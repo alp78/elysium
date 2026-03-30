@@ -9,7 +9,7 @@ description: "Open table formats (Apache Iceberg, Delta Lake, Apache Hudi) add a
 related:
   - "[[dbt-transformation-layer]]"
   - "fastapi and polars"
-  - "[[observability-deep-dive]]"
+  - "[observability-deep-dive](/13-Observability/Monitoring/observability-deep-dive)"
   - "[[idempotent-pipeline-design]]"
   - "[[five-pillars-of-data-engineering]]"
 created: 2026-03-22
@@ -429,7 +429,7 @@ CREATE TABLE data_catalog.pii_registry (
 ## Related
 - [[dbt-transformation-layer]] — dbt as the transformation engine for lakehouse tables
 - fastapi and polars — Polars for reading Parquet/Iceberg files efficiently
-- [[observability-deep-dive]] — lineage and data quality for lakehouse pipelines
+- [observability-deep-dive](/13-Observability/Monitoring/observability-deep-dive) — lineage and data quality for lakehouse pipelines
 - [[idempotent-pipeline-design]] — incremental load patterns for bronze/silver/gold layers
 
 ## References

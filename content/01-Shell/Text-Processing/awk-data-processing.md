@@ -1178,7 +1178,7 @@ awk -F',' '!seen[$2]++ {print $2}' file
 
 ---
 
-The filtering and aggregation patterns here (pattern-action rules, group-by with associative arrays) have direct DataFrame equivalents -- see [[02_py_explore_select_filter]] for the Pandas approach to the same column filtering and selection workflows.
+The filtering and aggregation patterns here (pattern-action rules, group-by with associative arrays) have direct DataFrame equivalents -- see [02_py_explore_select_filter](/03-Dataframes/Dataframes-Python/02_py_explore_select_filter) for the Pandas approach to the same column filtering and selection workflows.
 
 ## Related Notes
 

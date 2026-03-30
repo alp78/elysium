@@ -9,7 +9,7 @@ related:
   - "[[dbt-core-concepts]]"
   - "[[dbt-mart-models]]"
   - "[[dbt-intermediate-models]]"
-  - "[[idempotent-pipeline-design]]"
+  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
 ---
 
 # dbt: Materializations
@@ -151,7 +151,7 @@ Use when: rows can be corrected/restated and you want clean replacement without 
 
 #### merge (default for most adapters)
 
-Issues a SQL [[merge-and-upsert|MERGE]] statement matching on `unique_key`. Rows that match are updated; rows that don't match are inserted.
+Issues a SQL [MERGE](/04-SQL-Server/T-SQL/merge-and-upsert) statement matching on `unique_key`. Rows that match are updated; rows that don't match are inserted.
 
 ```sql
 {{ config(
@@ -246,7 +246,7 @@ with prices as (
 select * from prices
 ```
 
-With `unique_key` and `merge` strategy, dbt will update existing rows that fall in the lookback window with corrected values, then insert genuinely new rows. This merge-based approach is a key ingredient of [[idempotent-pipeline-design]] — re-running the same date range produces identical results without duplicating data.
+With `unique_key` and `merge` strategy, dbt will update existing rows that fall in the lookback window with corrected values, then insert genuinely new rows. This merge-based approach is a key ingredient of [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — re-running the same date range produces identical results without duplicating data.
 
 ---
 
@@ -379,4 +379,4 @@ dbt run --select tag:incremental --full-refresh
 - [[dbt-core-concepts]]
 - [[dbt-mart-models]]
 - [[dbt-intermediate-models]]
-- [[idempotent-pipeline-design]]
+- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)

@@ -36,14 +36,14 @@ mindmap
 ```
 > [!example]- Containers and Orchestration
 >
-> > [!abstract]- [[container-lifecycle]]
+> > [!abstract]- [container-lifecycle](/09-Docker/container-lifecycle)
 > >
-> > - [[container-lifecycle#Running Containers|Running containers]]
-> > - [[container-lifecycle#Lifecycle Management|Lifecycle management]]
-> > - [[container-lifecycle#Viewing Logs|Viewing logs]]
-> > - [[container-lifecycle#Exec and Attach|Exec and attach]]
-> > - [[container-lifecycle#Inspection and Debugging|Inspection and debugging]]
-> > - [[container-lifecycle#Container Debugging Checklist|Debugging checklist]]
+> > - [Running containers](/09-Docker/container-lifecycle#running-containers)
+> > - [Lifecycle management](/09-Docker/container-lifecycle#lifecycle-management)
+> > - [Viewing logs](/09-Docker/container-lifecycle#viewing-logs)
+> > - [Exec and attach](/09-Docker/container-lifecycle#exec-and-attach)
+> > - [Inspection and debugging](/09-Docker/container-lifecycle#inspection-and-debugging)
+> > - [Debugging checklist](/09-Docker/container-lifecycle#container-debugging-checklist)
 >
 > > [!abstract]- [[docker-compose]]
 > >
@@ -63,6 +63,6 @@ mindmap
 
 ## Cross-References
 
-- [[moc-terraform|Terraform]] — Cloud Run services run Docker images
-- [[moc-github-actions|GitHub Actions]] — CI/CD builds and pushes images
-- [[moc-shell|Shell]] — Docker commands run from shell
+- [Terraform](/07-Terraform/moc-terraform) — Cloud Run services run Docker images
+- [GitHub Actions](/10-GitHub-Actions/moc-github-actions) — CI/CD builds and pushes images
+- [Shell](/01-Shell/moc-shell) — Docker commands run from shell

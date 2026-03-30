@@ -193,7 +193,7 @@ for name, files in [("SQL Insert", sql_insert_files), ("BigQuery", bq_files)]:
 > The Python client library uses resumable uploads by default for files >8MB. If the
 > connection drops, re-running the same upload continues from where it stopped.
 
-For the CLI transfer tools (`gsutil cp`, `gcloud storage cp`, `rsync`, `bcp`) that these Python methods wrap or replace, see [[data-transfer]]. The GCS operations benchmarked below have direct CLI equivalents documented in [[gcs-object-operations]].
+For the CLI transfer tools (`gsutil cp`, `gcloud storage cp`, `rsync`, `bcp`) that these Python methods wrap or replace, see [data-transfer](/01-Shell/File-Operations/data-transfer). The GCS operations benchmarked below have direct CLI equivalents documented in [gcs-object-operations](/06-GCP/Storage/gcs-object-operations).
 
 ```python
 # Benchmark helper — persists results to JSON, keyed by (method, tier)

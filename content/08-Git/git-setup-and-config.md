@@ -41,7 +41,7 @@ related:
   - "[[git-daily-workflow]]"
   - "[[git-branching-and-merging]]"
   - "[[gitignore-patterns]]"
-  - "[[github-actions-ci-cd]]"
+  - "[github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -269,7 +269,7 @@ git clone --depth 1 https://github.com/org/repo.git
 > [!tip] Shallow Clones for CI/CD
 >
 > Shallow Clones in CI/CD Pipelines.
-> Shallow clones with `--depth 1` are the standard approach in [[github-actions-ci-cd]] pipelines. Cloning the full history of a large repository adds unnecessary time to every pipeline run. GitHub Actions uses `actions/checkout` with `fetch-depth: 1` by default for this reason.
+> Shallow clones with `--depth 1` are the standard approach in [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) pipelines. Cloning the full history of a large repository adds unnecessary time to every pipeline run. GitHub Actions uses `actions/checkout` with `fetch-depth: 1` by default for this reason.
 
 > [!warning] Shallow Clone Limitations
 >
@@ -340,7 +340,7 @@ pre-commit run gitleaks --all-files
 - [[git-daily-workflow]] — status, add, commit, push, pull commands for everyday work
 - [[git-branching-and-merging]] — creating, switching, merging, and deleting branches
 - [[gitignore-patterns]] — excluding files from Git tracking and Git LFS for large files
-- [[github-actions-ci-cd]] — CI/CD pipelines that use `git clone` and repository operations
+- [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — CI/CD pipelines that use `git clone` and repository operations
 - [[pull-requests-and-code-review]] — the PR workflow built on top of branches and remotes
 
 ## References

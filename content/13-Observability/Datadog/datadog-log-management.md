@@ -63,7 +63,7 @@ Expected: `Status: OK` and `Inputs: /var/opt/mssql/log/errorlog`.
 
 ### What Gets Logged
 
-SQL Server only writes to its error log on significant events — startups, failed logins, errors, backups, checkpoints. A simple `SELECT` does **not** generate an error log entry. For capturing query-level activity for compliance purposes, configure [[audit-logging|SQL Server audit logging]] separately from the errorlog.
+SQL Server only writes to its error log on significant events — startups, failed logins, errors, backups, checkpoints. A simple `SELECT` does **not** generate an error log entry. For capturing query-level activity for compliance purposes, configure [SQL Server audit logging](/04-SQL-Server/Security/audit-logging) separately from the errorlog.
 
 #### To force test entries
 
@@ -147,7 +147,7 @@ In Datadog: **Logs > Explorer** → filter by:
 
 > [!warning] Cloud Run logs not in Datadog
 >
-> Cloud Run job logs go to **GCP Cloud Logging** (see [[cloud-logging]] for the full GCP logging setup), not through dd-agent. They are not available in Datadog's Log Explorer. View them via gcloud:
+> Cloud Run job logs go to **GCP Cloud Logging** (see [cloud-logging](/06-GCP/Logging/cloud-logging) for the full GCP logging setup), not through dd-agent. They are not available in Datadog's Log Explorer. View them via gcloud:
 
 ```powershell
 gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=data-pipeline-pipeline" --limit=50 --format="table(timestamp,textPayload)"
@@ -172,4 +172,4 @@ The `LOG_FORMAT=json` env var on the Cloud Run Job formats logs as JSON, which e
 - [[datadog-agent-airflow-vm]] — Airflow VM agent with Docker socket access
 - [[datadog-apm-traces]] — Log-to-trace correlation via `dd.trace_id`
 - [[datadog-troubleshooting]] — "No Logs in Datadog" section
-- [[server-configuration]] — SQL Server VM and errorlog location
+- [server-configuration](/04-SQL-Server/Administration/server-configuration) — SQL Server VM and errorlog location

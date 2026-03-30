@@ -42,7 +42,7 @@ This page is the **conceptual framework** for GCP security. It explains the iden
 - **Service accounts** are for machines. They authenticate via key files, metadata server tokens, or Workload Identity Federation
 - **Rule:** production workloads always use service accounts, never user accounts. One SA per workload, not one SA for everything
 
-For SA creation and IAM binding commands, see [[service-accounts-and-iam#GCP Service Accounts — Machine Identities]]. For the Terraform pattern of one SA per workload, see [[terraform-iam-and-secrets#Design Principle: One Service Account Per Workload]].
+For SA creation and IAM binding commands, see [[service-accounts-and-iam#GCP Service Accounts — Machine Identities]]. For the Terraform pattern of one SA per workload, see [terraform-iam-and-secrets > Design Principle: One Service Account Per Workload](/07-Terraform/GCP-Resources/terraform-iam-and-secrets#design-principle-one-service-account-per-workload).
 
 ### Credential Types — Short-Lived vs Long-Lived
 
@@ -132,7 +132,7 @@ sequenceDiagram
 
 | Layer | Question | Mechanism | Vault Reference |
 |-------|----------|-----------|-----------------|
-| **Authentication** | Who are you? | OAuth2 tokens, key files, WIF | [[gcloud-authentication#How GCP Authentication Works]] |
+| **Authentication** | Who are you? | OAuth2 tokens, key files, WIF | [gcloud-authentication > How GCP Authentication Works](/06-GCP/Core/gcloud-authentication#how-gcp-authentication-works) |
 | **Authorization** | What can you do? | IAM roles and bindings | [[service-accounts-and-iam#IAM Bindings — Granting Roles to Service Accounts]] |
 | **Network control** | Where can data flow? | VPC-SC perimeters, firewalls | [[vpc-service-controls#The Data Exfiltration Threat Model]] |
 
@@ -153,7 +153,7 @@ ADC is the mechanism that answers "which credential should my code use?" without
 >
 > If `GOOGLE_APPLICATION_CREDENTIALS` points to a stale key file from an old project, ADC uses that key even when you're on a VM with a perfectly good metadata server token. ADC stops at the first match — it does not pick the "best" one. Unset the env var on VMs: `unset GOOGLE_APPLICATION_CREDENTIALS`.
 
-For the gcloud reference, see [[gcloud-authentication#The ADC Credential Search Order]]. For the Python ADC lookup implementation, see [[21_py_security_operations#google.auth.default — Application Default Credentials (ADC) lookup chain]]. For C#, see [[21_cs_security_operations#Application Default Credentials (ADC) lookup chain]].
+For the gcloud reference, see [gcloud-authentication > The ADC Credential Search Order](/06-GCP/Core/gcloud-authentication#the-adc-credential-search-order). For the Python ADC lookup implementation, see [21_py_security_operations > google.auth.default — Application Default Credentials (ADC) lookup chain](/02-Programming-Languages/Python/21_py_security_operations#googleauthdefault--application-default-credentials-adc-lookup-chain). For C#, see [21_cs_security_operations > Application Default Credentials (ADC) lookup chain](/02-Programming-Languages/CSharp/21_cs_security_operations#application-default-credentials-adc-lookup-chain).
 
 ---
 
@@ -173,7 +173,7 @@ For the gcloud reference, see [[gcloud-authentication#The ADC Credential Search 
 >
 > If the VM was created with `--scopes=compute-ro`, the metadata server token only works for Compute Engine read operations — even if the attached SA has broader IAM roles. Use `--scopes=cloud-platform` (all APIs) unless you have a specific reason to restrict.
 
-- Python implementation: [[21_py_security_operations#VM instance identity — metadata server credentials]]
+- Python implementation: [21_py_security_operations > VM instance identity — metadata server credentials](/02-Programming-Languages/Python/21_py_security_operations#vm-instance-identity--metadata-server-credentials)
 - SA attachment to VM: [[service-accounts-and-iam#ADC and the GCE Metadata Server]]
 
 ### Workload Identity Federation (WIF) — keyless external identity
@@ -201,9 +201,9 @@ sequenceDiagram
 - **When to use:** CI/CD (GitHub Actions), cross-cloud workloads, any external identity system
 - **WIF vs key file:** key files are permanent liabilities; WIF tokens live for minutes. Always prefer WIF
 
-- Pool and provider creation: [[20_py_security_setup#Workload Identity Federation]]
+- Pool and provider creation: [20_py_security_setup > Workload Identity Federation](/02-Programming-Languages/Python/20_py_security_setup#workload-identity-federation)
 - GitHub Actions usage: [[secrets-management#GitHub Actions — Workload Identity Federation (Keyless)]]
-- Python OIDC flow: [[21_py_security_operations#Workload Identity Federation — GitHub Actions OIDC flow]]
+- Python OIDC flow: [21_py_security_operations > Workload Identity Federation — GitHub Actions OIDC flow](/02-Programming-Languages/Python/21_py_security_operations#workload-identity-federation--github-actions-oidc-flow)
 
 ### Service Account Impersonation — temporary privilege escalation
 
@@ -215,9 +215,9 @@ sequenceDiagram
 - **Use case:** least-privilege delegation — a CI SA impersonates a deploy SA only during the deployment step
 - **Audit trail:** every impersonation is logged in Cloud Audit Logs with both the caller and the impersonated identity — full accountability chain
 
-- Python implementation: [[21_py_security_operations#Service account impersonation — keyless authentication]]
-- C# implementation: [[21_cs_security_operations#Service account impersonation — keyless authentication]]
-- Short-lived token generation: [[21_py_security_operations#google-cloud-iam-credentials — generate short-lived OAuth2 access tokens]]
+- Python implementation: [21_py_security_operations > Service account impersonation — keyless authentication](/02-Programming-Languages/Python/21_py_security_operations#service-account-impersonation--keyless-authentication)
+- C# implementation: [21_cs_security_operations > Service account impersonation — keyless authentication](/02-Programming-Languages/CSharp/21_cs_security_operations#service-account-impersonation--keyless-authentication)
+- Short-lived token generation: [21_py_security_operations > google-cloud-iam-credentials — generate short-lived OAuth2 access tokens](/02-Programming-Languages/Python/21_py_security_operations#google-cloud-iam-credentials--generate-short-lived-oauth2-access-tokens)
 
 ### Service Account Key Files — last resort only
 
@@ -230,8 +230,8 @@ sequenceDiagram
 
 - Key creation: [[service-accounts-and-iam#Service Account Key Files — Local Development Only]]
 - Key rotation procedure: [[secrets-management#Service Account Keys]]
-- Python key file auth: [[21_py_security_operations#google-auth Credentials.from_service_account_file — key file authentication]]
-- C# key file auth: [[21_cs_security_operations#GoogleCredential.FromFile — service account key file authentication]]
+- Python key file auth: [21_py_security_operations > google-auth Credentials.from_service_account_file — key file authentication](/02-Programming-Languages/Python/21_py_security_operations#google-auth-credentialsfromserviceaccountfile--key-file-authentication)
+- C# key file auth: [21_cs_security_operations > GoogleCredential.FromFile — service account key file authentication](/02-Programming-Languages/CSharp/21_cs_security_operations#googlecredentialfromfile--service-account-key-file-authentication)
 
 ### Application Default Credentials — interactive local dev
 
@@ -248,8 +248,8 @@ sequenceDiagram
 >
 > Running `gcloud auth login` and then wondering why `bigquery.Client()` in Python gets "permission denied." Python doesn't use gcloud's CLI credentials — it uses ADC. You need `gcloud auth application-default login` separately.
 
-- `gcloud auth login`: [[gcloud-authentication#gcloud auth login — interactive authentication for human users]]
-- `gcloud auth application-default login`: [[gcloud-authentication#gcloud auth application-default login — ADC for application code]]
+- `gcloud auth login`: [gcloud-authentication > gcloud auth login — interactive authentication for human users](/06-GCP/Core/gcloud-authentication#gcloud-auth-login--interactive-authentication-for-human-users)
+- `gcloud auth application-default login`: [gcloud-authentication > gcloud auth application-default login — ADC for application code](/06-GCP/Core/gcloud-authentication#gcloud-auth-application-default-login--adc-for-application-code)
 
 ---
 
@@ -272,11 +272,11 @@ Every source→destination pair in the stack, with the complete trust chain, req
 | SQL Server auth | Login + password (from Secret Manager) |
 | TLS note | SQL Server self-signed cert → `TrustServerCertificate=yes` (acceptable because IAP encrypts transport) |
 
-- Open tunnel: [[iap-tunneling#gcloud compute start-iap-tunnel — port forwarding through IAP]]
-- How IAP works: [[iap-tunneling#How IAP tunneling works — the full network path from workstation to VM]]
-- Connect via sqlcmd: [[connecting-to-gcp-resources#gcloud start-iap-tunnel + sqlcmd — SQL Server via IAP (Linux)]]
-- Connect via Python: [[connecting-to-gcp-resources#pymssql — SQL Server through IAP tunnel (Python)]]
-- Connect via SSMS: [[connecting-to-gcp-resources#Invoke-Sqlcmd / SSMS — SQL Server through IAP tunnel (PowerShell)]]
+- Open tunnel: [iap-tunneling > gcloud compute start-iap-tunnel — port forwarding through IAP](/01-Shell/Networking/iap-tunneling#gcloud-compute-start-iap-tunnel--port-forwarding-through-iap)
+- How IAP works: [iap-tunneling > How IAP tunneling works — the full network path from workstation to VM](/01-Shell/Networking/iap-tunneling#how-iap-tunneling-works--the-full-network-path-from-workstation-to-vm)
+- Connect via sqlcmd: [connecting-to-gcp-resources > gcloud start-iap-tunnel + sqlcmd — SQL Server via IAP (Linux)](/01-Shell/Networking/connecting-to-gcp-resources#gcloud-start-iap-tunnel--sqlcmd--sql-server-via-iap-linux)
+- Connect via Python: [connecting-to-gcp-resources > pymssql — SQL Server through IAP tunnel (Python)](/01-Shell/Networking/connecting-to-gcp-resources#pymssql--sql-server-through-iap-tunnel-python)
+- Connect via SSMS: [connecting-to-gcp-resources > Invoke-Sqlcmd / SSMS — SQL Server through IAP tunnel (PowerShell)](/01-Shell/Networking/connecting-to-gcp-resources#invoke-sqlcmd--ssms--sql-server-through-iap-tunnel-powershell)
 
 > [!warning] Common Mistake
 >
@@ -308,9 +308,9 @@ Every source→destination pair in the stack, with the complete trust chain, req
 | Network | Public Google API — no tunnel, no port, no firewall |
 | VPC-SC | May restrict which projects can query (if configured) |
 
-- Python: [[connecting-to-gcp-resources#google-cloud-bigquery Client — BigQuery queries (Python)]]
-- Python lab (with SA auth): [[21_py_security_operations#google-cloud-bigquery Client — query with service account credentials]]
-- C# lab: [[21_cs_security_operations#BigQueryClient — query with service account credentials]]
+- Python: [connecting-to-gcp-resources > google-cloud-bigquery Client — BigQuery queries (Python)](/01-Shell/Networking/connecting-to-gcp-resources#google-cloud-bigquery-client--bigquery-queries-python)
+- Python lab (with SA auth): [21_py_security_operations > google-cloud-bigquery Client — query with service account credentials](/02-Programming-Languages/Python/21_py_security_operations#google-cloud-bigquery-client--query-with-service-account-credentials)
+- C# lab: [21_cs_security_operations > BigQueryClient — query with service account credentials](/02-Programming-Languages/CSharp/21_cs_security_operations#bigqueryclient--query-with-service-account-credentials)
 - VPC-SC restrictions: [[vpc-service-controls]]
 
 > [!warning] Common Mistake
@@ -326,8 +326,8 @@ Every source→destination pair in the stack, with the complete trust chain, req
 | IAM role | `roles/datastore.user` (read/write documents) |
 | Network | Public Google API — no tunnel |
 
-- Python lab: [[21_py_security_operations#google-cloud-firestore Client — read documents with SA credentials]]
-- C# lab: [[21_cs_security_operations#FirestoreDb — read and write documents with SA credentials]]
+- Python lab: [21_py_security_operations > google-cloud-firestore Client — read documents with SA credentials](/02-Programming-Languages/Python/21_py_security_operations#google-cloud-firestore-client--read-documents-with-sa-credentials)
+- C# lab: [21_cs_security_operations > FirestoreDb — read and write documents with SA credentials](/02-Programming-Languages/CSharp/21_cs_security_operations#firestoredb--read-and-write-documents-with-sa-credentials)
 - Firestore IAM vs security rules: [[firestore-data-model-and-operations]]
 
 ### Python/C# → Cloud Storage (serverless API)
@@ -341,7 +341,7 @@ Every source→destination pair in the stack, with the complete trust chain, req
 | KMS-encrypted objects | CMEK or CSEK — transparent to readers with KMS access |
 
 - Minimum roles: [[service-accounts-and-iam#Minimum IAM Permission Set for a Data Pipeline]]
-- KMS encryption: [[21_py_security_operations#google-cloud-kms encrypt — symmetric encryption of plaintext]]
+- KMS encryption: [21_py_security_operations > google-cloud-kms encrypt — symmetric encryption of plaintext](/02-Programming-Languages/Python/21_py_security_operations#google-cloud-kms-encrypt--symmetric-encryption-of-plaintext)
 
 ### Python/C# → Secret Manager (serverless API)
 
@@ -354,7 +354,7 @@ Every source→destination pair in the stack, with the complete trust chain, req
 
 - IAM bindings: [[secrets-management#IAM for Secrets]]
 - Python code: [[secrets-management#Access from Python]]
-- Python lab: [[21_py_security_operations#google-cloud-secret-manager access_secret_version — read secrets]]
+- Python lab: [21_py_security_operations > google-cloud-secret-manager access_secret_version — read secrets](/02-Programming-Languages/Python/21_py_security_operations#google-cloud-secret-manager-accesssecretversion--read-secrets)
 
 ### Cloud Run → SQL Server (cross-service, same VPC)
 
@@ -382,9 +382,9 @@ Every source→destination pair in the stack, with the complete trust chain, req
 | WIF pool/provider | Configured for the GitHub repo |
 | Key file | **None** — this is the entire point of WIF |
 
-- WIF pool setup: [[20_py_security_setup#Workload Identity Federation]]
+- WIF pool setup: [20_py_security_setup > Workload Identity Federation](/02-Programming-Languages/Python/20_py_security_setup#workload-identity-federation)
 - GitHub Actions workflow: [[secrets-management#GitHub Actions — Workload Identity Federation (Keyless)]]
-- Python OIDC flow: [[21_py_security_operations#Workload Identity Federation — GitHub Actions OIDC flow]]
+- Python OIDC flow: [21_py_security_operations > Workload Identity Federation — GitHub Actions OIDC flow](/02-Programming-Languages/Python/21_py_security_operations#workload-identity-federation--github-actions-oidc-flow)
 
 ### GitHub Actions → SQL Server (WIF + IAP)
 
@@ -405,13 +405,13 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 
 > [!warning] Common Mistake
 >
-> Forgetting that the IAP tunnel command needs time to establish before `sqlcmd` connects. Add a `sleep 5` after starting the tunnel in the workflow. See [[sql-server-loading-patterns#Schema Migration CI/CD with GitHub Actions]] for a working workflow example.
+> Forgetting that the IAP tunnel command needs time to establish before `sqlcmd` connects. Add a `sleep 5` after starting the tunnel in the workflow. See [sql-server-loading-patterns > Schema Migration CI/CD with GitHub Actions](/04-SQL-Server/Patterns/sql-server-loading-patterns#schema-migration-cicd-with-github-actions) for a working workflow example.
 
 ### Connection Quick Reference Matrix
 
 > [!info]- All Connection Patterns at a Glance
 >
-> For protocol details and tunnel commands, see [[connecting-to-gcp-resources#Connection quick reference matrix — protocol and tunnel requirements by service]].
+> For protocol details and tunnel commands, see [connecting-to-gcp-resources > Connection quick reference matrix — protocol and tunnel requirements by service](/01-Shell/Networking/connecting-to-gcp-resources#connection-quick-reference-matrix--protocol-and-tunnel-requirements-by-service).
 
 | Source → Destination | Auth Method | Network Path | Tunnel Needed |
 |---------------------|-------------|-------------|---------------|
@@ -442,7 +442,7 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 | Python → BigQuery API | Google-managed TLS | Google (automatic) | Python `certifi` CA bundle |
 | Python → SQL Server | SQL Server self-signed cert | SQL Server on Linux | `TrustServerCertificate=yes` |
 | GitHub → GCP STS | Google-managed TLS | Google (automatic) | GitHub runner CA bundle |
-| SQL Server TDE (at rest) | GCP KMS-managed DEK | KMS wraps the key | [[tde-encryption]] |
+| SQL Server TDE (at rest) | GCP KMS-managed DEK | KMS wraps the key | [tde-encryption](/04-SQL-Server/Security/tde-encryption) |
 | GCS objects (at rest) | Google-managed or CMEK | Google or KMS | Transparent to readers |
 
 ### TrustServerCertificate=yes — why SQL Server connections use it
@@ -453,8 +453,8 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 
 - **Why this is acceptable:** the IAP tunnel already encrypts the transport end-to-end (workstation → Google edge → VM). The self-signed cert encrypts SQL Server's TDS protocol layer, but the outer layer is already protected by IAP
 - **When this is NOT acceptable:** public-facing SQL Server with no tunnel — use a CA-signed certificate from Let's Encrypt or an internal CA
-- SQL Server TLS setup: [[sql-server-authentication#TLS Encryption — network path client → IAP tunnel → VM → SQL Server]]
-- Certificate generation: [[sql-server-authentication#openssl req -x509 — generate TLS certificate for SQL Server]]
+- SQL Server TLS setup: [sql-server-authentication > TLS Encryption — network path client → IAP tunnel → VM → SQL Server](/04-SQL-Server/Security/sql-server-authentication#tls-encryption--network-path-client--iap-tunnel--vm--sql-server)
+- Certificate generation: [sql-server-authentication > openssl req -x509 — generate TLS certificate for SQL Server](/04-SQL-Server/Security/sql-server-authentication#openssl-req--x509--generate-tls-certificate-for-sql-server)
 
 ### KMS and Envelope Encryption — the two-tier model
 
@@ -463,10 +463,10 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 > Data is encrypted with a Data Encryption Key (DEK). The DEK is encrypted with a Key Encryption Key (KEK) stored in Cloud KMS. Only the encrypted DEK is stored alongside the ciphertext. To decrypt: call KMS to unwrap the DEK, then use the DEK to decrypt the data.
 
 - **Why two tiers:** the DEK encrypts locally (fast, no network call per row). KMS only wraps/unwraps the DEK (one API call per encrypt/decrypt operation). This keeps KMS costs low even for high-volume encryption
-- Encryption key hierarchy: [[tde-encryption#Encryption Key Hierarchy]]
-- Python envelope encryption: [[21_py_security_operations#cryptography AESGCM + google-cloud-kms — envelope encryption]]
-- C# envelope encryption: [[21_cs_security_operations#AesGcm + KeyManagementServiceClient — envelope encryption]]
-- SQL Server TDE (at-rest encryption using KMS): [[tde-encryption]]
+- Encryption key hierarchy: [tde-encryption > Encryption Key Hierarchy](/04-SQL-Server/Security/tde-encryption#encryption-key-hierarchy)
+- Python envelope encryption: [21_py_security_operations > cryptography AESGCM + google-cloud-kms — envelope encryption](/02-Programming-Languages/Python/21_py_security_operations#cryptography-aesgcm--google-cloud-kms--envelope-encryption)
+- C# envelope encryption: [21_cs_security_operations > AesGcm + KeyManagementServiceClient — envelope encryption](/02-Programming-Languages/CSharp/21_cs_security_operations#aesgcm--keymanagementserviceclient--envelope-encryption)
+- SQL Server TDE (at-rest encryption using KMS): [tde-encryption](/04-SQL-Server/Security/tde-encryption)
 
 ---
 
@@ -617,7 +617,7 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 >
 > Generate a TLS certificate from Let's Encrypt or an internal CA. Configure
 > SQL Server to use it. Remove `TrustServerCertificate=yes` from connection
-> strings. See [[sql-server-authentication#openssl req -x509 — generate TLS certificate for SQL Server]]
+> strings. See [sql-server-authentication > openssl req -x509 — generate TLS certificate for SQL Server](/04-SQL-Server/Security/sql-server-authentication#openssl-req--x509--generate-tls-certificate-for-sql-server)
 > for the certificate generation procedure.
 
 ---
@@ -635,5 +635,5 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 >
 > `gcloud auth login` for CLI tools + `gcloud auth application-default login`
 > for your application code. Or set `GOOGLE_APPLICATION_CREDENTIALS` to a
-> key file. See [[gcloud-authentication#gcloud auth application-default login — ADC for application code]]
+> key file. See [gcloud-authentication > gcloud auth application-default login — ADC for application code](/06-GCP/Core/gcloud-authentication#gcloud-auth-application-default-login--adc-for-application-code)
 > for the distinction.

@@ -60,7 +60,7 @@ status: complete
 
 # grep and Pattern Matching
 
-`grep` (Global Regular Expression Print) is the foundational text search tool in Unix/Linux environments and the daily workhorse of log analysis, pipeline debugging, and code archaeology for data engineers. The regex syntax used here is the same pattern language available in [[02_py_strings|Python's re module]] and [[02_cs_strings|C#'s Regex class]], so patterns you learn here transfer directly to application code. While grep finds matches, [[sed-stream-editing]] complements it by editing the matched lines in place.
+`grep` (Global Regular Expression Print) is the foundational text search tool in Unix/Linux environments and the daily workhorse of log analysis, pipeline debugging, and code archaeology for data engineers. The regex syntax used here is the same pattern language available in [Python's re module](/02-Programming-Languages/Python/02_py_strings) and [C#'s Regex class](/02-Programming-Languages/CSharp/02_cs_strings), so patterns you learn here transfer directly to application code. While grep finds matches, [[sed-stream-editing]] complements it by editing the matched lines in place.
 
 This note covers `grep` exhaustively alongside PowerShell's `Select-String` equivalent, so every technique is immediately usable regardless of which environment you are working in.
 

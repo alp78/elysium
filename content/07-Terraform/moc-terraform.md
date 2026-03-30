@@ -212,6 +212,6 @@ mindmap
 
 ## Cross-References
 
-- [[moc-gcp|GCP]] — The GCP services these Terraform configs provision
-- [[moc-github-actions|GitHub Actions]] — CI/CD pipelines that run terraform plan/apply
-- [[moc-data-architecture|Data Architecture]] — Architecture decisions that drive infrastructure choices
+- [GCP](/06-GCP/moc-gcp) — The GCP services these Terraform configs provision
+- [GitHub Actions](/10-GitHub-Actions/moc-github-actions) — CI/CD pipelines that run terraform plan/apply
+- [Data Architecture](/14-Data-Architecture/moc-data-architecture) — Architecture decisions that drive infrastructure choices

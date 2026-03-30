@@ -112,7 +112,7 @@ gcloud scheduler jobs create http weekly-report \
 
 ### Creating Jobs — Pub/Sub Target
 
-The Pub/Sub target publishes a message to a topic at the scheduled time. The message then triggers whatever subscribes to that topic — a Cloud Function, a pull consumer, or a push subscription to Cloud Run. This is the fan-out pattern: one schedule can trigger multiple downstream consumers via one topic. For a deeper dive on topic and subscription design, see [[pubsub-messaging]].
+The Pub/Sub target publishes a message to a topic at the scheduled time. The message then triggers whatever subscribes to that topic — a Cloud Function, a pull consumer, or a push subscription to Cloud Run. This is the fan-out pattern: one schedule can trigger multiple downstream consumers via one topic. For a deeper dive on topic and subscription design, see [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging).
 
 ```bash
 # Create a Pub/Sub-target scheduler job
@@ -742,7 +742,7 @@ gcloud scheduler jobs create http trigger-my-pipeline \
 
 ### The Serverless Pipeline Pattern
 
-The most common GCP data engineering pattern: Cloud Scheduler fires at a cron time → calls the Cloud Run Jobs API → your containerised pipeline stage runs to completion → exits (see [[cloud-run-jobs-vs-services]] for when to use Jobs vs Services). No always-on servers. No Kubernetes management. You pay only for the compute time the job actually uses.
+The most common GCP data engineering pattern: Cloud Scheduler fires at a cron time → calls the Cloud Run Jobs API → your containerised pipeline stage runs to completion → exits (see [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) for when to use Jobs vs Services). No always-on servers. No Kubernetes management. You pay only for the compute time the job actually uses.
 
 ```
 Cloud Scheduler (cron)
@@ -764,7 +764,7 @@ Cloud Run Job (Docker container)
 ### Full Setup: Scheduler to Cloud Run Job
 
 ```bash
-# Step 1: Ensure the Cloud Run Job exists (for Terraform-managed jobs, see [[terraform-cloud-run]])
+# Step 1: Ensure the Cloud Run Job exists (for Terraform-managed jobs, see [terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run))
 gcloud run jobs describe my-etl-job --region=europe-west1
 # If it doesn't exist, create/deploy it first via gcloud run jobs create or CI/CD
 
@@ -1233,12 +1233,12 @@ gcloud scheduler jobs create http scale-down-api \
 
 ## Related
 
-- [[cloud-run-jobs-vs-services]] — Cloud Run Jobs are the primary target for Cloud Scheduler in data pipeline architectures
-- [[pubsub-topics-and-subscriptions]] — Pub/Sub topics are the fan-out layer between Cloud Scheduler and multiple downstream consumers
-- [[pubsub-messaging]] — Publishing and consuming Pub/Sub messages in Python
-- [[service-accounts-and-iam]] — `roles/run.invoker`, `roles/workflows.invoker`, `roles/pubsub.publisher` for scheduler service accounts
-- [[cloud-logging]] — Diagnosing scheduler job failures and Cloud Run execution errors
-- [[gcp-projects-and-apis]] — APIs to enable: `cloudscheduler.googleapis.com`, `workflows.googleapis.com`, `cloudtasks.googleapis.com`, `cloudfunctions.googleapis.com`
+- [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — Cloud Run Jobs are the primary target for Cloud Scheduler in data pipeline architectures
+- [pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions) — Pub/Sub topics are the fan-out layer between Cloud Scheduler and multiple downstream consumers
+- [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging) — Publishing and consuming Pub/Sub messages in Python
+- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — `roles/run.invoker`, `roles/workflows.invoker`, `roles/pubsub.publisher` for scheduler service accounts
+- [cloud-logging](/06-GCP/Logging/cloud-logging) — Diagnosing scheduler job failures and Cloud Run execution errors
+- [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) — APIs to enable: `cloudscheduler.googleapis.com`, `workflows.googleapis.com`, `cloudtasks.googleapis.com`, `cloudfunctions.googleapis.com`
 
 ## References
 

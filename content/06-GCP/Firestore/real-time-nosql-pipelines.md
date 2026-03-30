@@ -63,7 +63,7 @@ related:
   - "[[pubsub-messaging]]"
   - "[[pubsub-topics-and-subscriptions]]"
   - "[[cloud-run-jobs-vs-services]]"
-  - "[[streaming-architecture]]"
+  - "[streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture)"
   - "[[data-loading-and-export]]"
   - "[[querying-and-cost-optimization]]"
   - "[[service-accounts-and-iam]]"
@@ -71,7 +71,7 @@ related:
   - "[[cloud-logging]]"
   - "[[cloud-monitoring-metrics]]"
   - "[[gcp-projects-and-apis]]"
-  - "[[gcloud-authentication]]"
+  - "[gcloud-authentication](/06-GCP/Core/gcloud-authentication)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -307,7 +307,7 @@ Use this when: inbound throughput exceeds Firestore's direct write capacity, you
 
 **When NOT to use this pattern:** if you only need analytics (skip Firestore, write directly to BigQuery via Dataflow), or if you only need real-time reads with no analytics (skip Dataflow and BigQuery, write directly to Firestore from producers).
 
-See [[streaming-architecture]] for the broader context of windowing strategies and late data handling in Dataflow.
+See [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) for the broader context of windowing strategies and late data handling in Dataflow.
 
 ---
 
@@ -855,7 +855,7 @@ python streaming_pipeline.py \
 
 > [!tip] Late Data Handling
 >
-> Add `--allow_late_data` or configure `beam.WindowInto` with `allowed_lateness` to handle messages that arrive after the window closes. For IoT use cases, a 30-second allowed lateness typically covers network delays without significantly increasing state size. See [[streaming-architecture]] for watermark and trigger strategies.
+> Add `--allow_late_data` or configure `beam.WindowInto` with `allowed_lateness` to handle messages that arrive after the window closes. For IoT use cases, a 30-second allowed lateness typically covers network delays without significantly increasing state size. See [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) for watermark and trigger strategies.
 
 ---
 

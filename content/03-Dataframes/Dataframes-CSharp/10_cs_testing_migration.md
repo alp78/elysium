@@ -12,7 +12,7 @@ keywords: [testing, pytest, xUnit, assert_frame_equal, validation, migration, pa
 description: "Polars.NET / C# DataFrames reference 10/10 — Project, Testing & Migration (end-to-end, validation, migration guide). Executable examples with cell outputs. See [[10_py_testing_migration]] for the Python equivalent."
 related:
   - "[[moc-dataframes]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[10_py_testing_migration]]"
   - "[[09_cs_database_interface]]"
 created: 2026-03-27
@@ -332,7 +332,7 @@ Console.WriteLine(total == 0
 ---
 ## Data Quality Pipeline
 
-The guard functions below enforce the same quality dimensions — completeness, uniqueness, referential integrity — defined in [[data-quality-framework]]. For a declarative approach to these same checks in the dbt layer, see [[dbt-testing-framework]].
+The guard functions below enforce the same quality dimensions — completeness, uniqueness, referential integrity — defined in [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework). For a declarative approach to these same checks in the dbt layer, see [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework).
 
 #### Define assertion guards from validation rules to chainable functions using DataFrame pass-through
 

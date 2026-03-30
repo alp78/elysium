@@ -8,9 +8,9 @@ keywords: [medallion architecture, bronze, silver, gold, raw data, cleaned data,
 description: "The medallion architecture (bronze/silver/gold) implemented in SQL Server — raw data landing, cleaning and deduplication, and analytics-ready aggregation across three schema layers."
 related:
   - "[[idempotent-pipeline-design]]"
-  - "[[bronze-layer-loading]]"
-  - "[[silver-transforms]]"
-  - "[[gold-transforms]]"
+  - "[bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading)"
+  - "[silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms)"
+  - "[gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms)"
   - "the pipeline steps"
 created: 2026-03-22
 updated: 2026-03-22
@@ -34,11 +34,11 @@ The medallion architecture organizes data into three layers — bronze, silver, 
 ### Medallion Technology Stack
 
 - SQL Server (ODBC Driver 18)
-- Python + [[bronze-layer-loading|pyodbc]] (parameterized queries, `?` placeholders)
+- Python + [pyodbc](/04-SQL-Server/Medallion-Project/bronze-layer-loading) (parameterized queries, `?` placeholders)
 - Pandas + NumPy for gold-layer analytics
 - Dapper (C#) for dashboard reads
 
-The medallion pattern aligns naturally with the ELT paradigm — raw data lands first, then transforms run inside the warehouse. In dbt projects, [[dbt-staging-models]] correspond to the bronze-to-silver transition, while [[dbt-mart-models]] produce the gold layer.
+The medallion pattern aligns naturally with the ELT paradigm — raw data lands first, then transforms run inside the warehouse. In dbt projects, [dbt-staging-models](/11-dbt/Modeling/dbt-staging-models) correspond to the bronze-to-silver transition, while [dbt-mart-models](/11-dbt/Modeling/dbt-mart-models) produce the gold layer.
 
 ### Database Connection Pattern
 
@@ -94,18 +94,18 @@ CREATE SCHEMA ref;   -- reference data (static lookups)
 - 1:1 mapping with source data
 - No transformations -- data lands exactly as received
 - Enables reprocessing from source if transforms change
-- See [[bronze-layer-loading]]
+- See [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading)
 
 ### Silver (Cleaned)
 - Deduplication, gap-filling, type casting
-- [[silver-transforms|SCD Type 2]] for slowly changing dimensions
+- [SCD Type 2](/04-SQL-Server/Medallion-Project/silver-transforms) for slowly changing dimensions
 - Business key validation
-- See [[silver-transforms]]
+- See [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms)
 
 ### Gold (Analytics)
 - Pre-computed scores, rankings, aggregations
 - Dashboard-ready format -- no further computation needed
-- See [[gold-transforms]]
+- See [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms)
 
 > [!danger] Gold must be reproducible from silver
 >
@@ -122,15 +122,15 @@ The medallion architecture enables [[idempotent-pipeline-design|idempotent pipel
 ## Related
 
 **General SQL Server patterns:**
-- [[sql-server-schema-layering]] — Schema organization for multi-layer architectures
-- [[sql-server-loading-patterns]] — Loading methods, benchmarks, minimal logging
-- [[sql-server-change-tracking]] — SCD2, temporal tables, CDC — decision matrix
-- [[sql-server-incremental-transforms]] — Watermark loading, gap-fill, pre-computed aggregations
+- [sql-server-schema-layering](/04-SQL-Server/Patterns/sql-server-schema-layering) — Schema organization for multi-layer architectures
+- [sql-server-loading-patterns](/04-SQL-Server/Patterns/sql-server-loading-patterns) — Loading methods, benchmarks, minimal logging
+- [sql-server-change-tracking](/04-SQL-Server/Patterns/sql-server-change-tracking) — SCD2, temporal tables, CDC — decision matrix
+- [sql-server-incremental-transforms](/04-SQL-Server/Patterns/sql-server-incremental-transforms) — Watermark loading, gap-fill, pre-computed aggregations
 
 **Worked implementation (financial index pipeline):**
-- [[bronze-layer-loading]] — How data enters the bronze layer
-- [[silver-transforms]] — Cleaning and deduplication patterns
-- [[gold-transforms]] — Analytics and scoring patterns
+- [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) — How data enters the bronze layer
+- [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) — Cleaning and deduplication patterns
+- [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) — Analytics and scoring patterns
 
 **Theory:**
 - [[idempotent-pipeline-design]] — Safe re-run patterns

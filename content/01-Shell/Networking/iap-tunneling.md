@@ -57,7 +57,7 @@ Step by step:
 
 > [!tip] Related pattern
 >
-> IAP requires the `iap.tunnelResourceAccessor` IAM role -- see [[service-accounts-and-iam]] for role binding patterns. The firewall rule allowing `35.235.240.0/20` can be managed declaratively with [[terraform-networking]].
+> IAP requires the `iap.tunnelResourceAccessor` IAM role -- see [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) for role binding patterns. The firewall rule allowing `35.235.240.0/20` can be managed declaratively with [terraform-networking](/07-Terraform/GCP-Resources/terraform-networking).
 
 ## IAP Tunnel Commands — All Variants
 
@@ -73,7 +73,7 @@ Step by step:
 > creation + SSH session into one command.
 >
 > For additional SSH patterns including OS Login and metadata-managed keys, see
-> [[vm-ssh-and-file-transfer]].
+> [vm-ssh-and-file-transfer](/06-GCP/Compute/vm-ssh-and-file-transfer).
 
 ```bash
 gcloud compute ssh data-pipeline-sql \
@@ -268,7 +268,7 @@ ss -tnp | grep :1433
 > For a small team accessing a few VMs, **IAP is always the right choice**. Zero infrastructure to maintain, zero cost, and per-user audit logging via Cloud Audit Logs.
 
 ## Related
-- [[gcp-identity-and-connection-patterns]] — Where IAP tunnels fit in the overall connection pattern framework
+- [gcp-identity-and-connection-patterns](/06-GCP/Security/gcp-identity-and-connection-patterns) — Where IAP tunnels fit in the overall connection pattern framework
 - [[firewalls]] — IAP firewall rule for `35.235.240.0/20` on port 22
 - [[connectivity-testing]] — diagnose IAP tunnel failures step by step
 - [[socket-inspection]] — verify IAP connections visible on the VM side

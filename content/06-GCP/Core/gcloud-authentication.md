@@ -50,7 +50,7 @@ Authenticates as a service account using a JSON key file. Use for CI/CD pipeline
 gcloud auth activate-service-account --key-file=key.json
 ```
 
-For creating and managing the service accounts referenced here, see [[service-accounts-and-iam]]. In GitHub Actions, [[github-actions-workflows|Workload Identity Federation]] eliminates key files entirely for CI/CD authentication.
+For creating and managing the service accounts referenced here, see [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam). In GitHub Actions, [Workload Identity Federation](/10-GitHub-Actions/github-actions-workflows) eliminates key files entirely for CI/CD authentication.
 
 #### gcloud auth list, revoke, print-access-token — view and manage credentials
 
@@ -73,7 +73,7 @@ gcloud auth revoke
 
 > [!info] The ADC Search Order
 >
-> When your Python code does `google.auth.default()` (covered in [[17_py_gcp]]), it searches for credentials in this exact order:
+> When your Python code does `google.auth.default()` (covered in [17_py_gcp](/02-Programming-Languages/Python/17_py_gcp)), it searches for credentials in this exact order:
 > 1. `GOOGLE_APPLICATION_CREDENTIALS` environment variable (path to a JSON key file)
 > 2. Application Default Credentials from `gcloud auth application-default login`
 > 3. GCE metadata server (automatic on VMs and Cloud Run — no setup needed)
@@ -88,7 +88,7 @@ gcloud auth revoke
 > [!danger] SA Key Files Never Expire
 >
 > Service Account Key Files Are Permanent Credentials.
-> Unlike OAuth tokens, SA key files never expire. A leaked key file in a git repo, a Docker image layer, or a log file grants permanent access until the key is explicitly revoked in the GCP console. Attackers actively scan public repos for GCP key patterns. If you suspect a key was leaked, immediately delete the key in IAM, then rotate all secrets the SA had access to. See [[service-accounts-and-iam]] for key rotation procedures.
+> Unlike OAuth tokens, SA key files never expire. A leaked key file in a git repo, a Docker image layer, or a log file grants permanent access until the key is explicitly revoked in the GCP console. Attackers actively scan public repos for GCP key patterns. If you suspect a key was leaked, immediately delete the key in IAM, then rotate all secrets the SA had access to. See [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) for key rotation procedures.
 
 ### GCP Authentication Gotchas and Edge Cases
 
@@ -98,17 +98,17 @@ gcloud auth revoke
 > `gcloud auth application-default login` caches the token in `~/.config/gcloud/application_default_credentials.json`. If your IAM roles change after login, the cached token still carries the old scopes until it refreshes (up to 1 hour). Force a refresh with `gcloud auth application-default login` again. This is a frequent source of "works on my machine but fails in CI" issues.
 
 - `gcloud auth login` and `gcloud auth application-default login` are **different credentials** for different purposes. You often need both for local development.
-- Service account key files (`key.json`) do not expire. If leaked, attackers have permanent access until the key is explicitly deleted. See [[service-accounts-and-iam]] for key rotation.
-- On [[vm-lifecycle|Compute Engine VMs]] and [[cloud-run-jobs-vs-services|Cloud Run]], the metadata server provides credentials automatically — no key files needed.
+- Service account key files (`key.json`) do not expire. If leaked, attackers have permanent access until the key is explicitly deleted. See [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) for key rotation.
+- On [Compute Engine VMs](/06-GCP/Compute/vm-lifecycle) and [Cloud Run](/06-GCP/Serverless/cloud-run-jobs-vs-services), the metadata server provides credentials automatically — no key files needed.
 
 ## Related
 
-- [[gcp-identity-and-connection-patterns]] — Complete identity model, OAuth2 flows, credential types, and connection patterns
-- [[gcloud-configurations]] — Manage multiple project contexts
-- [[service-accounts-and-iam]] — Create and manage service accounts, IAM bindings and roles
-- [[gcp-projects-and-apis]] — Set the active project for authentication context
+- [gcp-identity-and-connection-patterns](/06-GCP/Security/gcp-identity-and-connection-patterns) — Complete identity model, OAuth2 flows, credential types, and connection patterns
+- [gcloud-configurations](/06-GCP/Core/gcloud-configurations) — Manage multiple project contexts
+- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — Create and manage service accounts, IAM bindings and roles
+- [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) — Set the active project for authentication context
 
-For a comprehensive gcloud command reference, see [[gcloud-cheat-sheet]].
+For a comprehensive gcloud command reference, see [gcloud-cheat-sheet](/06-GCP/gcloud-cheat-sheet).
 
 ## References
 

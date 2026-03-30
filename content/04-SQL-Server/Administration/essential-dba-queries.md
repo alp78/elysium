@@ -534,7 +534,7 @@ LEFT JOIN (
 
 ### Related
 
-- [[sqlcmd-connection-and-usage]] — running these queries from the command line
+- [sqlcmd-connection-and-usage](/04-SQL-Server/Administration/sqlcmd-connection-and-usage) — running these queries from the command line
 - [[wait-stats-analysis]] — deep dive into wait type interpretation
 - [[blocking-and-locking]] — understanding blocking chains and lock types
 - [[performance-audit-playbook]] — interpreting disk I/O latency metrics and full structured audit

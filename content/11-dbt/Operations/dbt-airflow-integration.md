@@ -6,8 +6,8 @@ status: stable
 updated: 2026-03-23
 description: "BashOperator, astronomer-cosmos, and CloudRunJobOperator patterns for orchestrating dbt in Airflow, with a full ESG pipeline DAG."
 related:
-  - "[[airflow-core-concepts]]"
-  - "[[airflow-dag-patterns]]"
+  - "[airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts)"
+  - "[airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns)"
   - "[[dbt-core-concepts]]"
   - "[[dbt-ci-cd]]"
   - "[[dbt-observability]]"
@@ -15,7 +15,7 @@ related:
 
 # dbt: Airflow Integration
 
-Orchestrating dbt inside Airflow determines how granularly you can observe, retry, and alert on transformation failures. This builds on [[airflow-core-concepts]] and applies the [[airflow-dag-patterns]] to dbt-specific workflows. Three integration patterns exist, each offering a different trade-off between implementation effort and operational power.
+Orchestrating dbt inside Airflow determines how granularly you can observe, retry, and alert on transformation failures. This builds on [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) and applies the [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) to dbt-specific workflows. Three integration patterns exist, each offering a different trade-off between implementation effort and operational power.
 
 ---
 
@@ -351,8 +351,8 @@ check_results = PythonOperator(
 
 ## Related
 
-- [[airflow-core-concepts]]
-- [[airflow-dag-patterns]]
+- [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts)
+- [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns)
 - [[dbt-core-concepts]]
 - [[dbt-ci-cd]]
 - [[dbt-observability]]

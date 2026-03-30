@@ -32,11 +32,11 @@ mindmap
 > > - [[gcloud-cheat-sheet#Cloud Storage (gcloud storage)|Cloud Storage]]
 > > - [[gcloud-cheat-sheet#Quick Reference: Useful gcloud One-Liners|Useful one-liners]]
 >
-> > [!abstract]- [[gcloud-authentication]]
+> > [!abstract]- [gcloud-authentication](/06-GCP/Core/gcloud-authentication)
 > >
-> > - [[gcloud-authentication#Authentication Commands|Authentication commands]]
-> > - [[gcloud-authentication#The ADC Credential Search Order|ADC credential search order]]
-> > - [[gcloud-authentication#GCP Authentication Gotchas and Edge Cases|Gotchas and edge cases]]
+> > - [Authentication commands](/06-GCP/Core/gcloud-authentication#authentication-commands)
+> > - [ADC credential search order](/06-GCP/Core/gcloud-authentication#the-adc-credential-search-order)
+> > - [Gotchas and edge cases](/06-GCP/Core/gcloud-authentication#gcp-authentication-gotchas-and-edge-cases)
 >
 > > [!abstract]- [[gcloud-configurations]]
 > >
@@ -295,7 +295,7 @@ mindmap
 
 ## Cross-References
 
-- [[moc-terraform|Terraform]] — Infrastructure-as-code for provisioning GCP resources
-- [[moc-programming-languages|Programming Languages]] — Python and C# GCP integration notebooks (topics 17-24)
-- [[moc-shell|Shell]] — IAP tunneling and gcloud CLI from the shell perspective
-- [[moc-observability|Observability]] — GCP-native monitoring in the observability context
+- [Terraform](/07-Terraform/moc-terraform) — Infrastructure-as-code for provisioning GCP resources
+- [Programming Languages](/02-Programming-Languages/moc-programming-languages) — Python and C# GCP integration notebooks (topics 17-24)
+- [Shell](/01-Shell/moc-shell) — IAP tunneling and gcloud CLI from the shell perspective
+- [Observability](/13-Observability/moc-observability) — GCP-native monitoring in the observability context

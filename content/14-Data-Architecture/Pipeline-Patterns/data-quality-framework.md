@@ -10,11 +10,11 @@ related:
   - "[[error-handling-and-retry-patterns]]"
   - "[[functional-pipeline-architecture]]"
   - "[[medallion-architecture]]"
-  - "[[observability-strategy-matrix]]"
-  - "[[25_py_functional_pipeline]]"
-  - "[[25_cs_functional_pipeline]]"
-  - "[[dbt-testing-framework]]"
-  - "[[gcp-pipeline-health-and-sla]]"
+  - "[observability-strategy-matrix](/13-Observability/observability-strategy-matrix)"
+  - "[25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline)"
+  - "[25_cs_functional_pipeline](/02-Programming-Languages/CSharp/25_cs_functional_pipeline)"
+  - "[dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)"
+  - "[gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla)"
 ---
 
 # Data Quality Framework
@@ -32,10 +32,10 @@ Completeness means every row and every required field that should exist actually
 
 **How to detect:** Compare incoming row counts against expected counts (prior day, reference dimension, source manifest). Assert non-null on required columns.
 
-- Python row count assertion: [[25_py_functional_pipeline#Polars — assert minimum row count with len()]]
-- Full quality gate runner: [[25_py_functional_pipeline#Pipeline — run all quality gate assertions with log.info()]]
-- dbt row count tests: [[dbt-testing-framework#dbt-expectations — row count and statistical tests]]
-- GCP row count monitoring: [[gcp-pipeline-health-and-sla#Row Count Validation]]
+- Python row count assertion: [25_py_functional_pipeline > Polars — assert minimum row count with len()](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-minimum-row-count-with-len)
+- Full quality gate runner: [25_py_functional_pipeline > Pipeline — run all quality gate assertions with log.info()](/02-Programming-Languages/Python/25_py_functional_pipeline#pipeline--run-all-quality-gate-assertions-with-loginfo)
+- dbt row count tests: [dbt-testing-framework > dbt-expectations — row count and statistical tests](/11-dbt/Quality/dbt-testing-framework#dbt-expectations--row-count-and-statistical-tests)
+- GCP row count monitoring: [gcp-pipeline-health-and-sla > Row Count Validation](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#row-count-validation)
 
 ### Uniqueness — no unwanted duplicates
 
@@ -46,9 +46,9 @@ Uniqueness means each entity appears exactly once per grain. Duplicate rows infl
 
 **How to detect:** Assert uniqueness on natural keys (instrument + trade_date). Hash-based dedup on composite keys.
 
-- Python duplicate assertion: [[25_py_functional_pipeline#Polars — assert no duplicate rows with unique()]]
-- dbt composite uniqueness: [[dbt-testing-framework#dbt-utils test — unique_combination_of_columns]]
-- dbt built-in unique/not_null: [[dbt-testing-framework#dbt Built-in Generic Tests]]
+- Python duplicate assertion: [25_py_functional_pipeline > Polars — assert no duplicate rows with unique()](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-no-duplicate-rows-with-unique)
+- dbt composite uniqueness: [dbt-testing-framework > dbt-utils test — unique_combination_of_columns](/11-dbt/Quality/dbt-testing-framework#dbt-utils-test--uniquecombinationofcolumns)
+- dbt built-in unique/not_null: [dbt-testing-framework > dbt Built-in Generic Tests](/11-dbt/Quality/dbt-testing-framework#dbt-built-in-generic-tests)
 
 ### Validity — data conforms to business rules
 
@@ -59,11 +59,11 @@ Validity means values fall within acceptable domains and pass business logic rul
 
 **How to detect:** Range checks, regex patterns, enum membership, cross-field logic (e.g., open <= high, low <= close).
 
-- Python row-level validation: [[25_py_functional_pipeline#Pydantic — validate Bronze rows with BaseModel() row-level check]]
-- dbt expression assertions: [[dbt-testing-framework#dbt-utils test — expression_is_true]]
-- dbt range checks: [[dbt-testing-framework#dbt-utils test — accepted_range]]
-- Weight sum validation: [[pit-integrity-logic#Validation: Weight Sum Check]]
-- Data contracts: [[dbt-data-contracts-implementation]]
+- Python row-level validation: [25_py_functional_pipeline > Pydantic — validate Bronze rows with BaseModel() row-level check](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--validate-bronze-rows-with-basemodel-row-level-check)
+- dbt expression assertions: [dbt-testing-framework > dbt-utils test — expression_is_true](/11-dbt/Quality/dbt-testing-framework#dbt-utils-test--expressionistrue)
+- dbt range checks: [dbt-testing-framework > dbt-utils test — accepted_range](/11-dbt/Quality/dbt-testing-framework#dbt-utils-test--acceptedrange)
+- Weight sum validation: [pit-integrity-logic > Validation: Weight Sum Check](/04-SQL-Server/Performance/pit-integrity-logic#validation-weight-sum-check)
+- Data contracts: [dbt-data-contracts-implementation](/11-dbt/Quality/dbt-data-contracts-implementation)
 
 ### Timeliness — data arrives within SLA
 
@@ -74,9 +74,9 @@ Timeliness means data is available when downstream consumers need it. Late data 
 
 **How to detect:** Compare max timestamp in the dataset against expected freshness SLA. Implement dead man's switch for expected-but-missing loads.
 
-- Python freshness assertion: [[25_py_functional_pipeline#Polars — assert data freshness against SLA with max()]]
-- GCP freshness monitoring: [[gcp-pipeline-health-and-sla#Data Freshness Monitoring]]
-- Dead man's switch: [[gcp-pipeline-health-and-sla#Dead Man's Switch (Heartbeat Monitoring)]]
+- Python freshness assertion: [25_py_functional_pipeline > Polars — assert data freshness against SLA with max()](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-data-freshness-against-sla-with-max)
+- GCP freshness monitoring: [gcp-pipeline-health-and-sla > Data Freshness Monitoring](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#data-freshness-monitoring)
+- Dead man's switch: [gcp-pipeline-health-and-sla > Dead Man's Switch (Heartbeat Monitoring)](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#dead-mans-switch-heartbeat-monitoring)
 
 ### Accuracy — data values are correct
 
@@ -87,7 +87,7 @@ Accuracy means recorded values match the real-world truth. A price of 150.00 is 
 
 **How to detect:** Cross-reference against independent sources. Statistical anomaly detection (z-score) to flag outliers for manual review. Reconciliation queries between systems.
 
-- Python API corroboration: [[25_py_functional_pipeline#yfinance — corroborate with live API data using Ticker.history()]]
+- Python API corroboration: [25_py_functional_pipeline > yfinance — corroborate with live API data using Ticker.history()](/02-Programming-Languages/Python/25_py_functional_pipeline#yfinance--corroborate-with-live-api-data-using-tickerhistory)
 - Regression snapshot comparison: [[data-pipeline-testing-strategy#Regression tests — snapshot comparison]]
 
 ### Consistency — data agrees across systems
@@ -99,9 +99,9 @@ Consistency means the same logical entity has the same value in every system tha
 
 **How to detect:** Reconciliation queries comparing row counts, checksums, and key aggregates across systems. Hash-based comparison of entire datasets.
 
-- Python deterministic hash: [[25_py_functional_pipeline#hashlib — compute deterministic DataFrame hash with sha256()]]
-- SCD Type 2 consistency: [[silver-transforms#silver.index_dim — SCD Type 2 Dimension]]
-- Upsert consistency: [[sql-server-loading-patterns#Upsert (INSERT + UPDATE)]]
+- Python deterministic hash: [25_py_functional_pipeline > hashlib — compute deterministic DataFrame hash with sha256()](/02-Programming-Languages/Python/25_py_functional_pipeline#hashlib--compute-deterministic-dataframe-hash-with-sha256)
+- SCD Type 2 consistency: [silver-transforms > silver.index_dim — SCD Type 2 Dimension](/04-SQL-Server/Medallion-Project/silver-transforms#silverindexdim--scd-type-2-dimension)
+- Upsert consistency: [sql-server-loading-patterns > Upsert (INSERT + UPDATE)](/04-SQL-Server/Patterns/sql-server-loading-patterns#upsert-insert--update)
 
 ## Quality Gates by Medallion Layer
 
@@ -126,7 +126,7 @@ Bronze ([[medallion-architecture#Bronze (Raw)]]) validates that raw data landed 
 > - New enum values not in reference table
 > - Column order changed (schema evolution signal)
 
-- Bronze gate implementation: [[25_py_functional_pipeline#Pipeline — run Bronze data quality gate with run_quality_gate()]]
+- Bronze gate implementation: [25_py_functional_pipeline > Pipeline — run Bronze data quality gate with run_quality_gate()](/02-Programming-Languages/Python/25_py_functional_pipeline#pipeline--run-bronze-data-quality-gate-with-runqualitygate)
 - Quality gate pattern: [[functional-pipeline-architecture#Quality Gate Pattern]]
 - Data quality assertions: [[data-pipeline-testing-strategy#Data quality assertions]]
 
@@ -149,9 +149,9 @@ Silver ([[medallion-architecture#Silver (Cleaned)]]) enforces business rules and
 > - Minor schema drift (new nullable columns)
 > - Data distribution shift beyond 1 standard deviation
 
-- Silver gate implementation: [[25_py_functional_pipeline#Pipeline — run Silver data quality gate with run_quality_gate()]]
-- Row-level Pydantic validation: [[25_py_functional_pipeline#Pydantic — validate Bronze rows with BaseModel() row-level check]]
-- dbt test severity: [[dbt-testing-framework#dbt Test severity: warn vs error]]
+- Silver gate implementation: [25_py_functional_pipeline > Pipeline — run Silver data quality gate with run_quality_gate()](/02-Programming-Languages/Python/25_py_functional_pipeline#pipeline--run-silver-data-quality-gate-with-runqualitygate)
+- Row-level Pydantic validation: [25_py_functional_pipeline > Pydantic — validate Bronze rows with BaseModel() row-level check](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--validate-bronze-rows-with-basemodel-row-level-check)
+- dbt test severity: [dbt-testing-framework > dbt Test severity: warn vs error](/11-dbt/Quality/dbt-testing-framework#dbt-test-severity-warn-vs-error)
 
 ### Gold Quality Gate
 
@@ -176,9 +176,9 @@ Gold ([[medallion-architecture#Gold (Analytics)]]) is the last line of defense b
 > - Constituent weight below minimum threshold
 > - Publication timestamp later than typical
 
-- Weight validation: [[pit-integrity-logic#Validation: Weight Sum Check]]
+- Weight validation: [pit-integrity-logic > Validation: Weight Sum Check](/04-SQL-Server/Performance/pit-integrity-logic#validation-weight-sum-check)
 - Circuit breaker incident: esg circuit breaker fired
-- Store test failures for audit: [[dbt-testing-framework#dbt --store-failures]]
+- Store test failures for audit: [dbt-testing-framework > dbt --store-failures](/11-dbt/Quality/dbt-testing-framework#dbt---store-failures)
 
 ## Data Quality Tooling
 
@@ -193,8 +193,8 @@ Gold ([[medallion-architecture#Gold (Analytics)]]) is the last line of defense b
 > [!warning] Anti-pattern: writing dbt tests that duplicate warehouse constraints
 > If your warehouse enforces NOT NULL and UNIQUE via DDL constraints, dbt tests on the same columns are redundant cost. Use dbt tests for business rules the warehouse cannot enforce.
 
-- Built-in generic tests: [[dbt-testing-framework#dbt Built-in Generic Tests]]
-- Statistical tests: [[dbt-testing-framework#dbt-expectations — row count and statistical tests]]
+- Built-in generic tests: [dbt-testing-framework > dbt Built-in Generic Tests](/11-dbt/Quality/dbt-testing-framework#dbt-built-in-generic-tests)
+- Statistical tests: [dbt-testing-framework > dbt-expectations — row count and statistical tests](/11-dbt/Quality/dbt-testing-framework#dbt-expectations--row-count-and-statistical-tests)
 - CI/CD integration: [[data-pipeline-testing-strategy#CI/CD Test Automation]]
 
 ### Great Expectations — Python assertion suites with profiling
@@ -224,8 +224,8 @@ Gold ([[medallion-architecture#Gold (Analytics)]]) is the last line of defense b
 
 **Limitations:** No standardization, no built-in reporting, maintenance burden grows with pipeline count.
 
-- Python quality gate: [[25_py_functional_pipeline#Pipeline — run all quality gate assertions with log.info()]]
-- C# functional pipeline: [[25_cs_functional_pipeline]]
+- Python quality gate: [25_py_functional_pipeline > Pipeline — run all quality gate assertions with log.info()](/02-Programming-Languages/Python/25_py_functional_pipeline#pipeline--run-all-quality-gate-assertions-with-loginfo)
+- C# functional pipeline: [25_cs_functional_pipeline](/02-Programming-Languages/CSharp/25_cs_functional_pipeline)
 
 ### Dataplex Quality (GCP) — native BigQuery quality scans
 
@@ -235,7 +235,7 @@ Gold ([[medallion-architecture#Gold (Analytics)]]) is the last line of defense b
 
 **Limitations:** GCP-only, limited custom logic, no cross-cloud support.
 
-- GCP pipeline health: [[gcp-pipeline-health-and-sla#Row Count Validation]]
+- GCP pipeline health: [gcp-pipeline-health-and-sla > Row Count Validation](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#row-count-validation)
 
 ### When to Combine Tools
 
@@ -279,8 +279,8 @@ CREATE TABLE bronze.quarantine (
 );
 ```
 
-- Python quarantine table creation: [[25_py_functional_pipeline#SQL Server — create quarantine table for rejected rows with cursor.execute()]]
-- Python quarantine persistence: [[25_py_functional_pipeline#SQL Server — define quarantine persistence helper with cursor.execute()]]
+- Python quarantine table creation: [25_py_functional_pipeline > SQL Server — create quarantine table for rejected rows with cursor.execute()](/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--create-quarantine-table-for-rejected-rows-with-cursorexecute)
+- Python quarantine persistence: [25_py_functional_pipeline > SQL Server — define quarantine persistence helper with cursor.execute()](/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--define-quarantine-persistence-helper-with-cursorexecute)
 
 ### Reject-Persist-Investigate Workflow
 
@@ -346,7 +346,7 @@ quality_gate = ShortCircuitOperator(
 > [!info] ShortCircuitOperator vs BranchPythonOperator
 > Use `ShortCircuitOperator` when failure means "stop everything." Use `BranchPythonOperator` when failure means "take an alternate path" (e.g., quarantine and continue with good rows).
 
-- Airflow DAG patterns: [[airflow-dag-patterns]]
+- Airflow DAG patterns: [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns)
 
 ### GitHub Actions Integration — dbt test in CI/CD
 
@@ -379,8 +379,8 @@ Run `dbt test --select state:modified+` on every pull request to catch quality r
 - [[error-handling-and-retry-patterns]] — Retry logic, dead letter queues, and circuit breakers
 - [[functional-pipeline-architecture]] — Quality gate and quarantine patterns in functional style
 - [[medallion-architecture]] — Bronze / Silver / Gold layer definitions and responsibilities
-- [[observability-strategy-matrix]] — Logging, metrics, and alerting strategy across pipeline layers
-- [[25_py_functional_pipeline]] — Full Python implementation of quality gates, quarantine, and anomaly detection
-- [[25_cs_functional_pipeline]] — C# implementation of the same patterns
-- [[dbt-testing-framework]] — dbt test types, severity levels, and store-failures
-- [[gcp-pipeline-health-and-sla]] — GCP-native freshness monitoring and alerting
+- [observability-strategy-matrix](/13-Observability/observability-strategy-matrix) — Logging, metrics, and alerting strategy across pipeline layers
+- [25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline) — Full Python implementation of quality gates, quarantine, and anomaly detection
+- [25_cs_functional_pipeline](/02-Programming-Languages/CSharp/25_cs_functional_pipeline) — C# implementation of the same patterns
+- [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework) — dbt test types, severity levels, and store-failures
+- [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) — GCP-native freshness monitoring and alerting

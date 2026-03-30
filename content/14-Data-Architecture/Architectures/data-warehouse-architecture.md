@@ -12,13 +12,13 @@ related:
   - "[[open-table-formats]]"
   - "[[dbt-transformation-layer]]"
   - "[[idempotent-pipeline-design]]"
-  - "[[querying-and-cost-optimization]]"
+  - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
   - "[[serialization-formats]]"
   - "[[five-pillars-of-data-engineering]]"
-  - "[[silver-transforms]]"
-  - "[[gold-transforms]]"
-  - "[[merge-and-upsert]]"
-  - "[[partitioning-strategies]]"
+  - "[silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms)"
+  - "[gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms)"
+  - "[merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert)"
+  - "[partitioning-strategies](/04-SQL-Server/Storage-and-Indexes/partitioning-strategies)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -46,7 +46,7 @@ Understanding why a data warehouse exists requires understanding what it is *not
 | **Freshness** | Real-time / near-real-time | Batch (hourly, daily) or near-real-time |
 
 > [!info] SQL Server Can Do Both
-> SQL Server is primarily an OLTP system but supports OLAP workloads through columnstore indexes, read replicas (Always On Availability Groups readable secondaries), and In-Memory OLTP. See [[always-on-availability-groups]] and [[index-types-and-strategy]] for the mechanics. BigQuery and Snowflake are purpose-built OLAP engines — they do not support row-level transactions or real-time writes at OLTP scale.
+> SQL Server is primarily an OLTP system but supports OLAP workloads through columnstore indexes, read replicas (Always On Availability Groups readable secondaries), and In-Memory OLTP. See [always-on-availability-groups](/04-SQL-Server/High-Availability/always-on-availability-groups) and [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) for the mechanics. BigQuery and Snowflake are purpose-built OLAP engines — they do not support row-level transactions or real-time writes at OLTP scale.
 
 The core architectural implication: **OLTP → normalize to reduce write amplification. OLAP → denormalize to reduce join overhead at query time.**
 
@@ -154,7 +154,7 @@ CREATE TABLE fact_trades (
 | **Non-additive** | No | No | Ratios, percentages, averages |
 
 > [!warning] Semi-Additive Measure Trap
-> Never SUM a balance or inventory count across time periods — you get the sum of every snapshot, not the current total. Use LAST_VALUE or MAX with appropriate window framing instead. See [[gold-transforms]] for practical patterns.
+> Never SUM a balance or inventory count across time periods — you get the sum of every snapshot, not the current total. Use LAST_VALUE or MAX with appropriate window framing instead. See [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) for practical patterns.
 
 ### Periodic Snapshot Fact Table
 
@@ -181,7 +181,7 @@ CREATE TABLE fact_account_daily (
 - Rows are populated even when nothing changes (fill-forward logic required for missing periods)
 - All rows for the same snapshot date are loaded in a single batch
 - Enables easy period-over-period queries: join to itself on `date_sk - 1`
-- See [[silver-transforms]] for fill-forward implementation patterns
+- See [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) for fill-forward implementation patterns
 
 ### Accumulating Snapshot Fact Table
 
@@ -276,7 +276,7 @@ fact_trade.trade_flag_sk       INT REFERENCES dim_trade_flags
 Slowly Changing Dimensions (SCD), also called historical dimension tracking, handle the problem of dimension attributes that change over time. A customer moves city, a product changes category, an analyst changes desk. How you preserve (or discard) that history depends on the SCD type.
 
 > [!info] SCD in dbt
-> dbt's `snapshot` feature implements SCD Type 2 natively using a check strategy or a timestamp strategy. See [[dbt-transformation-layer]] for implementation details and [[merge-and-upsert]] for the underlying MERGE statement mechanics.
+> dbt's `snapshot` feature implements SCD Type 2 natively using a check strategy or a timestamp strategy. See [[dbt-transformation-layer]] for implementation details and [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert) for the underlying MERGE statement mechanics.
 
 ### SCD Type 1 — Overwrite (No History)
 
@@ -527,7 +527,7 @@ Modern cloud data warehouses have largely converged on columnar storage, MPP (Ma
 | **Best for** | GCP-native shops, ad hoc analytics | Multi-cloud, data sharing at scale | AWS shops, existing Redshift investment | Microsoft/Azure shops |
 
 > [!tip] BigQuery Cost Control
-> BigQuery on-demand pricing charges per byte scanned. The three most impactful cost controls: (1) partition tables on date columns — queries that filter on the partition key scan only matching partitions, (2) cluster tables by frequently-filtered columns, (3) never `SELECT *`. See [[querying-and-cost-optimization]] for dry run commands and detailed optimization practices.
+> BigQuery on-demand pricing charges per byte scanned. The three most impactful cost controls: (1) partition tables on date columns — queries that filter on the partition key scan only matching partitions, (2) cluster tables by frequently-filtered columns, (3) never `SELECT *`. See [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) for dry run commands and detailed optimization practices.
 
 ---
 
@@ -612,7 +612,7 @@ CREATE TABLE gold.monthly_pnl_summary (
 );
 ```
 
-Load this table as part of the [[gold-transforms]] pipeline step on a daily cadence.
+Load this table as part of the [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) pipeline step on a daily cadence.
 
 ### Pre-Computed Rollups Pattern
 
@@ -648,7 +648,7 @@ Cloud warehouses do not require traditional capacity planning, but understanding
 | **Streaming inserts** | Rows inserted via streaming API | Use batch loads where latency allows |
 | **Slot reservations** | Fixed monthly commitment | Use when predictable high volume |
 
-**Rule of thumb:** Tables over 1 TB should be partitioned. Tables over 10 TB should be both partitioned and clustered. See [[querying-and-cost-optimization]] for mechanics. For SQL Server warehouse tables, [[partitioning-strategies]] covers partition functions, schemes, and sliding window maintenance.
+**Rule of thumb:** Tables over 1 TB should be partitioned. Tables over 10 TB should be both partitioned and clustered. See [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) for mechanics. For SQL Server warehouse tables, [partitioning-strategies](/04-SQL-Server/Storage-and-Indexes/partitioning-strategies) covers partition functions, schemes, and sliding window maintenance.
 
 ### Snowflake Cost Model
 
@@ -687,10 +687,10 @@ Before declaring a warehouse schema production-ready, verify:
 - [[open-table-formats]] — Apache Iceberg, Delta Lake, and the lakehouse convergence of lake + warehouse
 - [[dbt-transformation-layer]] — The standard tool for implementing ELT transforms in a warehouse
 - [[idempotent-pipeline-design]] — How to safely load and reload warehouse data
-- [[querying-and-cost-optimization]] — BigQuery-specific cost optimization mechanics
-- [[merge-and-upsert]] — MERGE statement for SCD Type 2 implementation in SQL Server
-- [[partitioning-strategies]] — SQL Server partitioning (compare to BigQuery partition pruning)
+- [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) — BigQuery-specific cost optimization mechanics
+- [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert) — MERGE statement for SCD Type 2 implementation in SQL Server
+- [partitioning-strategies](/04-SQL-Server/Storage-and-Indexes/partitioning-strategies) — SQL Server partitioning (compare to BigQuery partition pruning)
 - [[serialization-formats]] — Parquet and columnar storage formats underpinning cloud DWH storage
-- [[silver-transforms]] — Silver-layer cleaning patterns that feed warehouse staging
-- [[gold-transforms]] — Gold-layer aggregation patterns for analytical consumption
+- [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) — Silver-layer cleaning patterns that feed warehouse staging
+- [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) — Gold-layer aggregation patterns for analytical consumption
 - [[five-pillars-of-data-engineering]] — Architectural principles every DWH design should satisfy

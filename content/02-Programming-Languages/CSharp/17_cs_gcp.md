@@ -115,7 +115,7 @@ Console.WriteLine($"Bucket:  {bucketName}");
 
 ## Cloud Storage (GCS)
 
-**Pipeline role: BRONZE LAYER** — Raw data lands here first. yfinance OHLCV data is fetched and uploaded as CSV to `gs://bucket/bronze/ohlcv/`. GCS is the data lake — immutable, versioned, cheap storage. Downstream services (BigQuery, pipelines) read from here. For the CLI equivalents of these operations (`gsutil`, `gcloud storage`, lifecycle policies), see [[gcs-object-operations]].
+**Pipeline role: BRONZE LAYER** — Raw data lands here first. yfinance OHLCV data is fetched and uploaded as CSV to `gs://bucket/bronze/ohlcv/`. GCS is the data lake — immutable, versioned, cheap storage. Downstream services (BigQuery, pipelines) read from here. For the CLI equivalents of these operations (`gsutil`, `gcloud storage`, lifecycle policies), see [gcs-object-operations](/06-GCP/Storage/gcs-object-operations).
 
 ```csharp
 // Cloud Storage — upload/download/list objects.
@@ -237,7 +237,7 @@ foreach (var row in bqClient.ExecuteQuery(sql, parameters: null))
 
 ## Pub/Sub
 
-**Pipeline role: EVENT BUS** — Decouples pipeline steps. After each ETL stage completes, a message is published ("ohlcv_loaded", "silver_computed", "gold_scored"). Downstream consumers (dashboards, alerting, other pipelines) subscribe to these events. Enables async, event-driven architecture. For topic/subscription management and dead-letter configuration via `gcloud`, see [[pubsub-messaging]].
+**Pipeline role: EVENT BUS** — Decouples pipeline steps. After each ETL stage completes, a message is published ("ohlcv_loaded", "silver_computed", "gold_scored"). Downstream consumers (dashboards, alerting, other pipelines) subscribe to these events. Enables async, event-driven architecture. For topic/subscription management and dead-letter configuration via `gcloud`, see [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging).
 
 ```csharp
 // Pub/Sub — publish and pull messages.

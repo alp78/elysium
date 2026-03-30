@@ -52,7 +52,7 @@ related:
   - "[[cloud-run-jobs-vs-services|Cloud Run]]"
   - "[[vm-lifecycle|Compute Engine]]"
   - "[[cloud-logging]]"
-  - "[[tf-iam-secrets-serverless|Secret Manager]]"
+  - "[Secret Manager](/07-Terraform/Block-Library/tf-iam-secrets-serverless)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

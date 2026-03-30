@@ -102,7 +102,7 @@ kill -- -<PGID>
 > - Lock files left in `/var/run/`, `/tmp/`, or the application's data directory
 > - Shared memory segments: `ipcs -m` (list), `ipcrm -m <shmid>` (remove)
 > - Incomplete writes: check file sizes and checksums
-> - Database transaction state: look for open transactions in `sys.dm_exec_sessions` -- if a SQL Server process is the victim, check [[deadlock-detection-and-prevention]] for proper KILL session handling
+> - Database transaction state: look for open transactions in `sys.dm_exec_sessions` -- if a SQL Server process is the victim, check [deadlock-detection-and-prevention](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) for proper KILL session handling
 
 ### PowerShell — Stop-Process for graceful and forced termination
 

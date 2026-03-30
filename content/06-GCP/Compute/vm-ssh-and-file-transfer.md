@@ -41,7 +41,7 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap 
 
 ### Copying Files To and From VMs with gcloud compute scp
 
-The `scp` and `rsync` patterns here mirror the general [[data-transfer]] commands, but routed through the IAP tunnel. For VM provisioning via infrastructure-as-code, see [[terraform-compute]].
+The `scp` and `rsync` patterns here mirror the general [data-transfer](/01-Shell/File-Operations/data-transfer) commands, but routed through the IAP tunnel. For VM provisioning via infrastructure-as-code, see [terraform-compute](/07-Terraform/GCP-Resources/terraform-compute).
 
 `scp` performs secure copy over SSH. The `hostname:` prefix determines the direction: local to remote or remote to local.
 
@@ -77,7 +77,7 @@ gcloud compute scp --recurse ./dags/ data-pipeline-airflow:/tmp/dags/ --zone=eur
 Your machine ──► Google IAP Proxy ──► GCP Internal Network ──► VM (private IP only)
 ```
 
-IAP authenticates you using your gcloud credentials and your IAM role (`roles/iap.tunnelResourceAccessor`). The VM never sees a public IP connection — all traffic is internal to Google's network after the IAP proxy. For the full tunnel mechanics including port forwarding and troubleshooting, see [[iap-tunneling]].
+IAP authenticates you using your gcloud credentials and your IAM role (`roles/iap.tunnelResourceAccessor`). The VM never sees a public IP connection — all traffic is internal to Google's network after the IAP proxy. For the full tunnel mechanics including port forwarding and troubleshooting, see [iap-tunneling](/01-Shell/Networking/iap-tunneling).
 
 ### Prerequisites for IAP Access
 
@@ -91,7 +91,7 @@ IAP authenticates you using your gcloud credentials and your IAM role (`roles/ia
 - [[disks-and-snapshots]] — Using serial console when SSH is unavailable
 - [[service-accounts-and-iam]] — IAM roles required for IAP tunnel access
 - [[vpc-service-controls]] — VPC-SC may restrict IAP access patterns
-- [[gcloud-authentication]] — Your gcloud credentials are used for IAP authentication
+- [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — Your gcloud credentials are used for IAP authentication
 
 ## References
 

@@ -9,8 +9,8 @@ description: "Advanced SQL Server T-SQL patterns with executable examples — co
 related:
   - "[[sql-fundamentals]]"
   - "[[sql-engineering]]"
-  - "[[execution-plans]]"
-  - "[[query-plan-analysis]]"
+  - "[execution-plans](/04-SQL-Server/Performance/execution-plans)"
+  - "[query-plan-analysis](/04-SQL-Server/Performance/query-plan-analysis)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -50,11 +50,11 @@ Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=y
 
 > [!danger] Lab-Only Credentials
 >
-> The connection string above contains a plaintext password for a local lab environment. In production, credentials are stored in GCP Secret Manager and fetched at runtime — never hardcoded. See [[secrets-management#Access from Python]].
+> The connection string above contains a plaintext password for a local lab environment. In production, credentials are stored in GCP Secret Manager and fetched at runtime — never hardcoded. See [secrets-management > Access from Python](/06-GCP/Security/secrets-management#access-from-python).
 
 ## Advanced Window Functions
 
-The window functions and SCD patterns in this section are used extensively in the [[silver-transforms]] and [[gold-transforms]] layers of the medallion pipeline to produce cleaned and analytical datasets.
+The window functions and SCD patterns in this section are used extensively in the [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) and [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) layers of the medallion pipeline to produce cleaned and analytical datasets.
 
 ### Window Functions — ROW_NUMBER for Deduplication
 

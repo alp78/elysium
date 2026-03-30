@@ -2035,7 +2035,7 @@ on:
 - [[git-recovery-and-undo]] — Recovery commands
 - [[git-merge-conflicts]] — Conflict resolution guide
 - [[pull-requests-and-code-review]] — PR best practices
-- [[github-actions-problems]] — CI/CD-specific problems (companion note)
+- [github-actions-problems](/10-GitHub-Actions/github-actions-problems) — CI/CD-specific problems (companion note)
 
 ---
 

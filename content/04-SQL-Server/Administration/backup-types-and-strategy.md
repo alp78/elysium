@@ -111,7 +111,7 @@ WITH CHECKSUM;
 > - **2** different storage types (local disk + cloud storage)
 > - **1** copy offsite (GCS bucket in a different region)
 >
-> For the GCS side, [[gcs-buckets-and-lifecycle]] covers lifecycle policies that automatically transition backups from Standard to Nearline to Coldline storage. As a complementary strategy, [[disks-and-snapshots|GCE disk snapshots]] provide block-level backup with near-instant restore.
+> For the GCS side, [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) covers lifecycle policies that automatically transition backups from Standard to Nearline to Coldline storage. As a complementary strategy, [GCE disk snapshots](/06-GCP/Compute/disks-and-snapshots) provide block-level backup with near-instant restore.
 
 ---
 
@@ -221,4 +221,4 @@ See [[restore-and-recovery]] for the complete RESTORE commands, and backup resto
 
 - [[restore-and-recovery]] — full restore, PITR, restore to new database
 - [[server-configuration]] — recovery model configuration with `mssql-conf`
-- [[sqlcmd-connection-and-usage]] — using sqlcmd for backup scripting
+- [sqlcmd-connection-and-usage](/04-SQL-Server/Administration/sqlcmd-connection-and-usage) — using sqlcmd for backup scripting

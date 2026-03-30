@@ -939,7 +939,7 @@ Multi-document    No                      Yes (--- separator)
 
 ## Serialization, Deserialization, and Streams
 
-For an architecture-level comparison of when to choose JSON, CSV, Parquet, or Avro for pipeline storage and interchange, see [[serialization-formats]].
+For an architecture-level comparison of when to choose JSON, CSV, Parquet, or Avro for pipeline storage and interchange, see [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats).
 
 #### Serialization overview — object to bytes/string and back
 
@@ -1579,7 +1579,7 @@ print(f"  Speedup:    {csv_time/pl_time:.1f}x")
 
 > [!tip] Related pattern
 >
-> When writing pipeline output to files, codec selection (gzip, zstd, snappy) significantly affects both file size and read performance — see [[compression]] for benchmark data and decision guidance.
+> When writing pipeline output to files, codec selection (gzip, zstd, snappy) significantly affects both file size and read performance — see [compression](/01-Shell/File-Operations/compression) for benchmark data and decision guidance.
 
 ## Cloud and Object Storage
 

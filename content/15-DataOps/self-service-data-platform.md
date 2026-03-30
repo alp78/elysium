@@ -44,8 +44,8 @@ description: "Building self-service data platforms — from data catalogs and qu
 related:
   - "[[dataops-principles-and-practices]]"
   - "[[data-team-organization]]"
-  - "[[data-mesh-architecture]]"
-  - "[[dbt-transformation-layer]]"
+  - "[data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture)"
+  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -169,7 +169,7 @@ A data catalog is the discovery layer that makes self-service possible. Without 
 
 - **Search:** Find tables, columns, and datasets by keyword or business term
 - **Metadata:** Description, owner, data type, row count, last updated
-- **Lineage:** Where does this data come from? What does it feed downstream? Tools like [[gcp-data-lineage-and-catalog]] provide automated cross-system lineage on GCP.
+- **Lineage:** Where does this data come from? What does it feed downstream? Tools like [gcp-data-lineage-and-catalog](/13-Observability/GCP-Native/gcp-data-lineage-and-catalog) provide automated cross-system lineage on GCP.
 - **Quality status:** Is this dataset passing its quality checks?
 - **SLA and freshness:** When should this data be updated? Is it currently fresh?
 - **Access request:** How do I get access if I don't have it?
@@ -186,7 +186,7 @@ A data catalog is the discovery layer that makes self-service possible. Without 
 | **Select Star** | Commercial SaaS | Automated documentation from query history, easy setup | Less configurable | Smaller teams wanting quick time-to-value |
 
 > [!tip] Start with dbt Docs If You Use dbt
-> If your transformation layer is dbt, `dbt docs generate` gives you a free, code-generated catalog with lineage, descriptions, and test status. It won't have everything a full catalog provides, but it is infinitely better than nothing and zero additional tooling cost. See [[dbt-documentation-and-lineage]] for how to maximize the value of dbt's built-in catalog features.
+> If your transformation layer is dbt, `dbt docs generate` gives you a free, code-generated catalog with lineage, descriptions, and test status. It won't have everything a full catalog provides, but it is infinitely better than nothing and zero additional tooling cost. See [dbt-documentation-and-lineage](/11-dbt/Operations/dbt-documentation-and-lineage) for how to maximize the value of dbt's built-in catalog features.
 
 ---
 
@@ -428,7 +428,7 @@ terms:
 
 ### Data Contract Enforcement
 
-[[data-contracts|Data contracts]] should be:
+[Data contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts) should be:
 - **Versioned in Git** alongside the transformation code
 - **Validated in CI** — a PR that breaks a contract schema fails CI
 - **Checked at runtime** — the pipeline validates the contract before serving data
@@ -573,7 +573,7 @@ Track these to know if your self-service investment is working:
 
 ### Connection to Data Mesh
 
-The self-service data platform is the enabling technology for a [[data-mesh-architecture]]. Data mesh cannot function without:
+The self-service data platform is the enabling technology for a [data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture). Data mesh cannot function without:
 
 - A self-service platform that allows domain teams to publish data products without central engineering
 - A data catalog where products are discoverable across domains
@@ -626,7 +626,7 @@ Building a self-service platform is a multi-quarter investment. A pragmatic sequ
 
 - [[dataops-principles-and-practices]] — the DataOps practices that the self-service platform operationalizes
 - [[data-team-organization]] — how team structure must evolve to support self-service
-- [[data-mesh-architecture]] — the federated organizational pattern that self-service platforms enable
-- [[dbt-transformation-layer]] — the transformation and semantic layer that sits at the heart of the platform
+- [data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture) — the federated organizational pattern that self-service platforms enable
+- [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — the transformation and semantic layer that sits at the heart of the platform
 - [[dataops-principles-and-practices|data quality]] — detailed breakdown of quality tools and testing strategies
-- [[technology-selection-matrices|orchestration selection]] — orchestration layer that keeps data products fresh
+- [orchestration selection](/14-Data-Architecture/Decision-Frameworks/technology-selection-matrices) — orchestration layer that keeps data products fresh

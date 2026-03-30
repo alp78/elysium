@@ -12,7 +12,7 @@ keywords: [head, tail, describe, select, filter, where, isin, column selection, 
 description: "Polars.NET / C# DataFrames reference 02/10 — Explore, Select & Filter (head/tail, describe, where, isin). Executable examples with cell outputs. See [[02_py_explore_select_filter]] for the Python equivalent."
 related:
   - "[[moc-dataframes]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[02_py_explore_select_filter]]"
   - "[[01_cs_foundations_io]]"
   - "[[03_cs_transforms_expressions]]"

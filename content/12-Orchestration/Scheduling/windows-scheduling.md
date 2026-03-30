@@ -1215,6 +1215,6 @@ Register-ScheduledTask -Xml (Get-Content "MyTask.xml" -Raw) -TaskName "MyTask" -
 
 ## Related
 
-- [[linux-scheduling]] — The Linux equivalent: cron, systemd timers, at, and anacron
+- [linux-scheduling](/12-Orchestration/Scheduling/linux-scheduling) — The Linux equivalent: cron, systemd timers, at, and anacron
 - [[gcp-scheduling]] — Cloud-based scheduling with Cloud Scheduler for serverless and managed alternatives
 - [[airflow-core-concepts]] — When pipelines outgrow Task Scheduler, Airflow provides DAG-based orchestration with dependencies, retries, and a monitoring UI

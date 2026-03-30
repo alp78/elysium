@@ -29,7 +29,7 @@ Apache Airflow for programmatic workflow orchestration: architecture, DAG author
 
 Platform-native scheduling tools for recurring jobs that do not require a full orchestration framework: Linux cron and systemd timers, GCP Cloud Scheduler and Cloud Workflows, and Windows Task Scheduler.
 
-* [[linux-scheduling]] — cron syntax and crontab management, systemd timers with OnCalendar, at/batch for one-time jobs, anacron for intermittent machines, overlap prevention with flock, cron environment and PATH gotchas, SSH configuration for remote scheduling, and a decision table for cron vs Airflow vs Cloud Scheduler
+* [linux-scheduling](/12-Orchestration/Scheduling/linux-scheduling) — cron syntax and crontab management, systemd timers with OnCalendar, at/batch for one-time jobs, anacron for intermittent machines, overlap prevention with flock, cron environment and PATH gotchas, SSH configuration for remote scheduling, and a decision table for cron vs Airflow vs Cloud Scheduler
 
 * [[gcp-scheduling]] — Cloud Scheduler (managed cron-as-a-service) with HTTP, Pub/Sub, and App Engine targets, Cloud Tasks for durable rate-limited queues, Cloud Workflows for multi-step serverless orchestration, Eventarc for event-driven triggers, wiring patterns for Cloud Run jobs and Cloud Functions, and a cost/capability comparison across all four services
 
@@ -42,9 +42,9 @@ A domain-specific ingestion framework for multi-vendor ESG data that combines sc
 
 ## Cross-References
 
-- [[moc-data-architecture|Data Architecture]] — pipeline patterns that Airflow orchestrates
-- [[docker-compose]] — running Airflow locally via Docker Compose
-- [[cloud-run-jobs-vs-services]] — serverless targets Airflow triggers
+- [Data Architecture](/14-Data-Architecture/moc-data-architecture) — pipeline patterns that Airflow orchestrates
+- [docker-compose](/09-Docker/docker-compose) — running Airflow locally via Docker Compose
+- [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — serverless targets Airflow triggers
 - [[datadog-airflow-observability]] — monitoring Airflow with Datadog
-- [[github-actions-ci-cd]] — deploying DAGs automatically via CI/CD
-- [[dbt-airflow-integration]] — running dbt in Airflow DAGs (BashOperator, Cosmos, Cloud Run)
+- [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — deploying DAGs automatically via CI/CD
+- [dbt-airflow-integration](/11-dbt/Operations/dbt-airflow-integration) — running dbt in Airflow DAGs (BashOperator, Cosmos, Cloud Run)

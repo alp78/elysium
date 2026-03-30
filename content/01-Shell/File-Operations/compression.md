@@ -134,7 +134,7 @@ tar tzf archive.tar.gz | head -20
 
 > [!tip] Related pattern
 >
-> For a broader comparison of serialization codecs (Snappy, gzip, zstd, LZ4) alongside file formats like Parquet and Avro, see [[serialization-formats]]. For writing Parquet with specific compression options in code, see [[10_py_serialization_formats]] (Python) and [[10_cs_serialization_formats]] (C#).
+> For a broader comparison of serialization codecs (Snappy, gzip, zstd, LZ4) alongside file formats like Parquet and Avro, see [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats). For writing Parquet with specific compression options in code, see [10_py_serialization_formats](/02-Programming-Languages/Python/10_py_serialization_formats) (Python) and [10_cs_serialization_formats](/02-Programming-Languages/CSharp/10_cs_serialization_formats) (C#).
 
 > [!tip] Pipeline compression strategy
 >
@@ -206,10 +206,10 @@ $gz.Write($input, 0, $input.Length); $gz.Close()
 [System.IO.File]::WriteAllBytes("data.csv.gz", $ms.ToArray())
 ```
 
-When exporting data from BigQuery, the `bq extract --compression` flag accepts gzip and snappy for CSV/JSON exports -- see [[data-loading-and-export]] for the full syntax. If you are archiving compressed files to GCS cold storage tiers, compressing before upload saves significant storage cost -- see [[gcs-buckets-and-lifecycle]] for lifecycle policies that transition objects between storage classes.
+When exporting data from BigQuery, the `bq extract --compression` flag accepts gzip and snappy for CSV/JSON exports -- see [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) for the full syntax. If you are archiving compressed files to GCS cold storage tiers, compressing before upload saves significant storage cost -- see [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) for lifecycle policies that transition objects between storage classes.
 
 ## Related
-- [[data-flow-architecture]] — format and compression selection by pipeline scenario
+- [data-flow-architecture](/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — format and compression selection by pipeline scenario
 - [[file-manipulation]] — moving and copying the resulting archives
 - [[data-transfer]] — compression during rsync transfers (`-z` flag)
 - [[navigation-and-listing]] — checking disk usage before and after compression

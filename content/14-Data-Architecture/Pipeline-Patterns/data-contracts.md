@@ -80,7 +80,7 @@ graph LR
 | **JSON Schema** | Human-readable, widely supported | REST APIs, config validation |
 | **Protocol Buffers** | Strongly typed, backward-compatible by design | gRPC services, high-throughput |
 | **Avro** | Schema evolution built-in, compact binary | Kafka/Pub/Sub messages |
-| **[[dbt-data-contracts-implementation|dbt YAML]]** | Native to dbt, enforced at build time | Warehouse transforms |
+| **[dbt YAML](/11-dbt/Quality/dbt-data-contracts-implementation)** | Native to dbt, enforced at build time | Warehouse transforms |
 | **SQL DDL** | Universal, everyone reads SQL | Database tables |
 
 ### Example Contract: ESG Score Feed
@@ -189,7 +189,7 @@ sla:
 
 > [!info] Automated Contract Enforcement
 >
-> Validates contract YAML syntax and runs dbt contract tests on every push that touches contracts or models. See [[github-actions-patterns]] for reusable workflow patterns.
+> Validates contract YAML syntax and runs dbt contract tests on every push that touches contracts or models. See [github-actions-patterns](/10-GitHub-Actions/github-actions-patterns) for reusable workflow patterns.
 
 ```yaml
 # .github/workflows/contract-test.yml

@@ -8,8 +8,8 @@ keywords: [firestore, python, google-cloud-firestore, document, collection, quer
 description: "Firestore operations in Python with executable examples and cell outputs — covers CRUD, queries, transactions, batches, real-time listeners, and subcollections."
 related:
   - "[[firestore-csharp]]"
-  - "[[firestore-data-model-and-operations]]"
-  - "[[real-time-nosql-pipelines]]"
+  - "[firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations)"
+  - "[real-time-nosql-pipelines](/06-GCP/Firestore/real-time-nosql-pipelines)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -58,7 +58,7 @@ This cell:
 
 > [!warning] Key File for Local Dev Only
 >
-> Setting `GOOGLE_APPLICATION_CREDENTIALS` to a local key file works for development but is a security liability. On production VMs and Cloud Run, remove this env var — the metadata server provides credentials automatically. See [[gcp-identity-and-connection-patterns#Metadata Server (GCE VMs, Cloud Run) — the production standard]].
+> Setting `GOOGLE_APPLICATION_CREDENTIALS` to a local key file works for development but is a security liability. On production VMs and Cloud Run, remove this env var — the metadata server provides credentials automatically. See [gcp-identity-and-connection-patterns > Metadata Server (GCE VMs, Cloud Run) — the production standard](/06-GCP/Security/gcp-identity-and-connection-patterns#metadata-server-gce-vms-cloud-run--the-production-standard).
 
 ```python
 import os

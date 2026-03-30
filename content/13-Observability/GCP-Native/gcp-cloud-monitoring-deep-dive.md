@@ -62,9 +62,9 @@ description: >
   comprehensive feature-parity comparison with Datadog — using only GCP-native tools.
 related:
   - "[[gcp-cloud-trace-and-logging]]"
-  - "[[pubsub-messaging|Pub/Sub]]"
-  - "[[querying-and-cost-optimization|BigQuery deep dive]]"
-  - "[[cloud-run-jobs-vs-services|Cloud Run]]"
+  - "[Pub/Sub](/06-GCP/Serverless/pubsub-messaging)"
+  - "[BigQuery deep dive](/06-GCP/BigQuery/querying-and-cost-optimization)"
+  - "[Cloud Run](/06-GCP/Serverless/cloud-run-jobs-vs-services)"
   - "[[moc-observability]]"
   - "[[observability-deep-dive|Datadog vs GCP native]]"
   - "[[observability-strategy-matrix]]"

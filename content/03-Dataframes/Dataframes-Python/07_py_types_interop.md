@@ -13,7 +13,7 @@ description: "Pandas/Polars DataFrame reference 07/10 — Advanced Types & Inter
 related:
   - "[[moc-dataframes]]"
   - "[[07_cs_types_interop]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[06_py_lazy_performance]]"
   - "[[08_py_visualization]]"
 created: 2026-03-24

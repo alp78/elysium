@@ -13,7 +13,7 @@ description: "Pandas/Polars DataFrame reference 08/10 — Visualization (matplot
 related:
   - "[[moc-dataframes]]"
   - "[[08_cs_visualization]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[07_py_types_interop]]"
   - "[[09_py_database_interface]]"
 created: 2026-03-24

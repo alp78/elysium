@@ -18,20 +18,20 @@ status: complete
 > (STOXX/yfinance stock index scoring system) on SQL Server. For the general
 > patterns and alternative approaches, see the [[moc-sql-server#Patterns]]
 > section. For the architectural theory behind bronze/silver/gold layering,
-> see [[medallion-architecture]].
+> see [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture).
 
 # Silver Transforms
 
-The silver layer cleans, deduplicates, and historicizes the raw data from [[bronze-layer-loading|bronze]]. Where bronze is ephemeral (truncated each run), silver is permanent — it accumulates history across every pipeline run. In dbt terminology, silver corresponds to [[dbt-intermediate-models|intermediate models]] that sit between staging and mart layers.
+The silver layer cleans, deduplicates, and historicizes the raw data from [[bronze-layer-loading|bronze]]. Where bronze is ephemeral (truncated each run), silver is permanent — it accumulates history across every pipeline run. In dbt terminology, silver corresponds to [intermediate models](/11-dbt/Modeling/dbt-intermediate-models) that sit between staging and mart layers.
 
 **Pipeline flow:** [[bronze-layer-loading|Bronze]] → Python transforms → Silver tables → [[gold-transforms|Gold scoring]]
 
 Key improvements silver makes over bronze:
 
-- **[[data-warehouse-architecture|SCD Type 2]]** on dimensions — tracks attribute changes over time
+- **[SCD Type 2](/14-Data-Architecture/Architectures/data-warehouse-architecture)** on dimensions — tracks attribute changes over time
 - **One row per symbol per date** — deduplication via UNIQUE indexes
 - **Gap-filled OHLCV** — forward-fills missing trading days using the [[bronze-layer-loading#bronze.trading_calendar|trading calendar]]
-- **Validation gates** — a [[data-quality-framework]] between bronze and silver ensures data integrity before promotion
+- **Validation gates** — a [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) between bronze and silver ensures data integrity before promotion
 - **Full history retained** — silver accumulates across runs; bronze is wiped each run
 
 ---
@@ -46,7 +46,7 @@ Tracks company attribute changes (sector, name, etc.) over time. When an attribu
 
 > [!info] SCD Type 2 Pattern
 >
-> SCD Type 2 (Slowly Changing Dimension Type 2) preserves history by closing old records and inserting new ones. The `valid_to = NULL` + `is_current = 1` pattern is the standard implementation in SQL Server. See [[idempotent-pipeline-design]] for general data pipeline patterns. For dbt's declarative approach to the same SCD2 logic, see [[dbt-snapshots-and-scd]].
+> SCD Type 2 (Slowly Changing Dimension Type 2) preserves history by closing old records and inserting new ones. The `valid_to = NULL` + `is_current = 1` pattern is the standard implementation in SQL Server. See [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) for general data pipeline patterns. For dbt's declarative approach to the same SCD2 logic, see [dbt-snapshots-and-scd](/11-dbt/Advanced/dbt-snapshots-and-scd).
 
 #### CREATE TABLE silver.index_dim — SCD Type 2 with valid_from, valid_to, is_current
 
@@ -400,7 +400,7 @@ DELETE FROM silver.index_usa_ohlcv  WHERE date > CAST(GETDATE() AS DATE) AND is_
 
 - [[bronze-layer-loading]] — upstream: raw data loading patterns and DDL
 - [[gold-transforms]] — downstream: aggregations, scoring, and dashboard-ready views
-- [[medallion-architecture]] — architectural context
-- [[idempotent-pipeline-design]] — general idempotent data pipeline patterns including SCD
+- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — architectural context
+- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — general idempotent data pipeline patterns including SCD
 - the data pipeline steps — pipeline steps that drive these transforms
 - common pipeline errors — troubleshooting stale forward-fills and stuck OHLCV data

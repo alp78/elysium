@@ -28,7 +28,7 @@ Session B: holds EXCLUSIVE lock on Table2, waiting for lock on Table1
 → Neither can continue → deadlock
 ```
 
-The surviving session proceeds normally — it is not notified that a deadlock occurred. The victim receives error 1205, which must be handled with retry logic in application code. For Python retry patterns around this error, see [[08_py_errorhandling]]; for C# `SqlException` retry wrappers, see [[08_cs_errorhandling]].
+The surviving session proceeds normally — it is not notified that a deadlock occurred. The victim receives error 1205, which must be handled with retry logic in application code. For Python retry patterns around this error, see [08_py_errorhandling](/02-Programming-Languages/Python/08_py_errorhandling); for C# `SqlException` retry wrappers, see [08_cs_errorhandling](/02-Programming-Languages/CSharp/08_cs_errorhandling).
 
 ```text
 Msg 1205, Level 13, State 51
@@ -155,7 +155,7 @@ ORDER BY deadlock_time DESC;
 
 > [!tip] Related pattern: Airflow task retries
 >
-> When deadlocks occur during orchestrated pipeline runs, [[airflow-troubleshooting]] covers configuring Airflow task-level retries with exponential back-off for transient database errors like 1205.
+> When deadlocks occur during orchestrated pipeline runs, [airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting) covers configuring Airflow task-level retries with exponential back-off for transient database errors like 1205.
 
 > [!tip] The Single Most Effective Prevention
 >
@@ -262,7 +262,7 @@ DROP TABLE IF EXISTS dbo.deadlock_test_b
 
 ### Related
 
-- [[error-handling-and-retry-patterns]] — Where deadlock retry fits in the broader error classification and retry strategy framework
+- [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Where deadlock retry fits in the broader error classification and retry strategy framework
 - [[race-conditions]] — When concurrent access produces wrong data (not stuck processes)
 - [[server-configuration]] — RCSI and other server settings that prevent deadlocks
 - [[wait-stats-analysis]] — LCK_M wait types indicate lock contention

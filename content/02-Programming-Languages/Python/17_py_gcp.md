@@ -93,7 +93,7 @@ print(f"Region:  {REGION}")
 
 ## Cloud Storage (GCS)
 
-**Pipeline role: BRONZE LAYER** — Raw data lands here first. yfinance OHLCV data is fetched and uploaded as CSV to `gs://bucket/bronze/ohlcv/`. GCS is the data lake — immutable, versioned, cheap storage. Downstream services (BigQuery, pipelines) read from here. For the CLI equivalents of these operations (`gsutil cp`, `gcloud storage cp`, lifecycle rules), see [[gcs-object-operations]].
+**Pipeline role: BRONZE LAYER** — Raw data lands here first. yfinance OHLCV data is fetched and uploaded as CSV to `gs://bucket/bronze/ohlcv/`. GCS is the data lake — immutable, versioned, cheap storage. Downstream services (BigQuery, pipelines) read from here. For the CLI equivalents of these operations (`gsutil cp`, `gcloud storage cp`, lifecycle rules), see [gcs-object-operations](/06-GCP/Storage/gcs-object-operations).
 
 GCS organizes data into **buckets** (globally unique top-level containers) containing **blobs** (objects identified by path). Prefixes like `bronze/`, `silver/`, `gold/` simulate a folder hierarchy. C# equivalent: `Google.Cloud.Storage.V1` (`StorageClient`).
 
@@ -286,7 +286,7 @@ for row in results:
 
 ## Pub/Sub
 
-**Pipeline role: EVENT BUS** — Decouples pipeline steps. After each ETL stage completes, a message is published ("ohlcv_loaded", "silver_computed", "gold_scored"). Downstream consumers (dashboards, alerting, other pipelines) subscribe to these events. Enables async, event-driven architecture. For topic/subscription management and dead-letter configuration via `gcloud`, see [[pubsub-messaging]].
+**Pipeline role: EVENT BUS** — Decouples pipeline steps. After each ETL stage completes, a message is published ("ohlcv_loaded", "silver_computed", "gold_scored"). Downstream consumers (dashboards, alerting, other pipelines) subscribe to these events. Enables async, event-driven architecture. For topic/subscription management and dead-letter configuration via `gcloud`, see [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging).
 
 Messages are published to **topics** (named channels) and consumed via **subscriptions** (pull or push). Each message carries a bytes payload plus optional string attributes as metadata. Messages must be **acknowledged** after processing — unacknowledged messages are redelivered after the ack deadline. C# equivalent: `Google.Cloud.PubSub.V1` (`PublisherClient`, `SubscriberClient`).
 
@@ -518,7 +518,7 @@ if events_received:
 
 ## Secret Manager
 
-**Pipeline role: CREDENTIAL VAULT** — All secrets (DB passwords, API keys, connection strings) live here. Pipeline code retrieves them at runtime — never hardcoded, never in git. Supports versioning and rotation. In production, Cloud Run and GKE inject secrets automatically. For the broader secrets management strategy including rotation policies and workload identity, see [[secrets-management]].
+**Pipeline role: CREDENTIAL VAULT** — All secrets (DB passwords, API keys, connection strings) live here. Pipeline code retrieves them at runtime — never hardcoded, never in git. Supports versioning and rotation. In production, Cloud Run and GKE inject secrets automatically. For the broader secrets management strategy including rotation policies and workload identity, see [secrets-management](/06-GCP/Security/secrets-management).
 
 A **secret** is a named container for sensitive data. Each update creates a new immutable **version** — old versions can be disabled or destroyed for rotation. Secrets are retrieved at runtime via **access** calls (latest or specific version). C# equivalent: `Google.Cloud.SecretManager.V1` (`SecretManagerServiceClient`).
 

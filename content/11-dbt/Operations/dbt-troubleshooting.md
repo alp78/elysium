@@ -6,7 +6,7 @@ status: stable
 updated: 2026-03-23
 description: "Systematic diagnosis of dbt compilation errors, runtime failures, test failures, incremental drift, snapshot corruption, and a reference table of 12 common errors with causes and fixes."
 related:
-  - "[[airflow-troubleshooting]]"
+  - "[airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting)"
   - "[[dbt-cli-reference]]"
   - "[[dbt-testing-framework]]"
   - "[[dbt-performance-tuning]]"
@@ -435,7 +435,7 @@ Fix the source deduplication first, then full-refresh the incremental model.
 
 ## Related
 
-- [[airflow-troubleshooting]]
+- [airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting)
 - [[dbt-cli-reference]]
 - [[dbt-testing-framework]]
 - [[dbt-performance-tuning]]

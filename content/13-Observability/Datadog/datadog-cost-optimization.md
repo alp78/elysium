@@ -86,10 +86,10 @@ Everything is conditional on `var.dd_api_key != ""`. To disable:
 One `terraform apply` + one image rebuild cleans up everything.
 
 > [!tip] Trial-to-Paid Transition
-> The 14-day trial gives full access to all Datadog features. Use the trial period to build dashboards, monitors, and verify the full observability stack. After the trial, evaluate which features are worth the cost (Infrastructure + APM at ~$50-80/host/month is the typical entry point for production monitoring). For a broader view of cost management across the GCP stack, see [[gcp-billing-and-pricing]].
+> The 14-day trial gives full access to all Datadog features. Use the trial period to build dashboards, monitors, and verify the full observability stack. After the trial, evaluate which features are worth the cost (Infrastructure + APM at ~$50-80/host/month is the typical entry point for production monitoring). For a broader view of cost management across the GCP stack, see [gcp-billing-and-pricing](/06-GCP/Cost-Management/gcp-billing-and-pricing).
 
 > [!tip] Related pattern
-> The cost optimization mindset here parallels the [[finops-cost-optimization|SQL Server FinOps]] approach: right-size resources first, then decide which premium capabilities (APM traces, log indexing) deliver enough value to justify their cost.
+> The cost optimization mindset here parallels the [SQL Server FinOps](/04-SQL-Server/Administration/finops-cost-optimization) approach: right-size resources first, then decide which premium capabilities (APM traces, log indexing) deliver enough value to justify their cost.
 
 ---
 

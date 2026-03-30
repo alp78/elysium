@@ -109,6 +109,6 @@ mindmap
 
 ## Cross-References
 
-- [[moc-sql-server|SQL Server]] — Administration, performance, and pipeline patterns beyond queries
-- [[moc-gcp|GCP]] — BigQuery service configuration and data loading
-- [[moc-programming-languages|Programming Languages]] — Python and C# database access notebooks
+- [SQL Server](/04-SQL-Server/moc-sql-server) — Administration, performance, and pipeline patterns beyond queries
+- [GCP](/06-GCP/moc-gcp) — BigQuery service configuration and data loading
+- [Programming Languages](/02-Programming-Languages/moc-programming-languages) — Python and C# database access notebooks

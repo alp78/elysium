@@ -2535,7 +2535,7 @@ JOIN analytics.index_weights USING (instrument_isin);
 - [[gcp-billing-and-pricing]] — BigQuery pricing model
 - [[gcp-cost-monitoring-and-budgets]] — Cost monitoring and alerts
 - [[gcp-total-cost-of-ownership]] — TCO calculations
-- [[dbt-bigquery-adapter]] — dbt-specific BigQuery configuration
+- [dbt-bigquery-adapter](/11-dbt/Adapters/dbt-bigquery-adapter) — dbt-specific BigQuery configuration
 
 ---
 

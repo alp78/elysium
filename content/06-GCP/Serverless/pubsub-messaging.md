@@ -14,7 +14,7 @@ status: complete
 
 # Pub/Sub Publishing and Consuming Messages
 
-Publishing to a Pub/Sub topic is a single `gcloud pubsub topics publish` command. Consuming is a `gcloud pubsub subscriptions pull`. In practice, production systems use client libraries (Python `google-cloud-pubsub` -- see [[24_py_streaming_realtime]], or C# -- see [[24_cs_streaming_realtime]]) for both operations, but the CLI commands are essential for testing, debugging, and verifying message flow. The most important operational concept is that Pub/Sub delivers messages **at least once**, which means consumers must be idempotent.
+Publishing to a Pub/Sub topic is a single `gcloud pubsub topics publish` command. Consuming is a `gcloud pubsub subscriptions pull`. In practice, production systems use client libraries (Python `google-cloud-pubsub` -- see [24_py_streaming_realtime](/02-Programming-Languages/Python/24_py_streaming_realtime), or C# -- see [24_cs_streaming_realtime](/02-Programming-Languages/CSharp/24_cs_streaming_realtime)) for both operations, but the CLI commands are essential for testing, debugging, and verifying message flow. The most important operational concept is that Pub/Sub delivers messages **at least once**, which means consumers must be idempotent.
 
 ## Publishing Messages
 
@@ -100,7 +100,7 @@ Structure messages as JSON with a consistent schema:
 }
 ```
 
-Keep messages small (under 10 KB). For large payloads, store the data in GCS and publish a pointer (GCS URI) in the message body. For the broader architectural context of how Pub/Sub fits into event-driven pipelines, see [[streaming-architecture]].
+Keep messages small (under 10 KB). For large payloads, store the data in GCS and publish a pointer (GCS URI) in the message body. For the broader architectural context of how Pub/Sub fits into event-driven pipelines, see [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture).
 
 ## Related
 

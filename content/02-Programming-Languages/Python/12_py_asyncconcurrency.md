@@ -477,7 +477,7 @@ await asyncio.gather(*worker_tasks)
 
 > [!tip] Related pattern
 >
-> The concurrency patterns below (task fan-out, semaphore-bounded parallelism) parallel how [[airflow-dag-patterns]] manages DAG task concurrency — both control how many units of work execute simultaneously, just at different abstraction levels.
+> The concurrency patterns below (task fan-out, semaphore-bounded parallelism) parallel how [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) manages DAG task concurrency — both control how many units of work execute simultaneously, just at different abstraction levels.
 
 `concurrent.futures` provides two pool executors with a uniform API — swap one for the other with a single line change:
 

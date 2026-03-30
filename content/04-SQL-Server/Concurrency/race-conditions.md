@@ -375,4 +375,4 @@ The data pipeline's primary defense is **serialization via Airflow** — `max_ac
 - [[deadlock-detection-and-prevention]] — the loudly-detected sibling of race conditions
 - [[blocking-and-locking]] — lock types, isolation levels, and blocking chains
 - [[merge-and-upsert]] — atomic MERGE patterns that eliminate check-then-insert races
-- [[medallion-architecture]] — pipeline structure that explains the DAG serialization context
+- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — pipeline structure that explains the DAG serialization context

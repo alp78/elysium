@@ -14,7 +14,7 @@ status: complete
 
 # HTTP Requests — Interacting with APIs and Services
 
-Data pipelines frequently interact with REST APIs (financial data providers, cloud services, webhooks). `curl` is the command-line tool for making HTTP requests, and knowing its advanced flags can be the difference between a working integration and hours of debugging. For [[rest-api-design-and-consumption|REST API design patterns]] including pagination, error handling, and idempotency, see the Data Architecture section.
+Data pipelines frequently interact with REST APIs (financial data providers, cloud services, webhooks). `curl` is the command-line tool for making HTTP requests, and knowing its advanced flags can be the difference between a working integration and hours of debugging. For [REST API design patterns](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) including pagination, error handling, and idempotency, see the Data Architecture section.
 
 ## Linux — curl
 
@@ -100,7 +100,7 @@ curl -s -o /dev/null -w "DNS: %{time_namelookup}s\nConnect: %{time_connect}s\nTL
 >
 > - **curl**: Best for one-off requests, debugging, health checks, and scripts. Supports every protocol. Use in bash scripts.
 > - **wget**: Best for downloading files (automatic retry, resume, mirroring). `wget -c` resumes interrupted downloads. Use for large file transfers.
-> - **Python requests**: Best for complex API interactions (pagination, OAuth flows, session management). Use in your pipeline code -- see [[15_py_webapis]] for httpx, requests, and async HTTP patterns.
+> - **Python requests**: Best for complex API interactions (pagination, OAuth flows, session management). Use in your pipeline code -- see [15_py_webapis](/02-Programming-Languages/Python/15_py_webapis) for httpx, requests, and async HTTP patterns.
 >
 > In production scripts, always set `--retry`, `--connect-timeout`, and `--max-time` on curl. A hanging curl with no timeout can block your pipeline indefinitely.
 
@@ -158,4 +158,4 @@ Invoke-WebRequest -Uri "https://data-provider.com/latest.csv" -OutFile "data.csv
 - [[environment-variables]] — store `$API_TOKEN` securely in environment variables
 - [[iap-tunneling]] — calling services behind IAP with identity tokens
 
-For invoking HTTP endpoints deployed as managed services, see [[cloud-run-jobs-vs-services]] which covers Cloud Run HTTP triggers and authentication.
+For invoking HTTP endpoints deployed as managed services, see [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) which covers Cloud Run HTTP triggers and authentication.

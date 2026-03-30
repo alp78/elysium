@@ -9,8 +9,8 @@ description: "SQL Server T-SQL fundamentals with executable examples and cell ou
 related:
   - "[[sql-advanced]]"
   - "[[sql-engineering]]"
-  - "[[sargable-queries]]"
-  - "[[merge-and-upsert]]"
+  - "[sargable-queries](/04-SQL-Server/T-SQL/sargable-queries)"
+  - "[merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -45,7 +45,7 @@ Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?TrustServerCertif
 
 > [!danger] Lab-Only Credentials
 >
-> The connection string above contains a plaintext password for a local lab environment. In production, credentials are stored in GCP Secret Manager and fetched at runtime — never hardcoded. See [[secrets-management#Access from Python]].
+> The connection string above contains a plaintext password for a local lab environment. In production, credentials are stored in GCP Secret Manager and fetched at runtime — never hardcoded. See [secrets-management > Access from Python](/06-GCP/Security/secrets-management#access-from-python).
 
 ## Schema Exploration
 
@@ -182,7 +182,7 @@ ORDER BY ORDINAL_POSITION
 > | Temp tables | `#temp` (session-scoped) | `CREATE TEMP TABLE` (script-scoped) |
 > | Table path | `schema.table` | `` `project.dataset.table` `` |
 >
-> For the full cross-platform comparison including Python and C#, see [[05_py_aggregation_reshaping]] and [[05_cs_aggregation_reshaping]].
+> For the full cross-platform comparison including Python and C#, see [05_py_aggregation_reshaping](/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) and [05_cs_aggregation_reshaping](/03-Dataframes/Dataframes-CSharp/05_cs_aggregation_reshaping).
 
 ### SELECT, Filtering & Sorting — Basic SELECT with WHERE
 
@@ -430,7 +430,7 @@ Group by `YEAR(date), MONTH(date)` to build time-series summaries. Shows monthly
 
 > [!warning] Functions on columns kill SARGability
 >
-> `WHERE YEAR(date) = 2025` cannot use an index on `date` — the engine evaluates `YEAR()` on every row. Rewrite as `WHERE date >= '2025-01-01' AND date < '2026-01-01'`. Functions in `GROUP BY` are fine (no index needed). Functions in `WHERE` are the problem. See [[sargable-queries]].
+> `WHERE YEAR(date) = 2025` cannot use an index on `date` — the engine evaluates `YEAR()` on every row. Rewrite as `WHERE date >= '2025-01-01' AND date < '2026-01-01'`. Functions in `GROUP BY` are fine (no index needed). Functions in `WHERE` are the problem. See [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries).
 
 
 ```sql
@@ -1265,7 +1265,7 @@ FROM silver.eurostoxx50_ohlcv
 
 > [!tip] Related pattern
 >
-> The SQL that creates and populates the bronze tables queried here is covered in [[bronze-layer-loading]], which walks through the ingestion pipeline that feeds this medallion architecture.
+> The SQL that creates and populates the bronze tables queried here is covered in [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading), which walks through the ingestion pipeline that feeds this medallion architecture.
 
 ### Bronze → Silver → Gold Transforms — Daily Returns
 

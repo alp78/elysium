@@ -61,8 +61,8 @@ keywords:
   - BMR Article 21
   - five year retention
 related:
-  - "[[pit-integrity-logic]]"
-  - "[[dataops-for-indices]]"
+  - "[pit-integrity-logic](/04-SQL-Server/Performance/pit-integrity-logic)"
+  - "[dataops-for-indices](/15-DataOps/dataops-for-indices)"
   - "[[index-maintenance-and-corporate-actions]]"
 created: 2026-03-22
 updated: 2026-03-22
@@ -71,7 +71,7 @@ status: complete
 
 # Compliance and Auditability — Financial Index Calculation
 
-This reference covers the full compliance and auditability surface for a production index calculation platform: end-to-end data lineage, corporate action processing with complete audit trails, EU Benchmarks Regulation (BMR) obligations, restatement procedures, and Datadog integration patterns for continuous compliance monitoring. The [[audit-logging|SQL Server audit logging]] configuration captures database-level access events that feed directly into the audit trail described here.
+This reference covers the full compliance and auditability surface for a production index calculation platform: end-to-end data lineage, corporate action processing with complete audit trails, EU Benchmarks Regulation (BMR) obligations, restatement procedures, and Datadog integration patterns for continuous compliance monitoring. The [SQL Server audit logging](/04-SQL-Server/Security/audit-logging) configuration captures database-level access events that feed directly into the audit trail described here.
 
 ---
 
@@ -2306,6 +2306,6 @@ def validate_monitor_routing(api_key: str, app_key: str) -> bool:
 
 ## Appendix C: Related Notes
 
-- [[pit-integrity-logic]] — Point-in-time correctness for historical constituent data
-- [[dataops-for-indices]] — Pipeline orchestration, testing, and deployment
+- [pit-integrity-logic](/04-SQL-Server/Performance/pit-integrity-logic) — Point-in-time correctness for historical constituent data
+- [dataops-for-indices](/15-DataOps/dataops-for-indices) — Pipeline orchestration, testing, and deployment
 - [[index-maintenance-and-corporate-actions]] — Operational runbooks for specific action types

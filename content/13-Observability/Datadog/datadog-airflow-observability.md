@@ -14,7 +14,7 @@ status: complete
 
 # Airflow Observability — StatsD Metrics and Dashboard
 
-The [[datadog-agent-airflow-vm|Airflow VM Datadog agent]] covers the infrastructure layer (VM CPU, container metrics). This note covers **Airflow-specific observability** — DAG run metrics, task execution tracking, scheduler health, and the purpose-built Airflow Orchestration dashboard. Understanding [[airflow-core-concepts|Airflow's architecture]] (scheduler, executor, DAG bag) is essential context for interpreting these metrics correctly.
+The [Airflow VM Datadog agent](/13-Observability/Datadog/datadog-agent-airflow-vm) covers the infrastructure layer (VM CPU, container metrics). This note covers **Airflow-specific observability** — DAG run metrics, task execution tracking, scheduler health, and the purpose-built Airflow Orchestration dashboard. Understanding [[airflow-core-concepts|Airflow's architecture]] (scheduler, executor, DAG bag) is essential context for interpreting these metrics correctly.
 
 ---
 
@@ -237,8 +237,8 @@ Create these in **Monitors → New Monitor → Metric**:
 
 ## Related Notes
 
-- [[datadog-architecture-overview]] — full observability architecture
-- [[datadog-agent-airflow-vm]] — agent infrastructure including StatsD config
-- [[datadog-dashboards]] — Pipeline Watch dashboard (covers Cloud Run + SQL VM metrics)
+- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — full observability architecture
+- [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) — agent infrastructure including StatsD config
+- [datadog-dashboards](/13-Observability/Datadog/datadog-dashboards) — Pipeline Watch dashboard (covers Cloud Run + SQL VM metrics)
 - the Airflow DAGs — DAG structure and what each DAG does
 - the startup scripts — startup script where StatsD env vars are set

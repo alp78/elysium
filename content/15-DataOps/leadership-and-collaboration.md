@@ -71,7 +71,7 @@ See our silver layer pattern in dags/common/sql_helpers.py:42 for an example."
 - Suggest alternatives, don't just point out problems
 - Use "we" language: "We prefer MERGE here because..." not "You should use MERGE"
 - Approve with comments for minor issues; block only for correctness or safety
-- Review within 24 hours — stale PRs kill velocity (see [[pull-requests-and-code-review]] for the full review workflow and PR template)
+- Review within 24 hours — stale PRs kill velocity (see [pull-requests-and-code-review](/08-Git/pull-requests-and-code-review) for the full review workflow and PR template)
 
 ## Technical Design Documents
 
@@ -177,7 +177,7 @@ Level 4: Delegation (month 6+)
 
 #### What to teach first (highest ROI for a data engineering team)
 
-1. **[[migration-idempotency-backfills|Idempotency]]** — most bugs in junior-written pipelines come from non-idempotent transforms
+1. **[Idempotency](/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills)** — most bugs in junior-written pipelines come from non-idempotent transforms
 2. **SQL fundamentals** — window functions, CTEs, MERGE statements, execution plans
 3. **Git discipline** — meaningful commits, atomic PRs, rebasing, conflict resolution
 4. **Monitoring before shipping** — "if you can't see it breaking, you can't fix it"
@@ -321,7 +321,7 @@ GOOD response: "I can deliver this in 3 weeks with a phased approach:
 | "Deploy to prod today" | Is there a rollback plan? | Never deploy without a rollback path | Deploy with a feature flag, monitor for 24h before enabling |
 | "Use this vendor's API directly" | Does this bypass our data contracts? | Protect the schema boundary | Add a thin adapter layer now, integrate properly later |
 | "Copy the production database" | Does it contain PII? | Never copy PII to dev without masking | Set up a masked copy with synthetic data |
-| "Just add a column" | Is this a schema change to a shared table? | Requires contract review | Propose [[migration-idempotency-backfills|expand-and-contract migration]] |
+| "Just add a column" | Is this a schema change to a shared table? | Requires contract review | Propose [expand-and-contract migration](/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) |
 
 #### How to escalate effectively
 
@@ -557,8 +557,8 @@ Result: Alex feels defensive.              Result: The team discusses how to
 ## Related
 
 - [[index-maintenance-and-corporate-actions]] — Financial domain context including EU BMR regulatory obligations driving the audit and incident response needs
-- [[migration-idempotency-backfills]] — Technical patterns (idempotency, data contracts, schema evolution) that feed into the code review checklist
-- [[ai-augmented-data-engineering]] — AI-assisted code review and documentation patterns
+- [migration-idempotency-backfills](/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) — Technical patterns (idempotency, data contracts, schema evolution) that feed into the code review checklist
+- [ai-augmented-data-engineering](/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering) — AI-assisted code review and documentation patterns
 
 ## References
 

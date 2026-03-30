@@ -158,5 +158,5 @@ mindmap
 
 ## Cross-References
 
-- [[moc-github-actions|GitHub Actions]] — CI/CD workflows triggered by Git events
-- [[moc-shell|Shell]] — Git commands run from shell
+- [GitHub Actions](/10-GitHub-Actions/moc-github-actions) — CI/CD workflows triggered by Git events
+- [Shell](/01-Shell/moc-shell) — Git commands run from shell

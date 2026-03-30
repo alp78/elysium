@@ -60,7 +60,7 @@ related:
   - "[[git-branching-and-merging]]"
   - "[[git-daily-workflow]]"
   - "[[git-history-and-inspection]]"
-  - "[[github-actions-ci-cd]]"
+  - "[github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd)"
   - "[[gitignore-patterns]]"
   - "[[pull-requests-and-code-review]]"
 created: 2026-03-22
@@ -640,6 +640,6 @@ git push
 - [[git-branching-and-merging]] — Branch creation, merging, and conflict resolution
 - [[git-daily-workflow]] — Everyday commit, push, and pull patterns
 - [[git-history-and-inspection]] — Inspecting logs, diff, and blame
-- [[github-actions-ci-cd]] — CI/CD secrets, workflow triggers, and authentication
+- [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — CI/CD secrets, workflow triggers, and authentication
 - [[gitignore-patterns]] — Structuring `.gitignore` and stopping tracked files
 - [[pull-requests-and-code-review]] — PR workflow, squash merges, branch deletion

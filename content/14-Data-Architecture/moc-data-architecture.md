@@ -57,8 +57,8 @@ How to structure the pipeline code — data layering, idempotent operations, tra
 * [[migration-idempotency-backfills]] — Migration strategies (strangler fig), backfill chunking, schema evolution, data contracts for safe evolution.
 
 **Implementation references:**
-* [[25_py_functional_pipeline]] — Python reference implementation
-* [[25_cs_functional_pipeline]] — C# reference implementation
+* [25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline) — Python reference implementation
+* [25_cs_functional_pipeline](/02-Programming-Languages/CSharp/25_cs_functional_pipeline) — C# reference implementation
 
 ## Pipeline Reliability — Keeping Data Trustworthy
 
@@ -100,8 +100,8 @@ Foundational principles and decision frameworks for every technology and archite
 
 ## Cross-References
 
-- [[bronze-layer-loading]], [[silver-transforms]], [[gold-transforms]] — SQL Server implementations of medallion layers
-- [[airflow-dag-patterns]] — pipeline scheduling patterns for Airflow
-- [[gcp-scheduling]] — Cloud Scheduler to Cloud Run patterns
-- [[moc-dbt|dbt]] — full dbt transformation layer section
+- [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading), [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms), [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) — SQL Server implementations of medallion layers
+- [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) — pipeline scheduling patterns for Airflow
+- [gcp-scheduling](/12-Orchestration/Scheduling/gcp-scheduling) — Cloud Scheduler to Cloud Run patterns
+- [dbt](/11-dbt/moc-dbt) — full dbt transformation layer section
 - [[dbt-transformation-layer]] — concise code-heavy dbt overview

@@ -7,10 +7,10 @@ aliases: [GitHub Actions, CI/CD, workflow, gh run, workflow_dispatch, matrix tes
 keywords: [GitHub Actions, workflow, YAML, trigger, push, pull_request, schedule, workflow_dispatch, matrix, secrets, GCP_SA_KEY, gh run, gh workflow run, deploy, Cloud Run, Artifact Registry, google-github-actions/auth]
 description: "GitHub Actions CI/CD workflows for data engineering teams — triggers, matrix testing, secrets management, GCP authentication, and monitoring workflow runs with the GitHub CLI."
 related:
-  - "[[pull-requests-and-code-review]]"
-  - "[[git-daily-workflow]]"
-  - "[[terraform-registry-and-ci]]"
-  - "[[image-management]]"
+  - "[pull-requests-and-code-review](/08-Git/pull-requests-and-code-review)"
+  - "[git-daily-workflow](/08-Git/git-daily-workflow)"
+  - "[terraform-registry-and-ci](/07-Terraform/GCP-Resources/terraform-registry-and-ci)"
+  - "[image-management](/09-Docker/image-management)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -25,7 +25,7 @@ GitHub Actions automates workflows (build, test, deploy) triggered by events lik
 Common trigger events:
 
 - `push` to main — triggers deployment (e.g., deploy pipeline + dashboard to Cloud Run)
-- `pull_request` opened/updated — triggers tests and linting (see [[pull-requests-and-code-review]] for the PR conventions that pair with these checks)
+- `pull_request` opened/updated — triggers tests and linting (see [pull-requests-and-code-review](/08-Git/pull-requests-and-code-review) for the PR conventions that pair with these checks)
 - `schedule` (cron) — triggers periodic jobs (e.g., nightly data refresh)
 - `workflow_dispatch` — manual trigger via GitHub UI or CLI
 
@@ -63,7 +63,7 @@ gh workflow run deploy.yml
 ### Common CI/CD Patterns for Data Teams
 
 - On push to main: deploy pipeline container and dashboard to Cloud Run
-- On PR: run unit tests, linting, SQL validation (for dbt-specific checks, see [[dbt-ci-cd]])
+- On PR: run unit tests, linting, SQL validation (for dbt-specific checks, see [dbt-ci-cd](/11-dbt/Operations/dbt-ci-cd))
 - On schedule: run data pipeline (e.g., daily at market close)
 - On tag (`v*`): create a GitHub Release with changelog
 - Matrix builds: test across Python 3.10, 3.11, 3.12 in parallel
@@ -298,10 +298,10 @@ gh run watch
 
 ## Related
 
-- [[pull-requests-and-code-review]] — PR events that trigger workflows
-- [[terraform-registry-and-ci]] — the CI service account used by these workflows
-- [[image-management]] — the Docker build/push commands used in workflows
-- [[gitignore-patterns]] — what to gitignore to avoid leaking secrets
+- [pull-requests-and-code-review](/08-Git/pull-requests-and-code-review) — PR events that trigger workflows
+- [terraform-registry-and-ci](/07-Terraform/GCP-Resources/terraform-registry-and-ci) — the CI service account used by these workflows
+- [image-management](/09-Docker/image-management) — the Docker build/push commands used in workflows
+- [gitignore-patterns](/08-Git/gitignore-patterns) — what to gitignore to avoid leaking secrets
 
 ## References
 

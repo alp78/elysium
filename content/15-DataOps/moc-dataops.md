@@ -76,6 +76,6 @@ mindmap
 
 ## Cross-References
 
-- [[moc-data-architecture|Data Architecture]] — Architecture principles that DataOps operationalizes
-- [[moc-github-actions|GitHub Actions]] — CI/CD automation implementing DataOps practices
-- [[moc-observability|Observability]] — Monitoring and SLA tracking as a DataOps pillar
+- [Data Architecture](/14-Data-Architecture/moc-data-architecture) — Architecture principles that DataOps operationalizes
+- [GitHub Actions](/10-GitHub-Actions/moc-github-actions) — CI/CD automation implementing DataOps practices
+- [Observability](/13-Observability/moc-observability) — Monitoring and SLA tracking as a DataOps pillar

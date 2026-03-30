@@ -14,7 +14,7 @@ status: complete
 
 # Services — Starting, Stopping, and Debugging Daemons
 
-Every long-running process in your infrastructure -- SQL Server, Airflow, Datadog agent, Docker daemon -- runs as a systemd service on Linux. Understanding service management is how you restart a crashed database, check why a monitoring agent stopped collecting metrics, or enable a new service to survive reboots. For Airflow-specific service management (scheduler, worker, webserver), see [[airflow-core-concepts]].
+Every long-running process in your infrastructure -- SQL Server, Airflow, Datadog agent, Docker daemon -- runs as a systemd service on Linux. Understanding service management is how you restart a crashed database, check why a monitoring agent stopped collecting metrics, or enable a new service to survive reboots. For Airflow-specific service management (scheduler, worker, webserver), see [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts).
 
 ### systemctl, journalctl — managing systemd services and reading logs
 
@@ -126,7 +126,7 @@ Set-Service -Name "MSSQLSERVER" -StartupType Automatic
 Get-Service -Name "MSSQLSERVER" -DependentServices
 ```
 
-When running multiple services as containers, [[docker-compose]] provides declarative service orchestration with `docker compose up/down/restart` and automatic dependency ordering.
+When running multiple services as containers, [docker-compose](/09-Docker/docker-compose) provides declarative service orchestration with `docker compose up/down/restart` and automatic dependency ordering.
 
 ## Related
 - [[viewing-processes]] — monitor resource usage of a running service

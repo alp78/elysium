@@ -14,7 +14,7 @@ status: complete
 
 # gcloud Output Formatting and Filtering
 
-The `--format` and `--filter` flags are the most underused features of the [[gcloud-authentication|gcloud CLI]]. They transform gcloud from a human-readable tool into a scriptable data extraction engine, enabling you to pipe exact field values into shell scripts, build inventory automation, and run server-side filtered queries instead of grepping local output.
+The `--format` and `--filter` flags are the most underused features of the [gcloud CLI](/06-GCP/Core/gcloud-authentication). They transform gcloud from a human-readable tool into a scriptable data extraction engine, enabling you to pipe exact field values into shell scripts, build inventory automation, and run server-side filtered queries instead of grepping local output.
 
 ### Why gcloud Output Formatting Matters
 
@@ -120,7 +120,7 @@ gcloud compute instances list --impersonate-service-account=pipeline-sa@project.
 
 ## Related
 
-- [[gcloud-authentication]] — How authentication tokens work with formatted output
+- [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — How authentication tokens work with formatted output
 - [[gcloud-configurations]] — Switching projects before running formatted queries
 - [[gcp-projects-and-apis]] — Listing projects and enabled APIs with formatted output
 - [[service-accounts-and-iam]] — Impersonating service accounts to test permissions

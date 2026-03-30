@@ -13,7 +13,7 @@ description: "Pandas/Polars DataFrame reference 02/10 — Explore, Select & Filt
 related:
   - "[[moc-dataframes]]"
   - "[[02_cs_explore_select_filter]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[01_py_foundations_io]]"
   - "[[03_py_transforms_expressions]]"
 created: 2026-03-24

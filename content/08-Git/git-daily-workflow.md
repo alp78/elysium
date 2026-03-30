@@ -21,7 +21,7 @@ status: complete
 
 # Git Daily Workflow
 
-Git is not optional for data engineering. Every SQL migration, every DAG definition, every pipeline configuration, and every [[hcl-syntax-basics|Terraform module]] must be version-controlled. These are the commands you run dozens of times per day. For a condensed quick-reference, see [[git-cheat-sheet]].
+Git is not optional for data engineering. Every SQL migration, every DAG definition, every pipeline configuration, and every [Terraform module](/07-Terraform/Fundamentals/hcl-syntax-basics) must be version-controlled. These are the commands you run dozens of times per day. For a condensed quick-reference, see [[git-cheat-sheet]].
 
 ## Step 1: Check What's Changed
 
@@ -233,7 +233,7 @@ This is the standard workflow used by data engineering teams:
 9. Clean up locally         git checkout main && git pull && git branch -d feat/my-feature
 ```
 
-Pushing a branch or opening a PR typically triggers [[github-actions-fundamentals|GitHub Actions]] CI workflows -- linting, tests, and builds that validate the change before review. For dbt projects specifically, [[dbt-ci-cd]] runs model compilation and test checks on every PR.
+Pushing a branch or opening a PR typically triggers [GitHub Actions](/10-GitHub-Actions/github-actions-fundamentals) CI workflows -- linting, tests, and builds that validate the change before review. For dbt projects specifically, [dbt-ci-cd](/11-dbt/Operations/dbt-ci-cd) runs model compilation and test checks on every PR.
 
 ### Rules for Distributed Data Teams
 
@@ -271,7 +271,7 @@ See [[git-recovery-and-undo]] for detailed recovery procedures and [[git-common-
 >
 > 1. **Never commit credentials.** Add to [[gitignore-patterns|.gitignore]]: `*.env`, `*.json` (service account keys), `secrets/`. Use `git-secrets` to scan for AWS/GCP keys before each commit.
 > 2. **SQL migrations in git.** Number them sequentially: `V001__create_ohlcv.sql`, `V002__add_signals.sql`. Never modify a committed migration — create a new one. See the dbt and migration notes for versioning patterns.
-> 3. **DAG files in git.** Airflow reads DAGs from a directory — changes are deployed by updating the files. Version them in git, deploy via [[github-actions-ci-cd|CI/CD]] or SCP.
+> 3. **DAG files in git.** Airflow reads DAGs from a directory — changes are deployed by updating the files. Version them in git, deploy via [CI/CD](/10-GitHub-Actions/github-actions-ci-cd) or SCP.
 > 4. **Large data files.** If you must track data files, use Git LFS: `git lfs track "*.parquet"`. Otherwise, keep data in GCS and reference it by URI.
 
 ### Quick Reference
@@ -302,7 +302,7 @@ See [[git-recovery-and-undo]] for detailed recovery procedures and [[git-common-
 - [[git-remote-management]] — Remotes, upstream forks, fetch vs pull
 - [[git-tagging-and-releases]] — Tagging releases for deployment
 - [[pull-requests-and-code-review]] — PR workflow and GitHub CLI
-- [[github-actions-ci-cd]] — Automated testing and deployment
+- [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — Automated testing and deployment
 - [[git-common-errors]] — 25+ error scenarios with fixes
 - [[gitignore-patterns]] — Keeping secrets and junk out of the repo
 - [[git-cheat-sheet]] — One-page quick reference

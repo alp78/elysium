@@ -14,7 +14,7 @@ status: complete
 
 # Server Configuration
 
-These are the non-negotiable configuration settings that every production SQL Server instance must have in place before going live. Skipping any of these leads to data corruption, OOM crashes, or unrecoverable failures. When provisioning the underlying VM with [[terraform-compute|Terraform]], these config requirements should be reflected in the VM spec (machine type, disk size, resource limits).
+These are the non-negotiable configuration settings that every production SQL Server instance must have in place before going live. Skipping any of these leads to data corruption, OOM crashes, or unrecoverable failures. When provisioning the underlying VM with [Terraform](/07-Terraform/GCP-Resources/terraform-compute), these config requirements should be reflected in the VM spec (machine type, disk size, resource limits).
 
 ---
 
@@ -144,7 +144,7 @@ UPDATE STATISTICS gold.index_performance WITH FULLSCAN;
 
 ## Linux OS Tuning (for SQL Server on Linux)
 
-Three Linux settings with outsized impact on SQL Server performance. Wrong defaults cause random latency spikes, I/O stalls, and memory thrashing. When running SQL Server in Docker, [[container-lifecycle|container resource limits]] (memory limits, CPU quotas) mirror these OS-level tuning concerns.
+Three Linux settings with outsized impact on SQL Server performance. Wrong defaults cause random latency spikes, I/O stalls, and memory thrashing. When running SQL Server in Docker, [container resource limits](/09-Docker/container-lifecycle) (memory limits, CPU quotas) mirror these OS-level tuning concerns.
 
 ### Swappiness
 

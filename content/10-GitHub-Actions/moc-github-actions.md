@@ -81,7 +81,7 @@ mindmap
 
 ## Cross-References
 
-- [[moc-git|Git]] — Git events that trigger GitHub Actions workflows
-- [[moc-terraform|Terraform]] — Terraform plan/apply automated via GitHub Actions
-- [[moc-docker|Docker]] — Docker build and push in CI/CD pipelines
-- [[moc-data-architecture|Data Architecture]] — Testing strategy that coordinates CI with quality gates
+- [Git](/08-Git/moc-git) — Git events that trigger GitHub Actions workflows
+- [Terraform](/07-Terraform/moc-terraform) — Terraform plan/apply automated via GitHub Actions
+- [Docker](/09-Docker/moc-docker) — Docker build and push in CI/CD pipelines
+- [Data Architecture](/14-Data-Architecture/moc-data-architecture) — Testing strategy that coordinates CI with quality gates

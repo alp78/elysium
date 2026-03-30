@@ -13,7 +13,7 @@ description: "Pandas/Polars DataFrame reference 10/10 — Real-World Project, Te
 related:
   - "[[moc-dataframes]]"
   - "[[10_cs_testing_migration]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[09_py_database_interface]]"
 created: 2026-03-24
 updated: 2026-03-24
@@ -334,7 +334,7 @@ assert_schema_pl(
 
 ## Data Validation Rules
 
-Business rules that data must satisfy: no nulls in key columns, value ranges, referential integrity, uniqueness constraints, and temporal consistency. These checks map directly to the quality dimensions (completeness, uniqueness, validity) defined in [[data-quality-framework]], and dbt implements the same patterns declaratively via [[dbt-testing-framework]].
+Business rules that data must satisfy: no nulls in key columns, value ranges, referential integrity, uniqueness constraints, and temporal consistency. These checks map directly to the quality dimensions (completeness, uniqueness, validity) defined in [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework), and dbt implements the same patterns declaratively via [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework).
 
 ### Polars
 

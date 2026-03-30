@@ -225,7 +225,7 @@ display(pd.DataFrame(sample))
 
 > [!tip] Related pattern
 >
-> For the architectural context of where streaming fits within the broader data platform — including how real-time feeds connect to batch pipelines — see [[streaming-architecture]].
+> For the architectural context of where streaming fits within the broader data platform — including how real-time feeds connect to batch pipelines — see [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture).
 
 ## WebSocket Streaming
 
@@ -404,7 +404,7 @@ print(f'  p50: {sse_p50:.0f}µs  p99: {sse_p99:.0f}µs  p99.9: {sse_p999:.0f}µs
 ## Google Cloud Pub/Sub
 
 Managed message bus with at-least-once delivery, auto-scaling, and dead-letter queues.
-Decouples publishers from subscribers — the backbone of event-driven architectures in GCP. For topic/subscription setup, dead-letter configuration, and operational patterns via `gcloud`, see [[pubsub-messaging]].
+Decouples publishers from subscribers — the backbone of event-driven architectures in GCP. For topic/subscription setup, dead-letter configuration, and operational patterns via `gcloud`, see [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging).
 
 #### gcloud services enable + IAM binding — Pub/Sub API and permissions
 

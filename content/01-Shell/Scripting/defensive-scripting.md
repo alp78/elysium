@@ -24,7 +24,7 @@ set -euo pipefail
 
 > [!tip] Related pattern
 >
-> The same error-handling philosophy applies in application code: [[08_py_errorhandling]] covers Python's `try`/`except` (the equivalent of `set -e` with explicit catches), and [[08_cs_errorhandling]] covers C#'s `try`/`catch`/`finally` pattern. For error handling in DAG orchestration, see [[airflow-dag-patterns]].
+> The same error-handling philosophy applies in application code: [08_py_errorhandling](/02-Programming-Languages/Python/08_py_errorhandling) covers Python's `try`/`except` (the equivalent of `set -e` with explicit catches), and [08_cs_errorhandling](/02-Programming-Languages/CSharp/08_cs_errorhandling) covers C#'s `try`/`catch`/`finally` pattern. For error handling in DAG orchestration, see [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns).
 
 ### set -e — exit immediately on error
 
@@ -145,7 +145,7 @@ log "Pipeline complete"
 
 ## Related
 
-- [[error-handling-and-retry-patterns]] — Cross-cutting error classification, retry strategies, and failure propagation theory
+- [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Cross-cutting error classification, retry strategies, and failure propagation theory
 - [[command-chaining]] — How `&&`, `||`, and `;` use exit codes
 - [[io-redirection]] — Redirecting errors for logging
 - [[environment-variables]] — Handling required vs optional configuration

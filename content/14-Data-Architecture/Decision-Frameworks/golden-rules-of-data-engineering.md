@@ -467,7 +467,7 @@ If you cannot see it, you cannot fix it. If you cannot measure it, you cannot im
 2. **When did it start?** (Metrics)
 3. **Where did time go?** (Traces)
 
-These are the three pillars of observability, and they apply to data engineering just as much as they apply to web services. See [[five-pillars-of-data-engineering|Observability (Pillar 2)]]. [[dataops-principles-and-practices|DataOps]] codifies these rules into repeatable team practices — CI/CD for data, automated testing, and monitoring-as-code.
+These are the three pillars of observability, and they apply to data engineering just as much as they apply to web services. See [[five-pillars-of-data-engineering|Observability (Pillar 2)]]. [DataOps](/15-DataOps/dataops-principles-and-practices) codifies these rules into repeatable team practices — CI/CD for data, automated testing, and monitoring-as-code.
 
 ### The Minimum Observability Bar
 

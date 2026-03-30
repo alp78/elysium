@@ -19,12 +19,12 @@ aliases:
 keywords: [testing pyramid, unit test, integration test, contract test, data quality, regression test, test data, fixture, CI/CD, pytest, dbt test, schema validation, golden file]
 description: "The testing pyramid for data engineering: unit, integration, contract, quality, and regression testing across bronze/silver/gold layers."
 related:
-  - "[[dbt-testing-framework]]"
+  - "[dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)"
   - "[[data-quality-framework]]"
   - "[[data-contracts]]"
-  - "[[gcp-pipeline-health-and-sla]]"
-  - "[[github-actions-data-engineering]]"
-  - "[[10_py_testing_migration]]"
+  - "[gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla)"
+  - "[github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering)"
+  - "[10_py_testing_migration](/03-Dataframes/Dataframes-Python/10_py_testing_migration)"
   - "[[idempotent-pipeline-design]]"
   - "[[environment-management-strategy]]"
 created: 2026-03-29
@@ -75,9 +75,9 @@ Unit tests validate individual functions, SQL transforms, and dbt models in isol
 >
 > Feed a known input DataFrame or SQL result into a transform function and assert the output matches expected values. No database, no network, no external dependencies. Pure logic verification.
 >
-> - **Python:** pytest with sample DataFrames as fixtures — see [[10_py_testing_migration]]
-> - **C#:** xUnit with test DataFrames — see [[10_cs_testing_migration]]
-> - **dbt:** schema tests in `schema.yml` — `unique`, `not_null`, `accepted_values`, `relationships` — see [[dbt-testing-framework#dbt Built-in Generic Tests]]
+> - **Python:** pytest with sample DataFrames as fixtures — see [10_py_testing_migration](/03-Dataframes/Dataframes-Python/10_py_testing_migration)
+> - **C#:** xUnit with test DataFrames — see [10_cs_testing_migration](/03-Dataframes/Dataframes-CSharp/10_cs_testing_migration)
+> - **dbt:** schema tests in `schema.yml` — `unique`, `not_null`, `accepted_values`, `relationships` — see [dbt-testing-framework > dbt Built-in Generic Tests](/11-dbt/Quality/dbt-testing-framework#dbt-built-in-generic-tests)
 > - **When:** every PR, every commit — seconds to run
 
 > [!danger] Skip Unit Tests And...
@@ -119,7 +119,7 @@ Contract tests verify that source data matches the expected schema before any tr
 > Define the expected schema (column names, types, nullability, value ranges) in a contract file or dbt source YAML. On every ingestion, validate the incoming data against the contract. If a column is missing, renamed, or has a new type, the test fails before the data enters bronze.
 >
 > - Define contracts: [[data-contracts#What a Data Contract Contains]]
-> - dbt contracts: [[dbt-data-contracts-implementation]]
+> - dbt contracts: [dbt-data-contracts-implementation](/11-dbt/Quality/dbt-data-contracts-implementation)
 > - Schema drift detection: [[context-and-metadata-architecture]]
 > - When: every PR (schema changes in code) + every ingestion (schema changes in source data)
 
@@ -137,8 +137,8 @@ Integration tests run the pipeline end-to-end with real connections but test dat
 >
 > Spin up a real database (Docker SQL Server in GitHub Actions), load test fixtures (100-1000 rows of known data), run the full bronze → silver → gold flow, and assert the output shape and values.
 >
-> - GitHub Actions: [[github-actions-data-engineering#Full Python Lint + Test Workflow]]
-> - dbt in CI: [[github-actions-data-engineering#dbt Build Against Dev Schema]]
+> - GitHub Actions: [github-actions-data-engineering > Full Python Lint + Test Workflow](/10-GitHub-Actions/github-actions-data-engineering#full-python-lint--test-workflow)
+> - dbt in CI: [github-actions-data-engineering > dbt Build Against Dev Schema](/10-GitHub-Actions/github-actions-data-engineering#dbt-build-against-dev-schema)
 > - When: on merge to main — too slow for every PR, too important to skip
 
 > [!danger] Skip Integration Tests And...
@@ -172,7 +172,7 @@ This table maps testing to the **medallion architecture** — what specific chec
 | Pipeline Layer | What to Test | Primary Tool | Vault Reference |
 |---|---|---|---|
 | **Bronze** | Schema matches source, row count > 0, no all-NULL columns, source freshness | dbt source tests, Python assertions | [[data-quality-framework#Medallion Bronze Quality Gate — Landing / Raw]] |
-| **Silver** | Business logic correctness, dedup worked, SCD2 integrity, gap-fill completeness | dbt tests, pytest with fixtures | [[dbt-testing-framework#dbt Built-in Generic Tests]] |
+| **Silver** | Business logic correctness, dedup worked, SCD2 integrity, gap-fill completeness | dbt tests, pytest with fixtures | [dbt-testing-framework > dbt Built-in Generic Tests](/11-dbt/Quality/dbt-testing-framework#dbt-built-in-generic-tests) |
 | **Gold** | Output shape matches expectations, z-scores in bounds, no NaN in scores, ranks are contiguous | dbt tests, pandas assertions | [[data-quality-framework#Medallion Gold Quality Gate -- Consumption / Publication]] |
 | **Cross-layer** | Row count preservation (bronze → silver minus expected dedup), referential integrity | dbt cross-model tests, SQL assertions | [[data-quality-framework#Data Quality Quarantine Pattern]] |
 
@@ -191,11 +191,11 @@ This table maps testing to the **medallion architecture** — what specific chec
 
 Test individual functions, SQL transforms, and dbt models in isolation. These are the fastest tests and should make up the majority of your test suite.
 
-**Python (pytest):** Test transform functions with sample DataFrames as fixtures. See [[10_py_testing_migration]] for Pandas/Polars testing patterns.
+**Python (pytest):** Test transform functions with sample DataFrames as fixtures. See [10_py_testing_migration](/03-Dataframes/Dataframes-Python/10_py_testing_migration) for Pandas/Polars testing patterns.
 
-**C# (xUnit):** Test transform methods with test DataFrames. See [[10_cs_testing_migration]] for Deedle/Polars.NET patterns.
+**C# (xUnit):** Test transform methods with test DataFrames. See [10_cs_testing_migration](/03-Dataframes/Dataframes-CSharp/10_cs_testing_migration) for Deedle/Polars.NET patterns.
 
-**dbt:** Schema tests in `schema.yml` — `unique`, `not_null`, `accepted_values`, `relationships`. See [[dbt-testing-framework#dbt Built-in Generic Tests]] for the full list.
+**dbt:** Schema tests in `schema.yml` — `unique`, `not_null`, `accepted_values`, `relationships`. See [dbt-testing-framework > dbt Built-in Generic Tests](/11-dbt/Quality/dbt-testing-framework#dbt-built-in-generic-tests) for the full list.
 
 > [!info] The unit test rule
 >
@@ -219,7 +219,7 @@ Validate data properties at layer boundaries. These run after every pipeline exe
 | Uniqueness on business key | Duplicates from failed dedup or bad merge | dbt `unique`, `unique_combination_of_columns` |
 | Freshness | Stale data — source hasn't updated | dbt `source freshness`, custom metric |
 
-See [[data-quality-framework#Data Quality Dimensions]] for the full quality taxonomy and [[gcp-pipeline-health-and-sla#Row Count Validation]] for production monitoring integration.
+See [[data-quality-framework#Data Quality Dimensions]] for the full quality taxonomy and [gcp-pipeline-health-and-sla > Row Count Validation](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#row-count-validation) for production monitoring integration.
 
 > [!warning] Quality Checks Need Production Too
 >
@@ -236,7 +236,7 @@ Verify that source data matches the expected schema before any transform runs.
 **Implementation:**
 - Define the contract (column names, types, nullability, value ranges): see [[data-contracts#What a Data Contract Contains]]
 - Validate on ingestion with a Python validator or dbt source test: see [[context-and-metadata-architecture#Schema Drift Detection]]
-- dbt contracts: see [[dbt-data-contracts-implementation#What Is a dbt Data Contract?]]
+- dbt contracts: see [dbt-data-contracts-implementation > What Is a dbt Data Contract?](/11-dbt/Quality/dbt-data-contracts-implementation#what-is-a-dbt-data-contract)
 
 > [!danger] Schema Changes Kill Silently
 >
@@ -255,7 +255,7 @@ Test the pipeline end-to-end with real connections but test data.
 
 **GitHub Actions implementation:** Spin up a SQL Server Docker container, load test fixtures, run the pipeline, assert output shape and values.
 
-See [[github-actions-data-engineering#Full Python Lint + Test Workflow]] for the CI workflow and [[github-actions-data-engineering#dbt Build Against Dev Schema]] for dbt integration tests in CI.
+See [github-actions-data-engineering > Full Python Lint + Test Workflow](/10-GitHub-Actions/github-actions-data-engineering#full-python-lint--test-workflow) for the CI workflow and [github-actions-data-engineering > dbt Build Against Dev Schema](/10-GitHub-Actions/github-actions-data-engineering#dbt-build-against-dev-schema) for dbt integration tests in CI.
 
 > [!warning] Integration Tests Need Real Infra
 >
@@ -306,7 +306,7 @@ Verify today's output matches yesterday's expected output after a code change.
 
 ## CI/CD Test Automation
 
-The complete testing pipeline on every PR and merge. For GitHub Actions workflow syntax, see [[github-actions-data-engineering#End-to-End Pipeline: PR to Lint to Test to Build to Deploy to Verify]].
+The complete testing pipeline on every PR and merge. For GitHub Actions workflow syntax, see [github-actions-data-engineering > End-to-End Pipeline: PR to Lint to Test to Build to Deploy to Verify](/10-GitHub-Actions/github-actions-data-engineering#end-to-end-pipeline-pr-to-lint-to-test-to-build-to-deploy-to-verify).
 
 ```yaml
 # Conceptual workflow — link to implementation pages for full YAML
@@ -356,8 +356,8 @@ jobs:
 
 Data quality checks are the exception — they span both worlds. Run them in CI (testing) AND after every production load (monitoring).
 
-- Testing side: [[dbt-testing-framework]] + [[github-actions-data-engineering]]
-- Monitoring side: [[gcp-pipeline-health-and-sla]] + [[data-quality-framework#Quality Gate Airflow Integration]]
+- Testing side: [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework) + [github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering)
+- Monitoring side: [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) + [[data-quality-framework#Quality Gate Airflow Integration]]
 
 ---
 
@@ -380,13 +380,13 @@ Data quality checks are the exception — they span both worlds. Run them in CI 
 
 ## Related
 
-- [[dbt-testing-framework]] — dbt generic tests, custom tests, severity levels, store-failures
+- [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework) — dbt generic tests, custom tests, severity levels, store-failures
 - [[data-quality-framework]] — Quality dimensions, medallion quality gates, quarantine pattern
 - [[data-contracts]] — Contract specification, breaking vs non-breaking changes, CI validation
-- [[dbt-data-contracts-implementation]] — dbt-native contracts, model versions, access control
-- [[gcp-pipeline-health-and-sla]] — Production monitoring: freshness, row counts, SLA tracking, alerting
-- [[github-actions-data-engineering]] — CI/CD workflows for data pipelines, dbt in CI, WIF auth
+- [dbt-data-contracts-implementation](/11-dbt/Quality/dbt-data-contracts-implementation) — dbt-native contracts, model versions, access control
+- [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) — Production monitoring: freshness, row counts, SLA tracking, alerting
+- [github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering) — CI/CD workflows for data pipelines, dbt in CI, WIF auth
 - [[context-and-metadata-architecture]] — Schema drift detection, schema evolution patterns
-- [[10_py_testing_migration]] — pytest patterns for Pandas/Polars DataFrame testing
-- [[10_cs_testing_migration]] — xUnit patterns for Deedle/Polars.NET DataFrame testing
+- [10_py_testing_migration](/03-Dataframes/Dataframes-Python/10_py_testing_migration) — pytest patterns for Pandas/Polars DataFrame testing
+- [10_cs_testing_migration](/03-Dataframes/Dataframes-CSharp/10_cs_testing_migration) — xUnit patterns for Deedle/Polars.NET DataFrame testing
 - [[environment-management-strategy]] — How testing fits into the dev/staging/prod promotion workflow

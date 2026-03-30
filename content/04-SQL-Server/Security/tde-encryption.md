@@ -29,7 +29,7 @@ Transparent Data Encryption (TDE) encrypts SQL Server database files at rest —
 - Does NOT provide column-level encryption (use Always Encrypted for that)
 - Does NOT encrypt filestream or filetable data
 
-For managing the KMS key material and related secrets programmatically, see [[secrets-management]] (GCP Secret Manager) and [[21_py_security_operations]] (Python KMS encryption patterns).
+For managing the KMS key material and related secrets programmatically, see [secrets-management](/06-GCP/Security/secrets-management) (GCP Secret Manager) and [21_py_security_operations](/02-Programming-Languages/Python/21_py_security_operations) (Python KMS encryption patterns).
 
 **Why It Matters for the project**: Compliance requirements (SOC 2, GDPR Article 32 — encryption of personal data at rest), and protection against GCP disk snapshot exposure.
 

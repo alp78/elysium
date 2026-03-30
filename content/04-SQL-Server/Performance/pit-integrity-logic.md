@@ -7,11 +7,11 @@ aliases: [PIT, point-in-time, effective-dated, bi-temporal, as-of query, weight 
 keywords: [point-in-time, PIT query, effective date, expiry date, bi-temporal, valid time, transaction time, system versioning, temporal table, weight normalization, residual distribution, rounding error, constituent membership, rebalancing, reconstitution, free float, capping factor, index divisor, covering index, columnstore, LAST_VALUE IGNORE NULLS, forward fill, ESG temporal alignment, reconciliation, audit, EU BMR]
 description: "Point-in-Time data integrity patterns for stock index calculation and ESG scoring — covers effective-dated constituent lists, weight normalization to exactly 1.00000000, bi-temporal modeling, and performance tuning for large-scale price/ESG joins."
 related:
-  - "[[dimensional-modeling]]"
-  - "[[data-warehouse-architecture]]"
+  - "[dimensional-modeling](/14-Data-Architecture/Data-Modeling/dimensional-modeling)"
+  - "[data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture)"
   - "[[silver-transforms]]"
   - "[[index-maintenance-and-corporate-actions]]"
-  - "[[compliance-and-auditability]]"
+  - "[compliance-and-auditability](/13-Observability/Monitoring/compliance-and-auditability)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -505,8 +505,8 @@ print(f"Reconciliation PASSED: max diff = {max_diff:.10f}")
 
 ### See Also
 
-- [[dimensional-modeling]] — Star schema design for index data warehouses
-- [[data-warehouse-architecture]] — SCD types and temporal modeling patterns
-- [[compliance-and-auditability]] — EU BMR lineage and corporate action audit trail
+- [dimensional-modeling](/14-Data-Architecture/Data-Modeling/dimensional-modeling) — Star schema design for index data warehouses
+- [data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture) — SCD types and temporal modeling patterns
+- [compliance-and-auditability](/13-Observability/Monitoring/compliance-and-auditability) — EU BMR lineage and corporate action audit trail
 - [[index-maintenance-and-corporate-actions]] — Corporate action types and their index impact
 - [[scoring-methodology]] — Z-score and composite scoring for index signals

@@ -20,7 +20,7 @@ status: complete
 
 > [!tip] Prerequisite Reading
 >
-> For the theoretical framework behind these operations — identity model, credential types, OAuth2 flows, and connection patterns — see [[gcp-identity-and-connection-patterns]].
+> For the theoretical framework behind these operations — identity model, credential types, OAuth2 flows, and connection patterns — see [gcp-identity-and-connection-patterns](/06-GCP/Security/gcp-identity-and-connection-patterns).
 
 ## Environment Setup
 

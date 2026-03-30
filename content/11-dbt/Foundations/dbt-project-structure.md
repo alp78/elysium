@@ -8,8 +8,8 @@ description: "Project layout, naming conventions, config inheritance, multi-adap
 related:
   - "[[dbt-core-concepts]]"
   - "[[dbt-cli-reference]]"
-  - "[[medallion-architecture]]"
-  - "[[dbt-transformation-layer]]"
+  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
+  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
 ---
 
 # dbt: Project Structure
@@ -330,7 +330,7 @@ group by 1
 
 ### dbt Mapping to Medallion Architecture
 
-The directory structure directly mirrors the [[medallion-architecture]] layers, making the staging/intermediate/marts hierarchy a concrete implementation of bronze/silver/gold:
+The directory structure directly mirrors the [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) layers, making the staging/intermediate/marts hierarchy a concrete implementation of bronze/silver/gold:
 
 ```
 Bronze (raw ingestion)
@@ -388,5 +388,5 @@ financial_platform:
 ## Related
 - [[dbt-core-concepts]]
 - [[dbt-cli-reference]]
-- [[medallion-architecture]]
-- [[dbt-transformation-layer]]
+- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)
+- [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)

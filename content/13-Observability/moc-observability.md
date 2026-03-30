@@ -151,13 +151,13 @@ mindmap
 > > - [[datadog-alerting#Dashboard Conditional Formatting|Dashboard conditional formatting]]
 > > - [[datadog-alerting#GCE Host Automuting in Datadog|GCE host automuting]]
 >
-> > [!abstract]- [[datadog-airflow-observability]]
+> > [!abstract]- [datadog-airflow-observability](/13-Observability/Datadog/datadog-airflow-observability)
 > >
-> > - [[datadog-airflow-observability#How StatsD Metrics Flow from Airflow to Datadog|StatsD metrics flow]]
-> > - [[datadog-airflow-observability#Key Metrics Reference|Key metrics reference]]
-> > - [[datadog-airflow-observability#Airflow Orchestration Dashboard in Datadog|Airflow dashboard]]
-> > - [[datadog-airflow-observability#Recommended Airflow Monitors in Datadog|Recommended monitors]]
-> > - [[datadog-airflow-observability#Limitations of Self-Hosted Airflow Observability|Self-hosted limitations]]
+> > - [StatsD metrics flow](/13-Observability/Datadog/datadog-airflow-observability#how-statsd-metrics-flow-from-airflow-to-datadog)
+> > - [Key metrics reference](/13-Observability/Datadog/datadog-airflow-observability#key-metrics-reference)
+> > - [Airflow dashboard](/13-Observability/Datadog/datadog-airflow-observability#airflow-orchestration-dashboard-in-datadog)
+> > - [Recommended monitors](/13-Observability/Datadog/datadog-airflow-observability#recommended-airflow-monitors-in-datadog)
+> > - [Self-hosted limitations](/13-Observability/Datadog/datadog-airflow-observability#limitations-of-self-hosted-airflow-observability)
 >
 > > [!abstract]- [[datadog-cost-optimization]]
 > >
@@ -231,7 +231,7 @@ mindmap
 
 ## Cross-References
 
-- [[moc-gcp|GCP]] — Cloud Logging and Cloud Monitoring service configuration
-- [[moc-sql-server|SQL Server]] — Wait stats and performance monitoring from the SQL Server perspective
-- [[moc-data-architecture|Data Architecture]] — Observability strategy in the five pillars framework
-- [[moc-dbt|dbt]] — dbt observability and Datadog integration
+- [GCP](/06-GCP/moc-gcp) — Cloud Logging and Cloud Monitoring service configuration
+- [SQL Server](/04-SQL-Server/moc-sql-server) — Wait stats and performance monitoring from the SQL Server perspective
+- [Data Architecture](/14-Data-Architecture/moc-data-architecture) — Observability strategy in the five pillars framework
+- [dbt](/11-dbt/moc-dbt) — dbt observability and Datadog integration

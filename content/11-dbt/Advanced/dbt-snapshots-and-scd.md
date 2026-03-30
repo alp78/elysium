@@ -6,14 +6,14 @@ status: stable
 updated: 2026-03-23
 description: "SCD Type 2 snapshots with timestamp and check strategies, PIT queries, ESG audit trails, and gotchas for financial data pipelines"
 related:
-  - "[[silver-transforms]]"
-  - "[[pit-integrity-logic]]"
+  - "[silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms)"
+  - "[pit-integrity-logic](/04-SQL-Server/Performance/pit-integrity-logic)"
   - "[[eu-bmr-benchmark-regulation]]"
 ---
 
 # dbt: Snapshots and SCD
 
-dbt snapshots implement **Slowly Changing Dimension Type 2 (SCD2)**: when a row changes, the old version is closed with an end timestamp and a new version is inserted with the current timestamp. Every historical state of the data is preserved. In financial data pipelines this is non-negotiable — index constituent weights, ESG ratings, and benchmark definitions change frequently and must be reproducible as of any historical point in time. For the broader SQL Server implementation of these patterns, see [[silver-transforms]].
+dbt snapshots implement **Slowly Changing Dimension Type 2 (SCD2)**: when a row changes, the old version is closed with an end timestamp and a new version is inserted with the current timestamp. Every historical state of the data is preserved. In financial data pipelines this is non-negotiable — index constituent weights, ESG ratings, and benchmark definitions change frequently and must be reproducible as of any historical point in time. For the broader SQL Server implementation of these patterns, see [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms).
 
 ---
 
@@ -607,8 +607,8 @@ Ingest raw data
 
 ## Related
 
-- [[silver-transforms]]
-- [[pit-integrity-logic]]
+- [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms)
+- [pit-integrity-logic](/04-SQL-Server/Performance/pit-integrity-logic)
 - [[eu-bmr-benchmark-regulation]]
 - [[dbt-testing-framework]]
 - [[dbt-core-concepts]]

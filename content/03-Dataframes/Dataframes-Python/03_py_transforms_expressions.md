@@ -13,7 +13,7 @@ description: "Pandas/Polars DataFrame reference 03/10 — Transforms, Expression
 related:
   - "[[moc-dataframes]]"
   - "[[03_cs_transforms_expressions]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[02_py_explore_select_filter]]"
   - "[[04_py_missing_strings_datetime]]"
 created: 2026-03-24
@@ -2258,7 +2258,7 @@ scores_pl.select(cs.contains("score")).head(3)
 | Concept | Polars | Pandas Equivalent |
 |---|---|---|
 | Expression | pl.col("x") * 2 | No equivalent |
-| select | df.select(...) | df[[api-protocols-comparison]] |
+| select | df.select(...) | df[api-protocols-comparison](/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison) |
 | with_columns | df.with_columns(...) | df.assign(...) |
 | filter | df.filter(expr) | df[condition] |
 | group_by.agg | df.group_by().agg(exprs) | df.groupby().agg() |

@@ -9,8 +9,8 @@ description: "Terraform configuration for GCP Artifact Registry (Docker image st
 related:
   - "[[terraform-iam-and-secrets]]"
   - "[[terraform-cloud-run]]"
-  - "[[github-actions-ci-cd]]"
-  - "[[image-management]]"
+  - "[github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd)"
+  - "[image-management](/09-Docker/image-management)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -178,16 +178,16 @@ The `credentials_json` field receives the full JSON content of the CI service ac
 | `DD_API_KEY` | Datadog API key | Pipeline containers for APM/log shipping |
 | `DB_PASSWORD` | Database SA password | Pipeline and dashboard containers |
 
-For the full GitHub Actions CI/CD workflow setup, see [[github-actions-ci-cd]].
+For the full GitHub Actions CI/CD workflow setup, see [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd).
 
-For Docker image build and push operations, see [[image-management]].
+For Docker image build and push operations, see [image-management](/09-Docker/image-management).
 
 ## Related
 
 - [[terraform-iam-and-secrets]] — how the CI service account's permissions are structured
 - [[terraform-cloud-run]] — the Cloud Run services that pull images from this registry
-- [[github-actions-ci-cd]] — the GitHub Actions workflows that use the CI service account
-- [[image-management]] — docker tag, push, and build commands for the registry
+- [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — the GitHub Actions workflows that use the CI service account
+- [image-management](/09-Docker/image-management) — docker tag, push, and build commands for the registry
 
 ## References
 

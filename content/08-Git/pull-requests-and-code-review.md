@@ -10,7 +10,7 @@ related:
   - "[[git-daily-workflow]]"
   - "[[git-branching-and-merging]]"
   - "[[git-recovery-and-undo]]"
-  - "[[github-actions-ci-cd]]"
+  - "[github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -108,7 +108,7 @@ Go to your repository **Settings → General → Pull Requests** and enable:
 
 **Option C: Branch protection rule (strictest)**
 
-Branch protection rules work hand-in-hand with [[github-actions-ci-cd]] -- CI checks run on every PR push, and the merge button stays greyed out until they pass. Code review itself is also a powerful [[leadership-and-collaboration|teaching and collaboration tool]], especially for onboarding new team members.
+Branch protection rules work hand-in-hand with [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) -- CI checks run on every PR push, and the merge button stays greyed out until they pass. Code review itself is also a powerful [teaching and collaboration tool](/15-DataOps/leadership-and-collaboration), especially for onboarding new team members.
 
 Go to **Settings → Branches → Branch protection rules → Add rule** for `main`:
 
@@ -300,7 +300,7 @@ gh pr merge 7 --squash
 - [[git-daily-workflow]] — the daily workflow that feeds into PRs
 - [[git-branching-and-merging]] — creating and managing branches
 - [[git-recovery-and-undo]] — stash and reflog for recovery
-- [[github-actions-ci-cd]] — the CI/CD that runs on PRs
+- [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — the CI/CD that runs on PRs
 
 ## References
 

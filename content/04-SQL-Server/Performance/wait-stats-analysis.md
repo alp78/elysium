@@ -142,7 +142,7 @@ DBCC SQLPERF('sys.dm_os_wait_stats', CLEAR);
 > [!tip] Datadog Monitoring
 >
 > Related pattern: Datadog monitoring.
-> These same wait types can be tracked continuously via [[datadog-sql-server-integration]], which surfaces `PAGEIOLATCH`, `LCK_M`, and other waits as Datadog metrics. For custom DMV-based queries exposed through Datadog, see [[datadog-custom-queries]].
+> These same wait types can be tracked continuously via [datadog-sql-server-integration](/13-Observability/Datadog/datadog-sql-server-integration), which surfaces `PAGEIOLATCH`, `LCK_M`, and other waits as Datadog metrics. For custom DMV-based queries exposed through Datadog, see [datadog-custom-queries](/13-Observability/Datadog/datadog-custom-queries).
 
 > [!info] High Signal Waits = CPU Bottleneck
 >

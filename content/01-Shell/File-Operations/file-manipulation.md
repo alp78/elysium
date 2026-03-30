@@ -150,7 +150,7 @@ mv directory/ /tmp/delete_me_$(date +%Y%m%d)/
 > `-p` creates parent directories as needed and suppresses "already exists"
 > errors — making it idempotent (safe to run repeatedly). Combined with
 > [[brace-expansion-and-globbing|brace expansion]], a single command creates an entire
-> [[medallion-architecture]] directory tree.
+> [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) directory tree.
 
 ```bash
 mkdir -p /data/pipeline/{bronze,silver,gold}/staging

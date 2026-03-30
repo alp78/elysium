@@ -7,7 +7,7 @@ aliases: [Docker Compose, docker compose, docker-compose, compose, multi-contain
 keywords: [docker compose, up, down, build, restart, logs, pull, prune, multi-container, orchestration, services, volumes, detached, scale, exec, run, config, healthcheck, depends_on, networks, env_file, bind mount, named volume, override, force-recreate, rolling update, docker system prune, compose lifecycle, service restart]
 description: "Complete Docker Compose reference — compose file structure, lifecycle commands (up/down/start/stop/restart), scaling, logs, exec/debug, config overrides, and cleanup. Includes a full data engineering stack example with Airflow, PostgreSQL, and Redis."
 related:
-  - "[[container-lifecycle]]"
+  - "[container-lifecycle](/09-Docker/container-lifecycle)"
   - "[[image-management]]"
   - "[[docker-cheat-sheet]]"
   - "the Airflow DAGs"
@@ -18,7 +18,7 @@ status: complete
 
 # Docker Compose — Complete Reference
 
-Docker Compose defines and runs multi-container applications from a single `docker-compose.yaml` file. For data engineering, this typically means running the [[airflow-deployment|Airflow stack]] (scheduler, webserver, triggerer) alongside PostgreSQL and Redis, or local development stacks combining databases, pipeline services, and supporting infrastructure. All services, their images, networking, volumes, environment, and startup order are declared in one file and managed with a single CLI. In production, the same service topology often maps to [[terraform-cloud-run|Cloud Run services]] managed by Terraform.
+Docker Compose defines and runs multi-container applications from a single `docker-compose.yaml` file. For data engineering, this typically means running the [Airflow stack](/12-Orchestration/Airflow/airflow-deployment) (scheduler, webserver, triggerer) alongside PostgreSQL and Redis, or local development stacks combining databases, pipeline services, and supporting infrastructure. All services, their images, networking, volumes, environment, and startup order are declared in one file and managed with a single CLI. In production, the same service topology often maps to [Cloud Run services](/07-Terraform/GCP-Resources/terraform-cloud-run) managed by Terraform.
 
 ---
 
@@ -258,7 +258,7 @@ networks:
 
 ### Environment Variable Substitution
 
-Compose substitutes `${VAR}` and `$VAR` references from three sources, in priority order (the same [[environment-variables|environment variable patterns]] used throughout shell scripting and CI):
+Compose substitutes `${VAR}` and `$VAR` references from three sources, in priority order (the same [environment variable patterns](/01-Shell/Scripting/environment-variables) used throughout shell scripting and CI):
 
 1. Shell environment variables (highest priority)
 2. `.env` file in the same directory as the compose file
@@ -289,7 +289,7 @@ WEBSERVER_SECRET_KEY=changeme-use-a-real-secret
 
 > [!tip] Related pattern
 >
-> The `env_file` and `environment` directives here mirror the [[environment-variables|shell environment variable]] conventions. In CI/CD, GitHub Actions injects these same values through secrets and `env:` blocks rather than `.env` files.
+> The `env_file` and `environment` directives here mirror the [shell environment variable](/01-Shell/Scripting/environment-variables) conventions. In CI/CD, GitHub Actions injects these same values through secrets and `env:` blocks rather than `.env` files.
 
 ---
 
@@ -663,7 +663,7 @@ docker system df -v
 
 ## Related
 
-- [[container-lifecycle]] — Individual container operations (docker run, stop, rm, inspect)
+- [container-lifecycle](/09-Docker/container-lifecycle) — Individual container operations (docker run, stop, rm, inspect)
 - [[image-management]] — Building and pushing Docker images
 - [[docker-cheat-sheet]] — Full docker CLI quick reference
 - the Airflow DAGs — Airflow runs via Docker Compose on the Airflow VM

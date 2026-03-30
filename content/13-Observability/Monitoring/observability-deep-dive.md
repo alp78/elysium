@@ -9,10 +9,10 @@ description: "Observability deep dive for data engineering: DataDog custom metri
 related:
   - "[[datadog-architecture-overview]]"
   - "fastapi and polars"
-  - "[[dbt-transformation-layer]]"
-  - "[[idempotent-pipeline-design]]"
-  - "[[open-table-formats]]"
-  - "[[five-pillars-of-data-engineering]]"
+  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
+  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
+  - "[open-table-formats](/14-Data-Architecture/Architectures/open-table-formats)"
+  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
   - "[[observability-strategy-matrix]]"
 created: 2026-03-22
 updated: 2026-03-22
@@ -21,7 +21,7 @@ status: complete
 
 # Observability Deep Dive: DataDog, Lineage, and Data Cataloging
 
-Observability in data engineering is not just "monitoring with a fancier name." Monitoring tells you *that* something broke. Observability tells you *why* it broke, *what data* was affected, and *who* needs to be notified. For a financial index provider where incorrect data has regulatory and financial consequences, observability is a fiduciary obligation. This aligns with the broader [[dataops-principles-and-practices|DataOps philosophy]], which treats observability as a foundational pillar alongside testing, CI/CD, and automation.
+Observability in data engineering is not just "monitoring with a fancier name." Monitoring tells you *that* something broke. Observability tells you *why* it broke, *what data* was affected, and *who* needs to be notified. For a financial index provider where incorrect data has regulatory and financial consequences, observability is a fiduciary obligation. This aligns with the broader [DataOps philosophy](/15-DataOps/dataops-principles-and-practices), which treats observability as a foundational pillar alongside testing, CI/CD, and automation.
 
 > [!warning] Financial Data Stakes
 > In financial indexing, a monitoring gap is not just an operational inconvenience — it can result in incorrect index values published to the market, incorrect ETF NAVs, failed rebalancing trades, and regulatory scrutiny. Observability at this level is a compliance requirement, not an engineering nicety.
@@ -29,6 +29,8 @@ Observability in data engineering is not just "monitoring with a fancier name." 
 ---
 
 ### The Three Pillars (Metrics, Logs, Traces) Applied to Data Pipelines
+
+Every observability system is built on three complementary signal types. Each answers a different question about your pipeline's behavior, and no single pillar is sufficient on its own. Metrics tell you *something is wrong*, logs tell you *what happened*, and traces tell you *where the time went*.
 
 | Pillar | Application Question | Data Engineering Example |
 |---|---|---|
@@ -38,11 +40,19 @@ Observability in data engineering is not just "monitoring with a fancier name." 
 
 Most data teams have metrics and logs but lack traces. Without traces, debugging a slow pipeline means grepping through logs hoping to reconstruct the execution flow. With traces, you click on the slow pipeline run and see exactly which stage, which query, and which table was the bottleneck.
 
+> [!tip] The Observability Maturity Ladder
+> **Level 1 — Logs only:** you know something failed after reading log output manually. Most small teams are here.
+> **Level 2 — Metrics + Logs:** you get alerted when a metric threshold is breached, then investigate in logs. Most mid-size teams are here.
+> **Level 3 — Metrics + Logs + Traces:** you see the full execution path, identify the bottleneck stage, and drill into the specific query or API call. This is where financial data teams need to be.
+
+> [!warning] Metrics Without Context Are Noise
+> A metric that says "pipeline duration = 47 minutes" is useless without context. Is 47 minutes normal? Was it 12 minutes yesterday? Did it spike because of a slow upstream API or because the MERGE hit 10x more rows than usual? Always pair metrics with baselines and dimensional tags (stage name, index key, date) so alerts carry actionable context.
+
 ---
 
 ## DataDog for Data Pipeline Observability
 
-DataDog is the observability platform used by financial data companies and index providers. For a senior data engineer, the key is not just *installing* DataDog but *instrumenting* pipelines to produce actionable signals. The [[datadog-architecture-overview]] covers the practical agent setup and infrastructure topology, while [[cloud-logging]] provides the GCP-native logging complement for services like Cloud Run where the Datadog agent cannot run.
+DataDog is the observability platform used by financial data companies and index providers. For a senior data engineer, the key is not just *installing* DataDog but *instrumenting* pipelines to produce actionable signals. The [[datadog-architecture-overview]] covers the practical agent setup and infrastructure topology, while [cloud-logging](/06-GCP/Logging/cloud-logging) provides the GCP-native logging complement for services like Cloud Run where the Datadog agent cannot run.
 
 ### Custom Metrics for Pipeline Health
 
@@ -151,7 +161,18 @@ def load_daily_ohlcv(index_key: str, target_date: str):
 
 ## Data Freshness Monitoring
 
-Data freshness is the single most important metric for a data pipeline. It answers: "how old is the data that consumers are seeing right now?"
+Data freshness is the single most important metric for a data pipeline. It answers: "how old is the data that consumers are seeing right now?" Freshness is measured as the elapsed time between the most recent data point in a table and the current wall-clock time. A gold layer table with `max(trade_date) = 2026-03-09` queried at 10:00 AM on March 10 has a freshness of ~18 hours — which may or may not be acceptable depending on the SLA.
+
+> [!info] Freshness vs Latency vs Timeliness
+> These three terms are related but distinct:
+> - **Freshness** — how old is the most recent data in the table right now? (consumer perspective)
+> - **Latency** — how long does data take to travel from source to destination? (pipeline perspective)
+> - **Timeliness** — did the data arrive before the SLA deadline? (business perspective)
+>
+> A pipeline with 5-minute latency that runs at 11 PM produces fresh data by midnight. The same pipeline running at 6 AM produces stale data for any consumer with a pre-market SLA. Freshness depends on *when* the pipeline runs, not just *how fast* it runs.
+
+> [!danger] Stale Data in Financial Indexing
+> A stale gold layer in a financial index pipeline means the published index value is based on yesterday's prices. If an ETF tracking the index rebalances based on stale weights, trades execute at incorrect allocations. The correction cost scales with AUM — a 0.1% allocation error on a $1B ETF is $1M of tracking error. Freshness monitoring with automatic halt-before-publish is not optional.
 
 ### SQL Implementation: Freshness Tracking Table
 
@@ -203,7 +224,18 @@ def report_freshness(conn: pyodbc.Connection):
 
 ## Data Lineage: Where Did This Number Come From?
 
-Data lineage tracks the journey of every data point from source to destination. For a regulated financial index, an auditor may ask: "Show me exactly how the EURO market index closing value on March 9, 2026 was calculated — every input, every transformation, every intermediate value."
+Data lineage is the complete record of how a data point was produced — every source it originated from, every transformation applied, every intermediate table it passed through, and every consumer that reads it. Lineage operates at two granularity levels: **table-level** (which tables feed which tables) and **column-level** (which specific columns participate in which calculations).
+
+For a regulated financial index, an auditor may ask: "Show me exactly how the EURO market index closing value on March 9, 2026 was calculated — every input, every transformation, every intermediate value."
+
+> [!info] Forward Lineage vs Backward Lineage
+> - **Backward lineage** (provenance): "Where did this gold table value come from?" — traces upstream to source. Used for root cause analysis when a value looks wrong.
+> - **Forward lineage** (impact analysis): "If I change this bronze table schema, what breaks downstream?" — traces downstream to consumers. Used before schema changes, migrations, or decommissioning tables.
+>
+> Both directions are essential. Backward lineage debugs incidents; forward lineage prevents them.
+
+> [!warning] Lineage Gaps Are Invisible Until an Audit
+> If your lineage graph has gaps (stages not logged), you won't notice until someone asks "how was this number calculated?" and you can't answer. The most common gap: Python scripts that load data outside of dbt — these don't appear in the dbt lineage graph unless you manually log them.
 
 ### Column-Level Lineage for an Index Calculation
 
@@ -238,7 +270,7 @@ flowchart TB
 > - **Gold → Dashboard** — Blazor Server reads from gold layer
 
 > [!info] Lineage and dbt
-> [[dbt-transformation-layer|dbt]] automatically generates column-level lineage as part of `dbt docs generate`. For tables outside dbt (bronze loads, custom scripts), you must manually log lineage to a metadata table as shown below.
+> [dbt](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) automatically generates column-level lineage as part of `dbt docs generate`. For tables outside dbt (bronze loads, custom scripts), you must manually log lineage to a metadata table as shown below.
 
 ### Implementing Lineage with Metadata Tables
 
@@ -267,7 +299,17 @@ VALUES (@run_id, 'bronze.yahoo_ohlcv', 'silver.daily_ohlcv', 'MERGE', @source_co
 
 ## Data Cataloging and Entitlement
 
-A data catalog is the searchable inventory of all datasets, tables, columns, and their metadata. Financial index platforms explicitly require experience with "data cataloging and data entitlement capabilities."
+A data catalog is the searchable inventory of all datasets, tables, columns, and their metadata. It answers the question every new team member asks: "What data do we have, where is it, what does it mean, and who owns it?" Without a catalog, tribal knowledge is the only documentation — and tribal knowledge leaves when people do.
+
+Data entitlement is the access control layer on top of the catalog: who can see which datasets, at what granularity, and under what conditions. Financial index platforms explicitly require experience with "data cataloging and data entitlement capabilities."
+
+> [!info] Catalog vs Documentation vs Lineage
+> These three overlap but serve different purposes:
+> - **Catalog** — searchable inventory of *what exists* (tables, schemas, owners, tags)
+> - **Documentation** — prose explaining *how to use it* (business context, caveats, examples)
+> - **Lineage** — graph showing *where it came from* (upstream sources, transformations)
+>
+> A mature data platform has all three. dbt generates documentation and lineage automatically; the catalog must be maintained separately (or via a tool like DataHub/OpenMetadata that ingests dbt artifacts).
 
 ### What a Data Catalog Must Contain
 
@@ -281,7 +323,17 @@ A data catalog is the searchable inventory of all datasets, tables, columns, and
 
 ### Data Entitlement (Access Control for Financial Data)
 
-In index providers, not all data is available to all teams. Client data is segregated, pre-announcement reconstitution data is restricted, and market data licensing limits redistribution.
+Data entitlement goes beyond standard RBAC. In index providers, access control is driven by regulatory requirements, client contracts, and market data licenses — not just organizational hierarchy. Not all data is available to all teams. Client data is segregated, pre-announcement reconstitution data is restricted, and market data licensing limits redistribution.
+
+> [!danger] Pre-Announcement Data Leakage
+> Index reconstitution decisions (which stocks enter/exit the index) are market-moving information. If a data engineer with gold-layer access queries `reconstitution_candidates` before the official announcement date, that constitutes potential insider trading exposure — even if the query was for debugging. Entitlement rules must enforce time-based access: reconstitution tables are restricted until T+0 (announcement date).
+
+> [!info] Entitlement Dimensions for Financial Data
+> - **Role-based** — data_consumer vs data_engineer vs compliance_auditor
+> - **Schema-based** — gold layer is read-only for consumers; bronze/silver require engineer role
+> - **Time-based** — reconstitution data restricted until announcement date
+> - **Client-based** — client A's custom index data invisible to client B's team
+> - **License-based** — redistributing Bloomberg/Reuters raw data may violate vendor agreements
 
 #### Role-based access control for index data schemas
 
@@ -320,9 +372,14 @@ GRANT SELECT ON SCHEMA::gold TO compliance_auditor;
 
 ## Building a Data Quality Framework
 
-Data quality is not a one-time check — it is a continuous system that validates data at every layer.
+Data quality is not a one-time check — it is a continuous system that validates data at every layer. A quality framework defines *what* to check (dimensions), *where* to check (which pipeline stage), *how* to check (SQL assertions, Python validators, dbt tests), and *what happens when checks fail* (halt, quarantine, alert, or log-and-continue).
+
+> [!tip] Quality Gates vs Quality Checks
+> A **quality check** validates data and reports pass/fail. A **quality gate** is a check that *blocks the pipeline* if it fails. Not every check should be a gate — blocking on a warning-level anomaly creates unnecessary pipeline failures. Reserve gates for critical dimensions (completeness, validity) and use non-blocking checks for informational dimensions (minor distribution shifts).
 
 ### The Data Quality Dimensions
+
+The six dimensions below form the standard framework for data quality assessment. Each dimension answers a different question about the data, and each requires different validation techniques.
 
 | Dimension | Question | Check |
 |---|---|---|
@@ -332,6 +389,9 @@ Data quality is not a one-time check — it is a continuous system that validate
 | **Consistency** | Do related tables agree? | Sum of constituent weights = 100%; index value from components = published value |
 | **Uniqueness** | Are there duplicates? | COUNT vs COUNT(DISTINCT key) |
 | **Validity** | Are values in acceptable ranges? | Stock price > 0; weight between 0 and 1; date is a valid trading day |
+
+> [!warning] The Hardest Dimension: Accuracy
+> Completeness, uniqueness, and validity can be checked with SQL alone. Accuracy requires an *external reference* — you need a second source of truth to compare against. For financial data, this means cross-referencing your calculated index value against a published benchmark, or comparing your ingested prices against a second data vendor. Without a reference, you can only check that data *looks reasonable*, not that it's *correct*.
 
 #### Automated data quality checks stored in pipeline.quality_checks
 
@@ -382,6 +442,15 @@ WHERE index_key = 'market_index';
 
 ### Great Expectations Integration
 
+Great Expectations (GX) is a Python framework for defining data validation rules as code. Unlike SQL-based checks that run inside the warehouse, GX validates DataFrames in Python — making it ideal for checking raw ingested data *before* it reaches the warehouse. Expectations are declarative ("this column must be between 0.01 and 100000") and composable into suites that run as pipeline steps.
+
+> [!info] When to Use Great Expectations vs dbt Tests vs SQL Checks
+> - **Great Expectations** — Python-native validation on raw ingested DataFrames (bronze layer). Best for validating data before it enters the warehouse.
+> - **dbt tests** — SQL-native validation on transformed tables (staging, intermediate, marts). Best for testing business logic and referential integrity.
+> - **SQL quality checks** — Custom SQL assertions stored in `pipeline.quality_checks`. Best for ad-hoc operational checks and SLA tracking.
+>
+> Use all three at different pipeline stages. They complement each other — GX catches source problems, dbt tests catch transform errors, SQL checks enforce business invariants.
+
 #### Great Expectations Python-based validation suite
 
 ```python
@@ -423,13 +492,16 @@ if not result.success:
 ```
 
 > [!tip] Great Expectations vs dbt Tests
-> Use [[dbt-transformation-layer|dbt tests]] for SQL-native validation on transformed tables (staging, intermediate, marts). Use Great Expectations for Python-native validation on raw ingested data *before* it reaches the warehouse. They complement each other — dbt tests catch transformation errors, GX catches source data quality problems.
+> Use [dbt tests](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) for SQL-native validation on transformed tables (staging, intermediate, marts). Use Great Expectations for Python-native validation on raw ingested data *before* it reaches the warehouse. They complement each other — dbt tests catch transformation errors, GX catches source data quality problems.
 
 ---
 
 ## Data Profiling and Drift Detection: Shift-Left Quality
 
 Traditional data quality checks ask "does this data pass my rules?" Drift detection asks a deeper question: "has the *shape* of this data changed in a way that suggests something upstream is broken?" This is the difference between catching a bad row and catching a bad *data feed* — before the bad rows even arrive.
+
+> [!info] What is Drift?
+> In data engineering, **drift** means an unexpected change in data structure or statistical properties compared to a known baseline. Drift is not inherently bad — markets move, schemas evolve, and new columns appear. The goal is to *detect* drift early so a human can decide whether it's a legitimate change (new column from an API upgrade) or a data error (provider switched currency denomination silently).
 
 #### Two types of drift that break financial pipelines
 
@@ -439,6 +511,16 @@ Traditional data quality checks ask "does this data pass my rules?" Drift detect
 | **Data drift** | Statistical distribution of values shifts unexpectedly | Mean close price of Euro market index constituents drops 40% overnight | Could be a market crash *or* a data feed switching from EUR to GBP |
 
 ### Schema Drift Detection
+
+Schema drift occurs when the *structure* of incoming data changes without the pipeline being updated to expect it. This is the most common cause of silent data corruption — a renamed column doesn't crash the pipeline, it just loads NULLs into the target column while the data quietly disappears.
+
+> [!info] Schema Drift Severity Levels
+> - **CRITICAL — Column missing or renamed:** the pipeline will either crash (good — fail-fast) or silently load NULLs into the target (bad — silent corruption). Always halt.
+> - **HIGH — Type changed:** a column that was `Float64` is now `String`. The pipeline may load successfully but downstream calculations produce wrong results. Halt and investigate.
+> - **LOW — New column added:** an upstream source added a field. No immediate breakage, but it may contain data you should be capturing. Log and review.
+
+> [!danger] The Silent NULL Problem
+> When a source renames `adj_close` to `adjusted_close`, a pipeline that maps by column name will load NULLs into `adj_close` (the column exists in the target but has no matching source data). No error is thrown. The pipeline reports success. Downstream calculations silently use NULL values, which in many SQL aggregations are simply ignored — producing numerically plausible but wrong results. Schema drift detection before loading is the only defense.
 
 #### Python function to detect schema drift against a reference schema
 
@@ -508,6 +590,32 @@ if any(d['severity'] == 'CRITICAL' for d in drifts):
 ```
 
 ### Statistical Data Drift Detection
+
+Statistical drift detection compares the *distribution* of today's data against a historical baseline to determine whether values have shifted beyond expected variation. Unlike rule-based checks ("is this price negative?"), statistical drift catches anomalies that are technically valid but behaviorally abnormal ("prices are all positive, but the mean dropped 40% overnight").
+
+> [!info] Z-Score — Measuring Mean Shift
+> The **Z-score** measures how many standard deviations the current mean is from the baseline mean. A Z-score of 0 means no shift; a Z-score of 3 means the current mean is 3 standard deviations away from the baseline — an event that occurs by chance only 0.3% of the time under normal conditions.
+>
+> **Formula:** `Z = (current_mean - baseline_mean) / baseline_std`
+>
+> **Interpretation:** |Z| > 3.0 is the conventional threshold for "something unusual happened." For financial data with fat-tailed distributions, you may need to adjust this — a Z-score of 3 during earnings season may be normal.
+
+> [!info] Kolmogorov-Smirnov (KS) Test — Measuring Distribution Change
+> The **KS test** compares two entire distributions, not just their means. It answers: "could these two samples have been drawn from the same underlying distribution?" The test returns a **p-value** — the probability that the observed difference arose by chance.
+>
+> - **p-value > 0.05** — distributions are statistically similar (no drift)
+> - **p-value < 0.05** — distributions are statistically different (drift detected)
+> - **p-value < 0.001** — distributions are very different (high-confidence drift)
+>
+> The KS test catches drift that Z-score misses: if the mean stays the same but the variance doubles (some prices went up, others went down), the Z-score shows nothing but the KS test flags it.
+
+> [!warning] Statistical Tests on Financial Data Have Caveats
+> Financial time series violate the assumptions of standard statistical tests:
+> - **Fat tails** — extreme events are more frequent than a normal distribution predicts. A 5-sigma move happens more often than once in 3.5 million days.
+> - **Regime changes** — a central bank rate decision can shift the entire distribution overnight. This is real market behavior, not a data error.
+> - **Seasonality** — volume spikes on options expiration days, year-end rebalancing, and earnings seasons are predictable but look anomalous to a naive baseline.
+>
+> Use drift detection as an *early warning signal*, not an automated halt. A human must decide whether a CRITICAL drift alert is a data error or a genuine market event.
 
 #### Z-score and Kolmogorov-Smirnov test for distribution drift
 
@@ -607,6 +715,11 @@ for r in drift_results:
 
 ### Automated Drift Monitoring Table
 
+Drift results must be persisted so they can be queried by dashboards, tracked over time, and correlated with pipeline incidents. The table below stores every drift check result with severity, resolution status, and the statistical values that triggered the alert.
+
+> [!tip] Track Resolved Drifts, Not Just Active Ones
+> Keeping a history of resolved drifts builds institutional knowledge. When a similar drift recurs, the `resolution_note` from last time tells the on-call engineer: "This happened on 2026-01-15 — it was a JPY/USD feed switch, fixed by contacting the vendor." Without this history, every drift alert is investigated from scratch.
+
 #### SQL table for persisting drift detection results — drives dashboards and alerts
 
 ```sql
@@ -671,18 +784,27 @@ flowchart TB
 
 ### Observability Gotchas and Edge Cases
 
-- **DataDog statsd vs DogStatsD:** The standard `statsd` client works but lacks DataDog-specific features (histograms, service checks, events). Use the `datadog` Python client (`pip install datadog`) for full DataDog support.
-- **Drift thresholds for financial data:** Z-score threshold of 3.0 and KS p-value of 0.05 are starting points. Financial time series have fat tails and regime changes — tune thresholds based on your specific asset class and market conditions. A 30% single-day move might be a genuine market event, not a data error.
-- **Catalog tooling selection:** Google Data Catalog is ideal if your stack is GCP-native. For mixed environments (SQL Server + BigQuery + GCS), OpenMetadata or DataHub offer better multi-system connectors.
-- **Freshness SLAs:** Different tables have different SLAs. The gold layer might have a 30-minute SLA during market hours; bronze tables might have a 5-minute SLA. Track SLA per table, not a single global threshold.
-- **Lineage completeness:** dbt generates lineage automatically for dbt models. External processes (Python loaders, SQL Agent jobs) must manually log to `pipeline.lineage`. Without this, your lineage graph has holes.
+> [!warning] DataDog statsd vs DogStatsD
+> The standard `statsd` client works but lacks DataDog-specific features (histograms, service checks, events). Use the `datadog` Python client (`pip install datadog`) for full DogStatsD support. If you use the generic `statsd` client, histograms silently degrade to timers and you lose percentile calculations.
+
+> [!warning] Drift Thresholds for Financial Data
+> Z-score threshold of 3.0 and KS p-value of 0.05 are starting points only. Financial time series have fat tails and regime changes — tune thresholds based on your specific asset class and market conditions. A 30% single-day move in an emerging market equity index might be a genuine market event, not a data error. Consider separate thresholds for different asset classes and market regimes.
+
+> [!tip] Catalog Tooling Selection
+> Google Data Catalog is ideal if your stack is GCP-native (BigQuery auto-discovery, Dataplex integration). For mixed environments (SQL Server + BigQuery + GCS), OpenMetadata or DataHub offer better multi-system connectors. Evaluate on three axes: connector coverage for your stack, lineage depth (table vs column level), and operational burden (managed vs self-hosted).
+
+> [!warning] Freshness SLAs Must Be Per-Table
+> Different tables have different SLAs. The gold layer might have a 30-minute SLA during market hours; bronze tables might have a 5-minute SLA. Track SLA per table, not a single global threshold. A single "pipeline freshness" metric hides the table that's 3 hours stale behind the table that was just refreshed.
+
+> [!danger] Lineage Completeness
+> dbt generates lineage automatically for dbt models. External processes (Python loaders, SQL Agent jobs) must manually log to `pipeline.lineage`. Without this, your lineage graph has holes — and holes in lineage are invisible until an auditor asks "how was this number calculated?" and you can't trace it back to source.
 
 ## Related
 - [[datadog-architecture-overview]] — DataDog agent setup and infrastructure monitoring
 - fastapi and polars — FastAPI services and Polars pipelines being monitored
-- [[dbt-transformation-layer]] — dbt tests as a complementary data quality layer
-- [[idempotent-pipeline-design]] — pipeline design patterns that support observability
-- [[open-table-formats]] — Iceberg time travel as a lineage/audit capability
+- [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — dbt tests as a complementary data quality layer
+- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — pipeline design patterns that support observability
+- [open-table-formats](/14-Data-Architecture/Architectures/open-table-formats) — Iceberg time travel as a lineage/audit capability
 
 ## References
 - [DataDog Python client](https://datadogpy.readthedocs.io/)

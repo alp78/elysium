@@ -7,13 +7,13 @@ updated: 2026-03-23
 description: "Model contracts, access levels, versioning, and breaking-change detection for financial data pipelines"
 related:
   - "[[dbt-testing-framework]]"
-  - "[[data-contracts]]"
+  - "[data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts)"
   - "[[dbt-core-concepts]]"
 ---
 
 # dbt: Data Contracts Implementation
 
-Data contracts in dbt make model schemas enforceable at build time rather than discovered at query time. This is the dbt-specific implementation of the broader [[data-contracts]] architectural pattern. Combined with model access levels and versioning, they turn mart models into stable, consumer-facing APIs — critical in financial data pipelines where downstream reports, regulatory feeds, and third-party ESG systems all depend on column stability.
+Data contracts in dbt make model schemas enforceable at build time rather than discovered at query time. This is the dbt-specific implementation of the broader [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts) architectural pattern. Combined with model access levels and versioning, they turn mart models into stable, consumer-facing APIs — critical in financial data pipelines where downstream reports, regulatory feeds, and third-party ESG systems all depend on column stability.
 
 ---
 
@@ -319,7 +319,7 @@ jobs:
             --full-refresh false
 ```
 
-`state:modified+` runs only models that changed in this PR, plus all downstream dependents — catching cascading contract breaks without rebuilding the entire project. For the full quality context in which these contract checks operate, see [[data-quality-framework]].
+`state:modified+` runs only models that changed in this PR, plus all downstream dependents — catching cascading contract breaks without rebuilding the entire project. For the full quality context in which these contract checks operate, see [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework).
 
 ### Catching Column Removals
 
@@ -476,7 +476,7 @@ dbt will print a deprecation warning for any `ref(..., v=1)` call after `2026-06
 ## Related
 
 - [[dbt-testing-framework]]
-- [[data-contracts]]
+- [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts)
 - [[dbt-core-concepts]]
 - [[dbt-macros-and-jinja]]
 - [[dbt-packages]]

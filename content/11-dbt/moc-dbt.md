@@ -241,8 +241,8 @@ mindmap
 
 ## Cross-References
 
-- [[moc-data-architecture|Data Architecture]] — dbt transformation layer theory and medallion architecture
-- [[moc-sql-server|SQL Server]] — SQL Server pipeline patterns that dbt automates
-- [[moc-db-queries|DB Queries]] — BigQuery and SQL Server query patterns used in dbt models
-- [[moc-github-actions|GitHub Actions]] — CI/CD pipelines running dbt test and build
-- [[moc-observability|Observability]] — dbt observability in the broader monitoring stack
+- [Data Architecture](/14-Data-Architecture/moc-data-architecture) — dbt transformation layer theory and medallion architecture
+- [SQL Server](/04-SQL-Server/moc-sql-server) — SQL Server pipeline patterns that dbt automates
+- [DB Queries](/05-DB-Queries/moc-db-queries) — BigQuery and SQL Server query patterns used in dbt models
+- [GitHub Actions](/10-GitHub-Actions/moc-github-actions) — CI/CD pipelines running dbt test and build
+- [Observability](/13-Observability/moc-observability) — dbt observability in the broader monitoring stack

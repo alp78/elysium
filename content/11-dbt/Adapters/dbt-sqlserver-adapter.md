@@ -6,15 +6,15 @@ status: stable
 updated: 2026-03-23
 description: "SQL Server adapter installation, auth, T-SQL differences, incremental strategy, index post-hooks, and known limitations."
 related:
-  - "[[moc-sql-server]]"
+  - "[moc-sql-server](/04-SQL-Server/moc-sql-server)"
   - "[[dbt-performance-tuning]]"
-  - "[[sqlcmd-connection-and-usage]]"
+  - "[sqlcmd-connection-and-usage](/04-SQL-Server/Administration/sqlcmd-connection-and-usage)"
   - "[[dbt-cross-adapter-patterns]]"
 ---
 
 # dbt: SQL Server Adapter
 
-The `dbt-sqlserver` community adapter connects dbt Core to Microsoft SQL Server and Azure SQL. It is not maintained by dbt Labs — pin versions carefully. This note covers everything needed to run dbt reliably against a SQL Server instance from a Linux host (GCE, Cloud Run, WSL), which is the common deployment path when orchestrating from GCP. For prerequisite SQL Server instance setup, see [[server-configuration]].
+The `dbt-sqlserver` community adapter connects dbt Core to Microsoft SQL Server and Azure SQL. It is not maintained by dbt Labs — pin versions carefully. This note covers everything needed to run dbt reliably against a SQL Server instance from a Linux host (GCE, Cloud Run, WSL), which is the common deployment path when orchestrating from GCP. For prerequisite SQL Server instance setup, see [server-configuration](/04-SQL-Server/Administration/server-configuration).
 
 ---
 
@@ -255,7 +255,7 @@ SELECT value FROM STRING_SPLIT(tag_list, ',')
 
 ### SQL Server Post-Hook Indexes
 
-SQL Server does not auto-create indexes on dbt-managed tables. For guidance on choosing between clustered, non-clustered, and columnstore indexes, see [[index-types-and-strategy]]. For incremental models queried by date range or ISIN, add non-clustered indexes via `post_hook`.
+SQL Server does not auto-create indexes on dbt-managed tables. For guidance on choosing between clustered, non-clustered, and columnstore indexes, see [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy). For incremental models queried by date range or ISIN, add non-clustered indexes via `post_hook`.
 
 ```sql
 -- models/mart/mart_esg_scores.sql
@@ -379,7 +379,7 @@ connect_timeout: 60
 
 ## Related
 
-- [[moc-sql-server]]
+- [moc-sql-server](/04-SQL-Server/moc-sql-server)
 - [[dbt-performance-tuning]]
-- [[sqlcmd-connection-and-usage]]
+- [sqlcmd-connection-and-usage](/04-SQL-Server/Administration/sqlcmd-connection-and-usage)
 - [[dbt-cross-adapter-patterns]]

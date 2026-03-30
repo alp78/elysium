@@ -13,7 +13,7 @@ description: "Pandas/Polars DataFrame reference 05/10 — Aggregation & Reshapin
 related:
   - "[[moc-dataframes]]"
   - "[[05_cs_aggregation_reshaping]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[04_py_missing_strings_datetime]]"
   - "[[06_py_lazy_performance]]"
 created: 2026-03-24
@@ -705,7 +705,7 @@ display(
 
 ## Window Transform
 
-Window functions like `PARTITION BY` and `ROWS BETWEEN` appear across SQL and DataFrame APIs. The SQL Server gold layer in [[gold-transforms]] applies the same ranking and running-total logic, and [[bq-advanced]] covers BigQuery window functions for identical analytical needs.
+Window functions like `PARTITION BY` and `ROWS BETWEEN` appear across SQL and DataFrame APIs. The SQL Server gold layer in [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) applies the same ranking and running-total logic, and [bq-advanced](/05-DB-Queries/BigQuery/bq-advanced) covers BigQuery window functions for identical analytical needs.
 
 ### Pandas Window Transform — groupby().transform()
 ```python

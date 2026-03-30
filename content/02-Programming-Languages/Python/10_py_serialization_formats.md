@@ -558,7 +558,7 @@ print("""
 
 ## Format Performance Benchmark
 
-For the architecture-level decision guide on when to use each format across the full pipeline (ingestion, storage, interchange), see [[serialization-formats]]. The benchmarks below focus on Python-specific library performance, while [[data-loading-and-export]] covers how format choice affects BigQuery load throughput.
+For the architecture-level decision guide on when to use each format across the full pipeline (ingestion, storage, interchange), see [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats). The benchmarks below focus on Python-specific library performance, while [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) covers how format choice affects BigQuery load throughput.
 
 #### Generate synthetic OHLCV test data — three sizes for benchmarks
 

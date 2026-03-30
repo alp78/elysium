@@ -86,7 +86,7 @@ sudo iotop -o   # -o = only show processes with active I/O
 
 > [!tip] SQL Server memory behavior
 >
-> SQL Server intentionally grabs as much memory as possible and holds it. This is BY DESIGN -- it's using the RAM as a buffer pool cache. `free -h` will show almost all memory as "used," which looks alarming but is correct behavior. For deeper analysis of buffer pool health, cache hit ratios, and memory grants, see [[memory-and-buffer-pool]].
+> SQL Server intentionally grabs as much memory as possible and holds it. This is BY DESIGN -- it's using the RAM as a buffer pool cache. `free -h` will show almost all memory as "used," which looks alarming but is correct behavior. For deeper analysis of buffer pool health, cache hit ratios, and memory grants, see [memory-and-buffer-pool](/04-SQL-Server/Performance/memory-and-buffer-pool).
 >
 > The real question is: "Does SQL Server have ENOUGH memory?" Check Page Life Expectancy (PLE):
 > ```sql
@@ -116,7 +116,7 @@ Get-Counter '\PhysicalDisk(*)\Disk Reads/sec','\PhysicalDisk(*)\Disk Writes/sec'
     '\PhysicalDisk(*)\Avg. Disk sec/Read','\PhysicalDisk(*)\Avg. Disk sec/Write'
 ```
 
-For automated monitoring of these same metrics (CPU, memory, disk I/O) with alerting and dashboards, see [[datadog-sql-server-integration]]. To tune SQL Server's memory ceiling and prevent it from starving the OS, see [[server-configuration|max server memory configuration]].
+For automated monitoring of these same metrics (CPU, memory, disk I/O) with alerting and dashboards, see [datadog-sql-server-integration](/13-Observability/Datadog/datadog-sql-server-integration). To tune SQL Server's memory ceiling and prevent it from starving the OS, see [max server memory configuration](/04-SQL-Server/Administration/server-configuration).
 
 ## Related
 - [[viewing-processes]] — identify which processes are consuming the resources

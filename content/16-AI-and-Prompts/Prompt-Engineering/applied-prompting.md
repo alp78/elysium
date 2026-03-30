@@ -97,7 +97,7 @@ calls to action, author bios, or SEO keywords.
 > "Mid-level data engineers who have built pipelines but haven't used the bronze/silver/gold pattern" tells the model exactly what to include (practical implementation) and what to skip (why pipelines matter in the first place). Audience anchoring is one of the highest-ROI additions to a content prompt.
 
 > [!info] Medallion Architecture
-> The blog post example references [[medallion-architecture|medallion architecture]] (bronze/silver/gold layers). This is a real pattern relevant to data engineering content — see the linked note for technical context that could ground your prompt.
+> The blog post example references [medallion architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) (bronze/silver/gold layers). This is a real pattern relevant to data engineering content — see the linked note for technical context that could ground your prompt.
 
 ---
 

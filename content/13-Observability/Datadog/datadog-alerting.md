@@ -146,4 +146,4 @@ Enable in: **Integrations > Google Cloud Platform > Edit > GCE Automuting = ON**
 - [[datadog-custom-queries]] — `sqlserver.deadlocks.total` metric source
 - [[datadog-agent-airflow-vm]] — StatsD source for Airflow scheduler metrics
 - [[datadog-gcp-integration]] — GCE Automuting for VM stop/start
-- [[essential-dba-queries]] — Manual queries to investigate after a deadlock alert
+- [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — Manual queries to investigate after a deadlock alert

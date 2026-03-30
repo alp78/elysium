@@ -13,7 +13,7 @@ related:
   - "[[idempotent-pipeline-design]]"
   - "[[five-pillars-of-data-engineering]]"
   - "[[serialization-formats]]"
-  - "[[querying-and-cost-optimization]]"
+  - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
   - "[[streaming-architecture]]"
   - "[[data-mesh-architecture]]"
 created: 2026-03-22
@@ -411,7 +411,7 @@ GROUP BY event_date, product_category
 ORDER BY event_date, total_revenue DESC;
 ```
 
-For BigQuery query optimization on external tables, see [[querying-and-cost-optimization]].
+For BigQuery query optimization on external tables, see [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization).
 
 ---
 
@@ -458,7 +458,7 @@ CALL glue.system.remove_orphan_files(
 ```
 
 > [!tip] Automate Maintenance with Airflow
-> Schedule Iceberg maintenance jobs as daily [[airflow-dag-patterns|Airflow DAGs]]. Run compaction after the nightly batch load, expire snapshots weekly, and remove orphans monthly. Failing to do this will progressively degrade query performance and inflate storage costs.
+> Schedule Iceberg maintenance jobs as daily [Airflow DAGs](/12-Orchestration/Airflow/airflow-dag-patterns). Run compaction after the nightly batch load, expire snapshots weekly, and remove orphans monthly. Failing to do this will progressively degrade query performance and inflate storage costs.
 
 ---
 
@@ -480,7 +480,7 @@ The lakehouse is primarily a batch analytics architecture, but it increasingly h
 - [[idempotent-pipeline-design]] — ensuring safe re-runs in lakehouse pipelines
 - [[streaming-architecture]] — streaming ingestion into lakehouse tables
 - [[data-mesh-architecture]] — organizational pattern that uses lakehouse as the technical foundation
-- [[querying-and-cost-optimization]] — BigQuery optimization when querying BigLake tables
+- [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) — BigQuery optimization when querying BigLake tables
 - [[serialization-formats]] — Parquet, ORC, Avro — the file formats underneath the table formats
 - [[five-pillars-of-data-engineering]] — reliability, observability, efficiency, security, operability
 

@@ -6,8 +6,8 @@ status: stable
 updated: 2026-03-23
 description: "Identifying slow models from run_results.json, BigQuery and SQL Server tuning, thread configuration, incremental strategy optimisation, and model refactoring with dbt-audit-helper."
 related:
-  - "[[query-plan-analysis]]"
-  - "[[querying-and-cost-optimization]]"
+  - "[query-plan-analysis](/04-SQL-Server/Performance/query-plan-analysis)"
+  - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
   - "[[dbt-materializations]]"
   - "[[dbt-troubleshooting]]"
   - "[[dbt-observability]]"
@@ -92,7 +92,7 @@ def check_slow_models(**context):
 
 ### BigQuery Tuning — Partition Pruning
 
-Partitioned tables are only useful if queries filter on the partition column — see [[querying-and-cost-optimization]] for broader BigQuery cost strategies. Verify pruning is happening in the query plan:
+Partitioned tables are only useful if queries filter on the partition column — see [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) for broader BigQuery cost strategies. Verify pruning is happening in the query plan:
 
 ```sql
 -- Check partitions scanned in INFORMATION_SCHEMA
@@ -187,7 +187,7 @@ GROUP BY 1, 2
 
 ### Post-Hook Indexes
 
-dbt materialises tables without indexes by default. The [[partitioning-strategies]] note covers SQL Server partitioning in depth; for dbt-managed tables, add indexes in `post-hook`:
+dbt materialises tables without indexes by default. The [partitioning-strategies](/04-SQL-Server/Storage-and-Indexes/partitioning-strategies) note covers SQL Server partitioning in depth; for dbt-managed tables, add indexes in `post-hook`:
 
 ```sql
 -- dbt_project.yml
@@ -443,8 +443,8 @@ bq query --use_legacy_sql=false < target/compiled/.../audit_fct_index_weights.sq
 
 ## Related
 
-- [[query-plan-analysis]]
-- [[querying-and-cost-optimization]]
+- [query-plan-analysis](/04-SQL-Server/Performance/query-plan-analysis)
+- [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)
 - [[dbt-materializations]]
 - [[dbt-troubleshooting]]
 - [[dbt-observability]]

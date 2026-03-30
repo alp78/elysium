@@ -8,8 +8,8 @@ description: "What dbt is, how it compiles, the DAG, materializations, profiles,
 related:
   - "[[dbt-project-structure]]"
   - "[[dbt-cli-reference]]"
-  - "[[dbt-transformation-layer]]"
-  - "[[airflow-core-concepts]]"
+  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
+  - "[airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts)"
 ---
 
 # dbt Core Concepts
@@ -105,7 +105,7 @@ JOIN {{ ref('int_constituent_weights') }} w
 GROUP BY w.index_code, r.price_date
 ```
 
-dbt knows to run staging first, then intermediate, then marts — mirroring the [[medallion-architecture]] progression from bronze to silver to gold. You never specify execution order — ref() handles it.
+dbt knows to run staging first, then intermediate, then marts — mirroring the [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) progression from bronze to silver to gold. You never specify execution order — ref() handles it.
 
 > [!tip] Contrast with Airflow
 > In Airflow, you explicitly define `task_a >> task_b >> task_c`. In dbt, dependencies are implicit from ref(). Airflow orchestrates *when* dbt runs; dbt manages the *order within* a run.
@@ -252,6 +252,6 @@ models:
 
 - [[dbt-project-structure]] — Directory layout and naming conventions
 - [[dbt-cli-reference]] — CLI commands and flags
-- [[dbt-transformation-layer]] — Code-heavy walkthrough
-- [[airflow-core-concepts]] — How Airflow orchestrates dbt runs
-- [[medallion-architecture]] — How bronze/silver/gold maps to staging/intermediate/marts
+- [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — Code-heavy walkthrough
+- [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) — How Airflow orchestrates dbt runs
+- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — How bronze/silver/gold maps to staging/intermediate/marts

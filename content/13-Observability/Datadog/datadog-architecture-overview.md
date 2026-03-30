@@ -74,7 +74,7 @@ Cloud Run Job: data-pipeline-pipeline
 | SQL Server database | DD Agent (sqlserver check) | Connections, buffer pool, waits, query stats |
 | SQL Server errorlog | DD Agent (file tailing) | Errors, failed logins, checkpoints |
 | Pipeline steps | ddtrace APM | Per-step traces with duration, SQL queries |
-| Cloud Run jobs | GCP Integration | Execution count, CPU, memory — compare with [[cloud-monitoring-metrics|GCP-native Cloud Monitoring]] for metrics that remain outside Datadog |
+| Cloud Run jobs | GCP Integration | Execution count, CPU, memory — compare with [GCP-native Cloud Monitoring](/06-GCP/Logging/cloud-monitoring-metrics) for metrics that remain outside Datadog |
 
 ---
 

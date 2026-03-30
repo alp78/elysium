@@ -1252,7 +1252,7 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 - [[github-actions-fundamentals]] — Workflow anatomy, triggers, runners, secrets
 - [[github-actions-patterns]] — Reusable workflows, matrix builds, deployment patterns
 - [[github-actions-data-engineering]] — Data pipeline CI/CD specifics
-- [[secrets-management]] — Secret rotation and management
+- [secrets-management](/06-GCP/Security/secrets-management) — Secret rotation and management
 
 ---
 

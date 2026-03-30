@@ -72,7 +72,7 @@ A practical how-to guide covering every major Airflow deployment option — from
 
 ## Option 1: Local Development with Docker Compose
 
-Docker Compose is the fastest way to run a full Airflow environment locally. The official `docker-compose.yaml` from Apache runs all components in containers (see [[docker-compose]] for foundational Compose concepts), making it easy to reproduce the production environment on a laptop.
+Docker Compose is the fastest way to run a full Airflow environment locally. The official `docker-compose.yaml` from Apache runs all components in containers (see [docker-compose](/09-Docker/docker-compose) for foundational Compose concepts), making it easy to reproduce the production environment on a laptop.
 
 ### Step 1: Fetch the Official Docker Compose File
 
@@ -148,7 +148,7 @@ x-airflow-common: &airflow-common
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config      # airflow.cfg overrides
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins    # Custom plugins
     - ./secrets:/opt/secrets:ro                               # GCP service account keys
-  user: "${AIRFLOW_UID:-50000}:0"  # See [[file-manipulation]] for chown/chmod patterns when DAG file permissions cause issues
+  user: "${AIRFLOW_UID:-50000}:0"  # See [file-manipulation](/01-Shell/File-Operations/file-manipulation) for chown/chmod patterns when DAG file permissions cause issues
   depends_on: &airflow-common-depends-on
     postgres:
       condition: service_healthy
@@ -279,7 +279,7 @@ apache-airflow-providers-postgres==5.10.0
 
 ## Option 2: Self-Hosted on Google Compute Engine (GCE)
 
-For teams that need more control than managed services provide, or want to minimize cloud-managed service costs. VM provisioning can be automated with [[terraform-compute]].
+For teams that need more control than managed services provide, or want to minimize cloud-managed service costs. VM provisioning can be automated with [terraform-compute](/07-Terraform/GCP-Resources/terraform-compute).
 
 ### Architecture
 
@@ -941,4 +941,4 @@ Approximate monthly costs for running Airflow at small/medium scale (us-central1
 - [GCP Secret Manager backend](https://airflow.apache.org/docs/apache-airflow-providers-google/stable/secrets-backends/google-cloud-secret-manager-backend.html)
 
 ## Related
-- [[environment-management-strategy]] — How Airflow connections and deployment fit into the full dev/staging/prod strategy
+- [environment-management-strategy](/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — How Airflow connections and deployment fit into the full dev/staging/prod strategy

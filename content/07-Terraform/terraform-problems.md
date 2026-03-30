@@ -2145,7 +2145,7 @@ terraform version  # Confirm: Terraform v1.9.8
 - [[tf-compute-and-storage]] — Compute and storage blocks
 - [[tf-iam-secrets-serverless]] — IAM, secrets, serverless blocks
 - [[tf-data-services]] — BigQuery, Firestore, Dataflow blocks
-- [[github-actions-data-engineering]] — CI/CD for Terraform
+- [github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering) — CI/CD for Terraform
 
 ---
 

@@ -9,12 +9,12 @@ related:
   - "[[dbt-intermediate-models]]"
   - "[[dbt-materializations]]"
   - "[[dbt-testing-framework]]"
-  - "[[rest-api-design-and-consumption]]"
+  - "[rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption)"
 ---
 
 # dbt: Mart Models
 
-Mart models are the [[gold-transforms|gold layer]] — consumption-ready tables and views that BI tools, APIs, and data scientists query directly. They enforce a clear grain, carry comprehensive documentation, and are defined in data contracts via `_exposures.yml`.
+Mart models are the [gold layer](/04-SQL-Server/Medallion-Project/gold-transforms) — consumption-ready tables and views that BI tools, APIs, and data scientists query directly. They enforce a clear grain, carry comprehensive documentation, and are defined in data contracts via `_exposures.yml`.
 
 ---
 
@@ -22,7 +22,7 @@ Mart models are the [[gold-transforms|gold layer]] — consumption-ready tables 
 
 | Rule | Rationale |
 |---|---|
-| Prefix `fct_` for facts, `dim_` for dimensions | Follows [[dimensional-modeling]] conventions and communicates model type to consumers |
+| Prefix `fct_` for facts, `dim_` for dimensions | Follows [dimensional-modeling](/14-Data-Architecture/Data-Modeling/dimensional-modeling) conventions and communicates model type to consumers |
 | Declare grain explicitly in YAML description | Prevents ambiguous aggregation by consumers |
 | Materialise as `table` or `incremental` | Views are too slow for direct BI consumption at scale |
 | Full column documentation | Marts are the consumer contract |
@@ -526,4 +526,4 @@ exposures:
 - [[dbt-intermediate-models]]
 - [[dbt-materializations]]
 - [[dbt-testing-framework]]
-- [[rest-api-design-and-consumption]]
+- [rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption)

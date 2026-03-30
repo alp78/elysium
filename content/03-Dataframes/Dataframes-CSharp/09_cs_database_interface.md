@@ -12,7 +12,7 @@ keywords: [SQLContext, DuckDB, SQL Server, database, query, connection, ADO.NET,
 description: "Polars.NET / C# DataFrames reference 09/10 — Database & SQL Interface (SQLContext, DuckDB, SQL Server). Executable examples with cell outputs. See [[09_py_database_interface]] for the Python equivalent."
 related:
   - "[[moc-dataframes]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[09_py_database_interface]]"
   - "[[08_cs_visualization]]"
   - "[[10_cs_testing_migration]]"
@@ -452,7 +452,7 @@ result
 
 ## SQL Server
 
-The query patterns used here follow the same SQL fundamentals documented in [[sql-fundamentals]]. For C# database access outside of DataFrames — EF Core, Dapper, and ADO.NET patterns — see [[16_cs_database]].
+The query patterns used here follow the same SQL fundamentals documented in [sql-fundamentals](/05-DB-Queries/SQL-Server/sql-fundamentals). For C# database access outside of DataFrames — EF Core, Dapper, and ADO.NET patterns — see [16_cs_database](/02-Programming-Languages/CSharp/16_cs_database).
 
 #### Connect + basic query
 

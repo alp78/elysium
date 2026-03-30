@@ -172,4 +172,4 @@ sudo cat -A /etc/datadog-agent/conf.d/sqlserver.d/conf.yaml | head -40
 - [[datadog-agent-sql-vm]] — Agent management and restart commands
 - [[datadog-dashboards]] — Dashboard widgets consuming these custom metrics
 - [[datadog-alerting]] — Deadlock alert monitor using `sqlserver.deadlocks.total`
-- [[essential-dba-queries]] — Raw DMV queries for manual investigation
+- [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — Raw DMV queries for manual investigation

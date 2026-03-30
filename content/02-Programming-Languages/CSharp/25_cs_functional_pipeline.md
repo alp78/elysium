@@ -9,14 +9,14 @@ description: "End-to-end functional data pipeline in C#/.NET with FluentValidati
 related:
   - "[[moc-programming-languages]]"
   - "[[25_py_functional_pipeline]]"
-  - "[[functional-pipeline-architecture]]"
+  - "[functional-pipeline-architecture](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture)"
   - "[[18_cs_designpatterns]]"
   - "[[15_cs_webapis]]"
   - "[[16_cs_database]]"
   - "[[10_cs_serialization_formats]]"
   - "[[23_cs_data_ingestion]]"
-  - "[[medallion-architecture]]"
-  - "[[data-modeling-patterns]]"
+  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
+  - "[data-modeling-patterns](/14-Data-Architecture/Data-Modeling/data-modeling-patterns)"
 created: 2026-03-29
 updated: 2026-03-30
 status: complete

@@ -9,7 +9,7 @@ description: "Advanced BigQuery SQL patterns with executable examples — covers
 related:
   - "[[bq-fundamentals]]"
   - "[[bq-engineering]]"
-  - "[[data-warehouse-architecture]]"
+  - "[data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -50,11 +50,11 @@ Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
 > [!info] BigQuery Uses ADC — No Password
 >
-> The `bigquery://` connection uses Application Default Credentials — no password in the connection string. Locally: `gcloud auth application-default login`. On VMs/Cloud Run: the metadata server provides credentials automatically. See [[gcloud-authentication#The ADC Credential Search Order]].
+> The `bigquery://` connection uses Application Default Credentials — no password in the connection string. Locally: `gcloud auth application-default login`. On VMs/Cloud Run: the metadata server provides credentials automatically. See [gcloud-authentication > The ADC Credential Search Order](/06-GCP/Core/gcloud-authentication#the-adc-credential-search-order).
 
 ## Advanced Window Functions
 
-The window functions in this section appear throughout production pipelines. The [[gold-transforms]] layer in SQL Server relies on the same `ROW_NUMBER`, `LAG`, and running-total patterns adapted for T-SQL syntax.
+The window functions in this section appear throughout production pipelines. The [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) layer in SQL Server relies on the same `ROW_NUMBER`, `LAG`, and running-total patterns adapted for T-SQL syntax.
 
 ### Window Functions — ROW_NUMBER for Deduplication
 
@@ -901,7 +901,7 @@ LIMIT 15
 
 > [!tip] Related pattern
 >
-> For cross-language equivalents of MERGE and window functions, see [[gold-transforms]] for SQL Server and [[05_py_aggregation_reshaping]] / [[05_cs_aggregation_reshaping]] for DataFrame equivalents.
+> For cross-language equivalents of MERGE and window functions, see [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) for SQL Server and [05_py_aggregation_reshaping](/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) / [05_cs_aggregation_reshaping](/03-Dataframes/Dataframes-CSharp/05_cs_aggregation_reshaping) for DataFrame equivalents.
 
 ### MERGE (Upsert) — Syntax and Patterns
 

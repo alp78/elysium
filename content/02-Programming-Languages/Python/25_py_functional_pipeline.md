@@ -9,15 +9,15 @@ description: "End-to-end functional data pipeline with Pydantic validation, line
 related:
   - "[[moc-programming-languages]]"
   - "[[25_cs_functional_pipeline]]"
-  - "[[functional-pipeline-architecture]]"
+  - "[functional-pipeline-architecture](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture)"
   - "[[18_py_designpatterns]]"
   - "[[15_py_webapis]]"
   - "[[16_py_database]]"
   - "[[10_py_serialization_formats]]"
   - "[[23_py_data_ingestion]]"
-  - "[[medallion-architecture]]"
-  - "[[airflow-dag-patterns]]"
-  - "[[data-modeling-patterns]]"
+  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
+  - "[airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns)"
+  - "[data-modeling-patterns](/14-Data-Architecture/Data-Modeling/data-modeling-patterns)"
 created: 2026-03-29
 updated: 2026-03-30
 status: complete

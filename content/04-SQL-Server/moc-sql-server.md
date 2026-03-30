@@ -41,13 +41,13 @@ mindmap
 > > - [[server-configuration#Linux OS Tuning (for SQL Server on Linux)|Linux OS tuning]]
 > > - [[server-configuration#TempDB Configuration|TempDB configuration]]
 >
-> > [!abstract]- [[sqlcmd-connection-and-usage]]
+> > [!abstract]- [sqlcmd-connection-and-usage](/04-SQL-Server/Administration/sqlcmd-connection-and-usage)
 > >
-> > - [[sqlcmd-connection-and-usage#Connecting — The First Step in Every Database Operation|Connection flags and syntax]]
-> > - [[sqlcmd-connection-and-usage#Connecting Through IAP Tunnel (GCP)|IAP tunnel connections]]
-> > - [[sqlcmd-connection-and-usage#Scripted Connection Testing|Scripted connection testing]]
-> > - [[sqlcmd-connection-and-usage#Dedicated Admin Connection (DAC)|Dedicated admin connection]]
-> > - [[sqlcmd-connection-and-usage#Scripting Variables|Scripting variables]]
+> > - [Connection flags and syntax](/04-SQL-Server/Administration/sqlcmd-connection-and-usage#connecting--the-first-step-in-every-database-operation)
+> > - [IAP tunnel connections](/04-SQL-Server/Administration/sqlcmd-connection-and-usage#connecting-through-iap-tunnel-gcp)
+> > - [Scripted connection testing](/04-SQL-Server/Administration/sqlcmd-connection-and-usage#scripted-connection-testing)
+> > - [Dedicated admin connection](/04-SQL-Server/Administration/sqlcmd-connection-and-usage#dedicated-admin-connection-dac)
+> > - [Scripting variables](/04-SQL-Server/Administration/sqlcmd-connection-and-usage#scripting-variables)
 >
 > > [!abstract]- [[essential-dba-queries]]
 > >
@@ -416,8 +416,8 @@ mindmap
 
 ## Cross-References
 
-- [[moc-db-queries|DB Queries]] — SQL Server query notebooks with executable examples
-- [[moc-gcp|GCP]] — SQL Server VMs on Compute Engine
-- [[moc-terraform|Terraform]] — Provisioning SQL Server infrastructure
-- [[moc-data-architecture|Data Architecture]] — Medallion architecture theory
-- [[25_py_functional_pipeline]] — Python pipeline using SQL Server as the persistence layer
+- [DB Queries](/05-DB-Queries/moc-db-queries) — SQL Server query notebooks with executable examples
+- [GCP](/06-GCP/moc-gcp) — SQL Server VMs on Compute Engine
+- [Terraform](/07-Terraform/moc-terraform) — Provisioning SQL Server infrastructure
+- [Data Architecture](/14-Data-Architecture/moc-data-architecture) — Medallion architecture theory
+- [25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline) — Python pipeline using SQL Server as the persistence layer

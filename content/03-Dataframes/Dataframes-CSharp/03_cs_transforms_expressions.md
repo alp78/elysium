@@ -12,7 +12,7 @@ keywords: [with_columns, when, then, otherwise, apply, map, transform, method ch
 description: "Polars.NET / C# DataFrames reference 03/10 — Transforms, Expressions & Chaining (with_columns, when/then). Executable examples with cell outputs. See [[03_py_transforms_expressions]] for the Python equivalent."
 related:
   - "[[moc-dataframes]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[03_py_transforms_expressions]]"
   - "[[02_cs_explore_select_filter]]"
   - "[[04_cs_missing_strings_datetime]]"

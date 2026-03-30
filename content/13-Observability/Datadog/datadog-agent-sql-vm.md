@@ -177,5 +177,5 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
 - [[datadog-custom-queries]] — Custom DMV metric queries
 - [[datadog-log-management]] — Errorlog collection configuration
 - [[datadog-troubleshooting]] — Common issues including missing agent after bootstrap
-- [[server-configuration]] — SQL Server VM configuration reference
-- [[essential-dba-queries]] — DMV queries useful for debugging SQL Server health
+- [server-configuration](/04-SQL-Server/Administration/server-configuration) — SQL Server VM configuration reference
+- [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — DMV queries useful for debugging SQL Server health

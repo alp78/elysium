@@ -97,7 +97,7 @@ COMMIT;
 >
 > IDENTITY resets on TRUNCATE, has gaps after rollbacks, and differs between dev/staging/prod. Any system that stores or references the IDENTITY value externally breaks when the table is rebuilt.
 
-**The fix:** use natural keys (symbol + date) or deterministic surrogate keys (hash of business columns) for anything shared externally. Reserve IDENTITY for internal-only surrogate keys. See [[idempotent-pipeline-design]].
+**The fix:** use natural keys (symbol + date) or deterministic surrogate keys (hash of business columns) for anything shared externally. Reserve IDENTITY for internal-only surrogate keys. See [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design).
 
 ---
 

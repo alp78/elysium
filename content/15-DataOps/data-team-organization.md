@@ -142,7 +142,7 @@ Fully autonomous domain teams own their entire data lifecycle — ingestion, tra
 
 **Best for:** Large organizations (1000+ employees) with strong domain boundaries, companies with multiple business units that have genuinely different data needs, mature data cultures.
 
-See [[data-mesh-architecture]] for a deep dive on federated teams.
+See [data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture) for a deep dive on federated teams.
 
 ### Topology Comparison Table
 
@@ -517,4 +517,4 @@ Track these metrics to understand team health and improve continuously:
 - [[dataops-principles-and-practices]] — the practices this team structure exists to execute
 - [[self-service-data-platform]] — how to scale data capability without scaling headcount linearly
 - [[leadership-and-collaboration]] — broader principles of engineering leadership
-- [[data-mesh-architecture]] — the fully federated team model at large scale
+- [data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture) — the fully federated team model at large scale

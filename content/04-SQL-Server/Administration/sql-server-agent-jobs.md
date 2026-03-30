@@ -23,7 +23,7 @@ status: complete
 
 # SQL Server Agent Jobs — Built-In Task Scheduling
 
-SQL Server Agent is the native job scheduler built into SQL Server. It runs maintenance tasks, CDC log readers, backup schedules, and custom ETL steps. On Linux, it requires explicit enabling. Understanding when to use Agent vs [[airflow-dag-patterns|Airflow]] vs cron is essential for a clean operations architecture.
+SQL Server Agent is the native job scheduler built into SQL Server. It runs maintenance tasks, CDC log readers, backup schedules, and custom ETL steps. On Linux, it requires explicit enabling. Understanding when to use Agent vs [Airflow](/12-Orchestration/Airflow/airflow-dag-patterns) vs cron is essential for a clean operations architecture.
 
 ---
 
@@ -265,7 +265,7 @@ This is the most important section of the page. Five different ways to trigger w
 
 **Airflow — anything that orchestrates multiple systems or needs dependencies:**
 
-This is the primary orchestrator in the stack. [[airflow-dag-patterns|Airflow]] owns:
+This is the primary orchestrator in the stack. [Airflow](/12-Orchestration/Airflow/airflow-dag-patterns) owns:
 
 - Bronze loading pipelines (fetch from yfinance → load to SQL Server)
 - Silver/gold transforms (trigger Python scripts that read/write SQL Server)

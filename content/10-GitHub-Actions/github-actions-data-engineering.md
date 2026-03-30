@@ -48,7 +48,7 @@ description: "GitHub Actions for data engineering — CI for pipelines, CD for C
 related:
   - "[[github-actions-fundamentals]]"
   - "[[github-actions-patterns]]"
-  - "[[dbt-transformation-layer]]"
+  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -591,7 +591,7 @@ jobs:
 
 ## dbt CI
 
-The workflows below implement the [[dbt-ci-cd|dbt CI/CD patterns]] specific to BigQuery, running `dbt build` against an ephemeral CI schema and cleaning up afterward.
+The workflows below implement the [dbt CI/CD patterns](/11-dbt/Operations/dbt-ci-cd) specific to BigQuery, running `dbt build` against an ephemeral CI schema and cleaning up afterward.
 
 ### dbt Build Against Dev Schema
 
@@ -853,7 +853,7 @@ sys.exit(len(failures))
 
 ### Airflow DAG Validation in CI
 
-Validating [[airflow-dag-patterns|DAG structure]] in CI catches import errors and dependency cycles before they reach the scheduler. The workflow below installs Airflow with version constraints, imports every DAG file, and runs structural assertions.
+Validating [DAG structure](/12-Orchestration/Airflow/airflow-dag-patterns) in CI catches import errors and dependency cycles before they reach the scheduler. The workflow below installs Airflow with version constraints, imports every DAG file, and runs structural assertions.
 
 ```yaml
 # .github/workflows/dag-validation.yml
@@ -1426,5 +1426,5 @@ jobs:
 
 - [[github-actions-fundamentals]] — workflow anatomy, triggers, runners, GITHUB_TOKEN
 - [[github-actions-patterns]] — matrix builds, reusable workflows, deployment patterns
-- [[dbt-transformation-layer]] — dbt project structure and development workflow
-- [[data-pipeline-testing-strategy]] — Which tests to run at each CI/CD stage
+- [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — dbt project structure and development workflow
+- [data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — Which tests to run at each CI/CD stage

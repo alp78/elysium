@@ -8,13 +8,13 @@ description: "Schema tests dbt-utils dbt-expectations custom tests"
 related:
   - "[[dbt-data-contracts-implementation]]"
   - "[[dbt-project-structure]]"
-  - "[[data-quality-framework]]"
-  - "[[data-contracts]]"
+  - "[data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework)"
+  - "[data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts)"
 ---
 
 # dbt: Testing Framework
 
-dbt's testing system is the primary mechanism for asserting data quality, implementing a key layer of the [[data-quality-framework]]. Tests run against materialised relations in the warehouse, covering structural constraints, business rules, and statistical expectations. When paired with [[data-contracts]], these tests enforce guarantees that downstream consumers can depend on. This note covers all four test categories: built-in generic, dbt-utils, dbt-expectations, and custom tests.
+dbt's testing system is the primary mechanism for asserting data quality, implementing a key layer of the [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework). Tests run against materialised relations in the warehouse, covering structural constraints, business rules, and statistical expectations. When paired with [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts), these tests enforce guarantees that downstream consumers can depend on. This note covers all four test categories: built-in generic, dbt-utils, dbt-expectations, and custom tests.
 
 ---
 
@@ -570,6 +570,6 @@ models:
 ## Related
 - [[dbt-data-contracts-implementation]]
 - [[dbt-project-structure]]
-- [[data-quality-framework]]
-- [[data-contracts]]
-- [[data-pipeline-testing-strategy]] — How dbt tests fit into the full testing pyramid for data engineering
+- [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework)
+- [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts)
+- [data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — How dbt tests fit into the full testing pyramid for data engineering

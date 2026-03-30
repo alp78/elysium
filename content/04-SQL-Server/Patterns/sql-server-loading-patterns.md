@@ -23,7 +23,7 @@ status: complete
 
 # SQL Server Loading Patterns — Getting Data In Efficiently
 
-Loading is the most performance-sensitive part of any pipeline. The wrong method turns a 30-second load into a 30-minute one. This page covers every loading method available in SQL Server with benchmarks, trade-offs, and gotchas. For Python-specific benchmarks, see [[23_py_data_ingestion]]. For C# benchmarks, see [[23_cs_data_ingestion]].
+Loading is the most performance-sensitive part of any pipeline. The wrong method turns a 30-second load into a 30-minute one. This page covers every loading method available in SQL Server with benchmarks, trade-offs, and gotchas. For Python-specific benchmarks, see [23_py_data_ingestion](/02-Programming-Languages/Python/23_py_data_ingestion). For C# benchmarks, see [23_cs_data_ingestion](/02-Programming-Languages/CSharp/23_cs_data_ingestion).
 
 ---
 
@@ -78,7 +78,7 @@ The simplest loading strategy: delete existing data, load fresh. Used when the s
 
 > [!info] When to Use Truncate-and-Reload
 >
-> Best for small tables (<1M rows), dimension tables, or snapshot data where history is preserved downstream (e.g., in silver). Bronze tables in a [[medallion-architecture]] are typically truncate-and-reload.
+> Best for small tables (<1M rows), dimension tables, or snapshot data where history is preserved downstream (e.g., in silver). Bronze tables in a [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) are typically truncate-and-reload.
 
 ```sql
 -- Step 1: Clear existing data for this partition key
@@ -97,7 +97,7 @@ COMMIT;
 
 > [!warning] TRUNCATE vs DELETE
 >
-> `TRUNCATE TABLE` is faster (minimal logging, no row-by-row log entries) but requires `ALTER TABLE` permission, resets `IDENTITY`, and cannot be scoped with a `WHERE` clause. Use `DELETE` when you need to clear a subset (e.g., by `_index`). `TRUNCATE` cannot be rolled back in user transactions on all recovery models — see [[idempotent-pipeline-design]] for details.
+> `TRUNCATE TABLE` is faster (minimal logging, no row-by-row log entries) but requires `ALTER TABLE` permission, resets `IDENTITY`, and cannot be scoped with a `WHERE` clause. Use `DELETE` when you need to clear a subset (e.g., by `_index`). `TRUNCATE` cannot be rolled back in user transactions on all recovery models — see [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) for details.
 
 ---
 
@@ -151,7 +151,7 @@ ALTER TABLE staging.signals_daily
 
 ## Watermarks — The Foundation of Incremental Loading
 
-A watermark is a **persisted bookmark** that records how far a pipeline has processed. It answers the question: "where did I leave off last time?" Every incremental loading strategy — append, upsert, partition-based — depends on a reliable watermark. Without one, the pipeline either reprocesses everything (wasteful) or guesses where to start (dangerous). For the architectural theory behind idempotent incremental pipelines, see [[idempotent-pipeline-design]]. For how Airflow orchestrates watermark-driven loads, see [[airflow-dag-patterns]].
+A watermark is a **persisted bookmark** that records how far a pipeline has processed. It answers the question: "where did I leave off last time?" Every incremental loading strategy — append, upsert, partition-based — depends on a reliable watermark. Without one, the pipeline either reprocesses everything (wasteful) or guesses where to start (dangerous). For the architectural theory behind idempotent incremental pipelines, see [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design). For how Airflow orchestrates watermark-driven loads, see [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns).
 
 ### What a Watermark Is — definition and types
 
@@ -427,7 +427,7 @@ When source data contains both new rows and updates to existing rows. Three appr
 
 > [!info] Upsert Strategy Decision
 >
-> Choose based on data volume and control requirements. For full MERGE syntax, see [[merge-and-upsert]]. For idempotency guarantees, see [[idempotent-pipeline-design]].
+> Choose based on data volume and control requirements. For full MERGE syntax, see [[merge-and-upsert]]. For idempotency guarantees, see [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design).
 
 | Approach | Speed | Safety | Complexity | Best For |
 |----------|-------|--------|------------|----------|
@@ -605,7 +605,7 @@ bcp FinanceDB.dbo.trades format nul -S prod-sql01 -T -c -t "," -f /fmt/trades.xm
 
 ## SqlBulkCopy — C# Bulk Loading
 
-The C# equivalent of bcp — high throughput with full transaction support. For detailed C# ingestion benchmarks, see [[23_cs_data_ingestion]].
+The C# equivalent of bcp — high throughput with full transaction support. For detailed C# ingestion benchmarks, see [23_cs_data_ingestion](/02-Programming-Languages/CSharp/23_cs_data_ingestion).
 
 ### SqlBulkCopy WriteToServer — .NET bulk load with transaction
 
@@ -699,7 +699,7 @@ Minimal logging skips detailed transaction log writes for bulk operations, givin
 
 > [!info] Automated SQL Server schema deployment
 >
-> Run migration scripts against SQL Server as part of your CI/CD pipeline. The IAP tunnel connects GitHub Actions to your private GCP Compute Engine VM. See [[github-actions-data-engineering]] for more GCP CI/CD patterns.
+> Run migration scripts against SQL Server as part of your CI/CD pipeline. The IAP tunnel connects GitHub Actions to your private GCP Compute Engine VM. See [github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering) for more GCP CI/CD patterns.
 
 ```yaml
 # .github/workflows/migrate-sql.yml
@@ -786,4 +786,4 @@ When using MERGE or staging-based upsert, the join between staging and target be
 
 
 ## Related
-- [[data-flow-architecture]] — complete data movement topology and transfer method decision matrix
+- [data-flow-architecture](/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — complete data movement topology and transfer method decision matrix

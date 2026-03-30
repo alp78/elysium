@@ -249,7 +249,7 @@ Extract code into a module when:
 
 > [!tip] Related pattern
 >
-> Module composition in Terraform mirrors [[18_py_designpatterns|software design patterns]] like facade (a module hides complexity behind a simple interface) and composition over inheritance (combining small modules rather than building monolithic configs).
+> Module composition in Terraform mirrors [software design patterns](/02-Programming-Languages/Python/18_py_designpatterns) like facade (a module hides complexity behind a simple interface) and composition over inheritance (combining small modules rather than building monolithic configs).
 
 Do NOT extract when:
 - It's only used once

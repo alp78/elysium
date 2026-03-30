@@ -9,10 +9,10 @@ description: "The five pillars of senior data engineering — reliability, obser
 related:
   - "[[medallion-architecture]]"
   - "[[idempotent-pipeline-design]]"
-  - "[[datadog-architecture-overview]]"
-  - "[[backup-types-and-strategy]]"
-  - "[[service-accounts-and-iam]]"
-  - "[[observability-strategy-matrix]]"
+  - "[datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview)"
+  - "[backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy)"
+  - "[service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)"
+  - "[observability-strategy-matrix](/13-Observability/observability-strategy-matrix)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -30,15 +30,15 @@ Your pipeline must produce correct data, every time. This means [[idempotent-pip
 
 ## Observability
 
-You cannot fix what you cannot see. Every system you operate needs metrics (how much), logs (what happened), and traces (where did time go). The gap between "it works on my machine" and "it works in production" is entirely filled by observability. See [[datadog-architecture-overview]] and [[cloud-logging]].
+You cannot fix what you cannot see. Every system you operate needs metrics (how much), logs (what happened), and traces (where did time go). The gap between "it works on my machine" and "it works in production" is entirely filled by observability. See [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) and [cloud-logging](/06-GCP/Logging/cloud-logging).
 
 ## Efficiency
 
-Cloud resources cost real money. A query that scans 10 TB when it could scan 10 GB is not just slow — it is a $50 billing event that happens every time someone runs it. Senior engineers think in dollars-per-query, IOPS-per-transaction, and cold-start-latency-per-invocation. See [[querying-and-cost-optimization]] and cost reference.
+Cloud resources cost real money. A query that scans 10 TB when it could scan 10 GB is not just slow — it is a $50 billing event that happens every time someone runs it. Senior engineers think in dollars-per-query, IOPS-per-transaction, and cold-start-latency-per-invocation. See [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) and cost reference.
 
 ## Security
 
-The data you move often contains financial information, personal identifiers, or proprietary signals. Least-privilege access, encrypted connections, parameterized queries, and credential rotation are not optional hardening steps — they are baseline professional standards. See [[service-accounts-and-iam]] and [[tde-encryption]].
+The data you move often contains financial information, personal identifiers, or proprietary signals. Least-privilege access, encrypted connections, parameterized queries, and credential rotation are not optional hardening steps — they are baseline professional standards. See [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) and [tde-encryption](/04-SQL-Server/Security/tde-encryption).
 
 ## Operability
 
@@ -48,11 +48,11 @@ Every system you build will eventually be operated by someone who is not you, po
 
 | Pillar | Key Vault Sections |
 |--------|-------------------|
-| Reliability | [[medallion-architecture]], [[backup-types-and-strategy]], [[deadlock-detection-and-prevention]] |
-| Observability | [[datadog-architecture-overview]], [[cloud-logging]], [[wait-stats-analysis]] |
-| Efficiency | [[querying-and-cost-optimization]], [[index-types-and-strategy]], cost reference |
-| Security | [[service-accounts-and-iam]], [[tde-encryption]], [[vpc-service-controls]] |
-| Operability | the pause and resume runbook, the destroy and rebuild runbook, [[defensive-scripting]] |
+| Reliability | [[medallion-architecture]], [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy), [deadlock-detection-and-prevention](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) |
+| Observability | [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview), [cloud-logging](/06-GCP/Logging/cloud-logging), [wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis) |
+| Efficiency | [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization), [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy), cost reference |
+| Security | [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam), [tde-encryption](/04-SQL-Server/Security/tde-encryption), [vpc-service-controls](/06-GCP/Security/vpc-service-controls) |
+| Operability | the pause and resume runbook, the destroy and rebuild runbook, [defensive-scripting](/01-Shell/Scripting/defensive-scripting) |
 
 > [!tip] Reading This Vault
 > This is a reference, not a novel. Jump to whatever section matches the problem in front of you. Each note is self-contained. Wikilinks point you to related material when concepts overlap.

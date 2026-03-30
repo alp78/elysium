@@ -582,7 +582,7 @@ xcom_backend = plugins.gcs_xcom_backend.GCSXComBackend
 
 ## Issue 7: Deadlock Detected in Metadata Database
 
-Database deadlocks in Airflow share root causes with broader [[deadlock-detection-and-prevention]] patterns in SQL Server and PostgreSQL.
+Database deadlocks in Airflow share root causes with broader [deadlock-detection-and-prevention](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) patterns in SQL Server and PostgreSQL.
 
 **Symptom:** Scheduler or Worker logs contain:
 
@@ -942,7 +942,7 @@ gsutil ls -r "gs://my-airflow-logs-bucket/airflow-logs/my_dag_id/"
 docker compose logs -f airflow-scheduler
 docker compose logs airflow-scheduler | grep -E "ERROR|WARNING|CRITICAL" | tail -100
 
-# Systemd (self-hosted) — see [[managing-services]] for systemd fundamentals
+# Systemd (self-hosted) — see [managing-services](/01-Shell/Process-Management/managing-services) for systemd fundamentals
 journalctl -u airflow-scheduler -n 500
 journalctl -u airflow-scheduler -f                           # Follow
 journalctl -u airflow-scheduler --since "2024-01-15 06:00"  # Since a specific time

@@ -12,7 +12,7 @@ keywords: [groupby, agg, window, rolling, join, merge, pivot, melt, unpivot, cro
 description: "Polars.NET / C# DataFrames reference 05/10 — Aggregation & Reshaping (groupby, windows, joins, pivot, melt). Executable examples with cell outputs. See [[05_py_aggregation_reshaping]] for the Python equivalent."
 related:
   - "[[moc-dataframes]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[05_py_aggregation_reshaping]]"
   - "[[04_cs_missing_strings_datetime]]"
   - "[[06_cs_lazy_performance]]"
@@ -397,7 +397,7 @@ groupHeadD.Rows[groupHeadD.RowKeys.Take(9)]
 ---
 ## Window Functions
 
-The SQL Server gold layer in [[gold-transforms]] applies the same windowed aggregations to produce final analytical tables.
+The SQL Server gold layer in [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) applies the same windowed aggregations to produce final analytical tables.
 
 #### Polars.NET — Mean over group (window function)
 

@@ -14,7 +14,7 @@ status: complete
 
 # GCS Object Operations
 
-Cloud Storage (GCS) is the connective tissue of every GCP data pipeline — where raw data lands, intermediate files live, backups are stored, and exports are staged. The `gcloud storage` command (part of the gcloud CLI) handles all object operations. It automatically parallelizes large transfers and is generally faster than the older `gsutil` command for most data engineering tasks. For the shell-level rsync and scp equivalents of these operations, see [[data-transfer]].
+Cloud Storage (GCS) is the connective tissue of every GCP data pipeline — where raw data lands, intermediate files live, backups are stored, and exports are staged. The `gcloud storage` command (part of the gcloud CLI) handles all object operations. It automatically parallelizes large transfers and is generally faster than the older `gsutil` command for most data engineering tasks. For the shell-level rsync and scp equivalents of these operations, see [data-transfer](/01-Shell/File-Operations/data-transfer).
 
 ### Listing GCS Objects with gcloud storage ls
 
@@ -105,7 +105,7 @@ Object metadata fields useful for data engineering:
 
 > [!tip] Related pattern
 >
-> For code that needs to read GCS objects transparently alongside local files, [[09_py_fileio_serialization|Python's fsspec]] provides a unified file I/O interface that abstracts away `gs://` vs local paths.
+> For code that needs to read GCS objects transparently alongside local files, [Python's fsspec](/02-Programming-Languages/Python/09_py_fileio_serialization) provides a unified file I/O interface that abstracts away `gs://` vs local paths.
 
 > [!tip] Large File Transfer Options
 >
@@ -120,7 +120,7 @@ Object metadata fields useful for data engineering:
 
 ### Common GCS Pipeline Patterns
 
-Bronze landing copies local data to GCS staging (Python equivalent: [[22_py_data_transfer]]). Silver processing happens inside a Cloud Run Job via the Python client library. Gold output exports BigQuery results back to GCS for downstream consumers.
+Bronze landing copies local data to GCS staging (Python equivalent: [22_py_data_transfer](/02-Programming-Languages/Python/22_py_data_transfer)). Silver processing happens inside a Cloud Run Job via the Python client library. Gold output exports BigQuery results back to GCS for downstream consumers.
 
 ```bash
 # Bronze landing: local data → GCS staging

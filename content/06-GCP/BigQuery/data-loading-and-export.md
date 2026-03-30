@@ -14,7 +14,7 @@ status: complete
 
 # BigQuery Data Loading and Export
 
-BigQuery ingests data primarily from Cloud Storage (GCS), supporting CSV, Parquet, Avro, ORC, and newline-delimited JSON. Parquet is the recommended format for production loads — it is columnar, compressed, and carries its own schema, eliminating the need for schema specification or header row handling. For a deeper comparison of when to choose each format, see [[serialization-formats]]. This note covers load and export operations, hive-partitioned directory structures, and BigQuery's built-in time travel capability for recovering from data corruption.
+BigQuery ingests data primarily from Cloud Storage (GCS), supporting CSV, Parquet, Avro, ORC, and newline-delimited JSON. Parquet is the recommended format for production loads — it is columnar, compressed, and carries its own schema, eliminating the need for schema specification or header row handling. For a deeper comparison of when to choose each format, see [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats). This note covers load and export operations, hive-partitioned directory structures, and BigQuery's built-in time travel capability for recovering from data corruption.
 
 ## Loading Data from GCS
 
@@ -69,7 +69,7 @@ The `*` wildcard in the destination path causes BigQuery to shard the output acr
 # Export table to GCS
 bq extract --destination_format=PARQUET project_data.ohlcv gs://data-pipeline-bucket/export/ohlcv-*.parquet
 
-# Export with compression (see [[compression]] for algorithm trade-offs)
+# Export with compression (see [compression](/01-Shell/File-Operations/compression) for algorithm trade-offs)
 bq extract --destination_format=CSV --compression=GZIP \
   project_data.ohlcv gs://data-pipeline-bucket/export/ohlcv-*.csv.gz
 ```
@@ -111,7 +111,7 @@ bq cp project_data.ohlcv@-86400000 project_data.ohlcv_restored
 
 > [!tip] Related pattern
 >
-> The `bq load` workflow mirrors the [[bronze-layer-loading]] pattern used for SQL Server ingestion — both follow the same stage-then-validate approach for landing raw data into an analytical store. Once data is loaded, [[bq-engineering]] covers the advanced query patterns that transform and consume it.
+> The `bq load` workflow mirrors the [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) pattern used for SQL Server ingestion — both follow the same stage-then-validate approach for landing raw data into an analytical store. Once data is loaded, [bq-engineering](/05-DB-Queries/BigQuery/bq-engineering) covers the advanced query patterns that transform and consume it.
 
 ### BigQuery Data Format Comparison
 
@@ -132,7 +132,7 @@ bq cp project_data.ohlcv@-86400000 project_data.ohlcv_restored
 - [[gcs-buckets-and-lifecycle]] — Lifecycle rules to auto-expire staging data after loading
 
 ## Related
-- [[data-flow-architecture]] — complete data movement topology showing how bq load/extract fits into the stack
+- [data-flow-architecture](/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — complete data movement topology showing how bq load/extract fits into the stack
 
 ## References
 

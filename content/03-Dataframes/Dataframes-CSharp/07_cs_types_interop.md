@@ -12,7 +12,7 @@ keywords: [categorical, Enum, Arrow, zero-copy, interop, type casting, schema, n
 description: "Polars.NET / C# DataFrames reference 07/10 — Advanced Types & Interop (categoricals, Arrow, zero-copy). Executable examples with cell outputs. See [[07_py_types_interop]] for the Python equivalent."
 related:
   - "[[moc-dataframes]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[07_py_types_interop]]"
   - "[[06_cs_lazy_performance]]"
   - "[[08_cs_visualization]]"

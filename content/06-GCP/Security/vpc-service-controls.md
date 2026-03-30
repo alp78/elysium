@@ -192,7 +192,7 @@ gcloud logging read 'protoPayload.status.code=7 AND
 ## Related
 
 - [[service-accounts-and-iam]] — IAM is the "who"; VPC-SC is the "where" — both layers work together
-- [[gcloud-authentication]] — Understanding which identity is making requests is essential for debugging VPC-SC
+- [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — Understanding which identity is making requests is essential for debugging VPC-SC
 - [[cloud-logging]] — VPC-SC violations appear in Cloud Audit Logs; query them with `gcloud logging read`
 - [[dataset-and-table-management]] — BigQuery is one of the primary services protected by VPC-SC
 - [[gcs-buckets-and-lifecycle]] — GCS is the other primary service protected by VPC-SC

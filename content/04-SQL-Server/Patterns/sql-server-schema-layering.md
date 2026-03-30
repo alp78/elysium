@@ -22,7 +22,7 @@ status: complete
 
 # SQL Server Schema Layering — Organizing Databases for Data Pipelines
 
-This page covers the **how** of organizing SQL Server schemas for layered data architectures. For the **why** — the architectural reasoning behind bronze/silver/gold layers — see [[medallion-architecture]]. For how dbt maps its own schema configuration to these patterns, see [[dbt-intermediate-models]].
+This page covers the **how** of organizing SQL Server schemas for layered data architectures. For the **why** — the architectural reasoning behind bronze/silver/gold layers — see [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture). For how dbt maps its own schema configuration to these patterns, see [dbt-intermediate-models](/11-dbt/Modeling/dbt-intermediate-models).
 
 ---
 

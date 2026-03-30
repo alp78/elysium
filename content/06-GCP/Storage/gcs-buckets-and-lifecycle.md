@@ -14,7 +14,7 @@ status: complete
 
 # GCS Buckets and Lifecycle — Storage Classes and Cost Management
 
-Cloud Storage pricing is not uniform — there are four storage classes with different monthly storage costs and retrieval costs. The pattern is: lower storage cost = higher retrieval cost. Lifecycle rules automate the transition of objects through these classes as data ages, and automatic deletion at the end of the retention period. Aligning lifecycle deletion ages with your [[backup-types-and-strategy|backup retention policy]] ensures you never delete data that hasn't been backed up elsewhere. Configuring lifecycle rules on pipeline buckets is a one-time setup that permanently reduces storage costs without any ongoing maintenance.
+Cloud Storage pricing is not uniform — there are four storage classes with different monthly storage costs and retrieval costs. The pattern is: lower storage cost = higher retrieval cost. Lifecycle rules automate the transition of objects through these classes as data ages, and automatic deletion at the end of the retention period. Aligning lifecycle deletion ages with your [backup retention policy](/04-SQL-Server/Administration/backup-types-and-strategy) ensures you never delete data that hasn't been backed up elsewhere. Configuring lifecycle rules on pipeline buckets is a one-time setup that permanently reduces storage costs without any ongoing maintenance.
 
 ### Creating GCS Buckets with gcloud storage
 
@@ -43,7 +43,7 @@ Lower storage cost = higher retrieval cost. Match class to access pattern — a 
 | COLDLINE | $0.004/GB/mo | 90 days | $0.02/GB | Quarterly backups |
 | ARCHIVE | $0.001/GB/mo | 365 days | $0.05/GB | Legal hold, long-term |
 
-Choosing the right storage class is one of the most impactful [[finops-cost-optimization]] levers available in GCP -- a single class change on a multi-TB bucket can save thousands per month.
+Choosing the right storage class is one of the most impactful [finops-cost-optimization](/04-SQL-Server/Administration/finops-cost-optimization) levers available in GCP -- a single class change on a multi-TB bucket can save thousands per month.
 
 > [!warning] Minimum Duration Charges
 >
@@ -100,7 +100,7 @@ gcloud storage buckets update gs://data-pipeline-pipeline-data --versioning
 
 > [!tip] Related pattern
 >
-> For reproducible bucket provisioning with lifecycle rules baked in, use [[tf-compute-and-storage|Terraform storage blocks]] instead of manual `gcloud` commands.
+> For reproducible bucket provisioning with lifecycle rules baked in, use [Terraform storage blocks](/07-Terraform/Block-Library/tf-compute-and-storage) instead of manual `gcloud` commands.
 
 ### GCS Bucket Location and Data Residency
 

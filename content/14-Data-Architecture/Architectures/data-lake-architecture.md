@@ -8,15 +8,15 @@ keywords: [data lake, data swamp, schema-on-read, schema-on-write, object storag
 description: "Comprehensive reference on data lake architecture — zone organization (Landing, Cleansed, Curated), Hive-style partitioning, file format selection, governance and cataloging, anti-patterns (data swamp), GCS/S3/ADLS comparison, and GCP-specific lake implementation using GCS, BigQuery external tables, and Dataproc."
 related:
   - "[[data-warehouse-architecture]]"
-  - "[[gcs-buckets-and-lifecycle]]"
-  - "[[gcs-object-operations]]"
+  - "[gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle)"
+  - "[gcs-object-operations](/06-GCP/Storage/gcs-object-operations)"
   - "[[open-table-formats]]"
   - "[[medallion-architecture]]"
   - "[[serialization-formats]]"
-  - "[[querying-and-cost-optimization]]"
-  - "[[dataset-and-table-management]]"
+  - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
+  - "[dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management)"
   - "[[idempotent-pipeline-design]]"
-  - "[[service-accounts-and-iam]]"
+  - "[service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)"
   - "[[dbt-transformation-layer]]"
   - "[[five-pillars-of-data-engineering]]"
 created: 2026-03-22
@@ -147,7 +147,7 @@ The curated zone is the public-facing layer. It is optimized for the actual quer
 - Version-controlled schema (breaking changes require deprecation notice)
 
 > [!tip] Curated Zone as External Tables
-> In a GCP lake, mount the curated zone as BigQuery external tables. Analysts get the familiar BigQuery SQL interface and cost controls (partition pruning, dry runs) while the data physically lives in GCS. When query performance demands it, materialize the most-queried external tables into native BigQuery tables. See [[querying-and-cost-optimization]] and [[dataset-and-table-management]] for setup.
+> In a GCP lake, mount the curated zone as BigQuery external tables. Analysts get the familiar BigQuery SQL interface and cost controls (partition pruning, dry runs) while the data physically lives in GCS. When query performance demands it, materialize the most-queried external tables into native BigQuery tables. See [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) and [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) for setup.
 
 ---
 
@@ -381,10 +381,10 @@ The zone architecture naturally maps to a tiered access control model.
 | **Curated** | All data consumers (analysts, BI) | `roles/storage.objectViewer` on curated bucket |
 | **Admin** | Data platform team only | `roles/storage.admin` |
 
-See [[service-accounts-and-iam]] for GCP IAM mechanics and [[vpc-service-controls]] for perimeter-level lake access control.
+See [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) for GCP IAM mechanics and [vpc-service-controls](/06-GCP/Security/vpc-service-controls) for perimeter-level lake access control.
 
 > [!warning] Don't Grant Project-Level Storage Roles
-> Granting `roles/storage.objectViewer` at the project level gives access to all buckets in the project. Assign bucket-level IAM bindings to enforce zone separation. Use [[service-accounts-and-iam]]'s condition-based IAM for attribute-level access control.
+> Granting `roles/storage.objectViewer` at the project level gives access to all buckets in the project. Assign bucket-level IAM bindings to enforce zone separation. Use [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)'s condition-based IAM for attribute-level access control.
 
 ### PII Handling in the Lake
 
@@ -421,7 +421,7 @@ A data lake becomes a data swamp when it grows without governance. Swamps are ch
 
 **Symptom:** The lake grows indefinitely. Storage costs compound monthly. "We might need it someday" is the only retention policy.
 
-**Fix:** Define explicit retention periods per zone and per dataset. Implement GCS lifecycle rules to automatically transition and delete data. See [[gcs-buckets-and-lifecycle]] for lifecycle rule syntax.
+**Fix:** Define explicit retention periods per zone and per dataset. Implement GCS lifecycle rules to automatically transition and delete data. See [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) for lifecycle rule syntax.
 
 ```bash
 # GCS lifecycle rule: delete landing zone files after 90 days
@@ -547,7 +547,7 @@ gcloud storage buckets create gs://example-data-lake-curated \
   --uniform-bucket-level-access
 ```
 
-See [[gcs-buckets-and-lifecycle]] for the full lifecycle rule configuration reference.
+See [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) for the full lifecycle rule configuration reference.
 
 ### Mounting Curated Zone as BigQuery External Tables
 
@@ -651,7 +651,7 @@ print(f"Wrote {df_clean.count()} rows to cleansed zone")
 
 ### Storage Class Lifecycle Policies
 
-Implement automatic storage class transitions to minimize cost for aging data. See [[gcs-buckets-and-lifecycle]] for full lifecycle JSON configuration.
+Implement automatic storage class transitions to minimize cost for aging data. See [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) for full lifecycle JSON configuration.
 
 | Zone | Initial class | Transition | Final disposition |
 |---|---|---|---|
@@ -681,7 +681,7 @@ Implement automatic storage class transitions to minimize cost for aging data. S
 ```
 
 > [!warning] NEARLINE and COLDLINE Minimum Storage Durations
-> GCS charges a minimum storage duration for NEARLINE (30 days) and COLDLINE (90 days). If you delete a COLDLINE object after 10 days, you are charged for 90 days. Design lifecycle transitions so objects have lived in the current class for at least the minimum duration before transitioning or deleting. See [[gcs-buckets-and-lifecycle]] for the full cost model.
+> GCS charges a minimum storage duration for NEARLINE (30 days) and COLDLINE (90 days). If you delete a COLDLINE object after 10 days, you are charged for 90 days. Design lifecycle transitions so objects have lived in the current class for at least the minimum duration before transitioning or deleting. See [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) for the full cost model.
 
 ### Columnar Compression Efficiency
 
@@ -732,14 +732,14 @@ Before treating a data lake zone as production-ready:
 ## Related Notes
 
 - [[data-warehouse-architecture]] — The structured analytical layer that the curated zone feeds
-- [[gcs-buckets-and-lifecycle]] — GCS bucket setup, storage classes, and lifecycle rule configuration
-- [[gcs-object-operations]] — GCS object CRUD, bulk operations, and gsutil patterns
+- [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) — GCS bucket setup, storage classes, and lifecycle rule configuration
+- [gcs-object-operations](/06-GCP/Storage/gcs-object-operations) — GCS object CRUD, bulk operations, and gsutil patterns
 - [[open-table-formats]] — Apache Iceberg and Delta Lake: ACID transactions on data lake storage
 - [[medallion-architecture]] — The Bronze/Silver/Gold pattern implemented as a lake zone architecture
 - [[serialization-formats]] — Deep dive on Parquet, Avro, ORC, JSON, CSV mechanics and trade-offs
-- [[querying-and-cost-optimization]] — BigQuery cost controls when querying from GCS external tables
-- [[dataset-and-table-management]] — Creating and managing BigQuery external tables on GCS
+- [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) — BigQuery cost controls when querying from GCS external tables
+- [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — Creating and managing BigQuery external tables on GCS
 - [[idempotent-pipeline-design]] — Writing idempotent pipelines that safely re-run against lake zones
-- [[service-accounts-and-iam]] — GCP IAM for per-zone access control
+- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — GCP IAM for per-zone access control
 - [[dbt-transformation-layer]] — Standard tool for curated zone SQL transforms
 - [[five-pillars-of-data-engineering]] — Reliability, observability, and security principles for lake design

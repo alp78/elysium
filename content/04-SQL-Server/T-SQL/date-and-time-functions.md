@@ -14,7 +14,7 @@ status: complete
 
 # Date and Time Functions
 
-Dates look simple until you realize that "March 10, 2026 at 3 PM" means a different instant in time depending on whether you're in Paris, New York, or Tokyo. For the shell-level `date` equivalents used in backup scripts and cron jobs, see [[date-and-time-handling]]. A pipeline that processes market close times across a Euro market index, a US 50 index, and an Asia/Pacific 50 index must handle three different closing times, daylight saving transitions that happen on different dates in different countries, and the fact that "today" is a different date in Sydney and New York for several hours each day.
+Dates look simple until you realize that "March 10, 2026 at 3 PM" means a different instant in time depending on whether you're in Paris, New York, or Tokyo. For the shell-level `date` equivalents used in backup scripts and cron jobs, see [date-and-time-handling](/01-Shell/Text-Processing/date-and-time-handling). A pipeline that processes market close times across a Euro market index, a US 50 index, and an Asia/Pacific 50 index must handle three different closing times, daylight saving transitions that happen on different dates in different countries, and the fact that "today" is a different date in Sydney and New York for several hours each day.
 
 ---
 
@@ -292,7 +292,7 @@ GROUP BY DATEPART(QUARTER, trade_date), YEAR(trade_date)
 
 ## Python Date and Time Reference
 
-For the full Python datetime reference including `relativedelta`, `ZoneInfo`, and pandas date ranges, see [[11_py_datetimemathutils]]. The C# equivalents (`DateTimeOffset`, `DateOnly`, `TimeZoneInfo`) are covered in [[11_cs_datetimemathutils]].
+For the full Python datetime reference including `relativedelta`, `ZoneInfo`, and pandas date ranges, see [11_py_datetimemathutils](/02-Programming-Languages/Python/11_py_datetimemathutils). The C# equivalents (`DateTimeOffset`, `DateOnly`, `TimeZoneInfo`) are covered in [11_cs_datetimemathutils](/02-Programming-Languages/CSharp/11_cs_datetimemathutils).
 
 Python has two kinds of datetimes — this distinction matters enormously in pipelines:
 

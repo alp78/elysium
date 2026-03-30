@@ -25,16 +25,16 @@ aliases:
 keywords: [data flow, data movement, transfer method, push vs pull, batch vs streaming, cross-database join, format selection, compression, topology, architecture]
 description: "Complete data movement topology, transfer method selection, format decisions, and flow patterns for the GCP + SQL Server stack."
 related:
-  - "[[data-transfer]]"
-  - "[[compression]]"
+  - "[data-transfer](/01-Shell/File-Operations/data-transfer)"
+  - "[compression](/01-Shell/File-Operations/compression)"
   - "[[serialization-formats]]"
   - "[[medallion-architecture]]"
   - "[[idempotent-pipeline-design]]"
   - "[[streaming-architecture]]"
-  - "[[data-loading-and-export]]"
-  - "[[gcs-object-operations]]"
-  - "[[sql-server-loading-patterns]]"
-  - "[[airflow-dag-patterns]]"
+  - "[data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export)"
+  - "[gcs-object-operations](/06-GCP/Storage/gcs-object-operations)"
+  - "[sql-server-loading-patterns](/04-SQL-Server/Patterns/sql-server-loading-patterns)"
+  - "[airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns)"
 created: 2026-03-29
 updated: 2026-03-29
 status: complete
@@ -101,17 +101,17 @@ graph TD
 
 | Flow | Source | Destination | Tool | Format | Frequency | Vault Reference |
 |---|---|---|---|---|---|---|
-| API ingestion | External APIs | SQL Server bronze | Python (pyodbc) | JSON → SQL INSERT | Daily (Airflow) | [[bronze-layer-loading#Strategy 1: Truncate & Reload (Most Loaders)]] |
-| OHLCV merge | External APIs | SQL Server bronze | Python (pyodbc) | JSON → SQL MERGE | Daily (Airflow) | [[bronze-layer-loading#Strategy 2: Merge (OHLCV Only)]] |
+| API ingestion | External APIs | SQL Server bronze | Python (pyodbc) | JSON → SQL INSERT | Daily (Airflow) | [bronze-layer-loading > Strategy 1: Truncate & Reload (Most Loaders)](/04-SQL-Server/Medallion-Project/bronze-layer-loading#strategy-1-truncate--reload-most-loaders) |
+| OHLCV merge | External APIs | SQL Server bronze | Python (pyodbc) | JSON → SQL MERGE | Daily (Airflow) | [bronze-layer-loading > Strategy 2: Merge (OHLCV Only)](/04-SQL-Server/Medallion-Project/bronze-layer-loading#strategy-2-merge-ohlcv-only) |
 | Bronze → Silver | SQL Server bronze | SQL Server silver | Python transforms | In-database | Daily (Airflow) | [[medallion-architecture#Silver (Cleaned)]] |
 | Silver → Gold | SQL Server silver | SQL Server gold | Python transforms | In-database | Daily (Airflow) | [[medallion-architecture#Gold (Analytics)]] |
 | SQL → BigQuery | SQL Server gold | BigQuery | bcp → GCS → bq load | CSV/Parquet | Daily | See cross-database join below |
-| CDC streaming | SQL Server | Pub/Sub → BigQuery | CDC + Python | JSON events | Near-real-time | [[sql-server-change-tracking#CDC → Pub/Sub — streaming changes to GCP]] |
-| CDC to Firestore | SQL Server | Firestore | CDC + Python | JSON docs | Event-driven | [[sql-server-change-tracking#CDC → Firestore — push dimension changes to real-time store]] |
-| GCS → BigQuery | Cloud Storage | BigQuery | bq load | Parquet/CSV | On-demand | [[data-loading-and-export#bq load --source_format=PARQUET — load Parquet from GCS (recommended)]] |
-| File transfer | Local | GCE VM | gcloud scp / rsync | Any | Ad-hoc | [[data-transfer#gcloud compute scp — push and pull files to/from GCE VMs]] |
-| File upload | Local | GCS | gcloud storage cp | Any | Ad-hoc | [[data-transfer#gcloud storage — modern replacement for gsutil (20-94% faster)]] |
-| Orchestration | Airflow | All systems | DAG tasks | N/A | Scheduled | [[airflow-dag-patterns#Medallion Architecture DAG — Bronze to Silver to Gold]] |
+| CDC streaming | SQL Server | Pub/Sub → BigQuery | CDC + Python | JSON events | Near-real-time | [sql-server-change-tracking > CDC → Pub/Sub — streaming changes to GCP](/04-SQL-Server/Patterns/sql-server-change-tracking#cdc--pubsub--streaming-changes-to-gcp) |
+| CDC to Firestore | SQL Server | Firestore | CDC + Python | JSON docs | Event-driven | [sql-server-change-tracking > CDC → Firestore — push dimension changes to real-time store](/04-SQL-Server/Patterns/sql-server-change-tracking#cdc--firestore--push-dimension-changes-to-real-time-store) |
+| GCS → BigQuery | Cloud Storage | BigQuery | bq load | Parquet/CSV | On-demand | [data-loading-and-export > bq load --source_format=PARQUET — load Parquet from GCS (recommended)](/06-GCP/BigQuery/data-loading-and-export#bq-load---sourceformatparquet--load-parquet-from-gcs-recommended) |
+| File transfer | Local | GCE VM | gcloud scp / rsync | Any | Ad-hoc | [data-transfer > gcloud compute scp — push and pull files to/from GCE VMs](/01-Shell/File-Operations/data-transfer#gcloud-compute-scp--push-and-pull-files-tofrom-gce-vms) |
+| File upload | Local | GCS | gcloud storage cp | Any | Ad-hoc | [data-transfer > gcloud storage — modern replacement for gsutil (20-94% faster)](/01-Shell/File-Operations/data-transfer#gcloud-storage--modern-replacement-for-gsutil-20-94-faster) |
+| Orchestration | Airflow | All systems | DAG tasks | N/A | Scheduled | [airflow-dag-patterns > Medallion Architecture DAG — Bronze to Silver to Gold](/12-Orchestration/Airflow/airflow-dag-patterns#medallion-architecture-dag--bronze-to-silver-to-gold) |
 
 ---
 
@@ -121,18 +121,18 @@ graph TD
 
 | Source | Destination | Volume | Best Tool | Why | Reference |
 |---|---|---|---|---|---|
-| Local file | GCE VM | < 1 GB | `gcloud compute scp` | Simple, IAP-integrated | [[data-transfer#gcloud compute scp — push and pull files to/from GCE VMs]] |
-| Local file | GCE VM | > 1 GB | `rsync -avzP` through IAP | Resume, delta, compression | [[data-transfer#rsync through IAP tunnel — transferring to GCE VMs with no public IP]] |
-| Local file | GCS | Any | `gcloud storage cp` | Parallel composite upload, resumable | [[data-transfer#gcloud storage — modern replacement for gsutil (20-94% faster)]] |
-| GCS | BigQuery | Any | `bq load` | Native, no intermediate step | [[data-loading-and-export#bq load --source_format=PARQUET — load Parquet from GCS (recommended)]] |
-| BigQuery | GCS | Any | `bq extract` | Native export with compression | [[data-loading-and-export#Exporting BigQuery Data to GCS]] |
-| JSON/CSV | SQL Server | < 100K rows | pyodbc `fast_executemany` | Transactional, Python-native | [[sql-server-loading-patterns#cursor.fast_executemany = True — batch mode activation]] |
-| JSON/CSV | SQL Server | > 1M rows | `bcp` bulk load | Fastest path, minimal logging | [[sql-server-loading-patterns#bcp BULK LOAD — command-line syntax]] |
-| SQL Server | CSV file | Any | `bcp queryout` | Maximum throughput | [[data-transfer#bcp queryout — export a query result to CSV]] |
-| GCS ↔ GCS | Same region | Any | `gsutil cp gs:// gs://` | Server-side, zero egress | [[data-transfer#gsutil cp gs:// gs:// — server-side copy between GCS buckets]] |
-| Directory sync | Local ↔ GCS | Ongoing | `gsutil rsync` / `gcloud storage rsync` | Delta sync, delete support | [[data-transfer#gsutil rsync — delta sync to Cloud Storage]] |
-| VM ↔ VM | Same VPC | Any | `rsync` over private IP | No IAP needed, direct path | [[data-transfer#rsync -avzP over SSH — local to remote and back]] |
-| VM ↔ VM | Cross-VPC | Any | `rsync` through IAP | IAP for secure cross-VPC | [[iap-tunneling]] |
+| Local file | GCE VM | < 1 GB | `gcloud compute scp` | Simple, IAP-integrated | [data-transfer > gcloud compute scp — push and pull files to/from GCE VMs](/01-Shell/File-Operations/data-transfer#gcloud-compute-scp--push-and-pull-files-tofrom-gce-vms) |
+| Local file | GCE VM | > 1 GB | `rsync -avzP` through IAP | Resume, delta, compression | [data-transfer > rsync through IAP tunnel — transferring to GCE VMs with no public IP](/01-Shell/File-Operations/data-transfer#rsync-through-iap-tunnel--transferring-to-gce-vms-with-no-public-ip) |
+| Local file | GCS | Any | `gcloud storage cp` | Parallel composite upload, resumable | [data-transfer > gcloud storage — modern replacement for gsutil (20-94% faster)](/01-Shell/File-Operations/data-transfer#gcloud-storage--modern-replacement-for-gsutil-20-94-faster) |
+| GCS | BigQuery | Any | `bq load` | Native, no intermediate step | [data-loading-and-export > bq load --source_format=PARQUET — load Parquet from GCS (recommended)](/06-GCP/BigQuery/data-loading-and-export#bq-load---sourceformatparquet--load-parquet-from-gcs-recommended) |
+| BigQuery | GCS | Any | `bq extract` | Native export with compression | [data-loading-and-export > Exporting BigQuery Data to GCS](/06-GCP/BigQuery/data-loading-and-export#exporting-bigquery-data-to-gcs) |
+| JSON/CSV | SQL Server | < 100K rows | pyodbc `fast_executemany` | Transactional, Python-native | [sql-server-loading-patterns > cursor.fast_executemany = True — batch mode activation](/04-SQL-Server/Patterns/sql-server-loading-patterns#cursorfastexecutemany--true--batch-mode-activation) |
+| JSON/CSV | SQL Server | > 1M rows | `bcp` bulk load | Fastest path, minimal logging | [sql-server-loading-patterns > bcp BULK LOAD — command-line syntax](/04-SQL-Server/Patterns/sql-server-loading-patterns#bcp-bulk-load--command-line-syntax) |
+| SQL Server | CSV file | Any | `bcp queryout` | Maximum throughput | [data-transfer > bcp queryout — export a query result to CSV](/01-Shell/File-Operations/data-transfer#bcp-queryout--export-a-query-result-to-csv) |
+| GCS ↔ GCS | Same region | Any | `gsutil cp gs:// gs://` | Server-side, zero egress | [data-transfer > gsutil cp gs:// gs:// — server-side copy between GCS buckets](/01-Shell/File-Operations/data-transfer#gsutil-cp-gs-gs--server-side-copy-between-gcs-buckets) |
+| Directory sync | Local ↔ GCS | Ongoing | `gsutil rsync` / `gcloud storage rsync` | Delta sync, delete support | [data-transfer > gsutil rsync — delta sync to Cloud Storage](/01-Shell/File-Operations/data-transfer#gsutil-rsync--delta-sync-to-cloud-storage) |
+| VM ↔ VM | Same VPC | Any | `rsync` over private IP | No IAP needed, direct path | [data-transfer > rsync -avzP over SSH — local to remote and back](/01-Shell/File-Operations/data-transfer#rsync--avzp-over-ssh--local-to-remote-and-back) |
+| VM ↔ VM | Cross-VPC | Any | `rsync` through IAP | IAP for secure cross-VPC | [iap-tunneling](/01-Shell/Networking/iap-tunneling) |
 
 ---
 
@@ -158,7 +158,7 @@ When to use CSV vs JSON vs Parquet vs Avro. For the deep codec comparison with b
 > - **Messaging (Pub/Sub):** JSON — schema validation at the consumer, not the broker
 >
 > For compression algorithm selection (gzip vs zstd vs snappy), see
-> [[compression#Compression strategy matrix — choosing the right algorithm for data pipelines]].
+> [compression > Compression strategy matrix — choosing the right algorithm for data pipelines](/01-Shell/File-Operations/compression#compression-strategy-matrix--choosing-the-right-algorithm-for-data-pipelines).
 
 ---
 
@@ -268,9 +268,9 @@ graph LR
 
 Best for < 1M rows. Use when SQL Server has the complex logic and BigQuery has a small reference table.
 
-- `bq extract` to GCS as CSV: [[data-loading-and-export#Exporting BigQuery Data to GCS]]
-- `gsutil cp` / `gcloud storage cp` to VM: [[gcs-object-operations#Copying Files with gcloud storage cp]]
-- `bcp in` to SQL Server: [[sql-server-loading-patterns#bcp BULK LOAD — command-line syntax]]
+- `bq extract` to GCS as CSV: [data-loading-and-export > Exporting BigQuery Data to GCS](/06-GCP/BigQuery/data-loading-and-export#exporting-bigquery-data-to-gcs)
+- `gsutil cp` / `gcloud storage cp` to VM: [gcs-object-operations > Copying Files with gcloud storage cp](/06-GCP/Storage/gcs-object-operations#copying-files-with-gcloud-storage-cp)
+- `bcp in` to SQL Server: [sql-server-loading-patterns > bcp BULK LOAD — command-line syntax](/04-SQL-Server/Patterns/sql-server-loading-patterns#bcp-bulk-load--command-line-syntax)
 
 ### Option B: Export SQL Server → load into BigQuery (analytical queries)
 
@@ -286,9 +286,9 @@ graph LR
 
 Best for analytical queries over large datasets. Use when BigQuery is the analytical engine and SQL Server has the source data.
 
-- `bcp queryout` from SQL Server: [[data-transfer#bcp queryout — export a query result to CSV]]
-- Upload to GCS: [[data-transfer#gcloud storage — modern replacement for gsutil (20-94% faster)]]
-- `bq load` into BigQuery: [[data-loading-and-export#bq load --source_format=CSV — load CSV from GCS]]
+- `bcp queryout` from SQL Server: [data-transfer > bcp queryout — export a query result to CSV](/01-Shell/File-Operations/data-transfer#bcp-queryout--export-a-query-result-to-csv)
+- Upload to GCS: [data-transfer > gcloud storage — modern replacement for gsutil (20-94% faster)](/01-Shell/File-Operations/data-transfer#gcloud-storage--modern-replacement-for-gsutil-20-94-faster)
+- `bq load` into BigQuery: [data-loading-and-export > bq load --source_format=CSV — load CSV from GCS](/06-GCP/BigQuery/data-loading-and-export#bq-load---sourceformatcsv--load-csv-from-gcs)
 
 ### Option C: Pull both into Python DataFrames (ad-hoc analysis)
 
@@ -305,8 +305,8 @@ graph LR
 
 Best for ad-hoc analysis and small-to-medium joins. Use when both datasets fit in memory.
 
-- SQL Server via pyodbc: [[sql-server-loading-patterns#cursor.fast_executemany = True — batch mode activation]]
-- BigQuery via Python client: [[bq-advanced]]
+- SQL Server via pyodbc: [sql-server-loading-patterns > cursor.fast_executemany = True — batch mode activation](/04-SQL-Server/Patterns/sql-server-loading-patterns#cursorfastexecutemany--true--batch-mode-activation)
+- BigQuery via Python client: [bq-advanced](/05-DB-Queries/BigQuery/bq-advanced)
 
 > [!tip] Cross-Database Join Decision
 >
@@ -329,19 +329,19 @@ Best for ad-hoc analysis and small-to-medium joins. Use when both datasets fit i
 > | **No intermediate storage** | If destination fails, restart from source | Stage in GCS first — replay without re-fetching |
 > | **Mixed push and pull for same flow** | CDC to Pub/Sub AND a batch pull = duplicates | Choose one: event-driven OR batch, not both |
 > | **No source-destination validation** | Row count mismatches go unnoticed | Compare `COUNT(*)` after every load — see [[idempotent-pipeline-design]] |
-> | **Loading directly to production** | No validation, no rollback | Always load to staging first — see [[sql-server-loading-patterns#Loading Directly to Production — no staging, no validation]] |
+> | **Loading directly to production** | No validation, no rollback | Always load to staging first — see [sql-server-loading-patterns > Loading Directly to Production — no staging, no validation](/04-SQL-Server/Patterns/sql-server-loading-patterns#loading-directly-to-production--no-staging-no-validation) |
 
 ---
 
 ## Related
 
-- [[data-transfer]] — CLI tools for every transfer scenario (rsync, scp, bcp, gsutil)
-- [[compression]] — Algorithm selection for pipeline data
+- [data-transfer](/01-Shell/File-Operations/data-transfer) — CLI tools for every transfer scenario (rsync, scp, bcp, gsutil)
+- [compression](/01-Shell/File-Operations/compression) — Algorithm selection for pipeline data
 - [[serialization-formats]] — Format comparison with benchmarks
 - [[medallion-architecture]] — Bronze → Silver → Gold layer design
 - [[idempotent-pipeline-design]] — Load patterns that are safe to re-run
 - [[streaming-architecture]] — Full streaming theory (Lambda, Kappa, CDC, windowing)
-- [[sql-server-loading-patterns]] — SQL Server bulk load methods and benchmarks
-- [[data-loading-and-export]] — BigQuery load and export operations
-- [[gcs-object-operations]] — GCS file operations and transfer optimization
-- [[airflow-dag-patterns]] — Orchestration patterns for all flows above
+- [sql-server-loading-patterns](/04-SQL-Server/Patterns/sql-server-loading-patterns) — SQL Server bulk load methods and benchmarks
+- [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) — BigQuery load and export operations
+- [gcs-object-operations](/06-GCP/Storage/gcs-object-operations) — GCS file operations and transfer optimization
+- [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) — Orchestration patterns for all flows above

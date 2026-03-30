@@ -259,6 +259,6 @@ mindmap
 
 ## Cross-References
 
-- [[moc-dataframes|DataFrames]] — Pandas and Polars operations using Python and C# foundations
-- [[moc-shell|Shell]] — Scripts often orchestrated from shell
-- [[moc-data-architecture|Data Architecture]] — Architecture theory behind the functional pipeline
+- [DataFrames](/03-Dataframes/moc-dataframes) — Pandas and Polars operations using Python and C# foundations
+- [Shell](/01-Shell/moc-shell) — Scripts often orchestrated from shell
+- [Data Architecture](/14-Data-Architecture/moc-data-architecture) — Architecture theory behind the functional pipeline

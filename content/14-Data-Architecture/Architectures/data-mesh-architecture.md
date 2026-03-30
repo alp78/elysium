@@ -12,7 +12,7 @@ related:
   - "[[five-pillars-of-data-engineering]]"
   - "[[dbt-transformation-layer]]"
   - "[[open-table-formats]]"
-  - "[[service-accounts-and-iam]]"
+  - "[service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)"
   - "[[idempotent-pipeline-design]]"
   - "[[streaming-architecture]]"
 created: 2026-03-22
@@ -271,7 +271,7 @@ Data mesh is technology-agnostic, but certain technologies make it practical:
 
 ### Kafka (Message Broker)
 
-[[pubsub-messaging|Pub/Sub]] and Kafka are the canonical event backbone for data mesh. Domain teams publish domain events to their own topics; consumers subscribe. Decoupling is physical — consumers do not call the domain's API; they read from the event stream.
+[Pub/Sub](/06-GCP/Serverless/pubsub-messaging) and Kafka are the canonical event backbone for data mesh. Domain teams publish domain events to their own topics; consumers subscribe. Decoupling is physical — consumers do not call the domain's API; they read from the event stream.
 
 ```
 Payments Domain          Kafka Broker          Consumers
@@ -394,7 +394,7 @@ The [[dbt-transformation-layer|dbt transformation layer]] within a domain's data
 - [[dbt-transformation-layer]] — SQL transformation within domain data products
 - [[idempotent-pipeline-design]] — reliability requirement for data product pipelines
 - [[five-pillars-of-data-engineering]] — reliability, observability, efficiency, security, operability
-- [[service-accounts-and-iam]] — GCP IAM as the enforcement layer for data product access control
+- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — GCP IAM as the enforcement layer for data product access control
 
 ## References
 

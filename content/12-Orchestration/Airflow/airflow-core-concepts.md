@@ -124,7 +124,7 @@ The webserver reads from the Metadata DB — it does **not** schedule tasks.
 Workers are processes (or pods) that **execute Task Instances**. What "worker" means depends on the Executor:
 - **LocalExecutor**: subprocesses on the Scheduler machine
 - **CeleryExecutor**: Celery worker processes on separate machines
-- **KubernetesExecutor**: ephemeral Kubernetes pods, each following its own [[container-lifecycle]]
+- **KubernetesExecutor**: ephemeral Kubernetes pods, each following its own [container-lifecycle](/09-Docker/container-lifecycle)
 
 ### Metadata Database
 
@@ -476,7 +476,7 @@ wait_for_data = SqlSensor(
 
 A **Connection** stores credentials for external systems (databases, APIs, cloud services). Stored in the Metadata DB (encrypted) or externally (Secret Manager, env vars).
 
-#### Setting a connection via environment variable (preferred for secrets -- see [[environment-variables]] for general env var patterns)
+#### Setting a connection via environment variable (preferred for secrets -- see [environment-variables](/01-Shell/Scripting/environment-variables) for general env var patterns)
 
 ```bash
 # Format: AIRFLOW_CONN_{CONN_ID} = URI or JSON
@@ -780,7 +780,7 @@ delete_worker_pods = True
 > Google Cloud Composer (managed Airflow) uses the `LocalKubernetesExecutor` by default, which routes tasks either to local workers or K8s pods based on configuration. You cannot change the executor in Cloud Composer. See [[airflow-deployment]] for Cloud Composer specifics.
 
 > [!tip] Related pattern
-> Most local and self-hosted Airflow deployments use [[docker-compose]] to run the Scheduler, Webserver, and Metadata DB as coordinated containers. The [[airflow-deployment]] note walks through the full `docker-compose.yaml` setup.
+> Most local and self-hosted Airflow deployments use [docker-compose](/09-Docker/docker-compose) to run the Scheduler, Webserver, and Metadata DB as coordinated containers. The [[airflow-deployment]] note walks through the full `docker-compose.yaml` setup.
 
 ---
 
@@ -809,7 +809,7 @@ Airflow uses Jinja2 templating in `template_fields` of Operators. Common templat
 
 ## Related Notes
 
-- [[error-handling-and-retry-patterns]] — Error classification, retry strategies, and failure propagation theory behind Airflow's retry mechanics
+- [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Error classification, retry strategies, and failure propagation theory behind Airflow's retry mechanics
 - [[airflow-dag-patterns]] — Task dependencies, dynamic DAGs, branching, trigger rules
 - [[airflow-deployment]] — Docker Compose, Cloud Composer, CI/CD for DAGs
 - [[airflow-troubleshooting]] — Common errors, debugging CLI commands, log locations

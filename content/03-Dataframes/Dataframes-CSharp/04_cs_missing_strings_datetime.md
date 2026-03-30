@@ -12,7 +12,7 @@ keywords: [null, NaN, fillna, dropna, str, dt, timezones, datetime, string metho
 description: "Polars.NET / C# DataFrames reference 04/10 — Missing Data, Strings & DateTime (nulls, .str, .dt, timezones). Executable examples with cell outputs. See [[04_py_missing_strings_datetime]] for the Python equivalent."
 related:
   - "[[moc-dataframes]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[04_py_missing_strings_datetime]]"
   - "[[03_cs_transforms_expressions]]"
   - "[[05_cs_aggregation_reshaping]]"

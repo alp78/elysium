@@ -97,7 +97,7 @@ mindmap
 
 ## Cross-References
 
-- [[functional-pipeline-architecture|Functional Pipeline Architecture]] — The architecture that produces context-enriched, self-describing data for AI consumers
-- [[data-quality-framework|Data Quality Framework]] — Quarantine pattern applied to failed LLM extractions
-- [[moc-programming-languages|Programming Languages]] — Python foundations for LLM API integration
-- [[moc-data-architecture|Data Architecture]] — Contract and provenance patterns extended to LLM outputs
+- [Functional Pipeline Architecture](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture) — The architecture that produces context-enriched, self-describing data for AI consumers
+- [Data Quality Framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) — Quarantine pattern applied to failed LLM extractions
+- [Programming Languages](/02-Programming-Languages/moc-programming-languages) — Python foundations for LLM API integration
+- [Data Architecture](/14-Data-Architecture/moc-data-architecture) — Contract and provenance patterns extended to LLM outputs

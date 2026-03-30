@@ -13,7 +13,7 @@ description: "Pandas/Polars DataFrame reference 01/10 — Foundations & I/O (Ser
 related:
   - "[[moc-dataframes]]"
   - "[[01_cs_foundations_io]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[02_py_explore_select_filter]]"
 created: 2026-03-24
 updated: 2026-03-24
@@ -3752,7 +3752,7 @@ print(f"CSV lazy+filter: {df_csv_lazy.shape} in {csv_lazy_time:.4f}s")
 
 ## Format Comparison: Size and Speed
 
-For a deeper look at when to choose Parquet, CSV, or JSON across the full data pipeline, see [[serialization-formats]]. The same Parquet I/O patterns shown here apply when loading data into BigQuery via [[data-loading-and-export]].
+For a deeper look at when to choose Parquet, CSV, or JSON across the full data pipeline, see [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats). The same Parquet I/O patterns shown here apply when loading data into BigQuery via [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export).
 
 - **Read JSON**: Load a JSON file into a DataFrame.
 

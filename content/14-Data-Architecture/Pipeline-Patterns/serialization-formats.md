@@ -14,7 +14,7 @@ status: complete
 
 # Serialization Formats
 
-Serialization is the bridge between in-memory data structures and persistent storage or network transmission. This note covers every serialization format a data engineer encounters, from human-readable (JSON, YAML) to high-performance binary (Protobuf, Avro, MessagePack). For detailed JSON and CSV handling, see [[awk-data-processing|CSV processing with awk]]. For Parquet-specific operations, see parquet files.
+Serialization is the bridge between in-memory data structures and persistent storage or network transmission. This note covers every serialization format a data engineer encounters, from human-readable (JSON, YAML) to high-performance binary (Protobuf, Avro, MessagePack). For detailed JSON and CSV handling, see [CSV processing with awk](/01-Shell/Text-Processing/awk-data-processing). For Parquet-specific operations, see parquet files.
 
 ### Serialization Format Decision Matrix
 
@@ -33,7 +33,7 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 
 > [!tip] Format Selection Guide
 > - **APIs and configs** → JSON (universal) or YAML (human-friendly config)
-> - **Data lake and analytics** → Parquet (columnar, compressed, schema embedded). For loading Parquet into BigQuery, see [[data-loading-and-export]].
+> - **Data lake and analytics** → Parquet (columnar, compressed, schema embedded). For loading Parquet into BigQuery, see [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export).
 > - **Kafka / streaming** → Avro (schema evolution, compact, widely supported)
 > - **gRPC / microservices** → Protobuf (fastest, smallest, strongly typed)
 > - **Internal Python pipelines** → MessagePack (drop-in JSON replacement, 2-5x faster)
@@ -48,7 +48,7 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 - Universal: every language, every tool, every API
 - Verbose: field names repeat for every record
 - Slow: string parsing is expensive at scale
-- Best for: [[awk-data-processing|JSON and CSV processing]]
+- Best for: [JSON and CSV processing](/01-Shell/Text-Processing/awk-data-processing)
 
 ### YAML
 
@@ -68,7 +68,7 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 - Universal: Excel, SQL Server bulk insert, pandas, every ETL tool
 - Large: no compression, no column pruning
 - Best for: data exchange with external parties, human inspection, SQL Server `BULK INSERT`
-- See [[awk-data-processing|CSV processing with awk]] for parsing recipes
+- See [CSV processing with awk](/01-Shell/Text-Processing/awk-data-processing) for parsing recipes
 
 ### MessagePack
 
@@ -113,7 +113,7 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 - See parquet files for detailed coverage
 - Best for: analytical queries, data lakes, pipelines that need fast column-selective reads
 - Used by BigQuery external tables, Spark, Hive, Presto, Snowflake, DuckDB
-- For reading and writing Parquet in Python, see [[10_py_serialization_formats]]; for C#, see [[10_cs_serialization_formats]]; for lower-level file I/O patterns, see [[09_py_fileio_serialization]]
+- For reading and writing Parquet in Python, see [10_py_serialization_formats](/02-Programming-Languages/Python/10_py_serialization_formats); for C#, see [10_cs_serialization_formats](/02-Programming-Languages/CSharp/10_cs_serialization_formats); for lower-level file I/O patterns, see [09_py_fileio_serialization](/02-Programming-Languages/Python/09_py_fileio_serialization)
 
 ### Pickle
 
@@ -129,7 +129,7 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 
 ### Compression Codec Comparison
 
-Compression is orthogonal to format — most formats support multiple codecs. Choose based on the dominant constraint. For a deeper treatment of [[compression]] algorithms (snappy, gzip, zstd, lz4) and their trade-offs beyond serialization, see the dedicated compression note.
+Compression is orthogonal to format — most formats support multiple codecs. Choose based on the dominant constraint. For a deeper treatment of [compression](/01-Shell/File-Operations/compression) algorithms (snappy, gzip, zstd, lz4) and their trade-offs beyond serialization, see the dedicated compression note.
 
 | Codec | Compress Speed | Decompress Speed | Ratio | Best For |
 |---|---|---|---|---|
@@ -149,9 +149,9 @@ Compression is orthogonal to format — most formats support multiple codecs. Ch
 
 ## Related Notes
 
-- [[awk-data-processing|CSV processing with awk]] — Practical JSON and CSV processing in Bash, Python, PowerShell
+- [CSV processing with awk](/01-Shell/Text-Processing/awk-data-processing) — Practical JSON and CSV processing in Bash, Python, PowerShell
 - parquet files — Parquet inspection, CSV↔Parquet conversion, partitioning and clustering
-- [[date-and-time-handling]] — Date formats and ISO 8601 for file naming conventions
+- [date-and-time-handling](/01-Shell/Text-Processing/date-and-time-handling) — Date formats and ISO 8601 for file naming conventions
 
 
 ## Related

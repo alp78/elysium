@@ -11,12 +11,12 @@ related:
   - "[[data-warehouse-architecture]]"
   - "[[data-lake-architecture]]"
   - "[[context-and-metadata-architecture]]"
-  - "[[firestore-data-model-and-operations]]"
+  - "[firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations)"
   - "[[dbt-transformation-layer]]"
   - "[[medallion-architecture]]"
   - "[[idempotent-pipeline-design]]"
   - "[[serialization-formats]]"
-  - "[[querying-and-cost-optimization]]"
+  - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -2393,7 +2393,7 @@ WHERE isin = 'US0378331005';
 
 Document databases store data as self-contained documents (typically JSON) organized in collections. Each document can have a different structure — there is no enforced schema. This flexibility makes document models ideal for operational data, configuration stores, and hierarchical data that does not fit neatly into relational tables.
 
-For detailed Firestore operations, Python SDK patterns, real-time listeners, and querying, see [[firestore-data-model-and-operations]].
+For detailed Firestore operations, Python SDK patterns, real-time listeners, and querying, see [firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations).
 
 ### Firestore Document Modeling — When to Use
 
@@ -2571,7 +2571,7 @@ doc_ref.on_snapshot(on_snapshot)
 ```
 
 > [!warning] Document Databases and Analytics Do Not Mix
-> Firestore is excellent for operational reads (get a single document by key, query a collection with filters) but terrible for analytical queries (scan all documents, aggregate across collections, join collections). If you need analytics on document data, export it to BigQuery using the Firestore-to-BigQuery extension or a custom export pipeline. See [[firestore-data-model-and-operations]] for export patterns.
+> Firestore is excellent for operational reads (get a single document by key, query a collection with filters) but terrible for analytical queries (scan all documents, aggregate across collections, join collections). If you need analytics on document data, export it to BigQuery using the Firestore-to-BigQuery extension or a custom export pipeline. See [firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations) for export patterns.
 
 ---
 
@@ -3019,4 +3019,4 @@ The key insight: **data models are not mutually exclusive.** A well-architected 
 
 ---
 
-*See also: [[dimensional-modeling]] for star schema deep dive, [[data-warehouse-architecture]] for Kimball/Inmon/DV2 comparison, [[data-lake-architecture]] for storage layer patterns, [[firestore-data-model-and-operations]] for Firestore SDK patterns.*
+*See also: [[dimensional-modeling]] for star schema deep dive, [[data-warehouse-architecture]] for Kimball/Inmon/DV2 comparison, [[data-lake-architecture]] for storage layer patterns, [firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations) for Firestore SDK patterns.*

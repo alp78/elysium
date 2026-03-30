@@ -154,7 +154,7 @@ resource "google_compute_router_nat" "main" {
 
 ## Firewall Rules
 
-GCP firewalls are **stateful** -- if outbound traffic is allowed, the return traffic is automatically allowed. Rules are evaluated by priority (lower number = higher priority). The default is to deny all ingress and allow all egress. Note that these VPC-level firewall rules complement any OS-level [[firewalls]] configured inside the VMs themselves.
+GCP firewalls are **stateful** -- if outbound traffic is allowed, the return traffic is automatically allowed. Rules are evaluated by priority (lower number = higher priority). The default is to deny all ingress and allow all egress. Note that these VPC-level firewall rules complement any OS-level [firewalls](/01-Shell/Networking/firewalls) configured inside the VMs themselves.
 
 ### Rule: allow_sql — SQL Server Port 1433
 
@@ -251,7 +251,7 @@ resource "google_compute_firewall" "allow_iap" {
 | Field | Value | Meaning |
 |-------|-------|---------|
 | `ports` | `["22"]` | SSH port. |
-| `source_ranges` | `["35.235.240.0/20"]` | IAP tunnel range only. SSH is not open to the internet -- the only way to SSH into either VM is through `gcloud compute ssh`, which routes through IAP. See [[iap-tunneling]] for the full IAP connection workflow and troubleshooting. |
+| `source_ranges` | `["35.235.240.0/20"]` | IAP tunnel range only. SSH is not open to the internet -- the only way to SSH into either VM is through `gcloud compute ssh`, which routes through IAP. See [iap-tunneling](/01-Shell/Networking/iap-tunneling) for the full IAP connection workflow and troubleshooting. |
 | `target_tags` | `["airflow", "sql"]` | Both VMs accept SSH through IAP. |
 
 ### Rule: deny_all_ingress — Belt-and-Suspenders Catch-All

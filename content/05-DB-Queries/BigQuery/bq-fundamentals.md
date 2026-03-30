@@ -9,8 +9,8 @@ description: "BigQuery Standard SQL fundamentals with executable examples and ce
 related:
   - "[[bq-advanced]]"
   - "[[bq-engineering]]"
-  - "[[querying-and-cost-optimization]]"
-  - "[[dataset-and-table-management]]"
+  - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
+  - "[dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -45,7 +45,7 @@ Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
 > [!info] BigQuery Uses ADC — No Password
 >
-> The `bigquery://` connection uses Application Default Credentials — no password in the connection string. Locally: `gcloud auth application-default login`. On VMs/Cloud Run: the metadata server provides credentials automatically. See [[gcloud-authentication#The ADC Credential Search Order]].
+> The `bigquery://` connection uses Application Default Credentials — no password in the connection string. Locally: `gcloud auth application-default login`. On VMs/Cloud Run: the metadata server provides credentials automatically. See [gcloud-authentication > The ADC Credential Search Order](/06-GCP/Core/gcloud-authentication#the-adc-credential-search-order).
 
 ## Schema Exploration
 
@@ -199,7 +199,7 @@ The fundamental query: pick columns, filter rows, sort results. `LIMIT N` limits
 
 > [!danger] LIMIT does NOT reduce bytes scanned
 >
-> `SELECT * FROM table LIMIT 10` still scans the ENTIRE table — BigQuery reads all matching data, then truncates the result. You pay for the full scan regardless of LIMIT. To reduce cost, select only the columns you need and filter on partitioned/clustered columns. See [[querying-and-cost-optimization]].
+> `SELECT * FROM table LIMIT 10` still scans the ENTIRE table — BigQuery reads all matching data, then truncates the result. You pay for the full scan regardless of LIMIT. To reduce cost, select only the columns you need and filter on partitioned/clustered columns. See [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization).
 
 > [!tip] Backtick escaping for table references
 >
@@ -1301,7 +1301,7 @@ FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
 
 > [!tip] Related pattern
 >
-> The transforms below query data that was first ingested through the [[data-loading-and-export]] pipeline. Understanding how data arrives in bronze helps explain the schemas these queries target.
+> The transforms below query data that was first ingested through the [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) pipeline. Understanding how data arrives in bronze helps explain the schemas these queries target.
 
 ### Bronze → Silver → Gold Transforms — Daily Returns
 

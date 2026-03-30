@@ -66,7 +66,7 @@ related:
   - "[[cloud-run-jobs-vs-services]]"
   - "[[service-accounts-and-iam]]"
   - "[[gcp-projects-and-apis]]"
-  - "[[gcloud-authentication]]"
+  - "[gcloud-authentication](/06-GCP/Core/gcloud-authentication)"
   - "[[cloud-logging]]"
 created: 2026-03-22
 updated: 2026-03-22
@@ -328,7 +328,7 @@ db = firestore.Client(project="my-gcp-project")
 db = firestore.Client(project="my-gcp-project", database="my-named-db")
 ```
 
-See [[gcloud-authentication]] for setting up Application Default Credentials (ADC) and [[service-accounts-and-iam]] for service account key management.
+See [gcloud-authentication](/06-GCP/Core/gcloud-authentication) for setting up Application Default Credentials (ADC) and [[service-accounts-and-iam]] for service account key management.
 
 ---
 

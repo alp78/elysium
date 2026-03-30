@@ -9,8 +9,8 @@ description: "BigQuery engineering patterns with executable examples — covers 
 related:
   - "[[bq-fundamentals]]"
   - "[[bq-advanced]]"
-  - "[[gcp-billing-and-pricing]]"
-  - "[[gcp-cost-monitoring-and-budgets]]"
+  - "[gcp-billing-and-pricing](/06-GCP/Cost-Management/gcp-billing-and-pricing)"
+  - "[gcp-cost-monitoring-and-budgets](/06-GCP/Cost-Management/gcp-cost-monitoring-and-budgets)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -35,7 +35,7 @@ Topics covered:
 - Data Lineage & Audit Columns
 - Scripting (DECLARE, SET, IF, LOOP, BEGIN...EXCEPTION...END)
 
-To practice these patterns against realistic scenarios, work through [[bigquery-problems]].
+To practice these patterns against realistic scenarios, work through [bigquery-problems](/06-GCP/BigQuery/bigquery-problems).
 
 > [!info] INFORMATION_SCHEMA Is BigQuery's Primary Introspection
 >
@@ -53,7 +53,7 @@ To practice these patterns against realistic scenarios, work through [[bigquery-
 
 > [!tip] Always Dry-Run Before Expensive Queries
 >
-> In bq CLI: `bq query --dry_run "SELECT ..."` — returns estimated bytes without executing. In Python: `job_config.dry_run = True`. At $6.25/TB, a `SELECT *` on a 1 TB table costs $6.25. Check before you run. See [[gcp-billing-and-pricing#BigQuery]].
+> In bq CLI: `bq query --dry_run "SELECT ..."` — returns estimated bytes without executing. In Python: `job_config.dry_run = True`. At $6.25/TB, a `SELECT *` on a 1 TB table costs $6.25. Check before you run. See [gcp-billing-and-pricing > BigQuery](/06-GCP/Cost-Management/gcp-billing-and-pricing#bigquery).
 
 > [!info] Lab Environment Note
 >
@@ -73,7 +73,7 @@ Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
 > [!info] BigQuery Uses ADC — No Password
 >
-> The `bigquery://` connection uses Application Default Credentials — no password in the connection string. See [[gcloud-authentication#The ADC Credential Search Order]].
+> The `bigquery://` connection uses Application Default Credentials — no password in the connection string. See [gcloud-authentication > The ADC Credential Search Order](/06-GCP/Core/gcloud-authentication#the-adc-credential-search-order).
 
 ```sql
 -- Create a demo dataset for our objects (idempotent)
@@ -350,7 +350,7 @@ LIMIT 10
 
 > [!tip] Related pattern
 >
-> Tools like [[dbt-bigquery-adapter|dbt's BigQuery adapter]] generate many of the parameterized query and view patterns shown below, removing the need to hand-write stored procedures for routine transforms.
+> Tools like [dbt's BigQuery adapter](/11-dbt/Adapters/dbt-bigquery-adapter) generate many of the parameterized query and view patterns shown below, removing the need to hand-write stored procedures for routine transforms.
 
 ### Stored Procedures — Basic SP with Parameters
 
@@ -972,7 +972,7 @@ LIMIT 10
 > BigQuery SELECT * Scans All Columns and Bills Accordingly.
 > BigQuery is columnar -- you pay per column scanned, not per row. `SELECT *` on a 1 TB table costs the full 1 TB price even if you only need two columns. Always select specific columns. Use the query validator in the BigQuery console (top-right of the editor) to preview bytes scanned before running.
 
-For a broader look at controlling BigQuery spend through slot management and reservation strategies, see [[querying-and-cost-optimization]].
+For a broader look at controlling BigQuery spend through slot management and reservation strategies, see [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization).
 
 ### Execution Plans & Query Optimization — Common Anti-Patterns
 

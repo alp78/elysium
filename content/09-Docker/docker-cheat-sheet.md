@@ -7,7 +7,7 @@ aliases: [Docker cheat sheet, docker quick reference, container cheat sheet]
 keywords: [docker, cheat sheet, quick reference, container, compose, image, build, run, logs, exec, ps, stop, rm, prune, volume, network, dockerfile, buildx]
 description: "Exhaustive CLI reference for Docker and Docker Compose — container lifecycle, image management, volumes, networks, Dockerfile instructions, and system cleanup."
 related:
-  - "[[container-lifecycle]]"
+  - "[container-lifecycle](/09-Docker/container-lifecycle)"
   - "[[docker-compose]]"
   - "[[image-management]]"
 created: 2026-03-22
@@ -905,6 +905,6 @@ docker push myregistry.io/org/myapp:latest
 
 ## Related
 
-- [[container-lifecycle]]
+- [container-lifecycle](/09-Docker/container-lifecycle)
 - [[docker-compose]]
 - [[image-management]]

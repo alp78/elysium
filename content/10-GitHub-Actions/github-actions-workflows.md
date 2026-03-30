@@ -8,10 +8,10 @@ keywords: [github actions, ci/cd, workflow, pipeline, matrix testing, deployment
 description: "GitHub Actions CI/CD workflow patterns for data engineering — building Docker images, running tests, deploying to Cloud Run, and managing infrastructure with Terraform."
 related:
   - "[[github-actions-ci-cd]]"
-  - "[[docker-compose]]"
-  - "[[image-management]]"
-  - "[[terraform-plan-apply-destroy]]"
-  - "[[git-daily-workflow]]"
+  - "[docker-compose](/09-Docker/docker-compose)"
+  - "[image-management](/09-Docker/image-management)"
+  - "[terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy)"
+  - "[git-daily-workflow](/08-Git/git-daily-workflow)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -19,7 +19,7 @@ status: complete
 
 # GitHub Actions CI/CD Workflows
 
-GitHub Actions automates build, test, and deployment pipelines triggered by repository events (push, PR, schedule, manual dispatch). For data engineering teams, the key workflows are: building and pushing [[docker-compose|Docker images]], running pipeline tests, deploying to [[cloud-run-jobs-vs-services|Cloud Run]] via [[terraform-cloud-run|Terraform-managed infrastructure]], and validating [[terraform-plan-apply-destroy|Terraform changes]].
+GitHub Actions automates build, test, and deployment pipelines triggered by repository events (push, PR, schedule, manual dispatch). For data engineering teams, the key workflows are: building and pushing [Docker images](/09-Docker/docker-compose), running pipeline tests, deploying to [Cloud Run](/06-GCP/Serverless/cloud-run-jobs-vs-services) via [Terraform-managed infrastructure](/07-Terraform/GCP-Resources/terraform-cloud-run), and validating [Terraform changes](/07-Terraform/Fundamentals/terraform-plan-apply-destroy).
 
 ### Workflow YAML Structure
 
@@ -42,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Authenticate using Workload Identity Federation (see [[gcloud-authentication]])
+      # Authenticate using Workload Identity Federation (see [gcloud-authentication](/06-GCP/Core/gcloud-authentication))
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
@@ -122,11 +122,11 @@ repos:
 
 > [!warning] Secrets management
 >
-> Never hardcode credentials in workflow files. Use GitHub Secrets (`${{ secrets.NAME }}`) for API keys, passwords, and service account credentials. For GCP, prefer [[gcloud-authentication|Workload Identity Federation]] over service account key files.
+> Never hardcode credentials in workflow files. Use GitHub Secrets (`${{ secrets.NAME }}`) for API keys, passwords, and service account credentials. For GCP, prefer [Workload Identity Federation](/06-GCP/Core/gcloud-authentication) over service account key files.
 
 ## Related
 
 - [[github-actions-ci-cd]] — data pipeline project-specific workflow configurations
-- [[git-daily-workflow]] — Git workflow that feeds into CI/CD
-- [[image-management]] — Docker image build and push patterns
-- [[terraform-plan-apply-destroy]] — Terraform in CI/CD pipelines
+- [git-daily-workflow](/08-Git/git-daily-workflow) — Git workflow that feeds into CI/CD
+- [image-management](/09-Docker/image-management) — Docker image build and push patterns
+- [terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — Terraform in CI/CD pipelines

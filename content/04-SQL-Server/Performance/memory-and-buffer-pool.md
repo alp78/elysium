@@ -59,7 +59,7 @@ WHERE name = 'max server memory (MB)';
 
 ## Checking Available System Memory
 
-For OS-level memory monitoring with `free`, `vmstat`, and other Linux tools, see [[system-resources]].
+For OS-level memory monitoring with `free`, `vmstat`, and other Linux tools, see [system-resources](/01-Shell/Process-Management/system-resources).
 
 #### sys.dm_os_sys_memory — OS-level memory status
 
@@ -248,7 +248,7 @@ GCP VMs have fixed memory per machine type. Recommended sizing for SQL Server 20
 > [!tip] Buffer Pool in Datadog
 >
 > Related pattern: buffer pool metrics in Datadog.
-> The [[datadog-sql-server-integration]] exposes buffer cache hit ratio and PLE as continuous time-series metrics, enabling alerting on memory pressure trends before they become incidents.
+> The [datadog-sql-server-integration](/13-Observability/Datadog/datadog-sql-server-integration) exposes buffer cache hit ratio and PLE as continuous time-series metrics, enabling alerting on memory pressure trends before they become incidents.
 
 > [!warning] 2 GB VMs Are Insufficient
 >

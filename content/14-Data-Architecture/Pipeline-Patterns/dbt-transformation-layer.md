@@ -9,7 +9,7 @@ description: "dbt (Data Build Tool) is the standard SQL transformation layer for
 related:
   - "fastapi and polars"
   - "[[idempotent-pipeline-design]]"
-  - "[[observability-deep-dive]]"
+  - "[observability-deep-dive](/13-Observability/Monitoring/observability-deep-dive)"
   - "[[open-table-formats]]"
   - "[[five-pillars-of-data-engineering]]"
 created: 2026-03-22
@@ -19,7 +19,7 @@ status: complete
 
 # dbt: The Transformation Layer
 
-> For the full dbt section with adapter-specific guides, testing patterns, CI/CD, Airflow integration, and troubleshooting, see [[moc-dbt]].
+> For the full dbt section with adapter-specific guides, testing patterns, CI/CD, Airflow integration, and troubleshooting, see [moc-dbt](/11-dbt/moc-dbt).
 
 dbt (Data Build Tool) has become the standard for managing SQL-based transformations in modern data platforms. Leading data platform teams require expertise in dbt for implementing layered transformation flows and managing lakehouse concepts. dbt does not extract or load data — it transforms data that is already in your warehouse, applying software engineering practices (version control, testing, documentation) to SQL.
 
@@ -65,7 +65,7 @@ dbt (Data Build Tool) has become the standard for managing SQL-based transformat
 | Best for | Teams with existing Airflow, cost-conscious | Teams without orchestration, want turnkey |
 
 > [!tip] Which to Choose
-> If you already have [[airflow-core-concepts|Airflow]] or Cloud Scheduler, use **dbt Core** — it is free and fully featured. dbt Cloud adds value mainly for teams without existing orchestration infrastructure.
+> If you already have [Airflow](/12-Orchestration/Airflow/airflow-core-concepts) or Cloud Scheduler, use **dbt Core** — it is free and fully featured. dbt Cloud adds value mainly for teams without existing orchestration infrastructure.
 
 ---
 
@@ -191,7 +191,7 @@ SELECT * FROM rolling_metrics
 
 > [!info] The ref() function
 >
-> `{{ ref('stg_yahoo_ohlcv') }}` is how dbt builds the dependency graph. dbt automatically determines execution order from `ref()` calls — you never manually specify task order. This is dbt's equivalent of [[airflow-core-concepts|Airflow]]'s `>>` task dependencies.
+> `{{ ref('stg_yahoo_ohlcv') }}` is how dbt builds the dependency graph. dbt automatically determines execution order from `ref()` calls — you never manually specify task order. This is dbt's equivalent of [Airflow](/12-Orchestration/Airflow/airflow-core-concepts)'s `>>` task dependencies.
 
 ### Mart Models (Consumption-Ready, Incremental)
 
@@ -318,7 +318,7 @@ WHERE trade_date > GETDATE()
 
 ## Snapshots: SCD Type 2 with dbt
 
-dbt snapshots implement [[dbt-snapshots-and-scd|SCD Type 2]] automatically — tracking historical changes to dimension tables by adding `dbt_valid_from` and `dbt_valid_to` columns.
+dbt snapshots implement [SCD Type 2](/11-dbt/Advanced/dbt-snapshots-and-scd) automatically — tracking historical changes to dimension tables by adding `dbt_valid_from` and `dbt_valid_to` columns.
 
 #### dbt snapshot for index constituents (SCD Type 2)
 
@@ -397,7 +397,7 @@ FROM ...
 
 ## dbt + Airflow Integration
 
-dbt integrates with [[airflow-core-concepts|Airflow]] via `BashOperator` (simple) or the `DbtTaskGroup` from `astronomer-cosmos` (granular task-level control).
+dbt integrates with [Airflow](/12-Orchestration/Airflow/airflow-core-concepts) via `BashOperator` (simple) or the `DbtTaskGroup` from `astronomer-cosmos` (granular task-level control).
 
 #### Airflow DAG integrating dbt into the daily data pipeline
 
@@ -492,7 +492,7 @@ jobs:
 ## Related
 - [[idempotent-pipeline-design]] — the incremental load patterns dbt implements
 - fastapi and polars — the EL layer that feeds the bronze tables dbt transforms
-- [[observability-deep-dive]] — monitoring dbt runs with DataDog
+- [observability-deep-dive](/13-Observability/Monitoring/observability-deep-dive) — monitoring dbt runs with DataDog
 - [[open-table-formats]] — Iceberg/Delta Lake as storage backends in a lakehouse architecture
 
 ## References

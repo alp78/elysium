@@ -855,8 +855,8 @@ Processing Time: ─────────────────────
 ## Related
 
 - [[index-maintenance-and-corporate-actions]] — Financial index domain, corporate actions, PIT temporal data
-- [[ai-augmented-data-engineering]] — LLM pipelines that complement these data architecture patterns
-- [[leadership-and-collaboration]] — Data contracts, ADRs, technical debt management, and incident response
+- [ai-augmented-data-engineering](/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering) — LLM pipelines that complement these data architecture patterns
+- [leadership-and-collaboration](/15-DataOps/leadership-and-collaboration) — Data contracts, ADRs, technical debt management, and incident response
 
 ## References
 

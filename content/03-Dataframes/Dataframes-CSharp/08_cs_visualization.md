@@ -12,7 +12,7 @@ keywords: [plot, bar, line, scatter, histogram, heatmap, Plotly, Plotly.NET, mat
 description: "Polars.NET / C# DataFrames reference 08/10 — Visualization (charts, plots, interactive graphics). Executable examples with cell outputs. See [[08_py_visualization]] for the Python equivalent."
 related:
   - "[[moc-dataframes]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[08_py_visualization]]"
   - "[[07_cs_types_interop]]"
   - "[[09_cs_database_interface]]"

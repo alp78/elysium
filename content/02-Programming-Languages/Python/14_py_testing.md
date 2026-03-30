@@ -960,7 +960,7 @@ Key testing patterns for data engineering and finance:
 
 > [!tip] Related pattern
 >
-> The pytest patterns here (fixtures, parametrize, assertion style) have direct parallels in [[dbt-testing-framework]], where dbt tests validate SQL transforms the same way pytest validates Python transforms. For the broader quality strategy that both test layers feed into, see [[data-quality-framework]].
+> The pytest patterns here (fixtures, parametrize, assertion style) have direct parallels in [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework), where dbt tests validate SQL transforms the same way pytest validates Python transforms. For the broader quality strategy that both test layers feed into, see [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework).
 
 #### Pure function testing — normalize_trades transform
 

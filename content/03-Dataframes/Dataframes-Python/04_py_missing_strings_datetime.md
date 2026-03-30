@@ -13,7 +13,7 @@ description: "Pandas/Polars DataFrame reference 04/10 — Missing Data, Strings 
 related:
   - "[[moc-dataframes]]"
   - "[[04_cs_missing_strings_datetime]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[03_py_transforms_expressions]]"
   - "[[05_py_aggregation_reshaping]]"
 created: 2026-03-24

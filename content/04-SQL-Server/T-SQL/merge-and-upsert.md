@@ -261,7 +261,7 @@ records_inserted=50  records_updated=45  records_unchanged=5
 
 ## T-SQL MERGE Statement (Atomic Upsert)
 
-The T-SQL `MERGE` statement combines INSERT and UPDATE into a single atomic operation. It is the most concise way to express "insert if not exists, update if matched" and is safe against phantom insert race conditions because the check and write happen atomically. MERGE is the core [[idempotent-pipeline-design|idempotent pattern]] used across the pipeline, and [[dbt-materializations|dbt incremental models]] generate MERGE statements internally when targeting SQL Server.
+The T-SQL `MERGE` statement combines INSERT and UPDATE into a single atomic operation. It is the most concise way to express "insert if not exists, update if matched" and is safe against phantom insert race conditions because the check and write happen atomically. MERGE is the core [idempotent pattern](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) used across the pipeline, and [dbt incremental models](/11-dbt/Modeling/dbt-materializations) generate MERGE statements internally when targeting SQL Server.
 
 #### MERGE WHEN MATCHED / NOT MATCHED — atomic upsert pattern
 
@@ -692,6 +692,6 @@ Pipeline: MERGE INTO silver.stock_dim ... WHEN MATCHED AND hash changed THEN UPD
 - [[deadlock-detection-and-prevention]] — MERGE deadlock scenarios and prevention strategies
 - [[race-conditions]] — phantom insert prevention with MERGE and serialization strategies
 - [[storage-internals]] — version store mechanics, page splits during MERGE updates
-- [[medallion-architecture]] — bronze/silver/gold schema design context
+- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — bronze/silver/gold schema design context
 - [[silver-transforms]] — full silver transform implementations
 - [[gold-transforms]] — gold scoring and analytics transforms

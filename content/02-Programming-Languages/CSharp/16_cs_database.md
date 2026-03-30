@@ -634,7 +634,7 @@ Quick reference of all important SQLite PRAGMAs — set these right after `Open(
 
 Connect to the live stoxx database (localhost,1434). Query `sys.tables` and
 `sys.schemas` to discover the medallion architecture: bronze (raw), silver (cleaned),
-gold (computed scores). `sys.partitions` gives approximate row counts. The T-SQL patterns used throughout this section (parameterised queries, CTEs, window functions) follow [[sql-fundamentals]].
+gold (computed scores). `sys.partitions` gives approximate row counts. The T-SQL patterns used throughout this section (parameterised queries, CTEs, window functions) follow [sql-fundamentals](/05-DB-Queries/SQL-Server/sql-fundamentals).
 
 > [!info] ADO.NET pattern (SQL Server)
 >

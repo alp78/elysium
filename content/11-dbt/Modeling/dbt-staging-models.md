@@ -9,12 +9,12 @@ related:
   - "[[dbt-intermediate-models]]"
   - "[[dbt-project-structure]]"
   - "[[dbt-core-concepts]]"
-  - "[[bronze-layer-loading]]"
+  - "[bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading)"
 ---
 
 # dbt: Staging Models
 
-Staging models form the first transformation layer. They sit directly on top of raw source tables produced by [[bronze-layer-loading]] and perform only the operations needed to make data usable downstream: renaming columns to a consistent convention, casting types, and adding lightweight derived fields. They never join to other models and never contain business logic.
+Staging models form the first transformation layer. They sit directly on top of raw source tables produced by [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) and perform only the operations needed to make data usable downstream: renaming columns to a consistent convention, casting types, and adding lightweight derived fields. They never join to other models and never contain business logic.
 
 ---
 
@@ -30,7 +30,7 @@ Staging models form the first transformation layer. They sit directly on top of 
 | Add `_id` surrogate key where natural key is complex | Simplifies downstream joins |
 
 > [!tip] Related pattern
-> The rename-and-cast operations in staging models rely on the same [[sql-fundamentals]] patterns — `CAST`, `UPPER`, `TRIM`, and `COALESCE` — that appear throughout the SQL reference material.
+> The rename-and-cast operations in staging models rely on the same [sql-fundamentals](/05-DB-Queries/SQL-Server/sql-fundamentals) patterns — `CAST`, `UPPER`, `TRIM`, and `COALESCE` — that appear throughout the SQL reference material.
 
 > [!NOTE] No business logic
 > If you find yourself writing a `CASE WHEN` that encodes a business rule (e.g., "a return > 50% is suspicious"), that belongs in an intermediate model, not staging. Staging is for structural transformation only.
@@ -462,4 +462,4 @@ where close_price > 0 and volume > 1000  -- this is analytical logic
 - [[dbt-intermediate-models]]
 - [[dbt-project-structure]]
 - [[dbt-core-concepts]]
-- [[bronze-layer-loading]]
+- [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading)

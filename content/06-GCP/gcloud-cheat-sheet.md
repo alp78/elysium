@@ -7,7 +7,7 @@ aliases: [gcloud cheat sheet, gcloud quick reference, GCP CLI cheat sheet]
 keywords: [gcloud, cheat sheet, quick reference, compute, bigquery, cloud run, storage, iam, pubsub, logging, gcp commands, bq, gsutil, gcloud storage, secret manager, firestore, scheduler, cloud run jobs]
 description: "Exhaustive CLI reference for gcloud, bq, and gcloud storage — the one page a senior Data Engineer bookmarks for all GCP command-line work."
 related:
-  - "[[gcloud-authentication]]"
+  - "[gcloud-authentication](/06-GCP/Core/gcloud-authentication)"
   - "[[gcloud-configurations]]"
   - "[[gcloud-output-formatting]]"
   - "[[vm-lifecycle]]"
@@ -19,7 +19,7 @@ related:
   - "[[service-accounts-and-iam]]"
   - "[[pubsub-topics-and-subscriptions]]"
   - "[[cloud-logging]]"
-  - "[[iap-tunneling]]"
+  - "[iap-tunneling](/01-Shell/Networking/iap-tunneling)"
 created: 2026-03-22
 updated: 2026-03-23
 status: stable
@@ -2290,7 +2290,7 @@ gcloud storage ls -l 'gs://fin-landing-bucket/**' \
 
 ## Related
 
-- [[gcloud-authentication]] — OAuth2, ADC, SA keys, Workload Identity
+- [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — OAuth2, ADC, SA keys, Workload Identity
 - [[gcloud-configurations]] — Named configurations and multi-project setup
 - [[gcloud-output-formatting]] — `--format`, `--filter`, `--flatten`, jq patterns
 - [[vm-lifecycle]] — VM create/start/stop/delete patterns and startup scripts
@@ -2302,4 +2302,4 @@ gcloud storage ls -l 'gs://fin-landing-bucket/**' \
 - [[service-accounts-and-iam]] — SA design, least-privilege, custom roles
 - [[pubsub-topics-and-subscriptions]] — Topic/subscription patterns, DLQ, push vs pull
 - [[cloud-logging]] — Log filter syntax, sinks, log-based metrics
-- [[iap-tunneling]] — IAP SSH and TCP tunnels for private VMs
+- [iap-tunneling](/01-Shell/Networking/iap-tunneling) — IAP SSH and TCP tunnels for private VMs

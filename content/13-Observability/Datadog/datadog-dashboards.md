@@ -88,7 +88,7 @@ Use **Notes & Links** widgets as section headers:
 | Group By | `resource_name` |
 | Title | DAG Task Duration |
 
-This breaks down each pipeline step by name and shows how long each took. The steps that load into the [[gold-transforms|gold layer]] are typically the most resource-intensive, since they run aggregation logic and write final business-ready tables.
+This breaks down each pipeline step by name and shows how long each took. The steps that load into the [gold layer](/04-SQL-Server/Medallion-Project/gold-transforms) are typically the most resource-intensive, since they run aggregation logic and write final business-ready tables.
 
 #### Widget: Pipeline Peak CPU (Query Value)
 
@@ -380,4 +380,4 @@ A custom dashboard definition is stored at `infra/datadog/airflow_dashboard.json
 - [[datadog-sql-server-integration]] — Built-in SQL Server metrics
 - [[datadog-agent-airflow-vm]] — StatsD source for Airflow metrics
 - [[datadog-gcp-integration]] — GCP Integration for Cloud Run metrics
-- [[essential-dba-queries]] — Manual DMV queries for deeper investigation
+- [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — Manual DMV queries for deeper investigation

@@ -128,6 +128,6 @@ mindmap
 
 ## Cross-References
 
-- [[moc-programming-languages|Programming Languages]] — Python and C# foundations these notebooks build on
-- [[moc-db-queries|DB Queries]] — SQL-first approach to the same data operations
-- [[25_py_functional_pipeline]] — Production pipeline using Polars DataFrames
+- [Programming Languages](/02-Programming-Languages/moc-programming-languages) — Python and C# foundations these notebooks build on
+- [DB Queries](/05-DB-Queries/moc-db-queries) — SQL-first approach to the same data operations
+- [25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline) — Production pipeline using Polars DataFrames

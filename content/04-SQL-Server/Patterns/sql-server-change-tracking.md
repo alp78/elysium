@@ -23,7 +23,7 @@ status: complete
 
 # SQL Server Change Tracking — Capturing Data History
 
-"How do I know what changed?" is the most common question in data engineering. SQL Server has five built-in answers and two external ones. Most teams use the wrong one. For SCD type definitions (Types 1-6), see [[data-warehouse-architecture]]. For dbt's declarative approach, see [[dbt-snapshots-and-scd]].
+"How do I know what changed?" is the most common question in data engineering. SQL Server has five built-in answers and two external ones. Most teams use the wrong one. For SCD type definitions (Types 1-6), see [data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture). For dbt's declarative approach, see [dbt-snapshots-and-scd](/11-dbt/Advanced/dbt-snapshots-and-scd).
 
 ---
 
@@ -310,7 +310,7 @@ FROM cdc.fn_cdc_get_all_changes_bronze_signals_daily(
 
 > [!info] SQL Server CDC to Pub/Sub pipeline
 >
-> In the broader ecosystem, teams use Kafka/Debezium for CDC streaming. In this GCP stack, the equivalent is Pub/Sub. This Python script polls CDC change tables and publishes each change as a Pub/Sub message. Run it as an [[airflow-dag-patterns|Airflow task]] or a Cloud Run job on a schedule (e.g., every 5 minutes).
+> In the broader ecosystem, teams use Kafka/Debezium for CDC streaming. In this GCP stack, the equivalent is Pub/Sub. This Python script polls CDC change tables and publishes each change as a Pub/Sub message. Run it as an [Airflow task](/12-Orchestration/Airflow/airflow-dag-patterns) or a Cloud Run job on a schedule (e.g., every 5 minutes).
 
 ```python
 import pyodbc, json
@@ -440,7 +440,7 @@ Declarative SCD2: dbt handles the close/insert logic automatically. Two detectio
 
 > [!info] dbt Snapshot
 >
-> dbt snapshots generate `dbt_valid_from`, `dbt_valid_to`, and `dbt_scd_id` columns automatically. Choose `timestamp` strategy when the source has a reliable `updated_at` column; use `check` strategy to compare specific column values. See [[dbt-snapshots-and-scd]] for full syntax and configuration.
+> dbt snapshots generate `dbt_valid_from`, `dbt_valid_to`, and `dbt_scd_id` columns automatically. Choose `timestamp` strategy when the source has a reliable `updated_at` column; use `check` strategy to compare specific column values. See [dbt-snapshots-and-scd](/11-dbt/Advanced/dbt-snapshots-and-scd) for full syntax and configuration.
 
 - **Timestamp strategy:** detects changes when `updated_at` advances — fast but misses changes where only non-timestamp columns change
 - **Check strategy:** compares listed columns on every run — catches all changes but slower (full table scan)

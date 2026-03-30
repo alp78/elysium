@@ -18,11 +18,11 @@ status: complete
 > (STOXX/yfinance stock index scoring system) on SQL Server. For the general
 > patterns and alternative approaches, see the [[moc-sql-server#Patterns]]
 > section. For the architectural theory behind bronze/silver/gold layering,
-> see [[medallion-architecture]].
+> see [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture).
 
 # Bronze Layer Loading
 
-The bronze layer is the raw data landing zone in the [[medallion-architecture]]. Every table stores data exactly as received from the source — 1:1 with the source JSON files produced by yfinance fetchers. No business logic is applied; transformations happen in [[silver-transforms|silver]].
+The bronze layer is the raw data landing zone in the [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture). Every table stores data exactly as received from the source — 1:1 with the source JSON files produced by yfinance fetchers. No business logic is applied; transformations happen in [[silver-transforms|silver]].
 
 **Pipeline flow:** yfinance API → JSON files → Python loaders → Bronze tables → [[silver-transforms|Silver transforms]]
 
@@ -36,7 +36,7 @@ The bronze layer is the raw data landing zone in the [[medallion-architecture]].
 
 ### Idempotent Database and Schema Creation
 
-All DDL in this project is idempotent — safe to run multiple times without error, following the principles described in [[idempotent-pipeline-design]]. File: `db/ddl/bronze_schema.sql`
+All DDL in this project is idempotent — safe to run multiple times without error, following the principles described in [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design). File: `db/ddl/bronze_schema.sql`
 
 #### CREATE DATABASE IF NOT EXISTS — idempotent analytics database creation
 
@@ -57,7 +57,7 @@ GO
 
 ### Connection Helper (`utils/db.py`)
 
-All Python modules share a single connection factory. Credentials come from `.env`. This is the key that unlocks the database — every loader and transform imports `get_connection()` to get a database handle. Credentials are never hardcoded. For benchmarks comparing pyodbc `fast_executemany` with alternative ingestion methods (bcp, SqlBulkCopy), see [[23_py_data_ingestion]] and [[23_cs_data_ingestion]].
+All Python modules share a single connection factory. Credentials come from `.env`. This is the key that unlocks the database — every loader and transform imports `get_connection()` to get a database handle. Credentials are never hardcoded. For benchmarks comparing pyodbc `fast_executemany` with alternative ingestion methods (bcp, SqlBulkCopy), see [23_py_data_ingestion](/02-Programming-Languages/Python/23_py_data_ingestion) and [23_cs_data_ingestion](/02-Programming-Languages/CSharp/23_cs_data_ingestion).
 
 #### pyodbc connect with os.environ — connection factory from .env
 
@@ -460,7 +460,7 @@ CREATE UNIQUE INDEX UX_silver_{ohlcv_table}
 
 ## Loading Patterns (JSON → Bronze)
 
-Loaders read JSON files produced by fetchers and write to bronze tables. Two strategies apply, depending on the data type. In production, [[airflow-dag-patterns|Airflow DAGs]] orchestrate these bronze loads as upstream tasks in the pipeline.
+Loaders read JSON files produced by fetchers and write to bronze tables. Two strategies apply, depending on the data type. In production, [Airflow DAGs](/12-Orchestration/Airflow/airflow-dag-patterns) orchestrate these bronze loads as upstream tasks in the pipeline.
 
 ### Strategy 1: Truncate & Reload (Most Loaders)
 
@@ -578,7 +578,7 @@ WHERE symbol = ? AND date = ?
 
 - [[silver-transforms]] — next stage: cleaning, deduplication, SCD Type 2, gap-filling
 - [[gold-transforms]] — final stage: pre-computed analytics and scoring
-- [[medallion-architecture]] — architectural context for all three layers
+- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — architectural context for all three layers
 - the data pipeline steps — pipeline steps that drive these loaders
 - data formats and serialization — JSON handling and Python type mapping
 - database connections — pyodbc connection patterns and parameterized queries

@@ -8,10 +8,10 @@ keywords: [idempotent, idempotency, safe re-run, replay, backfill, data pipeline
 description: "Idempotent pipeline design ensures running a pipeline multiple times with the same input produces the same result without duplicates or corruption — the foundation of reliable data engineering."
 related:
   - "[[medallion-architecture]]"
-  - "[[merge-and-upsert]]"
-  - "[[silver-transforms]]"
+  - "[merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert)"
+  - "[silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms)"
   - "[[five-pillars-of-data-engineering]]"
-  - "[[backup-types-and-strategy]]"
+  - "[backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -35,7 +35,7 @@ With idempotency, you can re-run any step at any time with confidence.
 
 ### DELETE-INSERT (Partition Swap)
 
-Delete all data for the target partition, then insert fresh data. The partition key (usually a date) scopes the delete. The [[bronze-layer-loading]] module uses this exact pattern to reload daily partitions safely.
+Delete all data for the target partition, then insert fresh data. The partition key (usually a date) scopes the delete. The [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) module uses this exact pattern to reload daily partitions safely.
 
 ```sql
 -- Idempotent daily load: delete today's data, then re-insert
@@ -53,7 +53,7 @@ COMMIT;
 
 ### MERGE (Upsert)
 
-Match on a business key. Update if exists, insert if new. See [[merge-and-upsert]] for the full T-SQL MERGE pattern. In dbt, the [[dbt-materializations|incremental materialization]] generates a MERGE statement under the hood, providing idempotency declaratively.
+Match on a business key. Update if exists, insert if new. See [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert) for the full T-SQL MERGE pattern. In dbt, the [incremental materialization](/11-dbt/Modeling/dbt-materializations) generates a MERGE statement under the hood, providing idempotency declaratively.
 
 ```sql
 MERGE INTO silver.index_dim AS target
@@ -92,12 +92,12 @@ This isolates the slow I/O (bulk load) from the fast atomic swap.
 | Appending timestamps without dedup | Same data with different load timestamps | Deduplicate on business key before insert |
 
 > [!tip] Related pattern
-> Without idempotency, concurrent pipeline runs can trigger [[race-conditions]] — two instances inserting the same partition simultaneously, producing duplicates or deadlocks. Idempotent designs eliminate this class of failure by making the outcome independent of execution order.
+> Without idempotency, concurrent pipeline runs can trigger [race-conditions](/04-SQL-Server/Concurrency/race-conditions) — two instances inserting the same partition simultaneously, producing duplicates or deadlocks. Idempotent designs eliminate this class of failure by making the outcome independent of execution order.
 
 ## Related
 
 - [[error-handling-and-retry-patterns]] — Idempotency is a prerequisite for safe retries — the error handling framework depends on it
 - [[medallion-architecture]] — The bronze/silver/gold pattern relies on idempotent transforms at each layer
-- [[merge-and-upsert]] — T-SQL MERGE statement for upsert operations
-- [[silver-transforms]] — Silver layer cleaning and deduplication patterns
+- [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert) — T-SQL MERGE statement for upsert operations
+- [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) — Silver layer cleaning and deduplication patterns
 - [[five-pillars-of-data-engineering]] — Idempotency is the foundation of Pillar 1 (Reliability)

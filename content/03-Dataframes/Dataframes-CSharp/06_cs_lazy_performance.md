@@ -12,7 +12,7 @@ keywords: [lazy, collect, scan_csv, scan_parquet, query plan, optimization, stre
 description: "Polars.NET / C# DataFrames reference 06/10 — Lazy API & Performance (lazy/collect, query plan, benchmarks). Executable examples with cell outputs. See [[06_py_lazy_performance]] for the Python equivalent."
 related:
   - "[[moc-dataframes]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[06_py_lazy_performance]]"
   - "[[05_cs_aggregation_reshaping]]"
   - "[[07_cs_types_interop]]"

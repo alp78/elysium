@@ -51,7 +51,7 @@ gcloud iam service-accounts keys delete <KEY_ID> --iam-account=data-pipeline-pip
 
 ### IAM Bindings — Granting Roles to Service Accounts
 
-For declarative, version-controlled IAM bindings, [[terraform-iam-and-secrets]] provides the Terraform equivalent of these `gcloud` commands.
+For declarative, version-controlled IAM bindings, [terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets) provides the Terraform equivalent of these `gcloud` commands.
 
 > [!info] IAM Binding Parameters
 >
@@ -106,7 +106,7 @@ You can also test what a service account can see by impersonating it during `gcl
 > - BigQuery: `roles/bigquery.dataEditor` + `roles/bigquery.jobUser`
 > - GCS: `roles/storage.objectAdmin` (on specific buckets, not the project)
 > - Cloud Run: `roles/run.invoker` (to trigger jobs)
-> - SQL Server: no IAM role needed — authentication is at the database level (see [[sql-server-authentication]] for the parallel least-privilege patterns)
+> - SQL Server: no IAM role needed — authentication is at the database level (see [sql-server-authentication](/04-SQL-Server/Security/sql-server-authentication) for the parallel least-privilege patterns)
 > - Secret Manager: `roles/secretmanager.secretAccessor` (to read credentials)
 
 ### Custom IAM Roles for Tighter Control
@@ -121,12 +121,12 @@ Custom roles allow you to grant exactly the permissions needed and no more — f
 
 ### ADC and the GCE Metadata Server
 
-On GCE VMs and Cloud Run, credentials are provided automatically by the GCP metadata server — no key files needed. The credentials are refreshed automatically and scoped to the service account attached to the VM or Cloud Run job. See [[gcloud-authentication]] for the full ADC credential search order, including how to activate a service account via `gcloud auth activate-service-account`.
+On GCE VMs and Cloud Run, credentials are provided automatically by the GCP metadata server — no key files needed. The credentials are refreshed automatically and scoped to the service account attached to the VM or Cloud Run job. See [gcloud-authentication](/06-GCP/Core/gcloud-authentication) for the full ADC credential search order, including how to activate a service account via `gcloud auth activate-service-account`.
 
 ## Related
 
 - [[gcp-identity-and-connection-patterns]] — Complete identity model, credential types, connection patterns by scenario
-- [[gcloud-authentication]] — ADC credential search order; when key files vs metadata server applies
+- [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — ADC credential search order; when key files vs metadata server applies
 - [[vpc-service-controls]] — VPC-SC restricts what IAM-permitted identities can do with data
 - [[cloud-run-jobs-vs-services]] — Attach the pipeline service account to Cloud Run jobs
 - [[gcs-buckets-and-lifecycle]] — Grant `roles/storage.objectAdmin` on specific buckets only

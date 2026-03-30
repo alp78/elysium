@@ -23,7 +23,7 @@ status: complete
 
 # SQL Server Incremental Transforms — Processing Only What Changed
 
-Full-table recomputation is fine at 10K rows. At 100M rows it takes hours and costs real money. Incremental transforms process only new or changed data on each run. For the theory behind idempotent incremental processing, see [[idempotent-pipeline-design]]. For orchestrating incremental loads with Airflow, see [[airflow-dag-patterns]].
+Full-table recomputation is fine at 10K rows. At 100M rows it takes hours and costs real money. Incremental transforms process only new or changed data on each run. For the theory behind idempotent incremental processing, see [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design). For orchestrating incremental loads with Airflow, see [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns).
 
 ---
 
@@ -351,7 +351,7 @@ CREATE UNIQUE CLUSTERED INDEX IX_vw_daily_avg
 
 **Choose indexed views when:** the aggregation is simple (COUNT, SUM, AVG with GROUP BY), the source table has low write volume, and the dashboard needs zero-staleness. Example: daily count of stocks per sector — small result set, rarely changes mid-day.
 
-**Choose aggregation tables when:** the aggregation involves OUTER JOINs, subqueries, window functions, or complex business logic that indexed views can't express. Also when the source is high-write (staging tables, bronze loads) — the DML overhead of maintaining an indexed view during bulk loads is prohibitive. The Medallion-Project's `gold.index_performance` and `gold.scores_daily` are aggregation tables refreshed by [[airflow-dag-patterns|Airflow]].
+**Choose aggregation tables when:** the aggregation involves OUTER JOINs, subqueries, window functions, or complex business logic that indexed views can't express. Also when the source is high-write (staging tables, bronze loads) — the DML overhead of maintaining an indexed view during bulk loads is prohibitive. The Medallion-Project's `gold.index_performance` and `gold.scores_daily` are aggregation tables refreshed by [Airflow](/12-Orchestration/Airflow/airflow-dag-patterns).
 
 **Choose neither when:** the query is already fast enough on the base table with a covering index. Pre-compute only when profiling shows the aggregation query as a bottleneck — premature materialization adds maintenance cost for no gain.
 

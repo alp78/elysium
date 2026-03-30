@@ -22,7 +22,7 @@ This note covers `iam.tf`, `secrets.tf`, and the IAM portions of `ci.tf` — the
 
 ### Design Principle: One Service Account Per Workload
 
-A **service account** is a non-human identity that a workload runs as. Each workload gets its own service account with the minimum permissions it needs (**least privilege**). For the underlying GCP IAM concepts -- roles, policies, and the principal hierarchy -- see [[service-accounts-and-iam]]. This is the standard GCP pattern -- one service account per service. The service accounts themselves have **no permissions by default**; they only gain access through explicit IAM bindings.
+A **service account** is a non-human identity that a workload runs as. Each workload gets its own service account with the minimum permissions it needs (**least privilege**). For the underlying GCP IAM concepts -- roles, policies, and the principal hierarchy -- see [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam). This is the standard GCP pattern -- one service account per service. The service accounts themselves have **no permissions by default**; they only gain access through explicit IAM bindings.
 
 > [!info] Resource vs Project IAM
 >
@@ -183,7 +183,7 @@ See [[terraform-conditional-resources]] for the full pattern.
 
 ### The Two-Level Structure
 
-Secret Manager uses a **two-level structure**: the **secret** (a named container) and one or more **versions** (the actual values). For the operational side of working with secrets -- rotation, access auditing, and application integration patterns -- see [[secrets-management]]. This is why there are two Terraform resources per secret — one for the container, one for the value. The container defines the name and replication policy; the version holds the actual sensitive data. You can have multiple versions (e.g., after rotating a password) and Cloud Run references `version = "latest"` to always get the newest one.
+Secret Manager uses a **two-level structure**: the **secret** (a named container) and one or more **versions** (the actual values). For the operational side of working with secrets -- rotation, access auditing, and application integration patterns -- see [secrets-management](/06-GCP/Security/secrets-management). This is why there are two Terraform resources per secret — one for the container, one for the value. The container defines the name and replication policy; the version holds the actual sensitive data. You can have multiple versions (e.g., after rotating a password) and Cloud Run references `version = "latest"` to always get the newest one.
 
 ### Secret Container
 

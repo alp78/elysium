@@ -6,8 +6,8 @@ status: stable
 updated: 2026-03-23
 description: "GitHub Actions CI with slim builds and manifest diffing, Workload Identity Federation, pre-commit hooks, and CD via Git pull or Docker rebuild."
 related:
-  - "[[github-actions-data-engineering]]"
-  - "[[github-actions-patterns]]"
+  - "[github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering)"
+  - "[github-actions-patterns](/10-GitHub-Actions/github-actions-patterns)"
   - "[[dbt-core-concepts]]"
   - "[[dbt-airflow-integration]]"
   - "[[dbt-observability]]"
@@ -15,7 +15,7 @@ related:
 
 # dbt: CI/CD
 
-A robust dbt CI/CD pipeline validates SQL correctness before merge, prevents regressions in data quality tests, and deploys only what changed. The workflows here build on [[github-actions-workflows]] and apply [[github-actions-ci-cd]] patterns to dbt-specific concerns. For financial index and ESG data pipelines the stakes are high: a broken model can silently corrupt benchmark calculations used for regulatory reporting.
+A robust dbt CI/CD pipeline validates SQL correctness before merge, prevents regressions in data quality tests, and deploys only what changed. The workflows here build on [github-actions-workflows](/10-GitHub-Actions/github-actions-workflows) and apply [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) patterns to dbt-specific concerns. For financial index and ESG data pipelines the stakes are high: a broken model can silently corrupt benchmark calculations used for regulatory reporting.
 
 ---
 
@@ -391,8 +391,8 @@ This is the preferred pattern for regulated environments: every production run i
 
 ## Related
 
-- [[github-actions-data-engineering]]
-- [[github-actions-patterns]]
+- [github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering)
+- [github-actions-patterns](/10-GitHub-Actions/github-actions-patterns)
 - [[dbt-core-concepts]]
 - [[dbt-airflow-integration]]
 - [[dbt-observability]]

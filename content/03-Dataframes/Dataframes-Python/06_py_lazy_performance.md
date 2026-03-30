@@ -13,7 +13,7 @@ description: "Pandas/Polars DataFrame reference 06/10 — Lazy API & Performance
 related:
   - "[[moc-dataframes]]"
   - "[[06_cs_lazy_performance]]"
-  - "[[moc-programming-languages]]"
+  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
   - "[[05_py_aggregation_reshaping]]"
   - "[[07_py_types_interop]]"
 created: 2026-03-24
@@ -74,7 +74,7 @@ print(f"Type: {type(df)}, Shape: {df.shape}")
 
 ## Lazy: Deferred
 
-The lazy-vs-eager distinction mirrors concepts elsewhere in the pipeline: dbt's ephemeral models defer computation in the same way a LazyFrame does, while `dbt run` materializes results like `.collect()` — see [[dbt-materializations]]. BigQuery's query planner applies similar predicate pushdown and projection pruning, covered in [[querying-and-cost-optimization]].
+The lazy-vs-eager distinction mirrors concepts elsewhere in the pipeline: dbt's ephemeral models defer computation in the same way a LazyFrame does, while `dbt run` materializes results like `.collect()` — see [dbt-materializations](/11-dbt/Modeling/dbt-materializations). BigQuery's query planner applies similar predicate pushdown and projection pruning, covered in [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization).
 
 
 ```python

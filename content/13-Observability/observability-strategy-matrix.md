@@ -13,7 +13,7 @@ related:
   - "[[gcp-cloud-monitoring-deep-dive]]"
   - "[[datadog-alerting]]"
   - "[[datadog-dashboards]]"
-  - "[[five-pillars-of-data-engineering]]"
+  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
 created: 2026-03-29
 updated: 2026-03-29
 status: complete
@@ -72,7 +72,7 @@ Dashboard: **DBA Dashboard** | Config: [[datadog-sql-server-integration#Built-in
 
 ### Airflow
 
-Dashboard: **Pipeline Watch** | Config: [[datadog-airflow-observability#Key Metrics Reference]], [[datadog-dashboards#Airflow Orchestration Dashboard]]
+Dashboard: **Pipeline Watch** | Config: [datadog-airflow-observability > Key Metrics Reference](/13-Observability/Datadog/datadog-airflow-observability#key-metrics-reference), [[datadog-dashboards#Airflow Orchestration Dashboard]]
 
 > [!note] Key Metrics
 >

@@ -29,7 +29,7 @@ Linux task scheduling encompasses every mechanism for running commands automatic
 
 ## Cron and Crontab
 
-Cron is the simplest scheduler — it runs commands at specified intervals on a single machine. For lightweight tasks (backup scripts, health checks, log rotation), cron is the right tool. For complex pipelines with dependencies, retries, and monitoring, use [[airflow-core-concepts|Airflow]].
+Cron is the simplest scheduler — it runs commands at specified intervals on a single machine. For lightweight tasks (backup scripts, health checks, log rotation), cron is the right tool. For complex pipelines with dependencies, retries, and monitoring, use [Airflow](/12-Orchestration/Airflow/airflow-core-concepts).
 
 ### Crontab Syntax Diagram
 
@@ -1393,7 +1393,7 @@ flock -n 9 || exit 0
 
 ---
 
-For the Windows equivalent of these scheduling tools, see [[windows-scheduling]].
+For the Windows equivalent of these scheduling tools, see [windows-scheduling](/12-Orchestration/Scheduling/windows-scheduling).
 
 ## Related Notes
 

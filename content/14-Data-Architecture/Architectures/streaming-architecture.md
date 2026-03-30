@@ -7,16 +7,16 @@ aliases: [streaming architecture, Lambda architecture, Kappa architecture, event
 keywords: [streaming, batch, micro-batch, Lambda architecture, Kappa architecture, event-driven, Kafka, Pub/Sub, Kinesis, Event Hubs, Spark Structured Streaming, Apache Flink, Apache Beam, Dataflow, ksqlDB, Debezium, SQL Server CDC, GCP Datastream, event sourcing, CQRS, exactly-once, at-least-once, tumbling window, sliding window, session window, watermark, late data, reprocessing, replay, real-time analytics, stream processing, CDC, change data capture, producer, consumer, broker, topic, partition, consumer group, offset, backpressure, checkpointing, state store, windowing]
 description: "Streaming architecture patterns — Lambda, Kappa, and event-driven — covering batch vs streaming trade-offs, message broker comparisons (Kafka, Pub/Sub, Kinesis), stream processing engines (Flink, Beam/Dataflow, Spark Structured Streaming), CDC tools (Debezium, GCP Datastream), and the GCP canonical streaming stack."
 related:
-  - "[[pubsub-messaging]]"
-  - "[[pubsub-topics-and-subscriptions]]"
+  - "[pubsub-messaging](/06-GCP/Serverless/pubsub-messaging)"
+  - "[pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions)"
   - "[[lakehouse-architecture]]"
   - "[[medallion-architecture]]"
   - "[[idempotent-pipeline-design]]"
   - "[[five-pillars-of-data-engineering]]"
-  - "[[airflow-core-concepts]]"
+  - "[airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts)"
   - "[[data-mesh-architecture]]"
   - "[[open-table-formats]]"
-  - "[[cloud-logging]]"
+  - "[cloud-logging](/06-GCP/Logging/cloud-logging)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -26,7 +26,7 @@ status: complete
 
 Streaming architecture is any data system design where data is processed continuously as it arrives — events are consumed and acted upon within milliseconds to seconds, rather than being collected and processed in large batches hours later. It encompasses the message brokers that carry events, the processing engines that transform them, the patterns that govern their semantics (Lambda, Kappa, CQRS, event sourcing), and the windowing strategies that handle the inherent challenges of time-ordered distributed data.
 
-The canonical GCP streaming stack — [[pubsub-messaging|Pub/Sub]] → Dataflow (Apache Beam) → BigQuery — is the reference implementation for this vault. But understanding the landscape of alternatives is essential: Kafka dominates outside GCP, Flink is the leading stateful streaming engine globally, and CDC (Change Data Capture) is how streaming connects to existing relational databases. For Python and C# implementations of streaming patterns, see [[24_py_streaming_realtime]] and [[24_cs_streaming_realtime]] respectively.
+The canonical GCP streaming stack — [Pub/Sub](/06-GCP/Serverless/pubsub-messaging) → Dataflow (Apache Beam) → BigQuery — is the reference implementation for this vault. But understanding the landscape of alternatives is essential: Kafka dominates outside GCP, Flink is the leading stateful streaming engine globally, and CDC (Change Data Capture) is how streaming connects to existing relational databases. For Python and C# implementations of streaming patterns, see [24_py_streaming_realtime](/02-Programming-Languages/Python/24_py_streaming_realtime) and [24_cs_streaming_realtime](/02-Programming-Languages/CSharp/24_cs_streaming_realtime) respectively.
 
 ---
 
@@ -211,7 +211,7 @@ Event-driven architecture (EDA) is a broader pattern — not just for data pipel
 | **When to choose** | Multi-engine, cross-cloud, replay required, Kafka ecosystem | GCP-native, serverless, simple fan-out | AWS-native streaming | Azure-native streaming |
 
 > [!tip] GCP Recommendation: Pub/Sub for Simplicity, Kafka for Portability
-> If you are fully committed to GCP, [[pubsub-topics-and-subscriptions|Pub/Sub]] is the right choice — serverless, no operational overhead, native Dataflow integration. If you need cross-cloud portability, replay to offset 0, or the Kafka Connect ecosystem (hundreds of pre-built connectors), run Kafka on Dataproc or use Confluent Cloud.
+> If you are fully committed to GCP, [Pub/Sub](/06-GCP/Serverless/pubsub-topics-and-subscriptions) is the right choice — serverless, no operational overhead, native Dataflow integration. If you need cross-cloud portability, replay to offset 0, or the Kafka Connect ecosystem (hundreds of pre-built connectors), run Kafka on Dataproc or use Confluent Cloud.
 
 ---
 
@@ -434,7 +434,7 @@ Benefits: complete audit trail, point-in-time state reconstruction, natural CDC 
 
 ### Streaming Pattern — CQRS (Command Query Responsibility Segregation)
 
-CQRS separates the write model (commands that change state) from the read model (queries that read state). [[real-time-nosql-pipelines|Firestore]] is a natural fit for the read-side materialized view in CQRS, providing real-time sync to client applications. In a streaming context:
+CQRS separates the write model (commands that change state) from the read model (queries that read state). [Firestore](/06-GCP/Firestore/real-time-nosql-pipelines) is a natural fit for the read-side materialized view in CQRS, providing real-time sync to client applications. In a streaming context:
 
 ```
 Write Side (Command)           Event Stream          Read Side (Query)
@@ -600,10 +600,10 @@ Files on GCS       ──►                                ──►  Firestore
 ```
 
 #### GCP Streaming to BigQuery — why this stack
-- **Pub/Sub** is serverless, globally distributed, and deeply integrated with every GCP service. It handles spikes without capacity planning. See [[pubsub-topics-and-subscriptions]] for setup and [[pubsub-messaging]] for publish/consume patterns.
+- **Pub/Sub** is serverless, globally distributed, and deeply integrated with every GCP service. It handles spikes without capacity planning. See [pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions) for setup and [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging) for publish/consume patterns.
 - **Dataflow** (Apache Beam runner) is fully managed — no cluster to size, patch, or scale. It auto-scales workers based on backlog. The unified batch+stream model means one Beam pipeline handles both historical backfill and live streaming.
 - **BigQuery** is the serving layer — serverless SQL, no indexes to manage, sub-second query latency on petabytes, native streaming insert API.
-- **Cloud Logging + Monitoring:** see [[cloud-logging]] and [[cloud-monitoring-metrics]] for pipeline observability.
+- **Cloud Logging + Monitoring:** see [cloud-logging](/06-GCP/Logging/cloud-logging) and [cloud-monitoring-metrics](/06-GCP/Logging/cloud-monitoring-metrics) for pipeline observability.
 
 #### End-to-end GCP streaming pipeline with Dataflow
 ```python
@@ -724,16 +724,16 @@ For [[data-mesh-architecture|data mesh]] implementations, each domain's data pro
 
 ## Related Notes
 
-- [[pubsub-messaging]] — Pub/Sub publish/consume patterns and operational commands
-- [[pubsub-topics-and-subscriptions]] — Pub/Sub topic and subscription setup on GCP
+- [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging) — Pub/Sub publish/consume patterns and operational commands
+- [pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions) — Pub/Sub topic and subscription setup on GCP
 - [[lakehouse-architecture]] — lakehouse as the serving layer for streaming pipelines
 - [[open-table-formats]] — Iceberg and Delta Lake as the streaming write target
 - [[medallion-architecture]] — bronze layer as the streaming ingestion target
 - [[idempotent-pipeline-design]] — exactly-once semantics and idempotent consumer design
-- [[airflow-core-concepts]] — orchestrating streaming pipeline deployments and monitoring
+- [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) — orchestrating streaming pipeline deployments and monitoring
 - [[data-mesh-architecture]] — domain data products exposed as streaming topics
-- [[cloud-logging]] — GCP observability for streaming pipelines
-- [[cloud-monitoring-metrics]] — pipeline lag, backlog, and throughput metrics
+- [cloud-logging](/06-GCP/Logging/cloud-logging) — GCP observability for streaming pipelines
+- [cloud-monitoring-metrics](/06-GCP/Logging/cloud-monitoring-metrics) — pipeline lag, backlog, and throughput metrics
 - [[five-pillars-of-data-engineering]] — reliability and observability for streaming systems
 
 ## References

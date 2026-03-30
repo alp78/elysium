@@ -21,13 +21,13 @@ aliases:
 keywords: [environment, dev, staging, prod, promotion, deployment, workspace, target, configuration, secret management, cost model, CI/CD]
 description: "Dev, staging, prod environment topology, promotion workflow, tool-by-tool environment separation, and cost model."
 related:
-  - "[[gcloud-configurations]]"
-  - "[[secrets-management]]"
-  - "[[airflow-deployment]]"
-  - "[[github-actions-patterns]]"
+  - "[gcloud-configurations](/06-GCP/Core/gcloud-configurations)"
+  - "[secrets-management](/06-GCP/Security/secrets-management)"
+  - "[airflow-deployment](/12-Orchestration/Airflow/airflow-deployment)"
+  - "[github-actions-patterns](/10-GitHub-Actions/github-actions-patterns)"
   - "[[golden-rules-of-data-engineering]]"
-  - "[[gcp-billing-and-pricing]]"
-  - "[[gcp-total-cost-of-ownership]]"
+  - "[gcp-billing-and-pricing](/06-GCP/Cost-Management/gcp-billing-and-pricing)"
+  - "[gcp-total-cost-of-ownership](/06-GCP/Cost-Management/gcp-total-cost-of-ownership)"
   - "[[data-flow-architecture]]"
 created: 2026-03-29
 updated: 2026-03-29
@@ -103,14 +103,14 @@ gcloud config set project data-platform-dev
 gcloud config configurations activate dev
 ```
 
-See [[gcloud-configurations#gcloud config configurations create — named config per environment]] for setup and [[gcloud-configurations#Protecting Production with Visual Cues in Terminal]] for the shell prompt trick that color-codes your terminal by environment.
+See [gcloud-configurations > gcloud config configurations create — named config per environment](/06-GCP/Core/gcloud-configurations#gcloud-config-configurations-create--named-config-per-environment) for setup and [gcloud-configurations > Protecting Production with Visual Cues in Terminal](/06-GCP/Core/gcloud-configurations#protecting-production-with-visual-cues-in-terminal) for the shell prompt trick that color-codes your terminal by environment.
 
 > [!danger] Wrong gcloud configuration targets wrong project
 >
 > Forgetting to switch configurations before running `gcloud compute instances delete`
 > or `bq rm` hits the wrong project. Always verify with `gcloud config get project`
 > before destructive operations. The terminal color-coding pattern in
-> [[gcloud-configurations]] makes the active project visible at a glance.
+> [gcloud-configurations](/06-GCP/Core/gcloud-configurations) makes the active project visible at a glance.
 
 ### Terraform — workspaces or variable files
 
@@ -169,9 +169,9 @@ dbt run --target prod      # explicitly hits prod
 
 Each environment has its own Airflow Connections (different SQL Server host, different BigQuery dataset) and Variables (environment name, feature flags).
 
-- Connections store credentials: see [[airflow-core-concepts#Connections]]
-- Secret Manager backend: see [[secrets-management#Airflow Connections Backed by Secret Manager]]
-- Environment-specific variables: see [[airflow-core-concepts#Variables]]
+- Connections store credentials: see [airflow-core-concepts > Connections](/12-Orchestration/Airflow/airflow-core-concepts#connections)
+- Secret Manager backend: see [secrets-management > Airflow Connections Backed by Secret Manager](/06-GCP/Security/secrets-management#airflow-connections-backed-by-secret-manager)
+- Environment-specific variables: see [airflow-core-concepts > Variables](/12-Orchestration/Airflow/airflow-core-concepts#variables)
 
 > [!warning] Copying DAGs between environments
 >
@@ -184,10 +184,10 @@ Each environment has its own Airflow Connections (different SQL Server host, dif
 
 GitHub Environments (`dev`, `staging`, `production`) provide per-environment secrets and protection rules (approval gates, branch restrictions).
 
-- Define environments: see [[github-actions-patterns#Define Environments in GitHub]]
-- Deployment with gate: see [[github-actions-patterns#Deployment Workflow with Gate]]
-- Multi-environment deploy: see [[github-actions-patterns#Multi-Environment Deployment]]
-- WIF authentication: see [[secrets-management#GitHub Actions — Workload Identity Federation (Keyless)]]
+- Define environments: see [github-actions-patterns > Define Environments in GitHub](/10-GitHub-Actions/github-actions-patterns#define-environments-in-github)
+- Deployment with gate: see [github-actions-patterns > Deployment Workflow with Gate](/10-GitHub-Actions/github-actions-patterns#deployment-workflow-with-gate)
+- Multi-environment deploy: see [github-actions-patterns > Multi-Environment Deployment](/10-GitHub-Actions/github-actions-patterns#multi-environment-deployment)
+- WIF authentication: see [secrets-management > GitHub Actions — Workload Identity Federation (Keyless)](/06-GCP/Security/secrets-management#github-actions--workload-identity-federation-keyless)
 
 > [!tip] Production environment protection rules
 >
@@ -200,7 +200,7 @@ GitHub Environments (`dev`, `staging`, `production`) provide per-environment sec
 
 - **Dev:** Local Docker container (`docker run -e SA_PASSWORD=... mcr.microsoft.com/mssql/server`) or a small GCE e2-small VM
 - **Prod:** Production GCE VM with proper sizing, backups, and Datadog monitoring
-- Configuration: see [[server-configuration]] for memory, recovery model, and RCSI settings
+- Configuration: see [server-configuration](/04-SQL-Server/Administration/server-configuration) for memory, recovery model, and RCSI settings
 
 > [!danger] Separate SQL Server Instances
 >
@@ -212,7 +212,7 @@ GitHub Environments (`dev`, `staging`, `production`) provide per-environment sec
 
 - **Dev:** Dataset `dev_pipeline` in the dev GCP project
 - **Prod:** Dataset `pipeline_data` in the prod GCP project
-- Per-service cost: see [[gcp-billing-and-pricing#BigQuery]]
+- Per-service cost: see [gcp-billing-and-pricing > BigQuery](/06-GCP/Cost-Management/gcp-billing-and-pricing#bigquery)
 
 > [!warning] bq commands use the default project
 >
@@ -302,7 +302,7 @@ graph TD
 
 ## Cost Model by Environment
 
-What each environment actually costs per month. For full per-service pricing detail, see [[gcp-billing-and-pricing]]. For complete architecture cost breakdowns at different scales, see [[gcp-total-cost-of-ownership]].
+What each environment actually costs per month. For full per-service pricing detail, see [gcp-billing-and-pricing](/06-GCP/Cost-Management/gcp-billing-and-pricing). For complete architecture cost breakdowns at different scales, see [gcp-total-cost-of-ownership](/06-GCP/Cost-Management/gcp-total-cost-of-ownership).
 
 | Component | Dev | Staging | Prod |
 |---|---|---|---|
@@ -319,7 +319,7 @@ What each environment actually costs per month. For full per-service pricing det
 > - Run SQL Server as a local Docker container instead of a GCE VM — saves $25/month
 > - Use BigQuery free tier (1TB/month of queries) — most dev work fits within this
 > - Stop staging VMs overnight and weekends — ~30% cost reduction (see
->   [[gcp-total-cost-of-ownership#Paused vs Running Cost Comparison]])
+>   [gcp-total-cost-of-ownership > Paused vs Running Cost Comparison](/06-GCP/Cost-Management/gcp-total-cost-of-ownership#paused-vs-running-cost-comparison))
 
 ---
 
@@ -343,10 +343,10 @@ What each environment actually costs per month. For full per-service pricing det
 ## Related
 
 - [[data-flow-architecture]] — how data moves between all systems in the stack
-- [[gcloud-configurations]] — named configurations for multi-project safety
-- [[secrets-management]] — Secret Manager, Airflow connections, GitHub Actions secrets
-- [[airflow-deployment]] — Airflow installation and configuration per environment
-- [[github-actions-patterns]] — CI/CD workflows with environment gates
+- [gcloud-configurations](/06-GCP/Core/gcloud-configurations) — named configurations for multi-project safety
+- [secrets-management](/06-GCP/Security/secrets-management) — Secret Manager, Airflow connections, GitHub Actions secrets
+- [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) — Airflow installation and configuration per environment
+- [github-actions-patterns](/10-GitHub-Actions/github-actions-patterns) — CI/CD workflows with environment gates
 - [[golden-rules-of-data-engineering]] — foundational principles including "choose boring technology"
-- [[gcp-billing-and-pricing]] — per-service pricing detail
-- [[gcp-total-cost-of-ownership]] — complete architecture cost breakdowns
+- [gcp-billing-and-pricing](/06-GCP/Cost-Management/gcp-billing-and-pricing) — per-service pricing detail
+- [gcp-total-cost-of-ownership](/06-GCP/Cost-Management/gcp-total-cost-of-ownership) — complete architecture cost breakdowns

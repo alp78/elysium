@@ -109,7 +109,7 @@ sqlcmd -S 10.132.0.2 -U sa -P 'MyPassword123'  # password visible in process lis
 export SA_PASSWORD=$(cat /run/secrets/sa_password)
 sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD"
 
-# BEST: Use a secret manager and inject at runtime (see [[secrets-management]])
+# BEST: Use a secret manager and inject at runtime (see [secrets-management](/06-GCP/Security/secrets-management))
 export SA_PASSWORD=$(gcloud secrets versions access latest --secret="sql-sa-password")
 sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD"
 
@@ -168,7 +168,7 @@ Remove-Item Env:MY_VAR
 > ```
 > Restart your terminal for the change to take effect.
 
-For a declarative approach to managing variables and configuration across environments, see [[terraform-variables-and-outputs]] which covers Terraform input variables, locals, and output values.
+For a declarative approach to managing variables and configuration across environments, see [terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs) which covers Terraform input variables, locals, and output values.
 
 ## Related
 

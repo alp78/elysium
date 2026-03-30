@@ -14,12 +14,12 @@ related:
   - "[[data-mesh-architecture]]"
   - "[[idempotent-pipeline-design]]"
   - "[[dbt-transformation-layer]]"
-  - "[[moc-terraform]]"
-  - "[[airflow-core-concepts]]"
-  - "[[moc-gcp]]"
+  - "[moc-terraform](/07-Terraform/moc-terraform)"
+  - "[airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts)"
+  - "[moc-gcp](/06-GCP/moc-gcp)"
   - "[[five-pillars-of-data-engineering]]"
   - "[[api-protocols-comparison]]"
-  - "[[moc-observability]]"
+  - "[moc-observability](/13-Observability/moc-observability)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -110,28 +110,28 @@ graph LR
 > SQL Server provides ACID transactions, stored procedures, and sub-second point lookups. If your transforms need to update individual rows, enforce referential integrity, or run complex procedural logic, SQL Server is the right choice. BigQuery is optimized for analytical scans, not transactional writes. See [[medallion-architecture]] for the bronze/silver/gold pattern in SQL Server.
 
 > [!question] Why BigQuery for serving to BI tools?
-> BI tools like Looker and Tableau have native BigQuery connectors with query pushdown. Analysts can also write ad-hoc SQL directly. BigQuery handles concurrent analytical queries without affecting your transactional SQL Server workload. See [[querying-and-cost-optimization]] for cost controls.
+> BI tools like Looker and Tableau have native BigQuery connectors with query pushdown. Analysts can also write ad-hoc SQL directly. BigQuery handles concurrent analytical queries without affecting your transactional SQL Server workload. See [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) for cost controls.
 
 > [!question] Why Cloud Run over a VM-based cron script?
-> Cloud Run scales to zero when not running — no idle compute cost. Each job runs in a Docker container, making it reproducible and isolated. If the job takes 5 minutes daily, you pay for 5 minutes, not 24 hours of VM time. See [[cloud-run-jobs-vs-services]] for the jobs vs. services distinction.
+> Cloud Run scales to zero when not running — no idle compute cost. Each job runs in a Docker container, making it reproducible and isolated. If the job takes 5 minutes daily, you pay for 5 minutes, not 24 hours of VM time. See [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) for the jobs vs. services distinction.
 
 > [!question] Why Airflow over Cloud Scheduler alone?
-> Cloud Scheduler can trigger a single Cloud Run job, but Airflow manages multi-step DAGs with dependencies, retries, SLA monitoring, and backfills. If your pipeline has more than 2-3 steps, Airflow pays for itself in operational clarity. See [[airflow-core-concepts]] for DAG design.
+> Cloud Scheduler can trigger a single Cloud Run job, but Airflow manages multi-step DAGs with dependencies, retries, SLA monitoring, and backfills. If your pipeline has more than 2-3 steps, Airflow pays for itself in operational clarity. See [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) for DAG design.
 
 ### Implementation Checklist
 
-- [ ] Create GCS bucket with lifecycle policy (delete raw files after 90 days) — [[gcs-buckets-and-lifecycle]]
+- [ ] Create GCS bucket with lifecycle policy (delete raw files after 90 days) — [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle)
 - [ ] Build Python ingestion script with retry logic and idempotent writes — [[rest-api-design-and-consumption]]
 - [ ] Create SQL Server bronze/silver/gold schemas — [[medallion-architecture]]
 - [ ] Write transforms as stored procedures or dbt models — [[dbt-transformation-layer]]
-- [ ] Set up Airflow DAG with task dependencies — [[airflow-dag-patterns]]
-- [ ] Configure BigQuery export (scheduled query or `bq load`) — [[data-loading-and-export]]
-- [ ] Add freshness monitoring and alerting — [[gcp-cloud-monitoring-deep-dive]]
-- [ ] Terraform all infrastructure — [[terraform-plan-apply-destroy]]
+- [ ] Set up Airflow DAG with task dependencies — [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns)
+- [ ] Configure BigQuery export (scheduled query or `bq load`) — [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export)
+- [ ] Add freshness monitoring and alerting — [gcp-cloud-monitoring-deep-dive](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive)
+- [ ] Terraform all infrastructure — [terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy)
 
 ### Related Notes
 
-[[medallion-architecture]] | [[idempotent-pipeline-design]] | [[rest-api-design-and-consumption]] | [[dbt-transformation-layer]] | [[cloud-run-jobs-vs-services]] | [[airflow-core-concepts]] | [[gcs-buckets-and-lifecycle]] | [[bronze-layer-loading]] | [[silver-transforms]] | [[gold-transforms]]
+[[medallion-architecture]] | [[idempotent-pipeline-design]] | [[rest-api-design-and-consumption]] | [[dbt-transformation-layer]] | [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) | [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) | [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) | [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) | [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) | [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms)
 
 ---
 
@@ -179,7 +179,7 @@ graph LR
 ### Key Decisions Explained
 
 > [!question] Why Pub/Sub over Kafka?
-> Pub/Sub is fully managed — no brokers to provision, no ZooKeeper, no cluster sizing. It auto-scales to handle traffic spikes and you pay per message. Choose Kafka if you need message replay beyond 7 days, strict ordering guarantees across partitions, or you already run Kafka on-prem. See [[pubsub-messaging]] and [[pubsub-topics-and-subscriptions]].
+> Pub/Sub is fully managed — no brokers to provision, no ZooKeeper, no cluster sizing. It auto-scales to handle traffic spikes and you pay per message. Choose Kafka if you need message replay beyond 7 days, strict ordering guarantees across partitions, or you already run Kafka on-prem. See [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging) and [pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions).
 
 > [!question] Why Dataflow over Cloud Run with a Pub/Sub trigger?
 > Cloud Run can process Pub/Sub messages, but it processes them individually — no windowing, no state, no exactly-once guarantees. Dataflow (Apache Beam) provides tumbling/sliding/session windows, watermarks for late data, and exactly-once processing. If you need to aggregate events over time windows, Dataflow is the right tool. See [[streaming-architecture]] for windowing patterns.
@@ -201,7 +201,7 @@ graph LR
 
 ### Related Notes
 
-[[streaming-architecture]] | [[pubsub-messaging]] | [[pubsub-topics-and-subscriptions]] | [[firestore-data-model-and-operations]] | [[real-time-nosql-pipelines]] | [[querying-and-cost-optimization]] | [[gcp-cloud-monitoring-deep-dive]]
+[[streaming-architecture]] | [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging) | [pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions) | [firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations) | [real-time-nosql-pipelines](/06-GCP/Firestore/real-time-nosql-pipelines) | [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) | [gcp-cloud-monitoring-deep-dive](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive)
 
 ---
 
@@ -313,7 +313,7 @@ dbt_project/
 
 ### Related Notes
 
-[[data-warehouse-architecture]] | [[dimensional-modeling]] | [[dbt-transformation-layer]] | [[querying-and-cost-optimization]] | [[data-loading-and-export]] | [[gcp-data-lineage-and-catalog]] | [[gcp-pipeline-health-and-sla]]
+[[data-warehouse-architecture]] | [[dimensional-modeling]] | [[dbt-transformation-layer]] | [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) | [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) | [gcp-data-lineage-and-catalog](/13-Observability/GCP-Native/gcp-data-lineage-and-catalog) | [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla)
 
 ---
 
@@ -391,13 +391,13 @@ graph TB
 ### Key Decisions Explained
 
 > [!question] Why land everything in GCS first?
-> GCS acts as an immutable audit log. If a transform has a bug, you can replay from raw files without re-extracting from the source. This also decouples extraction from loading — if BigQuery is temporarily unavailable, files are safe in GCS. See [[gcs-buckets-and-lifecycle]].
+> GCS acts as an immutable audit log. If a transform has a bug, you can replay from raw files without re-extracting from the source. This also decouples extraction from loading — if BigQuery is temporarily unavailable, files are safe in GCS. See [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle).
 
 > [!question] Why per-source prefixes in GCS?
 > Different sources have different schemas, formats, and arrival schedules. Organizing by source (`/sql-server/YYYY-MM-DD/`, `/api/YYYY-MM-DD/`) makes it easy to re-process a single source without touching others. It also simplifies IAM — you can grant a service account access to only its source prefix.
 
 > [!question] Why Airflow over simpler orchestration?
-> Multi-source integration requires complex dependency management: "load API data only after SQL Server extract completes, but SFTP can run in parallel." Airflow's DAG model makes these dependencies explicit and visual. It also handles per-source retry logic and SLA monitoring. See [[airflow-dag-patterns]].
+> Multi-source integration requires complex dependency management: "load API data only after SQL Server extract completes, but SFTP can run in parallel." Airflow's DAG model makes these dependencies explicit and visual. It also handles per-source retry logic and SLA monitoring. See [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns).
 
 > [!question] How do you handle schema drift?
 > - **Landing zone**: Store raw files as-is (JSON, CSV, Parquet). Schema drift is the source's problem at this layer.
@@ -444,7 +444,7 @@ FULL OUTER JOIN sftp_companies f ON s.isin = f.isin
 
 ### Related Notes
 
-[[medallion-architecture]] | [[idempotent-pipeline-design]] | [[dbt-transformation-layer]] | [[airflow-dag-patterns]] | [[serialization-formats]] | [[context-and-metadata-architecture]] | [[data-modeling-patterns]] | [[gcs-buckets-and-lifecycle]] | database connections
+[[medallion-architecture]] | [[idempotent-pipeline-design]] | [[dbt-transformation-layer]] | [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) | [[serialization-formats]] | [[context-and-metadata-architecture]] | [[data-modeling-patterns]] | [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) | database connections
 
 ---
 
@@ -519,7 +519,7 @@ graph LR
 
 ### Related Notes
 
-[[cloud-run-jobs-vs-services]] | [[gcp-scheduling]] | [[querying-and-cost-optimization]] | [[dbt-transformation-layer]] | [[github-actions-workflows]] | [[gcp-cloud-monitoring-deep-dive]] | [[gcs-buckets-and-lifecycle]]
+[cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) | [gcp-scheduling](/12-Orchestration/Scheduling/gcp-scheduling) | [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) | [[dbt-transformation-layer]] | [github-actions-workflows](/10-GitHub-Actions/github-actions-workflows) | [gcp-cloud-monitoring-deep-dive](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) | [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle)
 
 ---
 
@@ -597,13 +597,13 @@ graph TB
 ### Key Decisions Explained
 
 > [!question] Why Cloud Composer over self-hosted Airflow?
-> At 10+ engineers, Airflow becomes critical infrastructure. Cloud Composer handles upgrades, scaling, and high availability. The cost premium (~$300-500/month for a small environment) is cheaper than an engineer spending time on Airflow ops. See [[airflow-deployment]].
+> At 10+ engineers, Airflow becomes critical infrastructure. Cloud Composer handles upgrades, scaling, and high availability. The cost premium (~$300-500/month for a small environment) is cheaper than an engineer spending time on Airflow ops. See [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment).
 
 > [!question] Why data mesh principles?
 > Data mesh assigns ownership: Team A owns ingestion, Team B owns core models, Team C owns domain analytics. Each team publishes "data products" with defined contracts (schema, SLA, freshness). Consumers depend on contracts, not implementation details. See [[data-mesh-architecture]].
 
 > [!question] Why Terraform modules per team?
-> Each team gets a Terraform module that provisions their resources (BigQuery datasets, Cloud Run services, IAM bindings). The platform team maintains shared modules (networking, monitoring). Changes are peer-reviewed via pull requests. See [[terraform-module-composition]].
+> Each team gets a Terraform module that provisions their resources (BigQuery datasets, Cloud Run services, IAM bindings). The platform team maintains shared modules (networking, monitoring). Changes are peer-reviewed via pull requests. See [terraform-module-composition](/07-Terraform/Patterns/terraform-module-composition).
 
 > [!question] Why gRPC for inter-service communication?
 > gRPC provides strongly-typed contracts (Protobuf), bi-directional streaming, and 2-10x better performance than REST for internal service-to-service calls. Use REST only for external-facing APIs where browser compatibility matters. See [[grpc-for-data-pipelines]] and [[api-protocols-comparison]].
@@ -639,7 +639,7 @@ contract:
 
 ### Related Notes
 
-[[data-mesh-architecture]] | [[airflow-deployment]] | [[terraform-module-composition]] | [[grpc-for-data-pipelines]] | [[api-protocols-comparison]] | [[gcp-data-lineage-and-catalog]] | [[context-and-metadata-architecture]] | [[gcp-pipeline-health-and-sla]] | [[service-accounts-and-iam]]
+[[data-mesh-architecture]] | [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) | [terraform-module-composition](/07-Terraform/Patterns/terraform-module-composition) | [[grpc-for-data-pipelines]] | [[api-protocols-comparison]] | [gcp-data-lineage-and-catalog](/13-Observability/GCP-Native/gcp-data-lineage-and-catalog) | [[context-and-metadata-architecture]] | [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) | [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)
 
 ---
 
@@ -714,13 +714,13 @@ graph TB
 > Index calculation requires ACID transactions — if a corporate action adjustment fails midway, you need to roll back the entire calculation, not end up with partially adjusted data. SQL Server's transaction model, stored procedures, and temporal tables make this safe. BigQuery is append-optimized and lacks row-level transactions.
 
 > [!question] Why immutable GCS archive?
-> Regulatory requirement: you must be able to reproduce any historical index value. This requires proving which market data was used (GCS raw files), which version of the calculation logic ran (Git commit hash in audit table), and what the output was (temporal table history). See [[gcs-buckets-and-lifecycle]].
+> Regulatory requirement: you must be able to reproduce any historical index value. This requires proving which market data was used (GCS raw files), which version of the calculation logic ran (Git commit hash in audit table), and what the output was (temporal table history). See [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle).
 
 > [!question] Why temporal tables for audit?
 > SQL Server temporal tables automatically maintain a history of every row change with system-time versioning. You can query "what was the index value at any point in time" and "what data was used to calculate it." This satisfies regulatory audit requirements without custom audit trigger code.
 
 > [!question] Why strict SLA monitoring?
-> Index values drive trading decisions. A late publication can cause trading halts or client penalties. The Airflow DAG includes SLA callbacks that trigger PagerDuty if the gold layer is not populated by the deadline. See [[gcp-pipeline-health-and-sla]] and [[airflow-core-concepts]].
+> Index values drive trading decisions. A late publication can cause trading halts or client penalties. The Airflow DAG includes SLA callbacks that trigger PagerDuty if the gold layer is not populated by the deadline. See [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) and [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts).
 
 ### Corporate Actions Processing Pattern
 
@@ -757,7 +757,7 @@ JOIN bronze.corporate_actions ca
 
 ### Related Notes
 
-[[medallion-architecture]] | [[bronze-layer-loading]] | [[silver-transforms]] | [[gold-transforms]] | [[idempotent-pipeline-design]] | [[dimensional-modeling]] | [[airflow-core-concepts]] | [[airflow-dag-patterns]] | [[rest-api-design-and-consumption]] | [[gcp-pipeline-health-and-sla]] | fastapi and polars
+[[medallion-architecture]] | [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) | [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) | [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) | [[idempotent-pipeline-design]] | [[dimensional-modeling]] | [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) | [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) | [[rest-api-design-and-consumption]] | [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) | fastapi and polars
 
 ---
 
@@ -820,7 +820,7 @@ graph TB
 > Some features are naturally batch (e.g., "average revenue over last 90 days") while others must be real-time (e.g., "number of events in the last 5 minutes"). Batch features are cheaper to compute and cover most use cases. Add streaming features only when freshness matters.
 
 > [!question] Why Firestore over Redis for the online store?
-> Firestore is fully managed, scales automatically, and has a generous free tier. Redis (Memorystore) requires capacity planning and cluster management. Choose Redis only if you need sub-millisecond latency (Firestore is ~10-50ms). See [[firestore-data-model-and-operations]].
+> Firestore is fully managed, scales automatically, and has a generous free tier. Redis (Memorystore) requires capacity planning and cluster management. Choose Redis only if you need sub-millisecond latency (Firestore is ~10-50ms). See [firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations).
 
 ### Feature Definition Pattern
 
@@ -855,7 +855,7 @@ FEATURE_DEFINITIONS = {
 
 ### Related Notes
 
-[[firestore-data-model-and-operations]] | [[real-time-nosql-pipelines]] | [[dbt-transformation-layer]] | [[streaming-architecture]] | [[querying-and-cost-optimization]] | [[ai-augmented-data-engineering]]
+[firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations) | [real-time-nosql-pipelines](/06-GCP/Firestore/real-time-nosql-pipelines) | [[dbt-transformation-layer]] | [[streaming-architecture]] | [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) | [ai-augmented-data-engineering](/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering)
 
 ---
 
@@ -993,7 +993,7 @@ VALIDATION_QUERIES = {
 
 ### Related Notes
 
-[[migration-idempotency-backfills]] | [[idempotent-pipeline-design]] | [[data-loading-and-export]] | [[dbt-transformation-layer]] | database connections | [[querying-and-cost-optimization]] | [[terraform-plan-apply-destroy]]
+[[migration-idempotency-backfills]] | [[idempotent-pipeline-design]] | [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) | [[dbt-transformation-layer]] | database connections | [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) | [terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy)
 
 ---
 
@@ -1067,13 +1067,13 @@ graph LR
 ### Key Decisions Explained
 
 > [!question] What is the single highest-impact optimization?
-> **BigQuery partitioning and clustering.** If you have a 10TB table and every query scans all of it, you pay ~$50 per query. Partition by date and cluster by your most common filter column, and the same query might scan 10GB — $0.05. This is a 1000x cost reduction for time-range queries. See [[querying-and-cost-optimization]].
+> **BigQuery partitioning and clustering.** If you have a 10TB table and every query scans all of it, you pay ~$50 per query. Partition by date and cluster by your most common filter column, and the same query might scan 10GB — $0.05. This is a 1000x cost reduction for time-range queries. See [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization).
 
 > [!question] When is Datadog worth the cost?
-> Datadog becomes worth it when: (1) you have 5+ services that need distributed tracing, (2) you need custom APM dashboards that Cloud Monitoring cannot provide, or (3) you need log analytics beyond simple search. For pipelines with <5 components, Cloud Monitoring's free tier is sufficient. See [[gcp-cloud-monitoring-deep-dive]] and [[datadog-cost-optimization]].
+> Datadog becomes worth it when: (1) you have 5+ services that need distributed tracing, (2) you need custom APM dashboards that Cloud Monitoring cannot provide, or (3) you need log analytics beyond simple search. For pipelines with <5 components, Cloud Monitoring's free tier is sufficient. See [gcp-cloud-monitoring-deep-dive](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) and [datadog-cost-optimization](/13-Observability/Datadog/datadog-cost-optimization).
 
 > [!question] Should we use reserved capacity (BigQuery slots)?
-> Only if your monthly BigQuery on-demand spend exceeds ~$2,000/month consistently. Below that, on-demand is cheaper. BigQuery Editions flex slots let you commit for 1 hour minimum, which is useful for large batch windows. See [[querying-and-cost-optimization]].
+> Only if your monthly BigQuery on-demand spend exceeds ~$2,000/month consistently. Below that, on-demand is cheaper. BigQuery Editions flex slots let you commit for 1 hour minimum, which is useful for large batch windows. See [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization).
 
 > [!question] How do we prevent cost surprises?
 > - Set BigQuery per-user byte limits (`maximum_bytes_billed`)
@@ -1099,7 +1099,7 @@ graph LR
 
 ### Related Notes
 
-[[querying-and-cost-optimization]] | [[gcs-buckets-and-lifecycle]] | [[cloud-run-jobs-vs-services]] | [[vm-lifecycle]] | [[finops-cost-optimization]] | [[gcp-cloud-monitoring-deep-dive]] | [[datadog-cost-optimization]] | [[datadog-cost-reference]] | [[table-compression]] | [[partitioning-strategies]]
+[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) | [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) | [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) | [vm-lifecycle](/06-GCP/Compute/vm-lifecycle) | [finops-cost-optimization](/04-SQL-Server/Administration/finops-cost-optimization) | [gcp-cloud-monitoring-deep-dive](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) | [datadog-cost-optimization](/13-Observability/Datadog/datadog-cost-optimization) | [datadog-cost-reference](/13-Observability/Datadog/datadog-cost-reference) | [table-compression](/04-SQL-Server/Storage-and-Indexes/table-compression) | [partitioning-strategies](/04-SQL-Server/Storage-and-Indexes/partitioning-strategies)
 
 ---
 
@@ -1112,26 +1112,26 @@ graph LR
 
 | I need to... | Use | Notes | Link |
 |---|---|---|---|
-| Schedule a simple daily job | Cloud Scheduler + Cloud Run | No dependencies, single job | [[gcp-scheduling]] |
-| Run a complex DAG with dependencies | Airflow | Multi-step with retries and SLA | [[airflow-core-concepts]] |
-| Chain jobs with dependencies (simple) | Cloud Workflows | 2-5 steps, no complex logic | [[gcp-scheduling]] |
-| Run a job on a Linux VM | cron + systemd | On-prem or persistent VM | [[linux-scheduling]] |
-| Run a job on a Windows server | Task Scheduler | Windows-only environments | [[windows-scheduling]] |
-| Manage Airflow in production | Cloud Composer | Managed Airflow, GCP-native | [[airflow-deployment]] |
-| Debug a failed Airflow DAG | Airflow UI + logs | Check task logs, XComs, connections | [[airflow-troubleshooting]] |
+| Schedule a simple daily job | Cloud Scheduler + Cloud Run | No dependencies, single job | [gcp-scheduling](/12-Orchestration/Scheduling/gcp-scheduling) |
+| Run a complex DAG with dependencies | Airflow | Multi-step with retries and SLA | [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) |
+| Chain jobs with dependencies (simple) | Cloud Workflows | 2-5 steps, no complex logic | [gcp-scheduling](/12-Orchestration/Scheduling/gcp-scheduling) |
+| Run a job on a Linux VM | cron + systemd | On-prem or persistent VM | [linux-scheduling](/12-Orchestration/Scheduling/linux-scheduling) |
+| Run a job on a Windows server | Task Scheduler | Windows-only environments | [windows-scheduling](/12-Orchestration/Scheduling/windows-scheduling) |
+| Manage Airflow in production | Cloud Composer | Managed Airflow, GCP-native | [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) |
+| Debug a failed Airflow DAG | Airflow UI + logs | Check task logs, XComs, connections | [airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting) |
 
 ### Storage and Data
 
 | I need to... | Use | Notes | Link |
 |---|---|---|---|
-| Store raw files cheaply | GCS (Nearline/Coldline) | Lifecycle policies auto-tier | [[gcs-buckets-and-lifecycle]] |
-| Run ad-hoc SQL on large data | BigQuery | Serverless, pay per query | [[querying-and-cost-optimization]] |
-| Store transactional data with ACID | SQL Server | Row-level transactions, stored procs | [[moc-sql-server]] |
-| Serve data to a real-time dashboard | Firestore | Sub-10ms point reads | [[firestore-data-model-and-operations]] |
-| Store time-series at massive scale | Bigtable | Billions of rows, single-digit ms | [[real-time-nosql-pipelines]] |
+| Store raw files cheaply | GCS (Nearline/Coldline) | Lifecycle policies auto-tier | [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) |
+| Run ad-hoc SQL on large data | BigQuery | Serverless, pay per query | [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) |
+| Store transactional data with ACID | SQL Server | Row-level transactions, stored procs | [moc-sql-server](/04-SQL-Server/moc-sql-server) |
+| Serve data to a real-time dashboard | Firestore | Sub-10ms point reads | [firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations) |
+| Store time-series at massive scale | Bigtable | Billions of rows, single-digit ms | [real-time-nosql-pipelines](/06-GCP/Firestore/real-time-nosql-pipelines) |
 | Choose a file format for data exchange | Parquet (analytics) or JSON (APIs) | See format comparison | [[serialization-formats]] |
-| Load data into BigQuery | `bq load` or streaming insert | Batch vs real-time trade-off | [[data-loading-and-export]] |
-| Transfer files between systems | `gsutil rsync` or `gcloud transfer` | GCS-native tools | [[data-transfer]] |
+| Load data into BigQuery | `bq load` or streaming insert | Batch vs real-time trade-off | [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) |
+| Transfer files between systems | `gsutil rsync` or `gcloud transfer` | GCS-native tools | [data-transfer](/01-Shell/File-Operations/data-transfer) |
 
 ### Processing and Transformation
 
@@ -1149,23 +1149,23 @@ graph LR
 
 | I need to... | Use | Notes | Link |
 |---|---|---|---|
-| Deploy infrastructure reproducibly | Terraform | State-managed, peer-reviewed | [[moc-terraform]] |
-| Deploy a Cloud Run service | Terraform + Docker | Or `gcloud run deploy` for small teams | [[terraform-cloud-run]] |
-| Manage secrets securely | GCP Secret Manager + Terraform | Never commit secrets to Git | [[terraform-iam-and-secrets]] |
-| Set up CI/CD for data pipelines | GitHub Actions | Test, lint, deploy on merge | [[github-actions-workflows]] |
-| Manage Terraform state | GCS backend with locking | Remote state for teams | [[terraform-state-management]] |
-| Create reusable infra modules | Terraform modules | Composition over inheritance | [[terraform-module-composition]] |
+| Deploy infrastructure reproducibly | Terraform | State-managed, peer-reviewed | [moc-terraform](/07-Terraform/moc-terraform) |
+| Deploy a Cloud Run service | Terraform + Docker | Or `gcloud run deploy` for small teams | [terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run) |
+| Manage secrets securely | GCP Secret Manager + Terraform | Never commit secrets to Git | [terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets) |
+| Set up CI/CD for data pipelines | GitHub Actions | Test, lint, deploy on merge | [github-actions-workflows](/10-GitHub-Actions/github-actions-workflows) |
+| Manage Terraform state | GCS backend with locking | Remote state for teams | [terraform-state-management](/07-Terraform/Fundamentals/terraform-state-management) |
+| Create reusable infra modules | Terraform modules | Composition over inheritance | [terraform-module-composition](/07-Terraform/Patterns/terraform-module-composition) |
 
 ### Monitoring and Governance
 
 | I need to... | Use | Notes | Link |
 |---|---|---|---|
-| Monitor pipeline health for free | GCP Cloud Monitoring | Free tier: logs, metrics, alerts | [[gcp-cloud-monitoring-deep-dive]] |
-| Track data lineage | Dataplex Lineage API | Auto-captured for BigQuery | [[gcp-data-lineage-and-catalog]] |
-| Monitor SLA compliance | Custom metrics + alerting | Define freshness and completeness SLAs | [[gcp-pipeline-health-and-sla]] |
-| Deep application performance tracing | Datadog APM | Distributed traces across services | [[datadog-apm-traces]] |
-| Monitor SQL Server performance | Wait stats + execution plans | Identify bottlenecks | [[wait-stats-analysis]] |
-| Audit database access | SQL Server audit logging | Compliance and security | [[audit-logging]] |
+| Monitor pipeline health for free | GCP Cloud Monitoring | Free tier: logs, metrics, alerts | [gcp-cloud-monitoring-deep-dive](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) |
+| Track data lineage | Dataplex Lineage API | Auto-captured for BigQuery | [gcp-data-lineage-and-catalog](/13-Observability/GCP-Native/gcp-data-lineage-and-catalog) |
+| Monitor SLA compliance | Custom metrics + alerting | Define freshness and completeness SLAs | [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) |
+| Deep application performance tracing | Datadog APM | Distributed traces across services | [datadog-apm-traces](/13-Observability/Datadog/datadog-apm-traces) |
+| Monitor SQL Server performance | Wait stats + execution plans | Identify bottlenecks | [wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis) |
+| Audit database access | SQL Server audit logging | Compliance and security | [audit-logging](/04-SQL-Server/Security/audit-logging) |
 
 ### APIs and Communication
 
@@ -1181,11 +1181,11 @@ graph LR
 
 | I need to... | Use | Notes | Link |
 |---|---|---|---|
-| Parse a log file quickly | awk / grep | Pattern matching and text extraction | [[awk-data-processing]], [[grep-and-pattern-matching]] |
-| Edit a file in-place | sed | Stream editing, regex substitution | [[sed-stream-editing]] |
-| Transfer files via SSH | scp / rsync | Secure copy, incremental sync | [[data-transfer]] |
-| Debug network connectivity | curl, netcat, telnet | Test endpoints and ports | [[connectivity-testing]] |
-| Manage background processes | nohup, screen, tmux | Long-running jobs on VMs | [[viewing-processes]] |
+| Parse a log file quickly | awk / grep | Pattern matching and text extraction | [awk-data-processing](/01-Shell/Text-Processing/awk-data-processing), [grep-and-pattern-matching](/01-Shell/Text-Processing/grep-and-pattern-matching) |
+| Edit a file in-place | sed | Stream editing, regex substitution | [sed-stream-editing](/01-Shell/Text-Processing/sed-stream-editing) |
+| Transfer files via SSH | scp / rsync | Secure copy, incremental sync | [data-transfer](/01-Shell/File-Operations/data-transfer) |
+| Debug network connectivity | curl, netcat, telnet | Test endpoints and ports | [connectivity-testing](/01-Shell/Networking/connectivity-testing) |
+| Manage background processes | nohup, screen, tmux | Long-running jobs on VMs | [viewing-processes](/01-Shell/Process-Management/viewing-processes) |
 
 ---
 
@@ -1247,7 +1247,7 @@ flowchart TD
 
 **The mistake:** Building 20 microservices for a pipeline that is fundamentally a linear DAG. Each service has its own deployment, monitoring, and failure mode. Debugging requires tracing through 20 services.
 
-**The fix:** Use a monolithic pipeline (Airflow DAG with task functions) until you have a genuine reason to decompose. Microservices solve organizational scaling problems, not technical ones. See [[airflow-dag-patterns]].
+**The fix:** Use a monolithic pipeline (Airflow DAG with task functions) until you have a genuine reason to decompose. Microservices solve organizational scaling problems, not technical ones. See [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns).
 
 ### "We Don't Need Tests for Data"
 

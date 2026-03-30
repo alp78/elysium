@@ -380,7 +380,7 @@ conn.close()
 
 ## SQL Server — pyodbc (ODBC Driver 18)
 
-The SQL patterns used below (parameterised queries, window functions, CTEs) follow the same T-SQL dialect covered in [[sql-fundamentals]]. For how connection pooling interacts with SQL Server lock behavior under concurrent writes, see [[blocking-and-locking]].
+The SQL patterns used below (parameterised queries, window functions, CTEs) follow the same T-SQL dialect covered in [sql-fundamentals](/05-DB-Queries/SQL-Server/sql-fundamentals). For how connection pooling interacts with SQL Server lock behavior under concurrent writes, see [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking).
 
 #### SQL Server — connect and list schemas/tables
 

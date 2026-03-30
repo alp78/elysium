@@ -8,7 +8,7 @@ keywords: [firestore, csharp, dotnet, Google.Cloud.Firestore, DocumentReference,
 description: "Firestore operations in C# with executable examples and cell outputs — covers CRUD, queries, transactions, batches, snapshots, and typed document mapping."
 related:
   - "[[firestore-python]]"
-  - "[[firestore-data-model-and-operations]]"
+  - "[firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
