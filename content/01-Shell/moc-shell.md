@@ -14,28 +14,18 @@ or operate systems. Expand any page below to see its sections, or click through
 to the full content. Every page covers both bash (Linux/macOS) and PowerShell (Windows).
 
 ```mermaid
-flowchart LR
-  D([Data and Files])
-  D --> nav[navigation]
-  D --> read[reading files]
-  D --> grep[grep, regex]
-  D --> awk[awk]
-  D --> sed[sed]
-  D --> date[date, time]
-  D --> find[finding files]
-  D --> file[file manipulation]
-  D --> comp[compression]
-  D --> xfer[data transfer]
-  click nav "./navigation-and-listing"
-  click read "./reading-file-contents"
-  click grep "./grep-and-pattern-matching"
-  click awk "./awk-data-processing"
-  click sed "./sed-stream-editing"
-  click date "./date-and-time-handling"
-  click find "./finding-files"
-  click file "./file-manipulation"
-  click comp "./compression"
-  click xfer "./data-transfer"
+mindmap
+  ((Data and Files))
+    (navigation)
+    (reading files)
+    (grep, regex)
+    (awk)
+    (sed)
+    (date, time)
+    (finding files)
+    (file manipulation)
+    (compression)
+    (data transfer)
 ```
 
 > [!example]- Data & Files
@@ -132,22 +122,15 @@ flowchart LR
 > > - [[data-transfer#gsutil and gcloud storage — Cloud Storage Transfers]]
 
 ```mermaid
-flowchart LR
-  S([Script Engineering])
-  S --> hist[command history]
-  S --> io[IO redirection]
-  S --> chain[command chaining]
-  S --> proc[process substitution]
-  S --> brace[brace expansion]
-  S --> env[environment variables]
-  S --> def[defensive scripting]
-  click hist "./command-history"
-  click io "./io-redirection"
-  click chain "./command-chaining"
-  click proc "./process-substitution"
-  click brace "./brace-expansion-and-globbing"
-  click env "./environment-variables"
-  click def "./defensive-scripting"
+mindmap
+  ((Script Engineering))
+    (command history)
+    (IO redirection)
+    (command chaining)
+    (process substitution)
+    (brace expansion)
+    (environment variables)
+    (defensive scripting)
 ```
 
 > [!example]- Script Engineering
@@ -214,28 +197,18 @@ flowchart LR
 > > - [[defensive-scripting#trap EXIT — guaranteed cleanup on script exit, error, or signal]]
 
 ```mermaid
-flowchart LR
-  N([System and Network])
-  N --> ps[viewing processes]
-  N --> res[system resources]
-  N --> kill[killing processes]
-  N --> svc[managing services]
-  N --> conn[connectivity testing]
-  N --> sock[socket inspection]
-  N --> http[HTTP, APIs]
-  N --> fw[firewalls]
-  N --> iap[IAP tunneling]
-  N --> gcp[GCP resources]
-  click ps "./viewing-processes"
-  click res "./system-resources"
-  click kill "./killing-processes"
-  click svc "./managing-services"
-  click conn "./connectivity-testing"
-  click sock "./socket-inspection"
-  click http "./http-requests-and-apis"
-  click fw "./firewalls"
-  click iap "./iap-tunneling"
-  click gcp "./connecting-to-gcp-resources"
+mindmap
+  ((System and Network))
+    (viewing processes)
+    (system resources)
+    (killing processes)
+    (managing services)
+    (connectivity testing)
+    (socket inspection)
+    (HTTP, APIs)
+    (firewalls)
+    (IAP tunneling)
+    (GCP resources)
 ```
 
 > [!example]- System & Network Operations

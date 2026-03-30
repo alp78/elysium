@@ -426,6 +426,11 @@ button.darkmode {
   background-color: transparent !important;
 }
 
+/* ── Callout collapse artifact — hide inner content overflow ──── */
+.callout.is-collapsed .callout-content {
+  display: none !important;
+}
+
 /* ── MOC nested callouts — white links inside abstract callouts ── */
 [saved-theme="dark"] .callout[data-callout="example"] .callout[data-callout="abstract"] a {
   color: #c0caf5 !important;
