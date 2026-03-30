@@ -40,9 +40,6 @@ status: complete
 > [!quote]
 > "Easy things should be easy, and hard things should be possible."
 > — **Larry Wall**
->
-> "When in doubt, use brute force."
-> — **Ken Thompson**
 
 `sed` (stream editor) is a non-interactive, line-oriented text transformation tool. It processes input one line at a time, applies a sequence of editing commands, and writes results to standard output. Used by data engineers daily for log cleaning, SQL migration file edits, CSV header fixes, config file patching, and bulk in-place file edits across entire codebases.
 

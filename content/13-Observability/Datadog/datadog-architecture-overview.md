@@ -25,37 +25,51 @@ Datadog monitoring for the data platform uses two agents and one GCP Integration
 
 ### Datadog Infrastructure Topology
 
-```
-GCE VM: data-pipeline-airflow (e2-medium, COS)
-│
-├── Docker network: airflow-net
-│   ├── airflow-postgres     (postgres:16-alpine)     ← metadata DB
-│   ├── airflow-webserver    (airflow:2.10.5)          ← UI on port 8080
-│   ├── airflow-scheduler    (airflow:2.10.5)          ← LocalExecutor
-│   ├── airflow-triggerer    (airflow:2.10.5)          ← deferred tasks
-│   └── dd-agent             (gcr.io/datadoghq/agent:7) ← Datadog Agent
-│       ├── port 8126 → APM traces from Cloud Run
-│       ├── Docker socket → container logs + metrics
-│       └── /proc, /sys → host system metrics
-│
-GCE VM: data-pipeline-sql (e2-small, Ubuntu 22.04)
-│
-├── SQL Server 2022 Developer (systemd)
-└── datadog-agent (systemd package)
-    ├── SQL Server integration → connections, buffer pool, waits
-    ├── SQL Server errorlog → log collection
-    └── Host metrics → CPU, RAM, disk, network
-│
-Cloud Run Job: data-pipeline-pipeline
-│
-├── ddtrace-run → auto-instruments pyodbc, requests
-└── Sends traces to dd-agent on Airflow VM (port 8126 via VPC)
-│
-└──── All data → Datadog EU (datadoghq.eu)
-        ├── Infrastructure → VM CPU, RAM, disk
-        ├── Logs → Airflow containers + SQL Server errorlog
-        ├── APM → Pipeline step traces + SQL queries
-        └── GCP Integration → Cloud Run job metrics
+```mermaid
+flowchart TD
+    subgraph VM1["GCE VM: data-pipeline-airflow (e2-medium, COS)"]
+        subgraph NET["Docker network: airflow-net"]
+            PG["airflow-postgres<br/>postgres:16-alpine"]
+            WEB["airflow-webserver<br/>airflow:2.10.5 · port 8080"]
+            SCHED["airflow-scheduler<br/>airflow:2.10.5 · LocalExecutor"]
+            TRIG["airflow-triggerer<br/>airflow:2.10.5"]
+            DD1["dd-agent<br/>gcr.io/datadoghq/agent:7"]
+        end
+    end
+
+    subgraph VM2["GCE VM: data-pipeline-sql (e2-small, Ubuntu 22.04)"]
+        SQL["SQL Server 2022 Developer<br/>systemd"]
+        DD2["datadog-agent<br/>systemd package"]
+    end
+
+    subgraph CR["Cloud Run Job: data-pipeline-pipeline"]
+        TRACE["ddtrace-run<br/>auto-instruments pyodbc, requests"]
+    end
+
+    subgraph DDEU["Datadog EU (datadoghq.eu)"]
+        INFRA["Infrastructure<br/>VM CPU, RAM, disk"]
+        LOGS["Logs<br/>Airflow containers + SQL errorlog"]
+        APM["APM<br/>Pipeline traces + SQL queries"]
+        GCP["GCP Integration<br/>Cloud Run job metrics"]
+    end
+
+    DD1 -->|"Docker socket: logs + metrics"| NET
+    DD1 -->|"/proc, /sys: host metrics"| VM1
+    TRACE -->|"port 8126 via VPC"| DD1
+    DD2 -->|"SQL integration"| SQL
+
+    DD1 --> DDEU
+    DD2 --> DDEU
+    CR --> DDEU
+
+    style VM1 fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style VM2 fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style CR fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style DDEU fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style NET fill:#1a1a2e,stroke:#22d3ee,color:#fff
+    style DD1 fill:#1a1a2e,stroke:#e0af68,color:#fff
+    style DD2 fill:#1a1a2e,stroke:#e0af68,color:#fff
+    style TRACE fill:#1a1a2e,stroke:#bb9af7,color:#fff
 ```
 
 ---

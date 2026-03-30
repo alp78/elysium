@@ -23,8 +23,8 @@ status: complete
 # SQL Server Change Tracking — Capturing Data History
 
 > [!quote]
-> "The only thing that is constant is change."
-> — **Heraclitus**
+> "Without a reliable history of what changed and when, you cannot debug a data pipeline, satisfy an auditor, or recover from a bad load."
+> — **Ralph Kimball**, *The Data Warehouse Toolkit*
 
 "How do I know what changed?" is the most common question in data engineering. SQL Server has five built-in answers and two external ones. Most teams use the wrong one. For SCD type definitions (Types 1-6), see [data-warehouse-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-warehouse-architecture). For dbt's declarative approach, see [dbt-snapshots-and-scd](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-snapshots-and-scd).
 

@@ -14,8 +14,8 @@ status: complete
 # Git Remote Repository Management
 
 > [!quote]
-> "Alone we can do so little; together we can do so much."
-> — **Helen Keller**
+> "When there is no central 'master' location that contains the source code, you can suddenly host things without the politics that go along with that 'one repo to rule them all' concept."
+> — **Linus Torvalds**
 
 Git remotes are named references to copies of a repository hosted on a server (typically GitHub). Every cloned repo starts with one remote — `origin` — pointing at the URL you cloned from. Forked repos commonly add a second remote called `upstream` to track the original project. This note covers every essential remote operation: inspecting remotes, adding new ones, fetching, pruning stale branches, and safely force-pushing after a rebase.
 

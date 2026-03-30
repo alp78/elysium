@@ -111,3 +111,10 @@ mindmap
 > - [[troubleshooting-flowcharts#Flowchart 2: "Pipeline Failed" — Data Pipeline Troubleshooting|Pipeline failure diagnosis]]
 > - [[troubleshooting-flowcharts#Flowchart 3: "Should I Add an Index?" — Index Decision Tree|Index decision tree]]
 > - [[troubleshooting-flowcharts#Flowchart 4: "Disk Space Emergency" — Storage Recovery|Disk space emergency]]
+
+> [!abstract]- [[sqlcmd-connection-and-usage]]
+>
+> - [[sqlcmd-connection-and-usage#Connecting — The First Step in Every Database Operation|Connecting to SQL Server]]
+> - [[sqlcmd-connection-and-usage#Connecting Through IAP Tunnel (GCP)|Connecting through IAP tunnel]]
+> - [[sqlcmd-connection-and-usage#Automated Backup Script Using sqlcmd|Automated backup script]]
+> - [[sqlcmd-connection-and-usage#Flag Quick Reference|Flag reference]]

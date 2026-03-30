@@ -386,7 +386,7 @@ The virtual IP (`10.132.0.100`) floats between nodes — it's always assigned to
 > [!info] Use ILB Instead of Floating VIP
 >
 > GCP Internal Load Balancer Instead of Floating VIP.
-> GCP doesn't support Gratuitous ARP. An Internal TCP/UDP Load Balancer is often used instead of a floating VIP. Create an ILB with a health check on port 1433 and a backend instance group containing all AG nodes. The ILB forwards traffic only to the node that responds as primary. See [[#Internal Load Balancer instead of floating VIP]] below.
+> GCP doesn't support Gratuitous ARP. An Internal TCP/UDP Load Balancer is often used instead of a floating VIP. Create an ILB with a health check on port 1433 and a backend instance group containing all AG nodes. The ILB forwards traffic only to the node that responds as primary. See [Internal Load Balancer instead of floating VIP](#internal-load-balancer-instead-of-floating-vip) below.
 
 ---
 

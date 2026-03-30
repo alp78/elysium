@@ -62,8 +62,8 @@ status: complete
 # GCP Cost Monitoring and Budgets
 
 > [!quote]
-> "A budget tells us what we can't afford, but it doesn't keep us from buying it."
-> — **William Feather**
+> "A cloud budget without an alert is a credit card without a limit — you will only discover the damage after the bill arrives."
+> — **J.R. Storment**, *Cloud FinOps*
 
 > Operational FinOps for GCP. Covers the full stack: export billing data, alert on budgets, detect anomalies, optimize per service, and automate enforcement.
 

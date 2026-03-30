@@ -23,10 +23,14 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 > [!info] ISS & STOXX Glossary
 > For formal methodology definitions of ESG ratings, frameworks, and sustainability
 > terms as used by index providers and ESG data vendors, see the
-> [[ISS-STOXX/_index|ISS & STOXX Glossary]] — particularly [ESG Ratings](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-ratings),
+> [ISS & STOXX Glossary](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/_index) — particularly [ESG Ratings](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-ratings),
 > [ESG Frameworks](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks), and [Sustainability Themes](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/sustainability-themes).
 
 ---
+
+> [!quote]
+> "Climate risk is investment risk."
+> — **Larry Fink**
 
 ## ESG (Environmental, Social, and Governance)
 
@@ -39,6 +43,10 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 **Related terms:** [Sustainable Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#Sustainable Finance), [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable Energy), [Carbon Capture and Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Carbon Capture and Storage), [Compliance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Compliance)
 
 ---
+
+> [!quote]
+> "The transition to net-zero will be the greatest commercial opportunity of our time."
+> — **Mark Carney**
 
 ## Net-Zero
 
@@ -54,6 +62,10 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 **Related terms:** [ESG](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#ESG (Environmental, Social, and Governance)), [Sustainable Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#Sustainable Finance), [Carbon Capture and Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Carbon Capture and Storage), [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable Energy), [Green Hydrogen](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Green Hydrogen)
 
 ---
+
+> [!quote]
+> "Sustainability is not about philanthropy — it is about long-term profitability."
+> — **Al Gore**
 
 ## Sustainable Finance
 
@@ -81,6 +93,10 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 > For renewable energy as part of the broader energy value chain, see also [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable Energy) in the Energy and Commodities encyclopedia.
 
 ---
+
+> [!quote]
+> "Buy into a company because you want to own it, not because you want the stock to go up."
+> — **Warren Buffett**
 
 ## Blue Chip
 

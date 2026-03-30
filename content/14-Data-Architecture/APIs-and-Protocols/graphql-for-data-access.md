@@ -65,8 +65,8 @@ status: complete
 # GraphQL for Data Access
 
 > [!quote]
-> "Software is not limited by physics, like buildings are. It is limited by imagination, by design, by organization. In short, it is limited by properties of people, not by properties of the world."
-> — **Martin Fowler**
+> "Think about describing the data, not the view. Model your data as objects in the graph — the API should expose data semantics, not feature-specific payloads."
+> — **Lee Byron** (co-creator of GraphQL)
 
 GraphQL is a query language for APIs and a runtime for executing those queries, developed by Facebook in 2012 and open-sourced in 2015. Unlike REST, where the server defines the shape of every response, GraphQL lets the client declare exactly what data it needs. For data engineers, this matters when building flexible data access layers that serve multiple consumers — dashboards, pipelines, ML feature stores — from a single endpoint.
 
@@ -77,23 +77,23 @@ GraphQL is a query language for APIs and a runtime for executing those queries, 
 
 ## Table of Contents
 
-1. [[#What GraphQL Is]]
-2. [[#When Data Engineers Use GraphQL]]
-3. [[#Schema Definition Language (SDL)]]
-4. [[#Queries]]
-5. [[#Mutations]]
-6. [[#Subscriptions]]
-7. [[#Resolvers]]
-8. [[#Python GraphQL Server with Strawberry]]
-9. [[#Python GraphQL Server with Ariadne]]
-10. [[#N+1 Query Problem and DataLoader]]
-11. [[#Pagination: Relay-Style Cursor Connections]]
-12. [[#Authentication and Authorization in Resolvers]]
-13. [[#Introspection]]
-14. [[#GraphQL vs REST Comparison]]
-15. [[#GraphQL Federation]]
-16. [[#Real-World: GitHub GraphQL API for Pipeline Automation]]
-17. [[#When NOT to Use GraphQL]]
+1. [What GraphQL Is](#what-graphql-is)
+2. [When Data Engineers Use GraphQL](#when-data-engineers-use-graphql)
+3. [Schema Definition Language (SDL)](#schema-definition-language-sdl)
+4. [Queries](#queries)
+5. [Mutations](#mutations)
+6. [Subscriptions](#subscriptions)
+7. [Resolvers](#resolvers)
+8. [Python GraphQL Server with Strawberry](#python-graphql-server-with-strawberry)
+9. [Python GraphQL Server with Ariadne](#python-graphql-server-with-ariadne)
+10. [N+1 Query Problem and DataLoader](#n1-query-problem-and-dataloader)
+11. [Pagination: Relay-Style Cursor Connections](#pagination-relay-style-cursor-connections)
+12. [Authentication and Authorization in Resolvers](#authentication-and-authorization-in-resolvers)
+13. [Introspection](#introspection)
+14. [GraphQL vs REST Comparison](#graphql-vs-rest-comparison)
+15. [GraphQL Federation](#graphql-federation)
+16. [Real-World: GitHub GraphQL API for Pipeline Automation](#real-world-github-graphql-api-for-pipeline-automation)
+17. [When NOT to Use GraphQL](#when-not-to-use-graphql)
 
 ---
 

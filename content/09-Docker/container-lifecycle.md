@@ -182,7 +182,7 @@ docker inspect my-transform --format='Memory: {{.HostConfig.Memory}}, CPUs: {{.H
 
 > [!warning] OOM Kills
 >
-> If a container exceeds its `--memory` limit, the Linux kernel kills it with SIGKILL. The exit code will be 137. Always set memory limits on containers running untrusted or unpredictable workloads. See the [[#Exit Code Reference]] table below.
+> If a container exceeds its `--memory` limit, the Linux kernel kills it with SIGKILL. The exit code will be 137. Always set memory limits on containers running untrusted or unpredictable workloads. See the [Exit Code Reference](#exit-code-reference) table below.
 
 #### docker run --network — attach to a specific Docker network
 ```bash
@@ -248,19 +248,16 @@ docker run --rm -it \
 ### Basic Listing
 
 #### docker ps — list running containers
-```bash
-# List running containers
-sudo docker ps
-# CONTAINER ID  IMAGE              STATUS         PORTS      NAMES
-# 39c312ed574a  airflow:2.8        Up 3 days                 airflow-triggerer
-# f3dc649e45a5  airflow:2.8        Up 3 days                 airflow-scheduler
-# KEY FIELDS:
-# STATUS = Up X days (healthy) or Exited (crashed) or Restarting (crash loop)
-# NAMES = the container name (what you use in docker exec, logs, etc.)
 
-# All containers including stopped
-sudo docker ps -a
-# Stopped containers consume disk space — clean them periodically
+> [!info] Key docker ps output fields
+>
+> - **STATUS** — `Up X days` (healthy), `Exited` (crashed), or `Restarting` (crash loop)
+> - **NAMES** — the container name used in `docker exec`, `logs`, `stop`, etc.
+> - Stopped containers consume disk space — clean them periodically with `docker container prune`
+
+```bash
+sudo docker ps
+sudo docker ps -a       # all containers including stopped
 ```
 
 #### docker ps -q — list only container IDs for scripting
@@ -334,20 +331,16 @@ docker ps --filter name=airflow -q | xargs docker restart
 
 ### Graceful Shutdown: `stop` vs `kill`
 
+> [!info] docker stop vs docker kill — signal behavior
+>
+> - **`docker stop`** sends SIGTERM, waits for the process to exit cleanly, then SIGKILL after timeout. This is the same signal sequence used by the kernel for regular [process termination](https://alp78.github.io/elysium/01-Shell/Process-Management/killing-processes) — gives the app time to flush buffers, close DB connections, and finish in-flight requests.
+> - **`docker kill`** sends SIGKILL immediately — no cleanup, no grace period. Use only when `docker stop` hangs or for containers you do not care about.
+
 ```bash
-# docker stop: sends SIGTERM, waits for the process to exit cleanly, then SIGKILL
-# This is the same signal sequence used by the kernel for regular processes (see [killing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/killing-processes))
-# — gives the app time to flush buffers, close DB connections, finish in-flight requests
 docker stop airflow-scheduler         # default 10-second timeout
+docker stop -t 60 spark-worker        # wait up to 60s before SIGKILL
 
-# Extend the timeout for slow-to-stop containers (e.g., Spark jobs)
-docker stop -t 60 spark-worker        # wait up to 60 seconds before SIGKILL
-
-# docker kill: sends SIGKILL immediately — no cleanup, no grace period
-# Use only when docker stop hangs or for containers you don't care about
-docker kill airflow-scheduler
-
-# Send a specific signal (useful for containers that handle SIGUSR1, etc.)
+docker kill airflow-scheduler         # immediate SIGKILL
 docker kill --signal SIGHUP nginx-container   # trigger config reload without restart
 ```
 

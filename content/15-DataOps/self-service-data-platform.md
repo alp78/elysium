@@ -49,8 +49,8 @@ status: complete
 # Self-Service Data Platform
 
 > [!quote]
-> "Just as electricity transformed almost everything 100 years ago, today I actually have a hard time thinking of an industry that I don't think AI will transform in the next several years."
-> — **Andrew Ng**
+> "The goal of a self-service data platform is not to eliminate data engineers — it is to eliminate the bottleneck where data engineers become request processors for work that capable users could do themselves."
+> — **Zhamak Dehghani**
 
 A self-service data platform is the infrastructure, tooling, and governance framework that allows analysts, scientists, and business users to access, query, and build on trusted data — **without filing a ticket to the data engineering team for every new request**.
 

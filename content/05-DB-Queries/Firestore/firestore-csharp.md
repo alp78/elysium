@@ -83,6 +83,11 @@ This cell:
 >
 > On .NET 10, Firestore SDK reads fail due to a missing `AsyncInterfaces` assembly. Writes work fine. For reads, we use the Firestore REST API as a workaround.
 
+> [!info] Two Clients — SDK and REST
+>
+> - **SDK client** — used for writes and single-document reads (these work on .NET 10). Collection-level reads fail due to a missing `AsyncInterfaces` assembly.
+> - **REST client** — used for collection reads, filtered queries, and collection group queries. This is the .NET 10 workaround; in .NET 8/9 the SDK handles everything.
+
 ```csharp
 #r "nuget: Google.Cloud.Firestore"
 #r "nuget: Microsoft.Bcl.AsyncInterfaces"
@@ -94,25 +99,20 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
-// ── Credentials (local dev only — use metadata server in production) ──
+// Credentials (local dev only — use metadata server in production)
 Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS",
     @"C:\Users\aperi\DEV\LANG\gcp-bq-key.json");
 
-// ── SDK client ──
-// Used for writes + single-document reads (these work on .NET 10).
-// Collection-level reads fail due to a missing AsyncInterfaces assembly.
+// SDK client
 var db = FirestoreDb.Create("bq-wh-nb");
 
-// ── REST client ──
-// Used for collection reads, filtered queries, and collection group queries.
-// This is the .NET 10 workaround — in .NET 8/9, the SDK handles everything.
+// REST client
 var credential = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault()
     .CreateScoped("https://www.googleapis.com/auth/datastore");
 var token = await credential.UnderlyingCredential.GetAccessTokenForRequestAsync();
 var http = new HttpClient();
 http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-// Base URL for all Firestore REST API calls
 var baseUrl = "https://firestore.googleapis.com/v1/projects/bq-wh-nb/databases/(default)/documents";
 
 Console.WriteLine("Connected to Firestore (SDK + REST).");
@@ -486,11 +486,14 @@ This cell:
 2. Parses JSON response, extracts symbol, short_name, price from each document
 3. Prints a formatted table
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var snapshot = await db.Collection("stocks").Limit(10).GetSnapshotAsync();
-//   foreach (var doc in snapshot.Documents) { ... }
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var snapshot = await db.Collection("stocks").Limit(10).GetSnapshotAsync();
+> foreach (var doc in snapshot.Documents) { ... }
+> ```
 
+```csharp
 // List first 10 stocks via REST
 var listResp = await http.GetAsync($"{baseUrl}/stocks?pageSize=10");
 var listJson = JsonDocument.Parse(await listResp.Content.ReadAsStringAsync());
@@ -561,13 +564,16 @@ This cell:
 1. Sends a structured query to the REST API filtering `country == "Germany"`
 2. Returns only German stocks with their sector
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var docs = await db.Collection("stocks")
-//       .WhereEqualTo("country", "Germany")
-//       .Limit(15)
-//       .GetSnapshotAsync();
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var docs = await db.Collection("stocks")
+>     .WhereEqualTo("country", "Germany")
+>     .Limit(15)
+>     .GetSnapshotAsync();
+> ```
 
+```csharp
 // Equality filter: country == "Germany"
 var germanQuery = @"{
     ""structuredQuery"": {
@@ -616,14 +622,17 @@ This cell:
 1. Filters stocks where `current_price > 500`
 2. Orders by `current_price` descending
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var docs = await db.Collection("stocks")
-//       .WhereGreaterThan("current_price", 500)
-//       .OrderByDescending("current_price")
-//       .Limit(10)
-//       .GetSnapshotAsync();
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var docs = await db.Collection("stocks")
+>     .WhereGreaterThan("current_price", 500)
+>     .OrderByDescending("current_price")
+>     .Limit(10)
+>     .GetSnapshotAsync();
+> ```
 
+```csharp
 // Range filter: price > 500, ordered descending
 var rangeQuery = @"{
     ""structuredQuery"": {
@@ -665,14 +674,17 @@ This cell:
 2. Uses `compositeFilter` with `AND` operator
 3. Requires a composite index (same as Python)
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var docs = await db.Collection("stocks")
-//       .WhereEqualTo("country", "France")
-//       .WhereLessThan("current_price", 200)
-//       .Limit(10)
-//       .GetSnapshotAsync();
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var docs = await db.Collection("stocks")
+>     .WhereEqualTo("country", "France")
+>     .WhereLessThan("current_price", 200)
+>     .Limit(10)
+>     .GetSnapshotAsync();
+> ```
 
+```csharp
 // Compound query needs a composite index
 await EnsureIndex("stocks", new[] {
     ("country", "ASCENDING"),
@@ -724,13 +736,16 @@ This cell:
 1. Filters stocks where the `tags` array contains `"germany"`
 2. Uses `ARRAY_CONTAINS` operator in the REST API
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var docs = await db.Collection("stocks")
-//       .WhereArrayContains("tags", "germany")
-//       .Limit(15)
-//       .GetSnapshotAsync();
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var docs = await db.Collection("stocks")
+>     .WhereArrayContains("tags", "germany")
+>     .Limit(15)
+>     .GetSnapshotAsync();
+> ```
 
+```csharp
 // Array contains: stocks tagged with "germany"
 var arrayQuery = @"{
     ""structuredQuery"": {
@@ -780,13 +795,16 @@ This cell:
 2. Uses `ARRAY_CONTAINS_ANY` operator
 3. Returns French OR Dutch stocks
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var docs = await db.Collection("stocks")
-//       .WhereArrayContainsAny("tags", new[] { "france", "netherlands" })
-//       .Limit(15)
-//       .GetSnapshotAsync();
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var docs = await db.Collection("stocks")
+>     .WhereArrayContainsAny("tags", new[] { "france", "netherlands" })
+>     .Limit(15)
+>     .GetSnapshotAsync();
+> ```
 
+```csharp
 // Array contains any: French OR Dutch stocks
 var acaQuery = @"{
     ""structuredQuery"": {
@@ -835,13 +853,16 @@ This cell:
 1. Orders stocks by `scores.composite` descending (nested field, dot notation)
 2. Takes top 5
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var docs = await db.Collection("stocks")
-//       .OrderByDescending("scores.composite")
-//       .Limit(5)
-//       .GetSnapshotAsync();
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var docs = await db.Collection("stocks")
+>     .OrderByDescending("scores.composite")
+>     .Limit(5)
+>     .GetSnapshotAsync();
+> ```
 
+```csharp
 // Order by nested field: scores.composite DESC, limit 5
 var topQuery = @"{
     ""structuredQuery"": {
@@ -882,14 +903,17 @@ This cell:
 1. Filters stocks where `scores.momentum > 0.05` (dot notation)
 2. Orders by `scores.momentum` descending
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var docs = await db.Collection("stocks")
-//       .WhereGreaterThan("scores.momentum", 0.05)
-//       .OrderByDescending("scores.momentum")
-//       .Limit(10)
-//       .GetSnapshotAsync();
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var docs = await db.Collection("stocks")
+>     .WhereGreaterThan("scores.momentum", 0.05)
+>     .OrderByDescending("scores.momentum")
+>     .Limit(10)
+>     .GetSnapshotAsync();
+> ```
 
+```csharp
 // Filter on nested map: scores.momentum > 0.05
 var momentumQuery = @"{
     ""structuredQuery"": {
@@ -940,14 +964,17 @@ This cell:
 2. Orders by `date` descending, takes top 5
 3. Prints OHLCV data for each day
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var docs = await db.Collection("stocks").Document("ASML.AS")
-//       .Collection("prices")
-//       .OrderByDescending("date")
-//       .Limit(5)
-//       .GetSnapshotAsync();
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var docs = await db.Collection("stocks").Document("ASML.AS")
+>     .Collection("prices")
+>     .OrderByDescending("date")
+>     .Limit(5)
+>     .GetSnapshotAsync();
+> ```
 
+```csharp
 // Read subcollection: stocks/ASML.AS/prices (last 5 days)
 var priceQuery = @"{
     ""structuredQuery"": {
@@ -988,15 +1015,18 @@ This cell:
 2. Orders by `close` descending
 3. Only searches ASML's prices — not other stocks
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var docs = await db.Collection("stocks").Document("ASML.AS")
-//       .Collection("prices")
-//       .WhereGreaterThan("close", 700)
-//       .OrderByDescending("close")
-//       .Limit(10)
-//       .GetSnapshotAsync();
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var docs = await db.Collection("stocks").Document("ASML.AS")
+>     .Collection("prices")
+>     .WhereGreaterThan("close", 700)
+>     .OrderByDescending("close")
+>     .Limit(10)
+>     .GetSnapshotAsync();
+> ```
 
+```csharp
 // Query subcollection: ASML days above 700
 var subQuery = @"{
     ""structuredQuery"": {
@@ -1318,13 +1348,16 @@ This cell:
 **Prerequisite**: field exemption for `close` on `prices` collection group
 (created from the Python notebook's `ensure_index()`).
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var docs = await db.CollectionGroup("prices")
-//       .OrderByDescending("close")
-//       .Limit(10)
-//       .GetSnapshotAsync();
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var docs = await db.CollectionGroup("prices")
+>     .OrderByDescending("close")
+>     .Limit(10)
+>     .GetSnapshotAsync();
+> ```
 
+```csharp
 // Collection group needs a field exemption
 await EnsureIndex("prices", new[] { ("close", "DESCENDING") }, scope: "COLLECTION_GROUP");
 
@@ -1376,14 +1409,17 @@ This cell:
 3. Orders by `close` descending, limits to 10
 4. Prints cross-stock closing prices for that day
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var docs = await db.CollectionGroup("prices")
-//       .WhereEqualTo("date", targetDate)
-//       .OrderByDescending("close")
-//       .Limit(10)
-//       .GetSnapshotAsync();
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var docs = await db.CollectionGroup("prices")
+>     .WhereEqualTo("date", targetDate)
+>     .OrderByDescending("close")
+>     .Limit(10)
+>     .GetSnapshotAsync();
+> ```
 
+```csharp
 // Collection group + date filter needs a field exemption
 await EnsureIndex("prices", new[] { ("date", "ASCENDING") }, scope: "COLLECTION_GROUP");
 
@@ -1454,15 +1490,18 @@ This cell:
 2. Follows `nextPageToken` from each response to get the next page
 3. Stops after 2 pages (demo limit)
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var query = db.Collection("stocks").OrderBy("symbol").Limit(5);
-//   QuerySnapshot snapshot = await query.GetSnapshotAsync();
-//   // Next page:
-//   query = db.Collection("stocks").OrderBy("symbol")
-//       .StartAfter(snapshot.Documents.Last())
-//       .Limit(5);
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var query = db.Collection("stocks").OrderBy("symbol").Limit(5);
+> QuerySnapshot snapshot = await query.GetSnapshotAsync();
+> // Next page:
+> query = db.Collection("stocks").OrderBy("symbol")
+>     .StartAfter(snapshot.Documents.Last())
+>     .Limit(5);
+> ```
 
+```csharp
 // Paginate: 5 stocks per page, 2 pages
 Console.WriteLine("=== Paginated Stock List ===");
 string nextToken = null;
@@ -1517,14 +1556,17 @@ This cell:
 2. Counts documents in each via REST
 3. Prints a summary table
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   foreach (var coll in db.ListRootCollectionsAsync())
-//   {
-//       var snapshot = await coll.Count().GetSnapshotAsync();
-//       Console.WriteLine($"  {coll.Id}: {snapshot.Count}");
-//   }
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> foreach (var coll in db.ListRootCollectionsAsync())
+> {
+>     var snapshot = await coll.Count().GetSnapshotAsync();
+>     Console.WriteLine($"  {coll.Id}: {snapshot.Count}");
+> }
+> ```
 
+```csharp
 // List collections and count documents
 Console.WriteLine("=== Collections ===");
 foreach (var coll in new[] { "stocks", "sectors", "alerts", "pipeline_runs", "watchlists", "config" })
@@ -1552,13 +1594,16 @@ This cell:
 1. Lists subcollections under `stocks/ASML.AS` via REST API
 2. Prints the subcollection name and a sample document
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var subCollections = db.Collection("stocks").Document("ASML.AS")
-//       .ListCollectionsAsync();
-//   await foreach (var sub in subCollections)
-//       Console.WriteLine($"  {sub.Id}");
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var subCollections = db.Collection("stocks").Document("ASML.AS")
+>     .ListCollectionsAsync();
+> await foreach (var sub in subCollections)
+>     Console.WriteLine($"  {sub.Id}");
+> ```
 
+```csharp
 // List subcollections of a document
 var subCollUrl = $"{baseUrl}/stocks/ASML.AS/prices?pageSize=1";
 var subCollResp = await http.GetAsync(subCollUrl);
@@ -1587,15 +1632,18 @@ This cell:
 2. Uses `LESS_THAN` filter on `started_at` timestamp field
 3. Prints stale runs for freshness monitoring
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var cutoff = Timestamp.FromDateTime(DateTime.UtcNow.AddHours(-48));
-//   var docs = await db.Collection("pipeline_runs")
-//       .WhereLessThan("started_at", cutoff)
-//       .OrderBy("started_at")
-//       .Limit(10)
-//       .GetSnapshotAsync();
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var cutoff = Timestamp.FromDateTime(DateTime.UtcNow.AddHours(-48));
+> var docs = await db.Collection("pipeline_runs")
+>     .WhereLessThan("started_at", cutoff)
+>     .OrderBy("started_at")
+>     .Limit(10)
+>     .GetSnapshotAsync();
+> ```
 
+```csharp
 // Find stale pipeline runs (>48h old)
 var cutoff = DateTime.UtcNow.AddHours(-48).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
 var staleQuery = $@"{{
@@ -1635,13 +1683,16 @@ This cell:
 1. Queries `pipeline_runs` where `status == "FAILED"`
 2. Inspects the `steps` array to find which step failed
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var docs = await db.Collection("pipeline_runs")
-//       .WhereEqualTo("status", "FAILED")
-//       .Limit(10)
-//       .GetSnapshotAsync();
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var docs = await db.Collection("pipeline_runs")
+>     .WhereEqualTo("status", "FAILED")
+>     .Limit(10)
+>     .GetSnapshotAsync();
+> ```
 
+```csharp
 // Failed pipeline runs
 var failedQuery = @"{
     ""structuredQuery"": {
@@ -1679,14 +1730,17 @@ This cell:
 1. Compound filter: `severity == "HIGH"` AND `acknowledged == false`
 2. Returns alerts needing immediate attention
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var docs = await db.Collection("alerts")
-//       .WhereEqualTo("severity", "HIGH")
-//       .WhereEqualTo("acknowledged", false)
-//       .Limit(10)
-//       .GetSnapshotAsync();
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var docs = await db.Collection("alerts")
+>     .WhereEqualTo("severity", "HIGH")
+>     .WhereEqualTo("acknowledged", false)
+>     .Limit(10)
+>     .GetSnapshotAsync();
+> ```
 
+```csharp
 // Compound query on alerts needs a composite index
 await EnsureIndex("alerts", new[] {
     ("severity", "ASCENDING"),
@@ -1735,13 +1789,16 @@ This cell:
 1. Reads `config/pipeline` — fetch interval, retries, thresholds
 2. Prints all key-value pairs
 
-```csharp
-// SDK equivalent (.NET 8/9):
-//   var doc = await db.Collection("config").Document("pipeline").GetSnapshotAsync();
-//   var dict = doc.ToDictionary();
-//   foreach (var kv in dict)
-//       Console.WriteLine($"  {kv.Key}: {kv.Value}");
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var doc = await db.Collection("config").Document("pipeline").GetSnapshotAsync();
+> var dict = doc.ToDictionary();
+> foreach (var kv in dict)
+>     Console.WriteLine($"  {kv.Key}: {kv.Value}");
+> ```
 
+```csharp
 // Read config document
 Console.WriteLine("=== Pipeline Config ===");
 var configResp = await http.GetAsync($"{baseUrl}/config/pipeline");

@@ -16,8 +16,8 @@ status: complete
 ![Pipeline Architecture](/static/index_lab.jpg)
 
 > [!quote]
-> "Premature optimization is the root of all evil. Yet we should not pass up our opportunities in that critical 3%."
-> — **Donald Knuth**
+> "Everything fails all the time, so plan for failure and nothing fails."
+> — **Werner Vogels**, CTO of Amazon
 
 
 ## How the Pipeline Works

@@ -688,12 +688,8 @@ terraform plan  # Should not show a lock error
 
 4. Enforce CI/CD-only applies for production — no local applies:
 
-```yaml
-# .github/workflows/terraform-apply.yml
-# This is the ONLY path to apply in production.
-# Engineers may NOT run 'terraform apply' locally against prod state.
-# If this workflow is running, wait. Do not force-unlock.
-```
+> [!warning] CI/CD-only applies for production
+> The `terraform-apply.yml` workflow is the ONLY path to apply in production. Engineers must NOT run `terraform apply` locally against prod state. If the workflow is running, wait for it to complete. Do not force-unlock.
 
 **Fix procedure**
 

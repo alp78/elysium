@@ -16,34 +16,40 @@ status: complete
 Identity-Aware Proxy (IAP) is Google Cloud's way to let you access VMs that have no public IP. It's the backbone of secure GCE connectivity: your SSH sessions, database connections, and even SSMS all travel through IAP when configured correctly. Understanding how IAP tunneling works at the network level — not just "run this gcloud command" — is what separates debugging in minutes from debugging in hours.
 
 > [!quote]
-> "Security is a process, not a product."
-> — **Bruce Schneier**
+> "Trust is a vulnerability. Zero Trust eliminates trust from digital systems because it provides no value to an organisation."
+> — **John Kindervag** (creator of Zero Trust at Forrester)
 
 ### How IAP tunneling works — the full network path from workstation to VM
 
-```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ Your Workstation (Windows)                                                   │
-│                                                                              │
-│  SSMS ──────► 127.0.0.1:1435 ──────► gcloud (IAP tunnel process)            │
-│                (local listener)         │                                    │
-│                                         │ HTTPS (port 443)                   │
-│                                         ▼                                    │
-│                              ┌─────────────────────┐                         │
-│                              │ Google IAP Proxy     │                         │
-│                              │ (authenticates you   │                         │
-│                              │  via OAuth/gcloud)   │                         │
-│                              └─────────┬───────────┘                         │
-│                                        │ Internal GCP network                │
-│                                        ▼                                     │
-│                              ┌─────────────────────┐                         │
-│                              │ Your VM (10.0.0.3)   │                         │
-│                              │ port 1433 (SQL)      │                         │
-│                              │ No public IP         │                         │
-│                              └─────────────────────┘                         │
-└──────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph WS["Your Workstation (Windows)"]
+        SSMS["SSMS"]
+        LOCAL["127.0.0.1:1435<br/>local listener"]
+        GCLOUD["gcloud<br/>IAP tunnel process"]
+        SSMS --> LOCAL --> GCLOUD
+    end
 
-Step by step:
+    subgraph GOOGLE["Google Cloud"]
+        IAP["Google IAP Proxy<br/>authenticates via OAuth/gcloud"]
+        subgraph VPC["Internal GCP Network"]
+            VM["Your VM (10.0.0.3)<br/>port 1433 · SQL Server<br/>No public IP"]
+        end
+        IAP -->|"Internal GCP network"| VM
+    end
+
+    GCLOUD -->|"HTTPS (port 443)"| IAP
+
+    style WS fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style GOOGLE fill:#1a1a2e,stroke:#22d3ee,color:#fff
+    style VPC fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style IAP fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style VM fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style SSMS fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style GCLOUD fill:#1a1a2e,stroke:#e0af68,color:#fff
+```
+
+**Step by step:**
 1. gcloud opens a LOCAL listener on 127.0.0.1:1435 (your machine)
 2. SSMS connects to 127.0.0.1:1435 (thinks it's a local SQL Server)
 3. gcloud wraps the TCP traffic in HTTPS and sends it to Google's IAP proxy
@@ -52,7 +58,6 @@ Step by step:
 6. If authorized, IAP forwards the traffic over GCP's internal network to the VM
 7. Traffic arrives at the VM's port 1433 as a normal TCP connection from within the VPC
 8. SQL Server processes the query and sends the response back through the same tunnel
-```
 
 > [!info] VM never sees your real IP
 >

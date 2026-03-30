@@ -14,11 +14,8 @@ status: complete
 # AI-Augmented Data Engineering: LLM and RAG Pipelines
 
 > [!quote]
-> "AI is going to eliminate a lot of current jobs, and there will be classes of jobs that totally go away. AI is also going to create entirely new jobs."
-> — **Sam Altman**
->
-> "Just as the Industrial Revolution freed up a lot of humanity from physical drudgery, I think AI has the potential to free up humanity from a lot of the mental drudgery."
-> — **Andrew Ng**
+> "Large language models are not databases. They are reasoning engines that happen to have memorized a lot of text."
+> — **Simon Willison**
 
 By 2026, senior data engineers are expected to transition from "builders" to "strategists" who integrate AI capabilities into data platforms. This does not mean becoming a machine learning engineer — it means understanding how to build the data infrastructure that powers LLM applications and how to use LLMs as tools within data pipelines.
 

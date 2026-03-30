@@ -34,6 +34,10 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 ---
 
+> [!quote]
+> "Infrastructure is the backbone upon which economic development is built."
+> — **Arundhati Bhattacharya**
+
 ## Concessions
 
 **Definition:** A concession is a contractual right granted by a government or other entity to a private company to operate, maintain, and develop a specific infrastructure asset or public service for a defined period. In exchange, the concessionaire typically invests in maintaining and improving the infrastructure and collects revenues from users (such as tolls for highways or landing fees for airports). At the end of the concession period, the asset reverts to the government. Concession-based business models are common in transportation infrastructure, utilities, and public services.
@@ -69,6 +73,10 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 **Related terms:** [Leasing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Leasing), [Logistics](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Logistics), [Internet of Things (IoT)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Internet of Things (IoT)), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply Chain)
 
 ---
+
+> [!quote]
+> "Amateurs talk about strategy. Professionals talk about logistics."
+> — **Robert H. Barrow**
 
 ## Logistics
 
@@ -118,6 +126,10 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 ---
 
+> [!quote]
+> "Real estate cannot be lost or stolen, nor can it be carried away. It is about the safest investment in the world."
+> — **Franklin D. Roosevelt**
+
 ## Real Estate Investment
 
 **Definition:** Real estate investment involves the purchase, ownership, management, rental, or sale of property for profit. Real estate investments range from residential properties and commercial buildings to industrial warehouses, retail centers, and specialized assets like data centers and healthcare facilities. Institutional investors often access real estate through Real Estate Investment Trusts (REITs), which allow investors to own shares in professionally managed property portfolios without directly purchasing properties. Real estate offers diversification, income from rents, and potential capital appreciation.
@@ -141,6 +153,10 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 **Related terms:** [Distributors](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Distributors), [OEM (Original Equipment Manufacturer)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#OEM (Original Equipment Manufacturer)), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply Chain), [Business-to-Business (B2B)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#B2B)
 
 ---
+
+> [!quote]
+> "Supply chain is like nature. It is all around us."
+> — **Dave Waters**
 
 ## Supply Chain
 

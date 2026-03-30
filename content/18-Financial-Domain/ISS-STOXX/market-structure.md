@@ -38,7 +38,7 @@ date: 2026-03-28
 ADTV tells you how busy a stock is on a normal day. Index providers like STOXX use it to decide whether a stock trades frequently enough to be included in an index -- if daily volume is too thin, large investors cannot enter or exit positions without moving the price.
 
 > [!tip] Related Terms
-> [[#Liquidity]] | [[#Liquidity Screening]] | [[#Trading Volume]] | [[#Turnover Velocity]]
+> [Liquidity](#liquidity) | [Liquidity Screening](#liquidity-screening) | [Trading Volume](#trading-volume) | [Turnover Velocity](#turnover-velocity)
 
 > [!example]- Source excerpts (5)
 >
@@ -91,7 +91,7 @@ ADTV tells you how busy a stock is on a normal day. Index providers like STOXX u
 The ask price is what you pay when you buy a stock at market. If a STOXX index constituent has an ask of EUR 50.02 and a bid of EUR 50.00, buyers crossing the spread will execute at EUR 50.02. Index calculations typically use last-trade or mid-point prices rather than raw ask prices, but the ask is essential for understanding transaction costs.
 
 > [!tip] Related Terms
-> [[#Bid Price]] | [[#Bid-Ask Spread]] | [[#Order Book]] | [[#Market Order]]
+> [Bid Price](#bid-price) | [Bid-Ask Spread](#bid-ask-spread) | [Order Book](#order-book) | [Market Order](#market-order)
 
 > [!example]- Source excerpts (5)
 >
@@ -145,7 +145,7 @@ The ask price is what you pay when you buy a stock at market. If a STOXX index c
 Auctions matter enormously for index funds. The closing auction price on an exchange is typically the price STOXX uses for end-of-day index calculations. On rebalancing days, massive order flow concentrates in the closing auction as trackers adjust their portfolios, sometimes representing a significant share of a stock's daily volume.
 
 > [!tip] Related Terms
-> [[#Order Book]] | [[#Market Order]] | [[#Limit Order]] | [[#Exchange]]
+> [Order Book](#order-book) | [Market Order](#market-order) | [Limit Order](#limit-order) | [Exchange](#exchange)
 
 > [!example]- Source excerpts (5)
 >
@@ -199,7 +199,7 @@ Auctions matter enormously for index funds. The closing auction price on an exch
 A bear market is the opposite of good times for equity investors. When a STOXX index enters a bear market, constituent weights shift as different stocks fall at different rates, and companies near size-tier boundaries may be reclassified from mid-cap to small-cap at the next review.
 
 > [!tip] Related Terms
-> [[#Bull Market]] | [[#Correction]] | [[#Crash]] | [[#Circuit Breaker]]
+> [Bull Market](#bull-market) | [Correction](#correction) | [Crash](#crash) | [Circuit Breaker](#circuit-breaker)
 
 > [!example]- Source excerpts (5)
 >
@@ -249,7 +249,7 @@ A bear market is the opposite of good times for equity investors. When a STOXX i
 The bid price is what you receive when you sell a stock at market. For highly liquid STOXX index constituents, the bid is usually only a fraction of a cent away from the ask. For less liquid names, the gap widens, increasing implicit trading costs for index-tracking funds.
 
 > [!tip] Related Terms
-> [[#Ask Price]] | [[#Bid-Ask Spread]] | [[#Order Book]] | [[#Market Maker]]
+> [Ask Price](#ask-price) | [Bid-Ask Spread](#bid-ask-spread) | [Order Book](#order-book) | [Market Maker](#market-maker)
 
 > [!example]- Source excerpts (5)
 >
@@ -303,7 +303,7 @@ The bid price is what you receive when you sell a stock at market. For highly li
 The bid-ask spread is the hidden cost of trading. When STOXX evaluates whether a stock is liquid enough for index inclusion, narrow spreads complement high volume as evidence that the stock can be traded efficiently. Wider spreads increase the cost of replicating an index.
 
 > [!tip] Related Terms
-> [[#Bid Price]] | [[#Ask Price]] | [[#Liquidity]] | [[#Market Maker]]
+> [Bid Price](#bid-price) | [Ask Price](#ask-price) | [Liquidity](#liquidity) | [Market Maker](#market-maker)
 
 > [!example]- Source excerpts (4)
 >
@@ -350,7 +350,7 @@ The bid-ask spread is the hidden cost of trading. When STOXX evaluates whether a
 Block trades allow large investors to move sizable positions without disrupting the open market. On STOXX index rebalancing days, asset managers may use block trades to efficiently adjust holdings in line with new index weights, avoiding the price impact that would result from placing the full order on the order book.
 
 > [!tip] Related Terms
-> [[#Dark Pool]] | [[#Order Book]] | [[#Liquidity]] | [[#Market Maker]]
+> [Dark Pool](#dark-pool) | [Order Book](#order-book) | [Liquidity](#liquidity) | [Market Maker](#market-maker)
 
 > [!example]- Source excerpts (1)
 >
@@ -376,7 +376,7 @@ Block trades allow large investors to move sizable positions without disrupting 
 Blue chips are the anchor stocks of major STOXX indices. They tend to have the largest free-float market capitalisation, the highest liquidity, and the greatest analyst coverage. The EURO STOXX 50, for example, is essentially a blue-chip index for the eurozone.
 
 > [!tip] Related Terms
-> [[#Large-Cap]] | [[#Market Capitalization]] | [[#Liquidity]] | [[#Free Float]]
+> [Large-Cap](#large-cap) | [Market Capitalization](#market-capitalization) | [Liquidity](#liquidity) | [Free Float](#free-float)
 
 > [!example]- Source excerpts (5)
 >
@@ -428,7 +428,7 @@ Blue chips are the anchor stocks of major STOXX indices. They tend to have the l
 A bull market is when equities are broadly climbing. During bull markets, STOXX indices tend to see more candidates meeting inclusion thresholds at review dates, and the selection process becomes more about ranking than about finding stocks that clear minimum bars.
 
 > [!tip] Related Terms
-> [[#Bear Market]] | [[#Rally]] | [[#Market Capitalization]]
+> [Bear Market](#bear-market) | [Rally](#rally) | [Market Capitalization](#market-capitalization)
 
 > [!example]- Source excerpts (5)
 >
@@ -480,7 +480,7 @@ A bull market is when equities are broadly climbing. During bull markets, STOXX 
 Country classification answers the question "Where does this company belong?" A firm incorporated in Luxembourg but primarily listed in Frankfurt may be classified differently depending on the index provider's rules. STOXX relies on country classification for its regional and single-country index families (e.g., STOXX Europe 600 vs. DAX).
 
 > [!tip] Related Terms
-> [[#Primary Listing]] | [[#Primary Market]] | [[#Regulated Market]] | [[#Dual Listing]]
+> [Primary Listing](#primary-listing) | [Primary Market](#primary-market) | [Regulated Market](#regulated-market) | [Dual Listing](#dual-listing)
 
 > [!example]- Source excerpts (5)
 >
@@ -534,7 +534,7 @@ Country classification answers the question "Where does this company belong?" A 
 Circuit breakers are the emergency brakes of a stock exchange. If a STOXX index constituent drops (or rises) too fast, the exchange can trigger a volatility interruption that pauses trading for a few minutes. During market-wide stress events, broader circuit breakers may halt all trading on an exchange simultaneously.
 
 > [!tip] Related Terms
-> [[#Volatility Halt]] | [[#Halt (Trading)]] | [[#Crash]] | [[#Exchange]]
+> [Volatility Halt](#volatility-halt) | [Halt (Trading)](#halt-trading) | [Crash](#crash) | [Exchange](#exchange)
 
 > [!example]- Source excerpts (1)
 >
@@ -561,7 +561,7 @@ Circuit breakers are the emergency brakes of a stock exchange. If a STOXX index 
 Clearing sits between trade execution and settlement. When a STOXX index futures contract is traded on Eurex, Eurex Clearing steps in as the buyer to every seller and the seller to every buyer, guaranteeing that both sides will fulfil their obligations even if one party defaults.
 
 > [!tip] Related Terms
-> [[#Settlement]] | [[#Settlement Cycle (T+2)]] | [[#Eurex]] | [[#Exchange]]
+> [Settlement](#settlement) | [Settlement Cycle (T+2)](#settlement-cycle-t2) | [Eurex](#eurex) | [Exchange](#exchange)
 
 > [!example]- Source excerpts (5)
 >
@@ -612,7 +612,7 @@ Clearing sits between trade execution and settlement. When a STOXX index futures
 A correction is the market taking a breather. For a STOXX index, a 10-15% pullback may not trigger any special index action, but it can shift the relative rankings of constituents and affect which stocks are near size-tier boundaries at the next review.
 
 > [!tip] Related Terms
-> [[#Bear Market]] | [[#Crash]] | [[#Bull Market]] | [[#Rally]]
+> [Bear Market](#bear-market) | [Crash](#crash) | [Bull Market](#bull-market) | [Rally](#rally)
 
 > [!example]- Source excerpts (5)
 >
@@ -666,7 +666,7 @@ A correction is the market taking a breather. For a STOXX index, a 10-15% pullba
 A crash is the extreme scenario that index providers must plan for. STOXX methodologies include provisions for extraordinary events -- such as suspensions, delistings, or exchange closures -- that can accompany crashes. Historical crashes (1987, 2008, 2020) have shaped how modern index rules handle stressed markets.
 
 > [!tip] Related Terms
-> [[#Bear Market]] | [[#Circuit Breaker]] | [[#Correction]] | [[#Volatility Halt]]
+> [Bear Market](#bear-market) | [Circuit Breaker](#circuit-breaker) | [Correction](#correction) | [Volatility Halt](#volatility-halt)
 
 > [!example]- Source excerpts (5)
 >
@@ -717,7 +717,7 @@ A crash is the extreme scenario that index providers must plan for. STOXX method
 Custodians are the vaults of the financial world. When ISS or STOXX needs to determine who owns a company's shares (to calculate free float or identify strategic holdings), custodian records and regulatory filings are key data sources. Global custodians like Clearstream (a Deutsche Borse Group subsidiary) are critical infrastructure.
 
 > [!tip] Related Terms
-> [[#Settlement]] | [[#Clearing (Market)]] | [[#Free Float]] | [[#Strategic Holding]]
+> [Settlement](#settlement) | [Clearing (Market)](#clearing-market) | [Free Float](#free-float) | [Strategic Holding](#strategic-holding)
 
 > [!example]- Source excerpts (5)
 >
@@ -769,7 +769,7 @@ Custodians are the vaults of the financial world. When ISS or STOXX needs to det
 A depositary receipt lets investors trade foreign shares on their home exchange without dealing with currency conversion or foreign settlement systems directly. STOXX indices may include or exclude depositary receipts depending on whether the underlying ordinary shares are already represented, to avoid double-counting.
 
 > [!tip] Related Terms
-> [[#Dual Listing]] | [[#Primary Listing]] | [[#Exchange]]
+> [Dual Listing](#dual-listing) | [Primary Listing](#primary-listing) | [Exchange](#exchange)
 
 > [!example]- Source excerpts (5)
 >
@@ -822,7 +822,7 @@ A depositary receipt lets investors trade foreign shares on their home exchange 
 When a company lists on multiple exchanges, index providers must decide which listing counts as the "primary" one and how to aggregate trading volume. STOXX generally selects a single primary listing for index inclusion to prevent the same economic exposure from appearing twice.
 
 > [!tip] Related Terms
-> [[#Primary Listing]] | [[#Depositary Receipt]] | [[#Liquidity]]
+> [Primary Listing](#primary-listing) | [Depositary Receipt](#depositary-receipt) | [Liquidity](#liquidity)
 
 > [!example]- Source excerpts (2)
 >
@@ -855,7 +855,7 @@ When a company lists on multiple exchanges, index providers must decide which li
 Eurex is where many STOXX index derivatives trade. If an asset manager wants to hedge exposure to the EURO STOXX 50, the futures and options contracts for that index are listed on Eurex. It plays a central role in European derivatives markets.
 
 > [!tip] Related Terms
-> [[#Deutsche Borse Group]] | [[#Exchange]] | [[#Frankfurt Stock Exchange]]
+> [Deutsche Borse Group](#deutsche-borse-group) | [Exchange](#exchange) | [Frankfurt Stock Exchange](#frankfurt-stock-exchange)
 
 > [!example]- Source excerpts (5)
 >
@@ -908,7 +908,7 @@ Eurex is where many STOXX index derivatives trade. If an asset manager wants to 
 An exchange provides the infrastructure -- order books, price discovery, clearing links -- that makes orderly trading possible. STOXX maintains a list of eligible exchanges for each index family; a stock must be listed on one of those exchanges to be considered.
 
 > [!tip] Related Terms
-> [[#Regulated Market]] | [[#Frankfurt Stock Exchange]] | [[#Eurex]] | [[#Primary Listing]]
+> [Regulated Market](#regulated-market) | [Frankfurt Stock Exchange](#frankfurt-stock-exchange) | [Eurex](#eurex) | [Primary Listing](#primary-listing)
 
 > [!example]- Source excerpts (5)
 >
@@ -958,7 +958,7 @@ An exchange provides the infrastructure -- order books, price discovery, clearin
 Equity is the foundational asset class that STOXX indices measure. When someone says "equity index," they mean an index composed of ownership stakes in companies -- as opposed to fixed-income, commodity, or other asset classes. The STOXX index family is predominantly an equity index franchise.
 
 > [!tip] Related Terms
-> [[#Stock]] | [[#Market Capitalization]] | [[#Free Float]] | [[#Exchange]]
+> [Stock](#stock) | [Market Capitalization](#market-capitalization) | [Free Float](#free-float) | [Exchange](#exchange)
 
 > [!example]- Source excerpts (5)
 >
@@ -1011,7 +1011,7 @@ Equity is the foundational asset class that STOXX indices measure. When someone 
 Frankfurt Stock Exchange is the venue where most German blue-chip stocks are traded. Because Deutsche Borse Group also owns the STOXX index business (through Qontigo), there is a close operational relationship between the exchange and the indices that reference stocks listed there.
 
 > [!tip] Related Terms
-> [[#Deutsche Borse Group]] | [[#Exchange]] | [[#Regulated Market]] | [[#Qontigo]]
+> [Deutsche Borse Group](#deutsche-borse-group) | [Exchange](#exchange) | [Regulated Market](#regulated-market) | [Qontigo](#qontigo)
 
 > [!example]- Source excerpts (5)
 >
@@ -1064,7 +1064,7 @@ Frankfurt Stock Exchange is the venue where most German blue-chip stocks are tra
 Free float answers the question "How much of this company can the market actually buy and sell?" A company with 1 billion shares outstanding but 600 million held by a founding family has a free float of roughly 40%. STOXX multiplies market capitalisation by the free-float factor so that index weights reflect investable reality.
 
 > [!tip] Related Terms
-> [[#Free-Float Shares]] | [[#Strategic Holding]] | [[#Market Capitalization]] | [[#Investable Market]]
+> [Free-Float Shares](#free-float-shares) | [Strategic Holding](#strategic-holding) | [Market Capitalization](#market-capitalization) | [Investable Market](#investable-market)
 
 > [!example]- Source excerpts (5)
 >
@@ -1116,7 +1116,7 @@ Free float answers the question "How much of this company can the market actuall
 While free float is expressed as a percentage, free-float shares give you the actual share count. STOXX multiplies a stock's price by its free-float shares to arrive at the free-float market capitalisation used for index weighting.
 
 > [!tip] Related Terms
-> [[#Free Float]] | [[#Strategic Holding]] | [[#Market Capitalization]]
+> [Free Float](#free-float) | [Strategic Holding](#strategic-holding) | [Market Capitalization](#market-capitalization)
 
 > [!example]- Source excerpts (4)
 >
@@ -1162,7 +1162,7 @@ While free float is expressed as a percentage, free-float shares give you the ac
 Float is the everyday shorthand for free float. When traders say "the float is tight," they mean there are relatively few shares available for public trading, which can amplify price moves. STOXX formalises this concept through its free-float factor, but in casual market discussion, "float" is the term you will hear most often.
 
 > [!tip] Related Terms
-> [[#Free Float]] | [[#Free-Float Shares]] | [[#Strategic Holding]] | [[#Market Capitalization]]
+> [Free Float](#free-float) | [Free-Float Shares](#free-float-shares) | [Strategic Holding](#strategic-holding) | [Market Capitalization](#market-capitalization)
 
 > [!example]- Source excerpts (5)
 >
@@ -1216,7 +1216,7 @@ Float is the everyday shorthand for free float. When traders say "the float is t
 GICS is the industry taxonomy you hear about most often in the context of S&P and MSCI indices. Although STOXX primarily uses ICB (Industry Classification Benchmark), GICS is relevant when comparing STOXX indices against S&P or MSCI benchmarks or when investors map holdings across classification systems.
 
 > [!tip] Related Terms
-> [[#ICB (Industry Classification Benchmark)]] | [[#Sector]] | [[#Sector Classification]] | [[#Supersector]]
+> [ICB (Industry Classification Benchmark)](#icb-industry-classification-benchmark) | [Sector](#sector) | [Sector Classification](#sector-classification) | [Supersector](#supersector)
 
 > [!example]- Source excerpts (5)
 >
@@ -1269,7 +1269,7 @@ GICS is the industry taxonomy you hear about most often in the context of S&P an
 A trading halt freezes all order matching for a security. When a STOXX index constituent is halted, the index calculator typically uses the last traded price until trading resumes. Prolonged halts may trigger special index treatment, such as using fair-value estimates or removing the stock if the halt extends beyond a defined period.
 
 > [!tip] Related Terms
-> [[#Circuit Breaker]] | [[#Volatility Halt]] | [[#Exchange]] | [[#Crash]]
+> [Circuit Breaker](#circuit-breaker) | [Volatility Halt](#volatility-halt) | [Exchange](#exchange) | [Crash](#crash)
 
 > [!example]- Source excerpts (5)
 >
@@ -1322,7 +1322,7 @@ A trading halt freezes all order matching for a security. When a STOXX index con
 ICB is the classification backbone behind STOXX sector indices. When you see a "STOXX Europe 600 Banks" index, the constituent selection relies on ICB codes to identify which companies are classified as banks. ICB was originally developed by Dow Jones and FTSE and is now maintained by FTSE Russell.
 
 > [!tip] Related Terms
-> [[#GICS (Global Industry Classification Standard)]] | [[#Sector]] | [[#Supersector]] | [[#Sector Classification]]
+> [GICS (Global Industry Classification Standard)](#gics-global-industry-classification-standard) | [Sector](#sector) | [Supersector](#supersector) | [Sector Classification](#sector-classification)
 
 > [!example]- Source excerpts (5)
 >
@@ -1374,7 +1374,7 @@ ICB is the classification backbone behind STOXX sector indices. When you see a "
 Not every listed stock is investable in a meaningful sense. A company trading three times a week with a USD 5 million free-float market cap is technically public, but impractical for large funds. STOXX's investable market definition filters out such securities so that indices represent portfolios investors can actually replicate.
 
 > [!tip] Related Terms
-> [[#Liquidity Screening]] | [[#Free Float]] | [[#Market Capitalization]] | [[#Small-Cap]] | [[#Micro-Cap]]
+> [Liquidity Screening](#liquidity-screening) | [Free Float](#free-float) | [Market Capitalization](#market-capitalization) | [Small-Cap](#small-cap) | [Micro-Cap](#micro-cap)
 
 > [!example]- Source excerpts (5)
 >
@@ -1429,7 +1429,7 @@ Not every listed stock is investable in a meaningful sense. A company trading th
 Large-cap stocks are the household names -- the biggest companies by market value. In a STOXX context, the EURO STOXX 50 is effectively a large-cap index for the eurozone. Large-cap thresholds vary by region and index family.
 
 > [!tip] Related Terms
-> [[#Mid-Cap]] | [[#Small-Cap]] | [[#Micro-Cap]] | [[#Market Capitalization]]
+> [Mid-Cap](#mid-cap) | [Small-Cap](#small-cap) | [Micro-Cap](#micro-cap) | [Market Capitalization](#market-capitalization)
 
 > [!example]- Source excerpts (5)
 >
@@ -1480,7 +1480,7 @@ Large-cap stocks are the household names -- the biggest companies by market valu
 Liquidity is the lifeblood of index replicability. If a stock in an index is illiquid, funds tracking that index will incur high transaction costs or slippage when rebalancing. STOXX therefore applies liquidity screens during index reviews to ensure all constituents trade actively enough.
 
 > [!tip] Related Terms
-> [[#Average Daily Trading Volume (ADTV)]] | [[#Turnover Velocity]] | [[#Liquidity Screening]] | [[#Trading Volume]]
+> [Average Daily Trading Volume (ADTV)](#average-daily-trading-volume-adtv) | [Turnover Velocity](#turnover-velocity) | [Liquidity Screening](#liquidity-screening) | [Trading Volume](#trading-volume)
 
 > [!example]- Source excerpts (5)
 >
@@ -1530,7 +1530,7 @@ Liquidity is the lifeblood of index replicability. If a stock in an index is ill
 Liquidity screening is the gate that keeps thinly traded stocks out of an index. During quarterly or semi-annual reviews, STOXX checks each candidate stock against its liquidity criteria. Stocks that fall below the threshold are either excluded from entry or, if already in the index, may be removed subject to buffer rules.
 
 > [!tip] Related Terms
-> [[#Liquidity]] | [[#Average Daily Trading Volume (ADTV)]] | [[#Turnover Velocity]] | [[#Investable Market]]
+> [Liquidity](#liquidity) | [Average Daily Trading Volume (ADTV)](#average-daily-trading-volume-adtv) | [Turnover Velocity](#turnover-velocity) | [Investable Market](#investable-market)
 
 > [!example]- Source excerpts (5)
 >
@@ -1581,7 +1581,7 @@ Liquidity screening is the gate that keeps thinly traded stocks out of an index.
 A limit order gives the trader price control at the expense of execution certainty. Index fund managers often use limit orders during rebalancing to avoid paying more than a target price for new constituents. In contrast to market orders, limit orders can sit unfilled on the order book until the price reaches the specified level.
 
 > [!tip] Related Terms
-> [[#Market Order]] | [[#Order Book]] | [[#Ask Price]] | [[#Bid Price]]
+> [Market Order](#market-order) | [Order Book](#order-book) | [Ask Price](#ask-price) | [Bid Price](#bid-price)
 
 > [!example]- Source excerpts (1)
 >
@@ -1607,7 +1607,7 @@ A limit order gives the trader price control at the expense of execution certain
 A long position is the most basic form of equity exposure. When a fund tracks the EURO STOXX 50, it holds long positions in all 50 constituent stocks in proportion to their index weights. The concept of being "long" contrasts with short selling, where an investor profits from price declines.
 
 > [!tip] Related Terms
-> [[#Short Selling]] | [[#Equity]] | [[#Stock]] | [[#Market Order]]
+> [Short Selling](#short-selling) | [Equity](#equity) | [Stock](#stock) | [Market Order](#market-order)
 
 > [!example]- Source excerpts (5)
 >
@@ -1661,7 +1661,7 @@ A long position is the most basic form of equity exposure. When a fund tracks th
 Market capitalisation is the most fundamental size metric in equity indexing. STOXX almost always uses the free-float-adjusted version so that index weights reflect the portion of each company that the market can actually trade, rather than the total theoretical value.
 
 > [!tip] Related Terms
-> [[#Free Float]] | [[#Free-Float Shares]] | [[#Large-Cap]] | [[#Mid-Cap]] | [[#Small-Cap]]
+> [Free Float](#free-float) | [Free-Float Shares](#free-float-shares) | [Large-Cap](#large-cap) | [Mid-Cap](#mid-cap) | [Small-Cap](#small-cap)
 
 > [!example]- Source excerpts (5)
 >
@@ -1715,7 +1715,7 @@ Market capitalisation is the most fundamental size metric in equity indexing. ST
 Micro-cap stocks sit at the tail end of the size distribution. They appear in broad total-market indices but are typically absent from headline benchmarks like the STOXX Europe 600. Their inclusion or exclusion has a minimal effect on index performance but matters for completeness-oriented investors.
 
 > [!tip] Related Terms
-> [[#Small-Cap]] | [[#Large-Cap]] | [[#Mid-Cap]] | [[#Market Capitalization]] | [[#Investable Market]]
+> [Small-Cap](#small-cap) | [Large-Cap](#large-cap) | [Mid-Cap](#mid-cap) | [Market Capitalization](#market-capitalization) | [Investable Market](#investable-market)
 
 > [!example]- Source excerpts (2)
 >
@@ -1746,7 +1746,7 @@ Micro-cap stocks sit at the tail end of the size distribution. They appear in br
 Mid-cap companies are the "middle children" of the equity market -- large enough to be liquid and well-followed, but small enough to offer growth potential that mega-caps may lack. STOXX publishes dedicated mid-cap indices (e.g., STOXX Europe Mid 200) for investors targeting this segment.
 
 > [!tip] Related Terms
-> [[#Large-Cap]] | [[#Small-Cap]] | [[#Market Capitalization]]
+> [Large-Cap](#large-cap) | [Small-Cap](#small-cap) | [Market Capitalization](#market-capitalization)
 
 > [!example]- Source excerpts (5)
 >
@@ -1797,7 +1797,7 @@ Mid-cap companies are the "middle children" of the equity market -- large enough
 Market makers are the lubricant of the order book. On exchanges like Xetra, designated sponsors (a form of market maker) are required for certain securities to maintain minimum quote sizes and maximum spreads. Their presence improves the liquidity metrics that STOXX evaluates when screening stocks for index inclusion.
 
 > [!tip] Related Terms
-> [[#Bid-Ask Spread]] | [[#Bid Price]] | [[#Ask Price]] | [[#Order Book]] | [[#Liquidity]]
+> [Bid-Ask Spread](#bid-ask-spread) | [Bid Price](#bid-price) | [Ask Price](#ask-price) | [Order Book](#order-book) | [Liquidity](#liquidity)
 
 > [!example]- Source excerpts (5)
 >
@@ -1847,7 +1847,7 @@ Market makers are the lubricant of the order book. On exchanges like Xetra, desi
 A market order is the simplest way to get into or out of a position right now. For highly liquid STOXX blue chips, a market order will typically fill at or very near the displayed bid or ask. For less liquid constituents, the execution price may deviate noticeably from the last traded price, particularly for large order sizes.
 
 > [!tip] Related Terms
-> [[#Limit Order]] | [[#Ask Price]] | [[#Bid Price]] | [[#Order Book]]
+> [Limit Order](#limit-order) | [Ask Price](#ask-price) | [Bid Price](#bid-price) | [Order Book](#order-book)
 
 > [!example]- Source excerpts (1)
 >
@@ -1875,7 +1875,7 @@ A market order is the simplest way to get into or out of a position right now. F
 The order book is the central nervous system of an exchange. It shows how many shares are available at each price level on both the bid and ask sides. For STOXX index constituents, deep order books signal healthy liquidity, while thin books raise concerns about replicability and transaction costs for index-tracking funds.
 
 > [!tip] Related Terms
-> [[#Bid Price]] | [[#Ask Price]] | [[#Limit Order]] | [[#Market Order]] | [[#Market Maker]]
+> [Bid Price](#bid-price) | [Ask Price](#ask-price) | [Limit Order](#limit-order) | [Market Order](#market-order) | [Market Maker](#market-maker)
 
 > [!example]- Source excerpts (5)
 >
@@ -1929,7 +1929,7 @@ The order book is the central nervous system of an exchange. It shows how many s
 OTC trading happens off-exchange, often via dealer networks or bilateral agreements. STOXX index methodologies typically require that eligible securities be listed on a regulated exchange, which means purely OTC-traded instruments do not qualify. However, some post-trade reporting of exchange-listed stocks occurs OTC (e.g., systematic internaliser trades in Europe).
 
 > [!tip] Related Terms
-> [[#Exchange]] | [[#Regulated Market]] | [[#Dark Pool]] | [[#Block Trade]]
+> [Exchange](#exchange) | [Regulated Market](#regulated-market) | [Dark Pool](#dark-pool) | [Block Trade](#block-trade)
 
 > [!example]- Source excerpts (5)
 >
@@ -1983,7 +1983,7 @@ OTC trading happens off-exchange, often via dealer networks or bilateral agreeme
 For dual-listed companies, the primary listing is the "home" exchange that STOXX treats as authoritative for pricing and liquidity measurement. Getting this designation right matters because it determines which price feed drives the index calculation.
 
 > [!tip] Related Terms
-> [[#Dual Listing]] | [[#Exchange]] | [[#Primary Market]] | [[#Depositary Receipt]]
+> [Dual Listing](#dual-listing) | [Exchange](#exchange) | [Primary Market](#primary-market) | [Depositary Receipt](#depositary-receipt)
 
 > [!example]- Source excerpts (5)
 >
@@ -2033,7 +2033,7 @@ For dual-listed companies, the primary listing is the "home" exchange that STOXX
 Primary market is closely related to primary listing but operates at the country level rather than the exchange level. A company's primary market determines whether it appears in, say, a German index or a French index within the STOXX family.
 
 > [!tip] Related Terms
-> [[#Primary Listing]] | [[#Country Classification]] | [[#Regulated Market]]
+> [Primary Listing](#primary-listing) | [Country Classification](#country-classification) | [Regulated Market](#regulated-market)
 
 > [!example]- Source excerpts (5)
 >
@@ -2087,7 +2087,7 @@ Primary market is closely related to primary listing but operates at the country
 Qontigo is the brand name under which STOXX indices are developed and maintained. When you read a STOXX methodology document, Qontigo is the legal entity behind it. It was formed in 2019 by merging the STOXX, DAX, and Axioma businesses within Deutsche Borse Group.
 
 > [!tip] Related Terms
-> [[#Deutsche Borse Group]] | [[#Frankfurt Stock Exchange]] | [[#Eurex]]
+> [Deutsche Borse Group](#deutsche-borse-group) | [Frankfurt Stock Exchange](#frankfurt-stock-exchange) | [Eurex](#eurex)
 
 > [!example]- Source excerpts (5)
 >
@@ -2140,7 +2140,7 @@ Qontigo is the brand name under which STOXX indices are developed and maintained
 A regulated market is an exchange that operates under an official regulatory framework, providing investor protections such as disclosure requirements and fair-access rules. STOXX's insistence on regulated-market listings ensures that index constituents meet baseline transparency and governance standards.
 
 > [!tip] Related Terms
-> [[#Exchange]] | [[#Primary Listing]] | [[#Frankfurt Stock Exchange]]
+> [Exchange](#exchange) | [Primary Listing](#primary-listing) | [Frankfurt Stock Exchange](#frankfurt-stock-exchange)
 
 > [!example]- Source excerpts (5)
 >
@@ -2192,7 +2192,7 @@ A regulated market is an exchange that operates under an official regulatory fra
 A rally is a period when the market climbs with conviction. For STOXX indices, a broad rally lifts the aggregate index level and often compresses the performance dispersion among constituents. Sharp rallies can also affect index reviews if previously marginal stocks surge past capitalisation thresholds.
 
 > [!tip] Related Terms
-> [[#Bull Market]] | [[#Bear Market]] | [[#Correction]] | [[#Market Capitalization]]
+> [Bull Market](#bull-market) | [Bear Market](#bear-market) | [Correction](#correction) | [Market Capitalization](#market-capitalization)
 
 > [!example]- Source excerpts (5)
 >
@@ -2244,7 +2244,7 @@ A rally is a period when the market climbs with conviction. For STOXX indices, a
 A sector is a broad economic category -- Banks, Technology, Health Care, and so on. STOXX sector indices allow investors to gain targeted exposure to one part of the economy or to analyse how different parts of the market are performing relative to each other.
 
 > [!tip] Related Terms
-> [[#Sector Classification]] | [[#Supersector]] | [[#ICB (Industry Classification Benchmark)]] | [[#GICS (Global Industry Classification Standard)]]
+> [Sector Classification](#sector-classification) | [Supersector](#supersector) | [ICB (Industry Classification Benchmark)](#icb-industry-classification-benchmark) | [GICS (Global Industry Classification Standard)](#gics-global-industry-classification-standard)
 
 > [!example]- Source excerpts (5)
 >
@@ -2296,7 +2296,7 @@ A sector is a broad economic category -- Banks, Technology, Health Care, and so 
 Sector classification is the act of labelling a company -- deciding, for example, that a fintech firm belongs under "Financial Services" rather than "Technology." These decisions directly affect which sector index a stock appears in and can influence portfolio construction when investors use sector-based strategies.
 
 > [!tip] Related Terms
-> [[#Sector]] | [[#ICB (Industry Classification Benchmark)]] | [[#GICS (Global Industry Classification Standard)]] | [[#Supersector]]
+> [Sector](#sector) | [ICB (Industry Classification Benchmark)](#icb-industry-classification-benchmark) | [GICS (Global Industry Classification Standard)](#gics-global-industry-classification-standard) | [Supersector](#supersector)
 
 > [!example]- Source excerpts (5)
 >
@@ -2348,7 +2348,7 @@ Sector classification is the act of labelling a company -- deciding, for example
 Settlement is the back-office conclusion of a trade. When STOXX schedules an index rebalancing, it must account for the settlement cycle so that index-tracking funds can execute trades and have them settle by the effective date. In Europe, most equity markets operate on a T+2 settlement cycle.
 
 > [!tip] Related Terms
-> [[#Exchange]] | [[#Regulated Market]] | [[#Trading Volume]]
+> [Exchange](#exchange) | [Regulated Market](#regulated-market) | [Trading Volume](#trading-volume)
 
 > [!example]- Source excerpts (5)
 >
@@ -2399,7 +2399,7 @@ Settlement is the back-office conclusion of a trade. When STOXX schedules an ind
 Small-cap stocks offer exposure to smaller, often faster-growing companies. They tend to be less liquid and more volatile than large-caps. In STOXX's European index framework, the Small 200 captures companies ranked below the top 400 by free-float market capitalisation.
 
 > [!tip] Related Terms
-> [[#Micro-Cap]] | [[#Mid-Cap]] | [[#Large-Cap]] | [[#Market Capitalization]]
+> [Micro-Cap](#micro-cap) | [Mid-Cap](#mid-cap) | [Large-Cap](#large-cap) | [Market Capitalization](#market-capitalization)
 
 > [!example]- Source excerpts (5)
 >
@@ -2451,7 +2451,7 @@ Small-cap stocks offer exposure to smaller, often faster-growing companies. They
 Short selling allows investors to profit from declining prices. While STOXX indices themselves are long-only constructs, short selling of index constituents is a critical market activity that affects price discovery and liquidity. Short-selling bans (as seen during the 2020 COVID crisis in some European markets) can distort index constituent pricing and trading volumes.
 
 > [!tip] Related Terms
-> [[#Long Position]] | [[#Stock]] | [[#Equity]] | [[#Bear Market]]
+> [Long Position](#long-position) | [Stock](#stock) | [Equity](#equity) | [Bear Market](#bear-market)
 
 > [!example]- Source excerpts (1)
 >
@@ -2478,7 +2478,7 @@ Short selling allows investors to profit from declining prices. While STOXX indi
 Stock is the most basic unit of equity investing. When a data engineer works with STOXX index data, each row in a constituent file typically represents one stock, identified by its ISIN, SEDOL, or ticker. The stock's price, shares outstanding, and free-float factor are the core inputs to index weight calculations.
 
 > [!tip] Related Terms
-> [[#Equity]] | [[#Market Capitalization]] | [[#Free Float]] | [[#Primary Listing]]
+> [Equity](#equity) | [Market Capitalization](#market-capitalization) | [Free Float](#free-float) | [Primary Listing](#primary-listing)
 
 > [!example]- Source excerpts (5)
 >
@@ -2529,7 +2529,7 @@ Stock is the most basic unit of equity investing. When a data engineer works wit
 Supersectors provide a middle layer of granularity. They are broader than sectors but narrower than the top-level industry grouping. The EURO STOXX supersector indices are among the most widely followed benchmarks for European sector analysis.
 
 > [!tip] Related Terms
-> [[#Sector]] | [[#ICB (Industry Classification Benchmark)]] | [[#Sector Classification]]
+> [Sector](#sector) | [ICB (Industry Classification Benchmark)](#icb-industry-classification-benchmark) | [Sector Classification](#sector-classification)
 
 > [!example]- Source excerpts (5)
 >
@@ -2582,7 +2582,7 @@ Supersectors provide a middle layer of granularity. They are broader than sector
 Trading volume is the simplest count of activity -- how many shares changed hands. On its own it does not tell you much about liquidity quality, but averaged over time (ADTV) or normalised by shares outstanding (turnover velocity), it becomes a powerful screening tool.
 
 > [!tip] Related Terms
-> [[#Average Daily Trading Volume (ADTV)]] | [[#Turnover Velocity]] | [[#Liquidity]]
+> [Average Daily Trading Volume (ADTV)](#average-daily-trading-volume-adtv) | [Turnover Velocity](#turnover-velocity) | [Liquidity](#liquidity)
 
 > [!example]- Source excerpts (5)
 >
@@ -2633,7 +2633,7 @@ Trading volume is the simplest count of activity -- how many shares changed hand
 Tick size determines the granularity of the order book. A stock trading at EUR 50 might have a tick size of EUR 0.01, meaning the next possible price is EUR 50.01 or EUR 49.99. For STOXX index constituents, tick size regimes affect bid-ask spreads and, indirectly, the transaction costs of replicating an index.
 
 > [!tip] Related Terms
-> [[#Bid-Ask Spread]] | [[#Order Book]] | [[#Market Maker]] | [[#Liquidity]]
+> [Bid-Ask Spread](#bid-ask-spread) | [Order Book](#order-book) | [Market Maker](#market-maker) | [Liquidity](#liquidity)
 
 > [!example]- Source excerpts (2)
 >

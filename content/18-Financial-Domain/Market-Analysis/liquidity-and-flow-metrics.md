@@ -29,6 +29,10 @@ Liquidity metrics measure how easily stocks can be traded without significant pr
 | **Money Flow Index** | Volume-weighted RSI | > 80 overbought · < 20 oversold |
 | **On-Balance Volume** | Cumulative volume on up vs down days | Divergence from price = early signal |
 
+> [!quote]
+> "Liquidity is the oxygen of financial markets — you only notice it when it's gone."
+> — **Howard Marks**
+
 ## Bid-Ask Spread
 
 The bid-ask spread is the most direct measure of market liquidity and transaction costs.
@@ -69,6 +73,10 @@ A volume-weighted version of [RSI](https://alp78.github.io/elysium/18-Financial-
 
 > [!tip] MFI vs RSI
 > MFI is often more reliable than plain RSI for detecting divergences because it weights volume. A stock making new highs on declining volume shows up as an MFI divergence before RSI catches it.
+
+> [!quote]
+> "Volume is the fuel that drives the market. When volume expands on a move, it confirms the move."
+> — **Joseph Granville**
 
 ## On-Balance Volume (OBV)
 

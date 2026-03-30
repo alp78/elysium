@@ -90,6 +90,190 @@ Terraform is declarative: you describe the desired end state, and Terraform comp
 
 The declarative approach means Terraform can determine whether a resource already exists, needs updating, or needs to be recreated — and it can handle all three cases automatically.
 
+## HCL Functions Reference
+
+All functions are available in any HCL expression context. Test them interactively with `terraform console`.
+
+### String Functions
+
+| Function | Signature | Example | Result |
+|----------|-----------|---------|--------|
+| `format` | `format(spec, args…)` | `format("%-10s %d", "id", 42)` | `"id         42"` |
+| `join` | `join(sep, list)` | `join(", ", ["a","b","c"])` | `"a, b, c"` |
+| `split` | `split(sep, str)` | `split(",", "a,b,c")` | `["a","b","c"]` |
+| `replace` | `replace(str, search, replace)` | `replace("hello world", "world", "HCL")` | `"hello HCL"` |
+| `trimspace` | `trimspace(str)` | `trimspace("  hi  ")` | `"hi"` |
+| `lower` | `lower(str)` | `lower("Hello")` | `"hello"` |
+| `upper` | `upper(str)` | `upper("hello")` | `"HELLO"` |
+| `regex` | `regex(pattern, str)` | `regex("[0-9]+", "abc123")` | `"123"` |
+| `regexall` | `regexall(pattern, str)` | `regexall("[0-9]+", "a1b22")` | `["1","22"]` |
+| `substr` | `substr(str, offset, length)` | `substr("hello", 1, 3)` | `"ell"` |
+| `startswith` | `startswith(str, prefix)` | `startswith("terraform", "terra")` | `true` |
+| `endswith` | `endswith(str, suffix)` | `endswith("main.tf", ".tf")` | `true` |
+| `title` | `title(str)` | `title("hello world")` | `"Hello World"` |
+| `indent` | `indent(spaces, str)` | `indent(2, "a\nb")` | `"a\n  b"` |
+| `chomp` | `chomp(str)` | `chomp("hello\n")` | `"hello"` |
+| `trimprefix` | `trimprefix(str, prefix)` | `trimprefix("hello", "hel")` | `"lo"` |
+| `trimsuffix` | `trimsuffix(str, suffix)` | `trimsuffix("hello", "lo")` | `"hel"` |
+
+---
+
+### Collection Functions
+
+| Function | Signature | Example | Result |
+|----------|-----------|---------|--------|
+| `length` | `length(collection)` | `length(["a","b","c"])` | `3` |
+| `lookup` | `lookup(map, key, default)` | `lookup({a=1}, "b", 0)` | `0` |
+| `merge` | `merge(maps…)` | `merge({a=1},{b=2})` | `{a=1,b=2}` |
+| `keys` | `keys(map)` | `keys({a=1,b=2})` | `["a","b"]` |
+| `values` | `values(map)` | `values({a=1,b=2})` | `[1,2]` |
+| `flatten` | `flatten(list)` | `flatten([[1,2],[3]])` | `[1,2,3]` |
+| `distinct` | `distinct(list)` | `distinct(["a","b","a"])` | `["a","b"]` |
+| `concat` | `concat(lists…)` | `concat(["a"],["b","c"])` | `["a","b","c"]` |
+| `element` | `element(list, index)` | `element(["a","b","c"], 1)` | `"b"` |
+| `contains` | `contains(list, value)` | `contains(["a","b"], "a")` | `true` |
+| `zipmap` | `zipmap(keys, values)` | `zipmap(["a","b"],[1,2])` | `{a=1,b=2}` |
+| `toset` | `toset(list)` | `toset(["a","b","a"])` | `{"a","b"}` |
+| `tolist` | `tolist(set)` | `tolist(toset(["b","a"]))` | `["a","b"]` |
+| `tomap` | `tomap(object)` | `tomap({a="x",b="y"})` | `{a="x",b="y"}` |
+| `index` | `index(list, value)` | `index(["a","b","c"],"b")` | `1` |
+| `slice` | `slice(list, start, end)` | `slice(["a","b","c"],1,3)` | `["b","c"]` |
+| `reverse` | `reverse(list)` | `reverse([1,2,3])` | `[3,2,1]` |
+| `sort` | `sort(list)` | `sort(["c","a","b"])` | `["a","b","c"]` |
+| `chunklist` | `chunklist(list, size)` | `chunklist([1,2,3,4],2)` | `[[1,2],[3,4]]` |
+| `transpose` | `transpose(map_of_lists)` | `transpose({a=["x","y"]})` | `{x=["a"],y=["a"]}` |
+| `matchkeys` | `matchkeys(vals, keys, search)` | see docs | filtered list |
+| `one` | `one(list)` | `one(["a"])` | `"a"` |
+| `range` | `range(start, limit, step)` | `range(0, 4, 1)` | `[0,1,2,3]` |
+| `alltrue` | `alltrue(list)` | `alltrue([true,true])` | `true` |
+| `anytrue` | `anytrue(list)` | `anytrue([false,true])` | `true` |
+
+---
+
+### Numeric Functions
+
+| Function | Signature | Example | Result |
+|----------|-----------|---------|--------|
+| `min` | `min(numbers…)` | `min(3,1,2)` | `1` |
+| `max` | `max(numbers…)` | `max(3,1,2)` | `3` |
+| `ceil` | `ceil(number)` | `ceil(1.2)` | `2` |
+| `floor` | `floor(number)` | `floor(1.9)` | `1` |
+| `abs` | `abs(number)` | `abs(-5)` | `5` |
+| `signum` | `signum(number)` | `signum(-3)` | `-1` |
+| `log` | `log(number, base)` | `log(8, 2)` | `3` |
+| `pow` | `pow(base, exp)` | `pow(2, 10)` | `1024` |
+| `parseint` | `parseint(str, base)` | `parseint("ff", 16)` | `255` |
+
+---
+
+### Date/Time Functions
+
+| Function | Signature | Example | Result |
+|----------|-----------|---------|--------|
+| `timestamp` | `timestamp()` | `timestamp()` | `"2026-03-23T00:00:00Z"` |
+| `formatdate` | `formatdate(spec, timestamp)` | `formatdate("YYYY-MM-DD", timestamp())` | `"2026-03-23"` |
+| `timeadd` | `timeadd(timestamp, duration)` | `timeadd(timestamp(), "24h")` | tomorrow's timestamp |
+| `timecmp` | `timecmp(ts_a, ts_b)` | `timecmp("2026-01-01T00:00:00Z","2025-01-01T00:00:00Z")` | `1` |
+
+---
+
+### Filesystem Functions
+
+| Function | Signature | Example | Result |
+|----------|-----------|---------|--------|
+| `file` | `file(path)` | `file("${path.module}/script.sh")` | file contents as string |
+| `filebase64` | `filebase64(path)` | `filebase64("cert.pem")` | base64-encoded file |
+| `templatefile` | `templatefile(path, vars)` | `templatefile("startup.sh.tpl", {project=var.project})` | rendered template string |
+| `fileset` | `fileset(base, pattern)` | `fileset("${path.module}/sql", "*.sql")` | set of matching filenames |
+| `fileexists` | `fileexists(path)` | `fileexists("optional.tf")` | bool |
+| `pathexpand` | `pathexpand("~/.kube/config")` | — | expanded path string |
+
+---
+
+### Encoding Functions
+
+| Function | Signature | Example | Result |
+|----------|-----------|---------|--------|
+| `jsonencode` | `jsonencode(value)` | `jsonencode({a=1})` | `"{\"a\":1}"` |
+| `jsondecode` | `jsondecode(str)` | `jsondecode("{\"a\":1}")` | object `{a=1}` |
+| `yamlencode` | `yamlencode(value)` | `yamlencode({a=1,b="x"})` | YAML string |
+| `yamldecode` | `yamldecode(str)` | `yamldecode(file("config.yaml"))` | HCL object |
+| `base64encode` | `base64encode(str)` | `base64encode("hello")` | `"aGVsbG8="` |
+| `base64decode` | `base64decode(str)` | `base64decode("aGVsbG8=")` | `"hello"` |
+| `base64gzip` | `base64gzip(str)` | `base64gzip(file("big.txt"))` | gzip+base64 |
+| `csvdecode` | `csvdecode(str)` | `csvdecode(file("data.csv"))` | list of maps |
+| `textencodebase64` | `textencodebase64(str, enc)` | `textencodebase64("hi","UTF-16LE")` | base64 of re-encoded string |
+| `urlencode` | `urlencode(str)` | `urlencode("hello world")` | `"hello+world"` |
+
+---
+
+### IP / CIDR Functions
+
+| Function | Signature | Example | Result |
+|----------|-----------|---------|--------|
+| `cidrsubnet` | `cidrsubnet(prefix, newbits, netnum)` | `cidrsubnet("10.0.0.0/16", 8, 1)` | `"10.0.1.0/24"` |
+| `cidrhost` | `cidrhost(prefix, hostnum)` | `cidrhost("10.0.1.0/24", 5)` | `"10.0.1.5"` |
+| `cidrnetmask` | `cidrnetmask(prefix)` | `cidrnetmask("10.0.0.0/16")` | `"255.255.0.0"` |
+| `cidrsubnets` | `cidrsubnets(prefix, newbits…)` | `cidrsubnets("10.0.0.0/8",8,8,8)` | list of 3 subnets |
+| `cidrcontains` | `cidrcontains(cidr, ip)` | `cidrcontains("10.0.0.0/8","10.1.2.3")` | `true` |
+
+---
+
+### Crypto / Hash Functions
+
+| Function | Signature | Example | Result |
+|----------|-----------|---------|--------|
+| `sha256` | `sha256(str)` | `sha256("hello")` | hex SHA-256 digest |
+| `sha512` | `sha512(str)` | `sha512("hello")` | hex SHA-512 digest |
+| `sha1` | `sha1(str)` | `sha1("hello")` | hex SHA-1 digest |
+| `md5` | `md5(str)` | `md5("hello")` | hex MD5 digest |
+| `uuid` | `uuid()` | `uuid()` | random UUID v4 string |
+| `uuidv5` | `uuidv5(namespace, name)` | `uuidv5("dns","example.com")` | deterministic UUID v5 |
+| `bcrypt` | `bcrypt(str, cost?)` | `bcrypt("pass",10)` | bcrypt hash (avoid in state) |
+| `filesha256` | `filesha256(path)` | `filesha256("lambda.zip")` | SHA-256 of file |
+| `filemd5` | `filemd5(path)` | `filemd5("object.bin")` | MD5 of file |
+
+---
+
+### Type Conversion and Safety Functions
+
+| Function | Signature | Example | Result |
+|----------|-----------|---------|--------|
+| `try` | `try(exprs…)` | `try(var.opt.field, "default")` | first non-erroring expression |
+| `can` | `can(expr)` | `can(tonumber(var.x))` | `true` if expr succeeds |
+| `nonsensitive` | `nonsensitive(value)` | `nonsensitive(var.password)` | strips sensitive marking |
+| `sensitive` | `sensitive(value)` | `sensitive(local.token)` | marks value as sensitive |
+| `tostring` | `tostring(value)` | `tostring(42)` | `"42"` |
+| `tonumber` | `tonumber(value)` | `tonumber("3.14")` | `3.14` |
+| `tobool` | `tobool(value)` | `tobool("true")` | `true` |
+| `type` | `type(value)` | (console only) | prints type of value |
+
+---
+
+## File Organization Reference
+
+| File | Purpose |
+|------|---------|
+| `main.tf` | Provider config, backend block |
+| `variables.tf` | Input variable declarations |
+| `outputs.tf` | Output value declarations |
+| `locals.tf` | Local value definitions |
+| `versions.tf` | `terraform {}` block with required_version and required_providers |
+| `network.tf` | VPC, subnets, firewall rules, Cloud NAT |
+| `compute.tf` | Compute Engine VMs, instance templates, managed groups |
+| `iam.tf` | Service accounts, IAM bindings and members |
+| `run.tf` | Cloud Run V2 services and jobs |
+| `storage.tf` | GCS buckets, lifecycle rules |
+| `data.tf` | `data {}` blocks — lookups for existing resources |
+| `import.tf` | `import {}` blocks (TF 1.5+) |
+| `*.tfvars` | Variable value files (do not commit secrets) |
+| `*.tfvars.json` | JSON format variable value files |
+| `override.tf` | Local overrides (do not commit — add to `.gitignore`) |
+| `.terraform.lock.hcl` | Provider lock file — always commit to version control |
+| `.terraform/` | Local cache — add to `.gitignore` |
+
+---
+
 ## Related
 
 - [terraform-providers-and-backend](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-providers-and-backend) — Configuring where Terraform connects and stores state

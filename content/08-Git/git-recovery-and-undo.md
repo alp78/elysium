@@ -129,41 +129,25 @@ git reset --hard abc1234
 
 ### Stash — Temporarily Shelve Work
 
+> [!info] git stash — temporarily shelve all modified tracked files
+> - `git stash` — save changes to a stack and revert working directory to clean state
+> - `git stash push -m "label"` — stash with a descriptive message
+> - `git stash list` — show all items on the stash stack
+> - `git stash pop` — apply the top stash entry and remove it from the stack
+> - `git stash apply` — apply the top stash entry but keep it on the stack
+> - `git stash apply stash@{N}` — apply a specific stash by index (0 is most recent)
+> - `git stash drop stash@{N}` — remove a specific stash entry
+> - `git stash clear` — delete ALL stash entries (see danger callout below)
+
 ```bash
-# Stash all modified tracked files
 git stash
-# stash — save modified tracked files to a stack and revert the working directory to clean state
-# In plain English: Put my current work aside so I can do something else. I'll come back to it.
-
-# Stash with a descriptive message
 git stash push -m "WIP: pulse fetcher refactor"
-# push — explicitly push to the stash stack
-# -m "..." — a label to identify this stash
-# In plain English: Same as stash but with a label so I remember what this was.
-
-# List all stashed entries
 git stash list
-# list — show all items on the stash stack
-
-# Apply the most recent stash and remove it from the stack
 git stash pop
-# pop — apply the top stash entry and delete it from the stack
-
-# Apply the most recent stash but keep it on the stack
 git stash apply
-# apply — apply the top stash entry but keep it in the stack
-
-# Apply a specific stash without removing it
 git stash apply stash@{2}
-# stash@{2} — the stash index (0 is most recent)
-
-# Delete a specific stash entry
 git stash drop stash@{2}
-# drop — remove a stash entry
-
-# Delete ALL stash entries
 git stash clear
-# clear — empty the entire stash stack
 ```
 
 > [!danger] stash clear Deletes ALL Stashes

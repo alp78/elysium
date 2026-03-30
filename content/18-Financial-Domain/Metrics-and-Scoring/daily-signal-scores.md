@@ -22,6 +22,10 @@ status: complete
 
 Daily signal scores are cross-sectional z-scores computed daily across all index constituents in the financial data platform dashboard. Each composite score averages its component z-scores and is ranked with dense rank (no gaps, ties allowed). See [scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology) for the underlying z-score and ranking mechanics.
 
+> [!quote]
+> "An object in motion tends to stay in motion. So does a stock price."
+> — **Cliff Asness**
+
 ## Momentum Score
 
 The momentum score measures sustained price trend strength across four dimensions.
@@ -43,6 +47,10 @@ $$\text{MomentumScore} = \text{mean}(z_{\text{RS}},\ z_{\text{SMA50}},\ z_{\text
 
 > [!tip] Cross-Reference
 > For standalone technical indicators like RSI, MACD, and ADX that complement the momentum score, see [technical-indicators](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/technical-indicators).
+
+> [!quote]
+> "The time to buy is when there's blood in the streets, even if the blood is your own."
+> — **Baron Rothschild**
 
 ## Divergence Alerts
 

@@ -14,8 +14,8 @@ status: complete
 # Blocking and Locking
 
 > [!quote]
-> "There are only two hard things in Computer Science: cache invalidation and naming things."
-> — **Phil Karlton**
+> "A lock is a mechanism that, when used correctly, makes concurrency invisible. When used incorrectly, it makes concurrency catastrophic."
+> — **Jim Gray**, *Transaction Processing: Concepts and Techniques*
 
 SQL Server uses locks to coordinate concurrent access to data. Every read and write acquires locks automatically based on the isolation level and the type of operation. Understanding lock types, lock granularity, and isolation levels is essential for diagnosing blocking and designing concurrent-safe pipelines.
 
@@ -253,7 +253,7 @@ SQL Server allows explicit lock hints in queries. Use these only when you know e
 > [!warning] NOLOCK Is Not a Performance Fix
 >
 > NOLOCK Is Not a Performance Optimization.
-> `WITH (NOLOCK)` (also written `READ UNCOMMITTED`) is sometimes used as a "performance hint" but it risks returning incorrect, inconsistent data — including rows that don't exist (from rolled-back transactions) or missing rows. Enable [[#Read Committed Snapshot Isolation (RCSI)|RCSI]] instead — it provides consistent reads without blocking and without dirty reads.
+> `WITH (NOLOCK)` (also written `READ UNCOMMITTED`) is sometimes used as a "performance hint" but it risks returning incorrect, inconsistent data — including rows that don't exist (from rolled-back transactions) or missing rows. Enable [RCSI](#read-committed-snapshot-isolation-rcsi) instead — it provides consistent reads without blocking and without dirty reads.
 
 ---
 

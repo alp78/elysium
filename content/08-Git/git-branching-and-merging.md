@@ -14,8 +14,8 @@ status: complete
 # Git Branching and Merging
 
 > [!quote]
-> "I always knew that one day Smalltalk would replace Java. I just didn't know it would be called Ruby."
-> — **Kent Beck**
+> "In git, we like branches so much that once you realize you have to have a special branch anyway, you might as well have many."
+> — **Linus Torvalds**
 
 Branching isolates work so that multiple features, fixes, and experiments can proceed in parallel without interfering with each other. Merging integrates completed work back into the main branch.
 

@@ -279,28 +279,17 @@ Directory.Delete(tmpDir, recursive: true);
 > - Use for gRPC, microservice communication, and Kafka messages
 > - For config files or human-readable exchange, use JSON instead
 
-```csharp
-// Protocol Buffers (Protobuf) — cross-language binary serialization with schema
-//
-// WHAT: Protobuf defines message schemas in .proto files. The protoc compiler
-//   generates C#/Java/Python/Go classes. You serialize instances to compact
-//   binary bytes and deserialize back with full type safety.
-//
-// WHY:
-//   - 60-80% smaller than JSON (binary encoding, no field names in payload)
-//   - 10-100x faster to parse than JSON (no text parsing, direct memory mapping)
-//   - Strict schema with backward/forward compatibility (add fields without breaking)
-//   - Cross-language: same .proto generates code for C#, Python, Java, Go, etc.
-//
-// WHEN TO USE: gRPC services, Kafka events, high-frequency data feeds,
-//   inter-service communication, mobile APIs (bandwidth matters)
-// ANTI-PATTERNS:
-//   - Don't use for human-readable configs — use JSON/YAML instead
-//   - Don't change field numbers in existing .proto — breaks all consumers
-//   - Don't use for one-off scripts — JSON is simpler for ad-hoc work
+> [!warning] Protobuf anti-patterns
+>
+> - Don't use for human-readable configs -- use JSON/YAML instead
+> - Don't change field numbers in existing `.proto` -- breaks all consumers
+> - Don't use for one-off scripts -- JSON is simpler for ad-hoc work
 
-// NOTE: In production, protoc generates C# classes from .proto files.
-// In notebooks, we use the dynamic message API (same binary format).
+> [!tip] When to use Protobuf
+>
+> gRPC services, Kafka events, high-frequency data feeds, inter-service communication, mobile APIs (bandwidth matters). In production, `protoc` generates C# classes from `.proto` files. In notebooks, use the dynamic message API (same binary format).
+
+```csharp
 Console.WriteLine("  Google.Protobuf loaded.");
 ```
 
@@ -308,18 +297,18 @@ Console.WriteLine("  Google.Protobuf loaded.");
 
 #### Dynamic protobuf messages
 
+> [!info] Protobuf wire format
+>
+> For dynamic messages without `protoc`, use raw byte encoding. Each field is encoded as `(field_number << 3 | wire_type) + value`. Wire types: `0` = varint, `1` = 64-bit, `2` = length-delimited, `5` = 32-bit.
+
 ```csharp
-// Dynamic protobuf messages — runtime message construction without protoc
+// Runtime message construction without protoc
 
 var fileDescProto = new Google.Protobuf.Reflection.FileDescriptorProto
 {
     Name = "stock_quote.proto",
     Package = "stoxx",
 };
-
-// For dynamic messages, we use a simpler approach: raw byte encoding
-// Protobuf wire format: each field = (field_number << 3 | wire_type) + value
-// Wire types: 0=varint, 1=64-bit, 2=length-delimited, 5=32-bit
 
 // Manually encode a StockQuote { symbol="SAP.DE", price=166.52, volume=82621 }
 var ms = new MemoryStream();
@@ -458,33 +447,20 @@ Console.WriteLine(@"
 
 Schema is defined in JSON format and embedded in every file header — readers don't need an external schema to decode. Supports schema evolution (add/remove fields with compatibility rules). Compact binary format, comparable to Protobuf. Standard in Kafka (with Schema Registry for version management) and Hadoop. For simple analytics files, Parquet is better; for human-readable interchange, use JSON.
 
-```csharp
-// Apache Avro — binary serialization with embedded schema for data engineering
-//
-// WHAT: Avro is a row-based binary format where the schema is embedded in every file.
-//   Unlike Protobuf (which uses separate .proto files), Avro files are self-describing:
-//   any consumer can read the schema from the file header without external metadata.
-//
-// WHY:
-//   - Schema embedded in file — no need for a separate schema registry (though one helps)
-//   - Schema evolution — add/remove fields without breaking readers
-//   - Compact binary — field names stored once in header, not per record
-//   - THE standard for Kafka messages in data engineering (Confluent Schema Registry)
-//   - Supported by Spark, Flink, Hive, BigQuery, and all major data tools
-//
-// WHEN TO USE: Kafka event streaming, data lake storage, ETL intermediate format
-// AVRO vs PROTOBUF vs PARQUET:
-//   Avro:    row-based, self-describing, best for streaming/Kafka
-//   Protobuf: binary, external schema, best for gRPC/microservices
-//   Parquet:  columnar, best for analytics/queries (read specific columns)
-//
-// ANTI-PATTERNS:
-//   - Don't use Avro for analytics queries — use Parquet (columnar = column pruning)
-//   - Don't change field types in schema evolution — only add/remove fields
-//   - Don't use Avro without a schema registry in production Kafka
+> [!tip] Avro vs Protobuf vs Parquet
+>
+> - **Avro**: row-based, self-describing, best for streaming/Kafka
+> - **Protobuf**: binary, external schema, best for gRPC/microservices
+> - **Parquet**: columnar, best for analytics/queries (read specific columns)
 
-// Define Avro schema as JSON string
-// This is the standard way — Avro schemas are always JSON, even for binary data
+> [!warning] Avro anti-patterns
+>
+> - Don't use Avro for analytics queries -- use Parquet (columnar = column pruning)
+> - Don't change field types in schema evolution -- only add/remove fields
+> - Don't use Avro without a schema registry in production Kafka
+
+```csharp
+// Define Avro schema as JSON string (Avro schemas are always JSON, even for binary data)
 var schemaJson = @"{
   ""type"": ""record"",
   ""name"": ""StockQuote"",

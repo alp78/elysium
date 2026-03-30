@@ -20,6 +20,10 @@ status: complete
 
 The financial data platform dashboard includes two visualization panels that synthesize the individual signal scores into high-level index characterizations: a five-axis radar chart for factor tilts and a dual-ring donut chart for index composition.
 
+> [!quote]
+> "Your portfolio's returns are overwhelmingly determined by your exposure to a few common risk factors."
+> — **Eugene Fama**
+
 ## Factor Profile (Radar Chart)
 
 The factor profile radar chart displays the average factor tilt of the selected index across five axes. Raw z-scores from daily and quarterly signal calculations are normalized to a 0–100 scale for visualization.

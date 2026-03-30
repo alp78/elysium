@@ -44,7 +44,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Quality Factor]], [[#Net Operating Assets (Changes in)]], [[#Alpha Signal]]
+> [Quality Factor](#quality-factor), [Net Operating Assets (Changes in)](#net-operating-assets-changes-in), [Alpha Signal](#alpha-signal)
 
 > [!example]- Source excerpts (5)
 >
@@ -100,7 +100,7 @@ $$
 this is a guardrail that prevents a smart beta index from accidentally becoming a sector bet. If technology is 20% of the benchmark, the factor index might hold between 15% and 25% in technology — but never 40%.
 
 > [!tip] Related terms
-> [[#Industry Neutral]], [[#Capping Constraint]], [[#Tracking Error Budget]]
+> [Industry Neutral](#industry-neutral), [Capping Constraint](#capping-constraint), [Tracking Error Budget](#tracking-error-budget)
 
 > [!example]- Source excerpts (4)
 >
@@ -135,6 +135,10 @@ this is a guardrail that prevents a smart beta index from accidentally becoming 
 
 ---
 
+> [!quote]
+> "The search for alpha is the oldest quest in finance."
+> — **Eugene Fama**
+
 ### Alpha Signal
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="63 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 63</span>
@@ -154,7 +158,7 @@ $$
 where $z_{i,k}$ is the standardized score for security $i$ on factor $k$, and $w_k$ is the factor weight.
 
 > [!tip] Related terms
-> [[#Multifactor Signal]], [[#Factor Tilt]], [[#Factor (Definition)]]
+> [Multifactor Signal](#multifactor-signal), [Factor Tilt](#factor-tilt), [Factor (Definition)](#factor-definition)
 
 > [!example]- Source excerpts (5)
 >
@@ -208,7 +212,7 @@ where $z_{i,k}$ is the standardized score for security $i$ on factor $k$, and $w
 capping stops any one stock from dominating the index. Even if a factor model loves a particular stock, the cap limits its weight so that a blow-up in that single name does not destroy the whole portfolio.
 
 > [!tip] Related terms
-> [[#Security Weight Cap]], [[#Active Industry Constraint]], [[#Turnover Constraint]]
+> [Security Weight Cap](#security-weight-cap), [Active Industry Constraint](#active-industry-constraint), [Turnover Constraint](#turnover-constraint)
 
 > [!example]- Source excerpts (3)
 >
@@ -236,6 +240,10 @@ capping stops any one stock from dominating the index. Even if a factor model lo
 
 ---
 
+> [!quote]
+> "The CAPM is the E=mc squared of finance."
+> — **Eugene Fama**
+
 ### Capital Asset Pricing Model (CAPM)
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -256,7 +264,7 @@ $$
 where $R_f$ is the risk-free rate, $R_m$ is the market return, and $\beta_i = \frac{\text{Cov}(R_i, R_m)}{\text{Var}(R_m)}$.
 
 > [!tip] Related terms
-> [[#Factor (Definition)]], [[#Risk Premia]], [[#Low Risk Factor]]
+> [Factor (Definition)](#factor-definition), [Risk Premia](#risk-premia), [Low Risk Factor](#low-risk-factor)
 
 > [!example]- Source excerpts (1)
 >
@@ -289,7 +297,7 @@ $$
 where $D_i$ is the expected annual dividend and $P_i$ is the current price. More sophisticated versions include net buyback yield.
 
 > [!tip] Related terms
-> [[#Value Factor]], [[#Yield Factor]], [[#Factor (Definition)]]
+> [Value Factor](#value-factor), [Yield Factor](#yield-factor), [Factor (Definition)](#factor-definition)
 
 > [!example]- Source excerpts (5)
 >
@@ -349,7 +357,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Low Risk Factor]], [[#Quality Factor]], [[#Low Volatility Factor]]
+> [Low Risk Factor](#low-risk-factor), [Quality Factor](#quality-factor), [Low Volatility Factor](#low-volatility-factor)
 
 > [!example]- Source excerpts (2)
 >
@@ -388,7 +396,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Quality Factor]], [[#Accruals]], [[#Net Operating Assets (Changes in)]]
+> [Quality Factor](#quality-factor), [Accruals](#accruals), [Net Operating Assets (Changes in)](#net-operating-assets-changes-in)
 
 > [!example]- Source excerpts (5)
 >
@@ -430,6 +438,10 @@ $$
 
 ## E
 
+> [!quote]
+> "Diversification is the only free lunch in investing."
+> — **Harry Markowitz**
+
 ### Efficient Frontier
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
@@ -450,7 +462,7 @@ $$
 Tracing out all $\sigma^*$ values produces the frontier.
 
 > [!tip] Related terms
-> [[#Mean-Variance Optimization]], [[#Minimum Variance]], [[#Maximum Diversification]]
+> [Mean-Variance Optimization](#mean-variance-optimization), [Minimum Variance](#minimum-variance), [Maximum Diversification](#maximum-diversification)
 
 > [!example]- Source excerpts (5)
 >
@@ -502,7 +514,7 @@ Tracing out all $\sigma^*$ values produces the frontier.
 when a company reports earnings that beat (or miss) expectations, the stock tends to keep drifting in the same direction — the market digests the news slowly. Factor indices can capture this drift by tilting toward recent positive surprises.
 
 > [!tip] Related terms
-> [[#Earnings Momentum]], [[#Price Momentum]], [[#Momentum Factor]]
+> [Earnings Momentum](#earnings-momentum), [Price Momentum](#price-momentum), [Momentum Factor](#momentum-factor)
 
 > [!example]- Source excerpts (3)
 >
@@ -547,7 +559,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Earnings Announcement Drift]], [[#Momentum Factor]], [[#Alpha Signal]]
+> [Earnings Announcement Drift](#earnings-announcement-drift), [Momentum Factor](#momentum-factor), [Alpha Signal](#alpha-signal)
 
 > [!example]- Source excerpts (5)
 >
@@ -606,7 +618,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Risk Parity]], [[#Risk Budget]], [[#Minimum Variance]], [[#Maximum Diversification]]
+> [Risk Parity](#risk-parity), [Risk Budget](#risk-budget), [Minimum Variance](#minimum-variance), [Maximum Diversification](#maximum-diversification)
 
 > [!example]- Source excerpts (1)
 >
@@ -622,6 +634,10 @@ $$
 
 ## F
 
+> [!quote]
+> "A factor is simply a characteristic that explains differences in stock returns."
+> — **Eugene Fama**
+
 ### Factor (Definition)
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5,508 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 5,508</span>
@@ -636,7 +652,7 @@ $$
 a factor is a measurable characteristic of stocks — like cheapness or recent performance — that has historically been rewarded with higher returns over long periods, backed by economic reasoning.
 
 > [!tip] Related terms
-> [[#Factor Investing]], [[#Factor-Based Index]], [[#Smart Beta]]
+> [Factor Investing](#factor-investing), [Factor-Based Index](#factor-based-index), [Smart Beta](#smart-beta)
 
 > [!example]- Source excerpts (5)
 >
@@ -689,7 +705,7 @@ a factor is a measurable characteristic of stocks — like cheapness or recent p
 different factors "take turns" performing well. Value might struggle when momentum shines, and vice versa. Holding both in one portfolio is like diversifying across asset classes — but within equities.
 
 > [!tip] Related terms
-> [[#Multi-Factor]], [[#Multifactor Signal]], [[#Factor Investing]]
+> [Multi-Factor](#multi-factor), [Multifactor Signal](#multifactor-signal), [Factor Investing](#factor-investing)
 
 > [!example]- Source excerpts (5)
 >
@@ -730,6 +746,10 @@ different factors "take turns" performing well. Value might struggle when moment
 
 ---
 
+> [!quote]
+> "Factor investing is the systematic harvesting of risk premia."
+> — **Cliff Asness**
+
 ### Factor Investing
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="219 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 219</span>
@@ -743,7 +763,7 @@ different factors "take turns" performing well. Value might struggle when moment
 instead of buying the whole market by size, factor investing deliberately tilts toward stocks that share a trait — cheapness, recent winners, financial health — that academic research has shown earns a premium over time.
 
 > [!tip] Related terms
-> [[#Factor (Definition)]], [[#Smart Beta]], [[#Factor-Based Index]], [[#Risk Premia]]
+> [Factor (Definition)](#factor-definition), [Smart Beta](#smart-beta), [Factor-Based Index](#factor-based-index), [Risk Premia](#risk-premia)
 
 > [!example]- Source excerpts (5)
 >
@@ -783,6 +803,10 @@ instead of buying the whole market by size, factor investing deliberately tilts 
 
 ---
 
+> [!quote]
+> "Risk premia exist because bearing risk is uncomfortable."
+> — **Cliff Asness**
+
 ### Factor Premium
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
@@ -804,7 +828,7 @@ $$
 where the long (short) portfolio holds the top (bottom) quintile on factor $k$.
 
 > [!tip] Related terms
-> [[#Risk Premia]], [[#Factor Crowding]], [[#Factor (Definition)]]
+> [Risk Premia](#risk-premia), [Factor Crowding](#factor-crowding), [Factor (Definition)](#factor-definition)
 
 > [!example]- Source excerpts (5)
 >
@@ -859,7 +883,7 @@ where the long (short) portfolio holds the top (bottom) quintile on factor $k$.
 factor rotation is the idea of being a "factor timer" — overweighting value when value is cheap and momentum when trends are strong. It is appealing in theory but difficult in practice, which is why most STOXX indices stick to fixed multi-factor blends and leave rotation to active managers.
 
 > [!tip] Related terms
-> [[#Factor Diversification]], [[#Factor Crowding]], [[#Multi-Factor]]
+> [Factor Diversification](#factor-diversification), [Factor Crowding](#factor-crowding), [Multi-Factor](#multi-factor)
 
 > [!example]- Source excerpts (1)
 >
@@ -892,7 +916,7 @@ $$
 where $\kappa$ controls the aggressiveness of the tilt and $z_i$ is the factor z-score.
 
 > [!tip] Related terms
-> [[#Alpha Signal]], [[#Factor-Based Index]], [[#Active Industry Constraint]]
+> [Alpha Signal](#alpha-signal), [Factor-Based Index](#factor-based-index), [Active Industry Constraint](#active-industry-constraint)
 
 > [!example]- Source excerpts (5)
 >
@@ -947,7 +971,7 @@ where $\kappa$ controls the aggressiveness of the tilt and $z_i$ is the factor z
 a factor-based index is like a regular stock index — the S&P 500 or EURO STOXX 50 — except the weights are tilted by a factor score instead of simply reflecting company size.
 
 > [!tip] Related terms
-> [[#Factor Investing]], [[#Smart Beta]], [[#Factor Tilt]]
+> [Factor Investing](#factor-investing), [Smart Beta](#smart-beta), [Factor Tilt](#factor-tilt)
 
 > [!example]- Source excerpts (5)
 >
@@ -1008,7 +1032,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Value Factor]], [[#Earnings Momentum]], [[#Factor (Definition)]]
+> [Value Factor](#value-factor), [Earnings Momentum](#earnings-momentum), [Factor (Definition)](#factor-definition)
 
 > [!example]- Source excerpts (1)
 >
@@ -1037,7 +1061,7 @@ $$
 if the benchmark has 12% in pharmaceuticals, the factor index also holds exactly 12% in pharmaceuticals. All the action happens inside each sector — picking the best factor stocks within each industry — rather than across sectors.
 
 > [!tip] Related terms
-> [[#Active Industry Constraint]], [[#Tracking Error Budget]], [[#Factor Tilt]]
+> [Active Industry Constraint](#active-industry-constraint), [Tracking Error Budget](#tracking-error-budget), [Factor Tilt](#factor-tilt)
 
 > [!example]- Source excerpts (5)
 >
@@ -1091,7 +1115,7 @@ if the benchmark has 12% in pharmaceuticals, the factor index also holds exactly
 the low risk factor is the finding that boring, steady stocks have historically delivered better risk-adjusted returns than wild, volatile ones — contradicting the textbook idea that more risk always equals more reward.
 
 > [!tip] Related terms
-> [[#Low Volatility Factor]], [[#Minimum Variance]], [[#Risk Premia]]
+> [Low Volatility Factor](#low-volatility-factor), [Minimum Variance](#minimum-variance), [Risk Premia](#risk-premia)
 
 > [!example]- Source excerpts (5)
 >
@@ -1132,6 +1156,10 @@ the low risk factor is the finding that boring, steady stocks have historically 
 
 ---
 
+> [!quote]
+> "The low-volatility anomaly is the greatest embarrassment to the efficient market hypothesis."
+> — **Cliff Asness**
+
 ### Low Volatility Factor
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14 mentions across STOXX & ISS pages (low)">▰▰ 14</span>
@@ -1151,7 +1179,7 @@ $$
 Securities with the smallest $\sigma_i$ receive the highest weights.
 
 > [!tip] Related terms
-> [[#Low Risk Factor]], [[#Minimum Variance]], [[#Equal Risk Contribution]]
+> [Low Risk Factor](#low-risk-factor), [Minimum Variance](#minimum-variance), [Equal Risk Contribution](#equal-risk-contribution)
 
 > [!example]- Source excerpts (5)
 >
@@ -1191,6 +1219,10 @@ Securities with the smallest $\sigma_i$ receive the highest weights.
 
 ## M
 
+> [!quote]
+> "The goal is not to maximize return but to optimize the ratio of return to risk."
+> — **Harry Markowitz**
+
 ### Minimum Variance
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="769 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 769</span>
@@ -1209,7 +1241,7 @@ w^* = \arg\min_{w} \; w^\top \Sigma w \quad \text{s.t.} \quad \sum_i w_i = 1, \;
 $$
 
 > [!tip] Related terms
-> [[#Low Volatility Factor]], [[#Maximum Diversification]], [[#Capping Constraint]]
+> [Low Volatility Factor](#low-volatility-factor), [Maximum Diversification](#maximum-diversification), [Capping Constraint](#capping-constraint)
 
 > [!example]- Source excerpts (5)
 >
@@ -1248,6 +1280,10 @@ $$
 
 ---
 
+> [!quote]
+> "Momentum is a fact, not a theory; returns tend to persist."
+> — **Cliff Asness**
+
 ### Momentum Factor
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="50 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 50</span>
@@ -1267,7 +1303,7 @@ $$
 The most recent month is excluded to avoid the short-term reversal effect.
 
 > [!tip] Related terms
-> [[#Price Momentum]], [[#Earnings Momentum]], [[#Earnings Announcement Drift]]
+> [Price Momentum](#price-momentum), [Earnings Momentum](#earnings-momentum), [Earnings Announcement Drift](#earnings-announcement-drift)
 
 > [!example]- Source excerpts (5)
 >
@@ -1309,6 +1345,10 @@ The most recent month is excluded to avoid the short-term reversal effect.
 
 ---
 
+> [!quote]
+> "Combining factors is like combining ingredients; the blend matters more than any single one."
+> — **Kenneth French**
+
 ### Multi-Factor
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="239 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 239</span>
@@ -1323,7 +1363,7 @@ The most recent month is excluded to avoid the short-term reversal effect.
 instead of betting on one factor, you bet on several at once — for example, value + momentum + quality. This hedges your bets because different factors outperform in different market conditions.
 
 > [!tip] Related terms
-> [[#Factor Diversification]], [[#Multifactor Signal]], [[#Alpha Signal]]
+> [Factor Diversification](#factor-diversification), [Multifactor Signal](#multifactor-signal), [Alpha Signal](#alpha-signal)
 
 > [!example]- Source excerpts (5)
 >
@@ -1380,7 +1420,7 @@ $$
 where $K$ is the number of factors and $z_{i,k}$ is the winsorized z-score for factor $k$.
 
 > [!tip] Related terms
-> [[#Alpha Signal]], [[#Multi-Factor]], [[#Factor Tilt]]
+> [Alpha Signal](#alpha-signal), [Multi-Factor](#multi-factor), [Factor Tilt](#factor-tilt)
 
 > [!example]- Source excerpts (5)
 >
@@ -1440,7 +1480,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Accruals]], [[#Quality Factor]], [[#Dilution]]
+> [Accruals](#accruals), [Quality Factor](#quality-factor), [Dilution](#dilution)
 
 > [!example]- Source excerpts (5)
 >
@@ -1499,7 +1539,7 @@ $$
 (using trading days: skip the most recent ~21 days, look back ~252 days total)
 
 > [!tip] Related terms
-> [[#Momentum Factor]], [[#Earnings Momentum]], [[#Factor Tilt]]
+> [Momentum Factor](#momentum-factor), [Earnings Momentum](#earnings-momentum), [Factor Tilt](#factor-tilt)
 
 > [!example]- Source excerpts (5)
 >
@@ -1542,6 +1582,10 @@ $$
 
 ## Q
 
+> [!quote]
+> "In the short run the market is a voting machine, but in the long run it is a weighing machine."
+> — **Benjamin Graham**
+
 ### Quality Factor
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="63 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 63</span>
@@ -1562,7 +1606,7 @@ $$
 where sub-signals $m$ include ROE, accruals, $\Delta$NOA, and dilution.
 
 > [!tip] Related terms
-> [[#Accruals]], [[#Dilution]], [[#Net Operating Assets (Changes in)]], [[#Value Factor]]
+> [Accruals](#accruals), [Dilution](#dilution), [Net Operating Assets (Changes in)](#net-operating-assets-changes-in), [Value Factor](#value-factor)
 
 > [!example]- Source excerpts (5)
 >
@@ -1617,7 +1661,7 @@ where sub-signals $m$ include ROE, accruals, $\Delta$NOA, and dilution.
 a risk budget is like a spending cap but for risk. Instead of saying "no stock above 5% of portfolio dollars," you say "no stock above 5% of portfolio risk." This is a more sophisticated way to control concentration because a small-weight volatile stock can contribute more risk than a large-weight stable one.
 
 > [!tip] Related terms
-> [[#Equal Risk Contribution]], [[#Risk Parity]], [[#Capping Constraint]]
+> [Equal Risk Contribution](#equal-risk-contribution), [Risk Parity](#risk-parity), [Capping Constraint](#capping-constraint)
 
 > [!example]- Source excerpts (5)
 >
@@ -1673,7 +1717,7 @@ a risk budget is like a spending cap but for risk. Instead of saying "no stock a
 risk parity says: "Bonds are much less risky than stocks, so if you want equal risk contribution, you need to hold a lot more bonds (potentially using leverage) and fewer stocks." It is the multi-asset version of equal risk contribution.
 
 > [!tip] Related terms
-> [[#Equal Risk Contribution]], [[#Risk Budget]], [[#Maximum Diversification]]
+> [Equal Risk Contribution](#equal-risk-contribution), [Risk Budget](#risk-budget), [Maximum Diversification](#maximum-diversification)
 
 > [!example]- Source excerpts (3)
 >
@@ -1699,6 +1743,10 @@ risk parity says: "Bonds are much less risky than stocks, so if you want equal r
 
 ---
 
+> [!quote]
+> "Risk and return are joined at the hip."
+> — **Eugene Fama**
+
 ### Risk Premia
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="120 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 120</span>
@@ -1712,7 +1760,7 @@ risk parity says: "Bonds are much less risky than stocks, so if you want equal r
 a risk premium is the reward investors receive for taking on a particular type of risk. The value premium, for example, compensates investors for holding cheap (often distressed) companies. Factor indices are tools for capturing these premiums systematically.
 
 > [!tip] Related terms
-> [[#Factor Investing]], [[#Factor (Definition)]], [[#Smart Beta]]
+> [Factor Investing](#factor-investing), [Factor (Definition)](#factor-definition), [Smart Beta](#smart-beta)
 
 > [!example]- Source excerpts (5)
 >
@@ -1752,6 +1800,10 @@ a risk premium is the reward investors receive for taking on a particular type o
 
 ## S
 
+> [!quote]
+> "Small stocks outperform because they are riskier, and risk must be compensated."
+> — **Eugene Fama**
+
 ### Size Factor
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="69 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 69</span>
@@ -1771,7 +1823,7 @@ $$
 Negative log ensures that smaller companies receive higher scores.
 
 > [!tip] Related terms
-> [[#Factor (Definition)]], [[#Smart Beta]], [[#Factor-Based Index]]
+> [Factor (Definition)](#factor-definition), [Smart Beta](#smart-beta), [Factor-Based Index](#factor-based-index)
 
 > [!example]- Source excerpts (5)
 >
@@ -1812,6 +1864,10 @@ Negative log ensures that smaller companies receive higher scores.
 
 ---
 
+> [!quote]
+> "Smart beta bridges the gap between active and passive investing."
+> — **Cliff Asness**
+
 ### Smart Beta
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="84 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 84</span>
@@ -1827,7 +1883,7 @@ Negative log ensures that smaller companies receive higher scores.
 smart beta sits between passive index investing and active management. You still follow transparent rules (like an index), but those rules are designed to be "smarter" than simply weighting by company size — for example, weighting by cheapness or equal risk.
 
 > [!tip] Related terms
-> [[#Factor Investing]], [[#Factor-Based Index]], [[#Risk Premia]]
+> [Factor Investing](#factor-investing), [Factor-Based Index](#factor-based-index), [Risk Premia](#risk-premia)
 
 > [!example]- Source excerpts (5)
 >
@@ -1882,7 +1938,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Active Industry Constraint]], [[#Turnover Constraint]], [[#Factor Tilt]]
+> [Active Industry Constraint](#active-industry-constraint), [Turnover Constraint](#turnover-constraint), [Factor Tilt](#factor-tilt)
 
 > [!example]- Source excerpts (1)
 >
@@ -1915,7 +1971,7 @@ $$
 where $w^{+}$ and $w^{-}$ are post- and pre-rebalancing weights.
 
 > [!tip] Related terms
-> [[#Capping Constraint]], [[#Security Weight Cap]], [[#Tracking Error Budget]]
+> [Capping Constraint](#capping-constraint), [Security Weight Cap](#security-weight-cap), [Tracking Error Budget](#tracking-error-budget)
 
 > [!example]- Source excerpts (5)
 >
@@ -1956,6 +2012,10 @@ where $w^{+}$ and $w^{-}$ are post- and pre-rebalancing weights.
 
 ## V
 
+> [!quote]
+> "Price is what you pay; value is what you get."
+> — **Warren Buffett**
+
 ### Value Factor
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="75 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 75</span>
@@ -1976,7 +2036,7 @@ $$
 where B/P = book-to-price, E/P = earnings-to-price, D/P = dividend yield.
 
 > [!tip] Related terms
-> [[#Quality Factor]], [[#Factor (Definition)]], [[#Smart Beta]]
+> [Quality Factor](#quality-factor), [Factor (Definition)](#factor-definition), [Smart Beta](#smart-beta)
 
 > [!example]- Source excerpts (5)
 >
@@ -2039,7 +2099,7 @@ $$
 where $D_i$ is dividends per share, Net Buybacks is repurchases minus issuance, and $P_i$ is the share price.
 
 > [!tip] Related terms
-> [[#Carry Factor]], [[#Value Factor]], [[#Quality Factor]]
+> [Carry Factor](#carry-factor), [Value Factor](#value-factor), [Quality Factor](#quality-factor)
 
 > [!example]- Source excerpts (1)
 >

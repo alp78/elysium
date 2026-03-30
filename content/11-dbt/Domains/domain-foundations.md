@@ -15,7 +15,6 @@ mindmap
     (core concepts)
     (project structure)
     (CLI reference)
-    (cheat sheet)
 ```
 
 > [!abstract]- [[dbt-core-concepts]]
@@ -41,10 +40,3 @@ mindmap
 > - [[dbt-cli-reference#Key Flags Reference|Key flags]]
 > - [[dbt-cli-reference#Reading CLI Output|Reading CLI output]]
 
-> [!abstract]- [[dbt-cheat-sheet]]
->
-> - [[dbt-cheat-sheet#dbt Global Flags|Global flags]]
-> - [[dbt-cheat-sheet#Node Selection Syntax|Node selection syntax]]
-> - [[dbt-cheat-sheet#Jinja Reference|Jinja reference]]
-> - [[dbt-cheat-sheet#YAML Schema Reference|YAML schema reference]]
-> - [[dbt-cheat-sheet#Materialization Config Reference|Materialization config]]

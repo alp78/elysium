@@ -128,6 +128,13 @@ conn = pymssql.connect(
 
 #### Invoke-Sqlcmd / SSMS — SQL Server through IAP tunnel (PowerShell)
 
+> [!info] SSMS connection settings through IAP tunnel
+>
+> - **Server name:** `127.0.0.1,1435` (comma between host and port — SQL Server convention)
+> - **Authentication:** SQL Server Authentication
+> - **Login:** `sa`
+> - **Password:** your SA password
+
 ```powershell
 # Step 1: Open tunnel (in a separate PowerShell window)
 gcloud compute start-iap-tunnel data-pipeline-sql 1433 `
@@ -135,14 +142,7 @@ gcloud compute start-iap-tunnel data-pipeline-sql 1433 `
     --zone=europe-west1-b
 # Expected: "Listening on port [1435]."
 
-# Step 2a: Connect via SSMS
-# Server name: 127.0.0.1,1435
-# Authentication: SQL Server Authentication
-# Login: sa
-# Password: (your password)
-# Note: SSMS uses COMMA between host and port: 127.0.0.1,1435
-
-# Step 2b: Connect via PowerShell
+# Step 2: Connect via PowerShell
 Invoke-Sqlcmd -ServerInstance "127.0.0.1,1435" -Database "analytics_db" `
     -Username "sa" -Password $env:SA_PASSWORD `
     -TrustServerCertificate -Query "SELECT COUNT(*) AS cnt FROM gold.scores_daily"
@@ -253,21 +253,20 @@ Invoke-RestMethod -Uri "$url/health" -Headers @{Authorization = "Bearer $token"}
 
 Airflow runs on port 8080 inside the VM. Same pattern as SQL Server: tunnel + connect.
 
+> [!tip] Airflow access after tunnel opens
+>
+> Once the tunnel is up, open `http://localhost:8080` in your browser and log in with your Airflow credentials.
+
 ```bash
-# Open tunnel to Airflow
 gcloud compute start-iap-tunnel data-pipeline-airflow 8080 \
     --local-host-port=127.0.0.1:8080 \
     --zone=europe-west1-b
-# Then open browser: http://localhost:8080
-# Login with your Airflow credentials
+```
 
+```bash
 # Quick health check via CLI
 curl -s http://localhost:8080/api/v1/health | python -m json.tool
-# Expected:
-# {
-#     "metadatabase": {"status": "healthy"},
-#     "scheduler": {"status": "healthy", "latest_scheduler_heartbeat": "2026-03-10T08:00:00+00:00"}
-# }
+# Expected: {"metadatabase": {"status": "healthy"}, "scheduler": {"status": "healthy"}}
 ```
 
 ```powershell
@@ -293,15 +292,16 @@ Datadog agent listens on localhost only — you must SSH into the VM to interact
 >
 > Because they listen on localhost only, you must SSH into the VM to query them. There is no way to open an IAP tunnel to these ports from outside — SSH is the only path.
 
+> [!tip] Expected output from datadog-agent status
+>
+> A healthy agent reports `Agent (running)` with version, status, and active checks
+> (`sqlserver`, `disk`, `cpu`, `memory`, `network`). Port verification via `ss` should
+> show all three listeners on `127.0.0.1` (ports 5000, 5001, 8126).
+
 ```bash
-# SSH in and check agent status
+# Check agent status
 gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap \
     --command="sudo datadog-agent status | head -30"
-# Expected:
-# Agent (running)
-#   Version: 7.x.x
-#   Status: Running
-#   Checks: [sqlserver, disk, cpu, memory, network, ...]
 
 # Check if agent can reach Datadog intake
 gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap \
@@ -310,10 +310,6 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap 
 # Verify agent ports from the VM
 gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap \
     --command="ss -tlnp | grep -E '(5000|5001|8126)'"
-# Expected:
-# LISTEN  0  4096  127.0.0.1:5000   0.0.0.0:*   users:(("agent",pid=...))
-# LISTEN  0  4096  127.0.0.1:5001   0.0.0.0:*   users:(("agent",pid=...))
-# LISTEN  0  4096  127.0.0.1:8126   0.0.0.0:*   users:(("trace-agent",pid=...))
 ```
 
 ### Connection quick reference matrix — protocol and tunnel requirements by service

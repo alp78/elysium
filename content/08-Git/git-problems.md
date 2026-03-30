@@ -10,8 +10,8 @@ description: "Comprehensive catalog of Git and GitHub problems in distributed da
 # Git and GitHub Problems in Distributed Teams
 
 > [!quote]
-> "The most dangerous phrase in the language is 'we've always done it this way.'"
-> — **Grace Hopper**
+> "You must never EVER destroy other people's history. You must not rebase commits other people did. If it doesn't have your sign-off on it, it's off limits."
+> — **Linus Torvalds**
 
 Git is the backbone of collaborative data engineering, but its power comes with footguns that multiply in distributed teams. When multiple engineers edit Airflow DAGs, SQL migrations, Terraform configs, and dbt models in the same repository, every problem below becomes a near-certainty. In a regulated financial index platform where audit trails matter and broken main means no index publication, these problems range from career-defining incidents to daily friction. This note catalogs each one with actionable prevention and recovery.
 
@@ -786,30 +786,19 @@ When two branches modify the same lines (or adjacent lines) of the same file, Gi
 
 1. **Set up CODEOWNERS** to ensure shared file owners are notified before work begins:
 
+> [!info] CODEOWNERS — assign reviewers by file path
+> Place in `.github/CODEOWNERS`. GitHub requires at least one listed owner to approve PRs that touch matching paths. Use a global fallback (`*`) plus team-specific paths for DAGs, Terraform, dbt models, SQL migrations, and CI/CD.
+
 ```
 # .github/CODEOWNERS
-
-# Global fallback
-* @data-team-leads
-
-# Airflow DAGs — notify DAG owner
-/dags/ @airflow-admin @data-engineering-lead
-
-# Terraform — infrastructure team must review
-/terraform/ @infra-team
-
-# dbt models — model owners
+*            @data-team-leads
+/dags/       @airflow-admin @data-engineering-lead
+/terraform/  @infra-team
 /models/finance/ @quant-team
-/models/esg/ @esg-data-team
-
-# SQL migrations — DBA must approve
-/migrations/ @dba-team @data-engineering-lead
-
-# C# API
-/src/Api/ @backend-team
-
-# CI/CD
-/.github/ @devops-team
+/models/esg/     @esg-data-team
+/migrations/     @dba-team @data-engineering-lead
+/src/Api/        @backend-team
+/.github/        @devops-team
 ```
 
 2. **Communicate before editing shared files.** Post in the team Slack channel: `@channel editing dags/index_calculation_dag.py for ticket DATA-451, ETA 2h`.
@@ -1087,33 +1076,26 @@ git rebase --abort
 
 2. **Set team-wide Git config** via a setup script (`scripts/git-setup.sh`):
 
+> [!info] Team Git configuration script — run once per clone
+> - `pull.rebase true` — always rebase when pulling (prevents merge commits on feature branches)
+> - `rebase.autoStash true` — auto-stash dirty files before rebase
+> - `merge.ff only` — prevent accidental local merges (squash merge via GitHub UI)
+> - `diff.algorithm histogram` — better diff algorithm for large files
+> - `core.autocrlf input` — standardize line endings (LF on commit); use `true` on Windows
+> - `init.defaultBranch main` — default branch name
+> - `branch.autoSetupRebase always` — show branch in pull output
+
 ```bash
 #!/bin/bash
-# Team Git configuration — run once after cloning
-# Usage: bash scripts/git-setup.sh
-
+# scripts/git-setup.sh — run once after cloning
 echo "Configuring Git for [Team Name] standards..."
 
-# Always rebase when pulling (prevents merge commits on feature branches)
 git config pull.rebase true
-
-# Autostash before rebase
 git config rebase.autoStash true
-
-# Squash merge by default (set in GitHub UI, but also local preference)
-git config merge.ff only   # prevent accidental local merges
-
-# Better diff algorithm
+git config merge.ff only
 git config diff.algorithm histogram
-
-# Standardize line endings
-git config core.autocrlf input   # macOS/Linux: convert CRLF to LF on commit
-# git config core.autocrlf true  # Windows: convert to CRLF on checkout, LF on commit
-
-# Default branch name
+git config core.autocrlf input
 git config init.defaultBranch main
-
-# Show branch in pull output
 git config branch.autoSetupRebase always
 
 echo "Done. Current config:"

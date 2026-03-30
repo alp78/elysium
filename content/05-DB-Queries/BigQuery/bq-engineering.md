@@ -14,8 +14,8 @@ status: complete
 # BigQuery for Data Engineering - Database Objects & Performance
 
 > [!quote]
-> "In pioneer days they used oxen for heavy pulling, and when one ox couldn't budge a log, they didn't try to grow a larger ox. We shouldn't be trying for bigger computers, but for more systems of computers."
-> — **Grace Hopper**
+> "BigQuery separates storage from compute. That single architectural decision changes everything about how you design tables, partition data, and pay for queries."
+> — **Jordan Tigani**, founding engineer of BigQuery
 
 Database engineering patterns using the **stoxx** index database.
 Prerequisite: SQL_01_Fundamentals.ipynb, SQL_02_Advanced.ipynb

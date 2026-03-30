@@ -82,6 +82,10 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ---
 
+> [!quote]
+> "Liquidity is the lifeblood of markets — without market makers, orderly trading would cease."
+> — **Fischer Black**
+
 ## Market-Making
 
 **Definition:** Market-making is the activity of providing liquidity to financial markets by continuously quoting both buy (bid) and sell (ask) prices for a financial instrument. A market maker stands ready to buy from sellers and sell to buyers at all times, profiting from the spread between the bid and ask prices. Market makers play a crucial role in maintaining liquid, orderly markets, ensuring that investors can always buy or sell securities at fair prices. Investment banks and specialized trading firms are the primary market makers in equities, fixed income, currencies, and derivatives markets.

@@ -76,26 +76,28 @@ Apache Airflow is an open-source **workflow orchestration platform** for program
 
 Airflow has five core components that work together. Understanding each is essential for deployment, debugging, and performance tuning.
 
-```
-┌────────────────────────────────────────────────────────┐
-│                      Airflow Architecture               │
-│                                                        │
-│  ┌──────────┐   schedules   ┌──────────────────────┐  │
-│  │Scheduler │──────────────►│  Executor             │  │
-│  │          │               │  (Local/Celery/K8s)   │  │
-│  └──────┬───┘               └──────────┬────────────┘  │
-│         │                              │               │
-│         ▼                              ▼               │
-│  ┌──────────────┐           ┌──────────────────────┐  │
-│  │ Metadata DB  │◄─────────►│  Workers             │  │
-│  │ (PostgreSQL) │           │  (run task instances) │  │
-│  └──────────────┘           └──────────────────────┘  │
-│         ▲                                              │
-│         │                                              │
-│  ┌──────┴───┐                                          │
-│  │Webserver │  (UI + REST API)                        │
-│  └──────────┘                                          │
-└────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph ARCH["Airflow Architecture"]
+        SCHED["Scheduler"]
+        EXEC["Executor<br/>Local / Celery / K8s"]
+        WORKERS["Workers<br/>run task instances"]
+        METADB["Metadata DB<br/>PostgreSQL"]
+        WEBUI["Webserver<br/>UI + REST API"]
+
+        SCHED -->|"schedules"| EXEC
+        EXEC --> WORKERS
+        SCHED --> METADB
+        WORKERS <--> METADB
+        WEBUI --> METADB
+    end
+
+    style ARCH fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style SCHED fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style EXEC fill:#1a1a2e,stroke:#22d3ee,color:#fff
+    style WORKERS fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style METADB fill:#1a1a2e,stroke:#e0af68,color:#fff
+    style WEBUI fill:#1a1a2e,stroke:#7aa2f7,color:#fff
 ```
 
 ### Scheduler
@@ -141,7 +143,7 @@ PostgreSQL (recommended) or MySQL database that stores:
 
 ### Executor
 
-The Executor determines **how** tasks are run. See the [[#Executors Comparison Table]] section below.
+The Executor determines **how** tasks are run. See the [Executors Comparison Table](#executors-comparison-table) section below.
 
 ---
 

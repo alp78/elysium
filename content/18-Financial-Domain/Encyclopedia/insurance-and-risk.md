@@ -45,6 +45,10 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ---
 
+> [!quote]
+> "Life insurance is the only tool that takes pennies and guarantees dollars."
+> — **Ben Feldman**
+
 ## Insurance (Life)
 
 **Definition:** Life insurance is a contract between an individual (the policyholder) and an insurance company in which the insurer agrees to pay a designated beneficiary a sum of money upon the death of the insured person, in exchange for regular premium payments. Life insurance serves as financial protection for dependents, covers funeral expenses, and can be used for estate planning. Various types include term life (coverage for a specific period), whole life (lifetime coverage with a savings component), universal life (flexible premiums and death benefits), and unit-linked (investment-linked) policies.
@@ -68,6 +72,10 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 **Related terms:** [Insurance Premium](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance Premium), [Reinsurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Reinsurance), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk Management), [Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Underwriting)
 
 ---
+
+> [!quote]
+> "Float is money we hold that is not ours but which we get to invest for Berkshire's benefit."
+> — **Warren Buffett**
 
 ## Insurance Premium
 
@@ -93,6 +101,10 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ---
 
+> [!quote]
+> "Reinsurance is the business of insuring insurance companies — it is the safety net beneath the safety net."
+> — **Henry Kluge**
+
 ## Reinsurance
 
 **Definition:** Reinsurance is insurance purchased by an insurance company (the ceding company) from another insurance company (the reinsurer) to transfer a portion of its risk. Reinsurance allows insurance companies to protect themselves against catastrophic losses, stabilize their financial results, increase their underwriting capacity, and manage their capital more efficiently. Reinsurance can be proportional (the reinsurer shares a percentage of premiums and losses) or non-proportional (the reinsurer only covers losses above a specified threshold). Major reinsurers include Munich Re, Swiss Re, and Hannover Re.
@@ -104,6 +116,10 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 **Related terms:** [Insurance (Property-Casualty)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance (Property-Casualty)), [Insurance Premium](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance Premium), [Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Underwriting), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk Management)
 
 ---
+
+> [!quote]
+> "The biggest risk is not taking any risk — in a world that is changing quickly, the only strategy guaranteed to fail is not taking risks."
+> — **Nassim Nicholas Taleb**
 
 ## Risk Management
 

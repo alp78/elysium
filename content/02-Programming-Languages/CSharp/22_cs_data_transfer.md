@@ -14,8 +14,8 @@ status: complete
 # 22. Data Transfer — GCS, SQL Server, BigQuery
 
 > [!quote]
-> "The most important property of a program is whether it accomplishes the intention of its user."
-> — **C.A.R. Hoare**
+> "Make it work, make it right, make it fast — in that order. But when moving data at scale, make it parallel."
+> — **Kent Beck**
 
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.

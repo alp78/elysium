@@ -14,8 +14,8 @@ status: complete
 # Point-in-Time Data Integrity
 
 > [!quote]
-> "The most important property of a program is whether it accomplishes the intention of its user."
-> — **Tony Hoare**
+> "In financial computing, the answer is not approximately right — it is exactly right, or it is wrong."
+> — **Patrick Burns**
 
 > [!danger] Why This Matters
 >

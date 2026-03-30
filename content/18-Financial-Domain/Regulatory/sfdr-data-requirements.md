@@ -21,6 +21,10 @@ updated: 2026-03-23
 
 ## Principal Adverse Impact (PAI) Indicators
 
+> [!quote]
+> "What gets measured gets managed — and what gets disclosed gets scrutinized."
+> — **Hiro Mizuno** (former CIO, Japan Government Pension Investment Fund)
+
 ### Mandatory Indicators (Table 1 of SFDR RTS)
 
 | # | Indicator | Data Needed | Vendor Source | Computation |

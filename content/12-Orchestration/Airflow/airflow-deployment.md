@@ -283,27 +283,28 @@ For teams that need more control than managed services provide, or want to minim
 
 ### Architecture
 
-```
-┌─────────────────────────────────────────┐
-│  GCE VM (e2-standard-4 or larger)       │
-│                                         │
-│  ┌────────────┐  ┌──────────────────┐  │
-│  │ Scheduler  │  │   Webserver      │  │
-│  │ (systemd)  │  │   (systemd)      │  │
-│  └────────────┘  └──────────────────┘  │
-│         │                │              │
-│  ┌──────▼──────────────────────────┐   │
-│  │  LocalExecutor (subprocess)     │   │
-│  └──────────────────────────────┐  │   │
-│                                  │  │   │
-│  ┌─────────────────────────────┐ │  │   │
-│  │  Cloud SQL (PostgreSQL)     │◄┘  │   │
-│  │  (Managed Metadata DB)      │    │   │
-│  └─────────────────────────────┘    │   │
-└─────────────────────────────────────────┘
-         │
-         ▼
-  GCS bucket (DAG sync, logs)
+```mermaid
+flowchart TD
+    subgraph VM["GCE VM (e2-standard-4 or larger)"]
+        SCH[Scheduler\nsystemd]
+        WEB[Webserver\nsystemd]
+        EXE[LocalExecutor\nsubprocess]
+        DB[(Cloud SQL\nPostgreSQL)]
+
+        SCH --> EXE
+        WEB --> EXE
+        EXE --> DB
+    end
+
+    GCS[(GCS Bucket\nDAG sync, logs)]
+    VM --> GCS
+
+    style VM fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style SCH fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style WEB fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style EXE fill:#1a1a2e,stroke:#e0af68,color:#fff
+    style DB fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style GCS fill:#1a1a2e,stroke:#22d3ee,color:#fff
 ```
 
 ### Install Airflow on a GCE VM
@@ -477,7 +478,7 @@ gcloud composer environments describe my-airflow-env \
 - You need executor customization (Composer fixes the executor)
 
 > [!warning] Cloud Composer Costs
-> Cloud Composer is expensive relative to self-hosted. A SMALL environment is ~$300-500/month. A MEDIUM environment with multiple workers can exceed $1500/month. Always set `--min-workers 1` and `--max-workers N` to enable auto-scaling and control costs. See the [[#Cost Comparison]] section below.
+> Cloud Composer is expensive relative to self-hosted. A SMALL environment is ~$300-500/month. A MEDIUM environment with multiple workers can exceed $1500/month. Always set `--min-workers 1` and `--max-workers N` to enable auto-scaling and control costs. See the [Cost Comparison](#cost-comparison) section below.
 
 ### Installing PyPI Packages in Cloud Composer
 

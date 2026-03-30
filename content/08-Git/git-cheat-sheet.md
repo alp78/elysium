@@ -113,11 +113,17 @@ git config --global --edit
 
 #### Credential helpers
 
+| Helper | Platform | Notes |
+|---|---|---|
+| `osxkeychain` | macOS | System keychain |
+| `manager` | Windows | Git Credential Manager |
+| `store` | Any | Plaintext file (`~/.git-credentials`) -- insecure |
+| `cache` | Any | In-memory, 15 min default |
+| `cache --timeout=3600` | Any | In-memory, 1 hour |
+
 ```bash
-git config --global credential.helper osxkeychain       # macOS
-git config --global credential.helper manager            # Windows (Git Credential Manager)
-git config --global credential.helper store              # Plaintext file (~/.git-credentials) — insecure
-git config --global credential.helper cache              # In-memory, 15 min default
+git config --global credential.helper osxkeychain
+git config --global credential.helper manager
 git config --global credential.helper "cache --timeout=3600"
 ```
 

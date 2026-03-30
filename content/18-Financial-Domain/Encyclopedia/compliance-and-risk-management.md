@@ -23,6 +23,10 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 ---
 
+> [!quote]
+> "Culture eats compliance for breakfast — if you have the right culture, compliance follows naturally."
+> — **Gary Gensler**
+
 ## Compliance
 
 **Definition:** Compliance refers to the process of adhering to laws, regulations, guidelines, and internal policies that govern a company's operations. In the financial sector, compliance is particularly critical because of extensive regulatory requirements designed to protect consumers, prevent fraud, combat money laundering, and maintain market integrity. Compliance departments within financial institutions are responsible for monitoring adherence to regulations, implementing policies, conducting training, and reporting to regulatory authorities. Non-compliance can result in severe penalties, including fines, license revocations, and reputational damage.
@@ -34,6 +38,10 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 **Related terms:** [Regulatory Approval](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Regulatory Approval), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Risk Management), [Cybersecurity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cybersecurity), [Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Underwriting)
 
 ---
+
+> [!quote]
+> "Intellectual property is the oil of the 21st century."
+> — **Mark Getty**
 
 ## Intellectual Property (IP)
 
@@ -58,6 +66,10 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 **Related terms:** [Royalties](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Royalties), [Intellectual Property (IP)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Intellectual Property (IP)), [Franchise](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Franchise), [In-Licensing Agreement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#In-Licensing Agreement), [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Patent)
 
 ---
+
+> [!quote]
+> "The patent system added the fuel of interest to the fire of genius."
+> — **Abraham Lincoln**
 
 ## Patent
 

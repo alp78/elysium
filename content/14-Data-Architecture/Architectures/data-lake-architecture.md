@@ -46,38 +46,21 @@ Understanding this distinction is the architectural foundation of the data lake 
 
 The canonical data lake organizes storage into **zones** (also called layers or tiers), each with a defined quality level, access pattern, and governance contract. The zone concept maps directly to the [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) (Bronze = Landing/Raw, Silver = Cleansed, Gold = Curated).
 
-```
-Source Systems
-      │
-      ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  LANDING / RAW ZONE  (also: Bronze Zone)                        │
-│  • Exact copy of source data, no transformation                  │
-│  • Immutable — files written once, never modified               │
-│  • All formats accepted (JSON, CSV, Parquet, binary, XML...)    │
-│  • Retained for audit/replay (90 days to permanent)             │
-│  • Limited access: pipeline service accounts only               │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │  validation + cleaning pipeline
-                          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  CLEANSED / CONFORMING ZONE  (also: Silver Zone)                │
-│  • Validated, deduplicated, schema-enforced                     │
-│  • Standard formats only (Parquet, Avro — schema embedded)      │
-│  • Partitioned by date using Hive-style conventions             │
-│  • PII masked or tokenized at this layer                        │
-│  • Accessible to data engineers and approved tooling            │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │  aggregation + enrichment pipeline
-                          ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  CURATED / ANALYTICS ZONE  (also: Gold Zone)                    │
-│  • Business-ready, optimized for query performance               │
-│  • Columnar, compressed, heavily partitioned and clustered      │
-│  • Denormalized for common query patterns                       │
-│  • Accessible to analysts, BI tools, data science               │
-│  • Often exposed via external tables or data warehouse engine   │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    src["Source Systems"]
+    landing["LANDING / RAW ZONE (Bronze)\nExact copy, no transformation\nImmutable — write once\nAll formats: JSON, CSV, Parquet, XML\nRetained 90 days to permanent\nAccess: pipeline service accounts only"]
+    cleansed["CLEANSED / CONFORMING ZONE (Silver)\nValidated, deduplicated, schema-enforced\nParquet / Avro only\nHive-style date partitioning\nPII masked or tokenized\nAccess: data engineers + approved tooling"]
+    curated["CURATED / ANALYTICS ZONE (Gold)\nBusiness-ready, query-optimized\nColumnar, compressed, partitioned\nDenormalized for common patterns\nAccess: analysts, BI, data science\nExposed via external tables or DWH"]
+
+    src --> landing
+    landing -->|"validation +\ncleaning pipeline"| cleansed
+    cleansed -->|"aggregation +\nenrichment pipeline"| curated
+
+    style src fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style landing fill:#1a1a2e,stroke:#e0af68,color:#fff
+    style cleansed fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style curated fill:#1a1a2e,stroke:#9ece6a,color:#fff
 ```
 
 ### Landing / Raw Zone

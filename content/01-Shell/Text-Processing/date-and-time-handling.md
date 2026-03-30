@@ -16,9 +16,6 @@ status: complete
 > [!quote]
 > "Time is an illusion. Lunchtime doubly so."
 > — **Douglas Adams**
->
-> "There is no problem in computer science that cannot be solved by adding another level of indirection. But that usually will create another problem."
-> — **David Wheeler**
 
 Dates look simple until you realize that "March 10, 2026 at 3 PM" means a different instant in time depending on whether you're in Paris, New York, or Tokyo. A pipeline that processes market close times across Euro market index, the data pipeline project USA 50, and the data pipeline project Asia/Pacific 50 must handle three different closing times, daylight saving transitions that happen on different dates in different countries, and the fact that "today" is a different date in Sydney and New York for several hours each day.
 
@@ -184,17 +181,21 @@ Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ" -AsUTC              # 2026-03-10T15:30:0
 [DateTimeOffset]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")   # 2026-03-10T15:30:00Z (any PS)
 Get-Date -UFormat "%s"                                       # 1773422200 (Unix epoch)
 Get-Date -Format "yyyyMMdd_HHmmss"                           # 20260310_163000
-
-# Format specifiers (PowerShell uses .NET format strings):
-# yyyy = 4-digit year        yy = 2-digit year
-# MM = month 01-12           MMM = abbreviated (Mar)    MMMM = full (March)
-# dd = day 01-31             ddd = abbreviated day (Tue)  dddd = full (Tuesday)
-# HH = hour 00-23 (24h)     hh = hour 01-12 (12h)      tt = AM/PM
-# mm = minute 00-59          ss = second 00-59
-# fff = milliseconds         ffffff = microseconds
-# K = timezone offset (+01:00)
-# IMPORTANT: MM = month, mm = minute. Case matters!
 ```
+
+> [!info] PowerShell format specifiers (.NET format strings)
+>
+> - `yyyy` — 4-digit year | `yy` — 2-digit year
+> - `MM` — month 01-12 | `MMM` — abbreviated (Mar) | `MMMM` — full (March)
+> - `dd` — day 01-31 | `ddd` — abbreviated day (Tue) | `dddd` — full (Tuesday)
+> - `HH` — hour 00-23 (24h) | `hh` — hour 01-12 (12h) | `tt` — AM/PM
+> - `mm` — minute 00-59 | `ss` — second 00-59
+> - `fff` — milliseconds | `ffffff` — microseconds
+> - `K` — timezone offset (+01:00)
+
+> [!warning] MM vs mm case sensitivity
+>
+> `MM` = month, `mm` = minute. Case matters in .NET format strings.
 
 #### [datetime]::ParseExact — parsing date strings in PowerShell
 ```powershell
@@ -537,25 +538,22 @@ datetime(2026, 3, 10, 15, 30, tzinfo=ZoneInfo("Europe/Paris"))  # 2026-03-10 15:
 
 ### Parsing Strings to Dates in Python
 
-```python
-# ============================================================
-# PARSING STRINGS → DATES
-# ============================================================
+> [!info] Python strptime/strftime format codes
+>
+> - `%Y` — 4-digit year | `%y` — 2-digit year
+> - `%m` — month 01-12 | `%b` — abbreviated (Mar) | `%B` — full (March)
+> - `%d` — day 01-31 | `%j` — day of year (069)
+> - `%H` — hour 00-23 | `%I` — hour 01-12 | `%p` — AM/PM
+> - `%M` — minute 00-59 | `%S` — second 00-59
+> - `%f` — microseconds | `%z` — UTC offset (+0100) | `%Z` — timezone name
+> - `%A` — weekday (Tuesday) | `%a` — abbreviated (Tue)
 
+```python
 # strptime (string parse time) — explicit format
 datetime.strptime("2026-03-10", "%Y-%m-%d")                  # datetime(2026, 3, 10)
 datetime.strptime("2026-03-10T15:30:00", "%Y-%m-%dT%H:%M:%S")
 datetime.strptime("10/03/2026", "%d/%m/%Y")                  # European format
 datetime.strptime("Mar 10, 2026 3:30 PM", "%b %d, %Y %I:%M %p")
-
-# Format codes:
-# %Y = 4-digit year    %y = 2-digit year
-# %m = month 01-12     %b = abbreviated (Mar)    %B = full (March)
-# %d = day 01-31       %j = day of year (069)
-# %H = hour 00-23      %I = hour 01-12           %p = AM/PM
-# %M = minute 00-59    %S = second 00-59
-# %f = microseconds    %z = UTC offset (+0100)   %Z = timezone name
-# %A = weekday (Tuesday)  %a = abbreviated (Tue)
 
 # fromisoformat (Python 3.7+ — fastest for ISO strings)
 datetime.fromisoformat("2026-03-10")                          # datetime(2026, 3, 10)
@@ -795,16 +793,19 @@ else
 DateTime.TryParseExact("20260310", "yyyyMMdd", CultureInfo.InvariantCulture,
     DateTimeStyles.None, out var compactDate);
 
-// Format strings (.NET):
-// yyyy = 4-digit year      yy = 2-digit year
-// MM = month 01-12         MMM = abbreviated (Mar)     MMMM = full (March)
-// dd = day 01-31           ddd = abbreviated day (Tue) dddd = full (Tuesday)
-// HH = hour 00-23          hh = hour 01-12             tt = AM/PM
-// mm = minute 00-59        ss = second 00-59
-// fff = milliseconds       ffffff = microseconds
-// K = timezone offset      zzz = timezone offset (+01:00)
-// NOTE: MM = month, mm = minute. Same gotcha as PowerShell.
 ```
+
+> [!info] C# (.NET) format strings
+>
+> - `yyyy` — 4-digit year | `yy` — 2-digit year
+> - `MM` — month 01-12 | `MMM` — abbreviated (Mar) | `MMMM` — full (March)
+> - `dd` — day 01-31 | `ddd` — abbreviated day (Tue) | `dddd` — full (Tuesday)
+> - `HH` — hour 00-23 | `hh` — hour 01-12 | `tt` — AM/PM
+> - `mm` — minute 00-59 | `ss` — second 00-59
+> - `fff` — milliseconds | `ffffff` — microseconds
+> - `K` — timezone offset | `zzz` — timezone offset (+01:00)
+>
+> `MM` = month, `mm` = minute. Same case-sensitivity gotcha as PowerShell.
 
 ### Formatting Dates to Strings in C#
 

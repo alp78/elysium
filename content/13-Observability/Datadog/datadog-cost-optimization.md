@@ -14,8 +14,8 @@ status: complete
 # Datadog Cost Optimization
 
 > [!quote]
-> "Monitoring is so important that our monitoring systems need to be more available and scalable than the systems being monitored."
-> — **Gene Kim**
+> "The biggest cost in observability is not the tooling — it is the data you collect that nobody ever looks at."
+> — **Charity Majors**, CTO of Honeycomb
 
 The the data pipeline project Datadog setup runs two agents (Airflow VM and SQL VM) plus a GCP Integration. The agent software itself is free — costs are incurred from Datadog's SaaS based on host count and log/trace volume.
 

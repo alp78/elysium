@@ -23,8 +23,8 @@ status: complete
 # SQL Server Incremental Transforms — Processing Only What Changed
 
 > [!quote]
-> "We should forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil."
-> — **Donald Knuth**
+> "Do not process data you do not need. The fastest byte is the one you never touch."
+> — **Michael Stonebraker**
 
 Full-table recomputation is fine at 10K rows. At 100M rows it takes hours and costs real money. Incremental transforms process only new or changed data on each run. For the theory behind idempotent incremental processing, see [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design). For orchestrating incremental loads with Airflow, see [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns).
 

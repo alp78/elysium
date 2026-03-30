@@ -51,6 +51,10 @@ New Divisor = Old Divisor × (New Numerator / Old Numerator)
 
 This means: the index value at market close *before* the event equals the index value at market open *after* the event — the event itself creates no return.
 
+> [!quote]
+> "In God we trust; all others must bring data."
+> — **W. Edwards Deming**
+
 ## Corporate Actions: The Highest-Risk Data Operation
 
 Corporate actions are company-level events that change the capital structure, ownership, or trading characteristics of a security. For index engineers, each corporate action requires a specific data adjustment to maintain index accuracy.
@@ -148,6 +152,10 @@ WHERE c.index_key = 'target_index';
 -- In a correct split, @old_numerator = @new_numerator (price halved, shares doubled → product unchanged)
 -- So the divisor should NOT change for a clean split
 ```
+
+> [!quote]
+> "When you buy an index fund, you are also buying all the transaction costs of all those stock trades that an index manager has to make."
+> — **John Bogle**
 
 ## Index Reconstitution: The Quarterly Event
 
@@ -346,6 +354,10 @@ WHERE c.index_key = 'target_index'
   AND (d.end_date IS NULL OR d.end_date > '2026-03-09')
 ORDER BY weight_pct DESC;
 ```
+
+> [!quote]
+> "It is easy to see the past as inevitable, because it already happened. The hard part is remembering it was once uncertain."
+> — **Marcos Lopez de Prado**
 
 ## Point-in-Time (PIT) Temporal Data: Querying History Without Look-Ahead Bias
 
@@ -657,7 +669,7 @@ ORDER BY esg_tilted_weight DESC;
 
 ## ISS & STOXX Glossary Cross-References
 
-For formal definitions of the index construction terms discussed above, see the [[ISS-STOXX/_index|ISS & STOXX Glossary]]:
+For formal definitions of the index construction terms discussed above, see the [ISS & STOXX Glossary](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/_index):
 
 - [Divisor](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Divisor) and [Divisor Adjustment](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Divisor Adjustment) — formal definition and formula
 - [Free-Float](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float) and [Free-Float Factor](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float Factor) — weighting methodology

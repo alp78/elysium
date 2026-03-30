@@ -66,21 +66,24 @@ The grain determines what goes in the fact table (the numeric measures at that g
 
 The canonical Kimball structure: one central **fact table** surrounded by **dimension tables** joined via surrogate keys. It looks like a star when drawn. See [dimensional-modeling](https://alp78.github.io/elysium/14-Data-Architecture/Data-Modeling/dimensional-modeling) for the full Kimball four-step design process with complete DDL examples.
 
-```
-          ┌──────────────┐
-          │  dim_date    │
-          └──────┬───────┘
-                 │
-┌──────────┐    │    ┌──────────────┐
-│ dim_inst │────┼────│  fact_prices │
-└──────────┘    │    └──────────────┘
-                │         │
-          ┌─────┴──────┐  │
-          │  dim_exch  │  │
-          └────────────┘  │
-                     ┌────┴──────┐
-                     │ dim_curr  │
-                     └───────────┘
+```mermaid
+flowchart LR
+    date["dim_date"]
+    inst["dim_inst"]
+    exch["dim_exch"]
+    curr["dim_curr"]
+    fact["fact_prices"]
+
+    date --- fact
+    inst --- fact
+    exch --- fact
+    curr --- fact
+
+    style fact fill:#1a1a2e,stroke:#22d3ee,color:#fff
+    style date fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style inst fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style exch fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style curr fill:#1a1a2e,stroke:#bb9af7,color:#fff
 ```
 
 #### Advantages of star schema
@@ -399,18 +402,26 @@ Bill Inmon's approach is top-down: build an integrated, normalized Enterprise Da
 
 #### The Inmon flow
 
-```
-Source Systems (OLTP)
-        │
-        ▼
-  ODS (Operational Data Store)  ← optional, near-real-time staging
-        │
-        ▼
-  EDW (3NF, integrated, atomic)
-        │
-        ├──► Data Mart A (Finance — star schema)
-        ├──► Data Mart B (Risk — star schema)
-        └──► Data Mart C (Compliance — star schema)
+```mermaid
+flowchart TD
+    oltp["Source Systems (OLTP)"]
+    ods["ODS\nOperational Data Store\n(optional, near-real-time staging)"]
+    edw["EDW\n3NF, integrated, atomic"]
+    martA["Data Mart A\nFinance — star schema"]
+    martB["Data Mart B\nRisk — star schema"]
+    martC["Data Mart C\nCompliance — star schema"]
+
+    oltp --> ods --> edw
+    edw --> martA
+    edw --> martB
+    edw --> martC
+
+    style oltp fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style ods fill:#1a1a2e,stroke:#e0af68,color:#fff
+    style edw fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style martA fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style martB fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style martC fill:#1a1a2e,stroke:#9ece6a,color:#fff
 ```
 
 The EDW itself is **not** queried by business users. It is a normalized integration layer. Business users query dimensional data marts derived from it.

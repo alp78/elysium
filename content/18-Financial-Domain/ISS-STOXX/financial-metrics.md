@@ -40,7 +40,7 @@ R_{\text{active}} = R_{\text{portfolio}} - R_{\text{benchmark}}
 $$
 
 > [!tip] Related terms
-> [[#Alpha]], [[#Tracking Error]], [[#Information Ratio]]
+> [Alpha](#alpha), [Tracking Error](#tracking-error), [Information Ratio](#information-ratio)
 
 > [!example]- Source excerpts (5)
 >
@@ -96,7 +96,7 @@ $$
 Where $R_f$ is the risk-free rate and $R_m$ is the market return.
 
 > [!tip] Related terms
-> [[#Beta]], [[#Active Return]], [[#Risk-Adjusted Return]], [[#Equity Risk Premium]]
+> [Beta](#beta), [Active Return](#active-return), [Risk-Adjusted Return](#risk-adjusted-return), [Equity Risk Premium](#equity-risk-premium)
 
 > [!example]- Source excerpts (5)
 >
@@ -149,7 +149,7 @@ $$
 Where $n$ is the number of years in the holding period.
 
 > [!tip] Related terms
-> [[#Total Return]], [[#Gross Return]], [[#Net Return]]
+> [Total Return](#total-return), [Gross Return](#gross-return), [Net Return](#net-return)
 
 > [!example]- Source excerpts (5)
 >
@@ -206,7 +206,7 @@ $$
 So a move from 2.50% to 3.00% is a change of 50 bp.
 
 > [!tip] Related terms
-> [[#Spread (Credit)]], [[#Yield Curve]], [[#Risk-Free Rate]]
+> [Spread (Credit)](#spread-credit), [Yield Curve](#yield-curve), [Risk-Free Rate](#risk-free-rate)
 
 > [!example]- Source excerpts (5)
 >
@@ -261,7 +261,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Alpha]], [[#Equity Risk Premium]], [[#Factor Exposure]]
+> [Alpha](#alpha), [Equity Risk Premium](#equity-risk-premium), [Factor Exposure](#factor-exposure)
 
 > [!example]- Source excerpts (5)
 >
@@ -309,7 +309,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Price-to-Earnings Ratio]], [[#Earnings Yield]], [[#Cash Flow Yield]]
+> [Price-to-Earnings Ratio](#price-to-earnings-ratio), [Earnings Yield](#earnings-yield), [Cash Flow Yield](#cash-flow-yield)
 
 > [!example]- Source excerpts (1)
 >
@@ -339,7 +339,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Earnings Yield]], [[#Dividend Yield]], [[#Book-to-Price Ratio]]
+> [Earnings Yield](#earnings-yield), [Dividend Yield](#dividend-yield), [Book-to-Price Ratio](#book-to-price-ratio)
 
 > [!example]- Source excerpts (4)
 >
@@ -390,7 +390,7 @@ $$
 Where $V_{\text{begin}}$ and $V_{\text{end}}$ are the starting and ending values, and $n$ is the number of years.
 
 > [!tip] Related terms
-> [[#Annualized Return]], [[#Total Return]]
+> [Annualized Return](#annualized-return), [Total Return](#total-return)
 
 > [!example]- Source excerpts (5)
 >
@@ -445,7 +445,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Covariance]], [[#Beta]], [[#Volatility]], [[#Standard Deviation]]
+> [Covariance](#covariance), [Beta](#beta), [Volatility](#volatility), [Standard Deviation](#standard-deviation)
 
 > [!example]- Source excerpts (5)
 >
@@ -498,7 +498,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Correlation]], [[#Beta]], [[#Standard Deviation]], [[#Factor Exposure]]
+> [Correlation](#correlation), [Beta](#beta), [Standard Deviation](#standard-deviation), [Factor Exposure](#factor-exposure)
 
 > [!example]- Source excerpts (5)
 >
@@ -551,7 +551,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Debt-to-Equity Ratio]], [[#Free Cash Flow (FCF)]], [[#Gross Profitability]]
+> [Debt-to-Equity Ratio](#debt-to-equity-ratio), [Free Cash Flow (FCF)](#free-cash-flow-fcf), [Gross Profitability](#gross-profitability)
 
 > [!example]- Source excerpts (2)
 >
@@ -587,7 +587,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Current Ratio]], [[#Enterprise Value (EV)]], [[#EBITDA]]
+> [Current Ratio](#current-ratio), [Enterprise Value (EV)](#enterprise-value-ev), [EBITDA](#ebitda)
 
 > [!example]- Source excerpts (5)
 >
@@ -641,7 +641,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Total Return]], [[#Net Return]], [[#Gross Return]], [[#Earnings Yield]]
+> [Total Return](#total-return), [Net Return](#net-return), [Gross Return](#gross-return), [Earnings Yield](#earnings-yield)
 
 > [!example]- Source excerpts (5)
 >
@@ -698,7 +698,7 @@ $$
 Where $C_t$ is the cash flow at time $t$ and $y$ is the yield to maturity.
 
 > [!tip] Related terms
-> [[#Yield Curve]], [[#Spread (Credit)]], [[#Risk-Free Rate]], [[#Basis Point]]
+> [Yield Curve](#yield-curve), [Spread (Credit)](#spread-credit), [Risk-Free Rate](#risk-free-rate), [Basis Point](#basis-point)
 
 > [!example]- Source excerpts (5)
 >
@@ -753,7 +753,7 @@ $$
 Where $V(t)$ is the value at time $t$ and $V_{\text{peak}}$ is the highest value prior to $t$.
 
 > [!tip] Related terms
-> [[#Maximum Drawdown]], [[#Volatility]], [[#Value at Risk (VaR)]]
+> [Maximum Drawdown](#maximum-drawdown), [Volatility](#volatility), [Value at Risk (VaR)](#value-at-risk-var)
 
 > [!example]- Source excerpts (5)
 >
@@ -807,7 +807,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Net Income]], [[#Price-to-Earnings Ratio]], [[#Earnings Yield]], [[#PEG Ratio]]
+> [Net Income](#net-income), [Price-to-Earnings Ratio](#price-to-earnings-ratio), [Earnings Yield](#earnings-yield), [PEG Ratio](#peg-ratio)
 
 > [!example]- Source excerpts (5)
 >
@@ -860,7 +860,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Price-to-Earnings Ratio]], [[#Cash Flow Yield]], [[#Book-to-Price Ratio]]
+> [Price-to-Earnings Ratio](#price-to-earnings-ratio), [Cash Flow Yield](#cash-flow-yield), [Book-to-Price Ratio](#book-to-price-ratio)
 
 > [!example]- Source excerpts (5)
 >
@@ -918,7 +918,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Enterprise Value (EV)]], [[#Net Income]], [[#Operating Margin]], [[#Free Cash Flow (FCF)]]
+> [Enterprise Value (EV)](#enterprise-value-ev), [Net Income](#net-income), [Operating Margin](#operating-margin), [Free Cash Flow (FCF)](#free-cash-flow-fcf)
 
 > [!example]- Source excerpts (5)
 >
@@ -968,7 +968,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#EVA Margin]], [[#Net Operating Profit After Tax (NOPAT)]], [[#Gross Profitability]]
+> [EVA Margin](#eva-margin), [Net Operating Profit After Tax (NOPAT)](#net-operating-profit-after-tax-nopat), [Gross Profitability](#gross-profitability)
 
 > [!example]- Source excerpts (5)
 >
@@ -1021,7 +1021,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Economic Value Added (EVA)]], [[#Net Operating Profit After Tax (NOPAT)]], [[#Gross Profitability]]
+> [Economic Value Added (EVA)](#economic-value-added-eva), [Net Operating Profit After Tax (NOPAT)](#net-operating-profit-after-tax-nopat), [Gross Profitability](#gross-profitability)
 
 > [!example]- Source excerpts (5)
 >
@@ -1076,7 +1076,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Alpha]], [[#Beta]], [[#Risk-Adjusted Return]], [[#Sharpe Ratio]]
+> [Alpha](#alpha), [Beta](#beta), [Risk-Adjusted Return](#risk-adjusted-return), [Sharpe Ratio](#sharpe-ratio)
 
 > [!example]- Source excerpts (2)
 >
@@ -1109,7 +1109,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#EBITDA]], [[#Debt-to-Equity Ratio]], [[#Earnings Yield]], [[#Price-to-Earnings Ratio]]
+> [EBITDA](#ebitda), [Debt-to-Equity Ratio](#debt-to-equity-ratio), [Earnings Yield](#earnings-yield), [Price-to-Earnings Ratio](#price-to-earnings-ratio)
 
 > [!example]- Source excerpts (5)
 >
@@ -1165,7 +1165,7 @@ $$
 Where $\beta_{ik}$ is the exposure of asset $i$ to factor $k$, and $F_k$ is the factor return.
 
 > [!tip] Related terms
-> [[#Factor Return]], [[#Beta]], [[#Return Attribution]]
+> [Factor Return](#factor-return), [Beta](#beta), [Return Attribution](#return-attribution)
 
 > [!example]- Source excerpts (5)
 >
@@ -1219,7 +1219,7 @@ F_k = R_{\text{high exposure}} - R_{\text{low exposure}}
 $$
 
 > [!tip] Related terms
-> [[#Factor Exposure]], [[#Return Attribution]], [[#Active Return]]
+> [Factor Exposure](#factor-exposure), [Return Attribution](#return-attribution), [Active Return](#active-return)
 
 > [!example]- Source excerpts (5)
 >
@@ -1274,7 +1274,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Cash Flow Yield]], [[#EBITDA]], [[#Net Income]], [[#Revenue]]
+> [Cash Flow Yield](#cash-flow-yield), [EBITDA](#ebitda), [Net Income](#net-income), [Revenue](#revenue)
 
 > [!example]- Source excerpts (5)
 >
@@ -1330,7 +1330,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Gross Profitability]], [[#Operating Margin]], [[#Revenue]], [[#EBITDA]]
+> [Gross Profitability](#gross-profitability), [Operating Margin](#operating-margin), [Revenue](#revenue), [EBITDA](#ebitda)
 
 > [!example]- Source excerpts (2)
 >
@@ -1365,7 +1365,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Economic Value Added (EVA)]], [[#EVA Margin]], [[#Earnings Yield]]
+> [Economic Value Added (EVA)](#economic-value-added-eva), [EVA Margin](#eva-margin), [Earnings Yield](#earnings-yield)
 
 > [!example]- Source excerpts (5)
 >
@@ -1418,7 +1418,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Net Return]], [[#Total Return]], [[#Dividend Yield]]
+> [Net Return](#net-return), [Total Return](#total-return), [Dividend Yield](#dividend-yield)
 
 > [!example]- Source excerpts (5)
 >
@@ -1474,7 +1474,7 @@ $$
 Where $\sigma_{\text{active}}$ is the tracking error (standard deviation of active returns).
 
 > [!tip] Related terms
-> [[#Active Return]], [[#Tracking Error]], [[#Sharpe Ratio]], [[#Sortino Ratio]]
+> [Active Return](#active-return), [Tracking Error](#tracking-error), [Sharpe Ratio](#sharpe-ratio), [Sortino Ratio](#sortino-ratio)
 
 > [!example]- Source excerpts (5)
 >
@@ -1530,7 +1530,7 @@ $$
 Where $n_i$ is the number of shares of constituent $i$ and $p_{i,t}$ is its price at time $t$.
 
 > [!tip] Related terms
-> [[#Total Return]], [[#Gross Return]], [[#Net Return]]
+> [Total Return](#total-return), [Gross Return](#gross-return), [Net Return](#net-return)
 
 > [!example]- Source excerpts (1)
 >
@@ -1560,7 +1560,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Drawdown]], [[#Value at Risk (VaR)]], [[#Volatility]], [[#Sortino Ratio]]
+> [Drawdown](#drawdown), [Value at Risk (VaR)](#value-at-risk-var), [Volatility](#volatility), [Sortino Ratio](#sortino-ratio)
 
 > [!example]- Source excerpts (5)
 >
@@ -1614,7 +1614,7 @@ $$
 Commonly using a 12-month lookback with a 1-month skip.
 
 > [!tip] Related terms
-> [[#Factor Exposure]], [[#Factor Return]], [[#Realized Volatility]]
+> [Factor Exposure](#factor-exposure), [Factor Return](#factor-return), [Realized Volatility](#realized-volatility)
 
 > [!example]- Source excerpts (5)
 >
@@ -1670,7 +1670,7 @@ $$
 Where $\tau_i$ is the applicable withholding tax rate for constituent $i$.
 
 > [!tip] Related terms
-> [[#Gross Return]], [[#Total Return]], [[#Dividend Yield]]
+> [Gross Return](#gross-return), [Total Return](#total-return), [Dividend Yield](#dividend-yield)
 
 > [!example]- Source excerpts (5)
 >
@@ -1725,7 +1725,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Earnings Per Share (EPS)]], [[#Revenue]], [[#EBITDA]], [[#Return on Equity (ROE)]]
+> [Earnings Per Share (EPS)](#earnings-per-share-eps), [Revenue](#revenue), [EBITDA](#ebitda), [Return on Equity (ROE)](#return-on-equity-roe)
 
 > [!example]- Source excerpts (5)
 >
@@ -1780,7 +1780,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Gross Margin]], [[#EBITDA]], [[#Net Income]], [[#EVA Margin]]
+> [Gross Margin](#gross-margin), [EBITDA](#ebitda), [Net Income](#net-income), [EVA Margin](#eva-margin)
 
 > [!example]- Source excerpts (1)
 >
@@ -1810,7 +1810,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Price-to-Earnings Ratio]], [[#Earnings Per Share (EPS)]], [[#Earnings Yield]]
+> [Price-to-Earnings Ratio](#price-to-earnings-ratio), [Earnings Per Share (EPS)](#earnings-per-share-eps), [Earnings Yield](#earnings-yield)
 
 > [!example]- Source excerpts (1)
 >
@@ -1838,7 +1838,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Earnings Yield]], [[#Book-to-Price Ratio]], [[#Cash Flow Yield]], [[#Dividend Yield]]
+> [Earnings Yield](#earnings-yield), [Book-to-Price Ratio](#book-to-price-ratio), [Cash Flow Yield](#cash-flow-yield), [Dividend Yield](#dividend-yield)
 
 > [!example]- Source excerpts (2)
 >
@@ -1876,7 +1876,7 @@ $$
 Where $r_t$ are daily log returns and 252 is the standard annualization factor.
 
 > [!tip] Related terms
-> [[#Volatility]], [[#Standard Deviation]], [[#Beta]], [[#Value at Risk (VaR)]]
+> [Volatility](#volatility), [Standard Deviation](#standard-deviation), [Beta](#beta), [Value at Risk (VaR)](#value-at-risk-var)
 
 > [!example]- Source excerpts (5)
 >
@@ -1929,7 +1929,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Return on Equity (ROE)]], [[#Net Income]], [[#Gross Profitability]]
+> [Return on Equity (ROE)](#return-on-equity-roe), [Net Income](#net-income), [Gross Profitability](#gross-profitability)
 
 > [!example]- Source excerpts (5)
 >
@@ -1983,7 +1983,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Return on Assets (ROA)]], [[#Debt-to-Equity Ratio]], [[#Net Income]], [[#Earnings Per Share (EPS)]]
+> [Return on Assets (ROA)](#return-on-assets-roa), [Debt-to-Equity Ratio](#debt-to-equity-ratio), [Net Income](#net-income), [Earnings Per Share (EPS)](#earnings-per-share-eps)
 
 > [!example]- Source excerpts (5)
 >
@@ -2039,7 +2039,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Net Income]], [[#Gross Margin]], [[#Operating Margin]], [[#EBITDA]]
+> [Net Income](#net-income), [Gross Margin](#gross-margin), [Operating Margin](#operating-margin), [EBITDA](#ebitda)
 
 > [!example]- Source excerpts (5)
 >
@@ -2093,7 +2093,7 @@ $$
 This is the general form (Sharpe ratio). Alternative specifications replace $\sigma_p$ with downside deviation (Sortino) or tracking error (Information ratio).
 
 > [!tip] Related terms
-> [[#Sharpe Ratio]], [[#Sortino Ratio]], [[#Information Ratio]], [[#Alpha]]
+> [Sharpe Ratio](#sharpe-ratio), [Sortino Ratio](#sortino-ratio), [Information Ratio](#information-ratio), [Alpha](#alpha)
 
 > [!example]- Source excerpts (5)
 >
@@ -2149,7 +2149,7 @@ R_f \approx \text{Yield on short-term government bonds}
 $$
 
 > [!tip] Related terms
-> [[#Equity Risk Premium]], [[#Market Premium]], [[#Sharpe Ratio]], [[#Alpha]]
+> [Equity Risk Premium](#equity-risk-premium), [Market Premium](#market-premium), [Sharpe Ratio](#sharpe-ratio), [Alpha](#alpha)
 
 > [!example]- Source excerpts (5)
 >
@@ -2202,7 +2202,7 @@ S = \frac{R_p - R_f}{\sigma_p}
 $$
 
 > [!tip] Related terms
-> [[#Sortino Ratio]], [[#Information Ratio]], [[#Standard Deviation]], [[#Risk-Adjusted Return]]
+> [Sortino Ratio](#sortino-ratio), [Information Ratio](#information-ratio), [Standard Deviation](#standard-deviation), [Risk-Adjusted Return](#risk-adjusted-return)
 
 > [!example]- Source excerpts (5)
 >
@@ -2253,7 +2253,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Volatility]], [[#Realized Volatility]], [[#Sharpe Ratio]], [[#Tracking Error]]
+> [Volatility](#volatility), [Realized Volatility](#realized-volatility), [Sharpe Ratio](#sharpe-ratio), [Tracking Error](#tracking-error)
 
 > [!example]- Source excerpts (5)
 >
@@ -2308,7 +2308,7 @@ $$
 Typically expressed in basis points.
 
 > [!tip] Related terms
-> [[#Basis Point]], [[#Yield Curve]], [[#Duration (Bond)]], [[#Risk-Free Rate]]
+> [Basis Point](#basis-point), [Yield Curve](#yield-curve), [Duration (Bond)](#duration-bond), [Risk-Free Rate](#risk-free-rate)
 
 > [!example]- Source excerpts (5)
 >
@@ -2364,7 +2364,7 @@ $$
 Where $P_t$ is the price at time $t$ and $D_t$ is the dividend received.
 
 > [!tip] Related terms
-> [[#Gross Return]], [[#Net Return]], [[#Annualized Return]], [[#Dividend Yield]]
+> [Gross Return](#gross-return), [Net Return](#net-return), [Annualized Return](#annualized-return), [Dividend Yield](#dividend-yield)
 
 > [!example]- Source excerpts (5)
 >
@@ -2414,7 +2414,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Active Return]], [[#Information Ratio]], [[#Standard Deviation]]
+> [Active Return](#active-return), [Information Ratio](#information-ratio), [Standard Deviation](#standard-deviation)
 
 > [!example]- Source excerpts (5)
 >
@@ -2468,7 +2468,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Weighted Average]], [[#Tracking Error]]
+> [Weighted Average](#weighted-average), [Tracking Error](#tracking-error)
 
 > [!example]- Source excerpts (5)
 >
@@ -2531,7 +2531,7 @@ $$
 Where $z_{\alpha}$ is the z-score at confidence level $\alpha$.
 
 > [!tip] Related terms
-> [[#Maximum Drawdown]], [[#Volatility]], [[#Standard Deviation]], [[#Drawdown]]
+> [Maximum Drawdown](#maximum-drawdown), [Volatility](#volatility), [Standard Deviation](#standard-deviation), [Drawdown](#drawdown)
 
 > [!example]- Source excerpts (5)
 >
@@ -2584,7 +2584,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Realized Volatility]], [[#Standard Deviation]], [[#Beta]], [[#Value at Risk (VaR)]]
+> [Realized Volatility](#realized-volatility), [Standard Deviation](#standard-deviation), [Beta](#beta), [Value at Risk (VaR)](#value-at-risk-var)
 
 > [!example]- Source excerpts (5)
 >
@@ -2638,7 +2638,7 @@ $$
 $$
 
 > [!tip] Related terms
-> [[#Turnover]], [[#Factor Exposure]], [[#Return Attribution]]
+> [Turnover](#turnover), [Factor Exposure](#factor-exposure), [Return Attribution](#return-attribution)
 
 > [!example]- Source excerpts (5)
 >
@@ -2698,7 +2698,7 @@ $$
 This is the Nelson-Siegel model, where $\beta_0$ is the long-run level, $\beta_1$ captures slope, $\beta_2$ captures curvature, and $\tau$ is a decay parameter.
 
 > [!tip] Related terms
-> [[#Duration (Bond)]], [[#Spread (Credit)]], [[#Risk-Free Rate]], [[#Basis Point]]
+> [Duration (Bond)](#duration-bond), [Spread (Credit)](#spread-credit), [Risk-Free Rate](#risk-free-rate), [Basis Point](#basis-point)
 
 > [!example]- Source excerpts (5)
 >

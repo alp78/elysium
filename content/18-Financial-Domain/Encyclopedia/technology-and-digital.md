@@ -45,6 +45,10 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ---
 
+> [!quote]
+> "The cloud is really about the democratization of computing."
+> — **Marc Benioff**
+
 ## Cloud Computing
 
 **Definition:** Cloud computing is the delivery of computing services — including servers, storage, databases, networking, software, analytics, and artificial intelligence — over the internet ("the cloud") rather than through local servers or personal devices. Cloud computing allows organizations to access technology resources on demand, scale up or down as needed, and pay only for what they use. The three main service models are Infrastructure as a Service (IaaS), Platform as a Service (PaaS), and Software as a Service (SaaS). Cloud computing has fundamentally transformed how businesses deploy and manage technology.
@@ -56,6 +60,10 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 **Related terms:** [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service)), [IaaS](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#IaaS), [PaaS](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#PaaS), [Hybrid Cloud](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Hybrid Cloud), [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation)
 
 ---
+
+> [!quote]
+> "There are only two types of companies: those that have been hacked and those that will be."
+> — **Robert Mueller**
 
 ## Cybersecurity
 
@@ -93,6 +101,10 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ---
 
+> [!quote]
+> "ERP is the backbone of a business. Without it, you have islands of information that never connect."
+> — **Hasso Plattner**
+
 ## Enterprise Resource Planning (ERP)
 
 **Definition:** Enterprise Resource Planning (ERP) is a type of integrated software platform that organizations use to manage and automate core business processes in real time. ERP systems consolidate functions such as finance, human resources, manufacturing, supply chain, procurement, and customer relationship management into a single unified system. By providing a single source of truth for business data, ERP systems improve operational efficiency, reduce redundancy, enable better decision-making, and facilitate regulatory compliance. Modern ERP solutions are increasingly cloud-based and powered by AI.
@@ -104,6 +116,10 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 **Related terms:** [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service)), [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation), [Cloud Computing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cloud Computing)
 
 ---
+
+> [!quote]
+> "Fintech is not about building better banks — it is about building a world that doesn't need banks."
+> — **Brett King**
 
 ## Fintech
 
@@ -141,6 +157,10 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ---
 
+> [!quote]
+> "If you think that the internet has changed your life, think again. The IoT is about to change it all over again."
+> — **Brendan O'Brien**
+
 ## Internet of Things (IoT)
 
 **Definition:** The Internet of Things (IoT) refers to the network of physical devices, vehicles, appliances, sensors, and other objects embedded with electronics, software, and network connectivity that enables them to collect, exchange, and act on data. IoT devices range from simple sensors that monitor temperature to complex industrial systems that control manufacturing processes. The IoT creates value by enabling real-time monitoring, automation, predictive maintenance, and data-driven decision-making across industries including manufacturing, agriculture, healthcare, transportation, and smart cities.
@@ -152,6 +172,10 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 **Related terms:** [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation), [Cloud Computing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cloud Computing), [Machine Learning / AI](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Machine Learning / AI), [Cybersecurity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cybersecurity)
 
 ---
+
+> [!quote]
+> "AI is probably the most important thing humanity has ever worked on."
+> — **Sundar Pichai**
 
 ## Machine Learning / AI
 
@@ -200,6 +224,10 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 **Related terms:** [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#E-Commerce), [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service)), [Subscription Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Subscription Model), [Fintech](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Fintech)
 
 ---
+
+> [!quote]
+> "SaaS makes the cost of trying new ideas so low that every company can afford to experiment."
+> — **Aaron Levie**
 
 ## SaaS (Software as a Service)
 

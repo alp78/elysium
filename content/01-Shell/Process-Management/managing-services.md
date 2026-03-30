@@ -16,8 +16,8 @@ status: complete
 Every long-running process in your infrastructure -- SQL Server, Airflow, Datadog agent, Docker daemon -- runs as a systemd service on Linux. Understanding service management is how you restart a crashed database, check why a monitoring agent stopped collecting metrics, or enable a new service to survive reboots. For Airflow-specific service management (scheduler, worker, webserver), see [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts).
 
 > [!quote]
-> "The first rule of any technology used in a business is that automation applied to an efficient operation will magnify the efficiency. The second is that automation applied to an inefficient operation will magnify the inefficiency."
-> — **Bill Gates**
+> "systemd is never finished, never complete, but tracking progress of technology."
+> — **Lennart Poettering** (creator of systemd)
 
 ### systemctl, journalctl — managing systemd services and reading logs
 

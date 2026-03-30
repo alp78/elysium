@@ -328,27 +328,22 @@ docker compose up -d --build --force-recreate airflow-webserver
 
 ### Stopping Services
 
+> [!info] docker compose down — what each flag removes
+>
+> - **`down`** (no flags) — removes containers and networks; volumes are preserved. Safe to run repeatedly.
+> - **`down -v`** — also removes named volumes declared in the `volumes` section. Data will be lost.
+> - **`down --rmi all`** — also removes all images used by services. `--rmi local` removes only locally built images.
+> - **`down -v --rmi all`** — nuclear option: removes everything.
+> - **`stop`** (not `down`) — stops containers WITHOUT removing them, preserving container state.
+
 ```bash
-# Stop and remove containers and networks (volumes are preserved)
-docker compose down
-# This is the standard "tear down" — safe to run repeatedly
+docker compose down                    # standard tear-down (keeps volumes)
+docker compose down -v                 # also remove named volumes
+docker compose down --rmi all          # also remove all images
+docker compose down -v --rmi all       # remove everything
 
-# Stop and remove containers, networks, AND named volumes — data will be lost
-docker compose down -v
-# -v / --volumes: also remove named volumes declared in the volumes section
-
-# Stop and remove containers, networks, AND all images used by services
-docker compose down --rmi all
-# --rmi all: removes all images; --rmi local: removes only locally built images
-
-# Nuclear option: remove everything
-docker compose down -v --rmi all
-
-# Stop containers WITHOUT removing them (preserves container state)
-docker compose stop
-
-# Stop a specific service without removing it
-docker compose stop airflow-scheduler
+docker compose stop                    # stop without removing
+docker compose stop airflow-scheduler  # stop a specific service
 ```
 
 > [!warning] down -v Deletes All Volumes

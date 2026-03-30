@@ -68,8 +68,8 @@ status: complete
 # Compliance and Auditability — Financial Index Calculation
 
 > [!quote]
-> "All developers should have access to metrics and monitoring systems so that they can take control and understand how their code affects response time and server resource utilization."
-> — **Patrick Debois**
+> "An audit log is not a feature — it is the difference between 'we think this happened' and 'we can prove this happened.'"
+> — **Kelsey Hightower**
 
 This reference covers the full compliance and auditability surface for a production index calculation platform: end-to-end data lineage, corporate action processing with complete audit trails, EU Benchmarks Regulation (BMR) obligations, restatement procedures, and Datadog integration patterns for continuous compliance monitoring. The [SQL Server audit logging](https://alp78.github.io/elysium/04-SQL-Server/Security/audit-logging) configuration captures database-level access events that feed directly into the audit trail described here.
 
@@ -77,11 +77,11 @@ This reference covers the full compliance and auditability surface for a product
 
 ### Table of Contents
 
-1. [[#1. End-to-End Data Lineage]]
-2. [[#2. Corporate Action Processing]]
-3. [[#3. EU BMR Compliance]]
-4. [[#4. Restatement Procedures]]
-5. [[#5. Datadog Integration for Compliance Monitoring]]
+1. [1. End-to-End Data Lineage](#1-end-to-end-data-lineage)
+2. [2. Corporate Action Processing](#2-corporate-action-processing)
+3. [3. EU BMR Compliance](#3-eu-bmr-compliance)
+4. [4. Restatement Procedures](#4-restatement-procedures)
+5. [5. Datadog Integration for Compliance Monitoring](#5-datadog-integration-for-compliance-monitoring)
 
 ---
 

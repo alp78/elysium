@@ -14,11 +14,10 @@ status: complete
 # Terraform Plan, Apply, and Destroy
 
 > [!quote]
-> "Measure twice, cut once."
-> — **Proverb** (the carpenter's rule that every `terraform plan` embodies)
+> "Plans are worthless, but planning is everything."
+> — **Dwight D. Eisenhower**
 
-The Terraform core workflow is declarative: you describe infrastructure in `.tf` files, and Terraform computes a diff against current state, shows you a plan, and applies only what changed. Understanding each step — including when to use targeted applies, how to import existing resources, and how to inspect state — is essential for safe infrastructure management. For a condensed quick-reference of all Terraform commands, see [terraform-cheat-sheet](https://alp78.github.io/elysium/07-Terraform/terraform-cheat-sheet).
-
+The Terraform core workflow is declarative: you describe infrastructure in `.tf` files, and Terraform computes a diff against current state, shows you a plan, and applies only what changed. Understanding each step — including when to use targeted applies, how to import existing resources, and how to inspect state — is essential for safe infrastructure management.
 ## How terraform apply Works
 
 Before diving into commands, understanding the apply sequence prevents surprises:
@@ -54,15 +53,12 @@ terraform -chdir=infra init
 
 ### Plan — Preview Changes Without Applying
 
+> [!info] terraform plan — preview changes without applying
+> - `-out=tfplan` saves the plan to a file for applying the exact same plan later
+> - Always review the plan before applying. Look for resources being destroyed (is this intentional?), changes to production resources (is this safe?), and new resources (will this increase the bill?)
+
 ```bash
-# Plan (preview changes without applying)
 terraform plan -out=tfplan
-# Shows: what will be created, modified, or destroyed
-# -out = save the plan to a file (for applying the exact same plan)
-# ALWAYS review the plan before applying. Look for:
-# - Resources being destroyed (is this intentional?)
-# - Changes to production resources (is this safe?)
-# - New resources (will this increase the bill?)
 ```
 
 > [!warning] Always Review the Plan
@@ -342,6 +338,49 @@ variable "region" {
   default     = "europe-west1"
 }
 ```
+
+### Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success / no changes |
+| `1` | Error |
+| `2` | Success with changes pending (only with `-detailed-exitcode`) |
+
+---
+
+### Terraform Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `TF_LOG` | Log level: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`, `OFF` |
+| `TF_LOG_PATH` | Write logs to this file instead of stderr |
+| `TF_VAR_name` | Set variable `name` (overrides `.tfvars` files) |
+| `TF_CLI_ARGS` | Default CLI flags appended to every command |
+| `TF_CLI_ARGS_plan` | Default flags for `terraform plan` only |
+| `TF_CLI_ARGS_apply` | Default flags for `terraform apply` only |
+| `TF_DATA_DIR` | Override the `.terraform` directory path |
+| `TF_WORKSPACE` | Set the active workspace |
+| `TF_IN_AUTOMATION` | Set to any non-empty value to suppress interactive prompts and adjust output for CI |
+| `TF_INPUT` | Set to `0` to disable interactive prompts globally |
+| `TF_REGISTRY_DISCOVERY_RETRY` | Number of registry discovery retries |
+| `GOOGLE_CREDENTIALS` | Path to a GCP service account key JSON file |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Path used by Application Default Credentials |
+| `GOOGLE_PROJECT` | Default GCP project ID for the google provider |
+| `GOOGLE_REGION` | Default GCP region for the google provider |
+
+```bash
+# Enable trace logging to a file
+TF_LOG=TRACE TF_LOG_PATH=terraform.log terraform plan
+
+# Set a variable via environment
+TF_VAR_project_id=my-project terraform plan
+
+# CI mode
+TF_IN_AUTOMATION=1 TF_INPUT=0 terraform apply -auto-approve
+```
+
+---
 
 ## Related
 

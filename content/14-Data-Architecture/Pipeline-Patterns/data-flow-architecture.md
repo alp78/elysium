@@ -32,8 +32,8 @@ status: complete
 # Data Flow Architecture
 
 > [!quote]
-> "If you can't describe what you are doing as a process, you don't know what you're doing."
-> — **W. Edwards Deming**
+> "As data accumulates, it begins to have gravity — it attracts services, applications, and more data toward it. Moving compute to data is almost always cheaper than moving data to compute."
+> — **Dave McCrory** (coined the term "data gravity")
 
 This page is the topology map for the entire stack. Every other page in the vault covers *how* to use a specific tool — this page answers *which* tool, *what format*, and *what pattern* for moving data from any A to any B.
 

@@ -16,8 +16,8 @@ status: complete
 The most underused debugging skill in data engineering is reading socket state. When a pipeline fails with "connection refused" or "connection timed out," the answer is almost always visible in the socket table — if you know how to read it. `ss` (socket statistics) is the modern replacement for `netstat` on Linux.
 
 > [!quote]
-> "Data dominates. If you've chosen the right data structures and organized things well, the algorithms will almost always be self-evident."
-> — **Rob Pike**
+> "The devil is in the details, and everything in socket programming is a detail."
+> — **W. Richard Stevens**, *UNIX Network Programming*
 
 ## Understanding `ss` Output
 
@@ -66,21 +66,22 @@ ss -tlnp
 
 ### Common services and default ports — SSH, SQL Server, Datadog, PostgreSQL, Airflow
 
-```bash
-# Port    Service                     Typical Bind Address
-# 22      SSH (sshd)                  0.0.0.0 (all interfaces — for IAP and direct SSH)
-# 53      DNS (systemd-resolved)      127.0.0.53 (loopback — local resolution only)
-# 1433    SQL Server (sqlservr)       0.0.0.0 (all interfaces — accepts DB connections)
-# 1434    SQL Server Browser          127.0.0.1 (loopback — instance discovery, rarely needed)
-# 1431    SQL Server DAC              127.0.0.1 (loopback — emergency admin access)
-# 5000    Datadog Agent (intake)      127.0.0.1 (loopback — collects local metrics)
-# 5001    Datadog Agent (IPC)         127.0.0.1 (loopback — internal communication)
-# 8126    Datadog APM (traces)        127.0.0.1 (loopback — receives traces from local apps)
-# 5432    PostgreSQL                  0.0.0.0 or 127.0.0.1 (depends on pg_hba.conf)
-# 8080    Airflow webserver           0.0.0.0 (all — but usually behind a reverse proxy)
-# 5555    Airflow Flower              0.0.0.0 (all — Celery monitoring)
-# 6379    Redis                       127.0.0.1 (loopback — should NEVER be 0.0.0.0)
-```
+> [!info] Common services and their default ports and bind addresses
+>
+> | Port | Service | Typical Bind Address |
+> |------|---------|---------------------|
+> | 22 | SSH (sshd) | `0.0.0.0` — all interfaces, for IAP and direct SSH |
+> | 53 | DNS (systemd-resolved) | `127.0.0.53` — loopback, local resolution only |
+> | 1433 | SQL Server (sqlservr) | `0.0.0.0` — all interfaces, accepts DB connections |
+> | 1434 | SQL Server Browser | `127.0.0.1` — loopback, instance discovery, rarely needed |
+> | 1431 | SQL Server DAC | `127.0.0.1` — loopback, emergency admin access |
+> | 5000 | Datadog Agent (intake) | `127.0.0.1` — loopback, collects local metrics |
+> | 5001 | Datadog Agent (IPC) | `127.0.0.1` — loopback, internal communication |
+> | 8126 | Datadog APM (traces) | `127.0.0.1` — loopback, receives traces from local apps |
+> | 5432 | PostgreSQL | `0.0.0.0` or `127.0.0.1` — depends on pg_hba.conf |
+> | 8080 | Airflow webserver | `0.0.0.0` — all, usually behind a reverse proxy |
+> | 5555 | Airflow Flower | `0.0.0.0` — all, Celery monitoring |
+> | 6379 | Redis | `127.0.0.1` — loopback, should NEVER be `0.0.0.0` |
 
 > [!tip] SQL Server port breakdown
 >
@@ -90,26 +91,23 @@ ss -tlnp
 
 ### ss -tnp — viewing established connections and reading peer addresses
 
+> [!info] Reading established connections from ss -tnp
+>
+> Without the `-l` flag, `ss` shows established (active) connections instead of listening sockets.
+> Each line shows who is connected to your services:
+>
+> - **`10.0.0.24:56434 → 10.0.0.3:1433`** — IAP proxy internal IP connected to SQL Server. The high ephemeral port (56434) is the client side.
+> - **Same IP, different ephemeral port (26733)** — second SQL Server connection from the same IAP proxy. Two connections = likely SSMS with two query windows, or one app with two sessions.
+> - **`35.235.240.5:44122 → 10.0.0.3:22`** — SSH connection from a Google IAP IP (`35.235.240.0/20` range). This is your interactive SSH session via `gcloud compute ssh`.
+
 ```bash
-# Show active (established) TCP connections
 ss -tnp
-# No -l flag = shows established connections instead of listening sockets
-# This shows who is actively connected to your services
-
-# Example output:
-# State   Recv-Q  Send-Q   Local Address:Port     Peer Address:Port  Process
-# ESTAB   0       0        10.0.0.3:1433          10.0.0.24:56434
-# ESTAB   0       0        10.0.0.3:1433          10.0.0.24:26733
-# ESTAB   0       0        10.0.0.3:22            35.235.240.5:44122
-
-# Reading each line:
-# Line 1: Someone at 10.0.0.24 (ephemeral port 56434) is connected to SQL Server (1433)
-#          10.0.0.24 = IAP proxy internal IP — this is an IAP tunnel connection
-# Line 2: Second SQL Server connection from the same IAP proxy (different ephemeral port)
-#          Two connections = likely SSMS with two query windows, or one app with two sessions
-# Line 3: SSH connection from 35.235.240.5 — a Google IAP IP (35.235.240.0/20 range)
-#          This is your interactive SSH session via gcloud compute ssh
 ```
+
+    State   Recv-Q  Send-Q   Local Address:Port     Peer Address:Port  Process
+    ESTAB   0       0        10.0.0.3:1433          10.0.0.24:56434
+    ESTAB   0       0        10.0.0.3:1433          10.0.0.24:26733
+    ESTAB   0       0        10.0.0.3:22            35.235.240.5:44122
 
 > [!info] Ephemeral ports explained
 >

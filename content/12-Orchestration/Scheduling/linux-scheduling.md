@@ -124,55 +124,92 @@ crontab -l > ~/crontab-backup.txt
 
 ### Common Schedule Patterns
 
+#### Cron schedule — every N minutes
+
+Use the step syntax `*/N` in the minute field to run at regular intervals within each hour.
+
 ```bash
-# ─── EVERY N MINUTES ───────────────────────────────────────────────────────
 */5  * * * *   command    # every 5 minutes
 */10 * * * *   command    # every 10 minutes
 */15 * * * *   command    # every 15 minutes
 */30 * * * *   command    # every 30 minutes
+```
 
-# ─── HOURLY VARIANTS ───────────────────────────────────────────────────────
+#### Cron schedule — hourly variants
+
+Pin a specific minute (or multiple minutes) with `*` in the hour field.
+
+```bash
 0    * * * *   command    # at the top of every hour (XX:00)
 30   * * * *   command    # at XX:30 every hour (half-past)
 15,45 * * * *  command    # at XX:15 and XX:45
+```
 
-# ─── DAILY ─────────────────────────────────────────────────────────────────
+#### Cron schedule — daily
+
+Set minute and hour to fixed values with `* * *` for the remaining fields.
+
+```bash
 0  3 * * *     command    # every day at 03:00 AM
 0  6 * * *     command    # every day at 06:00 AM
 30 23 * * *    command    # every day at 23:30
+```
 
-# ─── WEEKDAYS ONLY ─────────────────────────────────────────────────────────
+#### Cron schedule — weekdays only
+
+Use `1-5` (Monday through Friday) in the day-of-week field. Comma-separated lists also work.
+
+```bash
 0 9,17,22 * * 1-5   command    # 09:00, 17:00, 22:00 Mon–Fri
 0 7       * * 1-5   command    # 07:00 Mon–Fri
 0 6       * * 1,2,3,4,5  command  # same as above, explicit
+```
 
-# ─── WEEKENDS ONLY ─────────────────────────────────────────────────────────
+#### Cron schedule — weekends only
+
+Saturday is `6`, Sunday is `0` (or `7` in some crond implementations).
+
+```bash
 0 2 * * 6,0   command    # 02:00 on Saturday and Sunday
 0 2 * * 6-7   command    # 02:00 on Saturday and Sunday (7=Sun in some crond)
+```
 
-# ─── WEEKLY ─────────────────────────────────────────────────────────────────
+#### Cron schedule — weekly
+
+Set the day-of-week field to a single day (`0` = Sunday, `1` = Monday, etc.).
+
+```bash
 0 2 * * 0     command    # 02:00 every Sunday
 0 2 * * 1     command    # 02:00 every Monday
+```
 
-# ─── MONTHLY ───────────────────────────────────────────────────────────────
+#### Cron schedule — monthly
+
+Set the day-of-month field to a fixed date (or comma-separated dates).
+
+```bash
 0 0 1 * *     command    # midnight on the 1st of every month
 0 6 15 * *    command    # 06:00 on the 15th of every month
 0 0 1,15 * *  command    # midnight on the 1st and 15th
-
-# ─── SPECIFIC DAY COMBOS ───────────────────────────────────────────────────
-# WARNING: day-of-month and day-of-week are OR'd, not AND'd in standard cron
-# "0 6 1 * 1" means: 06:00 on the 1st OR any Monday — not both
-# To run on first Monday of the month, check inside the script:
-0 6 1-7 * 1   /path/script.sh  # runs every Monday + every 1st–7th
-# Script body: [ $(date +\%u) -eq 1 ] || exit 0  — only proceed if it's Monday
-
-# ─── YEARLY ─────────────────────────────────────────────────────────────────
-0 0 1 1 *     command    # midnight on January 1st each year
 ```
 
-> [!warning] Day-of-month OR day-of-week trap
->
-> In standard Vixie cron, if BOTH day-of-month and day-of-week are specified (not `*`), the job runs when EITHER condition is true. To implement true "first Monday of the month", use the guard pattern shown above or switch to systemd timers, which support `OnCalendar=Mon *-*-1..7`.
+#### Cron schedule — specific day-of-month and day-of-week combos
+
+> [!warning] Day-of-month and day-of-week are OR'd, not AND'd
+> In standard Vixie cron, `0 6 1 * 1` means 06:00 on the 1st **or** any Monday -- not both. To target the first Monday of the month, restrict the day-of-month range to `1-7` and guard inside the script. For precise calendar targeting, switch to systemd timers with `OnCalendar=Mon *-*-1..7`.
+
+```bash
+0 6 1-7 * 1   /path/script.sh  # runs every Monday + every 1st–7th
+# Script body: [ $(date +\%u) -eq 1 ] || exit 0  — only proceed if it's Monday
+```
+
+#### Cron schedule — yearly
+
+Set both month and day-of-month to fixed values.
+
+```bash
+0 0 1 1 *     command    # midnight on January 1st each year
+```
 
 ### Special Strings (@reboot, @daily, etc.)
 
@@ -203,40 +240,56 @@ Vixie cron and most modern crond implementations support `@string` shortcuts:
 
 Cron runs with a stripped-down environment — no `.bashrc`, no `.bash_profile`, no PATH additions from your shell config.
 
-```bash
-# Default cron PATH is usually just:
-# /usr/bin:/bin
-# Which means: python3, pip, virtualenv, gcloud, bq — all missing
+> [!info] Default cron PATH
+> Cron's default PATH is typically just `/usr/bin:/bin`, which means `python3`, `pip`, `virtualenv`, `gcloud`, `bq`, and most other tools you rely on are missing.
 
-# ─── APPROACH 1: Set variables at the top of the crontab ───────────────────
-# Add these lines ABOVE the schedule lines in crontab -e:
+#### Cron environment — set variables at the top of the crontab
+
+Add variable assignments above the schedule lines in `crontab -e`. Cron applies them to all subsequent jobs.
+
+```bash
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/home/pipeline/.local/bin
 MAILTO=oncall@example.com
 TZ=UTC
+```
 
-# Now cron will use this PATH for all subsequent jobs
+#### Cron environment — source your environment inside the script
 
-# ─── APPROACH 2: Source your environment inside the script ─────────────────
-# In your script (/home/pipeline/scripts/run_pipeline.sh):
+Load `.bashrc` or `.env` at the top of the wrapper script so the cron job inherits the same PATH and secrets as your interactive shell.
+
+```bash
 #!/bin/bash
 set -euo pipefail                    # see [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) for why this matters
 source /home/pipeline/.bashrc       # loads aliases and PATH changes
 source /home/pipeline/.env          # loads environment-specific secrets
 exec /home/pipeline/scripts/main.py "$@"
+```
 
-# ─── APPROACH 3: Use full absolute paths everywhere ─────────────────────────
-# The safest and most portable approach — no surprises:
+#### Cron environment — use full absolute paths everywhere
+
+The safest and most portable approach. No dependency on PATH at all.
+
+```bash
 0 * * * * /usr/bin/python3 /home/pipeline/scripts/check.py >> /var/log/pipeline/check.log 2>&1
-# Full path to python3, full path to script, redirect output to log file
+```
 
-# ─── APPROACH 4: Activate a virtualenv inside the cron job ──────────────────
+#### Cron environment — activate a virtualenv inside the cron job
+
+Either source the `activate` script, or call the venv's Python binary directly (more robust since it avoids `source` in a non-interactive shell).
+
+```bash
 0 3 * * * source /home/pipeline/venv/bin/activate && python /home/pipeline/etl/run.py
 
 # Or more robustly, call the venv python directly:
 0 3 * * * /home/pipeline/venv/bin/python /home/pipeline/etl/run.py >> /var/log/pipeline/etl.log 2>&1
+```
 
-# ─── TIMEZONE: explicit TZ in crontab ───────────────────────────────────────
+#### Cron environment — explicit timezone in crontab
+
+Set `TZ` in the crontab to decouple schedule times from the server's local timezone.
+
+```bash
 TZ=UTC
 0 3 * * * /path/to/script.sh    # runs at 03:00 UTC regardless of server TZ
 
@@ -278,52 +331,80 @@ Register-ScheduledTask -TaskName "DailyETL" -Action $action `
 
 ### Output Handling — Redirect, MAILTO, and Logging
 
-```bash
-# ─── DEFAULT BEHAVIOR: cron emails output to the local user ─────────────────
-# If MAILTO is not set and mail is configured, cron emails stdout+stderr
-# On most servers, this piles up in /var/spool/mail/$USER silently
+#### Cron output — default behavior
 
-# ─── DISCARD ALL OUTPUT (silent mode) ───────────────────────────────────────
+If `MAILTO` is not set and a mail transport is configured, cron emails both stdout and stderr to the local user. On most servers this piles up silently in `/var/spool/mail/$USER`.
+
+#### Cron output — discard all output (silent mode)
+
+> [!warning] Silent mode hides failures
+> Discarding all output means you will never know if a job failed unless you add separate health checks or alerting.
+
+```bash
 0 * * * * /path/to/script.sh > /dev/null 2>&1
 # > /dev/null    = discard stdout
 # 2>&1           = redirect stderr to where stdout goes (also /dev/null)
-# WARNING: silent mode means you never know if the job failed
+```
 
-# ─── LOG STDOUT ONLY, DISCARD STDERR ────────────────────────────────────────
+#### Cron output — log stdout only
+
+Stderr still goes to the cron email (or is lost if mail is not configured).
+
+```bash
 0 * * * * /path/to/script.sh >> /var/log/pipeline/check.log
-# Stderr still goes to cron email (or is lost)
+```
 
-# ─── LOG BOTH STDOUT AND STDERR (recommended) ───────────────────────────────
+#### Cron output — log both stdout and stderr (recommended)
+
+Use `>>` to append rather than overwrite, preserving history across runs.
+
+```bash
 0 * * * * /path/to/script.sh >> /var/log/pipeline/check.log 2>&1
-# >> = append (not overwrite) — preserves history
+```
 
-# ─── TIMESTAMPED LOGGING ────────────────────────────────────────────────────
+#### Cron output — timestamped logging
+
+Prepend a timestamp before each run, or define a `log()` function inside the script for per-line timestamps.
+
+```bash
 0 * * * * echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting" >> /var/log/pipeline/check.log 2>&1 && \
            /path/to/script.sh >> /var/log/pipeline/check.log 2>&1
 
 # Or add timestamps inside the script with a logger function:
 # log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
+```
 
-# ─── EMAIL NOTIFICATIONS ────────────────────────────────────────────────────
-# Set MAILTO at top of crontab to redirect email output:
+#### Cron output — email notifications via MAILTO
+
+Set `MAILTO` at the top of the crontab to control where cron sends output.
+
+```bash
 MAILTO=oncall@example.com          # email all output to this address
-MAILTO=""                          # suppress all email (equivalent to 2>&1 > /dev/null for email)
+MAILTO=""                          # suppress all email
+```
 
-# ─── LOG ROTATION (prevent logs from growing forever) ───────────────────────
+#### Cron output — log rotation with logrotate
+
+Prevent log files from growing forever by adding a logrotate config in `/etc/logrotate.d/`.
+
+```bash
 # /etc/logrotate.d/pipeline:
-# /var/log/pipeline/*.log {
-#     daily
-#     rotate 30
-#     compress
-#     delaycompress
-#     missingok
-#     notifempty
-# }
+/var/log/pipeline/*.log {
+    daily
+    rotate 30
+    compress
+    delaycompress
+    missingok
+    notifempty
+}
+```
 
-# ─── USING logger TO WRITE TO SYSLOG ────────────────────────────────────────
+#### Cron output — write to syslog with logger
+
+Pipe output to `logger` when you already aggregate syslog centrally. View entries with `journalctl -t pipeline-check`.
+
+```bash
 0 * * * * /path/to/script.sh 2>&1 | /usr/bin/logger -t pipeline-check
-# logger writes to syslog (viewable with: journalctl -t pipeline-check)
-# Useful when you already aggregate syslog centrally
 ```
 
 #### PowerShell equivalent (Windows logging)
@@ -349,24 +430,28 @@ Write-EventLog -LogName Application -Source "PipelineJob" `
 
 When a cron job's execution time exceeds its schedule interval, multiple instances run simultaneously. For pipelines that write to databases or files, this causes corruption, duplicate records, and resource exhaustion.
 
-```bash
-# ─── BASIC FLOCK USAGE ───────────────────────────────────────────────────────
-# flock -n = non-blocking (fail immediately if lock is held, don't wait)
-# /tmp/job.lock = the lock file (any path works; just be consistent)
-*/5 * * * * flock -n /tmp/pipeline.lock /path/to/script.sh
-# If the previous run is still active, this invocation exits immediately (silently)
+#### flock — basic usage in crontab
 
-# ─── WITH LOGGING WHEN SKIPPED ──────────────────────────────────────────────
+`flock -n` is non-blocking — if the lock is already held, the invocation exits immediately instead of waiting. The lock file path (e.g., `/tmp/pipeline.lock`) can be any path; just be consistent. Append `|| echo ... >> log` to record when a run was skipped due to overlap. Use `--timeout 60` to wait up to 60 seconds for the lock instead of failing instantly.
+
+```bash
+# Basic: skip silently if previous run is still active
+*/5 * * * * flock -n /tmp/pipeline.lock /path/to/script.sh
+
+# With logging when skipped
 */5 * * * * flock -n /tmp/pipeline.lock /path/to/script.sh \
     || echo "[$(date)] Skipped: previous run still active" >> /var/log/pipeline/overlap.log
 
-# ─── FLOCK WITH TIMEOUT (wait up to N seconds for the lock) ─────────────────
+# With timeout: wait up to 60 seconds for the lock
 */5 * * * * flock --timeout 60 /tmp/pipeline.lock /path/to/script.sh
-# Waits up to 60 seconds for the lock; exits with code 1 if timeout exceeded
+```
 
-# ─── FLOCK INSIDE THE SCRIPT (recommended pattern) ──────────────────────────
+#### flock — inside the script (recommended pattern)
+
+Place the lock acquisition at the top of the script itself. The file descriptor pattern (`exec 9>`) holds the lock for the entire script lifetime — it's automatically released when the script exits (even on crash).
+
+```bash
 #!/bin/bash
-# Place this at the top of /home/pipeline/scripts/run_etl.sh:
 LOCKFILE=/tmp/run_etl.lock
 exec 9>"$LOCKFILE"
 if ! flock -n 9; then
@@ -375,20 +460,21 @@ if ! flock -n 9; then
 fi
 # Lock is held for the rest of the script's lifetime
 # ... rest of script ...
+```
 
-# ─── FLOCK WITH WRAPPER (inline in crontab, readable) ───────────────────────
+#### flock — inline wrapper and debugging
+
+```bash
+# Readable inline wrapper in crontab
 0 3 * * * /usr/bin/flock -n /tmp/daily-etl.lock /home/pipeline/venv/bin/python \
     /home/pipeline/etl/daily_run.py >> /var/log/pipeline/daily.log 2>&1
 
-# ─── CHECK IF LOCK IS CURRENTLY HELD ────────────────────────────────────────
-# (useful for debugging)
+# Check if a lock is currently held (debugging)
 flock -n /tmp/pipeline.lock echo "No lock held" || echo "Lock is currently held"
-
-# ─── REMOVE STALE LOCK FILES ────────────────────────────────────────────────
-# flock uses fcntl file locks — they are automatically released when the process dies
-# You do NOT need to manually delete lock files; stale locks are not a problem with flock
-# This is why flock is preferred over PID file patterns
 ```
+
+> [!info] Stale lock files are not a problem with flock
+> `flock` uses `fcntl` kernel-level file locks — they are automatically released when the process dies. You do NOT need to manually delete lock files. This is why `flock` is preferred over PID file patterns, which leave stale files on crash.
 
 > [!warning] PID files vs flock
 > Older scripts use PID file patterns (`echo $$ > /tmp/script.pid; kill -0 $(cat /tmp/script.pid)`). These are fragile: if the process crashes, the PID file is left behind and blocks future runs. `flock` uses kernel-level file locks that are automatically released on process exit — always prefer `flock`.
@@ -466,51 +552,75 @@ echo -e "root\npipeline" | sudo tee /etc/cron.allow
 
 ### Debugging Cron — Syslog, Testing, and Common Failures
 
+#### Check cron logs in syslog — find evidence of job execution or failure
+
+The cron log location depends on your distro and whether it uses `journald` or traditional syslog files.
+
 ```bash
-# ─── CHECK CRON LOGS IN SYSLOG ──────────────────────────────────────────────
-# On systems using journald (Ubuntu 16.04+, Debian 9+):
+# journald (Ubuntu 16.04+, Debian 9+)
 journalctl -u cron --since "1 hour ago"
 journalctl -u cron -f                    # follow in real time
 journalctl -u cron --since "2026-03-22 03:00:00" --until "2026-03-22 04:00:00"
+```
 
-# On older systems using /var/log/syslog:
+```bash
+# Traditional syslog (older Debian/Ubuntu)
 grep CRON /var/log/syslog | tail -50
 grep "pipeline" /var/log/syslog
+```
 
-# On systems using /var/log/cron (RHEL/CentOS/Amazon Linux):
+```bash
+# /var/log/cron (RHEL/CentOS/Amazon Linux)
 tail -f /var/log/cron
+```
 
-# ─── TEST YOUR SCRIPT EXACTLY AS CRON RUNS IT ───────────────────────────────
-# Strip environment to cron defaults, then run the script:
+#### Test your script exactly as cron runs it — strip the environment to cron defaults
+
+Cron jobs run with a minimal environment. If your script works interactively but fails under cron, simulate cron's stripped-down environment to reproduce the problem.
+
+```bash
 env -i HOME=/home/pipeline SHELL=/bin/bash \
     PATH=/usr/bin:/bin \
     LOGNAME=pipeline USER=pipeline \
     /home/pipeline/scripts/run_etl.sh
-# If this fails but "bash /home/pipeline/scripts/run_etl.sh" succeeds,
-# you have a PATH or environment variable problem
+```
 
-# ─── TEMPORARILY SHORTEN THE INTERVAL FOR TESTING ───────────────────────────
-# In crontab -e, change "0 3 * * *" to "* * * * *" to run every minute
-# Watch logs: journalctl -u cron -f
-# Change back when done — don't leave it running every minute in production
+> [!tip] If the `env -i` invocation fails but `bash /home/pipeline/scripts/run_etl.sh` succeeds, you have a PATH or environment variable problem.
 
-# ─── CHECK IF CROND IS RUNNING ──────────────────────────────────────────────
+#### Temporarily shorten the interval for testing — run every minute to verify quickly
+
+> [!warning] Change `"0 3 * * *"` to `"* * * * *"` in `crontab -e` to run every minute. Watch with `journalctl -u cron -f`. Change it back when done — never leave a per-minute schedule in production.
+
+#### Check if crond is running — verify the daemon is active
+
+```bash
 systemctl status cron        # Debian/Ubuntu
 systemctl status crond       # RHEL/CentOS/Amazon Linux
 pgrep -l cron                # find cron process(es)
+```
 
-# ─── COMMON CRON FAILURES ───────────────────────────────────────────────────
-# 1. Script not executable:
+#### Common cron failures — the five problems that cause most silent breakage
+
+```bash
+# 1. Script not executable
 chmod +x /home/pipeline/scripts/run_etl.sh
-# 2. Script has Windows line endings (CRLF):
+```
+
+```bash
+# 2. Script has Windows line endings (CRLF)
 file /home/pipeline/scripts/run_etl.sh      # will say "CRLF" if broken
 dos2unix /home/pipeline/scripts/run_etl.sh  # fix it
-# 3. Relative paths in script (script's cwd is / in cron):
-# Change: python etl.py → /home/pipeline/venv/bin/python /home/pipeline/etl/etl.py
-# Or: cd /home/pipeline/etl && /home/pipeline/venv/bin/python etl.py
-# 4. Missing environment variable (e.g. DB_HOST):
+```
+
+> [!warning] Cron's working directory is `/`, so relative paths in your script will fail silently. Use absolute paths: `/home/pipeline/venv/bin/python /home/pipeline/etl/etl.py`, or `cd` first with `cd /home/pipeline/etl && ...`.
+
+```bash
+# 4. Missing environment variable (e.g. DB_HOST)
 # Add to crontab: DB_HOST=10.132.0.2
-# 5. Script output buffering hides errors in logs:
+```
+
+```bash
+# 5. Script output buffering hides errors in logs
 # Add PYTHONUNBUFFERED=1 to crontab or use python -u flag
 ```
 
@@ -870,8 +980,9 @@ Anacron solves a fundamental problem with cron: if a daily job is scheduled for 
 30      10      pipeline-monthly /home/pipeline/scripts/archive_old_data.sh
 ```
 
+#### Anacron commands — manual runs, timestamps, and logs
+
 ```bash
-# ─── ANACRON COMMANDS ────────────────────────────────────────────────────────
 # Run anacron manually (for testing):
 sudo anacron -d -f              # -d = debug mode, -f = force run all jobs
 
@@ -934,10 +1045,12 @@ ssh -L 1433:10.132.0.2:1433 bastion-server
 
 ### Extended SSH Config Patterns
 
-```bash
-# ~/.ssh/config — extended patterns for data engineering infrastructure
+#### GCP VM with IAP tunneling — SSH config for private VMs
 
-# ─── GCP VM WITH IAP TUNNELING ───────────────────────────────────────────────
+GCP VMs without public IPs require Identity-Aware Proxy tunneling. The `ProxyCommand` directive wraps `gcloud compute start-iap-tunnel` so the tunnel is transparent.
+
+```bash
+# ~/.ssh/config
 Host data-pipeline-sql
     HostName 10.132.0.2
     User pipeline
@@ -946,9 +1059,14 @@ Host data-pipeline-sql
         --listen-on-stdin \
         --zone=europe-west1-b \
         --project=data-platform-prod
+```
 
-# ─── BASTION HOST PATTERN ────────────────────────────────────────────────────
-# Connect to internal servers via a bastion/jump host:
+#### Bastion host pattern — SSH through a jump host to internal servers
+
+Connect to internal servers that have no direct network path by chaining through a bastion host. `ProxyJump` handles the two-hop connection transparently.
+
+```bash
+# ~/.ssh/config
 Host bastion
     HostName bastion.example.com
     User deploy
@@ -960,8 +1078,14 @@ Host internal-db
     IdentityFile ~/.ssh/deploy_key
     ProxyJump bastion             # SSH through bastion transparently
     # Alternative syntax: ProxyCommand ssh -W %h:%p bastion
+```
 
-# ─── MULTIPLE ENVIRONMENTS ───────────────────────────────────────────────────
+#### Multiple environments — wildcard Host blocks for prod and dev
+
+Use wildcard patterns to apply shared settings across all hosts in an environment. Specific `Host` entries inherit from the matching wildcard block.
+
+```bash
+# ~/.ssh/config
 Host prod-*
     User pipeline-prod
     IdentityFile ~/.ssh/prod_key
@@ -977,8 +1101,14 @@ Host prod-sql
 
 Host prod-airflow
     HostName 10.132.0.10
+```
 
-# ─── SHARED CONFIG OPTIONS ───────────────────────────────────────────────────
+#### Shared config options — connection reuse and agent forwarding
+
+The `Host *` block applies to every connection. Connection multiplexing (`ControlMaster`) avoids repeated handshakes when you SSH to the same host multiple times.
+
+```bash
+# ~/.ssh/config
 Host *
     # Reuse SSH connections (faster repeated connections to same host):
     ControlMaster auto
@@ -992,8 +1122,11 @@ Host *
 
 ### SSH Key Generation and Management
 
+#### Generate SSH keys — ed25519 for modern systems, RSA for legacy
+
+Prefer `ed25519` over RSA for new keys: it is faster, more secure, and produces shorter key material. Use RSA 4096 only when connecting to systems that do not support ed25519.
+
 ```bash
-# ─── GENERATE KEYS ───────────────────────────────────────────────────────────
 # Modern key (ed25519 — preferred):
 ssh-keygen -t ed25519 -C "data-engineer@company.com" -f ~/.ssh/gcp_ed25519
 # -t ed25519  = elliptic curve (faster and more secure than RSA 2048)
@@ -1006,14 +1139,21 @@ ssh-keygen -t rsa -b 4096 -C "legacy-system@company.com" -f ~/.ssh/legacy_rsa
 # Generate without passphrase (for automation — handle with care):
 ssh-keygen -t ed25519 -C "ci-deploy@company.com" -f ~/.ssh/ci_deploy -N ""
 # -N "" = empty passphrase (no prompt required for automation)
+```
 
-# ─── COPY KEY TO SERVER ──────────────────────────────────────────────────────
+#### Copy key to server — ssh-copy-id appends to authorized_keys
+
+```bash
 ssh-copy-id -i ~/.ssh/gcp_ed25519.pub user@server
 # Appends the public key to ~/.ssh/authorized_keys on the server
+
 # Equivalent manual steps:
 cat ~/.ssh/gcp_ed25519.pub | ssh user@server "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
+```
 
-# ─── SSH AGENT ───────────────────────────────────────────────────────────────
+#### SSH agent — cache passphrases so you type them once per session
+
+```bash
 # Start the agent (usually auto-started by your desktop environment):
 eval "$(ssh-agent -s)"
 
@@ -1025,12 +1165,22 @@ ssh-add -l
 
 # Remove a key from the agent:
 ssh-add -d ~/.ssh/gcp_ed25519
+```
 
-# ─── VIEW KEY FINGERPRINT ────────────────────────────────────────────────────
+#### View key fingerprint — verify which key is deployed
+
+```bash
 ssh-keygen -lf ~/.ssh/gcp_ed25519.pub
 # Output: 256 SHA256:xxxx... data-engineer@company.com (ED25519)
+```
 
-# ─── PERMISSIONS (CRITICAL — SSH refuses to work if permissions are wrong) ───
+#### SSH directory permissions — required for SSH to function
+
+> [!danger] SSH silently refuses to work if permissions are wrong
+>
+> If your private key file is group- or world-readable, SSH will ignore it without a clear error. If `~/.ssh` itself is too open, `authorized_keys` is ignored entirely. Always set these permissions immediately after creating keys.
+
+```bash
 chmod 700 ~/.ssh
 chmod 600 ~/.ssh/config
 chmod 600 ~/.ssh/id_ed25519           # private key: owner read/write only
@@ -1040,8 +1190,11 @@ chmod 600 ~/.ssh/authorized_keys
 
 ### SSH Tunneling for Data Engineering
 
+#### Local port forwarding (-L) — access a remote database from your workstation
+
+Maps a port on your local machine to a service reachable from the remote host. The most common data engineering use case is tunneling to SQL Server or PostgreSQL through a bastion.
+
 ```bash
-# ─── LOCAL PORT FORWARDING (-L): access remote service locally ───────────────
 # Forward local port 1433 to the SQL Server at 10.132.0.2:1433 via a bastion:
 ssh -L 1433:10.132.0.2:1433 bastion-server -N &
 # -L local_port:remote_host:remote_port
@@ -1054,18 +1207,32 @@ sqlcmd -S localhost,1433 -U sa
 # Forward BigQuery proxy port:
 ssh -L 9050:127.0.0.1:9050 prod-server -N &
 # For cloud-sql-proxy listening on the remote server
+```
 
-# ─── REMOTE PORT FORWARDING (-R): expose local service to remote server ──────
+#### Remote port forwarding (-R) — expose a local service to a remote server
+
+Makes a port on the remote server point back to your local machine. Useful for testing webhooks or letting a remote CI runner reach a local dev service.
+
+```bash
 # Expose local port 8080 on the remote server's port 8080:
 ssh -R 8080:localhost:8080 remote-server
-# Useful for testing webhooks — the remote server can now reach your local service
+# The remote server can now reach your local service at localhost:8080
+```
 
-# ─── DYNAMIC SOCKS PROXY (-D): route all traffic through SSH ─────────────────
+#### Dynamic SOCKS proxy (-D) — route arbitrary traffic through SSH
+
+Creates a SOCKS5 proxy that tunnels any TCP connection through the SSH host. Configure your browser or CLI tools to use `localhost:1080` as a SOCKS5 proxy.
+
+```bash
 ssh -D 1080 bastion-server -N &
 # Creates a SOCKS5 proxy on localhost:1080
-# Configure your browser or tools to use SOCKS5 proxy at localhost:1080
+```
 
-# ─── WITH SSH CONFIG (cleaner approach) ──────────────────────────────────────
+#### SSH config tunnel entries — declare tunnels declaratively
+
+Instead of remembering `-L` flags, define tunnels in `~/.ssh/config` and start them with a single command. Multiple `LocalForward` directives can forward several ports at once.
+
+```bash
 # Add to ~/.ssh/config:
 Host sql-tunnel
     HostName bastion.example.com
@@ -1076,13 +1243,18 @@ Host sql-tunnel
 # Then:
 ssh sql-tunnel -N &    # start the tunnel
 sqlcmd -S localhost,1433 ...
+```
 
-# ─── GCP IAP TUNNEL (preferred for GCP VMs — no public IP required) ──────────
+#### GCP IAP tunnel — reach private VMs without a public IP
+
+IAP tunneling authenticates via your Google identity and does not require the VM to have an external IP. Preferred over traditional bastion hosts in GCP environments.
+
+```bash
 gcloud compute start-iap-tunnel data-pipeline-sql 22 --local-host-port=localhost:2222 \
     --zone=europe-west1-b &
 ssh -p 2222 user@localhost
 
-# Or via SSH config ProxyCommand (see section 5.1):
+# Or via SSH config ProxyCommand (see Extended SSH Config Patterns above):
 ssh data-pipeline-sql    # IAP tunnel is transparent
 
 # For SQL Server (port 1433) via IAP:
@@ -1117,8 +1289,11 @@ type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh user@server "cat >> ~/.ssh/autho
 
 ### Pipeline Scheduling with Cron — Production Patterns
 
+#### Complete production crontab example — /etc/cron.d layout
+
+A real-world `/etc/cron.d/data-pipeline` file combining environment variables, `flock` overlap prevention, log redirection, and jobs at multiple cadences. Every entry uses the system crontab format (includes the `user` field).
+
 ```bash
-# ─── COMPLETE PRODUCTION CRONTAB EXAMPLE ────────────────────────────────────
 # /etc/cron.d/data-pipeline
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/pipeline/.local/bin
@@ -1151,15 +1326,26 @@ TZ=UTC
 
 ### Running Python Pipelines via Cron
 
+#### Recommended pattern — virtualenv Python with flock and date-stamped logs
+
+Always invoke the virtualenv Python binary directly (not `python3` from PATH). Combine with `flock` for overlap prevention and date-stamped log files for easy debugging.
+
+> [!warning] Percent signs must be escaped in crontab
+>
+> Cron interprets `%` as a newline. Use `\%` for date formatting inside crontab entries (e.g., `\%Y-\%m-\%d`). This does not apply inside wrapper scripts.
+
 ```bash
-# ─── RECOMMENDED PATTERN: virtualenv python + flock + logging ────────────────
 # In crontab or /etc/cron.d/pipeline:
 0 3 * * * pipeline flock -n /tmp/etl.lock \
     /home/pipeline/venv/bin/python /home/pipeline/etl/run.py \
     >> /var/log/pipeline/etl-$(date +\%Y-\%m-\%d).log 2>&1
-# Note: \%Y etc. — percent signs must be escaped in crontab with backslash
+```
 
-# ─── WRAPPER SCRIPT PATTERN (keeps crontab simple) ──────────────────────────
+#### Wrapper script pattern — keeps crontab clean and adds alerting
+
+Move all logic into a bash wrapper so the crontab entry stays on one line. The wrapper handles logging, exit code capture, and failure alerting.
+
+```bash
 # /home/pipeline/scripts/run_etl_wrapper.sh:
 #!/bin/bash
 set -euo pipefail
@@ -1175,7 +1361,10 @@ mkdir -p "$LOG_DIR"
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"
 }
+```
 
+```bash
+# Continuation of run_etl_wrapper.sh — execution and alerting:
 log "Starting ETL pipeline"
 "$VENV_PYTHON" "$ETL_SCRIPT" 2>&1 | tee -a "$LOG_FILE"
 EXIT_CODE=${PIPESTATUS[0]}
@@ -1189,8 +1378,11 @@ else
 fi
 
 exit $EXIT_CODE
+```
 
-# Crontab entry (clean and readable):
+The crontab entry becomes a single readable line:
+
+```bash
 0 3 * * * pipeline flock -n /tmp/etl.lock /home/pipeline/scripts/run_etl_wrapper.sh
 ```
 
@@ -1318,18 +1510,38 @@ Use this decision table to select the right scheduler for a given task:
 
 #### Cron vs Airflow vs Cloud Scheduler — decision flowchart
 
-```
-Is the task a single command or script on one Linux machine?
-├── Yes → Is it a recurring job?
-│   ├── Yes → Does it need dependency-awareness or structured logging?
-│   │   ├── Yes → Use systemd timer
-│   │   └── No  → Use cron
-│   └── No  → Use at
-└── No  → Does it involve multiple steps with dependencies?
-    ├── Yes → Use Airflow (or Cloud Composer on GCP)
-    └── No  → Does it trigger a cloud API / HTTP endpoint?
-        ├── Yes → Use GCP Cloud Scheduler
-        └── No  → Consider Airflow for orchestration
+```mermaid
+flowchart TD
+    Q1{Single command on one Linux machine?}
+    Q2{Recurring job?}
+    Q3{Needs dependency-awareness or structured logging?}
+    Q4{Multiple steps with dependencies?}
+    Q5{Triggers a cloud API or HTTP endpoint?}
+
+    A1([cron])
+    A2([systemd timer])
+    A3([at])
+    A4([Airflow / Cloud Composer])
+    A5([GCP Cloud Scheduler])
+    A6([Airflow for orchestration])
+
+    Q1 -->|Yes| Q2
+    Q1 -->|No| Q4
+    Q2 -->|Yes| Q3
+    Q2 -->|No| A3
+    Q3 -->|Yes| A2
+    Q3 -->|No| A1
+    Q4 -->|Yes| A4
+    Q4 -->|No| Q5
+    Q5 -->|Yes| A5
+    Q5 -->|No| A6
+
+    style A1 fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style A2 fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style A3 fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style A4 fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style A5 fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style A6 fill:#1a1a2e,stroke:#7aa2f7,color:#fff
 ```
 
 > [!info] GCP Cloud Scheduler

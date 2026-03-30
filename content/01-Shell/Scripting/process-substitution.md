@@ -16,8 +16,8 @@ status: complete
 These features let you treat command output as files and embed multi-line strings directly in your scripts. They eliminate temporary files and make complex data pipeline scripts significantly cleaner.
 
 > [!quote]
-> "Simplicity is a great virtue but it requires hard work to achieve it and education to appreciate it."
-> — **Edsger Dijkstra**
+> "Expect the output of every program to become the input to another, as yet unknown, program. Don't clutter output with extraneous information. Don't insist on interactive input."
+> — **Doug McIlroy**
 
 ## Process Substitution
 

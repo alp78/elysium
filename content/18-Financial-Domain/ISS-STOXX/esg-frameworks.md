@@ -26,6 +26,10 @@ date: 2026-03-28
 
 ## B
 
+> [!quote]
+> "You cannot manage what you do not measure."
+> — **Peter Drucker**
+
 ### CDP (Carbon Disclosure Project)
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="217 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 217</span>
@@ -36,9 +40,9 @@ date: 2026-03-28
 CDP matters because it provides one of the largest standardized datasets on corporate environmental performance. ISS ESG and STOXX index methodologies frequently reference CDP scores and disclosure status when screening companies for climate-related risks and inclusion in sustainability indices. Investors use CDP data to compare how transparently companies report emissions and resource use.
 
 > [!tip] Related terms
-> - [[#GHG Protocol]] — the emissions accounting methodology most CDP responses rely on
-> - [[#Task Force on Climate-related Financial Disclosures (TCFD)]] — CDP has aligned its questionnaire with TCFD recommendations
-> - [[#Science Based Targets Initiative (SBTi)]] — CDP tracks which respondents have committed to science-based targets
+> - [GHG Protocol](#ghg-protocol) — the emissions accounting methodology most CDP responses rely on
+> - [Task Force on Climate-related Financial Disclosures (TCFD)](#task-force-on-climate-related-financial-disclosures-tcfd) — CDP has aligned its questionnaire with TCFD recommendations
+> - [Science Based Targets Initiative (SBTi)](#science-based-targets-initiative-sbti) — CDP tracks which respondents have committed to science-based targets
 
 > [!example]- Source excerpts (5)
 >
@@ -88,10 +92,10 @@ CDP matters because it provides one of the largest standardized datasets on corp
 The Convention on Cluster Munitions is one of the key treaties referenced in controversial weapons screening across the ESG industry. ISS ESG identifies companies involved in the production of cluster munitions or key components, and STOXX ESG indices systematically exclude these companies. Cluster munitions screening is mandated or recommended by numerous national regulations — notably Belgian and Norwegian law — and is standard practice in responsible investment frameworks. Involvement in cluster munitions is considered one of the most severe norms violations in ESG assessment.
 
 > [!tip] Related terms
-> - [[#Biological Weapons Convention (BWC)]] — another treaty used in controversial weapons screening
-> - [[#Chemical Weapons Convention (CWC)]] — bans chemical weapons
-> - [[#Ottawa Treaty (Mine Ban Convention)]] — bans anti-personnel landmines
-> - [[#Good Governance]] — weapons convention compliance feeds into minimum social safeguard assessments
+> - [Biological Weapons Convention (BWC)](#biological-weapons-convention-bwc) — another treaty used in controversial weapons screening
+> - [Chemical Weapons Convention (CWC)](#chemical-weapons-convention-cwc) — bans chemical weapons
+> - [Ottawa Treaty (Mine Ban Convention)](#ottawa-treaty-mine-ban-convention) — bans anti-personnel landmines
+> - [Good Governance](#good-governance) — weapons convention compliance feeds into minimum social safeguard assessments
 
 > [!example]- Source excerpts (1)
 >
@@ -105,6 +109,10 @@ The Convention on Cluster Munitions is one of the key treaties referenced in con
 
 ---
 
+> [!quote]
+> "Transparency is the currency of trust in the age of sustainability."
+> — **Christine Lagarde**
+
 ### CSRD (Corporate Sustainability Reporting Directive)
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="10 mentions across STOXX & ISS pages (low)">▰▰ 10</span>
@@ -115,10 +123,10 @@ The Convention on Cluster Munitions is one of the key treaties referenced in con
 The CSRD is a watershed regulation for ESG investing in Europe. It requires companies to apply the principle of double materiality — reporting on how sustainability issues affect the business and how the business affects people and the environment. For STOXX index users and ISS clients, the CSRD means a significant increase in the volume and comparability of corporate sustainability data available for analysis, screening, and index construction.
 
 > [!tip] Related terms
-> - [[#ESRS (European Sustainability Reporting Standards)]] — the disclosure standards mandated under CSRD
-> - [[#NFRD (Non-Financial Reporting Directive)]] — the predecessor directive CSRD replaces
-> - [[#Double Materiality]] — the core reporting principle embedded in CSRD
-> - [[#EU Taxonomy]] — CSRD requires taxonomy-aligned revenue disclosures
+> - [ESRS (European Sustainability Reporting Standards)](#esrs-european-sustainability-reporting-standards) — the disclosure standards mandated under CSRD
+> - [NFRD (Non-Financial Reporting Directive)](#nfrd-non-financial-reporting-directive) — the predecessor directive CSRD replaces
+> - [Double Materiality](#double-materiality) — the core reporting principle embedded in CSRD
+> - [EU Taxonomy](#eu-taxonomy) — CSRD requires taxonomy-aligned revenue disclosures
 
 > [!example]- Source excerpts (5)
 >
@@ -172,9 +180,9 @@ The CSRD is a watershed regulation for ESG investing in Europe. It requires comp
 DNSH acts as a safeguard within the EU Taxonomy — an activity cannot be labeled "green" simply because it contributes to one environmental goal while damaging another. For investors using STOXX ESG indices or ISS ESG data, DNSH compliance is a critical filter when assessing whether a company's revenue truly qualifies as taxonomy-aligned. Failing DNSH on any single objective disqualifies the activity.
 
 > [!tip] Related terms
-> - [[#EU Taxonomy]] — the regulation in which DNSH is a core requirement
-> - [[#Good Governance]] — the social safeguard that complements DNSH on the environmental side
-> - [[#European ESG Template (EET)]] — the data exchange template that captures DNSH assessments
+> - [EU Taxonomy](#eu-taxonomy) — the regulation in which DNSH is a core requirement
+> - [Good Governance](#good-governance) — the social safeguard that complements DNSH on the environmental side
+> - [European ESG Template (EET)](#european-esg-template-eet) — the data exchange template that captures DNSH assessments
 
 > [!example]- Source excerpts (4)
 >
@@ -209,6 +217,10 @@ DNSH acts as a safeguard within the EU Taxonomy — an activity cannot be labele
 
 ---
 
+> [!quote]
+> "Climate change is simultaneously a physical risk and a transition risk."
+> — **Mark Carney**
+
 ### Double Materiality
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
@@ -219,10 +231,10 @@ DNSH acts as a safeguard within the EU Taxonomy — an activity cannot be labele
 Double materiality distinguishes European ESG disclosure from frameworks like ISSB/SASB that focus primarily on financial materiality (enterprise value). For investors relying on ISS ESG ratings or STOXX sustainability indices, double materiality means that European companies will disclose a broader set of sustainability impacts — even those that may not yet have a clear financial consequence — providing a richer dataset for ESG analysis.
 
 > [!tip] Related terms
-> - [[#CSRD (Corporate Sustainability Reporting Directive)]] — the directive that mandates double materiality
-> - [[#ESRS (European Sustainability Reporting Standards)]] — the standards that implement the double materiality assessment
-> - [[#International Sustainability Standards Board (ISSB)]] — uses a single (financial) materiality lens, contrasting with double materiality
-> - [[#SASB (Sustainability Accounting Standards Board)]] — also focused on financial materiality
+> - [CSRD (Corporate Sustainability Reporting Directive)](#csrd-corporate-sustainability-reporting-directive) — the directive that mandates double materiality
+> - [ESRS (European Sustainability Reporting Standards)](#esrs-european-sustainability-reporting-standards) — the standards that implement the double materiality assessment
+> - [International Sustainability Standards Board (ISSB)](#international-sustainability-standards-board-issb) — uses a single (financial) materiality lens, contrasting with double materiality
+> - [SASB (Sustainability Accounting Standards Board)](#sasb-sustainability-accounting-standards-board) — also focused on financial materiality
 
 > [!example]- Source excerpts (5)
 >
@@ -276,10 +288,10 @@ Double materiality distinguishes European ESG disclosure from frameworks like IS
 The Equator Principles matter because they represent the financial industry's primary self-regulatory framework for managing environmental and social risks in large infrastructure and industrial projects. Over 130 financial institutions in 38 countries have adopted them, covering the majority of international project finance. ISS ESG assesses banks and financial institutions on their adherence to the Equator Principles as part of governance and sustainability evaluations. For STOXX financial-sector ESG indices, adoption of the Equator Principles is a positive indicator of a bank's environmental and social risk management maturity.
 
 > [!tip] Related terms
-> - [[#UN Guiding Principles on Business and Human Rights]] — the UNGPs inform the Equator Principles' human rights due diligence requirements
-> - [[#ILO Conventions]] — referenced in the IFC Performance Standards underlying the Equator Principles
-> - [[#Good Governance]] — Equator Principles adoption signals governance quality in financial institutions
-> - [[#OECD Guidelines for Multinational Enterprises]] — another normative framework referenced alongside the Equator Principles
+> - [UN Guiding Principles on Business and Human Rights](#un-guiding-principles-on-business-and-human-rights) — the UNGPs inform the Equator Principles' human rights due diligence requirements
+> - [ILO Conventions](#ilo-conventions) — referenced in the IFC Performance Standards underlying the Equator Principles
+> - [Good Governance](#good-governance) — Equator Principles adoption signals governance quality in financial institutions
+> - [OECD Guidelines for Multinational Enterprises](#oecd-guidelines-for-multinational-enterprises) — another normative framework referenced alongside the Equator Principles
 
 > [!example]- Source excerpts (5)
 >
@@ -330,10 +342,10 @@ The Equator Principles matter because they represent the financial industry's pr
 ESRS standardizes sustainability reporting across the EU in a way that earlier voluntary frameworks could not. For ISS and STOXX, ESRS disclosures will become a primary source of structured ESG data for European companies, improving comparability and reducing reliance on estimated data points. Index providers can leverage ESRS-mandated datapoints — such as Scope 1/2/3 emissions, workforce metrics, and governance structures — for rules-based index construction.
 
 > [!tip] Related terms
-> - [[#CSRD (Corporate Sustainability Reporting Directive)]] — the legislative vehicle that makes ESRS mandatory
-> - [[#Double Materiality]] — the assessment methodology built into ESRS
-> - [[#Global Reporting Initiative (GRI)]] — ESRS was developed with a high degree of interoperability with GRI Standards
-> - [[#International Sustainability Standards Board (ISSB)]] — EFRAG ensured compatibility between ESRS and ISSB standards
+> - [CSRD (Corporate Sustainability Reporting Directive)](#csrd-corporate-sustainability-reporting-directive) — the legislative vehicle that makes ESRS mandatory
+> - [Double Materiality](#double-materiality) — the assessment methodology built into ESRS
+> - [Global Reporting Initiative (GRI)](#global-reporting-initiative-gri) — ESRS was developed with a high degree of interoperability with GRI Standards
+> - [International Sustainability Standards Board (ISSB)](#international-sustainability-standards-board-issb) — EFRAG ensured compatibility between ESRS and ISSB standards
 
 > [!example]- Source excerpts (4)
 >
@@ -366,6 +378,10 @@ ESRS standardizes sustainability reporting across the EU in a way that earlier v
 
 ---
 
+> [!quote]
+> "A common language for sustainability is the foundation of a green financial system."
+> — **Christine Lagarde**
+
 ### EU Taxonomy
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="70 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 70</span>
@@ -376,10 +392,10 @@ ESRS standardizes sustainability reporting across the EU in a way that earlier v
 The EU Taxonomy is foundational to sustainable finance in Europe. STOXX uses taxonomy alignment data to construct green revenue and climate transition indices. ISS ESG provides taxonomy alignment assessments that investors use to meet regulatory disclosure obligations under SFDR. Understanding the difference between "taxonomy-eligible" (the activity is covered by the Taxonomy) and "taxonomy-aligned" (the activity meets all criteria) is essential for interpreting these data points correctly.
 
 > [!tip] Related terms
-> - [[#Do No Significant Harm (DNSH)]] — one of the four conditions for taxonomy alignment
-> - [[#Good Governance]] — the minimum social safeguards requirement under the Taxonomy
-> - [[#CSRD (Corporate Sustainability Reporting Directive)]] — requires companies to report taxonomy-aligned revenue
-> - [[#European ESG Template (EET)]] — captures taxonomy alignment data for fund-level reporting
+> - [Do No Significant Harm (DNSH)](#do-no-significant-harm-dnsh) — one of the four conditions for taxonomy alignment
+> - [Good Governance](#good-governance) — the minimum social safeguards requirement under the Taxonomy
+> - [CSRD (Corporate Sustainability Reporting Directive)](#csrd-corporate-sustainability-reporting-directive) — requires companies to report taxonomy-aligned revenue
+> - [European ESG Template (EET)](#european-esg-template-eet) — captures taxonomy alignment data for fund-level reporting
 
 > [!example]- Source excerpts (5)
 >
@@ -425,9 +441,9 @@ The EU Taxonomy is foundational to sustainable finance in Europe. STOXX uses tax
 EET is the plumbing that makes ESG regulation work in practice for the European fund industry. Without a standardized template, every asset manager would transmit sustainability data in a different format, making it nearly impossible for advisors to match client sustainability preferences to fund characteristics. ISS ESG provides data solutions that feed into EET fields, and STOXX indices are among those whose characteristics are reported via the template.
 
 > [!tip] Related terms
-> - [[#EU Taxonomy]] — EET captures taxonomy-eligible and taxonomy-aligned percentages
-> - [[#Do No Significant Harm (DNSH)]] — DNSH assessment fields are part of the EET
-> - [[#SDGs (Sustainable Development Goals)]] — certain EET fields reference SDG alignment
+> - [EU Taxonomy](#eu-taxonomy) — EET captures taxonomy-eligible and taxonomy-aligned percentages
+> - [Do No Significant Harm (DNSH)](#do-no-significant-harm-dnsh) — DNSH assessment fields are part of the EET
+> - [SDGs (Sustainable Development Goals)](#sdgs-sustainable-development-goals) — certain EET fields reference SDG alignment
 
 > [!example]- Source excerpts (1)
 >
@@ -443,6 +459,10 @@ EET is the plumbing that makes ESG regulation work in practice for the European 
 
 ## G
 
+> [!quote]
+> "What gets measured gets improved."
+> — **Peter Drucker**
+
 ### GHG Protocol
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="24 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 24</span>
@@ -453,10 +473,10 @@ EET is the plumbing that makes ESG regulation work in practice for the European 
 The GHG Protocol's scope classification is the universal language of carbon accounting. Virtually every climate-related index, rating, and regulation — including STOXX climate indices, ISS ESG carbon risk ratings, TCFD disclosures, and the EU Taxonomy — relies on GHG Protocol definitions. When ISS ESG reports a company's carbon intensity or STOXX constructs a Paris-aligned benchmark, the underlying emissions data follows GHG Protocol methodology.
 
 > [!tip] Related terms
-> - [[#CDP (Carbon Disclosure Project)]] — CDP questionnaires require GHG Protocol-based reporting
-> - [[#Task Force on Climate-related Financial Disclosures (TCFD)]] — TCFD metrics reference GHG Protocol scopes
-> - [[#Science Based Targets Initiative (SBTi)]] — targets are set using GHG Protocol scope definitions
-> - [[#Paris Agreement]] — national and corporate Paris-aligned targets use GHG Protocol accounting
+> - [CDP (Carbon Disclosure Project)](#cdp-carbon-disclosure-project) — CDP questionnaires require GHG Protocol-based reporting
+> - [Task Force on Climate-related Financial Disclosures (TCFD)](#task-force-on-climate-related-financial-disclosures-tcfd) — TCFD metrics reference GHG Protocol scopes
+> - [Science Based Targets Initiative (SBTi)](#science-based-targets-initiative-sbti) — targets are set using GHG Protocol scope definitions
+> - [Paris Agreement](#paris-agreement) — national and corporate Paris-aligned targets use GHG Protocol accounting
 
 > [!example]- Source excerpts (5)
 >
@@ -496,6 +516,10 @@ The GHG Protocol's scope classification is the universal language of carbon acco
 
 ---
 
+> [!quote]
+> "Sunlight is said to be the best of disinfectants."
+> — **Louis Brandeis**
+
 ### Global Reporting Initiative (GRI)
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="48 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 48</span>
@@ -506,10 +530,10 @@ The GHG Protocol's scope classification is the universal language of carbon acco
 GRI has been the dominant sustainability reporting framework for over two decades. Many ESG data providers, including ISS ESG, ingest GRI-aligned reports as a primary data source. GRI has also influenced the development of the ESRS, with extensive interoperability between the two frameworks. For investors, a company reporting under GRI typically provides a broader view of its sustainability impacts than one using a purely financially-material framework.
 
 > [!tip] Related terms
-> - [[#ESRS (European Sustainability Reporting Standards)]] — developed with high interoperability with GRI
-> - [[#SASB (Sustainability Accounting Standards Board)]] — differs from GRI in its focus on financial materiality
-> - [[#Double Materiality]] — GRI's impact materiality concept is one pillar of double materiality
-> - [[#SDGs (Sustainable Development Goals)]] — GRI provides guidance on linking disclosures to SDGs
+> - [ESRS (European Sustainability Reporting Standards)](#esrs-european-sustainability-reporting-standards) — developed with high interoperability with GRI
+> - [SASB (Sustainability Accounting Standards Board)](#sasb-sustainability-accounting-standards-board) — differs from GRI in its focus on financial materiality
+> - [Double Materiality](#double-materiality) — GRI's impact materiality concept is one pillar of double materiality
+> - [SDGs (Sustainable Development Goals)](#sdgs-sustainable-development-goals) — GRI provides guidance on linking disclosures to SDGs
 
 > [!example]- Source excerpts (5)
 >
@@ -559,10 +583,10 @@ GRI has been the dominant sustainability reporting framework for over two decade
 Good governance is the social floor beneath the EU Taxonomy's environmental ceiling. Even if an activity passes the substantial contribution test and DNSH criteria, it fails taxonomy alignment if the company does not meet minimum social safeguards. ISS ESG norms-based research and controversy screening directly inform good governance assessments, making ISS data a key input for taxonomy alignment evaluations used by STOXX indices and fund managers.
 
 > [!tip] Related terms
-> - [[#EU Taxonomy]] — good governance is one of the four alignment conditions
-> - [[#UN Guiding Principles on Business and Human Rights]] — one of the referenced normative frameworks
-> - [[#UN Global Compact]] — UNGC violations are often used as a proxy for good governance failures
-> - [[#Do No Significant Harm (DNSH)]] — the environmental counterpart to social safeguards
+> - [EU Taxonomy](#eu-taxonomy) — good governance is one of the four alignment conditions
+> - [UN Guiding Principles on Business and Human Rights](#un-guiding-principles-on-business-and-human-rights) — one of the referenced normative frameworks
+> - [UN Global Compact](#un-global-compact) — UNGC violations are often used as a proxy for good governance failures
+> - [Do No Significant Harm (DNSH)](#do-no-significant-harm-dnsh) — the environmental counterpart to social safeguards
 
 > [!example]- Source excerpts (5)
 >
@@ -603,6 +627,10 @@ Good governance is the social floor beneath the EU Taxonomy's environmental ceil
 
 ## I
 
+> [!quote]
+> "Labor is not a commodity."
+> — **Declaration of Philadelphia**
+
 ### ILO Conventions
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
@@ -613,10 +641,10 @@ Good governance is the social floor beneath the EU Taxonomy's environmental ceil
 ILO Conventions are foundational to the social dimension of ESG analysis. ISS ESG norms-based research evaluates companies against ILO core labour standards, and violations trigger flags that can lead to exclusion from STOXX ESG indices. The ILO's fundamental conventions are explicitly referenced in the EU Taxonomy's minimum social safeguards, the UN Global Compact's labour principles, and the OECD Guidelines for Multinational Enterprises. For investors, ILO Convention compliance is a baseline expectation for responsible corporate behaviour on labour rights.
 
 > [!tip] Related terms
-> - [[#Good Governance]] — ILO core labour standards are part of the EU Taxonomy's minimum social safeguards
-> - [[#UN Global Compact]] — UNGC Principles 3-6 on labour are derived from ILO Conventions
-> - [[#UN Guiding Principles on Business and Human Rights]] — UNGPs reference ILO standards in the context of human rights due diligence
-> - [[#OECD Guidelines for Multinational Enterprises]] — OECD Guidelines incorporate ILO labour standards
+> - [Good Governance](#good-governance) — ILO core labour standards are part of the EU Taxonomy's minimum social safeguards
+> - [UN Global Compact](#un-global-compact) — UNGC Principles 3-6 on labour are derived from ILO Conventions
+> - [UN Guiding Principles on Business and Human Rights](#un-guiding-principles-on-business-and-human-rights) — UNGPs reference ILO standards in the context of human rights due diligence
+> - [OECD Guidelines for Multinational Enterprises](#oecd-guidelines-for-multinational-enterprises) — OECD Guidelines incorporate ILO labour standards
 
 > [!example]- Source excerpts (5)
 >
@@ -663,10 +691,10 @@ ILO Conventions are foundational to the social dimension of ESG analysis. ISS ES
 The ISSB represents the push toward a single global baseline for sustainability disclosure oriented around enterprise value. It contrasts with the EU's double materiality approach under ESRS. For ISS and STOXX, ISSB standards create a globally consistent layer of climate and sustainability data that can be used alongside regional requirements. As jurisdictions adopt ISSB standards, the availability of comparable ESG data for index construction and screening will increase significantly.
 
 > [!tip] Related terms
-> - [[#SASB (Sustainability Accounting Standards Board)]] — SASB standards were consolidated into the ISSB
-> - [[#Task Force on Climate-related Financial Disclosures (TCFD)]] — IFRS S2 incorporates TCFD recommendations
-> - [[#ESRS (European Sustainability Reporting Standards)]] — the EU equivalent, with interoperability provisions
-> - [[#Double Materiality]] — ISSB uses financial materiality, while ESRS uses double materiality
+> - [SASB (Sustainability Accounting Standards Board)](#sasb-sustainability-accounting-standards-board) — SASB standards were consolidated into the ISSB
+> - [Task Force on Climate-related Financial Disclosures (TCFD)](#task-force-on-climate-related-financial-disclosures-tcfd) — IFRS S2 incorporates TCFD recommendations
+> - [ESRS (European Sustainability Reporting Standards)](#esrs-european-sustainability-reporting-standards) — the EU equivalent, with interoperability provisions
+> - [Double Materiality](#double-materiality) — ISSB uses financial materiality, while ESRS uses double materiality
 
 > [!example]- Source excerpts (4)
 >
@@ -713,9 +741,9 @@ The ISSB represents the push toward a single global baseline for sustainability 
 The NFRD was the EU's first mandatory sustainability reporting requirement, but its flexibility was both a strength and a weakness. The lack of standardized reporting templates made it difficult for ESG data providers like ISS to extract consistent, comparable data. The CSRD was introduced specifically to address these shortcomings, expanding scope to roughly 50,000 companies and mandating the use of ESRS. Understanding the NFRD provides context for why the CSRD represents such a significant regulatory leap.
 
 > [!tip] Related terms
-> - [[#CSRD (Corporate Sustainability Reporting Directive)]] — the successor to NFRD
-> - [[#ESRS (European Sustainability Reporting Standards)]] — the standardized reporting format NFRD lacked
-> - [[#Double Materiality]] — not explicitly required under NFRD but central to CSRD
+> - [CSRD (Corporate Sustainability Reporting Directive)](#csrd-corporate-sustainability-reporting-directive) — the successor to NFRD
+> - [ESRS (European Sustainability Reporting Standards)](#esrs-european-sustainability-reporting-standards) — the standardized reporting format NFRD lacked
+> - [Double Materiality](#double-materiality) — not explicitly required under NFRD but central to CSRD
 
 > [!example]- Source excerpts (1)
 >
@@ -741,10 +769,10 @@ The NFRD was the EU's first mandatory sustainability reporting requirement, but 
 The OECD Guidelines are a foundational normative framework in ESG investing. ISS ESG norms-based research explicitly assesses company conduct against the OECD Guidelines, and violations can trigger exclusion or underweighting in STOXX ESG indices. The Guidelines are one of the four normative references in the EU Taxonomy's minimum social safeguards (Article 18), alongside the UNGPs, the ILO Core Labour Standards, and the International Bill of Human Rights. For investors, OECD Guidelines compliance provides a comprehensive baseline for evaluating responsible corporate conduct across all ESG dimensions.
 
 > [!tip] Related terms
-> - [[#Good Governance]] — OECD Guidelines are explicitly referenced in EU Taxonomy minimum safeguards
-> - [[#UN Guiding Principles on Business and Human Rights]] — the UNGPs and OECD Guidelines are complementary normative frameworks
-> - [[#UN Global Compact]] — UNGC principles overlap significantly with OECD Guidelines themes
-> - [[#ILO Conventions]] — the OECD Guidelines' employment chapter references ILO standards
+> - [Good Governance](#good-governance) — OECD Guidelines are explicitly referenced in EU Taxonomy minimum safeguards
+> - [UN Guiding Principles on Business and Human Rights](#un-guiding-principles-on-business-and-human-rights) — the UNGPs and OECD Guidelines are complementary normative frameworks
+> - [UN Global Compact](#un-global-compact) — UNGC principles overlap significantly with OECD Guidelines themes
+> - [ILO Conventions](#ilo-conventions) — the OECD Guidelines' employment chapter references ILO standards
 
 > [!example]- Source excerpts (5)
 >
@@ -785,6 +813,10 @@ The OECD Guidelines are a foundational normative framework in ESG investing. ISS
 
 ---
 
+> [!quote]
+> "We are the first generation to feel the impact of climate change and the last generation that can do something about it."
+> — **Barack Obama**
+
 ### Paris Agreement
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="145 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 145</span>
@@ -795,10 +827,10 @@ The OECD Guidelines are a foundational normative framework in ESG investing. ISS
 The Paris Agreement is the single most referenced climate target in financial regulation and index methodology. STOXX constructs Paris-aligned benchmarks (PABs) and climate transition benchmarks (CTBs) under the EU Benchmark Regulation, both of which derive their decarbonization trajectories from Paris temperature goals. ISS ESG climate solutions provide company-level Paris alignment assessments. An investor's portfolio "alignment with Paris" has become a central metric in climate-aware investing.
 
 > [!tip] Related terms
-> - [[#Science Based Targets Initiative (SBTi)]] — SBTi validates corporate targets against Paris-aligned pathways
-> - [[#GHG Protocol]] — emissions accounting underpinning Paris-aligned analysis
-> - [[#Task Force on Climate-related Financial Disclosures (TCFD)]] — TCFD scenario analysis often uses Paris-derived temperature scenarios
-> - [[#EU Taxonomy]] — the Taxonomy's climate mitigation objective is grounded in Paris Agreement goals
+> - [Science Based Targets Initiative (SBTi)](#science-based-targets-initiative-sbti) — SBTi validates corporate targets against Paris-aligned pathways
+> - [GHG Protocol](#ghg-protocol) — emissions accounting underpinning Paris-aligned analysis
+> - [Task Force on Climate-related Financial Disclosures (TCFD)](#task-force-on-climate-related-financial-disclosures-tcfd) — TCFD scenario analysis often uses Paris-derived temperature scenarios
+> - [EU Taxonomy](#eu-taxonomy) — the Taxonomy's climate mitigation objective is grounded in Paris Agreement goals
 
 > [!example]- Source excerpts (5)
 >
@@ -838,6 +870,10 @@ The Paris Agreement is the single most referenced climate target in financial re
 
 ---
 
+> [!quote]
+> "The six Principles were born from the conviction that ESG issues can affect portfolio performance."
+> — **Kofi Annan**
+
 ### PRI (Principles for Responsible Investment)
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="98 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 98</span>
@@ -848,9 +884,9 @@ The Paris Agreement is the single most referenced climate target in financial re
 PRI is the largest global coalition of institutional investors committed to ESG integration, with over 5,000 signatories managing more than USD 120 trillion in assets. ISS ESG data and STOXX ESG indices are widely used by PRI signatories to fulfill their commitments under Principles 1 (ESG integration) and 2 (active ownership). PRI reporting requirements have also driven demand for more granular ESG data from providers like ISS.
 
 > [!tip] Related terms
-> - [[#Stewardship Code]] — national stewardship codes often complement PRI commitments
-> - [[#UN Global Compact]] — another UN initiative frequently referenced alongside PRI
-> - [[#SDGs (Sustainable Development Goals)]] — PRI encourages signatories to consider SDG alignment
+> - [Stewardship Code](#stewardship-code) — national stewardship codes often complement PRI commitments
+> - [UN Global Compact](#un-global-compact) — another UN initiative frequently referenced alongside PRI
+> - [SDGs (Sustainable Development Goals)](#sdgs-sustainable-development-goals) — PRI encourages signatories to consider SDG alignment
 
 > [!example]- Source excerpts (5)
 >
@@ -902,10 +938,10 @@ PRI is the largest global coalition of institutional investors committed to ESG 
 SASB's industry-specific approach is its distinguishing feature — rather than a one-size-fits-all checklist, it identifies the 3-8 ESG topics most financially relevant to each industry. ISS ESG research often maps to SASB-identified material topics, and STOXX ESG index methodologies may weight factors aligned with SASB's industry materiality maps. Now folded into the ISSB, SASB standards continue to be referenced as the industry-level layer beneath the broader IFRS S1 and S2 standards.
 
 > [!tip] Related terms
-> - [[#International Sustainability Standards Board (ISSB)]] — the body that now houses SASB standards
-> - [[#Global Reporting Initiative (GRI)]] — GRI takes a broader stakeholder materiality approach compared to SASB
-> - [[#Double Materiality]] — SASB uses single (financial) materiality
-> - [[#ESRS (European Sustainability Reporting Standards)]] — covers a broader scope but references SASB-style industry specificity
+> - [International Sustainability Standards Board (ISSB)](#international-sustainability-standards-board-issb) — the body that now houses SASB standards
+> - [Global Reporting Initiative (GRI)](#global-reporting-initiative-gri) — GRI takes a broader stakeholder materiality approach compared to SASB
+> - [Double Materiality](#double-materiality) — SASB uses single (financial) materiality
+> - [ESRS (European Sustainability Reporting Standards)](#esrs-european-sustainability-reporting-standards) — covers a broader scope but references SASB-style industry specificity
 
 > [!example]- Source excerpts (5)
 >
@@ -947,6 +983,10 @@ SASB's industry-specific approach is its distinguishing feature — rather than 
 
 ---
 
+> [!quote]
+> "Setting targets is the first step in turning the invisible into the visible."
+> — **Tony Robbins**
+
 ### Science Based Targets Initiative (SBTi)
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
@@ -957,10 +997,10 @@ SASB's industry-specific approach is its distinguishing feature — rather than 
 SBTi has become the gold standard for validating whether a company's climate commitments are credible. ISS ESG climate data includes whether companies have SBTi-validated targets, and STOXX climate indices may screen for or overweight companies with approved science-based targets. Having an SBTi-validated target signals to investors that a company's decarbonization trajectory is consistent with Paris Agreement goals, not merely aspirational.
 
 > [!tip] Related terms
-> - [[#Paris Agreement]] — SBTi targets are anchored to Paris temperature goals
-> - [[#GHG Protocol]] — SBTi targets are set using GHG Protocol scope definitions
-> - [[#CDP (Carbon Disclosure Project)]] — SBTi partner; CDP tracks SBTi commitment and validation status
-> - [[#UN Global Compact]] — SBTi partner organization
+> - [Paris Agreement](#paris-agreement) — SBTi targets are anchored to Paris temperature goals
+> - [GHG Protocol](#ghg-protocol) — SBTi targets are set using GHG Protocol scope definitions
+> - [CDP (Carbon Disclosure Project)](#cdp-carbon-disclosure-project) — SBTi partner; CDP tracks SBTi commitment and validation status
+> - [UN Global Compact](#un-global-compact) — SBTi partner organization
 
 > [!example]- Source excerpts (5)
 >
@@ -1000,6 +1040,10 @@ SBTi has become the gold standard for validating whether a company's climate com
 
 ---
 
+> [!quote]
+> "Saving our planet is now a communications challenge."
+> — **David Attenborough**
+
 ### SDGs (Sustainable Development Goals)
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="426 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 426</span>
@@ -1010,10 +1054,10 @@ SBTi has become the gold standard for validating whether a company's climate com
 SDGs provide a universal language for linking investment activities to real-world outcomes. ISS ESG offers SDG impact ratings and SDG Solutions assessments that map company products and services to SDG contributions and obstructions. STOXX constructs SDG-aligned indices that include or overweight companies demonstrating positive SDG contributions. For impact-oriented investors, SDG mapping provides a tangible way to articulate the societal purpose of a portfolio.
 
 > [!tip] Related terms
-> - [[#PRI (Principles for Responsible Investment)]] — PRI encourages SDG alignment in investment strategies
-> - [[#Global Reporting Initiative (GRI)]] — GRI provides guidance on linking disclosures to SDGs
-> - [[#EU Taxonomy]] — many taxonomy-aligned activities correspond to specific SDGs
-> - [[#European ESG Template (EET)]] — certain fields reference SDG-aligned investments
+> - [PRI (Principles for Responsible Investment)](#pri-principles-for-responsible-investment) — PRI encourages SDG alignment in investment strategies
+> - [Global Reporting Initiative (GRI)](#global-reporting-initiative-gri) — GRI provides guidance on linking disclosures to SDGs
+> - [EU Taxonomy](#eu-taxonomy) — many taxonomy-aligned activities correspond to specific SDGs
+> - [European ESG Template (EET)](#european-esg-template-eet) — certain fields reference SDG-aligned investments
 
 > [!example]- Source excerpts (5)
 >
@@ -1059,9 +1103,9 @@ SDGs provide a universal language for linking investment activities to real-worl
 SRD II is directly relevant to ISS's proxy advisory business. As a proxy advisor, ISS must disclose its methodology, conflicts of interest, and how it applies codes of conduct — all requirements under SRD II. For STOXX governance indices and ISS Governance QualityScore, SRD II's emphasis on say-on-pay and board accountability provides a regulatory foundation for the governance metrics that feed into ESG scoring and index construction.
 
 > [!tip] Related terms
-> - [[#Stewardship Code]] — national stewardship codes complement SRD II engagement requirements
-> - [[#Good Governance]] — SRD II reinforces governance standards used in taxonomy assessments
-> - [[#PRI (Principles for Responsible Investment)]] — PRI Principle 2 (active ownership) aligns with SRD II goals
+> - [Stewardship Code](#stewardship-code) — national stewardship codes complement SRD II engagement requirements
+> - [Good Governance](#good-governance) — SRD II reinforces governance standards used in taxonomy assessments
+> - [PRI (Principles for Responsible Investment)](#pri-principles-for-responsible-investment) — PRI Principle 2 (active ownership) aligns with SRD II goals
 
 > [!example]- Source excerpts (5)
 >
@@ -1099,6 +1143,10 @@ SRD II is directly relevant to ISS's proxy advisory business. As a proxy advisor
 
 ---
 
+> [!quote]
+> "With ownership comes responsibility."
+> — **Kofi Annan**
+
 ### Stewardship Code
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="33 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 33</span>
@@ -1109,9 +1157,9 @@ SRD II is directly relevant to ISS's proxy advisory business. As a proxy advisor
 Stewardship codes complement regulatory requirements like SRD II by encouraging investors to be active, informed owners rather than passive holders. ISS's stewardship and proxy voting services help institutional investors meet stewardship code expectations, particularly around voting and engagement. STOXX governance indices reward companies that respond positively to stewardship engagement, such as improved board independence or enhanced ESG disclosures.
 
 > [!tip] Related terms
-> - [[#SRD II (Shareholder Rights Directive II)]] — the EU regulatory counterpart to voluntary stewardship codes
-> - [[#PRI (Principles for Responsible Investment)]] — PRI signatories often reference stewardship codes
-> - [[#Good Governance]] — stewardship expectations reinforce good governance standards
+> - [SRD II (Shareholder Rights Directive II)](#srd-ii-shareholder-rights-directive-ii) — the EU regulatory counterpart to voluntary stewardship codes
+> - [PRI (Principles for Responsible Investment)](#pri-principles-for-responsible-investment) — PRI signatories often reference stewardship codes
+> - [Good Governance](#good-governance) — stewardship expectations reinforce good governance standards
 
 > [!example]- Source excerpts (5)
 >
@@ -1163,11 +1211,11 @@ Stewardship codes complement regulatory requirements like SRD II by encouraging 
 TCFD transformed climate disclosure from a niche ESG exercise into a mainstream financial risk communication. Its four-pillar framework is embedded in regulations worldwide, including the EU's CSRD, the UK's mandatory climate disclosure rules, and the ISSB's IFRS S2 standard. ISS ESG climate assessments are structured around TCFD pillars, and STOXX climate indices rely on TCFD-aligned data — particularly scenario analysis and forward-looking metrics — to construct benchmarks. Even though the TCFD itself has concluded its work, its framework remains the de facto architecture for climate disclosure.
 
 > [!tip] Related terms
-> - [[#International Sustainability Standards Board (ISSB)]] — ISSB's IFRS S2 fully incorporates TCFD recommendations
-> - [[#GHG Protocol]] — TCFD metrics rely on GHG Protocol scope definitions
-> - [[#Paris Agreement]] — TCFD scenario analysis typically uses Paris-aligned temperature pathways
-> - [[#CDP (Carbon Disclosure Project)]] — CDP aligned its climate questionnaire with TCFD
-> - [[#CSRD (Corporate Sustainability Reporting Directive)]] — ESRS climate standards (E1) build on TCFD
+> - [International Sustainability Standards Board (ISSB)](#international-sustainability-standards-board-issb) — ISSB's IFRS S2 fully incorporates TCFD recommendations
+> - [GHG Protocol](#ghg-protocol) — TCFD metrics rely on GHG Protocol scope definitions
+> - [Paris Agreement](#paris-agreement) — TCFD scenario analysis typically uses Paris-aligned temperature pathways
+> - [CDP (Carbon Disclosure Project)](#cdp-carbon-disclosure-project) — CDP aligned its climate questionnaire with TCFD
+> - [CSRD (Corporate Sustainability Reporting Directive)](#csrd-corporate-sustainability-reporting-directive) — ESRS climate standards (E1) build on TCFD
 
 > [!example]- Source excerpts (5)
 >
@@ -1219,10 +1267,10 @@ TCFD transformed climate disclosure from a niche ESG exercise into a mainstream 
 TNFD extends the climate disclosure paradigm to the broader biodiversity and nature crisis. As regulators and investors recognize that nature loss poses systemic financial risks alongside climate change, TNFD-aligned data is becoming increasingly important. ISS ESG is developing nature-related data capabilities, and STOXX has begun exploring biodiversity-related index concepts. For investors, TNFD provides a structured way to assess portfolio exposure to risks such as deforestation, water scarcity, and ecosystem degradation.
 
 > [!tip] Related terms
-> - [[#Task Force on Climate-related Financial Disclosures (TCFD)]] — TNFD mirrors TCFD's four-pillar architecture
-> - [[#EU Taxonomy]] — the Taxonomy's biodiversity objective (Objective 6) aligns with TNFD themes
-> - [[#ESRS (European Sustainability Reporting Standards)]] — ESRS E4 (biodiversity and ecosystems) covers TNFD-adjacent topics
-> - [[#SDGs (Sustainable Development Goals)]] — SDGs 14 (life below water) and 15 (life on land) align with TNFD scope
+> - [Task Force on Climate-related Financial Disclosures (TCFD)](#task-force-on-climate-related-financial-disclosures-tcfd) — TNFD mirrors TCFD's four-pillar architecture
+> - [EU Taxonomy](#eu-taxonomy) — the Taxonomy's biodiversity objective (Objective 6) aligns with TNFD themes
+> - [ESRS (European Sustainability Reporting Standards)](#esrs-european-sustainability-reporting-standards) — ESRS E4 (biodiversity and ecosystems) covers TNFD-adjacent topics
+> - [SDGs (Sustainable Development Goals)](#sdgs-sustainable-development-goals) — SDGs 14 (life below water) and 15 (life on land) align with TNFD scope
 
 > [!example]- Source excerpts (2)
 >
@@ -1245,6 +1293,10 @@ TNFD extends the climate disclosure paradigm to the broader biodiversity and nat
 
 ## U
 
+> [!quote]
+> "The business of business is no longer just business."
+> — **Kofi Annan**
+
 ### UN Global Compact
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="124 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 124</span>
@@ -1255,10 +1307,10 @@ TNFD extends the climate disclosure paradigm to the broader biodiversity and nat
 UN Global Compact compliance is one of the most widely used norms-based screens in ESG investing. ISS ESG norms-based research explicitly assesses whether companies violate UNGC principles, and this assessment feeds into STOXX ESG indices as an exclusion or underweighting criterion. A UNGC violation flag from ISS ESG can trigger automatic exclusion from sustainability indices and is also relevant to the EU Taxonomy's minimum social safeguards (good governance) requirement.
 
 > [!tip] Related terms
-> - [[#Good Governance]] — UNGC compliance is a key input into EU Taxonomy minimum safeguard assessments
-> - [[#UN Guiding Principles on Business and Human Rights]] — addresses human rights more specifically, complementing UNGC Principles 1-2
-> - [[#PRI (Principles for Responsible Investment)]] — PRI is a sister UN initiative; many signatories also participate in UNGC
-> - [[#Science Based Targets Initiative (SBTi)]] — SBTi is a UNGC partner initiative
+> - [Good Governance](#good-governance) — UNGC compliance is a key input into EU Taxonomy minimum safeguard assessments
+> - [UN Guiding Principles on Business and Human Rights](#un-guiding-principles-on-business-and-human-rights) — addresses human rights more specifically, complementing UNGC Principles 1-2
+> - [PRI (Principles for Responsible Investment)](#pri-principles-for-responsible-investment) — PRI is a sister UN initiative; many signatories also participate in UNGC
+> - [Science Based Targets Initiative (SBTi)](#science-based-targets-initiative-sbti) — SBTi is a UNGC partner initiative
 
 > [!example]- Source excerpts (5)
 >
@@ -1307,10 +1359,10 @@ UN Global Compact compliance is one of the most widely used norms-based screens 
 The UNGPs are foundational to social risk assessment in ESG investing. ISS ESG evaluates companies against UNGP expectations as part of its norms-based research and controversy assessments. Under the EU Taxonomy, adherence to UNGPs is explicitly referenced as a minimum social safeguard. STOXX ESG indices that apply norms-based exclusions typically screen for UNGP violations. For investors, UNGP-aligned due diligence by portfolio companies reduces exposure to litigation, regulatory action, and reputational damage from human rights failures.
 
 > [!tip] Related terms
-> - [[#Good Governance]] — UNGPs are explicitly referenced in EU Taxonomy minimum safeguards (Article 18)
-> - [[#UN Global Compact]] — UNGC Principles 1-2 on human rights are complementary to the UNGPs
-> - [[#CSRD (Corporate Sustainability Reporting Directive)]] — ESRS S1-S4 social standards reference UNGP concepts
-> - [[#SDGs (Sustainable Development Goals)]] — UNGPs contribute to SDGs 8 (decent work) and 16 (peace, justice)
+> - [Good Governance](#good-governance) — UNGPs are explicitly referenced in EU Taxonomy minimum safeguards (Article 18)
+> - [UN Global Compact](#un-global-compact) — UNGC Principles 1-2 on human rights are complementary to the UNGPs
+> - [CSRD (Corporate Sustainability Reporting Directive)](#csrd-corporate-sustainability-reporting-directive) — ESRS S1-S4 social standards reference UNGP concepts
+> - [SDGs (Sustainable Development Goals)](#sdgs-sustainable-development-goals) — UNGPs contribute to SDGs 8 (decent work) and 16 (peace, justice)
 
 > [!example]- Source excerpts (5)
 >

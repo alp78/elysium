@@ -14,8 +14,8 @@ status: complete
 # Datadog Agent Setup — SQL Server VM (systemd on Ubuntu)
 
 > [!quote]
-> "If a machine can perform a desired operation, then a machine often should."
-> — **Niall Richard Murphy**
+> "Without monitoring, you are just guessing. With monitoring, you are making informed decisions."
+> — **Tom Wilkie**, co-creator of Grafana Loki
 
 The SQL VM runs Ubuntu 22.04, so the Datadog Agent is installed as a system package managed by systemd — not Docker. This is the standard Linux installation method and gives the agent access to OS-level metrics, SQL Server integration checks, and file tailing for the errorlog.
 

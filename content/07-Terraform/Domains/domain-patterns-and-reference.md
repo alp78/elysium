@@ -7,7 +7,7 @@ tags:
 
 # Patterns and Reference
 
-Reusable Terraform patterns — conditional resources, dependency management, module composition — plus a cheat sheet and troubleshooting guide.
+Reusable Terraform patterns — conditional resources, dependency management, module composition — plus a troubleshooting guide.
 
 ```mermaid
 mindmap
@@ -15,7 +15,7 @@ mindmap
     (conditional resources)
     (dependencies)
     (module composition)
-    (cheat sheet)
+
     (troubleshooting)
 ```
 
@@ -42,14 +42,6 @@ mindmap
 > - [[terraform-module-composition#Multi-Environment with Modules|Multi-environment with modules]]
 > - [[terraform-module-composition#Environment Promotion Pattern|Environment promotion pattern]]
 > - [[terraform-module-composition#When to Extract a Module|When to extract a module]]
-
-> [!abstract]- [[terraform-cheat-sheet]]
->
-> - [[terraform-cheat-sheet#Core Workflow|Core workflow commands]]
-> - [[terraform-cheat-sheet#State Commands|State commands]]
-> - [[terraform-cheat-sheet#Resource Targeting|Resource targeting]]
-> - [[terraform-cheat-sheet#HCL Functions Reference|HCL functions reference]]
-> - [[terraform-cheat-sheet#Common Patterns|Common patterns]]
 
 > [!abstract]- [[terraform-problems]]
 >

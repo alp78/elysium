@@ -63,7 +63,7 @@ status: complete
 # Airflow Troubleshooting Guide
 
 > [!quote]
-> "You are either building a learning organization or you are losing to a company who is."
+> "'Debugging' isn't an adequate term to describe the various activities in responding to an incident in production. Increasing time pressure and consequences make it fundamentally different."
 > — **John Allspaw**
 >
 > "Automation is the serialization of understanding."
@@ -72,7 +72,7 @@ status: complete
 A reference for diagnosing and fixing the most common Apache Airflow problems encountered in production data engineering. Each issue includes the exact error message or symptom, root cause analysis, and step-by-step resolution. To test your troubleshooting skills against realistic scenarios, work through [airflow-problems](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-problems).
 
 > [!info] Structure
-> Issues are organized by symptom. Use `Ctrl+F` to search for an exact error message. For CLI commands used in debugging, see the [[#CLI Debugging Reference]] section.
+> Issues are organized by symptom. Use `Ctrl+F` to search for an exact error message. For CLI commands used in debugging, see the [CLI Debugging Reference](#cli-debugging-reference) section.
 
 ---
 

@@ -21,6 +21,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+> [!quote]
+> "Biosimilars will do for biologics what generics did for small-molecule drugs."
+> — **Leah Christl**
+
 ## Biosimilars
 
 **Definition:** Biosimilars are biological medical products that are highly similar to an already approved reference biologic drug, with no clinically meaningful differences in terms of safety, purity, or potency. Unlike generic versions of small-molecule drugs, biosimilars cannot be exact copies because biological drugs are made from living organisms and are structurally complex. The development and approval of biosimilars requires extensive comparative analytical, preclinical, and clinical studies to demonstrate similarity to the reference product. Biosimilars offer more affordable alternatives to expensive biologic therapies.
@@ -44,6 +48,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 **Related terms:** [Clinical Trials](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Clinical Trials), [Biosimilars](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Biosimilars), [Out-Licensing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Out-Licensing), [Recombinant Therapies](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Recombinant Therapies)
 
 ---
+
+> [!quote]
+> "Without clinical trials, there can be no better treatments, no prevention strategies, and no cures."
+> — **Janet Woodcock**
 
 ## Clinical Trials
 
@@ -69,6 +77,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+> [!quote]
+> "Generic drugs are one of the greatest success stories in public health."
+> — **Scott Gottlieb**
+
 ## Generic Drugs
 
 **Definition:** Generic drugs are pharmaceutical products that are equivalent to brand-name drugs in dosage form, strength, route of administration, quality, performance, and intended use. They are manufactured and sold after the brand-name drug's patent protection has expired, allowing other manufacturers to produce and sell the same formulation at significantly lower prices. Generic drugs must meet the same regulatory standards as brand-name drugs and undergo abbreviated approval processes to demonstrate bioequivalence. They play a crucial role in making healthcare more affordable and accessible.
@@ -93,6 +105,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+> [!quote]
+> "Intellectual property is the oil of the 21st century."
+> — **Mark Getty**
+
 ## Intellectual Property (IP)
 
 **Definition:** Intellectual property refers to creations of the mind that are legally protected from unauthorized use by others. IP includes patents (protecting inventions), trademarks (protecting brand names and logos), copyrights (protecting creative works), and trade secrets (protecting confidential business information). IP protection incentivizes innovation by granting creators exclusive rights to use and commercialize their inventions and creations for a specified period. In the business world, IP can represent significant value, forming the basis for licensing agreements, royalties, and competitive advantage.
@@ -104,6 +120,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 **Related terms:** [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Patent), [In-Licensing Agreement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#In-Licensing Agreement), [Out-Licensing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Out-Licensing), [Royalties](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Royalties)
 
 ---
+
+> [!quote]
+> "Technology is nothing. What's important is that you have faith in people, that they're basically good and smart, and if you give them tools, they'll do wonderful things with them."
+> — **Steve Jobs**
 
 ## Medical Devices
 
@@ -128,6 +148,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 **Related terms:** [In-Licensing Agreement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#In-Licensing Agreement), [Intellectual Property (IP)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Intellectual Property), [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Patent), [Royalties](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Royalties)
 
 ---
+
+> [!quote]
+> "The patent system added the fuel of interest to the fire of genius."
+> — **Abraham Lincoln**
 
 ## Patent
 
@@ -237,6 +261,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+> [!quote]
+> "Price is what you pay. Value is what you get."
+> — **Warren Buffett**
+
 ## Goodwill
 
 **Definition:** Goodwill is an intangible asset that arises when one company acquires another for more than the fair value of its identifiable net assets. It represents the premium paid for elements such as brand reputation, customer relationships, proprietary technology, employee expertise, and market position that cannot be separately identified and valued. Under accounting standards (IFRS and US GAAP), goodwill must be tested annually for impairment and written down if its carrying value exceeds its recoverable amount. Goodwill is a common item on the balance sheets of companies that grow through acquisitions.
@@ -308,6 +336,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 **Related terms:** [Leasing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Leasing), [Fleet Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Fleet Management)
 
 ---
+
+> [!quote]
+> "Gold is money. Everything else is credit."
+> — **J.P. Morgan**
 
 ## Precious Metals
 

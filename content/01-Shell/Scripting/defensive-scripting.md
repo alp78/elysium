@@ -16,8 +16,11 @@ status: complete
 Every bash script you write for production should begin with one line that enables three safety mechanisms preventing the most common and most dangerous categories of scripting bugs. Without it, your script is a loaded gun pointed at your data.
 
 > [!quote]
-> "Programming today is a race between software engineers striving to build bigger and better idiot-proof programs, and the Universe trying to produce bigger and better idiots. So far, the Universe is winning."
-> — **Rick Cook**
+> "The most dangerous phrase in the language is, 'We've always done it this way.'"
+> — **Grace Hopper**
+>
+> "Bash without `set -euo pipefail` is a loaded gun pointed at your data."
+> — Shell scripting proverb
 
 #### set -euo pipefail — the essential first line of every production script
 ```bash

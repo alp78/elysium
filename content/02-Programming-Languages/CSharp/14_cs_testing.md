@@ -17,8 +17,8 @@ status: complete
 > "Legacy code is simply code without tests."
 > — **Michael Feathers**
 >
-> "The only way to go fast, is to go well."
-> — **Robert C. Martin**
+> "Write tests until fear is transformed into boredom."
+> — **Kent Beck**, *Test-Driven Development: By Example*
 
 ## Testing Philosophy
 

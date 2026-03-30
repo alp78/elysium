@@ -59,6 +59,10 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 ---
 
+> [!quote]
+> "Trade finance is the oil that keeps the wheels of international commerce turning."
+> — **Pascal Lamy**
+
 ## Trade Finance
 
 **Definition:** Trade finance refers to the financial instruments and products used by companies to facilitate international and domestic trade and commerce. It helps manage the risks inherent in cross-border transactions where the buyer and seller may not know each other and operate under different legal systems. Common trade finance products include letters of credit (bank guarantees of payment), documentary collections, trade credit insurance, factoring, forfaiting, and supply chain finance. Trade finance is essential for enabling global commerce by bridging the trust and timing gaps between trading partners.
@@ -83,6 +87,10 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 ---
 
+> [!quote]
+> "The dealer's lot is the showroom, but the floor plan is what keeps it stocked."
+> — **Jim Press**
+
 ## Wholesale Financing
 
 **Definition:** Wholesale financing is a type of lending provided by financial institutions to businesses (particularly dealerships and distributors) to finance their inventory of goods for resale. In the automotive industry, wholesale financing (also called floor plan financing or dealer financing) allows car dealerships to stock vehicles on their lots without paying the full purchase price upfront. The dealer pays interest on the financing until the vehicle is sold to a consumer, at which point the wholesale loan for that unit is repaid.
@@ -94,6 +102,10 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 **Related terms:** [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer Finance), [Sales Financing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Sales Financing), [Leasing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Leasing), [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Working Capital), [Distributors](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Distributors)
 
 ---
+
+> [!quote]
+> "Revenue is vanity, profit is sanity, but cash is king."
+> — **Alan Miltz**
 
 ## Working Capital
 

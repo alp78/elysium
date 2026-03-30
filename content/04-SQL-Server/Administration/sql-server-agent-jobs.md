@@ -23,8 +23,8 @@ status: complete
 # SQL Server Agent Jobs — Built-In Task Scheduling
 
 > [!quote]
-> "How does a large software project get to be one year late? One day at a time."
-> — **Frederick P. Brooks Jr.**
+> "If you're doing something more than once, automate it. The first rule of ops is: never do manually what a scheduled job can do for you."
+> — **Tom Limoncelli**, *The Practice of System and Network Administration*
 
 SQL Server Agent is the native job scheduler built into SQL Server. It runs maintenance tasks, CDC log readers, backup schedules, and custom ETL steps. On Linux, it requires explicit enabling. Understanding when to use Agent vs [Airflow](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) vs cron is essential for a clean operations architecture.
 

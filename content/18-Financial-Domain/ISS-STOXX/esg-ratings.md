@@ -26,6 +26,10 @@ date: 2026-03-28
 
 ## A
 
+> [!quote]
+> "The most important thing a shareholder can do is show up."
+> — **Nell Minow**
+
 ### Active Ownership
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="57 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 57</span>
@@ -36,7 +40,7 @@ date: 2026-03-28
 Active Ownership means investors do not simply buy shares and hope for the best. They actively push companies to improve by voting at shareholder meetings, meeting with executives to discuss ESG concerns, and sometimes joining forces with other investors to amplify their influence. It is the opposite of passive investing from a stewardship perspective.
 
 > [!tip] Related terms
-> [[#Engagement Escalation]], [[#Norm-Based Research]], [[#ESG Integration]]
+> [Engagement Escalation](#engagement-escalation), [Norm-Based Research](#norm-based-research), [ESG Integration](#esg-integration)
 
 > [!example]- Source excerpts (5)
 >
@@ -79,6 +83,10 @@ Active Ownership means investors do not simply buy shares and hope for the best.
 
 ## B
 
+> [!quote]
+> "Excellence is not a destination but a continuously receding horizon."
+> — **Al Gore**
+
 ### Best-in-Class Screening
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -91,7 +99,7 @@ Best-in-Class screening does not ban entire industries outright. Instead, it ran
 **Typical thresholds:** Companies are ranked within their sector; those in the top quartile (or top decile, depending on the index methodology) are selected. STOXX ESG-X indices often use a top-percentile cutoff relative to sector peers.
 
 > [!tip] Related terms
-> [[#Norm-Based Screening]], [[#ESG Corporate Rating]], [[#Decile-Based Scoring]]
+> [Norm-Based Screening](#norm-based-screening), [ESG Corporate Rating](#esg-corporate-rating), [Decile-Based Scoring](#decile-based-scoring)
 
 > [!example]- Source excerpts (1)
 >
@@ -117,7 +125,7 @@ In simple terms, BIAT measures how much damage (or benefit) a company causes to 
 **Score range:** Outputs are typically expressed using ecological impact metrics such as Mean Species Abundance (MSA) loss per unit of revenue or land area, alongside qualitative assessments of biodiversity management practices.
 
 > [!tip] Related terms
-> [[#Mean Species Abundance (MSA)]], [[#Environmental Pillar]], [[#Carbon Risk Rating]]
+> [Mean Species Abundance (MSA)](#mean-species-abundance-msa), [Environmental Pillar](#environmental-pillar), [Carbon Risk Rating](#carbon-risk-rating)
 
 > [!example]- Source excerpts (5)
 >
@@ -171,7 +179,7 @@ the Carbon Risk Rating tells investors how vulnerable a company is to the costs 
 **Score range:** ISS ESG typically rates carbon risk on a scale that ranges from negligible to severe. Companies receive performance grades (A+ to D-) on their carbon management, and a numerical risk exposure score contextualises the grade.
 
 > [!tip] Related terms
-> [[#Climetrics]], [[#Water Risk Rating]], [[#Environmental Pillar]], [[#ESG Risk Rating]]
+> [Climetrics](#climetrics), [Water Risk Rating](#water-risk-rating), [Environmental Pillar](#environmental-pillar), [ESG Risk Rating](#esg-risk-rating)
 
 > [!example]- Source excerpts (5)
 >
@@ -223,7 +231,7 @@ Think of Climetrics as a "climate score for your investment fund." It checks whe
 **Score range:** 1 to 5 leaves, where 5 leaves represents the best climate performance.
 
 > [!tip] Related terms
-> [[#ESG Fund Rating]], [[#Carbon Risk Rating]], [[#Fund Rating]]
+> [ESG Fund Rating](#esg-fund-rating), [Carbon Risk Rating](#carbon-risk-rating), [Fund Rating](#fund-rating)
 
 > [!example]- Source excerpts (5)
 >
@@ -275,7 +283,7 @@ A Controversy Rating measures how badly a company has been caught behaving. If a
 **Score range:** ISS ESG controversy significance scores typically range from 1 (low significance) to 10 (very high significance). Some frameworks group these into categories such as Minor, Significant, High, and Severe.
 
 > [!tip] Related terms
-> [[#Controversy Level]], [[#Norm-Based Research]], [[#ESG Risk Categories]]
+> [Controversy Level](#controversy-level), [Norm-Based Research](#norm-based-research), [ESG Risk Categories](#esg-risk-categories)
 
 > [!example]- Source excerpts (5)
 >
@@ -327,7 +335,7 @@ Controversy Level is the "headline summary" of a company's controversy profile. 
 **Typical levels:** None, Low, Moderate, Significant, High, Severe. These map to exclusion thresholds in many STOXX ESG index methodologies.
 
 > [!tip] Related terms
-> [[#Controversy Rating]], [[#ESG Risk Categories]], [[#Norm-Based Screening]]
+> [Controversy Rating](#controversy-rating), [ESG Risk Categories](#esg-risk-categories), [Norm-Based Screening](#norm-based-screening)
 
 > [!example]- Source excerpts (2)
 >
@@ -360,7 +368,7 @@ The ISS ESG Corporate Rating is the core ESG grade for a company. Analysts exami
 **Score range:** A+ (Prime, best) through D- (worst). Companies achieving a rating of C+ or above in their respective sector are awarded "Prime" status, indicating they meet or exceed the sector-specific minimum ESG performance threshold.
 
 > [!tip] Related terms
-> [[#ISS ESG Corporate Rating]], [[#ESG Corporate Rating]], [[#ESG Scorecard]], [[#Materiality]]
+> [ISS ESG Corporate Rating](#iss-esg-corporate-rating), [ESG Corporate Rating](#esg-corporate-rating), [ESG Scorecard](#esg-scorecard), [Materiality](#materiality)
 
 > [!example]- Source excerpts (5)
 >
@@ -412,7 +420,7 @@ Country Ratings work like corporate ESG ratings but applied to governments. They
 **Score range:** Letter grades from A+ to D-, mirroring the corporate scale. Countries achieving a threshold grade may qualify as "approved" for ESG-screened sovereign bond portfolios.
 
 > [!tip] Related terms
-> [[#Corporate Rating (ISS ESG)]], [[#Governance Pillar]], [[#Environmental Pillar]], [[#Social Pillar]]
+> [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg), [Governance Pillar](#governance-pillar), [Environmental Pillar](#environmental-pillar), [Social Pillar](#social-pillar)
 
 > [!example]- Source excerpts (5)
 >
@@ -460,7 +468,7 @@ The Cyber Risk Score tells investors whether a company is likely to suffer a dam
 **Score range:** Numerical scoring, typically normalised on a 1-10 or 0-100 scale depending on the data vendor. Higher scores indicate better cyber risk management. ISS ESG integrates cyber risk factors into QualityScore governance assessments.
 
 > [!tip] Related terms
-> [[#Governance QualityScore]], [[#ISS QualityScore]], [[#Exposure Score]]
+> [Governance QualityScore](#governance-qualityscore), [ISS QualityScore](#iss-qualityscore), [Exposure Score](#exposure-score)
 
 > [!example]- Source excerpts (5)
 >
@@ -511,7 +519,7 @@ The Cyber Risk Score tells investors whether a company is likely to suffer a dam
 Data Verification is the quality control behind ESG ratings. Companies may self-report flattering sustainability numbers, so ISS ESG cross-checks those claims against external evidence. If a company claims zero emissions violations but regulatory databases show fines, the discrepancy is flagged and the rating adjusted accordingly.
 
 > [!tip] Related terms
-> [[#Corporate Rating (ISS ESG)]], [[#ESG Scorecard]], [[#Norm-Based Research]]
+> [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg), [ESG Scorecard](#esg-scorecard), [Norm-Based Research](#norm-based-research)
 
 > [!example]- Source excerpts (5)
 >
@@ -563,7 +571,7 @@ Decile-Based Scoring converts raw ESG numbers into a simple 1-to-10 rank within 
 **Score range:** Deciles 1 through 10, where Decile 1 = top 10% of peers (best) and Decile 10 = bottom 10% (worst).
 
 > [!tip] Related terms
-> [[#ISS QualityScore]], [[#Best-in-Class Screening]], [[#ESG Risk Rating]]
+> [ISS QualityScore](#iss-qualityscore), [Best-in-Class Screening](#best-in-class-screening), [ESG Risk Rating](#esg-risk-rating)
 
 > [!example]- Source excerpts (2)
 >
@@ -583,6 +591,10 @@ Decile-Based Scoring converts raw ESG numbers into a simple 1-to-10 rank within 
 
 ---
 
+> [!quote]
+> "What gets measured gets managed, but what matters most may not be measurable."
+> — **Mark Carney**
+
 ### Double Materiality
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
@@ -593,7 +605,7 @@ Decile-Based Scoring converts raw ESG numbers into a simple 1-to-10 rank within 
 In simple terms, traditional materiality asks: "Does climate change hurt this company's bottom line?" Double Materiality adds a second question: "Does this company hurt the climate?" Both directions matter. A chemical company might be financially resilient to environmental regulation (low financial materiality) but still cause significant pollution (high impact materiality). Double Materiality captures both dimensions.
 
 > [!tip] Related terms
-> [[#Materiality]], [[#ESG Risk Rating]], [[#Principal Adverse Impact (PAI)]]
+> [Materiality](#materiality), [ESG Risk Rating](#esg-risk-rating), [Principal Adverse Impact (PAI)](#principal-adverse-impact-pai)
 
 > [!example]- Source excerpts (5)
 >
@@ -637,6 +649,10 @@ In simple terms, traditional materiality asks: "Does climate change hurt this co
 
 ## E
 
+> [!quote]
+> "Every company and every industry will be transformed by the transition to a net-zero world."
+> — **Larry Fink**
+
 ### ESG (Environmental, Social, Governance)
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8,515 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 8,515</span>
@@ -647,7 +663,7 @@ In simple terms, traditional materiality asks: "Does climate change hurt this co
 ESG is the overarching framework. It says: "To judge whether a company is responsibly managed, look at three things: how it treats the planet (E), how it treats people (S), and how its leadership operates (G)." Every other term in this glossary is a specific measurement or methodology built on top of these three pillars.
 
 > [!tip] Related terms
-> [[#Environmental Pillar]], [[#Social Pillar]], [[#Governance Pillar]]
+> [Environmental Pillar](#environmental-pillar), [Social Pillar](#social-pillar), [Governance Pillar](#governance-pillar)
 
 > [!example]- Source excerpts (5)
 >
@@ -698,7 +714,7 @@ This is the same concept as the Corporate Rating (ISS ESG) entry above, referred
 **Score range:** A+ to D-. Prime status awarded at C+ or above within the relevant sector.
 
 > [!tip] Related terms
-> [[#Corporate Rating (ISS ESG)]], [[#ISS ESG Corporate Rating]], [[#Materiality]]
+> [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg), [ISS ESG Corporate Rating](#iss-esg-corporate-rating), [Materiality](#materiality)
 
 > [!example]- Source excerpts (5)
 >
@@ -748,7 +764,7 @@ This is the same concept as the Corporate Rating (ISS ESG) entry above, referred
 ESG Disclosure is about how much a company tells the world about its sustainability practices. A company with strong ESG Disclosure publishes detailed, verified data on emissions, workforce composition, supply chain practices, and governance structures. Poor disclosure, even if the underlying performance is acceptable, leaves investors unable to evaluate risk and may itself be treated as a risk signal.
 
 > [!tip] Related terms
-> [[#Disclosure-Based Assessment]], [[#ESG Transparency Level]], [[#Data Verification]]
+> [Disclosure-Based Assessment](#disclosure-based-assessment), [ESG Transparency Level](#esg-transparency-level), [Data Verification](#data-verification)
 
 > [!example]- Source excerpts (5)
 >
@@ -799,7 +815,7 @@ ESG Fund Ratings answer the question: "If I buy this fund, how ESG-friendly is m
 **Score range:** Typically expressed as a star rating (1-5 stars) or a numerical score on a 0-100 scale, depending on the product. Climetrics uses a leaf-based scale for the climate dimension.
 
 > [!tip] Related terms
-> [[#Fund Rating]], [[#Climetrics]], [[#Corporate Rating (ISS ESG)]]
+> [Fund Rating](#fund-rating), [Climetrics](#climetrics), [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg)
 
 > [!example]- Source excerpts (1)
 >
@@ -812,6 +828,10 @@ ESG Fund Ratings answer the question: "If I buy this fund, how ESG-friendly is m
 
 ---
 
+> [!quote]
+> "ESG factors are not separate from financial analysis; they are financial analysis."
+> — **Larry Fink**
+
 ### ESG Integration
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="149 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 149</span>
@@ -822,7 +842,7 @@ ESG Fund Ratings answer the question: "If I buy this fund, how ESG-friendly is m
 ESG Integration means treating ESG data the same way you treat financial data: as material information that affects investment returns. Rather than maintaining a separate "ESG overlay," integration embeds sustainability factors directly into the analytical workflow. An analyst might adjust a company's discount rate based on its governance risk or revise revenue forecasts based on climate transition exposure.
 
 > [!tip] Related terms
-> [[#Responsible Investment]], [[#Active Ownership]], [[#ESG Risk Rating]]
+> [Responsible Investment](#responsible-investment), [Active Ownership](#active-ownership), [ESG Risk Rating](#esg-risk-rating)
 
 > [!example]- Source excerpts (5)
 >
@@ -874,7 +894,7 @@ The ESG Risk Rating separates exposure from management. A company might be heavi
 **Score range:** Numerical scores where lower values indicate less unmanaged risk. Common severity buckets: Negligible (0-10), Low (10-20), Medium (20-30), High (30-40), Severe (40+).
 
 > [!tip] Related terms
-> [[#Exposure Score]], [[#Management Score]], [[#ESG Risk Categories]]
+> [Exposure Score](#exposure-score), [Management Score](#management-score), [ESG Risk Categories](#esg-risk-categories)
 
 > [!example]- Source excerpts (5)
 >
@@ -925,7 +945,7 @@ The ESG Risk Rating separates exposure from management. A company might be heavi
 The ESG Scorecard is the report card. It takes all the detailed analysis behind a corporate rating and presents it in a digestible format so that an analyst or portfolio manager can quickly understand where a company excels and where it falls short on ESG criteria.
 
 > [!tip] Related terms
-> [[#Corporate Rating (ISS ESG)]], [[#Environmental Pillar]], [[#Social Pillar]], [[#Governance Pillar]]
+> [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg), [Environmental Pillar](#environmental-pillar), [Social Pillar](#social-pillar), [Governance Pillar](#governance-pillar)
 
 > [!example]- Source excerpts (1)
 >
@@ -949,7 +969,7 @@ The ESG Scorecard is the report card. It takes all the detailed analysis behind 
 The Environmental Pillar measures everything related to a company's relationship with the natural world. For a utility company this pillar is heavily weighted because energy production directly drives emissions. For a software company the weighting is lighter, though data centre energy use and e-waste still matter.
 
 > [!tip] Related terms
-> [[#Social Pillar]], [[#Governance Pillar]], [[#Carbon Risk Rating]], [[#Water Risk Rating]]
+> [Social Pillar](#social-pillar), [Governance Pillar](#governance-pillar), [Carbon Risk Rating](#carbon-risk-rating), [Water Risk Rating](#water-risk-rating)
 
 > [!example]- Source excerpts (1)
 >
@@ -974,7 +994,7 @@ Exposure Score is the starting point before management is factored in. A coal mi
 **Score range:** Typically expressed on a 0-100 or 0-10 scale within the ESG Risk Rating framework, where higher values indicate greater inherent exposure.
 
 > [!tip] Related terms
-> [[#ESG Risk Rating]], [[#Management Score]], [[#ESG Risk Categories]]
+> [ESG Risk Rating](#esg-risk-rating), [Management Score](#management-score), [ESG Risk Categories](#esg-risk-categories)
 
 > [!example]- Source excerpts (2)
 >
@@ -1007,7 +1027,7 @@ Exposure Score is the starting point before management is factored in. A coal mi
 Fund Rating is the umbrella term for scoring an entire investment fund on ESG criteria. Whether the focus is broad ESG quality, climate alignment, or regulatory compliance, the methodology follows the same principle: look through the fund to its holdings, score each holding, and roll the scores up.
 
 > [!tip] Related terms
-> [[#ESG Fund Rating]], [[#Climetrics]], [[#ESG Corporate Rating]]
+> [ESG Fund Rating](#esg-fund-rating), [Climetrics](#climetrics), [ESG Corporate Rating](#esg-corporate-rating)
 
 > [!example]- Source excerpts (4)
 >
@@ -1055,7 +1075,7 @@ Governance QualityScore zeroes in on the G of ESG with granular detail. It answe
 **Score range:** Decile 1 (lowest governance risk, best governance) through Decile 10 (highest governance risk, worst governance). Scores are computed at the sub-pillar and overall level.
 
 > [!tip] Related terms
-> [[#ISS QualityScore]], [[#Governance Pillar]], [[#Decile-Based Scoring]]
+> [ISS QualityScore](#iss-qualityscore), [Governance Pillar](#governance-pillar), [Decile-Based Scoring](#decile-based-scoring)
 
 > [!example]- Source excerpts (5)
 >
@@ -1093,6 +1113,10 @@ Governance QualityScore zeroes in on the G of ESG with granular detail. It answe
 
 ---
 
+> [!quote]
+> "The gap between what companies say and what they do has never been more dangerous."
+> — **Al Gore**
+
 ### Greenwashing Risk
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
@@ -1103,7 +1127,7 @@ Governance QualityScore zeroes in on the G of ESG with granular detail. It answe
 Greenwashing Risk is the danger that something labelled "green" or "sustainable" is not as environmentally friendly as it appears. A company might market itself as carbon neutral while relying on questionable offset schemes, or a fund might call itself ESG-focused while holding significant fossil fuel positions. ISS ESG's verification and rating processes help investors see through such claims.
 
 > [!tip] Related terms
-> [[#Data Verification]], [[#Sustainability Bond Rating]], [[#ESG Disclosure]]
+> [Data Verification](#data-verification), [Sustainability Bond Rating](#sustainability-bond-rating), [ESG Disclosure](#esg-disclosure)
 
 > [!example]- Source excerpts (5)
 >
@@ -1146,6 +1170,10 @@ Greenwashing Risk is the danger that something labelled "green" or "sustainable"
 
 ## I
 
+> [!quote]
+> "We make a living by what we get, but we make a life by what we give."
+> — **Winston Churchill**
+
 ### Impact Investing
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="54 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 54</span>
@@ -1156,7 +1184,7 @@ Greenwashing Risk is the danger that something labelled "green" or "sustainable"
 Impact Investing goes beyond simply avoiding harm or managing risk. It actively directs capital toward companies and projects that solve environmental or social problems. An impact investor might target clean water infrastructure, affordable healthcare, or renewable energy, measuring success not only by financial returns but by litres of clean water delivered, patients treated, or tonnes of carbon avoided.
 
 > [!tip] Related terms
-> [[#SDG Impact Rating]], [[#Sustainability Solutions Assessment]], [[#Responsible Investment]]
+> [SDG Impact Rating](#sdg-impact-rating), [Sustainability Solutions Assessment](#sustainability-solutions-assessment), [Responsible Investment](#responsible-investment)
 
 > [!example]- Source excerpts (5)
 >
@@ -1206,7 +1234,7 @@ ISS ESG Corporate Rating is the formal, unabbreviated name for the Corporate Rat
 **Score range:** A+ to D-. Prime status (indicating ESG leadership within a sector) is awarded to companies meeting or exceeding a sector-specific threshold, typically C+ or above.
 
 > [!tip] Related terms
-> [[#Corporate Rating (ISS ESG)]], [[#ESG Corporate Rating]], [[#ESG Scorecard]]
+> [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg), [ESG Corporate Rating](#esg-corporate-rating), [ESG Scorecard](#esg-scorecard)
 
 > [!example]- Source excerpts (5)
 >
@@ -1257,7 +1285,7 @@ ISS QualityScore is a risk-focused scoring tool. Unlike the ESG Corporate Rating
 **Score range:** Decile 1 (best/lowest risk) through Decile 10 (worst/highest risk). Scores are available at the overall, pillar, and sub-pillar levels.
 
 > [!tip] Related terms
-> [[#Governance QualityScore]], [[#Muni QualityScore]], [[#Decile-Based Scoring]]
+> [Governance QualityScore](#governance-qualityscore), [Muni QualityScore](#muni-qualityscore), [Decile-Based Scoring](#decile-based-scoring)
 
 > [!example]- Source excerpts (5)
 >
@@ -1308,7 +1336,7 @@ The Management Score is the "what are you doing about it?" assessment. A company
 **Score range:** Numerical, typically on a 0-100 scale within the ESG Risk Rating framework. A higher Management Score indicates stronger ESG risk management, which in turn reduces the unmanaged ESG risk.
 
 > [!tip] Related terms
-> [[#Exposure Score]], [[#ESG Risk Rating]], [[#ESG Risk Categories]]
+> [Exposure Score](#exposure-score), [ESG Risk Rating](#esg-risk-rating), [ESG Risk Categories](#esg-risk-categories)
 
 > [!example]- Source excerpts (3)
 >
@@ -1336,6 +1364,10 @@ The Management Score is the "what are you doing about it?" assessment. A company
 
 ---
 
+> [!quote]
+> "The essence of strategy is choosing what not to do."
+> — **Michael Porter**
+
 ### Materiality
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="351 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 351</span>
@@ -1346,7 +1378,7 @@ The Management Score is the "what are you doing about it?" assessment. A company
 Materiality is the reason a bank and a mining company are not rated on the same ESG criteria with the same weights. Water use is highly material for a beverage manufacturer but less so for a software company. Materiality frameworks prevent one-size-fits-all ESG scoring and ensure that the most relevant risks drive the rating.
 
 > [!tip] Related terms
-> [[#ESG Risk Categories]], [[#Corporate Rating (ISS ESG)]], [[#ESG Scorecard]]
+> [ESG Risk Categories](#esg-risk-categories), [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg), [ESG Scorecard](#esg-scorecard)
 
 > [!example]- Source excerpts (5)
 >
@@ -1398,7 +1430,7 @@ Mean Species Abundance is a single number that captures how "intact" an ecosyste
 **Score range:** 0% (total ecosystem destruction) to 100% (pristine, undisturbed ecosystem). Corporate impact is typically expressed as MSA loss (in km2.MSA or percentage points) per unit of revenue or output.
 
 > [!tip] Related terms
-> [[#Biodiversity Impact Assessment Tool (BIAT)]], [[#Environmental Pillar]], [[#Exposure Score]]
+> [Biodiversity Impact Assessment Tool (BIAT)](#biodiversity-impact-assessment-tool-biat), [Environmental Pillar](#environmental-pillar), [Exposure Score](#exposure-score)
 
 > [!example]- Source excerpts (5)
 >
@@ -1449,7 +1481,7 @@ Mean Species Abundance is a single number that captures how "intact" an ecosyste
 The Modern Slavery Scorecard checks whether a company is taking concrete steps to ensure there is no forced labour or human trafficking in its business or supply chain. It goes beyond simply having a policy statement and evaluates whether the company actually audits suppliers, trains employees, and reports on findings.
 
 > [!tip] Related terms
-> [[#Social Pillar]], [[#Norm-Based Research]], [[#Norm-Based Screening]]
+> [Social Pillar](#social-pillar), [Norm-Based Research](#norm-based-research), [Norm-Based Screening](#norm-based-screening)
 
 > [!example]- Source excerpts (5)
 >
@@ -1498,7 +1530,7 @@ Muni QualityScore adapts the ISS QualityScore concept for the municipal bond mar
 **Score range:** Decile 1 (lowest risk) through Decile 10 (highest risk), consistent with the ISS QualityScore framework.
 
 > [!tip] Related terms
-> [[#ISS QualityScore]], [[#Governance QualityScore]], [[#Country Rating]]
+> [ISS QualityScore](#iss-qualityscore), [Governance QualityScore](#governance-qualityscore), [Country Rating](#country-rating)
 
 > [!example]- Source excerpts (2)
 >
@@ -1521,6 +1553,10 @@ Muni QualityScore adapts the ISS QualityScore concept for the municipal bond mar
 
 ## N
 
+> [!quote]
+> "Divestment is a blunt instrument, but sometimes blunt instruments are necessary."
+> — **Kofi Annan**
+
 ### Negative Screening
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="23 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 23</span>
@@ -1531,7 +1567,7 @@ Muni QualityScore adapts the ISS QualityScore concept for the municipal bond mar
 Negative Screening is the most straightforward form of responsible investing: it removes companies from consideration entirely based on what they do or how they behave. If an investor's policy prohibits tobacco, every tobacco manufacturer is excluded regardless of how well-managed it might be otherwise. It is a blunt but effective tool for aligning portfolios with values or regulatory requirements.
 
 > [!tip] Related terms
-> [[#Positive Screening]], [[#Norm-Based Screening]], [[#Best-in-Class Screening]]
+> [Positive Screening](#positive-screening), [Norm-Based Screening](#norm-based-screening), [Best-in-Class Screening](#best-in-class-screening)
 
 > [!example]- Source excerpts (5)
 >
@@ -1569,6 +1605,10 @@ Negative Screening is the most straightforward form of responsible investing: it
 
 ---
 
+> [!quote]
+> "Human rights are not things that are put on the table for people to enjoy; they are things people fight for."
+> — **Kofi Annan**
+
 ### Norm-Based Research
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="32 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 32</span>
@@ -1581,7 +1621,7 @@ Norm-Based Research is the investigative process behind controversy screening. A
 **Assessment outputs:** Companies are categorised by violation status, typically as Compliant, Watchlist, or Non-Compliant with respect to each relevant international framework.
 
 > [!tip] Related terms
-> [[#Norm-Based Screening]], [[#Controversy Rating]], [[#Controversy Level]]
+> [Norm-Based Screening](#norm-based-screening), [Controversy Rating](#controversy-rating), [Controversy Level](#controversy-level)
 
 > [!example]- Source excerpts (5)
 >
@@ -1629,7 +1669,7 @@ Norm-Based Research is the investigative process behind controversy screening. A
 Norm-Based Screening is the investment action that follows from Norm-Based Research. Once research identifies a company as violating international norms (e.g., using child labour or causing severe environmental damage), the screening process determines whether that company should be excluded from a portfolio, placed on a watch list, or subjected to engagement.
 
 > [!tip] Related terms
-> [[#Norm-Based Research]], [[#Best-in-Class Screening]], [[#Controversy Rating]]
+> [Norm-Based Research](#norm-based-research), [Best-in-Class Screening](#best-in-class-screening), [Controversy Rating](#controversy-rating)
 
 > [!example]- Source excerpts (5)
 >
@@ -1682,7 +1722,7 @@ Norm-Based Screening is the investment action that follows from Norm-Based Resea
 Peer Group Comparison answers the question: "Is this company good at ESG relative to its competitors?" A chemical company might have higher absolute emissions than a software company, but if it manages those emissions better than every other chemical company, it deserves a higher relative score. This prevents inherently high-impact industries from being systematically penalised regardless of effort.
 
 > [!tip] Related terms
-> [[#Sector-Relative Scoring]], [[#Decile-Based Scoring]], [[#Best-in-Class Screening]]
+> [Sector-Relative Scoring](#sector-relative-scoring), [Decile-Based Scoring](#decile-based-scoring), [Best-in-Class Screening](#best-in-class-screening)
 
 > [!example]- Source excerpts (5)
 >
@@ -1732,7 +1772,7 @@ Peer Group Comparison answers the question: "Is this company good at ESG relativ
 Positive Screening flips the script from "who do we exclude?" to "who do we include because they are doing well?" Instead of removing bad actors, it actively seeks out companies that lead on sustainability. A positive screen might select the top 20% of companies by ESG score in each sector, or it might target companies generating revenue from clean energy, sustainable agriculture, or healthcare access.
 
 > [!tip] Related terms
-> [[#Negative Screening]], [[#Best-in-Class Screening]], [[#ESG Prime Status]]
+> [Negative Screening](#negative-screening), [Best-in-Class Screening](#best-in-class-screening), [ESG Prime Status](#esg-prime-status)
 
 > [!example]- Source excerpts (5)
 >
@@ -1773,6 +1813,10 @@ Positive Screening flips the script from "who do we exclude?" to "who do we incl
 
 ---
 
+> [!quote]
+> "If you cannot describe what you are doing as a process, you do not know what you are doing."
+> — **W. Edwards Deming**
+
 ### Principal Adverse Impact (PAI)
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
@@ -1785,7 +1829,7 @@ PAI is a regulatory requirement, not a score. European fund managers must disclo
 **Key indicators:** 14 mandatory indicators and numerous optional indicators defined in SFDR Regulatory Technical Standards (RTS). Examples include Scope 1/2/3 GHG emissions, carbon footprint, fossil fuel exposure, water emissions, hazardous waste, gender diversity on boards, and human rights policy compliance.
 
 > [!tip] Related terms
-> [[#ESG Fund Rating]], [[#Environmental Pillar]], [[#Social Pillar]], [[#Carbon Risk Rating]]
+> [ESG Fund Rating](#esg-fund-rating), [Environmental Pillar](#environmental-pillar), [Social Pillar](#social-pillar), [Carbon Risk Rating](#carbon-risk-rating)
 
 > [!example]- Source excerpts (5)
 >
@@ -1827,6 +1871,10 @@ PAI is a regulatory requirement, not a score. European fund managers must disclo
 
 ## R
 
+> [!quote]
+> "Sustainable capitalism is not an oxymoron."
+> — **Al Gore**
+
 ### Responsible Investment
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="612 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 612</span>
@@ -1837,7 +1885,7 @@ PAI is a regulatory requirement, not a score. European fund managers must disclo
 Responsible Investment is the umbrella term for all the ways investors can take sustainability into account. It is not a single strategy but a spectrum: at one end, simply avoiding the worst offenders; at the other, actively investing to generate measurable positive impact. Most institutional investors today practice some form of Responsible Investment, driven by a combination of fiduciary duty, regulatory requirements, and stakeholder expectations.
 
 > [!tip] Related terms
-> [[#ESG Integration]], [[#Active Ownership]], [[#Impact Investing]], [[#Negative Screening]]
+> [ESG Integration](#esg-integration), [Active Ownership](#active-ownership), [Impact Investing](#impact-investing), [Negative Screening](#negative-screening)
 
 > [!example]- Source excerpts (5)
 >
@@ -1880,6 +1928,10 @@ Responsible Investment is the umbrella term for all the ways investors can take 
 
 ## S
 
+> [!quote]
+> "Sustainability is no longer about doing less harm; it is about doing more good."
+> — **Jochen Zeitz**
+
 ### SDG Impact Rating
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="46 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 46</span>
@@ -1892,7 +1944,7 @@ The SDG Impact Rating connects corporate behaviour to the UN's 17 global goals. 
 **Score range:** Typically classified on a five-point scale from Significant Obstruction through No Net Impact to Significant Contribution. Some implementations use numerical scores mapped to each of the 17 SDGs individually.
 
 > [!tip] Related terms
-> [[#Sustainability Solutions Assessment]], [[#Corporate Rating (ISS ESG)]], [[#Materiality]]
+> [Sustainability Solutions Assessment](#sustainability-solutions-assessment), [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg), [Materiality](#materiality)
 
 > [!example]- Source excerpts (5)
 >
@@ -1944,7 +1996,7 @@ The SDG Impact Rating connects corporate behaviour to the UN's 17 global goals. 
 The Social Pillar evaluates how a company treats people. Are workers paid fairly and kept safe? Does the company respect human rights in its supply chain? Are products safe for consumers? Is the company a good neighbour to the communities where it operates? Social issues can be harder to quantify than environmental metrics, but they carry significant financial and reputational risk.
 
 > [!tip] Related terms
-> [[#Environmental Pillar]], [[#Governance Pillar]], [[#Modern Slavery Scorecard]], [[#Norm-Based Research]]
+> [Environmental Pillar](#environmental-pillar), [Governance Pillar](#governance-pillar), [Modern Slavery Scorecard](#modern-slavery-scorecard), [Norm-Based Research](#norm-based-research)
 
 > [!example]- Source excerpts (1)
 >
@@ -1958,6 +2010,10 @@ The Social Pillar evaluates how a company treats people. Are workers paid fairly
 
 ---
 
+> [!quote]
+> "The social responsibility of business is to increase its profits, but that view is now incomplete."
+> — **Larry Fink**
+
 ### Stakeholder Capitalism
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
@@ -1968,7 +2024,7 @@ The Social Pillar evaluates how a company treats people. Are workers paid fairly
 Stakeholder Capitalism challenges the traditional view that a company exists solely to maximise profit for shareholders. It argues that long-term value creation depends on maintaining healthy relationships with all stakeholders. ISS ESG ratings operationalise this concept by measuring whether companies invest in worker welfare, community development, and environmental stewardship alongside financial performance.
 
 > [!tip] Related terms
-> [[#Social Pillar]], [[#Governance Pillar]], [[#Responsible Investment]], [[#Double Materiality]]
+> [Social Pillar](#social-pillar), [Governance Pillar](#governance-pillar), [Responsible Investment](#responsible-investment), [Double Materiality](#double-materiality)
 
 > [!example]- Source excerpts (2)
 >
@@ -1999,7 +2055,7 @@ A Sustainability Bond Rating tells investors whether a "green" or "social" bond 
 **Assessment outputs:** Typically a Second Party Opinion (SPO) with an overall sustainability quality assessment ranging from "Not Aligned" through "Aligned" to "Positive" or "Best-in-Class" relative to ICMA principles. ISS ESG also provides a "Shading" from dark green (excellent) to light green or no shade.
 
 > [!tip] Related terms
-> [[#Corporate Rating (ISS ESG)]], [[#SDG Impact Rating]], [[#Environmental Pillar]]
+> [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg), [SDG Impact Rating](#sdg-impact-rating), [Environmental Pillar](#environmental-pillar)
 
 > [!example]- Source excerpts (2)
 >
@@ -2018,6 +2074,10 @@ A Sustainability Bond Rating tells investors whether a "green" or "social" bond 
 
 ---
 
+> [!quote]
+> "The stone age did not end because we ran out of stones."
+> — **Ahmed Zaki Yamani**
+
 ### Sustainability Solutions Assessment
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -2030,7 +2090,7 @@ The Sustainability Solutions Assessment measures whether a company is part of th
 **Score range:** Typically expressed as the percentage of revenue derived from sustainability solution areas, sometimes combined with a qualitative rating of the significance and additionality of the solutions.
 
 > [!tip] Related terms
-> [[#SDG Impact Rating]], [[#ESG Fund Rating]], [[#Principal Adverse Impact (PAI)]]
+> [SDG Impact Rating](#sdg-impact-rating), [ESG Fund Rating](#esg-fund-rating), [Principal Adverse Impact (PAI)](#principal-adverse-impact-pai)
 
 > [!example]- Source excerpts (1)
 >
@@ -2046,6 +2106,10 @@ The Sustainability Solutions Assessment measures whether a company is part of th
 
 ## W
 
+> [!quote]
+> "Water is the driving force of all nature."
+> — **Leonardo da Vinci**
+
 ### Water Risk Rating
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
@@ -2058,7 +2122,7 @@ The Water Risk Rating measures whether a company is likely to face water-related
 **Score range:** Performance grades typically from A+ to D-, consistent with the ISS ESG corporate rating scale. Risk exposure is additionally contextualised by geographic water stress indicators (e.g., WRI Aqueduct data).
 
 > [!tip] Related terms
-> [[#Carbon Risk Rating]], [[#Environmental Pillar]], [[#Exposure Score]], [[#Management Score]]
+> [Carbon Risk Rating](#carbon-risk-rating), [Environmental Pillar](#environmental-pillar), [Exposure Score](#exposure-score), [Management Score](#management-score)
 
 > [!example]- Source excerpts (5)
 >

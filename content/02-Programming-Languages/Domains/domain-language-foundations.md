@@ -23,6 +23,7 @@ mindmap
     (datetime, math)
     (async, concurrency)
     (design patterns)
+    (environments, deps)
 ```
 
 > [!abstract]- Basics, Types, and Operators
@@ -110,3 +111,12 @@ mindmap
 > - Data validation — [[18_py_designpatterns#Data Validation|py]] · [[18_cs_designpatterns#Data Validation|cs]]
 > - Reflection and introspection — [[18_py_designpatterns#Reflection|py]] · [[18_cs_designpatterns#Reflection|cs]]
 > - Project structure and best practices — [[18_py_designpatterns#Project Structure & Best Practices|py]] · [[18_cs_designpatterns#Project Structure & Best Practices|cs]]
+
+> [!abstract]- Environments and Dependencies
+>
+> - Creating virtual environments — [[26_py_environments#venv — create and activate virtual environments|py]] · [[26_cs_environments#dotnet new — create projects and solution files|cs]]
+> - Installing packages — [[26_py_environments#pip — install and manage packages|py]] · [[26_cs_environments#dotnet add package — install NuGet packages|cs]]
+> - Pinning and freezing — [[26_py_environments#pip freeze — pin dependencies for reproducibility|py]] · [[26_cs_environments#Pinning and Locking Dependencies|cs]]
+> - Docker patterns — [[26_py_environments#Docker — Python environments in containers|py]] · [[26_cs_environments#Docker — multi-stage builds for .NET|cs]]
+> - CI/CD setup — [[26_py_environments#GitHub Actions — Python in CI|py]] · [[26_cs_environments#GitHub Actions — .NET in CI|cs]]
+> - Anti-patterns — [[26_py_environments#Anti-Patterns and Common Mistakes|py]] · [[26_cs_environments#Anti-Patterns and Common Mistakes|cs]]

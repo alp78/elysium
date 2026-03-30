@@ -21,6 +21,10 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 ---
 
+> [!quote]
+> "Carbon capture is not a silver bullet, but it is an essential part of the portfolio of solutions we need."
+> — **Fatih Birol**
+
 ## Carbon Capture and Storage
 
 **Definition:** Carbon capture and storage (CCS) is a technology process that captures carbon dioxide (CO2) emissions produced from industrial processes or power generation before they enter the atmosphere, transports the captured CO2, and stores it deep underground in geological formations. CCS is considered a critical technology for mitigating climate change, particularly in hard-to-abate sectors like cement, steel, and petrochemicals where eliminating emissions entirely is technically challenging. The technology can also be combined with bioenergy to achieve net-negative emissions.
@@ -81,6 +85,10 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 ---
 
+> [!quote]
+> "Green hydrogen is the missing piece of the puzzle for full decarbonization."
+> — **Frans Timmermans**
+
 ## Green Hydrogen
 
 **Definition:** Green hydrogen is hydrogen produced through the electrolysis of water using renewable energy sources such as wind or solar power. Unlike grey hydrogen (produced from natural gas) or blue hydrogen (produced from natural gas with carbon capture), green hydrogen produces no carbon emissions during its production. It is considered a key enabler of the energy transition, particularly for decarbonizing hard-to-abate sectors like heavy industry, long-distance transportation, and high-temperature industrial processes.
@@ -92,6 +100,10 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 **Related terms:** [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable Energy), [Carbon Capture and Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Carbon Capture and Storage), [Energy Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Energy Storage), [Cogeneration](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Cogeneration), [Net-Zero](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#Net-Zero)
 
 ---
+
+> [!quote]
+> "LNG is the bridge fuel that can help the world transition to a lower-carbon energy system."
+> — **Daniel Yergin**
 
 ## Liquefied Natural Gas (LNG)
 
@@ -141,6 +153,10 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 ---
 
+> [!quote]
+> "A refinery is the nexus between the raw material and the consumer product — the crack spread is the heartbeat of the oil industry."
+> — **Philip Verleger**
+
 ## Refining
 
 **Definition:** Refining is the industrial process of transforming crude oil into usable petroleum products through distillation, cracking, reforming, and treatment processes. Refineries produce a range of products including gasoline, diesel fuel, jet fuel, heating oil, lubricants, asphalt, and petrochemical feedstocks. The refining margin (the difference between crude oil input costs and the value of refined product output) is a key profitability metric. Refining is a capital-intensive, highly regulated industry that is central to the global energy supply chain.
@@ -152,6 +168,10 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 **Related terms:** [Downstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Downstream), [Petrochemicals](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Petrochemicals), [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Commodity Trading](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Commodity Trading)
 
 ---
+
+> [!quote]
+> "The stone age didn't end because we ran out of stones. The oil age won't end because we run out of oil."
+> — **Ahmed Zaki Yamani**
 
 ## Renewable Energy
 

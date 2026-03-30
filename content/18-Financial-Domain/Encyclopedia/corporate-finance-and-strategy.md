@@ -33,6 +33,10 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ---
 
+> [!quote]
+> "The best strategy requires knowing what not to do."
+> — **Michael Porter**
+
 ## Divestitures
 
 **Definition:** A divestiture is the partial or full disposal of a business unit, subsidiary, or asset by a company. Companies divest for various strategic reasons: to raise cash, focus on core operations, reduce debt, comply with regulatory requirements (such as antitrust conditions for mergers), or unlock shareholder value by separating business units that may be more valuable as standalone entities. Divestitures can take the form of sales to other companies, spin-offs to shareholders, management buyouts, or liquidations.
@@ -56,6 +60,10 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 **Related terms:** [Wealth Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Wealth Management), [Corporate Finance Advisory](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Corporate Finance Advisory), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment Banking), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk Management)
 
 ---
+
+> [!quote]
+> "Our favorite holding period is forever."
+> — **Warren Buffett**
 
 ## Holding Company
 
@@ -93,6 +101,10 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ---
 
+> [!quote]
+> "Managers who want to do deals are like teenagers who want to go on dates — it's very hard to be dissuasive."
+> — **Charlie Munger**
+
 ## Mergers and Acquisitions (M&A)
 
 **Definition:** Mergers and acquisitions (M&A) refer to the consolidation of companies through various types of financial transactions. A merger occurs when two companies combine to form a new entity, while an acquisition occurs when one company purchases another. M&A transactions are used to achieve strategic objectives such as gaining market share, entering new markets, acquiring technology or talent, achieving economies of scale, or eliminating competition. M&A deals involve complex processes including valuation, due diligence, negotiation, financing, regulatory approval, and integration.
@@ -128,6 +140,10 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 **Related terms:** [Subsidiaries](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Subsidiaries), [Holding Company](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Holding Company)
 
 ---
+
+> [!quote]
+> "The whole is sometimes worth less than the sum of its parts."
+> — **Peter Lynch**
 
 ## Spin-Off
 

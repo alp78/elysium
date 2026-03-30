@@ -14,8 +14,8 @@ status: complete
 # Pipeline Integration and Developer Experience
 
 > [!quote]
-> "The programmer, like the poet, works only slightly removed from pure thought-stuff. He builds his castles in the air, from air, creating by exertion of the imagination."
-> — **Frederick P. Brooks Jr.**
+> "Without observability into what your queries are doing, you are flying blind. Tag everything, measure everything, correlate everything."
+> — **Charity Majors**
 
 Three recurring friction points when integrating SQL Server into a data engineering pipeline: correlating SQL performance metrics with specific Airflow DAG runs, managing schema changes without breaking production, and controlling connection counts to avoid memory exhaustion on the database VM.
 

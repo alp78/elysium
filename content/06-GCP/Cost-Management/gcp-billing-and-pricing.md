@@ -76,11 +76,8 @@ status: complete
 # GCP Billing and Pricing — Data Engineering Reference
 
 > [!quote]
-> "Beware of little expenses. A small leak will sink a great ship."
-> — **Benjamin Franklin**
->
-> "Cost awareness is a lost art. We need to regain that art."
-> — **Werner Vogels**
+> "FinOps is the practice of bringing financial accountability to the variable spend model of cloud, enabling distributed teams to make business trade-offs between speed, cost, and quality."
+> — **J.R. Storment**, *Cloud FinOps*
 
 This note is the single source of truth for GCP cost management across every data engineering service. It covers pricing models, billing dimensions, free tiers, discount mechanisms, cost formulas, and practical gcloud / BigQuery commands for ongoing cost analysis.
 

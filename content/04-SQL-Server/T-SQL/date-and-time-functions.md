@@ -14,8 +14,8 @@ status: complete
 # Date and Time Functions
 
 > [!quote]
-> "Time is an illusion. Lunchtime doubly so."
-> — **Douglas Adams**
+> "There are two hard problems in datetime handling: timezone conversions, daylight saving transitions, and off-by-one errors."
+> — **Jon Skeet**, *Noda Time*
 
 Dates look simple until you realize that "March 10, 2026 at 3 PM" means a different instant in time depending on whether you're in Paris, New York, or Tokyo. For the shell-level `date` equivalents used in backup scripts and cron jobs, see [date-and-time-handling](https://alp78.github.io/elysium/01-Shell/Text-Processing/date-and-time-handling). A pipeline that processes market close times across a Euro market index, a US 50 index, and an Asia/Pacific 50 index must handle three different closing times, daylight saving transitions that happen on different dates in different countries, and the fact that "today" is a different date in Sydney and New York for several hours each day.
 

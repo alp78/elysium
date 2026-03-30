@@ -14,8 +14,8 @@ status: complete
 # Terraform Module Composition
 
 > [!quote]
-> "The key to making programs fast is to make them do practically nothing."
-> — **Mike Haertel** (on the power of composing small, focused units)
+> "You can use modules to further split up your configuration as well as parameterize it. The goal is giving you enough options so it isn't overwhelming complexity."
+> — **Mitchell Hashimoto**
 
 Terraform modules are the primary mechanism for creating reusable, composable infrastructure. When you manage multiple environments (dev, staging, prod), modules prevent copy-paste between configurations and enable environment promotion.
 

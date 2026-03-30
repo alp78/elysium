@@ -65,8 +65,8 @@ status: complete
 # Terraform Block Library — IAM, Secrets & Serverless (GCP)
 
 > [!quote]
-> "The principle of least privilege means giving a user account or process only those privileges which are essential to perform its intended function."
-> — **Jerome Saltzer**
+> "The only way to do great work is to never trust a single layer of defense."
+> — **Dan Kaminsky**
 
 Atomic, copy-paste Terraform blocks for GCP IAM, Secret Manager, Cloud Run v2, Cloud Functions v2, Cloud Scheduler, Pub/Sub, and Artifact Registry. Every argument carries an inline comment explaining its purpose. Blocks are generic and meant to be adapted to any project.
 

@@ -10,8 +10,8 @@ description: "BigQuery adapter partitioning, clustering, incremental strategies,
 # dbt: BigQuery Adapter
 
 > [!quote]
-> "All models are wrong, but some are useful."
-> — **George Box**
+> "Serverless is a simple but powerful concept when it comes to gigabyte- to petabyte-scale data analysis. It's a relatively hard engineering problem."
+> — **Jordan Tigani** (founding engineer of BigQuery)
 
 `dbt-bigquery` is a first-party adapter maintained by dbt Labs. It maps dbt materializations to BigQuery DDL/DML and exposes BigQuery-specific config options — partitioning, clustering, slot labels, and cost controls — directly in model config blocks. For broader BigQuery cost and query optimization patterns, see [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization).
 

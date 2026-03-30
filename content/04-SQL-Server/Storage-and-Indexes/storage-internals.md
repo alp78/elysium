@@ -14,8 +14,8 @@ status: complete
 # Storage Internals
 
 > [!quote]
-> "Computer Science is no more about computers than astronomy is about telescopes."
-> — **Edsger W. Dijkstra**
+> "A conventional disk-based DBMS spends the overwhelming majority of its cycles on overhead activity — buffer management, locking, latching, and log management — not on useful work."
+> — **Michael Stonebraker**
 
 SQL Server reads and writes in fixed 8 KB pages — every I/O operation moves exactly one page. Understanding how pages, extents, files, the log, and the buffer pool interact is the foundation for diagnosing every performance problem: slow queries, high I/O, blocked sessions, and slow recovery all trace back to these internals.
 

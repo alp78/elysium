@@ -129,12 +129,10 @@ curl -s -H "Metadata-Flavor: Google" \
 
 #### CREATE LOGIN / CREATE USER — dedicated logins per application
 
-```sql
--- ============================================================
--- Create dedicated logins for each application
--- Run as sa (one last time before disabling)
--- ============================================================
+> [!info] Create dedicated logins for each application
+> Run the following as `sa` (one last time before disabling it). Each application gets its own login with minimum necessary permissions.
 
+```sql
 -- 1. Pipeline service account (Python pipeline — full DML on bronze/silver/gold)
 CREATE LOGIN pipeline_svc WITH PASSWORD = 'P!pel1ne$ecure2026', CHECK_POLICY = ON;
 GO
@@ -205,14 +203,17 @@ SELECT
 FROM sys.server_principals
 WHERE type IN ('S', 'U')
 ORDER BY create_date;
--- Expected output:
--- name            type_desc       is_disabled  create_date
--- sa              SQL_LOGIN       1            2024-01-15 (disabled)
--- pipeline_svc    SQL_LOGIN       0            2026-03-10
--- dashboard_svc   SQL_LOGIN       0            2026-03-10
--- airflow_svc     SQL_LOGIN       0            2026-03-10
--- datadog_svc     SQL_LOGIN       0            2026-03-10
 ```
+
+Expected output:
+
+| name | type_desc | is_disabled | create_date |
+|------|-----------|-------------|-------------|
+| sa | SQL_LOGIN | 1 | 2024-01-15 (disabled) |
+| pipeline_svc | SQL_LOGIN | 0 | 2026-03-10 |
+| dashboard_svc | SQL_LOGIN | 0 | 2026-03-10 |
+| airflow_svc | SQL_LOGIN | 0 | 2026-03-10 |
+| datadog_svc | SQL_LOGIN | 0 | 2026-03-10 |
 
 #### pymssql, ADO.NET — update connection strings with dedicated logins
 
@@ -639,11 +640,10 @@ gcloud monitoring policies create \
 
 Run this comprehensive review every quarter:
 
-```sql
--- ============================================================
--- QUARTERLY SECURITY REVIEW SCRIPT
--- ============================================================
+> [!info] Quarterly security review script
+> Run this comprehensive review every quarter to verify login status, orphaned users, role memberships, permissions, TDE status, encryption, and audit logs.
 
+```sql
 -- 1. Review all SQL logins
 PRINT '=== 1. SQL Server Logins ==='
 SELECT name, type_desc, is_disabled, create_date, modify_date,

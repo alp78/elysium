@@ -36,7 +36,7 @@ date: 2026-03-28
 avoided emissions are the greenhouse gases that *would have been released* if a cleaner product or technology had not been used. For example, a wind turbine manufacturer can claim avoided emissions equal to the fossil-fuel generation its turbines displace.
 
 > [!tip] Related terms
-> [[#Carbon Offsetting]], [[#Emissions Scopes (Scope 1, Scope 2, Scope 3)]], [[#Green Revenue]]
+> [Carbon Offsetting](#carbon-offsetting), [Emissions Scopes (Scope 1, Scope 2, Scope 3)](#emissions-scopes-scope-1-scope-2-scope-3), [Green Revenue](#green-revenue)
 
 > [!example]- Source excerpts (2)
 >
@@ -67,7 +67,7 @@ avoided emissions are the greenhouse gases that *would have been released* if a 
 this assessment measures whether a company is helping or hurting the variety of life on Earth — from forests and coral reefs to soil organisms. Investors use it to gauge nature-related financial risk.
 
 > [!tip] Related terms
-> [[#Deforestation Risk]], [[#Nature-Related Risk]], [[#Water Stress]]
+> [Deforestation Risk](#deforestation-risk), [Nature-Related Risk](#nature-related-risk), [Water Stress](#water-stress)
 
 > [!example]- Source excerpts (5)
 >
@@ -115,7 +115,7 @@ this assessment measures whether a company is helping or hurting the variety of 
 biodiversity loss means that the web of life — species, habitats, and the ecological processes that sustain them — is shrinking. For investors, this matters because many industries depend on healthy ecosystems (agriculture, pharmaceuticals, tourism) and face material risk when those ecosystems degrade. ISS ESG evaluates corporate exposure to biodiversity-loss drivers as part of its nature-related analytics.
 
 > [!tip] Related terms
-> [[#Biodiversity Impact Assessment]], [[#Habitat Loss]], [[#Natural Capital]], [[#Nature-Related Risk]]
+> [Biodiversity Impact Assessment](#biodiversity-impact-assessment), [Habitat Loss](#habitat-loss), [Natural Capital](#natural-capital), [Nature-Related Risk](#nature-related-risk)
 
 > [!example]- Source excerpts (5)
 >
@@ -163,7 +163,7 @@ biodiversity loss means that the web of life — species, habitats, and the ecol
 brown revenue is the money a company earns from activities that are considered environmentally harmful. It is the conceptual opposite of *green revenue*. Index providers like STOXX use brown-revenue thresholds to exclude companies from climate benchmarks.
 
 > [!tip] Related terms
-> [[#Green Revenue]], [[#High-Emitting Sectors]], [[#Stranded Assets]]
+> [Green Revenue](#green-revenue), [High-Emitting Sectors](#high-emitting-sectors), [Stranded Assets](#stranded-assets)
 
 > [!example]- Source excerpts (3)
 >
@@ -192,6 +192,10 @@ brown revenue is the money a company earns from activities that are considered e
 
 ## C
 
+> [!quote]
+> "We have a finite carbon budget; every ton counts."
+> — **Mark Carney**
+
 ### Carbon Budget
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="92 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 92</span>
@@ -202,7 +206,7 @@ brown revenue is the money a company earns from activities that are considered e
 a carbon budget is the total "allowance" of CO2 the world can still emit before crossing a dangerous temperature threshold. Companies and portfolios can be assessed against their fair share of the remaining global budget.
 
 > [!tip] Related terms
-> [[#Climate Scenario Analysis]], [[#IEA Net Zero Pathway]], [[#Net Zero]]
+> [Climate Scenario Analysis](#climate-scenario-analysis), [IEA Net Zero Pathway](#iea-net-zero-pathway), [Net Zero](#net-zero)
 
 > [!example]- Source excerpts (5)
 >
@@ -252,7 +256,7 @@ a carbon budget is the total "allowance" of CO2 the world can still emit before 
 CCS is a way to grab CO2 before it enters the atmosphere (or pull it back out) and lock it away underground. While CCS is not a substitute for reducing emissions at source, the IEA Net Zero Pathway identifies it as essential for decarbonizing hard-to-abate sectors like cement and steel. ISS ESG tracks corporate CCS capacity and investment as an indicator of transition readiness.
 
 > [!tip] Related terms
-> [[#Avoided Emissions]], [[#Carbon Offsetting]], [[#Energy Transition]], [[#Net Zero]]
+> [Avoided Emissions](#avoided-emissions), [Carbon Offsetting](#carbon-offsetting), [Energy Transition](#energy-transition), [Net Zero](#net-zero)
 
 > [!example]- Source excerpts (1)
 >
@@ -276,7 +280,7 @@ CCS is a way to grab CO2 before it enters the atmosphere (or pull it back out) a
 a carbon credit is a permit that lets a company release one ton of CO2 — or proof that one ton has been kept out of the atmosphere. Companies can buy credits to meet regulatory obligations or voluntary climate commitments. ISS ESG assesses whether companies use credits as a credible part of their decarbonization strategy or as a substitute for genuine emissions cuts.
 
 > [!tip] Related terms
-> [[#Carbon Offsetting]], [[#Carbon Pricing]], [[#Net Zero]]
+> [Carbon Offsetting](#carbon-offsetting), [Carbon Pricing](#carbon-pricing), [Net Zero](#net-zero)
 
 > [!example]- Source excerpts (2)
 >
@@ -297,6 +301,10 @@ a carbon credit is a permit that lets a company release one ton of CO2 — or pr
 
 ---
 
+> [!quote]
+> "If you want less of something, tax it; if you want more, subsidize it."
+> — **Arthur Pigou**
+
 ### Carbon Pricing
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
@@ -309,7 +317,7 @@ carbon pricing makes polluting more expensive. When companies have to pay for ev
 $$\text{Carbon Cost} = \text{Unabated Emissions (tCO}_2\text{e)} \times \text{Carbon Price (\$/tCO}_2\text{e)}$$
 
 > [!tip] Related terms
-> [[#Carbon Credit]], [[#Climate Scenario Analysis]], [[#Transition Risk]]
+> [Carbon Credit](#carbon-credit), [Climate Scenario Analysis](#climate-scenario-analysis), [Transition Risk](#transition-risk)
 
 > [!example]- Source excerpts (2)
 >
@@ -330,6 +338,10 @@ $$\text{Carbon Cost} = \text{Unabated Emissions (tCO}_2\text{e)} \times \text{Ca
 
 ---
 
+> [!quote]
+> "The greatest threat to our planet is the belief that someone else will save it."
+> — **Robert Swan**
+
 ### Carbon Footprint
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="219 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 219</span>
@@ -344,7 +356,7 @@ $$\text{Portfolio Carbon Footprint} = \sum_{i} \frac{\text{Investment}_i}{\text{
 where EVIC = Enterprise Value Including Cash.
 
 > [!tip] Related terms
-> [[#Carbon Intensity]], [[#Financed Emissions]], [[#Weighted Average Carbon Intensity (WACI)]]
+> [Carbon Intensity](#carbon-intensity), [Financed Emissions](#financed-emissions), [Weighted Average Carbon Intensity (WACI)](#weighted-average-carbon-intensity-waci)
 
 > [!example]- Source excerpts (5)
 >
@@ -385,6 +397,10 @@ where EVIC = Enterprise Value Including Cash.
 
 ---
 
+> [!quote]
+> "Efficiency is doing things right; effectiveness is doing the right things."
+> — **Peter Drucker**
+
 ### Carbon Intensity
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="184 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 184</span>
@@ -397,7 +413,7 @@ carbon intensity tells you how "dirty" each dollar of a company's revenue is. A 
 $$\text{Carbon Intensity} = \frac{\text{Total GHG Emissions (tCO}_2\text{e)}}{\text{Revenue (USD millions)}}$$
 
 > [!tip] Related terms
-> [[#Carbon Footprint]], [[#Weighted Average Carbon Intensity (WACI)]], [[#High-Emitting Sectors]]
+> [Carbon Footprint](#carbon-footprint), [Weighted Average Carbon Intensity (WACI)](#weighted-average-carbon-intensity-waci), [High-Emitting Sectors](#high-emitting-sectors)
 
 > [!example]- Source excerpts (5)
 >
@@ -447,7 +463,7 @@ $$\text{Carbon Intensity} = \frac{\text{Total GHG Emissions (tCO}_2\text{e)}}{\t
 climate analytics is the data engine behind sustainable investing. It translates raw emissions data, weather models, and policy scenarios into actionable metrics that portfolio managers can use.
 
 > [!tip] Related terms
-> [[#Climate Scenario Analysis]], [[#Implied Temperature Rise]], [[#Physical Risk]], [[#Transition Risk]]
+> [Climate Scenario Analysis](#climate-scenario-analysis), [Implied Temperature Rise](#implied-temperature-rise), [Physical Risk](#physical-risk), [Transition Risk](#transition-risk)
 
 > [!example]- Source excerpts (4)
 >
@@ -481,6 +497,10 @@ climate analytics is the data engine behind sustainable investing. It translates
 
 ---
 
+> [!quote]
+> "The future is already here; it is just not evenly distributed."
+> — **William Gibson**
+
 ### Climate Scenario Analysis
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
@@ -491,7 +511,7 @@ climate analytics is the data engine behind sustainable investing. It translates
 scenario analysis asks "what if?" questions: What happens to this company's profits if governments impose a high carbon tax? What if global temperatures rise by 3 C? ISS ESG provides scenario-aligned data for regulatory stress tests and strategic planning.
 
 > [!tip] Related terms
-> [[#Carbon Budget]], [[#IEA Net Zero Pathway]], [[#Physical Risk]], [[#Transition Risk]]
+> [Carbon Budget](#carbon-budget), [IEA Net Zero Pathway](#iea-net-zero-pathway), [Physical Risk](#physical-risk), [Transition Risk](#transition-risk)
 
 > [!example]- Source excerpts (5)
 >
@@ -531,6 +551,10 @@ scenario analysis asks "what if?" questions: What happens to this company's prof
 
 ---
 
+> [!quote]
+> "There is no such thing as waste in nature; everything is recycled."
+> — **Michael Braungart**
+
 ### Circular Economy
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14 mentions across STOXX & ISS pages (low)">▰▰ 14</span>
@@ -541,7 +565,7 @@ scenario analysis asks "what if?" questions: What happens to this company's prof
 a circular economy keeps resources in use for as long as possible. Instead of mining new raw materials, manufacturing a product, and sending it to a landfill, companies design for reuse, repair, and recycling. ISS ESG and STOXX use circular-economy criteria in thematic indices that track companies enabling or adopting circular business models.
 
 > [!tip] Related terms
-> [[#Environmental Footprint]], [[#Green Revenue]], [[#Natural Capital]]
+> [Environmental Footprint](#environmental-footprint), [Green Revenue](#green-revenue), [Natural Capital](#natural-capital)
 
 > [!example]- Source excerpts (5)
 >
@@ -588,7 +612,7 @@ a circular economy keeps resources in use for as long as possible. Instead of mi
 climate litigation is the growing wave of lawsuits accusing companies of causing climate harm or misleading investors about climate risks. A fossil-fuel company sued for decades of emissions, or a corporation accused of greenwashing, faces climate litigation risk. ISS ESG tracks pending and resolved climate-related legal actions as part of its controversy monitoring.
 
 > [!tip] Related terms
-> [[#Greenwashing]], [[#Transition Risk]], [[#Stranded Assets]]
+> [Greenwashing](#greenwashing), [Transition Risk](#transition-risk), [Stranded Assets](#stranded-assets)
 
 > [!example]- Source excerpts (1)
 >
@@ -601,6 +625,10 @@ climate litigation is the growing wave of lawsuits accusing companies of causing
 
 ---
 
+> [!quote]
+> "The transition to clean energy is the greatest commercial opportunity of our time."
+> — **Mark Carney**
+
 ### Climate Transition
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="459 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 459</span>
@@ -611,7 +639,7 @@ climate litigation is the growing wave of lawsuits accusing companies of causing
 climate transition is the journey from fossil-fuel dependence to a sustainable economy. STOXX Climate Transition Benchmark (CTB) indices track companies that are actively on this journey, weighting them by their progress.
 
 > [!tip] Related terms
-> [[#Decarbonization Pathway]], [[#Net Zero Transition]], [[#Transition Risk]]
+> [Decarbonization Pathway](#decarbonization-pathway), [Net Zero Transition](#net-zero-transition), [Transition Risk](#transition-risk)
 
 > [!example]- Source excerpts (5)
 >
@@ -650,6 +678,10 @@ climate transition is the journey from fossil-fuel dependence to a sustainable e
 
 ## D
 
+> [!quote]
+> "A goal without a plan is just a wish."
+> — **Antoine de Saint-Exupery**
+
 ### Decarbonization Pathway
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="64 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 64</span>
@@ -664,7 +696,7 @@ $$\text{Target Intensity}_t = \text{Base Intensity} \times (1 - r)^{t}$$
 where $r$ is the annual decarbonization rate (e.g., 7% for PAB) and $t$ is years since the base year.
 
 > [!tip] Related terms
-> [[#Carbon Budget]], [[#IEA Net Zero Pathway]], [[#Net Zero Transition]], [[#Paris-Aligned Benchmark (PAB)]]
+> [Carbon Budget](#carbon-budget), [IEA Net Zero Pathway](#iea-net-zero-pathway), [Net Zero Transition](#net-zero-transition), [Paris-Aligned Benchmark (PAB)](#paris-aligned-benchmark-pab)
 
 > [!example]- Source excerpts (5)
 >
@@ -716,7 +748,7 @@ where $r$ is the annual decarbonization rate (e.g., 7% for PAB) and $t$ is years
 deforestation risk flags companies whose business depends on products that drive forest loss. ISS ESG evaluates supply-chain exposure and corporate no-deforestation commitments.
 
 > [!tip] Related terms
-> [[#Biodiversity Impact Assessment]], [[#Nature-Related Risk]]
+> [Biodiversity Impact Assessment](#biodiversity-impact-assessment), [Nature-Related Risk](#nature-related-risk)
 
 > [!example]- Source excerpts (2)
 >
@@ -751,7 +783,7 @@ energy efficiency means doing more with less energy — better insulation, smart
 $$\text{Energy Efficiency} = \frac{\text{Useful Energy Output}}{\text{Total Energy Input}} \times 100\%$$
 
 > [!tip] Related terms
-> [[#Carbon Intensity]], [[#Energy Transition]], [[#Green Revenue]]
+> [Carbon Intensity](#carbon-intensity), [Energy Transition](#energy-transition), [Green Revenue](#green-revenue)
 
 > [!example]- Source excerpts (5)
 >
@@ -800,7 +832,7 @@ $$\text{Energy Efficiency} = \frac{\text{Useful Energy Output}}{\text{Total Ener
 the energy transition is the move away from burning fossil fuels toward cleaner alternatives. It is the single largest component of the broader climate transition. STOXX and ISS ESG use energy-transition metrics — such as renewable energy capacity, fossil-fuel revenue share, and capex alignment — to construct climate benchmarks and thematic indices.
 
 > [!tip] Related terms
-> [[#Climate Transition]], [[#Fossil Fuel Divestment]], [[#Net Zero Transition]], [[#Renewable Energy Capacity]]
+> [Climate Transition](#climate-transition), [Fossil Fuel Divestment](#fossil-fuel-divestment), [Net Zero Transition](#net-zero-transition), [Renewable Energy Capacity](#renewable-energy-capacity)
 
 > [!example]- Source excerpts (5)
 >
@@ -850,7 +882,7 @@ the energy transition is the move away from burning fossil fuels toward cleaner 
 an environmental footprint is a broad scorecard of how heavily a company treads on the planet. While a carbon footprint focuses only on emissions, an environmental footprint also captures water consumption, waste generation, and ecosystem disruption. ISS ESG provides multi-dimensional environmental footprint data for corporate sustainability assessments.
 
 > [!tip] Related terms
-> [[#Carbon Footprint]], [[#Circular Economy]], [[#Natural Capital]], [[#Water Stress]]
+> [Carbon Footprint](#carbon-footprint), [Circular Economy](#circular-economy), [Natural Capital](#natural-capital), [Water Stress](#water-stress)
 
 > [!example]- Source excerpts (2)
 >
@@ -873,6 +905,10 @@ an environmental footprint is a broad scorecard of how heavily a company treads 
 
 ## F
 
+> [!quote]
+> "Follow the money and you will find the emissions."
+> — **Mark Carney**
+
 ### Financed Emissions
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
@@ -885,7 +921,7 @@ financed emissions answer the question: "How much pollution is my bank or fund r
 $$\text{Financed Emissions}_i = \frac{\text{Outstanding Amount}_i}{\text{EVIC}_i} \times \text{Emissions}_i$$
 
 > [!tip] Related terms
-> [[#Carbon Footprint]], [[#Emissions Scopes (Scope 1, Scope 2, Scope 3)]], [[#Weighted Average Carbon Intensity (WACI)]]
+> [Carbon Footprint](#carbon-footprint), [Emissions Scopes (Scope 1, Scope 2, Scope 3)](#emissions-scopes-scope-1-scope-2-scope-3), [Weighted Average Carbon Intensity (WACI)](#weighted-average-carbon-intensity-waci)
 
 > [!example]- Source excerpts (5)
 >
@@ -927,6 +963,10 @@ $$\text{Financed Emissions}_i = \frac{\text{Outstanding Amount}_i}{\text{EVIC}_i
 
 ---
 
+> [!quote]
+> "Capital markets can be a powerful force for environmental good."
+> — **Christine Lagarde**
+
 ### Green Bond
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="34 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 34</span>
@@ -937,7 +977,7 @@ $$\text{Financed Emissions}_i = \frac{\text{Outstanding Amount}_i}{\text{EVIC}_i
 a green bond is a loan that a company or government raises specifically to fund environmentally friendly projects. ISS ESG provides second-party opinions (SPOs) that verify whether a bond qualifies as "green" under frameworks like the ICMA Green Bond Principles.
 
 > [!tip] Related terms
-> [[#Green Revenue]], [[#Climate Transition]]
+> [Green Revenue](#green-revenue), [Climate Transition](#climate-transition)
 
 > [!example]- Source excerpts (5)
 >
@@ -986,7 +1026,7 @@ a green bond is a loan that a company or government raises specifically to fund 
 green revenue is the "clean" portion of a company's income. STOXX uses green-revenue data to overweight companies earning more from sustainable activities and to screen for inclusion in sustainability indices.
 
 > [!tip] Related terms
-> [[#Brown Revenue]], [[#Avoided Emissions]], [[#Green Bond]]
+> [Brown Revenue](#brown-revenue), [Avoided Emissions](#avoided-emissions), [Green Bond](#green-bond)
 
 > [!example]- Source excerpts (4)
 >
@@ -1020,6 +1060,10 @@ green revenue is the "clean" portion of a company's income. STOXX uses green-rev
 
 ---
 
+> [!quote]
+> "CO2 is the thermostat knob that controls Earth's temperature."
+> — **James Hansen**
+
 ### Greenhouse Gas (GHG)
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="431 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 431</span>
@@ -1032,7 +1076,7 @@ greenhouse gases act like a blanket around the Earth, trapping heat. CO2 is the 
 $$\text{CO}_2\text{e} = \sum_{g} \text{Emissions}_g \times \text{GWP}_g$$
 
 > [!tip] Related terms
-> [[#Carbon Footprint]], [[#Emissions Scopes (Scope 1, Scope 2, Scope 3)]]
+> [Carbon Footprint](#carbon-footprint), [Emissions Scopes (Scope 1, Scope 2, Scope 3)](#emissions-scopes-scope-1-scope-2-scope-3)
 
 > [!example]- Source excerpts (5)
 >
@@ -1074,6 +1118,10 @@ $$\text{CO}_2\text{e} = \sum_{g} \text{Emissions}_g \times \text{GWP}_g$$
 
 ---
 
+> [!quote]
+> "A half-truth is the most cowardly of lies."
+> — **Mark Twain**
+
 ### Greenwashing
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="43 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 43</span>
@@ -1084,7 +1132,7 @@ $$\text{CO}_2\text{e} = \sum_{g} \text{Emissions}_g \times \text{GWP}_g$$
 greenwashing is when companies or fund managers talk a bigger climate game than they actually play. Regulators (including the EU via SFDR and the Benchmark Regulation) and data providers like ISS ESG work to detect and flag greenwashing by verifying claims against actual performance data, taxonomy alignment, and controversy records.
 
 > [!tip] Related terms
-> [[#Climate Litigation]], [[#Green Bond]], [[#Green Revenue]]
+> [Climate Litigation](#climate-litigation), [Green Bond](#green-bond), [Green Revenue](#green-revenue)
 
 > [!example]- Source excerpts (5)
 >
@@ -1134,7 +1182,7 @@ greenwashing is when companies or fund managers talk a bigger climate game than 
 high-emitting sectors are the industries most responsible for climate change. STOXX climate benchmarks must maintain at least equivalent aggregate exposure to these sectors as the parent index, ensuring the benchmark does not simply "divest" from the problem.
 
 > [!tip] Related terms
-> [[#Brown Revenue]], [[#Carbon Intensity]], [[#Transition Risk]]
+> [Brown Revenue](#brown-revenue), [Carbon Intensity](#carbon-intensity), [Transition Risk](#transition-risk)
 
 > [!example]- Source excerpts (4)
 >
@@ -1176,7 +1224,7 @@ high-emitting sectors are the industries most responsible for climate change. ST
 habitat loss means that the places where wild species live are being destroyed, fragmented, or degraded. For investors, companies linked to habitat loss through their operations or supply chains face regulatory, reputational, and litigation risk. ISS ESG assesses corporate exposure to habitat-loss drivers as part of its biodiversity and nature-related risk analytics.
 
 > [!tip] Related terms
-> [[#Biodiversity Impact Assessment]], [[#Biodiversity Loss]], [[#Deforestation Risk]], [[#Nature-Related Risk]]
+> [Biodiversity Impact Assessment](#biodiversity-impact-assessment), [Biodiversity Loss](#biodiversity-loss), [Deforestation Risk](#deforestation-risk), [Nature-Related Risk](#nature-related-risk)
 
 > [!example]- Source excerpts (1)
 >
@@ -1202,7 +1250,7 @@ habitat loss means that the places where wild species live are being destroyed, 
 implied temperature rise answers: "If every company in the world behaved like this one, how hot would the planet get?" A score of 1.5 C means the company is aligned with the Paris Agreement; 3 C+ signals significant misalignment. ISS ESG calculates this metric using proprietary climate models.
 
 > [!tip] Related terms
-> [[#Climate Scenario Analysis]], [[#Temperature Alignment]], [[#Science-Based Target]]
+> [Climate Scenario Analysis](#climate-scenario-analysis), [Temperature Alignment](#temperature-alignment), [Science-Based Target](#science-based-target)
 
 > [!example]- Source excerpts (5)
 >
@@ -1244,6 +1292,10 @@ implied temperature rise answers: "If every company in the world behaved like th
 
 ## J
 
+> [!quote]
+> "No one should be left behind in the shift to a green economy."
+> — **Christine Lagarde**
+
 ### Just Transition
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
@@ -1254,7 +1306,7 @@ implied temperature rise answers: "If every company in the world behaved like th
 a just transition means making sure that the move to clean energy does not leave coal miners, oil workers, and their communities behind. Investors increasingly evaluate whether companies have credible just-transition plans alongside their decarbonization strategies. ISS ESG integrates social and workforce indicators into its assessment of corporate transition readiness.
 
 > [!tip] Related terms
-> [[#Climate Transition]], [[#Energy Transition]], [[#Net Zero Transition]], [[#Social License to Operate]]
+> [Climate Transition](#climate-transition), [Energy Transition](#energy-transition), [Net Zero Transition](#net-zero-transition), [Social License to Operate](#social-license-to-operate)
 
 > [!example]- Source excerpts (5)
 >
@@ -1309,7 +1361,7 @@ $$\text{CO}_2\text{e (methane)} = \text{CH}_4 \text{ Emissions (tonnes)} \times 
 where $\text{GWP}_{\text{CH}_4}$ is 28 (100-year) or 80 (20-year) per IPCC AR6.
 
 > [!tip] Related terms
-> [[#Carbon Intensity]], [[#Emissions Scopes (Scope 1, Scope 2, Scope 3)]], [[#Greenhouse Gas (GHG)]]
+> [Carbon Intensity](#carbon-intensity), [Emissions Scopes (Scope 1, Scope 2, Scope 3)](#emissions-scopes-scope-1-scope-2-scope-3), [Greenhouse Gas (GHG)](#greenhouse-gas-ghg)
 
 > [!example]- Source excerpts (5)
 >
@@ -1363,7 +1415,7 @@ where $\text{GWP}_{\text{CH}_4}$ is 28 (100-year) or 80 (20-year) per IPCC AR6.
 nature-related risk captures the idea that businesses depend on healthy ecosystems (pollination, clean water, stable soils) and face financial consequences when those systems break down. ISS ESG integrates nature-related metrics alongside traditional climate data.
 
 > [!tip] Related terms
-> [[#Biodiversity Impact Assessment]], [[#Deforestation Risk]], [[#Physical Risk]], [[#Water Risk]]
+> [Biodiversity Impact Assessment](#biodiversity-impact-assessment), [Deforestation Risk](#deforestation-risk), [Physical Risk](#physical-risk), [Water Risk](#water-risk)
 
 > [!example]- Source excerpts (5)
 >
@@ -1413,7 +1465,7 @@ nature-related risk captures the idea that businesses depend on healthy ecosyste
 natural capital is the planet's "balance sheet" of natural assets. Just as a company's financial capital can be depleted through overspending, natural capital can be run down through pollution, overextraction, and habitat destruction. ISS ESG evaluates corporate dependencies on natural capital and the risks of its degradation, informing nature-related financial disclosures.
 
 > [!tip] Related terms
-> [[#Biodiversity Loss]], [[#Environmental Footprint]], [[#Nature-Related Risk]], [[#Water Risk]]
+> [Biodiversity Loss](#biodiversity-loss), [Environmental Footprint](#environmental-footprint), [Nature-Related Risk](#nature-related-risk), [Water Risk](#water-risk)
 
 > [!example]- Source excerpts (5)
 >
@@ -1453,6 +1505,10 @@ natural capital is the planet's "balance sheet" of natural assets. Just as a com
 
 ---
 
+> [!quote]
+> "Net zero by 2050 is the defining challenge of our era."
+> — **Mark Carney**
+
 ### Net Zero
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="351 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 351</span>
@@ -1463,7 +1519,7 @@ natural capital is the planet's "balance sheet" of natural assets. Just as a com
 net zero means putting no more carbon into the air than is taken out. For a company, this usually requires deep cuts in direct emissions (Scope 1 and 2) and value-chain emissions (Scope 3), with residual emissions neutralized through permanent carbon removal.
 
 > [!tip] Related terms
-> [[#Carbon Budget]], [[#Decarbonization Pathway]], [[#Net Zero Transition]], [[#Science-Based Target]]
+> [Carbon Budget](#carbon-budget), [Decarbonization Pathway](#decarbonization-pathway), [Net Zero Transition](#net-zero-transition), [Science-Based Target](#science-based-target)
 
 > [!example]- Source excerpts (5)
 >
@@ -1509,7 +1565,7 @@ net zero means putting no more carbon into the air than is taken out. For a comp
 net zero transition is the *journey*, while net zero is the *destination*. STOXX Climate Transition Benchmarks reward companies that demonstrate credible transition plans, even if they currently operate in high-emitting sectors.
 
 > [!tip] Related terms
-> [[#Climate Transition]], [[#Decarbonization Pathway]], [[#Net Zero]], [[#Transition Risk]]
+> [Climate Transition](#climate-transition), [Decarbonization Pathway](#decarbonization-pathway), [Net Zero](#net-zero), [Transition Risk](#transition-risk)
 
 > [!example]- Source excerpts (5)
 >
@@ -1565,7 +1621,7 @@ $$\text{PAB Carbon Intensity} \leq 0.50 \times \text{Parent Index Carbon Intensi
 $$\text{PAB Carbon Intensity}_t \leq \text{PAB Carbon Intensity}_{t-1} \times (1 - 0.07)$$
 
 > [!tip] Related terms
-> [[#Climate Transition]], [[#Decarbonization Pathway]], [[#Weighted Average Carbon Intensity (WACI)]]
+> [Climate Transition](#climate-transition), [Decarbonization Pathway](#decarbonization-pathway), [Weighted Average Carbon Intensity (WACI)](#weighted-average-carbon-intensity-waci)
 
 > [!example]- Source excerpts (5)
 >
@@ -1605,6 +1661,10 @@ $$\text{PAB Carbon Intensity}_t \leq \text{PAB Carbon Intensity}_{t-1} \times (1
 
 ---
 
+> [!quote]
+> "Nature bats last."
+> — **Paul Ehrlich**
+
 ### Physical Risk
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="26 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 26</span>
@@ -1615,7 +1675,7 @@ $$\text{PAB Carbon Intensity}_t \leq \text{PAB Carbon Intensity}_{t-1} \times (1
 physical risk is the danger that climate change will damage a company's factories, disrupt its supply chain, or reduce demand for its products. A coastal real-estate portfolio, for example, faces high physical risk from sea-level rise.
 
 > [!tip] Related terms
-> [[#Climate Scenario Analysis]], [[#Nature-Related Risk]], [[#Transition Risk]], [[#Water Risk]]
+> [Climate Scenario Analysis](#climate-scenario-analysis), [Nature-Related Risk](#nature-related-risk), [Transition Risk](#transition-risk), [Water Risk](#water-risk)
 
 > [!example]- Source excerpts (5)
 >
@@ -1666,7 +1726,7 @@ physical risk is the danger that climate change will damage a company's factorie
 a science-based target is a company's climate pledge that has been checked against actual climate science. ISS ESG tracks whether companies have set, committed to, or validated science-based targets, and STOXX uses this information in index construction.
 
 > [!tip] Related terms
-> [[#Decarbonization Pathway]], [[#IEA Net Zero Pathway]], [[#Net Zero]], [[#Temperature Alignment]]
+> [Decarbonization Pathway](#decarbonization-pathway), [IEA Net Zero Pathway](#iea-net-zero-pathway), [Net Zero](#net-zero), [Temperature Alignment](#temperature-alignment)
 
 > [!example]- Source excerpts (5)
 >
@@ -1706,6 +1766,10 @@ a science-based target is a company's climate pledge that has been checked again
 
 ---
 
+> [!quote]
+> "Most fossil fuel reserves are unburnable if we are to stay within two degrees."
+> — **Mark Carney**
+
 ### Stranded Assets
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -1716,7 +1780,7 @@ a science-based target is a company's climate pledge that has been checked again
 stranded assets are investments that lose their value because climate policy, technology shifts, or changing demand make them uneconomic. An oil company sitting on vast reserves may find those reserves worthless under strict climate regulation.
 
 > [!tip] Related terms
-> [[#Brown Revenue]], [[#Carbon Budget]], [[#High-Emitting Sectors]], [[#Transition Risk]]
+> [Brown Revenue](#brown-revenue), [Carbon Budget](#carbon-budget), [High-Emitting Sectors](#high-emitting-sectors), [Transition Risk](#transition-risk)
 
 > [!example]- Source excerpts (1)
 >
@@ -1740,7 +1804,7 @@ stranded assets are investments that lose their value because climate policy, te
 the SDGs are the world's shared to-do list — from "No Poverty" (Goal 1) to "Climate Action" (Goal 13) to "Life Below Water" (Goal 14). Fund managers use SDG-alignment data from ISS ESG to build thematic sustainability portfolios.
 
 > [!tip] Related terms
-> [[#Green Revenue]], [[#Biodiversity Impact Assessment]]
+> [Green Revenue](#green-revenue), [Biodiversity Impact Assessment](#biodiversity-impact-assessment)
 
 > [!example]- Source excerpts (5)
 >
@@ -1789,7 +1853,7 @@ the SDGs are the world's shared to-do list — from "No Poverty" (Goal 1) to "Cl
 temperature alignment is a thermometer for investments. If a portfolio's temperature alignment is 2.5 C, it means the portfolio is overshooting the Paris Agreement and contributing to a warmer-than-safe world. ISS ESG provides company-level temperature scores used in STOXX climate benchmarks.
 
 > [!tip] Related terms
-> [[#Implied Temperature Rise]], [[#Decarbonization Pathway]], [[#Science-Based Target]]
+> [Implied Temperature Rise](#implied-temperature-rise), [Decarbonization Pathway](#decarbonization-pathway), [Science-Based Target](#science-based-target)
 
 > [!example]- Source excerpts (1)
 >
@@ -1813,7 +1877,7 @@ temperature alignment is a thermometer for investments. If a portfolio's tempera
 transition metals are the raw materials that make decarbonization possible. Without lithium for batteries or copper for electric wiring, the energy transition stalls. STOXX thematic indices track companies involved in mining, refining, or recycling these materials.
 
 > [!tip] Related terms
-> [[#Climate Transition]], [[#Green Revenue]], [[#Net Zero Transition]]
+> [Climate Transition](#climate-transition), [Green Revenue](#green-revenue), [Net Zero Transition](#net-zero-transition)
 
 > [!example]- Source excerpts (5)
 >
@@ -1853,6 +1917,10 @@ transition metals are the raw materials that make decarbonization possible. With
 
 ---
 
+> [!quote]
+> "The biggest risk is not that the transition happens too fast, but that it happens too late."
+> — **Mark Carney**
+
 ### Transition Risk
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="96 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 96</span>
@@ -1863,7 +1931,7 @@ transition metals are the raw materials that make decarbonization possible. With
 transition risk is the danger that climate *policy and technology* — rather than climate *weather* — will hurt a company's bottom line. A carbon tax, for instance, directly raises costs for high-emitting firms. ISS ESG quantifies transition risk through carbon pricing scenarios, technology exposure analysis, and regulatory mapping.
 
 > [!tip] Related terms
-> [[#Climate Scenario Analysis]], [[#High-Emitting Sectors]], [[#Physical Risk]], [[#Stranded Assets]]
+> [Climate Scenario Analysis](#climate-scenario-analysis), [High-Emitting Sectors](#high-emitting-sectors), [Physical Risk](#physical-risk), [Stranded Assets](#stranded-assets)
 
 > [!example]- Source excerpts (5)
 >
@@ -1905,6 +1973,10 @@ transition risk is the danger that climate *policy and technology* — rather th
 
 ## W
 
+> [!quote]
+> "Thousands have lived without love, not one without water."
+> — **W.H. Auden**
+
 ### Water Risk
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="19 mentions across STOXX & ISS pages (low)">▰▰ 19</span>
@@ -1915,7 +1987,7 @@ transition risk is the danger that climate *policy and technology* — rather th
 water risk captures the business consequences of having too little water (drought), too much (floods), or water that is too dirty to use. ISS ESG assesses water risk at the facility level, mapping company sites against hydrological basin data.
 
 > [!tip] Related terms
-> [[#Nature-Related Risk]], [[#Physical Risk]], [[#Water Stress]]
+> [Nature-Related Risk](#nature-related-risk), [Physical Risk](#physical-risk), [Water Stress](#water-stress)
 
 > [!example]- Source excerpts (5)
 >
@@ -1968,7 +2040,7 @@ $$\text{Water Stress Ratio} = \frac{\text{Total Water Withdrawals}}{\text{Availa
 A ratio above 0.4 (40%) is generally classified as "high water stress."
 
 > [!tip] Related terms
-> [[#Nature-Related Risk]], [[#Physical Risk]], [[#Water Risk]]
+> [Nature-Related Risk](#nature-related-risk), [Physical Risk](#physical-risk), [Water Risk](#water-risk)
 
 > [!example]- Source excerpts (5)
 >
@@ -2023,7 +2095,7 @@ $$\text{WACI} = \sum_{i} w_i \times \frac{\text{Scope 1 + Scope 2 Emissions}_i}{
 where $w_i$ is the portfolio weight of company $i$.
 
 > [!tip] Related terms
-> [[#Carbon Footprint]], [[#Carbon Intensity]], [[#Financed Emissions]], [[#Paris-Aligned Benchmark (PAB)]]
+> [Carbon Footprint](#carbon-footprint), [Carbon Intensity](#carbon-intensity), [Financed Emissions](#financed-emissions), [Paris-Aligned Benchmark (PAB)](#paris-aligned-benchmark-pab)
 
 > [!example]- Source excerpts (3)
 >

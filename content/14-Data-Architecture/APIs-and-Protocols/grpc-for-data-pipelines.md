@@ -77,23 +77,23 @@ gRPC is a high-performance, open-source RPC framework developed by Google that u
 
 ## Table of Contents
 
-1. [[#What gRPC Is]]
-2. [[#When Data Engineers Use gRPC]]
-3. [[#Protocol Buffers]]
-4. [[#Complete .proto File Example]]
-5. [[#Four RPC Types]]
-6. [[#Python gRPC Server Implementation]]
-7. [[#Python gRPC Client Implementation]]
-8. [[#Server Streaming for Real-Time Market Data]]
-9. [[#Client Streaming for Bulk Ingestion]]
-10. [[#Bidirectional Streaming]]
-11. [[#Error Handling and Status Codes]]
-12. [[#Interceptors]]
-13. [[#Load Balancing and Service Discovery]]
-14. [[#Health Checking and Reflection]]
-15. [[#gRPC vs REST Comparison]]
-16. [[#gRPC on GCP]]
-17. [[#When NOT to Use gRPC]]
+1. [What gRPC Is](#what-grpc-is)
+2. [When Data Engineers Use gRPC](#when-data-engineers-use-grpc)
+3. [Protocol Buffers](#protocol-buffers)
+4. [Complete .proto File Example](#complete-proto-file-example)
+5. [Four RPC Types](#four-rpc-types)
+6. [Python gRPC Server Implementation](#python-grpc-server-implementation)
+7. [Python gRPC Client Implementation](#python-grpc-client-implementation)
+8. [Server Streaming for Real-Time Market Data](#server-streaming-for-real-time-market-data)
+9. [Client Streaming for Bulk Ingestion](#client-streaming-for-bulk-ingestion)
+10. [Bidirectional Streaming](#bidirectional-streaming)
+11. [Error Handling and Status Codes](#error-handling-and-status-codes)
+12. [Interceptors](#interceptors)
+13. [Load Balancing and Service Discovery](#load-balancing-and-service-discovery)
+14. [Health Checking and Reflection](#health-checking-and-reflection)
+15. [gRPC vs REST Comparison](#grpc-vs-rest-comparison)
+16. [gRPC on GCP](#grpc-on-gcp)
+17. [When NOT to Use gRPC](#when-not-to-use-grpc)
 
 ---
 

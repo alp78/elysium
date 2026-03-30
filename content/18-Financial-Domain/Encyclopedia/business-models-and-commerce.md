@@ -47,6 +47,10 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ---
 
+> [!quote]
+> "The Internet is becoming the town square for the global village of tomorrow."
+> — **Bill Gates**
+
 ## E-Commerce
 
 **Definition:** E-commerce (electronic commerce) refers to the buying and selling of goods and services over the internet. It encompasses online retail stores, digital marketplaces, business-to-business trading platforms, and direct-to-consumer sales channels. E-commerce has transformed traditional retail by enabling businesses to reach global customers, operate 24/7, offer personalized shopping experiences, and reduce the overhead costs associated with physical stores. It includes various models such as B2C, B2B, C2C (consumer-to-consumer), and D2C (direct-to-consumer).
@@ -58,6 +62,10 @@ Encyclopedia of business model and commerce terms covering how companies structu
 **Related terms:** [Business-to-Consumer (B2C)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Business-to-Consumer (B2C)), [Business-to-Business (B2B)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Business-to-Business (B2B)), [Omnichannel](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Omnichannel), [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation), [Platform Business Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Platform Business Model), [Marketplace](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Marketplace)
 
 ---
+
+> [!quote]
+> "In business, the idea of measuring what you are doing, picking the measurements that count, is one that applies to franchising."
+> — **Ray Kroc**
 
 ## Franchise
 
@@ -94,6 +102,10 @@ Encyclopedia of business model and commerce terms covering how companies structu
 **Related terms:** [Subscription Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Subscription Model), [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service)), [White-Label Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#White-Label Services), [Cloud Computing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cloud Computing)
 
 ---
+
+> [!quote]
+> "A platform is a business model that creates value by facilitating exchanges between two or more interdependent groups."
+> — **Alex Moazed**
 
 ## Marketplace
 
@@ -143,6 +155,10 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ---
 
+> [!quote]
+> "The most scalable businesses are those that can grow without adding marginal cost for each new customer."
+> — **Sangeet Paul Choudary**
+
 ## Platform Business Model
 
 **Definition:** A platform business model creates value by facilitating exchanges between two or more interdependent groups, typically consumers and producers. Unlike traditional linear business models where a company produces and sells a product, platform businesses act as intermediaries that connect participants and earn revenue through transaction fees, subscriptions, or advertising. Platform businesses benefit from network effects: the more users that join, the more valuable the platform becomes for all participants. Digital platforms have disrupted industries from transportation to hospitality to financial services.
@@ -154,6 +170,10 @@ Encyclopedia of business model and commerce terms covering how companies structu
 **Related terms:** [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#E-Commerce), [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service)), [Marketplace](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Marketplace), [Fintech](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Fintech), [Subscription Model](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Subscription Model)
 
 ---
+
+> [!quote]
+> "Recurring revenue is the key to building a company that has real, lasting value."
+> — **John Warrillow**
 
 ## Subscription Model
 

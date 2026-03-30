@@ -14,8 +14,8 @@ status: complete
 # gcloud Output Formatting and Filtering
 
 > [!quote]
-> "Numbers have an important story to tell. They rely on you to give them a clear and convincing voice."
-> — **Stephen Few**, data visualization expert
+> "The difference between a gcloud command that works in a script and one that doesn't is the --format flag."
+> — **Ahmet Alp Balkan**, Google Cloud developer tools engineer
 
 The `--format` and `--filter` flags are the most underused features of the [gcloud CLI](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication). They transform gcloud from a human-readable tool into a scriptable data extraction engine, enabling you to pipe exact field values into shell scripts, build inventory automation, and run server-side filtered queries instead of grepping local output.
 
@@ -127,6 +127,53 @@ gcloud compute instances list --impersonate-service-account=pipeline-sa@project.
 - [gcloud-configurations](https://alp78.github.io/elysium/06-GCP/Core/gcloud-configurations) — Switching projects before running formatted queries
 - [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) — Listing projects and enabled APIs with formatted output
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — Impersonating service accounts to test permissions
+
+---
+
+### Useful gcloud One-Liners
+
+Compound commands for daily GCP operations — project info, failed job lookup, IAM auditing, BigQuery slot usage, storage inspection.
+
+```bash
+# Current project, account, and active config
+gcloud config list --format="value(core.project,core.account)"
+
+# Cloud Run jobs that failed in the last 24 hours
+gcloud logging read \
+  'resource.type="cloud_run_job" AND severity=ERROR' \
+  --freshness=24h --limit=50 --format=json \
+  | jq '.[] | {job: .resource.labels.job_name, time: .timestamp, msg: .textPayload}'
+
+# All service accounts with creation dates
+gcloud iam service-accounts list \
+  --format="table(email,displayName,oauth2ClientId)"
+
+# Roles assigned to a specific service account
+gcloud projects get-iam-policy fin-prod-project \
+  --format=json | jq \
+  '.bindings[] | select(.members[] | contains("pipeline-sa@fin-prod-project")) | .role'
+
+# BigQuery slot utilisation for today
+bq query --use_legacy_sql=false --format=prettyjson '
+  SELECT job_id, user_email, total_slot_ms, total_bytes_processed
+  FROM `region-EU.INFORMATION_SCHEMA.JOBS_BY_PROJECT`
+  WHERE DATE(creation_time) = CURRENT_DATE()
+  ORDER BY total_slot_ms DESC LIMIT 20'
+
+# Largest objects in a GCS bucket
+gcloud storage ls -l 'gs://fin-datalake-bucket/**' \
+  | sort -rn -k1 | head -20
+
+# Firewall rules allowing ingress from 0.0.0.0/0
+gcloud compute firewall-rules list \
+  --filter="direction=INGRESS AND sourceRanges:0.0.0.0/0" \
+  --format="table(name,network,allowed[].ports,targetTags)"
+
+# Call a private Cloud Run service with identity token
+TOKEN=$(gcloud auth print-identity-token)
+curl -sS -H "Authorization: Bearer ${TOKEN}" \
+  https://prices-api-xyz-ew.a.run.app/v1/prices/AAPL
+```
 
 ## References
 

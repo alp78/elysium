@@ -78,23 +78,23 @@ status: complete
 
 ### Table of Contents
 
-1. [[#Cloud Monitoring Architecture]]
-2. [[#Monitoring Every GCP Component Used in Data Engineering]]
-   - [[#Compute Engine VMs]]
-   - [[#BigQuery]]
-   - [[#Cloud Run Jobs and Services]]
-   - [[#Pub/Sub]]
-   - [[#Cloud Storage]]
-   - [[#Firestore]]
-   - [[#Cloud Scheduler and Cloud Functions]]
-3. [[#Monitoring Query Language (MQL)]]
-4. [[#Custom Metrics for Data Pipelines]]
-5. [[#Dashboards]]
-6. [[#Alerting Policies]]
-7. [[#Uptime Checks]]
-8. [[#SLIs and SLOs]]
-9. [[#Cloud Monitoring vs Datadog — Feature Parity]]
-10. [[#Operational Runbook]]
+1. [Cloud Monitoring Architecture](#cloud-monitoring-architecture)
+2. [Monitoring Every GCP Component Used in Data Engineering](#monitoring-every-gcp-component-used-in-data-engineering)
+   - [Compute Engine VMs](#compute-engine-vms)
+   - [BigQuery](#bigquery)
+   - [Cloud Run Jobs and Services](#cloud-run-jobs-and-services)
+   - [Pub/Sub](#pubsub)
+   - [Cloud Storage](#cloud-storage)
+   - [Firestore](#firestore)
+   - [Cloud Scheduler and Cloud Functions](#cloud-scheduler-and-cloud-functions)
+3. [Monitoring Query Language (MQL)](#monitoring-query-language-mql)
+4. [Custom Metrics for Data Pipelines](#custom-metrics-for-data-pipelines)
+5. [Dashboards](#dashboards)
+6. [Alerting Policies](#alerting-policies)
+7. [Uptime Checks](#uptime-checks)
+8. [SLIs and SLOs](#slis-and-slos)
+9. [Cloud Monitoring vs Datadog — Feature Parity](#cloud-monitoring-vs-datadog-feature-parity)
+10. [Operational Runbook](#operational-runbook)
 
 ---
 
@@ -281,6 +281,9 @@ After installation, additional metrics become available:
 
 The Ops Agent can collect SQL Server performance counters via its `sqlserver` receiver. Configuration lives at `/etc/google-cloud-ops-agent/config.yaml`.
 
+> [!info] Ops Agent SQL Server authentication
+> By default the Ops Agent uses Windows Authentication (the service account running the agent). To use SQL Authentication instead, uncomment `username` and `password` in the config below and set the environment variable `SQL_MONITORING_PASSWORD`.
+
 ```yaml
 # /etc/google-cloud-ops-agent/config.yaml
 metrics:
@@ -288,9 +291,7 @@ metrics:
     sqlserver:
       type: sqlserver
       collection_interval: 60s
-      # Uses Windows Authentication (running as a service account)
-      # or SQL Authentication:
-      # username: monitoring_user
+      # username: monitoring_user         # uncomment for SQL Authentication
       # password: ${SQL_MONITORING_PASSWORD}
 
   service:

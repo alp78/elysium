@@ -16,8 +16,8 @@ status: complete
 When a pipeline process is stuck — an infinite loop, a hanging database connection, a deadlocked worker — you need to terminate it. The order of escalation matters: graceful first (let the process clean up), forceful only as a last resort. `kill -9` without trying SIGTERM first causes data corruption, orphaned lock files, and unrolled transactions.
 
 > [!quote]
-> "I call it my billion-dollar mistake. It was the invention of the null reference in 1965."
-> — **Tony Hoare**
+> "If SIGTERM is asking a process to leave the building, SIGKILL is the operating system dropping a concrete block on it."
+> — Unix sysadmin proverb
 
 ## Linux — kill, pkill, killall
 

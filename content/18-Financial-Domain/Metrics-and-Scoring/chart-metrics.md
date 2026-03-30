@@ -36,6 +36,10 @@ Trailing 30-day cumulative return, plotted daily. Uses a baseline series (green 
 
 **Interpretation**: Positive = recent momentum is bullish. Sustained values > +5% indicate a strong trend. Zero crossings mark regime changes.
 
+> [!quote]
+> "The real measure of your wealth is how much you'd be worth if you lost all your money."
+> — **Bernard Meltzer**
+
 ## Drawdown from Peak (%)
 
 Distance from the running all-time high of the cumulative factor. This metric is always less than or equal to zero.
@@ -73,6 +77,10 @@ A horizontal dashed line marks the historical average for the selected index.
 | 15–25% | Elevated |
 | > 25% | High risk |
 | > 40% | Crisis-level (e.g. 2020 COVID, 2022 rate shock) |
+
+> [!quote]
+> "The Sharpe ratio is the most widely used measure of risk-adjusted return because it adjusts for total risk, not just systematic risk."
+> — **William Sharpe**
 
 ## Rolling 30d Sharpe Ratio
 

@@ -111,8 +111,6 @@ gcloud auth revoke
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — Create and manage service accounts, IAM bindings and roles
 - [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) — Set the active project for authentication context
 
-For a comprehensive gcloud command reference, see [gcloud-cheat-sheet](https://alp78.github.io/elysium/06-GCP/gcloud-cheat-sheet).
-
 ## References
 
 - [gcloud auth documentation](https://cloud.google.com/sdk/gcloud/reference/auth)

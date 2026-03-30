@@ -52,23 +52,18 @@ Data warehouses (Snowflake, Redshift, BigQuery, SQL Server) solved governance bu
 
 The lakehouse resolves both sets of problems by separating storage from compute and adding a transaction layer on top of open formats:
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                     QUERY ENGINES                            │
-│   Spark │ Trino │ Presto │ DuckDB │ BigQuery │ Athena        │
-└─────────────────────┬────────────────────────────────────────┘
-                      │  reads/writes via open table format API
-┌─────────────────────▼────────────────────────────────────────┐
-│              OPEN TABLE FORMAT LAYER                         │
-│      Delta Lake │ Apache Iceberg │ Apache Hudi               │
-│   (metadata: catalogs, manifests, snapshots, transaction log) │
-└─────────────────────┬────────────────────────────────────────┘
-                      │  physical files
-┌─────────────────────▼────────────────────────────────────────┐
-│                OBJECT STORAGE                                │
-│         Google Cloud Storage │ Amazon S3 │ ADLS Gen2         │
-│              (Parquet files — cheap, durable, open)          │
-└──────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    engines["QUERY ENGINES\nSpark | Trino | Presto | DuckDB | BigQuery | Athena"]
+    format["OPEN TABLE FORMAT LAYER\nDelta Lake | Apache Iceberg | Apache Hudi\nMetadata: catalogs, manifests, snapshots, txn log"]
+    storage["OBJECT STORAGE\nGoogle Cloud Storage | Amazon S3 | ADLS Gen2\nParquet files — cheap, durable, open"]
+
+    engines -->|"reads/writes via\nopen table format API"| format
+    format -->|"physical files"| storage
+
+    style engines fill:#1a1a2e,stroke:#22d3ee,color:#fff
+    style format fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style storage fill:#1a1a2e,stroke:#9ece6a,color:#fff
 ```
 
 The table format layer is what makes the lakehouse work. It is a metadata contract on top of files — any engine that implements the format spec can read and write the same data, with full ACID semantics.
@@ -163,11 +158,19 @@ For a deep technical dive into each format's metadata model, see [open-table-for
 
 The [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) (bronze / silver / gold) is the canonical organizational pattern for data within a lakehouse. Each layer is a set of lakehouse tables (Iceberg or Delta) in object storage, with increasing quality and decreasing granularity:
 
-```
-Raw Sources                Bronze Layer             Silver Layer          Gold Layer
-(APIs, DBs, Files)  ──►  (raw, schema-on-write) ──► (cleaned, deduplicated) ──► (aggregated, business-ready)
-                          Iceberg / Delta tables     Iceberg / Delta tables   Iceberg / Delta tables
-                          on GCS                     on GCS                   on GCS
+```mermaid
+flowchart LR
+    src["Raw Sources\nAPIs, DBs, Files"]
+    bronze["Bronze Layer\nRaw, schema-on-write\nIceberg / Delta on GCS"]
+    silver["Silver Layer\nCleaned, deduplicated\nIceberg / Delta on GCS"]
+    gold["Gold Layer\nAggregated, business-ready\nIceberg / Delta on GCS"]
+
+    src --> bronze --> silver --> gold
+
+    style src fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style bronze fill:#1a1a2e,stroke:#e0af68,color:#fff
+    style silver fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style gold fill:#1a1a2e,stroke:#9ece6a,color:#fff
 ```
 
 Key differences from a purely SQL-Server-based medallion implementation:
@@ -191,18 +194,21 @@ BigLake is Google's lakehouse governance layer. It consists of:
 - **Data Boost:** a serverless read path that lets Bigtable and Spanner data be queried without consuming database compute.
 
 #### GCP Lakehouse Stack
-```
-BigQuery (SQL queries, BI)
-    ▲
-    │  BigLake tables (external tables pointing at GCS)
-    │
-BigLake Metastore (catalog: databases, tables, schemas)
-    ▲
-    │
-Google Cloud Storage (Parquet + Iceberg metadata)
-    ▲
-    │
-Dataflow / Dataproc / Spark (writes new data)
+```mermaid
+flowchart BT
+    write["Dataflow / Dataproc / Spark\nWrites new data"]
+    gcs["Google Cloud Storage\nParquet + Iceberg metadata"]
+    catalog["BigLake Metastore\nCatalog: databases, tables, schemas"]
+    bq["BigQuery\nSQL queries, BI"]
+
+    write --> gcs
+    gcs --> catalog
+    catalog -->|"BigLake tables\n(external tables pointing at GCS)"| bq
+
+    style write fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style gcs fill:#1a1a2e,stroke:#e0af68,color:#fff
+    style catalog fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style bq fill:#1a1a2e,stroke:#22d3ee,color:#fff
 ```
 
 **Python: create a BigLake Iceberg table via BigQuery client**

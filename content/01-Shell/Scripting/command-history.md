@@ -18,9 +18,6 @@ In an incident at 2 AM, you do not have time to retype a complex pipeline comman
 > [!quote]
 > "Those who cannot remember the past are condemned to repeat it."
 > — **George Santayana**
->
-> "It's a curious thing about our industry: not only do we not learn from our mistakes, we also don't learn from our successes."
-> — **Keith Braithwaite**
 
 ## Bash History
 

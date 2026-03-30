@@ -52,28 +52,25 @@ The Lambda architecture (Nathan Marz, 2011) addresses a real problem: batch syst
 
 ### Components
 
-```
-                    ┌─────────────────────────────────────────────┐
-Raw Event Stream ──►│              MESSAGE BROKER                  │
-(all events)        │         (Kafka / Pub/Sub / Kinesis)          │
-                    └──────────────┬──────────────┬───────────────┘
-                                   │              │
-                    ┌──────────────▼──┐  ┌────────▼───────────────┐
-                    │   BATCH LAYER   │  │     SPEED LAYER         │
-                    │ (Spark on HDFS, │  │ (Flink / Kafka Streams  │
-                    │  BigQuery, etc.)│  │  / Storm)               │
-                    │                │  │                          │
-                    │ Recomputes ALL  │  │ Processes only recent   │
-                    │ data nightly.   │  │ events. Fast but approx.│
-                    │ Authoritative.  │  │ Results overwritten by   │
-                    │                │  │ batch when batch catches │
-                    └──────┬─────────┘  └────────┬───────────────┘
-                           │                     │
-                    ┌──────▼─────────────────────▼───────────────┐
-                    │              SERVING LAYER                   │
-                    │    (Cassandra, HBase, BigQuery, Redis)       │
-                    │  Merges batch view + speed view at query time │
-                    └─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    src["Raw Event Stream\n(all events)"]
+    broker["MESSAGE BROKER\nKafka / Pub/Sub / Kinesis"]
+    batch["BATCH LAYER\nSpark on HDFS, BigQuery\nRecomputes ALL data nightly\nAuthoritative"]
+    speed["SPEED LAYER\nFlink / Kafka Streams / Storm\nProcesses only recent events\nFast but approximate"]
+    serving["SERVING LAYER\nCassandra, HBase, BigQuery, Redis\nMerges batch + speed views at query time"]
+
+    src --> broker
+    broker --> batch
+    broker --> speed
+    batch --> serving
+    speed --> serving
+
+    style src fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style broker fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style batch fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style speed fill:#1a1a2e,stroke:#e0af68,color:#fff
+    style serving fill:#1a1a2e,stroke:#22d3ee,color:#fff
 ```
 
 ### How the Layers Work
@@ -109,27 +106,21 @@ The Kappa architecture (Jay Kreps, LinkedIn, 2014) is a direct response to Lambd
 
 ### Components
 
-```
-                    ┌────────────────────────────────────────────┐
-Raw Event Stream ──►│           MESSAGE BROKER                   │
-(all events,        │      (Kafka — long retention,               │
- long retention)    │       compacted topics, replay)            │
-                    └──────────────┬─────────────────────────────┘
-                                   │  consumed by ONE processing system
-                    ┌──────────────▼─────────────────────────────┐
-                    │         STREAM PROCESSING ENGINE            │
-                    │    (Flink / Kafka Streams / Beam)           │
-                    │                                             │
-                    │  Single codebase for ALL processing.        │
-                    │  Reprocessing = replay from offset 0.       │
-                    │  New logic version = run new job in         │
-                    │  parallel, cutover, remove old.             │
-                    └──────────────┬─────────────────────────────┘
-                                   │
-                    ┌──────────────▼─────────────────────────────┐
-                    │            SERVING LAYER                    │
-                    │  (BigQuery, Iceberg, Redis, Cassandra)      │
-                    └─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    src["Raw Event Stream\n(all events, long retention)"]
+    broker["MESSAGE BROKER\nKafka — long retention,\ncompacted topics, replay"]
+    engine["STREAM PROCESSING ENGINE\nFlink / Kafka Streams / Beam\nSingle codebase for ALL processing\nReprocessing = replay from offset 0"]
+    serving["SERVING LAYER\nBigQuery, Iceberg, Redis, Cassandra"]
+
+    src --> broker
+    broker -->|"consumed by ONE\nprocessing system"| engine
+    engine --> serving
+
+    style src fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style broker fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style engine fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style serving fill:#1a1a2e,stroke:#22d3ee,color:#fff
 ```
 
 ### Reprocessing in Kappa
@@ -174,15 +165,39 @@ Event-driven architecture (EDA) is a broader pattern — not just for data pipel
 
 **Event schema:** the contract between producers and consumers. Must be versioned and registered in a schema registry to prevent breaking changes.
 
-```
-┌────────────────┐        ┌──────────────────────┐        ┌────────────────────┐
-│  PRODUCER      │        │   MESSAGE BROKER      │        │  CONSUMER          │
-│                │        │                       │        │                    │
-│  Payments API  │──────► │  payments.events      │──────► │  Risk scoring job  │
-│  Orders svc    │──────► │  orders.completed     │──────► │  Finance analytics │
-│  Inventory svc │──────► │  inventory.changes    │──────► │  Audit logger      │
-└────────────────┘        └──────────────────────┘        └────────────────────┘
-                           (Kafka / Pub/Sub / Kinesis)
+```mermaid
+flowchart LR
+    subgraph Producers
+        p1["Payments API"]
+        p2["Orders svc"]
+        p3["Inventory svc"]
+    end
+
+    subgraph Broker["MESSAGE BROKER\nKafka / Pub/Sub / Kinesis"]
+        t1["payments.events"]
+        t2["orders.completed"]
+        t3["inventory.changes"]
+    end
+
+    subgraph Consumers
+        c1["Risk scoring job"]
+        c2["Finance analytics"]
+        c3["Audit logger"]
+    end
+
+    p1 --> t1 --> c1
+    p2 --> t2 --> c2
+    p3 --> t3 --> c3
+
+    style p1 fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style p2 fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style p3 fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style t1 fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style t2 fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style t3 fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style c1 fill:#1a1a2e,stroke:#22d3ee,color:#fff
+    style c2 fill:#1a1a2e,stroke:#22d3ee,color:#fff
+    style c3 fill:#1a1a2e,stroke:#22d3ee,color:#fff
 ```
 
 ---
@@ -583,13 +598,50 @@ DataStream<Event> withTimestamps = rawStream
 
 This is the canonical GCP real-time pipeline architecture:
 
-```
-Data Sources            GCP Services                     Destinations
-────────────────────────────────────────────────────────────────────────
-Application events ──►  Cloud Pub/Sub  ──►  Dataflow  ──►  BigQuery
-Database CDC       ──►  Datastream     ──►  (Beam)    ──►  Cloud Storage
-IoT devices        ──►  IoT Core       ──►             ──►  Bigtable
-Files on GCS       ──►                                ──►  Firestore
+```mermaid
+flowchart LR
+    subgraph Sources["Data Sources"]
+        s1["Application events"]
+        s2["Database CDC"]
+        s3["IoT devices"]
+        s4["Files on GCS"]
+    end
+
+    subgraph GCP["GCP Services"]
+        pubsub["Cloud Pub/Sub"]
+        ds["Datastream"]
+        iot["IoT Core"]
+        df["Dataflow\n(Beam)"]
+    end
+
+    subgraph Destinations
+        bq["BigQuery"]
+        gcs["Cloud Storage"]
+        bt["Bigtable"]
+        fs["Firestore"]
+    end
+
+    s1 --> pubsub --> df
+    s2 --> ds --> df
+    s3 --> iot --> df
+    s4 --> df
+    df --> bq
+    df --> gcs
+    df --> bt
+    df --> fs
+
+    style s1 fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style s2 fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style s3 fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style s4 fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style pubsub fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style ds fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style iot fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style df fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style bq fill:#1a1a2e,stroke:#22d3ee,color:#fff
+    style gcs fill:#1a1a2e,stroke:#22d3ee,color:#fff
+    style bt fill:#1a1a2e,stroke:#22d3ee,color:#fff
+    style fs fill:#1a1a2e,stroke:#22d3ee,color:#fff
 ```
 
 #### GCP Streaming to BigQuery — why this stack

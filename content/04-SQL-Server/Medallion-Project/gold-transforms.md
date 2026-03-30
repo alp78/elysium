@@ -22,8 +22,8 @@ status: complete
 # Gold Transforms
 
 > [!quote]
-> "The goal is to turn data into information, and information into insight."
-> — **Carly Fiorina**
+> "The gold layer is the contract with your consumers. If the schema changes without warning, every dashboard, API, and downstream pipeline breaks."
+> — **Maxime Beauchemin**, creator of Apache Airflow and Superset
 
 The gold layer contains pre-computed analytics scores ready for dashboard consumption. No raw data lives here — only derived metrics with z-scores, ranks, health flags, and performance calculations. All gold transforms read from [silver](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) and write to gold tables. In dbt, the equivalent role is served by [mart models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-mart-models) that expose business-ready datasets.
 

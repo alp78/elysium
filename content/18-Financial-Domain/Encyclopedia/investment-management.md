@@ -22,6 +22,10 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+> [!quote]
+> "The most important investment decision is asset allocation — the choice among stocks, bonds, and alternative assets."
+> — **David Swensen**
+
 ## Alternative Investments
 
 **Definition:** Alternative investments are financial assets that do not fall into the conventional categories of stocks, bonds, or cash. They include real estate, private equity, hedge funds, infrastructure, commodities, credit funds, and other non-traditional asset classes. These investments often have lower liquidity than publicly traded securities but may offer higher returns and portfolio diversification. Institutional investors such as pension funds and endowments commonly allocate a portion of their portfolios to alternatives to reduce overall risk and enhance returns over the long term.
@@ -46,6 +50,10 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+> [!quote]
+> "The duty of a fiduciary is to put the client's interests ahead of his own in every instance."
+> — **Arthur Levitt**
+
 ## Fiduciary
 
 **Definition:** A fiduciary is an individual or institution that is legally and ethically obligated to act in the best interest of another party, known as the principal or beneficiary. Fiduciary duties include loyalty (putting the client's interests first), care (exercising reasonable diligence), and disclosure (providing full transparency). In finance, fiduciary relationships arise in trust management, investment advisory, pension fund administration, and custodian services. Breach of fiduciary duty can result in legal liability, damages, and regulatory sanctions.
@@ -57,6 +65,10 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 **Related terms:** [Trust Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Trust Banking), [Wealth Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Wealth Management), [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset Management)
 
 ---
+
+> [!quote]
+> "It's not whether you're right or wrong that's important, but how much money you make when you're right and how much you lose when you're wrong."
+> — **George Soros**
 
 ## Hedge Funds
 
@@ -70,6 +82,10 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+> [!quote]
+> "Investment bankers are the deal junkies of the financial world — they live for the next transaction."
+> — **Michael Lewis**
+
 ## Investment Banking
 
 **Definition:** Investment banking is a specialized segment of banking that helps organizations raise capital, provides advisory services for complex financial transactions, and facilitates trading of securities. Core investment banking activities include underwriting new debt and equity issues, advising on mergers and acquisitions, facilitating restructurings, and providing market-making services. Investment banks serve corporations, governments, institutional investors, and high-net-worth individuals. They differ from commercial banks in that they focus on capital markets and advisory rather than deposit-taking and lending.
@@ -81,6 +97,10 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 **Related terms:** [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Markets), [Mergers and Acquisitions (M&A)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Mergers and Acquisitions (M&A)), [Equity Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equity Underwriting), [Bond Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Bond Underwriting)
 
 ---
+
+> [!quote]
+> "The mutual fund industry has been built, in a sense, on witchcraft."
+> — **John Bogle**
 
 ## Mutual Funds
 
@@ -105,6 +125,10 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 **Related terms:** [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset Management), [Annuity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Annuity), [Superannuation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Superannuation), [Fiduciary](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Fiduciary)
 
 ---
+
+> [!quote]
+> "Diversification is the only free lunch in investing."
+> — **Harry Markowitz**
 
 ## Portfolio Management
 
@@ -142,6 +166,10 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+> [!quote]
+> "In private equity, you buy a company and try to make it better — it is capitalism in its most elemental form."
+> — **Henry Kravis**
+
 ## Private Equity
 
 **Definition:** Private equity (PE) refers to investment funds that acquire equity ownership in companies that are not publicly traded on a stock exchange. PE firms raise capital from institutional investors and high-net-worth individuals, use it (often combined with debt) to acquire companies, improve their operations and financial performance over a holding period of typically 3-7 years, and then exit through a sale or IPO. Private equity strategies include leveraged buyouts, growth capital, distressed investing, and venture capital. PE firms typically charge a management fee (2% of assets) and carried interest (20% of profits above a hurdle rate).
@@ -165,6 +193,10 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 **Related terms:** [Pension Fund](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Pension Fund), [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset Management), [Wealth Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Wealth Management)
 
 ---
+
+> [!quote]
+> "Venture capital is about catching the lightning in a bottle."
+> — **Fred Wilson**
 
 ## Venture Capital
 

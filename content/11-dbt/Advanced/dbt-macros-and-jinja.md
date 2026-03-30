@@ -520,3 +520,76 @@ Jinja `{% set %}` runs at compile time. Assigning a value with `{% set x = some_
 - [dbt-cross-adapter-patterns](https://alp78.github.io/elysium/11-dbt/Adapters/dbt-cross-adapter-patterns)
 - [dbt-data-contracts-implementation](https://alp78.github.io/elysium/11-dbt/Quality/dbt-data-contracts-implementation)
 - [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework)
+
+---
+
+## Useful Macro Patterns
+
+Production-tested macro snippets for common cross-project needs.
+
+### Dynamic Schema Override
+
+Override dbt's default schema naming so prod uses the custom schema directly while dev prefixes it.
+
+```jinja
+{# macros/generate_schema_name.sql #}
+{% macro generate_schema_name(custom_schema_name, node) -%}
+    {%- set default_schema = target.schema -%}
+    {%- if custom_schema_name is none -%}
+        {{ default_schema }}
+    {%- elif target.name == 'prod' -%}
+        {{ custom_schema_name | trim }}
+    {%- else -%}
+        {{ default_schema }}_{{ custom_schema_name | trim }}
+    {%- endif -%}
+{%- endmacro %}
+```
+
+### Grant Select After Build
+
+Post-hook macro to grant read access on a schema after models are built.
+
+```jinja
+{# macros/grant_select.sql #}
+{% macro grant_select(schema, role) %}
+    {% set sql %}
+        GRANT SELECT ON ALL TABLES IN SCHEMA {{ schema }} TO {{ role }};
+    {% endset %}
+    {% do run_query(sql) %}
+    {{ log("Granted SELECT on " ~ schema ~ " to " ~ role, info=true) }}
+{% endmacro %}
+```
+
+### Column-Level Hashing (Pseudonymisation)
+
+Hash PII columns in dev but leave them readable in prod.
+
+```jinja
+{# macros/hash_pii.sql #}
+{% macro hash_pii(column_name) %}
+    {%- if target.name == 'dev' -%}
+        SHA2(CAST({{ column_name }} AS VARCHAR), 256)
+    {%- else -%}
+        {{ column_name }}
+    {%- endif -%}
+{% endmacro %}
+```
+
+### Date Spine (SQL Server)
+
+Generate a continuous date range using a recursive CTE — useful for gap-filling time series.
+
+```jinja
+{# macros/date_spine_sqlserver.sql #}
+{% macro date_spine_sqlserver(start_date, end_date) %}
+    WITH dates AS (
+        SELECT CAST('{{ start_date }}' AS DATE) AS d
+        UNION ALL
+        SELECT DATEADD(day, 1, d)
+        FROM dates
+        WHERE d < CAST('{{ end_date }}' AS DATE)
+    )
+    SELECT d AS date_day FROM dates
+    OPTION (MAXRECURSION 0)
+{% endmacro %}
+```

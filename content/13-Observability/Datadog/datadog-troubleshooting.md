@@ -14,8 +14,8 @@ status: complete
 # Datadog Troubleshooting
 
 > [!quote]
-> "A good culture can work around broken tooling, but the opposite rarely holds true."
-> — **Niall Richard Murphy**
+> "You can't fix what you can't see. Observability is about closing the feedback loop between deploying code and understanding its impact."
+> — **Charity Majors**
 
 Common issues with the Datadog agent and observability setup for the data platform. For pipeline-specific errors (missing APM traces root cause), see also common pipeline errors.
 

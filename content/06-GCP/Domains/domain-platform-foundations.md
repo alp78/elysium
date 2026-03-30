@@ -12,22 +12,13 @@ GCP platform essentials from gcloud CLI structure and authentication through nam
 ```mermaid
 mindmap
   ((Platform Foundations))
-    (gcloud cheat sheet)
     (authentication)
     (configurations)
     (output formatting)
     (projects and APIs)
 ```
 
-> [!abstract]- [[gcloud-cheat-sheet]]
->
-> - [[gcloud-cheat-sheet#gcloud Command Structure and Anatomy|Command structure]]
-> - [[gcloud-cheat-sheet#gcloud Global Flags Reference|Global flags]]
-> - [[gcloud-cheat-sheet#BigQuery (bq CLI)|BigQuery bq CLI]]
-> - [[gcloud-cheat-sheet#Cloud Storage (gcloud storage)|Cloud Storage]]
-> - [[gcloud-cheat-sheet#Quick Reference: Useful gcloud One-Liners|Useful one-liners]]
-
-> [!abstract]- [gcloud-authentication](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication)
+> [!abstract]- [[gcloud-authentication]]
 >
 > - [Authentication commands](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication#authentication-commands)
 > - [ADC credential search order](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication#the-adc-credential-search-order)
@@ -51,3 +42,10 @@ mindmap
 > - [[gcp-projects-and-apis#Listing and Describing GCP Projects|Listing projects]]
 > - [[gcp-projects-and-apis#Listing and Enabling GCP APIs|Enabling APIs]]
 > - [[gcp-projects-and-apis#Common GCP APIs for Data Engineering|Common APIs for data engineering]]
+
+> [!abstract]- [[gcloud-authentication]]
+>
+> - [[gcloud-authentication#How GCP Authentication Works|How GCP authentication works]]
+> - [[gcloud-authentication#Authentication Commands|Authentication commands]]
+> - [[gcloud-authentication#The ADC Credential Search Order|ADC credential search order]]
+> - [[gcloud-authentication#GCP Authentication Gotchas and Edge Cases|Gotchas and edge cases]]

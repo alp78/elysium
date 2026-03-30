@@ -10,8 +10,8 @@ description: "GitHub Actions CI with slim builds and manifest diffing, Workload 
 # dbt: CI/CD
 
 > [!quote]
-> "Everything fails, all the time."
-> — **Werner Vogels**
+> "The longer you wait to integrate, the more it costs and the more unpredictable the cost becomes."
+> — **Mary Poppendieck**
 
 A robust dbt CI/CD pipeline validates SQL correctness before merge, prevents regressions in data quality tests, and deploys only what changed. The workflows here build on [github-actions-workflows](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-workflows) and apply [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) patterns to dbt-specific concerns. For financial index and ESG data pipelines the stakes are high: a broken model can silently corrupt benchmark calculations used for regulatory reporting.
 

@@ -69,8 +69,8 @@ status: complete
 # GCP Data Lineage and Catalog — Definitive Reference
 
 > [!quote]
-> "Before buying or building a tool, it becomes important to evaluate the maximum utility it can provide for the unique set of engineering challenges specific teams face."
-> — **Cindy Sridharan**
+> "Data lineage is the Rosetta Stone for analytics teams — it lets you trace any number back to its source and understand every transformation along the way."
+> — **Maxime Beauchemin**, creator of Apache Airflow and Apache Superset
 
 ---
 

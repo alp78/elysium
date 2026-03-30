@@ -45,8 +45,8 @@ status: complete
 # Git Setup and Configuration
 
 > [!quote]
-> "Well begun is half done."
-> — **Aristotle**
+> "Git proved I could be more than a one-hit wonder."
+> — **Linus Torvalds**
 
 Git is a distributed version control system. It tracks every change to every file in your project, lets multiple people work on the same codebase simultaneously, and provides tools to merge everyone's work together. This note covers the essential vocabulary, the initial setup every new machine requires, and the commands for creating and cloning repositories.
 

@@ -46,6 +46,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+> [!quote]
+> "The banker who is not also a merchant is nothing but a moneylender."
+> — **Walter Bagehot**
+
 ## Commercial Banking
 
 **Definition:** Commercial banking refers to the segment of the banking industry that provides financial services to businesses, ranging from small and medium enterprises to large corporations. Commercial banking services include accepting deposits, making business loans, providing lines of credit, offering trade finance, managing cash and treasury operations, and facilitating foreign exchange transactions. Commercial banks act as financial intermediaries, channeling deposits from savers into loans for businesses that need capital for operations, expansion, or investment.
@@ -82,6 +86,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+> [!quote]
+> "The credit union movement deserves great praise because it has taught people to save, to borrow wisely, and to manage their own financial affairs."
+> — **John F. Kennedy**
+
 ## Credit Union
 
 **Definition:** A credit union is a member-owned, not-for-profit financial cooperative that provides traditional banking services such as savings accounts, checking accounts, and loans. Unlike commercial banks, credit unions are owned by their members (depositors), who each have one vote in the organization's governance regardless of how much money they have deposited. Credit unions typically offer more favorable interest rates on savings and loans compared to commercial banks because they are not driven by shareholder profit motives.
@@ -93,6 +101,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 **Related terms:** [Commercial Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Commercial Banking), [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail Banking), [Non-Bank Lender](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Non-Bank Lender)
 
 ---
+
+> [!quote]
+> "Banking is necessary, banks are not."
+> — **Bill Gates**
 
 ## Digital Banking
 
@@ -130,6 +142,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+> [!quote]
+> "Do not borrow money to buy stocks — the margin call will come at the worst possible time."
+> — **Jesse Livermore**
+
 ## Margin Lending
 
 **Definition:** Margin lending is a type of borrowing where an investor uses securities they already own as collateral to borrow money from a brokerage or bank to buy additional securities. The investor's existing portfolio serves as the margin (collateral), and the lender charges interest on the borrowed amount. Margin lending amplifies both potential gains and losses, making it a higher-risk strategy. If the value of the collateral falls below a certain threshold (a margin call), the investor must deposit additional funds or sell securities to restore the required margin level.
@@ -141,6 +157,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 **Related terms:** [Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Brokerage), [Collateral](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Collateral), [Prime Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Prime Brokerage)
 
 ---
+
+> [!quote]
+> "A man in debt is so far a slave."
+> — **Ralph Waldo Emerson**
 
 ## Mortgage
 
@@ -213,6 +233,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 **Related terms:** [Cash Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Cash Management), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk Management), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction Banking)
 
 ---
+
+> [!quote]
+> "A man I do not trust could not get money from me on all the bonds in Christendom."
+> — **J.P. Morgan**
 
 ## Trust Banking
 

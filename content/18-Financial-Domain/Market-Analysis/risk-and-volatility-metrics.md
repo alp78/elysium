@@ -33,6 +33,10 @@ Risk and volatility metrics quantify the uncertainty and potential downside of e
 | **Calmar Ratio** | Annualized Return ÷ Max Drawdown | Return per unit of tail risk |
 | **Value at Risk (95%)** | 5th percentile of daily return distribution | "Worst day in 20" under normal conditions |
 
+> [!quote]
+> "The stock market is filled with individuals who know the price of everything, but the value of nothing."
+> — **Philip Fisher**
+
 ## Beta
 
 Beta measures a stock's sensitivity to market movements.
@@ -48,6 +52,10 @@ $$\beta = \frac{\text{Cov}(r_{\text{stock}}, r_{\text{market}})}{\text{Var}(r_{\
 | 1.0 – 1.5 | More volatile than market |
 | > 1.5 | High sensitivity (tech, growth, financials) |
 
+> [!quote]
+> "Volatility is the price of admission. The prize inside is superior long-term returns."
+> — **Nick Murray**
+
 ## VIX (CBOE Volatility Index)
 
 The VIX measures implied volatility from S&P 500 options, often called the "fear gauge."
@@ -59,6 +67,10 @@ The VIX measures implied volatility from S&P 500 options, often called the "fear
 | 25–30 | Elevated uncertainty |
 | > 30 | Fear — high stress (corrections, geopolitical shocks) |
 | > 40 | Crisis-level (2020 COVID, 2008 GFC) |
+
+> [!quote]
+> "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1."
+> — **Warren Buffett**
 
 ## Maximum Drawdown
 
@@ -101,6 +113,10 @@ $$\text{Calmar} = \frac{\text{Annualized Return}}{\text{Maximum Drawdown}}$$
 | > 3.0 | Excellent (high return, small drawdowns) |
 | 1.0–3.0 | Good |
 | < 1.0 | Returns don't justify the drawdown experienced |
+
+> [!quote]
+> "VaR is like an airbag that works all the time, except when you have a car accident."
+> — **David Einhorn**
 
 ## Value at Risk (VaR)
 

@@ -138,3 +138,10 @@ mindmap
 > - [[datadog-troubleshooting#COS Read-Only Filesystem Constraints for dd-agent|COS filesystem constraints]]
 > - [[datadog-troubleshooting#Ghost Hosts Appearing in Datadog Infrastructure|Ghost hosts]]
 > - [[datadog-troubleshooting#Agent Management Commands|Agent management commands]]
+
+> [!abstract]- [[datadog-airflow-observability]]
+>
+> - [[datadog-airflow-observability#How StatsD Metrics Flow from Airflow to Datadog|StatsD metrics flow]]
+> - [[datadog-airflow-observability#Enabling StatsD in Airflow Docker Compose|Enabling StatsD]]
+> - [[datadog-airflow-observability#Verifying Metrics Flow|Verifying metrics]]
+> - [[datadog-airflow-observability#Key Metrics Reference|Key metrics reference]]

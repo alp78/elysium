@@ -14,8 +14,8 @@ status: complete
 # 24. Streaming & Real-Time Data — WebSocket, SSE, Pub/Sub, Firestore
 
 > [!quote]
-> "The best way to predict the future is to invent it."
-> — **Alan Kay**
+> "Turning the database inside out: take the implementation detail that was previously hidden inside the database, and make it a first-class citizen."
+> — **Martin Kleppmann**, *Making Sense of Stream Processing* (2016)
 
 ### Technologies Overview
 

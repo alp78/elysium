@@ -540,7 +540,7 @@ When work is triggered by events rather than time:
 | BigQuery query | `bq query` | Data operation, not infra |
 | One-time service enable | `gcloud services enable` | If done once and never changed |
 
-See [gcloud-cheat-sheet](https://alp78.github.io/elysium/06-GCP/gcloud-cheat-sheet) for common command patterns.
+See [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) for gcloud command structure and global flags.
 
 ---
 

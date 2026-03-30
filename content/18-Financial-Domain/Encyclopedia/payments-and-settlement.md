@@ -45,6 +45,10 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+> [!quote]
+> "The clearinghouse stands between buyer and seller so neither has to trust the other."
+> — **Craig Pirrong**
+
 ## Clearing
 
 **Definition:** Clearing is the process that occurs between the execution of a trade and the final settlement of that trade. A clearinghouse acts as an intermediary between the buyer and seller, ensuring that the trade obligations are properly fulfilled. The clearing process involves confirming trade details, calculating obligations, managing margins and collateral, and ultimately guaranteeing the performance of the trade. This process reduces counterparty risk — the risk that one party will fail to fulfill its side of the transaction — and is essential for the stability and integrity of financial markets.
@@ -57,6 +61,10 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+> [!quote]
+> "The custody business is about trust — the trust that your assets will be there when you need them."
+> — **Tim Keaney**
+
 ## Custodian Services
 
 **Definition:** Custodian services involve the safekeeping and administration of financial assets such as stocks, bonds, and other securities on behalf of institutional and individual investors. A custodian bank holds these assets in electronic or physical form, processes transactions, collects dividends and interest payments, provides tax information, and handles corporate actions. Custodians do not engage in trading or advisory services; their role is to protect client assets and ensure accurate record-keeping. Custody is a critical function in the financial system, particularly for institutional investors managing billions of dollars.
@@ -68,6 +76,10 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 **Related terms:** [Securities Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Securities Clearing), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Settlement)
 
 ---
+
+> [!quote]
+> "Money is just information, a way we measure what we trade, manage debts, make promises."
+> — **David Graeber**
 
 ## Electronic Money
 
@@ -117,6 +129,10 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+> [!quote]
+> "Payments are to the economy what plumbing is to a building — invisible when working, catastrophic when not."
+> — **Pieter van der Does**
+
 ## Payments Processing
 
 **Definition:** Payments processing is the handling of financial transactions between merchants, consumers, and financial institutions through electronic systems. It encompasses the entire transaction lifecycle from initiation to final settlement, including authorization (verifying funds are available), authentication (confirming the identity of the payer), clearing (exchanging transaction details between parties), and settlement (transferring funds). Payment processors act as intermediaries in this chain, facilitating billions of transactions daily across credit cards, debit cards, mobile payments, and digital wallets.
@@ -165,6 +181,10 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+> [!quote]
+> "Settlement is where the rubber meets the road — it is the moment when promises become reality."
+> — **Benoît Coeuré**
+
 ## Settlement
 
 **Definition:** Settlement is the final step in a securities or payment transaction, where the actual exchange of assets and cash occurs between parties. In securities trading, settlement involves the delivery of securities from the seller to the buyer and the transfer of payment from the buyer to the seller. Settlement periods vary by market and instrument type (T+1 or T+2, meaning one or two business days after the trade date). In payments, settlement is the transfer of funds from the acquiring bank to the merchant's account after a card transaction has been authorized and cleared.
@@ -176,6 +196,10 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 **Related terms:** [Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Clearing), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments Processing), [Custodian Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Custodian Services), [Authorization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Authorization)
 
 ---
+
+> [!quote]
+> "The best security is when the data worth stealing simply isn't there."
+> — **Patrick Gauthier**
 
 ## Tokenization
 

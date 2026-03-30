@@ -14,8 +14,8 @@ status: complete
 # Backup Types and Strategy
 
 > [!quote]
-> "I call it normalization because then President Nixon was talking a lot about normalizing relations with China. I figured that if he could normalize relations, so could I."
-> — **Edgar F. Codd**
+> "You don't have a backup until you've restored it."
+> — **Paul Randal**, SQLskills
 
 Backups are the single most critical responsibility of anyone operating a database. A backup strategy is not "I'll remember to back up before big changes" — it is a documented, automated, tested schedule that guarantees you can recover to any point in time within your recovery window.
 

@@ -14,8 +14,8 @@ status: complete
 # Transparent Data Encryption (TDE) with GCP Cloud KMS
 
 > [!quote]
-> "There are two types of encryption: one that will prevent your sister from reading your diary and one that will prevent your government."
-> — **Bruce Schneier**
+> "Encryption works. Properly implemented strong crypto systems are one of the few things that you can rely on."
+> — **Edward Snowden**
 
 Transparent Data Encryption (TDE) encrypts SQL Server database files at rest — protecting `.mdf`, `.ldf`, and `tempdb` files from unauthorized access even if someone obtains the physical disk, a GCS backup file, or a VM disk snapshot.
 
@@ -39,35 +39,34 @@ For managing the KMS key material and related secrets programmatically, see [sec
 
 Understanding the key hierarchy is essential before setting up TDE or attempting disaster recovery.
 
-```
-GCP Cloud KMS                         SQL Server 2022
-┌─────────────────────┐               ┌──────────────────────────────┐
-│ Key Ring:            │               │                              │
-│  analytics-keyring       │               │  Service Master Key (SMK)    │
-│  (europe-west1)      │               │  ├── Auto-generated at       │
-│                      │               │  │   SQL Server install       │
-│ Crypto Key:          │               │  │                            │
-│  analytics-sql-tde       │               │  Database Master Key (DMK)   │
-│  ├── Purpose:        │               │  ├── Protected by SMK         │
-│  │   ENCRYPT_DECRYPT │               │  ├── Password backup:         │
-│  ├── Algorithm:      │◄─── wraps ───►│  │   'StrongMasterKeyPass!'  │
-│  │   GOOGLE_SYMMETRIC│               │  │                            │
-│  ├── Rotation:       │               │  Certificate                  │
-│  │   Every 90 days   │               │  (project_tde_cert)             │
-│  └── Protection:     │               │  ├── Subject: the data pipeline project TDE       │
-│      HSM-backed      │               │  ├── Expiry: 2028-03-10       │
-│                      │               │  │                            │
-└─────────────────────┘               │  Database Encryption Key      │
-                                       │  (DEK)                        │
-                                       │  ├── Algorithm: AES_256       │
-                                       │  ├── Protected by certificate │
-                                       │  │                            │
-                                       │  Encrypted Files              │
-                                       │  ├── analytics_db.mdf (data)          │
-                                       │  ├── mydb_log.ldf (log)      │
-                                       │  └── tempdb.mdf (auto)        │
-                                       │                              │
-                                       └──────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph KMS["GCP Cloud KMS"]
+        RING["Key Ring: analytics-keyring<br/>europe-west1"]
+        KEY["Crypto Key: analytics-sql-tde<br/>ENCRYPT_DECRYPT · GOOGLE_SYMMETRIC<br/>Rotation: 90 days · HSM-backed"]
+        RING --> KEY
+    end
+
+    subgraph SQLSRV["SQL Server 2022"]
+        SMK["Service Master Key (SMK)<br/>auto-generated at install"]
+        DMK["Database Master Key (DMK)<br/>protected by SMK"]
+        CERT["Certificate: project_tde_cert<br/>Expiry: 2028-03-10"]
+        DEK["Database Encryption Key (DEK)<br/>AES_256 · protected by certificate"]
+        FILES["Encrypted Files<br/>analytics_db.mdf · mydb_log.ldf · tempdb.mdf"]
+
+        SMK --> DMK --> CERT --> DEK --> FILES
+    end
+
+    KEY <-->|"wraps"| DMK
+
+    style KMS fill:#1a1a2e,stroke:#22d3ee,color:#fff
+    style SQLSRV fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style KEY fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style SMK fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style DMK fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style CERT fill:#1a1a2e,stroke:#e0af68,color:#fff
+    style DEK fill:#1a1a2e,stroke:#e0af68,color:#fff
+    style FILES fill:#1a1a2e,stroke:#7aa2f7,color:#fff
 ```
 
 ---

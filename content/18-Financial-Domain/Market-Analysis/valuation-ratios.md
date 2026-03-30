@@ -48,6 +48,10 @@ $$\text{PEG} = \frac{P/E}{\text{EPS Growth Rate (\%)}}$$
 > [!warning] PEG Limitations
 > PEG ratios are unreliable when EPS growth is negative (negative denominator), near zero (inflates PEG), or cyclical (one-year growth misleads). Use with forward consensus estimates for best results.
 
+> [!quote]
+> "The price-earnings ratio, averaged over ten years, is a strong predictor of the real rate of return on stocks over the subsequent ten years."
+> — **Robert Shiller**
+
 ## CAPE / Shiller P/E
 
 The Cyclically Adjusted Price-to-Earnings ratio smooths earnings over a 10-year period, adjusting for inflation. Created by Robert Shiller, this metric reduces the impact of business cycle fluctuations.
@@ -75,6 +79,10 @@ $$\text{EV/Sales} = \frac{\text{Market Cap} + \text{Debt} - \text{Cash}}{\text{A
 | 3–10 | Growth premium, justified if margins expand |
 | > 10 | Requires extraordinary growth to justify |
 
+> [!quote]
+> "In the long run, earnings and cash flow are all that matter. The rest is noise."
+> — **Bill Miller**
+
 ## Free Cash Flow Yield
 
 Measures the cash return a company generates relative to its market capitalization. More reliable than earnings yield because [free cash flow](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores) is harder to manipulate than accounting earnings.
@@ -88,6 +96,10 @@ $$\text{FCF Yield} = \frac{\text{Free Cash Flow}}{\text{Market Cap}} \times 100$
 | 2–5% | Average |
 | < 2% | Growth company or low cash generation |
 | Negative | Burning cash — check [health warnings](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores) |
+
+> [!quote]
+> "Price is what you pay. Value is what you get."
+> — **Benjamin Graham**
 
 ## Earnings Yield
 

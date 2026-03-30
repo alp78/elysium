@@ -14,8 +14,8 @@ status: complete
 # GCP Projects and APIs
 
 > [!quote]
-> "The secret to building large apps is never build large apps. Break your applications into small pieces. Then, assemble those testable, bite-sized pieces into your big application."
-> — **Justin Meyer**, creator of JavaScriptMVC
+> "A GCP project is not just a folder — it is a billing boundary, an IAM scope, and an API activation unit. Getting the project structure wrong is the most expensive mistake to fix later."
+> — **Daz Wilkin**, Google Developer Advocate
 
 GCP projects are the fundamental organizational unit for resources, billing, and access control. Every resource — VMs, BigQuery datasets, Cloud Run jobs, GCS buckets — lives inside a project. APIs must be explicitly enabled per project before the corresponding services can be used; an `API not enabled` error is always the result of a missing `gcloud services enable` call.
 
@@ -99,6 +99,63 @@ A project's `lifecycleState` field (visible in `gcloud projects describe`) indic
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — Service accounts live within projects; IAM bindings are project-scoped
 - [dataset-and-table-management](https://alp78.github.io/elysium/06-GCP/BigQuery/dataset-and-table-management) — Requires `bigquery.googleapis.com` to be enabled
 - [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) — Requires `run.googleapis.com` to be enabled
+
+---
+
+### gcloud Command Structure and Anatomy
+
+Every `gcloud` invocation follows this anatomy:
+
+```
+gcloud [GROUP] [SUBGROUP] [ACTION] [POSITIONAL_ARGS] [FLAGS]
+```
+
+| Segment | Description | Example |
+|---|---|---|
+| `GROUP` | Top-level product area | `compute`, `run`, `iam`, `pubsub` |
+| `SUBGROUP` | Resource type within the group | `instances`, `jobs`, `service-accounts` |
+| `ACTION` | Verb | `create`, `list`, `describe`, `delete`, `update` |
+| `POSITIONAL_ARGS` | Resource name(s) | `my-instance`, `my-topic` |
+| `FLAGS` | Named parameters prefixed with `--` | `--zone=us-central1-a` |
+
+```bash
+# Anatomy example: create a VM
+gcloud   compute   instances   create   prices-etl-vm   \
+  --zone=europe-west1-b   \
+  --machine-type=e2-standard-4   \
+  --image-family=debian-12   \
+  --image-project=debian-cloud
+#  GROUP    SUBGROUP  ACTION  POSITIONAL            FLAGS...
+```
+
+The `bq` CLI follows a slightly different convention:
+
+```
+bq [GLOBAL_FLAGS] COMMAND [FLAGS] [ARGS]
+```
+
+```bash
+bq --project_id=fin-prod-project   query   --use_legacy_sql=false   'SELECT ...'
+#  GLOBAL_FLAG                     COMMAND  FLAG                      ARG
+```
+
+### gcloud Global Flags Reference
+
+These flags apply to nearly every `gcloud` command. Combine freely.
+
+| Flag | Description | Example |
+|---|---|---|
+| `--project` | Override the active project | `--project=fin-prod-project` |
+| `--account` | Override the active account | `--account=svc@proj.iam.gserviceaccount.com` |
+| `--configuration` | Use a named configuration | `--configuration=prod` |
+| `--format` | Output format: `json`, `yaml`, `csv`, `table`, `value(FIELD)` | `--format=json` |
+| `--filter` | Server-side or client-side filter expression | `--filter="status=RUNNING"` |
+| `--limit` | Maximum number of resources to list | `--limit=20` |
+| `--sort-by` | Sort field; prefix `~` for descending | `--sort-by=~createTime` |
+| `--quiet` | Disable interactive prompts; assume yes | `--quiet` |
+| `--verbosity` | Log level: `debug`, `info`, `warning`, `error` | `--verbosity=debug` |
+| `--impersonate-service-account` | Impersonate a SA for the call | `--impersonate-service-account=sa@proj.iam.gserviceaccount.com` |
+| `--log-http` | Log all HTTP requests/responses to stderr | `--log-http` |
 
 ## References
 

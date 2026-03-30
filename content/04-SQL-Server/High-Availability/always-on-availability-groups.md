@@ -14,8 +14,8 @@ status: complete
 # Always On Availability Groups
 
 > [!quote]
-> "Everything fails, all the time, in unexpected ways."
-> — **Werner Vogels**
+> "High availability is not about preventing failure — it is about recovering from failure faster than your users notice."
+> — **Adrian Cockcroft**
 
 Always On Availability Groups (AGs) are the primary high-availability mechanism for SQL Server on Linux. An AG replicates a group of databases across 2–9 replicas (1 primary + up to 8 secondaries), with the primary accepting reads and writes while secondaries receive and replay transaction log records automatically.
 
@@ -39,21 +39,27 @@ A single SQL Server instance is a single point of failure. If the VM crashes, th
 
 ### Option 1: Always On Availability Groups (Recommended)
 
-```
-                 ┌──────────────────────────────┐
-                 │         Listener VIP          │
-                 │   analytics-sql-ag.internal:1433  │
-                 └──────────┬───────────────────┘
-                            │
-          ┌─────────────────┼─────────────────┐
-          ▼                 ▼                  ▼
-┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐
-│   Primary (RW)   │ │  Secondary (RO)  │ │  Secondary (RO)  │
-│  analytics-sql-01    │ │  analytics-sql-02    │ │  analytics-sql-03    │
-│  zone-b          │ │  zone-c          │ │  zone-d          │
-└──────────────────┘ └──────────────────┘ └──────────────────┘
-      │  log send ────────►│  log send ────────►│
-      │◄──── ack ──────────│◄──── ack ──────────│
+```mermaid
+flowchart TD
+    VIP["Listener VIP<br/>analytics-sql-ag.internal:1433"]
+
+    VIP --> PRIMARY
+    VIP --> SEC1
+    VIP --> SEC2
+
+    PRIMARY["Primary (RW)<br/>analytics-sql-01<br/>zone-b"]
+    SEC1["Secondary (RO)<br/>analytics-sql-02<br/>zone-c"]
+    SEC2["Secondary (RO)<br/>analytics-sql-03<br/>zone-d"]
+
+    PRIMARY -->|"log send"| SEC1
+    PRIMARY -->|"log send"| SEC2
+    SEC1 -->|"ack"| PRIMARY
+    SEC2 -->|"ack"| PRIMARY
+
+    style VIP fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style PRIMARY fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style SEC1 fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style SEC2 fill:#1a1a2e,stroke:#7aa2f7,color:#fff
 ```
 
 #### Synchronous vs asynchronous — AG replication modes

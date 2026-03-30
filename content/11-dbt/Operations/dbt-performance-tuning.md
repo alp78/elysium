@@ -10,8 +10,8 @@ description: "Identifying slow models from run_results.json, BigQuery and SQL Se
 # dbt: Performance Tuning
 
 > [!quote]
-> "The First Rule of Program Optimization: Don't do it. The Second Rule of Program Optimization (for experts only): Don't do it yet."
-> — **Michael A. Jackson**
+> "Bottlenecks occur in surprising places, so don't try to second guess and put in a speed hack until you have proven that's where the bottleneck is."
+> — **Rob Pike**
 
 Performance problems in dbt manifest as three distinct symptoms: slow model execution time (compute cost), slow incremental runs (data freshness SLA risk), and high slot/credit consumption (cloud cost). This note covers diagnosis, adapter-specific tuning, and model-level refactoring techniques.
 

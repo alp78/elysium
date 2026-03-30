@@ -14,8 +14,8 @@ status: complete
 # 11. Date, Time, Math & Utilities - Python
 
 > [!quote]
-> "Controlling complexity is the essence of computer programming."
-> — **Brian W. Kernighan**
+> "There are two hard problems in datetime handling: timezone conversions, daylight saving transitions, and off-by-one errors."
+> — **Jon Skeet**
 
 ## Date and Time
 

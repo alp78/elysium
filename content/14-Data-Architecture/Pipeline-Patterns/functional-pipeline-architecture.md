@@ -366,7 +366,7 @@ Context is persisted to `context_log` in SQL Server — it survives the Python/C
 
 ## Data Contracts as Consumer-Facing Output
 
-The [[#Contract-First Validation]] section above covers contracts as INPUT validation — rejecting bad data at boundaries. This section covers contracts as OUTPUT — making gold values self-describing for any consumer.
+The [Contract-First Validation](#contract-first-validation) section above covers contracts as INPUT validation — rejecting bad data at boundaries. This section covers contracts as OUTPUT — making gold values self-describing for any consumer.
 
 The pipeline exports a JSON Schema file per gold table, enriched with `x-column-context` — the column registries serialized as structured metadata alongside the schema. Any consumer — a dashboard, another pipeline, an LLM agent — can interpret every value correctly without reading the pipeline source code.
 

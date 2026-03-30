@@ -26,8 +26,8 @@ Topics covered:
 - Profiling Real Workloads
 
 > [!quote]
-> "The First Rule of Program Optimization: Don't do it. The Second Rule of Program Optimization (for experts only): Don't do it yet."
-> — **Michael A. Jackson**
+> "Make it correct, make it clear, make it concise, make it fast. In that order."
+> — **Wes Dyer**
 
 ## Timing & Benchmarking
 

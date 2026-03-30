@@ -34,6 +34,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+> [!quote]
+> "Wall Street is the only place that people ride to in a Rolls Royce to get advice from those who take the subway."
+> — **Warren Buffett**
+
 ## Brokerage
 
 **Definition:** Brokerage is the business of acting as an intermediary between buyers and sellers of financial securities such as stocks, bonds, mutual funds, and other investment products. A brokerage firm or broker executes trades on behalf of clients, provides research and investment advice, and may offer custody of client assets. Brokers earn revenue through commissions on trades, fees for advisory services, or the spread between bid and ask prices. Modern brokerage has expanded to include online and mobile platforms, enabling self-directed investing alongside traditional advisor-led services.
@@ -45,6 +49,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 **Related terms:** [Securities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Securities), [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Prime Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Prime Brokerage), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment Banking)
 
 ---
+
+> [!quote]
+> "Capital markets are the lifeblood of capitalism — they channel savings to their most productive uses."
+> — **Henry Paulson**
 
 ## Capital Markets
 
@@ -82,6 +90,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+> [!quote]
+> "Derivatives are financial weapons of mass destruction."
+> — **Warren Buffett**
+
 ## Derivatives
 
 **Definition:** Derivatives are financial instruments whose value is derived from an underlying asset, index, rate, or benchmark. The most common types of derivatives are futures, options, swaps, and forwards. They are used for hedging (reducing risk exposure), speculation (betting on price movements), and arbitrage (exploiting price differences between markets). Derivatives can be based on a wide variety of underlying assets including equities, bonds, currencies, commodities, interest rates, and market indices. They are traded both on organized exchanges and in over-the-counter (OTC) markets.
@@ -93,6 +105,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 **Related terms:** [Futures and Options](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Futures and Options), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk Management), [Commodity Trading](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Commodity Trading), [Market-Making](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Market-Making)
 
 ---
+
+> [!quote]
+> "In the short run, the market is a voting machine but in the long run, it is a weighing machine."
+> — **Benjamin Graham**
 
 ## Equities
 
@@ -130,6 +146,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+> [!quote]
+> "Gentlemen prefer bonds."
+> — **Andrew Mellon**
+
 ## Fixed Income
 
 **Definition:** Fixed income refers to investment securities that pay the holder a fixed amount of interest at regular intervals until the maturity date, at which point the principal amount is returned. The most common fixed-income instruments are government and corporate bonds, treasury bills, municipal bonds, and certificates of deposit. Fixed-income investments are generally considered less risky than equities because they provide predictable income streams and have priority over equity in the event of a company's bankruptcy. They are a core component of diversified investment portfolios, particularly for income-seeking and risk-averse investors.
@@ -141,6 +161,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 **Related terms:** [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Bond Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Bond Underwriting), [Debt Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Debt Capital Markets), [Portfolio Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Portfolio Management)
 
 ---
+
+> [!quote]
+> "There is no way to make money in futures unless you get in ahead of the move and get out before it's over."
+> — **Jesse Livermore**
 
 ## Futures and Options
 
@@ -154,6 +178,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+> [!quote]
+> "Don't look for the needle in the haystack. Just buy the haystack."
+> — **John Bogle**
+
 ## Index
 
 **Definition:** A financial index is a statistical measure that tracks the performance of a group of assets, typically stocks, representing a particular market, sector, or investment strategy. Indices serve as benchmarks against which investors can measure the performance of their portfolios. They are also the basis for index funds and exchange-traded funds (ETFs) that aim to replicate the index's performance. Major indices include the S&P 500, major European equity indices, the FTSE 100, and the Nikkei 225. Index providers determine the composition and methodology of each index.
@@ -165,6 +193,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 **Related terms:** [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Exchange (Stock/Futures)), [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Portfolio Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Portfolio Management), [scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology), [index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics)
 
 ---
+
+> [!quote]
+> "IPO stands for 'It's Probably Overpriced.'"
+> — **David Dreman**
 
 ## Initial Public Offering (IPO)
 

@@ -938,8 +938,15 @@ jobs:
 
 ### One-Time GCP Setup
 
+> [!info] WIF setup steps (run once per project)
+> 1. Create a Workload Identity Pool
+> 2. Create an OIDC Provider with attribute mapping and repository condition
+> 3. Create a dedicated service account for CI
+> 4. Bind the SA to the Workload Identity Pool for your repository
+> 5. Grant the SA necessary IAM roles (e.g., `roles/bigquery.dataEditor`)
+> 6. Get the provider resource name and save it as GitHub secret `WIF_PROVIDER`
+
 ```bash
-# Variables
 PROJECT_ID="my-project"
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
 POOL_ID="github-actions"
@@ -947,13 +954,11 @@ PROVIDER_ID="github-provider"
 SA_EMAIL="gh-actions-ci@${PROJECT_ID}.iam.gserviceaccount.com"
 REPO="my-org/my-repo"
 
-# 1. Create Workload Identity Pool
 gcloud iam workload-identity-pools create $POOL_ID \
   --project=$PROJECT_ID \
   --location=global \
   --display-name="GitHub Actions Pool"
 
-# 2. Create OIDC Provider
 gcloud iam workload-identity-pools providers create-oidc $PROVIDER_ID \
   --project=$PROJECT_ID \
   --location=global \
@@ -963,29 +968,24 @@ gcloud iam workload-identity-pools providers create-oidc $PROVIDER_ID \
   --attribute-condition="assertion.repository=='${REPO}'" \
   --issuer-uri="https://token.actions.githubusercontent.com"
 
-# 3. Create Service Account
 gcloud iam service-accounts create gh-actions-ci \
   --project=$PROJECT_ID \
   --display-name="GitHub Actions CI"
 
-# 4. Bind Service Account to Workload Identity Pool
 gcloud iam service-accounts add-iam-policy-binding $SA_EMAIL \
   --project=$PROJECT_ID \
   --role="roles/iam.workloadIdentityUser" \
   --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_ID}/attribute.repository/${REPO}"
 
-# 5. Grant SA permissions (example)
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:${SA_EMAIL}" \
   --role="roles/bigquery.dataEditor"
 
-# 6. Get provider resource name (save as GitHub secret WIF_PROVIDER)
 gcloud iam workload-identity-pools providers describe $PROVIDER_ID \
   --project=$PROJECT_ID \
   --location=global \
   --workload-identity-pool=$POOL_ID \
   --format='value(name)'
-# → projects/123456/locations/global/workloadIdentityPools/github-actions/providers/github-provider
 ```
 
 ### GitHub Secrets to Set

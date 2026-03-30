@@ -10,8 +10,8 @@ description: "SQL Server adapter installation, auth, T-SQL differences, incremen
 # dbt: SQL Server Adapter
 
 > [!quote]
-> "The best code is no code at all."
-> — **Jeff Atwood**
+> "Practices that matured over decades in software engineering should be replicated in data — deployment processes, testing, version control."
+> — **Tristan Handy** (creator of dbt)
 
 The `dbt-sqlserver` community adapter connects dbt Core to Microsoft SQL Server and Azure SQL. It is not maintained by dbt Labs — pin versions carefully. This note covers everything needed to run dbt reliably against a SQL Server instance from a Linux host (GCE, Cloud Run, WSL), which is the common deployment path when orchestrating from GCP. For prerequisite SQL Server instance setup, see [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration).
 

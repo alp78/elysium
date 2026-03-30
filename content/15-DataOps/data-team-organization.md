@@ -49,9 +49,6 @@ status: complete
 > [!quote]
 > "A fast flow of change requires that teams are loosely coupled — each team should be able to deliver value without waiting on other teams."
 > — **Matthew Skelton & Manuel Pais** (*Team Topologies*)
->
-> "The biggest issue on software teams is making sure everyone understands what everyone else is doing."
-> — **Martin Fowler**
 
 How you organize your data team shapes everything: what gets built, how fast it ships, how reliable it is, and whether engineers stay or leave. There is no universally correct topology — but there are clear trade-offs, and the best teams are intentional about the model they choose.
 

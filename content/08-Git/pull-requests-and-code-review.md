@@ -21,55 +21,43 @@ Pull requests (PRs) are GitHub's mechanism for proposing changes. They let teamm
 
 ### Creating a PR
 
-```bash
-# Create a PR from the current branch to main
-gh pr create --title "Add daily signal fetcher" --body "Fetches PE, yield from yfinance."
-# gh — GitHub CLI tool
-# pr create — create a new pull request
-# --title "..." — the PR title
-# --body "..." — the PR description/body
+> [!info] gh pr create — open a new pull request from the current branch
+> - `--title` / `--body` — set the PR title and description
+> - `--base` — target a branch other than the default (e.g., `develop`)
+> - `--draft` — mark as work-in-progress; cannot be merged until marked ready
 
-# Create a PR targeting a specific base branch
+```bash
+gh pr create --title "Add daily signal fetcher" --body "Fetches PE, yield from yfinance."
+
+# Target a specific base branch
 gh pr create --title "Fix bug" --body "Details" --base develop
-# --base develop — target the develop branch instead of the default (main)
 
 # Create a draft PR (work in progress)
 gh pr create --draft --title "WIP: new feature"
-# --draft — mark as draft: cannot be merged until marked ready
 ```
 
 ### Reviewing and Merging PRs
 
+> [!info] gh pr — review and merge pull requests
+> - `pr list` — show all open PRs in the repository
+> - `pr view 42` — show title, body, status, checks, and reviews for PR #42
+> - `pr checkout 42` — download and switch to PR #42's branch for local testing
+> - `pr merge 42` — merge the pull request (combine with `--squash`, `--merge`, or `--rebase`)
+> - `--delete-branch` — delete the branch on GitHub after merging
+
 ```bash
-# List all open pull requests
 gh pr list
-# pr list — show all open PRs in the repository
-
-# View details of a specific PR
 gh pr view 42
-# pr view — show title, body, status, checks, reviews
-# 42 — the PR number
-
-# Check out a PR's branch locally for testing
 gh pr checkout 42
-# pr checkout — download and switch to the PR's branch
-# 42 — the PR number
-# In plain English: Download PR #42's code to my machine so I can test it.
 
-# Squash-merge a PR and delete the remote branch
+# Squash-merge and delete the remote branch
 gh pr merge 42 --squash --delete-branch
-# pr merge — merge the pull request
-# 42 — the PR number
-# --squash — combine all commits into one
-# --delete-branch — delete the branch on GitHub after merging
 
 # Standard merge (preserves all commits)
 gh pr merge --merge
-# --merge — standard merge with full commit history preserved
 
 # Rebase merge (linear history, no merge commit)
 gh pr merge --rebase
-# --rebase — replay PR commits onto the base branch
 ```
 
 ### Merge Strategy Comparison

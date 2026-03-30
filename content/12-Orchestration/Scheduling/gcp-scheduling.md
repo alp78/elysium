@@ -86,15 +86,17 @@ gcloud scheduler jobs create http daily-pipeline \
   --min-backoff=1m \
   --max-backoff=10m \
   --max-doublings=3
-# --schedule: cron expression
-# --time-zone: tz database name (default is UTC)
-# --uri: the Cloud Run Jobs run API endpoint
-# --oauth-service-account-email: SA used to generate OAuth token for auth
-# --attempt-deadline: how long to wait for HTTP response before treating as failure
-# --max-retry-attempts: retry count on failure (0–5)
-# --min-backoff / --max-backoff: exponential backoff bounds
-# --max-doublings: max times the backoff interval is doubled before reaching --max-backoff
 ```
+
+> [!info] Cloud Scheduler HTTP Target Flags
+> - `--schedule` — cron expression
+> - `--time-zone` — tz database name (default is UTC)
+> - `--uri` — the Cloud Run Jobs run API endpoint
+> - `--oauth-service-account-email` — SA used to generate OAuth token for auth
+> - `--attempt-deadline` — how long to wait for HTTP response before treating as failure
+> - `--max-retry-attempts` — retry count on failure (0–5)
+> - `--min-backoff` / `--max-backoff` — exponential backoff bounds
+> - `--max-doublings` — max times the backoff interval is doubled before reaching `--max-backoff`
 
 ```bash
 # Create an HTTP job calling an external REST API (no auth)
@@ -107,9 +109,10 @@ gcloud scheduler jobs create http weekly-report \
   --http-method=POST \
   --headers="Content-Type=application/json,X-Api-Key=PLACEHOLDER" \
   --attempt-deadline=5m
-# --headers: custom HTTP headers as KEY=VALUE pairs (comma-separated)
-# For sensitive header values, inject via Secret Manager at deploy time
 ```
+
+> [!tip] Custom Headers
+> `--headers` accepts custom HTTP headers as `KEY=VALUE` pairs (comma-separated). For sensitive header values (API keys, tokens), inject via Secret Manager at deploy time rather than hardcoding in the scheduler job definition.
 
 ---
 
@@ -126,11 +129,12 @@ gcloud scheduler jobs create pubsub daily-ingest-trigger \
   --topic=projects/my-project/topics/daily-ingest \
   --message-body='{"source":"scheduler","pipeline":"daily-ingest"}' \
   --attributes="env=prod,version=2"
-# --topic: full resource path of the Pub/Sub topic
-# --message-body: the message payload (string, often JSON)
-# --attributes: Pub/Sub message attributes (key=value pairs, comma-separated)
-#   Attributes are indexed metadata — useful for filtering subscriptions
 ```
+
+> [!info] Pub/Sub Target Flags
+> - `--topic` — full resource path of the Pub/Sub topic
+> - `--message-body` — the message payload (string, often JSON)
+> - `--attributes` — Pub/Sub message attributes (key=value pairs, comma-separated). Attributes are indexed metadata — useful for filtering subscriptions
 
 > [!tip] Pub/Sub Target vs HTTP Target
 > Use the **Pub/Sub target** when you want loose coupling: the scheduler does not need to know who consumes the event. Multiple consumers can subscribe. The trigger is durable — if a consumer is temporarily down, Pub/Sub retains the message.
@@ -295,11 +299,15 @@ gcloud tasks queues create my-pipeline-queue \
   --min-backoff=10s \
   --max-backoff=5m \
   --max-doublings=4
-# --max-dispatches-per-second: rate limit — max tasks delivered per second
-# --max-concurrent-dispatches: max tasks in-flight simultaneously
-# --max-attempts: total attempts per task (including first attempt; -1 = unlimited)
-# Backoff parameters control retry timing (same semantics as Cloud Scheduler)
+```
 
+> [!info] Cloud Tasks Queue Flags
+> - `--max-dispatches-per-second` — rate limit: max tasks delivered per second
+> - `--max-concurrent-dispatches` — max tasks in-flight simultaneously
+> - `--max-attempts` — total attempts per task (including first attempt; `-1` = unlimited)
+> - Backoff parameters control retry timing (same semantics as Cloud Scheduler)
+
+```bash
 # Describe a queue (see current config and stats)
 gcloud tasks queues describe my-pipeline-queue --location=europe-west1
 
@@ -316,12 +324,13 @@ gcloud tasks create-http-task \
   --header="Content-Type:application/json" \
   --task-name=process-abc123 \
   --schedule-time="2026-03-22T10:00:00Z"
-# --task-name: optional unique name — prevents duplicate task creation
-#   If a task with this name already exists (and was recently created/completed),
-#   the new create call is rejected → idempotent enqueue
-# --schedule-time: delay execution until this time (ISO 8601 UTC)
-#   Omit for "execute ASAP"
+```
 
+> [!info] Cloud Tasks Task Flags
+> - `--task-name` — optional unique name that prevents duplicate task creation. If a task with this name already exists (and was recently created/completed), the new create call is rejected, giving you **idempotent enqueue** semantics
+> - `--schedule-time` — delay execution until this time (ISO 8601 UTC). Omit for "execute ASAP"
+
+```bash
 # Purge a queue (delete all queued tasks — use carefully)
 gcloud tasks queues purge my-pipeline-queue --location=europe-west1
 
@@ -685,13 +694,17 @@ gcloud workflows deploy my-pipeline-workflow \
   --location=europe-west1 \
   --source=my-pipeline-workflow.yaml \
   --service-account=workflow-sa@my-project.iam.gserviceaccount.com
-# --service-account: the SA the workflow uses to call HTTP endpoints and GCP APIs
+```
 
+> [!info] Workflows Deploy and Run Flags
+> - `--service-account` — the SA the workflow uses to call HTTP endpoints and GCP APIs
+> - `--data` — JSON input arguments available as `${args}` in the workflow
+
+```bash
 # Execute a workflow (one-off run)
 gcloud workflows run my-pipeline-workflow \
   --location=europe-west1 \
   --data='{"date":"2026-03-22","env":"prod"}'
-# --data: JSON input arguments available as ${args} in the workflow
 
 # List executions
 gcloud workflows executions list my-pipeline-workflow \
@@ -718,8 +731,9 @@ gcloud scheduler jobs create http trigger-my-pipeline \
   --uri="https://workflowexecutions.googleapis.com/v1/projects/my-project/locations/europe-west1/workflows/my-pipeline-workflow/executions" \
   --message-body='{"argument":"{\"env\":\"prod\"}"}' \
   --oauth-service-account-email=scheduler-sa@my-project.iam.gserviceaccount.com
-# The scheduler SA needs roles/workflows.invoker to trigger workflow executions
 ```
+
+> [!tip] The scheduler SA needs `roles/workflows.invoker` to trigger workflow executions.
 
 ---
 
@@ -829,9 +843,9 @@ gcloud scheduler jobs create http trigger-etl-with-args \
   --message-body='{"overrides":{"containerOverrides":[{"args":["--date","$(date +%Y-%m-%d)","--env","prod"]}]}}' \
   --http-method=POST \
   --oauth-service-account-email=cloud-scheduler-sa@my-project.iam.gserviceaccount.com
-# The body follows the Cloud Run Jobs API v2 RunJobRequest schema
-# containerOverrides.args replaces the container's CMD arguments
 ```
+
+> [!info] The body follows the Cloud Run Jobs API v2 `RunJobRequest` schema. `containerOverrides.args` replaces the container's CMD arguments.
 
 > [!warning] Static Date in Scheduler Body
 > The `$(date +%Y-%m-%d)` in the `--message-body` is NOT evaluated by Cloud Scheduler — it is treated as a literal string. Cloud Scheduler does not support shell expansion or template variables. If you need dynamic dates, pass a sentinel value (e.g., `"--date","auto"`) and have the container compute the date itself.
@@ -891,10 +905,14 @@ gcloud functions deploy my-pipeline-function \
   --memory=512MB \
   --timeout=540s \
   --service-account=function-sa@my-project.iam.gserviceaccount.com
-# --gen2: use Cloud Functions 2nd gen (backed by Cloud Run — preferred for new deployments)
-# --trigger-topic: subscribes the function to this Pub/Sub topic automatically
-# --timeout: max execution time (540s = 9 minutes for gen2; up to 60 min with longer timeout setting)
+```
 
+> [!info] Cloud Functions Deploy Flags
+> - `--gen2` — use Cloud Functions 2nd gen (backed by Cloud Run — preferred for new deployments)
+> - `--trigger-topic` — subscribes the function to this Pub/Sub topic automatically
+> - `--timeout` — max execution time (540s = 9 minutes for gen2; up to 60 min with longer timeout setting)
+
+```bash
 # Step 3: Create the Cloud Scheduler job targeting the Pub/Sub topic
 gcloud scheduler jobs create pubsub trigger-function-daily \
   --location=europe-west1 \
@@ -950,9 +968,13 @@ gcloud functions deploy my-http-function \
   --timeout=300s \
   --service-account=function-sa@my-project.iam.gserviceaccount.com \
   --no-allow-unauthenticated
-# --trigger-http: HTTP trigger (function URL is the endpoint)
-# --no-allow-unauthenticated: require OAuth token (Cloud Scheduler provides this)
+```
 
+> [!info] HTTP-Triggered Function Flags
+> - `--trigger-http` — HTTP trigger (function URL is the endpoint)
+> - `--no-allow-unauthenticated` — require OAuth token (Cloud Scheduler provides this)
+
+```bash
 # Get the function URL
 gcloud functions describe my-http-function \
   --gen2 \
@@ -1153,13 +1175,13 @@ gcloud scheduler jobs create http health-check-api \
   --http-method=GET \
   --attempt-deadline=30s \
   --max-retry-attempts=0
-# --max-retry-attempts=0: no retries — if it fails, alert immediately
-# Health checks should fail fast, not retry (a retry could mask a systemic problem)
-
-# Create a Cloud Monitoring alert for scheduler job failures
-# (via gcloud monitoring or Terraform — see terraform-iam-and-secrets for the pattern)
-# Alert condition: cloudscheduler.googleapis.com/job/attempt_count with failure filter
 ```
+
+> [!tip] Health Checks Should Fail Fast
+> `--max-retry-attempts=0` means no retries — if the check fails, alert immediately. Health checks should not retry because a retry could mask a systemic problem.
+
+> [!info] Monitoring Alert
+> Create a Cloud Monitoring alert for scheduler job failures via `gcloud monitoring` or Terraform (see terraform-iam-and-secrets for the pattern). Alert condition: `cloudscheduler.googleapis.com/job/attempt_count` with a failure filter.
 
 #### Python health check function
 
@@ -1226,8 +1248,9 @@ gcloud scheduler jobs create http scale-down-api \
   --message-body='{"scaling":{"minInstanceCount":0}}' \
   --http-method=PATCH \
   --oauth-service-account-email=${SCHEDULER_SA}
-# Scheduler SA needs roles/run.admin to patch the service configuration
 ```
+
+> [!tip] The scheduler SA needs `roles/run.admin` to patch the service configuration.
 
 > [!warning] Scale-Down Risk
 > Scaling min-instances to 0 means the next request after scale-down will incur a cold start. If your API serves user-facing requests, test the cold start latency under production load conditions before implementing this pattern. For internal pipeline triggers where a 10-second cold start is acceptable, the cost savings are significant.

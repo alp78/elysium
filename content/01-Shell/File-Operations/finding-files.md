@@ -14,11 +14,8 @@ status: complete
 # Finding Files — Surgical Searching at Scale
 
 > [!quote]
-> "Write programs that do one thing and do it well. Write programs to work together."
-> — **Doug McIlroy**
->
-> "Laziness: The quality that makes you go to great effort to reduce overall energy expenditure."
-> — **Larry Wall**
+> "UNIX has a couple of hundred system calls, and the `find` command is probably the single most complicated command in the whole system."
+> — **Brian Kernighan**
 
 When a pipeline fails and you need to find the offending file across a directory tree with thousands of entries, brute-force listing is not an option. You need targeted search tools that filter by name, size, time, type, and content. The `find` command is universal; `fd` is faster for interactive use; `locate` is instant but potentially stale. While `find` locates files by metadata, [grep-and-pattern-matching](https://alp78.github.io/elysium/01-Shell/Text-Processing/grep-and-pattern-matching) searches inside those files for content -- the two tools complement each other in every investigation.
 

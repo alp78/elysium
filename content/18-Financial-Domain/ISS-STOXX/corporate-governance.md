@@ -26,6 +26,10 @@ date: 2026-03-28
 
 ## A
 
+> [!quote]
+> "The best CEOs I know are teachers, and at the core of what they teach is strategy."
+> — **Michael Porter**
+
 ### Activist Investor
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="25 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 25</span>
@@ -38,7 +42,7 @@ an activist investor is a shareholder who buys enough stock to demand changes �
 **ISS QualityScore Pillar:** Board Structure, Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Proxy Contest]], [[#Contested Election]], [[#Shareholder Proposal]], [[#Board Refreshment]]
+> [Proxy Contest](#proxy-contest), [Contested Election](#contested-election), [Shareholder Proposal](#shareholder-proposal), [Board Refreshment](#board-refreshment)
 
 > [!example]- Source excerpts (5)
 >
@@ -90,7 +94,7 @@ an advisory vote lets shareholders voice approval or disapproval on a topic — 
 **ISS QualityScore Pillar:** Compensation
 
 > [!tip] Related Terms
-> [[#Say-on-Pay]], [[#Proxy Voting]], [[#Vote Preference]]
+> [Say-on-Pay](#say-on-pay), [Proxy Voting](#proxy-voting), [Vote Preference](#vote-preference)
 
 > [!example]- Source excerpts (5)
 >
@@ -141,7 +145,7 @@ the AGM is the yearly meeting where shareholders get to vote on the people and p
 **ISS QualityScore Pillar:** Foundational to all pillars
 
 > [!tip] Related Terms
-> [[#Proxy Voting]], [[#Director Election]], [[#Say-on-Pay]], [[#Extraordinary General Meeting (EGM)]]
+> [Proxy Voting](#proxy-voting), [Director Election](#director-election), [Say-on-Pay](#say-on-pay), [Extraordinary General Meeting (EGM)](#extraordinary-general-meeting-egm)
 
 > [!example]- Source excerpts (5)
 >
@@ -193,7 +197,7 @@ anti-takeover provisions are defensive shields a company puts in place so that a
 **ISS QualityScore Pillar:** Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Poison Pill]], [[#Dual-Class Shares]], [[#Supermajority Vote Requirement]], [[#Classified Board]]
+> [Poison Pill](#poison-pill), [Dual-Class Shares](#dual-class-shares), [Supermajority Vote Requirement](#supermajority-vote-requirement), [Classified Board](#classified-board)
 
 > [!example]- Source excerpts (5)
 >
@@ -247,7 +251,7 @@ this is the board's job of making sure the company's financial statements are ac
 **ISS QualityScore Pillar:** Audit & Risk Oversight
 
 > [!tip] Related Terms
-> [[#Board Independence]], [[#Board Structure]], [[#Governance QualityScore]]
+> [Board Independence](#board-independence), [Board Structure](#board-structure), [Governance QualityScore](#governance-qualityscore)
 
 > [!example]- Source excerpts (5)
 >
@@ -302,7 +306,7 @@ a classified (or "staggered") board slows down shareholder ability to change boa
 **ISS QualityScore Pillar:** Shareholder Rights, Board Structure
 
 > [!tip] Related Terms
-> [[#Anti-Takeover Provision]], [[#Majority Voting]], [[#Shareholder Rights]]
+> [Anti-Takeover Provision](#anti-takeover-provision), [Majority Voting](#majority-voting), [Shareholder Rights](#shareholder-rights)
 
 > [!example]- Source excerpts (5)
 >
@@ -342,6 +346,10 @@ a classified (or "staggered") board slows down shareholder ability to change boa
 
 ---
 
+> [!quote]
+> "Diversity is not a nice-to-have; it is a must-have for effective governance."
+> — **Larry Fink**
+
 ### Board Diversity
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="341 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 341</span>
@@ -354,7 +362,7 @@ board diversity means the board is not composed entirely of people with the same
 **ISS QualityScore Pillar:** Board Structure
 
 > [!tip] Related Terms
-> [[#Board Independence]], [[#EEO-1 Data]], [[#Director Data]]
+> [Board Independence](#board-independence), [EEO-1 Data](#eeo-1-data), [Director Data](#director-data)
 
 > [!example]- Source excerpts (5)
 >
@@ -394,6 +402,10 @@ board diversity means the board is not composed entirely of people with the same
 
 ---
 
+> [!quote]
+> "The job of the board is to govern, not to manage."
+> — **Peter Drucker**
+
 ### Board Independence
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="665 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 665</span>
@@ -406,7 +418,7 @@ an independent director is someone who does not work at the company, is not rela
 **ISS QualityScore Pillar:** Board Structure
 
 > [!tip] Related Terms
-> [[#Independent Director]], [[#CEO Duality]], [[#Compensation Committee]]
+> [Independent Director](#independent-director), [CEO Duality](#ceo-duality), [Compensation Committee](#compensation-committee)
 
 > [!example]- Source excerpts (5)
 >
@@ -456,7 +468,7 @@ board refreshment is about making sure the board does not become stale. If the s
 **ISS QualityScore Pillar:** Board Structure
 
 > [!tip] Related Terms
-> [[#Board Tenure]], [[#Board Independence]], [[#Director Election]], [[#Board Diversity]]
+> [Board Tenure](#board-tenure), [Board Independence](#board-independence), [Director Election](#director-election), [Board Diversity](#board-diversity)
 
 > [!example]- Source excerpts (5)
 >
@@ -506,7 +518,7 @@ board structure is the big picture of how the board is set up and operates. ISS 
 **ISS QualityScore Pillar:** Board Structure
 
 > [!tip] Related Terms
-> [[#Board Independence]], [[#CEO Duality]], [[#Board Classification (Classified Board)]]
+> [Board Independence](#board-independence), [CEO Duality](#ceo-duality), [Board Classification (Classified Board)](#board-classification-classified-board)
 
 > [!example]- Source excerpts (5)
 >
@@ -558,7 +570,7 @@ board tenure is how long each director has been on the board. ISS flags boards w
 **ISS QualityScore Pillar:** Board Structure
 
 > [!tip] Related Terms
-> [[#Board Refreshment]], [[#Board Independence]], [[#Independent Director]], [[#Director Data]]
+> [Board Refreshment](#board-refreshment), [Board Independence](#board-independence), [Independent Director](#independent-director), [Director Data](#director-data)
 
 > [!example]- Source excerpts (5)
 >
@@ -610,7 +622,7 @@ burn rate measures how fast a company is handing out shares to employees. A high
 **ISS QualityScore Pillar:** Compensation
 
 > [!tip] Related Terms
-> [[#Equity Plan]], [[#Executive Compensation]], [[#Say-on-Pay]]
+> [Equity Plan](#equity-plan), [Executive Compensation](#executive-compensation), [Say-on-Pay](#say-on-pay)
 
 > [!example]- Source excerpts (5)
 >
@@ -666,7 +678,7 @@ capital allocation is how a company spends its money. Shareholders and proxy adv
 **ISS QualityScore Pillar:** Compensation (as it relates to incentive metrics), Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Share Buyback]], [[#Activist Investor]], [[#Executive Compensation]]
+> [Share Buyback](#share-buyback), [Activist Investor](#activist-investor), [Executive Compensation](#executive-compensation)
 
 > [!example]- Source excerpts (5)
 >
@@ -706,6 +718,10 @@ capital allocation is how a company spends its money. Shareholders and proxy adv
 
 ---
 
+> [!quote]
+> "Accountability is the glue that ties commitment to results."
+> — **Bob Proctor**
+
 ### Clawback Policy
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="36 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 36</span>
@@ -718,7 +734,7 @@ a clawback policy says: "If we discover the numbers were wrong or you misbehaved
 **ISS QualityScore Pillar:** Compensation
 
 > [!tip] Related Terms
-> [[#Executive Compensation]], [[#Compensation Committee]], [[#Say-on-Pay]]
+> [Executive Compensation](#executive-compensation), [Compensation Committee](#compensation-committee), [Say-on-Pay](#say-on-pay)
 
 > [!example]- Source excerpts (5)
 >
@@ -771,7 +787,7 @@ the compensation committee decides how much executives get paid and in what form
 **ISS QualityScore Pillar:** Compensation, Board Structure
 
 > [!tip] Related Terms
-> [[#Executive Compensation]], [[#Board Independence]], [[#Say-on-Pay]]
+> [Executive Compensation](#executive-compensation), [Board Independence](#board-independence), [Say-on-Pay](#say-on-pay)
 
 > [!example]- Source excerpts (5)
 >
@@ -824,7 +840,7 @@ a contested election is a director race with competing candidates — the board'
 **ISS QualityScore Pillar:** Board Structure, Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Proxy Contest]], [[#Activist Investor]], [[#Director Election]], [[#Majority Voting]]
+> [Proxy Contest](#proxy-contest), [Activist Investor](#activist-investor), [Director Election](#director-election), [Majority Voting](#majority-voting)
 
 > [!example]- Source excerpts (5)
 >
@@ -876,7 +892,7 @@ CSR is a company's effort to be a good corporate citizen — treating workers fa
 **ISS QualityScore Pillar:** Not directly scored, but intersects with Board Structure (oversight) and Shareholder Rights (proposal support)
 
 > [!tip] Related Terms
-> [[#ESG Committee]], [[#Shareholder Proposal]], [[#Lobbying Disclosure]], [[#Political Spending Disclosure]]
+> [ESG Committee](#esg-committee), [Shareholder Proposal](#shareholder-proposal), [Lobbying Disclosure](#lobbying-disclosure), [Political Spending Disclosure](#political-spending-disclosure)
 
 > [!example]- Source excerpts (4)
 >
@@ -910,6 +926,10 @@ CSR is a company's effort to be a good corporate citizen — treating workers fa
 
 ---
 
+> [!quote]
+> "Democracy is the worst form of government, except for all the others."
+> — **Winston Churchill**
+
 ### Cumulative Voting
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="526 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 526</span>
@@ -922,7 +942,7 @@ cumulative voting lets smaller shareholders pool their votes to support one dire
 **ISS QualityScore Pillar:** Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Majority Voting]], [[#Shareholder Rights]], [[#Board Structure]]
+> [Majority Voting](#majority-voting), [Shareholder Rights](#shareholder-rights), [Board Structure](#board-structure)
 
 > [!example]- Source excerpts (5)
 >
@@ -977,7 +997,7 @@ director data is the detailed dossier ISS keeps on every public-company board me
 **ISS QualityScore Pillar:** Board Structure
 
 > [!tip] Related Terms
-> [[#Overboarded Director]], [[#Board Diversity]], [[#Board Independence]]
+> [Overboarded Director](#overboarded-director), [Board Diversity](#board-diversity), [Board Independence](#board-independence)
 
 > [!example]- Source excerpts (5)
 >
@@ -1029,7 +1049,7 @@ director elections are how shareholders decide who sits on the board. ISS may re
 **ISS QualityScore Pillar:** Board Structure
 
 > [!tip] Related Terms
-> [[#Majority Voting]], [[#Contested Election]], [[#Board Refreshment]], [[#Overboarded Director]]
+> [Majority Voting](#majority-voting), [Contested Election](#contested-election), [Board Refreshment](#board-refreshment), [Overboarded Director](#overboarded-director)
 
 > [!example]- Source excerpts (5)
 >
@@ -1070,6 +1090,10 @@ director elections are how shareholders decide who sits on the board. ISS may re
 
 ---
 
+> [!quote]
+> "One share, one vote is the bedrock principle of corporate democracy."
+> — **Arthur Levitt**
+
 ### Dual-Class Shares
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -1082,7 +1106,7 @@ dual-class shares let founders or insiders keep outsized voting power even after
 **ISS QualityScore Pillar:** Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Anti-Takeover Provision]], [[#Shareholder Rights]], [[#Supermajority Vote Requirement]]
+> [Anti-Takeover Provision](#anti-takeover-provision), [Shareholder Rights](#shareholder-rights), [Supermajority Vote Requirement](#supermajority-vote-requirement)
 
 > [!example]- Source excerpts (1)
 >
@@ -1109,7 +1133,7 @@ the EEO-1 report is a government form that shows the racial and gender makeup of
 **ISS QualityScore Pillar:** Not directly scored, but intersects with Board Structure (diversity) and Shareholder Rights (proposal support)
 
 > [!tip] Related Terms
-> [[#Board Diversity]], [[#Shareholder Proposal]], [[#Director Data]]
+> [Board Diversity](#board-diversity), [Shareholder Proposal](#shareholder-proposal), [Director Data](#director-data)
 
 > [!example]- Source excerpts (5)
 >
@@ -1161,7 +1185,7 @@ the EEO-1 report is a government form that shows the racial and gender makeup of
 the Engagement Suite is ISS's tool for investors who want to have structured conversations with companies about governance improvements and keep records of those interactions. It helps investors meet stewardship code requirements by documenting their engagement efforts.
 
 > [!tip] Related Terms
-> [[#Proxy Voting]], [[#Governance Exchange]], [[#Vote Disclosure]]
+> [Proxy Voting](#proxy-voting), [Governance Exchange](#governance-exchange), [Vote Disclosure](#vote-disclosure)
 
 > [!example]- Source excerpts (2)
 >
@@ -1194,7 +1218,7 @@ an equity plan is a company's program for giving employees ownership stakes. Whe
 **ISS QualityScore Pillar:** Compensation
 
 > [!tip] Related Terms
-> [[#Burn Rate]], [[#Executive Compensation]], [[#Advisory Vote]]
+> [Burn Rate](#burn-rate), [Executive Compensation](#executive-compensation), [Advisory Vote](#advisory-vote)
 
 > [!example]- Source excerpts (5)
 >
@@ -1233,6 +1257,10 @@ an equity plan is a company's program for giving employees ownership stakes. Whe
 
 ---
 
+> [!quote]
+> "The problem with executive pay is not its level but its disconnect from performance."
+> — **Michael Jensen**
+
 ### Executive Compensation
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,865 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,865</span>
@@ -1245,7 +1273,7 @@ executive compensation is everything a top executive receives for doing their jo
 **ISS QualityScore Pillar:** Compensation
 
 > [!tip] Related Terms
-> [[#Say-on-Pay]], [[#Burn Rate]], [[#Clawback Policy]], [[#Equity Plan]]
+> [Say-on-Pay](#say-on-pay), [Burn Rate](#burn-rate), [Clawback Policy](#clawback-policy), [Equity Plan](#equity-plan)
 
 > [!example]- Source excerpts (5)
 >
@@ -1298,7 +1326,7 @@ an EGM is a special shareholders' meeting called on short notice for matters too
 **ISS QualityScore Pillar:** Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Annual General Meeting (AGM)]], [[#Special Meeting Right]], [[#Shareholder Rights]]
+> [Annual General Meeting (AGM)](#annual-general-meeting-agm), [Special Meeting Right](#special-meeting-right), [Shareholder Rights](#shareholder-rights)
 
 > [!example]- Source excerpts (5)
 >
@@ -1342,6 +1370,10 @@ an EGM is a special shareholders' meeting called on short notice for matters too
 
 ## F
 
+> [!quote]
+> "A fiduciary is a person who has undertaken to act for and on behalf of another in circumstances which give rise to a relationship of trust."
+> — **Lord Millett**
+
 ### Fiduciary Duty
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="100 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 100</span>
@@ -1354,7 +1386,7 @@ fiduciary duty means directors and fund managers must put the interests of share
 **ISS QualityScore Pillar:** Foundational to all pillars
 
 > [!tip] Related Terms
-> [[#Board Independence]], [[#Independent Director]], [[#Related-Party Transaction]], [[#Stewardship]]
+> [Board Independence](#board-independence), [Independent Director](#independent-director), [Related-Party Transaction](#related-party-transaction), [Stewardship](#stewardship)
 
 > [!example]- Source excerpts (5)
 >
@@ -1404,7 +1436,7 @@ fiduciary duty means directors and fund managers must put the interests of share
 Form N-PX is the public filing where fund managers reveal how they voted at shareholder meetings. Investors and researchers use these filings to evaluate whether asset managers are voting consistently with their stated policies and stewardship commitments.
 
 > [!tip] Related Terms
-> [[#Vote Disclosure]], [[#Voting Analytics]], [[#Proxy Voting]]
+> [Vote Disclosure](#vote-disclosure), [Voting Analytics](#voting-analytics), [Proxy Voting](#proxy-voting)
 
 > [!example]- Source excerpts (3)
 >
@@ -1443,7 +1475,7 @@ Form N-PX is the public filing where fund managers reveal how they voted at shar
 Global Meeting Results is ISS's database of what happened at every shareholder meeting — how each proposal was voted on and whether it passed or failed. Investors use this data to spot governance trends and benchmark company results against peers.
 
 > [!tip] Related Terms
-> [[#Proxy Voting]], [[#Say-on-Pay]], [[#Shareholder Proposal]]
+> [Proxy Voting](#proxy-voting), [Say-on-Pay](#say-on-pay), [Shareholder Proposal](#shareholder-proposal)
 
 > [!example]- Source excerpts (3)
 >
@@ -1471,6 +1503,10 @@ Global Meeting Results is ISS's database of what happened at every shareholder m
 
 ---
 
+> [!quote]
+> "Failure should not be rewarded, and yet it often is in the boardroom."
+> — **Nell Minow**
+
 ### Golden Parachute
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="427 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 427</span>
@@ -1483,7 +1519,7 @@ a golden parachute is the big payout an executive receives if the company is sol
 **ISS QualityScore Pillar:** Compensation
 
 > [!tip] Related Terms
-> [[#Executive Compensation]], [[#Say-on-Pay]], [[#Clawback Policy]], [[#Anti-Takeover Provision]]
+> [Executive Compensation](#executive-compensation), [Say-on-Pay](#say-on-pay), [Clawback Policy](#clawback-policy), [Anti-Takeover Provision](#anti-takeover-provision)
 
 > [!example]- Source excerpts (5)
 >
@@ -1533,7 +1569,7 @@ a golden parachute is the big payout an executive receives if the company is sol
 Governance Exchange is a bridge ISS built between companies and their shareholders so they can talk about governance issues in a more organized way, especially during proxy season. Companies can explain their governance practices and investors can flag concerns.
 
 > [!tip] Related Terms
-> [[#Engagement Suite]], [[#ProxyExchange]], [[#Proxy Contest]]
+> [Engagement Suite](#engagement-suite), [ProxyExchange](#proxyexchange), [Proxy Contest](#proxy-contest)
 
 > [!example]- Source excerpts (5)
 >
@@ -1570,6 +1606,10 @@ Governance Exchange is a bridge ISS built between companies and their shareholde
 
 ---
 
+> [!quote]
+> "Good governance is the difference between a company that thrives and one that merely survives."
+> — **Peter Drucker**
+
 ### Governance QualityScore
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="68 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 68</span>
@@ -1582,7 +1622,7 @@ Governance QualityScore is ISS's report card for how well a company is governed.
 **ISS QualityScore Pillar:** All four pillars — Board Structure, Compensation, Shareholder Rights, Audit & Risk Oversight
 
 > [!tip] Related Terms
-> [[#Board Structure]], [[#Executive Compensation]], [[#Shareholder Rights]], [[#Audit & Risk Oversight]]
+> [Board Structure](#board-structure), [Executive Compensation](#executive-compensation), [Shareholder Rights](#shareholder-rights), [Audit & Risk Oversight](#audit-risk-oversight)
 
 > [!example]- Source excerpts (5)
 >
@@ -1622,6 +1662,10 @@ Governance QualityScore is ISS's report card for how well a company is governed.
 
 ## I
 
+> [!quote]
+> "The value of independent directors lies in their willingness to ask uncomfortable questions."
+> — **Adolf Berle**
+
 ### Independent Director
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,856 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,856</span>
@@ -1634,7 +1678,7 @@ an independent director is an outsider who can make objective decisions because 
 **ISS QualityScore Pillar:** Board Structure
 
 > [!tip] Related Terms
-> [[#Board Independence]], [[#CEO Duality]], [[#Overboarded Director]]
+> [Board Independence](#board-independence), [CEO Duality](#ceo-duality), [Overboarded Director](#overboarded-director)
 
 > [!example]- Source excerpts (5)
 >
@@ -1684,7 +1728,7 @@ an independent director is an outsider who can make objective decisions because 
 the ISS Benchmark Policy is the "standard playbook" ISS uses to decide whether to recommend a "for" or "against" vote on proxy proposals. Most institutional investors who subscribe to ISS either follow these recommendations directly or use them as a starting point for their own policies.
 
 > [!tip] Related Terms
-> [[#ISS Voting Policy]], [[#Proxy Voting]], [[#Advisory Vote]]
+> [ISS Voting Policy](#iss-voting-policy), [Proxy Voting](#proxy-voting), [Advisory Vote](#advisory-vote)
 
 > [!example]- Source excerpts (5)
 >
@@ -1731,7 +1775,7 @@ the ISS Benchmark Policy is the "standard playbook" ISS uses to decide whether t
 ISS does not have just one voting policy — it offers a menu. The Benchmark policy is the most widely used, but investors with specific mandates (e.g., faith-based investing, public pensions, sustainability-focused funds) can choose an alternative lens through which ISS evaluates proxy proposals.
 
 > [!tip] Related Terms
-> [[#ISS Benchmark Policy]], [[#Proxy Voting]], [[#Vote Preference]]
+> [ISS Benchmark Policy](#iss-benchmark-policy), [Proxy Voting](#proxy-voting), [Vote Preference](#vote-preference)
 
 > [!example]- Source excerpts (5)
 >
@@ -1785,7 +1829,7 @@ a lead independent director is the "independent voice" on the board when the CEO
 **ISS QualityScore Pillar:** Board Structure
 
 > [!tip] Related Terms
-> [[#CEO Duality]], [[#Board Independence]], [[#Independent Director]], [[#Board Structure]]
+> [CEO Duality](#ceo-duality), [Board Independence](#board-independence), [Independent Director](#independent-director), [Board Structure](#board-structure)
 
 > [!example]- Source excerpts (5)
 >
@@ -1839,7 +1883,7 @@ lobbying disclosure proposals ask companies to reveal how much they spend trying
 **ISS QualityScore Pillar:** Not directly scored, but intersects with Shareholder Rights (proposal support)
 
 > [!tip] Related Terms
-> [[#Political Spending Disclosure]], [[#Shareholder Proposal]], [[#Corporate Social Responsibility (CSR)]]
+> [Political Spending Disclosure](#political-spending-disclosure), [Shareholder Proposal](#shareholder-proposal), [Corporate Social Responsibility (CSR)](#corporate-social-responsibility-csr)
 
 > [!example]- Source excerpts (2)
 >
@@ -1872,7 +1916,7 @@ an LTIP is the part of an executive's pay that they earn only if the company hit
 **ISS QualityScore Pillar:** Compensation
 
 > [!tip] Related Terms
-> [[#Executive Compensation]], [[#Pay-for-Performance Alignment]], [[#Equity Plan]], [[#Say-on-Pay]]
+> [Executive Compensation](#executive-compensation), [Pay-for-Performance Alignment](#pay-for-performance-alignment), [Equity Plan](#equity-plan), [Say-on-Pay](#say-on-pay)
 
 > [!example]- Source excerpts (5)
 >
@@ -1916,6 +1960,10 @@ an LTIP is the part of an executive's pay that they earn only if the company hit
 
 ## M
 
+> [!quote]
+> "Shareholders should have real power to remove directors who fail to serve their interests."
+> — **Arthur Levitt**
+
 ### Majority Voting
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="228 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 228</span>
@@ -1928,7 +1976,7 @@ majority voting means a director must win the support of more than half the voti
 **ISS QualityScore Pillar:** Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Cumulative Voting]], [[#Board Classification (Classified Board)]], [[#Shareholder Rights]]
+> [Cumulative Voting](#cumulative-voting), [Board Classification (Classified Board)](#board-classification-classified-board), [Shareholder Rights](#shareholder-rights)
 
 > [!example]- Source excerpts (5)
 >
@@ -1981,7 +2029,7 @@ a majority voting standard is the rule that says a director must win genuine maj
 **ISS QualityScore Pillar:** Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Majority Voting]], [[#Director Election]], [[#Shareholder Rights]], [[#Board Refreshment]]
+> [Majority Voting](#majority-voting), [Director Election](#director-election), [Shareholder Rights](#shareholder-rights), [Board Refreshment](#board-refreshment)
 
 > [!example]- Source excerpts (5)
 >
@@ -2025,6 +2073,10 @@ a majority voting standard is the rule that says a director must win genuine maj
 
 ## O
 
+> [!quote]
+> "No one can serve two masters well, let alone five or six."
+> — **Adolf Berle**
+
 ### Overboarded Director
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="147 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 147</span>
@@ -2037,7 +2089,7 @@ an overboarded director has too many board seats. ISS worries they cannot attend
 **ISS QualityScore Pillar:** Board Structure
 
 > [!tip] Related Terms
-> [[#Director Data]], [[#Board Independence]], [[#Independent Director]]
+> [Director Data](#director-data), [Board Independence](#board-independence), [Independent Director](#independent-director)
 
 > [!example]- Source excerpts (5)
 >
@@ -2079,6 +2131,10 @@ an overboarded director has too many board seats. ISS worries they cannot attend
 
 ## P
 
+> [!quote]
+> "Pay without performance is the central problem in corporate governance today."
+> — **Michael Jensen**
+
 ### Pay-for-Performance Alignment
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="282 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 282</span>
@@ -2091,7 +2147,7 @@ pay-for-performance alignment asks a simple question: is the CEO being paid like
 **ISS QualityScore Pillar:** Compensation
 
 > [!tip] Related Terms
-> [[#Say-on-Pay]], [[#Executive Compensation]], [[#Long-Term Incentive Plan (LTIP)]], [[#Compensation Committee]]
+> [Say-on-Pay](#say-on-pay), [Executive Compensation](#executive-compensation), [Long-Term Incentive Plan (LTIP)](#long-term-incentive-plan-ltip), [Compensation Committee](#compensation-committee)
 
 > [!example]- Source excerpts (5)
 >
@@ -2131,6 +2187,10 @@ pay-for-performance alignment asks a simple question: is the CEO being paid like
 
 ---
 
+> [!quote]
+> "Takeover defenses that entrench management at the expense of shareholders destroy value."
+> — **Michael Jensen**
+
 ### Poison Pill
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,078 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,078</span>
@@ -2143,7 +2203,7 @@ a poison pill is a defense mechanism that makes it extremely costly for anyone t
 **ISS QualityScore Pillar:** Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Anti-Takeover Provision]], [[#Shareholder Rights]], [[#Dual-Class Shares]]
+> [Anti-Takeover Provision](#anti-takeover-provision), [Shareholder Rights](#shareholder-rights), [Dual-Class Shares](#dual-class-shares)
 
 > [!example]- Source excerpts (5)
 >
@@ -2195,7 +2255,7 @@ political spending disclosure proposals ask companies to tell shareholders where
 **ISS QualityScore Pillar:** Not directly scored, but intersects with Shareholder Rights (proposal support)
 
 > [!tip] Related Terms
-> [[#Lobbying Disclosure]], [[#Shareholder Proposal]], [[#Corporate Social Responsibility (CSR)]]
+> [Lobbying Disclosure](#lobbying-disclosure), [Shareholder Proposal](#shareholder-proposal), [Corporate Social Responsibility (CSR)](#corporate-social-responsibility-csr)
 
 > [!example]- Source excerpts (1)
 >
@@ -2219,7 +2279,7 @@ proxy access lets long-term shareholders put their own director candidates on th
 **ISS QualityScore Pillar:** Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Director Election]], [[#Proxy Contest]], [[#Shareholder Rights]], [[#Contested Election]]
+> [Director Election](#director-election), [Proxy Contest](#proxy-contest), [Shareholder Rights](#shareholder-rights), [Contested Election](#contested-election)
 
 > [!example]- Source excerpts (5)
 >
@@ -2267,7 +2327,7 @@ proxy access lets long-term shareholders put their own director candidates on th
 a proxy contest is a shareholder battle for control. An activist investor who disagrees with how the company is being run asks other shareholders to vote for the activist's candidates or proposals instead of the board's. ISS evaluates each side's arguments and issues a recommendation.
 
 > [!tip] Related Terms
-> [[#ProxyExchange]], [[#Shareholder Proposal]], [[#Proxy Voting]]
+> [ProxyExchange](#proxyexchange), [Shareholder Proposal](#shareholder-proposal), [Proxy Voting](#proxy-voting)
 
 > [!example]- Source excerpts (5)
 >
@@ -2307,6 +2367,10 @@ a proxy contest is a shareholder battle for control. An activist investor who di
 
 ---
 
+> [!quote]
+> "The proxy is the shareholder's ballot, and casting it is both a right and a responsibility."
+> — **Arthur Levitt**
+
 ### Proxy Voting
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4,813 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 4,813</span>
@@ -2319,7 +2383,7 @@ most shareholders do not attend company meetings. Instead, they fill out a proxy
 **ISS QualityScore Pillar:** Foundational to all pillars
 
 > [!tip] Related Terms
-> [[#Proxy Exchange]], [[#ISS Benchmark Policy]], [[#Vote Preference]], [[#Form N-PX]]
+> [Proxy Exchange](#proxy-exchange), [ISS Benchmark Policy](#iss-benchmark-policy), [Vote Preference](#vote-preference), [Form N-PX](#form-n-px)
 
 > [!example]- Source excerpts (5)
 >
@@ -2370,7 +2434,7 @@ most shareholders do not attend company meetings. Instead, they fill out a proxy
 ProxyExchange (one word, branded) is ISS's flagship product for institutional investors who need to research proxy proposals, apply their voting policies, execute votes, and generate reports — all in one place. It is the interface through which the majority of ISS clients interact with proxy season.
 
 > [!tip] Related Terms
-> [[#Proxy Exchange]], [[#Proxy Voting]], [[#ISS Voting Policy]], [[#Governance Exchange]]
+> [Proxy Exchange](#proxy-exchange), [Proxy Voting](#proxy-voting), [ISS Voting Policy](#iss-voting-policy), [Governance Exchange](#governance-exchange)
 
 > [!example]- Source excerpts (5)
 >
@@ -2422,7 +2486,7 @@ a quorum is the minimum attendance needed for a shareholder meeting to count. If
 **ISS QualityScore Pillar:** Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Annual General Meeting (AGM)]], [[#Proxy Voting]], [[#Shareholder Rights]]
+> [Annual General Meeting (AGM)](#annual-general-meeting-agm), [Proxy Voting](#proxy-voting), [Shareholder Rights](#shareholder-rights)
 
 > [!example]- Source excerpts (5)
 >
@@ -2476,7 +2540,7 @@ a related-party transaction is a deal between the company and an insider. For ex
 **ISS QualityScore Pillar:** Audit & Risk Oversight, Board Structure
 
 > [!tip] Related Terms
-> [[#Board Independence]], [[#Independent Director]], [[#Fiduciary Duty]], [[#Audit & Risk Oversight]]
+> [Board Independence](#board-independence), [Independent Director](#independent-director), [Fiduciary Duty](#fiduciary-duty), [Audit & Risk Oversight](#audit-risk-oversight)
 
 > [!example]- Source excerpts (5)
 >
@@ -2518,6 +2582,10 @@ a related-party transaction is a deal between the company and an insider. For ex
 
 ## S
 
+> [!quote]
+> "Executive pay should be determined by performance, not by the executives themselves."
+> — **Michael Jensen**
+
 ### Say-on-Pay
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="847 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 847</span>
@@ -2530,7 +2598,7 @@ say-on-pay is the annual moment when shareholders give a thumbs up or thumbs dow
 **ISS QualityScore Pillar:** Compensation
 
 > [!tip] Related Terms
-> [[#Advisory Vote]], [[#Executive Compensation]], [[#Compensation Committee]], [[#Clawback Policy]]
+> [Advisory Vote](#advisory-vote), [Executive Compensation](#executive-compensation), [Compensation Committee](#compensation-committee), [Clawback Policy](#clawback-policy)
 
 > [!example]- Source excerpts (5)
 >
@@ -2582,7 +2650,7 @@ a share buyback is when a company buys back its own stock, effectively returning
 **ISS QualityScore Pillar:** Shareholder Rights (when subject to approval), Compensation (when linked to equity dilution)
 
 > [!tip] Related Terms
-> [[#Capital Allocation]], [[#Equity Plan]], [[#Tender Offer]], [[#Burn Rate]]
+> [Capital Allocation](#capital-allocation), [Equity Plan](#equity-plan), [Tender Offer](#tender-offer), [Burn Rate](#burn-rate)
 
 > [!example]- Source excerpts (5)
 >
@@ -2620,6 +2688,10 @@ a share buyback is when a company buys back its own stock, effectively returning
 
 ---
 
+> [!quote]
+> "The shareholder proposal process is the town hall of corporate democracy."
+> — **Arthur Levitt**
+
 ### Shareholder Proposal
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6,025 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 6,025</span>
@@ -2632,7 +2704,7 @@ shareholder proposals are items on the ballot that come from investors, not from
 **ISS QualityScore Pillar:** Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Advisory Vote]], [[#Proxy Voting]], [[#Special Meeting Right]]
+> [Advisory Vote](#advisory-vote), [Proxy Voting](#proxy-voting), [Special Meeting Right](#special-meeting-right)
 
 > [!example]- Source excerpts (5)
 >
@@ -2667,6 +2739,10 @@ shareholder proposals are items on the ballot that come from investors, not from
 
 ---
 
+> [!quote]
+> "Property rights and shareholder rights are the foundation of capitalism itself."
+> — **Adolf Berle**
+
 ### Shareholder Rights
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="830 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 830</span>
@@ -2679,7 +2755,7 @@ shareholder rights are the powers investors have as part-owners of a company. IS
 **ISS QualityScore Pillar:** Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Special Meeting Right]], [[#Supermajority Vote Requirement]], [[#Cumulative Voting]], [[#Dual-Class Shares]]
+> [Special Meeting Right](#special-meeting-right), [Supermajority Vote Requirement](#supermajority-vote-requirement), [Cumulative Voting](#cumulative-voting), [Dual-Class Shares](#dual-class-shares)
 
 > [!example]- Source excerpts (5)
 >
@@ -2730,7 +2806,7 @@ a special meeting right lets shareholders convene an emergency meeting when some
 **ISS QualityScore Pillar:** Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Shareholder Rights]], [[#Shareholder Proposal]], [[#Anti-Takeover Provision]]
+> [Shareholder Rights](#shareholder-rights), [Shareholder Proposal](#shareholder-proposal), [Anti-Takeover Provision](#anti-takeover-provision)
 
 > [!example]- Source excerpts (2)
 >
@@ -2750,6 +2826,10 @@ a special meeting right lets shareholders convene an emergency meeting when some
 
 ---
 
+> [!quote]
+> "Stewardship is the responsible allocation and management of capital."
+> — **Kofi Annan**
+
 ### Stewardship
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="616 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 616</span>
@@ -2762,7 +2842,7 @@ stewardship is the idea that investors have a responsibility to actively oversee
 **ISS QualityScore Pillar:** Foundational to all pillars
 
 > [!tip] Related Terms
-> [[#Proxy Voting]], [[#Engagement Suite]], [[#Fiduciary Duty]], [[#Vote Disclosure]]
+> [Proxy Voting](#proxy-voting), [Engagement Suite](#engagement-suite), [Fiduciary Duty](#fiduciary-duty), [Vote Disclosure](#vote-disclosure)
 
 > [!example]- Source excerpts (5)
 >
@@ -2798,6 +2878,10 @@ stewardship is the idea that investors have a responsibility to actively oversee
 
 ---
 
+> [!quote]
+> "The principle of majority rule is essential to democratic governance, corporate or otherwise."
+> — **Adolf Berle**
+
 ### Supermajority Vote Requirement
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="332 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 332</span>
@@ -2810,7 +2894,7 @@ a supermajority requirement raises the bar for passing important votes so high t
 **ISS QualityScore Pillar:** Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Anti-Takeover Provision]], [[#Shareholder Rights]], [[#Dual-Class Shares]]
+> [Anti-Takeover Provision](#anti-takeover-provision), [Shareholder Rights](#shareholder-rights), [Dual-Class Shares](#dual-class-shares)
 
 > [!example]- Source excerpts (5)
 >
@@ -2864,7 +2948,7 @@ a tender offer is when someone offers to buy your shares at an above-market pric
 **ISS QualityScore Pillar:** Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Anti-Takeover Provision]], [[#Poison Pill]], [[#Share Buyback]], [[#Activist Investor]]
+> [Anti-Takeover Provision](#anti-takeover-provision), [Poison Pill](#poison-pill), [Share Buyback](#share-buyback), [Activist Investor](#activist-investor)
 
 > [!example]- Source excerpts (5)
 >
@@ -2905,6 +2989,10 @@ a tender offer is when someone offers to buy your shares at an above-market pric
 
 ## U
 
+> [!quote]
+> "Capitalism without democracy tends toward oligarchy."
+> — **Adolf Berle**
+
 ### Unequal Voting Rights
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="190 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 190</span>
@@ -2917,7 +3005,7 @@ unequal voting rights mean some shareholders get more votes per share than other
 **ISS QualityScore Pillar:** Shareholder Rights
 
 > [!tip] Related Terms
-> [[#Dual-Class Shares]], [[#Anti-Takeover Provision]], [[#Shareholder Rights]], [[#Proxy Access]]
+> [Dual-Class Shares](#dual-class-shares), [Anti-Takeover Provision](#anti-takeover-provision), [Shareholder Rights](#shareholder-rights), [Proxy Access](#proxy-access)
 
 > [!example]- Source excerpts (5)
 >
@@ -2968,7 +3056,7 @@ unequal voting rights mean some shareholders get more votes per share than other
 vote disclosure is when a fund manager reveals their voting record — which proposals they supported, opposed, or abstained on. Transparency in voting is increasingly expected and, in many markets, legally required.
 
 > [!tip] Related Terms
-> [[#Form N-PX]], [[#Voting Analytics]], [[#Proxy Voting]]
+> [Form N-PX](#form-n-px), [Voting Analytics](#voting-analytics), [Proxy Voting](#proxy-voting)
 
 > [!example]- Source excerpts (3)
 >
@@ -3003,7 +3091,7 @@ vote disclosure is when a fund manager reveals their voting record — which pro
 vote preference is the actual vote — "for" or "against" — that an investor decides to cast on each agenda item. ISS provides vote preferences as recommendations to its clients, who can accept, modify, or override them according to their own policies.
 
 > [!tip] Related Terms
-> [[#ISS Voting Policy]], [[#Proxy Voting]], [[#Advisory Vote]]
+> [ISS Voting Policy](#iss-voting-policy), [Proxy Voting](#proxy-voting), [Advisory Vote](#advisory-vote)
 
 > [!example]- Source excerpts (1)
 >
@@ -3025,7 +3113,7 @@ vote preference is the actual vote — "for" or "against" — that an investor d
 Voting Analytics is the ISS tool that lets you see how the investment industry as a whole voted on governance topics. You can look up how specific funds voted, compare voting patterns across managers, or track whether support for a shareholder proposal type is growing or shrinking over time.
 
 > [!tip] Related Terms
-> [[#Vote Disclosure]], [[#Form N-PX]], [[#Global Meeting Results]], [[#Proxy Voting]]
+> [Vote Disclosure](#vote-disclosure), [Form N-PX](#form-n-px), [Global Meeting Results](#global-meeting-results), [Proxy Voting](#proxy-voting)
 
 > [!example]- Source excerpts (5)
 >

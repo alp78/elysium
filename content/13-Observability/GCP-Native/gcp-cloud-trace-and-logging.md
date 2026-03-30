@@ -865,33 +865,38 @@ Data Access logs are the most useful for data engineers (who read which BigQuery
 
 Using gcloud:
 
+> [!info] Enabling Data Access audit logs via IAM policy
+> Export the IAM policy, add an `auditConfigs` block for each service you want to track, then apply the updated policy. The JSON block below enables both `DATA_READ` and `DATA_WRITE` logging for BigQuery and Cloud Storage.
+
 ```bash
-# Export current IAM policy to a file
 gcloud projects get-iam-policy PROJECT \
   --format=json > /tmp/policy.json
+```
 
-# Edit the file to add auditConfigs
-# Add this block to the JSON:
-# {
-#   "auditConfigs": [
-#     {
-#       "service": "bigquery.googleapis.com",
-#       "auditLogConfigs": [
-#         { "logType": "DATA_READ" },
-#         { "logType": "DATA_WRITE" }
-#       ]
-#     },
-#     {
-#       "service": "storage.googleapis.com",
-#       "auditLogConfigs": [
-#         { "logType": "DATA_READ" },
-#         { "logType": "DATA_WRITE" }
-#       ]
-#     }
-#   ]
-# }
+Add this `auditConfigs` block to the exported JSON:
 
-# Apply the updated policy
+```json
+{
+  "auditConfigs": [
+    {
+      "service": "bigquery.googleapis.com",
+      "auditLogConfigs": [
+        { "logType": "DATA_READ" },
+        { "logType": "DATA_WRITE" }
+      ]
+    },
+    {
+      "service": "storage.googleapis.com",
+      "auditLogConfigs": [
+        { "logType": "DATA_READ" },
+        { "logType": "DATA_WRITE" }
+      ]
+    }
+  ]
+}
+```
+
+```bash
 gcloud projects set-iam-policy PROJECT /tmp/policy.json
 ```
 
