@@ -22,17 +22,23 @@ A well-architected prompt is the single highest-leverage investment in getting c
 
 A well-architected prompt has four layers. Each layer serves a distinct purpose:
 
+```mermaid
+flowchart TB
+    R[Role] --> G[Goal]
+    G --> C[Constraints]
+    C --> F[Format]
+
+    style R fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style G fill:#1a1a2e,stroke:#34a853,color:#fff
+    style C fill:#1a1a2e,stroke:#e8b84d,color:#fff
+    style F fill:#1a1a2e,stroke:#bb9af7,color:#fff
 ```
-┌─────────────────────────────────────────┐
-│  ROLE       Who the model is            │
-├─────────────────────────────────────────┤
-│  GOAL       What to accomplish          │
-├─────────────────────────────────────────┤
-│  CONSTRAINTS  Boundaries and rules      │
-├─────────────────────────────────────────┤
-│  FORMAT     How to structure the output │
-└─────────────────────────────────────────┘
-```
+
+> [!abstract] The four layers
+> - **Role** — who the model is (primes vocabulary and reasoning)
+> - **Goal** — what to accomplish (the single most important sentence)
+> - **Constraints** — boundaries and rules (what NOT to do)
+> - **Format** — how to structure the output (JSON, table, bullet list)
 
 ### Layer 1: Role — Priming Vocabulary and Reasoning Patterns
 

@@ -192,6 +192,199 @@ Explain in 2-3 sentences. End with a recommendation: ACCEPT (real event) or INVE
 
 ---
 
+## Validating LLM Outputs in Production
+
+Calling an LLM API and parsing the response is the easy part. The hard part is trusting the output enough to feed it into a financial data pipeline — where a wrong extraction silently corrupts index calculations. The LLM is just another data source, subject to the same [[functional-pipeline-architecture#Contract-First Validation|contract-first validation]] rigor as Yahoo Finance or any vendor API.
+
+### Structured Output Validation
+
+The LLM returns text. Even with "Return ONLY valid JSON" in the prompt, the output may contain markdown fences wrapping the JSON, trailing text after the object, wrong field names, missing required fields, or nonsensical values (a stock split ratio of 1:1000).
+
+> [!abstract] What is structured output validation?
+> The same Pydantic/FluentValidation contract pattern used at pipeline stage boundaries, applied to LLM responses. Parse the raw text, validate against a typed model, quarantine on failure. The LLM doesn't know your enum values — the contract does.
+
+```python
+from pydantic import BaseModel, Field, ValidationError
+from typing import Literal
+from datetime import date
+import json
+
+class CorporateActionExtraction(BaseModel):
+    """Schema that LLM output must conform to."""
+    company_name: str
+    symbol: str
+    action_type: Literal["SPLIT", "DIVIDEND", "MERGER", "SPINOFF", "RIGHTS_ISSUE"]
+    effective_date: date
+    confidence: float = Field(ge=0.0, le=1.0)
+
+def validate_llm_output(raw_text: str) -> CorporateActionExtraction | None:
+    # Strip markdown fences the LLM may wrap around JSON
+    cleaned = raw_text.strip().removeprefix("```json").removesuffix("```").strip()
+    try:
+        data = json.loads(cleaned)
+    except json.JSONDecodeError as e:
+        quarantine_llm_output(raw_text, f"JSON parse failed: {e}")
+        return None
+    try:
+        return CorporateActionExtraction(**data)
+    except ValidationError as e:
+        quarantine_llm_output(raw_text, f"Schema validation failed: {e}")
+        return None
+```
+
+> [!danger] LLMs Produce Confident Garbage
+>
+> An LLM that returns `{"action_type": "STOCK_SPLIT"}` instead of `"SPLIT"`
+> passes JSON parsing but fails schema validation — the `Literal` constraint
+> catches it. Without Pydantic at the boundary, this typo enters your pipeline
+> as an unknown action type, silently breaking every downstream JOIN that
+> filters on `action_type`.
+
+### Confidence Scoring and Human Review
+
+> [!abstract] What is confidence routing?
+> The LLM includes a self-reported confidence score in its output. This is not reliable as an absolute measure, but it IS useful as a relative signal — the LLM tends to report lower confidence when the input is genuinely ambiguous. Route extractions to different paths based on confidence thresholds.
+
+| Confidence | Action | Example |
+|---|---|---|
+| **High (>0.9)** | Auto-accept into pipeline | Clear stock split with explicit ratio |
+| **Medium (0.5–0.9)** | Accept with flag for review | Ambiguous action, multiple interpretations |
+| **Low (<0.5)** | Route to human review queue | Regulatory filing with no clear action type |
+
+```python
+extraction = validate_llm_output(response.text)
+if extraction is None:
+    return  # already quarantined
+
+if extraction.confidence >= 0.9:
+    ingest_to_bronze(extraction)
+elif extraction.confidence >= 0.5:
+    ingest_to_bronze(extraction, flagged=True)
+    notify_review_queue(extraction, reason="medium confidence")
+else:
+    route_to_human_review(extraction)
+```
+
+### Regression Testing LLM Extractions
+
+> [!abstract] What are golden file tests?
+> A curated set of real inputs with verified correct outputs. When a model update or prompt change is deployed, the golden cases run automatically — any deviation from the expected output is caught before production. This is the LLM equivalent of the pipeline's [[data-pipeline-testing-strategy|quality gate]].
+
+```python
+GOLDEN_CASES = [
+    {
+        "input": "Deutsche Telekom AG announces a 1:4 stock split...",
+        "expected": {"action_type": "SPLIT", "ratio_numerator": 1,
+                     "ratio_denominator": 4, "symbol": "DTE.DE"}
+    },
+]
+
+@pytest.mark.parametrize("case", GOLDEN_CASES)
+def test_extraction_matches_golden(case):
+    result = extract_corporate_action(case["input"])
+    for key, expected in case["expected"].items():
+        assert result[key] == expected
+```
+
+### Prompt Versioning
+
+The prompt IS the logic. When an extraction is disputed, you need to know which prompt version AND which model version produced it — the same [[functional-pipeline-architecture#Data Provenance and Lineage Tracking|provenance principle]] from the pipeline architecture.
+
+```python
+import hashlib
+
+EXTRACTION_PROMPT_V3 = """Extract the corporate action from this press release..."""
+PROMPT_HASH = hashlib.sha256(EXTRACTION_PROMPT_V3.encode()).hexdigest()[:16]
+
+run_context.prompt_version = PROMPT_HASH
+run_context.model_version = "claude-sonnet-4-6"
+```
+
+> [!tip] Trace every LLM output
+> `batch_id` traces a data row to its pipeline run. `prompt_hash` + `model_version` trace an LLM output to the exact prompt and model that produced it. Together they form a complete audit trail.
+
+---
+
+## Guardrails for Financial Data Pipelines
+
+When LLM outputs feed into financial calculations, a wrong extraction corrupts index values, triggers incorrect corporate action adjustments, or produces misleading regulatory filings. The blast radius is far larger than a single bad row.
+
+> [!danger] The 4:1 vs 1:4 Problem
+>
+> An LLM extracts a stock split ratio as 4:1 instead of 1:4. The adjustment
+> factor is inverted: prices are multiplied by 4 instead of divided by 4.
+> Every historical price is now 16x too high. Daily returns look normal
+> (ratios are scale-invariant). Volatility looks normal. The error is
+> invisible to every automated check — only a human comparing absolute
+> price levels against an independent source catches it.
+
+### Multi-Source Verification
+
+> [!abstract] What is multi-source verification?
+> For high-stakes extractions, the LLM result is treated as a **first pass** for speed. The vendor's structured feed (Bloomberg, Refinitiv) is the source of truth. The LLM adds value by processing press releases hours before the vendor data arrives — but the vendor data is the final confirmation. If they disagree, the vendor wins and the LLM extraction is flagged for prompt improvement.
+
+```python
+def verify_corporate_action(llm_extraction: dict, vendor_data: dict) -> bool:
+    """Cross-check LLM extraction against vendor structured feed."""
+    checks = [
+        llm_extraction["action_type"] == vendor_data["action_type"],
+        llm_extraction["effective_date"] == vendor_data["effective_date"],
+        llm_extraction["symbol"] == vendor_data["symbol"],
+    ]
+    if llm_extraction["action_type"] == "SPLIT":
+        llm_ratio = llm_extraction["ratio_denominator"] / llm_extraction["ratio_numerator"]
+        vendor_ratio = vendor_data["split_factor"]
+        checks.append(abs(llm_ratio - vendor_ratio) < 0.01)
+    return all(checks)
+```
+
+### Constrained Output with Tool Use
+
+> [!abstract] What is tool use?
+> Instead of asking the LLM to return free-form JSON and validating after, **tool use** (also called function calling) forces the LLM to produce output conforming to a JSON Schema at generation time. The `action_type` MUST be one of the enum values, `effective_date` MUST be a date string, `confidence` MUST be between 0 and 1. This eliminates the entire class of "valid JSON but wrong field names" errors.
+
+```python
+response = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=1024,
+    tools=[{
+        "name": "record_corporate_action",
+        "description": "Record a corporate action extracted from text",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "action_type": {
+                    "type": "string",
+                    "enum": ["SPLIT", "DIVIDEND", "MERGER", "SPINOFF", "RIGHTS_ISSUE"]
+                },
+                "effective_date": {"type": "string", "format": "date"},
+                "symbol": {"type": "string"},
+                "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+            },
+            "required": ["action_type", "effective_date", "symbol", "confidence"]
+        }
+    }],
+    messages=[{"role": "user", "content": f"Extract the corporate action: {text}"}]
+)
+```
+
+> [!info] Tool Use vs Free-Form JSON
+>
+> **Free-form JSON:** the LLM can return ANY valid JSON — you validate after.
+> **Tool use:** the LLM MUST return JSON matching your schema — validation is built in.
+> For financial data, always prefer tool use — the schema constrains the output
+> space and eliminates entire categories of extraction errors.
+
+### Idempotent LLM Operations
+
+LLM calls are non-deterministic — the same input can produce different outputs. For pipelines that must be [[idempotent-pipeline-design|idempotent]] (safe to re-run), two patterns:
+
+> [!info] Two idempotency patterns
+> - **Cache by input hash** — hash the input text, check if an extraction exists for this hash. If yes, return cached. If no, call the LLM and cache. Same input always yields the same output.
+> - **Record and compare** — on re-run, call the LLM again but compare against the previous extraction. If they differ on critical fields (action_type, ratio, date), flag for human review instead of silently overwriting.
+
+---
+
 ## Self-Describing Data for AI Consumers
 
 The sections above cover two directions of AI × data engineering: LLMs as tools inside pipelines (parsing, classification, anomaly explanation) and AI coding assistants for productivity. There is a third direction: **pipelines that produce structured metadata FOR AI consumers** — turning opaque numbers into self-describing data that any agent interprets correctly without guessing.
@@ -540,6 +733,12 @@ def validate_index_weights(weights: pd.Series, index_key: str,
 - [[functional-pipeline-architecture#Context-Driven Decisions — Real Data Proof]] — Zero-volume classification, SMA-20 null accounting, contract interpretation
 - [[context-and-metadata-architecture]] — The broader metadata theory: five types of pipeline context, bi-temporal modeling
 - [[data-contracts]] — Contract specification: schema + SLA + semantics agreements
+- [[functional-pipeline-architecture#Contract-First Validation]] — The same Pydantic pattern applied to LLM outputs
+- [[functional-pipeline-architecture#Data Provenance and Lineage Tracking]] — Extending provenance to cover prompt versioning
+- [[data-quality-framework#The Quarantine Pattern]] — Dead letter queue for failed LLM extractions
+- [[data-pipeline-testing-strategy]] — Where LLM regression tests fit in the testing pyramid
+- [[error-handling-and-retry-patterns]] — Error classification and retry for LLM API failures
+- [[idempotent-pipeline-design]] — Idempotent patterns for non-deterministic LLM operations
 - [[index-maintenance-and-corporate-actions]] — ESG data extraction from PDFs using LLMs
 - [[migration-idempotency-backfills]] — Data platform patterns that AI tools help build and document
 - [[leadership-and-collaboration]] — AI-assisted code review and technical writing at scale
