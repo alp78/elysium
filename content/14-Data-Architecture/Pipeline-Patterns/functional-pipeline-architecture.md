@@ -404,7 +404,7 @@ The pipeline exports a JSON Schema file per gold table, enriched with `x-column-
 | Contract export | [[25_py_functional_pipeline#Pydantic — define data contract export function with `model_json_schema()`\|py]] | [[25_cs_functional_pipeline#C# — define data contract export function with `JsonSerializer`\|cs]] |
 | Contract inspection | [[25_py_functional_pipeline#JSON — inspect exported data contract with `json.loads()`\|py]] | [[25_cs_functional_pipeline#JSON — inspect exported data contract with `JsonSerializer.Deserialize()`\|cs]] |
 
-See [[data-contracts]] for the broader contract specification theory and breaking vs non-breaking change classification.
+See [[data-contracts]] for the broader contract specification theory. See [[ai-augmented-data-engineering#Self-Describing Data for AI Consumers]] for how AI agents consume these contracts in practice.
 
 ---
 

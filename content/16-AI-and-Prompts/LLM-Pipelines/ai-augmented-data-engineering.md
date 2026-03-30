@@ -29,6 +29,7 @@ LLMs are not replacements for SQL transforms or Airflow DAGs. They are specializ
 | **Data quality remediation** | Failed validation rules + data sample | Suggest fix: is this a data error or a real event? | Remediation recommendation (augments [[data-quality-framework]] checks) |
 | **Schema documentation** | Table DDL + sample data | Generate column descriptions | Auto-populated data catalog entries |
 | **Query generation** | Natural language question | Generate SQL | Validated SQL query |
+| **Context-aware interpretation** | Gold table + data contract JSON | Interpret values using column metadata | Accurate analysis with correct units and formulas |
 
 ## RAG Architecture: Retrieval-Augmented Generation
 
@@ -193,6 +194,129 @@ Explain in 2-3 sentences. End with a recommendation: ACCEPT (real event) or INVE
     return response.content[0].text
 ```
 
+---
+
+## Self-Describing Data for AI Consumers
+
+The sections above cover two directions of AI × data engineering: LLMs as tools inside pipelines (parsing, classification, anomaly explanation) and AI coding assistants for productivity. There is a third direction: **pipelines that produce structured metadata FOR AI consumers** — turning opaque numbers into self-describing data that any agent interprets correctly without guessing.
+
+### The Interpretation Problem
+
+An AI agent queries `gold_symbol_profile` and sees `volatility: 0.0187`. Without context, it faces four ambiguities:
+
+- Is it a **percentage** (0.02%) or a **decimal ratio** (1.87%)?
+- Is it **daily**, weekly, monthly, or **annualized**?
+- What **formula** produced it — standard deviation of what, over what window?
+- What does **NULL** mean — no data available, not applicable, or insufficient history?
+
+The agent has three options: hallucinate an interpretation, refuse to answer, or ask a human. All are bad. The root cause is that the data is structurally correct but not self-describing.
+
+### The Solution — Data Contracts with Column Context
+
+> [!abstract] What is a data contract?
+> A **data contract** is a formal agreement between a data producer and its consumers. It specifies the schema (column names and types), SLAs (freshness, availability), and — critically — **column semantics** (what each value means, how it was computed, what NULL represents). See [[data-contracts]] for the full specification theory.
+
+The pipeline exports a JSON Schema file alongside each gold table, enriched with `x-column-context` — structured metadata for every derived column:
+
+```json
+{
+  "name": "volatility",
+  "description": "Std dev of daily returns — annualize with √252",
+  "unit": "decimal_ratio",
+  "computation": "std(daily_return) per symbol",
+  "source_columns": ["silver.daily_return"],
+  "null_semantics": "insufficient_data",
+  "valid_range": [0, 1]
+}
+```
+
+> [!abstract] What is column context?
+> **Column context** (`ColumnContext`) is a structured metadata model attached to each derived column. It records the description, unit of measurement, computation formula, source columns from the upstream layer, null semantics, and valid range. Unlike comments in code, column context is machine-readable — any consumer (dashboard, pipeline, LLM agent) can parse it programmatically.
+
+With this contract, the AI agent's interpretation becomes deterministic:
+1. Read the contract → unit is `decimal_ratio`, not percentage
+2. Read the description → "annualize with √252"
+3. Compute: `0.0187 × √252 × 100 = 29.7%` annualized volatility
+4. Generate: "The annualized volatility of SAP.DE is 29.7%, computed as the standard deviation of daily close-to-close returns multiplied by √252."
+
+No hallucination. No guessing. The interpretation comes from the contract, not from the model's training data.
+
+> [!warning] Without Contracts — The Hallucination Risk
+>
+> Without the data contract, the LLM sees `volatility: 0.0187` and must guess
+> what it means. Training data might suggest it's a percentage (wrong), annualized
+> (might be wrong), or a Sharpe ratio (completely wrong). The agent produces a
+> confident, articulate, incorrect answer. With the contract, the interpretation
+> is deterministic — the metadata IS the ground truth, not the model's memory.
+
+### The Context Architecture Behind It
+
+The column context is not a one-off export — it's part of a broader **context architecture** that flows through the pipeline alongside the data:
+
+> [!abstract] What is context propagation?
+> **Context propagation** means that metadata created at one pipeline stage (bronze) is carried forward to downstream stages (silver, gold) via a `StageContext` carrier. Each stage inherits upstream warnings and adds its own. By gold, the context contains the full warning chain from every stage — zero-volume classifications from bronze, SMA null explanations from silver, and weight validation results from gold.
+
+- **ColumnContext** models are defined per medallion layer, documenting every column's meaning, formula, sources, and null semantics
+- These registries are attached to **StageContext** and propagated through the pipeline via `for_next_stage()`
+- At export time, the column contexts are serialized into the JSON Schema contract as `x-column-context`
+
+See [[functional-pipeline-architecture#Context Architecture — Semantic Metadata Layer]] for the full architecture and [[functional-pipeline-architecture#Data Contracts as Consumer-Facing Output]] for the export mechanism. For the broader theory covering five types of pipeline context, see [[context-and-metadata-architecture]].
+
+### AI Agent Workflow with Contracts
+
+A practical example — an AI agent reads the contract before interpreting data:
+
+```python
+import json
+from pathlib import Path
+from anthropic import Anthropic
+
+client = Anthropic()
+
+# Load the data contract exported by the pipeline
+contract = json.loads(Path("contracts/gold_symbol_profile_contract.json").read_text())
+column_context = {c["name"]: c for c in contract["x-column-context"]}
+
+# Read the data
+german_stocks = query_gold("SELECT * FROM gold_symbol_profile WHERE symbol LIKE '%.DE'")
+
+# Build a context-aware prompt — the LLM receives the metadata, not just the numbers
+vol_ctx = column_context["volatility"]
+prompt = f"""Interpret this data using the provided column metadata.
+
+Column metadata for 'volatility':
+- Description: {vol_ctx['description']}
+- Unit: {vol_ctx['unit']}
+- Computation: {vol_ctx['computation']}
+- Null means: {vol_ctx['null_semantics']}
+
+Data:
+{german_stocks.to_json()}
+
+Question: What is the average volatility of German stocks, and what does the number mean?
+"""
+
+response = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=512,
+    messages=[{"role": "user", "content": prompt}]
+)
+```
+
+> [!tip] Deterministic vs probabilistic
+> The column metadata in the prompt is **deterministic** — it comes from the pipeline's own export, not from the LLM's training data. The LLM's role is natural language generation (turning the metadata into a readable explanation), not data interpretation (guessing what the column means). This separation is what prevents hallucination.
+
+**Implementations:**
+
+| Component | Python | C# |
+|---|---|---|
+| ColumnContext model | [[25_py_functional_pipeline#Pydantic — define column semantic metadata model with `BaseModel`\|py]] | [[25_cs_functional_pipeline#record — define column semantic metadata model with `record`\|cs]] |
+| Column registries | [[25_py_functional_pipeline#Pydantic — define column registries for each medallion layer\|py]] | [[25_cs_functional_pipeline#C# — define column registries for each medallion layer\|cs]] |
+| Contract export | [[25_py_functional_pipeline#Pydantic — define data contract export function with `model_json_schema()`\|py]] | [[25_cs_functional_pipeline#C# — define data contract export function with `JsonSerializer`\|cs]] |
+| Contract interpretation | [[25_py_functional_pipeline#Data Contract — Column Semantics as Structured Data\|py]] | [[25_cs_functional_pipeline#Data Contract — Column Semantics as Structured Data\|cs]] |
+
+---
+
 ### Vector Database Comparison for Financial Data
 
 | Database | Type | Best For | Deployment |
@@ -259,6 +383,7 @@ def call_llm_with_budget(text: str) -> str:
 | Calculating index values | No | SQL / Python (deterministic math) |
 | Validating data types | No | Pydantic, Great Expectations |
 | Extracting dates from free text | Maybe | regex first, LLM as fallback |
+| Interpreting column semantics | No | Data contracts with `x-column-context` — deterministic, no token cost |
 | Classifying unstructured documents | **Yes** | LLM excels here |
 | Generating natural language summaries | **Yes** | LLM excels here |
 | Understanding press releases | **Yes** | LLM excels here |
@@ -413,7 +538,13 @@ def validate_index_weights(weights: pd.Series, index_key: str,
 
 ## Related
 
-- [[index-maintenance-and-corporate-actions]] — ESG data extraction from PDFs using LLMs (Section 32.10)
+- [[functional-pipeline-architecture]] — The five-principle architecture that produces context-enriched, self-describing data
+- [[functional-pipeline-architecture#Context Architecture — Semantic Metadata Layer]] — ColumnContext, BusinessContext, TemporalContext models
+- [[functional-pipeline-architecture#Data Contracts as Consumer-Facing Output]] — How `x-column-context` is exported alongside gold tables
+- [[functional-pipeline-architecture#Context-Driven Decisions — Real Data Proof]] — Zero-volume classification, SMA-20 null accounting, contract interpretation
+- [[context-and-metadata-architecture]] — The broader metadata theory: five types of pipeline context, bi-temporal modeling
+- [[data-contracts]] — Contract specification: schema + SLA + semantics agreements
+- [[index-maintenance-and-corporate-actions]] — ESG data extraction from PDFs using LLMs
 - [[migration-idempotency-backfills]] — Data platform patterns that AI tools help build and document
 - [[leadership-and-collaboration]] — AI-assisted code review and technical writing at scale
 
