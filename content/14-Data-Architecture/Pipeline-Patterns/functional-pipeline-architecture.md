@@ -57,61 +57,47 @@ This architecture sits on TOP of [[medallion-architecture]] (which defines the d
 
 ```mermaid
 flowchart TB
-    subgraph FETCH["Imperative Shell — I/O Boundary"]
-        API[External API] -->|HTTP + retry| LAND[JSON Landing Zone]
-    end
+    API[API] -->|retry| LAND[Landing]
+    LAND --> VAL_B{{Validate}}
+    VAL_B -->|valid| BRONZE[(Bronze)]
+    VAL_B -->|invalid| DLQ[Quarantine]
+    BRONZE --> TX[Transforms]
+    TX --> VAL_S{{Validate}}
+    VAL_S -->|valid| SILVER[(Silver)]
+    VAL_S -->|invalid| DLQ
+    SILVER --> QG{{Quality Gate}}
+    QG -->|pass| AGG[Aggregation]
+    QG -->|fail| STOP[STOP]
+    AGG --> GOLD[(Gold)]
+    GOLD --> PQ[Parquet]
+    PQ --> SERVE[API Server]
 
-    subgraph BRONZE_GATE["Contract Enforcement — Bronze Boundary"]
-        LAND --> VAL_B{{"Pydantic / FluentValidation"}}
-        VAL_B -->|valid| BRONZE[(Bronze Table)]
-        VAL_B -->|invalid| DLQ_B[Quarantine]
-    end
+    BRONZE -.->|hash| LIN[(Lineage)]
+    SILVER -.->|hash| LIN
+    GOLD -.->|hash| LIN
 
-    subgraph SILVER_STAGE["Functional Core — Pure Transforms"]
-        BRONZE --> TRANSFORM_S["daily_return, intraday_range, sma_20"]
-    end
+    BRONZE -.->|context| CTX_S[Context]
+    CTX_S -.->|accumulate| CTX_G[Context]
+    CTX_G -.->|export| CON[Contract]
 
-    subgraph SILVER_GATE["Contract Enforcement — Silver Boundary"]
-        TRANSFORM_S --> VAL_S{{"Pydantic / FluentValidation"}}
-        VAL_S -->|valid| SILVER[(Silver Table)]
-        VAL_S -->|invalid| DLQ_S[Quarantine]
-    end
-
-    subgraph QUALITY["Quality Gate — Stage Boundary Assertion"]
-        SILVER --> QG{{"not_null, no_dupes,\nrange, freshness"}}
-        QG -->|pass| TRANSFORM_G
-        QG -->|fail| STOP[Pipeline STOP]
-    end
-
-    subgraph GOLD_STAGE["Functional Core — Pure Aggregation"]
-        TRANSFORM_G["daily_summary, symbol_profile"]
-    end
-
-    TRANSFORM_G --> GOLD[(Gold Tables)]
-    GOLD --> PARQUET[Parquet Export]
-    PARQUET --> SERVE["FastAPI / ASP.NET Core"]
-
-    BRONZE -.->|batch_id + SHA-256| LINEAGE[(Lineage)]
-    SILVER -.->|batch_id + SHA-256| LINEAGE
-    GOLD -.->|batch_id + SHA-256| LINEAGE
-
-    BRONZE -.->|context warnings| CTX_S[Silver Context]
-    CTX_S -.->|accumulated context| CTX_G[Gold Context]
-    CTX_G -.->|x-column-context| CONTRACT[Data Contract]
-
-    style FETCH fill:#1a1a2e,stroke:#e8b84d,stroke-width:2px,color:#fff
-    style BRONZE_GATE fill:#1a1a2e,stroke:#34a853,stroke-width:2px,color:#fff
-    style SILVER_STAGE fill:#1a1a2e,stroke:#4285f4,stroke-width:2px,color:#fff
-    style SILVER_GATE fill:#1a1a2e,stroke:#34a853,stroke-width:2px,color:#fff
-    style QUALITY fill:#1a1a2e,stroke:#cc4125,stroke-width:2px,color:#fff
-    style GOLD_STAGE fill:#1a1a2e,stroke:#4285f4,stroke-width:2px,color:#fff
-    style DLQ_B fill:#cc4125,stroke:#a33,color:#fff
-    style DLQ_S fill:#cc4125,stroke:#a33,color:#fff
+    style API fill:#1a1a2e,stroke:#e8b84d,color:#fff
+    style LAND fill:#1a1a2e,stroke:#e8b84d,color:#fff
+    style VAL_B fill:#1a1a2e,stroke:#34a853,color:#fff
+    style VAL_S fill:#1a1a2e,stroke:#34a853,color:#fff
+    style TX fill:#1a1a2e,stroke:#4285f4,color:#fff
+    style AGG fill:#1a1a2e,stroke:#4285f4,color:#fff
+    style QG fill:#1a1a2e,stroke:#cc4125,color:#fff
+    style BRONZE fill:#1a1a2e,stroke:#e8b84d,color:#fff
+    style SILVER fill:#1a1a2e,stroke:#4285f4,color:#fff
+    style GOLD fill:#1a1a2e,stroke:#4285f4,color:#fff
+    style PQ fill:#1a1a2e,stroke:#4285f4,color:#fff
+    style SERVE fill:#1a1a2e,stroke:#4285f4,color:#fff
+    style DLQ fill:#cc4125,stroke:#a33,color:#fff
     style STOP fill:#cc4125,stroke:#a33,color:#fff
-    style LINEAGE fill:#669df6,stroke:#4285f4,color:#fff
+    style LIN fill:#669df6,stroke:#4285f4,color:#fff
     style CTX_S fill:#1a4d2e,stroke:#34a853,color:#fff
     style CTX_G fill:#1a4d2e,stroke:#34a853,color:#fff
-    style CONTRACT fill:#1a4d2e,stroke:#34a853,color:#fff
+    style CON fill:#1a4d2e,stroke:#34a853,color:#fff
 ```
 
 > [!abstract] Diagram legend

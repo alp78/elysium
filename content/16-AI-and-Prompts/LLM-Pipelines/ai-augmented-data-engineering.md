@@ -107,13 +107,14 @@ collection.add(
 
 #### Corporate actions extraction from press releases
 
+Corporate actions (splits, dividends, mergers, spinoffs) arrive as unstructured press releases. Manually parsing them takes hours per filing and is error-prone. An LLM extracts structured fields — action type, ratio, effective date, currency — in seconds. The output feeds directly into the [[index-maintenance-and-corporate-actions|corporate actions pipeline]] where adjustment factors are computed.
+
 ```python
 from anthropic import Anthropic
 
 client = Anthropic()
-```
 
-```python
+
 def extract_corporate_action(press_release_text: str) -> dict:
     """
     Extract structured corporate action data from a press release.
@@ -159,6 +160,8 @@ on the same date.
 ```
 
 #### Data quality anomaly explanation
+
+When a [[data-quality-framework|quality gate]] flags an anomaly — a stock dropping 16% in a day, volume spiking 10x — the pipeline needs to decide: is this a real market event or a data error? An LLM cross-references the flagged value against recent news to classify the anomaly and recommend whether to accept or investigate. This replaces the manual triage step where an engineer googles the stock name to check for news.
 
 ```python
 def explain_anomaly(symbol: str, metric: str, value: float, expected_range: tuple,
