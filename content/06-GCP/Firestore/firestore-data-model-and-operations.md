@@ -63,8 +63,8 @@ status: complete
 # Firestore — Data Model and Operations
 
 > [!quote]
-> "Data is a precious thing and will last longer than the systems themselves."
-> — **Tim Berners-Lee**
+> "In a document database, you model your data around the questions you need to answer, not the relationships between entities."
+> — **Rick Houlihan**, AWS NoSQL design lead
 
 ### Why Firestore for Data Engineering
 

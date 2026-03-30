@@ -14,8 +14,8 @@ status: stable
 # gcloud CLI Cheat Sheet
 
 > [!quote]
-> "The three chief virtues of a programmer are: laziness, impatience, and hubris."
-> — **Larry Wall**
+> "Give me six hours to chop down a tree and I will spend the first four sharpening the axe."
+> — **Abraham Lincoln**
 
 > The single reference page for all `gcloud`, `bq`, and `gcloud storage` work.
 > Financial domain context throughout — pipelines, datasets, service accounts, and jobs are named accordingly.

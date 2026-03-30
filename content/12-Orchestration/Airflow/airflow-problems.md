@@ -10,11 +10,11 @@ description: "Comprehensive catalog of Airflow production problems — 25 issues
 # Airflow Production Problems
 
 > [!quote]
-> "Everything fails, all the time."
-> — **Werner Vogels**
+> "Incidents are unplanned investments; their costs have already been incurred. Your org's challenge is to get ROI on those events."
+> — **John Allspaw**
 >
-> "If debugging is the process of removing software bugs, then programming must be the process of putting them in."
-> — **Edsger Dijkstra**
+> "We have to take human performance seriously, and if we don't, we will continue to see brittle systems."
+> — **John Allspaw**
 
 Airflow is the de facto orchestrator for data pipelines, but its flexibility comes with operational complexity. In a financial index platform where missed SLAs mean regulatory exposure, every problem below has been encountered in production. This note catalogs each one, explains why it happens, and provides actionable prevention and fix protocols. The context throughout is self-hosted Airflow on Docker Compose, with SQL Server and BigQuery as data backends, GCP infrastructure, and strict publication SLAs for financial index and ESG data.
 

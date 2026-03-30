@@ -14,8 +14,8 @@ status: complete
 # Datadog SQL Server Log Collection
 
 > [!quote]
-> "The most effective debugging tool is still careful thought, coupled with judiciously placed print statements."
-> — **Brian Kernighan**
+> "Without a histogram, you just don't understand the behavior of your system."
+> — **Theo Schlossnagle**
 
 The Datadog Agent collects SQL Server metrics by default, but **log collection requires a separate config file**. Without it, no logs appear in Datadog's Log Explorer. This note documents the setup, permission requirements, and how to test that logs are flowing.
 

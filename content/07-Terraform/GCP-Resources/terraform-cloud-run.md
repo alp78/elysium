@@ -14,8 +14,8 @@ status: complete
 # Terraform Cloud Run — Services and Jobs
 
 > [!quote]
-> "No code is the best way to write secure and reliable applications. Write nothing; deploy nowhere."
-> — **Kelsey Hightower**
+> "The future of serverless is about running your code without thinking about servers, and that future is already here."
+> — **Tim Wagner**
 
 This note covers `run.tf` — the Cloud Run service (dashboard) and Cloud Run jobs (pipeline, setup) that form the application layer of the example infrastructure.
 

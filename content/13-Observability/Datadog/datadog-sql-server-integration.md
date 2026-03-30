@@ -14,8 +14,8 @@ status: complete
 # Datadog SQL Server Integration
 
 > [!quote]
-> "Not everything that counts can be counted, and not everything that can be counted counts."
-> — **William Bruce Cameron**
+> "Monitoring tells you whether a system is working, observability lets you ask why it isn't working."
+> — **Baron Schwartz**
 
 The Datadog SQL Server integration (`sqlserver` check) connects to SQL Server using ODBC and collects built-in metrics from DMVs — connections, buffer pool stats, lock waits, batch requests, and query statistics. It runs on the [SQL VM agent](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-sql-vm) as a scheduled check every 15 seconds. Many of these metrics automate the same health checks you would run manually with [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/Administration/essential-dba-queries), but with continuous collection and alerting instead of ad-hoc diagnosis.
 

@@ -14,8 +14,8 @@ status: complete
 # Terraform Plan, Apply, and Destroy
 
 > [!quote]
-> "Automate everything that doesn't require high judgment."
-> — **Werner Vogels**
+> "Measure twice, cut once."
+> — **Proverb** (the carpenter's rule that every `terraform plan` embodies)
 
 The Terraform core workflow is declarative: you describe infrastructure in `.tf` files, and Terraform computes a diff against current state, shows you a plan, and applies only what changed. Understanding each step — including when to use targeted applies, how to import existing resources, and how to inspect state — is essential for safe infrastructure management. For a condensed quick-reference of all Terraform commands, see [terraform-cheat-sheet](https://alp78.github.io/elysium/07-Terraform/terraform-cheat-sheet).
 

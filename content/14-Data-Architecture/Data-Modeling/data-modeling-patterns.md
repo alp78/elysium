@@ -28,8 +28,8 @@ erDiagram
 # Data Modeling Patterns
 
 > [!quote]
-> "I call it my billion-dollar mistake. It was the invention of the null reference in 1965."
-> — **Tony Hoare**
+> "The model is not the territory, but you'd better have a good map if you want to navigate the territory."
+> — **Bill Inmon**
 >
 > "The grain must be declared before choosing dimensions or facts because every candidate dimension or fact must be consistent with the grain."
 > — **Ralph Kimball**

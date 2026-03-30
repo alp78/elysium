@@ -14,8 +14,8 @@ status: complete
 # The Data Architect's Playbook: Migration, Idempotency, and Backfills
 
 > [!quote]
-> "Plan to throw one away; you will, anyhow."
-> — **Fred Brooks**
+> "Every migration is a negotiation between the system you have and the system you want — the art is making the transition invisible to users."
+> — **Sam Newman**
 >
 > "How good the design is doesn't matter near as much as whether the design is getting better or worse."
 > — **Kent Beck**

@@ -14,8 +14,8 @@ status: complete
 # 21. Security Operations — Encryption, Certificates & Identity
 
 > [!quote]
-> "There are two kinds of cryptography in this world: cryptography that will stop your kid sister from reading your files, and cryptography that will stop major governments from reading your files."
-> — **Bruce Schneier**
+> "The only truly secure system is one that is powered off, cast in a block of concrete, and sealed in a lead-lined room with armed guards — and even then I have my doubts."
+> — **Gene Spafford**
 
 > [!tip] Prerequisite Reading
 >

@@ -14,8 +14,8 @@ status: complete
 # dbt: The Transformation Layer
 
 > [!quote]
-> "Any fool can write code that a computer can understand. Good programmers write code that humans can understand."
-> — **Martin Fowler**
+> "Analytics code should be version-controlled, tested, and modular — the same standards we apply to software should apply to SQL."
+> — **Tristan Handy** (creator of dbt)
 
 > For the full dbt section with adapter-specific guides, testing patterns, CI/CD, Airflow integration, and troubleshooting, see [moc-dbt](https://alp78.github.io/elysium/11-dbt/moc-dbt).
 

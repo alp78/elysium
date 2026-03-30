@@ -48,6 +48,10 @@ status: complete
 
 # DataOps for Index Calculation Platforms
 
+> [!quote]
+> "Inspection to improve quality is too late, ineffective, costly. Quality comes not from inspection, but from the improvement of the production process."
+> — **W. Edwards Deming**
+
 Operational reference covering the full DataOps lifecycle for stock index calculation platforms: parallel backtesting, continuous validation, blue-green data deployment, methodology versioning, and incident response. All examples are production-ready and infrastructure-agnostic at the naming level.
 
 ---

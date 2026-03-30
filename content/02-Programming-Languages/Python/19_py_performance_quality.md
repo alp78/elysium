@@ -26,8 +26,8 @@ Topics covered:
 - Profiling Real Workloads
 
 > [!quote]
-> "We should forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil."
-> — **Donald Knuth**
+> "The First Rule of Program Optimization: Don't do it. The Second Rule of Program Optimization (for experts only): Don't do it yet."
+> — **Michael A. Jackson**
 
 ## Timing & Benchmarking
 

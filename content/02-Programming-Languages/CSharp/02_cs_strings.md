@@ -13,6 +13,10 @@ status: complete
 
 # 02. Strings - C#
 
+> [!quote]
+> "Either write something worth reading, or do something worth writing."
+> — **Benjamin Franklin**
+
 ## String Creation & Basics
 
 #### String (string) - immutable sequence of Unicode characters

@@ -63,11 +63,11 @@ status: complete
 # Airflow Troubleshooting Guide
 
 > [!quote]
-> "If debugging is the process of removing software bugs, then programming must be the process of putting them in."
-> — **Edsger Dijkstra**
+> "You are either building a learning organization or you are losing to a company who is."
+> — **John Allspaw**
 >
-> "The most effective debugging tool is still careful thought, coupled with judiciously placed print statements."
-> — **Brian Kernighan**
+> "Automation is the serialization of understanding."
+> — **Kelsey Hightower**
 
 A reference for diagnosing and fixing the most common Apache Airflow problems encountered in production data engineering. Each issue includes the exact error message or symptom, root cause analysis, and step-by-step resolution. To test your troubleshooting skills against realistic scenarios, work through [airflow-problems](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-problems).
 

@@ -14,8 +14,8 @@ status: complete
 # BigQuery for Data Engineering - Database Objects & Performance
 
 > [!quote]
-> "Simplicity is prerequisite for reliability."
-> — **Edsger W. Dijkstra**
+> "In pioneer days they used oxen for heavy pulling, and when one ox couldn't budge a log, they didn't try to grow a larger ox. We shouldn't be trying for bigger computers, but for more systems of computers."
+> — **Grace Hopper**
 
 Database engineering patterns using the **stoxx** index database.
 Prerequisite: SQL_01_Fundamentals.ipynb, SQL_02_Advanced.ipynb

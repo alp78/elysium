@@ -13,6 +13,10 @@ status: complete
 
 # 12. Async & Concurrency - C#
 
+> [!quote]
+> "Everybody who learns concurrency thinks they understand it, ends up finding mysterious races they thought weren't possible, and discovers that they didn't actually understand it yet after all."
+> — **Herb Sutter**
+
 ```csharp
 using System.Diagnostics;
 using System.Threading;

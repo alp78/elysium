@@ -14,8 +14,8 @@ status: complete
 # Streaming Architecture
 
 > [!quote]
-> "Everything fails, all the time."
-> — **Werner Vogels**
+> "A log is perhaps the simplest possible storage abstraction. It is an append-only, totally-ordered sequence of records ordered by time."
+> — **Jay Kreps** (creator of Apache Kafka)
 
 Streaming architecture is any data system design where data is processed continuously as it arrives — events are consumed and acted upon within milliseconds to seconds, rather than being collected and processed in large batches hours later. It encompasses the message brokers that carry events, the processing engines that transform them, the patterns that govern their semantics (Lambda, Kappa, CQRS, event sourcing), and the windowing strategies that handle the inherent challenges of time-ordered distributed data.
 

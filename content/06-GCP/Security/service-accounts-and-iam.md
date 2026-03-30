@@ -14,8 +14,8 @@ status: complete
 # Service Accounts and IAM — Securing the Pipeline
 
 > [!quote]
-> "Amateurs hack systems, professionals hack people."
-> — **Bruce Schneier**
+> "The principle of least privilege requires that every module must be able to access only the information and resources that are necessary for its legitimate purpose."
+> — **Jerome Saltzer**, MIT, formulator of the principle of least privilege
 
 Every GCP resource is protected by Identity and Access Management (IAM). Your pipeline's service account needs precisely the right permissions — too few and the pipeline fails, too many and a compromised credential becomes a security disaster. The principle of least privilege is not a nice-to-have; it is the single most important security practice in cloud engineering. Most tutorials grant `roles/editor` or `roles/owner` to service accounts — this is wrong. These roles grant access to everything in the project: compute, storage, IAM, billing, all of it.
 

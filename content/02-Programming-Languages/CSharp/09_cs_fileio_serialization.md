@@ -13,6 +13,10 @@ status: complete
 
 # 09. File I/O & Serialization - C#
 
+> [!quote]
+> "Tape is dead. Disk is tape. Flash is disk. RAM locality is king."
+> — **Jim Gray**
+
 ```csharp
 using System.IO;
 using System.Diagnostics;

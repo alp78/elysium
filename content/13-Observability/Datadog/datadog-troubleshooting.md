@@ -14,8 +14,8 @@ status: complete
 # Datadog Troubleshooting
 
 > [!quote]
-> "If debugging is the process of removing software bugs, then programming must be the process of putting them in."
-> — **Edsger Dijkstra**
+> "A good culture can work around broken tooling, but the opposite rarely holds true."
+> — **Niall Richard Murphy**
 
 Common issues with the Datadog agent and observability setup for the data platform. For pipeline-specific errors (missing APM traces root cause), see also common pipeline errors.
 

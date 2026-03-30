@@ -14,8 +14,8 @@ status: complete
 # Firestore for Data Engineering — C#
 
 > [!quote]
-> "Data is a precious thing and will last longer than the systems themselves."
-> — **Tim Berners-Lee**
+> "The value of a database is in direct proportion to the ease with which data can be stored and retrieved."
+> — **Edgar F. Codd**
 
 > [!danger] .NET 10 Breaks Firestore SDK Reads
 >

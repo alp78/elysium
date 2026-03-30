@@ -14,8 +14,8 @@ status: complete
 # VPC Service Controls — Preventing Data Exfiltration
 
 > [!quote]
-> "If you think technology can solve your security problems, then you don't understand the problems and you don't understand the technology."
-> — **Bruce Schneier**
+> "Defense in depth is the principle of protecting a system using multiple independent layers of security controls."
+> — **NIST Special Publication 800-53**
 
 IAM controls *who* can access resources. VPC Service Controls (VPC-SC) control *where* data can flow — even if someone has valid IAM permissions. For a data platform project, this is the difference between "an engineer can query BigQuery" and "an engineer can query BigQuery *but cannot copy the results to their personal GCP project*." VPC-SC enforces this at the network level, regardless of IAM role. Even `roles/owner` cannot exfiltrate data past a properly configured perimeter.
 

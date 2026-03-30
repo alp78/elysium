@@ -14,8 +14,8 @@ status: complete
 # Pub/Sub Publishing and Consuming Messages
 
 > [!quote]
-> "There are only two hard problems in distributed systems: 2. Exactly-once delivery 1. Guaranteed order of messages 2. Exactly-once delivery"
-> — **Mathias Verraes**
+> "The basic problem of communication is that of reproducing at one point either exactly or approximately a message selected at another point."
+> — **Claude Shannon**, *A Mathematical Theory of Communication* (1948)
 
 Publishing to a Pub/Sub topic is a single `gcloud pubsub topics publish` command. Consuming is a `gcloud pubsub subscriptions pull`. In practice, production systems use client libraries (Python `google-cloud-pubsub` -- see [24_py_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/Python/24_py_streaming_realtime), or C# -- see [24_cs_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/24_cs_streaming_realtime)) for both operations, but the CLI commands are essential for testing, debugging, and verifying message flow. The most important operational concept is that Pub/Sub delivers messages **at least once**, which means consumers must be idempotent.
 

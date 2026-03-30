@@ -13,6 +13,10 @@ status: complete
 
 # Prompt Debugging, Optimization, and System Design
 
+> [!quote]
+> "When an LLM gives you a wrong answer, the first question is always: did I give it the right context? The model is a mirror of the prompt."
+> — **Riley Goodside** (prompt engineering pioneer)
+
 This note covers the diagnostic and system-level layer of prompt engineering: identifying why prompts fail, rebuilding them systematically, designing prompt workflows and multi-agent systems, managing memory across long conversations, and building a reusable prompt library. It also includes the full mastery checklist and quick reference card. For foundations, see [prompt-foundations](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations); for structural patterns, see [prompt-architecture](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture).
 
 ---

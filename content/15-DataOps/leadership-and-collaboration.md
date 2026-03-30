@@ -13,6 +13,10 @@ status: complete
 
 # Leadership and Collaboration at Scale
 
+> [!quote]
+> "No pull request should ever be accepted unless the engineer can answer the question, 'How will I know if this breaks?'"
+> — **Charity Majors**
+
 A senior data engineer at a large financial data company operates at the "Individual Contributor Lead" or "Director" level. The role demands more than technical excellence — it requires the ability to influence architecture decisions, mentor engineers, manage stakeholder expectations, and navigate complex organizational dynamics. This note covers the non-technical skills that determine whether a senior engineer advances or plateaus.
 
 ## The Code Review as a Teaching Tool

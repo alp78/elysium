@@ -14,8 +14,8 @@ status: complete
 # 02. Strings - Python
 
 > [!quote]
-> "There are only two hard things in Computer Science: cache invalidation and naming things."
-> — **Phil Karlton**
+> "Either write something worth reading, or do something worth writing."
+> — **Benjamin Franklin**
 
 ## String Creation & Basics
 

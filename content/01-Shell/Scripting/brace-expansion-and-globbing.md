@@ -16,8 +16,8 @@ status: complete
 Brace expansion and shell globbing let you generate multiple arguments from compact patterns, match files by name across directory trees, and write commands that would otherwise require loops — all in a single expression. Enabling the right `shopt` options unlocks recursive globbing and prevents dangerous silent failures.
 
 > [!quote]
-> "UNIX is basically a simple operating system, but you have to be a genius to understand the simplicity."
-> — **Dennis Ritchie**
+> "Civilization advances by extending the number of important operations which we can perform without thinking about them."
+> — **Alfred North Whitehead**
 
 ## Brace Expansion
 

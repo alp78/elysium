@@ -16,11 +16,8 @@ status: complete
 Every bash script you write for production should begin with one line that enables three safety mechanisms preventing the most common and most dangerous categories of scripting bugs. Without it, your script is a loaded gun pointed at your data.
 
 > [!quote]
-> "Everyone knows that debugging is twice as hard as writing a program in the first place. So if you're as clever as you can be when you write it, how will you ever debug it?"
-> — **Brian Kernighan**
->
-> "Program testing can be used to show the presence of bugs, but never to show their absence."
-> — **Edsger Dijkstra**
+> "Programming today is a race between software engineers striving to build bigger and better idiot-proof programs, and the Universe trying to produce bigger and better idiots. So far, the Universe is winning."
+> — **Rick Cook**
 
 #### set -euo pipefail — the essential first line of every production script
 ```bash

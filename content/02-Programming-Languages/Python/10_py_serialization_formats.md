@@ -14,8 +14,8 @@ status: complete
 # 10. Serialization Formats - Python
 
 > [!quote]
-> "Data dominates. If you've chosen the right data structures and organized things well, the algorithms will almost always be self-evident."
-> — **Rob Pike**
+> "Write programs to handle text streams, because that is a universal interface."
+> — **Doug McIlroy**
 
 ```python
 import os

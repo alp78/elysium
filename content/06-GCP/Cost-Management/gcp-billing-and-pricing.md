@@ -76,8 +76,8 @@ status: complete
 # GCP Billing and Pricing — Data Engineering Reference
 
 > [!quote]
-> "A budget tells us what we can't afford, but it doesn't keep us from buying it."
-> — **William Feather**
+> "Beware of little expenses. A small leak will sink a great ship."
+> — **Benjamin Franklin**
 >
 > "Cost awareness is a lost art. We need to regain that art."
 > — **Werner Vogels**

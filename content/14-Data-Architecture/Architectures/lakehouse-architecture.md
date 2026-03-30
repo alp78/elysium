@@ -14,8 +14,8 @@ status: complete
 # Lakehouse Architecture
 
 > [!quote]
-> "The best way to predict the future is to invent it."
-> — **Alan Kay**
+> "A lakehouse is a data management system based on low-cost storage that also provides traditional analytical DBMS management and performance features."
+> — **Michael Armbrust** (co-creator of Delta Lake)
 
 The lakehouse is a data platform architecture that collapses the traditional two-tier stack — a cheap data lake for raw storage and an expensive data warehouse for governed analytics — into a single, unified storage layer. It achieves this by adding a metadata layer (an [open table format](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/open-table-formats)) on top of object-storage files (Parquet on GCS, S3, or ADLS) that provides ACID transactions, schema enforcement, time travel, and fine-grained governance. The result is one copy of data, one compute model, and one governance layer that serves everything from raw ingestion to BI dashboards to ML training sets.
 

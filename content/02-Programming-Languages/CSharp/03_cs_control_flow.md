@@ -13,6 +13,10 @@ status: complete
 
 # 03. Control Flow - C#
 
+> [!quote]
+> "Fools ignore complexity. Pragmatists suffer it. Some can avoid it. Geniuses remove it."
+> — **Alan Perlis**
+
 ## Conditional Statements
 
 #### if / else if / else — explicit bool conditions

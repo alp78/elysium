@@ -14,8 +14,8 @@ status: complete
 # The Golden Rules of Data Engineering
 
 > [!quote]
-> "Simplicity is a prerequisite for reliability."
-> — **Edsger W. Dijkstra**
+> "A data engineer's job is to get data into a state where it can create value, not to build the most sophisticated pipeline possible."
+> — **Joe Reis & Matt Housley**
 >
 > "Adding manpower to a late software project makes it later."
 > — **Fred Brooks**

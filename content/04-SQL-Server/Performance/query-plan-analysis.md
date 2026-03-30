@@ -14,8 +14,8 @@ status: complete
 # Query Plan Analysis
 
 > [!quote]
-> "We should forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil."
-> — **Donald Knuth**
+> "There are no solutions, only trade-offs."
+> — **Thomas Sowell**
 
 SQL Server execution plans are the map SQL Server uses to execute a query. Reading them reveals exactly where time is being spent, why a query is slow, and what to change to fix it. Every performance investigation eventually leads here — [wait statistics](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) tell you the category of the problem, execution plans tell you the specific query and operator causing it.
 

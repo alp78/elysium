@@ -14,8 +14,8 @@ status: complete
 # BigQuery for Data Engineering - Advanced Patterns
 
 > [!quote]
-> "There are only two hard things in Computer Science: cache invalidation and naming things."
-> — **Phil Karlton**
+> "The mindset of SQL is 'what do I want?' not 'how do I get it?' — that is the leap from procedural to declarative thinking."
+> — **Joe Celko**
 
 Advanced SQL techniques using the **stoxx** index database.
 Prerequisite: SQL_01_Fundamentals.ipynb

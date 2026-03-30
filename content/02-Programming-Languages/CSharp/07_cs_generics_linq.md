@@ -13,6 +13,10 @@ status: complete
 
 # 07. Generics & LINQ - C#
 
+> [!quote]
+> "All non-trivial abstractions, to some degree, are leaky."
+> — **Joel Spolsky**
+
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 using System.Reflection;

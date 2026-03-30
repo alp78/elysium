@@ -47,8 +47,8 @@ status: complete
 # Data Team Organization
 
 > [!quote]
-> "Adding manpower to a late software project makes it later."
-> — **Fred Brooks**
+> "A fast flow of change requires that teams are loosely coupled — each team should be able to deliver value without waiting on other teams."
+> — **Matthew Skelton & Manuel Pais** (*Team Topologies*)
 >
 > "The biggest issue on software teams is making sure everyone understands what everyone else is doing."
 > — **Martin Fowler**

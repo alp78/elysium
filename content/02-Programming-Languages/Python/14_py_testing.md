@@ -14,11 +14,11 @@ status: complete
 # 14. Testing - Python
 
 > [!quote]
-> "Program testing can be used to show the presence of bugs, but never to show their absence."
-> — **Edsger W. Dijkstra**
+> "Legacy code is simply code without tests."
+> — **Michael Feathers**
 >
-> "Make it work, make it right, make it fast."
-> — **Kent Beck**
+> "The only way to go fast, is to go well."
+> — **Robert C. Martin**
 
 ## Testing Philosophy
 

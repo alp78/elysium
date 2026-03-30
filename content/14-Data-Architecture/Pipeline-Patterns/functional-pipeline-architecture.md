@@ -28,8 +28,8 @@ status: complete
 # Functional Pipeline Architecture
 
 > [!quote]
-> "I'm not a great programmer; I'm just a good programmer with great habits."
-> — **Kent Beck**
+> "The fundamental problem of state in data pipelines is not managing it — it is eliminating the need for it."
+> — **Nathan Marz** (creator of Apache Storm)
 
 This is a composite architecture combining five named principles from different engineering disciplines. No single established name exists for the combination — each principle has deep literature independently. Their power comes from using them together.
 

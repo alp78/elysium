@@ -14,8 +14,8 @@ status: complete
 # Restore and Recovery
 
 > [!quote]
-> "Everything fails, all the time."
-> — **Werner Vogels**
+> "An ounce of prevention is worth a pound of cure."
+> — **Benjamin Franklin**
 
 Knowing how to perform a restore is the test of whether your backup strategy is real. Every restore procedure should be practiced in a non-production environment before you need it under pressure.
 

@@ -13,6 +13,13 @@ status: complete
 
 # 06. Object-Oriented Programming - C#
 
+> [!quote]
+> "I made up the term 'object-oriented', and I can tell you I did not have C++ in mind."
+> — **Alan Kay**
+>
+> "You wanted a banana but what you got was a gorilla holding the banana and the entire jungle."
+> — **Joe Armstrong**
+
 ## Classes & Objects
 
 #### Class declaration — auto-properties, constructors, methods, ToString

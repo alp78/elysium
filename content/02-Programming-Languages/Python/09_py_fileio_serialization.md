@@ -14,8 +14,8 @@ status: complete
 # 09. File I/O & Serialization - Python
 
 > [!quote]
-> "Show me your flowcharts and conceal your tables, and I shall continue to be mystified. Show me your tables, and I won't usually need your flowcharts; they'll be obvious."
-> — **Fred Brooks**
+> "Tape is dead. Disk is tape. Flash is disk. RAM locality is king."
+> — **Jim Gray**
 
 ```python
 import os

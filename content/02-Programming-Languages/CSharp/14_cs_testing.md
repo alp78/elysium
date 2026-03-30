@@ -13,6 +13,13 @@ status: complete
 
 # 14. Testing - C#
 
+> [!quote]
+> "Legacy code is simply code without tests."
+> — **Michael Feathers**
+>
+> "The only way to go fast, is to go well."
+> — **Robert C. Martin**
+
 ## Testing Philosophy
 
 Testing is not about proving code works — it's about **catching bugs before they reach production**.

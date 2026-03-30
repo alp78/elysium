@@ -14,8 +14,8 @@ status: complete
 # Datadog Agent Setup — Airflow VM (Docker on COS)
 
 > [!quote]
-> "Everything fails, all the time."
-> — **Werner Vogels**
+> "Ops engineers are intelligent, scrappy, and capable of building great things. You should be allowed to take pride in making yourself and your systems better."
+> — **Alice Goldfuss**
 
 The Airflow VM runs Container-Optimized OS (COS), so the Datadog Agent runs as a Docker container on the same Docker network as the Airflow containers. COS is an immutable OS optimized for containers — it has a read-only root filesystem, which affects where the agent can write state.
 

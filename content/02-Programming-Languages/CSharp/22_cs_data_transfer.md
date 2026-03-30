@@ -13,6 +13,10 @@ status: complete
 
 # 22. Data Transfer — GCS, SQL Server, BigQuery
 
+> [!quote]
+> "The most important property of a program is whether it accomplishes the intention of its user."
+> — **C.A.R. Hoare**
+
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.

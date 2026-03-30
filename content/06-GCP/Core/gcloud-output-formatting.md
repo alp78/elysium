@@ -14,8 +14,8 @@ status: complete
 # gcloud Output Formatting and Filtering
 
 > [!quote]
-> "The best code is no code at all. Every new line of code you willingly bring into the world is code that has to be debugged, code that has to be read and understood, code that has to be supported."
-> — **Jeff Atwood**
+> "Numbers have an important story to tell. They rely on you to give them a clear and convincing voice."
+> — **Stephen Few**, data visualization expert
 
 The `--format` and `--filter` flags are the most underused features of the [gcloud CLI](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication). They transform gcloud from a human-readable tool into a scriptable data extraction engine, enabling you to pipe exact field values into shell scripts, build inventory automation, and run server-side filtered queries instead of grepping local output.
 

@@ -13,6 +13,10 @@ status: complete
 
 # 21. Security Operations — Encryption, Certificates & Identity (C#)
 
+> [!quote]
+> "The only truly secure system is one that is powered off, cast in a block of concrete, and sealed in a lead-lined room with armed guards — and even then I have my doubts."
+> — **Gene Spafford**
+
 > [!tip] Prerequisite Reading
 >
 > For the theoretical framework behind these operations — identity model, credential types, OAuth2 flows, and connection patterns — see [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns).

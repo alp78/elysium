@@ -10,11 +10,8 @@ description: "Comprehensive catalog of Terraform production problems — 25 issu
 # Terraform Production Problems
 
 > [!quote]
-> "Everything fails, all the time."
-> — **Werner Vogels**
->
-> "Optimism is an occupational hazard of programming; feedback is the treatment."
-> — **Kent Beck**
+> "The first step in fixing a broken program is getting it to fail repeatably."
+> — **Tom Duff**
 
 Terraform is the foundation of infrastructure-as-code for the data platform, but its state-based model introduces a class of problems that can destroy production infrastructure in seconds. In a regulated financial index platform where every GCP resource supports the publication pipeline, a mismanaged `terraform apply` can take down the entire data platform — the SQL Server VM that runs index calculations, the GCS buckets holding vendor data feeds, the BigQuery datasets powering analytics. This note catalogs every major problem encountered in production, explains why it happens technically, and provides actionable prevention and recovery procedures. Problems are ordered by severity: Critical (infrastructure destruction/data loss) → High (drift/team blocking) → Moderate (operational pain) → Low (team friction).
 

@@ -76,8 +76,8 @@ status: complete
 # REST API Design and Consumption
 
 > [!quote]
-> "Talk is cheap. Show me the code."
-> — **Linus Torvalds**
+> "A truly RESTful API looks like hypertext. Every addressable unit of information carries an address."
+> — **Roy Fielding**
 
 > [!abstract] Purpose
 > This is the definitive reference on REST APIs for data engineering work. It covers two directions: **consuming** external APIs (market data vendors, SaaS platforms, financial data feeds) and **building** internal data APIs that serve processed results to dashboards, downstream systems, and automated consumers. Dense with working code.

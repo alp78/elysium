@@ -10,8 +10,8 @@ description: "BashOperator, astronomer-cosmos, and CloudRunJobOperator patterns 
 # dbt: Airflow Integration
 
 > [!quote]
-> "Improving daily work is even more important than doing daily work."
-> — **Gene Kim**
+> "The greatest limitation in writing software is our ability to understand the systems we are creating."
+> — **John Ousterhout**
 
 Orchestrating dbt inside Airflow determines how granularly you can observe, retry, and alert on transformation failures. This builds on [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) and applies the [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) to dbt-specific workflows. Three integration patterns exist, each offering a different trade-off between implementation effort and operational power.
 

@@ -14,8 +14,8 @@ status: complete
 # Firestore for Data Engineering — Python
 
 > [!quote]
-> "Simplicity is a great virtue but it requires hard work to achieve it and education to appreciate it. And to make matters worse: complexity sells better."
-> — **Edsger W. Dijkstra**
+> "The world is not made up of rows and columns. Sometimes a document is exactly what the data wants to be."
+> — **Michael Stonebraker**
 
 Comprehensive reference for querying, writing, and managing Firestore collections
 using the `google-cloud-firestore` Python SDK.

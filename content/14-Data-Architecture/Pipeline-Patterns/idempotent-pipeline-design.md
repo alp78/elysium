@@ -14,8 +14,8 @@ status: complete
 # Idempotent Pipeline Design
 
 > [!quote]
-> "Simplicity is a prerequisite for reliability."
-> — **Edsger W. Dijkstra**
+> "An idempotent operation can be applied multiple times without changing the result beyond the initial application — this is the foundation of reliable data processing."
+> — **Tyler Akidau** (Apache Beam tech lead)
 
 An idempotent pipeline produces the same result whether it runs once or ten times with the same input. This is the single most important property of any production data pipeline — it makes re-runs safe, backfills reliable, and incident recovery straightforward.
 

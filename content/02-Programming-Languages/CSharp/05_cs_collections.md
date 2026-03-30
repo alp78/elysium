@@ -13,6 +13,13 @@ status: complete
 
 # 05. Collections - C#
 
+> [!quote]
+> "Algorithms + Data Structures = Programs."
+> — **Niklaus Wirth**
+>
+> "Smart data structures and dumb code works a lot better than the other way around."
+> — **Eric S. Raymond**
+
 ## Arrays and Lists
 
 #### Array — T[] (fixed size)

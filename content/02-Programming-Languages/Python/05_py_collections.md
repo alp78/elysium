@@ -14,8 +14,8 @@ status: complete
 # 05. Collections - Python
 
 > [!quote]
-> "Bad programmers worry about the code. Good programmers worry about data structures and their relationships."
-> — **Linus Torvalds**
+> "Algorithms + Data Structures = Programs."
+> — **Niklaus Wirth**
 >
 > "Smart data structures and dumb code works a lot better than the other way around."
 > — **Eric S. Raymond**

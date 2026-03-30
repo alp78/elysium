@@ -28,8 +28,8 @@ Polars transforms → Silver → Polars aggregation → Gold → Parquet → Fas
 > "The object-oriented version of spaghetti code is, of course, 'lasagna code'. Too many layers."
 > — **Roberto Waltman**
 >
-> "Make it work, make it right, make it fast."
-> — **Kent Beck**
+> "State is never simple. State complects value and time."
+> — **Rich Hickey**
 
 > [!abstract] Pipeline Dependencies
 >

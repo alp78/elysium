@@ -68,8 +68,8 @@ status: complete
 # GCP Cloud Monitoring — Deep Dive
 
 > [!quote]
-> "Monitoring is so important that our monitoring systems need to be more available and scalable than the systems being monitored."
-> — **Gene Kim**
+> "The future of monitoring is leaning strongly toward complex analytics on epic amounts of telemetry data."
+> — **Theo Schlossnagle**
 
 > [!abstract] Purpose
 > This is the definitive reference for using GCP Cloud Monitoring (formerly Stackdriver) as the single observability platform for data engineering infrastructure. The goal: achieve full operational parity with Datadog using only GCP-native tools, at a fraction of the cost.

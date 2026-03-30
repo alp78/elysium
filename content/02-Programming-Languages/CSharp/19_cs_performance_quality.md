@@ -11,6 +11,10 @@ updated: 2026-03-24
 status: complete
 ---
 
+> [!quote]
+> "The First Rule of Program Optimization: Don't do it. The Second Rule of Program Optimization (for experts only): Don't do it yet."
+> — **Michael A. Jackson**
+
 ## Timing & Benchmarking
 
 #### Stopwatch timing and BenchmarkDotNet

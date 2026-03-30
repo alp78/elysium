@@ -14,8 +14,8 @@ status: complete
 # GCP Scheduling Services — Complete Reference
 
 > [!quote]
-> "Everything fails, all the time."
-> — **Werner Vogels**
+> "The whole goal is, we want to reduce the amount that a human needs to give to the system in order to make it do what you want it to do."
+> — **Kelsey Hightower**
 
 GCP offers four distinct scheduling and workflow primitives that data engineers routinely confuse: **Cloud Scheduler** (managed cron — fire and forget at a time), **Cloud Tasks** (durable task queues with rate control), **Cloud Workflows** (multi-step serverless orchestration), and **Eventarc** (event-driven function triggers). Knowing when to reach for each one — and how to wire them together — eliminates entire classes of operational complexity. This note covers all four plus the patterns that connect them.
 

@@ -14,8 +14,8 @@ status: complete
 # Pull Requests and Code Review
 
 > [!quote]
-> "Any fool can write code that a computer can understand. Good programmers write code that humans can understand."
-> — **Martin Fowler**
+> "Given enough eyeballs, all bugs are shallow."
+> — **Eric S. Raymond** (Linus's Law)
 
 Pull requests (PRs) are GitHub's mechanism for proposing changes. They let teammates review your code, discuss it, and approve it before merging. This note covers the complete PR lifecycle from creation to merge, including recovery from common failure modes.
 

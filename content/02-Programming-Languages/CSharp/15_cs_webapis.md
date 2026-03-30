@@ -19,6 +19,11 @@ Topics covered:
 - Building a REST API (ASP.NET Minimal APIs)
 - Data Engineering API Patterns
 
+> [!quote]
+> "Web programming is the science of coming up with increasingly complicated ways of concatenating strings."
+> — **Greg Brockman**
+
+
 ## HTTP Clients & REST API Calls
 
 ```csharp

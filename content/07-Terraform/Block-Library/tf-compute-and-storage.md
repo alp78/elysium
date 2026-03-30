@@ -64,8 +64,8 @@ status: complete
 # Terraform Block Library — GCP Compute & Storage
 
 > [!quote]
-> "Everything fails, all the time."
-> — **Werner Vogels**
+> "The cheapest, fastest, and most reliable components are those that aren't there."
+> — **Gordon Bell**
 
 > Self-contained, heavily commented Terraform blocks for GCP Compute Engine and Cloud Storage.
 > Each section includes a **when-to-use** note followed by the full resource block.

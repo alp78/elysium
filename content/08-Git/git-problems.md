@@ -10,8 +10,8 @@ description: "Comprehensive catalog of Git and GitHub problems in distributed da
 # Git and GitHub Problems in Distributed Teams
 
 > [!quote]
-> "Optimism is an occupational hazard of programming; feedback is the treatment."
-> — **Kent Beck**
+> "The most dangerous phrase in the language is 'we've always done it this way.'"
+> — **Grace Hopper**
 
 Git is the backbone of collaborative data engineering, but its power comes with footguns that multiply in distributed teams. When multiple engineers edit Airflow DAGs, SQL migrations, Terraform configs, and dbt models in the same repository, every problem below becomes a near-certainty. In a regulated financial index platform where audit trails matter and broken main means no index publication, these problems range from career-defining incidents to daily friction. This note catalogs each one with actionable prevention and recovery.
 

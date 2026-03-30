@@ -13,6 +13,10 @@ status: complete
 
 # 23. Data Ingestion — SQL Server, BigQuery, Firestore
 
+> [!quote]
+> "Data is a precious thing and will last longer than the systems themselves."
+> — **Tim Berners-Lee**
+
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.

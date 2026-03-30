@@ -13,6 +13,10 @@ status: complete
 
 # Prompt Engineering Foundations: Core Principles, Context Hierarchy, Clarity, and Structure
 
+> [!quote]
+> "I really am mostly programming in English now, a bit sheepishly telling the LLM what code to write. It hurts the ego a bit, but the power to operate over software in large 'code actions' is just too net useful."
+> — **Andrej Karpathy**
+
 Prompt engineering is the practice of designing inputs to AI models that produce predictable, high-quality outputs. It is not about tricks or hacks — it is about understanding how language models process instructions and structuring your communication accordingly. This note covers the foundational layer: the axioms that govern model behavior, the context hierarchy every prompt operates within, and how structure shapes the type of output you receive.
 
 ---

@@ -16,8 +16,8 @@ status: complete
 Environment variables are the standard mechanism for passing configuration to processes without hardcoding values in source code. Every production system you operate — databases, orchestrators, cloud CLIs, Docker containers — reads environment variables for credentials, connection strings, feature flags, and runtime parameters.
 
 > [!quote]
-> "There are only two hard things in Computer Science: cache invalidation and naming things."
-> — **Phil Karlton**
+> "Explicit is better than implicit."
+> — **Tim Peters**, The Zen of Python
 
 ## The Propagation Model
 

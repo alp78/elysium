@@ -21,6 +21,11 @@ Topics covered:
 - Dapper (micro-ORM, like pandas read_sql / SQLAlchemy)
 - Real-world Index Provider Queries (index provider)
 
+> [!quote]
+> "Future users of large data banks must be protected from having to know how the data is organized in the machine."
+> — **Edgar F. Codd**
+
+
 > [!info] Run this cell once before
 >
 > Run this cell once before any cells that use NuGet packages — suppresses harmless CS1701/CS1702 assembly version warnings.

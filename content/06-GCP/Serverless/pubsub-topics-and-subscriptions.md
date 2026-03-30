@@ -14,8 +14,8 @@ status: complete
 # Pub/Sub Topics and Subscriptions
 
 > [!quote]
-> "Simplicity is prerequisite for reliability."
-> — **Edsger W. Dijkstra**
+> "The key in making great and growable systems is much more to design how its modules communicate rather than what their internal properties and behaviors should be."
+> — **Alan Kay**
 
 Pub/Sub decouples producers from consumers. Instead of pipeline stages calling each other directly (tight coupling), they publish events to topics and subscribe independently. This pattern enables retry logic, dead letter queues, and horizontal scaling without changing the producer code. A topic is the named channel; subscriptions are the delivery mechanisms. Multiple subscriptions on the same topic each receive all messages independently.
 

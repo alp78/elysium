@@ -22,8 +22,8 @@ Topics covered:
 - Querying Files — DuckDB vs Polars/Pandas
 
 > [!quote]
-> "Show me your flowcharts and conceal your tables, and I shall continue to be mystified. Show me your tables, and I won't usually need your flowcharts; they'll be obvious."
-> — **Fred Brooks**
+> "Future users of large data banks must be protected from having to know how the data is organized in the machine."
+> — **Edgar F. Codd**
 
 ```python
 import sqlite3

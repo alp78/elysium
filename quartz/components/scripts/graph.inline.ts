@@ -208,25 +208,31 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
           const srcTier = getNodeTier((l.source as NodeData).id)
           const tgtTier = getNodeTier((l.target as NodeData).id)
           const minTier = Math.min(srcTier, tgtTier)
-          if (minTier === 0) return 120  // index → MOC spacing
-          if (minTier === 1) return 80   // MOC → domain spacing
-          return 50                       // domain → page spacing
+          if (minTier === 0) return 150  // index → MOC: wide orbit
+          if (minTier === 1) return 60   // MOC → domain: tight cluster
+          return 35                       // domain → page: compact petal
         })
         .strength((l) => {
           const srcTier = getNodeTier((l.source as NodeData).id)
           const tgtTier = getNodeTier((l.target as NodeData).id)
           const minTier = Math.min(srcTier, tgtTier)
-          if (minTier === 0) return 0.3  // strong pull: MOCs orbit index
-          if (minTier === 1) return 0.2  // medium pull: domains orbit MOC
-          return 0.15                     // gentle pull: pages orbit domain
+          if (minTier === 0) return 0.4  // strong: MOCs orbit index
+          if (minTier === 1) return 0.7  // very strong: domains STICK to their MOC
+          return 0.5                      // strong: pages stick to their domain
         }),
     )
-    .force("center", forceCenter(cx, cy).strength(0.005))
+    .force("center", forceCenter(cx, cy).strength(0.003))
     .force(
       "collide",
       forceCollide<NodeData>()
-        .radius((d) => getNodeRadius(d) + 12)
-        .strength(0.5)
+        .radius((d) => {
+          const tier = getNodeTier(d.id)
+          if (tier === 0) return 40
+          if (tier === 1) return 25
+          if (tier === 2) return 15
+          return getNodeRadius(d) + 8
+        })
+        .strength(0.6)
         .iterations(3),
     )
     .force(
@@ -234,22 +240,22 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
       forceRadial<NodeData>(
         (d) => {
           const tier = getNodeTier(d.id)
-          if (tier === 0) return 0                  // index at center
-          if (tier === 1) return baseRadius * 0.4   // MOCs: inner ring
-          if (tier === 2) return baseRadius * 0.75  // domains: middle ring
-          return baseRadius * 1.1                    // pages: outer ring
+          if (tier === 0) return 0                  // index pinned to center
+          if (tier === 1) return baseRadius * 0.5   // MOCs: inner ring
+          if (tier === 2) return baseRadius * 0.85  // domains: middle ring (hint only)
+          return baseRadius * 1.3                    // pages: wide outer fan
         },
         cx,
         cy,
       ).strength((d) => {
         const tier = getNodeTier(d.id)
-        if (tier === 0) return 1.0    // pin index to center
-        if (tier === 1) return 0.15   // MOCs gently held in ring
-        if (tier === 2) return 0.08   // domains loosely held
-        return 0.03                    // pages drift freely
+        if (tier === 0) return 1.0     // pin index hard
+        if (tier === 1) return 0.12    // MOCs held in ring
+        if (tier === 2) return 0.02    // domains: WEAK radial — link force dominates
+        return 0.015                    // pages: very weak radial — follow their domain
       }),
     )
-    .velocityDecay(0.55)
+    .velocityDecay(0.5)
     .alphaDecay(0.008)
     .alphaMin(0.001)
     .alpha(1)

@@ -20,6 +20,11 @@ Topics covered:
 - Reflection
 - Project Structure & Best Practices
 
+> [!quote]
+> "When I see patterns in my programs, I consider it a sign of trouble. The shape of a program should reflect only the problem it needs to solve."
+> — **Paul Graham**
+
+
 ```csharp
 // Suppress CS1701 assembly version warnings (NuGet packages on .NET 10).
 using System.Reflection;

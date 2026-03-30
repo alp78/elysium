@@ -14,8 +14,8 @@ status: complete
 # SQL for Data Engineering — Database Objects & Performance
 
 > [!quote]
-> "Simplicity is prerequisite for reliability."
-> — **Edsger W. Dijkstra**
+> "A database is only as good as the integrity constraints that protect it."
+> — **C.J. Date**
 
 Database engineering patterns using the **stoxx** index database.
 Prerequisite: SQL_01_Fundamentals.ipynb, SQL_02_Advanced.ipynb

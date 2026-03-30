@@ -24,6 +24,14 @@ LINQ transforms → Silver → LINQ aggregation → Gold → Parquet → HttpLis
 - **Structural integrity** (vertical) — pure transforms, typed contracts, quality gates, immutable records
 - **Semantic integrity** (horizontal) — column context, business context, temporal markers, lineage tracking
 
+> [!quote]
+> "The object-oriented version of spaghetti code is, of course, 'lasagna code'. Too many layers."
+> — **Roberto Waltman**
+>
+> "State is never simple. State complects value and time."
+> — **Rich Hickey**
+
+
 ```csharp
 #r "nuget: Microsoft.Data.SqlClient"
 #r "nuget: Dapper"

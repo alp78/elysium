@@ -10,8 +10,8 @@ description: "View table incremental ephemeral snapshot deep dive"
 # dbt: Materializations
 
 > [!quote]
-> "All models are wrong, but some are useful."
-> — **George Box**
+> "There are only two hard things in Computer Science: cache invalidation and naming things."
+> — **Phil Karlton**
 
 A materialisation determines how dbt writes a model's SQL output into the warehouse. Choosing the wrong materialisation is one of the most common performance and cost mistakes in a dbt project.
 

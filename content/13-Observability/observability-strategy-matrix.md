@@ -14,10 +14,10 @@ status: complete
 # Observability Strategy Matrix
 
 > [!quote]
-> "Monitoring tells you whether a system is working. Observability lets you ask why it's not working."
-> — **Charity Majors**
+> "I'll start with observability tools only — if you know which tools look but don't touch, you can diagnose problems without introducing new ones."
+> — **Brendan Gregg**
 >
-> "No complex system is ever fully healthy."
+> "Distributed systems are pathologically unpredictable. It's impossible to predict the myriad states of partial failure various parts of the system might end up in."
 > — **Cindy Sridharan**
 
 This page answers **what to monitor** for every component in the Elysium data platform. It does not cover how to configure any tool — every cell in the matrix links to the implementation page that does.

@@ -14,8 +14,8 @@ status: complete
 # Terraform State Management
 
 > [!quote]
-> "Everything fails, all the time."
-> — **Werner Vogels**
+> "The source of truth is the single place where the system's current state is definitively recorded."
+> — **Martin Kleppmann**
 
 Terraform state is the source of truth that maps your `.tf` configuration to real GCP resources. Understanding how state works, how to protect it, and how to safely manipulate it is critical for production infrastructure management.
 

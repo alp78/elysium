@@ -69,8 +69,8 @@ status: complete
 # GCP Data Lineage and Catalog — Definitive Reference
 
 > [!quote]
-> "If you can not measure it, you can not improve it."
-> — **Lord Kelvin**
+> "Before buying or building a tool, it becomes important to evaluate the maximum utility it can provide for the unique set of engineering challenges specific teams face."
+> — **Cindy Sridharan**
 
 ---
 

@@ -13,6 +13,10 @@ status: complete
 
 # 10. Serialization Formats - C#
 
+> [!quote]
+> "Write programs to handle text streams, because that is a universal interface."
+> — **Doug McIlroy**
+
 ```csharp
 using System.IO;
 using System.Diagnostics;

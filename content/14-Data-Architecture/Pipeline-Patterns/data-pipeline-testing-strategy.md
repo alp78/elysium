@@ -26,8 +26,8 @@ status: complete
 # Data Pipeline Testing Strategy
 
 > [!quote]
-> "Program testing can be used to show the presence of bugs, but never to show their absence."
-> — **Edsger W. Dijkstra**
+> "Data quality is not a technical problem. It is a trust problem — one bad number erodes months of credibility."
+> — **Chad Sanderson**
 >
 > "Write tests until fear is transformed into boredom."
 > — **Kent Beck**

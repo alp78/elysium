@@ -14,8 +14,8 @@ status: complete
 # BigQuery Data Loading and Export
 
 > [!quote]
-> "Data is a precious thing and will last longer than the systems themselves."
-> — **Tim Berners-Lee**
+> "Getting information off the Internet is like taking a drink from a fire hydrant."
+> — **Mitch Kapor**, founder of Lotus Development
 
 BigQuery ingests data primarily from Cloud Storage (GCS), supporting CSV, Parquet, Avro, ORC, and newline-delimited JSON. Parquet is the recommended format for production loads — it is columnar, compressed, and carries its own schema, eliminating the need for schema specification or header row handling. For a deeper comparison of when to choose each format, see [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats). This note covers load and export operations, hive-partitioned directory structures, and BigQuery's built-in time travel capability for recovering from data corruption.
 

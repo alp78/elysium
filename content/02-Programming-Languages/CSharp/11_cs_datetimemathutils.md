@@ -19,6 +19,11 @@ Topics covered:
 - Logging
 - Configuration & Environment Variables
 
+> [!quote]
+> "Controlling complexity is the essence of computer programming."
+> — **Brian W. Kernighan**
+
+
 #### Imports and warning suppression
 
 ```csharp
