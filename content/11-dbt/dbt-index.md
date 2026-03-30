@@ -97,5 +97,5 @@ For a concise code-heavy overview, see [[dbt-transformation-layer]]. This sectio
 - [[terraform-index]] — Infrastructure for warehouses dbt targets
 - [[data-architecture-index]] — Medallion architecture, data modeling
 - [[financial-domain-index]] — Domain context for all dbt model examples
-- [[engineering-practice-index]] — DataOps practices for dbt
+- [[dataops-index]] — DataOps practices for dbt
 - [[programming-languages-index]] — Python for dbt-core and custom Python models

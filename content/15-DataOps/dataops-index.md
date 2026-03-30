@@ -1,22 +1,22 @@
 ---
 type: index
-category: engineering-practice
+category: dataops
 technology: [github-actions, git]
-tags: [github-actions, git, dataops, leadership]
-aliases: [Engineering Practice Index]
-keywords: [engineering practice, ci/cd, security, leadership, github actions, best practices, code review, mentoring, technical writing]
-description: "Index for the Engineering Practice section — CI/CD workflows, security practices, and engineering leadership and collaboration."
+tags: [dataops, leadership, data-engineering, ci-cd]
+aliases: [DataOps Index, Engineering Practice Index]
+keywords: [dataops, data team, data engineering, ci/cd, leadership, code review, mentoring, technical writing, self-service, data platform, team organization]
+description: "Index for the DataOps section — DataOps principles, data team organization, self-service platforms, and engineering leadership."
 related:
   - "[[index|Elysium]]"
   - "[[five-pillars-of-data-engineering]]"
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-03-30
 status: complete
 ---
 
-# Engineering Practice
+# DataOps
 
-Cross-cutting practices that apply across all technologies — DataOps, security fundamentals, and leadership at scale.
+DataOps principles, data team organization, self-service platforms, and engineering leadership.
 
 ### DataOps Principles and Team Organization
 

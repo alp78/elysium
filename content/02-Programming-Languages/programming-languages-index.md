@@ -23,31 +23,31 @@ Paired Python and C# references covering 24 topics. Each note was converted from
 
 | # | Topic | Python | C\# |
 |---|-------|--------|------|
-| 01 | Basics (variables, types, operators, I/O) | [[01_py_basics\|Basics]] | [[01_cs_basics\|Basics]] |
-| 02 | Strings (manipulation, formatting, regex) | [[02_py_strings\|Strings]] | [[02_cs_strings\|Strings]] |
-| 03 | Control Flow (if/else, loops, pattern matching) | [[03_py_control_flow\|Control Flow]] | [[03_cs_control_flow\|Control Flow]] |
-| 04 | Functions (lambdas, closures, decorators/delegates) | [[04_py_functions\|Functions]] | [[04_cs_functions\|Functions]] |
-| 05 | Collections (lists, dicts, sets, LINQ) | [[05_py_collections\|Collections]] | [[05_cs_collections\|Collections]] |
-| 06 | OOP (classes, inheritance, polymorphism) | [[06_py_oop\|OOP]] | [[06_cs_oop\|OOP]] |
-| 07 | Generics and LINQ / Comprehensions | [[07_py_generics_linq\|Generics & LINQ]] | [[07_cs_generics_linq\|Generics & LINQ]] |
-| 08 | Error Handling (exceptions, try/catch) | [[08_py_errorhandling\|Error Handling]] | [[08_cs_errorhandling\|Error Handling]] |
-| 09 | File I/O and Serialization (JSON, CSV) | [[09_py_fileio_serialization\|File I/O]] | [[09_cs_fileio_serialization\|File I/O]] |
-| 10 | Serialization Formats (Parquet, Avro, Protobuf, MessagePack) | [[10_py_serialization_formats\|Serialization]] | [[10_cs_serialization_formats\|Serialization]] |
-| 11 | DateTime, Math, and Utilities | [[11_py_datetimemathutils\|DateTime & Math]] | [[11_cs_datetimemathutils\|DateTime & Math]] |
-| 12 | Async and Concurrency | [[12_py_asyncconcurrency\|Async]] | [[12_cs_asyncconcurrency\|Async]] |
-| 13 | Advanced Parallel Pipelines (Dataflow, channels, rate limiting) | [[13_py_advancedpipelines\|Pipelines]] | [[13_cs_advancedpipelines\|Pipelines]] |
-| 14 | Testing (unit tests, mocking) | [[14_py_testing\|Testing]] | [[14_cs_testing\|Testing]] |
-| 15 | Web APIs (HTTP clients and servers) | [[15_py_webapis\|Web APIs]] | [[15_cs_webapis\|Web APIs]] |
-| 16 | Database Access (SQL, ORM, connections) | [[16_py_database\|Database]] | [[16_cs_database\|Database]] |
-| 17 | GCP (BigQuery, GCS, Pub/Sub) | [[17_py_gcp\|GCP]] | [[17_cs_gcp\|GCP]] |
-| 18 | Design Patterns (singleton, factory, observer) | [[18_py_designpatterns\|Design Patterns]] | [[18_cs_designpatterns\|Design Patterns]] |
-| 19 | Performance & Code Quality (profiling, Big-O, linting) | [[19_py_performance_quality\|Performance]] | [[19_cs_performance_quality\|Performance]] |
-| 20 | Security Setup (GCP infrastructure, KMS, secrets, WIF) | [[20_py_security_setup\|Security Setup]] | — |
-| 21 | Security Operations (encryption, certificates, identity) | [[21_py_security_operations\|Security Ops]] | [[21_cs_security_operations\|Security Ops]] |
-| 22 | Data Transfer (GCS, SQL Server, BigQuery benchmarks) | [[22_py_data_transfer\|Data Transfer]] | [[22_cs_data_transfer\|Data Transfer]] |
-| 23 | Data Ingestion (bulk load SQL Server, BigQuery, Firestore) | [[23_py_data_ingestion\|Data Ingestion]] | [[23_cs_data_ingestion\|Data Ingestion]] |
-| 24 | Streaming & Real-Time (WebSocket, SSE, Pub/Sub, Firestore) | [[24_py_streaming_realtime\|Streaming]] | [[24_cs_streaming_realtime\|Streaming]] |
-| 25 | Functional Data Pipeline (Medallion, Validation, Lineage, Serving) | [[25_py_functional_pipeline\|Pipeline]] | [[25_cs_functional_pipeline\|Pipeline]] |
+| 01 | Basics (variables, types, operators, I/O) | [[01_py_basics|Basics]] | [[01_cs_basics|Basics]] |
+| 02 | Strings (manipulation, formatting, regex) | [[02_py_strings|Strings]] | [[02_cs_strings|Strings]] |
+| 03 | Control Flow (if/else, loops, pattern matching) | [[03_py_control_flow|Control Flow]] | [[03_cs_control_flow|Control Flow]] |
+| 04 | Functions (lambdas, closures, decorators/delegates) | [[04_py_functions|Functions]] | [[04_cs_functions|Functions]] |
+| 05 | Collections (lists, dicts, sets, LINQ) | [[05_py_collections|Collections]] | [[05_cs_collections|Collections]] |
+| 06 | OOP (classes, inheritance, polymorphism) | [[06_py_oop|OOP]] | [[06_cs_oop|OOP]] |
+| 07 | Generics and LINQ / Comprehensions | [[07_py_generics_linq|Generics & LINQ]] | [[07_cs_generics_linq|Generics & LINQ]] |
+| 08 | Error Handling (exceptions, try/catch) | [[08_py_errorhandling|Error Handling]] | [[08_cs_errorhandling|Error Handling]] |
+| 09 | File I/O and Serialization (JSON, CSV) | [[09_py_fileio_serialization|File I/O]] | [[09_cs_fileio_serialization|File I/O]] |
+| 10 | Serialization Formats (Parquet, Avro, Protobuf, MessagePack) | [[10_py_serialization_formats|Serialization]] | [[10_cs_serialization_formats|Serialization]] |
+| 11 | DateTime, Math, and Utilities | [[11_py_datetimemathutils|DateTime & Math]] | [[11_cs_datetimemathutils|DateTime & Math]] |
+| 12 | Async and Concurrency | [[12_py_asyncconcurrency|Async]] | [[12_cs_asyncconcurrency|Async]] |
+| 13 | Advanced Parallel Pipelines (Dataflow, channels, rate limiting) | [[13_py_advancedpipelines|Pipelines]] | [[13_cs_advancedpipelines|Pipelines]] |
+| 14 | Testing (unit tests, mocking) | [[14_py_testing|Testing]] | [[14_cs_testing|Testing]] |
+| 15 | Web APIs (HTTP clients and servers) | [[15_py_webapis|Web APIs]] | [[15_cs_webapis|Web APIs]] |
+| 16 | Database Access (SQL, ORM, connections) | [[16_py_database|Database]] | [[16_cs_database|Database]] |
+| 17 | GCP (BigQuery, GCS, Pub/Sub) | [[17_py_gcp|GCP]] | [[17_cs_gcp|GCP]] |
+| 18 | Design Patterns (singleton, factory, observer) | [[18_py_designpatterns|Design Patterns]] | [[18_cs_designpatterns|Design Patterns]] |
+| 19 | Performance & Code Quality (profiling, Big-O, linting) | [[19_py_performance_quality|Performance]] | [[19_cs_performance_quality|Performance]] |
+| 20 | Security Setup (GCP infrastructure, KMS, secrets, WIF) | [[20_py_security_setup|Security Setup]] | — |
+| 21 | Security Operations (encryption, certificates, identity) | [[21_py_security_operations|Security Ops]] | [[21_cs_security_operations|Security Ops]] |
+| 22 | Data Transfer (GCS, SQL Server, BigQuery benchmarks) | [[22_py_data_transfer|Data Transfer]] | [[22_cs_data_transfer|Data Transfer]] |
+| 23 | Data Ingestion (bulk load SQL Server, BigQuery, Firestore) | [[23_py_data_ingestion|Data Ingestion]] | [[23_cs_data_ingestion|Data Ingestion]] |
+| 24 | Streaming & Real-Time (WebSocket, SSE, Pub/Sub, Firestore) | [[24_py_streaming_realtime|Streaming]] | [[24_cs_streaming_realtime|Streaming]] |
+| 25 | Functional Data Pipeline (Medallion, Validation, Lineage, Serving) | [[25_py_functional_pipeline|Pipeline]] | [[25_cs_functional_pipeline|Pipeline]] |
 
 ## How These Notes Work
 

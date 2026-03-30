@@ -414,7 +414,7 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').select('date', 'close').head(5)
 #### Pandas — Subset multiple rows with iloc[[index]]
 
 ```python
-# Pandas: iloc[[list]] — multiple rows by position
+# Pandas: iloc[[navigation-and-listing]] — multiple rows by position
 ohlcv.iloc[[0, 50, 100, 500]]
 ```
 

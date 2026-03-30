@@ -56,6 +56,6 @@ status: complete
 
 | # | Section | Description | Index |
 |---|---------|-------------|-------|
-| 15 | **Engineering Practice** | Leadership, DataOps, data team organization, self-service platforms | [[engineering-practice-index]] |
+| 15 | **DataOps** | DataOps principles, data team organization, self-service platforms, leadership | [[dataops-index]] |
 | 16 | **AI and Prompts** | Prompt engineering, model-specific patterns, LLM pipelines | [[ai-and-prompts-index]] |
 | 18 | **Financial Domain** | Metrics, scoring, financial encyclopedia, market analysis | [[financial-domain-index]] |

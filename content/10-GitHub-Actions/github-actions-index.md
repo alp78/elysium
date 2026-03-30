@@ -9,7 +9,7 @@ description: "Index for the GitHub Actions section — workflow anatomy, CI/CD p
 related:
   - "[[index|Elysium]]"
   - "[[git-index]]"
-  - "[[engineering-practice-index]]"
+  - "[[dataops-index]]"
   - "[[terraform-index]]"
 created: 2026-03-22
 updated: 2026-03-22
@@ -79,6 +79,6 @@ GitHub Actions is the automation platform built into GitHub — it runs CI/CD pi
 - **Terraform** — [[terraform-registry-and-ci]] provisions the CI service account and Artifact Registry
 - **Docker** — [[image-management]] for the build/push steps that Actions automates
 - **GCP** — [[service-accounts-and-iam]] and Workload Identity Federation for keyless auth
-- **Engineering Practice** — [[engineering-practice-index]] for broader engineering practices
+- **DataOps** — [[dataops-index]] for DataOps principles and team practices
 
 > *This table renders in Obsidian via Dataview. On the web, browse the notes listed above or use the Explorer sidebar.*

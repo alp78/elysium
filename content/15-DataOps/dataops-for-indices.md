@@ -1,6 +1,6 @@
 ---
 type: reference
-category: engineering-practice
+category: dataops
 technology:
   - github-actions
   - bigquery

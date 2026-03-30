@@ -1,6 +1,6 @@
 ---
 type: concept
-category: engineering-practice
+category: dataops
 technology: [sql-server, python, airflow, terraform]
 tags: [python, sql, terraform, airflow, leadership]
 aliases: [code review best practices, technical design document, ADR template, architecture decision record, blameless post-mortem, incident response, war room, technical debt management, RACI matrix, matrixed organization, mentoring junior engineers, stakeholder communication, senior engineer skills, staff engineer, data engineering leadership]

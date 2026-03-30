@@ -1,6 +1,6 @@
 ---
 type: reference
-category: engineering-practice
+category: dataops
 tags: [dataops]
 aliases:
   - self-service data

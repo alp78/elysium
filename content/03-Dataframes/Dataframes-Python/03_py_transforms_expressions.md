@@ -2258,7 +2258,7 @@ scores_pl.select(cs.contains("score")).head(3)
 | Concept | Polars | Pandas Equivalent |
 |---|---|---|
 | Expression | pl.col("x") * 2 | No equivalent |
-| select | df.select(...) | df[[cols]] |
+| select | df.select(...) | df[[api-protocols-comparison]] |
 | with_columns | df.with_columns(...) | df.assign(...) |
 | filter | df.filter(expr) | df[condition] |
 | group_by.agg | df.group_by().agg(exprs) | df.groupby().agg() |

@@ -1389,7 +1389,7 @@ def validate_decimal_range(df: pd.DataFrame, col: str, max_precision: int = 28) 
     max_val = 10 ** (max_precision - 2) - 0.01
     overflows = df[df[col].abs() > max_val]
     if not overflows.empty:
-        logger.error(f"Decimal overflow in {col}: {overflows[[col]].head()}")
+        logger.error(f"Decimal overflow in {col}: {overflows[[05_cs_collections]].head()}")
     return df[df[col].abs() <= max_val]
 ```
 

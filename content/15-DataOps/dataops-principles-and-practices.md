@@ -1,6 +1,6 @@
 ---
 type: concept
-category: engineering-practice
+category: dataops
 technology: []
 tags: [dataops]
 aliases:
