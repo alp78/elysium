@@ -17,7 +17,6 @@ related:
   - "[[dataset-and-table-management]]"
   - "[[idempotent-pipeline-design]]"
   - "[[service-accounts-and-iam]]"
-  - "[[etl-vs-elt]]"
   - "[[dbt-transformation-layer]]"
   - "[[five-pillars-of-data-engineering]]"
   - "[[moc-data-pipeline-lifecycle]]"
@@ -743,7 +742,6 @@ Before treating a data lake zone as production-ready:
 - [[dataset-and-table-management]] — Creating and managing BigQuery external tables on GCS
 - [[idempotent-pipeline-design]] — Writing idempotent pipelines that safely re-run against lake zones
 - [[service-accounts-and-iam]] — GCP IAM for per-zone access control
-- [[etl-vs-elt]] — ELT pattern applied to lake architecture (load raw, transform in-place)
 - [[dbt-transformation-layer]] — Standard tool for curated zone SQL transforms
 - [[five-pillars-of-data-engineering]] — Reliability, observability, and security principles for lake design
 - [[moc-data-pipeline-lifecycle]] — End-to-end pipeline view linking lake ingestion through analytics

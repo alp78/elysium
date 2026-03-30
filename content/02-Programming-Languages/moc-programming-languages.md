@@ -121,16 +121,6 @@ Google Cloud Platform workflows: security infrastructure setup, encryption and i
 
 * [[17_cs_gcp]] — Full medallion pipeline on GCP: data fetch, GCS Bronze upload, BigQuery Silver/Gold transforms, Firestore publishing, Pub/Sub events, Secret Manager, and Cloud Monitoring in C#.
 
-## Cross-Language Comparison — Decision Frameworks and Side-by-Side References
-
-Comparison tables and decision guides that span SQL, Python, and C# — helping you choose the right tool and pattern for each scenario.
-
-* [[sql-python-csharp-transforms]] — Side-by-side data transforms in T-SQL, pandas, and LINQ: window functions (ROW_NUMBER, RANK, LAG/LEAD), pivoting, z-scores, percent change, deduplication, conditional aggregation, and the decision framework for where to transform.
-
-* [[etl-vs-elt]] — ETL vs ELT comparison: transform location, compute cost, raw data preservation, debugging trade-offs, and how each maps to the medallion architecture.
-
-* [[merge-vs-rebase-vs-squash]] — Git merge strategies compared: standard merge, rebase, and squash merge — history shape, when to use each, and team workflow implications.
-
 ## Cross-References
 
 - [[rest-api-design-and-consumption]] — Language-agnostic REST API patterns

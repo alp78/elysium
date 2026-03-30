@@ -19,7 +19,7 @@ related:
 
 ### What dbt Is (and Is Not)
 
-dbt is the **T** in [[etl-vs-elt|ELT]]. It does not extract data from sources. It does not load data into the warehouse. It transforms data that is already in the warehouse using SQL.
+dbt is the **T** in ELT. It does not extract data from sources. It does not load data into the warehouse. It transforms data that is already in the warehouse using SQL.
 
 | dbt Does | dbt Does Not |
 |----------|-------------|

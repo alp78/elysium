@@ -11,7 +11,6 @@ related:
   - "[[bronze-layer-loading]]"
   - "[[silver-transforms]]"
   - "[[gold-transforms]]"
-  - "[[etl-vs-elt]]"
   - "the pipeline steps"
 created: 2026-03-22
 updated: 2026-03-22
@@ -39,7 +38,7 @@ The medallion architecture organizes data into three layers — bronze, silver, 
 - Pandas + NumPy for gold-layer analytics
 - Dapper (C#) for dashboard reads
 
-The medallion pattern aligns naturally with the [[etl-vs-elt|ELT paradigm]] — raw data lands first, then transforms run inside the warehouse. In dbt projects, [[dbt-staging-models]] correspond to the bronze-to-silver transition, while [[dbt-mart-models]] produce the gold layer.
+The medallion pattern aligns naturally with the ELT paradigm — raw data lands first, then transforms run inside the warehouse. In dbt projects, [[dbt-staging-models]] correspond to the bronze-to-silver transition, while [[dbt-mart-models]] produce the gold layer.
 
 ### Database Connection Pattern
 
@@ -135,5 +134,4 @@ The medallion architecture enables [[idempotent-pipeline-design|idempotent pipel
 
 **Theory:**
 - [[idempotent-pipeline-design]] — Safe re-run patterns
-- [[etl-vs-elt]] — The medallion pattern is inherently ELT
 - the pipeline steps — project-specific pipeline execution

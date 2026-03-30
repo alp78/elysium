@@ -11,7 +11,6 @@ related:
   - "[[medallion-architecture]]"
   - "[[open-table-formats]]"
   - "[[dbt-transformation-layer]]"
-  - "[[etl-vs-elt]]"
   - "[[idempotent-pipeline-design]]"
   - "[[querying-and-cost-optimization]]"
   - "[[serialization-formats]]"
@@ -550,7 +549,7 @@ Modern cloud warehouses favor **ELT** (Extract → Load → Transform) over trad
 > [!info] Why ELT Won
 > Cloud warehouses have essentially unlimited compute at linear per-query cost. It is cheaper and simpler to run SQL transforms inside BigQuery than to spin up and maintain a separate Spark cluster. ELT also preserves the raw data (enabling re-derivation when business rules change) and leverages the warehouse's optimizer rather than fighting it.
 
-See [[etl-vs-elt]] for a full comparison table and [[dbt-transformation-layer]] for the standard ELT implementation tool.
+See [[dbt-transformation-layer]] for the standard ELT implementation tool.
 
 ---
 
@@ -688,7 +687,6 @@ Before declaring a warehouse schema production-ready, verify:
 - [[medallion-architecture]] — Practical Bronze/Silver/Gold implementation pattern
 - [[open-table-formats]] — Apache Iceberg, Delta Lake, and the lakehouse convergence of lake + warehouse
 - [[dbt-transformation-layer]] — The standard tool for implementing ELT transforms in a warehouse
-- [[etl-vs-elt]] — Full comparison of ETL and ELT paradigms with decision criteria
 - [[idempotent-pipeline-design]] — How to safely load and reload warehouse data
 - [[querying-and-cost-optimization]] — BigQuery-specific cost optimization mechanics
 - [[merge-and-upsert]] — MERGE statement for SCD Type 2 implementation in SQL Server

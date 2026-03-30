@@ -6,7 +6,7 @@ tags: [shell, python, csharp, bash, linux, powershell, sql-server]
 aliases: [datetime handling, ISO 8601, timezone management, date arithmetic, DST pitfalls, naive vs aware datetime, DATETIMEOFFSET, DateTimeOffset, UTC storage, date parsing, date formatting]
 keywords: [iso 8601, datetime, date, timezone, utc, dst, daylight saving, GETUTCDATE, SYSUTCDATETIME, DATETIMEOFFSET, DATETIME2, DateTimeOffset, DateOnly, zoneinfo, pytz, timedelta, relativedelta, dateutil, strptime, strftime, fromisoformat, date arithmetic, date parsing, date formatting, unix epoch, unix timestamp, pandas date_range, timedatectl, Get-Date, DATEADD, DATEDIFF, DATETRUNC, EOMONTH, AT TIME ZONE]
 description: "Comprehensive reference for date and time handling across all pipeline contexts — ISO 8601 formats, timezone management, UTC storage, DST pitfalls, and date arithmetic in Bash, PowerShell, SQL Server T-SQL, Python, and C#."
-related: [awk-data-processing, serialization-formats, sql-python-csharp-transforms, idempotent-pipeline-design, etl-vs-elt]
+related: [awk-data-processing, serialization-formats, idempotent-pipeline-design]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -16,7 +16,7 @@ status: complete
 
 Dates look simple until you realize that "March 10, 2026 at 3 PM" means a different instant in time depending on whether you're in Paris, New York, or Tokyo. A pipeline that processes market close times across Euro market index, the data pipeline project USA 50, and the data pipeline project Asia/Pacific 50 must handle three different closing times, daylight saving transitions that happen on different dates in different countries, and the fact that "today" is a different date in Sydney and New York for several hours each day.
 
-This note covers dates exhaustively: ISO format variants, timezone management, parsing, formatting, arithmetic -- in the terminal (Linux/PowerShell), then [[sql-python-csharp-transforms|SQL Server, Python, and C#]]. For the Python and C# datetime libraries in more depth, see [[11_py_datetimemathutils]] and [[11_cs_datetimemathutils]].
+This note covers dates exhaustively: ISO format variants, timezone management, parsing, formatting, arithmetic -- in the terminal (Linux/PowerShell), then SQL Server, Python, and C#. For the Python and C# datetime libraries in more depth, see [[11_py_datetimemathutils]] and [[11_cs_datetimemathutils]].
 
 ### ISO 8601 — the only date format you should use in pipelines
 
@@ -979,9 +979,8 @@ Fix: Always convert through UTC. Never hardcode offsets between non-UTC timezone
 
 - [[grep-and-pattern-matching|text processing tools]] — JSON and CSV parsing in Bash, jq, Python, PowerShell
 - [[serialization-formats]] — Full format comparison: JSON, YAML, CSV, Parquet, Avro, Protobuf, MessagePack
-- [[sql-python-csharp-transforms]] — Side-by-side data manipulation in SQL, Python, C#
+
 - [[idempotent-pipeline-design]] — Pipeline design that handles date boundaries correctly
-- [[etl-vs-elt]] — When to transform at the SQL layer vs Python layer
 
 ## References
 

@@ -101,7 +101,6 @@ Foundational principles and decision frameworks for every technology and archite
 ## Cross-References
 
 - [[bronze-layer-loading]], [[silver-transforms]], [[gold-transforms]] — SQL Server implementations of medallion layers
-- [[etl-vs-elt]] — ETL vs ELT comparison table
 - [[airflow-dag-patterns]] — pipeline scheduling patterns for Airflow
 - [[gcp-scheduling]] — Cloud Scheduler to Cloud Run patterns
 - [[moc-dbt|dbt]] — full dbt transformation layer section

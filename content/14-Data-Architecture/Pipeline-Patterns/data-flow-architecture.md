@@ -306,7 +306,7 @@ graph LR
 Best for ad-hoc analysis and small-to-medium joins. Use when both datasets fit in memory.
 
 - SQL Server via pyodbc: [[sql-server-loading-patterns#cursor.fast_executemany = True — batch mode activation]]
-- BigQuery via Python client: [[sql-python-csharp-transforms]]
+- BigQuery via Python client: [[bq-advanced]]
 
 > [!tip] Cross-Database Join Decision
 >

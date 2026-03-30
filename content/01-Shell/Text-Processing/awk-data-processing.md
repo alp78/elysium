@@ -16,8 +16,7 @@ status: complete
 
 # awk Data Processing Reference
 
-awk (also gawk -- GNU awk, mawk -- faster awk) is a domain-specific language built for column-oriented text processing. It reads input record by record (lines by default), splits each record into fields, and applies pattern-action rules. For data engineers it is the fastest path from raw text files, logs, and CSVs to structured output without writing a full Python script. For a side-by-side comparison of the same operations in SQL, Python, and C#, see [[sql-python-csharp-transforms]].
-
+awk (also gawk -- GNU awk, mawk -- faster awk) is a domain-specific language built for column-oriented text processing. It reads input record by record (lines by default), splits each record into fields, and applies pattern-action rules. For data engineers it is the fastest path from raw text files, logs, and CSVs to structured output without writing a full Python script.
 > [!info] Which awk are you running?
 >
 > On macOS the default `awk` is BSD awk. On Linux it is usually gawk. On Windows you use PowerShell natively or install gawk via Chocolatey (`choco install gawk`) or Git Bash. All examples below work in gawk. BSD awk differences are noted inline.

@@ -20,7 +20,6 @@ Before writing code, establish the foundational patterns:
 - [[functional-pipeline-architecture]] — Functional core/imperative shell, contract validation, quality gates, data provenance
 - [[data-flow-architecture]] — Complete data movement topology: every source-destination pair, transfer methods, format selection
 - [[idempotent-pipeline-design]] — Safe re-runs and backfills
-- [[etl-vs-elt]] — When to transform outside vs inside the warehouse
 
 ## Infrastructure Provisioning
 

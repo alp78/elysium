@@ -19,7 +19,6 @@ related:
   - "[[moc-gcp]]"
   - "[[five-pillars-of-data-engineering]]"
   - "[[moc-data-pipeline-lifecycle]]"
-  - "[[etl-vs-elt]]"
   - "[[api-protocols-comparison]]"
   - "[[moc-observability]]"
 created: 2026-03-22
@@ -446,7 +445,7 @@ FULL OUTER JOIN sftp_companies f ON s.isin = f.isin
 
 ### Related Notes
 
-[[medallion-architecture]] | [[idempotent-pipeline-design]] | [[dbt-transformation-layer]] | [[airflow-dag-patterns]] | [[serialization-formats]] | [[context-and-metadata-architecture]] | [[data-modeling-patterns]] | [[etl-vs-elt]] | [[gcs-buckets-and-lifecycle]] | database connections
+[[medallion-architecture]] | [[idempotent-pipeline-design]] | [[dbt-transformation-layer]] | [[airflow-dag-patterns]] | [[serialization-formats]] | [[context-and-metadata-architecture]] | [[data-modeling-patterns]] | [[gcs-buckets-and-lifecycle]] | database connections
 
 ---
 
@@ -1145,7 +1144,7 @@ graph LR
 | Build a medallion pipeline | bronze/silver/gold schemas | SQL Server or BigQuery | [[medallion-architecture]] |
 | Handle idempotent writes | DELETE-INSERT or MERGE | Safe re-runs, no duplicates | [[idempotent-pipeline-design]] |
 | Migrate data between platforms | Strangler fig + dual write | Incremental, validated | [[migration-idempotency-backfills]] |
-| Compare ETL vs ELT approaches | See comparison table | Depends on compute location | [[etl-vs-elt]] |
+| Compare ETL vs ELT approaches | See comparison table | Depends on compute location | ETL vs ELT |
 
 ### Infrastructure and DevOps
 
@@ -1320,4 +1319,4 @@ A quick reference for when two technologies seem interchangeable.
 
 *This guide is a living document. As new scenarios emerge or technologies change, add new sections and update existing ones. The goal is that any data engineer can open this note and find a starting point for their next architecture decision.*
 
-**See also:** [[moc-data-architecture]] | [[five-pillars-of-data-engineering]] | [[moc-data-pipeline-lifecycle]] | [[etl-vs-elt]]
+**See also:** [[moc-data-architecture]] | [[five-pillars-of-data-engineering]] | [[moc-data-pipeline-lifecycle]]

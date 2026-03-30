@@ -11,8 +11,7 @@ related:
   - "[[five-pillars-of-data-engineering]]"
   - "[[moc-data-pipeline-lifecycle]]"
   - "[[moc-infrastructure-as-code]]"
-  - "[[sql-python-csharp-transforms]]"
-  - "[[etl-vs-elt]]"
+
   - "[[medallion-architecture]]"
   - "[[data-warehouse-architecture]]"
   - "[[data-lake-architecture]]"
@@ -60,7 +59,7 @@ Every technology decision in data engineering is a trade-off. There is no univer
 > [!tip] How to Use This Reference
 > Each section contains a **decision matrix** (comparison table), **decision rules** (concrete thresholds and if-then logic), and **callouts** for the non-obvious gotchas. Start with the matrix, apply the decision rule, then read the detailed comparison if the choice is ambiguous.
 
-For side-by-side code examples of SQL, Python, and C# doing the same transforms, see [[sql-python-csharp-transforms]]. For ETL vs ELT trade-offs, see [[etl-vs-elt]]. For the principles that underpin every decision here, see [[five-pillars-of-data-engineering]].
+For the principles that underpin every decision here, see [[five-pillars-of-data-engineering]].
 
 ---
 
@@ -706,7 +705,7 @@ Choosing the right data architecture is the highest-leverage decision in a data 
 ```
 
 > [!important] The Medallion Architecture Is Not an Alternative
-> Medallion (Bronze/Silver/Gold) is a **layering pattern**, not a competing architecture. You can apply Medallion inside a Data Warehouse, a Data Lake, or a Lakehouse. It defines how data flows through refinement stages. Every architecture in this table benefits from Medallion layering. See [[medallion-architecture]] for the layer definitions and [[etl-vs-elt]] for where transforms happen.
+> Medallion (Bronze/Silver/Gold) is a **layering pattern**, not a competing architecture. You can apply Medallion inside a Data Warehouse, a Data Lake, or a Lakehouse. It defines how data flows through refinement stages. Every architecture in this table benefits from Medallion layering. See [[medallion-architecture]] for the layer definitions.
 
 ### Architecture Combinations (Real-World)
 
@@ -960,7 +959,7 @@ For rapid lookup when you just need the answer:
 
 | Task | Answer | Note Reference |
 |------|--------|---------------|
-| ...transform data in a database | SQL | [[sql-python-csharp-transforms]] |
+| ...transform data in a database | SQL | [[sql-fundamentals]] |
 | ...call an API and load results | Python | [[rest-api-design-and-consumption]] |
 | ...schedule a daily job | Cloud Scheduler + Cloud Run Job | [[gcp-scheduling]] |
 | ...orchestrate 10+ dependent jobs | Airflow | [[airflow-core-concepts]] |
@@ -1002,8 +1001,7 @@ For rapid lookup when you just need the answer:
 - [[moc-infrastructure-as-code]] — Terraform and IaC overview
 
 #### Comparison references
-- [[sql-python-csharp-transforms]] — side-by-side code for the same transforms
-- [[etl-vs-elt]] — when to transform outside vs inside the warehouse
+
 - [[api-protocols-comparison]] — REST vs gRPC vs GraphQL vs WebSocket
 
 #### Implementation details

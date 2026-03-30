@@ -45,6 +45,6 @@ Firestore CRUD, queries, transactions, batches, real-time listeners, subcollecti
 - [[gcp-billing-and-pricing]] — Per-TB pricing for BigQuery queries and storage
 - [[dimensional-modeling]] — Star and snowflake schema design patterns
 - [[data-modeling-patterns]] — Reusable schema patterns across engines
-- [[sql-python-csharp-transforms]] — Side-by-side transform syntax comparison across languages
+
 - [[data-warehouse-architecture]] — When to use SQL Server vs BigQuery
 - [[16_py_database|Python Database]] — Python connection and query patterns

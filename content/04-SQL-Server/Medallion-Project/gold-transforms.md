@@ -811,7 +811,7 @@ ORDER BY date
 
 | Technique | Where | Why |
 |-----------|-------|-----|
-| `ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...)` | Latest-row queries | Get the most recent record per group without subquery (see [[sql-python-csharp-transforms]] for cross-language equivalents) |
+| `ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...)` | Latest-row queries | Get the most recent record per group without subquery |
 | `AVG() OVER (ROWS BETWEEN N PRECEDING AND CURRENT ROW)` | SMA computation | Moving averages computed entirely in SQL — no client-side loop |
 | `LAG(col, N) OVER (ORDER BY date)` | Price changes | Previous-day and 5-day-ago close for change % calculation |
 | `CASE WHEN cnt >= N THEN value END` | SMA validation | Only output MA if we have enough data points |

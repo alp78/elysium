@@ -34,6 +34,8 @@ How teams work in parallel without stepping on each other. Covers branch creatio
 
 * [[git-tagging-and-releases]] — lightweight vs annotated tags, pushing tags to GitHub, semantic versioning conventions, and marking production releases
 
+* [[merge-vs-rebase-vs-squash]] — Git merge strategies compared: standard merge, rebase, and squash merge — comparison table, history shape, when to use each, and team workflow implications
+
 ## Recovery & Reference — Undo, History, Errors, and Quick Reference
 
 When things go wrong, and the tools for investigating what happened. Covers every undo method from safe to destructive, history inspection, common error messages, and the full cheat sheet.

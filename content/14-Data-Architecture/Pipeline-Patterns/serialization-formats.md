@@ -6,7 +6,7 @@ tags: [data-architecture, architecture, pipeline, python]
 aliases: [serialization, data formats comparison, format decision matrix, JSON vs Parquet, Avro vs Protobuf, MessagePack, Pickle, compression codecs, Snappy, Zstd, Gzip, LZ4]
 keywords: [serialization, json, yaml, csv, parquet, avro, protobuf, messagepack, pickle, compression, snappy, zstd, gzip, lz4, schema, binary format, text format, kafka, gRPC, data lake, format comparison, encoding, decoding, schema evolution, cross-language]
 description: "Comprehensive comparison of every serialization format a data engineer encounters — JSON, YAML, CSV, MessagePack, Protobuf, Avro, Parquet, and Pickle — with a format decision matrix and compression codec comparison (Snappy, LZ4, Zstd, Gzip)."
-related: [awk-data-processing, parquet-files, date-and-time-handling, sql-python-csharp-transforms]
+related: [awk-data-processing, parquet-files, date-and-time-handling]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -152,7 +152,7 @@ Compression is orthogonal to format — most formats support multiple codecs. Ch
 - [[awk-data-processing|CSV processing with awk]] — Practical JSON and CSV processing in Bash, Python, PowerShell
 - parquet files — Parquet inspection, CSV↔Parquet conversion, partitioning and clustering
 - [[date-and-time-handling]] — Date formats and ISO 8601 for file naming conventions
-- [[sql-python-csharp-transforms]] — Where to transform: SQL vs Python vs C#
+
 
 ## Related
 - [[data-flow-architecture]] — format selection matrix by pipeline scenario and data movement topology

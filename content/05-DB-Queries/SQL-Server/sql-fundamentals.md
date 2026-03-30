@@ -182,7 +182,7 @@ ORDER BY ORDINAL_POSITION
 > | Temp tables | `#temp` (session-scoped) | `CREATE TEMP TABLE` (script-scoped) |
 > | Table path | `schema.table` | `` `project.dataset.table` `` |
 >
-> For the full cross-platform comparison including Python and C#, see [[sql-python-csharp-transforms]].
+> For the full cross-platform comparison including Python and C#, see [[05_py_aggregation_reshaping]] and [[05_cs_aggregation_reshaping]].
 
 ### SELECT, Filtering & Sorting — Basic SELECT with WHERE
 
