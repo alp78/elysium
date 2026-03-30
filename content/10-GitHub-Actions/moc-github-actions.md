@@ -4,36 +4,84 @@ tags:
   - moc
   - github-actions
   - ci-cd
+  - automation
 ---
 
 # MOC: GitHub Actions
 
-GitHub Actions automates build, test, and deployment workflows triggered by repository events. These notes cover everything from YAML workflow anatomy and trigger configuration through production-grade CI/CD patterns for data engineering teams deploying to GCP.
+CI/CD automation from YAML fundamentals to data engineering pipelines —
+6 pages covering workflow syntax, reusable patterns, deployment automation,
+and troubleshooting. Expand any section to browse page contents.
 
-## Workflow Fundamentals — Syntax, Triggers, and Core Mechanics
+```mermaid
+mindmap
+  ((Foundations and Patterns))
+    (fundamentals)
+    (workflows)
+    (patterns)
+```
+> [!example]- Foundations and Patterns
+>
+> > [!abstract]- [[github-actions-fundamentals]]
+> >
+> > - [[github-actions-fundamentals#Workflow File Anatomy|Workflow file anatomy]]
+> > - [[github-actions-fundamentals#Triggers (on)|Triggers]]
+> > - [[github-actions-fundamentals#Jobs|Jobs and runners]]
+> > - [[github-actions-fundamentals#Expressions and Contexts|Expressions and contexts]]
+> > - [[github-actions-fundamentals#Secrets|Secrets and GITHUB_TOKEN]]
+> > - [[github-actions-fundamentals#Caching|Caching and concurrency]]
+>
+> > [!abstract]- [[github-actions-workflows]]
+> >
+> > - [[github-actions-workflows#Key Patterns|Key patterns]]
+> > - [[github-actions-workflows#Matrix Testing|Matrix testing]]
+> > - [[github-actions-workflows#Manual Workflow Dispatch with Inputs|Manual dispatch with inputs]]
+> > - [[github-actions-workflows#Pre-commit Hooks|Pre-commit hooks]]
+>
+> > [!abstract]- [[github-actions-patterns]]
+> >
+> > - [[github-actions-patterns#Matrix Builds|Matrix builds]]
+> > - [[github-actions-patterns#Reusable Workflows|Reusable workflows]]
+> > - [[github-actions-patterns#Composite Actions|Composite actions]]
+> > - [[github-actions-patterns#Environment Protection (Staging → Production)|Environment protection]]
+> > - [[github-actions-patterns#Monorepo: Path Filters|Monorepo path filters]]
+> > - [[github-actions-patterns#Cost Optimization|Cost optimization]]
 
-How GitHub Actions works: workflow file structure, event triggers, runners, jobs, steps, secrets, caching, artifacts, and concurrency controls.
-
-* [[github-actions-fundamentals]] — workflow YAML anatomy, trigger events (push, PR, schedule, dispatch), runners, jobs and steps, secrets management, caching with actions/cache, artifacts, and concurrency groups
-
-* [[github-actions-ci-cd]] — connecting triggers to Git events, monitoring runs with the GitHub CLI (gh run list/view/watch), secrets management at repo and org level, and common CI/CD trigger patterns for data teams
-
-* [[github-actions-workflows]] — end-to-end CI/CD workflow structure for data engineering, Workload Identity Federation for keyless GCP auth, Docker build-and-push to Artifact Registry, Cloud Run deployment, and matrix testing
-
-## CI/CD Patterns and Data Engineering — Advanced Workflows and Automation
-
-Reusable patterns for production pipelines: matrix builds, composite actions, environment protection, Terraform automation, dbt CI, data quality gates, and troubleshooting common problems.
-
-* [[github-actions-patterns]] — matrix builds across Python versions and OS, reusable workflows with workflow_call, composite actions, environment protection rules, Terraform plan/apply automation, Docker build patterns, monorepo path filters, release automation, and cost optimization
-
-* [[github-actions-data-engineering]] — Python pipeline CI (lint + test), Cloud Run CD, dbt CI with slim builds, BigQuery dry-run SQL validation, Airflow DAG import checks, data quality gates with Great Expectations, Workload Identity Federation setup, Slack notifications, and cost monitoring
-
-* [[github-actions-problems]] — 20 production problems ranked by severity including supply chain attacks via pull_request_target, secret exposure, workflow injection, YAML untestability, cache misses, runner inconsistencies, matrix explosion, and action pinning strategies
+```mermaid
+mindmap
+  ((Applied Automation))
+    (CI/CD deployment)
+    (data engineering)
+    (troubleshooting)
+```
+> [!example]- Applied Automation
+>
+> > [!abstract]- [[github-actions-ci-cd]]
+> >
+> > - [[github-actions-ci-cd#How GitHub Actions Connects to Git|Git trigger events]]
+> > - [[github-actions-ci-cd#Monitoring Workflows with GitHub CLI|Monitoring with GitHub CLI]]
+> > - [[github-actions-ci-cd#Secrets Management|Secrets management]]
+> > - [[github-actions-ci-cd#Troubleshooting Common Errors|Troubleshooting common errors]]
+>
+> > [!abstract]- [[github-actions-data-engineering]]
+> >
+> > - [[github-actions-data-engineering#CI for Data Pipelines|CI for data pipelines]]
+> > - [[github-actions-data-engineering#Terraform Automation|Terraform automation]]
+> > - [[github-actions-data-engineering#dbt CI|dbt CI]]
+> > - [[github-actions-data-engineering#Data Quality Gates|Data quality gates]]
+> > - [[github-actions-data-engineering#Workload Identity Federation (Keyless GCP Auth)|Workload Identity Federation]]
+> > - [[github-actions-data-engineering#Troubleshooting|Troubleshooting]]
+>
+> > [!abstract]- [[github-actions-problems]]
+> >
+> > - [[github-actions-problems#Critical — Production Impact|Critical production impact]]
+> > - [[github-actions-problems#High — Team Velocity Killers|Team velocity killers]]
+> > - [[github-actions-problems#Moderate — Operational Pain|Operational pain]]
+> > - [[github-actions-problems#Low — Annoyances|Low-severity annoyances]]
 
 ## Cross-References
 
-- [[moc-git|Git]] — branching strategies that feed into CI triggers
-- [[terraform-registry-and-ci]] — provisions the CI service account and Artifact Registry
-- [[image-management]] — Docker build/push steps that Actions automates
-- [[service-accounts-and-iam]] — GCP IAM and Workload Identity Federation for keyless auth
-- [[moc-dataops|DataOps]] — DataOps principles and team practices
+- [[moc-git|Git]] — Git events that trigger GitHub Actions workflows
+- [[moc-terraform|Terraform]] — Terraform plan/apply automated via GitHub Actions
+- [[moc-docker|Docker]] — Docker build and push in CI/CD pipelines
+- [[moc-data-architecture|Data Architecture]] — Testing strategy that coordinates CI with quality gates

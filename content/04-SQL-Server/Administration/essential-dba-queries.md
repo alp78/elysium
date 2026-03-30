@@ -62,7 +62,7 @@ SELECT @@SERVERNAME AS server_name, @@SERVICENAME AS service_name,
 
 ### sys.databases — All Databases on the Instance
 
-> [!info] What This Shows
+> [!abstract] What This Shows
 >
 > Every database on the instance with its recovery model, compatibility level, and key flags. The `log_reuse_wait_desc` column is especially important — it tells you why the transaction log cannot be truncated.
 
@@ -89,7 +89,7 @@ ORDER BY name;
 
 ### sys.master_files — Database File Locations and Sizes
 
-> [!info] What This Shows
+> [!abstract] What This Shows
 >
 > Physical file paths, current size, max size, and growth settings for every data and log file across all databases. Use this to verify file placement (data and log on separate drives) and catch unlimited auto-growth settings.
 
@@ -114,7 +114,7 @@ ORDER BY d.name, mf.file_id;
 
 ### sys.configurations — Instance Configuration Settings
 
-> [!info] What This Shows
+> [!abstract] What This Shows
 >
 > Key instance-level settings that control memory allocation, parallelism, and backup behavior. Compare `value` (configured) vs `value_in_use` (active) — a mismatch means a `RECONFIGURE` or restart is pending.
 
@@ -146,7 +146,7 @@ ORDER BY name;
 
 ### Database Size Summary — Data vs Log Breakdown
 
-> [!info] What This Shows
+> [!abstract] What This Shows
 >
 > Total allocated size per database, split into data files and log files. This is the first query to run when investigating capacity — it tells you whether data or log growth is consuming space.
 
@@ -218,7 +218,7 @@ ORDER BY total_rows DESC;
 
 ### Index Sizes — Space Consumed per Index
 
-> [!info] What This Shows
+> [!abstract] What This Shows
 >
 > Total and used space for every index on every table. Use this to find oversized indexes that waste disk and slow down writes.
 
@@ -327,9 +327,11 @@ FROM sys.dm_exec_sessions
 WHERE is_user_process = 1
 GROUP BY login_name, program_name
 ORDER BY connections DESC;
--- program_name shows the application: "Python", "Microsoft JDBC", ".Net SqlClient", etc.
--- Spike in connections often precedes performance problems
 ```
+
+> [!tip] Connection Spikes Signal Trouble
+>
+> `program_name` identifies the application: Python, Microsoft JDBC, .Net SqlClient, etc. A sudden spike in connections often precedes performance problems — check for connection leaks or runaway retry loops.
 
 ---
 
@@ -346,8 +348,6 @@ FROM sys.dm_exec_requests r
 CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) st
 WHERE r.session_id > 50    -- exclude system sessions
 ORDER BY r.total_elapsed_time DESC;
--- status: running, suspended (waiting for resource), sleeping
--- If a query has high elapsed_time but low cpu_time, it's WAITING (not computing)
 ```
 
 > [!tip] Suspended Status
@@ -361,14 +361,11 @@ ORDER BY r.total_elapsed_time DESC;
 ```sql
 -- Kill a stuck session (last resort)
 KILL 82;
--- Terminates session 82 and rolls back any open transaction
--- ⚠️ ALWAYS check what the session is doing first (query above)
--- Killing a long-running transaction means rolling it back — which can take LONGER
 ```
 
-> [!warning] Kill With Caution
+> [!danger] Rollback Can Take Longer Than the Original Query
 >
-> Killing a session with a long-running open transaction will roll back all of its work. The rollback may take longer than the original operation. Always check elapsed time and reads before killing.
+> Killing a session with an open transaction triggers a ROLLBACK — which can take longer than letting the query finish. A 2-hour INSERT that's 90% done will take ~1.8 hours to roll back. Always check what the session is doing first with the Running Queries query above.
 
 ---
 
@@ -388,13 +385,17 @@ WHERE wait_type NOT IN (
     'BROKER_EVENTHANDLER','SQLTRACE_BUFFER_FLUSH','HADR_FILESTREAM_IOMGR_IOCOMPLETION')
 AND waiting_tasks_count > 0
 ORDER BY wait_time_ms DESC;
--- INTERPRETATION:
--- PAGEIOLATCH_* = disk I/O waits (solution: faster disk, more memory, index tuning)
--- LCK_M_* = lock waits (solution: shorter transactions, better isolation levels)
--- CXPACKET = parallelism waits (often benign; check MAXDOP settings)
--- SOS_SCHEDULER_YIELD = CPU pressure (solution: more CPU or optimize queries)
--- WRITELOG = transaction log writes slow (solution: faster disk for log file)
 ```
+
+> [!info] Common Wait Types
+>
+> | Wait type | Meaning | Fix |
+> |---|---|---|
+> | `PAGEIOLATCH_*` | Disk I/O waits | Faster disk, more memory, index tuning |
+> | `LCK_M_*` | Lock waits | Shorter transactions, RCSI |
+> | `CXPACKET` | Parallelism waits | Often benign — check MAXDOP settings |
+> | `SOS_SCHEDULER_YIELD` | CPU pressure | More CPU or optimize queries |
+> | `WRITELOG` | Transaction log writes slow | Faster disk for log file |
 
 ### Memory — Does SQL Server Have Enough?
 
@@ -404,9 +405,11 @@ SELECT physical_memory_kb / 1024 AS physical_mb,
        (SELECT cntr_value FROM sys.dm_os_performance_counters
         WHERE counter_name = 'Page life expectancy' AND object_name LIKE '%Buffer Manager%') AS PLE_sec
 FROM sys.dm_os_sys_info;
--- PLE > 300 = healthy (pages stay in memory)
--- PLE < 60 = memory pressure (SQL Server evicting data constantly = slow queries)
 ```
+
+> [!info] Page Life Expectancy Thresholds
+>
+> PLE > 300 = healthy (pages stay in memory). PLE < 60 = memory pressure — SQL Server is evicting data pages constantly, which means every query pays the cost of reading from disk.
 
 ### I/O Latency — Is the Disk Fast Enough?
 
@@ -430,25 +433,30 @@ SELECT r.session_id AS blocked, r.blocking_session_id AS blocker,
 FROM sys.dm_exec_requests r
 CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) st
 WHERE r.blocking_session_id > 0;
--- If blocking chains are frequent, your transactions are holding locks too long
--- Fix: shorter transactions, RCSI (Read Committed Snapshot Isolation)
 ```
+
+> [!tip] Frequent Blocking Means Long Transactions
+>
+> If blocking chains appear regularly, your transactions are holding locks too long. Fix: shorter transactions and RCSI (Read Committed Snapshot Isolation), which lets readers proceed without waiting for writers.
 
 ### Deadlocks — How Many Since Restart?
 
 ```sql
 SELECT cntr_value AS total_deadlocks FROM sys.dm_os_performance_counters
 WHERE counter_name = 'Number of Deadlocks/sec' AND instance_name = '_Total';
--- This is a CUMULATIVE counter (resets on restart)
--- If growing: review the deadlock Extended Events trace in the SQL Server tuning guide
 ```
+
+> [!info] Cumulative Counter
+>
+> This counter is cumulative and resets on SQL Server restart. If the value is growing between checks, review the deadlock Extended Events trace to identify the competing queries.
 
 ---
 
 ### System Health Dashboard (Single Query)
 
+Combines CPU, memory, I/O, and connection counts into a single row for a quick health snapshot.
+
 ```sql
--- Quick health check: CPU, memory, IO, connections
 SELECT
     (SELECT cpu_count FROM sys.dm_os_sys_info) AS logical_cpus,
     (SELECT physical_memory_kb / 1024 FROM sys.dm_os_sys_info) AS physical_memory_mb,

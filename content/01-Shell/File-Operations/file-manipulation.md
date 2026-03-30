@@ -128,7 +128,7 @@ rm -rf directory/          # force delete recursively (no confirmation)
 mv directory/ /tmp/delete_me_$(date +%Y%m%d)/
 ```
 
-> [!info] Prerequisites
+> [!tip] Prerequisites
 >
 > Before writing delete logic in scripts, enable [[defensive-scripting|set -euo pipefail]] -- `set -u` prevents the catastrophic `rm -rf $UNDEFINED` expansion, and `trap EXIT` ensures cleanup runs even on error.
 
@@ -207,7 +207,7 @@ chown -R 50000:0 /home/airflow/dags/
 
 #### du -sh — check directory size before copying or deleting
 
-> [!info] Check size before copy or delete
+> [!tip] Check size before copy or delete
 >
 > Always check the size of what you're about to copy or delete. `-s` gives a
 > summary total, `-h` makes it human-readable. For a full disk investigation workflow

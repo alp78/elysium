@@ -281,7 +281,7 @@ git clone --depth 1 https://github.com/org/repo.git
 
 ### pre-commit Framework — run checks before every commit
 
-> [!info] What Pre-Commit Hooks Do
+> [!abstract] What Pre-Commit Hooks Do
 >
 > Git hooks are scripts that run automatically at specific points in the Git workflow. Pre-commit hooks run BEFORE the commit is created — if they fail, the commit is aborted. This catches secrets, lint errors, and formatting issues before they reach the repo.
 

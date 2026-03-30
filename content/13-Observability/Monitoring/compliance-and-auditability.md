@@ -62,7 +62,6 @@ keywords:
   - five year retention
 related:
   - "[[pit-integrity-logic]]"
-  - "[[esg-data-ingestion-framework]]"
   - "[[dataops-for-indices]]"
   - "[[index-maintenance-and-corporate-actions]]"
 created: 2026-03-22
@@ -2308,6 +2307,5 @@ def validate_monitor_routing(api_key: str, app_key: str) -> bool:
 ## Appendix C: Related Notes
 
 - [[pit-integrity-logic]] — Point-in-time correctness for historical constituent data
-- [[esg-data-ingestion-framework]] — ESG data lineage and vendor governance
 - [[dataops-for-indices]] — Pipeline orchestration, testing, and deployment
 - [[index-maintenance-and-corporate-actions]] — Operational runbooks for specific action types

@@ -65,7 +65,7 @@ status: complete
 
 A practical how-to guide covering every major Airflow deployment option — from a local Docker Compose environment for development to managed cloud services for production. Includes configuration reference, DAG deployment strategies, secrets management, monitoring setup, and cost comparisons.
 
-> [!info] Prerequisites
+> [!tip] Prerequisites
 > Familiarity with [[airflow-core-concepts]] (Executors, Scheduler, Workers, Metadata DB) is assumed. This note focuses on infrastructure — not DAG authoring.
 
 ---

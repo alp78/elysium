@@ -36,7 +36,7 @@ Polars transforms → Silver → Polars aggregation → Gold → Parquet → Fas
 - **Structural integrity** (vertical) — pure transforms, typed contracts, quality gates, immutable models
 - **Semantic integrity** (horizontal) — column context, business context, temporal markers, lineage tracking
 
-> [!info] Pipeline Dependencies
+> [!abstract] Pipeline Dependencies
 >
 > All imports organized by category: stdlib, data, validation, database, serving, visualization.
 
@@ -1013,7 +1013,7 @@ print("persist_context() defined")
 
 #### SQL Server — define lineage persistence helper with `cursor.execute()`
 
-> [!info] Idempotent Lineage Persistence
+> [!tip] Idempotent Lineage Persistence
 >
 > Inserts a StageLineage into lineage_stages. Deletes any existing record for the same batch+stage first.
 
@@ -3910,7 +3910,7 @@ pl.DataFrame(lineage_records)
 
 #### JSON — read back persisted run context with `json.loads()`
 
-> [!info] Verify RunContext JSON
+> [!tip] Verify RunContext JSON
 >
 > Check the JSON file is complete and parseable. Shows business_context and temporal_context.
 

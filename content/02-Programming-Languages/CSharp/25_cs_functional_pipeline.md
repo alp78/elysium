@@ -1052,7 +1052,7 @@ Console.WriteLine("PersistContext() defined");
 
 #### SQL Server — define lineage persistence helper with `Execute()`
 
-> [!info] Idempotent Lineage Persistence
+> [!tip] Idempotent Lineage Persistence
 >
 > Inserts a StageLineage into lineage_stages. Deletes any existing record for the same batch+stage first.
 
@@ -3102,7 +3102,7 @@ lineageDt
 
 #### JSON — read back persisted run context with `JsonSerializer.Deserialize()`
 
-> [!info] Verify RunContext JSON
+> [!tip] Verify RunContext JSON
 >
 > Check the JSON file is complete and parseable. Shows business_context and temporal_context.
 

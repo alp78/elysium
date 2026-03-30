@@ -50,11 +50,9 @@ Tracks company attribute changes (sector, name, etc.) over time. When an attribu
 
 #### CREATE TABLE silver.index_dim — SCD Type 2 with valid_from, valid_to, is_current
 
-```sql
--- Slowly Changing Dimension Type 2: tracks attribute changes over time.
--- When a stock's sector, name, or other attribute changes, the old row is
--- "closed" (valid_to set, is_current=0) and a new row is inserted.
+SCD Type 2 (Slowly Changing Dimension Type 2) tracks attribute changes over time. When a stock's sector, name, or other attribute changes, the old row is "closed" (`valid_to` set, `is_current=0`) and a new row is inserted.
 
+```sql
 CREATE TABLE silver.index_dim (
     id                      INT IDENTITY(1,1) PRIMARY KEY,
     _index                  VARCHAR(20)     NOT NULL,
@@ -74,14 +72,13 @@ CREATE TABLE silver.index_dim (
 );
 GO
 
--- Filtered unique index: enforce ONE current record per (_index, symbol)
--- WHERE is_current = 1 means the uniqueness only applies to active rows;
--- historical (closed) rows can have duplicates.
 CREATE UNIQUE INDEX UX_silver_index_dim_current
     ON silver.index_dim (_index, symbol) WHERE is_current = 1;
 GO
 ```
 
+> [!info] Filtered unique index
+> The `WHERE is_current = 1` clause creates a filtered unique index: uniqueness is enforced only on active rows. Historical (closed) rows can have duplicate `(_index, symbol)` pairs because they represent different time periods. This is what makes SCD Type 2 work without violating uniqueness.
 
 #### SCD Type 2 example — silver.index_dim state after attribute change
 
@@ -92,14 +89,12 @@ GO
 
 ### silver.signals_daily — Deduplicated Daily Signals
 
-One row per `(_index, symbol, signal_date)` — no duplicates. Bronze gets truncated every run; silver preserves the full history.
+> [!info] Deduplication strategy
+> One row per `(_index, symbol, signal_date)` — no duplicates. Bronze gets truncated every run; silver preserves the full history.
 
 #### CREATE TABLE silver.signals_daily — UNIQUE constraint on (symbol, date)
 
 ```sql
--- One row per (_index, symbol, signal_date) — no duplicates.
--- Bronze gets truncated every run; silver preserves the full history.
-
 CREATE TABLE silver.signals_daily (
     id                      INT IDENTITY(1,1) PRIMARY KEY,
     _index                  VARCHAR(20)     NOT NULL,
@@ -114,7 +109,6 @@ CREATE TABLE silver.signals_daily (
 );
 GO
 
--- UNIQUE: prevents duplicate rows for the same stock on the same day
 CREATE UNIQUE INDEX IX_silver_signals_daily_symbol_date
     ON silver.signals_daily (_index, symbol, signal_date);
 GO
@@ -124,8 +118,9 @@ GO
 
 #### CREATE TABLE silver.signals_quarterly — UNIQUE constraint on (symbol, quarter)
 
+Same deduplication pattern: one row per `(_index, symbol, as_of_date)`.
+
 ```sql
--- Same pattern: one row per (_index, symbol, as_of_date)
 CREATE TABLE silver.signals_quarterly (
     id                      INT IDENTITY(1,1) PRIMARY KEY,
     _index                  VARCHAR(20)     NOT NULL,

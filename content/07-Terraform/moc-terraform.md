@@ -46,7 +46,7 @@ mindmap
 > >
 > > - [[terraform-providers-and-backend#Provider and Backend Configuration|Provider and backend configuration]]
 > > - [[terraform-providers-and-backend#Why Remote State?|Why remote state]]
-> > - [[terraform-providers-and-backend#The `required_providers` Block|Required providers block]]
+> > - [[terraform-providers-and-backend#The terraform Block|The terraform block]]
 >
 > > [!abstract]- [[terraform-state-management]]
 > >
@@ -98,7 +98,7 @@ mindmap
 > > - [[terraform-iam-and-secrets#IAM Bindings|IAM bindings]]
 > > - [[terraform-iam-and-secrets#Secret Manager — secrets.tf|Secret Manager]]
 > > - [[terraform-iam-and-secrets#Conditional Datadog Resources|Conditional Datadog resources]]
-> > - [[terraform-iam-and-secrets#CI/CD Service Account — ci.tf|CI service account]]
+> > - [[terraform-iam-and-secrets#CI IAM Bindings|CI IAM bindings]]
 >
 > > [!abstract]- [[terraform-cloud-run]]
 > >
@@ -112,7 +112,7 @@ mindmap
 > >
 > > - [[terraform-registry-and-ci#Artifact Registry — registry.tf|Artifact Registry]]
 > > - [[terraform-registry-and-ci#Cleanup Policies|Cleanup policies]]
-> > - [[terraform-registry-and-ci#CI/CD Service Account — ci.tf|CI service account]]
+> > - [[terraform-registry-and-ci#IAM Bindings|CI IAM bindings]]
 > > - [[terraform-registry-and-ci#GitHub Actions Workflow Integration|GitHub Actions integration]]
 
 ```mermaid
@@ -161,10 +161,10 @@ mindmap
 >
 > > [!abstract]- [[terraform-problems]]
 > >
-> > - [[terraform-problems#Critical — Infrastructure Destruction / Data Loss|Critical problems]]
-> > - [[terraform-problems#High — Infrastructure Drift / Team Blocking|High severity drift and blocking]]
+> > - [[terraform-problems#Critical — Infrastructure Destruction|Critical problems]]
+> > - [[terraform-problems#High — Infrastructure Drift|High severity drift and blocking]]
 > > - [[terraform-problems#Moderate — Operational Pain|Moderate operational pain]]
-> > - [[terraform-problems#Low — Annoyances / Team Friction|Low severity annoyances]]
+> > - [[terraform-problems#Low — Annoyances|Low severity annoyances]]
 
 ```mermaid
 mindmap
@@ -191,7 +191,7 @@ mindmap
 > > - [[tf-compute-and-storage#Disk Management|Disk management]]
 > > - [[tf-compute-and-storage#Cloud Storage Blocks|Cloud Storage blocks]]
 > > - [[tf-compute-and-storage#Bucket IAM — Grant Access to Members|Bucket IAM]]
-> > - [[tf-compute-and-storage#Bucket Notification — Trigger Pub/Sub on Object Finalize|Bucket notifications]]
+> > - [[tf-compute-and-storage#Bucket Notification — Trigger Pub|Bucket notifications]]
 >
 > > [!abstract]- [[tf-data-services]]
 > >
@@ -207,7 +207,7 @@ mindmap
 > > - [[tf-iam-secrets-serverless#Secret Manager Blocks|Secret Manager blocks]]
 > > - [[tf-iam-secrets-serverless#Cloud Run Blocks|Cloud Run blocks]]
 > > - [[tf-iam-secrets-serverless#Cloud Functions Blocks|Cloud Functions blocks]]
-> > - [[tf-iam-secrets-serverless#Pub/Sub Blocks|Pub/Sub blocks]]
+> > - [[tf-iam-secrets-serverless#Topic|Pub/Sub blocks]]
 > > - [[tf-iam-secrets-serverless#Artifact Registry Blocks|Artifact Registry blocks]]
 
 ## Cross-References

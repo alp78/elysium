@@ -71,7 +71,7 @@ The pyramid reads bottom-to-top: the base (unit tests) runs the most tests at th
 
 Unit tests validate individual functions, SQL transforms, and dbt models in isolation. They are the fastest, cheapest, and most numerous tests in the pyramid.
 
-> [!info] How Unit Tests Work
+> [!abstract] How Unit Tests Work
 >
 > Feed a known input DataFrame or SQL result into a transform function and assert the output matches expected values. No database, no network, no external dependencies. Pure logic verification.
 >
@@ -90,7 +90,7 @@ Unit tests validate individual functions, SQL transforms, and dbt models in isol
 
 Quality assertions validate data properties at layer boundaries: nulls, counts, ranges, uniqueness, and freshness. They run after every pipeline execution, not just in CI.
 
-> [!info] How Quality Assertions Work
+> [!abstract] How Quality Assertions Work
 >
 > After each pipeline stage writes its output, run a set of checks against the result:
 >
@@ -114,7 +114,7 @@ Quality assertions validate data properties at layer boundaries: nulls, counts, 
 
 Contract tests verify that source data matches the expected schema before any transform runs. They are the only defense against upstream changes.
 
-> [!info] How Contract Tests Work
+> [!abstract] How Contract Tests Work
 >
 > Define the expected schema (column names, types, nullability, value ranges) in a contract file or dbt source YAML. On every ingestion, validate the incoming data against the contract. If a column is missing, renamed, or has a new type, the test fails before the data enters bronze.
 >
@@ -133,7 +133,7 @@ Contract tests verify that source data matches the expected schema before any tr
 
 Integration tests run the pipeline end-to-end with real connections but test data. They catch the "works in dev, breaks in prod" failures that unit tests cannot.
 
-> [!info] How Integration Tests Work
+> [!abstract] How Integration Tests Work
 >
 > Spin up a real database (Docker SQL Server in GitHub Actions), load test fixtures (100-1000 rows of known data), run the full bronze → silver → gold flow, and assert the output shape and values.
 >
@@ -151,7 +151,7 @@ Integration tests run the pipeline end-to-end with real connections but test dat
 
 E2E tests validate the complete pipeline from data fetch through gold output, including orchestration, quality gates, and export. They catch multi-step regressions that no single-layer test can detect.
 
-> [!info] How E2E Tests Work
+> [!abstract] How E2E Tests Work
 >
 > Run the full pipeline (or a representative subset) on a fixed test dataset. Compare the gold output against a "golden file" — a known-correct reference output. Flag any difference above a tolerance threshold (exact match for integers, ±0.01 for floats).
 >

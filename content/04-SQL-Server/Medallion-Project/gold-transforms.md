@@ -606,10 +606,9 @@ The Blazor dashboard reads gold tables through C# repositories using Dapper. All
 
 #### ROW_NUMBER() PARTITION BY _index — most recent performance per index
 
-```sql
--- IndexPerformanceRepository.GetLatestSnapshotAsync()
--- Returns one row per index with the most recent performance data
+Maps to `IndexPerformanceRepository.GetLatestSnapshotAsync()` — returns one row per index with the most recent performance data.
 
+```sql
 SELECT p._index AS [Index],
        p.perf_date AS PerfDate,
        p.daily_return AS DailyReturn,
@@ -640,10 +639,9 @@ ORDER BY p._index
 
 #### SELECT WHERE _index = @idx AND perf_date BETWEEN — full time series query
 
-```sql
--- IndexPerformanceRepository.GetPerformanceAsync()
--- Full time series, optionally filtered by index and date range
+Maps to `IndexPerformanceRepository.GetPerformanceAsync()` — full time series, optionally filtered by index and date range.
 
+```sql
 SELECT _index AS [Index],
        perf_date AS PerfDate,
        daily_return AS DailyReturn,
@@ -667,10 +665,9 @@ ORDER BY _index, perf_date
 
 #### CTE MAX(score_date) — latest factor scores for all stocks in an index
 
-```sql
--- ScoresRepository.GetDailyScoresAsync()
--- Latest scores for all stocks in an index (or all indices)
+Maps to `ScoresRepository.GetDailyScoresAsync()` — latest scores for all stocks in an index (or all indices).
 
+```sql
 WITH max_dates AS (
     -- Find the latest score_date per index
     SELECT _index, MAX(score_date) AS max_date
@@ -716,9 +713,9 @@ ORDER BY sd._index, sd.index_weight DESC
 
 #### ROW_NUMBER() PARTITION BY symbol — deduplicate to one row per stock
 
-```sql
--- ScoresRepository.GetQuarterlyScoresAsync()
+Maps to `ScoresRepository.GetQuarterlyScoresAsync()` — deduplicates to one row per stock using the most recent quarter.
 
+```sql
 WITH latest AS (
     SELECT *,
            ROW_NUMBER() OVER (
@@ -755,10 +752,9 @@ ORDER BY _index, quality_rank
 
 #### AVG() OVER ROWS BETWEEN — server-side SMA correct at date boundaries
 
-```sql
--- StockRepository.GetOhlcvAsync()
--- Computes SMA 30/90 via SQL window functions to avoid client-side recalculation
+Maps to `StockRepository.GetOhlcvAsync()` — computes SMA 30/90 via SQL window functions to avoid client-side recalculation.
 
+```sql
 WITH cte AS (
     SELECT symbol, date,
            [open], high, low, [close], adj_close, volume,
@@ -837,10 +833,9 @@ SELECT _index, MAX(perf_date) FROM gold.index_performance GROUP BY _index
 ```sql
 -- Delete stale gold rows if needed
 DELETE FROM gold.index_performance WHERE perf_date > CAST(GETDATE() AS DATE);
-
--- Then re-run pipeline to rebuild:
--- gcloud run jobs execute analytics-pipeline --region=europe-west1 --args='--from,14,--to,16'
 ```
+
+Then re-run the pipeline to rebuild: `gcloud run jobs execute analytics-pipeline --region=europe-west1 --args='--from,14,--to,16'`
 
 ---
 

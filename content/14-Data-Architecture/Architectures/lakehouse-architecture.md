@@ -93,7 +93,7 @@ Object storage (GCS, S3) has no native transaction support — it is a key-value
 - **Isolation:** multiple writers can operate concurrently using optimistic concurrency control; conflicts are detected and the losing writer retries.
 - **Durability:** once committed to the transaction log (which is itself written to object storage), a write is permanent.
 
-> [!info] How Delta Lake Achieves Atomicity
+> [!abstract] How Delta Lake Achieves Atomicity
 > Delta Lake writes new Parquet files to the storage location, then atomically updates a `_delta_log/` transaction log entry. Readers query the log first to determine which files constitute the current table state. Files not referenced in the log are invisible — partial writes simply never appear in the log.
 
 ### Schema Enforcement and Evolution

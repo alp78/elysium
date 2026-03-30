@@ -117,7 +117,7 @@ Set-Service -Name "MSSQLSERVER" -StartupType Automatic
 
 #### Get-Service -DependentServices — check what else stops
 
-> [!info] Check dependent services
+> [!tip] Check dependent services
 >
 > Shows services that depend on this one. Stopping SQL Server may also stop
 > SQL Server Agent, SSIS, or other dependent services.

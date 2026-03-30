@@ -161,7 +161,7 @@ For the gcloud reference, see [[gcloud-authentication#The ADC Credential Search 
 
 ### Metadata Server (GCE VMs, Cloud Run) — the production standard
 
-> [!info] How the Metadata Server Works
+> [!abstract] How the Metadata Server Works
 >
 > Every GCE VM and Cloud Run instance has access to a local metadata server at `169.254.169.254`. The VM's attached service account is the identity. Code calls the metadata server, gets a short-lived token, and uses it — no credentials to manage, rotate, or leak.
 

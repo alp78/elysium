@@ -43,7 +43,6 @@ keywords:
   - flat-rate slots
 related:
   - "[[pit-integrity-logic]]"
-  - "[[esg-data-ingestion-framework]]"
   - "[[compliance-and-auditability]]"
   - "[[golden-rules-of-data-engineering]]"
 created: 2026-03-22
@@ -716,7 +715,7 @@ ORDER BY days_stale DESC;
 ```
 
 > [!note] See also
-> [[esg-data-ingestion-framework]] for the upstream ingestion pipeline that feeds the `esg_scores` table validated here.
+>  for the upstream ingestion pipeline that feeds the `esg_scores` table validated here.
 
 ---
 

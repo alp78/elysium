@@ -26,7 +26,7 @@ Cloud Scheduler is Google's fully managed cron-as-a-service. You define a schedu
 
 Think of it as replacing the cron tab entry on a VM with a managed, durable, monitored, multi-region service. The scheduler itself is regional but survives single-zone outages.
 
-> [!info] Required API
+> [!tip] Required API
 > Enable before first use: `gcloud services enable cloudscheduler.googleapis.com`
 > Cloud Scheduler requires an App Engine application in the project (it uses App Engine's scheduling infrastructure internally). Run `gcloud app create --region=europe-west1` if the project has no App Engine app yet.
 
@@ -405,7 +405,7 @@ Cloud Workflows is a fully managed, serverless workflow engine. You define multi
 
 **The key differentiator from Cloud Composer (Airflow):** Cloud Workflows is lightweight and has no infrastructure to manage. Cloud Composer provisions a managed Airflow environment (GKE cluster + database) with significant overhead ($200–500/month minimum). For workflows with fewer than 20 steps and no complex dependency graphs, Cloud Workflows is dramatically cheaper and simpler.
 
-> [!info] Required API
+> [!tip] Required API
 > `gcloud services enable workflows.googleapis.com`
 
 ---

@@ -312,7 +312,7 @@ FROM {{ ref('stg_yahoo_ohlcv') }}
 WHERE trade_date > GETDATE()
 ```
 
-> [!info] How dbt Tests Work
+> [!abstract] How dbt Tests Work
 > A dbt test is a SQL query that **returns rows on failure**. If the query returns 0 rows, the test passes. If it returns any rows, the test fails. Custom tests in `tests/` are just SQL files — they can be as complex as your business rules require.
 
 ---

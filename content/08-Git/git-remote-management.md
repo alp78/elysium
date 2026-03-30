@@ -36,7 +36,7 @@ upstream  https://github.com/original-org/repo.git (fetch)
 upstream  https://github.com/original-org/repo.git (push)
 ```
 
-> [!info] What origin Means
+> [!abstract] What origin Means
 >
 > What "origin" means.
 > `origin` is just the conventional default name Git assigns to the remote you cloned from. It is not special — you can rename it. `upstream` is the community convention for the original repo when working with a fork.

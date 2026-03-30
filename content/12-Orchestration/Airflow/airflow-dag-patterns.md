@@ -63,7 +63,7 @@ status: complete
 
 A reference for the most important Apache Airflow DAG authoring patterns used in production data engineering. This note covers how to express complex workflow logic in DAGs: dependencies, grouping, dynamic generation, branching, and scheduling strategies.
 
-> [!info] Prerequisites
+> [!tip] Prerequisites
 > This note assumes familiarity with Airflow fundamentals. See [[airflow-core-concepts]] for DAG structure, Operators, Sensors, XComs, and the TaskFlow API before reading this reference.
 
 ---

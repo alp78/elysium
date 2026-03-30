@@ -3,116 +3,421 @@ title: "MOC: SQL Server"
 tags:
   - moc
   - sql-server
-  - t-sql
+  - tsql
   - database
 ---
 
 # MOC: SQL Server
 
-This map covers SQL Server 2022 on Linux (GCP Compute Engine) from the perspective of a data engineer who owns the full stack: provisioning, security, performance tuning, pipeline loading, and the medallion architecture that sits on top. Pages are grouped by role so you can navigate by what you need to do, not by where the file lives.
+SQL Server from instance administration through query optimization to
+pipeline construction — covering operations, storage internals, T-SQL craft,
+performance tuning, security, and the medallion pipeline implementation.
+Expand any section to browse page contents.
 
-## Administration & High Availability — Standing Up and Operating the Instance
+```mermaid
+mindmap
+  ((Server Operations))
+    (server configuration)
+    (sqlcmd connection)
+    (essential DBA queries)
+    (Agent jobs)
+    (backup strategy)
+    (restore and recovery)
+    (FinOps cost optimization)
+    (HA overview)
+    (Always On AGs)
+    (production problems)
+    (troubleshooting flowcharts)
+```
 
-Everything required to provision, configure, back up, restore, and keep a SQL Server instance running in production. Starts with initial setup and ends with multi-replica high availability.
+> [!example]- Server Operations
+>
+> > [!abstract]- [[server-configuration]]
+> >
+> > - [[server-configuration#Tier 1: Non-Negotiable (Do Before Going to Production)|Non-negotiable production settings]]
+> > - [[server-configuration#Set Max Server Memory|Max server memory]]
+> > - [[server-configuration#Recovery Model|Recovery model selection]]
+> > - [[server-configuration#Enable Read Committed Snapshot Isolation (RCSI)|RCSI enablement]]
+> > - [[server-configuration#Linux OS Tuning (for SQL Server on Linux)|Linux OS tuning]]
+> > - [[server-configuration#TempDB Configuration|TempDB configuration]]
+>
+> > [!abstract]- [[sqlcmd-connection-and-usage]]
+> >
+> > - [[sqlcmd-connection-and-usage#Connecting — The First Step in Every Database Operation|Connection flags and syntax]]
+> > - [[sqlcmd-connection-and-usage#Connecting Through IAP Tunnel (GCP)|IAP tunnel connections]]
+> > - [[sqlcmd-connection-and-usage#Scripted Connection Testing|Scripted connection testing]]
+> > - [[sqlcmd-connection-and-usage#Dedicated Admin Connection (DAC)|Dedicated admin connection]]
+> > - [[sqlcmd-connection-and-usage#Scripting Variables|Scripting variables]]
+>
+> > [!abstract]- [[essential-dba-queries]]
+> >
+> > - [[essential-dba-queries#Server Information|Server information]]
+> > - [[essential-dba-queries#Space and Size|Space and size analysis]]
+> > - [[essential-dba-queries#Active Connections|Active connections]]
+> > - [[essential-dba-queries#Currently Running Queries|Currently running queries]]
+> > - [[essential-dba-queries#The Diagnostic Five (Run These First)|The diagnostic five]]
+>
+> > [!abstract]- [[sql-server-agent-jobs]]
+> >
+> > - [[sql-server-agent-jobs#SQL Server Agent on Linux — Enabling and Configuring|Enabling Agent on Linux]]
+> > - [[sql-server-agent-jobs#Agent Architecture|Agent architecture]]
+> > - [[sql-server-agent-jobs#Creating and Managing Jobs|Creating and managing jobs]]
+> > - [[sql-server-agent-jobs#Job Triggering in the GCP + SQL Server Stack|Job triggering comparison]]
+> > - [[sql-server-agent-jobs#Monitoring Agent Jobs from GCP|Monitoring from GCP]]
+>
+> > [!abstract]- [[backup-types-and-strategy]]
+> >
+> > - [[backup-types-and-strategy#Backup Types|Backup types comparison]]
+> > - [[backup-types-and-strategy#T-SQL Backup Commands|T-SQL backup commands]]
+> > - [[backup-types-and-strategy#The 3-2-1 Backup Rule|The 3-2-1 rule]]
+> > - [[backup-types-and-strategy#Recovery Model Decision Matrix|Recovery model decision matrix]]
+> > - [[backup-types-and-strategy#Production HA Backup Schedule|Production backup schedule]]
+>
+> > [!abstract]- [[restore-and-recovery]]
+> >
+> > - [[restore-and-recovery#Full Restore|Full restore]]
+> > - [[restore-and-recovery#Point-in-Time Recovery (PITR)|Point-in-time recovery]]
+> > - [[restore-and-recovery#Restore to a New Database (Side-by-Side)|Side-by-side restore]]
+> > - [[restore-and-recovery#Monitoring Recovery Progress After a Crash|Monitoring recovery progress]]
+>
+> > [!abstract]- [[finops-cost-optimization]]
+> >
+> > - [[finops-cost-optimization#Persistent Disk Snapshot Schedules|Disk snapshot schedules]]
+> > - [[finops-cost-optimization#Committed Use Discounts (CUDs) vs Spot Instances|CUDs vs spot instances]]
+> > - [[finops-cost-optimization#Right-Sizing and Cost Monitoring|Right-sizing and cost monitoring]]
+> > - [[finops-cost-optimization#SQL Server Storage Optimization|Storage optimization]]
+>
+> > [!abstract]- [[high-availability-overview]]
+> >
+> > - [[high-availability-overview#Why High Availability?|Why high availability]]
+> > - [[high-availability-overview#HA Options for SQL Server 2022 on Linux|HA options comparison]]
+> > - [[high-availability-overview#Setting Up Always On Availability Groups on Linux (GCP)|AG setup on Linux]]
+> > - [[high-availability-overview#Monitoring the AG — Essential DMVs|AG monitoring DMVs]]
+> > - [[high-availability-overview#Failover Operations|Failover operations]]
+> > - [[high-availability-overview#GCP-Specific HA Considerations|GCP-specific considerations]]
+>
+> > [!abstract]- [[always-on-availability-groups]]
+> >
+> > - [[always-on-availability-groups#HA Options for SQL Server 2022 on Linux|HA options comparison]]
+> > - [[always-on-availability-groups#Setting Up Always On AGs on Linux (GCP)|Step-by-step AG setup]]
+> > - [[always-on-availability-groups#Monitoring the AG — Essential DMVs|Monitoring DMVs]]
+> > - [[always-on-availability-groups#Failover Operations|Failover operations]]
+> > - [[always-on-availability-groups#Troubleshooting|Troubleshooting five common issues]]
+>
+> > [!abstract]- [[sql-server-problems]]
+> >
+> > - [[sql-server-problems#Transaction Log Full|Transaction log full]]
+> > - [[sql-server-problems#Data Disk Full|Data disk full]]
+> > - [[sql-server-problems#Parameter Sniffing|Parameter sniffing]]
+> > - [[sql-server-problems#Moderate — Operational Pain|Moderate operational pain]]
+> > - [[sql-server-problems#SQL Server on Linux Gotchas|Linux-specific gotchas]]
+>
+> > [!abstract]- [[troubleshooting-flowcharts]]
+> >
+> > - [[troubleshooting-flowcharts#Flowchart 1: "Why Is It Slow?" — The Master Flowchart|Why is it slow]]
+> > - [[troubleshooting-flowcharts#Flowchart 2: "Pipeline Failed" — Data Pipeline Troubleshooting|Pipeline failure diagnosis]]
+> > - [[troubleshooting-flowcharts#Flowchart 3: "Should I Add an Index?" — Index Decision Tree|Index decision tree]]
+> > - [[troubleshooting-flowcharts#Flowchart 4: "Disk Space Emergency" — Storage Recovery|Disk space emergency]]
 
-* [[server-configuration]] — max server memory, RCSI, TempDB tuning, recovery models, and Linux OS settings (swappiness, THP, I/O scheduler) for SQL Server on GCP
+```mermaid
+mindmap
+  ((Storage Internals))
+    (storage internals)
+    (index types and strategy)
+    (table compression)
+    (partitioning strategies)
+```
 
-* [[sqlcmd-connection-and-usage]] — connecting via classic sqlcmd and go-sqlcmd, all common flags (-S -U -P -d -C), inline queries, script execution, and CSV export
+> [!example]- Storage Internals
+>
+> > [!abstract]- [[storage-internals]]
+> >
+> > - [[storage-internals#Database File Architecture|Database file architecture]]
+> > - [[storage-internals#Page Anatomy|Page anatomy]]
+> > - [[storage-internals#The Transaction Log (.ldf) — How WAL Works|Transaction log and WAL]]
+> > - [[storage-internals#CRUD Operations — The Full Internal Flow|CRUD operations at page level]]
+> > - [[storage-internals#Index Structures at the Page Level|Index structures at page level]]
+> > - [[storage-internals#The Buffer Pool — SQL Server's Memory Manager|Buffer pool memory manager]]
+>
+> > [!abstract]- [[index-types-and-strategy]]
+> >
+> > - [[index-types-and-strategy#Index Types — What They Are and When to Use Each|Index types overview]]
+> > - [[index-types-and-strategy#Exploring Existing Indexes|Exploring existing indexes]]
+> > - [[index-types-and-strategy#Index Usage Analysis — Are Your Indexes Being Used?|Index usage analysis]]
+> > - [[index-types-and-strategy#Creating Indexes — All Flavors|Creating indexes]]
+> > - [[index-types-and-strategy#Statistics — The Optimizer's Data Map|Statistics management]]
+> > - [[index-types-and-strategy#Pipeline Index Strategy|Pipeline index strategy]]
+>
+> > [!abstract]- [[table-compression]]
+> >
+> > - [[table-compression#Compression Types|Row vs page compression]]
+> > - [[table-compression#When to Apply Page Compression|When to apply page compression]]
+> > - [[table-compression#Estimating Compression Savings Before Applying|Estimating savings]]
+> > - [[table-compression#Applying Compression|Applying compression]]
+> > - [[table-compression#Pipeline Compression Strategy|Pipeline compression strategy]]
+>
+> > [!abstract]- [[partitioning-strategies]]
+> >
+> > - [[partitioning-strategies#How SQL Server Partitioning Works|How partitioning works]]
+> > - [[partitioning-strategies#SWITCH — Millisecond Partition Operations|Partition SWITCH operations]]
+> > - [[partitioning-strategies#Adding New Partitions — Sliding Window Pattern|Sliding window pattern]]
+> > - [[partitioning-strategies#Monitoring Partitioned Tables|Monitoring partitioned tables]]
+> > - [[partitioning-strategies#Partitioning Decision Tree|Partitioning decision tree]]
 
-* [[sql-server-agent-jobs]] — enabling Agent on Linux, creating jobs and schedules, built-in CDC/backup agents, and a five-way comparison of Agent vs Airflow vs cron vs Cloud Scheduler vs Cloud Functions
+```mermaid
+mindmap
+  ((Query Craft and Performance))
+    (SARGable queries)
+    (MERGE and upsert)
+    (date and time functions)
+    (execution plans)
+    (query plan analysis)
+    (wait stats analysis)
+    (memory and buffer pool)
+    (index maintenance)
+    (performance audit)
+    (pipeline integration)
+    (PIT integrity logic)
+```
 
-* [[essential-dba-queries]] — DMV diagnostic toolkit for incidents: server version, database sizes, active connections, running queries, blocking chains, and cumulative wait statistics
+> [!example]- Query Craft and Performance
+>
+> > [!abstract]- [[sargable-queries]]
+> >
+> > - [[sargable-queries#SARGable vs Non-SARGable — Functions on Columns|Functions on columns]]
+> > - [[sargable-queries#Detecting Non-SARGable Predicates in Execution Plans|Detecting in execution plans]]
+> > - [[sargable-queries#Implicit Conversions — The Silent Killer|Implicit conversions]]
+> > - [[sargable-queries#SARGability Quick Reference for the Pipeline|Pipeline quick reference]]
+>
+> > [!abstract]- [[merge-and-upsert]]
+> >
+> > - [[merge-and-upsert#The Four Load Patterns at a Glance|Four load patterns]]
+> > - [[merge-and-upsert#Strategy 3: SCD Type 2 — Close Old, Insert New (Silver Dimensions)|SCD Type 2 pattern]]
+> > - [[merge-and-upsert#T-SQL MERGE Statement (Atomic Upsert)|T-SQL MERGE statement]]
+> > - [[merge-and-upsert#Transaction Management|Transaction management]]
+> > - [[merge-and-upsert#Transaction Management|Transaction management]]
+>
+> > [!abstract]- [[date-and-time-functions]]
+> >
+> > - [[date-and-time-functions#ISO 8601 — The Only Date Format You Should Use|ISO 8601 formats]]
+> > - [[date-and-time-functions#Parsing and Formatting|Parsing and formatting]]
+> > - [[date-and-time-functions#Timezone Conversion with AT TIME ZONE|Timezone conversion]]
+> > - [[date-and-time-functions#Practical Pipeline Date Patterns|Pipeline date patterns]]
+> > - [[date-and-time-functions#DST Pitfalls That Break Pipelines|DST pitfalls]]
+>
+> > [!abstract]- [[execution-plans]]
+> >
+> > - [[execution-plans#Reading the Visual Tree in SSMS|Reading the visual tree]]
+> > - [[execution-plans#Getting Plans from the Pipeline (Non-SSMS)|Getting plans from the pipeline]]
+> > - [[execution-plans#Cost Analysis — Finding the Most Expensive Operator|Cost analysis]]
+> > - [[execution-plans#Cardinality Estimation — Detecting Bad Row Count Guesses|Cardinality estimation]]
+> > - [[execution-plans#Parameter Sniffing|Parameter sniffing]]
+> > - [[execution-plans#Batch Mode Execution|Batch mode execution]]
+>
+> > [!abstract]- [[query-plan-analysis]]
+> >
+> > - [[query-plan-analysis#How to Read an Execution Plan|Reading an execution plan]]
+> > - [[query-plan-analysis#Capturing Plans from the Pipeline (Without SSMS)|Capturing plans programmatically]]
+> > - [[query-plan-analysis#Cardinality Estimation — Detecting Bad Row Count Guesses|Cardinality estimation]]
+> > - [[query-plan-analysis#Parameter Sniffing|Parameter sniffing]]
+> > - [[query-plan-analysis#Query Store Setup and Regression Detection|Query Store regression detection]]
+>
+> > [!abstract]- [[wait-stats-analysis]]
+> >
+> > - [[wait-stats-analysis#System Health Dashboard — First Check|System health dashboard]]
+> > - [[wait-stats-analysis#Top Waits Query — The Primary Diagnostic|Top waits query]]
+> > - [[wait-stats-analysis#Top Resource-Consuming Queries|Top resource consumers]]
+> > - [[wait-stats-analysis#TempDB Contention Detection|TempDB contention]]
+> > - [[wait-stats-analysis#Query Store — Regression Detection|Query Store regression detection]]
+>
+> > [!abstract]- [[memory-and-buffer-pool]]
+> >
+> > - [[memory-and-buffer-pool#Memory Sizing Rule|Memory sizing rule]]
+> > - [[memory-and-buffer-pool#Page Life Expectancy (PLE)|Page life expectancy]]
+> > - [[memory-and-buffer-pool#Memory Clerks — Where Memory Is Being Used|Memory clerks]]
+> > - [[memory-and-buffer-pool#Pending Memory Grants|Pending memory grants]]
+> > - [[memory-and-buffer-pool#Memory Pressure Diagnosis Flow|Memory pressure diagnosis]]
+>
+> > [!abstract]- [[index-maintenance]]
+> >
+> > - [[index-maintenance#Fragmentation Detection|Fragmentation detection]]
+> > - [[index-maintenance#REORGANIZE — Online, Lightweight|REORGANIZE]]
+> > - [[index-maintenance#REBUILD — Heavier, More Thorough|REBUILD]]
+> > - [[index-maintenance#Automated Maintenance Script|Automated maintenance script]]
+> > - [[index-maintenance#Pipeline Maintenance Schedule|Pipeline maintenance schedule]]
+> > - [[index-maintenance#Index Discovery|Index discovery queries]]
+>
+> > [!abstract]- [[performance-audit-playbook]]
+> >
+> > - [[performance-audit-playbook#Phase 1: Instance Overview|Instance overview]]
+> > - [[performance-audit-playbook#Phase 2: Memory Pressure|Memory pressure]]
+> > - [[performance-audit-playbook#Phase 3: Wait Statistics|Wait statistics]]
+> > - [[performance-audit-playbook#Phase 5: Expensive Queries|Expensive queries]]
+> > - [[performance-audit-playbook#Phase 6: Index Health|Index health]]
+> > - [[performance-audit-playbook#DBCC and Trace Flag Reference|DBCC and trace flags]]
+>
+> > [!abstract]- [[pipeline-integration-and-devex]]
+> >
+> > - [[pipeline-integration-and-devex#Query Tagging for Airflow Correlation|Query tagging for Airflow]]
+> > - [[pipeline-integration-and-devex#Connection Pool Management|Connection pool management]]
+> > - [[pipeline-integration-and-devex#Datadog SQL Server Agent — Full Configuration|Datadog agent configuration]]
+>
+> > [!abstract]- [[pit-integrity-logic]]
+> >
+> > - [[pit-integrity-logic#Effective-Dated Constituent Lists|Effective-dated constituent lists]]
+> > - [[pit-integrity-logic#Bi-Temporal Model|Bi-temporal model]]
+> > - [[pit-integrity-logic#Weight Normalization|Weight normalization]]
+> > - [[pit-integrity-logic#Performance Tuning for Large-Scale Joins|Large-scale join tuning]]
+> > - [[pit-integrity-logic#Reconciliation Queries|Reconciliation queries]]
 
-* [[backup-types-and-strategy]] — full, differential, transaction log, and copy-only backups, the 3-2-1 rule, recovery model selection, and an automated GCS backup script
+```mermaid
+mindmap
+  ((Concurrency and Security))
+    (authentication)
+    (TDE encryption)
+    (audit logging)
+    (blocking and locking)
+    (deadlock prevention)
+    (race conditions)
+```
 
-* [[restore-and-recovery]] — full restore, point-in-time recovery (PITR) with log replaying, and restoring to a new database for side-by-side comparison
+> [!example]- Concurrency and Security
+>
+> > [!abstract]- [[sql-server-authentication]]
+> >
+> > - [[sql-server-authentication#Part 1: GCP Service Account Hardening|GCP service account hardening]]
+> > - [[sql-server-authentication#Part 2: SQL Server Login Hardening|SQL Server login hardening]]
+> > - [[sql-server-authentication#Part 3: TLS Encryption for Connections|TLS encryption for connections]]
+> > - [[sql-server-authentication#Part 4: GCP Firewall Rules|GCP firewall rules]]
+> > - [[sql-server-authentication#Part 5: SQL Server Audit|SQL Server audit setup]]
+> > - [[sql-server-authentication#Quarterly Security Review|Quarterly security review]]
+>
+> > [!abstract]- [[tde-encryption]]
+> >
+> > - [[tde-encryption#Step 1: Create KMS Keyring and Key in GCP|Create KMS keyring and key]]
+> > - [[tde-encryption#Step 3: Certificate-Based TDE Setup|Certificate-based TDE setup]]
+> > - [[tde-encryption#Step 4: CRITICAL — Backup the Certificate and Private Key|Certificate backup]]
+> > - [[tde-encryption#Step 6: Restore Certificate on Another Server (Disaster Recovery)|Disaster recovery restore]]
+> > - [[tde-encryption#TDE Monitoring Query|TDE monitoring]]
+>
+> > [!abstract]- [[audit-logging]]
+> >
+> > - [[audit-logging#SQL Server Audit Architecture|Audit architecture]]
+> > - [[audit-logging#Step 4: Query Audit Logs|Querying audit logs]]
+> > - [[audit-logging#Step 5: Detect Brute-Force Login Attacks|Brute-force detection]]
+> > - [[audit-logging#Audit File Management|Audit file management]]
+>
+> > [!abstract]- [[blocking-and-locking]]
+> >
+> > - [[blocking-and-locking#Lock Types|Lock types]]
+> > - [[blocking-and-locking#Lock Granularity|Lock granularity]]
+> > - [[blocking-and-locking#Isolation Levels|Isolation levels]]
+> > - [[blocking-and-locking#Read Committed Snapshot Isolation (RCSI)|RCSI]]
+> > - [[blocking-and-locking#Detecting Blocking Chains|Detecting blocking chains]]
+> > - [[blocking-and-locking#Lock Monitoring Queries|Lock monitoring queries]]
+>
+> > [!abstract]- [[deadlock-detection-and-prevention]]
+> >
+> > - [[deadlock-detection-and-prevention#Detecting Deadlocks|Detecting deadlocks]]
+> > - [[deadlock-detection-and-prevention#Extended Events Session for Persistent Capture|Extended Events capture]]
+> > - [[deadlock-detection-and-prevention#Preventing Deadlocks|Prevention strategies]]
+> > - [[deadlock-detection-and-prevention#Application-Level Retry Logic|Application-level retry logic]]
+> > - [[deadlock-detection-and-prevention#Reproducing a Deadlock for Testing|Reproducing for testing]]
+>
+> > [!abstract]- [[race-conditions]]
+> >
+> > - [[race-conditions#Common Race Condition Patterns in Data Pipelines|Common pipeline race patterns]]
+> > - [[race-conditions#How to Detect Race Conditions|Detection techniques]]
+> > - [[race-conditions#Prevention Strategies|Prevention strategies]]
+> > - [[race-conditions#Pipeline Race Condition Audit|Pipeline audit checklist]]
 
-* [[finops-cost-optimization]] — GCP disk snapshot schedules, application-consistent snapshots with SUSPEND_FOR_SNAPSHOT_BACKUP, committed use discounts vs spot instances, and right-sizing VMs
+```mermaid
+mindmap
+  ((Pipeline Patterns))
+    (loading patterns)
+    (schema layering)
+    (change tracking)
+    (incremental transforms)
+    (pipeline anti-patterns)
+    (bronze layer)
+    (silver transforms)
+    (gold transforms)
+```
 
-* [[high-availability-overview]] — HA architecture for SQL Server 2022 on Linux GCP: Always On AG setup with Pacemaker/Corosync, monitoring DMVs, failover operations, read-only routing, and GCP Internal Load Balancer configuration
-
-* [[always-on-availability-groups]] — step-by-step AG deployment, synchronous vs asynchronous commit, RPO/RTO targets, planned and forced failover, certificate authentication, and troubleshooting five common AG issues
-
-
-## Security & Compliance — Locking Down Access and Meeting Audit Requirements
-
-Identity layers, encryption at rest, and audit trails required for regulatory compliance (EU BMR, SOC 2, GDPR).
-
-* [[sql-server-authentication]] — three-layer identity hardening: GCP IAM service account with minimal roles, dedicated SQL logins with least-privilege schema permissions, TLS 1.2 enforcement, firewall rules, and a quarterly security review checklist
-
-* [[tde-encryption]] — enabling Transparent Data Encryption with GCP Cloud KMS key protection, the encryption key hierarchy (SMK/DMK/certificate/DEK), critical certificate backup to GCS, disaster recovery restore procedure, and performance impact benchmarks
-
-* [[audit-logging]] — setting up SQL Server Audit on Linux: server and database audit specifications, querying .sqlaudit files, detecting brute-force login attempts, forwarding events to GCP Cloud Logging and BigQuery, and running quarterly compliance reviews
-
-## Storage & Indexing — How Data Lives on Disk and How Queries Find It
-
-The physical layer: pages, extents, B-trees, columnstore, compression, partitioning, and ongoing index maintenance. Understanding these internals is the prerequisite for every performance investigation.
-
-* [[storage-internals]] — the 8 KB page and 64 KB extent model, .mdf/.ldf file architecture, page anatomy (header, row offset array), write-ahead logging and checkpoints, CRUD mechanics at the page level, page splits, tempdb consumers, and the buffer pool
-
-* [[index-types-and-strategy]] — clustered, nonclustered, covering, filtered, and columnstore indexes with creation syntax, the decision tree for choosing the right type, anti-patterns (GUID clustered keys, over-indexing), and statistics management
-
-* [[index-maintenance]] — detecting fragmentation with sys.dm_db_index_physical_stats, REORGANIZE vs REBUILD thresholds, fill factor guidance, online rebuilds, and an automated maintenance script for pipeline workloads
-
-* [[partitioning-strategies]] — partition functions and schemes, partition elimination for query performance, SWITCH for millisecond archiving and loading, the sliding window pattern, and when partitioning is worth the overhead (10M+ row threshold)
-
-* [[table-compression]] — row vs page compression mechanics, estimating savings with sp_estimate_data_compression_savings, applying compression with online rebuilds, and guidance for gold-layer financial time-series tables
-
-## Performance & Concurrency — Finding Bottlenecks and Resolving Contention
-
-The diagnostic loop: wait stats reveal the category, execution plans reveal the query, and concurrency analysis reveals the contention pattern. Includes the audit playbook, troubleshooting flowcharts, and the production problems catalog.
-
-* [[sargable-queries]] — SARGable vs non-SARGable predicates, the fundamental rule (no functions on the column side), implicit conversion traps, and fix strategies that turn full scans into index seeks
-
-* [[wait-stats-analysis]] — reading sys.dm_os_wait_stats to diagnose bottlenecks, the filtered wait query, signal vs resource wait interpretation, common wait types for pipeline workloads (PAGEIOLATCH, WRITELOG, LCK_M, CXPACKET), and Query Store setup
-
-* [[execution-plans]] — estimated vs actual plans in SSMS, reading the visual tree right-to-left, cost analysis, cardinality estimation errors, per-query wait stats, implicit conversions, parameter sniffing, and batch mode
-
-* [[query-plan-analysis]] — capturing plans programmatically, plan operators (seek/scan/lookup/join), parameter sniffing diagnosis, Query Store setup for regression detection, and forcing plans with sp_query_store_force_plan
-
-* [[memory-and-buffer-pool]] — how the buffer pool caches 8 KB pages, Page Life Expectancy and buffer cache hit ratio, memory clerks, memory grants, pending grant detection, and max server memory sizing rules for GCP VMs
-
-* [[performance-audit-playbook]] — 11-phase step-by-step methodology: instance overview, memory pressure, wait stats, IO performance, expensive queries, index health, TempDB, blocking, statistics quality, database sizes, and security review
-
-* [[troubleshooting-flowcharts]] — four decision trees for slowness (via wait stats), pipeline failure root cause, the index decision tree, and disk space emergency recovery
-
-* [[blocking-and-locking]] — lock types (S, X, U, IS, IX), the compatibility matrix, lock granularity hierarchy, isolation levels (READ COMMITTED through SERIALIZABLE), RCSI, lock escalation prevention, and blocking chain detection
-
-* [[deadlock-detection-and-prevention]] — circular wait mechanics, error 1205 handling, deadlock monitor thread, detection with DMVs and Extended Events, RCSI as the primary prevention strategy, and application-level retry logic in Python and C#
-
-* [[race-conditions]] — four pipeline race patterns (lost update, phantom insert, dirty read, overlapping truncate-reload), detection queries, and five prevention strategies including Airflow serialization, atomic SQL operations, and unique constraints
-
-* [[sql-server-problems]] — 25 production problems ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures covering performance, concurrency, data loading, backup, and operational issues
-
-## Pipeline Patterns & Medallion Project — Loading, Transforming, and Serving Data
-
-How data flows through SQL Server: loading methods, schema organization, change tracking, incremental processing, anti-patterns to avoid, and the bronze/silver/gold implementation of a financial index pipeline.
-
-* [[sql-server-loading-patterns]] — every method of getting data into SQL Server benchmarked and compared: bcp, BULK INSERT, pyodbc fast_executemany, SqlBulkCopy, loading strategies (truncate-reload, staging swap, incremental, upsert), and minimal logging
-
-* [[sql-server-schema-layering]] — organizing databases and schemas for layered architectures: schema-per-layer, schema-per-domain, separate databases, naming conventions, cross-schema security, and metadata columns
-
-* [[merge-and-upsert]] — four load patterns (truncate-reload, read-then-INSERT/UPDATE, SCD Type 2 close-and-insert, delete-and-insert), the MERGE statement, transaction management with XACT_ABORT, and @@ROWCOUNT guards
-
-* [[date-and-time-functions]] — ISO 8601 formats, DATETIME2 vs DATETIMEOFFSET selection, DATEADD/DATEDIFF/EOMONTH/DATETRUNC, AT TIME ZONE conversion, DST pitfalls, and cross-language patterns (T-SQL, Python, C#)
-
-* [[sql-server-change-tracking]] — seven methods for capturing data history (manual SCD2, temporal tables, CDC, Change Tracking, triggers, dbt snapshots, audit columns) with a decision matrix and side-by-side comparisons
-
-* [[sql-server-incremental-transforms]] — watermark-based loading, partition SWITCH, window functions at scale (ROW_NUMBER, moving averages), gap detection, forward-fill, pre-computed aggregation tables, and indexed views
-
-* [[sql-server-pipeline-anti-patterns]] — 20+ production mistakes that cause incidents: row-by-row inserts, SELECT *, silent truncation, NOLOCK abuse, implicit conversions, float comparison, cursors in ETL, and the fix for each
-
-* [[pipeline-integration-and-devex]] — tagging SQL queries with Airflow context for monitoring correlation, schema migration management with Flyway or a Python runner, and connection pool sizing for pymssql and ADO.NET
-
-* [[pit-integrity-logic]] — point-in-time data integrity for stock index calculation: effective-dated constituent lists, SCD2 membership tracking, weight normalization to exactly 1.00000000, bi-temporal modeling, and performance tuning for large-scale temporal joins
-
-* [[bronze-layer-loading]] — bronze table DDL for the financial index pipeline, idempotent schema creation, pyodbc connection setup, truncate-and-reload vs merge loading, and JSON-to-bronze data flow for OHLCV, signals, and dimension tables
-
-* [[silver-transforms]] — SCD Type 2 dimension tracking, OHLCV gap-filling against the trading calendar, daily and quarterly signal upserts, unique index design for deduplication, and the validation gate between bronze and silver
-
-* [[gold-transforms]] — gold table DDL, z-score computation by group, financial health flags, governance scoring, cap-weighted index performance, moving average CTEs (SMA 30/90), composite scoring and ranking, and dashboard-ready consumption queries
+> [!example]- Pipeline Patterns
+>
+> > [!abstract]- [[sql-server-loading-patterns]]
+> >
+> > - [[sql-server-loading-patterns#Loading Methods Comparison|Loading methods comparison]]
+> > - [[sql-server-loading-patterns#Truncate-and-Reload|Truncate and reload]]
+> > - [[sql-server-loading-patterns#Watermarks — The Foundation of Incremental Loading|Watermark fundamentals]]
+> > - [[sql-server-loading-patterns#Upsert (INSERT + UPDATE)|Upsert approaches]]
+> > - [[sql-server-loading-patterns#pyodbc fast_executemany Deep Dive|pyodbc fast_executemany]]
+> > - [[sql-server-loading-patterns#bcp Deep Dive|bcp bulk loading]]
+>
+> > [!abstract]- [[sql-server-schema-layering]]
+> >
+> > - [[sql-server-schema-layering#Schema-per-Layer (Standard Approach)|Schema per layer]]
+> > - [[sql-server-schema-layering#Separate Databases per Layer|Separate databases per layer]]
+> > - [[sql-server-schema-layering#Naming Conventions|Naming conventions]]
+> > - [[sql-server-schema-layering#Cross-Schema Security|Cross-schema security]]
+> > - [[sql-server-schema-layering#Which Schema Strategy — Scenario-Based Decision|Schema strategy decision]]
+>
+> > [!abstract]- [[sql-server-change-tracking]]
+> >
+> > - [[sql-server-change-tracking#Decision Matrix|Change tracking decision matrix]]
+> > - [[sql-server-change-tracking#Manual SCD Type 2|Manual SCD Type 2]]
+> > - [[sql-server-change-tracking#SQL Server Temporal Tables (SYSTEM_VERSIONING)|Temporal tables]]
+> > - [[sql-server-change-tracking#Change Data Capture (CDC)|Change Data Capture]]
+> > - [[sql-server-change-tracking#Change Tracking (CT)|Change Tracking]]
+>
+> > [!abstract]- [[sql-server-incremental-transforms]]
+> >
+> > - [[sql-server-incremental-transforms#Watermark-Based Incremental Loading|Watermark-based loading]]
+> > - [[sql-server-incremental-transforms#Partition-Based Incremental Processing|Partition-based processing]]
+> > - [[sql-server-incremental-transforms#Window Function Transforms at Scale|Window function transforms]]
+> > - [[sql-server-incremental-transforms#Gap Detection and Forward-Fill|Gap detection and forward-fill]]
+> > - [[sql-server-incremental-transforms#Pre-Computed Aggregation Tables|Pre-computed aggregation]]
+> > - [[sql-server-incremental-transforms#Indexed Views vs Aggregation Tables|Indexed views vs aggregation tables]]
+>
+> > [!abstract]- [[sql-server-pipeline-anti-patterns]]
+> >
+> > - [[sql-server-pipeline-anti-patterns#Loading Anti-Patterns|Loading anti-patterns]]
+> > - [[sql-server-pipeline-anti-patterns#Schema Anti-Patterns|Schema anti-patterns]]
+> > - [[sql-server-pipeline-anti-patterns#Query Anti-Patterns|Query anti-patterns]]
+> > - [[sql-server-pipeline-anti-patterns#Change Tracking Anti-Patterns|Change tracking anti-patterns]]
+> > - [[sql-server-pipeline-anti-patterns#Concurrency Anti-Patterns|Concurrency anti-patterns]]
+> > - [[sql-server-pipeline-anti-patterns#Performance Anti-Patterns|Performance anti-patterns]]
+>
+> > [!abstract]- [[bronze-layer-loading]]
+> >
+> > - [[bronze-layer-loading#Database Setup & Connection|Database setup and connection]]
+> > - [[bronze-layer-loading#Bronze Table DDL|Bronze table DDL]]
+> > - [[bronze-layer-loading#Dynamic OHLCV Tables|Dynamic OHLCV tables]]
+> > - [[bronze-layer-loading#Loading Patterns (JSON → Bronze)|Loading patterns]]
+> > - [[bronze-layer-loading#Index Design (Bronze Layer)|Bronze index design]]
+>
+> > [!abstract]- [[silver-transforms]]
+> >
+> > - [[silver-transforms#Silver DDL|Silver table DDL]]
+> > - [[silver-transforms#SCD Type 2 Transform — Index Dimensions|SCD Type 2 transform]]
+> > - [[silver-transforms#Upsert — Daily Signals|Daily signal upsert]]
+> > - [[silver-transforms#OHLCV Gap-Fill Transform|OHLCV gap-fill transform]]
+> > - [[silver-transforms#Key SQL Techniques Used in Silver Transforms|Key SQL techniques]]
+>
+> > [!abstract]- [[gold-transforms]]
+> >
+> > - [[gold-transforms#Gold Table DDL|Gold table DDL]]
+> > - [[gold-transforms#Gold Analytics Logic|Analytics logic and z-scores]]
+> > - [[gold-transforms#Daily Scores Transform|Daily scores transform]]
+> > - [[gold-transforms#Index Performance Transform|Index performance transform]]
+> > - [[gold-transforms#Dashboard Consumption Queries|Dashboard consumption queries]]
+> > - [[gold-transforms#Gold Freshness Checks|Freshness checks]]
 
 ## Cross-References
 
-- [[dbt-sqlserver-adapter]] — dbt SQL Server adapter configuration
-- [[dbt-performance-tuning]] — Tuning dbt models on SQL Server
+- [[moc-db-queries|DB Queries]] — SQL Server query notebooks with executable examples
+- [[moc-gcp|GCP]] — SQL Server VMs on Compute Engine
+- [[moc-terraform|Terraform]] — Provisioning SQL Server infrastructure
+- [[moc-data-architecture|Data Architecture]] — Medallion architecture theory
+- [[25_py_functional_pipeline]] — Python pipeline using SQL Server as the persistence layer

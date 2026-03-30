@@ -54,7 +54,7 @@ Dashboard: **DBA Dashboard** | Config: [[datadog-sql-server-integration#Built-in
 > - **Active connections** — connection pool saturation indicator
 > - **Batch requests/sec** — workload throughput baseline
 
-> [!info] Key Logs
+> [!abstract] Key Logs
 >
 > - **Error log (severity >= 16)** — SQL Server errors that affect user sessions. Severity 16 = user error, 17+ = resource/system issues
 > - **Slow queries (>5s)** — queries exceeding duration threshold, captured via Extended Events or Datadog deep database monitoring
@@ -83,7 +83,7 @@ Dashboard: **Pipeline Watch** | Config: [[datadog-airflow-observability#Key Metr
 > - **Pool utilization** — percentage of pool slots in use. 100% = tasks are queuing
 > - **Zombie tasks** — tasks marked as running but with no active process. Indicates worker crashes
 
-> [!info] Key Logs
+> [!abstract] Key Logs
 >
 > - **Task stdout/stderr** — output from each task's execution. First place to look for transform errors, SQL failures, API timeouts
 > - **Scheduler logs** — DAG parsing errors, scheduling decisions, heartbeat status
@@ -110,7 +110,7 @@ Dashboard: **Cost + Performance** | Config: [[gcp-cloud-monitoring-deep-dive#Big
 > - **Error rate** — percentage of queries failing. Non-zero needs investigation
 > - **Duration p50/p95/p99** — query latency distribution. p99 drift indicates growing tables or missing partitions
 
-> [!info] Key Logs
+> [!abstract] Key Logs
 >
 > - **Audit logs (BigQueryAuditMetadata)** — every query executed, who ran it, bytes scanned, cost. The authoritative cost analysis source
 > - **Job failures** — queries that failed with errors. Check for quota exceeded, syntax errors, permission issues
@@ -136,7 +136,7 @@ Dashboard: **Service Health** | Config: [[gcp-cloud-monitoring-deep-dive#Built-i
 > - **Instance count** — active container instances. Correlate with request count for efficiency
 > - **Memory %** — container memory utilization. Above 90% risks OOM kills
 
-> [!info] Key Logs
+> [!abstract] Key Logs
 >
 > - **Stdout/stderr from container** — application logs. First place to look for errors
 > - **Crash logs** — container exit with non-zero code. OOM, unhandled exceptions, timeout
@@ -161,7 +161,7 @@ Dashboard: **Messaging Health** | Config: [[gcp-cloud-monitoring-deep-dive#Pub/S
 > - **Publish/pull latency** — time to publish or pull a message. Spikes indicate Pub/Sub service issues
 > - **Dead letter count** — messages moved to DLQ after max delivery attempts. Non-zero = systematic processing failure
 
-> [!info] Key Logs
+> [!abstract] Key Logs
 >
 > - **DLQ messages** — messages that failed processing repeatedly. Contains the original payload and error context
 > - **Subscription errors** — delivery failures, acknowledgement timeouts, permission issues
@@ -184,7 +184,7 @@ Dashboard: **Storage Dashboard** | Config: [[gcp-cloud-monitoring-deep-dive#Clou
 > - **Total bytes** — storage volume per bucket. Tracks growth for capacity and cost planning
 > - **Request count by type** — Class A (writes) vs Class B (reads). Unusual write spikes may indicate runaway pipeline
 
-> [!info] Key Logs
+> [!abstract] Key Logs
 >
 > - **Access logs** — who accessed which objects. Useful for audit and debugging access issues
 > - **Lifecycle actions** — objects transitioned to Nearline/Coldline/Archive or deleted by lifecycle rules
@@ -206,7 +206,7 @@ Dashboard: **Real-Time Store** | Config: [[gcp-cloud-monitoring-deep-dive#Firest
 > - **Active connections** — concurrent client connections. Spikes indicate consumer issues
 > - **Document count** — total documents. Unexpected growth may indicate a write loop
 
-> [!info] Key Logs
+> [!abstract] Key Logs
 >
 > - **Security rule denials** — requests blocked by Firestore security rules. May indicate misconfigured rules or unauthorized access
 > - **Quota warnings** — approaching operation or storage quotas
@@ -230,7 +230,7 @@ Dashboard: **VM Health** | Config: [[datadog-agent-sql-vm]], [[gcp-cloud-monitor
 > - **IOPS** — disk operations per second. High IOPS + high latency = disk bottleneck
 > - **Network I/O** — bytes in/out. Spikes during pipeline runs are normal; sustained spikes are not
 
-> [!info] Key Logs
+> [!abstract] Key Logs
 >
 > - **Syslog** — OS-level events: service starts/stops, kernel warnings, SSH logins
 > - **OOM kills** — kernel killed a process for exceeding available memory. Check `dmesg` for the victim
@@ -256,7 +256,7 @@ Dashboard: **Data Quality** | Config: [[gcp-pipeline-health-and-sla#Data Freshne
 > - **Schema drift** — columns added, removed, or type-changed since last run. Catches upstream API changes
 > - **Duplicate rate** — percentage of duplicate rows in target tables. Non-zero after dedup = logic bug
 
-> [!info] Key Logs
+> [!abstract] Key Logs
 >
 > - **Transform logs** — output from each pipeline stage. Includes row counts, timing, validation results
 > - **Validation gate results** — PASS/FAIL for each quality check. The first place to look when data quality degrades

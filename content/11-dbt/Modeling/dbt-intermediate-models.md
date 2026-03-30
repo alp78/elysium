@@ -9,7 +9,6 @@ related:
   - "[[dbt-staging-models]]"
   - "[[dbt-mart-models]]"
   - "[[dbt-materializations]]"
-  - "[[esg-data-ingestion-framework]]"
 ---
 
 # dbt: Intermediate Models
@@ -513,4 +512,3 @@ from {{ ref('stg_market_data__daily_prices') }}
 - [[dbt-staging-models]]
 - [[dbt-mart-models]]
 - [[dbt-materializations]]
-- [[esg-data-ingestion-framework]]

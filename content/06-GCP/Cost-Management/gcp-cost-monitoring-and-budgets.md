@@ -744,7 +744,7 @@ gcloud quotas info --service=bigquery.googleapis.com --project=PROJECT_ID
 
 #### Materialized Views for Repeated Queries
 
-> [!info] How materialized views save cost
+> [!abstract] How materialized views save cost
 > A materialized view pre-computes and caches expensive aggregations. BigQuery automatically rewrites incoming queries to read from the MV instead of scanning the full base table — the user doesn't need to reference the MV explicitly. With `enable_refresh = TRUE`, the cache refreshes on a schedule (e.g., every 60 minutes). You pay for the refresh scan, but all subsequent reads hit the cached result at near-zero cost.
 
 ```sql

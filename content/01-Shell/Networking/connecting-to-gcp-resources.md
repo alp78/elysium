@@ -95,7 +95,7 @@ sqlcmd -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d analytics_db \
 
 #### Debug from the VM side — verify SQL Server is listening
 
-> [!info] Debug from VM side
+> [!tip] Debug from VM side
 >
 > If the tunnel is up but connections fail, SSH in and check that `sqlservr` is
 > listening on port 1433.
@@ -182,7 +182,7 @@ bq ls data-platform-prod:data-pipeline
 
 #### gcloud auth list — debug BigQuery authentication
 
-> [!info] Debug BigQuery authentication
+> [!tip] Debug BigQuery authentication
 >
 > The active account must have `bigquery.jobs.create` permission (typically via
 > BigQuery User or BigQuery Data Viewer role). If queries fail with "Access Denied,"

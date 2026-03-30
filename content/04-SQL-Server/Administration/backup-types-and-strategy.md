@@ -46,10 +46,13 @@ Backups are the single most critical responsibility of anyone operating a databa
 BACKUP DATABASE analytics_db
 TO DISK = '/var/opt/mssql/backup/mydb_full.bak'
 WITH COMPRESSION, STATS = 10, CHECKSUM;
--- COMPRESSION = 3-5x smaller, slightly more CPU
--- STATS = 10 = print progress every 10%
--- CHECKSUM = verify integrity during backup (catches corruption early)
 ```
+
+> [!info] BACKUP WITH options
+>
+> - **COMPRESSION** — produces a 3-5x smaller `.bak` file at the cost of slightly more CPU
+> - **STATS = 10** — prints progress every 10 % so you can monitor long-running backups
+> - **CHECKSUM** — verifies page integrity during the backup, catching corruption early rather than at restore time
 
 #### BACKUP DATABASE WITH DIFFERENTIAL — only changes since last full
 
@@ -63,13 +66,13 @@ WITH DIFFERENTIAL, COMPRESSION, CHECKSUM;
 
 #### BACKUP LOG — transaction log backup for point-in-time recovery
 
+Captures every transaction since the last log backup, enabling point-in-time recovery — restore to any second within the log chain.
+
 ```sql
 -- Transaction log (required for FULL recovery model)
 BACKUP LOG analytics_db
 TO DISK = '/var/opt/mssql/backup/mydb_log.trn'
 WITH COMPRESSION;
--- Captures every transaction since the last log backup
--- Enables point-in-time recovery: "restore to 14:23:45 yesterday"
 ```
 
 #### BACKUP DATABASE WITH COPY_ONLY — ad-hoc backup that preserves the chain
@@ -79,9 +82,11 @@ WITH COMPRESSION;
 BACKUP DATABASE analytics_db
 TO DISK = '/var/opt/mssql/backup/mydb_adhoc.bak'
 WITH COPY_ONLY, COMPRESSION;
--- COPY_ONLY = does not reset the differential baseline
--- Use before: schema changes, risky deployments, data migrations
 ```
+
+> [!tip] Copy-only backups preserve the backup chain
+>
+> A copy-only backup does not reset the differential baseline — take one before schema changes, risky deployments, or data migrations without disrupting the regular backup schedule.
 
 #### RESTORE VERIFYONLY — validate a backup file without restoring
 
@@ -159,13 +164,17 @@ ALTER DATABASE [analytics_db] SET RECOVERY SIMPLE;
 
 -- Switch to FULL (production, point-in-time recovery needed)
 ALTER DATABASE [analytics_db] SET RECOVERY FULL;
--- IMPORTANT: take a full backup IMMEDIATELY after switching to FULL
--- to start the log chain. PITR is impossible without it.
 ```
+
+> [!danger] Take a full backup immediately after switching to FULL
+>
+> After switching from SIMPLE to FULL recovery model, take a full backup immediately. Without it, the transaction log cannot be backed up and will grow indefinitely until the server runs out of disk.
 
 ### After Switching from FULL to SIMPLE — Reclaim Log Space
 
 Switching to SIMPLE marks the log space as reusable but does not shrink the `.ldf` file on disk. SQL Server will reuse the space internally, but the file stays its current size. To physically reclaim disk space:
+
+Shrinking the log file to a reasonable size reclaims disk space; SQL Server will grow it again as needed, but under SIMPLE recovery it will recycle space internally.
 
 ```sql
 -- Check current log size and usage
@@ -175,8 +184,7 @@ DBCC SQLPERF(LOGSPACE);
 SELECT name, type_desc, size * 8 / 1024 AS size_mb
 FROM sys.database_files WHERE type = 1;
 
--- Shrink the log file to a reasonable size (e.g., 64 MB)
--- SQL Server will grow it again as needed, but under SIMPLE it will recycle space
+-- Shrink the log file to 64 MB
 DBCC SHRINKFILE(N'mydb_log', 64);
 ```
 

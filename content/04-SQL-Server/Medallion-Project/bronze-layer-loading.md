@@ -118,17 +118,15 @@ WHERE _index = ?          -- parameterized: e.g. 'market_index'
 
 Stores company identity data: name, sector, country, exchange, currency. Refreshed yearly or on index rebalance.
 
-- **Source:** `data/dimensions/{prefix}_dim.json` (fetched from yfinance `.info`)
-- **Refresh:** On setup or manual re-fetch
-- **Strategy:** Truncate & reload per index
+> [!abstract] Data source
+> - **Source:** `data/dimensions/{prefix}_dim.json` (fetched from yfinance `.info`)
+> - **Refresh:** On setup or manual re-fetch
+> - **Strategy:** Truncate & reload per index
+> - **Index:** `(_index, symbol)` — all operations filter by `_index` first
 
 #### CREATE TABLE bronze.index_dim — full DDL with clustered index
 
 ```sql
--- Source: data/dimensions/{prefix}_dim.json (fetched from yfinance .info)
--- Refresh: on setup or manual re-fetch
--- Strategy: truncate & reload per index
-
 IF NOT EXISTS (SELECT * FROM sys.tables t
                JOIN sys.schemas s ON t.schema_id = s.schema_id
                WHERE s.name = 'bronze' AND t.name = 'index_dim')
@@ -167,7 +165,6 @@ CREATE TABLE bronze.index_dim (
 );
 GO
 
--- Index: (_index, symbol) — all operations filter by _index first
 CREATE INDEX IX_bronze_index_dim_index
     ON bronze.index_dim (_index, symbol);
 GO
@@ -178,17 +175,14 @@ GO
 
 One snapshot per stock per pipeline run. Stores price metrics, momentum, and analyst sentiment from yfinance.
 
-- **Source:** `data/stage/{prefix}_signals_daily.json`
-- **Refresh:** 3x daily (09:00, 17:00, 22:00 UTC)
-- **Strategy:** Truncate & reload per index
+> [!abstract] Data source
+> - **Source:** `data/stage/{prefix}_signals_daily.json`
+> - **Refresh:** 3x daily (09:00, 17:00, 22:00 UTC)
+> - **Strategy:** Truncate & reload per index
 
 #### CREATE TABLE bronze.signals_daily — full DDL
 
 ```sql
--- Source: data/stage/{prefix}_signals_daily.json
--- Refresh: 3x daily (09:00, 17:00, 22:00 UTC)
--- Strategy: truncate & reload per index
-
 CREATE TABLE bronze.signals_daily (
     id                      INT IDENTITY(1,1) PRIMARY KEY,
     _index                  VARCHAR(20)     NOT NULL,
@@ -222,7 +216,6 @@ CREATE TABLE bronze.signals_daily (
 );
 GO
 
--- Index: (_index, symbol, timestamp)
 CREATE INDEX IX_bronze_signals_daily_index_symbol
     ON bronze.signals_daily (_index, symbol, timestamp);
 GO
@@ -231,17 +224,14 @@ GO
 
 ### bronze.signals_quarterly — Quarterly Fundamentals
 
-- **Source:** `data/stage/{prefix}_signals_quarterly.json`
-- **Refresh:** Daily (values only change quarterly with earnings)
-- **Strategy:** Truncate & reload per index
+> [!abstract] Data source
+> - **Source:** `data/stage/{prefix}_signals_quarterly.json`
+> - **Refresh:** Daily (values only change quarterly with earnings)
+> - **Strategy:** Truncate & reload per index
 
 #### CREATE TABLE bronze.signals_quarterly — full DDL
 
 ```sql
--- Source: data/stage/{prefix}_signals_quarterly.json
--- Refresh: daily (values only change quarterly with earnings)
--- Strategy: truncate & reload per index
-
 CREATE TABLE bronze.signals_quarterly (
     id                      INT IDENTITY(1,1) PRIMARY KEY,
     _index                  VARCHAR(20)     NOT NULL,
@@ -285,17 +275,14 @@ GO
 
 ### bronze.pulse — Real-Time Price Snapshots
 
-- **Source:** `data/pulse/{prefix}_pulse.json`
-- **Refresh:** Every 5 minutes during market hours
-- **Strategy:** Truncate & reload per index
+> [!abstract] Data source
+> - **Source:** `data/pulse/{prefix}_pulse.json`
+> - **Refresh:** Every 5 minutes during market hours
+> - **Strategy:** Truncate & reload per index
 
 #### CREATE TABLE bronze.pulse — BIGINT PK for high-frequency data
 
 ```sql
--- Source: data/pulse/{prefix}_pulse.json
--- Refresh: every 5 minutes during market hours
--- Strategy: truncate & reload per index
-
 CREATE TABLE bronze.pulse (
     id                      BIGINT IDENTITY(1,1) PRIMARY KEY,  -- BIGINT for high-frequency data
     _index                  VARCHAR(20)     NOT NULL,
@@ -334,12 +321,13 @@ GO
 
 ### bronze.pulse_tickers — Most Active Stocks
 
+> [!abstract] Data source
+> - **Source:** `data/pulse/{prefix}_tickers.json`
+> - **Refresh:** Hourly during market hours
+
 #### CREATE TABLE bronze.pulse_tickers — full DDL
 
 ```sql
--- Source: data/pulse/{prefix}_tickers.json
--- Refresh: hourly during market hours
-
 CREATE TABLE bronze.pulse_tickers (
     id                      INT IDENTITY(1,1) PRIMARY KEY,
     _index                  VARCHAR(20)     NOT NULL,
@@ -364,17 +352,14 @@ CREATE INDEX IX_bronze_pulse_tickers_index
 
 Used to detect gaps in OHLCV data — if the exchange was open but we have no price, that's a gap to forward-fill. See [[silver-transforms]] for the gap-filling logic.
 
-- **Source:** `exchange_calendars` Python library
-- **Refresh:** On setup (populated once per exchange)
-- **Composite primary key:** `(date, exchange_code)` — no surrogate id
+> [!abstract] Data source
+> - **Source:** `exchange_calendars` Python library
+> - **Refresh:** On setup (populated once per exchange)
+> - **Composite primary key:** `(date, exchange_code)` — no surrogate id
 
 #### CREATE TABLE bronze.trading_calendar — full DDL
 
 ```sql
--- Source: exchange_calendars Python library
--- Refresh: on setup (populated once per exchange)
--- Composite primary key: (date, exchange_code) — no surrogate id
-
 CREATE TABLE bronze.trading_calendar (
     date                    DATE            NOT NULL,         -- calendar date
     exchange_code           VARCHAR(10)     NOT NULL,         -- yfinance exchange code, e.g. 'AMS'
@@ -392,7 +377,6 @@ CREATE TABLE bronze.trading_calendar (
 );
 GO
 
--- Optimized for: WHERE exchange_code = ? AND is_trading_day = 1 AND date BETWEEN ...
 CREATE INDEX IX_bronze_trading_calendar_exchange
     ON bronze.trading_calendar (exchange_code, is_trading_day, date);
 GO
@@ -433,10 +417,9 @@ def silver_ohlcv(key):
 
 #### CREATE TABLE IF NOT EXISTS — OHLCV bronze and silver per index (idempotent)
 
-```sql
--- Created by setup_index.py for each new index (idempotent)
+Bronze OHLCV stores raw prices from yfinance. Created by `setup_index.py` for each new index (idempotent).
 
--- Bronze OHLCV: raw prices from yfinance
+```sql
 IF NOT EXISTS (SELECT * FROM sys.tables t
                JOIN sys.schemas s ON t.schema_id = s.schema_id
                WHERE s.name = 'bronze' AND t.name = '{ohlcv_table}')
@@ -457,8 +440,11 @@ CREATE TABLE bronze.{ohlcv_table} (
 
 CREATE INDEX IX_bronze_{ohlcv_table}
     ON bronze.{ohlcv_table} (symbol, date);
+```
 
--- Silver OHLCV: gap-filled, forward-filled version
+Silver OHLCV is the gap-filled, forward-filled version of bronze.
+
+```sql
 IF NOT EXISTS (...)
 CREATE TABLE silver.{ohlcv_table} (
     -- Same columns as bronze, plus:

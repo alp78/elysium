@@ -57,7 +57,7 @@ gcloud access-context-manager perimeters create data-pipeline-data-perimeter \
   --access-levels="accessPolicies/POLICY_ID/accessLevels/data-pipeline-trusted-engineers"
 ```
 
-> [!info] What the Perimeter Enforces
+> [!abstract] What the Perimeter Enforces
 >
 > - BigQuery, GCS, and Compute Engine are now inside the perimeter
 > - Data cannot be copied or exported outside the project

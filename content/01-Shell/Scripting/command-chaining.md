@@ -133,7 +133,7 @@ zcat /var/log/pipeline-2025-03-*.gz | \
 
 This pipeline decompresses, filters, extracts fields, counts occurrences, and shows the top 20 error patterns — all in a single streaming pass. No intermediate files, no memory explosion. A 50GB compressed log can be analyzed in minutes on a machine with 2GB of RAM.
 
-> [!info] Pipeline exit code trap
+> [!abstract] Pipeline exit code trap
 >
 > By default, a pipeline's exit code is the exit code of the **last** command only. If `grep` finds nothing (exit code 1) but `wc -l` succeeds (exit code 0), the pipeline reports success. This masks failures silently.
 >

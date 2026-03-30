@@ -10,7 +10,7 @@ related:
   - "[[moc-data-architecture]]"
   - "[[five-pillars-of-data-engineering]]"
   - "[[moc-data-pipeline-lifecycle]]"
-  - "[[moc-infrastructure-as-code]]"
+  - "[[moc-terraform]]"
 
   - "[[medallion-architecture]]"
   - "[[data-warehouse-architecture]]"
@@ -549,7 +549,7 @@ When work is triggered by events rather than time:
 > - **If it is temporary, use gcloud CLI.** Do not pollute Terraform state with throwaway resources.
 > - **If you are learning, use Console.** Then translate to Terraform once you understand the resource.
 >
-> See [[terraform-plan-apply-destroy]] for the apply workflow and [[moc-infrastructure-as-code]] for the full IaC reference.
+> See [[terraform-plan-apply-destroy]] for the apply workflow and [[moc-terraform]] for the full IaC reference.
 
 ### Terraform-Specific Decisions
 
@@ -998,7 +998,7 @@ For rapid lookup when you just need the answer:
 - [[moc-data-architecture]] — full section index
 - [[five-pillars-of-data-engineering]] — the principles behind every decision
 - [[moc-data-pipeline-lifecycle]] — end-to-end pipeline patterns
-- [[moc-infrastructure-as-code]] — Terraform and IaC overview
+- [[moc-terraform]] — Terraform and IaC overview
 
 #### Comparison references
 

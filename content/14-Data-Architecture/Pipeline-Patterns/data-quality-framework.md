@@ -121,7 +121,7 @@ Bronze ([[medallion-architecture#Bronze (Raw)]]) validates that raw data landed 
 > - Duplicate detection on natural keys
 > - Malformed rows (parse failures, encoding errors)
 
-> [!info] Tier 3 — Advisory (log for review)
+> [!abstract] Tier 3 — Advisory (log for review)
 > - Row count outside 80-120% of prior load
 > - New enum values not in reference table
 > - Column order changed (schema evolution signal)
@@ -144,7 +144,7 @@ Silver ([[medallion-architecture#Silver (Cleaned)]]) enforces business rules and
 > - Staleness: data older than freshness SLA
 > - Cross-field logic violations (open > high, low > close)
 
-> [!info] Tier 3 — Advisory (log for review)
+> [!abstract] Tier 3 — Advisory (log for review)
 > - Rows requiring fallback to T-1 values
 > - Minor schema drift (new nullable columns)
 > - Data distribution shift beyond 1 standard deviation
@@ -171,7 +171,7 @@ Gold ([[medallion-architecture#Gold (Analytics)]]) is the last line of defense b
 > - Sector allocation drift beyond threshold
 > - Turnover exceeds rebalance limits
 
-> [!info] Tier 3 — Advisory (log for review)
+> [!abstract] Tier 3 — Advisory (log for review)
 > - Minor rounding differences across systems (<1e-6)
 > - Constituent weight below minimum threshold
 > - Publication timestamp later than typical

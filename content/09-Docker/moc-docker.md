@@ -8,26 +8,61 @@ tags:
 
 # MOC: Docker
 
-Docker packages every pipeline stage, database, and monitoring agent into isolated containers with their own dependencies. This MOC covers the full Docker workflow from building images through running containers to orchestrating multi-service stacks.
+Container management from building images to orchestrating multi-container
+applications. Expand any section below for page contents.
 
-## Images & Builds — Dockerfile, Multi-Stage Builds, and Registry Operations
+```mermaid
+mindmap
+  ((Images and Builds))
+    (image management)
+```
+> [!example]- Images and Builds
+>
+> > [!abstract]- [[image-management]]
+> >
+> > - [[image-management#Dockerfile Fundamentals|Dockerfile fundamentals]]
+> > - [[image-management#Building Images|Building images]]
+> > - [[image-management#Multi-Stage Builds|Multi-stage builds]]
+> > - [[image-management#Registry Operations|Registry operations]]
+> > - [[image-management#Image Size Optimization|Size optimization]]
+> > - [[image-management#Cleanup|Image cleanup]]
 
-How to create optimized container images, tag them for deployment, and push them to GCP Artifact Registry.
-
-* [[image-management]] — Dockerfile instructions, building with cache and multi-stage patterns, tagging strategies, pushing to Artifact Registry, inspecting layers and image size, and cleaning up disk usage
-
-## Container Operations — Running, Inspecting, Debugging, and Composing
-
-Day-to-day container management: launching containers, reading logs, debugging crashes, and orchestrating multi-container stacks for local development and production.
-
-* [[container-lifecycle]] — docker run with all key flags, listing and filtering containers, start/stop/kill/pause lifecycle, logs, exec for debugging, file copying, inspection, and cleanup with prune
-
-* [[docker-compose]] — compose file structure with a full Airflow + PostgreSQL + Redis example, lifecycle commands (up/down/start/stop/restart), scaling, logs, exec, config overrides, and system cleanup
-
-* [[docker-cheat-sheet]] — exhaustive CLI reference for Docker and Docker Compose covering container lifecycle, image management, volumes, networks, Dockerfile instructions, and system cleanup
+```mermaid
+mindmap
+  ((Containers and Orchestration))
+    (container lifecycle)
+    (Docker Compose)
+    (cheat sheet)
+```
+> [!example]- Containers and Orchestration
+>
+> > [!abstract]- [[container-lifecycle]]
+> >
+> > - [[container-lifecycle#Running Containers|Running containers]]
+> > - [[container-lifecycle#Lifecycle Management|Lifecycle management]]
+> > - [[container-lifecycle#Viewing Logs|Viewing logs]]
+> > - [[container-lifecycle#Exec and Attach|Exec and attach]]
+> > - [[container-lifecycle#Inspection and Debugging|Inspection and debugging]]
+> > - [[container-lifecycle#Container Debugging Checklist|Debugging checklist]]
+>
+> > [!abstract]- [[docker-compose]]
+> >
+> > - [[docker-compose#Compose File Structure|Compose file structure]]
+> > - [[docker-compose#Lifecycle Commands|Lifecycle commands]]
+> > - [[docker-compose#Updating Images (Rolling Updates)|Rolling updates]]
+> > - [[docker-compose#Configuration: Validation and Overrides|Config validation and overrides]]
+>
+> > [!abstract]- [[docker-cheat-sheet]]
+> >
+> > - [[docker-cheat-sheet#Container Lifecycle|Container lifecycle]]
+> > - [[docker-cheat-sheet#Image Management|Image management]]
+> > - [[docker-cheat-sheet#Docker Compose|Docker Compose]]
+> > - [[docker-cheat-sheet#Volume Management|Volume management]]
+> > - [[docker-cheat-sheet#Network Management|Network management]]
+> > - [[docker-cheat-sheet#Dockerfile Reference|Dockerfile reference]]
 
 ## Cross-References
 
-- [[terraform-cloud-run]] — Terraform provisions Cloud Run services that run Docker images
-- [[github-actions-ci-cd]] — CI/CD pipelines that build and push Docker images on merge
-- [[datadog-agent-airflow-vm]] — Datadog agent runs as a Docker container on the Airflow VM
+- [[moc-terraform|Terraform]] — Cloud Run services run Docker images
+- [[moc-github-actions|GitHub Actions]] — CI/CD builds and pushes images
+- [[moc-shell|Shell]] — Docker commands run from shell

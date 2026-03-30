@@ -42,7 +42,7 @@ updated: 2026-03-23
 
 ### Data Pipeline for PAI Computation
 
-See [[esg-data-ingestion-framework]] for the full vendor normalization pipeline (when the ESG quality checks fail, follow the [[esg-circuit-breaker-fired]] runbook). The PAI computation sits on top of the normalized ESG scores:
+See  for the full vendor normalization pipeline (when the ESG quality checks fail, follow the [[esg-circuit-breaker-fired]] runbook). The PAI computation sits on top of the normalized ESG scores:
 
 ```
 ESG vendor data (raw) → Normalize (0-100 scale) → PAI calculation → SFDR disclosure report
@@ -85,7 +85,6 @@ def compute_waci(weights: pd.DataFrame, emissions: pd.DataFrame) -> float:
 
 ## Related
 
-- [[esg-data-ingestion-framework]] — Vendor normalization and circuit breaker
 - [[eu-bmr-benchmark-regulation]] — Benchmark administrator obligations
 - [[iosco-benchmark-principles]] — International standards
 - [[compliance-and-auditability]] — Audit trail for ESG data

@@ -11,7 +11,6 @@ related:
   - "[[scoring-methodology]]"
   - "[[factor-profile-and-composition]]"
   - "[[data-sources-and-refresh]]"
-  - "[[esg-data-ingestion-framework|ESG integration]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -86,7 +85,7 @@ $$\text{GovernanceScore} = 10 - \text{mean}(\text{AuditRisk}, \text{BoardRisk}, 
 **Scale**: 0 (worst governance) – 10 (best governance). Scores below 5 warrant attention.
 
 > [!info] ESG Connection
-> Governance risk is one pillar of ESG evaluation. For broader ESG data integration including environmental and social scores, see [[esg-data-ingestion-framework|ESG integration]] and [[esg-and-sustainability]].
+> Governance risk is one pillar of ESG evaluation. For broader ESG data integration including environmental and social scores, see  and [[esg-and-sustainability]].
 
 ## Related
 

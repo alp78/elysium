@@ -27,9 +27,12 @@ Overwrites the existing database with the contents of a full backup.
 RESTORE DATABASE analytics_db
 FROM DISK = '/var/opt/mssql/backup/mydb_full.bak'
 WITH REPLACE, RECOVERY;
--- REPLACE = overwrite the existing database
--- RECOVERY = bring the database online (default)
 ```
+
+> [!info] RESTORE WITH options
+>
+> - **REPLACE** — overwrites the existing database without a safety check
+> - **RECOVERY** — brings the database online after restore (this is the default if omitted)
 
 > [!warning] REPLACE Destroys Existing Data
 >
@@ -41,17 +44,20 @@ WITH REPLACE, RECOVERY;
 
 Restores to an exact second using the full backup chain: full → differential (optional) → log backups.
 
+1. Restore the full backup with `NORECOVERY` to leave the database in a restoring state.
+2. Restore the differential backup (also with `NORECOVERY`) to bring the database closer to the target time.
+3. Restore the transaction log with `STOPAT` to replay transactions up to the exact second, then bring the database online with `RECOVERY`.
+
 ```sql
--- Step 1: Restore full backup (leave in restoring state)
 RESTORE DATABASE analytics_db FROM DISK = '/var/opt/mssql/backup/mydb_full.bak' WITH NORECOVERY;
--- Step 2: Restore differential (still restoring)
 RESTORE DATABASE analytics_db FROM DISK = '/var/opt/mssql/backup/mydb_diff.bak' WITH NORECOVERY;
--- Step 3: Restore log to exact point in time
 RESTORE LOG analytics_db FROM DISK = '/var/opt/mssql/backup/mydb_log.trn'
 WITH STOPAT = '2026-03-09T14:23:45', RECOVERY;
--- STOPAT = stop replaying log at this exact timestamp
--- RECOVERY = bring the database online
 ```
+
+> [!info] STOPAT — point-in-time precision
+>
+> `STOPAT` tells SQL Server to stop replaying the transaction log at the specified timestamp. Any transactions committed after that moment are discarded. Pair it with `RECOVERY` on the final restore step to bring the database online.
 
 #### RESTORE DATABASE options — NORECOVERY, STOPAT, REPLACE
 
@@ -73,6 +79,8 @@ WITH STOPAT = '2026-03-09T14:23:45', RECOVERY;
 
 Use this to restore a backup alongside the existing production database for comparison or investigation — without touching production data.
 
+Use `MOVE` to remap data and log file paths when the original files are already in use by the production database — this lets you restore yesterday's backup alongside production for comparison.
+
 ```sql
 -- Restore to a NEW database (side-by-side, for comparison)
 RESTORE DATABASE project_investigation
@@ -80,8 +88,6 @@ FROM DISK = '/var/opt/mssql/backup/mydb_full.bak'
 WITH MOVE 'analytics_db' TO '/var/opt/mssql/data/project_inv.mdf',
      MOVE 'mydb_log' TO '/var/opt/mssql/data/project_inv_log.ldf',
      RECOVERY;
--- MOVE = remap file paths (required when the original files are in use)
--- Use case: "restore yesterday's backup alongside production to compare data"
 ```
 
 > [!tip] Side-by-Side Investigation

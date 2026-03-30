@@ -55,7 +55,7 @@ rsync -avzh --info=progress2 source_dir/ dest_dir/
 
 #### rsync -P — resume interrupted transfers
 
-> [!info] Resume with -P
+> [!tip] Resume with -P
 >
 > `-P` combines `--partial` + `--progress`. Without `--partial`, a partially
 > transferred file is **deleted** on interruption — you start over. With `--partial`,
@@ -68,7 +68,7 @@ rsync -avzP source_dir/ dest_dir/
 
 #### rsync -n — dry-run preview before destructive operations
 
-> [!info] Dry-run preview
+> [!tip] Dry-run preview
 >
 > `-n` (or `--dry-run`) shows every file that **would** be transferred or
 > deleted without actually doing anything. Always dry-run before `--delete` operations.

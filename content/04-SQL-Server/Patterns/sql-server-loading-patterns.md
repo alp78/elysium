@@ -491,7 +491,7 @@ The standard Python path for loading data into SQL Server. One configuration fla
 
 ### cursor.fast_executemany = True — batch mode activation
 
-> [!info] How fast_executemany Works
+> [!abstract] How fast_executemany Works
 >
 > Without it, pyodbc sends one row per TDS network round-trip. With it, pyodbc batches all parameter arrays into a single TDS call. The speedup is proportional to network latency.
 
