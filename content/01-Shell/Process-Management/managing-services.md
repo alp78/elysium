@@ -6,7 +6,6 @@ tags: [shell, bash, linux, powershell]
 aliases: [systemctl, journalctl, service management, systemd, daemon, OOM kill, service restart]
 keywords: [systemctl, journalctl, systemd, service, daemon, start service, stop service, restart service, enable on boot, service logs, OOM killer, out of memory, service status, mssql-server, datadog-agent, airflow, service failed, Set-Service, Start-Service]
 description: "Managing Linux systemd services and Windows services for production data engineering infrastructure. Covers start/stop/restart/enable, reading service logs with journalctl, diagnosing OOM kills, and the PowerShell equivalents."
-related: ["[viewing-processes](/01-Shell/Process-Management/viewing-processes)", "[killing-processes](/01-Shell/Process-Management/killing-processes)", "[system-resources](/01-Shell/Process-Management/system-resources)", "[reading-file-contents](/01-Shell/Text-Processing/reading-file-contents)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # Services — Starting, Stopping, and Debugging Daemons
 
-Every long-running process in your infrastructure -- SQL Server, Airflow, Datadog agent, Docker daemon -- runs as a systemd service on Linux. Understanding service management is how you restart a crashed database, check why a monitoring agent stopped collecting metrics, or enable a new service to survive reboots. For Airflow-specific service management (scheduler, worker, webserver), see [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts).
+Every long-running process in your infrastructure -- SQL Server, Airflow, Datadog agent, Docker daemon -- runs as a systemd service on Linux. Understanding service management is how you restart a crashed database, check why a monitoring agent stopped collecting metrics, or enable a new service to survive reboots. For Airflow-specific service management (scheduler, worker, webserver), see [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts).
 
 ### systemctl, journalctl — managing systemd services and reading logs
 
@@ -126,10 +125,10 @@ Set-Service -Name "MSSQLSERVER" -StartupType Automatic
 Get-Service -Name "MSSQLSERVER" -DependentServices
 ```
 
-When running multiple services as containers, [docker-compose](/09-Docker/docker-compose) provides declarative service orchestration with `docker compose up/down/restart` and automatic dependency ordering.
+When running multiple services as containers, [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) provides declarative service orchestration with `docker compose up/down/restart` and automatic dependency ordering.
 
 ## Related
-- [viewing-processes](/01-Shell/Process-Management/viewing-processes) — monitor resource usage of a running service
-- [system-resources](/01-Shell/Process-Management/system-resources) — detect OOM conditions before they kill services
-- [killing-processes](/01-Shell/Process-Management/killing-processes) — `kill` as last resort when `systemctl stop` doesn't work
-- [reading-file-contents](/01-Shell/Text-Processing/reading-file-contents) — read log files when `journalctl` isn't enough
+- [viewing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/viewing-processes) — monitor resource usage of a running service
+- [system-resources](https://alp78.github.io/elysium/01-Shell/Process-Management/system-resources) — detect OOM conditions before they kill services
+- [killing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/killing-processes) — `kill` as last resort when `systemctl stop` doesn't work
+- [reading-file-contents](https://alp78.github.io/elysium/01-Shell/Text-Processing/reading-file-contents) — read log files when `journalctl` isn't enough

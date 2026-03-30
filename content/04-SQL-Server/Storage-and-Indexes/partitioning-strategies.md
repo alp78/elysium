@@ -6,7 +6,6 @@ tags: [sql, sql-server, tsql]
 aliases: [SQL Server partitioning, table partitioning, partition function, partition scheme, partition elimination, SWITCH partition, horizontal partitioning, date-based partitioning]
 keywords: [partitioning, partition function, partition scheme, partition elimination, SWITCH, partition boundary, trade_date, monthly partitioning, yearly partitioning, FILEGROUP, sys.partitions, sys.partition_functions, sys.partition_schemes, partition_number, archiving, sliding window, columnstore partition, partition key, RIGHT vs LEFT partition function]
 description: "SQL Server table partitioning by date: partition functions, partition schemes, creating partitioned clustered indexes, partition elimination for query performance, SWITCH for fast archiving and loading, and the sliding window pattern for ongoing pipelines."
-related: [storage-internals, index-types-and-strategy, table-compression, index-maintenance, performance-audit-playbook, blocking-and-locking, bronze-layer-loading]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # Partitioning Strategies
 
-SQL Server table partitioning divides a large table into smaller horizontal slices based on a partition key column — typically a date. Each partition is a logically independent unit: queries that filter on the partition key can skip entire partitions without scanning them (partition elimination). Partitions also enable fast `SWITCH` operations that move a full partition between tables in milliseconds — the basis for efficient archiving and sliding-window pipeline patterns. BigQuery uses the same partitioning concept for [cost optimization and query performance](/06-GCP/BigQuery/querying-and-cost-optimization).
+SQL Server table partitioning divides a large table into smaller horizontal slices based on a partition key column — typically a date. Each partition is a logically independent unit: queries that filter on the partition key can skip entire partitions without scanning them (partition elimination). Partitions also enable fast `SWITCH` operations that move a full partition between tables in milliseconds — the basis for efficient archiving and sliding-window pipeline patterns. BigQuery uses the same partitioning concept for [cost optimization and query performance](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization).
 
 > [!info] When to Partition
 >
@@ -177,7 +176,7 @@ ORDER BY partition_number;
 >
 > Partition Elimination Requires a SARGable Predicate on the Partition Key.
 > `WHERE trade_date >= '2025-01-01'` — eliminates older partitions. Good.
-> `WHERE YEAR(trade_date) = 2025` — wraps the column in a function. SQL Server may NOT eliminate partitions. Use [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries) patterns: always filter directly on the column.
+> `WHERE YEAR(trade_date) = 2025` — wraps the column in a function. SQL Server may NOT eliminate partitions. Use [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries) patterns: always filter directly on the column.
 
 ---
 
@@ -305,7 +304,7 @@ MERGE RANGE ('2021-01-01');
 
 ### Per-Partition Compression
 
-Different partitions can have different compression levels — useful for mixed hot/cold data. See [table-compression](/04-SQL-Server/Storage-and-Indexes/table-compression) for detailed compression ratio benchmarks and the decision framework for choosing between ROW and PAGE compression.
+Different partitions can have different compression levels — useful for mixed hot/cold data. See [table-compression](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/table-compression) for detailed compression ratio benchmarks and the decision framework for choosing between ROW and PAGE compression.
 
 ```sql
 -- Apply PAGE compression to old partitions, NONE to the current-year partition
@@ -381,7 +380,7 @@ JOIN sys.partition_functions pf ON ps.function_id = pf.function_id;
 ```
 Is the table > 10 million rows?
 ├── NO  → Don't partition. Add covering indexes instead.
-│         See [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy).
+│         See [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy).
 └── YES → Do queries consistently filter by a date column?
           ├── NO  → Partitioning won't help (no partition elimination).
           │         Consider columnstore index instead.
@@ -411,10 +410,10 @@ Is the table > 10 million rows?
 
 ### Related
 
-- [storage-internals](/04-SQL-Server/Storage-and-Indexes/storage-internals) — how pages and filegroups interact with partitions at the storage level
-- [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — columnstore indexes as an alternative to partitioning for analytics workloads
-- [table-compression](/04-SQL-Server/Storage-and-Indexes/table-compression) — applying per-partition compression to cold historical data
-- [index-maintenance](/04-SQL-Server/Performance/index-maintenance) — maintaining fragmentation per partition with `REBUILD PARTITION = N`
-- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — identifying tables over 10M rows that are candidates for partitioning
-- [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — SWITCH operations take a schema modification lock briefly; plan maintenance windows accordingly
-- [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) — SWITCH-based staging loads as an alternative to TRUNCATE + INSERT for large bronze tables
+- [storage-internals](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/storage-internals) — how pages and filegroups interact with partitions at the storage level
+- [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — columnstore indexes as an alternative to partitioning for analytics workloads
+- [table-compression](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/table-compression) — applying per-partition compression to cold historical data
+- [index-maintenance](https://alp78.github.io/elysium/04-SQL-Server/Performance/index-maintenance) — maintaining fragmentation per partition with `REBUILD PARTITION = N`
+- [performance-audit-playbook](https://alp78.github.io/elysium/04-SQL-Server/Performance/performance-audit-playbook) — identifying tables over 10M rows that are candidates for partitioning
+- [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) — SWITCH operations take a schema modification lock briefly; plan maintenance windows accordingly
+- [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) — SWITCH-based staging loads as an alternative to TRUNCATE + INSERT for large bronze tables

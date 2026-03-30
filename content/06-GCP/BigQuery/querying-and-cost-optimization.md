@@ -6,7 +6,6 @@ tags: [performance, cost, infrastructure, bigquery, gcp]
 aliases: [BigQuery cost optimization, bq query, BigQuery dry run, BigQuery caching, BigQuery SELECT star cost, BQ cost]
 keywords: [bigquery, bq query, cost optimization, dry run, --dry_run, bytes processed, TB scanned, partitioning, clustering, SELECT star, columnar, parameterized query, destination table, materialized view, INFORMATION_SCHEMA, JOBS, standard SQL, legacy SQL, allow_large_results, caching]
 description: "How to run BigQuery queries efficiently using the bq CLI — including dry runs for cost estimation, parameterized queries for caching, destination tables, and the 80/20 cost optimization practices."
-related: [dataset-and-table-management, data-loading-and-export, job-management, gcp-projects-and-apis, service-accounts-and-iam]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -121,10 +120,10 @@ Run this weekly. Find the expensive queries and optimize them.
 
 ## Related
 
-- [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — Partitioning and clustering are configured at table creation
-- [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) — How data gets into BigQuery for querying
-- [job-management](/06-GCP/BigQuery/job-management) — Monitoring query jobs, canceling runaway scans
-- [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) — `bigquery.googleapis.com` must be enabled
+- [dataset-and-table-management](https://alp78.github.io/elysium/06-GCP/BigQuery/dataset-and-table-management) — Partitioning and clustering are configured at table creation
+- [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) — How data gets into BigQuery for querying
+- [job-management](https://alp78.github.io/elysium/06-GCP/BigQuery/job-management) — Monitoring query jobs, canceling runaway scans
+- [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) — `bigquery.googleapis.com` must be enabled
 
 ## References
 

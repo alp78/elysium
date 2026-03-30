@@ -5,10 +5,7 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [file IO, JSON serialization, CSV, file reading, file writing, serialization, deserialization]
 keywords: [File, StreamReader, StreamWriter, JsonSerializer, System.Text.Json, Newtonsoft, CsvHelper, Path, Directory]
-description: "C# file I/O and serialization reference with executable examples and cell outputs — covers File/Stream APIs, System.Text.Json, Newtonsoft.Json, CSV handling, and async file operations. See [09_py_fileio_serialization](/02-Programming-Languages/Python/09_py_fileio_serialization) for the Python equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[09_py_fileio_serialization](/02-Programming-Languages/Python/09_py_fileio_serialization)"
+description: "C# file I/O and serialization reference with executable examples and cell outputs — covers File/Stream APIs, System.Text.Json, Newtonsoft.Json, CSV handling, and async file operations. See [09_py_fileio_serialization](https://alp78.github.io/elysium/02-Programming-Languages/Python/09_py_fileio_serialization) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -675,7 +672,7 @@ Multi-document    No                      Yes (--- separator)
 
 ## Serialization, Deserialization, and Streams
 
-For an architecture-level comparison of when to choose JSON, CSV, Parquet, or Avro across the full pipeline, see [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats). The `GZipStream` and `DeflateStream` wrappers used with these streams map to the codec decisions covered in [compression](/01-Shell/File-Operations/compression).
+For an architecture-level comparison of when to choose JSON, CSV, Parquet, or Avro across the full pipeline, see [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats). The `GZipStream` and `DeflateStream` wrappers used with these streams map to the codec decisions covered in [compression](https://alp78.github.io/elysium/01-Shell/File-Operations/compression).
 
 #### Serialization Streams — System.IO hierarchy FileStream, MemoryStream, StreamReader
 

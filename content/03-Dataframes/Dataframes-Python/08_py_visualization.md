@@ -10,12 +10,6 @@ aliases:
   - matplotlib, seaborn, plotting, charts
 keywords: [matplotlib, seaborn, plot, bar, line, scatter, histogram, heatmap, subplots, facet, savefig]
 description: "Pandas/Polars DataFrame reference 08/10 — Visualization (matplotlib, seaborn, static charts). Side-by-side executable examples with cell outputs."
-related:
-  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
-  - "[08_cs_visualization](/03-Dataframes/Dataframes-CSharp/08_cs_visualization)"
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[07_py_types_interop](/03-Dataframes/Dataframes-Python/07_py_types_interop)"
-  - "[09_py_database_interface](/03-Dataframes/Dataframes-Python/09_py_database_interface)"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete

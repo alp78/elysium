@@ -6,7 +6,6 @@ tags: [shell, bash, linux, powershell]
 aliases: [command history, shell history, history recall, reverse search, Ctrl+R]
 keywords: [command history, history, reverse search, Ctrl+R, bash history, HISTSIZE, HISTCONTROL, recall, re-run command, bang bang, exclamation, PSReadLine, predictive intellisense]
 description: "How to search, recall, and re-run previous shell commands in bash and PowerShell, including history configuration for data engineers and incident response."
-related: [environment-variables, defensive-scripting, command-chaining]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -142,9 +141,9 @@ Set-PSReadLineOption -PredictionViewStyle ListView
 
 ## Related
 
-- [environment-variables](/01-Shell/Scripting/environment-variables) — Preventing secrets from being stored in history
-- [defensive-scripting](/01-Shell/Scripting/defensive-scripting) — Writing scripts that don't need manual recall
-- [command-chaining](/01-Shell/Scripting/command-chaining) — Building complex command pipelines
+- [environment-variables](https://alp78.github.io/elysium/01-Shell/Scripting/environment-variables) — Preventing secrets from being stored in history
+- [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) — Writing scripts that don't need manual recall
+- [command-chaining](https://alp78.github.io/elysium/01-Shell/Scripting/command-chaining) — Building complex command pipelines
 
 ## References
 

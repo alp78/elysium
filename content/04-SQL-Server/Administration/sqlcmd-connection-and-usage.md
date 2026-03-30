@@ -6,7 +6,6 @@ tags: [sql, sql-server, tsql]
 aliases: [sqlcmd, go-sqlcmd, mssql-tools, Invoke-Sqlcmd, sql server command line]
 keywords: [sqlcmd, sql server command line, mssql-tools18, connection flags, -S -U -P -d -C, execute query, script file, CSV export, PowerShell Invoke-Sqlcmd, go-sqlcmd, IAP tunnel, TDS, ODBC]
 description: "How to connect to SQL Server from the command line using sqlcmd, including all common flags, inline queries, script execution, and CSV export in both Linux and PowerShell."
-related: [essential-dba-queries, server-configuration, backup-types-and-strategy]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -268,7 +267,7 @@ sqlcmd -S prod-sql01 -E -d FinanceDB -i /deploy/v2.5.sql -b -o /logs/v2.5.log
 
 ### Related
 
-- [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — queries to run after connecting
-- [server-configuration](/04-SQL-Server/Administration/server-configuration) — configuring max memory, RCSI, recovery models
-- [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy) — using sqlcmd for backup operations
-- [restore-and-recovery](/04-SQL-Server/Administration/restore-and-recovery) — RESTORE commands
+- [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/Administration/essential-dba-queries) — queries to run after connecting
+- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) — configuring max memory, RCSI, recovery models
+- [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy) — using sqlcmd for backup operations
+- [restore-and-recovery](https://alp78.github.io/elysium/04-SQL-Server/Administration/restore-and-recovery) — RESTORE commands

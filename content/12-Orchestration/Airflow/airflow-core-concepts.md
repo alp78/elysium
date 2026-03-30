@@ -53,10 +53,6 @@ keywords:
   - dag scheduling
   - airflow architecture
 description: "Comprehensive reference for Apache Airflow core concepts: architecture (Scheduler, Webserver, Worker, Metadata DB, Executor), DAGs, Operators, Sensors, Hooks, XComs, the TaskFlow API, and a comparison of all Executor types."
-related:
-  - airflow-dag-patterns
-  - airflow-deployment
-  - airflow-troubleshooting
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -124,7 +120,7 @@ The webserver reads from the Metadata DB — it does **not** schedule tasks.
 Workers are processes (or pods) that **execute Task Instances**. What "worker" means depends on the Executor:
 - **LocalExecutor**: subprocesses on the Scheduler machine
 - **CeleryExecutor**: Celery worker processes on separate machines
-- **KubernetesExecutor**: ephemeral Kubernetes pods, each following its own [container-lifecycle](/09-Docker/container-lifecycle)
+- **KubernetesExecutor**: ephemeral Kubernetes pods, each following its own [container-lifecycle](https://alp78.github.io/elysium/09-Docker/container-lifecycle)
 
 ### Metadata Database
 
@@ -476,7 +472,7 @@ wait_for_data = SqlSensor(
 
 A **Connection** stores credentials for external systems (databases, APIs, cloud services). Stored in the Metadata DB (encrypted) or externally (Secret Manager, env vars).
 
-#### Setting a connection via environment variable (preferred for secrets -- see [environment-variables](/01-Shell/Scripting/environment-variables) for general env var patterns)
+#### Setting a connection via environment variable (preferred for secrets -- see [environment-variables](https://alp78.github.io/elysium/01-Shell/Scripting/environment-variables) for general env var patterns)
 
 ```bash
 # Format: AIRFLOW_CONN_{CONN_ID} = URI or JSON
@@ -542,7 +538,7 @@ def load_postgres_to_bq(**context):
 XComs (Cross-Communications) allow tasks to exchange small messages via the Metadata DB. A task **pushes** a value; downstream tasks **pull** it.
 
 > [!warning] XCom Size Limit
-> XComs are stored in the Metadata DB. The default serialization backend (pickle/JSON) has a practical limit of **~48 KB** in most configurations. Do NOT use XComs to pass DataFrames, file contents, or large result sets. Instead, write data to GCS/S3 and pass the **path** as the XCom value. See [airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting) for the "XCom too large" error.
+> XComs are stored in the Metadata DB. The default serialization backend (pickle/JSON) has a practical limit of **~48 KB** in most configurations. Do NOT use XComs to pass DataFrames, file contents, or large result sets. Instead, write data to GCS/S3 and pass the **path** as the XCom value. See [airflow-troubleshooting](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-troubleshooting) for the "XCom too large" error.
 
 ```python
 # --- Pushing XComs ---
@@ -777,10 +773,10 @@ delete_worker_pods = True
 ```
 
 > [!info] Cloud Composer Uses LocalKubernetesExecutor
-> Google Cloud Composer (managed Airflow) uses the `LocalKubernetesExecutor` by default, which routes tasks either to local workers or K8s pods based on configuration. You cannot change the executor in Cloud Composer. See [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) for Cloud Composer specifics.
+> Google Cloud Composer (managed Airflow) uses the `LocalKubernetesExecutor` by default, which routes tasks either to local workers or K8s pods based on configuration. You cannot change the executor in Cloud Composer. See [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) for Cloud Composer specifics.
 
 > [!tip] Related pattern
-> Most local and self-hosted Airflow deployments use [docker-compose](/09-Docker/docker-compose) to run the Scheduler, Webserver, and Metadata DB as coordinated containers. The [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) note walks through the full `docker-compose.yaml` setup.
+> Most local and self-hosted Airflow deployments use [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) to run the Scheduler, Webserver, and Metadata DB as coordinated containers. The [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) note walks through the full `docker-compose.yaml` setup.
 
 ---
 
@@ -809,10 +805,10 @@ Airflow uses Jinja2 templating in `template_fields` of Operators. Common templat
 
 ## Related Notes
 
-- [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Error classification, retry strategies, and failure propagation theory behind Airflow's retry mechanics
-- [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) — Task dependencies, dynamic DAGs, branching, trigger rules
-- [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) — Docker Compose, Cloud Composer, CI/CD for DAGs
-- [airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting) — Common errors, debugging CLI commands, log locations
+- [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Error classification, retry strategies, and failure propagation theory behind Airflow's retry mechanics
+- [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) — Task dependencies, dynamic DAGs, branching, trigger rules
+- [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) — Docker Compose, Cloud Composer, CI/CD for DAGs
+- [airflow-troubleshooting](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-troubleshooting) — Common errors, debugging CLI commands, log locations
 
 ## References
 

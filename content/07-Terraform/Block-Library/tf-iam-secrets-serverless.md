@@ -57,8 +57,6 @@ description: >
   Cloud Functions v2, Cloud Scheduler, Pub/Sub, and Artifact Registry. Each
   block is self-contained and heavily commented for copy-paste use in data
   engineering infrastructure.
-related:
-  - "[moc-terraform](/07-Terraform/moc-terraform)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

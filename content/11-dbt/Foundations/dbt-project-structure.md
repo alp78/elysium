@@ -5,11 +5,6 @@ technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "Project layout, naming conventions, config inheritance, multi-adapter"
-related:
-  - "[dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)"
-  - "[dbt-cli-reference](/11-dbt/Foundations/dbt-cli-reference)"
-  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
-  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
 ---
 
 # dbt: Project Structure
@@ -330,7 +325,7 @@ group by 1
 
 ### dbt Mapping to Medallion Architecture
 
-The directory structure directly mirrors the [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) layers, making the staging/intermediate/marts hierarchy a concrete implementation of bronze/silver/gold:
+The directory structure directly mirrors the [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) layers, making the staging/intermediate/marts hierarchy a concrete implementation of bronze/silver/gold:
 
 ```
 Bronze (raw ingestion)
@@ -386,7 +381,7 @@ financial_platform:
 ---
 
 ## Related
-- [dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)
-- [dbt-cli-reference](/11-dbt/Foundations/dbt-cli-reference)
-- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)
-- [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)
+- [dbt-core-concepts](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-core-concepts)
+- [dbt-cli-reference](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-cli-reference)
+- [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)
+- [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)

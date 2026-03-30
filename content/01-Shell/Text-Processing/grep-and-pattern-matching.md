@@ -44,15 +44,6 @@ keywords:
   - zgrep
   - compressed file search
 description: "Exhaustive reference for grep and pattern matching in bash and PowerShell, covering basic flags, regular expressions, advanced features, data engineering scenarios, and ripgrep. Every bash example paired with its PowerShell Select-String equivalent."
-related:
-  - "[reading-file-contents](/01-Shell/Text-Processing/reading-file-contents)"
-  - "[io-redirection](/01-Shell/Scripting/io-redirection)"
-  - "[finding-files](/01-Shell/File-Operations/finding-files)"
-  - "[command-chaining](/01-Shell/Scripting/command-chaining)"
-  - "[process-substitution](/01-Shell/Scripting/process-substitution)"
-  - "[brace-expansion-and-globbing](/01-Shell/Scripting/brace-expansion-and-globbing)"
-  - "[viewing-processes](/01-Shell/Process-Management/viewing-processes)"
-  - "[defensive-scripting](/01-Shell/Scripting/defensive-scripting)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -60,7 +51,7 @@ status: complete
 
 # grep and Pattern Matching
 
-`grep` (Global Regular Expression Print) is the foundational text search tool in Unix/Linux environments and the daily workhorse of log analysis, pipeline debugging, and code archaeology for data engineers. The regex syntax used here is the same pattern language available in [Python's re module](/02-Programming-Languages/Python/02_py_strings) and [C#'s Regex class](/02-Programming-Languages/CSharp/02_cs_strings), so patterns you learn here transfer directly to application code. While grep finds matches, [sed-stream-editing](/01-Shell/Text-Processing/sed-stream-editing) complements it by editing the matched lines in place.
+`grep` (Global Regular Expression Print) is the foundational text search tool in Unix/Linux environments and the daily workhorse of log analysis, pipeline debugging, and code archaeology for data engineers. The regex syntax used here is the same pattern language available in [Python's re module](https://alp78.github.io/elysium/02-Programming-Languages/Python/02_py_strings) and [C#'s Regex class](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/02_cs_strings), so patterns you learn here transfer directly to application code. While grep finds matches, [sed-stream-editing](https://alp78.github.io/elysium/01-Shell/Text-Processing/sed-stream-editing) complements it by editing the matched lines in place.
 
 This note covers `grep` exhaustively alongside PowerShell's `Select-String` equivalent, so every technique is immediately usable regardless of which environment you are working in.
 
@@ -1505,14 +1496,14 @@ Get-ChildItem -Recurse -Filter *.sql |
 
 ## Related Notes
 
-- [reading-file-contents](/01-Shell/Text-Processing/reading-file-contents) — `cat`, `head`, `tail`, `less` for viewing files before grepping
-- [io-redirection](/01-Shell/Scripting/io-redirection) — Redirect grep output to files, suppress stderr with `2>/dev/null`
-- [finding-files](/01-Shell/File-Operations/finding-files) — `find` and `Get-ChildItem` to locate files before grepping
-- [command-chaining](/01-Shell/Scripting/command-chaining) — Pipe grep output into `sort`, `uniq`, `wc`, `awk`, `cut`
-- [process-substitution](/01-Shell/Scripting/process-substitution) — Use `<(grep ...)` to feed grep output as a file argument
-- [brace-expansion-and-globbing](/01-Shell/Scripting/brace-expansion-and-globbing) — Glob patterns for targeting multiple files in grep
-- [viewing-processes](/01-Shell/Process-Management/viewing-processes) — `ps aux | grep` patterns for finding processes
-- [defensive-scripting](/01-Shell/Scripting/defensive-scripting) — Handle grep exit codes (0 = match found, 1 = no match, 2 = error)
+- [reading-file-contents](https://alp78.github.io/elysium/01-Shell/Text-Processing/reading-file-contents) — `cat`, `head`, `tail`, `less` for viewing files before grepping
+- [io-redirection](https://alp78.github.io/elysium/01-Shell/Scripting/io-redirection) — Redirect grep output to files, suppress stderr with `2>/dev/null`
+- [finding-files](https://alp78.github.io/elysium/01-Shell/File-Operations/finding-files) — `find` and `Get-ChildItem` to locate files before grepping
+- [command-chaining](https://alp78.github.io/elysium/01-Shell/Scripting/command-chaining) — Pipe grep output into `sort`, `uniq`, `wc`, `awk`, `cut`
+- [process-substitution](https://alp78.github.io/elysium/01-Shell/Scripting/process-substitution) — Use `<(grep ...)` to feed grep output as a file argument
+- [brace-expansion-and-globbing](https://alp78.github.io/elysium/01-Shell/Scripting/brace-expansion-and-globbing) — Glob patterns for targeting multiple files in grep
+- [viewing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/viewing-processes) — `ps aux | grep` patterns for finding processes
+- [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) — Handle grep exit codes (0 = match found, 1 = no match, 2 = error)
 
 > [!info] grep exit codes in scripts
 >

@@ -6,11 +6,6 @@ tags: [security, infrastructure, terraform, iac, gcp]
 aliases: [terraform IAM, terraform service accounts, terraform Secret Manager, GCP IAM bindings terraform, google_service_account]
 keywords: [google_service_account, google_project_iam_member, google_secret_manager_secret, IAM bindings, service account, least privilege, secret manager, secret version, roles, secretAccessor, run.invoker, artifactregistry.writer, conditional resources, Datadog, count]
 description: "Terraform configuration for GCP IAM service accounts, IAM role bindings, and Secret Manager secrets. Covers the least-privilege pattern with one service account per workload, resource-level vs project-level bindings, and conditional Datadog resources."
-related:
-  - "[terraform-compute](/07-Terraform/GCP-Resources/terraform-compute)"
-  - "[terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run)"
-  - "[terraform-conditional-resources](/07-Terraform/Patterns/terraform-conditional-resources)"
-  - "[terraform-networking](/07-Terraform/GCP-Resources/terraform-networking)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -22,7 +17,7 @@ This note covers `iam.tf`, `secrets.tf`, and the IAM portions of `ci.tf` — the
 
 ### Design Principle: One Service Account Per Workload
 
-A **service account** is a non-human identity that a workload runs as. Each workload gets its own service account with the minimum permissions it needs (**least privilege**). For the underlying GCP IAM concepts -- roles, policies, and the principal hierarchy -- see [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam). This is the standard GCP pattern -- one service account per service. The service accounts themselves have **no permissions by default**; they only gain access through explicit IAM bindings.
+A **service account** is a non-human identity that a workload runs as. Each workload gets its own service account with the minimum permissions it needs (**least privilege**). For the underlying GCP IAM concepts -- roles, policies, and the principal hierarchy -- see [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam). This is the standard GCP pattern -- one service account per service. The service accounts themselves have **no permissions by default**; they only gain access through explicit IAM bindings.
 
 > [!info] Resource vs Project IAM
 >
@@ -175,7 +170,7 @@ The Datadog service account gets three read-only roles:
 >
 > The Datadog integration can only observe — it cannot modify any resource. This is the correct least-privilege posture for a monitoring integration.
 
-See [terraform-conditional-resources](/07-Terraform/Patterns/terraform-conditional-resources) for the full pattern.
+See [terraform-conditional-resources](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-conditional-resources) for the full pattern.
 
 ---
 
@@ -183,7 +178,7 @@ See [terraform-conditional-resources](/07-Terraform/Patterns/terraform-condition
 
 ### The Two-Level Structure
 
-Secret Manager uses a **two-level structure**: the **secret** (a named container) and one or more **versions** (the actual values). For the operational side of working with secrets -- rotation, access auditing, and application integration patterns -- see [secrets-management](/06-GCP/Security/secrets-management). This is why there are two Terraform resources per secret — one for the container, one for the value. The container defines the name and replication policy; the version holds the actual sensitive data. You can have multiple versions (e.g., after rotating a password) and Cloud Run references `version = "latest"` to always get the newest one.
+Secret Manager uses a **two-level structure**: the **secret** (a named container) and one or more **versions** (the actual values). For the operational side of working with secrets -- rotation, access auditing, and application integration patterns -- see [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management). This is why there are two Terraform resources per secret — one for the container, one for the value. The container defines the name and replication policy; the version holds the actual sensitive data. You can have multiple versions (e.g., after rotating a password) and Cloud Run references `version = "latest"` to always get the newest one.
 
 ### Secret Container
 
@@ -312,10 +307,10 @@ gcloud secrets versions access latest --secret=data-pipeline-db-password
 
 ## Related
 
-- [terraform-compute](/07-Terraform/GCP-Resources/terraform-compute) — the VMs assigned service accounts
-- [terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run) — how secrets are injected into Cloud Run containers
-- [terraform-conditional-resources](/07-Terraform/Patterns/terraform-conditional-resources) — the `count` pattern for optional Datadog resources
-- [terraform-registry-and-ci](/07-Terraform/GCP-Resources/terraform-registry-and-ci) — the CI service account's primary use case
+- [terraform-compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-compute) — the VMs assigned service accounts
+- [terraform-cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run) — how secrets are injected into Cloud Run containers
+- [terraform-conditional-resources](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-conditional-resources) — the `count` pattern for optional Datadog resources
+- [terraform-registry-and-ci](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-registry-and-ci) — the CI service account's primary use case
 
 ## References
 

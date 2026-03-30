@@ -6,12 +6,6 @@ tags: [monitoring, orchestration, observability, docker, airflow, datadog, gcp]
 aliases: [DD Agent Airflow, Datadog Airflow VM, dd-agent COS]
 keywords: [datadog agent, airflow vm, docker, container-optimized os, COS, dd-agent, autodiscovery, docker labels, statsd, DogStatsD, port 8126, APM, startup script, airflow-net, e2-medium]
 description: "How to set up the Datadog Agent as a Docker container on the example Airflow VM (Container-Optimized OS), covering startup script, autodiscovery labels, StatsD metrics, and memory budget."
-related:
-  - datadog-architecture-overview
-  - datadog-apm-traces
-  - datadog-troubleshooting
-  - data-pipeline-architecture-overview
-  - data-pipeline-airflow-dags
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -69,7 +63,7 @@ docker run -d \
 | Docker socket (read-only) | `docker.sock` | Enables container discovery and log collection |
 
 > [!warning] COS Filesystem Constraint
-> Container-Optimized OS has a read-only `/opt` filesystem. The standard Datadog volume mount `-v /opt/datadog-agent/run:/opt/datadog-agent/run:rw` will **fail silently** on COS. Always use `/var/lib/datadog-agent/run` on the host side. See [datadog-troubleshooting](/13-Observability/Datadog/datadog-troubleshooting) for the exact fix.
+> Container-Optimized OS has a read-only `/opt` filesystem. The standard Datadog volume mount `-v /opt/datadog-agent/run:/opt/datadog-agent/run:rw` will **fail silently** on COS. Always use `/var/lib/datadog-agent/run` on the host side. See [datadog-troubleshooting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-troubleshooting) for the exact fix.
 
 > [!tip] Startup Script Guard
 > The agent launch is guarded by `|| echo "WARNING..."` so a failure doesn't block Airflow startup. If the agent fails to start, the Airflow containers still launch normally.
@@ -235,7 +229,7 @@ resource "google_compute_instance" "airflow" {
 ```
 
 > [!warning] Missing dd-api-key
-> The `dd-api-key` metadata must be present on the Airflow VM. During infrastructure changes (e.g., Cloud SQL to SQL VM migration), this key can accidentally be omitted, causing dd-agent to not start. Always verify both VMs have `dd-api-key` in their metadata. This is the most common cause of missing APM traces — see [datadog-troubleshooting](/13-Observability/Datadog/datadog-troubleshooting).
+> The `dd-api-key` metadata must be present on the Airflow VM. During infrastructure changes (e.g., Cloud SQL to SQL VM migration), this key can accidentally be omitted, causing dd-agent to not start. Always verify both VMs have `dd-api-key` in their metadata. This is the most common cause of missing APM traces — see [datadog-troubleshooting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-troubleshooting).
 
 ---
 
@@ -259,9 +253,9 @@ gcloud compute ssh data-pipeline-airflow --zone=europe-west1-b --tunnel-through-
 
 ## Related
 
-- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — Full observability topology
-- [datadog-apm-traces](/13-Observability/Datadog/datadog-apm-traces) — APM trace flow from Cloud Run through this agent
-- [datadog-dashboards](/13-Observability/Datadog/datadog-dashboards) — Airflow Orchestration Dashboard and its metrics
-- [datadog-alerting](/13-Observability/Datadog/datadog-alerting) — Recommended monitors for Airflow scheduler and tasks
-- [datadog-troubleshooting](/13-Observability/Datadog/datadog-troubleshooting) — APM not appearing, no logs, COS filesystem issues
+- [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) — Full observability topology
+- [datadog-apm-traces](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-apm-traces) — APM trace flow from Cloud Run through this agent
+- [datadog-dashboards](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-dashboards) — Airflow Orchestration Dashboard and its metrics
+- [datadog-alerting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-alerting) — Recommended monitors for Airflow scheduler and tasks
+- [datadog-troubleshooting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-troubleshooting) — APM not appearing, no logs, COS filesystem issues
 - the Airflow DAGs — the data pipeline project DAG structure and pipeline orchestration

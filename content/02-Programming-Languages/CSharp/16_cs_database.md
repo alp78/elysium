@@ -5,10 +5,7 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [database access, SQL, ORM, pyodbc, Entity Framework, Dapper, SQLAlchemy, connection strings]
 keywords: [Entity Framework, Dapper, SqlConnection, DbContext, LINQ to SQL, migrations, connection string, ORM]
-description: "C# database reference with executable examples and cell outputs — covers Entity Framework Core, Dapper, raw ADO.NET, migrations, and connection string patterns. See [16_py_database](/02-Programming-Languages/Python/16_py_database) for the Python equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[16_py_database](/02-Programming-Languages/Python/16_py_database)"
+description: "C# database reference with executable examples and cell outputs — covers Entity Framework Core, Dapper, raw ADO.NET, migrations, and connection string patterns. See [16_py_database](https://alp78.github.io/elysium/02-Programming-Languages/Python/16_py_database) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -634,7 +631,7 @@ Quick reference of all important SQLite PRAGMAs — set these right after `Open(
 
 Connect to the live stoxx database (localhost,1434). Query `sys.tables` and
 `sys.schemas` to discover the medallion architecture: bronze (raw), silver (cleaned),
-gold (computed scores). `sys.partitions` gives approximate row counts. The T-SQL patterns used throughout this section (parameterised queries, CTEs, window functions) follow [sql-fundamentals](/05-DB-Queries/SQL-Server/sql-fundamentals).
+gold (computed scores). `sys.partitions` gives approximate row counts. The T-SQL patterns used throughout this section (parameterised queries, CTEs, window functions) follow [sql-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals).
 
 > [!info] ADO.NET pattern (SQL Server)
 >

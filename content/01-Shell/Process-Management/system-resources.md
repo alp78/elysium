@@ -6,7 +6,6 @@ tags: [shell, bash, linux, powershell]
 aliases: [free, vmstat, iostat, iotop, lscpu, uptime, load average, memory monitoring, disk IO]
 keywords: [free, vmstat, iostat, iotop, lscpu, uptime, load average, memory, CPU, disk I/O, buffer cache, swap, available memory, page life expectancy, PLE, SQL Server memory, OOM killer, performance monitoring, Get-Counter]
 description: "Linux and PowerShell commands for monitoring memory, CPU, and disk I/O. Explains the 'available' vs 'free' memory distinction, load average interpretation, and how to read iostat for disk saturation."
-related: ["[viewing-processes](/01-Shell/Process-Management/viewing-processes)", "[killing-processes](/01-Shell/Process-Management/killing-processes)", "[managing-services](/01-Shell/Process-Management/managing-services)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -86,7 +85,7 @@ sudo iotop -o   # -o = only show processes with active I/O
 
 > [!tip] SQL Server memory behavior
 >
-> SQL Server intentionally grabs as much memory as possible and holds it. This is BY DESIGN -- it's using the RAM as a buffer pool cache. `free -h` will show almost all memory as "used," which looks alarming but is correct behavior. For deeper analysis of buffer pool health, cache hit ratios, and memory grants, see [memory-and-buffer-pool](/04-SQL-Server/Performance/memory-and-buffer-pool).
+> SQL Server intentionally grabs as much memory as possible and holds it. This is BY DESIGN -- it's using the RAM as a buffer pool cache. `free -h` will show almost all memory as "used," which looks alarming but is correct behavior. For deeper analysis of buffer pool health, cache hit ratios, and memory grants, see [memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/Performance/memory-and-buffer-pool).
 >
 > The real question is: "Does SQL Server have ENOUGH memory?" Check Page Life Expectancy (PLE):
 > ```sql
@@ -116,9 +115,9 @@ Get-Counter '\PhysicalDisk(*)\Disk Reads/sec','\PhysicalDisk(*)\Disk Writes/sec'
     '\PhysicalDisk(*)\Avg. Disk sec/Read','\PhysicalDisk(*)\Avg. Disk sec/Write'
 ```
 
-For automated monitoring of these same metrics (CPU, memory, disk I/O) with alerting and dashboards, see [datadog-sql-server-integration](/13-Observability/Datadog/datadog-sql-server-integration). To tune SQL Server's memory ceiling and prevent it from starving the OS, see [max server memory configuration](/04-SQL-Server/Administration/server-configuration).
+For automated monitoring of these same metrics (CPU, memory, disk I/O) with alerting and dashboards, see [datadog-sql-server-integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-sql-server-integration). To tune SQL Server's memory ceiling and prevent it from starving the OS, see [max server memory configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration).
 
 ## Related
-- [viewing-processes](/01-Shell/Process-Management/viewing-processes) — identify which processes are consuming the resources
-- [killing-processes](/01-Shell/Process-Management/killing-processes) — terminate runaway processes consuming excess resources
-- [managing-services](/01-Shell/Process-Management/managing-services) — check if OOM kills are crashing services
+- [viewing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/viewing-processes) — identify which processes are consuming the resources
+- [killing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/killing-processes) — terminate runaway processes consuming excess resources
+- [managing-services](https://alp78.github.io/elysium/01-Shell/Process-Management/managing-services) — check if OOM kills are crashing services

@@ -6,7 +6,6 @@ tags: [infrastructure, gcp, security, iam]
 aliases: [VPC Service Controls, VPC-SC, service perimeter, access context manager, data exfiltration prevention, GCP data perimeter]
 keywords: [VPC service controls, VPC-SC, access context manager, service perimeter, access policy, ingress policy, egress policy, access level, data exfiltration, perimeter, restricted services, violation reason, RESOURCES_NOT_IN_SAME_SERVICE_PERIMETER, NO_MATCHING_ACCESS_LEVEL, financial data security, Terraform VPC-SC, gcloud access-context-manager]
 description: "How VPC Service Controls create a data perimeter that prevents exfiltration of BigQuery and GCS data — even for users with IAM admin permissions — and how to configure, audit, and debug VPC-SC violations."
-related: [service-accounts-and-iam, gcloud-authentication, cloud-logging, dataset-and-table-management, gcs-buckets-and-lifecycle]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -153,7 +152,7 @@ resource "google_access_context_manager_access_level" "trusted_engineers" {
 
 ### Debugging VPC-SC Denial Errors
 
-VPC-SC denials appear in [Cloud Audit Logs](/06-GCP/Logging/cloud-logging) with a specific violation type:
+VPC-SC denials appear in [Cloud Audit Logs](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) with a specific violation type:
 
 ```bash
 gcloud logging read 'protoPayload.status.code=7 AND
@@ -191,11 +190,11 @@ gcloud logging read 'protoPayload.status.code=7 AND
 
 ## Related
 
-- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — IAM is the "who"; VPC-SC is the "where" — both layers work together
-- [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — Understanding which identity is making requests is essential for debugging VPC-SC
-- [cloud-logging](/06-GCP/Logging/cloud-logging) — VPC-SC violations appear in Cloud Audit Logs; query them with `gcloud logging read`
-- [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — BigQuery is one of the primary services protected by VPC-SC
-- [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) — GCS is the other primary service protected by VPC-SC
+- [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — IAM is the "who"; VPC-SC is the "where" — both layers work together
+- [gcloud-authentication](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication) — Understanding which identity is making requests is essential for debugging VPC-SC
+- [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) — VPC-SC violations appear in Cloud Audit Logs; query them with `gcloud logging read`
+- [dataset-and-table-management](https://alp78.github.io/elysium/06-GCP/BigQuery/dataset-and-table-management) — BigQuery is one of the primary services protected by VPC-SC
+- [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) — GCS is the other primary service protected by VPC-SC
 
 ## References
 

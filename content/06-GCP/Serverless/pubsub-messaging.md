@@ -6,7 +6,6 @@ tags: [infrastructure, gcp, pubsub]
 aliases: [Pub/Sub publish, Pub/Sub consume, Pub/Sub pull, gcloud pubsub publish, message attributes, Pub/Sub backlog, ordering keys, exactly-once, idempotent]
 keywords: [pubsub, publish, consume, pull, auto-ack, attributes, message ordering, ordering keys, exactly-once delivery, at-least-once, idempotent, backlog, num_undelivered_messages, pipeline lag, MERGE upsert]
 description: "How to publish messages to Pub/Sub topics and consume them from subscriptions — including attributes, ordering keys, backlog monitoring, and the idempotency requirements of at-least-once delivery."
-related: [pubsub-topics-and-subscriptions, cloud-run-jobs-vs-services, querying-and-cost-optimization, cloud-monitoring-metrics]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # Pub/Sub Publishing and Consuming Messages
 
-Publishing to a Pub/Sub topic is a single `gcloud pubsub topics publish` command. Consuming is a `gcloud pubsub subscriptions pull`. In practice, production systems use client libraries (Python `google-cloud-pubsub` -- see [24_py_streaming_realtime](/02-Programming-Languages/Python/24_py_streaming_realtime), or C# -- see [24_cs_streaming_realtime](/02-Programming-Languages/CSharp/24_cs_streaming_realtime)) for both operations, but the CLI commands are essential for testing, debugging, and verifying message flow. The most important operational concept is that Pub/Sub delivers messages **at least once**, which means consumers must be idempotent.
+Publishing to a Pub/Sub topic is a single `gcloud pubsub topics publish` command. Consuming is a `gcloud pubsub subscriptions pull`. In practice, production systems use client libraries (Python `google-cloud-pubsub` -- see [24_py_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/Python/24_py_streaming_realtime), or C# -- see [24_cs_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/24_cs_streaming_realtime)) for both operations, but the CLI commands are essential for testing, debugging, and verifying message flow. The most important operational concept is that Pub/Sub delivers messages **at least once**, which means consumers must be idempotent.
 
 ## Publishing Messages
 
@@ -63,7 +62,7 @@ gcloud pubsub subscriptions describe pipeline-sub \
 # This is how you detect pipeline lag
 ```
 
-A growing backlog is the primary indicator of pipeline lag. If messages arrive faster than they are consumed, the backlog grows, increasing end-to-end latency. The backlog metric is also available in [Cloud Monitoring](/06-GCP/Logging/cloud-monitoring-metrics) at `pubsub.googleapis.com/subscription/num_undelivered_messages`.
+A growing backlog is the primary indicator of pipeline lag. If messages arrive faster than they are consumed, the backlog grows, increasing end-to-end latency. The backlog metric is also available in [Cloud Monitoring](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics) at `pubsub.googleapis.com/subscription/num_undelivered_messages`.
 
 ### Pub/Sub Ordering Keys and Exactly-Once Delivery
 
@@ -100,14 +99,14 @@ Structure messages as JSON with a consistent schema:
 }
 ```
 
-Keep messages small (under 10 KB). For large payloads, store the data in GCS and publish a pointer (GCS URI) in the message body. For the broader architectural context of how Pub/Sub fits into event-driven pipelines, see [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture).
+Keep messages small (under 10 KB). For large payloads, store the data in GCS and publish a pointer (GCS URI) in the message body. For the broader architectural context of how Pub/Sub fits into event-driven pipelines, see [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture).
 
 ## Related
 
-- [pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions) — Creating topics, subscriptions, and dead letter queues
-- [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — Cloud Run Services often serve as push subscription endpoints
-- [cloud-monitoring-metrics](/06-GCP/Logging/cloud-monitoring-metrics) — Monitor `pubsub.googleapis.com/subscription/num_undelivered_messages`
-- [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) — Using MERGE (upsert) to maintain idempotency when writing to BigQuery
+- [pubsub-topics-and-subscriptions](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-topics-and-subscriptions) — Creating topics, subscriptions, and dead letter queues
+- [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) — Cloud Run Services often serve as push subscription endpoints
+- [cloud-monitoring-metrics](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics) — Monitor `pubsub.googleapis.com/subscription/num_undelivered_messages`
+- [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) — Using MERGE (upsert) to maintain idempotency when writing to BigQuery
 
 ## References
 

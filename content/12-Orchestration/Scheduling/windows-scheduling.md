@@ -33,8 +33,6 @@ keywords:
   - Python pipeline scheduling
   - Windows automation
 description: "Exhaustive reference for scheduling tasks on Windows using schtasks.exe, the PowerShell ScheduledTasks module, and PSScheduledJob. Covers all trigger types, data engineering patterns (SSIS, sqlcmd, Python pipelines), event-based triggers, error notification, and a comparison with Linux cron."
-related:
-  - "[airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -1215,6 +1213,6 @@ Register-ScheduledTask -Xml (Get-Content "MyTask.xml" -Raw) -TaskName "MyTask" -
 
 ## Related
 
-- [linux-scheduling](/12-Orchestration/Scheduling/linux-scheduling) — The Linux equivalent: cron, systemd timers, at, and anacron
-- [gcp-scheduling](/12-Orchestration/Scheduling/gcp-scheduling) — Cloud-based scheduling with Cloud Scheduler for serverless and managed alternatives
-- [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) — When pipelines outgrow Task Scheduler, Airflow provides DAG-based orchestration with dependencies, retries, and a monitoring UI
+- [linux-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/linux-scheduling) — The Linux equivalent: cron, systemd timers, at, and anacron
+- [gcp-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling) — Cloud-based scheduling with Cloud Scheduler for serverless and managed alternatives
+- [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) — When pipelines outgrow Task Scheduler, Airflow provides DAG-based orchestration with dependencies, retries, and a monitoring UI

@@ -5,19 +5,7 @@ technology: [python, polars, pydantic, fastapi, sqlserver]
 tags: [python, pipeline, data-quality, lineage, polars, pydantic, fastapi, streamlit, sql-server, medallion, parquet, airflow, validation, plotly]
 aliases: [functional pipeline, medallion pipeline, data lineage, pydantic validation]
 keywords: [pipeline, medallion, bronze, silver, gold, pydantic, validation, lineage, fastapi, streamlit, plotly, airflow, parquet]
-description: "End-to-end functional data pipeline with Pydantic validation, lineage tracking, Parquet export, FastAPI serving, and Plotly visualization. See [25_cs_functional_pipeline](/02-Programming-Languages/CSharp/25_cs_functional_pipeline) for the C# equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[25_cs_functional_pipeline](/02-Programming-Languages/CSharp/25_cs_functional_pipeline)"
-  - "[functional-pipeline-architecture](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture)"
-  - "[18_py_designpatterns](/02-Programming-Languages/Python/18_py_designpatterns)"
-  - "[15_py_webapis](/02-Programming-Languages/Python/15_py_webapis)"
-  - "[16_py_database](/02-Programming-Languages/Python/16_py_database)"
-  - "[10_py_serialization_formats](/02-Programming-Languages/Python/10_py_serialization_formats)"
-  - "[23_py_data_ingestion](/02-Programming-Languages/Python/23_py_data_ingestion)"
-  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
-  - "[airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns)"
-  - "[data-modeling-patterns](/14-Data-Architecture/Data-Modeling/data-modeling-patterns)"
+description: "End-to-end functional data pipeline with Pydantic validation, lineage tracking, Parquet export, FastAPI serving, and Plotly visualization. See [25_cs_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline) for the C# equivalent."
 created: 2026-03-29
 updated: 2026-03-30
 status: complete

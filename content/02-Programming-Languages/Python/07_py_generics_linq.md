@@ -5,10 +5,7 @@ technology: [python]
 tags: [python]
 aliases: [generics, LINQ, type parameters, generic collections, comprehensions, functional programming]
 keywords: [generics, TypeVar, Generic, Protocol, map, filter, reduce, itertools, functools, comprehension]
-description: "Python generics and functional data processing reference with executable examples and cell outputs — covers TypeVar, Generic classes, Protocol, functional tools, and itertools. See [07_cs_generics_linq](/02-Programming-Languages/CSharp/07_cs_generics_linq) for the C# equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[07_cs_generics_linq](/02-Programming-Languages/CSharp/07_cs_generics_linq)"
+description: "Python generics and functional data processing reference with executable examples and cell outputs — covers TypeVar, Generic classes, Protocol, functional tools, and itertools. See [07_cs_generics_linq](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/07_cs_generics_linq) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -414,7 +411,7 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').select('date', 'close').head(5)
 #### Pandas — Subset multiple rows with iloc[index](/index)
 
 ```python
-# Pandas: iloc[navigation-and-listing](/01-Shell/File-Operations/navigation-and-listing) — multiple rows by position
+# Pandas: iloc[navigation-and-listing](https://alp78.github.io/elysium/01-Shell/File-Operations/navigation-and-listing) — multiple rows by position
 ohlcv.iloc[[0, 50, 100, 500]]
 ```
 

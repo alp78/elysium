@@ -6,10 +6,6 @@ tags: [git]
 aliases: [git log, git diff, git blame, git show, git history, inspect commits, git log graph]
 keywords: [git log, git diff, git blame, git show, oneline, graph, author, since, file history, commit history, diff staged, blame, who changed, inspect commit, show file at commit, bisect, shortlog]
 description: "Commands for viewing and inspecting Git history — git log with filters and graph views, git diff for staged/unstaged changes, git blame for authorship, and git show for individual commits."
-related:
-  - "[git-daily-workflow](/08-Git/git-daily-workflow)"
-  - "[git-recovery-and-undo](/08-Git/git-recovery-and-undo)"
-  - "[pull-requests-and-code-review](/08-Git/pull-requests-and-code-review)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -231,9 +227,9 @@ git show <commit-sha> --stat
 
 ## Related
 
-- [git-daily-workflow](/08-Git/git-daily-workflow) — the daily git commands that generate history
-- [git-recovery-and-undo](/08-Git/git-recovery-and-undo) — using reflog and bisect to recover or diagnose
-- [pull-requests-and-code-review](/08-Git/pull-requests-and-code-review) — diff commands used during code review
+- [git-daily-workflow](https://alp78.github.io/elysium/08-Git/git-daily-workflow) — the daily git commands that generate history
+- [git-recovery-and-undo](https://alp78.github.io/elysium/08-Git/git-recovery-and-undo) — using reflog and bisect to recover or diagnose
+- [pull-requests-and-code-review](https://alp78.github.io/elysium/08-Git/pull-requests-and-code-review) — diff commands used during code review
 
 ## References
 

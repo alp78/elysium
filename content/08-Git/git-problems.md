@@ -2030,12 +2030,12 @@ on:
 
 ## Related
 
-- [git-daily-workflow](/08-Git/git-daily-workflow) — Standard daily Git workflow
-- [git-branching-and-merging](/08-Git/git-branching-and-merging) — Branching strategy reference
-- [git-recovery-and-undo](/08-Git/git-recovery-and-undo) — Recovery commands
-- [git-merge-conflicts](/08-Git/git-merge-conflicts) — Conflict resolution guide
-- [pull-requests-and-code-review](/08-Git/pull-requests-and-code-review) — PR best practices
-- [github-actions-problems](/10-GitHub-Actions/github-actions-problems) — CI/CD-specific problems (companion note)
+- [git-daily-workflow](https://alp78.github.io/elysium/08-Git/git-daily-workflow) — Standard daily Git workflow
+- [git-branching-and-merging](https://alp78.github.io/elysium/08-Git/git-branching-and-merging) — Branching strategy reference
+- [git-recovery-and-undo](https://alp78.github.io/elysium/08-Git/git-recovery-and-undo) — Recovery commands
+- [git-merge-conflicts](https://alp78.github.io/elysium/08-Git/git-merge-conflicts) — Conflict resolution guide
+- [pull-requests-and-code-review](https://alp78.github.io/elysium/08-Git/pull-requests-and-code-review) — PR best practices
+- [github-actions-problems](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-problems) — CI/CD-specific problems (companion note)
 
 ---
 

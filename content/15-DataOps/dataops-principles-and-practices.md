@@ -46,11 +46,6 @@ keywords:
   - deployment frequency
   - change failure rate
 description: "DataOps principles and practices — the intersection of Agile, DevOps, and Lean applied to data engineering, covering the DataOps manifesto, CI/CD for data, shift-left testing, and maturity models."
-related:
-  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
-  - "[golden-rules-of-data-engineering](/14-Data-Architecture/Decision-Frameworks/golden-rules-of-data-engineering)"
-  - "[data-team-organization](/15-DataOps/data-team-organization)"
-  - "[self-service-data-platform](/15-DataOps/self-service-data-platform)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -150,7 +145,7 @@ For each key metric M in each pipeline P:
   5. Periodically re-baseline as business naturally evolves
 ```
 
-This is the foundation behind tools like Monte Carlo Data, Bigeye, and the anomaly detection features in [dbt](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) and Great Expectations. For a deeper look at how observability fits into a broader monitoring strategy, see [observability-deep-dive](/13-Observability/Monitoring/observability-deep-dive).
+This is the foundation behind tools like Monte Carlo Data, Bigeye, and the anomaly detection features in [dbt](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) and Great Expectations. For a deeper look at how observability fits into a broader monitoring strategy, see [observability-deep-dive](https://alp78.github.io/elysium/13-Observability/Monitoring/observability-deep-dive).
 
 > [!warning] SPC Requires Stability First
 > SPC only works on a **stable process**. If your pipelines are constantly being rewritten, your baselines will be meaningless. Stabilize your architecture before adding SPC-style monitoring.
@@ -224,14 +219,14 @@ Manual processes are the enemy of reliability and speed. Every manual step is a 
 
 | Process | Before Automation | After Automation |
 |---------|------------------|-----------------|
-| Pipeline deployment | Engineer SSHes to server, runs script | Push to main branch → [CI/CD](/10-GitHub-Actions/github-actions-ci-cd) deploys |
+| Pipeline deployment | Engineer SSHes to server, runs script | Push to main branch → [CI/CD](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) deploys |
 | Data quality checks | Analyst notices anomaly in dashboard | Automated test fails pipeline before serving |
 | Schema migration | Manual ALTER TABLE + prayer | Migration scripts in version control, tested in staging |
 | Alerting | On-call checks dashboard daily | Alert fires within minutes of anomaly |
 | Environment refresh | "Copy prod to staging" ticket | Automated refresh job on schedule |
 | Documentation | Wiki page, always stale | Generated from code (dbt docs, Data Catalog) |
 
-**Orchestration** is the coordination layer — ensuring pipelines run in the right order, with proper dependencies, retries, and alerting. See [orchestration selection](/14-Data-Architecture/Decision-Frameworks/technology-selection-matrices) for a full breakdown of Airflow, Prefect, Dagster, and others.
+**Orchestration** is the coordination layer — ensuring pipelines run in the right order, with proper dependencies, retries, and alerting. See [orchestration selection](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/technology-selection-matrices) for a full breakdown of Airflow, Prefect, Dagster, and others.
 
 ### Pillar 2: Agile Iteration
 
@@ -258,7 +253,7 @@ Data teams that operate in long waterfall cycles — "gather requirements for 3 
 DataOps is not a project with an end date — it is a continuous practice. Teams should:
 - Track and trend key operational metrics (see DORA Metrics section below)
 - Hold regular retrospectives focused on process improvement
-- Build governance in, not on (data contracts, access controls, lineage tracking) — the [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) provides the concrete checks and thresholds that operationalize this governance
+- Build governance in, not on (data contracts, access controls, lineage tracking) — the [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) provides the concrete checks and thresholds that operationalize this governance
 - Create feedback loops from consumers back to producers
 
 ---
@@ -344,7 +339,7 @@ In traditional data development, quality checks happened at the end: an analyst 
 - Document business rules in code, not in someone's head
 
 #### At development time
-- Write dbt schema tests alongside the model, not after — the [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework) provides the full catalog of test types available for shift-left validation
+- Write dbt schema tests alongside the model, not after — the [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework) provides the full catalog of test types available for shift-left validation
 - Use `dbt-unit-testing` to test SQL logic on small mock datasets
 - Make the feedback loop fast — run tests locally in seconds, not minutes
 
@@ -577,9 +572,9 @@ Run the improvements as a time-boxed project. Re-measure after 90 days. Repeat.
 
 ## Related Concepts
 
-- [five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering) — the foundational engineering capabilities that DataOps practices build upon
-- [golden-rules-of-data-engineering](/14-Data-Architecture/Decision-Frameworks/golden-rules-of-data-engineering) — principles that align with DataOps philosophy
-- [data-team-organization](/15-DataOps/data-team-organization) — how to structure a team to execute DataOps practices effectively
-- [self-service-data-platform](/15-DataOps/self-service-data-platform) — the platform-level manifestation of DataOps maturity
-- [orchestration selection](/14-Data-Architecture/Decision-Frameworks/technology-selection-matrices) — choosing the right orchestration tool for your CI/CD pipelines
-- [data quality](/15-DataOps/dataops-principles-and-practices) — detailed look at shift-left testing tools and strategies
+- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) — the foundational engineering capabilities that DataOps practices build upon
+- [golden-rules-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/golden-rules-of-data-engineering) — principles that align with DataOps philosophy
+- [data-team-organization](https://alp78.github.io/elysium/15-DataOps/data-team-organization) — how to structure a team to execute DataOps practices effectively
+- [self-service-data-platform](https://alp78.github.io/elysium/15-DataOps/self-service-data-platform) — the platform-level manifestation of DataOps maturity
+- [orchestration selection](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/technology-selection-matrices) — choosing the right orchestration tool for your CI/CD pipelines
+- [data quality](https://alp78.github.io/elysium/15-DataOps/dataops-principles-and-practices) — detailed look at shift-left testing tools and strategies

@@ -6,7 +6,6 @@ tags: [sql, sql-server, tsql]
 aliases: [SQL Server restore, point-in-time recovery, PITR, RESTORE DATABASE, NORECOVERY, STOPAT, restore to new database]
 keywords: [restore, RESTORE DATABASE, RESTORE LOG, NORECOVERY, RECOVERY, REPLACE, STOPAT, point-in-time recovery, PITR, full restore, differential restore, log restore, side-by-side restore, MOVE, disaster recovery, crash recovery]
 description: "How to restore a SQL Server database from backup including full restore, point-in-time recovery (PITR) with log replaying, and restoring to a new database for side-by-side comparison."
-related: [backup-types-and-strategy, server-configuration, essential-dba-queries]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -143,7 +142,7 @@ WHERE command LIKE '%RECOVERY%';
 
 ### Related
 
-- [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy) — understanding backup types and the 3-2-1 rule
-- [server-configuration](/04-SQL-Server/Administration/server-configuration) — recovery model configuration
-- [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — monitoring active queries and blocking
-- [storage-internals](/04-SQL-Server/Storage-and-Indexes/storage-internals) — how WAL and checkpoints work at the page level
+- [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy) — understanding backup types and the 3-2-1 rule
+- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) — recovery model configuration
+- [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/Administration/essential-dba-queries) — monitoring active queries and blocking
+- [storage-internals](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/storage-internals) — how WAL and checkpoints work at the page level

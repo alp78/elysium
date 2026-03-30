@@ -6,7 +6,6 @@ tags: [infrastructure, gcp, gcloud]
 aliases: [gcloud config, gcloud configurations, GCP project switching, named configurations]
 keywords: [gcloud config configurations, gcloud config set, project switching, named configurations, multi-project, dev staging production, gcloud config list, activate configuration, environment safety, production protection]
 description: "How to use gcloud named configurations to safely manage multiple GCP projects (dev, staging, production) and switch between them without error-prone manual config changes."
-related: [gcloud-authentication, gcloud-projects-and-apis, gcloud-output-formatting]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -94,10 +93,10 @@ Without named configurations, switching projects requires remembering to set pro
 
 ## Related
 
-- [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — Authentication context per configuration
-- [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) — Project metadata and API management
-- [gcloud-output-formatting](/06-GCP/Core/gcloud-output-formatting) — Extract configuration details programmatically
-- [environment-management-strategy](/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — How gcloud configurations fit into the full dev/staging/prod strategy
+- [gcloud-authentication](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication) — Authentication context per configuration
+- [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) — Project metadata and API management
+- [gcloud-output-formatting](https://alp78.github.io/elysium/06-GCP/Core/gcloud-output-formatting) — Extract configuration details programmatically
+- [environment-management-strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — How gcloud configurations fit into the full dev/staging/prod strategy
 
 ## References
 

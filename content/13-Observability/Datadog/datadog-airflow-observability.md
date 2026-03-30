@@ -6,7 +6,6 @@ tags: [monitoring, orchestration, observability, docker, airflow, datadog]
 aliases: [Airflow Observability, Airflow StatsD Metrics, Airflow Datadog Dashboard]
 keywords: [StatsD, DogStatsD, STATSD_ON, STATSD_HOST, STATSD_PORT, STATSD_PREFIX, airflow.scheduler_heartbeat, dagrun.duration, ti.finish, dagrun.schedule_delay, dag_processing.import_errors, dagbag_size, executor.open_slots, pool.starving_tasks, triggerer_heartbeat, microseconds, airflow_dashboard.json, import dashboard JSON, recommended monitors]
 description: "Airflow-specific observability for the project — how to enable StatsD metrics from Airflow containers, key metrics for scheduler health and DAG run tracking, the Airflow Orchestration dashboard, and recommended Datadog monitors."
-related: [datadog-architecture-overview, datadog-agent-airflow-vm, datadog-dashboards, data-pipeline-airflow-dags, data-pipeline-startup-scripts]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # Airflow Observability — StatsD Metrics and Dashboard
 
-The [Airflow VM Datadog agent](/13-Observability/Datadog/datadog-agent-airflow-vm) covers the infrastructure layer (VM CPU, container metrics). This note covers **Airflow-specific observability** — DAG run metrics, task execution tracking, scheduler health, and the purpose-built Airflow Orchestration dashboard. Understanding [Airflow's architecture](/12-Orchestration/Airflow/airflow-core-concepts) (scheduler, executor, DAG bag) is essential context for interpreting these metrics correctly.
+The [Airflow VM Datadog agent](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) covers the infrastructure layer (VM CPU, container metrics). This note covers **Airflow-specific observability** — DAG run metrics, task execution tracking, scheduler health, and the purpose-built Airflow Orchestration dashboard. Understanding [Airflow's architecture](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) (scheduler, executor, DAG bag) is essential context for interpreting these metrics correctly.
 
 ---
 
@@ -223,7 +222,7 @@ Create these in **Monitors → New Monitor → Metric**:
 ### Limitations of Self-Hosted Airflow Observability
 
 > [!tip] Related pattern
-> When Datadog metrics reveal task failures or scheduler anomalies, the [airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting) guide provides targeted diagnostic steps for common failure modes like import errors, pool exhaustion, and zombie task recovery.
+> When Datadog metrics reveal task failures or scheduler anomalies, the [airflow-troubleshooting](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-troubleshooting) guide provides targeted diagnostic steps for common failure modes like import errors, pool exhaustion, and zombie task recovery.
 
 | Capability | Available? | Alternative |
 |------------|-----------|-------------|
@@ -237,8 +236,8 @@ Create these in **Monitors → New Monitor → Metric**:
 
 ## Related Notes
 
-- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — full observability architecture
-- [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) — agent infrastructure including StatsD config
-- [datadog-dashboards](/13-Observability/Datadog/datadog-dashboards) — Pipeline Watch dashboard (covers Cloud Run + SQL VM metrics)
+- [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) — full observability architecture
+- [datadog-agent-airflow-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) — agent infrastructure including StatsD config
+- [datadog-dashboards](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-dashboards) — Pipeline Watch dashboard (covers Cloud Run + SQL VM metrics)
 - the Airflow DAGs — DAG structure and what each DAG does
 - the startup scripts — startup script where StatsD env vars are set

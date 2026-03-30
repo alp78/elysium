@@ -6,7 +6,6 @@ tags: [sql, sql-server, tsql, dba, tempdb, transaction-log, disk-space, index-si
 aliases: [DBA queries, SQL Server diagnostics, DMV queries, sys.dm_exec_sessions, sys.dm_exec_requests]
 keywords: [DBA queries, DMV, dynamic management views, server version, database size, active connections, running queries, blocking chains, kill session, wait stats, page life expectancy, sys.dm_exec_sessions, sys.dm_exec_requests, sys.dm_os_wait_stats, SERVERPROPERTY, sys.databases, sys.master_files, sys.configurations, sp_spaceused, sys.dm_db_partition_stats, index sizes, transaction log, VLF, TempDB, disk free space, sys.dm_os_volume_stats]
 description: "Essential T-SQL diagnostic queries for SQL Server DBAs: server version, database sizes, active connections, currently running queries, blocking chains, wait statistics, space and size analysis, transaction log health, TempDB monitoring, and disk capacity."
-related: [sqlcmd-connection-and-usage, wait-stats-analysis, blocking-and-locking, performance-audit-playbook, sql-server-disk-full]
 created: 2026-03-22
 updated: 2026-03-30
 status: complete
@@ -302,7 +301,7 @@ FROM sys.database_files;
 
 > [!danger] Full Disk Halts the Pipeline
 >
-> SQL Server stops accepting writes when the disk is full. The database goes read-only, transactions fail, and the pipeline halts. Monitor disk free space proactively — see [sql-server-disk-full](/15-Runbooks/sql-server-disk-full) for the full runbook. As a rule of thumb, alert at 85% used, investigate at 90%, and treat 95% as a P1 incident.
+> SQL Server stops accepting writes when the disk is full. The database goes read-only, transactions fail, and the pipeline halts. Monitor disk free space proactively — see [sql-server-disk-full](https://alp78.github.io/elysium/15-Runbooks/sql-server-disk-full) for the full runbook. As a rule of thumb, alert at 85% used, investigate at 90%, and treat 95% as a P1 incident.
 
 ```sql
 SELECT DISTINCT
@@ -490,7 +489,7 @@ ORDER BY p.rows DESC;
 
 > [!warning] Heaps Are Dangerous
 >
-> A table without a clustered index forces every query into a full table scan. In silver and gold layers, every table must have a clustered index. See [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) for the correct clustered key selection.
+> A table without a clustered index forces every query into a full table scan. In silver and gold layers, every table must have a clustered index. See [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) for the correct clustered key selection.
 
 ---
 
@@ -534,10 +533,10 @@ LEFT JOIN (
 
 ### Related
 
-- [sqlcmd-connection-and-usage](/04-SQL-Server/Administration/sqlcmd-connection-and-usage) — running these queries from the command line
-- [wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis) — deep dive into wait type interpretation
-- [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — understanding blocking chains and lock types
-- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — interpreting disk I/O latency metrics and full structured audit
-- [memory-and-buffer-pool](/04-SQL-Server/Performance/memory-and-buffer-pool) — Page Life Expectancy and buffer pool health
-- [sql-server-disk-full](/15-Runbooks/sql-server-disk-full) — runbook for disk capacity incidents
-- [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — clustered key selection and index design
+- [sqlcmd-connection-and-usage](https://alp78.github.io/elysium/04-SQL-Server/Administration/sqlcmd-connection-and-usage) — running these queries from the command line
+- [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) — deep dive into wait type interpretation
+- [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) — understanding blocking chains and lock types
+- [performance-audit-playbook](https://alp78.github.io/elysium/04-SQL-Server/Performance/performance-audit-playbook) — interpreting disk I/O latency metrics and full structured audit
+- [memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/Performance/memory-and-buffer-pool) — Page Life Expectancy and buffer pool health
+- [sql-server-disk-full](https://alp78.github.io/elysium/15-Runbooks/sql-server-disk-full) — runbook for disk capacity incidents
+- [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — clustered key selection and index design

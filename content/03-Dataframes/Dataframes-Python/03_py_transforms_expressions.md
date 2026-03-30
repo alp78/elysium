@@ -10,12 +10,6 @@ aliases:
   - with_columns, assign, apply, map, when/then, method chaining
 keywords: [with_columns, assign, apply, map_elements, when, then, otherwise, pipe, method chaining, expressions]
 description: "Pandas/Polars DataFrame reference 03/10 — Transforms, Expressions & Chaining (with_columns, when/then, apply). Side-by-side executable examples with cell outputs."
-related:
-  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
-  - "[03_cs_transforms_expressions](/03-Dataframes/Dataframes-CSharp/03_cs_transforms_expressions)"
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[02_py_explore_select_filter](/03-Dataframes/Dataframes-Python/02_py_explore_select_filter)"
-  - "[04_py_missing_strings_datetime](/03-Dataframes/Dataframes-Python/04_py_missing_strings_datetime)"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -2258,7 +2252,7 @@ scores_pl.select(cs.contains("score")).head(3)
 | Concept | Polars | Pandas Equivalent |
 |---|---|---|
 | Expression | pl.col("x") * 2 | No equivalent |
-| select | df.select(...) | df[api-protocols-comparison](/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison) |
+| select | df.select(...) | df[api-protocols-comparison](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison) |
 | with_columns | df.with_columns(...) | df.assign(...) |
 | filter | df.filter(expr) | df[condition] |
 | group_by.agg | df.group_by().agg(exprs) | df.groupby().agg() |

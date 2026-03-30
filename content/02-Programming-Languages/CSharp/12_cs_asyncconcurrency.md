@@ -5,10 +5,7 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [async await, concurrency, parallelism, tasks, threads, asyncio, Task]
 keywords: [async, await, Task, CancellationToken, Parallel, Thread, SemaphoreSlim, Channel, IAsyncEnumerable]
-description: "C# async and concurrency reference with executable examples and cell outputs — covers async/await, Task, parallel programming, CancellationToken, and Channels. See [12_py_asyncconcurrency](/02-Programming-Languages/Python/12_py_asyncconcurrency) for the Python equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[12_py_asyncconcurrency](/02-Programming-Languages/Python/12_py_asyncconcurrency)"
+description: "C# async and concurrency reference with executable examples and cell outputs — covers async/await, Task, parallel programming, CancellationToken, and Channels. See [12_py_asyncconcurrency](https://alp78.github.io/elysium/02-Programming-Languages/Python/12_py_asyncconcurrency) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

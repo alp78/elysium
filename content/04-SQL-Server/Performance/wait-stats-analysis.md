@@ -6,7 +6,6 @@ tags: [performance, sql, sql-server, tsql]
 aliases: [wait stats, wait statistics, sys.dm_os_wait_stats, PAGEIOLATCH, WRITELOG, LCK_M, CXPACKET, SOS_SCHEDULER_YIELD, RESOURCE_SEMAPHORE, wait type interpretation]
 keywords: [wait stats, wait statistics, sys.dm_os_wait_stats, PAGEIOLATCH_SH, PAGEIOLATCH_EX, WRITELOG, PAGELATCH, LCK_M_X, LCK_M_S, CXPACKET, CXCONSUMER, SOS_SCHEDULER_YIELD, RESOURCE_SEMAPHORE, ASYNC_NETWORK_IO, signal wait, resource wait, idle waits, benign waits, DBCC SQLPERF, wait type, performance diagnosis, query plan, page life expectancy, buffer pool, I/O latency, disk throughput]
 description: "How to read SQL Server wait statistics (sys.dm_os_wait_stats) to diagnose performance problems: the complete filtered wait query, signal vs. resource wait interpretation, common wait type meanings for pipeline workloads, I/O latency benchmarks, and Query Store setup for regression detection."
-related: [essential-dba-queries, memory-and-buffer-pool, io-latency-analysis, blocking-and-locking, execution-plans, performance-audit-playbook]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # Wait Stats Analysis
 
-Wait statistics are the single most important diagnostic for SQL Server performance problems. They answer: "What is SQL Server spending its time waiting on?" Every time a session cannot proceed immediately, it records a wait. Analyzing the cumulative waits across the instance tells you exactly which resource is the bottleneck — disk, memory, CPU, or locks. For a structured process that incorporates these queries into a repeatable audit, see [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook).
+Wait statistics are the single most important diagnostic for SQL Server performance problems. They answer: "What is SQL Server spending its time waiting on?" Every time a session cannot proceed immediately, it records a wait. Analyzing the cumulative waits across the instance tells you exactly which resource is the bottleneck — disk, memory, CPU, or locks. For a structured process that incorporates these queries into a repeatable audit, see [performance-audit-playbook](https://alp78.github.io/elysium/04-SQL-Server/Performance/performance-audit-playbook).
 
 ---
 
@@ -142,7 +141,7 @@ DBCC SQLPERF('sys.dm_os_wait_stats', CLEAR);
 > [!tip] Datadog Monitoring
 >
 > Related pattern: Datadog monitoring.
-> These same wait types can be tracked continuously via [datadog-sql-server-integration](/13-Observability/Datadog/datadog-sql-server-integration), which surfaces `PAGEIOLATCH`, `LCK_M`, and other waits as Datadog metrics. For custom DMV-based queries exposed through Datadog, see [datadog-custom-queries](/13-Observability/Datadog/datadog-custom-queries).
+> These same wait types can be tracked continuously via [datadog-sql-server-integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-sql-server-integration), which surfaces `PAGEIOLATCH`, `LCK_M`, and other waits as Datadog metrics. For custom DMV-based queries exposed through Datadog, see [datadog-custom-queries](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-custom-queries).
 
 > [!info] High Signal Waits = CPU Bottleneck
 >
@@ -436,9 +435,9 @@ Quick reference for the most common wait types. For deep analysis of each wait t
 
 ### Related
 
-- [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — quick diagnostic queries run during incidents
-- [memory-and-buffer-pool](/04-SQL-Server/Performance/memory-and-buffer-pool) — Page Life Expectancy, buffer pool pressure details
-- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — full structured audit including disk I/O metrics
-- [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — `LCK_M_*` wait type analysis
-- [execution-plans](/04-SQL-Server/Performance/execution-plans) — reading plans to find the root cause of high waits
-- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — structured process using these wait stat queries
+- [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/Administration/essential-dba-queries) — quick diagnostic queries run during incidents
+- [memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/Performance/memory-and-buffer-pool) — Page Life Expectancy, buffer pool pressure details
+- [performance-audit-playbook](https://alp78.github.io/elysium/04-SQL-Server/Performance/performance-audit-playbook) — full structured audit including disk I/O metrics
+- [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) — `LCK_M_*` wait type analysis
+- [execution-plans](https://alp78.github.io/elysium/04-SQL-Server/Performance/execution-plans) — reading plans to find the root cause of high waits
+- [performance-audit-playbook](https://alp78.github.io/elysium/04-SQL-Server/Performance/performance-audit-playbook) — structured process using these wait stat queries

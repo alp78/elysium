@@ -5,10 +5,7 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [if else, loops, for loop, while loop, switch, pattern matching, match case]
 keywords: [if, else, switch, for, foreach, while, break, continue, pattern matching, LINQ]
-description: "C# control flow reference with executable examples and cell outputs — covers conditionals, switch expressions, loops, pattern matching, and iterators. See [03_py_control_flow](/02-Programming-Languages/Python/03_py_control_flow) for the Python equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[03_py_control_flow](/02-Programming-Languages/Python/03_py_control_flow)"
+description: "C# control flow reference with executable examples and cell outputs — covers conditionals, switch expressions, loops, pattern matching, and iterators. See [03_py_control_flow](https://alp78.github.io/elysium/02-Programming-Languages/Python/03_py_control_flow) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

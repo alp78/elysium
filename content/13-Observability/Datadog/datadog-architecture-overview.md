@@ -6,13 +6,6 @@ tags: [monitoring, observability, sql, airflow, datadog, gcp]
 aliases: [Datadog Overview, the data pipeline project Observability, Datadog Architecture]
 keywords: [datadog, observability, monitoring, metrics, logs, traces, APM, three pillars, data-pipeline, EU region, datadoghq.eu, agent, GCP integration, Cloud Run, infrastructure, DogStatsD]
 description: "Architecture overview of Datadog monitoring for the data platform — two agents (Airflow VM + SQL VM) plus GCP Integration cover metrics, logs, and traces across the full stack."
-related:
-  - datadog-agent-airflow-vm
-  - datadog-agent-sql-vm
-  - datadog-sql-server-integration
-  - datadog-apm-traces
-  - data-pipeline-architecture-overview
-  - data-pipeline-gcp-resources
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -74,7 +67,7 @@ Cloud Run Job: data-pipeline-pipeline
 | SQL Server database | DD Agent (sqlserver check) | Connections, buffer pool, waits, query stats |
 | SQL Server errorlog | DD Agent (file tailing) | Errors, failed logins, checkpoints |
 | Pipeline steps | ddtrace APM | Per-step traces with duration, SQL queries |
-| Cloud Run jobs | GCP Integration | Execution count, CPU, memory — compare with [GCP-native Cloud Monitoring](/06-GCP/Logging/cloud-monitoring-metrics) for metrics that remain outside Datadog |
+| Cloud Run jobs | GCP Integration | Execution count, CPU, memory — compare with [GCP-native Cloud Monitoring](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics) for metrics that remain outside Datadog |
 
 ---
 
@@ -86,10 +79,10 @@ Cloud Run Job: data-pipeline-pipeline
 | **Logs** | Structured text from containers + errorlog | Agent reads Docker stdout via socket; tails SQL Server errorlog |
 | **Traces** | Request-level spans with timing | `ddtrace-run` instruments Python code; traces route through Agent on port 8126 |
 
-All three converge in Datadog by sharing the `service` tag (e.g., `data-pipeline-pipeline`) and trace correlation IDs (`dd.trace_id`, `dd.span_id`) for log-to-trace linking. This three-pillar approach is an implementation of the conceptual framework described in [observability-deep-dive](/13-Observability/Monitoring/observability-deep-dive), applied specifically to the project's GCP-hosted stack.
+All three converge in Datadog by sharing the `service` tag (e.g., `data-pipeline-pipeline`) and trace correlation IDs (`dd.trace_id`, `dd.span_id`) for log-to-trace linking. This three-pillar approach is an implementation of the conceptual framework described in [observability-deep-dive](https://alp78.github.io/elysium/13-Observability/Monitoring/observability-deep-dive), applied specifically to the project's GCP-hosted stack.
 
 > [!info] Log-to-Trace Correlation
-> When `LOG_FORMAT=json` is set on the Cloud Run Job and the JSON logger injects `dd.trace_id` / `dd.span_id`, you can click directly from a log line in Datadog's Log Explorer to the corresponding APM flame graph. See [datadog-apm-traces](/13-Observability/Datadog/datadog-apm-traces) for the logger implementation.
+> When `LOG_FORMAT=json` is set on the Cloud Run Job and the JSON logger injects `dd.trace_id` / `dd.span_id`, you can click directly from a log line in Datadog's Log Explorer to the corresponding APM flame graph. See [datadog-apm-traces](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-apm-traces) for the logger implementation.
 
 ---
 
@@ -203,12 +196,12 @@ One `terraform apply` + one image rebuild cleans up everything.
 
 ## Related
 
-- [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) — Agent setup on Container-Optimized OS
-- [datadog-agent-sql-vm](/13-Observability/Datadog/datadog-agent-sql-vm) — Agent setup on Ubuntu with systemd
-- [datadog-sql-server-integration](/13-Observability/Datadog/datadog-sql-server-integration) — SQL Server integration configuration
-- [datadog-apm-traces](/13-Observability/Datadog/datadog-apm-traces) — APM tracing and Python instrumentation
-- [datadog-dashboards](/13-Observability/Datadog/datadog-dashboards) — Pipeline Watch and DBA dashboards
-- [datadog-troubleshooting](/13-Observability/Datadog/datadog-troubleshooting) — Common issues and fixes
-- [datadog-cost-optimization](/13-Observability/Datadog/datadog-cost-optimization) — Pricing breakdown
+- [datadog-agent-airflow-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) — Agent setup on Container-Optimized OS
+- [datadog-agent-sql-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-sql-vm) — Agent setup on Ubuntu with systemd
+- [datadog-sql-server-integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-sql-server-integration) — SQL Server integration configuration
+- [datadog-apm-traces](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-apm-traces) — APM tracing and Python instrumentation
+- [datadog-dashboards](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-dashboards) — Pipeline Watch and DBA dashboards
+- [datadog-troubleshooting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-troubleshooting) — Common issues and fixes
+- [datadog-cost-optimization](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-cost-optimization) — Pricing breakdown
 - the project architecture — Full the data pipeline project system architecture
 - the GCP resources — GCP resources managed by Terraform

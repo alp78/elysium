@@ -6,7 +6,6 @@ tags: [infrastructure, api, gcp, gcloud]
 aliases: [GCP projects, GCP APIs, gcloud services, enable API, project listing]
 keywords: [gcp projects, project list, gcloud projects list, enable API, gcloud services enable, bigquery API, cloud run API, pubsub API, compute API, service activation, API enablement, data engineering APIs]
 description: "How to list GCP projects, inspect project metadata, and enable or verify the APIs required for data engineering workloads including BigQuery, Cloud Run, Pub/Sub, and Compute Engine."
-related: [gcloud-authentication, gcloud-configurations, gcloud-output-formatting, dataset-and-table-management, cloud-run-jobs-vs-services]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,7 +17,7 @@ GCP projects are the fundamental organizational unit for resources, billing, and
 
 ### Why GCP Projects and APIs Matter
 
-A common failure mode when setting up a new GCP project is running `gcloud run jobs execute` or `bq query` only to receive an error that the API is disabled. Knowing which APIs to enable upfront — and how to verify what is currently enabled — eliminates this class of errors. Projects also serve as the billing boundary and the IAM scope for [service account](/06-GCP/Security/service-accounts-and-iam) permissions.
+A common failure mode when setting up a new GCP project is running `gcloud run jobs execute` or `bq query` only to receive an error that the API is disabled. Knowing which APIs to enable upfront — and how to verify what is currently enabled — eliminates this class of errors. Projects also serve as the billing boundary and the IAM scope for [service account](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) permissions.
 
 ### Listing and Describing GCP Projects
 
@@ -82,7 +81,7 @@ gcloud services enable bigquery.googleapis.com run.googleapis.com pubsub.googlea
 
 > [!warning] APIs Are Per-Project
 >
-> Enabling an API in your dev project does not enable it in prod. Every project must have APIs enabled independently. When setting up a new environment (dev → staging → prod), API enablement must be repeated — or automated with [Terraform](/07-Terraform/moc-terraform).
+> Enabling an API in your dev project does not enable it in prod. Every project must have APIs enabled independently. When setting up a new environment (dev → staging → prod), API enablement must be repeated — or automated with [Terraform](https://alp78.github.io/elysium/07-Terraform/moc-terraform).
 
 ### GCP API Lifecycle States
 
@@ -90,12 +89,12 @@ A project's `lifecycleState` field (visible in `gcloud projects describe`) indic
 
 ## Related
 
-- [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — Authentication must be established before project and API commands work
-- [gcloud-configurations](/06-GCP/Core/gcloud-configurations) — Use named configurations to target the right project automatically
-- [gcloud-output-formatting](/06-GCP/Core/gcloud-output-formatting) — Use `--format` and `--filter` to extract project IDs into scripts
-- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — Service accounts live within projects; IAM bindings are project-scoped
-- [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — Requires `bigquery.googleapis.com` to be enabled
-- [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — Requires `run.googleapis.com` to be enabled
+- [gcloud-authentication](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication) — Authentication must be established before project and API commands work
+- [gcloud-configurations](https://alp78.github.io/elysium/06-GCP/Core/gcloud-configurations) — Use named configurations to target the right project automatically
+- [gcloud-output-formatting](https://alp78.github.io/elysium/06-GCP/Core/gcloud-output-formatting) — Use `--format` and `--filter` to extract project IDs into scripts
+- [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — Service accounts live within projects; IAM bindings are project-scoped
+- [dataset-and-table-management](https://alp78.github.io/elysium/06-GCP/BigQuery/dataset-and-table-management) — Requires `bigquery.googleapis.com` to be enabled
+- [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) — Requires `run.googleapis.com` to be enabled
 
 ## References
 

@@ -5,12 +5,7 @@ technology: [csharp, dotnet, gcp]
 tags: [csharp, gcp, pipeline, sql, bigquery]
 aliases: [Data Ingestion CSharp, SQL Server Bulk Insert, BigQuery Load]
 keywords: [ingestion, SqlBulkCopy, BigQuery load, Firestore batch, GCS, CSV, Parquet, ADO.NET, Google.Cloud.BigQuery, benchmark, throughput, latency]
-description: "C# data ingestion reference — bulk loading into SQL Server, BigQuery, and Firestore from local and GCS sources with performance benchmarks. See [23_py_data_ingestion](/02-Programming-Languages/Python/23_py_data_ingestion) for the Python equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[23_py_data_ingestion](/02-Programming-Languages/Python/23_py_data_ingestion)"
-  - "[22_cs_data_transfer](/02-Programming-Languages/CSharp/22_cs_data_transfer)"
-  - "[16_cs_database](/02-Programming-Languages/CSharp/16_cs_database)"
+description: "C# data ingestion reference — bulk loading into SQL Server, BigQuery, and Firestore from local and GCS sources with performance benchmarks. See [23_py_data_ingestion](https://alp78.github.io/elysium/02-Programming-Languages/Python/23_py_data_ingestion) for the Python equivalent."
 created: 2026-03-28
 updated: 2026-03-28
 status: complete
@@ -313,7 +308,7 @@ class IngestResult
 
 ## Schema Setup
 
-The SQL Server DDL below follows the same [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) patterns used in the medallion architecture. BigQuery schema and load configuration align with [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export).
+The SQL Server DDL below follows the same [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) patterns used in the medallion architecture. BigQuery schema and load configuration align with [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export).
 
 #### Create staging table in SQL Server
 

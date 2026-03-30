@@ -6,7 +6,6 @@ tags: [api, shell, bash, linux, powershell]
 aliases: [curl, wget, HTTP request, REST API, Invoke-RestMethod, Invoke-WebRequest]
 keywords: [curl, wget, HTTP, REST API, GET request, POST request, JSON, bearer token, download file, retry, timeout, status code, timing breakdown, Invoke-RestMethod, Invoke-WebRequest, curl vs wget, connect-timeout, max-time, health check]
 description: "Making HTTP requests from the command line with curl and PowerShell's Invoke-RestMethod. Covers headers, JSON bodies, authentication, file downloads with retry, timing breakdown for latency diagnosis, and when to use curl vs wget vs Python requests."
-related: ["[connectivity-testing](/01-Shell/Networking/connectivity-testing)", "[firewalls](/01-Shell/Networking/firewalls)", "[iap-tunneling](/01-Shell/Networking/iap-tunneling)", "[environment-variables](/01-Shell/Scripting/environment-variables)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # HTTP Requests — Interacting with APIs and Services
 
-Data pipelines frequently interact with REST APIs (financial data providers, cloud services, webhooks). `curl` is the command-line tool for making HTTP requests, and knowing its advanced flags can be the difference between a working integration and hours of debugging. For [REST API design patterns](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) including pagination, error handling, and idempotency, see the Data Architecture section.
+Data pipelines frequently interact with REST APIs (financial data providers, cloud services, webhooks). `curl` is the command-line tool for making HTTP requests, and knowing its advanced flags can be the difference between a working integration and hours of debugging. For [REST API design patterns](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) including pagination, error handling, and idempotency, see the Data Architecture section.
 
 ## Linux — curl
 
@@ -100,7 +99,7 @@ curl -s -o /dev/null -w "DNS: %{time_namelookup}s\nConnect: %{time_connect}s\nTL
 >
 > - **curl**: Best for one-off requests, debugging, health checks, and scripts. Supports every protocol. Use in bash scripts.
 > - **wget**: Best for downloading files (automatic retry, resume, mirroring). `wget -c` resumes interrupted downloads. Use for large file transfers.
-> - **Python requests**: Best for complex API interactions (pagination, OAuth flows, session management). Use in your pipeline code -- see [15_py_webapis](/02-Programming-Languages/Python/15_py_webapis) for httpx, requests, and async HTTP patterns.
+> - **Python requests**: Best for complex API interactions (pagination, OAuth flows, session management). Use in your pipeline code -- see [15_py_webapis](https://alp78.github.io/elysium/02-Programming-Languages/Python/15_py_webapis) for httpx, requests, and async HTTP patterns.
 >
 > In production scripts, always set `--retry`, `--connect-timeout`, and `--max-time` on curl. A hanging curl with no timeout can block your pipeline indefinitely.
 
@@ -153,9 +152,9 @@ Invoke-WebRequest -Uri "https://data-provider.com/latest.csv" -OutFile "data.csv
 ```
 
 ## Related
-- [connectivity-testing](/01-Shell/Networking/connectivity-testing) — test TCP reachability before HTTP calls
-- [firewalls](/01-Shell/Networking/firewalls) — when curl returns "connection timed out" or "connection refused"
-- [environment-variables](/01-Shell/Scripting/environment-variables) — store `$API_TOKEN` securely in environment variables
-- [iap-tunneling](/01-Shell/Networking/iap-tunneling) — calling services behind IAP with identity tokens
+- [connectivity-testing](https://alp78.github.io/elysium/01-Shell/Networking/connectivity-testing) — test TCP reachability before HTTP calls
+- [firewalls](https://alp78.github.io/elysium/01-Shell/Networking/firewalls) — when curl returns "connection timed out" or "connection refused"
+- [environment-variables](https://alp78.github.io/elysium/01-Shell/Scripting/environment-variables) — store `$API_TOKEN` securely in environment variables
+- [iap-tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling) — calling services behind IAP with identity tokens
 
-For invoking HTTP endpoints deployed as managed services, see [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) which covers Cloud Run HTTP triggers and authentication.
+For invoking HTTP endpoints deployed as managed services, see [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) which covers Cloud Run HTTP triggers and authentication.

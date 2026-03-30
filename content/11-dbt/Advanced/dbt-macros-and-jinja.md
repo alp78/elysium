@@ -5,10 +5,6 @@ technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "Jinja2 fundamentals, writing macros, dbt-utils patterns, dispatch, hooks, and anti-patterns for financial data pipelines"
-related:
-  - "[dbt-packages](/11-dbt/Advanced/dbt-packages)"
-  - "[dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)"
-  - "[dbt-cross-adapter-patterns](/11-dbt/Adapters/dbt-cross-adapter-patterns)"
 ---
 
 # dbt: Macros and Jinja
@@ -198,7 +194,7 @@ from weighted
 
 ## dbt-utils Macros
 
-Install via `packages.yml` (see [dbt-packages](/11-dbt/Advanced/dbt-packages)). The most useful macros for financial pipelines:
+Install via `packages.yml` (see [dbt-packages](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-packages)). The most useful macros for financial pipelines:
 
 ### dbt-utils surrogate_key — deterministic hash key from columns
 
@@ -515,8 +511,8 @@ Jinja `{% set %}` runs at compile time. Assigning a value with `{% set x = some_
 
 ## Related
 
-- [dbt-packages](/11-dbt/Advanced/dbt-packages)
-- [dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)
-- [dbt-cross-adapter-patterns](/11-dbt/Adapters/dbt-cross-adapter-patterns)
-- [dbt-data-contracts-implementation](/11-dbt/Quality/dbt-data-contracts-implementation)
-- [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)
+- [dbt-packages](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-packages)
+- [dbt-core-concepts](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-core-concepts)
+- [dbt-cross-adapter-patterns](https://alp78.github.io/elysium/11-dbt/Adapters/dbt-cross-adapter-patterns)
+- [dbt-data-contracts-implementation](https://alp78.github.io/elysium/11-dbt/Quality/dbt-data-contracts-implementation)
+- [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework)

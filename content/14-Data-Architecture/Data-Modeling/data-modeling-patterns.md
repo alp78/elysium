@@ -6,17 +6,6 @@ tags: [data-architecture, architecture, data-modeling, sql, bigquery, firestore]
 aliases: [data modeling patterns, normalized model, 3NF, Data Vault, hub satellite link, wide table, OBT, one big table, activity schema, graph model, document model, time-series model, anchor modeling]
 keywords: [data modeling, normalized model, third normal form, 3NF, BCNF, Boyce-Codd, Data Vault 2.0, hub, satellite, link, hash key, hash diff, wide table, one big table, OBT, denormalized table, activity schema, event schema, graph model, document model, time-series model, narrow model, wide model, hybrid model, OHLCV, anchor modeling, star schema, snowflake schema, dimensional modeling, OLTP, OLAP, entity-relationship, EAV, entity-attribute-value, semi-structured, schemaless, Firestore, BigQuery, SQL Server, Neo4j, TimescaleDB, InfluxDB, ClickHouse, columnar storage, partitioning, clustering, materialized view]
 description: "Comprehensive reference on data modeling patterns beyond dimensional modeling — normalized (3NF), Data Vault 2.0, wide/flat (OBT), activity schema, document, graph, and time-series models. Each pattern demonstrated with full DDL, SQL examples, and concrete scenarios from a financial index provider domain. Includes a decision framework for choosing the right model per use case."
-related:
-  - "[dimensional-modeling](/14-Data-Architecture/Data-Modeling/dimensional-modeling)"
-  - "[data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture)"
-  - "[data-lake-architecture](/14-Data-Architecture/Architectures/data-lake-architecture)"
-  - "[context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture)"
-  - "[firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations)"
-  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
-  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
-  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
-  - "[serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats)"
-  - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -43,7 +32,7 @@ Data modeling is the discipline of deciding how to structure data for storage, r
 This note covers the broader landscape: **normalized (3NF)**, **Data Vault 2.0**, **wide/flat (OBT)**, **activity schema**, **document**, **graph**, and **time-series** models. All examples draw from a financial index provider domain — an organization that calculates and publishes market indices, maintains constituent lists, tracks daily valuations, and serves this data to institutional clients.
 
 > [!info] Companion Note: Dimensional Modeling
-> Star schemas, snowflake schemas, fact table types (transactional, periodic snapshot, accumulating snapshot), slowly changing dimensions (SCD Types 1–6), conformed dimensions, and the Kimball methodology are covered in detail in [data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture). This note assumes familiarity with those concepts and focuses on the models that complement or replace dimensional modeling in specific contexts.
+> Star schemas, snowflake schemas, fact table types (transactional, periodic snapshot, accumulating snapshot), slowly changing dimensions (SCD Types 1–6), conformed dimensions, and the Kimball methodology are covered in detail in [data-warehouse-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-warehouse-architecture). This note assumes familiarity with those concepts and focuses on the models that complement or replace dimensional modeling in specific contexts.
 
 ---
 
@@ -69,7 +58,7 @@ No single model is universally correct. The choice depends on the workload patte
 ```
 START: What is the primary consumer of this data?
 │
-├─► BI dashboards / analysts → Star Schema (see [data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture))
+├─► BI dashboards / analysts → Star Schema (see [data-warehouse-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-warehouse-architecture))
 │     └─► Sub-second response required, BI tool can't do joins? → OBT (Wide/Flat)
 │
 ├─► OLTP application / transactional writes → Normalized (3NF)
@@ -698,7 +687,7 @@ ORDER BY total_market_cap DESC;
 | Developer cognitive load | High (must know FK graph) | Low (fact + dims) |
 
 > [!warning] 3NF Is Not Wrong — It Is Wrong for Analytics
-> Normalized models excel at what they are designed for: transactional integrity, write efficiency, and eliminating update anomalies. The problem arises when people query a normalized OLTP system for analytical purposes. The correct architecture is: **3NF for source → denormalized for analytics**. See [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) for the layered approach.
+> Normalized models excel at what they are designed for: transactional integrity, write efficiency, and eliminating update anomalies. The problem arises when people query a normalized OLTP system for analytical purposes. The correct architecture is: **3NF for source → denormalized for analytics**. See [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) for the layered approach.
 
 ---
 
@@ -706,7 +695,7 @@ ORDER BY total_market_cap DESC;
 
 Data Vault 2.0 (DV2), designed by Dan Linstedt, is a modeling methodology purpose-built for enterprise data warehouses that must integrate many source systems, handle schema evolution gracefully, and provide full auditability. It sits between the raw source and the consumption layer — it is the integration and historization engine, not the reporting model.
 
-For foundational DV2 concepts (hubs, links, satellites, when to use), see [data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture). This section goes deeper into the financial index provider implementation.
+For foundational DV2 concepts (hubs, links, satellites, when to use), see [data-warehouse-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-warehouse-architecture). This section goes deeper into the financial index provider implementation.
 
 ### When to Use
 
@@ -736,7 +725,7 @@ Source Systems (3NF OLTP)
   Business Vault (computed satellites — derived metrics, business rules)
         │
         ▼
-  Information Mart (star schemas for BI — see [data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture))
+  Information Mart (star schemas for BI — see [data-warehouse-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-warehouse-architecture))
 ```
 
 ### Hub-Link-Satellite Pattern — Full DDL
@@ -2393,7 +2382,7 @@ WHERE isin = 'US0378331005';
 
 Document databases store data as self-contained documents (typically JSON) organized in collections. Each document can have a different structure — there is no enforced schema. This flexibility makes document models ideal for operational data, configuration stores, and hierarchical data that does not fit neatly into relational tables.
 
-For detailed Firestore operations, Python SDK patterns, real-time listeners, and querying, see [firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations).
+For detailed Firestore operations, Python SDK patterns, real-time listeners, and querying, see [firestore-data-model-and-operations](https://alp78.github.io/elysium/06-GCP/Firestore/firestore-data-model-and-operations).
 
 ### Firestore Document Modeling — When to Use
 
@@ -2571,7 +2560,7 @@ doc_ref.on_snapshot(on_snapshot)
 ```
 
 > [!warning] Document Databases and Analytics Do Not Mix
-> Firestore is excellent for operational reads (get a single document by key, query a collection with filters) but terrible for analytical queries (scan all documents, aggregate across collections, join collections). If you need analytics on document data, export it to BigQuery using the Firestore-to-BigQuery extension or a custom export pipeline. See [firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations) for export patterns.
+> Firestore is excellent for operational reads (get a single document by key, query a collection with filters) but terrible for analytical queries (scan all documents, aggregate across collections, join collections). If you need analytics on document data, export it to BigQuery using the Firestore-to-BigQuery extension or a custom export pipeline. See [firestore-data-model-and-operations](https://alp78.github.io/elysium/06-GCP/Firestore/firestore-data-model-and-operations) for export patterns.
 
 ---
 
@@ -2894,7 +2883,7 @@ Normalized models are designed for write efficiency and referential integrity. F
 
 Building your OBT first and treating it as the canonical dataset means any schema change, data correction, or backfill requires modifying a massive denormalized table with cascading consequences.
 
-**Fix:** Build a properly modeled upstream layer (dimensional, Data Vault, or normalized). Derive the OBT from it. See [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture).
+**Fix:** Build a properly modeled upstream layer (dimensional, Data Vault, or normalized). Derive the OBT from it. See [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture).
 
 ### One Model for Everything
 
@@ -2912,7 +2901,7 @@ The narrow/EAV pattern is useful for heterogeneous metrics but becomes a perform
 
 Building fact tables without explicitly stating "one row represents exactly X" leads to mixed-grain tables, double-counting in aggregations, and fan-out traps in BI tools.
 
-**Fix:** Document the grain in the table comment, enforce it at load time, and test it with dbt tests. See [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer).
+**Fix:** Document the grain in the table comment, enforce it at load time, and test it with dbt tests. See [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer).
 
 ### Storing Nested JSON in Relational Columns Without Extraction
 
@@ -2993,12 +2982,12 @@ A complete data platform at an index provider uses multiple models across layers
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-This layered architecture maps to the [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture):
+This layered architecture maps to the [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture):
 - **Bronze** = staging area (raw extracts from all sources)
 - **Silver** = Data Vault raw vault + business vault (integrated, historized)
 - **Gold** = star schemas + OBTs + activity schema (consumption-ready)
 
-The [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) manages the Silver-to-Gold transformations (building star schemas and OBTs from the vault), while [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture) provides lineage, data contracts, and quality monitoring across all layers.
+The [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) manages the Silver-to-Gold transformations (building star schemas and OBTs from the vault), while [context-and-metadata-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture) provides lineage, data contracts, and quality monitoring across all layers.
 
 ---
 
@@ -3015,8 +3004,8 @@ The [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-trans
 | Relationship traversal, network analysis | **Graph** | Not for aggregation-heavy or time-series workloads |
 | Time-range scans, metric aggregation | **Time-Series** | Schema rigidity (wide) or pivot overhead (narrow) |
 
-The key insight: **data models are not mutually exclusive.** A well-architected platform uses different models at different layers, each optimized for its specific consumers and query patterns. The data flows through these models via the [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) and [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer), with [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture) providing the connective tissue.
+The key insight: **data models are not mutually exclusive.** A well-architected platform uses different models at different layers, each optimized for its specific consumers and query patterns. The data flows through these models via the [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) and [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer), with [context-and-metadata-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture) providing the connective tissue.
 
 ---
 
-*See also: [dimensional-modeling](/14-Data-Architecture/Data-Modeling/dimensional-modeling) for star schema deep dive, [data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture) for Kimball/Inmon/DV2 comparison, [data-lake-architecture](/14-Data-Architecture/Architectures/data-lake-architecture) for storage layer patterns, [firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations) for Firestore SDK patterns.*
+*See also: [dimensional-modeling](https://alp78.github.io/elysium/14-Data-Architecture/Data-Modeling/dimensional-modeling) for star schema deep dive, [data-warehouse-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-warehouse-architecture) for Kimball/Inmon/DV2 comparison, [data-lake-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-lake-architecture) for storage layer patterns, [firestore-data-model-and-operations](https://alp78.github.io/elysium/06-GCP/Firestore/firestore-data-model-and-operations) for Firestore SDK patterns.*

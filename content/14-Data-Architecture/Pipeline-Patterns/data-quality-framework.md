@@ -4,17 +4,6 @@ type: concept
 technology: [sql-server, bigquery, airflow, python]
 status: stable
 updated: 2026-03-29
-related:
-  - "[data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy)"
-  - "[data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts)"
-  - "[error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns)"
-  - "[functional-pipeline-architecture](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture)"
-  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
-  - "[observability-strategy-matrix](/13-Observability/observability-strategy-matrix)"
-  - "[25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline)"
-  - "[25_cs_functional_pipeline](/02-Programming-Languages/CSharp/25_cs_functional_pipeline)"
-  - "[dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)"
-  - "[gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla)"
 ---
 
 # Data Quality Framework
@@ -32,10 +21,10 @@ Completeness means every row and every required field that should exist actually
 
 **How to detect:** Compare incoming row counts against expected counts (prior day, reference dimension, source manifest). Assert non-null on required columns.
 
-- Python row count assertion: [25_py_functional_pipeline > Polars — assert minimum row count with len()](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-minimum-row-count-with-len)
-- Full quality gate runner: [25_py_functional_pipeline > Pipeline — run all quality gate assertions with log.info()](/02-Programming-Languages/Python/25_py_functional_pipeline#pipeline--run-all-quality-gate-assertions-with-loginfo)
-- dbt row count tests: [dbt-testing-framework > dbt-expectations — row count and statistical tests](/11-dbt/Quality/dbt-testing-framework#dbt-expectations--row-count-and-statistical-tests)
-- GCP row count monitoring: [gcp-pipeline-health-and-sla > Row Count Validation](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#row-count-validation)
+- Python row count assertion: [25_py_functional_pipeline > Polars — assert minimum row count with len()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-minimum-row-count-with-len)
+- Full quality gate runner: [25_py_functional_pipeline > Pipeline — run all quality gate assertions with log.info()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pipeline--run-all-quality-gate-assertions-with-loginfo)
+- dbt row count tests: [dbt-testing-framework > dbt-expectations — row count and statistical tests](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework#dbt-expectations--row-count-and-statistical-tests)
+- GCP row count monitoring: [gcp-pipeline-health-and-sla > Row Count Validation](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#row-count-validation)
 
 ### Uniqueness — no unwanted duplicates
 
@@ -46,9 +35,9 @@ Uniqueness means each entity appears exactly once per grain. Duplicate rows infl
 
 **How to detect:** Assert uniqueness on natural keys (instrument + trade_date). Hash-based dedup on composite keys.
 
-- Python duplicate assertion: [25_py_functional_pipeline > Polars — assert no duplicate rows with unique()](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-no-duplicate-rows-with-unique)
-- dbt composite uniqueness: [dbt-testing-framework > dbt-utils test — unique_combination_of_columns](/11-dbt/Quality/dbt-testing-framework#dbt-utils-test--uniquecombinationofcolumns)
-- dbt built-in unique/not_null: [dbt-testing-framework > dbt Built-in Generic Tests](/11-dbt/Quality/dbt-testing-framework#dbt-built-in-generic-tests)
+- Python duplicate assertion: [25_py_functional_pipeline > Polars — assert no duplicate rows with unique()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-no-duplicate-rows-with-unique)
+- dbt composite uniqueness: [dbt-testing-framework > dbt-utils test — unique_combination_of_columns](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework#dbt-utils-test--uniquecombinationofcolumns)
+- dbt built-in unique/not_null: [dbt-testing-framework > dbt Built-in Generic Tests](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework#dbt-built-in-generic-tests)
 
 ### Validity — data conforms to business rules
 
@@ -59,11 +48,11 @@ Validity means values fall within acceptable domains and pass business logic rul
 
 **How to detect:** Range checks, regex patterns, enum membership, cross-field logic (e.g., open <= high, low <= close).
 
-- Python row-level validation: [25_py_functional_pipeline > Pydantic — validate Bronze rows with BaseModel() row-level check](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--validate-bronze-rows-with-basemodel-row-level-check)
-- dbt expression assertions: [dbt-testing-framework > dbt-utils test — expression_is_true](/11-dbt/Quality/dbt-testing-framework#dbt-utils-test--expressionistrue)
-- dbt range checks: [dbt-testing-framework > dbt-utils test — accepted_range](/11-dbt/Quality/dbt-testing-framework#dbt-utils-test--acceptedrange)
-- Weight sum validation: [pit-integrity-logic > Validation: Weight Sum Check](/04-SQL-Server/Performance/pit-integrity-logic#validation-weight-sum-check)
-- Data contracts: [dbt-data-contracts-implementation](/11-dbt/Quality/dbt-data-contracts-implementation)
+- Python row-level validation: [25_py_functional_pipeline > Pydantic — validate Bronze rows with BaseModel() row-level check](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--validate-bronze-rows-with-basemodel-row-level-check)
+- dbt expression assertions: [dbt-testing-framework > dbt-utils test — expression_is_true](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework#dbt-utils-test--expressionistrue)
+- dbt range checks: [dbt-testing-framework > dbt-utils test — accepted_range](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework#dbt-utils-test--acceptedrange)
+- Weight sum validation: [pit-integrity-logic > Validation: Weight Sum Check](https://alp78.github.io/elysium/04-SQL-Server/Performance/pit-integrity-logic#validation-weight-sum-check)
+- Data contracts: [dbt-data-contracts-implementation](https://alp78.github.io/elysium/11-dbt/Quality/dbt-data-contracts-implementation)
 
 ### Timeliness — data arrives within SLA
 
@@ -74,9 +63,9 @@ Timeliness means data is available when downstream consumers need it. Late data 
 
 **How to detect:** Compare max timestamp in the dataset against expected freshness SLA. Implement dead man's switch for expected-but-missing loads.
 
-- Python freshness assertion: [25_py_functional_pipeline > Polars — assert data freshness against SLA with max()](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-data-freshness-against-sla-with-max)
-- GCP freshness monitoring: [gcp-pipeline-health-and-sla > Data Freshness Monitoring](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#data-freshness-monitoring)
-- Dead man's switch: [gcp-pipeline-health-and-sla > Dead Man's Switch (Heartbeat Monitoring)](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#dead-mans-switch-heartbeat-monitoring)
+- Python freshness assertion: [25_py_functional_pipeline > Polars — assert data freshness against SLA with max()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-data-freshness-against-sla-with-max)
+- GCP freshness monitoring: [gcp-pipeline-health-and-sla > Data Freshness Monitoring](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#data-freshness-monitoring)
+- Dead man's switch: [gcp-pipeline-health-and-sla > Dead Man's Switch (Heartbeat Monitoring)](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#dead-mans-switch-heartbeat-monitoring)
 
 > [!info] Three Types of Freshness
 >
@@ -95,8 +84,8 @@ Accuracy means recorded values match the real-world truth. A price of 150.00 is 
 
 **How to detect:** Cross-reference against independent sources. Statistical anomaly detection (z-score) to flag outliers for manual review. Reconciliation queries between systems.
 
-- Python API corroboration: [25_py_functional_pipeline > yfinance — corroborate with live API data using Ticker.history()](/02-Programming-Languages/Python/25_py_functional_pipeline#yfinance--corroborate-with-live-api-data-using-tickerhistory)
-- Regression snapshot comparison: [data-pipeline-testing-strategy > Regression tests — snapshot comparison](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy#regression-tests--snapshot-comparison)
+- Python API corroboration: [25_py_functional_pipeline > yfinance — corroborate with live API data using Ticker.history()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#yfinance--corroborate-with-live-api-data-using-tickerhistory)
+- Regression snapshot comparison: [data-pipeline-testing-strategy > Regression tests — snapshot comparison](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy#regression-tests--snapshot-comparison)
 
 ### Consistency — data agrees across systems
 
@@ -107,17 +96,17 @@ Consistency means the same logical entity has the same value in every system tha
 
 **How to detect:** Reconciliation queries comparing row counts, checksums, and key aggregates across systems. Hash-based comparison of entire datasets.
 
-- Python deterministic hash: [25_py_functional_pipeline > hashlib — compute deterministic DataFrame hash with sha256()](/02-Programming-Languages/Python/25_py_functional_pipeline#hashlib--compute-deterministic-dataframe-hash-with-sha256)
-- SCD Type 2 consistency: [silver-transforms > silver.index_dim — SCD Type 2 Dimension](/04-SQL-Server/Medallion-Project/silver-transforms#silverindexdim--scd-type-2-dimension)
-- Upsert consistency: [sql-server-loading-patterns > Upsert (INSERT + UPDATE)](/04-SQL-Server/Patterns/sql-server-loading-patterns#upsert-insert--update)
+- Python deterministic hash: [25_py_functional_pipeline > hashlib — compute deterministic DataFrame hash with sha256()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#hashlib--compute-deterministic-dataframe-hash-with-sha256)
+- SCD Type 2 consistency: [silver-transforms > silver.index_dim — SCD Type 2 Dimension](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms#silverindexdim--scd-type-2-dimension)
+- Upsert consistency: [sql-server-loading-patterns > Upsert (INSERT + UPDATE)](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-loading-patterns#upsert-insert--update)
 
 ## Quality Gates by Medallion Layer
 
-Each [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) layer has different quality priorities. Bronze gates protect ingestion integrity. Silver gates enforce business rules. Gold gates guard publication correctness.
+Each [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) layer has different quality priorities. Bronze gates protect ingestion integrity. Silver gates enforce business rules. Gold gates guard publication correctness.
 
 ### Bronze Quality Gate
 
-Bronze ([medallion-architecture > Bronze (Raw)](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture#bronze-raw)) validates that raw data landed correctly before any transformation.
+Bronze ([medallion-architecture > Bronze (Raw)](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture#bronze-raw)) validates that raw data landed correctly before any transformation.
 
 > [!danger] Tier 1 — Critical (halt pipeline)
 > - Schema conformance: column names and types match expected contract
@@ -134,13 +123,13 @@ Bronze ([medallion-architecture > Bronze (Raw)](/14-Data-Architecture/Pipeline-P
 > - New enum values not in reference table
 > - Column order changed (schema evolution signal)
 
-- Bronze gate implementation: [25_py_functional_pipeline > Pipeline — run Bronze data quality gate with run_quality_gate()](/02-Programming-Languages/Python/25_py_functional_pipeline#pipeline--run-bronze-data-quality-gate-with-runqualitygate)
-- Quality gate pattern: [functional-pipeline-architecture > Quality Gate Pattern](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#quality-gate-pattern)
-- Data quality assertions: [data-pipeline-testing-strategy > Data quality assertions](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy#data-quality-assertions)
+- Bronze gate implementation: [25_py_functional_pipeline > Pipeline — run Bronze data quality gate with run_quality_gate()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pipeline--run-bronze-data-quality-gate-with-runqualitygate)
+- Quality gate pattern: [functional-pipeline-architecture > Quality Gate Pattern](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#quality-gate-pattern)
+- Data quality assertions: [data-pipeline-testing-strategy > Data quality assertions](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy#data-quality-assertions)
 
 ### Silver Quality Gate
 
-Silver ([medallion-architecture > Silver (Cleaned)](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture#silver-cleaned)) enforces business rules and referential integrity on cleaned data.
+Silver ([medallion-architecture > Silver (Cleaned)](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture#silver-cleaned)) enforces business rules and referential integrity on cleaned data.
 
 > [!danger] Tier 1 — Critical (halt pipeline)
 > - Business rule violation on mandatory fields (price <= 0, negative volume)
@@ -168,13 +157,13 @@ Silver ([medallion-architecture > Silver (Cleaned)](/14-Data-Architecture/Pipeli
 > compare incoming columns against the contract, hash the schema,
 > alert on mismatch.
 
-- Silver gate implementation: [25_py_functional_pipeline > Pipeline — run Silver data quality gate with run_quality_gate()](/02-Programming-Languages/Python/25_py_functional_pipeline#pipeline--run-silver-data-quality-gate-with-runqualitygate)
-- Row-level Pydantic validation: [25_py_functional_pipeline > Pydantic — validate Bronze rows with BaseModel() row-level check](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--validate-bronze-rows-with-basemodel-row-level-check)
-- dbt test severity: [dbt-testing-framework > dbt Test severity: warn vs error](/11-dbt/Quality/dbt-testing-framework#dbt-test-severity-warn-vs-error)
+- Silver gate implementation: [25_py_functional_pipeline > Pipeline — run Silver data quality gate with run_quality_gate()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pipeline--run-silver-data-quality-gate-with-runqualitygate)
+- Row-level Pydantic validation: [25_py_functional_pipeline > Pydantic — validate Bronze rows with BaseModel() row-level check](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--validate-bronze-rows-with-basemodel-row-level-check)
+- dbt test severity: [dbt-testing-framework > dbt Test severity: warn vs error](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework#dbt-test-severity-warn-vs-error)
 
 ### Gold Quality Gate
 
-Gold ([medallion-architecture > Gold (Analytics)](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture#gold-analytics)) is the last line of defense before data reaches clients, regulatory filings, and downstream systems.
+Gold ([medallion-architecture > Gold (Analytics)](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture#gold-analytics)) is the last line of defense before data reaches clients, regulatory filings, and downstream systems.
 
 > [!danger] Gold is publication — treat every Gold check as a circuit breaker
 > If a quality gate at the Gold layer fails and the pipeline continues anyway (e.g., because the check was set to `severity: warn` instead of `error`), incorrect index values reach clients and regulatory filings. Gold-layer checks that affect publication integrity must ALWAYS halt the pipeline. See esg circuit breaker fired for a real incident where this saved us.
@@ -195,9 +184,9 @@ Gold ([medallion-architecture > Gold (Analytics)](/14-Data-Architecture/Pipeline
 > - Constituent weight below minimum threshold
 > - Publication timestamp later than typical
 
-- Weight validation: [pit-integrity-logic > Validation: Weight Sum Check](/04-SQL-Server/Performance/pit-integrity-logic#validation-weight-sum-check)
+- Weight validation: [pit-integrity-logic > Validation: Weight Sum Check](https://alp78.github.io/elysium/04-SQL-Server/Performance/pit-integrity-logic#validation-weight-sum-check)
 - Circuit breaker incident: esg circuit breaker fired
-- Store test failures for audit: [dbt-testing-framework > dbt --store-failures](/11-dbt/Quality/dbt-testing-framework#dbt---store-failures)
+- Store test failures for audit: [dbt-testing-framework > dbt --store-failures](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework#dbt---store-failures)
 
 ## Data Quality Tooling
 
@@ -212,9 +201,9 @@ Gold ([medallion-architecture > Gold (Analytics)](/14-Data-Architecture/Pipeline
 > [!warning] Anti-pattern: writing dbt tests that duplicate warehouse constraints
 > If your warehouse enforces NOT NULL and UNIQUE via DDL constraints, dbt tests on the same columns are redundant cost. Use dbt tests for business rules the warehouse cannot enforce.
 
-- Built-in generic tests: [dbt-testing-framework > dbt Built-in Generic Tests](/11-dbt/Quality/dbt-testing-framework#dbt-built-in-generic-tests)
-- Statistical tests: [dbt-testing-framework > dbt-expectations — row count and statistical tests](/11-dbt/Quality/dbt-testing-framework#dbt-expectations--row-count-and-statistical-tests)
-- CI/CD integration: [data-pipeline-testing-strategy > CI/CD Test Automation](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy#cicd-test-automation)
+- Built-in generic tests: [dbt-testing-framework > dbt Built-in Generic Tests](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework#dbt-built-in-generic-tests)
+- Statistical tests: [dbt-testing-framework > dbt-expectations — row count and statistical tests](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework#dbt-expectations--row-count-and-statistical-tests)
+- CI/CD integration: [data-pipeline-testing-strategy > CI/CD Test Automation](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy#cicd-test-automation)
 
 ### Great Expectations — Python assertion suites with profiling
 
@@ -243,8 +232,8 @@ Gold ([medallion-architecture > Gold (Analytics)](/14-Data-Architecture/Pipeline
 
 **Limitations:** No standardization, no built-in reporting, maintenance burden grows with pipeline count.
 
-- Python quality gate: [25_py_functional_pipeline > Pipeline — run all quality gate assertions with log.info()](/02-Programming-Languages/Python/25_py_functional_pipeline#pipeline--run-all-quality-gate-assertions-with-loginfo)
-- C# functional pipeline: [25_cs_functional_pipeline](/02-Programming-Languages/CSharp/25_cs_functional_pipeline)
+- Python quality gate: [25_py_functional_pipeline > Pipeline — run all quality gate assertions with log.info()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pipeline--run-all-quality-gate-assertions-with-loginfo)
+- C# functional pipeline: [25_cs_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline)
 
 ### Dataplex Quality (GCP) — native BigQuery quality scans
 
@@ -254,7 +243,7 @@ Gold ([medallion-architecture > Gold (Analytics)](/14-Data-Architecture/Pipeline
 
 **Limitations:** GCP-only, limited custom logic, no cross-cloud support.
 
-- GCP pipeline health: [gcp-pipeline-health-and-sla > Row Count Validation](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#row-count-validation)
+- GCP pipeline health: [gcp-pipeline-health-and-sla > Row Count Validation](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#row-count-validation)
 
 ### When to Combine Tools
 
@@ -278,8 +267,8 @@ A quarantine isolates rows that fail quality checks so they can be investigated 
 > [!danger] Never silently drop bad rows
 > Dropping rows that fail validation means you lose evidence of upstream data issues. Quarantined rows are your forensic trail: they tell you what went wrong, when, and how often. Without quarantine, you discover data loss only when a client reports it.
 
-- Quarantine pattern overview: [functional-pipeline-architecture > The Quarantine Pattern](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#the-quarantine-pattern)
-- Dead letter queue (same concept, different name): [error-handling-and-retry-patterns > Dead Letter Queue (DLQ) — don't drop, don't retry forever](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns#dead-letter-queue-dlq--dont-drop-dont-retry-forever)
+- Quarantine pattern overview: [functional-pipeline-architecture > The Quarantine Pattern](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#the-quarantine-pattern)
+- Dead letter queue (same concept, different name): [error-handling-and-retry-patterns > Dead Letter Queue (DLQ) — don't drop, don't retry forever](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns#dead-letter-queue-dlq--dont-drop-dont-retry-forever)
 
 ### Quarantine Table Design
 
@@ -298,8 +287,8 @@ CREATE TABLE bronze.quarantine (
 );
 ```
 
-- Python quarantine table creation: [25_py_functional_pipeline > SQL Server — create quarantine table for rejected rows with cursor.execute()](/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--create-quarantine-table-for-rejected-rows-with-cursorexecute)
-- Python quarantine persistence: [25_py_functional_pipeline > SQL Server — define quarantine persistence helper with cursor.execute()](/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--define-quarantine-persistence-helper-with-cursorexecute)
+- Python quarantine table creation: [25_py_functional_pipeline > SQL Server — create quarantine table for rejected rows with cursor.execute()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--create-quarantine-table-for-rejected-rows-with-cursorexecute)
+- Python quarantine persistence: [25_py_functional_pipeline > SQL Server — define quarantine persistence helper with cursor.execute()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--define-quarantine-persistence-helper-with-cursorexecute)
 
 ### Reject-Persist-Investigate Workflow
 
@@ -365,7 +354,7 @@ quality_gate = ShortCircuitOperator(
 > [!info] ShortCircuitOperator vs BranchPythonOperator
 > Use `ShortCircuitOperator` when failure means "stop everything." Use `BranchPythonOperator` when failure means "take an alternate path" (e.g., quarantine and continue with good rows).
 
-- Airflow DAG patterns: [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns)
+- Airflow DAG patterns: [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns)
 
 ### GitHub Actions Integration — dbt test in CI/CD
 
@@ -376,7 +365,7 @@ Run `dbt test --select state:modified+` on every pull request to catch quality r
 - run: dbt test --select state:modified+ --defer --state prod-manifest/
 ```
 
-- CI/CD test automation: [data-pipeline-testing-strategy > CI/CD Test Automation](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy#cicd-test-automation)
+- CI/CD test automation: [data-pipeline-testing-strategy > CI/CD Test Automation](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy#cicd-test-automation)
 
 ## SLA Definitions by Dataset
 
@@ -393,13 +382,13 @@ Run `dbt test --select state:modified+` on every pull request to catch quality r
 
 ## Related
 
-- [data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — Testing pyramid that coordinates quality checks with unit, integration, and contract tests
-- [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts) — Schema and SLA agreements between producers and consumers
-- [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Retry logic, dead letter queues, and circuit breakers
-- [functional-pipeline-architecture](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture) — Quality gate and quarantine patterns in functional style
-- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — Bronze / Silver / Gold layer definitions and responsibilities
-- [observability-strategy-matrix](/13-Observability/observability-strategy-matrix) — Logging, metrics, and alerting strategy across pipeline layers
-- [25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline) — Full Python implementation of quality gates, quarantine, and anomaly detection
-- [25_cs_functional_pipeline](/02-Programming-Languages/CSharp/25_cs_functional_pipeline) — C# implementation of the same patterns
-- [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework) — dbt test types, severity levels, and store-failures
-- [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) — GCP-native freshness monitoring and alerting
+- [data-pipeline-testing-strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — Testing pyramid that coordinates quality checks with unit, integration, and contract tests
+- [data-contracts](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-contracts) — Schema and SLA agreements between producers and consumers
+- [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Retry logic, dead letter queues, and circuit breakers
+- [functional-pipeline-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture) — Quality gate and quarantine patterns in functional style
+- [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — Bronze / Silver / Gold layer definitions and responsibilities
+- [observability-strategy-matrix](https://alp78.github.io/elysium/13-Observability/observability-strategy-matrix) — Logging, metrics, and alerting strategy across pipeline layers
+- [25_py_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline) — Full Python implementation of quality gates, quarantine, and anomaly detection
+- [25_cs_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline) — C# implementation of the same patterns
+- [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework) — dbt test types, severity levels, and store-failures
+- [gcp-pipeline-health-and-sla](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) — GCP-native freshness monitoring and alerting

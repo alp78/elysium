@@ -15,7 +15,6 @@ tags:
 aliases: [SQL Server Agent, Agent Jobs, Job Scheduling, Task Scheduling SQL Server]
 keywords: [sql server agent, agent jobs, sqlagent, sp_add_job, sp_add_jobstep, sp_add_schedule, msdb, sysjobhistory, job triggering, airflow vs agent, cron vs agent, cloud scheduler, cloud run, cloud functions, CDC log reader, index maintenance, backup job, linux agent]
 description: "SQL Server Agent job scheduling — enabling on Linux, creating jobs, built-in CDC/backup agents, and a complete comparison of all five job triggering methods in the GCP + SQL Server + Airflow stack."
-related: [server-configuration, airflow-dag-patterns, sql-server-change-tracking, backup-types-and-strategy, index-maintenance]
 created: 2026-03-29
 updated: 2026-03-29
 status: complete
@@ -23,7 +22,7 @@ status: complete
 
 # SQL Server Agent Jobs — Built-In Task Scheduling
 
-SQL Server Agent is the native job scheduler built into SQL Server. It runs maintenance tasks, CDC log readers, backup schedules, and custom ETL steps. On Linux, it requires explicit enabling. Understanding when to use Agent vs [Airflow](/12-Orchestration/Airflow/airflow-dag-patterns) vs cron is essential for a clean operations architecture.
+SQL Server Agent is the native job scheduler built into SQL Server. It runs maintenance tasks, CDC log readers, backup schedules, and custom ETL steps. On Linux, it requires explicit enabling. Understanding when to use Agent vs [Airflow](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) vs cron is essential for a clean operations architecture.
 
 ---
 
@@ -142,7 +141,7 @@ EXEC msdb.dbo.sp_add_jobserver
 
 > [!info] Automated Backup Job
 >
-> See [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy) for backup theory and the 3-2-1 rule. This job automates the nightly full backup.
+> See [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy) for backup theory and the 3-2-1 rule. This job automates the nightly full backup.
 
 ```sql
 EXEC msdb.dbo.sp_add_job @job_name = N'Nightly Full Backup';
@@ -214,7 +213,7 @@ EXEC msdb.dbo.sp_help_jobactivity;
 | Log Shipping | Copy job, Restore job | Secondary database falls behind, DR gap grows |
 | Availability Groups | AG health check | AG monitoring goes blind, failover detection delayed |
 
-- **CDC log reader:** reads the transaction log and populates `cdc.*` change tables. See [sql-server-change-tracking > Change Data Capture (CDC)](/04-SQL-Server/Patterns/sql-server-change-tracking#change-data-capture-cdc) for CDC details
+- **CDC log reader:** reads the transaction log and populates `cdc.*` change tables. See [sql-server-change-tracking > Change Data Capture (CDC)](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-change-tracking#change-data-capture-cdc) for CDC details
 - **CDC cleanup:** purges change table rows older than the configured retention. Without it, change tables grow unbounded
 - **Monitor with:** `SELECT * FROM msdb.dbo.cdc_jobs;` to check CDC job status
 
@@ -265,7 +264,7 @@ This is the most important section of the page. Five different ways to trigger w
 
 **Airflow — anything that orchestrates multiple systems or needs dependencies:**
 
-This is the primary orchestrator in the stack. [Airflow](/12-Orchestration/Airflow/airflow-dag-patterns) owns:
+This is the primary orchestrator in the stack. [Airflow](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) owns:
 
 - Bronze loading pipelines (fetch from yfinance → load to SQL Server)
 - Silver/gold transforms (trigger Python scripts that read/write SQL Server)

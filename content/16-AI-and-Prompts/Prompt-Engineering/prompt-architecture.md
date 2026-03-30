@@ -6,7 +6,6 @@ tags: [ai, prompt-engineering]
 aliases: [prompt structure, 4-layer prompt, prompt layering, role goal constraints format, XML prompting, JSON schema prompting, meta-prompting, chain of thought, prompt template]
 keywords: [prompt architecture, role, goal, constraints, format, XML tags, JSON schema, paragraph form, modular prompts, layering, chain of thought, meta-prompting, structured output, prompt template, 4-layer, system prompt design, constraint types, output format]
 description: "The 4-layer prompt architecture (Role, Goal, Constraints, Format) with complete worked examples, plus modular structural formats — XML tags, JSON schemas, and paragraph form — with guidance on when to use each. Covers meta-prompting and chain-of-thought structuring."
-related: [prompt-foundations, model-specific-prompting, applied-prompting, prompt-debugging]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # Prompt Architecture: Structural Layering, XML, JSON Schemas, and Chain of Thought
 
-A well-architected prompt is the single highest-leverage investment in getting consistent AI output. This note covers the 4-layer structural template (Role → Goal → Constraints → Format), the three modular formats (XML, JSON, paragraph), and how to choose among them. These patterns build on the axioms in [prompt-foundations](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) and inform the model-specific strategies in [model-specific-prompting](/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting).
+A well-architected prompt is the single highest-leverage investment in getting consistent AI output. This note covers the 4-layer structural template (Role → Goal → Constraints → Format), the three modular formats (XML, JSON, paragraph), and how to choose among them. These patterns build on the axioms in [prompt-foundations](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) and inform the model-specific strategies in [model-specific-prompting](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting).
 
 ---
 
@@ -75,7 +74,7 @@ The goal is the **single most important sentence** in your prompt. If the model 
 
 > [!warning] Buried goals produce poor output
 >
-> If your goal is in paragraph 3, the model has already started pattern-matching against the opening words. Put the goal in the **first sentence** of the user prompt. See [intent vs. output misalignment](/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#42-intent-vs-output-misalignment) for the failure mode this prevents.
+> If your goal is in paragraph 3, the model has already started pattern-matching against the opening words. Put the goal in the **first sentence** of the user prompt. See [intent vs. output misalignment](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#42-intent-vs-output-misalignment) for the failure mode this prevents.
 
 ### Layer 3: Constraints — Defining the Negative Space
 
@@ -172,7 +171,7 @@ For each issue found:
 </constraints>
 ```
 
-**When to use XML:** Complex prompts with 3+ distinct sections, system prompts, agent instructions, multi-step workflows. Claude specifically interprets XML tags as structural markers (see [Claude-specific guidance](/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting#claude-anthropic)).
+**When to use XML:** Complex prompts with 3+ distinct sections, system prompts, agent instructions, multi-step workflows. Claude specifically interprets XML tags as structural markers (see [Claude-specific guidance](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting#claude-anthropic)).
 
 > [!warning] LLM JSON syntax errors
 >
@@ -233,7 +232,7 @@ a slightly delayed update than complex timezone-aware scheduling.
 | Plain paragraphs | Low | Highest | Creative, conversational, exploratory |
 
 > [!info] Format and Model Interaction
-> The right format also depends on the model. Claude handles XML best. GPT-4 handles markdown system/user separation well. Gemini works well with clearly-framed task statements. See [model-specific-prompting](/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting) for per-model format guidance.
+> The right format also depends on the model. Claude handles XML best. GPT-4 handles markdown system/user separation well. Gemini works well with clearly-framed task statements. See [model-specific-prompting](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting) for per-model format guidance.
 
 ---
 
@@ -294,7 +293,7 @@ Rewrite the prompt to produce the desired output.
 ```
 
 > [!warning] Meta-Prompting Limitations
-> The model evaluating its own prompt inherits its own blind spots. Use a different role for evaluation than for generation — if the generator was a "data engineer," make the evaluator a "prompt engineer" or "technical writer." See [evaluation agent pattern](/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#51-workflows-loops-and-multi-agent-systems) for the architectural solution.
+> The model evaluating its own prompt inherits its own blind spots. Use a different role for evaluation than for generation — if the generator was a "data engineer," make the evaluator a "prompt engineer" or "technical writer." See [evaluation agent pattern](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#51-workflows-loops-and-multi-agent-systems) for the architectural solution.
 
 ---
 
@@ -321,10 +320,10 @@ Format:
 
 ## Related Notes
 
-- [prompt-foundations](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) — The three axioms and context hierarchy that underlie these architectural patterns
-- [model-specific-prompting](/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting) — Claude vs. GPT-4 vs. Gemini vs. Grok format preferences
-- [applied-prompting](/16-AI-and-Prompts/Prompt-Engineering/applied-prompting) — The 4-layer template applied to research, code, data extraction, and content tasks
-- [prompt-debugging](/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging) — Rebuilding broken prompts using phrasing, logic steps, and reinforcement
+- [prompt-foundations](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) — The three axioms and context hierarchy that underlie these architectural patterns
+- [model-specific-prompting](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting) — Claude vs. GPT-4 vs. Gemini vs. Grok format preferences
+- [applied-prompting](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/applied-prompting) — The 4-layer template applied to research, code, data extraction, and content tasks
+- [prompt-debugging](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging) — Rebuilding broken prompts using phrasing, logic steps, and reinforcement
 
 ## References
 

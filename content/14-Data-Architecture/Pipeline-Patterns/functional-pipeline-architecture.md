@@ -20,16 +20,6 @@ aliases:
   - "Pipeline Architecture Principles"
 keywords: [functional core, imperative shell, contract validation, quality gate, data provenance, lineage, immutable, value object, quarantine, dead letter queue, pydantic, fluentvalidation, batch_id, SHA-256]
 description: "Five architectural principles — functional core/imperative shell, contract validation, quality gates, data provenance, immutable value objects — applied to data pipeline construction."
-related:
-  - "[25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline)"
-  - "[25_cs_functional_pipeline](/02-Programming-Languages/CSharp/25_cs_functional_pipeline)"
-  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
-  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
-  - "[data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts)"
-  - "[data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework)"
-  - "[data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy)"
-  - "[error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns)"
-  - "[context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture)"
 created: 2026-03-29
 updated: 2026-03-29
 status: complete
@@ -40,8 +30,8 @@ status: complete
 This is a composite architecture combining five named principles from different engineering disciplines. No single established name exists for the combination — each principle has deep literature independently. Their power comes from using them together.
 
 Two reference implementations exist:
-- **Python:** [25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline) — Pydantic + Polars + tenacity + pyodbc
-- **C#:** [25_cs_functional_pipeline](/02-Programming-Languages/CSharp/25_cs_functional_pipeline) — FluentValidation + LINQ + Polly + Dapper
+- **Python:** [25_py_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline) — Pydantic + Polars + tenacity + pyodbc
+- **C#:** [25_cs_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline) — FluentValidation + LINQ + Polly + Dapper
 
 > [!info] Theory here, implementation there
 >
@@ -49,7 +39,7 @@ Two reference implementations exist:
 > details (code, validation rules, SQL DDL) live in the paired notebooks. Every section
 > below links to the exact heading where the principle is built.
 
-This architecture sits on TOP of [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) (which defines the data layering) and [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) (which defines safe re-runs). This page defines how the pipeline CODE is structured.
+This architecture sits on TOP of [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) (which defines the data layering) and [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) (which defines safe re-runs). This page defines how the pipeline CODE is structured.
 
 ---
 
@@ -130,19 +120,19 @@ flowchart TB
 
 | What | Python | C# |
 |---|---|---|
-| Daily returns | [25_py_functional_pipeline > Polars — compute daily returns with pct_change().over()](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--compute-daily-returns-with-pctchangeover) | [25_cs_functional_pipeline > LINQ — compute daily returns with GroupBy().SelectMany()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#linq--compute-daily-returns-with-groupbyselectmany) |
-| Intraday range | [25_py_functional_pipeline > Polars — compute intraday range with with_columns()](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--compute-intraday-range-with-withcolumns) | [25_cs_functional_pipeline > LINQ — compute intraday range with Select()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#linq--compute-intraday-range-with-select) |
-| Moving average | [25_py_functional_pipeline > Polars — compute 20-day moving average with rolling_mean().over()](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--compute-20-day-moving-average-with-rollingmeanover) | [25_cs_functional_pipeline > LINQ — compute 20-day SMA with Skip().Take().Average()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#linq--compute-20-day-sma-with-skiptakeaverage) |
-| Gold summary | [25_py_functional_pipeline > Polars — build daily cross-sectional summary with group_by().agg()](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--build-daily-cross-sectional-summary-with-groupbyagg) | [25_cs_functional_pipeline > LINQ — build Gold daily summary with GroupBy().Select()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#linq--build-gold-daily-summary-with-groupbyselect) |
-| Gold profiles | [25_py_functional_pipeline > Polars — build per-symbol profile with cum_max() drawdown](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--build-per-symbol-profile-with-cummax-drawdown) | [25_cs_functional_pipeline > LINQ — define standard deviation extension with Sum().Sqrt()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#linq--define-standard-deviation-extension-with-sumsqrt) |
+| Daily returns | [25_py_functional_pipeline > Polars — compute daily returns with pct_change().over()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#polars--compute-daily-returns-with-pctchangeover) | [25_cs_functional_pipeline > LINQ — compute daily returns with GroupBy().SelectMany()](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#linq--compute-daily-returns-with-groupbyselectmany) |
+| Intraday range | [25_py_functional_pipeline > Polars — compute intraday range with with_columns()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#polars--compute-intraday-range-with-withcolumns) | [25_cs_functional_pipeline > LINQ — compute intraday range with Select()](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#linq--compute-intraday-range-with-select) |
+| Moving average | [25_py_functional_pipeline > Polars — compute 20-day moving average with rolling_mean().over()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#polars--compute-20-day-moving-average-with-rollingmeanover) | [25_cs_functional_pipeline > LINQ — compute 20-day SMA with Skip().Take().Average()](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#linq--compute-20-day-sma-with-skiptakeaverage) |
+| Gold summary | [25_py_functional_pipeline > Polars — build daily cross-sectional summary with group_by().agg()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#polars--build-daily-cross-sectional-summary-with-groupbyagg) | [25_cs_functional_pipeline > LINQ — build Gold daily summary with GroupBy().Select()](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#linq--build-gold-daily-summary-with-groupbyselect) |
+| Gold profiles | [25_py_functional_pipeline > Polars — build per-symbol profile with cum_max() drawdown](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#polars--build-per-symbol-profile-with-cummax-drawdown) | [25_cs_functional_pipeline > LINQ — define standard deviation extension with Sum().Sqrt()](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#linq--define-standard-deviation-extension-with-sumsqrt) |
 
 **Imperative shell (I/O boundaries):**
 
 | What | Python | C# |
 |---|---|---|
-| Configuration | [25_py_functional_pipeline > Python — define pipeline paths, SQL connection, and stock universe](/02-Programming-Languages/Python/25_py_functional_pipeline#python--define-pipeline-paths-sql-connection-and-stock-universe) | [25_cs_functional_pipeline > Constants — define pipeline paths, SQL connection, and stock universe](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#constants--define-pipeline-paths-sql-connection-and-stock-universe) |
-| API fetch | [25_py_functional_pipeline > yfinance — fetch OHLCV to JSON landing zone with Ticker.history()](/02-Programming-Languages/Python/25_py_functional_pipeline#yfinance--fetch-ohlcv-to-json-landing-zone-with-tickerhistory) | [25_cs_functional_pipeline > HttpClient — fetch OHLCV from Yahoo Finance with Polly ExecuteAsync()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#httpclient--fetch-ohlcv-from-yahoo-finance-with-polly-executeasync) |
-| DB persistence | [25_py_functional_pipeline > SQLAlchemy — define DataFrame write helper with to_sql()](/02-Programming-Languages/Python/25_py_functional_pipeline#sqlalchemy--define-dataframe-write-helper-with-tosql) | [25_cs_functional_pipeline > Dapper — define Bronze MERGE upsert with Execute()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#dapper--define-bronze-merge-upsert-with-execute) |
+| Configuration | [25_py_functional_pipeline > Python — define pipeline paths, SQL connection, and stock universe](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#python--define-pipeline-paths-sql-connection-and-stock-universe) | [25_cs_functional_pipeline > Constants — define pipeline paths, SQL connection, and stock universe](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#constants--define-pipeline-paths-sql-connection-and-stock-universe) |
+| API fetch | [25_py_functional_pipeline > yfinance — fetch OHLCV to JSON landing zone with Ticker.history()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#yfinance--fetch-ohlcv-to-json-landing-zone-with-tickerhistory) | [25_cs_functional_pipeline > HttpClient — fetch OHLCV from Yahoo Finance with Polly ExecuteAsync()](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#httpclient--fetch-ohlcv-from-yahoo-finance-with-polly-executeasync) |
+| DB persistence | [25_py_functional_pipeline > SQLAlchemy — define DataFrame write helper with to_sql()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#sqlalchemy--define-dataframe-write-helper-with-tosql) | [25_cs_functional_pipeline > Dapper — define Bronze MERGE upsert with Execute()](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#dapper--define-bronze-merge-upsert-with-execute) |
 
 > [!danger] Anti-pattern: transforms that call the database
 >
@@ -165,10 +155,10 @@ flowchart TB
 
 | Layer | Python | C# |
 |---|---|---|
-| Bronze | [25_py_functional_pipeline > Pydantic — define Bronze validation model with BaseModel and Field()](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-bronze-validation-model-with-basemodel-and-field) | [25_cs_functional_pipeline > record — define Bronze OHLCV data model with Data Annotations](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-bronze-ohlcv-data-model-with-data-annotations) |
-| Silver | [25_py_functional_pipeline > Pydantic — define Silver validation model with BaseModel and Field()](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-silver-validation-model-with-basemodel-and-field) | [25_cs_functional_pipeline > record — define Silver OHLCV data model with enrichment fields](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-silver-ohlcv-data-model-with-enrichment-fields) |
-| Gold | [25_py_functional_pipeline > Pydantic — define Gold validation models with BaseModel and Field()](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-gold-validation-models-with-basemodel-and-field) | [25_cs_functional_pipeline > record — define Gold daily summary data model](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-gold-daily-summary-data-model) |
-| Validation rules | [25_py_functional_pipeline > Pydantic — validate Bronze rows with BaseModel() row-level check](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--validate-bronze-rows-with-basemodel-row-level-check) | [25_cs_functional_pipeline > FluentValidation — define Bronze validation rules with AbstractValidator\<T>](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#fluentvalidation--define-bronze-validation-rules-with-abstractvalidatort) |
+| Bronze | [25_py_functional_pipeline > Pydantic — define Bronze validation model with BaseModel and Field()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-bronze-validation-model-with-basemodel-and-field) | [25_cs_functional_pipeline > record — define Bronze OHLCV data model with Data Annotations](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-bronze-ohlcv-data-model-with-data-annotations) |
+| Silver | [25_py_functional_pipeline > Pydantic — define Silver validation model with BaseModel and Field()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-silver-validation-model-with-basemodel-and-field) | [25_cs_functional_pipeline > record — define Silver OHLCV data model with enrichment fields](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-silver-ohlcv-data-model-with-enrichment-fields) |
+| Gold | [25_py_functional_pipeline > Pydantic — define Gold validation models with BaseModel and Field()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-gold-validation-models-with-basemodel-and-field) | [25_cs_functional_pipeline > record — define Gold daily summary data model](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-gold-daily-summary-data-model) |
+| Validation rules | [25_py_functional_pipeline > Pydantic — validate Bronze rows with BaseModel() row-level check](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--validate-bronze-rows-with-basemodel-row-level-check) | [25_cs_functional_pipeline > FluentValidation — define Bronze validation rules with AbstractValidator\<T>](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#fluentvalidation--define-bronze-validation-rules-with-abstractvalidatort) |
 
 **Language comparison:**
 
@@ -179,7 +169,7 @@ flowchart TB
 | Strictness mode | `ConfigDict(strict=True)` — no coercion | Compile-time type safety + runtime validation |
 | Error output | `ValidationError` with field-level messages | `ValidationResult` with `Errors` collection |
 
-See [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts) for the broader contract theory and [context-and-metadata-architecture > Schema Drift Detection](/14-Data-Architecture/Architectures/context-and-metadata-architecture#schema-drift-detection) for schema evolution patterns.
+See [data-contracts](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-contracts) for the broader contract theory and [context-and-metadata-architecture > Schema Drift Detection](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture#schema-drift-detection) for schema evolution patterns.
 
 ---
 
@@ -202,15 +192,15 @@ See [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts) for
 
 | Check | Python | C# |
 |---|---|---|
-| Not empty | [25_py_functional_pipeline > Polars — assert DataFrame is not empty with len()](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-dataframe-is-not-empty-with-len) | [25_cs_functional_pipeline > DataTable — define data quality assertion functions with AsEnumerable()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#datatable--define-data-quality-assertion-functions-with-asenumerable) |
-| No null keys | [25_py_functional_pipeline > Polars — assert no nulls in key columns with null_count()](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-no-nulls-in-key-columns-with-nullcount) | (same file, same function) |
-| No duplicates | [25_py_functional_pipeline > Polars — assert no duplicate rows with unique()](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-no-duplicate-rows-with-unique) | (same file, same function) |
-| Value range | [25_py_functional_pipeline > Polars — assert values within range with filter()](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-values-within-range-with-filter) | (same file, same function) |
-| Freshness | [25_py_functional_pipeline > Polars — assert data freshness against SLA with max()](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-data-freshness-against-sla-with-max) | (same file, same function) |
-| Orchestrator | [25_py_functional_pipeline > Pipeline — run all quality gate assertions with log.info()](/02-Programming-Languages/Python/25_py_functional_pipeline#pipeline--run-all-quality-gate-assertions-with-loginfo) | [25_cs_functional_pipeline > DataTable — run Bronze data quality gate with RunQualityGate()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#datatable--run-bronze-data-quality-gate-with-runqualitygate) |
-| Exception | [25_py_functional_pipeline > Python — define custom Exception subclass for quality gate failures](/02-Programming-Languages/Python/25_py_functional_pipeline#python--define-custom-exception-subclass-for-quality-gate-failures) | [25_cs_functional_pipeline > Exception — define data quality gate failure exception](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#exception--define-data-quality-gate-failure-exception) |
+| Not empty | [25_py_functional_pipeline > Polars — assert DataFrame is not empty with len()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-dataframe-is-not-empty-with-len) | [25_cs_functional_pipeline > DataTable — define data quality assertion functions with AsEnumerable()](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#datatable--define-data-quality-assertion-functions-with-asenumerable) |
+| No null keys | [25_py_functional_pipeline > Polars — assert no nulls in key columns with null_count()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-no-nulls-in-key-columns-with-nullcount) | (same file, same function) |
+| No duplicates | [25_py_functional_pipeline > Polars — assert no duplicate rows with unique()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-no-duplicate-rows-with-unique) | (same file, same function) |
+| Value range | [25_py_functional_pipeline > Polars — assert values within range with filter()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-values-within-range-with-filter) | (same file, same function) |
+| Freshness | [25_py_functional_pipeline > Polars — assert data freshness against SLA with max()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-data-freshness-against-sla-with-max) | (same file, same function) |
+| Orchestrator | [25_py_functional_pipeline > Pipeline — run all quality gate assertions with log.info()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pipeline--run-all-quality-gate-assertions-with-loginfo) | [25_cs_functional_pipeline > DataTable — run Bronze data quality gate with RunQualityGate()](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#datatable--run-bronze-data-quality-gate-with-runqualitygate) |
+| Exception | [25_py_functional_pipeline > Python — define custom Exception subclass for quality gate failures](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#python--define-custom-exception-subclass-for-quality-gate-failures) | [25_cs_functional_pipeline > Exception — define data quality gate failure exception](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#exception--define-data-quality-gate-failure-exception) |
 
-See [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) for the quality dimension taxonomy and [data-pipeline-testing-strategy > Data quality assertions](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy#data-quality-assertions) for where quality gates fit in the testing pyramid.
+See [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) for the quality dimension taxonomy and [data-pipeline-testing-strategy > Data quality assertions](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy#data-quality-assertions) for where quality gates fit in the testing pyramid.
 
 > [!warning] Quality gates are not tests
 >
@@ -249,14 +239,14 @@ ORDER BY started_at;
 
 | Component | Python | C# |
 |---|---|---|
-| Batch ID | [25_py_functional_pipeline > uuid — generate unique batch ID with uuid4()](/02-Programming-Languages/Python/25_py_functional_pipeline#uuid--generate-unique-batch-id-with-uuid4) | [25_cs_functional_pipeline > Guid — generate unique batch ID with Guid.NewGuid()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#guid--generate-unique-batch-id-with-guidnewguid) |
-| SHA-256 hash | [25_py_functional_pipeline > hashlib — compute deterministic DataFrame hash with sha256()](/02-Programming-Languages/Python/25_py_functional_pipeline#hashlib--compute-deterministic-dataframe-hash-with-sha256) | [25_cs_functional_pipeline > SHA256 — compute deterministic data hash with SHA256.HashData()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#sha256--compute-deterministic-data-hash-with-sha256hashdata) |
-| Stage tracking | [25_py_functional_pipeline > Python — define stage start and end tracker with datetime.now()](/02-Programming-Languages/Python/25_py_functional_pipeline#python--define-stage-start-and-end-tracker-with-datetimenow) | [25_cs_functional_pipeline > DateTime — define stage start and end tracker with DateTime.UtcNow](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#datetime--define-stage-start-and-end-tracker-with-datetimeutcnow) |
-| Lineage models | [25_py_functional_pipeline > Pydantic — define lineage tracking models with BaseModel and Field()](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-lineage-tracking-models-with-basemodel-and-field) | [25_cs_functional_pipeline > record — define stage lineage tracking data model](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-stage-lineage-tracking-data-model) |
-| Run context | [25_py_functional_pipeline > Pydantic — save run context to JSON with model_dump_json()](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--save-run-context-to-json-with-modeldumpjson) | [25_cs_functional_pipeline > JsonSerializer — save run context to JSON with Serialize()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#jsonserializer--save-run-context-to-json-with-serialize) |
-| Persistence | [25_py_functional_pipeline > SQL Server — define lineage persistence helper with cursor.execute()](/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--define-lineage-persistence-helper-with-cursorexecute) | [25_cs_functional_pipeline > Dapper — define lineage persistence helper with Execute()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#dapper--define-lineage-persistence-helper-with-execute) |
+| Batch ID | [25_py_functional_pipeline > uuid — generate unique batch ID with uuid4()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#uuid--generate-unique-batch-id-with-uuid4) | [25_cs_functional_pipeline > Guid — generate unique batch ID with Guid.NewGuid()](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#guid--generate-unique-batch-id-with-guidnewguid) |
+| SHA-256 hash | [25_py_functional_pipeline > hashlib — compute deterministic DataFrame hash with sha256()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#hashlib--compute-deterministic-dataframe-hash-with-sha256) | [25_cs_functional_pipeline > SHA256 — compute deterministic data hash with SHA256.HashData()](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#sha256--compute-deterministic-data-hash-with-sha256hashdata) |
+| Stage tracking | [25_py_functional_pipeline > Python — define stage start and end tracker with datetime.now()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#python--define-stage-start-and-end-tracker-with-datetimenow) | [25_cs_functional_pipeline > DateTime — define stage start and end tracker with DateTime.UtcNow](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#datetime--define-stage-start-and-end-tracker-with-datetimeutcnow) |
+| Lineage models | [25_py_functional_pipeline > Pydantic — define lineage tracking models with BaseModel and Field()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-lineage-tracking-models-with-basemodel-and-field) | [25_cs_functional_pipeline > record — define stage lineage tracking data model](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-stage-lineage-tracking-data-model) |
+| Run context | [25_py_functional_pipeline > Pydantic — save run context to JSON with model_dump_json()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--save-run-context-to-json-with-modeldumpjson) | [25_cs_functional_pipeline > JsonSerializer — save run context to JSON with Serialize()](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#jsonserializer--save-run-context-to-json-with-serialize) |
+| Persistence | [25_py_functional_pipeline > SQL Server — define lineage persistence helper with cursor.execute()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--define-lineage-persistence-helper-with-cursorexecute) | [25_cs_functional_pipeline > Dapper — define lineage persistence helper with Execute()](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#dapper--define-lineage-persistence-helper-with-execute) |
 
-See [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture) for the broader provenance theory including bi-temporal modeling and context propagation patterns.
+See [context-and-metadata-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture) for the broader provenance theory including bi-temporal modeling and context propagation patterns.
 
 ---
 
@@ -268,8 +258,8 @@ See [context-and-metadata-architecture](/14-Data-Architecture/Architectures/cont
 
 **Implementations:** The contract models from the Contract-First Validation section (above) serve double duty — they are both validation contracts AND immutable value objects. The SCD2 upsert logic relies on this:
 
-- Python SCD2: [25_py_functional_pipeline > SQL Server — define SCD Type 2 upsert for one symbol with MERGE INTO](/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--define-scd-type-2-upsert-for-one-symbol-with-merge-into)
-- C#: [25_cs_functional_pipeline > record — define Bronze OHLCV data model with Data Annotations](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-bronze-ohlcv-data-model-with-data-annotations) (records provide built-in value equality)
+- Python SCD2: [25_py_functional_pipeline > SQL Server — define SCD Type 2 upsert for one symbol with MERGE INTO](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--define-scd-type-2-upsert-for-one-symbol-with-merge-into)
+- C#: [25_cs_functional_pipeline > record — define Bronze OHLCV data model with Data Annotations](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-bronze-ohlcv-data-model-with-data-annotations) (records provide built-in value equality)
 
 > [!tip] Immutability enables change detection
 >
@@ -289,11 +279,11 @@ See [context-and-metadata-architecture](/14-Data-Architecture/Architectures/cont
 
 | Component | Python | C# |
 |---|---|---|
-| Quarantine table DDL | [25_py_functional_pipeline > SQL Server — create quarantine table for rejected rows with cursor.execute()](/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--create-quarantine-table-for-rejected-rows-with-cursorexecute) | (same DDL) |
-| Quarantine persistence | [25_py_functional_pipeline > SQL Server — define quarantine persistence helper with cursor.execute()](/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--define-quarantine-persistence-helper-with-cursorexecute) | [25_cs_functional_pipeline > Dapper — define quarantine persistence helper with Execute()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#dapper--define-quarantine-persistence-helper-with-execute) |
-| Review quarantined rows | [25_py_functional_pipeline > Polars — review quarantined rows with read_database()](/02-Programming-Languages/Python/25_py_functional_pipeline#polars--review-quarantined-rows-with-readdatabase) | [25_cs_functional_pipeline > Dapper — review quarantined rows with QueryToTable()](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#dapper--review-quarantined-rows-with-querytotable) |
+| Quarantine table DDL | [25_py_functional_pipeline > SQL Server — create quarantine table for rejected rows with cursor.execute()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--create-quarantine-table-for-rejected-rows-with-cursorexecute) | (same DDL) |
+| Quarantine persistence | [25_py_functional_pipeline > SQL Server — define quarantine persistence helper with cursor.execute()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--define-quarantine-persistence-helper-with-cursorexecute) | [25_cs_functional_pipeline > Dapper — define quarantine persistence helper with Execute()](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#dapper--define-quarantine-persistence-helper-with-execute) |
+| Review quarantined rows | [25_py_functional_pipeline > Polars — review quarantined rows with read_database()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#polars--review-quarantined-rows-with-readdatabase) | [25_cs_functional_pipeline > Dapper — review quarantined rows with QueryToTable()](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#dapper--review-quarantined-rows-with-querytotable) |
 
-See [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) for broader error handling theory and [data-quality-framework > Data Quality Quarantine Pattern](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework#data-quality-quarantine-pattern) for the quarantine pattern in the quality framework.
+See [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) for broader error handling theory and [data-quality-framework > Data Quality Quarantine Pattern](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework#data-quality-quarantine-pattern) for the quarantine pattern in the quality framework.
 
 > [!danger] Never silently drop bad rows
 >
@@ -342,7 +332,7 @@ Records the trigger (`scheduled`, `manual`, `backfill`, `reprocess`), the `is_co
 
 ### TemporalContext — Bi-Temporal Markers
 
-Separates `as_of_date` (what date is this data FOR) from `knowledge_date` (when did we learn about it). Without it, a backfill loading 2024 data in 2026 looks like a normal 2026 run. See [context-and-metadata-architecture > Temporal Context — As of When Is This Data True?](/14-Data-Architecture/Architectures/context-and-metadata-architecture#temporal-context--as-of-when-is-this-data-true) for the broader theory.
+Separates `as_of_date` (what date is this data FOR) from `knowledge_date` (when did we learn about it). Without it, a backfill loading 2024 data in 2026 looks like a normal 2026 run. See [context-and-metadata-architecture > Temporal Context — As of When Is This Data True?](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture#temporal-context--as-of-when-is-this-data-true) for the broader theory.
 
 ### StageContext — The Propagation Carrier
 
@@ -360,13 +350,13 @@ Context is persisted to `context_log` in SQL Server — it survives the Python/C
 
 | Component | Python | C# |
 |---|---|---|
-| ColumnContext model | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-column-semantic-metadata-model-with-basemodel) | [cs](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-column-semantic-metadata-model-with-record) |
-| Column registries | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-column-registries-for-each-medallion-layer) | [cs](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#c--define-column-registries-for-each-medallion-layer) |
-| BusinessContext model | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-business-context-model-with-basemodel) | [cs](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-business-context-model-with-record) |
-| TemporalContext model | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-temporal-context-model-with-basemodel) | [cs](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-temporal-context-model-with-record) |
-| StageContext model | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-stage-context-model-for-cross-stage-propagation-with-basemodel) | [cs](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-stage-context-model-for-cross-stage-propagation-with-record) |
-| Context persistence | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--define-context-persistence-helper-with-cursorexecute) | [cs](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#sql-server--define-context-persistence-helper-with-execute) |
-| context_log DDL | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--create-context-log-table-with-cursorexecute) | (same DDL) |
+| ColumnContext model | [py](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-column-semantic-metadata-model-with-basemodel) | [cs](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-column-semantic-metadata-model-with-record) |
+| Column registries | [py](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-column-registries-for-each-medallion-layer) | [cs](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#c--define-column-registries-for-each-medallion-layer) |
+| BusinessContext model | [py](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-business-context-model-with-basemodel) | [cs](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-business-context-model-with-record) |
+| TemporalContext model | [py](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-temporal-context-model-with-basemodel) | [cs](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-temporal-context-model-with-record) |
+| StageContext model | [py](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-stage-context-model-for-cross-stage-propagation-with-basemodel) | [cs](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-stage-context-model-for-cross-stage-propagation-with-record) |
+| Context persistence | [py](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--define-context-persistence-helper-with-cursorexecute) | [cs](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#sql-server--define-context-persistence-helper-with-execute) |
+| context_log DDL | [py](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#sql-server--create-context-log-table-with-cursorexecute) | (same DDL) |
 
 ---
 
@@ -401,10 +391,10 @@ The pipeline exports a JSON Schema file per gold table, enriched with `x-column-
 
 | Component | Python | C# |
 |---|---|---|
-| Contract export | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-data-contract-export-function-with-modeljsonschema) | [cs](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#c--define-data-contract-export-function-with-jsonserializer) |
-| Contract inspection | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#json--inspect-exported-data-contract-with-jsonloads) | [cs](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#json--inspect-exported-data-contract-with-jsonserializerdeserialize) |
+| Contract export | [py](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-data-contract-export-function-with-modeljsonschema) | [cs](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#c--define-data-contract-export-function-with-jsonserializer) |
+| Contract inspection | [py](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#json--inspect-exported-data-contract-with-jsonloads) | [cs](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#json--inspect-exported-data-contract-with-jsonserializerdeserialize) |
 
-See [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts) for the broader contract specification theory. See [ai-augmented-data-engineering > Self-Describing Data for AI Consumers](/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering#self-describing-data-for-ai-consumers) for how AI agents consume these contracts in practice.
+See [data-contracts](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-contracts) for the broader contract specification theory. See [ai-augmented-data-engineering > Self-Describing Data for AI Consumers](https://alp78.github.io/elysium/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering#self-describing-data-for-ai-consumers) for how AI agents consume these contracts in practice.
 
 ---
 
@@ -428,9 +418,9 @@ The AI agent scenario: `volatility: 0.0187` is meaningless without the contract.
 
 | Demonstration | Python | C# |
 |---|---|---|
-| Zero-volume classification | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#zero-volume-classification--holiday-or-anomaly) | [cs](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#zero-volume-classification--holiday-or-anomaly) |
-| SMA-20 null accounting | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#sma-20-null-accounting--expected-vs-unexpected) | [cs](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#sma-20-null-accounting--expected-vs-unexpected) |
-| Contract interpretation | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#data-contract--column-semantics-as-structured-data) | [cs](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#data-contract--column-semantics-as-structured-data) |
+| Zero-volume classification | [py](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#zero-volume-classification--holiday-or-anomaly) | [cs](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#zero-volume-classification--holiday-or-anomaly) |
+| SMA-20 null accounting | [py](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#sma-20-null-accounting--expected-vs-unexpected) | [cs](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#sma-20-null-accounting--expected-vs-unexpected) |
+| Contract interpretation | [py](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#data-contract--column-semantics-as-structured-data) | [cs](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#data-contract--column-semantics-as-structured-data) |
 
 > [!abstract] Context Makes Data Self-Describing
 >
@@ -438,7 +428,7 @@ The AI agent scenario: `volatility: 0.0187` is meaningless without the contract.
 > Context explains data FORWARD to any consumer — what does this value mean?
 > Together they make data trustworthy: verifiably correct AND self-describing.
 
-See [ai-augmented-data-engineering](/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering) for how AI agents consume context-enriched data.
+See [ai-augmented-data-engineering](https://alp78.github.io/elysium/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering) for how AI agents consume context-enriched data.
 
 ---
 
@@ -468,14 +458,14 @@ See [ai-augmented-data-engineering](/16-AI-and-Prompts/LLM-Pipelines/ai-augmente
 
 ## Related
 
-- [25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline) — Python reference implementation (Pydantic + Polars + tenacity)
-- [25_cs_functional_pipeline](/02-Programming-Languages/CSharp/25_cs_functional_pipeline) — C# reference implementation (FluentValidation + LINQ + Polly)
-- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — Bronze/Silver/Gold data layering (this page builds on top of medallion)
-- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — MERGE upsert and safe re-run patterns
-- [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts) — Contract specification, breaking vs non-breaking changes
-- [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) — Quality dimensions, medallion quality gates, quarantine pattern
-- [data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — Where quality gates fit in the testing pyramid
-- [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Retry strategies, circuit breaker, dead letter queue theory
-- [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture) — The five types of pipeline context, bi-temporal modeling, schema evolution
-- [ai-augmented-data-engineering](/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering) — AI agents as consumers of context-enriched data
-- [data-modeling-patterns](/14-Data-Architecture/Data-Modeling/data-modeling-patterns) — SCD Type 2 pattern used in dim_symbol
+- [25_py_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline) — Python reference implementation (Pydantic + Polars + tenacity)
+- [25_cs_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline) — C# reference implementation (FluentValidation + LINQ + Polly)
+- [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — Bronze/Silver/Gold data layering (this page builds on top of medallion)
+- [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — MERGE upsert and safe re-run patterns
+- [data-contracts](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-contracts) — Contract specification, breaking vs non-breaking changes
+- [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) — Quality dimensions, medallion quality gates, quarantine pattern
+- [data-pipeline-testing-strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — Where quality gates fit in the testing pyramid
+- [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Retry strategies, circuit breaker, dead letter queue theory
+- [context-and-metadata-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture) — The five types of pipeline context, bi-temporal modeling, schema evolution
+- [ai-augmented-data-engineering](https://alp78.github.io/elysium/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering) — AI agents as consumers of context-enriched data
+- [data-modeling-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Data-Modeling/data-modeling-patterns) — SCD Type 2 pattern used in dim_symbol

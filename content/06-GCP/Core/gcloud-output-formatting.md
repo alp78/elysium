@@ -6,7 +6,6 @@ tags: [infrastructure, gcp, gcloud]
 aliases: [gcloud format, gcloud filter, gcloud output, gcloud --format, gcloud --filter]
 keywords: [gcloud, format, filter, output formatting, value, table, csv, json, flattened, basename, server-side filter, projection, transformation, scripting, impersonation, service account impersonation]
 description: "How to use gcloud --format and --filter flags to extract structured data from GCP APIs, enabling scriptable output in table, value, CSV, JSON, and flattened formats."
-related: [gcloud-authentication, gcloud-configurations, gcp-projects-and-apis, service-accounts-and-iam]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # gcloud Output Formatting and Filtering
 
-The `--format` and `--filter` flags are the most underused features of the [gcloud CLI](/06-GCP/Core/gcloud-authentication). They transform gcloud from a human-readable tool into a scriptable data extraction engine, enabling you to pipe exact field values into shell scripts, build inventory automation, and run server-side filtered queries instead of grepping local output.
+The `--format` and `--filter` flags are the most underused features of the [gcloud CLI](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication). They transform gcloud from a human-readable tool into a scriptable data extraction engine, enabling you to pipe exact field values into shell scripts, build inventory automation, and run server-side filtered queries instead of grepping local output.
 
 ### Why gcloud Output Formatting Matters
 
@@ -120,10 +119,10 @@ gcloud compute instances list --impersonate-service-account=pipeline-sa@project.
 
 ## Related
 
-- [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — How authentication tokens work with formatted output
-- [gcloud-configurations](/06-GCP/Core/gcloud-configurations) — Switching projects before running formatted queries
-- [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) — Listing projects and enabled APIs with formatted output
-- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — Impersonating service accounts to test permissions
+- [gcloud-authentication](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication) — How authentication tokens work with formatted output
+- [gcloud-configurations](https://alp78.github.io/elysium/06-GCP/Core/gcloud-configurations) — Switching projects before running formatted queries
+- [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) — Listing projects and enabled APIs with formatted output
+- [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — Impersonating service accounts to test permissions
 
 ## References
 

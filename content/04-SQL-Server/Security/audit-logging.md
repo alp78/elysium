@@ -6,7 +6,6 @@ tags: [sql, gcp, sql-server, tsql]
 aliases: [SQL Server Audit, audit logging, database audit, server audit, audit specification, LGIF, LGIS, failed login detection, brute force detection, compliance logging]
 keywords: [SQL Server Audit, server audit, audit specification, database audit specification, CREATE SERVER AUDIT, CREATE SERVER AUDIT SPECIFICATION, CREATE DATABASE AUDIT SPECIFICATION, sys.fn_get_audit_file, LGIF, LGIS, FAILED_LOGIN_GROUP, SUCCESSFUL_LOGIN_GROUP, DATABASE_PERMISSION_CHANGE_GROUP, SERVER_ROLE_MEMBER_CHANGE_GROUP, brute force detection, credential stuffing, GCP Ops Agent, Cloud Logging, Cloud Monitoring, BigQuery sink, quarterly security review, orphaned users, audit file, sqlaudit, compliance, IOSCO, ESMA, GDPR]
 description: "Step-by-step guide to setting up SQL Server Audit on Linux for compliance and threat detection: server audit target, server and database audit specifications, querying audit logs, detecting brute-force attacks, forwarding to GCP Cloud Logging and BigQuery, and running a quarterly security review."
-related: [tde-encryption, sql-server-authentication, server-configuration, performance-audit-playbook]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # Audit Logging
 
-SQL Server Audit tracks all security-relevant events (login attempts, permission changes, data access) to binary audit files (`.sqlaudit`). Required for regulatory compliance (IOSCO/ESMA for benchmark administrators, GDPR Article 30 data access logs) as outlined in the [compliance-and-auditability](/13-Observability/Monitoring/compliance-and-auditability) framework. Events are written to disk and can be forwarded to GCP [Cloud Logging](/06-GCP/Logging/cloud-logging) for centralized monitoring and alerting.
+SQL Server Audit tracks all security-relevant events (login attempts, permission changes, data access) to binary audit files (`.sqlaudit`). Required for regulatory compliance (IOSCO/ESMA for benchmark administrators, GDPR Article 30 data access logs) as outlined in the [compliance-and-auditability](https://alp78.github.io/elysium/13-Observability/Monitoring/compliance-and-auditability) framework. Events are written to disk and can be forwarded to GCP [Cloud Logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) for centralized monitoring and alerting.
 
 ---
 
@@ -454,7 +453,7 @@ ALTER SERVER AUDIT project_audit WITH (STATE = ON);
 
 ### Related
 
-- [tde-encryption](/04-SQL-Server/Security/tde-encryption) — encryption at rest that complements audit logging for compliance
-- [sql-server-authentication](/04-SQL-Server/Security/sql-server-authentication) — login hardening, TLS, and firewall rules
-- [server-configuration](/04-SQL-Server/Administration/server-configuration) — instance settings including security configurations
-- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — Phase 11 security quick check using sysadmin membership and guest access queries
+- [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/Security/tde-encryption) — encryption at rest that complements audit logging for compliance
+- [sql-server-authentication](https://alp78.github.io/elysium/04-SQL-Server/Security/sql-server-authentication) — login hardening, TLS, and firewall rules
+- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) — instance settings including security configurations
+- [performance-audit-playbook](https://alp78.github.io/elysium/04-SQL-Server/Performance/performance-audit-playbook) — Phase 11 security quick check using sysadmin membership and guest access queries

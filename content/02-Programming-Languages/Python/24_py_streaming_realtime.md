@@ -5,12 +5,7 @@ technology: [python, gcp]
 tags: [python, gcp, pipeline, streaming]
 aliases: [Streaming Python, Real-Time Data Python, WebSocket, SSE, Pub/Sub]
 keywords: [streaming, real-time, WebSocket, SSE, server-sent events, Pub/Sub, Firestore listener, aiohttp, asyncio, latency, throughput, MFT, Transfer Service]
-description: "Python streaming and real-time data reference — WebSocket, SSE, Pub/Sub, Firestore listeners, and latency benchmarks. See [24_cs_streaming_realtime](/02-Programming-Languages/CSharp/24_cs_streaming_realtime) for the C# equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[24_cs_streaming_realtime](/02-Programming-Languages/CSharp/24_cs_streaming_realtime)"
-  - "[23_py_data_ingestion](/02-Programming-Languages/Python/23_py_data_ingestion)"
-  - "[12_py_asyncconcurrency](/02-Programming-Languages/Python/12_py_asyncconcurrency)"
+description: "Python streaming and real-time data reference — WebSocket, SSE, Pub/Sub, Firestore listeners, and latency benchmarks. See [24_cs_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/24_cs_streaming_realtime) for the C# equivalent."
 created: 2026-03-28
 updated: 2026-03-28
 status: complete
@@ -225,7 +220,7 @@ display(pd.DataFrame(sample))
 
 > [!tip] Related pattern
 >
-> For the architectural context of where streaming fits within the broader data platform — including how real-time feeds connect to batch pipelines — see [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture).
+> For the architectural context of where streaming fits within the broader data platform — including how real-time feeds connect to batch pipelines — see [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture).
 
 ## WebSocket Streaming
 
@@ -404,7 +399,7 @@ print(f'  p50: {sse_p50:.0f}µs  p99: {sse_p99:.0f}µs  p99.9: {sse_p999:.0f}µs
 ## Google Cloud Pub/Sub
 
 Managed message bus with at-least-once delivery, auto-scaling, and dead-letter queues.
-Decouples publishers from subscribers — the backbone of event-driven architectures in GCP. For topic/subscription setup, dead-letter configuration, and operational patterns via `gcloud`, see [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging).
+Decouples publishers from subscribers — the backbone of event-driven architectures in GCP. For topic/subscription setup, dead-letter configuration, and operational patterns via `gcloud`, see [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging).
 
 #### gcloud services enable + IAM binding — Pub/Sub API and permissions
 

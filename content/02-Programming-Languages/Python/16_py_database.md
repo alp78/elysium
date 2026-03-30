@@ -5,10 +5,7 @@ technology: [python]
 tags: [python]
 aliases: [database access, SQL, ORM, pyodbc, Entity Framework, Dapper, SQLAlchemy, connection strings]
 keywords: [pyodbc, SQLAlchemy, sqlite3, connection string, ORM, query, transaction, pandas, read_sql]
-description: "Python database reference with executable examples and cell outputs — covers pyodbc, SQLAlchemy ORM, raw SQL, transactions, and pandas integration. See [16_cs_database](/02-Programming-Languages/CSharp/16_cs_database) for the C# equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[16_cs_database](/02-Programming-Languages/CSharp/16_cs_database)"
+description: "Python database reference with executable examples and cell outputs — covers pyodbc, SQLAlchemy ORM, raw SQL, transactions, and pandas integration. See [16_cs_database](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/16_cs_database) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -380,7 +377,7 @@ conn.close()
 
 ## SQL Server — pyodbc (ODBC Driver 18)
 
-The SQL patterns used below (parameterised queries, window functions, CTEs) follow the same T-SQL dialect covered in [sql-fundamentals](/05-DB-Queries/SQL-Server/sql-fundamentals). For how connection pooling interacts with SQL Server lock behavior under concurrent writes, see [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking).
+The SQL patterns used below (parameterised queries, window functions, CTEs) follow the same T-SQL dialect covered in [sql-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals). For how connection pooling interacts with SQL Server lock behavior under concurrent writes, see [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking).
 
 #### SQL Server — connect and list schemas/tables
 

@@ -6,12 +6,6 @@ tags: [ci-cd, docker, github-actions, git]
 aliases: [GitHub Actions, CI/CD pipelines, continuous integration, continuous deployment, GHA]
 keywords: [github actions, ci/cd, workflow, pipeline, matrix testing, deployment, docker build, artifact registry, cloud run, automated testing, pre-commit hooks]
 description: "GitHub Actions CI/CD workflow patterns for data engineering — building Docker images, running tests, deploying to Cloud Run, and managing infrastructure with Terraform."
-related:
-  - "[github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd)"
-  - "[docker-compose](/09-Docker/docker-compose)"
-  - "[image-management](/09-Docker/image-management)"
-  - "[terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy)"
-  - "[git-daily-workflow](/08-Git/git-daily-workflow)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -19,7 +13,7 @@ status: complete
 
 # GitHub Actions CI/CD Workflows
 
-GitHub Actions automates build, test, and deployment pipelines triggered by repository events (push, PR, schedule, manual dispatch). For data engineering teams, the key workflows are: building and pushing [Docker images](/09-Docker/docker-compose), running pipeline tests, deploying to [Cloud Run](/06-GCP/Serverless/cloud-run-jobs-vs-services) via [Terraform-managed infrastructure](/07-Terraform/GCP-Resources/terraform-cloud-run), and validating [Terraform changes](/07-Terraform/Fundamentals/terraform-plan-apply-destroy).
+GitHub Actions automates build, test, and deployment pipelines triggered by repository events (push, PR, schedule, manual dispatch). For data engineering teams, the key workflows are: building and pushing [Docker images](https://alp78.github.io/elysium/09-Docker/docker-compose), running pipeline tests, deploying to [Cloud Run](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) via [Terraform-managed infrastructure](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run), and validating [Terraform changes](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy).
 
 ### Workflow YAML Structure
 
@@ -42,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Authenticate using Workload Identity Federation (see [gcloud-authentication](/06-GCP/Core/gcloud-authentication))
+      # Authenticate using Workload Identity Federation (see [gcloud-authentication](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication))
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
@@ -122,11 +116,11 @@ repos:
 
 > [!warning] Secrets management
 >
-> Never hardcode credentials in workflow files. Use GitHub Secrets (`${{ secrets.NAME }}`) for API keys, passwords, and service account credentials. For GCP, prefer [Workload Identity Federation](/06-GCP/Core/gcloud-authentication) over service account key files.
+> Never hardcode credentials in workflow files. Use GitHub Secrets (`${{ secrets.NAME }}`) for API keys, passwords, and service account credentials. For GCP, prefer [Workload Identity Federation](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication) over service account key files.
 
 ## Related
 
-- [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — data pipeline project-specific workflow configurations
-- [git-daily-workflow](/08-Git/git-daily-workflow) — Git workflow that feeds into CI/CD
-- [image-management](/09-Docker/image-management) — Docker image build and push patterns
-- [terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — Terraform in CI/CD pipelines
+- [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — data pipeline project-specific workflow configurations
+- [git-daily-workflow](https://alp78.github.io/elysium/08-Git/git-daily-workflow) — Git workflow that feeds into CI/CD
+- [image-management](https://alp78.github.io/elysium/09-Docker/image-management) — Docker image build and push patterns
+- [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — Terraform in CI/CD pipelines

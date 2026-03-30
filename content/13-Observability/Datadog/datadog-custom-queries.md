@@ -6,12 +6,6 @@ tags: [monitoring, observability, sql, datadog]
 aliases: [Custom SQL Metrics, Datadog custom_queries, DMV metrics]
 keywords: [datadog custom queries, custom_queries, sqlserver, DMV, dm_exec_sessions, dm_os_performance_counters, connections by login, deadlock count, monotonic_count, gauge, tag column, metric prefix, sqlserver prefix]
 description: "How to configure custom SQL Server DMV queries in the Datadog SQL Server integration to track connections by login and deadlock counts as custom metrics."
-related:
-  - datadog-sql-server-integration
-  - datadog-agent-sql-vm
-  - datadog-dashboards
-  - datadog-alerting
-  - essential-dba-queries
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -168,8 +162,8 @@ sudo cat -A /etc/datadog-agent/conf.d/sqlserver.d/conf.yaml | head -40
 
 ## Related
 
-- [datadog-sql-server-integration](/13-Observability/Datadog/datadog-sql-server-integration) — Base integration config that hosts these queries
-- [datadog-agent-sql-vm](/13-Observability/Datadog/datadog-agent-sql-vm) — Agent management and restart commands
-- [datadog-dashboards](/13-Observability/Datadog/datadog-dashboards) — Dashboard widgets consuming these custom metrics
-- [datadog-alerting](/13-Observability/Datadog/datadog-alerting) — Deadlock alert monitor using `sqlserver.deadlocks.total`
-- [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — Raw DMV queries for manual investigation
+- [datadog-sql-server-integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-sql-server-integration) — Base integration config that hosts these queries
+- [datadog-agent-sql-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-sql-vm) — Agent management and restart commands
+- [datadog-dashboards](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-dashboards) — Dashboard widgets consuming these custom metrics
+- [datadog-alerting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-alerting) — Deadlock alert monitor using `sqlserver.deadlocks.total`
+- [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/Administration/essential-dba-queries) — Raw DMV queries for manual investigation

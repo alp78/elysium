@@ -6,9 +6,6 @@ tags: [csharp, nosql, gcp, firestore]
 aliases: [Firestore C#, Firestore queries C#, NoSQL C#, document database C#]
 keywords: [firestore, csharp, dotnet, Google.Cloud.Firestore, DocumentReference, CollectionReference, query, where, order, limit, batch, transaction, snapshot, WriteBatch, FieldValue]
 description: "Firestore operations in C# with executable examples and cell outputs — covers CRUD, queries, transactions, batches, snapshots, and typed document mapping."
-related:
-  - "[firestore-python](/05-DB-Queries/Firestore/firestore-python)"
-  - "[firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -6,11 +6,6 @@ tags: [sql, sql-server, tsql]
 aliases: [SQL fundamentals, T-SQL basics, SQL queries, SELECT, JOIN, WHERE, GROUP BY]
 keywords: [sql, t-sql, select, join, inner join, left join, where, group by, having, order by, subquery, union, aggregate, count, sum, avg, distinct, null, like, between, in, case, coalesce]
 description: "SQL Server T-SQL fundamentals with executable examples and cell outputs — covers SELECT, filtering, joins, aggregation, subqueries, and set operations."
-related:
-  - "[sql-advanced](/05-DB-Queries/SQL-Server/sql-advanced)"
-  - "[sql-engineering](/05-DB-Queries/SQL-Server/sql-engineering)"
-  - "[sargable-queries](/04-SQL-Server/T-SQL/sargable-queries)"
-  - "[merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -19,7 +14,7 @@ status: complete
 # SQL for Data Engineering
 
 Hands-on SQL using the **stoxx** index database (SQL Server).
-Medallion architecture: Bronze (raw) → Silver (cleaned) → Gold (analytics). For the database objects and performance patterns that build on these fundamentals, continue to [sql-engineering](/05-DB-Queries/SQL-Server/sql-engineering).
+Medallion architecture: Bronze (raw) → Silver (cleaned) → Gold (analytics). For the database objects and performance patterns that build on these fundamentals, continue to [sql-engineering](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-engineering).
 
 Topics covered:
 - Connection & Schema Exploration
@@ -45,7 +40,7 @@ Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?TrustServerCertif
 
 > [!danger] Lab-Only Credentials
 >
-> The connection string above contains a plaintext password for a local lab environment. In production, credentials are stored in GCP Secret Manager and fetched at runtime — never hardcoded. See [secrets-management > Access from Python](/06-GCP/Security/secrets-management#access-from-python).
+> The connection string above contains a plaintext password for a local lab environment. In production, credentials are stored in GCP Secret Manager and fetched at runtime — never hardcoded. See [secrets-management > Access from Python](https://alp78.github.io/elysium/06-GCP/Security/secrets-management#access-from-python).
 
 ## Schema Exploration
 
@@ -182,7 +177,7 @@ ORDER BY ORDINAL_POSITION
 > | Temp tables | `#temp` (session-scoped) | `CREATE TEMP TABLE` (script-scoped) |
 > | Table path | `schema.table` | `` `project.dataset.table` `` |
 >
-> For the full cross-platform comparison including Python and C#, see [05_py_aggregation_reshaping](/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) and [05_cs_aggregation_reshaping](/03-Dataframes/Dataframes-CSharp/05_cs_aggregation_reshaping).
+> For the full cross-platform comparison including Python and C#, see [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) and [05_cs_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-CSharp/05_cs_aggregation_reshaping).
 
 ### SELECT, Filtering & Sorting — Basic SELECT with WHERE
 
@@ -430,7 +425,7 @@ Group by `YEAR(date), MONTH(date)` to build time-series summaries. Shows monthly
 
 > [!warning] Functions on columns kill SARGability
 >
-> `WHERE YEAR(date) = 2025` cannot use an index on `date` — the engine evaluates `YEAR()` on every row. Rewrite as `WHERE date >= '2025-01-01' AND date < '2026-01-01'`. Functions in `GROUP BY` are fine (no index needed). Functions in `WHERE` are the problem. See [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries).
+> `WHERE YEAR(date) = 2025` cannot use an index on `date` — the engine evaluates `YEAR()` on every row. Rewrite as `WHERE date >= '2025-01-01' AND date < '2026-01-01'`. Functions in `GROUP BY` are fine (no index needed). Functions in `WHERE` are the problem. See [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries).
 
 
 ```sql
@@ -1265,7 +1260,7 @@ FROM silver.eurostoxx50_ohlcv
 
 > [!tip] Related pattern
 >
-> The SQL that creates and populates the bronze tables queried here is covered in [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading), which walks through the ingestion pipeline that feeds this medallion architecture.
+> The SQL that creates and populates the bronze tables queried here is covered in [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading), which walks through the ingestion pipeline that feeds this medallion architecture.
 
 ### Bronze → Silver → Gold Transforms — Daily Returns
 

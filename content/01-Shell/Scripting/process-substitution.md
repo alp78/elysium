@@ -6,7 +6,6 @@ tags: [shell, bash, linux]
 aliases: [process substitution, here document, here string, heredoc, herestring, advanced input output]
 keywords: [process substitution, here document, heredoc, here string, herestring, diff command output, virtual file descriptor, multi-line input, EOF, stdin, temporary file elimination]
 description: "Bash process substitution (<() and >()), here documents (<<EOF), and here strings (<<<) for treating command output as files and embedding multi-line strings in scripts."
-related: [command-chaining, io-redirection, defensive-scripting, brace-expansion]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -98,10 +97,10 @@ grep "ASML" <<< "ASML SAP SIE"
 
 ## Related
 
-- [io-redirection](/01-Shell/Scripting/io-redirection) — Basic redirection operators
-- [command-chaining](/01-Shell/Scripting/command-chaining) — Connecting commands with pipes
-- [brace-expansion-and-globbing](/01-Shell/Scripting/brace-expansion-and-globbing) — Another argument generation technique
-- [defensive-scripting](/01-Shell/Scripting/defensive-scripting) — Using these patterns in production scripts
+- [io-redirection](https://alp78.github.io/elysium/01-Shell/Scripting/io-redirection) — Basic redirection operators
+- [command-chaining](https://alp78.github.io/elysium/01-Shell/Scripting/command-chaining) — Connecting commands with pipes
+- [brace-expansion-and-globbing](https://alp78.github.io/elysium/01-Shell/Scripting/brace-expansion-and-globbing) — Another argument generation technique
+- [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) — Using these patterns in production scripts
 
 ## References
 

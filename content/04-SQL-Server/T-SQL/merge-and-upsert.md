@@ -6,7 +6,6 @@ tags: [sql, sql-server, tsql]
 aliases: [MERGE, upsert, WHEN MATCHED, WHEN NOT MATCHED, SCD Type 2, truncate and reload, delete and insert, fast_executemany]
 keywords: [MERGE, upsert, WHEN MATCHED, WHEN NOT MATCHED, SCD, SCD2, Slowly Changing Dimension, truncate reload, delete insert, fast_executemany, pyodbc, NORECOVERY, XACT_ABORT, "@@ROWCOUNT", "@@ERROR", "@@TRANCOUNT", XACT_STATE, TRY CATCH, savepoint, SAVE TRAN, RCSI, version store, U lock, X lock, phantom insert, race condition, atomic, idempotent, bronze silver gold, medallion]
 description: "MERGE statement patterns and upsert strategies for the bronze→silver→gold medallion pipeline: truncate-reload for snapshots, merge for OHLCV corrections, SCD Type 2 close-and-insert for dimensions, and delete-and-insert for gold. Includes transaction management, @@ROWCOUNT guards, and XACT_ABORT best practices."
-related: [sargable-queries, storage-internals, blocking-and-locking, deadlock-detection-and-prevention, race-conditions, medallion-architecture, silver-transforms, gold-transforms]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -74,7 +73,7 @@ except Exception:
 
 ## Strategy 2: Read-then-INSERT/UPDATE (OHLCV Merge)
 
-OHLCV data is append-only (new dates added each day) with volume corrections (after-hours snapshots have volume=0, which gets corrected the following day). A full truncate-reload would destroy years of price history, so this strategy reads what already exists and only touches what changed. This is the same MERGE pattern used in [bronze OHLCV loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading#strategy-2-merge-ohlcv-only).
+OHLCV data is append-only (new dates added each day) with volume corrections (after-hours snapshots have volume=0, which gets corrected the following day). A full truncate-reload would destroy years of price history, so this strategy reads what already exists and only touches what changed. This is the same MERGE pattern used in [bronze OHLCV loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading#strategy-2-merge-ohlcv-only).
 
 #### SELECT existing rows — build lookup map for merge comparison
 
@@ -261,7 +260,7 @@ records_inserted=50  records_updated=45  records_unchanged=5
 
 ## T-SQL MERGE Statement (Atomic Upsert)
 
-The T-SQL `MERGE` statement combines INSERT and UPDATE into a single atomic operation. It is the most concise way to express "insert if not exists, update if matched" and is safe against phantom insert race conditions because the check and write happen atomically. MERGE is the core [idempotent pattern](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) used across the pipeline, and [dbt incremental models](/11-dbt/Modeling/dbt-materializations) generate MERGE statements internally when targeting SQL Server.
+The T-SQL `MERGE` statement combines INSERT and UPDATE into a single atomic operation. It is the most concise way to express "insert if not exists, update if matched" and is safe against phantom insert race conditions because the check and write happen atomically. MERGE is the core [idempotent pattern](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) used across the pipeline, and [dbt incremental models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-materializations) generate MERGE statements internally when targeting SQL Server.
 
 #### MERGE WHEN MATCHED / NOT MATCHED — atomic upsert pattern
 
@@ -696,11 +695,11 @@ Pipeline: MERGE INTO silver.stock_dim ... WHEN MATCHED AND hash changed THEN UPD
 
 ### Related
 
-- [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries) — ensure WHERE clauses on MERGE join keys are SARGable for index seeks
-- [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — U lock → X lock promotion and RCSI's effect on reader/writer conflicts
-- [deadlock-detection-and-prevention](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) — MERGE deadlock scenarios and prevention strategies
-- [race-conditions](/04-SQL-Server/Concurrency/race-conditions) — phantom insert prevention with MERGE and serialization strategies
-- [storage-internals](/04-SQL-Server/Storage-and-Indexes/storage-internals) — version store mechanics, page splits during MERGE updates
-- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — bronze/silver/gold schema design context
-- [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) — full silver transform implementations
-- [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) — gold scoring and analytics transforms
+- [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries) — ensure WHERE clauses on MERGE join keys are SARGable for index seeks
+- [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) — U lock → X lock promotion and RCSI's effect on reader/writer conflicts
+- [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) — MERGE deadlock scenarios and prevention strategies
+- [race-conditions](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/race-conditions) — phantom insert prevention with MERGE and serialization strategies
+- [storage-internals](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/storage-internals) — version store mechanics, page splits during MERGE updates
+- [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — bronze/silver/gold schema design context
+- [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) — full silver transform implementations
+- [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) — gold scoring and analytics transforms

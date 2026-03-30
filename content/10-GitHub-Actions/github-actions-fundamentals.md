@@ -43,10 +43,6 @@ keywords:
   - needs
   - if conditional
 description: "GitHub Actions fundamentals — workflow anatomy, triggers, runners, jobs, steps, secrets, caching, artifacts, and concurrency."
-related:
-  - "[github-actions-patterns](/10-GitHub-Actions/github-actions-patterns)"
-  - "[github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering)"
-  - "[git-daily-workflow](/08-Git/git-daily-workflow)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -55,7 +51,7 @@ status: complete
 # GitHub Actions Fundamentals
 
 > [!abstract] Summary
-> GitHub Actions automates software workflows directly in a repository. A **workflow** is a YAML file in `.github/workflows/` that defines when to run (triggers), where to run (runners), and what to run (jobs and steps). Workflows are typically triggered by the [daily Git workflow](/08-Git/git-daily-workflow) -- pushes, PRs, and merges fire the events that start CI pipelines.
+> GitHub Actions automates software workflows directly in a repository. A **workflow** is a YAML file in `.github/workflows/` that defines when to run (triggers), where to run (runners), and what to run (jobs and steps). Workflows are typically triggered by the [daily Git workflow](https://alp78.github.io/elysium/08-Git/git-daily-workflow) -- pushes, PRs, and merges fire the events that start CI pipelines.
 
 ---
 
@@ -457,7 +453,7 @@ steps:
       pip install -r requirements.txt
       pip install -r requirements-dev.txt
     # Shell steps run in bash by default — apply the same
-    # set -e / set -o pipefail practices from [defensive-scripting](/01-Shell/Scripting/defensive-scripting)
+    # set -e / set -o pipefail practices from [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting)
 
   - name: With custom shell
     shell: python
@@ -998,7 +994,7 @@ steps:
 
 ### Manual Retry Pattern
 
-The retry loop below follows the same [defensive shell patterns](/01-Shell/Scripting/defensive-scripting) used in production scripts -- short-circuit on success, log on failure, and cap retries.
+The retry loop below follows the same [defensive shell patterns](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) used in production scripts -- short-circuit on success, log on failure, and cap retries.
 
 ```yaml
 - name: Retry on failure
@@ -1228,6 +1224,6 @@ jobs:
 
 ### See Also
 
-- [github-actions-patterns](/10-GitHub-Actions/github-actions-patterns) — matrix builds, reusable workflows, deployment strategies
-- [github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering) — data pipeline CI/CD, Workload Identity, dbt CI
-- [git-daily-workflow](/08-Git/git-daily-workflow) — branching strategy that pairs with these workflows
+- [github-actions-patterns](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-patterns) — matrix builds, reusable workflows, deployment strategies
+- [github-actions-data-engineering](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-data-engineering) — data pipeline CI/CD, Workload Identity, dbt CI
+- [git-daily-workflow](https://alp78.github.io/elysium/08-Git/git-daily-workflow) — branching strategy that pairs with these workflows

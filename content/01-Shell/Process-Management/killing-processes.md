@@ -6,7 +6,6 @@ tags: [shell, bash, linux, powershell]
 aliases: [kill, pkill, killall, SIGTERM, SIGKILL, kill -9, stop process, terminate process]
 keywords: [kill, pkill, killall, SIGTERM, SIGKILL, kill -9, stop process, terminate, signal, graceful shutdown, force kill, process group, PGID, strace, lock file cleanup, Stop-Process]
 description: "Graceful and forceful process termination in Linux and PowerShell. Covers the correct kill escalation sequence (SIGTERM → strace → SIGKILL), pkill -f for pattern matching, process groups, and cleanup after force kills."
-related: ["[viewing-processes](/01-Shell/Process-Management/viewing-processes)", "[managing-services](/01-Shell/Process-Management/managing-services)", "[system-resources](/01-Shell/Process-Management/system-resources)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -20,7 +19,7 @@ When a pipeline process is stuck — an infinite loop, a hanging database connec
 
 > [!info] SIGTERM graceful shutdown
 >
-> Docker uses the same SIGTERM→SIGKILL escalation — see [container-lifecycle](/09-Docker/container-lifecycle). The process can:
+> Docker uses the same SIGTERM→SIGKILL escalation — see [container-lifecycle](https://alp78.github.io/elysium/09-Docker/container-lifecycle). The process can:
 > 1. Flush buffers and close file handles
 > 2. Commit or rollback database transactions
 > 3. Release locks
@@ -102,7 +101,7 @@ kill -- -<PGID>
 > - Lock files left in `/var/run/`, `/tmp/`, or the application's data directory
 > - Shared memory segments: `ipcs -m` (list), `ipcrm -m <shmid>` (remove)
 > - Incomplete writes: check file sizes and checksums
-> - Database transaction state: look for open transactions in `sys.dm_exec_sessions` -- if a SQL Server process is the victim, check [deadlock-detection-and-prevention](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) for proper KILL session handling
+> - Database transaction state: look for open transactions in `sys.dm_exec_sessions` -- if a SQL Server process is the victim, check [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) for proper KILL session handling
 
 ### PowerShell — Stop-Process for graceful and forced termination
 
@@ -137,6 +136,6 @@ Get-Process -Name "python" | Stop-Process -Confirm
 ```
 
 ## Related
-- [viewing-processes](/01-Shell/Process-Management/viewing-processes) — find the PID before killing
-- [managing-services](/01-Shell/Process-Management/managing-services) — use `systemctl stop` for services (cleaner than `kill`)
-- [system-resources](/01-Shell/Process-Management/system-resources) — confirm resource is released after killing
+- [viewing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/viewing-processes) — find the PID before killing
+- [managing-services](https://alp78.github.io/elysium/01-Shell/Process-Management/managing-services) — use `systemctl stop` for services (cleaner than `kill`)
+- [system-resources](https://alp78.github.io/elysium/01-Shell/Process-Management/system-resources) — confirm resource is released after killing

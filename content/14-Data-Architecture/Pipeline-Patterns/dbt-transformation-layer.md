@@ -6,12 +6,6 @@ tags: [data-architecture, architecture, pipeline, python, sql, airflow, dbt, big
 aliases: [dbt Core, dbt Cloud, Data Build Tool, dbt models, dbt snapshots, dbt macros, dbt testing, transformation layer]
 keywords: [dbt, data build tool, dbt core, dbt cloud, staging models, intermediate models, mart models, dbt test, schema tests, custom tests, snapshots, SCD type 2, slowly changing dimensions, macros, jinja, incremental models, dbt run, dbt compile, sources, ref, dbt-utils, CI/CD, slim builds, state comparison, airflow dbt integration, medallion architecture, bronze silver gold, ELT]
 description: "dbt (Data Build Tool) is the standard SQL transformation layer for modern data platforms — it implements software engineering practices (version control, testing, documentation, CI/CD) for SQL transforms already inside your warehouse. Covers project structure, staging/intermediate/mart model layers, schema and custom tests, SCD Type 2 snapshots, Jinja macros, Airflow integration, and slim CI builds."
-related:
-  - "fastapi and polars"
-  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
-  - "[observability-deep-dive](/13-Observability/Monitoring/observability-deep-dive)"
-  - "[open-table-formats](/14-Data-Architecture/Architectures/open-table-formats)"
-  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -19,7 +13,7 @@ status: complete
 
 # dbt: The Transformation Layer
 
-> For the full dbt section with adapter-specific guides, testing patterns, CI/CD, Airflow integration, and troubleshooting, see [moc-dbt](/11-dbt/moc-dbt).
+> For the full dbt section with adapter-specific guides, testing patterns, CI/CD, Airflow integration, and troubleshooting, see [moc-dbt](https://alp78.github.io/elysium/11-dbt/moc-dbt).
 
 dbt (Data Build Tool) has become the standard for managing SQL-based transformations in modern data platforms. Leading data platform teams require expertise in dbt for implementing layered transformation flows and managing lakehouse concepts. dbt does not extract or load data — it transforms data that is already in your warehouse, applying software engineering practices (version control, testing, documentation) to SQL.
 
@@ -65,7 +59,7 @@ dbt (Data Build Tool) has become the standard for managing SQL-based transformat
 | Best for | Teams with existing Airflow, cost-conscious | Teams without orchestration, want turnkey |
 
 > [!tip] Which to Choose
-> If you already have [Airflow](/12-Orchestration/Airflow/airflow-core-concepts) or Cloud Scheduler, use **dbt Core** — it is free and fully featured. dbt Cloud adds value mainly for teams without existing orchestration infrastructure.
+> If you already have [Airflow](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) or Cloud Scheduler, use **dbt Core** — it is free and fully featured. dbt Cloud adds value mainly for teams without existing orchestration infrastructure.
 
 ---
 
@@ -106,7 +100,7 @@ dbt_project/
 ```
 
 > [!info] Medallion Architecture Mapping
-> dbt's `staging/` folder corresponds to the **bronze → silver** transition. `intermediate/` is the **silver layer** business logic. `marts/` is the **gold layer** consumption-ready output. See [open-table-formats](/14-Data-Architecture/Architectures/open-table-formats) for the Iceberg lakehouse equivalent.
+> dbt's `staging/` folder corresponds to the **bronze → silver** transition. `intermediate/` is the **silver layer** business logic. `marts/` is the **gold layer** consumption-ready output. See [open-table-formats](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/open-table-formats) for the Iceberg lakehouse equivalent.
 
 ---
 
@@ -191,7 +185,7 @@ SELECT * FROM rolling_metrics
 
 > [!info] The ref() function
 >
-> `{{ ref('stg_yahoo_ohlcv') }}` is how dbt builds the dependency graph. dbt automatically determines execution order from `ref()` calls — you never manually specify task order. This is dbt's equivalent of [Airflow](/12-Orchestration/Airflow/airflow-core-concepts)'s `>>` task dependencies.
+> `{{ ref('stg_yahoo_ohlcv') }}` is how dbt builds the dependency graph. dbt automatically determines execution order from `ref()` calls — you never manually specify task order. This is dbt's equivalent of [Airflow](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts)'s `>>` task dependencies.
 
 ### Mart Models (Consumption-Ready, Incremental)
 
@@ -240,7 +234,7 @@ SELECT * FROM scored
 ```
 
 > [!tip] Incremental Models
-> The `is_incremental()` macro returns `true` when the target table already exists. On first run (or after `dbt run --full-refresh`), the `WHERE` clause is skipped and all data is loaded. This is the same pattern as [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) applied to SQL.
+> The `is_incremental()` macro returns `true` when the target table already exists. On first run (or after `dbt run --full-refresh`), the `WHERE` clause is skipped and all data is loaded. This is the same pattern as [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) applied to SQL.
 
 ---
 
@@ -318,7 +312,7 @@ WHERE trade_date > GETDATE()
 
 ## Snapshots: SCD Type 2 with dbt
 
-dbt snapshots implement [SCD Type 2](/11-dbt/Advanced/dbt-snapshots-and-scd) automatically — tracking historical changes to dimension tables by adding `dbt_valid_from` and `dbt_valid_to` columns.
+dbt snapshots implement [SCD Type 2](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-snapshots-and-scd) automatically — tracking historical changes to dimension tables by adding `dbt_valid_from` and `dbt_valid_to` columns.
 
 #### dbt snapshot for index constituents (SCD Type 2)
 
@@ -397,7 +391,7 @@ FROM ...
 
 ## dbt + Airflow Integration
 
-dbt integrates with [Airflow](/12-Orchestration/Airflow/airflow-core-concepts) via `BashOperator` (simple) or the `DbtTaskGroup` from `astronomer-cosmos` (granular task-level control).
+dbt integrates with [Airflow](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) via `BashOperator` (simple) or the `DbtTaskGroup` from `astronomer-cosmos` (granular task-level control).
 
 #### Airflow DAG integrating dbt into the daily data pipeline
 
@@ -490,10 +484,10 @@ jobs:
 - **Snapshot `unique_key` must truly be unique:** If the source table has duplicates on the `unique_key`, the snapshot will fail with a merge conflict error. Add a deduplication CTE in the snapshot query.
 
 ## Related
-- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — the incremental load patterns dbt implements
+- [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — the incremental load patterns dbt implements
 - fastapi and polars — the EL layer that feeds the bronze tables dbt transforms
-- [observability-deep-dive](/13-Observability/Monitoring/observability-deep-dive) — monitoring dbt runs with DataDog
-- [open-table-formats](/14-Data-Architecture/Architectures/open-table-formats) — Iceberg/Delta Lake as storage backends in a lakehouse architecture
+- [observability-deep-dive](https://alp78.github.io/elysium/13-Observability/Monitoring/observability-deep-dive) — monitoring dbt runs with DataDog
+- [open-table-formats](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/open-table-formats) — Iceberg/Delta Lake as storage backends in a lakehouse architecture
 
 ## References
 - [dbt Core documentation](https://docs.getdbt.com/)

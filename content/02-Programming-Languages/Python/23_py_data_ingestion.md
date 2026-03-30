@@ -5,12 +5,7 @@ technology: [python, gcp]
 tags: [python, gcp, pipeline, sql, bigquery]
 aliases: [Data Ingestion Python, SQL Server Bulk Insert, BigQuery Load]
 keywords: [ingestion, bulk insert, bcp, BigQuery load, Firestore batch, GCS, CSV, Parquet, pyodbc, google-cloud-bigquery, benchmark, throughput, latency]
-description: "Python data ingestion reference — bulk loading into SQL Server, BigQuery, and Firestore from local and GCS sources with performance benchmarks. See [23_cs_data_ingestion](/02-Programming-Languages/CSharp/23_cs_data_ingestion) for the C# equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[23_cs_data_ingestion](/02-Programming-Languages/CSharp/23_cs_data_ingestion)"
-  - "[22_py_data_transfer](/02-Programming-Languages/Python/22_py_data_transfer)"
-  - "[16_py_database](/02-Programming-Languages/Python/16_py_database)"
+description: "Python data ingestion reference — bulk loading into SQL Server, BigQuery, and Firestore from local and GCS sources with performance benchmarks. See [23_cs_data_ingestion](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/23_cs_data_ingestion) for the C# equivalent."
 created: 2026-03-28
 updated: 2026-03-28
 status: complete
@@ -316,7 +311,7 @@ print(f'  Loaded {len(ingest_results)} existing results from {INGEST_RESULTS_FIL
 ## Schema Setup
 
 Create unified `ohlcv_bench` staging table in SQL Server and BigQuery.
-Same OHLCV schema everywhere. Firestore is schemaless — no setup needed. The SQL Server DDL below follows the same [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) patterns used in the medallion architecture, while the BigQuery schema aligns with the format decisions documented in [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export).
+Same OHLCV schema everywhere. Firestore is schemaless — no setup needed. The SQL Server DDL below follows the same [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) patterns used in the medallion architecture, while the BigQuery schema aligns with the format decisions documented in [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export).
 
 #### pymssql — create staging table in SQL Server
 

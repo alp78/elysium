@@ -6,7 +6,6 @@ tags: [infrastructure, gcp, compute-engine]
 aliases: [gcloud compute ssh, gcloud compute scp, IAP tunnel, VM remote access, VM file transfer]
 keywords: [gcloud compute ssh, IAP, Identity-Aware Proxy, tunnel-through-iap, scp, file transfer, remote command, secure copy, no public IP, pscp, permission denied, sudo cp, SSH into VM]
 description: "How to SSH into Compute Engine VMs through the IAP tunnel (no public IP required), run remote commands non-interactively, and copy files to and from VMs using gcloud compute scp."
-related: [vm-lifecycle, disks-and-snapshots, service-accounts-and-iam, vpc-service-controls, gcloud-authentication]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -41,7 +40,7 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap 
 
 ### Copying Files To and From VMs with gcloud compute scp
 
-The `scp` and `rsync` patterns here mirror the general [data-transfer](/01-Shell/File-Operations/data-transfer) commands, but routed through the IAP tunnel. For VM provisioning via infrastructure-as-code, see [terraform-compute](/07-Terraform/GCP-Resources/terraform-compute).
+The `scp` and `rsync` patterns here mirror the general [data-transfer](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer) commands, but routed through the IAP tunnel. For VM provisioning via infrastructure-as-code, see [terraform-compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-compute).
 
 `scp` performs secure copy over SSH. The `hostname:` prefix determines the direction: local to remote or remote to local.
 
@@ -77,21 +76,21 @@ gcloud compute scp --recurse ./dags/ data-pipeline-airflow:/tmp/dags/ --zone=eur
 Your machine ──► Google IAP Proxy ──► GCP Internal Network ──► VM (private IP only)
 ```
 
-IAP authenticates you using your gcloud credentials and your IAM role (`roles/iap.tunnelResourceAccessor`). The VM never sees a public IP connection — all traffic is internal to Google's network after the IAP proxy. For the full tunnel mechanics including port forwarding and troubleshooting, see [iap-tunneling](/01-Shell/Networking/iap-tunneling).
+IAP authenticates you using your gcloud credentials and your IAM role (`roles/iap.tunnelResourceAccessor`). The VM never sees a public IP connection — all traffic is internal to Google's network after the IAP proxy. For the full tunnel mechanics including port forwarding and troubleshooting, see [iap-tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling).
 
 ### Prerequisites for IAP Access
 
 - `roles/iap.tunnelResourceAccessor` IAM role on the project or VM resource
-- `compute.googleapis.com` API enabled (see [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis))
+- `compute.googleapis.com` API enabled (see [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis))
 - Firewall rule allowing IAP's IP range (`35.235.240.0/20`) on TCP port 22
 
 ## Related
 
-- [vm-lifecycle](/06-GCP/Compute/vm-lifecycle) — Starting and stopping the VMs you SSH into
-- [disks-and-snapshots](/06-GCP/Compute/disks-and-snapshots) — Using serial console when SSH is unavailable
-- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — IAM roles required for IAP tunnel access
-- [vpc-service-controls](/06-GCP/Security/vpc-service-controls) — VPC-SC may restrict IAP access patterns
-- [gcloud-authentication](/06-GCP/Core/gcloud-authentication) — Your gcloud credentials are used for IAP authentication
+- [vm-lifecycle](https://alp78.github.io/elysium/06-GCP/Compute/vm-lifecycle) — Starting and stopping the VMs you SSH into
+- [disks-and-snapshots](https://alp78.github.io/elysium/06-GCP/Compute/disks-and-snapshots) — Using serial console when SSH is unavailable
+- [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — IAM roles required for IAP tunnel access
+- [vpc-service-controls](https://alp78.github.io/elysium/06-GCP/Security/vpc-service-controls) — VPC-SC may restrict IAP access patterns
+- [gcloud-authentication](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication) — Your gcloud credentials are used for IAP authentication
 
 ## References
 

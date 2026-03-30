@@ -10,12 +10,6 @@ aliases:
   - SQLContext, DuckDB, SQL Server, database queries
 keywords: [SQLContext, DuckDB, pyodbc, sqlalchemy, read_database, SQL, register, execute]
 description: "Pandas/Polars DataFrame reference 09/10 — Database & SQL Interface (SQLContext, DuckDB, SQL Server connectivity). Side-by-side executable examples with cell outputs."
-related:
-  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
-  - "[09_cs_database_interface](/03-Dataframes/Dataframes-CSharp/09_cs_database_interface)"
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[08_py_visualization](/03-Dataframes/Dataframes-Python/08_py_visualization)"
-  - "[10_py_testing_migration](/03-Dataframes/Dataframes-Python/10_py_testing_migration)"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -103,7 +97,7 @@ display(ctx.execute("""
 
 ## Window Functions in SQL
 
-The SQL syntax used in Polars SQLContext follows the same patterns as [sql-fundamentals](/05-DB-Queries/SQL-Server/sql-fundamentals) for SQL Server and [bq-fundamentals](/05-DB-Queries/BigQuery/bq-fundamentals) for BigQuery. For direct Python database access with pyodbc and SQLAlchemy outside of DataFrames, see [16_py_database](/02-Programming-Languages/Python/16_py_database).
+The SQL syntax used in Polars SQLContext follows the same patterns as [sql-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals) for SQL Server and [bq-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-fundamentals) for BigQuery. For direct Python database access with pyodbc and SQLAlchemy outside of DataFrames, see [16_py_database](https://alp78.github.io/elysium/02-Programming-Languages/Python/16_py_database).
 
 - **Rolling Window**: Compute statistics over a sliding window of N consecutive rows (e.g., 7-day moving average).
 - **With Columns**: Add new columns or replace existing ones. All original columns are kept.
@@ -3000,7 +2994,7 @@ Connect Pandas and Polars directly to SQL Server tables for reading, writing, an
 > [!danger] Never hardcode credentials in connection strings
 >
 > Use environment variables (`os.environ.get()`) or a secret manager. The `.env` file
-> should be in `.gitignore` and never committed. See [environment-variables](/01-Shell/Scripting/environment-variables) for secure
+> should be in `.gitignore` and never committed. See [environment-variables](https://alp78.github.io/elysium/01-Shell/Scripting/environment-variables) for secure
 > credential handling patterns.
 
 > [!warning] TrustServerCertificate=yes disables certificate validation
@@ -3306,13 +3300,13 @@ print(f"First batch: {df.shape}")
 > df.to_sql("table", engine, if_exists="append", index=False, method="multi")
 > ```
 > For tables >100K rows, use `bcp` instead — it's 10-50x faster than any ORM approach.
-> See [data-transfer](/01-Shell/File-Operations/data-transfer) for bcp patterns.
+> See [data-transfer](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer) for bcp patterns.
 
 > [!danger] if_exists="replace" drops the table
 >
 > This destroys indexes, constraints, permissions, and foreign keys. Use
 > `if_exists="append"` with a preceding `DELETE` for controlled replacement, or use
-> `MERGE`/upsert patterns from [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert).
+> `MERGE`/upsert patterns from [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/merge-and-upsert).
 
 ### Pandas — df.to_sql()
 

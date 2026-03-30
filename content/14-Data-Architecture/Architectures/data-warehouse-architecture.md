@@ -6,19 +6,6 @@ tags: [data-architecture, architecture, data-warehouse, sql, bigquery]
 aliases: [data warehouse, DWH, dimensional modeling, star schema, snowflake schema, Kimball, Inmon, fact table, dimension table, OLAP, OLTP, data mart, conformed dimension, degenerate dimension, junk dimension, SCD, slowly changing dimensions, SCD Type 2, SCD Type 1, accumulating snapshot, periodic snapshot, transactional fact, enterprise data warehouse, EDW]
 keywords: [data warehouse, DWH, OLAP, OLTP, dimensional modeling, Kimball, Inmon, star schema, snowflake schema, fact table, dimension table, conformed dimensions, degenerate dimensions, junk dimensions, slowly changing dimensions, SCD, SCD Type 1, SCD Type 2, SCD Type 3, SCD Type 4, SCD Type 6, mini-dimension, data vault, hub, link, satellite, transactional fact, periodic snapshot, accumulating snapshot, BigQuery, Snowflake, Redshift, Azure Synapse, materialized views, aggregation tables, ELT, ETL, data mart, enterprise data warehouse, 3NF, normalization, surrogate key, business key, grain, conformed calendar, cost optimization, partitioning]
 description: "Comprehensive reference on data warehouse architecture covering the Kimball dimensional modeling methodology (star schema, fact and dimension table types, all SCD variants), the Inmon 3NF top-down approach, Data Vault 2.0, cloud DWH comparisons (BigQuery, Snowflake, Redshift, Synapse), and ELT/ETL positioning."
-related:
-  - "[data-lake-architecture](/14-Data-Architecture/Architectures/data-lake-architecture)"
-  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
-  - "[open-table-formats](/14-Data-Architecture/Architectures/open-table-formats)"
-  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
-  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
-  - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
-  - "[serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats)"
-  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
-  - "[silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms)"
-  - "[gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms)"
-  - "[merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert)"
-  - "[partitioning-strategies](/04-SQL-Server/Storage-and-Indexes/partitioning-strategies)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -46,7 +33,7 @@ Understanding why a data warehouse exists requires understanding what it is *not
 | **Freshness** | Real-time / near-real-time | Batch (hourly, daily) or near-real-time |
 
 > [!info] SQL Server Can Do Both
-> SQL Server is primarily an OLTP system but supports OLAP workloads through columnstore indexes, read replicas (Always On Availability Groups readable secondaries), and In-Memory OLTP. See [always-on-availability-groups](/04-SQL-Server/High-Availability/always-on-availability-groups) and [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) for the mechanics. BigQuery and Snowflake are purpose-built OLAP engines — they do not support row-level transactions or real-time writes at OLTP scale.
+> SQL Server is primarily an OLTP system but supports OLAP workloads through columnstore indexes, read replicas (Always On Availability Groups readable secondaries), and In-Memory OLTP. See [always-on-availability-groups](https://alp78.github.io/elysium/04-SQL-Server/High-Availability/always-on-availability-groups) and [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) for the mechanics. BigQuery and Snowflake are purpose-built OLAP engines — they do not support row-level transactions or real-time writes at OLTP scale.
 
 The core architectural implication: **OLTP → normalize to reduce write amplification. OLAP → denormalize to reduce join overhead at query time.**
 
@@ -73,7 +60,7 @@ The grain determines what goes in the fact table (the numeric measures at that g
 
 ### Star Schema
 
-The canonical Kimball structure: one central **fact table** surrounded by **dimension tables** joined via surrogate keys. It looks like a star when drawn. See [dimensional-modeling](/14-Data-Architecture/Data-Modeling/dimensional-modeling) for the full Kimball four-step design process with complete DDL examples.
+The canonical Kimball structure: one central **fact table** surrounded by **dimension tables** joined via surrogate keys. It looks like a star when drawn. See [dimensional-modeling](https://alp78.github.io/elysium/14-Data-Architecture/Data-Modeling/dimensional-modeling) for the full Kimball four-step design process with complete DDL examples.
 
 ```
           ┌──────────────┐
@@ -154,7 +141,7 @@ CREATE TABLE fact_trades (
 | **Non-additive** | No | No | Ratios, percentages, averages |
 
 > [!warning] Semi-Additive Measure Trap
-> Never SUM a balance or inventory count across time periods — you get the sum of every snapshot, not the current total. Use LAST_VALUE or MAX with appropriate window framing instead. See [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) for practical patterns.
+> Never SUM a balance or inventory count across time periods — you get the sum of every snapshot, not the current total. Use LAST_VALUE or MAX with appropriate window framing instead. See [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) for practical patterns.
 
 ### Periodic Snapshot Fact Table
 
@@ -181,7 +168,7 @@ CREATE TABLE fact_account_daily (
 - Rows are populated even when nothing changes (fill-forward logic required for missing periods)
 - All rows for the same snapshot date are loaded in a single batch
 - Enables easy period-over-period queries: join to itself on `date_sk - 1`
-- See [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) for fill-forward implementation patterns
+- See [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) for fill-forward implementation patterns
 
 ### Accumulating Snapshot Fact Table
 
@@ -276,7 +263,7 @@ fact_trade.trade_flag_sk       INT REFERENCES dim_trade_flags
 Slowly Changing Dimensions (SCD), also called historical dimension tracking, handle the problem of dimension attributes that change over time. A customer moves city, a product changes category, an analyst changes desk. How you preserve (or discard) that history depends on the SCD type.
 
 > [!info] SCD in dbt
-> dbt's `snapshot` feature implements SCD Type 2 natively using a check strategy or a timestamp strategy. See [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) for implementation details and [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert) for the underlying MERGE statement mechanics.
+> dbt's `snapshot` feature implements SCD Type 2 natively using a check strategy or a timestamp strategy. See [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) for implementation details and [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/merge-and-upsert) for the underlying MERGE statement mechanics.
 
 ### SCD Type 1 — Overwrite (No History)
 
@@ -440,7 +427,7 @@ The EDW itself is **not** queried by business users. It is a normalized integrat
 | **Common in** | Mid-sized companies, cloud-native | Large enterprises, financial services |
 
 > [!tip] In Practice: Hybrid Wins
-> Most real-world warehouses are hybrid. A normalized staging/integration layer (Inmon-style) feeds dimensional data marts (Kimball-style). This is exactly what the [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) implements: normalized Silver → denormalized Gold. The [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) typically handles the Gold layer modeling.
+> Most real-world warehouses are hybrid. A normalized staging/integration layer (Inmon-style) feeds dimensional data marts (Kimball-style). This is exactly what the [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) implements: normalized Silver → denormalized Gold. The [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) typically handles the Gold layer modeling.
 
 ---
 
@@ -505,7 +492,7 @@ CREATE TABLE sat_instrument_market_data (
 | BI users query the warehouse directly | No — expose Kimball marts on top of DV2 |
 
 > [!info] Data Vault + Kimball Together
-> Most production DV2 implementations expose **Information Marts** (Kimball-style star schemas) on top of the DV2 raw vault for BI tools and analysts. The DV2 raw vault is the system of record; the information marts are the reporting layer. This maps directly to [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) where Silver = DV2 raw vault, Gold = information marts.
+> Most production DV2 implementations expose **Information Marts** (Kimball-style star schemas) on top of the DV2 raw vault for BI tools and analysts. The DV2 raw vault is the system of record; the information marts are the reporting layer. This maps directly to [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) where Silver = DV2 raw vault, Gold = information marts.
 
 ---
 
@@ -527,7 +514,7 @@ Modern cloud data warehouses have largely converged on columnar storage, MPP (Ma
 | **Best for** | GCP-native shops, ad hoc analytics | Multi-cloud, data sharing at scale | AWS shops, existing Redshift investment | Microsoft/Azure shops |
 
 > [!tip] BigQuery Cost Control
-> BigQuery on-demand pricing charges per byte scanned. The three most impactful cost controls: (1) partition tables on date columns — queries that filter on the partition key scan only matching partitions, (2) cluster tables by frequently-filtered columns, (3) never `SELECT *`. See [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) for dry run commands and detailed optimization practices.
+> BigQuery on-demand pricing charges per byte scanned. The three most impactful cost controls: (1) partition tables on date columns — queries that filter on the partition key scan only matching partitions, (2) cluster tables by frequently-filtered columns, (3) never `SELECT *`. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) for dry run commands and detailed optimization practices.
 
 ---
 
@@ -548,7 +535,7 @@ Modern cloud warehouses favor **ELT** (Extract → Load → Transform) over trad
 > [!info] Why ELT Won
 > Cloud warehouses have essentially unlimited compute at linear per-query cost. It is cheaper and simpler to run SQL transforms inside BigQuery than to spin up and maintain a separate Spark cluster. ELT also preserves the raw data (enabling re-derivation when business rules change) and leverages the warehouse's optimizer rather than fighting it.
 
-See [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) for the standard ELT implementation tool.
+See [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) for the standard ELT implementation tool.
 
 ---
 
@@ -612,7 +599,7 @@ CREATE TABLE gold.monthly_pnl_summary (
 );
 ```
 
-Load this table as part of the [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) pipeline step on a daily cadence.
+Load this table as part of the [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) pipeline step on a daily cadence.
 
 ### Pre-Computed Rollups Pattern
 
@@ -648,7 +635,7 @@ Cloud warehouses do not require traditional capacity planning, but understanding
 | **Streaming inserts** | Rows inserted via streaming API | Use batch loads where latency allows |
 | **Slot reservations** | Fixed monthly commitment | Use when predictable high volume |
 
-**Rule of thumb:** Tables over 1 TB should be partitioned. Tables over 10 TB should be both partitioned and clustered. See [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) for mechanics. For SQL Server warehouse tables, [partitioning-strategies](/04-SQL-Server/Storage-and-Indexes/partitioning-strategies) covers partition functions, schemes, and sliding window maintenance.
+**Rule of thumb:** Tables over 1 TB should be partitioned. Tables over 10 TB should be both partitioned and clustered. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) for mechanics. For SQL Server warehouse tables, [partitioning-strategies](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/partitioning-strategies) covers partition functions, schemes, and sliding window maintenance.
 
 ### Snowflake Cost Model
 
@@ -661,7 +648,7 @@ Cloud warehouses do not require traditional capacity planning, but understanding
 
 ---
 
-For guidance on building the metadata and context layers that make warehouse data self-describing and auditable, see [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture).
+For guidance on building the metadata and context layers that make warehouse data self-describing and auditable, see [context-and-metadata-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture).
 
 ### Warehouse Architecture Checklist
 
@@ -682,15 +669,15 @@ Before declaring a warehouse schema production-ready, verify:
 
 ## Related Notes
 
-- [data-lake-architecture](/14-Data-Architecture/Architectures/data-lake-architecture) — The complementary storage architecture; data lakes feed data warehouses
-- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — Practical Bronze/Silver/Gold implementation pattern
-- [open-table-formats](/14-Data-Architecture/Architectures/open-table-formats) — Apache Iceberg, Delta Lake, and the lakehouse convergence of lake + warehouse
-- [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — The standard tool for implementing ELT transforms in a warehouse
-- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — How to safely load and reload warehouse data
-- [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) — BigQuery-specific cost optimization mechanics
-- [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert) — MERGE statement for SCD Type 2 implementation in SQL Server
-- [partitioning-strategies](/04-SQL-Server/Storage-and-Indexes/partitioning-strategies) — SQL Server partitioning (compare to BigQuery partition pruning)
-- [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Parquet and columnar storage formats underpinning cloud DWH storage
-- [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) — Silver-layer cleaning patterns that feed warehouse staging
-- [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) — Gold-layer aggregation patterns for analytical consumption
-- [five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering) — Architectural principles every DWH design should satisfy
+- [data-lake-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-lake-architecture) — The complementary storage architecture; data lakes feed data warehouses
+- [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — Practical Bronze/Silver/Gold implementation pattern
+- [open-table-formats](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/open-table-formats) — Apache Iceberg, Delta Lake, and the lakehouse convergence of lake + warehouse
+- [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — The standard tool for implementing ELT transforms in a warehouse
+- [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — How to safely load and reload warehouse data
+- [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) — BigQuery-specific cost optimization mechanics
+- [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/merge-and-upsert) — MERGE statement for SCD Type 2 implementation in SQL Server
+- [partitioning-strategies](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/partitioning-strategies) — SQL Server partitioning (compare to BigQuery partition pruning)
+- [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Parquet and columnar storage formats underpinning cloud DWH storage
+- [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) — Silver-layer cleaning patterns that feed warehouse staging
+- [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) — Gold-layer aggregation patterns for analytical consumption
+- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) — Architectural principles every DWH design should satisfy

@@ -6,10 +6,6 @@ tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform state, terraform.tfstate, remote state, state locking, terraform backend, GCS backend]
 keywords: [terraform state, tfstate, remote state, state file, GCS backend, state locking, terraform state commands, terraform state list, terraform state show, terraform state mv, terraform state rm, force-unlock, backend gcs, state bucket]
 description: "How Terraform state works, why remote state in GCS is essential, how state locking prevents concurrent applies, and the terraform state subcommands for safe state manipulation."
-related:
-  - "[terraform-providers-and-backend](/07-Terraform/Fundamentals/terraform-providers-and-backend)"
-  - "[terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy)"
-  - "[terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -282,9 +278,9 @@ terraform -chdir=infra validate
 
 ## Related
 
-- [terraform-providers-and-backend](/07-Terraform/Fundamentals/terraform-providers-and-backend) — backend "gcs" block configuration
-- [terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — the workflow that reads and updates state
-- [terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs) — outputs extracted from state after apply
+- [terraform-providers-and-backend](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-providers-and-backend) — backend "gcs" block configuration
+- [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — the workflow that reads and updates state
+- [terraform-variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-variables-and-outputs) — outputs extracted from state after apply
 
 ## References
 

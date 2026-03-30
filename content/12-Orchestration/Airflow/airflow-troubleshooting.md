@@ -55,10 +55,6 @@ keywords:
   - airflow performance
   - airflow webserver not starting
 description: "Comprehensive Airflow troubleshooting guide covering the most common errors with exact error messages and fixes: DAG import errors, stuck tasks, scheduler issues, XCom size limits, metadata DB deadlocks, OOM worker kills, and slow DAG parsing. Includes the full debugging CLI reference."
-related:
-  - airflow-core-concepts
-  - airflow-dag-patterns
-  - airflow-deployment
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -66,7 +62,7 @@ status: complete
 
 # Airflow Troubleshooting Guide
 
-A reference for diagnosing and fixing the most common Apache Airflow problems encountered in production data engineering. Each issue includes the exact error message or symptom, root cause analysis, and step-by-step resolution. To test your troubleshooting skills against realistic scenarios, work through [airflow-problems](/12-Orchestration/Airflow/airflow-problems).
+A reference for diagnosing and fixing the most common Apache Airflow problems encountered in production data engineering. Each issue includes the exact error message or symptom, root cause analysis, and step-by-step resolution. To test your troubleshooting skills against realistic scenarios, work through [airflow-problems](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-problems).
 
 > [!info] Structure
 > Issues are organized by symptom. Use `Ctrl+F` to search for an exact error message. For CLI commands used in debugging, see the [[#CLI Debugging Reference]] section.
@@ -582,7 +578,7 @@ xcom_backend = plugins.gcs_xcom_backend.GCSXComBackend
 
 ## Issue 7: Deadlock Detected in Metadata Database
 
-Database deadlocks in Airflow share root causes with broader [deadlock-detection-and-prevention](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) patterns in SQL Server and PostgreSQL.
+Database deadlocks in Airflow share root causes with broader [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) patterns in SQL Server and PostgreSQL.
 
 **Symptom:** Scheduler or Worker logs contain:
 
@@ -942,7 +938,7 @@ gsutil ls -r "gs://my-airflow-logs-bucket/airflow-logs/my_dag_id/"
 docker compose logs -f airflow-scheduler
 docker compose logs airflow-scheduler | grep -E "ERROR|WARNING|CRITICAL" | tail -100
 
-# Systemd (self-hosted) — see [managing-services](/01-Shell/Process-Management/managing-services) for systemd fundamentals
+# Systemd (self-hosted) — see [managing-services](https://alp78.github.io/elysium/01-Shell/Process-Management/managing-services) for systemd fundamentals
 journalctl -u airflow-scheduler -n 500
 journalctl -u airflow-scheduler -f                           # Follow
 journalctl -u airflow-scheduler --since "2024-01-15 06:00"  # Since a specific time
@@ -1222,9 +1218,9 @@ Understanding task states is essential for diagnosing stuck or unexpected behavi
 
 ## Related Notes
 
-- [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) — Architecture, Executors, XCom mechanics, connection setup
-- [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) — Dynamic DAG issues, trigger rule bugs, backfill problems
-- [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) — Deployment-specific issues: Docker Compose, Cloud Composer, secrets
+- [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) — Architecture, Executors, XCom mechanics, connection setup
+- [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) — Dynamic DAG issues, trigger rule bugs, backfill problems
+- [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) — Deployment-specific issues: Docker Compose, Cloud Composer, secrets
 
 ## References
 

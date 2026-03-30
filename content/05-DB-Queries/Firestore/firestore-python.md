@@ -6,10 +6,6 @@ tags: [python, nosql, gcp, firestore]
 aliases: [Firestore Python, Firestore queries Python, NoSQL Python, document database Python]
 keywords: [firestore, python, google-cloud-firestore, document, collection, query, where, order_by, limit, batch, transaction, real-time, on_snapshot, subcollection, array_contains, composite index]
 description: "Firestore operations in Python with executable examples and cell outputs — covers CRUD, queries, transactions, batches, real-time listeners, and subcollections."
-related:
-  - "[firestore-csharp](/05-DB-Queries/Firestore/firestore-csharp)"
-  - "[firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations)"
-  - "[real-time-nosql-pipelines](/06-GCP/Firestore/real-time-nosql-pipelines)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -58,7 +54,7 @@ This cell:
 
 > [!warning] Key File for Local Dev Only
 >
-> Setting `GOOGLE_APPLICATION_CREDENTIALS` to a local key file works for development but is a security liability. On production VMs and Cloud Run, remove this env var — the metadata server provides credentials automatically. See [gcp-identity-and-connection-patterns > Metadata Server (GCE VMs, Cloud Run) — the production standard](/06-GCP/Security/gcp-identity-and-connection-patterns#metadata-server-gce-vms-cloud-run--the-production-standard).
+> Setting `GOOGLE_APPLICATION_CREDENTIALS` to a local key file works for development but is a security liability. On production VMs and Cloud Run, remove this env var — the metadata server provides credentials automatically. See [gcp-identity-and-connection-patterns > Metadata Server (GCE VMs, Cloud Run) — the production standard](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns#metadata-server-gce-vms-cloud-run--the-production-standard).
 
 ```python
 import os

@@ -6,7 +6,6 @@ tags: [infrastructure, gcp, compute-engine]
 aliases: [GCE disks, persistent disk snapshots, disk resize, serial console, disk snapshot GCP]
 keywords: [persistent disk, snapshot, disk resize, serial console, backup, restore, incremental snapshot, resize2fs, xfs_growfs, boot problems, disk management, pd-ssd, pd-balanced, disk list]
 description: "How to manage Compute Engine persistent disks — creating incremental snapshots before risky changes, resizing disks, restoring from snapshots, and using the serial console when a VM won't boot."
-related: [vm-lifecycle, vm-ssh-and-file-transfer, gcs-buckets-and-lifecycle, cloud-logging]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -100,10 +99,10 @@ gcloud compute instances get-serial-port-output data-pipeline-sql --zone=europe-
 
 ## Related
 
-- [vm-lifecycle](/06-GCP/Compute/vm-lifecycle) — Stop the VM before detaching/attaching disks after snapshot restore
-- [vm-ssh-and-file-transfer](/06-GCP/Compute/vm-ssh-and-file-transfer) — SSH is the primary access method; serial console is the fallback
-- [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) — GCS is the alternative storage layer for pipeline data (not OS disks)
-- [cloud-logging](/06-GCP/Logging/cloud-logging) — Check Cloud Logging alongside serial console output for boot diagnostics
+- [vm-lifecycle](https://alp78.github.io/elysium/06-GCP/Compute/vm-lifecycle) — Stop the VM before detaching/attaching disks after snapshot restore
+- [vm-ssh-and-file-transfer](https://alp78.github.io/elysium/06-GCP/Compute/vm-ssh-and-file-transfer) — SSH is the primary access method; serial console is the fallback
+- [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) — GCS is the alternative storage layer for pipeline data (not OS disks)
+- [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) — Check Cloud Logging alongside serial console output for boot diagnostics
 
 ## References
 

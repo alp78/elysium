@@ -6,7 +6,6 @@ tags: [performance, sql, sql-server, tsql]
 aliases: [execution plans, query plans, parameter sniffing, cardinality estimation, plan cache, Query Store, SARGability, SHOWPLAN, key lookup, index seek, index scan, table scan]
 keywords: [execution plan, query plan, SSMS, estimated rows, actual rows, cardinality estimation, parameter sniffing, plan cache, Query Store, index seek, index scan, table scan, key lookup, nested loops, hash match, merge join, STATISTICS XML, SET STATISTICS TIME, SET STATISTICS IO, logical reads, plan regression, force plan, sp_query_store_force_plan, implicit conversion, plan reuse, OPTION RECOMPILE]
 description: "How to read, capture, and analyze SQL Server execution plans to identify performance problems — covers plan operators, cardinality estimation errors, parameter sniffing, Query Store setup, and plan forcing to fix regressions."
-related: [wait-stats-analysis, memory-and-buffer-pool, sargable-queries, index-types-and-strategy, index-maintenance, server-configuration, essential-dba-queries]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # Query Plan Analysis
 
-SQL Server execution plans are the map SQL Server uses to execute a query. Reading them reveals exactly where time is being spent, why a query is slow, and what to change to fix it. Every performance investigation eventually leads here — [wait statistics](/04-SQL-Server/Performance/wait-stats-analysis) tell you the category of the problem, execution plans tell you the specific query and operator causing it.
+SQL Server execution plans are the map SQL Server uses to execute a query. Reading them reveals exactly where time is being spent, why a query is slow, and what to change to fix it. Every performance investigation eventually leads here — [wait statistics](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) tell you the category of the problem, execution plans tell you the specific query and operator causing it.
 
 ## How to Read an Execution Plan
 
@@ -437,7 +436,7 @@ EXEC sp_query_store_force_plan @query_id = @query_id, @plan_id = @plan_id;
 | **Key Lookup** | NC Index Seek followed by Key Lookup | Add INCLUDE columns to make the index covering |
 | **Bad cardinality** | Estimated vs. Actual rows differ by 10x+ | Update statistics with FULLSCAN |
 | **Sort spill** | Sort operator with warning icon | Add index that pre-sorts the data; increase `max server memory` |
-| **Implicit conversion** | Warning on scan/seek: type conversion | Fix data types to match in WHERE clause (see [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries)) |
+| **Implicit conversion** | Warning on scan/seek: type conversion | Fix data types to match in WHERE clause (see [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries)) |
 | **Parameter sniffing** | Same query wildly faster/slower depending on parameters | OPTION (RECOMPILE) or Query Store plan forcing |
 | **Nested loops with many iterations** | Nested Loops with thick outer arrow | Add index on the inner table's join column |
 | **Hash Match spill** | Hash Match with warning (spilled to TempDB) | Increase `max server memory` or fix cardinality to get correct memory grant |
@@ -456,13 +455,13 @@ These comments appear in `sys.dm_exec_sql_text` and in Query Store, enabling cor
 
 ### Related
 
-- [wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis) — The starting point for performance diagnosis
-- [memory-and-buffer-pool](/04-SQL-Server/Performance/memory-and-buffer-pool) — Memory grants, RESOURCE_SEMAPHORE, buffer pool
-- [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries) — Writing queries that use index seeks instead of scans
-- [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — Building the right indexes to support efficient plans
-- [index-maintenance](/04-SQL-Server/Performance/index-maintenance) — Fragmented indexes cause worse plans and higher I/O costs
-- [server-configuration](/04-SQL-Server/Administration/server-configuration) — MAXDOP and cost threshold settings that affect plan choices
-- [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — Quick reference for plan cache queries
+- [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) — The starting point for performance diagnosis
+- [memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/Performance/memory-and-buffer-pool) — Memory grants, RESOURCE_SEMAPHORE, buffer pool
+- [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries) — Writing queries that use index seeks instead of scans
+- [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — Building the right indexes to support efficient plans
+- [index-maintenance](https://alp78.github.io/elysium/04-SQL-Server/Performance/index-maintenance) — Fragmented indexes cause worse plans and higher I/O costs
+- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) — MAXDOP and cost threshold settings that affect plan choices
+- [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/Administration/essential-dba-queries) — Quick reference for plan cache queries
 
 ### References
 

@@ -6,7 +6,6 @@ tags: [monitoring, observability, terraform, datadog, gcp]
 aliases: [Datadog GCP Integration, GCP Cloud Monitoring Integration, Datadog Cloud Run Metrics]
 keywords: [GCP integration, Google Cloud Platform, Cloud Monitoring API, data-pipeline-datadog service account, monitoring.viewer, compute.viewer, cloudasset.viewer, GCE automuting, resource collection, Cloud Run job metrics, gcp.run.job, datadoghq.eu, manual setup]
 description: "How to set up the Datadog GCP Integration for the project — enables pulling Cloud Run job metrics (CPU, memory, execution count) from Google Cloud Monitoring into Datadog without running an agent in Cloud Run."
-related: [datadog-architecture-overview, datadog-agent-airflow-vm, datadog-dashboards, data-pipeline-gcp-resources]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -20,7 +19,7 @@ The GCP Integration enables Datadog to pull metrics from Cloud Run, Compute Engi
 
 ### Why the Datadog GCP Integration Is Needed
 
-The [Airflow VM agent](/13-Observability/Datadog/datadog-agent-airflow-vm) and [SQL VM agent](/13-Observability/Datadog/datadog-agent-sql-vm) cover the GCE VMs. But the `data-pipeline-pipeline` Cloud Run job has no persistent host — each execution runs in a fresh container and exits. The only way to get Cloud Run metrics is via the GCP Integration, which pulls them directly from Google Cloud Monitoring.
+The [Airflow VM agent](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) and [SQL VM agent](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-sql-vm) cover the GCE VMs. But the `data-pipeline-pipeline` Cloud Run job has no persistent host — each execution runs in a fresh container and exits. The only way to get Cloud Run metrics is via the GCP Integration, which pulls them directly from Google Cloud Monitoring.
 
 ---
 
@@ -38,7 +37,7 @@ The [Airflow VM agent](/13-Observability/Datadog/datadog-agent-airflow-vm) and [
 7. Save the integration
 
 > [!info] Service Account Permissions
-> The Datadog SA has `monitoring.viewer`, `compute.viewer`, and `cloudasset.viewer` roles — it can read metrics but cannot modify any GCP resources. See [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) for the broader IAM model and least-privilege principles applied across the project.
+> The Datadog SA has `monitoring.viewer`, `compute.viewer`, and `cloudasset.viewer` roles — it can read metrics but cannot modify any GCP resources. See [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for the broader IAM model and least-privilege principles applied across the project.
 
 ---
 
@@ -70,7 +69,7 @@ Cloud Run job metrics use the `gcp.run.job.*` namespace. Key metric names:
 |--------|-------------|
 | `gcp.run.job.completed_execution_count` | Number of job executions completed |
 | `gcp.run.container.cpu.utilizations.avg` | CPU utilization during execution |
-| `gcp.run.container.memory.usage` | Memory usage during execution — these same metrics are available natively in [GCP Cloud Monitoring](/06-GCP/Logging/cloud-monitoring-metrics) |
+| `gcp.run.container.memory.usage` | Memory usage during execution — these same metrics are available natively in [GCP Cloud Monitoring](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics) |
 
 **Filter by job name:** Use `job_name:data-pipeline-pipeline` (not `service:data-pipeline-pipeline`).
 
@@ -106,8 +105,8 @@ gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=da
 
 ## Related Notes
 
-- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — full observability architecture
-- [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) — agent on the Airflow VM
-- [datadog-agent-sql-vm](/13-Observability/Datadog/datadog-agent-sql-vm) — agent on the SQL VM
-- [datadog-dashboards](/13-Observability/Datadog/datadog-dashboards) — Pipeline Watch dashboard using Cloud Run metrics
+- [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) — full observability architecture
+- [datadog-agent-airflow-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) — agent on the Airflow VM
+- [datadog-agent-sql-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-sql-vm) — agent on the SQL VM
+- [datadog-dashboards](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-dashboards) — Pipeline Watch dashboard using Cloud Run metrics
 - the GCP resources — GCP resource inventory

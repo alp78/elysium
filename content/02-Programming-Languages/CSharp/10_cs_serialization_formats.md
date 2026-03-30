@@ -5,11 +5,7 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [serialization formats, JSON, CSV, Parquet, Avro, Protocol Buffers]
 keywords: [serialization, JSON, CSV, Parquet, Avro, protobuf, msgpack, System.Text.Json, Newtonsoft, data formats, schema evolution, compression]
-description: "C# serialization formats reference with executable examples and cell outputs — covers JSON, CSV, Parquet, Avro, Protocol Buffers, MessagePack, and format comparison benchmarks. See [10_py_serialization_formats](/02-Programming-Languages/Python/10_py_serialization_formats) for the Python equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[10_py_serialization_formats](/02-Programming-Languages/Python/10_py_serialization_formats)"
-  - "[09_cs_fileio_serialization](/02-Programming-Languages/CSharp/09_cs_fileio_serialization)"
+description: "C# serialization formats reference with executable examples and cell outputs — covers JSON, CSV, Parquet, Avro, Protocol Buffers, MessagePack, and format comparison benchmarks. See [10_py_serialization_formats](https://alp78.github.io/elysium/02-Programming-Languages/Python/10_py_serialization_formats) for the Python equivalent."
 created: 2026-03-25
 updated: 2026-03-25
 status: complete
@@ -673,7 +669,7 @@ Console.WriteLine(@"
 
 ## Format Performance Benchmark
 
-For the architecture-level decision guide on when to use each format (Parquet for analytics, Avro for streaming, Protobuf for services), see [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats).
+For the architecture-level decision guide on when to use each format (Parquet for analytics, Avro for streaming, Protobuf for services), see [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats).
 
 #### Generate test data
 

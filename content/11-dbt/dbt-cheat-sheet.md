@@ -1824,7 +1824,7 @@ FROM {{ ref('int_index_levels_with_fx') }}
 
 ## Related
 
-- [moc-dbt](/11-dbt/moc-dbt) — Full dbt section
-- [dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts) — What dbt is and how it works
-- [dbt-cli-reference](/11-dbt/Foundations/dbt-cli-reference) — Detailed CLI reference
-- [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — Foundational overview
+- [moc-dbt](https://alp78.github.io/elysium/11-dbt/moc-dbt) — Full dbt section
+- [dbt-core-concepts](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-core-concepts) — What dbt is and how it works
+- [dbt-cli-reference](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-cli-reference) — Detailed CLI reference
+- [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — Foundational overview

@@ -6,7 +6,6 @@ tags: [sql, gcp, sql-server, tsql]
 aliases: [SQL Server authentication, service account hardening, SQL Server Audit, login hardening, sa disable, dedicated logins, GCP service account, IAM least privilege, TLS SQL Server, network encryption, firewall rules, SQL Server security, LGIF, LGIS, failed login, brute force detection]
 keywords: [SQL Server authentication, sa disable, CREATE LOGIN, CREATE USER, GRANT, DENY, schema permissions, GCP service account, IAM roles, roles/storage.objectAdmin, roles/monitoring.metricWriter, SQL Server Audit, server audit, audit specification, sys.fn_get_audit_file, LGIF, LGIS, failed login detection, brute force, TLS 1.2, forceencryption, mssql-conf, GCP firewall rules, allow-sql-internal, IAP tunnel, sys.dm_exec_connections, encrypt_option, quarterly security review, orphaned users, sysadmin members]
 description: "How to harden SQL Server 2022 on GCP: creating a dedicated GCP service account with minimal IAM roles, setting up application-specific SQL logins with least-privilege permissions, enabling TLS 1.2 encryption, configuring GCP firewall rules, setting up SQL Server Audit for login and data access events, and running a quarterly security review."
-related: [tde-encryption, server-configuration, high-availability-overview, essential-dba-queries]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -737,7 +736,7 @@ ORDER BY event_time DESC;
 |-------|-----------------|
 | sa login is disabled | `ALTER LOGIN sa DISABLE;` |
 | No orphaned users | `DROP USER <orphaned_user>;` |
-| TDE cert expiry > 180 days | Rotate certificate (see [tde-encryption](/04-SQL-Server/Security/tde-encryption)) |
+| TDE cert expiry > 180 days | Rotate certificate (see [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/Security/tde-encryption)) |
 | Password last set > 90 days | `ALTER LOGIN x WITH PASSWORD = '...' MUST_CHANGE` |
 | Unexpected sysadmin members | `ALTER SERVER ROLE sysadmin DROP MEMBER <login>` |
 | Unencrypted connections found | Verify `forceencryption = 1` in mssql.conf, restart |
@@ -745,10 +744,10 @@ ORDER BY event_time DESC;
 
 ### Related
 
-- [tde-encryption](/04-SQL-Server/Security/tde-encryption) — Encryption at rest for database files
-- [server-configuration](/04-SQL-Server/Administration/server-configuration) — OS-level and SQL Server configuration settings
-- [high-availability-overview](/04-SQL-Server/High-Availability/high-availability-overview) — Certificate-based authentication for AG endpoints
-- [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — DMV queries for monitoring connections and sessions
+- [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/Security/tde-encryption) — Encryption at rest for database files
+- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) — OS-level and SQL Server configuration settings
+- [high-availability-overview](https://alp78.github.io/elysium/04-SQL-Server/High-Availability/high-availability-overview) — Certificate-based authentication for AG endpoints
+- [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/Administration/essential-dba-queries) — DMV queries for monitoring connections and sessions
 
 ### References
 

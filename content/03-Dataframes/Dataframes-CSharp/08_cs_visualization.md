@@ -9,13 +9,7 @@ tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - charts, plots, Plotly, matplotlib, seaborn
 keywords: [plot, bar, line, scatter, histogram, heatmap, Plotly, Plotly.NET, matplotlib, seaborn, visualization]
-description: "Polars.NET / C# DataFrames reference 08/10 — Visualization (charts, plots, interactive graphics). Executable examples with cell outputs. See [08_py_visualization](/03-Dataframes/Dataframes-Python/08_py_visualization) for the Python equivalent."
-related:
-  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[08_py_visualization](/03-Dataframes/Dataframes-Python/08_py_visualization)"
-  - "[07_cs_types_interop](/03-Dataframes/Dataframes-CSharp/07_cs_types_interop)"
-  - "[09_cs_database_interface](/03-Dataframes/Dataframes-CSharp/09_cs_database_interface)"
+description: "Polars.NET / C# DataFrames reference 08/10 — Visualization (charts, plots, interactive graphics). Executable examples with cell outputs. See [08_py_visualization](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/08_py_visualization) for the Python equivalent."
 created: 2026-03-27
 updated: 2026-03-27
 status: complete

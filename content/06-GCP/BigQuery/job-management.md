@@ -6,7 +6,6 @@ tags: [infrastructure, bigquery, gcp]
 aliases: [BigQuery jobs, bq jobs, bq cancel, bq show job, BigQuery job listing]
 keywords: [bq jobs, job management, bq ls -j, bq show -j, bq cancel, job id, job errors, bytes processed, query history, cancel query, runaway query, job details]
 description: "How to list, inspect, and cancel BigQuery jobs using the bq CLI — essential for diagnosing failed queries, understanding cost history, and stopping accidental large scans."
-related: [querying-and-cost-optimization, data-loading-and-export, dataset-and-table-management, cloud-logging, cloud-monitoring-metrics]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -56,7 +55,7 @@ Job IDs appear in:
 - The output of `bq query` (printed when the query starts)
 - `bq ls -j` listings
 - The BigQuery console (job history tab)
-- [Cloud Logging](/06-GCP/Logging/cloud-logging) entries for BigQuery audit logs (resource type `bigquery_resource`)
+- [Cloud Logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) entries for BigQuery audit logs (resource type `bigquery_resource`)
 
 ### BigQuery Job States Reference
 
@@ -68,14 +67,14 @@ Job IDs appear in:
 
 ### Cost Recovery by Querying BigQuery Job History with SQL
 
-For a more powerful view of job history and cost, use `INFORMATION_SCHEMA.JOBS` directly in BigQuery SQL (see [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) for the full query). The `bq ls -j` command is useful for quick command-line checks, but SQL against `INFORMATION_SCHEMA` gives you full analytical power over the job history.
+For a more powerful view of job history and cost, use `INFORMATION_SCHEMA.JOBS` directly in BigQuery SQL (see [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) for the full query). The `bq ls -j` command is useful for quick command-line checks, but SQL against `INFORMATION_SCHEMA` gives you full analytical power over the job history.
 
 ## Related
 
-- [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) — Dry runs before execution and INFORMATION_SCHEMA cost queries
-- [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) — Load and export operations also create BQ jobs
-- [cloud-logging](/06-GCP/Logging/cloud-logging) — BigQuery jobs emit audit logs visible in Cloud Logging
-- [cloud-monitoring-metrics](/06-GCP/Logging/cloud-monitoring-metrics) — `bigquery.googleapis.com/query/count` and slot usage metrics
+- [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) — Dry runs before execution and INFORMATION_SCHEMA cost queries
+- [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) — Load and export operations also create BQ jobs
+- [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) — BigQuery jobs emit audit logs visible in Cloud Logging
+- [cloud-monitoring-metrics](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics) — `bigquery.googleapis.com/query/count` and slot usage metrics
 
 ## References
 

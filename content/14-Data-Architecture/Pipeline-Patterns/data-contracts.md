@@ -22,14 +22,6 @@ aliases:
   - "Data Contract"
 keywords: [data contract, schema, SLA, semver, breaking change, producer, consumer, ownership, validation, CI, JSON Schema, Protobuf, Avro, dbt contract, deprecation, enum, primary key]
 description: "Formal agreements between data producers and consumers — schema, SLAs, semantics, ownership, versioning — with YAML examples, CI enforcement, and breaking-change classification."
-related:
-  - "[data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework)"
-  - "[serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats)"
-  - "[streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture)"
-  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
-  - "[data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy)"
-  - "[rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption)"
-  - "[error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns)"
 status: complete
 created: 2026-03-23
 updated: 2026-03-29
@@ -51,7 +43,7 @@ updated: 2026-03-29
 | **Ownership** | Who produces, who maintains, who to contact | "Market Data Team owns, Index Ops consumes" |
 | **Versioning** | How changes are communicated and rolled out | "Semver: breaking = major, additive = minor" |
 
-The contract concept parallels [API contracts](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) in REST design — both define a stable interface between producer and consumer, with versioning and backward-compatibility guarantees.
+The contract concept parallels [API contracts](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) in REST design — both define a stable interface between producer and consumer, with versioning and backward-compatibility guarantees.
 
 > [!warning] Enforce contracts in CI
 >
@@ -90,7 +82,7 @@ graph LR
 | **JSON Schema** | Human-readable, widely supported | REST APIs, config validation |
 | **Protocol Buffers** | Strongly typed, backward-compatible by design | gRPC services, high-throughput |
 | **Avro** | Schema evolution built-in, compact binary | Kafka/Pub/Sub messages |
-| **[dbt YAML](/11-dbt/Quality/dbt-data-contracts-implementation)** | Native to dbt, enforced at build time | Warehouse transforms |
+| **[dbt YAML](https://alp78.github.io/elysium/11-dbt/Quality/dbt-data-contracts-implementation)** | Native to dbt, enforced at build time | Warehouse transforms |
 | **SQL DDL** | Universal, everyone reads SQL | Database tables |
 
 ### Data Contracts in Practice — Exported from Code
@@ -102,8 +94,8 @@ the semantics, and `export_contracts()` serializes both into a JSON Schema
 file — a machine-readable contract that any consumer (including AI agents)
 can parse.
 
-See [functional-pipeline-architecture](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture) for the architecture and
-[25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline) for the implementation.
+See [functional-pipeline-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture) for the architecture and
+[25_py_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline) for the implementation.
 
 ### Example Contract: ESG Score Feed
 
@@ -211,7 +203,7 @@ sla:
 
 > [!info] Automated Contract Enforcement
 >
-> Validates contract YAML syntax and runs dbt contract tests on every push that touches contracts or models. See [github-actions-patterns](/10-GitHub-Actions/github-actions-patterns) for reusable workflow patterns.
+> Validates contract YAML syntax and runs dbt contract tests on every push that touches contracts or models. See [github-actions-patterns](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-patterns) for reusable workflow patterns.
 
 ```yaml
 # .github/workflows/contract-test.yml
@@ -269,17 +261,17 @@ jobs:
 | Anti-Pattern | Problem | Better Approach |
 |-------------|---------|----------------|
 | No contract exists | Schema changes break consumers silently | Define contracts before building |
-| Contract not enforced | Contract exists but nobody checks | Automate validation in CI and pipeline (see [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework)) |
+| Contract not enforced | Contract exists but nobody checks | Automate validation in CI and pipeline (see [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework)) |
 | Verbal agreements | "We agreed in a meeting" is not auditable | Version-controlled YAML contracts |
 | Producer ignores consumer needs | Schema designed for producer convenience | Joint schema design sessions |
 | No deprecation period | Old version removed immediately | Minimum 30-day deprecation window |
 
 ## Related
 
-- [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) — Quality gates that enforce contract SLAs at each medallion layer
-- [data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — How contract tests fit in the data engineering testing pyramid
-- [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Schema formats (Protobuf, Avro, JSON Schema) and their evolution support
-- [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — dbt model contracts with enforced schemas at build time
-- [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) — Schema registries for event contracts in Pub/Sub and Kafka
-- [rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) — API contracts parallel data contracts: versioning, backward compatibility
-- [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — What happens when contract validation fails: quarantine, DLQ, alerting
+- [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) — Quality gates that enforce contract SLAs at each medallion layer
+- [data-pipeline-testing-strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — How contract tests fit in the data engineering testing pyramid
+- [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Schema formats (Protobuf, Avro, JSON Schema) and their evolution support
+- [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — dbt model contracts with enforced schemas at build time
+- [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture) — Schema registries for event contracts in Pub/Sub and Kafka
+- [rest-api-design-and-consumption](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) — API contracts parallel data contracts: versioning, backward compatibility
+- [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — What happens when contract validation fails: quarantine, DLQ, alerting

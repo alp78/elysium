@@ -5,10 +5,7 @@ technology: [csharp, dotnet]
 tags: [csharp, performance, testing]
 aliases: [performance profiling, code quality, Stopwatch, BenchmarkDotNet, Span, nullable reference types]
 keywords: [Stopwatch, BenchmarkDotNet, GC.GetTotalMemory, Span, stackalloc, ArrayPool, LINQ performance, Roslyn Analyzers, nullable reference types, code smells, Big-O]
-description: "C# performance and code quality reference with executable examples and cell outputs — covers timing, memory measurement, Span<T>, Big-O, LINQ pitfalls, code smells, and static analysis. See [19_py_performance_quality](/02-Programming-Languages/Python/19_py_performance_quality) for the Python equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[19_py_performance_quality](/02-Programming-Languages/Python/19_py_performance_quality)"
+description: "C# performance and code quality reference with executable examples and cell outputs — covers timing, memory measurement, Span<T>, Big-O, LINQ pitfalls, code smells, and static analysis. See [19_py_performance_quality](https://alp78.github.io/elysium/02-Programming-Languages/Python/19_py_performance_quality) for the Python equivalent."
 created: 2026-03-24
 updated: 2026-03-24
 status: complete

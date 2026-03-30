@@ -6,7 +6,6 @@ tags: [monitoring, observability, cost, datadog]
 aliases: [Datadog Cost, Datadog Pricing, Datadog Monthly Cost]
 keywords: [Datadog EU, datadoghq.eu, 14-day trial, Infrastructure, Logs, APM Pro, 50-80 per host, dd-agent RAM, 350 MB, 250 MB, free trial, agent cost, SaaS, host count, log volume, trace volume]
 description: "Datadog cost reference for the data platform — the agents themselves are free, costs are Datadog SaaS pricing based on host count and log/trace volume, with the EU 14-day trial covering initial setup."
-related: [datadog-architecture-overview, datadog-agent-airflow-vm, datadog-agent-sql-vm, data-pipeline-cost-reference]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -33,7 +32,7 @@ The agent itself is free — you pay for Datadog's SaaS based on host count and 
 
 ### What Drives Datadog Pricing
 
-**Host count:** The data platform has 2 monitored hosts (`data-pipeline-airflow` and `data-pipeline-sql`). Cloud Run jobs are ephemeral and don't count as hosts — their metrics come from the [GCP Integration](/13-Observability/Datadog/datadog-gcp-integration).
+**Host count:** The data platform has 2 monitored hosts (`data-pipeline-airflow` and `data-pipeline-sql`). Cloud Run jobs are ephemeral and don't count as hosts — their metrics come from the [GCP Integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-gcp-integration).
 
 **Log volume:** SQL Server only logs significant events (startups, errors, failed logins, backups) — not regular queries. Log volume is very low.
 
@@ -63,7 +62,7 @@ The Datadog EU 14-day trial is sufficient to:
 - Test APM traces and log collection
 - Evaluate whether the full subscription is worthwhile
 
-After the trial, set `dd_api_key = ""` in `terraform.tfvars` and run `terraform apply` to cleanly disable everything. See [datadog-troubleshooting](/13-Observability/Datadog/datadog-troubleshooting) for the full disabling procedure.
+After the trial, set `dd_api_key = ""` in `terraform.tfvars` and run `terraform apply` to cleanly disable everything. See [datadog-troubleshooting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-troubleshooting) for the full disabling procedure.
 
 ---
 
@@ -80,6 +79,6 @@ The Datadog subscription would roughly double the total infrastructure cost. Eva
 
 ## Related Notes
 
-- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — full observability architecture
+- [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) — full observability architecture
 - cost reference — GCP infrastructure cost reference
-- [datadog-troubleshooting](/13-Observability/Datadog/datadog-troubleshooting) — how to disable Datadog if trial ends
+- [datadog-troubleshooting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-troubleshooting) — how to disable Datadog if trial ends

@@ -6,7 +6,6 @@ tags: [python, sql, sql-server, tsql, medallion-project]
 aliases: [Bronze Layer, Bronze DDL, Bronze Loading, JSON to Bronze, Raw Layer Loading, Bronze Tables, Bronze Schema]
 keywords: [bronze layer, raw layer, medallion architecture, DDL, pyodbc, parameterized queries, JSON loading, truncate reload, upsert, merge, OHLCV, trading calendar, index_dim, signals_daily, signals_quarterly, pulse, fast_executemany, executemany, batch insert, identity column, SYSUTCDATETIME, IS NOT EXISTS CREATE TABLE, idempotent DDL, bronze schema]
 description: "Complete DDL and Python loading patterns for the example medallion bronze layer — covers all table definitions, idempotent schema creation, pyodbc connection setup, truncate-and-reload vs merge loading strategies, and JSON-to-bronze data flow."
-related: [silver-transforms, gold-transforms, medallion-architecture, data-formats-and-serialization, pyodbc-sql-server]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -16,15 +15,15 @@ status: complete
 >
 > This page documents the implementation of a specific financial data pipeline
 > (STOXX/yfinance stock index scoring system) on SQL Server. For the general
-> patterns and alternative approaches, see the [moc-sql-server > Patterns](/04-SQL-Server/moc-sql-server#patterns)
+> patterns and alternative approaches, see the [moc-sql-server > Patterns](https://alp78.github.io/elysium/04-SQL-Server/moc-sql-server#patterns)
 > section. For the architectural theory behind bronze/silver/gold layering,
-> see [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture).
+> see [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture).
 
 # Bronze Layer Loading
 
-The bronze layer is the raw data landing zone in the [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture). Every table stores data exactly as received from the source — 1:1 with the source JSON files produced by yfinance fetchers. No business logic is applied; transformations happen in [silver](/04-SQL-Server/Medallion-Project/silver-transforms).
+The bronze layer is the raw data landing zone in the [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture). Every table stores data exactly as received from the source — 1:1 with the source JSON files produced by yfinance fetchers. No business logic is applied; transformations happen in [silver](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms).
 
-**Pipeline flow:** yfinance API → JSON files → Python loaders → Bronze tables → [Silver transforms](/04-SQL-Server/Medallion-Project/silver-transforms)
+**Pipeline flow:** yfinance API → JSON files → Python loaders → Bronze tables → [Silver transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms)
 
 > [!info] Bronze Layer Role
 >
@@ -36,7 +35,7 @@ The bronze layer is the raw data landing zone in the [medallion-architecture](/1
 
 ### Idempotent Database and Schema Creation
 
-All DDL in this project is idempotent — safe to run multiple times without error, following the principles described in [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design). File: `db/ddl/bronze_schema.sql`
+All DDL in this project is idempotent — safe to run multiple times without error, following the principles described in [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design). File: `db/ddl/bronze_schema.sql`
 
 #### CREATE DATABASE IF NOT EXISTS — idempotent analytics database creation
 
@@ -57,7 +56,7 @@ GO
 
 ### Connection Helper (`utils/db.py`)
 
-All Python modules share a single connection factory. Credentials come from `.env`. This is the key that unlocks the database — every loader and transform imports `get_connection()` to get a database handle. Credentials are never hardcoded. For benchmarks comparing pyodbc `fast_executemany` with alternative ingestion methods (bcp, SqlBulkCopy), see [23_py_data_ingestion](/02-Programming-Languages/Python/23_py_data_ingestion) and [23_cs_data_ingestion](/02-Programming-Languages/CSharp/23_cs_data_ingestion).
+All Python modules share a single connection factory. Credentials come from `.env`. This is the key that unlocks the database — every loader and transform imports `get_connection()` to get a database handle. Credentials are never hardcoded. For benchmarks comparing pyodbc `fast_executemany` with alternative ingestion methods (bcp, SqlBulkCopy), see [23_py_data_ingestion](https://alp78.github.io/elysium/02-Programming-Languages/Python/23_py_data_ingestion) and [23_cs_data_ingestion](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/23_cs_data_ingestion).
 
 #### pyodbc connect with os.environ — connection factory from .env
 
@@ -350,7 +349,7 @@ CREATE INDEX IX_bronze_pulse_tickers_index
 
 ### bronze.trading_calendar — Exchange Schedules
 
-Used to detect gaps in OHLCV data — if the exchange was open but we have no price, that's a gap to forward-fill. See [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) for the gap-filling logic.
+Used to detect gaps in OHLCV data — if the exchange was open but we have no price, that's a gap to forward-fill. See [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) for the gap-filling logic.
 
 > [!abstract] Data source
 > - **Source:** `exchange_calendars` Python library
@@ -460,7 +459,7 @@ CREATE UNIQUE INDEX UX_silver_{ohlcv_table}
 
 ## Loading Patterns (JSON → Bronze)
 
-Loaders read JSON files produced by fetchers and write to bronze tables. Two strategies apply, depending on the data type. In production, [Airflow DAGs](/12-Orchestration/Airflow/airflow-dag-patterns) orchestrate these bronze loads as upstream tasks in the pipeline.
+Loaders read JSON files produced by fetchers and write to bronze tables. Two strategies apply, depending on the data type. In production, [Airflow DAGs](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) orchestrate these bronze loads as upstream tasks in the pipeline.
 
 ### Strategy 1: Truncate & Reload (Most Loaders)
 
@@ -576,9 +575,9 @@ WHERE symbol = ? AND date = ?
 
 ### Related Notes
 
-- [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) — next stage: cleaning, deduplication, SCD Type 2, gap-filling
-- [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) — final stage: pre-computed analytics and scoring
-- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — architectural context for all three layers
+- [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) — next stage: cleaning, deduplication, SCD Type 2, gap-filling
+- [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) — final stage: pre-computed analytics and scoring
+- [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — architectural context for all three layers
 - the data pipeline steps — pipeline steps that drive these loaders
 - data formats and serialization — JSON handling and Python type mapping
 - database connections — pyodbc connection patterns and parameterized queries

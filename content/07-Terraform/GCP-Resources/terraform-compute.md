@@ -6,11 +6,6 @@ tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform GCE, terraform VM, google_compute_instance, Container-Optimized OS, COS, startup script terraform]
 keywords: [google_compute_instance, GCE, virtual machine, startup script, machine type, e2-medium, pd-ssd, pd-balanced, Container-Optimized OS, COS, Ubuntu, OS Login, Shielded VM, boot disk, network interface, service account, ephemeral IP, no public IP]
 description: "Terraform configuration for GCE virtual machine instances: the Airflow VM (Container-Optimized OS, ephemeral public IP) and the SQL Server VM (Ubuntu, SSD, no public IP), with startup scripts, shielded instance config, and OS Login."
-related:
-  - "[terraform-networking](/07-Terraform/GCP-Resources/terraform-networking)"
-  - "[terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets)"
-  - "[terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run)"
-  - "[SSH and scheduling](/12-Orchestration/Scheduling/linux-scheduling)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -22,7 +17,7 @@ This note covers the GCE VM definitions from `compute.tf`: the Airflow orchestra
 
 ### Architecture Context
 
-Two GCE instances share the same subnet (`10.0.0.0/24`) but differ significantly in their OS, disk, public IP assignment, and purpose. For the full [vm-lifecycle](/06-GCP/Compute/vm-lifecycle) of these instances -- starting, stopping, resizing, and live migration -- see the GCP Compute Engine notes.
+Two GCE instances share the same subnet (`10.0.0.0/24`) but differ significantly in their OS, disk, public IP assignment, and purpose. For the full [vm-lifecycle](https://alp78.github.io/elysium/06-GCP/Compute/vm-lifecycle) of these instances -- starting, stopping, resizing, and live migration -- see the GCP Compute Engine notes.
 
 | Aspect | Airflow VM | SQL VM |
 |--------|-----------|--------|
@@ -184,7 +179,7 @@ resource "google_compute_instance" "sql" {
 }
 ```
 
-The SQL Server database VM. Runs SQL Server 2022 Developer Edition directly on Ubuntu (not in Docker). For the post-provisioning database configuration (memory limits, TempDB, backup schedules), see [server-configuration](/04-SQL-Server/Administration/server-configuration).
+The SQL Server database VM. Runs SQL Server 2022 Developer Edition directly on Ubuntu (not in Docker). For the post-provisioning database configuration (memory limits, TempDB, backup schedules), see [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration).
 
 | Field | Value | Meaning |
 |-------|-------|---------|
@@ -217,7 +212,7 @@ network_interface {
 }
 ```
 
-No `access_config` block means **no public IP at all**. The SQL VM is only reachable from within the VPC (port 1433 for queries, port 22 via IAP tunnel for SSH). Outbound internet access is provided by [Cloud NAT](/07-Terraform/GCP-Resources/terraform-networking#resource-cloud-nat) for package installation.
+No `access_config` block means **no public IP at all**. The SQL VM is only reachable from within the VPC (port 1433 for queries, port 22 via IAP tunnel for SSH). Outbound internet access is provided by [Cloud NAT](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-networking#resource-cloud-nat) for package installation.
 
 ### Metadata — Startup Script with Credentials
 
@@ -277,11 +272,11 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
 
 ## Related
 
-- [terraform-networking](/07-Terraform/GCP-Resources/terraform-networking) — the VPC and firewall rules these VMs attach to
-- [terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — the service accounts assigned to these VMs
-- [SSH and scheduling](/12-Orchestration/Scheduling/linux-scheduling) — how SSH tunneling via IAP works
-- [docker-compose](/09-Docker/docker-compose) — the Docker containers running on the Airflow VM
-- [terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run) — the Cloud Run resources that connect to the SQL VM's private IP
+- [terraform-networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-networking) — the VPC and firewall rules these VMs attach to
+- [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — the service accounts assigned to these VMs
+- [SSH and scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/linux-scheduling) — how SSH tunneling via IAP works
+- [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) — the Docker containers running on the Airflow VM
+- [terraform-cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run) — the Cloud Run resources that connect to the SQL VM's private IP
 
 ## References
 

@@ -15,7 +15,6 @@ tags:
 aliases: [Loading Patterns, Bulk Loading, Data Ingestion SQL Server, fast_executemany, SqlBulkCopy, BULK INSERT, bcp]
 keywords: [loading patterns, bulk insert, bcp, fast_executemany, SqlBulkCopy, OPENROWSET, truncate reload, staging swap, incremental append, upsert, minimal logging, TABLOCK, batch size, row-by-row insert, executemany, parameterized insert, partition switch, data loading benchmark]
 description: "Every method of getting data into SQL Server — benchmarked and compared. Covers bcp, BULK INSERT, pyodbc fast_executemany, SqlBulkCopy, loading strategies (truncate-reload, staging swap, incremental, upsert), and minimal logging."
-related: [merge-and-upsert, partitioning-strategies, idempotent-pipeline-design, 23_py_data_ingestion, 23_cs_data_ingestion, bronze-layer-loading]
 created: 2026-03-29
 updated: 2026-03-29
 status: complete
@@ -23,7 +22,7 @@ status: complete
 
 # SQL Server Loading Patterns — Getting Data In Efficiently
 
-Loading is the most performance-sensitive part of any pipeline. The wrong method turns a 30-second load into a 30-minute one. This page covers every loading method available in SQL Server with benchmarks, trade-offs, and gotchas. For Python-specific benchmarks, see [23_py_data_ingestion](/02-Programming-Languages/Python/23_py_data_ingestion). For C# benchmarks, see [23_cs_data_ingestion](/02-Programming-Languages/CSharp/23_cs_data_ingestion).
+Loading is the most performance-sensitive part of any pipeline. The wrong method turns a 30-second load into a 30-minute one. This page covers every loading method available in SQL Server with benchmarks, trade-offs, and gotchas. For Python-specific benchmarks, see [23_py_data_ingestion](https://alp78.github.io/elysium/02-Programming-Languages/Python/23_py_data_ingestion). For C# benchmarks, see [23_cs_data_ingestion](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/23_cs_data_ingestion).
 
 ---
 
@@ -78,7 +77,7 @@ The simplest loading strategy: delete existing data, load fresh. Used when the s
 
 > [!info] When to Use Truncate-and-Reload
 >
-> Best for small tables (<1M rows), dimension tables, or snapshot data where history is preserved downstream (e.g., in silver). Bronze tables in a [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) are typically truncate-and-reload.
+> Best for small tables (<1M rows), dimension tables, or snapshot data where history is preserved downstream (e.g., in silver). Bronze tables in a [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) are typically truncate-and-reload.
 
 ```sql
 -- Step 1: Clear existing data for this partition key
@@ -97,7 +96,7 @@ COMMIT;
 
 > [!warning] TRUNCATE vs DELETE
 >
-> `TRUNCATE TABLE` is faster (minimal logging, no row-by-row log entries) but requires `ALTER TABLE` permission, resets `IDENTITY`, and cannot be scoped with a `WHERE` clause. Use `DELETE` when you need to clear a subset (e.g., by `_index`). `TRUNCATE` cannot be rolled back in user transactions on all recovery models — see [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) for details.
+> `TRUNCATE TABLE` is faster (minimal logging, no row-by-row log entries) but requires `ALTER TABLE` permission, resets `IDENTITY`, and cannot be scoped with a `WHERE` clause. Use `DELETE` when you need to clear a subset (e.g., by `_index`). `TRUNCATE` cannot be rolled back in user transactions on all recovery models — see [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) for details.
 
 ---
 
@@ -134,7 +133,7 @@ EXEC sp_rename 'gold.signals_daily_old', 'signals_daily';  -- move old to stagin
 
 > [!tip] Partition SWITCH for Zero-Downtime
 >
-> `SWITCH` is a metadata-only operation — no data moves. Requires matching indexes, same filegroup, and a `CHECK` constraint on the staging table that matches the partition boundary. See [partitioning-strategies](/04-SQL-Server/Storage-and-Indexes/partitioning-strategies) for full `SWITCH` mechanics.
+> `SWITCH` is a metadata-only operation — no data moves. Requires matching indexes, same filegroup, and a `CHECK` constraint on the staging table that matches the partition boundary. See [partitioning-strategies](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/partitioning-strategies) for full `SWITCH` mechanics.
 
 ```sql
 -- Staging table has CHECK constraint matching the target partition
@@ -151,7 +150,7 @@ ALTER TABLE staging.signals_daily
 
 ## Watermarks — The Foundation of Incremental Loading
 
-A watermark is a **persisted bookmark** that records how far a pipeline has processed. It answers the question: "where did I leave off last time?" Every incremental loading strategy — append, upsert, partition-based — depends on a reliable watermark. Without one, the pipeline either reprocesses everything (wasteful) or guesses where to start (dangerous). For the architectural theory behind idempotent incremental pipelines, see [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design). For how Airflow orchestrates watermark-driven loads, see [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns).
+A watermark is a **persisted bookmark** that records how far a pipeline has processed. It answers the question: "where did I leave off last time?" Every incremental loading strategy — append, upsert, partition-based — depends on a reliable watermark. Without one, the pipeline either reprocesses everything (wasteful) or guesses where to start (dangerous). For the architectural theory behind idempotent incremental pipelines, see [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design). For how Airflow orchestrates watermark-driven loads, see [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns).
 
 ### What a Watermark Is — definition and types
 
@@ -376,7 +375,7 @@ If you use an overlap window (subtract N days from watermark) but the target tab
 
 ### Using IDENTITY as watermark on a truncate-reload table — broken contract
 
-`IDENTITY` values reset on `TRUNCATE`. If the source table is truncated and reloaded, the same IDENTITY value now points to a different row. Use a business date or timestamp column as the watermark, not IDENTITY. See [sql-server-pipeline-anti-patterns > IDENTITY as a Business Key](/04-SQL-Server/Patterns/sql-server-pipeline-anti-patterns#identity-as-a-business-key).
+`IDENTITY` values reset on `TRUNCATE`. If the source table is truncated and reloaded, the same IDENTITY value now points to a different row. Use a business date or timestamp column as the watermark, not IDENTITY. See [sql-server-pipeline-anti-patterns > IDENTITY as a Business Key](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-pipeline-anti-patterns#identity-as-a-business-key).
 
 ### No NULL handling on first run — pipeline crashes on empty table
 
@@ -427,7 +426,7 @@ When source data contains both new rows and updates to existing rows. Three appr
 
 > [!info] Upsert Strategy Decision
 >
-> Choose based on data volume and control requirements. For full MERGE syntax, see [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert). For idempotency guarantees, see [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design).
+> Choose based on data volume and control requirements. For full MERGE syntax, see [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/merge-and-upsert). For idempotency guarantees, see [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design).
 
 | Approach | Speed | Safety | Complexity | Best For |
 |----------|-------|--------|------------|----------|
@@ -437,7 +436,7 @@ When source data contains both new rows and updates to existing rows. Three appr
 
 **Choose DELETE + INSERT when:** the target table is small (<1M rows), the logic is simple (one partition key), and you want maximum readability. This is what the Medallion-Project bronze loaders use.
 
-**Choose MERGE when:** you need a single atomic statement that handles insert/update/delete in one pass, and you understand the locking gotchas (see [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert)). Best for medium-volume tables with a clear natural key.
+**Choose MERGE when:** you need a single atomic statement that handles insert/update/delete in one pass, and you understand the locking gotchas (see [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/merge-and-upsert)). Best for medium-volume tables with a clear natural key.
 
 **Choose Staging + separate INSERT/UPDATE when:** the volume is large (>1M rows), you want to separate insert and update logic for debugging, or you need to validate before committing. Most production pipelines at scale land here.
 
@@ -512,7 +511,7 @@ conn.commit()
 > pyodbc sends Python `float('nan')` as the string `"nan"`, not `NULL`. Convert explicitly before loading: `None if math.isnan(v) else v`. Similarly, `numpy.int64` is not a native Python type — cast to `int()` before passing to pyodbc.
 
 - **Batch size:** 5,000-10,000 rows per `executemany` call is optimal. Too large = memory pressure on the driver; too small = round-trip overhead
-- **Column type matching:** Python `float` maps to SQL `FLOAT`; Python `str` to `NVARCHAR`. Mismatches cause implicit conversions — see [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries) for why this kills performance
+- **Column type matching:** Python `float` maps to SQL `FLOAT`; Python `str` to `NVARCHAR`. Mismatches cause implicit conversions — see [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries) for why this kills performance
 - **None vs NULL:** `None` becomes SQL `NULL` — correct. But `numpy.nan` does not — convert first
 
 ---
@@ -605,7 +604,7 @@ bcp FinanceDB.dbo.trades format nul -S prod-sql01 -T -c -t "," -f /fmt/trades.xm
 
 ## SqlBulkCopy — C# Bulk Loading
 
-The C# equivalent of bcp — high throughput with full transaction support. For detailed C# ingestion benchmarks, see [23_cs_data_ingestion](/02-Programming-Languages/CSharp/23_cs_data_ingestion).
+The C# equivalent of bcp — high throughput with full transaction support. For detailed C# ingestion benchmarks, see [23_cs_data_ingestion](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/23_cs_data_ingestion).
 
 ### SqlBulkCopy WriteToServer — .NET bulk load with transaction
 
@@ -699,7 +698,7 @@ Minimal logging skips detailed transaction log writes for bulk operations, givin
 
 > [!info] Automated SQL Server schema deployment
 >
-> Run migration scripts against SQL Server as part of your CI/CD pipeline. The IAP tunnel connects GitHub Actions to your private GCP Compute Engine VM. See [github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering) for more GCP CI/CD patterns.
+> Run migration scripts against SQL Server as part of your CI/CD pipeline. The IAP tunnel connects GitHub Actions to your private GCP Compute Engine VM. See [github-actions-data-engineering](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-data-engineering) for more GCP CI/CD patterns.
 
 ```yaml
 # .github/workflows/migrate-sql.yml
@@ -782,8 +781,8 @@ When using MERGE or staging-based upsert, the join between staging and target be
 > conn.commit()
 > ```
 >
-> OHLCV uses an application-side merge: read existing keys into a dict, partition incoming rows into inserts vs updates, execute each batch separately. See [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) for the full implementation.
+> OHLCV uses an application-side merge: read existing keys into a dict, partition incoming rows into inserts vs updates, execute each batch separately. See [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) for the full implementation.
 
 
 ## Related
-- [data-flow-architecture](/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — complete data movement topology and transfer method decision matrix
+- [data-flow-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — complete data movement topology and transfer method decision matrix

@@ -6,7 +6,6 @@ tags: [sql, sql-server, tsql]
 aliases: [SARGable, search argument, index seek, non-sargable, predicate]
 keywords: [SARGable, search argument, index seek, index scan, predicate, WHERE clause, YEAR function, CAST, CONVERT, LEFT, LIKE, functions on columns, implicit conversion, computed column, query optimization, execution plan, scan vs seek]
 description: "SARGable query patterns that enable SQL Server index seeks vs non-SARGable patterns that force full scans. Includes a complete reference table and fix strategies."
-related: [index-types-and-strategy, execution-plans, wait-stats-analysis, performance-audit-playbook]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -218,7 +217,7 @@ cursor.executemany("INSERT INTO ...", rows)
 
 ### Related
 
-- [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — index types that SARGable queries exploit
-- [execution-plans](/04-SQL-Server/Performance/execution-plans) — how to read execution plans to spot scans
-- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — structured audit process
-- [wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis) — diagnosing I/O pressure from non-SARGable queries
+- [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — index types that SARGable queries exploit
+- [execution-plans](https://alp78.github.io/elysium/04-SQL-Server/Performance/execution-plans) — how to read execution plans to spot scans
+- [performance-audit-playbook](https://alp78.github.io/elysium/04-SQL-Server/Performance/performance-audit-playbook) — structured audit process
+- [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) — diagnosing I/O pressure from non-SARGable queries

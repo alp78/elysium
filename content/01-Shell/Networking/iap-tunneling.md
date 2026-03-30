@@ -6,7 +6,6 @@ tags: [shell, bash, linux, powershell, gcp, networking]
 aliases: [IAP, Identity-Aware Proxy, IAP tunnel, gcloud start-iap-tunnel, iap.tunnelInstances.accessTunnelResourceAccessor]
 keywords: [IAP, Identity-Aware Proxy, IAP tunnel, gcloud start-iap-tunnel, gcloud compute ssh, tunnel-through-iap, local-host-port, SQL Server tunnel, SSMS IAP, no public IP, secure connectivity, GCE access, VPN alternative, bastion host alternative, IAP debugging, 35.235.240.0/20, IAP IP range]
 description: "Google Cloud IAP (Identity-Aware Proxy) tunneling for secure access to VMs with no public IP. Covers how IAP works at the network level, all tunnel command variants, debugging common failures, and comparison with Cloud VPN and bastion hosts."
-related: ["[connectivity-testing](/01-Shell/Networking/connectivity-testing)", "[firewalls](/01-Shell/Networking/firewalls)", "[socket-inspection](/01-Shell/Networking/socket-inspection)", "[connecting-to-gcp-resources](/01-Shell/Networking/connecting-to-gcp-resources)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -57,7 +56,7 @@ Step by step:
 
 > [!tip] Related pattern
 >
-> IAP requires the `iap.tunnelResourceAccessor` IAM role -- see [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) for role binding patterns. The firewall rule allowing `35.235.240.0/20` can be managed declaratively with [terraform-networking](/07-Terraform/GCP-Resources/terraform-networking).
+> IAP requires the `iap.tunnelResourceAccessor` IAM role -- see [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for role binding patterns. The firewall rule allowing `35.235.240.0/20` can be managed declaratively with [terraform-networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-networking).
 
 ## IAP Tunnel Commands — All Variants
 
@@ -73,7 +72,7 @@ Step by step:
 > creation + SSH session into one command.
 >
 > For additional SSH patterns including OS Login and metadata-managed keys, see
-> [vm-ssh-and-file-transfer](/06-GCP/Compute/vm-ssh-and-file-transfer).
+> [vm-ssh-and-file-transfer](https://alp78.github.io/elysium/06-GCP/Compute/vm-ssh-and-file-transfer).
 
 ```bash
 gcloud compute ssh data-pipeline-sql \
@@ -112,7 +111,7 @@ gcloud compute start-iap-tunnel data-pipeline-sql 1433 \
 > | `1435` | **Local** port on your machine (any free port — does not need to match remote) |
 >
 > After running: connect via SSMS → `127.0.0.1,1435`
-> For sqlcmd through the tunnel, see [sqlcmd-connection-and-usage](/04-SQL-Server/Administration/sqlcmd-connection-and-usage).
+> For sqlcmd through the tunnel, see [sqlcmd-connection-and-usage](https://alp78.github.io/elysium/04-SQL-Server/Administration/sqlcmd-connection-and-usage).
 
 > [!danger] IAP 10-minute idle timeout
 >
@@ -268,8 +267,8 @@ ss -tnp | grep :1433
 > For a small team accessing a few VMs, **IAP is always the right choice**. Zero infrastructure to maintain, zero cost, and per-user audit logging via Cloud Audit Logs.
 
 ## Related
-- [gcp-identity-and-connection-patterns](/06-GCP/Security/gcp-identity-and-connection-patterns) — Where IAP tunnels fit in the overall connection pattern framework
-- [firewalls](/01-Shell/Networking/firewalls) — IAP firewall rule for `35.235.240.0/20` on port 22
-- [connectivity-testing](/01-Shell/Networking/connectivity-testing) — diagnose IAP tunnel failures step by step
-- [socket-inspection](/01-Shell/Networking/socket-inspection) — verify IAP connections visible on the VM side
-- [connecting-to-gcp-resources](/01-Shell/Networking/connecting-to-gcp-resources) — full guide: IAP + SQL Server, Airflow, BigQuery
+- [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns) — Where IAP tunnels fit in the overall connection pattern framework
+- [firewalls](https://alp78.github.io/elysium/01-Shell/Networking/firewalls) — IAP firewall rule for `35.235.240.0/20` on port 22
+- [connectivity-testing](https://alp78.github.io/elysium/01-Shell/Networking/connectivity-testing) — diagnose IAP tunnel failures step by step
+- [socket-inspection](https://alp78.github.io/elysium/01-Shell/Networking/socket-inspection) — verify IAP connections visible on the VM side
+- [connecting-to-gcp-resources](https://alp78.github.io/elysium/01-Shell/Networking/connecting-to-gcp-resources) — full guide: IAP + SQL Server, Airflow, BigQuery

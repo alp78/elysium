@@ -6,7 +6,6 @@ tags: [infrastructure, gcp, cloud-run]
 aliases: [Cloud Run Jobs, Cloud Run Services, gcloud run jobs, serverless containers, Cloud Run ETL, cold start]
 keywords: [cloud run, cloud run jobs, cloud run services, serverless, containers, docker, execute job, cold start, ETL batch job, pipeline stage, gcloud run jobs execute, gcloud run jobs update, memory, CPU, timeout, retries, image size, multi-stage build, min instances]
 description: "How to manage Cloud Run Jobs vs Services for data pipeline workloads — executing jobs, viewing logs, updating configuration, and mitigating cold start latency for ETL containers."
-related: [pubsub-topics-and-subscriptions, pubsub-messaging, gcs-object-operations, service-accounts-and-iam, gcp-projects-and-apis, cloud-logging]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # Cloud Run Jobs vs Services — Serverless Containers for Data Pipelines
 
-Cloud Run runs Docker containers without managing servers. For data engineering, Cloud Run **Jobs** are the key feature — they run to completion and exit (unlike Cloud Run **Services** which serve HTTP requests). Your pipeline stages (loaders, transforms, scorers) each run as a Cloud Run Job, triggered by Airflow or a scheduler. For infrastructure-as-code deployment, [terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run) provides the Terraform resource definitions. Services are used for APIs, webhooks, and event-driven endpoints that need to stay running.
+Cloud Run runs Docker containers without managing servers. For data engineering, Cloud Run **Jobs** are the key feature — they run to completion and exit (unlike Cloud Run **Services** which serve HTTP requests). Your pipeline stages (loaders, transforms, scorers) each run as a Cloud Run Job, triggered by Airflow or a scheduler. For infrastructure-as-code deployment, [terraform-cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run) provides the Terraform resource definitions. Services are used for APIs, webhooks, and event-driven endpoints that need to stay running.
 
 ### Cloud Run Jobs vs Services Comparison
 
@@ -74,7 +73,7 @@ The first execution after a period of inactivity takes longer because Cloud Run 
 
 > [!tip] Reducing Cold Start Latency
 >
-> - **Keep images small.** A 2 GB image with unnecessary dependencies takes 30-60 seconds to pull. A 200 MB slim image starts in 5-10 seconds. Use [docker-compose](/09-Docker/docker-compose) locally to mirror the production container environment during development.
+> - **Keep images small.** A 2 GB image with unnecessary dependencies takes 30-60 seconds to pull. A 200 MB slim image starts in 5-10 seconds. Use [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) locally to mirror the production container environment during development.
 > - **Multi-stage Docker builds.** Build dependencies in stage 1, copy only the runtime into the final image.
 > - **Min instances = 1** (for services): keeps one instance warm. Not applicable to Jobs (they always cold start).
 > - **CPU allocation = always** (for services): keeps CPU allocated even between requests, reducing startup latency.
@@ -94,7 +93,7 @@ Airflow DAG
             └─► Cloud Run Job (gold container) → MERGE into BigQuery production
 ```
 
-Each stage is an independent Cloud Run Job. Airflow orchestrates the sequence using task dependencies. This architecture allows individual stages to be retried, redeployed, or replaced without affecting the others. For CI/CD automation that builds and deploys these containers via Workload Identity, see [github-actions-workflows](/10-GitHub-Actions/github-actions-workflows).
+Each stage is an independent Cloud Run Job. Airflow orchestrates the sequence using task dependencies. This architecture allows individual stages to be retried, redeployed, or replaced without affecting the others. For CI/CD automation that builds and deploys these containers via Workload Identity, see [github-actions-workflows](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-workflows).
 
 ### Cloud Run Environment Variables and Secrets
 
@@ -109,12 +108,12 @@ gcloud run jobs update data-pipeline-pipeline --region=europe-west1 \
 
 ## Related
 
-- [pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions) — Push subscriptions can trigger Cloud Run Services
-- [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging) — Cloud Run Services as push subscription endpoints
-- [gcs-object-operations](/06-GCP/Storage/gcs-object-operations) — Jobs typically read input from and write output to GCS
-- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — `roles/run.invoker` to trigger jobs; SA attached to the job for GCS/BQ access
-- [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) — `run.googleapis.com` must be enabled
-- [cloud-logging](/06-GCP/Logging/cloud-logging) — Job logs are available in Cloud Logging by resource type `cloud_run_job`
+- [pubsub-topics-and-subscriptions](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-topics-and-subscriptions) — Push subscriptions can trigger Cloud Run Services
+- [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) — Cloud Run Services as push subscription endpoints
+- [gcs-object-operations](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations) — Jobs typically read input from and write output to GCS
+- [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — `roles/run.invoker` to trigger jobs; SA attached to the job for GCS/BQ access
+- [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) — `run.googleapis.com` must be enabled
+- [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) — Job logs are available in Cloud Logging by resource type `cloud_run_job`
 
 ## References
 

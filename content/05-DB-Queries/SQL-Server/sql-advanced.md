@@ -6,11 +6,6 @@ tags: [sql, sql-server, tsql]
 aliases: [SQL advanced, window functions, CTE, common table expression, PIVOT, UNPIVOT, JSON, recursive CTE, ROW_NUMBER, RANK, LAG, LEAD]
 keywords: [window functions, cte, recursive cte, pivot, unpivot, json, row_number, rank, dense_rank, lag, lead, partition by, running total, moving average, ntile, percentile, cross apply, outer apply, for json, openjson]
 description: "Advanced SQL Server T-SQL patterns with executable examples — covers window functions, CTEs, PIVOT/UNPIVOT, JSON, CROSS APPLY, and recursive queries."
-related:
-  - "[sql-fundamentals](/05-DB-Queries/SQL-Server/sql-fundamentals)"
-  - "[sql-engineering](/05-DB-Queries/SQL-Server/sql-engineering)"
-  - "[execution-plans](/04-SQL-Server/Performance/execution-plans)"
-  - "[query-plan-analysis](/04-SQL-Server/Performance/query-plan-analysis)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -50,11 +45,11 @@ Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=y
 
 > [!danger] Lab-Only Credentials
 >
-> The connection string above contains a plaintext password for a local lab environment. In production, credentials are stored in GCP Secret Manager and fetched at runtime — never hardcoded. See [secrets-management > Access from Python](/06-GCP/Security/secrets-management#access-from-python).
+> The connection string above contains a plaintext password for a local lab environment. In production, credentials are stored in GCP Secret Manager and fetched at runtime — never hardcoded. See [secrets-management > Access from Python](https://alp78.github.io/elysium/06-GCP/Security/secrets-management#access-from-python).
 
 ## Advanced Window Functions
 
-The window functions and SCD patterns in this section are used extensively in the [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) and [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) layers of the medallion pipeline to produce cleaned and analytical datasets.
+The window functions and SCD patterns in this section are used extensively in the [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) and [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) layers of the medallion pipeline to produce cleaned and analytical datasets.
 
 ### Window Functions — ROW_NUMBER for Deduplication
 

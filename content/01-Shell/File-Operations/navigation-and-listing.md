@@ -6,7 +6,6 @@ tags: [shell, bash, linux, powershell]
 aliases: [ls, du, df, directory listing, disk usage, disk free, tree command]
 keywords: [ls, du, df, tree, directory listing, disk usage, disk space, file sizes, hidden files, human readable, sort by time, modification time, disk free, filesystem, navigation]
 description: "Linux and PowerShell commands for navigating the filesystem, listing files sorted by modification time, checking disk usage with du, and monitoring free disk space with df. Includes the du vs df discrepancy explained."
-related: ["[file-manipulation](/01-Shell/File-Operations/file-manipulation)", "[finding-files](/01-Shell/File-Operations/finding-files)", "[reading-file-contents](/01-Shell/Text-Processing/reading-file-contents)", "[compression](/01-Shell/File-Operations/compression)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -83,7 +82,7 @@ tree -L 2 --dirsfirst
 > - **Find files programmatically:** `find . -name "*.csv" -print0 | xargs -0 ...`
 > - **Get file metadata in scripts:** `stat --format='%s %n' *` instead of parsing `ls -l`
 >
-> See [defensive-scripting](/01-Shell/Scripting/defensive-scripting) for robust file-handling patterns.
+> See [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) for robust file-handling patterns.
 
 ### du, ls, df — investigating disk space on a database server
 
@@ -223,10 +222,10 @@ Get-PSDrive -PSProvider FileSystem | Format-Table Name,
     @{N='Free(GB)';E={[math]::Round($_.Free/1GB,1)}}
 ```
 
-For continuous disk and resource monitoring beyond manual `du`/`df` checks, see [system-resources](/01-Shell/Process-Management/system-resources) which covers `vmstat`, `iostat`, and automated alerting patterns.
+For continuous disk and resource monitoring beyond manual `du`/`df` checks, see [system-resources](https://alp78.github.io/elysium/01-Shell/Process-Management/system-resources) which covers `vmstat`, `iostat`, and automated alerting patterns.
 
 ## Related
-- [file-manipulation](/01-Shell/File-Operations/file-manipulation) — copying, moving, permissions, and safe delete patterns
-- [finding-files](/01-Shell/File-Operations/finding-files) — surgical search for specific files across large trees
-- [reading-file-contents](/01-Shell/Text-Processing/reading-file-contents) — what to do once you find the file
-- [compression](/01-Shell/File-Operations/compression) — reduce disk usage with gzip, zstd, and tar
+- [file-manipulation](https://alp78.github.io/elysium/01-Shell/File-Operations/file-manipulation) — copying, moving, permissions, and safe delete patterns
+- [finding-files](https://alp78.github.io/elysium/01-Shell/File-Operations/finding-files) — surgical search for specific files across large trees
+- [reading-file-contents](https://alp78.github.io/elysium/01-Shell/Text-Processing/reading-file-contents) — what to do once you find the file
+- [compression](https://alp78.github.io/elysium/01-Shell/File-Operations/compression) — reduce disk usage with gzip, zstd, and tar

@@ -5,10 +5,7 @@ technology: [python]
 tags: [python]
 aliases: [async await, concurrency, parallelism, tasks, threads, asyncio, Task]
 keywords: [asyncio, async, await, coroutine, Task, threading, multiprocessing, concurrent.futures, GIL]
-description: "Python async and concurrency reference with executable examples and cell outputs — covers asyncio, async/await, tasks, threading, multiprocessing, and concurrent.futures. See [12_cs_asyncconcurrency](/02-Programming-Languages/CSharp/12_cs_asyncconcurrency) for the C# equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[12_cs_asyncconcurrency](/02-Programming-Languages/CSharp/12_cs_asyncconcurrency)"
+description: "Python async and concurrency reference with executable examples and cell outputs — covers asyncio, async/await, tasks, threading, multiprocessing, and concurrent.futures. See [12_cs_asyncconcurrency](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/12_cs_asyncconcurrency) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -477,7 +474,7 @@ await asyncio.gather(*worker_tasks)
 
 > [!tip] Related pattern
 >
-> The concurrency patterns below (task fan-out, semaphore-bounded parallelism) parallel how [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) manages DAG task concurrency — both control how many units of work execute simultaneously, just at different abstraction levels.
+> The concurrency patterns below (task fan-out, semaphore-bounded parallelism) parallel how [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) manages DAG task concurrency — both control how many units of work execute simultaneously, just at different abstraction levels.
 
 `concurrent.futures` provides two pool executors with a uniform API — swap one for the other with a single line change:
 

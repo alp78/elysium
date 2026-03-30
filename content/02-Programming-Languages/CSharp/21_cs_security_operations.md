@@ -5,12 +5,7 @@ technology: [csharp, dotnet, gcp]
 tags: [csharp, gcp, security, encryption, identity]
 aliases: [Security Operations CSharp, Encryption and Identity CSharp]
 keywords: [encryption, KMS, Secret Manager, certificates, service account, OAuth, ADC, IAM, Cloud SQL, SSL, envelope encryption, Polars.NET, Google.Cloud.SecretManager, Google.Cloud.Kms]
-description: "C# security operations reference — encryption, certificates, identity, and secure access across GCP services. Executable examples with cell outputs. Built on infrastructure from [20_py_security_setup](/02-Programming-Languages/Python/20_py_security_setup). See [21_py_security_operations](/02-Programming-Languages/Python/21_py_security_operations) for the Python equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[21_py_security_operations](/02-Programming-Languages/Python/21_py_security_operations)"
-  - "[20_py_security_setup](/02-Programming-Languages/Python/20_py_security_setup)"
-  - "[17_cs_gcp](/02-Programming-Languages/CSharp/17_cs_gcp)"
+description: "C# security operations reference — encryption, certificates, identity, and secure access across GCP services. Executable examples with cell outputs. Built on infrastructure from [20_py_security_setup](https://alp78.github.io/elysium/02-Programming-Languages/Python/20_py_security_setup). See [21_py_security_operations](https://alp78.github.io/elysium/02-Programming-Languages/Python/21_py_security_operations) for the Python equivalent."
 created: 2026-03-27
 updated: 2026-03-27
 status: complete
@@ -20,7 +15,7 @@ status: complete
 
 > [!tip] Prerequisite Reading
 >
-> For the theoretical framework behind these operations — identity model, credential types, OAuth2 flows, and connection patterns — see [gcp-identity-and-connection-patterns](/06-GCP/Security/gcp-identity-and-connection-patterns).
+> For the theoretical framework behind these operations — identity model, credential types, OAuth2 flows, and connection patterns — see [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns).
 
 ## Environment Setup
 

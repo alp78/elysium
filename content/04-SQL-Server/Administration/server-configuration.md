@@ -6,7 +6,6 @@ tags: [sql, sql-server, tsql]
 aliases: [SQL Server configuration, max server memory, sp_configure, mssql-conf, RCSI, Read Committed Snapshot Isolation, TempDB configuration, swappiness, THP]
 keywords: [max server memory, sp_configure, mssql-conf, RCSI, Read Committed Snapshot Isolation, TempDB files, swappiness, transparent huge pages, THP, IO scheduler, trace flags, recovery model, memory limit, buffer pool, Linux optimization, GCP]
 description: "Non-negotiable SQL Server configuration settings: max server memory, RCSI, TempDB, recovery models, and Linux OS tuning (swappiness, THP, I/O scheduler) for SQL Server on Linux GCP."
-related: [memory-and-buffer-pool, backup-types-and-strategy, storage-internals, essential-dba-queries]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # Server Configuration
 
-These are the non-negotiable configuration settings that every production SQL Server instance must have in place before going live. Skipping any of these leads to data corruption, OOM crashes, or unrecoverable failures. When provisioning the underlying VM with [Terraform](/07-Terraform/GCP-Resources/terraform-compute), these config requirements should be reflected in the VM spec (machine type, disk size, resource limits).
+These are the non-negotiable configuration settings that every production SQL Server instance must have in place before going live. Skipping any of these leads to data corruption, OOM crashes, or unrecoverable failures. When provisioning the underlying VM with [Terraform](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-compute), these config requirements should be reflected in the VM spec (machine type, disk size, resource limits).
 
 ---
 
@@ -22,7 +21,7 @@ These are the non-negotiable configuration settings that every production SQL Se
 
 ### Set Max Server Memory
 
-SQL Server will consume every byte of available memory and never release it without a restart. On a shared VM (with Datadog agent, OS processes), this causes OOM kills. See [memory-and-buffer-pool](/04-SQL-Server/Performance/memory-and-buffer-pool) for how the buffer pool uses the memory allocated here.
+SQL Server will consume every byte of available memory and never release it without a restart. On a shared VM (with Datadog agent, OS processes), this causes OOM kills. See [memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/Performance/memory-and-buffer-pool) for how the buffer pool uses the memory allocated here.
 
 **Rule:** `max server memory = Total RAM − 1 GB` (minimum). On a 2 GB VM: 768–1024 MB. On an 8 GB VM: 6144 MB.
 
@@ -89,7 +88,7 @@ ALTER DATABASE [analytics_db] SET RECOVERY FULL;
 -- to start the log chain. PITR is impossible without it.
 ```
 
-See [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy) for the full decision matrix.
+See [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy) for the full decision matrix.
 
 ---
 
@@ -126,7 +125,7 @@ ORDER BY p.rows DESC;
 -- If ANY silver/gold table appears here, fix it immediately.
 ```
 
-See [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) for clustered index key selection.
+See [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) for clustered index key selection.
 
 ---
 
@@ -144,7 +143,7 @@ UPDATE STATISTICS gold.index_performance WITH FULLSCAN;
 
 ## Linux OS Tuning (for SQL Server on Linux)
 
-Three Linux settings with outsized impact on SQL Server performance. Wrong defaults cause random latency spikes, I/O stalls, and memory thrashing. When running SQL Server in Docker, [container resource limits](/09-Docker/container-lifecycle) (memory limits, CPU quotas) mirror these OS-level tuning concerns.
+Three Linux settings with outsized impact on SQL Server performance. Wrong defaults cause random latency spikes, I/O stalls, and memory thrashing. When running SQL Server in Docker, [container resource limits](https://alp78.github.io/elysium/09-Docker/container-lifecycle) (memory limits, CPU quotas) mirror these OS-level tuning concerns.
 
 ### Swappiness
 
@@ -322,7 +321,7 @@ net.ipv4.neigh.default.gc_thresh3 = 16384
 
 ### Related
 
-- [memory-and-buffer-pool](/04-SQL-Server/Performance/memory-and-buffer-pool) — how the buffer pool uses max server memory
-- [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy) — recovery model implications for backup strategy
-- [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — RCSI and its effect on lock contention
-- [storage-internals](/04-SQL-Server/Storage-and-Indexes/storage-internals) — TempDB internals and WAL mechanics
+- [memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/Performance/memory-and-buffer-pool) — how the buffer pool uses max server memory
+- [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy) — recovery model implications for backup strategy
+- [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) — RCSI and its effect on lock contention
+- [storage-internals](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/storage-internals) — TempDB internals and WAL mechanics

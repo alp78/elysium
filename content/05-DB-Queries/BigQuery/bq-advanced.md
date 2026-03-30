@@ -6,10 +6,6 @@ tags: [sql, bigquery, gcp]
 aliases: [BigQuery advanced, BigQuery window functions, BigQuery CTE, BigQuery JSON, BigQuery ML, BQML]
 keywords: [window functions, cte, analytic functions, approximate aggregation, hll_count, approx_quantiles, pivot, unpivot, json_extract, json_value, geospatial, st_geogpoint, bqml, ml.predict, scripting, declare, loop, javascript udf]
 description: "Advanced BigQuery SQL patterns with executable examples — covers window functions, approximate aggregation, scripting, JSON, geospatial, BQML, and JavaScript UDFs."
-related:
-  - "[bq-fundamentals](/05-DB-Queries/BigQuery/bq-fundamentals)"
-  - "[bq-engineering](/05-DB-Queries/BigQuery/bq-engineering)"
-  - "[data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -50,11 +46,11 @@ Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
 > [!info] BigQuery Uses ADC — No Password
 >
-> The `bigquery://` connection uses Application Default Credentials — no password in the connection string. Locally: `gcloud auth application-default login`. On VMs/Cloud Run: the metadata server provides credentials automatically. See [gcloud-authentication > The ADC Credential Search Order](/06-GCP/Core/gcloud-authentication#the-adc-credential-search-order).
+> The `bigquery://` connection uses Application Default Credentials — no password in the connection string. Locally: `gcloud auth application-default login`. On VMs/Cloud Run: the metadata server provides credentials automatically. See [gcloud-authentication > The ADC Credential Search Order](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication#the-adc-credential-search-order).
 
 ## Advanced Window Functions
 
-The window functions in this section appear throughout production pipelines. The [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) layer in SQL Server relies on the same `ROW_NUMBER`, `LAG`, and running-total patterns adapted for T-SQL syntax.
+The window functions in this section appear throughout production pipelines. The [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) layer in SQL Server relies on the same `ROW_NUMBER`, `LAG`, and running-total patterns adapted for T-SQL syntax.
 
 ### Window Functions — ROW_NUMBER for Deduplication
 
@@ -901,7 +897,7 @@ LIMIT 15
 
 > [!tip] Related pattern
 >
-> For cross-language equivalents of MERGE and window functions, see [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) for SQL Server and [05_py_aggregation_reshaping](/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) / [05_cs_aggregation_reshaping](/03-Dataframes/Dataframes-CSharp/05_cs_aggregation_reshaping) for DataFrame equivalents.
+> For cross-language equivalents of MERGE and window functions, see [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) for SQL Server and [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) / [05_cs_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-CSharp/05_cs_aggregation_reshaping) for DataFrame equivalents.
 
 ### MERGE (Upsert) — Syntax and Patterns
 

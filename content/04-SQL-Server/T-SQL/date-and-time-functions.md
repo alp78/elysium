@@ -6,7 +6,6 @@ tags: [python, csharp, sql, sql-server, tsql]
 aliases: [SQL Server date functions, datetime types, DATETIMEOFFSET, DATETIME2, DATEADD, DATEDIFF, EOMONTH, DATETRUNC, AT TIME ZONE, ISO 8601, date arithmetic]
 keywords: [date, datetime, DATETIME2, DATETIMEOFFSET, DATE, SMALLDATETIME, DATEADD, DATEDIFF, DATEDIFF_BIG, EOMONTH, DATETRUNC, DATEFROMPARTS, DATETIME2FROMPARTS, FORMAT, CONVERT, GETDATE, GETUTCDATE, SYSUTCDATETIME, SYSDATETIMEOFFSET, ISO 8601, UTC, timezone, AT TIME ZONE, DST daylight saving, trade_date, naive datetime, aware datetime, dateutil, relativedelta, ZoneInfo, DateTimeOffset, DateOnly, pipeline date patterns]
 description: "Complete reference for date and time handling in SQL Server T-SQL, Python, and C# — covering ISO 8601 formats, data type selection, parsing/formatting, date arithmetic, timezone conversion, and DST pitfalls that break pipelines."
-related: [sargable-queries, merge-and-upsert, gold-transforms, silver-transforms, bronze-layer-loading, performance-audit-playbook]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # Date and Time Functions
 
-Dates look simple until you realize that "March 10, 2026 at 3 PM" means a different instant in time depending on whether you're in Paris, New York, or Tokyo. For the shell-level `date` equivalents used in backup scripts and cron jobs, see [date-and-time-handling](/01-Shell/Text-Processing/date-and-time-handling). A pipeline that processes market close times across a Euro market index, a US 50 index, and an Asia/Pacific 50 index must handle three different closing times, daylight saving transitions that happen on different dates in different countries, and the fact that "today" is a different date in Sydney and New York for several hours each day.
+Dates look simple until you realize that "March 10, 2026 at 3 PM" means a different instant in time depending on whether you're in Paris, New York, or Tokyo. For the shell-level `date` equivalents used in backup scripts and cron jobs, see [date-and-time-handling](https://alp78.github.io/elysium/01-Shell/Text-Processing/date-and-time-handling). A pipeline that processes market close times across a Euro market index, a US 50 index, and an Asia/Pacific 50 index must handle three different closing times, daylight saving transitions that happen on different dates in different countries, and the fact that "today" is a different date in Sydney and New York for several hours each day.
 
 ---
 
@@ -292,7 +291,7 @@ GROUP BY DATEPART(QUARTER, trade_date), YEAR(trade_date)
 
 ## Python Date and Time Reference
 
-For the full Python datetime reference including `relativedelta`, `ZoneInfo`, and pandas date ranges, see [11_py_datetimemathutils](/02-Programming-Languages/Python/11_py_datetimemathutils). The C# equivalents (`DateTimeOffset`, `DateOnly`, `TimeZoneInfo`) are covered in [11_cs_datetimemathutils](/02-Programming-Languages/CSharp/11_cs_datetimemathutils).
+For the full Python datetime reference including `relativedelta`, `ZoneInfo`, and pandas date ranges, see [11_py_datetimemathutils](https://alp78.github.io/elysium/02-Programming-Languages/Python/11_py_datetimemathutils). The C# equivalents (`DateTimeOffset`, `DateOnly`, `TimeZoneInfo`) are covered in [11_cs_datetimemathutils](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/11_cs_datetimemathutils).
 
 Python has two kinds of datetimes — this distinction matters enormously in pipelines:
 
@@ -586,9 +585,9 @@ BACKUP_FILE="project_backup_$(date +%Y%m%d_%H%M%S).bak"
 
 ### Related
 
-- [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries) — date predicates on indexed columns: never wrap in CONVERT/CAST in WHERE clauses
-- [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert) — transaction patterns that use date range filtering for incremental loads
-- [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) — SMA calculations using date-ordered window functions and `trade_date` ranges
-- [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) — SCD Type 2 effective date handling (`effective_from`, `effective_to`)
-- [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) — `loaded_at` timestamps and idempotent reload by date range
-- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — statistics staleness queries that filter by date
+- [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries) — date predicates on indexed columns: never wrap in CONVERT/CAST in WHERE clauses
+- [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/merge-and-upsert) — transaction patterns that use date range filtering for incremental loads
+- [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) — SMA calculations using date-ordered window functions and `trade_date` ranges
+- [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) — SCD Type 2 effective date handling (`effective_from`, `effective_to`)
+- [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) — `loaded_at` timestamps and idempotent reload by date range
+- [performance-audit-playbook](https://alp78.github.io/elysium/04-SQL-Server/Performance/performance-audit-playbook) — statistics staleness queries that filter by date

@@ -6,7 +6,6 @@ tags: [sql, sql-server, tsql]
 aliases: [SQL Server troubleshooting, why is it slow, pipeline failed, disk space emergency, should I add an index, decision tree, troubleshooting guide]
 keywords: [troubleshooting, flowchart, PAGEIOLATCH, WRITELOG, LCK_M, blocking, deadlock, disk full, slow query, pipeline failed, index decision, CXPACKET, SOS_SCHEDULER_YIELD, MEMORY_ALLOCATION_EXT, buffer pool, pd-standard, pd-ssd, mdf full, ldf full, SHRINKFILE, BACKUP LOG, connection refused, login failed, constraint violation, wait stats, dm_os_wait_stats]
 description: "Visual troubleshooting flowcharts for SQL Server: diagnosing slowness via wait stats, pipeline failure root cause analysis, the index decision tree, and disk space emergency recovery steps."
-related: [wait-stats-analysis, performance-audit-playbook, blocking-and-locking, deadlock-detection-and-prevention, index-types-and-strategy, index-maintenance, memory-and-buffer-pool, backup-types-and-strategy]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,13 +13,13 @@ status: complete
 
 # Troubleshooting Flowcharts
 
-Four decision trees for the most common SQL Server problems: slowness, pipeline failures, indexing decisions, and disk space emergencies. Start with the relevant flowchart, then follow references to deeper notes for each resolution path. To practice applying these flowcharts to realistic scenarios, work through [sql-server-problems](/04-SQL-Server/sql-server-problems).
+Four decision trees for the most common SQL Server problems: slowness, pipeline failures, indexing decisions, and disk space emergencies. Start with the relevant flowchart, then follow references to deeper notes for each resolution path. To practice applying these flowcharts to realistic scenarios, work through [sql-server-problems](https://alp78.github.io/elysium/04-SQL-Server/sql-server-problems).
 
 ---
 
 ## Flowchart 1: "Why Is It Slow?" — The Master Flowchart
 
-Start here when users report slowness or pipeline runs are taking longer than usual. The first step is always [wait statistics](/04-SQL-Server/Performance/wait-stats-analysis).
+Start here when users report slowness or pipeline runs are taking longer than usual. The first step is always [wait statistics](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis).
 
 ```
                             ┌──────────────────────┐
@@ -120,10 +119,10 @@ ORDER BY wait_time_ms DESC;
 |---|---|---|
 | `PAGEIOLATCH_SH / PAGEIOLATCH_EX` | Buffer pool miss — reading from disk because data isn't cached | Add RAM; add covering indexes to reduce scan volume; move to pd-ssd |
 | `WRITELOG` | Transaction log write latency | Move .ldf to dedicated pd-ssd; reduce transaction frequency |
-| `LCK_M_S / LCK_M_X / LCK_M_IX` | Lock contention — queries blocked on each other | Enable [RCSI](/04-SQL-Server/Concurrency/blocking-and-locking#read-committed-snapshot-isolation-rcsi); add indexes; shorten transactions |
+| `LCK_M_S / LCK_M_X / LCK_M_IX` | Lock contention — queries blocked on each other | Enable [RCSI](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking#read-committed-snapshot-isolation-rcsi); add indexes; shorten transactions |
 | `CXPACKET / CXCONSUMER` | Parallel query thread skew | Check MAXDOP setting; set to `cores/2` or use cost threshold 25-50 |
 | `SOS_SCHEDULER_YIELD` | CPU saturation | Find CPU-heavy queries via `dm_exec_query_stats`; add missing indexes |
-| `MEMORY_ALLOCATION_EXT` | Memory pressure / pending grants | Check `max server memory`; check [PLE](/04-SQL-Server/Performance/memory-and-buffer-pool#page-life-expectancy); add RAM |
+| `MEMORY_ALLOCATION_EXT` | Memory pressure / pending grants | Check `max server memory`; check [PLE](https://alp78.github.io/elysium/04-SQL-Server/Performance/memory-and-buffer-pool#page-life-expectancy); add RAM |
 | `PAGELATCH_UP` | TempDB contention on PFS/GAM/SGAM pages | Add TempDB data files = number of CPU cores |
 
 ---
@@ -221,7 +220,7 @@ EXEC xp_readerrorlog 0, 1, N'Login failed';
 
 #### Data integrity errors — duplicate key, constraint violation, type mismatch
 
-- **Duplicate key:** The MERGE or INSERT logic doesn't properly handle existing rows. See [merge-and-upsert](/04-SQL-Server/T-SQL/merge-and-upsert).
+- **Duplicate key:** The MERGE or INSERT logic doesn't properly handle existing rows. See [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/merge-and-upsert).
 - **NULL constraint violation:** Source data has NULLs in a NOT NULL column. Add validation in the bronze loader.
 - **FK violation:** Load parent tables before child tables. Bronze layer should load `stock_dim` before `daily_ohlcv`.
 
@@ -397,7 +396,7 @@ DBCC SHRINKFILE (mydb_log, 1024);  -- shrink to 1 GB minimum
 
 > [!warning] SHRINKFILE Is a Last Resort
 >
-> Shrinking and then letting the log grow again causes log file fragmentation. The correct long-term fix is to take log backups regularly (every 15 minutes for FULL recovery model) to prevent the log from growing in the first place. See [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy).
+> Shrinking and then letting the log grow again causes log file fragmentation. The correct long-term fix is to take log backups regularly (every 15 minutes for FULL recovery model) to prevent the log from growing in the first place. See [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy).
 
 #### du, find, journalctl — OS disk full Linux cleanup
 
@@ -426,11 +425,11 @@ sudo resize2fs /dev/sda1       # ext4
 
 ### Related
 
-- [wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis) — full wait type reference with diagnostic queries
-- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — systematic 11-phase audit covering all dimensions of performance
-- [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — diagnosing and resolving LCK_M_* waits
-- [deadlock-detection-and-prevention](/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) — error 1205 handling, retry logic, prevention patterns
-- [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — comprehensive index selection and creation guide
-- [index-maintenance](/04-SQL-Server/Performance/index-maintenance) — fragmentation analysis and scheduled rebuild/reorganize
-- [memory-and-buffer-pool](/04-SQL-Server/Performance/memory-and-buffer-pool) — PLE, buffer cache hit ratio, and memory clerk analysis
-- [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy) — log backup strategy to prevent .ldf from filling up
+- [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) — full wait type reference with diagnostic queries
+- [performance-audit-playbook](https://alp78.github.io/elysium/04-SQL-Server/Performance/performance-audit-playbook) — systematic 11-phase audit covering all dimensions of performance
+- [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) — diagnosing and resolving LCK_M_* waits
+- [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) — error 1205 handling, retry logic, prevention patterns
+- [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — comprehensive index selection and creation guide
+- [index-maintenance](https://alp78.github.io/elysium/04-SQL-Server/Performance/index-maintenance) — fragmentation analysis and scheduled rebuild/reorganize
+- [memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/Performance/memory-and-buffer-pool) — PLE, buffer cache hit ratio, and memory clerk analysis
+- [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy) — log backup strategy to prevent .ldf from filling up

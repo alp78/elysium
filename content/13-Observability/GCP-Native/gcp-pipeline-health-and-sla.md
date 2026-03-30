@@ -53,14 +53,6 @@ description: >
   using GCP-native tooling. Covers data freshness, quality checks, SLA definition
   and measurement, alerting triage decision trees, on-call procedures, and
   self-healing automation patterns — no third-party APM required.
-related:
-  - "[structured logging](/06-GCP/Logging/cloud-logging)"
-  - "[custom metrics](/06-GCP/Logging/cloud-monitoring-metrics)"
-  - "[alerting policies](/06-GCP/Logging/cloud-monitoring-metrics)"
-  - "[Cloud Run Jobs](/06-GCP/Serverless/cloud-run-jobs-vs-services)"
-  - "[BigQuery cost monitoring](/06-GCP/Cost-Management/gcp-cost-monitoring-and-budgets)"
-  - "[moc-observability](/13-Observability/moc-observability)"
-  - "[observability-strategy-matrix](/13-Observability/observability-strategy-matrix)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -68,7 +60,7 @@ status: complete
 
 # GCP Pipeline Health and SLA Monitoring
 
-Operational runbook for keeping data pipelines healthy using GCP-native tools. Covers the full loop: define what healthy means, measure it continuously, alert when it breaks, respond with a clear procedure, and automate recovery where possible. SLA monitoring is a core practice within the [DataOps discipline](/15-DataOps/dataops-principles-and-practices), ensuring that pipeline reliability is measured and reported systematically rather than reactively.
+Operational runbook for keeping data pipelines healthy using GCP-native tools. Covers the full loop: define what healthy means, measure it continuously, alert when it breaks, respond with a clear procedure, and automate recovery where possible. SLA monitoring is a core practice within the [DataOps discipline](https://alp78.github.io/elysium/15-DataOps/dataops-principles-and-practices), ensuring that pipeline reliability is measured and reported systematically rather than reactively.
 
 ---
 
@@ -1565,11 +1557,11 @@ Use this checklist when onboarding a new data pipeline to the monitoring stack.
 
 ## Related
 
-- [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Error classification, retry strategies, circuit breakers, and alerting thresholds that this monitoring enforces
-- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — Idempotency enables safe retries and reruns
-- [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) — Airflow retry configuration and SLA callbacks
-- [sql-server-pipeline-anti-patterns](/04-SQL-Server/Patterns/sql-server-pipeline-anti-patterns) — Pipeline mistakes that monitoring should detect
-- [data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — How production monitoring complements pre-deployment testing
+- [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Error classification, retry strategies, circuit breakers, and alerting thresholds that this monitoring enforces
+- [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — Idempotency enables safe retries and reruns
+- [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) — Airflow retry configuration and SLA callbacks
+- [sql-server-pipeline-anti-patterns](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-pipeline-anti-patterns) — Pipeline mistakes that monitoring should detect
+- [data-pipeline-testing-strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — How production monitoring complements pre-deployment testing
 - [ ] Scheduled health check job running every 15 minutes
 
 > [!tip] Checklist in practice

@@ -6,7 +6,6 @@ tags: [sql, gcp, sql-server, tsql]
 aliases: [Always On AG, availability group, AOAG, AG, HA, Pacemaker HA, SQL Server HA, failover clustering, SQL Server Linux HA]
 keywords: [Always On Availability Groups, AOAG, availability group, Pacemaker, Corosync, WSFC, failover, synchronous commit, asynchronous commit, RPO, RTO, listener, virtual IP, read-only routing, log send queue, redo queue, seeding, split-brain, STONITH, quorum, mssql-server-ha, certificate authentication, endpoint, Hadr_endpoint, planned failover, forced failover, data loss, sys.dm_hadr_availability_replica_states, sys.dm_hadr_database_replica_states, SQL Server Linux, GCP, ILB, ApplicationIntent=ReadOnly]
 description: "Complete guide to SQL Server Always On Availability Groups on Linux (GCP): architecture, replication modes, step-by-step setup with Pacemaker, essential monitoring DMVs, planned and forced failover operations, read-only routing, and troubleshooting for 5 common issues."
-related: [backup-types-and-strategy, restore-and-recovery, server-configuration, storage-internals, blocking-and-locking]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -609,7 +608,7 @@ WHERE drs.redo_queue_size > 0;
 #### AG sync lag fixes — network, redo bottleneck, log throughput
 - Check secondary disk I/O: `iostat -xz 1` — look for high `%util` or `await`
 - Ensure secondary has enough CPU for redo thread (it's single-threaded per database in most cases)
-- If secondary is also serving read queries, those queries may hold schema locks blocking redo. Use [RCSI](/04-SQL-Server/Concurrency/blocking-and-locking) on the secondary to avoid this
+- If secondary is also serving read queries, those queries may hold schema locks blocking redo. Use [RCSI](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) on the secondary to avoid this
 - Increase secondary VM size if I/O or CPU is the bottleneck
 
 ### Issue 3: Automatic Failover Didn't Happen
@@ -680,8 +679,8 @@ ALTER ENDPOINT [Hadr_endpoint]
 
 ### Related
 
-- [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy) — FULL recovery model required for AGs; backup strategy with AG
-- [restore-and-recovery](/04-SQL-Server/Administration/restore-and-recovery) — recovery point objectives and how AGs interact with restore scenarios
-- [server-configuration](/04-SQL-Server/Administration/server-configuration) — instance settings (MAXDOP, max server memory) that apply to all replicas
-- [blocking-and-locking](/04-SQL-Server/Concurrency/blocking-and-locking) — RCSI on secondary replicas to prevent redo thread blocking
-- [storage-internals](/04-SQL-Server/Storage-and-Indexes/storage-internals) — WAL and log record flow that underlies AG replication
+- [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy) — FULL recovery model required for AGs; backup strategy with AG
+- [restore-and-recovery](https://alp78.github.io/elysium/04-SQL-Server/Administration/restore-and-recovery) — recovery point objectives and how AGs interact with restore scenarios
+- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) — instance settings (MAXDOP, max server memory) that apply to all replicas
+- [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) — RCSI on secondary replicas to prevent redo thread blocking
+- [storage-internals](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/storage-internals) — WAL and log record flow that underlies AG replication

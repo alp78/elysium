@@ -6,7 +6,6 @@ tags: [python, sql, sql-server, tsql, medallion-project]
 aliases: [Gold Layer, Gold Transforms, Silver to Gold, Gold DDL, Scoring Tables, Pre-computed Analytics, Factor Scores]
 keywords: [gold layer, medallion architecture, z-score, zscore by group, factor scores, relative value, momentum, sentiment, quality score, governance score, health flags, index performance, cap-weighted, ROW_NUMBER, window functions, LAG, AVG OVER ROWS, CTE, SMA 30, SMA 90, moving average, composite score, composite rank, scores_daily, scores_quarterly, index_performance, dashboard ready, pre-computed, gold schema]
 description: "Complete SQL and Python patterns for the example gold layer — covers all gold table DDL, z-score computation, financial health flags, governance scoring, cap-weighted index performance, moving average CTEs, and dashboard consumption queries."
-related: [silver-transforms, bronze-layer-loading, medallion-architecture]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -16,15 +15,15 @@ status: complete
 >
 > This page documents the implementation of a specific financial data pipeline
 > (STOXX/yfinance stock index scoring system) on SQL Server. For the general
-> patterns and alternative approaches, see the [moc-sql-server > Patterns](/04-SQL-Server/moc-sql-server#patterns)
+> patterns and alternative approaches, see the [moc-sql-server > Patterns](https://alp78.github.io/elysium/04-SQL-Server/moc-sql-server#patterns)
 > section. For the architectural theory behind bronze/silver/gold layering,
-> see [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture).
+> see [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture).
 
 # Gold Transforms
 
-The gold layer contains pre-computed analytics scores ready for dashboard consumption. No raw data lives here — only derived metrics with z-scores, ranks, health flags, and performance calculations. All gold transforms read from [silver](/04-SQL-Server/Medallion-Project/silver-transforms) and write to gold tables. In dbt, the equivalent role is served by [mart models](/11-dbt/Modeling/dbt-mart-models) that expose business-ready datasets.
+The gold layer contains pre-computed analytics scores ready for dashboard consumption. No raw data lives here — only derived metrics with z-scores, ranks, health flags, and performance calculations. All gold transforms read from [silver](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) and write to gold tables. In dbt, the equivalent role is served by [mart models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-mart-models) that expose business-ready datasets.
 
-**Pipeline flow:** [Silver](/04-SQL-Server/Medallion-Project/silver-transforms) → Python + pandas → Gold tables → Blazor dashboard
+**Pipeline flow:** [Silver](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) → Python + pandas → Gold tables → Blazor dashboard
 
 > [!info] Gold Layer Role
 >
@@ -191,7 +190,7 @@ GO
 
 ## Gold Analytics Logic
 
-Z-score computation and composite scoring happens in Python/pandas (not SQL). The helper functions live in `transforms/_gold_utils.py`. SQL is used for data retrieval and the final write-back. For the pandas equivalents of the window functions used below (groupby, rolling averages, rank), see [05_py_aggregation_reshaping](/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping).
+Z-score computation and composite scoring happens in Python/pandas (not SQL). The helper functions live in `transforms/_gold_utils.py`. SQL is used for data retrieval and the final write-back. For the pandas equivalents of the window functions used below (groupby, rolling averages, rank), see [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping).
 
 ### Z-Score by Group (`_gold_utils.py`)
 
@@ -841,8 +840,8 @@ Then re-run the pipeline to rebuild: `gcloud run jobs execute analytics-pipeline
 
 ### Related Notes
 
-- [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) — upstream: cleaned data that feeds all gold transforms
-- [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) — raw data layer
-- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — architectural context
+- [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) — upstream: cleaned data that feeds all gold transforms
+- [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) — raw data layer
+- [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — architectural context
 - the pipeline steps — pipeline steps 14–16 drive gold transforms
 - common pipeline errors — troubleshooting stuck index_performance and stale scores

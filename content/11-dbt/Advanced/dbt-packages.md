@@ -5,10 +5,6 @@ technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "dbt-utils, dbt-expectations, elementary, codegen, audit-helper, and writing custom packages for financial data pipelines"
-related:
-  - "[dbt-macros-and-jinja](/11-dbt/Advanced/dbt-macros-and-jinja)"
-  - "[dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)"
-  - "[dbt-observability](/11-dbt/Operations/dbt-observability)"
 ---
 
 # dbt: Packages
@@ -544,8 +540,8 @@ packages:
 
 ## Related
 
-- [dbt-macros-and-jinja](/11-dbt/Advanced/dbt-macros-and-jinja)
-- [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)
-- [dbt-observability](/11-dbt/Operations/dbt-observability)
-- [dbt-data-contracts-implementation](/11-dbt/Quality/dbt-data-contracts-implementation)
-- [dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts)
+- [dbt-macros-and-jinja](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-macros-and-jinja)
+- [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework)
+- [dbt-observability](https://alp78.github.io/elysium/11-dbt/Operations/dbt-observability)
+- [dbt-data-contracts-implementation](https://alp78.github.io/elysium/11-dbt/Quality/dbt-data-contracts-implementation)
+- [dbt-core-concepts](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-core-concepts)

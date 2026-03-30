@@ -26,7 +26,7 @@ LLMs are not replacements for SQL transforms or Airflow DAGs. They are specializ
 | **Corporate actions parsing** | Press release text | Extract: action type, ratio, effective date | Structured corporate action record (see [[index-maintenance-and-corporate-actions]]) |
 | **Regulatory filing classification** | SEC/ESMA filing PDF (including [[sfdr-data-requirements|SFDR disclosures]]) | Classify: material change, routine, amendment | Category tag + confidence score |
 | **Anomaly explanation** | "SAP dropped 15% today" + news | Generate explanation for data quality alert | Human-readable anomaly report |
-| **Data quality remediation** | Failed validation rules + data sample | Suggest fix: is this a data error or a real event? | Remediation recommendation (augments [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) checks) |
+| **Data quality remediation** | Failed validation rules + data sample | Suggest fix: is this a data error or a real event? | Remediation recommendation (augments [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) checks) |
 | **Schema documentation** | Table DDL + sample data | Generate column descriptions | Auto-populated data catalog entries |
 | **Query generation** | Natural language question | Generate SQL | Validated SQL query |
 | **Context-aware interpretation** | Gold table + data contract JSON | Interpret values using column metadata | Accurate analysis with correct units and formulas |
@@ -158,7 +158,7 @@ on the same date.
 
 #### Data quality anomaly explanation
 
-When a [quality gate](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) flags an anomaly — a stock dropping 16% in a day, volume spiking 10x — the pipeline needs to decide: is this a real market event or a data error? An LLM cross-references the flagged value against recent news to classify the anomaly and recommend whether to accept or investigate. This replaces the manual triage step where an engineer googles the stock name to check for news.
+When a [quality gate](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) flags an anomaly — a stock dropping 16% in a day, volume spiking 10x — the pipeline needs to decide: is this a real market event or a data error? An LLM cross-references the flagged value against recent news to classify the anomaly and recommend whether to accept or investigate. This replaces the manual triage step where an engineer googles the stock name to check for news.
 
 ```python
 def explain_anomaly(symbol: str, metric: str, value: float, expected_range: tuple,
@@ -194,7 +194,7 @@ Explain in 2-3 sentences. End with a recommendation: ACCEPT (real event) or INVE
 
 ## Validating LLM Outputs in Production
 
-Calling an LLM API and parsing the response is the easy part. The hard part is trusting the output enough to feed it into a financial data pipeline — where a wrong extraction silently corrupts index calculations. The LLM is just another data source, subject to the same [contract-first validation](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#contract-first-validation) rigor as Yahoo Finance or any vendor API.
+Calling an LLM API and parsing the response is the easy part. The hard part is trusting the output enough to feed it into a financial data pipeline — where a wrong extraction silently corrupts index calculations. The LLM is just another data source, subject to the same [contract-first validation](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#contract-first-validation) rigor as Yahoo Finance or any vendor API.
 
 ### Structured Output Validation
 
@@ -268,7 +268,7 @@ else:
 ### Regression Testing LLM Extractions
 
 > [!abstract] What are golden file tests?
-> A curated set of real inputs with verified correct outputs. When a model update or prompt change is deployed, the golden cases run automatically — any deviation from the expected output is caught before production. This is the LLM equivalent of the pipeline's [quality gate](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy).
+> A curated set of real inputs with verified correct outputs. When a model update or prompt change is deployed, the golden cases run automatically — any deviation from the expected output is caught before production. This is the LLM equivalent of the pipeline's [quality gate](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy).
 
 ```python
 GOLDEN_CASES = [
@@ -288,7 +288,7 @@ def test_extraction_matches_golden(case):
 
 ### Prompt Versioning
 
-The prompt IS the logic. When an extraction is disputed, you need to know which prompt version AND which model version produced it — the same [provenance principle](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#data-provenance-and-lineage-tracking) from the pipeline architecture.
+The prompt IS the logic. When an extraction is disputed, you need to know which prompt version AND which model version produced it — the same [provenance principle](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#data-provenance-and-lineage-tracking) from the pipeline architecture.
 
 ```python
 import hashlib
@@ -377,7 +377,7 @@ response = client.messages.create(
 
 ### Idempotent LLM Operations
 
-LLM calls are non-deterministic — the same input can produce different outputs. For pipelines that must be [idempotent](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) (safe to re-run), two patterns:
+LLM calls are non-deterministic — the same input can produce different outputs. For pipelines that must be [idempotent](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) (safe to re-run), two patterns:
 
 > [!info] Two idempotency patterns
 > - **Cache by input hash** — hash the input text, check if an extraction exists for this hash. If yes, return cached. If no, call the LLM and cache. Same input always yields the same output.
@@ -403,7 +403,7 @@ The agent has three options: hallucinate an interpretation, refuse to answer, or
 ### The Solution — Data Contracts with Column Context
 
 > [!abstract] What is a data contract?
-> A **data contract** is a formal agreement between a data producer and its consumers. It specifies the schema (column names and types), SLAs (freshness, availability), and — critically — **column semantics** (what each value means, how it was computed, what NULL represents). See [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts) for the full specification theory.
+> A **data contract** is a formal agreement between a data producer and its consumers. It specifies the schema (column names and types), SLAs (freshness, availability), and — critically — **column semantics** (what each value means, how it was computed, what NULL represents). See [data-contracts](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-contracts) for the full specification theory.
 
 The pipeline exports a JSON Schema file alongside each gold table, enriched with `x-column-context` — structured metadata for every derived column:
 
@@ -449,7 +449,7 @@ The column context is not a one-off export — it's part of a broader **context 
 - These registries are attached to **StageContext** and propagated through the pipeline via `for_next_stage()`
 - At export time, the column contexts are serialized into the JSON Schema contract as `x-column-context`
 
-See [functional-pipeline-architecture > Context Architecture — Semantic Metadata Layer](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#context-architecture--semantic-metadata-layer) for the full architecture and [functional-pipeline-architecture > Data Contracts as Consumer-Facing Output](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#data-contracts-as-consumer-facing-output) for the export mechanism. For the broader theory covering five types of pipeline context, see [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture).
+See [functional-pipeline-architecture > Context Architecture — Semantic Metadata Layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#context-architecture--semantic-metadata-layer) for the full architecture and [functional-pipeline-architecture > Data Contracts as Consumer-Facing Output](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#data-contracts-as-consumer-facing-output) for the export mechanism. For the broader theory covering five types of pipeline context, see [context-and-metadata-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture).
 
 ### AI Agent Workflow with Contracts
 
@@ -499,10 +499,10 @@ response = client.messages.create(
 
 | Component | Python | C# |
 |---|---|---|
-| ColumnContext model | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-column-semantic-metadata-model-with-basemodel) | [cs](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-column-semantic-metadata-model-with-record) |
-| Column registries | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-column-registries-for-each-medallion-layer) | [cs](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#c--define-column-registries-for-each-medallion-layer) |
-| Contract export | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-data-contract-export-function-with-modeljsonschema) | [cs](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#c--define-data-contract-export-function-with-jsonserializer) |
-| Contract interpretation | [py](/02-Programming-Languages/Python/25_py_functional_pipeline#data-contract--column-semantics-as-structured-data) | [cs](/02-Programming-Languages/CSharp/25_cs_functional_pipeline#data-contract--column-semantics-as-structured-data) |
+| ColumnContext model | [py](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-column-semantic-metadata-model-with-basemodel) | [cs](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#record--define-column-semantic-metadata-model-with-record) |
+| Column registries | [py](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-column-registries-for-each-medallion-layer) | [cs](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#c--define-column-registries-for-each-medallion-layer) |
+| Contract export | [py](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--define-data-contract-export-function-with-modeljsonschema) | [cs](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#c--define-data-contract-export-function-with-jsonserializer) |
+| Contract interpretation | [py](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#data-contract--column-semantics-as-structured-data) | [cs](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline#data-contract--column-semantics-as-structured-data) |
 
 ---
 
@@ -727,21 +727,21 @@ def validate_index_weights(weights: pd.Series, index_key: str,
 
 ## Related
 
-- [functional-pipeline-architecture](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture) — The five-principle architecture that produces context-enriched, self-describing data
-- [functional-pipeline-architecture > Context Architecture — Semantic Metadata Layer](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#context-architecture--semantic-metadata-layer) — ColumnContext, BusinessContext, TemporalContext models
-- [functional-pipeline-architecture > Data Contracts as Consumer-Facing Output](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#data-contracts-as-consumer-facing-output) — How `x-column-context` is exported alongside gold tables
-- [functional-pipeline-architecture > Context-Driven Decisions — Real Data Proof](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#context-driven-decisions--real-data-proof) — Zero-volume classification, SMA-20 null accounting, contract interpretation
-- [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture) — The broader metadata theory: five types of pipeline context, bi-temporal modeling
-- [data-contracts](/14-Data-Architecture/Pipeline-Patterns/data-contracts) — Contract specification: schema + SLA + semantics agreements
-- [functional-pipeline-architecture > Contract-First Validation](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#contract-first-validation) — The same Pydantic pattern applied to LLM outputs
-- [functional-pipeline-architecture > Data Provenance and Lineage Tracking](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#data-provenance-and-lineage-tracking) — Extending provenance to cover prompt versioning
-- [data-quality-framework > The Quarantine Pattern](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework#the-quarantine-pattern) — Dead letter queue for failed LLM extractions
-- [data-pipeline-testing-strategy](/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — Where LLM regression tests fit in the testing pyramid
-- [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Error classification and retry for LLM API failures
-- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — Idempotent patterns for non-deterministic LLM operations
-- [[index-maintenance-and-corporate-actions]] — ESG data extraction from PDFs using LLMs
-- [migration-idempotency-backfills](/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) — Data platform patterns that AI tools help build and document
-- [leadership-and-collaboration](/15-DataOps/leadership-and-collaboration) — AI-assisted code review and technical writing at scale
+- [functional-pipeline-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture) — The five-principle architecture that produces context-enriched, self-describing data
+- [functional-pipeline-architecture > Context Architecture — Semantic Metadata Layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#context-architecture--semantic-metadata-layer) — ColumnContext, BusinessContext, TemporalContext models
+- [functional-pipeline-architecture > Data Contracts as Consumer-Facing Output](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#data-contracts-as-consumer-facing-output) — How `x-column-context` is exported alongside gold tables
+- [functional-pipeline-architecture > Context-Driven Decisions — Real Data Proof](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#context-driven-decisions--real-data-proof) — Zero-volume classification, SMA-20 null accounting, contract interpretation
+- [context-and-metadata-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture) — The broader metadata theory: five types of pipeline context, bi-temporal modeling
+- [data-contracts](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-contracts) — Contract specification: schema + SLA + semantics agreements
+- [functional-pipeline-architecture > Contract-First Validation](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#contract-first-validation) — The same Pydantic pattern applied to LLM outputs
+- [functional-pipeline-architecture > Data Provenance and Lineage Tracking](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#data-provenance-and-lineage-tracking) — Extending provenance to cover prompt versioning
+- [data-quality-framework > The Quarantine Pattern](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework#the-quarantine-pattern) — Dead letter queue for failed LLM extractions
+- [data-pipeline-testing-strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) — Where LLM regression tests fit in the testing pyramid
+- [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Error classification and retry for LLM API failures
+- [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — Idempotent patterns for non-deterministic LLM operations
+- [index-maintenance-and-corporate-actions](https://alp78.github.io/elysium/index-maintenance-and-corporate-actions) — ESG data extraction from PDFs using LLMs
+- [migration-idempotency-backfills](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) — Data platform patterns that AI tools help build and document
+- [leadership-and-collaboration](https://alp78.github.io/elysium/15-DataOps/leadership-and-collaboration) — AI-assisted code review and technical writing at scale
 
 ## References
 

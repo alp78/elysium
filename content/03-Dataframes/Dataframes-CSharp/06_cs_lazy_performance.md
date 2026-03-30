@@ -9,13 +9,7 @@ tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - lazy evaluation, query optimization, benchmarks
 keywords: [lazy, collect, scan_csv, scan_parquet, query plan, optimization, streaming, benchmark, performance]
-description: "Polars.NET / C# DataFrames reference 06/10 — Lazy API & Performance (lazy/collect, query plan, benchmarks). Executable examples with cell outputs. See [06_py_lazy_performance](/03-Dataframes/Dataframes-Python/06_py_lazy_performance) for the Python equivalent."
-related:
-  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[06_py_lazy_performance](/03-Dataframes/Dataframes-Python/06_py_lazy_performance)"
-  - "[05_cs_aggregation_reshaping](/03-Dataframes/Dataframes-CSharp/05_cs_aggregation_reshaping)"
-  - "[07_cs_types_interop](/03-Dataframes/Dataframes-CSharp/07_cs_types_interop)"
+description: "Polars.NET / C# DataFrames reference 06/10 — Lazy API & Performance (lazy/collect, query plan, benchmarks). Executable examples with cell outputs. See [06_py_lazy_performance](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/06_py_lazy_performance) for the Python equivalent."
 created: 2026-03-27
 updated: 2026-03-27
 status: complete

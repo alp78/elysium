@@ -40,3 +40,7 @@ title: Elysium
 > [!example]- AI and Prompts
 >
 > - [[moc-ai-and-prompts|AI & Prompts]] — Prompt engineering, LLM pipeline integration, output validation, and financial guardrails
+
+> [!example]- Financial Domain
+>
+> - [[moc-financial-domain|Financial Domain]] — Sector encyclopedias, market analysis, scoring methodology, regulatory compliance, and the ISS-STOXX glossary

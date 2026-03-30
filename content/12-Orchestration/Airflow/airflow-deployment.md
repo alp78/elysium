@@ -52,10 +52,6 @@ keywords:
   - celery executor deployment
   - kubernetes executor deployment
 description: "Step-by-step how-to guide for deploying Apache Airflow: local Docker Compose development setup, self-hosted on GCE, GCP Cloud Composer managed service, AWS MWAA, configuration of airflow.cfg, DAG deployment strategies, secrets management, and monitoring integration."
-related:
-  - airflow-core-concepts
-  - airflow-dag-patterns
-  - airflow-troubleshooting
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -66,13 +62,13 @@ status: complete
 A practical how-to guide covering every major Airflow deployment option — from a local Docker Compose environment for development to managed cloud services for production. Includes configuration reference, DAG deployment strategies, secrets management, monitoring setup, and cost comparisons.
 
 > [!tip] Prerequisites
-> Familiarity with [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) (Executors, Scheduler, Workers, Metadata DB) is assumed. This note focuses on infrastructure — not DAG authoring.
+> Familiarity with [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) (Executors, Scheduler, Workers, Metadata DB) is assumed. This note focuses on infrastructure — not DAG authoring.
 
 ---
 
 ## Option 1: Local Development with Docker Compose
 
-Docker Compose is the fastest way to run a full Airflow environment locally. The official `docker-compose.yaml` from Apache runs all components in containers (see [docker-compose](/09-Docker/docker-compose) for foundational Compose concepts), making it easy to reproduce the production environment on a laptop.
+Docker Compose is the fastest way to run a full Airflow environment locally. The official `docker-compose.yaml` from Apache runs all components in containers (see [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) for foundational Compose concepts), making it easy to reproduce the production environment on a laptop.
 
 ### Step 1: Fetch the Official Docker Compose File
 
@@ -148,7 +144,7 @@ x-airflow-common: &airflow-common
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config      # airflow.cfg overrides
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins    # Custom plugins
     - ./secrets:/opt/secrets:ro                               # GCP service account keys
-  user: "${AIRFLOW_UID:-50000}:0"  # See [file-manipulation](/01-Shell/File-Operations/file-manipulation) for chown/chmod patterns when DAG file permissions cause issues
+  user: "${AIRFLOW_UID:-50000}:0"  # See [file-manipulation](https://alp78.github.io/elysium/01-Shell/File-Operations/file-manipulation) for chown/chmod patterns when DAG file permissions cause issues
   depends_on: &airflow-common-depends-on
     postgres:
       condition: service_healthy
@@ -279,7 +275,7 @@ apache-airflow-providers-postgres==5.10.0
 
 ## Option 2: Self-Hosted on Google Compute Engine (GCE)
 
-For teams that need more control than managed services provide, or want to minimize cloud-managed service costs. VM provisioning can be automated with [terraform-compute](/07-Terraform/GCP-Resources/terraform-compute).
+For teams that need more control than managed services provide, or want to minimize cloud-managed service costs. VM provisioning can be automated with [terraform-compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-compute).
 
 ### Architecture
 
@@ -928,9 +924,9 @@ Approximate monthly costs for running Airflow at small/medium scale (us-central1
 
 ## Related Notes
 
-- [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) — Architecture, Executors, DAG structure
-- [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) — Dynamic DAGs, idempotency, backfill patterns
-- [airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting) — Debugging deployment issues, health checks, log analysis
+- [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) — Architecture, Executors, DAG structure
+- [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) — Dynamic DAGs, idempotency, backfill patterns
+- [airflow-troubleshooting](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-troubleshooting) — Debugging deployment issues, health checks, log analysis
 
 ## References
 
@@ -941,4 +937,4 @@ Approximate monthly costs for running Airflow at small/medium scale (us-central1
 - [GCP Secret Manager backend](https://airflow.apache.org/docs/apache-airflow-providers-google/stable/secrets-backends/google-cloud-secret-manager-backend.html)
 
 ## Related
-- [environment-management-strategy](/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — How Airflow connections and deployment fit into the full dev/staging/prod strategy
+- [environment-management-strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — How Airflow connections and deployment fit into the full dev/staging/prod strategy

@@ -6,7 +6,6 @@ tags: [ai, prompt-engineering]
 aliases: [model differences prompting, Claude vs GPT prompting, model-specific syntax, cross-model prompting, Anthropic prompting, OpenAI prompting, Google Gemini prompting, xAI Grok prompting, Perplexity prompting, model comparison AI]
 keywords: [Claude, GPT-4, ChatGPT, Gemini, Grok, Perplexity, model-specific, XML tags, system prompt, tone, instruction following, safety, refusal, cross-model portability, model comparison, prompt portability, Anthropic, OpenAI, Google, xAI, model strengths, model weaknesses, model quirks]
 description: "Model-specific prompting strategies for Claude (Anthropic), GPT-4/ChatGPT (OpenAI), Gemini (Google), Grok (xAI), and Perplexity. Covers each model's strengths, preferred structural formats, tone response characteristics, and distinctive behavioral traits. Includes cross-model portability tips."
-related: [prompt-architecture, prompt-foundations, applied-prompting, prompt-debugging]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # Model-Specific Prompting: Claude, GPT-4, Gemini, Grok, and Perplexity
 
-Different models respond differently to the same prompt. Understanding these tendencies avoids wasted iterations and lets you write prompts that either target a specific model's strengths or travel well across models. This note documents the behavioral profiles, preferred formats, and distinctive traits of the five major AI models as of 2026. For structural foundations common to all models, see [prompt-foundations](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) and [prompt-architecture](/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture).
+Different models respond differently to the same prompt. Understanding these tendencies avoids wasted iterations and lets you write prompts that either target a specific model's strengths or travel well across models. This note documents the behavioral profiles, preferred formats, and distinctive traits of the five major AI models as of 2026. For structural foundations common to all models, see [prompt-foundations](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) and [prompt-architecture](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture).
 
 ---
 
@@ -195,16 +194,16 @@ A robust prompt should produce acceptable output across multiple models. If it o
 | Interpretation | Do all models interpret ambiguous instructions the same way? |
 | Constraints | Do all models respect every constraint? |
 
-If any dimension fails, the prompt needs tightening in that area — not model-specific tuning. See [testing across models](/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#44-testing-across-models-and-measuring-consistency) for the full protocol.
+If any dimension fails, the prompt needs tightening in that area — not model-specific tuning. See [testing across models](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#44-testing-across-models-and-measuring-consistency) for the full protocol.
 
 ---
 
 ## Related Notes
 
-- [prompt-architecture](/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture) — The 4-layer structural template that works as a base for all models
-- [prompt-foundations](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) — Core axioms that apply across all models
-- [applied-prompting](/16-AI-and-Prompts/Prompt-Engineering/applied-prompting) — Model-specific tips applied to real workflows (research, code, data analysis)
-- [prompt-debugging](/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging) — Diagnosing which part of a cross-model failure is prompt-dependent vs. model-dependent
+- [prompt-architecture](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture) — The 4-layer structural template that works as a base for all models
+- [prompt-foundations](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) — Core axioms that apply across all models
+- [applied-prompting](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/applied-prompting) — Model-specific tips applied to real workflows (research, code, data analysis)
+- [prompt-debugging](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging) — Diagnosing which part of a cross-model failure is prompt-dependent vs. model-dependent
 
 ## References
 

@@ -9,13 +9,7 @@ tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - SQLContext, DuckDB, database, SQL
 keywords: [SQLContext, DuckDB, SQL Server, database, query, connection, ADO.NET, SQLAlchemy]
-description: "Polars.NET / C# DataFrames reference 09/10 — Database & SQL Interface (SQLContext, DuckDB, SQL Server). Executable examples with cell outputs. See [09_py_database_interface](/03-Dataframes/Dataframes-Python/09_py_database_interface) for the Python equivalent."
-related:
-  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[09_py_database_interface](/03-Dataframes/Dataframes-Python/09_py_database_interface)"
-  - "[08_cs_visualization](/03-Dataframes/Dataframes-CSharp/08_cs_visualization)"
-  - "[10_cs_testing_migration](/03-Dataframes/Dataframes-CSharp/10_cs_testing_migration)"
+description: "Polars.NET / C# DataFrames reference 09/10 — Database & SQL Interface (SQLContext, DuckDB, SQL Server). Executable examples with cell outputs. See [09_py_database_interface](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/09_py_database_interface) for the Python equivalent."
 created: 2026-03-27
 updated: 2026-03-27
 status: complete
@@ -452,7 +446,7 @@ result
 
 ## SQL Server
 
-The query patterns used here follow the same SQL fundamentals documented in [sql-fundamentals](/05-DB-Queries/SQL-Server/sql-fundamentals). For C# database access outside of DataFrames — EF Core, Dapper, and ADO.NET patterns — see [16_cs_database](/02-Programming-Languages/CSharp/16_cs_database).
+The query patterns used here follow the same SQL fundamentals documented in [sql-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals). For C# database access outside of DataFrames — EF Core, Dapper, and ADO.NET patterns — see [16_cs_database](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/16_cs_database).
 
 #### Connect + basic query
 

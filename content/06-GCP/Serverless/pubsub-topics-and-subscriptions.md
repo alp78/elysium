@@ -6,7 +6,6 @@ tags: [infrastructure, gcp, pubsub]
 aliases: [Pub/Sub topics, Pub/Sub subscriptions, gcloud pubsub, dead letter queue, push subscription, pull subscription]
 keywords: [pubsub, pub/sub, topic, subscription, pull subscription, push subscription, dead letter, ack deadline, message retention, at-least-once delivery, acknowledgement, gcloud pubsub topics create, gcloud pubsub subscriptions create, decoupling, asynchronous messaging]
 description: "How to create Pub/Sub topics and subscriptions — including pull vs push models, acknowledgement deadlines, message retention, and dead letter queues for failed message handling."
-related: [pubsub-messaging, cloud-run-jobs-vs-services, gcp-projects-and-apis, service-accounts-and-iam, cloud-logging]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -101,11 +100,11 @@ gcloud pubsub subscriptions update pipeline-sub \
 
 ## Related
 
-- [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging) — Publishing messages to topics and consuming from subscriptions
-- [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — Cloud Run Services are common push subscription endpoints
-- [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) — `pubsub.googleapis.com` must be enabled
-- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — `roles/pubsub.publisher` and `roles/pubsub.subscriber` roles
-- [cloud-logging](/06-GCP/Logging/cloud-logging) — Pub/Sub delivery failures appear in Cloud Logging
+- [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) — Publishing messages to topics and consuming from subscriptions
+- [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) — Cloud Run Services are common push subscription endpoints
+- [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) — `pubsub.googleapis.com` must be enabled
+- [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — `roles/pubsub.publisher` and `roles/pubsub.subscriber` roles
+- [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) — Pub/Sub delivery failures appear in Cloud Logging
 
 ## References
 

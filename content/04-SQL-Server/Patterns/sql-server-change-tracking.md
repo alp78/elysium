@@ -15,7 +15,6 @@ tags:
 aliases: [Change Tracking, SCD2 SQL Server, Temporal Tables, CDC, Change Data Capture, Slowly Changing Dimensions]
 keywords: [change tracking, SCD Type 2, temporal tables, SYSTEM_VERSIONING, CDC, change data capture, change tracking CT, triggers, dbt snapshots, valid_from, valid_to, is_current, filtered unique index, history table, FOR SYSTEM_TIME, audit trail, data history, slowly changing dimension]
 description: "Every method SQL Server offers for tracking data changes over time — manual SCD2, temporal tables, CDC, Change Tracking, dbt snapshots — with a decision matrix and side-by-side comparisons."
-related: [data-warehouse-architecture, dbt-snapshots-and-scd, merge-and-upsert, silver-transforms, race-conditions]
 created: 2026-03-29
 updated: 2026-03-29
 status: complete
@@ -23,7 +22,7 @@ status: complete
 
 # SQL Server Change Tracking — Capturing Data History
 
-"How do I know what changed?" is the most common question in data engineering. SQL Server has five built-in answers and two external ones. Most teams use the wrong one. For SCD type definitions (Types 1-6), see [data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture). For dbt's declarative approach, see [dbt-snapshots-and-scd](/11-dbt/Advanced/dbt-snapshots-and-scd).
+"How do I know what changed?" is the most common question in data engineering. SQL Server has five built-in answers and two external ones. Most teams use the wrong one. For SCD type definitions (Types 1-6), see [data-warehouse-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-warehouse-architecture). For dbt's declarative approach, see [dbt-snapshots-and-scd](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-snapshots-and-scd).
 
 ---
 
@@ -302,7 +301,7 @@ FROM cdc.fn_cdc_get_all_changes_bronze_signals_daily(
 >
 > CDC is not "set and forget." The log reader agent must be running, change tables grow unbounded without cleanup, and schema changes can break the capture instance.
 
-- **Log reader agent must be running:** CDC depends on SQL Server Agent (see [sql-server-agent-jobs](/04-SQL-Server/Administration/sql-server-agent-jobs) for Agent on Linux). If the agent stops, changes accumulate in the transaction log, potentially filling it
+- **Log reader agent must be running:** CDC depends on SQL Server Agent (see [sql-server-agent-jobs](https://alp78.github.io/elysium/04-SQL-Server/Administration/sql-server-agent-jobs) for Agent on Linux). If the agent stops, changes accumulate in the transaction log, potentially filling it
 - **Cleanup:** CDC change tables grow until you configure retention: `EXEC sys.sp_cdc_change_job @job_type = 'cleanup', @retention = 4320;` (minutes)
 - **Schema changes break CDC:** adding or dropping a column requires disabling and re-enabling CDC on that table — the capture instance must match the current schema
 
@@ -310,7 +309,7 @@ FROM cdc.fn_cdc_get_all_changes_bronze_signals_daily(
 
 > [!info] SQL Server CDC to Pub/Sub pipeline
 >
-> In the broader ecosystem, teams use Kafka/Debezium for CDC streaming. In this GCP stack, the equivalent is Pub/Sub. This Python script polls CDC change tables and publishes each change as a Pub/Sub message. Run it as an [Airflow task](/12-Orchestration/Airflow/airflow-dag-patterns) or a Cloud Run job on a schedule (e.g., every 5 minutes).
+> In the broader ecosystem, teams use Kafka/Debezium for CDC streaming. In this GCP stack, the equivalent is Pub/Sub. This Python script polls CDC change tables and publishes each change as a Pub/Sub message. Run it as an [Airflow task](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) or a Cloud Run job on a schedule (e.g., every 5 minutes).
 
 ```python
 import pyodbc, json
@@ -440,7 +439,7 @@ Declarative SCD2: dbt handles the close/insert logic automatically. Two detectio
 
 > [!info] dbt Snapshot
 >
-> dbt snapshots generate `dbt_valid_from`, `dbt_valid_to`, and `dbt_scd_id` columns automatically. Choose `timestamp` strategy when the source has a reliable `updated_at` column; use `check` strategy to compare specific column values. See [dbt-snapshots-and-scd](/11-dbt/Advanced/dbt-snapshots-and-scd) for full syntax and configuration.
+> dbt snapshots generate `dbt_valid_from`, `dbt_valid_to`, and `dbt_scd_id` columns automatically. Choose `timestamp` strategy when the source has a reliable `updated_at` column; use `check` strategy to compare specific column values. See [dbt-snapshots-and-scd](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-snapshots-and-scd) for full syntax and configuration.
 
 - **Timestamp strategy:** detects changes when `updated_at` advances — fast but misses changes where only non-timestamp columns change
 - **Check strategy:** compares listed columns on every run — catches all changes but slower (full table scan)
@@ -488,4 +487,4 @@ The history table grows at least as fast as the rate of changes to the source ta
 > 4. Changed stocks: `UPDATE SET is_current = 0, valid_to = SYSUTCDATETIME()` → `INSERT` new version
 > 5. Filtered unique index `UX_silver_index_dim_current` enforces one active row per stock
 >
-> See [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) for the full detect/close/insert implementation.
+> See [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) for the full detect/close/insert implementation.

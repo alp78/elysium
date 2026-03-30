@@ -6,7 +6,6 @@ tags: [monitoring, observability, sql, datadog, gcp]
 aliases: [SQL Server Log Collection, Datadog SQL Logs, SQL Server Errorlog Datadog]
 keywords: [logs.yaml, errorlog, "/var/opt/mssql/log/errorlog", start_position beginning, Bytes Read 0, log collection, logs_enabled, dd-agent mssql group, source sqlserver, failed login, CHECKPOINT, log tailing, agent tails, "host:sql-vm", "service:sql-server", log explorer]
 description: "How to configure Datadog Agent to collect SQL Server errorlog entries from the example SQL VM — including the logs.yaml setup, permission fix, and how to test that logs are flowing."
-related: [datadog-architecture-overview, datadog-agent-sql-vm, datadog-custom-queries, data-pipeline-common-errors]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -114,13 +113,13 @@ SQL Server **metrics** (connections, buffer pool, waits) are collected by the `s
 - Metrics: `/etc/datadog-agent/conf.d/sqlserver.d/conf.yaml`
 - Logs: `/etc/datadog-agent/conf.d/sqlserver.d/logs.yaml`
 
-Both must be configured separately. See [datadog-agent-sql-vm](/13-Observability/Datadog/datadog-agent-sql-vm) for the metrics integration config and [datadog-custom-queries](/13-Observability/Datadog/datadog-custom-queries) for custom SQL queries.
+Both must be configured separately. See [datadog-agent-sql-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-sql-vm) for the metrics integration config and [datadog-custom-queries](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-custom-queries) for custom SQL queries.
 
 ---
 
 ## Related Notes
 
-- [datadog-agent-sql-vm](/13-Observability/Datadog/datadog-agent-sql-vm) — full SQL VM agent setup including metrics integration
-- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — observability architecture overview
-- [datadog-custom-queries](/13-Observability/Datadog/datadog-custom-queries) — custom SQL queries for connections and deadlocks
+- [datadog-agent-sql-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-sql-vm) — full SQL VM agent setup including metrics integration
+- [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) — observability architecture overview
+- [datadog-custom-queries](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-custom-queries) — custom SQL queries for connections and deadlocks
 - common pipeline errors — troubleshooting "no SQL Server logs in Log Explorer"

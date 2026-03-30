@@ -64,11 +64,6 @@ keywords:
   - httpx
   - FastAPI
 description: Master decision framework comparing all API and data exchange protocols relevant to data engineering — REST, gRPC, GraphQL, WebSocket, SSE, MQTT, AMQP, Webhooks, SFTP, FIX, and GCP Pub/Sub. Includes working Python code examples, a protocol comparison matrix, and decision tables by use case and constraint.
-related:
-  - "[rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption)"
-  - "[grpc-for-data-pipelines](/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines)"
-  - "[graphql-for-data-access](/14-Data-Architecture/APIs-and-Protocols/graphql-for-data-access)"
-  - "[moc-data-architecture](/14-Data-Architecture/moc-data-architecture)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -99,7 +94,7 @@ These protocols follow the classic pattern: client sends a request, server sends
 
 ### REST (HTTP/JSON)
 
-REST is the lingua franca of the internet. Almost every external API a data engineer will consume — Bloomberg, Refinitiv Eikon, Alpha Vantage, Stripe, Salesforce, Snowflake, GitHub — speaks REST over HTTP/1.1 with JSON payloads. The stateless request-response model maps cleanly to CRUD operations, and the tooling ecosystem is unmatched: OpenAPI specs, Postman, curl, every HTTP library in every language. For a deeper treatment of authentication patterns, pagination strategies, rate-limit handling, and idiomatic Python consumption patterns, see [rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption).
+REST is the lingua franca of the internet. Almost every external API a data engineer will consume — Bloomberg, Refinitiv Eikon, Alpha Vantage, Stripe, Salesforce, Snowflake, GitHub — speaks REST over HTTP/1.1 with JSON payloads. The stateless request-response model maps cleanly to CRUD operations, and the tooling ecosystem is unmatched: OpenAPI specs, Postman, curl, every HTTP library in every language. For a deeper treatment of authentication patterns, pagination strategies, rate-limit handling, and idiomatic Python consumption patterns, see [rest-api-design-and-consumption](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption).
 
 **Sweet spot:** public and partner APIs, CRUD-style data access, any situation where interoperability and broad tooling support matter more than raw performance.
 
@@ -107,7 +102,7 @@ REST is the lingua franca of the internet. Almost every external API a data engi
 
 ### gRPC (HTTP/2 + Protobuf)
 
-gRPC is Google's open-source RPC framework built on HTTP/2 and Protocol Buffers. Where REST sends human-readable JSON over a new connection per request, gRPC sends binary-encoded Protobuf messages over a single multiplexed HTTP/2 connection. The result is typically 5–10x lower payload size and significantly higher throughput for high-frequency internal service calls. gRPC also defines four communication patterns in one framework: unary (request-response), server-streaming, client-streaming, and bidirectional streaming — making it uniquely suited for pipeline stages that need to stream large result sets. Schema contracts are enforced via `.proto` files, which serve as the single source of truth across every language that generates stubs from them. For service definition patterns, Python stub generation, streaming implementation, and GCP Cloud Run deployment, see [grpc-for-data-pipelines](/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines).
+gRPC is Google's open-source RPC framework built on HTTP/2 and Protocol Buffers. Where REST sends human-readable JSON over a new connection per request, gRPC sends binary-encoded Protobuf messages over a single multiplexed HTTP/2 connection. The result is typically 5–10x lower payload size and significantly higher throughput for high-frequency internal service calls. gRPC also defines four communication patterns in one framework: unary (request-response), server-streaming, client-streaming, and bidirectional streaming — making it uniquely suited for pipeline stages that need to stream large result sets. Schema contracts are enforced via `.proto` files, which serve as the single source of truth across every language that generates stubs from them. For service definition patterns, Python stub generation, streaming implementation, and GCP Cloud Run deployment, see [grpc-for-data-pipelines](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines).
 
 **Sweet spot:** high-throughput internal microservices, streaming pipeline stages, any service where schema enforcement and low latency matter more than browser compatibility.
 
@@ -115,7 +110,7 @@ gRPC is Google's open-source RPC framework built on HTTP/2 and Protocol Buffers.
 
 ### GraphQL
 
-GraphQL is a query language for APIs, developed by Facebook and now widely adopted for data-serving layers. Rather than defining fixed endpoints that return fixed shapes, GraphQL exposes a single endpoint backed by a strongly-typed schema written in Schema Definition Language (SDL). Clients specify exactly the fields they need, eliminating over-fetching (getting too much data) and under-fetching (needing multiple round trips). For data engineering teams serving analytics consumers with divergent needs — one team wants trades with position data, another wants only OHLCV — GraphQL lets each team write their own query without requiring server-side endpoint proliferation. The introspection feature means the schema is self-documenting and explorable via tools like GraphiQL. For schema design, resolver patterns, and Python server implementation, see [graphql-for-data-access](/14-Data-Architecture/APIs-and-Protocols/graphql-for-data-access).
+GraphQL is a query language for APIs, developed by Facebook and now widely adopted for data-serving layers. Rather than defining fixed endpoints that return fixed shapes, GraphQL exposes a single endpoint backed by a strongly-typed schema written in Schema Definition Language (SDL). Clients specify exactly the fields they need, eliminating over-fetching (getting too much data) and under-fetching (needing multiple round trips). For data engineering teams serving analytics consumers with divergent needs — one team wants trades with position data, another wants only OHLCV — GraphQL lets each team write their own query without requiring server-side endpoint proliferation. The introspection feature means the schema is self-documenting and explorable via tools like GraphiQL. For schema design, resolver patterns, and Python server implementation, see [graphql-for-data-access](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/graphql-for-data-access).
 
 **Sweet spot:** data-serving layers with multiple heterogeneous consumers, situations where over-fetching is costly, self-documenting APIs for internal data products.
 
@@ -870,7 +865,7 @@ Data Platform Services
 
 ## See Also
 
-- [rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) — REST deep dive: pagination, rate limiting, retry patterns, Python clients
-- [grpc-for-data-pipelines](/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines) — gRPC deep dive: .proto files, streaming, Python stubs, Cloud Run deployment
-- [graphql-for-data-access](/14-Data-Architecture/APIs-and-Protocols/graphql-for-data-access) — GraphQL deep dive: schema design, resolvers, Python server, consumer patterns
-- [moc-data-architecture](/14-Data-Architecture/moc-data-architecture) — Full data architecture index
+- [rest-api-design-and-consumption](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) — REST deep dive: pagination, rate limiting, retry patterns, Python clients
+- [grpc-for-data-pipelines](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines) — gRPC deep dive: .proto files, streaming, Python stubs, Cloud Run deployment
+- [graphql-for-data-access](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/graphql-for-data-access) — GraphQL deep dive: schema design, resolvers, Python server, consumer patterns
+- [moc-data-architecture](https://alp78.github.io/elysium/14-Data-Architecture/moc-data-architecture) — Full data architecture index

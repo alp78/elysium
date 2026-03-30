@@ -6,11 +6,6 @@ tags: [docker]
 aliases: [container lifecycle, docker ps, docker logs, docker exec, docker stats, docker inspect, docker run, container management, docker commands, container operations]
 keywords: [docker, container, lifecycle, run, ps, start, stop, restart, pause, unpause, kill, wait, logs, exec, attach, stats, inspect, diff, top, port, rm, prune, exit code, OOM, crash loop, debugging, container management, detached, interactive, volume mount, port mapping, environment variables, restart policy, resource limits, network, env-file, SIGTERM, SIGKILL, graceful shutdown, docker cp, go template, filter, format]
 description: "Comprehensive Docker container lifecycle reference — running containers with all key flags, listing and filtering, lifecycle management (start/stop/kill/pause), logs, exec, file copying, inspection, debugging, and cleanup. Covers everything a data engineer needs to manage containers day-to-day."
-related:
-  - "[docker-compose](/09-Docker/docker-compose)"
-  - "[image-management](/09-Docker/image-management)"
-  - "[docker-cheat-sheet](/09-Docker/docker-cheat-sheet)"
-  - "[managing-services](/01-Shell/Process-Management/managing-services)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,7 +13,7 @@ status: complete
 
 # Container Lifecycle
 
-Docker containers are the runtime environment for pipeline stages, databases, and monitoring agents. Each step — loader, transform, scorer — runs in a container with its own dependencies, isolated from the host system. This note covers every container operation you need as a data engineer, from launching a one-off job to debugging a crash loop in production. For a condensed quick-reference of all Docker commands, see [docker-cheat-sheet](/09-Docker/docker-cheat-sheet).
+Docker containers are the runtime environment for pipeline stages, databases, and monitoring agents. Each step — loader, transform, scorer — runs in a container with its own dependencies, isolated from the host system. This note covers every container operation you need as a data engineer, from launching a one-off job to debugging a crash loop in production. For a condensed quick-reference of all Docker commands, see [docker-cheat-sheet](https://alp78.github.io/elysium/09-Docker/docker-cheat-sheet).
 
 ---
 
@@ -68,7 +63,7 @@ docker run -d --name postgres-db -p 127.0.0.1:5432:5432 postgres:16
 
 #### docker run -v host:container — volume mounts for data persistence
 
-When bind-mounting host directories, the container process must have permission to read and write the mounted path. In [Airflow containers](/12-Orchestration/Airflow/airflow-deployment), the default user (`50000:0`) often requires `chown` adjustments on the host side, similar to the [file permission patterns](/01-Shell/File-Operations/file-manipulation) used in shell administration.
+When bind-mounting host directories, the container process must have permission to read and write the mounted path. In [Airflow containers](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment), the default user (`50000:0`) often requires `chown` adjustments on the host side, similar to the [file permission patterns](https://alp78.github.io/elysium/01-Shell/File-Operations/file-manipulation) used in shell administration.
 
 ```bash
 # -v HOST_PATH:CONTAINER_PATH
@@ -337,7 +332,7 @@ docker ps --filter name=airflow -q | xargs docker restart
 
 ```bash
 # docker stop: sends SIGTERM, waits for the process to exit cleanly, then SIGKILL
-# This is the same signal sequence used by the kernel for regular processes (see [killing-processes](/01-Shell/Process-Management/killing-processes))
+# This is the same signal sequence used by the kernel for regular processes (see [killing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/killing-processes))
 # — gives the app time to flush buffers, close DB connections, finish in-flight requests
 docker stop airflow-scheduler         # default 10-second timeout
 
@@ -431,7 +426,7 @@ docker logs -f airflow-scheduler 2>&1 | grep --line-buffered "ERROR|CRITICAL"
 
 ```bash
 # There is no built-in multi-container log follow in vanilla Docker.
-# Use docker-compose logs for compose stacks (see [docker-compose](/09-Docker/docker-compose))
+# Use docker-compose logs for compose stacks (see [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose))
 docker compose logs -f airflow-scheduler airflow-worker
 
 # For non-compose setups, run multiple follows in parallel with:
@@ -732,7 +727,7 @@ docker inspect <container> --format='{{json .Mounts}}' | python3 -m json.tool
 
 > [!tip] Decoding Exit Codes
 >
-> Exit codes 128+N mean the process was killed by Unix signal N. So 128+9 (SIGKILL) = 137, and 128+15 (SIGTERM) = 143. These are the same [Unix signals](/01-Shell/Process-Management/killing-processes) you send with `kill` on a regular process. When you see 137, your first question should be: OOM kill or explicit `docker kill`? Check `docker inspect <container> --format='{{.State.OOMKilled}}'` — if `true`, it was OOM.
+> Exit codes 128+N mean the process was killed by Unix signal N. So 128+9 (SIGKILL) = 137, and 128+15 (SIGTERM) = 143. These are the same [Unix signals](https://alp78.github.io/elysium/01-Shell/Process-Management/killing-processes) you send with `kill` on a regular process. When you see 137, your first question should be: OOM kill or explicit `docker kill`? Check `docker inspect <container> --format='{{.State.OOMKilled}}'` — if `true`, it was OOM.
 
 ```bash
 # Definitive OOM check — returns true or false
@@ -743,7 +738,7 @@ docker inspect <container> --format='{{.State.OOMKilled}}'
 
 ## Related
 
-- [docker-compose](/09-Docker/docker-compose) — Orchestrating multi-container stacks
-- [image-management](/09-Docker/image-management) — Building, tagging, and pushing images
-- [docker-cheat-sheet](/09-Docker/docker-cheat-sheet) — Quick reference for all Docker commands
-- [managing-services](/01-Shell/Process-Management/managing-services) — Managing long-running service containers
+- [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) — Orchestrating multi-container stacks
+- [image-management](https://alp78.github.io/elysium/09-Docker/image-management) — Building, tagging, and pushing images
+- [docker-cheat-sheet](https://alp78.github.io/elysium/09-Docker/docker-cheat-sheet) — Quick reference for all Docker commands
+- [managing-services](https://alp78.github.io/elysium/01-Shell/Process-Management/managing-services) — Managing long-running service containers

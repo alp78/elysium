@@ -6,16 +6,6 @@ tags: [data-architecture, architecture, lakehouse, python, bigquery, gcp]
 aliases: [lakehouse, data lakehouse, lake house, Delta Lake, Apache Iceberg, Apache Hudi, BigLake, Unity Catalog, Tabular, Databricks Lakehouse, lakehouse architecture]
 keywords: [lakehouse, data lakehouse, lake house, data lake, data warehouse, ACID transactions, object storage, schema enforcement, time travel, Delta Lake, Apache Iceberg, Apache Hudi, open table format, medallion architecture, bronze silver gold, BigLake, Unity Catalog, Tabular, Databricks, Snowflake, BigQuery, Spark, Trino, Presto, DuckDB, governance, schema evolution, partition pruning, query engine, Parquet, GCS, S3, cost optimization, lakehouse vs warehouse, lakehouse vs data lake]
 description: "The lakehouse architecture combines the low-cost flexible storage of a data lake with the transactional guarantees and governance of a data warehouse, enabled by open table formats (Delta Lake, Apache Iceberg, Apache Hudi) that add ACID transactions, time travel, and schema enforcement directly on object storage."
-related:
-  - "[open-table-formats](/14-Data-Architecture/Architectures/open-table-formats)"
-  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
-  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
-  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
-  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
-  - "[serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats)"
-  - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
-  - "[streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture)"
-  - "[data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -23,7 +13,7 @@ status: complete
 
 # Lakehouse Architecture
 
-The lakehouse is a data platform architecture that collapses the traditional two-tier stack — a cheap data lake for raw storage and an expensive data warehouse for governed analytics — into a single, unified storage layer. It achieves this by adding a metadata layer (an [open table format](/14-Data-Architecture/Architectures/open-table-formats)) on top of object-storage files (Parquet on GCS, S3, or ADLS) that provides ACID transactions, schema enforcement, time travel, and fine-grained governance. The result is one copy of data, one compute model, and one governance layer that serves everything from raw ingestion to BI dashboards to ML training sets.
+The lakehouse is a data platform architecture that collapses the traditional two-tier stack — a cheap data lake for raw storage and an expensive data warehouse for governed analytics — into a single, unified storage layer. It achieves this by adding a metadata layer (an [open table format](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/open-table-formats)) on top of object-storage files (Parquet on GCS, S3, or ADLS) that provides ACID transactions, schema enforcement, time travel, and fine-grained governance. The result is one copy of data, one compute model, and one governance layer that serves everything from raw ingestion to BI dashboards to ML training sets.
 
 ---
 
@@ -145,7 +135,7 @@ Most production lakehouses use Copy-on-Write for dimension tables (slow-changing
 
 ### Open Table Formats Comparison
 
-For a deep technical dive into each format's metadata model, see [open-table-formats](/14-Data-Architecture/Architectures/open-table-formats). The summary comparison:
+For a deep technical dive into each format's metadata model, see [open-table-formats](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/open-table-formats). The summary comparison:
 
 | Dimension | Delta Lake | Apache Iceberg | Apache Hudi |
 |---|---|---|---|
@@ -167,7 +157,7 @@ For a deep technical dive into each format's metadata model, see [open-table-for
 
 ### Medallion Architecture as the Lakehouse Pattern
 
-The [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) (bronze / silver / gold) is the canonical organizational pattern for data within a lakehouse. Each layer is a set of lakehouse tables (Iceberg or Delta) in object storage, with increasing quality and decreasing granularity:
+The [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) (bronze / silver / gold) is the canonical organizational pattern for data within a lakehouse. Each layer is a set of lakehouse tables (Iceberg or Delta) in object storage, with increasing quality and decreasing granularity:
 
 ```
 Raw Sources                Bronze Layer             Silver Layer          Gold Layer
@@ -181,7 +171,7 @@ Key differences from a purely SQL-Server-based medallion implementation:
 - **Silver tables** use Copy-on-Write — quality transformations are batch, reads are frequent.
 - **Gold tables** may be materialized views in BigQuery for fast BI access, pointing at the Iceberg silver tables via BigLake.
 
-The [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) can manage the silver → gold transformations using incremental models against Iceberg tables via Spark or Trino.
+The [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) can manage the silver → gold transformations using incremental models against Iceberg tables via Spark or Trino.
 
 ---
 
@@ -313,7 +303,7 @@ ORDER BY event_date;
 - Your regulatory environment requires long-retention data with point-in-time query capability.
 - You are building a multi-tenant data platform where different teams use different tools.
 - You are managing semi-structured or unstructured data alongside structured.
-- You need to implement [data mesh](/14-Data-Architecture/Architectures/data-mesh-architecture) — domain teams owning their data products in open formats that any consumer can read.
+- You need to implement [data mesh](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-mesh-architecture) — domain teams owning their data products in open formats that any consumer can read.
 
 #### Do not choose the lakehouse when
 
@@ -411,7 +401,7 @@ GROUP BY event_date, product_category
 ORDER BY event_date, total_revenue DESC;
 ```
 
-For BigQuery query optimization on external tables, see [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization).
+For BigQuery query optimization on external tables, see [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization).
 
 ---
 
@@ -458,13 +448,13 @@ CALL glue.system.remove_orphan_files(
 ```
 
 > [!tip] Automate Maintenance with Airflow
-> Schedule Iceberg maintenance jobs as daily [Airflow DAGs](/12-Orchestration/Airflow/airflow-dag-patterns). Run compaction after the nightly batch load, expire snapshots weekly, and remove orphans monthly. Failing to do this will progressively degrade query performance and inflate storage costs.
+> Schedule Iceberg maintenance jobs as daily [Airflow DAGs](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns). Run compaction after the nightly batch load, expire snapshots weekly, and remove orphans monthly. Failing to do this will progressively degrade query performance and inflate storage costs.
 
 ---
 
 ### Connection to Streaming Architecture
 
-The lakehouse is primarily a batch analytics architecture, but it increasingly handles streaming workloads. For streaming pipelines writing to lakehouse tables, see [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture):
+The lakehouse is primarily a batch analytics architecture, but it increasingly handles streaming workloads. For streaming pipelines writing to lakehouse tables, see [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture):
 
 - Apache Flink writes to Iceberg tables with exactly-once semantics via the Iceberg Flink sink.
 - Spark Structured Streaming writes to Delta Lake with micro-batch or continuous processing.
@@ -474,15 +464,15 @@ The lakehouse is primarily a batch analytics architecture, but it increasingly h
 
 ## Related Notes
 
-- [open-table-formats](/14-Data-Architecture/Architectures/open-table-formats) — deep technical dive into Iceberg, Delta Lake, Hudi metadata models
-- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — bronze/silver/gold organizational pattern within a lakehouse
-- [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — SQL transformation on lakehouse tables
-- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — ensuring safe re-runs in lakehouse pipelines
-- [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) — streaming ingestion into lakehouse tables
-- [data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture) — organizational pattern that uses lakehouse as the technical foundation
-- [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) — BigQuery optimization when querying BigLake tables
-- [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Parquet, ORC, Avro — the file formats underneath the table formats
-- [five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering) — reliability, observability, efficiency, security, operability
+- [open-table-formats](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/open-table-formats) — deep technical dive into Iceberg, Delta Lake, Hudi metadata models
+- [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — bronze/silver/gold organizational pattern within a lakehouse
+- [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — SQL transformation on lakehouse tables
+- [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — ensuring safe re-runs in lakehouse pipelines
+- [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture) — streaming ingestion into lakehouse tables
+- [data-mesh-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-mesh-architecture) — organizational pattern that uses lakehouse as the technical foundation
+- [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) — BigQuery optimization when querying BigLake tables
+- [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Parquet, ORC, Avro — the file formats underneath the table formats
+- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) — reliability, observability, efficiency, security, operability
 
 ## References
 

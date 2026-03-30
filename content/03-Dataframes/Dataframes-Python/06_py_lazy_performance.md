@@ -10,12 +10,6 @@ aliases:
   - lazy evaluation, query plan, collect, benchmarks
 keywords: [lazy, collect, scan_parquet, scan_csv, query plan, optimization, predicate pushdown, projection pushdown, benchmark]
 description: "Pandas/Polars DataFrame reference 06/10 — Lazy API & Performance (lazy/collect, query plan, benchmarks). Side-by-side executable examples with cell outputs."
-related:
-  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
-  - "[06_cs_lazy_performance](/03-Dataframes/Dataframes-CSharp/06_cs_lazy_performance)"
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[05_py_aggregation_reshaping](/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping)"
-  - "[07_py_types_interop](/03-Dataframes/Dataframes-Python/07_py_types_interop)"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -74,7 +68,7 @@ print(f"Type: {type(df)}, Shape: {df.shape}")
 
 ## Lazy: Deferred
 
-The lazy-vs-eager distinction mirrors concepts elsewhere in the pipeline: dbt's ephemeral models defer computation in the same way a LazyFrame does, while `dbt run` materializes results like `.collect()` — see [dbt-materializations](/11-dbt/Modeling/dbt-materializations). BigQuery's query planner applies similar predicate pushdown and projection pruning, covered in [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization).
+The lazy-vs-eager distinction mirrors concepts elsewhere in the pipeline: dbt's ephemeral models defer computation in the same way a LazyFrame does, while `dbt run` materializes results like `.collect()` — see [dbt-materializations](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-materializations). BigQuery's query planner applies similar predicate pushdown and projection pruning, covered in [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization).
 
 
 ```python

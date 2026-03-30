@@ -6,7 +6,6 @@ tags: [observability, infrastructure, gcp, monitoring]
 aliases: [Cloud Monitoring, GCP metrics, time series, gcloud monitoring, VM CPU metrics, Cloud Monitoring metrics descriptors, BigQuery metrics]
 keywords: [cloud monitoring, metrics, time series, gcloud monitoring time-series list, metrics descriptors, CPU utilization, disk read, disk write, network, cloud run job completions, pubsub backlog, bigquery slot usage, capacity planning, right-sizing, monitoring time-series, interval-start-time, doubleValue]
 description: "How to query Cloud Monitoring time-series metrics using the gcloud CLI — listing available metric types and reading historical metric data for capacity planning, right-sizing, and pipeline health monitoring."
-related: [cloud-logging, vm-lifecycle, cloud-run-jobs-vs-services, pubsub-messaging, dataset-and-table-management]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -51,7 +50,7 @@ gcloud monitoring time-series list \
 > [!tip] Metrics for Right-Sizing
 >
 > Use Metrics for Right-Sizing Decisions.
-> Pull CPU utilization data before any VM resize decision. If the top 5 data points (peak values from the last 7 days) are all below 0.30 (30%), the VM is over-provisioned. The `sort -n | tail -5` pipeline extracts the highest recorded values, which represent true peak load. See [vm-lifecycle](/06-GCP/Compute/vm-lifecycle) for the full right-sizing workflow.
+> Pull CPU utilization data before any VM resize decision. If the top 5 data points (peak values from the last 7 days) are all below 0.30 (30%), the VM is over-provisioned. The `sort -n | tail -5` pipeline extracts the highest recorded values, which represent true peak load. See [vm-lifecycle](https://alp78.github.io/elysium/06-GCP/Compute/vm-lifecycle) for the full right-sizing workflow.
 
 ### Key Cloud Monitoring Metrics for Data Engineers
 
@@ -71,7 +70,7 @@ gcloud monitoring time-series list \
 | Signal type | Tool | Best for |
 |---|---|---|
 | Metrics (numeric, aggregated) | Cloud Monitoring | Trends, capacity planning, alerting thresholds, right-sizing |
-| Logs (text, events) | [Cloud Logging](/06-GCP/Logging/cloud-logging) | Root cause analysis, debugging failures, finding specific errors |
+| Logs (text, events) | [Cloud Logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) | Root cause analysis, debugging failures, finding specific errors |
 
 Metrics tell you *how much* and *when* — they are aggregated numbers over time. Logs tell you *what happened* — they are discrete events with full context. Senior engineers use both together: metrics surface anomalies, logs explain them.
 
@@ -104,11 +103,11 @@ While `gcloud monitoring` CLI commands are used for ad-hoc queries, alerting pol
 
 ## Related
 
-- [cloud-logging](/06-GCP/Logging/cloud-logging) — Logs complement metrics for full observability; use both during incident response
-- [vm-lifecycle](/06-GCP/Compute/vm-lifecycle) — Metric-driven right-sizing decisions for Compute Engine VMs
-- [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — Monitor `run.googleapis.com/job/completed_task_attempt_count` for pipeline success rates
-- [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging) — `pubsub.googleapis.com/subscription/num_undelivered_messages` detects pipeline lag
-- [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — BigQuery slot utilization metrics for capacity planning
+- [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) — Logs complement metrics for full observability; use both during incident response
+- [vm-lifecycle](https://alp78.github.io/elysium/06-GCP/Compute/vm-lifecycle) — Metric-driven right-sizing decisions for Compute Engine VMs
+- [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) — Monitor `run.googleapis.com/job/completed_task_attempt_count` for pipeline success rates
+- [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) — `pubsub.googleapis.com/subscription/num_undelivered_messages` detects pipeline lag
+- [dataset-and-table-management](https://alp78.github.io/elysium/06-GCP/BigQuery/dataset-and-table-management) — BigQuery slot utilization metrics for capacity planning
 
 ## References
 

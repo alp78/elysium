@@ -6,11 +6,6 @@ tags: [docker]
 aliases: [Docker Compose, docker compose, docker-compose, compose, multi-container, compose file, docker-compose.yaml, docker-compose.yml]
 keywords: [docker compose, up, down, build, restart, logs, pull, prune, multi-container, orchestration, services, volumes, detached, scale, exec, run, config, healthcheck, depends_on, networks, env_file, bind mount, named volume, override, force-recreate, rolling update, docker system prune, compose lifecycle, service restart]
 description: "Complete Docker Compose reference — compose file structure, lifecycle commands (up/down/start/stop/restart), scaling, logs, exec/debug, config overrides, and cleanup. Includes a full data engineering stack example with Airflow, PostgreSQL, and Redis."
-related:
-  - "[container-lifecycle](/09-Docker/container-lifecycle)"
-  - "[image-management](/09-Docker/image-management)"
-  - "[docker-cheat-sheet](/09-Docker/docker-cheat-sheet)"
-  - "the Airflow DAGs"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,7 +13,7 @@ status: complete
 
 # Docker Compose — Complete Reference
 
-Docker Compose defines and runs multi-container applications from a single `docker-compose.yaml` file. For data engineering, this typically means running the [Airflow stack](/12-Orchestration/Airflow/airflow-deployment) (scheduler, webserver, triggerer) alongside PostgreSQL and Redis, or local development stacks combining databases, pipeline services, and supporting infrastructure. All services, their images, networking, volumes, environment, and startup order are declared in one file and managed with a single CLI. In production, the same service topology often maps to [Cloud Run services](/07-Terraform/GCP-Resources/terraform-cloud-run) managed by Terraform.
+Docker Compose defines and runs multi-container applications from a single `docker-compose.yaml` file. For data engineering, this typically means running the [Airflow stack](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) (scheduler, webserver, triggerer) alongside PostgreSQL and Redis, or local development stacks combining databases, pipeline services, and supporting infrastructure. All services, their images, networking, volumes, environment, and startup order are declared in one file and managed with a single CLI. In production, the same service topology often maps to [Cloud Run services](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run) managed by Terraform.
 
 ---
 
@@ -258,7 +253,7 @@ networks:
 
 ### Environment Variable Substitution
 
-Compose substitutes `${VAR}` and `$VAR` references from three sources, in priority order (the same [environment variable patterns](/01-Shell/Scripting/environment-variables) used throughout shell scripting and CI):
+Compose substitutes `${VAR}` and `$VAR` references from three sources, in priority order (the same [environment variable patterns](https://alp78.github.io/elysium/01-Shell/Scripting/environment-variables) used throughout shell scripting and CI):
 
 1. Shell environment variables (highest priority)
 2. `.env` file in the same directory as the compose file
@@ -289,7 +284,7 @@ WEBSERVER_SECRET_KEY=changeme-use-a-real-secret
 
 > [!tip] Related pattern
 >
-> The `env_file` and `environment` directives here mirror the [shell environment variable](/01-Shell/Scripting/environment-variables) conventions. In CI/CD, GitHub Actions injects these same values through secrets and `env:` blocks rather than `.env` files.
+> The `env_file` and `environment` directives here mirror the [shell environment variable](https://alp78.github.io/elysium/01-Shell/Scripting/environment-variables) conventions. In CI/CD, GitHub Actions injects these same values through secrets and `env:` blocks rather than `.env` files.
 
 ---
 
@@ -663,7 +658,7 @@ docker system df -v
 
 ## Related
 
-- [container-lifecycle](/09-Docker/container-lifecycle) — Individual container operations (docker run, stop, rm, inspect)
-- [image-management](/09-Docker/image-management) — Building and pushing Docker images
-- [docker-cheat-sheet](/09-Docker/docker-cheat-sheet) — Full docker CLI quick reference
+- [container-lifecycle](https://alp78.github.io/elysium/09-Docker/container-lifecycle) — Individual container operations (docker run, stop, rm, inspect)
+- [image-management](https://alp78.github.io/elysium/09-Docker/image-management) — Building and pushing Docker images
+- [docker-cheat-sheet](https://alp78.github.io/elysium/09-Docker/docker-cheat-sheet) — Full docker CLI quick reference
 - the Airflow DAGs — Airflow runs via Docker Compose on the Airflow VM

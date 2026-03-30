@@ -6,13 +6,6 @@ tags: [monitoring, observability, sql, airflow, datadog]
 aliases: [Datadog Monitors, Datadog Alerts, Deadlock Alert, Airflow Monitors]
 keywords: [datadog monitors, alerts, deadlock alert, scheduler down, airflow monitor, metric monitor, change alert, notification, email alert, P1 critical, P2 high, conditional formatting, monitor message, recovery]
 description: "Recommended Datadog monitors for the data platform — deadlock detection on SQL Server, Airflow scheduler health, task failure alerts, and pool starvation warnings."
-related:
-  - datadog-dashboards
-  - datadog-custom-queries
-  - datadog-sql-server-integration
-  - datadog-agent-airflow-vm
-  - essential-dba-queries
-  - "[observability-strategy-matrix](/13-Observability/observability-strategy-matrix)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -67,7 +60,7 @@ To verify the full pipeline (deadlock → metric → monitor → email):
 1. Create a deadlock using the procedure in the SQL Server Tuning Guide, Section 5.8
 2. Wait 15-30 seconds for the Datadog agent to collect the updated counter
 3. The monitor should trigger and send an email within 1-2 minutes
-4. The Deadlock Count widget on the [SQL Server DBA dashboard](/13-Observability/Datadog/datadog-dashboards) should increment
+4. The Deadlock Count widget on the [SQL Server DBA dashboard](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-dashboards) should increment
 
 > [!info] Why change alert
 >
@@ -107,7 +100,7 @@ Create these in **Monitors → New Monitor → Metric**:
 | P4 (Low) | Queued duration spikes — performance degradation only | Next business day |
 
 > [!info] Airflow Duration Units
-> Airflow emits durations in **microseconds**. The Queued Duration Spike threshold of 60,000,000 equals 60 seconds. Adjust based on your typical DAG run times from the [Airflow dashboard](/13-Observability/Datadog/datadog-dashboards).
+> Airflow emits durations in **microseconds**. The Queued Duration Spike threshold of 60,000,000 equals 60 seconds. Adjust based on your typical DAG run times from the [Airflow dashboard](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-dashboards).
 
 ---
 
@@ -134,7 +127,7 @@ In addition to monitors (which send notifications), the SQL Server DBA dashboard
 
 ### GCE Host Automuting in Datadog
 
-When GCE Automuting is enabled in the [GCP Integration](/13-Observability/Datadog/datadog-gcp-integration), monitors are automatically muted when a VM is stopped in GCP. This prevents false alerts during intentional maintenance or off-hours cost reduction when the SQL or Airflow VM is stopped.
+When GCE Automuting is enabled in the [GCP Integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-gcp-integration), monitors are automatically muted when a VM is stopped in GCP. This prevents false alerts during intentional maintenance or off-hours cost reduction when the SQL or Airflow VM is stopped.
 
 Enable in: **Integrations > Google Cloud Platform > Edit > GCE Automuting = ON**
 
@@ -142,8 +135,8 @@ Enable in: **Integrations > Google Cloud Platform > Edit > GCE Automuting = ON**
 
 ## Related
 
-- [datadog-dashboards](/13-Observability/Datadog/datadog-dashboards) — Dashboard widgets with conditional formatting
-- [datadog-custom-queries](/13-Observability/Datadog/datadog-custom-queries) — `sqlserver.deadlocks.total` metric source
-- [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) — StatsD source for Airflow scheduler metrics
-- [datadog-gcp-integration](/13-Observability/Datadog/datadog-gcp-integration) — GCE Automuting for VM stop/start
-- [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — Manual queries to investigate after a deadlock alert
+- [datadog-dashboards](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-dashboards) — Dashboard widgets with conditional formatting
+- [datadog-custom-queries](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-custom-queries) — `sqlserver.deadlocks.total` metric source
+- [datadog-agent-airflow-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) — StatsD source for Airflow scheduler metrics
+- [datadog-gcp-integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-gcp-integration) — GCE Automuting for VM stop/start
+- [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/Administration/essential-dba-queries) — Manual queries to investigate after a deadlock alert

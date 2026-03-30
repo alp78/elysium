@@ -6,20 +6,6 @@ tags: [data-architecture, architecture, python, sql, terraform, airflow, bigquer
 aliases: [scenario guide, use case guide, reference architecture, solution patterns, architecture decisions, what to use when]
 keywords: [scenario-based architecture, decision guide, reference architecture, solution patterns, daily batch pipeline, streaming pipeline, data warehouse, multi-source integration, small team data platform, large team data platform, financial index calculation, machine learning feature pipeline, data migration, cost optimization, medallion architecture, star schema, ETL, ELT, BigQuery, SQL Server, Cloud Run, Airflow, Terraform, dbt, Pub/Sub, Dataflow, Firestore, GCS, Cloud Scheduler, Dataplex, data mesh, feature store, strangler fig, cost-optimized pipeline]
 description: "Practical scenario-based decision guide — 'I have THIS business need, what do I use?' — covering ten real-world data engineering scenarios with recommended stacks, Mermaid architecture diagrams, key decisions explained, cost estimates, and links to detailed vault notes."
-related:
-  - "[moc-data-architecture](/14-Data-Architecture/moc-data-architecture)"
-  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
-  - "[streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture)"
-  - "[data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture)"
-  - "[data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture)"
-  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
-  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
-  - "[moc-terraform](/07-Terraform/moc-terraform)"
-  - "[airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts)"
-  - "[moc-gcp](/06-GCP/moc-gcp)"
-  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
-  - "[api-protocols-comparison](/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison)"
-  - "[moc-observability](/13-Observability/moc-observability)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -107,31 +93,31 @@ graph LR
 ### Key Decisions Explained
 
 > [!question] Why SQL Server over BigQuery for transforms?
-> SQL Server provides ACID transactions, stored procedures, and sub-second point lookups. If your transforms need to update individual rows, enforce referential integrity, or run complex procedural logic, SQL Server is the right choice. BigQuery is optimized for analytical scans, not transactional writes. See [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) for the bronze/silver/gold pattern in SQL Server.
+> SQL Server provides ACID transactions, stored procedures, and sub-second point lookups. If your transforms need to update individual rows, enforce referential integrity, or run complex procedural logic, SQL Server is the right choice. BigQuery is optimized for analytical scans, not transactional writes. See [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) for the bronze/silver/gold pattern in SQL Server.
 
 > [!question] Why BigQuery for serving to BI tools?
-> BI tools like Looker and Tableau have native BigQuery connectors with query pushdown. Analysts can also write ad-hoc SQL directly. BigQuery handles concurrent analytical queries without affecting your transactional SQL Server workload. See [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) for cost controls.
+> BI tools like Looker and Tableau have native BigQuery connectors with query pushdown. Analysts can also write ad-hoc SQL directly. BigQuery handles concurrent analytical queries without affecting your transactional SQL Server workload. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) for cost controls.
 
 > [!question] Why Cloud Run over a VM-based cron script?
-> Cloud Run scales to zero when not running — no idle compute cost. Each job runs in a Docker container, making it reproducible and isolated. If the job takes 5 minutes daily, you pay for 5 minutes, not 24 hours of VM time. See [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) for the jobs vs. services distinction.
+> Cloud Run scales to zero when not running — no idle compute cost. Each job runs in a Docker container, making it reproducible and isolated. If the job takes 5 minutes daily, you pay for 5 minutes, not 24 hours of VM time. See [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) for the jobs vs. services distinction.
 
 > [!question] Why Airflow over Cloud Scheduler alone?
-> Cloud Scheduler can trigger a single Cloud Run job, but Airflow manages multi-step DAGs with dependencies, retries, SLA monitoring, and backfills. If your pipeline has more than 2-3 steps, Airflow pays for itself in operational clarity. See [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) for DAG design.
+> Cloud Scheduler can trigger a single Cloud Run job, but Airflow manages multi-step DAGs with dependencies, retries, SLA monitoring, and backfills. If your pipeline has more than 2-3 steps, Airflow pays for itself in operational clarity. See [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) for DAG design.
 
 ### Implementation Checklist
 
-- [ ] Create GCS bucket with lifecycle policy (delete raw files after 90 days) — [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle)
-- [ ] Build Python ingestion script with retry logic and idempotent writes — [rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption)
-- [ ] Create SQL Server bronze/silver/gold schemas — [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)
-- [ ] Write transforms as stored procedures or dbt models — [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)
-- [ ] Set up Airflow DAG with task dependencies — [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns)
-- [ ] Configure BigQuery export (scheduled query or `bq load`) — [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export)
-- [ ] Add freshness monitoring and alerting — [gcp-cloud-monitoring-deep-dive](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive)
-- [ ] Terraform all infrastructure — [terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy)
+- [ ] Create GCS bucket with lifecycle policy (delete raw files after 90 days) — [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle)
+- [ ] Build Python ingestion script with retry logic and idempotent writes — [rest-api-design-and-consumption](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption)
+- [ ] Create SQL Server bronze/silver/gold schemas — [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)
+- [ ] Write transforms as stored procedures or dbt models — [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)
+- [ ] Set up Airflow DAG with task dependencies — [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns)
+- [ ] Configure BigQuery export (scheduled query or `bq load`) — [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export)
+- [ ] Add freshness monitoring and alerting — [gcp-cloud-monitoring-deep-dive](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive)
+- [ ] Terraform all infrastructure — [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy)
 
 ### Related Notes
 
-[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) | [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) | [rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) | [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) | [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) | [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) | [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) | [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) | [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) | [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms)
+[medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) | [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) | [rest-api-design-and-consumption](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) | [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) | [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) | [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) | [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) | [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) | [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) | [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms)
 
 ---
 
@@ -179,10 +165,10 @@ graph LR
 ### Key Decisions Explained
 
 > [!question] Why Pub/Sub over Kafka?
-> Pub/Sub is fully managed — no brokers to provision, no ZooKeeper, no cluster sizing. It auto-scales to handle traffic spikes and you pay per message. Choose Kafka if you need message replay beyond 7 days, strict ordering guarantees across partitions, or you already run Kafka on-prem. See [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging) and [pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions).
+> Pub/Sub is fully managed — no brokers to provision, no ZooKeeper, no cluster sizing. It auto-scales to handle traffic spikes and you pay per message. Choose Kafka if you need message replay beyond 7 days, strict ordering guarantees across partitions, or you already run Kafka on-prem. See [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) and [pubsub-topics-and-subscriptions](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-topics-and-subscriptions).
 
 > [!question] Why Dataflow over Cloud Run with a Pub/Sub trigger?
-> Cloud Run can process Pub/Sub messages, but it processes them individually — no windowing, no state, no exactly-once guarantees. Dataflow (Apache Beam) provides tumbling/sliding/session windows, watermarks for late data, and exactly-once processing. If you need to aggregate events over time windows, Dataflow is the right tool. See [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) for windowing patterns.
+> Cloud Run can process Pub/Sub messages, but it processes them individually — no windowing, no state, no exactly-once guarantees. Dataflow (Apache Beam) provides tumbling/sliding/session windows, watermarks for late data, and exactly-once processing. If you need to aggregate events over time windows, Dataflow is the right tool. See [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture) for windowing patterns.
 
 > [!question] Why dual-write to Firestore AND BigQuery?
 > Different access patterns need different stores. Firestore serves sub-10ms point reads for dashboards and APIs. BigQuery handles full-table scans and aggregations for analytics. Writing to both from the same Dataflow pipeline ensures consistency without building a separate sync process.
@@ -201,7 +187,7 @@ graph LR
 
 ### Related Notes
 
-[streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) | [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging) | [pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions) | [firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations) | [real-time-nosql-pipelines](/06-GCP/Firestore/real-time-nosql-pipelines) | [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) | [gcp-cloud-monitoring-deep-dive](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive)
+[streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture) | [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) | [pubsub-topics-and-subscriptions](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-topics-and-subscriptions) | [firestore-data-model-and-operations](https://alp78.github.io/elysium/06-GCP/Firestore/firestore-data-model-and-operations) | [real-time-nosql-pipelines](https://alp78.github.io/elysium/06-GCP/Firestore/real-time-nosql-pipelines) | [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) | [gcp-cloud-monitoring-deep-dive](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive)
 
 ---
 
@@ -276,13 +262,13 @@ graph TB
 ### Key Decisions Explained
 
 > [!question] Why BigQuery over Snowflake?
-> Both are excellent cloud warehouses. BigQuery wins on GCP-native integration (IAM, Cloud Monitoring, Dataflow, Vertex AI), truly serverless operation (no warehouse sizing), and cost model (pay per query byte scanned, not per compute-second). Choose Snowflake if you are multi-cloud or need features like data sharing with external partners on other clouds. See [data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture).
+> Both are excellent cloud warehouses. BigQuery wins on GCP-native integration (IAM, Cloud Monitoring, Dataflow, Vertex AI), truly serverless operation (no warehouse sizing), and cost model (pay per query byte scanned, not per compute-second). Choose Snowflake if you are multi-cloud or need features like data sharing with external partners on other clouds. See [data-warehouse-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-warehouse-architecture).
 
 > [!question] Why star schema (Kimball) over normalized (Inmon)?
-> Analytics teams need fast, intuitive queries. Star schemas let analysts write `SELECT dim.category, SUM(fact.revenue) FROM fact JOIN dim` without understanding complex join chains. The denormalization trades storage efficiency for query simplicity. See [dimensional-modeling](/14-Data-Architecture/Data-Modeling/dimensional-modeling) for full DDL examples.
+> Analytics teams need fast, intuitive queries. Star schemas let analysts write `SELECT dim.category, SUM(fact.revenue) FROM fact JOIN dim` without understanding complex join chains. The denormalization trades storage efficiency for query simplicity. See [dimensional-modeling](https://alp78.github.io/elysium/14-Data-Architecture/Data-Modeling/dimensional-modeling) for full DDL examples.
 
 > [!question] Why dbt over stored procedures or custom Python?
-> dbt provides version-controlled SQL transforms with built-in testing (`unique`, `not_null`, `relationships`, custom tests), automatic DAG generation from `ref()` calls, and documentation that stays in sync with code. It turns SQL into a software engineering practice. See [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer).
+> dbt provides version-controlled SQL transforms with built-in testing (`unique`, `not_null`, `relationships`, custom tests), automatic DAG generation from `ref()` calls, and documentation that stays in sync with code. It turns SQL into a software engineering practice. See [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer).
 
 > [!question] Why three dbt layers (staging, intermediate, mart)?
 > - **Staging**: 1:1 with source tables, minimal transformation (type casting, renaming)
@@ -313,7 +299,7 @@ dbt_project/
 
 ### Related Notes
 
-[data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture) | [dimensional-modeling](/14-Data-Architecture/Data-Modeling/dimensional-modeling) | [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) | [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) | [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) | [gcp-data-lineage-and-catalog](/13-Observability/GCP-Native/gcp-data-lineage-and-catalog) | [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla)
+[data-warehouse-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-warehouse-architecture) | [dimensional-modeling](https://alp78.github.io/elysium/14-Data-Architecture/Data-Modeling/dimensional-modeling) | [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) | [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) | [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) | [gcp-data-lineage-and-catalog](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-data-lineage-and-catalog) | [gcp-pipeline-health-and-sla](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla)
 
 ---
 
@@ -391,20 +377,20 @@ graph TB
 ### Key Decisions Explained
 
 > [!question] Why land everything in GCS first?
-> GCS acts as an immutable audit log. If a transform has a bug, you can replay from raw files without re-extracting from the source. This also decouples extraction from loading — if BigQuery is temporarily unavailable, files are safe in GCS. See [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle).
+> GCS acts as an immutable audit log. If a transform has a bug, you can replay from raw files without re-extracting from the source. This also decouples extraction from loading — if BigQuery is temporarily unavailable, files are safe in GCS. See [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle).
 
 > [!question] Why per-source prefixes in GCS?
 > Different sources have different schemas, formats, and arrival schedules. Organizing by source (`/sql-server/YYYY-MM-DD/`, `/api/YYYY-MM-DD/`) makes it easy to re-process a single source without touching others. It also simplifies IAM — you can grant a service account access to only its source prefix.
 
 > [!question] Why Airflow over simpler orchestration?
-> Multi-source integration requires complex dependency management: "load API data only after SQL Server extract completes, but SFTP can run in parallel." Airflow's DAG model makes these dependencies explicit and visual. It also handles per-source retry logic and SLA monitoring. See [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns).
+> Multi-source integration requires complex dependency management: "load API data only after SQL Server extract completes, but SFTP can run in parallel." Airflow's DAG model makes these dependencies explicit and visual. It also handles per-source retry logic and SLA monitoring. See [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns).
 
 > [!question] How do you handle schema drift?
 > - **Landing zone**: Store raw files as-is (JSON, CSV, Parquet). Schema drift is the source's problem at this layer.
 > - **Raw dataset**: Use BigQuery's schema auto-detection or explicit `RECORD` types for nested JSON.
 > - **Staging**: dbt models cast to explicit types. If a new column appears, the staging model ignores it until you add it.
 > - **Contracts**: Define expected schemas in dbt's `_sources.yml`. Tests fail if columns are missing or types change.
-> See [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture) and [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats).
+> See [context-and-metadata-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture) and [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats).
 
 ### Identity Resolution Pattern
 
@@ -444,7 +430,7 @@ FULL OUTER JOIN sftp_companies f ON s.isin = f.isin
 
 ### Related Notes
 
-[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) | [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) | [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) | [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) | [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) | [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture) | [data-modeling-patterns](/14-Data-Architecture/Data-Modeling/data-modeling-patterns) | [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) | database connections
+[medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) | [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) | [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) | [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) | [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) | [context-and-metadata-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture) | [data-modeling-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Data-Modeling/data-modeling-patterns) | [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) | database connections
 
 ---
 
@@ -519,7 +505,7 @@ graph LR
 
 ### Related Notes
 
-[cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) | [gcp-scheduling](/12-Orchestration/Scheduling/gcp-scheduling) | [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) | [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) | [github-actions-workflows](/10-GitHub-Actions/github-actions-workflows) | [gcp-cloud-monitoring-deep-dive](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) | [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle)
+[cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) | [gcp-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling) | [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) | [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) | [github-actions-workflows](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-workflows) | [gcp-cloud-monitoring-deep-dive](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) | [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle)
 
 ---
 
@@ -597,16 +583,16 @@ graph TB
 ### Key Decisions Explained
 
 > [!question] Why Cloud Composer over self-hosted Airflow?
-> At 10+ engineers, Airflow becomes critical infrastructure. Cloud Composer handles upgrades, scaling, and high availability. The cost premium (~$300-500/month for a small environment) is cheaper than an engineer spending time on Airflow ops. See [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment).
+> At 10+ engineers, Airflow becomes critical infrastructure. Cloud Composer handles upgrades, scaling, and high availability. The cost premium (~$300-500/month for a small environment) is cheaper than an engineer spending time on Airflow ops. See [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment).
 
 > [!question] Why data mesh principles?
-> Data mesh assigns ownership: Team A owns ingestion, Team B owns core models, Team C owns domain analytics. Each team publishes "data products" with defined contracts (schema, SLA, freshness). Consumers depend on contracts, not implementation details. See [data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture).
+> Data mesh assigns ownership: Team A owns ingestion, Team B owns core models, Team C owns domain analytics. Each team publishes "data products" with defined contracts (schema, SLA, freshness). Consumers depend on contracts, not implementation details. See [data-mesh-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-mesh-architecture).
 
 > [!question] Why Terraform modules per team?
-> Each team gets a Terraform module that provisions their resources (BigQuery datasets, Cloud Run services, IAM bindings). The platform team maintains shared modules (networking, monitoring). Changes are peer-reviewed via pull requests. See [terraform-module-composition](/07-Terraform/Patterns/terraform-module-composition).
+> Each team gets a Terraform module that provisions their resources (BigQuery datasets, Cloud Run services, IAM bindings). The platform team maintains shared modules (networking, monitoring). Changes are peer-reviewed via pull requests. See [terraform-module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-module-composition).
 
 > [!question] Why gRPC for inter-service communication?
-> gRPC provides strongly-typed contracts (Protobuf), bi-directional streaming, and 2-10x better performance than REST for internal service-to-service calls. Use REST only for external-facing APIs where browser compatibility matters. See [grpc-for-data-pipelines](/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines) and [api-protocols-comparison](/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison).
+> gRPC provides strongly-typed contracts (Protobuf), bi-directional streaming, and 2-10x better performance than REST for internal service-to-service calls. Use REST only for external-facing APIs where browser compatibility matters. See [grpc-for-data-pipelines](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines) and [api-protocols-comparison](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison).
 
 ### Data Contract Example
 
@@ -639,7 +625,7 @@ contract:
 
 ### Related Notes
 
-[data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture) | [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) | [terraform-module-composition](/07-Terraform/Patterns/terraform-module-composition) | [grpc-for-data-pipelines](/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines) | [api-protocols-comparison](/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison) | [gcp-data-lineage-and-catalog](/13-Observability/GCP-Native/gcp-data-lineage-and-catalog) | [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture) | [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) | [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)
+[data-mesh-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-mesh-architecture) | [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) | [terraform-module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-module-composition) | [grpc-for-data-pipelines](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines) | [api-protocols-comparison](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison) | [gcp-data-lineage-and-catalog](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-data-lineage-and-catalog) | [context-and-metadata-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture) | [gcp-pipeline-health-and-sla](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) | [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam)
 
 ---
 
@@ -714,13 +700,13 @@ graph TB
 > Index calculation requires ACID transactions — if a corporate action adjustment fails midway, you need to roll back the entire calculation, not end up with partially adjusted data. SQL Server's transaction model, stored procedures, and temporal tables make this safe. BigQuery is append-optimized and lacks row-level transactions.
 
 > [!question] Why immutable GCS archive?
-> Regulatory requirement: you must be able to reproduce any historical index value. This requires proving which market data was used (GCS raw files), which version of the calculation logic ran (Git commit hash in audit table), and what the output was (temporal table history). See [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle).
+> Regulatory requirement: you must be able to reproduce any historical index value. This requires proving which market data was used (GCS raw files), which version of the calculation logic ran (Git commit hash in audit table), and what the output was (temporal table history). See [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle).
 
 > [!question] Why temporal tables for audit?
 > SQL Server temporal tables automatically maintain a history of every row change with system-time versioning. You can query "what was the index value at any point in time" and "what data was used to calculate it." This satisfies regulatory audit requirements without custom audit trigger code.
 
 > [!question] Why strict SLA monitoring?
-> Index values drive trading decisions. A late publication can cause trading halts or client penalties. The Airflow DAG includes SLA callbacks that trigger PagerDuty if the gold layer is not populated by the deadline. See [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) and [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts).
+> Index values drive trading decisions. A late publication can cause trading halts or client penalties. The Airflow DAG includes SLA callbacks that trigger PagerDuty if the gold layer is not populated by the deadline. See [gcp-pipeline-health-and-sla](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) and [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts).
 
 ### Corporate Actions Processing Pattern
 
@@ -757,7 +743,7 @@ JOIN bronze.corporate_actions ca
 
 ### Related Notes
 
-[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) | [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) | [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) | [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) | [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) | [dimensional-modeling](/14-Data-Architecture/Data-Modeling/dimensional-modeling) | [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) | [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns) | [rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) | [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) | fastapi and polars
+[medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) | [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) | [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) | [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) | [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) | [dimensional-modeling](https://alp78.github.io/elysium/14-Data-Architecture/Data-Modeling/dimensional-modeling) | [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) | [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) | [rest-api-design-and-consumption](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) | [gcp-pipeline-health-and-sla](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) | fastapi and polars
 
 ---
 
@@ -820,7 +806,7 @@ graph TB
 > Some features are naturally batch (e.g., "average revenue over last 90 days") while others must be real-time (e.g., "number of events in the last 5 minutes"). Batch features are cheaper to compute and cover most use cases. Add streaming features only when freshness matters.
 
 > [!question] Why Firestore over Redis for the online store?
-> Firestore is fully managed, scales automatically, and has a generous free tier. Redis (Memorystore) requires capacity planning and cluster management. Choose Redis only if you need sub-millisecond latency (Firestore is ~10-50ms). See [firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations).
+> Firestore is fully managed, scales automatically, and has a generous free tier. Redis (Memorystore) requires capacity planning and cluster management. Choose Redis only if you need sub-millisecond latency (Firestore is ~10-50ms). See [firestore-data-model-and-operations](https://alp78.github.io/elysium/06-GCP/Firestore/firestore-data-model-and-operations).
 
 ### Feature Definition Pattern
 
@@ -855,7 +841,7 @@ FEATURE_DEFINITIONS = {
 
 ### Related Notes
 
-[firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations) | [real-time-nosql-pipelines](/06-GCP/Firestore/real-time-nosql-pipelines) | [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) | [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) | [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) | [ai-augmented-data-engineering](/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering)
+[firestore-data-model-and-operations](https://alp78.github.io/elysium/06-GCP/Firestore/firestore-data-model-and-operations) | [real-time-nosql-pipelines](https://alp78.github.io/elysium/06-GCP/Firestore/real-time-nosql-pipelines) | [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) | [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture) | [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) | [ai-augmented-data-engineering](https://alp78.github.io/elysium/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering)
 
 ---
 
@@ -941,17 +927,17 @@ graph TB
 ### Key Decisions Explained
 
 > [!question] Why strangler fig over big-bang migration?
-> Big-bang migrations have a single point of failure: if anything goes wrong during cutover, you roll back entirely and lose weeks of work. Strangler fig lets you migrate table by table, validate incrementally, and roll back individual tables without affecting the rest. See [migration-idempotency-backfills](/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills).
+> Big-bang migrations have a single point of failure: if anything goes wrong during cutover, you roll back entirely and lose weeks of work. Strangler fig lets you migrate table by table, validate incrementally, and roll back individual tables without affecting the rest. See [migration-idempotency-backfills](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills).
 
 > [!question] Why watermark-based incremental extraction?
-> Each table has a column that monotonically increases (e.g., `modified_date`, `row_version`). The extraction job records the last watermark value and only extracts rows modified since then. This is idempotent — re-running with the same watermark extracts the same rows. See [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design).
+> Each table has a column that monotonically increases (e.g., `modified_date`, `row_version`). The extraction job records the last watermark value and only extracts rows modified since then. This is idempotent — re-running with the same watermark extracts the same rows. See [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design).
 
 > [!question] What about stored procedures?
 > BigQuery does not support traditional stored procedures in the same way. Options:
 > 1. Rewrite as dbt models (preferred — version-controlled, testable)
 > 2. Rewrite as BigQuery scripting (procedural SQL, less testable)
 > 3. Keep complex logic in Python Cloud Run jobs
-> See [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) for the dbt approach.
+> See [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) for the dbt approach.
 
 ### Validation Query Example
 
@@ -993,7 +979,7 @@ VALIDATION_QUERIES = {
 
 ### Related Notes
 
-[migration-idempotency-backfills](/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) | [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) | [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) | [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) | database connections | [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) | [terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy)
+[migration-idempotency-backfills](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) | [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) | [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) | [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) | database connections | [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) | [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy)
 
 ---
 
@@ -1067,13 +1053,13 @@ graph LR
 ### Key Decisions Explained
 
 > [!question] What is the single highest-impact optimization?
-> **BigQuery partitioning and clustering.** If you have a 10TB table and every query scans all of it, you pay ~$50 per query. Partition by date and cluster by your most common filter column, and the same query might scan 10GB — $0.05. This is a 1000x cost reduction for time-range queries. See [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization).
+> **BigQuery partitioning and clustering.** If you have a 10TB table and every query scans all of it, you pay ~$50 per query. Partition by date and cluster by your most common filter column, and the same query might scan 10GB — $0.05. This is a 1000x cost reduction for time-range queries. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization).
 
 > [!question] When is Datadog worth the cost?
-> Datadog becomes worth it when: (1) you have 5+ services that need distributed tracing, (2) you need custom APM dashboards that Cloud Monitoring cannot provide, or (3) you need log analytics beyond simple search. For pipelines with <5 components, Cloud Monitoring's free tier is sufficient. See [gcp-cloud-monitoring-deep-dive](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) and [datadog-cost-optimization](/13-Observability/Datadog/datadog-cost-optimization).
+> Datadog becomes worth it when: (1) you have 5+ services that need distributed tracing, (2) you need custom APM dashboards that Cloud Monitoring cannot provide, or (3) you need log analytics beyond simple search. For pipelines with <5 components, Cloud Monitoring's free tier is sufficient. See [gcp-cloud-monitoring-deep-dive](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) and [datadog-cost-optimization](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-cost-optimization).
 
 > [!question] Should we use reserved capacity (BigQuery slots)?
-> Only if your monthly BigQuery on-demand spend exceeds ~$2,000/month consistently. Below that, on-demand is cheaper. BigQuery Editions flex slots let you commit for 1 hour minimum, which is useful for large batch windows. See [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization).
+> Only if your monthly BigQuery on-demand spend exceeds ~$2,000/month consistently. Below that, on-demand is cheaper. BigQuery Editions flex slots let you commit for 1 hour minimum, which is useful for large batch windows. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization).
 
 > [!question] How do we prevent cost surprises?
 > - Set BigQuery per-user byte limits (`maximum_bytes_billed`)
@@ -1099,7 +1085,7 @@ graph LR
 
 ### Related Notes
 
-[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) | [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) | [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) | [vm-lifecycle](/06-GCP/Compute/vm-lifecycle) | [finops-cost-optimization](/04-SQL-Server/Administration/finops-cost-optimization) | [gcp-cloud-monitoring-deep-dive](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) | [datadog-cost-optimization](/13-Observability/Datadog/datadog-cost-optimization) | [datadog-cost-reference](/13-Observability/Datadog/datadog-cost-reference) | [table-compression](/04-SQL-Server/Storage-and-Indexes/table-compression) | [partitioning-strategies](/04-SQL-Server/Storage-and-Indexes/partitioning-strategies)
+[querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) | [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) | [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) | [vm-lifecycle](https://alp78.github.io/elysium/06-GCP/Compute/vm-lifecycle) | [finops-cost-optimization](https://alp78.github.io/elysium/04-SQL-Server/Administration/finops-cost-optimization) | [gcp-cloud-monitoring-deep-dive](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) | [datadog-cost-optimization](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-cost-optimization) | [datadog-cost-reference](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-cost-reference) | [table-compression](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/table-compression) | [partitioning-strategies](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/partitioning-strategies)
 
 ---
 
@@ -1112,80 +1098,80 @@ graph LR
 
 | I need to... | Use | Notes | Link |
 |---|---|---|---|
-| Schedule a simple daily job | Cloud Scheduler + Cloud Run | No dependencies, single job | [gcp-scheduling](/12-Orchestration/Scheduling/gcp-scheduling) |
-| Run a complex DAG with dependencies | Airflow | Multi-step with retries and SLA | [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) |
-| Chain jobs with dependencies (simple) | Cloud Workflows | 2-5 steps, no complex logic | [gcp-scheduling](/12-Orchestration/Scheduling/gcp-scheduling) |
-| Run a job on a Linux VM | cron + systemd | On-prem or persistent VM | [linux-scheduling](/12-Orchestration/Scheduling/linux-scheduling) |
-| Run a job on a Windows server | Task Scheduler | Windows-only environments | [windows-scheduling](/12-Orchestration/Scheduling/windows-scheduling) |
-| Manage Airflow in production | Cloud Composer | Managed Airflow, GCP-native | [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) |
-| Debug a failed Airflow DAG | Airflow UI + logs | Check task logs, XComs, connections | [airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting) |
+| Schedule a simple daily job | Cloud Scheduler + Cloud Run | No dependencies, single job | [gcp-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling) |
+| Run a complex DAG with dependencies | Airflow | Multi-step with retries and SLA | [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) |
+| Chain jobs with dependencies (simple) | Cloud Workflows | 2-5 steps, no complex logic | [gcp-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling) |
+| Run a job on a Linux VM | cron + systemd | On-prem or persistent VM | [linux-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/linux-scheduling) |
+| Run a job on a Windows server | Task Scheduler | Windows-only environments | [windows-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/windows-scheduling) |
+| Manage Airflow in production | Cloud Composer | Managed Airflow, GCP-native | [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) |
+| Debug a failed Airflow DAG | Airflow UI + logs | Check task logs, XComs, connections | [airflow-troubleshooting](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-troubleshooting) |
 
 ### Storage and Data
 
 | I need to... | Use | Notes | Link |
 |---|---|---|---|
-| Store raw files cheaply | GCS (Nearline/Coldline) | Lifecycle policies auto-tier | [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) |
-| Run ad-hoc SQL on large data | BigQuery | Serverless, pay per query | [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) |
-| Store transactional data with ACID | SQL Server | Row-level transactions, stored procs | [moc-sql-server](/04-SQL-Server/moc-sql-server) |
-| Serve data to a real-time dashboard | Firestore | Sub-10ms point reads | [firestore-data-model-and-operations](/06-GCP/Firestore/firestore-data-model-and-operations) |
-| Store time-series at massive scale | Bigtable | Billions of rows, single-digit ms | [real-time-nosql-pipelines](/06-GCP/Firestore/real-time-nosql-pipelines) |
-| Choose a file format for data exchange | Parquet (analytics) or JSON (APIs) | See format comparison | [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) |
-| Load data into BigQuery | `bq load` or streaming insert | Batch vs real-time trade-off | [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) |
-| Transfer files between systems | `gsutil rsync` or `gcloud transfer` | GCS-native tools | [data-transfer](/01-Shell/File-Operations/data-transfer) |
+| Store raw files cheaply | GCS (Nearline/Coldline) | Lifecycle policies auto-tier | [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) |
+| Run ad-hoc SQL on large data | BigQuery | Serverless, pay per query | [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) |
+| Store transactional data with ACID | SQL Server | Row-level transactions, stored procs | [moc-sql-server](https://alp78.github.io/elysium/04-SQL-Server/moc-sql-server) |
+| Serve data to a real-time dashboard | Firestore | Sub-10ms point reads | [firestore-data-model-and-operations](https://alp78.github.io/elysium/06-GCP/Firestore/firestore-data-model-and-operations) |
+| Store time-series at massive scale | Bigtable | Billions of rows, single-digit ms | [real-time-nosql-pipelines](https://alp78.github.io/elysium/06-GCP/Firestore/real-time-nosql-pipelines) |
+| Choose a file format for data exchange | Parquet (analytics) or JSON (APIs) | See format comparison | [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) |
+| Load data into BigQuery | `bq load` or streaming insert | Batch vs real-time trade-off | [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) |
+| Transfer files between systems | `gsutil rsync` or `gcloud transfer` | GCS-native tools | [data-transfer](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer) |
 
 ### Processing and Transformation
 
 | I need to... | Use | Notes | Link |
 |---|---|---|---|
-| Transform data in a warehouse | dbt | Version-controlled SQL transforms | [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) |
-| Process streaming events | Pub/Sub + Dataflow | Windowing, exactly-once | [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) |
+| Transform data in a warehouse | dbt | Version-controlled SQL transforms | [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) |
+| Process streaming events | Pub/Sub + Dataflow | Windowing, exactly-once | [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture) |
 | Run Python data processing | Pandas/Polars in Cloud Run | Containerized, scalable | python pipeline execution |
-| Build a medallion pipeline | bronze/silver/gold schemas | SQL Server or BigQuery | [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) |
-| Handle idempotent writes | DELETE-INSERT or MERGE | Safe re-runs, no duplicates | [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) |
-| Migrate data between platforms | Strangler fig + dual write | Incremental, validated | [migration-idempotency-backfills](/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) |
+| Build a medallion pipeline | bronze/silver/gold schemas | SQL Server or BigQuery | [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) |
+| Handle idempotent writes | DELETE-INSERT or MERGE | Safe re-runs, no duplicates | [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) |
+| Migrate data between platforms | Strangler fig + dual write | Incremental, validated | [migration-idempotency-backfills](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) |
 | Compare ETL vs ELT approaches | See comparison table | Depends on compute location | ETL vs ELT |
 
 ### Infrastructure and DevOps
 
 | I need to... | Use | Notes | Link |
 |---|---|---|---|
-| Deploy infrastructure reproducibly | Terraform | State-managed, peer-reviewed | [moc-terraform](/07-Terraform/moc-terraform) |
-| Deploy a Cloud Run service | Terraform + Docker | Or `gcloud run deploy` for small teams | [terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run) |
-| Manage secrets securely | GCP Secret Manager + Terraform | Never commit secrets to Git | [terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets) |
-| Set up CI/CD for data pipelines | GitHub Actions | Test, lint, deploy on merge | [github-actions-workflows](/10-GitHub-Actions/github-actions-workflows) |
-| Manage Terraform state | GCS backend with locking | Remote state for teams | [terraform-state-management](/07-Terraform/Fundamentals/terraform-state-management) |
-| Create reusable infra modules | Terraform modules | Composition over inheritance | [terraform-module-composition](/07-Terraform/Patterns/terraform-module-composition) |
+| Deploy infrastructure reproducibly | Terraform | State-managed, peer-reviewed | [moc-terraform](https://alp78.github.io/elysium/07-Terraform/moc-terraform) |
+| Deploy a Cloud Run service | Terraform + Docker | Or `gcloud run deploy` for small teams | [terraform-cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run) |
+| Manage secrets securely | GCP Secret Manager + Terraform | Never commit secrets to Git | [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) |
+| Set up CI/CD for data pipelines | GitHub Actions | Test, lint, deploy on merge | [github-actions-workflows](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-workflows) |
+| Manage Terraform state | GCS backend with locking | Remote state for teams | [terraform-state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-state-management) |
+| Create reusable infra modules | Terraform modules | Composition over inheritance | [terraform-module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-module-composition) |
 
 ### Monitoring and Governance
 
 | I need to... | Use | Notes | Link |
 |---|---|---|---|
-| Monitor pipeline health for free | GCP Cloud Monitoring | Free tier: logs, metrics, alerts | [gcp-cloud-monitoring-deep-dive](/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) |
-| Track data lineage | Dataplex Lineage API | Auto-captured for BigQuery | [gcp-data-lineage-and-catalog](/13-Observability/GCP-Native/gcp-data-lineage-and-catalog) |
-| Monitor SLA compliance | Custom metrics + alerting | Define freshness and completeness SLAs | [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) |
-| Deep application performance tracing | Datadog APM | Distributed traces across services | [datadog-apm-traces](/13-Observability/Datadog/datadog-apm-traces) |
-| Monitor SQL Server performance | Wait stats + execution plans | Identify bottlenecks | [wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis) |
-| Audit database access | SQL Server audit logging | Compliance and security | [audit-logging](/04-SQL-Server/Security/audit-logging) |
+| Monitor pipeline health for free | GCP Cloud Monitoring | Free tier: logs, metrics, alerts | [gcp-cloud-monitoring-deep-dive](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) |
+| Track data lineage | Dataplex Lineage API | Auto-captured for BigQuery | [gcp-data-lineage-and-catalog](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-data-lineage-and-catalog) |
+| Monitor SLA compliance | Custom metrics + alerting | Define freshness and completeness SLAs | [gcp-pipeline-health-and-sla](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) |
+| Deep application performance tracing | Datadog APM | Distributed traces across services | [datadog-apm-traces](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-apm-traces) |
+| Monitor SQL Server performance | Wait stats + execution plans | Identify bottlenecks | [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) |
+| Audit database access | SQL Server audit logging | Compliance and security | [audit-logging](https://alp78.github.io/elysium/04-SQL-Server/Security/audit-logging) |
 
 ### APIs and Communication
 
 | I need to... | Use | Notes | Link |
 |---|---|---|---|
-| Build a REST API for data serving | FastAPI + Cloud Run | Python, async, auto-docs | [rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) |
-| High-performance service-to-service calls | gRPC | Protobuf, streaming, 2-10x faster than REST | [grpc-for-data-pipelines](/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines) |
-| Choose an API protocol | See comparison | REST vs gRPC vs GraphQL | [api-protocols-comparison](/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison) |
-| Query data flexibly from frontend | GraphQL | Client-specified fields, nested queries | [graphql-for-data-access](/14-Data-Architecture/APIs-and-Protocols/graphql-for-data-access) |
-| Consume a third-party REST API | Python + requests | Retry logic, pagination, auth | [rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) |
+| Build a REST API for data serving | FastAPI + Cloud Run | Python, async, auto-docs | [rest-api-design-and-consumption](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) |
+| High-performance service-to-service calls | gRPC | Protobuf, streaming, 2-10x faster than REST | [grpc-for-data-pipelines](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines) |
+| Choose an API protocol | See comparison | REST vs gRPC vs GraphQL | [api-protocols-comparison](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison) |
+| Query data flexibly from frontend | GraphQL | Client-specified fields, nested queries | [graphql-for-data-access](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/graphql-for-data-access) |
+| Consume a third-party REST API | Python + requests | Retry logic, pagination, auth | [rest-api-design-and-consumption](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) |
 
 ### Shell and Quick Tasks
 
 | I need to... | Use | Notes | Link |
 |---|---|---|---|
-| Parse a log file quickly | awk / grep | Pattern matching and text extraction | [awk-data-processing](/01-Shell/Text-Processing/awk-data-processing), [grep-and-pattern-matching](/01-Shell/Text-Processing/grep-and-pattern-matching) |
-| Edit a file in-place | sed | Stream editing, regex substitution | [sed-stream-editing](/01-Shell/Text-Processing/sed-stream-editing) |
-| Transfer files via SSH | scp / rsync | Secure copy, incremental sync | [data-transfer](/01-Shell/File-Operations/data-transfer) |
-| Debug network connectivity | curl, netcat, telnet | Test endpoints and ports | [connectivity-testing](/01-Shell/Networking/connectivity-testing) |
-| Manage background processes | nohup, screen, tmux | Long-running jobs on VMs | [viewing-processes](/01-Shell/Process-Management/viewing-processes) |
+| Parse a log file quickly | awk / grep | Pattern matching and text extraction | [awk-data-processing](https://alp78.github.io/elysium/01-Shell/Text-Processing/awk-data-processing), [grep-and-pattern-matching](https://alp78.github.io/elysium/01-Shell/Text-Processing/grep-and-pattern-matching) |
+| Edit a file in-place | sed | Stream editing, regex substitution | [sed-stream-editing](https://alp78.github.io/elysium/01-Shell/Text-Processing/sed-stream-editing) |
+| Transfer files via SSH | scp / rsync | Secure copy, incremental sync | [data-transfer](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer) |
+| Debug network connectivity | curl, netcat, telnet | Test endpoints and ports | [connectivity-testing](https://alp78.github.io/elysium/01-Shell/Networking/connectivity-testing) |
+| Manage background processes | nohup, screen, tmux | Long-running jobs on VMs | [viewing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/viewing-processes) |
 
 ---
 
@@ -1235,25 +1221,25 @@ flowchart TD
 
 **The mistake:** Dumping everything into GCS or S3 with no schema enforcement, no catalog, no naming conventions. Six months later, nobody knows what any file is.
 
-**The fix:** Define schemas upfront (even if they are flexible). Use a catalog (Dataplex, Data Catalog). Enforce naming conventions (`/source/entity/YYYY-MM-DD/`). See [data-lake-architecture](/14-Data-Architecture/Architectures/data-lake-architecture) and [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture).
+**The fix:** Define schemas upfront (even if they are flexible). Use a catalog (Dataplex, Data Catalog). Enforce naming conventions (`/source/entity/YYYY-MM-DD/`). See [data-lake-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-lake-architecture) and [context-and-metadata-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture).
 
 ### "We Need Kafka for Everything"
 
 **The mistake:** Deploying Kafka for a pipeline that processes 1,000 events per day. You now have ZooKeeper, brokers, schema registry, and Connect to manage — for something Cloud Scheduler + Cloud Run could handle.
 
-**The fix:** Use Pub/Sub for GCP-native workloads under 100K messages/second. Use Kafka only when you need multi-day replay, strict ordering, or you are already running Kafka. See [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture).
+**The fix:** Use Pub/Sub for GCP-native workloads under 100K messages/second. Use Kafka only when you need multi-day replay, strict ordering, or you are already running Kafka. See [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture).
 
 ### "Let's Use Microservices for Data Pipelines"
 
 **The mistake:** Building 20 microservices for a pipeline that is fundamentally a linear DAG. Each service has its own deployment, monitoring, and failure mode. Debugging requires tracing through 20 services.
 
-**The fix:** Use a monolithic pipeline (Airflow DAG with task functions) until you have a genuine reason to decompose. Microservices solve organizational scaling problems, not technical ones. See [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns).
+**The fix:** Use a monolithic pipeline (Airflow DAG with task functions) until you have a genuine reason to decompose. Microservices solve organizational scaling problems, not technical ones. See [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns).
 
 ### "We Don't Need Tests for Data"
 
 **The mistake:** No validation between pipeline stages. A source schema change silently produces NULL values that propagate to dashboards. The CEO discovers the issue.
 
-**The fix:** dbt tests at every layer. Freshness checks. Row count assertions. Schema contracts. See [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) and [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture).
+**The fix:** dbt tests at every layer. Freshness checks. Row count assertions. Schema contracts. See [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) and [context-and-metadata-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture).
 
 ### "Terraform Everything from Day One"
 
@@ -1265,7 +1251,7 @@ flowchart TD
 
 **The mistake:** Using SQL Server for everything — transactional writes, analytical queries, real-time serving, and ML feature storage. Performance degrades as workloads compete for resources.
 
-**The fix:** Use the right store for the right access pattern. SQL Server for transactions, BigQuery for analytics, Firestore for real-time reads. See [data-modeling-patterns](/14-Data-Architecture/Data-Modeling/data-modeling-patterns) for when to use which model.
+**The fix:** Use the right store for the right access pattern. SQL Server for transactions, BigQuery for analytics, Firestore for real-time reads. See [data-modeling-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Data-Modeling/data-modeling-patterns) for when to use which model.
 
 ---
 
@@ -1318,4 +1304,4 @@ A quick reference for when two technologies seem interchangeable.
 
 *This guide is a living document. As new scenarios emerge or technologies change, add new sections and update existing ones. The goal is that any data engineer can open this note and find a starting point for their next architecture decision.*
 
-**See also:** [moc-data-architecture](/14-Data-Architecture/moc-data-architecture) | [five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering) | 
+**See also:** [moc-data-architecture](https://alp78.github.io/elysium/14-Data-Architecture/moc-data-architecture) | [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) | 

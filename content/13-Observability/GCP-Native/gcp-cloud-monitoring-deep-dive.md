@@ -60,14 +60,6 @@ description: >
   monitor data engineering infrastructure. Covers metric types, monitored resources,
   MQL, custom metrics, dashboards, alerting policies, uptime checks, SLOs, and a
   comprehensive feature-parity comparison with Datadog — using only GCP-native tools.
-related:
-  - "[gcp-cloud-trace-and-logging](/13-Observability/GCP-Native/gcp-cloud-trace-and-logging)"
-  - "[Pub/Sub](/06-GCP/Serverless/pubsub-messaging)"
-  - "[BigQuery deep dive](/06-GCP/BigQuery/querying-and-cost-optimization)"
-  - "[Cloud Run](/06-GCP/Serverless/cloud-run-jobs-vs-services)"
-  - "[moc-observability](/13-Observability/moc-observability)"
-  - "[Datadog vs GCP native](/13-Observability/Monitoring/observability-deep-dive)"
-  - "[observability-strategy-matrix](/13-Observability/observability-strategy-matrix)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -1686,8 +1678,8 @@ Cloud Monitoring can alert when the error budget burn rate is too high — the s
 |---|---|---|---|
 | **VM metrics** | Ops Agent | Datadog Agent | Both collect CPU, memory, disk, network automatically |
 | **SQL Server metrics** | Ops Agent `sqlserver` receiver | Native SQL Server integration | Datadog has richer out-of-the-box SQL metrics (200+ counters); Ops Agent covers ~20 key counters |
-| **APM / Distributed Tracing** | Cloud Trace | Datadog APM | See [gcp-cloud-trace-and-logging](/13-Observability/GCP-Native/gcp-cloud-trace-and-logging); Cloud Trace integrates natively with GCP services |
-| **Log Management** | Cloud Logging | Datadog Log Management | See [gcp-cloud-trace-and-logging](/13-Observability/GCP-Native/gcp-cloud-trace-and-logging); Cloud Logging is free up to 50 GB/project/month |
+| **APM / Distributed Tracing** | Cloud Trace | Datadog APM | See [gcp-cloud-trace-and-logging](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-trace-and-logging); Cloud Trace integrates natively with GCP services |
+| **Log Management** | Cloud Logging | Datadog Log Management | See [gcp-cloud-trace-and-logging](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-trace-and-logging); Cloud Logging is free up to 50 GB/project/month |
 | **Dashboards** | Cloud Monitoring Dashboards | Datadog Dashboards | Datadog has better UX (drag-and-drop, TV mode, widgets); Cloud Monitoring requires JSON or UI clicks |
 | **Alerting** | Alerting Policies | Datadog Monitors | Similar capability; Datadog has built-in anomaly detection and forecast alerts |
 | **Custom Metrics** | monitoring_v3 Python/REST API | DogStatsD / REST API | Cloud Monitoring is significantly cheaper at scale |

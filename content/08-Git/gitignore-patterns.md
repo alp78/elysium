@@ -6,10 +6,6 @@ tags: [git, github]
 aliases: [.gitignore, gitignore, git ignore, exclude files, git rm --cached]
 keywords: [.gitignore, gitignore, patterns, exclude, secrets, .env, credentials, pyc, pycache, venv, node_modules, git rm --cached, BFG, filter-branch, stop tracking, git secrets, accidentally committed]
 description: "How to use .gitignore to exclude files from version control, patterns for Python data engineering projects, how to stop tracking already-committed files, and what to do if secrets were accidentally committed."
-related:
-  - "[git-daily-workflow](/08-Git/git-daily-workflow)"
-  - "[github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd)"
-  - "[pull-requests-and-code-review](/08-Git/pull-requests-and-code-review)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -44,7 +40,7 @@ Each line is a pattern. Git will ignore matching files.
 
 ### Pattern Syntax
 
-The glob-style pattern syntax used in `.gitignore` is shared with shell expansion. For a deeper look at how `*`, `**`, and `?` work, see [brace-expansion-and-globbing](/01-Shell/Scripting/brace-expansion-and-globbing).
+The glob-style pattern syntax used in `.gitignore` is shared with shell expansion. For a deeper look at how `*`, `**`, and `?` work, see [brace-expansion-and-globbing](https://alp78.github.io/elysium/01-Shell/Scripting/brace-expansion-and-globbing).
 
 | Pattern | Matches |
 |---------|---------|
@@ -180,7 +176,7 @@ Use BFG or `filter-branch` as above. Even after removing the trailer from all co
 
 ### terraform.tfvars — Critical to Gitignore
 
-Files like `.env` contain [environment-variables](/01-Shell/Scripting/environment-variables) that configure local development and CI/CD -- they should always be gitignored because they often hold secrets or machine-specific paths.
+Files like `.env` contain [environment-variables](https://alp78.github.io/elysium/01-Shell/Scripting/environment-variables) that configure local development and CI/CD -- they should always be gitignored because they often hold secrets or machine-specific paths.
 
 The Terraform variables file containing passwords and API keys must be gitignored:
 
@@ -193,7 +189,7 @@ terraform.tfvars
 .terraform.lock.hcl  # only if you don't want to commit the lock file
 ```
 
-See [terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs) for context on what `terraform.tfvars` contains.
+See [terraform-variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-variables-and-outputs) for context on what `terraform.tfvars` contains.
 
 ---
 
@@ -291,9 +287,9 @@ git lfs migrate import --include="*.parquet" --everything
 
 ## Related
 
-- [git-daily-workflow](/08-Git/git-daily-workflow) — the daily workflow that benefits from a clean .gitignore
-- [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — CI secrets that must never be committed
-- [terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs) — terraform.tfvars that must be gitignored
+- [git-daily-workflow](https://alp78.github.io/elysium/08-Git/git-daily-workflow) — the daily workflow that benefits from a clean .gitignore
+- [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — CI secrets that must never be committed
+- [terraform-variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-variables-and-outputs) — terraform.tfvars that must be gitignored
 
 ## References
 

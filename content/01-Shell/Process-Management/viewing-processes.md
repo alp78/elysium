@@ -6,7 +6,6 @@ tags: [shell, bash, linux, powershell]
 aliases: [ps aux, htop, top, pstree, process list, process monitoring, iostat, docker stats]
 keywords: [ps aux, htop, top, pstree, process list, PID, CPU usage, memory usage, RSS, VSZ, zombie process, D state, uninterruptible sleep, iostat, docker stats, process tree, uptime, load average, free memory]
 description: "Linux and PowerShell commands for viewing running processes, understanding resource usage, and diagnosing system performance issues. Covers ps aux, htop, top, pstree, and the D state (uninterruptible sleep) that cannot be killed."
-related: ["[killing-processes](/01-Shell/Process-Management/killing-processes)", "[system-resources](/01-Shell/Process-Management/system-resources)", "[managing-services](/01-Shell/Process-Management/managing-services)", "[reading-file-contents](/01-Shell/Text-Processing/reading-file-contents)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -165,7 +164,7 @@ $os = Get-CimInstance Win32_OperatingSystem
 ```
 
 ## Related
-- [killing-processes](/01-Shell/Process-Management/killing-processes) — what to do once you find the problematic process
-- [system-resources](/01-Shell/Process-Management/system-resources) — deeper memory, CPU, and disk I/O analysis
-- [managing-services](/01-Shell/Process-Management/managing-services) — checking systemd service status and logs
-- [reading-file-contents](/01-Shell/Text-Processing/reading-file-contents) — reading service logs after identifying the issue
+- [killing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/killing-processes) — what to do once you find the problematic process
+- [system-resources](https://alp78.github.io/elysium/01-Shell/Process-Management/system-resources) — deeper memory, CPU, and disk I/O analysis
+- [managing-services](https://alp78.github.io/elysium/01-Shell/Process-Management/managing-services) — checking systemd service status and logs
+- [reading-file-contents](https://alp78.github.io/elysium/01-Shell/Text-Processing/reading-file-contents) — reading service logs after identifying the issue

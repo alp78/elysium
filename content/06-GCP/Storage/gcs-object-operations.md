@@ -6,7 +6,6 @@ tags: [infrastructure, gcp, gcs]
 aliases: [GCS objects, gcloud storage, gsutil, Cloud Storage operations, GCS copy, GCS sync, GCS rsync]
 keywords: [gcloud storage, gsutil, GCS, cloud storage, ls, cp, copy, rsync, sync, mv, move, rm, delete, object metadata, parallel upload, parallel composite upload, component size, gcloud storage vs gsutil, transfer service, large file, incremental sync]
 description: "How to list, copy, sync, move, delete, and inspect metadata of Cloud Storage objects using the gcloud storage CLI — including parallel transfers for large files and incremental sync patterns."
-related: [gcs-buckets-and-lifecycle, data-loading-and-export, cloud-run-jobs-vs-services, gcloud-output-formatting]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # GCS Object Operations
 
-Cloud Storage (GCS) is the connective tissue of every GCP data pipeline — where raw data lands, intermediate files live, backups are stored, and exports are staged. The `gcloud storage` command (part of the gcloud CLI) handles all object operations. It automatically parallelizes large transfers and is generally faster than the older `gsutil` command for most data engineering tasks. For the shell-level rsync and scp equivalents of these operations, see [data-transfer](/01-Shell/File-Operations/data-transfer).
+Cloud Storage (GCS) is the connective tissue of every GCP data pipeline — where raw data lands, intermediate files live, backups are stored, and exports are staged. The `gcloud storage` command (part of the gcloud CLI) handles all object operations. It automatically parallelizes large transfers and is generally faster than the older `gsutil` command for most data engineering tasks. For the shell-level rsync and scp equivalents of these operations, see [data-transfer](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer).
 
 ### Listing GCS Objects with gcloud storage ls
 
@@ -31,7 +30,7 @@ gcloud storage ls gs://data-pipeline-bucket/data/
 > [!danger] Recursive Delete Is Irreversible
 >
 > `gcloud storage rm -r` Is Irreversible Without Versioning.
-> `gcloud storage rm -r gs://bucket/prefix/` deletes all matching objects immediately with no confirmation prompt and no trash. If versioning is not enabled on the bucket, the data is permanently gone. Always enable versioning on buckets containing pipeline data or backups (see [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle)). A single typo in the prefix can wipe an entire dataset.
+> `gcloud storage rm -r gs://bucket/prefix/` deletes all matching objects immediately with no confirmation prompt and no trash. If versioning is not enabled on the bucket, the data is permanently gone. Always enable versioning on buckets containing pipeline data or backups (see [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle)). A single typo in the prefix can wipe an entire dataset.
 
 ### Copying Files with gcloud storage cp
 
@@ -65,7 +64,7 @@ gcloud storage rsync -r -d ./local_data/ gs://data-pipeline-bucket/data/
 >
 > The `-d` (delete) flag on `gcloud storage rsync` removes GCS objects that don't exist locally. Always double-check:
 > 1. The source and destination are in the correct order
-> 2. Versioning is enabled on the bucket if you need recovery (see [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle))
+> 2. Versioning is enabled on the bucket if you need recovery (see [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle))
 > 3. The sync will delete only what you expect
 
 ### Moving and Deleting GCS Objects
@@ -97,7 +96,7 @@ Object metadata fields useful for data engineering:
 - `size` — file size in bytes
 - `md5Hash` — checksum for integrity verification
 - `contentType` — MIME type (`application/octet-stream` for Parquet, `text/csv` for CSV)
-- `storageClass` — current storage class (see [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle))
+- `storageClass` — current storage class (see [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle))
 - `timeCreated` — when the object was first uploaded
 - `updated` — last modification timestamp
 
@@ -105,7 +104,7 @@ Object metadata fields useful for data engineering:
 
 > [!tip] Related pattern
 >
-> For code that needs to read GCS objects transparently alongside local files, [Python's fsspec](/02-Programming-Languages/Python/09_py_fileio_serialization) provides a unified file I/O interface that abstracts away `gs://` vs local paths.
+> For code that needs to read GCS objects transparently alongside local files, [Python's fsspec](https://alp78.github.io/elysium/02-Programming-Languages/Python/09_py_fileio_serialization) provides a unified file I/O interface that abstracts away `gs://` vs local paths.
 
 > [!tip] Large File Transfer Options
 >
@@ -120,7 +119,7 @@ Object metadata fields useful for data engineering:
 
 ### Common GCS Pipeline Patterns
 
-Bronze landing copies local data to GCS staging (Python equivalent: [22_py_data_transfer](/02-Programming-Languages/Python/22_py_data_transfer)). Silver processing happens inside a Cloud Run Job via the Python client library. Gold output exports BigQuery results back to GCS for downstream consumers.
+Bronze landing copies local data to GCS staging (Python equivalent: [22_py_data_transfer](https://alp78.github.io/elysium/02-Programming-Languages/Python/22_py_data_transfer)). Silver processing happens inside a Cloud Run Job via the Python client library. Gold output exports BigQuery results back to GCS for downstream consumers.
 
 ```bash
 # Bronze landing: local data → GCS staging
@@ -132,10 +131,10 @@ bq extract --destination_format=PARQUET project_data.ohlcv gs://data-pipeline-bu
 
 ## Related
 
-- [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) — Creating buckets, storage classes, and lifecycle rules that govern these objects
-- [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) — Loading GCS objects into BigQuery with `bq load`
-- [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) — Cloud Run Jobs read/write GCS as their primary data interface
-- [gcloud-output-formatting](/06-GCP/Core/gcloud-output-formatting) — Use `--format` with `gcloud storage ls` for scriptable listings
+- [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) — Creating buckets, storage classes, and lifecycle rules that govern these objects
+- [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) — Loading GCS objects into BigQuery with `bq load`
+- [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) — Cloud Run Jobs read/write GCS as their primary data interface
+- [gcloud-output-formatting](https://alp78.github.io/elysium/06-GCP/Core/gcloud-output-formatting) — Use `--format` with `gcloud storage ls` for scriptable listings
 
 ## References
 

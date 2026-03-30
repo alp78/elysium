@@ -6,7 +6,6 @@ tags: [git, github]
 aliases: [git tag, annotated tag, semantic versioning, release tags, lightweight tag, git push tags, version label, tag a release, SemVer git]
 keywords: [git tag, tagging, annotated tag, lightweight tag, release, versioning, semantic versioning, semver, v1.0.0, git push tags, push tag to github, list tags, mark release, tag message, tag annotation, production release, git tag -a]
 description: "How to create lightweight and annotated git tags, push them to GitHub, and use semantic versioning to mark production releases."
-related: ["[git-daily-workflow](/08-Git/git-daily-workflow)", "[git-history-and-inspection](/08-Git/git-history-and-inspection)", "[pull-requests-and-code-review](/08-Git/pull-requests-and-code-review)", "[github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd)"]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -153,7 +152,7 @@ git push origin --delete v1.0.0-draft
 
 ### Integration with GitHub Actions
 
-Tags are a common CI/CD trigger. When you push a tag matching a pattern like `v*`, a GitHub Actions workflow can automatically build, test, and deploy. See [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) for workflow configuration.
+Tags are a common CI/CD trigger. When you push a tag matching a pattern like `v*`, a GitHub Actions workflow can automatically build, test, and deploy. See [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) for workflow configuration.
 
 Example trigger block in a GitHub Actions workflow:
 
@@ -183,7 +182,7 @@ This fires the workflow whenever a tag starting with `v` is pushed — covering 
 
 ## Related
 
-- [git-daily-workflow](/08-Git/git-daily-workflow) — the commit workflow that precedes tagging a release
-- [git-history-and-inspection](/08-Git/git-history-and-inspection) — `git show`, `git log` to find the commit to tag
-- [pull-requests-and-code-review](/08-Git/pull-requests-and-code-review) — merging the PR before tagging the release
-- [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — triggering deployments automatically on tag push
+- [git-daily-workflow](https://alp78.github.io/elysium/08-Git/git-daily-workflow) — the commit workflow that precedes tagging a release
+- [git-history-and-inspection](https://alp78.github.io/elysium/08-Git/git-history-and-inspection) — `git show`, `git log` to find the commit to tag
+- [pull-requests-and-code-review](https://alp78.github.io/elysium/08-Git/pull-requests-and-code-review) — merging the PR before tagging the release
+- [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — triggering deployments automatically on tag push

@@ -6,7 +6,6 @@ tags: [sql, sql-server, tsql]
 aliases: [index fragmentation, index rebuild, index reorganize, fill factor, ALTER INDEX REBUILD, ALTER INDEX REORGANIZE, index defragmentation, Ola Hallengren]
 keywords: [index fragmentation, avg_fragmentation_in_percent, index rebuild, index reorganize, fill factor, ONLINE=ON, sys.dm_db_index_physical_stats, REORGANIZE, REBUILD, PAGE compression, DATA_COMPRESSION, columnstore reorganize, COMPRESS_ALL_ROW_GROUPS, statistics update after rebuild, index maintenance script, Ola Hallengren, maintenance window]
 description: "How to detect and fix SQL Server index fragmentation using REORGANIZE and REBUILD operations — includes fragmentation thresholds, automated maintenance script, fill factor guidance, and a recommended maintenance schedule for data pipeline workloads."
-related: [index-types-and-strategy, wait-stats-analysis, query-plan-analysis, storage-internals, server-configuration, essential-dba-queries]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,13 +13,13 @@ status: complete
 
 # Index Maintenance
 
-Index fragmentation occurs when the physical order of data pages on disk diverges from the logical order of the B-tree index. As pages split during INSERT, UPDATE, and DELETE operations, pages become partially filled and out-of-order. Fragmented indexes cause SQL Server to read more pages than necessary for range scans, increasing I/O and elevating `PAGEIOLATCH_SH` [wait statistics](/04-SQL-Server/Performance/wait-stats-analysis).
+Index fragmentation occurs when the physical order of data pages on disk diverges from the logical order of the B-tree index. As pages split during INSERT, UPDATE, and DELETE operations, pages become partially filled and out-of-order. Fragmented indexes cause SQL Server to read more pages than necessary for range scans, increasing I/O and elevating `PAGEIOLATCH_SH` [wait statistics](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis).
 
 ### Why Fragmentation Matters
 
 - **Range scans** (WHERE date BETWEEN, ORDER BY) read pages sequentially. Fragmented indexes require jumping between non-contiguous pages, causing extra I/O.
 - **Partial pages** waste space — a 50% full page holds half as much data, so range scans read twice as many pages.
-- **Effect on buffer pool** — more pages read means more [buffer pool](/04-SQL-Server/Performance/memory-and-buffer-pool) pressure, evicting useful cached pages.
+- **Effect on buffer pool** — more pages read means more [buffer pool](https://alp78.github.io/elysium/04-SQL-Server/Performance/memory-and-buffer-pool) pressure, evicting useful cached pages.
 - **Effect on small indexes** — indexes under 1,000 pages have negligible fragmentation impact regardless of the percentage. Skip them in maintenance scripts.
 
 ## Fragmentation Detection
@@ -133,7 +132,7 @@ WITH (
     ONLINE = ON,
     FILLFACTOR = 90,             -- leave 10% free space on each page for future inserts
     SORT_IN_TEMPDB = ON,         -- use TempDB for sort work (reduces main DB I/O)
-    DATA_COMPRESSION = PAGE,     -- compress at page level (see [table-compression](/04-SQL-Server/Storage-and-Indexes/table-compression) for savings estimates)
+    DATA_COMPRESSION = PAGE,     -- compress at page level (see [table-compression](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/table-compression) for savings estimates)
     MAXDOP = 2                   -- limit parallel threads to 2
 );
 -- FILLFACTOR: 100 = pack pages full (best for read-only), 80-90 = leave room for inserts
@@ -214,7 +213,7 @@ DEALLOCATE idx_cursor;
 
 ### Statistics After Maintenance
 
-[Cardinality estimation](/04-SQL-Server/Performance/query-plan-analysis) depends on accurate statistics. Keep them current:
+[Cardinality estimation](https://alp78.github.io/elysium/04-SQL-Server/Performance/query-plan-analysis) depends on accurate statistics. Keep them current:
 
 ```sql
 -- Update statistics for a specific table with full scan (most accurate)
@@ -251,7 +250,7 @@ ORDER BY sp.modification_counter DESC;
 | **Never rebuilding** | Fragmentation grows → range scans read more pages → queries slow down | Weekly maintenance: REORGANIZE at 5–30%, REBUILD at >30% |
 | **Rebuilding tiny indexes** | Indexes under 1,000 pages have negligible fragmentation impact — wasting maintenance time | Skip indexes with page_count < 1,000 |
 | **Over-indexing staging tables** | Staging tables are truncated and bulk-loaded — indexes slow down the load | Drop indexes before bulk load, recreate after |
-| **Ignoring partitioned indexes** | Each partition fragments independently and may need separate maintenance | Use `REBUILD PARTITION = N` to target hot partitions only (see [partitioning-strategies](/04-SQL-Server/Storage-and-Indexes/partitioning-strategies)) |
+| **Ignoring partitioned indexes** | Each partition fragments independently and may need separate maintenance | Use `REBUILD PARTITION = N` to target hot partitions only (see [partitioning-strategies](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/partitioning-strategies)) |
 | **Not updating statistics after large loads** | Stale statistics → bad query plans → table scans | `UPDATE STATISTICS table WITH FULLSCAN` after bulk loads |
 | **REBUILD OFFLINE during business hours** | Locks the table for the duration | Always use `WITH (ONLINE = ON)` in production, or schedule off-hours |
 
@@ -428,12 +427,12 @@ ORDER BY improvement_measure DESC;
 
 ### Related
 
-- [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — Choosing the right index type before maintaining it
-- [wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis) — High PAGEIOLATCH_SH waits indicate fragmentation or insufficient RAM
-- [query-plan-analysis](/04-SQL-Server/Performance/query-plan-analysis) — Fragmented indexes cause more expensive execution plans
-- [storage-internals](/04-SQL-Server/Storage-and-Indexes/storage-internals) — How page splits create fragmentation at the storage level
-- [server-configuration](/04-SQL-Server/Administration/server-configuration) — TempDB configuration affects SORT_IN_TEMPDB performance during rebuilds
-- [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — DMV queries for index health monitoring
+- [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — Choosing the right index type before maintaining it
+- [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) — High PAGEIOLATCH_SH waits indicate fragmentation or insufficient RAM
+- [query-plan-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/query-plan-analysis) — Fragmented indexes cause more expensive execution plans
+- [storage-internals](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/storage-internals) — How page splits create fragmentation at the storage level
+- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) — TempDB configuration affects SORT_IN_TEMPDB performance during rebuilds
+- [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/Administration/essential-dba-queries) — DMV queries for index health monitoring
 
 ### References
 

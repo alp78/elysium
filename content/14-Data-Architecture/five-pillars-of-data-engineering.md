@@ -6,13 +6,6 @@ tags: [data-architecture, data-engineering, architecture]
 aliases: [Five Pillars, Senior Data Engineer Pillars, data engineering principles, engineering pillars]
 keywords: [five pillars, reliability, observability, efficiency, security, operability, senior data engineer, mindset, principles, data engineering fundamentals]
 description: "The five pillars of senior data engineering — reliability, observability, efficiency, security, and operability — that every production system must be designed around."
-related:
-  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
-  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
-  - "[datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview)"
-  - "[backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy)"
-  - "[service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)"
-  - "[observability-strategy-matrix](/13-Observability/observability-strategy-matrix)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -26,7 +19,7 @@ Every topic in this knowledge base maps to one of these five pillars:
 
 ## Reliability
 
-Your pipeline must produce correct data, every time. This means [idempotent transforms](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design), atomic loads, proper error handling, and retry logic that does not silently corrupt state. A pipeline that works 99% of the time is a pipeline that lies to its consumers 3.65 days per year.
+Your pipeline must produce correct data, every time. This means [idempotent transforms](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design), atomic loads, proper error handling, and retry logic that does not silently corrupt state. A pipeline that works 99% of the time is a pipeline that lies to its consumers 3.65 days per year.
 
 > [!danger] Without Reliability
 >
@@ -39,7 +32,7 @@ Your pipeline must produce correct data, every time. This means [idempotent tran
 
 ## Observability
 
-You cannot fix what you cannot see. Every system you operate needs metrics (how much), logs (what happened), and traces (where did time go). The gap between "it works on my machine" and "it works in production" is entirely filled by observability. See [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) and [cloud-logging](/06-GCP/Logging/cloud-logging).
+You cannot fix what you cannot see. Every system you operate needs metrics (how much), logs (what happened), and traces (where did time go). The gap between "it works on my machine" and "it works in production" is entirely filled by observability. See [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) and [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging).
 
 > [!danger] Without Observability
 >
@@ -53,7 +46,7 @@ You cannot fix what you cannot see. Every system you operate needs metrics (how 
 
 ## Efficiency
 
-Cloud resources cost real money. A query that scans 10 TB when it could scan 10 GB is not just slow — it is a $50 billing event that happens every time someone runs it. Senior engineers think in dollars-per-query, IOPS-per-transaction, and cold-start-latency-per-invocation. See [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) and cost reference.
+Cloud resources cost real money. A query that scans 10 TB when it could scan 10 GB is not just slow — it is a $50 billing event that happens every time someone runs it. Senior engineers think in dollars-per-query, IOPS-per-transaction, and cold-start-latency-per-invocation. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) and cost reference.
 
 > [!danger] Without Efficiency
 >
@@ -66,7 +59,7 @@ Cloud resources cost real money. A query that scans 10 TB when it could scan 10 
 
 ## Security
 
-The data you move often contains financial information, personal identifiers, or proprietary signals. Least-privilege access, encrypted connections, parameterized queries, and credential rotation are not optional hardening steps — they are baseline professional standards. See [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) and [tde-encryption](/04-SQL-Server/Security/tde-encryption).
+The data you move often contains financial information, personal identifiers, or proprietary signals. Least-privilege access, encrypted connections, parameterized queries, and credential rotation are not optional hardening steps — they are baseline professional standards. See [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) and [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/Security/tde-encryption).
 
 > [!danger] Without Security
 >
@@ -94,11 +87,11 @@ Every system you build will eventually be operated by someone who is not you, po
 
 | Pillar | Key Vault Pages |
 |--------|----------------|
-| Reliability | [functional-pipeline-architecture](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture), [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design), [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework), [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture), [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) |
-| Observability | [observability-strategy-matrix](/13-Observability/observability-strategy-matrix), [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview), [gcp-pipeline-health-and-sla](/13-Observability/GCP-Native/gcp-pipeline-health-and-sla), [cloud-logging](/06-GCP/Logging/cloud-logging) |
-| Efficiency | [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization), [index-types-and-strategy](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy), [gcp-cost-monitoring-and-budgets](/06-GCP/Cost-Management/gcp-cost-monitoring-and-budgets), [finops-cost-optimization](/04-SQL-Server/Administration/finops-cost-optimization) |
-| Security | [gcp-identity-and-connection-patterns](/06-GCP/Security/gcp-identity-and-connection-patterns), [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam), [secrets-management](/06-GCP/Security/secrets-management), [tde-encryption](/04-SQL-Server/Security/tde-encryption) |
-| Operability | [defensive-scripting](/01-Shell/Scripting/defensive-scripting), [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns), [dbt-documentation-and-lineage](/11-dbt/Operations/dbt-documentation-and-lineage) |
+| Reliability | [functional-pipeline-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture), [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design), [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework), [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture), [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) |
+| Observability | [observability-strategy-matrix](https://alp78.github.io/elysium/13-Observability/observability-strategy-matrix), [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview), [gcp-pipeline-health-and-sla](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla), [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) |
+| Efficiency | [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization), [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy), [gcp-cost-monitoring-and-budgets](https://alp78.github.io/elysium/06-GCP/Cost-Management/gcp-cost-monitoring-and-budgets), [finops-cost-optimization](https://alp78.github.io/elysium/04-SQL-Server/Administration/finops-cost-optimization) |
+| Security | [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns), [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam), [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management), [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/Security/tde-encryption) |
+| Operability | [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting), [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns), [dbt-documentation-and-lineage](https://alp78.github.io/elysium/11-dbt/Operations/dbt-documentation-and-lineage) |
 
 > [!tip] Reading This Vault
 > This is a reference, not a novel. Jump to whatever section matches the problem in front of you. Each note is self-contained. Wikilinks point you to related material when concepts overlap.

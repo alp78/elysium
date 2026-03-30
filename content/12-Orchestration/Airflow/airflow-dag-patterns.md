@@ -50,10 +50,6 @@ keywords:
   - cross_downstream
   - medallion architecture airflow
 description: "Comprehensive reference for Apache Airflow DAG patterns: task dependencies, task groups, dynamic DAG generation, branching, trigger rules, idempotency, backfill, parameterization, dataset-driven scheduling, and SLA/callback configuration."
-related:
-  - airflow-core-concepts
-  - airflow-deployment
-  - airflow-troubleshooting
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -64,7 +60,7 @@ status: complete
 A reference for the most important Apache Airflow DAG authoring patterns used in production data engineering. This note covers how to express complex workflow logic in DAGs: dependencies, grouping, dynamic generation, branching, and scheduling strategies.
 
 > [!tip] Prerequisites
-> This note assumes familiarity with Airflow fundamentals. See [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) for DAG structure, Operators, Sensors, XComs, and the TaskFlow API before reading this reference.
+> This note assumes familiarity with Airflow fundamentals. See [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) for DAG structure, Operators, Sensors, XComs, and the TaskFlow API before reading this reference.
 
 ---
 
@@ -211,7 +207,7 @@ Dynamic DAG generation creates tasks programmatically — from a config file, da
 
 > [!warning] Keep DAG parsing fast
 >
-> DAG files are parsed by the Scheduler repeatedly (every 30s by default). Code that runs at module level (outside of tasks) runs during parsing. Never make database queries, API calls, or heavy computations at module level. Generate dynamic tasks from a static config file or lightweight Python list, not from live queries. See [airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting) for slow DAG parsing symptoms.
+> DAG files are parsed by the Scheduler repeatedly (every 30s by default). Code that runs at module level (outside of tasks) runs during parsing. Never make database queries, API calls, or heavy computations at module level. Generate dynamic tasks from a static config file or lightweight Python list, not from live queries. See [airflow-troubleshooting](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-troubleshooting) for slow DAG parsing symptoms.
 
 ### Pattern 1: Dynamic Tasks from a Config List
 
@@ -492,7 +488,7 @@ cleanup = PythonOperator(
 
 ## Idempotent DAGs
 
-An idempotent pipeline produces the same result whether run once or multiple times for the same time period. This is essential for safe retries and backfills. For a deeper treatment of idempotency beyond Airflow, see [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design).
+An idempotent pipeline produces the same result whether run once or multiple times for the same time period. This is essential for safe retries and backfills. For a deeper treatment of idempotency beyond Airflow, see [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design).
 
 ### Key Idempotency Settings
 
@@ -503,7 +499,7 @@ with DAG(
     start_date=datetime(2024, 1, 1),
 
     # CRITICAL: Only one DAG Run active at a time
-    # Prevents parallel runs from corrupting shared resources (a form of [race-conditions](/04-SQL-Server/Concurrency/race-conditions) prevention)
+    # Prevents parallel runs from corrupting shared resources (a form of [race-conditions](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/race-conditions) prevention)
     max_active_runs=1,
 
     catchup=False,  # Don't auto-backfill — use explicit backfill commands
@@ -839,7 +835,7 @@ with DAG(
 
 ### Medallion Architecture DAG — Bronze to Silver to Gold
 
-A full medallion architecture DAG using Task Groups, trigger rules, and callbacks. The bronze layer tasks here follow the patterns described in [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading).
+A full medallion architecture DAG using Task Groups, trigger rules, and callbacks. The bronze layer tasks here follow the patterns described in [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading).
 
 ```python
 # dags/medallion_pipeline.py
@@ -931,9 +927,9 @@ medallion_pipeline()
 
 ## Related Notes
 
-- [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) — DAG structure, Operators, Sensors, XComs, TaskFlow API
-- [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) — Docker Compose setup, Cloud Composer, CI/CD for DAGs
-- [airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting) — Debugging dynamic DAGs, trigger rule issues, backfill problems
+- [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) — DAG structure, Operators, Sensors, XComs, TaskFlow API
+- [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) — Docker Compose setup, Cloud Composer, CI/CD for DAGs
+- [airflow-troubleshooting](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-troubleshooting) — Debugging dynamic DAGs, trigger rule issues, backfill problems
 
 ## References
 

@@ -6,7 +6,6 @@ tags: [ai, prompt-engineering]
 aliases: [prompt engineering basics, prompt fundamentals, prompt principles, LLM input design, context hierarchy, token efficiency]
 keywords: [prompt engineering, context hierarchy, system prompt, user prompt, token efficiency, clarity, specificity, intent alignment, ambiguity, structure, reasoning, creativity, factuality, completion engine, context window, front-load]
 description: "Core principles of prompt engineering: the three axioms of LLM completion, the four-level context hierarchy (system → user → history → model knowledge), and how to achieve clarity, specificity, and intent alignment. Covers how prompt structure shapes reasoning, creative, and factual outputs."
-related: [prompt-architecture, model-specific-prompting, applied-prompting, prompt-debugging]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -60,10 +59,10 @@ System Prompt (highest authority)
 | Model knowledge | Facts, patterns, language | Static (training cutoff) |
 
 > [!warning] Context Decay
-> As a conversation grows long, the model's effective "memory" of earlier instructions degrades. This is why critical constraints must appear in the system prompt (highest persistence), not just as a one-time user message. See [prompt-debugging](/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging) for how to reinforce constraints mid-conversation.
+> As a conversation grows long, the model's effective "memory" of earlier instructions degrades. This is why critical constraints must appear in the system prompt (highest persistence), not just as a one-time user message. See [prompt-debugging](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging) for how to reinforce constraints mid-conversation.
 
 > [!info] Multi-Agent Context
-> In [multi-agent systems](/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#51-workflows-loops-and-multi-agent-systems), each agent has its own context hierarchy. A sub-agent's system prompt is set by the orchestrator — not the human user. This matters for designing agent architectures.
+> In [multi-agent systems](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#51-workflows-loops-and-multi-agent-systems), each agent has its own context hierarchy. A sub-agent's system prompt is set by the orchestrator — not the human user. This matters for designing agent architectures.
 
 ---
 
@@ -98,7 +97,7 @@ Sometimes what you ask for is not what you actually need:
 | "Review my code" | Find bugs, not style issues | "Review this code for correctness bugs only. Ignore style, naming, and formatting. Focus on logic errors, edge cases, and potential runtime exceptions." |
 
 > [!tip] Always State the Downstream Use
-> Tell the model what you'll **do** with the output. "List the top 10 stocks by market cap" produces a plain list. "List the top 10 stocks by market cap — I need this for a dashboard card" produces output shaped for that use. See [data extraction examples](/16-AI-and-Prompts/Prompt-Engineering/applied-prompting#34-data-analysis-and-extraction) for more.
+> Tell the model what you'll **do** with the output. "List the top 10 stocks by market cap" produces a plain list. "List the top 10 stocks by market cap — I need this for a dashboard card" produces output shaped for that use. See [data extraction examples](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/applied-prompting#34-data-analysis-and-extraction) for more.
 
 ---
 
@@ -167,16 +166,16 @@ Question: What was the year-over-year revenue growth in Q3?
 | Factuality | Source grounding, "only use X," explicit uncertainty handling | No source context, no uncertainty framing |
 
 > [!warning] Hallucination Risk on Factual Tasks
-> Without source grounding, models will confidently invent facts. Always include "use only the provided data" and "say 'unknown' if unsure" for any factual extraction task. See [diagnosing hallucinated facts](/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#41-diagnosing-weak-outputs) for the full fix.
+> Without source grounding, models will confidently invent facts. Always include "use only the provided data" and "say 'unknown' if unsure" for any factual extraction task. See [diagnosing hallucinated facts](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#41-diagnosing-weak-outputs) for the full fix.
 
 ---
 
 ## Related Notes
 
-- [prompt-architecture](/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture) — The 4-layer structural system (Role, Goal, Constraints, Format) that operationalizes these foundations
-- [model-specific-prompting](/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting) — How Claude, GPT-4, Gemini, and Grok respond differently to structure
-- [applied-prompting](/16-AI-and-Prompts/Prompt-Engineering/applied-prompting) — Research, code, data extraction, and content creation workflows
-- [prompt-debugging](/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging) — Diagnosing and fixing weak prompts; building prompt systems
+- [prompt-architecture](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture) — The 4-layer structural system (Role, Goal, Constraints, Format) that operationalizes these foundations
+- [model-specific-prompting](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting) — How Claude, GPT-4, Gemini, and Grok respond differently to structure
+- [applied-prompting](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/applied-prompting) — Research, code, data extraction, and content creation workflows
+- [prompt-debugging](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging) — Diagnosing and fixing weak prompts; building prompt systems
 
 ## References
 

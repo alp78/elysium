@@ -6,11 +6,6 @@ tags: [infrastructure, terraform, iac]
 aliases: [terraform dependencies, terraform dependency graph, depends_on, terraform parallelism, resource references]
 keywords: [dependency graph, implicit dependency, explicit dependency, depends_on, resource reference, parallel creation, terraform plan order, ".id", ".name", ".email", "network_interface[0]"]
 description: "How Terraform builds and resolves the resource dependency graph — implicit dependencies from resource references, explicit depends_on, and how parallelism works during apply."
-related:
-  - "[terraform-resource-dependencies](/07-Terraform/Patterns/terraform-resource-dependencies)"
-  - "[terraform-conditional-resources](/07-Terraform/Patterns/terraform-conditional-resources)"
-  - "[hcl-syntax-basics](/07-Terraform/Fundamentals/hcl-syntax-basics)"
-  - "[terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -18,7 +13,7 @@ status: complete
 
 # Terraform Resource Dependencies
 
-Terraform automatically builds a dependency graph from your resource references. Understanding how it works prevents ordering issues during apply and explains why some resources are created in parallel while others wait. To practice dependency graph reasoning and other Terraform scenarios, work through [terraform-problems](/07-Terraform/terraform-problems).
+Terraform automatically builds a dependency graph from your resource references. Understanding how it works prevents ordering issues during apply and explains why some resources are created in parallel while others wait. To practice dependency graph reasoning and other Terraform scenarios, work through [terraform-problems](https://alp78.github.io/elysium/07-Terraform/terraform-problems).
 
 ## How the Dependency Graph Works
 
@@ -190,10 +185,10 @@ Some changes can be applied in-place (updating an attribute without recreating t
 
 ## Related
 
-- [terraform-conditional-resources](/07-Terraform/Patterns/terraform-conditional-resources) — how `count` and `for_each` interact with the dependency graph
-- [terraform-plan-apply-destroy](/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — reading the plan to understand what will be created, updated, or destroyed
-- [hcl-syntax-basics](/07-Terraform/Fundamentals/hcl-syntax-basics) — HCL syntax for resource references
-- [terraform-state-management](/07-Terraform/Fundamentals/terraform-state-management) — how state tracks the real resource IDs that references resolve to
+- [terraform-conditional-resources](https://alp78.github.io/elysium/07-Terraform/Patterns/terraform-conditional-resources) — how `count` and `for_each` interact with the dependency graph
+- [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — reading the plan to understand what will be created, updated, or destroyed
+- [hcl-syntax-basics](https://alp78.github.io/elysium/07-Terraform/Fundamentals/hcl-syntax-basics) — HCL syntax for resource references
+- [terraform-state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-state-management) — how state tracks the real resource IDs that references resolve to
 
 ## References
 

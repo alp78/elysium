@@ -6,7 +6,6 @@ tags: [shell, bash, linux]
 aliases: [brace expansion, globbing, extglob, globstar, failglob, shopt]
 keywords: [brace expansion, globbing, extglob, globstar, failglob, shopt, wildcard, pattern matching, bash expansion, file patterns, recursive glob, exclude patterns]
 description: "Brace expansion and globbing in Bash for generating multiple arguments from patterns, recursive file matching, and excluding file types. Includes shopt settings for production shells."
-related: ["[defensive-scripting](/01-Shell/Scripting/defensive-scripting)", "[io-redirection](/01-Shell/Scripting/io-redirection)", "[file-manipulation](/01-Shell/File-Operations/file-manipulation)", "[finding-files](/01-Shell/File-Operations/finding-files)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -106,7 +105,7 @@ Get-ChildItem -Path . -Exclude *.log,*.tmp
 ```
 
 ## Related
-- [defensive-scripting](/01-Shell/Scripting/defensive-scripting) — `set -euo pipefail` pairs with `failglob` for safe scripts
-- [file-manipulation](/01-Shell/File-Operations/file-manipulation) — `mkdir -p` with brace expansion for directory trees
-- [finding-files](/01-Shell/File-Operations/finding-files) — `find` and `fd` for more complex file searches
-- [io-redirection](/01-Shell/Scripting/io-redirection) — combining globs with redirection patterns
+- [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) — `set -euo pipefail` pairs with `failglob` for safe scripts
+- [file-manipulation](https://alp78.github.io/elysium/01-Shell/File-Operations/file-manipulation) — `mkdir -p` with brace expansion for directory trees
+- [finding-files](https://alp78.github.io/elysium/01-Shell/File-Operations/finding-files) — `find` and `fd` for more complex file searches
+- [io-redirection](https://alp78.github.io/elysium/01-Shell/Scripting/io-redirection) — combining globs with redirection patterns

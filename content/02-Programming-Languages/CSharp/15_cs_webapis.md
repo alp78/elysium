@@ -5,10 +5,7 @@ technology: [csharp, dotnet]
 tags: [api, csharp]
 aliases: [REST API, HTTP client, web server, FastAPI, ASP.NET, Flask, minimal API, requests]
 keywords: [HttpClient, ASP.NET, minimal API, controller, middleware, routing, authentication, Swagger, IHttpClientFactory]
-description: "C# web and APIs reference with executable examples and cell outputs — covers HttpClient, ASP.NET Core minimal APIs, controllers, middleware, and authentication. See [15_py_webapis](/02-Programming-Languages/Python/15_py_webapis) for the Python equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[15_py_webapis](/02-Programming-Languages/Python/15_py_webapis)"
+description: "C# web and APIs reference with executable examples and cell outputs — covers HttpClient, ASP.NET Core minimal APIs, controllers, middleware, and authentication. See [15_py_webapis](https://alp78.github.io/elysium/02-Programming-Languages/Python/15_py_webapis) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

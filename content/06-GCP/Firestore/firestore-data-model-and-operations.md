@@ -55,19 +55,6 @@ description: >
   CLI operations, Terraform provisioning, and data engineering patterns including
   pipeline state stores, config-driven pipelines, event sourcing, and the
   Firestore vs BigQuery vs Bigtable decision matrix.
-related:
-  - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
-  - "[dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management)"
-  - "[data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export)"
-  - "[gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle)"
-  - "[gcs-object-operations](/06-GCP/Storage/gcs-object-operations)"
-  - "[pubsub-messaging](/06-GCP/Serverless/pubsub-messaging)"
-  - "[pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions)"
-  - "[cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services)"
-  - "[service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)"
-  - "[gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis)"
-  - "[gcloud-authentication](/06-GCP/Core/gcloud-authentication)"
-  - "[cloud-logging](/06-GCP/Logging/cloud-logging)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -95,7 +82,7 @@ Firestore is distinct from traditional relational databases: there is no fixed s
 > [!tip] When to Use Firestore
 >
 > When to reach for Firestore.
-> Firestore excels at pipeline state tracking, config stores, feature flags, audit logs, and any use case where you need real-time change propagation without managing infrastructure. For analytics workloads, pair it with [BigQuery](/06-GCP/BigQuery/querying-and-cost-optimization).
+> Firestore excels at pipeline state tracking, config stores, feature flags, audit logs, and any use case where you need real-time change propagation without managing infrastructure. For analytics workloads, pair it with [BigQuery](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization).
 
 ---
 
@@ -138,7 +125,7 @@ Firestore has two operating modes. The mode is chosen at database creation time 
 | Cost driver | Per read/write/delete | Per bytes scanned | Per instance-hour |
 | Best DE use case | Pipeline state, config, flags | Analytics, reporting | Transactional data with FK constraints |
 
-See [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) for BigQuery table design patterns and [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) for BigQuery cost controls.
+See [dataset-and-table-management](https://alp78.github.io/elysium/06-GCP/BigQuery/dataset-and-table-management) for BigQuery table design patterns and [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) for BigQuery cost controls.
 
 ---
 
@@ -328,7 +315,7 @@ db = firestore.Client(project="my-gcp-project")
 db = firestore.Client(project="my-gcp-project", database="my-named-db")
 ```
 
-See [gcloud-authentication](/06-GCP/Core/gcloud-authentication) for setting up Application Default Credentials (ADC) and [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) for service account key management.
+See [gcloud-authentication](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication) for setting up Application Default Credentials (ADC) and [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for service account key management.
 
 ---
 
@@ -754,7 +741,7 @@ else:
 ```
 
 **Event-driven triggers via Cloud Functions**
-A Firestore trigger fires a [Cloud Function](/06-GCP/Serverless/cloud-run-jobs-vs-services) whenever a document is created or updated. Useful for fan-out patterns: a pipeline writes a "job request" document; a Cloud Function picks it up and triggers downstream processing.
+A Firestore trigger fires a [Cloud Function](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) whenever a document is created or updated. Useful for fan-out patterns: a pipeline writes a "job request" document; a Cloud Function picks it up and triggers downstream processing.
 
 A Cloud Function triggered by Firestore document creation can be deployed via Firebase Functions or Cloud Functions 2nd gen using a `functions_framework` handler.
 
@@ -835,12 +822,12 @@ gcloud firestore import gs://my-backup-bucket/firestore/2026-03-22 \
   --collection-ids=config
 ```
 
-See [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) for GCS bucket setup and [gcs-object-operations](/06-GCP/Storage/gcs-object-operations) for managing backup files. Make sure the Firestore service account has `storage.objects.create` on the destination bucket.
+See [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) for GCS bucket setup and [gcs-object-operations](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations) for managing backup files. Make sure the Firestore service account has `storage.objects.create` on the destination bucket.
 
 > [!tip] Schedule Exports
 >
 > Schedule exports with Cloud Scheduler.
-> Automate Firestore backups by triggering `gcloud firestore export` from a [Cloud Run Job](/06-GCP/Serverless/cloud-run-jobs-vs-services) on a schedule, or use the Firestore managed export via the console. Store exports in a lifecycle-managed GCS bucket to control retention costs.
+> Automate Firestore backups by triggering `gcloud firestore export` from a [Cloud Run Job](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) on a schedule, or use the Firestore managed export via the console. Store exports in a lifecycle-managed GCS bucket to control retention costs.
 
 ---
 
@@ -864,7 +851,7 @@ gcloud projects add-iam-policy-binding my-gcp-project \
   --role="roles/datastore.user"
 ```
 
-See [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) for service account creation and key management.
+See [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for service account creation and key management.
 
 #### Basic rules for a web app exposing Firestore (for reference)
 
@@ -1147,7 +1134,7 @@ def get_run_events(pipeline_id: str, run_id: str):
 
 ### Real-Time Data Ingestion
 
-Write streaming or micro-batch data to Firestore for applications that need low-latency access to fresh records. Combine with [BigQuery](/06-GCP/BigQuery/querying-and-cost-optimization) for historical analytics via periodic export.
+Write streaming or micro-batch data to Firestore for applications that need low-latency access to fresh records. Combine with [BigQuery](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) for historical analytics via periodic export.
 
 #### Write micro-batches to Firestore
 
@@ -1166,7 +1153,7 @@ def write_events_batch(events: list[dict]):
 ```
 
 #### Export hot data to BigQuery for analytics
-Run a [Cloud Run Job](/06-GCP/Serverless/cloud-run-jobs-vs-services) on a schedule that queries recent Firestore documents and streams them to BigQuery via the BigQuery Storage Write API. See [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) for BigQuery ingestion patterns.
+Run a [Cloud Run Job](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) on a schedule that queries recent Firestore documents and streams them to BigQuery via the BigQuery Storage Write API. See [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) for BigQuery ingestion patterns.
 
 ```python
 from google.cloud import bigquery
@@ -1285,7 +1272,7 @@ Or restructure to store dynamic keys as an array of `{key, value}` objects rathe
 
 #### Firestore vs Alternatives — decision guidance
 - Need real-time updates or listeners → **Firestore**
-- Need SQL analytics on large datasets → **BigQuery** (see [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization))
+- Need SQL analytics on large datasets → **BigQuery** (see [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization))
 - Need ACID transactions with foreign keys → **Cloud SQL**
 - Need >10 GB/s write throughput on time-series → **Bigtable**
 - Need pipeline state, config, feature flags → **Firestore** (purpose-built for this)

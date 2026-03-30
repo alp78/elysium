@@ -64,18 +64,6 @@ description: >
   advanced patterns (bridge tables, factless facts, aggregates, late-arriving data),
   and physical implementation in SQL Server and BigQuery. Every concept is grounded
   in a financial index provider domain with full DDL and concrete SQL examples.
-related:
-  - "[data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture)"
-  - "[star vs snowflake schema](/14-Data-Architecture/Data-Modeling/dimensional-modeling)"
-  - "[SCD patterns](/14-Data-Architecture/Architectures/data-warehouse-architecture)"
-  - "[dbt modeling](/11-dbt/Modeling/dbt-staging-models)"
-  - "[columnstore indexes](/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy)"
-  - "[BigQuery partitioning](/06-GCP/BigQuery/dataset-and-table-management)"
-  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
-  - "[fact design](/14-Data-Architecture/Data-Modeling/dimensional-modeling)"
-  - "[dimension design](/14-Data-Architecture/Data-Modeling/dimensional-modeling)"
-  - "[bus matrix](/14-Data-Architecture/Data-Modeling/dimensional-modeling)"
-  - "[dimensional-modeling](/14-Data-Architecture/Data-Modeling/dimensional-modeling)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -149,12 +137,12 @@ For the index valuation process at the grain of one index per trading day:
 
 ### Step 4 — Identify the Facts
 
-Facts are the numeric measurements produced by the business process at the declared grain. They should be **additive**, **semi-additive**, or **non-additive** — and you must know which. DataFrame operations like joins and groupbys in [05_py_aggregation_reshaping](/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) mirror the star schema query pattern — joining a fact DataFrame to dimension DataFrames along key columns.
+Facts are the numeric measurements produced by the business process at the declared grain. They should be **additive**, **semi-additive**, or **non-additive** — and you must know which. DataFrame operations like joins and groupbys in [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) mirror the star schema query pattern — joining a fact DataFrame to dimension DataFrames along key columns.
 
 | Measure | Additivity | Explanation |
 |---------|-----------|-------------|
 | `market_cap_usd` | Semi-additive | Can sum across indices but not across dates (use snapshot logic) |
-| `daily_return_pct` | Non-additive | Percentages cannot be summed; must be compounded (see [bq-advanced](/05-DB-Queries/BigQuery/bq-advanced) for BigQuery window functions that handle compounding) |
+| `daily_return_pct` | Non-additive | Percentages cannot be summed; must be compounded (see [bq-advanced](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-advanced) for BigQuery window functions that handle compounding) |
 | `num_constituents` | Semi-additive | Count at a point in time; averaging across dates is valid, summing is not |
 | `weight_pct` | Semi-additive | Sums to 100% within one index on one date; cannot sum across indices |
 | `rows_processed` | Additive | Can sum across pipelines, dates, or any dimension |
@@ -310,7 +298,7 @@ erDiagram
     }
 ```
 
-In practice, the [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) layer is where dimensional models are physically built — fact and dimension tables are materialized as gold-layer outputs ready for dashboard consumption.
+In practice, the [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) layer is where dimensional models are physically built — fact and dimension tables are materialized as gold-layer outputs ready for dashboard consumption.
 
 ### Why Star Schemas Outperform Normalized Models for Analytics
 

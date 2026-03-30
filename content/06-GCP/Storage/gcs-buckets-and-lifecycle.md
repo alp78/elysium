@@ -6,7 +6,6 @@ tags: [infrastructure, gcp, gcs]
 aliases: [GCS buckets, GCS lifecycle, GCS storage classes, GCS versioning, Cloud Storage lifecycle rules, STANDARD NEARLINE COLDLINE ARCHIVE]
 keywords: [GCS bucket, cloud storage, storage class, STANDARD, NEARLINE, COLDLINE, ARCHIVE, lifecycle rules, versioning, SetStorageClass, auto-transition, auto-delete, uniform bucket level access, location, data residency, lifecycle.json, cost optimization, retrieval cost]
 description: "How to create GCS buckets with appropriate storage classes and configure lifecycle rules to automatically transition objects through STANDARD → NEARLINE → COLDLINE → ARCHIVE, reducing storage costs for aging pipeline data."
-related: [gcs-object-operations, data-loading-and-export, service-accounts-and-iam, gcp-projects-and-apis]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # GCS Buckets and Lifecycle — Storage Classes and Cost Management
 
-Cloud Storage pricing is not uniform — there are four storage classes with different monthly storage costs and retrieval costs. The pattern is: lower storage cost = higher retrieval cost. Lifecycle rules automate the transition of objects through these classes as data ages, and automatic deletion at the end of the retention period. Aligning lifecycle deletion ages with your [backup retention policy](/04-SQL-Server/Administration/backup-types-and-strategy) ensures you never delete data that hasn't been backed up elsewhere. Configuring lifecycle rules on pipeline buckets is a one-time setup that permanently reduces storage costs without any ongoing maintenance.
+Cloud Storage pricing is not uniform — there are four storage classes with different monthly storage costs and retrieval costs. The pattern is: lower storage cost = higher retrieval cost. Lifecycle rules automate the transition of objects through these classes as data ages, and automatic deletion at the end of the retention period. Aligning lifecycle deletion ages with your [backup retention policy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy) ensures you never delete data that hasn't been backed up elsewhere. Configuring lifecycle rules on pipeline buckets is a one-time setup that permanently reduces storage costs without any ongoing maintenance.
 
 ### Creating GCS Buckets with gcloud storage
 
@@ -43,7 +42,7 @@ Lower storage cost = higher retrieval cost. Match class to access pattern — a 
 | COLDLINE | $0.004/GB/mo | 90 days | $0.02/GB | Quarterly backups |
 | ARCHIVE | $0.001/GB/mo | 365 days | $0.05/GB | Legal hold, long-term |
 
-Choosing the right storage class is one of the most impactful [finops-cost-optimization](/04-SQL-Server/Administration/finops-cost-optimization) levers available in GCP -- a single class change on a multi-TB bucket can save thousands per month.
+Choosing the right storage class is one of the most impactful [finops-cost-optimization](https://alp78.github.io/elysium/04-SQL-Server/Administration/finops-cost-optimization) levers available in GCP -- a single class change on a multi-TB bucket can save thousands per month.
 
 > [!warning] Minimum Duration Charges
 >
@@ -100,7 +99,7 @@ gcloud storage buckets update gs://data-pipeline-pipeline-data --versioning
 
 > [!tip] Related pattern
 >
-> For reproducible bucket provisioning with lifecycle rules baked in, use [Terraform storage blocks](/07-Terraform/Block-Library/tf-compute-and-storage) instead of manual `gcloud` commands.
+> For reproducible bucket provisioning with lifecycle rules baked in, use [Terraform storage blocks](https://alp78.github.io/elysium/07-Terraform/Block-Library/tf-compute-and-storage) instead of manual `gcloud` commands.
 
 ### GCS Bucket Location and Data Residency
 
@@ -113,10 +112,10 @@ For data residency compliance (GDPR, financial regulations), use a specific regi
 
 ## Related
 
-- [gcs-object-operations](/06-GCP/Storage/gcs-object-operations) — Uploading, syncing, moving, and deleting objects within these buckets
-- [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) — Loading bucket contents into BigQuery; exporting BigQuery to buckets
-- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — `roles/storage.objectAdmin` on specific buckets (not the project)
-- [gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis) — `storage.googleapis.com` is usually enabled by default
+- [gcs-object-operations](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations) — Uploading, syncing, moving, and deleting objects within these buckets
+- [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) — Loading bucket contents into BigQuery; exporting BigQuery to buckets
+- [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — `roles/storage.objectAdmin` on specific buckets (not the project)
+- [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) — `storage.googleapis.com` is usually enabled by default
 
 ## References
 

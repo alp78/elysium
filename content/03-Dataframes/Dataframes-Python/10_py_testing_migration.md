@@ -10,11 +10,6 @@ aliases:
   - end-to-end project, validation, migration guide
 keywords: [pytest, assert_frame_equal, testing, validation, migration, pandas to polars, refactor]
 description: "Pandas/Polars DataFrame reference 10/10 — Real-World Project, Testing & Migration (end-to-end, validation, migration guide). Side-by-side executable examples with cell outputs."
-related:
-  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
-  - "[10_cs_testing_migration](/03-Dataframes/Dataframes-CSharp/10_cs_testing_migration)"
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[09_py_database_interface](/03-Dataframes/Dataframes-Python/09_py_database_interface)"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -334,7 +329,7 @@ assert_schema_pl(
 
 ## Data Validation Rules
 
-Business rules that data must satisfy: no nulls in key columns, value ranges, referential integrity, uniqueness constraints, and temporal consistency. These checks map directly to the quality dimensions (completeness, uniqueness, validity) defined in [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework), and dbt implements the same patterns declaratively via [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework).
+Business rules that data must satisfy: no nulls in key columns, value ranges, referential integrity, uniqueness constraints, and temporal consistency. These checks map directly to the quality dimensions (completeness, uniqueness, validity) defined in [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework), and dbt implements the same patterns declaratively via [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework).
 
 ### Polars
 

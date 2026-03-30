@@ -6,7 +6,6 @@ tags: [ai, prompt-engineering]
 aliases: [prompt debugging, prompt optimization, weak output diagnosis, intent misalignment, prompt system design, multi-agent prompting, prompt library, prompt mastery, feedback loop prompting, iterative refinement, memory layering, prompt workflows, prompt anti-patterns]
 keywords: [prompt debugging, diagnosing weak outputs, intent misalignment, rebuilding prompts, contextual reinforcement, phrasing rephrasing, logic steps, cross-model testing, consistency, workflows chains loops, multi-agent systems, planner researcher executor reviewer, memory layering, iterative refinement, feedback integration, prompt library, meta-analysis, mastery checklist, anti-patterns, universal modifiers, 4-layer template, quick reference, CLAUDE.md, memory file]
 description: "Complete guide to debugging weak AI prompts, diagnosing output failures, rebuilding prompts with three techniques (rephrasing, logic steps, contextual reinforcement), and designing prompt systems including workflows, loops, multi-agent architectures, memory layering, and feedback loops. Includes the full mastery checklist and prompt library structure."
-related: [prompt-foundations, prompt-architecture, model-specific-prompting, applied-prompting]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # Prompt Debugging, Optimization, and System Design
 
-This note covers the diagnostic and system-level layer of prompt engineering: identifying why prompts fail, rebuilding them systematically, designing prompt workflows and multi-agent systems, managing memory across long conversations, and building a reusable prompt library. It also includes the full mastery checklist and quick reference card. For foundations, see [prompt-foundations](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations); for structural patterns, see [prompt-architecture](/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture).
+This note covers the diagnostic and system-level layer of prompt engineering: identifying why prompts fail, rebuilding them systematically, designing prompt workflows and multi-agent systems, managing memory across long conversations, and building a reusable prompt library. It also includes the full mastery checklist and quick reference card. For foundations, see [prompt-foundations](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations); for structural patterns, see [prompt-architecture](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture).
 
 ---
 
@@ -161,7 +160,7 @@ A robust prompt should produce acceptable output across multiple models. If it o
 
 If any dimension fails, the prompt needs tightening in that area — not model-specific tuning.
 
-For model-specific strengths and preferred formats, see [model-specific-prompting](/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting).
+For model-specific strengths and preferred formats, see [model-specific-prompting](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting).
 
 ---
 
@@ -484,10 +483,10 @@ Format:
 
 ## Related Notes
 
-- [prompt-foundations](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) — The three axioms and context hierarchy that define why prompts fail
-- [prompt-architecture](/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture) — The 4-layer template in full structural detail
-- [model-specific-prompting](/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting) — Per-model strengths, quirks, and debugging adjustments
-- [applied-prompting](/16-AI-and-Prompts/Prompt-Engineering/applied-prompting) — Real-world before/after examples to practice against
+- [prompt-foundations](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) — The three axioms and context hierarchy that define why prompts fail
+- [prompt-architecture](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture) — The 4-layer template in full structural detail
+- [model-specific-prompting](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting) — Per-model strengths, quirks, and debugging adjustments
+- [applied-prompting](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/applied-prompting) — Real-world before/after examples to practice against
 
 ## References
 

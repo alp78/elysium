@@ -6,11 +6,6 @@ tags: [git, github]
 aliases: [pull request, PR, code review, gh pr, GitHub CLI, PR workflow, merge PR, squash merge]
 keywords: [pull request, PR, code review, gh pr create, gh pr merge, squash merge, rebase merge, draft PR, branch protection, auto-merge, force-with-lease, merge conflict, PR workflow, github cli, gh pr checkout]
 description: "Pull request creation, review, and merge workflows using GitHub CLI — including squash merge, handling diverged branches with rebase, branch protection rules, and resolving 'not mergeable' errors."
-related:
-  - "[git-daily-workflow](/08-Git/git-daily-workflow)"
-  - "[git-branching-and-merging](/08-Git/git-branching-and-merging)"
-  - "[git-recovery-and-undo](/08-Git/git-recovery-and-undo)"
-  - "[github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -108,7 +103,7 @@ Go to your repository **Settings → General → Pull Requests** and enable:
 
 **Option C: Branch protection rule (strictest)**
 
-Branch protection rules work hand-in-hand with [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) -- CI checks run on every PR push, and the merge button stays greyed out until they pass. Code review itself is also a powerful [teaching and collaboration tool](/15-DataOps/leadership-and-collaboration), especially for onboarding new team members.
+Branch protection rules work hand-in-hand with [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) -- CI checks run on every PR push, and the merge button stays greyed out until they pass. Code review itself is also a powerful [teaching and collaboration tool](https://alp78.github.io/elysium/15-DataOps/leadership-and-collaboration), especially for onboarding new team members.
 
 Go to **Settings → Branches → Branch protection rules → Add rule** for `main`:
 
@@ -297,10 +292,10 @@ gh pr merge 7 --squash
 
 ## Related
 
-- [git-daily-workflow](/08-Git/git-daily-workflow) — the daily workflow that feeds into PRs
-- [git-branching-and-merging](/08-Git/git-branching-and-merging) — creating and managing branches
-- [git-recovery-and-undo](/08-Git/git-recovery-and-undo) — stash and reflog for recovery
-- [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — the CI/CD that runs on PRs
+- [git-daily-workflow](https://alp78.github.io/elysium/08-Git/git-daily-workflow) — the daily workflow that feeds into PRs
+- [git-branching-and-merging](https://alp78.github.io/elysium/08-Git/git-branching-and-merging) — creating and managing branches
+- [git-recovery-and-undo](https://alp78.github.io/elysium/08-Git/git-recovery-and-undo) — stash and reflog for recovery
+- [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — the CI/CD that runs on PRs
 
 ## References
 

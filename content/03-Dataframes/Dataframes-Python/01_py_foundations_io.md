@@ -10,11 +10,6 @@ aliases:
   - Series, DataFrames, indexes, data types
 keywords: [Series, DataFrame, Index, dtypes, int64, float64, object, category, read_csv, read_parquet, to_csv, to_parquet]
 description: "Pandas/Polars DataFrame reference 01/10 — Foundations & I/O (Series, DataFrames, types, CSV/Parquet). Side-by-side executable examples with cell outputs."
-related:
-  - "[moc-dataframes](/03-Dataframes/moc-dataframes)"
-  - "[01_cs_foundations_io](/03-Dataframes/Dataframes-CSharp/01_cs_foundations_io)"
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[02_py_explore_select_filter](/03-Dataframes/Dataframes-Python/02_py_explore_select_filter)"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -3752,7 +3747,7 @@ print(f"CSV lazy+filter: {df_csv_lazy.shape} in {csv_lazy_time:.4f}s")
 
 ## Format Comparison: Size and Speed
 
-For a deeper look at when to choose Parquet, CSV, or JSON across the full data pipeline, see [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats). The same Parquet I/O patterns shown here apply when loading data into BigQuery via [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export).
+For a deeper look at when to choose Parquet, CSV, or JSON across the full data pipeline, see [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats). The same Parquet I/O patterns shown here apply when loading data into BigQuery via [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export).
 
 - **Read JSON**: Load a JSON file into a DataFrame.
 

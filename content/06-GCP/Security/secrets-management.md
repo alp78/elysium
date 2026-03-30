@@ -44,7 +44,7 @@ gcloud secrets add-iam-policy-binding db-password \
 
 ### Terraform Provisioning
 
-The Terraform blocks below are part of the broader [terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets) module that provisions both IAM bindings and Secret Manager resources together.
+The Terraform blocks below are part of the broader [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) module that provisions both IAM bindings and Secret Manager resources together.
 
 ```hcl
 resource "google_secret_manager_secret" "db_password" {
@@ -67,7 +67,7 @@ resource "google_secret_manager_secret_iam_member" "pipeline_access" {
 
 ### Access from Python
 
-The Python client library usage here is covered in more depth in [20_py_security_setup](/02-Programming-Languages/Python/20_py_security_setup), which includes error handling and caching patterns.
+The Python client library usage here is covered in more depth in [20_py_security_setup](https://alp78.github.io/elysium/02-Programming-Languages/Python/20_py_security_setup), which includes error handling and caching patterns.
 
 ```python
 from google.cloud import secretmanager
@@ -120,7 +120,7 @@ Store in GitHub Settings > Secrets and variables > Actions:
 
 ### Local Development Secret Patterns
 
-For local development, secrets often surface as [environment-variables](/01-Shell/Scripting/environment-variables) in the shell. The `direnv` pattern below bridges Secret Manager with shell-level credential handling.
+For local development, secrets often surface as [environment-variables](https://alp78.github.io/elysium/01-Shell/Scripting/environment-variables) in the shell. The `direnv` pattern below bridges Secret Manager with shell-level credential handling.
 
 ```bash
 # Application Default Credentials (no key file needed)
@@ -173,10 +173,10 @@ export SQL_CONN_STRING="Server=localhost;Database=analytics_db;User=sa;Password=
 
 ## Related
 
-- [gcp-identity-and-connection-patterns](/06-GCP/Security/gcp-identity-and-connection-patterns) — Identity model and connection patterns that determine how secrets are consumed
-- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — IAM roles and service account design
-- [tf-iam-secrets-serverless](/07-Terraform/Block-Library/tf-iam-secrets-serverless) — Terraform blocks for secrets and IAM
-- [github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering) — Workload Identity Federation setup
-- [airflow-deployment](/12-Orchestration/Airflow/airflow-deployment) — Airflow configuration and connections
-- [golden-rules-of-data-engineering](/14-Data-Architecture/Decision-Frameworks/golden-rules-of-data-engineering) — Rule 9: Automate Everything
-- [environment-management-strategy](/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — How secrets differ between dev, staging, and prod
+- [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns) — Identity model and connection patterns that determine how secrets are consumed
+- [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — IAM roles and service account design
+- [tf-iam-secrets-serverless](https://alp78.github.io/elysium/07-Terraform/Block-Library/tf-iam-secrets-serverless) — Terraform blocks for secrets and IAM
+- [github-actions-data-engineering](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-data-engineering) — Workload Identity Federation setup
+- [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) — Airflow configuration and connections
+- [golden-rules-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/golden-rules-of-data-engineering) — Rule 9: Automate Everything
+- [environment-management-strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — How secrets differ between dev, staging, and prod

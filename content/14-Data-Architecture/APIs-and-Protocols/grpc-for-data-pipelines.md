@@ -57,11 +57,6 @@ description: >
   all four RPC types, Python server and client implementations, error handling,
   interceptors, load balancing, and comparisons with REST. Includes financial
   data scenarios for market data feeds and bulk ingestion pipelines.
-related:
-  - "[rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption)"
-  - "[serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats)"
-  - "fastapi and polars"
-  - "[streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -1588,7 +1583,7 @@ async with aio.insecure_channel("localhost:50051") as channel:
 
 ## Related Notes
 
-- [rest-api-design-and-consumption](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) — REST patterns and when to use REST vs gRPC
-- [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Deep dive on protobuf, Avro, Parquet, Arrow
+- [rest-api-design-and-consumption](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) — REST patterns and when to use REST vs gRPC
+- [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Deep dive on protobuf, Avro, Parquet, Arrow
 - fastapi and polars — Building HTTP APIs in Python when gRPC is not needed
-- [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) — Event streaming patterns; gRPC streaming vs Kafka
+- [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture) — Event streaming patterns; gRPC streaming vs Kafka

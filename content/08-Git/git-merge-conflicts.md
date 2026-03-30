@@ -6,7 +6,6 @@ tags: [git, github]
 aliases: [merge conflict, conflict markers, resolve conflicts, git merge abort, conflict resolution, git mergetool, rebase conflict, three-way merge, accept incoming, accept current]
 keywords: [merge conflict, conflict markers, resolve conflict, git merge abort, git mergetool, rebase continue, rebase abort, conflict resolution, three-way merge, HEAD, incoming changes, stash pop conflict, VS Code merge tool, accept current, accept incoming, prevent merge conflicts, conflict markers explanation]
 description: "How to understand, resolve, and prevent git merge conflicts — including conflict marker syntax, step-by-step resolution, git mergetool with VS Code, and rebase conflict resolution with a real-world case study."
-related: ["[git-branching-and-merging](/08-Git/git-branching-and-merging)", "[git-remote-management](/08-Git/git-remote-management)", "[git-recovery-and-undo](/08-Git/git-recovery-and-undo)", "[pull-requests-and-code-review](/08-Git/pull-requests-and-code-review)"]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -149,7 +148,7 @@ git rebase --skip    # Skip the current commit (use only if that commit is no lo
 > [!warning] Rebase vs Merge Abort
 >
 > Rebase --abort vs Merge --abort.
-> Both abort commands are safe and restore your prior state. Remember: after a `git rebase`, commit SHAs change — you will need to `git push --force-with-lease` to update the remote. See [git-remote-management](/08-Git/git-remote-management) for safe force-push usage.
+> Both abort commands are safe and restore your prior state. Remember: after a `git rebase`, commit SHAs change — you will need to `git push --force-with-lease` to update the remote. See [git-remote-management](https://alp78.github.io/elysium/08-Git/git-remote-management) for safe force-push usage.
 
 ## Real-World Case Study: Rebase a PR After Another PR Was Merged
 
@@ -306,7 +305,7 @@ Prevention is better than resolution. Strategies that reduce conflict frequency:
 - **Merge or rebase frequently** — if your branch lives for more than a day or two, periodically rebase onto the latest `main` to stay current.
 - **Coordinate on shared files** — if two people are editing the same file for unrelated reasons, communicate and consider sequencing the PRs.
 - **Use GitHub's branch update button** — enable "Always suggest updating pull request branches" in repo Settings → General → Pull Requests. This adds a one-click "Update branch" button on the PR page.
-- **Enable branch protection rules** — "Require branches to be up to date before merging" forces every PR to be rebased before it can merge. See [pull-requests-and-code-review](/08-Git/pull-requests-and-code-review) for setup.
+- **Enable branch protection rules** — "Require branches to be up to date before merging" forces every PR to be rebased before it can merge. See [pull-requests-and-code-review](https://alp78.github.io/elysium/08-Git/pull-requests-and-code-review) for setup.
 
 > [!tip] Rebase early, rebase often
 >
@@ -336,7 +335,7 @@ Prevention is better than resolution. Strategies that reduce conflict frequency:
 
 ## Related
 
-- [git-branching-and-merging](/08-Git/git-branching-and-merging) — merge and rebase strategies that trigger conflicts
-- [git-remote-management](/08-Git/git-remote-management) — `--force-with-lease` for pushing after rebase
-- [git-recovery-and-undo](/08-Git/git-recovery-and-undo) — aborting, resetting, and recovering from failed merges
-- [pull-requests-and-code-review](/08-Git/pull-requests-and-code-review) — preventing unmergeable PRs with branch protection rules
+- [git-branching-and-merging](https://alp78.github.io/elysium/08-Git/git-branching-and-merging) — merge and rebase strategies that trigger conflicts
+- [git-remote-management](https://alp78.github.io/elysium/08-Git/git-remote-management) — `--force-with-lease` for pushing after rebase
+- [git-recovery-and-undo](https://alp78.github.io/elysium/08-Git/git-recovery-and-undo) — aborting, resetting, and recovering from failed merges
+- [pull-requests-and-code-review](https://alp78.github.io/elysium/08-Git/pull-requests-and-code-review) — preventing unmergeable PRs with branch protection rules

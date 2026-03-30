@@ -6,11 +6,6 @@ tags: [monitoring, observability, performance, cost, datadog, gcp]
 aliases: [Datadog Costs, Datadog Pricing, DD Agent Cost]
 keywords: [datadog cost, datadog pricing, host cost, trial, infrastructure monitoring, APM pro, logs pricing, EU region, datadoghq.eu, 14-day trial, per host, dd-agent free, ram usage 350mb, disable datadog, dd_api_key empty]
 description: "Datadog pricing breakdown for the data platform — agent RAM overhead, trial vs paid costs, and how to cleanly disable all Datadog components by setting dd_api_key to empty."
-related:
-  - datadog-architecture-overview
-  - datadog-agent-airflow-vm
-  - datadog-agent-sql-vm
-  - datadog-troubleshooting
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -57,7 +52,7 @@ The agents are lightweight additions to existing VMs:
 | data-pipeline-airflow (e2-medium, 4 GB) | Docker container | ~350 MB |
 | data-pipeline-sql (e2-small, 2 GB) | systemd package | ~250 MB |
 
-See [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) for the full memory budget on the Airflow VM (total ~1,650 MB out of 4 GB).
+See [datadog-agent-airflow-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) for the full memory budget on the Airflow VM (total ~1,650 MB out of 4 GB).
 
 ---
 
@@ -86,10 +81,10 @@ Everything is conditional on `var.dd_api_key != ""`. To disable:
 One `terraform apply` + one image rebuild cleans up everything.
 
 > [!tip] Trial-to-Paid Transition
-> The 14-day trial gives full access to all Datadog features. Use the trial period to build dashboards, monitors, and verify the full observability stack. After the trial, evaluate which features are worth the cost (Infrastructure + APM at ~$50-80/host/month is the typical entry point for production monitoring). For a broader view of cost management across the GCP stack, see [gcp-billing-and-pricing](/06-GCP/Cost-Management/gcp-billing-and-pricing).
+> The 14-day trial gives full access to all Datadog features. Use the trial period to build dashboards, monitors, and verify the full observability stack. After the trial, evaluate which features are worth the cost (Infrastructure + APM at ~$50-80/host/month is the typical entry point for production monitoring). For a broader view of cost management across the GCP stack, see [gcp-billing-and-pricing](https://alp78.github.io/elysium/06-GCP/Cost-Management/gcp-billing-and-pricing).
 
 > [!tip] Related pattern
-> The cost optimization mindset here parallels the [SQL Server FinOps](/04-SQL-Server/Administration/finops-cost-optimization) approach: right-size resources first, then decide which premium capabilities (APM traces, log indexing) deliver enough value to justify their cost.
+> The cost optimization mindset here parallels the [SQL Server FinOps](https://alp78.github.io/elysium/04-SQL-Server/Administration/finops-cost-optimization) approach: right-size resources first, then decide which premium capabilities (APM traces, log indexing) deliver enough value to justify their cost.
 
 ---
 
@@ -106,7 +101,7 @@ If cost is a concern after the trial:
 
 ## Related
 
-- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — Full observability topology
-- [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) — Memory budget on Airflow VM
-- [datadog-agent-sql-vm](/13-Observability/Datadog/datadog-agent-sql-vm) — SQL VM agent management
-- [datadog-troubleshooting](/13-Observability/Datadog/datadog-troubleshooting) — Disabling Datadog section
+- [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) — Full observability topology
+- [datadog-agent-airflow-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) — Memory budget on Airflow VM
+- [datadog-agent-sql-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-sql-vm) — SQL VM agent management
+- [datadog-troubleshooting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-troubleshooting) — Disabling Datadog section

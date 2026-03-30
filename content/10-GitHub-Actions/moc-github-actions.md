@@ -20,32 +20,12 @@ mindmap
     (workflows)
     (patterns)
 ```
+
 > [!example]- Foundations and Patterns
 >
-> > [!abstract]- [[github-actions-fundamentals]]
-> >
-> > - [[github-actions-fundamentals#Workflow File Anatomy|Workflow file anatomy]]
-> > - [[github-actions-fundamentals#Triggers (on)|Triggers]]
-> > - [[github-actions-fundamentals#Jobs|Jobs and runners]]
-> > - [[github-actions-fundamentals#Expressions and Contexts|Expressions and contexts]]
-> > - [[github-actions-fundamentals#Secrets|Secrets and GITHUB_TOKEN]]
-> > - [[github-actions-fundamentals#Caching|Caching and concurrency]]
+> [[domain-foundations-and-patterns]]
 >
-> > [!abstract]- [[github-actions-workflows]]
-> >
-> > - [[github-actions-workflows#Key Patterns|Key patterns]]
-> > - [[github-actions-workflows#Matrix Testing|Matrix testing]]
-> > - [[github-actions-workflows#Manual Workflow Dispatch with Inputs|Manual dispatch with inputs]]
-> > - [[github-actions-workflows#Pre-commit Hooks|Pre-commit hooks]]
->
-> > [!abstract]- [[github-actions-patterns]]
-> >
-> > - [[github-actions-patterns#Matrix Builds|Matrix builds]]
-> > - [[github-actions-patterns#Reusable Workflows|Reusable workflows]]
-> > - [[github-actions-patterns#Composite Actions|Composite actions]]
-> > - [[github-actions-patterns#Environment Protection (Staging → Production)|Environment protection]]
-> > - [[github-actions-patterns#Monorepo: Path Filters|Monorepo path filters]]
-> > - [[github-actions-patterns#Cost Optimization|Cost optimization]]
+> GitHub Actions YAML syntax, triggers, jobs, expressions, secrets, caching, matrix builds, reusable workflows, and cost optimization patterns.
 
 ```mermaid
 mindmap
@@ -54,34 +34,16 @@ mindmap
     (data engineering)
     (troubleshooting)
 ```
+
 > [!example]- Applied Automation
 >
-> > [!abstract]- [[github-actions-ci-cd]]
-> >
-> > - [[github-actions-ci-cd#How GitHub Actions Connects to Git|Git trigger events]]
-> > - [[github-actions-ci-cd#Monitoring Workflows with GitHub CLI|Monitoring with GitHub CLI]]
-> > - [[github-actions-ci-cd#Secrets Management|Secrets management]]
-> > - [[github-actions-ci-cd#Troubleshooting Common Errors|Troubleshooting common errors]]
+> [[domain-applied-automation]]
 >
-> > [!abstract]- [[github-actions-data-engineering]]
-> >
-> > - [[github-actions-data-engineering#CI for Data Pipelines|CI for data pipelines]]
-> > - [[github-actions-data-engineering#Terraform Automation|Terraform automation]]
-> > - [[github-actions-data-engineering#dbt CI|dbt CI]]
-> > - [[github-actions-data-engineering#Data Quality Gates|Data quality gates]]
-> > - [[github-actions-data-engineering#Workload Identity Federation (Keyless GCP Auth)|Workload Identity Federation]]
-> > - [[github-actions-data-engineering#Troubleshooting|Troubleshooting]]
->
-> > [!abstract]- [[github-actions-problems]]
-> >
-> > - [[github-actions-problems#Critical — Production Impact|Critical production impact]]
-> > - [[github-actions-problems#High — Team Velocity Killers|Team velocity killers]]
-> > - [[github-actions-problems#Moderate — Operational Pain|Operational pain]]
-> > - [[github-actions-problems#Low — Annoyances|Low-severity annoyances]]
+> Real-world CI/CD deployment, data engineering pipeline automation, and troubleshooting common GitHub Actions failures.
 
 ## Cross-References
 
-- [Git](/08-Git/moc-git) — Git events that trigger GitHub Actions workflows
-- [Terraform](/07-Terraform/moc-terraform) — Terraform plan/apply automated via GitHub Actions
-- [Docker](/09-Docker/moc-docker) — Docker build and push in CI/CD pipelines
-- [Data Architecture](/14-Data-Architecture/moc-data-architecture) — Testing strategy that coordinates CI with quality gates
+- [Git](https://alp78.github.io/elysium/08-Git/moc-git) — Git events that trigger GitHub Actions workflows
+- [Terraform](https://alp78.github.io/elysium/07-Terraform/moc-terraform) — Terraform plan/apply automated via GitHub Actions
+- [Docker](https://alp78.github.io/elysium/09-Docker/moc-docker) — Docker build and push in CI/CD pipelines
+- [Data Architecture](https://alp78.github.io/elysium/14-Data-Architecture/moc-data-architecture) — Testing strategy that coordinates CI with quality gates

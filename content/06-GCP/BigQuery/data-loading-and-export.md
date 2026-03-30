@@ -6,7 +6,6 @@ tags: [infrastructure, bigquery, gcp]
 aliases: [BigQuery load, bq load, BigQuery export, bq extract, time travel, BigQuery GCS load, Parquet BigQuery]
 keywords: [bq load, bq extract, CSV, Parquet, AVRO, ORC, NEWLINE_DELIMITED_JSON, GCS, hive partitioning, autodetect schema, time travel, FOR SYSTEM_TIME AS OF, restore, bq cp, compression, GZIP, export, data loading, ingestion]
 description: "How to load data into BigQuery from GCS using CSV, Parquet, and other formats — including hive-partitioned layouts — and export BigQuery tables back to GCS. Also covers BigQuery time travel for querying and restoring historical data."
-related: [dataset-and-table-management, querying-and-cost-optimization, job-management, gcs-object-operations, gcs-buckets-and-lifecycle]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # BigQuery Data Loading and Export
 
-BigQuery ingests data primarily from Cloud Storage (GCS), supporting CSV, Parquet, Avro, ORC, and newline-delimited JSON. Parquet is the recommended format for production loads — it is columnar, compressed, and carries its own schema, eliminating the need for schema specification or header row handling. For a deeper comparison of when to choose each format, see [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats). This note covers load and export operations, hive-partitioned directory structures, and BigQuery's built-in time travel capability for recovering from data corruption.
+BigQuery ingests data primarily from Cloud Storage (GCS), supporting CSV, Parquet, Avro, ORC, and newline-delimited JSON. Parquet is the recommended format for production loads — it is columnar, compressed, and carries its own schema, eliminating the need for schema specification or header row handling. For a deeper comparison of when to choose each format, see [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats). This note covers load and export operations, hive-partitioned directory structures, and BigQuery's built-in time travel capability for recovering from data corruption.
 
 ## Loading Data from GCS
 
@@ -69,7 +68,7 @@ The `*` wildcard in the destination path causes BigQuery to shard the output acr
 # Export table to GCS
 bq extract --destination_format=PARQUET project_data.ohlcv gs://data-pipeline-bucket/export/ohlcv-*.parquet
 
-# Export with compression (see [compression](/01-Shell/File-Operations/compression) for algorithm trade-offs)
+# Export with compression (see [compression](https://alp78.github.io/elysium/01-Shell/File-Operations/compression) for algorithm trade-offs)
 bq extract --destination_format=CSV --compression=GZIP \
   project_data.ohlcv gs://data-pipeline-bucket/export/ohlcv-*.csv.gz
 ```
@@ -111,7 +110,7 @@ bq cp project_data.ohlcv@-86400000 project_data.ohlcv_restored
 
 > [!tip] Related pattern
 >
-> The `bq load` workflow mirrors the [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) pattern used for SQL Server ingestion — both follow the same stage-then-validate approach for landing raw data into an analytical store. Once data is loaded, [bq-engineering](/05-DB-Queries/BigQuery/bq-engineering) covers the advanced query patterns that transform and consume it.
+> The `bq load` workflow mirrors the [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) pattern used for SQL Server ingestion — both follow the same stage-then-validate approach for landing raw data into an analytical store. Once data is loaded, [bq-engineering](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-engineering) covers the advanced query patterns that transform and consume it.
 
 ### BigQuery Data Format Comparison
 
@@ -125,14 +124,14 @@ bq cp project_data.ohlcv@-86400000 project_data.ohlcv_restored
 
 ## Related
 
-- [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — Tables must exist (or use `--autodetect`) before loading
-- [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) — Querying tables after data is loaded
-- [job-management](/06-GCP/BigQuery/job-management) — Load and export operations create BQ jobs; monitor and cancel them
-- [gcs-object-operations](/06-GCP/Storage/gcs-object-operations) — Managing the GCS objects that feed BigQuery loads
-- [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) — Lifecycle rules to auto-expire staging data after loading
+- [dataset-and-table-management](https://alp78.github.io/elysium/06-GCP/BigQuery/dataset-and-table-management) — Tables must exist (or use `--autodetect`) before loading
+- [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) — Querying tables after data is loaded
+- [job-management](https://alp78.github.io/elysium/06-GCP/BigQuery/job-management) — Load and export operations create BQ jobs; monitor and cancel them
+- [gcs-object-operations](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations) — Managing the GCS objects that feed BigQuery loads
+- [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) — Lifecycle rules to auto-expire staging data after loading
 
 ## Related
-- [data-flow-architecture](/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — complete data movement topology showing how bq load/extract fits into the stack
+- [data-flow-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — complete data movement topology showing how bq load/extract fits into the stack
 
 ## References
 

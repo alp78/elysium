@@ -5,10 +5,7 @@ technology: [python]
 tags: [python]
 aliases: [design patterns, singleton, factory, observer, strategy, repository, dependency injection]
 keywords: [singleton, factory, observer, strategy, repository, dependency injection, SOLID, decorator pattern]
-description: "Python design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and dependency injection. See [18_cs_designpatterns](/02-Programming-Languages/CSharp/18_cs_designpatterns) for the C# equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[18_cs_designpatterns](/02-Programming-Languages/CSharp/18_cs_designpatterns)"
+description: "Python design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and dependency injection. See [18_cs_designpatterns](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/18_cs_designpatterns) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -27,7 +24,7 @@ Topics covered:
 
 > [!tip] Related pattern
 >
-> dbt's `ref()` and `source()` functions implement dependency injection at the SQL layer — models declare their dependencies explicitly rather than hardcoding table names, enabling the same swap-and-test pattern shown below. See [dbt-core-concepts](/11-dbt/Foundations/dbt-core-concepts) for details.
+> dbt's `ref()` and `source()` functions implement dependency injection at the SQL layer — models declare their dependencies explicitly rather than hardcoding table names, enabling the same swap-and-test pattern shown below. See [dbt-core-concepts](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-core-concepts) for details.
 
 A class receives its dependencies (DB connection, API client, logger) through its constructor, NOT by creating them internally. This enables testability (swap real DB for mock), flexibility (swap providers), and single responsibility. In Python, no framework is needed — just pass objects via `__init__`. C# equivalent: `Microsoft.Extensions.DependencyInjection` (`builder.Services.AddXxx`).
 

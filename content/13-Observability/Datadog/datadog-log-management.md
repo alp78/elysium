@@ -6,12 +6,6 @@ tags: [monitoring, observability, sql, docker, airflow, datadog]
 aliases: [Log Collection, SQL Server Log Collection, Datadog Logs, errorlog, log tailing]
 keywords: [datadog log collection, SQL server errorlog, log tailing, logs.yaml, file tailing, source sqlserver, dd-agent mssql group, bytes read, start_position beginning, container logs, docker autodiscovery, DD_LOGS_ENABLED, DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL, Live Tail, Log Explorer]
 description: "How to configure Datadog log collection for the data platform — SQL Server errorlog file tailing on the SQL VM and Docker container log collection on the Airflow VM."
-related:
-  - datadog-agent-sql-vm
-  - datadog-agent-airflow-vm
-  - datadog-sql-server-integration
-  - datadog-troubleshooting
-  - server-configuration
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -22,7 +16,7 @@ status: complete
 Log collection for the data platform uses two separate mechanisms: **file tailing** for the SQL Server errorlog (on the SQL VM), and **Docker socket autodiscovery** for Airflow container logs (on the Airflow VM).
 
 > [!warning] Logs Require Separate Config
-> The Datadog Agent collects SQL Server metrics automatically via the [SQL Server integration](/13-Observability/Datadog/datadog-sql-server-integration), but **log collection requires a separate config file** (`logs.yaml`). Metrics and logs are configured independently.
+> The Datadog Agent collects SQL Server metrics automatically via the [SQL Server integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-sql-server-integration), but **log collection requires a separate config file** (`logs.yaml`). Metrics and logs are configured independently.
 
 ---
 
@@ -63,7 +57,7 @@ Expected: `Status: OK` and `Inputs: /var/opt/mssql/log/errorlog`.
 
 ### What Gets Logged
 
-SQL Server only writes to its error log on significant events — startups, failed logins, errors, backups, checkpoints. A simple `SELECT` does **not** generate an error log entry. For capturing query-level activity for compliance purposes, configure [SQL Server audit logging](/04-SQL-Server/Security/audit-logging) separately from the errorlog.
+SQL Server only writes to its error log on significant events — startups, failed logins, errors, backups, checkpoints. A simple `SELECT` does **not** generate an error log entry. For capturing query-level activity for compliance purposes, configure [SQL Server audit logging](https://alp78.github.io/elysium/04-SQL-Server/Security/audit-logging) separately from the errorlog.
 
 #### To force test entries
 
@@ -147,7 +141,7 @@ In Datadog: **Logs > Explorer** → filter by:
 
 > [!warning] Cloud Run logs not in Datadog
 >
-> Cloud Run job logs go to **GCP Cloud Logging** (see [cloud-logging](/06-GCP/Logging/cloud-logging) for the full GCP logging setup), not through dd-agent. They are not available in Datadog's Log Explorer. View them via gcloud:
+> Cloud Run job logs go to **GCP Cloud Logging** (see [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) for the full GCP logging setup), not through dd-agent. They are not available in Datadog's Log Explorer. View them via gcloud:
 
 ```powershell
 gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=data-pipeline-pipeline" --limit=50 --format="table(timestamp,textPayload)"
@@ -168,8 +162,8 @@ The `LOG_FORMAT=json` env var on the Cloud Run Job formats logs as JSON, which e
 
 ## Related
 
-- [datadog-agent-sql-vm](/13-Observability/Datadog/datadog-agent-sql-vm) — SQL VM agent install and management
-- [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) — Airflow VM agent with Docker socket access
-- [datadog-apm-traces](/13-Observability/Datadog/datadog-apm-traces) — Log-to-trace correlation via `dd.trace_id`
-- [datadog-troubleshooting](/13-Observability/Datadog/datadog-troubleshooting) — "No Logs in Datadog" section
-- [server-configuration](/04-SQL-Server/Administration/server-configuration) — SQL Server VM and errorlog location
+- [datadog-agent-sql-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-sql-vm) — SQL VM agent install and management
+- [datadog-agent-airflow-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) — Airflow VM agent with Docker socket access
+- [datadog-apm-traces](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-apm-traces) — Log-to-trace correlation via `dd.trace_id`
+- [datadog-troubleshooting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-troubleshooting) — "No Logs in Datadog" section
+- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) — SQL Server VM and errorlog location

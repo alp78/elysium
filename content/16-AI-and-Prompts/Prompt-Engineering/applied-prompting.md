@@ -6,7 +6,6 @@ tags: [ai, prompt-engineering, python, sql, terraform, airflow, bigquery]
 aliases: [applied prompt engineering, prompt engineering examples, before after prompts, prompt optimization examples, research prompts, code generation prompts, data extraction prompts, content creation prompts]
 keywords: [applied prompting, research analysis, content creation, code generation, data extraction, before after optimization, medallion architecture, upsert Python SQL Server, JSON extraction, financial report, blog post, API review, Kubernetes explanation, React Svelte comparison, weak prompts, strong prompts, prompt examples, real-world prompting]
 description: "Applied prompt engineering with complete before/after examples for four core domains: research and analysis, content creation, code and technical tasks, and data analysis and extraction. Every example includes the weak prompt, the optimized prompt, and the principle behind the improvement."
-related: [prompt-foundations, prompt-architecture, model-specific-prompting, prompt-debugging]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # Applied Prompt Engineering: Research, Code Generation, Data Analysis, and Creative Workflows
 
-This note converts the foundational principles from [prompt-foundations](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) and the structural patterns from [prompt-architecture](/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture) into concrete, domain-specific prompt workflows. Every section includes a weak "before" prompt, an optimized "after" prompt, and an explanation of what changed and why. These are not templates — they are worked examples that demonstrate the reasoning behind each design choice.
+This note converts the foundational principles from [prompt-foundations](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) and the structural patterns from [prompt-architecture](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture) into concrete, domain-specific prompt workflows. Every section includes a weak "before" prompt, an optimized "after" prompt, and an explanation of what changed and why. These are not templates — they are worked examples that demonstrate the reasoning behind each design choice.
 
 ---
 
@@ -97,7 +96,7 @@ calls to action, author bios, or SEO keywords.
 > "Mid-level data engineers who have built pipelines but haven't used the bronze/silver/gold pattern" tells the model exactly what to include (practical implementation) and what to skip (why pipelines matter in the first place). Audience anchoring is one of the highest-ROI additions to a content prompt.
 
 > [!info] Medallion Architecture
-> The blog post example references [medallion architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) (bronze/silver/gold layers). This is a real pattern relevant to data engineering content — see the linked note for technical context that could ground your prompt.
+> The blog post example references [medallion architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) (bronze/silver/gold layers). This is a real pattern relevant to data engineering content — see the linked note for technical context that could ground your prompt.
 
 ---
 
@@ -254,7 +253,7 @@ Three additional optimization patterns with the principle behind each.
 **Principle:** Constraints prevent the model from "helpfully" redesigning everything instead of reviewing what you asked.
 
 > [!tip] The Downstream Use Principle
-> All these optimization patterns share one meta-principle: telling the model what you'll do with the output shapes every subsequent decision. "I need this for a dashboard card" changes format. "This is for a technical blog post" changes tone and depth. "This feeds into a JSON parser" changes structure. Always include the downstream use. See [intent alignment](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations#13-clarity-specificity-and-intent-alignment) for the theoretical grounding.
+> All these optimization patterns share one meta-principle: telling the model what you'll do with the output shapes every subsequent decision. "I need this for a dashboard card" changes format. "This is for a technical blog post" changes tone and depth. "This feeds into a JSON parser" changes structure. Always include the downstream use. See [intent alignment](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations#13-clarity-specificity-and-intent-alignment) for the theoretical grounding.
 
 ---
 
@@ -291,10 +290,10 @@ Before sending any applied prompt, verify:
 
 ## Related Notes
 
-- [prompt-foundations](/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) — The axioms and intent alignment principles behind these examples
-- [prompt-architecture](/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture) — The 4-layer template used in the research and code prompts above
-- [model-specific-prompting](/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting) — How to adapt these prompts for Claude vs. GPT-4 vs. Gemini
-- [prompt-debugging](/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging) — When these patterns don't work and how to diagnose why
+- [prompt-foundations](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) — The axioms and intent alignment principles behind these examples
+- [prompt-architecture](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture) — The 4-layer template used in the research and code prompts above
+- [model-specific-prompting](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting) — How to adapt these prompts for Claude vs. GPT-4 vs. Gemini
+- [prompt-debugging](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging) — When these patterns don't work and how to diagnose why
 
 ## References
 

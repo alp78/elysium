@@ -6,7 +6,6 @@ tags: [shell, bash, linux, powershell]
 aliases: [env vars, environment variables, shell variables, export, PATH variable]
 keywords: [environment variable, env var, export, PATH, bashrc, profile, credential handling, secret management, process environment, child process, variable propagation, unset, printenv]
 description: "How environment variables propagate through process hierarchies in bash and PowerShell, including secure credential handling patterns and persistence across sessions."
-related: [command-chaining, defensive-scripting, command-history]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -109,7 +108,7 @@ sqlcmd -S 10.132.0.2 -U sa -P 'MyPassword123'  # password visible in process lis
 export SA_PASSWORD=$(cat /run/secrets/sa_password)
 sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD"
 
-# BEST: Use a secret manager and inject at runtime (see [secrets-management](/06-GCP/Security/secrets-management))
+# BEST: Use a secret manager and inject at runtime (see [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management))
 export SA_PASSWORD=$(gcloud secrets versions access latest --secret="sql-sa-password")
 sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD"
 
@@ -119,7 +118,7 @@ unset SA_PASSWORD
 
 > [!info] ps aux credential leak
 >
-> Any user on the system can run `ps aux` and see the full command line of every running process. If you pass a password as a command-line argument (`-P 'MyPassword'`), every user on the machine can read it. Environment variables are slightly better (visible only via `/proc/<pid>/environ`, which requires same-user or root access), but the gold standard is reading credentials from a file descriptor or secret manager. Docker secrets mount to `/run/secrets/` inside the [container](/09-Docker/container-lifecycle) -- always use this mechanism for containerized workloads.
+> Any user on the system can run `ps aux` and see the full command line of every running process. If you pass a password as a command-line argument (`-P 'MyPassword'`), every user on the machine can read it. Environment variables are slightly better (visible only via `/proc/<pid>/environ`, which requires same-user or root access), but the gold standard is reading credentials from a file descriptor or secret manager. Docker secrets mount to `/run/secrets/` inside the [container](https://alp78.github.io/elysium/09-Docker/container-lifecycle) -- always use this mechanism for containerized workloads.
 
 ### PowerShell — $env: drive, SetEnvironmentVariable for persistent env vars
 
@@ -168,13 +167,13 @@ Remove-Item Env:MY_VAR
 > ```
 > Restart your terminal for the change to take effect.
 
-For a declarative approach to managing variables and configuration across environments, see [terraform-variables-and-outputs](/07-Terraform/Fundamentals/terraform-variables-and-outputs) which covers Terraform input variables, locals, and output values.
+For a declarative approach to managing variables and configuration across environments, see [terraform-variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-variables-and-outputs) which covers Terraform input variables, locals, and output values.
 
 ## Related
 
-- [defensive-scripting](/01-Shell/Scripting/defensive-scripting) — Using `set -u` to catch unset variable references
-- [command-history](/01-Shell/Scripting/command-history) — Preventing secrets from being saved to history
-- [command-chaining](/01-Shell/Scripting/command-chaining) — Operators that control execution flow
+- [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) — Using `set -u` to catch unset variable references
+- [command-history](https://alp78.github.io/elysium/01-Shell/Scripting/command-history) — Preventing secrets from being saved to history
+- [command-chaining](https://alp78.github.io/elysium/01-Shell/Scripting/command-chaining) — Operators that control execution flow
 
 ## References
 

@@ -6,7 +6,6 @@ tags: [shell, python, csharp, bash, linux, powershell, sql-server]
 aliases: [datetime handling, ISO 8601, timezone management, date arithmetic, DST pitfalls, naive vs aware datetime, DATETIMEOFFSET, DateTimeOffset, UTC storage, date parsing, date formatting]
 keywords: [iso 8601, datetime, date, timezone, utc, dst, daylight saving, GETUTCDATE, SYSUTCDATETIME, DATETIMEOFFSET, DATETIME2, DateTimeOffset, DateOnly, zoneinfo, pytz, timedelta, relativedelta, dateutil, strptime, strftime, fromisoformat, date arithmetic, date parsing, date formatting, unix epoch, unix timestamp, pandas date_range, timedatectl, Get-Date, DATEADD, DATEDIFF, DATETRUNC, EOMONTH, AT TIME ZONE]
 description: "Comprehensive reference for date and time handling across all pipeline contexts — ISO 8601 formats, timezone management, UTC storage, DST pitfalls, and date arithmetic in Bash, PowerShell, SQL Server T-SQL, Python, and C#."
-related: [awk-data-processing, serialization-formats, idempotent-pipeline-design]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -16,7 +15,7 @@ status: complete
 
 Dates look simple until you realize that "March 10, 2026 at 3 PM" means a different instant in time depending on whether you're in Paris, New York, or Tokyo. A pipeline that processes market close times across Euro market index, the data pipeline project USA 50, and the data pipeline project Asia/Pacific 50 must handle three different closing times, daylight saving transitions that happen on different dates in different countries, and the fact that "today" is a different date in Sydney and New York for several hours each day.
 
-This note covers dates exhaustively: ISO format variants, timezone management, parsing, formatting, arithmetic -- in the terminal (Linux/PowerShell), then SQL Server, Python, and C#. For the Python and C# datetime libraries in more depth, see [11_py_datetimemathutils](/02-Programming-Languages/Python/11_py_datetimemathutils) and [11_cs_datetimemathutils](/02-Programming-Languages/CSharp/11_cs_datetimemathutils).
+This note covers dates exhaustively: ISO format variants, timezone management, parsing, formatting, arithmetic -- in the terminal (Linux/PowerShell), then SQL Server, Python, and C#. For the Python and C# datetime libraries in more depth, see [11_py_datetimemathutils](https://alp78.github.io/elysium/02-Programming-Languages/Python/11_py_datetimemathutils) and [11_cs_datetimemathutils](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/11_cs_datetimemathutils).
 
 ### ISO 8601 — the only date format you should use in pipelines
 
@@ -361,7 +360,7 @@ SELECT DATETIMEOFFSETFROMPARTS(2026, 3, 10, 15, 30, 0, 0, 1, 0, 7)     -- 2026-0
 
 ### Date Arithmetic in T-SQL
 
-For the full T-SQL date function reference including FORMAT, ISDATE, and calendar table patterns, see [date-and-time-functions](/04-SQL-Server/T-SQL/date-and-time-functions).
+For the full T-SQL date function reference including FORMAT, ISDATE, and calendar table patterns, see [date-and-time-functions](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/date-and-time-functions).
 
 ```sql
 -- ============================================================
@@ -977,10 +976,10 @@ Fix: Always convert through UTC. Never hardcode offsets between non-UTC timezone
 
 ## Related Notes
 
-- [text processing tools](/01-Shell/Text-Processing/grep-and-pattern-matching) — JSON and CSV parsing in Bash, jq, Python, PowerShell
-- [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Full format comparison: JSON, YAML, CSV, Parquet, Avro, Protobuf, MessagePack
+- [text processing tools](https://alp78.github.io/elysium/01-Shell/Text-Processing/grep-and-pattern-matching) — JSON and CSV parsing in Bash, jq, Python, PowerShell
+- [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Full format comparison: JSON, YAML, CSV, Parquet, Avro, Protobuf, MessagePack
 
-- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — Pipeline design that handles date boundaries correctly
+- [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — Pipeline design that handles date boundaries correctly
 
 ## References
 

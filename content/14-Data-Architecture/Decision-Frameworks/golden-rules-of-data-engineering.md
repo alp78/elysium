@@ -6,12 +6,6 @@ tags: [data-architecture, data-engineering, architecture]
 aliases: [golden rules, engineering principles, data engineering philosophy, first principles, trade-off analysis, YAGNI, KISS, build vs buy, undifferentiated heavy lifting, reversible decisions, two-way doors]
 keywords: [golden rules, data engineering principles, first principles, trade-off analysis, decision framework, YAGNI, KISS, build vs buy, undifferentiated heavy lifting, reversible decisions, two-way doors, boring technology, innovation tokens, schema evolution, idempotent pipelines, raw data preservation, bronze layer, complexity debt, cloud cost optimization, observability, automation, infrastructure as code, CI/CD, shadow pipelines, canary deployments, blue-green deployments, resume-driven development, tight coupling, loose coupling, expand and contract, premature optimization, operational pragmatism, dimensional clarity, lifecycle thinking, data engineering philosophy, simplicity, reliability, cost awareness, anti-patterns]
 description: "The golden rules of data engineering — ten foundational principles that guide every architectural decision, technology choice, and trade-off evaluation. Inspired by Reis & Housley, Kleppmann, Kimball, Densmore, and the five pillars of senior data engineering."
-related:
-  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
-  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
-  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
-  - "[context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture)"
-  - "[data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -23,7 +17,7 @@ Every discipline has its load-bearing principles — the handful of truths that,
 
 These are not commandments handed down from a conference keynote. They are patterns distilled from painful production incidents, surprise cloud bills, 3 AM pages, migrations that took three times longer than estimated, and the quiet satisfaction of systems that just work, month after month, without anyone thinking about them. That last part — the not thinking about it — is the goal.
 
-The intellectual lineage here is worth naming. Joe Reis and Matt Housley gave us lifecycle thinking: the idea that data engineering is not about tools but about the journey data takes from source to value. Martin Kleppmann taught us to understand trade-offs at the systems level — that every design choice is a bet, and you should know what you are betting on. Ralph Kimball gave us dimensional clarity — the discipline of modeling data so that humans can actually understand it. Matt Densmore gave us operational pragmatism — the reminder that a pipeline is not done when it runs once; it is done when it runs reliably without you. And the [five pillars](/14-Data-Architecture/five-pillars-of-data-engineering) — reliability, observability, efficiency, security, and operability — provide the structural framework that these rules reinforce.
+The intellectual lineage here is worth naming. Joe Reis and Matt Housley gave us lifecycle thinking: the idea that data engineering is not about tools but about the journey data takes from source to value. Martin Kleppmann taught us to understand trade-offs at the systems level — that every design choice is a bet, and you should know what you are betting on. Ralph Kimball gave us dimensional clarity — the discipline of modeling data so that humans can actually understand it. Matt Densmore gave us operational pragmatism — the reminder that a pipeline is not done when it runs once; it is done when it runs reliably without you. And the [five pillars](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) — reliability, observability, efficiency, security, and operability — provide the structural framework that these rules reinforce.
 
 This note is the philosophical foundation. It does not tell you which tool to use. It tells you how to think about which tool to use.
 
@@ -110,7 +104,7 @@ Kleppmann dedicates significant portions of "Designing Data-Intensive Applicatio
 This means:
 - **Loose coupling** between pipeline stages. Each stage should communicate through well-defined interfaces (files, APIs, message queues) rather than direct database connections or shared mutable state.
 - **Schema evolution** through the expand-and-contract pattern: add the new column, migrate consumers, then remove the old column. Never break existing consumers with a schema change.
-- **Idempotent pipelines** that can be safely re-run without duplicating data or corrupting state. [Idempotency](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) is so fundamental that it could be a golden rule on its own — see the dedicated note for the full treatment.
+- **Idempotent pipelines** that can be safely re-run without duplicating data or corrupting state. [Idempotency](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) is so fundamental that it could be a golden rule on its own — see the dedicated note for the full treatment.
 - **Versioned interfaces** so that consumers can migrate at their own pace rather than being forced to update in lockstep.
 
 ### Expand-and-Contract in Practice
@@ -198,7 +192,7 @@ This is the rule that, when violated, causes the most regret. Not the most immed
 
 ### The Principle
 
-The bronze layer in a [medallion architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) exists for exactly one reason: to preserve raw data exactly as received from the source system. The [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) is the standard architectural pattern that embodies this rule across all three layers. No transformations. No filtering. No deduplication. No "helpful" type conversions. The data lands in bronze looking exactly the way it looked when it left the source.
+The bronze layer in a [medallion architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) exists for exactly one reason: to preserve raw data exactly as received from the source system. The [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) is the standard architectural pattern that embodies this rule across all three layers. No transformations. No filtering. No deduplication. No "helpful" type conversions. The data lands in bronze looking exactly the way it looked when it left the source.
 
 Why? Because you can always re-derive silver and gold from bronze. You can apply new transformations, fix bugs in old transformations, add new columns, change aggregation logic — all from the same raw data. But you can never re-derive bronze from gold. The transformation is lossy by definition. Information is destroyed at every layer of abstraction.
 
@@ -446,7 +440,7 @@ The best test of automation is onboarding. When a new team member joins:
 If any of these require tribal knowledge — "oh, you need to manually create that table first" or "you have to set that environment variable that isn't documented anywhere" — you have automation gaps.
 
 > [!tip] The Bus Factor Automation Test
-> If the person who built the pipeline is unavailable (vacation, sick, departed), can the rest of the team operate, debug, and deploy changes to the pipeline? If not, the automation is incomplete. See also: [Operability (Pillar 5)](/14-Data-Architecture/five-pillars-of-data-engineering).
+> If the person who built the pipeline is unavailable (vacation, sick, departed), can the rest of the team operate, debug, and deploy changes to the pipeline? If not, the automation is incomplete. See also: [Operability (Pillar 5)](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering).
 
 ### Decision Test
 
@@ -467,7 +461,7 @@ If you cannot see it, you cannot fix it. If you cannot measure it, you cannot im
 2. **When did it start?** (Metrics)
 3. **Where did time go?** (Traces)
 
-These are the three pillars of observability, and they apply to data engineering just as much as they apply to web services. See [Observability (Pillar 2)](/14-Data-Architecture/five-pillars-of-data-engineering). [DataOps](/15-DataOps/dataops-principles-and-practices) codifies these rules into repeatable team practices — CI/CD for data, automated testing, and monitoring-as-code.
+These are the three pillars of observability, and they apply to data engineering just as much as they apply to web services. See [Observability (Pillar 2)](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering). [DataOps](https://alp78.github.io/elysium/15-DataOps/dataops-principles-and-practices) codifies these rules into repeatable team practices — CI/CD for data, automated testing, and monitoring-as-code.
 
 ### The Minimum Observability Bar
 
@@ -601,9 +595,9 @@ The golden rules do not eliminate trade-offs. They give you a framework for navi
 
 ## Related Notes
 
-- [five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering) — The structural framework (reliability, observability, efficiency, security, operability) that these rules reinforce
-- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — The practical implementation of Rule 3's emphasis on safe re-execution
-- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — The architectural pattern that embodies Rule 5's raw data preservation
-- [context-and-metadata-architecture](/14-Data-Architecture/Architectures/context-and-metadata-architecture) — The metadata layer that supports Rule 10's observability requirements
-- [data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture) — The structural decisions (grain, dimensions, facts) where Rule 4's one-way door framework matters most
-- [environment-management-strategy](/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — Dev/staging/prod separation strategy that implements Rule 9 (Automate Everything)
+- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) — The structural framework (reliability, observability, efficiency, security, operability) that these rules reinforce
+- [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — The practical implementation of Rule 3's emphasis on safe re-execution
+- [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — The architectural pattern that embodies Rule 5's raw data preservation
+- [context-and-metadata-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture) — The metadata layer that supports Rule 10's observability requirements
+- [data-warehouse-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-warehouse-architecture) — The structural decisions (grain, dimensions, facts) where Rule 4's one-way door framework matters most
+- [environment-management-strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — Dev/staging/prod separation strategy that implements Rule 9 (Automate Everything)

@@ -5,12 +5,7 @@ technology: [python, gcp]
 tags: [python, gcp, security, encryption, identity]
 aliases: [Security Operations Python, Encryption and Identity Python]
 keywords: [encryption, KMS, Secret Manager, certificates, Workload Identity, OAuth, JWT, IAM, SSH, paramiko, Cloud SQL, BigQuery, Firestore, GCS, signed URLs, CMEK, CSEK, envelope encryption, IAP tunnel, service account impersonation]
-description: "Python security operations reference — encryption, certificates, identity, and secure access across GCP services. Executable examples with cell outputs. Built on infrastructure from [20_py_security_setup](/02-Programming-Languages/Python/20_py_security_setup). See [21_cs_security_operations](/02-Programming-Languages/CSharp/21_cs_security_operations) for the C# equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[21_cs_security_operations](/02-Programming-Languages/CSharp/21_cs_security_operations)"
-  - "[20_py_security_setup](/02-Programming-Languages/Python/20_py_security_setup)"
-  - "[17_py_gcp](/02-Programming-Languages/Python/17_py_gcp)"
+description: "Python security operations reference — encryption, certificates, identity, and secure access across GCP services. Executable examples with cell outputs. Built on infrastructure from [20_py_security_setup](https://alp78.github.io/elysium/02-Programming-Languages/Python/20_py_security_setup). See [21_cs_security_operations](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/21_cs_security_operations) for the C# equivalent."
 created: 2026-03-27
 updated: 2026-03-27
 status: complete
@@ -20,7 +15,7 @@ status: complete
 
 > [!tip] Prerequisite Reading
 >
-> For the theoretical framework behind these operations — identity model, credential types, OAuth2 flows, and connection patterns — see [gcp-identity-and-connection-patterns](/06-GCP/Security/gcp-identity-and-connection-patterns).
+> For the theoretical framework behind these operations — identity model, credential types, OAuth2 flows, and connection patterns — see [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns).
 
 ## Environment Setup
 

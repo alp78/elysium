@@ -5,15 +5,11 @@ technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "Business logic transforms, silver layer"
-related:
-  - "[dbt-staging-models](/11-dbt/Modeling/dbt-staging-models)"
-  - "[dbt-mart-models](/11-dbt/Modeling/dbt-mart-models)"
-  - "[dbt-materializations](/11-dbt/Modeling/dbt-materializations)"
 ---
 
 # dbt: Intermediate Models
 
-Intermediate models are the business logic layer — the [silver-transforms](/04-SQL-Server/Medallion-Project/silver-transforms) tier of the pipeline. They join, enrich, and transform staging data into analysis-ready building blocks that feed the mart layer. They are not intended for direct consumption by end users or BI tools — they are internal to the dbt DAG.
+Intermediate models are the business logic layer — the [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) tier of the pipeline. They join, enrich, and transform staging data into analysis-ready building blocks that feed the mart layer. They are not intended for direct consumption by end users or BI tools — they are internal to the dbt DAG.
 
 ---
 
@@ -509,6 +505,6 @@ from {{ ref('stg_market_data__daily_prices') }}
 ---
 
 ## Related
-- [dbt-staging-models](/11-dbt/Modeling/dbt-staging-models)
-- [dbt-mart-models](/11-dbt/Modeling/dbt-mart-models)
-- [dbt-materializations](/11-dbt/Modeling/dbt-materializations)
+- [dbt-staging-models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-staging-models)
+- [dbt-mart-models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-mart-models)
+- [dbt-materializations](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-materializations)

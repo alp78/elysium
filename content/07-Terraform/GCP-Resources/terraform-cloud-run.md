@@ -6,11 +6,6 @@ tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform Cloud Run, google_cloud_run_v2_service, google_cloud_run_v2_job, Cloud Run service terraform, Cloud Run job terraform]
 keywords: [Cloud Run, google_cloud_run_v2_service, google_cloud_run_v2_job, Cloud Run job, Cloud Run service, session affinity, direct VPC egress, startup probe, secret injection, task_count, max_retries, timeout, scaling, min_instances, PRIVATE_RANGES_ONLY]
 description: "Terraform configuration for Cloud Run services (long-running HTTP endpoints) and Cloud Run jobs (batch run-to-completion), including VPC access, secret injection, session affinity, scaling, and the double-nested job template structure."
-related:
-  - "[terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets)"
-  - "[terraform-networking](/07-Terraform/GCP-Resources/terraform-networking)"
-  - "[terraform-registry-and-ci](/07-Terraform/GCP-Resources/terraform-registry-and-ci)"
-  - "[terraform-compute](/07-Terraform/GCP-Resources/terraform-compute)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -49,7 +44,7 @@ locals {
 
 ## Resource: Dashboard Service
 
-A Cloud Run **service** is a long-running HTTP endpoint. Unlike jobs, services stay alive to serve requests. For the architectural distinction between services and jobs, including when to choose each, see [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services).
+A Cloud Run **service** is a long-running HTTP endpoint. Unlike jobs, services stay alive to serve requests. For the architectural distinction between services and jobs, including when to choose each, see [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services).
 
 ```hcl
 resource "google_cloud_run_v2_service" "dashboard" {
@@ -132,7 +127,7 @@ containers {
 
 | Field | Value | Meaning |
 |-------|-------|---------|
-| `image` | `.../dashboard:latest` | Docker image to run. `latest` tag is updated by [GitHub Actions](/10-GitHub-Actions/github-actions-workflows) on every push to `main`. |
+| `image` | `.../dashboard:latest` | Docker image to run. `latest` tag is updated by [GitHub Actions](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-workflows) on every push to `main`. |
 | `container_port` | `8080` | Port the Blazor app listens on inside the container. Cloud Run routes external HTTPS traffic to this port. |
 | `startup_probe` | HTTP GET `/` | Cloud Run checks if the container is ready by hitting `/` every 10 seconds, starting 3 seconds after launch. If it fails 3 times, the container is killed and restarted. |
 | `ConnectionStrings__project` | ADO.NET connection string (without password) | .NET convention: double underscore `__` maps to `:` in `appsettings.json` hierarchy. Equivalent to `ConnectionStrings:data-pipeline`. Contains the SQL VM's private IP, database name, and user — but **not** the password. `TrustServerCertificate=true` skips SSL certificate validation (acceptable for internal VPC traffic). |
@@ -317,10 +312,10 @@ gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=da
 
 ## Related
 
-- [terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — service accounts and Secret Manager used here
-- [terraform-networking](/07-Terraform/GCP-Resources/terraform-networking) — the VPC this service connects to via direct egress
-- [terraform-registry-and-ci](/07-Terraform/GCP-Resources/terraform-registry-and-ci) — Artifact Registry where the Docker images live
-- [terraform-compute](/07-Terraform/GCP-Resources/terraform-compute) — the SQL VM that these services connect to
+- [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — service accounts and Secret Manager used here
+- [terraform-networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-networking) — the VPC this service connects to via direct egress
+- [terraform-registry-and-ci](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-registry-and-ci) — Artifact Registry where the Docker images live
+- [terraform-compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-compute) — the SQL VM that these services connect to
 
 ## References
 

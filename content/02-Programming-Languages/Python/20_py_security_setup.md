@@ -5,13 +5,7 @@ technology: [python, gcp]
 tags: [python, gcp, security, infrastructure]
 aliases: [Security Setup, GCP Security Infrastructure, Workload Identity Setup]
 keywords: [gcloud, service account, KMS, Secret Manager, Cloud SQL, Workload Identity Federation, OIDC, IAM, CMEK, SSH, Artifact Registry, Compute Engine, BigQuery, Firestore, GCS]
-description: "GCP security infrastructure setup — provisions service accounts, KMS keys, secrets, Cloud SQL, Compute Engine, Workload Identity Federation, and populates demo data. Prerequisite for [21_py_security_operations](/02-Programming-Languages/Python/21_py_security_operations) and [21_cs_security_operations](/02-Programming-Languages/CSharp/21_cs_security_operations)."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[21_py_security_operations](/02-Programming-Languages/Python/21_py_security_operations)"
-  - "[21_cs_security_operations](/02-Programming-Languages/CSharp/21_cs_security_operations)"
-  - "[17_py_gcp](/02-Programming-Languages/Python/17_py_gcp)"
-  - "[17_cs_gcp](/02-Programming-Languages/CSharp/17_cs_gcp)"
+description: "GCP security infrastructure setup — provisions service accounts, KMS keys, secrets, Cloud SQL, Compute Engine, Workload Identity Federation, and populates demo data. Prerequisite for [21_py_security_operations](https://alp78.github.io/elysium/02-Programming-Languages/Python/21_py_security_operations) and [21_cs_security_operations](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/21_cs_security_operations)."
 created: 2026-03-27
 updated: 2026-03-27
 status: complete
@@ -21,7 +15,7 @@ status: complete
 
 > [!tip] Prerequisite Reading
 >
-> For the theoretical framework behind these operations — identity model, credential types, OAuth2 flows, and connection patterns — see [gcp-identity-and-connection-patterns](/06-GCP/Security/gcp-identity-and-connection-patterns).
+> For the theoretical framework behind these operations — identity model, credential types, OAuth2 flows, and connection patterns — see [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns).
 
 ```python
 import itertools

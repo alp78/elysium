@@ -56,10 +56,6 @@ description: >
   orchestration, spot/preemptible, instance groups), disk management, snapshot
   policies, VM scheduling, GCS buckets (landing zone, data lake, Terraform state),
   IAM bindings, bucket objects, and Pub/Sub notifications.
-related:
-  - "[moc-terraform](/07-Terraform/moc-terraform)"
-  - "[Terraform networking](/07-Terraform/Block-Library/tf-foundation-and-networking)"
-  - "[Terraform IAM](/07-Terraform/Block-Library/tf-iam-secrets-serverless)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

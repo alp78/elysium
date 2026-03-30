@@ -5,12 +5,6 @@ technology: [dbt, datadog]
 status: stable
 updated: 2026-03-23
 description: "Monitoring dbt runs with Datadog custom metrics, the elementary package for anomaly detection, artifact parsing, and Slack alerting for financial data pipelines."
-related:
-  - "[moc-observability](/13-Observability/moc-observability)"
-  - "[datadog-dashboards](/13-Observability/Datadog/datadog-dashboards)"
-  - "[dbt-packages](/11-dbt/Advanced/dbt-packages)"
-  - "[dbt-airflow-integration](/11-dbt/Operations/dbt-airflow-integration)"
-  - "[dbt-ci-cd](/11-dbt/Operations/dbt-ci-cd)"
 ---
 
 # dbt: Observability
@@ -367,8 +361,8 @@ resource "datadog_dashboard" "dbt_observability" {
 
 ## Related
 
-- [moc-observability](/13-Observability/moc-observability)
-- [datadog-dashboards](/13-Observability/Datadog/datadog-dashboards)
-- [dbt-packages](/11-dbt/Advanced/dbt-packages)
-- [dbt-airflow-integration](/11-dbt/Operations/dbt-airflow-integration)
-- [dbt-ci-cd](/11-dbt/Operations/dbt-ci-cd)
+- [moc-observability](https://alp78.github.io/elysium/13-Observability/moc-observability)
+- [datadog-dashboards](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-dashboards)
+- [dbt-packages](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-packages)
+- [dbt-airflow-integration](https://alp78.github.io/elysium/11-dbt/Operations/dbt-airflow-integration)
+- [dbt-ci-cd](https://alp78.github.io/elysium/11-dbt/Operations/dbt-ci-cd)

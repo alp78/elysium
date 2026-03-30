@@ -6,15 +6,6 @@ tags: [monitoring, observability, sql, airflow, datadog, gcp]
 aliases: [Pipeline Watch Dashboard, SQL Server DBA Dashboard, Datadog Dashboards, Airflow Dashboard]
 keywords: [datadog dashboard, pipeline watch, SQL server DBA dashboard, screenboard, query value, timeseries, top list, buffer cache hit ratio, page life expectancy, deadlock, connections by login, batch requests, lock waits, buffer pool, Cloud Run metrics, airflow metrics, StatsD, DAG run duration]
 description: "Step-by-step instructions for building the Pipeline Watch and SQL Server DBA dashboards in Datadog, plus the Airflow Orchestration Dashboard — covering all widgets, metrics, and layout tips."
-related:
-  - datadog-architecture-overview
-  - datadog-sql-server-integration
-  - datadog-custom-queries
-  - datadog-alerting
-  - datadog-agent-airflow-vm
-  - datadog-gcp-integration
-  - essential-dba-queries
-  - "[observability-strategy-matrix](/13-Observability/observability-strategy-matrix)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -88,7 +79,7 @@ Use **Notes & Links** widgets as section headers:
 | Group By | `resource_name` |
 | Title | DAG Task Duration |
 
-This breaks down each pipeline step by name and shows how long each took. The steps that load into the [gold layer](/04-SQL-Server/Medallion-Project/gold-transforms) are typically the most resource-intensive, since they run aggregation logic and write final business-ready tables.
+This breaks down each pipeline step by name and shows how long each took. The steps that load into the [gold layer](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) are typically the most resource-intensive, since they run aggregation logic and write final business-ready tables.
 
 #### Widget: Pipeline Peak CPU (Query Value)
 
@@ -374,10 +365,10 @@ A custom dashboard definition is stored at `infra/datadog/airflow_dashboard.json
 
 ## Related
 
-- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — Full observability topology
-- [datadog-alerting](/13-Observability/Datadog/datadog-alerting) — Monitors and alert configurations
-- [datadog-custom-queries](/13-Observability/Datadog/datadog-custom-queries) — Custom DMV metrics consumed by these dashboards
-- [datadog-sql-server-integration](/13-Observability/Datadog/datadog-sql-server-integration) — Built-in SQL Server metrics
-- [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) — StatsD source for Airflow metrics
-- [datadog-gcp-integration](/13-Observability/Datadog/datadog-gcp-integration) — GCP Integration for Cloud Run metrics
-- [essential-dba-queries](/04-SQL-Server/Administration/essential-dba-queries) — Manual DMV queries for deeper investigation
+- [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) — Full observability topology
+- [datadog-alerting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-alerting) — Monitors and alert configurations
+- [datadog-custom-queries](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-custom-queries) — Custom DMV metrics consumed by these dashboards
+- [datadog-sql-server-integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-sql-server-integration) — Built-in SQL Server metrics
+- [datadog-agent-airflow-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) — StatsD source for Airflow metrics
+- [datadog-gcp-integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-gcp-integration) — GCP Integration for Cloud Run metrics
+- [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/Administration/essential-dba-queries) — Manual DMV queries for deeper investigation

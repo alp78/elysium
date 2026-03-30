@@ -5,18 +5,7 @@ technology: [csharp, dotnet, fluentvalidation, polly, dapper, sqlserver]
 tags: [csharp, pipeline, data-quality, lineage, dotnet, fluentvalidation, polly, dapper, aspnet, sql-server, medallion, parquet, validation, plotly]
 aliases: [functional pipeline csharp, medallion pipeline dotnet, data lineage csharp]
 keywords: [pipeline, medallion, bronze, silver, gold, fluentvalidation, validation, lineage, aspnet, parquet, polly, dapper]
-description: "End-to-end functional data pipeline in C#/.NET with FluentValidation, Polly resilience, lineage tracking, Parquet export, and ASP.NET serving. See [25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline) for the Python equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[25_py_functional_pipeline](/02-Programming-Languages/Python/25_py_functional_pipeline)"
-  - "[functional-pipeline-architecture](/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture)"
-  - "[18_cs_designpatterns](/02-Programming-Languages/CSharp/18_cs_designpatterns)"
-  - "[15_cs_webapis](/02-Programming-Languages/CSharp/15_cs_webapis)"
-  - "[16_cs_database](/02-Programming-Languages/CSharp/16_cs_database)"
-  - "[10_cs_serialization_formats](/02-Programming-Languages/CSharp/10_cs_serialization_formats)"
-  - "[23_cs_data_ingestion](/02-Programming-Languages/CSharp/23_cs_data_ingestion)"
-  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
-  - "[data-modeling-patterns](/14-Data-Architecture/Data-Modeling/data-modeling-patterns)"
+description: "End-to-end functional data pipeline in C#/.NET with FluentValidation, Polly resilience, lineage tracking, Parquet export, and ASP.NET serving. See [25_py_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline) for the Python equivalent."
 created: 2026-03-29
 updated: 2026-03-30
 status: complete

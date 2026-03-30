@@ -11,11 +11,6 @@ aliases:
   - "GitHub Actions Security"
 keywords: [supply chain attack, pull_request_target, secret exposure, workflow injection, YAML untestable, cache miss, runner inconsistency, permission model, cost surprise, concurrency confusion, matrix explosion, action pinning, feedback loop, reusable workflow limits]
 description: "Comprehensive catalog of GitHub Actions problems in distributed teams — 20 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures."
-related:
-  - "[github-actions-fundamentals](/10-GitHub-Actions/github-actions-fundamentals)"
-  - "[github-actions-patterns](/10-GitHub-Actions/github-actions-patterns)"
-  - "[github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering)"
-  - "on call guide"
 status: stable
 created: 2026-03-23
 updated: 2026-03-30
@@ -1249,10 +1244,10 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 
 ## Related
 
-- [github-actions-fundamentals](/10-GitHub-Actions/github-actions-fundamentals) — Workflow anatomy, triggers, runners, secrets
-- [github-actions-patterns](/10-GitHub-Actions/github-actions-patterns) — Reusable workflows, matrix builds, deployment patterns
-- [github-actions-data-engineering](/10-GitHub-Actions/github-actions-data-engineering) — Data pipeline CI/CD specifics
-- [secrets-management](/06-GCP/Security/secrets-management) — Secret rotation and management
+- [github-actions-fundamentals](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-fundamentals) — Workflow anatomy, triggers, runners, secrets
+- [github-actions-patterns](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-patterns) — Reusable workflows, matrix builds, deployment patterns
+- [github-actions-data-engineering](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-data-engineering) — Data pipeline CI/CD specifics
+- [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — Secret rotation and management
 
 ---
 

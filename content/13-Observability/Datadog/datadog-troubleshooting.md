@@ -6,7 +6,6 @@ tags: [monitoring, observability, sql, terraform, docker, datadog, gcp]
 aliases: [Datadog Troubleshooting, DD Agent Troubleshooting, Datadog Common Issues]
 keywords: [agent not appearing, invalid API key, APM traces missing, no logs, COS filesystem, read-only opt, ghost hosts, ghost host, INACTIVE host, Windows line endings, CRLF, bash\r, terraform apply metadata, VM reset, dd-api-key missing, Airflow VM, startup script, Cloud Run metrics not showing, pipeline logs not in Datadog, Cloud Logging]
 description: "Troubleshooting guide for Datadog agent issues on the data platform — covering agent not appearing, missing APM traces, no logs, COS filesystem constraints, ghost hosts, and Windows line ending issues."
-related: [datadog-architecture-overview, datadog-agent-airflow-vm, datadog-agent-sql-vm, datadog-apm-traces, datadog-sql-server-logs, data-pipeline-common-errors]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -128,7 +127,7 @@ Expected: `Logs: xx logs sent`. If 0:
 
 In Datadog, use **Logs > Live Tail** (not Log Explorer) to see logs in real time. New accounts may show an onboarding wizard — Live Tail bypasses it.
 
-For SQL Server log collection issues, see [datadog-sql-server-logs](/13-Observability/Datadog/datadog-sql-server-logs).
+For SQL Server log collection issues, see [datadog-sql-server-logs](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-sql-server-logs).
 
 ---
 
@@ -179,7 +178,7 @@ The Docker-internal PostgreSQL IP (e.g., `172.18.0.3`) also appears as a separat
 
 ### Cloud Run Metrics Not Showing in Datadog
 
-Cloud Run jobs are ephemeral — no Datadog Agent runs inside them. Metrics come from the **GCP Integration** (see [datadog-gcp-integration](/13-Observability/Datadog/datadog-gcp-integration)). If no Cloud Run metrics appear:
+Cloud Run jobs are ephemeral — no Datadog Agent runs inside them. Metrics come from the **GCP Integration** (see [datadog-gcp-integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-gcp-integration)). If no Cloud Run metrics appear:
 
 1. Verify GCP Integration is set up in Datadog (**Integrations > Google Cloud Platform**)
 2. Check the Datadog SA has `monitoring.viewer` role
@@ -266,10 +265,10 @@ One `terraform apply` + one image rebuild cleans up everything.
 
 ## Related Notes
 
-- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — full observability architecture
-- [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) — Airflow VM agent setup
-- [datadog-agent-sql-vm](/13-Observability/Datadog/datadog-agent-sql-vm) — SQL VM agent setup
-- [datadog-apm-traces](/13-Observability/Datadog/datadog-apm-traces) — APM trace instrumentation
-- [datadog-sql-server-logs](/13-Observability/Datadog/datadog-sql-server-logs) — SQL Server log collection
-- [datadog-gcp-integration](/13-Observability/Datadog/datadog-gcp-integration) — GCP Cloud Run metrics integration
+- [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) — full observability architecture
+- [datadog-agent-airflow-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) — Airflow VM agent setup
+- [datadog-agent-sql-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-sql-vm) — SQL VM agent setup
+- [datadog-apm-traces](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-apm-traces) — APM trace instrumentation
+- [datadog-sql-server-logs](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-sql-server-logs) — SQL Server log collection
+- [datadog-gcp-integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-gcp-integration) — GCP Cloud Run metrics integration
 - common pipeline errors — project-specific error reference including Datadog issues

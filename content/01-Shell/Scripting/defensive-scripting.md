@@ -6,7 +6,6 @@ tags: [shell, bash, linux]
 aliases: [defensive scripting, set -euo pipefail, bash strict mode, safe scripting, script safety]
 keywords: [set -e, set -u, set -o pipefail, defensive scripting, bash strict mode, trap, cleanup, exit on error, unset variable, pipeline failure, production script template, error handling]
 description: "The bash set flags (set -euo pipefail) that prevent the most dangerous scripting bugs, including exit-on-error, unset variable detection, pipeline failure propagation, and cleanup traps."
-related: [command-chaining, io-redirection, environment-variables]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -24,7 +23,7 @@ set -euo pipefail
 
 > [!tip] Related pattern
 >
-> The same error-handling philosophy applies in application code: [08_py_errorhandling](/02-Programming-Languages/Python/08_py_errorhandling) covers Python's `try`/`except` (the equivalent of `set -e` with explicit catches), and [08_cs_errorhandling](/02-Programming-Languages/CSharp/08_cs_errorhandling) covers C#'s `try`/`catch`/`finally` pattern. For error handling in DAG orchestration, see [airflow-dag-patterns](/12-Orchestration/Airflow/airflow-dag-patterns).
+> The same error-handling philosophy applies in application code: [08_py_errorhandling](https://alp78.github.io/elysium/02-Programming-Languages/Python/08_py_errorhandling) covers Python's `try`/`except` (the equivalent of `set -e` with explicit catches), and [08_cs_errorhandling](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/08_cs_errorhandling) covers C#'s `try`/`catch`/`finally` pattern. For error handling in DAG orchestration, see [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns).
 
 ### set -e — exit immediately on error
 
@@ -145,11 +144,11 @@ log "Pipeline complete"
 
 ## Related
 
-- [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Cross-cutting error classification, retry strategies, and failure propagation theory
-- [command-chaining](/01-Shell/Scripting/command-chaining) — How `&&`, `||`, and `;` use exit codes
-- [io-redirection](/01-Shell/Scripting/io-redirection) — Redirecting errors for logging
-- [environment-variables](/01-Shell/Scripting/environment-variables) — Handling required vs optional configuration
-- [process-substitution](/01-Shell/Scripting/process-substitution) — Advanced I/O patterns for scripts
+- [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Cross-cutting error classification, retry strategies, and failure propagation theory
+- [command-chaining](https://alp78.github.io/elysium/01-Shell/Scripting/command-chaining) — How `&&`, `||`, and `;` use exit codes
+- [io-redirection](https://alp78.github.io/elysium/01-Shell/Scripting/io-redirection) — Redirecting errors for logging
+- [environment-variables](https://alp78.github.io/elysium/01-Shell/Scripting/environment-variables) — Handling required vs optional configuration
+- [process-substitution](https://alp78.github.io/elysium/01-Shell/Scripting/process-substitution) — Advanced I/O patterns for scripts
 
 ## References
 

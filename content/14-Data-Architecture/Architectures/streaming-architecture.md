@@ -6,17 +6,6 @@ tags: [data-architecture, architecture, streaming, python, gcp]
 aliases: [streaming architecture, Lambda architecture, Kappa architecture, event-driven architecture, real-time pipeline, stream processing, CDC, change data capture, event streaming, micro-batch, continuous processing, stream-first architecture]
 keywords: [streaming, batch, micro-batch, Lambda architecture, Kappa architecture, event-driven, Kafka, Pub/Sub, Kinesis, Event Hubs, Spark Structured Streaming, Apache Flink, Apache Beam, Dataflow, ksqlDB, Debezium, SQL Server CDC, GCP Datastream, event sourcing, CQRS, exactly-once, at-least-once, tumbling window, sliding window, session window, watermark, late data, reprocessing, replay, real-time analytics, stream processing, CDC, change data capture, producer, consumer, broker, topic, partition, consumer group, offset, backpressure, checkpointing, state store, windowing]
 description: "Streaming architecture patterns — Lambda, Kappa, and event-driven — covering batch vs streaming trade-offs, message broker comparisons (Kafka, Pub/Sub, Kinesis), stream processing engines (Flink, Beam/Dataflow, Spark Structured Streaming), CDC tools (Debezium, GCP Datastream), and the GCP canonical streaming stack."
-related:
-  - "[pubsub-messaging](/06-GCP/Serverless/pubsub-messaging)"
-  - "[pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions)"
-  - "[lakehouse-architecture](/14-Data-Architecture/Architectures/lakehouse-architecture)"
-  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
-  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
-  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
-  - "[airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts)"
-  - "[data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture)"
-  - "[open-table-formats](/14-Data-Architecture/Architectures/open-table-formats)"
-  - "[cloud-logging](/06-GCP/Logging/cloud-logging)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -26,7 +15,7 @@ status: complete
 
 Streaming architecture is any data system design where data is processed continuously as it arrives — events are consumed and acted upon within milliseconds to seconds, rather than being collected and processed in large batches hours later. It encompasses the message brokers that carry events, the processing engines that transform them, the patterns that govern their semantics (Lambda, Kappa, CQRS, event sourcing), and the windowing strategies that handle the inherent challenges of time-ordered distributed data.
 
-The canonical GCP streaming stack — [Pub/Sub](/06-GCP/Serverless/pubsub-messaging) → Dataflow (Apache Beam) → BigQuery — is the reference implementation for this vault. But understanding the landscape of alternatives is essential: Kafka dominates outside GCP, Flink is the leading stateful streaming engine globally, and CDC (Change Data Capture) is how streaming connects to existing relational databases. For Python and C# implementations of streaming patterns, see [24_py_streaming_realtime](/02-Programming-Languages/Python/24_py_streaming_realtime) and [24_cs_streaming_realtime](/02-Programming-Languages/CSharp/24_cs_streaming_realtime) respectively.
+The canonical GCP streaming stack — [Pub/Sub](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) → Dataflow (Apache Beam) → BigQuery — is the reference implementation for this vault. But understanding the landscape of alternatives is essential: Kafka dominates outside GCP, Flink is the leading stateful streaming engine globally, and CDC (Change Data Capture) is how streaming connects to existing relational databases. For Python and C# implementations of streaming patterns, see [24_py_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/Python/24_py_streaming_realtime) and [24_cs_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/24_cs_streaming_realtime) respectively.
 
 ---
 
@@ -40,7 +29,7 @@ These three processing models represent fundamentally different trade-offs betwe
 | **Latency** | Minutes to hours | Seconds to minutes | Milliseconds to seconds |
 | **Throughput** | Very high — optimized for large volumes | High | Moderate to high |
 | **State management** | Stateless by design; state lives in the database | Stateful per micro-batch window | Stateful — maintained in memory/RocksDB |
-| **Exactly-once** | Easy — idempotent batch loads; see [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) | Hard — requires transactional commits per batch | Hard — requires distributed checkpointing |
+| **Exactly-once** | Easy — idempotent batch loads; see [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) | Hard — requires transactional commits per batch | Hard — requires distributed checkpointing |
 | **Reprocessing** | Easy — re-run the batch job | Moderate — replay from source topic | Hard — requires log retention and replay |
 | **Late data handling** | N/A — all data collected before job starts | Limited watermark support | Full watermark and late-event policies |
 | **Infrastructure cost** | Low at rest — compute runs briefly | Moderate — compute runs frequently | High — compute runs 24/7 |
@@ -163,7 +152,7 @@ This requires that Kafka topics retain sufficient history — typically 7–90 d
 | **Best for** | Highly accurate historical aggregates + real-time | Systems where single codebase simplicity outweighs reprocessing cost |
 
 > [!info] Modern Consensus: Kappa + Open Table Formats
-> The current industry consensus is converging toward Kappa-style single-codebase streaming, with Apache Iceberg or Delta Lake as the serving layer. Iceberg's time travel enables point-in-time accuracy without a batch recompute. Flink writing to Iceberg with exactly-once semantics provides accurate, low-latency results without dual codebases. This is the [lakehouse](/14-Data-Architecture/Architectures/lakehouse-architecture) + Kappa combination.
+> The current industry consensus is converging toward Kappa-style single-codebase streaming, with Apache Iceberg or Delta Lake as the serving layer. Iceberg's time travel enables point-in-time accuracy without a batch recompute. Flink writing to Iceberg with exactly-once semantics provides accurate, low-latency results without dual codebases. This is the [lakehouse](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/lakehouse-architecture) + Kappa combination.
 
 ---
 
@@ -211,7 +200,7 @@ Event-driven architecture (EDA) is a broader pattern — not just for data pipel
 | **When to choose** | Multi-engine, cross-cloud, replay required, Kafka ecosystem | GCP-native, serverless, simple fan-out | AWS-native streaming | Azure-native streaming |
 
 > [!tip] GCP Recommendation: Pub/Sub for Simplicity, Kafka for Portability
-> If you are fully committed to GCP, [Pub/Sub](/06-GCP/Serverless/pubsub-topics-and-subscriptions) is the right choice — serverless, no operational overhead, native Dataflow integration. If you need cross-cloud portability, replay to offset 0, or the Kafka Connect ecosystem (hundreds of pre-built connectors), run Kafka on Dataproc or use Confluent Cloud.
+> If you are fully committed to GCP, [Pub/Sub](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-topics-and-subscriptions) is the right choice — serverless, no operational overhead, native Dataflow integration. If you need cross-cloud portability, replay to offset 0, or the Kafka Connect ecosystem (hundreds of pre-built connectors), run Kafka on Dataproc or use Confluent Cloud.
 
 ---
 
@@ -328,7 +317,7 @@ Change Data Capture is the technique of streaming changes from a relational data
 - **No application code change required.** The database already logs every change; CDC just reads that log.
 - **Low latency.** Changes are available within milliseconds of being committed.
 - **Complete change history.** Inserts, updates, AND deletes — a standard SELECT query cannot capture deletes.
-- **Enables real-time lakehouse.** CDC streams database changes into [lakehouse](/14-Data-Architecture/Architectures/lakehouse-architecture) tables (Iceberg, Delta) keeping an analytical copy current.
+- **Enables real-time lakehouse.** CDC streams database changes into [lakehouse](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/lakehouse-architecture) tables (Iceberg, Delta) keeping an analytical copy current.
 
 ### CDC Tools
 
@@ -434,7 +423,7 @@ Benefits: complete audit trail, point-in-time state reconstruction, natural CDC 
 
 ### Streaming Pattern — CQRS (Command Query Responsibility Segregation)
 
-CQRS separates the write model (commands that change state) from the read model (queries that read state). [Firestore](/06-GCP/Firestore/real-time-nosql-pipelines) is a natural fit for the read-side materialized view in CQRS, providing real-time sync to client applications. In a streaming context:
+CQRS separates the write model (commands that change state) from the read model (queries that read state). [Firestore](https://alp78.github.io/elysium/06-GCP/Firestore/real-time-nosql-pipelines) is a natural fit for the read-side materialized view in CQRS, providing real-time sync to client applications. In a streaming context:
 
 ```
 Write Side (Command)           Event Stream          Read Side (Query)
@@ -464,7 +453,7 @@ Distributed streaming systems can guarantee one of three delivery semantics:
 - Flink + Kafka: two-phase commit protocol between Flink's checkpoint and Kafka's transaction coordinator
 
 > [!warning] Exactly-Once Is Not Magic
-> "Exactly-once" in streaming applies to the broker-to-processor-to-sink path. It does not protect against logic bugs (processing an event twice because your code has a bug), external system failures (the sink database rejecting a write), or clock skew. Always design for [idempotency](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) at the application level as a defense in depth.
+> "Exactly-once" in streaming applies to the broker-to-processor-to-sink path. It does not protect against logic bugs (processing an event twice because your code has a bug), external system failures (the sink database rejecting a write), or clock skew. Always design for [idempotency](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) at the application level as a defense in depth.
 
 ---
 
@@ -600,10 +589,10 @@ Files on GCS       ──►                                ──►  Firestore
 ```
 
 #### GCP Streaming to BigQuery — why this stack
-- **Pub/Sub** is serverless, globally distributed, and deeply integrated with every GCP service. It handles spikes without capacity planning. See [pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions) for setup and [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging) for publish/consume patterns.
+- **Pub/Sub** is serverless, globally distributed, and deeply integrated with every GCP service. It handles spikes without capacity planning. See [pubsub-topics-and-subscriptions](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-topics-and-subscriptions) for setup and [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) for publish/consume patterns.
 - **Dataflow** (Apache Beam runner) is fully managed — no cluster to size, patch, or scale. It auto-scales workers based on backlog. The unified batch+stream model means one Beam pipeline handles both historical backfill and live streaming.
 - **BigQuery** is the serving layer — serverless SQL, no indexes to manage, sub-second query latency on petabytes, native streaming insert API.
-- **Cloud Logging + Monitoring:** see [cloud-logging](/06-GCP/Logging/cloud-logging) and [cloud-monitoring-metrics](/06-GCP/Logging/cloud-monitoring-metrics) for pipeline observability.
+- **Cloud Logging + Monitoring:** see [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) and [cloud-monitoring-metrics](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics) for pipeline observability.
 
 #### End-to-end GCP streaming pipeline with Dataflow
 ```python
@@ -708,33 +697,33 @@ Use this matrix to decide whether a use case requires streaming, micro-batch, or
 
 ### Connection to Lakehouse Architecture
 
-Streaming and the [lakehouse](/14-Data-Architecture/Architectures/lakehouse-architecture) are complementary:
+Streaming and the [lakehouse](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/lakehouse-architecture) are complementary:
 - Streaming provides the real-time ingestion layer.
 - The lakehouse provides the durable, queryable storage layer with ACID guarantees.
 
-The combination — streaming writes to [Iceberg](/14-Data-Architecture/Architectures/open-table-formats) via Flink or Dataflow — is increasingly called the "streaming lakehouse":
+The combination — streaming writes to [Iceberg](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/open-table-formats) via Flink or Dataflow — is increasingly called the "streaming lakehouse":
 
 ```
 Kafka/Pub/Sub  →  Flink (exactly-once)  →  Iceberg on GCS  →  BigQuery/Trino/DuckDB
 ```
 
-For [data mesh](/14-Data-Architecture/Architectures/data-mesh-architecture) implementations, each domain's data product may expose a streaming interface (a Kafka topic or Pub/Sub topic) for real-time consumers, in addition to a batch interface (an Iceberg table or BigQuery dataset) for analytical consumers.
+For [data mesh](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-mesh-architecture) implementations, each domain's data product may expose a streaming interface (a Kafka topic or Pub/Sub topic) for real-time consumers, in addition to a batch interface (an Iceberg table or BigQuery dataset) for analytical consumers.
 
 ---
 
 ## Related Notes
 
-- [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging) — Pub/Sub publish/consume patterns and operational commands
-- [pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions) — Pub/Sub topic and subscription setup on GCP
-- [lakehouse-architecture](/14-Data-Architecture/Architectures/lakehouse-architecture) — lakehouse as the serving layer for streaming pipelines
-- [open-table-formats](/14-Data-Architecture/Architectures/open-table-formats) — Iceberg and Delta Lake as the streaming write target
-- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — bronze layer as the streaming ingestion target
-- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — exactly-once semantics and idempotent consumer design
-- [airflow-core-concepts](/12-Orchestration/Airflow/airflow-core-concepts) — orchestrating streaming pipeline deployments and monitoring
-- [data-mesh-architecture](/14-Data-Architecture/Architectures/data-mesh-architecture) — domain data products exposed as streaming topics
-- [cloud-logging](/06-GCP/Logging/cloud-logging) — GCP observability for streaming pipelines
-- [cloud-monitoring-metrics](/06-GCP/Logging/cloud-monitoring-metrics) — pipeline lag, backlog, and throughput metrics
-- [five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering) — reliability and observability for streaming systems
+- [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) — Pub/Sub publish/consume patterns and operational commands
+- [pubsub-topics-and-subscriptions](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-topics-and-subscriptions) — Pub/Sub topic and subscription setup on GCP
+- [lakehouse-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/lakehouse-architecture) — lakehouse as the serving layer for streaming pipelines
+- [open-table-formats](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/open-table-formats) — Iceberg and Delta Lake as the streaming write target
+- [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — bronze layer as the streaming ingestion target
+- [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — exactly-once semantics and idempotent consumer design
+- [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) — orchestrating streaming pipeline deployments and monitoring
+- [data-mesh-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-mesh-architecture) — domain data products exposed as streaming topics
+- [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) — GCP observability for streaming pipelines
+- [cloud-monitoring-metrics](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics) — pipeline lag, backlog, and throughput metrics
+- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) — reliability and observability for streaming systems
 
 ## References
 

@@ -5,11 +5,7 @@ technology: [python]
 tags: [python]
 aliases: [serialization formats, JSON, CSV, Parquet, Avro, Protocol Buffers]
 keywords: [serialization, JSON, CSV, Parquet, Avro, protobuf, msgpack, pickle, arrow, feather, data formats, schema evolution, compression]
-description: "Python serialization formats reference with executable examples and cell outputs — covers JSON, CSV, Parquet, Avro, Protocol Buffers, MessagePack, and format comparison benchmarks. See [10_cs_serialization_formats](/02-Programming-Languages/CSharp/10_cs_serialization_formats) for the C# equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[10_cs_serialization_formats](/02-Programming-Languages/CSharp/10_cs_serialization_formats)"
-  - "[09_py_fileio_serialization](/02-Programming-Languages/Python/09_py_fileio_serialization)"
+description: "Python serialization formats reference with executable examples and cell outputs — covers JSON, CSV, Parquet, Avro, Protocol Buffers, MessagePack, and format comparison benchmarks. See [10_cs_serialization_formats](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/10_cs_serialization_formats) for the C# equivalent."
 created: 2026-03-25
 updated: 2026-03-25
 status: complete
@@ -558,7 +554,7 @@ print("""
 
 ## Format Performance Benchmark
 
-For the architecture-level decision guide on when to use each format across the full pipeline (ingestion, storage, interchange), see [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats). The benchmarks below focus on Python-specific library performance, while [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) covers how format choice affects BigQuery load throughput.
+For the architecture-level decision guide on when to use each format across the full pipeline (ingestion, storage, interchange), see [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats). The benchmarks below focus on Python-specific library performance, while [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) covers how format choice affects BigQuery load throughput.
 
 #### Generate synthetic OHLCV test data — three sizes for benchmarks
 

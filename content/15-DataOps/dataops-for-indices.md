@@ -41,10 +41,6 @@ keywords:
   - synonym swap
   - dataset expiry
   - flat-rate slots
-related:
-  - "[pit-integrity-logic](/04-SQL-Server/Performance/pit-integrity-logic)"
-  - "[compliance-and-auditability](/13-Observability/Monitoring/compliance-and-auditability)"
-  - "[golden-rules-of-data-engineering](/14-Data-Architecture/Decision-Frameworks/golden-rules-of-data-engineering)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -982,7 +978,7 @@ GO
 > Run migrations at deploy time before starting the calculation engine. The runner reads all `.sql` files in `migrations/`, computes a SHA-256 of each, checks against `schema_migrations`, and applies only those not yet recorded. Never edit a migration file after it has been applied — add a new migration instead.
 
 > [!note] See also
-> [golden-rules-of-data-engineering](/14-Data-Architecture/Decision-Frameworks/golden-rules-of-data-engineering) — Rule 3 (never mutate history without a restatement) and Rule 7 (all schema changes through migrations) apply directly here.
+> [golden-rules-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/golden-rules-of-data-engineering) — Rule 3 (never mutate history without a restatement) and Rule 7 (all schema changes through migrations) apply directly here.
 
 ---
 
@@ -998,7 +994,7 @@ GO
 | **SEV-4** | Non-material data quality issue; no subscriber impact | Next business day | Single constituent weight differs in 8th decimal place; within tolerance |
 
 > [!danger] SEV-1 is a restatement event
-> Regulatory frameworks (IOSCO, EU Benchmarks Regulation, SEC) require formal disclosure of material restatements. Engage compliance immediately; do not attempt to quietly correct and republish without a documented restatement notice. See [compliance-and-auditability](/13-Observability/Monitoring/compliance-and-auditability).
+> Regulatory frameworks (IOSCO, EU Benchmarks Regulation, SEC) require formal disclosure of material restatements. Engage compliance immediately; do not attempt to quietly correct and republish without a documented restatement notice. See [compliance-and-auditability](https://alp78.github.io/elysium/13-Observability/Monitoring/compliance-and-auditability).
 
 ### SEV-1 Runbook
 
@@ -1150,7 +1146,7 @@ gcloud scheduler jobs resume index-publication-job \
 > File the post-mortem document in the incident record and link it from the GitHub issue. Tag it with the incident date and severity. Review corrective actions at the next DataOps team retrospective.
 
 > [!note] See also
-> [pit-integrity-logic](/04-SQL-Server/Performance/pit-integrity-logic) for the point-in-time correctness principles that govern how restatements are recorded without corrupting the historical record visible to downstream consumers.
+> [pit-integrity-logic](https://alp78.github.io/elysium/04-SQL-Server/Performance/pit-integrity-logic) for the point-in-time correctness principles that govern how restatements are recorded without corrupting the historical record visible to downstream consumers.
 
 ---
 

@@ -6,7 +6,6 @@ tags: [shell, bash, gcp, linux, powershell, sql-server]
 aliases: [rsync, scp, gcloud scp, gsutil, gcloud storage, bcp, sqlcmd export, file transfer, data movement]
 keywords: [rsync, scp, gcloud compute scp, gsutil, gcloud storage, bcp, sqlcmd, file transfer, data movement, trailing slash, resume transfer, delta transfer, parallel transfer, bandwidth limit, checksum, GCS upload, GCS sync, SQL Server export, CSV export, bulk copy, parallel bcp, bwlimit, rsync exclude, dry run]
 description: "Complete guide to data transfer tools for data engineering: rsync for local and remote transfers, scp for quick copies, gcloud compute scp for GCE VMs, gsutil and gcloud storage for GCS, bcp for SQL Server bulk export/import, and sqlcmd for query-based export."
-related: ["[iap-tunneling](/01-Shell/Networking/iap-tunneling)", "[connecting-to-gcp-resources](/01-Shell/Networking/connecting-to-gcp-resources)", "[compression](/01-Shell/File-Operations/compression)", "[file-manipulation](/01-Shell/File-Operations/file-manipulation)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -177,7 +176,7 @@ rsync -avzP -e "ssh -p 2222" /data/ user@server:/data/
 > Open an IAP tunnel to port 22 (SSH) on the VM, then point rsync at the
 > local tunnel endpoint. The tunnel runs in the background (`&`). For simpler
 > one-off transfers, use `gcloud compute scp` instead. For IAP tunnel details, see
-> [iap-tunneling](/01-Shell/Networking/iap-tunneling).
+> [iap-tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling).
 
 ```bash
 gcloud compute start-iap-tunnel data-pipeline-sql 22 \
@@ -291,7 +290,7 @@ gcloud compute scp --recurse .\local_dir\ data-pipeline-sql:/tmp/ `
 
 ## gcloud compute scp — GCE-Native File Transfer
 
-`gcloud compute scp` wraps scp with automatic IAP tunneling, OS Login authentication, and zone resolution. It's the simplest way to move files to/from GCE VMs. For additional SSH and file transfer patterns on GCE, including OS Login and metadata SSH keys, see [vm-ssh-and-file-transfer](/06-GCP/Compute/vm-ssh-and-file-transfer).
+`gcloud compute scp` wraps scp with automatic IAP tunneling, OS Login authentication, and zone resolution. It's the simplest way to move files to/from GCE VMs. For additional SSH and file transfer patterns on GCE, including OS Login and metadata SSH keys, see [vm-ssh-and-file-transfer](https://alp78.github.io/elysium/06-GCP/Compute/vm-ssh-and-file-transfer).
 
 #### gcloud compute scp — push and pull files to/from GCE VMs
 
@@ -340,7 +339,7 @@ gcloud compute scp --recurse ./dags/ data-pipeline-airflow:/tmp/dags/ \
 
 ## gsutil and gcloud storage — Cloud Storage Transfers
 
-Google Cloud Storage (GCS) is the backbone for data lake storage, pipeline staging, and database backups. `gsutil` and `gcloud storage` are your tools for moving data in and out. For the full range of GCS object operations including parallel composite uploads and signed URLs, see [gcs-object-operations](/06-GCP/Storage/gcs-object-operations).
+Google Cloud Storage (GCS) is the backbone for data lake storage, pipeline staging, and database backups. `gsutil` and `gcloud storage` are your tools for moving data in and out. For the full range of GCS object operations including parallel composite uploads and signed URLs, see [gcs-object-operations](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations).
 
 #### gsutil cp, gsutil rsync — upload and sync to Cloud Storage
 
@@ -437,7 +436,7 @@ gcloud storage rsync ./local_data/ gs://data-pipeline-data-lake/bronze/ --recurs
 
 ## bcp — SQL Server Bulk Copy
 
-`bcp` (bulk copy program) transfers data between SQL Server and flat files at maximum throughput. It bypasses the query engine and writes directly to/from the storage layer. For loading millions of rows, bcp is 10-50x faster than INSERT statements. In a medallion architecture, bcp imports typically feed the [bronze layer](/04-SQL-Server/Medallion-Project/bronze-layer-loading) before transformation begins.
+`bcp` (bulk copy program) transfers data between SQL Server and flat files at maximum throughput. It bypasses the query engine and writes directly to/from the storage layer. For loading millions of rows, bcp is 10-50x faster than INSERT statements. In a medallion architecture, bcp imports typically feed the [bronze layer](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) before transformation begins.
 
 #### bcp — bulk copy export and import (Linux)
 
@@ -633,7 +632,7 @@ Invoke-Sqlcmd -ServerInstance "127.0.0.1,1435" -Database "data-pipeline" `
 | VM → VM (no local relay) | SSH + rsync | SSH into source VM, rsync directly to dest VM |
 | Database backup → GCS | `bcp` + `gsutil` | Export with bcp, then `gsutil cp backup.bak gs://bucket/` |
 
-Once data lands in GCS, you can load it directly into BigQuery with `bq load` -- see [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) for format options and schema autodetection. For recurring transfers, schedule rsync or gsutil jobs with cron -- see [linux-scheduling](/12-Orchestration/Scheduling/linux-scheduling) for crontab patterns.
+Once data lands in GCS, you can load it directly into BigQuery with `bq load` -- see [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) for format options and schema autodetection. For recurring transfers, schedule rsync or gsutil jobs with cron -- see [linux-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/linux-scheduling) for crontab patterns.
 
 ### Compression trade-offs — when to use -z during transfers
 
@@ -666,8 +665,8 @@ Once data lands in GCS, you can load it directly into BigQuery with `bq load` --
 > Rule: for any transfer over 1 GB, use a tool with resume support (rsync, gcloud storage, or gsutil).
 
 ## Related
-- [data-flow-architecture](/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — complete data movement topology and tool selection framework
-- [iap-tunneling](/01-Shell/Networking/iap-tunneling) — opening IAP tunnels for rsync and scp to GCE VMs
-- [compression](/01-Shell/File-Operations/compression) — compress data before or during transfer
-- [connecting-to-gcp-resources](/01-Shell/Networking/connecting-to-gcp-resources) — complete GCP connection guide including GCS
-- [file-manipulation](/01-Shell/File-Operations/file-manipulation) — local file operations before transfer
+- [data-flow-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — complete data movement topology and tool selection framework
+- [iap-tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling) — opening IAP tunnels for rsync and scp to GCE VMs
+- [compression](https://alp78.github.io/elysium/01-Shell/File-Operations/compression) — compress data before or during transfer
+- [connecting-to-gcp-resources](https://alp78.github.io/elysium/01-Shell/Networking/connecting-to-gcp-resources) — complete GCP connection guide including GCS
+- [file-manipulation](https://alp78.github.io/elysium/01-Shell/File-Operations/file-manipulation) — local file operations before transfer

@@ -6,7 +6,6 @@ tags: [shell, bash, linux, powershell]
 aliases: [find, fd, locate, file search, find command, xargs]
 keywords: [find, fd, locate, xargs, file search, recursive search, find by name, find by size, find by time, mtime, mmin, find and delete, empty directories, parallel processing, Get-ChildItem, Where-Object, find large files]
 description: "Targeted file searching with find, fd, and locate — searching by name pattern, size, modification time, and content. Includes parallel processing with xargs and PowerShell equivalents."
-related: ["[navigation-and-listing](/01-Shell/File-Operations/navigation-and-listing)", "[reading-file-contents](/01-Shell/Text-Processing/reading-file-contents)", "[file-manipulation](/01-Shell/File-Operations/file-manipulation)", "[brace-expansion-and-globbing](/01-Shell/Scripting/brace-expansion-and-globbing)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -14,7 +13,7 @@ status: complete
 
 # Finding Files — Surgical Searching at Scale
 
-When a pipeline fails and you need to find the offending file across a directory tree with thousands of entries, brute-force listing is not an option. You need targeted search tools that filter by name, size, time, type, and content. The `find` command is universal; `fd` is faster for interactive use; `locate` is instant but potentially stale. While `find` locates files by metadata, [grep-and-pattern-matching](/01-Shell/Text-Processing/grep-and-pattern-matching) searches inside those files for content -- the two tools complement each other in every investigation.
+When a pipeline fails and you need to find the offending file across a directory tree with thousands of entries, brute-force listing is not an option. You need targeted search tools that filter by name, size, time, type, and content. The `find` command is universal; `fd` is faster for interactive use; `locate` is instant but potentially stale. While `find` locates files by metadata, [grep-and-pattern-matching](https://alp78.github.io/elysium/01-Shell/Text-Processing/grep-and-pattern-matching) searches inside those files for content -- the two tools complement each other in every investigation.
 
 ## Linux — find, fd, locate
 
@@ -73,7 +72,7 @@ find /data/ -type f -size -1k
 >
 > `-exec` runs a command on each found file. `{}` is the placeholder for the
 > filename. `\;` terminates the command (one invocation per file). Schedule cleanup
-> jobs via cron — see [linux-scheduling](/12-Orchestration/Scheduling/linux-scheduling).
+> jobs via cron — see [linux-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/linux-scheduling).
 
 ```bash
 find /var/log/pipeline/ -name "*.log" -mtime +30 -exec rm {} \;
@@ -156,7 +155,7 @@ find /data/ -name "*.csv" -print0 | xargs -0 -P 4 gzip
 > Without `-print0`, filenames containing spaces or quotes cause `xargs` to split them
 > into multiple arguments. `file with spaces.csv` becomes three arguments: `file`, `with`,
 > `spaces.csv`. This can target wrong files — or worse, delete unintended files.
-> See [defensive-scripting](/01-Shell/Scripting/defensive-scripting) for more null-delimiter patterns.
+> See [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) for more null-delimiter patterns.
 
 ### find vs fd vs locate — tool comparison
 
@@ -222,14 +221,14 @@ Get-ChildItem -Path "C:\data\" -Recurse -Directory |
 >
 > `Select-String` searches file contents by regex and returns structured objects
 > with `Filename`, `LineNumber`, and `Line` properties. Use `**\*` glob for recursive
-> search. For the Linux equivalent, see [grep-and-pattern-matching](/01-Shell/Text-Processing/grep-and-pattern-matching).
+> search. For the Linux equivalent, see [grep-and-pattern-matching](https://alp78.github.io/elysium/01-Shell/Text-Processing/grep-and-pattern-matching).
 
 ```powershell
 Select-String -Path "C:\pipeline\**\*.py" -Pattern "deadlock" -Recurse
 ```
 
 ## Related
-- [navigation-and-listing](/01-Shell/File-Operations/navigation-and-listing) — listing directories before searching
-- [reading-file-contents](/01-Shell/Text-Processing/reading-file-contents) — reading the files you find
-- [file-manipulation](/01-Shell/File-Operations/file-manipulation) — deleting or moving files found by `find`
-- [brace-expansion-and-globbing](/01-Shell/Scripting/brace-expansion-and-globbing) — globbing patterns complement `find`
+- [navigation-and-listing](https://alp78.github.io/elysium/01-Shell/File-Operations/navigation-and-listing) — listing directories before searching
+- [reading-file-contents](https://alp78.github.io/elysium/01-Shell/Text-Processing/reading-file-contents) — reading the files you find
+- [file-manipulation](https://alp78.github.io/elysium/01-Shell/File-Operations/file-manipulation) — deleting or moving files found by `find`
+- [brace-expansion-and-globbing](https://alp78.github.io/elysium/01-Shell/Scripting/brace-expansion-and-globbing) — globbing patterns complement `find`

@@ -6,7 +6,6 @@ tags: [shell, bash, linux, powershell]
 aliases: [command chaining, shell operators, chain commands, && operator, pipe operator, semicolon operator, OR operator]
 keywords: [command chaining, exit code, logical AND, logical OR, pipe, pipeline, semicolon, fail-fast, bash operators, powershell operators, process exit code, shell execution flow]
 description: "How bash and PowerShell command chaining operators (&&, ||, ;, |) use exit codes to control execution flow, enabling fail-fast scripts and graceful error handling."
-related: [io-redirection, defensive-scripting, process-substitution]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -167,9 +166,9 @@ command *> all.txt
 
 ## Related
 
-- [io-redirection](/01-Shell/Scripting/io-redirection) — Controlling where command output goes
-- [defensive-scripting](/01-Shell/Scripting/defensive-scripting) — Using `set -euo pipefail` to make scripts safe
-- [process-substitution](/01-Shell/Scripting/process-substitution) — Treating command output as files
+- [io-redirection](https://alp78.github.io/elysium/01-Shell/Scripting/io-redirection) — Controlling where command output goes
+- [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) — Using `set -euo pipefail` to make scripts safe
+- [process-substitution](https://alp78.github.io/elysium/01-Shell/Scripting/process-substitution) — Treating command output as files
 
 ## References
 

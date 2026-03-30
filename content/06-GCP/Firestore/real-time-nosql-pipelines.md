@@ -59,19 +59,6 @@ description: >
   event-driven processing patterns, config-driven behavior, Pub/Sub + Dataflow
   streaming, change data capture, full Python implementations, monitoring, cost
   optimization, and security. Batch vs. real-time decision framework included.
-related:
-  - "[pubsub-messaging](/06-GCP/Serverless/pubsub-messaging)"
-  - "[pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions)"
-  - "[cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services)"
-  - "[streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture)"
-  - "[data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export)"
-  - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
-  - "[service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)"
-  - "[vpc-service-controls](/06-GCP/Security/vpc-service-controls)"
-  - "[cloud-logging](/06-GCP/Logging/cloud-logging)"
-  - "[cloud-monitoring-metrics](/06-GCP/Logging/cloud-monitoring-metrics)"
-  - "[gcp-projects-and-apis](/06-GCP/Core/gcp-projects-and-apis)"
-  - "[gcloud-authentication](/06-GCP/Core/gcloud-authentication)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -114,7 +101,7 @@ Most pipeline metadata use cases (dashboards, alerting, config) need **operation
 When an Airflow DAG or Cloud Run job executes, it writes structured state documents to Firestore. A web dashboard subscribes via `on_snapshot()` or REST, showing current status without polling. This avoids the N+1 query problem against a relational metadata store.
 
 **Feature stores for ML serving — low-latency feature lookup**
-Precomputed features written asynchronously during batch jobs are read synchronously at inference time. Firestore delivers sub-10ms p99 on document reads with the right data model (one document per entity key). Related: [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) for BigQuery feature materialization patterns.
+Precomputed features written asynchronously during batch jobs are read synchronously at inference time. Firestore delivers sub-10ms p99 on document reads with the right data model (one document per entity key). Related: [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) for BigQuery feature materialization patterns.
 
 **Configuration management — change config, immediate effect**
 A Firestore document holds operational parameters: quality thresholds, email recipients, feature flags, schedule overrides. Operators update the document; the next pipeline run reads the new values without a code deploy or restart.
@@ -134,11 +121,11 @@ Gold scores computed in BigQuery are written to Firestore (`stocks` collection) 
 
 | Requirement | Problem with Firestore | Use Instead |
 |---|---|---|
-| Heavy analytics (aggregations, full scans) | No columnar storage, expensive per-read pricing for large result sets | [BigQuery](/06-GCP/BigQuery/querying-and-cost-optimization) |
+| Heavy analytics (aggregations, full scans) | No columnar storage, expensive per-read pricing for large result sets | [BigQuery](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) |
 | High-throughput time-series (millions of writes/sec) | Per-document write limit (1/sec), collection-level limits | Bigtable |
 | Complex joins and multi-table transactions | No joins; transactions limited to 500 documents | Cloud SQL / AlloyDB |
-| Message queuing, fan-out, backpressure | No queue semantics, no dead-letter native support | [Pub/Sub](/06-GCP/Serverless/pubsub-messaging) |
-| Large blob storage | Documents capped at 1 MB | [Cloud Storage](/06-GCP/Storage/gcs-buckets-and-lifecycle) |
+| Message queuing, fan-out, backpressure | No queue semantics, no dead-letter native support | [Pub/Sub](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) |
+| Large blob storage | Documents capped at 1 MB | [Cloud Storage](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) |
 | Relational integrity with foreign keys | No enforced referential integrity | Cloud SQL |
 
 > [!danger] The Expensive Anti-Pattern
@@ -199,7 +186,7 @@ Data arrives  → Write document to Firestore collection "raw_events"
     Function marks document as processed (or deletes it)
 ```
 
-This pattern eliminates polling entirely. The Cloud Function is only invoked when data exists to process. Related: [cloud-run-jobs-vs-services](/06-GCP/Serverless/cloud-run-jobs-vs-services) for when a long-running service is preferable to a function.
+This pattern eliminates polling entirely. The Cloud Function is only invoked when data exists to process. Related: [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) for when a long-running service is preferable to a function.
 
 #### Eventarc trigger configuration
 
@@ -303,11 +290,11 @@ service cloud.firestore {
                     └─────────────────┘                         └──────────────────┘
 ```
 
-Use this when: inbound throughput exceeds Firestore's direct write capacity, you need both real-time operational reads (Firestore) and historical analytics (BigQuery), and you want durable buffering (Pub/Sub) to handle backpressure. Related: [pubsub-topics-and-subscriptions](/06-GCP/Serverless/pubsub-topics-and-subscriptions) for topic and subscription configuration.
+Use this when: inbound throughput exceeds Firestore's direct write capacity, you need both real-time operational reads (Firestore) and historical analytics (BigQuery), and you want durable buffering (Pub/Sub) to handle backpressure. Related: [pubsub-topics-and-subscriptions](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-topics-and-subscriptions) for topic and subscription configuration.
 
 **When NOT to use this pattern:** if you only need analytics (skip Firestore, write directly to BigQuery via Dataflow), or if you only need real-time reads with no analytics (skip Dataflow and BigQuery, write directly to Firestore from producers).
 
-See [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) for the broader context of windowing strategies and late data handling in Dataflow.
+See [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture) for the broader context of windowing strategies and late data handling in Dataflow.
 
 ---
 
@@ -364,7 +351,7 @@ unsubscribe = col_ref.on_snapshot(on_change)
 
 > [!warning] Listener Process Availability
 >
-> The real-time CDC listener is a long-running process. Run it on [Cloud Run (service)](/06-GCP/Serverless/cloud-run-jobs-vs-services) with a health check, not as a one-shot job. Ensure it reconnects on transient Firestore errors.
+> The real-time CDC listener is a long-running process. Run it on [Cloud Run (service)](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) with a health check, not as a one-shot job. Ensure it reconnects on transient Firestore errors.
 
 ---
 
@@ -855,7 +842,7 @@ python streaming_pipeline.py \
 
 > [!tip] Late Data Handling
 >
-> Add `--allow_late_data` or configure `beam.WindowInto` with `allowed_lateness` to handle messages that arrive after the window closes. For IoT use cases, a 30-second allowed lateness typically covers network delays without significantly increasing state size. See [streaming-architecture](/14-Data-Architecture/Architectures/streaming-architecture) for watermark and trigger strategies.
+> Add `--allow_late_data` or configure `beam.WindowInto` with `allowed_lateness` to handle messages that arrive after the window closes. For IoT use cases, a 30-second allowed lateness typically covers network delays without significantly increasing state size. See [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture) for watermark and trigger strategies.
 
 ---
 
@@ -863,7 +850,7 @@ python streaming_pipeline.py \
 
 ### Firestore Metrics in Cloud Monitoring
 
-The following metrics are available under the `firestore.googleapis.com` namespace in [Cloud Monitoring](/06-GCP/Logging/cloud-monitoring-metrics):
+The following metrics are available under the `firestore.googleapis.com` namespace in [Cloud Monitoring](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics):
 
 | Metric | Description | Alert Threshold |
 |---|---|---|
@@ -887,7 +874,7 @@ gcloud monitoring policies create \
 
 ### Logging Firestore Operations
 
-Firestore does not log individual document reads/writes to [Cloud Logging](/06-GCP/Logging/cloud-logging) by default. Enable Data Access audit logs to capture them:
+Firestore does not log individual document reads/writes to [Cloud Logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) by default. Enable Data Access audit logs to capture them:
 
 ```bash
 # Enable DATA_READ and DATA_WRITE audit logs for Firestore
@@ -1021,7 +1008,7 @@ db.collection("pipelines").document(name).collection("runs").document(run_id).se
 | Ad-hoc query | Supported (indexed only) | Full SQL | Not supported |
 | Best for | Operational reads/writes | Analytics | Message delivery |
 
-For pure analytics with no real-time read requirement, [BigQuery streaming inserts](/06-GCP/BigQuery/data-loading-and-export) are cheaper than Firestore writes. Use Firestore only when the real-time listener or low-latency lookup justifies the cost.
+For pure analytics with no real-time read requirement, [BigQuery streaming inserts](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) are cheaper than Firestore writes. Use Firestore only when the real-time listener or low-latency lookup justifies the cost.
 
 ---
 
@@ -1029,7 +1016,7 @@ For pure analytics with no real-time read requirement, [BigQuery streaming inser
 
 ### Service Account Authentication
 
-All server-to-server Firestore access should use dedicated service accounts — never user credentials or default compute service accounts in production. See [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) for service account creation and key management.
+All server-to-server Firestore access should use dedicated service accounts — never user credentials or default compute service accounts in production. See [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for service account creation and key management.
 
 ```bash
 # Create a dedicated service account for pipeline state writes
@@ -1073,7 +1060,7 @@ On Cloud Run or GKE with Workload Identity, omit the explicit credentials — th
 
 ### VPC Service Controls
 
-Firestore can be included in a VPC Service Control perimeter to prevent data exfiltration. See [vpc-service-controls](/06-GCP/Security/vpc-service-controls) for perimeter configuration. When Firestore is inside a VPC-SC perimeter, access from outside the perimeter (including developer workstations) requires an access policy with appropriate access levels.
+Firestore can be included in a VPC Service Control perimeter to prevent data exfiltration. See [vpc-service-controls](https://alp78.github.io/elysium/06-GCP/Security/vpc-service-controls) for perimeter configuration. When Firestore is inside a VPC-SC perimeter, access from outside the perimeter (including developer workstations) requires an access policy with appropriate access levels.
 
 ```bash
 # Add Firestore to an existing perimeter
@@ -1095,13 +1082,13 @@ Firestore encrypts all data at rest automatically using AES-256 and in transit u
 
 ### Diagnosing Slow Writes
 
-1. Check `firestore.googleapis.com/api/request_latencies` in [Cloud Monitoring](/06-GCP/Logging/cloud-monitoring-metrics) — filter by method `BatchWrite` or `Commit`.
+1. Check `firestore.googleapis.com/api/request_latencies` in [Cloud Monitoring](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics) — filter by method `BatchWrite` or `Commit`.
 2. Verify you are not hitting the per-document write limit (1 write/second per document). If so, shard hot documents by appending a random suffix to the document ID and aggregating reads.
 3. Check if composite indexes are being built — writes are throttled during index backfill.
 
 ### Diagnosing Missing Documents
 
-1. Verify the write succeeded — check for exceptions in application logs via [Cloud Logging](/06-GCP/Logging/cloud-logging).
+1. Verify the write succeeded — check for exceptions in application logs via [Cloud Logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging).
 2. Check TTL policy — document may have been deleted by TTL.
 3. Verify the document path — Firestore is case-sensitive and path-exact.
 4. Check security rules if using client-side SDKs.

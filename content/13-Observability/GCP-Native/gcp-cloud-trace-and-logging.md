@@ -64,12 +64,6 @@ description: >
   Storage, Log Analytics SQL, audit logs, OpenTelemetry tracing, span
   instrumentation, trace-log correlation, and a full GCP-native observability
   stack architecture with cost comparison vs Datadog.
-related:
-  - "[Cloud Monitoring](/06-GCP/Logging/cloud-monitoring-metrics)"
-  - "[custom metrics](/06-GCP/Logging/cloud-monitoring-metrics)"
-  - "[moc-observability](/13-Observability/moc-observability)"
-  - "[Firestore state store](/06-GCP/Firestore/firestore-data-model-and-operations)"
-  - "[Cloud Run pipelines](/06-GCP/Serverless/cloud-run-jobs-vs-services)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -78,7 +72,7 @@ status: complete
 # GCP Cloud Logging and Cloud Trace for Data Engineers
 
 > [!abstract] What This Covers
-> The logging and distributed tracing pillars of GCP-native observability for data engineering pipelines. Metrics are covered in [Cloud Monitoring](/06-GCP/Logging/cloud-monitoring-metrics). This note goes deep on writing structured logs from pipelines, querying them effectively, routing them for cost control and analytics, understanding audit logs, and instrumenting Python pipelines with OpenTelemetry for end-to-end distributed tracing.
+> The logging and distributed tracing pillars of GCP-native observability for data engineering pipelines. Metrics are covered in [Cloud Monitoring](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics). This note goes deep on writing structured logs from pipelines, querying them effectively, routing them for cost control and analytics, understanding audit logs, and instrumenting Python pipelines with OpenTelemetry for end-to-end distributed tracing.
 
 ---
 
@@ -614,7 +608,7 @@ gcloud logging metrics delete pipeline-errors --project=PROJECT
 ```
 
 > [!note] Log-Based Metric Latency
-> Log-based metrics have up to 3–4 minutes of latency. Do not use them for sub-minute alerting. For low-latency alerting, write custom metrics directly from your pipeline code using the Cloud Monitoring API (see [Cloud Monitoring](/06-GCP/Logging/cloud-monitoring-metrics)).
+> Log-based metrics have up to 3–4 minutes of latency. Do not use them for sub-minute alerting. For low-latency alerting, write custom metrics directly from your pipeline code using the Cloud Monitoring API (see [Cloud Monitoring](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics)).
 
 ---
 
@@ -1351,7 +1345,7 @@ Data Pipeline (Cloud Run Job)
 
 #### Step 1: Metrics
 
-- Install Ops Agent on all VMs (see [custom metrics](/06-GCP/Logging/cloud-monitoring-metrics))
+- Install Ops Agent on all VMs (see [custom metrics](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics))
 - Cloud Run metrics are automatic (no Ops Agent needed)
 - Write custom metrics for business KPIs using `google-cloud-monitoring` Python library
 - Create log-based metrics for error counts
@@ -1513,4 +1507,4 @@ with tracer.start_as_current_span("my-span", attributes={"key": "value"}) as spa
 
 ---
 
-*See also: [Cloud Monitoring](/06-GCP/Logging/cloud-monitoring-metrics) | [custom metrics](/06-GCP/Logging/cloud-monitoring-metrics) | [moc-observability](/13-Observability/moc-observability) | [Firestore state store](/06-GCP/Firestore/firestore-data-model-and-operations)*
+*See also: [Cloud Monitoring](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics) | [custom metrics](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics) | [moc-observability](https://alp78.github.io/elysium/13-Observability/moc-observability) | [Firestore state store](https://alp78.github.io/elysium/06-GCP/Firestore/firestore-data-model-and-operations)*

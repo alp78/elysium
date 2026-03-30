@@ -57,9 +57,8 @@ const SECTION_COLORS: Record<string, number> = {
   "12-Orchestration": 0x22c55e,
   "13-Observability": 0xa855f7,
   "14-Data": 0x06b6d4,
-  "15-Runbooks": 0xef4444,
-  "16-Engineering": 0x6b7280,
-  "17-AI": 0xec4899,
+  "15-DataOps": 0xef4444,
+  "16-AI": 0xec4899,
   "18-Financial": 0xfbbf24,
 }
 

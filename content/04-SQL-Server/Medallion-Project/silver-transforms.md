@@ -6,7 +6,6 @@ tags: [python, sql, sql-server, tsql, medallion-project]
 aliases: [Silver Layer, Silver Transforms, Bronze to Silver, SCD2 Transform, Silver DDL, Cleaned Layer, Gap Fill, Forward Fill]
 keywords: [silver layer, medallion architecture, SCD Type 2, slowly changing dimensions, deduplication, gap fill, forward fill, is_filled, trading calendar, upsert, unique index, filtered index, valid_from, valid_to, is_current, OHLCV transform, signals daily, signals quarterly, index_dim SCD2, upserting, insert or update, parameterized queries, silver schema]
 description: "Complete SQL patterns for the example silver layer — covers SCD Type 2 dimension tracking, OHLCV gap-filling against the trading calendar, daily and quarterly signal upserts, and unique index design for deduplication."
-related: [bronze-layer-loading, gold-transforms, medallion-architecture, data-warehouse-architecture]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -16,22 +15,22 @@ status: complete
 >
 > This page documents the implementation of a specific financial data pipeline
 > (STOXX/yfinance stock index scoring system) on SQL Server. For the general
-> patterns and alternative approaches, see the [moc-sql-server > Patterns](/04-SQL-Server/moc-sql-server#patterns)
+> patterns and alternative approaches, see the [moc-sql-server > Patterns](https://alp78.github.io/elysium/04-SQL-Server/moc-sql-server#patterns)
 > section. For the architectural theory behind bronze/silver/gold layering,
-> see [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture).
+> see [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture).
 
 # Silver Transforms
 
-The silver layer cleans, deduplicates, and historicizes the raw data from [bronze](/04-SQL-Server/Medallion-Project/bronze-layer-loading). Where bronze is ephemeral (truncated each run), silver is permanent — it accumulates history across every pipeline run. In dbt terminology, silver corresponds to [intermediate models](/11-dbt/Modeling/dbt-intermediate-models) that sit between staging and mart layers.
+The silver layer cleans, deduplicates, and historicizes the raw data from [bronze](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading). Where bronze is ephemeral (truncated each run), silver is permanent — it accumulates history across every pipeline run. In dbt terminology, silver corresponds to [intermediate models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-intermediate-models) that sit between staging and mart layers.
 
-**Pipeline flow:** [Bronze](/04-SQL-Server/Medallion-Project/bronze-layer-loading) → Python transforms → Silver tables → [Gold scoring](/04-SQL-Server/Medallion-Project/gold-transforms)
+**Pipeline flow:** [Bronze](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) → Python transforms → Silver tables → [Gold scoring](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms)
 
 Key improvements silver makes over bronze:
 
-- **[SCD Type 2](/14-Data-Architecture/Architectures/data-warehouse-architecture)** on dimensions — tracks attribute changes over time
+- **[SCD Type 2](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-warehouse-architecture)** on dimensions — tracks attribute changes over time
 - **One row per symbol per date** — deduplication via UNIQUE indexes
-- **Gap-filled OHLCV** — forward-fills missing trading days using the [trading calendar](/04-SQL-Server/Medallion-Project/bronze-layer-loading#bronzetradingcalendar)
-- **Validation gates** — a [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) between bronze and silver ensures data integrity before promotion
+- **Gap-filled OHLCV** — forward-fills missing trading days using the [trading calendar](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading#bronzetradingcalendar)
+- **Validation gates** — a [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) between bronze and silver ensures data integrity before promotion
 - **Full history retained** — silver accumulates across runs; bronze is wiped each run
 
 ---
@@ -46,7 +45,7 @@ Tracks company attribute changes (sector, name, etc.) over time. When an attribu
 
 > [!info] SCD Type 2 Pattern
 >
-> SCD Type 2 (Slowly Changing Dimension Type 2) preserves history by closing old records and inserting new ones. The `valid_to = NULL` + `is_current = 1` pattern is the standard implementation in SQL Server. See [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) for general data pipeline patterns. For dbt's declarative approach to the same SCD2 logic, see [dbt-snapshots-and-scd](/11-dbt/Advanced/dbt-snapshots-and-scd).
+> SCD Type 2 (Slowly Changing Dimension Type 2) preserves history by closing old records and inserting new ones. The `valid_to = NULL` + `is_current = 1` pattern is the standard implementation in SQL Server. See [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) for general data pipeline patterns. For dbt's declarative approach to the same SCD2 logic, see [dbt-snapshots-and-scd](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-snapshots-and-scd).
 
 #### CREATE TABLE silver.index_dim — SCD Type 2 with valid_from, valid_to, is_current
 
@@ -273,7 +272,7 @@ records_inserted=50  records_updated=45  records_unchanged=5
 
 File: `ingestion/transforms/transform_ohlcv.py`
 
-The OHLCV transform uses the [trading calendar](/04-SQL-Server/Medallion-Project/bronze-layer-loading#bronzetradingcalendar) to detect gaps — dates where the exchange was open but no price data arrived. These gaps are forward-filled from the previous day's close.
+The OHLCV transform uses the [trading calendar](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading#bronzetradingcalendar) to detect gaps — dates where the exchange was open but no price data arrived. These gaps are forward-filled from the previous day's close.
 
 #### LEFT JOIN trading_calendar — identify OHLCV data gaps
 
@@ -398,9 +397,9 @@ DELETE FROM silver.index_usa_ohlcv  WHERE date > CAST(GETDATE() AS DATE) AND is_
 
 ### Related Notes
 
-- [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) — upstream: raw data loading patterns and DDL
-- [gold-transforms](/04-SQL-Server/Medallion-Project/gold-transforms) — downstream: aggregations, scoring, and dashboard-ready views
-- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — architectural context
-- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — general idempotent data pipeline patterns including SCD
+- [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) — upstream: raw data loading patterns and DDL
+- [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) — downstream: aggregations, scoring, and dashboard-ready views
+- [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — architectural context
+- [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — general idempotent data pipeline patterns including SCD
 - the data pipeline steps — pipeline steps that drive these transforms
 - common pipeline errors — troubleshooting stale forward-fills and stuck OHLCV data

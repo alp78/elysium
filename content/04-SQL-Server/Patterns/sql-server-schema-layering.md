@@ -14,7 +14,6 @@ tags:
 aliases: [Schema Layering, Schema per Layer, Database Organization, Schema Design Patterns]
 keywords: [schema layering, schema per layer, schema per domain, schema per source, naming conventions, cross-schema security, database roles, GRANT SELECT, CREATE SCHEMA, bronze silver gold, data mesh, staging schema, reserved words, metadata columns]
 description: "How to organize SQL Server databases and schemas for multi-layer data architectures — schema-per-layer, schema-per-domain, separate databases, naming conventions, and security."
-related: [medallion-architecture, bronze-layer-loading, silver-transforms, gold-transforms, sql-server-authentication]
 created: 2026-03-29
 updated: 2026-03-29
 status: complete
@@ -22,7 +21,7 @@ status: complete
 
 # SQL Server Schema Layering — Organizing Databases for Data Pipelines
 
-This page covers the **how** of organizing SQL Server schemas for layered data architectures. For the **why** — the architectural reasoning behind bronze/silver/gold layers — see [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture). For how dbt maps its own schema configuration to these patterns, see [dbt-intermediate-models](/11-dbt/Modeling/dbt-intermediate-models).
+This page covers the **how** of organizing SQL Server schemas for layered data architectures. For the **why** — the architectural reasoning behind bronze/silver/gold layers — see [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture). For how dbt maps its own schema configuration to these patterns, see [dbt-intermediate-models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-intermediate-models).
 
 ---
 
@@ -273,4 +272,4 @@ Without `_ingested_at` and `_source_file` in bronze tables, you cannot debug dat
 > - `gold.scores_daily`, `gold.scores_quarterly`, `gold.index_performance` — pre-computed analytics
 >
 > All tables include `_ingested_at DATETIME2 DEFAULT SYSUTCDATETIME()` as a metadata column.
-> See [bronze-layer-loading](/04-SQL-Server/Medallion-Project/bronze-layer-loading) for the full DDL.
+> See [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) for the full DDL.

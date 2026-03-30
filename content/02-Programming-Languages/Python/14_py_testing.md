@@ -5,10 +5,7 @@ technology: [python]
 tags: [testing, python]
 aliases: [unit testing, pytest, xUnit, NUnit, test driven development, mocking, assertions]
 keywords: [pytest, unittest, mock, patch, fixture, parametrize, assert, coverage, TDD]
-description: "Python testing reference with executable examples and cell outputs — covers pytest, unittest, fixtures, mocking, parametrize, and test-driven development patterns. See [14_cs_testing](/02-Programming-Languages/CSharp/14_cs_testing) for the C# equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[14_cs_testing](/02-Programming-Languages/CSharp/14_cs_testing)"
+description: "Python testing reference with executable examples and cell outputs — covers pytest, unittest, fixtures, mocking, parametrize, and test-driven development patterns. See [14_cs_testing](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/14_cs_testing) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -960,7 +957,7 @@ Key testing patterns for data engineering and finance:
 
 > [!tip] Related pattern
 >
-> The pytest patterns here (fixtures, parametrize, assertion style) have direct parallels in [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework), where dbt tests validate SQL transforms the same way pytest validates Python transforms. For the broader quality strategy that both test layers feed into, see [data-quality-framework](/14-Data-Architecture/Pipeline-Patterns/data-quality-framework).
+> The pytest patterns here (fixtures, parametrize, assertion style) have direct parallels in [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework), where dbt tests validate SQL transforms the same way pytest validates Python transforms. For the broader quality strategy that both test layers feed into, see [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework).
 
 #### Pure function testing — normalize_trades transform
 

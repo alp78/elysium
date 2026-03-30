@@ -6,7 +6,6 @@ tags: [performance, cost, sql, gcp, sql-server, tsql]
 aliases: [SQL Server cost optimization, FinOps SQL Server, GCP disk snapshots, committed use discount, spot instances, application-consistent snapshot, right-sizing SQL Server]
 keywords: [finops, cost optimization, disk snapshot, committed use discount, CUD, spot instance, preemptible VM, right-sizing, GCP Recommender, billing export, BigQuery billing, SUSPEND_FOR_SNAPSHOT_BACKUP, DBCC FREEZEIO, DBCC THAWIO, Nearline, Coldline, pd-balanced, pd-ssd, Cloud Scheduler, snapshot schedule, gcloud compute resource-policies, PITR, application-consistent, crash-consistent, on-demand]
 description: "Cost optimization strategies for SQL Server on GCP: disk snapshot schedules, application-consistent snapshot technique with SQL Server 2022 SUSPEND_FOR_SNAPSHOT_BACKUP, committed use discounts vs spot instances, and right-sizing the VM using GCP Recommender."
-related: [backup-types-and-strategy, restore-and-recovery, server-configuration, always-on-availability-groups, tde-encryption]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -31,7 +30,7 @@ GCP persistent disk snapshots are incremental, block-level copies of the disk. T
 
 **Best strategy: use BOTH**
 
-- Daily SQL BACKUP to GCS (for PITR and granular recovery — see [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy))
+- Daily SQL BACKUP to GCS (for PITR and granular recovery — see [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy))
 - Daily disk snapshot (for fast full-VM recovery / disaster recovery)
 
 #### gcloud compute resource-policies create — snapshot schedule
@@ -162,7 +161,7 @@ LIMIT 20"
 #### Cost reduction checklist — stop idle VMs, right-size, compress, lifecycle
 
 - [ ] Stop VM when not in use (nights/weekends for dev): schedule with Cloud Scheduler
-- [ ] Use pd-balanced instead of pd-ssd if IOPS requirements are met (see [server-configuration](/04-SQL-Server/Administration/server-configuration))
+- [ ] Use pd-balanced instead of pd-ssd if IOPS requirements are met (see [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration))
 - [ ] Set log backup retention policy (don't keep indefinitely)
 - [ ] Use Nearline/Coldline storage class for old backups in GCS:
   - Standard → Nearline: 30 days old
@@ -200,17 +199,17 @@ LIMIT 20"
 
 Beyond GCP-level cost savings, SQL Server's own storage choices affect both performance and cost:
 
-**Table compression as a buffer pool multiplier** — see [table-compression](/04-SQL-Server/Storage-and-Indexes/table-compression):
+**Table compression as a buffer pool multiplier** — see [table-compression](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/table-compression):
 - PAGE compression on gold-layer tables saves 60-80% disk space
 - Fewer disk I/Os = less need to upgrade to pd-ssd from pd-balanced
 - More data fits in the buffer pool = less need to upsize the VM's RAM
 
-**Partitioning for tiered storage** — see [partitioning-strategies](/04-SQL-Server/Storage-and-Indexes/partitioning-strategies):
+**Partitioning for tiered storage** — see [partitioning-strategies](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/partitioning-strategies):
 - Old partitions can be on a pd-balanced or pd-standard disk (cheaper)
 - Current-year partition stays on pd-ssd for low latency
 - Filegroups map partitions to disks: partition 1-5 on archive disk, partition 6+ on fast disk
 
-**[Backup compression](/04-SQL-Server/Administration/backup-types-and-strategy)** — enabled by default in SQL Server 2022:
+**[Backup compression](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy)** — enabled by default in SQL Server 2022:
 ```sql
 -- Verify backup compression is enabled at instance level
 SELECT value_in_use FROM sys.configurations
@@ -226,9 +225,9 @@ Backup compression typically reduces backup file size by 50-70%, directly reduci
 
 ### Related
 
-- [backup-types-and-strategy](/04-SQL-Server/Administration/backup-types-and-strategy) — SQL backup strategy (Full/Differential/Log) that complements disk snapshots
-- [restore-and-recovery](/04-SQL-Server/Administration/restore-and-recovery) — how to restore from both SQL backups and disk snapshots
-- [server-configuration](/04-SQL-Server/Administration/server-configuration) — disk type selection (pd-ssd vs pd-balanced) and IO configuration
-- [always-on-availability-groups](/04-SQL-Server/High-Availability/always-on-availability-groups) — AG backup offload to secondary reduces primary VM IO costs
-- [tde-encryption](/04-SQL-Server/Security/tde-encryption) — TDE adds ~3-7% CPU overhead; factor into VM sizing
-- [table-compression](/04-SQL-Server/Storage-and-Indexes/table-compression) — reduce storage and buffer pool footprint without adding RAM
+- [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy) — SQL backup strategy (Full/Differential/Log) that complements disk snapshots
+- [restore-and-recovery](https://alp78.github.io/elysium/04-SQL-Server/Administration/restore-and-recovery) — how to restore from both SQL backups and disk snapshots
+- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) — disk type selection (pd-ssd vs pd-balanced) and IO configuration
+- [always-on-availability-groups](https://alp78.github.io/elysium/04-SQL-Server/High-Availability/always-on-availability-groups) — AG backup offload to secondary reduces primary VM IO costs
+- [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/Security/tde-encryption) — TDE adds ~3-7% CPU overhead; factor into VM sizing
+- [table-compression](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/table-compression) — reduce storage and buffer pool footprint without adding RAM

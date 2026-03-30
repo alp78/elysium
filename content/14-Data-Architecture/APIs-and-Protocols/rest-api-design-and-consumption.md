@@ -68,12 +68,6 @@ description: >
   processed data to dashboards and downstream systems). Covers HTTP fundamentals,
   authentication patterns, pagination strategies, rate limiting, async consumption
   with httpx, FastAPI for data serving, OpenAPI specifications, and curl workflows.
-related:
-  - "fastapi and polars"
-  - "[moc-data-architecture](/14-Data-Architecture/moc-data-architecture)"
-  - "[Python HTTP requests](/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption)"
-  - "[curl and HTTP](/01-Shell/Networking/http-requests-and-apis)"
-  - "[service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -90,7 +84,7 @@ status: complete
 
 ### What REST Is
 
-REST (Representational State Transfer) is a stateless client-server architectural style built on top of HTTP. Every request from a client contains all information the server needs to fulfill it — no session state lives on the server between calls. This property is what makes REST pipelines straightforward to scale horizontally and retry safely. For Python implementation of REST clients and servers, see [15_py_webapis](/02-Programming-Languages/Python/15_py_webapis); for C#, see [15_cs_webapis](/02-Programming-Languages/CSharp/15_cs_webapis).
+REST (Representational State Transfer) is a stateless client-server architectural style built on top of HTTP. Every request from a client contains all information the server needs to fulfill it — no session state lives on the server between calls. This property is what makes REST pipelines straightforward to scale horizontally and retry safely. For Python implementation of REST clients and servers, see [15_py_webapis](https://alp78.github.io/elysium/02-Programming-Languages/Python/15_py_webapis); for C#, see [15_cs_webapis](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/15_cs_webapis).
 
 Key constraints of REST:
 - **Stateless** — server holds no client context between requests
@@ -299,7 +293,7 @@ curl -H "X-API-Key: $API_KEY" "https://api.example.com/v1/prices?symbol=AAPL"
 curl -H "Authorization: Bearer $API_KEY" "https://api.example.com/v1/prices?symbol=AAPL"
 ```
 
-For more curl recipes and CLI-based API interaction patterns, see [http-requests-and-apis](/01-Shell/Networking/http-requests-and-apis).
+For more curl recipes and CLI-based API interaction patterns, see [http-requests-and-apis](https://alp78.github.io/elysium/01-Shell/Networking/http-requests-and-apis).
 
 > [!warning] Never log query params containing secrets
 > Many logging frameworks capture full URLs. If the API key is a query parameter, it ends up in your logs. Use header-based auth and scrub Authorization headers from logs.
@@ -1659,7 +1653,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 | Webhook   | Event notifications, push-based       | Event-driven | JSON                | Push-based         |
 | FTP/SFTP  | Bulk file transfers, legacy data      | High         | Files               | No                 |
 
-For a deeper side-by-side comparison of REST, gRPC, GraphQL, and other protocols, see [api-protocols-comparison](/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison).
+For a deeper side-by-side comparison of REST, gRPC, GraphQL, and other protocols, see [api-protocols-comparison](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison).
 
 #### Use REST when
 - Consuming a third-party API (it will almost certainly be REST)
@@ -1881,4 +1875,4 @@ If-None-Match: {etag}                X-Request-Id (for support tickets)
 
 ---
 
-*See also: [error-handling-and-retry-patterns](/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) | fastapi and polars | [curl and HTTP](/01-Shell/Networking/http-requests-and-apis) | [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) | *
+*See also: [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) | fastapi and polars | [curl and HTTP](https://alp78.github.io/elysium/01-Shell/Networking/http-requests-and-apis) | [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) | *

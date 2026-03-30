@@ -5,12 +5,6 @@ technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "Systematic diagnosis of dbt compilation errors, runtime failures, test failures, incremental drift, snapshot corruption, and a reference table of 12 common errors with causes and fixes."
-related:
-  - "[airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting)"
-  - "[dbt-cli-reference](/11-dbt/Foundations/dbt-cli-reference)"
-  - "[dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)"
-  - "[dbt-performance-tuning](/11-dbt/Operations/dbt-performance-tuning)"
-  - "[dbt-observability](/11-dbt/Operations/dbt-observability)"
 ---
 
 # dbt: Troubleshooting
@@ -163,7 +157,7 @@ Database Error in model fct_index_constituent_history
 #### Fix — Query Timeout
 - For BigQuery: increase `job_timeout_ms` in the model config or profile.
 - For SQL Server: increase `query_timeout` in `profiles.yml`.
-- Longer term: see [dbt-performance-tuning](/11-dbt/Operations/dbt-performance-tuning) for model splitting strategies.
+- Longer term: see [dbt-performance-tuning](https://alp78.github.io/elysium/11-dbt/Operations/dbt-performance-tuning) for model splitting strategies.
 
 ```yaml
 # BigQuery — per-model timeout override
@@ -194,7 +188,7 @@ Resources exceeded during query execution: Out of memory; ...
 }}
 ```
 
-3. Break the model into smaller intermediate models (see [dbt-performance-tuning](/11-dbt/Operations/dbt-performance-tuning)).
+3. Break the model into smaller intermediate models (see [dbt-performance-tuning](https://alp78.github.io/elysium/11-dbt/Operations/dbt-performance-tuning)).
 
 ---
 
@@ -435,8 +429,8 @@ Fix the source deduplication first, then full-refresh the incremental model.
 
 ## Related
 
-- [airflow-troubleshooting](/12-Orchestration/Airflow/airflow-troubleshooting)
-- [dbt-cli-reference](/11-dbt/Foundations/dbt-cli-reference)
-- [dbt-testing-framework](/11-dbt/Quality/dbt-testing-framework)
-- [dbt-performance-tuning](/11-dbt/Operations/dbt-performance-tuning)
-- [dbt-observability](/11-dbt/Operations/dbt-observability)
+- [airflow-troubleshooting](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-troubleshooting)
+- [dbt-cli-reference](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-cli-reference)
+- [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework)
+- [dbt-performance-tuning](https://alp78.github.io/elysium/11-dbt/Operations/dbt-performance-tuning)
+- [dbt-observability](https://alp78.github.io/elysium/11-dbt/Operations/dbt-observability)

@@ -6,7 +6,6 @@ tags: [shell, bash, linux, powershell, networking]
 aliases: [ss, netstat, socket inspection, TCP state, LISTEN, ESTABLISHED, TIME-WAIT, ephemeral ports, connection refused vs timed out]
 keywords: [ss, netstat, socket inspection, TCP state, LISTEN, ESTAB, TIME-WAIT, ephemeral ports, loopback, 0.0.0.0, 127.0.0.1, connection refused, connection timed out, connection count, Get-NetTCPConnection, SQL Server ports, 1433, 1434, DAC, connection pool, Recv-Q]
 description: "Reading socket state with ss (socket statistics) to diagnose network connectivity issues. Covers listening vs established connections, loopback vs all-interface binding, ephemeral ports, TIME-WAIT connections, and the 'connection refused vs timed out' distinction."
-related: ["[connectivity-testing](/01-Shell/Networking/connectivity-testing)", "[firewalls](/01-Shell/Networking/firewalls)", "[iap-tunneling](/01-Shell/Networking/iap-tunneling)", "[viewing-processes](/01-Shell/Process-Management/viewing-processes)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -217,7 +216,7 @@ Get-NetTCPConnection -LocalPort 1433 | Group-Object State |
 ```
 
 ## Related
-- [connectivity-testing](/01-Shell/Networking/connectivity-testing) — test reachability before reading socket state
-- [firewalls](/01-Shell/Networking/firewalls) — when sockets show nothing listening but you expected something
-- [iap-tunneling](/01-Shell/Networking/iap-tunneling) — understanding IAP proxy addresses in established connections
-- [viewing-processes](/01-Shell/Process-Management/viewing-processes) — find which process owns a socket (combine with `ss -p`)
+- [connectivity-testing](https://alp78.github.io/elysium/01-Shell/Networking/connectivity-testing) — test reachability before reading socket state
+- [firewalls](https://alp78.github.io/elysium/01-Shell/Networking/firewalls) — when sockets show nothing listening but you expected something
+- [iap-tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling) — understanding IAP proxy addresses in established connections
+- [viewing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/viewing-processes) — find which process owns a socket (combine with `ss -p`)

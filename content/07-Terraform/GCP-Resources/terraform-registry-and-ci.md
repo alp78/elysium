@@ -6,11 +6,6 @@ tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform Artifact Registry, terraform CI service account, docker registry terraform, cleanup policies terraform]
 keywords: [Artifact Registry, google_artifact_registry_repository, cleanup policies, Docker registry, image cleanup, keep-latest-5, delete-untagged, CI service account, GitHub Actions, data-pipeline-ci, image tags, docker push, registry path]
 description: "Terraform configuration for GCP Artifact Registry (Docker image storage with cleanup policies) and the CI/CD service account used by GitHub Actions to push images and deploy Cloud Run services."
-related:
-  - "[terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets)"
-  - "[terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run)"
-  - "[github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd)"
-  - "[image-management](/09-Docker/image-management)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -137,7 +132,7 @@ resource "google_service_account_iam_member" "ci_act_as_dashboard" {
 
 > [!info] Least Privilege Chain
 >
-> The CI account can push images and update deployments, but it cannot access the database, read secrets, or trigger pipeline runs. It can only assign existing service accounts to Cloud Run workloads. See [terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets) for the full IAM design.
+> The CI account can push images and update deployments, but it cannot access the database, read secrets, or trigger pipeline runs. It can only assign existing service accounts to Cloud Run workloads. See [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) for the full IAM design.
 
 ---
 
@@ -178,16 +173,16 @@ The `credentials_json` field receives the full JSON content of the CI service ac
 | `DD_API_KEY` | Datadog API key | Pipeline containers for APM/log shipping |
 | `DB_PASSWORD` | Database SA password | Pipeline and dashboard containers |
 
-For the full GitHub Actions CI/CD workflow setup, see [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd).
+For the full GitHub Actions CI/CD workflow setup, see [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd).
 
-For Docker image build and push operations, see [image-management](/09-Docker/image-management).
+For Docker image build and push operations, see [image-management](https://alp78.github.io/elysium/09-Docker/image-management).
 
 ## Related
 
-- [terraform-iam-and-secrets](/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — how the CI service account's permissions are structured
-- [terraform-cloud-run](/07-Terraform/GCP-Resources/terraform-cloud-run) — the Cloud Run services that pull images from this registry
-- [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — the GitHub Actions workflows that use the CI service account
-- [image-management](/09-Docker/image-management) — docker tag, push, and build commands for the registry
+- [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — how the CI service account's permissions are structured
+- [terraform-cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run) — the Cloud Run services that pull images from this registry
+- [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — the GitHub Actions workflows that use the CI service account
+- [image-management](https://alp78.github.io/elysium/09-Docker/image-management) — docker tag, push, and build commands for the registry
 
 ## References
 

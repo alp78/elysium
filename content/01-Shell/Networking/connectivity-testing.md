@@ -6,7 +6,6 @@ tags: [testing, shell, bash, linux, powershell, gcp, networking]
 aliases: [netcat, nc, ping, traceroute, mtr, dig, DNS, port testing, TCP test, ss, connectivity]
 keywords: [netcat, nc, ping, traceroute, mtr, dig, DNS lookup, port testing, TCP test, ss, connectivity, connection refused, connection timed out, /dev/tcp, Test-NetConnection, Resolve-DnsName, network debugging, firewall, GCP firewall rules]
 description: "Systematic network connectivity debugging from DNS resolution through TCP port reachability to application-level authentication. Covers netcat, dig, traceroute, mtr, ss, and PowerShell Test-NetConnection."
-related: ["[firewalls](/01-Shell/Networking/firewalls)", "[socket-inspection](/01-Shell/Networking/socket-inspection)", "[iap-tunneling](/01-Shell/Networking/iap-tunneling)", "[http-requests-and-apis](/01-Shell/Networking/http-requests-and-apis)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -120,7 +119,7 @@ mtr -c 10 hostname
 > `ss` is the modern replacement for `netstat`. Flags: `-t` = TCP, `-l` = listening,
 > `-n` = numeric (don't resolve names), `-p` = show process. Use this to verify that the
 > service you're trying to reach is actually listening on the expected port. For deeper
-> connection state analysis, see [socket-inspection](/01-Shell/Networking/socket-inspection).
+> connection state analysis, see [socket-inspection](https://alp78.github.io/elysium/01-Shell/Networking/socket-inspection).
 
 ```bash
 ss -tlnp
@@ -144,7 +143,7 @@ nc -zv -w 5 10.132.0.2 1433
 # If refused: SQL Server is not running, or listening on different port
 # If timeout: GCP firewall rule blocking port 1433
 
-# 4. Can we authenticate? (see [sql-server-authentication](/04-SQL-Server/Security/sql-server-authentication) for login types and troubleshooting)
+# 4. Can we authenticate? (see [sql-server-authentication](https://alp78.github.io/elysium/04-SQL-Server/Security/sql-server-authentication) for login types and troubleshooting)
 sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d data-pipeline -Q "SELECT 1" -l 10
 # -l 10 = login timeout 10 seconds
 # If "Login failed": wrong credentials
@@ -226,10 +225,10 @@ Get-NetTCPConnection -State Listen | Sort-Object LocalPort |
     @{N='Process';E={(Get-Process -Id $_.OwningProcess).ProcessName}}
 ```
 
-For a broader systematic diagnosis approach that goes beyond network connectivity into application and query-level troubleshooting, see [troubleshooting-flowcharts](/04-SQL-Server/Performance/troubleshooting-flowcharts).
+For a broader systematic diagnosis approach that goes beyond network connectivity into application and query-level troubleshooting, see [troubleshooting-flowcharts](https://alp78.github.io/elysium/04-SQL-Server/Performance/troubleshooting-flowcharts).
 
 ## Related
-- [firewalls](/01-Shell/Networking/firewalls) — when `nc` shows timeout (packet blocked, not refused)
-- [socket-inspection](/01-Shell/Networking/socket-inspection) — deeper analysis of connection states
-- [iap-tunneling](/01-Shell/Networking/iap-tunneling) — connecting to VMs with no public IP
-- [http-requests-and-apis](/01-Shell/Networking/http-requests-and-apis) — testing REST API connectivity with curl
+- [firewalls](https://alp78.github.io/elysium/01-Shell/Networking/firewalls) — when `nc` shows timeout (packet blocked, not refused)
+- [socket-inspection](https://alp78.github.io/elysium/01-Shell/Networking/socket-inspection) — deeper analysis of connection states
+- [iap-tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling) — connecting to VMs with no public IP
+- [http-requests-and-apis](https://alp78.github.io/elysium/01-Shell/Networking/http-requests-and-apis) — testing REST API connectivity with curl

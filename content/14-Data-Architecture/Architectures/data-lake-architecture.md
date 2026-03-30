@@ -6,19 +6,6 @@ tags: [data-architecture, architecture, python, bigquery, gcp]
 aliases: [data lake, data swamp, landing zone, raw zone, curated zone, GCS data lake, S3 data lake, ADLS data lake, bronze zone, silver zone, gold zone, schema-on-read, Hive-style partitioning, object storage lake, cloud data lake]
 keywords: [data lake, data swamp, schema-on-read, schema-on-write, object storage, landing zone, raw zone, cleansed zone, curated zone, zones, GCS, S3, ADLS, Azure Data Lake Storage, cloud storage, Hive partitioning, Hive-style, partition discovery, Parquet, Avro, ORC, CSV, JSON, file format, data catalog, data lineage, data governance, PII, access control, lifecycle policy, storage class, BigQuery external tables, Dataproc, ETL, ELT, medallion architecture, data lakehouse, Apache Iceberg, Delta Lake, open table formats, cost optimization, retention policy, naming convention, file organization, compaction, small files problem]
 description: "Comprehensive reference on data lake architecture — zone organization (Landing, Cleansed, Curated), Hive-style partitioning, file format selection, governance and cataloging, anti-patterns (data swamp), GCS/S3/ADLS comparison, and GCP-specific lake implementation using GCS, BigQuery external tables, and Dataproc."
-related:
-  - "[data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture)"
-  - "[gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle)"
-  - "[gcs-object-operations](/06-GCP/Storage/gcs-object-operations)"
-  - "[open-table-formats](/14-Data-Architecture/Architectures/open-table-formats)"
-  - "[medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
-  - "[serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats)"
-  - "[querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization)"
-  - "[dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management)"
-  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
-  - "[service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)"
-  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
-  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -53,7 +40,7 @@ Understanding this distinction is the architectural foundation of the data lake 
 
 ## Zone Architecture
 
-The canonical data lake organizes storage into **zones** (also called layers or tiers), each with a defined quality level, access pattern, and governance contract. The zone concept maps directly to the [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) (Bronze = Landing/Raw, Silver = Cleansed, Gold = Curated).
+The canonical data lake organizes storage into **zones** (also called layers or tiers), each with a defined quality level, access pattern, and governance contract. The zone concept maps directly to the [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) (Bronze = Landing/Raw, Silver = Cleansed, Gold = Curated).
 
 ```
 Source Systems
@@ -147,7 +134,7 @@ The curated zone is the public-facing layer. It is optimized for the actual quer
 - Version-controlled schema (breaking changes require deprecation notice)
 
 > [!tip] Curated Zone as External Tables
-> In a GCP lake, mount the curated zone as BigQuery external tables. Analysts get the familiar BigQuery SQL interface and cost controls (partition pruning, dry runs) while the data physically lives in GCS. When query performance demands it, materialize the most-queried external tables into native BigQuery tables. See [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) and [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) for setup.
+> In a GCP lake, mount the curated zone as BigQuery external tables. Analysts get the familiar BigQuery SQL interface and cost controls (partition pruning, dry runs) while the data physically lives in GCS. When query performance demands it, materialize the most-queried external tables into native BigQuery tables. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) and [dataset-and-table-management](https://alp78.github.io/elysium/06-GCP/BigQuery/dataset-and-table-management) for setup.
 
 ---
 
@@ -228,13 +215,13 @@ df.coalesce(target_partitions).write \
 ```
 
 > [!tip] Incremental Loads and File Accumulation
-> Landing zones that receive incremental files will accumulate thousands of small files over time. Run a weekly compaction job that merges small Parquet files by partition into optimal-size consolidated files. [open-table-formats](/14-Data-Architecture/Architectures/open-table-formats) (Apache Iceberg, Delta Lake) manage this automatically through their `OPTIMIZE` / `REWRITE DATA FILES` operations.
+> Landing zones that receive incremental files will accumulate thousands of small files over time. Run a weekly compaction job that merges small Parquet files by partition into optimal-size consolidated files. [open-table-formats](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/open-table-formats) (Apache Iceberg, Delta Lake) manage this automatically through their `OPTIMIZE` / `REWRITE DATA FILES` operations.
 
 ---
 
 ## Storage Formats: When to Use Each
 
-See [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) for detailed encoding mechanics and compression codec comparison. This section covers the decision criteria specific to data lake storage.
+See [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) for detailed encoding mechanics and compression codec comparison. This section covers the decision criteria specific to data lake storage.
 
 | Format | Schema embedded | Columnar | Splittable | Best use case in a lake |
 |---|---|---|---|---|
@@ -254,7 +241,7 @@ Curated zone:   Parquet (compressed, partitioned, clustered)
 ```
 
 > [!warning] Never Use CSV or JSON in the Curated Zone
-> CSV and JSON have no embedded schema, no columnar storage, and no compression interoperability. A 10 GB CSV file in the curated zone will be read end-to-end for every query. The same data as Parquet with Snappy compression is typically 2–5 GB and scanned 3–10x faster because query engines read only the relevant columns. See [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) for the full format comparison.
+> CSV and JSON have no embedded schema, no columnar storage, and no compression interoperability. A 10 GB CSV file in the curated zone will be read end-to-end for every query. The same data as Parquet with Snappy compression is typically 2–5 GB and scanned 3–10x faster because query engines read only the relevant columns. See [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) for the full format comparison.
 
 #### Parquet configuration for data lake
 
@@ -381,10 +368,10 @@ The zone architecture naturally maps to a tiered access control model.
 | **Curated** | All data consumers (analysts, BI) | `roles/storage.objectViewer` on curated bucket |
 | **Admin** | Data platform team only | `roles/storage.admin` |
 
-See [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) for GCP IAM mechanics and [vpc-service-controls](/06-GCP/Security/vpc-service-controls) for perimeter-level lake access control.
+See [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for GCP IAM mechanics and [vpc-service-controls](https://alp78.github.io/elysium/06-GCP/Security/vpc-service-controls) for perimeter-level lake access control.
 
 > [!warning] Don't Grant Project-Level Storage Roles
-> Granting `roles/storage.objectViewer` at the project level gives access to all buckets in the project. Assign bucket-level IAM bindings to enforce zone separation. Use [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam)'s condition-based IAM for attribute-level access control.
+> Granting `roles/storage.objectViewer` at the project level gives access to all buckets in the project. Assign bucket-level IAM bindings to enforce zone separation. Use [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam)'s condition-based IAM for attribute-level access control.
 
 ### PII Handling in the Lake
 
@@ -421,7 +408,7 @@ A data lake becomes a data swamp when it grows without governance. Swamps are ch
 
 **Symptom:** The lake grows indefinitely. Storage costs compound monthly. "We might need it someday" is the only retention policy.
 
-**Fix:** Define explicit retention periods per zone and per dataset. Implement GCS lifecycle rules to automatically transition and delete data. See [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) for lifecycle rule syntax.
+**Fix:** Define explicit retention periods per zone and per dataset. Implement GCS lifecycle rules to automatically transition and delete data. See [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) for lifecycle rule syntax.
 
 ```bash
 # GCS lifecycle rule: delete landing zone files after 90 days
@@ -458,7 +445,7 @@ gs://org-data-lake-curated/     # analytics-ready, permanent, public (internal)
 
 **Symptom:** Re-running the pipeline for a date creates duplicate files or doubles row counts.
 
-**Fix:** Design every pipeline write as idempotent. For Parquet in GCS, the most reliable approach is to write to a temporary path and then atomically rename (or use the [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) TRUNCATE + RELOAD pattern):
+**Fix:** Design every pipeline write as idempotent. For Parquet in GCS, the most reliable approach is to write to a temporary path and then atomically rename (or use the [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) TRUNCATE + RELOAD pattern):
 
 ```python
 # Idempotent Parquet write: write to temp, rename to final
@@ -515,7 +502,7 @@ gcs_client.move_blobs(temp_path, final_path)
 | **Best for** | Exploration, ML, multi-format sources, cost-sensitive storage | Known query patterns, BI dashboards, governed reporting |
 
 > [!tip] Lake + Warehouse = Lakehouse
-> Modern architectures combine both: a data lake for low-cost raw storage, feeding a data warehouse or lakehouse layer for governed analytical queries. The [open-table-formats](/14-Data-Architecture/Architectures/open-table-formats) (Apache Iceberg, Delta Lake) blur this boundary further — open table formats bring warehouse-grade ACID transactions and schema enforcement to object storage, creating the "lakehouse" architecture. The [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) is a practical implementation pattern that spans both.
+> Modern architectures combine both: a data lake for low-cost raw storage, feeding a data warehouse or lakehouse layer for governed analytical queries. The [open-table-formats](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/open-table-formats) (Apache Iceberg, Delta Lake) blur this boundary further — open table formats bring warehouse-grade ACID transactions and schema enforcement to object storage, creating the "lakehouse" architecture. The [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) is a practical implementation pattern that spans both.
 
 ---
 
@@ -547,7 +534,7 @@ gcloud storage buckets create gs://example-data-lake-curated \
   --uniform-bucket-level-access
 ```
 
-See [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) for the full lifecycle rule configuration reference.
+See [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) for the full lifecycle rule configuration reference.
 
 ### Mounting Curated Zone as BigQuery External Tables
 
@@ -651,7 +638,7 @@ print(f"Wrote {df_clean.count()} rows to cleansed zone")
 
 ### Storage Class Lifecycle Policies
 
-Implement automatic storage class transitions to minimize cost for aging data. See [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) for full lifecycle JSON configuration.
+Implement automatic storage class transitions to minimize cost for aging data. See [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) for full lifecycle JSON configuration.
 
 | Zone | Initial class | Transition | Final disposition |
 |---|---|---|---|
@@ -681,7 +668,7 @@ Implement automatic storage class transitions to minimize cost for aging data. S
 ```
 
 > [!warning] NEARLINE and COLDLINE Minimum Storage Durations
-> GCS charges a minimum storage duration for NEARLINE (30 days) and COLDLINE (90 days). If you delete a COLDLINE object after 10 days, you are charged for 90 days. Design lifecycle transitions so objects have lived in the current class for at least the minimum duration before transitioning or deleting. See [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) for the full cost model.
+> GCS charges a minimum storage duration for NEARLINE (30 days) and COLDLINE (90 days). If you delete a COLDLINE object after 10 days, you are charged for 90 days. Design lifecycle transitions so objects have lived in the current class for at least the minimum duration before transitioning or deleting. See [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) for the full cost model.
 
 ### Columnar Compression Efficiency
 
@@ -731,15 +718,15 @@ Before treating a data lake zone as production-ready:
 
 ## Related Notes
 
-- [data-warehouse-architecture](/14-Data-Architecture/Architectures/data-warehouse-architecture) — The structured analytical layer that the curated zone feeds
-- [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) — GCS bucket setup, storage classes, and lifecycle rule configuration
-- [gcs-object-operations](/06-GCP/Storage/gcs-object-operations) — GCS object CRUD, bulk operations, and gsutil patterns
-- [open-table-formats](/14-Data-Architecture/Architectures/open-table-formats) — Apache Iceberg and Delta Lake: ACID transactions on data lake storage
-- [medallion-architecture](/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — The Bronze/Silver/Gold pattern implemented as a lake zone architecture
-- [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Deep dive on Parquet, Avro, ORC, JSON, CSV mechanics and trade-offs
-- [querying-and-cost-optimization](/06-GCP/BigQuery/querying-and-cost-optimization) — BigQuery cost controls when querying from GCS external tables
-- [dataset-and-table-management](/06-GCP/BigQuery/dataset-and-table-management) — Creating and managing BigQuery external tables on GCS
-- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — Writing idempotent pipelines that safely re-run against lake zones
-- [service-accounts-and-iam](/06-GCP/Security/service-accounts-and-iam) — GCP IAM for per-zone access control
-- [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — Standard tool for curated zone SQL transforms
-- [five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering) — Reliability, observability, and security principles for lake design
+- [data-warehouse-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-warehouse-architecture) — The structured analytical layer that the curated zone feeds
+- [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) — GCS bucket setup, storage classes, and lifecycle rule configuration
+- [gcs-object-operations](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations) — GCS object CRUD, bulk operations, and gsutil patterns
+- [open-table-formats](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/open-table-formats) — Apache Iceberg and Delta Lake: ACID transactions on data lake storage
+- [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — The Bronze/Silver/Gold pattern implemented as a lake zone architecture
+- [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Deep dive on Parquet, Avro, ORC, JSON, CSV mechanics and trade-offs
+- [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) — BigQuery cost controls when querying from GCS external tables
+- [dataset-and-table-management](https://alp78.github.io/elysium/06-GCP/BigQuery/dataset-and-table-management) — Creating and managing BigQuery external tables on GCS
+- [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — Writing idempotent pipelines that safely re-run against lake zones
+- [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — GCP IAM for per-zone access control
+- [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — Standard tool for curated zone SQL transforms
+- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) — Reliability, observability, and security principles for lake design

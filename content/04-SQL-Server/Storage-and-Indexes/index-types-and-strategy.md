@@ -6,7 +6,6 @@ tags: [sql, sql-server, tsql]
 aliases: [clustered index, nonclustered index, covering index, filtered index, columnstore index, CCI, NCCI, composite index, index key, INCLUDE columns, bookmark lookup, key lookup, index seek, index scan, B-tree, fill factor, fragmentation, REORGANIZE, REBUILD, statistics]
 keywords: [clustered index, nonclustered index, covering index, filtered index, columnstore index, CCI, NCCI, composite index, INCLUDE, bookmark lookup, key lookup, index seek, index scan, B-tree, fill factor, fragmentation, REORGANIZE, REBUILD, statistics, UPDATE STATISTICS, FULLSCAN, missing index DMV, sys.dm_db_missing_index_details, sys.dm_db_index_usage_stats, sys.dm_db_index_physical_stats, heap, GUID clustered key, NEWSEQUENTIALID, unique index, primary key, index anti-patterns, index decision tree, auto update statistics, DBCC SHOW_STATISTICS, index maintenance]
 description: "All SQL Server index types (clustered, nonclustered, covering, filtered, columnstore) with creation syntax, usage guidance, the decision tree for choosing the right type, anti-patterns, fragmentation detection and maintenance, statistics management, and the data pipeline index strategy."
-related: [storage-internals, index-maintenance, sargable-queries, execution-plans, performance-audit-playbook, server-configuration]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -838,9 +837,9 @@ ON dbo.gold_scores (symbol, date, composite_score, rank_overall, _index, sector)
 
 ### Related
 
-- [storage-internals](/04-SQL-Server/Storage-and-Indexes/storage-internals) — B-tree page structure, page splits, and how indexes are stored
-- [index-maintenance](/04-SQL-Server/Performance/index-maintenance) — dedicated maintenance procedures and scheduling
-- [sargable-queries](/04-SQL-Server/T-SQL/sargable-queries) — writing predicates that enable index seeks instead of scans
-- [execution-plans](/04-SQL-Server/Performance/execution-plans) — reading execution plans to identify missing indexes and key lookups
-- [performance-audit-playbook](/04-SQL-Server/Performance/performance-audit-playbook) — structured audit incorporating index analysis
-- [server-configuration](/04-SQL-Server/Administration/server-configuration) — heap detection and statistics update after bulk loads
+- [storage-internals](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/storage-internals) — B-tree page structure, page splits, and how indexes are stored
+- [index-maintenance](https://alp78.github.io/elysium/04-SQL-Server/Performance/index-maintenance) — dedicated maintenance procedures and scheduling
+- [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries) — writing predicates that enable index seeks instead of scans
+- [execution-plans](https://alp78.github.io/elysium/04-SQL-Server/Performance/execution-plans) — reading execution plans to identify missing indexes and key lookups
+- [performance-audit-playbook](https://alp78.github.io/elysium/04-SQL-Server/Performance/performance-audit-playbook) — structured audit incorporating index analysis
+- [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) — heap detection and statistics update after bulk loads

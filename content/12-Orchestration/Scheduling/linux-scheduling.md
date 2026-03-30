@@ -6,13 +6,6 @@ tags: [orchestration, bash, scheduling, cron]
 aliases: [cron, crontab, systemd timer, at, anacron, Linux scheduling, cron job, cron expression, crontab syntax, cron schedule, crond, cron daemon, task scheduler linux]
 keywords: [cron, crontab, crontab -e, crontab -l, crontab -r, systemd timer, systemd.timer, OnCalendar, at command, batch command, atq, atrm, anacron, anacrontab, flock, overlap prevention, cron overlap, MAILTO, cron logging, cron debugging, cron environment, cron PATH, cron TZ, cron syslog, "/etc/cron.d", "/etc/crontab", cron.daily, cron.weekly, "@reboot", "@hourly", "@daily", "@weekly", "@monthly", journalctl timer, persistent timer, ssh config, ssh key, ed25519, ssh-copy-id, ssh tunnel, ProxyCommand, IAP tunnel, cron vs airflow, cloud scheduler, task scheduling linux, job scheduling, recurring job, scheduled task linux]
 description: "Exhaustive reference for Linux task scheduling covering cron, systemd timers, at/batch, and anacron. Includes crontab syntax, overlap prevention with flock, environment handling, output logging, SSH configuration for remote scheduling, and a decision table for choosing between cron, Airflow, and Cloud Scheduler."
-related:
-  - "[managing-services](/01-Shell/Process-Management/managing-services)"
-  - "[defensive-scripting](/01-Shell/Scripting/defensive-scripting)"
-  - "[environment-variables](/01-Shell/Scripting/environment-variables)"
-  - "[io-redirection](/01-Shell/Scripting/io-redirection)"
-  - "[iap-tunneling](/01-Shell/Networking/iap-tunneling)"
-  - "[connecting-to-gcp-resources](/01-Shell/Networking/connecting-to-gcp-resources)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -29,7 +22,7 @@ Linux task scheduling encompasses every mechanism for running commands automatic
 
 ## Cron and Crontab
 
-Cron is the simplest scheduler — it runs commands at specified intervals on a single machine. For lightweight tasks (backup scripts, health checks, log rotation), cron is the right tool. For complex pipelines with dependencies, retries, and monitoring, use [Airflow](/12-Orchestration/Airflow/airflow-core-concepts).
+Cron is the simplest scheduler — it runs commands at specified intervals on a single machine. For lightweight tasks (backup scripts, health checks, log rotation), cron is the right tool. For complex pipelines with dependencies, retries, and monitoring, use [Airflow](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts).
 
 ### Crontab Syntax Diagram
 
@@ -194,7 +187,7 @@ Vixie cron and most modern crond implementations support `@string` shortcuts:
 
 # Practical examples:
 @reboot    /usr/local/bin/start_pipeline_agent.sh
-@daily     /usr/bin/find /var/log/pipeline -name "*.log" -mtime +30 -delete  # see [finding-files](/01-Shell/File-Operations/finding-files) for more find patterns
+@daily     /usr/bin/find /var/log/pipeline -name "*.log" -mtime +30 -delete  # see [finding-files](https://alp78.github.io/elysium/01-Shell/File-Operations/finding-files) for more find patterns
 @weekly    /home/airflow/scripts/weekly_maintenance.sh
 @monthly   /home/airflow/scripts/monthly_report.sh
 ```
@@ -223,7 +216,7 @@ TZ=UTC
 # ─── APPROACH 2: Source your environment inside the script ─────────────────
 # In your script (/home/pipeline/scripts/run_pipeline.sh):
 #!/bin/bash
-set -euo pipefail                    # see [defensive-scripting](/01-Shell/Scripting/defensive-scripting) for why this matters
+set -euo pipefail                    # see [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) for why this matters
 source /home/pipeline/.bashrc       # loads aliases and PATH changes
 source /home/pipeline/.env          # loads environment-specific secrets
 exec /home/pipeline/scripts/main.py "$@"
@@ -1219,7 +1212,7 @@ log "Starting backup"
     -P "${SA_PASSWORD}" \
     -Q "BACKUP DATABASE [analytics_db] TO DISK = '${BACKUP_FILE}' WITH COMPRESSION, STATS = 10"
 
-log "Uploading to GCS: ${BUCKET}/$(date +%Y/%m/%d)/"  # see [data-transfer](/01-Shell/File-Operations/data-transfer) for rsync/gsutil patterns
+log "Uploading to GCS: ${BUCKET}/$(date +%Y/%m/%d)/"  # see [data-transfer](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer) for rsync/gsutil patterns
 gsutil cp "${BACKUP_FILE}" "${BUCKET}/$(date +%Y/%m/%d)/$(basename ${BACKUP_FILE})"
 
 log "Cleanup: removing local backup file"
@@ -1336,7 +1329,7 @@ Is the task a single command or script on one Linux machine?
 ```
 
 > [!info] GCP Cloud Scheduler
-> Cloud Scheduler is not a replacement for cron on Linux — it is a managed service that sends HTTP requests or Pub/Sub messages on a schedule. It cannot run arbitrary shell commands. Use it to trigger Cloud Functions, Cloud Run services, or Pub/Sub topics from a managed, serverless context. See [connecting-to-gcp-resources](/01-Shell/Networking/connecting-to-gcp-resources) for GCP integration patterns.
+> Cloud Scheduler is not a replacement for cron on Linux — it is a managed service that sends HTTP requests or Pub/Sub messages on a schedule. It cannot run arbitrary shell commands. Use it to trigger Cloud Functions, Cloud Run services, or Pub/Sub topics from a managed, serverless context. See [connecting-to-gcp-resources](https://alp78.github.io/elysium/01-Shell/Networking/connecting-to-gcp-resources) for GCP integration patterns.
 
 ---
 
@@ -1393,16 +1386,16 @@ flock -n 9 || exit 0
 
 ---
 
-For the Windows equivalent of these scheduling tools, see [windows-scheduling](/12-Orchestration/Scheduling/windows-scheduling).
+For the Windows equivalent of these scheduling tools, see [windows-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/windows-scheduling).
 
 ## Related Notes
 
-- [managing-services](/01-Shell/Process-Management/managing-services) — systemd service management, systemctl, journalctl
-- [defensive-scripting](/01-Shell/Scripting/defensive-scripting) — set -euo pipefail, error handling in shell scripts
-- [environment-variables](/01-Shell/Scripting/environment-variables) — shell environment, export, sourcing files
-- [io-redirection](/01-Shell/Scripting/io-redirection) — stdout/stderr redirection, tee, append vs overwrite
-- [iap-tunneling](/01-Shell/Networking/iap-tunneling) — GCP Identity-Aware Proxy tunneling in detail
-- [connecting-to-gcp-resources](/01-Shell/Networking/connecting-to-gcp-resources) — gcloud, GCS, BigQuery from the shell
+- [managing-services](https://alp78.github.io/elysium/01-Shell/Process-Management/managing-services) — systemd service management, systemctl, journalctl
+- [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) — set -euo pipefail, error handling in shell scripts
+- [environment-variables](https://alp78.github.io/elysium/01-Shell/Scripting/environment-variables) — shell environment, export, sourcing files
+- [io-redirection](https://alp78.github.io/elysium/01-Shell/Scripting/io-redirection) — stdout/stderr redirection, tee, append vs overwrite
+- [iap-tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling) — GCP Identity-Aware Proxy tunneling in detail
+- [connecting-to-gcp-resources](https://alp78.github.io/elysium/01-Shell/Networking/connecting-to-gcp-resources) — gcloud, GCS, BigQuery from the shell
 
 ## References
 

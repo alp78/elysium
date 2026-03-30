@@ -6,14 +6,6 @@ tags: [git, github]
 aliases: [git workflow, git status, git add, git commit, git push, git pull, conventional commits, git diff, git fetch, feature branch workflow, daily git]
 keywords: [git, status, add, commit, push, pull, rebase, diff, stage, conventional commits, feat, fix, refactor, daily workflow, version control, git add -p, interactive staging, git push -u, upstream tracking, git fetch, git pull --rebase, amend commit, unstage, git status -s, short status, git diff --staged, feature branch, squash merge, gh pr create, GitHub CLI]
 description: "The complete daily Git workflow for data engineering teams — from checking status through staging, committing, pushing, and pulling, plus the full feature branch workflow, conventional commit conventions, team rules, and a decision tree for when things go wrong."
-related:
-  - "[git-branching-and-merging](/08-Git/git-branching-and-merging)"
-  - "[git-recovery-and-undo](/08-Git/git-recovery-and-undo)"
-  - "[git-cheat-sheet](/08-Git/git-cheat-sheet)"
-  - "[pull-requests-and-code-review](/08-Git/pull-requests-and-code-review)"
-  - "[git-setup-and-config](/08-Git/git-setup-and-config)"
-  - "[git-common-errors](/08-Git/git-common-errors)"
-  - "[gitignore-patterns](/08-Git/gitignore-patterns)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -21,7 +13,7 @@ status: complete
 
 # Git Daily Workflow
 
-Git is not optional for data engineering. Every SQL migration, every DAG definition, every pipeline configuration, and every [Terraform module](/07-Terraform/Fundamentals/hcl-syntax-basics) must be version-controlled. These are the commands you run dozens of times per day. For a condensed quick-reference, see [git-cheat-sheet](/08-Git/git-cheat-sheet).
+Git is not optional for data engineering. Every SQL migration, every DAG definition, every pipeline configuration, and every [Terraform module](https://alp78.github.io/elysium/07-Terraform/Fundamentals/hcl-syntax-basics) must be version-controlled. These are the commands you run dozens of times per day. For a condensed quick-reference, see [git-cheat-sheet](https://alp78.github.io/elysium/08-Git/git-cheat-sheet).
 
 ## Step 1: Check What's Changed
 
@@ -88,7 +80,7 @@ git add -A
 > [!warning] Avoid Staging Everything
 >
 > Avoid `git add -A` or `git add .` in Production Repos.
-> In repos with sensitive files (.env, credentials), stage specific files by name instead. Use [.gitignore](/08-Git/gitignore-patterns) as a safety net, not as your primary defense against committing secrets or large files.
+> In repos with sensitive files (.env, credentials), stage specific files by name instead. Use [.gitignore](https://alp78.github.io/elysium/08-Git/gitignore-patterns) as a safety net, not as your primary defense against committing secrets or large files.
 
 #### git add -p — interactive staging, choose hunks within files
 
@@ -210,7 +202,7 @@ git fetch
 
 > [!tip] Fetch Is Always Safe
 >
-> `git fetch` is always safe — it never modifies your files. `git pull` might cause [merge conflicts](/08-Git/git-merge-conflicts). When in doubt, fetch first and inspect with `git log origin/main --oneline`.
+> `git fetch` is always safe — it never modifies your files. `git pull` might cause [merge conflicts](https://alp78.github.io/elysium/08-Git/git-merge-conflicts). When in doubt, fetch first and inspect with `git log origin/main --oneline`.
 
 > [!warning] Pull Without Rebase Creates Noise
 >
@@ -233,7 +225,7 @@ This is the standard workflow used by data engineering teams:
 9. Clean up locally         git checkout main && git pull && git branch -d feat/my-feature
 ```
 
-Pushing a branch or opening a PR typically triggers [GitHub Actions](/10-GitHub-Actions/github-actions-fundamentals) CI workflows -- linting, tests, and builds that validate the change before review. For dbt projects specifically, [dbt-ci-cd](/11-dbt/Operations/dbt-ci-cd) runs model compilation and test checks on every PR.
+Pushing a branch or opening a PR typically triggers [GitHub Actions](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-fundamentals) CI workflows -- linting, tests, and builds that validate the change before review. For dbt projects specifically, [dbt-ci-cd](https://alp78.github.io/elysium/11-dbt/Operations/dbt-ci-cd) runs model compilation and test checks on every PR.
 
 ### Rules for Distributed Data Teams
 
@@ -249,8 +241,8 @@ Pushing a branch or opening a PR typically triggers [GitHub Actions](/10-GitHub-
 - **Write descriptive PR descriptions** explaining WHY, not just WHAT
 - **Delete branches after merging** — use `--delete-branch` flag
 - **Use branch protection rules on main** — require reviews, passing CI, no force-push
-- **Tag releases** so you can always find what's deployed (see [git-tagging-and-releases](/08-Git/git-tagging-and-releases))
-- **Keep `.gitignore` comprehensive from day one** (see [gitignore-patterns](/08-Git/gitignore-patterns))
+- **Tag releases** so you can always find what's deployed (see [git-tagging-and-releases](https://alp78.github.io/elysium/08-Git/git-tagging-and-releases))
+- **Keep `.gitignore` comprehensive from day one** (see [gitignore-patterns](https://alp78.github.io/elysium/08-Git/gitignore-patterns))
 - **Never commit secrets** — use environment variables and secret managers
 
 ### When Things Go Wrong: Git Decision Tree
@@ -263,15 +255,15 @@ Pushing a branch or opening a PR typically triggers [GitHub Actions](/10-GitHub-
 | **Merged to main?** | `git revert SHA` (create an undo commit) — never rewrite main's history |
 | **Lost a commit?** | `git reflog` — Git's safety net, remembers everything for ~90 days |
 
-See [git-recovery-and-undo](/08-Git/git-recovery-and-undo) for detailed recovery procedures and [git-common-errors](/08-Git/git-common-errors) for specific error messages.
+See [git-recovery-and-undo](https://alp78.github.io/elysium/08-Git/git-recovery-and-undo) for detailed recovery procedures and [git-common-errors](https://alp78.github.io/elysium/08-Git/git-common-errors) for specific error messages.
 
 ### Best Practices for Data Pipeline Teams
 
 > [!tip] Best Practices
 >
-> 1. **Never commit credentials.** Add to [.gitignore](/08-Git/gitignore-patterns): `*.env`, `*.json` (service account keys), `secrets/`. Use `git-secrets` to scan for AWS/GCP keys before each commit.
+> 1. **Never commit credentials.** Add to [.gitignore](https://alp78.github.io/elysium/08-Git/gitignore-patterns): `*.env`, `*.json` (service account keys), `secrets/`. Use `git-secrets` to scan for AWS/GCP keys before each commit.
 > 2. **SQL migrations in git.** Number them sequentially: `V001__create_ohlcv.sql`, `V002__add_signals.sql`. Never modify a committed migration — create a new one. See the dbt and migration notes for versioning patterns.
-> 3. **DAG files in git.** Airflow reads DAGs from a directory — changes are deployed by updating the files. Version them in git, deploy via [CI/CD](/10-GitHub-Actions/github-actions-ci-cd) or SCP.
+> 3. **DAG files in git.** Airflow reads DAGs from a directory — changes are deployed by updating the files. Version them in git, deploy via [CI/CD](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) or SCP.
 > 4. **Large data files.** If you must track data files, use Git LFS: `git lfs track "*.parquet"`. Otherwise, keep data in GCS and reference it by URI.
 
 ### Quick Reference
@@ -295,14 +287,14 @@ See [git-recovery-and-undo](/08-Git/git-recovery-and-undo) for detailed recovery
 
 ## Related
 
-- [git-setup-and-config](/08-Git/git-setup-and-config) — Initial Git setup and core concepts
-- [git-branching-and-merging](/08-Git/git-branching-and-merging) — Creating branches and merge strategies
-- [git-merge-conflicts](/08-Git/git-merge-conflicts) — Resolving conflicts step by step
-- [git-recovery-and-undo](/08-Git/git-recovery-and-undo) — Stash, reset, revert, and reflog
-- [git-remote-management](/08-Git/git-remote-management) — Remotes, upstream forks, fetch vs pull
-- [git-tagging-and-releases](/08-Git/git-tagging-and-releases) — Tagging releases for deployment
-- [pull-requests-and-code-review](/08-Git/pull-requests-and-code-review) — PR workflow and GitHub CLI
-- [github-actions-ci-cd](/10-GitHub-Actions/github-actions-ci-cd) — Automated testing and deployment
-- [git-common-errors](/08-Git/git-common-errors) — 25+ error scenarios with fixes
-- [gitignore-patterns](/08-Git/gitignore-patterns) — Keeping secrets and junk out of the repo
-- [git-cheat-sheet](/08-Git/git-cheat-sheet) — One-page quick reference
+- [git-setup-and-config](https://alp78.github.io/elysium/08-Git/git-setup-and-config) — Initial Git setup and core concepts
+- [git-branching-and-merging](https://alp78.github.io/elysium/08-Git/git-branching-and-merging) — Creating branches and merge strategies
+- [git-merge-conflicts](https://alp78.github.io/elysium/08-Git/git-merge-conflicts) — Resolving conflicts step by step
+- [git-recovery-and-undo](https://alp78.github.io/elysium/08-Git/git-recovery-and-undo) — Stash, reset, revert, and reflog
+- [git-remote-management](https://alp78.github.io/elysium/08-Git/git-remote-management) — Remotes, upstream forks, fetch vs pull
+- [git-tagging-and-releases](https://alp78.github.io/elysium/08-Git/git-tagging-and-releases) — Tagging releases for deployment
+- [pull-requests-and-code-review](https://alp78.github.io/elysium/08-Git/pull-requests-and-code-review) — PR workflow and GitHub CLI
+- [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — Automated testing and deployment
+- [git-common-errors](https://alp78.github.io/elysium/08-Git/git-common-errors) — 25+ error scenarios with fixes
+- [gitignore-patterns](https://alp78.github.io/elysium/08-Git/gitignore-patterns) — Keeping secrets and junk out of the repo
+- [git-cheat-sheet](https://alp78.github.io/elysium/08-Git/git-cheat-sheet) — One-page quick reference

@@ -6,14 +6,6 @@ tags: [monitoring, observability, python, sql, datadog, polars]
 aliases: [DataDog pipeline monitoring, data lineage, data catalog, data quality framework, schema drift, data drift, entitlement, Great Expectations, data freshness]
 keywords: [datadog, observability, metrics, logs, traces, APM, statsd, data freshness, data lineage, data catalog, data quality, schema drift, data drift, kolmogorov-smirnov, KS test, great expectations, OpenMetadata, DataHub, Google Data Catalog, Unity Catalog, data entitlement, RBAC, pipeline SLA, monitoring, alerting, completeness, accuracy, uniqueness, validity, consistency, drift detection, pipeline health, SQL Server monitoring]
 description: "Observability deep dive for data engineering: DataDog custom metrics and APM traces for pipeline health, data freshness tracking, data lineage implementation, data catalog tooling, data quality frameworks (Great Expectations + SQL checks), and automated schema and statistical drift detection for financial pipelines."
-related:
-  - "[datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview)"
-  - "fastapi and polars"
-  - "[dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer)"
-  - "[idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design)"
-  - "[open-table-formats](/14-Data-Architecture/Architectures/open-table-formats)"
-  - "[five-pillars-of-data-engineering](/14-Data-Architecture/five-pillars-of-data-engineering)"
-  - "[observability-strategy-matrix](/13-Observability/observability-strategy-matrix)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -21,7 +13,7 @@ status: complete
 
 # Observability Deep Dive: DataDog, Lineage, and Data Cataloging
 
-Observability in data engineering is not just "monitoring with a fancier name." Monitoring tells you *that* something broke. Observability tells you *why* it broke, *what data* was affected, and *who* needs to be notified. For a financial index provider where incorrect data has regulatory and financial consequences, observability is a fiduciary obligation. This aligns with the broader [DataOps philosophy](/15-DataOps/dataops-principles-and-practices), which treats observability as a foundational pillar alongside testing, CI/CD, and automation.
+Observability in data engineering is not just "monitoring with a fancier name." Monitoring tells you *that* something broke. Observability tells you *why* it broke, *what data* was affected, and *who* needs to be notified. For a financial index provider where incorrect data has regulatory and financial consequences, observability is a fiduciary obligation. This aligns with the broader [DataOps philosophy](https://alp78.github.io/elysium/15-DataOps/dataops-principles-and-practices), which treats observability as a foundational pillar alongside testing, CI/CD, and automation.
 
 > [!warning] Financial Data Stakes
 > In financial indexing, a monitoring gap is not just an operational inconvenience — it can result in incorrect index values published to the market, incorrect ETF NAVs, failed rebalancing trades, and regulatory scrutiny. Observability at this level is a compliance requirement, not an engineering nicety.
@@ -52,7 +44,7 @@ Most data teams have metrics and logs but lack traces. Without traces, debugging
 
 ## DataDog for Data Pipeline Observability
 
-DataDog is the observability platform used by financial data companies and index providers. For a senior data engineer, the key is not just *installing* DataDog but *instrumenting* pipelines to produce actionable signals. The [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) covers the practical agent setup and infrastructure topology, while [cloud-logging](/06-GCP/Logging/cloud-logging) provides the GCP-native logging complement for services like Cloud Run where the Datadog agent cannot run.
+DataDog is the observability platform used by financial data companies and index providers. For a senior data engineer, the key is not just *installing* DataDog but *instrumenting* pipelines to produce actionable signals. The [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) covers the practical agent setup and infrastructure topology, while [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) provides the GCP-native logging complement for services like Cloud Run where the Datadog agent cannot run.
 
 ### Custom Metrics for Pipeline Health
 
@@ -270,7 +262,7 @@ flowchart TB
 > - **Gold → Dashboard** — Blazor Server reads from gold layer
 
 > [!info] Lineage and dbt
-> [dbt](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) automatically generates column-level lineage as part of `dbt docs generate`. For tables outside dbt (bronze loads, custom scripts), you must manually log lineage to a metadata table as shown below.
+> [dbt](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) automatically generates column-level lineage as part of `dbt docs generate`. For tables outside dbt (bronze loads, custom scripts), you must manually log lineage to a metadata table as shown below.
 
 ### Implementing Lineage with Metadata Tables
 
@@ -492,7 +484,7 @@ if not result.success:
 ```
 
 > [!tip] Great Expectations vs dbt Tests
-> Use [dbt tests](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) for SQL-native validation on transformed tables (staging, intermediate, marts). Use Great Expectations for Python-native validation on raw ingested data *before* it reaches the warehouse. They complement each other — dbt tests catch transformation errors, GX catches source data quality problems.
+> Use [dbt tests](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) for SQL-native validation on transformed tables (staging, intermediate, marts). Use Great Expectations for Python-native validation on raw ingested data *before* it reaches the warehouse. They complement each other — dbt tests catch transformation errors, GX catches source data quality problems.
 
 ---
 
@@ -800,11 +792,11 @@ flowchart TB
 > dbt generates lineage automatically for dbt models. External processes (Python loaders, SQL Agent jobs) must manually log to `pipeline.lineage`. Without this, your lineage graph has holes — and holes in lineage are invisible until an auditor asks "how was this number calculated?" and you can't trace it back to source.
 
 ## Related
-- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — DataDog agent setup and infrastructure monitoring
+- [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) — DataDog agent setup and infrastructure monitoring
 - fastapi and polars — FastAPI services and Polars pipelines being monitored
-- [dbt-transformation-layer](/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — dbt tests as a complementary data quality layer
-- [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — pipeline design patterns that support observability
-- [open-table-formats](/14-Data-Architecture/Architectures/open-table-formats) — Iceberg time travel as a lineage/audit capability
+- [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — dbt tests as a complementary data quality layer
+- [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — pipeline design patterns that support observability
+- [open-table-formats](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/open-table-formats) — Iceberg time travel as a lineage/audit capability
 
 ## References
 - [DataDog Python client](https://datadogpy.readthedocs.io/)

@@ -6,7 +6,6 @@ tags: [monitoring, observability, python, docker, datadog, gcp]
 aliases: [Datadog APM, ddtrace, Pipeline Traces, APM Instrumentation]
 keywords: [ddtrace, ddtrace-run, APM traces, auto-instrumentation, monkey-patch, pyodbc, requests, flame graph, pipeline.step, tracer.trace, DD_TRACE_AGENT_URL, DD_SERVICE, data-pipeline-pipeline, log-to-trace correlation, dd.trace_id, dd.span_id, JSON logger, import error guard, local development, no impact SQL Server]
 description: "How ddtrace APM instrumentation works in the data pipeline — auto-instruments pyodbc and requests, creates per-step flame graphs, and injects trace IDs into logs for correlation."
-related: [datadog-architecture-overview, datadog-agent-airflow-vm, datadog-sql-server-logs, data-pipeline-pipeline-steps, project-production-deployment]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -180,8 +179,8 @@ If you want to remove Datadog/ddtrace:
 
 ## Related Notes
 
-- [datadog-architecture-overview](/13-Observability/Datadog/datadog-architecture-overview) — full observability architecture
-- [datadog-agent-airflow-vm](/13-Observability/Datadog/datadog-agent-airflow-vm) — the dd-agent that receives traces on port 8126
-- [datadog-sql-server-logs](/13-Observability/Datadog/datadog-sql-server-logs) — companion: logs from SQL Server errorlog
+- [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) — full observability architecture
+- [datadog-agent-airflow-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) — the dd-agent that receives traces on port 8126
+- [datadog-sql-server-logs](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-sql-server-logs) — companion: logs from SQL Server errorlog
 - the pipeline steps — what each pipeline step does
 - common pipeline errors — APM traces missing troubleshooting

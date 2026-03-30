@@ -6,7 +6,6 @@ tags: [shell, bash, linux, powershell]
 aliases: [gzip, zstd, tar, compress, decompress, archive, zip, snappy]
 keywords: [gzip, zstd, tar, compression, decompress, archive, zip, snappy, compress data, tar.gz, tar.zst, gz, compression algorithm, compression level, pipeline compression strategy, 7zip, GZipStream, Compress-Archive]
 description: "Compression tools and strategies for data engineering: gzip for compatibility, zstd for performance, tar for directory archiving. Includes a compression strategy matrix for pipeline intermediate files, archives, Parquet, and database backups."
-related: ["[file-manipulation](/01-Shell/File-Operations/file-manipulation)", "[data-transfer](/01-Shell/File-Operations/data-transfer)", "[navigation-and-listing](/01-Shell/File-Operations/navigation-and-listing)", "[finding-files](/01-Shell/File-Operations/finding-files)" ]
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -134,7 +133,7 @@ tar tzf archive.tar.gz | head -20
 
 > [!tip] Related pattern
 >
-> For a broader comparison of serialization codecs (Snappy, gzip, zstd, LZ4) alongside file formats like Parquet and Avro, see [serialization-formats](/14-Data-Architecture/Pipeline-Patterns/serialization-formats). For writing Parquet with specific compression options in code, see [10_py_serialization_formats](/02-Programming-Languages/Python/10_py_serialization_formats) (Python) and [10_cs_serialization_formats](/02-Programming-Languages/CSharp/10_cs_serialization_formats) (C#).
+> For a broader comparison of serialization codecs (Snappy, gzip, zstd, LZ4) alongside file formats like Parquet and Avro, see [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats). For writing Parquet with specific compression options in code, see [10_py_serialization_formats](https://alp78.github.io/elysium/02-Programming-Languages/Python/10_py_serialization_formats) (Python) and [10_cs_serialization_formats](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/10_cs_serialization_formats) (C#).
 
 > [!tip] Pipeline compression strategy
 >
@@ -206,11 +205,11 @@ $gz.Write($input, 0, $input.Length); $gz.Close()
 [System.IO.File]::WriteAllBytes("data.csv.gz", $ms.ToArray())
 ```
 
-When exporting data from BigQuery, the `bq extract --compression` flag accepts gzip and snappy for CSV/JSON exports -- see [data-loading-and-export](/06-GCP/BigQuery/data-loading-and-export) for the full syntax. If you are archiving compressed files to GCS cold storage tiers, compressing before upload saves significant storage cost -- see [gcs-buckets-and-lifecycle](/06-GCP/Storage/gcs-buckets-and-lifecycle) for lifecycle policies that transition objects between storage classes.
+When exporting data from BigQuery, the `bq extract --compression` flag accepts gzip and snappy for CSV/JSON exports -- see [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) for the full syntax. If you are archiving compressed files to GCS cold storage tiers, compressing before upload saves significant storage cost -- see [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) for lifecycle policies that transition objects between storage classes.
 
 ## Related
-- [data-flow-architecture](/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — format and compression selection by pipeline scenario
-- [file-manipulation](/01-Shell/File-Operations/file-manipulation) — moving and copying the resulting archives
-- [data-transfer](/01-Shell/File-Operations/data-transfer) — compression during rsync transfers (`-z` flag)
-- [navigation-and-listing](/01-Shell/File-Operations/navigation-and-listing) — checking disk usage before and after compression
-- [finding-files](/01-Shell/File-Operations/finding-files) — finding old archives to clean up
+- [data-flow-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — format and compression selection by pipeline scenario
+- [file-manipulation](https://alp78.github.io/elysium/01-Shell/File-Operations/file-manipulation) — moving and copying the resulting archives
+- [data-transfer](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer) — compression during rsync transfers (`-z` flag)
+- [navigation-and-listing](https://alp78.github.io/elysium/01-Shell/File-Operations/navigation-and-listing) — checking disk usage before and after compression
+- [finding-files](https://alp78.github.io/elysium/01-Shell/File-Operations/finding-files) — finding old archives to clean up

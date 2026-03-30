@@ -6,11 +6,6 @@ tags: [sql, sql-server, tsql]
 aliases: [SQL engineering, SQL performance, transactions, error handling, indexing, temp tables, table variables, dynamic SQL, stored procedures]
 keywords: [transactions, error handling, try catch, temp tables, table variables, dynamic sql, stored procedures, user defined functions, indexing, query hints, set statistics, execution plan, deadlock, isolation level, snapshot]
 description: "SQL Server T-SQL engineering patterns with executable examples — covers transactions, error handling, temp tables, dynamic SQL, stored procedures, and performance tuning."
-related:
-  - "[sql-fundamentals](/05-DB-Queries/SQL-Server/sql-fundamentals)"
-  - "[sql-advanced](/05-DB-Queries/SQL-Server/sql-advanced)"
-  - "[wait-stats-analysis](/04-SQL-Server/Performance/wait-stats-analysis)"
-  - "[index-maintenance](/04-SQL-Server/Performance/index-maintenance)"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -54,7 +49,7 @@ Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=y
 
 > [!danger] Lab-Only Credentials
 >
-> The connection string above contains a plaintext password for a local lab environment. In production, credentials are stored in GCP Secret Manager and fetched at runtime — never hardcoded. See [secrets-management > Access from Python](/06-GCP/Security/secrets-management#access-from-python).
+> The connection string above contains a plaintext password for a local lab environment. In production, credentials are stored in GCP Secret Manager and fetched at runtime — never hardcoded. See [secrets-management > Access from Python](https://alp78.github.io/elysium/06-GCP/Security/secrets-management#access-from-python).
 
 ```sql
 -- Create a demo schema for our objects (idempotent)
@@ -429,7 +424,7 @@ ORDER BY [rank]
 
 > [!tip] Related pattern
 >
-> The [dbt-sqlserver-adapter](/11-dbt/Adapters/dbt-sqlserver-adapter) generates parameterized queries and materialization logic similar to these stored procedures, providing a version-controlled alternative to hand-written SPs.
+> The [dbt-sqlserver-adapter](https://alp78.github.io/elysium/11-dbt/Adapters/dbt-sqlserver-adapter) generates parameterized queries and materialization logic similar to these stored procedures, providing a version-controlled alternative to hand-written SPs.
 
 ### Stored Procedures — Basic SP with Parameters
 
@@ -786,7 +781,7 @@ ORDER BY i.type_desc
 
 ## Slowly Changing Dimensions (SCD)
 
-The MERGE patterns used for SCD Type 2 below are a key building block for [idempotent-pipeline-design](/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design), where every load can be safely re-run without duplicating or corrupting data.
+The MERGE patterns used for SCD Type 2 below are a key building block for [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design), where every load can be safely re-run without duplicating or corrupting data.
 
 ### Slowly Changing Dimensions — SCD Type 1 Overwrite
 

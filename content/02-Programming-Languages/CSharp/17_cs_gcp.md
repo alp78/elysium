@@ -5,10 +5,7 @@ technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [Google Cloud, BigQuery, Cloud Storage, GCS, Pub/Sub, cloud SDK]
 keywords: [Google.Cloud.BigQuery, Google.Cloud.Storage, Google.Cloud.PubSub, service account, GCP, dotnet GCP]
-description: "C# GCP reference with executable examples and cell outputs — covers BigQuery, Cloud Storage, Pub/Sub, and authentication with the Google Cloud .NET SDK. See [17_py_gcp](/02-Programming-Languages/Python/17_py_gcp) for the Python equivalent."
-related:
-  - "[moc-programming-languages](/02-Programming-Languages/moc-programming-languages)"
-  - "[17_py_gcp](/02-Programming-Languages/Python/17_py_gcp)"
+description: "C# GCP reference with executable examples and cell outputs — covers BigQuery, Cloud Storage, Pub/Sub, and authentication with the Google Cloud .NET SDK. See [17_py_gcp](https://alp78.github.io/elysium/02-Programming-Languages/Python/17_py_gcp) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -115,7 +112,7 @@ Console.WriteLine($"Bucket:  {bucketName}");
 
 ## Cloud Storage (GCS)
 
-**Pipeline role: BRONZE LAYER** — Raw data lands here first. yfinance OHLCV data is fetched and uploaded as CSV to `gs://bucket/bronze/ohlcv/`. GCS is the data lake — immutable, versioned, cheap storage. Downstream services (BigQuery, pipelines) read from here. For the CLI equivalents of these operations (`gsutil`, `gcloud storage`, lifecycle policies), see [gcs-object-operations](/06-GCP/Storage/gcs-object-operations).
+**Pipeline role: BRONZE LAYER** — Raw data lands here first. yfinance OHLCV data is fetched and uploaded as CSV to `gs://bucket/bronze/ohlcv/`. GCS is the data lake — immutable, versioned, cheap storage. Downstream services (BigQuery, pipelines) read from here. For the CLI equivalents of these operations (`gsutil`, `gcloud storage`, lifecycle policies), see [gcs-object-operations](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations).
 
 ```csharp
 // Cloud Storage — upload/download/list objects.
@@ -237,7 +234,7 @@ foreach (var row in bqClient.ExecuteQuery(sql, parameters: null))
 
 ## Pub/Sub
 
-**Pipeline role: EVENT BUS** — Decouples pipeline steps. After each ETL stage completes, a message is published ("ohlcv_loaded", "silver_computed", "gold_scored"). Downstream consumers (dashboards, alerting, other pipelines) subscribe to these events. Enables async, event-driven architecture. For topic/subscription management and dead-letter configuration via `gcloud`, see [pubsub-messaging](/06-GCP/Serverless/pubsub-messaging).
+**Pipeline role: EVENT BUS** — Decouples pipeline steps. After each ETL stage completes, a message is published ("ohlcv_loaded", "silver_computed", "gold_scored"). Downstream consumers (dashboards, alerting, other pipelines) subscribe to these events. Enables async, event-driven architecture. For topic/subscription management and dead-letter configuration via `gcloud`, see [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging).
 
 ```csharp
 // Pub/Sub — publish and pull messages.
