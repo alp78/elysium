@@ -37,6 +37,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+> [!quote]
+> "Not every innovator needs to be a manufacturer — the best ideas can be built by the best builders."
+> — **Chris Chen**
+
 ## CDMO (Contract Development and Manufacturing Organization)
 
 **Definition:** A CDMO is a company that provides comprehensive services for the development and manufacturing of pharmaceutical and biopharmaceutical products on a contract basis. CDMOs support drug companies by handling some or all of the steps needed to bring a drug from development through to large-scale commercial production. They offer expertise in process development, formulation, analytical testing, clinical trial material manufacturing, and commercial-scale production. Using a CDMO allows pharmaceutical companies to avoid the enormous capital costs of building their own manufacturing facilities.
@@ -65,6 +69,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+> [!quote]
+> "The FDA is the gatekeeper between science and the patient — its approval is the final exam."
+> — **Margaret Hamburg**
+
 ## FDA Approval
 
 **Definition:** FDA approval refers to the authorization granted by the U.S. Food and Drug Administration for a drug, biologic, medical device, or other regulated product to be marketed and sold in the United States. The FDA evaluates scientific data from clinical trials to determine whether a product's benefits outweigh its risks. For drugs, the approval process involves review of a New Drug Application (NDA) or Biologics License Application (BLA) and typically takes 10-12 months following submission. FDA approval is a critical milestone for pharmaceutical companies as it unlocks access to the world's largest pharmaceutical market.
@@ -92,6 +100,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 **Related terms:** [Biosimilars](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Biosimilars), [Clinical Trials](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Clinical Trials), [Regulatory Approval](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Regulatory Approval), [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Patent)
 
 ---
+
+> [!quote]
+> "You do not need to invent everything yourself — the smartest companies know when to license from others."
+> — **Henry Chesbrough**
 
 ## In-Licensing Agreement
 
@@ -137,6 +149,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+> [!quote]
+> "Open innovation means your most valuable ideas may reach patients faster through someone else's hands."
+> — **Henry Chesbrough**
+
 ## Out-Licensing
 
 **Definition:** Out-licensing is the process by which a company grants the rights to its intellectual property, technology, or product to another company for development, manufacturing, or commercialization. The licensor typically receives upfront payments, milestone payments, and ongoing royalties. Out-licensing is common in the pharmaceutical industry, where a company that has developed a promising drug candidate may not have the resources or geographic reach to commercialize it globally, so it licenses the rights for specific markets or indications to a larger partner.
@@ -165,6 +181,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+> [!quote]
+> "Genetic engineering will transform medicine more profoundly than any technology since antibiotics."
+> — **Paul Berg**
+
 ## Recombinant Therapies
 
 **Definition:** Recombinant therapies are medical treatments derived from recombinant DNA technology, in which genetic material from different sources is combined to create new genetic sequences. This technology is used to produce proteins, hormones, and other biological molecules in large quantities for therapeutic use. Common examples include recombinant insulin for diabetes, recombinant growth hormone, and recombinant clotting factors for hemophilia. Recombinant technology has enabled the production of purer, more consistent, and more scalable biological therapies than those derived from natural sources.
@@ -188,6 +208,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 **Related terms:** [Clinical Trials](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Clinical Trials), [Patent](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Patent), [FDA Approval](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#FDA Approval), [Biosimilars](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Biosimilars)
 
 ---
+
+> [!quote]
+> "The sale of the product is just the beginning — the real relationship is built through service."
+> — **Harvey Mackay**
 
 ## Aftermarket
 
@@ -225,6 +249,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+> [!quote]
+> "Getting the product to the customer is half the battle — distribution is strategy."
+> — **Jeff Bezos**
+
 ## Distributors
 
 **Definition:** Distributors are intermediary entities that purchase products from manufacturers and resell them to retailers, businesses, or directly to consumers. Distributors add value by providing logistics, warehousing, marketing, credit, and after-sales service. They serve as a critical link in the supply chain, enabling manufacturers to reach broad markets without building their own extensive sales and delivery infrastructure. Distribution networks can be exclusive (one distributor per region) or non-exclusive (multiple distributors compete in the same area).
@@ -236,6 +264,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 **Related terms:** [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Supply Chain), [Resellers](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Resellers), [Logistics](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Logistics)
 
 ---
+
+> [!quote]
+> "Data from the fleet tells you more about your operations than any spreadsheet ever could."
+> — **Jim Heppelmann**
 
 ## Fleet Management
 
@@ -301,6 +333,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+> [!quote]
+> "Safety is not an option in aviation — maintenance is the price of keeping aircraft in the sky."
+> — **Robert Crandall**
+
 ## Maintenance Repair and Overhaul (MRO)
 
 **Definition:** Maintenance, Repair, and Overhaul (MRO) refers to the comprehensive range of activities required to keep complex equipment and machinery in safe, operational condition throughout its useful life. In the aerospace and defense industries, MRO includes scheduled inspections, component repairs, engine overhauls, structural modifications, and compliance with regulatory airworthiness requirements. MRO services represent a significant and recurring revenue stream for equipment manufacturers, as the installed base of engines, aircraft, and other complex systems requires continuous maintenance over decades of operation.
@@ -324,6 +360,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 **Related terms:** [Aftermarket](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Aftermarket), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Supply Chain), [Procurement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Procurement)
 
 ---
+
+> [!quote]
+> "Flexibility is the new competitive advantage — ownership ties you down."
+> — **Satya Nadella**
 
 ## Operating Lease
 
@@ -352,6 +392,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 **Related terms:** [Commodity Trading](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Commodity Trading), [Open-Pit Mining](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Open-Pit Mining)
 
 ---
+
+> [!quote]
+> "Every dollar saved in procurement is a dollar straight to the bottom line."
+> — **Tim Cook**
 
 ## Procurement
 

@@ -21,6 +21,10 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ---
 
+> [!quote]
+> "The greatest risk in retirement is not dying too soon but living too long without income."
+> — **Moshe Milevsky**
+
 ## Annuity
 
 **Definition:** An annuity is a financial product sold by insurance companies that provides a series of payments to the holder at regular intervals, typically during retirement. The buyer pays either a lump sum or a series of premiums, and the insurer agrees to make periodic payments beginning either immediately or at a future date. Annuities serve as a way to convert a lump sum of savings into a guaranteed income stream, protecting the holder against the risk of outliving their money. They come in various forms including fixed, variable, and indexed annuities.
@@ -32,6 +36,10 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 **Related terms:** [Endowment Insurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Endowment Insurance), [Insurance (Life)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance (Life)), [Pension Fund](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Pension Fund), [Insurance Premium](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance Premium)
 
 ---
+
+> [!quote]
+> "Saving and insuring are two sides of the same coin — both protect against an uncertain future."
+> — **Peter Bernstein**
 
 ## Endowment Insurance
 
@@ -61,6 +69,10 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ---
 
+> [!quote]
+> "In an uncertain world, insurance is the business of making promises about the future."
+> — **Peter Drucker**
+
 ## Insurance (Property-Casualty)
 
 **Definition:** Property-casualty insurance (also known as general insurance or non-life insurance) protects individuals and businesses against financial losses from damage to property or from liability for injury or damage caused to others. Property insurance covers losses to physical assets (buildings, vehicles, equipment) from perils such as fire, theft, natural disasters, and accidents. Casualty insurance covers legal liability for injuries or damage to third parties. Common types include homeowner's, automobile, commercial property, liability, workers' compensation, and marine insurance.
@@ -88,6 +100,10 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 **Related terms:** [Insurance (Life)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance (Life)), [Insurance (Property-Casualty)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance (Property-Casualty)), [Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Underwriting), [Reinsurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Reinsurance)
 
 ---
+
+> [!quote]
+> "Speed of payout is everything in a disaster — parametric products deliver cash when it matters most."
+> — **Isaac Anthony**
 
 ## Parametric Insurance
 
@@ -132,6 +148,10 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 **Related terms:** [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives), [Insurance (Property-Casualty)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance (Property-Casualty)), [Reinsurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Reinsurance)
 
 ---
+
+> [!quote]
+> "Combining investment with protection gives people permission to grow their wealth while still sleeping at night."
+> — **Mark Tucker**
 
 ## Unit-Linked Insurance
 

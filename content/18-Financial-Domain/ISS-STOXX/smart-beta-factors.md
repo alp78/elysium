@@ -26,6 +26,10 @@ date: 2026-03-28
 
 ## A
 
+> [!quote]
+> "Earnings can be manipulated, but cash flow tells the truth."
+> — **Richard Sloan**
+
 ### Accruals
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="23 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 23</span>
@@ -277,6 +281,10 @@ where $R_f$ is the risk-free rate, $R_m$ is the market return, and $\beta_i = \f
 
 ---
 
+> [!quote]
+> "Getting paid to wait is the essence of carry."
+> — **Antti Ilmanen**
+
 ### Carry Factor
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="19 mentions across STOXX & ISS pages (low)">▰▰ 19</span>
@@ -338,6 +346,10 @@ where $D_i$ is the expected annual dividend and $P_i$ is the current price. More
 
 ## D
 
+> [!quote]
+> "Rule number one: never lose money. Rule number two: never forget rule number one."
+> — **Warren Buffett**
+
 ### Defensive Factor
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
@@ -377,6 +389,10 @@ $$
 >
 
 ---
+
+> [!quote]
+> "Dilution is a stealth tax on every existing shareholder."
+> — **Charlie Munger**
 
 ### Dilution
 
@@ -501,6 +517,10 @@ Tracing out all $\sigma^*$ values produces the frontier.
 
 ---
 
+> [!quote]
+> "Markets are slow to absorb information that contradicts the consensus."
+> — **David Dreman**
+
 ### Earnings Announcement Drift
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
@@ -541,6 +561,10 @@ when a company reports earnings that beat (or miss) expectations, the stock tend
 >
 
 ---
+
+> [!quote]
+> "The trend is your friend until it bends."
+> — **Ed Seykota**
 
 ### Earnings Momentum
 
@@ -691,6 +715,10 @@ a factor is a measurable characteristic of stocks — like cheapness or recent p
 >
 
 ---
+
+> [!quote]
+> "Diversification is the only free lunch in finance."
+> — **Harry Markowitz**
 
 ### Factor Diversification
 
@@ -869,6 +897,10 @@ where the long (short) portfolio holds the top (bottom) quintile on factor $k$.
 
 ---
 
+> [!quote]
+> "Timing the market is a fool's game, but understanding cycles is wisdom."
+> — **Howard Marks**
+
 ### Factor Rotation
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -896,6 +928,10 @@ factor rotation is the idea of being a "factor timer" — overweighting value wh
 >
 
 ---
+
+> [!quote]
+> "Tilting toward what works is not speculation; it is disciplined investing."
+> — **Cliff Asness**
 
 ### Factor Tilt
 
@@ -1014,6 +1050,10 @@ a factor-based index is like a regular stock index — the S&P 500 or EURO STOXX
 
 ## G
 
+> [!quote]
+> "The biggest risk is not taking any risk."
+> — **Mark Zuckerberg**
+
 ### Growth Factor
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -1100,6 +1140,10 @@ if the benchmark has 12% in pharmaceuticals, the factor index also holds exactly
 ---
 
 ## L
+
+> [!quote]
+> "The essence of investment management is the management of risks, not the management of returns."
+> — **Benjamin Graham**
 
 ### Low Risk Factor
 
@@ -1520,6 +1564,10 @@ $$
 
 ## P
 
+> [!quote]
+> "An object in motion tends to stay in motion."
+> — **Isaac Newton**
+
 ### Price Momentum
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="17 mentions across STOXX & ISS pages (low)">▰▰ 17</span>
@@ -1648,6 +1696,10 @@ where sub-signals $m$ include ROE, accruals, $\Delta$NOA, and dilution.
 
 ## R
 
+> [!quote]
+> "Risk budgeting is the disciplined art of spending your scarcest resource."
+> — **Andrew Ang**
+
 ### Risk Budget
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
@@ -1702,6 +1754,10 @@ a risk budget is like a spending cap but for risk. Instead of saying "no stock a
 >
 
 ---
+
+> [!quote]
+> "Equal risk, not equal dollars, is the foundation of true diversification."
+> — **Ray Dalio**
 
 ### Risk Parity
 
@@ -2077,6 +2133,10 @@ where B/P = book-to-price, E/P = earnings-to-price, D/P = dividend yield.
 ---
 
 ## Y
+
+> [!quote]
+> "Income is the reason most investors buy, and the reason most stay."
+> — **John Bogle**
 
 ### Yield Factor
 

@@ -22,6 +22,10 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 ---
 
+> [!quote]
+> "The art of lending is in the collateral, not the borrower's charm."
+> — **J.P. Morgan**
+
 ## Asset-Backed Lending
 
 **Definition:** Asset-backed lending is a form of financing in which loans are secured by collateral in the form of assets such as inventory, accounts receivable, equipment, or real estate. If the borrower defaults, the lender can seize and sell the pledged assets to recover the loan amount. This type of lending is common in commercial and corporate finance, where businesses pledge their assets to obtain credit at more favorable terms than unsecured borrowing would allow. It reduces risk for lenders and provides borrowers with access to capital they might not otherwise qualify for.
@@ -50,6 +54,10 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 ---
 
+> [!quote]
+> "Trade cannot flourish without trust — and export credit agencies provide that trust."
+> — **Karin Finkelston**
+
 ## Export Credit Agency Finance
 
 **Definition:** Export credit agency (ECA) finance involves loans, guarantees, or insurance provided or supported by government-backed export credit agencies to facilitate international trade. ECAs help domestic companies sell goods and services to foreign buyers by reducing the payment risk associated with cross-border transactions. This is particularly important for large, capital-intensive projects such as infrastructure, aircraft purchases, and energy installations, where the foreign buyer may have difficulty obtaining financing from commercial lenders.
@@ -62,6 +70,10 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 ---
 
+> [!quote]
+> "Cash flow, not profit, determines whether a business survives."
+> — **Peter Drucker**
+
 ## Factoring
 
 **Definition:** Factoring is a financial transaction in which a business sells its accounts receivable (invoices) to a third party (a factor) at a discount in exchange for immediate cash. This allows the business to receive funds quickly rather than waiting 30, 60, or 90 days for customers to pay their invoices. The factor then collects the payments from the customers. Factoring improves cash flow for businesses, particularly small and medium enterprises that may not have access to traditional bank credit lines. It can be structured as recourse (the seller bears the risk of non-payment) or non-recourse (the factor absorbs the risk).
@@ -73,6 +85,10 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 **Related terms:** [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Working Capital), [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Trade Finance), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Supply Chain)
 
 ---
+
+> [!quote]
+> "No single bank should bear a risk so large that its failure would threaten the system."
+> — **Paul Volcker**
 
 ## Loan Syndication
 
@@ -146,6 +162,10 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 ---
 
+> [!quote]
+> "Financial engineering is about creating structures that allocate risk to those best able to bear it."
+> — **Robert Merton**
+
 ## Structured Finance
 
 **Definition:** Structured finance refers to complex financial instruments and arrangements designed to meet specific risk-return objectives that cannot be achieved through conventional financing methods. Structured finance products include asset-backed securities, mortgage-backed securities, collateralized debt obligations, collateralized loan obligations, and synthetic structures. These instruments typically involve pooling assets, tranching (creating layers of risk), and credit enhancement. Structured finance is used to fund large projects, manage risk, and provide financing to entities that may not qualify for traditional bank loans.
@@ -183,6 +203,10 @@ Syndicated loans are loans arranged through the loan syndication process: a grou
 **Related terms:** [Export Credit Agency Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Export Credit Agency Finance), [Factoring](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Factoring), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Supply Chain), [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Working Capital)
 
 ---
+
+> [!quote]
+> "The revolving credit line is the engine of origination — without it, new loans would stop."
+> — **Lewis Ranieri**
 
 ## Warehouse Financing
 

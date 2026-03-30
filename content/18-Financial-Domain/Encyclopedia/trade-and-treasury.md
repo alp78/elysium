@@ -23,6 +23,10 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 ---
 
+> [!quote]
+> "Cash is a fact, profit is an opinion."
+> — **Alfred Rappaport**
+
 ## Cash Management
 
 **Definition:** Cash management refers to the corporate treasury function of collecting, managing, and investing a company's cash flows efficiently. Banks offer cash management services to corporate clients to help them optimize their liquidity positions, streamline payment and collection processes, manage bank accounts across multiple locations and currencies, and invest surplus cash. Effective cash management ensures a company has enough liquid funds to meet its obligations while maximizing the return on idle cash balances.
@@ -35,6 +39,10 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 ---
 
+> [!quote]
+> "Governments back exports because trade creates jobs — export credit is trade policy in financial form."
+> — **Robert Zoellick**
+
 ## Export Credit Agency Finance
 
 **Definition:** Export credit agency (ECA) finance involves loans, guarantees, or insurance provided or supported by government-backed export credit agencies to facilitate international trade. ECAs help domestic companies sell goods and services to foreign buyers by reducing the payment risk associated with cross-border transactions. This is particularly important for large, capital-intensive projects such as infrastructure, aircraft purchases, and energy installations, where the foreign buyer may have difficulty obtaining financing from commercial lenders.
@@ -46,6 +54,10 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 **Related terms:** [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Trade Finance), [Project Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Project Finance), [Structured Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Structured Finance), [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Working Capital)
 
 ---
+
+> [!quote]
+> "Make it easy to buy and people will buy more."
+> — **Henry Ford**
 
 ## Sales Financing
 

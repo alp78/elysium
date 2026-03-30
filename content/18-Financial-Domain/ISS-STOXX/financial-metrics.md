@@ -26,6 +26,9 @@ date: 2026-03-28
 
 ## A
 
+> [!quote]
+> "The only way to do great work is to love what you do." — Steve Jobs
+
 ### Active Return
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="51 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 51</span>
@@ -137,6 +140,9 @@ Where $R_f$ is the risk-free rate and $R_m$ is the market return.
 
 ---
 
+> [!quote]
+> "Compound interest is the eighth wonder of the world." — Albert Einstein (attributed)
+
 ### Annualized Return
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
@@ -193,6 +199,9 @@ Where $n$ is the number of years in the holding period.
 ---
 
 ## B
+
+> [!quote]
+> "Beware of little expenses; a small leak will sink a great ship." — Benjamin Franklin
 
 ### Basis Point
 
@@ -303,6 +312,9 @@ $$
 
 ---
 
+> [!quote]
+> "Price is what you pay. Value is what you get." — Warren Buffett
+
 ### Book-to-Price Ratio
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -332,6 +344,9 @@ $$
 ---
 
 ## C
+
+> [!quote]
+> "Revenue is vanity, profit is sanity, but cash is king." — Anonymous
 
 ### Cash Flow Yield
 
@@ -500,6 +515,9 @@ $$
 
 ---
 
+> [!quote]
+> "No man is an island, entire of itself." — John Donne
+
 ### Covariance
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="58 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 58</span>
@@ -553,6 +571,9 @@ $$
 
 ---
 
+> [!quote]
+> "A man who pays his bills on time is soon forgotten." — Oscar Wilde
+
 ### Current Ratio
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
@@ -588,6 +609,9 @@ $$
 ---
 
 ## D
+
+> [!quote]
+> "Neither a borrower nor a lender be." — William Shakespeare
 
 ### Debt-to-Equity Ratio
 
@@ -699,6 +723,9 @@ $$
 >
 
 ---
+
+> [!quote]
+> "Time is the most valuable thing a man can spend." — Theophrastus
 
 ### Duration (Bond)
 
@@ -874,6 +901,9 @@ $$
 
 ---
 
+> [!quote]
+> "Earnings are the lifeblood of every enterprise." — Anonymous
+
 ### Earnings Yield
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="31 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 31</span>
@@ -925,6 +955,9 @@ $$
 >
 
 ---
+
+> [!quote]
+> "EBITDA makes even a lemonade stand look like a Fortune 500 company." — Charlie Munger (paraphrased)
 
 ### EBITDA
 
@@ -981,6 +1014,9 @@ $$
 >
 
 ---
+
+> [!quote]
+> "It is not enough to be busy. The question is: what are we busy about?" — Henry David Thoreau
 
 ### Economic Value Added (EVA)
 
@@ -1127,6 +1163,9 @@ $$
 
 ---
 
+> [!quote]
+> "The price of anything is the amount of life you exchange for it." — Henry David Thoreau
+
 ### Enterprise Value (EV)
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="84 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 84</span>
@@ -1241,6 +1280,9 @@ Where $\beta_{ik}$ is the exposure of asset $i$ to factor $k$, and $F_k$ is the 
 
 ---
 
+> [!quote]
+> "There is nothing so practical as a good theory." — Kurt Lewin
+
 ### Factor Return
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="26 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 26</span>
@@ -1295,6 +1337,9 @@ $$
 >
 
 ---
+
+> [!quote]
+> "Cash flow is a fact; profit is an opinion." — Alfred Rappaport
 
 ### Free Cash Flow (FCF)
 
@@ -1352,6 +1397,9 @@ $$
 
 ## G
 
+> [!quote]
+> "A penny saved is a penny earned." — Benjamin Franklin
+
 ### Gross Margin
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
@@ -1386,6 +1434,9 @@ $$
 >
 
 ---
+
+> [!quote]
+> "Profitability is coming from productivity, efficiency, management, austerity, and the way to manage the business." — Carlos Slim
 
 ### Gross Profitability
 
@@ -1439,6 +1490,9 @@ $$
 >
 
 ---
+
+> [!quote]
+> "What you keep after taxes and fees matters more than what you earn before them." — Anonymous
 
 ### Gross Return
 
@@ -1702,6 +1756,9 @@ Commonly using a 12-month lookback with a 1-month skip.
 
 ## N
 
+> [!quote]
+> "It is not what you earn but what you keep that determines your wealth." — Anonymous
+
 ### Net Return
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="447 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 447</span>
@@ -1759,6 +1816,9 @@ Where $\tau_i$ is the applicable withholding tax rate for constituent $i$.
 
 ---
 
+> [!quote]
+> "The bottom line is the bottom line." — Anonymous
+
 ### Net Income
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="73 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 73</span>
@@ -1814,6 +1874,9 @@ $$
 
 ---
 
+> [!quote]
+> "Efficiency is doing things right; effectiveness is doing the right things." — Peter Drucker
+
 ### Operating Margin
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -1843,6 +1906,9 @@ $$
 ---
 
 ## P
+
+> [!quote]
+> "Growth at a reasonable price is the investor's holy grail." — Peter Lynch (paraphrased)
 
 ### PEG Ratio
 
@@ -1971,6 +2037,9 @@ Where $r_t$ are daily log returns and 252 is the standard annualization factor.
 
 ---
 
+> [!quote]
+> "Do more with less." — Anonymous
+
 ### Return on Assets (ROA)
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="13 mentions across STOXX & ISS pages (low)">▰▰ 13</span>
@@ -2082,6 +2151,9 @@ $$
 >
 
 ---
+
+> [!quote]
+> "Nothing happens until someone sells something." — Peter Drucker (attributed)
 
 ### Revenue
 
@@ -2196,6 +2268,9 @@ This is the general form (Sharpe ratio). Alternative specifications replace $\si
 >
 
 ---
+
+> [!quote]
+> "There is no such thing as a risk-free investment, only a risk-free rate of return." — Anonymous
 
 ### Risk-Free Rate
 
@@ -2364,6 +2439,9 @@ $$
 
 ---
 
+> [!quote]
+> "The spread tells you the market's level of fear." — Anonymous
+
 ### Spread (Credit)
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="752 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 752</span>
@@ -2420,6 +2498,9 @@ Typically expressed in basis points.
 
 ## T
 
+> [!quote]
+> "Never count just the dividends or just the price. Count everything." — Anonymous
+
 ### Total Return
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="334 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 334</span>
@@ -2471,6 +2552,9 @@ Where $P_t$ is the price at time $t$ and $D_t$ is the dividend received.
 >
 
 ---
+
+> [!quote]
+> "Trust, but verify." — Ronald Reagan
 
 ### Tracking Error
 
@@ -2525,6 +2609,9 @@ $$
 >
 
 ---
+
+> [!quote]
+> "Costs eat returns the way termites eat wood: slowly, silently, and from within." — John C. Bogle (paraphrased)
 
 ### Turnover
 
@@ -2703,6 +2790,9 @@ $$
 ---
 
 ## W
+
+> [!quote]
+> "Not all things are created equal, nor should they be counted equally." — Anonymous
 
 ### Weighted Average
 

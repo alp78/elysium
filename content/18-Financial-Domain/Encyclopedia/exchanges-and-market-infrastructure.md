@@ -22,6 +22,10 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ---
 
+> [!quote]
+> "The clearinghouse is the guarantor of last resort — it stands between every buyer and every seller."
+> — **John C. Hull**
+
 ## Clearing
 
 **Definition:** Clearing is the process that occurs between the execution of a trade and the final settlement of that trade. A clearinghouse acts as an intermediary between the buyer and seller, ensuring that the trade obligations are properly fulfilled. The clearing process involves confirming trade details, calculating obligations, managing margins and collateral, and ultimately guaranteeing the performance of the trade. This process reduces counterparty risk — the risk that one party will fail to fulfill its side of the transaction — and is essential for the stability and integrity of financial markets.
@@ -33,6 +37,10 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 **Related terms:** [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Settlement), [Securities Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Securities Clearing), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Exchange (Stock/Futures)), [Custodian Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Custodian Services), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Settlement)
 
 ---
+
+> [!quote]
+> "The most important thing a custodian does is make sure assets are safe — everything else is secondary."
+> — **Robert Kelly**
 
 ## Custodian Services
 
@@ -57,6 +65,10 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 **Related terms:** [Listing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Listing), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Exchange (Stock/Futures)), [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Markets), [Initial Public Offering (IPO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Initial Public Offering (IPO))
 
 ---
+
+> [!quote]
+> "The stock exchange is the bazaar of capitalism — it is where ownership changes hands."
+> — **Robert Shiller**
 
 ## Exchange (Stock/Futures)
 
@@ -110,6 +122,10 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ---
 
+> [!quote]
+> "Netting is the genius of modern clearing — it turns millions of obligations into a manageable few."
+> — **Darrell Duffie**
+
 ## Securities Clearing
 
 **Definition:** Securities clearing is the reconciliation of orders between transacting parties in the purchase and sale of financial instruments. More specifically, it refers to the process of updating the accounts of the trading parties and arranging for the transfer of money and securities. Securities clearing typically occurs through a central clearing counterparty (CCP) that interposes itself between buyers and sellers, becoming the buyer to every seller and the seller to every buyer. This netting and novation process dramatically reduces settlement risk and the volume of securities that need to physically change hands.
@@ -121,6 +137,10 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 **Related terms:** [Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Clearing), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Settlement), [Custodian Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Custodian Services), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Exchange (Stock/Futures))
 
 ---
+
+> [!quote]
+> "Settlement is where the rubber meets the road — it is the moment when promises become reality."
+> — **Benoit Coeure**
 
 ## Settlement
 
@@ -145,6 +165,10 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 **Related terms:** [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Exchange (Stock/Futures)), [Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Clearing), [Listing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/exchanges-and-market-infrastructure#Listing), [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Markets)
 
 ---
+
+> [!quote]
+> "The humble transfer agent is the keeper of the shareholder register — the definitive record of who owns what."
+> — **Larry Thompson**
 
 ## Stock Transfer Agency
 

@@ -110,6 +110,10 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ---
 
+> [!quote]
+> "A company that lists in multiple markets sends a signal that it belongs to the world, not to one country."
+> — **Xavier Rolet**
+
 ## Dual-Listed
 
 **Definition:** A dual-listed company (DLC) is a company whose shares are traded on two or more stock exchanges simultaneously. Companies choose to dual-list to access larger pools of capital, increase their visibility with international investors, satisfy regulatory requirements in multiple jurisdictions, or support cross-border business operations. Dual listing can be achieved through a full listing on each exchange, depositary receipts (ADRs for US markets, GDRs for international markets), or through a cross-listing arrangement. Dual-listed companies must comply with the reporting requirements of each exchange where they are listed.
@@ -121,6 +125,10 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 **Related terms:** [Listing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Listing), [Stock Connect](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Stock Connect), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Exchange (Stock/Futures))
 
 ---
+
+> [!quote]
+> "Catastrophes are not just natural events — they are financial events that test the resilience of our risk systems."
+> — **Swiss Re Institute**
 
 ## Natural Catastrophe
 
@@ -134,6 +142,10 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ---
 
+> [!quote]
+> "The sun provides more energy in one hour than the world uses in a year."
+> — **U.S. Department of Energy**
+
 ## Photovoltaic
 
 **Definition:** Photovoltaic (PV) refers to technology that converts sunlight directly into electricity using semiconductor materials (typically silicon). Photovoltaic cells are the building blocks of solar panels, which can be installed on rooftops, in solar farms, or integrated into building materials. PV technology has seen dramatic cost reductions over the past decade, making solar electricity one of the cheapest sources of new power generation in many markets. PV installations range from small residential systems to utility-scale solar farms covering thousands of acres.
@@ -145,6 +157,10 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 **Related terms:** [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#Renewable Energy), [Energy Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Energy Storage), [ESG](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#ESG (Environmental, Social, and Governance))
 
 ---
+
+> [!quote]
+> "The three most important things in real estate are location, location, location."
+> — **Harold Samuel**
 
 ## Property Development
 

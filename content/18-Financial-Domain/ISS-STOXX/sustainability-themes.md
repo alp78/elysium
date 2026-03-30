@@ -26,6 +26,10 @@ date: 2026-03-28
 
 ## A
 
+> [!quote]
+> "The cheapest energy is the energy you never use."
+> — **Amory Lovins**
+
 ### Avoided Emissions
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
@@ -104,6 +108,10 @@ this assessment measures whether a company is helping or hurting the variety of 
 >
 
 ---
+
+> [!quote]
+> "The loss of biodiversity is a loss of the future."
+> — **Edward O. Wilson**
 
 ### Biodiversity Loss
 
@@ -246,6 +254,10 @@ a carbon budget is the total "allowance" of CO2 the world can still emit before 
 
 ---
 
+> [!quote]
+> "We cannot solve our problems with the same thinking we used when we created them."
+> — **Albert Einstein**
+
 ### Carbon Capture and Storage (CCS)
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -269,6 +281,10 @@ CCS is a way to grab CO2 before it enters the atmosphere (or pull it back out) a
 >
 
 ---
+
+> [!quote]
+> "Pollution should never be the price of prosperity."
+> — **Al Gore**
 
 ### Carbon Credit
 
@@ -602,6 +618,10 @@ a circular economy keeps resources in use for as long as possible. Instead of mi
 
 ---
 
+> [!quote]
+> "Where there is a wrong, there is a remedy."
+> — **Legal maxim**
+
 ### Climate Litigation
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -738,6 +758,10 @@ where $r$ is the annual decarbonization rate (e.g., 7% for PAB) and $t$ is years
 
 ---
 
+> [!quote]
+> "A nation that destroys its soils destroys itself. Forests are the lungs of our land."
+> — **Franklin D. Roosevelt**
+
 ### Deforestation Risk
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
@@ -770,6 +794,10 @@ deforestation risk flags companies whose business depends on products that drive
 ---
 
 ## E
+
+> [!quote]
+> "Efficiency is doing things right; effectiveness is doing the right things."
+> — **Peter Drucker**
 
 ### Energy Efficiency
 
@@ -821,6 +849,10 @@ $$\text{Energy Efficiency} = \frac{\text{Useful Energy Output}}{\text{Total Ener
 >
 
 ---
+
+> [!quote]
+> "The Stone Age did not end for lack of stone, and the Oil Age will end long before the world runs out of oil."
+> — **Ahmed Zaki Yamani**
 
 ### Energy Transition
 
@@ -1015,6 +1047,10 @@ a green bond is a loan that a company or government raises specifically to fund 
 >
 
 ---
+
+> [!quote]
+> "Profit and sustainability are not mutually exclusive."
+> — **Paul Polman**
 
 ### Green Revenue
 
@@ -1214,6 +1250,10 @@ high-emitting sectors are the industries most responsible for climate change. ST
 
 ---
 
+> [!quote]
+> "In the end, we will conserve only what we love."
+> — **Baba Dioum**
+
 ### Habitat Loss
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -1239,6 +1279,10 @@ habitat loss means that the places where wild species live are being destroyed, 
 ---
 
 ## I
+
+> [!quote]
+> "We are the first generation to feel the effect of climate change and the last generation who can do something about it."
+> — **Barack Obama**
 
 ### Implied Temperature Rise
 
@@ -1347,6 +1391,10 @@ a just transition means making sure that the move to clean energy does not leave
 
 ## M
 
+> [!quote]
+> "Methane is the low-hanging fruit of climate mitigation."
+> — **Durwood Zaelke**
+
 ### Methane Emissions
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="18 mentions across STOXX & ISS pages (low)">▰▰ 18</span>
@@ -1405,6 +1453,10 @@ where $\text{GWP}_{\text{CH}_4}$ is 28 (100-year) or 80 (20-year) per IPCC AR6.
 
 ## N
 
+> [!quote]
+> "Nature is not a place to visit. It is home."
+> — **Gary Snyder**
+
 ### Nature-Related Risk
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="19 mentions across STOXX & ISS pages (low)">▰▰ 19</span>
@@ -1454,6 +1506,10 @@ nature-related risk captures the idea that businesses depend on healthy ecosyste
 >
 
 ---
+
+> [!quote]
+> "The economy is a wholly owned subsidiary of the environment, not the other way around."
+> — **Herman Daly**
 
 ### Natural Capital
 
@@ -1554,6 +1610,10 @@ net zero means putting no more carbon into the air than is taken out. For a comp
 >
 
 ---
+
+> [!quote]
+> "The transition to net zero is the greatest commercial opportunity of our time."
+> — **Mark Carney**
 
 ### Net Zero Transition
 
@@ -1716,6 +1776,10 @@ physical risk is the danger that climate change will damage a company's factorie
 
 ## R
 
+> [!quote]
+> "A goal without a plan is just a wish."
+> — **Antoine de Saint-Exupery**
+
 ### Science-Based Target
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="97 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 97</span>
@@ -1842,6 +1906,10 @@ the SDGs are the world's shared to-do list — from "No Poverty" (Goal 1) to "Cl
 >
 
 ---
+
+> [!quote]
+> "We have a single mission: to keep 1.5 degrees within reach."
+> — **Alok Sharma**
 
 ### Temperature Alignment
 
@@ -2025,6 +2093,10 @@ water risk captures the business consequences of having too little water (drough
 >
 
 ---
+
+> [!quote]
+> "When the well is dry, we know the worth of water."
+> — **Benjamin Franklin**
 
 ### Water Stress
 

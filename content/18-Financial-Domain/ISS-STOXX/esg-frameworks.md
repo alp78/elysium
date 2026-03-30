@@ -170,6 +170,10 @@ The CSRD is a watershed regulation for ESG investing in Europe. It requires comp
 
 ## D
 
+> [!quote]
+> "First, do no harm."
+> — **Hippocrates**
+
 ### Do No Significant Harm (DNSH)
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
@@ -277,6 +281,10 @@ Double materiality distinguishes European ESG disclosure from frameworks like IS
 ---
 
 ## E
+
+> [!quote]
+> "The banker who lends recklessly is as culpable as the borrower who borrows recklessly."
+> — **Anat Admati**
 
 ### Equator Principles
 
@@ -573,6 +581,10 @@ GRI has been the dominant sustainability reporting framework for over two decade
 
 ---
 
+> [!quote]
+> "Good governance is the single most important way to end poverty."
+> — **Kofi Annan**
+
 ### Good Governance
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="108 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 108</span>
@@ -681,6 +693,10 @@ ILO Conventions are foundational to the social dimension of ESG analysis. ISS ES
 
 ---
 
+> [!quote]
+> "What gets measured gets managed."
+> — **Peter Drucker**
+
 ### International Sustainability Standards Board (ISSB)
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
@@ -758,6 +774,10 @@ The NFRD was the EU's first mandatory sustainability reporting requirement, but 
 ---
 
 ## O
+
+> [!quote]
+> "With great power comes great responsibility."
+> — **Voltaire**
 
 ### OECD Guidelines for Multinational Enterprises
 
@@ -928,6 +948,10 @@ PRI is the largest global coalition of institutional investors committed to ESG 
 
 ## S
 
+> [!quote]
+> "Accounting does not make corporate earnings or balance sheets more volatile. Accounting just increases the transparency of volatility in earnings."
+> — **Diane Garnick**
+
 ### SASB (Sustainability Accounting Standards Board)
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="23 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 23</span>
@@ -1093,6 +1117,10 @@ SDGs provide a universal language for linking investment activities to real-worl
 
 ---
 
+> [!quote]
+> "Democracy is not a spectator sport."
+> — **Marian Wright Edelman**
+
 ### SRD II (Shareholder Rights Directive II)
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="67 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 67</span>
@@ -1201,6 +1229,10 @@ Stewardship codes complement regulatory requirements like SRD II by encouraging 
 
 ## T
 
+> [!quote]
+> "Without data, you are just another person with an opinion."
+> — **W. Edwards Deming**
+
 ### Task Force on Climate-related Financial Disclosures (TCFD)
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="44 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 44</span>
@@ -1256,6 +1288,10 @@ TCFD transformed climate disclosure from a niche ESG exercise into a mainstream 
 >
 
 ---
+
+> [!quote]
+> "We do not inherit the earth from our ancestors; we borrow it from our children."
+> — **Chief Seattle**
 
 ### Task Force on Nature-related Financial Disclosures (TNFD)
 
@@ -1348,6 +1384,10 @@ UN Global Compact compliance is one of the most widely used norms-based screens 
 >
 
 ---
+
+> [!quote]
+> "To deny people their human rights is to challenge their very humanity."
+> — **Nelson Mandela**
 
 ### UN Guiding Principles on Business and Human Rights
 

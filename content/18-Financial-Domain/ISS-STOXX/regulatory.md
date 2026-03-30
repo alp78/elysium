@@ -26,6 +26,10 @@ date: 2026-03-28
 
 ## A
 
+> [!quote]
+> "France must lead by example. Climate risk is financial risk."
+> — **Francois Hollande**
+
 ### Article 173 (French Energy Transition Law)
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
@@ -390,6 +394,10 @@ CSRD dramatically increases how many companies in Europe must publish detailed s
 
 ## D
 
+> [!quote]
+> "First, do no harm."
+> — **Hippocrates**
+
 ### DNSH (Do No Significant Harm)
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="18 mentions across STOXX & ISS pages (low)">▰▰ 18</span>
@@ -593,6 +601,10 @@ This is an alternative name. Refer to the full entry under **Benchmark Regulatio
 
 ---
 
+> [!quote]
+> "This is Europe's man-on-the-moon moment."
+> — **Ursula von der Leyen**
+
 ### EU Green Deal
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -619,6 +631,10 @@ the EU Green Deal is Europe's master plan to fight climate change and environmen
 >
 
 ---
+
+> [!quote]
+> "If you cannot define what is green, you cannot credibly invest in it."
+> — **Alexander De Croo**
 
 ### EU Taxonomy Alignment
 
@@ -789,6 +805,10 @@ MiFID II is the EU's main rulebook for how financial products are sold to invest
 
 ---
 
+> [!quote]
+> "Rights are not optional extras; they are the foundation."
+> — **Mary Robinson**
+
 ### Minimum Safeguards
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
@@ -905,6 +925,10 @@ A PAB is a benchmark designed to be fully compatible with a 1.5°C warming scena
 >
 
 ---
+
+> [!quote]
+> "If you are not part of the solution, you are part of the problem."
+> — **Eldridge Cleaver**
 
 ### PAI (Principal Adverse Impact)
 
@@ -1067,6 +1091,10 @@ ISS built this product specifically to help fund managers comply with SFDR's PAI
 
 ---
 
+> [!quote]
+> "Ownership brings obligation. Stewardship is ownership with purpose."
+> — **Will Hutton**
+
 ### Stewardship Code
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="33 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 33</span>
@@ -1119,6 +1147,10 @@ while a corporate governance code tells companies how to govern themselves, a st
 
 ---
 
+> [!quote]
+> "Do not tell me what you value. Show me your budget, and I will tell you what you value."
+> — **Joe Biden**
+
 ### Substantial Contribution
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
@@ -1157,6 +1189,10 @@ Substantial contribution is the positive environmental performance test in the T
 >
 
 ---
+
+> [!quote]
+> "Finance can be the great connector between sustainability goals and real-world impact."
+> — **Valdis Dombrovskis**
 
 ### Sustainable Finance Action Plan
 
@@ -1288,6 +1324,10 @@ TSC are the detailed, science-based performance benchmarks at the heart of the T
 ---
 
 ## U
+
+> [!quote]
+> "Harmonization is the price of access to a single market."
+> — **Jacques Delors**
 
 ### UCITS
 

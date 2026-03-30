@@ -38,6 +38,10 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+> [!quote]
+> "The job of an asset manager is not to beat the market but to serve the client."
+> — **Charles Ellis**
+
 ## Asset Management
 
 **Definition:** Asset management is the professional management of investments on behalf of clients, which can include individuals, institutions, pension funds, sovereign wealth funds, and corporations. Asset managers pool money from clients and invest it across a range of financial instruments — equities, bonds, real estate, commodities, and alternative assets — with the goal of growing the portfolio's value while managing risk. Asset management firms charge management fees (often a percentage of assets under management) and sometimes performance fees. The industry is a critical component of the global financial system, helping channel savings into productive investments.
@@ -114,6 +118,10 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+> [!quote]
+> "A pension is a promise — and promises must be funded."
+> — **Keith Ambachtsheer**
+
 ## Pension Fund
 
 **Definition:** A pension fund is a pool of money accumulated during an employee's working years, intended to provide income during retirement. Pension funds are managed by financial institutions that invest contributions from employees and/or employers across a diversified portfolio of assets including equities, bonds, real estate, and alternative investments. There are two main types: defined benefit plans (where the employer guarantees a specific retirement income) and defined contribution plans (where the retirement income depends on investment returns). Pension funds are among the largest institutional investors in the world.
@@ -142,6 +150,10 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+> [!quote]
+> "The prime broker is the plumber of the hedge fund world — nobody notices until the pipes break."
+> — **Sebastian Mallaby**
+
 ## Prime Brokerage
 
 **Definition:** Prime brokerage is a bundled package of services offered by investment banks to hedge funds and other large institutional investors. Services include securities lending (to facilitate short selling), leveraged trade executions, cash management, custody of assets, risk management analytics, reporting, and capital introduction (connecting funds with potential investors). Prime brokers act as a central point of contact for hedge funds' trading and operational needs, enabling them to trade across multiple exchanges and asset classes efficiently.
@@ -153,6 +165,10 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 **Related terms:** [Hedge Funds](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Hedge Funds), [Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Brokerage), [Market-Making](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Market-Making), [Securities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Securities)
 
 ---
+
+> [!quote]
+> "Wealth is not about having a lot of money — it is about having a lot of options."
+> — **Chris Rock**
 
 ## Private Banking
 
@@ -182,6 +198,10 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+> [!quote]
+> "The best time to start saving for retirement was twenty years ago — the second-best time is now."
+> — **Paul Keating**
+
 ## Superannuation
 
 **Definition:** Superannuation is the Australian and New Zealand term for a pension fund or retirement savings arrangement. Employers are legally required to contribute a percentage of each employee's salary (currently 11.5% in Australia) into a superannuation fund, which is then invested on the employee's behalf until retirement. Employees can also make voluntary contributions to boost their retirement savings. Superannuation funds invest across equities, bonds, property, and alternative assets, and are managed by industry funds, retail funds, or self-managed super funds (SMSFs).
@@ -209,6 +229,10 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 **Related terms:** [Private Equity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Private Equity), [Capital Raising](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Raising), [Initial Public Offering (IPO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Initial Public Offering (IPO)), [Alternative Investments](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Alternative Investments)
 
 ---
+
+> [!quote]
+> "It is not about the money — it is about the life you want the money to support."
+> — **Carl Richards**
 
 ## Wealth Management
 

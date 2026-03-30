@@ -21,6 +21,10 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+> [!quote]
+> "Behind every card tap is a complex chain of trust that moves money from buyer to seller in seconds."
+> — **Pieter van der Does**
+
 ## Acquiring (Payments)
 
 **Definition:** In the payments industry, acquiring refers to the process by which a financial institution (called an acquirer or acquiring bank) processes credit or debit card transactions on behalf of a merchant. When a customer swipes, taps, or enters card details, the acquirer communicates with the card-issuing bank to authorize and settle the transaction. The acquirer takes on some of the risk that the merchant will fulfill its obligations and handles the flow of funds from the cardholder's bank to the merchant's account. Acquiring is one of the core pillars of any payment platform and is distinct from issuing, which deals with providing the card to the consumer.
@@ -32,6 +36,10 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 **Related terms:** [Gateway (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Gateway (Payments)), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Settlement), [Issuing (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Issuing (Payments)), [Authorization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Authorization), [Merchant Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Merchant Services)
 
 ---
+
+> [!quote]
+> "Every payment starts with a question: can this person pay? The answer must come in milliseconds."
+> — **Dan Schulman**
 
 ## Authorization
 
@@ -93,6 +101,10 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+> [!quote]
+> "The payment gateway is the digital front door of every online business."
+> — **Jack Dorsey**
+
 ## Gateway (Payments)
 
 **Definition:** A payment gateway is a technology service that authorizes and processes payments for online and in-store merchants. It serves as the intermediary between the merchant's point-of-sale system (or e-commerce website) and the payment networks (Visa, Mastercard, etc.). The gateway encrypts sensitive card data, transmits it to the acquiring bank and card network for authorization, and returns the approval or decline response to the merchant. Payment gateways are essential for enabling secure digital commerce and are a key component of the modern payments infrastructure.
@@ -105,6 +117,10 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+> [!quote]
+> "Putting a card in someone's hand is putting your brand in their wallet — and your risk on your balance sheet."
+> — **Al Kelly**
+
 ## Issuing (Payments)
 
 **Definition:** In the payments industry, issuing refers to the process by which a financial institution (the issuer) provides payment cards (credit, debit, or prepaid) to consumers or businesses. The issuing bank establishes the cardholder's account, sets credit limits, processes billing and payments, manages rewards programs, and bears the credit risk for the cardholder's transactions. Issuing is the counterpart to acquiring in the payments ecosystem: the issuer represents the buyer's side while the acquirer represents the merchant's side of a transaction.
@@ -116,6 +132,10 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 **Related terms:** [Acquiring (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Acquiring (Payments)), [Credit Cards](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Credit Cards), [Prepaid Cards](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Prepaid Cards), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments Processing)
 
 ---
+
+> [!quote]
+> "If you cannot accept a payment, you cannot make a sale."
+> — **Max Levchin**
 
 ## Merchant Services
 
@@ -145,6 +165,10 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+> [!quote]
+> "The checkout experience is where your brand makes its final impression — make it seamless."
+> — **Angela Ahrendts**
+
 ## Point-of-Sale
 
 **Definition:** Point-of-sale (POS) refers to the place and time where a retail transaction is completed. In physical stores, the POS is typically the checkout counter where the customer pays for purchases. A POS system includes hardware (terminal, card reader, receipt printer, cash drawer) and software that processes transactions, manages inventory, tracks sales data, and generates reports. Modern POS systems are integrated with payment processing networks, loyalty programs, and inventory management systems, providing real-time business intelligence to merchants.
@@ -156,6 +180,10 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 **Related terms:** [Merchant Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Merchant Services), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments Processing), [Acquiring (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Acquiring (Payments))
 
 ---
+
+> [!quote]
+> "Prepaid cards are the great equalizer — they give everyone access to the electronic payments system."
+> — **Steve Streit**
 
 ## Prepaid Cards
 

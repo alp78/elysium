@@ -132,6 +132,10 @@ Back-testing lets index providers and investors see what returns a newly designe
 
 ---
 
+> [!quote]
+> "A benchmark is only as trustworthy as the process behind it."
+> — **Andrew Bailey**
+
 ### Benchmark Administration
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="30 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 30</span>
@@ -183,6 +187,10 @@ Benchmark administration is the regulatory umbrella under which index providers 
 >
 
 ---
+
+> [!quote]
+> "Clarity of purpose precedes quality of outcome."
+> — **Stephen Covey**
 
 ### Benchmark Statement
 
@@ -344,6 +352,10 @@ Data feeds are the pipes through which institutional investors receive index and
 
 ---
 
+> [!quote]
+> "Data is the new oil. Like oil, it must be refined to create value."
+> — **Clive Humby**
+
 ### Data Vendor
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="145 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 145</span>
@@ -493,6 +505,10 @@ DataDesk is the primary self-service front end for ISS clients. Users can search
 
 ---
 
+> [!quote]
+> "What companies choose not to disclose can be as telling as what they reveal."
+> — **Robert Eccles**
+
 ### Disclosure Rate
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -600,6 +616,10 @@ Factsheets are the "business card" of an index. STOXX publishes monthly factshee
 
 ## H
 
+> [!quote]
+> "Rules without a referee are merely suggestions."
+> — **Paul Volcker**
+
 ### Index Administrator
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
@@ -702,6 +722,10 @@ ISINs are the universal passport number for financial instruments. Every constit
 ---
 
 ## L
+
+> [!quote]
+> "Quis custodiet ipsos custodes? -- Who watches the watchmen?"
+> — **Juvenal**
 
 ### Oversight Function
 

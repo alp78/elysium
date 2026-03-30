@@ -77,6 +77,10 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ---
 
+> [!quote]
+> "Every business is a software business now."
+> — **Dean Leffingwell**
+
 ## Digital Transformation
 
 **Definition:** Digital transformation is the process of integrating digital technology into all areas of a business, fundamentally changing how the organization operates and delivers value to customers. It involves adopting technologies such as cloud computing, artificial intelligence, data analytics, IoT, and automation to improve efficiency, create new business models, and enhance customer experiences. Digital transformation is not simply about technology adoption; it requires changes in organizational culture, processes, and strategy. It has become a strategic imperative for companies across all industries.
@@ -133,6 +137,10 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ---
 
+> [!quote]
+> "The future of enterprise computing is hybrid — not everything belongs in the public cloud."
+> — **Arvind Krishna**
+
 ## Hybrid Cloud
 
 **Definition:** Hybrid cloud is a computing environment that combines on-premises infrastructure (private cloud) with public cloud services, allowing data and applications to be shared between them. This approach gives organizations greater flexibility: they can keep sensitive data on-premises for security and compliance reasons while using the public cloud for less-sensitive workloads and to handle demand spikes. Hybrid cloud is favored by enterprises transitioning from legacy systems to cloud-native architectures.
@@ -144,6 +152,10 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 **Related terms:** [Cloud Computing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cloud Computing), [IaaS](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#IaaS), [SaaS (Software as a Service)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#SaaS (Software as a Service)), [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation)
 
 ---
+
+> [!quote]
+> "Why buy the cow when you can rent the milk by the hour?"
+> — **Andy Jassy**
 
 ## IaaS (Infrastructure as a Service)
 
@@ -200,6 +212,10 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 **Related terms:** [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#E-Commerce), [Business-to-Consumer (B2C)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Business-to-Consumer (B2C)), [Digital Transformation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Digital Transformation)
 
 ---
+
+> [!quote]
+> "Developers just want to write code — give them a platform and get out of their way."
+> — **Werner Vogels**
 
 ## PaaS (Platform as a Service)
 

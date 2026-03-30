@@ -82,6 +82,10 @@ an activist investor is a shareholder who buys enough stock to demand changes �
 
 ---
 
+> [!quote]
+> "An advisory vote still carries the force of public opinion."
+> — **Nell Minow**
+
 ### Advisory Vote
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="616 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 616</span>
@@ -132,6 +136,10 @@ an advisory vote lets shareholders voice approval or disapproval on a topic — 
 >
 
 ---
+
+> [!quote]
+> "Shareholders who exercise their voting rights are the ultimate guardians of good governance."
+> — **Bob Tricker**
 
 ### Annual General Meeting (AGM)
 
@@ -184,6 +192,10 @@ the AGM is the yearly meeting where shareholders get to vote on the people and p
 >
 
 ---
+
+> [!quote]
+> "The best defense against a hostile takeover is a high stock price."
+> — **Martin Lipton**
 
 ### Anti-Takeover Provision
 
@@ -239,6 +251,10 @@ anti-takeover provisions are defensive shields a company puts in place so that a
 
 ---
 
+> [!quote]
+> "Trust, but verify."
+> — **Ronald Reagan**
+
 ### Audit & Risk Oversight
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="12 mentions across STOXX & ISS pages (low)">▰▰ 12</span>
@@ -293,6 +309,10 @@ this is the board's job of making sure the company's financial statements are ac
 ---
 
 ## B
+
+> [!quote]
+> "Staggered boards entrench management and weaken accountability."
+> — **Lucian Bebchuk**
 
 ### Board Classification (Classified Board)
 
@@ -456,6 +476,10 @@ an independent director is someone who does not work at the company, is not rela
 
 ---
 
+> [!quote]
+> "Renewal is not just changing the people; it is changing the thinking."
+> — **John Gardner**
+
 ### Board Refreshment
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="86 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 86</span>
@@ -505,6 +529,10 @@ board refreshment is about making sure the board does not become stale. If the s
 >
 
 ---
+
+> [!quote]
+> "The structure of the board determines the quality of its oversight."
+> — **Ada Demb**
 
 ### Board Structure
 
@@ -558,6 +586,10 @@ board structure is the big picture of how the board is set up and operates. ISS 
 
 ---
 
+> [!quote]
+> "The challenge is balancing institutional memory with fresh perspective."
+> — **Anne Simpson**
+
 ### Board Tenure
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="29 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 29</span>
@@ -609,6 +641,10 @@ board tenure is how long each director has been on the board. ISS flags boards w
 >
 
 ---
+
+> [!quote]
+> "Dilution is the silent tax on shareholders."
+> — **Charlie Munger**
 
 ### Burn Rate
 
@@ -665,6 +701,10 @@ burn rate measures how fast a company is handing out shares to employees. A high
 ---
 
 ## C
+
+> [!quote]
+> "The most important job of a CEO is capital allocation, yet few are trained for it."
+> — **Warren Buffett**
 
 ### Capital Allocation
 
@@ -775,6 +815,10 @@ a clawback policy says: "If we discover the numbers were wrong or you misbehaved
 
 ---
 
+> [!quote]
+> "Pay should be a consequence of performance, not a substitute for it."
+> — **Lucian Bebchuk**
+
 ### Compensation Committee
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,393 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,393</span>
@@ -828,6 +872,10 @@ the compensation committee decides how much executives get paid and in what form
 
 ---
 
+> [!quote]
+> "In any contest between power and patience, bet on patience."
+> — **W.B. Prescott**
+
 ### Contested Election
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="856 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 856</span>
@@ -879,6 +927,10 @@ a contested election is a director race with competing candidates — the board'
 >
 
 ---
+
+> [!quote]
+> "The business of business should not be about money. It should be about responsibility."
+> — **Anita Roddick**
 
 ### Corporate Social Responsibility (CSR)
 
@@ -1206,6 +1258,10 @@ the Engagement Suite is ISS's tool for investors who want to have structured con
 
 ---
 
+> [!quote]
+> "Ownership is the most powerful motivator known to mankind."
+> — **Corey Rosen**
+
 ### Equity Plan
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,051 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,051</span>
@@ -1313,6 +1369,10 @@ executive compensation is everything a top executive receives for doing their jo
 >
 
 ---
+
+> [!quote]
+> "When important matters cannot wait, shareholders must be heard."
+> — **Cadbury Report**
 
 ### Extraordinary General Meeting (EGM)
 
@@ -1817,6 +1877,10 @@ ISS does not have just one voting policy — it offers a menu. The Benchmark pol
 
 ## L
 
+> [!quote]
+> "Independence without leadership is ineffective; leadership without independence is captured."
+> — **Jay Lorsch**
+
 ### Lead Independent Director
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="54 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 54</span>
@@ -1871,6 +1935,10 @@ a lead independent director is the "independent voice" on the board when the CEO
 
 ---
 
+> [!quote]
+> "Lobbying is an industry with immense power that operates largely in the shadows."
+> — **Lee Drutman**
+
 ### Lobbying Disclosure
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
@@ -1903,6 +1971,10 @@ lobbying disclosure proposals ask companies to reveal how much they spend trying
 >
 
 ---
+
+> [!quote]
+> "Someone is sitting in the shade today because someone planted a tree a long time ago."
+> — **Warren Buffett**
 
 ### Long-Term Incentive Plan (LTIP)
 
@@ -2243,6 +2315,10 @@ a poison pill is a defense mechanism that makes it extremely costly for anyone t
 
 ---
 
+> [!quote]
+> "Follow the money."
+> — **Mark Felt (Deep Throat)**
+
 ### Political Spending Disclosure
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -2266,6 +2342,10 @@ political spending disclosure proposals ask companies to tell shareholders where
 >
 
 ---
+
+> [!quote]
+> "Access to the ballot is the first condition of shareholder democracy."
+> — **Lucian Bebchuk**
 
 ### Proxy Access
 
@@ -2316,6 +2396,10 @@ proxy access lets long-term shareholders put their own director candidates on th
 >
 
 ---
+
+> [!quote]
+> "A proxy fight is the last resort of a frustrated owner."
+> — **Carl Icahn**
 
 ### Proxy Contest
 
@@ -2528,6 +2612,10 @@ a quorum is the minimum attendance needed for a shareholder meeting to count. If
 
 ## R
 
+> [!quote]
+> "Conflicts of interest are the original sin of corporate governance."
+> — **Ira Millstein**
+
 ### Related-Party Transaction
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="417 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 417</span>
@@ -2637,6 +2725,10 @@ say-on-pay is the annual moment when shareholders give a thumbs up or thumbs dow
 >
 
 ---
+
+> [!quote]
+> "Buybacks only make sense when shares are bought below intrinsic value."
+> — **Warren Buffett**
 
 ### Share Buyback
 
@@ -2794,6 +2886,10 @@ shareholder rights are the powers investors have as part-owners of a company. IS
 
 ---
 
+> [!quote]
+> "The right to call a meeting is the right to set the agenda."
+> — **Robert Monks**
+
 ### Special Meeting Right
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
@@ -2935,6 +3031,10 @@ a supermajority requirement raises the bar for passing important votes so high t
 ---
 
 ## T
+
+> [!quote]
+> "When someone offers you a premium for your shares, the market is telling you something."
+> — **Peter Lynch**
 
 ### Tender Offer
 

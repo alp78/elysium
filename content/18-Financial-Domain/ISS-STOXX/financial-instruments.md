@@ -26,6 +26,9 @@ date: 2026-03-28
 
 ## B
 
+> [!quote]
+> "If you do not know where you are going, any road will get you there." — Lewis Carroll
+
 ### Benchmark (as Instrument Reference)
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5,507 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 5,507</span>
@@ -187,6 +190,9 @@ a call option is a bet that the index will go up. You pay a premium for the righ
 
 ---
 
+> [!quote]
+> "Simplicity is the ultimate sophistication." — Leonardo da Vinci
+
 ### Certificate (Index Certificate)
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="37 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 37</span>
@@ -238,6 +244,9 @@ Think of a certificate as a simplified way to "buy" an entire index through a si
 
 ---
 
+> [!quote]
+> "The measure of intelligence is the ability to change." — Albert Einstein
+
 ### Convertible Bond
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="90 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 90</span>
@@ -287,6 +296,9 @@ A convertible bond is a bond with an embedded stock option. You receive regular 
 >
 
 ---
+
+> [!quote]
+> "A promise made is a debt unpaid." — Robert W. Service
 
 ### Corporate Bond
 
@@ -397,6 +409,9 @@ you own the index and sell someone else the right to buy it above a certain pric
 
 ---
 
+> [!quote]
+> "Insurance is the only product that both the seller and buyer hope is never actually used." — Anonymous
+
 ### Credit Default Swap (CDS)
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
@@ -430,6 +445,9 @@ A credit default swap is essentially insurance against a borrower defaulting. Yo
 ---
 
 ## D
+
+> [!quote]
+> "Ownership is the most intimate relationship one can have to objects." — Walter Benjamin
 
 ### Equity (as Instrument)
 
@@ -538,6 +556,9 @@ An ETF lets you buy and sell a whole index as easily as a single stock. It holds
 
 ---
 
+> [!quote]
+> "Gold is money. Everything else is credit." — J.P. Morgan
+
 ### ETC (Exchange-Traded Commodity)
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="642 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 642</span>
@@ -587,6 +608,9 @@ An ETC works like an ETF, but for commodities — gold, oil, copper, agricultura
 >
 
 ---
+
+> [!quote]
+> "Credit is a system whereby a person who cannot pay gets another person who cannot pay to guarantee that he can pay." — Charles Dickens
 
 ### ETN (Exchange-Traded Note)
 
@@ -638,6 +662,9 @@ An ETN is essentially a bank's IOU linked to an index. You get precise index tra
 >
 
 ---
+
+> [!quote]
+> "The investor's chief problem, and even his worst enemy, is likely to be himself." — Benjamin Graham
 
 ### ETP (Exchange-Traded Product)
 
@@ -855,6 +882,9 @@ A green bond works exactly like a regular bond (fixed coupon, maturity date, cre
 
 ---
 
+> [!quote]
+> "There is no such thing as a free lunch." — Milton Friedman
+
 ### High-Yield Bond
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
@@ -944,6 +974,9 @@ An index fund is the original passive investment. You give money to the fund man
 
 ---
 
+> [!quote]
+> "Intellectual property has the shelf life of a banana." — Bill Gates
+
 ### Index License
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
@@ -997,6 +1030,9 @@ Before a bank can launch an ETF on the EURO STOXX 50, it must obtain a license f
 
 ---
 
+> [!quote]
+> "It is choice, not chance, that determines your destiny." — Jean Nidetch
+
 ### Index Option
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="101 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 101</span>
@@ -1048,6 +1084,9 @@ An index option is like insurance — or a lottery ticket — on the index's dir
 >
 
 ---
+
+> [!quote]
+> "One man's trash is another man's treasure." — Proverb
 
 ### Interest Rate Swap
 
@@ -1123,6 +1162,9 @@ A money market fund is the closest thing to a savings account in the investment 
 >
 
 ---
+
+> [!quote]
+> "The only difference between death and taxes is that death does not get worse every time Congress meets." — Will Rogers
 
 ### Municipal Bond
 
@@ -1208,6 +1250,9 @@ Passive investing means you buy the index and hold it. You do not try to pick wi
 >
 
 ---
+
+> [!quote]
+> "Good artists copy; great artists steal." — Pablo Picasso
 
 ### Portfolio Replication
 
@@ -1352,6 +1397,9 @@ A REIT lets you invest in real estate without buying property directly. The REIT
 
 ## S
 
+> [!quote]
+> "We make a living by what we get, but we make a life by what we give." — Winston Churchill
+
 ### Social Bond
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
@@ -1383,6 +1431,9 @@ A social bond is the society-focused cousin of the green bond. The money raised 
 >
 
 ---
+
+> [!quote]
+> "The power to tax is the power to destroy." — John Marshall
 
 ### Sovereign Bond
 
@@ -1494,6 +1545,9 @@ A structured product is a custom-built financial instrument — usually a bond p
 
 ---
 
+> [!quote]
+> "The greatest threat to our planet is the belief that someone else will save it." — Robert Swan
+
 ### Sustainability Bond
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
@@ -1531,6 +1585,9 @@ A sustainability bond is a hybrid — the money goes to projects that are both g
 
 ---
 
+> [!quote]
+> "What gets rewarded gets done." — Michael LeBoeuf
+
 ### Sustainability-Linked Bond
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
@@ -1561,6 +1618,9 @@ A sustainability-linked bond flips the model. Instead of earmarking money for sp
 >
 
 ---
+
+> [!quote]
+> "Everything in life is a trade-off." — Thomas Sowell
 
 ### Swap
 
@@ -1656,6 +1716,9 @@ A total return swap is a private deal between two parties. One side says, "I wil
 
 ---
 
+> [!quote]
+> "The secret of change is to focus all your energy not on fighting the old, but on building the new." — Socrates (attributed)
+
 ### Transition Bond
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -1680,6 +1743,9 @@ A transition bond is for companies that cannot credibly issue a green bond becau
 >
 
 ---
+
+> [!quote]
+> "An option is the right, but not the obligation, to make a choice." — Anonymous
 
 ### Warrant
 

@@ -148,6 +148,9 @@ The DAX is Germany's most important stock market index. It functions like a scor
 
 ---
 
+> [!quote]
+> "Sustainability is no longer about doing less harm. It is about doing more good." — Jochen Zeitz
+
 ### DAX 50 ESG
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="204 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 204</span>
@@ -205,6 +208,9 @@ Think of the DAX 50 ESG as a filtered version of the broader German stock market
 >
 
 ---
+
+> [!quote]
+> "Setting goals is the first step in turning the invisible into the visible." — Tony Robbins
 
 ### DAX ESG Target
 
@@ -377,6 +383,9 @@ The EURO STOXX 50 is the benchmark most people think of when they talk about Eur
 
 ---
 
+> [!quote]
+> "Volatility is the price of admission for long-term returns." — Nick Murray
+
 ### EURO STOXX 50 Volatility (VSTOXX) Subindices
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="68 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 68</span>
@@ -438,6 +447,9 @@ While the headline VSTOXX captures 30-day implied volatility, the subindices sho
 >
 
 ---
+
+> [!quote]
+> "Banking is necessary, banks are not." — Bill Gates
 
 ### EURO STOXX Banks
 
@@ -556,6 +568,9 @@ This is a dividend-hunter's index. Instead of picking companies by size (like th
 
 ---
 
+> [!quote]
+> "The full faith and credit of a government is only as good as its people." — Anonymous
+
 ### EUROGOV Bond Indices
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
@@ -598,6 +613,9 @@ The EUROGOV indices are the Eurozone equivalent of tracking how well government 
 ---
 
 ## I
+
+> [!quote]
+> "In every walk with nature one receives far more than he seeks." — John Muir
 
 ### ISS STOXX Biodiversity Indices
 
@@ -729,6 +747,9 @@ In simple terms, these indices reweight the stock market to favour companies tha
 
 ## M
 
+> [!quote]
+> "The middle is where most of the living happens." — David Brooks
+
 ### MDAX
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="665 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 665</span>
@@ -786,6 +807,9 @@ The MDAX is where you find Germany's mid-sized listed companies -- firms that ar
 ---
 
 ## S
+
+> [!quote]
+> "Small opportunities are often the beginning of great enterprises." — Demosthenes
 
 ### SDAX
 
@@ -845,6 +869,9 @@ The SDAX covers the next layer of German companies below the MDAX. These are sma
 
 ---
 
+> [!quote]
+> "The question is not whether intelligent machines can have emotions, but whether machines can be intelligent without emotions." — Marvin Minsky
+
 ### STOXX AI Global Artificial Intelligence Index
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
@@ -903,6 +930,9 @@ This index is a way to invest in the AI theme across the entire global stock mar
 >
 
 ---
+
+> [!quote]
+> "The 21st century will be the century of the Pacific." — Barack Obama
 
 ### STOXX Asia/Pacific 600
 
@@ -964,6 +994,9 @@ This is STOXX's main index for the Asia/Pacific region's developed stock markets
 
 ---
 
+> [!quote]
+> "Digital currency is going to be a very powerful thing." — John Donahoe
+
 ### STOXX Digital Asset Indices
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
@@ -996,6 +1029,9 @@ These indices bring the same methodological rigour that STOXX applies to traditi
 >
 
 ---
+
+> [!quote]
+> "The growth of the developing world is not just good for the developing world. It is good for all of us." — Christine Lagarde
 
 ### STOXX Emerging Markets
 
@@ -1124,6 +1160,9 @@ The STOXX Europe 600 is the go-to index for a broad view of European stock marke
 
 ---
 
+> [!quote]
+> "Large streams from little fountains flow, tall oaks from little acorns grow." — David Everett
+
 ### STOXX Europe Large 200
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
@@ -1179,6 +1218,9 @@ This index captures the biggest companies in Europe -- the top third of the STOX
 
 ---
 
+> [!quote]
+> "Think big, start small, scale fast." — Anonymous
+
 ### STOXX Europe Small 200
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -1212,6 +1254,9 @@ The Small 200 is the bottom third of the STOXX Europe 600 by company size. These
 >
 
 ---
+
+> [!quote]
+> "The map is not the territory, but a complete map comes closest." — Alfred Korzybski (adapted)
 
 ### STOXX Europe Total Market
 
@@ -1337,6 +1382,9 @@ The STOXX Global 1800 is a straightforward way to track the global developed-mar
 >
 
 ---
+
+> [!quote]
+> "The future is already here; it is just not evenly distributed." — William Gibson
 
 ### STOXX Global Metaverse
 
@@ -1624,6 +1672,9 @@ These indices are built for investors who want stock market exposure with reduce
 
 ---
 
+> [!quote]
+> "America is great because she is good." — Alexis de Tocqueville
+
 ### STOXX North America 600
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="51 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 51</span>
@@ -1687,6 +1738,9 @@ This is STOXX's comprehensive index for North American stocks, covering 600 comp
 
 ---
 
+> [!quote]
+> "Do you know the only thing that gives me pleasure? It is to see my dividends coming in." — John D. Rockefeller
+
 ### STOXX Select Dividend Indices
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14 mentions across STOXX & ISS pages (low)">▰▰ 14</span>
@@ -1733,6 +1787,9 @@ The Select Dividend family is a set of indices for income-seeking investors acro
 >
 
 ---
+
+> [!quote]
+> "Betting against America has never been the winning move." — Warren Buffett
 
 ### STOXX USA 500
 
@@ -1791,6 +1848,9 @@ The STOXX USA 500 is STOXX's benchmark for the US stock market, covering the 500
 >
 
 ---
+
+> [!quote]
+> "The world is a book, and those who do not travel read only one page." — Saint Augustine
 
 ### STOXX World Equity Indices
 
@@ -1853,6 +1913,9 @@ This is STOXX's widest-reaching equity index family, covering stocks from virtua
 ---
 
 ## T
+
+> [!quote]
+> "Technology is the campfire around which we tell our stories." — Laurie Anderson
 
 ### TecDAX
 
@@ -1982,6 +2045,9 @@ The VSTOXX is Europe's "fear gauge." When investors are nervous about the future
 
 ## Additional Index Families
 
+> [!quote]
+> "Europe is not just about economics. It is about values." — Angela Merkel
+
 ### STOXX Europe 50
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="79 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 79</span>
@@ -2040,6 +2106,9 @@ This is the broader European counterpart to the EURO STOXX 50. While the EURO ST
 >
 
 ---
+
+> [!quote]
+> "Know the enemy and know yourself; in a hundred battles you will never be in peril." — Sun Tzu
 
 ### STOXX Europe 600 Sector Indices
 
@@ -2150,6 +2219,9 @@ ESG-X indices are the simplest form of ESG integration: they take a standard STO
 
 ---
 
+> [!quote]
+> "What you see depends on where you stand." — Albert Einstein (attributed)
+
 ### STOXX True Exposure Indices
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -2182,6 +2254,9 @@ Most indices assign a company to a country based on where its headquarters or li
 >
 
 ---
+
+> [!quote]
+> "We do not inherit the earth from our ancestors; we borrow it from our children." — Chief Seattle (attributed)
 
 ### STOXX Sustainability Indices
 
@@ -2229,6 +2304,9 @@ The STOXX Sustainability indices represent a middle ground in ESG indexing -- st
 
 ---
 
+> [!quote]
+> "Innovation distinguishes between a leader and a follower." — Steve Jobs
+
 ### iSTOXX Indices
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
@@ -2274,6 +2352,9 @@ The iSTOXX brand is where STOXX puts its more specialised, product-oriented indi
 >
 
 ---
+
+> [!quote]
+> "A bird in the hand is worth two in the bush." — Aesop
 
 ### STOXX Maximum Dividend 40 Index
 
@@ -2324,6 +2405,9 @@ Unlike most dividend indices that look at what companies have paid in the past, 
 >
 
 ---
+
+> [!quote]
+> "Risk comes from not knowing what you are doing." — Warren Buffett
 
 ### DAX Risk Control Indices
 

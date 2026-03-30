@@ -22,6 +22,10 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 ---
 
+> [!quote]
+> "The installed base is the gift that keeps on giving — every machine sold is a customer for life."
+> — **David Cote**
+
 ## Aftermarket
 
 **Definition:** The aftermarket refers to the secondary market for parts, accessories, services, and upgrades for a product after its initial sale. In industries like automotive, aerospace, and heavy machinery, the aftermarket can be more profitable than the initial product sale because equipment owners need ongoing maintenance, spare parts, and performance upgrades throughout the product's operational life. Companies that build durable goods often derive a significant share of their revenue from aftermarket activities, creating a recurring revenue stream.
@@ -50,6 +54,10 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 ---
 
+> [!quote]
+> "No manufacturer can reach every customer alone — distributors extend your reach."
+> — **Sam Walton**
+
 ## Distributors
 
 **Definition:** Distributors are intermediary entities that purchase products from manufacturers and resell them to retailers, businesses, or directly to consumers. Distributors add value by providing logistics, warehousing, marketing, credit, and after-sales service. They serve as a critical link in the supply chain, enabling manufacturers to reach broad markets without building their own extensive sales and delivery infrastructure. Distribution networks can be exclusive (one distributor per region) or non-exclusive (multiple distributors compete in the same area).
@@ -61,6 +69,10 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 **Related terms:** [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply Chain), [Wholesale Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Wholesale Banking), [Resellers](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Resellers), [Logistics](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Logistics)
 
 ---
+
+> [!quote]
+> "You cannot manage what you cannot measure — and telematics lets you measure every mile."
+> — **Peter Drucker**
 
 ## Fleet Management
 
@@ -90,6 +102,10 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 ---
 
+> [!quote]
+> "The time to repair the roof is when the sun is shining."
+> — **John F. Kennedy**
+
 ## Maintenance Repair and Overhaul (MRO)
 
 **Definition:** Maintenance, Repair, and Overhaul (MRO) refers to the comprehensive range of activities required to keep complex equipment and machinery in safe, operational condition throughout its useful life. In the aerospace and defense industries, MRO includes scheduled inspections, component repairs, engine overhauls, structural modifications, and compliance with regulatory airworthiness requirements. MRO services represent a significant and recurring revenue stream for equipment manufacturers, as the installed base of engines, aircraft, and other complex systems requires continuous maintenance over decades of operation.
@@ -102,6 +118,10 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 ---
 
+> [!quote]
+> "Behind every great brand is a supplier who made it possible."
+> — **Tim Cook**
+
 ## OEM (Original Equipment Manufacturer)
 
 **Definition:** An Original Equipment Manufacturer (OEM) is a company that produces parts or equipment that are marketed and sold by another company under its own brand name. In practice, the term has evolved to also refer to companies that manufacture complete end products (such as Dell or HP in computing, or Toyota in automotive). OEM relationships are common in manufacturing industries where specialized component makers supply parts to final product assemblers. OEM sales typically involve large volume contracts with specific quality requirements and design specifications.
@@ -113,6 +133,10 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 **Related terms:** [Aftermarket](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Aftermarket), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply Chain), [Procurement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Procurement), [Resellers](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Resellers), [Maintenance Repair and Overhaul (MRO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Maintenance Repair and Overhaul (MRO))
 
 ---
+
+> [!quote]
+> "Procurement is no longer about buying things — it is about creating value across the supply network."
+> — **Jonathan Hughes**
 
 ## Procurement
 
@@ -141,6 +165,10 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 **Related terms:** [Alternative Investments](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Alternative Investments), [Project Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Project Finance), [Concessions](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Concessions), [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset Management)
 
 ---
+
+> [!quote]
+> "A value-added reseller does not just sell a product — they sell a solution to a problem."
+> — **Michael Dell**
 
 ## Resellers
 

@@ -26,6 +26,9 @@ date: 2026-03-28
 
 ## A
 
+> [!quote]
+> "The market is a weighing machine." — Benjamin Graham
+
 ### Adjusted Free-Float Market Capitalization
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
@@ -124,6 +127,9 @@ The announcement date gives market participants advance notice of upcoming index
 
 ## B
 
+> [!quote]
+> "Every journey has a first step, and every measurement has a starting point." — Anonymous
+
 ### Base Date
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="88 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 88</span>
@@ -172,6 +178,9 @@ The base date is the starting point of an index's time series. On this date the 
 >
 
 ---
+
+> [!quote]
+> "The beginning is the most important part of the work." — Plato
 
 ### Base Value
 
@@ -223,6 +232,9 @@ The base value is an arbitrary scaling constant — commonly set to 100, 1,000, 
 >
 
 ---
+
+> [!quote]
+> "Beware of little expenses; a small leak will sink a great ship." — Benjamin Franklin
 
 ### Basis Point (Index)
 
@@ -331,6 +343,9 @@ Benchmark indices are the flagship products of index providers. STOXX benchmark 
 >
 
 ---
+
+> [!quote]
+> "The art of being wise is the art of knowing what to overlook." — William James
 
 ### Buffer Rule
 
@@ -444,6 +459,9 @@ Where $w_i^{\text{uncapped}}$ is the raw weight and $W_{\max}$ is the cap limit.
 
 ---
 
+> [!quote]
+> "No single raindrop believes it is responsible for the flood." — Anonymous
+
 ### Capping Factor
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="104 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 104</span>
@@ -492,6 +510,9 @@ $$
 >
 
 ---
+
+> [!quote]
+> "The chain of memory is the chain of identity." — John Locke
 
 ### Chaining
 
@@ -550,6 +571,9 @@ Where $R_j^{\text{new basket}}$ is the return of the post-rebalancing basket on 
 
 ---
 
+> [!quote]
+> "The whole is greater than the sum of its parts." — Aristotle
+
 ### Component
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3,668 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 3,668</span>
@@ -600,6 +624,9 @@ The terms "component" and "constituent" are used interchangeably throughout the 
 
 ---
 
+> [!quote]
+> "Put all your eggs in one basket, and then watch that basket." — Andrew Carnegie
+
 ### Concentration Limit
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
@@ -629,6 +656,9 @@ Where $G$ is the set of constituents belonging to the group and $W_{\max}^{\text
 >
 
 ---
+
+> [!quote]
+> "A team is not a group of people who work together. It is a group of people who trust each other." — Simon Sinek
 
 ### Constituent
 
@@ -679,6 +709,9 @@ Where $G$ is the set of constituents belonging to the group and $W_{\max}^{\text
 >
 
 ---
+
+> [!quote]
+> "In God we trust; all others must bring data." — W. Edwards Deming
 
 ### Divisor
 
@@ -735,6 +768,9 @@ The numerator uses the new composition (post-event) and the denominator uses the
 
 ---
 
+> [!quote]
+> "You cannot step into the same river twice, but you can measure it consistently." — Heraclitus (adapted)
+
 ### Divisor Adjustment
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
@@ -765,6 +801,9 @@ A divisor adjustment is performed whenever the aggregate capitalization of the i
 ---
 
 ## E
+
+> [!quote]
+> "Timing is everything." — Anonymous
 
 ### Effective Date
 
@@ -930,6 +969,9 @@ $$
 
 ## F
 
+> [!quote]
+> "The early bird catches the worm." — William Camden
+
 ### Fast Entry Rule
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="21 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 21</span>
@@ -980,6 +1022,9 @@ Fast entry rules ensure that indices remain representative of the market between
 >
 
 ---
+
+> [!quote]
+> "Know when to hold them, know when to fold them." — Kenny Rogers
 
 ### Fast Exit Rule
 
@@ -1081,6 +1126,9 @@ Free-float is a critical concept in modern index construction. STOXX defines str
 >
 
 ---
+
+> [!quote]
+> "Not everything that can be counted counts, and not everything that counts can be counted." — William Bruce Cameron
 
 ### Free-Float Factor
 
@@ -1258,6 +1306,9 @@ STOXX calculates its indices in real time during exchange trading hours and publ
 
 ---
 
+> [!quote]
+> "In the multitude of counsellors there is safety." — Proverbs 11:14
+
 ### Index Committee
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -1281,6 +1332,9 @@ The STOXX Index Committee (or equivalent governance body) serves as the ultimate
 >
 
 ---
+
+> [!quote]
+> "Pure mathematics is the poetry of logical ideas." — Albert Einstein
 
 ### Index Formula (Laspeyres)
 
@@ -1342,6 +1396,9 @@ Where:
 >
 
 ---
+
+> [!quote]
+> "The thermometer of a society is its stock market." — Anonymous
 
 ### Index Level
 
@@ -1606,6 +1663,9 @@ $$
 
 ---
 
+> [!quote]
+> "In this world nothing can be said to be certain, except death and taxes." — Benjamin Franklin
+
 ### Net Return Index
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="64 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 64</span>
@@ -1715,6 +1775,9 @@ Fixed-count indices such as the EURO STOXX 50 always maintain exactly the target
 
 ## O
 
+> [!quote]
+> "The unexamined life is not worth living." — Socrates
+
 ### Periodic Review
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14 mentions across STOXX & ISS pages (low)">▰▰ 14</span>
@@ -1764,6 +1827,9 @@ Periodic reviews are the primary governance mechanism for index maintenance. STO
 >
 
 ---
+
+> [!quote]
+> "Price is what you pay. Value is what you get." — Warren Buffett
 
 ### Price Return Index
 
@@ -1887,6 +1953,9 @@ Reconstitution is distinct from rebalancing: reconstitution changes *which* secu
 
 ---
 
+> [!quote]
+> "What gets measured gets managed." — Peter Drucker
+
 ### Review Frequency
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="502 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 502</span>
@@ -1966,6 +2035,9 @@ All STOXX indices are rules-based, meaning that their methodology is fully codif
 
 ## S
 
+> [!quote]
+> "Diversification is the only free lunch in investing." — Harry Markowitz
+
 ### Sector Weighting
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
@@ -2015,6 +2087,9 @@ Sector weighting is a fundamental dimension of index risk and return attribution
 
 ---
 
+> [!quote]
+> "The secret of success is to know something nobody else knows." — Aristotle Onassis
+
 ### Selection Criteria
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="59 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 59</span>
@@ -2063,6 +2138,9 @@ Selection criteria determine which securities from the eligible universe actuall
 >
 
 ---
+
+> [!quote]
+> "You have to kiss a lot of frogs before you find your prince." — Anonymous
 
 ### Selection List
 
@@ -2114,6 +2192,9 @@ The selection list is the intermediate output of the index construction process,
 
 ---
 
+> [!quote]
+> "All models are wrong, but some are useful." — George E.P. Box
+
 ### Simulation
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="26 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 26</span>
@@ -2162,6 +2243,9 @@ Simulated (back-tested) data allows index users to evaluate how an index would h
 >
 
 ---
+
+> [!quote]
+> "Routine, in an intelligent man, is a sign of ambition." — W.H. Auden
 
 ### Systematic Index
 

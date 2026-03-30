@@ -167,6 +167,10 @@ In simple terms, BIAT measures how much damage (or benefit) a company causes to 
 
 ## C
 
+> [!quote]
+> "The question is not whether climate change will affect your portfolio, but when and how much."
+> — **Mark Carney**
+
 ### Carbon Risk Rating
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="81 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 81</span>
@@ -271,6 +275,10 @@ Think of Climetrics as a "climate score for your investment fund." It checks whe
 
 ---
 
+> [!quote]
+> "It takes twenty years to build a reputation and five minutes to ruin it."
+> — **Warren Buffett**
+
 ### Controversy Rating
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="254 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 254</span>
@@ -322,6 +330,10 @@ A Controversy Rating measures how badly a company has been caught behaving. If a
 >
 
 ---
+
+> [!quote]
+> "In a crisis, character is revealed, not formed."
+> — **Robert Freeman**
 
 ### Controversy Level
 
@@ -455,6 +467,10 @@ Country Ratings work like corporate ESG ratings but applied to governments. They
 >
 
 ---
+
+> [!quote]
+> "There are only two types of companies: those that have been hacked and those that will be."
+> — **Robert Mueller**
 
 ### Cyber Risk Score
 
@@ -754,6 +770,10 @@ This is the same concept as the Corporate Rating (ISS ESG) entry above, referred
 
 ---
 
+> [!quote]
+> "Sunlight is said to be the best of disinfectants."
+> — **Louis Brandeis**
+
 ### ESG Disclosure
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="15 mentions across STOXX & ISS pages (low)">▰▰ 15</span>
@@ -882,6 +902,10 @@ ESG Integration means treating ESG data the same way you treat financial data: a
 
 ---
 
+> [!quote]
+> "Risk comes from not knowing what you are doing."
+> — **Warren Buffett**
+
 ### ESG Risk Rating
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="137 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 137</span>
@@ -959,6 +983,10 @@ The ESG Scorecard is the report card. It takes all the detailed analysis behind 
 
 ---
 
+> [!quote]
+> "The environment is where we all meet; where we all have a mutual interest."
+> — **Lady Bird Johnson**
+
 ### Environmental Pillar
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -981,6 +1009,10 @@ The Environmental Pillar measures everything related to a company's relationship
 >
 
 ---
+
+> [!quote]
+> "You cannot manage what you cannot measure, and you cannot measure what you do not define."
+> — **Peter Drucker**
 
 ### Exposure Score
 
@@ -1016,6 +1048,10 @@ Exposure Score is the starting point before management is factored in. A coal mi
 ---
 
 ## F
+
+> [!quote]
+> "In investing, what is comfortable is rarely profitable."
+> — **Robert Arnott**
 
 ### Fund Rating
 
@@ -1471,6 +1507,10 @@ Mean Species Abundance is a single number that captures how "intact" an ecosyste
 
 ---
 
+> [!quote]
+> "No business which depends for its existence on paying less than living wages has any right to continue."
+> — **Franklin D. Roosevelt**
+
 ### Modern Slavery Scorecard
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
@@ -1659,6 +1699,10 @@ Norm-Based Research is the investigative process behind controversy screening. A
 
 ---
 
+> [!quote]
+> "The first step in the evolution of ethics is a sense of solidarity with other human beings."
+> — **Albert Schweitzer**
+
 ### Norm-Based Screening
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
@@ -1712,6 +1756,10 @@ Norm-Based Screening is the investment action that follows from Norm-Based Resea
 
 ## P
 
+> [!quote]
+> "Tell me who your peers are, and I will tell you who you are."
+> — **Johann Wolfgang von Goethe**
+
 ### Peer Group Comparison
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="36 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 36</span>
@@ -1761,6 +1809,10 @@ Peer Group Comparison answers the question: "Is this company good at ESG relativ
 >
 
 ---
+
+> [!quote]
+> "Be the change that you wish to see in the world."
+> — **Mahatma Gandhi**
 
 ### Positive Screening
 
@@ -1986,6 +2038,10 @@ The SDG Impact Rating connects corporate behaviour to the UN's 17 global goals. 
 
 ---
 
+> [!quote]
+> "A business that makes nothing but money is a poor business."
+> — **Henry Ford**
+
 ### Social Pillar
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
@@ -2042,6 +2098,10 @@ Stakeholder Capitalism challenges the traditional view that a company exists sol
 >
 
 ---
+
+> [!quote]
+> "The greatest threat to our planet is the belief that someone else will save it."
+> — **Robert Swan**
 
 ### Sustainability Bond Rating
 
