@@ -2375,8 +2375,6 @@ This is intentional — Airflow was designed for batch data pipelines where you 
 - [[airflow-dag-patterns]] — Reusable DAG design patterns
 - [[airflow-deployment]] — Docker Compose setup and hardening
 - [[airflow-troubleshooting]] — Quick diagnostic reference
-- [[airflow-scheduler-down]] — Runbook for scheduler failure
-- [[on-call-guide]] — Incident response framework
 
 ---
 

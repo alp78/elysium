@@ -318,7 +318,7 @@ def check_anomalies(calc_date: str, max_deviation_pct: float = 20.0, **context) 
 ```
 
 > [!warning] Never Auto-Override
-> The circuit breaker must require explicit human approval to resume. An index published with bad ESG data triggers restatements, regulatory scrutiny, and client trust erosion. The cost of a delayed publication is far lower than the cost of a wrong one. When the breaker fires, follow the [[esg-circuit-breaker-fired]] runbook.
+> The circuit breaker must require explicit human approval to resume. An index published with bad ESG data triggers restatements, regulatory scrutiny, and client trust erosion. The cost of a delayed publication is far lower than the cost of a wrong one. When the breaker fires, follow the esg circuit breaker fired runbook.
 
 ---
 

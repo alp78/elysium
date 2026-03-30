@@ -225,7 +225,7 @@ du -h --max-depth=1 /var/opt/mssql/ | sort -rh
 >
 > SQL Server **stops** when the disk is full. Always verify free space before
 > large copies or data imports. For the full disk-full runbook, see
-> [[sql-server-disk-full]].
+> sql server disk full.
 
 ```bash
 df -h

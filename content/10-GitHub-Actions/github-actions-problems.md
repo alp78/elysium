@@ -15,7 +15,7 @@ related:
   - "[[github-actions-fundamentals]]"
   - "[[github-actions-patterns]]"
   - "[[github-actions-data-engineering]]"
-  - "[[on-call-guide]]"
+  - "on call guide"
 status: stable
 created: 2026-03-23
 updated: 2026-03-30
@@ -1252,7 +1252,6 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 - [[github-actions-fundamentals]] — Workflow anatomy, triggers, runners, secrets
 - [[github-actions-patterns]] — Reusable workflows, matrix builds, deployment patterns
 - [[github-actions-data-engineering]] — Data pipeline CI/CD specifics
-- [[on-call-guide]] — Incident response when CI/CD breaks
 - [[secrets-management]] — Secret rotation and management
 
 ---

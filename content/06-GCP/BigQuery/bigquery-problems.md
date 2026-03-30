@@ -2535,9 +2535,7 @@ JOIN analytics.index_weights USING (instrument_isin);
 - [[gcp-billing-and-pricing]] — BigQuery pricing model
 - [[gcp-cost-monitoring-and-budgets]] — Cost monitoring and alerts
 - [[gcp-total-cost-of-ownership]] — TCO calculations
-- [[bigquery-quota-exceeded]] — Runbook for quota incidents
 - [[dbt-bigquery-adapter]] — dbt-specific BigQuery configuration
-- [[on-call-guide]] — Incident response framework
 
 ---
 

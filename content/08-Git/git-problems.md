@@ -2036,7 +2036,6 @@ on:
 - [[git-merge-conflicts]] — Conflict resolution guide
 - [[pull-requests-and-code-review]] — PR best practices
 - [[github-actions-problems]] — CI/CD-specific problems (companion note)
-- [[on-call-guide]] — Incident response when Git issues affect production
 
 ---
 

@@ -195,7 +195,7 @@ To restore to a specific second in time, replay backups in this order:
 Full → Differential (optional, speeds up restore) → Log backups in sequence → STOPAT target timestamp
 ```
 
-See [[restore-and-recovery]] for the complete RESTORE commands, and [[backup-restore-drill]] for the quarterly validation drill that tests these backups end-to-end.
+See [[restore-and-recovery]] for the complete RESTORE commands, and backup restore drill for the quarterly validation drill that tests these backups end-to-end.
 
 ---
 

@@ -209,7 +209,7 @@ Large financial data companies and similar organizations operate in a **matrix s
 | Incident response | **R** | **I** | **C** | **A** | **I** |
 
 > [!tip] Related pattern
-> For detailed on-call procedures and escalation paths that complement this RACI matrix, see the [[on-call-guide]]. For financial-specific incidents such as incorrect published index values, the [[data-restatement-procedure]] documents the end-to-end correction workflow.
+> For detailed on-call procedures and escalation paths that complement this RACI matrix, see the on call guide. For financial-specific incidents such as incorrect published index values, the data restatement procedure documents the end-to-end correction workflow.
 
 ## Architecture Decision Records (ADRs)
 

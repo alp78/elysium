@@ -454,7 +454,7 @@ fi
 DBCC CHECKDB('analytics_db') WITH NO_INFOMSGS, ALL_ERRORMSGS;
 ```
 
-4. Quarterly restore drill — see [[backup-restore-drill]] runbook. Automate the drill against a separate GCE instance:
+4. Quarterly restore drill — see backup restore drill runbook. Automate the drill against a separate GCE instance:
 ```bash
 # Restore to test instance (run on a separate VM)
 sqlcmd -S test-sql-instance -U sa -P "$SA_PASSWORD" -Q "
@@ -2261,8 +2261,6 @@ sudo systemctl restart mssql-server
 - [[blocking-and-locking]] — Blocking chain analysis
 - [[index-maintenance]] — Fragmentation management
 - [[backup-types-and-strategy]] — Backup configuration
-- [[sql-server-disk-full]] — Disk full runbook
-- [[on-call-guide]] — Incident response framework
 
 ---
 

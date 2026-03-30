@@ -87,7 +87,7 @@ tree -L 2 --dirsfirst
 
 ### du, ls, df — investigating disk space on a database server
 
-This is the opening move in the [[sql-server-disk-full]] runbook.
+This is the opening move in the sql server disk full runbook.
 
 ```bash
 # Step 1: What's consuming the most space? (top 10 directories)

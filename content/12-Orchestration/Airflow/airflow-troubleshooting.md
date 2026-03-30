@@ -1002,7 +1002,7 @@ MyCustomOperator(
 
 ## Issue 11: Slow DAG Parsing / Scheduler Performance
 
-**Symptom:** The Scheduler is consuming high CPU. New DAGs take minutes to appear. The UI shows an old `Last Parsed` time in the DAG list. If the scheduler process has stopped entirely, follow the [[airflow-scheduler-down]] runbook.
+**Symptom:** The Scheduler is consuming high CPU. New DAGs take minutes to appear. The UI shows an old `Last Parsed` time in the DAG list. If the scheduler process has stopped entirely, follow the airflow scheduler down runbook.
 
 #### Diagnosis — Scheduler Logs
 

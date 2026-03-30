@@ -131,7 +131,7 @@ find /data/ -type f -daystart -mtime 0
 
 > [!info] Find large files consuming disk
 >
-> A key step in the [[sql-server-disk-full]] runbook. Pipe through `head` to avoid
+> A key step in the sql server disk full runbook. Pipe through `head` to avoid
 > overwhelming output. `2>/dev/null` suppresses permission-denied errors from system
 > directories you can't read.
 

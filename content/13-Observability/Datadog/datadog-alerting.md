@@ -58,7 +58,7 @@ Notify: @oncall-team@example.com
 7. **Tags:** `env:prod`, `service:data-pipeline-sql`
 8. Click **Create**
 
-The monitor triggers immediately when a deadlock occurs and sends an email with remediation steps. It auto-resolves when no new deadlocks are detected in the evaluation window. When a P1 or P2 alert fires, follow the response procedures in the [[on-call-guide]] to ensure consistent triage and escalation.
+The monitor triggers immediately when a deadlock occurs and sends an email with remediation steps. It auto-resolves when no new deadlocks are detected in the evaluation window. When a P1 or P2 alert fires, follow the response procedures in the on call guide to ensure consistent triage and escalation.
 
 ### Testing the Deadlock Alert
 
@@ -89,7 +89,7 @@ Create these in **Monitors → New Monitor → Metric**:
 
 | Monitor | Metric | Condition | Severity |
 |---------|--------|-----------|----------|
-| Scheduler Down | `airflow.scheduler_heartbeat` | No data for 5 min | P1 (Critical) — see [[airflow-scheduler-down]] |
+| Scheduler Down | `airflow.scheduler_heartbeat` | No data for 5 min | P1 (Critical) — see airflow scheduler down |
 | DAG Parse Error | `airflow.dag_processing.import_errors` | > 0 for 5 min | P2 (High) |
 | Task Failure | `airflow.ti.finish.*.failed` | > 0 within 15 min | P2 (High) |
 | Pool Starvation | `airflow.pool.starving_tasks.default_pool` | > 0 for 10 min | P3 (Medium) |
@@ -101,7 +101,7 @@ Create these in **Monitors → New Monitor → Metric**:
 
 | Priority | Use For | Response Time |
 |----------|---------|---------------|
-| P1 (Critical) | Scheduler down — pipeline is completely blocked (see also [[sql-server-disk-full]] for disk-related critical alerts) | Immediate |
+| P1 (Critical) | Scheduler down — pipeline is completely blocked (see also sql server disk full for disk-related critical alerts) | Immediate |
 | P2 (High) | DAG parse errors, task failures — pipeline quality at risk | Within 30 min |
 | P3 (Medium) | Pool starvation, triggerer down, duration anomaly | Within 2 hours |
 | P4 (Low) | Queued duration spikes — performance degradation only | Next business day |

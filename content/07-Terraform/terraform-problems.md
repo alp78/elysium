@@ -2146,7 +2146,6 @@ terraform version  # Confirm: Terraform v1.9.8
 - [[tf-iam-secrets-serverless]] — IAM, secrets, serverless blocks
 - [[tf-data-services]] — BigQuery, Firestore, Dataflow blocks
 - [[github-actions-data-engineering]] — CI/CD for Terraform
-- [[on-call-guide]] — Incident response framework
 
 ---
 

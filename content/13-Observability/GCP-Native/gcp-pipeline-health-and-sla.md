@@ -1039,7 +1039,7 @@ gcloud compute ssh INSTANCE_NAME --zone=ZONE -- \
 
 ### On-Call Playbook
 
-When an SLA breach triggers a page, the responder should follow the [[on-call-guide]] for initial acknowledgement and escalation before diving into technical triage below.
+When an SLA breach triggers a page, the responder should follow the on call guide for initial acknowledgement and escalation before diving into technical triage below.
 
 #### First 5 minutes — Acknowledge and assess
 

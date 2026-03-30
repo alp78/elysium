@@ -52,16 +52,10 @@ status: complete
 | 13 | **Observability** | Datadog, GCP-native monitoring, data lineage, pipeline health | [[observability-index]] |
 | 14 | **Data Architecture** | Architectures, data modeling, pipeline patterns, APIs, decision frameworks | [[data-architecture-index]] |
 
-### Operations
+### Practice and Domain
 
 | # | Section | Description | Index |
 |---|---------|-------------|-------|
-| 15 | **Runbooks** | On-call guide, incident response, 10 operational runbooks | [[runbooks-index]] |
-
-### Domain and Practice
-
-| # | Section | Description | Index |
-|---|---------|-------------|-------|
-| 16 | **Engineering Practice** | Leadership, DataOps, data team organization, self-service platforms | [[engineering-practice-index]] |
-| 17 | **AI and Prompts** | Prompt engineering, model-specific patterns, LLM pipelines | [[ai-and-prompts-index]] |
+| 15 | **Engineering Practice** | Leadership, DataOps, data team organization, self-service platforms | [[engineering-practice-index]] |
+| 16 | **AI and Prompts** | Prompt engineering, model-specific patterns, LLM pipelines | [[ai-and-prompts-index]] |
 | 18 | **Financial Domain** | Metrics, scoring, financial encyclopedia, market analysis | [[financial-domain-index]] |

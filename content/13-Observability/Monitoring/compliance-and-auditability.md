@@ -1411,7 +1411,7 @@ CREATE TABLE dbo.bmr_complaints
 
 ### Restatement Decision Framework
 
-When an error is discovered in a published index level, the following process governs the response. The [[data-restatement-procedure]] provides the operational runbook that implements the framework below, including subscriber notification templates and approval workflows.
+When an error is discovered in a published index level, the following process governs the response. The data restatement procedure provides the operational runbook that implements the framework below, including subscriber notification templates and approval workflows.
 
 ```
 Error Discovered

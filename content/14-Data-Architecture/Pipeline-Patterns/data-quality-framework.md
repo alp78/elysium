@@ -158,7 +158,7 @@ Silver ([[medallion-architecture#Silver (Cleaned)]]) enforces business rules and
 Gold ([[medallion-architecture#Gold (Analytics)]]) is the last line of defense before data reaches clients, regulatory filings, and downstream systems.
 
 > [!danger] Gold is publication — treat every Gold check as a circuit breaker
-> If a quality gate at the Gold layer fails and the pipeline continues anyway (e.g., because the check was set to `severity: warn` instead of `error`), incorrect index values reach clients and regulatory filings. Gold-layer checks that affect publication integrity must ALWAYS halt the pipeline. See [[esg-circuit-breaker-fired]] for a real incident where this saved us.
+> If a quality gate at the Gold layer fails and the pipeline continues anyway (e.g., because the check was set to `severity: warn` instead of `error`), incorrect index values reach clients and regulatory filings. Gold-layer checks that affect publication integrity must ALWAYS halt the pipeline. See esg circuit breaker fired for a real incident where this saved us.
 
 > [!danger] Tier 1 — Critical (halt publication)
 > - Weights sum to 1.0: `ABS(SUM(weight) - 1.0) < 1e-9`
@@ -177,7 +177,7 @@ Gold ([[medallion-architecture#Gold (Analytics)]]) is the last line of defense b
 > - Publication timestamp later than typical
 
 - Weight validation: [[pit-integrity-logic#Validation: Weight Sum Check]]
-- Circuit breaker incident: [[esg-circuit-breaker-fired]]
+- Circuit breaker incident: esg circuit breaker fired
 - Store test failures for audit: [[dbt-testing-framework#dbt --store-failures]]
 
 ## Data Quality Tooling
