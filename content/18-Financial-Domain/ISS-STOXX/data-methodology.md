@@ -79,13 +79,14 @@ An API is the machine-to-machine doorway into a data provider's catalogue. STOXX
 
 ## B
 
+### Back-Testing
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="37 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 37</span>
+
 > [!quote]
 > "All models are wrong, but some are useful."
 > — **George Box**
 
-### Back-Testing
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="37 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 37</span>
 
 
 > The process of applying an index methodology retroactively to historical market data in order to simulate how the index would have performed prior to its official launch date.
@@ -132,13 +133,14 @@ Back-testing lets index providers and investors see what returns a newly designe
 
 ---
 
+### Benchmark Administration
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="30 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 30</span>
+
 > [!quote]
 > "A benchmark is only as trustworthy as the process behind it."
 > — **Andrew Bailey**
 
-### Benchmark Administration
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="30 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 30</span>
 
 
 > The totality of activities involved in the governance, determination, calculation, and dissemination of a financial benchmark, including oversight, methodology design, data collection, and stakeholder management.
@@ -188,13 +190,14 @@ Benchmark administration is the regulatory umbrella under which index providers 
 
 ---
 
+### Benchmark Statement
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="284 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 284</span>
+
 > [!quote]
 > "Clarity of purpose precedes quality of outcome."
 > — **Stephen Covey**
 
-### Benchmark Statement
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="284 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 284</span>
 
 
 > A public document required under the EU Benchmarks Regulation (BMR) that discloses the key elements of an index's methodology, its limitations, the circumstances under which its administrator would exercise discretion, and how it measures the underlying market or economic reality.
@@ -245,13 +248,14 @@ A benchmark statement is a regulatory compliance document, not a marketing facts
 
 ## C
 
+### Coverage Universe
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="127 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 127</span>
+
 > [!quote]
 > "The map is not the territory."
 > — **Alfred Korzybski**
 
-### Coverage Universe
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="127 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 127</span>
 
 
 > The total set of securities, entities, or data points that a data provider or index methodology considers eligible for inclusion before any screening, filtering, or weighting rules are applied.
@@ -298,13 +302,14 @@ Think of the coverage universe as the broadest possible "long list." For STOXX, 
 
 ---
 
+### Data Feed
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
+
 > [!quote]
 > "Data is the new oil, but like oil, it must be refined to be useful."
 > — **Clive Humby**
 
-### Data Feed
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
 
 
 > A continuous or scheduled electronic delivery of structured data — such as index levels, component weights, corporate actions, or ESG scores — from a provider to a consumer, typically via API, FTP, or a real-time streaming protocol.
@@ -352,13 +357,14 @@ Data feeds are the pipes through which institutional investors receive index and
 
 ---
 
+### Data Vendor
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="145 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 145</span>
+
 > [!quote]
 > "Data is the new oil. Like oil, it must be refined to create value."
 > — **Clive Humby**
 
-### Data Vendor
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="145 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 145</span>
 
 
 > A third-party firm that collects, aggregates, standardises, and redistributes financial, governance, or ESG data to institutional clients, often serving as an intermediary between primary data sources (exchanges, companies, regulators) and end users.
@@ -505,13 +511,14 @@ DataDesk is the primary self-service front end for ISS clients. Users can search
 
 ---
 
+### Disclosure Rate
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "What companies choose not to disclose can be as telling as what they reveal."
 > — **Robert Eccles**
 
-### Disclosure Rate
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > The percentage of companies within a given universe or index that voluntarily or mandatorily report a specific data point — such as carbon emissions, board-diversity statistics, or executive compensation details — as opposed to having that data estimated or imputed by the provider.
@@ -535,13 +542,14 @@ Disclosure rate is a key quality-of-data metric. A high disclosure rate means th
 
 ## E
 
+### Estimation Model
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "Prediction is very difficult, especially about the future."
 > — **Niels Bohr**
 
-### Estimation Model
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > A quantitative framework used by a data provider to infer, approximate, or impute a data point (such as carbon emissions or ESG metrics) when a company has not directly reported the figure.
@@ -616,13 +624,14 @@ Factsheets are the "business card" of an index. STOXX publishes monthly factshee
 
 ## H
 
+### Index Administrator
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
+
 > [!quote]
 > "Rules without a referee are merely suggestions."
 > — **Paul Volcker**
 
-### Index Administrator
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
 
 
 > The legal entity responsible for the governance, calculation, and publication of a financial benchmark or index, bearing regulatory accountability under frameworks such as the EU Benchmarks Regulation (BMR).
@@ -723,13 +732,14 @@ ISINs are the universal passport number for financial instruments. Every constit
 
 ## L
 
+### Oversight Function
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
+
 > [!quote]
 > "Quis custodiet ipsos custodes? -- Who watches the watchmen?"
 > — **Juvenal**
 
-### Oversight Function
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
 
 
 > An internal or independent committee established by a benchmark administrator to monitor and review all aspects of benchmark provision, including methodology integrity, data quality, conflict-of-interest management, and complaint handling, as required by the EU Benchmarks Regulation.
@@ -781,13 +791,14 @@ The oversight function is the governance watchdog inside an index provider. For 
 
 ## P
 
+### Point-in-Time Data
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
+
 > [!quote]
 > "In God we trust; all others bring data."
 > — **W. Edwards Deming**
 
-### Point-in-Time Data
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
 
 > Data that is stored and delivered exactly as it was known on a specific historical date, preserving the original values before any subsequent revisions, restatements, or corrections.
@@ -825,13 +836,14 @@ Point-in-time (PIT) databases are essential for unbiased back-testing. If a comp
 
 ## Q
 
+### Quality Assurance (Data)
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
+
 > [!quote]
 > "Quality is never an accident; it is always the result of intelligent effort."
 > — **John Ruskin**
 
-### Quality Assurance (Data)
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
 
 > The systematic processes, checks, and controls that a data provider applies to ensure accuracy, completeness, timeliness, and consistency of its datasets before publication or delivery to clients.
@@ -867,13 +879,14 @@ Quality assurance (QA) in the index and ESG data world encompasses automated val
 
 ## R
 
+### Restatement
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="291 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 291</span>
+
 > [!quote]
 > "Without data, you are just another person with an opinion."
 > — **W. Edwards Deming**
 
-### Restatement
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="291 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 291</span>
 
 
 > A revision to previously published data — such as financial figures, ESG metrics, or index values — issued by either the reporting company or the data provider to correct errors, reflect updated methodologies, or incorporate newly available information.
@@ -1017,13 +1030,14 @@ RICs are one of several vendor-specific codes that STOXX publishes for each inde
 
 ---
 
+### Rulebook
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="84 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 84</span>
+
 > [!quote]
 > "A good index is only as good as its rules."
 > — **John Tukey**
 
-### Rulebook
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="84 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 84</span>
 
 
 > The comprehensive, legally binding document published by an index administrator that specifies every aspect of an index's construction, maintenance, calculation, and governance — serving as the definitive methodology reference.

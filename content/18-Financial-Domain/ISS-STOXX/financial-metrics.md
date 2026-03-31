@@ -26,12 +26,13 @@ date: 2026-03-28
 
 ## A
 
-> [!quote]
-> "The only way to do great work is to love what you do." — Steve Jobs
-
 ### Active Return
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="51 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 51</span>
+
+> [!quote]
+> "The only way to do great work is to love what you do." — Steve Jobs
+
 
 
 > The difference between a portfolio's return and its benchmark return over a given period, representing the value added (or lost) by active management decisions.
@@ -83,13 +84,14 @@ $$
 
 ---
 
+### Alpha
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="189 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 189</span>
+
 > [!quote]
 > "The stock market is filled with individuals who know the price of everything, but the value of nothing."
 > — **Philip Fisher**
 
-### Alpha
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="189 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 189</span>
 
 
 > The excess return of a portfolio relative to the return predicted by the Capital Asset Pricing Model (CAPM), given the portfolio's systematic risk exposure (beta). Alpha isolates manager skill from market movement.
@@ -140,12 +142,13 @@ Where $R_f$ is the risk-free rate and $R_m$ is the market return.
 
 ---
 
-> [!quote]
-> "Compound interest is the eighth wonder of the world." — Albert Einstein (attributed)
-
 ### Annualized Return
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
+
+> [!quote]
+> "Compound interest is the eighth wonder of the world." — Albert Einstein (attributed)
+
 
 
 > The geometric average amount of money earned by an investment each year over a specified time period, compounding gains and losses into a single annual rate.
@@ -200,12 +203,13 @@ Where $n$ is the number of years in the holding period.
 
 ## B
 
-> [!quote]
-> "Beware of little expenses; a small leak will sink a great ship." — Benjamin Franklin
-
 ### Basis Point
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="456 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 456</span>
+
+> [!quote]
+> "Beware of little expenses; a small leak will sink a great ship." — Benjamin Franklin
+
 
 
 > One hundredth of one percentage point (0.01%), used to express small changes in interest rates, yields, spreads, and fund fees. 100 basis points equal 1 percentage point.
@@ -260,13 +264,14 @@ So a move from 2.50% to 3.00% is a change of 50 bp.
 
 ---
 
+### Beta
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="194 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 194</span>
+
 > [!quote]
 > "In the short run, the market is a voting machine; in the long run, it is a weighing machine."
 > — **Benjamin Graham**
 
-### Beta
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="194 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 194</span>
 
 
 > A measure of a security's or portfolio's systematic risk relative to the overall market. A beta of 1.0 indicates the asset moves in lockstep with the market; values above or below 1.0 indicate amplified or dampened sensitivity.
@@ -312,12 +317,13 @@ $$
 
 ---
 
-> [!quote]
-> "Price is what you pay. Value is what you get." — Warren Buffett
-
 ### Book-to-Price Ratio
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
+> [!quote]
+> "Price is what you pay. Value is what you get." — Warren Buffett
+
 
 
 > The ratio of a company's book value of equity to its market capitalisation. It is the inverse of the more commonly cited price-to-book ratio and is widely used as a value factor in index construction.
@@ -345,12 +351,13 @@ $$
 
 ## C
 
-> [!quote]
-> "Revenue is vanity, profit is sanity, but cash is king." — Anonymous
-
 ### Cash Flow Yield
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="26 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 26</span>
+
+> [!quote]
+> "Revenue is vanity, profit is sanity, but cash is king." — Anonymous
+
 
 
 > The ratio of operating cash flow per share to the current share price. It measures how much cash a business generates relative to its market valuation and is used as a value factor in index screening.
@@ -397,13 +404,14 @@ $$
 
 ---
 
+### Compound Annual Growth Rate (CAGR)
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
+
 > [!quote]
 > "Compound interest is the eighth wonder of the world."
 > — **Albert Einstein**
 
-### Compound Annual Growth Rate (CAGR)
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
 
 
 > The constant annual rate of return that would take an investment from its beginning value to its ending value over a specified period, assuming profits are reinvested. It smooths out year-to-year volatility into a single annualized figure.
@@ -458,13 +466,14 @@ Where $V_{\text{begin}}$ and $V_{\text{end}}$ are the starting and ending values
 
 ---
 
+### Correlation
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="305 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 305</span>
+
 > [!quote]
 > "Diversification is protection against ignorance."
 > — **Warren Buffett**
 
-### Correlation
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="305 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 305</span>
 
 
 > A statistical measure that quantifies the strength and direction of the linear relationship between two variables' returns, ranging from -1 (perfect negative) to +1 (perfect positive). A value of 0 indicates no linear relationship.
@@ -515,12 +524,13 @@ $$
 
 ---
 
-> [!quote]
-> "No man is an island, entire of itself." — John Donne
-
 ### Covariance
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="58 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 58</span>
+
+> [!quote]
+> "No man is an island, entire of itself." — John Donne
+
 
 
 > A measure of the joint variability of two random variables. In finance, it quantifies how the returns of two assets move together. Positive covariance means they tend to move in the same direction; negative means opposite directions.
@@ -571,12 +581,13 @@ $$
 
 ---
 
-> [!quote]
-> "A man who pays his bills on time is soon forgotten." — Oscar Wilde
-
 ### Current Ratio
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
+> [!quote]
+> "A man who pays his bills on time is soon forgotten." — Oscar Wilde
+
 
 
 > The ratio of a company's current assets to its current liabilities, measuring its ability to pay short-term obligations due within one year. It is a fundamental liquidity metric used in credit screening and quality factor construction.
@@ -610,12 +621,13 @@ $$
 
 ## D
 
-> [!quote]
-> "Neither a borrower nor a lender be." — William Shakespeare
-
 ### Debt-to-Equity Ratio
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="87 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 87</span>
+
+> [!quote]
+> "Neither a borrower nor a lender be." — William Shakespeare
+
 
 
 > The ratio of a company's total debt to its total shareholders' equity. It measures financial leverage, indicating how much of the company's capital structure is financed by creditors versus owners.
@@ -667,13 +679,14 @@ $$
 
 ---
 
+### Dividend Yield
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="755 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 755</span>
+
 > [!quote]
 > "Do you know the only thing that gives me pleasure? It's to see my dividends coming in."
 > — **John D. Rockefeller**
 
-### Dividend Yield
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="755 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 755</span>
 
 
 > The annual dividends paid per share divided by the share price, expressed as a percentage. In index methodology, it typically refers to the indicated (forward-looking) annual dividend.
@@ -724,12 +737,13 @@ $$
 
 ---
 
-> [!quote]
-> "Time is the most valuable thing a man can spend." — Theophrastus
-
 ### Duration (Bond)
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="892 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 892</span>
+
+> [!quote]
+> "Time is the most valuable thing a man can spend." — Theophrastus
+
 
 
 > A measure of the sensitivity of a bond's price to changes in interest rates, expressed in years. Modified duration estimates the percentage price change for a 1% change in yield; Macaulay duration is the weighted average time to receive the bond's cash flows.
@@ -784,13 +798,14 @@ Where $C_t$ is the cash flow at time $t$ and $y$ is the yield to maturity.
 
 ---
 
+### Drawdown
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="59 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 59</span>
+
 > [!quote]
 > "The first rule of investment is don't lose, and the second rule is don't forget the first rule."
 > — **Warren Buffett**
 
-### Drawdown
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="59 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 59</span>
 
 
 > The peak-to-trough decline of an investment or index, measured from the highest value to the subsequent lowest value before a new peak is established. Drawdown is expressed as a percentage loss.
@@ -844,13 +859,14 @@ Where $V(t)$ is the value at time $t$ and $V_{\text{peak}}$ is the highest value
 
 ## E
 
+### Earnings Per Share (EPS)
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="77 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 77</span>
+
 > [!quote]
 > "Earnings can be as pliable as putty when a charlatan heads the company reporting them."
 > — **Warren Buffett**
 
-### Earnings Per Share (EPS)
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="77 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 77</span>
 
 
 > The portion of a company's net income allocated to each outstanding share of common stock. It is the most widely used single measure of corporate profitability and serves as the denominator of the P/E ratio.
@@ -901,12 +917,13 @@ $$
 
 ---
 
-> [!quote]
-> "Earnings are the lifeblood of every enterprise." — Anonymous
-
 ### Earnings Yield
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="31 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 31</span>
+
+> [!quote]
+> "Earnings are the lifeblood of every enterprise." — Anonymous
+
 
 
 > The ratio of earnings per share to the current share price, equivalent to the inverse of the price-to-earnings ratio. Used as a value factor in STOXX and ISS index construction.
@@ -956,12 +973,13 @@ $$
 
 ---
 
-> [!quote]
-> "EBITDA makes even a lemonade stand look like a Fortune 500 company." — Charlie Munger (paraphrased)
-
 ### EBITDA
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="52 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 52</span>
+
+> [!quote]
+> "EBITDA makes even a lemonade stand look like a Fortune 500 company." — Charlie Munger (paraphrased)
+
 
 
 > Earnings Before Interest, Taxes, Depreciation, and Amortization. A proxy for a company's operating cash flow that strips out financing decisions, tax jurisdiction effects, and non-cash accounting charges, enabling comparisons across firms with different capital structures.
@@ -1015,12 +1033,13 @@ $$
 
 ---
 
-> [!quote]
-> "It is not enough to be busy. The question is: what are we busy about?" — Henry David Thoreau
-
 ### Economic Value Added (EVA)
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="56 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 56</span>
+
+> [!quote]
+> "It is not enough to be busy. The question is: what are we busy about?" — Henry David Thoreau
+
 
 
 > A proprietary measure of a company's financial performance defined as after-tax operating profit minus a charge for the capital employed to generate that profit. EVA quantifies whether a firm is creating or destroying shareholder value.
@@ -1126,13 +1145,14 @@ $$
 
 ---
 
+### Equity Risk Premium
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
 > [!quote]
 > "The equity premium is the most important number in finance."
 > — **Rajnish Mehra**
 
-### Equity Risk Premium
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
 
 > The expected return of the broad equity market in excess of the risk-free rate. It represents the additional compensation investors demand for bearing systematic market risk.
@@ -1163,12 +1183,13 @@ $$
 
 ---
 
-> [!quote]
-> "The price of anything is the amount of life you exchange for it." — Henry David Thoreau
-
 ### Enterprise Value (EV)
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="84 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 84</span>
+
+> [!quote]
+> "The price of anything is the amount of life you exchange for it." — Henry David Thoreau
+
 
 
 > The total value of a company as seen by all capital providers -- equity holders, debt holders, and minority interests -- minus cash and equivalents. It represents the theoretical takeover price and is the numerator in capital-structure-neutral valuation multiples like EV/EBITDA.
@@ -1220,13 +1241,14 @@ $$
 
 ## F
 
+### Factor Exposure
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="292 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 292</span>
+
 > [!quote]
 > "Returns are driven by systematic exposure to compensated risk factors."
 > — **Eugene Fama**
 
-### Factor Exposure
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="292 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 292</span>
 
 
 > The sensitivity of a portfolio or index to a specific systematic return driver (factor) such as value, momentum, size, or volatility. Measured as the loading coefficient in a factor regression model.
@@ -1280,12 +1302,13 @@ Where $\beta_{ik}$ is the exposure of asset $i$ to factor $k$, and $F_k$ is the 
 
 ---
 
-> [!quote]
-> "There is nothing so practical as a good theory." — Kurt Lewin
-
 ### Factor Return
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="26 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 26</span>
+
+> [!quote]
+> "There is nothing so practical as a good theory." — Kurt Lewin
+
 
 
 > The return attributable to a specific systematic factor over a given period. It represents the payoff to a long-short portfolio that is long stocks with high exposure to the factor and short stocks with low exposure.
@@ -1338,12 +1361,13 @@ $$
 
 ---
 
-> [!quote]
-> "Cash flow is a fact; profit is an opinion." — Alfred Rappaport
-
 ### Free Cash Flow (FCF)
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
+
+> [!quote]
+> "Cash flow is a fact; profit is an opinion." — Alfred Rappaport
+
 
 
 > The cash generated by a company's operations after deducting capital expenditures necessary to maintain or expand its asset base. FCF represents the cash available to pay dividends, reduce debt, buy back shares, or fund acquisitions.
@@ -1397,12 +1421,13 @@ $$
 
 ## G
 
-> [!quote]
-> "A penny saved is a penny earned." — Benjamin Franklin
-
 ### Gross Margin
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
+
+> [!quote]
+> "A penny saved is a penny earned." — Benjamin Franklin
+
 
 
 > The percentage of revenue remaining after subtracting the cost of goods sold (COGS). It measures how efficiently a company converts raw materials and direct labour into revenue before operating expenses.
@@ -1435,12 +1460,13 @@ $$
 
 ---
 
-> [!quote]
-> "Profitability is coming from productivity, efficiency, management, austerity, and the way to manage the business." — Carlos Slim
-
 ### Gross Profitability
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="22 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 22</span>
+
+> [!quote]
+> "Profitability is coming from productivity, efficiency, management, austerity, and the way to manage the business." — Carlos Slim
+
 
 
 > The ratio of gross profit (revenue minus cost of goods sold) to total assets. Introduced by Novy-Marx (2013) as a quality factor, it measures how efficiently a firm converts its asset base into profit before overhead costs.
@@ -1491,12 +1517,13 @@ $$
 
 ---
 
-> [!quote]
-> "What you keep after taxes and fees matters more than what you earn before them." — Anonymous
-
 ### Gross Return
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="687 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 687</span>
+
+> [!quote]
+> "What you keep after taxes and fees matters more than what you earn before them." — Anonymous
+
 
 
 > The total return of an index calculated assuming dividends are reinvested at the gross amount, before any withholding tax is deducted. This represents the theoretical maximum return for a tax-exempt investor.
@@ -1548,13 +1575,14 @@ $$
 
 ## I
 
+### Information Ratio
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
+
 > [!quote]
 > "The information ratio is the key measure of a portfolio manager's skill."
 > — **Richard Grinold**
 
-### Information Ratio
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
 
 
 > The ratio of a portfolio's active return to its tracking error. It measures the consistency with which a manager outperforms the benchmark per unit of active risk taken.
@@ -1640,13 +1668,14 @@ Where $n_i$ is the number of shares of constituent $i$ and $p_{i,t}$ is its pric
 
 ## M
 
+### Maximum Drawdown
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
+
 > [!quote]
 > "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1."
 > — **Warren Buffett**
 
-### Maximum Drawdown
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
 
 > The largest peak-to-trough decline observed over a specified time period. It quantifies the worst-case loss scenario an investor would have experienced.
@@ -1696,13 +1725,14 @@ $$
 
 ---
 
+### Momentum (Price Momentum)
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="687 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 687</span>
+
 > [!quote]
 > "The trend is your friend until the end when it bends."
 > — **Ed Seykota**
 
-### Momentum (Price Momentum)
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="687 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 687</span>
 
 
 > The tendency of securities that have performed well (poorly) over a recent period to continue performing well (poorly) in the near future. In index construction, momentum is typically measured as the total return over the past 6 to 12 months, often excluding the most recent month.
@@ -1756,12 +1786,13 @@ Commonly using a 12-month lookback with a 1-month skip.
 
 ## N
 
-> [!quote]
-> "It is not what you earn but what you keep that determines your wealth." — Anonymous
-
 ### Net Return
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="447 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 447</span>
+
+> [!quote]
+> "It is not what you earn but what you keep that determines your wealth." — Anonymous
+
 
 
 > The total return of an index calculated by reinvesting dividends after deducting the maximum applicable withholding tax rate for non-resident institutional investors. It provides a more realistic return measure for cross-border investors.
@@ -1816,12 +1847,13 @@ Where $\tau_i$ is the applicable withholding tax rate for constituent $i$.
 
 ---
 
-> [!quote]
-> "The bottom line is the bottom line." — Anonymous
-
 ### Net Income
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="73 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 73</span>
+
+> [!quote]
+> "The bottom line is the bottom line." — Anonymous
+
 
 
 > The total profit of a company after all expenses, taxes, interest, and depreciation have been subtracted from revenue. It is the "bottom line" of the income statement and the starting point for EPS calculation.
@@ -1874,12 +1906,13 @@ $$
 
 ---
 
-> [!quote]
-> "Efficiency is doing things right; effectiveness is doing the right things." — Peter Drucker
-
 ### Operating Margin
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
+> [!quote]
+> "Efficiency is doing things right; effectiveness is doing the right things." — Peter Drucker
+
 
 
 > The ratio of operating income (revenue minus operating expenses) to revenue, expressed as a percentage. It measures the proportion of revenue left after covering the costs of production and day-to-day operations, but before interest and taxes.
@@ -1907,12 +1940,13 @@ $$
 
 ## P
 
-> [!quote]
-> "Growth at a reasonable price is the investor's holy grail." — Peter Lynch (paraphrased)
-
 ### PEG Ratio
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
+> [!quote]
+> "Growth at a reasonable price is the investor's holy grail." — Peter Lynch (paraphrased)
+
 
 
 > The price-to-earnings ratio divided by the expected earnings growth rate. It adjusts the P/E ratio for growth, helping investors determine whether a stock's valuation is justified by its earnings growth trajectory.
@@ -1938,13 +1972,14 @@ $$
 
 ---
 
+### Price-to-Earnings Ratio
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
 > [!quote]
 > "Buy a stock the way you would buy a house — understand and like it before you put your money in."
 > — **Peter Lynch**
 
-### Price-to-Earnings Ratio
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
 
 > The ratio of a company's current share price to its earnings per share (EPS). It indicates how much investors are willing to pay for each unit of earnings and is a primary valuation metric in STOXX value and growth index classification.
@@ -1978,13 +2013,14 @@ $$
 
 ## R
 
+### Realized Volatility
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="24 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 24</span>
+
 > [!quote]
 > "Volatility is the price of admission for long-term returns."
 > — **Nick Murray**
 
-### Realized Volatility
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="24 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 24</span>
 
 
 > The actual historical volatility of an asset or index, computed as the standard deviation of returns over a past observation window. It is distinguished from implied volatility, which is forward-looking and derived from options prices.
@@ -2037,12 +2073,13 @@ Where $r_t$ are daily log returns and 252 is the standard annualization factor.
 
 ---
 
-> [!quote]
-> "Do more with less." — Anonymous
-
 ### Return on Assets (ROA)
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="13 mentions across STOXX & ISS pages (low)">▰▰ 13</span>
+
+> [!quote]
+> "Do more with less." — Anonymous
+
 
 
 > The ratio of net income to total assets, measuring how efficiently a company uses its entire asset base to generate profit. It is a key profitability metric in quality factor screening.
@@ -2094,13 +2131,14 @@ $$
 
 ---
 
+### Return on Equity (ROE)
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="63 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 63</span>
+
 > [!quote]
 > "A truly great business must have an enduring moat that protects excellent returns on invested capital."
 > — **Warren Buffett**
 
-### Return on Equity (ROE)
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="63 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 63</span>
 
 
 > The ratio of net income to shareholders' equity, measuring how effectively a company generates profit from the money shareholders have invested. It is one of the most watched profitability metrics in equity analysis.
@@ -2152,12 +2190,13 @@ $$
 
 ---
 
-> [!quote]
-> "Nothing happens until someone sells something." — Peter Drucker (attributed)
-
 ### Revenue
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3,843 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 3,843</span>
+
+> [!quote]
+> "Nothing happens until someone sells something." — Peter Drucker (attributed)
+
 
 
 > The total amount of income generated by the sale of goods or services related to a company's primary operations, before any expenses are deducted. Also referred to as "top line" or "sales."
@@ -2209,13 +2248,14 @@ $$
 
 ---
 
+### Risk-Adjusted Return
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="35 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 35</span>
+
 > [!quote]
 > "The essence of investment management is the management of risks, not the management of returns."
 > — **Benjamin Graham**
 
-### Risk-Adjusted Return
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="35 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 35</span>
 
 
 > A return metric that accounts for the amount of risk taken to achieve it. Common expressions include the Sharpe ratio, Sortino ratio, and information ratio.
@@ -2269,12 +2309,13 @@ This is the general form (Sharpe ratio). Alternative specifications replace $\si
 
 ---
 
-> [!quote]
-> "There is no such thing as a risk-free investment, only a risk-free rate of return." — Anonymous
-
 ### Risk-Free Rate
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="27 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 27</span>
+
+> [!quote]
+> "There is no such thing as a risk-free investment, only a risk-free rate of return." — Anonymous
+
 
 
 > The theoretical rate of return on an investment with zero risk of financial loss, typically proxied by the yield on short-term government securities such as U.S. Treasury bills or German Bunds. It serves as the baseline against which all risky investments are measured.
@@ -2327,13 +2368,14 @@ $$
 
 ---
 
+### Sharpe Ratio
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="60 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 60</span>
+
 > [!quote]
 > "The reward-to-variability ratio provides a single measure combining both risk and return."
 > — **William Sharpe**
 
-### Sharpe Ratio
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="60 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 60</span>
 
 
 > The ratio of a portfolio's excess return over the risk-free rate to its total standard deviation. Developed by William Sharpe, it is the most widely used measure of risk-adjusted performance.
@@ -2382,13 +2424,14 @@ $$
 
 ---
 
+### Standard Deviation
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="300 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 300</span>
+
 > [!quote]
 > "What gets measured gets managed."
 > — **Peter Drucker**
 
-### Standard Deviation
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="300 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 300</span>
 
 
 > A statistical measure of the dispersion of returns around their mean. In finance, it serves as the primary measure of total risk (volatility).
@@ -2439,12 +2482,13 @@ $$
 
 ---
 
-> [!quote]
-> "The spread tells you the market's level of fear." — Anonymous
-
 ### Spread (Credit)
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="752 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 752</span>
+
+> [!quote]
+> "The spread tells you the market's level of fear." — Anonymous
+
 
 
 > The difference in yield between a corporate bond (or other credit instrument) and a risk-free government bond of comparable maturity. It compensates the investor for default risk, liquidity risk, and other credit-related uncertainties.
@@ -2498,12 +2542,13 @@ Typically expressed in basis points.
 
 ## T
 
-> [!quote]
-> "Never count just the dividends or just the price. Count everything." — Anonymous
-
 ### Total Return
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="334 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 334</span>
+
+> [!quote]
+> "Never count just the dividends or just the price. Count everything." — Anonymous
+
 
 
 > The complete return on an investment including both price appreciation and income from dividends or interest, assuming all distributions are reinvested. STOXX publishes total return indices in both gross and net variants.
@@ -2553,12 +2598,13 @@ Where $P_t$ is the price at time $t$ and $D_t$ is the dividend received.
 
 ---
 
-> [!quote]
-> "Trust, but verify." — Ronald Reagan
-
 ### Tracking Error
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="501 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 501</span>
+
+> [!quote]
+> "Trust, but verify." — Ronald Reagan
+
 
 
 > The standard deviation of the difference between a portfolio's returns and its benchmark's returns. It measures the consistency of a portfolio's deviation from its benchmark, also known as active risk.
@@ -2610,12 +2656,13 @@ $$
 
 ---
 
-> [!quote]
-> "Costs eat returns the way termites eat wood: slowly, silently, and from within." — John C. Bogle (paraphrased)
-
 ### Turnover
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="668 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 668</span>
+
+> [!quote]
+> "Costs eat returns the way termites eat wood: slowly, silently, and from within." — John C. Bogle (paraphrased)
+
 
 
 > In index methodology, the proportion of an index's weight that changes at each rebalancing, reflecting the cost of maintaining the portfolio. It is typically expressed as one-way turnover (the sum of additions or deletions, not both).
@@ -2668,13 +2715,14 @@ $$
 
 ## V
 
+### Value at Risk (VaR)
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="45 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 45</span>
+
 > [!quote]
 > "The problem with VaR is that it tells you nothing about what happens in the tail."
 > — **Nassim Nicholas Taleb**
 
-### Value at Risk (VaR)
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="45 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 45</span>
 
 
 > The maximum expected loss of a portfolio over a specified time horizon at a given confidence level. For example, a one-day 95% VaR of $1 million means there is a 5% probability of losing more than $1 million in a single day.
@@ -2733,13 +2781,14 @@ Where $z_{\alpha}$ is the z-score at confidence level $\alpha$.
 
 ---
 
+### Volatility
+
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,756 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,756</span>
+
 > [!quote]
 > "Uncertainty is the only certainty there is."
 > — **John Allen Paulos**
 
-### Volatility
-
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,756 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,756</span>
 
 
 > A general term for the degree of variation in a trading price series over time. In quantitative finance, it is most commonly measured as the annualized standard deviation of returns.
@@ -2791,12 +2840,13 @@ $$
 
 ## W
 
-> [!quote]
-> "Not all things are created equal, nor should they be counted equally." — Anonymous
-
 ### Weighted Average
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="165 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 165</span>
+
+> [!quote]
+> "Not all things are created equal, nor should they be counted equally." — Anonymous
+
 
 
 > A calculation in which each constituent's value is multiplied by its index weight before summation, producing an aggregate that reflects the relative importance of each component. Used extensively in index-level statistics such as weighted-average P/E, dividend yield, and market capitalisation.
@@ -2850,13 +2900,14 @@ $$
 
 ## Y
 
+### Yield Curve
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
+
 > [!quote]
 > "Interest rates are to asset prices what gravity is to the apple."
 > — **Warren Buffett**
 
-### Yield Curve
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
 
 
 > A graphical representation of the relationship between bond yields and their maturities, typically for government securities. A normal (upward-sloping) curve indicates that longer-term bonds pay higher yields; an inverted curve, where short-term rates exceed long-term rates, has historically been a recession predictor.

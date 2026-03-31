@@ -22,11 +22,12 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 ---
 
+## Asset-Backed Lending
+
 > [!quote]
 > "The art of lending is in the collateral, not the borrower's charm."
 > — **J.P. Morgan**
 
-## Asset-Backed Lending
 
 **Definition:** Asset-backed lending is a form of financing in which loans are secured by collateral in the form of assets such as inventory, accounts receivable, equipment, or real estate. If the borrower defaults, the lender can seize and sell the pledged assets to recover the loan amount. This type of lending is common in commercial and corporate finance, where businesses pledge their assets to obtain credit at more favorable terms than unsecured borrowing would allow. It reduces risk for lenders and provides borrowers with access to capital they might not otherwise qualify for.
 
@@ -38,11 +39,12 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 ---
 
+## Collateral
+
 > [!quote]
 > "A banker is a fellow who lends you his umbrella when the sun is shining, but wants it back the minute it begins to rain."
 > — **Mark Twain**
 
-## Collateral
 
 **Definition:** Collateral is an asset or property pledged by a borrower to a lender as security for a loan. If the borrower fails to repay the loan according to the agreed terms, the lender has the right to seize the collateral to recover its losses. Collateral reduces the risk for the lender and often enables borrowers to obtain loans at lower interest rates or in larger amounts than would be available for unsecured lending. Common forms of collateral include real estate, vehicles, securities, inventory, and accounts receivable.
 
@@ -54,11 +56,12 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 ---
 
+## Export Credit Agency Finance
+
 > [!quote]
 > "Trade cannot flourish without trust — and export credit agencies provide that trust."
 > — **Karin Finkelston**
 
-## Export Credit Agency Finance
 
 **Definition:** Export credit agency (ECA) finance involves loans, guarantees, or insurance provided or supported by government-backed export credit agencies to facilitate international trade. ECAs help domestic companies sell goods and services to foreign buyers by reducing the payment risk associated with cross-border transactions. This is particularly important for large, capital-intensive projects such as infrastructure, aircraft purchases, and energy installations, where the foreign buyer may have difficulty obtaining financing from commercial lenders.
 
@@ -70,11 +73,12 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 ---
 
+## Factoring
+
 > [!quote]
 > "Cash flow, not profit, determines whether a business survives."
 > — **Peter Drucker**
 
-## Factoring
 
 **Definition:** Factoring is a financial transaction in which a business sells its accounts receivable (invoices) to a third party (a factor) at a discount in exchange for immediate cash. This allows the business to receive funds quickly rather than waiting 30, 60, or 90 days for customers to pay their invoices. The factor then collects the payments from the customers. Factoring improves cash flow for businesses, particularly small and medium enterprises that may not have access to traditional bank credit lines. It can be structured as recourse (the seller bears the risk of non-payment) or non-recourse (the factor absorbs the risk).
 
@@ -86,11 +90,12 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 ---
 
+## Loan Syndication
+
 > [!quote]
 > "No single bank should bear a risk so large that its failure would threaten the system."
 > — **Paul Volcker**
 
-## Loan Syndication
 
 **Definition:** Loan syndication is the process of arranging a loan that is funded by a group (syndicate) of lenders rather than a single lender. One bank (the lead arranger or bookrunner) organizes the syndicate, negotiates the terms with the borrower, and distributes portions of the loan to participating banks. Syndication allows banks to share the risk of very large loans that would be too large or risky for any single bank to hold on its balance sheet. It also provides borrowers with access to larger amounts of capital than any individual bank might be willing to lend.
 
@@ -102,11 +107,12 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 ---
 
+## Non-Performing Loan
+
 > [!quote]
 > "It is not the borrower who pays the price of a bad loan, but the lender who made it."
 > — **Charles P. Kindleberger**
 
-## Non-Performing Loan
 
 **Definition:** A non-performing loan (NPL) is a bank loan where the borrower has stopped making scheduled interest or principal payments, typically for 90 days or more. NPLs represent credit risk materialized: the bank has lent money that it may not fully recover. High levels of NPLs strain bank capital, reduce lending capacity, and can threaten financial stability. Banks manage NPLs through workout units, loan modifications, sale to distressed debt investors, or write-offs. NPL ratios are closely monitored by bank regulators as indicators of credit quality and financial health.
 
@@ -130,11 +136,12 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 ---
 
+## Project Finance
+
 > [!quote]
 > "Project finance lends against the future cash flow of the project, not the balance sheet of the sponsors."
 > — **Benjamin Esty**
 
-## Project Finance
 
 **Definition:** Project finance is a method of funding large-scale infrastructure, industrial, and public service projects where the lenders look primarily to the cash flows generated by the project as the source of loan repayment and where the project's assets serve as collateral. Unlike corporate finance, project finance is structured so that the project operates as a separate legal entity (special purpose vehicle), and lenders have limited or no recourse to the project sponsors' other assets. This structure is commonly used for power plants, pipelines, toll roads, airports, telecommunications networks, and mining operations.
 
@@ -146,11 +153,12 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 ---
 
+## Securitization
+
 > [!quote]
 > "Securitization was a great idea that was badly abused."
 > — **Lewis Ranieri**
 
-## Securitization
 
 **Definition:** Securitization is the financial process of pooling various types of contractual debt -- such as mortgages, auto loans, credit card receivables, or student loans -- and selling the consolidated cash flows as securities (known as asset-backed securities or mortgage-backed securities) to investors. Securitization allows the originating bank or lender to remove the loans from its balance sheet, freeing up capital to make new loans. Investors in the securities receive regular payments from the underlying loan pool. This process improves liquidity in the financial system but introduces complexity and counterparty risk.
 
@@ -162,11 +170,12 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 ---
 
+## Structured Finance
+
 > [!quote]
 > "Financial engineering is about creating structures that allocate risk to those best able to bear it."
 > — **Robert Merton**
 
-## Structured Finance
 
 **Definition:** Structured finance refers to complex financial instruments and arrangements designed to meet specific risk-return objectives that cannot be achieved through conventional financing methods. Structured finance products include asset-backed securities, mortgage-backed securities, collateralized debt obligations, collateralized loan obligations, and synthetic structures. These instruments typically involve pooling assets, tranching (creating layers of risk), and credit enhancement. Structured finance is used to fund large projects, manage risk, and provide financing to entities that may not qualify for traditional bank loans.
 
@@ -188,11 +197,12 @@ Syndicated loans are loans arranged through the loan syndication process: a grou
 
 ---
 
+## Trade Finance
+
 > [!quote]
 > "A letter of credit is the lifeblood of international commerce."
 > — **Jack Aron**
 
-## Trade Finance
 
 **Definition:** Trade finance refers to the financial instruments and products used by companies to facilitate international and domestic trade and commerce. It helps manage the risks inherent in cross-border transactions where the buyer and seller may not know each other and operate under different legal systems. Common trade finance products include letters of credit (bank guarantees of payment), documentary collections, trade credit insurance, factoring, forfaiting, and supply chain finance. Trade finance is essential for enabling global commerce by bridging the trust and timing gaps between trading partners.
 
@@ -204,11 +214,12 @@ Syndicated loans are loans arranged through the loan syndication process: a grou
 
 ---
 
+## Warehouse Financing
+
 > [!quote]
 > "The revolving credit line is the engine of origination — without it, new loans would stop."
 > — **Lewis Ranieri**
 
-## Warehouse Financing
 
 **Definition:** Warehouse financing (also called warehouse lending) is a type of revolving credit facility where a lender provides short-term funding to a loan originator, using the underlying loans as collateral. The originator "warehouses" the loans in this facility until they can be sold or securitized. Warehouse financing is crucial for non-bank lenders and mortgage companies that need capital to originate new loans before selling them to investors. The facility provides the working capital needed to continue lending while managing balance sheet constraints.
 

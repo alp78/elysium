@@ -21,11 +21,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## Biosimilars
+
 > [!quote]
 > "Biosimilars will do for biologics what generics did for small-molecule drugs."
 > — **Leah Christl**
 
-## Biosimilars
 
 **Definition:** Biosimilars are biological medical products that are highly similar to an already approved reference biologic drug, with no clinically meaningful differences in terms of safety, purity, or potency. Unlike generic versions of small-molecule drugs, biosimilars cannot be exact copies because biological drugs are made from living organisms and are structurally complex. The development and approval of biosimilars requires extensive comparative analytical, preclinical, and clinical studies to demonstrate similarity to the reference product. Biosimilars offer more affordable alternatives to expensive biologic therapies.
 
@@ -37,11 +38,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## CDMO (Contract Development and Manufacturing Organization)
+
 > [!quote]
 > "Not every innovator needs to be a manufacturer — the best ideas can be built by the best builders."
 > — **Chris Chen**
 
-## CDMO (Contract Development and Manufacturing Organization)
 
 **Definition:** A CDMO is a company that provides comprehensive services for the development and manufacturing of pharmaceutical and biopharmaceutical products on a contract basis. CDMOs support drug companies by handling some or all of the steps needed to bring a drug from development through to large-scale commercial production. They offer expertise in process development, formulation, analytical testing, clinical trial material manufacturing, and commercial-scale production. Using a CDMO allows pharmaceutical companies to avoid the enormous capital costs of building their own manufacturing facilities.
 
@@ -53,11 +55,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## Clinical Trials
+
 > [!quote]
 > "Without clinical trials, there can be no better treatments, no prevention strategies, and no cures."
 > — **Janet Woodcock**
 
-## Clinical Trials
 
 **Definition:** Clinical trials are research studies performed on human volunteers to evaluate the safety and efficacy of new medical treatments, drugs, devices, or diagnostic procedures. They follow a rigorous multi-phase process: Phase I tests safety and dosing on a small group; Phase II evaluates efficacy and side effects on a larger group; Phase III confirms effectiveness on large populations and monitors adverse reactions; and Phase IV occurs after regulatory approval to monitor long-term effects. Clinical trials are essential for obtaining regulatory approval from agencies such as the FDA (US) or EMA (Europe) before a new treatment can be marketed.
 
@@ -69,11 +72,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## FDA Approval
+
 > [!quote]
 > "The FDA is the gatekeeper between science and the patient — its approval is the final exam."
 > — **Margaret Hamburg**
 
-## FDA Approval
 
 **Definition:** FDA approval refers to the authorization granted by the U.S. Food and Drug Administration for a drug, biologic, medical device, or other regulated product to be marketed and sold in the United States. The FDA evaluates scientific data from clinical trials to determine whether a product's benefits outweigh its risks. For drugs, the approval process involves review of a New Drug Application (NDA) or Biologics License Application (BLA) and typically takes 10-12 months following submission. FDA approval is a critical milestone for pharmaceutical companies as it unlocks access to the world's largest pharmaceutical market.
 
@@ -85,11 +89,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## Generic Drugs
+
 > [!quote]
 > "Generic drugs are one of the greatest success stories in public health."
 > — **Scott Gottlieb**
 
-## Generic Drugs
 
 **Definition:** Generic drugs are pharmaceutical products that are equivalent to brand-name drugs in dosage form, strength, route of administration, quality, performance, and intended use. They are manufactured and sold after the brand-name drug's patent protection has expired, allowing other manufacturers to produce and sell the same formulation at significantly lower prices. Generic drugs must meet the same regulatory standards as brand-name drugs and undergo abbreviated approval processes to demonstrate bioequivalence. They play a crucial role in making healthcare more affordable and accessible.
 
@@ -101,11 +106,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## In-Licensing Agreement
+
 > [!quote]
 > "You do not need to invent everything yourself — the smartest companies know when to license from others."
 > — **Henry Chesbrough**
 
-## In-Licensing Agreement
 
 **Definition:** An in-licensing agreement is a contractual arrangement in which a company acquires the rights to develop, manufacture, or sell a product, technology, or intellectual property from another company. This is common in the pharmaceutical and technology industries, where one company may have discovered a promising drug or technology but lacks the resources, manufacturing capabilities, or market access to bring it to market. The licensee typically pays upfront fees, milestone payments, and royalties on future sales to the licensor.
 
@@ -117,11 +123,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## Intellectual Property (IP)
+
 > [!quote]
 > "Intellectual property is the oil of the 21st century."
 > — **Mark Getty**
 
-## Intellectual Property (IP)
 
 **Definition:** Intellectual property refers to creations of the mind that are legally protected from unauthorized use by others. IP includes patents (protecting inventions), trademarks (protecting brand names and logos), copyrights (protecting creative works), and trade secrets (protecting confidential business information). IP protection incentivizes innovation by granting creators exclusive rights to use and commercialize their inventions and creations for a specified period. In the business world, IP can represent significant value, forming the basis for licensing agreements, royalties, and competitive advantage.
 
@@ -133,11 +140,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## Medical Devices
+
 > [!quote]
 > "Technology is nothing. What's important is that you have faith in people, that they're basically good and smart, and if you give them tools, they'll do wonderful things with them."
 > — **Steve Jobs**
 
-## Medical Devices
 
 **Definition:** Medical devices are instruments, apparatus, machines, implants, or diagnostic tools used in the diagnosis, prevention, monitoring, or treatment of medical conditions. The medical device industry ranges from simple products like bandages and syringes to complex technologies like MRI scanners, robotic surgical systems, and implantable cardiac devices. Medical devices must meet stringent regulatory requirements and undergo rigorous testing before they can be marketed. The industry is characterized by continuous innovation, high barriers to entry, and strong intellectual property protection.
 
@@ -149,11 +157,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## Out-Licensing
+
 > [!quote]
 > "Open innovation means your most valuable ideas may reach patients faster through someone else's hands."
 > — **Henry Chesbrough**
 
-## Out-Licensing
 
 **Definition:** Out-licensing is the process by which a company grants the rights to its intellectual property, technology, or product to another company for development, manufacturing, or commercialization. The licensor typically receives upfront payments, milestone payments, and ongoing royalties. Out-licensing is common in the pharmaceutical industry, where a company that has developed a promising drug candidate may not have the resources or geographic reach to commercialize it globally, so it licenses the rights for specific markets or indications to a larger partner.
 
@@ -165,11 +174,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## Patent
+
 > [!quote]
 > "The patent system added the fuel of interest to the fire of genius."
 > — **Abraham Lincoln**
 
-## Patent
 
 **Definition:** A patent is a legal right granted by a government to an inventor, giving the inventor exclusive rights to make, use, sell, and license their invention for a specific period (typically 20 years from the filing date). Patents protect novel, non-obvious, and useful inventions, including products, processes, and technologies. In exchange for the exclusive rights, the inventor must publicly disclose the details of the invention, enabling others to build on the knowledge after the patent expires. Patents are particularly important in the pharmaceutical, technology, and manufacturing industries.
 
@@ -181,11 +191,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## Recombinant Therapies
+
 > [!quote]
 > "Genetic engineering will transform medicine more profoundly than any technology since antibiotics."
 > — **Paul Berg**
 
-## Recombinant Therapies
 
 **Definition:** Recombinant therapies are medical treatments derived from recombinant DNA technology, in which genetic material from different sources is combined to create new genetic sequences. This technology is used to produce proteins, hormones, and other biological molecules in large quantities for therapeutic use. Common examples include recombinant insulin for diabetes, recombinant growth hormone, and recombinant clotting factors for hemophilia. Recombinant technology has enabled the production of purer, more consistent, and more scalable biological therapies than those derived from natural sources.
 
@@ -209,11 +220,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## Aftermarket
+
 > [!quote]
 > "The sale of the product is just the beginning — the real relationship is built through service."
 > — **Harvey Mackay**
 
-## Aftermarket
 
 **Definition:** The aftermarket refers to the secondary market for parts, accessories, services, and upgrades for a product after its initial sale. In industries like automotive, aerospace, and heavy machinery, the aftermarket can be more profitable than the initial product sale because equipment owners need ongoing maintenance, spare parts, and performance upgrades throughout the product's operational life. Companies that build durable goods often derive a significant share of their revenue from aftermarket activities, creating a recurring revenue stream.
 
@@ -249,11 +261,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## Distributors
+
 > [!quote]
 > "Getting the product to the customer is half the battle — distribution is strategy."
 > — **Jeff Bezos**
 
-## Distributors
 
 **Definition:** Distributors are intermediary entities that purchase products from manufacturers and resell them to retailers, businesses, or directly to consumers. Distributors add value by providing logistics, warehousing, marketing, credit, and after-sales service. They serve as a critical link in the supply chain, enabling manufacturers to reach broad markets without building their own extensive sales and delivery infrastructure. Distribution networks can be exclusive (one distributor per region) or non-exclusive (multiple distributors compete in the same area).
 
@@ -265,11 +278,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## Fleet Management
+
 > [!quote]
 > "Data from the fleet tells you more about your operations than any spreadsheet ever could."
 > — **Jim Heppelmann**
 
-## Fleet Management
 
 **Definition:** Fleet management is the administration of a company's vehicle fleet, including acquisition, maintenance, fuel management, driver management, insurance, and disposal. Modern fleet management increasingly relies on telematics, GPS tracking, data analytics, and digital platforms to optimize routing, reduce costs, monitor driver behavior, ensure regulatory compliance, and manage vehicle lifecycles. Fleet management can apply to commercial vehicles, corporate car fleets, rental fleets, and specialized vehicle fleets.
 
@@ -293,11 +307,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## Goodwill
+
 > [!quote]
 > "Price is what you pay. Value is what you get."
 > — **Warren Buffett**
 
-## Goodwill
 
 **Definition:** Goodwill is an intangible asset that arises when one company acquires another for more than the fair value of its identifiable net assets. It represents the premium paid for elements such as brand reputation, customer relationships, proprietary technology, employee expertise, and market position that cannot be separately identified and valued. Under accounting standards (IFRS and US GAAP), goodwill must be tested annually for impairment and written down if its carrying value exceeds its recoverable amount. Goodwill is a common item on the balance sheets of companies that grow through acquisitions.
 
@@ -333,11 +348,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## Maintenance Repair and Overhaul (MRO)
+
 > [!quote]
 > "Safety is not an option in aviation — maintenance is the price of keeping aircraft in the sky."
 > — **Robert Crandall**
 
-## Maintenance Repair and Overhaul (MRO)
 
 **Definition:** Maintenance, Repair, and Overhaul (MRO) refers to the comprehensive range of activities required to keep complex equipment and machinery in safe, operational condition throughout its useful life. In the aerospace and defense industries, MRO includes scheduled inspections, component repairs, engine overhauls, structural modifications, and compliance with regulatory airworthiness requirements. MRO services represent a significant and recurring revenue stream for equipment manufacturers, as the installed base of engines, aircraft, and other complex systems requires continuous maintenance over decades of operation.
 
@@ -361,11 +377,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## Operating Lease
+
 > [!quote]
 > "Flexibility is the new competitive advantage — ownership ties you down."
 > — **Satya Nadella**
 
-## Operating Lease
 
 **Definition:** An operating lease is a contract in which the lessee rents an asset (such as equipment, vehicles, or real estate) for a period shorter than the asset's economic life. The lessee does not assume ownership risks or rewards; the lessor retains the asset on its balance sheet. Under IFRS 16 and ASC 842, even operating leases must now be recognized on the lessee's balance sheet as a right-of-use asset and lease liability. Operating leases are popular for assets that depreciate quickly or need frequent replacement, as they allow lessees to use assets without long-term ownership obligations.
 
@@ -377,11 +394,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## Precious Metals
+
 > [!quote]
 > "Gold is money. Everything else is credit."
 > — **J.P. Morgan**
 
-## Precious Metals
 
 **Definition:** Precious metals are rare, naturally occurring metallic elements of high economic value, including gold, silver, platinum, and palladium. They are valued for their rarity, durability, luster, and diverse industrial applications. Gold and silver have historically served as stores of value and currency. Platinum and palladium are critical for automotive catalytic converters, industrial processes, and jewelry. Precious metals are traded on commodity exchanges and OTC markets, and they serve as investment vehicles (physical bullion, ETFs, futures) and industrial inputs.
 
@@ -393,11 +411,12 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ---
 
+## Procurement
+
 > [!quote]
 > "Every dollar saved in procurement is a dollar straight to the bottom line."
 > — **Tim Cook**
 
-## Procurement
 
 **Definition:** Procurement is the process of finding, acquiring, and buying goods, services, or works from an external source, often through a competitive bidding process. It encompasses the entire process from identifying needs, sourcing suppliers, negotiating contracts, purchasing, receiving goods, and paying suppliers. Strategic procurement aims to optimize costs, quality, and supply reliability while managing risks in the supply chain. Modern procurement increasingly uses digital platforms, e-procurement systems, and AI-driven analytics.
 

@@ -22,11 +22,12 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+## Bond Underwriting
+
 > [!quote]
 > "The bond market is the most important market in the world — it finances everything governments and corporations do."
 > — **Bill Gross**
 
-## Bond Underwriting
 
 **Definition:** Bond underwriting is the process by which an investment bank or a group of banks (a syndicate) purchases a new issuance of bonds from the issuing entity (corporation, municipality, or government) and resells them to investors. The underwriter assumes the risk of distributing the bonds and earns a fee (the underwriting spread) for this service. Bond underwriting is a critical function of capital markets because it helps organizations raise debt capital for various purposes including infrastructure projects, corporate expansion, or refinancing existing debt.
 
@@ -38,11 +39,12 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+## Brokerage
+
 > [!quote]
 > "Wall Street is the only place that people ride to in a Rolls Royce to get advice from those who take the subway."
 > — **Warren Buffett**
 
-## Brokerage
 
 **Definition:** Brokerage is the business of acting as an intermediary between buyers and sellers of financial securities such as stocks, bonds, mutual funds, and other investment products. A brokerage firm or broker executes trades on behalf of clients, provides research and investment advice, and may offer custody of client assets. Brokers earn revenue through commissions on trades, fees for advisory services, or the spread between bid and ask prices. Modern brokerage has expanded to include online and mobile platforms, enabling self-directed investing alongside traditional advisor-led services.
 
@@ -54,11 +56,12 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+## Capital Markets
+
 > [!quote]
 > "Capital markets are the lifeblood of capitalism — they channel savings to their most productive uses."
 > — **Henry Paulson**
 
-## Capital Markets
 
 **Definition:** Capital markets are financial markets where long-term debt or equity-backed securities are bought and sold. They serve as a mechanism for channeling savings from investors to entities that need capital, such as corporations and governments. Capital markets include both primary markets (where new securities are issued through IPOs or bond offerings) and secondary markets (where existing securities are traded among investors). These markets play a vital role in economic growth by facilitating the efficient allocation of financial resources.
 
@@ -70,11 +73,12 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+## Capital Raising
+
 > [!quote]
 > "The No. 1 reason most people don't get what they want is that they don't know what they want — in business, that means knowing how much capital you need and why."
 > — **T. Harv Eker**
 
-## Capital Raising
 
 **Definition:** Capital raising is the process by which a company obtains funding to finance its operations, growth, or strategic initiatives. Companies can raise capital through equity (selling ownership shares) or debt (borrowing money through loans or bonds). Capital raising activities include initial public offerings, secondary offerings, rights issues, private placements, and bond issuances. Investment banks typically assist companies in structuring and executing capital raising transactions.
 
@@ -98,11 +102,12 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+## Derivatives
+
 > [!quote]
 > "Derivatives are financial weapons of mass destruction."
 > — **Warren Buffett**
 
-## Derivatives
 
 **Definition:** Derivatives are financial instruments whose value is derived from an underlying asset, index, rate, or benchmark. The most common types of derivatives are futures, options, swaps, and forwards. They are used for hedging (reducing risk exposure), speculation (betting on price movements), and arbitrage (exploiting price differences between markets). Derivatives can be based on a wide variety of underlying assets including equities, bonds, currencies, commodities, interest rates, and market indices. They are traded both on organized exchanges and in over-the-counter (OTC) markets.
 
@@ -114,11 +119,12 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+## Equities
+
 > [!quote]
 > "In the short run, the market is a voting machine but in the long run, it is a weighing machine."
 > — **Benjamin Graham**
 
-## Equities
 
 **Definition:** Equities, commonly referred to as stocks or shares, represent ownership interest in a company. When an investor buys equity in a company, they become a part-owner and are entitled to a share of the company's profits (through dividends) and any appreciation in the company's value (capital gains). Equities are traded on stock exchanges and are a fundamental component of investment portfolios. Equity markets provide companies with a way to raise capital and give investors opportunities to participate in corporate growth.
 
@@ -154,11 +160,12 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+## Fixed Income
+
 > [!quote]
 > "Gentlemen prefer bonds."
 > — **Andrew Mellon**
 
-## Fixed Income
 
 **Definition:** Fixed income refers to investment securities that pay the holder a fixed amount of interest at regular intervals until the maturity date, at which point the principal amount is returned. The most common fixed-income instruments are government and corporate bonds, treasury bills, municipal bonds, and certificates of deposit. Fixed-income investments are generally considered less risky than equities because they provide predictable income streams and have priority over equity in the event of a company's bankruptcy. They are a core component of diversified investment portfolios, particularly for income-seeking and risk-averse investors.
 
@@ -170,11 +177,12 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+## Futures and Options
+
 > [!quote]
 > "There is no way to make money in futures unless you get in ahead of the move and get out before it's over."
 > — **Jesse Livermore**
 
-## Futures and Options
 
 **Definition:** Futures and options are types of derivative contracts traded on exchanges. A futures contract obligates the buyer to purchase (and the seller to sell) a specific asset at a predetermined price on a specified future date. An option contract gives the holder the right, but not the obligation, to buy (call option) or sell (put option) an asset at a specific price within a certain time period. Both instruments are used for hedging (protecting against price fluctuations) and speculation (profiting from anticipated price movements). They are traded on regulated exchanges with standardized contract terms.
 
@@ -186,11 +194,12 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+## Index
+
 > [!quote]
 > "Don't look for the needle in the haystack. Just buy the haystack."
 > — **John Bogle**
 
-## Index
 
 **Definition:** A financial index is a statistical measure that tracks the performance of a group of assets, typically stocks, representing a particular market, sector, or investment strategy. Indices serve as benchmarks against which investors can measure the performance of their portfolios. They are also the basis for index funds and exchange-traded funds (ETFs) that aim to replicate the index's performance. Major indices include the S&P 500, major European equity indices, the FTSE 100, and the Nikkei 225. Index providers determine the composition and methodology of each index.
 
@@ -202,11 +211,12 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+## Initial Public Offering (IPO)
+
 > [!quote]
 > "IPO stands for 'It's Probably Overpriced.'"
 > — **David Dreman**
 
-## Initial Public Offering (IPO)
 
 **Definition:** An Initial Public Offering (IPO) is the process by which a private company offers its shares to the public for the first time on a stock exchange. Through an IPO, the company raises capital from public investors, gains access to ongoing capital markets, and enhances its visibility and credibility. The process involves selecting underwriters, filing regulatory documents (such as a prospectus), conducting a roadshow to market the offering to investors, and pricing the shares. After the IPO, the company's shares trade publicly and the company becomes subject to public company regulations including regular financial reporting.
 
@@ -218,11 +228,12 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+## Listing
+
 > [!quote]
 > "Going public is not the end of the journey — it is just the beginning of a whole new set of responsibilities."
 > — **Mary Jo White**
 
-## Listing
 
 **Definition:** Listing refers to the process by which a company's shares or securities are admitted to trading on a stock exchange. To become listed, a company must meet the exchange's requirements regarding financial performance, governance, disclosure, and market capitalization. Once listed, the company's shares can be bought and sold by investors on the exchange. Listing provides the company with access to public capital markets, enhances its visibility and credibility, and gives its shares a market price that facilitates valuations and transactions.
 
@@ -234,11 +245,12 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+## Market-Making
+
 > [!quote]
 > "Liquidity is the oxygen of financial markets — without it, everything seizes up."
 > — **Mohamed El-Erian**
 
-## Market-Making
 
 **Definition:** Market-making is the activity of providing liquidity to financial markets by continuously quoting both buy (bid) and sell (ask) prices for a financial instrument. A market maker stands ready to buy from sellers and sell to buyers at all times, profiting from the spread between the bid and ask prices. Market makers play a crucial role in maintaining liquid, orderly markets, ensuring that investors can always buy or sell securities at fair prices. Investment banks and specialized trading firms are the primary market makers in equities, fixed income, currencies, and derivatives markets.
 
@@ -250,11 +262,12 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+## Securities
+
 > [!quote]
 > "A security is nothing more than a claim on future cash flows — everything else is just the packaging."
 > — **Aswath Damodaran**
 
-## Securities
 
 **Definition:** Securities are tradable financial instruments that hold monetary value. They are broadly categorized into equity securities (stocks), debt securities (bonds), and derivative securities (options, futures, swaps). Securities represent an investment position in a company (equity), a creditor relationship with a government or corporation (debt), or a right to buy or sell an underlying asset (derivative). Securities are issued by companies and governments to raise capital, and they are traded on exchanges and over-the-counter markets, providing liquidity for investors.
 
@@ -266,11 +279,12 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ---
 
+## Underwriting
+
 > [!quote]
 > "An underwriter who will not decline risks is not an underwriter — he is merely an order taker."
 > — **John S. Doremus**
 
-## Underwriting
 
 **Definition:** Underwriting is the process by which a financial institution evaluates, assesses, and assumes risk. In insurance, underwriting involves evaluating the risk of insuring a person or asset and determining the appropriate premium to charge. In securities, underwriting involves an investment bank purchasing new securities from the issuer and reselling them to investors, assuming the risk that the securities might not sell. In lending, underwriting is the process of evaluating a borrower's creditworthiness and determining whether and on what terms to extend a loan.
 

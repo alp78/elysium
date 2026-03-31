@@ -26,12 +26,13 @@ date: 2026-03-28
 
 ## A
 
-> [!quote]
-> "Volume is the fuel that drives the market." — Joseph Granville
-
 ### Average Daily Trading Volume (ADTV)
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="18 mentions across STOXX & ISS pages (low)">▰▰ 18</span>
+
+> [!quote]
+> "Volume is the fuel that drives the market." — Joseph Granville
+
 
 
 > The mean number of shares (or contracts) traded per day over a defined
@@ -82,12 +83,13 @@ ADTV tells you how busy a stock is on a normal day. Index providers like STOXX u
 
 ---
 
-> [!quote]
-> "Every seller has a price, every buyer has a limit." — Anonymous
-
 ### Ask Price
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="13 mentions across STOXX & ISS pages (low)">▰▰ 13</span>
+
+> [!quote]
+> "Every seller has a price, every buyer has a limit." — Anonymous
+
 
 
 > The lowest price at which a seller is willing to sell a security at a given
@@ -138,12 +140,13 @@ The ask price is what you pay when you buy a stock at market. If a STOXX index c
 
 ---
 
-> [!quote]
-> "Going once, going twice — the auction is the purest form of price discovery." — Anonymous
-
 ### Auction (Opening/Closing)
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="61 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 61</span>
+
+> [!quote]
+> "Going once, going twice — the auction is the purest form of price discovery." — Anonymous
+
 
 
 > A price-determination mechanism in which buy and sell orders are collected
@@ -196,13 +199,14 @@ Auctions matter enormously for index funds. The closing auction price on an exch
 
 ## B
 
+### Bear Market
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="29 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 29</span>
+
 > [!quote]
 > "The bear market is the time when you find out who's been swimming naked."
 > — **Warren Buffett**
 
-### Bear Market
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="29 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 29</span>
 
 
 > A sustained decline in market prices, conventionally defined as a drop of
@@ -250,12 +254,13 @@ A bear market is the opposite of good times for equity investors. When a STOXX i
 
 ---
 
-> [!quote]
-> "The real price of everything is the toil and trouble of acquiring it." — Adam Smith
-
 ### Bid Price
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="36 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 36</span>
+
+> [!quote]
+> "The real price of everything is the toil and trouble of acquiring it." — Adam Smith
+
 
 
 > The highest price a buyer is willing to pay for a security at a given moment.
@@ -307,13 +312,14 @@ The bid price is what you receive when you sell a stock at market. For highly li
 
 ---
 
+### Bid-Ask Spread
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
+
 > [!quote]
 > "Transaction costs are the termites of investing."
 > — **John C. Bogle**
 
-### Bid-Ask Spread
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
 
 
 > The difference between the highest bid price and the lowest ask price for a
@@ -357,12 +363,13 @@ The bid-ask spread is the hidden cost of trading. When STOXX evaluates whether a
 
 ---
 
-> [!quote]
-> "Speak softly and carry a big stick." — Theodore Roosevelt
-
 ### Block Trade
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
+> [!quote]
+> "Speak softly and carry a big stick." — Theodore Roosevelt
+
 
 
 > A large privately negotiated transaction in securities that is executed
@@ -386,13 +393,14 @@ Block trades allow large investors to move sizable positions without disrupting 
 
 ---
 
+### Blue Chip
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="600 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 600</span>
+
 > [!quote]
 > "Time is the friend of the wonderful company, the enemy of the mediocre."
 > — **Warren Buffett**
 
-### Blue Chip
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="600 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 600</span>
 
 
 > An informal term for shares of large, well-established, financially sound
@@ -442,13 +450,14 @@ Blue chips are the anchor stocks of major STOXX indices. They tend to have the l
 
 ---
 
+### Bull Market
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="60 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 60</span>
+
 > [!quote]
 > "Bull markets are born on pessimism, grow on skepticism, mature on optimism, and die on euphoria."
 > — **Sir John Templeton**
 
-### Bull Market
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="60 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 60</span>
 
 
 > A sustained period of rising market prices, typically characterised by
@@ -498,12 +507,13 @@ A bull market is when equities are broadly climbing. During bull markets, STOXX 
 
 ## C
 
-> [!quote]
-> "Geography is destiny." — Napoleon Bonaparte (attributed)
-
 ### Country Classification
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="108 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 108</span>
+
+> [!quote]
+> "Geography is destiny." — Napoleon Bonaparte (attributed)
+
 
 
 > The assignment of a security or market to a specific country based on its
@@ -555,13 +565,14 @@ Country classification answers the question "Where does this company belong?" A 
 
 ---
 
+### Circuit Breaker
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "The market does not run on chance or luck — it runs on supply and demand."
 > — **Jesse Livermore**
 
-### Circuit Breaker
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > An automatic mechanism that temporarily halts or restricts trading on an
@@ -586,12 +597,13 @@ Circuit breakers are the emergency brakes of a stock exchange. If a STOXX index 
 
 ---
 
-> [!quote]
-> "Trust is good, but control is better." — Vladimir Lenin (attributed)
-
 ### Clearing (Market)
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="18,212 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 18,212</span>
+
+> [!quote]
+> "Trust is good, but control is better." — Vladimir Lenin (attributed)
+
 
 
 > The post-trade process of reconciling and confirming the obligations of buyer
@@ -641,13 +653,14 @@ Clearing sits between trade execution and settlement. When a STOXX index futures
 
 ---
 
+### Correction
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="130 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 130</span>
+
 > [!quote]
 > "A correction is a euphemism for losing a lot of money rapidly."
 > — **Nassim Nicholas Taleb**
 
-### Correction
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="130 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 130</span>
 
 
 > A decline of 10% or more from a recent peak in a stock, index, or market,
@@ -698,13 +711,14 @@ A correction is the market taking a breather. For a STOXX index, a 10-15% pullba
 
 ---
 
+### Crash
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="10 mentions across STOXX & ISS pages (low)">▰▰ 10</span>
+
 > [!quote]
 > "History doesn't repeat itself, but it often rhymes."
 > — **Mark Twain**
 
-### Crash
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="10 mentions across STOXX & ISS pages (low)">▰▰ 10</span>
 
 
 > A sudden, severe, and often unexpected decline in market prices, typically
@@ -753,12 +767,13 @@ A crash is the extreme scenario that index providers must plan for. STOXX method
 
 ---
 
-> [!quote]
-> "In trust is the beginning of all commerce." — Anonymous
-
 ### Custodian
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="78 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 78</span>
+
+> [!quote]
+> "In trust is the beginning of all commerce." — Anonymous
+
 
 
 > A financial institution that holds and safeguards securities on behalf of
@@ -809,12 +824,13 @@ Custodians are the vaults of the financial world. When ISS or STOXX needs to det
 
 ## D
 
-> [!quote]
-> "Distance is no barrier when the will is strong." — Anonymous
-
 ### Depositary Receipt
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="77 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 77</span>
+
+> [!quote]
+> "Distance is no barrier when the will is strong." — Anonymous
+
 
 
 > A negotiable financial instrument issued by a depositary bank that represents
@@ -864,12 +880,13 @@ A depositary receipt lets investors trade foreign shares on their home exchange 
 
 ---
 
-> [!quote]
-> "If you want to reach more people, meet them where they are." — Anonymous
-
 ### Dual Listing
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
+
+> [!quote]
+> "If you want to reach more people, meet them where they are." — Anonymous
+
 
 
 > The admission of a company's shares to trading on two or more stock exchanges,
@@ -901,12 +918,13 @@ When a company lists on multiple exchanges, index providers must decide which li
 
 ---
 
-> [!quote]
-> "A marketplace is more than a place; it is a set of rules." — Anonymous
-
 ### Eurex
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="635 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 635</span>
+
+> [!quote]
+> "A marketplace is more than a place; it is a set of rules." — Anonymous
+
 
 
 > One of the world's largest derivatives exchanges, operated by Deutsche Borse
@@ -956,13 +974,14 @@ Eurex is where many STOXX index derivatives trade. If an asset manager wants to 
 
 ---
 
+### Exchange
+
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,974 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,974</span>
+
 > [!quote]
 > "Wall Street is the only place that people ride to in a Rolls Royce to get advice from those who take the subway."
 > — **Warren Buffett**
 
-### Exchange
-
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,974 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,974</span>
 
 
 > A regulated marketplace where securities, derivatives, commodities, or other
@@ -1010,12 +1029,13 @@ An exchange provides the infrastructure -- order books, price discovery, clearin
 
 ---
 
-> [!quote]
-> "Ownership is the most intimate relationship one can have to objects." — Walter Benjamin
-
 ### Equity
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9,873 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 9,873</span>
+
+> [!quote]
+> "Ownership is the most intimate relationship one can have to objects." — Walter Benjamin
+
 
 
 > An ownership interest in a company, represented by shares of stock. Equity
@@ -1067,12 +1087,13 @@ Equity is the foundational asset class that STOXX indices measure. When someone 
 
 ## F
 
-> [!quote]
-> "Whoever controls the marketplace controls the economy." — Anonymous
-
 ### Frankfurt Stock Exchange
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="206 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 206</span>
+
+> [!quote]
+> "Whoever controls the marketplace controls the economy." — Anonymous
+
 
 
 > Germany's principal securities exchange (Frankfurter Wertpapierborse),
@@ -1122,12 +1143,13 @@ Frankfurt Stock Exchange is the venue where most German blue-chip stocks are tra
 
 ---
 
-> [!quote]
-> "The measure of a market is how freely its shares can change hands." — Anonymous
-
 ### Free Float
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,740 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,740</span>
+
+> [!quote]
+> "The measure of a market is how freely its shares can change hands." — Anonymous
+
 
 
 > The proportion of a company's total issued shares that are available for
@@ -1277,12 +1299,13 @@ Float is the everyday shorthand for free float. When traders say "the float is t
 
 ## G
 
-> [!quote]
-> "To classify is to understand." — Carl Linnaeus (adapted)
-
 ### GICS (Global Industry Classification Standard)
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="896 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 896</span>
+
+> [!quote]
+> "To classify is to understand." — Carl Linnaeus (adapted)
+
 
 
 > A four-tiered sector classification system developed by MSCI and S&P Dow
@@ -1334,12 +1357,13 @@ GICS is the industry taxonomy you hear about most often in the context of S&P an
 
 ## H
 
-> [!quote]
-> "Sometimes the best action is no action at all." — Lao Tzu (adapted)
-
 ### Halt (Trading)
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,573 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,573</span>
+
+> [!quote]
+> "Sometimes the best action is no action at all." — Lao Tzu (adapted)
+
 
 
 > A temporary suspension of trading in a particular security or across an
@@ -1389,12 +1413,13 @@ A trading halt freezes all order matching for a security. When a STOXX index con
 
 ## I
 
-> [!quote]
-> "The beginning of wisdom is the definition of terms." — Socrates
-
 ### ICB (Industry Classification Benchmark)
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,065 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,065</span>
+
+> [!quote]
+> "The beginning of wisdom is the definition of terms." — Socrates
+
 
 
 > A comprehensive classification system maintained by FTSE Russell that
@@ -1444,12 +1469,13 @@ ICB is the classification backbone behind STOXX sector indices. When you see a "
 
 ---
 
-> [!quote]
-> "Not everything that exists is available, and not everything available is worth buying." — Anonymous
-
 ### Investable Market
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
+
+> [!quote]
+> "Not everything that exists is available, and not everything available is worth buying." — Anonymous
+
 
 
 > The universe of securities that meet minimum requirements for liquidity, free
@@ -1502,13 +1528,14 @@ Not every listed stock is investable in a meaningful sense. A company trading th
 
 ## L
 
+### Large-Cap
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="45 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 45</span>
+
 > [!quote]
 > "It's far better to buy a wonderful company at a fair price than a fair company at a wonderful price."
 > — **Warren Buffett**
 
-### Large-Cap
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="45 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 45</span>
 
 
 > A classification for companies with the highest free-float market
@@ -1558,13 +1585,14 @@ Large-cap stocks are the household names -- the biggest companies by market valu
 
 ---
 
+### Liquidity
+
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,048 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,048</span>
+
 > [!quote]
 > "Liquidity is a coward — it disappears at the first sign of trouble."
 > — **Nassim Nicholas Taleb**
 
-### Liquidity
-
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,048 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,048</span>
 
 
 > The ease with which a security can be bought or sold in the market without
@@ -1612,12 +1640,13 @@ Liquidity is the lifeblood of index replicability. If a stock in an index is ill
 
 ---
 
-> [!quote]
-> "Measure twice, cut once." — Proverb
-
 ### Liquidity Screening
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="41 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 41</span>
+
+> [!quote]
+> "Measure twice, cut once." — Proverb
+
 
 
 > The process of applying minimum thresholds for trading activity (such as ADTV
@@ -1665,12 +1694,13 @@ Liquidity screening is the gate that keeps thinly traded stocks out of an index.
 
 ---
 
-> [!quote]
-> "Patience is the companion of wisdom." — Saint Augustine
-
 ### Limit Order
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
+> [!quote]
+> "Patience is the companion of wisdom." — Saint Augustine
+
 
 
 > An order to buy or sell a security at a specified price or better. A buy
@@ -1695,13 +1725,14 @@ A limit order gives the trader price control at the expense of execution certain
 
 ---
 
+### Long Position
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="59 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 59</span>
+
 > [!quote]
 > "The secret to investing is to figure out the value of something and then pay a lot less."
 > — **Joel Greenblatt**
 
-### Long Position
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="59 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 59</span>
 
 
 > Owning a security outright, or having a net positive exposure to it,
@@ -1752,13 +1783,14 @@ A long position is the most basic form of equity exposure. When a fund tracks th
 
 ## M
 
+### Market Capitalization
+
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,883 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,883</span>
+
 > [!quote]
 > "In the business world, the rearview mirror is always clearer than the windshield."
 > — **Warren Buffett**
 
-### Market Capitalization
-
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,883 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,883</span>
 
 
 > The total market value of a company's outstanding shares, calculated as the
@@ -1811,12 +1843,13 @@ Market capitalisation is the most fundamental size metric in equity indexing. ST
 
 ---
 
-> [!quote]
-> "Mighty oaks from little acorns grow." — Proverb
-
 ### Micro-Cap
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
+> [!quote]
+> "Mighty oaks from little acorns grow." — Proverb
+
 
 
 > A classification for companies at the smallest end of the market
@@ -1845,12 +1878,13 @@ Micro-cap stocks sit at the tail end of the size distribution. They appear in br
 
 ---
 
-> [!quote]
-> "The middle ground is not the safest; it is the least understood." — Anonymous
-
 ### Mid-Cap
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="118 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 118</span>
+
+> [!quote]
+> "The middle ground is not the safest; it is the least understood." — Anonymous
+
 
 
 > A classification for companies that fall between large-cap and small-cap
@@ -1898,13 +1932,14 @@ Mid-cap companies are the "middle children" of the equity market -- large enough
 
 ---
 
+### Market Maker
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="28 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 28</span>
+
 > [!quote]
 > "Markets are never wrong; opinions often are."
 > — **Jesse Livermore**
 
-### Market Maker
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="28 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 28</span>
 
 
 > A firm or individual that continuously quotes both bid and ask prices for a
@@ -1953,12 +1988,13 @@ Market makers are the lubricant of the order book. On exchanges like Xetra, desi
 
 ---
 
-> [!quote]
-> "Speed is useful only if you are running in the right direction." — Joel Barker
-
 ### Market Order
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
+> [!quote]
+> "Speed is useful only if you are running in the right direction." — Joel Barker
+
 
 
 > An order to buy or sell a security immediately at the best available price.
@@ -1984,12 +2020,13 @@ A market order is the simplest way to get into or out of a position right now. F
 
 ## O
 
-> [!quote]
-> "Transparency is the currency of trust." — Anonymous
-
 ### Order Book
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="40 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 40</span>
+
+> [!quote]
+> "Transparency is the currency of trust." — Anonymous
+
 
 
 > The electronic record of all outstanding buy and sell orders for a security,
@@ -2040,13 +2077,14 @@ The order book is the central nervous system of an exchange. It shows how many s
 
 ---
 
+### Over-the-Counter (OTC)
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="15 mentions across STOXX & ISS pages (low)">▰▰ 15</span>
+
 > [!quote]
 > "The less transparent the market, the more advantage to the professional."
 > — **George Soros**
 
-### Over-the-Counter (OTC)
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="15 mentions across STOXX & ISS pages (low)">▰▰ 15</span>
 
 
 > Trading that occurs directly between two parties without the supervision of
@@ -2098,12 +2136,13 @@ OTC trading happens off-exchange, often via dealer networks or bilateral agreeme
 
 ## P
 
-> [!quote]
-> "Home is where the heart is, and where the listing begins." — Anonymous
-
 ### Primary Listing
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
+
+> [!quote]
+> "Home is where the heart is, and where the listing begins." — Anonymous
+
 
 
 > The stock exchange on which a company's shares are principally admitted to
@@ -2152,12 +2191,13 @@ For dual-listed companies, the primary listing is the "home" exchange that STOXX
 
 ---
 
-> [!quote]
-> "All creation starts from a first offering." — Anonymous
-
 ### Primary Market
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="13 mentions across STOXX & ISS pages (low)">▰▰ 13</span>
+
+> [!quote]
+> "All creation starts from a first offering." — Anonymous
+
 
 
 > The country or exchange jurisdiction designated as a security's home market
@@ -2261,12 +2301,13 @@ Qontigo is the brand name under which STOXX indices are developed and maintained
 
 ## R
 
-> [!quote]
-> "Good fences make good neighbours." — Robert Frost
-
 ### Regulated Market
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="184 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 184</span>
+
+> [!quote]
+> "Good fences make good neighbours." — Robert Frost
+
 
 
 > A multilateral trading system operated or managed by a market operator that
@@ -2317,13 +2358,14 @@ A regulated market is an exchange that operates under an official regulatory fra
 
 ---
 
+### Rally
+
+<span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11,382 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 11,382</span>
+
 > [!quote]
 > "Be fearful when others are greedy, and greedy when others are fearful."
 > — **Warren Buffett**
 
-### Rally
-
-<span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11,382 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 11,382</span>
 
 
 > A sustained increase in the prices of securities or a market index,
@@ -2372,13 +2414,14 @@ A rally is a period when the market climbs with conviction. For STOXX indices, a
 
 ## S
 
+### Sector
+
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3,190 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 3,190</span>
+
 > [!quote]
 > "Know what you own, and know why you own it."
 > — **Peter Lynch**
 
-### Sector
-
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3,190 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 3,190</span>
 
 
 > A grouping of companies that operate in the same area of the economy,
@@ -2429,12 +2472,13 @@ A sector is a broad economic category -- Banks, Technology, Health Care, and so 
 
 ---
 
-> [!quote]
-> "A place for everything, and everything in its place." — Benjamin Franklin (attributed)
-
 ### Sector Classification
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="52 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 52</span>
+
+> [!quote]
+> "A place for everything, and everything in its place." — Benjamin Franklin (attributed)
+
 
 
 > The process of assigning each company to a specific sector, supersector,
@@ -2484,12 +2528,13 @@ Sector classification is the act of labelling a company -- deciding, for example
 
 ---
 
-> [!quote]
-> "A deal is not done until the money has changed hands." — Proverb
-
 ### Settlement
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="677 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 677</span>
+
+> [!quote]
+> "A deal is not done until the money has changed hands." — Proverb
+
 
 
 > The process by which a securities transaction is finalised: the buyer
@@ -2538,13 +2583,14 @@ Settlement is the back-office conclusion of a trade. When STOXX schedules an ind
 
 ---
 
+### Small-Cap
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="210 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 210</span>
+
 > [!quote]
 > "Big things have small beginnings."
 > — **Peter Senge**
 
-### Small-Cap
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="210 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 210</span>
 
 
 > A classification for companies in the lower tier of market capitalisation
@@ -2593,13 +2639,14 @@ Small-cap stocks offer exposure to smaller, often faster-growing companies. They
 
 ---
 
+### Short Selling
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "He who sells what isn't his'n must buy it back or go to prison."
 > — **Daniel Drew**
 
-### Short Selling
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > The practice of selling a security that the seller does not own, typically
@@ -2624,13 +2671,14 @@ Short selling allows investors to profit from declining prices. While STOXX indi
 
 ---
 
+### Stock
+
+<span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14,544 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 14,544</span>
+
 > [!quote]
 > "Behind every stock is a company — find out what it's doing."
 > — **Peter Lynch**
 
-### Stock
-
-<span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14,544 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 14,544</span>
 
 
 > A type of security that represents an ownership share in a corporation.
@@ -2680,12 +2728,13 @@ Stock is the most basic unit of equity investing. When a data engineer works wit
 
 ---
 
-> [!quote]
-> "From a distance, the forest tells you more than any single tree." — Anonymous
-
 ### Supersector
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="578 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 578</span>
+
+> [!quote]
+> "From a distance, the forest tells you more than any single tree." — Anonymous
+
 
 
 > A grouping level in the ICB classification hierarchy that sits between
@@ -2736,12 +2785,13 @@ Supersectors provide a middle layer of granularity. They are broader than sector
 
 ## T
 
-> [!quote]
-> "Markets speak loudest when they speak in volume." — Anonymous
-
 ### Trading Volume
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="267 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 267</span>
+
+> [!quote]
+> "Markets speak loudest when they speak in volume." — Anonymous
+
 
 
 > The total number of shares (or contracts) traded during a given period.
@@ -2789,12 +2839,13 @@ Trading volume is the simplest count of activity -- how many shares changed hand
 
 ---
 
-> [!quote]
-> "The devil is in the details." — Proverb
-
 ### Tick Size
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
+> [!quote]
+> "The devil is in the details." — Proverb
+
 
 
 > The minimum price increment at which a security can trade on an exchange.

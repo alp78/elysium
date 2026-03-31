@@ -13,11 +13,12 @@ updated: 2026-03-23
 
 ## The 19 Principles by Theme
 
+### Governance (Principles 1-5)
+
 > [!quote]
 > "Benchmarks are so important to global financial markets that their integrity must be beyond question."
 > — **IOSCO Board**, *Principles for Financial Benchmarks* (2013)
 
-### Governance (Principles 1-5)
 
 | # | Principle | DE Team Responsibility |
 |---|-----------|----------------------|

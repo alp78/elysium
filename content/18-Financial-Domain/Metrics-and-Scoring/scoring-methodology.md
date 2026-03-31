@@ -21,11 +21,12 @@ status: complete
 
 All daily and quarterly scores in the [financial data platform dashboard](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores) use cross-sectional z-scores to standardize and rank constituents within each index. This note documents the exact methodology for z-score calculation, composite scoring, ranking, and cap-weighting.
 
+## Z-Score Calculation
+
 > [!quote]
 > "Not everything that can be counted counts, and not everything that counts can be counted."
 > — **William Bruce Cameron**
 
-## Z-Score Calculation
 
 All daily and quarterly scores use cross-sectional z-scores within a grouping (index or sector):
 

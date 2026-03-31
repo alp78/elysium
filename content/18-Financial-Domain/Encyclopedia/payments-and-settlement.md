@@ -21,11 +21,12 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+## Acquiring (Payments)
+
 > [!quote]
 > "Behind every card tap is a complex chain of trust that moves money from buyer to seller in seconds."
 > — **Pieter van der Does**
 
-## Acquiring (Payments)
 
 **Definition:** In the payments industry, acquiring refers to the process by which a financial institution (called an acquirer or acquiring bank) processes credit or debit card transactions on behalf of a merchant. When a customer swipes, taps, or enters card details, the acquirer communicates with the card-issuing bank to authorize and settle the transaction. The acquirer takes on some of the risk that the merchant will fulfill its obligations and handles the flow of funds from the cardholder's bank to the merchant's account. Acquiring is one of the core pillars of any payment platform and is distinct from issuing, which deals with providing the card to the consumer.
 
@@ -37,11 +38,12 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+## Authorization
+
 > [!quote]
 > "Every payment starts with a question: can this person pay? The answer must come in milliseconds."
 > — **Dan Schulman**
 
-## Authorization
 
 **Definition:** In the payments ecosystem, authorization is the process by which a card-issuing bank approves or declines a transaction initiated by a cardholder. When a consumer uses a credit or debit card, the merchant's payment terminal sends a request through the payment network to the issuing bank, which checks the cardholder's account for sufficient funds or available credit, verifies the card is not reported stolen, and applies fraud detection rules. The bank then sends back an approval or decline code. Authorization happens in real time, typically within seconds, and is one of the key steps in the payment processing chain.
 
@@ -53,11 +55,12 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+## Clearing
+
 > [!quote]
 > "The clearinghouse stands between buyer and seller so neither has to trust the other."
 > — **Craig Pirrong**
 
-## Clearing
 
 **Definition:** Clearing is the process that occurs between the execution of a trade and the final settlement of that trade. A clearinghouse acts as an intermediary between the buyer and seller, ensuring that the trade obligations are properly fulfilled. The clearing process involves confirming trade details, calculating obligations, managing margins and collateral, and ultimately guaranteeing the performance of the trade. This process reduces counterparty risk — the risk that one party will fail to fulfill its side of the transaction — and is essential for the stability and integrity of financial markets.
 
@@ -69,11 +72,12 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+## Custodian Services
+
 > [!quote]
 > "The custody business is about trust — the trust that your assets will be there when you need them."
 > — **Tim Keaney**
 
-## Custodian Services
 
 **Definition:** Custodian services involve the safekeeping and administration of financial assets such as stocks, bonds, and other securities on behalf of institutional and individual investors. A custodian bank holds these assets in electronic or physical form, processes transactions, collects dividends and interest payments, provides tax information, and handles corporate actions. Custodians do not engage in trading or advisory services; their role is to protect client assets and ensure accurate record-keeping. Custody is a critical function in the financial system, particularly for institutional investors managing billions of dollars.
 
@@ -85,11 +89,12 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+## Electronic Money
+
 > [!quote]
 > "Money is just information, a way we measure what we trade, manage debts, make promises."
 > — **David Graeber**
 
-## Electronic Money
 
 **Definition:** Electronic money (e-money) is a digital representation of monetary value stored electronically, used as a medium of exchange for transactions conducted through electronic devices. Unlike traditional bank deposits, e-money is prepaid and stored on cards, mobile devices, or online wallets. It facilitates cashless payments, online shopping, and person-to-person transfers. E-money systems reduce reliance on physical currency and are particularly important in markets with limited banking infrastructure.
 
@@ -101,11 +106,12 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+## Gateway (Payments)
+
 > [!quote]
 > "The payment gateway is the digital front door of every online business."
 > — **Jack Dorsey**
 
-## Gateway (Payments)
 
 **Definition:** A payment gateway is a technology service that authorizes and processes payments for online and in-store merchants. It serves as the intermediary between the merchant's point-of-sale system (or e-commerce website) and the payment networks (Visa, Mastercard, etc.). The gateway encrypts sensitive card data, transmits it to the acquiring bank and card network for authorization, and returns the approval or decline response to the merchant. Payment gateways are essential for enabling secure digital commerce and are a key component of the modern payments infrastructure.
 
@@ -117,11 +123,12 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+## Issuing (Payments)
+
 > [!quote]
 > "Putting a card in someone's hand is putting your brand in their wallet — and your risk on your balance sheet."
 > — **Al Kelly**
 
-## Issuing (Payments)
 
 **Definition:** In the payments industry, issuing refers to the process by which a financial institution (the issuer) provides payment cards (credit, debit, or prepaid) to consumers or businesses. The issuing bank establishes the cardholder's account, sets credit limits, processes billing and payments, manages rewards programs, and bears the credit risk for the cardholder's transactions. Issuing is the counterpart to acquiring in the payments ecosystem: the issuer represents the buyer's side while the acquirer represents the merchant's side of a transaction.
 
@@ -133,11 +140,12 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+## Merchant Services
+
 > [!quote]
 > "If you cannot accept a payment, you cannot make a sale."
 > — **Max Levchin**
 
-## Merchant Services
 
 **Definition:** Merchant services encompass the financial services and technologies that enable businesses to accept and process electronic payment transactions, including credit and debit card payments, mobile payments, and online transactions. These services include payment processing, terminal leasing, fraud prevention, chargeback management, reporting and analytics, and settlement. Merchant service providers include banks, independent sales organizations, and fintech companies that help merchants of all sizes accept electronic payments.
 
@@ -149,11 +157,12 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+## Payments Processing
+
 > [!quote]
 > "Payments are to the economy what plumbing is to a building — invisible when working, catastrophic when not."
 > — **Pieter van der Does**
 
-## Payments Processing
 
 **Definition:** Payments processing is the handling of financial transactions between merchants, consumers, and financial institutions through electronic systems. It encompasses the entire transaction lifecycle from initiation to final settlement, including authorization (verifying funds are available), authentication (confirming the identity of the payer), clearing (exchanging transaction details between parties), and settlement (transferring funds). Payment processors act as intermediaries in this chain, facilitating billions of transactions daily across credit cards, debit cards, mobile payments, and digital wallets.
 
@@ -165,11 +174,12 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+## Point-of-Sale
+
 > [!quote]
 > "The checkout experience is where your brand makes its final impression — make it seamless."
 > — **Angela Ahrendts**
 
-## Point-of-Sale
 
 **Definition:** Point-of-sale (POS) refers to the place and time where a retail transaction is completed. In physical stores, the POS is typically the checkout counter where the customer pays for purchases. A POS system includes hardware (terminal, card reader, receipt printer, cash drawer) and software that processes transactions, manages inventory, tracks sales data, and generates reports. Modern POS systems are integrated with payment processing networks, loyalty programs, and inventory management systems, providing real-time business intelligence to merchants.
 
@@ -181,11 +191,12 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+## Prepaid Cards
+
 > [!quote]
 > "Prepaid cards are the great equalizer — they give everyone access to the electronic payments system."
 > — **Steve Streit**
 
-## Prepaid Cards
 
 **Definition:** Prepaid cards are payment cards loaded with a set amount of money before use. Unlike credit cards (which extend credit) or debit cards (which draw from a bank account), prepaid cards draw from the pre-loaded balance. They are used for gift cards, payroll disbursement, travel money, and financial inclusion for unbanked populations. When the balance is exhausted, the cardholder must reload the card or acquire a new one.
 
@@ -209,11 +220,12 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+## Settlement
+
 > [!quote]
 > "Settlement is where the rubber meets the road — it is the moment when promises become reality."
 > — **Benoît Coeuré**
 
-## Settlement
 
 **Definition:** Settlement is the final step in a securities or payment transaction, where the actual exchange of assets and cash occurs between parties. In securities trading, settlement involves the delivery of securities from the seller to the buyer and the transfer of payment from the buyer to the seller. Settlement periods vary by market and instrument type (T+1 or T+2, meaning one or two business days after the trade date). In payments, settlement is the transfer of funds from the acquiring bank to the merchant's account after a card transaction has been authorized and cleared.
 
@@ -225,11 +237,12 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ---
 
+## Tokenization
+
 > [!quote]
 > "The best security is when the data worth stealing simply isn't there."
 > — **Patrick Gauthier**
 
-## Tokenization
 
 **Definition:** In the payments industry, tokenization is the process of replacing sensitive payment data (such as a credit card number) with a unique, non-sensitive equivalent called a token. The token retains the essential information needed to process the payment but cannot be used to access the original data if intercepted by unauthorized parties. Tokenization enhances payment security by ensuring that actual card numbers are never transmitted or stored by merchants, reducing the risk of data breaches and fraud.
 

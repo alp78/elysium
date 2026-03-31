@@ -21,11 +21,12 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ---
 
+## Corporate Finance Advisory
+
 > [!quote]
 > "Every deal is a people deal first, a financial deal second."
 > — **Felix Rohatyn**
 
-## Corporate Finance Advisory
 
 **Definition:** Corporate finance advisory services involve providing strategic financial guidance to companies on major decisions that affect their capital structure, growth, and value. These services include advice on mergers and acquisitions, divestitures, restructurings, spin-offs, leveraged buyouts, joint ventures, strategic alliances, capital raising, and other transformative transactions. Advisory professionals analyze the financial implications of strategic options, conduct valuations, structure transactions, negotiate terms, and help execute deals. Investment banks and advisory boutiques are the primary providers of these services.
 
@@ -37,11 +38,12 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ---
 
+## Divestitures
+
 > [!quote]
 > "The best strategy requires knowing what not to do."
 > — **Michael Porter**
 
-## Divestitures
 
 **Definition:** A divestiture is the partial or full disposal of a business unit, subsidiary, or asset by a company. Companies divest for various strategic reasons: to raise cash, focus on core operations, reduce debt, comply with regulatory requirements (such as antitrust conditions for mergers), or unlock shareholder value by separating business units that may be more valuable as standalone entities. Divestitures can take the form of sales to other companies, spin-offs to shareholders, management buyouts, or liquidations.
 
@@ -65,11 +67,12 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ---
 
+## Holding Company
+
 > [!quote]
 > "Our favorite holding period is forever."
 > — **Warren Buffett**
 
-## Holding Company
 
 **Definition:** A holding company is a parent corporation that owns enough voting stock in another company (or companies) to control its management and policies. Holding companies typically do not produce goods or services themselves; instead, their purpose is to own shares of other companies and form a corporate group. This structure provides benefits including risk isolation (liabilities of one subsidiary do not affect others), tax efficiency, centralized management, and flexibility to acquire or divest businesses. Holding companies are common across many industries.
 
@@ -93,11 +96,12 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ---
 
+## Joint Venture
+
 > [!quote]
 > "If you want to go fast, go alone. If you want to go far, go together."
 > — **African proverb**
 
-## Joint Venture
 
 **Definition:** A joint venture (JV) is a business arrangement in which two or more parties agree to pool resources for a specific task or project while maintaining their separate identities. Each participant contributes assets, shares risks and rewards, and retains ownership of their individual business. Joint ventures are commonly used to enter new markets, share technology or expertise, spread the financial risk of large projects, or comply with local ownership requirements in certain countries. They can be structured as separate legal entities or as contractual agreements.
 
@@ -109,11 +113,12 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ---
 
+## Mergers and Acquisitions (M&A)
+
 > [!quote]
 > "Managers who want to do deals are like teenagers who want to go on dates — it's very hard to be dissuasive."
 > — **Charlie Munger**
 
-## Mergers and Acquisitions (M&A)
 
 **Definition:** Mergers and acquisitions (M&A) refer to the consolidation of companies through various types of financial transactions. A merger occurs when two companies combine to form a new entity, while an acquisition occurs when one company purchases another. M&A transactions are used to achieve strategic objectives such as gaining market share, entering new markets, acquiring technology or talent, achieving economies of scale, or eliminating competition. M&A deals involve complex processes including valuation, due diligence, negotiation, financing, regulatory approval, and integration.
 
@@ -125,11 +130,12 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ---
 
+## Restructuring
+
 > [!quote]
 > "Sometimes the best path forward is to take a step back and rebuild from a stronger foundation."
 > — **Wilbur Ross**
 
-## Restructuring
 
 **Definition:** Restructuring is the process of reorganizing a company's financial structure, operations, or organizational design to improve efficiency, reduce costs, or address financial difficulties. Financial restructuring may involve renegotiating debt terms, converting debt to equity, or entering bankruptcy protection. Operational restructuring might include closing unprofitable business units, reducing headcount, consolidating facilities, or outsourcing non-core functions. Companies restructure to adapt to changing market conditions, respond to competitive pressures, or recover from financial distress.
 
@@ -153,11 +159,12 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ---
 
+## Spin-Off
+
 > [!quote]
 > "The whole is sometimes worth less than the sum of its parts."
 > — **Peter Lynch**
 
-## Spin-Off
 
 **Definition:** A spin-off is a corporate action in which a company creates a new independent company by separating and distributing shares of a subsidiary or division to its existing shareholders. After the spin-off, the new entity operates as a standalone public company with its own management, board of directors, and stock listing. Spin-offs are undertaken when a parent company believes that a division will create more shareholder value as a separate entity, or to allow each business to pursue distinct strategies, attract focused investors, and improve operational transparency.
 
@@ -169,11 +176,12 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ---
 
+## Subsidiaries
+
 > [!quote]
 > "In a well-run corporate group, each subsidiary should be able to stand on its own two feet."
 > — **Jack Welch**
 
-## Subsidiaries
 
 **Definition:** A subsidiary is a company that is controlled by another company (the parent company), usually through ownership of more than 50% of its voting stock. Subsidiaries are separate legal entities from their parents, with their own management, employees, assets, and liabilities. However, the parent company exercises control over the subsidiary's major decisions and strategic direction. Companies create subsidiaries for various reasons including entering new markets, isolating risk, obtaining regulatory advantages, and organizing operations by geographic region or business line.
 

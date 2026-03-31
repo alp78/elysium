@@ -21,11 +21,12 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ---
 
+## Annuity
+
 > [!quote]
 > "The greatest risk in retirement is not dying too soon but living too long without income."
 > — **Moshe Milevsky**
 
-## Annuity
 
 **Definition:** An annuity is a financial product sold by insurance companies that provides a series of payments to the holder at regular intervals, typically during retirement. The buyer pays either a lump sum or a series of premiums, and the insurer agrees to make periodic payments beginning either immediately or at a future date. Annuities serve as a way to convert a lump sum of savings into a guaranteed income stream, protecting the holder against the risk of outliving their money. They come in various forms including fixed, variable, and indexed annuities.
 
@@ -37,11 +38,12 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ---
 
+## Endowment Insurance
+
 > [!quote]
 > "Saving and insuring are two sides of the same coin — both protect against an uncertain future."
 > — **Peter Bernstein**
 
-## Endowment Insurance
 
 **Definition:** Endowment insurance is a life insurance contract that pays a lump sum after a specific term (the maturity date) or upon the death of the insured, whichever comes first. It combines life insurance protection with a savings component. Part of the premium goes toward the death benefit, while the remainder is invested by the insurance company. At the end of the policy term, the policyholder receives the endowment amount, which includes their accumulated savings plus investment returns. Endowment policies are popular as long-term savings instruments and for funding specific goals like education or retirement.
 
@@ -53,11 +55,12 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ---
 
+## Insurance (Life)
+
 > [!quote]
 > "Life insurance is the only tool that takes pennies and guarantees dollars."
 > — **Ben Feldman**
 
-## Insurance (Life)
 
 **Definition:** Life insurance is a contract between an individual (the policyholder) and an insurance company in which the insurer agrees to pay a designated beneficiary a sum of money upon the death of the insured person, in exchange for regular premium payments. Life insurance serves as financial protection for dependents, covers funeral expenses, and can be used for estate planning. Various types include term life (coverage for a specific period), whole life (lifetime coverage with a savings component), universal life (flexible premiums and death benefits), and unit-linked (investment-linked) policies.
 
@@ -69,11 +72,12 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ---
 
+## Insurance (Property-Casualty)
+
 > [!quote]
 > "In an uncertain world, insurance is the business of making promises about the future."
 > — **Peter Drucker**
 
-## Insurance (Property-Casualty)
 
 **Definition:** Property-casualty insurance (also known as general insurance or non-life insurance) protects individuals and businesses against financial losses from damage to property or from liability for injury or damage caused to others. Property insurance covers losses to physical assets (buildings, vehicles, equipment) from perils such as fire, theft, natural disasters, and accidents. Casualty insurance covers legal liability for injuries or damage to third parties. Common types include homeowner's, automobile, commercial property, liability, workers' compensation, and marine insurance.
 
@@ -85,11 +89,12 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ---
 
+## Insurance Premium
+
 > [!quote]
 > "Float is money we hold that is not ours but which we get to invest for Berkshire's benefit."
 > — **Warren Buffett**
 
-## Insurance Premium
 
 **Definition:** An insurance premium is the amount of money that an individual or business must pay periodically (monthly, quarterly, or annually) to an insurance company in exchange for coverage under an insurance policy. The premium amount is determined by the insurer based on the risk profile of the insured, the type and amount of coverage, the deductible chosen, and actuarial calculations. Premiums represent the primary revenue source for insurance companies, and the insurer invests the collected premiums (the "float") to earn additional investment income.
 
@@ -101,11 +106,12 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ---
 
+## Parametric Insurance
+
 > [!quote]
 > "Speed of payout is everything in a disaster — parametric products deliver cash when it matters most."
 > — **Isaac Anthony**
 
-## Parametric Insurance
 
 **Definition:** Parametric insurance (also called index-based insurance) is a type of insurance that pays out a predetermined amount when a specific, measurable event occurs, rather than compensating for actual losses incurred. The trigger can be a natural disaster metric (e.g., earthquake magnitude, hurricane wind speed, rainfall level) or any other objectively measurable parameter. Parametric insurance offers faster payouts and reduced administrative costs compared to traditional indemnity insurance because there is no need for claims adjustment or loss assessment.
 
@@ -117,11 +123,12 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ---
 
+## Reinsurance
+
 > [!quote]
 > "Reinsurance is the business of insuring insurance companies — it is the safety net beneath the safety net."
 > — **Henry Kluge**
 
-## Reinsurance
 
 **Definition:** Reinsurance is insurance purchased by an insurance company (the ceding company) from another insurance company (the reinsurer) to transfer a portion of its risk. Reinsurance allows insurance companies to protect themselves against catastrophic losses, stabilize their financial results, increase their underwriting capacity, and manage their capital more efficiently. Reinsurance can be proportional (the reinsurer shares a percentage of premiums and losses) or non-proportional (the reinsurer only covers losses above a specified threshold). Major reinsurers include Munich Re, Swiss Re, and Hannover Re.
 
@@ -133,11 +140,12 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ---
 
+## Risk Management
+
 > [!quote]
 > "The biggest risk is not taking any risk — in a world that is changing quickly, the only strategy guaranteed to fail is not taking risks."
 > — **Nassim Nicholas Taleb**
 
-## Risk Management
 
 **Definition:** Risk management is the process of identifying, assessing, and controlling threats to an organization's capital, earnings, and operations. These threats can stem from a wide variety of sources including financial market uncertainty, credit defaults, operational failures, natural disasters, regulatory changes, strategic miscalculations, and cybersecurity breaches. Effective risk management involves establishing risk tolerance levels, implementing controls and mitigation strategies, monitoring risk exposures, and maintaining adequate reserves and insurance. In financial institutions, risk management is heavily regulated and central to business operations.
 
@@ -149,11 +157,12 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ---
 
+## Unit-Linked Insurance
+
 > [!quote]
 > "Combining investment with protection gives people permission to grow their wealth while still sleeping at night."
 > — **Mark Tucker**
 
-## Unit-Linked Insurance
 
 **Definition:** Unit-linked insurance is a type of life insurance product that combines life insurance protection with an investment component. The premiums paid by the policyholder are divided between insurance coverage and investment in units of various funds (similar to mutual funds). The value of the policy varies based on the performance of the chosen investment funds. Unlike traditional life insurance with guaranteed returns, unit-linked policies expose the policyholder to market risk but also offer the potential for higher returns. They provide flexibility in choosing investment options and switching between funds.
 

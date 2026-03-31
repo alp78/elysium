@@ -25,15 +25,17 @@ date: 2026-03-28
 > "An investment in knowledge pays the best interest."
 > — **Benjamin Franklin**
 
+## Domains
+
 > [!quote]
 > "In investing, what is comfortable is rarely profitable."
 > — **Robert Arnott**
+
 
 > [!quote]
 > "The stock market is a device for transferring money from the impatient to the patient."
 > — **Warren Buffett**
 
-## Domains
 
 | Domain | Terms | Description |
 |---|---|---|

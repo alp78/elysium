@@ -33,11 +33,12 @@ Risk and volatility metrics quantify the uncertainty and potential downside of e
 | **Calmar Ratio** | Annualized Return ÷ Max Drawdown | Return per unit of tail risk |
 | **Value at Risk (95%)** | 5th percentile of daily return distribution | "Worst day in 20" under normal conditions |
 
+## Beta
+
 > [!quote]
 > "The stock market is filled with individuals who know the price of everything, but the value of nothing."
 > — **Philip Fisher**
 
-## Beta
 
 Beta measures a stock's sensitivity to market movements.
 
@@ -52,11 +53,12 @@ $$\beta = \frac{\text{Cov}(r_{\text{stock}}, r_{\text{market}})}{\text{Var}(r_{\
 | 1.0 – 1.5 | More volatile than market |
 | > 1.5 | High sensitivity (tech, growth, financials) |
 
+## VIX (CBOE Volatility Index)
+
 > [!quote]
 > "Volatility is the price of admission. The prize inside is superior long-term returns."
 > — **Nick Murray**
 
-## VIX (CBOE Volatility Index)
 
 The VIX measures implied volatility from S&P 500 options, often called the "fear gauge."
 
@@ -68,15 +70,17 @@ The VIX measures implied volatility from S&P 500 options, often called the "fear
 | > 30 | Fear — high stress (corrections, geopolitical shocks) |
 | > 40 | Crisis-level (2020 COVID, 2008 GFC) |
 
+## Maximum Drawdown
+
 > [!quote]
 > "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1."
 > — **Warren Buffett**
+
 
 > [!quote]
 > "The most important rule of trading is to play great defense, not great offense."
 > — **Paul Tudor Jones**
 
-## Maximum Drawdown
 
 The maximum drawdown measures the largest peak-to-trough decline in portfolio value over a given period.
 
@@ -118,11 +122,12 @@ $$\text{Calmar} = \frac{\text{Annualized Return}}{\text{Maximum Drawdown}}$$
 | 1.0–3.0 | Good |
 | < 1.0 | Returns don't justify the drawdown experienced |
 
+## Value at Risk (VaR)
+
 > [!quote]
 > "VaR is like an airbag that works all the time, except when you have a car accident."
 > — **David Einhorn**
 
-## Value at Risk (VaR)
 
 The 95% VaR estimates the worst expected loss on 1 out of 20 trading days under normal conditions.
 

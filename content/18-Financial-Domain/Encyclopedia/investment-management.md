@@ -22,11 +22,12 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+## Alternative Investments
+
 > [!quote]
 > "The most important investment decision is asset allocation — the choice among stocks, bonds, and alternative assets."
 > — **David Swensen**
 
-## Alternative Investments
 
 **Definition:** Alternative investments are financial assets that do not fall into the conventional categories of stocks, bonds, or cash. They include real estate, private equity, hedge funds, infrastructure, commodities, credit funds, and other non-traditional asset classes. These investments often have lower liquidity than publicly traded securities but may offer higher returns and portfolio diversification. Institutional investors such as pension funds and endowments commonly allocate a portion of their portfolios to alternatives to reduce overall risk and enhance returns over the long term.
 
@@ -38,11 +39,12 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+## Asset Management
+
 > [!quote]
 > "The job of an asset manager is not to beat the market but to serve the client."
 > — **Charles Ellis**
 
-## Asset Management
 
 **Definition:** Asset management is the professional management of investments on behalf of clients, which can include individuals, institutions, pension funds, sovereign wealth funds, and corporations. Asset managers pool money from clients and invest it across a range of financial instruments — equities, bonds, real estate, commodities, and alternative assets — with the goal of growing the portfolio's value while managing risk. Asset management firms charge management fees (often a percentage of assets under management) and sometimes performance fees. The industry is a critical component of the global financial system, helping channel savings into productive investments.
 
@@ -54,11 +56,12 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+## Fiduciary
+
 > [!quote]
 > "The duty of a fiduciary is to put the client's interests ahead of his own in every instance."
 > — **Arthur Levitt**
 
-## Fiduciary
 
 **Definition:** A fiduciary is an individual or institution that is legally and ethically obligated to act in the best interest of another party, known as the principal or beneficiary. Fiduciary duties include loyalty (putting the client's interests first), care (exercising reasonable diligence), and disclosure (providing full transparency). In finance, fiduciary relationships arise in trust management, investment advisory, pension fund administration, and custodian services. Breach of fiduciary duty can result in legal liability, damages, and regulatory sanctions.
 
@@ -70,11 +73,12 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+## Hedge Funds
+
 > [!quote]
 > "It's not whether you're right or wrong that's important, but how much money you make when you're right and how much you lose when you're wrong."
 > — **George Soros**
 
-## Hedge Funds
 
 **Definition:** Hedge funds are pooled investment vehicles that employ a wide range of sophisticated strategies to generate returns for their investors, who are typically high-net-worth individuals and institutional investors. Unlike mutual funds, hedge funds often use leverage (borrowed money), short selling, derivatives, and complex trading strategies to pursue absolute returns regardless of market direction. They charge both management fees (typically 1-2% of assets) and performance fees (typically 20% of profits). Hedge funds are less regulated than mutual funds and require large minimum investments.
 
@@ -86,11 +90,12 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+## Investment Banking
+
 > [!quote]
 > "Investment bankers are the deal junkies of the financial world — they live for the next transaction."
 > — **Michael Lewis**
 
-## Investment Banking
 
 **Definition:** Investment banking is a specialized segment of banking that helps organizations raise capital, provides advisory services for complex financial transactions, and facilitates trading of securities. Core investment banking activities include underwriting new debt and equity issues, advising on mergers and acquisitions, facilitating restructurings, and providing market-making services. Investment banks serve corporations, governments, institutional investors, and high-net-worth individuals. They differ from commercial banks in that they focus on capital markets and advisory rather than deposit-taking and lending.
 
@@ -102,11 +107,12 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+## Mutual Funds
+
 > [!quote]
 > "The mutual fund industry has been built, in a sense, on witchcraft."
 > — **John Bogle**
 
-## Mutual Funds
 
 **Definition:** A mutual fund is a pooled investment vehicle that collects money from many investors and invests it in a diversified portfolio of stocks, bonds, or other securities according to a stated investment objective. Professional fund managers make investment decisions on behalf of the fund's shareholders. Mutual funds offer individual investors access to diversified, professionally managed portfolios at relatively low minimum investment amounts. They come in various types including equity funds, bond funds, money market funds, balanced funds, and index funds. Investors buy and sell mutual fund shares at the fund's net asset value (NAV), calculated at the end of each trading day.
 
@@ -118,11 +124,12 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+## Pension Fund
+
 > [!quote]
 > "A pension is a promise — and promises must be funded."
 > — **Keith Ambachtsheer**
 
-## Pension Fund
 
 **Definition:** A pension fund is a pool of money accumulated during an employee's working years, intended to provide income during retirement. Pension funds are managed by financial institutions that invest contributions from employees and/or employers across a diversified portfolio of assets including equities, bonds, real estate, and alternative investments. There are two main types: defined benefit plans (where the employer guarantees a specific retirement income) and defined contribution plans (where the retirement income depends on investment returns). Pension funds are among the largest institutional investors in the world.
 
@@ -134,11 +141,12 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+## Portfolio Management
+
 > [!quote]
 > "Diversification is the only free lunch in investing."
 > — **Harry Markowitz**
 
-## Portfolio Management
 
 **Definition:** Portfolio management is the process of selecting and managing an investment portfolio — a collection of financial assets such as stocks, bonds, cash, and alternative investments — to meet the investor's long-term financial objectives while managing risk. Portfolio management involves asset allocation (dividing investments across asset classes), security selection (choosing individual investments), and ongoing monitoring and rebalancing. It can be active (trying to outperform a benchmark through research and trading) or passive (tracking an index).
 
@@ -150,11 +158,12 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+## Prime Brokerage
+
 > [!quote]
 > "The prime broker is the plumber of the hedge fund world — nobody notices until the pipes break."
 > — **Sebastian Mallaby**
 
-## Prime Brokerage
 
 **Definition:** Prime brokerage is a bundled package of services offered by investment banks to hedge funds and other large institutional investors. Services include securities lending (to facilitate short selling), leveraged trade executions, cash management, custody of assets, risk management analytics, reporting, and capital introduction (connecting funds with potential investors). Prime brokers act as a central point of contact for hedge funds' trading and operational needs, enabling them to trade across multiple exchanges and asset classes efficiently.
 
@@ -166,11 +175,12 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+## Private Banking
+
 > [!quote]
 > "Wealth is not about having a lot of money — it is about having a lot of options."
 > — **Chris Rock**
 
-## Private Banking
 
 **Definition:** Private banking is a personalized banking service offered by financial institutions to high-net-worth individuals (HNWIs) and ultra-high-net-worth individuals (UHNWIs). Private banking goes beyond standard retail banking to provide tailored financial solutions including investment management, estate planning, tax advisory, trust services, lending, and lifestyle concierge services. Clients typically have a dedicated relationship manager who coordinates all banking and investment needs. Private banking clients usually have minimum investable assets ranging from USD 1 million to USD 10 million or more.
 
@@ -182,11 +192,12 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+## Private Equity
+
 > [!quote]
 > "In private equity, you buy a company and try to make it better — it is capitalism in its most elemental form."
 > — **Henry Kravis**
 
-## Private Equity
 
 **Definition:** Private equity (PE) refers to investment funds that acquire equity ownership in companies that are not publicly traded on a stock exchange. PE firms raise capital from institutional investors and high-net-worth individuals, use it (often combined with debt) to acquire companies, improve their operations and financial performance over a holding period of typically 3-7 years, and then exit through a sale or IPO. Private equity strategies include leveraged buyouts, growth capital, distressed investing, and venture capital. PE firms typically charge a management fee (2% of assets) and carried interest (20% of profits above a hurdle rate).
 
@@ -198,11 +209,12 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+## Superannuation
+
 > [!quote]
 > "The best time to start saving for retirement was twenty years ago — the second-best time is now."
 > — **Paul Keating**
 
-## Superannuation
 
 **Definition:** Superannuation is the Australian and New Zealand term for a pension fund or retirement savings arrangement. Employers are legally required to contribute a percentage of each employee's salary (currently 11.5% in Australia) into a superannuation fund, which is then invested on the employee's behalf until retirement. Employees can also make voluntary contributions to boost their retirement savings. Superannuation funds invest across equities, bonds, property, and alternative assets, and are managed by industry funds, retail funds, or self-managed super funds (SMSFs).
 
@@ -214,11 +226,12 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+## Venture Capital
+
 > [!quote]
 > "Venture capital is about catching the lightning in a bottle."
 > — **Fred Wilson**
 
-## Venture Capital
 
 **Definition:** Venture capital (VC) is a form of private equity financing provided to early-stage, high-growth-potential startup companies in exchange for equity ownership. Venture capitalists provide not only funding but also mentorship, strategic guidance, industry connections, and operational support. VC investments carry high risk because most startups fail, but the few that succeed can generate extraordinary returns. The VC ecosystem has been instrumental in funding companies that have become some of the world's most valuable businesses, particularly in technology, biotech, and fintech.
 
@@ -230,11 +243,12 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 ---
 
+## Wealth Management
+
 > [!quote]
 > "It is not about the money — it is about the life you want the money to support."
 > — **Carl Richards**
 
-## Wealth Management
 
 **Definition:** Wealth management is a comprehensive financial advisory service that combines financial planning, investment management, tax optimization, estate planning, retirement planning, and other services tailored to high-net-worth individuals and families. Unlike simple investment management (which focuses on portfolio returns), wealth management takes a holistic approach to a client's entire financial life. Wealth managers coordinate multiple disciplines to preserve and grow client wealth across generations, often serving as the primary point of contact for all financial matters.
 

@@ -21,11 +21,12 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 ---
 
+## Carbon Capture and Storage
+
 > [!quote]
 > "Carbon capture is not a silver bullet, but it is an essential part of the portfolio of solutions we need."
 > — **Fatih Birol**
 
-## Carbon Capture and Storage
 
 **Definition:** Carbon capture and storage (CCS) is a technology process that captures carbon dioxide (CO2) emissions produced from industrial processes or power generation before they enter the atmosphere, transports the captured CO2, and stores it deep underground in geological formations. CCS is considered a critical technology for mitigating climate change, particularly in hard-to-abate sectors like cement, steel, and petrochemicals where eliminating emissions entirely is technically challenging. The technology can also be combined with bioenergy to achieve net-negative emissions.
 
@@ -37,11 +38,12 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 ---
 
+## Cogeneration
+
 > [!quote]
 > "The cheapest energy is the energy you never waste."
 > — **Amory Lovins**
 
-## Cogeneration
 
 **Definition:** Cogeneration, also known as combined heat and power (CHP), is the simultaneous production of electricity and useful heat from a single fuel source. By capturing and using heat that would otherwise be wasted in conventional power generation, cogeneration plants can achieve total energy efficiencies of 80% or more, compared to about 35-50% for conventional power plants. This technology is widely used in industrial settings where both electricity and steam or hot water are needed.
 
@@ -53,11 +55,12 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 ---
 
+## Commodity Trading
+
 > [!quote]
 > "The speculator's chief enemies are ignorance, greed, fear, and hope."
 > — **Jesse Livermore**
 
-## Commodity Trading
 
 **Definition:** Commodity trading is the buying and selling of raw materials and primary products such as crude oil, natural gas, metals, agricultural products, and other physical goods. Commodity trading occurs on specialized exchanges (like the Chicago Mercantile Exchange or London Metal Exchange) and through over-the-counter markets. Traders may deal in physical commodities (actual delivery) or financial derivatives (futures, options, and swaps) based on commodity prices. Companies involved in commodity trading include energy companies, mining firms, agricultural conglomerates, and specialized trading houses.
 
@@ -81,11 +84,12 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 ---
 
+## Energy Storage
+
 > [!quote]
 > "The holy grail of energy is storage — once we solve storage, we solve renewables."
 > — **Elon Musk**
 
-## Energy Storage
 
 **Definition:** Energy storage refers to the capture of energy produced at one time for use at a later time. Energy storage technologies include batteries (lithium-ion, solid-state), pumped hydro, compressed air, and thermal storage. Energy storage is critical for the integration of renewable energy sources like solar and wind, which are intermittent by nature. By storing excess energy generated during peak production periods and releasing it during high-demand periods, energy storage systems help balance the electrical grid, improve reliability, and reduce reliance on fossil fuel backup generation.
 
@@ -97,11 +101,12 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 ---
 
+## Green Hydrogen
+
 > [!quote]
 > "Green hydrogen is the missing piece of the puzzle for full decarbonization."
 > — **Frans Timmermans**
 
-## Green Hydrogen
 
 **Definition:** Green hydrogen is hydrogen produced through the electrolysis of water using renewable energy sources such as wind or solar power. Unlike grey hydrogen (produced from natural gas) or blue hydrogen (produced from natural gas with carbon capture), green hydrogen produces no carbon emissions during its production. It is considered a key enabler of the energy transition, particularly for decarbonizing hard-to-abate sectors like heavy industry, long-distance transportation, and high-temperature industrial processes.
 
@@ -113,11 +118,12 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 ---
 
+## Liquefied Natural Gas (LNG)
+
 > [!quote]
 > "LNG is the bridge fuel that can help the world transition to a lower-carbon energy system."
 > — **Daniel Yergin**
 
-## Liquefied Natural Gas (LNG)
 
 **Definition:** Liquefied natural gas (LNG) is natural gas that has been cooled to approximately -162 degrees Celsius (-260 degrees Fahrenheit), converting it to a liquid state for storage and transportation. LNG occupies about 1/600th of the volume of natural gas in its gaseous state, making it economically feasible to transport across oceans in specially designed tankers to markets that are not connected by pipelines. At its destination, LNG is regasified (converted back to gas) and distributed through local pipeline networks. LNG plays a critical role in global energy trade and energy security.
 
@@ -129,11 +135,12 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 ---
 
+## Midstream
+
 > [!quote]
 > "Pipelines are the arteries of the energy system — they keep everything flowing."
 > — **Russell Gold**
 
-## Midstream
 
 **Definition:** In the energy industry, midstream refers to the activities that connect upstream production with downstream processing and consumption. Midstream operations include the transportation, storage, and wholesale marketing of crude oil, natural gas, natural gas liquids, and other hydrocarbons. Infrastructure assets include pipelines, tanker ships, rail cars, storage terminals, and processing plants. Midstream companies typically earn revenues based on throughput volumes rather than commodity prices, providing more stable and predictable cash flows than upstream operations.
 
@@ -169,11 +176,12 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 ---
 
+## Refining
+
 > [!quote]
 > "A refinery is the nexus between the raw material and the consumer product — the crack spread is the heartbeat of the oil industry."
 > — **Philip Verleger**
 
-## Refining
 
 **Definition:** Refining is the industrial process of transforming crude oil into usable petroleum products through distillation, cracking, reforming, and treatment processes. Refineries produce a range of products including gasoline, diesel fuel, jet fuel, heating oil, lubricants, asphalt, and petrochemical feedstocks. The refining margin (the difference between crude oil input costs and the value of refined product output) is a key profitability metric. Refining is a capital-intensive, highly regulated industry that is central to the global energy supply chain.
 
@@ -185,11 +193,12 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 ---
 
+## Renewable Energy
+
 > [!quote]
 > "The stone age didn't end because we ran out of stones. The oil age won't end because we run out of oil."
 > — **Ahmed Zaki Yamani**
 
-## Renewable Energy
 
 **Definition:** Renewable energy is energy derived from natural sources that are replenished at a rate faster than they are consumed, including solar, wind, hydroelectric, geothermal, tidal, and biomass energy. Unlike fossil fuels (coal, oil, natural gas), renewable energy sources produce little to no greenhouse gas emissions during operation, making them crucial for addressing climate change. The renewable energy sector has grown rapidly due to declining technology costs, supportive government policies, and increasing environmental awareness.
 
@@ -201,11 +210,12 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 ---
 
+## Upstream
+
 > [!quote]
 > "The meek shall inherit the earth, but not its mineral rights."
 > — **J. Paul Getty**
 
-## Upstream
 
 **Definition:** In the energy industry, upstream refers to the exploration for and production (E&P) of crude oil and natural gas. Upstream activities include geological surveys, seismic testing, exploratory drilling, well development, production operations, and well decommissioning. Upstream is the first stage of the oil and gas value chain, preceding midstream (transportation and storage) and downstream (refining and distribution). Upstream companies face significant risks including exploration failure, price volatility, geopolitical instability, and environmental regulations.
 

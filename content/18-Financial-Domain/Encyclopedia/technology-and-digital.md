@@ -45,11 +45,12 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ---
 
+## Cloud Computing
+
 > [!quote]
 > "The cloud is really about the democratization of computing."
 > — **Marc Benioff**
 
-## Cloud Computing
 
 **Definition:** Cloud computing is the delivery of computing services — including servers, storage, databases, networking, software, analytics, and artificial intelligence — over the internet ("the cloud") rather than through local servers or personal devices. Cloud computing allows organizations to access technology resources on demand, scale up or down as needed, and pay only for what they use. The three main service models are Infrastructure as a Service (IaaS), Platform as a Service (PaaS), and Software as a Service (SaaS). Cloud computing has fundamentally transformed how businesses deploy and manage technology.
 
@@ -61,11 +62,12 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ---
 
+## Cybersecurity
+
 > [!quote]
 > "There are only two types of companies: those that have been hacked and those that will be."
 > — **Robert Mueller**
 
-## Cybersecurity
 
 **Definition:** Cybersecurity refers to the practice of protecting computer systems, networks, programs, and data from digital attacks, unauthorized access, damage, or theft. As organizations increasingly depend on digital infrastructure, cybersecurity has become critical for protecting sensitive customer data, financial transactions, intellectual property, and operational systems. Cybersecurity encompasses technologies, processes, and practices such as firewalls, encryption, intrusion detection, identity and access management, threat intelligence, and security auditing.
 
@@ -77,11 +79,12 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ---
 
+## Digital Transformation
+
 > [!quote]
 > "Every business is a software business now."
 > — **Dean Leffingwell**
 
-## Digital Transformation
 
 **Definition:** Digital transformation is the process of integrating digital technology into all areas of a business, fundamentally changing how the organization operates and delivers value to customers. It involves adopting technologies such as cloud computing, artificial intelligence, data analytics, IoT, and automation to improve efficiency, create new business models, and enhance customer experiences. Digital transformation is not simply about technology adoption; it requires changes in organizational culture, processes, and strategy. It has become a strategic imperative for companies across all industries.
 
@@ -105,11 +108,12 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ---
 
+## Enterprise Resource Planning (ERP)
+
 > [!quote]
 > "ERP is the backbone of a business. Without it, you have islands of information that never connect."
 > — **Hasso Plattner**
 
-## Enterprise Resource Planning (ERP)
 
 **Definition:** Enterprise Resource Planning (ERP) is a type of integrated software platform that organizations use to manage and automate core business processes in real time. ERP systems consolidate functions such as finance, human resources, manufacturing, supply chain, procurement, and customer relationship management into a single unified system. By providing a single source of truth for business data, ERP systems improve operational efficiency, reduce redundancy, enable better decision-making, and facilitate regulatory compliance. Modern ERP solutions are increasingly cloud-based and powered by AI.
 
@@ -121,11 +125,12 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ---
 
+## Fintech
+
 > [!quote]
 > "Fintech is not about building better banks — it is about building a world that doesn't need banks."
 > — **Brett King**
 
-## Fintech
 
 **Definition:** Fintech (financial technology) refers to the use of innovative technology to deliver financial products and services more efficiently, accessibly, and affordably than traditional financial institutions. Fintech encompasses a wide range of applications including mobile payments, peer-to-peer lending, robo-advisors, blockchain-based services, digital wallets, insurtech, and regtech. Fintech companies often target underserved market segments or friction points in the traditional financial system, offering faster, cheaper, and more user-friendly alternatives.
 
@@ -137,11 +142,12 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ---
 
+## Hybrid Cloud
+
 > [!quote]
 > "The future of enterprise computing is hybrid — not everything belongs in the public cloud."
 > — **Arvind Krishna**
 
-## Hybrid Cloud
 
 **Definition:** Hybrid cloud is a computing environment that combines on-premises infrastructure (private cloud) with public cloud services, allowing data and applications to be shared between them. This approach gives organizations greater flexibility: they can keep sensitive data on-premises for security and compliance reasons while using the public cloud for less-sensitive workloads and to handle demand spikes. Hybrid cloud is favored by enterprises transitioning from legacy systems to cloud-native architectures.
 
@@ -153,11 +159,12 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ---
 
+## IaaS (Infrastructure as a Service)
+
 > [!quote]
 > "Why buy the cow when you can rent the milk by the hour?"
 > — **Andy Jassy**
 
-## IaaS (Infrastructure as a Service)
 
 **Definition:** Infrastructure as a Service (IaaS) is a cloud computing model that provides virtualized computing resources over the internet on a pay-as-you-go basis. Instead of purchasing and maintaining physical servers, storage, and networking equipment, organizations rent these resources from a cloud provider. IaaS gives businesses maximum flexibility and control over their IT infrastructure without the capital expenditure of building and managing a physical data center. The customer manages the operating system, middleware, and applications, while the cloud provider manages the physical hardware, networking, and virtualization.
 
@@ -169,11 +176,12 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ---
 
+## Internet of Things (IoT)
+
 > [!quote]
 > "If you think that the internet has changed your life, think again. The IoT is about to change it all over again."
 > — **Brendan O'Brien**
 
-## Internet of Things (IoT)
 
 **Definition:** The Internet of Things (IoT) refers to the network of physical devices, vehicles, appliances, sensors, and other objects embedded with electronics, software, and network connectivity that enables them to collect, exchange, and act on data. IoT devices range from simple sensors that monitor temperature to complex industrial systems that control manufacturing processes. The IoT creates value by enabling real-time monitoring, automation, predictive maintenance, and data-driven decision-making across industries including manufacturing, agriculture, healthcare, transportation, and smart cities.
 
@@ -185,11 +193,12 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ---
 
+## Machine Learning / AI
+
 > [!quote]
 > "AI is probably the most important thing humanity has ever worked on."
 > — **Sundar Pichai**
 
-## Machine Learning / AI
 
 **Definition:** Machine learning (ML) and artificial intelligence (AI) refer to technologies that enable computer systems to learn from data, identify patterns, and make decisions with minimal human intervention. ML is a subset of AI focused on algorithms that improve through experience. AI encompasses broader capabilities including natural language processing, computer vision, robotics, and generative AI. These technologies are transforming industries from healthcare (drug discovery, diagnostics) to finance (fraud detection, algorithmic trading) to manufacturing (predictive maintenance, quality control).
 
@@ -213,11 +222,12 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ---
 
+## PaaS (Platform as a Service)
+
 > [!quote]
 > "Developers just want to write code — give them a platform and get out of their way."
 > — **Werner Vogels**
 
-## PaaS (Platform as a Service)
 
 **Definition:** Platform as a Service (PaaS) is a cloud computing model that provides a platform allowing developers to build, deploy, and manage applications without dealing with the complexity of maintaining the underlying infrastructure (servers, storage, networking) and middleware. PaaS solutions include development tools, database management systems, operating systems, and application frameworks. PaaS sits between IaaS (which provides basic computing resources) and SaaS (which provides complete applications), offering a balance of flexibility and convenience for software development teams.
 
@@ -241,11 +251,12 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ---
 
+## SaaS (Software as a Service)
+
 > [!quote]
 > "SaaS makes the cost of trying new ideas so low that every company can afford to experiment."
 > — **Aaron Levie**
 
-## SaaS (Software as a Service)
 
 **Definition:** Software as a Service (SaaS) is a cloud computing model where software applications are hosted by a service provider and made available to customers over the internet, typically through a subscription model. Instead of installing and maintaining software on local computers, users access the application through a web browser. SaaS eliminates the need for organizations to manage hardware, software updates, and security patches. It offers scalability, accessibility from any device, automatic updates, and predictable subscription-based pricing.
 

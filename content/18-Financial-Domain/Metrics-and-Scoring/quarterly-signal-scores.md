@@ -20,11 +20,12 @@ status: complete
 
 Quarterly signal scores are updated with earnings reports and use the most recent quarterly financial data from yfinance. Unlike [daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores), these scores change infrequently and reflect fundamental business health rather than market sentiment.
 
+## Quality / Moat Score
+
 > [!quote]
 > "A truly great business must have an enduring 'moat' that protects excellent returns on invested capital."
 > — **Warren Buffett**
 
-## Quality / Moat Score
 
 The quality score (also called the moat score) measures fundamental strength across profitability, efficiency, and cash generation. Z-scores are computed within sectors when sufficient peers exist (3 or more); otherwise falls back to index-level grouping.
 
@@ -69,11 +70,12 @@ Health warnings are binary flags derived from quarterly balance sheet data. Stoc
 > [!warning] Critical Signal
 > Low quality score + many health flags = strong caution signal. Critical-level stocks may face dividend cuts, credit downgrades, or restructuring. Cross-reference with [daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores) divergence alerts.
 
+## Governance Risk Score
+
 > [!quote]
 > "Good corporate governance is about having the right processes to make and implement decisions."
 > — **Robert Monks**
 
-## Governance Risk Score
 
 A composite of ISS-style risk dimensions sourced from yfinance quarterly data. This score measures the quality of corporate governance practices.
 

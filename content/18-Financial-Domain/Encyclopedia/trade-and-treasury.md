@@ -23,11 +23,12 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 ---
 
+## Cash Management
+
 > [!quote]
 > "Cash is a fact, profit is an opinion."
 > — **Alfred Rappaport**
 
-## Cash Management
 
 **Definition:** Cash management refers to the corporate treasury function of collecting, managing, and investing a company's cash flows efficiently. Banks offer cash management services to corporate clients to help them optimize their liquidity positions, streamline payment and collection processes, manage bank accounts across multiple locations and currencies, and invest surplus cash. Effective cash management ensures a company has enough liquid funds to meet its obligations while maximizing the return on idle cash balances.
 
@@ -39,11 +40,12 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 ---
 
+## Export Credit Agency Finance
+
 > [!quote]
 > "Governments back exports because trade creates jobs — export credit is trade policy in financial form."
 > — **Robert Zoellick**
 
-## Export Credit Agency Finance
 
 **Definition:** Export credit agency (ECA) finance involves loans, guarantees, or insurance provided or supported by government-backed export credit agencies to facilitate international trade. ECAs help domestic companies sell goods and services to foreign buyers by reducing the payment risk associated with cross-border transactions. This is particularly important for large, capital-intensive projects such as infrastructure, aircraft purchases, and energy installations, where the foreign buyer may have difficulty obtaining financing from commercial lenders.
 
@@ -55,11 +57,12 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 ---
 
+## Sales Financing
+
 > [!quote]
 > "Make it easy to buy and people will buy more."
 > — **Henry Ford**
 
-## Sales Financing
 
 **Definition:** Sales financing (also called vendor financing or point-of-sale financing) is a financial service provided by a manufacturer or retailer, or by a financial institution on their behalf, to help customers purchase the manufacturer's products. It includes installment loans, conditional sales contracts, hire-purchase agreements, and consumer credit plans. Sales financing is particularly prevalent in the automotive, consumer electronics, and heavy equipment industries, where product prices are high enough to require financing. It serves a dual purpose: enabling purchases that would otherwise not occur, while generating additional revenue from interest and fees.
 
@@ -71,11 +74,12 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 ---
 
+## Trade Finance
+
 > [!quote]
 > "Trade finance is the oil that keeps the wheels of international commerce turning."
 > — **Pascal Lamy**
 
-## Trade Finance
 
 **Definition:** Trade finance refers to the financial instruments and products used by companies to facilitate international and domestic trade and commerce. It helps manage the risks inherent in cross-border transactions where the buyer and seller may not know each other and operate under different legal systems. Common trade finance products include letters of credit (bank guarantees of payment), documentary collections, trade credit insurance, factoring, forfaiting, and supply chain finance. Trade finance is essential for enabling global commerce by bridging the trust and timing gaps between trading partners.
 
@@ -99,11 +103,12 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 ---
 
+## Wholesale Financing
+
 > [!quote]
 > "The dealer's lot is the showroom, but the floor plan is what keeps it stocked."
 > — **Jim Press**
 
-## Wholesale Financing
 
 **Definition:** Wholesale financing is a type of lending provided by financial institutions to businesses (particularly dealerships and distributors) to finance their inventory of goods for resale. In the automotive industry, wholesale financing (also called floor plan financing or dealer financing) allows car dealerships to stock vehicles on their lots without paying the full purchase price upfront. The dealer pays interest on the financing until the vehicle is sold to a consumer, at which point the wholesale loan for that unit is repaid.
 
@@ -115,11 +120,12 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 ---
 
+## Working Capital
+
 > [!quote]
 > "Revenue is vanity, profit is sanity, but cash is king."
 > — **Alan Miltz**
 
-## Working Capital
 
 **Definition:** Working capital is the difference between a company's current assets (cash, accounts receivable, inventory) and its current liabilities (accounts payable, short-term debt, accrued expenses). It represents the short-term liquidity available to fund day-to-day operations. Positive working capital means the company can pay its short-term obligations and invest in its operations. Working capital management involves optimizing the levels of cash, receivables, inventory, and payables to ensure smooth operations while minimizing the cost of capital.
 

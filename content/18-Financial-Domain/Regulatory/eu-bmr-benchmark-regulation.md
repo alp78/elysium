@@ -13,11 +13,12 @@ updated: 2026-03-23
 
 ## Administrator Obligations (Articles 5-16)
 
+### Input Data Requirements (Article 11)
+
 > [!quote]
 > "A benchmark is only as good as the data that goes into it."
 > — **Jean-Paul Servais** (IOSCO Board Chair)
 
-### Input Data Requirements (Article 11)
 
 - All input data must be **traceable to its source** (vendor file, API call, manual entry)
 - Input data must be **verifiable and auditable** — keep the raw files

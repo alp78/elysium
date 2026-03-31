@@ -26,13 +26,14 @@ date: 2026-03-28
 
 ## A
 
+### Avoided Emissions
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
 > [!quote]
 > "The cheapest energy is the energy you never use."
 > — **Amory Lovins**
 
-### Avoided Emissions
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
 
 > Emissions reductions that occur outside a product's life cycle or value chain, but as a result of the use of that product. Often claimed by providers of renewable energy, energy-efficient technologies, or carbon capture solutions.
@@ -109,13 +110,14 @@ this assessment measures whether a company is helping or hurting the variety of 
 
 ---
 
+### Biodiversity Loss
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="50 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 50</span>
+
 > [!quote]
 > "The loss of biodiversity is a loss of the future."
 > — **Edward O. Wilson**
 
-### Biodiversity Loss
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="50 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 50</span>
 
 
 > The decline in the variety and abundance of species and ecosystems at the genetic, species, and ecosystem levels. In financial contexts, biodiversity loss represents a systemic risk driver that can erode natural capital, disrupt supply chains, and trigger regulatory or reputational consequences for exposed companies.
@@ -200,13 +202,14 @@ brown revenue is the money a company earns from activities that are considered e
 
 ## C
 
+### Carbon Budget
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="92 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 92</span>
+
 > [!quote]
 > "We have a finite carbon budget; every ton counts."
 > — **Mark Carney**
 
-### Carbon Budget
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="92 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 92</span>
 
 
 > The maximum cumulative amount of carbon dioxide (CO2) emissions permitted over a period of time to keep global warming within a specified temperature limit (e.g., 1.5 C or 2 C above pre-industrial levels).
@@ -254,13 +257,14 @@ a carbon budget is the total "allowance" of CO2 the world can still emit before 
 
 ---
 
+### Carbon Capture and Storage (CCS)
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "We cannot solve our problems with the same thinking we used when we created them."
 > — **Albert Einstein**
 
-### Carbon Capture and Storage (CCS)
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > A suite of technologies that capture carbon dioxide emissions at their source (e.g., power plants, industrial facilities) or directly from the atmosphere, transport the captured CO2, and store it permanently in deep geological formations or utilize it in industrial processes.
@@ -282,13 +286,14 @@ CCS is a way to grab CO2 before it enters the atmosphere (or pull it back out) a
 
 ---
 
+### Carbon Credit
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
 > [!quote]
 > "Pollution should never be the price of prosperity."
 > — **Al Gore**
 
-### Carbon Credit
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
 
 > A tradable certificate or permit representing the right to emit one metric ton of CO2 equivalent, or representing one metric ton of CO2 equivalent that has been reduced or removed from the atmosphere. Carbon credits are generated under compliance schemes (e.g., EU ETS) or voluntary standards (e.g., Verra, Gold Standard).
@@ -317,13 +322,14 @@ a carbon credit is a permit that lets a company release one ton of CO2 — or pr
 
 ---
 
+### Carbon Pricing
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
+
 > [!quote]
 > "If you want less of something, tax it; if you want more, subsidize it."
 > — **Arthur Pigou**
 
-### Carbon Pricing
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
 
 
 > A policy mechanism that assigns a monetary cost to greenhouse gas emissions, either through a carbon tax (a fixed price per ton of CO2e) or an emissions trading system (ETS, also known as cap-and-trade, where a market price emerges from a capped supply of allowances).
@@ -354,13 +360,14 @@ $$\text{Carbon Cost} = \text{Unabated Emissions (tCO}_2\text{e)} \times \text{Ca
 
 ---
 
+### Carbon Footprint
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="219 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 219</span>
+
 > [!quote]
 > "The greatest threat to our planet is the belief that someone else will save it."
 > — **Robert Swan**
 
-### Carbon Footprint
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="219 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 219</span>
 
 
 > The total greenhouse gas emissions caused directly and indirectly by an entity (company, portfolio, individual), usually expressed in metric tons of CO2 equivalent (tCO2e). For portfolios, the footprint is typically normalized per million dollars invested.
@@ -413,13 +420,14 @@ where EVIC = Enterprise Value Including Cash.
 
 ---
 
+### Carbon Intensity
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="184 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 184</span>
+
 > [!quote]
 > "Efficiency is doing things right; effectiveness is doing the right things."
 > — **Peter Drucker**
 
-### Carbon Intensity
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="184 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 184</span>
 
 
 > Greenhouse gas emissions per unit of economic output, commonly expressed as tCO2e per million USD of revenue or per unit of product.
@@ -513,13 +521,14 @@ climate analytics is the data engine behind sustainable investing. It translates
 
 ---
 
+### Climate Scenario Analysis
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
+
 > [!quote]
 > "The future is already here; it is just not evenly distributed."
 > — **William Gibson**
 
-### Climate Scenario Analysis
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
 
 
 > A forward-looking exercise that models the potential impact of different climate pathways (e.g., 1.5 C, 2 C, 3 C+ warming) on a company's or portfolio's financial performance, considering both transition risks and physical risks.
@@ -567,13 +576,14 @@ scenario analysis asks "what if?" questions: What happens to this company's prof
 
 ---
 
+### Circular Economy
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14 mentions across STOXX & ISS pages (low)">▰▰ 14</span>
+
 > [!quote]
 > "There is no such thing as waste in nature; everything is recycled."
 > — **Michael Braungart**
 
-### Circular Economy
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14 mentions across STOXX & ISS pages (low)">▰▰ 14</span>
 
 
 > An economic model that replaces the traditional linear "take-make-dispose" approach with systems designed to eliminate waste, circulate products and materials at their highest value, and regenerate natural systems. In sustainability investing, circular-economy alignment is assessed by examining a company's use of recycled inputs, product longevity, and end-of-life recovery.
@@ -618,13 +628,14 @@ a circular economy keeps resources in use for as long as possible. Instead of mi
 
 ---
 
+### Climate Litigation
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "Where there is a wrong, there is a remedy."
 > — **Legal maxim**
 
-### Climate Litigation
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > Legal proceedings brought against companies, governments, or other entities for their contribution to climate change, failure to adapt to climate impacts, or misrepresentation of climate-related risks and strategies. Climate litigation is an emerging source of transition risk that can result in damages, injunctions, or mandatory disclosure.
@@ -645,13 +656,14 @@ climate litigation is the growing wave of lawsuits accusing companies of causing
 
 ---
 
+### Climate Transition
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="459 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 459</span>
+
 > [!quote]
 > "The transition to clean energy is the greatest commercial opportunity of our time."
 > — **Mark Carney**
 
-### Climate Transition
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="459 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 459</span>
 
 
 > The systemic shift of an economy, sector, or company from high-carbon to low-carbon operations, encompassing changes in energy sources, industrial processes, business models, and capital allocation.
@@ -698,13 +710,14 @@ climate transition is the journey from fossil-fuel dependence to a sustainable e
 
 ## D
 
+### Decarbonization Pathway
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="64 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 64</span>
+
 > [!quote]
 > "A goal without a plan is just a wish."
 > — **Antoine de Saint-Exupery**
 
-### Decarbonization Pathway
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="64 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 64</span>
 
 
 > A time-bound trajectory that specifies the rate at which a company, sector, or portfolio must reduce its greenhouse gas emissions to align with a given temperature target (typically 1.5 C or well-below 2 C). EU Climate Benchmark regulation requires a minimum 7% year-on-year self-decarbonization for Paris-Aligned Benchmarks.
@@ -758,13 +771,14 @@ where $r$ is the annual decarbonization rate (e.g., 7% for PAB) and $t$ is years
 
 ---
 
+### Deforestation Risk
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
 > [!quote]
 > "A nation that destroys its soils destroys itself. Forests are the lungs of our land."
 > — **Franklin D. Roosevelt**
 
-### Deforestation Risk
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
 
 > The likelihood that a company's operations or supply chain contribute to the clearing of forests, either directly (land conversion) or indirectly (sourcing commodities linked to deforestation such as palm oil, soy, beef, or timber).
@@ -795,13 +809,14 @@ deforestation risk flags companies whose business depends on products that drive
 
 ## E
 
+### Energy Efficiency
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="70 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 70</span>
+
 > [!quote]
 > "Efficiency is doing things right; effectiveness is doing the right things."
 > — **Peter Drucker**
 
-### Energy Efficiency
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="70 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 70</span>
 
 
 > The ratio of useful energy output to total energy input for a given process, building, or economy. In sustainability investing, energy efficiency measures a company's ability to deliver the same products or services using less energy, thereby reducing costs and emissions.
@@ -850,13 +865,14 @@ $$\text{Energy Efficiency} = \frac{\text{Useful Energy Output}}{\text{Total Ener
 
 ---
 
+### Energy Transition
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="37 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 37</span>
+
 > [!quote]
 > "The Stone Age did not end for lack of stone, and the Oil Age will end long before the world runs out of oil."
 > — **Ahmed Zaki Yamani**
 
-### Energy Transition
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="37 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 37</span>
 
 
 > The global shift from fossil-fuel-based energy systems (coal, oil, natural gas) to low-carbon and renewable sources (solar, wind, hydrogen, nuclear), accompanied by changes in infrastructure, policy, technology, and consumer behavior.
@@ -937,13 +953,14 @@ an environmental footprint is a broad scorecard of how heavily a company treads 
 
 ## F
 
+### Financed Emissions
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
+
 > [!quote]
 > "Follow the money and you will find the emissions."
 > — **Mark Carney**
 
-### Financed Emissions
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
 
 
 > The greenhouse gas emissions attributable to a financial institution's lending and investment activities, calculated by apportioning a borrower's or investee's emissions according to the institution's share of financing.
@@ -995,13 +1012,14 @@ $$\text{Financed Emissions}_i = \frac{\text{Outstanding Amount}_i}{\text{EVIC}_i
 
 ---
 
+### Green Bond
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="34 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 34</span>
+
 > [!quote]
 > "Capital markets can be a powerful force for environmental good."
 > — **Christine Lagarde**
 
-### Green Bond
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="34 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 34</span>
 
 
 > A fixed-income instrument whose proceeds are exclusively allocated to finance or refinance projects with clear environmental benefits, such as renewable energy, energy efficiency, clean transportation, or sustainable water management.
@@ -1048,13 +1066,14 @@ a green bond is a loan that a company or government raises specifically to fund 
 
 ---
 
+### Green Revenue
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="17 mentions across STOXX & ISS pages (low)">▰▰ 17</span>
+
 > [!quote]
 > "Profit and sustainability are not mutually exclusive."
 > — **Paul Polman**
 
-### Green Revenue
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="17 mentions across STOXX & ISS pages (low)">▰▰ 17</span>
 
 
 > Revenue generated from products and services that deliver clear environmental benefits, including renewable energy generation, pollution prevention, sustainable agriculture, and circular-economy solutions. ISS ESG classifies revenue streams into granular green taxonomy categories.
@@ -1096,13 +1115,14 @@ green revenue is the "clean" portion of a company's income. STOXX uses green-rev
 
 ---
 
+### Greenhouse Gas (GHG)
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="431 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 431</span>
+
 > [!quote]
 > "CO2 is the thermostat knob that controls Earth's temperature."
 > — **James Hansen**
 
-### Greenhouse Gas (GHG)
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="431 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 431</span>
 
 
 > Any gas that absorbs and re-emits infrared radiation in the atmosphere, thereby contributing to the greenhouse effect and global warming. The principal GHGs are carbon dioxide (CO2), methane (CH4), nitrous oxide (N2O), hydrofluorocarbons (HFCs), perfluorocarbons (PFCs), sulphur hexafluoride (SF6), and nitrogen trifluoride (NF3).
@@ -1154,13 +1174,14 @@ $$\text{CO}_2\text{e} = \sum_{g} \text{Emissions}_g \times \text{GWP}_g$$
 
 ---
 
+### Greenwashing
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="43 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 43</span>
+
 > [!quote]
 > "A half-truth is the most cowardly of lies."
 > — **Mark Twain**
 
-### Greenwashing
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="43 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 43</span>
 
 
 > The practice of making misleading, unsubstantiated, or exaggerated claims about the environmental benefits of a product, service, company, or investment fund. In the financial sector, greenwashing includes overstating a fund's ESG credentials, selectively disclosing favorable climate metrics, or marketing as "sustainable" without substantive alignment to recognized standards.
@@ -1250,13 +1271,14 @@ high-emitting sectors are the industries most responsible for climate change. ST
 
 ---
 
+### Habitat Loss
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "In the end, we will conserve only what we love."
 > — **Baba Dioum**
 
-### Habitat Loss
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > The reduction in the area or quality of natural environments — forests, wetlands, grasslands, coral reefs, and other ecosystems — caused by land-use change, urbanization, agriculture, pollution, or climate change. Habitat loss is the leading driver of biodiversity decline globally.
@@ -1280,13 +1302,14 @@ habitat loss means that the places where wild species live are being destroyed, 
 
 ## I
 
+### Implied Temperature Rise
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
+
 > [!quote]
 > "We are the first generation to feel the effect of climate change and the last generation who can do something about it."
 > — **Barack Obama**
 
-### Implied Temperature Rise
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
 
 
 > A forward-looking metric that translates a company's or portfolio's projected greenhouse gas emissions pathway into a single temperature score (in degrees Celsius), representing the level of global warming that would result if the entire economy were as carbon-intensive as the entity being assessed.
@@ -1336,13 +1359,14 @@ implied temperature rise answers: "If every company in the world behaved like th
 
 ## J
 
+### Just Transition
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
+
 > [!quote]
 > "No one should be left behind in the shift to a green economy."
 > — **Christine Lagarde**
 
-### Just Transition
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
 
 
 > A framework for ensuring that the shift to a low-carbon economy is fair and inclusive, protecting the rights and livelihoods of workers, communities, and regions that depend on fossil-fuel industries or other high-carbon sectors. A just transition encompasses retraining programs, social safety nets, stakeholder engagement, and equitable distribution of the costs and benefits of decarbonization.
@@ -1391,13 +1415,14 @@ a just transition means making sure that the move to clean energy does not leave
 
 ## M
 
+### Methane Emissions
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="18 mentions across STOXX & ISS pages (low)">▰▰ 18</span>
+
 > [!quote]
 > "Methane is the low-hanging fruit of climate mitigation."
 > — **Durwood Zaelke**
 
-### Methane Emissions
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="18 mentions across STOXX & ISS pages (low)">▰▰ 18</span>
 
 
 > Emissions of methane (CH4), a greenhouse gas with a Global Warming Potential roughly 80 times that of CO2 over a 20-year horizon. Major sources include oil and gas operations (venting and flaring), livestock, rice cultivation, landfills, and coal mining. Reducing methane is considered the fastest lever for slowing near-term warming.
@@ -1453,13 +1478,14 @@ where $\text{GWP}_{\text{CH}_4}$ is 28 (100-year) or 80 (20-year) per IPCC AR6.
 
 ## N
 
+### Nature-Related Risk
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="19 mentions across STOXX & ISS pages (low)">▰▰ 19</span>
+
 > [!quote]
 > "Nature is not a place to visit. It is home."
 > — **Gary Snyder**
 
-### Nature-Related Risk
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="19 mentions across STOXX & ISS pages (low)">▰▰ 19</span>
 
 
 > Financial risk arising from an organization's dependencies and impacts on nature, encompassing biodiversity loss, ecosystem degradation, water scarcity, soil depletion, and ocean acidification. The TNFD framework categorizes these into physical risk, transition risk, and systemic risk related to nature.
@@ -1507,13 +1533,14 @@ nature-related risk captures the idea that businesses depend on healthy ecosyste
 
 ---
 
+### Natural Capital
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="67 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 67</span>
+
 > [!quote]
 > "The economy is a wholly owned subsidiary of the environment, not the other way around."
 > — **Herman Daly**
 
-### Natural Capital
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="67 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 67</span>
 
 
 > The stock of renewable and non-renewable natural resources — including air, water, soil, minerals, forests, wetlands, and biodiversity — that provide flows of ecosystem services (e.g., pollination, water filtration, carbon sequestration) underpinning economic activity and human well-being.
@@ -1561,13 +1588,14 @@ natural capital is the planet's "balance sheet" of natural assets. Just as a com
 
 ---
 
+### Net Zero
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="351 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 351</span>
+
 > [!quote]
 > "Net zero by 2050 is the defining challenge of our era."
 > — **Mark Carney**
 
-### Net Zero
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="351 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 351</span>
 
 
 > A state in which the greenhouse gases emitted into the atmosphere are balanced by an equivalent amount removed, resulting in no net increase in atmospheric GHG concentrations. At the global level, net zero CO2 must be achieved by approximately 2050 to limit warming to 1.5 C.
@@ -1611,13 +1639,14 @@ net zero means putting no more carbon into the air than is taken out. For a comp
 
 ---
 
+### Net Zero Transition
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="48 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 48</span>
+
 > [!quote]
 > "The transition to net zero is the greatest commercial opportunity of our time."
 > — **Mark Carney**
 
-### Net Zero Transition
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="48 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 48</span>
 
 
 > The process by which a company, portfolio, or economy moves from its current emissions profile to a net-zero state, encompassing strategic planning, capital reallocation, technology adoption, and stakeholder engagement.
@@ -1721,13 +1750,14 @@ $$\text{PAB Carbon Intensity}_t \leq \text{PAB Carbon Intensity}_{t-1} \times (1
 
 ---
 
+### Physical Risk
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="26 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 26</span>
+
 > [!quote]
 > "Nature bats last."
 > — **Paul Ehrlich**
 
-### Physical Risk
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="26 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 26</span>
 
 
 > The financial risk arising from the physical effects of climate change, including acute events (hurricanes, wildfires, floods) and chronic shifts (sea-level rise, heat stress, water scarcity). ISS ESG scores assets and companies on their exposure and vulnerability to these hazards under different warming scenarios.
@@ -1776,13 +1806,14 @@ physical risk is the danger that climate change will damage a company's factorie
 
 ## R
 
+### Science-Based Target
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="97 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 97</span>
+
 > [!quote]
 > "A goal without a plan is just a wish."
 > — **Antoine de Saint-Exupery**
 
-### Science-Based Target
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="97 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 97</span>
 
 
 > A greenhouse gas emissions reduction target adopted by a company that is consistent with the level of decarbonization required to meet the goals of the Paris Agreement (1.5 C or well-below 2 C). Targets are validated by the Science Based Targets initiative (SBTi).
@@ -1830,13 +1861,14 @@ a science-based target is a company's climate pledge that has been checked again
 
 ---
 
+### Stranded Assets
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "Most fossil fuel reserves are unburnable if we are to stay within two degrees."
 > — **Mark Carney**
 
-### Stranded Assets
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > Assets that suffer unanticipated or premature write-downs, devaluations, or conversion to liabilities as a result of the transition to a low-carbon economy. Examples include proven fossil-fuel reserves that can never be extracted if carbon budgets are respected, and coal-fired power plants retired before the end of their economic life.
@@ -1907,13 +1939,14 @@ the SDGs are the world's shared to-do list — from "No Poverty" (Goal 1) to "Cl
 
 ---
 
+### Temperature Alignment
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "We have a single mission: to keep 1.5 degrees within reach."
 > — **Alok Sharma**
 
-### Temperature Alignment
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > A metric that assesses whether a company's or portfolio's emissions trajectory is consistent with a specific global warming limit (e.g., 1.5 C, 2 C). It synthesizes current emissions, reduction targets, and decarbonization pace into a single temperature score.
@@ -1985,13 +2018,14 @@ transition metals are the raw materials that make decarbonization possible. With
 
 ---
 
+### Transition Risk
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="96 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 96</span>
+
 > [!quote]
 > "The biggest risk is not that the transition happens too fast, but that it happens too late."
 > — **Mark Carney**
 
-### Transition Risk
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="96 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 96</span>
 
 
 > Financial risk arising from the process of adjusting to a low-carbon economy, including policy and regulatory changes (carbon pricing, emissions caps), technological disruption (renewable energy cost declines), market shifts (changing consumer preferences), and reputational impacts.
@@ -2041,13 +2075,14 @@ transition risk is the danger that climate *policy and technology* — rather th
 
 ## W
 
+### Water Risk
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="19 mentions across STOXX & ISS pages (low)">▰▰ 19</span>
+
 > [!quote]
 > "Thousands have lived without love, not one without water."
 > — **W.H. Auden**
 
-### Water Risk
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="19 mentions across STOXX & ISS pages (low)">▰▰ 19</span>
 
 
 > The probability that water-related challenges — including scarcity, flooding, pollution, and regulatory restrictions — will materially affect a company's operations, supply chain, or financial performance.
@@ -2094,13 +2129,14 @@ water risk captures the business consequences of having too little water (drough
 
 ---
 
+### Water Stress
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
+
 > [!quote]
 > "When the well is dry, we know the worth of water."
 > — **Benjamin Franklin**
 
-### Water Stress
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
 
 
 > A condition in which the demand for water in a given region exceeds the available supply during a certain period, or when poor water quality restricts its use. Water stress is typically measured as the ratio of total water withdrawals to available renewable surface and groundwater supplies.

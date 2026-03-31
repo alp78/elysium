@@ -26,13 +26,14 @@ date: 2026-03-28
 
 ## A
 
+### Active Ownership
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="57 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 57</span>
+
 > [!quote]
 > "The most important thing a shareholder can do is show up."
 > — **Nell Minow**
 
-### Active Ownership
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="57 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 57</span>
 
 
 > A responsible investment strategy in which investors use their rights and influence as shareholders to drive improvements in ESG performance at portfolio companies. Active Ownership encompasses proxy voting, filing shareholder resolutions, direct engagement with management and boards, and collaborative engagement through investor coalitions. ISS ESG supports Active Ownership through its proxy voting advisory services and engagement data.
@@ -83,13 +84,14 @@ Active Ownership means investors do not simply buy shares and hope for the best.
 
 ## B
 
+### Best-in-Class Screening
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "Excellence is not a destination but a continuously receding horizon."
 > — **Al Gore**
 
-### Best-in-Class Screening
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > A positive screening methodology that identifies companies with superior ESG performance relative to their industry peers. Rather than excluding entire sectors, Best-in-Class selects the top-performing companies within each sector based on ESG criteria, enabling diversified portfolios that still reward strong sustainability practices.
@@ -167,13 +169,14 @@ In simple terms, BIAT measures how much damage (or benefit) a company causes to 
 
 ## C
 
+### Carbon Risk Rating
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="81 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 81</span>
+
 > [!quote]
 > "The question is not whether climate change will affect your portfolio, but when and how much."
 > — **Mark Carney**
 
-### Carbon Risk Rating
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="81 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 81</span>
 
 
 > A quantitative assessment of a company's exposure to and management of carbon-related financial risks, including transition risks (policy, technology, market shifts) and physical risks (extreme weather, resource scarcity). ISS ESG evaluates companies on their carbon footprint intensity, emissions reduction targets, fossil fuel reserves, and alignment with Paris Agreement pathways.
@@ -275,13 +278,14 @@ Think of Climetrics as a "climate score for your investment fund." It checks whe
 
 ---
 
+### Controversy Rating
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="254 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 254</span>
+
 > [!quote]
 > "It takes twenty years to build a reputation and five minutes to ruin it."
 > — **Warren Buffett**
 
-### Controversy Rating
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="254 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 254</span>
 
 
 > A backward-looking assessment that evaluates the severity of a company's involvement in environmental, social, or governance controversies. ISS ESG monitors global media, NGO reports, regulatory filings, and other public sources to identify incidents and assigns a severity score based on the impact, recurrence, and company response.
@@ -331,13 +335,14 @@ A Controversy Rating measures how badly a company has been caught behaving. If a
 
 ---
 
+### Controversy Level
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
+
 > [!quote]
 > "In a crisis, character is revealed, not formed."
 > — **Robert Freeman**
 
-### Controversy Level
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
 
 > A categorical classification of the current state of a company's involvement in ESG-related controversies. While the Controversy Rating scores the severity of individual incidents, the Controversy Level aggregates all active controversies into a single current-state indicator that signals the overall reputational and operational risk from unresolved ESG events.
@@ -468,13 +473,14 @@ Country Ratings work like corporate ESG ratings but applied to governments. They
 
 ---
 
+### Cyber Risk Score
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
+
 > [!quote]
 > "There are only two types of companies: those that have been hacked and those that will be."
 > — **Robert Mueller**
 
-### Cyber Risk Score
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
 
 
 > A specialised assessment that evaluates a company's exposure to and management of cybersecurity-related risks, including data breaches, system vulnerabilities, regulatory compliance (e.g., GDPR), incident response preparedness, and board-level cyber governance. ISS ESG incorporates cyber risk indicators into its broader governance and social pillar assessments.
@@ -607,13 +613,14 @@ Decile-Based Scoring converts raw ESG numbers into a simple 1-to-10 rank within 
 
 ---
 
+### Double Materiality
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
+
 > [!quote]
 > "What gets measured gets managed, but what matters most may not be measurable."
 > — **Mark Carney**
 
-### Double Materiality
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
 
 
 > A regulatory and analytical concept that requires ESG assessments to consider both how sustainability issues affect a company's financial performance (financial materiality, or "outside-in") and how the company's activities affect the environment and society (impact materiality, or "inside-out"). Double Materiality is a cornerstone of the EU Corporate Sustainability Reporting Directive (CSRD) and is increasingly reflected in ISS ESG's assessment frameworks.
@@ -665,13 +672,14 @@ In simple terms, traditional materiality asks: "Does climate change hurt this co
 
 ## E
 
+### ESG (Environmental, Social, Governance)
+
+<span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8,515 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 8,515</span>
+
 > [!quote]
 > "Every company and every industry will be transformed by the transition to a net-zero world."
 > — **Larry Fink**
 
-### ESG (Environmental, Social, Governance)
-
-<span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8,515 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 8,515</span>
 
 
 > The three central pillars used to evaluate the sustainability and ethical impact of an investment. Environmental criteria examine resource use, pollution, climate impact, and biodiversity. Social criteria assess labour practices, human rights, community relations, and product safety. Governance criteria cover board structure, executive compensation, audit integrity, shareholder rights, and anti-corruption measures.
@@ -770,13 +778,14 @@ This is the same concept as the Corporate Rating (ISS ESG) entry above, referred
 
 ---
 
+### ESG Disclosure
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="15 mentions across STOXX & ISS pages (low)">▰▰ 15</span>
+
 > [!quote]
 > "Sunlight is said to be the best of disinfectants."
 > — **Louis Brandeis**
 
-### ESG Disclosure
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="15 mentions across STOXX & ISS pages (low)">▰▰ 15</span>
 
 
 > A measure of the extent and quality of a company's public reporting on environmental, social, and governance factors. ESG Disclosure encompasses regulatory filings, sustainability reports, CDP responses, proxy statements, and other communications that provide investors with the information necessary to assess ESG performance. ISS ESG evaluates disclosure quality as part of its Corporate Rating methodology.
@@ -848,13 +857,14 @@ ESG Fund Ratings answer the question: "If I buy this fund, how ESG-friendly is m
 
 ---
 
+### ESG Integration
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="149 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 149</span>
+
 > [!quote]
 > "ESG factors are not separate from financial analysis; they are financial analysis."
 > — **Larry Fink**
 
-### ESG Integration
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="149 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 149</span>
 
 
 > The systematic inclusion of ESG factors into traditional financial analysis and investment decision-making processes. ESG Integration goes beyond negative screening or exclusion; it involves explicitly incorporating ESG risks and opportunities into valuation models, portfolio construction, risk management frameworks, and asset allocation decisions. ISS ESG provides data, ratings, and analytics that facilitate ESG Integration across asset classes.
@@ -902,13 +912,14 @@ ESG Integration means treating ESG data the same way you treat financial data: a
 
 ---
 
+### ESG Risk Rating
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="137 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 137</span>
+
 > [!quote]
 > "Risk comes from not knowing what you are doing."
 > — **Warren Buffett**
 
-### ESG Risk Rating
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="137 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 137</span>
 
 
 > A forward-looking assessment of the degree of unmanaged ESG risk that a company faces. It combines the company's exposure to material ESG risks (based on industry and geography) with its management of those risks (based on policies, programmes, and performance). The residual, unmanaged portion of risk determines the final rating.
@@ -983,13 +994,14 @@ The ESG Scorecard is the report card. It takes all the detailed analysis behind 
 
 ---
 
+### Environmental Pillar
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "The environment is where we all meet; where we all have a mutual interest."
 > — **Lady Bird Johnson**
 
-### Environmental Pillar
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > The "E" component of the ESG framework, encompassing a company's impact on and management of natural systems. Key themes include greenhouse gas emissions, energy efficiency, water use, waste management, pollution prevention, biodiversity impact, land use, and climate strategy. ISS ESG assigns industry-specific weightings to environmental indicators based on materiality.
@@ -1010,13 +1022,14 @@ The Environmental Pillar measures everything related to a company's relationship
 
 ---
 
+### Exposure Score
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
 > [!quote]
 > "You cannot manage what you cannot measure, and you cannot measure what you do not define."
 > — **Peter Drucker**
 
-### Exposure Score
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
 
 > A measure of the degree to which a company is inherently exposed to material ESG risks, determined primarily by its industry classification, geographic footprint, and business model. Exposure is assessed before considering any management actions, representing the "raw" risk that exists by virtue of what the company does and where it operates.
@@ -1049,13 +1062,14 @@ Exposure Score is the starting point before management is factored in. A coal mi
 
 ## F
 
+### Fund Rating
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
+
 > [!quote]
 > "In investing, what is comfortable is rarely profitable."
 > — **Robert Arnott**
 
-### Fund Rating
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
 
 
 > A generic term for any ESG assessment applied at the fund level rather than the individual company level. ISS ESG produces several fund-level products, including the ESG Fund Rating (overall ESG quality), Climetrics (climate performance), and regulatory-aligned disclosures (e.g., SFDR Article 8/9 compliance assessments). Fund Ratings aggregate company-level data weighted by portfolio allocation.
@@ -1149,13 +1163,14 @@ Governance QualityScore zeroes in on the G of ESG with granular detail. It answe
 
 ---
 
+### Greenwashing Risk
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
+
 > [!quote]
 > "The gap between what companies say and what they do has never been more dangerous."
 > — **Al Gore**
 
-### Greenwashing Risk
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
 
 > The risk that a company, fund, or financial product overstates or misrepresents its environmental or sustainability credentials. ISS ESG helps investors identify Greenwashing Risk by comparing stated ESG commitments against verified performance data, assessing the credibility of sustainability claims in bond frameworks, and evaluating whether fund compositions genuinely match their marketed ESG strategies.
@@ -1206,13 +1221,14 @@ Greenwashing Risk is the danger that something labelled "green" or "sustainable"
 
 ## I
 
+### Impact Investing
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="54 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 54</span>
+
 > [!quote]
 > "We make a living by what we get, but we make a life by what we give."
 > — **Winston Churchill**
 
-### Impact Investing
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="54 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 54</span>
 
 
 > An investment approach that intentionally seeks to generate measurable positive social or environmental outcomes alongside financial returns. ISS ESG supports Impact Investing through its SDG Impact Ratings, sustainability solutions assessments, and thematic data products that enable investors to identify and measure the real-world impact of their portfolio allocations.
@@ -1400,13 +1416,14 @@ The Management Score is the "what are you doing about it?" assessment. A company
 
 ---
 
+### Materiality
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="351 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 351</span>
+
 > [!quote]
 > "The essence of strategy is choosing what not to do."
 > — **Michael Porter**
 
-### Materiality
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="351 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 351</span>
 
 
 > The principle that ESG factors should be weighted according to their financial relevance and impact significance for a given industry. ISS ESG applies sector-specific materiality matrices that determine which ESG issues receive the highest weighting in the Corporate Rating. Materiality ensures that ratings reflect the issues most likely to affect a company's financial performance, operational resilience, and stakeholder relationships.
@@ -1507,13 +1524,14 @@ Mean Species Abundance is a single number that captures how "intact" an ecosyste
 
 ---
 
+### Modern Slavery Scorecard
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
+
 > [!quote]
 > "No business which depends for its existence on paying less than living wages has any right to continue."
 > — **Franklin D. Roosevelt**
 
-### Modern Slavery Scorecard
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
 
 
 > A specialised assessment tool that evaluates companies on their policies, due diligence processes, and transparency regarding modern slavery and forced labour risks within their operations and supply chains. The scorecard is aligned with requirements of the UK Modern Slavery Act, the Australian Modern Slavery Act, and similar regulations, assessing disclosures on risk assessment, remediation, and supply chain monitoring.
@@ -1593,13 +1611,14 @@ Muni QualityScore adapts the ISS QualityScore concept for the municipal bond mar
 
 ## N
 
+### Negative Screening
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="23 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 23</span>
+
 > [!quote]
 > "Divestment is a blunt instrument, but sometimes blunt instruments are necessary."
 > — **Kofi Annan**
 
-### Negative Screening
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="23 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 23</span>
 
 
 > An investment approach that systematically excludes companies, sectors, or countries from a portfolio based on predefined ESG criteria. Common exclusion grounds include involvement in controversial weapons, tobacco production, thermal coal extraction, severe human rights violations, and persistent environmental norm breaches. ISS ESG provides exclusion screening data and STOXX applies negative screens in the construction of its ESG index families.
@@ -1645,13 +1664,14 @@ Negative Screening is the most straightforward form of responsible investing: it
 
 ---
 
+### Norm-Based Research
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="32 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 32</span>
+
 > [!quote]
 > "Human rights are not things that are put on the table for people to enjoy; they are things people fight for."
 > — **Kofi Annan**
 
-### Norm-Based Research
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="32 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 32</span>
 
 
 > A research methodology that systematically identifies company involvement in incidents that violate international norms and standards, including the UN Global Compact Principles, the OECD Guidelines for Multinational Enterprises, the UN Guiding Principles on Business and Human Rights, and International Humanitarian Law. ISS ESG's Norm-Based Research produces assessments of the severity and status of each identified violation.
@@ -1699,13 +1719,14 @@ Norm-Based Research is the investigative process behind controversy screening. A
 
 ---
 
+### Norm-Based Screening
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
+
 > [!quote]
 > "The first step in the evolution of ethics is a sense of solidarity with other human beings."
 > — **Albert Schweitzer**
 
-### Norm-Based Screening
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
 
 
 > The application of Norm-Based Research findings to investment decision-making, typically by excluding or flagging companies that are found to be in violation of international norms. Norm-Based Screening is a foundational component of responsible investment policies and is required by many European institutional investors and regulatory frameworks, including the Swedish AP funds' ethical guidelines and SFDR disclosure requirements.
@@ -1756,13 +1777,14 @@ Norm-Based Screening is the investment action that follows from Norm-Based Resea
 
 ## P
 
+### Peer Group Comparison
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="36 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 36</span>
+
 > [!quote]
 > "Tell me who your peers are, and I will tell you who you are."
 > — **Johann Wolfgang von Goethe**
 
-### Peer Group Comparison
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="36 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 36</span>
 
 
 > A relative assessment methodology in which a company's ESG performance is evaluated against a defined set of industry, regional, or size-based peers. ISS ESG and STOXX use peer group comparisons to contextualise absolute ESG scores, ensuring that ratings reflect not only what a company does but how it compares to the most relevant benchmark companies. Peer groups are typically defined by industry classification (e.g., GICS, ICB) and sometimes further segmented by region or market capitalisation.
@@ -1810,13 +1832,14 @@ Peer Group Comparison answers the question: "Is this company good at ESG relativ
 
 ---
 
+### Positive Screening
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
+
 > [!quote]
 > "Be the change that you wish to see in the world."
 > — **Mahatma Gandhi**
 
-### Positive Screening
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
 
 > An investment approach that actively selects companies for inclusion in a portfolio based on superior ESG performance, sustainability contributions, or alignment with specific thematic criteria. Unlike negative screening (which excludes), positive screening identifies and overweights companies that demonstrate ESG leadership, produce sustainability solutions, or meet defined impact criteria. ISS ESG data supports positive screening through its Corporate Ratings, Prime Status designations, and SDG Impact Ratings.
@@ -1865,13 +1888,14 @@ Positive Screening flips the script from "who do we exclude?" to "who do we incl
 
 ---
 
+### Principal Adverse Impact (PAI)
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
+
 > [!quote]
 > "If you cannot describe what you are doing as a process, you do not know what you are doing."
 > — **W. Edwards Deming**
 
-### Principal Adverse Impact (PAI)
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
 
 
 > A regulatory concept introduced by the EU Sustainable Finance Disclosure Regulation (SFDR) that requires financial market participants to report on the most significant negative impacts of their investment decisions on sustainability factors. ISS ESG provides PAI data solutions covering mandatory indicators (e.g., GHG emissions, biodiversity impact, gender pay gap, controversial weapons exposure) and optional indicators across environmental and social domains.
@@ -1923,13 +1947,14 @@ PAI is a regulatory requirement, not a score. European fund managers must disclo
 
 ## R
 
+### Responsible Investment
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="612 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 612</span>
+
 > [!quote]
 > "Sustainable capitalism is not an oxymoron."
 > — **Al Gore**
 
-### Responsible Investment
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="612 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 612</span>
 
 
 > A broad investment philosophy that incorporates ESG considerations into investment decision-making and ownership practices with the goal of generating sustainable long-term returns while contributing to positive societal outcomes. Responsible Investment encompasses strategies ranging from negative screening and norm-based exclusions through ESG integration, active ownership, and impact investing. ISS ESG provides the data infrastructure, ratings, and advisory services that underpin Responsible Investment across the investment chain.
@@ -1980,13 +2005,14 @@ Responsible Investment is the umbrella term for all the ways investors can take 
 
 ## S
 
+### SDG Impact Rating
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="46 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 46</span>
+
 > [!quote]
 > "Sustainability is no longer about doing less harm; it is about doing more good."
 > — **Jochen Zeitz**
 
-### SDG Impact Rating
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="46 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 46</span>
 
 
 > An assessment of how a company's products, services, and operations contribute to or detract from the achievement of the United Nations Sustainable Development Goals (SDGs). ISS ESG evaluates companies' net impact across all 17 SDGs, distinguishing between positive contributions (e.g., providing clean energy) and negative impacts (e.g., generating pollution), and producing an overall net impact classification.
@@ -2038,13 +2064,14 @@ The SDG Impact Rating connects corporate behaviour to the UN's 17 global goals. 
 
 ---
 
+### Social Pillar
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "A business that makes nothing but money is a poor business."
 > — **Henry Ford**
 
-### Social Pillar
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > The "S" component of the ESG framework, encompassing a company's relationships with and impact on its workforce, customers, communities, and supply chain. Key themes include labour standards, occupational health and safety, diversity and inclusion, human rights, community engagement, product safety, data privacy, and access to essential services.
@@ -2066,13 +2093,14 @@ The Social Pillar evaluates how a company treats people. Are workers paid fairly
 
 ---
 
+### Stakeholder Capitalism
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
+
 > [!quote]
 > "The social responsibility of business is to increase its profits, but that view is now incomplete."
 > — **Larry Fink**
 
-### Stakeholder Capitalism
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
 
 > An economic and corporate governance philosophy that holds companies should serve the interests of all stakeholders, including employees, customers, suppliers, communities, and the environment, rather than prioritising shareholder returns exclusively. ISS ESG's assessment frameworks implicitly reflect Stakeholder Capitalism principles by evaluating corporate performance across environmental, social, and governance dimensions that capture impacts on a broad range of stakeholders.
@@ -2099,13 +2127,14 @@ Stakeholder Capitalism challenges the traditional view that a company exists sol
 
 ---
 
+### Sustainability Bond Rating
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
 > [!quote]
 > "The greatest threat to our planet is the belief that someone else will save it."
 > — **Robert Swan**
 
-### Sustainability Bond Rating
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
 
 > An assessment of fixed-income instruments (green bonds, social bonds, sustainability bonds, and sustainability-linked bonds) that evaluates the alignment of the bond's framework, use of proceeds, and issuer credentials with recognised standards such as the ICMA Green Bond Principles, Social Bond Principles, and the EU Green Bond Standard. ISS ESG provides Second Party Opinions (SPOs) and ongoing monitoring of labelled bond issuances.
@@ -2134,13 +2163,14 @@ A Sustainability Bond Rating tells investors whether a "green" or "social" bond 
 
 ---
 
+### Sustainability Solutions Assessment
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "The stone age did not end because we ran out of stones."
 > — **Ahmed Zaki Yamani**
 
-### Sustainability Solutions Assessment
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > An evaluation of the degree to which a company's products and services contribute to solving sustainability challenges, particularly those aligned with the UN SDGs and the EU Taxonomy for Sustainable Activities. ISS ESG assesses revenue exposure to sustainability solution areas such as renewable energy, energy efficiency, sustainable agriculture, healthcare access, and affordable housing.
@@ -2166,13 +2196,14 @@ The Sustainability Solutions Assessment measures whether a company is part of th
 
 ## W
 
+### Water Risk Rating
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
+
 > [!quote]
 > "Water is the driving force of all nature."
 > — **Leonardo da Vinci**
 
-### Water Risk Rating
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
 
 
 > A specialised assessment of a company's exposure to and management of water-related risks, including water scarcity in operating regions, water pollution, regulatory compliance, watershed stress, and the financial implications of water-dependent operations. ISS ESG evaluates companies on their water use efficiency, water recycling practices, water stewardship programmes, and disclosure quality.

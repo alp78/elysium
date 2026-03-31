@@ -31,11 +31,12 @@ Standard momentum and trend indicators used in equity index analysis. These comp
 | **ADX** | Average Directional Index | > 25 trending · < 20 range-bound |
 | **Golden/Death Cross** | SMA(50) crossing SMA(200) | Golden (up) = bullish · Death (down) = bearish |
 
+## RSI (Relative Strength Index)
+
 > [!quote]
 > "The RSI is the single most useful indicator I have ever found for determining when prices are overextended."
 > — **J. Welles Wilder**
 
-## RSI (Relative Strength Index)
 
 The RSI measures the speed and magnitude of recent price changes to evaluate overbought or oversold conditions.
 
@@ -62,11 +63,12 @@ $$\text{Histogram} = \text{MACD Line} - \text{Signal Line}$$
 - **Bearish crossover**: MACD crosses below signal line
 - **Zero line cross**: MACD crossing zero confirms trend direction
 
+## Bollinger Bands
+
 > [!quote]
 > "Bollinger Bands are not meant to be used in isolation. They are meant to provide a framework within which price action can be assessed."
 > — **John Bollinger**
 
-## Bollinger Bands
 
 $$\text{Upper Band} = \text{SMA}(20) + 2 \times \sigma(20)$$
 $$\text{Lower Band} = \text{SMA}(20) - 2 \times \sigma(20)$$
@@ -86,11 +88,12 @@ Price touching the upper band signals potential overbought conditions; touching 
 > [!info] ADX and Direction
 > ADX measures trend *strength* only, not direction. Combine with +DI/-DI (directional indicators) to determine if the trend is up or down.
 
+## Golden Cross and Death Cross
+
 > [!quote]
 > "The trend is your friend until the end when it bends."
 > — **Ed Seykota**
 
-## Golden Cross and Death Cross
 
 - **Golden Cross**: SMA(50) crosses **above** SMA(200) — bullish long-term signal
 - **Death Cross**: SMA(50) crosses **below** SMA(200) — bearish long-term signal

@@ -26,13 +26,14 @@ date: 2026-03-28
 
 ## A
 
+### Accruals
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="23 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 23</span>
+
 > [!quote]
 > "Earnings can be manipulated, but cash flow tells the truth."
 > — **Richard Sloan**
 
-### Accruals
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="23 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 23</span>
 
 
 > The non-cash component of reported earnings, computed as the difference between
@@ -139,13 +140,14 @@ this is a guardrail that prevents a smart beta index from accidentally becoming 
 
 ---
 
+### Alpha Signal
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="63 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 63</span>
+
 > [!quote]
 > "The search for alpha is the oldest quest in finance."
 > — **Eugene Fama**
 
-### Alpha Signal
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="63 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 63</span>
 
 
 > A quantitative score assigned to each security that predicts relative future
@@ -244,13 +246,14 @@ capping stops any one stock from dominating the index. Even if a factor model lo
 
 ---
 
+### Capital Asset Pricing Model (CAPM)
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "The CAPM is the E=mc squared of finance."
 > — **Eugene Fama**
 
-### Capital Asset Pricing Model (CAPM)
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > A foundational equilibrium model asserting that the expected excess return of a
@@ -281,13 +284,14 @@ where $R_f$ is the risk-free rate, $R_m$ is the market return, and $\beta_i = \f
 
 ---
 
+### Carry Factor
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="19 mentions across STOXX & ISS pages (low)">▰▰ 19</span>
+
 > [!quote]
 > "Getting paid to wait is the essence of carry."
 > — **Antti Ilmanen**
 
-### Carry Factor
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="19 mentions across STOXX & ISS pages (low)">▰▰ 19</span>
 
 
 > A factor that captures the return earned from holding higher-yielding assets
@@ -346,13 +350,14 @@ where $D_i$ is the expected annual dividend and $P_i$ is the current price. More
 
 ## D
 
+### Defensive Factor
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
 > [!quote]
 > "Rule number one: never lose money. Rule number two: never forget rule number one."
 > — **Warren Buffett**
 
-### Defensive Factor
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
 
 > A factor strategy that selects securities exhibiting stable earnings, low
@@ -390,13 +395,14 @@ $$
 
 ---
 
+### Dilution
+
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,626 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,626</span>
+
 > [!quote]
 > "Dilution is a stealth tax on every existing shareholder."
 > — **Charlie Munger**
 
-### Dilution
-
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,626 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,626</span>
 
 
 > In the STOXX quality framework, dilution captures the change in a company's
@@ -454,13 +460,14 @@ $$
 
 ## E
 
+### Efficient Frontier
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
+
 > [!quote]
 > "Diversification is the only free lunch in investing."
 > — **Harry Markowitz**
 
-### Efficient Frontier
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
 
 
 > The set of portfolios that offer the highest expected return for each level of
@@ -517,13 +524,14 @@ Tracing out all $\sigma^*$ values produces the frontier.
 
 ---
 
+### Earnings Announcement Drift
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
+
 > [!quote]
 > "Markets are slow to absorb information that contradicts the consensus."
 > — **David Dreman**
 
-### Earnings Announcement Drift
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
 
 
 > The empirically documented tendency for stock prices to continue moving in the
@@ -562,13 +570,14 @@ when a company reports earnings that beat (or miss) expectations, the stock tend
 
 ---
 
+### Earnings Momentum
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="18 mentions across STOXX & ISS pages (low)">▰▰ 18</span>
+
 > [!quote]
 > "The trend is your friend until it bends."
 > — **Ed Seykota**
 
-### Earnings Momentum
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="18 mentions across STOXX & ISS pages (low)">▰▰ 18</span>
 
 
 > A factor signal based on the direction and magnitude of analyst earnings
@@ -658,13 +667,14 @@ $$
 
 ## F
 
+### Factor (Definition)
+
+<span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5,508 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 5,508</span>
+
 > [!quote]
 > "A factor is simply a characteristic that explains differences in stock returns."
 > — **Eugene Fama**
 
-### Factor (Definition)
-
-<span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5,508 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 5,508</span>
 
 
 > A systematic, persistent, and economically motivated driver of security
@@ -716,13 +726,14 @@ a factor is a measurable characteristic of stocks — like cheapness or recent p
 
 ---
 
+### Factor Diversification
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
+
 > [!quote]
 > "Diversification is the only free lunch in finance."
 > — **Harry Markowitz**
 
-### Factor Diversification
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
 
 
 > The practice of combining multiple factor exposures within a single portfolio
@@ -774,13 +785,14 @@ different factors "take turns" performing well. Value might struggle when moment
 
 ---
 
+### Factor Investing
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="219 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 219</span>
+
 > [!quote]
 > "Factor investing is the systematic harvesting of risk premia."
 > — **Cliff Asness**
 
-### Factor Investing
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="219 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 219</span>
 
 
 > An investment approach that targets specific, evidence-based return drivers
@@ -831,13 +843,14 @@ instead of buying the whole market by size, factor investing deliberately tilts 
 
 ---
 
+### Factor Premium
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
+
 > [!quote]
 > "Risk premia exist because bearing risk is uncomfortable."
 > — **Cliff Asness**
 
-### Factor Premium
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
 
 
 > The long-run excess return attributable to systematic exposure to a specific
@@ -897,13 +910,14 @@ where the long (short) portfolio holds the top (bottom) quintile on factor $k$.
 
 ---
 
+### Factor Rotation
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "Timing the market is a fool's game, but understanding cycles is wisdom."
 > — **Howard Marks**
 
-### Factor Rotation
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > A dynamic strategy that adjusts factor exposures over time based on the
@@ -929,13 +943,14 @@ factor rotation is the idea of being a "factor timer" — overweighting value wh
 
 ---
 
+### Factor Tilt
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
+
 > [!quote]
 > "Tilting toward what works is not speculation; it is disciplined investing."
 > — **Cliff Asness**
 
-### Factor Tilt
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
 
 
 > The deliberate overweighting or underweighting of securities based on their
@@ -1050,13 +1065,14 @@ a factor-based index is like a regular stock index — the S&P 500 or EURO STOXX
 
 ## G
 
+### Growth Factor
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "The biggest risk is not taking any risk."
 > — **Mark Zuckerberg**
 
-### Growth Factor
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > A factor that selects securities exhibiting above-average earnings growth,
@@ -1141,13 +1157,14 @@ if the benchmark has 12% in pharmaceuticals, the factor index also holds exactly
 
 ## L
 
+### Low Risk Factor
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14 mentions across STOXX & ISS pages (low)">▰▰ 14</span>
+
 > [!quote]
 > "The essence of investment management is the management of risks, not the management of returns."
 > — **Benjamin Graham**
 
-### Low Risk Factor
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14 mentions across STOXX & ISS pages (low)">▰▰ 14</span>
 
 
 > A broad factor category encompassing strategies that overweight securities
@@ -1200,13 +1217,14 @@ the low risk factor is the finding that boring, steady stocks have historically 
 
 ---
 
+### Low Volatility Factor
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14 mentions across STOXX & ISS pages (low)">▰▰ 14</span>
+
 > [!quote]
 > "The low-volatility anomaly is the greatest embarrassment to the efficient market hypothesis."
 > — **Cliff Asness**
 
-### Low Volatility Factor
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14 mentions across STOXX & ISS pages (low)">▰▰ 14</span>
 
 
 > The specific implementation of the low risk factor that selects or overweights
@@ -1263,13 +1281,14 @@ Securities with the smallest $\sigma_i$ receive the highest weights.
 
 ## M
 
+### Minimum Variance
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="769 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 769</span>
+
 > [!quote]
 > "The goal is not to maximize return but to optimize the ratio of return to risk."
 > — **Harry Markowitz**
 
-### Minimum Variance
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="769 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 769</span>
 
 
 > A portfolio optimization strategy that seeks the set of weights producing the
@@ -1324,13 +1343,14 @@ $$
 
 ---
 
+### Momentum Factor
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="50 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 50</span>
+
 > [!quote]
 > "Momentum is a fact, not a theory; returns tend to persist."
 > — **Cliff Asness**
 
-### Momentum Factor
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="50 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 50</span>
 
 
 > A factor that captures the tendency of recent winners to continue outperforming
@@ -1389,13 +1409,14 @@ The most recent month is excluded to avoid the short-term reversal effect.
 
 ---
 
+### Multi-Factor
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="239 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 239</span>
+
 > [!quote]
 > "Combining factors is like combining ingredients; the blend matters more than any single one."
 > — **Kenneth French**
 
-### Multi-Factor
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="239 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 239</span>
 
 
 > An index or strategy that systematically combines two or more factor signals
@@ -1564,13 +1585,14 @@ $$
 
 ## P
 
+### Price Momentum
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="17 mentions across STOXX & ISS pages (low)">▰▰ 17</span>
+
 > [!quote]
 > "An object in motion tends to stay in motion."
 > — **Isaac Newton**
 
-### Price Momentum
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="17 mentions across STOXX & ISS pages (low)">▰▰ 17</span>
 
 
 > The trailing total return of a security over a defined look-back window,
@@ -1630,13 +1652,14 @@ $$
 
 ## Q
 
+### Quality Factor
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="63 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 63</span>
+
 > [!quote]
 > "In the short run the market is a voting machine, but in the long run it is a weighing machine."
 > — **Benjamin Graham**
 
-### Quality Factor
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="63 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 63</span>
 
 
 > A composite factor that identifies companies with strong profitability, low
@@ -1696,13 +1719,14 @@ where sub-signals $m$ include ROE, accruals, $\Delta$NOA, and dilution.
 
 ## R
 
+### Risk Budget
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
+
 > [!quote]
 > "Risk budgeting is the disciplined art of spending your scarcest resource."
 > — **Andrew Ang**
 
-### Risk Budget
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
 
 
 > The maximum contribution to total portfolio risk allocated to a single
@@ -1755,13 +1779,14 @@ a risk budget is like a spending cap but for risk. Instead of saying "no stock a
 
 ---
 
+### Risk Parity
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
+
 > [!quote]
 > "Equal risk, not equal dollars, is the foundation of true diversification."
 > — **Ray Dalio**
 
-### Risk Parity
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
 
 > A portfolio construction strategy that allocates risk equally across asset
@@ -1799,13 +1824,14 @@ risk parity says: "Bonds are much less risky than stocks, so if you want equal r
 
 ---
 
+### Risk Premia
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="120 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 120</span>
+
 > [!quote]
 > "Risk and return are joined at the hip."
 > — **Eugene Fama**
 
-### Risk Premia
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="120 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 120</span>
 
 
 > The excess return earned by bearing systematic, non-diversifiable risk
@@ -1856,13 +1882,14 @@ a risk premium is the reward investors receive for taking on a particular type o
 
 ## S
 
+### Size Factor
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="69 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 69</span>
+
 > [!quote]
 > "Small stocks outperform because they are riskier, and risk must be compensated."
 > — **Eugene Fama**
 
-### Size Factor
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="69 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 69</span>
 
 
 > A factor that captures the historical tendency of smaller-capitalization stocks
@@ -1920,13 +1947,14 @@ Negative log ensures that smaller companies receive higher scores.
 
 ---
 
+### Smart Beta
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="84 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 84</span>
+
 > [!quote]
 > "Smart beta bridges the gap between active and passive investing."
 > — **Cliff Asness**
 
-### Smart Beta
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="84 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 84</span>
 
 
 > An umbrella term for rules-based index strategies that deviate from
@@ -2068,13 +2096,14 @@ where $w^{+}$ and $w^{-}$ are post- and pre-rebalancing weights.
 
 ## V
 
+### Value Factor
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="75 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 75</span>
+
 > [!quote]
 > "Price is what you pay; value is what you get."
 > — **Warren Buffett**
 
-### Value Factor
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="75 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 75</span>
 
 
 > A factor that identifies undervalued securities by ranking them on fundamental
@@ -2134,13 +2163,14 @@ where B/P = book-to-price, E/P = earnings-to-price, D/P = dividend yield.
 
 ## Y
 
+### Yield Factor
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "Income is the reason most investors buy, and the reason most stay."
 > — **John Bogle**
 
-### Yield Factor
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > A factor that ranks securities by their total cash return to shareholders,

@@ -47,11 +47,12 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ---
 
+## E-Commerce
+
 > [!quote]
 > "The Internet is becoming the town square for the global village of tomorrow."
 > — **Bill Gates**
 
-## E-Commerce
 
 **Definition:** E-commerce (electronic commerce) refers to the buying and selling of goods and services over the internet. It encompasses online retail stores, digital marketplaces, business-to-business trading platforms, and direct-to-consumer sales channels. E-commerce has transformed traditional retail by enabling businesses to reach global customers, operate 24/7, offer personalized shopping experiences, and reduce the overhead costs associated with physical stores. It includes various models such as B2C, B2B, C2C (consumer-to-consumer), and D2C (direct-to-consumer).
 
@@ -63,11 +64,12 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ---
 
+## Franchise
+
 > [!quote]
 > "In business, the idea of measuring what you are doing, picking the measurements that count, is one that applies to franchising."
 > — **Ray Kroc**
 
-## Franchise
 
 **Definition:** A franchise is a business arrangement in which a company (the franchisor) grants another party (the franchisee) the right to operate a business using the franchisor's brand name, trademarks, proprietary knowledge, and business systems. The franchisee typically pays an upfront franchise fee and ongoing royalties to the franchisor. Franchising enables rapid expansion with lower capital requirements for the franchisor while providing franchisees with a proven business model, brand recognition, and operational support. It is a common model in fast food, retail, hotels, and automotive dealerships.
 
@@ -91,11 +93,12 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ---
 
+## Managed Services
+
 > [!quote]
 > "Do what you do best and outsource the rest."
 > — **Peter Drucker**
 
-## Managed Services
 
 **Definition:** Managed services is a business model in which a provider takes on ongoing responsibility for managing a defined set of services, systems, or processes on behalf of a client, typically under a contract with defined service levels (SLAs). Common examples include managed IT services (where a provider monitors and maintains a client's IT infrastructure), managed network services, managed security services, and managed payroll processing. The managed services model provides clients with predictable costs, specialist expertise, and freedom to focus on their core business, while providers earn recurring, subscription-like revenue.
 
@@ -107,11 +110,12 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ---
 
+## Marketplace
+
 > [!quote]
 > "A platform is a business model that creates value by facilitating exchanges between two or more interdependent groups."
 > — **Alex Moazed**
 
-## Marketplace
 
 **Definition:** A marketplace is a platform or venue that connects multiple buyers and sellers, enabling them to transact with one another. Unlike a traditional retailer that buys and resells goods, a marketplace earns revenue by facilitating transactions between third parties — typically through listing fees, transaction commissions, or subscription fees. Online marketplaces benefit from network effects: the more sellers offer products, the more buyers are attracted, which in turn attracts more sellers. Financial exchanges are a form of specialized marketplace for securities and derivatives.
 
@@ -123,11 +127,12 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ---
 
+## Membership Warehouse
+
 > [!quote]
 > "We are not in the business of selling things — we are in the business of renewing memberships."
 > — **Jim Sinegal**
 
-## Membership Warehouse
 
 **Definition:** A membership warehouse (also called a membership club or warehouse club) is a retail business model in which customers pay an annual membership fee in exchange for access to a retail store offering a wide range of products at deeply discounted prices. The warehouse format features minimal store decoration, bulk packaging, and limited SKU selection compared to traditional supermarkets. The membership fee creates a predictable, high-margin revenue stream, while the club format drives high customer loyalty and repeat purchases. Costco is the most prominent global example.
 
@@ -139,11 +144,12 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ---
 
+## Omnichannel
+
 > [!quote]
 > "The customer doesn't care about channels — they just want a seamless experience."
 > — **Brendon Witcher**
 
-## Omnichannel
 
 **Definition:** Omnichannel is a business strategy that provides customers with a seamless, integrated shopping experience across all channels — physical stores, websites, mobile apps, social media, call centers, and catalogs. Unlike multichannel (where each channel operates independently), omnichannel ensures that customer data, inventory, pricing, and promotions are synchronized across all touchpoints. A customer might browse products on a mobile app, visit a store to try them on, and complete the purchase online, with a consistent experience throughout.
 
@@ -155,11 +161,12 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ---
 
+## On-Demand Delivery
+
 > [!quote]
 > "Speed is the new currency of business."
 > — **Marc Benioff**
 
-## On-Demand Delivery
 
 **Definition:** On-demand delivery is a business model in which products or services are delivered to customers at or near the time of request, rather than through scheduled or pre-planned logistics routes. Enabled by mobile apps, GPS tracking, and gig-economy labor marketplaces, on-demand delivery has expanded from food and grocery delivery to pharmaceuticals, retail goods, and professional services. On-demand delivery platforms typically connect customers directly with couriers or service providers, using surge pricing and dynamic routing to balance supply and demand in real time.
 
@@ -171,11 +178,12 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ---
 
+## Platform Business Model
+
 > [!quote]
 > "The most scalable businesses are those that can grow without adding marginal cost for each new customer."
 > — **Sangeet Paul Choudary**
 
-## Platform Business Model
 
 **Definition:** A platform business model creates value by facilitating exchanges between two or more interdependent groups, typically consumers and producers. Unlike traditional linear business models where a company produces and sells a product, platform businesses act as intermediaries that connect participants and earn revenue through transaction fees, subscriptions, or advertising. Platform businesses benefit from network effects: the more users that join, the more valuable the platform becomes for all participants. Digital platforms have disrupted industries from transportation to hospitality to financial services.
 
@@ -187,11 +195,12 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ---
 
+## Subscription Model
+
 > [!quote]
 > "Recurring revenue is the key to building a company that has real, lasting value."
 > — **John Warrillow**
 
-## Subscription Model
 
 **Definition:** The subscription model is a business model where customers pay a recurring fee (monthly, quarterly, or annually) in exchange for continuous access to a product or service. This model provides companies with predictable, recurring revenue and builds long-term customer relationships. Subscriptions have expanded beyond traditional media (newspapers, magazines) to include software (SaaS), streaming entertainment, meal kits, beauty boxes, and even automobiles. The subscription model is valued by investors because it creates high visibility into future revenue and strong customer retention metrics.
 
@@ -203,11 +212,12 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ---
 
+## White-Label Services
+
 > [!quote]
 > "A brand for a company is like a reputation for a person — you earn it by doing hard things well."
 > — **Jeff Bezos**
 
-## White-Label Services
 
 **Definition:** White-label services (also called white-labeling or private-label services) are products or services produced by one company and rebranded and sold by another company under the buyer's brand name. The company that produces the product (the white-label provider) remains invisible to the end customer, and the reselling company presents the product as its own. White-labeling allows businesses to offer a broader range of products quickly and cost-effectively, without investing in the development of the underlying capability. It is common in financial services, software, consumer goods, and telecommunications.
 

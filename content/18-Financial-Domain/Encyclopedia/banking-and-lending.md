@@ -22,11 +22,12 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+## Bancassurance
+
 > [!quote]
 > "Distribution is the key to selling insurance — and banks have the best distribution."
 > — **Henri de Castries**
 
-## Bancassurance
 
 **Definition:** Bancassurance is a partnership arrangement between a bank and an insurance company in which the bank sells the insurance company's products to its existing customers. This model leverages the bank's distribution network — branches, online platforms, and relationship managers — to reach a large customer base for insurance products such as life insurance, home insurance, and health insurance. Bancassurance benefits both parties: the bank earns commission income without developing insurance products, while the insurer gains access to a broad customer base without building its own distribution network.
 
@@ -50,11 +51,12 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+## Commercial Banking
+
 > [!quote]
 > "The banker who is not also a merchant is nothing but a moneylender."
 > — **Walter Bagehot**
 
-## Commercial Banking
 
 **Definition:** Commercial banking refers to the segment of the banking industry that provides financial services to businesses, ranging from small and medium enterprises to large corporations. Commercial banking services include accepting deposits, making business loans, providing lines of credit, offering trade finance, managing cash and treasury operations, and facilitating foreign exchange transactions. Commercial banks act as financial intermediaries, channeling deposits from savers into loans for businesses that need capital for operations, expansion, or investment.
 
@@ -66,11 +68,12 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+## Consumer Finance
+
 > [!quote]
 > "Credit is a system whereby a person who cannot pay gets another person who cannot pay to guarantee that he can pay."
 > — **Charles Dickens**
 
-## Consumer Finance
 
 **Definition:** Consumer finance encompasses the lending and financial products provided directly to individual consumers, as opposed to businesses. It includes personal loans, auto loans, credit cards, mortgage loans, student loans, point-of-sale financing, and buy-now-pay-later products. Consumer finance companies earn revenue primarily through interest charges on outstanding balances and fees for services. The industry has been transformed by digital technology, with fintech companies and traditional banks offering increasingly automated and mobile-first consumer lending experiences.
 
@@ -94,11 +97,12 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+## Credit Union
+
 > [!quote]
 > "The credit union movement deserves great praise because it has taught people to save, to borrow wisely, and to manage their own financial affairs."
 > — **John F. Kennedy**
 
-## Credit Union
 
 **Definition:** A credit union is a member-owned, not-for-profit financial cooperative that provides traditional banking services such as savings accounts, checking accounts, and loans. Unlike commercial banks, credit unions are owned by their members (depositors), who each have one vote in the organization's governance regardless of how much money they have deposited. Credit unions typically offer more favorable interest rates on savings and loans compared to commercial banks because they are not driven by shareholder profit motives.
 
@@ -110,11 +114,12 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+## Digital Banking
+
 > [!quote]
 > "Banking is necessary, banks are not."
 > — **Bill Gates**
 
-## Digital Banking
 
 **Definition:** Digital banking refers to the digitization of all traditional banking activities and services that were historically only available to customers visiting a physical bank branch. This includes opening accounts, making deposits, transferring money, applying for loans, paying bills, and managing investments — all done through online platforms and mobile applications. Digital banking goes beyond simply having a website; it represents a fundamental transformation of the banking experience, often featuring real-time account management, AI-powered personal finance tools, and seamless integration with payment systems.
 
@@ -138,11 +143,12 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+## Leasing
+
 > [!quote]
 > "Why own when you can lease? The value is in the use, not the possession."
 > — **Thomas J. Watson**
 
-## Leasing
 
 **Definition:** Leasing is a contractual arrangement in which the owner of an asset (the lessor) grants another party (the lessee) the right to use the asset for a specified period in exchange for regular payments. Leasing is an alternative to purchasing, allowing businesses and individuals to use expensive equipment, vehicles, real estate, or other assets without bearing the full cost of ownership. There are two main types: operating leases (short-term, no ownership transfer) and finance leases (long-term, often with an option to purchase the asset at lease end).
 
@@ -154,11 +160,12 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+## Margin Lending
+
 > [!quote]
 > "Do not borrow money to buy stocks — the margin call will come at the worst possible time."
 > — **Jesse Livermore**
 
-## Margin Lending
 
 **Definition:** Margin lending is a type of borrowing where an investor uses securities they already own as collateral to borrow money from a brokerage or bank to buy additional securities. The investor's existing portfolio serves as the margin (collateral), and the lender charges interest on the borrowed amount. Margin lending amplifies both potential gains and losses, making it a higher-risk strategy. If the value of the collateral falls below a certain threshold (a margin call), the investor must deposit additional funds or sell securities to restore the required margin level.
 
@@ -170,11 +177,12 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+## Mortgage
+
 > [!quote]
 > "A man in debt is so far a slave."
 > — **Ralph Waldo Emerson**
 
-## Mortgage
 
 **Definition:** A mortgage is a loan used to purchase or refinance real estate, in which the property itself serves as collateral for the loan. The borrower makes regular payments (typically monthly) over a period of 15 to 30 years, consisting of principal and interest. If the borrower fails to make payments, the lender can foreclose on the property. Mortgages are the primary means by which individuals and families finance home purchases. Banks, credit unions, mortgage companies, and government agencies are the main providers of mortgage loans.
 
@@ -198,11 +206,12 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+## Retail Banking
+
 > [!quote]
 > "The branch of the future is in your pocket."
 > — **Brett King**
 
-## Retail Banking
 
 **Definition:** Retail banking, also known as consumer banking or personal banking, is the provision of financial services directly to individual consumers rather than corporations or institutions. Retail banking products and services include checking and savings accounts, personal loans, mortgages, credit cards, certificates of deposit, and basic investment products. Retail banks serve customers through branch networks, ATMs, online platforms, and mobile applications. Retail banking generates revenue through interest margins (the difference between lending and deposit rates), fees, and cross-selling of financial products.
 
@@ -214,11 +223,12 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+## Transaction Banking
+
 > [!quote]
 > "The plumbing of global commerce is transaction banking — it moves the money that moves the world."
 > — **Gottfried Leibbrandt**
 
-## Transaction Banking
 
 **Definition:** Transaction banking is the set of banking services that facilitate commercial transactions and financial flows for corporate and institutional clients. It encompasses cash management, payments, collections, trade finance, foreign exchange, securities services, and supply chain financing. Transaction banking is typically a high-volume, fee-based business that generates stable, recurring revenue for banks. It builds deep client relationships because once a company's treasury operations are integrated with a bank's transaction banking platform, switching costs are high.
 
@@ -230,11 +240,12 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+## Cash Management
+
 > [!quote]
 > "Never take your eyes off your cash flow because it is the lifeblood of business."
 > — **Richard Branson**
 
-## Cash Management
 
 **Definition:** Cash management refers to the corporate treasury function of collecting, managing, and investing a company's cash flows efficiently. Banks offer cash management services to corporate clients to help them optimize their liquidity positions, streamline payment and collection processes, manage bank accounts across multiple locations and currencies, and invest surplus cash. Effective cash management ensures a company has enough liquid funds to meet its obligations while maximizing the return on idle cash balances.
 
@@ -258,11 +269,12 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+## Trust Banking
+
 > [!quote]
 > "A man I do not trust could not get money from me on all the bonds in Christendom."
 > — **J.P. Morgan**
 
-## Trust Banking
 
 **Definition:** Trust banking involves a bank acting as a trustee or fiduciary agent to manage assets, administer trusts, and execute the wishes of individuals or institutions according to a trust agreement. Trust services include managing investment portfolios, administering estate plans, distributing income and principal to beneficiaries, providing tax reporting, and safekeeping valuable documents and assets. Trust banking is closely related to private banking and wealth management, serving high-net-worth individuals, families, and institutional clients.
 
@@ -274,11 +286,12 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+## Wholesale Banking
+
 > [!quote]
 > "Large-scale banking is really nothing more than organized trust."
 > — **Walter Bagehot**
 
-## Wholesale Banking
 
 **Definition:** Wholesale banking refers to banking services provided to large institutional customers including corporations, government agencies, other banks, pension funds, and institutional investors. Wholesale banking services include large-scale lending (syndicated and bilateral loans), deposit products, trade finance, cash management, foreign exchange, custody services, and capital markets products. Wholesale banking differs from retail banking in the size and sophistication of its client base and the complexity of its product offerings.
 
@@ -302,11 +315,12 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ---
 
+## Working Capital
+
 > [!quote]
 > "Revenue is vanity, profit is sanity, but cash is king."
 > — **Alan Miltz**
 
-## Working Capital
 
 **Definition:** Working capital is the difference between a company's current assets (cash, accounts receivable, inventory) and its current liabilities (accounts payable, short-term debt, accrued expenses). It represents the short-term liquidity available to fund day-to-day operations. Positive working capital means the company can pay its short-term obligations and invest in its operations. Working capital management involves optimizing the levels of cash, receivables, inventory, and payables to ensure smooth operations while minimizing the cost of capital.
 

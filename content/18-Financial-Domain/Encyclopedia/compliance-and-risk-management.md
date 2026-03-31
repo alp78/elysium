@@ -23,11 +23,12 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 ---
 
+## Compliance
+
 > [!quote]
 > "Culture eats compliance for breakfast — if you have the right culture, compliance follows naturally."
 > — **Gary Gensler**
 
-## Compliance
 
 **Definition:** Compliance refers to the process of adhering to laws, regulations, guidelines, and internal policies that govern a company's operations. In the financial sector, compliance is particularly critical because of extensive regulatory requirements designed to protect consumers, prevent fraud, combat money laundering, and maintain market integrity. Compliance departments within financial institutions are responsible for monitoring adherence to regulations, implementing policies, conducting training, and reporting to regulatory authorities. Non-compliance can result in severe penalties, including fines, license revocations, and reputational damage.
 
@@ -39,11 +40,12 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 ---
 
+## Intellectual Property (IP)
+
 > [!quote]
 > "Intellectual property is the oil of the 21st century."
 > — **Mark Getty**
 
-## Intellectual Property (IP)
 
 **Definition:** Intellectual property refers to creations of the mind that are legally protected from unauthorized use by others. IP includes patents (protecting inventions), trademarks (protecting brand names and logos), copyrights (protecting creative works), and trade secrets (protecting confidential business information). IP protection incentivizes innovation by granting creators exclusive rights to use and commercialize their inventions and creations for a specified period. In the business world, IP can represent significant value, forming the basis for licensing agreements, royalties, and competitive advantage.
 
@@ -55,11 +57,12 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 ---
 
+## Licensing
+
 > [!quote]
 > "The purpose of licensing is to grant others permission to use what you have created — on your terms."
 > — **Russ Krajec**
 
-## Licensing
 
 **Definition:** Licensing is a business arrangement in which the owner of intellectual property (IP) — such as a patent, trademark, copyright, or technology — grants permission to another party to use that IP in exchange for compensation, typically in the form of royalties, license fees, or other financial consideration. Licensing enables IP owners to generate revenue from their innovations without having to manufacture or market products themselves, and it allows licensees to access proven technologies, brands, or content without developing them from scratch.
 
@@ -71,11 +74,12 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 ---
 
+## Patent
+
 > [!quote]
 > "The patent system added the fuel of interest to the fire of genius."
 > — **Abraham Lincoln**
 
-## Patent
 
 **Definition:** A patent is a legal right granted by a government to an inventor, giving the inventor exclusive rights to make, use, sell, and license their invention for a specific period (typically 20 years from the filing date). Patents protect novel, non-obvious, and useful inventions, including products, processes, and technologies. In exchange for the exclusive rights, the inventor must publicly disclose the details of the invention, enabling others to build on the knowledge after the patent expires. Patents are particularly important in the pharmaceutical, technology, and manufacturing industries.
 
@@ -99,11 +103,12 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 ---
 
+## Risk Management
+
 > [!quote]
 > "Risk comes from not knowing what you are doing."
 > — **Warren Buffett**
 
-## Risk Management
 
 **Definition:** Risk management is the process of identifying, assessing, and controlling threats to an organization's capital, earnings, and operations. These threats can stem from a wide variety of sources including financial market uncertainty, credit defaults, operational failures, natural disasters, regulatory changes, strategic miscalculations, and cybersecurity breaches. Effective risk management involves establishing risk tolerance levels, implementing controls and mitigation strategies, monitoring risk exposures, and maintaining adequate reserves and insurance. In financial institutions, risk management is heavily regulated and central to business operations.
 
@@ -115,11 +120,12 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 ---
 
+## Royalties
+
 > [!quote]
 > "The sweetest income is the income that arrives while you sleep."
 > — **Naval Ravikant**
 
-## Royalties
 
 **Definition:** Royalties are payments made by one party (the licensee) to another (the licensor) for the ongoing use of an asset, typically intellectual property such as patents, trademarks, copyrights, franchises, or natural resources. Royalties are usually calculated as a percentage of revenue or profits generated from the use of the licensed asset, or as a per-unit fee. They represent a way for IP owners to monetize their creations over time and for licensees to access valuable assets without the cost and risk of developing them independently.
 

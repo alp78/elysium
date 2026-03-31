@@ -22,11 +22,12 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ---
 
+## Clearing
+
 > [!quote]
 > "The clearinghouse is the guarantor of last resort — it stands between every buyer and every seller."
 > — **John C. Hull**
 
-## Clearing
 
 **Definition:** Clearing is the process that occurs between the execution of a trade and the final settlement of that trade. A clearinghouse acts as an intermediary between the buyer and seller, ensuring that the trade obligations are properly fulfilled. The clearing process involves confirming trade details, calculating obligations, managing margins and collateral, and ultimately guaranteeing the performance of the trade. This process reduces counterparty risk — the risk that one party will fail to fulfill its side of the transaction — and is essential for the stability and integrity of financial markets.
 
@@ -38,11 +39,12 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ---
 
+## Custodian Services
+
 > [!quote]
 > "The most important thing a custodian does is make sure assets are safe — everything else is secondary."
 > — **Robert Kelly**
 
-## Custodian Services
 
 **Definition:** Custodian services involve the safekeeping and administration of financial assets such as stocks, bonds, and other securities on behalf of institutional and individual investors. A custodian bank holds these assets in electronic or physical form, processes transactions, collects dividends and interest payments, provides tax information, and handles corporate actions. Custodians do not engage in trading or advisory services; their role is to protect client assets and ensure accurate record-keeping. Custody is a critical function in the financial system, particularly for institutional investors managing billions of dollars.
 
@@ -66,11 +68,12 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ---
 
+## Exchange (Stock/Futures)
+
 > [!quote]
 > "The stock exchange is the bazaar of capitalism — it is where ownership changes hands."
 > — **Robert Shiller**
 
-## Exchange (Stock/Futures)
 
 **Definition:** A stock or futures exchange is an organized marketplace where securities (stocks, bonds), derivatives (futures, options), commodities, and other financial instruments are traded. Exchanges provide transparency, liquidity, price discovery, and regulatory oversight. They operate electronic order-matching systems that pair buyers and sellers, and they enforce listing standards for companies whose securities are traded. Major exchanges include the New York Stock Exchange, Nasdaq, London Stock Exchange, Deutsche Boerse (Xetra), Tokyo Stock Exchange, and Hong Kong Stock Exchange.
 
@@ -94,11 +97,12 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ---
 
+## Market-Making
+
 > [!quote]
 > "Liquidity is the lifeblood of markets — without market makers, orderly trading would cease."
 > — **Fischer Black**
 
-## Market-Making
 
 **Definition:** Market-making is the activity of providing liquidity to financial markets by continuously quoting both buy (bid) and sell (ask) prices for a financial instrument. A market maker stands ready to buy from sellers and sell to buyers at all times, profiting from the spread between the bid and ask prices. Market makers play a crucial role in maintaining liquid, orderly markets, ensuring that investors can always buy or sell securities at fair prices. Investment banks and specialized trading firms are the primary market makers in equities, fixed income, currencies, and derivatives markets.
 
@@ -122,11 +126,12 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ---
 
+## Securities Clearing
+
 > [!quote]
 > "Netting is the genius of modern clearing — it turns millions of obligations into a manageable few."
 > — **Darrell Duffie**
 
-## Securities Clearing
 
 **Definition:** Securities clearing is the reconciliation of orders between transacting parties in the purchase and sale of financial instruments. More specifically, it refers to the process of updating the accounts of the trading parties and arranging for the transfer of money and securities. Securities clearing typically occurs through a central clearing counterparty (CCP) that interposes itself between buyers and sellers, becoming the buyer to every seller and the seller to every buyer. This netting and novation process dramatically reduces settlement risk and the volume of securities that need to physically change hands.
 
@@ -138,11 +143,12 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ---
 
+## Settlement
+
 > [!quote]
 > "Settlement is where the rubber meets the road — it is the moment when promises become reality."
 > — **Benoit Coeure**
 
-## Settlement
 
 **Definition:** Settlement is the final step in a securities or payment transaction, where the actual exchange of assets and cash occurs between parties. In securities trading, settlement involves the delivery of securities from the seller to the buyer and the transfer of payment from the buyer to the seller. Settlement periods vary by market and instrument type (T+1 or T+2, meaning one or two business days after the trade date). In payments, settlement is the transfer of funds from the acquiring bank to the merchant's account after a card transaction has been authorized and cleared.
 
@@ -166,11 +172,12 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ---
 
+## Stock Transfer Agency
+
 > [!quote]
 > "The humble transfer agent is the keeper of the shareholder register — the definitive record of who owns what."
 > — **Larry Thompson**
 
-## Stock Transfer Agency
 
 **Definition:** A stock transfer agency (also called a transfer agent) is a company, usually a bank or trust company, appointed by a publicly listed corporation to maintain records of its shareholders, process transfers of stock ownership, handle dividend payments, manage corporate action events (such as mergers, splits, and rights offers), and issue or cancel share certificates. Transfer agents serve as the link between the issuing company and its shareholders, ensuring accurate ownership records and facilitating the mechanics of shareholder distributions and voting.
 

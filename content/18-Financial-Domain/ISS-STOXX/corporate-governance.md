@@ -26,13 +26,14 @@ date: 2026-03-28
 
 ## A
 
+### Activist Investor
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="25 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 25</span>
+
 > [!quote]
 > "The best CEOs I know are teachers, and at the core of what they teach is strategy."
 > — **Michael Porter**
 
-### Activist Investor
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="25 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 25</span>
 
 
 > An individual or entity (often a hedge fund) that acquires a significant stake in a public company with the explicit goal of influencing corporate strategy, governance, board composition, capital allocation, or operational decisions. Activist investors may pursue their objectives through private engagement, public campaigns, shareholder proposals, or proxy contests to replace incumbent directors.
@@ -82,13 +83,14 @@ an activist investor is a shareholder who buys enough stock to demand changes �
 
 ---
 
+### Advisory Vote
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="616 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 616</span>
+
 > [!quote]
 > "An advisory vote still carries the force of public opinion."
 > — **Nell Minow**
 
-### Advisory Vote
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="616 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 616</span>
 
 
 > A non-binding vote presented to shareholders at a company's annual or special meeting, most commonly used for executive compensation matters (say-on-pay). While the result does not legally compel the board to act, it serves as a powerful signal of investor sentiment.
@@ -137,13 +139,14 @@ an advisory vote lets shareholders voice approval or disapproval on a topic — 
 
 ---
 
+### Annual General Meeting (AGM)
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="41 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 41</span>
+
 > [!quote]
 > "Shareholders who exercise their voting rights are the ultimate guardians of good governance."
 > — **Bob Tricker**
 
-### Annual General Meeting (AGM)
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="41 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 41</span>
 
 
 > The mandatory annual gathering of a company's shareholders at which the board of directors presents financial results, directors stand for election (or re-election), auditor appointments are ratified, executive compensation may be voted on, and shareholder proposals are considered. AGMs are a legal requirement in most jurisdictions and represent the primary occasion for shareholders to exercise their voting rights.
@@ -193,13 +196,14 @@ the AGM is the yearly meeting where shareholders get to vote on the people and p
 
 ---
 
+### Anti-Takeover Provision
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
+
 > [!quote]
 > "The best defense against a hostile takeover is a high stock price."
 > — **Martin Lipton**
 
-### Anti-Takeover Provision
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
 
 
 > A mechanism embedded in a company's charter, bylaws, or adopted by the board that is designed to discourage or prevent hostile acquisition attempts. Common examples include poison pills (shareholder rights plans), staggered boards, supermajority vote requirements, and dual-class share structures.
@@ -251,13 +255,14 @@ anti-takeover provisions are defensive shields a company puts in place so that a
 
 ---
 
+### Audit & Risk Oversight
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="12 mentions across STOXX & ISS pages (low)">▰▰ 12</span>
+
 > [!quote]
 > "Trust, but verify."
 > — **Ronald Reagan**
 
-### Audit & Risk Oversight
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="12 mentions across STOXX & ISS pages (low)">▰▰ 12</span>
 
 
 > The board-level function — typically exercised through an audit committee — responsible for overseeing financial reporting integrity, internal controls, external audit processes, and enterprise risk management. ISS evaluates the independence, expertise, and meeting frequency of audit committees as part of its governance assessment.
@@ -310,13 +315,14 @@ this is the board's job of making sure the company's financial statements are ac
 
 ## B
 
+### Board Classification (Classified Board)
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="786 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 786</span>
+
 > [!quote]
 > "Staggered boards entrench management and weaken accountability."
 > — **Lucian Bebchuk**
 
-### Board Classification (Classified Board)
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="786 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 786</span>
 
 
 > A board structure in which directors are divided into multiple classes (typically three), with only one class standing for election each year. This means a full board turnover requires two or more annual election cycles, making it more difficult for shareholders to replace a majority of directors in a single vote.
@@ -366,13 +372,14 @@ a classified (or "staggered") board slows down shareholder ability to change boa
 
 ---
 
+### Board Diversity
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="341 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 341</span>
+
 > [!quote]
 > "Diversity is not a nice-to-have; it is a must-have for effective governance."
 > — **Larry Fink**
 
-### Board Diversity
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="341 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 341</span>
 
 
 > The representation of varied demographic backgrounds — including gender, race, ethnicity, age, nationality, and professional expertise — among the directors serving on a company's board. ISS and STOXX indices increasingly incorporate board diversity metrics as a measure of governance quality.
@@ -422,13 +429,14 @@ board diversity means the board is not composed entirely of people with the same
 
 ---
 
+### Board Independence
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="665 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 665</span>
+
 > [!quote]
 > "The job of the board is to govern, not to manage."
 > — **Peter Drucker**
 
-### Board Independence
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="665 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 665</span>
 
 
 > The proportion of directors on a board who have no material financial, familial, or professional relationship with the company or its management beyond their board service. Independent directors are expected to provide unbiased oversight and protect shareholder interests.
@@ -476,13 +484,14 @@ an independent director is someone who does not work at the company, is not rela
 
 ---
 
+### Board Refreshment
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="86 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 86</span>
+
 > [!quote]
 > "Renewal is not just changing the people; it is changing the thinking."
 > — **John Gardner**
 
-### Board Refreshment
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="86 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 86</span>
 
 
 > The ongoing process of introducing new directors to a board over time, ensuring a balance between institutional knowledge (through longer-tenured members) and fresh perspectives (through newer members). ISS evaluates whether boards have appropriate turnover mechanisms and whether long average tenure suggests entrenchment rather than continuity.
@@ -530,13 +539,14 @@ board refreshment is about making sure the board does not become stale. If the s
 
 ---
 
+### Board Structure
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="631 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 631</span>
+
 > [!quote]
 > "The structure of the board determines the quality of its oversight."
 > — **Ada Demb**
 
-### Board Structure
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="631 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 631</span>
 
 
 > The overall composition, organization, and governance framework of a company's board of directors, including its size, committee architecture, leadership model (combined vs. separated chair/CEO roles), director tenure, meeting frequency, and independence levels.
@@ -586,13 +596,14 @@ board structure is the big picture of how the board is set up and operates. ISS 
 
 ---
 
+### Board Tenure
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="29 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 29</span>
+
 > [!quote]
 > "The challenge is balancing institutional memory with fresh perspective."
 > — **Anne Simpson**
 
-### Board Tenure
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="29 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 29</span>
 
 
 > The length of time a director has continuously served on a company's board, measured from initial election to the present. ISS tracks individual director tenure and average board tenure as governance indicators; excessively long tenures may signal reduced independence, while very short average tenures may suggest instability or lack of institutional knowledge.
@@ -642,13 +653,14 @@ board tenure is how long each director has been on the board. ISS flags boards w
 
 ---
 
+### Burn Rate
+
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,052 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,052</span>
+
 > [!quote]
 > "Dilution is the silent tax on shareholders."
 > — **Charlie Munger**
 
-### Burn Rate
-
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,052 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,052</span>
 
 
 > The rate at which a company grants equity awards (stock options, restricted stock units, performance shares) to employees and executives, expressed as a percentage of total shares outstanding. ISS uses burn rate benchmarks to evaluate whether equity plan dilution is excessive relative to industry peers.
@@ -702,13 +714,14 @@ burn rate measures how fast a company is handing out shares to employees. A high
 
 ## C
 
+### Capital Allocation
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14 mentions across STOXX & ISS pages (low)">▰▰ 14</span>
+
 > [!quote]
 > "The most important job of a CEO is capital allocation, yet few are trained for it."
 > — **Warren Buffett**
 
-### Capital Allocation
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14 mentions across STOXX & ISS pages (low)">▰▰ 14</span>
 
 
 > The strategic process by which a company's board and management decide how to deploy the firm's financial resources — including reinvestment in the business (capital expenditures, R&D), acquisitions, debt repayment, dividends, and share repurchases. ISS and institutional investors evaluate capital allocation decisions for alignment with long-term shareholder value creation.
@@ -758,13 +771,14 @@ capital allocation is how a company spends its money. Shareholders and proxy adv
 
 ---
 
+### Clawback Policy
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="36 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 36</span>
+
 > [!quote]
 > "Accountability is the glue that ties commitment to results."
 > — **Bob Proctor**
 
-### Clawback Policy
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="36 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 36</span>
 
 
 > A formal company policy that allows the board to recoup previously awarded incentive compensation from executives in the event of a financial restatement, misconduct, or other triggering circumstances. Dodd-Frank and subsequent SEC/exchange listing rules have made clawback policies mandatory for listed companies, but ISS evaluates the robustness and scope of these policies beyond minimum requirements.
@@ -815,13 +829,14 @@ a clawback policy says: "If we discover the numbers were wrong or you misbehaved
 
 ---
 
+### Compensation Committee
+
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,393 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,393</span>
+
 > [!quote]
 > "Pay should be a consequence of performance, not a substitute for it."
 > — **Lucian Bebchuk**
 
-### Compensation Committee
-
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,393 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,393</span>
 
 
 > A committee of the board of directors, composed entirely or predominantly of independent directors, responsible for setting and overseeing executive pay programs, reviewing compensation philosophy, and making recommendations on say-on-pay and equity plan proposals.
@@ -872,13 +887,14 @@ the compensation committee decides how much executives get paid and in what form
 
 ---
 
+### Contested Election
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="856 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 856</span>
+
 > [!quote]
 > "In any contest between power and patience, bet on patience."
 > — **W.B. Prescott**
 
-### Contested Election
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="856 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 856</span>
 
 
 > A director election in which one or more dissident candidates are nominated in opposition to the board's recommended slate, requiring shareholders to choose between competing nominees. Contested elections typically arise from activist investor campaigns and are decided through proxy solicitations by both the management and dissident sides.
@@ -928,13 +944,14 @@ a contested election is a director race with competing candidates — the board'
 
 ---
 
+### Corporate Social Responsibility (CSR)
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
+
 > [!quote]
 > "The business of business should not be about money. It should be about responsibility."
 > — **Anita Roddick**
 
-### Corporate Social Responsibility (CSR)
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
 
 
 > A broad framework under which companies voluntarily integrate social, environmental, and ethical considerations into their business operations and stakeholder interactions, beyond what is required by law. CSR encompasses community engagement, environmental stewardship, labor practices, human rights, and philanthropic activity. ISS evaluates CSR-related shareholder proposals and incorporates social factors into its ESG assessments.
@@ -978,13 +995,14 @@ CSR is a company's effort to be a good corporate citizen — treating workers fa
 
 ---
 
+### Cumulative Voting
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="526 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 526</span>
+
 > [!quote]
 > "Democracy is the worst form of government, except for all the others."
 > — **Winston Churchill**
 
-### Cumulative Voting
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="526 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 526</span>
 
 
 > A voting method in director elections that allows shareholders to aggregate all of their votes and cast them for a single candidate (or distribute them among candidates in any proportion), rather than being limited to one vote per share per seat. This system strengthens minority shareholders' ability to elect at least one representative to the board.
@@ -1142,13 +1160,14 @@ director elections are how shareholders decide who sits on the board. ISS may re
 
 ---
 
+### Dual-Class Shares
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "One share, one vote is the bedrock principle of corporate democracy."
 > — **Arthur Levitt**
 
-### Dual-Class Shares
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > A capital structure in which a company issues two or more classes of common stock with unequal voting rights. Typically, insiders and founders hold a superior-vote class (e.g., 10 votes per share) while public investors hold an inferior-vote class (1 vote per share), allowing insiders to maintain control with a minority economic stake.
@@ -1258,13 +1277,14 @@ the Engagement Suite is ISS's tool for investors who want to have structured con
 
 ---
 
+### Equity Plan
+
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,051 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,051</span>
+
 > [!quote]
 > "Ownership is the most powerful motivator known to mankind."
 > — **Corey Rosen**
 
-### Equity Plan
-
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,051 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,051</span>
 
 
 > A shareholder-approved program through which a company grants stock-based compensation (stock options, restricted stock units, performance shares, stock appreciation rights) to employees, officers, and directors. ISS evaluates equity plans using the Equity Plan Scorecard (EPSC), which weighs plan cost, plan features, and grant practices.
@@ -1313,13 +1333,14 @@ an equity plan is a company's program for giving employees ownership stakes. Whe
 
 ---
 
+### Executive Compensation
+
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,865 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,865</span>
+
 > [!quote]
 > "The problem with executive pay is not its level but its disconnect from performance."
 > — **Michael Jensen**
 
-### Executive Compensation
-
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,865 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,865</span>
 
 
 > The total remuneration package awarded to a company's senior officers, including base salary, annual cash incentives, long-term equity awards, pension contributions, perquisites, and severance arrangements. ISS evaluates executive compensation for pay-performance alignment, peer benchmarking, problematic pay practices, and structural concerns.
@@ -1370,13 +1391,14 @@ executive compensation is everything a top executive receives for doing their jo
 
 ---
 
+### Extraordinary General Meeting (EGM)
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
+
 > [!quote]
 > "When important matters cannot wait, shareholders must be heard."
 > — **Cadbury Report**
 
-### Extraordinary General Meeting (EGM)
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
 
 
 > A shareholder meeting convened outside the regular annual meeting cycle to address urgent or extraordinary matters that cannot wait until the next AGM, such as a proposed merger, removal of a director, emergency capital raise, or charter amendment. EGMs may be called by the board or, where permitted, by shareholders meeting a specified ownership threshold.
@@ -1430,13 +1452,14 @@ an EGM is a special shareholders' meeting called on short notice for matters too
 
 ## F
 
+### Fiduciary Duty
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="100 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 100</span>
+
 > [!quote]
 > "A fiduciary is a person who has undertaken to act for and on behalf of another in circumstances which give rise to a relationship of trust."
 > — **Lord Millett**
 
-### Fiduciary Duty
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="100 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 100</span>
 
 
 > The legal obligation of a company's directors and officers — and of institutional investors managing assets on behalf of beneficiaries — to act in good faith, with care, loyalty, and in the best interests of shareholders or beneficiaries. In the governance context, fiduciary duty requires directors to exercise informed judgment, avoid conflicts of interest, and prioritize the long-term health of the enterprise over personal gain.
@@ -1563,13 +1586,14 @@ Global Meeting Results is ISS's database of what happened at every shareholder m
 
 ---
 
+### Golden Parachute
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="427 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 427</span>
+
 > [!quote]
 > "Failure should not be rewarded, and yet it often is in the boardroom."
 > — **Nell Minow**
 
-### Golden Parachute
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="427 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 427</span>
 
 
 > A contractual provision guaranteeing substantial severance payments and accelerated vesting of equity awards to senior executives upon termination following a change-in-control event (merger, acquisition, or takeover). ISS evaluates golden parachute arrangements as part of its say-on-pay and M&A vote analysis, and may recommend against them when the payouts are excessive relative to performance or include problematic features such as excise tax gross-ups.
@@ -1666,13 +1690,14 @@ Governance Exchange is a bridge ISS built between companies and their shareholde
 
 ---
 
+### Governance QualityScore
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="68 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 68</span>
+
 > [!quote]
 > "Good governance is the difference between a company that thrives and one that merely survives."
 > — **Peter Drucker**
 
-### Governance QualityScore
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="68 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 68</span>
 
 
 > A proprietary ISS scoring system that rates companies on governance practices across four pillars: Board Structure, Compensation/Remuneration, Shareholder Rights, and Audit & Risk Oversight. Scores are expressed as decile rankings (1 = lowest governance risk, 10 = highest governance risk) relative to regional and index peers. QualityScore is derived from approximately 200+ data points per company.
@@ -1722,13 +1747,14 @@ Governance QualityScore is ISS's report card for how well a company is governed.
 
 ## I
 
+### Independent Director
+
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,856 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,856</span>
+
 > [!quote]
 > "The value of independent directors lies in their willingness to ask uncomfortable questions."
 > — **Adolf Berle**
 
-### Independent Director
-
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,856 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,856</span>
 
 
 > A member of the board of directors who has no material relationship with the company — whether as an officer, employee, significant shareholder, business partner, family member of management, or service provider — that could compromise the exercise of independent judgment. Listing exchanges (NYSE, Nasdaq) and ISS each maintain independence standards, with ISS standards often being more stringent.
@@ -1877,13 +1903,14 @@ ISS does not have just one voting policy — it offers a menu. The Benchmark pol
 
 ## L
 
+### Lead Independent Director
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="54 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 54</span>
+
 > [!quote]
 > "Independence without leadership is ineffective; leadership without independence is captured."
 > — **Jay Lorsch**
 
-### Lead Independent Director
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="54 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 54</span>
 
 
 > A senior independent board member designated to serve as a counterbalance when the roles of CEO and board chair are combined (CEO duality). The lead independent director typically presides over executive sessions of independent directors, serves as a liaison between independent directors and the chair/CEO, and may have authority to call board meetings and approve agendas.
@@ -1935,13 +1962,14 @@ a lead independent director is the "independent voice" on the board when the CEO
 
 ---
 
+### Lobbying Disclosure
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
+
 > [!quote]
 > "Lobbying is an industry with immense power that operates largely in the shadows."
 > — **Lee Drutman**
 
-### Lobbying Disclosure
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
 
 > The voluntary or shareholder-requested reporting by a company of its direct and indirect lobbying activities, expenditures, trade association memberships, and the governance processes overseeing lobbying decisions. Shareholder proposals requesting lobbying disclosure have become among the most frequently filed proposal types, and ISS evaluates them based on materiality, current disclosure levels, and peer practices.
@@ -1972,13 +2000,14 @@ lobbying disclosure proposals ask companies to reveal how much they spend trying
 
 ---
 
+### Long-Term Incentive Plan (LTIP)
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="36 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 36</span>
+
 > [!quote]
 > "Someone is sitting in the shade today because someone planted a tree a long time ago."
 > — **Warren Buffett**
 
-### Long-Term Incentive Plan (LTIP)
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="36 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 36</span>
 
 
 > A compensation program that awards executives and key employees equity-based or cash-based incentives tied to multi-year performance goals (typically three or more years), designed to align management interests with long-term shareholder value creation. Common LTIP vehicles include performance share units, restricted stock units with performance conditions, and cash-based performance awards.
@@ -2032,13 +2061,14 @@ an LTIP is the part of an executive's pay that they earn only if the company hit
 
 ## M
 
+### Majority Voting
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="228 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 228</span>
+
 > [!quote]
 > "Shareholders should have real power to remove directors who fail to serve their interests."
 > — **Arthur Levitt**
 
-### Majority Voting
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="228 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 228</span>
 
 
 > A director election standard under which a nominee must receive more votes "for" than votes "against" (or "withheld") to be elected. Under a plurality standard, by contrast, a nominee needs only the most votes among candidates, meaning an unopposed director could theoretically be elected with a single vote. ISS generally favors majority voting standards because they give shareholders meaningful power to reject underperforming directors.
@@ -2145,13 +2175,14 @@ a majority voting standard is the rule that says a director must win genuine maj
 
 ## O
 
+### Overboarded Director
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="147 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 147</span>
+
 > [!quote]
 > "No one can serve two masters well, let alone five or six."
 > — **Adolf Berle**
 
-### Overboarded Director
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="147 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 147</span>
 
 
 > A director who serves on an excessive number of public company boards, raising concerns about their ability to devote sufficient time and attention to each board role. ISS applies specific numerical thresholds: generally, a non-CEO director is considered overboarded if they sit on more than four public company boards, and a sitting CEO is overboarded at more than two total boards (including their own).
@@ -2203,13 +2234,14 @@ an overboarded director has too many board seats. ISS worries they cannot attend
 
 ## P
 
+### Pay-for-Performance Alignment
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="282 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 282</span>
+
 > [!quote]
 > "Pay without performance is the central problem in corporate governance today."
 > — **Michael Jensen**
 
-### Pay-for-Performance Alignment
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="282 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 282</span>
 
 
 > The degree to which executive compensation outcomes correlate with company financial and stock-price performance over short- and long-term horizons. ISS conducts a quantitative pay-for-performance analysis comparing a company's CEO pay ranking to its total shareholder return (TSR) ranking within a peer group, flagging companies where a significant disconnect exists (e.g., high pay combined with poor performance).
@@ -2259,13 +2291,14 @@ pay-for-performance alignment asks a simple question: is the CEO being paid like
 
 ---
 
+### Poison Pill
+
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,078 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,078</span>
+
 > [!quote]
 > "Takeover defenses that entrench management at the expense of shareholders destroy value."
 > — **Michael Jensen**
 
-### Poison Pill
-
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,078 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,078</span>
 
 
 > A shareholder rights plan adopted by a board (typically without shareholder approval) that is triggered when an acquirer crosses a specified ownership threshold (commonly 10-20%). The pill allows existing shareholders to purchase additional shares at a steep discount, massively diluting the hostile bidder's stake and making the takeover prohibitively expensive.
@@ -2315,13 +2348,14 @@ a poison pill is a defense mechanism that makes it extremely costly for anyone t
 
 ---
 
+### Political Spending Disclosure
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "Follow the money."
 > — **Mark Felt (Deep Throat)**
 
-### Political Spending Disclosure
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > The voluntary or shareholder-requested reporting by a company of its political contributions — including direct donations to candidates and parties, payments to political action committees (PACs), and contributions to 501(c)(4) organizations engaged in political activity. Like lobbying disclosure, political spending transparency proposals are among the most frequently filed shareholder proposals, and ISS evaluates them based on current disclosure practices, materiality, and governance oversight.
@@ -2343,13 +2377,14 @@ political spending disclosure proposals ask companies to tell shareholders where
 
 ---
 
+### Proxy Access
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="482 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 482</span>
+
 > [!quote]
 > "Access to the ballot is the first condition of shareholder democracy."
 > — **Lucian Bebchuk**
 
-### Proxy Access
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="482 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 482</span>
 
 
 > A governance mechanism that allows qualifying shareholders (typically those owning 3% or more of outstanding shares for at least three years) to nominate a limited number of director candidates directly on the company's proxy card, without the cost and complexity of running a full proxy contest. Proxy access enables shareholders to propose alternative director nominees while using the company's ballot infrastructure.
@@ -2397,13 +2432,14 @@ proxy access lets long-term shareholders put their own director candidates on th
 
 ---
 
+### Proxy Contest
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="397 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 397</span>
+
 > [!quote]
 > "A proxy fight is the last resort of a frustrated owner."
 > — **Carl Icahn**
 
-### Proxy Contest
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="397 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 397</span>
 
 
 > A situation in which a dissident shareholder or activist investor solicits proxy votes from other shareholders in opposition to the company's board or management recommendations, typically seeking to elect alternative director nominees, block a transaction, or force a governance change. Also known as a proxy fight.
@@ -2451,13 +2487,14 @@ a proxy contest is a shareholder battle for control. An activist investor who di
 
 ---
 
+### Proxy Voting
+
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4,813 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 4,813</span>
+
 > [!quote]
 > "The proxy is the shareholder's ballot, and casting it is both a right and a responsibility."
 > — **Arthur Levitt**
 
-### Proxy Voting
-
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4,813 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 4,813</span>
 
 
 > The process by which shareholders who are unable or choose not to attend a shareholder meeting in person authorize another party (a proxy) to cast votes on their behalf on matters presented for approval. For institutional investors, proxy voting is a fiduciary duty and a core component of investment stewardship.
@@ -2612,13 +2649,14 @@ a quorum is the minimum attendance needed for a shareholder meeting to count. If
 
 ## R
 
+### Related-Party Transaction
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="417 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 417</span>
+
 > [!quote]
 > "Conflicts of interest are the original sin of corporate governance."
 > — **Ira Millstein**
 
-### Related-Party Transaction
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="417 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 417</span>
 
 
 > A business transaction between a company and an entity with which it has a pre-existing relationship — such as a director, officer, major shareholder, or their family members and affiliated entities. Related-party transactions create conflicts of interest and governance risk because the parties may not negotiate at arm's length, potentially disadvantaging minority shareholders.
@@ -2670,13 +2708,14 @@ a related-party transaction is a deal between the company and an insider. For ex
 
 ## S
 
+### Say-on-Pay
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="847 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 847</span>
+
 > [!quote]
 > "Executive pay should be determined by performance, not by the executives themselves."
 > — **Michael Jensen**
 
-### Say-on-Pay
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="847 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 847</span>
 
 
 > A mandatory (in the U.S. under Dodd-Frank) advisory shareholder vote on the compensation paid to a company's named executive officers, as disclosed in the proxy statement. Companies must hold say-on-pay votes at least once every three years, though most hold them annually. ISS recommends against say-on-pay when it identifies problematic pay practices or a significant pay-performance disconnect.
@@ -2726,13 +2765,14 @@ say-on-pay is the annual moment when shareholders give a thumbs up or thumbs dow
 
 ---
 
+### Share Buyback
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="148 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 148</span>
+
 > [!quote]
 > "Buybacks only make sense when shares are bought below intrinsic value."
 > — **Warren Buffett**
 
-### Share Buyback
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="148 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 148</span>
 
 
 > A program under which a company repurchases its own outstanding shares from the open market or through tender offers, reducing the total share count and typically increasing earnings per share and ownership concentration for remaining shareholders. Share buybacks are a capital return mechanism alongside dividends and are subject to shareholder approval in many non-U.S. jurisdictions.
@@ -2780,13 +2820,14 @@ a share buyback is when a company buys back its own stock, effectively returning
 
 ---
 
+### Shareholder Proposal
+
+<span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6,025 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 6,025</span>
+
 > [!quote]
 > "The shareholder proposal process is the town hall of corporate democracy."
 > — **Arthur Levitt**
 
-### Shareholder Proposal
-
-<span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6,025 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 6,025</span>
 
 
 > A resolution submitted by an eligible shareholder (meeting SEC ownership and procedural thresholds) for inclusion in a company's proxy statement and consideration at the annual meeting. Common shareholder proposal topics include governance reforms, environmental disclosures, political spending transparency, and social policies. Shareholder proposals are typically precatory (advisory) rather than binding.
@@ -2831,13 +2872,14 @@ shareholder proposals are items on the ballot that come from investors, not from
 
 ---
 
+### Shareholder Rights
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="830 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 830</span>
+
 > [!quote]
 > "Property rights and shareholder rights are the foundation of capitalism itself."
 > — **Adolf Berle**
 
-### Shareholder Rights
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="830 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 830</span>
 
 
 > The bundle of legal, contractual, and governance rights held by owners of a company's common shares, including the right to vote, the right to receive dividends, the right to call special meetings, the right to act by written consent, preemptive rights, and the right to amend bylaws. ISS dedicates an entire QualityScore pillar to evaluating how robustly a company protects these rights.
@@ -2886,13 +2928,14 @@ shareholder rights are the powers investors have as part-owners of a company. IS
 
 ---
 
+### Special Meeting Right
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
 > [!quote]
 > "The right to call a meeting is the right to set the agenda."
 > — **Robert Monks**
 
-### Special Meeting Right
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
 
 > The right of shareholders (individually or as a group meeting a specified ownership threshold) to call a special meeting of shareholders outside the regular annual meeting cycle. ISS supports the right of shareholders owning 10-25% of outstanding shares to call a special meeting and may recommend against governance proposals that eliminate or restrict this right.
@@ -2922,13 +2965,14 @@ a special meeting right lets shareholders convene an emergency meeting when some
 
 ---
 
+### Stewardship
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="616 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 616</span>
+
 > [!quote]
 > "Stewardship is the responsible allocation and management of capital."
 > — **Kofi Annan**
 
-### Stewardship
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="616 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 616</span>
 
 
 > The responsible management and oversight of invested assets by institutional investors, encompassing proxy voting, corporate engagement, monitoring of portfolio companies' governance and ESG practices, and public disclosure of stewardship activities. Stewardship codes (e.g., UK Stewardship Code, Japan Stewardship Code) formalize expectations for how asset managers and asset owners should exercise their ownership rights.
@@ -2974,13 +3018,14 @@ stewardship is the idea that investors have a responsibility to actively oversee
 
 ---
 
+### Supermajority Vote Requirement
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="332 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 332</span>
+
 > [!quote]
 > "The principle of majority rule is essential to democratic governance, corporate or otherwise."
 > — **Adolf Berle**
 
-### Supermajority Vote Requirement
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="332 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 332</span>
 
 
 > A charter or bylaw provision that requires more than a simple majority (typically 66.7% or 80%) of outstanding shares to approve certain corporate actions, such as mergers, charter amendments, or bylaw changes. ISS generally recommends eliminating supermajority requirements because they can entrench management and prevent shareholders from effecting governance changes.
@@ -3032,13 +3077,14 @@ a supermajority requirement raises the bar for passing important votes so high t
 
 ## T
 
+### Tender Offer
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="224 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 224</span>
+
 > [!quote]
 > "When someone offers you a premium for your shares, the market is telling you something."
 > — **Peter Lynch**
 
-### Tender Offer
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="224 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 224</span>
 
 
 > A public, time-limited offer made by an acquirer (or the company itself, in the case of a self-tender) to purchase shares directly from shareholders at a specified price, typically at a premium to the current market price. Tender offers are a mechanism for gaining control of a company and may be friendly (with board endorsement) or hostile (over board objection). ISS evaluates tender offer proposals for fairness, premium adequacy, and alignment with shareholder interests.
@@ -3089,13 +3135,14 @@ a tender offer is when someone offers to buy your shares at an above-market pric
 
 ## U
 
+### Unequal Voting Rights
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="190 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 190</span>
+
 > [!quote]
 > "Capitalism without democracy tends toward oligarchy."
 > — **Adolf Berle**
 
-### Unequal Voting Rights
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="190 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 190</span>
 
 
 > A governance structure in which different classes of shares carry different numbers of votes per share, resulting in a disconnect between economic ownership and voting power. Unequal voting rights — typically implemented through dual-class or multi-class share structures — allow founders, insiders, or controlling shareholders to maintain voting control with a minority economic stake. ISS and major index providers increasingly view unequal voting rights as a significant governance concern.

@@ -31,11 +31,12 @@ Market breadth measures how broadly a market move is supported across constituen
 | **Put/Call Ratio** | Put volume ÷ Call volume | > 1.0 = bearish sentiment (contrarian bullish) |
 | **Short Interest Ratio** | Short shares ÷ Avg daily volume | > 5 days = high short interest, potential squeeze |
 
+## Advance/Decline Ratio
+
 > [!quote]
 > "The generals may win a few battles, but if the troops aren't following, the war is lost."
 > — **Martin Zweig**
 
-## Advance/Decline Ratio
 
 Measures the breadth of market participation in a given move.
 
@@ -69,15 +70,17 @@ The net number of 52-week new highs vs new lows across index constituents.
 - **Turning negative while index rises**: Bearish divergence — narrow leadership
 - **Deeply negative then improving**: Potential bottom formation
 
+## Put/Call Ratio
+
 > [!quote]
 > "Be fearful when others are greedy and greedy when others are fearful."
 > — **Warren Buffett**
+
 
 > [!quote]
 > "When everybody thinks alike, everyone is likely to be wrong."
 > — **Humphrey Neill**
 
-## Put/Call Ratio
 
 Options market sentiment indicator. High put volume indicates hedging or bearish bets.
 

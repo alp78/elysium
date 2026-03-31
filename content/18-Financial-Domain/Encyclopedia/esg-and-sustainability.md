@@ -28,11 +28,12 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ---
 
+## ESG (Environmental, Social, and Governance)
+
 > [!quote]
 > "Climate risk is investment risk."
 > — **Larry Fink**
 
-## ESG (Environmental, Social, and Governance)
 
 **Definition:** ESG refers to the three central factors used to evaluate a company's sustainability and ethical impact. Environmental criteria examine how a company performs as a steward of the natural environment (carbon emissions, waste management, resource usage). Social criteria examine how it manages relationships with employees, suppliers, customers, and communities (labor practices, diversity, health and safety). Governance deals with a company's leadership, executive pay, audits, internal controls, and shareholder rights. ESG factors are increasingly used by investors to screen potential investments and by companies to report on their sustainability performance.
 
@@ -44,11 +45,12 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ---
 
+## Net-Zero
+
 > [!quote]
 > "The transition to net-zero will be the greatest commercial opportunity of our time."
 > — **Mark Carney**
 
-## Net-Zero
 
 **Definition:** Net-zero refers to achieving a balance between the amount of greenhouse gas emissions produced and the amount removed from the atmosphere, resulting in no net addition of greenhouse gases. A company, country, or sector achieves net-zero when its remaining emissions are offset by carbon removal activities such as reforestation, carbon capture and storage, or direct air capture. Net-zero commitments have become a central element of corporate sustainability strategies and government climate policies following the Paris Agreement's goal of limiting global warming to 1.5 degrees Celsius above pre-industrial levels.
 
@@ -63,11 +65,12 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ---
 
+## Sustainable Finance
+
 > [!quote]
 > "Sustainability is not about philanthropy — it is about long-term profitability."
 > — **Al Gore**
 
-## Sustainable Finance
 
 **Definition:** Sustainable finance refers to any form of financial service or product that integrates environmental, social, and governance (ESG) criteria into investment decisions, lending, and insurance. It includes green bonds (financing environmentally beneficial projects), sustainability-linked loans (where interest rates are tied to ESG performance), impact investing (targeting measurable social or environmental outcomes), and ESG-integrated investment strategies. Sustainable finance aims to channel capital toward activities that promote long-term economic, environmental, and social sustainability.
 
@@ -94,11 +97,12 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ---
 
+## Blue Chip
+
 > [!quote]
 > "Buy into a company because you want to own it, not because you want the stock to go up."
 > — **Warren Buffett**
 
-## Blue Chip
 
 **Definition:** A blue chip company is a well-established, financially stable, and nationally or globally recognized corporation with a long history of reliable performance, strong balance sheet, and a reputation for quality products or services. Blue chip stocks are considered relatively safe investments compared to smaller or less established companies. The term originates from poker, where blue chips traditionally hold the highest value. Blue chip companies typically pay consistent dividends, are components of major stock indices, and weather economic downturns better than most peers.
 
@@ -110,11 +114,12 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ---
 
+## Dual-Listed
+
 > [!quote]
 > "A company that lists in multiple markets sends a signal that it belongs to the world, not to one country."
 > — **Xavier Rolet**
 
-## Dual-Listed
 
 **Definition:** A dual-listed company (DLC) is a company whose shares are traded on two or more stock exchanges simultaneously. Companies choose to dual-list to access larger pools of capital, increase their visibility with international investors, satisfy regulatory requirements in multiple jurisdictions, or support cross-border business operations. Dual listing can be achieved through a full listing on each exchange, depositary receipts (ADRs for US markets, GDRs for international markets), or through a cross-listing arrangement. Dual-listed companies must comply with the reporting requirements of each exchange where they are listed.
 
@@ -126,11 +131,12 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ---
 
+## Natural Catastrophe
+
 > [!quote]
 > "Catastrophes are not just natural events — they are financial events that test the resilience of our risk systems."
 > — **Swiss Re Institute**
 
-## Natural Catastrophe
 
 **Definition:** A natural catastrophe is a large-scale natural event -- such as a hurricane, earthquake, flood, wildfire, or tsunami -- that causes widespread damage and financial losses. For the insurance and reinsurance industry, natural catastrophes represent some of the largest and most unpredictable risk exposures. Insurers use catastrophe models, geographic diversification, and reinsurance to manage their exposure. Climate change is increasing the frequency and severity of many natural catastrophes, creating growing challenges for the industry.
 
@@ -142,11 +148,12 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ---
 
+## Photovoltaic
+
 > [!quote]
 > "The sun provides more energy in one hour than the world uses in a year."
 > — **U.S. Department of Energy**
 
-## Photovoltaic
 
 **Definition:** Photovoltaic (PV) refers to technology that converts sunlight directly into electricity using semiconductor materials (typically silicon). Photovoltaic cells are the building blocks of solar panels, which can be installed on rooftops, in solar farms, or integrated into building materials. PV technology has seen dramatic cost reductions over the past decade, making solar electricity one of the cheapest sources of new power generation in many markets. PV installations range from small residential systems to utility-scale solar farms covering thousands of acres.
 
@@ -158,11 +165,12 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ---
 
+## Property Development
+
 > [!quote]
 > "The three most important things in real estate are location, location, location."
 > — **Harold Samuel**
 
-## Property Development
 
 **Definition:** Property development (also called real estate development) is the business of acquiring land and buildings, improving or constructing on them, and then selling or leasing the developed properties. Developers manage all stages of the development process including site acquisition, planning and zoning approvals, design, construction, marketing, and sales or leasing. Property development encompasses residential (houses, apartment buildings), commercial (offices, retail, hotels), industrial (warehouses, factories), and mixed-use developments. It is a capital-intensive activity that requires significant financing and carries risks related to construction, planning, and market conditions.
 

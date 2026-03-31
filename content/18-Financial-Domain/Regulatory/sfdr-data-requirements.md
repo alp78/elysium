@@ -21,11 +21,12 @@ updated: 2026-03-23
 
 ## Principal Adverse Impact (PAI) Indicators
 
+### Mandatory Indicators (Table 1 of SFDR RTS)
+
 > [!quote]
 > "What gets measured gets managed — and what gets disclosed gets scrutinized."
 > — **Hiro Mizuno** (former CIO, Japan Government Pension Investment Fund)
 
-### Mandatory Indicators (Table 1 of SFDR RTS)
 
 | # | Indicator | Data Needed | Vendor Source | Computation |
 |---|-----------|-------------|--------------|-------------|
@@ -52,11 +53,12 @@ See  for the full vendor normalization pipeline (when the ESG quality checks fai
 ESG vendor data (raw) → Normalize (0-100 scale) → PAI calculation → SFDR disclosure report
 ```
 
+### Key Computation: WACI
+
 > [!quote]
 > "Once climate change becomes a defining issue for financial stability, it may already be too late."
 > — **Mark Carney**
 
-### Key Computation: WACI
 
 ```python
 def compute_waci(weights: pd.DataFrame, emissions: pd.DataFrame) -> float:

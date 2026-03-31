@@ -22,11 +22,12 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 ---
 
+## Aftermarket
+
 > [!quote]
 > "The installed base is the gift that keeps on giving — every machine sold is a customer for life."
 > — **David Cote**
 
-## Aftermarket
 
 **Definition:** The aftermarket refers to the secondary market for parts, accessories, services, and upgrades for a product after its initial sale. In industries like automotive, aerospace, and heavy machinery, the aftermarket can be more profitable than the initial product sale because equipment owners need ongoing maintenance, spare parts, and performance upgrades throughout the product's operational life. Companies that build durable goods often derive a significant share of their revenue from aftermarket activities, creating a recurring revenue stream.
 
@@ -38,11 +39,12 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 ---
 
+## Concessions
+
 > [!quote]
 > "Infrastructure is the backbone upon which economic development is built."
 > — **Arundhati Bhattacharya**
 
-## Concessions
 
 **Definition:** A concession is a contractual right granted by a government or other entity to a private company to operate, maintain, and develop a specific infrastructure asset or public service for a defined period. In exchange, the concessionaire typically invests in maintaining and improving the infrastructure and collects revenues from users (such as tolls for highways or landing fees for airports). At the end of the concession period, the asset reverts to the government. Concession-based business models are common in transportation infrastructure, utilities, and public services.
 
@@ -54,11 +56,12 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 ---
 
+## Distributors
+
 > [!quote]
 > "No manufacturer can reach every customer alone — distributors extend your reach."
 > — **Sam Walton**
 
-## Distributors
 
 **Definition:** Distributors are intermediary entities that purchase products from manufacturers and resell them to retailers, businesses, or directly to consumers. Distributors add value by providing logistics, warehousing, marketing, credit, and after-sales service. They serve as a critical link in the supply chain, enabling manufacturers to reach broad markets without building their own extensive sales and delivery infrastructure. Distribution networks can be exclusive (one distributor per region) or non-exclusive (multiple distributors compete in the same area).
 
@@ -70,11 +73,12 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 ---
 
+## Fleet Management
+
 > [!quote]
 > "You cannot manage what you cannot measure — and telematics lets you measure every mile."
 > — **Peter Drucker**
 
-## Fleet Management
 
 **Definition:** Fleet management is the administration of a company's vehicle fleet, including acquisition, maintenance, fuel management, driver management, insurance, and disposal. Modern fleet management increasingly relies on telematics, GPS tracking, data analytics, and digital platforms to optimize routing, reduce costs, monitor driver behavior, ensure regulatory compliance, and manage vehicle lifecycles. Fleet management can apply to commercial vehicles, corporate car fleets, rental fleets, and specialized vehicle fleets.
 
@@ -86,11 +90,12 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 ---
 
+## Logistics
+
 > [!quote]
 > "Amateurs talk about strategy. Professionals talk about logistics."
 > — **Robert H. Barrow**
 
-## Logistics
 
 **Definition:** Logistics is the process of planning, implementing, and controlling the efficient, effective flow and storage of goods, services, and related information from the point of origin to the point of consumption. It encompasses transportation, warehousing, inventory management, order fulfillment, and distribution. Logistics is a critical function in supply chain management, and companies invest heavily in logistics to reduce costs, improve delivery speed, and enhance customer satisfaction. Modern logistics increasingly leverages technology such as GPS tracking, AI-driven route optimization, and automated warehouses.
 
@@ -102,11 +107,12 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 ---
 
+## Maintenance Repair and Overhaul (MRO)
+
 > [!quote]
 > "The time to repair the roof is when the sun is shining."
 > — **John F. Kennedy**
 
-## Maintenance Repair and Overhaul (MRO)
 
 **Definition:** Maintenance, Repair, and Overhaul (MRO) refers to the comprehensive range of activities required to keep complex equipment and machinery in safe, operational condition throughout its useful life. In the aerospace and defense industries, MRO includes scheduled inspections, component repairs, engine overhauls, structural modifications, and compliance with regulatory airworthiness requirements. MRO services represent a significant and recurring revenue stream for equipment manufacturers, as the installed base of engines, aircraft, and other complex systems requires continuous maintenance over decades of operation.
 
@@ -118,11 +124,12 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 ---
 
+## OEM (Original Equipment Manufacturer)
+
 > [!quote]
 > "Behind every great brand is a supplier who made it possible."
 > — **Tim Cook**
 
-## OEM (Original Equipment Manufacturer)
 
 **Definition:** An Original Equipment Manufacturer (OEM) is a company that produces parts or equipment that are marketed and sold by another company under its own brand name. In practice, the term has evolved to also refer to companies that manufacture complete end products (such as Dell or HP in computing, or Toyota in automotive). OEM relationships are common in manufacturing industries where specialized component makers supply parts to final product assemblers. OEM sales typically involve large volume contracts with specific quality requirements and design specifications.
 
@@ -134,11 +141,12 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 ---
 
+## Procurement
+
 > [!quote]
 > "Procurement is no longer about buying things — it is about creating value across the supply network."
 > — **Jonathan Hughes**
 
-## Procurement
 
 **Definition:** Procurement is the process of finding, acquiring, and buying goods, services, or works from an external source, often through a competitive bidding process. It encompasses the entire process from identifying needs, sourcing suppliers, negotiating contracts, purchasing, receiving goods, and paying suppliers. Strategic procurement aims to optimize costs, quality, and supply reliability while managing risks in the supply chain. Modern procurement increasingly uses digital platforms, e-procurement systems, and AI-driven analytics.
 
@@ -150,11 +158,12 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 ---
 
+## Real Estate Investment
+
 > [!quote]
 > "Real estate cannot be lost or stolen, nor can it be carried away. It is about the safest investment in the world."
 > — **Franklin D. Roosevelt**
 
-## Real Estate Investment
 
 **Definition:** Real estate investment involves the purchase, ownership, management, rental, or sale of property for profit. Real estate investments range from residential properties and commercial buildings to industrial warehouses, retail centers, and specialized assets like data centers and healthcare facilities. Institutional investors often access real estate through Real Estate Investment Trusts (REITs), which allow investors to own shares in professionally managed property portfolios without directly purchasing properties. Real estate offers diversification, income from rents, and potential capital appreciation.
 
@@ -166,11 +175,12 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 ---
 
+## Resellers
+
 > [!quote]
 > "A value-added reseller does not just sell a product — they sell a solution to a problem."
 > — **Michael Dell**
 
-## Resellers
 
 **Definition:** Resellers are businesses that purchase products from manufacturers, distributors, or other suppliers and sell them to end customers, often adding value through services such as customization, integration, support, and consultation. In the technology industry, value-added resellers (VARs) play an important role by combining hardware, software, and services into complete solutions for customers. Resellers provide manufacturers with broader market coverage and customer relationships.
 
@@ -182,11 +192,12 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 ---
 
+## Supply Chain
+
 > [!quote]
 > "Supply chain is like nature. It is all around us."
 > — **Dave Waters**
 
-## Supply Chain
 
 **Definition:** A supply chain is the entire network of entities, resources, activities, and technologies involved in the creation, production, and delivery of a product from raw materials to the end consumer. It includes sourcing raw materials, manufacturing, warehousing, transportation, distribution, and retail. Supply chain management (SCM) involves coordinating and optimizing these activities to minimize costs, improve quality, reduce lead times, and enhance customer satisfaction. Modern supply chains increasingly leverage digital technologies for visibility, predictive analytics, and automation.
 

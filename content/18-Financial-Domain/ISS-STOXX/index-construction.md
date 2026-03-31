@@ -26,12 +26,13 @@ date: 2026-03-28
 
 ## A
 
-> [!quote]
-> "The market is a weighing machine." — Benjamin Graham
-
 ### Adjusted Free-Float Market Capitalization
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
+
+> [!quote]
+> "The market is a weighing machine." — Benjamin Graham
+
 
 
 > The product of a security's price, its total shares outstanding, and its free-float factor, representing the portion of market value available for public trading after excluding strategic, locked-in, or restricted holdings.
@@ -127,12 +128,13 @@ The announcement date gives market participants advance notice of upcoming index
 
 ## B
 
-> [!quote]
-> "Every journey has a first step, and every measurement has a starting point." — Anonymous
-
 ### Base Date
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="88 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 88</span>
+
+> [!quote]
+> "Every journey has a first step, and every measurement has a starting point." — Anonymous
+
 
 
 > The reference calendar date from which an index's historical performance begins, serving as the temporal anchor for the index level series.
@@ -179,12 +181,13 @@ The base date is the starting point of an index's time series. On this date the 
 
 ---
 
-> [!quote]
-> "The beginning is the most important part of the work." — Plato
-
 ### Base Value
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="659 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 659</span>
+
+> [!quote]
+> "The beginning is the most important part of the work." — Plato
+
 
 
 > The numerical level assigned to an index on its base date, from which all subsequent index levels are derived as a ratio of current aggregate market value to the original aggregate market value.
@@ -233,12 +236,13 @@ The base value is an arbitrary scaling constant — commonly set to 100, 1,000, 
 
 ---
 
-> [!quote]
-> "Beware of little expenses; a small leak will sink a great ship." — Benjamin Franklin
-
 ### Basis Point (Index)
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
+
+> [!quote]
+> "Beware of little expenses; a small leak will sink a great ship." — Benjamin Franklin
+
 
 
 > A unit of measurement equal to one hundredth of one percent (0.01%), commonly used to express small changes in index levels, tracking error, or fee differentials.
@@ -289,13 +293,14 @@ $$
 
 ---
 
+### Benchmark Index
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="152 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 152</span>
+
 > [!quote]
 > "The index fund is a most unlikely hero for the typical investor."
 > — **John C. Bogle**
 
-### Benchmark Index
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="152 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 152</span>
 
 
 > A broadly representative, rules-based index that serves as a standard reference point for measuring the performance of investment portfolios, defining asset allocation, or constructing derivative instruments.
@@ -344,12 +349,13 @@ Benchmark indices are the flagship products of index providers. STOXX benchmark 
 
 ---
 
-> [!quote]
-> "The art of being wise is the art of knowing what to overlook." — William James
-
 ### Buffer Rule
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="65 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 65</span>
+
+> [!quote]
+> "The art of being wise is the art of knowing what to overlook." — William James
+
 
 
 > A threshold band applied during periodic reviews that allows existing constituents to remain in the index even if they marginally fail to meet the standard selection criteria, thereby reducing unnecessary turnover.
@@ -399,13 +405,14 @@ Buffer rules create a zone of tolerance around the selection threshold. For exam
 
 ## C
 
+### Capping
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="898 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 898</span>
+
 > [!quote]
 > "Diversification is the only free lunch in investing."
 > — **Harry Markowitz**
 
-### Capping
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="898 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 898</span>
 
 
 > The process of imposing a maximum weight constraint on individual constituents or groups of constituents within an index to ensure diversification and regulatory compliance.
@@ -459,12 +466,13 @@ Where $w_i^{\text{uncapped}}$ is the raw weight and $W_{\max}$ is the cap limit.
 
 ---
 
-> [!quote]
-> "No single raindrop believes it is responsible for the flood." — Anonymous
-
 ### Capping Factor
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="104 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 104</span>
+
+> [!quote]
+> "No single raindrop believes it is responsible for the flood." — Anonymous
+
 
 
 > A multiplicative coefficient applied to a constituent's weight at each rebalancing to enforce the index's maximum weight constraint, where a value of 1.0 means no adjustment and values below 1.0 indicate the constituent has been scaled down.
@@ -511,12 +519,13 @@ $$
 
 ---
 
-> [!quote]
-> "The chain of memory is the chain of identity." — John Locke
-
 ### Chaining
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="18 mentions across STOXX & ISS pages (low)">▰▰ 18</span>
+
+> [!quote]
+> "The chain of memory is the chain of identity." — John Locke
+
 
 
 > The technique of linking successive index segments across rebalancing or reconstitution events by multiplying the return of the new basket onto the cumulative index level of the old basket, ensuring a continuous time series despite changes in composition or weights.
@@ -571,12 +580,13 @@ Where $R_j^{\text{new basket}}$ is the return of the post-rebalancing basket on 
 
 ---
 
-> [!quote]
-> "The whole is greater than the sum of its parts." — Aristotle
-
 ### Component
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3,668 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 3,668</span>
+
+> [!quote]
+> "The whole is greater than the sum of its parts." — Aristotle
+
 
 
 > A security that is currently included in an index and contributes to its level calculation; synonymous with "constituent" in STOXX documentation.
@@ -624,12 +634,13 @@ The terms "component" and "constituent" are used interchangeably throughout the 
 
 ---
 
-> [!quote]
-> "Put all your eggs in one basket, and then watch that basket." — Andrew Carnegie
-
 ### Concentration Limit
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
+> [!quote]
+> "Put all your eggs in one basket, and then watch that basket." — Andrew Carnegie
+
 
 
 > A maximum threshold on the aggregate weight of a defined group of constituents — such as a single country, sector, or issuer group — designed to ensure diversification within the index beyond individual constituent caps.
@@ -657,12 +668,13 @@ Where $G$ is the set of constituents belonging to the group and $W_{\max}^{\text
 
 ---
 
-> [!quote]
-> "A team is not a group of people who work together. It is a group of people who trust each other." — Simon Sinek
-
 ### Constituent
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,462 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,462</span>
+
+> [!quote]
+> "A team is not a group of people who work together. It is a group of people who trust each other." — Simon Sinek
+
 
 
 > An individual security that is a member of an index at a given point in time and whose price, shares, and weighting factors contribute to the computation of the index level.
@@ -710,12 +722,13 @@ Where $G$ is the set of constituents belonging to the group and $W_{\max}^{\text
 
 ---
 
-> [!quote]
-> "In God we trust; all others must bring data." — W. Edwards Deming
-
 ### Divisor
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="84 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 84</span>
+
+> [!quote]
+> "In God we trust; all others must bring data." — W. Edwards Deming
+
 
 
 > A scaling factor in the index formula that preserves continuity of the index level across non-market events such as constituent changes, corporate actions, and rebalancing; it absorbs the mechanical impact of these events so the index level changes only due to price movements.
@@ -768,12 +781,13 @@ The numerator uses the new composition (post-event) and the denominator uses the
 
 ---
 
-> [!quote]
-> "You cannot step into the same river twice, but you can measure it consistently." — Heraclitus (adapted)
-
 ### Divisor Adjustment
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
+
+> [!quote]
+> "You cannot step into the same river twice, but you can measure it consistently." — Heraclitus (adapted)
+
 
 
 > The recalculation of the index divisor triggered by any non-market event — including constituent additions or deletions, share changes, free-float factor updates, corporate actions, or capping factor modifications — to ensure continuity of the index level.
@@ -802,12 +816,13 @@ A divisor adjustment is performed whenever the aggregate capitalization of the i
 
 ## E
 
-> [!quote]
-> "Timing is everything." — Anonymous
-
 ### Effective Date
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="346 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 346</span>
+
+> [!quote]
+> "Timing is everything." — Anonymous
+
 
 
 > The calendar date on which announced index changes — including additions, deletions, share updates, and rebalanced weights — take effect in the live index calculation.
@@ -854,13 +869,14 @@ The effective date is the implementation point for all changes disclosed on the 
 
 ---
 
+### Eligibility Criteria
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="25 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 25</span>
+
 > [!quote]
 > "The essence of investment management is the management of risks, not the management of returns."
 > — **Benjamin Graham**
 
-### Eligibility Criteria
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="25 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 25</span>
 
 
 > The set of minimum requirements — covering domicile, listing venue, security type, liquidity, free-float, and sector classification — that a security must satisfy before it can be considered for inclusion in an index.
@@ -909,13 +925,14 @@ Eligibility criteria act as the first filter in the index construction process. 
 
 ---
 
+### Equal Weighting
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="27 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 27</span>
+
 > [!quote]
 > "The market can stay irrational longer than you can stay solvent."
 > — **John Maynard Keynes**
 
-### Equal Weighting
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="27 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 27</span>
 
 
 > A weighting scheme in which every constituent of an index receives the same weight at each rebalancing date, regardless of market capitalization, price, or any fundamental metric.
@@ -969,12 +986,13 @@ $$
 
 ## F
 
-> [!quote]
-> "The early bird catches the worm." — William Camden
-
 ### Fast Entry Rule
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="21 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 21</span>
+
+> [!quote]
+> "The early bird catches the worm." — William Camden
+
 
 
 > A provision that allows a security to be added to an index outside the regular periodic review schedule when it rapidly meets pre-defined criteria, typically related to a sharp increase in market capitalization or a significant corporate event such as an IPO or spin-off.
@@ -1023,12 +1041,13 @@ Fast entry rules ensure that indices remain representative of the market between
 
 ---
 
-> [!quote]
-> "Know when to hold them, know when to fold them." — Kenny Rogers
-
 ### Fast Exit Rule
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="24 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 24</span>
+
+> [!quote]
+> "Know when to hold them, know when to fold them." — Kenny Rogers
+
 
 
 > A provision that triggers the removal of a constituent from an index between periodic reviews when it becomes ineligible due to events such as delisting, bankruptcy, or a severe decline in liquidity or market capitalization below a specified floor.
@@ -1075,13 +1094,14 @@ Fast exit rules protect index integrity by promptly removing securities that no 
 
 ---
 
+### Free-Float
+
+<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,168 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,168</span>
+
 > [!quote]
 > "Price is what you pay; value is what you get."
 > — **Warren Buffett**
 
-### Free-Float
-
-<span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,168 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,168</span>
 
 
 > The proportion of a company's total shares outstanding that is available for trading by public investors, excluding shares held by strategic investors, company insiders, governments, and other long-term locked-in holders.
@@ -1127,12 +1147,13 @@ Free-float is a critical concept in modern index construction. STOXX defines str
 
 ---
 
-> [!quote]
-> "Not everything that can be counted counts, and not everything that counts can be counted." — William Bruce Cameron
-
 ### Free-Float Factor
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="25 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 25</span>
+
+> [!quote]
+> "Not everything that can be counted counts, and not everything that counts can be counted." — William Bruce Cameron
+
 
 
 > A decimal coefficient between 0 and 1, typically rounded to the nearest 5% increment, representing the fraction of a company's shares that are freely available for public trading.
@@ -1188,13 +1209,14 @@ Rounded to the nearest 0.05.
 
 ---
 
+### Gross Return Index
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="21 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 21</span>
+
 > [!quote]
 > "It is not the return on my money that I am concerned about; it is the return of my money."
 > — **Will Rogers**
 
-### Gross Return Index
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="21 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 21</span>
 
 
 > An index variant that measures total performance by reinvesting the full amount of all ordinary cash dividends on the ex-date at the closing price of the paying constituent, without deducting any withholding taxes.
@@ -1251,13 +1273,14 @@ Where $D_i$ is the gross (pre-tax) dividend per share for constituent $i$ going 
 
 ## I
 
+### Index Calculation
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="253 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 253</span>
+
 > [!quote]
 > "A random walk down Wall Street with its eyes shut would select a portfolio doing just as well as one carefully selected by experts."
 > — **Burton Malkiel**
 
-### Index Calculation
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="253 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 253</span>
 
 
 > The continuous or end-of-day computational process by which constituent prices, shares, free-float factors, and capping factors are combined via the index formula to produce the index level at each point in time.
@@ -1306,12 +1329,13 @@ STOXX calculates its indices in real time during exchange trading hours and publ
 
 ---
 
-> [!quote]
-> "In the multitude of counsellors there is safety." — Proverbs 11:14
-
 ### Index Committee
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
+> [!quote]
+> "In the multitude of counsellors there is safety." — Proverbs 11:14
+
 
 
 > A governance body composed of senior professionals within the index provider organization responsible for overseeing index methodology, approving rule changes, exercising discretion in exceptional circumstances, and ensuring the integrity and representativeness of the index.
@@ -1333,12 +1357,13 @@ The STOXX Index Committee (or equivalent governance body) serves as the ultimate
 
 ---
 
-> [!quote]
-> "Pure mathematics is the poetry of logical ideas." — Albert Einstein
-
 ### Index Formula (Laspeyres)
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="72 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 72</span>
+
+> [!quote]
+> "Pure mathematics is the poetry of logical ideas." — Albert Einstein
+
 
 
 > The mathematical expression used to compute a capitalization-weighted index level, based on the Laspeyres aggregation method, where quantities (shares) are held fixed between rebalancing dates and the index reflects only price changes.
@@ -1397,12 +1422,13 @@ Where:
 
 ---
 
-> [!quote]
-> "The thermometer of a society is its stock market." — Anonymous
-
 ### Index Level
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="106 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 106</span>
+
+> [!quote]
+> "The thermometer of a society is its stock market." — Anonymous
+
 
 
 > The numerical value of an index at a given point in time, representing the cumulative effect of constituent price changes since the base date, scaled by the base value and maintained via the divisor.
@@ -1509,13 +1535,14 @@ $$
 
 ---
 
+### Index Universe
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="360 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 360</span>
+
 > [!quote]
 > "Wide diversification is only required when investors do not understand what they are doing."
 > — **Warren Buffett**
 
-### Index Universe
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="360 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 360</span>
 
 
 > The broadest set of securities from which an index's constituents may be selected, defined by geographic, exchange, sector, or asset-class criteria.
@@ -1563,13 +1590,14 @@ The index universe is the starting pool before any eligibility or selection scre
 
 ---
 
+### Investability
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
+
 > [!quote]
 > "Liquidity is a coward — it disappears at the first sign of trouble."
 > — **Nassim Nicholas Taleb**
 
-### Investability
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
 
 
 > The degree to which an index can be practically replicated by a real-world portfolio, determined by the liquidity, free-float, and trading volumes of its constituents, as well as the index's turnover and weight concentration characteristics.
@@ -1617,13 +1645,14 @@ Investability is a core design objective for benchmark indices. STOXX ensures in
 
 ## L
 
+### Market Capitalization Weighting
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
+
 > [!quote]
 > "Don't look for the needle in the haystack — just buy the haystack."
 > — **John C. Bogle**
 
-### Market Capitalization Weighting
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
 
 > A weighting methodology in which each constituent's weight is proportional to its full (non-free-float-adjusted) market capitalization, calculated as share price multiplied by total shares outstanding.
@@ -1663,12 +1692,13 @@ $$
 
 ---
 
-> [!quote]
-> "In this world nothing can be said to be certain, except death and taxes." — Benjamin Franklin
-
 ### Net Return Index
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="64 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 64</span>
+
+> [!quote]
+> "In this world nothing can be said to be certain, except death and taxes." — Benjamin Franklin
+
 
 
 > An index variant that reinvests dividends after deducting withholding taxes at the applicable rate for a specified investor domicile, reflecting the return achievable by a foreign or domestic investor subject to standard withholding tax regimes.
@@ -1775,12 +1805,13 @@ Fixed-count indices such as the EURO STOXX 50 always maintain exactly the target
 
 ## O
 
-> [!quote]
-> "The unexamined life is not worth living." — Socrates
-
 ### Periodic Review
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14 mentions across STOXX & ISS pages (low)">▰▰ 14</span>
+
+> [!quote]
+> "The unexamined life is not worth living." — Socrates
+
 
 
 > The scheduled process — typically conducted quarterly, semi-annually, or annually — during which an index provider reassesses constituency, share counts, free-float factors, and other parameters against current data.
@@ -1828,12 +1859,13 @@ Periodic reviews are the primary governance mechanism for index maintenance. STO
 
 ---
 
-> [!quote]
-> "Price is what you pay. Value is what you get." — Warren Buffett
-
 ### Price Return Index
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
+> [!quote]
+> "Price is what you pay. Value is what you get." — Warren Buffett
+
 
 
 > An index variant that measures the performance of the constituent basket based solely on price changes, without accounting for dividend distributions or other income.
@@ -1866,13 +1898,14 @@ $$
 
 ---
 
+### Rebalancing
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="271 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 271</span>
+
 > [!quote]
 > "Rebalancing is a discipline that forces you to sell high and buy low."
 > — **William Bernstein**
 
-### Rebalancing
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="271 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 271</span>
 
 
 > The periodic process of realigning constituent weights to their target values as defined by the weighting scheme, which may also involve updating share counts, free-float factors, and capping factors.
@@ -1919,13 +1952,14 @@ Rebalancing corrects the weight drift that accumulates between review dates as c
 
 ---
 
+### Reconstitution
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
 > [!quote]
 > "In the short run, the market is a voting machine; in the long run, it is a weighing machine."
 > — **Benjamin Graham**
 
-### Reconstitution
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
 
 > The process of redetermining the membership of an index by re-applying eligibility and selection criteria to the full index universe, resulting in additions of newly qualifying securities and deletions of those that no longer qualify.
@@ -1953,12 +1987,13 @@ Reconstitution is distinct from rebalancing: reconstitution changes *which* secu
 
 ---
 
-> [!quote]
-> "What gets measured gets managed." — Peter Drucker
-
 ### Review Frequency
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="502 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 502</span>
+
+> [!quote]
+> "What gets measured gets managed." — Peter Drucker
+
 
 
 > The cadence at which an index provider conducts periodic reviews, commonly expressed as quarterly (March, June, September, December), semi-annually, or annually.
@@ -2005,13 +2040,14 @@ STOXX uses different review frequencies across its index families. The EURO STOX
 
 ---
 
+### Rules-Based Index
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
 > [!quote]
 > "The stock market is filled with individuals who know the price of everything, but the value of nothing."
 > — **Philip Fisher**
 
-### Rules-Based Index
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
 > An index constructed and maintained according to a transparent, pre-defined, and publicly documented set of rules covering universe definition, eligibility, selection, weighting, rebalancing, and corporate action treatment, minimizing discretionary judgment by the index provider.
@@ -2035,12 +2071,13 @@ All STOXX indices are rules-based, meaning that their methodology is fully codif
 
 ## S
 
-> [!quote]
-> "Diversification is the only free lunch in investing." — Harry Markowitz
-
 ### Sector Weighting
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
+
+> [!quote]
+> "Diversification is the only free lunch in investing." — Harry Markowitz
+
 
 
 > The aggregate weight of all constituents classified within a specific industry sector or supersector, reflecting that sector's representation in the index at a given point in time.
@@ -2087,12 +2124,13 @@ Sector weighting is a fundamental dimension of index risk and return attribution
 
 ---
 
-> [!quote]
-> "The secret of success is to know something nobody else knows." — Aristotle Onassis
-
 ### Selection Criteria
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="59 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 59</span>
+
+> [!quote]
+> "The secret of success is to know something nobody else knows." — Aristotle Onassis
+
 
 
 > The specific quantitative and qualitative rules — beyond basic eligibility — used to rank and choose constituents from the eligible universe, typically based on market capitalization rank, liquidity thresholds, sector representation, or factor scores.
@@ -2139,12 +2177,13 @@ Selection criteria determine which securities from the eligible universe actuall
 
 ---
 
-> [!quote]
-> "You have to kiss a lot of frogs before you find your prince." — Anonymous
-
 ### Selection List
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,008 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,008</span>
+
+> [!quote]
+> "You have to kiss a lot of frogs before you find your prince." — Anonymous
+
 
 
 > The ordered ranking of eligible securities — typically sorted by free-float market capitalization or another primary criterion — from which the final index constituents are drawn during reconstitution.
@@ -2192,12 +2231,13 @@ The selection list is the intermediate output of the index construction process,
 
 ---
 
-> [!quote]
-> "All models are wrong, but some are useful." — George E.P. Box
-
 ### Simulation
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="26 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 26</span>
+
+> [!quote]
+> "All models are wrong, but some are useful." — George E.P. Box
+
 
 
 > The process of applying an index methodology retroactively to historical data to generate a hypothetical back-tested performance track record for a period before the index was officially launched.
@@ -2244,12 +2284,13 @@ Simulated (back-tested) data allows index users to evaluate how an index would h
 
 ---
 
-> [!quote]
-> "Routine, in an intelligent man, is a sign of ambition." — W.H. Auden
-
 ### Systematic Index
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
+> [!quote]
+> "Routine, in an intelligent man, is a sign of ambition." — W.H. Auden
+
 
 
 > An index constructed using a transparent, rules-based methodology that systematically targets a specific investment factor, theme, or strategy — such as value, momentum, low volatility, or ESG — rather than simply capturing broad market-capitalization exposure.
@@ -2279,13 +2320,14 @@ Systematic indices (also called strategy or smart beta indices) go beyond tradit
 
 ## T
 
+### Total Return Index
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="25 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 25</span>
+
 > [!quote]
 > "The miracle of compounding returns is overwhelmed by the tyranny of compounding costs."
 > — **John C. Bogle**
 
-### Total Return Index
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="25 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 25</span>
 
 
 > A generic term for an index variant that accounts for both price appreciation and the reinvestment of dividends and other cash distributions, encompassing both gross return and net return variants.
@@ -2333,13 +2375,14 @@ Systematic indices (also called strategy or smart beta indices) go beyond tradit
 
 ---
 
+### Tracking Error
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="501 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 501</span>
+
 > [!quote]
 > "The biggest risk is not volatility but the permanent loss of capital."
 > — **Benjamin Graham**
 
-### Tracking Error
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="501 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 501</span>
 
 
 > The annualized standard deviation of the difference in returns between a portfolio (or fund) and its benchmark index, measuring the consistency of replication.
@@ -2393,13 +2436,14 @@ Where $R_p$ and $R_b$ are daily portfolio and benchmark returns, respectively, a
 
 ---
 
+### Turnover
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="668 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 668</span>
+
 > [!quote]
 > "The stock market is a no-called-strike game — you don't have to swing at every pitch."
 > — **Warren Buffett**
 
-### Turnover
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="668 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 668</span>
 
 
 > The percentage of an index's total weight that changes at a rebalancing or reconstitution event, measured as the sum of all absolute weight changes divided by two.
@@ -2454,13 +2498,14 @@ Where $w_i^{\text{old}}$ and $w_i^{\text{new}}$ are the weights before and after
 
 ## W
 
+### Weighting Scheme
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="570 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 570</span>
+
 > [!quote]
 > "If you don't know who you are, the stock market is an expensive place to find out."
 > — **George Goodman**
 
-### Weighting Scheme
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="570 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 570</span>
 
 
 > The methodology that determines how the index's total value is allocated across its constituents, defining each security's influence on the index level; common schemes include free-float market-capitalization weighting, equal weighting, price weighting, and fundamental weighting.

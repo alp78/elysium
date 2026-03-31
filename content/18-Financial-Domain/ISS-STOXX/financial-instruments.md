@@ -26,12 +26,13 @@ date: 2026-03-28
 
 ## B
 
-> [!quote]
-> "If you do not know where you are going, any road will get you there." — Lewis Carroll
-
 ### Benchmark (as Instrument Reference)
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5,507 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 5,507</span>
+
+> [!quote]
+> "If you do not know where you are going, any road will get you there." — Lewis Carroll
+
 
 
 > A standard index — such as the EURO STOXX 50 or STOXX Europe 600 — against which the performance of a portfolio, fund, or financial product is measured. When an index serves as a benchmark, it becomes the contractual reference point embedded in the terms of derivatives, ETFs, and structured products.
@@ -80,13 +81,14 @@ a benchmark is the yardstick. When a fund manager says "we track the STOXX Europ
 
 ---
 
+### Bond (Fixed Income Security)
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="298 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 298</span>
+
 > [!quote]
 > "Gentlemen prefer bonds."
 > — **Andrew Mellon**
 
-### Bond (Fixed Income Security)
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="298 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 298</span>
 
 
 > A bond is a fixed-income debt instrument in which an investor lends capital to an issuer (government, corporation, or supranational entity) in exchange for periodic interest (coupon) payments and the return of principal at maturity. In the index context, bonds serve as the underlying securities for fixed-income indices published by STOXX and as the instruments evaluated by ISS ESG for labeled-debt verification.
@@ -136,13 +138,14 @@ a bond is an IOU with a schedule. You lend money, receive regular interest, and 
 
 ## C
 
+### Call Option
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="119 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 119</span>
+
 > [!quote]
 > "Derivatives are financial weapons of mass destruction."
 > — **Warren Buffett**
 
-### Call Option
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="119 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 119</span>
 
 
 > A call option is a derivatives contract that grants the holder the right, but not the obligation, to receive the cash difference between the underlying index level and the strike price at expiry (for European-style contracts) or at any point before expiry (for American-style). On Eurex, call options on STOXX indices are European-style and cash-settled, and they are a core component of covered-call and volatility strategy indices.
@@ -190,12 +193,13 @@ a call option is a bet that the index will go up. You pay a premium for the righ
 
 ---
 
-> [!quote]
-> "Simplicity is the ultimate sophistication." — Leonardo da Vinci
-
 ### Certificate (Index Certificate)
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="37 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 37</span>
+
+> [!quote]
+> "Simplicity is the ultimate sophistication." — Leonardo da Vinci
+
 
 
 > An index certificate is an unsecured debt instrument issued by a bank that replicates the performance of an underlying index on a one-to-one (delta-one) basis. The holder participates directly in the gains and losses of the index without owning the constituent securities.
@@ -244,12 +248,13 @@ Think of a certificate as a simplified way to "buy" an entire index through a si
 
 ---
 
-> [!quote]
-> "The measure of intelligence is the ability to change." — Albert Einstein
-
 ### Convertible Bond
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="90 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 90</span>
+
+> [!quote]
+> "The measure of intelligence is the ability to change." — Albert Einstein
+
 
 
 > A convertible bond is a hybrid fixed-income instrument that gives the bondholder the right to convert the bond into a predetermined number of the issuer's equity shares. Convertible bonds combine characteristics of debt (fixed coupon, maturity date) and equity (upside participation through conversion). STOXX publishes convertible bond indices, and ISS governance evaluates the dilutive impact of conversion features on existing shareholders.
@@ -297,12 +302,13 @@ A convertible bond is a bond with an embedded stock option. You receive regular 
 
 ---
 
-> [!quote]
-> "A promise made is a debt unpaid." — Robert W. Service
-
 ### Corporate Bond
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="17 mentions across STOXX & ISS pages (low)">▰▰ 17</span>
+
+> [!quote]
+> "A promise made is a debt unpaid." — Robert W. Service
+
 
 
 > A corporate bond is a debt security issued by a corporation to raise capital, obligating the issuer to pay periodic interest and return the principal at maturity. Corporate bonds are rated by credit agencies as either investment grade or high yield. STOXX publishes corporate bond indices segmented by credit quality, sector, and geography, while ISS ESG screens corporate bond issuers for ESG risk factors.
@@ -352,13 +358,14 @@ A corporate bond is a loan you make to a company. The company pays you interest 
 
 ---
 
+### Covered Call Strategy
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
+
 > [!quote]
 > "The individual investor should act consistently as an investor and not as a speculator."
 > — **Benjamin Graham**
 
-### Covered Call Strategy
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
 
 
 > A covered call strategy on an index involves holding a long position in the index portfolio while simultaneously writing (selling) call options on that same index. The premium received from selling the calls provides additional income but caps the upside potential. STOXX publishes dedicated covered-call strategy indices, such as the EURO STOXX 50 Buywrite Index.
@@ -409,12 +416,13 @@ you own the index and sell someone else the right to buy it above a certain pric
 
 ---
 
-> [!quote]
-> "Insurance is the only product that both the seller and buyer hope is never actually used." — Anonymous
-
 ### Credit Default Swap (CDS)
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
+> [!quote]
+> "Insurance is the only product that both the seller and buyer hope is never actually used." — Anonymous
+
 
 
 > A credit default swap is an OTC derivative contract in which one party (the protection buyer) pays a periodic premium to another party (the protection seller) in exchange for a contingent payment if a specified credit event — such as default or restructuring — occurs on a reference entity or bond. CDS spreads are widely used as market-implied measures of credit risk and feed into STOXX risk indices and ISS governance credit assessments.
@@ -446,12 +454,13 @@ A credit default swap is essentially insurance against a borrower defaulting. Yo
 
 ## D
 
-> [!quote]
-> "Ownership is the most intimate relationship one can have to objects." — Walter Benjamin
-
 ### Equity (as Instrument)
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9,874 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 9,874</span>
+
+> [!quote]
+> "Ownership is the most intimate relationship one can have to objects." — Walter Benjamin
+
 
 
 > Equity, in the context of financial instruments, refers to shares of ownership in a publicly listed company. Equities are the fundamental building blocks of stock indices — every STOXX and DAX index is ultimately a rules-based selection and weighting of equity securities. ISS Governance evaluates the governance practices of equity issuers, while ISS ESG rates their environmental and social performance.
@@ -501,13 +510,14 @@ Equity means ownership. When you buy a share of stock, you own a small piece of 
 
 ---
 
+### ETF (Exchange-Traded Fund)
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="765 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 765</span>
+
 > [!quote]
 > "The ETF is the most innovative financial instrument of the last two decades."
 > — **John C. Bogle**
 
-### ETF (Exchange-Traded Fund)
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="765 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 765</span>
 
 
 > An exchange-traded fund is an open-ended investment fund that trades on a stock exchange and seeks to replicate the performance of a specified index. ETFs are the dominant licensed product type on STOXX and DAX indices, with hundreds of ETFs tracking benchmarks such as the STOXX Europe 600 and EURO STOXX 50.
@@ -556,12 +566,13 @@ An ETF lets you buy and sell a whole index as easily as a single stock. It holds
 
 ---
 
-> [!quote]
-> "Gold is money. Everything else is credit." — J.P. Morgan
-
 ### ETC (Exchange-Traded Commodity)
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="642 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 642</span>
+
+> [!quote]
+> "Gold is money. Everything else is credit." — J.P. Morgan
+
 
 
 > An exchange-traded commodity is a debt security listed on an exchange that provides exposure to individual commodities or commodity indices. ETCs may be physically backed (holding the commodity) or synthetically backed (using derivatives). STOXX provides commodity-related benchmark indices that serve as underlyings for ETC products.
@@ -609,12 +620,13 @@ An ETC works like an ETF, but for commodities — gold, oil, copper, agricultura
 
 ---
 
-> [!quote]
-> "Credit is a system whereby a person who cannot pay gets another person who cannot pay to guarantee that he can pay." — Charles Dickens
-
 ### ETN (Exchange-Traded Note)
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
+
+> [!quote]
+> "Credit is a system whereby a person who cannot pay gets another person who cannot pay to guarantee that he can pay." — Charles Dickens
+
 
 
 > An exchange-traded note is an unsecured, unsubordinated debt instrument issued by a bank that promises to pay the return of a specified index minus fees. Unlike an ETF, an ETN does not hold a pool of assets; the investor bears the full credit risk of the issuing institution.
@@ -663,12 +675,13 @@ An ETN is essentially a bank's IOU linked to an index. You get precise index tra
 
 ---
 
-> [!quote]
-> "The investor's chief problem, and even his worst enemy, is likely to be himself." — Benjamin Graham
-
 ### ETP (Exchange-Traded Product)
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="45 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 45</span>
+
+> [!quote]
+> "The investor's chief problem, and even his worst enemy, is likely to be himself." — Benjamin Graham
+
 
 
 > Exchange-traded product is the umbrella term encompassing ETFs, ETNs, and ETCs — any financial product that is traded on an exchange and derives its value from an underlying benchmark or asset. STOXX indices serve as the basis for a broad ecosystem of ETPs across global exchanges.
@@ -769,13 +782,14 @@ Eurex futures let you make a binding agreement today to buy or sell the value of
 
 ## F
 
+### Futures Contract (Index Futures)
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="90 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 90</span>
+
 > [!quote]
 > "Markets can remain irrational longer than you can remain solvent."
 > — **John Maynard Keynes**
 
-### Futures Contract (Index Futures)
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="90 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 90</span>
 
 
 > An index futures contract is a standardized agreement to exchange, at a predetermined future date, a cash amount equal to the difference between the agreed price and the index level at expiry. Index futures are among the most widely traded derivatives globally, and STOXX/DAX indices underlie some of the highest-volume futures contracts on Eurex.
@@ -826,13 +840,14 @@ an index future is a bet on where the index will be at a specific date. You neve
 
 ## G
 
+### Green Bond (as Instrument)
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="28 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 28</span>
+
 > [!quote]
 > "We do not inherit the earth from our ancestors; we borrow it from our children."
 > — **Chief Seattle**
 
-### Green Bond (as Instrument)
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="28 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 28</span>
 
 
 > A green bond is a fixed-income instrument whose proceeds are exclusively allocated to finance projects with environmental benefits — renewable energy, energy efficiency, clean transportation, or sustainable water management. ISS ESG provides second-party opinions (SPOs) and verification services for green bond issuances, while STOXX publishes green bond indices that track this market segment.
@@ -882,12 +897,13 @@ A green bond works exactly like a regular bond (fixed coupon, maturity date, cre
 
 ---
 
-> [!quote]
-> "There is no such thing as a free lunch." — Milton Friedman
-
 ### High-Yield Bond
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
+> [!quote]
+> "There is no such thing as a free lunch." — Milton Friedman
+
 
 
 > A high-yield bond (also known as a "junk bond") is a fixed-income instrument rated below investment grade (below BBB- by S&P/Fitch or Baa3 by Moody's) that offers a higher coupon to compensate investors for elevated default risk. STOXX publishes high-yield bond indices that serve as benchmarks for this market segment, and ISS ESG screens high-yield issuers for governance and sustainability risks that may compound credit risk.
@@ -919,13 +935,14 @@ A high-yield bond pays more interest because the issuer is riskier — it has a 
 
 ## I
 
+### Index Fund
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="50 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 50</span>
+
 > [!quote]
 > "The index fund is a sensible, serviceable method for obtaining the market's rate of return with absolutely no effort and minimal expense."
 > — **John C. Bogle**
 
-### Index Fund
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="50 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 50</span>
 
 
 > An index fund is a collective investment scheme — mutual fund, unit trust, or similar vehicle — that aims to replicate the performance of a specified benchmark index by holding its constituent securities in proportion to their index weights. Unlike ETFs, traditional index funds are bought and sold at end-of-day NAV, not intraday on an exchange.
@@ -974,12 +991,13 @@ An index fund is the original passive investment. You give money to the fund man
 
 ---
 
-> [!quote]
-> "Intellectual property has the shelf life of a banana." — Bill Gates
-
 ### Index License
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
+
+> [!quote]
+> "Intellectual property has the shelf life of a banana." — Bill Gates
+
 
 
 > An index license is the contractual agreement granting a financial institution the right to use a STOXX or DAX index as the basis for a financial product — ETF, futures contract, structured product, or fund. STOXX Ltd. (part of the ISS STOXX group under Deutsche Boerse) charges licensing fees, typically as basis-point charges on assets under management or per-contract fees for derivatives.
@@ -1030,12 +1048,13 @@ Before a bank can launch an ETF on the EURO STOXX 50, it must obtain a license f
 
 ---
 
-> [!quote]
-> "It is choice, not chance, that determines your destiny." — Jean Nidetch
-
 ### Index Option
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="101 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 101</span>
+
+> [!quote]
+> "It is choice, not chance, that determines your destiny." — Jean Nidetch
+
 
 
 > An index option is a derivatives contract that gives the holder the right, but not the obligation, to receive (call) or pay (put) the cash difference between the index level and the strike price at or before expiry. STOXX-based index options are primarily traded on Eurex and are European-style (exercisable only at expiry) and cash-settled.
@@ -1085,12 +1104,13 @@ An index option is like insurance — or a lottery ticket — on the index's dir
 
 ---
 
-> [!quote]
-> "One man's trash is another man's treasure." — Proverb
-
 ### Interest Rate Swap
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
+
+> [!quote]
+> "One man's trash is another man's treasure." — Proverb
+
 
 
 > An interest rate swap is an OTC derivative contract in which two counterparties agree to exchange interest-rate cash flows — typically a fixed rate for a floating rate — on a notional principal amount over a specified period. Interest rate swaps are the most widely traded OTC derivative globally and are used by institutional investors, banks, and corporates to manage interest-rate risk. STOXX provides swap-rate-based indices and ISS governance frameworks assess counterparty risk in swap exposures.
@@ -1163,12 +1183,13 @@ A money market fund is the closest thing to a savings account in the investment 
 
 ---
 
-> [!quote]
-> "The only difference between death and taxes is that death does not get worse every time Congress meets." — Will Rogers
-
 ### Municipal Bond
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
+
+> [!quote]
+> "The only difference between death and taxes is that death does not get worse every time Congress meets." — Will Rogers
+
 
 
 > A municipal bond (muni bond) is a debt security issued by a state, city, county, or other local government entity to finance public projects such as infrastructure, schools, and hospitals. Municipal bonds are particularly prominent in the U.S. market and often carry tax-exempt status. ISS ESG evaluates municipal issuers for governance quality and sustainability alignment, while index providers track municipal bond performance through dedicated benchmarks.
@@ -1198,13 +1219,14 @@ A municipal bond is a loan to a local government. The city or state uses the mon
 
 ## O
 
+### Passive Investment
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="33 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 33</span>
+
 > [!quote]
 > "By periodically investing in an index fund, the know-nothing investor can actually outperform most investment professionals."
 > — **Warren Buffett**
 
-### Passive Investment
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="33 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 33</span>
 
 
 > Passive investment is an investment approach that seeks to replicate the performance of a market index rather than outperform it through active security selection. The growth of passive investing has been the primary driver of demand for STOXX and ISS index products, as assets flow into index-tracking ETFs, index funds, and index-based mandates.
@@ -1251,12 +1273,13 @@ Passive investing means you buy the index and hold it. You do not try to pick wi
 
 ---
 
-> [!quote]
-> "Good artists copy; great artists steal." — Pablo Picasso
-
 ### Portfolio Replication
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
+> [!quote]
+> "Good artists copy; great artists steal." — Pablo Picasso
+
 
 
 > Portfolio replication is the process by which a fund or product recreates the performance of an index. Full replication holds every constituent in exact index weight. Sampling (or optimized replication) holds a representative subset. Synthetic replication uses swaps or derivatives to match the index return without holding the underlying securities.
@@ -1280,13 +1303,14 @@ Replication is the mechanics behind passive investing. Full replication is the m
 
 ---
 
+### Put Option
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="189 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 189</span>
+
 > [!quote]
 > "The time to buy is when there's blood in the streets."
 > — **Baron Rothschild**
 
-### Put Option
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="189 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 189</span>
 
 
 > A put option is a derivatives contract that grants the holder the right, but not the obligation, to receive the cash difference between the strike price and the underlying index level at expiry (for European-style contracts). Put options on STOXX indices are traded on Eurex and are widely used for portfolio hedging — protecting against index declines — as well as for directional speculation and volatility strategies.
@@ -1338,13 +1362,14 @@ A put option is the mirror image of a call option. You pay a premium for the rig
 
 ## R
 
+### REIT (Real Estate Investment Trust)
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="163 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 163</span>
+
 > [!quote]
 > "Real estate cannot be lost or stolen, nor can it be carried away."
 > — **Franklin D. Roosevelt**
 
-### REIT (Real Estate Investment Trust)
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="163 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 163</span>
 
 
 > A REIT (Real Estate Investment Trust) is a company or trust that owns, operates, or finances income-generating real estate and is structured to distribute the majority of its taxable income to shareholders as dividends. REITs trade on stock exchanges like ordinary equities and are included in STOXX equity indices, often within dedicated real estate sector sub-indices. ISS Governance assesses REIT board structures, related-party transactions, and governance practices specific to the real estate sector.
@@ -1397,12 +1422,13 @@ A REIT lets you invest in real estate without buying property directly. The REIT
 
 ## S
 
-> [!quote]
-> "We make a living by what we get, but we make a life by what we give." — Winston Churchill
-
 ### Social Bond
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
+
+> [!quote]
+> "We make a living by what we get, but we make a life by what we give." — Winston Churchill
+
 
 
 > A social bond is a fixed-income instrument whose proceeds are allocated to projects that address or mitigate a specific social issue — affordable housing, access to healthcare, food security, or employment generation. ISS ESG provides second-party opinions and data on social bond issuances, verifying alignment with the ICMA Social Bond Principles.
@@ -1432,12 +1458,13 @@ A social bond is the society-focused cousin of the green bond. The money raised 
 
 ---
 
-> [!quote]
-> "The power to tax is the power to destroy." — John Marshall
-
 ### Sovereign Bond
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
+
+> [!quote]
+> "The power to tax is the power to destroy." — John Marshall
+
 
 
 > A sovereign bond is a debt security issued by a national government to finance public spending. Sovereign bonds are typically denominated in the issuing country's currency and are considered among the safest fixed-income instruments (for developed-market issuers). STOXX publishes sovereign bond indices covering euro-area and global government debt, while ISS ESG assesses sovereign issuers on governance quality, human rights, and environmental factors through its Country Rating methodology.
@@ -1487,13 +1514,14 @@ A sovereign bond is a loan to a country. Germany, France, the United States, and
 
 ---
 
+### Structured Product
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="414 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 414</span>
+
 > [!quote]
 > "Never invest in anything you cannot understand."
 > — **Warren Buffett**
 
-### Structured Product
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="414 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 414</span>
 
 
 > A structured product is a pre-packaged investment that combines a bond component with a derivative overlay linked to an underlying index (or basket of indices). Structured products are tailored to specific risk-return profiles — capital protection, yield enhancement, or leveraged participation — and are typically issued by banks. STOXX indices are among the most commonly used underlyings for structured products in Europe.
@@ -1545,12 +1573,13 @@ A structured product is a custom-built financial instrument — usually a bond p
 
 ---
 
-> [!quote]
-> "The greatest threat to our planet is the belief that someone else will save it." — Robert Swan
-
 ### Sustainability Bond
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
+
+> [!quote]
+> "The greatest threat to our planet is the belief that someone else will save it." — Robert Swan
+
 
 
 > A sustainability bond is a fixed-income instrument whose proceeds finance a combination of both environmental (green) and social projects. It merges the scope of green bonds and social bonds under a single issuance. ISS ESG provides verification and second-party opinions for sustainability bonds, assessing alignment with the ICMA Sustainability Bond Guidelines.
@@ -1585,12 +1614,13 @@ A sustainability bond is a hybrid — the money goes to projects that are both g
 
 ---
 
-> [!quote]
-> "What gets rewarded gets done." — Michael LeBoeuf
-
 ### Sustainability-Linked Bond
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
+> [!quote]
+> "What gets rewarded gets done." — Michael LeBoeuf
+
 
 
 > A sustainability-linked bond (SLB) is a fixed-income instrument whose financial characteristics (typically the coupon rate) are tied to the issuer's achievement of predefined sustainability performance targets (SPTs). Unlike use-of-proceeds bonds (green, social, sustainability), SLBs do not restrict how proceeds are spent — instead, the issuer faces a financial penalty (step-up coupon) if it misses its sustainability KPIs. ISS ESG assesses the ambition and credibility of SPTs in its second-party opinions.
@@ -1619,12 +1649,13 @@ A sustainability-linked bond flips the model. Instead of earmarking money for sp
 
 ---
 
-> [!quote]
-> "Everything in life is a trade-off." — Thomas Sowell
-
 ### Swap
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="141 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 141</span>
+
+> [!quote]
+> "Everything in life is a trade-off." — Thomas Sowell
+
 
 
 > A swap is a broad category of OTC derivative contracts in which two counterparties agree to exchange cash flows or returns according to a predefined formula over a set period. Common types include interest rate swaps, total return swaps, and credit default swaps. Swaps are fundamental to synthetic index replication, risk management, and credit hedging strategies involving STOXX indices.
@@ -1675,13 +1706,14 @@ A swap is a private agreement to trade one stream of payments for another. The s
 
 ## T
 
+### Total Return Swap
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
+
 > [!quote]
 > "Risk comes from not knowing what you're doing."
 > — **Warren Buffett**
 
-### Total Return Swap
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
 
 > A total return swap (TRS) is an OTC derivative contract in which one counterparty pays the total return of a reference index (price appreciation plus dividends) and the other pays a funding rate (e.g., EURIBOR plus a spread). TRS are widely used for synthetic portfolio replication, allowing investors to gain index exposure without purchasing the underlying securities.
@@ -1716,12 +1748,13 @@ A total return swap is a private deal between two parties. One side says, "I wil
 
 ---
 
-> [!quote]
-> "The secret of change is to focus all your energy not on fighting the old, but on building the new." — Socrates (attributed)
-
 ### Transition Bond
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
+
+> [!quote]
+> "The secret of change is to focus all your energy not on fighting the old, but on building the new." — Socrates (attributed)
+
 
 
 > A transition bond is a fixed-income instrument designed to fund an issuer's transition from a carbon-intensive business model to a lower-carbon one. Unlike green bonds, transition bonds acknowledge that the issuer operates in a "brown" sector (e.g., steel, cement, aviation) and needs capital to decarbonize. ISS ESG evaluates transition bond frameworks for credibility and alignment with climate science.
@@ -1744,12 +1777,13 @@ A transition bond is for companies that cannot credibly issue a green bond becau
 
 ---
 
-> [!quote]
-> "An option is the right, but not the obligation, to make a choice." — Anonymous
-
 ### Warrant
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,875 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,875</span>
+
+> [!quote]
+> "An option is the right, but not the obligation, to make a choice." — Anonymous
+
 
 
 > A warrant is a securitized option — typically issued by a bank — that gives the holder the right to receive a cash settlement based on the performance of an underlying index relative to a strike price. Index warrants are listed on exchanges and are popular with retail investors in Europe, particularly on the EURO STOXX 50 and DAX indices.

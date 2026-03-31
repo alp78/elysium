@@ -26,13 +26,14 @@ date: 2026-03-28
 
 ## B
 
+### CDP (Carbon Disclosure Project)
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="217 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 217</span>
+
 > [!quote]
 > "You cannot manage what you do not measure."
 > — **Peter Drucker**
 
-### CDP (Carbon Disclosure Project)
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="217 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 217</span>
 
 
 > CDP is a not-for-profit charity that runs a global disclosure system for investors, companies, cities, states, and regions to manage their environmental impacts. Founded in 2000, CDP collects self-reported data on climate change, water security, and deforestation through annual questionnaires sent to thousands of companies worldwide. Responses are scored from A (leadership) to D- (disclosure), with F indicating failure to disclose.
@@ -109,13 +110,14 @@ The Convention on Cluster Munitions is one of the key treaties referenced in con
 
 ---
 
+### CSRD (Corporate Sustainability Reporting Directive)
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="10 mentions across STOXX & ISS pages (low)">▰▰ 10</span>
+
 > [!quote]
 > "Transparency is the currency of trust in the age of sustainability."
 > — **Christine Lagarde**
 
-### CSRD (Corporate Sustainability Reporting Directive)
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="10 mentions across STOXX & ISS pages (low)">▰▰ 10</span>
 
 
 > The Corporate Sustainability Reporting Directive is an EU legislative instrument (Directive 2022/2464) that modernizes and strengthens the rules concerning social and environmental information that companies must report. Published by the European Commission, the CSRD replaces the earlier NFRD and dramatically expands the number of companies subject to mandatory sustainability reporting. It requires assurance of reported information, mandates the use of European Sustainability Reporting Standards (ESRS), and introduces digital tagging of disclosures.
@@ -170,13 +172,14 @@ The CSRD is a watershed regulation for ESG investing in Europe. It requires comp
 
 ## D
 
+### Do No Significant Harm (DNSH)
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
+
 > [!quote]
 > "First, do no harm."
 > — **Hippocrates**
 
-### Do No Significant Harm (DNSH)
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
 
 
 > Do No Significant Harm is a principle embedded in the EU Taxonomy Regulation (Regulation 2020/852) requiring that an economic activity, in order to qualify as environmentally sustainable, must not significantly harm any of the six environmental objectives defined by the Taxonomy: climate change mitigation, climate change adaptation, sustainable use of water and marine resources, transition to a circular economy, pollution prevention and control, and protection of biodiversity and ecosystems. Technical screening criteria specify the thresholds for what constitutes "significant harm" for each objective.
@@ -221,13 +224,14 @@ DNSH acts as a safeguard within the EU Taxonomy — an activity cannot be labele
 
 ---
 
+### Double Materiality
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
+
 > [!quote]
 > "Climate change is simultaneously a physical risk and a transition risk."
 > — **Mark Carney**
 
-### Double Materiality
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
 
 
 > Double materiality is a reporting concept formalized in the EU's CSRD and operationalized through the ESRS. It requires companies to assess and disclose sustainability matters from two perspectives simultaneously: (1) "impact materiality" — how the company's activities affect people and the environment (inside-out), and (2) "financial materiality" — how sustainability risks and opportunities affect the company's financial position and performance (outside-in). A matter is reportable if it is material from either perspective.
@@ -282,13 +286,14 @@ Double materiality distinguishes European ESG disclosure from frameworks like IS
 
 ## E
 
+### Equator Principles
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="69 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 69</span>
+
 > [!quote]
 > "The banker who lends recklessly is as culpable as the borrower who borrows recklessly."
 > — **Anat Admati**
 
-### Equator Principles
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="69 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 69</span>
 
 
 > The Equator Principles are a risk management framework adopted by financial institutions to determine, assess, and manage environmental and social risk in project finance transactions. First adopted in 2003 and currently in their fourth iteration (EP4, effective July 2020), the Equator Principles apply to project finance, project-related corporate loans, bridge loans, and project-related refinance and acquisition finance across all industry sectors globally. They are based on the International Finance Corporation (IFC) Performance Standards on Environmental and Social Sustainability and the World Bank Group Environmental, Health, and Safety Guidelines.
@@ -386,13 +391,14 @@ ESRS standardizes sustainability reporting across the EU in a way that earlier v
 
 ---
 
+### EU Taxonomy
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="70 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 70</span>
+
 > [!quote]
 > "A common language for sustainability is the foundation of a green financial system."
 > — **Christine Lagarde**
 
-### EU Taxonomy
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="70 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 70</span>
 
 
 > The EU Taxonomy (Regulation 2020/852) is a classification system established by the European Union to define which economic activities qualify as environmentally sustainable. It sets performance thresholds — known as technical screening criteria — for activities to be considered as making a "substantial contribution" to at least one of six environmental objectives while doing no significant harm (DNSH) to the remaining five and meeting minimum social safeguards (good governance). Financial market participants and large companies must disclose the proportion of their activities that are taxonomy-eligible and taxonomy-aligned.
@@ -467,13 +473,14 @@ EET is the plumbing that makes ESG regulation work in practice for the European 
 
 ## G
 
+### GHG Protocol
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="24 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 24</span>
+
 > [!quote]
 > "What gets measured gets improved."
 > — **Peter Drucker**
 
-### GHG Protocol
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="24 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 24</span>
 
 
 > The Greenhouse Gas Protocol is the most widely used international accounting framework for quantifying and managing greenhouse gas emissions. Developed jointly by the World Resources Institute (WRI) and the World Business Council for Sustainable Development (WBCSD), the GHG Protocol provides standards and guidance for companies, cities, and governments. Its Corporate Standard defines three "scopes" of emissions: Scope 1 (direct emissions from owned or controlled sources), Scope 2 (indirect emissions from purchased energy), and Scope 3 (all other indirect emissions across the value chain).
@@ -524,13 +531,14 @@ The GHG Protocol's scope classification is the universal language of carbon acco
 
 ---
 
+### Global Reporting Initiative (GRI)
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="48 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 48</span>
+
 > [!quote]
 > "Sunlight is said to be the best of disinfectants."
 > — **Louis Brandeis**
 
-### Global Reporting Initiative (GRI)
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="48 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 48</span>
 
 
 > The Global Reporting Initiative is an independent international organization that provides the world's most widely adopted standards for sustainability reporting. Founded in 1997, GRI publishes the GRI Standards — a modular set of interlinked standards that organizations use to report on their economic, environmental, and social impacts. The GRI Standards are organized into Universal Standards (GRI 1-3), Sector Standards, and Topic Standards covering areas from emissions (GRI 305) to human rights (GRI 411). GRI applies a multi-stakeholder materiality approach.
@@ -581,13 +589,14 @@ GRI has been the dominant sustainability reporting framework for over two decade
 
 ---
 
+### Good Governance
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="108 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 108</span>
+
 > [!quote]
 > "Good governance is the single most important way to end poverty."
 > — **Kofi Annan**
 
-### Good Governance
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="108 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 108</span>
 
 
 > In the context of the EU Taxonomy, "good governance" refers to the minimum social safeguards that a company must meet for any of its economic activities to qualify as taxonomy-aligned. Article 18 of the Taxonomy Regulation requires that investee companies follow procedures to ensure alignment with the OECD Guidelines for Multinational Enterprises and the UN Guiding Principles on Business and Human Rights, including the ILO Core Labour Standards and the International Bill of Human Rights. The assessment covers human rights, corruption and bribery, taxation, and fair competition.
@@ -639,13 +648,14 @@ Good governance is the social floor beneath the EU Taxonomy's environmental ceil
 
 ## I
 
+### ILO Conventions
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
+
 > [!quote]
 > "Labor is not a commodity."
 > — **Declaration of Philadelphia**
 
-### ILO Conventions
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
 
 
 > The International Labour Organization (ILO) Conventions are legally binding international treaties adopted by the International Labour Conference that set minimum standards for labour rights and working conditions. The ILO has adopted 190 conventions since its founding in 1919. The eight "fundamental" or "core" conventions cover four categories: freedom of association and collective bargaining (C087, C098), elimination of forced labour (C029, C105), abolition of child labour (C138, C182), and elimination of discrimination in employment (C100, C111). In 2022, a fifth category — occupational safety and health (C155, C187) — was elevated to fundamental status. These core conventions form the basis of the ILO Declaration on Fundamental Principles and Rights at Work.
@@ -693,13 +703,14 @@ ILO Conventions are foundational to the social dimension of ESG analysis. ISS ES
 
 ---
 
+### International Sustainability Standards Board (ISSB)
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
+
 > [!quote]
 > "What gets measured gets managed."
 > — **Peter Drucker**
 
-### International Sustainability Standards Board (ISSB)
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
 
 
 > The International Sustainability Standards Board is a standard-setting body established in 2021 by the IFRS Foundation at COP26 in Glasgow. The ISSB develops and issues IFRS Sustainability Disclosure Standards (IFRS S1 and IFRS S2) designed to provide a global baseline of sustainability-related financial disclosures for capital markets. IFRS S1 covers general sustainability-related financial disclosures, while IFRS S2 addresses climate-related disclosures specifically. The ISSB consolidated the CDSB (Climate Disclosure Standards Board) and the VRF (Value Reporting Foundation, which housed SASB) into its operations.
@@ -775,13 +786,14 @@ The NFRD was the EU's first mandatory sustainability reporting requirement, but 
 
 ## O
 
+### OECD Guidelines for Multinational Enterprises
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
+
 > [!quote]
 > "With great power comes great responsibility."
 > — **Voltaire**
 
-### OECD Guidelines for Multinational Enterprises
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
 
 
 > The OECD Guidelines for Multinational Enterprises on Responsible Business Conduct are recommendations addressed by governments to multinational enterprises operating in or from adhering countries. Originally adopted in 1976 and most recently updated in 2023, the Guidelines cover a broad range of responsible business conduct topics including human rights, employment and industrial relations, environment, combating bribery, consumer interests, science and technology, competition, and taxation. They are the most comprehensive set of government-backed recommendations on responsible business conduct and include a unique implementation mechanism through National Contact Points (NCPs) that handle complaints ("specific instances") against companies.
@@ -833,13 +845,14 @@ The OECD Guidelines are a foundational normative framework in ESG investing. ISS
 
 ---
 
+### Paris Agreement
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="145 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 145</span>
+
 > [!quote]
 > "We are the first generation to feel the impact of climate change and the last generation that can do something about it."
 > — **Barack Obama**
 
-### Paris Agreement
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="145 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 145</span>
 
 
 > The Paris Agreement is a legally binding international treaty on climate change adopted by 196 parties at COP21 in Paris on 12 December 2015. Its overarching goal is to hold the increase in the global average temperature to well below 2 degrees C above pre-industrial levels and to pursue efforts to limit the increase to 1.5 degrees C. Countries submit nationally determined contributions (NDCs) outlining their climate targets, and a global stocktake process reviews collective progress every five years.
@@ -890,13 +903,14 @@ The Paris Agreement is the single most referenced climate target in financial re
 
 ---
 
+### PRI (Principles for Responsible Investment)
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="98 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 98</span>
+
 > [!quote]
 > "The six Principles were born from the conviction that ESG issues can affect portfolio performance."
 > — **Kofi Annan**
 
-### PRI (Principles for Responsible Investment)
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="98 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 98</span>
 
 
 > The Principles for Responsible Investment is a UN-supported international network of investors founded in 2006. Signatories commit to six principles: incorporating ESG issues into investment analysis and decision-making, being active owners, seeking appropriate ESG disclosure from investee entities, promoting the principles within the investment industry, working collaboratively to enhance effectiveness, and reporting on activities and progress. PRI operates a mandatory annual reporting and assessment framework for signatories.
@@ -948,13 +962,14 @@ PRI is the largest global coalition of institutional investors committed to ESG 
 
 ## S
 
+### SASB (Sustainability Accounting Standards Board)
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="23 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 23</span>
+
 > [!quote]
 > "Accounting does not make corporate earnings or balance sheets more volatile. Accounting just increases the transparency of volatility in earnings."
 > — **Diane Garnick**
 
-### SASB (Sustainability Accounting Standards Board)
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="23 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 23</span>
 
 
 > The Sustainability Accounting Standards Board developed industry-specific sustainability disclosure standards designed to help companies disclose financially material sustainability information to investors. Founded in 2011 and consolidated into the IFRS Foundation's ISSB in 2022, SASB produced standards for 77 industries across 11 sectors, identifying the subset of ESG issues most likely to affect enterprise value in each industry. SASB standards focus on financial materiality and are designed for reporting in SEC filings and other investor communications.
@@ -1007,13 +1022,14 @@ SASB's industry-specific approach is its distinguishing feature — rather than 
 
 ---
 
+### Science Based Targets Initiative (SBTi)
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
+
 > [!quote]
 > "Setting targets is the first step in turning the invisible into the visible."
 > — **Tony Robbins**
 
-### Science Based Targets Initiative (SBTi)
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
 
 
 > The Science Based Targets initiative is a partnership between CDP, the UN Global Compact, the World Resources Institute (WRI), and the World Wide Fund for Nature (WWF). SBTi defines and promotes best practices in emissions reductions and net-zero targets in line with climate science. It provides a target-setting framework, validation services, and sector-specific guidance. Companies submit targets covering Scope 1, 2, and (where material) Scope 3 emissions for independent validation against criteria aligned with limiting warming to 1.5 degrees C.
@@ -1064,13 +1080,14 @@ SBTi has become the gold standard for validating whether a company's climate com
 
 ---
 
+### SDGs (Sustainable Development Goals)
+
+<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="426 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 426</span>
+
 > [!quote]
 > "Saving our planet is now a communications challenge."
 > — **David Attenborough**
 
-### SDGs (Sustainable Development Goals)
-
-<span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="426 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 426</span>
 
 
 > The Sustainable Development Goals are a collection of 17 interlinked global goals adopted by all United Nations member states in 2015 as part of the 2030 Agenda for Sustainable Development. The SDGs address global challenges including poverty (SDG 1), hunger (SDG 2), health (SDG 3), education (SDG 4), gender equality (SDG 5), clean water (SDG 6), clean energy (SDG 7), decent work (SDG 8), industry and innovation (SDG 9), reduced inequalities (SDG 10), sustainable cities (SDG 11), responsible consumption (SDG 12), climate action (SDG 13), life below water (SDG 14), life on land (SDG 15), peace and justice (SDG 16), and partnerships (SDG 17). They are supported by 169 targets and over 230 indicators.
@@ -1117,13 +1134,14 @@ SDGs provide a universal language for linking investment activities to real-worl
 
 ---
 
+### SRD II (Shareholder Rights Directive II)
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="67 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 67</span>
+
 > [!quote]
 > "Democracy is not a spectator sport."
 > — **Marian Wright Edelman**
 
-### SRD II (Shareholder Rights Directive II)
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="67 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 67</span>
 
 
 > The Shareholder Rights Directive II (Directive 2017/828/EU) is an EU directive that amends the original Shareholder Rights Directive (2007/36/EC) to encourage long-term shareholder engagement and improve transparency in the investment chain. Key provisions include requirements for institutional investors and asset managers to develop and publicly disclose engagement policies, say-on-pay votes on directors' remuneration policies, related-party transaction oversight, and transparency requirements for proxy advisors. Member states transposed SRD II into national law by June 2019.
@@ -1171,13 +1189,14 @@ SRD II is directly relevant to ISS's proxy advisory business. As a proxy advisor
 
 ---
 
+### Stewardship Code
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="33 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 33</span>
+
 > [!quote]
 > "With ownership comes responsibility."
 > — **Kofi Annan**
 
-### Stewardship Code
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="33 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 33</span>
 
 
 > A stewardship code is a set of principles or guidelines issued by a national regulator or industry body that sets expectations for how institutional investors engage with the companies they invest in. The UK Stewardship Code (published by the Financial Reporting Council, most recently revised in 2020) is the most influential example, establishing 12 principles covering purpose, governance, conflicts of interest, promoting well-functioning markets, review and assurance, client and beneficiary needs, ESG integration, monitoring, engagement, collaboration, escalation, and exercising rights and responsibilities. Other jurisdictions — including Japan, the Netherlands, and South Africa — have issued their own stewardship codes.
@@ -1229,13 +1248,14 @@ Stewardship codes complement regulatory requirements like SRD II by encouraging 
 
 ## T
 
+### Task Force on Climate-related Financial Disclosures (TCFD)
+
+<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="44 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 44</span>
+
 > [!quote]
 > "Without data, you are just another person with an opinion."
 > — **W. Edwards Deming**
 
-### Task Force on Climate-related Financial Disclosures (TCFD)
-
-<span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="44 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 44</span>
 
 
 > The Task Force on Climate-related Financial Disclosures was established in 2015 by the Financial Stability Board (FSB) under the leadership of Michael Bloomberg and Mark Carney. TCFD published its final recommendations in June 2017, organized around four pillars: Governance (how the organization governs climate-related risks and opportunities), Strategy (the actual and potential impacts of climate risks and opportunities), Risk Management (how the organization identifies, assesses, and manages climate risks), and Metrics and Targets (the metrics and targets used to assess and manage relevant climate risks). The TCFD was formally disbanded in October 2023, with monitoring responsibilities transferred to the ISSB.
@@ -1289,13 +1309,14 @@ TCFD transformed climate disclosure from a niche ESG exercise into a mainstream 
 
 ---
 
+### Task Force on Nature-related Financial Disclosures (TNFD)
+
+<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
+
 > [!quote]
 > "We do not inherit the earth from our ancestors; we borrow it from our children."
 > — **Chief Seattle**
 
-### Task Force on Nature-related Financial Disclosures (TNFD)
-
-<span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
 
 > The Taskforce on Nature-related Financial Disclosures is a global, market-led initiative that published its final recommendations in September 2023. Modeled on the TCFD, the TNFD provides a risk management and disclosure framework for organizations to report and act on evolving nature-related dependencies, impacts, risks, and opportunities. The framework uses the same four-pillar structure as TCFD (Governance, Strategy, Risk and Impact Management, Metrics and Targets) and introduces the LEAP approach (Locate, Evaluate, Assess, Prepare) as a practical methodology for nature-related risk assessment.
@@ -1329,13 +1350,14 @@ TNFD extends the climate disclosure paradigm to the broader biodiversity and nat
 
 ## U
 
+### UN Global Compact
+
+<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="124 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 124</span>
+
 > [!quote]
 > "The business of business is no longer just business."
 > — **Kofi Annan**
 
-### UN Global Compact
-
-<span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="124 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 124</span>
 
 
 > The United Nations Global Compact is a voluntary initiative launched in 2000 in which companies commit to aligning their strategies and operations with ten universal principles covering human rights, labour, environment, and anti-corruption. The ten principles are derived from the Universal Declaration of Human Rights, the ILO Declaration on Fundamental Principles and Rights at Work, the Rio Declaration on Environment and Development, and the UN Convention Against Corruption. Participants must submit an annual Communication on Progress (CoP) demonstrating how they implement the principles.
@@ -1385,13 +1407,14 @@ UN Global Compact compliance is one of the most widely used norms-based screens 
 
 ---
 
+### UN Guiding Principles on Business and Human Rights
+
+<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="12 mentions across STOXX & ISS pages (low)">▰▰ 12</span>
+
 > [!quote]
 > "To deny people their human rights is to challenge their very humanity."
 > — **Nelson Mandela**
 
-### UN Guiding Principles on Business and Human Rights
-
-<span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="12 mentions across STOXX & ISS pages (low)">▰▰ 12</span>
 
 
 > The United Nations Guiding Principles on Business and Human Rights (UNGPs), endorsed by the UN Human Rights Council in 2011, are a set of 31 principles implementing the "Protect, Respect and Remedy" framework developed by Professor John Ruggie. The three pillars are: (1) the state duty to protect against human rights abuses by third parties, including business; (2) the corporate responsibility to respect human rights, including through human rights due diligence; and (3) the need for greater access to effective remedy for victims of business-related human rights abuse. The UNGPs are not legally binding but are the authoritative global standard for preventing and addressing business-related human rights harm.
