@@ -15,22 +15,6 @@ status: complete
 
 # 26. Environments & Dependency Management - C#
 
-Topics covered:
-- Why Environments Exist
-- Creating Projects and Solutions
-- Installing NuGet Packages
-- Pinning and Locking Dependencies
-- Upgrading and Managing Packages
-- Inspecting the Environment
-- The .csproj Lifecycle
-- .NET SDK Version Management (global.json)
-- Environments in Docker (Multi-Stage Builds)
-- Environments in CI/CD (GitHub Actions)
-- Environments on GCP
-- Environments in Terraform
-- Anti-Patterns and Common Mistakes
-- Quick Reference Cheat Sheet
-
 > [!quote]
 > "Dependency management is the dark matter of software engineering — invisible but responsible for most of the catastrophic failures."
 > — **Attributed to various DevOps practitioners**

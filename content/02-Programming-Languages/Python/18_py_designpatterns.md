@@ -13,13 +13,6 @@ status: complete
 
 # 18. Design Patterns & Architecture - Python
 
-Topics covered:
-- Dependency Injection
-- Design Patterns (Singleton, Factory, Observer, Strategy)
-- Data Validation (Pydantic)
-- Reflection / Introspection
-- Project Structure & Best Practices
-
 > [!quote]
 > "When I see patterns in my programs, I consider it a sign of trouble. The shape of a program should reflect only the problem it needs to solve."
 > — **Paul Graham**, *Revenge of the Nerds*, essay (2002)

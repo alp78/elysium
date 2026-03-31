@@ -194,8 +194,8 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
           const tier = getNodeTier(d.id)
           if (tier === 0) return -500   // index pushes MOCs outward
           if (tier === 1) return -250   // MOCs push domains outward
-          if (tier === 2) return -120   // domains push pages outward
-          return -60                     // pages repel each other — spread the fan
+          if (tier === 2) return -150   // domains push pages outward
+          return -120                    // pages repel each other — spread around parent
         })
         .distanceMin(15)
         .distanceMax(600)
@@ -230,7 +230,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
           if (tier === 0) return 40
           if (tier === 1) return 25
           if (tier === 2) return 15
-          return getNodeRadius(d) + 8
+          return getNodeRadius(d) + 14
         })
         .strength(0.6)
         .iterations(3),

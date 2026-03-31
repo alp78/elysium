@@ -98,6 +98,10 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ## E-Commerce
 
+> [!quote]
+> "Get big fast — the internet rewards scale in ways that physical retail never could."
+> — **Jeff Bezos**
+
 **Definition:** E-commerce (electronic commerce) refers to the buying and selling of goods and services over the internet. It encompasses online retail stores, digital marketplaces, business-to-business trading platforms, and direct-to-consumer sales channels. E-commerce has transformed traditional retail by enabling businesses to reach global customers, operate 24/7, offer personalized shopping experiences, and reduce the overhead costs associated with physical stores. It includes various models such as B2C, B2B, C2C (consumer-to-consumer), and D2C (direct-to-consumer).
 
 **In context:** Amazon.com (AMZN, a US equity index) "engages in the retail sale of consumer products, advertising, and subscriptions service through online and physical stores." Prosus N.V. (PRX.AS, a European equity index) operates "internet platforms, such as classifieds, payments and fintech, food delivery, education technology, Etail." Walmart (WMT, a US equity index) operates "eCommerce websites, and mobile applications" alongside physical stores.

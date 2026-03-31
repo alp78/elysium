@@ -20,16 +20,6 @@ status: complete
 Hands-on SQL using the **stoxx** index database (BigQuery).
 Medallion architecture: Bronze (raw) → Silver (cleaned) → Gold (analytics). Once these fundamentals are solid, [bq-engineering](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-engineering) covers the database objects and performance patterns that build on them.
 
-Topics covered:
-- Connection & Schema Exploration
-- SELECT, filtering, sorting, aggregation
-- JOINs across medallion layers
-- Window Functions (ranking, moving averages, lag/lead)
-- CTEs & Subqueries
-- Bronze → Silver → Gold transformations
-- Data Quality Checks
-- Performance (indexes, execution plans)
-
 ```python
 %load_ext sql
 %config SqlMagic.displaycon = False

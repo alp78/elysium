@@ -84,6 +84,10 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ## Renewable Energy
 
+> [!quote]
+> "The cheapest kilowatt-hour is the one that is never used — the second cheapest now comes from wind and solar."
+> — **Fatih Birol**, IEA
+
 **Definition:** Renewable energy is energy derived from natural sources that are replenished at a rate faster than they are consumed, including solar, wind, hydroelectric, geothermal, tidal, and biomass energy. Unlike fossil fuels (coal, oil, natural gas), renewable energy sources produce little to no greenhouse gas emissions during operation, making them crucial for addressing climate change. The renewable energy sector has grown rapidly due to declining technology costs, supportive government policies, and increasing environmental awareness.
 
 **In context:** Enel SpA (ENEL.MI, a European equity index) "operates renewable, nuclear, wind, hydroelectric, thermal, solar, and geothermal power plants." Iberdrola (IBE.MC, a European equity index) "generates electricity from renewable sources, such as onshore and offshore wind, photovoltaic, hydro." Siemens Energy (ENR.DE, a European equity index) provides "onshore and offshore wind turbines." BASF SE (BAS.DE, a European equity index) engages in "renewable energy trading."
@@ -183,6 +187,10 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 ---
 
 ## Stock Connect
+
+> [!quote]
+> "Stock Connect has opened the door to China's capital markets in a way that no previous mechanism achieved."
+> — **Charles Li**, former CEO of HKEX
 
 **Definition:** Stock Connect is a mutual market access program that allows investors in mainland China and Hong Kong to trade eligible stocks listed on each other's exchanges. Established in 2014 (Shanghai-Hong Kong) and expanded in 2016 (Shenzhen-Hong Kong), Stock Connect has opened a major channel for international investors to access Chinese A-shares and for mainland Chinese investors to access Hong Kong-listed stocks. The program operates under each market's respective trading rules and settlement systems, with daily and aggregate quota limits.
 

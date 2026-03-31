@@ -142,6 +142,10 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## Medical Devices
 
+> [!quote]
+> "The best medical device is one the physician forgets is there because it works so well."
+> — **Earl Bakken**, founder of Medtronic
+
 **Definition:** Medical devices are instruments, apparatus, machines, implants, or diagnostic tools used in the diagnosis, prevention, monitoring, or treatment of medical conditions. The medical device industry ranges from simple products like bandages and syringes to complex technologies like MRI scanners, robotic surgical systems, and implantable cardiac devices. Medical devices must meet stringent regulatory requirements and undergo rigorous testing before they can be marketed. The industry is characterized by continuous innovation, high barriers to entry, and strong intellectual property protection.
 
 **In context:** Johnson & Johnson (JNJ, a US equity index) through its MedTech segment provides "products used in the surgery, orthopedic, cardiovascular, and vision fields" including "robotic surgical procedures." HOYA Corporation (7741.T, an Asia-Pacific equity index) offers "medical endoscopes; intraocular lenses; laparoscopic surgical instruments." Siemens AG (SIE.DE, a European equity index) through Siemens Healthineers "develops, manufactures, and sells various diagnostic and therapeutic products."

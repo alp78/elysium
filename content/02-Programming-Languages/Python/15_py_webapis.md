@@ -13,12 +13,6 @@ status: complete
 
 # 15. Web & APIs - Python
 
-Topics covered:
-- HTTP Clients (requests, httpx)
-- REST API Concepts
-- Building a REST API (FastAPI)
-- Data Engineering API Patterns
-
 > [!quote]
 > "Web programming is the science of coming up with increasingly complicated ways of concatenating strings."
 > — **Greg Brockman**

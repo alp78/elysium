@@ -371,10 +371,6 @@ tighter spreads signal greater liquidity.
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-> [!quote]
-> "Speak softly and carry a big stick."
-> — **Theodore Roosevelt**
-
 
 
 A large privately negotiated transaction in securities that is executed
@@ -403,10 +399,8 @@ portfolios.
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="600 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 600</span>
 
 > [!quote]
-> "Time is the friend of the wonderful company, the enemy of the mediocre."
+> "Buy into a company because you want to own it, not because you want the stock to go up."
 > — **Warren Buffett**
-
-
 
 An informal term for shares of large, well-established, financially sound
 companies with a long track record of reliable performance. Blue-chip stocks
@@ -516,10 +510,6 @@ thresholds.
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="108 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 108</span>
 
-> [!quote]
-> "Geography is destiny."
-> — **Napoleon Bonaparte (attributed)**
-
 
 
 The assignment of a security or market to a specific country based on its
@@ -576,10 +566,8 @@ index membership.
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 > [!quote]
-> "The market does not run on chance or luck — it runs on supply and demand."
-> — **Jesse Livermore**, *Reminiscences of a Stock Operator* (1923)
-
-
+> "Circuit breakers were born from the 1987 crash — the market's way of saying 'everyone take a breath.'"
+> — **Nicholas Brady**, *Report of the Presidential Task Force on Market Mechanisms* (1988)
 
 An automatic mechanism that temporarily halts or restricts trading on an
 exchange when prices move beyond predefined thresholds within a short period.
@@ -606,10 +594,6 @@ give participants time to absorb information.
 ### Clearing (Market)
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="18,212 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 18,212</span>
-
-> [!quote]
-> "Trust is good, but control is better."
-> — **Vladimir Lenin (attributed)**
 
 
 
@@ -723,10 +707,8 @@ considered normal, periodic resets within longer-term uptrends.
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="10 mentions across STOXX & ISS pages (low)">▰▰ 10</span>
 
 > [!quote]
-> "History doesn't repeat itself, but it often rhymes."
-> — **Mark Twain**
-
-
+> "In a crisis, the weights of losses crush all rational calculations."
+> — **John Kenneth Galbraith**, *The Great Crash 1929* (1955)
 
 A sudden, severe, and often unexpected decline in market prices, typically
 exceeding 20% over days or weeks. Market crashes stress-test index
@@ -836,10 +818,6 @@ holdings data that feeds into free-float and ownership analysis.
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="77 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 77</span>
 
-> [!quote]
-> "Distance is no barrier when the will is strong."
-> — **Anonymous**
-
 
 
 A negotiable financial instrument issued by a depositary bank that represents
@@ -892,10 +870,6 @@ shares in a foreign company. Common forms include American Depositary Receipts
 ### Dual Listing
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
-
-> [!quote]
-> "If you want to reach more people, meet them where they are."
-> — **Anonymous**
 
 
 
@@ -990,10 +964,8 @@ indices, individual equities, fixed income, and other asset classes.
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,974 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,974</span>
 
 > [!quote]
-> "Wall Street is the only place that people ride to in a Rolls Royce to get advice from those who take the subway."
-> — **Warren Buffett**
-
-
+> "The stock exchange is the one institution that exists to discover prices and allocate capital, and it does so through the mechanism of continuous trading."
+> — **Burton Malkiel**, *A Random Walk Down Wall Street* (1973)
 
 A regulated marketplace where securities, derivatives, commodities, or other
 financial instruments are bought and sold under a defined set of rules. In
@@ -1045,10 +1017,8 @@ index inclusion.
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9,873 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 9,873</span>
 
 > [!quote]
-> "Ownership is the most intimate relationship one can have to objects."
-> — **Walter Benjamin**
-
-
+> "An equity share is a claim on real assets and future earnings — it is ownership in its purest financial form."
+> — **Benjamin Graham & David Dodd**, *Security Analysis* (1934)
 
 An ownership interest in a company, represented by shares of stock. Equity
 holders have a residual claim on the company's assets after all debts are
@@ -1376,10 +1346,6 @@ sector-based analysis and comparison.
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,573 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,573</span>
 
-> [!quote]
-> "Sometimes the best action is no action at all."
-> — **Lao Tzu (adapted)**
-
 
 
 A temporary suspension of trading in a particular security or across an
@@ -1432,10 +1398,6 @@ triggered by pending news, order imbalances, or regulatory concerns.
 ### ICB (Industry Classification Benchmark)
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,065 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,065</span>
-
-> [!quote]
-> "The beginning of wisdom is the definition of terms."
-> — **Socrates**
 
 
 
@@ -1551,10 +1513,8 @@ eligibility screens.
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="45 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 45</span>
 
 > [!quote]
-> "It's far better to buy a wonderful company at a fair price than a fair company at a wonderful price."
-> — **Warren Buffett**
-
-
+> "Large-cap stocks are the bedrock of most portfolios — they offer liquidity, analyst coverage, and institutional ownership that smaller companies cannot match."
+> — **Jeremy Siegel**, *Stocks for the Long Run* (1994)
 
 A classification for companies with the highest free-float market
 capitalisation within a given index universe, typically the top tier by size.
@@ -1662,10 +1622,6 @@ metrics such as Average Daily Trading Volume (ADTV) and turnover velocity.
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="41 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 41</span>
 
-> [!quote]
-> "Measure twice, cut once."
-> — **Proverb**
-
 
 
 The process of applying minimum thresholds for trading activity (such as ADTV
@@ -1717,10 +1673,6 @@ index universe. STOXX applies liquidity screening at regular index reviews.
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-> [!quote]
-> "Patience is the companion of wisdom."
-> — **Saint Augustine**
-
 
 
 An order to buy or sell a security at a specified price or better. A buy
@@ -1748,10 +1700,6 @@ order book and provide liquidity.
 ### Long Position
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="59 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 59</span>
-
-> [!quote]
-> "The secret to investing is to figure out the value of something and then pay a lot less."
-> — **Joel Greenblatt**, *The Little Book That Beats the Market* (2005)
 
 
 
@@ -1806,10 +1754,6 @@ hold long positions in every constituent of the index they replicate.
 ### Market Capitalization
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,883 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,883</span>
-
-> [!quote]
-> "In the business world, the rearview mirror is always clearer than the windshield."
-> — **Warren Buffett**
 
 
 
@@ -1866,10 +1810,6 @@ free-float shares) is the standard weighting measure.
 ### Micro-Cap
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
-
-> [!quote]
-> "Mighty oaks from little acorns grow."
-> — **Proverb**
 
 
 
@@ -2013,10 +1953,6 @@ traded index constituents.
 ### Market Order
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
-
-> [!quote]
-> "Speed is useful only if you are running in the right direction."
-> — **Joel Barker**
 
 
 
@@ -2331,10 +2267,6 @@ and DAX index families.
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="184 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 184</span>
 
-> [!quote]
-> "Good fences make good neighbours."
-> — **Robert Frost**
-
 
 
 A multilateral trading system operated or managed by a market operator that
@@ -2445,10 +2377,6 @@ broad-based (affecting entire indices) or sector-specific.
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3,190 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 3,190</span>
 
-> [!quote]
-> "Know what you own, and know why you own it."
-> — **Peter Lynch**, *One Up on Wall Street* (1989)
-
 
 
 A grouping of companies that operate in the same area of the economy,
@@ -2502,10 +2430,6 @@ economic segments.
 ### Sector Classification
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="52 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 52</span>
-
-> [!quote]
-> "A place for everything, and everything in its place."
-> — **Benjamin Franklin (attributed)**
 
 
 
@@ -2615,10 +2539,6 @@ receives the securities and the seller receives payment. Settlement cycles
 ### Small-Cap
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="210 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 210</span>
-
-> [!quote]
-> "Big things have small beginnings."
-> — **Peter Senge**, *The Fifth Discipline* (1990)
 
 
 
@@ -2761,10 +2681,6 @@ a stock) that meets the index's eligibility criteria.
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="578 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 578</span>
 
-> [!quote]
-> "From a distance, the forest tells you more than any single tree."
-> — **Anonymous**
-
 
 
 A grouping level in the ICB classification hierarchy that sits between
@@ -2873,10 +2789,6 @@ velocity used in STOXX index eligibility screening.
 ### Tick Size
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
-
-> [!quote]
-> "The devil is in the details."
-> — **Proverb**
 
 
 

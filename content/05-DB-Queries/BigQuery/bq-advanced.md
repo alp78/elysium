@@ -18,22 +18,6 @@ status: complete
 > — **Joe Celko**, *SQL for Smarties* (1995)
 
 Advanced SQL techniques using the **stoxx** index database.
-Prerequisite: SQL_01_Fundamentals.ipynb
-
-Topics covered:
-- Advanced Window Functions (PERCENT_RANK, CUME_DIST, FIRST_VALUE, running totals, frames)
-- Recursive CTEs (date series, hierarchies)
-- CROSS JOIN / CROSS APPLY / OUTER APPLY
-- PIVOT / UNPIVOT
-- MERGE (upsert)
-- EXISTS vs IN vs JOIN
-- Grouping Sets, ROLLUP, CUBE
-- String Aggregation & Functions
-- NULL Handling Patterns
-- CASE Expression Patterns
-- Set Operations (UNION, INTERSECT, EXCEPT)
-- Date/Time Patterns & Calendar Tables
-- Temp Tables vs Table Variables vs CTEs
 
 
 ```python

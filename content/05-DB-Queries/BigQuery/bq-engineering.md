@@ -18,21 +18,6 @@ status: complete
 > — **Jordan Tigani**, founding engineer of BigQuery
 
 Database engineering patterns using the **stoxx** index database.
-Prerequisite: SQL_01_Fundamentals.ipynb, SQL_02_Advanced.ipynb
-
-Topics covered:
-- Views (regular, materialized)
-- Stored Procedures (parameters, error handling, transactions via BigQuery scripting)
-- User-Defined Functions (scalar SQL UDFs, JavaScript UDFs)
-- Partitioning (time-unit, ingestion-time, range)
-- Clustering (sort-based query optimization)
-- INFORMATION_SCHEMA queries (job history, table metadata, cost analysis)
-- DML quotas and limits
-- MERGE for Incremental Loads
-- Gap Detection & Gap Filling
-- Deduplication Strategies
-- Data Lineage & Audit Columns
-- Scripting (DECLARE, SET, IF, LOOP, BEGIN...EXCEPTION...END)
 
 To practice these patterns against realistic scenarios, work through [bigquery-problems](https://alp78.github.io/elysium/06-GCP/BigQuery/bigquery-problems).
 

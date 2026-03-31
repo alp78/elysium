@@ -13,18 +13,6 @@ status: complete
 
 # 19. Performance & Code Quality - Python
 
-Topics covered:
-- Timing & Benchmarking (timeit, perf_counter, cProfile)
-- Memory Profiling (sys.getsizeof, tracemalloc, memory_profiler)
-- CPU Profiling (cProfile, line_profiler)
-- Big-O Complexity & Algorithmic Thinking
-- Code Quality Metrics (cyclomatic complexity, linting)
-- Golden Rules of Performance
-- Absolute No-Go's
-- Code Smells & Anti-Patterns
-- Type Safety & Static Analysis
-- Profiling Real Workloads
-
 > [!quote]
 > "Make it correct, make it clear, make it concise, make it fast. In that order."
 > — **Wes Dyer**, blog post (2007)

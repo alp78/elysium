@@ -15,15 +15,6 @@ status: complete
 
 # 26. Environments — Python
 
-Topics covered:
-- Why environments exist and the isolation problem
-- Creating, activating, and managing virtual environments with venv
-- Installing, pinning, upgrading, and inspecting packages with pip
-- The requirements.txt lifecycle
-- Python version management
-- Environments in Docker, CI/CD, GCP, and Terraform
-- Anti-patterns and a quick reference cheat sheet
-
 > [!quote]
 > "Dependency management is the dark matter of software engineering — invisible but responsible for most of the catastrophic failures."
 > — **Attributed to various DevOps practitioners**

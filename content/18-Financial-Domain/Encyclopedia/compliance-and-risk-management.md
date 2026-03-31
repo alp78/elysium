@@ -105,6 +105,10 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 ## Risk Management
 
+> [!quote]
+> "Risk means more things can happen than will happen."
+> — **Elroy Dimson**
+
 **Definition:** Risk management is the process of identifying, assessing, and controlling threats to an organization's capital, earnings, and operations. These threats can stem from a wide variety of sources including financial market uncertainty, credit defaults, operational failures, natural disasters, regulatory changes, strategic miscalculations, and cybersecurity breaches. Effective risk management involves establishing risk tolerance levels, implementing controls and mitigation strategies, monitoring risk exposures, and maintaining adequate reserves and insurance. In financial institutions, risk management is heavily regulated and central to business operations.
 
 **In context:** Adyen (ADYEN.AS, a European equity index) integrates "risk management" into its payments platform. ANZ Group (ANZ.AX, an Asia-Pacific equity index) offers "risk management services in foreign exchange, interest rates, credit, commodities, and debt capital markets." Caterpillar (CAT, a US equity index) provides "insurance and risk management products and services." Munich Re (MUV2.DE, a European equity index) offers extensive "risk transfer" and risk management consulting.

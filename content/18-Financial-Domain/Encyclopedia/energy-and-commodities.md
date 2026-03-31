@@ -74,6 +74,10 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 ## Downstream
 
+> [!quote]
+> "The value of a barrel of crude oil is unlocked only when it reaches the refinery — downstream is where the margin lives."
+> — **Daniel Yergin**, *The New Map* (2020)
+
 **Definition:** In the energy industry, downstream refers to the activities that occur after the production phase and are closer to the end consumer. Downstream operations include refining crude oil into usable products (gasoline, diesel, jet fuel, petrochemicals), marketing and distributing these refined products to consumers and businesses, and operating retail fuel stations. Downstream is distinct from upstream (exploration and production of crude resources) and midstream (transportation and storage of raw resources).
 
 **In context:** Chevron Corporation (CVX, a US equity index) operates a Downstream segment that "refines crude oil into petroleum products; markets crude oil, refined products, and lubricants; manufactures and markets renewable fuels." TotalEnergies (TTE.PA, a European equity index) has a "Refining & Chemicals" segment handling downstream activities. Exxon Mobil (XOM, a US equity index) operates "Energy Products" and "Chemical Products" segments.
@@ -165,6 +169,10 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 ---
 
 ## Pipeline (Energy)
+
+> [!quote]
+> "A pipeline is a river of energy flowing underground — once built, it earns toll-like revenue for decades."
+> — **T. Boone Pickens**
 
 **Definition:** In the energy industry, a pipeline is a network of pipes used to transport crude oil, natural gas, refined petroleum products, or other fluids over long distances from production sites to processing facilities, storage terminals, or end consumers. Pipelines are the most efficient and cost-effective method for transporting large volumes of oil and gas overland. Pipeline infrastructure requires significant capital investment and is typically regulated by government authorities. Pipeline companies often operate under long-term contracts with fixed or formula-based tariffs.
 

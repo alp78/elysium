@@ -41,6 +41,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Brokerage
 
+> [!quote]
+> "The broker's job is to serve the client — the moment the broker forgets that, the relationship is over."
+> — **Charles Schwab**
+
 **Definition:** Brokerage is the business of acting as an intermediary between buyers and sellers of financial securities such as stocks, bonds, mutual funds, and other investment products. A brokerage firm or broker executes trades on behalf of clients, provides research and investment advice, and may offer custody of client assets. Brokers earn revenue through commissions on trades, fees for advisory services, or the spread between bid and ask prices. Modern brokerage has expanded to include online and mobile platforms, enabling self-directed investing alongside traditional advisor-led services.
 
 **In context:** Intesa Sanpaolo (ISP.MI, a European equity index) offers "private and commercial banking, corporate and transaction banking" services. Macquarie Group (MQG.AX, an Asia-Pacific equity index) is "involved in brokerage business, including equity research, sales, execution capabilities, and corporate access." Wells Fargo (WFC, a US equity index) provides "brokerage, financial planning" services through its Wealth and Investment Management segment.
@@ -81,6 +85,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 ---
 
 ## Debt Capital Markets
+
+> [!quote]
+> "The credit market is far larger and more consequential than the equity market — yet most investors pay it less attention."
+> — **Howard Marks**, *The Most Important Thing* (2011)
 
 **Definition:** Debt capital markets (DCM) refer to the marketplace where companies and governments raise funds by issuing debt instruments such as bonds, notes, and commercial paper to investors. Investment banks play a key role in debt capital markets by helping issuers structure and price their debt offerings, underwriting the issuance, and distributing the securities to institutional investors. The DCM function is distinct from equity capital markets, which deals with stock issuances. Debt capital markets are crucial for providing organizations with the financing they need while offering investors fixed-income investment opportunities.
 
@@ -128,6 +136,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Equity Underwriting
 
+> [!quote]
+> "The underwriter's art is pricing a new issue so that the company raises what it needs and investors feel they got a fair deal."
+> — **Bruce Wasserstein**, *Big Deal* (1998)
+
 **Definition:** Equity underwriting is the process by which investment banks help companies issue new shares of stock to investors. The underwriter evaluates the company, determines the appropriate share price and number of shares to be issued, purchases the shares from the company, and resells them to institutional and retail investors. The underwriter assumes the risk that the shares may not sell at the anticipated price. Equity underwriting is central to initial public offerings (IPOs) and follow-on stock offerings, and the underwriter earns fees and underwriting spreads for this service.
 
 **In context:** Goldman Sachs (GS, a US equity index) provides "equity and debt underwriting of public offerings and private placements." Sumitomo Mitsui Financial Group (8316.T, an Asia-Pacific equity index) provides "equity and fixed income sales and trading, and underwriting services." Mizuho Financial Group (8411.T, an Asia-Pacific equity index) offers "underwriting of equity and bonds."
@@ -139,6 +151,10 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 ---
 
 ## Exchange (Stock/Futures)
+
+> [!quote]
+> "An exchange is a marketplace for price discovery — it tells the world what something is worth right now."
+> — **Robert Shiller**, *Irrational Exuberance* (2000)
 
 **Definition:** A stock or futures exchange is an organized marketplace where securities (stocks, bonds), derivatives (futures, options), commodities, and other financial instruments are traded. Exchanges provide transparency, liquidity, price discovery, and regulatory oversight. They operate electronic order-matching systems that pair buyers and sellers, and they enforce listing standards for companies whose securities are traded. Major exchanges include the New York Stock Exchange, Nasdaq, London Stock Exchange, Deutsche Boerse (Xetra), Tokyo Stock Exchange, and Hong Kong Stock Exchange.
 

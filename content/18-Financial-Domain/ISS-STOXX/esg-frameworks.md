@@ -30,6 +30,10 @@ date: 2026-03-28
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="217 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 217</span>
 
+> [!quote]
+> "You cannot manage what you do not measure, and CDP provides the global measurement system for corporate environmental impact."
+> — **Paul Dickinson**, founder of CDP
+
 CDP is a not-for-profit charity that runs a global disclosure system for investors, companies, cities, states, and regions to manage their environmental impacts. Founded in 2000, CDP collects self-reported data on climate change, water security, and deforestation through annual questionnaires sent to thousands of companies worldwide. Responses are scored from A (leadership) to D- (disclosure), with F indicating failure to disclose.
 
 > [!note]
@@ -109,6 +113,10 @@ The Convention on Cluster Munitions (CCM) is an international treaty adopted in 
 ### CSRD (Corporate Sustainability Reporting Directive)
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="10 mentions across STOXX & ISS pages (low)">▰▰ 10</span>
+
+> [!quote]
+> "The CSRD transforms sustainability reporting from a voluntary exercise into a legal obligation with the same rigour as financial reporting."
+> — **Mairead McGuinness**, EU Commissioner for Financial Services, 2022
 
 The Corporate Sustainability Reporting Directive is an EU legislative instrument (Directive 2022/2464) that modernizes and strengthens the rules concerning social and environmental information that companies must report. Published by the European Commission, the CSRD replaces the earlier NFRD and dramatically expands the number of companies subject to mandatory sustainability reporting. It requires assurance of reported information, mandates the use of European Sustainability Reporting Standards (ESRS), and introduces digital tagging of disclosures.
 
@@ -213,6 +221,10 @@ Do No Significant Harm is a principle embedded in the EU Taxonomy Regulation (Re
 ### Double Materiality
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
+
+> [!quote]
+> "Double materiality recognises that a company is not an island. It both shapes and is shaped by the environmental and social systems it operates in."
+> — **Patrick de Cambourg**, former chair of EFRAG Sustainability Reporting Board
 
 Double materiality is a reporting concept formalized in the EU's CSRD and operationalized through the ESRS. It requires companies to assess and disclose sustainability matters from two perspectives simultaneously: (1) "impact materiality" — how the company's activities affect people and the environment (inside-out), and (2) "financial materiality" — how sustainability risks and opportunities affect the company's financial position and performance (outside-in). A matter is reportable if it is material from either perspective.
 

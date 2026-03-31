@@ -126,6 +126,10 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 ## Non-Recourse Loan
 
+> [!quote]
+> "Non-recourse debt forces the lender to underwrite the project, not just the sponsor's balance sheet."
+> — **Benjamin Esty**
+
 **Definition:** A non-recourse loan is a type of secured loan where the lender's recovery in the event of default is limited to the collateral asset (typically the project or property financed). If the collateral value is insufficient to cover the outstanding loan balance, the lender cannot pursue the borrower's other assets. Non-recourse financing is standard in project finance, where a special purpose vehicle (SPV) owns the project assets and the lenders have no claim on the sponsors' broader balance sheets. This structure transfers risk to lenders in exchange for higher interest rates and extensive due diligence.
 
 **In context:** Sumitomo Mitsui Financial Group (8316.T, an Asia-Pacific equity index) provides "project finance, export credit agency finance, structured finance, and nonrecourse loans."

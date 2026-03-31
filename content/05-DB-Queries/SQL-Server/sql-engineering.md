@@ -18,23 +18,6 @@ status: complete
 > — **C.J. Date**, *An Introduction to Database Systems* (2003)
 
 Database engineering patterns using the **stoxx** index database.
-Prerequisite: SQL_01_Fundamentals.ipynb, SQL_02_Advanced.ipynb
-
-Topics covered:
-- Views (regular, indexed)
-- Stored Procedures (parameters, error handling, transactions)
-- User-Defined Functions (scalar, table-valued)
-- Indexes (clustered, non-clustered, columnstore, filtered)
-- Constraints (PK, FK, CHECK, UNIQUE, DEFAULT)
-- Slowly Changing Dimensions (SCD Type 1 & 2)
-- MERGE for Incremental Loads
-- Gap Detection & Gap Filling
-- Deduplication Strategies
-- Execution Plans & Query Optimization
-- Transaction Isolation Levels
-- Bulk Loading Patterns
-- Data Lineage & Audit Columns
-- Partitioning Strategies
 
 > **Note**: Some sections CREATE database objects. All objects are created in a `demo` schema
 > or use temp tables to avoid modifying the production stoxx schema.

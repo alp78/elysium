@@ -87,6 +87,10 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ## Listing
 
+> [!quote]
+> "Going public is not the end of the journey — it is just the beginning of a whole new set of responsibilities."
+> — **Mary Jo White**
+
 **Definition:** Listing refers to the process by which a company's shares or securities are admitted to trading on a stock exchange. To become listed, a company must meet the exchange's requirements regarding financial performance, governance, disclosure, and market capitalization. Once listed, the company's shares can be bought and sold by investors on the exchange. Listing provides the company with access to public capital markets, enhances its visibility and credibility, and gives its shares a market price that facilitates valuations and transactions.
 
 **In context:** Hong Kong Exchanges and Clearing (0388.HK, an Asia-Pacific equity index) provides "listing, depository, and nominee services." Deutsche Boerse (DB1.DE, a European equity index) provides "pre-IPO and listing" services including "going and being public" support.
@@ -115,6 +119,10 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 ---
 
 ## Prime Brokerage
+
+> [!quote]
+> "The prime broker is the plumber of the hedge fund world — nobody notices until the pipes break."
+> — **Sebastian Mallaby**, *More Money Than God* (2010)
 
 **Definition:** Prime brokerage is a bundled package of services offered by investment banks to hedge funds and other large institutional investors. Services include securities lending (to facilitate short selling), leveraged trade executions, cash management, custody of assets, risk management analytics, reporting, and capital introduction (connecting funds with potential investors). Prime brokers act as a central point of contact for hedge funds' trading and operational needs, enabling them to trade across multiple exchanges and asset classes efficiently.
 
@@ -161,6 +169,10 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 ---
 
 ## Stock Connect
+
+> [!quote]
+> "Stock Connect has opened the door to China's capital markets in a way that no previous mechanism achieved."
+> — **Charles Li**, former CEO of HKEX
 
 **Definition:** Stock Connect is a mutual market access program that allows investors in mainland China and Hong Kong to trade shares listed on each other's exchanges through their local brokers and clearing houses. The program — which operates as Shanghai-Hong Kong Stock Connect and Shenzhen-Hong Kong Stock Connect — uses the existing trading and clearing infrastructure of both markets while maintaining separate regulatory oversight. Stock Connect programs have become a key mechanism for international investors to access Chinese equities and for Chinese investors to access Hong Kong-listed global companies.
 

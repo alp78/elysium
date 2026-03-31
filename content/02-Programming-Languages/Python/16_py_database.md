@@ -13,14 +13,6 @@ status: complete
 
 # 16. Database - Python
 
-Topics covered:
-- SQLite (built-in, zero setup)
-- SQL Server with pyodbc (ODBC Driver 18)
-- pandas integration (pd.read_sql, to_sql)
-- SQLAlchemy ORM
-- DuckDB (embedded analytical SQL)
-- Querying Files — DuckDB vs Polars/Pandas
-
 > [!quote]
 > "Future users of large data banks must be protected from having to know how the data is organized in the machine."
 > — **Edgar F. Codd**, *A Relational Model of Data for Large Shared Data Banks* (1970)

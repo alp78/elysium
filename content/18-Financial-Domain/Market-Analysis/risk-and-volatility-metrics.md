@@ -35,6 +35,9 @@ Risk and volatility metrics quantify the uncertainty and potential downside of e
 
 ## Beta
 
+> [!quote]
+> "Beta is a measure of risk only if you define risk as volatility relative to the market — which most practitioners do."
+> — **William Sharpe**
 
 Beta measures a stock's sensitivity to market movements.
 
@@ -68,6 +71,9 @@ The VIX measures implied volatility from S&P 500 options, often called the "fear
 
 ## Maximum Drawdown
 
+> [!quote]
+> "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1."
+> — **Warren Buffett**
 
 The maximum drawdown measures the largest peak-to-trough decline in portfolio value over a given period.
 

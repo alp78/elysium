@@ -87,6 +87,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Credit Cards
 
+> [!quote]
+> "The credit card changed American commerce more profoundly than any financial innovation since the checking account."
+> — **David Evans**, *Paying with Plastic* (2005)
+
 **Definition:** A credit card is a financial product issued by a bank or financial institution that allows the cardholder to borrow funds up to a pre-approved limit to make purchases or withdraw cash. The cardholder must repay the borrowed amount, typically with interest if the balance is not paid in full by the statement due date. Credit cards are a major consumer financial product, generating revenue for issuers through interest charges, annual fees, merchant interchange fees, and late payment penalties. They are also a key component of the global payments infrastructure.
 
 **In context:** American Express (AXP, a US equity index) offers "credit and charge cards and complementary products and services." JPMorgan Chase (JPM, a US equity index) offers "credit cards, payment solutions" through its Consumer & Community Banking segment. Toyota Motor (7203.T, an Asia-Pacific equity index) provides financial services including "credit cards." Apple Inc. (AAPL, a US equity index) offers "Apple Card, a co-branded credit card."
@@ -179,6 +183,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Mortgage
 
+> [!quote]
+> "The thirty-year fixed-rate mortgage is the most successful financial product in American history."
+> — **Lewis Ranieri**
+
 **Definition:** A mortgage is a loan used to purchase or refinance real estate, in which the property itself serves as collateral for the loan. The borrower makes regular payments (typically monthly) over a period of 15 to 30 years, consisting of principal and interest. If the borrower fails to make payments, the lender can foreclose on the property. Mortgages are the primary means by which individuals and families finance home purchases. Banks, credit unions, mortgage companies, and government agencies are the main providers of mortgage loans.
 
 **In context:** Bank of America (BAC, a US equity index) offers "residential mortgages and home equity loans" through its Consumer Banking segment. ING Groep (INGA.AS, a European equity index) provides "consumer lending products, such as residential mortgage loans." Commonwealth Bank of Australia (CBA.AX, an Asia-Pacific equity index) provides "home loans." JPMorgan Chase (JPM, a US equity index) offers "mortgage origination and servicing activities."
@@ -254,6 +262,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Treasury Services
 
+> [!quote]
+> "The corporate treasurer's job is to make sure the company never runs out of cash — everything else is secondary."
+> — **Craig Martin**
+
 **Definition:** Treasury services are financial products and solutions offered by banks to help corporations manage their cash flows, liquidity, and financial risk. Core treasury services include cash pooling (consolidating cash balances), payment and collection processing, liquidity management, investment of surplus funds, foreign exchange management, interest rate risk management, and bank relationship management. Corporate treasury departments are responsible for ensuring the company has adequate liquidity to meet its obligations while optimizing the return on excess cash and minimizing financial risk.
 
 **In context:** Nordea Bank (NDA-FI.HE, a European equity index) provides "treasury and markets products." BNP Paribas (BNP.PA, a European equity index) offers "cash management, and financial advisory services" to corporate clients. Mitsui & Co. (8031.T, an Asia-Pacific equity index) provides "accounting and treasury-related services." Banco Santander (SAN.MC, a European equity index) offers "debt capital markets, global transaction banking."
@@ -265,6 +277,10 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 ---
 
 ## Trust Banking
+
+> [!quote]
+> "The trustee's first duty is to the beneficiary — not to the bank, not to the market, not to himself."
+> — **Scott Fitzgibbon**
 
 **Definition:** Trust banking involves a bank acting as a trustee or fiduciary agent to manage assets, administer trusts, and execute the wishes of individuals or institutions according to a trust agreement. Trust services include managing investment portfolios, administering estate plans, distributing income and principal to beneficiaries, providing tax reporting, and safekeeping valuable documents and assets. Trust banking is closely related to private banking and wealth management, serving high-net-worth individuals, families, and institutional clients.
 

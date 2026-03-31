@@ -13,12 +13,6 @@ status: complete
 
 # 15. Web & APIs - C#
 
-Topics covered:
-- HTTP Clients (HttpClient)
-- REST API Concepts
-- Building a REST API (ASP.NET Minimal APIs)
-- Data Engineering API Patterns
-
 > [!quote]
 > "Web programming is the science of coming up with increasingly complicated ways of concatenating strings."
 > — **Greg Brockman**

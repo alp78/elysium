@@ -210,6 +210,10 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ## Securities Clearing
 
+> [!quote]
+> "Netting is the genius of modern clearing — it turns millions of obligations into a manageable few."
+> — **Darrell Duffie**, *How Big Banks Fail and What to Do About It* (2010)
+
 **Definition:** Securities clearing is the process of reconciling orders between transacting parties in the financial markets. It involves confirming the trade details, ensuring both parties have the securities and funds to complete the trade, and transferring the obligations through a central clearinghouse. Securities clearing reduces settlement risk by acting as the buyer to every seller and the seller to every buyer (central counterparty clearing). This netting process reduces the number of transactions that require settlement and the amount of securities and cash that must be exchanged.
 
 **In context:** Bank of America (BAC, a US equity index) offers "securities clearing, settlement, and custody services." Hong Kong Exchanges and Clearing (0388.HK, an Asia-Pacific equity index) provides comprehensive "clearing, settlement and custodian" services.

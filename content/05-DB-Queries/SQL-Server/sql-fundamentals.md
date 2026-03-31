@@ -20,16 +20,6 @@ status: complete
 Hands-on SQL using the **stoxx** index database (SQL Server).
 Medallion architecture: Bronze (raw) → Silver (cleaned) → Gold (analytics). For the database objects and performance patterns that build on these fundamentals, continue to [sql-engineering](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-engineering).
 
-Topics covered:
-- Connection & Schema Exploration
-- SELECT, filtering, sorting, aggregation
-- JOINs across medallion layers
-- Window Functions (ranking, moving averages, lag/lead)
-- CTEs & Subqueries
-- Bronze → Silver → Gold transformations
-- Data Quality Checks
-- Performance (indexes, execution plans)
-
 ```python
 %load_ext sql
 %config SqlMagic.displaycon = False
