@@ -42,7 +42,6 @@ var withWarningLevel = scriptOptions.GetType().GetMethod("WithWarningLevel");
 var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 
-Console.WriteLine("  WarningLevel set to 0");
 ```
 
       WarningLevel set to 0
@@ -91,7 +90,6 @@ using Google.Protobuf;
 // Third-party
 using DotNetEnv;
 
-Console.WriteLine("  Namespaces loaded");
 ```
 
       Namespaces loaded
@@ -101,7 +99,6 @@ Console.WriteLine("  Namespaces loaded");
 ```csharp
 // Load .env file so all GCP config is available
 DotNetEnv.Env.Load();
-Console.WriteLine($"  .env loaded: {File.Exists(".env")}");
 ```
 
       .env loaded: True
@@ -226,10 +223,10 @@ Console.WriteLine($"  Token (first 30): {token[..30]}...");
 
 #### IAMCredentialsClient — generate short-lived OAuth2 access tokens
 
+> [!info] Short-Lived Access Tokens
+> Generate tokens with 300s-3600s lifetime for time-boxed operations. Use when handing off to untrusted code. Do NOT use for long-running jobs — the token expires mid-run.
+
 ```csharp
-// Generate a short-lived access token (300s-3600s) for time-boxed operations.
-// When to use: handing off to untrusted code, time-boxing sensitive operations.
-// When NOT to use: long-running jobs (token expires mid-run).
 var iamCredClient = IAMCredentialsClient.Create();
 var tokenResponse = iamCredClient.GenerateAccessToken(
     new GenerateAccessTokenRequest
@@ -331,9 +328,10 @@ Console.WriteLine($"  Value (first 8): {newPassword[..8]}...");
 
 #### SecretManagerServiceClient — disable and destroy old versions
 
+> [!warning] Secret Rotation Grace Period
+> After creating a new secret version, disable (don't destroy) the old one. Schedule destruction after a grace period to allow in-flight operations using the old version to complete.
+
 ```csharp
-// After rotation, disable the old version so it cannot be accessed,
-// then schedule destruction after a grace period.
 var parent = SecretName.FromProjectSecret(PROJECT_ID, newSecretId);
 var versions = smClient.ListSecretVersions(parent);
 
@@ -545,9 +543,10 @@ For Cloud SQL SQL Server, username + password is the only practical client auth 
 
 #### SQL Server password authentication — direct connect
 
+> [!info] Native SQL Server Driver
+> `Microsoft.Data.SqlClient` provides full TLS support and modern authentication. Unlike Python's `pymssql` (which uses FreeTDS), this is the official Microsoft driver with complete feature parity.
+
 ```csharp
-// Connect to Cloud SQL for SQL Server using Microsoft.Data.SqlClient.
-// Native driver with full TLS support, unlike pymssql/FreeTDS in Python.
 using Microsoft.Data.SqlClient;
 
 var connStr = new SqlConnectionStringBuilder

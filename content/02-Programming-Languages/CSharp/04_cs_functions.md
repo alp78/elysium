@@ -32,7 +32,7 @@ C# methods must declare a return type (`int`, `string`, `void`). Parameters are 
 
 ```csharp
 string Greet(string name) { return $"Hello, {name}!"; }
-Console.WriteLine(Greet("Alice"));
+Greet("Alice")
 
 void PrintGreeting(string name)      // void — returns nothing
 {
@@ -65,8 +65,8 @@ RunDemo();
 ```csharp
 string GreetShort(string name) => $"Hello, {name}!";
 int Square(int x) => x * x;
-Console.WriteLine(GreetShort("Diana"));
-Console.WriteLine($"Square(5): {Square(5)}");
+GreetShort("Diana")
+Square(5)
 
 // Tuple return — multiple values in one return
 (int quotient, int remainder) Divide(int a, int b)
@@ -74,8 +74,8 @@ Console.WriteLine($"Square(5): {Square(5)}");
     return (a / b, a % b);
 }
 var (q, r) = Divide(17, 5);       // deconstruct
-Console.WriteLine($"17 / 5 = {q} remainder {r}");
-Console.WriteLine($"As tuple: {Divide(17, 5)}");
+$"17 / 5 = {q} remainder {r}"
+Divide(17, 5)   // As tuple
 ```
 
     Hello, Diana!
@@ -95,7 +95,7 @@ Console.WriteLine($"As tuple: {Divide(17, 5)}");
 
 ```csharp
 Func<string, string> sayHello = Greet;     // assign method to variable
-Console.WriteLine(sayHello("Eve"));
+sayHello("Eve")
 
 // Action<input...> — function with no return value (void)
 Action<string> printer = PrintGreeting;
@@ -103,14 +103,14 @@ printer("Frank");
 
 // Pass function as argument
 string Apply(Func<string, string> func, string value) => func(value);
-Console.WriteLine(Apply(Greet, "Grace"));
+Apply(Greet, "Grace")
 
 // Return a function
 Func<int, int> MakeMultiplier(int n) => x => x * n;
 var doubler = MakeMultiplier(2);
 var tripler = MakeMultiplier(3);
-Console.WriteLine($"doubler(5) = {doubler(5)}");
-Console.WriteLine($"tripler(5) = {tripler(5)}");
+doubler(5)
+tripler(5)
 ```
 
     Hello, Eve!
@@ -320,9 +320,9 @@ Parameter passing modes: `ref` (read+write), `out` (must assign before return �
 string Connect(string host, int port = 5432, bool ssl = true)
     => $"{host}:{port} ssl={ssl}";
 
-Console.WriteLine(Connect("localhost"));                    // all defaults
-Console.WriteLine(Connect("db.example.com", 3306));        // override port
-Console.WriteLine(Connect("db.example.com", ssl: false));  // named, skip port
+Connect("localhost")
+Connect("db.example.com", 3306)
+Connect("db.example.com", ssl: false)
 ```
 
     localhost:5432 ssl=True
@@ -345,7 +345,7 @@ void DoubleIt(ref int x)
 }
 int val = 5;
 DoubleIt(ref val);
-Console.WriteLine($"  ref: {val}");
+val   // ref
 ```
 
       ref: 10
@@ -374,7 +374,7 @@ if (TryDivide(10, 3, out int answer))
 ```csharp
 double Distance(in (double x, double y) point)
     => Math.Sqrt(point.x * point.x + point.y * point.y);
-Console.WriteLine($"  in: {Distance((3, 4))}");
+Distance((3, 4))   // in
 ```
 
       in: 5
@@ -388,12 +388,12 @@ int Total(params int[] numbers)       // caller can pass any number of ints
 {
     return numbers.Sum();
 }
-Console.WriteLine($"Total(1,2,3):   {Total(1, 2, 3)}");
-Console.WriteLine($"Total(10,20):   {Total(10, 20)}");
+Total(1, 2, 3)
+Total(10, 20)
 
 // Can also pass an array directly
 int[] nums = { 1, 2, 3, 4, 5 };
-Console.WriteLine($"Total(array):   {Total(nums)}");
+Total(nums)   // Total(array)
 ```
 
     Total(1,2,3):   6
@@ -410,12 +410,12 @@ Console.WriteLine($"Total(array):   {Total(nums)}");
 
 ```csharp
 void LogEvent(string name, object data) =>
-    Console.WriteLine($"  {name}: {data}");
+    $"  {name}: {data}"
 LogEvent("click", new { page = "home", button = "submit" });
 
 // Option 2: dictionary
 void LogDict(string name, Dictionary<string, object> data) =>
-    Console.WriteLine($"  {name}: {string.Join(", ", data.Select(kv => $"{kv.Key}={kv.Value}"))}");
+    $"  {name}: {string.Join(", ", data.Select(kv => $"{kv.Key}={kv.Value}"))}"
 LogDict("click", new Dictionary<string, object> { ["page"] = "home", ["button"] = "submit" });
 ```
 
@@ -441,8 +441,8 @@ LogDict("click", new Dictionary<string, object> { ["page"] = "home", ["button"] 
 Func<int, int> square = x => x * x;
 Func<int, int, int> add = (a, b) => a + b;
 
-Console.WriteLine($"square(5): {square(5)}");
-Console.WriteLine($"add(3, 4): {add(3, 4)}");
+square(5)
+add(3, 4)
 ```
 
     square(5): 25
@@ -463,7 +463,7 @@ Func<int, string> classify = (x) => {
     if (x < 0) return "negative";
     return "zero";
 };
-Console.WriteLine($"classify(-5): {classify(-5)}");
+classify(-5)
 ```
 
     classify(-5): negative
@@ -474,16 +474,16 @@ Pass lambdas to `OrderBy`, `Select`, `Where`, `MinBy`. Method chains compose ope
 
 ```csharp
 var names = new[] { "Charlie", "Alice", "Bob", "Diana" };
-Console.WriteLine($"By length:    [{string.Join(", ", names.OrderBy(n => n.Length))}]");
-Console.WriteLine($"By last char: [{string.Join(", ", names.OrderBy(n => n[^1]))}]");
+string.Join(", ", names.OrderBy(n => n.Length))   // By length
+string.Join(", ", names.OrderBy(n => n[^1]))   // By last char
 
 var nums = new[] { 1, 2, 3, 4, 5 };
-Console.WriteLine($"Squared: [{string.Join(", ", nums.Select(x => x * x))}]");
-Console.WriteLine($"Evens:   [{string.Join(", ", nums.Where(x => x % 2 == 0))}]");
+string.Join(", ", nums.Select(x => x * x))   // Squared
+string.Join(", ", nums.Where(x => x % 2 == 0))   // Evens
 
 var people = new[] { ("Alice", 30), ("Bob", 25), ("Charlie", 35) };
 var youngest = people.MinBy(p => p.Item2);
-Console.WriteLine($"Youngest: {youngest}");
+youngest   // Youngest
 ```
 
     By length:    [Bob, Alice, Diana, Charlie]
@@ -506,8 +506,8 @@ shout("hello");
 
 Predicate<int> isEven = x => x % 2 == 0;
 var list = new List<int> { 1, 2, 3, 4, 5, 6 };
-Console.WriteLine($"FindAll even: [{string.Join(", ", list.FindAll(isEven))}]");
-Console.WriteLine($"Exists > 5:   {list.Exists(x => x > 5)}");
+string.Join(", ", list.FindAll(isEven))   // FindAll even
+list.Exists(x => x > 5)   // Exists > 5
 ```
 
       HELLO!
@@ -521,9 +521,9 @@ Lambdas capture the **variable reference**, not a snapshot. If `multiplier` chan
 ```csharp
 int multiplier = 3;
 Func<int, int> times = x => x * multiplier;   // captures 'multiplier'
-Console.WriteLine($"times(5): {times(5)}");    // 15
+times(5)
 multiplier = 10;                                // change captured variable
-Console.WriteLine($"times(5): {times(5)}");    // 50 — sees the change!
+times(5)
 ```
 
     times(5): 15
@@ -569,8 +569,8 @@ Func<int, int> MakeAdder(int n)
 }
 var add5 = MakeAdder(5);
 var add10 = MakeAdder(10);
-Console.WriteLine($"add5(3):  {add5(3)}");     // 8
-Console.WriteLine($"add10(3): {add10(3)}");    // 13
+add5(3)
+add10(3)
 ```
 
     add5(3):  8
@@ -586,7 +586,7 @@ Action increment = () => counter++;
 increment();
 increment();
 increment();
-Console.WriteLine($"counter: {counter}");      // 3 — closure modified outer variable
+counter
 ```
 
     counter: 3
@@ -602,11 +602,11 @@ Func<int> MakeCounter(int start = 0)
     return () => ++count;
 }
 var c1 = MakeCounter(10);
-Console.WriteLine($"c1(): {c1()}");   // 11
-Console.WriteLine($"c1(): {c1()}");   // 12
+c1()
+c1()
 
 var c2 = MakeCounter(0);              // independent closure
-Console.WriteLine($"c2(): {c2()}");   // 1
+c2()
 ```
 
     c1(): 11
@@ -623,8 +623,8 @@ Func<int, bool> MakeRangeValidator(int min, int max)
 
 var isValidAge = MakeRangeValidator(0, 120);
 var isValidScore = MakeRangeValidator(0, 100);
-Console.WriteLine($"age 25:  {isValidAge(25)}");
-Console.WriteLine($"age 150: {isValidAge(150)}");
+isValidAge(25)   // age 25
+isValidAge(150)   // age 150
 ```
 
     age 25:  True
@@ -640,7 +640,7 @@ Console.WriteLine($"age 150: {isValidAge(150)}");
 var funcs = new List<Func<int>>();
 for (int i = 0; i < 3; i++)
     funcs.Add(() => i);               // all capture the SAME variable i
-Console.WriteLine($"Bad:  [{string.Join(", ", funcs.Select(f => f()))}]");  // [3, 3, 3]
+string.Join(", ", funcs.Select(f => f()))   // Bad
 
 // Fix: capture a copy
 var funcsGood = new List<Func<int>>();
@@ -649,7 +649,7 @@ for (int i = 0; i < 3; i++)
     int captured = i;                 // new variable each iteration
     funcsGood.Add(() => captured);
 }
-Console.WriteLine($"Good: [{string.Join(", ", funcsGood.Select(f => f()))}]");  // [0, 1, 2]
+string.Join(", ", funcsGood.Select(f => f()))   // Good
 ```
 
     Bad:  [3, 3, 3]
@@ -670,9 +670,9 @@ int Add(int a, int b) => a + b;
 int Multiply(int a, int b) => a * b;
 
 MathOp op = Add;
-Console.WriteLine($"Add: {op(3, 4)}");
+op(3, 4)   // Add
 op = Multiply;
-Console.WriteLine($"Mul: {op(3, 4)}");
+op(3, 4)   // Mul
 
 delegate int MathOp(int a, int b);     // custom delegate type
 ```
@@ -692,9 +692,10 @@ pipeline += msg => Console.WriteLine($"  Step 3: {msg.Length} chars");
 Console.WriteLine("Calling pipeline:");
 pipeline("hello world");    // all 3 functions execute
 
-// Remove a step
-// pipeline -= step;  // can remove specific handlers
 ```
+
+> [!info] Delegate Removal
+> Delegates support `-=` to remove handlers from the invocation list, enabling dynamic pipeline step management at runtime.
 
     Calling pipeline:
       Step 1: hello world
@@ -710,12 +711,15 @@ void PrintUpper(string s) => Console.WriteLine($"  {s.ToUpper()}");
 
 Action<string> handler = PrintUpper;    // no () — passing the method itself
 handler("method group");
-
-// With LINQ — can pass method directly instead of lambda
-var names = new[] { "alice", "bob", "charlie" };
-// Lambda:      names.Select(n => n.ToUpper())
-// Method group: not possible here because ToUpper is instance method
 ```
+
+> [!info] Lambda vs Method Group in LINQ
+>
+> With LINQ you can pass a method directly instead of wrapping it in a lambda:
+> `names.Select(Transform)` instead of `names.Select(n => Transform(n))`.
+> However, instance methods like `string.ToUpper()` can't be used as method
+> groups because they require an instance — use a lambda instead:
+> `names.Select(n => n.ToUpper())`.
 
       METHOD GROUP
 
@@ -762,10 +766,10 @@ string Format(double value) => $"double: {value:F2}";
 string Format(string value) => $"string: '{value}'";
 string Format(int a, int b) => $"two ints: {a} + {b} = {a + b}";
 
-Console.WriteLine(Format(42));           // calls Format(int)
-Console.WriteLine(Format(3.14));         // calls Format(double)
-Console.WriteLine(Format("hello"));      // calls Format(string)
-Console.WriteLine(Format(10, 20));       // calls Format(int, int)
+Format(42)
+Format(3.14)
+Format("hello")
+Format(10, 20)
 ```
 
     int: 42
@@ -777,22 +781,14 @@ Console.WriteLine(Format(10, 20));       // calls Format(int, int)
 
 Static method in a static class with `this` as first parameter: `static int WordCount(this string s)`. Enables fluent syntax: `"hello".WordCount()`. LINQ is built entirely with extension methods on `IEnumerable<T>`. Don't extend `object` — pollutes IntelliSense for all types.
 
+> [!info] LINQ Is Built on Extension Methods
+>
+> Every LINQ method (`.Where`, `.Select`, `.OrderBy`) is an extension method on `IEnumerable<T>`.
+> The simplified signature of `.Where`: `static IEnumerable<T> Where<T>(this IEnumerable<T> source, Func<T, bool> predicate)` — the `this` keyword before the first parameter makes it an extension method.
+
 ```csharp
-Console.WriteLine("Extension methods must be in static classes.");
-Console.WriteLine("LINQ methods (.Where, .Select, .OrderBy) are ALL extension methods.");
-Console.WriteLine("They 'extend' IEnumerable<T> without modifying its source code.");
-
-// Example of how LINQ's .Where is defined (simplified):
-// public static IEnumerable<T> Where<T>(this IEnumerable<T> source, Func<T, bool> predicate)
-//                                       ^^^^ 'this' makes it an extension method
-
-// Using LINQ extension methods (you've been using these all along!)
 var nums = new[] { 1, 2, 3, 4, 5 };
-Console.WriteLine($"Where+Select: [{string.Join(", ", nums.Where(x => x > 2).Select(x => x * 10))}]");
-// .Where and .Select are extension methods on int[] (which implements IEnumerable<int>)
+string.Join(", ", nums.Where(x => x > 2).Select(x => x * 10))   // Where+Select
 ```
 
-    Extension methods must be in static classes.
-    LINQ methods (.Where, .Select, .OrderBy) are ALL extension methods.
-    They 'extend' IEnumerable<T> without modifying its source code.
     Where+Select: [30, 40, 50]

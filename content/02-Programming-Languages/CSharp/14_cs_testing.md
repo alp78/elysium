@@ -84,7 +84,6 @@ var withWarningLevel = scriptOptions.GetType().GetMethod("WithWarningLevel");
 var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 
-Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.");
 ```
 
     WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
@@ -146,7 +145,6 @@ void RunTests(object testClass)
 // Attribute stubs for notebook use (real xUnit uses [Fact] and [Theory])
 
 
-Console.WriteLine("  Assert class, test runner, and attributes ready.");
 ```
 
       Assert class, test runner, and attributes ready.
@@ -282,7 +280,6 @@ void RunTest(string name, Action test)
     catch (Exception ex) { Console.WriteLine($"  ✗ {name}: {ex.Message}"); }
 }
 
-Console.WriteLine("=== Basic xUnit Tests ===");
 ```
 
     === Basic xUnit Tests ===
@@ -399,7 +396,6 @@ static int GetFeeBps(long volume) => volume switch
     _            => 10,
 };
 
-Console.WriteLine("=== Fee Tier [Theory] ===");
 var feeCases = new (long volume, int expectedBps)[]
 {
     (50_000, 30), (500_000, 20), (5_000_000, 10)
@@ -424,7 +420,6 @@ foreach (var (vol, bps) in feeCases)
 > - In a real project, use `[Theory]` + `[InlineData]` — xUnit runs once per row automatically
 
 ```csharp
-Console.WriteLine("\n=== Currency Conversion [Theory] ===");
 var fxCases = new (double amountUsd, double rate, double expected, string label)[]
 {
     (1000.0, 0.92,  920.0,    "USD→EUR"),   // 1000 USD × 0.92 EUR/USD = 920 EUR
@@ -454,7 +449,6 @@ foreach (var (amt, rate, exp, label) in fxCases)
 > Financial APIs occasionally return garbage (high < open, negative volume) — a pipeline without validation feeds bad data into models.
 
 ```csharp
-Console.WriteLine("\n=== OHLCV Validation [Theory] ===");
 
 // Pure validation function — returns true if the candle is physically possible
 static bool IsValidBar(double o, double h, double l, double c, long v)
@@ -481,7 +475,6 @@ foreach (var tc in ohlcvCases)
 
 ```csharp
 // Parametrize: ticker validation
-Console.WriteLine("\n=== Ticker Validation [Theory] ===");
 
 static bool IsValidTicker(string ticker)
     => System.Text.RegularExpressions.Regex.IsMatch(ticker, @"^[A-Z]{1,5}(\.[A-Z])?$");
@@ -525,7 +518,6 @@ void RunTest(string name, Action test)
 ```csharp
 // In C#, you mock interfaces (not concrete classes).
 
-Console.WriteLine("=== Mock Basics ===");
 ```
 
     === Mock Basics ===
@@ -688,8 +680,7 @@ RunTest("Mock with transient failure + retry", () =>
 // Moq equivalent — how you'd write the same test with the Moq NuGet library
 // Moq generates the mock class automatically from the interface (no hand-written mock needed).
 // Setup() defines what the mock returns. Verify() asserts how it was called.
-Console.WriteLine("\n=== Moq Equivalent (for real projects) ===");
-Console.WriteLine(@"
+@"
   // In a real test project with Moq (NuGet: Moq):
   var mock = new Mock<IMarketDataClient>();
 
@@ -703,7 +694,7 @@ Console.WriteLine(@"
   // Assert: verify the return value AND that the method was called exactly once
   Assert.Equal(178.50, quote.Last);
   mock.Verify(c => c.GetQuote(""AAPL""), Times.Once());
-");
+"
 ```
 
       ✓ Mock with transient failure + retry
@@ -813,7 +804,6 @@ static List<Dictionary<string, object>> NormalizeTrades(List<Dictionary<string, 
     return cleaned;
 }
 
-Console.WriteLine("=== Transform Tests ===");
 
 // TEST: normal trades are cleaned correctly — ticker uppercased, price rounded
 RunTest("NormalizeTrades basic", () =>
@@ -858,7 +848,6 @@ RunTest("NormalizeTrades empty list", () =>
 
 ```csharp
 // Mock external service (hand-written)
-Console.WriteLine("\n=== Mock External Service ===");
 
 // TEST: weight = stock market cap / total market cap, using mock data client
 RunTest("Index weight calculation with mock", () =>
@@ -894,7 +883,6 @@ RunTest("Index weight calculation with mock", () =>
 > - Bad API data is common: 0 for missing fields, negative prices from currency bugs, unadjusted splits
 
 ```csharp
-Console.WriteLine("\n=== Data Quality Tests ===");
 
 static List<string> ValidateEodPrices(List<EodPrice> prices)
 {
@@ -999,7 +987,6 @@ List<Dictionary<string, object>> QueryRows(string sql)
 void AssertTest(string name, bool condition)
     => Console.WriteLine($"  {(condition ? "PASS" : "FAIL")}: {name}");
 
-Console.WriteLine("  DB connection ready.");
 ```
 
       DB connection ready.
@@ -1211,7 +1198,7 @@ class PipelineRunner : IPipelineRunner
 #### GitHub Actions workflow
 
 ```csharp
-Console.WriteLine(@"
+@"
 KEY GITHUB ACTIONS CONCEPTS:
 
   Trigger              Description
@@ -1235,7 +1222,7 @@ KEY GITHUB ACTIONS CONCEPTS:
   --junitxml           --logger trx
   pip install -r ...   dotnet restore
   tox / nox            dotnet test matrix
-");
+"
 ```
 
     
@@ -1322,7 +1309,7 @@ jobs:
           path: ./test-results/**/coverage.cobertura.xml
 ";
 
-Console.WriteLine(workflow);
+workflow
 ```
 
     

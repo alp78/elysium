@@ -187,25 +187,25 @@ except RuntimeError as e:
 > - Properties: `args` (tuple), `__cause__` (`raise ... from`), `__context__` (implicit chaining)
 > - Hierarchical catching: `except OSError` catches all OS-related errors
 
-> [!danger] Never catch BaseException
+> [!danger] Never Catch BaseException
 >
-> This prevents `Ctrl+C` (`KeyboardInterrupt`) and `sys.exit()` from working.
+> The hierarchy shows why bare `except:` is dangerous — it catches `SystemExit` and `KeyboardInterrupt`. Always catch `Exception` (not `BaseException`) unless you specifically need system-level errors.
+>
+> ```
+> BaseException
+> ├── SystemExit / KeyboardInterrupt   -- DON'T catch with bare except
+> └── Exception
+>     ├── ValueError        (bad value format)
+>     ├── TypeError         (wrong argument type)
+>     ├── KeyError          (dict key missing)
+>     ├── IndexError        (list index out of range)
+>     ├── AttributeError    (attribute doesn't exist)
+>     ├── RuntimeError      (general runtime error)
+>     ├── ArithmeticError   (ZeroDivisionError, OverflowError)
+>     └── OSError           (FileNotFoundError, PermissionError)
+> ```
 
 ```python
-# Exception hierarchy — BaseException at root; always catch Exception (not BaseException)
-#
-#   BaseException
-#   ├── SystemExit / KeyboardInterrupt   ← DON'T catch with bare except
-#   └── Exception
-#       ├── ValueError        (bad value format)
-#       ├── TypeError         (wrong argument type)
-#       ├── KeyError          (dict key missing)
-#       ├── IndexError        (list index out of range)
-#       ├── AttributeError    (attribute doesn't exist)
-#       ├── RuntimeError      (general runtime error)
-#       ├── ArithmeticError   (ZeroDivisionError, OverflowError)
-#       └── OSError           (FileNotFoundError, PermissionError)
-
 # Exception properties — args, __cause__, __traceback__
 try:
     raise ValueError("salary must be positive", -500)

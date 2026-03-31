@@ -144,7 +144,6 @@ cmd.CommandText = @"
         trade_date TEXT NOT NULL DEFAULT (date('now'))
     )";
 cmd.ExecuteNonQuery();
-Console.WriteLine("Created table: trades");
 ```
 
     Created table: trades
@@ -176,7 +175,7 @@ foreach (var t in trades)
     cmd.Parameters.AddWithValue("@date", t.date);
     cmd.ExecuteNonQuery();
 }
-Console.WriteLine($"Inserted {trades.Length} trades");
+trades.Length  // inserted
 ```
 
     Inserted 6 trades
@@ -214,13 +213,13 @@ cmd = conn.CreateCommand();
 cmd.CommandText = "UPDATE trades SET price = @price WHERE trade_id = @id";
 cmd.Parameters.AddWithValue("@price", 700.00);
 cmd.Parameters.AddWithValue("@id", "TRD_004");
-Console.WriteLine($"Updated TRD_004 price -> $700.00 ({cmd.ExecuteNonQuery()} row affected)");
+cmd.ExecuteNonQuery()  // Updated TRD_004 price -> $700.00
 
 // DELETE
 cmd = conn.CreateCommand();
 cmd.CommandText = "DELETE FROM trades WHERE trade_id = @id";
 cmd.Parameters.AddWithValue("@id", "TRD_006");
-Console.WriteLine($"Deleted TRD_006 ({cmd.ExecuteNonQuery()} row affected)");
+cmd.ExecuteNonQuery()  // Deleted TRD_006
 ```
 
     Updated TRD_004 price -> $700.00 (1 row affected)
@@ -231,7 +230,6 @@ Console.WriteLine($"Deleted TRD_006 ({cmd.ExecuteNonQuery()} row affected)");
 ```csharp
 // Transaction — both inserts succeed or both roll back
 
-Console.WriteLine("=== Transaction Example ===");
 using (var tx = conn.BeginTransaction())
 {
     try
@@ -257,19 +255,17 @@ using (var tx = conn.BeginTransaction())
         c2.ExecuteNonQuery();
 
         tx.Commit();
-        Console.WriteLine("  Transaction committed (2 trades inserted)");
     }
     catch (Exception ex)
     {
         tx.Rollback();
-        Console.WriteLine($"  Transaction rolled back: {ex.Message}");
     }
 }
 
 // Final count
 cmd = conn.CreateCommand();
 cmd.CommandText = "SELECT COUNT(*) FROM trades";
-Console.WriteLine($"\nTotal trades: {cmd.ExecuteScalar()}");
+cmd.ExecuteScalar()  // total trades
 
 conn.Close();
 ```
@@ -304,7 +300,7 @@ var cmd = pragmaConn.CreateCommand();
 // WAL (Write-Ahead Log) allows concurrent reads during writes
 // DELETE (default): exclusive lock during writes, readers blocked
 cmd.CommandText = "PRAGMA journal_mode=WAL";
-Console.WriteLine($"journal_mode:    {cmd.ExecuteScalar()}");
+cmd.ExecuteScalar()  // journal_mode
 ```
 
     journal_mode:    memory
@@ -318,7 +314,7 @@ Console.WriteLine($"journal_mode:    {cmd.ExecuteScalar()}");
 cmd.CommandText = "PRAGMA synchronous=NORMAL";
 cmd.ExecuteNonQuery();
 cmd.CommandText = "PRAGMA synchronous";
-Console.WriteLine($"synchronous:     {cmd.ExecuteScalar()} (0=OFF, 1=NORMAL, 2=FULL)");
+cmd.ExecuteScalar()  // synchronous (0=OFF, 1=NORMAL, 2=FULL)
 ```
 
     synchronous:     1 (0=OFF, 1=NORMAL, 2=FULL)
@@ -331,11 +327,11 @@ Console.WriteLine($"synchronous:     {cmd.ExecuteScalar()} (0=OFF, 1=NORMAL, 2=F
 cmd.CommandText = "PRAGMA cache_size=-20000";
 cmd.ExecuteNonQuery();
 cmd.CommandText = "PRAGMA cache_size";
-Console.WriteLine($"cache_size:      {cmd.ExecuteScalar()} (negative = KB)");
+cmd.ExecuteScalar()  // cache_size (negative = KB)
 
 // Page size — must be set BEFORE creating tables (on new databases)
 cmd.CommandText = "PRAGMA page_size";
-Console.WriteLine($"page_size:       {cmd.ExecuteScalar()} bytes");
+cmd.ExecuteScalar()  // page_size (bytes)
 ```
 
     cache_size:      -20000 (negative = KB)
@@ -349,7 +345,7 @@ Console.WriteLine($"page_size:       {cmd.ExecuteScalar()} bytes");
 cmd.CommandText = "PRAGMA busy_timeout=5000";
 cmd.ExecuteNonQuery();
 cmd.CommandText = "PRAGMA busy_timeout";
-Console.WriteLine($"busy_timeout:    {cmd.ExecuteScalar()} ms");
+cmd.ExecuteScalar()  // busy_timeout (ms)
 ```
 
     busy_timeout:    5000 ms
@@ -363,7 +359,7 @@ Console.WriteLine($"busy_timeout:    {cmd.ExecuteScalar()} ms");
 cmd.CommandText = "PRAGMA mmap_size=268435456";
 cmd.ExecuteNonQuery();
 cmd.CommandText = "PRAGMA mmap_size";
-Console.WriteLine($"mmap_size:       {Convert.ToInt64(cmd.ExecuteScalar()) / 1024 / 1024} MB");
+Convert.ToInt64(cmd.ExecuteScalar()) / 1024 / 1024  // mmap_size (MB)
 ```
 
     mmap_size:       0 MB
@@ -376,14 +372,14 @@ Console.WriteLine($"mmap_size:       {Convert.ToInt64(cmd.ExecuteScalar()) / 102
 cmd.CommandText = "PRAGMA temp_store=MEMORY";
 cmd.ExecuteNonQuery();
 cmd.CommandText = "PRAGMA temp_store";
-Console.WriteLine($"temp_store:      {cmd.ExecuteScalar()} (0=DEFAULT, 1=FILE, 2=MEMORY)");
+cmd.ExecuteScalar()  // temp_store (0=DEFAULT, 1=FILE, 2=MEMORY)
 
 // Foreign keys — DISABLED by default in SQLite (!)
 // Must enable explicitly on every connection
 cmd.CommandText = "PRAGMA foreign_keys=ON";
 cmd.ExecuteNonQuery();
 cmd.CommandText = "PRAGMA foreign_keys";
-Console.WriteLine($"foreign_keys:    {cmd.ExecuteScalar()} (0=OFF, 1=ON)");
+cmd.ExecuteScalar()  // foreign_keys (0=OFF, 1=ON)
 ```
 
     temp_store:      2 (0=DEFAULT, 1=FILE, 2=MEMORY)
@@ -407,7 +403,6 @@ cmd.CommandText = @"
         volume     INTEGER
     )";
 cmd.ExecuteNonQuery();
-Console.WriteLine("Created table: ohlcv");
 ```
 
     Created table: ohlcv
@@ -429,7 +424,6 @@ for (int i = 0; i < 5000; i++)
         + $"VALUES ('{sym}', '{dt}', {price:F2}, {price * 1.02:F2}, {price * 0.98:F2}, {price * 1.01:F2}, {rng.Next(100000, 5000000)})";
     cmd.ExecuteNonQuery();
 }
-Console.WriteLine("Inserted 5000 OHLCV rows");
 ```
 
     Inserted 5000 OHLCV rows
@@ -464,22 +458,18 @@ QueryToTable(pragmaConn, "EXPLAIN QUERY PLAN SELECT * FROM ohlcv WHERE symbol = 
 ```csharp
 // CREATE INDEX speeds up WHERE, JOIN, ORDER BY
 
-Console.WriteLine("=== Creating Indexes ===");
 
 // Single column index — speeds up WHERE symbol = ?
 cmd.CommandText = "CREATE INDEX idx_ohlcv_symbol ON ohlcv(symbol)";
 cmd.ExecuteNonQuery();
-Console.WriteLine("  Created: idx_ohlcv_symbol (single column)");
 
 // Composite index — covers WHERE symbol = ? AND date > ?
 cmd.CommandText = "CREATE INDEX idx_ohlcv_symbol_date ON ohlcv(symbol, date)";
 cmd.ExecuteNonQuery();
-Console.WriteLine("  Created: idx_ohlcv_symbol_date (composite)");
 
 // Unique index — enforces no duplicate (symbol, date) pairs
 // cmd.CommandText = "CREATE UNIQUE INDEX idx_ohlcv_unique ON ohlcv(symbol, date)";
 // Would fail here because our sample data has duplicates
-Console.WriteLine("  UNIQUE INDEX: prevents duplicate (symbol, date) pairs");
 ```
 
     === Creating Indexes ===
@@ -518,7 +508,6 @@ QueryToTable(pragmaConn, "EXPLAIN QUERY PLAN SELECT * FROM ohlcv WHERE symbol = 
 
 cmd.CommandText = "ANALYZE";
 cmd.ExecuteNonQuery();
-Console.WriteLine("ANALYZE: query planner statistics updated");
 ```
 
     ANALYZE: query planner statistics updated
@@ -528,7 +517,6 @@ Console.WriteLine("ANALYZE: query planner statistics updated");
 ```csharp
 // sqlite_master — list all indexes
 
-Console.WriteLine("=== Indexes ===");
 QueryToTable(pragmaConn, "SELECT name AS [Index Name], tbl_name AS [Table] FROM sqlite_master WHERE type = 'index' ORDER BY tbl_name, name")
 ```
 
@@ -569,7 +557,7 @@ countCmd.CommandText = "PRAGMA page_count";
 var pageCount = Convert.ToInt64(countCmd.ExecuteScalar());
 countCmd.CommandText = "PRAGMA page_size";
 var pageSize = Convert.ToInt64(countCmd.ExecuteScalar());
-Console.WriteLine($"Database: {pageCount} pages x {pageSize} bytes = {pageCount * pageSize / 1024.0:F1} KB");
+$"{pageCount} pages x {pageSize} bytes = {pageCount * pageSize / 1024.0:F1} KB"
 ```
 
     Database: 135 pages x 4096 bytes = 540.0 KB
@@ -581,18 +569,16 @@ Console.WriteLine($"Database: {pageCount} pages x {pageSize} bytes = {pageCount 
 // Reclaims unused pages. On in-memory DB this is a no-op.
 cmd.CommandText = "VACUUM";
 cmd.ExecuteNonQuery();
-Console.WriteLine("VACUUM: database file compacted");
 
 // REINDEX — rebuild all indexes from scratch
 // Use after bulk updates that may have fragmented indexes
 cmd.CommandText = "REINDEX";
 cmd.ExecuteNonQuery();
-Console.WriteLine("REINDEX: all indexes rebuilt");
 
 // Integrity check — verify database consistency
 // Returns "ok" if everything is fine, or a list of problems
 cmd.CommandText = "PRAGMA integrity_check";
-Console.WriteLine($"Integrity:   {cmd.ExecuteScalar()}");
+cmd.ExecuteScalar()  // integrity_check
 
 pragmaConn.Close();
 ```
@@ -645,7 +631,6 @@ var connStr = "Server=localhost,1434;Database=stoxx;"
 
 var conn = new SqlConnection(connStr);
 conn.Open();
-Console.WriteLine("Connected to SQL Server: stoxx database");
 
 // List all schemas and tables with row counts
 QueryToTable(conn, @"
@@ -711,7 +696,6 @@ var sqlCmd = new SqlCommand(@"
         trade_date DATE NOT NULL DEFAULT GETDATE()
     )", conn);
 sqlCmd.ExecuteNonQuery();
-Console.WriteLine("Created dbo.trades_demo");
 ```
 
     Created dbo.trades_demo
@@ -728,7 +712,7 @@ sqlCmd.Parameters.AddWithValue("@s", "BUY");
 sqlCmd.Parameters.AddWithValue("@q", 100);
 sqlCmd.Parameters.AddWithValue("@p", 685.40);
 sqlCmd.Parameters.AddWithValue("@d", "2026-03-15");
-Console.WriteLine($"INSERT: {sqlCmd.ExecuteNonQuery()} row");
+sqlCmd.ExecuteNonQuery()  // INSERT
 ```
 
     INSERT: 1 row
@@ -741,7 +725,7 @@ Console.WriteLine($"INSERT: {sqlCmd.ExecuteNonQuery()} row");
 var sqlCmd = new SqlCommand("UPDATE dbo.trades_demo SET price = @p WHERE trade_id = @id", conn);
 sqlCmd.Parameters.AddWithValue("@p", 700.00);
 sqlCmd.Parameters.AddWithValue("@id", "TRD_001");
-Console.WriteLine($"UPDATE: {sqlCmd.ExecuteNonQuery()} row");
+sqlCmd.ExecuteNonQuery()  // UPDATE
 ```
 
     UPDATE: 1 row
@@ -753,7 +737,7 @@ Console.WriteLine($"UPDATE: {sqlCmd.ExecuteNonQuery()} row");
 
 var sqlCmd = new SqlCommand("DELETE FROM dbo.trades_demo WHERE trade_id = @id", conn);
 sqlCmd.Parameters.AddWithValue("@id", "TRD_001");
-Console.WriteLine($"DELETE: {sqlCmd.ExecuteNonQuery()} row");
+sqlCmd.ExecuteNonQuery()  // DELETE
 ```
 
     DELETE: 1 row
@@ -765,7 +749,6 @@ Console.WriteLine($"DELETE: {sqlCmd.ExecuteNonQuery()} row");
 
 var sqlCmd = new SqlCommand("DROP TABLE dbo.trades_demo", conn);
 sqlCmd.ExecuteNonQuery();
-Console.WriteLine("Dropped dbo.trades_demo");
 ```
 
     Dropped dbo.trades_demo
@@ -786,16 +769,14 @@ try
     new SqlCommand("INSERT INTO dbo.tx_demo VALUES (1, 'first')", conn, tx).ExecuteNonQuery();
     new SqlCommand("INSERT INTO dbo.tx_demo VALUES (2, 'second')", conn, tx).ExecuteNonQuery();
     tx.Commit();
-    Console.WriteLine("Transaction committed (2 rows inserted)");
 }
 catch (Exception ex)
 {
     tx.Rollback();
-    Console.WriteLine($"Transaction rolled back: {ex.Message}");
 }
 
 sqlCmd = new SqlCommand("SELECT COUNT(*) FROM dbo.tx_demo", conn);
-Console.WriteLine($"Rows in tx_demo: {sqlCmd.ExecuteScalar()}");
+sqlCmd.ExecuteScalar()  // rows in tx_demo
 sqlCmd = new SqlCommand("DROP TABLE dbo.tx_demo", conn);
 sqlCmd.ExecuteNonQuery();
 ```
@@ -847,7 +828,7 @@ int rows1 = 0;
 using (var reader = sqlCmd.ExecuteReader())
     while (reader.Read()) rows1++;
 sw.Stop();
-Console.WriteLine($"Full table scan: {rows1} symbols | {sw.ElapsedMilliseconds} ms");
+$"Full table scan: {rows1} symbols | {sw.ElapsedMilliseconds} ms"
 ```
 
     Full table scan: 50 symbols | 17 ms
@@ -872,7 +853,7 @@ int rows2 = 0;
 using (var reader = sqlCmd.ExecuteReader())
     while (reader.Read()) rows2++;
 sw.Stop();
-Console.WriteLine($"Index seek:      {rows2} rows | {sw.ElapsedMilliseconds} ms");
+$"Index seek: {rows2} rows | {sw.ElapsedMilliseconds} ms"
 ```
 
     Index seek:      100 rows | 6 ms
@@ -892,7 +873,7 @@ var joinResult = QueryToTable(conn, @"
     WHERE d.index_key = 'euro_stoxx_50'
     GROUP BY d.display_name");
 sw.Stop();
-Console.WriteLine($"JOIN completed in {sw.ElapsedMilliseconds} ms");
+$"JOIN completed in {sw.ElapsedMilliseconds} ms"
 joinResult
 ```
 
@@ -1048,7 +1029,7 @@ using (var reader = sqlCmd.ExecuteReader())
             reader["index_name"].ToString()!,
             Convert.ToDouble(reader["frag_pct"])));
 
-Console.WriteLine($"Found {indexesToRebuild.Count} indexes to rebuild (>30% fragmentation)");
+indexesToRebuild.Count  // indexes to rebuild (>30% fragmentation)
 ```
 
     Found 12 indexes to rebuild (>30% fragmentation)
@@ -1063,10 +1044,9 @@ foreach (var (schema, table, index, frag) in indexesToRebuild)
 {
     var rebuildSql = $"ALTER INDEX [{index}] ON [{schema}].[{table}] REBUILD";
     new SqlCommand(rebuildSql, conn).ExecuteNonQuery();
-    Console.WriteLine($"  REBUILT: [{schema}].[{table}].[{index}] (was {frag}%)");
 }
 sw.Stop();
-Console.WriteLine($"\nAll {indexesToRebuild.Count} indexes rebuilt in {sw.ElapsedMilliseconds} ms");
+$"All {indexesToRebuild.Count} indexes rebuilt in {sw.ElapsedMilliseconds} ms"
 ```
 
       REBUILT: [bronze].[trading_calendar].[PK_trading_calendar] (was 98.7%)
@@ -1092,7 +1072,6 @@ Console.WriteLine($"\nAll {indexesToRebuild.Count} indexes rebuilt in {sw.Elapse
 foreach (var (schema, table, _, _) in indexesToRebuild.DistinctBy(x => x.schema + "." + x.table))
 {
     new SqlCommand($"UPDATE STATISTICS [{schema}].[{table}]", conn).ExecuteNonQuery();
-    Console.WriteLine($"  STATS UPDATED: [{schema}].[{table}]");
 }
 ```
 
@@ -1188,7 +1167,6 @@ for (int i = 0; i < 5; i++)
     new SqlCommand("SELECT * FROM silver.eurostoxx50_ohlcv WHERE volume > 5000000", conn).ExecuteReader().Close();
 }
 
-Console.WriteLine("Ran 13 queries on unindexed columns to provoke recommendations");
 ```
 
     Ran 13 queries on unindexed columns to provoke recommendations
@@ -1473,8 +1451,8 @@ var multiSymbol = dapperConn.Query<OhlcvRow>(@"
     ORDER BY date DESC",
     new { Symbols = new[] { "ASML.AS", "SAP.DE", "MC.PA" } });
 
-Console.WriteLine($"Filtered (SAP + vol>3M): {filtered.Count()} rows");
-Console.WriteLine($"Multi-symbol IN:         {multiSymbol.Count()} rows");
+filtered.Count()   // filtered (SAP + vol>3M)
+multiSymbol.Count()  // multi-symbol IN
 ```
 
     Filtered (SAP + vol>3M): 10 rows
@@ -1529,7 +1507,7 @@ dapperConn.Execute(@"
 var inserted = dapperConn.Execute(
     "INSERT INTO dbo.dapper_trades VALUES (@TradeId, @Ticker, @Side, @Quantity, @Price)",
     new { TradeId = "TRD_001", Ticker = "ASML.AS", Side = "BUY", Quantity = 100, Price = 685.40m });
-Console.WriteLine($"INSERT: {inserted} row");
+inserted  // INSERT
 
 // INSERT multiple rows — pass a list, Dapper executes once per item
 var batch = new[] {
@@ -1539,19 +1517,19 @@ var batch = new[] {
 };
 var batchInserted = dapperConn.Execute(
     "INSERT INTO dbo.dapper_trades VALUES (@TradeId, @Ticker, @Side, @Quantity, @Price)", batch);
-Console.WriteLine($"BATCH INSERT: {batchInserted} rows");
+batchInserted  // BATCH INSERT
 
 // UPDATE
 var updated = dapperConn.Execute(
     "UPDATE dbo.dapper_trades SET price = @Price WHERE trade_id = @TradeId",
     new { Price = 700.00m, TradeId = "TRD_001" });
-Console.WriteLine($"UPDATE: {updated} row");
+updated  // UPDATE
 
 // DELETE
 var deleted = dapperConn.Execute(
     "DELETE FROM dbo.dapper_trades WHERE trade_id = @TradeId",
     new { TradeId = "TRD_004" });
-Console.WriteLine($"DELETE: {deleted} row");
+deleted  // DELETE
 ```
 
     INSERT: 1 row
@@ -1818,7 +1796,7 @@ foreach (var stock in new[] { asml, sap, mc, tte })
 }
 db.SaveChanges();
 
-Console.WriteLine($"Seeded: {db.Stocks.Count()} stocks, {db.Prices.Count()} prices");
+$"{db.Stocks.Count()} stocks, {db.Prices.Count()} prices"  // seeded
 ```
 
     Seeded: 4 stocks, 120 prices
@@ -1912,20 +1890,17 @@ db.Trades.Add(new Trade
     TradeDate = DateTime.Today
 });
 db.SaveChanges();
-Console.WriteLine("INSERT: TRD_001 added");
 
 // UPDATE — modify a tracked entity + SaveChanges generates UPDATE
 var trade = db.Trades.First(t => t.TradeId == "TRD_001");
 trade.Price = 700.00m;
 db.SaveChanges();
-Console.WriteLine($"UPDATE: TRD_001 price -> {trade.Price}");
 
 // DELETE — Remove + SaveChanges generates DELETE
 db.Trades.Remove(trade);
 db.SaveChanges();
-Console.WriteLine("DELETE: TRD_001 removed");
 
-Console.WriteLine($"Trades remaining: {db.Trades.Count()}");
+db.Trades.Count()  // trades remaining
 ```
 
     INSERT: TRD_001 added
@@ -1973,9 +1948,8 @@ var techStocks = db.Stocks
     .AsNoTracking()
     .ToList();
 
-Console.WriteLine("=== LINQ query (InMemory) — FromSqlRaw requires relational provider ===");
 foreach (var s in techStocks)
-    Console.WriteLine($"  {s.Symbol,-10} {s.Name,-20} {s.Sector}");
+    $"  {s.Symbol,-10} {s.Name,-20} {s.Sector}"
 ```
 
     === LINQ query (InMemory) — FromSqlRaw requires relational provider ===
@@ -2072,7 +2046,6 @@ dkCmd.CommandText = @"
         volume BIGINT
     )";
 dkCmd.ExecuteNonQuery();
-Console.WriteLine("DuckDB connected + table created");
 ```
 
     DuckDB connected + table created
@@ -2109,7 +2082,7 @@ using (var reader = sqlCmd.ExecuteReader())
 }
 
 dkCmd.CommandText = "SELECT COUNT(*) FROM ohlcv";
-Console.WriteLine($"Loaded {dkCmd.ExecuteScalar()} rows from SQL Server");
+dkCmd.ExecuteScalar()  // rows loaded from SQL Server
 ```
 
     Loaded 66355 rows from SQL Server
@@ -2133,13 +2106,13 @@ dt
 // ExecuteScalar — returns a single value (COUNT, MAX, etc.)
 
 dkCmd.CommandText = "SELECT COUNT(*) FROM ohlcv";
-Console.WriteLine($"Row count:      {dkCmd.ExecuteScalar()}");
+dkCmd.ExecuteScalar()  // row count
 
 dkCmd.CommandText = "SELECT COUNT(DISTINCT symbol) FROM ohlcv";
-Console.WriteLine($"Distinct stocks: {dkCmd.ExecuteScalar()}");
+dkCmd.ExecuteScalar()  // distinct stocks
 
 dkCmd.CommandText = "SELECT MAX(close) FROM ohlcv";
-Console.WriteLine($"Max close:      {dkCmd.ExecuteScalar()}");
+dkCmd.ExecuteScalar()  // max close
 ```
 
     Row count:      66355
@@ -2170,7 +2143,7 @@ dt
 
 dkCmd.CommandText = "UPDATE ohlcv SET close = 999.99 WHERE symbol = 'SAP.DE' AND date = (SELECT MAX(date) FROM ohlcv WHERE symbol = 'SAP.DE')";
 dkCmd.Parameters.Clear();
-Console.WriteLine($"UPDATE: {dkCmd.ExecuteNonQuery()} row");
+dkCmd.ExecuteNonQuery()  // UPDATE
 
 // Verify
 var dt = new DataTable();
@@ -2189,13 +2162,13 @@ dt
 // DELETE
 
 dkCmd.CommandText = "SELECT COUNT(*) FROM ohlcv WHERE symbol = 'SAP.DE'";
-Console.WriteLine($"Before DELETE: {dkCmd.ExecuteScalar()} SAP.DE rows");
+dkCmd.ExecuteScalar()  // before DELETE: SAP.DE rows
 
 dkCmd.CommandText = "DELETE FROM ohlcv WHERE symbol = 'SAP.DE' AND date < '2023-01-01'";
-Console.WriteLine($"DELETE: {dkCmd.ExecuteNonQuery()} rows");
+dkCmd.ExecuteNonQuery()  // DELETE
 
 dkCmd.CommandText = "SELECT COUNT(*) FROM ohlcv WHERE symbol = 'SAP.DE'";
-Console.WriteLine($"After DELETE:  {dkCmd.ExecuteScalar()} SAP.DE rows");
+dkCmd.ExecuteScalar()  // after DELETE: SAP.DE rows
 ```
 
     Before DELETE: 1324 SAP.DE rows
@@ -2207,7 +2180,6 @@ Console.WriteLine($"After DELETE:  {dkCmd.ExecuteScalar()} SAP.DE rows");
 ```csharp
 // Schema inspection — same as PostgreSQL
 
-Console.WriteLine("=== DESCRIBE ===");
 var dt = new DataTable();
 dkCmd.CommandText = "DESCRIBE ohlcv";
 dkCmd.Parameters.Clear();
@@ -2369,7 +2341,7 @@ using (var appender = duck.CreateAppender("ohlcv_fast"))
 }
 sw.Stop();
 
-Console.WriteLine($"Appender: loaded {bulkCount} rows in {sw.ElapsedMilliseconds} ms");
+$"Appender: loaded {bulkCount} rows in {sw.ElapsedMilliseconds} ms"
 ```
 
     Appender: loaded 66355 rows in 62 ms
@@ -2436,17 +2408,17 @@ dt
 // INSERT
 var inserted = duck.Execute(
     "INSERT INTO ohlcv VALUES ('TEST.XX', '2025-01-01', 100.0, 105.0, 95.0, 102.0, 1000000)");
-Console.WriteLine($"Dapper INSERT: {inserted} row");
+inserted  // Dapper INSERT
 
 // UPDATE
 var updated = duck.Execute(
     "UPDATE ohlcv SET close = 110.0 WHERE symbol = 'TEST.XX'");
-Console.WriteLine($"Dapper UPDATE: {updated} row");
+updated  // Dapper UPDATE
 
 // DELETE
 var deleted = duck.Execute(
     "DELETE FROM ohlcv WHERE symbol = 'TEST.XX'");
-Console.WriteLine($"Dapper DELETE: {deleted} row");
+deleted  // Dapper DELETE
 ```
 
     Dapper INSERT: 1 row
@@ -2461,11 +2433,11 @@ Console.WriteLine($"Dapper DELETE: {deleted} row");
 var latest = duck.QueryFirst<DuckOhlcv>(
     "SELECT symbol AS Symbol, CAST(date AS VARCHAR) AS Date, close AS Close, volume AS Volume "
     + "FROM ohlcv WHERE symbol = 'ASML.AS' ORDER BY date DESC LIMIT 1");
-Console.WriteLine($"QueryFirst: {latest.Symbol} | {latest.Date} | {latest.Close:F2}");
+$"{latest.Symbol} | {latest.Date} | {latest.Close:F2}"  // QueryFirst
 
 // ExecuteScalar
 var count = duck.ExecuteScalar<long>("SELECT COUNT(*) FROM ohlcv");
-Console.WriteLine($"ExecuteScalar: {count} rows");
+count  // ExecuteScalar (rows)
 ```
 
     QueryFirst: ASML.AS | 2026-03-12 | 1190.80
@@ -2484,14 +2456,12 @@ dkCmd.CommandText = @"
     TO 'C:/Users/aperi/DEV/LANG/data/duckdb_export.parquet' (FORMAT PARQUET)";
 dkCmd.Parameters.Clear();
 dkCmd.ExecuteNonQuery();
-Console.WriteLine("Exported to duckdb_export.parquet");
 
 dkCmd.CommandText = @"
     COPY (SELECT symbol, COUNT(*) AS days, ROUND(AVG(close), 2) AS avg_close
           FROM ohlcv GROUP BY symbol ORDER BY avg_close DESC)
     TO 'C:/Users/aperi/DEV/LANG/data/duckdb_export.csv' (FORMAT CSV, HEADER)";
 dkCmd.ExecuteNonQuery();
-Console.WriteLine("Exported to duckdb_export.csv");
 ```
 
     Exported to duckdb_export.parquet
@@ -2508,7 +2478,7 @@ dkCmd.Parameters.Clear();
 dkCmd.ExecuteNonQuery();
 
 dkCmd.CommandText = "SELECT COUNT(*) FROM from_parquet";
-Console.WriteLine($"Loaded from Parquet: {dkCmd.ExecuteScalar()} rows");
+dkCmd.ExecuteScalar()  // loaded from Parquet
 
 // Show auto-detected schema
 var dt = new DataTable();
@@ -2530,7 +2500,7 @@ dkCmd.CommandText = "CREATE OR REPLACE TABLE ohlcv_from_csv AS SELECT * FROM 'C:
 dkCmd.ExecuteNonQuery();
 
 dkCmd.CommandText = "SELECT COUNT(*) FROM ohlcv_from_csv";
-Console.WriteLine($"Created from CSV: {dkCmd.ExecuteScalar()} rows");
+dkCmd.ExecuteScalar()  // created from CSV
 
 dkCmd.CommandText = "DESCRIBE ohlcv_from_csv";
 var dt = new DataTable();
@@ -2585,12 +2555,10 @@ Indexes are optional — the columnar engine is already fast for scans. DuckDB u
 dkCmd.CommandText = "CREATE INDEX idx_ohlcv_symbol ON ohlcv(symbol)";
 dkCmd.Parameters.Clear();
 dkCmd.ExecuteNonQuery();
-Console.WriteLine("Created: idx_ohlcv_symbol (ART index)");
 
 // Unique index
 dkCmd.CommandText = "CREATE UNIQUE INDEX idx_ohlcv_sym_date ON ohlcv(symbol, date)";
 dkCmd.ExecuteNonQuery();
-Console.WriteLine("Created: idx_ohlcv_sym_date (UNIQUE, composite)");
 ```
 
     Created: idx_ohlcv_symbol (ART index)
@@ -2619,13 +2587,12 @@ dt
 
 dkCmd.CommandText = "DROP INDEX IF EXISTS idx_ohlcv_symbol";
 dkCmd.ExecuteNonQuery();
-Console.WriteLine("Dropped: idx_ohlcv_symbol");
 
 // Verify
 dkCmd.CommandText = "SELECT index_name FROM duckdb_indexes()";
 using (var r = dkCmd.ExecuteReader())
     while (r.Read())
-        Console.WriteLine($"  Remaining: {r.GetString(0)}");
+        r.GetString(0)  // remaining index
 ```
 
     Dropped: idx_ohlcv_symbol
@@ -2739,17 +2706,14 @@ dt
 dkCmd.CommandText = "SET memory_limit = '4GB'";
 dkCmd.Parameters.Clear();
 dkCmd.ExecuteNonQuery();
-Console.WriteLine("Set memory_limit = 4GB");
 
 // Set thread count
 dkCmd.CommandText = "SET threads = 4";
 dkCmd.ExecuteNonQuery();
-Console.WriteLine("Set threads = 4");
 
 // Enable object cache for interactive notebook use
 dkCmd.CommandText = "SET enable_object_cache = true";
 dkCmd.ExecuteNonQuery();
-Console.WriteLine("Set enable_object_cache = true");
 
 // Verify
 dkCmd.CommandText = "SELECT name, value FROM duckdb_settings() WHERE name IN ('memory_limit', 'threads', 'enable_object_cache') ORDER BY name";
@@ -2772,11 +2736,9 @@ dt
 
 dkCmd.CommandText = "VACUUM";
 dkCmd.ExecuteNonQuery();
-Console.WriteLine("VACUUM: space reclaimed");
 
 dkCmd.CommandText = "VACUUM ANALYZE";
 dkCmd.ExecuteNonQuery();
-Console.WriteLine("VACUUM ANALYZE: stats updated + space reclaimed");
 
 // CHECKPOINT — force write of WAL to main storage (file-based DBs only)
 // dkCmd.CommandText = "CHECKPOINT";

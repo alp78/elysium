@@ -18,6 +18,10 @@ status: complete
 >
 > — **Eric S. Raymond**, *The Art of Unix Programming* (2003)
 
+> [!danger] Secrets Management
+>
+> Load API keys from `.env` for local development. In production, use GCP Secret Manager, AWS Secrets Manager, or Azure Key Vault. NEVER commit `.env` to git.
+
 ```python
 # Imports and API keys from .env file
 import asyncio
@@ -30,10 +34,7 @@ from concurrent.futures import ThreadPoolExecutor
 import aiohttp
 from dotenv import load_dotenv
 
-# Load API keys from .env file — keeps secrets out of code
-# .env file must be in the same directory (or parent) as the notebook.
-# In production: use secret managers (GCP Secret Manager, AWS Secrets, Azure Key Vault).
-# NEVER commit .env to git — add it to .gitignore.
+# Load API keys from .env file
 load_dotenv()
 
 TWELVE_DATA_KEY = os.environ.get('TWELVE_DATA_KEY', '')
@@ -176,16 +177,12 @@ print(f'\n  Fetched {len(results)} quotes in {elapsed:.2f}s (3 concurrent max)')
 
 Returns an iterator of futures that yields results in completion order (fastest first), not submission order. Use when you want to process results as they arrive rather than waiting for all to finish.
 
+> [!info] as_completed — Fastest First
+>
+> Wraps coroutines and yields futures in completion order, not submission order. The fastest API response is processed first, even if submitted last. Use when you want to start processing results immediately rather than waiting for all.
+
 ```python
 # asyncio.as_completed — process results as they arrive, not in submission order
-#
-# WHAT: wraps a list of coroutines and yields futures in completion order.
-#   The fastest API response is processed first, even if it was submitted last.
-#
-# WHY: in a pipeline, you want to feed results to the next stage ASAP.
-#   gather waits for the slowest; as_completed starts processing immediately.
-#
-# NOTE: uses Finnhub (separate rate limit from Twelve Data used in previous cell)
 
 async def fetch_quote_fh(session, symbol):
     """Fetch a quote from Finnhub — returns current price and percent change."""

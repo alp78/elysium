@@ -66,9 +66,9 @@ using System.Runtime.CompilerServices;
 
 async Task<Dictionary<string, object>> FetchDataAsync(string source, double delaySeconds)
 {
-    Console.WriteLine($"  [{DateTime.Now:HH:mm:ss}] Starting fetch: {source}");
+    $"  [{DateTime.Now:HH:mm:ss}] Starting fetch: {source}"
     await Task.Delay(TimeSpan.FromSeconds(delaySeconds));  // non-blocking delay
-    Console.WriteLine($"  [{DateTime.Now:HH:mm:ss}] Completed fetch: {source}");
+    $"  [{DateTime.Now:HH:mm:ss}] Completed fetch: {source}"
     return new Dictionary<string, object>
     {
         ["source"] = source,
@@ -82,13 +82,13 @@ async Task<Dictionary<string, object>> FetchDataAsync(string source, double dela
 ```csharp
 // Sequential vs concurrent — await one-by-one vs Task.WhenAll
 
-Console.WriteLine("=== Sequential (one after another) ===");
+// === Sequential (one after another) ===
 var sw = Stopwatch.StartNew();
 var r1 = await FetchDataAsync("users_api", 1.0);
 var r2 = await FetchDataAsync("events_api", 0.8);
 var r3 = await FetchDataAsync("products_api", 0.5);
 sw.Stop();
-Console.WriteLine($"  Total: {sw.Elapsed.TotalSeconds:F2}s (sum of all delays)");
+$"  Total: {sw.Elapsed.TotalSeconds:F2}s (sum of all delays)"
 ```
 
     === Sequential (one after another) ===
@@ -105,15 +105,14 @@ Console.WriteLine($"  Total: {sw.Elapsed.TotalSeconds:F2}s (sum of all delays)")
 ```csharp
 // Concurrent execution — start all tasks, await them together
 
-Console.WriteLine("\n=== Concurrent (Task.WhenAll) ===");
 sw.Restart();
 var t1 = FetchDataAsync("users_api", 1.0);      // start task (don't await yet)
 var t2 = FetchDataAsync("events_api", 0.8);      // start task
 var t3 = FetchDataAsync("products_api", 0.5);    // start task
 var results = await Task.WhenAll(t1, t2, t3);     // await ALL at once
 sw.Stop();
-Console.WriteLine($"  Total: {sw.Elapsed.TotalSeconds:F2}s (max of all delays)");
-Console.WriteLine($"  Results: {results.Length} dictionaries");
+$"  Total: {sw.Elapsed.TotalSeconds:F2}s (max of all delays)"
+$"  Results: {results.Length} dictionaries"
 ```
 
     
@@ -145,7 +144,7 @@ async Task<string> FetchTableAsync(string name, double delay, bool fail = false)
 ```csharp
 // Task.WhenAll with error handling — catch failures from parallel tasks
 
-Console.WriteLine("=== Task.WhenAll (error handling) ===");
+// === Task.WhenAll (error handling) ===
 var allTask = Task.WhenAll(
     FetchTableAsync("events", 0.3),
     FetchTableAsync("users", 0.2, fail: true),  // this one fails
@@ -160,7 +159,7 @@ catch
 {
     // allTask.Exception contains ALL errors (AggregateException)
     foreach (var ex in allTask.Exception!.Flatten().InnerExceptions)
-        Console.WriteLine($"  ERROR: {ex.Message}");
+        ex.Message  // ERROR
 }
 ```
 
@@ -172,7 +171,6 @@ catch
 ```csharp
 // Task.WhenAny — first to complete wins (racing replicas)
 
-Console.WriteLine("\n=== Task.WhenAny (first wins) ===");
 var tasks = new[]
 {
     FetchTableAsync("replica-us", 0.5),
@@ -181,7 +179,7 @@ var tasks = new[]
 };
 
 var fastest = await Task.WhenAny(tasks);
-Console.WriteLine($"  First to finish: {await fastest}");
+await fastest  // First to finish
 // Note: the other tasks are still running — they don't cancel automatically.
 // Use CancellationToken to cancel the rest (see next cell).
 ```
@@ -202,12 +200,12 @@ A CancellationToken is a cooperative cancellation mechanism — you pass it to a
 
 async Task<string> LongRunningExportAsync(string table, CancellationToken ct)
 {
-    Console.WriteLine($"  Starting export: {table}");
+    table  // Starting export
     for (int i = 0; i < 10; i++)
     {
         ct.ThrowIfCancellationRequested();  // check if cancelled
         await Task.Delay(500, ct);           // also accepts token (throws if cancelled)
-        Console.WriteLine($"  {table}: chunk {i + 1}/10");
+        $"  {table}: chunk {i + 1}/10"
     }
     return $"{table}: export complete";
 }
@@ -218,7 +216,7 @@ async Task<string> LongRunningExportAsync(string table, CancellationToken ct)
 ```csharp
 // Cancel after timeout — automatic cancellation with CancelAfter
 
-Console.WriteLine("=== CancellationToken (timeout) ===");
+// === CancellationToken (timeout) ===
 // CancelAfter: automatically cancel after specified time
 var cts = new CancellationTokenSource();
 cts.CancelAfter(TimeSpan.FromSeconds(2));  // auto-cancel after 2s
@@ -226,11 +224,11 @@ cts.CancelAfter(TimeSpan.FromSeconds(2));  // auto-cancel after 2s
 try
 {
     var result = await LongRunningExportAsync("huge_events", cts.Token);
-    Console.WriteLine($"  {result}");
+    $"  {result}"
 }
 catch (OperationCanceledException)
 {
-    Console.WriteLine("  Export cancelled after 2s timeout");
+    //   Export cancelled after 2s timeout
 }
 ```
 
@@ -246,7 +244,6 @@ catch (OperationCanceledException)
 ```csharp
 // Manual cancellation — cancel on demand from external trigger
 
-Console.WriteLine("\n=== Manual cancellation ===");
 var cts2 = new CancellationTokenSource();
 
 // Start the export
@@ -256,7 +253,7 @@ var exportTask = LongRunningExportAsync("daily_clicks", cts2.Token);
 _ = Task.Run(async () =>
 {
     await Task.Delay(1500);
-    Console.WriteLine("  [Supervisor] Cancelling export...");
+    //   [Supervisor] Cancelling export...
     cts2.Cancel();
 });
 
@@ -266,7 +263,7 @@ try
 }
 catch (OperationCanceledException)
 {
-    Console.WriteLine("  Export was manually cancelled");
+    //   Export was manually cancelled
 }
 ```
 
@@ -300,7 +297,7 @@ async Task<string> FetchWithLimitAsync(SemaphoreSlim sem, string url)
     }
 }
 
-Console.WriteLine("=== SemaphoreSlim (max 3 concurrent) ===");
+// === SemaphoreSlim (max 3 concurrent) ===
 var sem = new SemaphoreSlim(3);  // max 3 concurrent
 var sw = Stopwatch.StartNew();
 var tasks = Enumerable.Range(0, 10)
@@ -308,10 +305,10 @@ var tasks = Enumerable.Range(0, 10)
     .ToArray();
 var results = await Task.WhenAll(tasks);
 sw.Stop();
-Console.WriteLine($"  Fetched {results.Length} pages in {sw.Elapsed.TotalSeconds:F2}s");
+$"  Fetched {results.Length} pages in {sw.Elapsed.TotalSeconds:F2}s"
 foreach (var r in results.Take(3))
-    Console.WriteLine($"    {r}");
-Console.WriteLine($"    ... ({results.Length - 3} more)");
+    $"    {r}"
+$"    ... ({results.Length - 3} more)"
 ```
 
     === SemaphoreSlim (max 3 concurrent) ===
@@ -347,17 +344,16 @@ async Task<T> RetryWithBackoffAsync<T>(Func<Task<T>> action, int maxRetries = 5,
         catch (Exception ex) when (attempt < maxRetries - 1)
         {
             var delay = baseDelayMs * (int)Math.Pow(2, attempt);  // 100, 200, 400, 800...
-            Console.WriteLine($"  Attempt {attempt + 1} failed: {ex.Message}. Retrying in {delay}ms...");
+            $"  Attempt {attempt + 1} failed: {ex.Message}. Retrying in {delay}ms..."
             await Task.Delay(delay);
         }
     }
     throw new InvalidOperationException("Unreachable");
 }
 
-Console.WriteLine("\n=== Retry with Exponential Backoff ===");
 attemptCount = 0;
 var apiResult = await RetryWithBackoffAsync(() => FlakyApiAsync("/data/events"));
-Console.WriteLine($"  Success on attempt {attemptCount}: {apiResult}");
+$"  Success on attempt {attemptCount}: {apiResult}"
 ```
 
     
@@ -373,7 +369,6 @@ A Channel is a thread-safe async queue for passing data between producers and co
 ```csharp
 // Channel producer — writes events then completes the channel
 
-Console.WriteLine("\n=== Channel<T> (async producer-consumer) ===");
 var channel = Channel.CreateBounded<Dictionary<string, string>>(5);
 var processedCount = 0;
 
@@ -413,7 +408,7 @@ await Task.WhenAll(
     ConsumeAsync("worker-3", channel.Reader)
 );
 sw.Stop();
-Console.WriteLine($"  Processed {processedCount} events in {sw.Elapsed.TotalSeconds:F2}s with 3 workers");
+$"  Processed {processedCount} events in {sw.Elapsed.TotalSeconds:F2}s with 3 workers"
 ```
 
     
@@ -432,7 +427,7 @@ async IAsyncEnumerable<string> FetchPagesAsync(int totalPages, int itemsPerPage)
     for (int page = 1; page <= totalPages; page++)
     {
         await Task.Delay(100); // simulate network latency per page
-        Console.WriteLine($"  Fetching page {page}...");
+        $"  Fetching page {page}..."
         for (int i = 0; i < itemsPerPage; i++)
             yield return $"page{page}_item{i + 1}"; // yield one item at a time
     }
@@ -444,9 +439,9 @@ int count = 0;
 await foreach (var item in FetchPagesAsync(3, 2))
 {
     count++;
-    Console.WriteLine($"    Received: {item}");
+    item  // Received
 }
-Console.WriteLine($"  Total: {count} items in {sw.ElapsedMilliseconds}ms");
+$"  Total: {count} items in {sw.ElapsedMilliseconds}ms"
 ```
 
       Fetching page 1...
@@ -484,7 +479,7 @@ try
         collected.Add(n);
 }
 catch (OperationCanceledException) { }
-Console.WriteLine($"  Collected {collected.Count} items before cancellation: [{string.Join(", ", collected)}]");
+$"  Collected {collected.Count} items before cancellation: [{string.Join(", ", collected)}]"
 ```
 
       Collected 3 items before cancellation: [0, 1, 2]
@@ -494,11 +489,10 @@ Console.WriteLine($"  Collected {collected.Count} items before cancellation: [{s
 ```csharp
 // break disposes the enumerator — producer stops cleanly
 
-Console.WriteLine("\n  First 5 from paginated source:");
 count = 0;
 await foreach (var item in FetchPagesAsync(10, 3))
 {
-    Console.WriteLine($"    {item}");
+    $"    {item}"
     count++;
     if (count >= 5) break;
 }
@@ -547,21 +541,21 @@ var payloads = Enumerable.Range(0, 8)
     .ToArray();
 
 // Sequential
-Console.WriteLine("=== Sequential (single thread) ===");
+// === Sequential (single thread) ===
 var sw = Stopwatch.StartNew();
 var seqHashes = payloads.Select(ComputeHash).ToArray();
 var seqTime = sw.Elapsed;
-Console.WriteLine($"  {seqHashes.Length} hashes in {seqTime.TotalSeconds:F2}s");
+$"  {seqHashes.Length} hashes in {seqTime.TotalSeconds:F2}s"
 
 // Parallel with Task.Run
-Console.WriteLine($"\n=== Task.Run (thread pool, {Environment.ProcessorCount} cores) ===");
+$"\n=== Task.Run (thread pool, {Environment.ProcessorCount} cores) ==="
 sw.Restart();
 var parallelTasks = payloads.Select(p => Task.Run(() => ComputeHash(p))).ToArray();
 var parHashes = await Task.WhenAll(parallelTasks);
 var parTime = sw.Elapsed;
-Console.WriteLine($"  {parHashes.Length} hashes in {parTime.TotalSeconds:F2}s");
-Console.WriteLine($"  Speedup: {seqTime / parTime:F1}x");
-Console.WriteLine($"  Results match: {seqHashes.SequenceEqual(parHashes)}");
+$"  {parHashes.Length} hashes in {parTime.TotalSeconds:F2}s"
+$"  Speedup: {seqTime / parTime:F1}x"
+seqHashes.SequenceEqual(parHashes)  // Results match
 ```
 
     === Sequential (single thread) ===
@@ -577,7 +571,6 @@ Console.WriteLine($"  Results match: {seqHashes.SequenceEqual(parHashes)}");
 ```csharp
 // Parallel.ForEach — partition and process collection items in parallel
 
-Console.WriteLine("\n=== Parallel.ForEach ===");
 var hashResults = new string[payloads.Length];
 sw.Restart();
 Parallel.ForEach(
@@ -586,8 +579,8 @@ Parallel.ForEach(
     i => hashResults[i] = ComputeHash(payloads[i])
 );
 sw.Stop();
-Console.WriteLine($"  {hashResults.Length} hashes in {sw.Elapsed.TotalSeconds:F2}s (max 4 threads)");
-Console.WriteLine($"  Results match: {seqHashes.SequenceEqual(hashResults)}");
+$"  {hashResults.Length} hashes in {sw.Elapsed.TotalSeconds:F2}s (max 4 threads)"
+seqHashes.SequenceEqual(hashResults)  // Results match
 ```
 
     
@@ -600,7 +593,7 @@ Console.WriteLine($"  Results match: {seqHashes.SequenceEqual(hashResults)}");
 ```csharp
 // Parallel.ForEachAsync — async I/O with controlled concurrency
 
-Console.WriteLine("=== Parallel.ForEachAsync (max 3 concurrent) ===");
+// === Parallel.ForEachAsync (max 3 concurrent) ===
 var tables = Enumerable.Range(0, 10).Select(i => $"table_{i:D2}").ToArray();
 var fetchedTables = new System.Collections.Concurrent.ConcurrentBag<string>();
 
@@ -615,9 +608,9 @@ await Parallel.ForEachAsync(
     }
 );
 sw.Stop();
-Console.WriteLine($"  Fetched {fetchedTables.Count} tables in {sw.Elapsed.TotalSeconds:F2}s");
+$"  Fetched {fetchedTables.Count} tables in {sw.Elapsed.TotalSeconds:F2}s"
 foreach (var t in fetchedTables.Take(3))
-    Console.WriteLine($"    {t}");
+    $"    {t}"
 ```
 
     === Parallel.ForEachAsync (max 3 concurrent) ===
@@ -631,7 +624,6 @@ foreach (var t in fetchedTables.Take(3))
 ```csharp
 // PLINQ — parallel LINQ with AsParallel()
 
-Console.WriteLine("\n=== PLINQ (.AsParallel()) ===");
 var rawRecords = Enumerable.Range(0, 1_000_000)
     .Select(i => $"evt_{i:D7},user_{i % 100:D3},{i * 0.01:F2}")
     .ToArray();
@@ -645,7 +637,7 @@ var parsed = rawRecords
     .Where(r => r.Value > 50.0)
     .ToArray();
 sw.Stop();
-Console.WriteLine($"  Parsed {rawRecords.Length:N0} -> {parsed.Length:N0} filtered in {sw.Elapsed.TotalSeconds:F2}s");
+$"  Parsed {rawRecords.Length:N0} -> {parsed.Length:N0} filtered in {sw.Elapsed.TotalSeconds:F2}s"
 ```
 
 #### PLINQ vs sequential — speedup comparison
@@ -660,7 +652,7 @@ var seqParsed = rawRecords
     .Where(r => r.Value > 50.0)
     .ToArray();
 sw.Stop();
-Console.WriteLine($"  Sequential: {sw.Elapsed.TotalSeconds:F2}s  |  PLINQ was faster on large data");
+$"  Sequential: {sw.Elapsed.TotalSeconds:F2}s  |  PLINQ was faster on large data"
 ```
 
     
@@ -696,16 +688,16 @@ Console.WriteLine($"  Sequential: {sw.Elapsed.TotalSeconds:F2}s  |  PLINQ was fa
 
 #nullable enable
 // Basic threading
-Console.WriteLine("=== Basic Threads ===");
+// === Basic Threads ===
 var threadResults = new System.Collections.Concurrent.ConcurrentBag<string>();
 
 void WorkerMethod(object? state)
 {
     var (name, delay) = ((string, int))state!;
-    Console.WriteLine($"  [{Thread.CurrentThread.ManagedThreadId}] {name} starting");
+    $"  [{Thread.CurrentThread.ManagedThreadId}] {name} starting"
     Thread.Sleep(delay);  // BLOCKING sleep (unlike Task.Delay)
     threadResults.Add($"{name} done");
-    Console.WriteLine($"  [{Thread.CurrentThread.ManagedThreadId}] {name} finished");
+    $"  [{Thread.CurrentThread.ManagedThreadId}] {name} finished"
 }
 
 var threads = new List<Thread>();
@@ -720,7 +712,7 @@ foreach (var (name, delay) in new[] { ("fetch_users", 300), ("fetch_events", 500
 foreach (var t in threads)
     t.Join();
 
-Console.WriteLine($"  Results: [{string.Join(", ", threadResults)}]");
+$"  Results: [{string.Join(", ", threadResults)}]"
 ```
 
     === Basic Threads ===
@@ -750,15 +742,15 @@ void IncrementUnsafe()
         unsafeCounter++;  // NOT atomic: read, add, write — threads can interleave
 }
 
-Console.WriteLine("=== Race Condition (no lock) ===");
+// === Race Condition (no lock) ===
 unsafeCounter = 0;
 var unsafeThreads = Enumerable.Range(0, 4)
     .Select(_ => new Thread(IncrementUnsafe))
     .ToArray();
 foreach (var t in unsafeThreads) t.Start();
 foreach (var t in unsafeThreads) t.Join();
-Console.WriteLine($"  Expected: 400,000");
-Console.WriteLine($"  Got:      {unsafeCounter:N0}  {(unsafeCounter != 400_000 ? "(WRONG — race condition!)" : "(got lucky this time)")}");
+$"  Expected: 400,000"
+$"  Got:      {unsafeCounter:N0}  {(unsafeCounter != 400_000 ? "(WRONG — race condition!)" : "(got lucky this time)")}"
 ```
 
     === Race Condition (no lock) ===
@@ -784,15 +776,14 @@ void IncrementSafe()
     }
 }
 
-Console.WriteLine("\n=== With lock (safe) ===");
 safeCounter = 0;
 var safeThreads = Enumerable.Range(0, 4)
     .Select(_ => new Thread(IncrementSafe))
     .ToArray();
 foreach (var t in safeThreads) t.Start();
 foreach (var t in safeThreads) t.Join();
-Console.WriteLine($"  Expected: 400,000");
-Console.WriteLine($"  Got:      {safeCounter:N0}  (correct — lock prevents race)");
+$"  Expected: 400,000"
+$"  Got:      {safeCounter:N0}  (correct — lock prevents race)"
 ```
 
     
@@ -813,15 +804,14 @@ void IncrementAtomic()
         Interlocked.Increment(ref atomicCounter);  // atomic: guaranteed correct
 }
 
-Console.WriteLine("\n=== Interlocked (lock-free) ===");
 atomicCounter = 0;
 var atomicThreads = Enumerable.Range(0, 4)
     .Select(_ => new Thread(IncrementAtomic))
     .ToArray();
 foreach (var t in atomicThreads) t.Start();
 foreach (var t in atomicThreads) t.Join();
-Console.WriteLine($"  Expected: 400,000");
-Console.WriteLine($"  Got:      {atomicCounter:N0}  (correct — atomic operation)");
+$"  Expected: 400,000"
+$"  Got:      {atomicCounter:N0}  (correct — atomic operation)"
 ```
 
     
@@ -839,7 +829,7 @@ Console.WriteLine($"  Got:      {atomicCounter:N0}  (correct — atomic operatio
 ```csharp
 // ConcurrentDictionary — thread-safe aggregation with AddOrUpdate
 
-Console.WriteLine("=== ConcurrentDictionary (thread-safe aggregation) ===");
+// === ConcurrentDictionary (thread-safe aggregation) ===
 var eventCounts = new ConcurrentDictionary<string, int>();
 var eventTypes = new[] { "click", "view", "purchase", "signup" };
 
@@ -851,10 +841,9 @@ Parallel.For(0, 100_000, i =>
     eventCounts.AddOrUpdate(evtType, 1, (key, oldVal) => oldVal + 1);
 });
 
-Console.WriteLine("  Event counts (100K events across 4 types):");
 foreach (var kvp in eventCounts.OrderBy(k => k.Key))
-    Console.WriteLine($"    {kvp.Key}: {kvp.Value:N0}");
-Console.WriteLine($"  Total: {eventCounts.Values.Sum():N0}");
+    $"    {kvp.Key}: {kvp.Value:N0}"
+eventCounts.Values.Sum():N0  // Total
 ```
 
     === ConcurrentDictionary (thread-safe aggregation) ===
@@ -872,7 +861,6 @@ Console.WriteLine($"  Total: {eventCounts.Values.Sum():N0}");
 ```csharp
 // BlockingCollection — producer-consumer with blocking threads
 
-Console.WriteLine("\n=== BlockingCollection (producer-consumer) ===");
 var collection = new BlockingCollection<string>(boundedCapacity: 5);
 var processed = new ConcurrentBag<string>();
 var sw = Stopwatch.StartNew();
@@ -910,10 +898,10 @@ producerThread.Join();
 foreach (var c in consumers) c.Join();
 sw.Stop();
 
-Console.WriteLine($"  Processed {processed.Count} events in {sw.Elapsed.TotalSeconds:F2}s");
+$"  Processed {processed.Count} events in {sw.Elapsed.TotalSeconds:F2}s"
 // Count per worker
 foreach (var g in processed.GroupBy(p => p.Split(":")[0]).OrderBy(g => g.Key))
-    Console.WriteLine($"    {g.Key}: {g.Count()} events");
+    $"    {g.Key}: {g.Count()} events"
 ```
 
     
@@ -971,7 +959,7 @@ var readTasks = Enumerable.Range(0, 5).Select(i => Task.Run(() =>
     try
     {
         var status = cache.GetValueOrDefault("ETL_001", "unknown");
-        Console.WriteLine($"  Reader {i}: ETL_001 = {status}");
+        $"  Reader {i}: ETL_001 = {status}"
     }
     finally { rwLock.ExitReadLock(); } // ALWAYS release in finally
 }));
@@ -983,13 +971,13 @@ var writeTask = Task.Run(() =>
     try
     {
         cache["ETL_002"] = "completed";
-        Console.WriteLine("  Writer: updated ETL_002 → completed");
+        //   Writer: updated ETL_002 → completed
     }
     finally { rwLock.ExitWriteLock(); }
 });
 
 await Task.WhenAll(readTasks.Append(writeTask));
-Console.WriteLine($"  Final cache: {string.Join(", ", cache.Select(kv => $"{kv.Key}={kv.Value}"))}");
+$"  Final cache: {string.Join(", ", cache.Select(kv => $"{kv.Key}={kv.Value}"))}"
 ```
 
       Writer: updated ETL_002 → completed
@@ -1009,13 +997,13 @@ var gate = new ManualResetEventSlim(false); // starts closed — threads will bl
 
 var workers = Enumerable.Range(0, 3).Select(i => Task.Run(() =>
 {
-    Console.WriteLine($"  Worker {i}: waiting for signal...");
+    $"  Worker {i}: waiting for signal..."
     gate.Wait();  // blocks until gate.Set() is called — efficient OS-level wait
-    Console.WriteLine($"  Worker {i}: proceeding!");
+    $"  Worker {i}: proceeding!"
 })).ToArray();
 
 await Task.Delay(200);  // simulate initialization work
-Console.WriteLine("  Main: initialization done, signaling workers");
+//   Main: initialization done, signaling workers
 gate.Set();  // opens the gate — ALL 3 workers unblock simultaneously
 await Task.WhenAll(workers);
 
@@ -1029,18 +1017,17 @@ await Task.WhenAll(workers);
 //   With CountdownEvent: each worker signals, main waits — clean and efficient.
 //
 // WHEN TO USE: "wait for all N workers to report ready", phased initialization
-Console.WriteLine("\n  CountdownEvent:");
 var countdown = new CountdownEvent(3);  // wait for 3 signals
 
 var setupTasks = Enumerable.Range(0, 3).Select(i => Task.Run(async () =>
 {
     await Task.Delay(50 * (i + 1));  // simulate setup work
-    Console.WriteLine($"  Worker {i}: setup done");
+    $"  Worker {i}: setup done"
     countdown.Signal();  // decrement count by 1
 })).ToArray();
 
 countdown.Wait();  // blocks until count reaches 0 (all 3 workers signaled)
-Console.WriteLine("  Main: all 3 workers finished setup, proceeding");
+//   Main: all 3 workers finished setup, proceeding
 ```
 
       Worker 0: waiting for signal...
@@ -1073,15 +1060,15 @@ var phasedWorkers = Enumerable.Range(0, 3).Select(i => Task.Run(async () =>
 {
     // Phase 0: Extract — each worker does its own extract work
     await Task.Delay(50 * (i + 1)); // worker 0 finishes first, worker 2 last
-    Console.WriteLine($"  Worker {i}: extract done");
+    $"  Worker {i}: extract done"
     barrier.SignalAndWait(); // blocks until all 3 call SignalAndWait
 
     // Phase 1: Transform — no one gets here until ALL finished extract
     await Task.Delay(30 * (i + 1));
-    Console.WriteLine($"  Worker {i}: transform done");
+    $"  Worker {i}: transform done"
     barrier.SignalAndWait(); // blocks until all 3 finish transform
 
-    Console.WriteLine($"  Worker {i}: load done");
+    $"  Worker {i}: load done"
 })).ToArray();
 
 await Task.WhenAll(phasedWorkers);
@@ -1116,13 +1103,13 @@ try
     while (await timer.WaitForNextTickAsync(timerCts.Token))
     {
         ticks++;
-        Console.WriteLine($"  Tick {ticks} at {DateTime.Now:HH:mm:ss.fff}");
+        $"  Tick {ticks} at {DateTime.Now:HH:mm:ss.fff}"
         // In production: await FetchLatestDataAsync(); or await CheckQueueDepthAsync();
     }
 }
 catch (OperationCanceledException) { } // expected — timer stopped by cancellation
 
-Console.WriteLine($"  Timer stopped after {ticks} ticks");
+$"  Timer stopped after {ticks} ticks"
 timer.Dispose(); // release the timer
 ```
 

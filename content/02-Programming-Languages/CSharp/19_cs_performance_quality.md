@@ -45,13 +45,13 @@ int SlowSum(int n) {
 var sw = Stopwatch.StartNew();
 var result = SlowSum(1_000_000);
 sw.Stop();
-Console.WriteLine($"SlowSum(1M): {sw.ElapsedMilliseconds}ms, result={result}");
+$"SlowSum(1M): {sw.ElapsedMilliseconds}ms, result={result}"
 
 // --- High-resolution timing ---
 long start = Stopwatch.GetTimestamp();
 SlowSum(1_000_000);
 var elapsed = Stopwatch.GetElapsedTime(start);
-Console.WriteLine($"GetElapsedTime: {elapsed.TotalMilliseconds:F2}ms");
+$"GetElapsedTime: {elapsed.TotalMilliseconds:F2}ms"
 
 // --- Reusable timer helper ---
 T MeasureTime<T>(Func<T> action, string label = "") {
@@ -123,28 +123,28 @@ var list = new List<int>(100_000);
 for (int i = 0; i < 100_000; i++) list.Add(i);
 
 long after = GC.GetTotalMemory(false);
-Console.WriteLine($"List<int>(100K): {(after - before) / 1024.0:F0} KB allocated");
+$"List<int>(100K): {(after - before) / 1024.0:F0} KB allocated"
 
 // Compare: int[] vs List<int> vs int[]  preallocated
 GC.Collect(); before = GC.GetTotalMemory(true);
 var arr = new int[100_000];
 for (int i = 0; i < arr.Length; i++) arr[i] = i;
 after = GC.GetTotalMemory(false);
-Console.WriteLine($"int[100K]:       {(after - before) / 1024.0:F0} KB allocated");
+$"int[100K]: {(after - before) / 1024.0:F0} KB allocated"
 
 // String vs StringBuilder
 GC.Collect(); before = GC.GetTotalMemory(true);
 string s = "";
 for (int i = 0; i < 10_000; i++) s += i.ToString();
 after = GC.GetTotalMemory(false);
-Console.WriteLine($"\nString += (10K): {(after - before) / 1024.0:F0} KB (O(n²) allocations!)");
+$"String += (10K): {(after - before) / 1024.0:F0} KB (O(n²) allocations!)"
 
 GC.Collect(); before = GC.GetTotalMemory(true);
 var sb = new System.Text.StringBuilder();
 for (int i = 0; i < 10_000; i++) sb.Append(i);
 string result2 = sb.ToString();
 after = GC.GetTotalMemory(false);
-Console.WriteLine($"StringBuilder:   {(after - before) / 1024.0:F0} KB (O(n))");
+$"StringBuilder: {(after - before) / 1024.0:F0} KB (O(n))"
 ```
 
     List<int>(100K): 447 KB allocated
@@ -174,7 +174,7 @@ long before = GC.GetTotalMemory(true);
 var structArr = new PointStruct[100_000];
 for (int i = 0; i < structArr.Length; i++) structArr[i] = new PointStruct(i, i);
 long after = GC.GetTotalMemory(false);
-Console.WriteLine($"PointStruct[100K]: {(after - before) / 1024.0:F0} KB");
+$"PointStruct[100K]: {(after - before) / 1024.0:F0} KB"
 
 // Class array: each element is a heap allocation
 GC.Collect();
@@ -182,8 +182,8 @@ before = GC.GetTotalMemory(true);
 var classArr = new PointClass[100_000];
 for (int i = 0; i < classArr.Length; i++) classArr[i] = new PointClass(i, i);
 after = GC.GetTotalMemory(false);
-Console.WriteLine($"PointClass[100K]:  {(after - before) / 1024.0:F0} KB");
-Console.WriteLine("Struct is significantly smaller (no object header, no GC tracking).");
+$"PointClass[100K]: {(after - before) / 1024.0:F0} KB"
+// Struct is significantly smaller (no object header, no GC tracking)
 ```
 
     PointStruct[100K]: 789 KB
@@ -209,7 +209,7 @@ Console.WriteLine("Struct is significantly smaller (no object header, no GC trac
 
     // With Span (zero-copy view)
     Span<int> span = data.AsSpan(100, 100); // No allocation
-    Console.WriteLine($"Span slice: {span.Length} elements, first={span[0]}, last={span[^1]}");
+    $"Span slice: {span.Length} elements, first={span[0]}, last={span[^1]}"
 }
 
 // ReadOnlySpan for string parsing (no substring allocations)
@@ -217,14 +217,14 @@ Console.WriteLine("Struct is significantly smaller (no object header, no GC trac
     ReadOnlySpan<char> text = "2024-01-15T10:30:00".AsSpan();
     var datePart = text[..10];   // No string allocation
     var timePart = text[11..];   // No string allocation
-    Console.WriteLine($"Date: {datePart.ToString()}, Time: {timePart.ToString()}");
+    $"Date: {datePart.ToString()}, Time: {timePart.ToString()}"
 }
 
 // stackalloc: allocate on the stack
 {
     Span<int> stackData = stackalloc int[256];
     for (int i = 0; i < stackData.Length; i++) stackData[i] = i * i;
-    Console.WriteLine($"stackalloc: {stackData.Length} ints on the stack");
+    $"stackalloc: {stackData.Length} ints on the stack"
 }
 ```
 
@@ -255,7 +255,7 @@ var hashSet = new HashSet<int>(list);
 var dict = list.ToDictionary(x => x, x => x);
 var sorted = new SortedDictionary<int, int>(dict);
 
-Console.WriteLine($"Lookup of element {n-1}:");
+$"Lookup of element {n-1}:"
 MeasureTime(() => list.Contains(n - 1), "List (O(n))");
 MeasureTime(() => hashSet.Contains(n - 1), "HashSet (O(1))");
 MeasureTime(() => dict.ContainsKey(n - 1), "Dict (O(1))");
@@ -292,7 +292,7 @@ var pool = ArrayPool<int>.Shared;
 int[] rented = pool.Rent(1024); // May return larger array
 try {
     for (int i = 0; i < 1024; i++) rented[i] = i;
-    Console.WriteLine($"ArrayPool: rented {rented.Length} (requested 1024), no allocation!");
+    $"ArrayPool: rented {rented.Length} (requested 1024), no allocation!"
 } finally {
     pool.Return(rented); // Return to pool for reuse
 }
@@ -363,12 +363,12 @@ string email = "alice@example.com";  // Just a string, no validation
 // GOOD:
 
 var validEmail = new Email("alice@example.com");
-Console.WriteLine($"Valid email: {validEmail}");
+validEmail
 
 try {
     var invalid = new Email("not-an-email");
 } catch (ArgumentException ex) {
-    Console.WriteLine($"Caught: {ex.Message}");
+    ex.Message  // caught
 }
 ```
 
@@ -404,17 +404,17 @@ string? maybeName = null;
 string safeName = maybeName ?? "Unknown";
 int length = maybeName?.Length ?? 0;
 
-Console.WriteLine($"Safe name: {safeName}, length: {length}");
+$"{safeName}, length: {length}"  // safe name
 
 // Pattern matching for null checks (modern C#)
 object? obj = "hello";
 if (obj is string text) {
-    Console.WriteLine($"It's a string: {text.ToUpper()}");
+    text.ToUpper()  // it's a string
 }
 
 // Null-conditional chaining
 string? result = maybeName?.ToUpper()?.Trim();
-Console.WriteLine($"Chained: {result ?? "(null)"}");
+result ?? "(null)"  // chained
 ```
 
     Safe name: Unknown, length: 0
@@ -451,7 +451,7 @@ IEnumerable<int> filtered = data.Where(x => x % 2 == 0); // Deferred!
 // GOOD: materialize once
 var materialized = filtered.ToList(); // single pass
 var count = materialized.Count;       // O(1) on List
-Console.WriteLine($"Materialized: {count} items");
+count  // materialized items
 
 // LINQ vs manual loop
 MeasureTime(() => data.Where(x => x % 2 == 0).Select(x => (long)x * x).Sum(), "LINQ chain");

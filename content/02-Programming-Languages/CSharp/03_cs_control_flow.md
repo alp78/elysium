@@ -44,7 +44,7 @@ else if (score >= 60)
     grade = "D";
 else
     grade = "F";
-Console.WriteLine($"Score {score} → Grade {grade}");
+$"Score {score} → Grade {grade}"
 
 int x = 10;
 if (x > 0)
@@ -53,7 +53,7 @@ if (x > 0)
 // Ternary expression — single-line conditional returning a value
 int age = 20;
 string status = age >= 18 ? "adult" : "minor";
-Console.WriteLine($"age={age} → {status}");
+$"age={age} → {status}"
 ```
 
     Score 85 → Grade B
@@ -67,7 +67,7 @@ Console.WriteLine($"age={age} → {status}");
 ```csharp
 int val = 15;
 string label = val > 20 ? "high" : val > 10 ? "mid" : "low";
-Console.WriteLine($"val={val} → {label}");
+$"val={val} → {label}"
 ```
 
     val=15 → mid
@@ -146,7 +146,7 @@ string result = command switch
     "stop" or "quit" or "exit" => "Stopping...",   // 'or' pattern
     _ => $"Unknown: {command}"                       // _ is wildcard default
 };
-Console.WriteLine(result);
+result
 ```
 
     Stopping...
@@ -164,7 +164,7 @@ grade = score switch
     >= 60 => "D",
     _ => "F"
 };
-Console.WriteLine($"Score {score} → Grade {grade}");
+$"Score {score} → Grade {grade}"
 ```
 
     Score 85 → Grade B
@@ -216,7 +216,7 @@ string holiday = date switch
     { DayOfWeek: DayOfWeek.Saturday or DayOfWeek.Sunday }        => "Weekend",
     _                                                             => "Regular day"
 };
-Console.WriteLine($"{date:yyyy-MM-dd} → {holiday}");
+$"{date:yyyy-MM-dd} → {holiday}"
 ```
 
     2024-12-25 → Christmas
@@ -238,11 +238,11 @@ string? maybeNull = null;
 
 // ?? — default fallback
 string safe = maybeNull ?? "default";
-Console.WriteLine($"??:  {safe}");
+safe   // ??
 
 // ??= — assign only if null
 maybeNull ??= "fallback";
-Console.WriteLine($"??=: {maybeNull}");
+maybeNull   // ??
 
 // is — pattern matching: tests type AND extracts value in one expression
 if (maybeNull is string notNull)
@@ -430,7 +430,7 @@ enumerator.MoveNext(); Console.WriteLine($"  next: {enumerator.Current}");  // 1
 
 ```csharp
 var oneLevel = new[] { new[] { 1, 2 }, new[] { 3, 4 }, new[] { 5, 6 } };
-Console.WriteLine($"SelectMany (1 level): [{string.Join(", ", oneLevel.SelectMany(x => x))}]");
+string.Join(", ", oneLevel.SelectMany(x => x))   // SelectMany (1 level)
 // Does NOT work for deep nesting — SelectMany only peels one layer
 ```
 
@@ -459,12 +459,12 @@ List<int> FlattenIter(object[] input)
     }
     return result;
 }
-Console.WriteLine($"Iterative flatten:    [{string.Join(", ", FlattenIter(nested))}]");
+string.Join(", ", FlattenIter(nested))   // Iterative flatten
 
 // FlatLinq — recursive SelectMany; compact but still uses the call stack
 IEnumerable<int> FlatLinq(IEnumerable<object> items) =>
     items.SelectMany(item => item is object[] sub ? FlatLinq(sub) : new[] { (int)item });
-Console.WriteLine($"LINQ recursive:       [{string.Join(", ", FlatLinq(nested))}]");
+string.Join(", ", FlatLinq(nested))   // LINQ recursive
 ```
 
     Iterative flatten:    [1, 2, 3, 4, 5, 6, 7]
@@ -476,12 +476,12 @@ LINQ queries are lazy — nothing executes until enumerated (`foreach`, `ToList`
 
 ```csharp
 var squaresList = Enumerable.Range(0, 10).Select(x => x * x).ToList();
-Console.WriteLine($"Eager list: [{string.Join(", ", squaresList)}]");
+string.Join(", ", squaresList)   // Eager list
 
 // Lazy: without .ToList() — values computed on demand during iteration
 var squaresLazy = Enumerable.Range(0, 10).Select(x => x * x);
-Console.WriteLine($"Lazy type:  {squaresLazy.GetType().Name}");
-Console.WriteLine($"As list:    [{string.Join(", ", squaresLazy)}]");
+squaresLazy.GetType().Name   // Lazy type
+string.Join(", ", squaresLazy)   // As list
 ```
 
     Eager list: [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
@@ -501,7 +501,7 @@ IEnumerable<int> TakeWhilePositive(int[] arr)
         yield return n;
     }
 }
-Console.WriteLine($"TakeWhile: [{string.Join(", ", TakeWhilePositive(new[] { 3, 7, -2, 5 }))}]");
+string.Join(", ", TakeWhilePositive(new[] { 3, 7, -2, 5 }))   // TakeWhile
 ```
 
     TakeWhile: [3, 7]
@@ -523,7 +523,7 @@ IEnumerable<int> Flatten(IEnumerable<object> nested)
     }
 }
 var nestedArr = new object[] { 1, new object[] { 2, 3 }, new object[] { 4, new object[] { 5, 6 } }, 7 };
-Console.WriteLine($"Flatten: [{string.Join(", ", Flatten(nestedArr))}]");
+string.Join(", ", Flatten(nestedArr))   // Flatten
 ```
 
     Flatten: [1, 2, 3, 4, 5, 6, 7]
@@ -547,21 +547,21 @@ Console.WriteLine($"Flatten: [{string.Join(", ", Flatten(nestedArr))}]");
 ```csharp
 // Select — transforms each element (map)
 var squares = Enumerable.Range(0, 10).Select(x => x * x).ToList();
-Console.WriteLine($"Squares:  [{string.Join(", ", squares)}]");
+string.Join(", ", squares)   // Squares
 
 // Where — keeps only elements matching a condition (filter)
 var evens = Enumerable.Range(0, 20).Where(x => x % 2 == 0).ToList();
-Console.WriteLine($"Evens:    [{string.Join(", ", evens)}]");
+string.Join(", ", evens)   // Evens
 
 // Chaining — pipe results through multiple operations
 var words = new[] { "hello", "world", "csharp", "is", "great" };
 var longUpper = words.Where(w => w.Length > 3).Select(w => w.ToUpper());
-Console.WriteLine($"Long upper: [{string.Join(", ", longUpper)}]");
+string.Join(", ", longUpper)   // Long upper
 
 // SelectMany — flattens one level of nesting (nested loop in one call)
 var matrix = new[] { new[] { 1, 2, 3 }, new[] { 4, 5, 6 }, new[] { 7, 8, 9 } };
 var flat = matrix.SelectMany(row => row).ToList();
-Console.WriteLine($"Flat:     [{string.Join(", ", flat)}]");
+string.Join(", ", flat)   // Flat
 ```
 
     Squares:  [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
@@ -581,11 +581,11 @@ var queryResult = from w in words
                   where w.Length > 3
                   orderby w.Length
                   select w.ToUpper();
-Console.WriteLine($"Query:    [{string.Join(", ", queryResult)}]");
+string.Join(", ", queryResult)   // Query
 
 // Method syntax — fluent chaining of extension methods (most common style)
 var methodResult = words.Where(w => w.Length > 3).OrderBy(w => w.Length).Select(w => w.ToUpper());
-Console.WriteLine($"Method:   [{string.Join(", ", methodResult)}]");
+string.Join(", ", methodResult)   // Method
 ```
 
     Query:    [HELLO, WORLD, GREAT, CSHARP]
@@ -603,17 +603,17 @@ Console.WriteLine($"Method:   [{string.Join(", ", methodResult)}]");
 
 ```csharp
 var squaresDict = Enumerable.Range(0, 6).ToDictionary(x => x, x => x * x);
-Console.WriteLine($"Squares dict: {string.Join(", ", squaresDict.Select(kv => $"{kv.Key}:{kv.Value}"))}");
+string.Join(", ", squaresDict.Select(kv => $"{kv.Key}:{kv.Value}"))   // Squares dict
 
 // Filter dict — Where on a dictionary yields KeyValuePair<K,V>; re-materialize with ToDictionary
 var scores = new Dictionary<string, int> { ["Alice"] = 85, ["Bob"] = 92, ["Charlie"] = 78, ["Diana"] = 95 };
 var passed = scores.Where(kv => kv.Value >= 80).ToDictionary(kv => kv.Key, kv => kv.Value);
-Console.WriteLine($"Passed:       {string.Join(", ", passed.Select(kv => $"{kv.Key}:{kv.Value}"))}");
+string.Join(", ", passed.Select(kv => $"{kv.Key}:{kv.Value}"))   // Passed
 
 // ToHashSet — deduplicated collection, O(1) lookup
 var words = new[] { "hello", "world", "csharp", "is", "great" };
 var uniqueLengths = words.Select(w => w.Length).ToHashSet();
-Console.WriteLine($"Unique lengths: [{string.Join(", ", uniqueLengths)}]");
+string.Join(", ", uniqueLengths)   // Unique lengths
 ```
 
     Squares dict: 0:0, 1:1, 2:4, 3:9, 4:16, 5:25
@@ -632,18 +632,18 @@ Console.WriteLine($"Unique lengths: [{string.Join(", ", uniqueLengths)}]");
 ```csharp
 var nums = new[] { 1, 2, 3, 4, 5 };
 int total = nums.Aggregate(0, (acc, x) => acc + x);
-Console.WriteLine($"Sum:     {total}");
+total   // Sum
 int product = nums.Aggregate(1, (acc, x) => acc * x);
-Console.WriteLine($"Product: {product}");
+product   // Product
 
 // Built-in aggregations — preferred for common operations
-Console.WriteLine($"Sum():   {nums.Sum()}");
-Console.WriteLine($"Max():   {nums.Max()}");
-Console.WriteLine($"Min():   {nums.Min()}");
-Console.WriteLine($"All():   {nums.All(x => x > 0)}");     // true if ALL match
-Console.WriteLine($"Any():   {nums.Any(x => x > 3)}");     // true if ANY match
-Console.WriteLine($"Count(): {nums.Count(x => x > 2)}");
-Console.WriteLine($"Average:{nums.Average()}");
+nums.Sum()   // Sum()
+nums.Max()   // Max()
+nums.Min()   // Min()
+nums.All(x => x > 0)   // All()
+nums.Any(x => x > 3)   // Any()
+nums.Count(x => x > 2)   // Count()
+nums.Average()   // Average
 ```
 
     Sum:     15
@@ -669,10 +669,10 @@ Console.WriteLine($"Average:{nums.Average()}");
 
 ```csharp
 var names = new[] { "Charlie", "Alice", "Bob", "Diana" };
-Console.WriteLine($"Alphabetical:  [{string.Join(", ", names.OrderBy(n => n))}]");
-Console.WriteLine($"By length:     [{string.Join(", ", names.OrderBy(n => n.Length))}]");
-Console.WriteLine($"Descending:    [{string.Join(", ", names.OrderByDescending(n => n))}]");
-Console.WriteLine($"By last char:  [{string.Join(", ", names.OrderBy(n => n[^1]))}]");
+string.Join(", ", names.OrderBy(n => n))   // Alphabetical
+string.Join(", ", names.OrderBy(n => n.Length))   // By length
+string.Join(", ", names.OrderByDescending(n => n))   // Descending
+string.Join(", ", names.OrderBy(n => n[^1]))   // By last char
 ```
 
     Alphabetical:  [Alice, Bob, Charlie, Diana]
@@ -699,7 +699,7 @@ var result = Enumerable.Range(1, 20)
     .OrderByDescending(x => x)          // sort descending
     .Take(3)                            // first 3
     .ToList();                          // materialize — executes the entire chain
-Console.WriteLine($"Chained: [{string.Join(", ", result)}]");
+string.Join(", ", result)   // Chained
 ```
 
     Chained: [400, 324, 256]
@@ -725,26 +725,26 @@ IEnumerable<int> Naturals(int start = 0)
         start++;
     }
 }
-Console.WriteLine($"First 5 naturals: [{string.Join(", ", Naturals().Take(5))}]");
-Console.WriteLine($"From 10:          [{string.Join(", ", Naturals(10).Take(5))}]");
+string.Join(", ", Naturals().Take(5))   // First 5 naturals
+string.Join(", ", Naturals(10).Take(5))   // From 10
 
 // Range — generates a sequence of consecutive integers
-Console.WriteLine($"Range:          [{string.Join(", ", Enumerable.Range(0, 5))}]");
+string.Join(", ", Enumerable.Range(0, 5))   // Range
 
 // Select — transforms each element with a lambda
-Console.WriteLine($"Select (map):   [{string.Join(", ", new[] { "a", "b" }.Select(s => s.ToUpper()))}]");
+string.Join(", ", new[] { "a", "b" }.Select(s => s.ToUpper()))   // Select (map)
 
 // Where — keeps only elements matching a condition
-Console.WriteLine($"Where (filter): [{string.Join(", ", new[] { 1, 2, 3, 4 }.Where(x => x > 2))}]");
+string.Join(", ", new[] { 1, 2, 3, 4 }.Where(x => x > 2))   // Where (filter)
 
 // Reverse — reverses the order of elements
-Console.WriteLine($"Reverse:        [{string.Join(", ", new[] { 1, 2, 3 }.Reverse())}]");
+string.Join(", ", new[] { 1, 2, 3 }.Reverse())   // Reverse
 
 // Concat — appends one sequence to another
-Console.WriteLine($"Concat (chain): [{string.Join(", ", new[] { 1, 2 }.Concat(new[] { 3, 4 }))}]");
+string.Join(", ", new[] { 1, 2 }.Concat(new[] { 3, 4 }))   // Concat (chain)
 
 // Repeat — produces a single value repeated n times
-Console.WriteLine($"Repeat:         [{string.Join(", ", Enumerable.Repeat("x", 3))}]");
+string.Join(", ", Enumerable.Repeat("x", 3))   // Repeat
 ```
 
     First 5 naturals: [0, 1, 2, 3, 4]

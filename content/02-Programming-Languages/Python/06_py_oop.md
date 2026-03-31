@@ -149,9 +149,11 @@ print(f"radius: {c.radius}")                     # calls getter (no parentheses!
 print(f"area:   {c.area:.2f}")                    # computed, read-only
 c.radius = 10                                     # calls setter (validates)
 print(f"new radius: {c.radius}")
-# c.radius = -1  # ValueError!
-# c.area = 100   # AttributeError! No setter defined
 ```
+
+> [!info] Property Validation
+>
+> Setters with validation raise exceptions for invalid values. Read-only properties (no setter) raise `AttributeError` on assignment.
 
     radius: 5
     area:   78.54
@@ -643,47 +645,31 @@ print(f"Dataclass typo: TypeError at creation time")
 
 #### Autocomplete, refactoring, and type safety
 
-```python
-# Autocomplete, refactoring, and type safety — IDE benefits of dataclasses
+> [!tip] Dataclass IDE Advantages Over Dict
+>
+> - **Autocomplete:** Dict keys must be memorized. Dataclass fields show on `.` in the IDE.
+> - **Refactoring:** Renaming a dict key requires search-and-replace across all files — miss one and it's a runtime error in production. Renaming a dataclass field highlights every broken usage instantly.
+> - **Self-documenting:** `def transform(record: Order)` tells the reader exactly what fields are available without reading docs.
 
+```python
 def transform_dict(record: dict) -> dict:
-    # What keys does record have? Must read docs or trace the code.
-    return record
+    return record  # what keys does record have? Must read docs or trace the code
 
 def transform_typed(record: Order) -> Order:
-    # IDE shows: Order has .customer_id, .amount — self-documenting
-    return record
-
-print("Dict:      no autocomplete, must memorize keys")
-print("Dataclass: IDE shows all fields on '.'")
-print("Dict:      search-and-replace 'customer_id' strings across all files")
-print("           miss one? Runtime error in production")
-print("Dataclass: rename the field → IDE highlights every broken usage")
+    return record  # IDE shows: Order has .customer_id, .amount
 ```
-
-    Dict:      no autocomplete, must memorize keys
-    Dataclass: IDE shows all fields on '.'
-    Dict:      search-and-replace 'customer_id' strings across all files
-               miss one? Runtime error in production
-    Dataclass: rename the field → IDE highlights every broken usage
 
 #### Dict — no validation
 
+> [!warning] Dict Accepts Any Garbage
+>
+> - **Dict:** `{"customer_id": "not_a_number", "amount": "free"}` — no error at any point.
+> - **Dataclass:** type hints help the IDE catch type mismatches, but no runtime enforcement.
+> - **Pydantic:** runtime validation that auto-converts valid data and rejects bad data with clear error messages.
+
 ```python
-# Dict vs dataclass — dicts have no type validation
-
 bad_dict = {"customer_id": "not_a_number", "amount": "free"}  # no error!
-
-# Dataclass — at least type hints help IDE catch it
-# With Pydantic — actual runtime validation:
-print("Dict:      any garbage in, no error")
-print("Dataclass: type hints + IDE catch mistakes")
-print("Pydantic:  runtime validation (auto-converts and rejects bad data)")
 ```
-
-    Dict:      any garbage in, no error
-    Dataclass: type hints + IDE catch mistakes
-    Pydantic:  runtime validation (auto-converts and rejects bad data)
 
 #### When to use what
 

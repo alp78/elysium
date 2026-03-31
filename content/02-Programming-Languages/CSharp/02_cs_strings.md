@@ -32,8 +32,8 @@ using System.Text.RegularExpressions;
 // Double quotes only for strings, single quotes for char
 string s1 = "hello";
 char c1 = 'A';                // single char — NOT a string
-Console.WriteLine($"String:         \"{s1}\"");
-Console.WriteLine($"Char:           '{c1}' (type: {c1.GetType().Name})");
+s1   // String: \"\"
+$"Char:           '{c1}' (type: {c1.GetType().Name})"
 ```
 
     String:         "hello"
@@ -46,9 +46,9 @@ Console.WriteLine($"Char:           '{c1}' (type: {c1.GetType().Name})");
 
 string s2 = @"C:\Users\new\test";
 string s3 = "C:\\Users\\new\\test";
-Console.WriteLine($"Verbatim:       {s2}");
-Console.WriteLine($"Escaped:        {s3}");
-Console.WriteLine($"Same? {s2 == s3}");
+s2   // Verbatim
+s3   // Escaped
+s2 == s3   // Same?
 ```
 
     Verbatim:       C:\Users\new\test
@@ -63,14 +63,14 @@ Console.WriteLine($"Same? {s2 == s3}");
 string s4 = @"This is
 a multiline
 string";
-Console.WriteLine($"Verbatim multiline:\n{s4}");
+s4   // Verbatim multiline:\n
 
 // Raw string literals (C# 11+) — triple-quoted; indentation is trimmed from the closing delimiter
 string s5 = """
     This is a
     raw string literal
     """;
-Console.WriteLine($"Raw string literal:\n{s5}");
+s5   // Raw string literal:\n
 ```
 
     Verbatim multiline:
@@ -86,14 +86,14 @@ Console.WriteLine($"Raw string literal:\n{s5}");
 ```csharp
 #nullable enable
 // Type-to-string conversion — ToString(), Convert.ToString(), and $""
-Console.WriteLine($"42.ToString():      '{42.ToString()}'");
-Console.WriteLine($"3.14.ToString():    '{3.14.ToString()}'");
-Console.WriteLine($"true.ToString():    '{true.ToString()}'");
-Console.WriteLine($"Convert.ToString(): '{Convert.ToString(42)}'");
+42.ToString()
+3.14.ToString()
+true.ToString()
+Convert.ToString(42)   // Convert.ToString()
 
 // Null-safe conversion — ?. returns null, ?? provides fallback
 object? obj = null;
-Console.WriteLine($"obj?.ToString():    '{obj?.ToString() ?? "(null)"}'");
+obj?.ToString() ?? "(null)"   // obj?.ToString()
 ```
 
     42.ToString():      '42'
@@ -107,9 +107,9 @@ Console.WriteLine($"obj?.ToString():    '{obj?.ToString() ?? "(null)"}'");
 ```csharp
 // String repetition and concatenation — no * operator in C#
 
-Console.WriteLine($"new string('*', 5):  '{new string('*', 5)}'");
-Console.WriteLine($"string.Concat(Enumerable.Repeat(\"ha\", 3)): '{string.Concat(Enumerable.Repeat("ha", 3))}'");
-Console.WriteLine($"\"hello\" + \" \" + \"world\": '{"hello" + " " + "world"}'");
+new string('*', 5)
+string.Concat(Enumerable.Repeat("ha", 3))
+"hello" + " " + "world"
 ```
 
     new string('*', 5):  '*****'
@@ -122,14 +122,14 @@ Console.WriteLine($"\"hello\" + \" \" + \"world\": '{"hello" + " " + "world"}'")
 // Empty string and null checks — three distinct states
 
 string empty = "";
-Console.WriteLine($"empty == \"\":       {empty == ""}");
-Console.WriteLine($"string.Empty:      \"{string.Empty}\"");
-Console.WriteLine($"empty.Length:       {empty.Length}");
-Console.WriteLine($"string.IsNullOrEmpty(\" \"): {string.IsNullOrEmpty(" ")}");
-Console.WriteLine($"string.IsNullOrEmpty(\"\"): {string.IsNullOrEmpty("")}");
-Console.WriteLine($"string.IsNullOrEmpty(null): {string.IsNullOrEmpty(null)}");
-Console.WriteLine($"string.IsNullOrWhiteSpace(\"  \"): {string.IsNullOrWhiteSpace("  ")}");
-Console.WriteLine($"string.IsNullOrWhiteSpace(\"\"): {string.IsNullOrWhiteSpace("")}");
+empty == ""
+string.Empty   // string.Empty: \"\"
+empty.Length
+string.IsNullOrEmpty(" ")
+string.IsNullOrEmpty("")
+string.IsNullOrEmpty(null)
+string.IsNullOrWhiteSpace("  ")
+string.IsNullOrWhiteSpace("")
 ```
 
     empty == "":       True
@@ -149,7 +149,7 @@ Console.WriteLine($"string.IsNullOrWhiteSpace(\"\"): {string.IsNullOrWhiteSpace(
 string s = "hello";
 // s[0] = 'H';  // Compile error! Strings are immutable
 s = 'H' + s.Substring(1);  // must create a new string
-Console.WriteLine($"Modified: {s}");
+s   // Modified
 ```
 
     Modified: Hello
@@ -170,15 +170,15 @@ Console.WriteLine($"Modified: {s}");
 string s = "Hello, World!";
 //           0123456789...
 
-Console.WriteLine($"s[0]:     '{s[0]}'");        // H (returns char)
-Console.WriteLine($"s[1]:     '{s[1]}'");        // e
-Console.WriteLine($"s[^1]:    '{s[^1]}'");       // ! (last char — ^1 is Index from end)
-Console.WriteLine($"s[^2]:    '{s[^2]}'");       // d (second to last)
-Console.WriteLine($"s[0..5]:  '{s[0..5]}'");     // Hello (stop is exclusive)
-Console.WriteLine($"s[..5]:   '{s[..5]}'");      // Hello (start defaults to 0)
-Console.WriteLine($"s[7..]:   '{s[7..]}'");      // World! (stop defaults to end)
-Console.WriteLine($"s[^6..]:  '{s[^6..]}'");     // orld! (from end)
-Console.WriteLine($"s[7..12]: '{s[7..12]}'");    // World
+s[0]
+s[1]
+s[^1]
+s[^2]
+s[0..5]
+s[..5]
+s[7..]
+s[^6..]
+s[7..12]
 ```
 
     s[0]:     'H'
@@ -196,17 +196,17 @@ Console.WriteLine($"s[7..12]: '{s[7..12]}'");    // World
 ```csharp
 // Substring and stride — older API and LINQ-based character stepping
 
-Console.WriteLine($"Substring(7):    '{s.Substring(7)}'");      // World!
-Console.WriteLine($"Substring(7,5):  '{s.Substring(7, 5)}'");    // World
+s.Substring(7)   // Substring(7)
+s.Substring(7, 5)   // Substring(7,5)
 
 // No step/stride — use LINQ or Array.Reverse for every-other or reversed
-Console.WriteLine($"Every 2nd:  '{new string(s.Where((c, i) => i % 2 == 0).ToArray())}'");
-Console.WriteLine($"Reversed:   '{new string(s.Reverse().ToArray())}'");
+new string(s.Where((c, i) => i % 2 == 0).ToArray())   // Every 2nd
+new string(s.Reverse().ToArray())   // Reversed
 
 // Or use Array.Reverse
 char[] arr = s.ToCharArray();
 Array.Reverse(arr);
-Console.WriteLine($"Reversed:   '{new string(arr)}'");
+new string(arr)   // Reversed
 ```
 
     Substring(7):    'World!'
@@ -219,9 +219,6 @@ Console.WriteLine($"Reversed:   '{new string(arr)}'");
 
 ```csharp
 // Out-of-range access — exception types for index vs range
-
-Console.WriteLine("s[100]    → IndexOutOfRangeException");
-Console.WriteLine("s[0..100] → ArgumentOutOfRangeException (range must be within bounds)");
 ```
 
     s[100]    → IndexOutOfRangeException
@@ -232,10 +229,8 @@ Console.WriteLine("s[0..100] → ArgumentOutOfRangeException (range must be with
 ```csharp
 // Character iteration — foreach yields each char in the string
 
-Console.Write("Chars: ");
 foreach (char ch in s[..5])
     Console.Write($"{ch} ");
-Console.WriteLine();
 ```
 
     Chars: H e l l o
@@ -245,7 +240,6 @@ Console.WriteLine();
 ```csharp
 // Enumerated iteration — LINQ Select with index for (char, index) pairs
 
-Console.WriteLine("Enumerated (LINQ):");
 foreach (var (ch, i) in s[..5].Select((c, i) => (c, i)))
     Console.WriteLine($"  [{i}] = '{ch}'");
 ```
@@ -262,7 +256,6 @@ foreach (var (ch, i) in s[..5].Select((c, i) => (c, i)))
 ```csharp
 // For-loop iteration — classic index-based character access
 
-Console.WriteLine("Enumerated (for loop):");
 for (int i = 0; i < 5; i++)
     Console.WriteLine($"  [{i}] = '{s[i]}'");
 ```
@@ -295,10 +288,10 @@ for (int i = 0; i < 5; i++)
 string s = "  Hello, World!  ";
 
 // Case methods — ToUpper, ToLower, ToTitleCase (via TextInfo); no built-in swapcase or casefold
-Console.WriteLine($"ToUpper():     '{"hello world".ToUpper()}'");
-Console.WriteLine($"ToLower():     '{"HELLO WORLD".ToLower()}'");
+"hello world".ToUpper()   // ToUpper()
+"HELLO WORLD".ToLower()   // ToLower()
 // No built-in Title Case — use TextInfo
-Console.WriteLine($"ToTitleCase(): '{CultureInfo.CurrentCulture.TextInfo.ToTitleCase("hello world")}'");
+CultureInfo.CurrentCulture.TextInfo.ToTitleCase("hello world")   // ToTitleCase()
 // No swapcase or casefold — must implement manually
 ```
 
@@ -311,14 +304,14 @@ Console.WriteLine($"ToTitleCase(): '{CultureInfo.CurrentCulture.TextInfo.ToTitle
 ```csharp
 // Whitespace and padding — Trim, PadLeft, PadRight
 
-Console.WriteLine($"Trim():        '{s.Trim()}'");           // both sides
-Console.WriteLine($"TrimStart():   '{s.TrimStart()}'");      // left only
-Console.WriteLine($"TrimEnd():     '{s.TrimEnd()}'");        // right only
-Console.WriteLine($"Trim('!'):     '{"Hello!!".Trim('!')}'");  // trim specific chars
-Console.WriteLine($"PadLeft(20):   '{"hello".PadLeft(20)}'");
-Console.WriteLine($"PadRight(20):  '{"hello".PadRight(20)}'");
-Console.WriteLine($"PadLeft(20,'*'):'{"hello".PadLeft(20, '*')}'");
-Console.WriteLine($"PadLeft(8,'0'):'{"42".PadLeft(8, '0')}'");      // zero-pad to fixed width
+s.Trim()   // Trim()
+s.TrimStart()   // TrimStart()
+s.TrimEnd()   // TrimEnd()
+"Hello!!".Trim('!')   // Trim('!')
+"hello".PadLeft(20)   // PadLeft(20)
+"hello".PadRight(20)   // PadRight(20)
+"hello".PadLeft(20, '*')   // PadLeft(20,'*')
+"42".PadLeft(8, '0')   // PadLeft(8,'0')
 ```
 
     Trim():        'Hello, World!'
@@ -335,19 +328,19 @@ Console.WriteLine($"PadLeft(8,'0'):'{"42".PadLeft(8, '0')}'");      // zero-pad 
 ```csharp
 // Character and string checks — char.IsLetter, LINQ-based string tests
 
-Console.WriteLine($"  char.IsLetter('A'):    {char.IsLetter('A')}");
-Console.WriteLine($"  char.IsDigit('5'):     {char.IsDigit('5')}");
-Console.WriteLine($"  char.IsWhiteSpace(' '):{char.IsWhiteSpace(' ')}");
-Console.WriteLine($"  char.IsUpper('A'):     {char.IsUpper('A')}");
-Console.WriteLine($"  char.IsLower('a'):     {char.IsLower('a')}");
+char.IsLetter('A')
+char.IsDigit('5')
+char.IsWhiteSpace(' ')
+char.IsUpper('A')
+char.IsLower('a')
 
 // String-level checks with LINQ
-Console.WriteLine($"  All letters:  {"Hello".All(char.IsLetter)}");       // isalpha
-Console.WriteLine($"  All digits:   {"12345".All(char.IsDigit)}");        // isdigit
-Console.WriteLine($"  All alnum:    {"Hello123".All(char.IsLetterOrDigit)}"); // isalnum
-Console.WriteLine($"  All upper:    {"HELLO".All(char.IsUpper)}");
-Console.WriteLine($"  All lower:    {"hello".All(char.IsLower)}");
-Console.WriteLine($"  All ASCII:    {"Hello".All(c => c < 128)}");
+"Hello".All(char.IsLetter)   // All letters
+"12345".All(char.IsDigit)   // All digits
+"Hello123".All(char.IsLetterOrDigit)   // All alnum
+"HELLO".All(char.IsUpper)   // All upper
+"hello".All(char.IsLower)   // All lower
+"Hello".All(c => c < 128)   // All ASCII
 ```
 
       char.IsLetter('A'):    True
@@ -368,17 +361,17 @@ Console.WriteLine($"  All ASCII:    {"Hello".All(c => c < 128)}");
 // Searching — IndexOf, LastIndexOf, Contains, StartsWith, EndsWith
 
 s = "Hello, World! Hello, C#!";
-Console.WriteLine($"IndexOf(\"Hello\"):     {s.IndexOf("Hello")}");        // 0
-Console.WriteLine($"IndexOf(\"Hello\",1):   {s.IndexOf("Hello", 1)}");     // 14
-Console.WriteLine($"LastIndexOf(\"Hello\"): {s.LastIndexOf("Hello")}");    // 14
-Console.WriteLine($"IndexOf(\"Java\"):      {s.IndexOf("Java")}");         // -1
-Console.WriteLine($"Contains(\"World\"):    {s.Contains("World")}");
-Console.WriteLine($"StartsWith(\"Hello\"): {s.StartsWith("Hello")}");
-Console.WriteLine($"EndsWith(\"!\"):       {s.EndsWith("!")}");
+s.IndexOf("Hello")   // IndexOf(\"Hello\")
+s.IndexOf("Hello", 1)   // IndexOf(\"Hello\",1)
+s.LastIndexOf("Hello")   // LastIndexOf(\"Hello\")
+s.IndexOf("Java")   // IndexOf(\"Java\")
+s.Contains("World")   // Contains(\"World\")
+s.StartsWith("Hello")   // StartsWith(\"Hello\")
+s.EndsWith("!")   // EndsWith(\"!\")
 
 // Count occurrences — no built-in, use LINQ or regex
 int count = s.Split("Hello").Length - 1;
-Console.WriteLine($"Count \"Hello\":       {count}");
+count   // Count \"Hello\"
 ```
 
     IndexOf("Hello"):     0
@@ -395,15 +388,15 @@ Console.WriteLine($"Count \"Hello\":       {count}");
 ```csharp
 // Replace and Split — substitution and tokenization
 
-Console.WriteLine($"Replace:           '{s.Replace("Hello", "Hi")}'");
+s.Replace("Hello", "Hi")   // Replace
 // No max count parameter — replaces ALL (use Regex for first-only)
 
 string csv = "apple,banana,cherry";
-Console.WriteLine($"Split(','):        [{string.Join(", ", csv.Split(','))}]");
-Console.WriteLine($"Split(',', 2):     [{string.Join(", ", csv.Split(',', 2))}]");
+string.Join(", ", csv.Split(','))   // Split(',')
+string.Join(", ", csv.Split(',', 2))   // Split(',', 2)
 string words = "  hello  world  ";
-Console.WriteLine($"Split():           [{string.Join(", ", words.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))}]");
-Console.WriteLine($"Split(' '):        [{string.Join(", ", words.Split(' '))}]");
+string.Join(", ", words.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))   // Split()
+string.Join(", ", words.Split(' '))   // Split(' ')
 ```
 
     Replace:           'Hi, World! Hi, C#!'
@@ -417,15 +410,15 @@ Console.WriteLine($"Split(' '):        [{string.Join(", ", words.Split(' '))}]")
 ```csharp
 // StringSplitOptions and Join — control Split behavior and reassembly
 
-Console.WriteLine($"RemoveEmpty:       [{string.Join(", ", "a,,b,,c".Split(',', StringSplitOptions.RemoveEmptyEntries))}]");
-Console.WriteLine($"TrimEntries:       [{string.Join(", ", " a , b , c ".Split(',', StringSplitOptions.TrimEntries))}]");
+string.Join(", ", "a,,b,,c".Split(',', StringSplitOptions.RemoveEmptyEntries))   // RemoveEmpty
+string.Join(", ", " a , b , c ".Split(',', StringSplitOptions.TrimEntries))   // TrimEntries
 
 // Join
 string[] parts = { "hello", "world", "csharp" };
-Console.WriteLine($"Join(' '):         '{string.Join(' ', parts)}'");
-Console.WriteLine($"Join(', '):        '{string.Join(", ", parts)}'");
-Console.WriteLine($"Join('->'):        '{string.Join("->", parts)}'");
-Console.WriteLine($"Concat:            '{string.Concat(parts)}'");
+string.Join(' ', parts)   // Join(' ')
+string.Join(", ", parts)   // Join(', ')
+string.Join("->", parts)   // Join('->')
+string.Concat(parts)   // Concat
 ```
 
     RemoveEmpty:       [a, b, c]
@@ -442,9 +435,9 @@ Console.WriteLine($"Concat:            '{string.Concat(parts)}'");
 
 byte[] utf8 = System.Text.Encoding.UTF8.GetBytes("hello");
 byte[] ascii = System.Text.Encoding.ASCII.GetBytes("hello");
-Console.WriteLine($"UTF8:  [{string.Join(", ", utf8)}]");
-Console.WriteLine($"ASCII: [{string.Join(", ", ascii)}]");
-Console.WriteLine($"Back:  '{System.Text.Encoding.UTF8.GetString(utf8)}'");
+string.Join(", ", utf8)   // UTF8
+string.Join(", ", ascii)   // ASCII
+System.Text.Encoding.UTF8.GetString(utf8)   // Back
 ```
 
     UTF8:  [104, 101, 108, 108, 111]
@@ -469,12 +462,9 @@ double pct = 0.856;
 ```csharp
 // String interpolation — $"" and String.Format for value embedding
 
-Console.WriteLine($"Name: {name}, Age: {age}");
-Console.WriteLine($"Expression: {age + 1}");
-Console.WriteLine($"Method call: {name.ToUpper()}");
-
-Console.WriteLine(string.Format("Name: {0}, Age: {1}", name, age));
-Console.WriteLine(string.Format("Name: {0}, Age: {1}, {0} again", name, age));
+$"Name: {name}, Age: {age}"
+age + 1   // Expression
+name.ToUpper()   // Method call
 ```
 
     Name: Alice, Age: 30
@@ -488,22 +478,22 @@ Console.WriteLine(string.Format("Name: {0}, Age: {1}, {0} again", name, age));
 ```csharp
 // Numeric format specifiers — F, N, E, G, P, C, X, D for display formatting
 
-Console.WriteLine($"Fixed 2 dec:    {n.ToString("F2")}");
-Console.WriteLine($"Fixed 0 dec:    {n.ToString("F0")}");
-Console.WriteLine($"Comma sep:      {n.ToString("N2")}");
-Console.WriteLine($"Scientific:     {n.ToString("E2")}");
-Console.WriteLine($"General:        {n.ToString("G4")}");
-Console.WriteLine($"Percentage:     {pct.ToString("P1")}");
-Console.WriteLine($"Currency:       {n.ToString("C2")}");
-Console.WriteLine($"Phone:          {1234567890:###-###-####}");
+n.ToString("F2")   // Fixed 2 dec
+n.ToString("F0")   // Fixed 0 dec
+n.ToString("N2")   // Comma sep
+n.ToString("E2")   // Scientific
+n.ToString("G4")   // General
+pct.ToString("P1")   // Percentage
+n.ToString("C2")   // Currency
+1234567890   // Phone
 
 int x = 255;
-Console.WriteLine($"Decimal:        {x.ToString("D")}");
-Console.WriteLine($"Hex upper:      {x.ToString("X")}");
-Console.WriteLine($"Hex lower:      {x.ToString("x")}");
-Console.WriteLine($"Zero-padded:    {x.ToString("D8")}");
-Console.WriteLine($"Binary:         {Convert.ToString(x, 2)}");
-Console.WriteLine($"Octal:          {Convert.ToString(x, 8)}");
+x.ToString("D")   // Decimal
+x.ToString("X")   // Hex upper
+x.ToString("x")   // Hex lower
+x.ToString("D8")   // Zero-padded
+Convert.ToString(x, 2)   // Binary
+Convert.ToString(x, 8)   // Octal
 ```
 
     Fixed 2 dec:    1234567.89
@@ -527,18 +517,18 @@ Console.WriteLine($"Octal:          {Convert.ToString(x, 8)}");
 // Alignment and culture-specific formatting — layout and locale control
 
 string s = "hi";
-Console.WriteLine($"Left 10:        '{s,-10}'");            // negative = left-align
-Console.WriteLine($"Right 10:       '{s,10}'");             // positive = right-align
-Console.WriteLine($"PadLeft(*):     '{s.PadLeft(10, '*')}'");
-Console.WriteLine($"PadRight(*):    '{s.PadRight(10, '*')}'");
+s   // Left 10
+s   // Right 10
+s.PadLeft(10, '*')   // PadLeft(*)
+s.PadRight(10, '*')   // PadRight(*)
 
 double amt = 1234567.89;
-Console.WriteLine($"US:  {amt.ToString("C2", new CultureInfo("en-US"))}");
-Console.WriteLine($"EUR: {amt.ToString("C2", new CultureInfo("fr-FR"))}");
-Console.WriteLine($"JPY: {amt.ToString("C0", new CultureInfo("ja-JP"))}");
-Console.WriteLine($"CNY: {amt.ToString("C2", new CultureInfo("zh-CN"))}");
-Console.WriteLine($"BRL: {amt.ToString("C2", new CultureInfo("pt-BR"))}");
-Console.WriteLine($"GBP: {amt.ToString("C2", new CultureInfo("en-GB"))}");
+amt.ToString("C2", new CultureInfo("en-US"))   // US
+amt.ToString("C2", new CultureInfo("fr-FR"))   // EUR
+amt.ToString("C0", new CultureInfo("ja-JP"))   // JPY
+amt.ToString("C2", new CultureInfo("zh-CN"))   // CNY
+amt.ToString("C2", new CultureInfo("pt-BR"))   // BRL
+amt.ToString("C2", new CultureInfo("en-GB"))   // GBP
 ```
 
     Left 10:        'hi        '
@@ -575,7 +565,7 @@ for (int i = 0; i < 50000; i++)
     result += i.ToString();
 sw.Stop();
 var t1 = sw.Elapsed.TotalSeconds;
-Console.WriteLine($"+ in loop (50k):     {t1:F4}s  len={result.Length}");
+$"+ in loop (50k):     {t1:F4}s  len={result.Length}"
 
 sw.Restart();
 var sb = new StringBuilder();
@@ -584,8 +574,8 @@ for (int i = 0; i < 50000; i++)
 result = sb.ToString();
 sw.Stop();
 var t2 = sw.Elapsed.TotalSeconds;
-Console.WriteLine($"StringBuilder (50k): {t2:F4}s  len={result.Length}");
-Console.WriteLine($"StringBuilder is {t1/t2:F1}x faster");
+$"StringBuilder (50k): {t2:F4}s  len={result.Length}"
+t1/t2   // StringBuilder is x faster
 ```
 
     + in loop (50k):     4.2222s  len=238890
@@ -604,13 +594,13 @@ sb.AppendLine();                          // append + newline
 sb.AppendLine($"Number: {42}");           // formatted append
 sb.Insert(0, ">>> ");                     // insert at position
 sb.Replace("World", "C#");               // replace
-Console.WriteLine($"Result:\n{sb}");
-Console.WriteLine($"Length:   {sb.Length}");
-Console.WriteLine($"Capacity: {sb.Capacity}");
+sb   // Result:\n
+sb.Length   // Length
+sb.Capacity   // Capacity
 
 // StringBuilder with initial capacity (avoid resizing)
 var sb2 = new StringBuilder(1000);        // pre-allocate
-Console.WriteLine($"Pre-alloc capacity: {sb2.Capacity}");
+sb2.Capacity   // Pre-alloc capacity
 ```
 
     Result:
@@ -627,14 +617,13 @@ Console.WriteLine($"Pre-alloc capacity: {sb2.Capacity}");
 // Join and Concat — efficient collection-to-string conversion
 
 var items = Enumerable.Range(0, 5).Select(i => $"item_{i}");
-Console.WriteLine($"Join: '{string.Join(", ", items)}'");
-Console.WriteLine($"Concat: '{string.Concat(Enumerable.Range(0, 5))}'");
+string.Join(", ", items)   // Join
+string.Concat(Enumerable.Range(0, 5))   // Concat
 
 string first = "Hello";
 string last = "World";
 string full = first + " " + last;     // compiler optimizes small concats
-Console.WriteLine($"Small concat: '{full}'");
-Console.WriteLine("Rule: use + for 2-5 strings, StringBuilder for loops");
+full   // Small concat
 ```
 
     Join: 'item_0, item_1, item_2, item_3, item_4'
@@ -669,15 +658,15 @@ if (match.Success)
 
 var phones = Regex.Matches(text, @"\d{3}-\d{3}-\d{4}");
 var emails = Regex.Matches(text, @"[\w.+-]+@[\w-]+\.[\w.]+");
-Console.WriteLine($"Phones: {string.Join(", ", phones.Select(m => m.Value))}");
-Console.WriteLine($"Emails: {string.Join(", ", emails.Select(m => m.Value))}");
+string.Join(", ", phones.Select(m => m.Value))   // Phones
+string.Join(", ", emails.Select(m => m.Value))   // Emails
 
 // Iterate matches
 foreach (Match m in phones)
     Console.WriteLine($"  {m.Value} at [{m.Index}:{m.Index + m.Length}]");
 
-Console.WriteLine($"IsMatch(digits): {Regex.IsMatch("12345", @"^\d+$")}");    // True
-Console.WriteLine($"IsMatch(mixed):  {Regex.IsMatch("123a5", @"^\d+$")}");    // False
+Regex.IsMatch("12345", @"^\d+$")   // IsMatch(digits)
+Regex.IsMatch("123a5", @"^\d+$")   // IsMatch(mixed)
 ```
 
     Found: 123-456-7890 at [59:71]
@@ -723,21 +712,21 @@ if (match.Success)
 ```csharp
 // Regex Replace, Split, and Compiled — advanced pattern operations
 
-Console.WriteLine(Regex.Replace(text, @"\d{3}-\d{3}-\d{4}", "***-***-****"));
+Regex.Replace(text, @"\d{3}-\d{3}-\d{4}", "***-***-****")
 
 // Replace with function (MatchEvaluator)
-Console.WriteLine(Regex.Replace("price: 50, qty: 3", @"\d+", m => (int.Parse(m.Value) * 2).ToString()));
+Regex.Replace("price: 50, qty: 3", @"\d+", m => (int.Parse(m.Value) * 2).ToString())
 
 // Replace with backreference
-Console.WriteLine(Regex.Replace("user@host", @"(\w+)@(\w+)", "$2/$1"));
+Regex.Replace("user@host", @"(\w+)@(\w+)", "$2/$1")
 
-Console.WriteLine(string.Join(", ", Regex.Split("Hello World. How are you? Fine!", @"[.!?]\s*")));
-Console.WriteLine(string.Join(", ", Regex.Split("a , b , c", @"\s*,\s*")));
+string.Join(", ", Regex.Split("Hello World. How are you? Fine!", @"[.!?]\s*"))
+string.Join(", ", Regex.Split("a , b , c", @"\s*,\s*"))
 
 // Compiled regex — precompiles to IL for repeated use
 var phonePat = new Regex(@"\d{3}-\d{3}-\d{4}", RegexOptions.Compiled);
-Console.WriteLine(string.Join(", ", phonePat.Matches(text).Select(m => m.Value)));
-Console.WriteLine(phonePat.Replace(text, "REDACTED"));
+string.Join(", ", phonePat.Matches(text).Select(m => m.Value))
+phonePat.Replace(text, "REDACTED")
 ```
 
     Contact us at support@email.com or sales@company.org. Call ***-***-**** or ***-***-****.
@@ -830,14 +819,14 @@ string text = "Hello\nworld\nHELLO";
 
 // IgnoreCase — case-insensitive matching
 var ic = Regex.Matches(text, @"hello", RegexOptions.IgnoreCase);
-Console.WriteLine($"IgnoreCase:  {string.Join(", ", ic.Select(m => m.Value))}");
+string.Join(", ", ic.Select(m => m.Value))   // IgnoreCase
 
 // Multiline — ^ and $ match line boundaries instead of string boundaries
 var ml = Regex.Matches(text, @"^\w+", RegexOptions.Multiline);
-Console.WriteLine($"Multiline:   {string.Join(", ", ml.Select(m => m.Value))}");
+string.Join(", ", ml.Select(m => m.Value))   // Multiline
 
 // Singleline — . matches newline characters
-Console.WriteLine($"Singleline:  {Regex.IsMatch(text, @"Hello.world", RegexOptions.Singleline)}");
+Regex.IsMatch(text, @"Hello.world", RegexOptions.Singleline)   // Singleline
 ```
 
     IgnoreCase:  Hello, HELLO
@@ -868,7 +857,7 @@ if (m2.Success) Console.WriteLine($"Verbose:     {m2.Groups[1]}-{m2.Groups[2]}-{
 // Combining regex flags — use | to apply multiple RegexOptions
 
 var combined = Regex.Matches(text, @"^hello", RegexOptions.IgnoreCase | RegexOptions.Multiline);
-Console.WriteLine($"Combined:    {string.Join(", ", combined.Select(m => m.Value))}");
+string.Join(", ", combined.Select(m => m.Value))   // Combined
 ```
 
     Combined:    Hello, HELLO

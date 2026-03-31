@@ -128,13 +128,16 @@ for status_code in [200, 201, 400, 401, 404, 500]:
     print(f"  {status_code}: {resp.status_code} {'OK' if resp.ok else 'FAILED'}")
 
 # raise_for_status() — raises HTTPError for 4xx/5xx
-# C# equivalent: resp.EnsureSuccessStatusCode()
 try:
     resp = requests.get("https://httpbin.org/status/500")
     resp.raise_for_status()
 except requests.HTTPError as e:
     print(f"\n  raise_for_status() caught: {e}")
 ```
+
+> [!info] raise_for_status()
+>
+> Raises `HTTPError` for 4xx/5xx responses. Without it, a 500 response is silently treated as success. Call it after every request in production code.
 
     === Status Code Handling ===
       200: 200 OK
@@ -508,9 +511,12 @@ def cancel_trade(trade_id: str):
 
 #### uvicorn.Server — start FastAPI server programmatically in background
 
+> [!info] Uvicorn in Background Thread
+>
+> `uvicorn.Server` API allows programmatic startup and shutdown from notebook cells. Unlike `uvicorn.run()` which blocks forever, the Server API runs in a background thread.
+
 ```python
 # Run uvicorn in a background thread so we can test from the next cells
-# uvicorn.Server API allows programmatic shutdown (unlike uvicorn.run)
 
 PORT = 8769
 

@@ -145,10 +145,9 @@ Dictionary<string, string> EXCHANGE_MAP = new() {
     ["HKG"] = "XHKG", ["TKS"] = "XTKS",
 };
 
-Console.WriteLine($"Pipeline config loaded");
-Console.WriteLine($"  Export dir:  {EXPORT_DIR}");
-Console.WriteLine($"  Universe:    {string.Join(", ", SYMBOLS)}");
-Console.WriteLine($"  Date range:  {START_DATE} → {END_DATE}");
+EXPORT_DIR   // export dir
+string.Join(", ", SYMBOLS)  // universe
+$"{START_DATE} → {END_DATE}"  // date range
 ```
 
     Pipeline config loaded
@@ -221,7 +220,6 @@ public class RawOhlcvValidator : AbstractValidator<RawOhlcv>
 var sample = new RawOhlcv("SAP.DE", new DateTime(2024, 1, 2), 144.5, 146.0, 143.8, 145.2, 145.2, 1_200_000);
 var validator = new RawOhlcvValidator();
 var result = validator.Validate(sample);
-Console.WriteLine($"RawOhlcv validated: {sample.Symbol} {sample.Date:yyyy-MM-dd} close={sample.Close}");
 ```
 
     RawOhlcv validated: SAP.DE 2024-01-02 close=145.2
@@ -267,7 +265,6 @@ public class CleanOhlcvValidator : AbstractValidator<CleanOhlcv>
     }
 }
 
-Console.WriteLine($"CleanOhlcv record defined — 14 fields");
 ```
 
     CleanOhlcv record defined — 14 fields
@@ -301,8 +298,6 @@ public record SymbolProfile(
     DateTime LastDate,
     string BatchId);
 
-Console.WriteLine($"DailySummary:  8 fields");
-Console.WriteLine($"SymbolProfile: 10 fields");
 ```
 
     DailySummary:  8 fields
@@ -590,7 +585,6 @@ List<string> ExportDataContracts(string exportDir)
     return paths;
 }
 
-Console.WriteLine("ExportDataContracts() defined");
 ```
 
     ExportDataContracts() defined
@@ -622,7 +616,6 @@ string GenerateBatchId()
 
 // Demo: generate a batch_id
 var demoBatch = GenerateBatchId();
-Console.WriteLine($"Sample batch_id: {demoBatch}");
 ```
 
     Sample batch_id: 4af95c21-c810-416d-81ec-75d175e0d6d3
@@ -651,7 +644,6 @@ var demoDt = new DataTable();
 demoDt.Columns.Add("a", typeof(int));
 demoDt.Columns.Add("b", typeof(int));
 demoDt.Rows.Add(1, 4); demoDt.Rows.Add(2, 5); demoDt.Rows.Add(3, 6);
-Console.WriteLine($"Hash of demo table: {ComputeHash(demoDt)}");
 ```
 
     Hash of demo table: 68135205be4bfc0c
@@ -690,7 +682,6 @@ StageLineage EndStage(Dictionary<string, object> ctx, DataTable outputDt,
     );
 }
 
-Console.WriteLine("StartStage() / EndStage() defined");
 ```
 
     StartStage() / EndStage() defined
@@ -710,7 +701,6 @@ string SaveRunContext(RunContext ctx)
     return path;
 }
 
-Console.WriteLine($"SaveRunContext() defined — writes to {LINEAGE_DIR}");
 ```
 
     SaveRunContext() defined — writes to C:\Users\aperi\DEV\LANG\data\pipeline\lineage
@@ -765,7 +755,6 @@ CREATE TABLE bronze_ohlcv (
     CONSTRAINT UQ_bronze_symbol_date UNIQUE (symbol, date)
 )
 ");
-Console.WriteLine("bronze_ohlcv table ready (with UNIQUE on symbol+date)");
 ```
 
     bronze_ohlcv table ready (with UNIQUE on symbol+date)
@@ -801,7 +790,6 @@ CREATE TABLE silver_ohlcv (
     CONSTRAINT UQ_silver_symbol_date UNIQUE (symbol, date)
 )
 ");
-Console.WriteLine("silver_ohlcv table ready (with UNIQUE on symbol+date)");
 ```
 
     silver_ohlcv table ready (with UNIQUE on symbol+date)
@@ -829,7 +817,6 @@ CREATE TABLE gold_daily_summary (
     INDEX IX_gold_daily_date CLUSTERED (date)
 )
 ");
-Console.WriteLine("gold_daily_summary table ready");
 ```
 
     gold_daily_summary table ready
@@ -859,7 +846,6 @@ CREATE TABLE gold_symbol_profile (
     INDEX IX_gold_profile_symbol CLUSTERED (symbol)
 )
 ");
-Console.WriteLine("gold_symbol_profile table ready");
 ```
 
     gold_symbol_profile table ready
@@ -896,7 +882,6 @@ CREATE TABLE dim_symbol (
     is_current              BIT           NOT NULL DEFAULT 1
 )
 ");
-Console.WriteLine("dim_symbol table ready (SCD Type 2)");
 ```
 
     dim_symbol table ready (SCD Type 2)
@@ -925,7 +910,6 @@ CREATE TABLE dim_calendar (
     CONSTRAINT PK_dim_calendar PRIMARY KEY (date, exchange_code)
 )
 ");
-Console.WriteLine("dim_calendar table ready (per-exchange)");
 ```
 
     dim_calendar table ready (per-exchange)
@@ -952,7 +936,6 @@ CREATE TABLE lineage_stages (
     output_hash   VARCHAR(16)  NOT NULL
 )
 ");
-Console.WriteLine("lineage_stages table ready");
 ```
 
     lineage_stages table ready
@@ -978,7 +961,6 @@ CREATE TABLE quarantine (
     quarantined_at  DATETIME2     NOT NULL DEFAULT GETUTCDATE()
 )
 ");
-Console.WriteLine("quarantine table ready (dead letter queue)");
 ```
 
     quarantine table ready (dead letter queue)
@@ -1004,7 +986,6 @@ CREATE TABLE context_log (
     created_at      DATETIME2      NOT NULL DEFAULT GETUTCDATE()
 )
 ");
-Console.WriteLine("context_log table ready");
 ```
 
     context_log table ready
@@ -1044,7 +1025,6 @@ void PersistContext(StageContext stageCtx)
         });
 }
 
-Console.WriteLine("PersistContext() defined");
 ```
 
     PersistContext() defined
@@ -1072,7 +1052,6 @@ void PersistLineage(StageLineage lineage)
         });
 }
 
-Console.WriteLine("PersistLineage() defined \u2014 idempotent: deletes before insert");
 ```
 
     PersistLineage() defined — idempotent: deletes before insert
@@ -1112,7 +1091,6 @@ void WriteToCsv(DataTable dt, string table, bool truncate = true)
     }
 }
 
-Console.WriteLine("QueryToTable() + WriteToCsv() defined");
 ```
 
     QueryToTable() + WriteToCsv() defined
@@ -1158,7 +1136,6 @@ int MergeBronze(DataTable dt, string batchId)
     return rowsAffected;
 }
 
-Console.WriteLine("MergeBronze() defined");
 ```
 
     MergeBronze() defined
@@ -1210,7 +1187,6 @@ int MergeSilver(DataTable dt, string batchId)
     return rowsAffected;
 }
 
-Console.WriteLine("MergeSilver() defined");
 ```
 
     MergeSilver() defined
@@ -1234,7 +1210,6 @@ void QuarantineRow(string batchId, string stage, Dictionary<string, object> rowD
         });
 }
 
-Console.WriteLine("QuarantineRow() defined \u2014 dead letter queue helper");
 ```
 
     QuarantineRow() defined — dead letter queue helper
@@ -1257,7 +1232,6 @@ AsyncRetryPolicy retryPolicy = Policy
             Console.WriteLine($"  Retry {attempt}/3 after {ex.GetType().Name}")
     );
 
-Console.WriteLine("retryPolicy defined \u2014 3 attempts, exponential backoff");
 ```
 
     retryPolicy defined — 3 attempts, exponential backoff
@@ -1275,7 +1249,6 @@ public class DataQualityException : Exception
     public DataQualityException(string message) : base(message) { }
 }
 
-Console.WriteLine("DataQualityException defined");
 ```
 
     DataQualityException defined
@@ -1294,7 +1267,6 @@ Console.WriteLine("DataQualityException defined");
     return (ok, ok ? $"{stage}: {dt.Rows.Count} rows" : $"{stage}: EMPTY DataTable");
 }
 
-Console.WriteLine("DqCheckNotEmpty() defined");
 ```
 
     DqCheckNotEmpty() defined
@@ -1320,7 +1292,6 @@ Console.WriteLine("DqCheckNotEmpty() defined");
     return (true, $"{stage}: no null keys in [{string.Join(", ", keys)}]");
 }
 
-Console.WriteLine("DqCheckNoNullKeys() defined");
 ```
 
     DqCheckNoNullKeys() defined
@@ -1344,7 +1315,6 @@ Console.WriteLine("DqCheckNoNullKeys() defined");
     return (ok, ok ? $"{stage}: no duplicates" : $"{stage}: {dupes} duplicates on [{string.Join(", ", keys)}]");
 }
 
-Console.WriteLine("DqCheckNoDuplicates() defined");
 ```
 
     DqCheckNoDuplicates() defined
@@ -1368,7 +1338,6 @@ Console.WriteLine("DqCheckNoDuplicates() defined");
         : $"{stage}: {outOfRange} values outside [{minVal}, {maxVal}] in '{col}'");
 }
 
-Console.WriteLine("DqCheckRange() defined");
 ```
 
     DqCheckRange() defined
@@ -1397,7 +1366,6 @@ Console.WriteLine("DqCheckRange() defined");
     return (ok, $"{stage}: latest date {latest:yyyy-MM-dd} ({age}d ago)" + (ok ? "" : $" EXCEEDS {maxAgeDays}d SLA"));
 }
 
-Console.WriteLine("DqCheckFreshness() defined");
 ```
 
     DqCheckFreshness() defined
@@ -1416,7 +1384,6 @@ Console.WriteLine("DqCheckFreshness() defined");
     return (ok, $"{stage}: {dt.Rows.Count} rows" + (ok ? "" : $" BELOW minimum {minRows}"));
 }
 
-Console.WriteLine("DqCheckRowCount() defined");
 ```
 
     DqCheckRowCount() defined
@@ -1450,7 +1417,6 @@ DataTable RunQualityGate(IEnumerable<(bool Passed, string Message)> checks, stri
     return dt;
 }
 
-Console.WriteLine("RunQualityGate() defined");
 ```
 
     RunQualityGate() defined
@@ -1533,7 +1499,6 @@ async Task<string> FetchSymbolsToLanding(IEnumerable<string> symbols)
     return landingPath;
 }
 
-Console.WriteLine("FetchSymbolsToLanding() defined");
 ```
 
     FetchSymbolsToLanding() defined
@@ -1563,7 +1528,6 @@ List<Dictionary<string, object>> LoadSymbolsFromLanding()
     return results;
 }
 
-Console.WriteLine("LoadSymbolsFromLanding() defined");
 ```
 
     LoadSymbolsFromLanding() defined
@@ -1645,7 +1609,6 @@ string Scd2UpsertSymbol(Dictionary<string, object> rec)
     return "SCD2_UPDATE";
 }
 
-Console.WriteLine("Scd2UpsertSymbol() defined");
 ```
 
     Scd2UpsertSymbol() defined
@@ -1680,7 +1643,6 @@ DataTable PopulateDimSymbolFromLanding()
     return dt;
 }
 
-Console.WriteLine("PopulateDimSymbolFromLanding() defined");
 ```
 
     PopulateDimSymbolFromLanding() defined
@@ -1689,7 +1651,6 @@ Console.WriteLine("PopulateDimSymbolFromLanding() defined");
 
 ```csharp
 // Step 1: Fetch from Yahoo Finance API \u2192 JSON landing zone
-Console.WriteLine("Step 1: Fetching symbol metadata to landing zone...\n");
 await FetchSymbolsToLanding(SYMBOLS);
 
 // Step 2: Load from landing JSON \u2192 SCD2 upsert into dim_symbol
@@ -1731,7 +1692,6 @@ DataTable calDt = QueryToTable(
              MIN(date) as first_date, MAX(date) as last_date
       FROM dim_calendar GROUP BY exchange_code ORDER BY exchange_code");
 
-Console.WriteLine("Calendar dimension (from Python notebook):");
 calDt.AsEnumerable().Take(5).CopyToDataTable()
 ```
 
@@ -1835,7 +1795,6 @@ async Task<string> FetchOhlcvToLanding(string symbol, string start, string end)
     return landingPath;
 }
 
-Console.WriteLine("FetchOhlcvToLanding() defined");
 ```
 
     FetchOhlcvToLanding() defined
@@ -1888,7 +1847,6 @@ DataTable LoadOhlcvFromLanding(string symbol)
     return dt;
 }
 
-Console.WriteLine("LoadOhlcvFromLanding() defined");
 ```
 
     LoadOhlcvFromLanding() defined
@@ -1952,7 +1910,6 @@ testDt.AsEnumerable().Take(5).CopyToDataTable()
     return (valid, rejected);
 }
 
-Console.WriteLine("ValidateBronze() defined \u2014 rejects go to quarantine");
 ```
 
     ValidateBronze() defined — rejects go to quarantine
@@ -2059,7 +2016,6 @@ async Task<(DataTable, StageLineage)> IngestBronze(string[] symbols, string star
     return (bronzeFull, lineage);
 }
 
-Console.WriteLine("IngestBronze() defined — landing zone + incremental MERGE");
 ```
 
     IngestBronze() defined — landing zone + incremental MERGE
@@ -2340,7 +2296,6 @@ DataTable TransformSilver(DataTable bronzeDt)
     return dt;
 }
 
-Console.WriteLine("TransformSilver() defined \u2014 composes all Silver transforms");
 ```
 
     TransformSilver() defined — composes all Silver transforms
@@ -2388,7 +2343,6 @@ Console.WriteLine("TransformSilver() defined \u2014 composes all Silver transfor
     return (valid, rejected);
 }
 
-Console.WriteLine("ValidateSilver() defined \u2014 rejects go to quarantine");
 ```
 
     ValidateSilver() defined — rejects go to quarantine
@@ -2432,7 +2386,6 @@ Console.WriteLine("ValidateSilver() defined \u2014 rejects go to quarantine");
     return (silverFull, lineage);
 }
 
-Console.WriteLine("ProcessSilver() defined — MERGE upsert, returns full dataset");
 ```
 
     ProcessSilver() defined — MERGE upsert, returns full dataset
@@ -2508,7 +2461,6 @@ var silverDq = RunQualityGate(new[] {
 }, "silver");
 
 // Soft checks — warn but don't block (daily return > 10% is unusual for blue chips)
-Console.WriteLine("Outlier checks (warnings only):");
 var outliers = silverDt.AsEnumerable()
     .Where(r => Math.Abs(Convert.ToDouble(r["daily_return"])) > 0.10)
     .ToList();
@@ -2797,7 +2749,6 @@ StageLineage PersistGold(DataTable dailyDt, DataTable profileDt, string batchId)
     return lineage;
 }
 
-Console.WriteLine("PersistGold() defined");
 ```
 
     PersistGold() defined
@@ -3194,7 +3145,6 @@ if (quarantineDt.Rows.Count > 0)
 }
 else
 {
-    Console.WriteLine("No quarantined rows — all data passed validation");
 }
 ```
 
@@ -3229,7 +3179,6 @@ if (goldStageCtx != null && goldStageCtx.DataWarnings.Count > 0)
 }
 else
 {
-    Console.WriteLine("No data warnings — clean run");
 }
 ```
 
@@ -3253,7 +3202,6 @@ if (File.Exists(contractPath))
     if (contract.TryGetProperty("x-column-context", out var colCtx))
     {
         Console.WriteLine($"  Column contexts: {colCtx.GetArrayLength()}");
-        Console.WriteLine();
         foreach (var col in colCtx.EnumerateArray())
         {
             if (col.TryGetProperty("is_derived", out var isDerived) && isDerived.GetBoolean())
@@ -3263,7 +3211,6 @@ if (File.Exists(contractPath))
                 Console.WriteLine($"    Computation: {col.GetProperty("computation")}");
                 Console.WriteLine($"    Sources: {col.GetProperty("source_columns")}");
                 Console.WriteLine($"    Null means: {col.GetProperty("null_semantics")}");
-                Console.WriteLine();
             }
         }
     }
@@ -3321,7 +3268,6 @@ public record DailySummaryResponse(
     double AvgIntradayPct
 );
 
-Console.WriteLine("DailySummaryResponse defined");
 ```
 
     DailySummaryResponse defined
@@ -3343,7 +3289,6 @@ public record SymbolProfileResponse(
     DateTime LastDate
 );
 
-Console.WriteLine("SymbolProfileResponse defined");
 ```
 
     SymbolProfileResponse defined
@@ -3365,7 +3310,6 @@ public record TimeSeriesRow(
     double? Sma20
 );
 
-Console.WriteLine("TimeSeriesRow defined");
 ```
 
     TimeSeriesRow defined
@@ -3413,7 +3357,6 @@ foreach (var grp in silverDt.AsEnumerable().GroupBy(r => r["symbol"]?.ToString()
     }).ToArray());
 }
 
-Console.WriteLine($"JSON data prepared for HttpListener: daily={dailyJson.Length:N0} chars, profiles={profilesJson.Length:N0} chars, symbols={silverSymbolJson.Count}");
 ```
 
     JSON data prepared for HttpListener: daily=80'209 chars, profiles=1'089 chars, symbols=5
@@ -3430,7 +3373,6 @@ string HandleHealth()
     return JsonSerializer.Serialize(new { status = "healthy", files });
 }
 
-Console.WriteLine("GET /health handler defined");
 ```
 
     GET /health handler defined
@@ -3445,7 +3387,6 @@ string HandleDailySummary()
     return dailyJson;
 }
 
-Console.WriteLine("GET /daily-summary handler defined");
 ```
 
     GET /daily-summary handler defined
@@ -3460,7 +3401,6 @@ string HandleSymbolProfile()
     return profilesJson;
 }
 
-Console.WriteLine("GET /symbol-profile handler defined");
 ```
 
     GET /symbol-profile handler defined
@@ -3475,7 +3415,6 @@ string HandleTimeseries(string symbol)
     return silverSymbolJson.GetValueOrDefault(symbol.ToUpper(), "[]");
 }
 
-Console.WriteLine("GET /symbol/{symbol}/timeseries handler defined");
 ```
 
     GET /symbol/{symbol}/timeseries handler defined
@@ -3491,7 +3430,6 @@ string HandleLineage(string batchIdPrefix)
     return files.Length > 0 ? File.ReadAllText(files[0]) : "{}";
 }
 
-Console.WriteLine("GET /lineage/{batch_id} handler defined");
 ```
 
     GET /lineage/{batch_id} handler defined
@@ -3553,7 +3491,6 @@ async Task HandleRequests()
 var serverThread = new Thread(() => HandleRequests().Wait()) { IsBackground = true };
 serverThread.Start();
 Thread.Sleep(1000);
-Console.WriteLine($"HttpListener running at http://localhost:{API_PORT}");
 ```
 
     HttpListener running at http://localhost:8098
@@ -3922,7 +3859,6 @@ var bronzeAudit = QueryToTable(
              adj_close, volume, dividends, stock_splits, batch_id, ingested_at
       FROM bronze_ohlcv
       WHERE symbol = 'SAP.DE' AND date = '2026-01-29'");
-Console.WriteLine("Bronze table (raw ingested):");
 bronzeAudit
 ```
 
@@ -3942,8 +3878,6 @@ var silverAudit = QueryToTable(
       WHERE symbol = 'SAP.DE' AND date BETWEEN '2026-01-28' AND '2026-01-30'
       ORDER BY date");
 
-Console.WriteLine("Silver table (enriched, 3-day window):");
-Console.WriteLine();
 
 if (silverAudit.Rows.Count >= 2)
 {
@@ -3956,7 +3890,6 @@ if (silverAudit.Rows.Count >= 2)
     Console.WriteLine($"  Expected return: ({currClose:F2} - {prevClose:F2}) / {prevClose:F2} = {expectedReturn:F6}");
     Console.WriteLine($"  Actual return:   {actualReturn:F6}");
     Console.WriteLine($"  Match: {Math.Abs(expectedReturn - actualReturn) < 0.000001}");
-    Console.WriteLine();
 }
 silverAudit
 ```
@@ -3979,8 +3912,6 @@ silverAudit
 var goldDailyAudit = QueryToTable(
     @"SELECT date, symbols_traded, avg_return, min_return, max_return, total_volume, batch_id
       FROM gold_daily_summary WHERE date = '2026-01-29'");
-Console.WriteLine("Gold daily summary (Jan 29):");
-Console.WriteLine("  The min_return on this day should reflect SAP's -16% drop");
 goldDailyAudit
 ```
 
@@ -3998,14 +3929,12 @@ var batchFromBronze = sqlConn.ExecuteScalar<string>(
 
 Console.WriteLine($"Disputed row: SAP.DE / 2026-01-29");
 Console.WriteLine($"Batch ID (from row): {batchFromBronze}");
-Console.WriteLine();
 
 var lineageAudit = QueryToTable(
     $@"SELECT stage, started_at, completed_at, input_rows, output_rows,
               rows_rejected, output_hash
        FROM lineage_stages WHERE batch_id = '{batchFromBronze}'
        ORDER BY started_at");
-Console.WriteLine("Full pipeline execution for this batch:");
 lineageAudit
 ```
 
@@ -4125,7 +4054,6 @@ Console.WriteLine("  - Same close price in Bronze and Silver");
 Console.WriteLine("  - Daily return verified mathematically from consecutive closes");
 Console.WriteLine("  - Zero rows rejected by Pydantic validation");
 Console.WriteLine("  - Output hash proves no post-ingestion tampering");
-Console.WriteLine();
 auditSummary
 ```
 

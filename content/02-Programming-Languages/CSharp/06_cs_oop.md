@@ -87,15 +87,15 @@ class Circle
 var dog1 = new Dog("Rex", 5);
 var dog2 = new Dog("Buddy", 3);
 
-Console.WriteLine($"dog1:        {dog1}");                    // calls ToString
-Console.WriteLine($"dog1.Name:   {dog1.Name}");
-Console.WriteLine($"dog1.Bark(): {dog1.Bark()}");
-Console.WriteLine($"Species:     {Dog.Species}");             // const accessed on class
-Console.WriteLine($"Older?:      {dog1.IsOlderThan(dog2)}");
-
-// Can't add attributes dynamically in C#:
-// dog1.Color = "brown";  // Compile error! No such property
+dog1
+dog1.Name
+dog1.Bark()
+Dog.Species   // Species
+dog1.IsOlderThan(dog2)   // Older?
 ```
+
+> [!info] No Dynamic Attributes
+> Unlike Python, C# only allows attributes declared in the class. Use `Dictionary<string, object>` for dynamic key-value storage.
 
     dog1:        Dog(Rex, age=5)
     dog1.Name:   Rex
@@ -109,13 +109,14 @@ Console.WriteLine($"Older?:      {dog1.IsOlderThan(dog2)}");
 // Property validation — prevent invalid state via setter logic
 
 var c = new Circle(5);
-Console.WriteLine($"Radius: {c.Radius}");
-Console.WriteLine($"Area:   {c.Area:F2}");
+c.Radius   // Radius
+c.Area   // Area
 c.Radius = 10;                                                // calls setter
-Console.WriteLine($"New radius: {c.Radius}");
-// c.Radius = -1;  // ArgumentException!
-// c.Area = 100;   // Compile error! No setter
+c.Radius   // New radius
 ```
+
+> [!info] Property Validation
+> Setters throw exceptions for invalid values. Read-only properties (no setter) produce compile errors on assignment.
 
     Radius: 5
     Area:   78.54
@@ -196,10 +197,10 @@ class Cat : Animal
 var dog = new Dog("Rex", "German Shepherd");
 var cat = new Cat("Whiskers");
 
-Console.WriteLine($"dog.Speak():  {dog.Speak()}");       // inherited from Animal
-Console.WriteLine($"dog.Fetch():  {dog.Fetch()}");       // Dog-specific
-Console.WriteLine($"cat.Speak():  {cat.Speak()}");       // overridden version
-Console.WriteLine($"dog.Breed:    {dog.Breed}");
+dog.Speak()
+dog.Fetch()
+cat.Speak()
+dog.Breed
 ```
 
     dog.Speak():  Rex says Woof!
@@ -235,9 +236,9 @@ AnimalRollCall(animals);
 // Type checking — is, as, and pattern matching for safe downcasting
 
 Animal a = new Dog("Rex", "Shepherd");
-Console.WriteLine($"a is Dog:    {a is Dog}");             // True
-Console.WriteLine($"a is Animal: {a is Animal}");          // True
-Console.WriteLine($"a is Cat:    {a is Cat}");             // False
+a is Dog
+a is Animal
+a is Cat
 
 // 'is' with binding — test and cast in one step
 if (a is Dog d)
@@ -246,8 +247,8 @@ if (a is Dog d)
 // 'as' — safe cast (returns null if wrong type)
 Dog? maybeDog = a as Dog;                                  // succeeds → Dog
 Cat? maybeCat = a as Cat;                                  // fails → null
-Console.WriteLine($"as Dog: {maybeDog?.Name ?? "null"}");
-Console.WriteLine($"as Cat: {maybeCat?.Name ?? "null"}");
+maybeDog?.Name ?? "null"   // as Dog
+maybeCat?.Name ?? "null"   // as Cat
 ```
 
     a is Dog:    True
@@ -365,13 +366,13 @@ class TextBox : IDrawable                    // only IDrawable, not IResizable
 var rect = new Rectangle(5, 3, "red");
 var circ = new CircleShape(4, "blue");
 
-Console.WriteLine($"rect: {rect.Describe()}");
-Console.WriteLine($"circ: {circ.Describe()}");
+rect.Describe()   // rect
+circ.Describe()   // circ
 
 // Polymorphism with abstract class
 Shape[] shapes = { rect, circ };
 double totalArea = shapes.Sum(s => s.Area());
-Console.WriteLine($"Total area: {totalArea:F2}");
+totalArea   // Total area
 ```
 
     rect: red Rectangle: area=15.00
@@ -546,14 +547,14 @@ class Employee
 
 var emp1 = new Employee("Alice", 95000);
 emp1.GiveRaise(10);
-Console.WriteLine($"Instance: {emp1}");
+emp1   // Instance
 
 var emp2 = Employee.FromString("Bob,85000");     // static factory
-Console.WriteLine($"Factory:  {emp2}");
+emp2   // Factory
 
-Console.WriteLine($"Static:   valid? {Employee.IsValidSalary(50000)}");
-Console.WriteLine($"Count:    {Employee.EmployeeCount}");
-Console.WriteLine($"Company:  {Employee.Company}");  // static property on CLASS
+Employee.IsValidSalary(50000)   // Static: valid?
+Employee.EmployeeCount   // Count
+Employee.Company   // Company
 ```
 
     Instance: Alice @ Acme Corp: $104'500
@@ -577,13 +578,12 @@ var record = new Dictionary<string, object>
 };
 // var total = record["amount"];  // KeyNotFoundException at RUNTIME!
 
-// Record — typo is caught at COMPILE TIME:
-// record Order(int CustomerId, double Amount);
-// var order = new Order(CustomerId: 123, Amout: 99.99);  // Compile error! 'Amout' doesn't exist
-
 Console.WriteLine("Dict typo:   silent bug → KeyNotFoundException at runtime");
 Console.WriteLine("Record typo: compile error → caught before code even runs");
 ```
+
+> [!tip] Records Catch Typos at Compile Time
+> Named parameters like `CustomerId:` are verified against the record definition. A typo like `Amout:` instead of `Amount:` is a compile error.
 
     Dict typo:   silent bug → KeyNotFoundException at runtime
     Record typo: compile error → caught before code even runs
@@ -606,12 +606,14 @@ var bad = new Dictionary<string, object>
     ["amount"] = "free"                 // string where number expected — no error!
 };
 
-// Record — compiler enforces types:
-// var order = new Order(CustomerId: "not_a_number", Amount: "free");
-// Compile error! string is not int/double
 Console.WriteLine("Dictionary<string, object>: any garbage in, no error");
 Console.WriteLine("Record:                     wrong type = compile error");
+```
 
+> [!tip] Records Enforce Types
+> Passing `"not_a_number"` to an `int` parameter is a compile error. Records provide compile-time safety that dictionaries and tuples lack.
+
+```csharp
 var dict1 = new Dictionary<string, int> { ["a"] = 1 };
 var dict2 = new Dictionary<string, int> { ["a"] = 1 };
 Console.WriteLine($"dict1 == dict2:  {dict1 == dict2}");     // False! Reference comparison
@@ -687,13 +689,13 @@ var p1 = new Point(3.0, 4.0);
 var p2 = new Point(3.0, 4.0);
 var p3 = new Point(1.0, 2.0);
 
-Console.WriteLine($"p1:        {p1}");                     // auto ToString
-Console.WriteLine($"p1 == p2:  {p1 == p2}");               // True! Value equality (not reference)
-Console.WriteLine($"p1 == p3:  {p1 == p3}");               // False
+p1
+p1 == p2
+p1 == p3
 
 // Deconstruction (auto-generated)
 var (x, y) = p1;
-Console.WriteLine($"Deconstructed: x={x}, y={y}");
+$"Deconstructed: x={x}, y={y}"
 ```
 
     p1:        Point { X = 3, Y = 4 }
@@ -708,13 +710,13 @@ Console.WriteLine($"Deconstructed: x={x}, y={y}");
 
 var emp = new Employee("Alice", "Engineering", 95000);
 var promoted = emp with { Salary = 110000 };               // creates NEW record
-Console.WriteLine($"Original:  {emp}");
-Console.WriteLine($"Promoted:  {promoted}");               // different salary
-Console.WriteLine($"Same?      {emp == promoted}");        // False
+emp   // Original
+promoted   // Promoted
+emp == promoted   // Same?
 
 var config = new Config("localhost", 5432);
-Console.WriteLine($"Config: {config}");
-Console.WriteLine($"ConnStr: {config.ConnectionString}");
+config   // Config
+config.ConnectionString   // ConnStr
 ```
 
     Original:  Employee { Name = Alice, Department = Engineering, Salary = 95000 }
@@ -730,7 +732,7 @@ Console.WriteLine($"ConnStr: {config.ConnectionString}");
 
 var versions = new[] { new Version(2, 0, 0), new Version(1, 9, 5), new Version(2, 1, 0) };
 // record structs don't auto-implement IComparable, but have value equality
-Console.WriteLine($"v1 == v2: {new Version(1, 0, 0) == new Version(1, 0, 0)}");  // True
+new Version(1, 0, 0) == new Version(1, 0, 0)   // v1 == v2
 
 var records = new[]
 {

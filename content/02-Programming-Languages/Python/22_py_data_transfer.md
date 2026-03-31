@@ -1608,10 +1608,12 @@ print(f"  {r['files']} files  {r['total_size']}  {r['elapsed']}  {r['throughput'
 
 Concurrent uploads using 8 threads. A semaphore limits the number of simultaneous uploads to avoid SSL buffer saturation — remaining threads queue and start as earlier uploads finish.
 
+> [!info] Semaphore-Throttled Thread Pool
+>
+> 8 threads with a semaphore limiting concurrent uploads prevents SSL connection saturation. All files are submitted but only N run simultaneously.
+
 ```python
 # ThreadPoolExecutor — 8 threads, semaphore-throttled to avoid SSL saturation
-# All 8 files are submitted to 8 threads, but a semaphore limits concurrent uploads
-# to stay within the connection's bandwidth. Starts at 4 concurrent, adjustable.
 CONCURRENT_LIMIT = 4
 _sem = __import__('threading').Semaphore(CONCURRENT_LIMIT)
 
@@ -1635,10 +1637,12 @@ print(f"  {r['files']} files  {r['total_size']}  {r['elapsed']}  {r['throughput'
 
 True parallelism — each upload in a separate process with its own GCS client. 4 workers process 8 files (4 concurrent, 4 queued) to stay within the connection's bandwidth capacity.
 
+> [!info] Process Pool for Parallel Uploads
+>
+> `max_workers=4` limits concurrent uploads to 4, avoiding SSL saturation while providing true process-level parallelism (bypasses GIL).
+
 ```python
 # loky ProcessPoolExecutor — 8 files across 4 processes
-# max_workers=4 is the throttle: 4 uploads run concurrently, remaining 4 queue.
-# This avoids SSL saturation while still using true process-level parallelism.
 
 def multiprocess_upload(files):
     executor = get_reusable_executor(max_workers=4)

@@ -41,7 +41,7 @@ var withWarningLevel = scriptOptions.GetType().GetMethod("WithWarningLevel");
 var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 
-Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.");
+// WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
 ```
 
     WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
@@ -64,7 +64,7 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 // Write and read — File class static methods for simple one-shot operations
 var tmpDir = Path.Combine(Path.GetTempPath(), "fileio_cs_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
-Console.WriteLine($"Working dir: {tmpDir}\n");
+$"Working dir: {tmpDir}"
 
 // WriteAllText — creates or overwrites the file
 var stagingFile = Path.Combine(tmpDir, "pipeline_output.txt");
@@ -73,17 +73,17 @@ var content = "pipeline_id|status|rows_processed\n"
             + "etl_002|failed|0\n"
             + "etl_003|success|8200\n";
 File.WriteAllText(stagingFile, content, Encoding.UTF8);
-Console.WriteLine($"  Written: {Path.GetFileName(stagingFile)} ({new FileInfo(stagingFile).Length} bytes)");
+$"  Written: {Path.GetFileName(stagingFile)} ({new FileInfo(stagingFile).Length} bytes)"
 
 // ReadAllText — entire file into one string (fine for small files)
 var text = File.ReadAllText(stagingFile, Encoding.UTF8);
-Console.WriteLine($"  Content ({text.Length} chars): {text[..50]}...");
+$"  Content ({text.Length} chars): {text[..50]}..."
 
 // ReadAllLines — returns string[] with one element per line
 string[] allLines = File.ReadAllLines(stagingFile, Encoding.UTF8);
-Console.WriteLine($"  Lines: {allLines.Length}");
+$"  Lines: {allLines.Length}"
 foreach (var (line, i) in allLines.Select((l, i) => (l, i)))
-    Console.WriteLine($"  [{i}]: {line}");
+    $"  [{i}]: {line}"
 ```
 
     Working dir: C:\Users\aperi\AppData\Local\Temp\fileio_cs_da9b60f9
@@ -99,6 +99,9 @@ foreach (var (line, i) in allLines.Select((l, i) => (l, i)))
 
 #### StreamReader and StreamWriter
 
+> [!info] StreamWriter for Buffered Writing
+> `StreamWriter` buffers writes and flushes in batches — more efficient than `WriteAllText` for many small writes.
+
 ```csharp
 // StreamReader — line-by-line reading for large files
 
@@ -107,11 +110,9 @@ using (var reader = new StreamReader(stagingFile, Encoding.UTF8))
     string? line;
     int lineNum = 0;
     while ((line = reader.ReadLine()) != null)
-        Console.WriteLine($"  Line {lineNum++}: {line}");
+        $"  Line {lineNum++}: {line}"
 }
 
-// StreamWriter — buffered writing
-// more efficient than WriteAllText for many small writes
 var logFile = Path.Combine(tmpDir, "etl_log.txt");
 using (var writer = new StreamWriter(logFile, append: false, Encoding.UTF8))
 {
@@ -120,7 +121,7 @@ using (var writer = new StreamWriter(logFile, append: false, Encoding.UTF8))
     writer.WriteLine("2024-01-15T03:00:05|INFO|Extracted 1.5M rows from BigQuery");
     writer.WriteLine("2024-01-15T03:00:12|INFO|Loaded to GCS");
 }
-Console.WriteLine($"  Written: {Path.GetFileName(logFile)}");
+$"  Written: {Path.GetFileName(logFile)}"
 ```
 
       Line 0: pipeline_id|status|rows_processed
@@ -139,29 +140,28 @@ using (var writer = new StreamWriter(logFile, append: true, Encoding.UTF8))
     writer.WriteLine("2024-01-15T03:02:00|INFO|Pipeline completed");
 
 var lines = File.ReadAllLines(logFile);
-Console.WriteLine($"  Total lines: {lines.Length}, Last: {lines[^1]}");
+$"  Total lines: {lines.Length}, Last: {lines[^1]}"
 
 // Binary I/O — File.WriteAllBytes / File.ReadAllBytes for raw bytes
 var binFile = Path.Combine(tmpDir, "sample.bin");
 byte[] pngMagic = { 0x89, 0x50, 0x4E, 0x47 };
 File.WriteAllBytes(binFile, pngMagic);
 byte[] raw = File.ReadAllBytes(binFile);
-Console.WriteLine($"  Binary: {BitConverter.ToString(raw)}");
+BitConverter.ToString(raw)   // Binary
 
 // Path operations — System.IO.Path for cross-platform path manipulation
 var p = @"/data/lake/raw/events/2024/01/events.parquet";
-Console.WriteLine($"  FileName:  {Path.GetFileName(p)}");
-Console.WriteLine($"  Extension: {Path.GetExtension(p)}");
-Console.WriteLine($"  Directory: {Path.GetDirectoryName(p)}");
-Console.WriteLine($"  Combine:   {Path.Combine(tmpDir, "output", "data.csv")}");
+Path.GetFileName(p)                          // FileName
+Path.GetExtension(p)                         // Extension
+Path.GetDirectoryName(p)                     // Directory
+Path.Combine(tmpDir, "output", "data.csv")   // Combine
 
 // List files
 foreach (var f in Directory.GetFiles(tmpDir))
-    Console.WriteLine($"    {Path.GetFileName(f)}");
+    Path.GetFileName(f)
 
 // Cleanup
 Directory.Delete(tmpDir, recursive: true);
-Console.WriteLine($"\n  Cleaned up: {tmpDir}");
 ```
 
       Total lines: 6, Last: 2024-01-15T03:02:00|INFO|Pipeline completed
@@ -202,18 +202,18 @@ using (var writer = new StreamWriter(csvFile, false, Encoding.UTF8))
     writer.WriteLine("etl_002,failed,0,0.1");
     writer.WriteLine("etl_003,success,8200,1.7");
 }
-Console.WriteLine($"  Written: {Path.GetFileName(csvFile)}");
+$"  Written: {Path.GetFileName(csvFile)}"
 
 // Read CSV with string.Split — works only if values never contain commas
 using (var reader = new StreamReader(csvFile, Encoding.UTF8))
 {
     var header = reader.ReadLine()?.Split(',');
-    Console.WriteLine($"  Header: [{string.Join(", ", header!)}]");
+    $"  Header: [{string.Join(", ", header!)}]"
     string? line;
     while ((line = reader.ReadLine()) != null)
     {
         var parts = line.Split(',');
-        Console.WriteLine($"  {parts[0]}: {parts[1]}, {int.Parse(parts[2]):N0} rows");
+        $"  {parts[0]}: {parts[1]}, {int.Parse(parts[2]):N0} rows"
     }
 }
 ```
@@ -264,7 +264,7 @@ List<Dictionary<string, string>> ReadCsvAsDict(string path)
 
 var rows = ReadCsvAsDict(csvFile);
 foreach (var row in rows)
-    Console.WriteLine($"  {row["pipeline_id"]}: {row["status"]}");
+    $"  {row["pipeline_id"]}: {row["status"]}"
 ```
 
       etl_001: success
@@ -278,7 +278,7 @@ foreach (var row in rows)
 
 var pipeData = "id|name|region\n1|Alice|EMEA\n2|Bob|APAC";
 foreach (var line in pipeData.Split('\n'))
-    Console.WriteLine($"  Pipe: [{string.Join(", ", line.Split('|'))}]");
+    $"  Pipe: [{string.Join(", ", line.Split('|'))}]"
 ```
 
       Pipe: [id, name, region]
@@ -293,7 +293,7 @@ foreach (var line in pipeData.Split('\n'))
 var sw = new StringWriter();
 sw.WriteLine("event_id,event_type,timestamp");
 sw.WriteLine("evt_001,page_view,2024-01-15T10:30:00Z");
-Console.WriteLine($"  In-memory CSV: {sw.ToString().TrimEnd()}");
+sw.ToString().TrimEnd()   // In-memory CSV
 
 // Cleanup
 Directory.Delete(tmpDir, recursive: true);
@@ -351,7 +351,7 @@ var pipelineMeta = new
     Tags = new[] { "production", "clickstream", "daily" },
     RowCount = 1_500_000,
 };
-Console.WriteLine(JsonSerializer.Serialize(pipelineMeta, jsonOptions));
+JsonSerializer.Serialize(pipelineMeta, jsonOptions)
 ```
 
     {
@@ -383,7 +383,7 @@ var run = new PipelineRun(
     CostUsd: 0.45m,
     ErrorMessage: null      // omitted due to WhenWritingNull
 );
-Console.WriteLine(JsonSerializer.Serialize(run, jsonOptions));
+JsonSerializer.Serialize(run, jsonOptions)
 ```
 
     {
@@ -409,9 +409,9 @@ var jsonInput = @"{
 }";
 
 var run2 = JsonSerializer.Deserialize<PipelineRun>(jsonInput, jsonOptions);
-Console.WriteLine($"  Pipeline: {run2!.PipelineId}");
-Console.WriteLine($"  Status:   {run2.Status}");
-Console.WriteLine($"  Error:    {run2.ErrorMessage}");
+run2!.PipelineId     // Pipeline
+run2.Status          // Status
+run2.ErrorMessage    // Error
 ```
 
       Pipeline: etl_purchases
@@ -426,7 +426,7 @@ Console.WriteLine($"  Error:    {run2.ErrorMessage}");
 var jsonFile = Path.Combine(tmpDir, "pipeline_config.json");
 File.WriteAllText(jsonFile, JsonSerializer.Serialize(run, jsonOptions), Encoding.UTF8);
 var loaded = JsonSerializer.Deserialize<PipelineRun>(File.ReadAllText(jsonFile), jsonOptions);
-Console.WriteLine($"  Loaded: {loaded!.PipelineId}, {loaded.RowsProcessed:N0} rows\n");
+$"  Loaded: {loaded!.PipelineId}, {loaded.RowsProcessed:N0} rows"
 
 // JsonDocument — low-level read-only DOM for querying without a class
 var apiResponse = @"{
@@ -442,10 +442,10 @@ var apiResponse = @"{
 {
     using var doc = JsonDocument.Parse(apiResponse);
     var root = doc.RootElement;
-    Console.WriteLine($"  Job:       {root.GetProperty("job_id").GetString()}");
+    root.GetProperty("job_id").GetString()                // Job
     var stats = root.GetProperty("statistics");
-    Console.WriteLine($"  Rows:      {stats.GetProperty("total_rows").GetInt64():N0}");
-    Console.WriteLine($"  Cache hit: {stats.GetProperty("cache_hit").GetBoolean()}");
+    stats.GetProperty("total_rows").GetInt64()              // Rows
+    stats.GetProperty("cache_hit").GetBoolean()             // Cache hit
 }
 ```
 
@@ -484,7 +484,7 @@ using (var reader = new StreamReader(jsonlFile, Encoding.UTF8))
     {
         using var lineDoc = JsonDocument.Parse(line);
         var r = lineDoc.RootElement;
-        Console.WriteLine($"  {r.GetProperty("event_id")}: {r.GetProperty("type")} by user {r.GetProperty("user_id")}");
+        $"  {r.GetProperty("event_id")}: {r.GetProperty("type")} by user {r.GetProperty("user_id")}"
     }
 }
 ```
@@ -507,7 +507,7 @@ using (var reader = new StreamReader(jsonlFile, Encoding.UTF8))
     utf8Writer.WriteNumber("rows_processed", 1_500_000);
     utf8Writer.WriteEndObject();
     utf8Writer.Flush();
-    Console.WriteLine($"  Utf8JsonWriter:\n{Encoding.UTF8.GetString(ms.ToArray())}");
+    Encoding.UTF8.GetString(ms.ToArray())   // Utf8JsonWriter output
 }
 
 // Cleanup
@@ -540,8 +540,8 @@ var jsonConfig = @"{
         ""dataset"": ""raw_events""
     }
 }";
-Console.WriteLine("JSON:");
-Console.WriteLine(jsonConfig);
+// JSON version
+jsonConfig
 ```
 
     JSON:
@@ -581,8 +581,8 @@ quality_checks:
 
 tags: [production, clickstream, daily]
 ";
-Console.WriteLine("YAML:");
-Console.WriteLine(yamlConfig);
+// YAML version
+yamlConfig
 ```
 
     YAML:
@@ -610,7 +610,6 @@ Console.WriteLine(yamlConfig);
 ```csharp
 // YamlDotNet usage pattern — serialize and deserialize YAML in C#
 
-Console.WriteLine(@"
 // Deserialize YAML → object
 var deserializer = new DeserializerBuilder()
     .WithNamingConvention(UnderscoredNamingConvention.Instance)
@@ -624,8 +623,7 @@ var serializer = new SerializerBuilder()
 string yaml = serializer.Serialize(config);
 
 // Read from file
-var config2 = deserializer.Deserialize<PipelineConfig>(File.ReadAllText(""config.yaml""));
-");
+var config2 = deserializer.Deserialize<PipelineConfig>(File.ReadAllText("config.yaml"));
 ```
 
     
@@ -649,18 +647,16 @@ var config2 = deserializer.Deserialize<PipelineConfig>(File.ReadAllText(""config
 ```csharp
 // JSON vs YAML comparison — when to use each format
 
-Console.WriteLine(@"
-Feature           JSON                    YAML
-─────────────────────────────────────────────────────
-Comments          NO                      YES (#)
-Quoting           REQUIRED (double)       Optional
-Trailing commas   NO                      N/A
-Readability       Compact                 Human-friendly
-Use case          APIs, data exchange     Config files (dbt, Airflow, K8s)
-C# package        System.Text.Json        YamlDotNet
-Security          Safe                    Use SafeYaml / safe_load ONLY
-Multi-document    No                      Yes (--- separator)
-");
+// Feature           JSON                    YAML
+// ─────────────────────────────────────────────────────
+// Comments          NO                      YES (#)
+// Quoting           REQUIRED (double)       Optional
+// Trailing commas   NO                      N/A
+// Readability       Compact                 Human-friendly
+// Use case          APIs, data exchange     Config files (dbt, Airflow, K8s)
+// C# package        System.Text.Json        YamlDotNet
+// Security          Safe                    Use SafeYaml / safe_load ONLY
+// Multi-document    No                      Yes (--- separator)
 ```
 
     
@@ -695,19 +691,17 @@ For an architecture-level comparison of when to choose JSON, CSV, Parquet, or Av
 var tmpDir = Path.Combine(Path.GetTempPath(), "streams_cs_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
 
-Console.WriteLine(@"
-Stream (abstract base)
-├── FileStream         — bytes to/from a file
-├── MemoryStream       — bytes in memory (no disk)
-├── NetworkStream      — bytes over TCP
-├── GZipStream         — compress/decompress on the fly
-└── BufferedStream     — adds buffering to any stream
-
-Wrappers (sit on top of a Stream):
-├── StreamReader / StreamWriter  — text I/O (encoding)
-├── BinaryReader / BinaryWriter  — primitive types
-└── Utf8JsonWriter               — JSON to a stream
-");
+// Stream (abstract base)
+// ├── FileStream         — bytes to/from a file
+// ├── MemoryStream       — bytes in memory (no disk)
+// ├── NetworkStream      — bytes over TCP
+// ├── GZipStream         — compress/decompress on the fly
+// └── BufferedStream     — adds buffering to any stream
+//
+// Wrappers (sit on top of a Stream):
+// ├── StreamReader / StreamWriter  — text I/O (encoding)
+// ├── BinaryReader / BinaryWriter  — primitive types
+// └── Utf8JsonWriter               — JSON to a stream
 ```
 
     
@@ -735,10 +729,10 @@ using (var ms = new MemoryStream())
     byte[] payload = Encoding.UTF8.GetBytes("etl_001|success|15000\n");
     ms.Write(payload);
 
-    Console.WriteLine($"  Position: {ms.Position}, Length: {ms.Length} bytes");
+    $"  Position: {ms.Position}, Length: {ms.Length} bytes"
 
     ms.Seek(0, SeekOrigin.Begin);
-    Console.WriteLine($"  Content: {Encoding.UTF8.GetString(ms.ToArray()).TrimEnd()}");
+    Encoding.UTF8.GetString(ms.ToArray()).TrimEnd()   // Content
 }
 ```
 
@@ -761,8 +755,8 @@ using (var ms = new MemoryStream())
         writer.Flush();
     }
     uploadStream.Seek(0, SeekOrigin.Begin);
-    Console.WriteLine($"\n  Upload payload: {uploadStream.Length} bytes");
-    Console.WriteLine($"  Preview: {Encoding.UTF8.GetString(uploadStream.ToArray()).TrimEnd()}");
+    $"  Upload payload: {uploadStream.Length} bytes"
+    Encoding.UTF8.GetString(uploadStream.ToArray()).TrimEnd()   // Preview
 }
 ```
 
@@ -782,7 +776,7 @@ sw.WriteLine("pipeline_id|status|rows");
 sw.WriteLine("etl_001|success|15000");
 sw.WriteLine("etl_002|failed|0");
 var builtString = sw.ToString();
-Console.WriteLine($"  StringWriter:\n  {builtString.TrimEnd()}");
+builtString.TrimEnd()   // StringWriter output
 ```
 
       StringWriter:
@@ -799,7 +793,7 @@ var sr = new StringReader(builtString);
 string? line;
 int lineNum = 0;
 while ((line = sr.ReadLine()) != null)
-    Console.WriteLine($"  StringReader line {lineNum++}: {line}");
+    $"  StringReader line {lineNum++}: {line}"
 ```
 
       StringReader line 0: pipeline_id|status|rows
@@ -819,7 +813,7 @@ using (var bw = new BinaryWriter(fs))
     bw.Write(43);    bw.Write(19.8);  bw.Write(false);  // sensor 43
     bw.Write(44);    bw.Write(31.2);  bw.Write(true);   // sensor 44
 }
-Console.WriteLine($"  Written: {new FileInfo(binFile).Length} bytes");
+new FileInfo(binFile).Length   // bytes written
 ```
 
       Written: 39 bytes
@@ -837,7 +831,7 @@ using (var br = new BinaryReader(fs))
         var id = br.ReadInt32();      // 4 bytes → int
         var val = br.ReadDouble();    // 8 bytes → double
         var alert = br.ReadBoolean(); // 1 byte → bool
-        Console.WriteLine($"  Sensor {id}: {val:F1}, alert={alert}");
+        $"  Sensor {id}: {val:F1}, alert={alert}"
     }
 }
 ```
@@ -862,8 +856,8 @@ using (var br = new BinaryReader(fs))
     }
     binaryMs.Seek(0, SeekOrigin.Begin);
     var brMem = new BinaryReader(binaryMs);
-    Console.WriteLine($"  From memory: sensor={brMem.ReadInt32()}, value={brMem.ReadDouble():F1}, " +
-                      $"alert={brMem.ReadBoolean()}, region={brMem.ReadString()}");
+    $"  From memory: sensor={brMem.ReadInt32()}, value={brMem.ReadDouble():F1}, " +
+    $"alert={brMem.ReadBoolean()}, region={brMem.ReadString()}"
 }
 ```
 
@@ -881,7 +875,7 @@ using (var fs = new FileStream(rawFile, FileMode.Create, FileAccess.Write))
 {
     byte[] data = { 0x01, 0x02, 0x03, 0x04, 0x05 };
     fs.Write(data);
-    Console.WriteLine($"  Wrote {fs.Length} bytes");
+    fs.Length   // bytes written
 }
 
 // Read with Seek — skip first 2 bytes, read 3
@@ -890,7 +884,7 @@ using (var fs = new FileStream(rawFile, FileMode.Open, FileAccess.Read))
     fs.Seek(2, SeekOrigin.Begin);
     var buffer = new byte[3];
     int bytesRead = fs.Read(buffer, 0, buffer.Length);
-    Console.WriteLine($"  Read {bytesRead} bytes from offset 2: [{string.Join(", ", buffer.Select(b => $"0x{b:X2}"))}]");
+    $"  Read {bytesRead} bytes from offset 2: [{string.Join(", ", buffer.Select(b => $"0x{b:X2}"))}]"
 }
 
 // Cleanup
@@ -917,11 +911,10 @@ var asyncFile = Path.Combine(tmpDir, "data.txt");
 
 // Async write — File.WriteAllTextAsync releases the thread during disk write
 await File.WriteAllTextAsync(asyncFile, "line1\nline2\nline3\n", Encoding.UTF8);
-Console.WriteLine("  Written async");
 
 // Async read — File.ReadAllTextAsync releases the thread during disk read
 var content = await File.ReadAllTextAsync(asyncFile, Encoding.UTF8);
-Console.WriteLine($"  Read async: {content.TrimEnd().Replace("\n", ", ")}");
+content.TrimEnd().Replace("\n", ", ")   // Read async
 
 // Async line-by-line with StreamReader + CancellationToken
 var cts = new CancellationTokenSource();
@@ -930,7 +923,7 @@ using (var reader = new StreamReader(asyncFile, Encoding.UTF8))
     string? line;
     int lineNum = 0;
     while ((line = await reader.ReadLineAsync(cts.Token)) != null)
-        Console.WriteLine($"    Async line {lineNum++}: {line}");
+        $"    Async line {lineNum++}: {line}"
 }
 
 // Async write with StreamWriter
@@ -941,7 +934,7 @@ await using (var writer = new StreamWriter(asyncLog, false, Encoding.UTF8))
     await writer.WriteLineAsync("2024-01-15 INFO Processing 1M rows");
     await writer.FlushAsync();
 }
-Console.WriteLine($"  Async log: {await File.ReadAllTextAsync(asyncLog)}");
+await File.ReadAllTextAsync(asyncLog)   // Async log
 
 Directory.Delete(tmpDir, recursive: true);
 ```
@@ -965,7 +958,6 @@ Directory.Delete(tmpDir, recursive: true);
 > Source generators require a partial class in a real project. The pattern below demonstrates the API — actual codegen needs a `.csproj`.
 
 ```csharp
-Console.WriteLine(@"
 // In a real project (not notebook):
 
 // 1. Define your type
@@ -982,7 +974,6 @@ var json = JsonSerializer.Serialize(quote, QuoteContext.Default.StockQuote);
 var parsed = JsonSerializer.Deserialize(json, QuoteContext.Default.StockQuote);
 
 // Result: no reflection, no runtime codegen, AOT-compatible, 2-5x faster
-");
 ```
 
     
@@ -1033,8 +1024,8 @@ var parsed = JsonSerializer.Deserialize(json, QuoteContext.Default.StockQuote);
         }
     }
 
-    Console.WriteLine($"  Extracted {symbols.Count} symbols: [{string.Join(", ", symbols)}]");
-    Console.WriteLine("  Memory: zero heap allocations during parsing (only the result list)");
+    $"  Extracted {symbols.Count} symbols: [{string.Join(", ", symbols)}]"
+    // Memory: zero heap allocations during parsing (only the result list)
 }
 ```
 
@@ -1066,8 +1057,8 @@ using (var accessor = mmf.CreateViewAccessor(500_000, 4))
 {
     var b0 = accessor.ReadByte(0);
     var b1 = accessor.ReadByte(1);
-    Console.WriteLine($"  Bytes at offset 500000: {b0}, {b1}");
-    Console.WriteLine($"  Expected: {500000 % 256}, {500001 % 256}");
+    $"  Bytes at offset 500000: {b0}, {b1}"
+    $"  Expected: {500000 % 256}, {500001 % 256}"
 }
 
 // Read a struct-like record at a specific offset
@@ -1076,18 +1067,15 @@ using (var accessor = mmf.CreateViewAccessor(0, 100))
     // Read first 10 bytes
     var buffer = new byte[10];
     accessor.ReadArray(0, buffer, 0, 10);
-    Console.WriteLine($"  First 10 bytes: [{string.Join(", ", buffer)}]");
+    $"  First 10 bytes: [{string.Join(", ", buffer)}]"
 }
 
 }
 
-// Shared memory between processes — named MMF
-Console.WriteLine(@"
-  // Named MMF for inter-process shared memory:
-  // Process A: MemoryMappedFile.CreateNew(""shared_data"", 1024)
-  // Process B: MemoryMappedFile.OpenExisting(""shared_data"")
-  // Both read/write the same memory region — no serialization needed
-");
+// Named MMF for inter-process shared memory:
+// Process A: MemoryMappedFile.CreateNew("shared_data", 1024)
+// Process B: MemoryMappedFile.OpenExisting("shared_data")
+// Both read/write the same memory region — no serialization needed
 
 Directory.Delete(tmpDir, recursive: true);
 ```
@@ -1112,7 +1100,6 @@ Directory.Delete(tmpDir, recursive: true);
 > This demonstrates the pattern — real usage requires a continuous data source (network stream, log pipe).
 
 ```csharp
-Console.WriteLine(@"
 // Production pattern: parse newline-delimited records from a network stream
 
 var pipe = new Pipe();
@@ -1139,8 +1126,7 @@ async Task ReadPipeAsync(PipeReader reader) {
         if (result.IsCompleted) break;
     }
 }
-");
-Console.WriteLine("  Pipelines: used by ASP.NET Core Kestrel for HTTP parsing");
+// Pipelines: used by ASP.NET Core Kestrel for HTTP parsing
 ```
 
     
@@ -1188,7 +1174,7 @@ Console.WriteLine("  Pipelines: used by ASP.NET Core Kestrel for HTTP parsing");
 // Traditional: line.Split(',') — allocates N strings per line
 var csvLine = "SAP.DE,2024-03-12,166.52,168.00,165.30,82621";
 var parts = csvLine.Split(','); // allocates string[] + 6 strings
-Console.WriteLine($"  Split: {parts[0]}, close={parts[2]}");
+$"  Split: {parts[0]}, close={parts[2]}"
 
 // Span-based: zero allocations until you need the final value
 {
@@ -1212,8 +1198,8 @@ Console.WriteLine($"  Split: {parts[0]}, close={parts[2]}");
 
     // Only allocate when you need the final value
     var closeValue = double.Parse(close);
-    Console.WriteLine($"  Span: {symbol.ToString()}, close={closeValue}");
-    Console.WriteLine("  Allocations: 0 during parsing, 1 string for final ToString()");
+    $"  Span: {symbol.ToString()}, close={closeValue}"
+    // Allocations: 0 during parsing, 1 string for final ToString()
 }
 ```
 
@@ -1237,26 +1223,26 @@ var text = "Euro Stoxx 50: SAP €166.52, ASML €685.40";
 // UTF-8: variable-length, ASCII-compatible, the internet standard
 var utf8Bytes = Encoding.UTF8.GetBytes(text);
 var utf8Back = Encoding.UTF8.GetString(utf8Bytes);
-Console.WriteLine($"  UTF-8:    {utf8Bytes.Length} bytes, roundtrip={text == utf8Back}");
+$"  UTF-8:    {utf8Bytes.Length} bytes, roundtrip={text == utf8Back}"
 
 // ASCII: 7-bit, non-ASCII chars become '?' — data loss!
 var asciiBytes = Encoding.ASCII.GetBytes(text);
 var asciiBack = Encoding.ASCII.GetString(asciiBytes);
-Console.WriteLine($"  ASCII:    {asciiBytes.Length} bytes, roundtrip={text == asciiBack} (€ lost!)");
-Console.WriteLine($"  ASCII:    \"{asciiBack}\"");
+$"  ASCII:    {asciiBytes.Length} bytes, roundtrip={text == asciiBack} (€ lost!)"
+asciiBack
 
 // UTF-16: C#'s internal format, 2 bytes per char (4 for supplementary)
 var utf16Bytes = Encoding.Unicode.GetBytes(text);
-Console.WriteLine($"  UTF-16:   {utf16Bytes.Length} bytes (2x larger than UTF-8 for ASCII text)");
+$"  UTF-16:   {utf16Bytes.Length} bytes (2x larger than UTF-8 for ASCII text)"
 
 // Latin-1 (ISO 8859-1): single-byte Western European — used in some legacy systems
 var latin1Bytes = Encoding.Latin1.GetBytes(text);
 var latin1Back = Encoding.Latin1.GetString(latin1Bytes);
-Console.WriteLine($"  Latin-1:  {latin1Bytes.Length} bytes, roundtrip={text == latin1Back}");
+$"  Latin-1:  {latin1Bytes.Length} bytes, roundtrip={text == latin1Back}"
 
 // Detect BOM (Byte Order Mark) in a file
 var bom = Encoding.UTF8.GetPreamble();
-Console.WriteLine($"  UTF-8 BOM: [{string.Join(", ", bom.Select(b => $"0x{b:X2}"))}] ({bom.Length} bytes)");
+$"  UTF-8 BOM: [{string.Join(", ", bom.Select(b => $"0x{b:X2}"))}] ({bom.Length} bytes)"
 ```
 
       UTF-8:    44 bytes, roundtrip=True
@@ -1274,21 +1260,21 @@ Console.WriteLine($"  UTF-8 BOM: [{string.Join(", ", bom.Select(b => $"0x{b:X2}"
 var original = "SAP.DE|2024-03-12|166.52";
 var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(original));
 var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(base64));
-Console.WriteLine($"  Original:  {original}");
-Console.WriteLine($"  Base64:    {base64}");
-Console.WriteLine($"  Decoded:   {decoded}");
-Console.WriteLine($"  Roundtrip: {original == decoded}");
+original     // Original
+base64       // Base64
+decoded      // Decoded
+original == decoded   // Roundtrip
 
 // Encode raw bytes (e.g., a hash or encrypted payload)
 var rawBytes = new byte[] { 0x89, 0x50, 0x4E, 0x47 }; // PNG header
 var b64Bytes = Convert.ToBase64String(rawBytes);
-Console.WriteLine($"\n  Raw bytes: [{BitConverter.ToString(rawBytes)}]");
-Console.WriteLine($"  Base64:    {b64Bytes}");
+BitConverter.ToString(rawBytes)   // Raw bytes
+b64Bytes   // Base64
 
 // URL-safe Base64 (replace + and / with - and _, strip padding =)
 var urlSafe = base64.Replace("+", "-").Replace("/", "_").TrimEnd('=');
-Console.WriteLine($"\n  Standard:  {base64}");
-Console.WriteLine($"  URL-safe:  {urlSafe}");
+base64     // Standard
+urlSafe    // URL-safe
 ```
 
       Original:  SAP.DE|2024-03-12|166.52
@@ -1311,15 +1297,15 @@ var hashBytes = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE };
 var hex = Convert.ToHexString(hashBytes);           // .NET 5+
 var hexLower = Convert.ToHexString(hashBytes).ToLower();
 var backToBytes = Convert.FromHexString(hex);
-Console.WriteLine($"  Bytes:     [{BitConverter.ToString(hashBytes)}]");
-Console.WriteLine($"  Hex:       {hex}");
-Console.WriteLine($"  Hex lower: {hexLower}");
-Console.WriteLine($"  Roundtrip: {hashBytes.SequenceEqual(backToBytes)}");
+BitConverter.ToString(hashBytes)          // Bytes
+hex                                       // Hex
+hexLower                                  // Hex lower
+hashBytes.SequenceEqual(backToBytes)      // Roundtrip
 
 // SHA-256 hash displayed as hex (standard format)
 var sha256 = SHA256.HashData(Encoding.UTF8.GetBytes("SAP.DE"));
-Console.WriteLine($"\n  SHA-256 of \"SAP.DE\": {Convert.ToHexString(sha256).ToLower()}");
-Console.WriteLine($"  Length: {sha256.Length} bytes = {sha256.Length * 2} hex chars");
+Convert.ToHexString(sha256).ToLower()     // SHA-256 of "SAP.DE"
+$"  Length: {sha256.Length} bytes = {sha256.Length * 2} hex chars"
 ```
 
       Bytes:     [DE-AD-BE-EF-CA-FE]
@@ -1338,23 +1324,23 @@ Console.WriteLine($"  Length: {sha256.Length} bytes = {sha256.Length * 2} hex ch
 var raw = "SAP.DE close=166.52 change=+2.5% sector=Tech&Finance";
 var escaped = Uri.EscapeDataString(raw);
 var unescaped = Uri.UnescapeDataString(escaped);
-Console.WriteLine($"  Raw:       {raw}");
-Console.WriteLine($"  Escaped:   {escaped}");
-Console.WriteLine($"  Unescaped: {unescaped}");
-Console.WriteLine($"  Roundtrip: {raw == unescaped}");
+raw          // Raw
+escaped      // Escaped
+unescaped    // Unescaped
+raw == unescaped   // Roundtrip
 
 // Building a safe API URL with encoded parameters
 var symbol = "BRK.B";  // dot and capital letters
 var note = "Q1 2024 earnings & revenue";
 var url = $"https://api.example.com/quote?symbol={Uri.EscapeDataString(symbol)}"
         + $"&note={Uri.EscapeDataString(note)}";
-Console.WriteLine($"\n  Safe URL: {url}");
+url   // Safe URL
 
 // WebUtility.UrlEncode — older API, encodes space as + (HTML form style)
 var webEncoded = WebUtility.UrlEncode(raw);
-Console.WriteLine($"\n  WebUtility:     {webEncoded}");
-Console.WriteLine($"  EscapeDataStr:  {escaped}");
-Console.WriteLine("  Difference: space → + (WebUtility) vs %20 (EscapeDataString)");
+webEncoded   // WebUtility
+escaped      // EscapeDataStr
+// Difference: space → + (WebUtility) vs %20 (EscapeDataString)
 ```
 
       Raw:       SAP.DE close=166.52 change=+2.5% sector=Tech&Finance
@@ -1376,17 +1362,18 @@ Console.WriteLine("  Difference: space → + (WebUtility) vs %20 (EscapeDataStri
 var sample = "SAP €166.52";
 var sampleBytes = Encoding.UTF8.GetBytes(sample);
 
-Console.WriteLine($"  Original:   {sample}");
-Console.WriteLine($"  UTF-8 bytes: [{string.Join(", ", sampleBytes.Select(b => $"0x{b:X2}"))}]");
-Console.WriteLine($"  Base64:      {Convert.ToBase64String(sampleBytes)}");
-Console.WriteLine($"  Hex:         {Convert.ToHexString(sampleBytes)}");
-Console.WriteLine($"  URL:         {Uri.EscapeDataString(sample)}");
-Console.WriteLine($"\n  {"Format",-15} {"Output",-40} {"Size",5}");
-Console.WriteLine($"  {new string('-', 62)}");
-Console.WriteLine($"  {"UTF-8",-15} {sampleBytes.Length + " bytes",-40} {sampleBytes.Length,5}");
-Console.WriteLine($"  {"Base64",-15} {Convert.ToBase64String(sampleBytes).Length + " chars",-40} {Convert.ToBase64String(sampleBytes).Length,5}");
-Console.WriteLine($"  {"Hex",-15} {Convert.ToHexString(sampleBytes).Length + " chars",-40} {Convert.ToHexString(sampleBytes).Length,5}");
-Console.WriteLine($"  {"URL",-15} {Uri.EscapeDataString(sample).Length + " chars",-40} {Uri.EscapeDataString(sample).Length,5}");
+sample                                                                // Original
+$"  UTF-8 bytes: [{string.Join(", ", sampleBytes.Select(b => $"0x{b:X2}"))}]"
+Convert.ToBase64String(sampleBytes)                                   // Base64
+Convert.ToHexString(sampleBytes)                                      // Hex
+Uri.EscapeDataString(sample)                                          // URL
+
+$"  {"Format",-15} {"Output",-40} {"Size",5}"
+$"  {new string('-', 62)}"
+$"  {"UTF-8",-15} {sampleBytes.Length + " bytes",-40} {sampleBytes.Length,5}"
+$"  {"Base64",-15} {Convert.ToBase64String(sampleBytes).Length + " chars",-40} {Convert.ToBase64String(sampleBytes).Length,5}"
+$"  {"Hex",-15} {Convert.ToHexString(sampleBytes).Length + " chars",-40} {Convert.ToHexString(sampleBytes).Length,5}"
+$"  {"URL",-15} {Uri.EscapeDataString(sample).Length + " chars",-40} {Uri.EscapeDataString(sample).Length,5}"
 ```
 
       Original:   SAP €166.52

@@ -37,15 +37,14 @@ client.DefaultRequestHeaders.Add("Accept", "application/json");
 
 // GET request — fetch data from an API endpoint
 // Financial example: fetch quotes, index data, EOD prices.
-Console.WriteLine("=== GET Request ===");
 var resp = await client.GetAsync("https://httpbin.org/get?ticker=AAPL&date=2024-03-15");
-Console.WriteLine($"Status: {(int)resp.StatusCode} {resp.StatusCode}");
+$"{(int)resp.StatusCode} {resp.StatusCode}"  // status
 
 // Parse JSON response
 var json = await resp.Content.ReadAsStringAsync();
 var doc = JsonDocument.Parse(json);
 var args = doc.RootElement.GetProperty("args");
-Console.WriteLine($"Args: ticker={args.GetProperty("ticker").GetString()}, date={args.GetProperty("date").GetString()}");
+$"ticker={args.GetProperty("ticker").GetString()}, date={args.GetProperty("date").GetString()}"  // args
 ```
 
     === GET Request ===
@@ -56,10 +55,9 @@ Console.WriteLine($"Args: ticker={args.GetProperty("ticker").GetString()}, date=
 
 ```csharp
 // ReadFromJsonAsync deserializes the response body directly into a typed object
-Console.WriteLine("=== GET with JSON deserialization ===");
 var dataResp = await client.GetAsync("https://httpbin.org/get?source=dotnet");
 var data = JsonSerializer.Deserialize<JsonElement>(await dataResp.Content.ReadAsStringAsync());
-Console.WriteLine($"Origin: {data.GetProperty("origin").GetString()}");
+data.GetProperty("origin").GetString()  // origin
 ```
 
     === GET with JSON deserialization ===
@@ -70,7 +68,6 @@ Console.WriteLine($"Origin: {data.GetProperty("origin").GetString()}");
 ```csharp
 // POST request — send a JSON body to an API endpoint
 // Financial example: submit trade order, upload events.
-Console.WriteLine("=== POST Request ===");
 var tradeOrder = new
 {
     ticker = "AAPL",
@@ -85,8 +82,8 @@ var tradeOrder = new
 resp = await client.PostAsync("https://httpbin.org/post",
     new StringContent(JsonSerializer.Serialize(tradeOrder), Encoding.UTF8, "application/json"));
 var postData = JsonSerializer.Deserialize<JsonElement>(await resp.Content.ReadAsStringAsync());
-Console.WriteLine($"Status: {(int)resp.StatusCode}");
-Console.WriteLine($"Body echoed: {postData.GetProperty("json")}");
+(int)resp.StatusCode  // status
+postData.GetProperty("json")  // body echoed
 ```
 
     === POST Request ===
@@ -103,15 +100,14 @@ Console.WriteLine($"Body echoed: {postData.GetProperty("json")}");
 
 ```csharp
 // Custom headers — API keys, bearer tokens for financial data providers
-Console.WriteLine("=== Custom Headers ===");
 var authClient = new HttpClient();
 authClient.DefaultRequestHeaders.Add("Authorization", "Bearer sk_demo_fake_key_12345");
 authClient.DefaultRequestHeaders.Add("X-Client-Id", "trading-pipeline-v2");
 
 resp = await authClient.GetAsync("https://httpbin.org/headers");
 var headers = (JsonSerializer.Deserialize<JsonElement>(await resp.Content.ReadAsStringAsync())).GetProperty("headers");
-Console.WriteLine($"  Authorization: {headers.GetProperty("Authorization").GetString()}");
-Console.WriteLine($"  X-Client-Id: {headers.GetProperty("X-Client-Id").GetString()}");
+headers.GetProperty("Authorization").GetString()  // Authorization
+headers.GetProperty("X-Client-Id").GetString()  // X-Client-Id
 ```
 
     === Custom Headers ===
@@ -122,7 +118,6 @@ Console.WriteLine($"  X-Client-Id: {headers.GetProperty("X-Client-Id").GetString
 
 ```csharp
 // Status code handling — check success/failure and EnsureSuccessStatusCode
-Console.WriteLine("=== Status Code Handling ===");
 foreach (var statusCode in new[] { 200, 201, 400, 401, 404, 500 })
 {
     resp = await client.GetAsync($"https://httpbin.org/status/{statusCode}");
@@ -169,7 +164,6 @@ var client = new HttpClient();
 
 // Pagination — loop through pages, collect all results
 // Financial example: paginating through trade history.
-Console.WriteLine("=== Pagination ===");
 var allPages = new List<JsonElement>();
 for (int page = 1; page <= 3; page++)
 {
@@ -179,7 +173,7 @@ for (int page = 1; page <= 3; page++)
     allPages.Add(data);
     Console.WriteLine($"  Page {page}: fetched (args: {data.GetProperty("args")})" );
 }
-Console.WriteLine($"  Total pages: {allPages.Count}");
+allPages.Count  // total pages
 ```
 
     === Pagination ===
@@ -202,7 +196,6 @@ Console.WriteLine($"  Total pages: {allPages.Count}");
 ```csharp
 // Retry with exponential backoff — recover from transient API failures
 // Python equivalent: for attempt in range(max_retries): try/except with time.sleep()
-Console.WriteLine("=== Retry with Backoff ===");
 
 async Task<HttpResponseMessage> FetchWithRetry(HttpClient c, string url, int maxRetries = 3)
 {
@@ -233,7 +226,7 @@ async Task<HttpResponseMessage> FetchWithRetry(HttpClient c, string url, int max
 }
 
 var result = await FetchWithRetry(client, "https://httpbin.org/get?ticker=AAPL");
-Console.WriteLine($"  Success: {(int)result.StatusCode}");
+(int)result.StatusCode  // success
 ```
 
     === Retry with Backoff ===
@@ -244,7 +237,6 @@ Console.WriteLine($"  Success: {(int)result.StatusCode}");
 ```csharp
 // Bulk POST — send multiple records in one request
 // Financial example: batch-submit trade confirmations.
-Console.WriteLine("=== Bulk POST ===");
 var batch = new[]
 {
     new { trade_id = "TRD_001", ticker = "AAPL", qty = 100, price = 178.50 },
@@ -255,9 +247,9 @@ var batch = new[]
 var postResp = await client.PostAsync("https://httpbin.org/post",
     new StringContent(JsonSerializer.Serialize(new { trades = batch }), Encoding.UTF8, "application/json"));
 var postData = JsonSerializer.Deserialize<JsonElement>(await postResp.Content.ReadAsStringAsync());
-Console.WriteLine($"  Sent {batch.Length} trades");
-Console.WriteLine($"  Status: {(int)postResp.StatusCode}");
-Console.WriteLine($"  Server received: {postData.GetProperty("json").GetProperty("trades").GetArrayLength()} trades");
+batch.Length  // trades sent
+(int)postResp.StatusCode  // status
+postData.GetProperty("json").GetProperty("trades").GetArrayLength()  // server received
 ```
 
     === Bulk POST ===
@@ -302,8 +294,7 @@ var positions = new Dictionary<string, PortfolioPosition>
 // Health check — K8s liveness probe
 // ASP.NET: app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 // Python:  @app.get("/health")
-Console.WriteLine("=== GET /health ===");
-Console.WriteLine($"  {{ status: healthy }}");
+$"{{ status: healthy }}"
 ```
 
     === GET /health ===
@@ -330,17 +321,14 @@ Console.WriteLine($"  {{ status: healthy }}");
     return ("200 OK", positions.Values.ToList());
 }
 
-Console.WriteLine("=== GET /positions ===");
 var (s1, b1) = GetPositions();
-Console.WriteLine($"  {s1}: {((List<PortfolioPosition>)b1).Count} positions");
+$"{s1}: {((List<PortfolioPosition>)b1).Count} positions"
 
-Console.WriteLine("\n=== GET /positions?ticker=AAPL ===");
 var (s2, b2) = GetPositions("AAPL");
-Console.WriteLine($"  {s2}: {b2}");
+$"{s2}: {b2}"
 
-Console.WriteLine("\n=== GET /positions?ticker=TSLA ===");
 var (s3, b3) = GetPositions("TSLA");
-Console.WriteLine($"  {s3}: {b3}");
+$"{s3}: {b3}"
 ```
 
     === GET /positions ===
@@ -366,13 +354,11 @@ Console.WriteLine($"  {s3}: {b3}");
         : ("404 Not Found", (object)$"No position for {ticker}");
 }
 
-Console.WriteLine("=== GET /positions/MSFT ===");
 var (s1, b1) = GetPosition("MSFT");
-Console.WriteLine($"  {s1}: {b1}");
+$"{s1}: {b1}"
 
-Console.WriteLine("\n=== GET /positions/TSLA ===");
 var (s2, b2) = GetPosition("TSLA");
-Console.WriteLine($"  {s2}: {b2}");
+$"{s2}: {b2}"
 ```
 
     === GET /positions/MSFT ===
@@ -397,13 +383,11 @@ Console.WriteLine($"  {s2}: {b2}");
         $"{trade.Side} {trade.Quantity} {trade.Ticker} @ {trade.Price}"));
 }
 
-Console.WriteLine("=== POST /trades (new order) ===");
 var (s1, b1) = PostTrade(new Trade("TRD_001", "AAPL", "BUY", 100, 178.50));
-Console.WriteLine($"  {s1}: {b1}");
+$"{s1}: {b1}"
 
-Console.WriteLine("\n=== POST /trades (duplicate) ===");
 var (s2, b2) = PostTrade(new Trade("TRD_001", "AAPL", "BUY", 100, 178.50));
-Console.WriteLine($"  {s2}: {b2}");
+$"{s2}: {b2}"
 ```
 
     === POST /trades (new order) ===
@@ -426,13 +410,11 @@ Console.WriteLine($"  {s2}: {b2}");
     return ("200 OK", (object)new { status = "CANCELLED", trade_id = tradeId });
 }
 
-Console.WriteLine("=== DELETE /trades/TRD_001 ===");
 var (s1, b1) = DeleteTrade("TRD_001");
-Console.WriteLine($"  {s1}: {b1}");
+$"{s1}: {b1}"
 
-Console.WriteLine("\n=== DELETE /trades/TRD_999 (not found) ===");
 var (s2, b2) = DeleteTrade("TRD_999");
-Console.WriteLine($"  {s2}: {b2}");
+$"{s2}: {b2}"
 ```
 
     === DELETE /trades/TRD_001 ===
@@ -514,13 +496,13 @@ record TradeOrderDto(
 
 // Valid order
 var order = new TradeOrderDto("TRD_001", "AAPL", "BUY", 100, 178.50);
-Console.WriteLine($"Valid: {order}");
+order  // valid
 
 // Validate manually (ASP.NET does this automatically for [FromBody])
 var ctx = new ValidationContext(order);
 var results = new List<ValidationResult>();
 bool isValid = Validator.TryValidateObject(order, ctx, results, true);
-Console.WriteLine($"Valid: {isValid}");
+isValid  // valid
 
 // Invalid — test each constraint
 var badCases = new (string label, TradeOrderDto dto)[] {
@@ -553,10 +535,10 @@ Implement `IValidatableObject.Validate()` for rules that span multiple fields
 (e.g. `EndDate` must be after `StartDate`). Called automatically after Data Annotation
 validation passes. Python equivalent: `@model_validator(mode="after")`.
 
-```csharp
-// PipelineConfigDto — record with IValidatableObject for cross-field validation
-// Type declarations must be in their own cell in .NET Interactive
+> [!info] .NET Interactive Cell Requirement
+> Record and class declarations must be in their own cell in .NET Interactive notebooks. Top-level statements and type declarations cannot share a cell.
 
+```csharp
 record PipelineConfigDto(
     [Required, RegularExpression(@"^[a-z][a-z0-9_]*$",
         ErrorMessage = "Name must be snake_case")]
@@ -597,20 +579,20 @@ var cfg = new PipelineConfigDto("daily_etl", "raw.events", "analytics.events_agg
     5000, new DateOnly(2024, 1, 1), new DateOnly(2024, 3, 15));
 var cfgResults = new List<ValidationResult>();
 Validator.TryValidateObject(cfg, new ValidationContext(cfg), cfgResults, true);
-Console.WriteLine($"Valid config: {cfgResults.Count == 0}");
+cfgResults.Count == 0  // valid config
 
 // Invalid — end before start
 var badCfg = new PipelineConfigDto("daily_etl", "raw.events", "analytics.out",
     1000, new DateOnly(2024, 6, 1), new DateOnly(2024, 1, 1));
 var badResults = new List<ValidationResult>();
 Validator.TryValidateObject(badCfg, new ValidationContext(badCfg), badResults, true);
-Console.WriteLine($"End before start: {(badResults.Count > 0 ? $"REJECTED — {badResults[0].ErrorMessage}" : "PASSED")}");
+badResults.Count > 0 ? $"REJECTED — {badResults[0].ErrorMessage}" : "PASSED"  // end before start
 
 // Invalid — non-snake_case name
 var badName = new PipelineConfigDto("DailyETL", "raw.events", "analytics.out");
 var nameResults = new List<ValidationResult>();
 Validator.TryValidateObject(badName, new ValidationContext(badName), nameResults, true);
-Console.WriteLine($"Non-snake_case: {(nameResults.Count > 0 ? $"REJECTED — {nameResults[0].ErrorMessage}" : "PASSED")}");
+nameResults.Count > 0 ? $"REJECTED — {nameResults[0].ErrorMessage}" : "PASSED"  // non-snake_case
 ```
 
     Valid config: True
@@ -663,7 +645,7 @@ var mlo = new MultiLegOrder("MLO_001", "PAIRS", new[] {
     new OrderLeg("AAPL", "BUY", 100, 178.50),
     new OrderLeg("MSFT", "SELL", 50, 415.20),
 });
-Console.WriteLine($"Order: {mlo.OrderId} | {mlo.Strategy} | {mlo.Legs.Length} legs | {mlo.Status}");
+$"{mlo.OrderId} | {mlo.Strategy} | {mlo.Legs.Length} legs | {mlo.Status}"
 
 // Invalid — PAIRS with 3 legs
 var bad3 = new MultiLegOrder("X", "PAIRS", new[] {
@@ -671,7 +653,7 @@ var bad3 = new MultiLegOrder("X", "PAIRS", new[] {
 });
 var r3 = new List<ValidationResult>();
 Validator.TryValidateObject(bad3, new ValidationContext(bad3), r3, true);
-Console.WriteLine($"PAIRS+3 legs: {(r3.Count > 0 ? $"REJECTED — {r3[0].ErrorMessage}" : "PASSED")}");
+r3.Count > 0 ? $"REJECTED — {r3[0].ErrorMessage}" : "PASSED"  // PAIRS+3 legs
 ```
 
     Order: MLO_001 | PAIRS | 2 legs | Pending
@@ -696,12 +678,11 @@ var jsonOpts = new JsonSerializerOptions
 
 // Serialize with camelCase + string enums
 var json = JsonSerializer.Serialize(mlo, jsonOpts);
-Console.WriteLine("=== JSON output (camelCase + string enum) ===");
-Console.WriteLine(json);
+json
 
 // Deserialize back
 var deserialized = JsonSerializer.Deserialize<MultiLegOrder>(json, jsonOpts);
-Console.WriteLine($"\nDeserialized: {deserialized?.OrderId} | {deserialized?.Status}");
+$"{deserialized?.OrderId} | {deserialized?.Status}"  // deserialized
 ```
 
     === JSON output (camelCase + string enum) ===
@@ -746,19 +727,17 @@ record ImmutableConfig(string DbHost, int DbPort = 5432, bool Ssl = true);
 // Test immutability and non-destructive mutation
 
 var config = new ImmutableConfig("db.prod.internal");
-Console.WriteLine($"Config: {config}");
+config
 
 // config.DbPort = 9999;  // Compile error! init-only property
-Console.WriteLine("config.DbPort = 9999 → Compile error (init-only)");
 
 // Non-destructive mutation with 'with'
 var devConfig = config with { DbHost = "localhost", Ssl = false };
-Console.WriteLine($"Dev:    {devConfig}");
-
-// C# is always strict — no implicit string-to-int coercion
-// int qty = "100";  // Compile error
-Console.WriteLine("int qty = \"100\" → Compile error (C# is always strict, unlike Python)");
+devConfig
 ```
+
+> [!info] No Implicit Type Coercion
+> `int qty = "100"` is a compile error. Use `int.Parse()` or `int.TryParse()` for explicit conversion. C# never coerces strings to numbers.
 
     Config: ImmutableConfig { DbHost = db.prod.internal, DbPort = 5432, Ssl = True }
     config.DbPort = 9999 → Compile error (init-only)
@@ -773,7 +752,7 @@ mapped to Python/Pydantic equivalents.
 ```csharp
 // Production validation checklist — C# rules mapped to Python equivalents
 
-Console.WriteLine(@"
+@"
   Rule                                          C# Approach                    Python Equivalent
   ───────────────────────────────────────────── ────────────────────────────── ──────────────────────────
   Use typed DTOs, not Dictionary                record / class                 Pydantic BaseModel
@@ -788,7 +767,7 @@ Console.WriteLine(@"
   Auto-generate API docs                        Swagger via AddSwaggerGen      model_json_schema()
   Complex validation rules                      FluentValidation NuGet         @field_validator chains
   Validate on model binding                     ASP.NET auto-validates         FastAPI auto-validates
-");
+"
 ```
 
 ## Summary

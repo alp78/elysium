@@ -79,12 +79,12 @@ Formatter.Register<Polars.CSharp.Series>((s, writer) =>
 // Generic method — one method works with any type T; compiler infers T from the argument
 T First<T>(T[] items) => items[0];
 
-Console.WriteLine($"int:    {First(new[] { 1, 2, 3 })}");
-Console.WriteLine($"string: {First(new[] { "a", "b", "c" })}");
-Console.WriteLine($"double: {First(new[] { 1.1, 2.2, 3.3 })}");
+First(new[] { 1, 2, 3 })          // int
+First(new[] { "a", "b", "c" })    // string
+First(new[] { 1.1, 2.2, 3.3 })    // double
 
 // Explicit type argument (sometimes needed when inference is ambiguous)
-Console.WriteLine($"explicit: {First<string>(new[] { "x", "y" })}");
+First<string>(new[] { "x", "y" })  // explicit
 ```
 
     int:    1
@@ -102,28 +102,25 @@ Generic constraints restrict what types can be used as a type parameter. Without
 T Max<T>(T a, T b) where T : IComparable<T>
     => a.CompareTo(b) >= 0 ? a : b;
 
-Console.WriteLine($"Max(3, 7):              {Max(3, 7)}");
-Console.WriteLine($"Max(\"apple\", \"banana\"): {Max("apple", "banana")}");
+Max(3, 7)                          // 7
+Max("apple", "banana")             // banana
 // Max(new object(), new object());  // Compile error! object doesn't implement IComparable
 
-// Common constraints reference
-Console.WriteLine("\nwhere T : struct          — T must be a value type (int, bool, struct)");
-Console.WriteLine("where T : class           — T must be a reference type (string, class)");
-Console.WriteLine("where T : new()           — T must have a parameterless constructor");
-Console.WriteLine("where T : IComparable<T>  — T must implement an interface");
-Console.WriteLine("where T : BaseClass       — T must inherit from a specific class");
-Console.WriteLine("where T : notnull         — T can't be null");
 ```
 
     Max(3, 7):              7
     Max("apple", "banana"): banana
-    
-    where T : struct          — T must be a value type (int, bool, struct)
-    where T : class           — T must be a reference type (string, class)
-    where T : new()           — T must have a parameterless constructor
-    where T : IComparable<T>  — T must implement an interface
-    where T : BaseClass       — T must inherit from a specific class
-    where T : notnull         — T can't be null
+
+> [!info] Common generic constraints
+>
+> | Constraint | Meaning |
+> |---|---|
+> | `where T : struct` | T must be a value type (`int`, `bool`, `struct`) |
+> | `where T : class` | T must be a reference type (`string`, `class`) |
+> | `where T : new()` | T must have a parameterless constructor |
+> | `where T : IComparable<T>` | T must implement an interface |
+> | `where T : BaseClass` | T must inherit from a specific class |
+> | `where T : notnull` | T cannot be `null` |
 
 #### Generic class and multiple type parameters
 
@@ -134,16 +131,16 @@ A generic class is parameterized by one or more types, allowing the same data st
 
 var ints = new List<int> { 1, 2, 3 };
 var lookup = new Dictionary<string, int> { ["Alice"] = 85, ["Bob"] = 92 };
-Console.WriteLine($"List<int>: [{string.Join(", ", ints)}]");
-Console.WriteLine($"Dict:      {string.Join(", ", lookup.Select(kv => $"{kv.Key}: {kv.Value}"))}");
+$"[{string.Join(", ", ints)}]"           // List<int>
+string.Join(", ", lookup.Select(kv => $"{kv.Key}: {kv.Value}"))  // Dict
 
 // Multiple type parameters — a generic method can take more than one type parameter
 (TKey, TValue) MakePair<TKey, TValue>(TKey key, TValue value) => (key, value);
 
 var pair1 = MakePair("name", 42);
 var pair2 = MakePair(1, true);
-Console.WriteLine($"pair1: {pair1}");
-Console.WriteLine($"pair2: {pair2}");
+pair1    // (name, 42)
+pair2    // (1, True)
 ```
 
     List<int>: [1, 2, 3]
@@ -189,19 +186,17 @@ foreach (var group in byDept)
 {
     var names = string.Join(", ", group.Select(e => e.Name));
     var avgSalary = group.Average(e => e.Salary);
-    Console.WriteLine($"  {group.Key,-15} ({group.Count()} people): [{names}] avg=${avgSalary:N0}");
+    $"  {group.Key,-15} ({group.Count()} people): [{names}] avg=${avgSalary:N0}"
 }
 
 // Top earner per department
-Console.WriteLine("\nMax salary per dept:");
 foreach (var group in byDept)
 {
     var top = group.MaxBy(e => e.Salary)!;
-    Console.WriteLine($"  {group.Key,-15} top earner: {top.Name} ${top.Salary:N0}");
+    $"  {group.Key,-15} top earner: {top.Name} ${top.Salary:N0}"
 }
 
 // Multiple aggregations per group
-Console.WriteLine("\nMultiple aggregations:");
 var deptStats = employees.GroupBy(e => e.Dept).Select(g => new
 {
     Dept = g.Key,
@@ -212,7 +207,7 @@ var deptStats = employees.GroupBy(e => e.Dept).Select(g => new
     TotalSalary = g.Sum(e => e.Salary),
 });
 foreach (var s in deptStats)
-    Console.WriteLine($"  {s.Dept,-15} count={s.Count} avg=${s.AvgSalary:N0} range=[${s.MinSalary:N0}-${s.MaxSalary:N0}] total=${s.TotalSalary:N0}");
+    $"  {s.Dept,-15} count={s.Count} avg=${s.AvgSalary:N0} range=[${s.MinSalary:N0}-${s.MaxSalary:N0}] total=${s.TotalSalary:N0}"
 ```
 
       Engineering     (3 people): [Alice, Charlie, Eve] avg=$97'667
@@ -245,12 +240,11 @@ var innerJoin = employees.Join(
     d => d.Dept,                                // key from departments
     (e, d) => new { e.Name, e.Dept, d.Head, d.Budget }
 );
-Console.WriteLine("Inner Join:");
+// Inner Join
 foreach (var r in innerJoin.Take(3))
-    Console.WriteLine($"  {r.Name,-10} {r.Dept,-15} head={r.Head,-10} budget=${r.Budget:N0}");
+    $"  {r.Name,-10} {r.Dept,-15} head={r.Head,-10} budget=${r.Budget:N0}"
 
 // GroupJoin — left join (all departments, employees may be empty)
-Console.WriteLine("\nLeft Join (GroupJoin):");
 var leftJoin = departments.GroupJoin(
     employees,
     d => d.Dept,
@@ -258,7 +252,7 @@ var leftJoin = departments.GroupJoin(
     (d, emps) => new { d.Dept, d.Head, Count = emps.Count() }
 );
 foreach (var r in leftJoin)
-    Console.WriteLine($"  {r.Dept,-15} head={r.Head,-10} employees={r.Count}");
+    $"  {r.Dept,-15} head={r.Head,-10} employees={r.Count}"
 ```
 
     Inner Join:
@@ -282,24 +276,22 @@ var result = employees
     .Select(e => new { e.Name, e.Salary, Tax = e.Salary * 0.3 })
     .OrderByDescending(e => e.Salary)
     .Take(3);
-Console.WriteLine("Top 3 earners (>75k) with tax:");
+// Top 3 earners (>75k) with tax
 foreach (var r in result)
-    Console.WriteLine($"  {r.Name,-10} salary=${r.Salary:N0}  tax=${r.Tax:N0}");
+    $"  {r.Name,-10} salary=${r.Salary:N0}  tax=${r.Tax:N0}"
 
 // Lookup — like Dictionary but allows multiple values per key
-Console.WriteLine("\nLookup (multi-value dictionary):");
 var empLookup = employees.ToLookup(e => e.Dept);
-Console.WriteLine($"Engineering: [{string.Join(", ", empLookup["Engineering"].Select(e => e.Name))}]");
-Console.WriteLine($"Unknown:     [{string.Join(", ", empLookup["Unknown"].Select(e => e.Name))}]");  // empty, no error
+$"Engineering: [{string.Join(", ", empLookup["Engineering"].Select(e => e.Name))}]"
+$"Unknown:     [{string.Join(", ", empLookup["Unknown"].Select(e => e.Name))}]"  // empty, no error
 
 // Zip — pair elements from parallel sequences
-Console.WriteLine("\nZip (parallel processing):");
 var names = employees.Select(e => e.Name);
 var salaries = employees.Select(e => e.Salary);
 var raises = employees.Select(e => e.Salary * 0.1);
 
 foreach (var (name, salary, raise_amt) in names.Zip(salaries, raises))
-    Console.WriteLine($"  {name,-10} ${salary,8:N0} + ${raise_amt,7:N0} raise");
+    $"  {name,-10} ${salary,8:N0} + ${raise_amt,7:N0} raise"
 ```
 
     Top 3 earners (>75k) with tax:
@@ -334,25 +326,23 @@ var people = new[]
 };
 
 // Select → nested (array per person)
-Console.WriteLine("Select (nested):");
 foreach (var arr in people.Select(p => p.Skills))
-    Console.WriteLine($"  [{string.Join(", ", arr)}]");
+    $"  [{string.Join(", ", arr)}]"
 
 // SelectMany → flat (one sequence)
 var allSkills = people.SelectMany(p => p.Skills);
-Console.WriteLine($"\nSelectMany (flat): [{string.Join(", ", allSkills)}]");
+$"SelectMany (flat): [{string.Join(", ", allSkills)}]"
 
 // With result selector — keeps access to the outer item
-Console.WriteLine("\nSelectMany with result selector:");
 var pairs = people.SelectMany(
     p => p.Skills,
     (p, skill) => $"{p.Name}: {skill}"
 );
 foreach (var pair in pairs)
-    Console.WriteLine($"  {pair}");
+    $"  {pair}"
 
 // Flatten + distinct
-Console.WriteLine($"\nDistinct skills: [{string.Join(", ", people.SelectMany(p => p.Skills).Distinct().OrderBy(s => s))}]");
+$"Distinct skills: [{string.Join(", ", people.SelectMany(p => p.Skills).Distinct().OrderBy(s => s))}]"
 
 // Flatten a List<List<int>>
 var matrix = new List<List<int>>
@@ -361,7 +351,7 @@ var matrix = new List<List<int>>
     new List<int> { 4, 5 },
     new List<int> { 6, 7, 8, 9 },
 };
-Console.WriteLine($"Flat matrix: [{string.Join(", ", matrix.SelectMany(row => row))}]");
+$"Flat matrix: [{string.Join(", ", matrix.SelectMany(row => row))}]"
 ```
 
     Select (nested):
@@ -430,9 +420,9 @@ using (var conn = new SqlConnection(connStr))
         + "ytd_change_pct AS YtdChangePct "
         + "FROM gold.scores_daily").AsList();
 }
-Console.WriteLine($"  OHLCV: {ohlcv.Count:N0} rows, {ohlcv.Select(r => r.Symbol).Distinct().Count()} symbols");
-Console.WriteLine($"  Scores: {scores.Count:N0} rows");
-Console.WriteLine($"  Date range: {ohlcv.Min(r => r.Date):yyyy-MM-dd} to {ohlcv.Max(r => r.Date):yyyy-MM-dd}");
+$"  OHLCV: {ohlcv.Count:N0} rows, {ohlcv.Select(r => r.Symbol).Distinct().Count()} symbols"
+$"  Scores: {scores.Count:N0} rows"
+$"  Date range: {ohlcv.Min(r => r.Date):yyyy-MM-dd} to {ohlcv.Max(r => r.Date):yyyy-MM-dd}"
 ```
 
       OHLCV: 66'355 rows, 50 symbols
@@ -743,7 +733,7 @@ Both operate on the same OHLCV data loaded from SQL Server.
 ```csharp
 // Load the same OHLCV data as a Polars DataFrame from Parquet
 var df = DataFrame.ReadParquet(@"C:\Users\aperi\DEV\LANG\data\eurostoxx50_ohlcv.parquet");
-Console.WriteLine($"  Polars: {df.Height} rows x {df.Width} columns");
+$"  Polars: {df.Height} rows x {df.Width} columns"
 df.Head(3)
 ```
 
@@ -1071,7 +1061,7 @@ dfAvg.Join(dfScores, new[] { Col("symbol") }, new[] { Col("symbol") })
 // Returns a new sequence that yields elements from both. Equivalent to SQL UNION ALL.
 var newRows = new[] { new Ohlcv("TEST.XX", DateTime.Today, 100, 105, 95, 102, 102, 50000) };
 var linqInsert = ohlcv.Concat(newRows).TakeLast(3).ToList();
-Console.WriteLine($"  LINQ: {ohlcv.Count} + {newRows.Length} = {ohlcv.Count + newRows.Length} rows (Concat)");
+$"  LINQ: {ohlcv.Count} + {newRows.Length} = {ohlcv.Count + newRows.Length} rows (Concat)"
 new DataFrame(
     Series.From("Symbol", linqInsert.Select(r => r.Symbol).ToArray()),
     Series.From("Date", linqInsert.Select(r => r.Date.ToString("yyyy-MM-dd")).ToArray()),
@@ -1104,7 +1094,7 @@ var newDf = new DataFrame(
     Series.From("is_filled", new[] { false }));
 
 var dfInserted = df.VStack(newDf);
-Console.WriteLine($"  Polars: {df.Height} + {newDf.Height} = {dfInserted.Height} rows (VStack)");
+$"  Polars: {df.Height} + {newDf.Height} = {dfInserted.Height} rows (VStack)"
 dfInserted.Tail(3)
 ```
 
@@ -1143,7 +1133,7 @@ df.Filter(Col("symbol") == Lit("ASML.AS"))
 ```csharp
 // LINQ: Where to keep, inverse of delete
 var linqDelete = ohlcv.Where(r => r.Symbol != "ASML.AS");
-Console.WriteLine($"  LINQ: {ohlcv.Count} - ASML rows = {linqDelete.Count()} remaining");
+$"  LINQ: {ohlcv.Count} - ASML rows = {linqDelete.Count()} remaining"
 ```
 
       LINQ: 66355 - ASML rows = 65024 remaining
@@ -1153,7 +1143,7 @@ Console.WriteLine($"  LINQ: {ohlcv.Count} - ASML rows = {linqDelete.Count()} rem
 ```csharp
 // Polars: Filter (keep non-matching)
 var dfFiltered = df.Filter(Col("symbol") != Lit("ASML.AS"));
-Console.WriteLine($"  Polars: {df.Height} - ASML rows = {dfFiltered.Height} remaining");
+$"  Polars: {df.Height} - ASML rows = {dfFiltered.Height} remaining"
 ```
 
       Polars: 66355 - ASML rows = 65024 remaining

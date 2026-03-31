@@ -180,7 +180,6 @@ void ProcessWithCleanup(bool throwError)
 }
 
 ProcessWithCleanup(false);
-Console.WriteLine();
 ProcessWithCleanup(true);
 ```
 
@@ -307,8 +306,7 @@ catch (OverflowException ex) { Console.WriteLine($"  Overflow: {ex.Message}"); }
 #nullable enable
 
 string? optionalField = null;
-int len = optionalField?.Length ?? 0;
-Console.WriteLine($"  Safe null handling: length = {len}");
+int len = optionalField?.Length ?? 0;  // Safe null handling: length = 0
 
 void ProcessRecord(string record)
 {
@@ -319,8 +317,7 @@ try { ProcessRecord(null!); }
 catch (ArgumentNullException ex) { Console.WriteLine($"  {ex.Message}"); }
 
 var emptyList = new List<int>();
-int safe = emptyList.FirstOrDefault();
-Console.WriteLine($"  FirstOrDefault on empty: {safe}");
+int safe = emptyList.FirstOrDefault();  // 0
 ```
 
       Safe null handling: length = 0
@@ -492,20 +489,20 @@ using (var reader = new StreamReader(tempFile))
 {
     string? line;
     while ((line = reader.ReadLine()) != null)
-        Console.WriteLine($"  Line: {line}");
+        $"  Line: {line}"
 }
 
 // Declaration form (C# 8+) — Dispose() at end of method scope
 void ReadCsvFile(string path)
 {
     using var reader = new StreamReader(path);
-    Console.WriteLine($"  Header: {reader.ReadLine()}");
-    Console.WriteLine($"  First row: {reader.ReadLine()}");
+    reader.ReadLine()    // Header
+    reader.ReadLine()    // First row
 }
 ReadCsvFile(tempFile);
 
 // What using expands to: try { body } finally { r?.Dispose(); }
-Console.WriteLine("  using(var r = ...) { body }  ≡  try { body } finally { r.Dispose(); }");
+// using(var r = ...) { body }  ≡  try { body } finally { r.Dispose(); }
 ```
 
       Line: col1,col2,col3
@@ -561,7 +558,7 @@ using (var csv = new CsvWriter(outFile))
     csv.WriteRow("Alice", 95000, "Engineering");
     csv.WriteRow("Bob", 65000, "Sales");
 }
-Console.WriteLine($"  Output: {File.ReadAllText(outFile).Trim()}");
+File.ReadAllText(outFile).Trim()   // Output
 
 File.Delete(tempFile);
 File.Delete(outFile);
@@ -593,14 +590,14 @@ string[] values = { "42", "bad", "100", "", "999" };
 foreach (var v in values)
 {
     if (int.TryParse(v, out int result))
-        Console.WriteLine($"  '{v}' → {result}");
+        $"  '{v}' → {result}"
     else
-        Console.WriteLine($"  '{v}' → [invalid, skipped]");
+        $"  '{v}' → [invalid, skipped]"
 }
 
 // Similarly: double.TryParse, DateTime.TryParse, Enum.TryParse
 DateTime.TryParse("2024-01-15", out var date);
-Console.WriteLine($"  Date parsed: {date:yyyy-MM-dd}");
+$"  Date parsed: {date:yyyy-MM-dd}"
 ```
 
       '42' → 42
@@ -640,9 +637,9 @@ var results = inputRows.Select((row, i) => ParseEmployee(row, i + 1)).ToList();
 var good = results.Where(r => r.IsValid).ToList();
 var bad  = results.Where(r => !r.IsValid).ToList();
 
-Console.WriteLine($"  Processed: {results.Count} rows, Valid: {good.Count}, Rejected: {bad.Count}");
-foreach (var r in good) Console.WriteLine($"    {r.Name,-10} ${r.Salary:N0}");
-foreach (var r in bad)  Console.WriteLine($"    ERROR: {r.Error}");
+$"  Processed: {results.Count} rows, Valid: {good.Count}, Rejected: {bad.Count}"
+foreach (var r in good) $"    {r.Name,-10} ${r.Salary:N0}"
+foreach (var r in bad)  $"    ERROR: {r.Error}"
 ```
 
       Processed: 6 rows, Valid: 3, Rejected: 3
@@ -714,7 +711,7 @@ var data = await WithRetry(async () =>
     if (callCount < 3) throw new IOException($"Connection timeout (attempt {callCount})");
     return "data loaded successfully";
 });
-Console.WriteLine($"  Result after {callCount} attempts: {data}");
+$"  Result after {callCount} attempts: {data}"
 ```
 
       Attempt 1 failed: Connection timeout (attempt 1). Retrying...

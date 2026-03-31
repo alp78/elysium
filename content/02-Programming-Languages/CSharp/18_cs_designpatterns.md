@@ -33,7 +33,6 @@ var scriptOptions = optionsField.GetValue(csharpKernel);
 var withWarningLevel = scriptOptions.GetType().GetMethod("WithWarningLevel");
 var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
-Console.WriteLine("WarningLevel set to 0.");
 ```
 
     WarningLevel set to 0.
@@ -45,24 +44,22 @@ Interface defines the contract (what, not how). Constructor injection passes dep
 ```csharp
 // ─── Interfaces ───
 
-Console.WriteLine("=== Dependency Injection ===");
 
 // ─── Production wiring ───
 var prodRepo = new SqlRepository("Server=prod-db;Database=stoxx");
 var prodNotifier = new SlackNotifier();
 var prodService = new PipelineService(prodRepo, prodNotifier);
 var result = prodService.Run("ASML.AS");
-Console.WriteLine($"  Result: {result}");
+result
 
 // ─── Test wiring — swap mocks ───
-Console.WriteLine("\n=== Test (with mocks) ===");
 var mockRepo = new MockRepository();
 var mockNotifier = new MockNotifier();
 var testService = new PipelineService(mockRepo, mockNotifier);
 result = testService.Run("TEST.XX");
-Console.WriteLine($"  Result: {result}");
-Console.WriteLine($"  Saved to mock: {string.Join(", ", mockRepo.Saved)}");
-Console.WriteLine($"  Notifications: {string.Join(", ", mockNotifier.Messages)}");
+result
+string.Join(", ", mockRepo.Saved)   // saved to mock
+string.Join(", ", mockNotifier.Messages)  // notifications
 
 // ─── Type declarations ───
 
@@ -167,22 +164,20 @@ The Factory pattern encapsulates object creation behind a static method or class
 // In DI: AddSingleton<T>() handles this automatically.
 // Python equivalent: __new__ override or module-level variable.
 
-Console.WriteLine("=== Singleton ===");
 
 var c1 = AppConfig.Instance;
 var c2 = AppConfig.Instance;
-Console.WriteLine($"  c1 == c2: {object.ReferenceEquals(c1, c2)}");  // True
-Console.WriteLine($"  ProjectId: {c1.ProjectId}");
+object.ReferenceEquals(c1, c2)  // c1 == c2 (True)
+c1.ProjectId
 
 // ─── Factory ───
 // Create objects without specifying exact class.
 // Python equivalent: dict dispatch { "gcs": GCSClient, "s3": S3Client }.
 
-Console.WriteLine("\n=== Factory ===");
 foreach (var provider in new[] { "gcs", "s3", "local" })
 {
     var client = StorageFactory.Create(provider);
-    Console.WriteLine($"  {provider,-5} -> {client.Upload("data.csv", new byte[100])}");
+    $"{provider,-5} -> {client.Upload("data.csv", new byte[100])}"
 }
 
 // ─── Type declarations ───
@@ -253,7 +248,6 @@ The Strategy pattern encapsulates interchangeable algorithms behind a common int
 // C#: event/delegate pattern (built into the language).
 // Python equivalent: callback list or event bus.
 
-Console.WriteLine("=== Observer ===");
 
 var bus = new EventBus();
 bus.StepCompleted += data => Console.WriteLine($"  [LOG]    {data.Step}: {data.Status}");
@@ -267,15 +261,14 @@ bus.Publish(new StepEvent("gold_score", "error", 0, "BQ timeout"));
 // Swap algorithms at runtime.
 // Python equivalent: inject a strategy object with a score() method.
 
-Console.WriteLine("\n=== Strategy ===");
 var prices = new double[] { 685, 690, 680, 695, 710, 700, 685 };
-Console.WriteLine($"Prices: [{string.Join(", ", prices)}]\n");
+string.Join(", ", prices)  // prices
 
 foreach (IScoringStrategy strategy in new IScoringStrategy[] { new MomentumStrategy(), new VolatilityStrategy() })
 {
     var scorer = new StockScorer(strategy);
     var score = scorer.Evaluate("ASML.AS", prices);
-    Console.WriteLine($"  {strategy.Name,-15} score={score:+0.0000}");
+    $"{strategy.Name,-15} score={score:+0.0000}"
 }
 
 // ─── Type declarations ───
@@ -343,16 +336,14 @@ public class StockScorer
 Attribute-based validation built into .NET: `[Required]`, `[Range]`, `[StringLength]`, `[RegularExpression]`. `Validator.TryValidateObject()` validates and collects all errors. In ASP.NET, model binding auto-validates incoming requests. For complex cross-field rules, use `IValidatableObject.Validate()` or FluentValidation. Python equivalent: Pydantic `BaseModel` with `Field()` constraints.
 
 ```csharp
-Console.WriteLine("=== Valid Data ===");
 var validRecord = new OhlcvRecord
 {
     Symbol = "ASML.AS", Date = new DateTime(2026, 3, 20),
     Open = 685.0, High = 710.0, Low = 680.0, Close = 700.0, Volume = 1_500_000
 };
 var (isValid, errors) = Validate(validRecord);
-Console.WriteLine($"  Valid: {isValid}");
+isValid  // valid
 
-Console.WriteLine("\n=== Invalid Data ===");
 var badRecords = new OhlcvRecord[]
 {
     new() { Symbol = "", Date = DateTime.Now, Open = -5, High = 10, Low = 8, Close = 9, Volume = 100 },
@@ -362,9 +353,9 @@ var badRecords = new OhlcvRecord[]
 foreach (var r in badRecords)
 {
     var (ok, errs) = Validate(r);
-    Console.WriteLine($"  Symbol=\"{r.Symbol}\" Open={r.Open} High={r.High} Vol={r.Volume}");
+    $"Symbol=\"{r.Symbol}\" Open={r.Open} High={r.High} Vol={r.Volume}"
     foreach (var e in errs)
-        Console.WriteLine($"    -> {e.ErrorMessage}");
+        e.ErrorMessage
 }
 
 // ─── Helper ───
@@ -437,52 +428,46 @@ Reflection lets you examine a type's properties, methods, and constructors at ru
 // Use cases: ORMs (map columns to properties), serializers,
 // plugin systems, DI containers, test frameworks.
 
-Console.WriteLine("=== Type Inspection ===");
 var order = new TradeOrder("ASML.AS", "BUY", 100, 685.40);
 var type = order.GetType();
 
-Console.WriteLine($"  Type name:     {type.Name}");        // TradeOrder
-Console.WriteLine($"  Full name:     {type.FullName}");    // Submission#X+TradeOrder
-Console.WriteLine($"  Is class:      {type.IsClass}");     // True
-Console.WriteLine($"  Is sealed:     {type.IsSealed}");    // depends
+type.Name       // type name
+type.FullName   // full name
+type.IsClass    // is class
+type.IsSealed   // is sealed
 
 // ─── Properties ───
-Console.WriteLine("\n=== Properties ===");
 foreach (var prop in type.GetProperties())
 {
     var value = prop.GetValue(order);
-    Console.WriteLine($"  {prop.Name,-12} {prop.PropertyType.Name,-10} = {value}");
+    $"{prop.Name,-12} {prop.PropertyType.Name,-10} = {value}"
 }
 
 // ─── Methods ───
-Console.WriteLine("\n=== Methods (declared) ===");
 foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
 {
     var parms = string.Join(", ", method.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"));
-    Console.WriteLine($"  {method.ReturnType.Name} {method.Name}({parms})");
+    $"{method.ReturnType.Name} {method.Name}({parms})"
 }
 
 // ─── Dynamic property access (like Python getattr) ───
-Console.WriteLine("\n=== Dynamic Access ===");
 foreach (var name in new[] { "Ticker", "Side", "Quantity", "Price" })
 {
     var prop = type.GetProperty(name);
     if (prop != null)
-        Console.WriteLine($"  {name} = {prop.GetValue(order)}");
+        $"{name} = {prop.GetValue(order)}"
 }
 
 // ─── Constructor inspection ───
-Console.WriteLine("\n=== Constructor Parameters ===");
 foreach (var ctor in type.GetConstructors())
 {
     foreach (var p in ctor.GetParameters())
-        Console.WriteLine($"  {p.Name}: {p.ParameterType.Name}");
+        $"{p.Name}: {p.ParameterType.Name}"
 }
 
 // ─── Create instance via reflection (like Python's cls(**kwargs)) ───
-Console.WriteLine("\n=== Create via Reflection ===");
 var newOrder = Activator.CreateInstance(type, "MC.PA", "SELL", 50, 890.20);
-Console.WriteLine($"  Created: {newOrder}");
+newOrder
 
 // ─── Type declaration ───
 
@@ -545,7 +530,7 @@ public class TradeOrder
 // Project Structure — how to organize a C# data pipeline / API project.
 // Python equivalent: package → module hierarchy.
 
-Console.WriteLine(@"
+@"
 === Recommended Project Layout ===
 
 IndexPipeline/
@@ -599,7 +584,7 @@ IndexPipeline/
    Unit test PipelineService with MockRepository.
    Integration test SqlRepository against real DB.
    Python equiv: pytest + unittest.mock.
-");
+"
 ```
 
     

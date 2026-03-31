@@ -2334,9 +2334,6 @@ for binding in bucket_iam.bindings:
         print(f"    → {member}")
     print()
 
-print("  Access control modes:")
-print("    Uniform (IAM only): recommended — single permission model")
-print("    Fine-grained (ACL): legacy — per-object ACLs, harder to audit")
 ```
 
       IAM policy for gs://seclab-dev-ap-26-data:
@@ -2348,10 +2345,11 @@ print("    Fine-grained (ACL): legacy — per-object ACLs, harder to audit")
     
       Role: roles/storage.legacyBucketReader
         → projectViewer:seclab-dev-ap-26
-    
-      Access control modes:
-        Uniform (IAM only): recommended — single permission model
-        Fine-grained (ACL): legacy — per-object ACLs, harder to audit
+
+> [!tip] Use Uniform Access Control
+>
+> - **Uniform (IAM only):** recommended — single permission model, easier to audit and manage.
+> - **Fine-grained (ACL):** legacy — per-object ACLs, harder to audit, easy to misconfigure. Only use if you need object-level permissions distinct from bucket-level.
 
 ## Cross-Service Security Patterns
 

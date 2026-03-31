@@ -721,7 +721,6 @@ parsed = json_mod.loads(result.stdout)
 print(f"  Parsed: source={parsed['source']}, pid={parsed['pid']}, result={parsed['result']}")
 
 # Run multiple subprocesses concurrently using ThreadPoolExecutor
-# (asyncio.create_subprocess_exec doesn't work on Windows ProactorEventLoop in notebooks)
 def run_python_expr(expr: str) -> tuple[str, str]:
     """Run a Python expression in a child process, return (expr, result)."""
     r = subprocess.run(["python", "-c", f"print({expr})"], capture_output=True, text=True, timeout=10)
@@ -734,6 +733,10 @@ with ThreadPoolExecutor(max_workers=3) as pool:
 for expr, result in results:
     print(f"  {expr:25} = {result}")
 ```
+
+> [!info] Windows Async Subprocess Limitation
+>
+> `asyncio.create_subprocess_exec` doesn't work reliably on Windows ProactorEventLoop in notebooks. Use `ThreadPoolExecutor` with `subprocess.run` as a cross-platform alternative.
 
       Exit code: 0
       Parsed: source=child, pid=40052, result=4950

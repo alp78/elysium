@@ -39,18 +39,18 @@ int[] zeros = new int[5];                            // [0, 0, 0, 0, 0]
 int[] ranged = Enumerable.Range(0, 5).ToArray();     // [0, 1, 2, 3, 4]
 string[] words = new[] { "hello", "world" };         // type inferred
 
-Console.WriteLine($"nums:    [{string.Join(", ", nums)}]");
-Console.WriteLine($"zeros:   [{string.Join(", ", zeros)}]");
-Console.WriteLine($"ranged:  [{string.Join(", ", ranged)}]");
-Console.WriteLine($"Length:  {nums.Length}");          // .Length (not .Count)
+string.Join(", ", nums)   // nums
+string.Join(", ", zeros)   // zeros
+string.Join(", ", ranged)   // ranged
+nums.Length   // Length
 
-Console.WriteLine($"nums[0]: {nums[0]}");              // first
-Console.WriteLine($"nums[^1]:{nums[^1]}");             // last (from end)
-Console.WriteLine($"[1..4]:  [{string.Join(", ", nums[1..4])}]");  // slice
-
-// Array: can't add/remove
-// nums.Add(6);  // Compile error! No Add method on array
+nums[0]
+nums[^1]
+string.Join(", ", nums[1..4])   // [1..4]
 ```
+
+> [!info] Arrays Are Fixed Size
+> Arrays have no `Add()` or `Remove()`. Use `List<T>` for resizable collections.
 
     nums:    [1, 2, 3, 4, 5]
     zeros:   [0, 0, 0, 0, 0]
@@ -64,6 +64,9 @@ Console.WriteLine($"[1..4]:  [{string.Join(", ", nums[1..4])}]");  // slice
 
 `List<T>` is C#'s resizable array — the most commonly used collection. Unlike a fixed-size array, a List grows automatically as you add elements. Internally it's backed by an array that doubles in capacity when full, making `Add()` amortized O(1) but occasionally causing a full copy.
 
+> [!warning] Lists Are Single-Type
+> `List<T>` holds one type only. `List<object>` allows mixed types but loses type safety — avoid in production code.
+
 > [!warning] List capacity doubling
 > When a List exceeds its internal capacity, it allocates a new array twice the size and copies all elements. For large lists (millions of items), this causes memory spikes and GC pressure. If you know the final size, set it upfront: `new List<T>(capacity: 1_000_000)`.
 
@@ -72,27 +75,24 @@ Console.WriteLine($"[1..4]:  [{string.Join(", ", nums[1..4])}]");  // slice
 
 var empty = new List<int>();
 var list = new List<int> { 1, 2, 3, 4, 5 };
-// var mixed = new List<???> { 1, "hello" };  // NOT allowed — single type only
-//   Use List<object> if you really need mixed types (rare, avoid)
-
-Console.WriteLine($"list:    [{string.Join(", ", list)}]");
-Console.WriteLine($"Count:   {list.Count}");            // .Count (not .Length)
+string.Join(", ", list)   // list
+list.Count   // Count
 
 var lst = new List<int> { 1, 2, 3 };
 lst.Add(4);                                   // add to end
 lst.Insert(0, 0);                             // insert at index
 lst.AddRange(new[] { 5, 6 });                 // add multiple
-Console.WriteLine($"After adds: [{string.Join(", ", lst)}]");
+string.Join(", ", lst)   // After adds
 
 lst = new List<int> { 1, 2, 3, 2, 4, 5 };
 lst.Remove(2);                                // remove FIRST occurrence of value
-Console.WriteLine($"Remove(2):  [{string.Join(", ", lst)}]");
+string.Join(", ", lst)   // Remove(2)
 lst.RemoveAt(0);                              // remove at index
-Console.WriteLine($"RemoveAt(0):[{string.Join(", ", lst)}]");
+string.Join(", ", lst)   // RemoveAt(0)
 int last = lst[^1]; lst.RemoveAt(lst.Count - 1);  // pop last (no built-in Pop)
-Console.WriteLine($"Pop last:   [{string.Join(", ", lst)}] (popped: {last})");
+$"Pop last:   [{string.Join(", ", lst)}] (popped: {last})"
 lst.Clear();                                  // remove all
-Console.WriteLine($"Clear():    [{string.Join(", ", lst)}]");
+string.Join(", ", lst)   // Clear()
 ```
 
     list:    [1, 2, 3, 4, 5]
@@ -111,11 +111,11 @@ These methods search a List linearly (O(n)) — they check each element until a 
 // Search and membership — Contains, IndexOf, FindAll, Find, Exists
 
 lst = new List<int> { 10, 20, 30, 40, 30, 50 };
-Console.WriteLine($"Contains(30):  {lst.Contains(30)}");
-Console.WriteLine($"IndexOf(30):   {lst.IndexOf(30)}");           // 2 (first occurrence)
-Console.WriteLine($"FindAll(>25):  [{string.Join(", ", lst.FindAll(x => x > 25))}]");
-Console.WriteLine($"Exists(>40):   {lst.Exists(x => x > 40)}");
-Console.WriteLine($"Find(>25):     {lst.Find(x => x > 25)}");
+lst.Contains(30)   // Contains(30)
+lst.IndexOf(30)   // IndexOf(30)
+string.Join(", ", lst.FindAll(x => x > 25))   // FindAll(>25)
+lst.Exists(x => x > 40)   // Exists(>40)
+lst.Find(x => x > 25)   // Find(>25)
 ```
 
     Contains(30):  True
@@ -132,20 +132,20 @@ Console.WriteLine($"Find(>25):     {lst.Find(x => x > 25)}");
 // Sorting — OrderBy (new sequence) vs Sort (in-place mutation)
 
 var unsorted = new List<int> { 3, 1, 4, 1, 5, 9, 2, 6 };
-Console.WriteLine($"OrderBy:     [{string.Join(", ", unsorted.OrderBy(x => x))}]");  // new sequence
-Console.WriteLine($"original:    [{string.Join(", ", unsorted)}]");                   // unchanged
+string.Join(", ", unsorted.OrderBy(x => x))   // OrderBy
+string.Join(", ", unsorted)   // original
 
 unsorted.Sort();                              // in-place sort
-Console.WriteLine($"Sort():      [{string.Join(", ", unsorted)}]");
+string.Join(", ", unsorted)   // Sort()
 
 // Sort() comparer: return -1 (left first), 0 (equal), +1 (right first)
 unsorted.Sort((a, b) => b.CompareTo(a));      // descending
-Console.WriteLine($"Desc:        [{string.Join(", ", unsorted)}]");
+string.Join(", ", unsorted)   // Desc
 
 var wordList = new List<string> { "banana", "apple", "cherry" };
-Console.WriteLine($"By length ASC:   [{string.Join(", ", wordList.OrderBy(w => w.Length))}]");
-Console.WriteLine($"By length DESC:   [{string.Join(", ", wordList.OrderByDescending(w => w.Length))}]");
-Console.WriteLine($"By length DESC then Alpha:   [{string.Join(", ", wordList.OrderByDescending(w => w.Length).ThenBy(w => w))}]");
+string.Join(", ", wordList.OrderBy(w => w.Length))   // By length ASC
+string.Join(", ", wordList.OrderByDescending(w => w.Length))   // By length DESC
+string.Join(", ", wordList.OrderByDescending(w => w.Length).ThenBy(w => w))   // By length DESC then Alpha
 ```
 
     OrderBy:     [1, 1, 2, 3, 4, 5, 6, 9]
@@ -169,7 +169,7 @@ These methods create new collections from existing ones. `ToArray()` and `ToList
 var original = new List<int> { 1, 2, 3 };
 var shallow = new List<int>(original);         // shallow copy (for value types, this is fine)
 shallow[0] = 99;
-Console.WriteLine($"original: [{string.Join(", ", original)}]");  // [1, 2, 3] — unchanged (int is value type)
+string.Join(", ", original)   // original
 
 // For reference types (List<List<int>>), shallow copy shares inner objects
 
@@ -193,29 +193,29 @@ int[] nums = { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
 ```csharp
 // Index (^) and Range (..) operators in detail
 
-Console.WriteLine($"nums[0]:   {nums[0]}");        // 10  (first)
-Console.WriteLine($"nums[9]:   {nums[9]}");        // 100 (last by position)
-Console.WriteLine($"nums[^1]:  {nums[^1]}");       // 100 (last — ^1 = from end)
-Console.WriteLine($"nums[^2]:  {nums[^2]}");       // 90  (second from end)
-Console.WriteLine($"nums[^10]: {nums[^10]}");      // 10  (first — ^Length)
+nums[0]
+nums[9]
+nums[^1]
+nums[^2]
+nums[^10]
 
 // [start..end] — start is INCLUSIVE, end is EXCLUSIVE
-Console.WriteLine($"[0..3]:    [{string.Join(", ", nums[0..3])}]");     // 10, 20, 30
-Console.WriteLine($"[3..7]:    [{string.Join(", ", nums[3..7])}]");     // 40, 50, 60, 70
-Console.WriteLine($"[..3]:     [{string.Join(", ", nums[..3])}]");      // 10, 20, 30  (start defaults to 0)
-Console.WriteLine($"[7..]:     [{string.Join(", ", nums[7..])}]");      // 80, 90, 100 (end defaults to length)
-Console.WriteLine($"[..]:      [{string.Join(", ", nums[..])}]");       // all elements (full copy)
+string.Join(", ", nums[0..3])   // [0..3]
+string.Join(", ", nums[3..7])   // [3..7]
+string.Join(", ", nums[..3])   // [..3]
+string.Join(", ", nums[7..])   // [7..]
+string.Join(", ", nums[..])   // [..]
 
-Console.WriteLine($"[^3..]:    [{string.Join(", ", nums[^3..])}]");     // 80, 90, 100  (last 3)
-Console.WriteLine($"[..^3]:    [{string.Join(", ", nums[..^3])}]");     // 10..70       (all except last 3)
-Console.WriteLine($"[^5..^2]:  [{string.Join(", ", nums[^5..^2])}]");   // 60, 70, 80   (from 5th-last to 2nd-last)
-Console.WriteLine($"[1..^1]:   [{string.Join(", ", nums[1..^1])}]");    // 20..90       (skip first and last)
+string.Join(", ", nums[^3..])   // [^3..]
+string.Join(", ", nums[..^3])   // [..^3]
+string.Join(", ", nums[^5..^2])   // [^5..^2]
+string.Join(", ", nums[1..^1])   // [1..^1]
 
 // Index and Range can be stored in variables
 Index last = ^1;
 Range middle = 2..^2;
-Console.WriteLine($"Index ^1:  {nums[last]}");                          // 100
-Console.WriteLine($"Range 2..^2: [{string.Join(", ", nums[middle])}]"); // 30, 40, 50, 60, 70, 80
+nums[last]   // Index ^1
+string.Join(", ", nums[middle])   // Range 2..^2
 ```
 
     nums[0]:   10
@@ -298,7 +298,7 @@ string text = "Hello, World!";
 
 // Normal substring — creates a NEW string (allocation):
 string sub1 = text.Substring(7, 5);           // "World" — new string on heap
-Console.WriteLine($"Substring:     '{sub1}'");
+sub1   // Substring
 
 // Span substring — must be in a block
 {
@@ -350,8 +350,8 @@ var scores = new Dictionary<string, int>
     { "Charlie", 78 }
 };
 
-Console.WriteLine($"person: {string.Join(", ", person.Select(kv => $"{kv.Key}:{kv.Value}"))}");
-Console.WriteLine($"scores: {string.Join(", ", scores.Select(kv => $"{kv.Key}:{kv.Value}"))}");
+string.Join(", ", person.Select(kv => $"{kv.Key}:{kv.Value}"))   // person
+string.Join(", ", scores.Select(kv => $"{kv.Key}:{kv.Value}"))   // scores
 ```
 
     person: name:Alice, age:30, city:NYC
@@ -362,15 +362,15 @@ Console.WriteLine($"scores: {string.Join(", ", scores.Select(kv => $"{kv.Key}:{k
 ```csharp
 // Dictionary access and update — bracket, TryGetValue, GetValueOrDefault
 
-Console.WriteLine($"person[\"name\"]:        {person["name"]}");       // KeyNotFoundException if missing
+person["name"]
 person["age"] = 31;                                                     // update
 person["email"] = "alice@example.com";                                  // add new key
-Console.WriteLine($"Updated age:          {person["age"]}");
+person["age"]   // Updated age
 
 // Safe access — TryGetValue returns false if key missing (no exception)
 if (scores.TryGetValue("Bob", out int bobScore))
     Console.WriteLine($"Bob's score:          {bobScore}");
-Console.WriteLine($"GetValueOrDefault:    {scores.GetValueOrDefault("Unknown", -1)}");
+scores.GetValueOrDefault("Unknown", -1)   // GetValueOrDefault
 ```
 
     person["name"]:        Alice
@@ -385,9 +385,9 @@ Console.WriteLine($"GetValueOrDefault:    {scores.GetValueOrDefault("Unknown", -
 
 var d = new Dictionary<string, int> { ["a"] = 1, ["b"] = 2, ["c"] = 3 };
 d.Remove("b");
-Console.WriteLine($"After Remove(b): {string.Join(", ", d.Select(kv => $"{kv.Key}:{kv.Value}"))}");
+string.Join(", ", d.Select(kv => $"{kv.Key}:{kv.Value}"))   // After Remove(b)
 d.Clear();
-Console.WriteLine($"After Clear:     Count={d.Count}");
+d.Count   // After Clear: Count
 ```
 
     After Remove(b): a:1, c:3
@@ -402,10 +402,10 @@ var dd = new Dictionary<string, object> { ["name"] = "Alice", ["age"] = 30, ["ci
 foreach (var (key, value) in dd)
     Console.WriteLine($"  {key}: {value}");
 
-Console.WriteLine($"ContainsKey(name):    {dd.ContainsKey("name")}");
-Console.WriteLine($"ContainsValue(NYC):   {dd.ContainsValue("NYC")}");
-Console.WriteLine($"Keys:   [{string.Join(", ", dd.Keys)}]");
-Console.WriteLine($"Values: [{string.Join(", ", dd.Values)}]");
+dd.ContainsKey("name")   // ContainsKey(name)
+dd.ContainsValue("NYC")   // ContainsValue(NYC)
+string.Join(", ", dd.Keys)   // Keys
+string.Join(", ", dd.Values)   // Values
 ```
 
       name: Alice
@@ -423,7 +423,7 @@ Console.WriteLine($"Values: [{string.Join(", ", dd.Values)}]");
 
 var filtered = scores.Where(kv => kv.Value >= 80)
     .ToDictionary(kv => kv.Key, kv => kv.Value);
-Console.WriteLine($"Score >= 80: {string.Join(", ", filtered.Select(kv => $"{kv.Key}:{kv.Value}"))}");
+string.Join(", ", filtered.Select(kv => $"{kv.Key}:{kv.Value}"))   // Score >= 80
 
 // Group by first letter
 var words = new[] { "apple", "banana", "avocado", "cherry", "blueberry" };
@@ -480,9 +480,9 @@ var nums = new HashSet<int> { 1, 2, 3, 4, 5 };
 var fromList = new List<int> { 1, 2, 2, 3, 3, 3 }.ToHashSet();
 var fromStr = "abracadabra".ToHashSet();
 
-Console.WriteLine($"nums:     {{{string.Join(", ", nums)}}}");
-Console.WriteLine($"fromList: {{{string.Join(", ", fromList)}}}");
-Console.WriteLine($"fromStr:  {{{string.Join(", ", fromStr)}}}");
+string.Join(", ", nums)   // nums
+string.Join(", ", fromList)   // fromList
+string.Join(", ", fromStr)   // fromStr
 ```
 
     nums:     {1, 2, 3, 4, 5}
@@ -495,10 +495,10 @@ Console.WriteLine($"fromStr:  {{{string.Join(", ", fromStr)}}}");
 // HashSet add and remove — Add returns bool, Remove returns bool
 
 var s = new HashSet<int> { 1, 2, 3 };
-Console.WriteLine($"Add(4):  {s.Add(4)}");     // True (new)
-Console.WriteLine($"Add(2):  {s.Add(2)}");     // False (duplicate ignored)
-Console.WriteLine($"Remove(1): {s.Remove(1)}");
-Console.WriteLine($"Set: {{{string.Join(", ", s)}}}");
+s.Add(4)   // Add(4)
+s.Add(2)   // Add(2)
+s.Remove(1)   // Remove(1)
+string.Join(", ", s)   // Set
 ```
 
     Add(4):  True
@@ -519,10 +519,10 @@ var inter = new HashSet<int>(a); inter.IntersectWith(b);
 var diff  = new HashSet<int>(a); diff.ExceptWith(b);
 var symm  = new HashSet<int>(a); symm.SymmetricExceptWith(b);
 
-Console.WriteLine($"Union:     {{{string.Join(", ", union)}}}");
-Console.WriteLine($"Intersect: {{{string.Join(", ", inter)}}}");
-Console.WriteLine($"Except:    {{{string.Join(", ", diff)}}}");
-Console.WriteLine($"Symmetric: {{{string.Join(", ", symm)}}}");
+string.Join(", ", union)   // Union
+string.Join(", ", inter)   // Intersect
+string.Join(", ", diff)   // Except
+string.Join(", ", symm)   // Symmetric
 ```
 
     Union:     {1, 2, 3, 4, 5, 6, 7}
@@ -540,8 +540,8 @@ var soldIds = new HashSet<string> { "P002", "P004", "P005" };
 
 var unsold = new HashSet<string>(prodIds); unsold.ExceptWith(soldIds);
 var unknown = new HashSet<string>(soldIds); unknown.ExceptWith(prodIds);
-Console.WriteLine($"Unsold:  {{{string.Join(", ", unsold)}}}");
-Console.WriteLine($"Unknown: {{{string.Join(", ", unknown)}}}");
+string.Join(", ", unsold)   // Unsold
+string.Join(", ", unknown)   // Unknown
 ```
 
     Unsold:  {P001, P003}
@@ -556,8 +556,8 @@ A `SortedSet<T>` is a collection that maintains its elements in sorted order and
 
 var unsorted = new HashSet<int> { 5, 3, 1, 4, 2 };
 var sorted = new SortedSet<int>(unsorted);
-Console.WriteLine($"SortedSet: {{{string.Join(", ", sorted)}}}");
-Console.WriteLine($"Min: {sorted.Min}, Max: {sorted.Max}");
+string.Join(", ", sorted)   // SortedSet
+$"Min: {sorted.Min}, Max: {sorted.Max}"
 ```
 
     SortedSet: {1, 2, 3, 4, 5}
@@ -579,10 +579,10 @@ Console.WriteLine($"Min: {sorted.Min}, Max: {sorted.Max}");
 var point = (3, 4);
 var person = (Name: "Alice", Age: 30, City: "NYC");
 
-Console.WriteLine($"point:     {point}");
-Console.WriteLine($"point.Item1: {point.Item1}");
-Console.WriteLine($"person.Name: {person.Name}");
-Console.WriteLine($"person.Age:  {person.Age}");
+point
+point.Item1
+person.Name
+person.Age
 ```
 
     point:     (3, 4)
@@ -596,12 +596,12 @@ Console.WriteLine($"person.Age:  {person.Age}");
 // Deconstruction and swap — unpack tuples into separate variables
 
 var (x, y) = point;
-Console.WriteLine($"Deconstructed: x={x}, y={y}");
+$"Deconstructed: x={x}, y={y}"
 
 // Swap without temp variable
 int a2 = 1, b2 = 2;
 (a2, b2) = (b2, a2);
-Console.WriteLine($"Swapped: a={a2}, b={b2}");
+$"Swapped: a={a2}, b={b2}"
 ```
 
     Deconstructed: x=3, y=4
@@ -633,10 +633,10 @@ enum PipelineStatus { Pending, Running, Success, Failed }
 ```csharp
 // Using enums — access, cast, parse, and iterate
 
-Console.WriteLine($"Color.Red:       {Color.Red}");
-Console.WriteLine($"(int)Color.Red:  {(int)Color.Red}");
-Console.WriteLine($"Parse:           {Enum.Parse<Color>("Blue")}");
-Console.WriteLine($"All values:      [{string.Join(", ", Enum.GetValues<Color>())}]");
+Color.Red
+(int)Color.Red
+Enum.Parse<Color>("Blue")   // Parse
+string.Join(", ", Enum.GetValues<Color>())   // All values
 ```
 
     Color.Red:       Red
@@ -662,11 +662,11 @@ var stack = new Stack<string>();
 stack.Push("first");
 stack.Push("second");
 stack.Push("third");
-Console.WriteLine($"Stack: [{string.Join(", ", stack)}]");
-Console.WriteLine($"Pop:   {stack.Pop()}");
-Console.WriteLine($"Pop:   {stack.Pop()}");
-Console.WriteLine($"Peek:  {stack.Peek()}");
-Console.WriteLine($"Count: {stack.Count}");
+string.Join(", ", stack)   // Stack
+stack.Pop()   // Pop
+stack.Pop()   // Pop
+stack.Peek()   // Peek
+stack.Count   // Count
 ```
 
     Stack: [third, second, first]
@@ -684,9 +684,9 @@ var queue = new Queue<string>();
 queue.Enqueue("first");
 queue.Enqueue("second");
 queue.Enqueue("third");
-Console.WriteLine($"Queue:   [{string.Join(", ", queue)}]");
-Console.WriteLine($"Dequeue: {queue.Dequeue()}");
-Console.WriteLine($"Peek:    {queue.Peek()}");
+string.Join(", ", queue)   // Queue
+queue.Dequeue()   // Dequeue
+queue.Peek()   // Peek
 ```
 
     Queue:   [first, second, third]
@@ -703,10 +703,10 @@ ll.AddLast("B");
 ll.AddFirst("A");
 ll.AddLast("D");
 ll.AddAfter(ll.Find("B")!, "C");
-Console.WriteLine($"LinkedList: [{string.Join(", ", ll)}]");
+string.Join(", ", ll)   // LinkedList
 ll.Remove("C");
 ll.RemoveFirst();
-Console.WriteLine($"After removes: [{string.Join(", ", ll)}]");
+string.Join(", ", ll)   // After removes
 ```
 
     LinkedList: [A, B, C, D]
@@ -722,8 +722,8 @@ pq.Enqueue("low priority", 3);
 pq.Enqueue("high priority", 1);
 pq.Enqueue("medium priority", 2);
 
-Console.WriteLine($"Dequeue: {pq.Dequeue()}");
-Console.WriteLine($"Dequeue: {pq.Dequeue()}");
+pq.Dequeue()   // Dequeue
+pq.Dequeue()   // Dequeue
 ```
 
     Dequeue: high priority

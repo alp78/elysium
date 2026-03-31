@@ -106,8 +106,6 @@ print("=== Write file (mode='w') ===")
 staging_file = tmp_dir / "pipeline_output.txt"  # Path / operator joins paths (like os.path.join)
 
 with open(staging_file, "w", encoding="utf-8") as f:
-    # 'w' mode: creates the file if it doesn't exist, OVERWRITES if it does.
-    # f.write() does NOT add a newline — you must add \n yourself.
     f.write("pipeline_id|status|rows_processed\n")  # header
     f.write("etl_001|success|15000\n")
     f.write("etl_002|failed|0\n")
@@ -116,6 +114,10 @@ with open(staging_file, "w", encoding="utf-8") as f:
 print(f"  Written: {staging_file}")
 print(f"  Size: {staging_file.stat().st_size} bytes")  # .stat() returns file metadata
 ```
+
+> [!warning] Write Mode Overwrites Silently
+>
+> `'w'` mode destroys existing content without warning. `f.write()` does NOT add a newline — you must add `\n` yourself.
 
     === Write file (mode='w') ===
       Written: C:\Users\aperi\AppData\Local\Temp\fileio_yk2nuyou\pipeline_output.txt
@@ -961,14 +963,14 @@ tmp_dir = Path(tempfile.mkdtemp(prefix="serial_"))
 
 #### StringIO — in-memory text stream
 
+> [!info] StringIO — In-Memory Text File
+>
+> Behaves like `open()` in text mode but lives entirely in memory. Use for building CSV/JSON payloads for API calls, cloud uploads, and unit tests without disk I/O.
+
 ```python
 # StringIO — in-memory text stream with file-like API
 
 print("=== StringIO (in-memory text stream) ===")
-# StringIO behaves exactly like a file opened in text mode ('r'/'w'),
-# but lives entirely in memory — no disk I/O.
-# Use case: build CSV/JSON payloads for API calls, cloud uploads, unit tests.
-
 buffer = StringIO()                  # create an empty text buffer
 buffer.write("line 1\n")            # write to it like a file
 buffer.write("line 2\n")
@@ -994,13 +996,14 @@ buffer.close()                       # free the buffer (or use 'with')
 
 #### BytesIO — in-memory binary stream
 
+> [!info] BytesIO — In-Memory Binary File
+>
+> Behaves like `open()` in binary mode. Use for building binary payloads (Parquet, Protobuf, images) for cloud upload without writing to disk.
+
 ```python
 # BytesIO — in-memory binary stream with file-like API
 
 print("\n=== BytesIO (in-memory binary stream) ===")
-# BytesIO behaves like a file opened in binary mode ('rb'/'wb').
-# Use case: build binary payloads (parquet, protobuf, images) for cloud upload.
-
 bin_buffer = BytesIO()
 bin_buffer.write(b"HEADER")         # write bytes (not strings)
 bin_buffer.write(b"\x00\x01\x02")  # raw binary data
@@ -1141,14 +1144,14 @@ print(f"  Type:     {type(run2)}")
 
 #### pickle.dumps / pickle.loads — serialize to/from bytes
 
+> [!danger] Pickle Executes Arbitrary Code
+>
+> pickle can serialize almost any Python object. But NEVER unpickle data from untrusted sources — a crafted payload can execute arbitrary code including `os.system('rm -rf /')`.
+
 ```python
 # pickle.dumps / pickle.loads — serialize any Python object to bytes
 
 print("\n=== pickle.dumps / pickle.loads ===")
-# pickle can serialize almost ANY Python object — including dataclasses,
-# lambdas, nested structures, custom classes.
-# WARNING: NEVER unpickle data from untrusted sources — it can execute arbitrary code.
-
 pickled = pickle.dumps(run)            # PipelineRun → bytes
 print(f"  Pickled size: {len(pickled)} bytes")
 print(f"  Type: {type(pickled)}")
@@ -1240,16 +1243,14 @@ print("="*60)
 
 #### struct.pack / struct.unpack — fixed-size binary records
 
+> [!info] struct Format Codes
+>
+> `struct` converts Python values to C-compatible binary data. Format codes: `i` = 32-bit int, `f` = 32-bit float, `d` = 64-bit double, `B` = unsigned byte, `?` = bool. Byte order: `<` = little-endian, `>` = big-endian, `!` = network order.
+
 ```python
 # struct.pack / struct.unpack — fixed-size binary records
 
 print("\n=== struct.pack / struct.unpack ===")
-# struct converts Python values ↔ C-compatible binary data.
-# Format codes: 'i' = 32-bit int, 'f' = 32-bit float, 'd' = 64-bit double,
-#               'B' = unsigned byte, '?' = bool, 's' = char[] (string bytes)
-# '<' = little-endian, '>' = big-endian, '!' = network byte order (big-endian)
-# Use case: reading binary file formats, network protocols, IoT sensor data.
-
 # Data Engineering scenario: pack a sensor reading into compact binary format
 # Format: '<i f d ?' = little-endian: int32 sensor_id, float32 value, float64 timestamp, bool alert
 fmt = '<ifd?'

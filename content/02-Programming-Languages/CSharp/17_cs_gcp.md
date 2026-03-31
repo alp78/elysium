@@ -89,7 +89,6 @@ var withWarningLevel = scriptOptions.GetType().GetMethod("WithWarningLevel");
 var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 
-Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.");
 ```
 
     WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
@@ -107,9 +106,9 @@ var bucketName = $"{projectId}-index-data";
 var bqDataset = "index_data";
 
 var creds = GoogleCredential.GetApplicationDefault();
-Console.WriteLine($"Authenticated: {creds.UnderlyingCredential.GetType().Name}");
-Console.WriteLine($"Project: {projectId}");
-Console.WriteLine($"Bucket:  {bucketName}");
+creds.UnderlyingCredential.GetType().Name  // authenticated
+projectId   // project
+bucketName  // bucket
 ```
 
     Authenticated: UserCredential
@@ -129,7 +128,6 @@ Console.WriteLine($"Bucket:  {bucketName}");
 var storageClient = StorageClient.Create();
 
 // ─── List blobs in bronze/ ───
-Console.WriteLine("=== List Bronze Blobs ===");
 // List blobs in the bronze prefix — like `gsutil ls gs://bucket/bronze/`
 foreach (var obj in storageClient.ListObjects(bucketName, "bronze/"))
     Console.WriteLine($"  {obj.Name,-50} {obj.Size,10:N0} bytes");
@@ -190,7 +188,6 @@ Console.WriteLine($"\n  Deleted: {blobName}");
 var bqClient = BigQueryClient.Create(projectId);
 
 // ─── Query bronze table ───
-Console.WriteLine("=== Query Bronze OHLCV ===");
 var sql = $@"
     SELECT symbol, date, ROUND(close, 2) AS close, volume
     FROM `{projectId}.{bqDataset}.bronze_ohlcv`
@@ -250,7 +247,6 @@ var topicName = TopicName.FromProjectTopic(projectId, "pipeline-events");
 var subName = SubscriptionName.FromProjectSubscription(projectId, "pipeline-events-sub");
 
 // ─── Publish ───
-Console.WriteLine("=== Publish Events ===");
 // Create async publisher — Pipeline role: emit events after each ETL step
 // Downstream consumers (dashboards, alerts) subscribe to these events
 var publisher = await PublisherClient.CreateAsync(topicName);
@@ -324,7 +320,6 @@ if (ackIds.Count > 0)
 var firestoreDb = FirestoreDb.Create(projectId);
 
 // --- Write sample scores (SDK) ---
-Console.WriteLine("=== Write to Firestore ===");
 var scores = new[]
 {
     new { Symbol = "ASML.AS", Close = 685.40, Rank = 1 },
@@ -430,7 +425,6 @@ client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bear
 
 var apiUrl = $"https://firestore.googleapis.com/v1/projects/{projectId}/databases/(default)/documents/pulse_live";
 
-Console.WriteLine("=== Firestore Polling (REST API) ===");
 Console.WriteLine("Polling pulse_live every 30s for 2 minutes...\n");
 
 var previousPrices = new Dictionary<string, string>();
@@ -533,7 +527,6 @@ Console.WriteLine($"\nPolling complete. {pollCount} polls, {previousPrices.Count
 var smClient = SecretManagerServiceClient.Create();
 
 // ─── Read secrets ───
-Console.WriteLine("=== Read Secrets ===");
 foreach (var secretId in new[] { "index-db-password", "index-api-key" })
 {
     var name = $"projects/{projectId}/secrets/{secretId}/versions/latest";
@@ -573,7 +566,6 @@ var metricClient = MetricServiceClient.Create();
 var projectName = $"projects/{projectId}";
 
 // ─── Write custom metric ───
-Console.WriteLine("=== Write Custom Metric ===");
 
 var now = DateTimeOffset.UtcNow;
 var interval = new TimeInterval

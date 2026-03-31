@@ -66,7 +66,7 @@ var withWarningLevel = scriptOptions.GetType().GetMethod("WithWarningLevel");
 var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 
-Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.");
+// WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
 ```
 
     WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
@@ -126,7 +126,7 @@ using (Stream fs = File.OpenWrite(parquetFile))
         new DataColumn(schema.DataFields[4], new bool[] { true, false, true, true, false }));
 }
 
-Console.WriteLine($"  Written: {Path.GetFileName(parquetFile)} ({new FileInfo(parquetFile).Length} bytes)");
+$"  Written: {Path.GetFileName(parquetFile)} ({new FileInfo(parquetFile).Length} bytes)"
 ```
 
       Written: events.parquet (1045 bytes)
@@ -140,7 +140,7 @@ using (Stream fs = File.OpenRead(parquetFile))
 {
     using var reader = await ParquetReader.CreateAsync(fs);
 
-    Console.WriteLine($"  Schema: {string.Join(", ", reader.Schema.DataFields.Select(f => $"{f.Name}:{f.ClrType.Name}"))}");
+    $"  Schema: {string.Join(", ", reader.Schema.DataFields.Select(f => $"{f.Name}:{f.ClrType.Name}"))}"
 
     using var groupReader = reader.OpenRowGroupReader(0);
 
@@ -149,9 +149,9 @@ using (Stream fs = File.OpenRead(parquetFile))
     var userIds = (await groupReader.ReadColumnAsync(reader.Schema.DataFields[2])).Data.Cast<long>().ToArray();
     var revenues = (await groupReader.ReadColumnAsync(reader.Schema.DataFields[3])).Data.Cast<double>().ToArray();
 
-    Console.WriteLine($"  Rows: {eventIds.Length}");
+    $"  Rows: {eventIds.Length}"
     for (int i = 0; i < eventIds.Length; i++)
-        Console.WriteLine($"    {eventIds[i]}: {eventTypes[i]}, user={userIds[i]}, revenue=${revenues[i]:F2}");
+        $"    {eventIds[i]}: {eventTypes[i]}, user={userIds[i]}, revenue=${revenues[i]:F2}"
 }
 ```
 
@@ -179,13 +179,13 @@ var events = new List<EventRecord>
 
 var typedFile = Path.Combine(tmpDir, "events_typed.parquet");
 await ParquetSerializer.SerializeAsync(events, typedFile);
-Console.WriteLine($"  Written: {Path.GetFileName(typedFile)} ({new FileInfo(typedFile).Length} bytes)");
+$"  Written: {Path.GetFileName(typedFile)} ({new FileInfo(typedFile).Length} bytes)"
 
 // Deserialize back to typed objects
 var loaded = await ParquetSerializer.DeserializeAsync<EventRecord>(typedFile);
-Console.WriteLine($"  Loaded {loaded.Count} records:");
+$"  Loaded {loaded.Count} records:"
 foreach (var e in loaded)
-    Console.WriteLine($"    {e.EventId}: {e.EventType}, user={e.UserId}, revenue=${e.Revenue:F2}");
+    $"    {e.EventId}: {e.EventType}, user={e.UserId}, revenue=${e.Revenue:F2}"
 ```
 
       Written: events_typed.parquet (1037 bytes)
@@ -204,9 +204,9 @@ foreach (var e in loaded)
 using (Stream fs = File.OpenRead(parquetFile))
 {
     using var reader = await ParquetReader.CreateAsync(fs);
-    Console.WriteLine($"  Row groups: {reader.RowGroupCount}");
+    $"  Row groups: {reader.RowGroupCount}"
     foreach (var field in reader.Schema.DataFields)
-        Console.WriteLine($"    {field.Name}: {field.ClrType.Name} (nullable={field.IsNullable})");
+        $"    {field.Name}: {field.ClrType.Name} (nullable={field.IsNullable})"
 }
 ```
 
@@ -225,12 +225,12 @@ using (Stream fs = File.OpenRead(parquetFile))
 {
     var memStream = new MemoryStream();
     await ParquetSerializer.SerializeAsync(events, memStream);
-    Console.WriteLine($"  MemoryStream size: {memStream.Length} bytes");
+    $"  MemoryStream size: {memStream.Length} bytes"
 
     // Read back from the same buffer — verify roundtrip
     memStream.Seek(0, SeekOrigin.Begin);
     var fromMem = await ParquetSerializer.DeserializeAsync<EventRecord>(memStream);
-    Console.WriteLine($"  Read from memory: {fromMem.Count} records");
+    $"  Read from memory: {fromMem.Count} records"
 }
 ```
 
@@ -242,16 +242,14 @@ using (Stream fs = File.OpenRead(parquetFile))
 ```csharp
 // CSV vs Parquet comparison — when to use each format
 
-Console.WriteLine(@"
-Feature              CSV                         Parquet
-──────────────────────────────────────────────────────────────
-Format               Text (row-based)            Binary (columnar)
-Schema               No (header row only)        Embedded (typed, nullable)
-Compression          None (manual gzip)          Built-in (snappy/gzip/zstd)
-Column pruning       No (read all columns)       Yes (read only what you need)
-Human-readable       Yes                         No
-Use case             Simple exchange, legacy      Data lakes, analytics, BigQuery
-");
+// Feature              CSV                         Parquet
+// ──────────────────────────────────────────────────────────────
+// Format               Text (row-based)            Binary (columnar)
+// Schema               No (header row only)        Embedded (typed, nullable)
+// Compression          None (manual gzip)          Built-in (snappy/gzip/zstd)
+// Column pruning       No (read all columns)       Yes (read only what you need)
+// Human-readable       Yes                         No
+// Use case             Simple exchange, legacy      Data lakes, analytics, BigQuery
 
 // Cleanup
 Directory.Delete(tmpDir, recursive: true);
@@ -291,7 +289,7 @@ Directory.Delete(tmpDir, recursive: true);
 > gRPC services, Kafka events, high-frequency data feeds, inter-service communication, mobile APIs (bandwidth matters). In production, `protoc` generates C# classes from `.proto` files. In notebooks, use the dynamic message API (same binary format).
 
 ```csharp
-Console.WriteLine("  Google.Protobuf loaded.");
+// Google.Protobuf loaded.
 ```
 
       Google.Protobuf loaded.
@@ -330,13 +328,13 @@ cos.WriteInt64(82621);
 cos.Flush();
 var protoBytes = ms.ToArray();
 
-Console.WriteLine($"  Protobuf:  {protoBytes.Length} bytes");
-Console.WriteLine($"  Hex:       {Convert.ToHexString(protoBytes).ToLower()}");
+$"  Protobuf:  {protoBytes.Length} bytes"
+Convert.ToHexString(protoBytes).ToLower()   // Hex
 
 // Compare with JSON
 var jsonStr = JsonSerializer.Serialize(new { symbol = "SAP.DE", price = 166.52, volume = 82621 });
-Console.WriteLine($"  JSON:      {Encoding.UTF8.GetByteCount(jsonStr)} bytes");
-Console.WriteLine($"  Savings:   {(1.0 - (double)protoBytes.Length / Encoding.UTF8.GetByteCount(jsonStr)) * 100:F0}%");
+$"  JSON:      {Encoding.UTF8.GetByteCount(jsonStr)} bytes"
+$"  Savings:   {(1.0 - (double)protoBytes.Length / Encoding.UTF8.GetByteCount(jsonStr)) * 100:F0}%"
 
 // Decode the bytes back using CodedInputStream
 var cis = new CodedInputStream(protoBytes);
@@ -352,7 +350,7 @@ while (!cis.IsAtEnd)
         default: cis.SkipLastField(); break;
     }
 }
-Console.WriteLine($"  Decoded:   symbol={sym}, price={price}, volume={vol}");
+$"  Decoded:   symbol={sym}, price={price}, volume={vol}"
 ```
 
       Protobuf:  21 bytes
@@ -366,43 +364,37 @@ Console.WriteLine($"  Decoded:   symbol={sym}, price={price}, volume={vol}");
 ```csharp
 // Production protobuf pattern — protoc-generated code workflow
 
-Console.WriteLine(@"
-  ── Step 1: Define schema (stock_quote.proto) ──
-
-  syntax = ""proto3"";
-  package stoxx;
-
-  message StockQuote {
-    string symbol = 1;     // field number, not default value
-    double price = 2;
-    int64  volume = 3;
-    string exchange = 4;   // added later — old consumers ignore it
-  }
-
-  ── Step 2: Compile ──
-
-  $ protoc --csharp_out=. stock_quote.proto
-  // Generates: StockQuote.cs (strongly-typed C# class)
-
-  ── Step 3: Use in C# ──
-
-  var quote = new StockQuote { Symbol = ""SAP.DE"", Price = 166.52, Volume = 82621 };
-
-  // Serialize to bytes
-  byte[] data = quote.ToByteArray();
-
-  // Deserialize from bytes
-  var parsed = StockQuote.Parser.ParseFrom(data);
-  Console.WriteLine($""{parsed.Symbol}: {parsed.Price}"");
-
-  // Schema evolution: old code ignores field 4 (exchange)
-  // New code reads it if present, uses default ("""") if absent
-
-  // gRPC service definition:
-  service MarketData {
-    rpc GetQuote (QuoteRequest) returns (StockQuote);
-  }
-");
+// ── Step 1: Define schema (stock_quote.proto) ──
+//
+// syntax = "proto3";
+// package stoxx;
+//
+// message StockQuote {
+//   string symbol = 1;     // field number, not default value
+//   double price = 2;
+//   int64  volume = 3;
+//   string exchange = 4;   // added later — old consumers ignore it
+// }
+//
+// ── Step 2: Compile ──
+//
+// $ protoc --csharp_out=. stock_quote.proto
+// Generates: StockQuote.cs (strongly-typed C# class)
+//
+// ── Step 3: Use in C# ──
+//
+// var quote = new StockQuote { Symbol = "SAP.DE", Price = 166.52, Volume = 82621 };
+//
+// byte[] data = quote.ToByteArray();                      // Serialize
+// var parsed = StockQuote.Parser.ParseFrom(data);          // Deserialize
+//
+// Schema evolution: old code ignores field 4 (exchange)
+// New code reads it if present, uses default ("") if absent
+//
+// gRPC service definition:
+// service MarketData {
+//   rpc GetQuote (QuoteRequest) returns (StockQuote);
+// }
 ```
 
     
@@ -476,9 +468,9 @@ var schemaJson = @"{
 
 // Parse the schema
 var schema = (RecordSchema)Schema.Parse(schemaJson);
-Console.WriteLine($"  Schema: {schema.Name} ({schema.Fields.Count} fields)");
+$"  Schema: {schema.Name} ({schema.Fields.Count} fields)"
 foreach (var f in schema.Fields)
-    Console.WriteLine($"    {f.Name}: {f.Schema}");
+    $"    {f.Name}: {f.Schema}"
 ```
 
       Schema: StockQuote (4 fields)
@@ -526,8 +518,8 @@ using (var writer = DataFileWriter<GenericRecord>.OpenWriter(
 }
 
 var fileSize = new FileInfo(avroFile).Length;
-Console.WriteLine($"  Written: {avroFile}");
-Console.WriteLine($"  Records: {records.Count}, Size: {fileSize} bytes");
+$"  Written: {avroFile}"
+$"  Records: {records.Count}, Size: {fileSize} bytes"
 ```
 
       Written: C:\Users\aperi\AppData\Local\Temp\avro_cs_89f4466f\quotes.avro
@@ -542,10 +534,9 @@ using (var reader = DataFileReader<GenericRecord>.OpenReader(avroFile))
 {
     // Read the embedded schema
     var fileSchema = reader.GetSchema();
-    Console.WriteLine($"  Schema from file: {fileSchema.Name}");
+    $"  Schema from file: {fileSchema.Name}"
 
     // Iterate records
-    Console.WriteLine("  Records:");
     while (reader.HasNext())
     {
         var record = reader.Next();
@@ -553,7 +544,7 @@ using (var reader = DataFileReader<GenericRecord>.OpenReader(avroFile))
         var price = record["price"];
         var vol = record["volume"];
         var exch = record["exchange"] ?? "N/A";
-        Console.WriteLine($"    {sym,-10} \u20ac{price,8:F2}  vol={vol,8}  exch={exch}");
+        $"    {sym,-10} \u20ac{price,8:F2}  vol={vol,8}  exch={exch}"
     }
 }
 ```
@@ -580,18 +571,18 @@ using (var writer = DataFileWriter<GenericRecord>.OpenWriter(datumWriter, avroMs
 }
 
 var avroBytes = avroMs.ToArray();
-Console.WriteLine($"  Avro in memory: {avroBytes.Length} bytes ({records.Count} records)");
+$"  Avro in memory: {avroBytes.Length} bytes ({records.Count} records)"
 
 // Compare with JSON
 var jsonPayload = JsonSerializer.Serialize(
     quotes.Select(q => new { symbol = q.Item1, price = q.Item2, volume = q.Item3, exchange = q.Item4 }));
 var jsonSize = Encoding.UTF8.GetByteCount(jsonPayload);
 
-Console.WriteLine($"\n  {"Format",-12} {"Size",8} {"Per record",12}");
-Console.WriteLine($"  {new string('\u2500', 34)}");
-Console.WriteLine($"  {"Avro",-12} {avroBytes.Length,8} {avroBytes.Length / records.Count,12}");
-Console.WriteLine($"  {"JSON",-12} {jsonSize,8} {jsonSize / records.Count,12}");
-Console.WriteLine($"  {"Savings",-12} {(1.0 - (double)avroBytes.Length / jsonSize) * 100:F0}%");
+$"  {"Format",-12} {"Size",8} {"Per record",12}"
+$"  {new string('\u2500', 34)}"
+$"  {"Avro",-12} {avroBytes.Length,8} {avroBytes.Length / records.Count,12}"
+$"  {"JSON",-12} {jsonSize,8} {jsonSize / records.Count,12}"
+$"  {"Savings",-12} {(1.0 - (double)avroBytes.Length / jsonSize) * 100:F0}%"
 
 // Cleanup
 Directory.Delete(tmpDir, recursive: true);
@@ -610,24 +601,22 @@ Directory.Delete(tmpDir, recursive: true);
 ```csharp
 // Schema evolution — add fields without breaking existing consumers
 
-Console.WriteLine(@"
-  Schema Evolution Rules:
-
-  SAFE:
-    + Add field with default    →  old readers get default, new readers get value
-    + Remove field with default →  old readers ignore extra bytes
-    + Add aliases               →  renamed fields still recognized
-
-  UNSAFE (breaks consumers):
-    × Change field type (string → int)
-    × Remove field WITHOUT default
-    × Change field number/order
-
-  In Kafka + Confluent Schema Registry:
-    - BACKWARD compatible: new schema can read old data
-    - FORWARD compatible:  old schema can read new data
-    - FULL compatible:     both directions
-");
+// Schema Evolution Rules:
+//
+// SAFE:
+//   + Add field with default    →  old readers get default, new readers get value
+//   + Remove field with default →  old readers ignore extra bytes
+//   + Add aliases               →  renamed fields still recognized
+//
+// UNSAFE (breaks consumers):
+//   × Change field type (string → int)
+//   × Remove field WITHOUT default
+//   × Change field number/order
+//
+// In Kafka + Confluent Schema Registry:
+//   - BACKWARD compatible: new schema can read old data
+//   - FORWARD compatible:  old schema can read new data
+//   - FULL compatible:     both directions
 ```
 
     
@@ -688,9 +677,9 @@ var small  = GenerateData(100);
 var medium = GenerateData(10_000);
 var large  = GenerateData(100_000);
 
-Console.WriteLine($"  Small:  {small.Count:N0} records");
-Console.WriteLine($"  Medium: {medium.Count:N0} records");
-Console.WriteLine($"  Large:  {large.Count:N0} records");
+$"  Small:  {small.Count:N0} records"
+$"  Medium: {medium.Count:N0} records"
+$"  Large:  {large.Count:N0} records"
 
 record OhlcvRecord(string Symbol, string Date, double Open, double High, double Low, double Close, long Volume);
 ```
@@ -728,7 +717,7 @@ long BenchRead(Action readAction)
     return sw.ElapsedMilliseconds;
 }
 
-Console.WriteLine("  Benchmark helpers ready.");
+// Benchmark helpers ready.
 ```
 
       Benchmark helpers ready.
@@ -762,7 +751,7 @@ foreach (var (label, data) in new[] { ("small", small), ("medium", medium), ("la
     var rMs = BenchRead(() => ReadCsv(path));
     results.Add(("CSV", label, data.Count, wMs, rMs, bytes));
 }
-Console.WriteLine("  CSV done.");
+// CSV done.
 ```
 
       CSV done.
@@ -794,7 +783,7 @@ foreach (var (label, data) in new[] { ("small", small), ("medium", medium), ("la
     var rMs = BenchRead(() => ReadJson(path));
     results.Add(("JSON", label, data.Count, wMs, rMs, bytes));
 }
-Console.WriteLine("  JSON done.");
+// JSON done.
 ```
 
       JSON done.
@@ -839,7 +828,7 @@ foreach (var (label, data) in new[] { ("small", small), ("medium", medium), ("la
     var rMs = BenchRead(() => ReadParquet(path));
     results.Add(("Parquet", label, data.Count, wMs, rMs, bytes));
 }
-Console.WriteLine("  Parquet done.");
+// Parquet done.
 ```
 
       Parquet done.
@@ -892,7 +881,7 @@ foreach (var (label, data) in new[] { ("small", small), ("medium", medium), ("la
     var rMs = BenchRead(() => ReadAvro(path));
     results.Add(("Avro", label, data.Count, wMs, rMs, bytes));
 }
-Console.WriteLine("  Avro done.");
+// Avro done.
 ```
 
       Avro done.
@@ -926,7 +915,7 @@ foreach (var (label, data) in new[] { ("small", small), ("medium", medium), ("la
     // Read is same format — skip for simplicity (no framing in raw proto)
     results.Add(("Protobuf", label, data.Count, wMs, 0, bytes));
 }
-Console.WriteLine("  Protobuf done.");
+// Protobuf done.
 ```
 
       Protobuf done.
@@ -936,7 +925,7 @@ Console.WriteLine("  Protobuf done.");
 ```csharp
 // Performance results table — write/read speed and file size per format
 
-Console.WriteLine("\n  \u2550\u2550\u2550 FORMAT PERFORMANCE BENCHMARK \u2550\u2550\u2550");
+// ═══ FORMAT PERFORMANCE BENCHMARK ═══
 
 foreach (var bucket in new[] { "large", "medium", "small" })
 {
@@ -950,9 +939,9 @@ foreach (var bucket in new[] { "large", "medium", "small" })
     var minRead = bucketResults.Where(r => r.ReadMs > 0).Min(r => r.ReadMs);
     var maxRead = bucketResults.Max(r => r.ReadMs);
 
-    Console.WriteLine($"\n  \u2550\u2550\u2550 {bucket.ToUpper()} ({bucketResults[0].Records:N0} records) \u2550\u2550\u2550");
-    Console.WriteLine($"  {"Format",-10} {"File Size",12} {"Bytes/Rec",10} {"Write ms",10} {"Read ms",10}");
-    Console.WriteLine($"  {new string('\u2500', 54)}");
+    $"\n  \u2550\u2550\u2550 {bucket.ToUpper()} ({bucketResults[0].Records:N0} records) \u2550\u2550\u2550"
+    $"  {"Format",-10} {"File Size",12} {"Bytes/Rec",10} {"Write ms",10} {"Read ms",10}"
+    $"  {new string('\u2500', 54)}"
 
     foreach (var r in bucketResults)
     {
@@ -967,7 +956,7 @@ foreach (var bucket in new[] { "large", "medium", "small" })
         var writeMark = r.WriteMs == minWrite ? " \u2714" : r.WriteMs == maxWrite ? " \u2718" : "";
         var readMark = r.ReadMs == minRead ? " \u2714" : r.ReadMs == maxRead ? " \u2718" : "";
 
-        Console.WriteLine($"  {r.Format,-10} {sizeStr,12} {bpr,8}{bprMark,-2} {r.WriteMs,8}{writeMark,-2} {readStr,8}{readMark}");
+        $"  {r.Format,-10} {sizeStr,12} {bpr,8}{bprMark,-2} {r.WriteMs,8}{writeMark,-2} {readStr,8}{readMark}"
     }
 }
 ```
@@ -1070,7 +1059,7 @@ Formatter.Register<DataFrame>(df =>
     return html + "</table>";
 }, mimeType: "text/html");
 
-Console.WriteLine("  DataFrame formatter registered.");
+// DataFrame formatter registered.
 ```
 
       DataFrame formatter registered.
@@ -1157,32 +1146,30 @@ Plotly.NET.CSharp.Chart.Bar<double, string, string>(
 ```csharp
 // Recommendation matrix — best format for each scenario
 
-Console.WriteLine(@"
-  ═══ WHEN TO USE WHAT ═══
-
-  Scenario                        Best Format     Why
-  ────────────────────────────────────────────────────────────────────────────
-  Data lake / analytics queries   Parquet         Columnar: read 2 of 50 columns = skip 96% of data
-  Kafka event streaming           Avro            Schema embedded, schema registry, compact
-  gRPC microservices              Protobuf        Fastest parse, smallest size, code-generated types
-  REST API responses              JSON            Human-readable, universal, self-describing
-  Config files                    JSON / YAML     Human-editable, comments (YAML), versioned in git
-  Legacy data warehouse export    CSV             Universal, every tool reads it, no schema needed
-  Debug / logging                 JSON            Human-readable, structured, grep-friendly
-  High-freq trading feed          Protobuf        Lowest latency, smallest payload, no text parsing
-  ML feature store                Parquet         Column pruning, predicate pushdown, partitioned
-  Cross-language IPC              Protobuf/Avro   Both cross-language; Protobuf for speed, Avro for schema
-  Batch ETL intermediate          Parquet         Compressed, typed, readable by Spark/BigQuery/Polars
-  Small config payloads (<1KB)    JSON            Overhead of binary formats not worth it
-  Shared memory / mmap           Binary (struct)  Fixed-size records, zero-copy access
-  Browser / mobile API            JSON + gzip     Universal client support, compressed in transit
-
-  SIZE RANKING (smallest to largest for same data):
-    Protobuf < Parquet < Avro < JSON < CSV
-
-  SPEED RANKING (fastest to slowest for read+write):
-    Protobuf ≈ Parquet > Avro > JSON > CSV
-");
+// ═══ WHEN TO USE WHAT ═══
+//
+// Scenario                        Best Format     Why
+// ────────────────────────────────────────────────────────────────────────────
+// Data lake / analytics queries   Parquet         Columnar: read 2 of 50 columns = skip 96% of data
+// Kafka event streaming           Avro            Schema embedded, schema registry, compact
+// gRPC microservices              Protobuf        Fastest parse, smallest size, code-generated types
+// REST API responses              JSON            Human-readable, universal, self-describing
+// Config files                    JSON / YAML     Human-editable, comments (YAML), versioned in git
+// Legacy data warehouse export    CSV             Universal, every tool reads it, no schema needed
+// Debug / logging                 JSON            Human-readable, structured, grep-friendly
+// High-freq trading feed          Protobuf        Lowest latency, smallest payload, no text parsing
+// ML feature store                Parquet         Column pruning, predicate pushdown, partitioned
+// Cross-language IPC              Protobuf/Avro   Both cross-language; Protobuf for speed, Avro for schema
+// Batch ETL intermediate          Parquet         Compressed, typed, readable by Spark/BigQuery/Polars
+// Small config payloads (<1KB)    JSON            Overhead of binary formats not worth it
+// Shared memory / mmap           Binary (struct)  Fixed-size records, zero-copy access
+// Browser / mobile API            JSON + gzip     Universal client support, compressed in transit
+//
+// SIZE RANKING (smallest to largest for same data):
+//   Protobuf < Parquet < Avro < JSON < CSV
+//
+// SPEED RANKING (fastest to slowest for read+write):
+//   Protobuf ≈ Parquet > Avro > JSON > CSV
 
 // Cleanup
 Directory.Delete(benchDir, recursive: true);

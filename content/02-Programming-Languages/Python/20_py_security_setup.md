@@ -255,10 +255,11 @@ print(f"  Project: {PROJECT_ID}  |  SA: {SA_EMAIL}")
 
 #### gcloud iam service-accounts keys create — download JSON key
 
+> [!danger] Service Account Key Security
+>
+> The JSON key file contains the private key. NEVER commit to git. Store in `.env` or a secret manager. In production, prefer Workload Identity Federation (keyless).
+
 ```python
-# The JSON key file contains the private key for the service account.
-# NEVER commit this file to git. Store it in .env or a secret manager.
-# In production, prefer Workload Identity Federation (keyless) instead.
 !gcloud iam service-accounts keys create ./gcp-sa-key.json --iam-account=notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
 
 os.environ["GCP_SA_KEY_PATH"] = "./gcp-sa-key.json"
@@ -611,9 +612,11 @@ print("  GCP_SA_KEY_PATH set")
 
 #### gcloud kms keyrings create — KMS key ring
 
+> [!warning] Key Rings Are Permanent
+>
+> KMS key rings cannot be deleted once created. Choose the location (region) carefully — it determines where encryption/decryption operations execute.
+
 ```python
-# A key ring is a logical grouping of cryptographic keys.
-# Key rings cannot be deleted once created - choose the location carefully.
 !gcloud kms keyrings create notebook-keyring --location=europe-west1
 ```
 

@@ -495,14 +495,16 @@ print(f"Diff {d} to {d2}: {diff.days} days")
 
 #### time: NO arithmetic support
 
+> [!warning] time Has No Arithmetic
+>
+> `time + timedelta(hours=1)` raises `TypeError`. Workaround: combine with a dummy date, do the arithmetic on the datetime, then extract the time component.
+
 ```python
-# time has NO arithmetic support — must convert to datetime first
+# time arithmetic — must convert to datetime first
 
 t = time(14, 30, 45)
 print(f"\n=== time arithmetic ===")
 print(f"Original:        {t}")
-# t + timedelta(hours=1)  # TypeError! time does not support arithmetic
-# Workaround: combine with a dummy date, do arithmetic, extract time
 dummy = datetime.combine(date.today(), t)
 new_time = (dummy + timedelta(hours=2, minutes=15)).time()
 print(f"+ 2h 15m:        {new_time}")
@@ -951,12 +953,11 @@ print(f"PIPELINE_ENV:  {os.environ['PIPELINE_ENV']}")
 # Delete an env var
 del os.environ["PIPELINE_ENV"]
 print(f"After delete:  {os.getenv('PIPELINE_ENV', 'not set')}")
-
-# os.environ vs os.getenv:
-# os.environ["KEY"]          → raises KeyError if missing
-# os.environ.get("KEY", d)   → returns d if missing
-# os.getenv("KEY", d)        → same as .get()
 ```
+
+> [!info] os.environ vs os.getenv
+>
+> `os.environ["KEY"]` raises `KeyError` if missing. `os.getenv("KEY", default)` returns the default silently. Use `os.environ` when the variable MUST exist (fail-fast); use `os.getenv` for optional configuration.
 
     === Environment Variables ===
     USERNAME:      Alex
@@ -1101,14 +1102,13 @@ print(f"DB port:  {toml_config['database']['port']}")   # native int!
 
 #### .env files
 
+> [!danger] Never Commit .env to Git
+>
+> `.env` files hold secrets for local development. `python-dotenv` loads them into `os.environ`. Always add `.env` to `.gitignore`. In production, use a secret manager instead.
+
 ```python
 # .env files — local secrets with python-dotenv
 
-// When NOT to use:
-#   - Production — use container env vars or cloud secret managers
-
-# .env files hold secrets for local dev. NEVER commit to git.
-# python-dotenv loads them into os.environ.
 print("\n=== .env files (pattern) ===")
 env_path = os.path.join(tmp_dir, ".env")
 with open(env_path, "w") as f:
