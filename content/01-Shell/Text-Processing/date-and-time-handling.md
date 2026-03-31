@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Time is an illusion. Lunchtime doubly so."
+>
 > — **Douglas Adams**, *The Hitchhiker's Guide to the Galaxy* (1979)
 
 Dates look simple until you realize that "March 10, 2026 at 3 PM" means a different instant in time depending on whether you're in Paris, New York, or Tokyo. A pipeline that processes market close times across Euro market index, the data pipeline project USA 50, and the data pipeline project Asia/Pacific 50 must handle three different closing times, daylight saving transitions that happen on different dates in different countries, and the fact that "today" is a different date in Sydney and New York for several hours each day.

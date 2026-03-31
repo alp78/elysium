@@ -73,9 +73,11 @@ status: complete
 
 > [!quote]
 > "A REST API should spend almost all of its descriptive effort in defining the media type(s) used for representing resources."
+>
 > — **Roy Fielding**, *Architectural Styles and the Design of Network-based Software Architectures* (2000)
 >
 > "The hardest part of design is not solving the problem — it is deciding which problem to solve."
+>
 > — **Leonard Richardson**, *RESTful Web APIs* (2013)
 
 > [!abstract] Purpose

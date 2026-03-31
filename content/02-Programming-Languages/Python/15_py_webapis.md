@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Web programming is the science of coming up with increasingly complicated ways of concatenating strings."
+>
 > — **Greg Brockman**
 
 ## HTTP Clients & REST API Calls

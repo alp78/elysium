@@ -53,6 +53,7 @@ status: complete
 
 > [!quote]
 > "Some people, when confronted with a problem, think 'I know, I'll use regular expressions.' Now they have two problems."
+>
 > — **Jamie Zawinski**, alt.religion.emacs post (1997)
 
 `grep` (Global Regular Expression Print) is the foundational text search tool in Unix/Linux environments and the daily workhorse of log analysis, pipeline debugging, and code archaeology for data engineers. The regex syntax used here is the same pattern language available in [Python's re module](https://alp78.github.io/elysium/02-Programming-Languages/Python/02_py_strings) and [C#'s Regex class](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/02_cs_strings), so patterns you learn here transfer directly to application code. While grep finds matches, [sed-stream-editing](https://alp78.github.io/elysium/01-Shell/Text-Processing/sed-stream-editing) complements it by editing the matched lines in place.

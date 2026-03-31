@@ -19,6 +19,7 @@ status: complete
 
 > [!quote]
 > "If you torture the data long enough, it will confess to anything."
+>
 > — **Ronald Coase**, attributed remark (c. 1960s)
 
 Polars.NET vs Deedle: Create columns, expressions, method chaining.

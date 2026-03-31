@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "I think of monitoring as TDD for production. And observability as debugging for production — give Future You the power to answer any question."
+>
 > — **Charity Majors**, charity.wtf (2018)
 
 The `data-pipeline-pipeline` Cloud Run job uses `ddtrace` for APM instrumentation. No significant code changes are needed — `ddtrace` auto-instruments Python libraries at import time and creates per-step flame graphs showing SQL query durations, HTTP call latency, and overall step timing.

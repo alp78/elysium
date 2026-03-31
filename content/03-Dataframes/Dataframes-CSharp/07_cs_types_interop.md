@@ -19,6 +19,7 @@ status: complete
 
 > [!quote]
 > "The nice thing about standards is that you have so many to choose from."
+>
 > — **Andrew S. Tanenbaum**, *Computer Networks* (1981)
 
 Polars.NET vs Deedle: Categoricals, nested types, library conversions, I/O deep dive.

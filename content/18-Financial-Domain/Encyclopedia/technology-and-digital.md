@@ -49,6 +49,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 > [!quote]
 > "The cloud is really about the democratization of computing."
+>
 > — **Marc Benioff**
 
 
@@ -66,6 +67,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 > [!quote]
 > "There are only two types of companies: those that have been hacked and those that will be."
+>
 > — **Robert Mueller**
 
 
@@ -83,6 +85,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 > [!quote]
 > "Every business is a software business now."
+>
 > — **Dean Leffingwell**, *Agile Software Requirements* (2011)
 
 
@@ -100,6 +103,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 > [!quote]
 > "Get big fast — the internet rewards scale in ways that physical retail never could."
+>
 > — **Jeff Bezos**
 
 **Definition:** E-commerce (electronic commerce) refers to the buying and selling of goods and services over the internet. It encompasses online retail stores, digital marketplaces, business-to-business trading platforms, and direct-to-consumer sales channels. E-commerce has transformed traditional retail by enabling businesses to reach global customers, operate 24/7, offer personalized shopping experiences, and reduce the overhead costs associated with physical stores. It includes various models such as B2C, B2B, C2C (consumer-to-consumer), and D2C (direct-to-consumer).
@@ -116,6 +120,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 > [!quote]
 > "ERP is the backbone of a business. Without it, you have islands of information that never connect."
+>
 > — **Hasso Plattner**
 
 
@@ -133,6 +138,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 > [!quote]
 > "Fintech is not about building better banks — it is about building a world that doesn't need banks."
+>
 > — **Brett King**, *Bank 4.0* (2018)
 
 
@@ -150,6 +156,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 > [!quote]
 > "The future of enterprise computing is hybrid — not everything belongs in the public cloud."
+>
 > — **Arvind Krishna**
 
 
@@ -167,6 +174,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 > [!quote]
 > "Why buy the cow when you can rent the milk by the hour?"
+>
 > — **Andy Jassy**
 
 
@@ -184,6 +192,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 > [!quote]
 > "If you think that the internet has changed your life, think again. The IoT is about to change it all over again."
+>
 > — **Brendan O'Brien**
 
 
@@ -201,6 +210,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 > [!quote]
 > "AI is probably the most important thing humanity has ever worked on."
+>
 > — **Sundar Pichai**
 
 
@@ -230,6 +240,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 > [!quote]
 > "Developers just want to write code — give them a platform and get out of their way."
+>
 > — **Werner Vogels**
 
 
@@ -259,6 +270,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 > [!quote]
 > "SaaS makes the cost of trying new ideas so low that every company can afford to experiment."
+>
 > — **Aaron Levie**
 
 

@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Measurement is the first step that leads to control and eventually to improvement. If you can't measure something, you can't understand it. If you can't understand it, you can't control it."
+>
 > — **H. James Harrington**
 
 A step-by-step methodology for auditing any SQL Server instance from scratch. Each phase includes the diagnostic queries, how to interpret the output, what "good" and "bad" look like, and what to do when you find problems. Run through the phases in order — earlier phases often explain findings in later ones.

@@ -26,6 +26,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 > [!quote]
 > "The art of lending is in the collateral, not the borrower's charm."
+>
 > — **J.P. Morgan**
 
 
@@ -43,6 +44,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 > [!quote]
 > "A banker is a fellow who lends you his umbrella when the sun is shining, but wants it back the minute it begins to rain."
+>
 > — **Mark Twain**
 
 
@@ -60,6 +62,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 > [!quote]
 > "Trade cannot flourish without trust — and export credit agencies provide that trust."
+>
 > — **Karin Finkelston**
 
 
@@ -77,6 +80,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 > [!quote]
 > "Cash flow, not profit, determines whether a business survives."
+>
 > — **Peter Drucker**
 
 
@@ -94,6 +98,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 > [!quote]
 > "No single bank should bear a risk so large that its failure would threaten the system."
+>
 > — **Paul Volcker**
 
 
@@ -111,6 +116,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 > [!quote]
 > "It is not the borrower who pays the price of a bad loan, but the lender who made it."
+>
 > — **Charles P. Kindleberger**, *Manias, Panics, and Crashes* (1978)
 
 
@@ -128,6 +134,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 > [!quote]
 > "Non-recourse debt forces the lender to underwrite the project, not just the sponsor's balance sheet."
+>
 > — **Benjamin Esty**
 
 **Definition:** A non-recourse loan is a type of secured loan where the lender's recovery in the event of default is limited to the collateral asset (typically the project or property financed). If the collateral value is insufficient to cover the outstanding loan balance, the lender cannot pursue the borrower's other assets. Non-recourse financing is standard in project finance, where a special purpose vehicle (SPV) owns the project assets and the lenders have no claim on the sponsors' broader balance sheets. This structure transfers risk to lenders in exchange for higher interest rates and extensive due diligence.
@@ -144,6 +151,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 > [!quote]
 > "Project finance lends against the future cash flow of the project, not the balance sheet of the sponsors."
+>
 > — **Benjamin Esty**
 
 
@@ -161,6 +169,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 > [!quote]
 > "Securitization was a great idea that was badly abused."
+>
 > — **Lewis Ranieri**
 
 
@@ -178,6 +187,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 > [!quote]
 > "Financial engineering is about creating structures that allocate risk to those best able to bear it."
+>
 > — **Robert Merton**
 
 
@@ -205,6 +215,7 @@ Syndicated loans are loans arranged through the loan syndication process: a grou
 
 > [!quote]
 > "A letter of credit is the lifeblood of international commerce."
+>
 > — **Jack Aron**
 
 
@@ -222,6 +233,7 @@ Syndicated loans are loans arranged through the loan syndication process: a grou
 
 > [!quote]
 > "The revolving credit line is the engine of origination — without it, new loans would stop."
+>
 > — **Lewis Ranieri**
 
 

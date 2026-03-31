@@ -36,6 +36,7 @@ Standard equity valuation ratios used in index analysis and stock screening, bey
 
 > [!quote]
 > "The P/E ratio of any company that's fairly priced will equal its growth rate."
+>
 > — **Peter Lynch**, *One Up on Wall Street* (1989)
 
 
@@ -57,6 +58,7 @@ $$\text{PEG} = \frac{P/E}{\text{EPS Growth Rate (\%)}}$$
 
 > [!quote]
 > "The price-earnings ratio, averaged over ten years, is a strong predictor of the real rate of return on stocks over the subsequent ten years."
+>
 > — **Robert Shiller**, *Irrational Exuberance* (2000)
 
 
@@ -89,6 +91,7 @@ $$\text{EV/Sales} = \frac{\text{Market Cap} + \text{Debt} - \text{Cash}}{\text{A
 
 > [!quote]
 > "In the long run, earnings and cash flow are all that matter. The rest is noise."
+>
 > — **Bill Miller**
 
 
@@ -108,6 +111,7 @@ $$\text{FCF Yield} = \frac{\text{Free Cash Flow}}{\text{Market Cap}} \times 100$
 
 > [!quote]
 > "Price is what you pay. Value is what you get."
+>
 > — **Benjamin Graham**, *The Intelligent Investor* (1949)
 
 

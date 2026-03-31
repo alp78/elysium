@@ -11,6 +11,7 @@ description: "Comprehensive catalog of SQL Server production problems for data e
 
 > [!quote]
 > "Everybody has a plan until they get punched in the mouth."
+>
 > — **Mike Tyson**
 
 SQL Server is the transactional backbone of the index calculation platform — bronze ingestion, silver cleaning, gold aggregation, and the API serving layer all depend on it. On a self-managed Linux/GCP instance without a dedicated DBA, the data engineering team owns every aspect: performance tuning, backup strategy, concurrency management, and capacity planning. Every problem below has caused a production incident or near-miss. This note provides the diagnosis commands, root causes, and fix procedures that a senior data engineer needs at 2 AM when the pipeline is down.

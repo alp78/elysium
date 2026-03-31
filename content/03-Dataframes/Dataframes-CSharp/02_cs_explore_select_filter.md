@@ -19,6 +19,7 @@ status: complete
 
 > [!quote]
 > "If we have data, let's look at data. If all we have are opinions, let's go with mine."
+>
 > — **Jim Barksdale**
 
 Polars.NET vs Deedle: Inspect data, select columns, filter rows.

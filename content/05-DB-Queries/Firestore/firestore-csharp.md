@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "The value of a database is in direct proportion to the ease with which data can be stored and retrieved."
+>
 > — **Edgar F. Codd**, *A Relational Model of Data for Large Shared Data Banks* (1970)
 
 > [!danger] .NET 10 Breaks Firestore SDK Reads

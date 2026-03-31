@@ -17,6 +17,7 @@ status: complete
 
 > [!quote]
 > "Dependency management is the dark matter of software engineering — invisible but responsible for most of the catastrophic failures."
+>
 > — **Attributed to various DevOps practitioners**
 
 ## venv — why virtual environments exist

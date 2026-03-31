@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "If it hurts, do it more frequently, and bring the pain forward."
+>
 > — **Jez Humble**, *Continuous Delivery* (2010)
 
 GitHub Actions automates workflows (build, test, deploy) triggered by events like pushes, PRs, schedules, or manual triggers. Workflows are defined in YAML files in `.github/workflows/`.

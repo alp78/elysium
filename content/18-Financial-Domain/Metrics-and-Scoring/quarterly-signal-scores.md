@@ -24,6 +24,7 @@ Quarterly signal scores are updated with earnings reports and use the most recen
 
 > [!quote]
 > "A truly great business must have an enduring 'moat' that protects excellent returns on invested capital."
+>
 > — **Warren Buffett**
 
 
@@ -74,6 +75,7 @@ Health warnings are binary flags derived from quarterly balance sheet data. Stoc
 
 > [!quote]
 > "Good corporate governance is about having the right processes to make and implement decisions."
+>
 > — **Robert Monks**, *Corporate Governance* (1995)
 
 

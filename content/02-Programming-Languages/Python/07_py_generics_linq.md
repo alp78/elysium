@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "All non-trivial abstractions, to some degree, are leaky."
+>
 > — **Joel Spolsky**, *The Law of Leaky Abstractions*, blog post (2002)
 
 ```python

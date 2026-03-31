@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Graphical user interfaces make easy tasks easy, while command line interfaces make difficult tasks possible."
+>
 > — **William Shotts**, *The Linux Command Line*
 
 `sqlcmd` is the primary command-line interface for SQL Server, used for connecting, executing ad-hoc queries, running script files, and exporting results. Understanding every flag and output option is essential for scripting production operations and incident response.

@@ -11,6 +11,7 @@ description: "Model contracts, access levels, versioning, and breaking-change de
 
 > [!quote]
 > "With a sufficient number of users of an API, it does not matter what you promise in the contract: all observable behaviors of your system will be depended on by somebody."
+>
 > — **Hyrum Wright**
 
 Data contracts in dbt make model schemas enforceable at build time rather than discovered at query time. This is the dbt-specific implementation of the broader [data-contracts](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-contracts) architectural pattern. Combined with model access levels and versioning, they turn mart models into stable, consumer-facing APIs — critical in financial data pipelines where downstream reports, regulatory feeds, and third-party ESG systems all depend on column stability.

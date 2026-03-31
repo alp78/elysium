@@ -19,6 +19,7 @@ status: complete
 
 > [!quote]
 > "Statistics are like bikinis. What they reveal is suggestive, but what they conceal is vital."
+>
 > — **Aaron Levenstein**
 
 Polars.NET vs Deedle: Group-by, aggregation, joins, concat, pivot, melt.

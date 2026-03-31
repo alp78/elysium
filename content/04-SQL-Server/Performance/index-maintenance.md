@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "TempDB is like SQL Server's public toilet."
+>
 > — **Brent Ozar**, brentozar.com
 
 Index fragmentation occurs when the physical order of data pages on disk diverges from the logical order of the B-tree index. As pages split during INSERT, UPDATE, and DELETE operations, pages become partially filled and out-of-order. Fragmented indexes cause SQL Server to read more pages than necessary for range scans, increasing I/O and elevating `PAGEIOLATCH_SH` [wait statistics](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis).

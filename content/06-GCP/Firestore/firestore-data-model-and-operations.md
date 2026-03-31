@@ -64,6 +64,7 @@ status: complete
 
 > [!quote]
 > "In a document database, you model your data around the questions you need to answer, not the relationships between entities."
+>
 > — **Rick Houlihan**, AWS NoSQL design lead
 
 ### Why Firestore for Data Engineering

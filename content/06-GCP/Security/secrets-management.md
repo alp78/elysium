@@ -10,6 +10,7 @@ updated: 2026-03-23
 
 > [!quote]
 > "Treat your secrets like your toothbrush: never share them and replace them regularly."
+>
 > — **Armon Dadgar**, co-founder of HashiCorp
 
 > [!abstract] When You Need This

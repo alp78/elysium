@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "We all want 100% availability, but that actually costs money."
+>
 > — **Werner Vogels**, AWS re:Invent keynote
 
 Cost optimization for a production SQL Server on GCP has three levers: **snapshot schedules** (cheap disaster recovery alongside SQL backups), **committed use discounts** (reduce VM cost for stable workloads), and **right-sizing** (ensure the VM matches actual resource utilization).

@@ -51,6 +51,7 @@ status: complete
 
 > [!quote]
 > "The third time you do something, it should be done using an automated process."
+>
 > — **Jez Humble**, *Continuous Delivery* (2010)
 
 > [!abstract] Summary

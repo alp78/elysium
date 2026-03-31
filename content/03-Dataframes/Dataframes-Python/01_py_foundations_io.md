@@ -20,6 +20,7 @@ status: complete
 
 > [!quote]
 > "Bad programmers worry about the code. Good programmers worry about data structures and their relationships."
+>
 > — **Linus Torvalds**, Git mailing list post (2006)
 
 This notebook provides a side-by-side tour of the **core building blocks** in

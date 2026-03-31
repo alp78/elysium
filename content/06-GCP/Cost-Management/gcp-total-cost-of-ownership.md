@@ -55,6 +55,7 @@ status: complete
 
 > [!quote]
 > "The cloud is not cheaper than on-prem by default. It is cheaper only when you engineer it to be — right-sizing, scheduling, and committed use are not optional."
+>
 > — **Corey Quinn**, Last Week in AWS
 
 This reference provides concrete, line-item TCO calculations for four archetypal data engineering pipeline architectures on GCP. All prices use **GCP list pricing as of early 2026** in the `us-central1` region unless noted. Committed use discounts (CUDs) and sustained use discounts (SUDs) are called out where applicable.

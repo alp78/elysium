@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "If debugging is the process of removing software bugs, then programming must be the process of putting them in."
+>
 > — **Edsger W. Dijkstra**, attributed remark (c. 1970s)
 
 ## try / catch / finally
@@ -57,6 +58,11 @@ catch (IndexOutOfRangeException ex)
 > Exceptions thrown in `async void` methods cannot be caught by the caller — they propagate to the `SynchronizationContext` and crash the process. Always use `async Task` for async methods. The only acceptable use of `async void` is for event handlers in UI frameworks.
 
 #### Multiple catch blocks
+
+Multiple catch blocks let you handle different exception types with different recovery strategies. C# evaluates them top-to-bottom and executes the FIRST matching block. Order matters: put the most specific exception types first and the most general (`Exception`) last — otherwise the general catch swallows everything and the specific blocks never execute.
+
+> [!danger] Catch order matters
+> `catch (Exception)` before `catch (SqlException)` means SQL errors are caught by the general handler and your SQL-specific retry logic never runs. The compiler warns about this in some cases, but not all. Always order: most specific → most general.
 
 ```csharp
 // Multiple catch blocks — match most specific exception first
@@ -119,6 +125,8 @@ LoadFile("C:\\Windows\\System32");
       Permission denied: C:\Windows\System32
 
 #### catch when — conditional catch
+
+`catch when` adds a boolean filter to a catch block: the exception is caught ONLY if the condition is true. Unlike catching and re-throwing, `catch when (false)` doesn't unwind the stack — the runtime skips the block entirely and tries the next one. This enables catching the same exception type differently based on context (e.g., transient vs permanent errors).
 
 ```csharp
 // catch when — conditional catch with boolean guard
@@ -646,6 +654,11 @@ foreach (var r in bad)  Console.WriteLine($"    ERROR: {r.Error}");
         ERROR: Row 5: salary cannot be negative (-500)
 
 #### AggregateException — parallel errors
+
+When multiple tasks run in parallel and several fail, .NET wraps all their exceptions into a single `AggregateException`. Calling `.Wait()` or `.Result` on a faulted `Task` throws `AggregateException`, not the original exception. Use `.Flatten()` to unwrap nested AggregateExceptions, and `.Handle()` to process each inner exception individually.
+
+> [!warning] await unwraps, .Result doesn't
+> `await task` automatically unwraps the AggregateException and throws the first inner exception. `task.Result` throws the AggregateException itself. This means catch blocks behave differently depending on whether you use `await` or `.Result` — a common source of confusion in mixed async/sync code.
 
 ```csharp
 // AggregateException — collect all errors from parallel/async operations

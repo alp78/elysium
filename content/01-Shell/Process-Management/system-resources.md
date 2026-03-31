@@ -17,9 +17,11 @@ Resource monitoring tells you whether performance problems are CPU-bound, memory
 
 > [!quote]
 > "Memory is like an orgasm. It's a lot better if you don't have to fake it."
+>
 > — **Seymour Cray** (on virtual memory)
 >
 > "Anyone can build a fast CPU. The trick is to build a fast system."
+>
 > — **Seymour Cray**, attributed remark (c. 1980s)
 
 ## Linux — free, lscpu, uptime, vmstat, iostat, iotop

@@ -27,6 +27,7 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 > [!quote]
 > "Culture eats compliance for breakfast — if you have the right culture, compliance follows naturally."
+>
 > — **Gary Gensler**
 
 
@@ -44,6 +45,7 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 > [!quote]
 > "Intellectual property is the oil of the 21st century."
+>
 > — **Mark Getty**
 
 
@@ -61,6 +63,7 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 > [!quote]
 > "The purpose of licensing is to grant others permission to use what you have created — on your terms."
+>
 > — **Russ Krajec**
 
 
@@ -78,6 +81,7 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 > [!quote]
 > "The patent system added the fuel of interest to the fire of genius."
+>
 > — **Abraham Lincoln**
 
 
@@ -107,6 +111,7 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 > [!quote]
 > "Risk means more things can happen than will happen."
+>
 > — **Elroy Dimson**
 
 **Definition:** Risk management is the process of identifying, assessing, and controlling threats to an organization's capital, earnings, and operations. These threats can stem from a wide variety of sources including financial market uncertainty, credit defaults, operational failures, natural disasters, regulatory changes, strategic miscalculations, and cybersecurity breaches. Effective risk management involves establishing risk tolerance levels, implementing controls and mitigation strategies, monitoring risk exposures, and maintaining adequate reserves and insurance. In financial institutions, risk management is heavily regulated and central to business operations.

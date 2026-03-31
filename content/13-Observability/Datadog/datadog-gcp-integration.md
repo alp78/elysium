@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "When Netflix instrumented their services, they instrumented service patterns — so when you built a new service, the monitoring would already be there once you got it running."
+>
 > — **Adrian Cockcroft**
 
 The GCP Integration enables Datadog to pull metrics from Cloud Run, Compute Engine, and other GCP services via the Cloud Monitoring API. This is how Cloud Run job metrics (CPU, memory, execution count) appear in Datadog — since Cloud Run jobs are ephemeral, no Datadog agent can run inside them.

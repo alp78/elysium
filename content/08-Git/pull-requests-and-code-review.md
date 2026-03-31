@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Given enough eyeballs, all bugs are shallow."
+>
 > — **Eric S. Raymond**, *The Cathedral and the Bazaar* (1999) (Linus's Law)
 
 Pull requests (PRs) are GitHub's mechanism for proposing changes. They let teammates review your code, discuss it, and approve it before merging. This note covers the complete PR lifecycle from creation to merge, including recovery from common failure modes.

@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "The future of serverless is about running your code without thinking about servers, and that future is already here."
+>
 > — **Tim Wagner**, creator of AWS Lambda
 
 This note covers `run.tf` — the Cloud Run service (dashboard) and Cloud Run jobs (pipeline, setup) that form the application layer of the example infrastructure.

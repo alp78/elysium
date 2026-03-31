@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "In our daily lives as programmers, we process text strings a lot. So I tried to work hard on text processing, namely the string class and regular expressions."
+>
 > — **Yukihiro Matsumoto**, creator of Ruby
 
 ## String Creation & Basics
@@ -410,9 +411,6 @@ Console.WriteLine($"Split(' '):        [{string.Join(", ", words.Split(' '))}]")
     Split(',', 2):     [apple, banana,cherry]
     Split():           [hello, world]
     Split(' '):        [, , hello, , world, , ]
-
-    
-    (9,79): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 
 #### StringSplitOptions
 

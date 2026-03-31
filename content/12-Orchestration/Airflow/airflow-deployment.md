@@ -61,6 +61,7 @@ status: complete
 
 > [!quote]
 > "There is no single continuous integration and delivery setup that will work for everyone. You are essentially trying to automate your company's culture using bash scripts."
+>
 > — **Kelsey Hightower**, tweet (2018)
 
 A practical how-to guide covering every major Airflow deployment option — from a local Docker Compose environment for development to managed cloud services for production. Includes configuration reference, DAG deployment strategies, secrets management, monitoring setup, and cost comparisons.

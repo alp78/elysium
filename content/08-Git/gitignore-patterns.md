@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away."
+>
 > — **Antoine de Saint-Exupery**, *Terre des hommes* (1939)
 
 The `.gitignore` file tells Git which files to never track. Critical for keeping secrets, build artifacts, and large files out of your repo. Once a file is committed, `.gitignore` alone does not remove it from history — you must also stop tracking it.

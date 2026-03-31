@@ -23,6 +23,7 @@ status: complete
 
 > [!quote]
 > "There is no code so big, twisted, or complex that maintenance can't make it worse."
+>
 > — **Gerald Weinberg**, *The Psychology of Computer Programming* (1971)
 
 Every anti-pattern here has been seen in production. Each one looked reasonable at the time. Each one caused an incident, a data quality issue, or a performance crisis.

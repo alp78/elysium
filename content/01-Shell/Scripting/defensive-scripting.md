@@ -17,9 +17,11 @@ Every bash script you write for production should begin with one line that enabl
 
 > [!quote]
 > "The most dangerous phrase in the language is, 'We've always done it this way.'"
+>
 > — **Grace Hopper**, attributed remark (c. 1980s)
 >
 > "Bash without `set -euo pipefail` is a loaded gun pointed at your data."
+>
 > — Shell scripting proverb
 
 #### set -euo pipefail — the essential first line of every production script

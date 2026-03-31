@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Plan to throw one away; you will, anyhow."
+>
 > — **Fred Brooks**, *The Mythical Man-Month* (1975)
 
 This is the practical "I have THIS business need, what do I use?" guide. Instead of starting from theory, it starts from **real-world situations** that data engineers face and works backward to the right architecture, technology stack, and design decisions.

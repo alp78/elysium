@@ -30,6 +30,11 @@ date: 2026-03-28
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="25 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 25</span>
 
+> [!quote]
+> "Activist investors are the market's immune system. They target companies where management is destroying value and force a reckoning."
+>
+> — **Carl Icahn**, activist investor
+
 An individual or entity (often a hedge fund) that acquires a significant stake in a public company with the explicit goal of influencing corporate strategy, governance, board composition, capital allocation, or operational decisions. Activist investors may pursue their objectives through private engagement, public campaigns, shareholder proposals, or proxy contests to replace incumbent directors.
 
 > [!note]
@@ -346,6 +351,11 @@ A board structure in which directors are divided into multiple classes (typicall
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="341 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 341</span>
 
+> [!quote]
+> "Diversity is not a favour to underrepresented groups. It is an investment in better decision-making. Homogeneous boards produce homogeneous thinking."
+>
+> — **Nell Minow**, co-founder of The Corporate Library, co-author of *Corporate Governance*
+
 The representation of varied demographic backgrounds — including gender, race, ethnicity, age, nationality, and professional expertise — among the directors serving on a company's board. ISS and STOXX indices increasingly incorporate board diversity metrics as a measure of governance quality.
 
 > [!note]
@@ -397,6 +407,11 @@ The representation of varied demographic backgrounds — including gender, race,
 ### Board Independence
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="665 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 665</span>
+
+> [!quote]
+> "The bedrock of good governance is an independent board. Directors who owe their positions to management cannot hold management accountable."
+>
+> — **Robert Monks**, corporate governance pioneer, co-author of *Corporate Governance*
 
 The proportion of directors on a board who have no material financial, familial, or professional relationship with the company or its management beyond their board service. Independent directors are expected to provide unbiased oversight and protect shareholder interests.
 
@@ -710,6 +725,11 @@ The strategic process by which a company's board and management decide how to de
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="36 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 36</span>
 
+> [!quote]
+> "Clawback provisions ensure that executives cannot keep bonuses earned on the back of misstated financials. They align long-term incentives with long-term truth."
+>
+> — **Mary Schapiro**, former SEC Chair, on Dodd-Frank clawback rules
+
 A formal company policy that allows the board to recoup previously awarded incentive compensation from executives in the event of a financial restatement, misconduct, or other triggering circumstances. Dodd-Frank and subsequent SEC/exchange listing rules have made clawback policies mandatory for listed companies, but ISS evaluates the robustness and scope of these policies beyond minimum requirements.
 
 > [!note]
@@ -867,6 +887,11 @@ A director election in which one or more dissident candidates are nominated in o
 ### Corporate Social Responsibility (CSR)
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
+
+> [!quote]
+> "The social responsibility of business is to increase its profits — but only within the rules of the game."
+>
+> — **Milton Friedman**, *The New York Times Magazine* (1970), the foundational critique that shaped the CSR debate
 
 A broad framework under which companies voluntarily integrate social, environmental, and ethical considerations into their business operations and stakeholder interactions, beyond what is required by law. CSR encompasses community engagement, environmental stewardship, labor practices, human rights, and philanthropic activity. ISS evaluates CSR-related shareholder proposals and incorporates social factors into its ESG assessments.
 
@@ -1076,6 +1101,11 @@ The ballot item at a shareholder meeting through which individual director nomin
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
+> [!quote]
+> "Dual-class stock is the governance equivalent of taxation without representation. Public shareholders supply the capital but have no proportionate voice."
+>
+> — **John C. Coffee Jr.**, Columbia Law School, *The Future as History: The Prospects for Global Convergence in Corporate Governance*
+
 A capital structure in which a company issues two or more classes of common stock with unequal voting rights. Typically, insiders and founders hold a superior-vote class (e.g., 10 votes per share) while public investors hold an inferior-vote class (1 vote per share), allowing insiders to maintain control with a minority economic stake.
 
 > [!note]
@@ -1240,6 +1270,11 @@ A shareholder-approved program through which a company grants stock-based compen
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,865 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,865</span>
 
+> [!quote]
+> "Executive pay is the acid test of corporate governance. If the board cannot get compensation right, you can be sure they are not getting much else right either."
+>
+> — **Lucian Bebchuk**, Harvard Law School, *Pay Without Performance*
+
 The total remuneration package awarded to a company's senior officers, including base salary, annual cash incentives, long-term equity awards, pension contributions, perquisites, and severance arrangements. ISS evaluates executive compensation for pay-performance alignment, peer benchmarking, problematic pay practices, and structural concerns.
 
 > [!note]
@@ -1348,6 +1383,11 @@ A shareholder meeting convened outside the regular annual meeting cycle to addre
 ### Fiduciary Duty
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="100 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 100</span>
+
+> [!quote]
+> "Fiduciary duty is the highest standard of care in equity. A fiduciary must act solely in the interest of the beneficiary, not in his own."
+>
+> — **Tamar Frankel**, Boston University School of Law, *Fiduciary Law* (2011)
 
 The legal obligation of a company's directors and officers — and of institutional investors managing assets on behalf of beneficiaries — to act in good faith, with care, loyalty, and in the best interests of shareholders or beneficiaries. In the governance context, fiduciary duty requires directors to exercise informed judgment, avoid conflicts of interest, and prioritize the long-term health of the enterprise over personal gain.
 
@@ -1477,6 +1517,11 @@ A comprehensive ISS dataset capturing vote outcomes from shareholder meetings wo
 ### Golden Parachute
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="427 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 427</span>
+
+> [!quote]
+> "Golden parachutes reward executives for losing control of their company. They transfer wealth from shareholders to departing management at the worst possible moment."
+>
+> — **Nell Minow**, governance expert, on change-in-control severance
 
 A contractual provision guaranteeing substantial severance payments and accelerated vesting of equity awards to senior executives upon termination following a change-in-control event (merger, acquisition, or takeover). ISS evaluates golden parachute arrangements as part of its say-on-pay and M&A vote analysis, and may recommend against them when the payouts are excessive relative to performance or include problematic features such as excise tax gross-ups.
 
@@ -1628,6 +1673,11 @@ A proprietary ISS scoring system that rates companies on governance practices ac
 ### Independent Director
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,856 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,856</span>
+
+> [!quote]
+> "An independent director's value is the willingness to say 'no' when the CEO says 'yes.' Without that independence, the board is a rubber stamp."
+>
+> — **Michael Jensen**, Harvard Business School, "The Modern Industrial Revolution, Exit, and the Failure of Internal Control Systems"
 
 A member of the board of directors who has no material relationship with the company — whether as an officer, employee, significant shareholder, business partner, family member of management, or service provider — that could compromise the exercise of independent judgment. Listing exchanges (NYSE, Nasdaq) and ISS each maintain independence standards, with ISS standards often being more stringent.
 
@@ -1923,6 +1973,11 @@ A compensation program that awards executives and key employees equity-based or 
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="228 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 228</span>
 
+> [!quote]
+> "Majority voting makes director elections real elections. Under plurality voting, a director could be elected with a single vote — that is not accountability."
+>
+> — **ISS**, U.S. Benchmark Voting Policy rationale
+
 A director election standard under which a nominee must receive more votes "for" than votes "against" (or "withheld") to be elected. Under a plurality standard, by contrast, a nominee needs only the most votes among candidates, meaning an unopposed director could theoretically be elected with a single vote. ISS generally favors majority voting standards because they give shareholders meaningful power to reject underperforming directors.
 
 > [!note]
@@ -2087,6 +2142,11 @@ A director who serves on an excessive number of public company boards, raising c
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="282 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 282</span>
 
+> [!quote]
+> "Pay without performance is the central problem in executive compensation. When CEOs collect fortunes while shareholders lose money, the system is broken."
+>
+> — **Lucian Bebchuk & Jesse Fried**, *Pay Without Performance: The Unfulfilled Promise of Executive Compensation*
+
 The degree to which executive compensation outcomes correlate with company financial and stock-price performance over short- and long-term horizons. ISS conducts a quantitative pay-for-performance analysis comparing a company's CEO pay ranking to its total shareholder return (TSR) ranking within a peer group, flagging companies where a significant disconnect exists (e.g., high pay combined with poor performance).
 
 > [!note]
@@ -2138,6 +2198,11 @@ The degree to which executive compensation outcomes correlate with company finan
 ### Poison Pill
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,078 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,078</span>
+
+> [!quote]
+> "The poison pill is the most powerful anti-takeover device ever invented. It single-handedly shifted the balance of power from shareholders to boards."
+>
+> — **Martin Lipton**, Wachtell, Lipton, Rosen & Katz, inventor of the poison pill (1982)
 
 A shareholder rights plan adopted by a board (typically without shareholder approval) that is triggered when an acquirer crosses a specified ownership threshold (commonly 10-20%). The pill allows existing shareholders to purchase additional shares at a steep discount, massively diluting the hostile bidder's stake and making the takeover prohibitively expensive.
 
@@ -2215,6 +2280,11 @@ The voluntary or shareholder-requested reporting by a company of its political c
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="482 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 482</span>
 
+> [!quote]
+> "Proxy access gives long-term shareholders a seat at the table without forcing them to wage a full-scale proxy fight. It is democracy at the board level."
+>
+> — **Scott Stringer**, former New York City Comptroller, on the Boardroom Accountability Project
+
 A governance mechanism that allows qualifying shareholders (typically those owning 3% or more of outstanding shares for at least three years) to nominate a limited number of director candidates directly on the company's proxy card, without the cost and complexity of running a full proxy contest. Proxy access enables shareholders to propose alternative director nominees while using the company's ballot infrastructure.
 
 > [!note]
@@ -2265,6 +2335,11 @@ A governance mechanism that allows qualifying shareholders (typically those owni
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="397 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 397</span>
 
+> [!quote]
+> "A proxy contest is corporate democracy in its rawest form: shareholders choose between two visions for the company's future."
+>
+> — **Wachtell, Lipton, Rosen & Katz**, on the mechanics of proxy fights
+
 A situation in which a dissident shareholder or activist investor solicits proxy votes from other shareholders in opposition to the company's board or management recommendations, typically seeking to elect alternative director nominees, block a transaction, or force a governance change. Also known as a proxy fight.
 
 > [!note]
@@ -2313,6 +2388,11 @@ A situation in which a dissident shareholder or activist investor solicits proxy
 ### Proxy Voting
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4,813 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 4,813</span>
+
+> [!quote]
+> "The proxy vote is the shareholder's voice. When institutional investors fail to vote thoughtfully, they abdicate the most powerful governance tool they possess."
+>
+> — **Robert Monks**, corporate governance pioneer, *Corpocracy*
 
 The process by which shareholders who are unable or choose not to attend a shareholder meeting in person authorize another party (a proxy) to cast votes on their behalf on matters presented for approval. For institutional investors, proxy voting is a fiduciary duty and a core component of investment stewardship.
 
@@ -2526,6 +2606,11 @@ A business transaction between a company and an entity with which it has a pre-e
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="847 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 847</span>
 
+> [!quote]
+> "Say-on-pay is the single most important governance reform since Sarbanes-Oxley. It gives shareholders a direct channel to push back on excessive executive compensation."
+>
+> — **Rosanna Landis Weaver**, As You Sow, on the impact of Dodd-Frank say-on-pay provisions
+
 A mandatory (in the U.S. under Dodd-Frank) advisory shareholder vote on the compensation paid to a company's named executive officers, as disclosed in the proxy statement. Companies must hold say-on-pay votes at least once every three years, though most hold them annually. ISS recommends against say-on-pay when it identifies problematic pay practices or a significant pay-performance disconnect.
 
 > [!note]
@@ -2628,6 +2713,11 @@ A program under which a company repurchases its own outstanding shares from the 
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6,025 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 6,025</span>
 
+> [!quote]
+> "The shareholder proposal is the great equalizer of corporate governance. A single investor with a small stake can force an entire board to confront issues it would rather ignore."
+>
+> — **John Chevedden**, prolific shareholder proposal filer
+
 A resolution submitted by an eligible shareholder (meeting SEC ownership and procedural thresholds) for inclusion in a company's proxy statement and consideration at the annual meeting. Common shareholder proposal topics include governance reforms, environmental disclosures, political spending transparency, and social policies. Shareholder proposals are typically precatory (advisory) rather than binding.
 
 > [!note]
@@ -2674,6 +2764,11 @@ A resolution submitted by an eligible shareholder (meeting SEC ownership and pro
 ### Shareholder Rights
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="830 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 830</span>
+
+> [!quote]
+> "Corporate governance is, at its core, about the protection of shareholder rights. Every other mechanism — boards, auditors, regulators — exists to safeguard those rights."
+>
+> — **OECD**, Principles of Corporate Governance (2004)
 
 The bundle of legal, contractual, and governance rights held by owners of a company's common shares, including the right to vote, the right to receive dividends, the right to call special meetings, the right to act by written consent, preemptive rights, and the right to amend bylaws. ISS dedicates an entire QualityScore pillar to evaluating how robustly a company protects these rights.
 
@@ -2757,6 +2852,11 @@ The right of shareholders (individually or as a group meeting a specified owners
 ### Stewardship
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="616 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 616</span>
+
+> [!quote]
+> "Stewardship is the missing link between asset ownership and corporate accountability. Without it, institutional shareholders are absentee landlords."
+>
+> — **Paul Myners**, Baron Myners, UK government review of institutional investment (2001)
 
 The responsible management and oversight of invested assets by institutional investors, encompassing proxy voting, corporate engagement, monitoring of portfolio companies' governance and ESG practices, and public disclosure of stewardship activities. Stewardship codes (e.g., UK Stewardship Code, Japan Stewardship Code) formalize expectations for how asset managers and asset owners should exercise their ownership rights.
 
@@ -2912,6 +3012,11 @@ A public, time-limited offer made by an acquirer (or the company itself, in the 
 ### Unequal Voting Rights
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="190 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 190</span>
+
+> [!quote]
+> "One share, one vote is the cornerstone of shareholder democracy. Unequal voting rights violate this principle by letting insiders overrule the majority."
+>
+> — **CFA Institute**, position statement on unequal voting structures
 
 A governance structure in which different classes of shares carry different numbers of votes per share, resulting in a disconnect between economic ownership and voting power. Unequal voting rights — typically implemented through dual-class or multi-class share structures — allow founders, insiders, or controlling shareholders to maintain voting control with a minority economic stake. ISS and major index providers increasingly view unequal voting rights as a significant governance concern.
 

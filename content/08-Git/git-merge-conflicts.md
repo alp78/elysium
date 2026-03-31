@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "You can disagree with me as much as you want, but during this talk, by definition, anybody who disagrees is stupid and ugly."
+>
 > — **Linus Torvalds**, Git mailing list
 
 Merge conflicts occur when two branches modify the same lines in the same file and Git cannot automatically decide which version to keep. They arise during `git merge`, `git rebase`, `git cherry-pick`, and `git stash pop`. This note explains conflict marker syntax, the step-by-step resolution process, tooling options, and prevention strategies.

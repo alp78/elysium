@@ -77,6 +77,7 @@ status: complete
 
 > [!quote]
 > "A truly RESTful API looks like hypertext. Every addressable unit of information carries an address."
+>
 > — **Roy Fielding**, *Architectural Styles and the Design of Network-based Software Architectures* (2000)
 
 > [!abstract] Purpose

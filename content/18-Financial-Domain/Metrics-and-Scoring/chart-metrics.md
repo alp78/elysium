@@ -79,6 +79,7 @@ A horizontal dashed line marks the historical average for the selected index.
 
 > [!quote]
 > "The Sharpe ratio is the most widely used measure of risk-adjusted return because it adjusts for total risk, not just systematic risk."
+>
 > — **William Sharpe**
 
 

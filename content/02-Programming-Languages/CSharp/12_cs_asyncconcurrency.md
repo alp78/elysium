@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Everybody who learns concurrency thinks they understand it, ends up finding mysterious races they thought weren't possible, and discovers that they didn't actually understand it yet after all."
+>
 > — **Herb Sutter**, *The Free Lunch Is Over*, Dr. Dobb's Journal (2005)
 
 ```csharp
@@ -191,6 +192,11 @@ Console.WriteLine($"  First to finish: {await fastest}");
 
 #### CancellationToken
 
+A CancellationToken is a cooperative cancellation mechanism — you pass it to async methods, and they periodically check `token.IsCancellationRequested` or call `token.ThrowIfCancellationRequested()` to stop early. The caller creates a `CancellationTokenSource`, which controls when cancellation is triggered (timeout, user action, or programmatic). Cancellation is cooperative: the called code must actively check the token — it's not forcefully killed.
+
+> [!warning] Cancellation is not instant
+> Passing a CancellationToken doesn't kill the operation immediately. The code must CHECK the token at regular intervals. A long-running SQL query or HTTP call won't stop until it returns — only then does the next token check abort. For true preemption, the underlying API must support cancellation natively (e.g., `HttpClient` does, raw socket reads may not).
+
 ```csharp
 // CancellationToken — cooperative cancellation for async operations
 
@@ -362,6 +368,8 @@ Console.WriteLine($"  Success on attempt {attemptCount}: {apiResult}");
 
 #### Channel<T> — async producer-consumer
 
+A Channel is a thread-safe async queue for passing data between producers and consumers. Producers write with `WriteAsync`, consumers read with `ReadAllAsync`. Channels are bounded (backpressure when full) or unbounded (unlimited buffer). They're the modern replacement for `BlockingCollection` in async code — fully async, no thread blocking.
+
 ```csharp
 // Channel producer — writes events then completes the channel
 
@@ -413,6 +421,8 @@ Console.WriteLine($"  Processed {processedCount} events in {sw.Elapsed.TotalSeco
       Processed 12 events in 0.78s with 3 workers
 
 #### IAsyncEnumerable&lt;T&gt; — async streaming with yield
+
+`IAsyncEnumerable<T>` enables streaming data one item at a time asynchronously. Instead of loading an entire result set into memory, you `yield return` each item as it becomes available. The consumer processes items as they arrive using `await foreach`. Essential for streaming database results, paginated API responses, or large file processing where loading everything into memory would be impractical.
 
 ```csharp
 // IAsyncEnumerable<T> — async streaming with yield return
@@ -821,6 +831,11 @@ Console.WriteLine($"  Got:      {atomicCounter:N0}  (correct — atomic operatio
 
 #### ConcurrentDictionary — thread-safe aggregation
 
+`ConcurrentDictionary` is a dictionary that multiple threads can read and write simultaneously without explicit locking. It uses fine-grained locking internally (lock striping), so concurrent writes to different keys don't block each other. Use `AddOrUpdate` and `GetOrAdd` for atomic read-modify-write operations.
+
+> [!danger] AddOrUpdate is not atomic end-to-end
+> The update delegate in `AddOrUpdate` may be called multiple times if there's contention — it's optimistic, not locked. Don't put side effects (database writes, API calls) inside the delegate. Only use it for pure computations.
+
 ```csharp
 // ConcurrentDictionary — thread-safe aggregation with AddOrUpdate
 
@@ -851,6 +866,8 @@ Console.WriteLine($"  Total: {eventCounts.Values.Sum():N0}");
       Total: 100'000
 
 #### BlockingCollection — thread concurrency producer-consumer
+
+`BlockingCollection` is the synchronous (thread-based) equivalent of Channel. Producers call `Add()` (blocks if bounded and full), consumers call `Take()` (blocks if empty). Use `GetConsumingEnumerable()` for a foreach-friendly consumer loop. Prefer `Channel<T>` in async code; use `BlockingCollection` only when working with thread-based (non-async) consumers.
 
 ```csharp
 // BlockingCollection — producer-consumer with blocking threads
@@ -1042,6 +1059,8 @@ Console.WriteLine("  Main: all 3 workers finished setup, proceeding");
 
 #### Barrier — phased synchronization
 
+A Barrier synchronizes multiple threads at a checkpoint: all participants must arrive at the barrier before any can proceed to the next phase. This is useful when parallel tasks must complete a step before the next step can begin — like a data pipeline where all partition loads must finish before the merge step starts. Each call to `SignalAndWait()` blocks until all participants have signaled.
+
 ```csharp
 // Barrier — phased synchronization where all participants reach a checkpoint
 
@@ -1081,6 +1100,8 @@ await Task.WhenAll(phasedWorkers);
       Worker 1: load done
 
 #### PeriodicTimer — modern scheduled polling
+
+`PeriodicTimer` (introduced in .NET 6) provides async-friendly periodic ticking without thread blocking. Unlike `System.Timers.Timer` (callback-based, easy to overlap) or `Task.Delay` in a loop (drift accumulation), `PeriodicTimer` provides a clean `WaitForNextTickAsync()` that respects cancellation tokens and doesn't fire overlapping callbacks.
 
 ```csharp
 // PeriodicTimer — modern .NET 6+ async-friendly scheduled polling

@@ -17,6 +17,7 @@ Brace expansion and shell globbing let you generate multiple arguments from comp
 
 > [!quote]
 > "The order of expansions is: brace expansion, tilde expansion, parameter and variable expansion, command substitution, arithmetic expansion, word splitting, and filename expansion."
+>
 > — **Bash Reference Manual**, GNU
 
 ## Brace Expansion

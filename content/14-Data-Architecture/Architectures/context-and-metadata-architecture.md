@@ -74,6 +74,7 @@ status: complete
 
 > [!quote]
 > "Metadata is a love note to the future."
+>
 > — **Jason Scott**, Internet Archive
 
 Data without context is noise. A number in a table means nothing unless you know where it came from, when it was true, how trustworthy it is, which pipeline produced it, and what it represents in business terms. This note is a comprehensive architectural reference for preserving every dimension of context as data flows through extraction, transformation, loading, and consumption.

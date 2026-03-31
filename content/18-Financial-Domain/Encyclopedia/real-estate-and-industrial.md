@@ -26,6 +26,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 > [!quote]
 > "The installed base is the gift that keeps on giving — every machine sold is a customer for life."
+>
 > — **David Cote**
 
 
@@ -43,6 +44,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 > [!quote]
 > "Infrastructure is the backbone upon which economic development is built."
+>
 > — **Arundhati Bhattacharya**
 
 
@@ -60,6 +62,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 > [!quote]
 > "No manufacturer can reach every customer alone — distributors extend your reach."
+>
 > — **Sam Walton**, *Made in America* (1992)
 
 
@@ -89,6 +92,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 > [!quote]
 > "Amateurs talk about strategy. Professionals talk about logistics."
+>
 > — **Robert H. Barrow**
 
 
@@ -106,6 +110,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 > [!quote]
 > "The time to repair the roof is when the sun is shining."
+>
 > — **John F. Kennedy**
 
 
@@ -123,6 +128,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 > [!quote]
 > "Behind every great brand is a supplier who made it possible."
+>
 > — **Tim Cook**
 
 
@@ -140,6 +146,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 > [!quote]
 > "Procurement is no longer about buying things — it is about creating value across the supply network."
+>
 > — **Jonathan Hughes**
 
 
@@ -157,6 +164,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 > [!quote]
 > "Real estate cannot be lost or stolen, nor can it be carried away. It is about the safest investment in the world."
+>
 > — **Franklin D. Roosevelt**
 
 
@@ -174,6 +182,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 > [!quote]
 > "A value-added reseller does not just sell a product — they sell a solution to a problem."
+>
 > — **Michael Dell**
 
 
@@ -191,6 +200,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 > [!quote]
 > "Supply chain is like nature. It is all around us."
+>
 > — **Dave Waters**
 
 

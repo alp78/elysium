@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Nobody actually creates perfect code the first time around, except me. But there's only one of me."
+>
 > — **Linus Torvalds**, Git mailing list
 
 Everyone makes mistakes. Git has several ways to undo things, ranging from completely safe to permanently destructive. The key is matching the right tool to the situation.

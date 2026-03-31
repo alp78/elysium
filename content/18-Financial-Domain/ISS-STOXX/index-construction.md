@@ -32,6 +32,7 @@ date: 2026-03-28
 
 > [!quote]
 > "The market is a weighing machine."
+>
 > — **Benjamin Graham**, *The Intelligent Investor* (1949)
 
 
@@ -296,6 +297,7 @@ $$
 
 > [!quote]
 > "The index fund is a most unlikely hero for the typical investor."
+>
 > — **John C. Bogle**, *The Little Book of Common Sense Investing* (2007)
 
 
@@ -351,7 +353,10 @@ A broadly representative, rules-based index that serves as a standard reference 
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="65 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 65</span>
 
-
+> [!quote]
+> "Buffer rules are the index world's answer to unnecessary turnover — they keep borderline stocks from churning in and out."
+>
+> — **Antti Petajisto**, *The Index Premium and Its Hidden Cost for Index Funds* (2011)
 
 A threshold band applied during periodic reviews that allows existing constituents to remain in the index even if they marginally fail to meet the standard selection criteria, thereby reducing unnecessary turnover.
 
@@ -407,6 +412,7 @@ A threshold band applied during periodic reviews that allows existing constituen
 
 > [!quote]
 > "Diversification is the only free lunch in investing."
+>
 > — **Harry Markowitz**
 
 
@@ -713,7 +719,10 @@ An individual security that is a member of an index at a given point in time and
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="84 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 84</span>
 
-
+> [!quote]
+> "The divisor is what makes an index a continuous time series rather than a disjointed sequence of portfolios."
+>
+> — **David Blitzer**, former Chairman of the S&P Index Committee
 
 A scaling factor in the index formula that preserves continuity of the index level across non-market events such as constituent changes, corporate actions, and rebalancing; it absorbs the mechanical impact of these events so the index level changes only due to price movements.
 
@@ -856,6 +865,7 @@ The calendar date on which announced index changes — including additions, dele
 
 > [!quote]
 > "The essence of investment management is the management of risks, not the management of returns."
+>
 > — **Benjamin Graham**, *The Intelligent Investor* (1949)
 
 
@@ -911,7 +921,10 @@ The set of minimum requirements — covering domicile, listing venue, security t
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="27 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 27</span>
 
-
+> [!quote]
+> "Equal weighting is the simplest diversification strategy — it says every stock deserves the same chance."
+>
+> — **Victor DeMiguel et al.**, *Optimal Versus Naive Diversification* (2009)
 
 A weighting scheme in which every constituent of an index receives the same weight at each rebalancing date, regardless of market capitalization, price, or any fundamental metric.
 
@@ -1073,7 +1086,10 @@ A provision that triggers the removal of a constituent from an index between per
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,168 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,168</span>
 
-
+> [!quote]
+> "Free-float adjustment ensures that index weights reflect tradeable reality, not theoretical ownership."
+>
+> — **MSCI Barra**, *Free Float Adjustment Methodology* (2001)
 
 The proportion of a company's total shares outstanding that is available for trading by public investors, excluding shares held by strategic investors, company insiders, governments, and other long-term locked-in holders.
 
@@ -1185,6 +1201,7 @@ Rounded to the nearest 0.05.
 
 > [!quote]
 > "It is not the return on my money that I am concerned about; it is the return of my money."
+>
 > — **Will Rogers**
 
 
@@ -1327,7 +1344,10 @@ A governance body composed of senior professionals within the index provider org
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="72 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 72</span>
 
-
+> [!quote]
+> "The Laspeyres method holds quantities fixed and lets prices tell the story — the natural choice for a market index."
+>
+> — **Irving Fisher**, *The Making of Index Numbers* (1922)
 
 The mathematical expression used to compute a capitalization-weighted index level, based on the Laspeyres aggregation method, where quantities (shares) are held fixed between rebalancing dates and the index reflects only price changes.
 
@@ -1504,6 +1524,7 @@ $$
 
 > [!quote]
 > "Wide diversification is only required when investors do not understand what they are doing."
+>
 > — **Warren Buffett**
 
 
@@ -1560,6 +1581,7 @@ The broadest set of securities from which an index's constituents may be selecte
 
 > [!quote]
 > "Liquidity is a coward — it disappears at the first sign of trouble."
+>
 > — **Nassim Nicholas Taleb**, *The Black Swan* (2007)
 
 
@@ -1616,6 +1638,7 @@ The degree to which an index can be practically replicated by a real-world portf
 
 > [!quote]
 > "Don't look for the needle in the haystack — just buy the haystack."
+>
 > — **John C. Bogle**, *The Little Book of Common Sense Investing* (2007)
 
 
@@ -1664,6 +1687,7 @@ $$
 
 > [!quote]
 > "In this world nothing can be said to be certain, except death and taxes."
+>
 > — **Benjamin Franklin**
 
 
@@ -1869,6 +1893,7 @@ $$
 
 > [!quote]
 > "Rebalancing is a discipline that forces you to sell high and buy low."
+>
 > — **William Bernstein**, *The Four Pillars of Investing* (2002)
 
 
@@ -1922,7 +1947,10 @@ The periodic process of realigning constituent weights to their target values as
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-
+> [!quote]
+> "Reconstitution is the moment when an index refreshes itself — new blood in, old blood out — based purely on the rules."
+>
+> — **Antti Petajisto**, *The Index Premium and Its Hidden Cost for Index Funds* (2011)
 
 The process of redetermining the membership of an index by re-applying eligibility and selection criteria to the full index universe, resulting in additions of newly qualifying securities and deletions of those that no longer qualify.
 
@@ -2005,7 +2033,10 @@ The cadence at which an index provider conducts periodic reviews, commonly expre
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-
+> [!quote]
+> "A good index is a set of published rules, applied consistently, with no room for discretion to creep in."
+>
+> — **IOSCO**, *Principles for Financial Benchmarks* (2013)
 
 An index constructed and maintained according to a transparent, pre-defined, and publicly documented set of rules covering universe definition, eligibility, selection, weighting, rebalancing, and corporate action treatment, minimizing discretionary judgment by the index provider.
 
@@ -2035,6 +2066,7 @@ An index constructed and maintained according to a transparent, pre-defined, and
 
 > [!quote]
 > "Diversification is the only free lunch in investing."
+>
 > — **Harry Markowitz**
 
 
@@ -2193,6 +2225,7 @@ The ordered ranking of eligible securities — typically sorted by free-float ma
 
 > [!quote]
 > "All models are wrong, but some are useful."
+>
 > — **George E.P. Box**, *Empirical Model-Building and Response Surfaces* (1987)
 
 
@@ -2282,6 +2315,7 @@ An index constructed using a transparent, rules-based methodology that systemati
 
 > [!quote]
 > "The miracle of compounding returns is overwhelmed by the tyranny of compounding costs."
+>
 > — **John C. Bogle**, *The Little Book of Common Sense Investing* (2007)
 
 
@@ -2338,6 +2372,7 @@ A generic term for an index variant that accounts for both price appreciation an
 
 > [!quote]
 > "The biggest risk is not volatility but the permanent loss of capital."
+>
 > — **Benjamin Graham**, *The Intelligent Investor* (1949)
 
 
@@ -2398,7 +2433,10 @@ Where $R_p$ and $R_b$ are daily portfolio and benchmark returns, respectively, a
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="668 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 668</span>
 
-
+> [!quote]
+> "The real cost of indexing is not the management fee — it is the turnover and the market impact of rebalancing trades."
+>
+> — **John C. Bogle**, *Common Sense on Mutual Funds* (1999)
 
 The percentage of an index's total weight that changes at a rebalancing or reconstitution event, measured as the sum of all absolute weight changes divided by two.
 
@@ -2457,7 +2495,10 @@ Where $w_i^{\text{old}}$ and $w_i^{\text{new}}$ are the weights before and after
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="570 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 570</span>
 
-
+> [!quote]
+> "Capitalization weighting is the only weighting method that is both self-rebalancing and reflects the aggregate opinion of all market participants."
+>
+> — **William F. Sharpe**, *Capital Asset Prices* (1964)
 
 The methodology that determines how the index's total value is allocated across its constituents, defining each security's influence on the index level; common schemes include free-float market-capitalization weighting, equal weighting, price weighting, and fundamental weighting.
 

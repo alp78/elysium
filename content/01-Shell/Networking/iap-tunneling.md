@@ -17,6 +17,7 @@ Identity-Aware Proxy (IAP) is Google Cloud's way to let you access VMs that have
 
 > [!quote]
 > "Trust is a vulnerability. Zero Trust eliminates trust from digital systems because it provides no value to an organisation."
+>
 > — **John Kindervag** (creator of Zero Trust at Forrester)
 
 ### How IAP tunneling works — the full network path from workstation to VM

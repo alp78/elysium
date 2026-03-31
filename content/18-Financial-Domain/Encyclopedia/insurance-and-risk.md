@@ -25,6 +25,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 > [!quote]
 > "The greatest risk in retirement is not dying too soon but living too long without income."
+>
 > — **Moshe Milevsky**, *Are You a Stock or a Bond?* (2008)
 
 
@@ -42,6 +43,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 > [!quote]
 > "Saving and insuring are two sides of the same coin — both protect against an uncertain future."
+>
 > — **Peter Bernstein**, *Against the Gods* (1996)
 
 
@@ -59,6 +61,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 > [!quote]
 > "Life insurance is the only tool that takes pennies and guarantees dollars."
+>
 > — **Ben Feldman**
 
 
@@ -76,6 +79,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 > [!quote]
 > "In an uncertain world, insurance is the business of making promises about the future."
+>
 > — **Peter Drucker**
 
 
@@ -93,6 +97,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 > [!quote]
 > "Float is money we hold that is not ours but which we get to invest for Berkshire's benefit."
+>
 > — **Warren Buffett**
 
 
@@ -110,6 +115,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 > [!quote]
 > "Speed of payout is everything in a disaster — parametric products deliver cash when it matters most."
+>
 > — **Isaac Anthony**
 
 
@@ -127,6 +133,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 > [!quote]
 > "Reinsurance is the business of insuring insurance companies — it is the safety net beneath the safety net."
+>
 > — **Henry Kluge**
 
 
@@ -144,6 +151,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 > [!quote]
 > "The essence of risk management lies in maximizing the areas where we have some control over the outcome while minimizing the areas where we have absolutely no control."
+>
 > — **Peter Bernstein**, *Against the Gods* (1996)
 
 **Definition:** Risk management is the process of identifying, assessing, and controlling threats to an organization's capital, earnings, and operations. These threats can stem from a wide variety of sources including financial market uncertainty, credit defaults, operational failures, natural disasters, regulatory changes, strategic miscalculations, and cybersecurity breaches. Effective risk management involves establishing risk tolerance levels, implementing controls and mitigation strategies, monitoring risk exposures, and maintaining adequate reserves and insurance. In financial institutions, risk management is heavily regulated and central to business operations.
@@ -160,6 +168,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 > [!quote]
 > "Combining investment with protection gives people permission to grow their wealth while still sleeping at night."
+>
 > — **Mark Tucker**
 
 

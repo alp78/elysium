@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "The purpose of abstraction is not to be vague, but to create a new semantic level in which one can be absolutely precise."
+>
 > — **Edsger W. Dijkstra**, *The Humble Programmer*, ACM Turing lecture (1972)
 
 ## Function Basics
@@ -120,6 +121,8 @@ Console.WriteLine($"tripler(5) = {tripler(5)}");
 
 #### Callbacks — onSuccess / onError
 
+A callback is a function passed as an argument to another function, to be called later when a specific event occurs. In C#, callbacks are implemented as `Action` or `Func` delegates. The caller decides what happens on success or failure by providing the callback — the called method doesn't need to know the details of error handling or notification.
+
 Accept `Action<string> onSuccess` and `Action<Exception> onError` — the caller defines the response. Decouples the operation from its side effects.
 
 ```csharp
@@ -142,6 +145,8 @@ FetchData("api/users",
 
 #### Strategy pattern — swap behavior via Func
 
+The strategy pattern lets you swap an algorithm at runtime without changing the code that uses it. Instead of hardcoding a calculation (like a pricing formula or scoring method), you pass the algorithm as a `Func` parameter. Different callers can inject different strategies — one uses z-score normalization, another uses percentile ranking — through the same method signature.
+
 Define interchangeable `Func<T, TResult>` for each strategy. Pass the desired one to the consumer — change behavior without modifying code (open/closed principle). Use for pricing rules, validation, sorting, formatters.
 
 ```csharp
@@ -161,6 +166,8 @@ Console.WriteLine($"  Member:   ${Calculate(100, memberDiscount):F2}");
       Member:   $70.00
 
 #### Pipeline — chained Func steps with Aggregate
+
+A pipeline chains multiple transformation steps where each step's output becomes the next step's input. In C#, you store steps as a `List<Func<T, T>>` and compose them with `Aggregate`. This mirrors the medallion architecture: raw data passes through validation, cleaning, and enrichment stages sequentially.
 
 Store steps as `List<Func<string, string>>`. `Aggregate` folds the input through each step sequentially. Steps are composable — add, remove, reorder independently, each testable in isolation.
 
@@ -187,7 +194,12 @@ Console.WriteLine($"  '{raw}' -> '{result}'");
 
 #### Dependency injection — inject fake time via Func
 
+Dependency injection (DI) means passing dependencies into a method or class from outside rather than creating them internally. The classic example: instead of calling `DateTime.UtcNow` directly (which makes testing impossible), you accept a `Func<DateTime>` parameter. In production, it returns real time; in tests, it returns a fixed date so results are deterministic.
+
 Accept `Func<DateTime> getNow` with default `DateTime.UtcNow`. Production uses the default; tests inject a fixed `DateTime` for deterministic results. No interface needed — `Func<DateTime>` is lightweight DI.
+
+> [!tip] DI enables testability
+> If a function calls `DateTime.UtcNow` directly, you can't test what happens at midnight, on weekends, or at year boundaries without waiting. Injecting time as a `Func<DateTime>` parameter makes every time-dependent scenario testable in milliseconds.
 
 > [!warning] Don't use DateTime.Now directly
 >
@@ -203,9 +215,6 @@ Dictionary<string, object> ProcessOrder(
     return order;
 }
 ```
-
-    
-    (4,19): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 
 #### Dependency injection — production call with default DateTime.UtcNow
 
@@ -233,6 +242,8 @@ Console.WriteLine($"  Test:       {order2["processed_at"]}");
 
 #### Progress callback
 
+A progress callback reports incremental status during a long-running operation. The caller provides an `Action` that receives progress updates (e.g., percentage complete, current item), allowing UI updates or logging without the core logic knowing how progress is displayed.
+
 Accept `Action<int, int, string>?` (nullable). Call with `onProgress?.Invoke(current, total, message)`. Callers control the display — console, UI, logging, or nothing.
 
 ```csharp
@@ -257,9 +268,6 @@ LoadData(new[] { "users", "orders", "products" },
       [1/3] Loading users
       [2/3] Loading orders
       [3/3] Loading products
-
-    
-    (5,55): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
 
 #### Sorting with Func as key
 

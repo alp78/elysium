@@ -11,6 +11,7 @@ description: "What dbt is, how it compiles, the DAG, materializations, profiles,
 
 > [!quote]
 > "Data engineering is much closer to software engineering than it is to data science."
+>
 > — **Maxime Beauchemin**, "The Rise of the Data Engineer" (2017)
 
 > [!abstract] When You Need This

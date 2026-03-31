@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Never underestimate the bandwidth of a station wagon full of tapes hurtling down the highway."
+>
 > — **Andrew S. Tanenbaum**, *Computer Networks* (1981)
 
 Copying a file on a single machine is trivial. Copying 50 GB of pipeline output from a Compute Engine VM to your workstation, synchronizing a directory tree between two servers, or uploading a database backup to Cloud Storage — that is where the tool choice and flags determine whether the transfer takes 5 minutes or 5 hours, and whether a network interruption means starting over or resuming cleanly.

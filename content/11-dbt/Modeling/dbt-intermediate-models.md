@@ -11,6 +11,7 @@ description: "Business logic transforms, silver layer"
 
 > [!quote]
 > "What you realize you're doing over time with data transformation is you're curating the knowledge of the organization that you work for."
+>
 > — **Tristan Handy**
 
 Intermediate models are the business logic layer — the [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) tier of the pipeline. They join, enrich, and transform staging data into analysis-ready building blocks that feed the mart layer. They are not intended for direct consumption by end users or BI tools — they are internal to the dbt DAG.

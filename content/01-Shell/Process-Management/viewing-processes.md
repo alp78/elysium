@@ -17,6 +17,7 @@ When an Airflow VM is slow, a query is hanging, or a runaway process is pinning 
 
 > [!quote]
 > "You can have a second computer once you've shown you know how to use the first one."
+>
 > — **Paul Barham**
 
 ## Linux — ps, top, htop, pstree

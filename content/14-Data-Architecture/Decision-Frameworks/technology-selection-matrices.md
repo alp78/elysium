@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Choose boring technology. Every technology choice carries an innovation token cost — spend them wisely."
+>
 > — **Dan McKinley**, "Choose Boring Technology" (2015)
 
 Every technology decision in data engineering is a trade-off. There is no universally "best" language, database, or architecture — only the best fit for a given context of scale, team skill, budget, latency requirements, and operational complexity. This note is the lookup table. When you face a technology decision, find the relevant matrix, check the constraints, and follow the decision rule.

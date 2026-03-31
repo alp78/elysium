@@ -29,7 +29,10 @@ date: 2026-03-28
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="54 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 54</span>
 
-
+> [!quote]
+> "The blue chips are the aristocracy of the stock market — they set the tone for everything else."
+>
+> — **Peter Lynch**, *One Up on Wall Street* (1989)
 
 A stock market index composed of shares in the largest, most liquid, and most financially stable companies within a given market or region. Blue-chip indices serve as headline benchmarks and are widely used as underlyings for financial products including ETFs, futures, and options.
 
@@ -89,7 +92,10 @@ A stock market index composed of shares in the largest, most liquid, and most fi
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3,832 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 3,832</span>
 
-
+> [!quote]
+> "The DAX is the pulse of German industry — when the DAX moves, it moves with the weight of Europe's largest economy."
+>
+> — **Deutsche Borse**, *DAX 30th Anniversary Publication* (2018)
 
 The DAX (Deutscher Aktienindex) is the blue-chip index of the 40 largest and most liquid companies trading on the Frankfurt Stock Exchange. Launched in 1988 with a base value of 1,000 points, the DAX was expanded from 30 to 40 constituents in September 2021. It is a total-return index by default, meaning dividends are reinvested into the index calculation.
 
@@ -152,6 +158,7 @@ The DAX (Deutscher Aktienindex) is the blue-chip index of the 40 largest and mos
 
 > [!quote]
 > "Sustainability is no longer about doing less harm. It is about doing more good."
+>
 > — **Jochen Zeitz**
 
 The DAX 50 ESG index comprises 50 large and liquid German equities selected from the HDAX universe (the combined constituents of DAX, MDAX, and TecDAX) that meet environmental, social, and governance (ESG) screening criteria. Companies involved in controversial weapons, tobacco, coal, nuclear energy, and military contracting, and those violating the UN Global Compact principles, are excluded.
@@ -320,6 +327,10 @@ The eb.rexx index family tracks the performance of the most liquid German govern
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,242 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,242</span>
 
+> [!quote]
+> "The EURO STOXX 50 is to the Eurozone what the Dow Jones is to America — the index everyone watches."
+>
+> — **Axel Lomholt**, General Manager, STOXX
 
 
 The EURO STOXX 50 is Europe's leading blue-chip index, comprising 50 of the largest and most liquid stocks from Eurozone countries. Constituents are selected from the EURO STOXX index (the Eurozone subset of the STOXX Europe 600) using free-float market capitalisation ranking, subject to a review buffer and sector representation considerations. It was launched on 26 February 1998 with a base value of 1,000 as of 31 December 1991.
@@ -386,6 +397,7 @@ The EURO STOXX 50 is Europe's leading blue-chip index, comprising 50 of the larg
 
 > [!quote]
 > "Volatility is the price of admission for long-term returns."
+>
 > — **Nick Murray**, *Simple Wealth, Inevitable Wealth* (1999)
 
 
@@ -454,6 +466,7 @@ The EURO STOXX 50 Volatility (VSTOXX) subindex family extends the headline VSTOX
 
 > [!quote]
 > "Banking is necessary, banks are not."
+>
 > — **Bill Gates**
 
 
@@ -519,6 +532,7 @@ The EURO STOXX Banks index tracks the performance of Eurozone banking-sector sto
 
 > [!quote]
 > "Do you know the only thing that gives me pleasure? It's to see my dividends coming in."
+>
 > — **John D. Rockefeller**
 
 
@@ -581,6 +595,7 @@ The EURO STOXX Select Dividend 30 index selects 30 high-dividend-yielding stocks
 
 > [!quote]
 > "The full faith and credit of a government is only as good as its people."
+>
 > — **Anonymous**
 
 The EUROGOV index family measures the performance of euro-denominated government bonds issued by Eurozone sovereign issuers. The family includes a broad overall index and sub-indices segmented by maturity band (1-3y, 3-5y, 5-7y, 7-10y, 10y+) and by individual issuer country. Bonds must meet minimum outstanding amount and remaining maturity thresholds to qualify for inclusion.
@@ -626,6 +641,10 @@ The EUROGOV index family measures the performance of euro-denominated government
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="40 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 40</span>
 
+> [!quote]
+> "Nature is the next frontier of financial risk — biodiversity loss threatens supply chains, asset values, and long-term returns."
+>
+> — **TNFD**, *Taskforce on Nature-related Financial Disclosures* (2023)
 
 
 The ISS STOXX Biodiversity index family integrates biodiversity-related data from ISS ESG into equity index construction. These indices aim to reduce portfolio exposure to companies with high negative impacts on biodiversity, including deforestation, water pollution, and habitat destruction, while increasing exposure to companies offering biodiversity-positive solutions. The methodology draws on frameworks such as the Taskforce on Nature-related Financial Disclosures (TNFD) and the Kunming-Montreal Global Biodiversity Framework.
@@ -690,6 +709,10 @@ The ISS STOXX Biodiversity index family integrates biodiversity-related data fro
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="38 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 38</span>
 
+> [!quote]
+> "A Paris-aligned benchmark must self-decarbonise at a rate consistent with limiting warming to 1.5 degrees."
+>
+> — **EU Technical Expert Group on Sustainable Finance**, *EU Climate Benchmarks Regulation* (2020)
 
 
 The ISS STOXX Net Zero Transition index family is designed to align investment portfolios with a 1.5 degree Celsius global warming trajectory. These indices comply with the EU Paris-Aligned Benchmark (PAB) and Climate Transition Benchmark (CTB) regulations, incorporating greenhouse gas emissions data, forward-looking decarbonisation targets, and fossil fuel revenue thresholds. The methodology mandates a minimum year-on-year self-decarbonisation rate of 7% for PAB-aligned variants.
@@ -1001,6 +1024,7 @@ The STOXX Asia/Pacific 600 index tracks 600 companies across developed markets i
 
 > [!quote]
 > "Digital currency is going to be a very powerful thing."
+>
 > — **John Donahoe**
 
 
@@ -1038,6 +1062,10 @@ The STOXX Digital Asset index family provides benchmarks for the digital asset a
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="55 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 55</span>
 
+> [!quote]
+> "Emerging markets are where the growth is — ignoring them means ignoring the future of the global economy."
+>
+> — **Antoine van Agtmael**, who coined the term "emerging markets" (1981)
 
 
 The STOXX Emerging Markets index family provides broad equity coverage of emerging-market countries worldwide. The indices track large, mid, and small capitalisation segments across markets in Asia, Latin America, Europe, the Middle East, and Africa. The family is part of the broader STOXX World Equity index framework and complements the developed-market STOXX Global 1800.
@@ -1100,6 +1128,10 @@ The STOXX Emerging Markets index family provides broad equity coverage of emergi
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="980 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 980</span>
 
+> [!quote]
+> "The STOXX Europe 600 is the de facto broadest representation of the European equity market."
+>
+> — **Stuart Heath**, Director, Equity & Index Product Design, Eurex
 
 
 The STOXX Europe 600 index covers 600 companies across 17 European countries, representing large, mid, and small capitalisation segments. It is derived from the STOXX Europe Total Market Index and subdivides into the STOXX Europe Large 200, STOXX Europe Mid 200, and STOXX Europe Small 200 sub-indices. The index serves as the primary pan-European equity benchmark for institutional investors.
@@ -1444,6 +1476,11 @@ The STOXX Global Metaverse index captures companies positioned to benefit from t
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
 
+> [!quote]
+> "Do you know the only thing that gives me pleasure? It's to see my dividends coming in."
+>
+> — **John D. Rockefeller**
+
 
 
 The STOXX Global Select Dividend 100 index selects the 100 highest-dividend-yielding stocks from the STOXX Global 1800 universe. Constituents are drawn from three regional Select Dividend sub-indices: STOXX Europe Select Dividend 30, STOXX North America Select Dividend 40, and STOXX Asia/Pacific Select Dividend 50 (with a total of 30 + 40 + 30 = 100 stocks). Selection is based on indicated annual net dividend yield, subject to filters on dividend growth and payout ratio. The index is weighted by net dividend yield.
@@ -1552,6 +1589,7 @@ The STOXX ICE Fixed Income Sustainability index family, developed in partnership
 
 > [!quote]
 > "The capital asset pricing model has been the backbone of modern portfolio theory."
+>
 > — **William Sharpe**
 
 
@@ -1611,6 +1649,7 @@ The STOXX Industry Neutral Ax Factor index family isolates single risk-factor ex
 
 > [!quote]
 > "The portfolio with the highest return is not necessarily the most desirable one."
+>
 > — **Harry Markowitz**
 
 
@@ -1741,6 +1780,7 @@ The STOXX North America 600 index tracks 600 companies across the United States 
 
 > [!quote]
 > "Do you know the only thing that gives me pleasure? It is to see my dividends coming in."
+>
 > — **John D. Rockefeller**
 
 
@@ -1982,6 +2022,7 @@ The TecDAX comprises the 30 largest and most liquid technology stocks listed on 
 
 > [!quote]
 > "Volatility is not risk — what matters is the permanent impairment of capital."
+>
 > — **Seth Klarman**, *Margin of Safety* (1991)
 
 
@@ -2155,6 +2196,10 @@ The STOXX Europe 600 Sector index family breaks the STOXX Europe 600 into its co
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="59 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 59</span>
 
+> [!quote]
+> "Exclusion is the simplest form of responsible investing — remove what you cannot accept, keep the rest."
+>
+> — **Rodolphe Bocquet**, Global Head of Sustainable Investing, Qontigo
 
 
 The STOXX ESG-X index family applies exclusionary ESG screening to standard STOXX benchmark indices. Companies involved in controversial weapons (cluster munitions, anti-personnel mines, biological and chemical weapons), tobacco production, and those violating the UN Global Compact principles are removed. The "X" in the name denotes "exclusion."
@@ -2403,6 +2448,7 @@ The STOXX Maximum Dividend 40 index selects the 40 stocks from the STOXX Global 
 
 > [!quote]
 > "Risk comes from not knowing what you are doing."
+>
 > — **Warren Buffett**
 
 
@@ -2447,7 +2493,10 @@ The DAX Risk Control index family applies a volatility-targeting mechanism to th
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="44 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 44</span>
 
-
+> [!quote]
+> "ESG integration is not about sacrificing returns — it is about understanding the full picture of risk."
+>
+> — **Larry Fink**, BlackRock CEO, Annual Letter to CEOs (2020)
 
 The STOXX Global ESG Leaders index selects companies from the STOXX Global 1800 that demonstrate leadership in environmental, social, and governance performance. Companies are assessed across ESG pillars and ranked within their sectors; those in the top quartile of each pillar are eligible for inclusion. The index targets approximately 300-400 constituents.
 

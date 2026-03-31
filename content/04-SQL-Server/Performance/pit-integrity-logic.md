@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "In financial computing, the answer is not approximately right — it is exactly right, or it is wrong."
+>
 > — **Patrick Burns**
 
 > [!danger] Why This Matters

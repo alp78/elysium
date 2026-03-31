@@ -51,6 +51,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 > [!quote]
 > "Get big fast — the internet rewards scale in ways that physical retail never could."
+>
 > — **Jeff Bezos**
 
 **Definition:** E-commerce (electronic commerce) refers to the buying and selling of goods and services over the internet. It encompasses online retail stores, digital marketplaces, business-to-business trading platforms, and direct-to-consumer sales channels. E-commerce has transformed traditional retail by enabling businesses to reach global customers, operate 24/7, offer personalized shopping experiences, and reduce the overhead costs associated with physical stores. It includes various models such as B2C, B2B, C2C (consumer-to-consumer), and D2C (direct-to-consumer).
@@ -67,6 +68,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 > [!quote]
 > "In business, the idea of measuring what you are doing, picking the measurements that count, is one that applies to franchising."
+>
 > — **Ray Kroc**
 
 
@@ -96,6 +98,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 > [!quote]
 > "Do what you do best and outsource the rest."
+>
 > — **Peter Drucker**
 
 
@@ -113,6 +116,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 > [!quote]
 > "A platform is a business model that creates value by facilitating exchanges between two or more interdependent groups."
+>
 > — **Alex Moazed**, *Modern Monopolies* (2016)
 
 
@@ -130,6 +134,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 > [!quote]
 > "We are not in the business of selling things — we are in the business of renewing memberships."
+>
 > — **Jim Sinegal**
 
 
@@ -147,6 +152,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 > [!quote]
 > "The customer doesn't care about channels — they just want a seamless experience."
+>
 > — **Brendon Witcher**
 
 
@@ -176,6 +182,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 > [!quote]
 > "The most scalable businesses are those that can grow without adding marginal cost for each new customer."
+>
 > — **Sangeet Paul Choudary**, *Platform Revolution* (2016)
 
 
@@ -193,6 +200,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 > [!quote]
 > "Recurring revenue is the key to building a company that has real, lasting value."
+>
 > — **John Warrillow**, *Built to Sell* (2011)
 
 

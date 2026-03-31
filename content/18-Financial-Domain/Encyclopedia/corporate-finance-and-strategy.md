@@ -25,6 +25,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 > [!quote]
 > "Every deal is a people deal first, a financial deal second."
+>
 > — **Felix Rohatyn**
 
 
@@ -42,6 +43,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 > [!quote]
 > "The best acquisitions are often the ones you don't make — sometimes the real value is in what you sell."
+>
 > — **Jack Welch**
 
 **Definition:** A divestiture is the partial or full disposal of a business unit, subsidiary, or asset by a company. Companies divest for various strategic reasons: to raise cash, focus on core operations, reduce debt, comply with regulatory requirements (such as antitrust conditions for mergers), or unlock shareholder value by separating business units that may be more valuable as standalone entities. Divestitures can take the form of sales to other companies, spin-offs to shareholders, management buyouts, or liquidations.
@@ -70,6 +72,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 > [!quote]
 > "Our favorite holding period is forever."
+>
 > — **Warren Buffett**
 
 
@@ -99,6 +102,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 > [!quote]
 > "A joint venture is a marriage of convenience — it works only when both partners bring something the other needs."
+>
 > — **Peter Drucker**
 
 **Definition:** A joint venture (JV) is a business arrangement in which two or more parties agree to pool resources for a specific task or project while maintaining their separate identities. Each participant contributes assets, shares risks and rewards, and retains ownership of their individual business. Joint ventures are commonly used to enter new markets, share technology or expertise, spread the financial risk of large projects, or comply with local ownership requirements in certain countries. They can be structured as separate legal entities or as contractual agreements.
@@ -115,6 +119,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 > [!quote]
 > "Managers who want to do deals are like teenagers who want to go on dates — it's very hard to be dissuasive."
+>
 > — **Charlie Munger**
 
 
@@ -132,6 +137,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 > [!quote]
 > "Restructuring is the art of turning a bad situation into a survivable one — and occasionally into a good one."
+>
 > — **Wilbur Ross**
 
 **Definition:** Restructuring is the process of reorganizing a company's financial structure, operations, or organizational design to improve efficiency, reduce costs, or address financial difficulties. Financial restructuring may involve renegotiating debt terms, converting debt to equity, or entering bankruptcy protection. Operational restructuring might include closing unprofitable business units, reducing headcount, consolidating facilities, or outsourcing non-core functions. Companies restructure to adapt to changing market conditions, respond to competitive pressures, or recover from financial distress.
@@ -160,6 +166,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 > [!quote]
 > "The whole is sometimes worth less than the sum of its parts."
+>
 > — **Peter Lynch**, *One Up on Wall Street* (1989)
 
 
@@ -177,6 +184,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 > [!quote]
 > "In a well-run corporate group, each subsidiary should be able to stand on its own two feet."
+>
 > — **Jack Welch**
 
 

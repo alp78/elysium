@@ -66,6 +66,7 @@ status: complete
 
 > [!quote]
 > "Think about describing the data, not the view. Model your data as objects in the graph — the API should expose data semantics, not feature-specific payloads."
+>
 > — **Lee Byron** (co-creator of GraphQL)
 
 GraphQL is a query language for APIs and a runtime for executing those queries, developed by Facebook in 2012 and open-sourced in 2015. Unlike REST, where the server defines the shape of every response, GraphQL lets the client declare exactly what data it needs. For data engineers, this matters when building flexible data access layers that serve multiple consumers — dashboards, pipelines, ML feature stores — from a single endpoint.

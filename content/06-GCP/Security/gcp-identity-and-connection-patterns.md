@@ -22,6 +22,7 @@ status: complete
 
 > [!quote]
 > "If you think technology can solve your security problems, then you don't understand the problems and you don't understand the technology."
+>
 > — **Bruce Schneier**, *Secrets and Lies* (2000)
 
 This page is the **conceptual framework** for GCP security. It explains the identity model, credential types, authentication methods, and connection patterns across the entire stack — then links to the specific heading where each implementation lives. Start here to understand the WHY and WHEN; follow the links for the HOW.

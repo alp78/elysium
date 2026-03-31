@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "The combination of threads, remote-procedure-call interfaces, and heavyweight object-oriented design is especially dangerous. If you are ever invited onto a project that is supposed to feature all three, fleeing in terror might well be an appropriate reaction."
+>
 > — **Eric S. Raymond**, *The Art of Unix Programming* (2003)
 
 ```csharp
@@ -179,6 +180,11 @@ Console.WriteLine("  Pipeline complete.");
       Pipeline complete.
 
 #### BatchBlock — size-bounded batching
+
+A `BatchBlock` in TPL Dataflow collects individual items into fixed-size arrays before passing them downstream. Instead of processing one record at a time (which wastes I/O on per-record database calls), a BatchBlock accumulates N items and sends them as a batch — enabling bulk inserts, batched API calls, and efficient resource utilization. When the source completes, any remaining items smaller than the batch size are flushed as a partial batch.
+
+> [!tip] Batch size tuning
+> Small batches (10-50) minimize latency but increase per-batch overhead. Large batches (1000+) maximize throughput but increase memory usage and delay processing. For database bulk inserts, 500-1000 rows per batch typically hits the sweet spot. Measure with your actual workload.
 
 ```csharp
 // BatchBlock — collect individual items into fixed-size arrays
@@ -386,6 +392,11 @@ await foreach (var (id, title) in FetchFredSeriesAsync("GDP", limit: 8))
         FYFRGDA188S          Federal Receipts as Percent of Gross Domestic Prod
 
 #### Parallel fetch with Channel batching
+
+This pattern combines `Channel<T>` (async producer-consumer queue) with parallel HTTP fetches: multiple producers fetch data concurrently and write to a shared channel, while a single consumer reads from the channel and processes items in order. The channel provides backpressure (bounded capacity) so fast producers don't overwhelm slow consumers or exhaust memory.
+
+> [!warning] Unbounded channels in parallel fetch
+> An unbounded channel with 100 parallel fetchers and a slow consumer will buffer everything in memory. If each response is 1 MB and 10,000 are in flight, that's 10 GB of buffered data. Always use bounded channels for parallel fetch patterns and handle `WaitToWriteAsync` backpressure.
 
 ```csharp
 // Channel with parallel producers and batching consumer

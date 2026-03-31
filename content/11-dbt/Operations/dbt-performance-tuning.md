@@ -11,6 +11,7 @@ description: "Identifying slow models from run_results.json, BigQuery and SQL Se
 
 > [!quote]
 > "Bottlenecks occur in surprising places, so don't try to second guess and put in a speed hack until you have proven that's where the bottleneck is."
+>
 > — **Rob Pike**, *Notes on Programming in C* (1989)
 
 Performance problems in dbt manifest as three distinct symptoms: slow model execution time (compute cost), slow incremental runs (data freshness SLA risk), and high slot/credit consumption (cloud cost). This note covers diagnosis, adapter-specific tuning, and model-level refactoring techniques.

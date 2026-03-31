@@ -15,9 +15,11 @@ status: complete
 
 > [!quote]
 > "Algorithms + Data Structures = Programs."
+>
 > — **Niklaus Wirth**, *Algorithms + Data Structures = Programs* (1976)
 >
 > "Smart data structures and dumb code works a lot better than the other way around."
+>
 > — **Eric S. Raymond**, *The Cathedral and the Bazaar* (1999)
 
 ## Arrays and Lists
@@ -60,6 +62,11 @@ Console.WriteLine($"[1..4]:  [{string.Join(", ", nums[1..4])}]");  // slice
 
 #### List&lt;T&gt; — adding and removing
 
+`List<T>` is C#'s resizable array — the most commonly used collection. Unlike a fixed-size array, a List grows automatically as you add elements. Internally it's backed by an array that doubles in capacity when full, making `Add()` amortized O(1) but occasionally causing a full copy.
+
+> [!warning] List capacity doubling
+> When a List exceeds its internal capacity, it allocates a new array twice the size and copies all elements. For large lists (millions of items), this causes memory spikes and GC pressure. If you know the final size, set it upfront: `new List<T>(capacity: 1_000_000)`.
+
 ```csharp
 // List<T> — dynamic array with Add, Insert, Remove operations
 
@@ -98,6 +105,8 @@ Console.WriteLine($"Clear():    [{string.Join(", ", lst)}]");
 
 #### List Contains, IndexOf, Find, Exists — search and membership
 
+These methods search a List linearly (O(n)) — they check each element until a match is found. For frequent lookups, use a `HashSet<T>` (O(1)) or `Dictionary<TKey, TValue>` instead.
+
 ```csharp
 // Search and membership — Contains, IndexOf, FindAll, Find, Exists
 
@@ -116,6 +125,8 @@ Console.WriteLine($"Find(>25):     {lst.Find(x => x > 25)}");
     Find(>25):     30
 
 #### List Sort, OrderBy, ThenBy — sorting and custom comparers
+
+`Sort()` sorts the list in-place (mutates it), while LINQ's `OrderBy()` returns a new sorted sequence without modifying the original. Use `Sort()` when you don't need the original order; use `OrderBy()` in LINQ chains where immutability matters.
 
 ```csharp
 // Sorting — OrderBy (new sequence) vs Sort (in-place mutation)
@@ -146,6 +157,11 @@ Console.WriteLine($"By length DESC then Alpha:   [{string.Join(", ", wordList.Or
     By length DESC then Alpha:   [banana, cherry, apple]
 
 #### List ToArray, ToList, shallow copy — copying and conversion
+
+These methods create new collections from existing ones. `ToArray()` and `ToList()` produce independent copies of the collection structure, but the elements themselves are NOT cloned — they're shallow copies. Modifying a reference-type element in the copy also modifies it in the original.
+
+> [!danger] Shallow copy trap
+> `var copy = original.ToList()` creates a new List, but both lists contain references to the SAME objects. Mutating `copy[0].Name = "changed"` also changes `original[0].Name`. For true independence, you need deep cloning.
 
 ```csharp
 // Copying and conversion — shallow copy, ToArray, ToList
@@ -532,6 +548,8 @@ Console.WriteLine($"Unknown: {{{string.Join(", ", unknown)}}}");
     Unknown: {P005}
 
 #### SortedSet
+
+A `SortedSet<T>` is a collection that maintains its elements in sorted order and guarantees uniqueness — duplicates are silently ignored on `Add()`. It uses a red-black tree internally, giving O(log n) for add, remove, and lookup. Use it when you need both uniqueness and sorted iteration.
 
 ```csharp
 // SortedSet — elements maintained in sorted order automatically

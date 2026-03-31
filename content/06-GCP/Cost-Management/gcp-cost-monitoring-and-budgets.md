@@ -63,6 +63,7 @@ status: complete
 
 > [!quote]
 > "A cloud budget without an alert is a credit card without a limit — you will only discover the damage after the bill arrives."
+>
 > — **J.R. Storment**, *Cloud FinOps*
 
 > Operational FinOps for GCP. Covers the full stack: export billing data, alert on budgets, detect anomalies, optimize per service, and automate enforcement.

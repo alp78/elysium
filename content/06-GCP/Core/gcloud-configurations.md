@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "The most common cause of cloud incidents is running a production command against the wrong project. Named configurations eliminate that class of error entirely."
+>
 > — **Seth Vargo**, Google Cloud engineer
 
 If you work across multiple GCP projects (dev, staging, production), switching `gcloud config set project` back and forth is error-prone. Named configurations solve this — each configuration is a named set of gcloud settings (project, region, zone, account) that you can switch between instantly.

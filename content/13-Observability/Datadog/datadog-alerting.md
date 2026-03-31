@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Nines don't matter if users aren't happy."
+>
 > — **Charity Majors**, charity.wtf (2019)
 
 Datadog monitors watch metrics over time and trigger notifications when conditions are met. The data platform uses monitors for SQL Server deadlock detection and Airflow scheduler health.

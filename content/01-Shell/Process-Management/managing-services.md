@@ -17,6 +17,7 @@ Every long-running process in your infrastructure -- SQL Server, Airflow, Datado
 
 > [!quote]
 > "systemd is never finished, never complete, but tracking progress of technology."
+>
 > — **Lennart Poettering** (creator of systemd)
 
 ### systemctl, journalctl — managing systemd services and reading logs

@@ -69,6 +69,7 @@ status: complete
 
 > [!quote]
 > "The future of monitoring is leaning strongly toward complex analytics on epic amounts of telemetry data."
+>
 > — **Theo Schlossnagle**
 
 > [!abstract] Purpose

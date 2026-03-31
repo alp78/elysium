@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Backups are not sexy, but neither is data loss."
+>
 > — **W. Curtis Preston**, *Backup & Recovery* (2007)
 
 Compute Engine persistent disk snapshots are your undo button. Snapshots are incremental — only changed blocks are stored — making them fast and inexpensive to create. The rule is simple: **always snapshot before any risky operation** (OS upgrades, database updates, schema migrations, disk resizing). The serial console provides the last resort for diagnosing VMs that fail to boot.

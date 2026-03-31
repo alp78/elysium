@@ -26,6 +26,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "The most important investment decision is asset allocation — the choice among stocks, bonds, and alternative assets."
+>
 > — **David Swensen**, *Pioneering Portfolio Management* (2000)
 
 
@@ -43,6 +44,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "The job of an asset manager is not to beat the market but to serve the client."
+>
 > — **Charles Ellis**, *Winning the Loser's Game* (1985)
 
 
@@ -60,6 +62,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "The duty of a fiduciary is to put the client's interests ahead of his own in every instance."
+>
 > — **Arthur Levitt**
 
 
@@ -77,6 +80,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "It's not whether you're right or wrong that's important, but how much money you make when you're right and how much you lose when you're wrong."
+>
 > — **George Soros**
 
 
@@ -94,6 +98,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "Investment bankers are the deal junkies of the financial world — they live for the next transaction."
+>
 > — **Michael Lewis**
 
 
@@ -111,6 +116,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "The mutual fund industry has been built, in a sense, on witchcraft."
+>
 > — **John Bogle**, *The Little Book of Common Sense Investing* (2007)
 
 
@@ -128,6 +134,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "A pension is a promise — and promises must be funded."
+>
 > — **Keith Ambachtsheer**
 
 
@@ -145,6 +152,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "Diversification is the only free lunch in investing."
+>
 > — **Harry Markowitz**
 
 
@@ -162,6 +170,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "The prime broker is the plumber of the hedge fund world — nobody notices until the pipes break."
+>
 > — **Sebastian Mallaby**, *More Money Than God* (2010)
 
 
@@ -179,6 +188,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "Wealth is not about having a lot of money — it is about having a lot of options."
+>
 > — **Chris Rock**
 
 
@@ -196,6 +206,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "In private equity, you buy a company and try to make it better — it is capitalism in its most elemental form."
+>
 > — **Henry Kravis**
 
 
@@ -213,6 +224,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "The best time to start saving for retirement was twenty years ago — the second-best time is now."
+>
 > — **Paul Keating**
 
 
@@ -230,6 +242,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "Venture capital is about catching the lightning in a bottle."
+>
 > — **Fred Wilson**
 
 
@@ -247,6 +260,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "It is not about the money — it is about the life you want the money to support."
+>
 > — **Carl Richards**, *The Behavior Gap* (2012)
 
 

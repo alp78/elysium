@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "GCS is the connective tissue of every GCP pipeline — data lands there, stages there, backs up there, and exports from there. Master the object operations and the rest follows."
+>
 > — **Valentin Deleplace**, Google Cloud Developer Advocate
 
 Cloud Storage (GCS) is the connective tissue of every GCP data pipeline — where raw data lands, intermediate files live, backups are stored, and exports are staged. The `gcloud storage` command (part of the gcloud CLI) handles all object operations. It automatically parallelizes large transfers and is generally faster than the older `gsutil` command for most data engineering tasks. For the shell-level rsync and scp equivalents of these operations, see [data-transfer](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer).

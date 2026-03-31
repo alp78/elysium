@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "As far as I'm concerned, if the code isn't checked into source control, it doesn't exist."
+>
 > — **Jeff Atwood**, codinghorror.com
 
 Git is not optional for data engineering. Every SQL migration, every DAG definition, every pipeline configuration, and every [Terraform module](https://alp78.github.io/elysium/07-Terraform/Fundamentals/hcl-syntax-basics) must be version-controlled. These are the commands you run dozens of times per day..

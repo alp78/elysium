@@ -32,6 +32,7 @@ date: 2026-03-28
 
 > [!quote]
 > "You cannot manage what you do not measure, and CDP provides the global measurement system for corporate environmental impact."
+>
 > — **Paul Dickinson**, founder of CDP
 
 CDP is a not-for-profit charity that runs a global disclosure system for investors, companies, cities, states, and regions to manage their environmental impacts. Founded in 2000, CDP collects self-reported data on climate change, water security, and deforestation through annual questionnaires sent to thousands of companies worldwide. Responses are scored from A (leadership) to D- (disclosure), with F indicating failure to disclose.
@@ -116,6 +117,7 @@ The Convention on Cluster Munitions (CCM) is an international treaty adopted in 
 
 > [!quote]
 > "The CSRD transforms sustainability reporting from a voluntary exercise into a legal obligation with the same rigour as financial reporting."
+>
 > — **Mairead McGuinness**, EU Commissioner for Financial Services, 2022
 
 The Corporate Sustainability Reporting Directive is an EU legislative instrument (Directive 2022/2464) that modernizes and strengthens the rules concerning social and environmental information that companies must report. Published by the European Commission, the CSRD replaces the earlier NFRD and dramatically expands the number of companies subject to mandatory sustainability reporting. It requires assurance of reported information, mandates the use of European Sustainability Reporting Standards (ESRS), and introduces digital tagging of disclosures.
@@ -224,6 +226,7 @@ Do No Significant Harm is a principle embedded in the EU Taxonomy Regulation (Re
 
 > [!quote]
 > "Double materiality recognises that a company is not an island. It both shapes and is shaped by the environmental and social systems it operates in."
+>
 > — **Patrick de Cambourg**, former chair of EFRAG Sustainability Reporting Board
 
 Double materiality is a reporting concept formalized in the EU's CSRD and operationalized through the ESRS. It requires companies to assess and disclose sustainability matters from two perspectives simultaneously: (1) "impact materiality" — how the company's activities affect people and the environment (inside-out), and (2) "financial materiality" — how sustainability risks and opportunities affect the company's financial position and performance (outside-in). A matter is reportable if it is material from either perspective.
@@ -282,6 +285,11 @@ Double materiality is a reporting concept formalized in the EU's CSRD and operat
 ### Equator Principles
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="69 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 69</span>
+
+> [!quote]
+> "The Equator Principles established that banks have a responsibility to ensure the projects they finance do not cause undue environmental or social harm."
+>
+> — **International Finance Corporation (IFC)**, on the adoption of EP in 2003
 
 The Equator Principles are a risk management framework adopted by financial institutions to determine, assess, and manage environmental and social risk in project finance transactions. First adopted in 2003 and currently in their fourth iteration (EP4, effective July 2020), the Equator Principles apply to project finance, project-related corporate loans, bridge loans, and project-related refinance and acquisition finance across all industry sectors globally. They are based on the International Finance Corporation (IFC) Performance Standards on Environmental and Social Sustainability and the World Bank Group Environmental, Health, and Safety Guidelines.
 
@@ -384,6 +392,11 @@ The European Sustainability Reporting Standards are a set of mandatory disclosur
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="70 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 70</span>
 
+> [!quote]
+> "The EU Taxonomy is a common language for sustainable finance. Without a shared definition of 'green,' every claim is just marketing."
+>
+> — **European Commission**, Technical Expert Group on Sustainable Finance, final report (2020)
+
 The EU Taxonomy (Regulation 2020/852) is a classification system established by the European Union to define which economic activities qualify as environmentally sustainable. It sets performance thresholds — known as technical screening criteria — for activities to be considered as making a "substantial contribution" to at least one of six environmental objectives while doing no significant harm (DNSH) to the remaining five and meeting minimum social safeguards (good governance). Financial market participants and large companies must disclose the proportion of their activities that are taxonomy-eligible and taxonomy-aligned.
 
 > [!note]
@@ -462,6 +475,11 @@ The European ESG Template is a standardized data exchange template developed by 
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="24 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 24</span>
 
+> [!quote]
+> "The GHG Protocol gave the world a common accounting language for greenhouse gas emissions, making it possible to compare corporate carbon footprints across borders and industries."
+>
+> — **World Resources Institute (WRI)**, on the 20th anniversary of the Corporate Standard
+
 The Greenhouse Gas Protocol is the most widely used international accounting framework for quantifying and managing greenhouse gas emissions. Developed jointly by the World Resources Institute (WRI) and the World Business Council for Sustainable Development (WBCSD), the GHG Protocol provides standards and guidance for companies, cities, and governments. Its Corporate Standard defines three "scopes" of emissions: Scope 1 (direct emissions from owned or controlled sources), Scope 2 (indirect emissions from purchased energy), and Scope 3 (all other indirect emissions across the value chain).
 
 > [!note]
@@ -514,6 +532,11 @@ The Greenhouse Gas Protocol is the most widely used international accounting fra
 ### Global Reporting Initiative (GRI)
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="48 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 48</span>
+
+> [!quote]
+> "GRI pioneered the idea that companies owe the public an account of their social and environmental performance, not just their financial results."
+>
+> — **Allen White**, co-founder of the Global Reporting Initiative
 
 The Global Reporting Initiative is an independent international organization that provides the world's most widely adopted standards for sustainability reporting. Founded in 1997, GRI publishes the GRI Standards — a modular set of interlinked standards that organizations use to report on their economic, environmental, and social impacts. The GRI Standards are organized into Universal Standards (GRI 1-3), Sector Standards, and Topic Standards covering areas from emissions (GRI 305) to human rights (GRI 411). GRI applies a multi-stakeholder materiality approach.
 
@@ -805,6 +828,11 @@ The OECD Guidelines for Multinational Enterprises on Responsible Business Conduc
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="145 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 145</span>
 
+> [!quote]
+> "The Paris Agreement is a bridge between today's policies and climate-neutrality before the end of the century."
+>
+> — **Christiana Figueres**, Executive Secretary of the UNFCCC, on the adoption of the Paris Agreement (2015)
+
 The Paris Agreement is a legally binding international treaty on climate change adopted by 196 parties at COP21 in Paris on 12 December 2015. Its overarching goal is to hold the increase in the global average temperature to well below 2 degrees C above pre-industrial levels and to pursue efforts to limit the increase to 1.5 degrees C. Countries submit nationally determined contributions (NDCs) outlining their climate targets, and a global stocktake process reviews collective progress every five years.
 
 > [!note]
@@ -857,6 +885,11 @@ The Paris Agreement is a legally binding international treaty on climate change 
 ### PRI (Principles for Responsible Investment)
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="98 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 98</span>
+
+> [!quote]
+> "The business case for responsible investment is clear. Markets that operate with integrity, transparency, and respect for human rights will always be more robust."
+>
+> — **Kofi Annan**, UN Secretary-General, at the PRI launch (2006)
 
 The Principles for Responsible Investment is a UN-supported international network of investors founded in 2006. Signatories commit to six principles: incorporating ESG issues into investment analysis and decision-making, being active owners, seeking appropriate ESG disclosure from investee entities, promoting the principles within the investment industry, working collaboratively to enhance effectiveness, and reporting on activities and progress. PRI operates a mandatory annual reporting and assessment framework for signatories.
 
@@ -911,6 +944,11 @@ The Principles for Responsible Investment is a UN-supported international networ
 ### SASB (Sustainability Accounting Standards Board)
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="23 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 23</span>
+
+> [!quote]
+> "SASB standards answer a simple question: for each industry, which sustainability issues are most likely to affect enterprise value?"
+>
+> — **Jean Rogers**, founder of SASB
 
 The Sustainability Accounting Standards Board developed industry-specific sustainability disclosure standards designed to help companies disclose financially material sustainability information to investors. Founded in 2011 and consolidated into the IFRS Foundation's ISSB in 2022, SASB produced standards for 77 industries across 11 sectors, identifying the subset of ESG issues most likely to affect enterprise value in each industry. SASB standards focus on financial materiality and are designed for reporting in SEC filings and other investor communications.
 
@@ -1020,6 +1058,11 @@ The Science Based Targets initiative is a partnership between CDP, the UN Global
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="426 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 426</span>
 
+> [!quote]
+> "The Sustainable Development Goals are a to-do list for people and planet, and a blueprint for success."
+>
+> — **Ban Ki-moon**, UN Secretary-General, on the adoption of the 2030 Agenda (2015)
+
 The Sustainable Development Goals are a collection of 17 interlinked global goals adopted by all United Nations member states in 2015 as part of the 2030 Agenda for Sustainable Development. The SDGs address global challenges including poverty (SDG 1), hunger (SDG 2), health (SDG 3), education (SDG 4), gender equality (SDG 5), clean water (SDG 6), clean energy (SDG 7), decent work (SDG 8), industry and innovation (SDG 9), reduced inequalities (SDG 10), sustainable cities (SDG 11), responsible consumption (SDG 12), climate action (SDG 13), life below water (SDG 14), life on land (SDG 15), peace and justice (SDG 16), and partnerships (SDG 17). They are supported by 169 targets and over 230 indicators.
 
 > [!note]
@@ -1119,6 +1162,11 @@ The Shareholder Rights Directive II (Directive 2017/828/EU) is an EU directive t
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="33 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 33</span>
 
+> [!quote]
+> "Stewardship is the responsible allocation, management, and oversight of capital to create long-term value for clients and beneficiaries."
+>
+> — **UK Financial Reporting Council**, UK Stewardship Code 2020
+
 A stewardship code is a set of principles or guidelines issued by a national regulator or industry body that sets expectations for how institutional investors engage with the companies they invest in. The UK Stewardship Code (published by the Financial Reporting Council, most recently revised in 2020) is the most influential example, establishing 12 principles covering purpose, governance, conflicts of interest, promoting well-functioning markets, review and assurance, client and beneficiary needs, ESG integration, monitoring, engagement, collaboration, escalation, and exercising rights and responsibilities. Other jurisdictions — including Japan, the Netherlands, and South Africa — have issued their own stewardship codes.
 
 > [!note]
@@ -1172,6 +1220,11 @@ A stewardship code is a set of principles or guidelines issued by a national reg
 ### Task Force on Climate-related Financial Disclosures (TCFD)
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="44 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 44</span>
+
+> [!quote]
+> "The financial crisis showed what happens when risks are not properly disclosed. Climate change is the next risk that markets are mispricing."
+>
+> — **Mark Carney**, Governor of the Bank of England, co-chair of the TCFD
 
 The Task Force on Climate-related Financial Disclosures was established in 2015 by the Financial Stability Board (FSB) under the leadership of Michael Bloomberg and Mark Carney. TCFD published its final recommendations in June 2017, organized around four pillars: Governance (how the organization governs climate-related risks and opportunities), Strategy (the actual and potential impacts of climate risks and opportunities), Risk Management (how the organization identifies, assesses, and manages climate risks), and Metrics and Targets (the metrics and targets used to assess and manage relevant climate risks). The TCFD was formally disbanded in October 2023, with monitoring responsibilities transferred to the ISSB.
 
@@ -1265,6 +1318,11 @@ The Taskforce on Nature-related Financial Disclosures is a global, market-led in
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="124 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 124</span>
 
+> [!quote]
+> "I propose that you, the business leaders gathered in Davos, and we, the United Nations, initiate a global compact of shared values and principles to give a human face to the global market."
+>
+> — **Kofi Annan**, UN Secretary-General, at the World Economic Forum (1999)
+
 The United Nations Global Compact is a voluntary initiative launched in 2000 in which companies commit to aligning their strategies and operations with ten universal principles covering human rights, labour, environment, and anti-corruption. The ten principles are derived from the Universal Declaration of Human Rights, the ILO Declaration on Fundamental Principles and Rights at Work, the Rio Declaration on Environment and Development, and the UN Convention Against Corruption. Participants must submit an annual Communication on Progress (CoP) demonstrating how they implement the principles.
 
 > [!note]
@@ -1316,6 +1374,11 @@ The United Nations Global Compact is a voluntary initiative launched in 2000 in 
 ### UN Guiding Principles on Business and Human Rights
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="12 mentions across STOXX & ISS pages (low)">▰▰ 12</span>
+
+> [!quote]
+> "The corporate responsibility to respect human rights exists independently of states' abilities or willingness to fulfil their own human rights obligations."
+>
+> — **John Ruggie**, author of the UN Guiding Principles, *Just Business* (2013)
 
 The United Nations Guiding Principles on Business and Human Rights (UNGPs), endorsed by the UN Human Rights Council in 2011, are a set of 31 principles implementing the "Protect, Respect and Remedy" framework developed by Professor John Ruggie. The three pillars are: (1) the state duty to protect against human rights abuses by third parties, including business; (2) the corporate responsibility to respect human rights, including through human rights due diligence; and (3) the need for greater access to effective remedy for victims of business-related human rights abuse. The UNGPs are not legally binding but are the authoritative global standard for preventing and addressing business-related human rights harm.
 

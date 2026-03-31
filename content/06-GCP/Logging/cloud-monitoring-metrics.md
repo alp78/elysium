@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Metrics without context are just numbers. Cloud Monitoring's value is correlating CPU, memory, and I/O time series with the specific job or query that caused the spike."
+>
 > — **Liz Fong-Jones**, observability advocate
 
 Cloud Monitoring captures time-series metrics for every GCP resource. When your VM's CPU spikes, when a Cloud Run job fails repeatedly, or when a Pub/Sub subscription is falling behind — Cloud Monitoring has the data. The `gcloud monitoring` commands let you explore available metrics and read historical data from the command line, without opening the Cloud Console. This is essential for scripted capacity planning and right-sizing decisions.

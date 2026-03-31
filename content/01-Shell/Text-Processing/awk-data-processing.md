@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "The goal was to see how much of programming we could stuff into one line."
+>
 > — **Brian Kernighan** (co-creator of awk)
 
 awk (also gawk -- GNU awk, mawk -- faster awk) is a domain-specific language built for column-oriented text processing. It reads input record by record (lines by default), splits each record into fields, and applies pattern-action rules. For data engineers it is the fastest path from raw text files, logs, and CSVs to structured output without writing a full Python script.

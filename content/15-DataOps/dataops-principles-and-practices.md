@@ -55,6 +55,7 @@ status: complete
 
 > [!quote]
 > "DataOps is not a destination — it is a discipline of continuously reducing the cycle time from data question to trusted answer."
+>
 > — **Lars Albertsson** (data engineering practitioner)
 
 DataOps is an agile, process-oriented methodology for developing and delivering analytics. It borrows the automation and quality mindset of DevOps, the iterative cadence of Agile, and the waste-elimination philosophy of Lean — and applies all three to the unique challenges of data engineering.

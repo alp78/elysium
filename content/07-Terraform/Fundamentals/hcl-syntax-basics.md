@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "A language that doesn't affect the way you think about programming is not worth knowing."
+>
 > — **Alan Perlis**, *Epigrams on Programming* (1982)
 
 HashiCorp Configuration Language (HCL) is a declarative language designed by HashiCorp specifically for infrastructure-as-code. Unlike imperative scripts (bash, Python), you describe _what_ you want and Terraform figures out _how_ to create it. HCL files use the `.tf` extension.

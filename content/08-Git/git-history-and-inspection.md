@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "The past is never dead. It's not even past."
+>
 > — **William Faulkner**, *Requiem for a Nun* (1951)
 
 Git's history inspection tools — `git log`, `git diff`, `git blame`, and `git show` — are essential for understanding what changed, when, and by whom. These are the commands you reach for during code review, debugging, and post-incident analysis.

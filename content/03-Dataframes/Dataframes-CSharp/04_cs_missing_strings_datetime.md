@@ -19,6 +19,7 @@ status: complete
 
 > [!quote]
 > "Life is dirty. So is your data. Get used to it."
+>
 > — **Oz du Soleil**
 
 Polars.NET vs Deedle: Handle nulls, manipulate strings, time series.

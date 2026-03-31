@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Turning the database inside out: take the implementation detail that was previously hidden inside the database, and make it a first-class citizen."
+>
 > — **Martin Kleppmann**, *Making Sense of Stream Processing* (2016)
 
 ### Technologies Overview

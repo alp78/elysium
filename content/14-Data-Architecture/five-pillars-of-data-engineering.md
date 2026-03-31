@@ -15,9 +15,11 @@ status: complete
 
 > [!quote]
 > "The undercurrents of data engineering — security, data management, DataOps, data architecture, orchestration, and software engineering — are the foundation everything else rests on."
+>
 > — **Joe Reis & Matt Housley**, *Fundamentals of Data Engineering* (2022)
 >
 > "Reliability is the most important feature. If the system does not do what users need, everything else is irrelevant."
+>
 > — **Michael Nygard**, *Release It!* (2007)
 
 A junior data engineer learns commands. A senior data engineer understands systems. The difference is not the number of tools you know — it is the depth at which you understand why those tools exist, when each one is the right choice, and what happens underneath when you run them. A senior engineer does not memorize syntax; they internalize patterns.

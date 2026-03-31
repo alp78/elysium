@@ -35,6 +35,7 @@ Standard momentum and trend indicators used in equity index analysis. These comp
 
 > [!quote]
 > "The RSI is the single most useful indicator I have ever found for determining when prices are overextended."
+>
 > — **J. Welles Wilder**, *New Concepts in Technical Trading Systems* (1978)
 
 
@@ -67,6 +68,7 @@ $$\text{Histogram} = \text{MACD Line} - \text{Signal Line}$$
 
 > [!quote]
 > "Bollinger Bands are not meant to be used in isolation. They are meant to provide a framework within which price action can be assessed."
+>
 > — **John Bollinger**, *Bollinger on Bollinger Bands* (2001)
 
 
@@ -92,6 +94,7 @@ Price touching the upper band signals potential overbought conditions; touching 
 
 > [!quote]
 > "The trend is your friend until the end when it bends."
+>
 > — **Ed Seykota**
 
 

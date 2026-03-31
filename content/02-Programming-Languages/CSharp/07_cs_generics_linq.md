@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "All non-trivial abstractions, to some degree, are leaky."
+>
 > — **Joel Spolsky**, *The Law of Leaky Abstractions*, blog post (2002)
 
 ```csharp
@@ -93,6 +94,8 @@ Console.WriteLine($"explicit: {First<string>(new[] { "x", "y" })}");
 
 #### Generic constraints — `where T : ...`
 
+Generic constraints restrict what types can be used as a type parameter. Without constraints, `T` could be anything — you can't call methods on it because the compiler doesn't know what `T` is. Adding `where T : IComparable` guarantees that `T` has a `CompareTo` method, enabling type-safe operations. Common constraints: `class` (reference type), `struct` (value type), `new()` (has parameterless constructor), `notnull`, and interface/base class requirements.
+
 ```csharp
 // Generic constraints — where T : IComparable restricts valid types
 
@@ -123,6 +126,8 @@ Console.WriteLine("where T : notnull         — T can't be null");
     where T : notnull         — T can't be null
 
 #### Generic class and multiple type parameters
+
+A generic class is parameterized by one or more types, allowing the same data structure to work with any type while maintaining compile-time type safety. `Result<TValue, TError>` can represent a success value OR an error without boxing or casting. Multiple type parameters let you build type-safe pairs, key-value mappings, and response wrappers.
 
 ```csharp
 // Generic class and multiple type parameters — List<T>, Dictionary<K,V>
@@ -172,6 +177,8 @@ var departments = new[]
 ```
 
 #### `GroupBy` and aggregations
+
+`GroupBy` partitions a sequence into groups based on a key function, then lets you aggregate each group independently. It's the LINQ equivalent of SQL's `GROUP BY` — you specify what to group by (e.g., sector), then compute aggregates per group (count, sum, average). The result is an `IGrouping<TKey, TElement>` for each distinct key.
 
 ```csharp
 // GroupBy and aggregations — split-apply-combine pattern
@@ -223,6 +230,11 @@ foreach (var s in deptStats)
       Marketing       count=1 avg=$72'000 range=[$72'000-$72'000] total=$72'000
 
 #### `Join` and `GroupJoin`
+
+`Join` combines two sequences by matching a key from each — the LINQ equivalent of SQL's `INNER JOIN`. `GroupJoin` is a LEFT JOIN variant that groups all matching right-side elements under each left-side element, producing a hierarchical result. Both require you to specify the outer key, inner key, and result selector.
+
+> [!warning] Join requires matching key types
+> The outer and inner key selectors must return the same type. If one returns `int` and the other returns `string`, the join silently produces zero results with no compile-time error. Always verify key types match.
 
 ```csharp
 // Join and GroupJoin — combine collections by matching keys
@@ -308,6 +320,8 @@ foreach (var (name, salary, raise_amt) in names.Zip(salaries, raises))
       Frank      $  72'000 + $  7'200 raise
 
 #### `SelectMany` — flatten nested collections
+
+`SelectMany` projects each element to a collection, then flattens all those collections into one sequence. It's the LINQ equivalent of a nested loop or SQL's `CROSS APPLY`. Common use: a list of orders where each order has multiple line items — `SelectMany` gives you a flat list of all line items across all orders.
 
 ```csharp
 // SelectMany — flatten nested collections into a single sequence

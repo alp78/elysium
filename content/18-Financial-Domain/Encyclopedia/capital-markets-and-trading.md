@@ -26,6 +26,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "The bond market is the most important market in the world — it finances everything governments and corporations do."
+>
 > — **Bill Gross**
 
 
@@ -43,6 +44,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "The broker's job is to serve the client — the moment the broker forgets that, the relationship is over."
+>
 > — **Charles Schwab**
 
 **Definition:** Brokerage is the business of acting as an intermediary between buyers and sellers of financial securities such as stocks, bonds, mutual funds, and other investment products. A brokerage firm or broker executes trades on behalf of clients, provides research and investment advice, and may offer custody of client assets. Brokers earn revenue through commissions on trades, fees for advisory services, or the spread between bid and ask prices. Modern brokerage has expanded to include online and mobile platforms, enabling self-directed investing alongside traditional advisor-led services.
@@ -59,6 +61,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "Capital markets are the lifeblood of capitalism — they channel savings to their most productive uses."
+>
 > — **Henry Paulson**
 
 
@@ -88,6 +91,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "The credit market is far larger and more consequential than the equity market — yet most investors pay it less attention."
+>
 > — **Howard Marks**, *The Most Important Thing* (2011)
 
 **Definition:** Debt capital markets (DCM) refer to the marketplace where companies and governments raise funds by issuing debt instruments such as bonds, notes, and commercial paper to investors. Investment banks play a key role in debt capital markets by helping issuers structure and price their debt offerings, underwriting the issuance, and distributing the securities to institutional investors. The DCM function is distinct from equity capital markets, which deals with stock issuances. Debt capital markets are crucial for providing organizations with the financing they need while offering investors fixed-income investment opportunities.
@@ -104,6 +108,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "Derivatives are financial weapons of mass destruction."
+>
 > — **Warren Buffett**
 
 
@@ -121,6 +126,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "In the short run, the market is a voting machine but in the long run, it is a weighing machine."
+>
 > — **Benjamin Graham**, *The Intelligent Investor* (1949)
 
 
@@ -138,6 +144,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "The underwriter's art is pricing a new issue so that the company raises what it needs and investors feel they got a fair deal."
+>
 > — **Bruce Wasserstein**, *Big Deal* (1998)
 
 **Definition:** Equity underwriting is the process by which investment banks help companies issue new shares of stock to investors. The underwriter evaluates the company, determines the appropriate share price and number of shares to be issued, purchases the shares from the company, and resells them to institutional and retail investors. The underwriter assumes the risk that the shares may not sell at the anticipated price. Equity underwriting is central to initial public offerings (IPOs) and follow-on stock offerings, and the underwriter earns fees and underwriting spreads for this service.
@@ -154,6 +161,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "An exchange is a marketplace for price discovery — it tells the world what something is worth right now."
+>
 > — **Robert Shiller**, *Irrational Exuberance* (2000)
 
 **Definition:** A stock or futures exchange is an organized marketplace where securities (stocks, bonds), derivatives (futures, options), commodities, and other financial instruments are traded. Exchanges provide transparency, liquidity, price discovery, and regulatory oversight. They operate electronic order-matching systems that pair buyers and sellers, and they enforce listing standards for companies whose securities are traded. Major exchanges include the New York Stock Exchange, Nasdaq, London Stock Exchange, Deutsche Boerse (Xetra), Tokyo Stock Exchange, and Hong Kong Stock Exchange.
@@ -170,6 +178,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "Gentlemen prefer bonds."
+>
 > — **Andrew Mellon**
 
 
@@ -187,6 +196,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "There is no way to make money in futures unless you get in ahead of the move and get out before it's over."
+>
 > — **Jesse Livermore**, *Reminiscences of a Stock Operator* (1923)
 
 
@@ -204,6 +214,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "Don't look for the needle in the haystack. Just buy the haystack."
+>
 > — **John Bogle**, *The Little Book of Common Sense Investing* (2007)
 
 
@@ -221,6 +232,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "IPO stands for 'It's Probably Overpriced.'"
+>
 > — **David Dreman**, *Contrarian Investment Strategies* (1998)
 
 
@@ -238,6 +250,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "Going public is not the end of the journey — it is just the beginning of a whole new set of responsibilities."
+>
 > — **Mary Jo White**
 
 
@@ -255,6 +268,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "Liquidity is the oxygen of financial markets — without it, everything seizes up."
+>
 > — **Mohamed El-Erian**
 
 
@@ -272,6 +286,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "A security is nothing more than a claim on future cash flows — everything else is just the packaging."
+>
 > — **Aswath Damodaran**, *The Little Book of Valuation* (2011)
 
 
@@ -289,6 +304,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "An underwriter who will not decline risks is not an underwriter — he is merely an order taker."
+>
 > — **John S. Doremus**
 
 

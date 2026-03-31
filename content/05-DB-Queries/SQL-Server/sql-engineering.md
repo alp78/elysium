@@ -15,12 +15,12 @@ status: complete
 
 > [!quote]
 > "A database is only as good as the integrity constraints that protect it."
+>
 > — **C.J. Date**, *An Introduction to Database Systems* (2003)
 
-Database engineering patterns using the **stoxx** index database.
-
-> **Note**: Some sections CREATE database objects. All objects are created in a `demo` schema
-> or use temp tables to avoid modifying the production stoxx schema.
+> [!warning] Some Sections CREATE Database Objects
+>
+> All objects are created in a `demo` schema or use temp tables to avoid modifying the production stoxx schema.
 
 ```python
 %load_ext sql

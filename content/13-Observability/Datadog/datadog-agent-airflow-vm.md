@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Monitoring is a verb, not a noun. It is the action of observing and checking the behavior of a system over time."
+>
 > — **Greg Poirier**, Monitorama 2016
 
 The Airflow VM runs Container-Optimized OS (COS), so the Datadog Agent runs as a Docker container on the same Docker network as the Airflow containers. COS is an immutable OS optimized for containers — it has a read-only root filesystem, which affects where the agent can write state.

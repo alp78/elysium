@@ -66,6 +66,7 @@ status: complete
 
 > [!quote]
 > "Protocol Buffers were created to solve the problem of a single evolving interface with many servers, each at a different version."
+>
 > — **Kenton Varda** (original Protobuf author)
 
 gRPC is a high-performance, open-source RPC framework developed by Google that uses HTTP/2 as its transport protocol and Protocol Buffers (protobuf) as its default serialization format. For data engineers, it is the go-to choice for building low-latency, high-throughput internal service communication — from real-time market data feeds to bulk ingestion pipelines between microservices.

@@ -64,9 +64,11 @@ status: complete
 
 > [!quote]
 > "'Debugging' isn't an adequate term to describe the various activities in responding to an incident in production. Increasing time pressure and consequences make it fundamentally different."
+>
 > — **John Allspaw**, *The Art of Capacity Planning* (2008)
 >
 > "Automation is the serialization of understanding."
+>
 > — **Kelsey Hightower**, tweet (2017)
 
 A reference for diagnosing and fixing the most common Apache Airflow problems encountered in production data engineering. Each issue includes the exact error message or symptom, root cause analysis, and step-by-step resolution. To test your troubleshooting skills against realistic scenarios, work through [airflow-problems](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-problems).

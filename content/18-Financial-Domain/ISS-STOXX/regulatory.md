@@ -267,6 +267,11 @@ A Climate Transition Benchmark is a benchmark category defined under the amended
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="271 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 271</span>
 
+> [!quote]
+> "Comply or explain gives companies flexibility while giving investors transparency. It is the governance mechanism that respects national diversity without sacrificing accountability."
+>
+> — **Sir Adrian Cadbury**, *Report of the Committee on the Financial Aspects of Corporate Governance* (1992)
+
 A Corporate Governance Code is a set of principles, standards, and best practices for the governance of listed companies, typically issued by a national regulatory body or stock exchange. Most codes follow the "comply or explain" model — companies must either comply with each provision or publicly explain why they deviate. Key topics include board composition and independence, executive remuneration, shareholder rights, audit committee oversight, and risk management. Influential examples include the UK Corporate Governance Code (issued by the Financial Reporting Council), the German Corporate Governance Code (DCGK), and the OECD/G20 Principles of Corporate Governance. ISS Governance evaluates companies' adherence to applicable governance codes as a core component of its proxy advisory and governance quality assessments.
 
 > [!note]
@@ -657,6 +662,11 @@ EU Taxonomy Alignment refers to the degree to which a company's economic activit
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="12 mentions across STOXX & ISS pages (low)">▰▰ 12</span>
 
+> [!quote]
+> "Financial materiality is the lens through which sustainability meets the balance sheet. If an ESG issue can move cash flows or cost of capital, it is financially material."
+>
+> — **ISSB (International Sustainability Standards Board)**, IFRS S1 Basis for Conclusions
+
 Financial materiality, in the context of sustainability reporting and ESG analysis, refers to the relevance of an ESG issue to a company's financial performance, risk profile, and enterprise value. Under the CSRD's "double materiality" approach, an issue is financially material if it could reasonably be expected to influence the decisions of users of financial statements — i.e., if it affects the company's cash flows, access to finance, or cost of capital. This contrasts with "impact materiality," which considers the company's outward effects on people and the environment.
 
 > [!note]
@@ -963,6 +973,11 @@ The SFDR Regulatory Technical Standards (Delegated Regulation (EU) 2022/1288) de
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="173 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 173</span>
 
+> [!quote]
+> "SFDR is the EU's answer to greenwashing in financial products. It forces fund managers to back up their sustainability claims with standardised, comparable disclosures."
+>
+> — **European Commission**, Sustainable Finance FAQ on SFDR implementation
+
 The Sustainable Finance Disclosure Regulation (Regulation (EU) 2019/2088) establishes harmonised rules for financial market participants and financial advisers on transparency regarding the integration of sustainability risks, the consideration of adverse sustainability impacts, and the provision of sustainability-related information about financial products. It creates a three-tier classification system for financial products (Article 6, Article 8, Article 9), mandates entity-level and product-level disclosures, and defines key concepts such as "sustainable investment" and "sustainability risk."
 
 > [!note]
@@ -1132,6 +1147,11 @@ Under the EU Taxonomy Regulation (EU 2020/852), an economic activity makes a sub
 ### Sustainable Finance Action Plan
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
+
+> [!quote]
+> "To finance sustainable growth, we need to redirect private capital. The Sustainable Finance Action Plan is our roadmap for making Europe's financial system a force for sustainability."
+>
+> — **Valdis Dombrovskis**, European Commission Vice-President, at the launch of the Action Plan (2018)
 
 The EU Sustainable Finance Action Plan, first published by the European Commission in March 2018 and renewed in July 2021, is the strategic roadmap for redirecting capital flows toward sustainable investment, managing financial risks from climate change and environmental degradation, and fostering transparency in financial and economic activity. The 2018 plan introduced ten key actions, leading directly to the creation of the EU Taxonomy Regulation, SFDR, the Low Carbon Benchmarks Regulation, the EU Green Bond Standard, and amendments to MiFID II and Solvency II for sustainability integration. The 2021 Renewed Sustainable Finance Strategy added actions on transition finance, SME inclusion, financial system resilience, and global ambition.
 

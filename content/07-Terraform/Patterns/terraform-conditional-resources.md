@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Flexibility in software is a double-edged sword. Every option you add also adds complexity."
+>
 > — **John Ousterhout**, *A Philosophy of Software Design* (2018)
 
 Terraform uses `count` for conditional resource creation and `for_each` for creating multiple instances from a collection. These are the primary mechanisms for parameterized, reusable infrastructure configurations.

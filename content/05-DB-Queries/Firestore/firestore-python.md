@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "The world is not made up of rows and columns. Sometimes a document is exactly what the data wants to be."
+>
 > — **Michael Stonebraker**, ACM interview
 
 Comprehensive reference for querying, writing, and managing Firestore collections

@@ -25,6 +25,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 > [!quote]
 > "Behind every card tap is a complex chain of trust that moves money from buyer to seller in seconds."
+>
 > — **Pieter van der Does**
 
 
@@ -42,6 +43,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 > [!quote]
 > "Every payment starts with a question: can this person pay? The answer must come in milliseconds."
+>
 > — **Dan Schulman**
 
 
@@ -59,6 +61,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 > [!quote]
 > "The clearinghouse stands between buyer and seller so neither has to trust the other."
+>
 > — **Craig Pirrong**
 
 
@@ -76,6 +79,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 > [!quote]
 > "The custody business is about trust — the trust that your assets will be there when you need them."
+>
 > — **Tim Keaney**
 
 
@@ -93,6 +97,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 > [!quote]
 > "Money is just information, a way we measure what we trade, manage debts, make promises."
+>
 > — **David Graeber**, *Debt: The First 5,000 Years* (2011)
 
 
@@ -110,6 +115,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 > [!quote]
 > "The payment gateway is the digital front door of every online business."
+>
 > — **Jack Dorsey**
 
 
@@ -127,6 +133,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 > [!quote]
 > "Putting a card in someone's hand is putting your brand in their wallet — and your risk on your balance sheet."
+>
 > — **Al Kelly**
 
 
@@ -144,6 +151,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 > [!quote]
 > "If you cannot accept a payment, you cannot make a sale."
+>
 > — **Max Levchin**
 
 
@@ -161,6 +169,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 > [!quote]
 > "Payments are to the economy what plumbing is to a building — invisible when working, catastrophic when not."
+>
 > — **Pieter van der Does**
 
 
@@ -178,6 +187,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 > [!quote]
 > "The checkout experience is where your brand makes its final impression — make it seamless."
+>
 > — **Angela Ahrendts**
 
 
@@ -195,6 +205,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 > [!quote]
 > "Prepaid cards are the great equalizer — they give everyone access to the electronic payments system."
+>
 > — **Steve Streit**
 
 
@@ -212,6 +223,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 > [!quote]
 > "Netting is the genius of modern clearing — it turns millions of obligations into a manageable few."
+>
 > — **Darrell Duffie**, *How Big Banks Fail and What to Do About It* (2010)
 
 **Definition:** Securities clearing is the process of reconciling orders between transacting parties in the financial markets. It involves confirming the trade details, ensuring both parties have the securities and funds to complete the trade, and transferring the obligations through a central clearinghouse. Securities clearing reduces settlement risk by acting as the buyer to every seller and the seller to every buyer (central counterparty clearing). This netting process reduces the number of transactions that require settlement and the amount of securities and cash that must be exchanged.
@@ -228,6 +240,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 > [!quote]
 > "Settlement is where the rubber meets the road — it is the moment when promises become reality."
+>
 > — **Benoît Coeuré**
 
 
@@ -245,6 +258,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 > [!quote]
 > "The best security is when the data worth stealing simply isn't there."
+>
 > — **Patrick Gauthier**
 
 

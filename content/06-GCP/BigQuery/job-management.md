@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "A complex system that works is invariably found to have evolved from a simple system that worked."
+>
 > — **John Gall**, *Systemantics* (1975)
 
 Every BigQuery operation — query, load, export, copy — creates a job. Jobs are the unit of work in BigQuery. Understanding how to list jobs, inspect their details (including errors and bytes processed), and cancel runaway jobs is essential for incident response and cost governance. The job history is also your primary audit trail for understanding what ran, who ran it, and how much it cost.

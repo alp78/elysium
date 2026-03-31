@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "The laws of science represent data compression in action — finding the shortest description that accounts for all the observations."
+>
 > — **James Gleick**, *The Information*
 
 SQL Server page and row compression reduce the on-disk and in-memory footprint of tables and indexes. For read-heavy tables like the example gold layer, page compression typically saves 60-80% of space on financial time-series data — meaning more data fits in the [buffer pool](https://alp78.github.io/elysium/04-SQL-Server/Performance/memory-and-buffer-pool) without adding RAM.

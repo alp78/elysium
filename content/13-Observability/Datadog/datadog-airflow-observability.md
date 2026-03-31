@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Do you know what's better than debugging at 3 AM with really great tools? Not having to wake up at 3 AM."
+>
 > — **Liz Fong-Jones**
 
 The [Airflow VM Datadog agent](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) covers the infrastructure layer (VM CPU, container metrics). This note covers **Airflow-specific observability** — DAG run metrics, task execution tracking, scheduler health, and the purpose-built Airflow Orchestration dashboard. Understanding [Airflow's architecture](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts) (scheduler, executor, DAG bag) is essential context for interpreting these metrics correctly.

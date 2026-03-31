@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Tape is dead. Disk is tape. Flash is disk. RAM locality is king."
+>
 > — **Jim Gray**, Turing Award lecture (1998)
 
 ```python

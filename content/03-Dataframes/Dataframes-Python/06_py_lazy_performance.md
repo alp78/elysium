@@ -19,9 +19,11 @@ status: complete
 
 > [!quote]
 > "Premature optimization is the root of all evil."
+>
 > — **Donald Knuth**, *Structured Programming with go to Statements* (1974)
 >
 > "The First Rule of Program Optimization: Don't do it. The Second Rule of Program Optimization (for experts only): Don't do it yet."
+>
 > — **Michael A. Jackson**, *Principles of Program Design* (1975)
 
 Polars lazy execution, optimization, benchmarks.

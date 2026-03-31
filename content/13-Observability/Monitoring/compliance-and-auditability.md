@@ -69,6 +69,7 @@ status: complete
 
 > [!quote]
 > "An audit log is not a feature — it is the difference between 'we think this happened' and 'we can prove this happened.'"
+>
 > — **Kelsey Hightower**, tweet (2019)
 
 This reference covers the full compliance and auditability surface for a production index calculation platform: end-to-end data lineage, corporate action processing with complete audit trails, EU Benchmarks Regulation (BMR) obligations, restatement procedures, and Datadog integration patterns for continuous compliance monitoring. The [SQL Server audit logging](https://alp78.github.io/elysium/04-SQL-Server/Security/audit-logging) configuration captures database-level access events that feed directly into the audit trail described here.

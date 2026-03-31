@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "I want clean history, but that really means (a) clean and (b) history."
+>
 > — **Linus Torvalds**, Git mailing list
 
 Three strategies for integrating changes from one branch into another. Each produces a different commit history shape.

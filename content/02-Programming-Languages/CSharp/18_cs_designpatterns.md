@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "When I see patterns in my programs, I consider it a sign of trouble. The shape of a program should reflect only the problem it needs to solve."
+>
 > — **Paul Graham**, *Revenge of the Nerds*, essay (2002)
 
 
@@ -149,6 +150,17 @@ public class PipelineService
 
 ## Design Patterns
 
+#### Singleton — one instance, global access point
+
+The Singleton pattern ensures a class has exactly one instance throughout the application's lifetime and provides a global access point to it. In data engineering, singletons are common for database connection pools, configuration managers, and logging services — resources that are expensive to create and should be shared. In C#, a `static readonly` field with a private constructor is the simplest thread-safe implementation.
+
+> [!warning] Singleton and testing
+> Singletons make unit testing difficult because they carry global state between tests. Test A modifies the singleton's state, and Test B sees the modified state. Prefer dependency injection with a singleton LIFETIME (registered once in the DI container) over the classic Singleton pattern — it gives you the same single-instance behavior but with testability.
+
+#### Factory — create objects without specifying exact class
+
+The Factory pattern encapsulates object creation behind a static method or class, so the caller specifies *what* it needs (e.g., `"gcs"`) without knowing *which* concrete class gets instantiated. This decouples the consumer from the implementation — adding a new storage backend means adding one new class and one new case in the factory, with zero changes to calling code. In C#, a `switch` expression in a static method is the most concise form.
+
 ```csharp
 // Singleton — exactly one instance.
 // C#: use static readonly field or Lazy<T>.
@@ -227,6 +239,14 @@ public static class StorageFactory
       gcs   -> gs://bucket/data.csv (100 bytes)
       s3    -> s3://bucket/data.csv (100 bytes)
       local -> file://data.csv (100 bytes)
+
+#### Observer — one-to-many event notification
+
+The Observer pattern establishes a one-to-many relationship: when one object (the subject) changes state, all its dependents (observers) are notified automatically. In C#, this is implemented with events and delegates — the subject exposes an `event`, and observers subscribe with `+=`. Common in data pipelines: a price feed publishes updates, and multiple consumers (dashboard, alerting system, persistence layer) each react independently.
+
+#### Strategy — swap algorithms at runtime
+
+The Strategy pattern encapsulates interchangeable algorithms behind a common interface, letting you swap behavior at runtime without modifying the code that uses it. Instead of an `if/else` chain selecting a scoring method, you inject the scoring function as a parameter. Each strategy (z-score normalization, percentile ranking, equal weighting) implements the same interface. The caller picks which strategy to use; the pipeline doesn't care which one it got.
 
 ```csharp
 // Observer — notify multiple listeners when something happens.
@@ -402,6 +422,13 @@ public class OhlcvRecord : IValidatableObject
         -> Volume cannot be negative
 
 ## Reflection
+
+#### Reflection — inspect and manipulate types at runtime
+
+Reflection lets you examine a type's properties, methods, and constructors at runtime — and invoke them dynamically without compile-time knowledge of the type. This is the foundation of ORMs (mapping database columns to class properties), serializers (JSON/XML), DI containers (auto-resolving constructor parameters), and test frameworks (discovering test methods). The tradeoff is performance: reflection calls are 10-100x slower than direct calls, so avoid them in hot loops.
+
+> [!warning] Reflection performance
+> `GetProperty().GetValue()` uses late binding on every call. If you need to read properties in a tight loop (e.g., mapping 100K database rows), cache the `PropertyInfo` objects or use compiled expressions / source generators instead. A single reflection call is fine; a million is not.
 
 ```csharp
 // Reflection — inspect types, properties, methods at runtime.

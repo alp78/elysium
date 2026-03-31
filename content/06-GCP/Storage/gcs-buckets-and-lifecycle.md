@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Storage is the most underrated enabler in cloud computing — it's only boring until it's gone."
+>
 > — **Adrian Cockcroft**, VP Cloud Architecture at AWS
 
 Cloud Storage pricing is not uniform — there are four storage classes with different monthly storage costs and retrieval costs. The pattern is: lower storage cost = higher retrieval cost. Lifecycle rules automate the transition of objects through these classes as data ages, and automatic deletion at the end of the retention period. Aligning lifecycle deletion ages with your [backup retention policy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy) ensures you never delete data that hasn't been backed up elsewhere. Configuring lifecycle rules on pipeline buckets is a one-time setup that permanently reduces storage costs without any ongoing maintenance.

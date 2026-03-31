@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "The quality of programmers is a decreasing function of the density of go to statements in the programs they produce."
+>
 > — **Edsger W. Dijkstra**, *Go To Statement Considered Harmful* (1968)
 
 ## Conditional Statements

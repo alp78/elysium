@@ -11,6 +11,7 @@ description: "Staging models 1:1 with source, source freshness"
 
 > [!quote]
 > "A pure task should be deterministic and idempotent, meaning that it will produce the same result every time it runs or re-runs."
+>
 > — **Maxime Beauchemin**, "Functional Data Engineering" (2018)
 
 Staging models form the first transformation layer. They sit directly on top of raw source tables produced by [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) and perform only the operations needed to make data usable downstream: renaming columns to a consistent convention, casting types, and adding lightweight derived fields. They never join to other models and never contain business logic.

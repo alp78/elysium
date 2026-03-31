@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "All models are wrong, but some are useful."
+>
 > — **George E. P. Box**, *Empirical Model-Building and Response Surfaces* (1987)
 
 Different models respond differently to the same prompt. Understanding these tendencies avoids wasted iterations and lets you write prompts that either target a specific model's strengths or travel well across models. This note documents the behavioral profiles, preferred formats, and distinctive traits of the five major AI models as of 2026. For structural foundations common to all models, see [prompt-foundations](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) and [prompt-architecture](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture).

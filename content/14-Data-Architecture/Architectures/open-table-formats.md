@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "We didn't have correctness guarantees. We didn't have atomic transactions. The goal of Iceberg is to allow organizations to build true data lakehouses in an open architecture, avoiding vendor lock-in."
+>
 > — **Ryan Blue** (creator of Apache Iceberg)
 
 The data lakehouse combines the low-cost storage of a data lake with the transactional guarantees of a data warehouse. At its core are **open table formats** — metadata layers that sit on top of Parquet files and provide ACID transactions, time travel, schema evolution, and partition management. Major index providers are building their next-generation data platforms on Apache Iceberg. This chapter covers Iceberg, Delta Lake, and how they fit into a financial data architecture.

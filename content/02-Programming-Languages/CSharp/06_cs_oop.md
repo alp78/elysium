@@ -15,9 +15,11 @@ status: complete
 
 > [!quote]
 > "I made up the term 'object-oriented', and I can tell you I did not have C++ in mind."
+>
 > — **Alan Kay**, email to Stefan Ram (2003)
 >
 > "You wanted a banana but what you got was a gorilla holding the banana and the entire jungle."
+>
 > — **Joe Armstrong**, *Coders at Work* interview (2009)
 
 ## Classes & Objects
@@ -123,6 +125,11 @@ Console.WriteLine($"New radius: {c.Radius}");
 
 #### Inheritance — base class, virtual, override, sealed
 
+Inheritance lets a class (child/derived) acquire all the fields, properties, and methods of another class (parent/base) and then extend or modify them. The child class is a specialized version of the parent: a `SavingsAccount` inherits everything from `BankAccount` and adds interest calculation. In C#, `virtual` marks a method as overridable, `override` replaces it in the child, and `sealed` prevents further overriding.
+
+> [!warning] Inheritance vs composition
+> Deep inheritance hierarchies (4+ levels) become brittle — a change to the base class ripples unpredictably through all descendants. Prefer composition ("has-a") over inheritance ("is-a") when the relationship isn't genuinely hierarchical. A `Pipeline` doesn't inherit from `Logger`; it HAS a logger.
+
 > [!info] Inheritance mechanics
 >
 > - `virtual` — marks a method for overriding
@@ -201,6 +208,8 @@ Console.WriteLine($"dog.Breed:    {dog.Breed}");
     dog.Breed:    German Shepherd
 
 #### Polymorphism — virtual dispatch via base class reference
+
+Polymorphism means a variable of type `Animal` can hold a `Dog`, `Cat`, or `Bird` — and calling `animal.Speak()` executes the correct version for each type at runtime. The caller doesn't need to know the concrete type. This is how plugin systems, strategy patterns, and extensible frameworks work: code against the base type, swap implementations freely.
 
 ```csharp
 // Polymorphism — operate on base type, dispatch to derived implementation
@@ -312,6 +321,11 @@ class CircleShape : Shape
 ```
 
 #### interface declaration — contract with default implementations
+
+An interface defines a contract: a set of methods and properties that implementing classes MUST provide. Unlike inheritance (one base class only), a class can implement multiple interfaces. Since C# 8.0, interfaces can include default method implementations — providing behavior that implementers can override but don't have to. Interfaces are the primary mechanism for dependency injection and testability.
+
+> [!tip] Interfaces enable mocking
+> In unit tests, you mock interfaces, not concrete classes. If your pipeline depends on `IDatabaseConnection` (interface), tests inject a fake. If it depends on `SqlConnection` (concrete class), you need a real database to test. Design for interfaces from the start.
 
 ```csharp
 // Interface declarations — pure contract with no implementation

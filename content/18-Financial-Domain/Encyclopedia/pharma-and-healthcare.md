@@ -25,6 +25,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "Biosimilars will do for biologics what generics did for small-molecule drugs."
+>
 > — **Leah Christl**
 
 
@@ -42,6 +43,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "Not every innovator needs to be a manufacturer — the best ideas can be built by the best builders."
+>
 > — **Chris Chen**
 
 
@@ -59,6 +61,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "Without clinical trials, there can be no better treatments, no prevention strategies, and no cures."
+>
 > — **Janet Woodcock**
 
 
@@ -76,6 +79,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "The FDA is the gatekeeper between science and the patient — its approval is the final exam."
+>
 > — **Margaret Hamburg**
 
 
@@ -93,6 +97,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "Generic drugs are one of the greatest success stories in public health."
+>
 > — **Scott Gottlieb**
 
 
@@ -110,6 +115,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "You do not need to invent everything yourself — the smartest companies know when to license from others."
+>
 > — **Henry Chesbrough**, *Open Innovation* (2003)
 
 
@@ -127,6 +133,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "Intellectual property is the oil of the 21st century."
+>
 > — **Mark Getty**
 
 
@@ -144,6 +151,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "The best medical device is one the physician forgets is there because it works so well."
+>
 > — **Earl Bakken**, founder of Medtronic
 
 **Definition:** Medical devices are instruments, apparatus, machines, implants, or diagnostic tools used in the diagnosis, prevention, monitoring, or treatment of medical conditions. The medical device industry ranges from simple products like bandages and syringes to complex technologies like MRI scanners, robotic surgical systems, and implantable cardiac devices. Medical devices must meet stringent regulatory requirements and undergo rigorous testing before they can be marketed. The industry is characterized by continuous innovation, high barriers to entry, and strong intellectual property protection.
@@ -160,6 +168,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "Open innovation means your most valuable ideas may reach patients faster through someone else's hands."
+>
 > — **Henry Chesbrough**, *Open Innovation* (2003)
 
 
@@ -177,6 +186,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "The patent system added the fuel of interest to the fire of genius."
+>
 > — **Abraham Lincoln**
 
 
@@ -194,6 +204,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "Genetic engineering will transform medicine more profoundly than any technology since antibiotics."
+>
 > — **Paul Berg**
 
 
@@ -223,6 +234,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "The sale of the product is just the beginning — the real relationship is built through service."
+>
 > — **Harvey Mackay**
 
 
@@ -264,6 +276,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "Getting the product to the customer is half the battle — distribution is strategy."
+>
 > — **Jeff Bezos**
 
 
@@ -281,6 +294,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "Data from the fleet tells you more about your operations than any spreadsheet ever could."
+>
 > — **Jim Heppelmann**
 
 
@@ -346,6 +360,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "Safety is not an option in aviation — maintenance is the price of keeping aircraft in the sky."
+>
 > — **Robert Crandall**
 
 
@@ -387,6 +402,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "Gold is money. Everything else is credit."
+>
 > — **J.P. Morgan**
 
 
@@ -404,6 +420,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "Every dollar saved in procurement is a dollar straight to the bottom line."
+>
 > — **Tim Cook**
 
 

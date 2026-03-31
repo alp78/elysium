@@ -11,6 +11,7 @@ description: "View table incremental ephemeral snapshot deep dive"
 
 > [!quote]
 > "There are only two ways to handle state in computing: recompute it or cache it. Everything else is a variation on that theme."
+>
 > — **Pat Helland**
 
 A materialisation determines how dbt writes a model's SQL output into the warehouse. Choosing the wrong materialisation is one of the most common performance and cost mistakes in a dbt project.

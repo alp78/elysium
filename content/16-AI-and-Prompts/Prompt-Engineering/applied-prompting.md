@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "The quality of the output is determined by the quality of the input. Prompt engineering is the art of asking the right question in the right way."
+>
 > — **Lilian Weng**, OpenAI
 
 This note converts the foundational principles from [prompt-foundations](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) and the structural patterns from [prompt-architecture](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-architecture) into concrete, domain-specific prompt workflows. Every section includes a weak "before" prompt, an optimized "after" prompt, and an explanation of what changed and why. These are not templates — they are worked examples that demonstrate the reasoning behind each design choice.

@@ -75,6 +75,7 @@ status: complete
 
 > [!quote]
 > "Automate everything that doesn't require high judgment."
+>
 > — **Werner Vogels**, AWS re:Invent keynote
 
 This note is an atomic block library for GCP data services. Each block is self-contained, production-ready, and commented argument by argument. Copy a block, swap names, wire in your variables, and apply. Blocks are grouped by service and then by resource type within each service. Every section opens with a brief **when to use** paragraph so you can scan quickly.

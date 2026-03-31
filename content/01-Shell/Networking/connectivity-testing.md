@@ -17,6 +17,7 @@ The first question in any network debugging session is: "Can my client reach the
 
 > [!quote]
 > "Everything fails, all the time."
+>
 > — **Werner Vogels**, AWS re:Invent keynote (2012)
 
 ## Linux — nc, dig, traceroute, mtr, ss

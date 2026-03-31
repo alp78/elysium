@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "The goal of an Observability team is not to collect logs, metrics, or traces. It is to build a culture of engineering based on facts and feedback."
+>
 > — **Cindy Sridharan**, *Distributed Systems Observability* (2018)
 
 Log collection for the data platform uses two separate mechanisms: **file tailing** for the SQL Server errorlog (on the SQL VM), and **Docker socket autodiscovery** for Airflow container logs (on the Airflow VM).

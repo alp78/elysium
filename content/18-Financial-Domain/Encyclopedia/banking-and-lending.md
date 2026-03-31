@@ -26,6 +26,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "Distribution is the key to selling insurance — and banks have the best distribution."
+>
 > — **Henri de Castries**
 
 
@@ -55,6 +56,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "The banker who is not also a merchant is nothing but a moneylender."
+>
 > — **Walter Bagehot**, *Lombard Street* (1873)
 
 
@@ -72,6 +74,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "Credit is a system whereby a person who cannot pay gets another person who cannot pay to guarantee that he can pay."
+>
 > — **Charles Dickens**
 
 
@@ -89,6 +92,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "The credit card changed American commerce more profoundly than any financial innovation since the checking account."
+>
 > — **David Evans**, *Paying with Plastic* (2005)
 
 **Definition:** A credit card is a financial product issued by a bank or financial institution that allows the cardholder to borrow funds up to a pre-approved limit to make purchases or withdraw cash. The cardholder must repay the borrowed amount, typically with interest if the balance is not paid in full by the statement due date. Credit cards are a major consumer financial product, generating revenue for issuers through interest charges, annual fees, merchant interchange fees, and late payment penalties. They are also a key component of the global payments infrastructure.
@@ -105,6 +109,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "The credit union movement deserves great praise because it has taught people to save, to borrow wisely, and to manage their own financial affairs."
+>
 > — **John F. Kennedy**
 
 
@@ -122,6 +127,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "Banking is necessary, banks are not."
+>
 > — **Bill Gates**
 
 
@@ -151,6 +157,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "Why own when you can lease? The value is in the use, not the possession."
+>
 > — **Thomas J. Watson**
 
 
@@ -168,6 +175,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "Do not borrow money to buy stocks — the margin call will come at the worst possible time."
+>
 > — **Jesse Livermore**, *Reminiscences of a Stock Operator* (1923)
 
 
@@ -185,6 +193,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "The thirty-year fixed-rate mortgage is the most successful financial product in American history."
+>
 > — **Lewis Ranieri**
 
 **Definition:** A mortgage is a loan used to purchase or refinance real estate, in which the property itself serves as collateral for the loan. The borrower makes regular payments (typically monthly) over a period of 15 to 30 years, consisting of principal and interest. If the borrower fails to make payments, the lender can foreclose on the property. Mortgages are the primary means by which individuals and families finance home purchases. Banks, credit unions, mortgage companies, and government agencies are the main providers of mortgage loans.
@@ -213,6 +222,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "The branch of the future is in your pocket."
+>
 > — **Brett King**, *Bank 4.0* (2018)
 
 
@@ -230,6 +240,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "The plumbing of global commerce is transaction banking — it moves the money that moves the world."
+>
 > — **Gottfried Leibbrandt**
 
 
@@ -247,6 +258,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "Never take your eyes off your cash flow because it is the lifeblood of business."
+>
 > — **Richard Branson**
 
 
@@ -264,6 +276,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "The corporate treasurer's job is to make sure the company never runs out of cash — everything else is secondary."
+>
 > — **Craig Martin**
 
 **Definition:** Treasury services are financial products and solutions offered by banks to help corporations manage their cash flows, liquidity, and financial risk. Core treasury services include cash pooling (consolidating cash balances), payment and collection processing, liquidity management, investment of surplus funds, foreign exchange management, interest rate risk management, and bank relationship management. Corporate treasury departments are responsible for ensuring the company has adequate liquidity to meet its obligations while optimizing the return on excess cash and minimizing financial risk.
@@ -280,6 +293,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "The trustee's first duty is to the beneficiary — not to the bank, not to the market, not to himself."
+>
 > — **Scott Fitzgibbon**
 
 **Definition:** Trust banking involves a bank acting as a trustee or fiduciary agent to manage assets, administer trusts, and execute the wishes of individuals or institutions according to a trust agreement. Trust services include managing investment portfolios, administering estate plans, distributing income and principal to beneficiaries, providing tax reporting, and safekeeping valuable documents and assets. Trust banking is closely related to private banking and wealth management, serving high-net-worth individuals, families, and institutional clients.
@@ -296,6 +310,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "Large-scale banking is really nothing more than organized trust."
+>
 > — **Walter Bagehot**, *Lombard Street* (1873)
 
 
@@ -325,6 +340,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "Revenue is vanity, profit is sanity, but cash is king."
+>
 > — **Alan Miltz**
 
 

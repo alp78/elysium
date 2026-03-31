@@ -11,6 +11,7 @@ description: "Comprehensive catalog of BigQuery production problems for data eng
 
 > [!quote]
 > "Every great developer you know got there by solving problems they were unqualified to solve until they actually did it."
+>
 > — **Patrick McKenzie**, kalzumeus.com
 
 BigQuery is deceptively simple — write SQL, get results. But in a production data platform serving financial index calculations, the pay-per-scan pricing model, DML concurrency limits, and implicit behaviors around partitioning, data types, and NULL handling create a minefield. A single unfiltered `SELECT *` on a 10TB table costs $62.50. A pipeline that runs 20 concurrent MERGEs hits a hard quota wall. FLOAT64 arithmetic that works in a spreadsheet produces wrong index values in BigQuery. This note catalogs every major problem with actionable prevention and fixes.

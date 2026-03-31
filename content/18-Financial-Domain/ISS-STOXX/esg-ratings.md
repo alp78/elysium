@@ -32,6 +32,7 @@ date: 2026-03-28
 
 > [!quote]
 > "Being an active owner means using your voice and your vote to push companies toward long-term sustainable value creation."
+>
 > — **PRI (Principles for Responsible Investment), Stewardship Framework**
 
 A responsible investment strategy in which investors use their rights and influence as shareholders to drive improvements in ESG performance at portfolio companies. Active Ownership encompasses proxy voting, filing shareholder resolutions, direct engagement with management and boards, and collaborative engagement through investor coalitions. ISS ESG supports Active Ownership through its proxy voting advisory services and engagement data.
@@ -89,6 +90,7 @@ A responsible investment strategy in which investors use their rights and influe
 
 > [!quote]
 > "Best-in-class does not mean picking winners from clean industries; it means finding the leaders within every industry, including the dirty ones."
+>
 > — **Matthew Kiernan**, founder of Innovest Strategic Value Advisors
 
 A positive screening methodology that identifies companies with superior ESG performance relative to their industry peers. Rather than excluding entire sectors, Best-in-Class selects the top-performing companies within each sector based on ESG criteria, enabling diversified portfolios that still reward strong sustainability practices.
@@ -603,6 +605,7 @@ A relative ranking methodology in which companies or funds are sorted into ten e
 
 > [!quote]
 > "Double materiality asks two questions at once: how does the world affect the company, and how does the company affect the world?"
+>
 > — **European Financial Reporting Advisory Group (EFRAG)**, CSRD conceptual guidance
 
 A regulatory and analytical concept that requires ESG assessments to consider both how sustainability issues affect a company's financial performance (financial materiality, or "outside-in") and how the company's activities affect the environment and society (impact materiality, or "inside-out"). Double Materiality is a cornerstone of the EU Corporate Sustainability Reporting Directive (CSRD) and is increasingly reflected in ISS ESG's assessment frameworks.
@@ -661,6 +664,7 @@ A regulatory and analytical concept that requires ESG assessments to consider bo
 
 > [!quote]
 > "Climate risk is investment risk. That is why I am asking companies to disclose how they are addressing environmental, social, and governance factors."
+>
 > — **Larry Fink**, CEO of BlackRock, 2020 letter to CEOs
 
 The three central pillars used to evaluate the sustainability and ethical impact of an investment. Environmental criteria examine resource use, pollution, climate impact, and biodiversity. Social criteria assess labour practices, human rights, community relations, and product safety. Governance criteria cover board structure, executive compensation, audit integrity, shareholder rights, and anti-corruption measures.
@@ -767,6 +771,7 @@ Synonymous with the ISS ESG Corporate Rating. A comprehensive assessment of a co
 
 > [!quote]
 > "What gets measured gets managed, but first it must be disclosed. Without ESG disclosure, investors are flying blind."
+>
 > — **Robert Eccles**, Harvard Business School, co-author of *The Integrated Reporting Movement*
 
 A measure of the extent and quality of a company's public reporting on environmental, social, and governance factors. ESG Disclosure encompasses regulatory filings, sustainability reports, CDP responses, proxy statements, and other communications that provide investors with the information necessary to assess ESG performance. ISS ESG evaluates disclosure quality as part of its Corporate Rating methodology.
@@ -846,6 +851,7 @@ An assessment of the overall ESG quality of a mutual fund or ETF based on the ag
 
 > [!quote]
 > "ESG integration is not about sacrificing returns. It is about recognising that environmental, social, and governance factors are financial factors."
+>
 > — **George Serafeim**, Harvard Business School, researcher on ESG and financial performance
 
 The systematic inclusion of ESG factors into traditional financial analysis and investment decision-making processes. ESG Integration goes beyond negative screening or exclusion; it involves explicitly incorporating ESG risks and opportunities into valuation models, portfolio construction, risk management frameworks, and asset allocation decisions. ISS ESG provides data, ratings, and analytics that facilitate ESG Integration across asset classes.
@@ -1133,6 +1139,7 @@ A data-driven governance risk scoring system within the ISS QualityScore suite t
 
 > [!quote]
 > "Greenwashing is the gap between symbolic corporate environmentalism and substantive environmental action."
+>
 > — **Miriam Cherry & Judd Sneirson**, "Beyond Profit: Rethinking Corporate Social Responsibility and Greenwashing After the BP Oil Disaster"
 
 The risk that a company, fund, or financial product overstates or misrepresents its environmental or sustainability credentials. ISS ESG helps investors identify Greenwashing Risk by comparing stated ESG commitments against verified performance data, assessing the credibility of sustainability claims in bond frameworks, and evaluating whether fund compositions genuinely match their marketed ESG strategies.
@@ -1190,6 +1197,7 @@ The risk that a company, fund, or financial product overstates or misrepresents 
 
 > [!quote]
 > "Impact investments are investments made with the intention to generate positive, measurable social and environmental impact alongside a financial return."
+>
 > — **Global Impact Investing Network (GIIN)**, founding definition
 
 An investment approach that intentionally seeks to generate measurable positive social or environmental outcomes alongside financial returns. ISS ESG supports Impact Investing through its SDG Impact Ratings, sustainability solutions assessments, and thematic data products that enable investors to identify and measure the real-world impact of their portfolio allocations.
@@ -1387,6 +1395,7 @@ A measure of how effectively a company manages its material ESG risks through po
 
 > [!quote]
 > "Materiality is the filter that separates the ESG noise from the ESG signal. Without it, sustainability ratings become meaningless laundry lists."
+>
 > — **Jean Rogers**, founder of SASB (Sustainability Accounting Standards Board)
 
 The principle that ESG factors should be weighted according to their financial relevance and impact significance for a given industry. ISS ESG applies sector-specific materiality matrices that determine which ESG issues receive the highest weighting in the Corporate Rating. Materiality ensures that ratings reflect the issues most likely to affect a company's financial performance, operational resilience, and stakeholder relationships.
@@ -1578,6 +1587,7 @@ A governance and sustainability risk scoring system specifically designed for US
 
 > [!quote]
 > "Exclusion is the oldest form of responsible investment. It says: there are some things money should not finance."
+>
 > — **Steve Waygood**, Chief Responsible Investment Officer, Aviva Investors
 
 An investment approach that systematically excludes companies, sectors, or countries from a portfolio based on predefined ESG criteria. Common exclusion grounds include involvement in controversial weapons, tobacco production, thermal coal extraction, severe human rights violations, and persistent environmental norm breaches. ISS ESG provides exclusion screening data and STOXX applies negative screens in the construction of its ESG index families.
@@ -1783,6 +1793,7 @@ A relative assessment methodology in which a company's ESG performance is evalua
 
 > [!quote]
 > "Positive screening shifts the conversation from what we exclude to what we actively seek: companies whose products and practices move society forward."
+>
 > — **Hiro Mizuno**, former CIO, Japan Government Pension Investment Fund (GPIF)
 
 An investment approach that actively selects companies for inclusion in a portfolio based on superior ESG performance, sustainability contributions, or alignment with specific thematic criteria. Unlike negative screening (which excludes), positive screening identifies and overweights companies that demonstrate ESG leadership, produce sustainability solutions, or meet defined impact criteria. ISS ESG data supports positive screening through its Corporate Ratings, Prime Status designations, and SDG Impact Ratings.
@@ -1892,6 +1903,7 @@ A regulatory concept introduced by the EU Sustainable Finance Disclosure Regulat
 
 > [!quote]
 > "Responsible investment is an approach to managing assets that sees investors include ESG factors in their decisions, to better manage risk and generate sustainable, long-term returns."
+>
 > — **PRI (Principles for Responsible Investment)**, founding statement
 
 A broad investment philosophy that incorporates ESG considerations into investment decision-making and ownership practices with the goal of generating sustainable long-term returns while contributing to positive societal outcomes. Responsible Investment encompasses strategies ranging from negative screening and norm-based exclusions through ESG integration, active ownership, and impact investing. ISS ESG provides the data infrastructure, ratings, and advisory services that underpin Responsible Investment across the investment chain.
@@ -2027,6 +2039,7 @@ The "S" component of the ESG framework, encompassing a company's relationships w
 
 > [!quote]
 > "The purpose of a corporation is to engage all its stakeholders in shared and sustained value creation. In creating such value, a corporation serves not only its shareholders but all its stakeholders."
+>
 > — **Klaus Schwab**, founder of the World Economic Forum, *Davos Manifesto 2020*
 
 An economic and corporate governance philosophy that holds companies should serve the interests of all stakeholders, including employees, customers, suppliers, communities, and the environment, rather than prioritising shareholder returns exclusively. ISS ESG's assessment frameworks implicitly reflect Stakeholder Capitalism principles by evaluating corporate performance across environmental, social, and governance dimensions that capture impacts on a broad range of stakeholders.

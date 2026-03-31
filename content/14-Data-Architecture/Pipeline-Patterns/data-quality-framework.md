@@ -10,9 +10,11 @@ updated: 2026-03-29
 
 > [!quote]
 > "Uncontrolled variation is the enemy of quality."
+>
 > — **W. Edwards Deming**, *Out of the Crisis* (1986)
 >
 > "It is wrong to suppose that if you can't measure it, you can't manage it -- a costly myth."
+>
 > — **W. Edwards Deming**, *The New Economics* (1993)
 
 Every data pipeline needs quality gates. In financial index calculation, a single bad price or weight produces a wrong index level that propagates to ETFs, derivatives, and regulatory filings. This page defines the six quality dimensions, maps them to medallion layers, and links to every concrete implementation in the vault.

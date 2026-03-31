@@ -33,6 +33,7 @@ Liquidity metrics measure how easily stocks can be traded without significant pr
 
 > [!quote]
 > "Liquidity is the oxygen of financial markets — you only notice it when it's gone."
+>
 > — **Howard Marks**, *The Most Important Thing* (2011)
 
 
@@ -79,6 +80,7 @@ A volume-weighted version of [RSI](https://alp78.github.io/elysium/18-Financial-
 
 > [!quote]
 > "Volume is the fuel that drives the market. When volume expands on a move, it confirms the move."
+>
 > — **Joseph Granville**, *New Strategy of Daily Stock Market Timing* (1976)
 
 

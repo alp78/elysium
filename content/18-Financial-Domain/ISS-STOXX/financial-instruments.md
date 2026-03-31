@@ -30,7 +30,10 @@ date: 2026-03-28
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5,507 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 5,507</span>
 
-
+> [!quote]
+> "A benchmark is not a portfolio; it is the standard against which all portfolios are judged."
+>
+> — **Charles D. Ellis**, *Winning the Loser's Game* (1998)
 
 A standard index — such as the EURO STOXX 50 or STOXX Europe 600 — against which the performance of a portfolio, fund, or financial product is measured. When an index serves as a benchmark, it becomes the contractual reference point embedded in the terms of derivatives, ETFs, and structured products.
 
@@ -87,6 +90,7 @@ A standard index — such as the EURO STOXX 50 or STOXX Europe 600 — against w
 
 > [!quote]
 > "Gentlemen prefer bonds."
+>
 > — **Andrew Mellon**
 
 
@@ -149,6 +153,7 @@ A bond is a fixed-income debt instrument in which an investor lends capital to a
 
 > [!quote]
 > "Derivatives are financial weapons of mass destruction."
+>
 > — **Warren Buffett**
 
 
@@ -261,7 +266,10 @@ An index certificate is an unsecured debt instrument issued by a bank that repli
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="90 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 90</span>
 
-
+> [!quote]
+> "The convertible bond is the Swiss Army knife of fixed income — part bond, part equity option, always interesting."
+>
+> — **John P. Calamos**, *Convertible Securities* (1998)
 
 A convertible bond is a hybrid fixed-income instrument that gives the bondholder the right to convert the bond into a predetermined number of the issuer's equity shares. Convertible bonds combine characteristics of debt (fixed coupon, maturity date) and equity (upside participation through conversion). STOXX publishes convertible bond indices, and ISS governance evaluates the dilutive impact of conversion features on existing shareholders.
 
@@ -317,6 +325,7 @@ A convertible bond is a hybrid fixed-income instrument that gives the bondholder
 
 > [!quote]
 > "A promise made is a debt unpaid."
+>
 > — **Robert W. Service**
 
 
@@ -376,7 +385,10 @@ A corporate bond is a debt security issued by a corporation to raise capital, ob
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
 
-
+> [!quote]
+> "Selling covered calls is the closest thing to a free lunch in the options world — you trade upside for income."
+>
+> — **Lawrence G. McMillan**, *Options as a Strategic Investment* (1980)
 
 A covered call strategy on an index involves holding a long position in the index portfolio while simultaneously writing (selling) call options on that same index. The premium received from selling the calls provides additional income but caps the upside potential. STOXX publishes dedicated covered-call strategy indices, such as the EURO STOXX 50 Buywrite Index.
 
@@ -434,6 +446,7 @@ A covered call strategy on an index involves holding a long position in the inde
 
 > [!quote]
 > "Insurance is the only product that both the seller and buyer hope is never actually used."
+>
 > — **Anonymous**
 
 
@@ -474,7 +487,10 @@ A credit default swap is an OTC derivative contract in which one party (the prot
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9,874 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 9,874</span>
 
-
+> [!quote]
+> "Stocks have been the best-performing asset class over the long run, beating bonds, bills, gold, and real estate."
+>
+> — **Jeremy Siegel**, *Stocks for the Long Run* (1994)
 
 Equity, in the context of financial instruments, refers to shares of ownership in a publicly listed company. Equities are the fundamental building blocks of stock indices — every STOXX and DAX index is ultimately a rules-based selection and weighting of equity securities. ISS Governance evaluates the governance practices of equity issuers, while ISS ESG rates their environmental and social performance.
 
@@ -533,6 +549,7 @@ Equity, in the context of financial instruments, refers to shares of ownership i
 
 > [!quote]
 > "The ETF is the most innovative financial instrument of the last two decades."
+>
 > — **John C. Bogle**, *The Little Book of Common Sense Investing* (2007)
 
 
@@ -593,6 +610,7 @@ An exchange-traded fund is an open-ended investment fund that trades on a stock 
 
 > [!quote]
 > "Gold is money. Everything else is credit."
+>
 > — **J.P. Morgan**
 
 
@@ -650,6 +668,7 @@ An exchange-traded commodity is a debt security listed on an exchange that provi
 
 > [!quote]
 > "Credit is a system whereby a person who cannot pay gets another person who cannot pay to guarantee that he can pay."
+>
 > — **Charles Dickens**
 
 
@@ -817,7 +836,10 @@ Eurex futures are standardized, exchange-traded derivatives contracts listed on 
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="90 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 90</span>
 
-
+> [!quote]
+> "Futures markets transfer risk from hedgers to speculators — that is their economic purpose."
+>
+> — **Merton H. Miller**, Nobel Prize lecture (1990)
 
 An index futures contract is a standardized agreement to exchange, at a predetermined future date, a cash amount equal to the difference between the agreed price and the index level at expiry. Index futures are among the most widely traded derivatives globally, and STOXX/DAX indices underlie some of the highest-volume futures contracts on Eurex.
 
@@ -874,7 +896,10 @@ An index futures contract is a standardized agreement to exchange, at a predeter
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="28 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 28</span>
 
-
+> [!quote]
+> "Green bonds channel private capital toward the climate transition — they make the bond market part of the solution."
+>
+> — **Sean Kidney**, CEO of Climate Bonds Initiative
 
 A green bond is a fixed-income instrument whose proceeds are exclusively allocated to finance projects with environmental benefits — renewable energy, energy efficiency, clean transportation, or sustainable water management. ISS ESG provides second-party opinions (SPOs) and verification services for green bond issuances, while STOXX publishes green bond indices that track this market segment.
 
@@ -932,7 +957,10 @@ A green bond is a fixed-income instrument whose proceeds are exclusively allocat
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-
+> [!quote]
+> "There are no bad bonds, only bad prices."
+>
+> — **Michael Milken**, pioneer of the high-yield bond market
 
 A high-yield bond (also known as a "junk bond") is a fixed-income instrument rated below investment grade (below BBB- by S&P/Fitch or Baa3 by Moody's) that offers a higher coupon to compensate investors for elevated default risk. STOXX publishes high-yield bond indices that serve as benchmarks for this market segment, and ISS ESG screens high-yield issuers for governance and sustainability risks that may compound credit risk.
 
@@ -973,6 +1001,7 @@ A high-yield bond (also known as a "junk bond") is a fixed-income instrument rat
 
 > [!quote]
 > "The index fund is a sensible, serviceable method for obtaining the market's rate of return with absolutely no effort and minimal expense."
+>
 > — **John C. Bogle**, *The Little Book of Common Sense Investing* (2007)
 
 
@@ -1087,7 +1116,10 @@ An index license is the contractual agreement granting a financial institution t
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="101 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 101</span>
 
-
+> [!quote]
+> "Options are the building blocks of any payoff structure an investor can imagine."
+>
+> — **Robert C. Merton**, *Theory of Rational Option Pricing* (1973)
 
 An index option is a derivatives contract that gives the holder the right, but not the obligation, to receive (call) or pay (put) the cash difference between the index level and the strike price at or before expiry. STOXX-based index options are primarily traded on Eurex and are European-style (exercisable only at expiry) and cash-settled.
 
@@ -1267,6 +1299,7 @@ A municipal bond (muni bond) is a debt security issued by a state, city, county,
 
 > [!quote]
 > "By periodically investing in an index fund, the know-nothing investor can actually outperform most investment professionals."
+>
 > — **Warren Buffett**
 
 
@@ -1353,7 +1386,10 @@ Portfolio replication is the process by which a fund or product recreates the pe
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="189 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 189</span>
 
-
+> [!quote]
+> "A put option is portfolio insurance — the premium is the price of sleeping at night."
+>
+> — **Myron Scholes & Fischer Black**, pioneers of options pricing theory (1973)
 
 A put option is a derivatives contract that grants the holder the right, but not the obligation, to receive the cash difference between the strike price and the underlying index level at expiry (for European-style contracts). Put options on STOXX indices are traded on Eurex and are widely used for portfolio hedging — protecting against index declines — as well as for directional speculation and volatility strategies.
 
@@ -1414,6 +1450,7 @@ A put option is a derivatives contract that grants the holder the right, but not
 
 > [!quote]
 > "Real estate cannot be lost or stolen, nor can it be carried away."
+>
 > — **Franklin D. Roosevelt**
 
 
@@ -1514,6 +1551,7 @@ A social bond is a fixed-income instrument whose proceeds are allocated to proje
 
 > [!quote]
 > "The power to tax is the power to destroy."
+>
 > — **John Marshall**
 
 
@@ -1575,6 +1613,7 @@ A sovereign bond is a debt security issued by a national government to finance p
 
 > [!quote]
 > "Never invest in anything you cannot understand."
+>
 > — **Warren Buffett**
 
 
@@ -1716,6 +1755,7 @@ A sustainability-linked bond (SLB) is a fixed-income instrument whose financial 
 
 > [!quote]
 > "Everything in life is a trade-off."
+>
 > — **Thomas Sowell**
 
 
@@ -1848,6 +1888,7 @@ A transition bond is a fixed-income instrument designed to fund an issuer's tran
 
 > [!quote]
 > "An option is the right, but not the obligation, to make a choice."
+>
 > — **Anonymous**
 
 

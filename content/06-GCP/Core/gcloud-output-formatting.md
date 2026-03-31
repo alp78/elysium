@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "The difference between a gcloud command that works in a script and one that doesn't is the --format flag."
+>
 > — **Ahmet Alp Balkan**, Google Cloud developer tools engineer
 
 The `--format` and `--filter` flags are the most underused features of the [gcloud CLI](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication). They transform gcloud from a human-readable tool into a scriptable data extraction engine, enabling you to pipe exact field values into shell scripts, build inventory automation, and run server-side filtered queries instead of grepping local output.

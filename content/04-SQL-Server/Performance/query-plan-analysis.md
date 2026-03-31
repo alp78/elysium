@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "The query optimizer is the most sophisticated piece of software in any database system. Understanding its plan is how you meet it halfway."
+>
 > — **Kalen Delaney**, *SQL Server Internals*
 
 SQL Server execution plans are the map SQL Server uses to execute a query. Reading them reveals exactly where time is being spent, why a query is slow, and what to change to fix it. Every performance investigation eventually leads here — [wait statistics](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) tell you the category of the problem, execution plans tell you the specific query and operator causing it.

@@ -77,6 +77,7 @@ status: complete
 
 > [!quote]
 > "FinOps is the practice of bringing financial accountability to the variable spend model of cloud, enabling distributed teams to make business trade-offs between speed, cost, and quality."
+>
 > — **J.R. Storment**, *Cloud FinOps*
 
 This note is the single source of truth for GCP cost management across every data engineering service. It covers pricing models, billing dimensions, free tiers, discount mechanisms, cost formulas, and practical gcloud / BigQuery commands for ongoing cost analysis.

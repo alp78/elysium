@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Functions are the verbs of serverless; containers are the nouns. You need both parts of speech to write a complete sentence."
+>
 > — **Ben Kehoe**, iRobot cloud robotics engineer
 
 Cloud Run runs Docker containers without managing servers. For data engineering, Cloud Run **Jobs** are the key feature — they run to completion and exit (unlike Cloud Run **Services** which serve HTTP requests). Your pipeline stages (loaders, transforms, scorers) each run as a Cloud Run Job, triggered by Airflow or a scheduler. For infrastructure-as-code deployment, [terraform-cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run) provides the Terraform resource definitions. Services are used for APIs, webhooks, and event-driven endpoints that need to stay running.

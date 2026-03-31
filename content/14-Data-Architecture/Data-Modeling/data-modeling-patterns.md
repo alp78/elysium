@@ -29,9 +29,11 @@ erDiagram
 
 > [!quote]
 > "The model is not the territory, but you'd better have a good map if you want to navigate the territory."
+>
 > — **Bill Inmon**, *Building the Data Warehouse* (2005)
 >
 > "The grain must be declared before choosing dimensions or facts because every candidate dimension or fact must be consistent with the grain."
+>
 > — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
 
 Data modeling is the discipline of deciding how to structure data for storage, retrieval, and analysis. The choice of model determines query performance, schema flexibility, load complexity, and the kinds of questions you can answer efficiently. Most practitioners default to dimensional modeling (star/snowflake) for analytics — and that is often correct — but it is only one pattern among many. Each model exists because it solves a specific class of problem better than the alternatives.

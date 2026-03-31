@@ -24,6 +24,7 @@ status: complete
 
 > [!quote]
 > "The best performance improvement is the transition from the nonworking state to the working state."
+>
 > — **John Ousterhout**, *A Philosophy of Software Design* (2018)
 
 Loading is the most performance-sensitive part of any pipeline. The wrong method turns a 30-second load into a 30-minute one. This page covers every loading method available in SQL Server with benchmarks, trade-offs, and gotchas. For Python-specific benchmarks, see [23_py_data_ingestion](https://alp78.github.io/elysium/02-Programming-Languages/Python/23_py_data_ingestion). For C# benchmarks, see [23_cs_data_ingestion](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/23_cs_data_ingestion).

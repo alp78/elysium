@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Plans are worthless, but planning is everything."
+>
 > — **Dwight D. Eisenhower**
 
 The Terraform core workflow is declarative: you describe infrastructure in `.tf` files, and Terraform computes a diff against current state, shows you a plan, and applies only what changed. Understanding each step — including when to use targeted applies, how to import existing resources, and how to inspect state — is essential for safe infrastructure management.

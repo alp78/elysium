@@ -23,34 +23,37 @@ date: 2026-03-28
 
 > [!quote]
 > "An investment in knowledge pays the best interest."
+>
 > — **Benjamin Franklin**
 
 ## Domains
 
 > [!quote]
 > "In investing, what is comfortable is rarely profitable."
+>
 > — **Robert Arnott**
 
 
 > [!quote]
 > "The stock market is a device for transferring money from the impatient to the patient."
+>
 > — **Warren Buffett**
 
 
 | Domain | Terms | Description |
 |---|---|---|
-| [[index-construction\|Index Construction]] | 48 | Index methodology, weighting, rebalancing, divisors, calculation formulas |
-| [[index-families\|Index Families]] | 43 | STOXX, DAX, EURO STOXX index families and benchmarks |
-| [[esg-ratings\|ESG Ratings]] | 46 | ESG risk ratings, QualityScore, controversy levels, scoring methodologies |
-| [[esg-frameworks\|ESG Frameworks]] | 27 | Reporting standards, taxonomies, international sustainability initiatives |
-| [[sustainability-themes\|Sustainability Themes]] | 45 | Climate metrics, Net Zero, carbon intensity, biodiversity, water risk |
-| [[corporate-governance\|Corporate Governance]] | 62 | Board structure, proxy voting, executive compensation, governance scores |
-| [[financial-instruments\|Financial Instruments]] | 37 | Derivatives, ETFs, structured products, green bonds on indices |
-| [[financial-metrics\|Financial Metrics]] | 53 | Return calculations, risk metrics, volatility, factor exposures |
-| [[data-methodology\|Data Methodology]] | 23 | Data collection, quality, coverage, estimation, back-testing |
-| [[regulatory\|Regulatory]] | 28 | SFDR, EU BMR, MiFID II, Paris-aligned benchmarks, taxonomy regulation |
-| [[market-structure\|Market Structure]] | 54 | Exchanges, sectors, liquidity, classification systems (ICB/GICS) |
-| [[smart-beta-factors\|Smart Beta & Factors]] | 39 | Factor investing, smart beta strategies, risk premia |
+| [Index Construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | 48 | Index methodology, weighting, rebalancing, divisors, calculation formulas |
+| [Index Families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families) | 43 | STOXX, DAX, EURO STOXX index families and benchmarks |
+| [ESG Ratings](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-ratings) | 46 | ESG risk ratings, QualityScore, controversy levels, scoring methodologies |
+| [ESG Frameworks](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks) | 27 | Reporting standards, taxonomies, international sustainability initiatives |
+| [Sustainability Themes](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/sustainability-themes) | 45 | Climate metrics, Net Zero, carbon intensity, biodiversity, water risk |
+| [Corporate Governance](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/corporate-governance) | 62 | Board structure, proxy voting, executive compensation, governance scores |
+| [Financial Instruments](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments) | 37 | Derivatives, ETFs, structured products, green bonds on indices |
+| [Financial Metrics](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-metrics) | 53 | Return calculations, risk metrics, volatility, factor exposures |
+| [Data Methodology](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/data-methodology) | 23 | Data collection, quality, coverage, estimation, back-testing |
+| [Regulatory](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory) | 28 | SFDR, EU BMR, MiFID II, Paris-aligned benchmarks, taxonomy regulation |
+| [Market Structure](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/market-structure) | 54 | Exchanges, sectors, liquidity, classification systems (ICB/GICS) |
+| [Smart Beta & Factors](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/smart-beta-factors) | 39 | Factor investing, smart beta strategies, risk premia |
 
 ## How to Use This Glossary
 

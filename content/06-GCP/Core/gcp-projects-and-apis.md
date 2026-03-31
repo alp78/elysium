@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "A GCP project is not just a folder — it is a billing boundary, an IAM scope, and an API activation unit. Getting the project structure wrong is the most expensive mistake to fix later."
+>
 > — **Daz Wilkin**, Google Developer Advocate
 
 GCP projects are the fundamental organizational unit for resources, billing, and access control. Every resource — VMs, BigQuery datasets, Cloud Run jobs, GCS buckets — lives inside a project. APIs must be explicitly enabled per project before the corresponding services can be used; an `API not enabled` error is always the result of a missing `gcloud services enable` call.

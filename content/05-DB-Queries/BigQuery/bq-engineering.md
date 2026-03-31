@@ -15,11 +15,8 @@ status: complete
 
 > [!quote]
 > "BigQuery separates storage from compute. That single architectural decision changes everything about how you design tables, partition data, and pay for queries."
+>
 > — **Jordan Tigani**, founding engineer of BigQuery
-
-Database engineering patterns using the **stoxx** index database.
-
-To practice these patterns against realistic scenarios, work through [bigquery-problems](https://alp78.github.io/elysium/06-GCP/BigQuery/bigquery-problems).
 
 > [!info] INFORMATION_SCHEMA Is BigQuery's Primary Introspection
 >

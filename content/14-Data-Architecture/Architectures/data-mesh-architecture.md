@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "There is accidental complexity: the complexity that we -- engineers, architects, and designers -- create in our solutions. Accidental complexity can and should be reduced."
+>
 > — **Zhamak Dehghani**, *Data Mesh* (2022)
 
 Data mesh is a sociotechnical approach to data platform design introduced by Zhamak Dehghani (ThoughtWorks) in 2019 and elaborated in her book *Data Mesh: Delivering Data-Driven Value at Scale* (2022). Its core claim: the centralized data team model — where one platform team owns all pipelines, all data, and all infrastructure — does not scale as organizations grow, because it creates a bottleneck that disconnects data producers from data consumers and treats data as a technical asset rather than a business product.

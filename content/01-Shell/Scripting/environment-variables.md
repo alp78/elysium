@@ -17,6 +17,7 @@ Environment variables are the standard mechanism for passing configuration to pr
 
 > [!quote]
 > "Explicit is better than implicit."
+>
 > — **Tim Peters**, The Zen of Python
 
 ## The Propagation Model

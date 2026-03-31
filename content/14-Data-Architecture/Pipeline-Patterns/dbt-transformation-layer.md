@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Analytics code should be version-controlled, tested, and modular — the same standards we apply to software should apply to SQL."
+>
 > — **Tristan Handy** (creator of dbt)
 
 > For the full dbt section with adapter-specific guides, testing patterns, CI/CD, Airflow integration, and troubleshooting, see [moc-dbt](https://alp78.github.io/elysium/11-dbt/moc-dbt).

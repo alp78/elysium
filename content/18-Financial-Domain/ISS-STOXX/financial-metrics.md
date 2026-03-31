@@ -32,6 +32,7 @@ date: 2026-03-28
 
 > [!quote]
 > "After costs, the return on the average actively managed dollar will be less than the return on the average passively managed dollar."
+>
 > — **William F. Sharpe**, *The Arithmetic of Active Management* (1991)
 
 The difference between a portfolio's return and its benchmark return over a given period, representing the value added (or lost) by active management decisions.
@@ -90,6 +91,7 @@ $$
 
 > [!quote]
 > "The evaluation of portfolio performance requires a measure of the excess return earned beyond that expected given the level of risk."
+>
 > — **Michael C. Jensen**, *The Performance of Mutual Funds in the Period 1945-1964* (1968)
 
 The excess return of a portfolio relative to the return predicted by the Capital Asset Pricing Model (CAPM), given the portfolio's systematic risk exposure (beta). Alpha isolates manager skill from market movement.
@@ -147,6 +149,7 @@ Where $R_f$ is the risk-free rate and $R_m$ is the market return.
 
 > [!quote]
 > "Compound interest is the eighth wonder of the world."
+>
 > — **Albert Einstein (attributed)**
 
 
@@ -269,6 +272,7 @@ So a move from 2.50% to 3.00% is a change of 50 bp.
 
 > [!quote]
 > "Beta measures the sensitivity of a stock's return to the return on the market portfolio."
+>
 > — **William F. Sharpe**, *Capital Asset Prices* (1964)
 
 A measure of a security's or portfolio's systematic risk relative to the overall market. A beta of 1.0 indicates the asset moves in lockstep with the market; values above or below 1.0 indicate amplified or dampened sensitivity.
@@ -321,6 +325,7 @@ $$
 
 > [!quote]
 > "Price is what you pay. Value is what you get."
+>
 > — **Warren Buffett**
 
 
@@ -357,6 +362,7 @@ $$
 
 > [!quote]
 > "Revenue is vanity, profit is sanity, but cash is king."
+>
 > — **Anonymous**
 
 
@@ -412,6 +418,7 @@ $$
 
 > [!quote]
 > "Compound interest is the eighth wonder of the world."
+>
 > — **Albert Einstein**
 
 
@@ -475,6 +482,7 @@ Where $V_{\text{begin}}$ and $V_{\text{end}}$ are the starting and ending values
 
 > [!quote]
 > "Diversification is protection against ignorance."
+>
 > — **Warren Buffett**
 
 
@@ -534,6 +542,7 @@ $$
 
 > [!quote]
 > "The portfolio problem is to find the combination of securities that gives the investor the return he wants with the least variance."
+>
 > — **Harry Markowitz**, *Portfolio Selection* (1952)
 
 A measure of the joint variability of two random variables. In finance, it quantifies how the returns of two assets move together. Positive covariance means they tend to move in the same direction; negative means opposite directions.
@@ -629,6 +638,7 @@ $$
 
 > [!quote]
 > "The one thing I can tell you is that the secret to investing is that there is no secret — except managing debt and costs."
+>
 > — **Benjamin Graham**, *The Intelligent Investor* (1949)
 
 The ratio of a company's total debt to its total shareholders' equity. It measures financial leverage, indicating how much of the company's capital structure is financed by creditors versus owners.
@@ -687,6 +697,7 @@ $$
 
 > [!quote]
 > "Do you know the only thing that gives me pleasure? It's to see my dividends coming in."
+>
 > — **John D. Rockefeller**
 
 
@@ -746,6 +757,7 @@ $$
 
 > [!quote]
 > "Duration is the single most important tool for measuring and managing interest rate risk in a bond portfolio."
+>
 > — **Frank J. Fabozzi**, *Bond Markets, Analysis, and Strategies* (1989)
 
 A measure of the sensitivity of a bond's price to changes in interest rates, expressed in years. Modified duration estimates the percentage price change for a 1% change in yield; Macaulay duration is the weighted average time to receive the bond's cash flows.
@@ -807,6 +819,7 @@ Where $C_t$ is the cash flow at time $t$ and $y$ is the yield to maturity.
 
 > [!quote]
 > "The first rule of investment is don't lose, and the second rule is don't forget the first rule."
+>
 > — **Warren Buffett**
 
 
@@ -869,6 +882,7 @@ Where $V(t)$ is the value at time $t$ and $V_{\text{peak}}$ is the highest value
 
 > [!quote]
 > "Earnings can be as pliable as putty when a charlatan heads the company reporting them."
+>
 > — **Warren Buffett**
 
 
@@ -928,6 +942,7 @@ $$
 
 > [!quote]
 > "Earnings are the lifeblood of every enterprise."
+>
 > — **Anonymous**
 
 
@@ -986,6 +1001,7 @@ $$
 
 > [!quote]
 > "EBITDA makes even a lemonade stand look like a Fortune 500 company."
+>
 > — **Charlie Munger (paraphrased)**, *Poor Charlie's Almanack* (2005)
 
 
@@ -1048,6 +1064,7 @@ $$
 
 > [!quote]
 > "EVA is the financial performance measure that comes closer than any other to capturing the true economic profit of an enterprise."
+>
 > — **G. Bennett Stewart III**, *The Quest for Value* (1991)
 
 A proprietary measure of a company's financial performance defined as after-tax operating profit minus a charge for the capital employed to generate that profit. EVA quantifies whether a firm is creating or destroying shareholder value.
@@ -1161,6 +1178,7 @@ $$
 
 > [!quote]
 > "The equity premium is the most important number in finance."
+>
 > — **Rajnish Mehra**, *The Equity Premium Puzzle* (1985)
 
 
@@ -1200,6 +1218,7 @@ $$
 
 > [!quote]
 > "Enterprise value captures the total claim on a business — equity plus debt minus cash — and is the only honest starting point for valuation."
+>
 > — **Aswath Damodaran**, *The Little Book of Valuation* (2011)
 
 The total value of a company as seen by all capital providers -- equity holders, debt holders, and minority interests -- minus cash and equivalents. It represents the theoretical takeover price and is the numerator in capital-structure-neutral valuation multiples like EV/EBITDA.
@@ -1258,6 +1277,7 @@ $$
 
 > [!quote]
 > "Returns are driven by systematic exposure to compensated risk factors."
+>
 > — **Eugene Fama**
 
 
@@ -1320,6 +1340,7 @@ Where $\beta_{ik}$ is the exposure of asset $i$ to factor $k$, and $F_k$ is the 
 
 > [!quote]
 > "Differences in expected returns across securities are driven by differences in their exposure to systematic risk factors."
+>
 > — **Eugene Fama & Kenneth French**, *Common Risk Factors in the Returns on Stocks and Bonds* (1993)
 
 The return attributable to a specific systematic factor over a given period. It represents the payoff to a long-short portfolio that is long stocks with high exposure to the factor and short stocks with low exposure.
@@ -1379,6 +1400,7 @@ $$
 
 > [!quote]
 > "Cash flow is a fact; profit is an opinion."
+>
 > — **Alfred Rappaport**, *Creating Shareholder Value* (1986)
 
 
@@ -1478,6 +1500,7 @@ $$
 
 > [!quote]
 > "Profitability is coming from productivity, efficiency, management, austerity, and the way to manage the business."
+>
 > — **Carlos Slim**
 
 
@@ -1537,6 +1560,7 @@ $$
 
 > [!quote]
 > "What you keep after taxes and fees matters more than what you earn before them."
+>
 > — **Anonymous**
 
 
@@ -1597,6 +1621,7 @@ $$
 
 > [!quote]
 > "The information ratio is the key measure of a portfolio manager's skill."
+>
 > — **Richard Grinold**, *Active Portfolio Management* (1999)
 
 
@@ -1692,6 +1717,7 @@ Where $n_i$ is the number of shares of constituent $i$ and $p_{i,t}$ is its pric
 
 > [!quote]
 > "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1."
+>
 > — **Warren Buffett**
 
 
@@ -1750,6 +1776,7 @@ $$
 
 > [!quote]
 > "The trend is your friend until the end when it bends."
+>
 > — **Ed Seykota**
 
 
@@ -1812,6 +1839,7 @@ Commonly using a 12-month lookback with a 1-month skip.
 
 > [!quote]
 > "It is not what you earn but what you keep that determines your wealth."
+>
 > — **Anonymous**
 
 
@@ -1964,6 +1992,7 @@ $$
 
 > [!quote]
 > "Growth at a reasonable price is the investor's holy grail."
+>
 > — **Peter Lynch (paraphrased)**, *One Up on Wall Street* (1989)
 
 
@@ -1998,6 +2027,7 @@ $$
 
 > [!quote]
 > "The intelligent investor should recognize that market prices reflect a price-earnings ratio, and the question is whether that ratio is justified by the company's prospects."
+>
 > — **Benjamin Graham**, *The Intelligent Investor* (1949)
 
 The ratio of a company's current share price to its earnings per share (EPS). It indicates how much investors are willing to pay for each unit of earnings and is a primary valuation metric in STOXX value and growth index classification.
@@ -2038,6 +2068,7 @@ $$
 
 > [!quote]
 > "Volatility is the price of admission for long-term returns."
+>
 > — **Nick Murray**, *Simple Wealth, Inevitable Wealth* (1999)
 
 
@@ -2155,6 +2186,7 @@ $$
 
 > [!quote]
 > "A truly great business must have an enduring moat that protects excellent returns on invested capital."
+>
 > — **Warren Buffett**
 
 
@@ -2215,6 +2247,7 @@ $$
 
 > [!quote]
 > "Nothing happens until someone sells something."
+>
 > — **Peter Drucker (attributed)**, *The Practice of Management* (1954)
 
 
@@ -2275,6 +2308,7 @@ $$
 
 > [!quote]
 > "The essence of investment management is the management of risks, not the management of returns."
+>
 > — **Benjamin Graham**, *The Intelligent Investor* (1949)
 
 
@@ -2337,6 +2371,7 @@ This is the general form (Sharpe ratio). Alternative specifications replace $\si
 
 > [!quote]
 > "There is no such thing as a risk-free investment, only a risk-free rate of return."
+>
 > — **Anonymous**
 
 
@@ -2398,6 +2433,7 @@ $$
 
 > [!quote]
 > "The reward-to-variability ratio provides a single measure combining both risk and return."
+>
 > — **William Sharpe**
 
 
@@ -2455,6 +2491,7 @@ $$
 
 > [!quote]
 > "Diversification is both observed and sensible; a rule of behavior which does not imply the superiority of diversification must be rejected both as a hypothesis and as a maxim."
+>
 > — **Harry Markowitz**, *Portfolio Selection* (1952)
 
 A statistical measure of the dispersion of returns around their mean. In finance, it serves as the primary measure of total risk (volatility).
@@ -2512,6 +2549,7 @@ $$
 
 > [!quote]
 > "The spread tells you the market's level of fear."
+>
 > — **Anonymous**
 
 
@@ -2574,6 +2612,7 @@ Typically expressed in basis points.
 
 > [!quote]
 > "Never count just the dividends or just the price. Count everything."
+>
 > — **Anonymous**
 
 
@@ -2632,6 +2671,7 @@ Where $P_t$ is the price at time $t$ and $D_t$ is the dividend received.
 
 > [!quote]
 > "Tracking error is the fundamental measure of active risk — it tells you how far a portfolio dares to stray from its benchmark."
+>
 > — **Richard Grinold & Ronald Kahn**, *Active Portfolio Management* (1999)
 
 The standard deviation of the difference between a portfolio's returns and its benchmark's returns. It measures the consistency of a portfolio's deviation from its benchmark, also known as active risk.
@@ -2690,6 +2730,7 @@ $$
 
 > [!quote]
 > "Costs eat returns the way termites eat wood: slowly, silently, and from within."
+>
 > — **John C. Bogle (paraphrased)**, *The Little Book of Common Sense Investing* (2007)
 
 
@@ -2751,6 +2792,7 @@ $$
 
 > [!quote]
 > "The problem with VaR is that it tells you nothing about what happens in the tail."
+>
 > — **Nassim Nicholas Taleb**, *The Black Swan* (2007)
 
 
@@ -2818,6 +2860,7 @@ Where $z_{\alpha}$ is the z-score at confidence level $\alpha$.
 
 > [!quote]
 > "Uncertainty is the only certainty there is."
+>
 > — **John Allen Paulos**, *A Mathematician Plays the Stock Market* (2003)
 
 
@@ -2878,6 +2921,7 @@ $$
 
 > [!quote]
 > "Not all things are created equal, nor should they be counted equally."
+>
 > — **Anonymous**
 
 
@@ -2940,6 +2984,7 @@ $$
 
 > [!quote]
 > "Interest rates are to asset prices what gravity is to the apple."
+>
 > — **Warren Buffett**
 
 

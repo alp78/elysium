@@ -32,6 +32,7 @@ date: 2026-03-28
 
 > [!quote]
 > "Volume is the fuel that drives the market."
+>
 > — **Joseph Granville**, *New Strategy of Daily Stock Market Timing* (1976)
 
 
@@ -90,6 +91,7 @@ screening in STOXX index methodologies.
 
 > [!quote]
 > "Every seller has a price, every buyer has a limit."
+>
 > — **Anonymous**
 
 
@@ -148,6 +150,7 @@ order book and, together with the bid price, defines the bid-ask spread.
 
 > [!quote]
 > "Going once, going twice — the auction is the purest form of price discovery."
+>
 > — **Anonymous**
 
 
@@ -208,6 +211,7 @@ closing auctions set the official closing price used by index providers.
 
 > [!quote]
 > "The bear market is the time when you find out who's been swimming naked."
+>
 > — **Warren Buffett**
 
 
@@ -263,6 +267,7 @@ reviews as falling capitalisation pushes companies below size thresholds.
 
 > [!quote]
 > "The real price of everything is the toil and trouble of acquiring it."
+>
 > — **Adam Smith**, *The Wealth of Nations* (1776)
 
 
@@ -322,6 +327,7 @@ best available price for a seller executing immediately.
 
 > [!quote]
 > "Transaction costs are the termites of investing."
+>
 > — **John C. Bogle**, *The Little Book of Common Sense Investing* (2007)
 
 
@@ -400,6 +406,7 @@ portfolios.
 
 > [!quote]
 > "Buy into a company because you want to own it, not because you want the stock to go up."
+>
 > — **Warren Buffett**
 
 An informal term for shares of large, well-established, financially sound
@@ -455,6 +462,7 @@ EURO STOXX 50 and DAX.
 
 > [!quote]
 > "Bull markets are born on pessimism, grow on skepticism, mature on optimism, and die on euphoria."
+>
 > — **Sir John Templeton**
 
 
@@ -567,6 +575,7 @@ index membership.
 
 > [!quote]
 > "Circuit breakers were born from the 1987 crash — the market's way of saying 'everyone take a breath.'"
+>
 > — **Nicholas Brady**, *Report of the Presidential Task Force on Market Mechanisms* (1988)
 
 An automatic mechanism that temporarily halts or restricts trading on an
@@ -650,6 +659,7 @@ between trading parties to manage counterparty risk.
 
 > [!quote]
 > "A correction is a euphemism for losing a lot of money rapidly."
+>
 > — **Nassim Nicholas Taleb**, *The Black Swan* (2007)
 
 
@@ -708,6 +718,7 @@ considered normal, periodic resets within longer-term uptrends.
 
 > [!quote]
 > "In a crisis, the weights of losses crush all rational calculations."
+>
 > — **John Kenneth Galbraith**, *The Great Crash 1929* (1955)
 
 A sudden, severe, and often unexpected decline in market prices, typically
@@ -762,6 +773,7 @@ and corporate action handling.
 
 > [!quote]
 > "In trust is the beginning of all commerce."
+>
 > — **Anonymous**
 
 
@@ -908,6 +920,7 @@ construction.
 
 > [!quote]
 > "A marketplace is more than a place; it is a set of rules."
+>
 > — **Anonymous**
 
 
@@ -965,6 +978,7 @@ indices, individual equities, fixed income, and other asset classes.
 
 > [!quote]
 > "The stock exchange is the one institution that exists to discover prices and allocate capital, and it does so through the mechanism of continuous trading."
+>
 > — **Burton Malkiel**, *A Random Walk Down Wall Street* (1973)
 
 A regulated marketplace where securities, derivatives, commodities, or other
@@ -1018,6 +1032,7 @@ index inclusion.
 
 > [!quote]
 > "An equity share is a claim on real assets and future earnings — it is ownership in its purest financial form."
+>
 > — **Benjamin Graham & David Dodd**, *Security Analysis* (1934)
 
 An ownership interest in a company, represented by shares of stock. Equity
@@ -1075,6 +1090,7 @@ sectors, and size segments.
 
 > [!quote]
 > "Whoever controls the marketplace controls the economy."
+>
 > — **Anonymous**
 
 
@@ -1132,6 +1148,7 @@ Europe by market capitalisation and the home exchange of the DAX index.
 
 > [!quote]
 > "The measure of a market is how freely its shares can change hands."
+>
 > — **Anonymous**
 
 
@@ -1289,6 +1306,7 @@ restricted shares, insider holdings, and other locked-up blocks.
 
 > [!quote]
 > "To classify is to understand."
+>
 > — **Carl Linnaeus (adapted)**
 
 
@@ -1346,7 +1364,10 @@ sector-based analysis and comparison.
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,573 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,573</span>
 
-
+> [!quote]
+> "When you halt trading, you give the market time to digest information rather than react in panic."
+>
+> — **SEC Chairman Arthur Levitt**, *Take On the Street* (2002)
 
 A temporary suspension of trading in a particular security or across an
 entire exchange, imposed by the exchange or a regulator. Trading halts are
@@ -1454,6 +1475,7 @@ for index construction and sector indices.
 
 > [!quote]
 > "Not everything that exists is available, and not everything available is worth buying."
+>
 > — **Anonymous**
 
 
@@ -1514,6 +1536,7 @@ eligibility screens.
 
 > [!quote]
 > "Large-cap stocks are the bedrock of most portfolios — they offer liquidity, analyst coverage, and institutional ownership that smaller companies cannot match."
+>
 > — **Jeremy Siegel**, *Stocks for the Long Run* (1994)
 
 A classification for companies with the highest free-float market
@@ -1569,6 +1592,7 @@ portion of the investable market.
 
 > [!quote]
 > "Liquidity is a coward — it disappears at the first sign of trouble."
+>
 > — **Nassim Nicholas Taleb**, *The Black Swan* (2007)
 
 
@@ -1755,7 +1779,10 @@ hold long positions in every constituent of the index they replicate.
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,883 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,883</span>
 
-
+> [!quote]
+> "In the short run, the market is a voting machine, but in the long run it is a weighing machine."
+>
+> — **Benjamin Graham**, *The Intelligent Investor* (1949)
 
 The total market value of a company's outstanding shares, calculated as the
 share price multiplied by the number of shares outstanding. In STOXX index
@@ -1811,7 +1838,10 @@ free-float shares) is the standard weighting measure.
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-
+> [!quote]
+> "Small and micro-cap stocks are where the inefficiencies live — less coverage, more mispricing, more opportunity."
+>
+> — **Joel Greenblatt**, *The Little Book That Beats the Market* (2005)
 
 A classification for companies at the smallest end of the market
 capitalisation spectrum, below the small-cap threshold. Micro-cap stocks are
@@ -1845,6 +1875,7 @@ often excluded from standard benchmark indices due to liquidity constraints.
 
 > [!quote]
 > "The middle ground is not the safest; it is the least understood."
+>
 > — **Anonymous**
 
 
@@ -1900,6 +1931,7 @@ capture this segment of the market.
 
 > [!quote]
 > "Markets are never wrong; opinions often are."
+>
 > — **Jesse Livermore**, *Reminiscences of a Stock Operator* (1923)
 
 
@@ -1985,6 +2017,7 @@ be filled.
 
 > [!quote]
 > "Transparency is the currency of trust."
+>
 > — **Anonymous**
 
 
@@ -2043,6 +2076,7 @@ and is the mechanism through which price discovery occurs on modern exchanges.
 
 > [!quote]
 > "The less transparent the market, the more advantage to the professional."
+>
 > — **George Soros**
 
 
@@ -2102,6 +2136,7 @@ generally excluded from STOXX indices.
 
 > [!quote]
 > "Home is where the heart is, and where the listing begins."
+>
 > — **Anonymous**
 
 
@@ -2158,6 +2193,7 @@ index purposes.
 
 > [!quote]
 > "All creation starts from a first offering."
+>
 > — **Anonymous**
 
 
@@ -2323,6 +2359,7 @@ on a regulated market.
 
 > [!quote]
 > "Be fearful when others are greedy, and greedy when others are fearful."
+>
 > — **Warren Buffett**
 
 
@@ -2377,7 +2414,10 @@ broad-based (affecting entire indices) or sector-specific.
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3,190 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 3,190</span>
 
-
+> [!quote]
+> "Sector rotation is the market's way of telling you where the economy is headed next."
+>
+> — **Sam Stovall**, *Standard & Poor's Guide to Sector Investing* (1996)
 
 A grouping of companies that operate in the same area of the economy,
 defined by an industry classification system such as ICB. STOXX publishes
@@ -2486,6 +2526,7 @@ ICB sector classification to build its sector index families.
 
 > [!quote]
 > "A deal is not done until the money has changed hands."
+>
 > — **Proverb**
 
 
@@ -2540,7 +2581,10 @@ receives the securities and the seller receives payment. Settlement cycles
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="210 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 210</span>
 
-
+> [!quote]
+> "Over long periods, small stocks have delivered a premium over large stocks — but the ride is rougher."
+>
+> — **Rolf Banz**, discoverer of the size effect (1981)
 
 A classification for companies in the lower tier of market capitalisation
 within an index universe, above micro-cap but below mid-cap thresholds. The
@@ -2594,6 +2638,7 @@ STOXX Europe Small 200 is an example of a small-cap index.
 
 > [!quote]
 > "He who sells what isn't his'n must buy it back or go to prison."
+>
 > — **Daniel Drew**
 
 
@@ -2626,6 +2671,7 @@ disclosure requirements and temporary bans during periods of stress.
 
 > [!quote]
 > "Behind every stock is a company — find out what it's doing."
+>
 > — **Peter Lynch**, *One Up on Wall Street* (1989)
 
 
@@ -2737,6 +2783,7 @@ and STOXX publishes supersector indices such as EURO STOXX Banks.
 
 > [!quote]
 > "Markets speak loudest when they speak in volume."
+>
 > — **Anonymous**
 
 

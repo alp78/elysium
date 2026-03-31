@@ -17,6 +17,7 @@ When a pipeline process is stuck — an infinite loop, a hanging database connec
 
 > [!quote]
 > "If SIGTERM is asking a process to leave the building, SIGKILL is the operating system dropping a concrete block on it."
+>
 > — Unix sysadmin proverb
 
 ## Linux — kill, pkill, killall

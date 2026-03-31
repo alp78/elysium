@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "I was tired of everyone using version numbers in whatever way they wanted and knew we could do better if everyone agreed on what each part of a version number meant."
+>
 > — **Tom Preston-Werner** (creator of Semantic Versioning, co-founder of GitHub)
 
 Git tags are named pointers to specific commits, used to mark significant points in a repository's history — most commonly production releases. Unlike branches, tags do not move as new commits are added. A tag always points to the same commit. This note covers lightweight tags, annotated tags, pushing tags to GitHub, and the semantic versioning convention used to name them.

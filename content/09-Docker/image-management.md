@@ -70,6 +70,7 @@ status: complete
 
 > [!quote]
 > "An image is worth a thousand lines of installation instructions."
+>
 > — **Solomon Hykes**, DockerCon talk (paraphrased)
 
 Docker images are the immutable, layered artifacts that run as [containers](https://alp78.github.io/elysium/09-Docker/container-lifecycle). For data engineering pipelines, you build images locally or in [CI/CD](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd), push them to [Artifact Registry](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-registry-and-ci), and deploy to [Cloud Run](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) or the Airflow DAGs. Understanding how images are built, layered, and sized is essential for fast deploys and low costs.

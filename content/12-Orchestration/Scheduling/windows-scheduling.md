@@ -42,6 +42,7 @@ status: complete
 
 > [!quote]
 > "The first rule of any technology used in a business is that automation applied to an efficient operation will magnify the efficiency. The second is that automation applied to an inefficient operation will magnify the inefficiency."
+>
 > — **Bill Gates**
 
 Windows task scheduling is the platform-native mechanism for running scripts, programs, and pipelines on a schedule. It encompasses three overlapping tools: **schtasks.exe** (legacy CLI), the **PowerShell ScheduledTasks module** (modern, object-oriented wrapper over the Task Scheduler COM API), and **PSScheduledJob** (PowerShell-centric jobs with native output streaming). This note covers all three in depth, with data engineering patterns for SSIS, sqlcmd, and Python pipelines, event-based triggers, and a mapping to Linux cron equivalents.

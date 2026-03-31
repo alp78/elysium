@@ -35,6 +35,7 @@ Market breadth measures how broadly a market move is supported across constituen
 
 > [!quote]
 > "The generals may win a few battles, but if the troops aren't following, the war is lost."
+>
 > — **Martin Zweig**, *Winning on Wall Street* (1986)
 
 
@@ -74,11 +75,13 @@ The net number of 52-week new highs vs new lows across index constituents.
 
 > [!quote]
 > "Be fearful when others are greedy and greedy when others are fearful."
+>
 > — **Warren Buffett**
 
 
 > [!quote]
 > "When everybody thinks alike, everyone is likely to be wrong."
+>
 > — **Humphrey Neill**, *The Art of Contrary Thinking* (1954)
 
 

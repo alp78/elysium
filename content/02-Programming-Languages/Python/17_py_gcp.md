@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "Everything fails all the time, so plan for failure and nothing fails."
+>
 > — **Werner Vogels**, CTO of Amazon
 
 ![Pipeline Architecture](/static/index_lab.jpg)

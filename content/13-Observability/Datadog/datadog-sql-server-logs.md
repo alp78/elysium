@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "A log is a record of what happened. A good log is a record of what happened that you can actually understand six months later at 3 AM."
+>
 > — **Bryan Cantrill**, CTO of Oxide Computer
 
 The Datadog Agent collects SQL Server metrics by default, but **log collection requires a separate config file**. Without it, no logs appear in Datadog's Log Explorer. This note documents the setup, permission requirements, and how to test that logs are flowing.

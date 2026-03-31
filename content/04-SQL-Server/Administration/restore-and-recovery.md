@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "A backup strategy is worthless if you have never tested a restore. Practice your disaster recovery before the disaster."
+>
 > — **Brent Ozar**, brentozar.com
 
 Knowing how to perform a restore is the test of whether your backup strategy is real. Every restore procedure should be practiced in a non-production environment before you need it under pressure.

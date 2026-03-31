@@ -15,6 +15,7 @@ status: complete
 
 > [!quote]
 > "If you spend more on coffee than on IT security, you will be hacked. What's more, you deserve to be hacked."
+>
 > — **Richard Clarke**, *Cyber War* (2010)
 
 SQL Server security has three distinct identity layers that must each be hardened independently. Vulnerabilities at any layer can expose data even when the other layers are correct.
