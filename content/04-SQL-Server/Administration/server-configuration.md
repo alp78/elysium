@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Configuration is the silent killer of production systems — most outages are caused not by code bugs, but by misconfiguration."
-> — **John Allspaw**
+> — **John Allspaw**, *Web Operations* (2010)
 
 These are the non-negotiable configuration settings that every production SQL Server instance must have in place before going live. Skipping any of these leads to data corruption, OOM crashes, or unrecoverable failures. When provisioning the underlying VM with [Terraform](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-compute), these config requirements should be reflected in the VM spec (machine type, disk size, resource limits).
 

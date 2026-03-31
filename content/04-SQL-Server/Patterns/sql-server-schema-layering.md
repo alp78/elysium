@@ -23,7 +23,7 @@ status: complete
 
 > [!quote]
 > "There are two ways of constructing a software design: One way is to make it so simple that there are obviously no deficiencies, and the other way is to make it so complicated that there are no obvious deficiencies."
-> — **Tony Hoare**
+> — **Tony Hoare**, 1980 ACM Turing Award lecture
 
 This page covers the **how** of organizing SQL Server schemas for layered data architectures. For the **why** — the architectural reasoning behind bronze/silver/gold layers — see [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture). For how dbt maps its own schema configuration to these patterns, see [dbt-intermediate-models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-intermediate-models).
 

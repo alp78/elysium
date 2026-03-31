@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "The query optimizer is the most sophisticated piece of software in any database system."
-> — **Michael Stonebraker**
+> — **Michael Stonebraker**, ACM interview
 
 SQL Server execution plans are the primary diagnostic tool for query performance. They show exactly how SQL Server chose to execute a query — which indexes it used, how it joined tables, how many rows it expected vs. actually processed, and what it waited on. Reading plans correctly is the skill that turns a 60-second query into a 200ms query.
 

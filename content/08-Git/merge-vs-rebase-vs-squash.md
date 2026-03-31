@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "I want clean history, but that really means (a) clean and (b) history."
-> — **Linus Torvalds**
+> — **Linus Torvalds**, Git mailing list
 
 Three strategies for integrating changes from one branch into another. Each produces a different commit history shape.
 
@@ -72,6 +72,14 @@ git commit -m "feat: add new feature"
 Collapses all branch commits into a single commit on main. The branch history is discarded.
 
 **Use when:** The branch has many small "wip" or "fix typo" commits that add noise to main's history.
+
+> [!warning] Squash loses individual commit history
+>
+> After a squash merge, all individual commits on the feature branch are collapsed into one. If you need to bisect or revert a specific change from within that branch later, you cannot — you can only revert the entire squash commit. For branches with multiple meaningful changes, consider a standard merge or rebase instead.
+
+> [!warning] Binary file merge conflicts
+>
+> Merge conflicts in binary files (images, compiled assets, Parquet files) cannot be resolved with text merge tools. Git will report the conflict but the file contents are meaningless to diff. You must choose one version entirely (`git checkout --ours file` or `git checkout --theirs file`) or replace the file manually.
 
 ### Decision guide — which merge strategy by scenario
 

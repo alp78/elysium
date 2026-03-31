@@ -53,10 +53,6 @@ This means: the index value at market close *before* the event equals the index 
 
 ## Corporate Actions: The Highest-Risk Data Operation
 
-> [!quote]
-> "In God we trust; all others must bring data."
-> — **W. Edwards Deming**
-
 
 Corporate actions are company-level events that change the capital structure, ownership, or trading characteristics of a security. For index engineers, each corporate action requires a specific data adjustment to maintain index accuracy.
 
@@ -158,7 +154,7 @@ WHERE c.index_key = 'target_index';
 
 > [!quote]
 > "When you buy an index fund, you are also buying all the transaction costs of all those stock trades that an index manager has to make."
-> — **John Bogle**
+> — **John Bogle**, *The Little Book of Common Sense Investing* (2007)
 
 
 Index reconstitution is the periodic review where constituents are added or removed based on the index methodology rules. For a major European equity index, this happens quarterly (March, June, September, December).
@@ -361,7 +357,7 @@ ORDER BY weight_pct DESC;
 
 > [!quote]
 > "It is easy to see the past as inevitable, because it already happened. The hard part is remembering it was once uncertain."
-> — **Marcos Lopez de Prado**
+> — **Marcos Lopez de Prado**, *Advances in Financial Machine Learning* (2018)
 
 
 Point-in-Time (PIT) data management answers the question: "What did we *know* about this index on a specific date?" This is fundamentally different from "What was the *correct* composition on that date?" — the distinction is critical for backtesting, regulatory audits, and quantitative research.

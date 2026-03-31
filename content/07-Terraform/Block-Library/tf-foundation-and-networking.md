@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "No code is the best way to write secure and reliable applications. Write nothing; deploy nowhere."
-> — **Kelsey Hightower**
+> — **Kelsey Hightower**, Twitter
 
 This is an atomic block library. Every section below is an independently copy-pasteable Terraform block. Each block is heavily commented so that every argument is self-explanatory, and each block is preceded by a short explanation of when a data engineer would reach for it. No block depends on another block in this file — treat each one as a standalone snippet.
 

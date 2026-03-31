@@ -41,11 +41,6 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Brokerage
 
-> [!quote]
-> "Wall Street is the only place that people ride to in a Rolls Royce to get advice from those who take the subway."
-> — **Warren Buffett**
-
-
 **Definition:** Brokerage is the business of acting as an intermediary between buyers and sellers of financial securities such as stocks, bonds, mutual funds, and other investment products. A brokerage firm or broker executes trades on behalf of clients, provides research and investment advice, and may offer custody of client assets. Brokers earn revenue through commissions on trades, fees for advisory services, or the spread between bid and ask prices. Modern brokerage has expanded to include online and mobile platforms, enabling self-directed investing alongside traditional advisor-led services.
 
 **In context:** Intesa Sanpaolo (ISP.MI, a European equity index) offers "private and commercial banking, corporate and transaction banking" services. Macquarie Group (MQG.AX, an Asia-Pacific equity index) is "involved in brokerage business, including equity research, sales, execution capabilities, and corporate access." Wells Fargo (WFC, a US equity index) provides "brokerage, financial planning" services through its Wealth and Investment Management segment.
@@ -74,11 +69,6 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 ---
 
 ## Capital Raising
-
-> [!quote]
-> "The No. 1 reason most people don't get what they want is that they don't know what they want — in business, that means knowing how much capital you need and why."
-> — **T. Harv Eker**
-
 
 **Definition:** Capital raising is the process by which a company obtains funding to finance its operations, growth, or strategic initiatives. Companies can raise capital through equity (selling ownership shares) or debt (borrowing money through loans or bonds). Capital raising activities include initial public offerings, secondary offerings, rights issues, private placements, and bond issuances. Investment banks typically assist companies in structuring and executing capital raising transactions.
 
@@ -123,7 +113,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "In the short run, the market is a voting machine but in the long run, it is a weighing machine."
-> — **Benjamin Graham**
+> — **Benjamin Graham**, *The Intelligent Investor* (1949)
 
 
 **Definition:** Equities, commonly referred to as stocks or shares, represent ownership interest in a company. When an investor buys equity in a company, they become a part-owner and are entitled to a share of the company's profits (through dividends) and any appreciation in the company's value (capital gains). Equities are traded on stock exchanges and are a fundamental component of investment portfolios. Equity markets provide companies with a way to raise capital and give investors opportunities to participate in corporate growth.
@@ -181,7 +171,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "There is no way to make money in futures unless you get in ahead of the move and get out before it's over."
-> — **Jesse Livermore**
+> — **Jesse Livermore**, *Reminiscences of a Stock Operator* (1923)
 
 
 **Definition:** Futures and options are types of derivative contracts traded on exchanges. A futures contract obligates the buyer to purchase (and the seller to sell) a specific asset at a predetermined price on a specified future date. An option contract gives the holder the right, but not the obligation, to buy (call option) or sell (put option) an asset at a specific price within a certain time period. Both instruments are used for hedging (protecting against price fluctuations) and speculation (profiting from anticipated price movements). They are traded on regulated exchanges with standardized contract terms.
@@ -198,7 +188,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "Don't look for the needle in the haystack. Just buy the haystack."
-> — **John Bogle**
+> — **John Bogle**, *The Little Book of Common Sense Investing* (2007)
 
 
 **Definition:** A financial index is a statistical measure that tracks the performance of a group of assets, typically stocks, representing a particular market, sector, or investment strategy. Indices serve as benchmarks against which investors can measure the performance of their portfolios. They are also the basis for index funds and exchange-traded funds (ETFs) that aim to replicate the index's performance. Major indices include the S&P 500, major European equity indices, the FTSE 100, and the Nikkei 225. Index providers determine the composition and methodology of each index.
@@ -215,7 +205,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "IPO stands for 'It's Probably Overpriced.'"
-> — **David Dreman**
+> — **David Dreman**, *Contrarian Investment Strategies* (1998)
 
 
 **Definition:** An Initial Public Offering (IPO) is the process by which a private company offers its shares to the public for the first time on a stock exchange. Through an IPO, the company raises capital from public investors, gains access to ongoing capital markets, and enhances its visibility and credibility. The process involves selecting underwriters, filing regulatory documents (such as a prospectus), conducting a roadshow to market the offering to investors, and pricing the shares. After the IPO, the company's shares trade publicly and the company becomes subject to public company regulations including regular financial reporting.
@@ -266,7 +256,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 > [!quote]
 > "A security is nothing more than a claim on future cash flows — everything else is just the packaging."
-> — **Aswath Damodaran**
+> — **Aswath Damodaran**, *The Little Book of Valuation* (2011)
 
 
 **Definition:** Securities are tradable financial instruments that hold monetary value. They are broadly categorized into equity securities (stocks), debt securities (bonds), and derivative securities (options, futures, swaps). Securities represent an investment position in a company (equity), a creditor relationship with a government or corporation (debt), or a right to buy or sell an underlying asset (derivative). Securities are issued by companies and governments to raise capital, and they are traded on exchanges and over-the-counter markets, providing liquidity for investors.

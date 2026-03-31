@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "At the heart of every large or small database is the relational model, quietly making sense of chaos."
-> — **C.J. Date**
+> — **C.J. Date**, *An Introduction to Database Systems* (2003)
 
 Hands-on SQL using the **stoxx** index database (SQL Server).
 Medallion architecture: Bronze (raw) → Silver (cleaned) → Gold (analytics). For the database objects and performance patterns that build on these fundamentals, continue to [sql-engineering](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-engineering).

@@ -93,7 +93,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 > [!quote]
 > "Money is just information, a way we measure what we trade, manage debts, make promises."
-> — **David Graeber**
+> — **David Graeber**, *Debt: The First 5,000 Years* (2011)
 
 
 **Definition:** Electronic money (e-money) is a digital representation of monetary value stored electronically, used as a medium of exchange for transactions conducted through electronic devices. Unlike traditional bank deposits, e-money is prepaid and stored on cards, mobile devices, or online wallets. It facilitates cashless payments, online shopping, and person-to-person transfers. E-money systems reduce reliance on physical currency and are particularly important in markets with limited banking infrastructure.

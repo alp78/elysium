@@ -46,7 +46,7 @@ status: complete
 
 > [!quote]
 > "Git proved I could be more than a one-hit wonder."
-> — **Linus Torvalds**
+> — **Linus Torvalds**, TED interview (2016)
 
 Git is a distributed version control system. It tracks every change to every file in your project, lets multiple people work on the same codebase simultaneously, and provides tools to merge everyone's work together. This note covers the essential vocabulary, the initial setup every new machine requires, and the commands for creating and cloning repositories.
 
@@ -203,6 +203,10 @@ git config --list
 > [!tip] Avoid Re-entering Your Password
 >
 > Run `git config --global credential.helper store` to avoid re-entering your password. On Windows, use `manager-core` for the Windows Credential Manager.
+
+> [!warning] credential.helper store is plaintext
+>
+> `credential.helper store` saves passwords in a plaintext file (`~/.git-credentials`). Anyone with access to your home directory can read them. On Windows, use `manager-core` (Windows Credential Manager) instead. On macOS, use `osxkeychain`.
 
 ```bash
 # All platforms — store credentials to disk (simple, less secure)

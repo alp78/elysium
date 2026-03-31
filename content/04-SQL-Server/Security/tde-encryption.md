@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Encryption works. Properly implemented strong crypto systems are one of the few things that you can rely on."
-> — **Edward Snowden**
+> — **Edward Snowden**, *The Guardian* interview (2013)
 
 Transparent Data Encryption (TDE) encrypts SQL Server database files at rest — protecting `.mdf`, `.ldf`, and `tempdb` files from unauthorized access even if someone obtains the physical disk, a GCS backup file, or a VM disk snapshot.
 

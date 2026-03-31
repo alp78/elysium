@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "A race condition is like a ticking time bomb — the system works perfectly until the day it doesn't, and by then the damage is done."
-> — **Leslie Lamport**
+> — **Leslie Lamport**, ACM interview
 
 A race condition occurs when two or more processes access shared data concurrently, and the final result depends on the timing of their execution. Unlike [deadlocks](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) (where processes get stuck), both processes complete — but the data ends up wrong.
 

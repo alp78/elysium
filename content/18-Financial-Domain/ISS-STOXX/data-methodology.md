@@ -31,12 +31,12 @@ date: 2026-03-28
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
 
 
-> A set of protocols, routines, and tools that allows software applications to communicate with a data provider's systems programmatically, enabling automated retrieval of index data, ESG scores, or governance analytics without manual intervention.
+A set of protocols, routines, and tools that allows software applications to communicate with a data provider's systems programmatically, enabling automated retrieval of index data, ESG scores, or governance analytics without manual intervention.
 
-An API is the machine-to-machine doorway into a data provider's catalogue. STOXX offers APIs that let licensees pull real-time index levels, historical compositions, and corporate-action data directly into their portfolio management and risk systems. ISS provides API access to governance scores, proxy research, and ESG ratings through its DataDesk and Sustainability Gateway platforms. For institutional users, API integration replaces manual file downloads and enables straight-through processing.
+> [!note]
+> An API is the machine-to-machine doorway into a data provider's catalogue. STOXX offers APIs that let licensees pull real-time index levels, historical compositions, and corporate-action data directly into their portfolio management and risk systems. ISS provides API access to governance scores, proxy research, and ESG ratings through its DataDesk and Sustainability Gateway platforms. For institutional users, API integration replaces manual file downloads and enables straight-through processing.
 
 > [!tip] Related Terms
-> [Data Feed](#data-feed), [DataDesk (ISS Platform)](#datadesk-iss-platform), [Snowflake Delivery](#snowflake-delivery), [Data Pipeline](#data-pipeline)
 
 > [!example]- Source excerpts (5)
 >
@@ -83,18 +83,12 @@ An API is the machine-to-machine doorway into a data provider's catalogue. STOXX
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="37 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 37</span>
 
-> [!quote]
-> "All models are wrong, but some are useful."
-> — **George Box**
+The process of applying an index methodology retroactively to historical market data in order to simulate how the index would have performed prior to its official launch date.
 
-
-
-> The process of applying an index methodology retroactively to historical market data in order to simulate how the index would have performed prior to its official launch date.
-
-Back-testing lets index providers and investors see what returns a newly designed index *would have* generated had it existed in the past. STOXX publishes back-tested performance alongside live track records in its factsheets, always with a disclaimer that back-tested results do not represent actual trading and may overstate performance because the rules were crafted with knowledge of historical outcomes.
+> [!note]
+> Back-testing lets index providers and investors see what returns a newly designed index *would have* generated had it existed in the past. STOXX publishes back-tested performance alongside live track records in its factsheets, always with a disclaimer that back-tested results do not represent actual trading and may overstate performance because the rules were crafted with knowledge of historical outcomes.
 
 > [!tip] Related Terms
-> [Historical Simulation](#historical-simulation), [Look-Ahead Bias](#look-ahead-bias), [Survivorship Bias](#survivorship-bias), [Point-in-Time Data](#point-in-time-data)
 
 > [!example]- Source excerpts (5)
 >
@@ -137,18 +131,12 @@ Back-testing lets index providers and investors see what returns a newly designe
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="30 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 30</span>
 
-> [!quote]
-> "A benchmark is only as trustworthy as the process behind it."
-> — **Andrew Bailey**
+The totality of activities involved in the governance, determination, calculation, and dissemination of a financial benchmark, including oversight, methodology design, data collection, and stakeholder management.
 
-
-
-> The totality of activities involved in the governance, determination, calculation, and dissemination of a financial benchmark, including oversight, methodology design, data collection, and stakeholder management.
-
-Benchmark administration is the regulatory umbrella under which index providers like STOXX operate. Under the EU Benchmarks Regulation (BMR), a benchmark administrator must maintain transparent methodologies, conflict-of-interest policies, and a complaints-handling procedure. STOXX is registered as an EU BMR-authorised administrator.
+> [!note]
+> Benchmark administration is the regulatory umbrella under which index providers like STOXX operate. Under the EU Benchmarks Regulation (BMR), a benchmark administrator must maintain transparent methodologies, conflict-of-interest policies, and a complaints-handling procedure. STOXX is registered as an EU BMR-authorised administrator.
 
 > [!tip] Related Terms
-> [Index Administrator](#index-administrator), [Rulebook](#rulebook), [Quality Assurance (Data)](#quality-assurance-data)
 
 > [!example]- Source excerpts (5)
 >
@@ -194,18 +182,12 @@ Benchmark administration is the regulatory umbrella under which index providers 
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="284 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 284</span>
 
-> [!quote]
-> "Clarity of purpose precedes quality of outcome."
-> — **Stephen Covey**
+A public document required under the EU Benchmarks Regulation (BMR) that discloses the key elements of an index's methodology, its limitations, the circumstances under which its administrator would exercise discretion, and how it measures the underlying market or economic reality.
 
-
-
-> A public document required under the EU Benchmarks Regulation (BMR) that discloses the key elements of an index's methodology, its limitations, the circumstances under which its administrator would exercise discretion, and how it measures the underlying market or economic reality.
-
-A benchmark statement is a regulatory compliance document, not a marketing factsheet. STOXX publishes benchmark statements for each index family, covering the market the benchmark intends to measure, the methodology's key elements, the potential limitations of the data inputs, and the conditions under which discretion or expert judgement may be applied. Investors and product issuers are required to reference the benchmark statement in their own prospectuses when using a regulated benchmark.
+> [!note]
+> A benchmark statement is a regulatory compliance document, not a marketing factsheet. STOXX publishes benchmark statements for each index family, covering the market the benchmark intends to measure, the methodology's key elements, the potential limitations of the data inputs, and the conditions under which discretion or expert judgement may be applied. Investors and product issuers are required to reference the benchmark statement in their own prospectuses when using a regulated benchmark.
 
 > [!tip] Related Terms
-> [Benchmark Administration](#benchmark-administration), [Rulebook](#rulebook), [Index Administrator](#index-administrator), [Methodology Consultation](#methodology-consultation)
 
 > [!example]- Source excerpts (5)
 >
@@ -252,18 +234,12 @@ A benchmark statement is a regulatory compliance document, not a marketing facts
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="127 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 127</span>
 
-> [!quote]
-> "The map is not the territory."
-> — **Alfred Korzybski**
+The total set of securities, entities, or data points that a data provider or index methodology considers eligible for inclusion before any screening, filtering, or weighting rules are applied.
 
-
-
-> The total set of securities, entities, or data points that a data provider or index methodology considers eligible for inclusion before any screening, filtering, or weighting rules are applied.
-
-Think of the coverage universe as the broadest possible "long list." For STOXX, the coverage universe for a regional index might be all listed equities on regulated exchanges in that region. For ISS, the coverage universe for ESG ratings might be all companies in the MSCI ACWI or a similar broad benchmark. The actual index or rating output is always a subset of this universe after selection criteria are applied.
+> [!note]
+> Think of the coverage universe as the broadest possible "long list." For STOXX, the coverage universe for a regional index might be all listed equities on regulated exchanges in that region. For ISS, the coverage universe for ESG ratings might be all companies in the MSCI ACWI or a similar broad benchmark. The actual index or rating output is always a subset of this universe after selection criteria are applied.
 
 > [!tip] Related Terms
-> [Universe Construction](#universe-construction), [Selection List](#selection-list), [Cross-Sectional Data](#cross-sectional-data)
 
 > [!example]- Source excerpts (5)
 >
@@ -306,18 +282,12 @@ Think of the coverage universe as the broadest possible "long list." For STOXX, 
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
 
-> [!quote]
-> "Data is the new oil, but like oil, it must be refined to be useful."
-> — **Clive Humby**
+A continuous or scheduled electronic delivery of structured data — such as index levels, component weights, corporate actions, or ESG scores — from a provider to a consumer, typically via API, FTP, or a real-time streaming protocol.
 
-
-
-> A continuous or scheduled electronic delivery of structured data — such as index levels, component weights, corporate actions, or ESG scores — from a provider to a consumer, typically via API, FTP, or a real-time streaming protocol.
-
-Data feeds are the pipes through which institutional investors receive index and governance data. STOXX delivers index values via real-time feeds (every 15 seconds for some indices) and end-of-day files. ISS distributes governance and ESG data through platform downloads, APIs, and bulk file deliveries. The format, frequency, and latency of a data feed are critical operational considerations for asset managers and custodians.
+> [!note]
+> Data feeds are the pipes through which institutional investors receive index and governance data. STOXX delivers index values via real-time feeds (every 15 seconds for some indices) and end-of-day files. ISS distributes governance and ESG data through platform downloads, APIs, and bulk file deliveries. The format, frequency, and latency of a data feed are critical operational considerations for asset managers and custodians.
 
 > [!tip] Related Terms
-> [End-of-Day Data](#end-of-day-data), [Data Vendor Code](#data-vendor-code), [Snowflake Delivery](#snowflake-delivery)
 
 > [!example]- Source excerpts (5)
 >
@@ -361,18 +331,12 @@ Data feeds are the pipes through which institutional investors receive index and
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="145 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 145</span>
 
-> [!quote]
-> "Data is the new oil. Like oil, it must be refined to create value."
-> — **Clive Humby**
+A third-party firm that collects, aggregates, standardises, and redistributes financial, governance, or ESG data to institutional clients, often serving as an intermediary between primary data sources (exchanges, companies, regulators) and end users.
 
-
-
-> A third-party firm that collects, aggregates, standardises, and redistributes financial, governance, or ESG data to institutional clients, often serving as an intermediary between primary data sources (exchanges, companies, regulators) and end users.
-
-Data vendors are the middlemen of the financial information ecosystem. STOXX itself acts as a data vendor when it licenses index data to Bloomberg, Refinitiv, and SIX for redistribution. Conversely, STOXX consumes data from vendors when sourcing market-cap figures, free-float estimates, or corporate-action feeds as inputs to its index calculations. ISS is both a data vendor (selling governance and ESG data) and a data consumer (purchasing financial and ownership data from other vendors). Understanding the vendor chain is important because data quality issues can originate at any link.
+> [!note]
+> Data vendors are the middlemen of the financial information ecosystem. STOXX itself acts as a data vendor when it licenses index data to Bloomberg, Refinitiv, and SIX for redistribution. Conversely, STOXX consumes data from vendors when sourcing market-cap figures, free-float estimates, or corporate-action feeds as inputs to its index calculations. ISS is both a data vendor (selling governance and ESG data) and a data consumer (purchasing financial and ownership data from other vendors). Understanding the vendor chain is important because data quality issues can originate at any link.
 
 > [!tip] Related Terms
-> [Data Vendor Code](#data-vendor-code), [Data Feed](#data-feed), [Vendor Reconciliation](#vendor-reconciliation), [Data Pipeline](#data-pipeline)
 
 > [!example]- Source excerpts (5)
 >
@@ -417,12 +381,12 @@ Data vendors are the middlemen of the financial information ecosystem. STOXX its
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="132 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 132</span>
 
 
-> A short alphanumeric identifier assigned by a data vendor (e.g., Bloomberg, Refinitiv, SIX) to uniquely reference a specific index, security, or data series within that vendor's platform.
+A short alphanumeric identifier assigned by a data vendor (e.g., Bloomberg, Refinitiv, SIX) to uniquely reference a specific index, security, or data series within that vendor's platform.
 
-Every STOXX index has a set of vendor codes — for example, a Bloomberg ticker, a Reuters RIC, and a STOXX internal symbol. These codes let portfolio managers, risk systems, and trading desks unambiguously refer to the same index across different technology platforms. Factsheets typically list all major vendor codes for each index.
+> [!note]
+> Every STOXX index has a set of vendor codes — for example, a Bloomberg ticker, a Reuters RIC, and a STOXX internal symbol. These codes let portfolio managers, risk systems, and trading desks unambiguously refer to the same index across different technology platforms. Factsheets typically list all major vendor codes for each index.
 
 > [!tip] Related Terms
-> [RIC (Reuters Instrument Code)](#ric-reuters-instrument-code), [ISIN (International Securities Identification Number)](#isin-international-securities-identification-number), [Factsheet](#factsheet)
 
 > [!example]- Source excerpts (5)
 >
@@ -467,12 +431,12 @@ Every STOXX index has a set of vendor codes — for example, a Bloomberg ticker,
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="35 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 35</span>
 
 
-> ISS Governance's online data portal that provides institutional subscribers with access to governance analytics, proxy voting research, compensation data, and ESG scores through a web-based interface.
+ISS Governance's online data portal that provides institutional subscribers with access to governance analytics, proxy voting research, compensation data, and ESG scores through a web-based interface.
 
-DataDesk is the primary self-service front end for ISS clients. Users can search companies, pull governance risk scores (QualityScores), review board profiles, view proxy research reports, and export datasets. It complements ISS's bulk data feeds and API access by offering an interactive, searchable environment suited for ad hoc research and due diligence.
+> [!note]
+> DataDesk is the primary self-service front end for ISS clients. Users can search companies, pull governance risk scores (QualityScores), review board profiles, view proxy research reports, and export datasets. It complements ISS's bulk data feeds and API access by offering an interactive, searchable environment suited for ad hoc research and due diligence.
 
 > [!tip] Related Terms
-> [Sustainability Gateway (ISS Platform)](#sustainability-gateway-iss-platform), [Data Feed](#data-feed), [Quality Assurance (Data)](#quality-assurance-data)
 
 > [!example]- Source excerpts (5)
 >
@@ -515,18 +479,12 @@ DataDesk is the primary self-service front end for ISS clients. Users can search
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-> [!quote]
-> "What companies choose not to disclose can be as telling as what they reveal."
-> — **Robert Eccles**
+The percentage of companies within a given universe or index that voluntarily or mandatorily report a specific data point — such as carbon emissions, board-diversity statistics, or executive compensation details — as opposed to having that data estimated or imputed by the provider.
 
-
-
-> The percentage of companies within a given universe or index that voluntarily or mandatorily report a specific data point — such as carbon emissions, board-diversity statistics, or executive compensation details — as opposed to having that data estimated or imputed by the provider.
-
-Disclosure rate is a key quality-of-data metric. A high disclosure rate means the data is grounded in company-reported figures; a low rate means the provider is relying heavily on estimation models. ISS publishes disclosure rates for its ESG indicators so that clients can assess how much of a portfolio's ESG profile rests on actual company data versus modelled values. STOXX ESG index methodologies may set minimum disclosure thresholds — for example, requiring that a company report Scope 1 and 2 emissions directly to be eligible for a climate index.
+> [!note]
+> Disclosure rate is a key quality-of-data metric. A high disclosure rate means the data is grounded in company-reported figures; a low rate means the provider is relying heavily on estimation models. ISS publishes disclosure rates for its ESG indicators so that clients can assess how much of a portfolio's ESG profile rests on actual company data versus modelled values. STOXX ESG index methodologies may set minimum disclosure thresholds — for example, requiring that a company report Scope 1 and 2 emissions directly to be eligible for a climate index.
 
 > [!tip] Related Terms
-> [Data Imputation](#data-imputation), [Estimation Model](#estimation-model), [Coverage Universe](#coverage-universe), [Quality Assurance (Data)](#quality-assurance-data)
 
 > [!example]- Source excerpts (1)
 >
@@ -546,18 +504,12 @@ Disclosure rate is a key quality-of-data metric. A high disclosure rate means th
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-> [!quote]
-> "Prediction is very difficult, especially about the future."
-> — **Niels Bohr**
+A quantitative framework used by a data provider to infer, approximate, or impute a data point (such as carbon emissions or ESG metrics) when a company has not directly reported the figure.
 
-
-
-> A quantitative framework used by a data provider to infer, approximate, or impute a data point (such as carbon emissions or ESG metrics) when a company has not directly reported the figure.
-
-Not all companies disclose every data point that ESG and climate indices require. ISS and other providers fill these gaps with estimation models — statistical or machine-learning approaches that predict unreported values based on industry peers, company size, geographic location, and available partial disclosures. Methodologies typically document which fields are reported vs. estimated and the confidence level of each estimate.
+> [!note]
+> Not all companies disclose every data point that ESG and climate indices require. ISS and other providers fill these gaps with estimation models — statistical or machine-learning approaches that predict unreported values based on industry peers, company size, geographic location, and available partial disclosures. Methodologies typically document which fields are reported vs. estimated and the confidence level of each estimate.
 
 > [!tip] Related Terms
-> [Coverage Universe](#coverage-universe), [Quality Assurance (Data)](#quality-assurance-data), [Look-Ahead Bias](#look-ahead-bias)
 
 > [!example]- Source excerpts (1)
 >
@@ -578,12 +530,12 @@ Not all companies disclose every data point that ESG and climate indices require
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
 
 
-> A standardised summary document — typically two to four pages — published by an index provider that presents an index's key characteristics, performance, top constituents, sector breakdown, and methodology highlights.
+A standardised summary document — typically two to four pages — published by an index provider that presents an index's key characteristics, performance, top constituents, sector breakdown, and methodology highlights.
 
-Factsheets are the "business card" of an index. STOXX publishes monthly factsheets for each index family, covering risk/return statistics, turnover, vendor codes, and a performance chart with both live and back-tested periods clearly marked. They are the most common starting point for any investor evaluating an index.
+> [!note]
+> Factsheets are the "business card" of an index. STOXX publishes monthly factsheets for each index family, covering risk/return statistics, turnover, vendor codes, and a performance chart with both live and back-tested periods clearly marked. They are the most common starting point for any investor evaluating an index.
 
 > [!tip] Related Terms
-> [Data Vendor Code](#data-vendor-code), [Rulebook](#rulebook), [Back-Testing](#back-testing)
 
 > [!example]- Source excerpts (5)
 >
@@ -628,18 +580,12 @@ Factsheets are the "business card" of an index. STOXX publishes monthly factshee
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
 
-> [!quote]
-> "Rules without a referee are merely suggestions."
-> — **Paul Volcker**
+The legal entity responsible for the governance, calculation, and publication of a financial benchmark or index, bearing regulatory accountability under frameworks such as the EU Benchmarks Regulation (BMR).
 
-
-
-> The legal entity responsible for the governance, calculation, and publication of a financial benchmark or index, bearing regulatory accountability under frameworks such as the EU Benchmarks Regulation (BMR).
-
-STOXX Ltd. is the index administrator for all STOXX and DAX indices. As an administrator, STOXX must maintain a control framework, methodology governance committee, conflicts-of-interest policy, and complaint-handling process. Clients licensing an index for an ETF or structured product must verify that the administrator is authorised under the applicable regulatory regime.
+> [!note]
+> STOXX Ltd. is the index administrator for all STOXX and DAX indices. As an administrator, STOXX must maintain a control framework, methodology governance committee, conflicts-of-interest policy, and complaint-handling process. Clients licensing an index for an ETF or structured product must verify that the administrator is authorised under the applicable regulatory regime.
 
 > [!tip] Related Terms
-> [Benchmark Administration](#benchmark-administration), [Rulebook](#rulebook), [Review Report](#review-report)
 
 > [!example]- Source excerpts (5)
 >
@@ -684,12 +630,12 @@ STOXX Ltd. is the index administrator for all STOXX and DAX indices. As an admin
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="49 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 49</span>
 
 
-> A twelve-character alphanumeric code (defined by ISO 6166) that uniquely identifies a specific security — such as an equity share, bond, or fund — across global markets.
+A twelve-character alphanumeric code (defined by ISO 6166) that uniquely identifies a specific security — such as an equity share, bond, or fund — across global markets.
 
-ISINs are the universal passport number for financial instruments. Every constituent in a STOXX index is identified by its ISIN, ensuring there is no ambiguity when a company is dual-listed or when local ticker symbols conflict. ISS also keys its governance and ESG data to ISINs to enable precise matching with portfolio holdings.
+> [!note]
+> ISINs are the universal passport number for financial instruments. Every constituent in a STOXX index is identified by its ISIN, ensuring there is no ambiguity when a company is dual-listed or when local ticker symbols conflict. ISS also keys its governance and ESG data to ISINs to enable precise matching with portfolio holdings.
 
 > [!tip] Related Terms
-> [RIC (Reuters Instrument Code)](#ric-reuters-instrument-code), [Data Vendor Code](#data-vendor-code), [Selection List](#selection-list)
 
 > [!example]- Source excerpts (5)
 >
@@ -736,18 +682,12 @@ ISINs are the universal passport number for financial instruments. Every constit
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
 
-> [!quote]
-> "Quis custodiet ipsos custodes? -- Who watches the watchmen?"
-> — **Juvenal**
+An internal or independent committee established by a benchmark administrator to monitor and review all aspects of benchmark provision, including methodology integrity, data quality, conflict-of-interest management, and complaint handling, as required by the EU Benchmarks Regulation.
 
-
-
-> An internal or independent committee established by a benchmark administrator to monitor and review all aspects of benchmark provision, including methodology integrity, data quality, conflict-of-interest management, and complaint handling, as required by the EU Benchmarks Regulation.
-
-The oversight function is the governance watchdog inside an index provider. For STOXX, this takes the form of an Oversight Committee with a defined charter, meeting cadence, and escalation authority. The committee reviews methodology changes, monitors for errors or manipulation, evaluates the adequacy of data inputs, and ensures that the administrator's code of conduct is followed. It operates independently from the commercial and index-operations teams to avoid conflicts of interest. ISS maintains analogous governance structures for its benchmark-related products.
+> [!note]
+> The oversight function is the governance watchdog inside an index provider. For STOXX, this takes the form of an Oversight Committee with a defined charter, meeting cadence, and escalation authority. The committee reviews methodology changes, monitors for errors or manipulation, evaluates the adequacy of data inputs, and ensures that the administrator's code of conduct is followed. It operates independently from the commercial and index-operations teams to avoid conflicts of interest. ISS maintains analogous governance structures for its benchmark-related products.
 
 > [!tip] Related Terms
-> [Benchmark Administration](#benchmark-administration), [Index Administrator](#index-administrator), [Methodology Consultation](#methodology-consultation), [Quality Assurance (Data)](#quality-assurance-data)
 
 > [!example]- Source excerpts (5)
 >
@@ -795,18 +735,12 @@ The oversight function is the governance watchdog inside an index provider. For 
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
-> [!quote]
-> "In God we trust; all others bring data."
-> — **W. Edwards Deming**
+Data that is stored and delivered exactly as it was known on a specific historical date, preserving the original values before any subsequent revisions, restatements, or corrections.
 
-
-
-> Data that is stored and delivered exactly as it was known on a specific historical date, preserving the original values before any subsequent revisions, restatements, or corrections.
-
-Point-in-time (PIT) databases are essential for unbiased back-testing. If a company restates its 2023 emissions in 2025, a PIT database retains both the original 2023 figure (as known in 2023) and the restated figure (as known in 2025). Using PIT data ensures that simulations reflect only the information that was actually available to decision-makers at each historical moment.
+> [!note]
+> Point-in-time (PIT) databases are essential for unbiased back-testing. If a company restates its 2023 emissions in 2025, a PIT database retains both the original 2023 figure (as known in 2023) and the restated figure (as known in 2025). Using PIT data ensures that simulations reflect only the information that was actually available to decision-makers at each historical moment.
 
 > [!tip] Related Terms
-> [Look-Ahead Bias](#look-ahead-bias), [Back-Testing](#back-testing), [Panel Data](#panel-data), [Survivorship Bias](#survivorship-bias)
 
 > [!example]- Source excerpts (3)
 >
@@ -840,18 +774,12 @@ Point-in-time (PIT) databases are essential for unbiased back-testing. If a comp
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
-> [!quote]
-> "Quality is never an accident; it is always the result of intelligent effort."
-> — **John Ruskin**
+The systematic processes, checks, and controls that a data provider applies to ensure accuracy, completeness, timeliness, and consistency of its datasets before publication or delivery to clients.
 
-
-
-> The systematic processes, checks, and controls that a data provider applies to ensure accuracy, completeness, timeliness, and consistency of its datasets before publication or delivery to clients.
-
-Quality assurance (QA) in the index and ESG data world encompasses automated validation rules (e.g., a market-cap value cannot be negative), manual review by analysts, reconciliation against independent sources, and exception-handling workflows. STOXX's index operations team runs multi-layered QA on every corporate action, rebalancing, and daily calculation. ISS applies similar rigour to governance scores, flagging outliers for analyst review.
+> [!note]
+> Quality assurance (QA) in the index and ESG data world encompasses automated validation rules (e.g., a market-cap value cannot be negative), manual review by analysts, reconciliation against independent sources, and exception-handling workflows. STOXX's index operations team runs multi-layered QA on every corporate action, rebalancing, and daily calculation. ISS applies similar rigour to governance scores, flagging outliers for analyst review.
 
 > [!tip] Related Terms
-> [Benchmark Administration](#benchmark-administration), [Estimation Model](#estimation-model), [Review Report](#review-report)
 
 > [!example]- Source excerpts (3)
 >
@@ -883,18 +811,12 @@ Quality assurance (QA) in the index and ESG data world encompasses automated val
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="291 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 291</span>
 
-> [!quote]
-> "Without data, you are just another person with an opinion."
-> — **W. Edwards Deming**
+A revision to previously published data — such as financial figures, ESG metrics, or index values — issued by either the reporting company or the data provider to correct errors, reflect updated methodologies, or incorporate newly available information.
 
-
-
-> A revision to previously published data — such as financial figures, ESG metrics, or index values — issued by either the reporting company or the data provider to correct errors, reflect updated methodologies, or incorporate newly available information.
-
-Restatements are the data world's errata. A company may restate its carbon emissions after discovering a measurement error; ISS may revise a governance score after receiving corrected board-composition data; STOXX may restate an index level if a corporate-action adjustment was applied incorrectly. Point-in-time databases preserve both the original and restated values so that historical analyses remain unbiased. High restatement frequency in a dataset can signal underlying data-quality issues and is tracked as part of quality assurance.
+> [!note]
+> Restatements are the data world's errata. A company may restate its carbon emissions after discovering a measurement error; ISS may revise a governance score after receiving corrected board-composition data; STOXX may restate an index level if a corporate-action adjustment was applied incorrectly. Point-in-time databases preserve both the original and restated values so that historical analyses remain unbiased. High restatement frequency in a dataset can signal underlying data-quality issues and is tracked as part of quality assurance.
 
 > [!tip] Related Terms
-> [Point-in-Time Data](#point-in-time-data), [Quality Assurance (Data)](#quality-assurance-data), [Look-Ahead Bias](#look-ahead-bias), [Vendor Reconciliation](#vendor-reconciliation)
 
 > [!example]- Source excerpts (5)
 >
@@ -937,12 +859,12 @@ Restatements are the data world's errata. A company may restate its carbon emiss
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="71 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 71</span>
 
 
-> A document published by an index administrator or advisory committee following a periodic index review, summarising the changes to index composition (additions, deletions, and share adjustments) and the rationale behind them.
+A document published by an index administrator or advisory committee following a periodic index review, summarising the changes to index composition (additions, deletions, and share adjustments) and the rationale behind them.
 
-After each quarterly or annual review, STOXX publishes a review report (sometimes called an announcement) that lists which companies are entering or leaving the index and any changes to free-float factors or share counts. These reports are closely watched by passive fund managers, who must execute rebalancing trades to match the new composition. ISS similarly publishes review and update reports for its governance and ESG rating changes.
+> [!note]
+> After each quarterly or annual review, STOXX publishes a review report (sometimes called an announcement) that lists which companies are entering or leaving the index and any changes to free-float factors or share counts. These reports are closely watched by passive fund managers, who must execute rebalancing trades to match the new composition. ISS similarly publishes review and update reports for its governance and ESG rating changes.
 
 > [!tip] Related Terms
-> [Selection List](#selection-list), [Rulebook](#rulebook), [Index Administrator](#index-administrator)
 
 > [!example]- Source excerpts (5)
 >
@@ -987,12 +909,12 @@ After each quarterly or annual review, STOXX publishes a review report (sometime
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="15 mentions across STOXX & ISS pages (low)">▰▰ 15</span>
 
 
-> A proprietary ticker-like identifier assigned by Refinitiv (formerly Reuters) to uniquely reference a financial instrument — such as an equity, index, or derivative — within the Refinitiv Eikon and Elektron platforms.
+A proprietary ticker-like identifier assigned by Refinitiv (formerly Reuters) to uniquely reference a financial instrument — such as an equity, index, or derivative — within the Refinitiv Eikon and Elektron platforms.
 
-RICs are one of several vendor-specific codes that STOXX publishes for each index. A RIC such as `.STOXX50E` allows Refinitiv terminal users and API consumers to pull real-time and historical data for the EURO STOXX 50. Because RICs are proprietary, they are not interchangeable with Bloomberg tickers or ISINs, making cross-reference tables essential for multi-vendor environments.
+> [!note]
+> RICs are one of several vendor-specific codes that STOXX publishes for each index. A RIC such as `.STOXX50E` allows Refinitiv terminal users and API consumers to pull real-time and historical data for the EURO STOXX 50. Because RICs are proprietary, they are not interchangeable with Bloomberg tickers or ISINs, making cross-reference tables essential for multi-vendor environments.
 
 > [!tip] Related Terms
-> [Data Vendor Code](#data-vendor-code), [ISIN (International Securities Identification Number)](#isin-international-securities-identification-number), [Data Feed](#data-feed)
 
 > [!example]- Source excerpts (5)
 >
@@ -1034,18 +956,12 @@ RICs are one of several vendor-specific codes that STOXX publishes for each inde
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="84 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 84</span>
 
-> [!quote]
-> "A good index is only as good as its rules."
-> — **John Tukey**
+The comprehensive, legally binding document published by an index administrator that specifies every aspect of an index's construction, maintenance, calculation, and governance — serving as the definitive methodology reference.
 
-
-
-> The comprehensive, legally binding document published by an index administrator that specifies every aspect of an index's construction, maintenance, calculation, and governance — serving as the definitive methodology reference.
-
-The rulebook is the single source of truth for an index. It details the universe, selection criteria, weighting scheme, rebalancing schedule, corporate-action treatment, and extraordinary-event procedures. STOXX publishes rulebooks for each index family, and any deviation from the rulebook must go through a formal governance and consultation process under BMR requirements.
+> [!note]
+> The rulebook is the single source of truth for an index. It details the universe, selection criteria, weighting scheme, rebalancing schedule, corporate-action treatment, and extraordinary-event procedures. STOXX publishes rulebooks for each index family, and any deviation from the rulebook must go through a formal governance and consultation process under BMR requirements.
 
 > [!tip] Related Terms
-> [Benchmark Administration](#benchmark-administration), [Index Administrator](#index-administrator), [Review Report](#review-report), [Factsheet](#factsheet)
 
 > [!example]- Source excerpts (5)
 >
@@ -1090,12 +1006,12 @@ The rulebook is the single source of truth for an index. It details the universe
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,008 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,008</span>
 
 
-> The finalised roster of securities or entities that have passed all eligibility screens, liquidity filters, and ranking criteria during an index review and will be included in the index for the upcoming period.
+The finalised roster of securities or entities that have passed all eligibility screens, liquidity filters, and ranking criteria during an index review and will be included in the index for the upcoming period.
 
-The selection list is the output of the review process — the names that "made the cut." For STOXX indices, the selection list is determined by applying the rulebook's criteria to the coverage universe at the review cut-off date. The list is typically published several days before the effective date to give the market time to anticipate rebalancing flows.
+> [!note]
+> The selection list is the output of the review process — the names that "made the cut." For STOXX indices, the selection list is determined by applying the rulebook's criteria to the coverage universe at the review cut-off date. The list is typically published several days before the effective date to give the market time to anticipate rebalancing flows.
 
 > [!tip] Related Terms
-> [Coverage Universe](#coverage-universe), [Universe Construction](#universe-construction), [Review Report](#review-report)
 
 > [!example]- Source excerpts (5)
 >
@@ -1140,12 +1056,12 @@ The selection list is the output of the review process — the names that "made 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
 
-> ISS's integrated online platform that provides clients with access to ESG ratings, climate analytics, norms-based screening, SDG alignment data, and other responsible-investment datasets through a unified web interface.
+ISS's integrated online platform that provides clients with access to ESG ratings, climate analytics, norms-based screening, SDG alignment data, and other responsible-investment datasets through a unified web interface.
 
-The Sustainability Gateway (sometimes referred to as ISS ESG Gateway) is the ESG-specific counterpart to DataDesk. It is purpose-built for responsible-investment workflows: portfolio-level ESG scoring, regulatory reporting (SFDR, EU Taxonomy), controversy screening, and engagement tracking. Data accessed through the Gateway feeds directly into compliance and reporting processes for asset managers and asset owners.
+> [!note]
+> The Sustainability Gateway (sometimes referred to as ISS ESG Gateway) is the ESG-specific counterpart to DataDesk. It is purpose-built for responsible-investment workflows: portfolio-level ESG scoring, regulatory reporting (SFDR, EU Taxonomy), controversy screening, and engagement tracking. Data accessed through the Gateway feeds directly into compliance and reporting processes for asset managers and asset owners.
 
 > [!tip] Related Terms
-> [DataDesk (ISS Platform)](#datadesk-iss-platform), [Estimation Model](#estimation-model), [Coverage Universe](#coverage-universe)
 
 > [!example]- Source excerpts (3)
 >

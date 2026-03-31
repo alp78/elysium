@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Everyone is looking for a standardized way to build distributed applications."
-> — **Solomon Hykes**
+> — **Solomon Hykes**, DockerCon talk
 
 Docker Compose defines and runs multi-container applications from a single `docker-compose.yaml` file. For data engineering, this typically means running the [Airflow stack](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) (scheduler, webserver, triggerer) alongside PostgreSQL and Redis, or local development stacks combining databases, pipeline services, and supporting infrastructure. All services, their images, networking, volumes, environment, and startup order are declared in one file and managed with a single CLI. In production, the same service topology often maps to [Cloud Run services](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-cloud-run) managed by Terraform.
 

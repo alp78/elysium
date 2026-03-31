@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "You can use modules to further split up your configuration as well as parameterize it. The goal is giving you enough options so it isn't overwhelming complexity."
-> — **Mitchell Hashimoto**
+> — **Mitchell Hashimoto**, HashiConf talk
 
 Terraform modules are the primary mechanism for creating reusable, composable infrastructure. When you manage multiple environments (dev, staging, prod), modules prevent copy-paste between configurations and enable environment promotion.
 

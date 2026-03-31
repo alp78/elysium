@@ -19,7 +19,7 @@ status: complete
 
 > [!quote]
 > "Program testing can be used to show the presence of bugs, but never to show their absence."
-> — **Edsger Dijkstra**
+> — **Edsger Dijkstra**, *Notes on Structured Programming*, EWD 249 (1970)
 
 End-to-end analysis, validation, Pandas-to-Polars guide.
 

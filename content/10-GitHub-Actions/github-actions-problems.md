@@ -20,7 +20,7 @@ updated: 2026-03-30
 
 > [!quote]
 > "We found that where code deployments are most painful, you'll find the poorest software delivery performance, organizational performance, and culture."
-> — **Nicole Forsgren**
+> — **Nicole Forsgren**, *Accelerate* (2018)
 
 GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as-YAML-in-a-repo. These problems compound in distributed teams where multiple engineers edit workflows, manage secrets, and rely on CI for deployment gates. The root issues are architectural: workflows live in the same repo as application code (so they're easy to tamper with), secrets are injected at runtime (so they can be leaked), and YAML is the execution model (so there's no local test suite). This note catalogs every major problem, explains precisely why it happens, and provides actionable prevention and fix protocols. In financial data engineering contexts, these failures often translate directly to SLA breaches — a broken deploy workflow means the index calculation pipeline doesn't ship on time.
 

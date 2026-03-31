@@ -17,7 +17,7 @@ Every GCP resource has different connectivity patterns. This note provides the e
 
 > [!quote]
 > "The interesting thing about cloud computing is that we've redefined cloud computing to include everything that we already do."
-> — **Larry Ellison**
+> — **Larry Ellison**, Oracle analyst conference (2008)
 
 ## Compute Engine VMs (SSH)
 

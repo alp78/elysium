@@ -110,7 +110,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "You do not need to invent everything yourself — the smartest companies know when to license from others."
-> — **Henry Chesbrough**
+> — **Henry Chesbrough**, *Open Innovation* (2003)
 
 
 **Definition:** An in-licensing agreement is a contractual arrangement in which a company acquires the rights to develop, manufacture, or sell a product, technology, or intellectual property from another company. This is common in the pharmaceutical and technology industries, where one company may have discovered a promising drug or technology but lacks the resources, manufacturing capabilities, or market access to bring it to market. The licensee typically pays upfront fees, milestone payments, and royalties on future sales to the licensor.
@@ -142,11 +142,6 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## Medical Devices
 
-> [!quote]
-> "Technology is nothing. What's important is that you have faith in people, that they're basically good and smart, and if you give them tools, they'll do wonderful things with them."
-> — **Steve Jobs**
-
-
 **Definition:** Medical devices are instruments, apparatus, machines, implants, or diagnostic tools used in the diagnosis, prevention, monitoring, or treatment of medical conditions. The medical device industry ranges from simple products like bandages and syringes to complex technologies like MRI scanners, robotic surgical systems, and implantable cardiac devices. Medical devices must meet stringent regulatory requirements and undergo rigorous testing before they can be marketed. The industry is characterized by continuous innovation, high barriers to entry, and strong intellectual property protection.
 
 **In context:** Johnson & Johnson (JNJ, a US equity index) through its MedTech segment provides "products used in the surgery, orthopedic, cardiovascular, and vision fields" including "robotic surgical procedures." HOYA Corporation (7741.T, an Asia-Pacific equity index) offers "medical endoscopes; intraocular lenses; laparoscopic surgical instruments." Siemens AG (SIE.DE, a European equity index) through Siemens Healthineers "develops, manufactures, and sells various diagnostic and therapeutic products."
@@ -161,7 +156,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 > [!quote]
 > "Open innovation means your most valuable ideas may reach patients faster through someone else's hands."
-> — **Henry Chesbrough**
+> — **Henry Chesbrough**, *Open Innovation* (2003)
 
 
 **Definition:** Out-licensing is the process by which a company grants the rights to its intellectual property, technology, or product to another company for development, manufacturing, or commercialization. The licensor typically receives upfront payments, milestone payments, and ongoing royalties. Out-licensing is common in the pharmaceutical industry, where a company that has developed a promising drug candidate may not have the resources or geographic reach to commercialize it globally, so it licenses the rights for specific markets or indications to a larger partner.
@@ -309,11 +304,6 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## Goodwill
 
-> [!quote]
-> "Price is what you pay. Value is what you get."
-> — **Warren Buffett**
-
-
 **Definition:** Goodwill is an intangible asset that arises when one company acquires another for more than the fair value of its identifiable net assets. It represents the premium paid for elements such as brand reputation, customer relationships, proprietary technology, employee expertise, and market position that cannot be separately identified and valued. Under accounting standards (IFRS and US GAAP), goodwill must be tested annually for impairment and written down if its carrying value exceeds its recoverable amount. Goodwill is a common item on the balance sheets of companies that grow through acquisitions.
 
 **In context:** Many companies across the example indices carry significant goodwill on their balance sheets following acquisitions. Companies like AbbVie (ABBV, a US equity index) and other large pharmaceutical and technology acquirers record substantial goodwill after paying acquisition premiums for innovative businesses.
@@ -378,11 +368,6 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 ---
 
 ## Operating Lease
-
-> [!quote]
-> "Flexibility is the new competitive advantage — ownership ties you down."
-> — **Satya Nadella**
-
 
 **Definition:** An operating lease is a contract in which the lessee rents an asset (such as equipment, vehicles, or real estate) for a period shorter than the asset's economic life. The lessee does not assume ownership risks or rewards; the lessor retains the asset on its balance sheet. Under IFRS 16 and ASC 842, even operating leases must now be recognized on the lessee's balance sheet as a right-of-use asset and lease liability. Operating leases are popular for assets that depreciate quickly or need frequent replacement, as they allow lessees to use assets without long-term ownership obligations.
 

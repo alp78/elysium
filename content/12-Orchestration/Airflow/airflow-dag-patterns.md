@@ -59,7 +59,7 @@ status: complete
 
 > [!quote]
 > "As these systems get more complicated and evolve rapidly, it becomes even more important to have something like Apache Airflow that brings everything together in a sane place where every little piece of the puzzle can be orchestrated properly with sane APIs."
-> — **Maxime Beauchemin**
+> — **Maxime Beauchemin**, "The Rise of the Data Engineer" (2017)
 
 A reference for the most important Apache Airflow DAG authoring patterns used in production data engineering. This note covers how to express complex workflow logic in DAGs: dependencies, grouping, dynamic generation, branching, and scheduling strategies.
 

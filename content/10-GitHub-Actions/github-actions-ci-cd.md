@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "If it hurts, do it more frequently, and bring the pain forward."
-> — **Jez Humble**
+> — **Jez Humble**, *Continuous Delivery* (2010)
 
 GitHub Actions automates workflows (build, test, deploy) triggered by events like pushes, PRs, schedules, or manual triggers. Workflows are defined in YAML files in `.github/workflows/`.
 
@@ -127,10 +127,6 @@ The `credentials_json` field receives the full JSON content of the service accou
 > - Rotate secrets periodically: delete old key in GCP/Datadog, generate new, update GitHub secret
 
 ---
-
-> [!warning] Missing secrets resolve to empty string
->
-> GitHub Actions does not fail when a secret is undefined -- `${{ secrets.UNDEFINED }}` silently becomes `""`. This means a typo in a secret name will not produce a "missing variable" error but will instead cause downstream actions to receive blank credentials. Use `gh secret list` to verify secret names match exactly.
 
 ### Example: Build and Deploy to Cloud Run
 
@@ -294,6 +290,35 @@ gh run rerun <RUN_ID> --failed
 # Watch the re-run
 gh run watch
 ```
+
+### Pre-commit Hooks — enforce code quality before commits reach GitHub
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  - repo: https://github.com/psf/black
+    rev: 24.1.1
+    hooks:
+      - id: black
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+```
+
+> [!tip] Pre-commit runs locally before `git commit`
+> Install with `pip install pre-commit && pre-commit install`. Hooks run automatically on every commit, catching formatting and linting issues before they reach CI. This reduces failed workflow runs and keeps PRs clean.
+
+---
 
 ## Related
 

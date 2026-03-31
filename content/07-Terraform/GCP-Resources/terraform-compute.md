@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Cloud providers have tricked us into believing that we're all too dumb to operate our own infrastructure, at any scale."
-> — **Mitchell Hashimoto**
+> — **Mitchell Hashimoto**, HashiConf talk
 
 This note covers the GCE VM definitions from `compute.tf`: the Airflow orchestrator VM and the SQL Server database VM. These are the two compute instances in the example infrastructure.
 

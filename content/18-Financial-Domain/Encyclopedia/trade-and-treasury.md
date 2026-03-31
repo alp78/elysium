@@ -27,7 +27,7 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 > [!quote]
 > "Cash is a fact, profit is an opinion."
-> — **Alfred Rappaport**
+> — **Alfred Rappaport**, *Creating Shareholder Value* (1986)
 
 
 **Definition:** Cash management refers to the corporate treasury function of collecting, managing, and investing a company's cash flows efficiently. Banks offer cash management services to corporate clients to help them optimize their liquidity positions, streamline payment and collection processes, manage bank accounts across multiple locations and currencies, and invest surplus cash. Effective cash management ensures a company has enough liquid funds to meet its obligations while maximizing the return on idle cash balances.

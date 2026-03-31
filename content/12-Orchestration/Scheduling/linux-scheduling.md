@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "As an industry we've been pushing: Automate. Automate. Automate. We should have been saying: Understand. Understand. Understand."
-> — **Kelsey Hightower**
+> — **Kelsey Hightower**, tweet (2020)
 
 Linux task scheduling encompasses every mechanism for running commands automatically at a specified time or interval: cron for recurring jobs, systemd timers for dependency-aware scheduling, `at` for one-time future execution, and anacron for machines that are not always powered on. This reference covers all four tools plus SSH configuration for remote scheduling, data engineering patterns, and a decision framework for when to use cron vs Airflow vs Cloud Scheduler.
 

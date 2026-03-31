@@ -25,7 +25,7 @@ status: complete
 
 > [!quote]
 > "Failures are a given in distributed systems. The question is never whether something will fail, but whether your system can recover gracefully when it does."
-> — **Martin Kleppmann**
+> — **Martin Kleppmann**, *Designing Data-Intensive Applications* (2017)
 
 Every tool in the vault handles errors in its own way — bash `trap`, Airflow retries, SQL Server deadlock retry, API backoff. This page provides the **universal theory** that cuts across all of them: error classification, retry strategies, failure propagation, circuit breakers, and dead letter queues. Every implementation detail links to the specific page and heading where it already exists.
 

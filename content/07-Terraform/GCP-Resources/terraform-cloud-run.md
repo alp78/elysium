@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "The future of serverless is about running your code without thinking about servers, and that future is already here."
-> — **Tim Wagner**
+> — **Tim Wagner**, creator of AWS Lambda
 
 This note covers `run.tf` — the Cloud Run service (dashboard) and Cloud Run jobs (pipeline, setup) that form the application layer of the example infrastructure.
 
@@ -131,7 +131,7 @@ containers {
 
 | Field | Value | Meaning |
 |-------|-------|---------|
-| `image` | `.../dashboard:latest` | Docker image to run. `latest` tag is updated by [GitHub Actions](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-workflows) on every push to `main`. |
+| `image` | `.../dashboard:latest` | Docker image to run. `latest` tag is updated by [GitHub Actions](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) on every push to `main`. |
 | `container_port` | `8080` | Port the Blazor app listens on inside the container. Cloud Run routes external HTTPS traffic to this port. |
 | `startup_probe` | HTTP GET `/` | Cloud Run checks if the container is ready by hitting `/` every 10 seconds, starting 3 seconds after launch. If it fails 3 times, the container is killed and restarted. |
 | `ConnectionStrings__project` | ADO.NET connection string (without password) | .NET convention: double underscore `__` maps to `:` in `appsettings.json` hierarchy. Equivalent to `ConnectionStrings:data-pipeline`. Contains the SQL VM's private IP, database name, and user — but **not** the password. `TrustServerCertificate=true` skips SSL certificate validation (acceptable for internal VPC traffic). |

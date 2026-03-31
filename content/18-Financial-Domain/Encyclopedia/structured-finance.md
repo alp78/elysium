@@ -111,7 +111,7 @@ Encyclopedia of structured finance terms covering complex financial instruments,
 
 > [!quote]
 > "It is not the borrower who pays the price of a bad loan, but the lender who made it."
-> — **Charles P. Kindleberger**
+> — **Charles P. Kindleberger**, *Manias, Panics, and Crashes* (1978)
 
 
 **Definition:** A non-performing loan (NPL) is a bank loan where the borrower has stopped making scheduled interest or principal payments, typically for 90 days or more. NPLs represent credit risk materialized: the bank has lent money that it may not fully recover. High levels of NPLs strain bank capital, reduce lending capacity, and can threaten financial stability. Banks manage NPLs through workout units, loan modifications, sale to distressed debt investors, or write-offs. NPL ratios are closely monitored by bank regulators as indicators of credit quality and financial health.

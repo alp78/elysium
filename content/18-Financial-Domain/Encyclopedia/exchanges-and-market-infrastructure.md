@@ -26,7 +26,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 > [!quote]
 > "The clearinghouse is the guarantor of last resort — it stands between every buyer and every seller."
-> — **John C. Hull**
+> — **John C. Hull**, *Options, Futures, and Other Derivatives* (1988)
 
 
 **Definition:** Clearing is the process that occurs between the execution of a trade and the final settlement of that trade. A clearinghouse acts as an intermediary between the buyer and seller, ensuring that the trade obligations are properly fulfilled. The clearing process involves confirming trade details, calculating obligations, managing margins and collateral, and ultimately guaranteeing the performance of the trade. This process reduces counterparty risk — the risk that one party will fail to fulfill its side of the transaction — and is essential for the stability and integrity of financial markets.
@@ -72,7 +72,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 > [!quote]
 > "The stock exchange is the bazaar of capitalism — it is where ownership changes hands."
-> — **Robert Shiller**
+> — **Robert Shiller**, *Irrational Exuberance* (2000)
 
 
 **Definition:** A stock or futures exchange is an organized marketplace where securities (stocks, bonds), derivatives (futures, options), commodities, and other financial instruments are traded. Exchanges provide transparency, liquidity, price discovery, and regulatory oversight. They operate electronic order-matching systems that pair buyers and sellers, and they enforce listing standards for companies whose securities are traded. Major exchanges include the New York Stock Exchange, Nasdaq, London Stock Exchange, Deutsche Boerse (Xetra), Tokyo Stock Exchange, and Hong Kong Stock Exchange.
@@ -130,7 +130,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 > [!quote]
 > "Netting is the genius of modern clearing — it turns millions of obligations into a manageable few."
-> — **Darrell Duffie**
+> — **Darrell Duffie**, *How Big Banks Fail and What to Do About It* (2010)
 
 
 **Definition:** Securities clearing is the reconciliation of orders between transacting parties in the purchase and sale of financial instruments. More specifically, it refers to the process of updating the accounts of the trading parties and arranging for the transfer of money and securities. Securities clearing typically occurs through a central clearing counterparty (CCP) that interposes itself between buyers and sellers, becoming the buyer to every seller and the seller to every buyer. This netting and novation process dramatically reduces settlement risk and the volume of securities that need to physically change hands.

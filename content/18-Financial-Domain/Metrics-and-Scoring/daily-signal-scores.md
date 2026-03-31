@@ -51,10 +51,6 @@ $$\text{MomentumScore} = \text{mean}(z_{\text{RS}},\ z_{\text{SMA50}},\ z_{\text
 
 ## Divergence Alerts
 
-> [!quote]
-> "The time to buy is when there's blood in the streets, even if the blood is your own."
-> — **Baron Rothschild**
-
 
 Divergence alerts are contrarian signals that fire when price is falling but analysts still rate the stock a buy. This can indicate either a market overreaction (opportunity) or a value trap (analysts lagging reality).
 

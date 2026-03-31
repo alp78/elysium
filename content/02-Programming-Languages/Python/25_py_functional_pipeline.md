@@ -29,7 +29,7 @@ Polars transforms → Silver → Polars aggregation → Gold → Parquet → Fas
 > — **Roberto Waltman**
 >
 > "State is never simple. State complects value and time."
-> — **Rich Hickey**
+> — **Rich Hickey**, *Simple Made Easy*, Strange Loop talk (2011)
 
 > [!abstract] Pipeline Dependencies
 >

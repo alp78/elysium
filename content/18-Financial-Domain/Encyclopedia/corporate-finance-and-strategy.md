@@ -40,11 +40,6 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ## Divestitures
 
-> [!quote]
-> "The best strategy requires knowing what not to do."
-> — **Michael Porter**
-
-
 **Definition:** A divestiture is the partial or full disposal of a business unit, subsidiary, or asset by a company. Companies divest for various strategic reasons: to raise cash, focus on core operations, reduce debt, comply with regulatory requirements (such as antitrust conditions for mergers), or unlock shareholder value by separating business units that may be more valuable as standalone entities. Divestitures can take the form of sales to other companies, spin-offs to shareholders, management buyouts, or liquidations.
 
 **In context:** Goldman Sachs (GS, a US equity index) provides advisory on "divestitures, corporate defense activities, restructurings, and spin-offs" as part of its financial advisory services.
@@ -98,11 +93,6 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ## Joint Venture
 
-> [!quote]
-> "If you want to go fast, go alone. If you want to go far, go together."
-> — **African proverb**
-
-
 **Definition:** A joint venture (JV) is a business arrangement in which two or more parties agree to pool resources for a specific task or project while maintaining their separate identities. Each participant contributes assets, shares risks and rewards, and retains ownership of their individual business. Joint ventures are commonly used to enter new markets, share technology or expertise, spread the financial risk of large projects, or comply with local ownership requirements in certain countries. They can be structured as separate legal entities or as contractual agreements.
 
 **In context:** adidas AG (ADS.DE, a European equity index) sells products through "joint ventures with retail partners." Mitsubishi Corporation (8058.T, an Asia-Pacific equity index) engages in "business investment and business development" across numerous joint venture arrangements. Siemens AG (SIE.DE, a European equity index) operates across multiple segments where joint ventures facilitate international projects.
@@ -132,11 +122,6 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ## Restructuring
 
-> [!quote]
-> "Sometimes the best path forward is to take a step back and rebuild from a stronger foundation."
-> — **Wilbur Ross**
-
-
 **Definition:** Restructuring is the process of reorganizing a company's financial structure, operations, or organizational design to improve efficiency, reduce costs, or address financial difficulties. Financial restructuring may involve renegotiating debt terms, converting debt to equity, or entering bankruptcy protection. Operational restructuring might include closing unprofitable business units, reducing headcount, consolidating facilities, or outsourcing non-core functions. Companies restructure to adapt to changing market conditions, respond to competitive pressures, or recover from financial distress.
 
 **In context:** Goldman Sachs (GS, a US equity index) provides advisory on "mergers and acquisitions, divestitures, corporate defense activities, restructurings, and spin-offs." Morgan Stanley (MS, a US equity index) provides advisory services related to "restructurings."
@@ -163,7 +148,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 > [!quote]
 > "The whole is sometimes worth less than the sum of its parts."
-> — **Peter Lynch**
+> — **Peter Lynch**, *One Up on Wall Street* (1989)
 
 
 **Definition:** A spin-off is a corporate action in which a company creates a new independent company by separating and distributing shares of a subsidiary or division to its existing shareholders. After the spin-off, the new entity operates as a standalone public company with its own management, board of directors, and stock listing. Spin-offs are undertaken when a parent company believes that a division will create more shareholder value as a separate entity, or to allow each business to pursue distinct strategies, attract focused investors, and improve operational transparency.

@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "The mindset of SQL is 'what do I want?' not 'how do I get it?' — that is the leap from procedural to declarative thinking."
-> — **Joe Celko**
+> — **Joe Celko**, *SQL for Smarties* (1995)
 
 Advanced SQL techniques using the **stoxx** index database.
 Prerequisite: SQL_01_Fundamentals.ipynb

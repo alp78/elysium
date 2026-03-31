@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "In git, we like branches so much that once you realize you have to have a special branch anyway, you might as well have many."
-> — **Linus Torvalds**
+> — **Linus Torvalds**, Git mailing list
 
 Branching isolates work so that multiple features, fixes, and experiments can proceed in parallel without interfering with each other. Merging integrates completed work back into the main branch.
 
@@ -42,16 +42,21 @@ git switch main
 
 A stash is a temporary storage area for uncommitted changes. When you stash, Git saves your modified tracked files and staged changes onto a stack, then reverts your working directory to a clean state matching the last commit. You can re-apply stashed changes later on the same branch or a different one. Stashing is essential when you need to switch branches mid-work without committing half-finished code.
 
+> [!info] Stash saves and restores work
+>
+> Saves your changes to a stack and reverts the working directory to clean. Use case: you need to switch to main for a hotfix but don't want to commit yet.
+
 ```bash
-# Stash uncommitted changes (save for later)
 git stash push -m "WIP: pulse chart refactor"
-# Saves your changes to a stack and reverts the working directory to clean
-# Use case: "I need to switch to main for a hotfix but don't want to commit yet"
 
 git stash list              # see all stashes
 git stash pop               # restore the most recent stash and remove it
 git stash apply stash@{2}   # apply a specific stash without removing it
 ```
+
+> [!warning] Stash skips untracked files
+>
+> By default `git stash` only saves modified tracked files. New files that have never been staged are left behind. Use `git stash -u` (or `--include-untracked`) to stash untracked files too. Without `-u`, switching branches after stashing can leave orphan files in your working directory.
 
 ## Merging Strategies
 
@@ -69,6 +74,10 @@ git merge feature/pulse-chart-fix
 # Creates a merge commit preserving both histories
 ```
 
+> [!tip] Use --no-ff for explicit merges
+>
+> If main has not advanced since your branch was created, Git performs a fast-forward merge (no merge commit). Use `git merge --no-ff` to force a merge commit even when fast-forward is possible. This keeps the branch boundary visible in `git log --graph`.
+
 ### Rebase (linear history)
 
 Rebasing takes every commit on your branch and re-applies them one by one on top of the target branch's latest commit. The result is a perfectly linear history — it looks like you started your work after the latest main commit, even if you actually started weeks ago. The trade-off: every replayed commit gets a new SHA hash, which means you're rewriting history.
@@ -79,6 +88,10 @@ git rebase main
 # Replays your commits on top of main's latest
 ```
 
+> [!danger] -D force-deletes without checking
+>
+> `git branch -d` refuses to delete a branch that hasn't been merged — this is a safety check. `git branch -D` (uppercase) bypasses the check and force-deletes unconditionally. If the branch has unmerged commits and hasn't been pushed, that work is only recoverable via `git reflog` for ~90 days.
+
 > [!warning] Never Rebase Shared Branches
 >
 > Rebasing rewrites commit hashes. If others have pulled your branch, rebase will cause conflicts and confusion. Only rebase local/private branches.
@@ -87,11 +100,12 @@ git rebase main
 
 The reflog is Git's safety net — it records every time HEAD moves (commits, checkouts, resets, rebases) for approximately 90 days. Even if you delete a branch or run `reset --hard`, the commits still exist in the reflog. You can recover almost anything that was ever committed by finding its hash in the reflog.
 
+> [!info] Undo last commit, keep changes
+>
+> `--soft` keeps your changes staged (ready to re-commit). `HEAD~1` means one commit back. Use this when you committed too early or with the wrong message.
+
 ```bash
-# Undo the last commit (keep the changes staged)
 git reset --soft HEAD~1
-# HEAD~1 = one commit back
-# --soft = keep changes staged (ready to re-commit)
 ```
 
 > [!danger] checkout -- Destroys Uncommitted Work
@@ -104,12 +118,13 @@ git checkout -- .
 # Does NOT affect untracked files
 ```
 
+> [!info] Reflog recovers lost commits
+>
+> The reflog shows every HEAD movement (commits, checkouts, resets, rebases). Even "deleted" commits survive here for approximately 90 days.
+
 ```bash
-# Recover from disaster (the reflog — Git's undo history)
 git reflog
-# Shows every HEAD movement (commits, checkouts, resets, rebases)
 git checkout <hash-from-reflog>
-# Recovers "lost" committed work — survives ~90 days
 ```
 
 See [git-recovery-and-undo](https://alp78.github.io/elysium/08-Git/git-recovery-and-undo) for detailed recovery workflows.

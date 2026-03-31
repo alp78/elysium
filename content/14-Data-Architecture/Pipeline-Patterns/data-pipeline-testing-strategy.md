@@ -30,7 +30,7 @@ status: complete
 > — **Chad Sanderson**
 >
 > "Write tests until fear is transformed into boredom."
-> — **Kent Beck**
+> — **Kent Beck**, *Test-Driven Development* (2002)
 
 Every page in this vault covers *how* to use a testing tool — pytest fixtures, dbt generic tests, GitHub Actions workflows. This page answers the strategy question: **what should I test, at which layer, with which tool, and when does each test run?**
 

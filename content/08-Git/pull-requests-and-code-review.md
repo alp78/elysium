@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Given enough eyeballs, all bugs are shallow."
-> — **Eric S. Raymond** (Linus's Law)
+> — **Eric S. Raymond**, *The Cathedral and the Bazaar* (1999) (Linus's Law)
 
 Pull requests (PRs) are GitHub's mechanism for proposing changes. They let teammates review your code, discuss it, and approve it before merging. This note covers the complete PR lifecycle from creation to merge, including recovery from common failure modes.
 
@@ -59,6 +59,10 @@ gh pr merge --merge
 # Rebase merge (linear history, no merge commit)
 gh pr merge --rebase
 ```
+
+> [!warning] Draft PRs block merge
+>
+> A `--draft` PR cannot be merged until explicitly marked as "Ready for review" via the GitHub UI or `gh pr ready`. CI checks still run on draft PRs, but the merge button is disabled. This prevents accidental merges of incomplete work.
 
 ### Merge Strategy Comparison
 

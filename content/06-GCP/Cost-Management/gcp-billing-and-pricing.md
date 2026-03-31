@@ -90,7 +90,7 @@ This note is the single source of truth for GCP cost management across every dat
 
 ### Billing Hierarchy
 
-```
+```text
 Organization
 └── Billing Account (credit card / invoice)
     ├── Project A  ←── Resources (VMs, BQ datasets, GCS buckets…)
@@ -224,7 +224,7 @@ You can also attach a Pub/Sub topic to a budget to trigger automated cost-contro
 
 #### Compute Engine cost formula — vCPU + memory + disk + network
 
-```
+```text
 Monthly cost =
   ( vCPU_count × vCPU_rate/hr
   + RAM_GB    × RAM_rate/hr  ) × hours_running
@@ -603,13 +603,13 @@ See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQ
 
 #### Cloud Run Job cost formula — vCPU-seconds + memory-seconds + requests
 
-```
+```text
 Cost = executions × duration_seconds × (vCPU × $0.0000240 + RAM_GB × $0.0000025)
 ```
 
 Example: 1 execution/day of a 2-vCPU, 4 GB, 300-second job:
 
-```
+```text
 Daily cost = 1 × 300 × (2 × 0.0000240 + 4 × 0.0000025)
            = 300 × (0.0000480 + 0.0000100)
            = 300 × 0.0000580
@@ -671,14 +671,14 @@ See [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverle
 
 #### Pub/Sub cost formula — message volume + delivery + storage
 
-```
+```text
 Monthly cost = max(0, total_message_volume_GB - 10) × $0.04
              + retained_acknowledged_GB × $0.27
 ```
 
 Example: 500 million messages/month at 500 bytes each:
 
-```
+```text
 Volume = 500M × max(500, 1000) bytes = 500M × 1000 = 500 GB
 Cost   = (500 - 10) × $0.04 = 490 × $0.04 = $19.60/month
 ```
@@ -834,14 +834,14 @@ Free tier resets daily (not monthly), making Firestore effectively free for deve
 
 #### Firestore cost estimation — reads, writes, deletes, storage
 
-```
+```text
 Monthly reads cost  = (total_reads - 50,000/day × 30) / 100,000 × $0.06
 Monthly writes cost = (total_writes - 20,000/day × 30) / 100,000 × $0.18
 ```
 
 Example: 5M reads/day, 500K writes/day (real-time dashboard):
 
-```
+```text
 Monthly reads  = (5,000,000 - 50,000) × 30 / 100,000 × $0.06
                = 149,850,000 / 100,000 × $0.06 = $89.91
 
@@ -886,7 +886,7 @@ Streaming jobs: 22–25% more expensive than batch due to persistent worker over
 
 #### Dataflow cost formula — worker vCPUs + memory + shuffle
 
-```
+```text
 Batch job cost =
   workers × duration_hours × (vCPUs_per_worker × $0.056 + RAM_GB × $0.003557)
   + disk_GB × duration_hours × $0.000054
@@ -895,7 +895,7 @@ Batch job cost =
 
 Example: 10-worker batch job, 2 hours, n1-standard-4 equivalent (4 vCPU, 15 GB), 250 GB disk, 100 GB shuffle:
 
-```
+```text
 Compute = 10 × 2 × (4 × $0.056 + 15 × $0.003557)
         = 10 × 2 × ($0.224 + $0.053355)
         = 10 × 2 × $0.277355

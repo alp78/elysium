@@ -19,7 +19,7 @@ status: complete
 
 > [!quote]
 > "The greatest value of a picture is when it forces us to notice what we never expected to see."
-> — **John Tukey**
+> — **John Tukey**, *Exploratory Data Analysis* (1977)
 
 Plotly.NET for interactive charts, ScottPlot for static/performance, OxyPlot for PDF export.
 

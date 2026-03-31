@@ -49,11 +49,6 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ## E-Commerce
 
-> [!quote]
-> "The Internet is becoming the town square for the global village of tomorrow."
-> — **Bill Gates**
-
-
 **Definition:** E-commerce (electronic commerce) refers to the buying and selling of goods and services over the internet. It encompasses online retail stores, digital marketplaces, business-to-business trading platforms, and direct-to-consumer sales channels. E-commerce has transformed traditional retail by enabling businesses to reach global customers, operate 24/7, offer personalized shopping experiences, and reduce the overhead costs associated with physical stores. It includes various models such as B2C, B2B, C2C (consumer-to-consumer), and D2C (direct-to-consumer).
 
 **In context:** Amazon.com (AMZN, a US equity index) "engages in the retail sale of consumer products, advertising, and subscriptions service through online and physical stores." Prosus N.V. (PRX.AS, a European equity index) operates "internet platforms, such as classifieds, payments and fintech, food delivery, education technology, Etail." Walmart (WMT, a US equity index) operates "eCommerce websites, and mobile applications" alongside physical stores.
@@ -114,7 +109,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 > [!quote]
 > "A platform is a business model that creates value by facilitating exchanges between two or more interdependent groups."
-> — **Alex Moazed**
+> — **Alex Moazed**, *Modern Monopolies* (2016)
 
 
 **Definition:** A marketplace is a platform or venue that connects multiple buyers and sellers, enabling them to transact with one another. Unlike a traditional retailer that buys and resells goods, a marketplace earns revenue by facilitating transactions between third parties — typically through listing fees, transaction commissions, or subscription fees. Online marketplaces benefit from network effects: the more sellers offer products, the more buyers are attracted, which in turn attracts more sellers. Financial exchanges are a form of specialized marketplace for securities and derivatives.
@@ -163,11 +158,6 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ## On-Demand Delivery
 
-> [!quote]
-> "Speed is the new currency of business."
-> — **Marc Benioff**
-
-
 **Definition:** On-demand delivery is a business model in which products or services are delivered to customers at or near the time of request, rather than through scheduled or pre-planned logistics routes. Enabled by mobile apps, GPS tracking, and gig-economy labor marketplaces, on-demand delivery has expanded from food and grocery delivery to pharmaceuticals, retail goods, and professional services. On-demand delivery platforms typically connect customers directly with couriers or service providers, using surge pricing and dynamic routing to balance supply and demand in real time.
 
 **In context:** Uber Technologies (UBER, a US equity index) operates Uber Eats for on-demand food delivery alongside its ride-hailing service. Amazon.com (AMZN, a US equity index) provides same-day and next-day delivery through its extensive logistics network, approximating on-demand fulfillment for Prime members. Prosus N.V. (PRX.AS, a European equity index) operates "food delivery" services through its internet platforms portfolio.
@@ -182,7 +172,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 > [!quote]
 > "The most scalable businesses are those that can grow without adding marginal cost for each new customer."
-> — **Sangeet Paul Choudary**
+> — **Sangeet Paul Choudary**, *Platform Revolution* (2016)
 
 
 **Definition:** A platform business model creates value by facilitating exchanges between two or more interdependent groups, typically consumers and producers. Unlike traditional linear business models where a company produces and sells a product, platform businesses act as intermediaries that connect participants and earn revenue through transaction fees, subscriptions, or advertising. Platform businesses benefit from network effects: the more users that join, the more valuable the platform becomes for all participants. Digital platforms have disrupted industries from transportation to hospitality to financial services.
@@ -199,7 +189,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 > [!quote]
 > "Recurring revenue is the key to building a company that has real, lasting value."
-> — **John Warrillow**
+> — **John Warrillow**, *Built to Sell* (2011)
 
 
 **Definition:** The subscription model is a business model where customers pay a recurring fee (monthly, quarterly, or annually) in exchange for continuous access to a product or service. This model provides companies with predictable, recurring revenue and builds long-term customer relationships. Subscriptions have expanded beyond traditional media (newspapers, magazines) to include software (SaaS), streaming entertainment, meal kits, beauty boxes, and even automobiles. The subscription model is valued by investors because it creates high visibility into future revenue and strong customer retention metrics.
@@ -213,11 +203,6 @@ Encyclopedia of business model and commerce terms covering how companies structu
 ---
 
 ## White-Label Services
-
-> [!quote]
-> "A brand for a company is like a reputation for a person — you earn it by doing hard things well."
-> — **Jeff Bezos**
-
 
 **Definition:** White-label services (also called white-labeling or private-label services) are products or services produced by one company and rebranded and sold by another company under the buyer's brand name. The company that produces the product (the white-label provider) remains invisible to the end customer, and the reselling company presents the product as its own. White-labeling allows businesses to offer a broader range of products quickly and cost-effectively, without investing in the development of the underlying capability. It is common in financial services, software, consumer goods, and telecommunications.
 

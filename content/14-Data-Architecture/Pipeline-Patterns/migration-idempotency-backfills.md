@@ -15,10 +15,10 @@ status: complete
 
 > [!quote]
 > "Every migration is a negotiation between the system you have and the system you want — the art is making the transition invisible to users."
-> — **Sam Newman**
+> — **Sam Newman**, *Monolith to Microservices* (2019)
 >
 > "How good the design is doesn't matter near as much as whether the design is getting better or worse."
-> — **Kent Beck**
+> — **Kent Beck**, *Extreme Programming Explained* (1999)
 
 A senior data engineer does not just build pipelines — they design systems that are safe to re-run, possible to migrate, and resilient to the inevitable chaos of production data. This note covers the architectural patterns that distinguish a reliable data platform from a fragile collection of scripts.
 

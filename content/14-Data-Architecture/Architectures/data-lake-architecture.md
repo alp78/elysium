@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Good data architecture serves business requirements with a common, widely reusable set of building blocks while maintaining flexibility and making appropriate trade-offs."
-> — **Joe Reis & Matt Housley**
+> — **Joe Reis & Matt Housley**, *Fundamentals of Data Engineering* (2022)
 
 A **data lake** is a centralized repository that stores raw data at any scale — structured, semi-structured, and unstructured — at a fraction of the cost of a traditional data warehouse. Unlike a warehouse which enforces schema on write (data is transformed into a fixed schema before loading), a data lake applies **schema-on-read**: data is stored in its native format and structure is only imposed when it is queried.
 

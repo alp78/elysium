@@ -26,7 +26,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "The most important investment decision is asset allocation — the choice among stocks, bonds, and alternative assets."
-> — **David Swensen**
+> — **David Swensen**, *Pioneering Portfolio Management* (2000)
 
 
 **Definition:** Alternative investments are financial assets that do not fall into the conventional categories of stocks, bonds, or cash. They include real estate, private equity, hedge funds, infrastructure, commodities, credit funds, and other non-traditional asset classes. These investments often have lower liquidity than publicly traded securities but may offer higher returns and portfolio diversification. Institutional investors such as pension funds and endowments commonly allocate a portion of their portfolios to alternatives to reduce overall risk and enhance returns over the long term.
@@ -43,7 +43,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "The job of an asset manager is not to beat the market but to serve the client."
-> — **Charles Ellis**
+> — **Charles Ellis**, *Winning the Loser's Game* (1985)
 
 
 **Definition:** Asset management is the professional management of investments on behalf of clients, which can include individuals, institutions, pension funds, sovereign wealth funds, and corporations. Asset managers pool money from clients and invest it across a range of financial instruments — equities, bonds, real estate, commodities, and alternative assets — with the goal of growing the portfolio's value while managing risk. Asset management firms charge management fees (often a percentage of assets under management) and sometimes performance fees. The industry is a critical component of the global financial system, helping channel savings into productive investments.
@@ -111,7 +111,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "The mutual fund industry has been built, in a sense, on witchcraft."
-> — **John Bogle**
+> — **John Bogle**, *The Little Book of Common Sense Investing* (2007)
 
 
 **Definition:** A mutual fund is a pooled investment vehicle that collects money from many investors and invests it in a diversified portfolio of stocks, bonds, or other securities according to a stated investment objective. Professional fund managers make investment decisions on behalf of the fund's shareholders. Mutual funds offer individual investors access to diversified, professionally managed portfolios at relatively low minimum investment amounts. They come in various types including equity funds, bond funds, money market funds, balanced funds, and index funds. Investors buy and sell mutual fund shares at the fund's net asset value (NAV), calculated at the end of each trading day.
@@ -162,7 +162,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "The prime broker is the plumber of the hedge fund world — nobody notices until the pipes break."
-> — **Sebastian Mallaby**
+> — **Sebastian Mallaby**, *More Money Than God* (2010)
 
 
 **Definition:** Prime brokerage is a bundled package of services offered by investment banks to hedge funds and other large institutional investors. Services include securities lending (to facilitate short selling), leveraged trade executions, cash management, custody of assets, risk management analytics, reporting, and capital introduction (connecting funds with potential investors). Prime brokers act as a central point of contact for hedge funds' trading and operational needs, enabling them to trade across multiple exchanges and asset classes efficiently.
@@ -247,7 +247,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 > [!quote]
 > "It is not about the money — it is about the life you want the money to support."
-> — **Carl Richards**
+> — **Carl Richards**, *The Behavior Gap* (2012)
 
 
 **Definition:** Wealth management is a comprehensive financial advisory service that combines financial planning, investment management, tax optimization, estate planning, retirement planning, and other services tailored to high-net-worth individuals and families. Unlike simple investment management (which focuses on portfolio returns), wealth management takes a holistic approach to a client's entire financial life. Wealth managers coordinate multiple disciplines to preserve and grow client wealth across generations, often serving as the primary point of contact for all financial matters.

@@ -29,7 +29,7 @@ LINQ transforms → Silver → LINQ aggregation → Gold → Parquet → HttpLis
 > — **Roberto Waltman**
 >
 > "State is never simple. State complects value and time."
-> — **Rich Hickey**
+> — **Rich Hickey**, *Simple Made Easy*, Strange Loop talk (2011)
 
 
 ```csharp

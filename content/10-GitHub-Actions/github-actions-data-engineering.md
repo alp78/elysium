@@ -54,7 +54,7 @@ status: complete
 
 > [!quote]
 > "Improving daily work is even more important than doing daily work."
-> — **Gene Kim**
+> — **Gene Kim**, *The Phoenix Project* (2013)
 
 > [!abstract] Summary
 > Practical GitHub Actions workflows for data engineering teams. Covers Python pipeline CI, Cloud Run CD, dbt CI, data quality gates, Workload Identity Federation (keyless GCP auth), Airflow DAG validation, and cost monitoring.

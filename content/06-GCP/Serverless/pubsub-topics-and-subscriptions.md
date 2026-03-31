@@ -15,13 +15,13 @@ status: complete
 
 > [!quote]
 > "The key in making great and growable systems is much more to design how its modules communicate rather than what their internal properties and behaviors should be."
-> — **Alan Kay**
+> — **Alan Kay**, *The Early History of Smalltalk* (1993)
 
 Pub/Sub decouples producers from consumers. Instead of pipeline stages calling each other directly (tight coupling), they publish events to topics and subscribe independently. This pattern enables retry logic, dead letter queues, and horizontal scaling without changing the producer code. A topic is the named channel; subscriptions are the delivery mechanisms. Multiple subscriptions on the same topic each receive all messages independently.
 
 ### Why Pub/Sub for Data Pipelines
 
-```
+```text
 Without Pub/Sub (tight coupling):
   Stage A calls Stage B directly → Stage B failure blocks Stage A
 

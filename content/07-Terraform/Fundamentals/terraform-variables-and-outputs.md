@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "A good name is the best documentation."
-> — **Dave Thomas & Andy Hunt**
+> — **Dave Thomas & Andy Hunt**, *The Pragmatic Programmer* (1999)
 
 Terraform's input variables and output values are the primary mechanism for making infrastructure configurations reusable and parameterized. Variables let callers supply values at runtime; outputs surface resource attributes after apply.
 
@@ -156,7 +156,7 @@ locals {
 
 Outputs are **optional** — they don't affect resource creation. They surface values at the end of `terraform apply` and are queryable at any time with `terraform output`.
 
-```
+```text
 Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
 
 Outputs:

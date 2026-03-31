@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "There is no compression algorithm for experience."
-> — **Andy Jassy**
+> — **Andy Jassy**, AWS re:Invent keynote (2012)
 
 When you move data between systems (GCE VM to GCS, pipeline output to archive), compression is not optional — it directly affects transfer time, storage cost, and bandwidth consumption. Choosing the right compression algorithm is an engineering decision, not an aesthetic one.
 

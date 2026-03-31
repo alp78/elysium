@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "A data engineer's job is to get data into a state where it can create value, not to build the most sophisticated pipeline possible."
-> — **Joe Reis & Matt Housley**
+> — **Joe Reis & Matt Housley**, *Fundamentals of Data Engineering* (2022)
 
 Every discipline has its load-bearing principles — the handful of truths that, once internalized, make thousands of smaller decisions nearly automatic. Medicine has "first, do no harm." Engineering has "measure twice, cut once." Data engineering has these ten rules.
 

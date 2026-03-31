@@ -87,7 +87,7 @@ erDiagram
 
 > [!quote]
 > "The grain declaration becomes a binding contract on the design."
-> — **Ralph Kimball**
+> — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
 
 Dimensional modeling is the foundational technique for structuring data in analytical warehouses. Developed by Ralph Kimball, it organizes data into **facts** (what happened — the measurements) and **dimensions** (the context — who, what, where, when, how). The resulting schemas are optimized for human understandability and query performance, making them the standard for virtually every analytics platform.
 

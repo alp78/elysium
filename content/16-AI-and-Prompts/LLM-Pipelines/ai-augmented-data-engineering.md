@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Large language models are not databases. They are reasoning engines that happen to have memorized a lot of text."
-> — **Simon Willison**
+> — **Simon Willison**, simonwillison.net (2023)
 
 By 2026, senior data engineers are expected to transition from "builders" to "strategists" who integrate AI capabilities into data platforms. This does not mean becoming a machine learning engineer — it means understanding how to build the data infrastructure that powers LLM applications and how to use LLMs as tools within data pipelines.
 

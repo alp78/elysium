@@ -19,7 +19,7 @@ status: complete
 
 > [!quote]
 > "If you torture the data long enough, it will confess to anything."
-> — **Ronald Coase**
+> — **Ronald Coase**, attributed remark (c. 1960s)
 
 Create columns, Polars expressions, method chaining.
 

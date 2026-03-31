@@ -163,7 +163,7 @@ Firestore pricing is operation-based, not instance-based. There is no cost when 
 
 Firestore organizes data hierarchically:
 
-```
+```text
 /pipelines                          ← collection
     /daily-ingest                   ← document
         name: "daily-ingest"
@@ -276,7 +276,7 @@ doc_ref = db.collection("pipelines").document("daily-ingest")
 
 #### Pattern comparison
 
-```
+```text
 # Nested — query runs for a specific pipeline
 /pipelines/{pipeline_id}/runs/{run_id}
 
@@ -859,7 +859,7 @@ See [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/s
 
 #### Basic rules for a web app exposing Firestore (for reference)
 
-```
+```text
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {

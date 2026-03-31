@@ -11,7 +11,7 @@ description: "Consumption-ready facts and dimensions, gold layer"
 
 > [!quote]
 > "Dimensions provide the 'who, what, where, when, why, and how' context surrounding a business process event."
-> — **Ralph Kimball**
+> — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
 
 Mart models are the [gold layer](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) — consumption-ready tables and views that BI tools, APIs, and data scientists query directly. They enforce a clear grain, carry comprehensive documentation, and are defined in data contracts via `_exposures.yml`.
 

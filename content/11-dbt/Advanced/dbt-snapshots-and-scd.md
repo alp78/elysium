@@ -11,7 +11,7 @@ description: "SCD Type 2 snapshots with timestamp and check strategies, PIT quer
 
 > [!quote]
 > "The ability to visualize something as abstract as a set of data in a concrete and tangible way is the secret of understandability."
-> — **Ralph Kimball**
+> — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
 
 dbt snapshots implement **Slowly Changing Dimension Type 2 (SCD2)**: when a row changes, the old version is closed with an end timestamp and a new version is inserted with the current timestamp. Every historical state of the data is preserved. In financial data pipelines this is non-negotiable — index constituent weights, ESG ratings, and benchmark definitions change frequently and must be reproducible as of any historical point in time. For the broader SQL Server implementation of these patterns, see [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms).
 

@@ -77,7 +77,7 @@ status: complete
 
 > [!quote]
 > "A truly RESTful API looks like hypertext. Every addressable unit of information carries an address."
-> — **Roy Fielding**
+> — **Roy Fielding**, *Architectural Styles and the Design of Network-based Software Architectures* (2000)
 
 > [!abstract] Purpose
 > This is the definitive reference on REST APIs for data engineering work. It covers two directions: **consuming** external APIs (market data vendors, SaaS platforms, financial data feeds) and **building** internal data APIs that serve processed results to dashboards, downstream systems, and automated consumers. Dense with working code.

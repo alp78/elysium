@@ -11,7 +11,7 @@ description: "Jinja2 fundamentals, writing macros, dbt-utils patterns, dispatch,
 
 > [!quote]
 > "A programming language is for thinking of programs, not for expressing programs you've already thought of."
-> — **Paul Graham**
+> — **Paul Graham**, *Hackers & Painters* (2004)
 
 Jinja2 is the templating layer that makes dbt SQL dynamic. Macros are reusable Jinja functions that live in the `macros/` directory and are compiled into plain SQL before execution. In financial data pipelines — where the same calculation pattern (z-score normalisation, cap-weighted return, factor exposure) is applied across dozens of index families and ESG providers — macros are the primary DRY mechanism.
 

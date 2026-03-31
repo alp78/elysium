@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "The goal of an Observability team is not to collect logs, metrics, or traces. It is to build a culture of engineering based on facts and feedback."
-> — **Cindy Sridharan**
+> — **Cindy Sridharan**, *Distributed Systems Observability* (2018)
 
 Log collection for the data platform uses two separate mechanisms: **file tailing** for the SQL Server errorlog (on the SQL VM), and **Docker socket autodiscovery** for Airflow container logs (on the Airflow VM).
 
@@ -26,72 +26,9 @@ Log collection for the data platform uses two separate mechanisms: **file tailin
 
 ## SQL Server Errorlog Collection
 
-### Configure the Log Source
+SQL Server errorlog collection uses file tailing via a `logs.yaml` config on the SQL VM. The `dd-agent` user must be added to the `mssql` group for read access.
 
-SSH into the SQL VM and write the log config file:
-
-```bash
-gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
-
-sudo mkdir -p /etc/datadog-agent/conf.d/sqlserver.d
-sudo tee /etc/datadog-agent/conf.d/sqlserver.d/logs.yaml <<EOF
-logs:
-  - type: file
-    path: /var/opt/mssql/log/errorlog
-    service: data-pipeline-sql
-    source: sqlserver
-EOF
-
-sudo chown -R dd-agent:dd-agent /etc/datadog-agent/conf.d/sqlserver.d/
-sudo usermod -aG mssql dd-agent
-sudo systemctl restart datadog-agent
-```
-
-> [!info] Why usermod to mssql group
->
-> The SQL Server errorlog file is owned by the `mssql` user. The Datadog agent runs as `dd-agent` — adding it to the `mssql` group grants read access to the log file without changing file permissions.
-
-### Verify Log Collection
-
-```bash
-sudo datadog-agent status | grep -A 10 "Integrations" | grep -A 5 "sqlserver"
-```
-
-Expected: `Status: OK` and `Inputs: /var/opt/mssql/log/errorlog`.
-
-### What Gets Logged
-
-SQL Server only writes to its error log on significant events — startups, failed logins, errors, backups, checkpoints. A simple `SELECT` does **not** generate an error log entry. For capturing query-level activity for compliance purposes, configure [SQL Server audit logging](https://alp78.github.io/elysium/04-SQL-Server/Security/audit-logging) separately from the errorlog.
-
-#### To force test entries
-
-```bash
-SA_PWD=$(curl -s -H "Metadata-Flavor: Google" \
-  "http://metadata.google.internal/computeMetadata/v1/instance/attributes/sa-password")
-
-# Force a checkpoint (writes to errorlog)
-/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_PWD" -C -Q "CHECKPOINT"
-
-# Or trigger a failed login (guaranteed log entry)
-/opt/mssql-tools18/bin/sqlcmd -S localhost -U fakeuser -P "wrong" -C -Q "SELECT 1" 2>/dev/null
-```
-
-Logs should appear in **Datadog > Logs > Explorer** within 1-2 minutes, filterable by `host:data-pipeline-sql`.
-
-### If Bytes Read Stays at 0
-
-The agent tails from the end of the file by default. To force it to read existing content:
-
-```yaml
-logs:
-  - type: file
-    path: /var/opt/mssql/log/errorlog
-    service: data-pipeline-sql
-    source: sqlserver
-    start_position: beginning
-```
-
-Restart the agent after editing.
+For the full setup (config file, permissions, verification, testing, and troubleshooting), see [datadog-sql-server-logs](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-sql-server-logs).
 
 ---
 

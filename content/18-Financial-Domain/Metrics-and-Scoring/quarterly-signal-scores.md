@@ -74,7 +74,7 @@ Health warnings are binary flags derived from quarterly balance sheet data. Stoc
 
 > [!quote]
 > "Good corporate governance is about having the right processes to make and implement decisions."
-> — **Robert Monks**
+> — **Robert Monks**, *Corporate Governance* (1995)
 
 
 A composite of ISS-style risk dimensions sourced from yfinance quarterly data. This score measures the quality of corporate governance practices.

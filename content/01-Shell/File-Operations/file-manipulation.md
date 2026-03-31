@@ -18,7 +18,7 @@ status: complete
 > — **Douglas Gwyn**
 >
 > "Only wimps use tape backup. Real men just upload their important stuff on ftp and let the rest of the world mirror it."
-> — **Linus Torvalds**
+> — **Linus Torvalds**, Usenet post (1996)
 
 Copying, moving, and deleting files seems trivial until you accidentally overwrite a production dataset, delete a directory that was still being written to, or run out of disk space mid-copy because you did not check first. Production file operations require explicit safety habits.
 

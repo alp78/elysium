@@ -106,7 +106,7 @@ A project's `lifecycleState` field (visible in `gcloud projects describe`) indic
 
 Every `gcloud` invocation follows this anatomy:
 
-```
+```text
 gcloud [GROUP] [SUBGROUP] [ACTION] [POSITIONAL_ARGS] [FLAGS]
 ```
 
@@ -130,7 +130,7 @@ gcloud   compute   instances   create   prices-etl-vm   \
 
 The `bq` CLI follows a slightly different convention:
 
-```
+```text
 bq [GLOBAL_FLAGS] COMMAND [FLAGS] [ARGS]
 ```
 

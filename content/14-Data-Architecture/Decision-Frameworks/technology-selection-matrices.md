@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Choose boring technology. Every technology choice carries an innovation token cost — spend them wisely."
-> — **Dan McKinley**
+> — **Dan McKinley**, "Choose Boring Technology" (2015)
 
 Every technology decision in data engineering is a trade-off. There is no universally "best" language, database, or architecture — only the best fit for a given context of scale, team skill, budget, latency requirements, and operational complexity. This note is the lookup table. When you face a technology decision, find the relevant matrix, check the constraints, and follow the decision rule.
 
@@ -525,7 +525,7 @@ When work is triggered by events rather than time:
 | Plan review | **Always `terraform plan` before `apply`** | No blind applies. Review the diff. |
 | Import existing resources | **`terraform import` + write matching config** | Brings Console-created resources under management |
 | Provider versioning | **Pin major + minor version** | `~> 5.0` allows patch updates, blocks breaking changes |
-| CI/CD integration | **GitHub Actions: plan on PR, apply on merge** | See [github-actions-workflows](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-workflows) for workflow patterns |
+| CI/CD integration | **GitHub Actions: plan on PR, apply on merge** | See [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) for workflow patterns |
 
 ### gcloud CLI: When It Shines
 
@@ -720,7 +720,7 @@ The most consequential decision in engineering is not which technology to use �
 | Custom scoring model | **Build** | Python + SQL Server + BigQuery | This IS your competitive advantage — full control required |
 | ETL framework | **Buy** for standard sources, **Build** for custom | dbt (transforms), Fivetran (ingestion), custom Python (APIs) | Standard connectors are commoditized; custom sources need custom code |
 | Dashboards | **Buy** or **Semi-build** | Looker (buy) or Blazor (semi-build) | Depends on customization needs and existing skills |
-| CI/CD | **Buy** | GitHub Actions | CI/CD is infrastructure, not differentiation. See [github-actions-workflows](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-workflows) |
+| CI/CD | **Buy** | GitHub Actions | CI/CD is infrastructure, not differentiation. See [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) |
 | Secret management | **Buy** | GCP Secret Manager | Never roll your own cryptography or secret storage |
 | Log aggregation | **Buy** | Datadog Logs or Cloud Logging | Building log infrastructure is not your job. See [datadog-log-management](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-log-management) |
 | Data quality checks | **Semi-build** | dbt tests + custom Python assertions | dbt handles standard checks; custom business rules need custom code |
@@ -778,7 +778,7 @@ Many decisions are not pure build or pure buy. The "semi-build" pattern uses a m
 | Workload | Deployment Method | Why |
 |----------|------------------|-----|
 | Airflow DAGs | **Git push → sync to DAGs folder** | DAGs are Python files; deploy = copy to the right directory. See [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) |
-| Cloud Run services/jobs | **GitHub Actions → `gcloud run deploy`** | Build Docker image, push to Artifact Registry, deploy. See [github-actions-workflows](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-workflows) |
+| Cloud Run services/jobs | **GitHub Actions → `gcloud run deploy`** | Build Docker image, push to Artifact Registry, deploy. See [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) |
 | Terraform infrastructure | **GitHub Actions → `terraform plan/apply`** | Plan on PR, apply on merge to main |
 | SQL Server schema changes | **Migration scripts (sequential, idempotent)** | Version-controlled .sql files. See [migration-idempotency-backfills](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) |
 | dbt models | **GitHub Actions → `dbt build`** | Test and deploy SQL transforms. See [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) |
@@ -938,7 +938,7 @@ For rapid lookup when you just need the answer:
 | ...test data quality | dbt tests | [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) |
 | ...parse a log file quickly | Bash (grep/awk) | [grep-and-pattern-matching](https://alp78.github.io/elysium/01-Shell/Text-Processing/grep-and-pattern-matching) |
 | ...manage SQL Server backups | T-SQL + PowerShell | [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy) |
-| ...set up CI/CD for a pipeline | GitHub Actions | [github-actions-workflows](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-workflows) |
+| ...set up CI/CD for a pipeline | GitHub Actions | [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) |
 | ...encrypt data at rest | TDE (SQL Server) or GCS encryption | [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/Security/tde-encryption) |
 | ...manage service accounts | Terraform + IAM | [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) |
 | ...explore a new GCP service | Console (UI), then translate to Terraform | [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) |
@@ -976,7 +976,7 @@ For rapid lookup when you just need the answer:
 - [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — data format selection
 - database connections — connecting Python and C# to databases
 - [container-lifecycle](https://alp78.github.io/elysium/09-Docker/container-lifecycle) / [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) — containerization
-- [github-actions-workflows](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-workflows) — CI/CD patterns
+- [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — CI/CD patterns
 
 #### Observability and operations
 - [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) — monitoring platform

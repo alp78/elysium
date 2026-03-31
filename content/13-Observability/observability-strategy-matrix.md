@@ -15,10 +15,10 @@ status: complete
 
 > [!quote]
 > "I'll start with observability tools only — if you know which tools look but don't touch, you can diagnose problems without introducing new ones."
-> — **Brendan Gregg**
+> — **Brendan Gregg**, *Systems Performance* (2013)
 >
 > "Distributed systems are pathologically unpredictable. It's impossible to predict the myriad states of partial failure various parts of the system might end up in."
-> — **Cindy Sridharan**
+> — **Cindy Sridharan**, *Distributed Systems Observability* (2018)
 
 This page answers **what to monitor** for every component in the Elysium data platform. It does not cover how to configure any tool — every cell in the matrix links to the implementation page that does.
 

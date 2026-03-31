@@ -62,7 +62,7 @@ status: complete
 
 > [!quote]
 > "I believe Airflow is positioned to be the batch process orchestrator that will dominate the next 5 years."
-> — **Maxime Beauchemin**
+> — **Maxime Beauchemin**, "The Rise of the Data Engineer" (2017)
 
 Apache Airflow is an open-source **workflow orchestration platform** for programmatically authoring, scheduling, monitoring, and managing data pipelines. Pipelines are defined as Python code, making them version-controllable, testable, and dynamically generated.
 

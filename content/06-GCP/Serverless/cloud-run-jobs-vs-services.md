@@ -84,7 +84,7 @@ The first execution after a period of inactivity takes longer because Cloud Run 
 
 ### Cloud Run Pipeline Architecture Pattern
 
-```
+```text
 Airflow DAG
     │
     ├─► gcloud run jobs execute data-pipeline-pipeline --args="--stage,bronze"
@@ -97,7 +97,7 @@ Airflow DAG
             └─► Cloud Run Job (gold container) → MERGE into BigQuery production
 ```
 
-Each stage is an independent Cloud Run Job. Airflow orchestrates the sequence using task dependencies. This architecture allows individual stages to be retried, redeployed, or replaced without affecting the others. For CI/CD automation that builds and deploys these containers via Workload Identity, see [github-actions-workflows](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-workflows).
+Each stage is an independent Cloud Run Job. Airflow orchestrates the sequence using task dependencies. This architecture allows individual stages to be retried, redeployed, or replaced without affecting the others. For CI/CD automation that builds and deploys these containers via Workload Identity, see [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd).
 
 ### Cloud Run Environment Variables and Secrets
 

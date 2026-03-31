@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "The network is the computer."
-> — **John Gage**
+> — **John Gage**, Sun Microsystems (1984)
 
 This note covers the complete GCP network topology for a production data engineering project defined in `network.tf`. Every resource communicates through this VPC.
 

@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Big data is like teenage sex: everyone talks about it, nobody really knows how to do it, everyone thinks everyone else is doing it, so everyone claims they are doing it."
-> — **Dan Ariely**
+> — **Dan Ariely**, Facebook post (2013)
 
 Hands-on SQL using the **stoxx** index database (BigQuery).
 Medallion architecture: Bronze (raw) → Silver (cleaned) → Gold (analytics). Once these fundamentals are solid, [bq-engineering](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-engineering) covers the database objects and performance patterns that build on them.

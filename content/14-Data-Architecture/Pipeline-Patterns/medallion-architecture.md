@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "The best way to protect private and sensitive data is to avoid ingesting this data in the first place."
-> — **Joe Reis & Matt Housley**
+> — **Joe Reis & Matt Housley**, *Fundamentals of Data Engineering* (2022)
 
 The medallion architecture organizes data into three layers — bronze, silver, and gold — each with increasing quality, structure, and business value. This is the core data pattern for the the pipeline steps.
 

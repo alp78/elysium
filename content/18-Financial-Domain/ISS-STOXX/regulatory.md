@@ -30,15 +30,10 @@ date: 2026-03-28
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
-> [!quote]
-> "France must lead by example. Climate risk is financial risk."
-> — **Francois Hollande**
+Article 173 of the French Energy Transition for Green Growth Act (2015) requires institutional investors — including insurance companies, pension funds, and asset managers — to disclose how they integrate ESG criteria and carbon-related risks into their investment policies. It was one of the earliest mandatory climate-risk disclosure requirements for financial institutions globally.
 
-
-
-> Article 173 of the French Energy Transition for Green Growth Act (2015) requires institutional investors — including insurance companies, pension funds, and asset managers — to disclose how they integrate ESG criteria and carbon-related risks into their investment policies. It was one of the earliest mandatory climate-risk disclosure requirements for financial institutions globally.
-
-this French law told large investors: "You must publicly explain how climate change and environmental issues affect your investment decisions." It paved the way for later EU-wide rules like SFDR and CSRD by proving that mandatory ESG disclosure was workable.
+> [!note]
+> this French law told large investors: "You must publicly explain how climate change and environmental issues affect your investment decisions." It paved the way for later EU-wide rules like SFDR and CSRD by proving that mandatory ESG disclosure was workable.
 
 > [!tip] Related Terms
 > - [SFDR](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#sfdr) — the EU-wide successor regime for sustainability disclosure
@@ -88,15 +83,10 @@ this French law told large investors: "You must publicly explain how climate cha
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-> [!quote]
-> "Labelling is the beginning of accountability in sustainable finance."
-> — **Christine Lagarde**
+Under the Sustainable Finance Disclosure Regulation (EU 2019/2088), an Article 8 fund — often called a "light green" fund — is a financial product that promotes environmental or social characteristics, provided that the companies in which investments are made follow good governance practices. Article 8 funds must disclose how those characteristics are met and whether a reference benchmark has been designated.
 
-
-
-> Under the Sustainable Finance Disclosure Regulation (EU 2019/2088), an Article 8 fund — often called a "light green" fund — is a financial product that promotes environmental or social characteristics, provided that the companies in which investments are made follow good governance practices. Article 8 funds must disclose how those characteristics are met and whether a reference benchmark has been designated.
-
-An Article 8 fund is not required to have sustainability as its core objective, but it must actively promote at least one environmental or social characteristic (for example, low carbon intensity or fair labour practices) and explain how it does so. Most ESG-tilted or ESG-integrated funds in Europe fall into this category.
+> [!note]
+> An Article 8 fund is not required to have sustainability as its core objective, but it must actively promote at least one environmental or social characteristic (for example, low carbon intensity or fair labour practices) and explain how it does so. Most ESG-tilted or ESG-integrated funds in Europe fall into this category.
 
 > [!tip] Related Terms
 > - [Article 9 Fund (SFDR)](#article-9-fund-sfdr) — the stricter "dark green" classification
@@ -119,9 +109,10 @@ An Article 8 fund is not required to have sustainability as its core objective, 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="12 mentions across STOXX & ISS pages (low)">▰▰ 12</span>
 
 
-> Under the EU Benchmark Regulation (BMR), a benchmark administrator is the natural or legal person that has control over the provision of a benchmark. The administrator is responsible for all stages of the benchmark process — including collecting input data, determining the benchmark, and publishing it. Administrators must be authorised or registered by the competent authority (typically a national financial regulator) and are subject to governance, transparency, and conflict-of-interest requirements.
+Under the EU Benchmark Regulation (BMR), a benchmark administrator is the natural or legal person that has control over the provision of a benchmark. The administrator is responsible for all stages of the benchmark process — including collecting input data, determining the benchmark, and publishing it. Administrators must be authorised or registered by the competent authority (typically a national financial regulator) and are subject to governance, transparency, and conflict-of-interest requirements.
 
-A benchmark administrator is the organisation that creates and maintains a financial index or benchmark (e.g., STOXX for Euro STOXX indices, or S&P Dow Jones Indices for the S&P 500). The EU BMR makes sure these administrators follow strict rules so that benchmarks cannot be easily manipulated.
+> [!note]
+> A benchmark administrator is the organisation that creates and maintains a financial index or benchmark (e.g., STOXX for Euro STOXX indices, or S&P Dow Jones Indices for the S&P 500). The EU BMR makes sure these administrators follow strict rules so that benchmarks cannot be easily manipulated.
 
 > [!tip] Related Terms
 > - [Benchmark Regulation (EU BMR)](#benchmark-regulation-eu-bmr) — the regulatory framework governing administrators
@@ -169,15 +160,10 @@ A benchmark administrator is the organisation that creates and maintains a finan
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="177 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 177</span>
 
-> [!quote]
-> "Benchmarks are too important to be left unregulated."
-> — **Gary Gensler**
+Regulation (EU) 2016/1011 — the EU Benchmark Regulation — establishes a common framework to ensure the accuracy, robustness, and integrity of benchmarks used in the European Union. It introduces requirements for benchmark administrators regarding governance, methodology transparency, input data quality, and codes of conduct for contributors. It also establishes rules for third-country benchmarks and creates the categories of Climate Transition Benchmarks (CTBs) and Paris-Aligned Benchmarks (PABs).
 
-
-
-> Regulation (EU) 2016/1011 — the EU Benchmark Regulation — establishes a common framework to ensure the accuracy, robustness, and integrity of benchmarks used in the European Union. It introduces requirements for benchmark administrators regarding governance, methodology transparency, input data quality, and codes of conduct for contributors. It also establishes rules for third-country benchmarks and creates the categories of Climate Transition Benchmarks (CTBs) and Paris-Aligned Benchmarks (PABs).
-
-The EU BMR was introduced after scandals like the LIBOR manipulation showed that financial benchmarks — used to price trillions in contracts — needed proper oversight. It requires index providers to register with regulators, document their methodologies, and handle conflicts of interest transparently.
+> [!note]
+> The EU BMR was introduced after scandals like the LIBOR manipulation showed that financial benchmarks — used to price trillions in contracts — needed proper oversight. It requires index providers to register with regulators, document their methodologies, and handle conflicts of interest transparently.
 
 > [!tip] Related Terms
 > - [Benchmark Administrator](#benchmark-administrator) — entities regulated under BMR
@@ -228,15 +214,10 @@ The EU BMR was introduced after scandals like the LIBOR manipulation showed that
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="140 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 140</span>
 
-> [!quote]
-> "You cannot manage what you cannot measure, and you cannot benchmark what you cannot define."
-> — **Gary Gensler**
+A Climate Transition Benchmark is a benchmark category defined under the amended EU Benchmark Regulation (EU 2019/2089). A CTB's underlying assets are selected, weighted, or excluded so that the resulting benchmark portfolio is on a decarbonisation trajectory consistent with the Paris Agreement goals. CTBs must demonstrate a year-on-year self-decarbonisation of at least 7% on average in GHG intensity. Unlike PABs, CTBs do not impose sector-level exclusions, making them suitable as a transition tool for broad market exposure.
 
-
-
-> A Climate Transition Benchmark is a benchmark category defined under the amended EU Benchmark Regulation (EU 2019/2089). A CTB's underlying assets are selected, weighted, or excluded so that the resulting benchmark portfolio is on a decarbonisation trajectory consistent with the Paris Agreement goals. CTBs must demonstrate a year-on-year self-decarbonisation of at least 7% on average in GHG intensity. Unlike PABs, CTBs do not impose sector-level exclusions, making them suitable as a transition tool for broad market exposure.
-
-A CTB is a stock market index specifically designed to put a portfolio on a path toward lower carbon emissions. It reduces the carbon footprint steadily each year but still keeps broad sector coverage — unlike the stricter PAB, which excludes fossil fuel companies outright. This makes CTBs attractive for investors who want climate alignment without giving up diversification.
+> [!note]
+> A CTB is a stock market index specifically designed to put a portfolio on a path toward lower carbon emissions. It reduces the carbon footprint steadily each year but still keeps broad sector coverage — unlike the stricter PAB, which excludes fossil fuel companies outright. This makes CTBs attractive for investors who want climate alignment without giving up diversification.
 
 > [!tip] Related Terms
 > - [PAB (Paris-Aligned Benchmark)](#pab-paris-aligned-benchmark) — the more restrictive climate benchmark category
@@ -286,15 +267,10 @@ A CTB is a stock market index specifically designed to put a portfolio on a path
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="271 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 271</span>
 
-> [!quote]
-> "Good governance is the DNA of a healthy corporation."
-> — **Peter Drucker**
+A Corporate Governance Code is a set of principles, standards, and best practices for the governance of listed companies, typically issued by a national regulatory body or stock exchange. Most codes follow the "comply or explain" model — companies must either comply with each provision or publicly explain why they deviate. Key topics include board composition and independence, executive remuneration, shareholder rights, audit committee oversight, and risk management. Influential examples include the UK Corporate Governance Code (issued by the Financial Reporting Council), the German Corporate Governance Code (DCGK), and the OECD/G20 Principles of Corporate Governance. ISS Governance evaluates companies' adherence to applicable governance codes as a core component of its proxy advisory and governance quality assessments.
 
-
-
-> A Corporate Governance Code is a set of principles, standards, and best practices for the governance of listed companies, typically issued by a national regulatory body or stock exchange. Most codes follow the "comply or explain" model — companies must either comply with each provision or publicly explain why they deviate. Key topics include board composition and independence, executive remuneration, shareholder rights, audit committee oversight, and risk management. Influential examples include the UK Corporate Governance Code (issued by the Financial Reporting Council), the German Corporate Governance Code (DCGK), and the OECD/G20 Principles of Corporate Governance. ISS Governance evaluates companies' adherence to applicable governance codes as a core component of its proxy advisory and governance quality assessments.
-
-a corporate governance code is a country's playbook for how listed companies should be run — covering topics like how independent the board should be, how executives get paid, and how shareholders get a voice. Companies must follow the code or publicly explain why they chose not to. ISS uses compliance with these codes as a central input when advising institutional investors on proxy voting and governance risk.
+> [!note]
+> a corporate governance code is a country's playbook for how listed companies should be run — covering topics like how independent the board should be, how executives get paid, and how shareholders get a voice. Companies must follow the code or publicly explain why they chose not to. ISS uses compliance with these codes as a central input when advising institutional investors on proxy voting and governance risk.
 
 > [!tip] Related Terms
 > - [Stewardship Code](#stewardship-code) — the investor-side counterpart to corporate governance codes
@@ -343,15 +319,10 @@ a corporate governance code is a country's playbook for how listed companies sho
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
 
-> [!quote]
-> "The era of voluntary sustainability reporting is coming to an end."
-> — **Christine Lagarde**
+The Corporate Sustainability Reporting Directive (Directive (EU) 2022/2464) is an EU directive that significantly expands the scope and depth of mandatory sustainability reporting by companies. It replaces and broadens the Non-Financial Reporting Directive (NFRD), extending obligations to all large companies and listed SMEs. Under CSRD, companies must report in accordance with the European Sustainability Reporting Standards (ESRS), obtain limited assurance on sustainability information, and publish reports in a machine-readable digital format.
 
-
-
-> The Corporate Sustainability Reporting Directive (Directive (EU) 2022/2464) is an EU directive that significantly expands the scope and depth of mandatory sustainability reporting by companies. It replaces and broadens the Non-Financial Reporting Directive (NFRD), extending obligations to all large companies and listed SMEs. Under CSRD, companies must report in accordance with the European Sustainability Reporting Standards (ESRS), obtain limited assurance on sustainability information, and publish reports in a machine-readable digital format.
-
-CSRD dramatically increases how many companies in Europe must publish detailed sustainability data — from roughly 11,000 under the old NFRD to approximately 50,000. It also standardises what they must report (using ESRS) and requires an external auditor to verify the data. For index providers like STOXX and data providers like ISS, CSRD creates a much richer pool of mandatory, comparable ESG data.
+> [!note]
+> CSRD dramatically increases how many companies in Europe must publish detailed sustainability data — from roughly 11,000 under the old NFRD to approximately 50,000. It also standardises what they must report (using ESRS) and requires an external auditor to verify the data. For index providers like STOXX and data providers like ISS, CSRD creates a much richer pool of mandatory, comparable ESG data.
 
 > [!tip] Related Terms
 > - [NFRD](#nfrd) — the predecessor directive CSRD replaces
@@ -404,15 +375,10 @@ CSRD dramatically increases how many companies in Europe must publish detailed s
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="18 mentions across STOXX & ISS pages (low)">▰▰ 18</span>
 
-> [!quote]
-> "First, do no harm."
-> — **Hippocrates**
+The Do No Significant Harm (DNSH) principle is a cornerstone of the EU Taxonomy Regulation and SFDR. Under the Taxonomy, an economic activity may qualify as environmentally sustainable only if it makes a substantial contribution to at least one environmental objective while doing no significant harm to any of the other five objectives (climate change mitigation, climate change adaptation, sustainable use of water and marine resources, transition to a circular economy, pollution prevention, and protection of biodiversity). SFDR applies its own DNSH test when defining "sustainable investments."
 
-
-
-> The Do No Significant Harm (DNSH) principle is a cornerstone of the EU Taxonomy Regulation and SFDR. Under the Taxonomy, an economic activity may qualify as environmentally sustainable only if it makes a substantial contribution to at least one environmental objective while doing no significant harm to any of the other five objectives (climate change mitigation, climate change adaptation, sustainable use of water and marine resources, transition to a circular economy, pollution prevention, and protection of biodiversity). SFDR applies its own DNSH test when defining "sustainable investments."
-
-DNSH is a safeguard that prevents greenwashing through cherry-picking. A company cannot claim its activity is green just because it helps one environmental goal if it simultaneously damages another. For example, a biofuels producer contributing to climate mitigation must also show it does not harm biodiversity through unsustainable land use.
+> [!note]
+> DNSH is a safeguard that prevents greenwashing through cherry-picking. A company cannot claim its activity is green just because it helps one environmental goal if it simultaneously damages another. For example, a biofuels producer contributing to climate mitigation must also show it does not harm biodiversity through unsustainable land use.
 
 > [!tip] Related Terms
 > - [Substantial Contribution](#substantial-contribution) — the positive test DNSH complements
@@ -464,15 +430,10 @@ DNSH is a safeguard that prevents greenwashing through cherry-picking. A company
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="71 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 71</span>
 
-> [!quote]
-> "Markets work best when participants trust the rules."
-> — **Gary Gensler**
+The European Securities and Markets Authority (ESMA) is an independent EU authority that contributes to safeguarding the stability of the European Union's financial system by enhancing the protection of investors and promoting stable and orderly financial markets. In the context of benchmarks and sustainable finance, ESMA supervises critical benchmarks, maintains the register of authorised benchmark administrators, develops technical standards for SFDR and the Taxonomy Regulation, and issues guidelines on fund naming and ESG disclosures.
 
-
-
-> The European Securities and Markets Authority (ESMA) is an independent EU authority that contributes to safeguarding the stability of the European Union's financial system by enhancing the protection of investors and promoting stable and orderly financial markets. In the context of benchmarks and sustainable finance, ESMA supervises critical benchmarks, maintains the register of authorised benchmark administrators, develops technical standards for SFDR and the Taxonomy Regulation, and issues guidelines on fund naming and ESG disclosures.
-
-ESMA is the EU's top securities watchdog. For STOXX and ISS, ESMA matters because it is the authority that authorises benchmark administrators under the BMR, writes the detailed rules that flesh out SFDR and Taxonomy requirements, and polices how fund managers label and market ESG products.
+> [!note]
+> ESMA is the EU's top securities watchdog. For STOXX and ISS, ESMA matters because it is the authority that authorises benchmark administrators under the BMR, writes the detailed rules that flesh out SFDR and Taxonomy requirements, and polices how fund managers label and market ESG products.
 
 > [!tip] Related Terms
 > - [ESMA Fund Naming Guidelines](#esma-fund-naming-guidelines) — ESMA's rules on using ESG/sustainability terms in fund names
@@ -522,9 +483,10 @@ ESMA is the EU's top securities watchdog. For STOXX and ISS, ESMA matters becaus
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
 
 
-> In 2024 ESMA finalised guidelines on the use of ESG- and sustainability-related terms in fund names. The guidelines establish quantitative thresholds: funds using terms like "ESG" or "sustainability" in their names must invest a minimum proportion (typically 80%) in assets used to meet environmental or social characteristics or sustainable investment objectives. Funds using "sustainability" or related terms must additionally meet a minimum allocation to "sustainable investments" as defined by SFDR. Exclusion criteria based on the PAB exclusions also apply.
+In 2024 ESMA finalised guidelines on the use of ESG- and sustainability-related terms in fund names. The guidelines establish quantitative thresholds: funds using terms like "ESG" or "sustainability" in their names must invest a minimum proportion (typically 80%) in assets used to meet environmental or social characteristics or sustainable investment objectives. Funds using "sustainability" or related terms must additionally meet a minimum allocation to "sustainable investments" as defined by SFDR. Exclusion criteria based on the PAB exclusions also apply.
 
-These guidelines stop fund managers from slapping "green" or "ESG" on a fund name for marketing purposes without the portfolio backing it up. If a fund calls itself "Sustainable European Equity," it must actually hold at least 80% in qualifying assets and apply specific exclusion screens. This has forced many funds to either rename or restructure.
+> [!note]
+> These guidelines stop fund managers from slapping "green" or "ESG" on a fund name for marketing purposes without the portfolio backing it up. If a fund calls itself "Sustainable European Equity," it must actually hold at least 80% in qualifying assets and apply specific exclusion screens. This has forced many funds to either rename or restructure.
 
 > [!tip] Related Terms
 > - [ESMA](#esma) — the authority issuing these guidelines
@@ -561,9 +523,10 @@ These guidelines stop fund managers from slapping "green" or "ESG" on a fund nam
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="13 mentions across STOXX & ISS pages (low)">▰▰ 13</span>
 
 
-> See [Benchmark Regulation (EU BMR)](#benchmark-regulation-eu-bmr). "EU Benchmark Regulation" is the commonly used short name for Regulation (EU) 2016/1011 governing the provision, use, and administration of benchmarks within the European Union. It is also referred to as "BMR" or "EU BMR."
+See [Benchmark Regulation (EU BMR)](#benchmark-regulation-eu-bmr). "EU Benchmark Regulation" is the commonly used short name for Regulation (EU) 2016/1011 governing the provision, use, and administration of benchmarks within the European Union. It is also referred to as "BMR" or "EU BMR."
 
-This is an alternative name. Refer to the full entry under **Benchmark Regulation (EU BMR)** above for complete details.
+> [!note]
+> This is an alternative name. Refer to the full entry under **Benchmark Regulation (EU BMR)** above for complete details.
 
 > [!tip] Related Terms
 > - [Benchmark Regulation (EU BMR)](#benchmark-regulation-eu-bmr) — full entry
@@ -613,15 +576,10 @@ This is an alternative name. Refer to the full entry under **Benchmark Regulatio
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-> [!quote]
-> "This is Europe's man-on-the-moon moment."
-> — **Ursula von der Leyen**
+The European Green Deal is the European Commission's flagship policy agenda, adopted in December 2019, committing the EU to become climate-neutral by 2050. It is not a single regulation but an overarching strategic framework that encompasses legislative packages including the European Climate Law (Regulation (EU) 2021/1119), the Fit for 55 package, the EU Taxonomy, CSRD, SFDR, CBAM, the Sustainable Finance Action Plan, and revisions to the EU ETS. The Green Deal covers climate, energy, transport, biodiversity, agriculture, circular economy, and pollution, aiming to decouple economic growth from resource use.
 
-
-
-> The European Green Deal is the European Commission's flagship policy agenda, adopted in December 2019, committing the EU to become climate-neutral by 2050. It is not a single regulation but an overarching strategic framework that encompasses legislative packages including the European Climate Law (Regulation (EU) 2021/1119), the Fit for 55 package, the EU Taxonomy, CSRD, SFDR, CBAM, the Sustainable Finance Action Plan, and revisions to the EU ETS. The Green Deal covers climate, energy, transport, biodiversity, agriculture, circular economy, and pollution, aiming to decouple economic growth from resource use.
-
-the EU Green Deal is Europe's master plan to fight climate change and environmental degradation while maintaining economic competitiveness. Nearly every EU sustainable finance regulation — from SFDR to the Taxonomy to CBAM — traces back to the Green Deal as its strategic origin. For STOXX and ISS, the Green Deal defines the regulatory direction: it signals which sectors face transition risks, which activities will be taxonomy-eligible, and where future disclosure mandates will emerge.
+> [!note]
+> the EU Green Deal is Europe's master plan to fight climate change and environmental degradation while maintaining economic competitiveness. Nearly every EU sustainable finance regulation — from SFDR to the Taxonomy to CBAM — traces back to the Green Deal as its strategic origin. For STOXX and ISS, the Green Deal defines the regulatory direction: it signals which sectors face transition risks, which activities will be taxonomy-eligible, and where future disclosure mandates will emerge.
 
 > [!tip] Related Terms
 > - [Sustainable Finance Action Plan](#sustainable-finance-action-plan) — the financial sector pillar of the Green Deal
@@ -645,15 +603,10 @@ the EU Green Deal is Europe's master plan to fight climate change and environmen
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
 
-> [!quote]
-> "If you cannot define what is green, you cannot credibly invest in it."
-> — **Alexander De Croo**
+EU Taxonomy Alignment refers to the degree to which a company's economic activities satisfy all four conditions of the EU Taxonomy Regulation (EU 2020/852): (1) the activity makes a substantial contribution to at least one of six environmental objectives, (2) it does no significant harm (DNSH) to any of the other objectives, (3) it is carried out in compliance with minimum safeguards (OECD Guidelines, UN Guiding Principles), and (4) it meets the relevant Technical Screening Criteria set out in the delegated acts. Taxonomy alignment is expressed as a percentage of revenue, capital expenditure, or operating expenditure.
 
-
-
-> EU Taxonomy Alignment refers to the degree to which a company's economic activities satisfy all four conditions of the EU Taxonomy Regulation (EU 2020/852): (1) the activity makes a substantial contribution to at least one of six environmental objectives, (2) it does no significant harm (DNSH) to any of the other objectives, (3) it is carried out in compliance with minimum safeguards (OECD Guidelines, UN Guiding Principles), and (4) it meets the relevant Technical Screening Criteria set out in the delegated acts. Taxonomy alignment is expressed as a percentage of revenue, capital expenditure, or operating expenditure.
-
-Taxonomy alignment is the gold standard measure of how "green" a company's activities are under EU law. A company might be 15% taxonomy-aligned, meaning 15% of its revenue comes from activities that pass all four tests. STOXX uses taxonomy alignment data to weight or screen companies in ESG indices, and ISS ESG provides taxonomy alignment analytics to investors.
+> [!note]
+> Taxonomy alignment is the gold standard measure of how "green" a company's activities are under EU law. A company might be 15% taxonomy-aligned, meaning 15% of its revenue comes from activities that pass all four tests. STOXX uses taxonomy alignment data to weight or screen companies in ESG indices, and ISS ESG provides taxonomy alignment analytics to investors.
 
 > [!tip] Related Terms
 > - [Taxonomy Eligibility](#taxonomy-eligibility) — the prerequisite step: is the activity covered by the Taxonomy?
@@ -704,15 +657,10 @@ Taxonomy alignment is the gold standard measure of how "green" a company's activ
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="12 mentions across STOXX & ISS pages (low)">▰▰ 12</span>
 
-> [!quote]
-> "Financial materiality is the bridge between sustainability and investment returns."
-> — **Mark Carney**
+Financial materiality, in the context of sustainability reporting and ESG analysis, refers to the relevance of an ESG issue to a company's financial performance, risk profile, and enterprise value. Under the CSRD's "double materiality" approach, an issue is financially material if it could reasonably be expected to influence the decisions of users of financial statements — i.e., if it affects the company's cash flows, access to finance, or cost of capital. This contrasts with "impact materiality," which considers the company's outward effects on people and the environment.
 
-
-
-> Financial materiality, in the context of sustainability reporting and ESG analysis, refers to the relevance of an ESG issue to a company's financial performance, risk profile, and enterprise value. Under the CSRD's "double materiality" approach, an issue is financially material if it could reasonably be expected to influence the decisions of users of financial statements — i.e., if it affects the company's cash flows, access to finance, or cost of capital. This contrasts with "impact materiality," which considers the company's outward effects on people and the environment.
-
-Financial materiality asks: "Does this ESG issue affect the company's bottom line?" For example, climate regulation is financially material for an oil company because carbon pricing directly affects its costs. ISS ESG ratings and STOXX index methodologies often rely on financial materiality to determine which ESG factors matter most for a given industry.
+> [!note]
+> Financial materiality asks: "Does this ESG issue affect the company's bottom line?" For example, climate regulation is financially material for an oil company because carbon pricing directly affects its costs. ISS ESG ratings and STOXX index methodologies often rely on financial materiality to determine which ESG factors matter most for a given industry.
 
 > [!tip] Related Terms
 > - [Double Materiality](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#double-materiality) — CSRD's approach combining financial and impact materiality
@@ -763,15 +711,10 @@ Financial materiality asks: "Does this ESG issue affect the company's bottom lin
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="12 mentions across STOXX & ISS pages (low)">▰▰ 12</span>
 
-> [!quote]
-> "Transparency and investor protection are two sides of the same coin."
-> — **Arthur Levitt**
+The Markets in Financial Instruments Directive II (Directive 2014/65/EU) and its companion regulation MiFIR form the EU's framework for regulating investment services, trading venues, and investor protection. In 2022, MiFID II was amended to require firms providing investment advice or portfolio management to integrate sustainability preferences into their suitability assessments. This means advisors must ask clients about their ESG preferences (including preferences for taxonomy-aligned investments, sustainable investments under SFDR, or PAI consideration) and match products accordingly.
 
-
-
-> The Markets in Financial Instruments Directive II (Directive 2014/65/EU) and its companion regulation MiFIR form the EU's framework for regulating investment services, trading venues, and investor protection. In 2022, MiFID II was amended to require firms providing investment advice or portfolio management to integrate sustainability preferences into their suitability assessments. This means advisors must ask clients about their ESG preferences (including preferences for taxonomy-aligned investments, sustainable investments under SFDR, or PAI consideration) and match products accordingly.
-
-MiFID II is the EU's main rulebook for how financial products are sold to investors. The sustainability amendments mean that when a financial advisor recommends funds to a client, they must now ask: "Do you care about sustainability?" and then recommend products that match. This created enormous demand for classified ESG data — exactly the kind STOXX indices and ISS ESG ratings provide.
+> [!note]
+> MiFID II is the EU's main rulebook for how financial products are sold to investors. The sustainability amendments mean that when a financial advisor recommends funds to a client, they must now ask: "Do you care about sustainability?" and then recommend products that match. This created enormous demand for classified ESG data — exactly the kind STOXX indices and ISS ESG ratings provide.
 
 > [!tip] Related Terms
 > - [SFDR (Sustainable Finance Disclosure Regulation)](#sfdr-sustainable-finance-disclosure-regulation) — MiFID II sustainability preferences reference SFDR definitions
@@ -821,15 +764,10 @@ MiFID II is the EU's main rulebook for how financial products are sold to invest
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
-> [!quote]
-> "Rights are not optional extras; they are the foundation."
-> — **Mary Robinson**
+Under the EU Taxonomy Regulation, minimum safeguards are the human rights and governance standards that an economic activity must comply with to qualify as taxonomy-aligned, regardless of its environmental performance. The minimum safeguards reference four international instruments: the OECD Guidelines for Multinational Enterprises, the UN Guiding Principles on Business and Human Rights, the ILO Declaration on Fundamental Principles and Rights at Work, and the International Bill of Human Rights. The European Commission's Platform on Sustainable Finance has published detailed guidance on how to assess compliance.
 
-
-
-> Under the EU Taxonomy Regulation, minimum safeguards are the human rights and governance standards that an economic activity must comply with to qualify as taxonomy-aligned, regardless of its environmental performance. The minimum safeguards reference four international instruments: the OECD Guidelines for Multinational Enterprises, the UN Guiding Principles on Business and Human Rights, the ILO Declaration on Fundamental Principles and Rights at Work, and the International Bill of Human Rights. The European Commission's Platform on Sustainable Finance has published detailed guidance on how to assess compliance.
-
-Minimum safeguards ensure that a "green" activity is not built on labour exploitation, corruption, or human rights abuses. Even if a wind farm contributes substantially to climate mitigation and passes DNSH, it cannot be taxonomy-aligned if it was constructed using forced labour. ISS ESG assesses companies against these norms-based standards as part of its taxonomy alignment analytics.
+> [!note]
+> Minimum safeguards ensure that a "green" activity is not built on labour exploitation, corruption, or human rights abuses. Even if a wind farm contributes substantially to climate mitigation and passes DNSH, it cannot be taxonomy-aligned if it was constructed using forced labour. ISS ESG assesses companies against these norms-based standards as part of its taxonomy alignment analytics.
 
 > [!tip] Related Terms
 > - [EU Taxonomy Alignment](#eu-taxonomy-alignment) — minimum safeguards are one of the four alignment conditions
@@ -866,9 +804,10 @@ Minimum safeguards ensure that a "green" activity is not built on labour exploit
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
-> The Non-Financial Reporting Directive (Directive 2014/95/EU) was the EU's first mandatory sustainability reporting regime for large public-interest entities. It required approximately 11,700 large companies and groups (including listed companies, banks, and insurance companies with more than 500 employees) to disclose information on environmental matters, social and employee issues, respect for human rights, anti-corruption, and board diversity. The NFRD was superseded by the CSRD, which broadened the scope and introduced standardised reporting through ESRS.
+The Non-Financial Reporting Directive (Directive 2014/95/EU) was the EU's first mandatory sustainability reporting regime for large public-interest entities. It required approximately 11,700 large companies and groups (including listed companies, banks, and insurance companies with more than 500 employees) to disclose information on environmental matters, social and employee issues, respect for human rights, anti-corruption, and board diversity. The NFRD was superseded by the CSRD, which broadened the scope and introduced standardised reporting through ESRS.
 
-The NFRD was Europe's first attempt at making companies report on sustainability, but it left too much flexibility — companies could choose their own frameworks, and the data was often not comparable. CSRD was introduced to fix these shortcomings by standardising the format and massively expanding coverage.
+> [!note]
+> The NFRD was Europe's first attempt at making companies report on sustainability, but it left too much flexibility — companies could choose their own frameworks, and the data was often not comparable. CSRD was introduced to fix these shortcomings by standardising the format and massively expanding coverage.
 
 > [!tip] Related Terms
 > - [CSRD](#csrd) — the directive that replaces and expands the NFRD
@@ -893,9 +832,10 @@ The NFRD was Europe's first attempt at making companies report on sustainability
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="697 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 697</span>
 
 
-> A Paris-Aligned Benchmark is the more stringent of the two climate benchmark categories introduced by the EU Low Carbon Benchmarks Regulation (EU 2019/2089). A PAB must meet all CTB requirements — including a 7% year-on-year GHG intensity reduction — and additionally must: (1) achieve at least 50% reduction in GHG intensity relative to the investable universe at inception, (2) exclude companies deriving 1% or more of revenues from coal exploration/mining/processing, 10% or more from oil exploration/production, 50% or more from natural gas exploration/production/distribution, and 50% or more from electricity generation with a GHG intensity above 100 gCO2e/kWh, and (3) exclude companies found to significantly harm environmental or social objectives.
+A Paris-Aligned Benchmark is the more stringent of the two climate benchmark categories introduced by the EU Low Carbon Benchmarks Regulation (EU 2019/2089). A PAB must meet all CTB requirements — including a 7% year-on-year GHG intensity reduction — and additionally must: (1) achieve at least 50% reduction in GHG intensity relative to the investable universe at inception, (2) exclude companies deriving 1% or more of revenues from coal exploration/mining/processing, 10% or more from oil exploration/production, 50% or more from natural gas exploration/production/distribution, and 50% or more from electricity generation with a GHG intensity above 100 gCO2e/kWh, and (3) exclude companies found to significantly harm environmental or social objectives.
 
-A PAB is a benchmark designed to be fully compatible with a 1.5°C warming scenario. It is the strictest regulated climate index label in the EU. Unlike a CTB, it cuts fossil fuel companies out entirely and starts from a much lower carbon baseline. STOXX offers both PAB and CTB versions of its major indices.
+> [!note]
+> A PAB is a benchmark designed to be fully compatible with a 1.5°C warming scenario. It is the strictest regulated climate index label in the EU. Unlike a CTB, it cuts fossil fuel companies out entirely and starts from a much lower carbon baseline. STOXX offers both PAB and CTB versions of its major indices.
 
 > [!tip] Related Terms
 > - [Climate Transition Benchmark (CTB)](#climate-transition-benchmark-ctb) — the less restrictive counterpart
@@ -943,15 +883,10 @@ A PAB is a benchmark designed to be fully compatible with a 1.5°C warming scena
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="33 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 33</span>
 
-> [!quote]
-> "If you are not part of the solution, you are part of the problem."
-> — **Eldridge Cleaver**
+Principal Adverse Impacts are the most significant negative effects that investment decisions or investment advice can have on sustainability factors relating to environmental, social, and employee matters, respect for human rights, anti-corruption, and anti-bribery. Under SFDR, financial market participants must publish a statement on their website explaining whether — and if so, how — they consider PAIs at the entity level. At the product level, Article 7 requires disclosure of how PAIs are considered for each financial product.
 
-
-
-> Principal Adverse Impacts are the most significant negative effects that investment decisions or investment advice can have on sustainability factors relating to environmental, social, and employee matters, respect for human rights, anti-corruption, and anti-bribery. Under SFDR, financial market participants must publish a statement on their website explaining whether — and if so, how — they consider PAIs at the entity level. At the product level, Article 7 requires disclosure of how PAIs are considered for each financial product.
-
-PAI is SFDR's way of making investors publicly account for the harm their investments cause. Instead of just talking about the good a fund does, PAI forces disclosure of the bad — like how much the portfolio's companies pollute, or how many workplace accidents they have.
+> [!note]
+> PAI is SFDR's way of making investors publicly account for the harm their investments cause. Instead of just talking about the good a fund does, PAI forces disclosure of the bad — like how much the portfolio's companies pollute, or how many workplace accidents they have.
 
 > [!tip] Related Terms
 > - [PAI Indicators](#pai-indicators) — the specific metrics used to measure PAIs
@@ -1002,9 +937,10 @@ PAI is SFDR's way of making investors publicly account for the harm their invest
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
 
-> The SFDR Regulatory Technical Standards (Delegated Regulation (EU) 2022/1288) define 14 mandatory PAI indicators for investments in investee companies and 2 mandatory indicators for investments in sovereigns/supranationals. For investee companies, the mandatory indicators cover: GHG emissions (Scope 1, 2, and 3), carbon footprint, GHG intensity, exposure to fossil fuels, share of non-renewable energy, energy consumption intensity, activities negatively affecting biodiversity, emissions to water, hazardous waste ratio, UNGC/OECD violations, gender pay gap, board gender diversity, exposure to controversial weapons, and lack of anti-corruption/anti-bribery policies. Additional opt-in indicators are also specified.
+The SFDR Regulatory Technical Standards (Delegated Regulation (EU) 2022/1288) define 14 mandatory PAI indicators for investments in investee companies and 2 mandatory indicators for investments in sovereigns/supranationals. For investee companies, the mandatory indicators cover: GHG emissions (Scope 1, 2, and 3), carbon footprint, GHG intensity, exposure to fossil fuels, share of non-renewable energy, energy consumption intensity, activities negatively affecting biodiversity, emissions to water, hazardous waste ratio, UNGC/OECD violations, gender pay gap, board gender diversity, exposure to controversial weapons, and lack of anti-corruption/anti-bribery policies. Additional opt-in indicators are also specified.
 
-PAI indicators are the specific data points investors must collect and report. They are standardised so that every fund in Europe reports the same metrics, making comparison possible. ISS ESG and other data providers map company-level data to these 14+ indicators and sell the packaged data to asset managers who need it for compliance.
+> [!note]
+> PAI indicators are the specific data points investors must collect and report. They are standardised so that every fund in Europe reports the same metrics, making comparison possible. ISS ESG and other data providers map company-level data to these 14+ indicators and sell the packaged data to asset managers who need it for compliance.
 
 > [!tip] Related Terms
 > - [PAI (Principal Adverse Impact)](#pai-principal-adverse-impact) — the overarching concept
@@ -1027,15 +963,10 @@ PAI indicators are the specific data points investors must collect and report. T
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="173 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 173</span>
 
-> [!quote]
-> "Disclosure is the lifeblood of efficient markets."
-> — **Arthur Levitt**
+The Sustainable Finance Disclosure Regulation (Regulation (EU) 2019/2088) establishes harmonised rules for financial market participants and financial advisers on transparency regarding the integration of sustainability risks, the consideration of adverse sustainability impacts, and the provision of sustainability-related information about financial products. It creates a three-tier classification system for financial products (Article 6, Article 8, Article 9), mandates entity-level and product-level disclosures, and defines key concepts such as "sustainable investment" and "sustainability risk."
 
-
-
-> The Sustainable Finance Disclosure Regulation (Regulation (EU) 2019/2088) establishes harmonised rules for financial market participants and financial advisers on transparency regarding the integration of sustainability risks, the consideration of adverse sustainability impacts, and the provision of sustainability-related information about financial products. It creates a three-tier classification system for financial products (Article 6, Article 8, Article 9), mandates entity-level and product-level disclosures, and defines key concepts such as "sustainable investment" and "sustainability risk."
-
-SFDR is the EU's landmark regulation that forces the entire investment chain — from pension funds to retail advisors — to be transparent about sustainability. It classifies funds into three buckets based on their sustainability ambition and requires standardised disclosures. SFDR has become the de facto labelling system for ESG funds in Europe and is a primary driver of demand for ESG data from providers like ISS and index solutions from STOXX.
+> [!note]
+> SFDR is the EU's landmark regulation that forces the entire investment chain — from pension funds to retail advisors — to be transparent about sustainability. It classifies funds into three buckets based on their sustainability ambition and requires standardised disclosures. SFDR has become the de facto labelling system for ESG funds in Europe and is a primary driver of demand for ESG data from providers like ISS and index solutions from STOXX.
 
 > [!tip] Related Terms
 > - [Article 8 Fund (SFDR)](#article-8-fund-sfdr) — "light green" product classification
@@ -1085,9 +1016,10 @@ SFDR is the EU's landmark regulation that forces the entire investment chain —
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
-> The ISS ESG SFDR PAI Solution is a commercial data product offered by ISS ESG (part of ISS Governance) that provides investors with company-level and portfolio-level data mapped to the mandatory and optional PAI indicators defined in the SFDR Regulatory Technical Standards. The solution covers the 14 mandatory corporate indicators plus additional opt-in indicators, offering pre-calculated data, raw data, and methodological documentation to support entity- and product-level SFDR reporting obligations.
+The ISS ESG SFDR PAI Solution is a commercial data product offered by ISS ESG (part of ISS Governance) that provides investors with company-level and portfolio-level data mapped to the mandatory and optional PAI indicators defined in the SFDR Regulatory Technical Standards. The solution covers the 14 mandatory corporate indicators plus additional opt-in indicators, offering pre-calculated data, raw data, and methodological documentation to support entity- and product-level SFDR reporting obligations.
 
-ISS built this product specifically to help fund managers comply with SFDR's PAI reporting requirements. Rather than collecting emissions data, waste data, diversity data, and dozens of other metrics from thousands of companies themselves, asset managers can buy it pre-packaged and mapped to the exact regulatory template from ISS.
+> [!note]
+> ISS built this product specifically to help fund managers comply with SFDR's PAI reporting requirements. Rather than collecting emissions data, waste data, diversity data, and dozens of other metrics from thousands of companies themselves, asset managers can buy it pre-packaged and mapped to the exact regulatory template from ISS.
 
 > [!tip] Related Terms
 > - [PAI Indicators](#pai-indicators) — the specific metrics the solution covers
@@ -1110,15 +1042,10 @@ ISS built this product specifically to help fund managers comply with SFDR's PAI
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="33 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 33</span>
 
-> [!quote]
-> "Ownership brings obligation. Stewardship is ownership with purpose."
-> — **Will Hutton**
+A Stewardship Code is a set of principles or guidelines directed at institutional investors, establishing expectations for responsible ownership and engagement with investee companies. Stewardship codes typically cover areas such as monitoring investee companies, engaging on ESG and strategy issues, exercising voting rights, managing conflicts of interest, and reporting on stewardship activities. The UK Stewardship Code (issued by the Financial Reporting Council, most recently revised in 2020) is the global reference model, requiring signatories to report annually on their stewardship activities with a focus on outcomes. Other jurisdictions — including Japan, the Netherlands, and South Africa — have adopted similar codes. The EU Shareholder Rights Directive II (SRD II) also contains stewardship-related requirements for institutional investors.
 
-
-
-> A Stewardship Code is a set of principles or guidelines directed at institutional investors, establishing expectations for responsible ownership and engagement with investee companies. Stewardship codes typically cover areas such as monitoring investee companies, engaging on ESG and strategy issues, exercising voting rights, managing conflicts of interest, and reporting on stewardship activities. The UK Stewardship Code (issued by the Financial Reporting Council, most recently revised in 2020) is the global reference model, requiring signatories to report annually on their stewardship activities with a focus on outcomes. Other jurisdictions — including Japan, the Netherlands, and South Africa — have adopted similar codes. The EU Shareholder Rights Directive II (SRD II) also contains stewardship-related requirements for institutional investors.
-
-while a corporate governance code tells companies how to govern themselves, a stewardship code tells investors how to be responsible owners — by actively monitoring companies, voting their shares, and engaging on issues like climate strategy and board quality. ISS Governance is deeply involved in stewardship through its proxy voting advisory services, voting analytics, and engagement solutions that help institutional investors meet their stewardship code obligations.
+> [!note]
+> while a corporate governance code tells companies how to govern themselves, a stewardship code tells investors how to be responsible owners — by actively monitoring companies, voting their shares, and engaging on issues like climate strategy and board quality. ISS Governance is deeply involved in stewardship through its proxy voting advisory services, voting analytics, and engagement solutions that help institutional investors meet their stewardship code obligations.
 
 > [!tip] Related Terms
 > - [Corporate Governance Code](#corporate-governance-code) — the company-side counterpart to stewardship codes
@@ -1167,15 +1094,10 @@ while a corporate governance code tells companies how to govern themselves, a st
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
-> [!quote]
-> "Do not tell me what you value. Show me your budget, and I will tell you what you value."
-> — **Joe Biden**
+Under the EU Taxonomy Regulation (EU 2020/852), an economic activity makes a substantial contribution to one of the six environmental objectives when it meets the specific Technical Screening Criteria laid down in the Taxonomy's delegated acts. The six objectives are: (1) climate change mitigation, (2) climate change adaptation, (3) sustainable use and protection of water and marine resources, (4) transition to a circular economy, (5) pollution prevention and control, and (6) protection and restoration of biodiversity and ecosystems. An activity may also make a substantial contribution by directly enabling another activity to make a substantial contribution.
 
-
-
-> Under the EU Taxonomy Regulation (EU 2020/852), an economic activity makes a substantial contribution to one of the six environmental objectives when it meets the specific Technical Screening Criteria laid down in the Taxonomy's delegated acts. The six objectives are: (1) climate change mitigation, (2) climate change adaptation, (3) sustainable use and protection of water and marine resources, (4) transition to a circular economy, (5) pollution prevention and control, and (6) protection and restoration of biodiversity and ecosystems. An activity may also make a substantial contribution by directly enabling another activity to make a substantial contribution.
-
-Substantial contribution is the positive environmental performance test in the Taxonomy. It answers the question: "Does this economic activity genuinely help achieve one of the EU's six environmental goals?" The thresholds are set out in detailed technical criteria — for example, for electricity generation to substantially contribute to climate mitigation, it must emit less than 100 gCO2e/kWh.
+> [!note]
+> Substantial contribution is the positive environmental performance test in the Taxonomy. It answers the question: "Does this economic activity genuinely help achieve one of the EU's six environmental goals?" The thresholds are set out in detailed technical criteria — for example, for electricity generation to substantially contribute to climate mitigation, it must emit less than 100 gCO2e/kWh.
 
 > [!tip] Related Terms
 > - [DNSH (Do No Significant Harm)](#dnsh-do-no-significant-harm) — the complementary negative test
@@ -1211,15 +1133,10 @@ Substantial contribution is the positive environmental performance test in the T
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
-> [!quote]
-> "Finance can be the great connector between sustainability goals and real-world impact."
-> — **Valdis Dombrovskis**
+The EU Sustainable Finance Action Plan, first published by the European Commission in March 2018 and renewed in July 2021, is the strategic roadmap for redirecting capital flows toward sustainable investment, managing financial risks from climate change and environmental degradation, and fostering transparency in financial and economic activity. The 2018 plan introduced ten key actions, leading directly to the creation of the EU Taxonomy Regulation, SFDR, the Low Carbon Benchmarks Regulation, the EU Green Bond Standard, and amendments to MiFID II and Solvency II for sustainability integration. The 2021 Renewed Sustainable Finance Strategy added actions on transition finance, SME inclusion, financial system resilience, and global ambition.
 
-
-
-> The EU Sustainable Finance Action Plan, first published by the European Commission in March 2018 and renewed in July 2021, is the strategic roadmap for redirecting capital flows toward sustainable investment, managing financial risks from climate change and environmental degradation, and fostering transparency in financial and economic activity. The 2018 plan introduced ten key actions, leading directly to the creation of the EU Taxonomy Regulation, SFDR, the Low Carbon Benchmarks Regulation, the EU Green Bond Standard, and amendments to MiFID II and Solvency II for sustainability integration. The 2021 Renewed Sustainable Finance Strategy added actions on transition finance, SME inclusion, financial system resilience, and global ambition.
-
-the Sustainable Finance Action Plan is the EU's master to-do list for greening the financial system. Nearly every major EU sustainable finance regulation — Taxonomy, SFDR, CSRD, Green MiFID, climate benchmarks — originated from this plan. For STOXX and ISS, the Action Plan is the strategic compass: understanding it means understanding where EU sustainable finance regulation is heading next and what data and index products will be in demand.
+> [!note]
+> the Sustainable Finance Action Plan is the EU's master to-do list for greening the financial system. Nearly every major EU sustainable finance regulation — Taxonomy, SFDR, CSRD, Green MiFID, climate benchmarks — originated from this plan. For STOXX and ISS, the Action Plan is the strategic compass: understanding it means understanding where EU sustainable finance regulation is heading next and what data and index products will be in demand.
 
 > [!tip] Related Terms
 > - [EU Green Deal](#eu-green-deal) — the broader political framework the Action Plan supports
@@ -1259,15 +1176,10 @@ the Sustainable Finance Action Plan is the EU's master to-do list for greening t
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="15 mentions across STOXX & ISS pages (low)">▰▰ 15</span>
 
-> [!quote]
-> "Without a common classification, sustainable finance is just a slogan."
-> — **Christine Lagarde**
+See [EU Taxonomy Alignment](#eu-taxonomy-alignment). Taxonomy alignment is the commonly used shorthand for the degree to which a company's or portfolio's economic activities meet all four conditions of the EU Taxonomy Regulation: substantial contribution, DNSH, minimum safeguards, and compliance with Technical Screening Criteria. Alignment is typically expressed as a percentage of revenue, CapEx, or OpEx.
 
-
-
-> See [EU Taxonomy Alignment](#eu-taxonomy-alignment). Taxonomy alignment is the commonly used shorthand for the degree to which a company's or portfolio's economic activities meet all four conditions of the EU Taxonomy Regulation: substantial contribution, DNSH, minimum safeguards, and compliance with Technical Screening Criteria. Alignment is typically expressed as a percentage of revenue, CapEx, or OpEx.
-
-This is a shorthand term. See the full entry under **EU Taxonomy Alignment** for detailed coverage.
+> [!note]
+> This is a shorthand term. See the full entry under **EU Taxonomy Alignment** for detailed coverage.
 
 > [!tip] Related Terms
 > - [EU Taxonomy Alignment](#eu-taxonomy-alignment) — full entry
@@ -1315,9 +1227,10 @@ This is a shorthand term. See the full entry under **EU Taxonomy Alignment** for
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
 
-> Technical Screening Criteria (TSC) are the quantitative and qualitative thresholds established in the EU Taxonomy's delegated acts that determine whether a specific economic activity makes a substantial contribution to an environmental objective and does no significant harm to the other objectives. TSC are activity-specific — for example, the TSC for electricity generation from solar PV differ from those for cement manufacturing. They are developed by the European Commission based on recommendations from the Platform on Sustainable Finance and are periodically reviewed and updated.
+Technical Screening Criteria (TSC) are the quantitative and qualitative thresholds established in the EU Taxonomy's delegated acts that determine whether a specific economic activity makes a substantial contribution to an environmental objective and does no significant harm to the other objectives. TSC are activity-specific — for example, the TSC for electricity generation from solar PV differ from those for cement manufacturing. They are developed by the European Commission based on recommendations from the Platform on Sustainable Finance and are periodically reviewed and updated.
 
-TSC are the detailed, science-based performance benchmarks at the heart of the Taxonomy. They translate high-level environmental goals into concrete, measurable thresholds — like "lifecycle emissions must be below 100 gCO2e/kWh" for power generation. ISS ESG uses TSC to assess and score companies' taxonomy alignment, and STOXX applies this data when constructing taxonomy-aligned indices.
+> [!note]
+> TSC are the detailed, science-based performance benchmarks at the heart of the Taxonomy. They translate high-level environmental goals into concrete, measurable thresholds — like "lifecycle emissions must be below 100 gCO2e/kWh" for power generation. ISS ESG uses TSC to assess and score companies' taxonomy alignment, and STOXX applies this data when constructing taxonomy-aligned indices.
 
 > [!tip] Related Terms
 > - [Substantial Contribution](#substantial-contribution) — TSC define what counts as a substantial contribution
@@ -1348,15 +1261,10 @@ TSC are the detailed, science-based performance benchmarks at the heart of the T
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="216 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 216</span>
 
-> [!quote]
-> "Harmonization is the price of access to a single market."
-> — **Jacques Delors**
+Undertakings for Collective Investment in Transferable Securities (UCITS) is an EU regulatory framework (Directive 2009/65/EC) that creates a harmonised set of rules for the establishment, management, and marketing of collective investment funds across the European Union. UCITS funds benefit from a European "passport" that allows them to be marketed to retail investors in any EU member state once authorised in one. UCITS imposes rules on diversification, liquidity, leverage, and eligible assets. Many ESG and sustainability-labelled funds in Europe are structured as UCITS.
 
-
-
-> Undertakings for Collective Investment in Transferable Securities (UCITS) is an EU regulatory framework (Directive 2009/65/EC) that creates a harmonised set of rules for the establishment, management, and marketing of collective investment funds across the European Union. UCITS funds benefit from a European "passport" that allows them to be marketed to retail investors in any EU member state once authorised in one. UCITS imposes rules on diversification, liquidity, leverage, and eligible assets. Many ESG and sustainability-labelled funds in Europe are structured as UCITS.
-
-UCITS is the standard wrapper for investment funds sold to ordinary retail investors in Europe. It ensures basic investor protections like diversification and liquidity. When STOXX creates an ESG index or ISS rates funds, a large proportion of the products using that data are UCITS funds. The SFDR, MiFID II sustainability preferences, and ESMA naming guidelines all apply heavily to the UCITS universe.
+> [!note]
+> UCITS is the standard wrapper for investment funds sold to ordinary retail investors in Europe. It ensures basic investor protections like diversification and liquidity. When STOXX creates an ESG index or ISS rates funds, a large proportion of the products using that data are UCITS funds. The SFDR, MiFID II sustainability preferences, and ESMA naming guidelines all apply heavily to the UCITS universe.
 
 > [!tip] Related Terms
 > - [MiFID II](#mifid-ii) — governs how UCITS are distributed and advised upon

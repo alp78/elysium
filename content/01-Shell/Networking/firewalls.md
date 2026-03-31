@@ -17,10 +17,10 @@ Every production database should be accessible ONLY from authorized sources. A S
 
 > [!quote]
 > "Complexity is the worst enemy of security, and our systems are getting more complex all the time."
-> — **Bruce Schneier**
+> — **Bruce Schneier**, *Schneier on Security* blog (2007)
 >
 > "You can't trust code that you did not totally create yourself."
-> — **Ken Thompson**
+> — **Ken Thompson**, *Reflections on Trusting Trust*, Turing Award lecture (1984)
 
 ### ufw — Linux Uncomplicated Firewall for port access control
 

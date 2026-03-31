@@ -20,7 +20,7 @@ Resource monitoring tells you whether performance problems are CPU-bound, memory
 > — **Seymour Cray** (on virtual memory)
 >
 > "Anyone can build a fast CPU. The trick is to build a fast system."
-> — **Seymour Cray**
+> — **Seymour Cray**, attributed remark (c. 1980s)
 
 ## Linux — free, lscpu, uptime, vmstat, iostat, iotop
 

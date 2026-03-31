@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "The purpose of an audit trail is not to catch wrongdoers — it is to make wrongdoing visible."
-> — **Gene Kim**
+> — **Gene Kim**, *The Phoenix Project* (2013)
 
 SQL Server Audit tracks all security-relevant events (login attempts, permission changes, data access) to binary audit files (`.sqlaudit`). Required for regulatory compliance (IOSCO/ESMA for benchmark administrators, GDPR Article 30 data access logs) as outlined in the [compliance-and-auditability](https://alp78.github.io/elysium/13-Observability/Monitoring/compliance-and-auditability) framework. Events are written to disk and can be forwarded to GCP [Cloud Logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) for centralized monitoring and alerting.
 

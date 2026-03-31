@@ -53,7 +53,7 @@ Authenticates as a service account using a JSON key file. Use for CI/CD pipeline
 gcloud auth activate-service-account --key-file=key.json
 ```
 
-For creating and managing the service accounts referenced here, see [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam). In GitHub Actions, [Workload Identity Federation](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-workflows) eliminates key files entirely for CI/CD authentication.
+For creating and managing the service accounts referenced here, see [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam). In GitHub Actions, [Workload Identity Federation](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) eliminates key files entirely for CI/CD authentication.
 
 #### gcloud auth list, revoke, print-access-token — view and manage credentials
 

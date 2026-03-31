@@ -36,7 +36,7 @@ Standard equity valuation ratios used in index analysis and stock screening, bey
 
 > [!quote]
 > "The P/E ratio of any company that's fairly priced will equal its growth rate."
-> — **Peter Lynch**
+> — **Peter Lynch**, *One Up on Wall Street* (1989)
 
 
 The PEG ratio adjusts the price-to-earnings ratio by the company's earnings growth rate, providing a growth-adjusted valuation measure.
@@ -57,7 +57,7 @@ $$\text{PEG} = \frac{P/E}{\text{EPS Growth Rate (\%)}}$$
 
 > [!quote]
 > "The price-earnings ratio, averaged over ten years, is a strong predictor of the real rate of return on stocks over the subsequent ten years."
-> — **Robert Shiller**
+> — **Robert Shiller**, *Irrational Exuberance* (2000)
 
 
 The Cyclically Adjusted Price-to-Earnings ratio smooths earnings over a 10-year period, adjusting for inflation. Created by Robert Shiller, this metric reduces the impact of business cycle fluctuations.
@@ -108,7 +108,7 @@ $$\text{FCF Yield} = \frac{\text{Free Cash Flow}}{\text{Market Cap}} \times 100$
 
 > [!quote]
 > "Price is what you pay. Value is what you get."
-> — **Benjamin Graham**
+> — **Benjamin Graham**, *The Intelligent Investor* (1949)
 
 
 The inverse of P/E, earnings yield enables direct comparison with bond yields — the "Fed Model" framework.

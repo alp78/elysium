@@ -31,13 +31,15 @@ date: 2026-03-28
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
 > [!quote]
-> "The market is a weighing machine." — Benjamin Graham
+> "The market is a weighing machine."
+> — **Benjamin Graham**, *The Intelligent Investor* (1949)
 
 
 
-> The product of a security's price, its total shares outstanding, and its free-float factor, representing the portion of market value available for public trading after excluding strategic, locked-in, or restricted holdings.
+The product of a security's price, its total shares outstanding, and its free-float factor, representing the portion of market value available for public trading after excluding strategic, locked-in, or restricted holdings.
 
-Adjusted free-float market capitalization is the standard measure STOXX uses to determine a constituent's weight within a capitalization-weighted index. By removing shares held by insiders, governments, or cross-holdings, the figure reflects only the investable portion of a company's equity. This prevents indices from overweighting companies where a large fraction of shares is illiquid or unavailable to the market.
+> [!note]
+> Adjusted free-float market capitalization is the standard measure STOXX uses to determine a constituent's weight within a capitalization-weighted index. By removing shares held by insiders, governments, or cross-holdings, the figure reflects only the investable portion of a company's equity. This prevents indices from overweighting companies where a large fraction of shares is illiquid or unavailable to the market.
 
 $$
 \text{AFFMC}_i = P_i \times S_i \times f_i
@@ -77,9 +79,10 @@ Where $P_i$ is the closing price of security $i$, $S_i$ is total shares outstand
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="28 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 28</span>
 
 
-> The calendar date on which an index provider publicly discloses the results of a periodic review, including additions, deletions, and share or free-float factor changes, before they become effective.
+The calendar date on which an index provider publicly discloses the results of a periodic review, including additions, deletions, and share or free-float factor changes, before they become effective.
 
-The announcement date gives market participants advance notice of upcoming index changes so they can prepare trades and manage tracking portfolios. STOXX typically announces review changes several trading days before the effective date. The gap between announcement and implementation is critical for reducing market impact and allowing orderly rebalancing by passive funds.
+> [!note]
+> The announcement date gives market participants advance notice of upcoming index changes so they can prepare trades and manage tracking portfolios. STOXX typically announces review changes several trading days before the effective date. The gap between announcement and implementation is critical for reducing market impact and allowing orderly rebalancing by passive funds.
 
 
 - [Dax Equity Calculation Guide 20231002 (PDF)](https://www.stoxx.com/document/News/2023/October/DAX%20Equity%20Calculation%20Guide_20231002.pdf)
@@ -132,14 +135,12 @@ The announcement date gives market participants advance notice of upcoming index
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="88 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 88</span>
 
-> [!quote]
-> "Every journey has a first step, and every measurement has a starting point." — Anonymous
 
 
+The reference calendar date from which an index's historical performance begins, serving as the temporal anchor for the index level series.
 
-> The reference calendar date from which an index's historical performance begins, serving as the temporal anchor for the index level series.
-
-The base date is the starting point of an index's time series. On this date the index is assigned its base value (e.g., 100 or 1,000), and all subsequent index levels are expressed relative to this starting point. Choosing a meaningful base date allows users to interpret index returns as cumulative performance since inception. STOXX indices typically specify both a base date and a base value in their rulebooks.
+> [!note]
+> The base date is the starting point of an index's time series. On this date the index is assigned its base value (e.g., 100 or 1,000), and all subsequent index levels are expressed relative to this starting point. Choosing a meaningful base date allows users to interpret index returns as cumulative performance since inception. STOXX indices typically specify both a base date and a base value in their rulebooks.
 
 > [!tip] Related terms
 > [Base Value](#base-value), [Index Level](#index-level)
@@ -185,14 +186,12 @@ The base date is the starting point of an index's time series. On this date the 
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="659 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 659</span>
 
-> [!quote]
-> "The beginning is the most important part of the work." — Plato
 
 
+The numerical level assigned to an index on its base date, from which all subsequent index levels are derived as a ratio of current aggregate market value to the original aggregate market value.
 
-> The numerical level assigned to an index on its base date, from which all subsequent index levels are derived as a ratio of current aggregate market value to the original aggregate market value.
-
-The base value is an arbitrary scaling constant — commonly set to 100, 1,000, or 5,000 — that makes the index level easy to read and compare. It has no economic meaning in itself; it merely anchors the level on the base date. Every STOXX index rulebook specifies both the base date and the base value, enabling users to compute cumulative returns over any period.
+> [!note]
+> The base value is an arbitrary scaling constant — commonly set to 100, 1,000, or 5,000 — that makes the index level easy to read and compare. It has no economic meaning in itself; it merely anchors the level on the base date. Every STOXX index rulebook specifies both the base date and the base value, enabling users to compute cumulative returns over any period.
 
 > [!tip] Related terms
 > [Base Date](#base-date), [Index Level](#index-level), [Divisor](#divisor)
@@ -240,14 +239,12 @@ The base value is an arbitrary scaling constant — commonly set to 100, 1,000, 
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
 
-> [!quote]
-> "Beware of little expenses; a small leak will sink a great ship." — Benjamin Franklin
 
 
+A unit of measurement equal to one hundredth of one percent (0.01%), commonly used to express small changes in index levels, tracking error, or fee differentials.
 
-> A unit of measurement equal to one hundredth of one percent (0.01%), commonly used to express small changes in index levels, tracking error, or fee differentials.
-
-In index construction, basis points provide a precise vocabulary for discussing weight changes, tracking tolerances, and return differences. For example, an index constituent whose weight changes from 3.50% to 3.55% has experienced a 5 basis-point increase. STOXX methodology documents frequently express capping thresholds, buffer tolerances, and turnover targets in basis-point terms.
+> [!note]
+> In index construction, basis points provide a precise vocabulary for discussing weight changes, tracking tolerances, and return differences. For example, an index constituent whose weight changes from 3.50% to 3.55% has experienced a 5 basis-point increase. STOXX methodology documents frequently express capping thresholds, buffer tolerances, and turnover targets in basis-point terms.
 
 $$
 1 \text{ bp} = 0.01\% = 0.0001
@@ -299,13 +296,14 @@ $$
 
 > [!quote]
 > "The index fund is a most unlikely hero for the typical investor."
-> — **John C. Bogle**
+> — **John C. Bogle**, *The Little Book of Common Sense Investing* (2007)
 
 
 
-> A broadly representative, rules-based index that serves as a standard reference point for measuring the performance of investment portfolios, defining asset allocation, or constructing derivative instruments.
+A broadly representative, rules-based index that serves as a standard reference point for measuring the performance of investment portfolios, defining asset allocation, or constructing derivative instruments.
 
-Benchmark indices are the flagship products of index providers. STOXX benchmark indices — such as the EURO STOXX 50, STOXX Europe 600, and STOXX Global 1800 — are designed to capture the performance of a defined market segment with high coverage and investability. They underpin trillions of euros in passive assets, ETFs, futures, and options. Benchmark status typically requires broad market acceptance, regulatory compliance (e.g., EU BMR), and transparent, rules-based construction.
+> [!note]
+> Benchmark indices are the flagship products of index providers. STOXX benchmark indices — such as the EURO STOXX 50, STOXX Europe 600, and STOXX Global 1800 — are designed to capture the performance of a defined market segment with high coverage and investability. They underpin trillions of euros in passive assets, ETFs, futures, and options. Benchmark status typically requires broad market acceptance, regulatory compliance (e.g., EU BMR), and transparent, rules-based construction.
 
 > [!tip] Related terms
 > [Rules-Based Index](#rules-based-index), [Index Universe](#index-universe), [Free-Float Market Capitalization Weighting](#free-float-market-capitalization-weighting)
@@ -353,14 +351,12 @@ Benchmark indices are the flagship products of index providers. STOXX benchmark 
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="65 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 65</span>
 
-> [!quote]
-> "The art of being wise is the art of knowing what to overlook." — William James
 
 
+A threshold band applied during periodic reviews that allows existing constituents to remain in the index even if they marginally fail to meet the standard selection criteria, thereby reducing unnecessary turnover.
 
-> A threshold band applied during periodic reviews that allows existing constituents to remain in the index even if they marginally fail to meet the standard selection criteria, thereby reducing unnecessary turnover.
-
-Buffer rules create a zone of tolerance around the selection threshold. For example, an index that selects the top 50 stocks by market capitalization might retain a current constituent as long as it ranks within the top 60, while a new entrant must rank within the top 40 to be added. This asymmetry prevents excessive churn caused by securities oscillating around the selection boundary, which would increase transaction costs for tracking portfolios.
+> [!note]
+> Buffer rules create a zone of tolerance around the selection threshold. For example, an index that selects the top 50 stocks by market capitalization might retain a current constituent as long as it ranks within the top 60, while a new entrant must rank within the top 40 to be added. This asymmetry prevents excessive churn caused by securities oscillating around the selection boundary, which would increase transaction costs for tracking portfolios.
 
 > [!tip] Related terms
 > [Fast Entry Rule](#fast-entry-rule), [Fast Exit Rule](#fast-exit-rule), [Reconstitution](#reconstitution), [Turnover](#turnover)
@@ -415,9 +411,10 @@ Buffer rules create a zone of tolerance around the selection threshold. For exam
 
 
 
-> The process of imposing a maximum weight constraint on individual constituents or groups of constituents within an index to ensure diversification and regulatory compliance.
+The process of imposing a maximum weight constraint on individual constituents or groups of constituents within an index to ensure diversification and regulatory compliance.
 
-Capping prevents any single security or issuer from dominating an index. STOXX applies capping at each periodic review and, for certain indices, on a more frequent basis. For UCITS-compliant indices, the 5/10/40 rule applies: no single constituent may exceed 10% weight, and all constituents above 5% may not collectively exceed 40%. Capping is implemented by adjusting each constituent's weight to satisfy these constraints while maintaining market-cap ranking order wherever possible.
+> [!note]
+> Capping prevents any single security or issuer from dominating an index. STOXX applies capping at each periodic review and, for certain indices, on a more frequent basis. For UCITS-compliant indices, the 5/10/40 rule applies: no single constituent may exceed 10% weight, and all constituents above 5% may not collectively exceed 40%. Capping is implemented by adjusting each constituent's weight to satisfy these constraints while maintaining market-cap ranking order wherever possible.
 
 $$
 w_i^{\text{capped}} = \min\!\left(w_i^{\text{uncapped}},\; W_{\max}\right)
@@ -470,14 +467,12 @@ Where $w_i^{\text{uncapped}}$ is the raw weight and $W_{\max}$ is the cap limit.
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="104 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 104</span>
 
-> [!quote]
-> "No single raindrop believes it is responsible for the flood." — Anonymous
 
 
+A multiplicative coefficient applied to a constituent's weight at each rebalancing to enforce the index's maximum weight constraint, where a value of 1.0 means no adjustment and values below 1.0 indicate the constituent has been scaled down.
 
-> A multiplicative coefficient applied to a constituent's weight at each rebalancing to enforce the index's maximum weight constraint, where a value of 1.0 means no adjustment and values below 1.0 indicate the constituent has been scaled down.
-
-The capping factor is the operational mechanism through which capping is implemented. STOXX calculates these factors during each review or capping event and publishes them alongside share counts and free-float factors. The capped weight of a constituent equals its uncapped weight multiplied by its capping factor.
+> [!note]
+> The capping factor is the operational mechanism through which capping is implemented. STOXX calculates these factors during each review or capping event and publishes them alongside share counts and free-float factors. The capped weight of a constituent equals its uncapped weight multiplied by its capping factor.
 
 $$
 w_i^{\text{capped}} = \text{CF}_i \times w_i^{\text{uncapped}}, \quad 0 < \text{CF}_i \le 1
@@ -523,14 +518,12 @@ $$
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="18 mentions across STOXX & ISS pages (low)">▰▰ 18</span>
 
-> [!quote]
-> "The chain of memory is the chain of identity." — John Locke
 
 
+The technique of linking successive index segments across rebalancing or reconstitution events by multiplying the return of the new basket onto the cumulative index level of the old basket, ensuring a continuous time series despite changes in composition or weights.
 
-> The technique of linking successive index segments across rebalancing or reconstitution events by multiplying the return of the new basket onto the cumulative index level of the old basket, ensuring a continuous time series despite changes in composition or weights.
-
-Chaining is the mathematical mechanism that allows an index to remain a single unbroken series even as its constituents change over time. At each rebalancing or reconstitution, the new basket's performance is "chained" onto the prior index level. This is operationally achieved through the divisor adjustment: the divisor absorbs the compositional change so that the index level is continuous across the transition. Without chaining, every reconstitution would reset the index level to an arbitrary value.
+> [!note]
+> Chaining is the mathematical mechanism that allows an index to remain a single unbroken series even as its constituents change over time. At each rebalancing or reconstitution, the new basket's performance is "chained" onto the prior index level. This is operationally achieved through the divisor adjustment: the divisor absorbs the compositional change so that the index level is continuous across the transition. Without chaining, every reconstitution would reset the index level to an arbitrary value.
 
 $$
 \text{Index}_{t+k} = \text{Index}_t \times \prod_{j=1}^{k} \left(1 + R_j^{\text{new basket}}\right)
@@ -584,14 +577,12 @@ Where $R_j^{\text{new basket}}$ is the return of the post-rebalancing basket on 
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3,668 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 3,668</span>
 
-> [!quote]
-> "The whole is greater than the sum of its parts." — Aristotle
 
 
+A security that is currently included in an index and contributes to its level calculation; synonymous with "constituent" in STOXX documentation.
 
-> A security that is currently included in an index and contributes to its level calculation; synonymous with "constituent" in STOXX documentation.
-
-The terms "component" and "constituent" are used interchangeably throughout the index industry. Each component has an associated weight determined by the index's weighting scheme, and its price movements directly influence the index level. The set of components is determined during reconstitution events and may change between reviews through corporate actions or fast-entry/fast-exit rules.
+> [!note]
+> The terms "component" and "constituent" are used interchangeably throughout the index industry. Each component has an associated weight determined by the index's weighting scheme, and its price movements directly influence the index level. The set of components is determined during reconstitution events and may change between reviews through corporate actions or fast-entry/fast-exit rules.
 
 > [!tip] Related terms
 > [Constituent](#constituent), [Selection Criteria](#selection-criteria), [Index Universe](#index-universe)
@@ -638,14 +629,12 @@ The terms "component" and "constituent" are used interchangeably throughout the 
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-> [!quote]
-> "Put all your eggs in one basket, and then watch that basket." — Andrew Carnegie
 
 
+A maximum threshold on the aggregate weight of a defined group of constituents — such as a single country, sector, or issuer group — designed to ensure diversification within the index beyond individual constituent caps.
 
-> A maximum threshold on the aggregate weight of a defined group of constituents — such as a single country, sector, or issuer group — designed to ensure diversification within the index beyond individual constituent caps.
-
-Concentration limits operate at a higher level than individual capping. While capping constrains the weight of a single security, concentration limits constrain the combined weight of a group. For example, a STOXX index might impose a rule that no single country may represent more than 30% of total index weight, or that the top five constituents combined may not exceed 40%. These limits are enforced during rebalancing through iterative weight redistribution, similar to the capping process.
+> [!note]
+> Concentration limits operate at a higher level than individual capping. While capping constrains the weight of a single security, concentration limits constrain the combined weight of a group. For example, a STOXX index might impose a rule that no single country may represent more than 30% of total index weight, or that the top five constituents combined may not exceed 40%. These limits are enforced during rebalancing through iterative weight redistribution, similar to the capping process.
 
 $$
 \sum_{i \in G} w_i \le W_{\max}^{\text{group}}
@@ -672,14 +661,12 @@ Where $G$ is the set of constituents belonging to the group and $W_{\max}^{\text
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,462 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,462</span>
 
-> [!quote]
-> "A team is not a group of people who work together. It is a group of people who trust each other." — Simon Sinek
 
 
+An individual security that is a member of an index at a given point in time and whose price, shares, and weighting factors contribute to the computation of the index level.
 
-> An individual security that is a member of an index at a given point in time and whose price, shares, and weighting factors contribute to the computation of the index level.
-
-"Constituent" is the preferred formal term in STOXX methodology documentation. Each constituent is characterized by its price, number of shares, free-float factor, and any applicable capping factor. The complete list of constituents for each STOXX index is published and updated at each periodic review.
+> [!note]
+> "Constituent" is the preferred formal term in STOXX methodology documentation. Each constituent is characterized by its price, number of shares, free-float factor, and any applicable capping factor. The complete list of constituents for each STOXX index is published and updated at each periodic review.
 
 > [!tip] Related terms
 > [Component](#component), [Eligibility Criteria](#eligibility-criteria), [Selection List](#selection-list)
@@ -726,14 +713,12 @@ Where $G$ is the set of constituents belonging to the group and $W_{\max}^{\text
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="84 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 84</span>
 
-> [!quote]
-> "In God we trust; all others must bring data." — W. Edwards Deming
 
 
+A scaling factor in the index formula that preserves continuity of the index level across non-market events such as constituent changes, corporate actions, and rebalancing; it absorbs the mechanical impact of these events so the index level changes only due to price movements.
 
-> A scaling factor in the index formula that preserves continuity of the index level across non-market events such as constituent changes, corporate actions, and rebalancing; it absorbs the mechanical impact of these events so the index level changes only due to price movements.
-
-The divisor is the single most important technical element in index maintenance. When an index is first created, the divisor is set so that the formula produces the desired base value. Thereafter, every time a non-market event would otherwise cause a discontinuity — an addition, deletion, share change, or capping adjustment — the divisor is recalculated to keep the index level unchanged at the moment of the change.
+> [!note]
+> The divisor is the single most important technical element in index maintenance. When an index is first created, the divisor is set so that the formula produces the desired base value. Thereafter, every time a non-market event would otherwise cause a discontinuity — an addition, deletion, share change, or capping adjustment — the divisor is recalculated to keep the index level unchanged at the moment of the change.
 
 $$
 D_{t+1} = D_t \times \frac{\sum_{i=1}^{n'} P_i^{t} \times S_i^{\text{new}} \times f_i^{\text{new}} \times \text{CF}_i^{\text{new}}}{\sum_{i=1}^{n} P_i^{t} \times S_i^{\text{old}} \times f_i^{\text{old}} \times \text{CF}_i^{\text{old}}}
@@ -785,14 +770,12 @@ The numerator uses the new composition (post-event) and the denominator uses the
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
-> [!quote]
-> "You cannot step into the same river twice, but you can measure it consistently." — Heraclitus (adapted)
 
 
+The recalculation of the index divisor triggered by any non-market event — including constituent additions or deletions, share changes, free-float factor updates, corporate actions, or capping factor modifications — to ensure continuity of the index level.
 
-> The recalculation of the index divisor triggered by any non-market event — including constituent additions or deletions, share changes, free-float factor updates, corporate actions, or capping factor modifications — to ensure continuity of the index level.
-
-A divisor adjustment is performed whenever the aggregate capitalization of the index would change for reasons unrelated to market price movements. The adjustment is timed to take effect at the close of trading on the day before the event becomes effective. By solving for the new divisor that equates the pre-event and post-event index levels, STOXX ensures a seamless transition.
+> [!note]
+> A divisor adjustment is performed whenever the aggregate capitalization of the index would change for reasons unrelated to market price movements. The adjustment is timed to take effect at the close of trading on the day before the event becomes effective. By solving for the new divisor that equates the pre-event and post-event index levels, STOXX ensures a seamless transition.
 
 > [!tip] Related terms
 > [Divisor](#divisor), [Corporate Action Treatment](#corporate-action-treatment), [Rebalancing](#rebalancing)
@@ -820,14 +803,12 @@ A divisor adjustment is performed whenever the aggregate capitalization of the i
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="346 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 346</span>
 
-> [!quote]
-> "Timing is everything." — Anonymous
 
 
+The calendar date on which announced index changes — including additions, deletions, share updates, and rebalanced weights — take effect in the live index calculation.
 
-> The calendar date on which announced index changes — including additions, deletions, share updates, and rebalanced weights — take effect in the live index calculation.
-
-The effective date is the implementation point for all changes disclosed on the announcement date. STOXX index changes are typically implemented at the opening of trading on the effective date, using the closing prices from the preceding trading day to compute the divisor adjustment. The gap between announcement and effective date (usually several trading days) is designed to give market participants time to adjust their portfolios in an orderly manner, minimizing market impact.
+> [!note]
+> The effective date is the implementation point for all changes disclosed on the announcement date. STOXX index changes are typically implemented at the opening of trading on the effective date, using the closing prices from the preceding trading day to compute the divisor adjustment. The gap between announcement and effective date (usually several trading days) is designed to give market participants time to adjust their portfolios in an orderly manner, minimizing market impact.
 
 > [!tip] Related terms
 > [Announcement Date](#announcement-date), [Periodic Review](#periodic-review), [Divisor Adjustment](#divisor-adjustment)
@@ -875,13 +856,14 @@ The effective date is the implementation point for all changes disclosed on the 
 
 > [!quote]
 > "The essence of investment management is the management of risks, not the management of returns."
-> — **Benjamin Graham**
+> — **Benjamin Graham**, *The Intelligent Investor* (1949)
 
 
 
-> The set of minimum requirements — covering domicile, listing venue, security type, liquidity, free-float, and sector classification — that a security must satisfy before it can be considered for inclusion in an index.
+The set of minimum requirements — covering domicile, listing venue, security type, liquidity, free-float, and sector classification — that a security must satisfy before it can be considered for inclusion in an index.
 
-Eligibility criteria act as the first filter in the index construction process. STOXX indices typically require that a security be a common equity share (no preferred shares, warrants, or convertibles), listed on a recognized exchange within the index's geographic scope, and meet minimum thresholds for free-float and trading liquidity. Only securities passing all eligibility screens enter the selection universe from which constituents are chosen.
+> [!note]
+> Eligibility criteria act as the first filter in the index construction process. STOXX indices typically require that a security be a common equity share (no preferred shares, warrants, or convertibles), listed on a recognized exchange within the index's geographic scope, and meet minimum thresholds for free-float and trading liquidity. Only securities passing all eligibility screens enter the selection universe from which constituents are chosen.
 
 > [!tip] Related terms
 > [Selection Criteria](#selection-criteria), [Index Universe](#index-universe), [Free-Float](#free-float)
@@ -929,15 +911,12 @@ Eligibility criteria act as the first filter in the index construction process. 
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="27 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 27</span>
 
-> [!quote]
-> "The market can stay irrational longer than you can stay solvent."
-> — **John Maynard Keynes**
 
 
+A weighting scheme in which every constituent of an index receives the same weight at each rebalancing date, regardless of market capitalization, price, or any fundamental metric.
 
-> A weighting scheme in which every constituent of an index receives the same weight at each rebalancing date, regardless of market capitalization, price, or any fundamental metric.
-
-In an equally weighted index with $n$ constituents, each security receives a weight of $1/n$ at rebalancing. Between rebalancing dates, weights drift as prices diverge, requiring periodic realignment. Equal weighting tilts exposure toward smaller-capitalization names relative to a cap-weighted benchmark and increases turnover due to the need for regular rebalancing.
+> [!note]
+> In an equally weighted index with $n$ constituents, each security receives a weight of $1/n$ at rebalancing. Between rebalancing dates, weights drift as prices diverge, requiring periodic realignment. Equal weighting tilts exposure toward smaller-capitalization names relative to a cap-weighted benchmark and increases turnover due to the need for regular rebalancing.
 
 $$
 w_i = \frac{1}{n}, \quad \forall\; i \in \{1, 2, \ldots, n\}
@@ -990,14 +969,12 @@ $$
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="21 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 21</span>
 
-> [!quote]
-> "The early bird catches the worm." — William Camden
 
 
+A provision that allows a security to be added to an index outside the regular periodic review schedule when it rapidly meets pre-defined criteria, typically related to a sharp increase in market capitalization or a significant corporate event such as an IPO or spin-off.
 
-> A provision that allows a security to be added to an index outside the regular periodic review schedule when it rapidly meets pre-defined criteria, typically related to a sharp increase in market capitalization or a significant corporate event such as an IPO or spin-off.
-
-Fast entry rules ensure that indices remain representative of the market between scheduled reviews. If a newly listed company or a rapidly growing stock rises to a level that would clearly qualify it for inclusion under normal review criteria, the fast entry rule triggers an interim addition. STOXX defines specific ranking thresholds for fast entry that are typically more stringent than the standard inclusion threshold.
+> [!note]
+> Fast entry rules ensure that indices remain representative of the market between scheduled reviews. If a newly listed company or a rapidly growing stock rises to a level that would clearly qualify it for inclusion under normal review criteria, the fast entry rule triggers an interim addition. STOXX defines specific ranking thresholds for fast entry that are typically more stringent than the standard inclusion threshold.
 
 > [!tip] Related terms
 > [Fast Exit Rule](#fast-exit-rule), [Buffer Rule](#buffer-rule), [Periodic Review](#periodic-review)
@@ -1045,14 +1022,12 @@ Fast entry rules ensure that indices remain representative of the market between
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="24 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 24</span>
 
-> [!quote]
-> "Know when to hold them, know when to fold them." — Kenny Rogers
 
 
+A provision that triggers the removal of a constituent from an index between periodic reviews when it becomes ineligible due to events such as delisting, bankruptcy, or a severe decline in liquidity or market capitalization below a specified floor.
 
-> A provision that triggers the removal of a constituent from an index between periodic reviews when it becomes ineligible due to events such as delisting, bankruptcy, or a severe decline in liquidity or market capitalization below a specified floor.
-
-Fast exit rules protect index integrity by promptly removing securities that no longer meet minimum standards. Without such rules, a bankrupt or illiquid stock could remain in the index for months until the next scheduled review, distorting returns and creating tracking difficulties. STOXX applies fast exit removals effective at the close of the day before the event or as soon as practicable.
+> [!note]
+> Fast exit rules protect index integrity by promptly removing securities that no longer meet minimum standards. Without such rules, a bankrupt or illiquid stock could remain in the index for months until the next scheduled review, distorting returns and creating tracking difficulties. STOXX applies fast exit removals effective at the close of the day before the event or as soon as practicable.
 
 > [!tip] Related terms
 > [Fast Entry Rule](#fast-entry-rule), [Buffer Rule](#buffer-rule), [Corporate Action Treatment](#corporate-action-treatment)
@@ -1098,15 +1073,12 @@ Fast exit rules protect index integrity by promptly removing securities that no 
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,168 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,168</span>
 
-> [!quote]
-> "Price is what you pay; value is what you get."
-> — **Warren Buffett**
 
 
+The proportion of a company's total shares outstanding that is available for trading by public investors, excluding shares held by strategic investors, company insiders, governments, and other long-term locked-in holders.
 
-> The proportion of a company's total shares outstanding that is available for trading by public investors, excluding shares held by strategic investors, company insiders, governments, and other long-term locked-in holders.
-
-Free-float is a critical concept in modern index construction. STOXX defines strategic holdings as those exceeding 5% of outstanding shares held by a single entity with an apparent long-term intent (e.g., founding families, governments, cross-holdings). These shares are excluded from the free-float calculation. A higher free-float indicates greater investability and liquidity, and ensures index weights reflect tradeable market value.
+> [!note]
+> Free-float is a critical concept in modern index construction. STOXX defines strategic holdings as those exceeding 5% of outstanding shares held by a single entity with an apparent long-term intent (e.g., founding families, governments, cross-holdings). These shares are excluded from the free-float calculation. A higher free-float indicates greater investability and liquidity, and ensures index weights reflect tradeable market value.
 
 > [!tip] Related terms
 > [Free-Float Factor](#free-float-factor), [Adjusted Free-Float Market Capitalization](#adjusted-free-float-market-capitalization), [Eligibility Criteria](#eligibility-criteria)
@@ -1151,14 +1123,12 @@ Free-float is a critical concept in modern index construction. STOXX defines str
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="25 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 25</span>
 
-> [!quote]
-> "Not everything that can be counted counts, and not everything that counts can be counted." — William Bruce Cameron
 
 
+A decimal coefficient between 0 and 1, typically rounded to the nearest 5% increment, representing the fraction of a company's shares that are freely available for public trading.
 
-> A decimal coefficient between 0 and 1, typically rounded to the nearest 5% increment, representing the fraction of a company's shares that are freely available for public trading.
-
-STOXX assigns free-float factors in bands (e.g., 0.05, 0.10, 0.15, ..., 0.95, 1.00). A company with 70% free-float receives a factor of 0.70. This factor is multiplied by total shares outstanding to arrive at free-float shares, which in turn determine the constituent's weight in a free-float capitalization-weighted index. ISS provides underlying ownership data that STOXX uses to compute these factors.
+> [!note]
+> STOXX assigns free-float factors in bands (e.g., 0.05, 0.10, 0.15, ..., 0.95, 1.00). A company with 70% free-float receives a factor of 0.70. This factor is multiplied by total shares outstanding to arrive at free-float shares, which in turn determine the constituent's weight in a free-float capitalization-weighted index. ISS provides underlying ownership data that STOXX uses to compute these factors.
 
 $$
 f_i = \frac{\text{Free-Float Shares}_i}{\text{Total Shares Outstanding}_i}
@@ -1219,9 +1189,10 @@ Rounded to the nearest 0.05.
 
 
 
-> An index variant that measures total performance by reinvesting the full amount of all ordinary cash dividends on the ex-date at the closing price of the paying constituent, without deducting any withholding taxes.
+An index variant that measures total performance by reinvesting the full amount of all ordinary cash dividends on the ex-date at the closing price of the paying constituent, without deducting any withholding taxes.
 
-The gross return index represents the maximum theoretical return achievable by an investor who captures all dividends without any tax leakage. It serves as a useful upper bound for performance comparison. STOXX calculates gross return indices alongside price return and net return variants for most of its index families.
+> [!note]
+> The gross return index represents the maximum theoretical return achievable by an investor who captures all dividends without any tax leakage. It serves as a useful upper bound for performance comparison. STOXX calculates gross return indices alongside price return and net return variants for most of its index families.
 
 $$
 \text{GRI}_t = \text{GRI}_{t-1} \times \frac{\sum_{i=1}^{n} P_i^t \times S_i \times f_i \times \text{CF}_i + \sum_{i \in \text{ex}} D_i \times S_i \times f_i \times \text{CF}_i}{\sum_{i=1}^{n} P_i^{t-1} \times S_i \times f_i \times \text{CF}_i}
@@ -1277,15 +1248,12 @@ Where $D_i$ is the gross (pre-tax) dividend per share for constituent $i$ going 
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="253 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 253</span>
 
-> [!quote]
-> "A random walk down Wall Street with its eyes shut would select a portfolio doing just as well as one carefully selected by experts."
-> — **Burton Malkiel**
 
 
+The continuous or end-of-day computational process by which constituent prices, shares, free-float factors, and capping factors are combined via the index formula to produce the index level at each point in time.
 
-> The continuous or end-of-day computational process by which constituent prices, shares, free-float factors, and capping factors are combined via the index formula to produce the index level at each point in time.
-
-STOXX calculates its indices in real time during exchange trading hours and publishes end-of-day official closing levels based on closing auction prices. The calculation engine applies the Laspeyres-type formula, maintaining the divisor to ensure continuity. Intra-day calculations typically use last-traded prices, while end-of-day calculations use official closing prices from the primary listing exchange.
+> [!note]
+> STOXX calculates its indices in real time during exchange trading hours and publishes end-of-day official closing levels based on closing auction prices. The calculation engine applies the Laspeyres-type formula, maintaining the divisor to ensure continuity. Intra-day calculations typically use last-traded prices, while end-of-day calculations use official closing prices from the primary listing exchange.
 
 > [!tip] Related terms
 > [Index Formula (Laspeyres)](#index-formula-laspeyres), [Divisor](#divisor), [Index Level](#index-level)
@@ -1333,14 +1301,12 @@ STOXX calculates its indices in real time during exchange trading hours and publ
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-> [!quote]
-> "In the multitude of counsellors there is safety." — Proverbs 11:14
 
 
+A governance body composed of senior professionals within the index provider organization responsible for overseeing index methodology, approving rule changes, exercising discretion in exceptional circumstances, and ensuring the integrity and representativeness of the index.
 
-> A governance body composed of senior professionals within the index provider organization responsible for overseeing index methodology, approving rule changes, exercising discretion in exceptional circumstances, and ensuring the integrity and representativeness of the index.
-
-The STOXX Index Committee (or equivalent governance body) serves as the ultimate decision-making authority for all methodology-related matters. It convenes periodically to review the results of periodic reviews, approve exceptional treatments, and consider methodology enhancements. The committee may exercise expert judgment in situations not fully covered by the rulebook — for example, during market disruptions or unprecedented corporate events. Its composition, mandate, and decision-making procedures are disclosed in compliance with the EU Benchmark Regulation (BMR) and IOSCO Principles.
+> [!note]
+> The STOXX Index Committee (or equivalent governance body) serves as the ultimate decision-making authority for all methodology-related matters. It convenes periodically to review the results of periodic reviews, approve exceptional treatments, and consider methodology enhancements. The committee may exercise expert judgment in situations not fully covered by the rulebook — for example, during market disruptions or unprecedented corporate events. Its composition, mandate, and decision-making procedures are disclosed in compliance with the EU Benchmark Regulation (BMR) and IOSCO Principles.
 
 > [!tip] Related terms
 > [Periodic Review](#periodic-review), [Rules-Based Index](#rules-based-index), [Stakeholder Consultation](#stakeholder-consultation)
@@ -1361,14 +1327,12 @@ The STOXX Index Committee (or equivalent governance body) serves as the ultimate
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="72 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 72</span>
 
-> [!quote]
-> "Pure mathematics is the poetry of logical ideas." — Albert Einstein
 
 
+The mathematical expression used to compute a capitalization-weighted index level, based on the Laspeyres aggregation method, where quantities (shares) are held fixed between rebalancing dates and the index reflects only price changes.
 
-> The mathematical expression used to compute a capitalization-weighted index level, based on the Laspeyres aggregation method, where quantities (shares) are held fixed between rebalancing dates and the index reflects only price changes.
-
-The Laspeyres framework underpins virtually all modern capitalization-weighted indices. In the STOXX implementation, the formula divides the sum of all constituents' adjusted free-float market capitalizations by the divisor. The divisor is calibrated so that the formula yields the base value on the base date, and it is subsequently adjusted to absorb all non-price changes.
+> [!note]
+> The Laspeyres framework underpins virtually all modern capitalization-weighted indices. In the STOXX implementation, the formula divides the sum of all constituents' adjusted free-float market capitalizations by the divisor. The divisor is calibrated so that the formula yields the base value on the base date, and it is subsequently adjusted to absorb all non-price changes.
 
 $$
 \text{Index}_t = \frac{\sum_{i=1}^{n} P_i^t \times S_i \times f_i \times \text{CF}_i}{D_t}
@@ -1426,14 +1390,12 @@ Where:
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="106 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 106</span>
 
-> [!quote]
-> "The thermometer of a society is its stock market." — Anonymous
 
 
+The numerical value of an index at a given point in time, representing the cumulative effect of constituent price changes since the base date, scaled by the base value and maintained via the divisor.
 
-> The numerical value of an index at a given point in time, representing the cumulative effect of constituent price changes since the base date, scaled by the base value and maintained via the divisor.
-
-The index level is the single number quoted in financial markets — for example, "the EURO STOXX 50 closed at 4,285.50." It is calculated by dividing the aggregate adjusted free-float market capitalization of all constituents by the divisor. Changes in the index level between two dates (expressed as a percentage) represent the index return over that period.
+> [!note]
+> The index level is the single number quoted in financial markets — for example, "the EURO STOXX 50 closed at 4,285.50." It is calculated by dividing the aggregate adjusted free-float market capitalization of all constituents by the divisor. Changes in the index level between two dates (expressed as a percentage) represent the index return over that period.
 
 > [!tip] Related terms
 > [Base Value](#base-value), [Base Date](#base-date), [Index Calculation](#index-calculation)
@@ -1481,9 +1443,10 @@ The index level is the single number quoted in financial markets — for example
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="79 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 79</span>
 
 
-> A unit of change in the index level, where a movement of one index point represents a change of 1.0 in the numerical index value, distinct from a percentage or basis-point change.
+A unit of change in the index level, where a movement of one index point represents a change of 1.0 in the numerical index value, distinct from a percentage or basis-point change.
 
-Index points are the raw unit of index level movement. A move from 4,200.00 to 4,215.00 is a 15-point move. Because the meaning of an index point depends on the level of the index, percentage returns are preferred for performance comparison. However, index points are commonly used in quoting futures and options on indices, in daily market commentary, and in specifying settlement values of index derivatives.
+> [!note]
+> Index points are the raw unit of index level movement. A move from 4,200.00 to 4,215.00 is a 15-point move. Because the meaning of an index point depends on the level of the index, percentage returns are preferred for performance comparison. However, index points are commonly used in quoting futures and options on indices, in daily market commentary, and in specifying settlement values of index derivatives.
 
 $$
 \Delta \text{pts} = \text{Index}_t - \text{Index}_{t-1}
@@ -1545,9 +1508,10 @@ $$
 
 
 
-> The broadest set of securities from which an index's constituents may be selected, defined by geographic, exchange, sector, or asset-class criteria.
+The broadest set of securities from which an index's constituents may be selected, defined by geographic, exchange, sector, or asset-class criteria.
 
-The index universe is the starting pool before any eligibility or selection screens are applied. For example, the STOXX Europe 600 draws from the STOXX Europe Total Market Index, which itself covers securities listed in 17 European countries. The universe definition determines the geographic and economic scope of the index and is specified in the index rulebook.
+> [!note]
+> The index universe is the starting pool before any eligibility or selection screens are applied. For example, the STOXX Europe 600 draws from the STOXX Europe Total Market Index, which itself covers securities listed in 17 European countries. The universe definition determines the geographic and economic scope of the index and is specified in the index rulebook.
 
 > [!tip] Related terms
 > [Eligibility Criteria](#eligibility-criteria), [Selection Criteria](#selection-criteria), [Selection List](#selection-list)
@@ -1596,13 +1560,14 @@ The index universe is the starting pool before any eligibility or selection scre
 
 > [!quote]
 > "Liquidity is a coward — it disappears at the first sign of trouble."
-> — **Nassim Nicholas Taleb**
+> — **Nassim Nicholas Taleb**, *The Black Swan* (2007)
 
 
 
-> The degree to which an index can be practically replicated by a real-world portfolio, determined by the liquidity, free-float, and trading volumes of its constituents, as well as the index's turnover and weight concentration characteristics.
+The degree to which an index can be practically replicated by a real-world portfolio, determined by the liquidity, free-float, and trading volumes of its constituents, as well as the index's turnover and weight concentration characteristics.
 
-Investability is a core design objective for benchmark indices. STOXX ensures investability by imposing minimum liquidity and free-float requirements at the eligibility stage, applying free-float adjustments to weights, and using buffer rules to limit turnover. An index with poor investability would generate excessive tracking error for replicating portfolios, defeating its purpose as a benchmark. Investability considerations also inform the choice of review frequency, capping thresholds, and fast entry/exit rules.
+> [!note]
+> Investability is a core design objective for benchmark indices. STOXX ensures investability by imposing minimum liquidity and free-float requirements at the eligibility stage, applying free-float adjustments to weights, and using buffer rules to limit turnover. An index with poor investability would generate excessive tracking error for replicating portfolios, defeating its purpose as a benchmark. Investability considerations also inform the choice of review frequency, capping thresholds, and fast entry/exit rules.
 
 > [!tip] Related terms
 > [Free-Float](#free-float), [Eligibility Criteria](#eligibility-criteria), [Tracking Error](#tracking-error), [Turnover](#turnover)
@@ -1651,13 +1616,14 @@ Investability is a core design objective for benchmark indices. STOXX ensures in
 
 > [!quote]
 > "Don't look for the needle in the haystack — just buy the haystack."
-> — **John C. Bogle**
+> — **John C. Bogle**, *The Little Book of Common Sense Investing* (2007)
 
 
 
-> A weighting methodology in which each constituent's weight is proportional to its full (non-free-float-adjusted) market capitalization, calculated as share price multiplied by total shares outstanding.
+A weighting methodology in which each constituent's weight is proportional to its full (non-free-float-adjusted) market capitalization, calculated as share price multiplied by total shares outstanding.
 
-Full market-cap weighting was the original method used by early indices. It weights companies by their total equity value regardless of how much of that value is available for trading. Most modern benchmark indices, including those from STOXX, have moved to free-float-adjusted market-cap weighting, but full-cap weighting is still used in certain research and strategy indices.
+> [!note]
+> Full market-cap weighting was the original method used by early indices. It weights companies by their total equity value regardless of how much of that value is available for trading. Most modern benchmark indices, including those from STOXX, have moved to free-float-adjusted market-cap weighting, but full-cap weighting is still used in certain research and strategy indices.
 
 $$
 w_i = \frac{P_i \times S_i}{\sum_{j=1}^{n} P_j \times S_j}
@@ -1697,13 +1663,15 @@ $$
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="64 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 64</span>
 
 > [!quote]
-> "In this world nothing can be said to be certain, except death and taxes." — Benjamin Franklin
+> "In this world nothing can be said to be certain, except death and taxes."
+> — **Benjamin Franklin**
 
 
 
-> An index variant that reinvests dividends after deducting withholding taxes at the applicable rate for a specified investor domicile, reflecting the return achievable by a foreign or domestic investor subject to standard withholding tax regimes.
+An index variant that reinvests dividends after deducting withholding taxes at the applicable rate for a specified investor domicile, reflecting the return achievable by a foreign or domestic investor subject to standard withholding tax regimes.
 
-The net return index provides a more realistic performance measure than the gross return index for investors who cannot fully reclaim dividend withholding taxes. STOXX applies country-specific withholding tax rates, typically the maximum rate applicable to a non-treaty institutional investor. This makes the net return index the most commonly used benchmark for comparing fund performance.
+> [!note]
+> The net return index provides a more realistic performance measure than the gross return index for investors who cannot fully reclaim dividend withholding taxes. STOXX applies country-specific withholding tax rates, typically the maximum rate applicable to a non-treaty institutional investor. This makes the net return index the most commonly used benchmark for comparing fund performance.
 
 $$
 \text{NRI}_t = \text{NRI}_{t-1} \times \frac{\sum_{i=1}^{n} P_i^t \times S_i \times f_i \times \text{CF}_i + \sum_{i \in \text{ex}} D_i \times (1 - \tau_i) \times S_i \times f_i \times \text{CF}_i}{\sum_{i=1}^{n} P_i^{t-1} \times S_i \times f_i \times \text{CF}_i}
@@ -1758,9 +1726,10 @@ Where $\tau_i$ is the withholding tax rate applicable to the dividend of constit
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="122 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 122</span>
 
 
-> The rule specifying whether an index maintains a predetermined fixed count of constituents (e.g., exactly 50 stocks) or allows the count to vary based on eligibility and selection criteria at each review.
+The rule specifying whether an index maintains a predetermined fixed count of constituents (e.g., exactly 50 stocks) or allows the count to vary based on eligibility and selection criteria at each review.
 
-Fixed-count indices such as the EURO STOXX 50 always maintain exactly the target number of constituents. When a constituent is removed, a replacement is added to maintain the count. Variable-count indices, such as the STOXX Europe Total Market Index, include all securities that satisfy the eligibility and selection thresholds, and the number of constituents may change at each review. Fixed-count indices typically require more elaborate buffer rules and ranking procedures.
+> [!note]
+> Fixed-count indices such as the EURO STOXX 50 always maintain exactly the target number of constituents. When a constituent is removed, a replacement is added to maintain the count. Variable-count indices, such as the STOXX Europe Total Market Index, include all securities that satisfy the eligibility and selection thresholds, and the number of constituents may change at each review. Fixed-count indices typically require more elaborate buffer rules and ranking procedures.
 
 > [!tip] Related terms
 > [Buffer Rule](#buffer-rule), [Constituent](#constituent), [Reconstitution](#reconstitution)
@@ -1809,14 +1778,12 @@ Fixed-count indices such as the EURO STOXX 50 always maintain exactly the target
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14 mentions across STOXX & ISS pages (low)">▰▰ 14</span>
 
-> [!quote]
-> "The unexamined life is not worth living." — Socrates
 
 
+The scheduled process — typically conducted quarterly, semi-annually, or annually — during which an index provider reassesses constituency, share counts, free-float factors, and other parameters against current data.
 
-> The scheduled process — typically conducted quarterly, semi-annually, or annually — during which an index provider reassesses constituency, share counts, free-float factors, and other parameters against current data.
-
-Periodic reviews are the primary governance mechanism for index maintenance. STOXX conducts reviews on predefined calendar dates published in advance. During a review, the index provider re-applies eligibility and selection criteria to the index universe, updates share counts and free-float factors, recalculates capping factors if applicable, and announces the resulting changes before the effective date.
+> [!note]
+> Periodic reviews are the primary governance mechanism for index maintenance. STOXX conducts reviews on predefined calendar dates published in advance. During a review, the index provider re-applies eligibility and selection criteria to the index universe, updates share counts and free-float factors, recalculates capping factors if applicable, and announces the resulting changes before the effective date.
 
 > [!tip] Related terms
 > [Reconstitution](#reconstitution), [Review Frequency](#review-frequency), [Announcement Date](#announcement-date), [Rebalancing](#rebalancing)
@@ -1863,14 +1830,12 @@ Periodic reviews are the primary governance mechanism for index maintenance. STO
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-> [!quote]
-> "Price is what you pay. Value is what you get." — Warren Buffett
 
 
+An index variant that measures the performance of the constituent basket based solely on price changes, without accounting for dividend distributions or other income.
 
-> An index variant that measures the performance of the constituent basket based solely on price changes, without accounting for dividend distributions or other income.
-
-The price return index is the simplest form of index calculation. When a constituent pays a dividend, the price drops by approximately the dividend amount on the ex-date, and this decline is reflected in the index level. No reinvestment adjustment is made. Price return indices understate total investor returns but are widely quoted in the media (e.g., the headline Dow Jones Industrial Average level is a price return figure).
+> [!note]
+> The price return index is the simplest form of index calculation. When a constituent pays a dividend, the price drops by approximately the dividend amount on the ex-date, and this decline is reflected in the index level. No reinvestment adjustment is made. Price return indices understate total investor returns but are widely quoted in the media (e.g., the headline Dow Jones Industrial Average level is a price return figure).
 
 $$
 \text{PRI}_t = \frac{\sum_{i=1}^{n} P_i^t \times S_i \times f_i \times \text{CF}_i}{D_t}
@@ -1904,13 +1869,14 @@ $$
 
 > [!quote]
 > "Rebalancing is a discipline that forces you to sell high and buy low."
-> — **William Bernstein**
+> — **William Bernstein**, *The Four Pillars of Investing* (2002)
 
 
 
-> The periodic process of realigning constituent weights to their target values as defined by the weighting scheme, which may also involve updating share counts, free-float factors, and capping factors.
+The periodic process of realigning constituent weights to their target values as defined by the weighting scheme, which may also involve updating share counts, free-float factors, and capping factors.
 
-Rebalancing corrects the weight drift that accumulates between review dates as constituent prices diverge. For equally weighted indices, rebalancing resets all weights to $1/n$. For capped free-float indices, rebalancing recalculates capping factors so that no constituent exceeds its weight ceiling. Rebalancing triggers a divisor adjustment to maintain index level continuity and is a key driver of turnover in index-tracking portfolios.
+> [!note]
+> Rebalancing corrects the weight drift that accumulates between review dates as constituent prices diverge. For equally weighted indices, rebalancing resets all weights to $1/n$. For capped free-float indices, rebalancing recalculates capping factors so that no constituent exceeds its weight ceiling. Rebalancing triggers a divisor adjustment to maintain index level continuity and is a key driver of turnover in index-tracking portfolios.
 
 > [!tip] Related terms
 > [Reconstitution](#reconstitution), [Divisor Adjustment](#divisor-adjustment), [Capping](#capping), [Turnover](#turnover)
@@ -1956,15 +1922,12 @@ Rebalancing corrects the weight drift that accumulates between review dates as c
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-> [!quote]
-> "In the short run, the market is a voting machine; in the long run, it is a weighing machine."
-> — **Benjamin Graham**
 
 
+The process of redetermining the membership of an index by re-applying eligibility and selection criteria to the full index universe, resulting in additions of newly qualifying securities and deletions of those that no longer qualify.
 
-> The process of redetermining the membership of an index by re-applying eligibility and selection criteria to the full index universe, resulting in additions of newly qualifying securities and deletions of those that no longer qualify.
-
-Reconstitution is distinct from rebalancing: reconstitution changes *which* securities are in the index, while rebalancing changes *how much weight* each security carries. In practice, both often occur simultaneously during periodic reviews. STOXX reconstitution follows a transparent, rules-based methodology that ranks eligible securities and applies buffer rules to manage turnover.
+> [!note]
+> Reconstitution is distinct from rebalancing: reconstitution changes *which* securities are in the index, while rebalancing changes *how much weight* each security carries. In practice, both often occur simultaneously during periodic reviews. STOXX reconstitution follows a transparent, rules-based methodology that ranks eligible securities and applies buffer rules to manage turnover.
 
 > [!tip] Related terms
 > [Rebalancing](#rebalancing), [Periodic Review](#periodic-review), [Buffer Rule](#buffer-rule), [Selection Criteria](#selection-criteria)
@@ -1991,14 +1954,12 @@ Reconstitution is distinct from rebalancing: reconstitution changes *which* secu
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="502 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 502</span>
 
-> [!quote]
-> "What gets measured gets managed." — Peter Drucker
 
 
+The cadence at which an index provider conducts periodic reviews, commonly expressed as quarterly (March, June, September, December), semi-annually, or annually.
 
-> The cadence at which an index provider conducts periodic reviews, commonly expressed as quarterly (March, June, September, December), semi-annually, or annually.
-
-STOXX uses different review frequencies across its index families. The EURO STOXX 50, for example, conducts a full reconstitution annually in September, with quarterly reviews for share and free-float updates only. More frequent reviews improve representativeness but increase turnover. The review frequency is a fundamental design choice that balances accuracy against transaction costs for index-tracking investors.
+> [!note]
+> STOXX uses different review frequencies across its index families. The EURO STOXX 50, for example, conducts a full reconstitution annually in September, with quarterly reviews for share and free-float updates only. More frequent reviews improve representativeness but increase turnover. The review frequency is a fundamental design choice that balances accuracy against transaction costs for index-tracking investors.
 
 > [!tip] Related terms
 > [Periodic Review](#periodic-review), [Reconstitution](#reconstitution), [Turnover](#turnover)
@@ -2044,15 +2005,12 @@ STOXX uses different review frequencies across its index families. The EURO STOX
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-> [!quote]
-> "The stock market is filled with individuals who know the price of everything, but the value of nothing."
-> — **Philip Fisher**
 
 
+An index constructed and maintained according to a transparent, pre-defined, and publicly documented set of rules covering universe definition, eligibility, selection, weighting, rebalancing, and corporate action treatment, minimizing discretionary judgment by the index provider.
 
-> An index constructed and maintained according to a transparent, pre-defined, and publicly documented set of rules covering universe definition, eligibility, selection, weighting, rebalancing, and corporate action treatment, minimizing discretionary judgment by the index provider.
-
-All STOXX indices are rules-based, meaning that their methodology is fully codified and published. This transparency is a regulatory requirement under the EU Benchmark Regulation (BMR) and IOSCO Principles for Financial Benchmarks. A rules-based approach ensures replicability, auditability, and consistency, and allows market participants to anticipate index changes before they are officially announced.
+> [!note]
+> All STOXX indices are rules-based, meaning that their methodology is fully codified and published. This transparency is a regulatory requirement under the EU Benchmark Regulation (BMR) and IOSCO Principles for Financial Benchmarks. A rules-based approach ensures replicability, auditability, and consistency, and allows market participants to anticipate index changes before they are officially announced.
 
 > [!tip] Related terms
 > [Eligibility Criteria](#eligibility-criteria), [Selection Criteria](#selection-criteria), [Weighting Scheme](#weighting-scheme)
@@ -2076,13 +2034,15 @@ All STOXX indices are rules-based, meaning that their methodology is fully codif
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
 > [!quote]
-> "Diversification is the only free lunch in investing." — Harry Markowitz
+> "Diversification is the only free lunch in investing."
+> — **Harry Markowitz**
 
 
 
-> The aggregate weight of all constituents classified within a specific industry sector or supersector, reflecting that sector's representation in the index at a given point in time.
+The aggregate weight of all constituents classified within a specific industry sector or supersector, reflecting that sector's representation in the index at a given point in time.
 
-Sector weighting is a fundamental dimension of index risk and return attribution. STOXX uses the ICB (Industry Classification Benchmark) system to classify constituents into industries and supersectors. In a free-float capitalization-weighted index, sector weights emerge organically from constituent market capitalizations. Some STOXX index variants impose sector concentration limits to prevent dominance by a single industry. Investors routinely monitor sector weights to understand the economic exposures embedded in their benchmark.
+> [!note]
+> Sector weighting is a fundamental dimension of index risk and return attribution. STOXX uses the ICB (Industry Classification Benchmark) system to classify constituents into industries and supersectors. In a free-float capitalization-weighted index, sector weights emerge organically from constituent market capitalizations. Some STOXX index variants impose sector concentration limits to prevent dominance by a single industry. Investors routinely monitor sector weights to understand the economic exposures embedded in their benchmark.
 
 > [!tip] Related terms
 > [Country Weighting](#country-weighting), [Concentration Limit](#concentration-limit), [Weighting Scheme](#weighting-scheme)
@@ -2128,14 +2088,12 @@ Sector weighting is a fundamental dimension of index risk and return attribution
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="59 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 59</span>
 
-> [!quote]
-> "The secret of success is to know something nobody else knows." — Aristotle Onassis
 
 
+The specific quantitative and qualitative rules — beyond basic eligibility — used to rank and choose constituents from the eligible universe, typically based on market capitalization rank, liquidity thresholds, sector representation, or factor scores.
 
-> The specific quantitative and qualitative rules — beyond basic eligibility — used to rank and choose constituents from the eligible universe, typically based on market capitalization rank, liquidity thresholds, sector representation, or factor scores.
-
-Selection criteria determine which securities from the eligible universe actually enter the index. For a benchmark like the STOXX Europe 600, selection is primarily by free-float market capitalization rank within size segments (large, mid, small). For thematic or strategy indices, selection may incorporate ESG scores, factor exposures, or fundamental metrics. Buffer rules are applied during selection to manage turnover.
+> [!note]
+> Selection criteria determine which securities from the eligible universe actually enter the index. For a benchmark like the STOXX Europe 600, selection is primarily by free-float market capitalization rank within size segments (large, mid, small). For thematic or strategy indices, selection may incorporate ESG scores, factor exposures, or fundamental metrics. Buffer rules are applied during selection to manage turnover.
 
 > [!tip] Related terms
 > [Eligibility Criteria](#eligibility-criteria), [Buffer Rule](#buffer-rule), [Index Universe](#index-universe), [Selection List](#selection-list)
@@ -2181,14 +2139,12 @@ Selection criteria determine which securities from the eligible universe actuall
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,008 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,008</span>
 
-> [!quote]
-> "You have to kiss a lot of frogs before you find your prince." — Anonymous
 
 
+The ordered ranking of eligible securities — typically sorted by free-float market capitalization or another primary criterion — from which the final index constituents are drawn during reconstitution.
 
-> The ordered ranking of eligible securities — typically sorted by free-float market capitalization or another primary criterion — from which the final index constituents are drawn during reconstitution.
-
-The selection list is the intermediate output of the index construction process, produced after eligibility screening but before the application of buffer rules and final constituent determination. STOXX constructs the selection list at each periodic review by ranking all eligible securities according to the index's primary selection criterion. Buffer rules are then applied to determine which securities are added or retained and which are removed.
+> [!note]
+> The selection list is the intermediate output of the index construction process, produced after eligibility screening but before the application of buffer rules and final constituent determination. STOXX constructs the selection list at each periodic review by ranking all eligible securities according to the index's primary selection criterion. Buffer rules are then applied to determine which securities are added or retained and which are removed.
 
 > [!tip] Related terms
 > [Selection Criteria](#selection-criteria), [Reconstitution](#reconstitution), [Buffer Rule](#buffer-rule)
@@ -2236,13 +2192,15 @@ The selection list is the intermediate output of the index construction process,
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="26 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 26</span>
 
 > [!quote]
-> "All models are wrong, but some are useful." — George E.P. Box
+> "All models are wrong, but some are useful."
+> — **George E.P. Box**, *Empirical Model-Building and Response Surfaces* (1987)
 
 
 
-> The process of applying an index methodology retroactively to historical data to generate a hypothetical back-tested performance track record for a period before the index was officially launched.
+The process of applying an index methodology retroactively to historical data to generate a hypothetical back-tested performance track record for a period before the index was officially launched.
 
-Simulated (back-tested) data allows index users to evaluate how an index would have performed under various market conditions. STOXX clearly distinguishes between live and simulated data in its publications. It is important to note that simulated performance does not reflect actual trading, does not account for transaction costs, and may incorporate survivorship bias or look-ahead bias. Regulatory standards require clear disclosure when simulated data is presented.
+> [!note]
+> Simulated (back-tested) data allows index users to evaluate how an index would have performed under various market conditions. STOXX clearly distinguishes between live and simulated data in its publications. It is important to note that simulated performance does not reflect actual trading, does not account for transaction costs, and may incorporate survivorship bias or look-ahead bias. Regulatory standards require clear disclosure when simulated data is presented.
 
 > [!tip] Related terms
 > [Base Date](#base-date), [Base Value](#base-value), [Tracking Error](#tracking-error)
@@ -2288,14 +2246,12 @@ Simulated (back-tested) data allows index users to evaluate how an index would h
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-> [!quote]
-> "Routine, in an intelligent man, is a sign of ambition." — W.H. Auden
 
 
+An index constructed using a transparent, rules-based methodology that systematically targets a specific investment factor, theme, or strategy — such as value, momentum, low volatility, or ESG — rather than simply capturing broad market-capitalization exposure.
 
-> An index constructed using a transparent, rules-based methodology that systematically targets a specific investment factor, theme, or strategy — such as value, momentum, low volatility, or ESG — rather than simply capturing broad market-capitalization exposure.
-
-Systematic indices (also called strategy or smart beta indices) go beyond traditional benchmark construction by embedding an investment thesis directly into the index rules. STOXX offers a wide range of systematic indices that select and weight constituents based on factor scores, optimization targets, or thematic criteria. Despite the added complexity, systematic indices adhere to the same governance, transparency, and rules-based standards as traditional benchmark indices.
+> [!note]
+> Systematic indices (also called strategy or smart beta indices) go beyond traditional benchmark construction by embedding an investment thesis directly into the index rules. STOXX offers a wide range of systematic indices that select and weight constituents based on factor scores, optimization targets, or thematic criteria. Despite the added complexity, systematic indices adhere to the same governance, transparency, and rules-based standards as traditional benchmark indices.
 
 > [!tip] Related terms
 > [Rules-Based Index](#rules-based-index), [Optimization-Based Weighting](#optimization-based-weighting), [Fundamental Weighting](#fundamental-weighting), [Weighting Scheme](#weighting-scheme)
@@ -2326,13 +2282,14 @@ Systematic indices (also called strategy or smart beta indices) go beyond tradit
 
 > [!quote]
 > "The miracle of compounding returns is overwhelmed by the tyranny of compounding costs."
-> — **John C. Bogle**
+> — **John C. Bogle**, *The Little Book of Common Sense Investing* (2007)
 
 
 
-> A generic term for an index variant that accounts for both price appreciation and the reinvestment of dividends and other cash distributions, encompassing both gross return and net return variants.
+A generic term for an index variant that accounts for both price appreciation and the reinvestment of dividends and other cash distributions, encompassing both gross return and net return variants.
 
-"Total return index" is often used as a shorthand for either the gross or net return version, depending on context. The key distinction from a price return index is that dividends are treated as reinvested (in full or after tax) rather than lost. For performance measurement and fund benchmarking, total return indices are the appropriate comparison because they reflect the full economic return earned by an equity investor.
+> [!note]
+> "Total return index" is often used as a shorthand for either the gross or net return version, depending on context. The key distinction from a price return index is that dividends are treated as reinvested (in full or after tax) rather than lost. For performance measurement and fund benchmarking, total return indices are the appropriate comparison because they reflect the full economic return earned by an equity investor.
 
 > [!tip] Related terms
 > [Gross Return Index](#gross-return-index), [Net Return Index](#net-return-index), [Price Return Index](#price-return-index)
@@ -2381,13 +2338,14 @@ Systematic indices (also called strategy or smart beta indices) go beyond tradit
 
 > [!quote]
 > "The biggest risk is not volatility but the permanent loss of capital."
-> — **Benjamin Graham**
+> — **Benjamin Graham**, *The Intelligent Investor* (1949)
 
 
 
-> The annualized standard deviation of the difference in returns between a portfolio (or fund) and its benchmark index, measuring the consistency of replication.
+The annualized standard deviation of the difference in returns between a portfolio (or fund) and its benchmark index, measuring the consistency of replication.
 
-Tracking error is the primary metric for evaluating how closely an index-tracking fund matches its benchmark. A tracking error of zero would indicate perfect replication. In practice, tracking error arises from transaction costs, cash drag, sampling, dividend timing, and corporate action handling. Index construction choices — such as capping frequency, buffer rules, and review frequency — directly influence the tracking error experienced by funds following the index.
+> [!note]
+> Tracking error is the primary metric for evaluating how closely an index-tracking fund matches its benchmark. A tracking error of zero would indicate perfect replication. In practice, tracking error arises from transaction costs, cash drag, sampling, dividend timing, and corporate action handling. Index construction choices — such as capping frequency, buffer rules, and review frequency — directly influence the tracking error experienced by funds following the index.
 
 $$
 \text{TE} = \sigma\!\left(R_p - R_b\right) \times \sqrt{252}
@@ -2440,15 +2398,12 @@ Where $R_p$ and $R_b$ are daily portfolio and benchmark returns, respectively, a
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="668 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 668</span>
 
-> [!quote]
-> "The stock market is a no-called-strike game — you don't have to swing at every pitch."
-> — **Warren Buffett**
 
 
+The percentage of an index's total weight that changes at a rebalancing or reconstitution event, measured as the sum of all absolute weight changes divided by two.
 
-> The percentage of an index's total weight that changes at a rebalancing or reconstitution event, measured as the sum of all absolute weight changes divided by two.
-
-Turnover quantifies the trading activity required to maintain an index-tracking portfolio. Higher turnover implies greater transaction costs, which erode net returns for passive investors. STOXX index construction rules — particularly buffer rules and review frequency — are designed with turnover management as an explicit objective. Turnover is typically expressed as a one-way figure.
+> [!note]
+> Turnover quantifies the trading activity required to maintain an index-tracking portfolio. Higher turnover implies greater transaction costs, which erode net returns for passive investors. STOXX index construction rules — particularly buffer rules and review frequency — are designed with turnover management as an explicit objective. Turnover is typically expressed as a one-way figure.
 
 $$
 \text{Turnover} = \frac{1}{2} \sum_{i=1}^{n} \left| w_i^{\text{new}} - w_i^{\text{old}} \right|
@@ -2502,15 +2457,12 @@ Where $w_i^{\text{old}}$ and $w_i^{\text{new}}$ are the weights before and after
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="570 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 570</span>
 
-> [!quote]
-> "If you don't know who you are, the stock market is an expensive place to find out."
-> — **George Goodman**
 
 
+The methodology that determines how the index's total value is allocated across its constituents, defining each security's influence on the index level; common schemes include free-float market-capitalization weighting, equal weighting, price weighting, and fundamental weighting.
 
-> The methodology that determines how the index's total value is allocated across its constituents, defining each security's influence on the index level; common schemes include free-float market-capitalization weighting, equal weighting, price weighting, and fundamental weighting.
-
-The weighting scheme is one of the most consequential design decisions in index construction. It determines the risk-return profile, sector tilts, capacity, and rebalancing needs of any portfolio tracking the index. STOXX offers indices across all major weighting schemes, though free-float market-capitalization weighting is the default for its flagship benchmark families. The choice of weighting scheme directly affects turnover, tracking error, and the economic exposures embedded in the index.
+> [!note]
+> The weighting scheme is one of the most consequential design decisions in index construction. It determines the risk-return profile, sector tilts, capacity, and rebalancing needs of any portfolio tracking the index. STOXX offers indices across all major weighting schemes, though free-float market-capitalization weighting is the default for its flagship benchmark families. The choice of weighting scheme directly affects turnover, tracking error, and the economic exposures embedded in the index.
 
 > [!tip] Related terms
 > [Free-Float Market Capitalization Weighting](#free-float-market-capitalization-weighting), [Market Capitalization Weighting](#market-capitalization-weighting), [Equal Weighting](#equal-weighting), [Fundamental Weighting](#fundamental-weighting), [Price Weighting](#price-weighting)

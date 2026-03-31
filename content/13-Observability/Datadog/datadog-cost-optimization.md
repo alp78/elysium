@@ -3,8 +3,8 @@ type: reference
 category: observability
 technology: [datadog, gcp]
 tags: [monitoring, observability, performance, cost, datadog, gcp]
-aliases: [Datadog Costs, Datadog Pricing, DD Agent Cost]
-keywords: [datadog cost, datadog pricing, host cost, trial, infrastructure monitoring, APM pro, logs pricing, EU region, datadoghq.eu, 14-day trial, per host, dd-agent free, ram usage 350mb, disable datadog, dd_api_key empty]
+aliases: [Datadog Costs, Datadog Pricing, DD Agent Cost, Datadog Cost Reference, Datadog Monthly Cost]
+keywords: [datadog cost, datadog pricing, host cost, trial, infrastructure monitoring, APM pro, logs pricing, EU region, datadoghq.eu, 14-day trial, per host, dd-agent free, ram usage 350mb, disable datadog, dd_api_key empty, SaaS pricing, GCP infrastructure cost comparison, 50-80 per host, log volume, trace volume]
 description: "Datadog pricing breakdown for the data platform — agent RAM overhead, trial vs paid costs, and how to cleanly disable all Datadog components by setting dd_api_key to empty."
 created: 2026-03-22
 updated: 2026-03-22
@@ -100,6 +100,30 @@ If cost is a concern after the trial:
 2. **GCE Automuting:** Enable in the GCP Integration so monitors are silenced and not billed for evaluation periods when VMs are stopped overnight.
 3. **Log sampling:** Configure log pipelines to drop high-volume debug logs and only index warnings/errors.
 4. **Trace sampling:** Configure `ddtrace` to sample a fraction of traces (e.g., 10%) to reduce APM host costs.
+
+---
+
+### Datadog Trial and Evaluation Period
+
+The Datadog EU 14-day trial is sufficient to:
+- Set up both agents
+- Configure the GCP Integration
+- Build the Pipeline Watch and SQL Server DBA dashboards
+- Test APM traces and log collection
+- Evaluate whether the full subscription is worthwhile
+
+After the trial, set `dd_api_key = ""` in `terraform.tfvars` and run `terraform apply` to cleanly disable everything. See [datadog-troubleshooting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-troubleshooting) for the full disabling procedure.
+
+---
+
+### Datadog Compared to GCP Infrastructure Costs
+
+For context, Datadog is optional add-on monitoring. The base the data pipeline project GCP infrastructure costs ~$83/month (see cost reference). Datadog adds:
+
+- Trial: $0
+- After trial (if subscribed): ~$100–160/month (2 hosts × $50–80)
+
+The Datadog subscription would roughly double the total infrastructure cost. Evaluate whether the observability value justifies the cost relative to using GCP Cloud Monitoring (free) and Cloud Logging (free tier).
 
 ---
 

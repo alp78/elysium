@@ -25,7 +25,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 > [!quote]
 > "The greatest risk in retirement is not dying too soon but living too long without income."
-> — **Moshe Milevsky**
+> — **Moshe Milevsky**, *Are You a Stock or a Bond?* (2008)
 
 
 **Definition:** An annuity is a financial product sold by insurance companies that provides a series of payments to the holder at regular intervals, typically during retirement. The buyer pays either a lump sum or a series of premiums, and the insurer agrees to make periodic payments beginning either immediately or at a future date. Annuities serve as a way to convert a lump sum of savings into a guaranteed income stream, protecting the holder against the risk of outliving their money. They come in various forms including fixed, variable, and indexed annuities.
@@ -42,7 +42,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 > [!quote]
 > "Saving and insuring are two sides of the same coin — both protect against an uncertain future."
-> — **Peter Bernstein**
+> — **Peter Bernstein**, *Against the Gods* (1996)
 
 
 **Definition:** Endowment insurance is a life insurance contract that pays a lump sum after a specific term (the maturity date) or upon the death of the insured, whichever comes first. It combines life insurance protection with a savings component. Part of the premium goes toward the death benefit, while the remainder is invested by the insurance company. At the end of the policy term, the policyholder receives the endowment amount, which includes their accumulated savings plus investment returns. Endowment policies are popular as long-term savings instruments and for funding specific goals like education or retirement.
@@ -141,11 +141,6 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 ---
 
 ## Risk Management
-
-> [!quote]
-> "The biggest risk is not taking any risk — in a world that is changing quickly, the only strategy guaranteed to fail is not taking risks."
-> — **Nassim Nicholas Taleb**
-
 
 **Definition:** Risk management is the process of identifying, assessing, and controlling threats to an organization's capital, earnings, and operations. These threats can stem from a wide variety of sources including financial market uncertainty, credit defaults, operational failures, natural disasters, regulatory changes, strategic miscalculations, and cybersecurity breaches. Effective risk management involves establishing risk tolerance levels, implementing controls and mitigation strategies, monitoring risk exposures, and maintaining adequate reserves and insurance. In financial institutions, risk management is heavily regulated and central to business operations.
 

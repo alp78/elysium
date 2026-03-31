@@ -17,7 +17,7 @@ In an incident at 2 AM, you do not have time to retype a complex pipeline comman
 
 > [!quote]
 > "Those who cannot remember the past are condemned to repeat it."
-> — **George Santayana**
+> — **George Santayana**, *The Life of Reason* (1905)
 
 ## Bash History
 

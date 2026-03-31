@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "When there is no central 'master' location that contains the source code, you can suddenly host things without the politics that go along with that 'one repo to rule them all' concept."
-> — **Linus Torvalds**
+> — **Linus Torvalds**, Git mailing list
 
 Git remotes are named references to copies of a repository hosted on a server (typically GitHub). Every cloned repo starts with one remote — `origin` — pointing at the URL you cloned from. Forked repos commonly add a second remote called `upstream` to track the original project. This note covers every essential remote operation: inspecting remotes, adding new ones, fetching, pruning stale branches, and safely force-pushing after a rebase.
 
@@ -144,6 +144,10 @@ Always use `--force-with-lease`. The only reason to use bare `--force` is if you
 ### Common Force-Push Scenario: Rebase Then Push
 
 After rebasing your feature branch onto the latest main (to resolve PR merge conflicts), the standard sequence is:
+
+> [!tip] Fetch immediately before force-push
+>
+> Always run `git fetch` right before `git push --force-with-lease`. The lease check compares against your last-fetched state, so a stale fetch means the safety check is stale too.
 
 ```bash
 git fetch origin main

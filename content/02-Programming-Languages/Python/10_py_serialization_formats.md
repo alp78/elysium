@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Write programs to handle text streams, because that is a universal interface."
-> — **Doug McIlroy**
+> — **Doug McIlroy**, *Bell System Technical Journal* (1978)
 
 ```python
 import os

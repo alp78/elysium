@@ -15,10 +15,10 @@ status: complete
 
 > [!quote]
 > "Algorithms + Data Structures = Programs."
-> — **Niklaus Wirth**
+> — **Niklaus Wirth**, *Algorithms + Data Structures = Programs* (1976)
 >
 > "Smart data structures and dumb code works a lot better than the other way around."
-> — **Eric S. Raymond**
+> — **Eric S. Raymond**, *The Cathedral and the Bazaar* (1999)
 
 ## Arrays and Lists
 

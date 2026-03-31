@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "You can disagree with me as much as you want, but during this talk, by definition, anybody who disagrees is stupid and ugly."
-> — **Linus Torvalds**
+> — **Linus Torvalds**, Git mailing list
 
 Merge conflicts occur when two branches modify the same lines in the same file and Git cannot automatically decide which version to keep. They arise during `git merge`, `git rebase`, `git cherry-pick`, and `git stash pop`. This note explains conflict marker syntax, the step-by-step resolution process, tooling options, and prevention strategies.
 
@@ -83,6 +83,10 @@ Everything between `<<<<<<< HEAD` and `=======` is what your current branch (HEA
 >
 > Do not leave conflict markers in your code.
 > If you stage a file that still contains `<<<<<<<` markers, Git will accept the commit — but the file will be broken. Always verify the file is clean before running `git add`.
+
+> [!warning] Binary files cannot be text-merged
+>
+> Merge conflicts in binary files (images, Parquet, compiled assets) show as "CONFLICT (binary)" with no conflict markers to edit. You must pick one entire version: `git checkout --ours file` or `git checkout --theirs file`, then `git add file`.
 
 ## Aborting a Merge
 

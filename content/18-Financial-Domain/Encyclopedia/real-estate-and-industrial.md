@@ -60,7 +60,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 > [!quote]
 > "No manufacturer can reach every customer alone — distributors extend your reach."
-> — **Sam Walton**
+> — **Sam Walton**, *Made in America* (1992)
 
 
 **Definition:** Distributors are intermediary entities that purchase products from manufacturers and resell them to retailers, businesses, or directly to consumers. Distributors add value by providing logistics, warehousing, marketing, credit, and after-sales service. They serve as a critical link in the supply chain, enabling manufacturers to reach broad markets without building their own extensive sales and delivery infrastructure. Distribution networks can be exclusive (one distributor per region) or non-exclusive (multiple distributors compete in the same area).
@@ -74,11 +74,6 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 ---
 
 ## Fleet Management
-
-> [!quote]
-> "You cannot manage what you cannot measure — and telematics lets you measure every mile."
-> — **Peter Drucker**
-
 
 **Definition:** Fleet management is the administration of a company's vehicle fleet, including acquisition, maintenance, fuel management, driver management, insurance, and disposal. Modern fleet management increasingly relies on telematics, GPS tracking, data analytics, and digital platforms to optimize routing, reduce costs, monitor driver behavior, ensure regulatory compliance, and manage vehicle lifecycles. Fleet management can apply to commercial vehicles, corporate car fleets, rental fleets, and specialized vehicle fleets.
 

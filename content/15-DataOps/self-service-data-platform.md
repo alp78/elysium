@@ -50,7 +50,7 @@ status: complete
 
 > [!quote]
 > "The goal of a self-service data platform is not to eliminate data engineers — it is to eliminate the bottleneck where data engineers become request processors for work that capable users could do themselves."
-> — **Zhamak Dehghani**
+> — **Zhamak Dehghani**, *Data Mesh* (2022)
 
 A self-service data platform is the infrastructure, tooling, and governance framework that allows analysts, scientists, and business users to access, query, and build on trusted data — **without filing a ticket to the data engineering team for every new request**.
 

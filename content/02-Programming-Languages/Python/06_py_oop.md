@@ -15,10 +15,10 @@ status: complete
 
 > [!quote]
 > "I made up the term 'object-oriented', and I can tell you I did not have C++ in mind."
-> — **Alan Kay**
+> — **Alan Kay**, email to Stefan Ram (2003)
 >
 > "You wanted a banana but what you got was a gorilla holding the banana and the entire jungle."
-> — **Joe Armstrong**
+> — **Joe Armstrong**, *Coders at Work* interview (2009)
 
 ```python
 import math

@@ -22,7 +22,7 @@ Topics covered:
 
 > [!quote]
 > "When I see patterns in my programs, I consider it a sign of trouble. The shape of a program should reflect only the problem it needs to solve."
-> — **Paul Graham**
+> — **Paul Graham**, *Revenge of the Nerds*, essay (2002)
 
 ## Dependency Injection
 

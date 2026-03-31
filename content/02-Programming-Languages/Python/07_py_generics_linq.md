@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "All non-trivial abstractions, to some degree, are leaky."
-> — **Joel Spolsky**
+> — **Joel Spolsky**, *The Law of Leaky Abstractions*, blog post (2002)
 
 ```python
 from typing import TypeVar, Generic, Optional

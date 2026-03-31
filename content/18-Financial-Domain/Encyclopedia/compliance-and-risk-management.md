@@ -105,11 +105,6 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 ## Risk Management
 
-> [!quote]
-> "Risk comes from not knowing what you are doing."
-> — **Warren Buffett**
-
-
 **Definition:** Risk management is the process of identifying, assessing, and controlling threats to an organization's capital, earnings, and operations. These threats can stem from a wide variety of sources including financial market uncertainty, credit defaults, operational failures, natural disasters, regulatory changes, strategic miscalculations, and cybersecurity breaches. Effective risk management involves establishing risk tolerance levels, implementing controls and mitigation strategies, monitoring risk exposures, and maintaining adequate reserves and insurance. In financial institutions, risk management is heavily regulated and central to business operations.
 
 **In context:** Adyen (ADYEN.AS, a European equity index) integrates "risk management" into its payments platform. ANZ Group (ANZ.AX, an Asia-Pacific equity index) offers "risk management services in foreign exchange, interest rates, credit, commodities, and debt capital markets." Caterpillar (CAT, a US equity index) provides "insurance and risk management products and services." Munich Re (MUV2.DE, a European equity index) offers extensive "risk transfer" and risk management consulting.
@@ -121,11 +116,6 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 ---
 
 ## Royalties
-
-> [!quote]
-> "The sweetest income is the income that arrives while you sleep."
-> — **Naval Ravikant**
-
 
 **Definition:** Royalties are payments made by one party (the licensee) to another (the licensor) for the ongoing use of an asset, typically intellectual property such as patents, trademarks, copyrights, franchises, or natural resources. Royalties are usually calculated as a percentage of revenue or profits generated from the use of the licensed asset, or as a per-unit fee. They represent a way for IP owners to monetize their creations over time and for licensees to access valuable assets without the cost and risk of developing them independently.
 

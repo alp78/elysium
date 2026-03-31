@@ -19,7 +19,7 @@ status: complete
 
 > [!quote]
 > "The greatest value of a picture is when it forces us to notice what we never expected to see."
-> — **John Tukey**
+> — **John Tukey**, *Exploratory Data Analysis* (1977)
 
 Pandas/Matplotlib/Seaborn for static charts, Plotly for interactive.
 

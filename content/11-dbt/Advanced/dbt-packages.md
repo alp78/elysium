@@ -11,7 +11,7 @@ description: "dbt-utils, dbt-expectations, elementary, codegen, audit-helper, an
 
 > [!quote]
 > "If I have seen further, it is by standing on the shoulders of giants."
-> — **Isaac Newton**
+> — **Isaac Newton**, letter to Robert Hooke (1675)
 
 dbt packages are importable dbt projects containing macros, models, seeds, and tests. They are the primary mechanism for sharing reusable logic across projects. For financial data pipelines processing index constituent data, ESG scores, and pricing feeds, a small set of well-chosen packages eliminates thousands of lines of boilerplate.
 

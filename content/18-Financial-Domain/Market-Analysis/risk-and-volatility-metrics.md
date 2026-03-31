@@ -35,10 +35,6 @@ Risk and volatility metrics quantify the uncertainty and potential downside of e
 
 ## Beta
 
-> [!quote]
-> "The stock market is filled with individuals who know the price of everything, but the value of nothing."
-> — **Philip Fisher**
-
 
 Beta measures a stock's sensitivity to market movements.
 
@@ -57,7 +53,7 @@ $$\beta = \frac{\text{Cov}(r_{\text{stock}}, r_{\text{market}})}{\text{Var}(r_{\
 
 > [!quote]
 > "Volatility is the price of admission. The prize inside is superior long-term returns."
-> — **Nick Murray**
+> — **Nick Murray**, *Simple Wealth, Inevitable Wealth* (1999)
 
 
 The VIX measures implied volatility from S&P 500 options, often called the "fear gauge."
@@ -71,15 +67,6 @@ The VIX measures implied volatility from S&P 500 options, often called the "fear
 | > 40 | Crisis-level (2020 COVID, 2008 GFC) |
 
 ## Maximum Drawdown
-
-> [!quote]
-> "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1."
-> — **Warren Buffett**
-
-
-> [!quote]
-> "The most important rule of trading is to play great defense, not great offense."
-> — **Paul Tudor Jones**
 
 
 The maximum drawdown measures the largest peak-to-trough decline in portfolio value over a given period.

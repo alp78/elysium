@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Thinking in sets, rather than row by row, is perhaps the most important skill a SQL programmer can develop."
-> — **Joe Celko**
+> — **Joe Celko**, *SQL for Smarties* (1995)
 
 Advanced SQL techniques using the **stoxx** index database.
 Prerequisite: SQL_01_Fundamentals.ipynb

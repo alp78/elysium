@@ -17,10 +17,10 @@ Every process has three standard file descriptors: fd 0 (stdin) for input, fd 1 
 
 > [!quote]
 > "Expect the output of every program to become the input to another, as yet unknown, program."
-> — **Doug McIlroy**
+> — **Doug McIlroy**, *Bell System Technical Journal* (1978)
 >
 > "Rule of Silence: When a program has nothing surprising to say, it should say nothing."
-> — **Eric S. Raymond**
+> — **Eric S. Raymond**, *The Art of Unix Programming* (2003)
 
 ## Bash Redirection
 

@@ -55,7 +55,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "The banker who is not also a merchant is nothing but a moneylender."
-> — **Walter Bagehot**
+> — **Walter Bagehot**, *Lombard Street* (1873)
 
 
 **Definition:** Commercial banking refers to the segment of the banking industry that provides financial services to businesses, ranging from small and medium enterprises to large corporations. Commercial banking services include accepting deposits, making business loans, providing lines of credit, offering trade finance, managing cash and treasury operations, and facilitating foreign exchange transactions. Commercial banks act as financial intermediaries, channeling deposits from savers into loans for businesses that need capital for operations, expansion, or investment.
@@ -164,7 +164,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "Do not borrow money to buy stocks — the margin call will come at the worst possible time."
-> — **Jesse Livermore**
+> — **Jesse Livermore**, *Reminiscences of a Stock Operator* (1923)
 
 
 **Definition:** Margin lending is a type of borrowing where an investor uses securities they already own as collateral to borrow money from a brokerage or bank to buy additional securities. The investor's existing portfolio serves as the margin (collateral), and the lender charges interest on the borrowed amount. Margin lending amplifies both potential gains and losses, making it a higher-risk strategy. If the value of the collateral falls below a certain threshold (a margin call), the investor must deposit additional funds or sell securities to restore the required margin level.
@@ -178,11 +178,6 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 ---
 
 ## Mortgage
-
-> [!quote]
-> "A man in debt is so far a slave."
-> — **Ralph Waldo Emerson**
-
 
 **Definition:** A mortgage is a loan used to purchase or refinance real estate, in which the property itself serves as collateral for the loan. The borrower makes regular payments (typically monthly) over a period of 15 to 30 years, consisting of principal and interest. If the borrower fails to make payments, the lender can foreclose on the property. Mortgages are the primary means by which individuals and families finance home purchases. Banks, credit unions, mortgage companies, and government agencies are the main providers of mortgage loans.
 
@@ -210,7 +205,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "The branch of the future is in your pocket."
-> — **Brett King**
+> — **Brett King**, *Bank 4.0* (2018)
 
 
 **Definition:** Retail banking, also known as consumer banking or personal banking, is the provision of financial services directly to individual consumers rather than corporations or institutions. Retail banking products and services include checking and savings accounts, personal loans, mortgages, credit cards, certificates of deposit, and basic investment products. Retail banks serve customers through branch networks, ATMs, online platforms, and mobile applications. Retail banking generates revenue through interest margins (the difference between lending and deposit rates), fees, and cross-selling of financial products.
@@ -271,11 +266,6 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Trust Banking
 
-> [!quote]
-> "A man I do not trust could not get money from me on all the bonds in Christendom."
-> — **J.P. Morgan**
-
-
 **Definition:** Trust banking involves a bank acting as a trustee or fiduciary agent to manage assets, administer trusts, and execute the wishes of individuals or institutions according to a trust agreement. Trust services include managing investment portfolios, administering estate plans, distributing income and principal to beneficiaries, providing tax reporting, and safekeeping valuable documents and assets. Trust banking is closely related to private banking and wealth management, serving high-net-worth individuals, families, and institutional clients.
 
 **In context:** Mitsubishi UFJ Financial Group (8306.T, an Asia-Pacific equity index) provides "trust banking and securities products and services." Mizuho Financial Group (8411.T, an Asia-Pacific equity index) provides "trust, securitization and structured finance, and stock transfer agency" services. Wells Fargo (WFC, a US equity index) provides "trust and fiduciary products and services."
@@ -290,7 +280,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 > [!quote]
 > "Large-scale banking is really nothing more than organized trust."
-> — **Walter Bagehot**
+> — **Walter Bagehot**, *Lombard Street* (1873)
 
 
 **Definition:** Wholesale banking refers to banking services provided to large institutional customers including corporations, government agencies, other banks, pension funds, and institutional investors. Wholesale banking services include large-scale lending (syndicated and bilateral loans), deposit products, trade finance, cash management, foreign exchange, custody services, and capital markets products. Wholesale banking differs from retail banking in the size and sophistication of its client base and the complexity of its product offerings.

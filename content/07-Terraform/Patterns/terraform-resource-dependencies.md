@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Terraform allows you to reference the attribute of any resource within any other resource. That's how the dependency graph gets built."
-> — **Mitchell Hashimoto**
+> — **Mitchell Hashimoto**, HashiConf talk
 
 Terraform automatically builds a dependency graph from your resource references. Understanding how it works prevents ordering issues during apply and explains why some resources are created in parallel while others wait. To practice dependency graph reasoning and other Terraform scenarios, work through [terraform-problems](https://alp78.github.io/elysium/07-Terraform/terraform-problems).
 
@@ -63,7 +63,7 @@ resource "google_compute_subnetwork" "main" {
 
 Terraform automatically resolves dependencies from resource references. This is the effective creation order:
 
-```
+```text
 variables.tf (inputs)
     │
     ├── google_compute_network.main (VPC)

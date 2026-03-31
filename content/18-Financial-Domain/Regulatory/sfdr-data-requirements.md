@@ -55,10 +55,6 @@ ESG vendor data (raw) → Normalize (0-100 scale) → PAI calculation → SFDR d
 
 ### Key Computation: WACI
 
-> [!quote]
-> "Once climate change becomes a defining issue for financial stability, it may already be too late."
-> — **Mark Carney**
-
 
 ```python
 def compute_waci(weights: pd.DataFrame, emissions: pd.DataFrame) -> float:

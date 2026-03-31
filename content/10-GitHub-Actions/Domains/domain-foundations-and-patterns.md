@@ -13,7 +13,6 @@ GitHub Actions YAML syntax, triggers, jobs, expressions, secrets, caching, matri
 mindmap
   ((Foundations and Patterns))
     (fundamentals)
-    (workflows)
     (patterns)
 ```
 
@@ -25,13 +24,6 @@ mindmap
 > - [[github-actions-fundamentals#Expressions and Contexts|Expressions and contexts]]
 > - [[github-actions-fundamentals#Secrets|Secrets and GITHUB_TOKEN]]
 > - [[github-actions-fundamentals#Caching|Caching and concurrency]]
-
-> [!abstract]- [[github-actions-workflows]]
->
-> - [[github-actions-workflows#Key Patterns|Key patterns]]
-> - [[github-actions-workflows#Matrix Testing|Matrix testing]]
-> - [[github-actions-workflows#Manual Workflow Dispatch with Inputs|Manual dispatch with inputs]]
-> - [[github-actions-workflows#Pre-commit Hooks|Pre-commit hooks]]
 
 > [!abstract]- [[github-actions-patterns]]
 >

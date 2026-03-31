@@ -33,7 +33,7 @@ Liquidity metrics measure how easily stocks can be traded without significant pr
 
 > [!quote]
 > "Liquidity is the oxygen of financial markets — you only notice it when it's gone."
-> — **Howard Marks**
+> — **Howard Marks**, *The Most Important Thing* (2011)
 
 
 The bid-ask spread is the most direct measure of market liquidity and transaction costs.
@@ -79,7 +79,7 @@ A volume-weighted version of [RSI](https://alp78.github.io/elysium/18-Financial-
 
 > [!quote]
 > "Volume is the fuel that drives the market. When volume expands on a move, it confirms the move."
-> — **Joseph Granville**
+> — **Joseph Granville**, *New Strategy of Daily Stock Market Timing* (1976)
 
 
 A cumulative indicator that adds volume on up days and subtracts volume on down days.

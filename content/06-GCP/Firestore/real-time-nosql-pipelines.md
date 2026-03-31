@@ -68,7 +68,7 @@ status: complete
 
 > [!quote]
 > "There are only two hard problems in distributed systems: 2. Exactly-once delivery 1. Guaranteed order of messages 2. Exactly-once delivery"
-> — **Mathias Verraes**
+> — **Mathias Verraes**, conference talk (widely cited)
 
 Firestore is a serverless, fully managed document database that occupies a specific niche in the GCP data stack: low-latency reads and writes, flexible schema, and native real-time listeners that push changes to clients without polling. This note covers how to use Firestore as the connective tissue of data pipelines — tracking state, reacting to events, driving configuration, and acting as a hot-tier store alongside BigQuery and Pub/Sub.
 
@@ -142,7 +142,7 @@ Gold scores computed in BigQuery are written to Firestore (`stocks` collection) 
 
 ### Pattern 1: Firestore as Pipeline State Store
 
-```
+```text
 Pipeline Start  → Write {status: "running", started_at: now()} to Firestore
                 ↓
      Dashboard reads in real-time via on_snapshot() listener
@@ -155,7 +155,7 @@ This pattern requires no polling endpoint, no separate metadata database, and no
 
 #### Document path convention
 
-```
+```text
 pipelines/{pipeline_name}/runs/{run_id}
 ```
 
@@ -178,7 +178,7 @@ db.collection("pipelines").document(pipeline_name).collection("runs") \
 
 ### Pattern 2: Event-Driven Processing with Firestore Triggers
 
-```
+```text
 Data arrives  → Write document to Firestore collection "raw_events"
               ↓
     Eventarc detects document create/update
@@ -231,7 +231,7 @@ def process_event(event_data: dict, doc_ref) -> None:
 
 ### Pattern 3: Config-Driven Pipeline Behavior
 
-```
+```text
 Operator updates config doc in Firestore console (or API)
               ↓
 Pipeline reads config at start of each run (with caching)
@@ -260,7 +260,7 @@ This pattern decouples operational tuning from the release cycle. Thresholds, em
 
 #### Firestore security rules for config docs
 
-```
+```text
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -280,7 +280,7 @@ service cloud.firestore {
 
 ### Pattern 4: Firestore + Pub/Sub + Dataflow Streaming
 
-```
+```text
 ┌─────────────┐     ┌─────────────┐     ┌───────────────────────────────┐
 │  Producers  │────▶│   Pub/Sub   │────▶│         Dataflow              │
 │ (IoT, APIs) │     │   Topic     │     │  (Apache Beam streaming job)  │

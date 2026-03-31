@@ -11,7 +11,7 @@ description: "Comprehensive catalog of Terraform production problems — 25 issu
 
 > [!quote]
 > "The first step in fixing a broken program is getting it to fail repeatably."
-> — **Tom Duff**
+> — **Tom Duff**, Bell Labs
 
 Terraform is the foundation of infrastructure-as-code for the data platform, but its state-based model introduces a class of problems that can destroy production infrastructure in seconds. In a regulated financial index platform where every GCP resource supports the publication pipeline, a mismanaged `terraform apply` can take down the entire data platform — the SQL Server VM that runs index calculations, the GCS buckets holding vendor data feeds, the BigQuery datasets powering analytics. This note catalogs every major problem encountered in production, explains why it happens technically, and provides actionable prevention and recovery procedures. Problems are ordered by severity: Critical (infrastructure destruction/data loss) → High (drift/team blocking) → Moderate (operational pain) → Low (team friction).
 
@@ -972,7 +972,7 @@ resource "google_compute_instance" "airflow" {
 
 2. Add CODEOWNERS for critical infrastructure files:
 
-```
+```text
 # .github/CODEOWNERS
 /terraform/compute.tf @senior-engineer @infra-lead
 /terraform/networking.tf @senior-engineer @infra-lead
@@ -1184,7 +1184,7 @@ Terraform state is a single file per workspace. All operations (plan, apply, imp
 
 Split state by domain. Each domain has its own state file, its own plan/apply cycle, and its own lock:
 
-```
+```text
 terraform/
 ├── networking/          # VPC, subnets, firewall rules, Cloud NAT — changes rarely
 │   ├── main.tf
@@ -2097,7 +2097,7 @@ terraform {
 
 2. Use `.tool-versions` for automatic version selection (works with asdf, mise):
 
-```
+```text
 # .tool-versions
 terraform 1.9.8
 ```

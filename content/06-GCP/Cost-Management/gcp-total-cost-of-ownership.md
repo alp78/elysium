@@ -79,7 +79,7 @@ This reference provides concrete, line-item TCO calculations for four archetypal
 
 ### The TCO Formula
 
-```
+```text
 Monthly TCO = Compute + Storage + Networking + Processing + Operations + Licensing
 ```
 

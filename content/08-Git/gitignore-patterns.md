@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away."
-> — **Antoine de Saint-Exupery**
+> — **Antoine de Saint-Exupery**, *Terre des hommes* (1939)
 
 The `.gitignore` file tells Git which files to never track. Critical for keeping secrets, build artifacts, and large files out of your repo. Once a file is committed, `.gitignore` alone does not remove it from history — you must also stop tracking it.
 
@@ -57,19 +57,22 @@ The glob-style pattern syntax used in `.gitignore` is shared with shell expansio
 | `secrets/**` | Everything inside a `secrets/` directory |
 | `/terraform.tfvars` | Only `terraform.tfvars` at the repo root (not in subdirs) |
 
+> [!warning] Negation patterns are order-sensitive
+>
+> A `!` pattern (e.g., `!data/sample.csv`) only works if a preceding line ignores the parent. If the parent directory itself is ignored with a trailing slash (`data/`), Git never looks inside it, and the negation has no effect. To negate a file inside an ignored directory, ignore the contents with `data/*` (no trailing slash) instead, then negate the specific file.
+
 ---
 
 ### Stop Tracking a File That's Already Committed
 
 Adding a file to `.gitignore` only prevents **new** files from being tracked. Files already committed are still tracked even after adding them to `.gitignore`.
 
+> [!info] Stop tracking, keep on disk
+>
+> `git rm --cached` removes a file from Git's index (staging area) without deleting it from your filesystem. Use this after adding a file to `.gitignore` that was already committed.
+
 ```bash
-# Stop tracking a file but keep it on disk
 git rm --cached .env
-# rm — remove from Git tracking
-# --cached — only remove from the index (staging area), keep the file on disk
-# .env — the file to stop tracking
-# In plain English: Stop tracking this file (but don't delete it from my computer). Use after adding it to .gitignore.
 ```
 
 Then commit the removal:
@@ -100,9 +103,7 @@ echo "*.log" >> .gitignore
 
 ```bash
 git rm -r --cached docs/logos/
-# rm — remove from Git
-# -r — recursive (for directories)
-# --cached — only remove from the index (staging area), not from your filesystem
+# -r = recursive (for directories), --cached = index only (files stay on disk)
 ```
 
 ### Step 3: Commit and push

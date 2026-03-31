@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "We were seventh to market... no one was a clear winner. It was a warring market."
-> — **Mitchell Hashimoto**
+> — **Mitchell Hashimoto**, HashiConf talk
 
 The provider block tells Terraform which cloud platform to manage, and the backend block tells it where to store its state file. Together, they form the foundation of every Terraform configuration.
 

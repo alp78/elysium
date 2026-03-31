@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Amateurs hack systems, professionals hack people."
-> — **Bruce Schneier**
+> — **Bruce Schneier**, *Secrets and Lies* (2000)
 
 `gcloud compute ssh` and `gcloud compute scp` provide secure, certificate-based access to Compute Engine VMs through Google's Identity-Aware Proxy (IAP) tunnel. The IAP tunnel routes traffic through Google's internal network, meaning VMs do not need a public IP address — a significant security improvement over traditional public SSH. This is the production-standard access method for GCE VMs.
 
@@ -76,7 +76,7 @@ gcloud compute scp --recurse ./dags/ data-pipeline-airflow:/tmp/dags/ --zone=eur
 
 ### IAP Tunnel Architecture for VM Access
 
-```
+```text
 Your machine ──► Google IAP Proxy ──► GCP Internal Network ──► VM (private IP only)
 ```
 

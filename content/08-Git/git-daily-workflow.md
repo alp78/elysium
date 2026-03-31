@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "As far as I'm concerned, if the code isn't checked into source control, it doesn't exist."
-> — **Jeff Atwood**
+> — **Jeff Atwood**, codinghorror.com
 
 Git is not optional for data engineering. Every SQL migration, every DAG definition, every pipeline configuration, and every [Terraform module](https://alp78.github.io/elysium/07-Terraform/Fundamentals/hcl-syntax-basics) must be version-controlled. These are the commands you run dozens of times per day..
 
@@ -23,10 +23,12 @@ Git is not optional for data engineering. Every SQL migration, every DAG definit
 
 #### git status — show working directory and staging area state
 
+> [!info] What git status shows
+>
+> Displays your current branch, staged changes, unstaged changes, and untracked files. In plain English: what's changed since my last save point?
+
 ```bash
 git status
-# Shows: current branch, staged changes, unstaged changes, untracked files
-# In plain English: What's changed since my last save point?
 ```
 
 #### git status -s — compact one-line-per-file status
@@ -60,10 +62,12 @@ git log --oneline --graph --decorate -20
 
 #### git add file — stage a specific file for the next commit
 
+> [!info] Staging marks files for commit
+>
+> `git add` moves a file from "modified" to "staged" (ready to commit). In plain English: mark this file to be included in the next save point.
+
 ```bash
 git add filename.py
-# add = move a file from "modified" to "staged" (ready to commit)
-# In plain English: Mark this file to be included in the next save point.
 ```
 
 #### git add dir/ — stage all changes in specific directories
@@ -75,10 +79,12 @@ git add src/transforms/ tests/
 
 #### git add -A — stage ALL changes (new, modified, deleted)
 
+> [!info] Stage all changes at once
+>
+> `-A` stages every change across the entire repo — new, modified, and deleted files. Use with caution in repos containing sensitive files.
+
 ```bash
 git add -A
-# -A = all: stage every change across the entire repo
-# In plain English: Mark everything for the next save. Use with caution.
 ```
 
 > [!warning] Avoid Staging Everything
@@ -88,20 +94,24 @@ git add -A
 
 #### git add -p — interactive staging, choose hunks within files
 
+> [!info] Interactive staging with hunks
+>
+> Patch mode shows each change hunk and asks y/n to stage it. In plain English: review each change one by one and pick which ones to include.
+
 ```bash
 git add -p
-# -p = patch mode: shows each change hunk and asks y/n to stage it
-# In plain English: Review each change one by one and pick which ones to include.
 ```
 
 #### git restore --staged file — unstage a file, keep working changes
 
+> [!info] Unstage without losing changes
+>
+> Removes a file from the staging area but keeps your working directory changes intact. In plain English: oops, I didn't mean to include that file.
+
 ```bash
 git reset HEAD filename.py
-# reset HEAD = move the staging pointer back
-# In plain English: Oops, I didn't mean to include that file. Remove it from staging.
 
-# Modern alternative:
+# Modern alternative (Git 2.23+):
 git restore --staged filename.py
 ```
 
@@ -109,10 +119,12 @@ git restore --staged filename.py
 
 #### git commit -m "message" — create a commit
 
+> [!info] Commit creates a snapshot
+>
+> A commit creates a new snapshot of all staged changes. `-m` sets the commit message inline so no editor opens.
+
 ```bash
 git commit -m "fix: correct timezone handling in OHLCV transform"
-# commit = create a new snapshot of all staged changes
-# -m "..." = the commit message (inline, no editor opens)
 ```
 
 #### git commit -m "title" -m "body" — commit with title and description
@@ -125,10 +137,12 @@ git commit -m "feat: add daily signal fetcher" -m "Fetches PE, yield, and moment
 
 #### git commit --amend — amend the last commit
 
+> [!info] Amend replaces the last commit
+>
+> `--amend` replaces the last commit with a new one (rewrites history). Use it to fix a typo in your last commit message or add forgotten files.
+
 ```bash
 git commit --amend -m "fix: correct timezone handling"
-# --amend = replace the last commit with a new one (rewrites history)
-# In plain English: Fix a typo in my last commit message or add forgotten files.
 ```
 
 > [!danger] Never Amend a Pushed Commit
@@ -153,10 +167,12 @@ Use present tense imperative ("add", "fix", "update" — not "added", "fixed"). 
 
 #### git push — upload local commits to GitHub
 
+> [!info] Push uploads to remote
+>
+> Sends your local commits to the tracked remote branch. In plain English: send your save points to GitHub so the team can see them.
+
 ```bash
 git push
-# push = send your local commits to the tracked remote branch
-# In plain English: Send your save points to GitHub so the team can see them.
 ```
 
 #### git push -u origin branch — push new branch and set up tracking
@@ -181,32 +197,41 @@ git push origin --delete feat/old-branch
 
 #### git pull — download and merge latest changes from GitHub
 
+> [!info] Pull fetches and merges
+>
+> `git pull` is shorthand for `git fetch` + `git merge` — it downloads and integrates the team's latest changes in one step.
+
 ```bash
 git pull
-# pull = shorthand for git fetch + git merge (download + integrate)
-# In plain English: Download the team's latest changes and merge them into your work.
 ```
 
 #### git pull --rebase — download and rebase for clean linear history
 
+> [!info] Pull with rebase avoids merges
+>
+> `--rebase` replays your local commits on top of the remote changes instead of creating a merge commit. Results in a cleaner, linear history.
+
 ```bash
 git pull --rebase
-# --rebase = replay your local commits on top of the remote changes instead of merging
-# In plain English: Download latest changes, then replay your work on top. Cleaner history.
 ```
 
 #### git fetch — download new data without merging (safe inspection)
 
+> [!info] Fetch downloads without merging
+>
+> Downloads from the remote but does not touch your files. Updates remote-tracking branches (`origin/main` etc.) so you can inspect changes before integrating.
+
 ```bash
 git fetch
-# fetch = download from remote but don't touch your files
-# Updates remote-tracking branches (origin/main etc.)
-# In plain English: Check what the team has done, but don't touch my files yet.
 ```
 
 > [!tip] Fetch Is Always Safe
 >
 > `git fetch` is always safe — it never modifies your files. `git pull` might cause [merge conflicts](https://alp78.github.io/elysium/08-Git/git-merge-conflicts). When in doubt, fetch first and inspect with `git log origin/main --oneline`.
+
+> [!warning] Pull with uncommitted changes
+>
+> `git pull` can refuse to run or create surprise merge conflicts if you have uncommitted changes in files that the remote also modified. Stash or commit your work before pulling: `git stash && git pull && git stash pop`.
 
 > [!warning] Pull Without Rebase Creates Noise
 >

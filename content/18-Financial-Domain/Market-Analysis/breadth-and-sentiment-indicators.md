@@ -35,7 +35,7 @@ Market breadth measures how broadly a market move is supported across constituen
 
 > [!quote]
 > "The generals may win a few battles, but if the troops aren't following, the war is lost."
-> — **Martin Zweig**
+> — **Martin Zweig**, *Winning on Wall Street* (1986)
 
 
 Measures the breadth of market participation in a given move.
@@ -79,7 +79,7 @@ The net number of 52-week new highs vs new lows across index constituents.
 
 > [!quote]
 > "When everybody thinks alike, everyone is likely to be wrong."
-> — **Humphrey Neill**
+> — **Humphrey Neill**, *The Art of Contrary Thinking* (1954)
 
 
 Options market sentiment indicator. High put volume indicates hedging or bearish bets.

@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "You can't manage what you can't measure, and you can't measure what you can't see."
-> — **Brent Ozar**
+> — **Brent Ozar**, brentozar.com
 
 These T-SQL queries are the diagnostic toolkit for operating SQL Server in production. Keep them in a script you can run in seconds during an incident. They map to Dynamic Management Views (DMVs) — real-time system tables that expose the internals of the running SQL Server instance.
 

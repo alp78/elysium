@@ -11,7 +11,7 @@ description: "dbt docs generate, exposures, lineage graph, static hosting on GCS
 
 > [!quote]
 > "The grain declaration becomes a binding contract on the design."
-> — **Ralph Kimball**
+> — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
 
 dbt documentation is generated from the same source-of-truth that runs your transformations. Every model description, column annotation, and exposure definition is version-controlled alongside SQL, making the docs auditable by the same review process that governs the code.
 

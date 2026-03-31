@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Cost awareness is a lost art. We need to regain that art."
-> — **Werner Vogels**
+> — **Werner Vogels**, AWS re:Invent keynote (2019)
 
 BigQuery charges $5 per TB of data scanned on the on-demand pricing model. A single `SELECT *` on a 10 TB table costs $50 — and runs every time someone executes it. Senior data engineers always dry-run queries before executing them, always use partitioned tables, and never select columns they don't need. This note covers the query execution mechanics and the 80/20 cost optimization practices that have the largest impact.
 

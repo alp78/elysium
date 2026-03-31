@@ -11,7 +11,7 @@ description: "Monitoring dbt runs with Datadog custom metrics, the elementary pa
 
 > [!quote]
 > "Monitoring is TDD for production. Observability is debugging for production -- give Future You the power to answer any question."
-> — **Charity Majors**
+> — **Charity Majors**, charity.wtf (2018)
 
 dbt produces rich execution artifacts after every run. A complete observability stack parses those artifacts, ships metrics to a monitoring platform, detects anomalies in data quality, and alerts the on-call engineer before downstream consumers notice a problem.
 

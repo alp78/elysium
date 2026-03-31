@@ -65,7 +65,7 @@ status: complete
 
 > [!quote]
 > "The best infrastructure is the infrastructure you don't have to think about."
-> — **Werner Vogels**
+> — **Werner Vogels**, AWS re:Invent keynote
 
 > Self-contained, heavily commented Terraform blocks for GCP Compute Engine and Cloud Storage.
 > Each section includes a **when-to-use** note followed by the full resource block.

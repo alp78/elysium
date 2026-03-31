@@ -59,7 +59,7 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 > [!quote]
 > "The speculator's chief enemies are ignorance, greed, fear, and hope."
-> — **Jesse Livermore**
+> — **Jesse Livermore**, *Reminiscences of a Stock Operator* (1923)
 
 
 **Definition:** Commodity trading is the buying and selling of raw materials and primary products such as crude oil, natural gas, metals, agricultural products, and other physical goods. Commodity trading occurs on specialized exchanges (like the Chicago Mercantile Exchange or London Metal Exchange) and through over-the-counter markets. Traders may deal in physical commodities (actual delivery) or financial derivatives (futures, options, and swaps) based on commodity prices. Companies involved in commodity trading include energy companies, mining firms, agricultural conglomerates, and specialized trading houses.
@@ -122,7 +122,7 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 > [!quote]
 > "LNG is the bridge fuel that can help the world transition to a lower-carbon energy system."
-> — **Daniel Yergin**
+> — **Daniel Yergin**, *The Prize* (1991)
 
 
 **Definition:** Liquefied natural gas (LNG) is natural gas that has been cooled to approximately -162 degrees Celsius (-260 degrees Fahrenheit), converting it to a liquid state for storage and transportation. LNG occupies about 1/600th of the volume of natural gas in its gaseous state, making it economically feasible to transport across oceans in specially designed tankers to markets that are not connected by pipelines. At its destination, LNG is regasified (converted back to gas) and distributed through local pipeline networks. LNG plays a critical role in global energy trade and energy security.
@@ -139,7 +139,7 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 > [!quote]
 > "Pipelines are the arteries of the energy system — they keep everything flowing."
-> — **Russell Gold**
+> — **Russell Gold**, *The Boom* (2014)
 
 
 **Definition:** In the energy industry, midstream refers to the activities that connect upstream production with downstream processing and consumption. Midstream operations include the transportation, storage, and wholesale marketing of crude oil, natural gas, natural gas liquids, and other hydrocarbons. Infrastructure assets include pipelines, tanker ships, rail cars, storage terminals, and processing plants. Midstream companies typically earn revenues based on throughput volumes rather than commodity prices, providing more stable and predictable cash flows than upstream operations.

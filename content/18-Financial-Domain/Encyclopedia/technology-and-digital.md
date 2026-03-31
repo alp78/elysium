@@ -83,7 +83,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 > [!quote]
 > "Every business is a software business now."
-> — **Dean Leffingwell**
+> — **Dean Leffingwell**, *Agile Software Requirements* (2011)
 
 
 **Definition:** Digital transformation is the process of integrating digital technology into all areas of a business, fundamentally changing how the organization operates and delivers value to customers. It involves adopting technologies such as cloud computing, artificial intelligence, data analytics, IoT, and automation to improve efficiency, create new business models, and enhance customer experiences. Digital transformation is not simply about technology adoption; it requires changes in organizational culture, processes, and strategy. It has become a strategic imperative for companies across all industries.
@@ -129,7 +129,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 > [!quote]
 > "Fintech is not about building better banks — it is about building a world that doesn't need banks."
-> — **Brett King**
+> — **Brett King**, *Bank 4.0* (2018)
 
 
 **Definition:** Fintech (financial technology) refers to the use of innovative technology to deliver financial products and services more efficiently, accessibly, and affordably than traditional financial institutions. Fintech encompasses a wide range of applications including mobile payments, peer-to-peer lending, robo-advisors, blockchain-based services, digital wallets, insurtech, and regtech. Fintech companies often target underserved market segments or friction points in the traditional financial system, offering faster, cheaper, and more user-friendly alternatives.

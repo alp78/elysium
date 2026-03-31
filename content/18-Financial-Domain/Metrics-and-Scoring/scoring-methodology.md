@@ -23,10 +23,6 @@ All daily and quarterly scores in the [financial data platform dashboard](https:
 
 ## Z-Score Calculation
 
-> [!quote]
-> "Not everything that can be counted counts, and not everything that counts can be counted."
-> — **William Bruce Cameron**
-
 
 All daily and quarterly scores use cross-sectional z-scores within a grouping (index or sector):
 

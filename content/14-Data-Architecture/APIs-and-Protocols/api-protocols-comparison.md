@@ -73,10 +73,10 @@ status: complete
 
 > [!quote]
 > "A REST API should spend almost all of its descriptive effort in defining the media type(s) used for representing resources."
-> — **Roy Fielding**
+> — **Roy Fielding**, *Architectural Styles and the Design of Network-based Software Architectures* (2000)
 >
 > "The hardest part of design is not solving the problem — it is deciding which problem to solve."
-> — **Leonard Richardson**
+> — **Leonard Richardson**, *RESTful Web APIs* (2013)
 
 > [!abstract] Purpose
 > Data engineers interact with APIs at every stage of a pipeline: pulling from vendor REST endpoints, consuming WebSocket market data feeds, receiving SFTP files from exchanges, publishing to message queues, and exposing data products downstream. This note is the entry point for deciding **which protocol to use and why**. Each protocol section links to a deeper implementation note where one exists.

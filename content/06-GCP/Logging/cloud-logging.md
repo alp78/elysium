@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Monitoring is for known-unknowns and actionable alerts, observability is for unknown-unknowns and empowering you to ask arbitrary new questions."
-> — **Charity Majors**
+> — **Charity Majors**, *Observability Engineering* (2022)
 
 When your Cloud Run job fails at 3 AM, Cloud Logging is the first place you look. As one of the three pillars covered in [observability-deep-dive](https://alp78.github.io/elysium/13-Observability/Monitoring/observability-deep-dive), logging complements metrics and tracing to give you full incident visibility. The `gcloud logging read` command supports a powerful filter language that lets you narrow from millions of log entries to the specific failure in seconds. The filter language uses field paths, comparison operators, and logical connectives — it is not grep, it is a structured query language applied to structured log records.
 

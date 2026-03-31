@@ -25,7 +25,6 @@ mindmap
     (alerting)
     (Airflow observability)
     (cost optimization)
-    (cost reference)
     (troubleshooting)
 ```
 
@@ -75,7 +74,7 @@ mindmap
 
 > [!abstract]- [[datadog-log-management]]
 >
-> - [[datadog-log-management#SQL Server Errorlog Collection|SQL Server errorlog collection]]
+> - [[datadog-log-management#SQL Server Errorlog Collection|SQL Server errorlog collection (overview)]]
 > - [[datadog-log-management#Airflow Container Log Collection|Airflow container log collection]]
 > - [[datadog-log-management#Viewing Logs in Datadog Log Explorer|Viewing logs in Log Explorer]]
 > - [[datadog-log-management#Cloud Run Pipeline Logs in Datadog|Cloud Run pipeline logs]]
@@ -122,13 +121,8 @@ mindmap
 > - [[datadog-cost-optimization#Datadog Agent Memory Overhead|Agent memory overhead]]
 > - [[datadog-cost-optimization#Disabling Datadog to Remove All Costs|Disabling Datadog]]
 > - [[datadog-cost-optimization#Datadog Cost Reduction Strategies|Cost reduction strategies]]
-
-> [!abstract]- [[datadog-cost-reference]]
->
-> - [[datadog-cost-reference#Datadog SaaS Cost Breakdown|SaaS cost breakdown]]
-> - [[datadog-cost-reference#What Drives Datadog Pricing|What drives pricing]]
-> - [[datadog-cost-reference#Datadog Agent RAM Impact on Existing VMs|Agent RAM impact]]
-> - [[datadog-cost-reference#Datadog Compared to GCP Infrastructure Costs|Compared to GCP costs]]
+> - [[datadog-cost-optimization#Datadog Trial and Evaluation Period|Trial and evaluation period]]
+> - [[datadog-cost-optimization#Datadog Compared to GCP Infrastructure Costs|Compared to GCP costs]]
 
 > [!abstract]- [[datadog-troubleshooting]]
 >

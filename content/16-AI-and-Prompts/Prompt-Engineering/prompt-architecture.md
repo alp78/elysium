@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "The hottest new programming language is English."
-> — **Andrej Karpathy**
+> — **Andrej Karpathy**, tweet (2023)
 
 A well-architected prompt is the single highest-leverage investment in getting consistent AI output. This note covers the 4-layer structural template (Role → Goal → Constraints → Format), the three modular formats (XML, JSON, paragraph), and how to choose among them. These patterns build on the axioms in [prompt-foundations](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-foundations) and inform the model-specific strategies in [model-specific-prompting](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/model-specific-prompting).
 

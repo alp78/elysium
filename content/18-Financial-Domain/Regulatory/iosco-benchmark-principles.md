@@ -89,4 +89,4 @@ updated: 2026-03-23
 - [sfdr-data-requirements](https://alp78.github.io/elysium/18-Financial-Domain/Regulatory/sfdr-data-requirements) — ESG disclosure requirements
 - [compliance-and-auditability](https://alp78.github.io/elysium/13-Observability/Monitoring/compliance-and-auditability) — Audit trail implementation
 - [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework) — Quality gates and SLA monitoring
-- [[backup-restore-drill]] — Disaster recovery validation
+- Backup restore drill — Disaster recovery validation

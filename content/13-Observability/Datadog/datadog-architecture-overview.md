@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "No complex system is ever fully healthy."
-> — **Cindy Sridharan**
+> — **Cindy Sridharan**, *Distributed Systems Observability* (2018)
 
 Datadog monitoring for the data platform uses two agents and one GCP Integration to deliver full observability — metrics, logs, and traces — across every component from the SQL Server VM to ephemeral Cloud Run jobs.
 

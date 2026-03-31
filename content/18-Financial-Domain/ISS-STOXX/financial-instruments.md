@@ -30,19 +30,19 @@ date: 2026-03-28
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5,507 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 5,507</span>
 
-> [!quote]
-> "If you do not know where you are going, any road will get you there." — Lewis Carroll
 
 
+A standard index — such as the EURO STOXX 50 or STOXX Europe 600 — against which the performance of a portfolio, fund, or financial product is measured. When an index serves as a benchmark, it becomes the contractual reference point embedded in the terms of derivatives, ETFs, and structured products.
 
-> A standard index — such as the EURO STOXX 50 or STOXX Europe 600 — against which the performance of a portfolio, fund, or financial product is measured. When an index serves as a benchmark, it becomes the contractual reference point embedded in the terms of derivatives, ETFs, and structured products.
-
-a benchmark is the yardstick. When a fund manager says "we track the STOXX Europe 600," that index is the benchmark instrument — the thing every return is compared against, and the thing that determines what the fund must hold.
+> [!note]
+> a benchmark is the yardstick. When a fund manager says "we track the STOXX Europe 600," that index is the benchmark instrument — the thing every return is compared against, and the thing that determines what the fund must hold.
 
 > [!tip] Related Terms
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Benchmark%20Selection)
-> - See also: **Index Fund**, **ETF**, **Passive Investment** in this file
+> - [Index Fund](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Index%20Fund)
+> - [ETF](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETF)
+> - [Passive Investment](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Passive%20Investment)
 
 > [!example]- Source excerpts (5)
 >
@@ -91,12 +91,17 @@ a benchmark is the yardstick. When a fund manager says "we track the STOXX Europ
 
 
 
-> A bond is a fixed-income debt instrument in which an investor lends capital to an issuer (government, corporation, or supranational entity) in exchange for periodic interest (coupon) payments and the return of principal at maturity. In the index context, bonds serve as the underlying securities for fixed-income indices published by STOXX and as the instruments evaluated by ISS ESG for labeled-debt verification.
+A bond is a fixed-income debt instrument in which an investor lends capital to an issuer (government, corporation, or supranational entity) in exchange for periodic interest (coupon) payments and the return of principal at maturity. In the index context, bonds serve as the underlying securities for fixed-income indices published by STOXX and as the instruments evaluated by ISS ESG for labeled-debt verification.
 
-a bond is an IOU with a schedule. You lend money, receive regular interest, and get your money back on a set date. Bonds are the building blocks of fixed-income indices and the raw material behind products like green bonds, corporate bonds, and sovereign bonds.
+> [!note]
+> a bond is an IOU with a schedule. You lend money, receive regular interest, and get your money back on a set date. Bonds are the building blocks of fixed-income indices and the raw material behind products like green bonds, corporate bonds, and sovereign bonds.
 
 > [!tip] Related Terms
-> - See also: **Corporate Bond**, **Sovereign Bond**, **Green Bond**, **High-Yield Bond**, **Investment Grade Bond** in this file
+> - [Corporate Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Corporate%20Bond)
+> - [Sovereign Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Sovereign%20Bond)
+> - [Green Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Green%20Bond)
+> - [High-Yield Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#High-Yield%20Bond)
+> - [Investment Grade Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Investment%20Grade%20Bond)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Fixed%20Income%20Indices)
 
 > [!example]- Source excerpts (5)
@@ -148,12 +153,16 @@ a bond is an IOU with a schedule. You lend money, receive regular interest, and 
 
 
 
-> A call option is a derivatives contract that grants the holder the right, but not the obligation, to receive the cash difference between the underlying index level and the strike price at expiry (for European-style contracts) or at any point before expiry (for American-style). On Eurex, call options on STOXX indices are European-style and cash-settled, and they are a core component of covered-call and volatility strategy indices.
+A call option is a derivatives contract that grants the holder the right, but not the obligation, to receive the cash difference between the underlying index level and the strike price at expiry (for European-style contracts) or at any point before expiry (for American-style). On Eurex, call options on STOXX indices are European-style and cash-settled, and they are a core component of covered-call and volatility strategy indices.
 
-a call option is a bet that the index will go up. You pay a premium for the right to profit if the index rises above a set level (the strike price). If it does not, you lose only the premium you paid.
+> [!note]
+> a call option is a bet that the index will go up. You pay a premium for the right to profit if the index rises above a set level (the strike price). If it does not, you lose only the premium you paid.
 
 > [!tip] Related Terms
-> - See also: **Put Option**, **Index Option**, **Options on Indices**, **Covered Call Strategy** in this file
+> - [Put Option](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Put%20Option)
+> - [Index Option](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Index%20Option)
+> - [Options on Indices](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Options%20on%20Indices)
+> - [Covered Call Strategy](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Covered%20Call%20Strategy)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
 
 > [!example]- Source excerpts (5)
@@ -197,17 +206,17 @@ a call option is a bet that the index will go up. You pay a premium for the righ
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="37 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 37</span>
 
-> [!quote]
-> "Simplicity is the ultimate sophistication." — Leonardo da Vinci
 
 
+An index certificate is an unsecured debt instrument issued by a bank that replicates the performance of an underlying index on a one-to-one (delta-one) basis. The holder participates directly in the gains and losses of the index without owning the constituent securities.
 
-> An index certificate is an unsecured debt instrument issued by a bank that replicates the performance of an underlying index on a one-to-one (delta-one) basis. The holder participates directly in the gains and losses of the index without owning the constituent securities.
-
-Think of a certificate as a simplified way to "buy" an entire index through a single security. Unlike an ETF, a certificate is a note issued by a bank, which means you carry the credit risk of that bank. If the issuer defaults, you may lose your investment regardless of how the index performed.
+> [!note]
+> Think of a certificate as a simplified way to "buy" an entire index through a single security. Unlike an ETF, a certificate is a note issued by a bank, which means you carry the credit risk of that bank. If the issuer defaults, you may lose your investment regardless of how the index performed.
 
 > [!tip] Related Terms
-> - See also: **Delta-One Product**, **Index-Linked Note**, **Structured Product** in this file
+> - [Delta-One Product](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Delta-One%20Product)
+> - [Index-Linked Note](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Index-Linked%20Note)
+> - [Structured Product](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Structured%20Product)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Price%20Return%20Index)
 
 > [!example]- Source excerpts (5)
@@ -252,17 +261,17 @@ Think of a certificate as a simplified way to "buy" an entire index through a si
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="90 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 90</span>
 
-> [!quote]
-> "The measure of intelligence is the ability to change." — Albert Einstein
 
 
+A convertible bond is a hybrid fixed-income instrument that gives the bondholder the right to convert the bond into a predetermined number of the issuer's equity shares. Convertible bonds combine characteristics of debt (fixed coupon, maturity date) and equity (upside participation through conversion). STOXX publishes convertible bond indices, and ISS governance evaluates the dilutive impact of conversion features on existing shareholders.
 
-> A convertible bond is a hybrid fixed-income instrument that gives the bondholder the right to convert the bond into a predetermined number of the issuer's equity shares. Convertible bonds combine characteristics of debt (fixed coupon, maturity date) and equity (upside participation through conversion). STOXX publishes convertible bond indices, and ISS governance evaluates the dilutive impact of conversion features on existing shareholders.
-
-A convertible bond is a bond with an embedded stock option. You receive regular interest like a normal bond, but if the company's share price rises enough, you can swap the bond for shares and participate in the equity upside. If the share price stays flat, you simply hold the bond to maturity.
+> [!note]
+> A convertible bond is a bond with an embedded stock option. You receive regular interest like a normal bond, but if the company's share price rises enough, you can swap the bond for shares and participate in the equity upside. If the share price stays flat, you simply hold the bond to maturity.
 
 > [!tip] Related Terms
-> - See also: **Bond**, **Corporate Bond**, **Equity** in this file
+> - [Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Bond)
+> - [Corporate Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Corporate%20Bond)
+> - [Equity](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Equity)
 > - [corporate-governance](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/corporate-governance#Shareholder%20Dilution)
 
 > [!example]- Source excerpts (5)
@@ -307,16 +316,21 @@ A convertible bond is a bond with an embedded stock option. You receive regular 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="17 mentions across STOXX & ISS pages (low)">▰▰ 17</span>
 
 > [!quote]
-> "A promise made is a debt unpaid." — Robert W. Service
+> "A promise made is a debt unpaid."
+> — **Robert W. Service**
 
 
 
-> A corporate bond is a debt security issued by a corporation to raise capital, obligating the issuer to pay periodic interest and return the principal at maturity. Corporate bonds are rated by credit agencies as either investment grade or high yield. STOXX publishes corporate bond indices segmented by credit quality, sector, and geography, while ISS ESG screens corporate bond issuers for ESG risk factors.
+A corporate bond is a debt security issued by a corporation to raise capital, obligating the issuer to pay periodic interest and return the principal at maturity. Corporate bonds are rated by credit agencies as either investment grade or high yield. STOXX publishes corporate bond indices segmented by credit quality, sector, and geography, while ISS ESG screens corporate bond issuers for ESG risk factors.
 
-A corporate bond is a loan you make to a company. The company pays you interest (the coupon) on a regular schedule and gives your money back when the bond matures. The riskier the company, the higher the interest rate it must offer to attract buyers.
+> [!note]
+> A corporate bond is a loan you make to a company. The company pays you interest (the coupon) on a regular schedule and gives your money back when the bond matures. The riskier the company, the higher the interest rate it must offer to attract buyers.
 
 > [!tip] Related Terms
-> - See also: **Bond**, **Investment Grade Bond**, **High-Yield Bond**, **Convertible Bond** in this file
+> - [Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Bond)
+> - [Investment Grade Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Investment%20Grade%20Bond)
+> - [High-Yield Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#High-Yield%20Bond)
+> - [Convertible Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Convertible%20Bond)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Corporate%20Bond%20Indices)
 
 > [!example]- Source excerpts (5)
@@ -362,18 +376,16 @@ A corporate bond is a loan you make to a company. The company pays you interest 
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
 
-> [!quote]
-> "The individual investor should act consistently as an investor and not as a speculator."
-> — **Benjamin Graham**
 
 
+A covered call strategy on an index involves holding a long position in the index portfolio while simultaneously writing (selling) call options on that same index. The premium received from selling the calls provides additional income but caps the upside potential. STOXX publishes dedicated covered-call strategy indices, such as the EURO STOXX 50 Buywrite Index.
 
-> A covered call strategy on an index involves holding a long position in the index portfolio while simultaneously writing (selling) call options on that same index. The premium received from selling the calls provides additional income but caps the upside potential. STOXX publishes dedicated covered-call strategy indices, such as the EURO STOXX 50 Buywrite Index.
-
-you own the index and sell someone else the right to buy it above a certain price. You collect a premium for this, which boosts your income in flat or mildly rising markets, but you give up gains if the index surges past the strike price.
+> [!note]
+> you own the index and sell someone else the right to buy it above a certain price. You collect a premium for this, which boosts your income in flat or mildly rising markets, but you give up gains if the index surges past the strike price.
 
 > [!tip] Related Terms
-> - See also: **Index Option**, **Options on Indices** in this file
+> - [Index Option](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Index%20Option)
+> - [Options on Indices](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Options%20on%20Indices)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Strategy%20Index)
 
@@ -421,16 +433,20 @@ you own the index and sell someone else the right to buy it above a certain pric
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
 > [!quote]
-> "Insurance is the only product that both the seller and buyer hope is never actually used." — Anonymous
+> "Insurance is the only product that both the seller and buyer hope is never actually used."
+> — **Anonymous**
 
 
 
-> A credit default swap is an OTC derivative contract in which one party (the protection buyer) pays a periodic premium to another party (the protection seller) in exchange for a contingent payment if a specified credit event — such as default or restructuring — occurs on a reference entity or bond. CDS spreads are widely used as market-implied measures of credit risk and feed into STOXX risk indices and ISS governance credit assessments.
+A credit default swap is an OTC derivative contract in which one party (the protection buyer) pays a periodic premium to another party (the protection seller) in exchange for a contingent payment if a specified credit event — such as default or restructuring — occurs on a reference entity or bond. CDS spreads are widely used as market-implied measures of credit risk and feed into STOXX risk indices and ISS governance credit assessments.
 
-A credit default swap is essentially insurance against a borrower defaulting. You pay a regular fee, and if the borrower fails to pay its debts, you receive a payout. CDS spreads (the cost of this protection) are a real-time market signal of how risky the market considers a particular company or government.
+> [!note]
+> A credit default swap is essentially insurance against a borrower defaulting. You pay a regular fee, and if the borrower fails to pay its debts, you receive a payout. CDS spreads (the cost of this protection) are a real-time market signal of how risky the market considers a particular company or government.
 
 > [!tip] Related Terms
-> - See also: **Swap**, **Corporate Bond**, **Sovereign Bond** in this file
+> - [Swap](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Swap)
+> - [Corporate Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Corporate%20Bond)
+> - [Sovereign Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Sovereign%20Bond)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Credit%20Risk%20Indicators)
 
 > [!example]- Source excerpts (2)
@@ -458,17 +474,18 @@ A credit default swap is essentially insurance against a borrower defaulting. Yo
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9,874 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 9,874</span>
 
-> [!quote]
-> "Ownership is the most intimate relationship one can have to objects." — Walter Benjamin
 
 
+Equity, in the context of financial instruments, refers to shares of ownership in a publicly listed company. Equities are the fundamental building blocks of stock indices — every STOXX and DAX index is ultimately a rules-based selection and weighting of equity securities. ISS Governance evaluates the governance practices of equity issuers, while ISS ESG rates their environmental and social performance.
 
-> Equity, in the context of financial instruments, refers to shares of ownership in a publicly listed company. Equities are the fundamental building blocks of stock indices — every STOXX and DAX index is ultimately a rules-based selection and weighting of equity securities. ISS Governance evaluates the governance practices of equity issuers, while ISS ESG rates their environmental and social performance.
-
-Equity means ownership. When you buy a share of stock, you own a small piece of the company and are entitled to a portion of its profits (dividends) and voting rights. Equity indices like the EURO STOXX 50 are simply structured collections of these ownership stakes, weighted by rules.
+> [!note]
+> Equity means ownership. When you buy a share of stock, you own a small piece of the company and are entitled to a portion of its profits (dividends) and voting rights. Equity indices like the EURO STOXX 50 are simply structured collections of these ownership stakes, weighted by rules.
 
 > [!tip] Related Terms
-> - See also: **ETF**, **Index Fund**, **Convertible Bond**, **Passive Investment** in this file
+> - [ETF](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETF)
+> - [Index Fund](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Index%20Fund)
+> - [Convertible Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Convertible%20Bond)
+> - [Passive Investment](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Passive%20Investment)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Europe%20600)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float%20Market%20Capitalization)
 
@@ -516,16 +533,20 @@ Equity means ownership. When you buy a share of stock, you own a small piece of 
 
 > [!quote]
 > "The ETF is the most innovative financial instrument of the last two decades."
-> — **John C. Bogle**
+> — **John C. Bogle**, *The Little Book of Common Sense Investing* (2007)
 
 
 
-> An exchange-traded fund is an open-ended investment fund that trades on a stock exchange and seeks to replicate the performance of a specified index. ETFs are the dominant licensed product type on STOXX and DAX indices, with hundreds of ETFs tracking benchmarks such as the STOXX Europe 600 and EURO STOXX 50.
+An exchange-traded fund is an open-ended investment fund that trades on a stock exchange and seeks to replicate the performance of a specified index. ETFs are the dominant licensed product type on STOXX and DAX indices, with hundreds of ETFs tracking benchmarks such as the STOXX Europe 600 and EURO STOXX 50.
 
-An ETF lets you buy and sell a whole index as easily as a single stock. It holds (or synthetically replicates) the index constituents, charges a small annual fee, and its price stays close to the net asset value through an arbitrage mechanism involving authorized participants.
+> [!note]
+> An ETF lets you buy and sell a whole index as easily as a single stock. It holds (or synthetically replicates) the index constituents, charges a small annual fee, and its price stays close to the net asset value through an arbitrage mechanism involving authorized participants.
 
 > [!tip] Related Terms
-> - See also: **ETP**, **Index Fund**, **Passive Investment**, **Portfolio Replication** in this file
+> - [ETP](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETP)
+> - [Index Fund](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Index%20Fund)
+> - [Passive Investment](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Passive%20Investment)
+> - [Portfolio Replication](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Portfolio%20Replication)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Europe%20600)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Full%20Replication)
 
@@ -571,16 +592,19 @@ An ETF lets you buy and sell a whole index as easily as a single stock. It holds
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="642 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 642</span>
 
 > [!quote]
-> "Gold is money. Everything else is credit." — J.P. Morgan
+> "Gold is money. Everything else is credit."
+> — **J.P. Morgan**
 
 
 
-> An exchange-traded commodity is a debt security listed on an exchange that provides exposure to individual commodities or commodity indices. ETCs may be physically backed (holding the commodity) or synthetically backed (using derivatives). STOXX provides commodity-related benchmark indices that serve as underlyings for ETC products.
+An exchange-traded commodity is a debt security listed on an exchange that provides exposure to individual commodities or commodity indices. ETCs may be physically backed (holding the commodity) or synthetically backed (using derivatives). STOXX provides commodity-related benchmark indices that serve as underlyings for ETC products.
 
-An ETC works like an ETF, but for commodities — gold, oil, copper, agricultural goods. Because you cannot easily store barrels of oil in a fund, many ETCs use futures contracts or swaps to provide the exposure.
+> [!note]
+> An ETC works like an ETF, but for commodities — gold, oil, copper, agricultural goods. Because you cannot easily store barrels of oil in a fund, many ETCs use futures contracts or swaps to provide the exposure.
 
 > [!tip] Related Terms
-> - See also: **ETP**, **ETN** in this file
+> - [ETP](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETP)
+> - [ETN](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETN)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Commodity%20Indices)
 
 > [!example]- Source excerpts (5)
@@ -625,16 +649,20 @@ An ETC works like an ETF, but for commodities — gold, oil, copper, agricultura
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
 
 > [!quote]
-> "Credit is a system whereby a person who cannot pay gets another person who cannot pay to guarantee that he can pay." — Charles Dickens
+> "Credit is a system whereby a person who cannot pay gets another person who cannot pay to guarantee that he can pay."
+> — **Charles Dickens**
 
 
 
-> An exchange-traded note is an unsecured, unsubordinated debt instrument issued by a bank that promises to pay the return of a specified index minus fees. Unlike an ETF, an ETN does not hold a pool of assets; the investor bears the full credit risk of the issuing institution.
+An exchange-traded note is an unsecured, unsubordinated debt instrument issued by a bank that promises to pay the return of a specified index minus fees. Unlike an ETF, an ETN does not hold a pool of assets; the investor bears the full credit risk of the issuing institution.
 
-An ETN is essentially a bank's IOU linked to an index. You get precise index tracking with no tracking error (since there is no portfolio to manage), but if the bank goes bust, you might get nothing. This is the key difference from an ETF.
+> [!note]
+> An ETN is essentially a bank's IOU linked to an index. You get precise index tracking with no tracking error (since there is no portfolio to manage), but if the bank goes bust, you might get nothing. This is the key difference from an ETF.
 
 > [!tip] Related Terms
-> - See also: **ETP**, **Certificate**, **Delta-One Product** in this file
+> - [ETP](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETP)
+> - [Certificate](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Certificate)
+> - [Delta-One Product](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Delta-One%20Product)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Price%20Return%20Index)
 
 > [!example]- Source excerpts (5)
@@ -679,17 +707,17 @@ An ETN is essentially a bank's IOU linked to an index. You get precise index tra
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="45 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 45</span>
 
-> [!quote]
-> "The investor's chief problem, and even his worst enemy, is likely to be himself." — Benjamin Graham
 
 
+Exchange-traded product is the umbrella term encompassing ETFs, ETNs, and ETCs — any financial product that is traded on an exchange and derives its value from an underlying benchmark or asset. STOXX indices serve as the basis for a broad ecosystem of ETPs across global exchanges.
 
-> Exchange-traded product is the umbrella term encompassing ETFs, ETNs, and ETCs — any financial product that is traded on an exchange and derives its value from an underlying benchmark or asset. STOXX indices serve as the basis for a broad ecosystem of ETPs across global exchanges.
-
-ETP is the big tent. Whenever someone says "exchange-traded product," they mean any of the exchange-listed wrappers (ETF, ETN, ETC) that give investors packaged access to an index, commodity, or strategy.
+> [!note]
+> ETP is the big tent. Whenever someone says "exchange-traded product," they mean any of the exchange-listed wrappers (ETF, ETN, ETC) that give investors packaged access to an index, commodity, or strategy.
 
 > [!tip] Related Terms
-> - See also: **ETF**, **ETN**, **ETC** in this file
+> - [ETF](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETF)
+> - [ETN](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETN)
+> - [ETC](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETC)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Global%20Indices)
 
 > [!example]- Source excerpts (5)
@@ -733,12 +761,15 @@ ETP is the big tent. Whenever someone says "exchange-traded product," they mean 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="10 mentions across STOXX & ISS pages (low)">▰▰ 10</span>
 
 
-> Eurex futures are standardized, exchange-traded derivatives contracts listed on Eurex Exchange (a subsidiary of Deutsche Boerse, the parent company of STOXX). Key contracts include the EURO STOXX 50 Index Future, the STOXX Europe 600 Index Future, and the DAX Future. These are among the most liquid equity index derivatives in the world.
+Eurex futures are standardized, exchange-traded derivatives contracts listed on Eurex Exchange (a subsidiary of Deutsche Boerse, the parent company of STOXX). Key contracts include the EURO STOXX 50 Index Future, the STOXX Europe 600 Index Future, and the DAX Future. These are among the most liquid equity index derivatives in the world.
 
-Eurex futures let you make a binding agreement today to buy or sell the value of an index at a future date. They are used by institutional investors for hedging, speculation, and portfolio overlay strategies. Daily settlement is marked to market.
+> [!note]
+> Eurex futures let you make a binding agreement today to buy or sell the value of an index at a future date. They are used by institutional investors for hedging, speculation, and portfolio overlay strategies. Daily settlement is marked to market.
 
 > [!tip] Related Terms
-> - See also: **Futures Contract**, **Options on Indices**, **Index Option** in this file
+> - [Futures Contract](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Futures%20Contract)
+> - [Options on Indices](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Options%20on%20Indices)
+> - [Index Option](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Index%20Option)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#DAX)
 
@@ -786,18 +817,17 @@ Eurex futures let you make a binding agreement today to buy or sell the value of
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="90 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 90</span>
 
-> [!quote]
-> "Markets can remain irrational longer than you can remain solvent."
-> — **John Maynard Keynes**
 
 
+An index futures contract is a standardized agreement to exchange, at a predetermined future date, a cash amount equal to the difference between the agreed price and the index level at expiry. Index futures are among the most widely traded derivatives globally, and STOXX/DAX indices underlie some of the highest-volume futures contracts on Eurex.
 
-> An index futures contract is a standardized agreement to exchange, at a predetermined future date, a cash amount equal to the difference between the agreed price and the index level at expiry. Index futures are among the most widely traded derivatives globally, and STOXX/DAX indices underlie some of the highest-volume futures contracts on Eurex.
-
-an index future is a bet on where the index will be at a specific date. You never receive actual shares — everything is settled in cash. Futures are popular because they offer leverage (you post margin, not the full notional value) and high liquidity.
+> [!note]
+> an index future is a bet on where the index will be at a specific date. You never receive actual shares — everything is settled in cash. Futures are popular because they offer leverage (you post margin, not the full notional value) and high liquidity.
 
 > [!tip] Related Terms
-> - See also: **Eurex Futures**, **Delta-One Product**, **Index Option** in this file
+> - [Eurex Futures](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Eurex%20Futures)
+> - [Delta-One Product](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Delta-One%20Product)
+> - [Index Option](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Index%20Option)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Settlement%20Price)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
 
@@ -844,18 +874,19 @@ an index future is a bet on where the index will be at a specific date. You neve
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="28 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 28</span>
 
-> [!quote]
-> "We do not inherit the earth from our ancestors; we borrow it from our children."
-> — **Chief Seattle**
 
 
+A green bond is a fixed-income instrument whose proceeds are exclusively allocated to finance projects with environmental benefits — renewable energy, energy efficiency, clean transportation, or sustainable water management. ISS ESG provides second-party opinions (SPOs) and verification services for green bond issuances, while STOXX publishes green bond indices that track this market segment.
 
-> A green bond is a fixed-income instrument whose proceeds are exclusively allocated to finance projects with environmental benefits — renewable energy, energy efficiency, clean transportation, or sustainable water management. ISS ESG provides second-party opinions (SPOs) and verification services for green bond issuances, while STOXX publishes green bond indices that track this market segment.
-
-A green bond works exactly like a regular bond (fixed coupon, maturity date, credit risk), except the issuer commits to spending the money raised on environmentally beneficial projects. ISS ESG verifies whether the bond actually meets green standards.
+> [!note]
+> A green bond works exactly like a regular bond (fixed coupon, maturity date, credit risk), except the issuer commits to spending the money raised on environmentally beneficial projects. ISS ESG verifies whether the bond actually meets green standards.
 
 > [!tip] Related Terms
-> - See also: **GSSS Bond**, **Social Bond**, **Sustainability Bond**, **Sustainability-Linked Bond**, **Labeled Debt** in this file
+> - [GSSS Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#GSSS%20Bond)
+> - [Social Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Social%20Bond)
+> - [Sustainability Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Sustainability%20Bond)
+> - [Sustainability-Linked Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Sustainability-Linked%20Bond)
+> - [Labeled Debt](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Labeled%20Debt)
 > - [[esg-terms#Green Bond Principles]]
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20ESG%20Indices)
 
@@ -901,17 +932,18 @@ A green bond works exactly like a regular bond (fixed coupon, maturity date, cre
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-> [!quote]
-> "There is no such thing as a free lunch." — Milton Friedman
 
 
+A high-yield bond (also known as a "junk bond") is a fixed-income instrument rated below investment grade (below BBB- by S&P/Fitch or Baa3 by Moody's) that offers a higher coupon to compensate investors for elevated default risk. STOXX publishes high-yield bond indices that serve as benchmarks for this market segment, and ISS ESG screens high-yield issuers for governance and sustainability risks that may compound credit risk.
 
-> A high-yield bond (also known as a "junk bond") is a fixed-income instrument rated below investment grade (below BBB- by S&P/Fitch or Baa3 by Moody's) that offers a higher coupon to compensate investors for elevated default risk. STOXX publishes high-yield bond indices that serve as benchmarks for this market segment, and ISS ESG screens high-yield issuers for governance and sustainability risks that may compound credit risk.
-
-A high-yield bond pays more interest because the issuer is riskier — it has a lower credit rating and a higher chance of defaulting. Investors accept this risk in exchange for the extra income. High-yield indices track the performance of this riskier corner of the bond market.
+> [!note]
+> A high-yield bond pays more interest because the issuer is riskier — it has a lower credit rating and a higher chance of defaulting. Investors accept this risk in exchange for the extra income. High-yield indices track the performance of this riskier corner of the bond market.
 
 > [!tip] Related Terms
-> - See also: **Bond**, **Corporate Bond**, **Investment Grade Bond**, **Credit Default Swap** in this file
+> - [Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Bond)
+> - [Corporate Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Corporate%20Bond)
+> - [Investment Grade Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Investment%20Grade%20Bond)
+> - [Credit Default Swap](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Credit%20Default%20Swap)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20High%20Yield%20Indices)
 
 > [!example]- Source excerpts (2)
@@ -941,16 +973,19 @@ A high-yield bond pays more interest because the issuer is riskier — it has a 
 
 > [!quote]
 > "The index fund is a sensible, serviceable method for obtaining the market's rate of return with absolutely no effort and minimal expense."
-> — **John C. Bogle**
+> — **John C. Bogle**, *The Little Book of Common Sense Investing* (2007)
 
 
 
-> An index fund is a collective investment scheme — mutual fund, unit trust, or similar vehicle — that aims to replicate the performance of a specified benchmark index by holding its constituent securities in proportion to their index weights. Unlike ETFs, traditional index funds are bought and sold at end-of-day NAV, not intraday on an exchange.
+An index fund is a collective investment scheme — mutual fund, unit trust, or similar vehicle — that aims to replicate the performance of a specified benchmark index by holding its constituent securities in proportion to their index weights. Unlike ETFs, traditional index funds are bought and sold at end-of-day NAV, not intraday on an exchange.
 
-An index fund is the original passive investment. You give money to the fund manager, they buy every stock in the index in the right proportions, and your return matches the index (minus a small fee). The key difference from an ETF is that you transact at the day's closing price, not in real time.
+> [!note]
+> An index fund is the original passive investment. You give money to the fund manager, they buy every stock in the index in the right proportions, and your return matches the index (minus a small fee). The key difference from an ETF is that you transact at the day's closing price, not in real time.
 
 > [!tip] Related Terms
-> - See also: **ETF**, **Passive Investment**, **Portfolio Replication** in this file
+> - [ETF](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETF)
+> - [Passive Investment](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Passive%20Investment)
+> - [Portfolio Replication](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Portfolio%20Replication)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Full%20Replication)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Europe%20600)
 
@@ -995,17 +1030,17 @@ An index fund is the original passive investment. You give money to the fund man
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
 
-> [!quote]
-> "Intellectual property has the shelf life of a banana." — Bill Gates
 
 
+An index license is the contractual agreement granting a financial institution the right to use a STOXX or DAX index as the basis for a financial product — ETF, futures contract, structured product, or fund. STOXX Ltd. (part of the ISS STOXX group under Deutsche Boerse) charges licensing fees, typically as basis-point charges on assets under management or per-contract fees for derivatives.
 
-> An index license is the contractual agreement granting a financial institution the right to use a STOXX or DAX index as the basis for a financial product — ETF, futures contract, structured product, or fund. STOXX Ltd. (part of the ISS STOXX group under Deutsche Boerse) charges licensing fees, typically as basis-point charges on assets under management or per-contract fees for derivatives.
-
-Before a bank can launch an ETF on the EURO STOXX 50, it must obtain a license from STOXX. This license spells out how the index data may be used, what products are covered, and what fees are owed. Index licensing is a major revenue stream for index providers.
+> [!note]
+> Before a bank can launch an ETF on the EURO STOXX 50, it must obtain a license from STOXX. This license spells out how the index data may be used, what products are covered, and what fees are owed. Index licensing is a major revenue stream for index providers.
 
 > [!tip] Related Terms
-> - See also: **ETF**, **Futures Contract**, **Structured Product** in this file
+> - [ETF](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETF)
+> - [Futures Contract](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Futures%20Contract)
+> - [Structured Product](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Structured%20Product)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Licensing%20Overview)
 
 > [!example]- Source excerpts (5)
@@ -1052,17 +1087,17 @@ Before a bank can launch an ETF on the EURO STOXX 50, it must obtain a license f
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="101 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 101</span>
 
-> [!quote]
-> "It is choice, not chance, that determines your destiny." — Jean Nidetch
 
 
+An index option is a derivatives contract that gives the holder the right, but not the obligation, to receive (call) or pay (put) the cash difference between the index level and the strike price at or before expiry. STOXX-based index options are primarily traded on Eurex and are European-style (exercisable only at expiry) and cash-settled.
 
-> An index option is a derivatives contract that gives the holder the right, but not the obligation, to receive (call) or pay (put) the cash difference between the index level and the strike price at or before expiry. STOXX-based index options are primarily traded on Eurex and are European-style (exercisable only at expiry) and cash-settled.
-
-An index option is like insurance — or a lottery ticket — on the index's direction. A call option profits when the index rises above the strike; a put option profits when it falls below. You pay a premium upfront for this right.
+> [!note]
+> An index option is like insurance — or a lottery ticket — on the index's direction. A call option profits when the index rises above the strike; a put option profits when it falls below. You pay a premium upfront for this right.
 
 > [!tip] Related Terms
-> - See also: **Options on Indices**, **Covered Call Strategy**, **Futures Contract** in this file
+> - [Options on Indices](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Options%20on%20Indices)
+> - [Covered Call Strategy](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Covered%20Call%20Strategy)
+> - [Futures Contract](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Futures%20Contract)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
 
 > [!example]- Source excerpts (5)
@@ -1108,17 +1143,17 @@ An index option is like insurance — or a lottery ticket — on the index's dir
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
-> [!quote]
-> "One man's trash is another man's treasure." — Proverb
 
 
+An interest rate swap is an OTC derivative contract in which two counterparties agree to exchange interest-rate cash flows — typically a fixed rate for a floating rate — on a notional principal amount over a specified period. Interest rate swaps are the most widely traded OTC derivative globally and are used by institutional investors, banks, and corporates to manage interest-rate risk. STOXX provides swap-rate-based indices and ISS governance frameworks assess counterparty risk in swap exposures.
 
-> An interest rate swap is an OTC derivative contract in which two counterparties agree to exchange interest-rate cash flows — typically a fixed rate for a floating rate — on a notional principal amount over a specified period. Interest rate swaps are the most widely traded OTC derivative globally and are used by institutional investors, banks, and corporates to manage interest-rate risk. STOXX provides swap-rate-based indices and ISS governance frameworks assess counterparty risk in swap exposures.
-
-An interest rate swap is a deal where two parties trade interest payments. One pays a fixed rate; the other pays a floating rate that changes with the market. No principal changes hands — only the difference in interest. Companies use swaps to lock in borrowing costs or hedge against rate movements.
+> [!note]
+> An interest rate swap is a deal where two parties trade interest payments. One pays a fixed rate; the other pays a floating rate that changes with the market. No principal changes hands — only the difference in interest. Companies use swaps to lock in borrowing costs or hedge against rate movements.
 
 > [!tip] Related Terms
-> - See also: **Swap**, **Total Return Swap**, **Credit Default Swap** in this file
+> - [Swap](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Swap)
+> - [Total Return Swap](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Total%20Return%20Swap)
+> - [Credit Default Swap](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Credit%20Default%20Swap)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Risk%20Management)
 
 > [!example]- Source excerpts (1)
@@ -1138,12 +1173,16 @@ An interest rate swap is a deal where two parties trade interest payments. One p
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
-> Labeled debt refers to any bond or debt instrument that carries a formal environmental or social label — Green, Social, Sustainability, or Sustainability-Linked. ISS ESG provides data coverage, screening, and second-party opinions for the labeled debt market, enabling investors to assess the credibility of these labels and integrate them into portfolio construction.
+Labeled debt refers to any bond or debt instrument that carries a formal environmental or social label — Green, Social, Sustainability, or Sustainability-Linked. ISS ESG provides data coverage, screening, and second-party opinions for the labeled debt market, enabling investors to assess the credibility of these labels and integrate them into portfolio construction.
 
-"Labeled debt" is the catch-all for bonds that come with an official tag declaring their purpose. The label signals to investors that proceeds (or the issuer's targets) are tied to sustainability goals. ISS ESG's role is to verify that the label is not just marketing.
+> [!note]
+> "Labeled debt" is the catch-all for bonds that come with an official tag declaring their purpose. The label signals to investors that proceeds (or the issuer's targets) are tied to sustainability goals. ISS ESG's role is to verify that the label is not just marketing.
 
 > [!tip] Related Terms
-> - See also: **GSSS Bond**, **Green Bond**, **Social Bond**, **Transition Bond** in this file
+> - [GSSS Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#GSSS%20Bond)
+> - [Green Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Green%20Bond)
+> - [Social Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Social%20Bond)
+> - [Transition Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Transition%20Bond)
 > - [[esg-terms#Use-of-Proceeds]]
 
 > [!example]- Source excerpts (1)
@@ -1163,12 +1202,15 @@ An interest rate swap is a deal where two parties trade interest payments. One p
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
 
-> A money market fund is a type of mutual fund that invests in short-term, high-quality debt instruments — treasury bills, commercial paper, certificates of deposit, and repurchase agreements — with the objective of preserving capital and providing liquidity. ISS governance frameworks assess money market fund boards and risk management practices, while STOXX money-market indices track short-term interest-rate benchmarks used for fund performance comparison.
+A money market fund is a type of mutual fund that invests in short-term, high-quality debt instruments — treasury bills, commercial paper, certificates of deposit, and repurchase agreements — with the objective of preserving capital and providing liquidity. ISS governance frameworks assess money market fund boards and risk management practices, while STOXX money-market indices track short-term interest-rate benchmarks used for fund performance comparison.
 
-A money market fund is the closest thing to a savings account in the investment world. It holds very short-term, very safe debt and aims to never lose money. The returns are modest but steady, and you can typically withdraw your funds at any time. These funds are benchmarked against overnight or short-term rate indices.
+> [!note]
+> A money market fund is the closest thing to a savings account in the investment world. It holds very short-term, very safe debt and aims to never lose money. The returns are modest but steady, and you can typically withdraw your funds at any time. These funds are benchmarked against overnight or short-term rate indices.
 
 > [!tip] Related Terms
-> - See also: **Commercial Paper**, **Treasury Bill / Treasury Bond**, **Bond** in this file
+> - [Commercial Paper](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Commercial%20Paper)
+> - [Treasury Bill / Treasury Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Treasury%20Bill%20/%20Treasury%20Bond)
+> - [Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Bond)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Money%20Market%20Benchmarks)
 
 > [!example]- Source excerpts (1)
@@ -1187,17 +1229,17 @@ A money market fund is the closest thing to a savings account in the investment 
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
 
-> [!quote]
-> "The only difference between death and taxes is that death does not get worse every time Congress meets." — Will Rogers
 
 
+A municipal bond (muni bond) is a debt security issued by a state, city, county, or other local government entity to finance public projects such as infrastructure, schools, and hospitals. Municipal bonds are particularly prominent in the U.S. market and often carry tax-exempt status. ISS ESG evaluates municipal issuers for governance quality and sustainability alignment, while index providers track municipal bond performance through dedicated benchmarks.
 
-> A municipal bond (muni bond) is a debt security issued by a state, city, county, or other local government entity to finance public projects such as infrastructure, schools, and hospitals. Municipal bonds are particularly prominent in the U.S. market and often carry tax-exempt status. ISS ESG evaluates municipal issuers for governance quality and sustainability alignment, while index providers track municipal bond performance through dedicated benchmarks.
-
-A municipal bond is a loan to a local government. The city or state uses the money to build roads, schools, or water systems, and pays you back with interest. In the U.S., the interest is often exempt from federal (and sometimes state) income tax, making munis attractive to high-tax-bracket investors.
+> [!note]
+> A municipal bond is a loan to a local government. The city or state uses the money to build roads, schools, or water systems, and pays you back with interest. In the U.S., the interest is often exempt from federal (and sometimes state) income tax, making munis attractive to high-tax-bracket investors.
 
 > [!tip] Related Terms
-> - See also: **Bond**, **Sovereign Bond**, **Investment Grade Bond** in this file
+> - [Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Bond)
+> - [Sovereign Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Sovereign%20Bond)
+> - [Investment Grade Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Investment%20Grade%20Bond)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#Fixed%20Income%20Indices)
 
 > [!example]- Source excerpts (2)
@@ -1229,12 +1271,15 @@ A municipal bond is a loan to a local government. The city or state uses the mon
 
 
 
-> Passive investment is an investment approach that seeks to replicate the performance of a market index rather than outperform it through active security selection. The growth of passive investing has been the primary driver of demand for STOXX and ISS index products, as assets flow into index-tracking ETFs, index funds, and index-based mandates.
+Passive investment is an investment approach that seeks to replicate the performance of a market index rather than outperform it through active security selection. The growth of passive investing has been the primary driver of demand for STOXX and ISS index products, as assets flow into index-tracking ETFs, index funds, and index-based mandates.
 
-Passive investing means you buy the index and hold it. You do not try to pick winning stocks or time the market. The philosophy is that most active managers fail to beat the index after fees, so matching the index cheaply is the better long-term strategy.
+> [!note]
+> Passive investing means you buy the index and hold it. You do not try to pick winning stocks or time the market. The philosophy is that most active managers fail to beat the index after fees, so matching the index cheaply is the better long-term strategy.
 
 > [!tip] Related Terms
-> - See also: **ETF**, **Index Fund**, **Portfolio Replication** in this file
+> - [ETF](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETF)
+> - [Index Fund](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Index%20Fund)
+> - [Portfolio Replication](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Portfolio%20Replication)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Market-Cap%20Weighting)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Global%20Indices)
 
@@ -1277,17 +1322,18 @@ Passive investing means you buy the index and hold it. You do not try to pick wi
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-> [!quote]
-> "Good artists copy; great artists steal." — Pablo Picasso
 
 
+Portfolio replication is the process by which a fund or product recreates the performance of an index. Full replication holds every constituent in exact index weight. Sampling (or optimized replication) holds a representative subset. Synthetic replication uses swaps or derivatives to match the index return without holding the underlying securities.
 
-> Portfolio replication is the process by which a fund or product recreates the performance of an index. Full replication holds every constituent in exact index weight. Sampling (or optimized replication) holds a representative subset. Synthetic replication uses swaps or derivatives to match the index return without holding the underlying securities.
-
-Replication is the mechanics behind passive investing. Full replication is the most transparent — you own every stock in the index. Sampling reduces trading costs in large indices (like the STOXX Europe 600) by holding a representative basket. Synthetic replication uses a swap with a bank to guarantee the index return.
+> [!note]
+> Replication is the mechanics behind passive investing. Full replication is the most transparent — you own every stock in the index. Sampling reduces trading costs in large indices (like the STOXX Europe 600) by holding a representative basket. Synthetic replication uses a swap with a bank to guarantee the index return.
 
 > [!tip] Related Terms
-> - See also: **ETF**, **Index Fund**, **Total Return Swap**, **Passive Investment** in this file
+> - [ETF](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETF)
+> - [Index Fund](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Index%20Fund)
+> - [Total Return Swap](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Total%20Return%20Swap)
+> - [Passive Investment](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Passive%20Investment)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Full%20Replication)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Optimized%20Replication)
 
@@ -1307,18 +1353,18 @@ Replication is the mechanics behind passive investing. Full replication is the m
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="189 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 189</span>
 
-> [!quote]
-> "The time to buy is when there's blood in the streets."
-> — **Baron Rothschild**
 
 
+A put option is a derivatives contract that grants the holder the right, but not the obligation, to receive the cash difference between the strike price and the underlying index level at expiry (for European-style contracts). Put options on STOXX indices are traded on Eurex and are widely used for portfolio hedging — protecting against index declines — as well as for directional speculation and volatility strategies.
 
-> A put option is a derivatives contract that grants the holder the right, but not the obligation, to receive the cash difference between the strike price and the underlying index level at expiry (for European-style contracts). Put options on STOXX indices are traded on Eurex and are widely used for portfolio hedging — protecting against index declines — as well as for directional speculation and volatility strategies.
-
-A put option is the mirror image of a call option. You pay a premium for the right to profit if the index falls below a set level. Fund managers commonly buy puts as portfolio insurance — if the market drops, the put pays out and offsets losses in the portfolio.
+> [!note]
+> A put option is the mirror image of a call option. You pay a premium for the right to profit if the index falls below a set level. Fund managers commonly buy puts as portfolio insurance — if the market drops, the put pays out and offsets losses in the portfolio.
 
 > [!tip] Related Terms
-> - See also: **Call Option**, **Index Option**, **Options on Indices**, **Covered Call Strategy** in this file
+> - [Call Option](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Call%20Option)
+> - [Index Option](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Index%20Option)
+> - [Options on Indices](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Options%20on%20Indices)
+> - [Covered Call Strategy](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Covered%20Call%20Strategy)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
 
 > [!example]- Source excerpts (5)
@@ -1372,12 +1418,15 @@ A put option is the mirror image of a call option. You pay a premium for the rig
 
 
 
-> A REIT (Real Estate Investment Trust) is a company or trust that owns, operates, or finances income-generating real estate and is structured to distribute the majority of its taxable income to shareholders as dividends. REITs trade on stock exchanges like ordinary equities and are included in STOXX equity indices, often within dedicated real estate sector sub-indices. ISS Governance assesses REIT board structures, related-party transactions, and governance practices specific to the real estate sector.
+A REIT (Real Estate Investment Trust) is a company or trust that owns, operates, or finances income-generating real estate and is structured to distribute the majority of its taxable income to shareholders as dividends. REITs trade on stock exchanges like ordinary equities and are included in STOXX equity indices, often within dedicated real estate sector sub-indices. ISS Governance assesses REIT board structures, related-party transactions, and governance practices specific to the real estate sector.
 
-A REIT lets you invest in real estate without buying property directly. The REIT owns buildings — offices, shopping centres, warehouses, apartments — collects rent, and passes most of the income to you as dividends. REITs appear in STOXX indices as a distinct sector, and their governance is scrutinized by ISS because of unique conflicts of interest (such as deals between the REIT and its management company).
+> [!note]
+> A REIT lets you invest in real estate without buying property directly. The REIT owns buildings — offices, shopping centres, warehouses, apartments — collects rent, and passes most of the income to you as dividends. REITs appear in STOXX indices as a distinct sector, and their governance is scrutinized by ISS because of unique conflicts of interest (such as deals between the REIT and its management company).
 
 > [!tip] Related Terms
-> - See also: **Equity**, **ETF**, **Index Fund** in this file
+> - [Equity](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Equity)
+> - [ETF](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETF)
+> - [Index Fund](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Index%20Fund)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Real%20Estate%20Indices)
 > - [corporate-governance](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/corporate-governance#Board%20Structure)
 
@@ -1426,17 +1475,18 @@ A REIT lets you invest in real estate without buying property directly. The REIT
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
 
-> [!quote]
-> "We make a living by what we get, but we make a life by what we give." — Winston Churchill
 
 
+A social bond is a fixed-income instrument whose proceeds are allocated to projects that address or mitigate a specific social issue — affordable housing, access to healthcare, food security, or employment generation. ISS ESG provides second-party opinions and data on social bond issuances, verifying alignment with the ICMA Social Bond Principles.
 
-> A social bond is a fixed-income instrument whose proceeds are allocated to projects that address or mitigate a specific social issue — affordable housing, access to healthcare, food security, or employment generation. ISS ESG provides second-party opinions and data on social bond issuances, verifying alignment with the ICMA Social Bond Principles.
-
-A social bond is the society-focused cousin of the green bond. The money raised goes to projects that help people — building hospitals, funding microfinance, or providing clean water. ISS ESG checks that the projects genuinely deliver social benefits.
+> [!note]
+> A social bond is the society-focused cousin of the green bond. The money raised goes to projects that help people — building hospitals, funding microfinance, or providing clean water. ISS ESG checks that the projects genuinely deliver social benefits.
 
 > [!tip] Related Terms
-> - See also: **Green Bond**, **GSSS Bond**, **Sustainability Bond**, **Labeled Debt** in this file
+> - [Green Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Green%20Bond)
+> - [GSSS Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#GSSS%20Bond)
+> - [Sustainability Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Sustainability%20Bond)
+> - [Labeled Debt](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Labeled%20Debt)
 > - [[esg-terms#Social Bond Principles]]
 
 > [!example]- Source excerpts (2)
@@ -1463,16 +1513,21 @@ A social bond is the society-focused cousin of the green bond. The money raised 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
 
 > [!quote]
-> "The power to tax is the power to destroy." — John Marshall
+> "The power to tax is the power to destroy."
+> — **John Marshall**
 
 
 
-> A sovereign bond is a debt security issued by a national government to finance public spending. Sovereign bonds are typically denominated in the issuing country's currency and are considered among the safest fixed-income instruments (for developed-market issuers). STOXX publishes sovereign bond indices covering euro-area and global government debt, while ISS ESG assesses sovereign issuers on governance quality, human rights, and environmental factors through its Country Rating methodology.
+A sovereign bond is a debt security issued by a national government to finance public spending. Sovereign bonds are typically denominated in the issuing country's currency and are considered among the safest fixed-income instruments (for developed-market issuers). STOXX publishes sovereign bond indices covering euro-area and global government debt, while ISS ESG assesses sovereign issuers on governance quality, human rights, and environmental factors through its Country Rating methodology.
 
-A sovereign bond is a loan to a country. Germany, France, the United States, and Japan all issue sovereign bonds to fund their budgets. Because governments can tax their citizens (and, in some cases, print currency), their bonds are generally regarded as low-risk — though this varies greatly by country.
+> [!note]
+> A sovereign bond is a loan to a country. Germany, France, the United States, and Japan all issue sovereign bonds to fund their budgets. Because governments can tax their citizens (and, in some cases, print currency), their bonds are generally regarded as low-risk — though this varies greatly by country.
 
 > [!tip] Related Terms
-> - See also: **Bond**, **Treasury Bill / Treasury Bond**, **Municipal Bond**, **Investment Grade Bond** in this file
+> - [Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Bond)
+> - [Treasury Bill / Treasury Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Treasury%20Bill%20/%20Treasury%20Bond)
+> - [Municipal Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Municipal%20Bond)
+> - [Investment Grade Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Investment%20Grade%20Bond)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Sovereign%20Bond%20Indices)
 
 > [!example]- Source excerpts (5)
@@ -1524,12 +1579,16 @@ A sovereign bond is a loan to a country. Germany, France, the United States, and
 
 
 
-> A structured product is a pre-packaged investment that combines a bond component with a derivative overlay linked to an underlying index (or basket of indices). Structured products are tailored to specific risk-return profiles — capital protection, yield enhancement, or leveraged participation — and are typically issued by banks. STOXX indices are among the most commonly used underlyings for structured products in Europe.
+A structured product is a pre-packaged investment that combines a bond component with a derivative overlay linked to an underlying index (or basket of indices). Structured products are tailored to specific risk-return profiles — capital protection, yield enhancement, or leveraged participation — and are typically issued by banks. STOXX indices are among the most commonly used underlyings for structured products in Europe.
 
-A structured product is a custom-built financial instrument — usually a bond plus an option glued together. The bank might guarantee you will not lose more than 10 % of your capital, while giving you 80 % of the EURO STOXX 50's upside. The exact terms depend on the product's design.
+> [!note]
+> A structured product is a custom-built financial instrument — usually a bond plus an option glued together. The bank might guarantee you will not lose more than 10 % of your capital, while giving you 80 % of the EURO STOXX 50's upside. The exact terms depend on the product's design.
 
 > [!tip] Related Terms
-> - See also: **Certificate**, **Index-Linked Note**, **Delta-One Product**, **Warrant** in this file
+> - [Certificate](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Certificate)
+> - [Index-Linked Note](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Index-Linked%20Note)
+> - [Delta-One Product](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Delta-One%20Product)
+> - [Warrant](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Warrant)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Strategy%20Index)
 
@@ -1577,17 +1636,18 @@ A structured product is a custom-built financial instrument — usually a bond p
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
-> [!quote]
-> "The greatest threat to our planet is the belief that someone else will save it." — Robert Swan
 
 
+A sustainability bond is a fixed-income instrument whose proceeds finance a combination of both environmental (green) and social projects. It merges the scope of green bonds and social bonds under a single issuance. ISS ESG provides verification and second-party opinions for sustainability bonds, assessing alignment with the ICMA Sustainability Bond Guidelines.
 
-> A sustainability bond is a fixed-income instrument whose proceeds finance a combination of both environmental (green) and social projects. It merges the scope of green bonds and social bonds under a single issuance. ISS ESG provides verification and second-party opinions for sustainability bonds, assessing alignment with the ICMA Sustainability Bond Guidelines.
-
-A sustainability bond is a hybrid — the money goes to projects that are both green and socially beneficial. For example, funding energy-efficient affordable housing would qualify because it addresses both an environmental and a social objective.
+> [!note]
+> A sustainability bond is a hybrid — the money goes to projects that are both green and socially beneficial. For example, funding energy-efficient affordable housing would qualify because it addresses both an environmental and a social objective.
 
 > [!tip] Related Terms
-> - See also: **Green Bond**, **Social Bond**, **GSSS Bond**, **Labeled Debt** in this file
+> - [Green Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Green%20Bond)
+> - [Social Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Social%20Bond)
+> - [GSSS Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#GSSS%20Bond)
+> - [Labeled Debt](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Labeled%20Debt)
 > - [[esg-terms#Sustainability Bond Guidelines]]
 
 > [!example]- Source excerpts (3)
@@ -1618,17 +1678,18 @@ A sustainability bond is a hybrid — the money goes to projects that are both g
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-> [!quote]
-> "What gets rewarded gets done." — Michael LeBoeuf
 
 
+A sustainability-linked bond (SLB) is a fixed-income instrument whose financial characteristics (typically the coupon rate) are tied to the issuer's achievement of predefined sustainability performance targets (SPTs). Unlike use-of-proceeds bonds (green, social, sustainability), SLBs do not restrict how proceeds are spent — instead, the issuer faces a financial penalty (step-up coupon) if it misses its sustainability KPIs. ISS ESG assesses the ambition and credibility of SPTs in its second-party opinions.
 
-> A sustainability-linked bond (SLB) is a fixed-income instrument whose financial characteristics (typically the coupon rate) are tied to the issuer's achievement of predefined sustainability performance targets (SPTs). Unlike use-of-proceeds bonds (green, social, sustainability), SLBs do not restrict how proceeds are spent — instead, the issuer faces a financial penalty (step-up coupon) if it misses its sustainability KPIs. ISS ESG assesses the ambition and credibility of SPTs in its second-party opinions.
-
-A sustainability-linked bond flips the model. Instead of earmarking money for specific projects, the issuer says: "If we do not cut our carbon emissions by 30 % by 2030, our interest rate goes up." This creates a direct financial incentive for the issuer to meet its sustainability promises.
+> [!note]
+> A sustainability-linked bond flips the model. Instead of earmarking money for specific projects, the issuer says: "If we do not cut our carbon emissions by 30 % by 2030, our interest rate goes up." This creates a direct financial incentive for the issuer to meet its sustainability promises.
 
 > [!tip] Related Terms
-> - See also: **Green Bond**, **GSSS Bond**, **Labeled Debt**, **Transition Bond** in this file
+> - [Green Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Green%20Bond)
+> - [GSSS Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#GSSS%20Bond)
+> - [Labeled Debt](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Labeled%20Debt)
+> - [Transition Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Transition%20Bond)
 > - [[esg-terms#Sustainability Performance Targets]]
 
 > [!example]- Source excerpts (2)
@@ -1654,16 +1715,20 @@ A sustainability-linked bond flips the model. Instead of earmarking money for sp
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="141 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 141</span>
 
 > [!quote]
-> "Everything in life is a trade-off." — Thomas Sowell
+> "Everything in life is a trade-off."
+> — **Thomas Sowell**
 
 
 
-> A swap is a broad category of OTC derivative contracts in which two counterparties agree to exchange cash flows or returns according to a predefined formula over a set period. Common types include interest rate swaps, total return swaps, and credit default swaps. Swaps are fundamental to synthetic index replication, risk management, and credit hedging strategies involving STOXX indices.
+A swap is a broad category of OTC derivative contracts in which two counterparties agree to exchange cash flows or returns according to a predefined formula over a set period. Common types include interest rate swaps, total return swaps, and credit default swaps. Swaps are fundamental to synthetic index replication, risk management, and credit hedging strategies involving STOXX indices.
 
-A swap is a private agreement to trade one stream of payments for another. The simplest example: one party pays a fixed interest rate and receives a floating rate in return. Swaps are the plumbing behind much of modern finance — they enable banks, funds, and corporations to reshape their risk exposures without buying or selling the underlying assets.
+> [!note]
+> A swap is a private agreement to trade one stream of payments for another. The simplest example: one party pays a fixed interest rate and receives a floating rate in return. Swaps are the plumbing behind much of modern finance — they enable banks, funds, and corporations to reshape their risk exposures without buying or selling the underlying assets.
 
 > [!tip] Related Terms
-> - See also: **Total Return Swap**, **Interest Rate Swap**, **Credit Default Swap** in this file
+> - [Total Return Swap](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Total%20Return%20Swap)
+> - [Interest Rate Swap](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Interest%20Rate%20Swap)
+> - [Credit Default Swap](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Credit%20Default%20Swap)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Synthetic%20Replication)
 
 > [!example]- Source excerpts (5)
@@ -1710,18 +1775,17 @@ A swap is a private agreement to trade one stream of payments for another. The s
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
-> [!quote]
-> "Risk comes from not knowing what you're doing."
-> — **Warren Buffett**
 
 
+A total return swap (TRS) is an OTC derivative contract in which one counterparty pays the total return of a reference index (price appreciation plus dividends) and the other pays a funding rate (e.g., EURIBOR plus a spread). TRS are widely used for synthetic portfolio replication, allowing investors to gain index exposure without purchasing the underlying securities.
 
-> A total return swap (TRS) is an OTC derivative contract in which one counterparty pays the total return of a reference index (price appreciation plus dividends) and the other pays a funding rate (e.g., EURIBOR plus a spread). TRS are widely used for synthetic portfolio replication, allowing investors to gain index exposure without purchasing the underlying securities.
-
-A total return swap is a private deal between two parties. One side says, "I will pay you whatever the EURO STOXX 50 returns," and the other side says, "I will pay you a floating interest rate." No shares change hands — it is purely a cash-flow exchange. This is how many synthetic ETFs get their index exposure.
+> [!note]
+> A total return swap is a private deal between two parties. One side says, "I will pay you whatever the EURO STOXX 50 returns," and the other side says, "I will pay you a floating interest rate." No shares change hands — it is purely a cash-flow exchange. This is how many synthetic ETFs get their index exposure.
 
 > [!tip] Related Terms
-> - See also: **Delta-One Product**, **Portfolio Replication**, **ETF** in this file
+> - [Delta-One Product](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Delta-One%20Product)
+> - [Portfolio Replication](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Portfolio%20Replication)
+> - [ETF](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETF)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Total%20Return%20Index)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Net%20Total%20Return%20Index)
 
@@ -1752,17 +1816,18 @@ A total return swap is a private deal between two parties. One side says, "I wil
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-> [!quote]
-> "The secret of change is to focus all your energy not on fighting the old, but on building the new." — Socrates (attributed)
 
 
+A transition bond is a fixed-income instrument designed to fund an issuer's transition from a carbon-intensive business model to a lower-carbon one. Unlike green bonds, transition bonds acknowledge that the issuer operates in a "brown" sector (e.g., steel, cement, aviation) and needs capital to decarbonize. ISS ESG evaluates transition bond frameworks for credibility and alignment with climate science.
 
-> A transition bond is a fixed-income instrument designed to fund an issuer's transition from a carbon-intensive business model to a lower-carbon one. Unlike green bonds, transition bonds acknowledge that the issuer operates in a "brown" sector (e.g., steel, cement, aviation) and needs capital to decarbonize. ISS ESG evaluates transition bond frameworks for credibility and alignment with climate science.
-
-A transition bond is for companies that cannot credibly issue a green bond because their current operations are heavily polluting — but they have a real plan to change. The bond finances that shift. ISS ESG checks whether the transition plan is genuine or just greenwashing.
+> [!note]
+> A transition bond is for companies that cannot credibly issue a green bond because their current operations are heavily polluting — but they have a real plan to change. The bond finances that shift. ISS ESG checks whether the transition plan is genuine or just greenwashing.
 
 > [!tip] Related Terms
-> - See also: **Green Bond**, **GSSS Bond**, **Sustainability-Linked Bond**, **Labeled Debt** in this file
+> - [Green Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Green%20Bond)
+> - [GSSS Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#GSSS%20Bond)
+> - [Sustainability-Linked Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Sustainability-Linked%20Bond)
+> - [Labeled Debt](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Labeled%20Debt)
 > - [[esg-terms#Climate Transition Finance]]
 
 > [!example]- Source excerpts (1)
@@ -1782,16 +1847,20 @@ A transition bond is for companies that cannot credibly issue a green bond becau
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,875 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,875</span>
 
 > [!quote]
-> "An option is the right, but not the obligation, to make a choice." — Anonymous
+> "An option is the right, but not the obligation, to make a choice."
+> — **Anonymous**
 
 
 
-> A warrant is a securitized option — typically issued by a bank — that gives the holder the right to receive a cash settlement based on the performance of an underlying index relative to a strike price. Index warrants are listed on exchanges and are popular with retail investors in Europe, particularly on the EURO STOXX 50 and DAX indices.
+A warrant is a securitized option — typically issued by a bank — that gives the holder the right to receive a cash settlement based on the performance of an underlying index relative to a strike price. Index warrants are listed on exchanges and are popular with retail investors in Europe, particularly on the EURO STOXX 50 and DAX indices.
 
-A warrant is essentially a long-dated option packaged as a tradeable security. You can buy a call warrant if you think the index will rise or a put warrant if you think it will fall. Warrants are issued by banks (not the exchange clearinghouse), so you carry the issuer's credit risk.
+> [!note]
+> A warrant is essentially a long-dated option packaged as a tradeable security. You can buy a call warrant if you think the index will rise or a put warrant if you think it will fall. Warrants are issued by banks (not the exchange clearinghouse), so you carry the issuer's credit risk.
 
 > [!tip] Related Terms
-> - See also: **Index Option**, **Options on Indices**, **Structured Product** in this file
+> - [Index Option](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Index%20Option)
+> - [Options on Indices](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Options%20on%20Indices)
+> - [Structured Product](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Structured%20Product)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#DAX)
 

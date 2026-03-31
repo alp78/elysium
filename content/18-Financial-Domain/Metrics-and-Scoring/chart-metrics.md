@@ -38,10 +38,6 @@ Trailing 30-day cumulative return, plotted daily. Uses a baseline series (green 
 
 ## Drawdown from Peak (%)
 
-> [!quote]
-> "The real measure of your wealth is how much you'd be worth if you lost all your money."
-> — **Bernard Meltzer**
-
 
 Distance from the running all-time high of the cumulative factor. This metric is always less than or equal to zero.
 

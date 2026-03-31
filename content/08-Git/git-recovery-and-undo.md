@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Nobody actually creates perfect code the first time around, except me. But there's only one of me."
-> — **Linus Torvalds**
+> — **Linus Torvalds**, Git mailing list
 
 Everyone makes mistakes. Git has several ways to undo things, ranging from completely safe to permanently destructive. The key is matching the right tool to the situation.
 
@@ -33,35 +33,35 @@ Everyone makes mistakes. Git has several ways to undo things, ranging from compl
 
 ### Safe: Discard Uncommitted Changes
 
+> [!info] Restore reverts to last commit
+>
+> `git restore` reverts a file to its last committed state. With `--staged`, it unstages a file without discarding your working directory changes.
+
 ```bash
 # Discard uncommitted changes to a file
 git restore filename.py
-# restore — restore a file to its last committed state
-# In plain English: Undo my changes to this file — go back to how it was at my last save.
 
-# Unstage a file without discarding changes
+# Unstage without discarding changes
 git restore --staged filename.py
-# --staged — operate on the staging area (not the working directory)
-# In plain English: Remove this file from the staging area but keep my changes.
 
-# Discard changes (older syntax)
+# Older syntax (same effect as restore)
 git checkout -- filename.py
-# checkout -- = older syntax for git restore. Same effect.
 ```
 
 ---
 
 ### Safe: Revert a Commit (Creates a New Undo Commit)
 
+> [!info] Revert creates an undo commit
+>
+> `git revert` creates a NEW commit that reverses the changes from a specific commit. History is preserved — safe for pushed/shared branches.
+
 ```bash
-# Create a new commit that undoes a specific commit
+# Undo a specific commit
 git revert abc1234
-# revert — create a NEW commit that reverses the changes from the specified commit. History is preserved.
-# In plain English: Undo a specific commit by creating a new "anti-commit". Safe to use on pushed/shared branches.
 
 # Revert the most recent commit
 git revert HEAD
-# HEAD — the most recent commit
 ```
 
 > [!tip] Revert is the Safe Way
@@ -72,23 +72,21 @@ git revert HEAD
 
 ### Careful: Reset (Rewrites History)
 
+> [!info] Reset modes control what survives
+>
+> - `--soft` — keeps changes staged (ready to re-commit)
+> - `--mixed` (default) — keeps changes in working directory but unstages them
+> - `--hard` — discards ALL changes permanently
+
 ```bash
 # Undo last commit, keep changes staged
 git reset --soft HEAD~1
-# reset — move the branch pointer backward
-# --soft — keep changes from the undone commit in the staging area (ready to re-commit)
-# HEAD~1 — one commit before HEAD
-# In plain English: Undo my last commit but keep all changes staged. Useful for re-doing a commit message.
 
-# Undo last commit, keep changes unstaged (default mode)
+# Undo last commit, keep changes unstaged (default)
 git reset --mixed HEAD~1
-# --mixed — keep changes in the working directory but unstage them (default behavior)
-# In plain English: Undo my last commit, un-stage the changes, but keep the file modifications.
 
 # Undo last commit and DELETE all changes (destructive)
 git reset --hard HEAD~1
-# --hard — discard ALL changes from the undone commit. Permanently deleted.
-# In plain English: Undo my last commit and throw away all the changes. Gone forever.
 ```
 
 > [!warning] Hard Reset Is Destructive
@@ -96,28 +94,28 @@ git reset --hard HEAD~1
 > `git reset --hard` is DESTRUCTIVE.
 > Uncommitted work is permanently lost. Only use on local, unpushed commits.
 
+> [!danger] Nuclear option destroys everything
+>
+> Resets your local branch to match the remote exactly. All local changes AND all local-only commits are permanently destroyed.
+
 ```bash
-# Reset local branch to match remote exactly (nuclear option)
 git reset --hard origin/main
-# origin/main — the remote branch to match. All local changes and commits are lost.
-# In plain English: Make my local branch identical to what's on GitHub. Everything local is gone.
 ```
 
 ---
 
 ### Recover: Reflog — Git's Safety Net
 
-```bash
-# Show a log of all recent HEAD movements
-git reflog
-# reflog — reference log: shows all recent HEAD movements (commits, resets, checkouts).
-# Even "deleted" commits appear here for ~90 days.
-# In plain English: Git's secret diary — it remembers everything, even things you thought you deleted.
+> [!info] Reflog is Git's safety net
+>
+> The reflog records all recent HEAD movements (commits, resets, checkouts). Even "deleted" commits appear here for approximately 90 days. Find the SHA of your lost work, then recover it.
 
-# Recover a lost commit found in reflog
+```bash
+# View all recent HEAD movements
+git reflog
+
+# Recover a lost commit by SHA from the reflog
 git reset --hard abc1234
-# abc1234 — the SHA found in reflog. Resets to that commit, recovering your work.
-# In plain English: I accidentally deleted something — reflog showed me the commit, now I'm recovering it.
 ```
 
 > [!tip] Even Hard Reset Is Recoverable
@@ -178,11 +176,12 @@ git restore filename.py
 
 ### "Need to undo a push"
 
+> [!info] Revert then push for shared branches
+>
+> Creates an "anti-commit" that reverses the last change, then pushes it. Safe for shared branches because it preserves history.
+
 ```bash
-# Revert and push (safe for shared branches)
 git revert HEAD && git push
-# revert HEAD — create an undo commit for the last change
-# In plain English: Undo my last pushed commit by creating an "anti-commit" and pushing it.
 ```
 
 ### "Accidentally committed a large file"
@@ -252,26 +251,33 @@ rm -f .git/index.lock
 
 Cherry-picking copies a single commit from one branch and applies it as a new commit on your current branch. Unlike merging (which brings in an entire branch's history), cherry-pick lets you surgically extract exactly one commit. This is useful when a bug fix landed on a different branch and you need just that fix without everything else.
 
+> [!info] Cherry-pick copies one commit
+>
+> Copies the changes from a specific commit and applies them as a new commit on your current branch. Useful for extracting a single bug fix from a different branch without merging everything else.
+
 ```bash
-# Apply a specific commit onto the current branch
 git cherry-pick abc1234
-# cherry-pick — copy the changes from a specific commit and apply them as a new commit
-# abc1234 — the commit SHA to copy
-# In plain English: Copy one specific commit from another branch onto mine.
 ```
+
+> [!warning] Cherry-pick creates duplicate commits
+>
+> The cherry-picked commit gets a new SHA on your branch. If you later merge the source branch, Git may flag the duplicated changes as a conflict. Cherry-pick sparingly — prefer merging or rebasing entire branches when possible.
 
 ### Advanced: Interactive Rebase
 
 Interactive rebase lets you rewrite your recent commit history — reorder commits, combine multiple commits into one (squash), edit commit messages, or drop commits entirely. It opens an editor showing your recent commits as a todo list where you choose what to do with each one. This is a powerful cleanup tool before pushing or opening a PR.
 
+> [!info] Interactive rebase rewrites history
+>
+> Opens an editor showing your recent commits as a todo list. You can reorder, squash (combine), edit messages, or drop commits entirely. Powerful cleanup tool before pushing or opening a PR.
+
 ```bash
-# Reorder, squash, edit, or drop the last 5 commits
 git rebase -i HEAD~5
-# rebase — replay commits
-# -i — interactive: opens an editor to choose what to do with each commit
-# HEAD~5 — the last 5 commits
-# In plain English: Let me rearrange, combine, or delete my last 5 commits.
 ```
+
+> [!danger] Dropping a commit is permanent
+>
+> If you change `pick` to `drop` (or delete a line) in the interactive rebase editor, that commit's changes are permanently removed from the branch. Unlike `git reset --soft`, the changes are not preserved in your working directory. If you drop the wrong commit, use `git reflog` to find the pre-rebase state and `git reset --hard` to restore it.
 
 > [!warning] Only Rebase Unpushed Commits
 >

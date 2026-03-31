@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "A database is only as good as the integrity constraints that protect it."
-> — **C.J. Date**
+> — **C.J. Date**, *An Introduction to Database Systems* (2003)
 
 Database engineering patterns using the **stoxx** index database.
 Prerequisite: SQL_01_Fundamentals.ipynb, SQL_02_Advanced.ipynb

@@ -62,10 +62,10 @@ status: complete
 
 > [!quote]
 > "SRE is what happens when you ask a software engineer to design an operations function."
-> — **Ben Treynor Sloss**
+> — **Ben Treynor Sloss**, *Site Reliability Engineering* (2016)
 >
 > "There are only three kinds of valid monitoring output: alerts that require immediate human action, tickets for non-urgent issues, and logging for diagnostics."
-> — **Ben Treynor Sloss**
+> — **Ben Treynor Sloss**, *Site Reliability Engineering* (2016)
 
 Operational runbook for keeping data pipelines healthy using GCP-native tools. Covers the full loop: define what healthy means, measure it continuously, alert when it breaks, respond with a clear procedure, and automate recovery where possible. SLA monitoring is a core practice within the [DataOps discipline](https://alp78.github.io/elysium/15-DataOps/dataops-principles-and-practices), ensuring that pipeline reliability is measured and reported systematically rather than reactively.
 

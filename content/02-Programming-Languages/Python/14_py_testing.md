@@ -15,7 +15,7 @@ status: complete
 
 > [!quote]
 > "Legacy code is simply code without tests."
-> — **Michael Feathers**
+> — **Michael Feathers**, *Working Effectively with Legacy Code* (2004)
 >
 > "Write tests until fear is transformed into boredom."
 > — **Kent Beck**, *Test-Driven Development: By Example*

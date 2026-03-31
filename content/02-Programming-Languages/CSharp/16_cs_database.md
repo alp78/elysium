@@ -23,7 +23,7 @@ Topics covered:
 
 > [!quote]
 > "Future users of large data banks must be protected from having to know how the data is organized in the machine."
-> — **Edgar F. Codd**
+> — **Edgar F. Codd**, *A Relational Model of Data for Large Shared Data Banks* (1970)
 
 
 > [!info] Run this cell once before
