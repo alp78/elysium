@@ -160,10 +160,10 @@ SELECT
     OBJECT_SCHEMA_NAME(i.object_id) + '.' + OBJECT_NAME(i.object_id) AS table_name,
     i.name AS index_name,
     i.type_desc,
-    s.user_seeks,       -- index seek operations (good — means index is used efficiently)
-    s.user_scans,       -- full index scans (ok for small tables, bad for large)
-    s.user_lookups,     -- bookmark lookups (nonclustered → clustered to get extra columns)
-    s.user_updates,     -- how often DML (INSERT/UPDATE/DELETE) maintains this index
+    s.user_seeks,       -- index seek operations
+    s.user_scans,       -- full index scans
+    s.user_lookups,     -- bookmark lookups
+    s.user_updates,     -- DML maintenance cost
     s.user_seeks + s.user_scans + s.user_lookups AS total_reads,
     s.last_user_seek,
     s.last_user_scan
@@ -172,12 +172,14 @@ LEFT JOIN sys.dm_db_index_usage_stats s
     ON i.object_id = s.object_id AND i.index_id = s.index_id AND s.database_id = DB_ID()
 WHERE OBJECTPROPERTY(i.object_id, 'IsUserTable') = 1
 ORDER BY total_reads DESC;
--- INTERPRETATION:
--- High user_seeks, low user_scans = healthy index (point lookups)
--- High user_scans = possible missing covering columns or wrong index key
--- High user_updates, zero reads = DEAD INDEX — drop it to save write overhead
--- user_lookups > 0 = key lookup happening — consider INCLUDE columns
 ```
+
+> [!info] Interpreting Index Usage Stats
+>
+> - **High user_seeks, low user_scans** — healthy index (point lookups working)
+> - **High user_scans** — possible missing covering columns or wrong index key
+> - **High user_updates, zero reads** — dead index; drop it to save write overhead
+> - **user_lookups > 0** — key lookup happening; consider adding INCLUDE columns
 
 #### dm_db_index_usage_stats user_seeks = 0 — find unused indexes
 
@@ -202,10 +204,11 @@ WHERE OBJECTPROPERTY(i.object_id, 'IsUserTable') = 1
   AND ISNULL(s.user_scans, 0) = 0
   AND ISNULL(s.user_lookups, 0) = 0
 ORDER BY s.user_updates DESC;
--- WARNING: dm_db_index_usage_stats resets on service restart
--- Check uptime first: SELECT sqlserver_start_time FROM sys.dm_os_sys_info
--- Only drop unused indexes if uptime covers a full business cycle (at least 1 week)
 ```
+
+> [!warning] Usage Stats Reset on Restart
+>
+> `dm_db_index_usage_stats` resets on service restart. Check uptime first: `SELECT sqlserver_start_time FROM sys.dm_os_sys_info`. Only drop unused indexes if uptime covers a full business cycle (at least 1 week).
 
 #### sys.index_columns STRING_AGG — find duplicate indexes (same key columns)
 
@@ -267,13 +270,14 @@ JOIN sys.dm_db_missing_index_group_stats migs ON mig.index_group_handle = migs.g
 JOIN sys.dm_db_missing_index_details mid ON mig.index_handle = mid.index_handle
 WHERE mid.database_id = DB_ID()
 ORDER BY improvement_score DESC;
--- improvement_score = estimated benefit (higher = more impactful)
--- CAUTION: These are suggestions, not commands. Always evaluate:
---   1. Does this duplicate an existing index?
---   2. Is the table heavily written to? (more indexes = slower inserts)
---   3. Can I extend an existing index with INCLUDE instead of creating a new one?
---   4. Resets on service restart — only trust after sufficient uptime
 ```
+
+> [!warning] Missing Index Suggestions Need Validation
+>
+> - Does this duplicate an existing index?
+> - Is the table heavily written to? (more indexes = slower inserts)
+> - Can you extend an existing index with INCLUDE instead of creating a new one?
+> - These suggestions reset on service restart — only trust after sufficient uptime
 
 #### XML plan MissingIndex — find cached plans with missing index warnings
 
@@ -294,48 +298,60 @@ ORDER BY total_elapsed_time DESC;
 
 ## Creating Indexes — All Flavors
 
+SQL Server supports several index types, each optimized for different query patterns. The right choice depends on the query workload — point lookups vs range scans vs analytics.
+
 ### Single-Column Nonclustered
+
+> [!abstract] Single-Column Nonclustered Index
+>
+> A B-tree index on one column. Most common index type. Enables index seek for equality and range queries on that column.
 
 ```sql
 -- Basic nonclustered index
 CREATE NONCLUSTERED INDEX IX_market_data_symbol
 ON dbo.market_data (symbol);
--- Creates a B-tree on the symbol column
--- Use for: WHERE symbol = 'ASML' (equality filter on one column)
 
 -- Unique nonclustered
 CREATE UNIQUE NONCLUSTERED INDEX UX_instrument_tickers_symbol
 ON dbo.instrument_tickers (symbol);
--- Enforces uniqueness + provides seek capability
--- Fails on INSERT/UPDATE that would create a duplicate
 ```
 
-### Composite (Multi-Column)
+> [!info] Nonclustered Index Basics
+>
+> - Creates a B-tree on the specified column — enables index seek for `WHERE symbol = 'ASML'`
+> - The `UNIQUE` variant enforces uniqueness and provides seek capability; rejects duplicate INSERT/UPDATE
+
+### Composite (Multi-Column) Index
+
+> [!abstract] Composite Index Definition
+>
+> A B-tree on multiple columns. Column ORDER matters: the index is useful only when queries filter on the leftmost columns.
 
 ```sql
 -- Two-column composite index
 CREATE NONCLUSTERED INDEX IX_market_data_symbol_date
 ON dbo.market_data (symbol, date);
--- Column order matters:
--- WHERE symbol = 'ASML' AND date = '2025-03-09'  → SEEK (both columns used)
--- WHERE symbol = 'ASML'                           → SEEK (leftmost prefix)
--- WHERE date = '2025-03-09'                       → SCAN (first column skipped — index less useful)
 
 -- Three-column composite
 CREATE NONCLUSTERED INDEX IX_daily_index_sector_date
 ON dbo.daily_metrics (_index, sector, date DESC);
--- DESC on date = most recent dates at the top of the index
--- Optimal for: WHERE _index = 'market_index' AND sector = 'Technology' ORDER BY date DESC
-
--- GUIDELINE: Column order in composite indexes
--- 1st position: Most selective equality column (highest cardinality in WHERE = )
--- 2nd position: Next equality column
--- Last position: Range/inequality column (>, <, BETWEEN, ORDER BY)
--- Example: WHERE _index = 'market_index' AND sector = 'Technology' AND date >= '2025-01-01'
---   Index: (_index, sector, date) — equalities first, range last
 ```
 
+> [!tip] Composite Index Column Ordering
+>
+> Column order matters — the index is useful only when queries filter on the leftmost columns:
+> - `WHERE symbol = 'ASML' AND date = '2025-03-09'` — **SEEK** (both columns used)
+> - `WHERE symbol = 'ASML'` — **SEEK** (leftmost prefix)
+> - `WHERE date = '2025-03-09'` — **SCAN** (first column skipped, index less useful)
+>
+> **Guideline:** equality columns first (most selective first), range/inequality column last.
+> Example: `WHERE _index = 'market_index' AND sector = 'Technology' AND date >= '2025-01-01'` → index `(_index, sector, date)`
+
 ### Covering Indexes (with INCLUDE)
+
+> [!abstract] Covering Index Definition
+>
+> Adds non-key columns to the leaf level of a nonclustered index. Eliminates key lookups by storing all columns the query needs directly in the index.
 
 ```sql
 -- Nonclustered with INCLUDE columns
@@ -343,24 +359,20 @@ CREATE NONCLUSTERED INDEX IX_market_data_symbol_date_cover
 ON dbo.market_data (symbol, date)
 INCLUDE (close, volume, high, low);
 -- Key columns (symbol, date) = used for seeking/filtering
--- INCLUDE columns (close, volume, high, low) = stored in leaf only, not in B-tree
--- Result: query reads ONLY this index — no bookmark lookup to the clustered index
-
--- WHEN TO ADD INCLUDE:
--- Run the query, check the execution plan. If you see a "Key Lookup" or "RID Lookup"
--- operator, the nonclustered index was used but SQL Server needed extra columns.
--- Add those extra columns to INCLUDE.
-
--- Example: This query causes a key lookup without INCLUDE:
--- SELECT symbol, date, close, volume FROM dbo.market_data WHERE symbol = 'ASML' AND date >= '2025-01-01'
--- With the covering index above: no lookup needed, pure index scan at leaf level
-
--- INCLUDE vs adding to key:
--- INCLUDE: column is at leaf level only — doesn't affect seek order, smaller B-tree
--- Key: column is in every B-tree level — only put columns here if they're in WHERE/ORDER BY
+-- INCLUDE columns (close, volume, high, low) = stored at leaf level only
 ```
 
+> [!info] When and How to Use INCLUDE
+>
+> - Check the execution plan. If you see a **Key Lookup** or **RID Lookup**, the nonclustered index was used but SQL Server needed extra columns. Add those columns to INCLUDE.
+> - Example: `SELECT symbol, date, close, volume FROM dbo.market_data WHERE symbol = 'ASML' AND date >= '2025-01-01'` — with the covering index above, no lookup needed.
+> - **INCLUDE vs key column:** INCLUDE stores the column at the leaf level only (smaller B-tree, no effect on seek order). Only put columns in the key if they appear in WHERE or ORDER BY.
+
 ### Filtered Indexes
+
+> [!abstract] Filtered Index Definition
+>
+> An index with a WHERE clause — indexes only rows matching the filter. Smaller, faster, and lower maintenance than a full index.
 
 ```sql
 -- Index only active tickers
@@ -376,22 +388,22 @@ CREATE NONCLUSTERED INDEX IX_market_data_recent
 ON dbo.market_data (symbol, date)
 INCLUDE (close)
 WHERE date >= '2024-01-01';
--- Indexes only the last ~1 year of data
--- Perfect for dashboard queries that never look at old data
 
--- LIMITATIONS:
--- 1. Filter must use simple comparisons (=, >, <, IN) — no functions, no LIKE
--- 2. Query WHERE clause must be a superset of the filter (or SQL Server won't use it)
--- 3. Can't be used with parameterized queries unless OPTION(RECOMPILE) is used
---    (because the optimizer doesn't know the parameter value at compile time)
-
--- Parameterized query forcing filtered index usage:
+-- Parameterized query forcing filtered index usage
 SELECT * FROM dbo.instrument_tickers WHERE symbol = @sym AND active = 1 OPTION (RECOMPILE);
--- OPTION (RECOMPILE) = recompile plan each execution — optimizer sees actual @sym value
--- Trade-off: compilation cost vs. better plan — worth it for infrequent complex queries
 ```
 
-### Clustered Index
+> [!warning] Filtered Index Limitations
+>
+> - Filter must use simple comparisons (`=`, `>`, `<`, `IN`) — no functions, no `LIKE`
+> - Query WHERE clause must be a superset of the filter, or SQL Server won't use the index
+> - Parameterized queries require `OPTION(RECOMPILE)` because the optimizer doesn't know the parameter value at compile time (trade-off: compilation cost vs. better plan)
+
+### Clustered Index (Primary Key)
+
+> [!abstract] Clustered Index Definition
+>
+> Determines the physical row order of the table. There can be only one per table. Choose the key carefully — it affects ALL queries.
 
 ```sql
 -- Create clustered index (defines physical row order)
@@ -409,63 +421,56 @@ CREATE TABLE dbo.audit_log (
     created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
     CONSTRAINT PK_audit_log PRIMARY KEY CLUSTERED (id)
 );
--- IDENTITY = auto-incrementing → sequential inserts → no page splits → minimal fragmentation
--- Best for: append-only tables, logging, audit trails
-
--- Choosing the right clustered index key:
--- NARROW: fewer bytes = smaller nonclustered indexes (they all store the clustered key)
--- UNIQUE: avoids the 4-byte uniquifier SQL Server adds to non-unique clustered keys
--- STATIC: columns that don't change — updates to the clustered key cause physical row moves
--- EVER-INCREASING: sequential values minimize page splits (INT IDENTITY, DATETIME2, SEQUENCE)
-
--- ANTI-PATTERN: GUID as clustered key
--- Random GUIDs cause massive page splits and fragmentation
--- If you must use GUID: use NEWSEQUENTIALID() instead of NEWID()
 CREATE TABLE dbo.bad_example (
     id UNIQUEIDENTIFIER DEFAULT NEWSEQUENTIALID(),  -- sequential, not random
     CONSTRAINT PK_bad PRIMARY KEY CLUSTERED (id)
 );
 ```
 
-### Columnstore Indexes
+> [!info] Choosing the Clustered Index Key
+>
+> - **NARROW** — fewer bytes = smaller nonclustered indexes (they all store the clustered key)
+> - **UNIQUE** — avoids the 4-byte uniquifier SQL Server adds to non-unique clustered keys
+> - **STATIC** — columns that don't change; updates to the clustered key cause physical row moves
+> - **EVER-INCREASING** — sequential values minimize page splits (INT IDENTITY, DATETIME2, SEQUENCE)
+
+> [!danger] GUID as Clustered Key
+>
+> Random GUIDs (`NEWID()`) cause massive page splits and fragmentation. If you must use GUID, use `NEWSEQUENTIALID()` instead.
+
+### Columnstore Index
+
+> [!abstract] Columnstore Index Definition
+>
+> Stores data column-by-column instead of row-by-row. Compresses 10x and scans 10-100x faster for analytics. Not for point lookups.
 
 ```sql
 -- Clustered Columnstore Index (CCI) — replaces table storage entirely
 CREATE CLUSTERED COLUMNSTORE INDEX CCI_market_data_archive
 ON dbo.market_data_archive;
--- Entire table is now stored in columnar segments (~1M rows each)
--- 10x compression ratio typical — great for archival/analytics tables
--- Best for: read-heavy tables with aggregate queries, rarely updated
--- AVOID for: single-row OLTP lookups, frequent single-row inserts
 
 -- CCI with ordering (SQL Server 2022+)
 CREATE CLUSTERED COLUMNSTORE INDEX CCI_market_data_archive
 ON dbo.market_data_archive
 ORDER (symbol, date);
--- Ordered CCI = segment elimination based on sorted column min/max values
--- Query: WHERE symbol = 'ASML' → skips all segments where symbol min > 'ASML' or max < 'ASML'
--- Similar to Parquet row group pruning
 
 -- Nonclustered Columnstore Index (NCCI) — hybrid approach
 CREATE NONCLUSTERED COLUMNSTORE INDEX NCCI_market_data_analytics
 ON dbo.market_data (symbol, date, close, volume, high, low, _index);
--- Adds columnstore alongside existing rowstore (B-tree) storage
--- Rowstore handles OLTP (inserts, point lookups)
--- NCCI handles analytics (aggregations, scans)
--- SQL Server optimizer picks the right one per query
 
 -- Filtered NCCI — columnstore on a subset
 CREATE NONCLUSTERED COLUMNSTORE INDEX NCCI_market_data_recent
 ON dbo.market_data (symbol, date, close, volume)
 WHERE date >= '2024-01-01';
--- Columnstore benefits only for recent data
--- Smaller index, faster to build and maintain
-
--- WHEN TO USE COLUMNSTORE IN the data pipeline:
--- Dashboard queries: "average close by index over 3 years" → scans millions of rows → columnstore wins
--- Pipeline upserts: "MERGE into ohlcv WHERE symbol = @s AND date = @d" → single-row → rowstore wins
--- Solution: keep rowstore clustered index for pipeline, add NCCI for dashboard
 ```
+
+> [!info] Columnstore Index Types and Usage
+>
+> - **CCI** — replaces table storage entirely with columnar segments (~1M rows each). 10x compression. Best for read-heavy analytics tables; avoid for single-row OLTP lookups.
+> - **Ordered CCI** (SQL Server 2022+) — enables segment elimination based on sorted column min/max values, similar to Parquet row group pruning.
+> - **NCCI** — adds columnstore alongside existing rowstore. Rowstore handles OLTP, NCCI handles analytics. The optimizer picks the right one per query.
+> - **Filtered NCCI** — columnstore on a subset of rows. Smaller index, faster to build and maintain.
+> - **Pipeline strategy:** keep rowstore clustered index for MERGE upserts, add NCCI for dashboard aggregate queries.
 
 ### Unique Constraints and Primary Keys
 
@@ -502,15 +507,16 @@ SELECT
 FROM sys.dm_db_index_physical_stats(DB_ID(), OBJECT_ID('dbo.market_data'), NULL, NULL, 'LIMITED') ips
 JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id;
 -- 'LIMITED' = fast scan (reads only parent pages, not leaf). Use 'DETAILED' for full accuracy.
--- avg_fragmentation_in_percent = logical fragmentation (out-of-order pages)
--- avg_page_space_used_in_percent = how full each page is (low = wasted space)
-
--- INTERPRETATION:
--- < 5% fragmentation     → do nothing
--- 5-30% fragmentation    → REORGANIZE (online, lightweight)
--- > 30% fragmentation    → REBUILD (offline or online, heavier but thorough)
--- page_count < 1000      → too small to matter — skip it
 ```
+
+> [!info] Fragmentation Thresholds
+>
+> - **< 5%** — do nothing
+> - **5-30%** — REORGANIZE (online, lightweight)
+> - **> 30%** — REBUILD (offline or online, heavier but thorough)
+> - **page_count < 1000** — too small to matter, skip it
+> - `avg_fragmentation_in_percent` = logical fragmentation (out-of-order pages)
+> - `avg_page_space_used_in_percent` = how full each page is (low = wasted space)
 
 #### sys.dm_db_index_physical_stats — check fragmentation across all indexes
 
@@ -593,6 +599,8 @@ ALTER INDEX CCI_archive ON dbo.market_data_archive REBUILD;
 
 ### Automated Maintenance Script
 
+This script automates the rebuild/reorganize decision based on fragmentation thresholds. Run it weekly during low-usage windows.
+
 ```sql
 -- Smart maintenance: reorganize or rebuild based on fragmentation level
 DECLARE @TableName NVARCHAR(256), @IndexName NVARCHAR(256), @Frag FLOAT, @Pages BIGINT;
@@ -627,10 +635,11 @@ END;
 
 CLOSE idx_cursor;
 DEALLOCATE idx_cursor;
--- Run weekly during low-usage window (e.g., Sunday 02:00 UTC)
--- For production: use Ola Hallengren's maintenance solution instead (industry standard)
--- https://ola.hallengren.com/
 ```
+
+> [!tip] Production Maintenance Recommendation
+>
+> Run weekly during low-usage windows (e.g., Sunday 02:00 UTC). For production environments, use [Ola Hallengren's maintenance solution](https://ola.hallengren.com/) instead — it is the industry standard.
 
 ---
 
@@ -738,41 +747,86 @@ ALTER DATABASE analytics_db SET AUTO_UPDATE_STATISTICS_ASYNC ON;
 
 Use this flowchart to decide which index type to create:
 
-```
-START: What query pattern are you optimizing?
-│
-├─ Point lookup (WHERE col = value, single row)
-│  └─ Is this the primary access pattern for the table?
-│     ├─ YES → CLUSTERED INDEX on that column
-│     └─ NO  → NONCLUSTERED INDEX on that column
-│
-├─ Range scan (WHERE col BETWEEN, col >= , ORDER BY)
-│  └─ Is it combined with equality filters?
-│     ├─ YES → COMPOSITE INDEX: equality columns first, range column last
-│     │        Example: (symbol, date) for WHERE symbol = 'ASML' AND date >= '2025-01-01'
-│     └─ NO  → NONCLUSTERED INDEX on the range column
-│
-├─ Multi-column filter (WHERE a = x AND b = y AND c > z)
-│  └─ COMPOSITE INDEX: most selective equality first, range last
-│     Then check: does the query SELECT other columns?
-│     ├─ YES → Add those to INCLUDE (covering index)
-│     └─ NO  → Key columns only
-│
-├─ Aggregate / GROUP BY over large data (millions of rows)
-│  └─ Is the table mostly read, rarely written?
-│     ├─ YES → CLUSTERED COLUMNSTORE INDEX
-│     └─ NO  → NONCLUSTERED COLUMNSTORE INDEX (hybrid)
-│
-├─ JOIN on a foreign key column
-│  └─ NONCLUSTERED INDEX on the FK column in the child table
-│     (Parent table's PK is already indexed)
-│
-├─ Sparse filter (WHERE active = 1, and 90% of rows are 0)
-│  └─ FILTERED NONCLUSTERED INDEX with WHERE active = 1
-│
-└─ ORDER BY without WHERE (e.g., TOP 10 ORDER BY date DESC)
-   └─ NONCLUSTERED INDEX on (date DESC)
-       Consider INCLUDE for the SELECT columns
+```mermaid
+flowchart TD
+    START{{"What query pattern?"}}
+    POINT["Point lookup<br/>WHERE col = value"]
+    RANGE["Range scan<br/>WHERE col BETWEEN"]
+    MULTI["Multi-column filter<br/>WHERE a=x AND b=y"]
+    AGG["Aggregate / GROUP BY<br/>millions of rows"]
+    JOIN_FK["JOIN on FK column"]
+    SPARSE["Sparse filter<br/>WHERE active = 1"]
+    ORDERBY["ORDER BY without WHERE<br/>TOP N ORDER BY col"]
+
+    POINT_Q{"Primary access<br/>pattern?"}
+    RANGE_Q{"Combined with<br/>equality filters?"}
+    MULTI_Q{"Query SELECTs<br/>other columns?"}
+    AGG_Q{"Table mostly read,<br/>rarely written?"}
+
+    CI(["CLUSTERED INDEX"])
+    NCI(["NONCLUSTERED INDEX"])
+    COMP(["COMPOSITE INDEX<br/>equality first, range last"])
+    NCI_RANGE(["NONCLUSTERED on range col"])
+    COVER(["Add INCLUDE cols<br/>covering index"])
+    KEYS(["Key columns only"])
+    CCI(["CLUSTERED COLUMNSTORE"])
+    NCCI(["NONCLUSTERED COLUMNSTORE"])
+    FK_NCI(["NONCLUSTERED on FK col"])
+    FILT(["FILTERED INDEX<br/>WHERE active = 1"])
+    ORD(["NONCLUSTERED on col DESC<br/>consider INCLUDE"])
+
+    START --> POINT
+    START --> RANGE
+    START --> MULTI
+    START --> AGG
+    START --> JOIN_FK
+    START --> SPARSE
+    START --> ORDERBY
+
+    POINT --> POINT_Q
+    POINT_Q -- YES --> CI
+    POINT_Q -- NO --> NCI
+
+    RANGE --> RANGE_Q
+    RANGE_Q -- YES --> COMP
+    RANGE_Q -- NO --> NCI_RANGE
+
+    MULTI --> COMP
+    COMP --> MULTI_Q
+    MULTI_Q -- YES --> COVER
+    MULTI_Q -- NO --> KEYS
+
+    AGG --> AGG_Q
+    AGG_Q -- YES --> CCI
+    AGG_Q -- NO --> NCCI
+
+    JOIN_FK --> FK_NCI
+    SPARSE --> FILT
+    ORDERBY --> ORD
+
+    style START fill:#1a1a2e,stroke:#bb9af7,color:#c0caf5
+    style POINT fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style RANGE fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style MULTI fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style AGG fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style JOIN_FK fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style SPARSE fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style ORDERBY fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style POINT_Q fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
+    style RANGE_Q fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
+    style MULTI_Q fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
+    style AGG_Q fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
+    style CI fill:#1a1a2e,stroke:#9ece6a,color:#9ece6a
+    style NCI fill:#1a1a2e,stroke:#9ece6a,color:#9ece6a
+    style COMP fill:#1a1a2e,stroke:#9ece6a,color:#9ece6a
+    style NCI_RANGE fill:#1a1a2e,stroke:#9ece6a,color:#9ece6a
+    style COVER fill:#1a1a2e,stroke:#9ece6a,color:#9ece6a
+    style KEYS fill:#1a1a2e,stroke:#9ece6a,color:#9ece6a
+    style CCI fill:#1a1a2e,stroke:#9ece6a,color:#9ece6a
+    style NCCI fill:#1a1a2e,stroke:#9ece6a,color:#9ece6a
+    style FK_NCI fill:#1a1a2e,stroke:#9ece6a,color:#9ece6a
+    style FILT fill:#1a1a2e,stroke:#9ece6a,color:#9ece6a
+    style ORD fill:#1a1a2e,stroke:#9ece6a,color:#9ece6a
 ```
 
 ---
@@ -799,44 +853,33 @@ START: What query pattern are you optimizing?
 Recommended index layout for the example data model:
 
 ```sql
--- dbo.market_data (main fact table — millions of rows, daily bulk upserts)
--- Clustered: (symbol, date) — primary access pattern for pipeline MERGE and dashboard lookups
--- NCCI for dashboard aggregates:
 CREATE NONCLUSTERED COLUMNSTORE INDEX NCCI_market_data_dashboard
 ON dbo.market_data (symbol, date, [open], high, low, [close], volume, _index);
 
--- dbo.daily_metrics (derived signals — daily upserts)
--- Clustered: (symbol, date)
--- Nonclustered for dashboard leaderboard:
 CREATE NONCLUSTERED INDEX IX_daily_index_date
 ON dbo.daily_metrics (_index, date DESC)
 INCLUDE (symbol, close, momentum_score, relative_value_score, sentiment_score);
 
--- dbo.quarterly_metrics (quarterly fundamentals)
--- Clustered: (symbol, quarter_end)
--- Nonclustered for dashboard:
 CREATE NONCLUSTERED INDEX IX_quarterly_index
 ON dbo.quarterly_metrics (_index)
 INCLUDE (symbol, pe_ratio, pb_ratio, dividend_yield, quality_score, governance_score);
 
--- dbo.instrument_tickers (dimension — small, rarely updated)
--- Clustered PK: (symbol)
--- Filtered for active:
 CREATE NONCLUSTERED INDEX IX_instrument_tickers_active_index
 ON dbo.instrument_tickers (_index, symbol)
 WHERE active = 1;
 
--- dbo.gold_scores (pre-computed — dashboard reads only)
--- Clustered: (symbol, date)
--- NCCI for ranking queries:
 CREATE NONCLUSTERED COLUMNSTORE INDEX NCCI_gold_scores
 ON dbo.gold_scores (symbol, date, composite_score, rank_overall, _index, sector);
-
--- MAINTENANCE SCHEDULE:
--- After each pipeline run (3x daily): UPDATE STATISTICS on tables that were loaded
--- Weekly (Sunday 02:00 UTC): REORGANIZE/REBUILD based on fragmentation
--- Monthly: Review unused index DMV, review missing index DMV
 ```
+
+> [!info] Index Design Rationale Per Table
+>
+> - **dbo.market_data** — millions of rows, daily bulk upserts. Clustered on `(symbol, date)` for pipeline MERGE and dashboard lookups. NCCI added for dashboard aggregate queries.
+> - **dbo.daily_metrics** — derived signals, daily upserts. Clustered on `(symbol, date)`. Nonclustered on `(_index, date DESC)` with INCLUDE for dashboard leaderboard queries.
+> - **dbo.quarterly_metrics** — quarterly fundamentals. Clustered on `(symbol, quarter_end)`. Nonclustered on `(_index)` with INCLUDE for dashboard reads.
+> - **dbo.instrument_tickers** — small dimension table, rarely updated. Clustered PK on `(symbol)`. Filtered index on `(_index, symbol) WHERE active = 1`.
+> - **dbo.gold_scores** — pre-computed, dashboard reads only. Clustered on `(symbol, date)`. NCCI for ranking queries.
+> - **Maintenance:** UPDATE STATISTICS after each pipeline run (3x daily). REORGANIZE/REBUILD weekly (Sunday 02:00 UTC). Review unused and missing index DMVs monthly.
 
 ---
 

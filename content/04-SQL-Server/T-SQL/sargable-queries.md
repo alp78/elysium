@@ -26,16 +26,12 @@ status: complete
 
 ### SARGable vs Non-SARGable — Functions on Columns
 
-```sql
--- NON-SARGABLE (BAD)                    SARGABLE (GOOD)
--- WHERE YEAR(trade_date) = 2025         WHERE trade_date >= '2025-01-01'
---                                         AND trade_date < '2026-01-01'
--- WHERE CONVERT(DATE, created)          WHERE created >= '2025-03-10'
---       = '2025-03-10'                    AND created < '2025-03-11'
--- WHERE LEFT(symbol, 2) = 'AS'          WHERE symbol LIKE 'AS%'
--- WHERE UPPER(sector) = 'TECH'          WHERE sector = 'TECH'
---   (CI collation matches regardless)
-```
+| Non-SARGable (Bad) | SARGable (Good) | Why |
+|---|---|---|
+| `WHERE YEAR(trade_date) = 2025` | `WHERE trade_date >= '2025-01-01' AND trade_date < '2026-01-01'` | Function on column prevents index seek |
+| `WHERE CONVERT(VARCHAR, trade_date, 112) = '20250315'` | `WHERE trade_date = '2025-03-15'` | CONVERT wraps the column |
+| `WHERE ISNULL(symbol, 'UNKNOWN') = 'ASML'` | `WHERE symbol = 'ASML'` | ISNULL wraps the column |
+| `WHERE LEFT(symbol, 3) = 'ASM'` | `WHERE symbol LIKE 'ASM%'` | LEFT wraps the column; LIKE prefix is SARGable |
 
 > [!warning] Functions on Columns Kill Index Usage
 >
@@ -48,17 +44,13 @@ status: complete
 
 ### SARGable vs Non-SARGable — Calculations and Implicit Conversions
 
-```sql
--- NON-SARGABLE (BAD)                    SARGABLE (GOOD)
--- WHERE price * quantity > 1000         WHERE price > 1000 / quantity
--- WHERE score + 10 > 50                 WHERE score > 40
--- WHERE DATEDIFF(DAY,                   WHERE trade_date >=
---   trade_date, GETDATE()) < 30           DATEADD(DAY, -30, GETDATE())
--- WHERE varchar_col = N'text'           WHERE varchar_col = 'text'
---   (nvarchar vs varchar mismatch)        (matching types)
--- WHERE symbol LIKE '%ML'               WHERE symbol LIKE 'AS%'
---   (can't seek — must scan)              (seekable — known prefix)
-```
+| Non-SARGable (Bad) | SARGable (Good) | Why |
+|---|---|---|
+| `WHERE price * quantity > 1000` | `WHERE price > 1000 / quantity` | Calculation on column prevents seek |
+| `WHERE score + 10 > 50` | `WHERE score > 40` | Arithmetic on column; move constant to value side |
+| `WHERE DATEDIFF(DAY, trade_date, GETDATE()) < 30` | `WHERE trade_date >= DATEADD(DAY, -30, GETDATE())` | DATEDIFF wraps the column |
+| `WHERE varchar_col = N'text'` | `WHERE varchar_col = 'text'` | NVARCHAR vs VARCHAR forces implicit conversion |
+| `WHERE symbol LIKE '%ML'` | `WHERE symbol LIKE 'AS%'` | Leading wildcard cannot seek; known prefix is seekable |
 
 > [!danger] SARGability Is Not Auto-Flagged
 >
@@ -69,26 +61,10 @@ status: complete
 
 ### Why Non-SARGable Predicates Are Slow
 
-The page-level view of what happens:
-
-```text
-SARGable: WHERE trade_date >= '2025-01-01' AND trade_date < '2026-01-01'
-
-  B-tree on trade_date:
-  Root → Intermediate → Leaf page for '2025-01-01'
-  Then scan forward through linked leaf pages until '2026-01-01'
-
-  Pages read: ~50 (only 2025 data)
-  ────────────────────────────────────────────
-
-Non-SARGable: WHERE YEAR(trade_date) = 2025
-
-  SQL Server CANNOT navigate the B-tree (YEAR() is not a key value)
-  Instead: read EVERY leaf page, compute YEAR() on every row, filter
-
-  Pages read: ~5,000 (entire table)
-  100x more I/O for the same result
-```
+> [!info] Page Scan vs Seek
+>
+> - **SARGable** `WHERE trade_date >= '2025-01-01' AND trade_date < '2026-01-01'` — SQL Server navigates the B-tree root to the leaf page for `2025-01-01`, then scans forward through linked leaf pages until `2026-01-01`. Pages read: ~50 (only 2025 data).
+> - **Non-SARGable** `WHERE YEAR(trade_date) = 2025` — SQL Server cannot navigate the B-tree because `YEAR()` is not a key value. Instead it reads every leaf page, computes `YEAR()` on every row, and filters. Pages read: ~5,000 (entire table). 100x more I/O for the same result.
 
 ---
 
@@ -114,8 +90,11 @@ The telltale sign is an **Index Scan** (or **Clustered Index Scan**) with a **Pr
 
 #### sys.dm_exec_query_plan XML — find non-SARGable predicates in cached plans
 
+> [!info] Find Non-SARGable Cached Plans
+>
+> Queries cached plans for Index Scan operators that carry a Predicate (post-scan filter) rather than a Seek Predicate — the signature of a non-SARGable WHERE clause.
+
 ```sql
--- Find non-SARGable predicates in cached plans (look for scans with predicates)
 ;WITH XMLNAMESPACES (DEFAULT 'http://schemas.microsoft.com/sqlserver/2004/07/showplan')
 SELECT TOP 20
     SUBSTRING(st.text, 1, 300) AS query_text,
@@ -143,25 +122,36 @@ If you cannot modify the query (e.g., it comes from a third-party tool), there a
 **Option 1: Computed column + index**
 
 ```sql
--- Option 1: Computed column + index
 ALTER TABLE silver.ohlcv_market_index
 ADD trade_year AS YEAR(date) PERSISTED;
 
 CREATE NONCLUSTERED INDEX IX_ohlcv_year
 ON silver.ohlcv_market_index (trade_year);
-
--- Now WHERE trade_year = 2025 uses an index seek
 ```
+
+> [!tip] Computed Column Enables Seek
+>
+> After adding the persisted computed column and index, `WHERE trade_year = 2025` uses an index seek instead of scanning and evaluating `YEAR()` per row.
+
+> [!warning] Computed Columns Must Be PERSISTED
+>
+> To create an index on a computed column, it must be deterministic. If the expression uses non-deterministic functions, the column must be marked `PERSISTED` — SQL Server stores the computed value physically instead of recalculating on every read. Also, certain SET options (ANSI_NULLS ON, QUOTED_IDENTIFIER ON) must be active when the index is created AND when queries run — pyodbc connections may not set these by default.
 
 **Option 2: Filtered index (if the predicate is always the same value)**
 
 ```sql
--- Option 2: Filtered index (if the predicate is always the same value)
 CREATE NONCLUSTERED INDEX IX_signals_2025
 ON silver.signals_daily (symbol, signal_date)
 WHERE YEAR(signal_date) = 2025;
--- Only works when the query uses the exact same predicate expression
 ```
+
+> [!warning] Filtered Index Predicate Must Match
+>
+> The query must use the exact same predicate expression as the filtered index definition. Even logically equivalent rewrites will not match.
+
+> [!warning] Filtered Index SET Option Requirements
+>
+> Filtered indexes require specific SET options active for both creation and query use: ANSI_NULLS ON, ANSI_PADDING ON, ANSI_WARNINGS ON, ARITHABORT ON, CONCAT_NULL_YIELDS_NULL ON, QUOTED_IDENTIFIER ON. If pyodbc or another driver doesn't set these, SQL Server silently ignores the filtered index and falls back to a table scan.
 
 ---
 
@@ -207,6 +197,12 @@ cursor.executemany("INSERT INTO ...", rows)
 ---
 
 ### SARGability Quick Reference for the Pipeline
+
+> [!warning] Parameter Sniffing Interaction
+>
+> A SARGable predicate with a parameterized query can still perform poorly if SQL Server "sniffs" an atypical parameter value on the first execution and caches a plan optimized for that value. Subsequent executions with typical values use the misoptimized plan. Monitor with `sys.dm_exec_query_stats` and consider `OPTION (RECOMPILE)` for volatile parameter distributions.
+
+At-a-glance reference for common predicate patterns — use this when reviewing WHERE clauses in pipeline SQL.
 
 | Common pipeline pattern | SARGable? | Fix |
 |---|---|---|

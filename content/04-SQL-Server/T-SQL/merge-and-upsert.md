@@ -240,6 +240,13 @@ Python compares each `(_index, symbol, date)` key:
 
 #### INSERT if new, UPDATE if changed, SKIP if identical — upsert logic
 
+> [!info] Upsert Three-Way Branching Logic
+>
+> For each `(_index, symbol, date)` key in the bronze source, Python checks three conditions:
+> - **INSERT** — key does not exist in silver yet (new date)
+> - **UPDATE** — key exists but at least one value column differs (market moved)
+> - **SKIP** — key exists and all values are identical (no change since last fetch)
+
 ```sql
 -- Step 3a: INSERT if this date doesn't exist in silver yet
 INSERT INTO silver.signals_daily (
@@ -256,7 +263,7 @@ WHERE _index = ? AND symbol = ? AND signal_date = ?
 
 #### Upsert run output — inserted, updated, skipped counts
 
-```
+```text
 records_inserted=50  records_updated=45  records_unchanged=5
 ```
 
@@ -287,6 +294,10 @@ WHEN NOT MATCHED THEN INSERT (
 );
 ```
 
+> [!warning] MERGE Requires Semicolon Terminator
+>
+> MERGE is one of the few T-SQL statements that REQUIRES a trailing semicolon. Omitting it causes cryptic syntax errors that point to the line AFTER the MERGE. Always terminate with `;`.
+
 #### MERGE WHEN NOT MATCHED THEN INSERT — prevent phantom duplicate inserts
 
 ```sql
@@ -305,6 +316,14 @@ WHEN NOT MATCHED THEN
 > happens silently in staging: a double-fetched API response produces
 > two rows with the same `(symbol, date)`. Always deduplicate the source
 > CTE before the MERGE: `WITH src AS (SELECT DISTINCT ... FROM staging)`.
+
+> [!danger] Concurrent MERGE Race Condition
+>
+> Two concurrent MERGE statements against the same target can produce duplicate inserts — a phantom read between the NOT MATCHED check and the INSERT. Fix: add `WITH (HOLDLOCK)` on the target table or wrap in SERIALIZABLE isolation. Without this, pipeline retry logic that runs MERGE concurrently will create duplicates.
+
+> [!warning] OUTPUT with MERGE Limitations
+>
+> The OUTPUT clause with MERGE has restrictions: it cannot use `OUTPUT INTO` when the target table has triggers. The `$action` column returns 'INSERT', 'UPDATE', or 'DELETE' — use it to log which rows were affected by which operation.
 
 > [!info] MERGE and RCSI Locking
 >
@@ -364,6 +383,8 @@ INSERT INTO gold.index_performance (
 ## Transaction Management
 
 ### When Autocommit Is Sufficient
+
+SQL Server runs in autocommit mode by default: each statement is its own implicit transaction that commits immediately on success or rolls back on failure. For single-statement operations (one INSERT, one UPDATE, one MERGE), autocommit is sufficient. Explicit `BEGIN TRAN` is only needed when multiple statements must succeed or fail together.
 
 Every SQL statement in SQL Server runs inside an implicit transaction (autocommit). For most pipeline operations — especially idempotent MERGEs — autocommit is the right default:
 
@@ -533,6 +554,10 @@ END CATCH
 | `OFF` (default) | Only the failing statement is rolled back. The transaction stays open. Subsequent statements still execute. |
 | `ON` | The entire transaction is immediately rolled back and execution jumps to CATCH (or aborts the batch). |
 
+> [!danger] XACT_ABORT OFF Commits Partial Work
+>
+> Without `XACT_ABORT ON`, a failing statement does NOT abort the transaction. Subsequent statements still execute and COMMIT saves an inconsistent state. With `XACT_ABORT ON`, any error immediately rolls back the entire transaction and jumps to CATCH.
+
 ```sql
 -- Without XACT_ABORT ON (dangerous):
 BEGIN TRAN;
@@ -557,6 +582,8 @@ COMMIT;                     -- never reached
 
 ### Error Functions Inside CATCH
 
+Inside a CATCH block, SQL Server provides functions that return details about the error: `ERROR_NUMBER()`, `ERROR_MESSAGE()`, `ERROR_SEVERITY()`, `ERROR_STATE()`, `ERROR_LINE()`, and `ERROR_PROCEDURE()`. These functions are only available inside CATCH — calling them outside returns NULL.
+
 ```sql
 BEGIN TRY
     MERGE gold.scores_daily AS tgt USING ...;
@@ -572,6 +599,8 @@ END CATCH
 ```
 
 ### Savepoints — Partial Rollback Within a Transaction
+
+A savepoint is a named checkpoint within a transaction. `SAVE TRANSACTION` creates one; `ROLLBACK TRANSACTION` to a savepoint undoes work back to that point without rolling back the entire transaction. Use savepoints when a multi-step pipeline should continue even if one optional step fails.
 
 When you want to undo part of a transaction without losing everything:
 
@@ -606,6 +635,8 @@ A bare `ROLLBACK` (without a savepoint name) kills the entire transaction. `ROLL
 
 ### SCOPE_IDENTITY() — Retrieving the Last Inserted Key
 
+After an INSERT into a table with an IDENTITY column, three functions can retrieve the generated value: `@@IDENTITY` (dangerous — returns the last identity across all scopes including triggers), `SCOPE_IDENTITY()` (safe — returns only the current scope), and `IDENT_CURRENT('table')` (returns the last value for a specific table regardless of scope or session).
+
 ```sql
 INSERT INTO gold.audit_log (action) VALUES ('refresh');
 DECLARE @log_id BIGINT = SCOPE_IDENTITY();
@@ -622,57 +653,42 @@ DECLARE @log_id BIGINT = SCOPE_IDENTITY();
 
 ### MERGE Internals — What Happens Under RCSI
 
+Under Read Committed Snapshot Isolation (RCSI), MERGE reads a snapshot of the source data but acquires update locks on the target. Understanding the lock sequence is essential for diagnosing deadlocks and designing concurrent pipeline loads.
+
 Understanding what happens inside SQL Server when a MERGE executes against an RCSI-enabled database prevents surprises in production:
 
-```
-Pipeline: MERGE INTO silver.stock_dim ... WHEN MATCHED AND hash changed THEN UPDATE
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#1a1b26', 'primaryTextColor': '#c0caf5', 'primaryBorderColor': '#565f89', 'lineColor': '#7aa2f7', 'secondaryColor': '#24283b', 'tertiaryColor': '#414868', 'edgeLabelBackground': '#1a1b26', 'clusterBkg': '#24283b', 'clusterBorder': '#565f89'}}}%%
+flowchart TD
+    A["1 — Plan Cache + Compilation<br/>MERGE compiles to: seek +<br/>conditional update + conditional insert"]
+    B["2 — Lock Manager<br/>Acquire IX on table"]
+    C["3 — Seek Phase<br/>Acquire U lock on each row<br/>U compatible with S, blocks other U/X"]
+    D{"MATCHED<br/>or NOT<br/>MATCHED?"}
+    E["4a — MATCHED<br/>Upgrade U → X lock on row"]
+    F["4b — NOT MATCHED<br/>Acquire X lock for INSERT"]
+    G["5 — Version Store tempdb<br/>Copy old row image to tempdb<br/>14-byte header + full row"]
+    H["6 — Log Manager<br/>LOP_MODIFY_ROW: before + after image<br/>UNDO on rollback, REDO on recovery"]
+    I["7 — Buffer Pool<br/>In-place update or page split<br/>Update NC indexes if keys changed"]
+    J["8 — COMMIT<br/>Log flush → lock release<br/>Version store entries remain"]
+    K["9 — Cleanup Monitor<br/>Background thread removes versions<br/>no active transaction needs"]
 
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│ 1. PLAN CACHE + COMPILATION                                                     │
-│    └── MERGE compiles to: seek + conditional update + conditional insert         │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│ 2. LOCK MANAGER                                                                 │
-│    ├── IX on table                                                              │
-│    ├── U (Update) lock on each row during the seek phase                        │
-│    │   └── U lock is compatible with S but not with other U or X                │
-│    │       (prevents conversion deadlocks where two sessions both hold S         │
-│    │        and then both try to convert to X)                                   │
-│    └── Convert U → X when modifying the row                                     │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│ 3. VERSION STORE (tempdb) — if RCSI is enabled                                  │
-│    ├── Before overwriting the row, copy the OLD version to tempdb               │
-│    │   └── 14-byte header + full row image → written to version store pages     │
-│    ├── Data page gets a pointer to the version store entry                      │
-│    └── Concurrent readers follow this pointer to see pre-update data            │
-│                                                                                 │
-│    Version chain (for a frequently updated row):                                │
-│    Data page row → tempdb version (LSN 300) → tempdb version (LSN 200) → ...   │
-│    Each reader walks the chain until it finds a version <= its snapshot LSN     │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│ 4. LOG MANAGER                                                                  │
-│    ├── LOP_MODIFY_ROW: before-image (old values) + after-image (new values)     │
-│    ├── Before-image enables UNDO on rollback                                    │
-│    ├── After-image enables REDO on crash recovery                               │
-│    └── UPDATE to indexed columns → additional log records for NC index changes  │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│ 5. BUFFER POOL                                                                  │
-│    ├── In-place update if new value fits in existing space                       │
-│    │   └── Overwrite bytes directly, update page LSN, mark dirty                │
-│    ├── Row expansion (variable-length column grew):                             │
-│    │   ├── Room on page → shift other rows, update offsets                      │
-│    │   └── No room → page split (clustered) or forwarding pointer (heap)        │
-│    └── Nonclustered index pages also modified if key columns changed            │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│ 6. COMMIT → log flush → lock release → version store entries remain             │
-│    └── Version store cleanup: background thread removes versions that no         │
-│        active transaction needs anymore (oldest active snapshot determines       │
-│        what can be cleaned up)                                                   │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│ 7. tempdb cleanup monitor                                                       │
-│    └── If a long-running read transaction holds an old snapshot:                 │
-│        └── Version store grows indefinitely → tempdb fills up → all writes fail │
-│        └── This is the #1 tempdb space problem in RCSI databases                │
-└─────────────────────────────────────────────────────────────────────────────────┘
+    A --> B --> C --> D
+    D -->|MATCHED| E
+    D -->|NOT MATCHED| F
+    E --> G --> H --> I --> J --> K
+    F --> H
+
+    style A fill:#1a1b26,stroke:#7aa2f7,color:#c0caf5
+    style B fill:#1a1b26,stroke:#7aa2f7,color:#c0caf5
+    style C fill:#1a1b26,stroke:#bb9af7,color:#c0caf5
+    style D fill:#414868,stroke:#ff9e64,color:#c0caf5
+    style E fill:#1a1b26,stroke:#f7768e,color:#c0caf5
+    style F fill:#1a1b26,stroke:#f7768e,color:#c0caf5
+    style G fill:#1a1b26,stroke:#9ece6a,color:#c0caf5
+    style H fill:#1a1b26,stroke:#7aa2f7,color:#c0caf5
+    style I fill:#1a1b26,stroke:#7aa2f7,color:#c0caf5
+    style J fill:#1a1b26,stroke:#9ece6a,color:#c0caf5
+    style K fill:#1a1b26,stroke:#565f89,color:#c0caf5
 ```
 
 > [!warning] Long-Running Reads Kill TempDB With RCSI
@@ -682,6 +698,8 @@ Pipeline: MERGE INTO silver.stock_dim ... WHEN MATCHED AND hash changed THEN UPD
 ---
 
 ### Pipeline Load Pattern Summary
+
+Decision guide for choosing the right load pattern based on table type, data volume, and concurrency requirements.
 
 | Loader | Table | Pattern | Transaction? |
 |--------|-------|---------|-------------|

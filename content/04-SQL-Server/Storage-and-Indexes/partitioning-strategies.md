@@ -24,31 +24,46 @@ SQL Server table partitioning divides a large table into smaller horizontal slic
 >
 > Only partition when a single table exceeds **10 million rows** and queries consistently filter by the partition key. Partitioning small tables adds metadata overhead with no performance benefit. The number one use case is large time-series tables (financial price data, pipeline audit logs) where most queries filter by `trade_date` or a similar date column.
 
+### Clustered Index on Partitioned vs Non-Partitioned Tables
+
+On a non-partitioned table, a clustered index physically orders ALL rows in the table by the index key. A seek on `(symbol, trade_date)` navigates one B-tree to find the exact page.
+
+On a partitioned table, each partition has its own independent B-tree for the clustered index. A query filtering on the partition key first eliminates partitions (metadata check), then seeks within the surviving partition's B-tree. This is faster for partition-key queries (fewer pages to scan) but adds overhead for queries that don't filter on the partition key — SQL Server must seek across ALL partition B-trees (a "partition-spanning seek").
+
+> [!warning] Non-Partition-Key Queries Are Slower
+>
+> A query like `WHERE symbol = 'ASML'` without a trade_date filter must scan every partition's B-tree independently. On a non-partitioned table, this would be a single index seek. On a 7-partition table, it becomes 7 separate seeks merged together. Only partition tables where the vast majority of queries filter on the partition key.
+
 ---
 
 ## How SQL Server Partitioning Works
 
 SQL Server partitioning has three required components:
 
-```
-PARTITION FUNCTION         →    PARTITION SCHEME         →    PARTITIONED TABLE
-────────────────────────────    ───────────────────────────    ──────────────────────────────
-Defines the boundary values     Maps partitions to filegroups   Clustered index uses the scheme
-for splitting the data          (usually PRIMARY for simple     as its storage target
-                                setups)
+```mermaid
+flowchart LR
+    PF["Partition Function\nDefines boundary values\nfor splitting the data"]
+    PS["Partition Scheme\nMaps partitions\nto filegroups"]
+    PT["Partitioned Table\nClustered index uses\nthe scheme as storage"]
+    
+    PF --> PS --> PT
+
+    style PF fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style PS fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style PT fill:#1a1a2e,stroke:#9ece6a,color:#fff
 ```
 
 #### Partitioning layout — yearly boundaries for market_data time-series
 
-```
-Partition 1: trade_date < '2021-01-01'   (pre-2021 historical)
-Partition 2: trade_date >= '2021-01-01' AND < '2022-01-01'   (2021)
-Partition 3: trade_date >= '2022-01-01' AND < '2023-01-01'   (2022)
-Partition 4: trade_date >= '2023-01-01' AND < '2024-01-01'   (2023)
-Partition 5: trade_date >= '2024-01-01' AND < '2025-01-01'   (2024)
-Partition 6: trade_date >= '2025-01-01' AND < '2026-01-01'   (2025)
-Partition 7: trade_date >= '2026-01-01'                       (2026 — current year)
-```
+| Partition | Range | Description |
+|---|---|---|
+| 1 | trade_date < 2021-01-01 | Pre-2021 historical |
+| 2 | 2021-01-01 to 2021-12-31 | 2021 |
+| 3 | 2022-01-01 to 2022-12-31 | 2022 |
+| 4 | 2023-01-01 to 2023-12-31 | 2023 |
+| 5 | 2024-01-01 to 2024-12-31 | 2024 |
+| 6 | 2025-01-01 to 2025-12-31 | 2025 |
+| 7 | trade_date >= 2026-01-01 | 2026 — current year |
 
 ---
 
@@ -56,12 +71,13 @@ Partition 7: trade_date >= '2026-01-01'                       (2026 — current 
 
 The partition function defines the boundary values and whether the boundary belongs to the left or right partition.
 
+> [!example] Yearly partition function for trade_date
+>
+> With `RANGE RIGHT`, the boundary value goes in the right (higher) partition:
+> Partition 1 gets `trade_date < '2021-01-01'`, Partition 2 gets `>= '2021-01-01' AND < '2022-01-01'`, etc.
+
 ```sql
--- YEARLY partition function for trade_date (DATE type)
--- RIGHT means: the boundary value goes in the right (higher) partition
---   Partition 1: trade_date < '2021-01-01'
---   Partition 2: trade_date >= '2021-01-01' AND < '2022-01-01'
---   ... etc.
+-- Yearly partition function for trade_date (DATE type)
 CREATE PARTITION FUNCTION pf_trade_date_yearly (DATE)
 AS RANGE RIGHT FOR VALUES (
     '2021-01-01',
@@ -98,21 +114,19 @@ ORDER BY prv.boundary_id;
 
 The partition scheme maps each partition to a filegroup. For most workloads, all partitions map to `PRIMARY`.
 
+> [!info] What Is a Filegroup?
+>
+> A filegroup is a named collection of data files that SQL Server uses as a storage target. The default `PRIMARY` filegroup stores everything. Creating additional filegroups (like `ARCHIVE`) lets you place older partitions on slower/cheaper storage while keeping current data on fast SSDs.
+
+> [!tip] Archive Filegroup Pattern
+>
+> For cold historical partitions, create a dedicated `ARCHIVE` filegroup on slower storage. Map old partitions to ARCHIVE and the current partition to PRIMARY. This reduces SSD costs while keeping hot data fast.
+
 ```sql
 -- Simple scheme: all partitions on the PRIMARY filegroup
 CREATE PARTITION SCHEME ps_trade_date_yearly
 AS PARTITION pf_trade_date_yearly
 ALL TO ([PRIMARY]);
-
--- Advanced scheme: archive partitions on a separate filegroup (for read-only compression)
--- Requires creating the filegroup first:
--- ALTER DATABASE analytics_db ADD FILEGROUP [ARCHIVE]
--- ALTER DATABASE analytics_db ADD FILE (NAME = 'project_archive', FILENAME = '/data/archive/project_archive.ndf') TO FILEGROUP [ARCHIVE]
---
--- CREATE PARTITION SCHEME ps_trade_date_yearly
--- AS PARTITION pf_trade_date_yearly
--- TO ([ARCHIVE], [ARCHIVE], [ARCHIVE], [ARCHIVE], [ARCHIVE], [ARCHIVE], [PRIMARY]);
--- (first N partitions → ARCHIVE filegroup, last partition → PRIMARY for current year)
 ```
 
 ---
@@ -153,16 +167,16 @@ WITH (DATA_COMPRESSION = PAGE);  -- can apply compression to all partitions at o
 
 When a query includes a filter on the partition key, SQL Server's optimizer uses the partition function to determine which partitions could contain matching rows and skips the rest.
 
+> [!question] How to Verify Partition Elimination
+>
+> In the execution plan, look for "Actual Partition Count" in the Clustered Index Seek properties. If it shows 1 or 2, partition elimination is working. If it shows the total partition count (e.g., 7), the query is scanning all partitions — likely a non-SARGable predicate on the partition key.
+
 ```sql
 -- This query hits ONLY partition 6 (2025 data) — eliminates 6 out of 7 partitions
 SELECT symbol, trade_date, [close]
 FROM dbo.market_data_partitioned
 WHERE trade_date BETWEEN '2025-01-01' AND '2025-12-31'
   AND symbol = 'ASML';
-
--- Verify partition elimination in the execution plan:
--- Look for "Actual Partition Count" in the plan properties
--- Should be 1 or 2 partitions, not all 7
 
 -- Query to see which partitions contain data
 SELECT
@@ -189,10 +203,11 @@ ORDER BY partition_number;
 
 `ALTER TABLE ... SWITCH` is the most powerful partitioning feature. It moves a partition between tables by updating metadata only — no data movement, no row-by-row processing. A billion-row partition switches in milliseconds.
 
-#### ALTER TABLE SWITCH PARTITION — fast archiving to archive table
+#### Creating the archive table
+
+The archive table must have an identical schema (columns, types, nullability, defaults) and an identical clustered index key to the partitioned table.
 
 ```sql
--- Create the archive table with identical structure on the ARCHIVE filegroup
 CREATE TABLE dbo.market_data_archive (
     trade_date      DATE            NOT NULL,
     symbol          NVARCHAR(20)    NOT NULL,
@@ -209,23 +224,23 @@ CREATE TABLE dbo.market_data_archive (
         ON [PRIMARY]  -- or ARCHIVE filegroup
 )
 WITH (DATA_COMPRESSION = PAGE);
+```
 
--- Switch partition 1 (pre-2021 data) OUT of the main table INTO the archive
--- This takes milliseconds — no data movement, only metadata update
+#### Switching a partition OUT to archive
+
+Switch partition 1 (pre-2021 data) out of the main table into the archive. This takes milliseconds — no data movement, only a metadata update. After the switch, partition 1 in the main table is empty and all pre-2021 rows live in the archive table.
+
+```sql
 ALTER TABLE dbo.market_data_partitioned
 SWITCH PARTITION 1
 TO dbo.market_data_archive;
-
--- After the switch:
--- dbo.market_data_partitioned partition 1 is empty
--- dbo.market_data_archive contains all pre-2021 rows
 ```
 
-#### ALTER TABLE SWITCH — fast staging load, switch table IN as partition
+#### Creating the staging table
+
+The staging table must use the same partition scheme and have an identical schema. Data is loaded here first without blocking the main table.
 
 ```sql
--- Pipeline: load new data to a staging table, then switch it in atomically
--- Step 1: Load data to the staging table
 CREATE TABLE dbo.market_data_staging_2026 (
     trade_date      DATE            NOT NULL,
     symbol          NVARCHAR(20)    NOT NULL,
@@ -242,15 +257,24 @@ CREATE TABLE dbo.market_data_staging_2026 (
         ON ps_trade_date_yearly (trade_date)  -- must use same partition scheme
 )
 WITH (DATA_COMPRESSION = PAGE);
+```
 
--- Load data into staging (can take minutes — doesn't block main table)
+#### Loading data into staging
+
+Loading into the staging table can take minutes but does not block the main partitioned table.
+
+```sql
 INSERT INTO dbo.market_data_staging_2026 (trade_date, symbol, ...)
 SELECT ...
 FROM external_source
 WHERE trade_date >= '2026-01-01';
+```
 
--- Step 2: Switch the staging table in as partition 7 (the 2026 partition)
--- This takes milliseconds — atomically replaces the empty partition with the loaded data
+#### Switching staging IN as a partition
+
+This takes milliseconds — atomically replaces the empty partition with the loaded data.
+
+```sql
 ALTER TABLE dbo.market_data_staging_2026
 SWITCH TO dbo.market_data_partitioned PARTITION 7;
 ```
@@ -268,23 +292,31 @@ SWITCH TO dbo.market_data_partitioned PARTITION 7;
 
 ## Adding New Partitions — Sliding Window Pattern
 
-For an ongoing pipeline, add a new partition boundary at the start of each year (or month for monthly partitioning):
+In a daily/yearly pipeline, new partitions must be added before data for the new period arrives. Without a new boundary, all new-year data lands in the last open-ended partition.
+
+#### Step 1: Designate the next filegroup
+
+Before splitting, tell the partition scheme which filegroup the new partition should use.
 
 ```sql
--- At the start of 2027, add a partition for 2027 data
--- Step 1: The partition scheme needs a "next used" filegroup
 ALTER PARTITION SCHEME ps_trade_date_yearly
 NEXT USED [PRIMARY];
+```
 
--- Step 2: Add the new boundary to the partition function
+#### Step 2: Split the boundary
+
+Add a new boundary value to the partition function. The 2026 partition is now bounded on the right (`>= '2026-01-01' AND < '2027-01-01'`), and a new empty partition 8 exists for 2027 data.
+
+```sql
 ALTER PARTITION FUNCTION pf_trade_date_yearly ()
 SPLIT RANGE ('2027-01-01');
+```
 
--- The partition function now has 7 boundaries (8 partitions)
--- The 2026 partition is now bounded on the right: >= '2026-01-01' AND < '2027-01-01'
--- A new empty partition 8 exists for 2027 data
+#### Step 3: Verify the new partition
 
--- Verify the new partition exists
+Confirm the partition function now has 7 boundaries (8 partitions) and the new partition exists.
+
+```sql
 SELECT
     partition_number,
     rows,
@@ -296,13 +328,16 @@ ORDER BY partition_number;
 
 #### Sliding Window — ALTER PARTITION FUNCTION MERGE RANGE remove old partitions
 
+A sliding window maintains a fixed number of active partitions by adding new ones at the front and removing old ones at the back. As 2027 data starts arriving, a new partition is added (SPLIT). Once 2020 data is archived, the old boundary is removed (MERGE). The window slides forward, keeping the partition count constant.
+
+> [!danger] Always SWITCH Before MERGE
+>
+> MERGE RANGE removes a partition boundary but does NOT delete the data — it combines two partitions into one. If you merge without switching out the data first, both partitions' data ends up in one partition. Always SWITCH OUT the data to an archive table before merging the boundary.
+
 ```sql
--- Before removing: switch out the old partition to the archive table (see above)
--- Then merge the empty partition boundary to eliminate the partition
+-- Merge the empty partition boundary after switching out the data
 ALTER PARTITION FUNCTION pf_trade_date_yearly ()
 MERGE RANGE ('2021-01-01');
--- Partition 1 and 2 are merged into a single partition (now covering all pre-2022 data)
--- Only safe to do after switching out the data first!
 ```
 
 ---
@@ -311,10 +346,11 @@ MERGE RANGE ('2021-01-01');
 
 Different partitions can have different compression levels — useful for mixed hot/cold data. See [table-compression](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/table-compression) for detailed compression ratio benchmarks and the decision framework for choosing between ROW and PAGE compression.
 
-```sql
--- Apply PAGE compression to old partitions, NONE to the current-year partition
--- (Current year gets many updates; old partitions are read-only)
+> [!info] Hot vs Cold Compression Strategy
+>
+> Historical partitions (read-only) benefit from PAGE compression — saves 60-80% storage with no write overhead since they're never updated. The current-year partition should remain uncompressed (or ROW compressed at most) because ongoing INSERT/UPDATE operations pay a CPU cost for compression on every write.
 
+```sql
 -- Compress partitions 1-6 (historical years 2020-2025)
 ALTER INDEX CIX_market_data_partitioned ON dbo.market_data_partitioned
 REBUILD PARTITION = 1 WITH (DATA_COMPRESSION = PAGE);
@@ -382,20 +418,37 @@ JOIN sys.partition_functions pf ON ps.function_id = pf.function_id;
 
 ### Partitioning Decision Tree
 
-```
-Is the table > 10 million rows?
-├── NO  → Don't partition. Add covering indexes instead.
-│         See [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy).
-└── YES → Do queries consistently filter by a date column?
-          ├── NO  → Partitioning won't help (no partition elimination).
-          │         Consider columnstore index instead.
-          └── YES → Partition by that date column.
-                    ├── Yearly partitioning → > 1M rows per year?
-                    │   YES → Use yearly boundaries
-                    │   NO  → Use monthly boundaries for finer granularity
-                    └── Do you need fast archiving or bulk-load switching?
-                        YES → SWITCH-based sliding window pattern
-                        NO  → Simple partition for elimination only
+```mermaid
+flowchart TD
+    Q1{Table over 10M rows?}
+    Q2{Queries filter by date column?}
+    Q3{Over 1M rows per year?}
+    Q4{Need fast archiving or bulk-load?}
+
+    A1([Add covering indexes])
+    A2([Consider columnstore])
+    A3([Yearly boundaries])
+    A4([Monthly boundaries])
+    A5([SWITCH sliding window])
+    A6([Simple partition elimination])
+
+    Q1 -->|No| A1
+    Q1 -->|Yes| Q2
+    Q2 -->|No| A2
+    Q2 -->|Yes| Q3
+    Q3 -->|Yes| A3
+    Q3 -->|No| A4
+    A3 --> Q4
+    A4 --> Q4
+    Q4 -->|Yes| A5
+    Q4 -->|No| A6
+
+    style A1 fill:#1a1a2e,stroke:#9ece6a,color:#fff
+    style A2 fill:#1a1a2e,stroke:#e0af68,color:#fff
+    style A3 fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style A4 fill:#1a1a2e,stroke:#7aa2f7,color:#fff
+    style A5 fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style A6 fill:#1a1a2e,stroke:#9ece6a,color:#fff
 ```
 
 ---

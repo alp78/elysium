@@ -47,8 +47,11 @@ SQL Server offers two row-based compression types (plus columnstore, which is a 
 
 > [!info] PAGE Includes ROW Compression
 >
-> PAGE Compression Includes ROW Compression.
 > PAGE compression applies all ROW compression techniques first, then adds prefix compression and dictionary compression on top. You never need to apply both — PAGE compression is strictly superior.
+
+> [!warning] CPU Overhead on Memory-Constrained Systems
+>
+> Compressed pages are decompressed when read into the buffer pool. On systems with small buffer pools where pages are frequently evicted and re-read, each re-read pays the decompression cost again. If your server has memory pressure (PLE < 300s), compression may increase CPU usage significantly as pages cycle in and out of the buffer pool.
 
 ---
 
@@ -69,7 +72,6 @@ SQL Server offers two row-based compression types (plus columnstore, which is a 
 
 > [!warning] Avoid Compressing Hot Tables
 >
-> Don't Compress Tables with Frequent Updates.
 > Page compression is not free on write paths. If a table receives thousands of row-level updates per second (e.g., a hot bronze staging table), compressing it will increase CPU and may slow write throughput. Only compress tables that have stabilized and are primarily read.
 
 ---
@@ -141,7 +143,6 @@ REBUILD WITH (
 
 > [!warning] Enterprise Edition Required
 >
-> ONLINE = ON Requires Enterprise Edition.
 > Online index rebuilds are not available in Standard Edition. On Standard Edition, an index rebuild takes a schema modification (Sch-M) lock on the table — blocking all reads and writes for the duration. Schedule Standard Edition rebuilds during maintenance windows. See [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) for lock type details.
 
 #### CREATE TABLE WITH DATA_COMPRESSION = PAGE — apply at creation time
@@ -156,6 +157,10 @@ CREATE TABLE gold.index_performance_archive (
     CONSTRAINT CIX_idx_perf_archive PRIMARY KEY CLUSTERED (trade_date, [index])
 ) WITH (DATA_COMPRESSION = PAGE);
 ```
+
+> [!danger] REBUILD Resets Compression
+>
+> Running `ALTER INDEX ... REBUILD` without specifying `DATA_COMPRESSION` resets the index to NONE — silently removing compression. Always include `WITH (DATA_COMPRESSION = PAGE)` in every REBUILD statement for compressed indexes. Automated maintenance scripts that rebuild fragmented indexes must preserve the compression setting.
 
 ---
 
@@ -179,8 +184,11 @@ JOIN sys.allocation_units a ON p.partition_id = a.container_id
 WHERE o.type = 'U'
   AND o.schema_id IN (SCHEMA_ID('gold'), SCHEMA_ID('silver'))
 ORDER BY size_mb DESC;
--- Look for: NONE on large read-heavy tables = compression opportunity
 ```
+
+> [!tip] Spot Compression Opportunities
+>
+> Look for `NONE` on large read-heavy tables in the output — those are prime candidates for page compression.
 
 #### sys.dm_exec_requests percent_complete — monitor compression rebuild progress
 
@@ -211,10 +219,12 @@ The analytics database has three schema layers with different compression recomm
 
 #### Batch compress gold tables — apply PAGE compression to all gold indexes
 
+> [!info] Maintenance Window for Standard Edition
+>
+> Run this batch during a maintenance window on Standard Edition (offline rebuild takes a Sch-M lock). On Enterprise Edition, add `ONLINE = ON` to each statement to avoid blocking.
+
 ```sql
 -- Apply page compression to all gold-layer tables
--- Run during a maintenance window for Standard Edition; can run online for Enterprise
-
 ALTER INDEX ALL ON gold.index_performance
 REBUILD WITH (DATA_COMPRESSION = PAGE);
 
@@ -244,8 +254,11 @@ WHERE bd.database_id = DB_ID('analytics_db')
   AND o.type = 'U'
 GROUP BY SCHEMA_NAME(o.schema_id)
 ORDER BY buffer_mb DESC;
--- Re-run after compression to verify buffer pool reduction
 ```
+
+> [!tip] Verify Buffer Pool Reduction
+>
+> Re-run this query after applying compression to confirm that the buffer pool footprint decreased as expected.
 
 ---
 

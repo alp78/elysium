@@ -96,11 +96,10 @@ SELECT
 FROM sys.database_files;
 ```
 
-```
-logical_name  physical_name                        type_desc  size_mb  growth_mb
-analytics_db          /var/opt/mssql/data/analytics_db.mdf          ROWS       40       8
-mydb_log     /var/opt/mssql/data/mydb_log.ldf     LOG        8        8
-```
+| logical_name | physical_name | type_desc | size_mb | growth_mb |
+|---|---|---|---|---|
+| analytics_db | /var/opt/mssql/data/analytics_db.mdf | ROWS | 40 | 8 |
+| mydb_log | /var/opt/mssql/data/mydb_log.ldf | LOG | 8 | 8 |
 
 ---
 
@@ -198,35 +197,20 @@ DBCC PAGE('analytics_db', 1, 3842, 3) WITH TABLERESULTS;
 
 The log file is the safety net. Every modification follows this sequence:
 
-```
-                     Time ───────────────────────────►
+```mermaid
+flowchart TD
+    A["BEGIN TRAN"]:::blue --> B["MODIFY page\nin buffer pool"]:::blue
+    B --> C["COMMIT TRAN"]:::blue
+    C --> D["Log flush to disk\n(.ldf — durability point)"]:::green
+    B --> E["Page now 'dirty'\nin buffer pool"]:::yellow
+    E --> F["CHECKPOINT\nflushes dirty pages\nto .mdf"]:::purple
 
-  ┌──────────┐     ┌──────────┐     ┌──────────┐
-  │ BEGIN     │     │ MODIFY   │     │ COMMIT   │
-  │ TRAN      │────►│ page in  │────►│ TRAN     │
-  │           │     │ buffer   │     │          │
-  └──────────┘     │ pool     │     └────┬─────┘
-                   └──────────┘          │
-                        │                │
-                        │           ┌────▼─────┐
-                        │           │ Log flush │ ◄── synchronous write to .ldf
-                        │           │ to disk   │     (this is the durability point)
-                        │           └──────────┘
-                        │
-                   ┌────▼─────┐
-                   │ Page now  │
-                   │ "dirty"   │
-                   │ in buffer │
-                   │ pool      │
-                   └────┬─────┘
-                        │
-                   (later, async)
-                        │
-                   ┌────▼──────────┐
-                   │ CHECKPOINT    │
-                   │ flushes dirty │──── writes modified pages to .mdf
-                   │ pages to disk │
-                   └───────────────┘
+    style A fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style B fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style C fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style D fill:#1a1a2e,stroke:#9ece6a,color:#c0caf5
+    style E fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
+    style F fill:#1a1a2e,stroke:#bb9af7,color:#c0caf5
 ```
 
 > [!info] COMMIT Does Not Mean Disk
@@ -258,12 +242,11 @@ FROM fn_dblog(NULL, NULL)
 ORDER BY [Current LSN] DESC;
 ```
 
-```
-Current LSN             Operation       Context         Transaction ID  Page ID  AllocUnitName
-00000027:0000014f:0003  LOP_INSERT_ROWS LCX_HEAP        0000:0000041a   1:3842   gold.index_performance
-00000027:0000014f:0002  LOP_MODIFY_ROW  LCX_PFS         0000:0000041a   1:1      PFS
-00000027:0000014e:0001  LOP_BEGIN_XACT  LCX_NULL        0000:0000041a   NULL     NULL
-```
+| Current LSN | Operation | Context | Transaction ID | Page ID | AllocUnitName |
+|---|---|---|---|---|---|
+| 00000027:0000014f:0003 | LOP_INSERT_ROWS | LCX_HEAP | 0000:0000041a | 1:3842 | gold.index_performance |
+| 00000027:0000014f:0002 | LOP_MODIFY_ROW | LCX_PFS | 0000:0000041a | 1:1 | PFS |
+| 00000027:0000014e:0001 | LOP_BEGIN_XACT | LCX_NULL | 0000:0000041a | NULL | NULL |
 
 #### DBCC LOGINFO — Virtual Log Files (VLF) count and status
 
@@ -312,56 +295,34 @@ VALUES ('market_index', '2026-03-10', 4892.34);
 
 #### INSERT internal flow — buffer pool, log write, dirty page, checkpoint
 
-```
-1. BEGIN IMPLICIT TRANSACTION
-   └── Log record: LOP_BEGIN_XACT (LSN 100)
+```mermaid
+flowchart TD
+    A["1. BEGIN IMPLICIT TRANSACTION\nLog: LOP_BEGIN_XACT (LSN 100)"]:::blue --> B{"2. FIND TARGET PAGE\nHeap → PFS lookup\nClustered → B-tree seek"}
+    B --> C{"Page in buffer pool?"}
+    C -->|"Yes"| D["Logical read"]:::green
+    C -->|"No"| E["Physical read\n8 KB from .mdf"]:::yellow
+    D --> F{"Space on page?"}
+    E --> F
+    F -->|"Yes"| G["3. WRITE ROW TO PAGE\nSerialize row → place at free_offset\nUpdate header → mark DIRTY"]:::blue
+    F -->|"No"| H["PAGE SPLIT\nAllocate new page\nMove ~50% rows\nUpdate chain + parent"]:::purple
+    H --> G
+    G --> I["4. WRITE LOG RECORD\nLOP_INSERT_ROWS (LSN 101)\npage ID + slot + after-image"]:::blue
+    I --> J["5. UPDATE NC INDEXES\nNavigate each NC B-tree\nInsert entry + log record"]:::blue
+    J --> K["6. COMMIT\nLOP_COMMIT_XACT (LSN 102)\nFlush log to .ldf"]:::green
+    K --> L["7. CHECKPOINT\nBackground flush\ndirty pages → .mdf"]:::purple
 
-2. FIND TARGET PAGE
-   ├── Is table a heap or clustered index?
-   │   ├── Heap: consult PFS to find a page with free space
-   │   └── Clustered: navigate B-tree to find the correct leaf page
-   │       (sorted position based on clustered key)
-   │
-   ├── Is the target page in the buffer pool?
-   │   ├── Yes: use it directly (logical read)
-   │   └── No: read 8 KB page from .mdf into buffer pool (physical read)
-   │
-   └── Is there enough space on the page?
-       ├── Yes: proceed
-       └── No (clustered): PAGE SPLIT
-           ├── Allocate new page
-           ├── Move ~50% of rows to new page
-           ├── Update page chain pointers (prev/next)
-           ├── Update parent B-tree node
-           └── Log all these operations
-
-3. WRITE ROW TO PAGE (in buffer pool)
-   ├── Serialize row: status bytes + fixed cols + null bitmap + var cols
-   ├── Place row at free_offset position on the page
-   ├── Add slot entry to row offset array
-   ├── Update page header: free_count, free_offset, slot_count, lsn
-   └── Mark page as DIRTY in buffer pool
-
-4. WRITE LOG RECORD
-   ├── Log record: LOP_INSERT_ROWS (LSN 101)
-   │   Contains: page ID, slot number, full row after-image
-   └── Update page header LSN to 101
-
-5. UPDATE NONCLUSTERED INDEXES
-   ├── For each nonclustered index on the table:
-   │   ├── Navigate the index B-tree to find insertion point
-   │   ├── Insert new index entry (key value + bookmark to clustered key)
-   │   ├── Possible index page split if page is full
-   │   └── Log record for each index modification
-   └── More indexes = more log records = slower inserts
-
-6. COMMIT
-   ├── Log record: LOP_COMMIT_XACT (LSN 102)
-   ├── FLUSH log buffer to .ldf on disk ◄── durability guarantee
-   └── Return success to client
-
-7. LATER: CHECKPOINT
-   └── Background process writes dirty data pages to .mdf
+    style A fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style B fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style C fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
+    style D fill:#1a1a2e,stroke:#9ece6a,color:#c0caf5
+    style E fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
+    style F fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
+    style G fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style H fill:#1a1a2e,stroke:#bb9af7,color:#c0caf5
+    style I fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style J fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style K fill:#1a1a2e,stroke:#9ece6a,color:#c0caf5
+    style L fill:#1a1a2e,stroke:#bb9af7,color:#c0caf5
 ```
 
 #### sys.dm_db_partition_stats — pages and rows per table
@@ -507,41 +468,37 @@ WHERE index_key = 'market_index'
 
 #### UPDATE internal flow — find row, log before/after, modify in-place or split
 
-```
-1. BEGIN IMPLICIT TRANSACTION
-   └── Log: LOP_BEGIN_XACT (LSN 200)
+```mermaid
+flowchart TD
+    A["1. BEGIN IMPLICIT TRANSACTION\nLog: LOP_BEGIN_XACT (LSN 200)"]:::blue --> B["2. FIND THE ROW\nB-tree seek or scan\nLocate page + row slot"]:::blue
+    B --> C["3. LOG BEFORE IMAGE\nLOP_MODIFY_ROW (LSN 201)\nold value → new value"]:::blue
+    C --> D{"4. MODIFY ROW IN-PLACE\n(in buffer pool)"}
+    D -->|"Fixed-length"| E["Overwrite bytes directly\nPage size unchanged"]:::green
+    D -->|"Var-length fits"| F["Overwrite or shift data\nUpdate offsets"]:::green
+    D -->|"Var-length, page full"| G{"Table type?"}
+    G -->|"Clustered"| H["PAGE SPLIT\nMove ~50% rows"]:::purple
+    G -->|"Heap"| I["Row moves to new page\nForwarding pointer left behind"]:::yellow
+    E --> J["Mark page DIRTY\nUpdate page LSN"]:::blue
+    F --> J
+    H --> J
+    I --> J
+    J --> K["5. UPDATE NC INDEXES\nKey col → delete old + insert new\nINCLUDE col → update leaf"]:::blue
+    K --> L["6. COMMIT\nLOP_COMMIT_XACT (LSN 202)\nFlush log to .ldf"]:::green
+    L --> M["7. CHECKPOINT\nFlush dirty pages → .mdf"]:::purple
 
-2. FIND THE ROW (same as SELECT — B-tree seek or scan)
-   └── Locate the data page and row slot
-
-3. LOG THE BEFORE IMAGE
-   └── Log: LOP_MODIFY_ROW (LSN 201)
-       Contains: page ID, slot, old value (4892.34), new value (4905.12)
-
-4. MODIFY ROW IN-PLACE (in buffer pool)
-   ├── Fixed-length column update (decimal):
-   │   └── Overwrite bytes directly — page size doesn't change
-   │
-   ├── Variable-length column update:
-   │   ├── New value fits in existing space → overwrite
-   │   ├── New value larger but page has room → shift data, update offsets
-   │   └── New value larger and page is full:
-   │       ├── CLUSTERED TABLE: page split (move half the rows)
-   │       └── HEAP: row moves to new page, forwarding pointer left behind
-   │
-   └── Mark page DIRTY, update page LSN
-
-5. UPDATE AFFECTED NONCLUSTERED INDEXES
-   ├── If updated column is an index key → delete old entry + insert new entry
-   ├── If updated column is in INCLUDE list → update the leaf entry
-   └── If updated column is not in any index → no index maintenance
-
-6. COMMIT
-   ├── Log: LOP_COMMIT_XACT (LSN 202)
-   ├── Flush log to .ldf
-   └── Return success
-
-7. LATER: CHECKPOINT flushes dirty pages to .mdf
+    style A fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style B fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style C fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style D fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
+    style E fill:#1a1a2e,stroke:#9ece6a,color:#c0caf5
+    style F fill:#1a1a2e,stroke:#9ece6a,color:#c0caf5
+    style G fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
+    style H fill:#1a1a2e,stroke:#bb9af7,color:#c0caf5
+    style I fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
+    style J fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style K fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style L fill:#1a1a2e,stroke:#9ece6a,color:#c0caf5
+    style M fill:#1a1a2e,stroke:#bb9af7,color:#c0caf5
 ```
 
 #### Heap forwarding pointers — UPDATE moves rows to new pages
@@ -579,6 +536,10 @@ ALTER TABLE gold.some_heap_table REBUILD;
 
 ### DELETE — Ghost Records and Deferred Cleanup
 
+> [!abstract] Ghost Records and Deferred Cleanup
+>
+> When SQL Server deletes a row, it doesn't immediately remove it from the page. Instead, it marks the row as a "ghost record" -- invisible to queries but still physically present. A background thread (ghost cleanup) removes these records later, avoiding the overhead of page reorganization during the DELETE transaction.
+
 ```sql
 DELETE FROM gold.index_performance
 WHERE index_key = 'market_index'
@@ -587,32 +548,22 @@ WHERE index_key = 'market_index'
 
 #### DELETE internal flow — ghost record marking and deferred cleanup
 
-```
-1. BEGIN IMPLICIT TRANSACTION
-   └── Log: LOP_BEGIN_XACT (LSN 300)
+```mermaid
+flowchart TD
+    A["1. BEGIN IMPLICIT TRANSACTION\nLog: LOP_BEGIN_XACT (LSN 300)"]:::blue --> B["2. FIND THE ROW\nB-tree seek or scan"]:::blue
+    B --> C["3. GHOST THE ROW\nSet GHOST bit in status byte A\nRow invisible but physically present"]:::yellow
+    C --> D["Log: LOP_DELETE_ROWS (LSN 301)\nFull before-image"]:::blue
+    D --> E["4. DELETE FROM NC INDEXES\nGhost corresponding entries"]:::blue
+    E --> F["5. COMMIT\nLOP_COMMIT_XACT (LSN 302)\nFlush log to .ldf"]:::green
+    F --> G["6. GHOST CLEANUP TASK\n(background, every ~5-10 sec)\nPhysically remove row data\nUpdate page header\nSpace now available"]:::purple
 
-2. FIND THE ROW (B-tree seek or scan)
-
-3. GHOST THE ROW (not immediately removed)
-   ├── Set the GHOST bit in the row's status byte A
-   ├── The row is now invisible to queries but physically still on the page
-   ├── Page header slot_count stays the same
-   └── Log: LOP_DELETE_ROWS (LSN 301) with full before-image
-
-4. DELETE FROM NONCLUSTERED INDEXES
-   └── Ghost the corresponding entries in each nonclustered index
-
-5. COMMIT
-   ├── Log: LOP_COMMIT_XACT (LSN 302)
-   ├── Flush log to .ldf
-   └── Return success
-
-6. LATER: GHOST CLEANUP TASK (background)
-   ├── Runs approximately every 5-10 seconds
-   ├── Scans for pages with ghost records
-   ├── Physically removes the row data from the page
-   ├── Updates page header: free_count, slot_count
-   └── Space is now available for new rows
+    style A fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style B fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style C fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
+    style D fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style E fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style F fill:#1a1a2e,stroke:#9ece6a,color:#c0caf5
+    style G fill:#1a1a2e,stroke:#bb9af7,color:#c0caf5
 ```
 
 #### Ghost cleanup task — why deferred removal instead of immediate delete
@@ -641,6 +592,10 @@ WHERE ghost_record_count > 0;
 
 ### BULK INSERT — Mass Loading
 
+> [!abstract] Bulk Insert and Minimal Logging
+>
+> Bulk insert bypasses the row-by-row insert path and writes directly to data pages in batches. Under certain conditions (empty table or heap, TABLOCK hint, recovery model), SQL Server uses minimal logging -- recording only page allocations instead of individual row inserts, which can be 10-100x faster.
+
 ```sql
 -- How the Python pipeline loads data (via pymssql executemany or BULK INSERT)
 BULK INSERT bronze.ohlcv_raw
@@ -650,28 +605,28 @@ WITH (FIELDTERMINATOR = ',', ROWTERMINATOR = '\n', FIRSTROW = 2);
 
 #### BULK INSERT internal flow — minimal logging, extent allocation, bulk lock
 
-```
-1. MINIMAL LOGGING (if recovery model = SIMPLE or BULK_LOGGED)
-   ├── Instead of logging each row individually:
-   │   Row-by-row: 100,000 log records (one per row)
-   │   Bulk:       ~100 log records (one per extent allocation)
-   └── Dramatically reduces log I/O
+```mermaid
+flowchart TD
+    A["1. MINIMAL LOGGING\n(SIMPLE or BULK_LOGGED)\n~100 log records per extent\nvs 100,000 row-by-row"]:::green --> B["2. EXTENT ALLOCATION\nPre-allocate 64 KB extents\nSequential fill, all uniform\nNo PFS lookups"]:::blue
+    B --> C{"3. PAGE FILLING\nClustered index?"}
+    C -->|"Pre-sorted data"| D["Sequential fill\n~100% page density"]:::green
+    C -->|"Unsorted data"| E["Sort in tempdb first\nThen sequential fill"]:::yellow
+    C -->|"No clustered index"| F["Pack rows top-down\n~100% page density"]:::green
+    D --> G{"4. INDEX MAINTENANCE"}
+    E --> G
+    F --> G
+    G -->|"Option A"| H["Update indexes\nrow by row during load"]:::blue
+    G -->|"Option B"| I["Drop indexes → bulk load\n→ rebuild indexes"]:::purple
 
-2. EXTENT ALLOCATION
-   ├── SQL Server pre-allocates entire extents (64 KB = 8 pages)
-   ├── Fills pages sequentially within each extent
-   └── No PFS lookups, no mixed extents — all uniform
-
-3. PAGE FILLING
-   ├── Rows are packed into pages top-down
-   ├── If clustered index exists: rows must go in sorted order
-   │   └── If data is pre-sorted by clustered key: sequential fill (fast)
-   │   └── If data is unsorted: sort in tempdb first, then fill (slower)
-   └── Pages are filled to ~100% (vs ~75% for row-by-row with page splits)
-
-4. INDEX MAINTENANCE
-   ├── Option A (default): update indexes row by row during load
-   └── Option B: drop indexes → bulk load → rebuild indexes (faster for large loads)
+    style A fill:#1a1a2e,stroke:#9ece6a,color:#c0caf5
+    style B fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style C fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
+    style D fill:#1a1a2e,stroke:#9ece6a,color:#c0caf5
+    style E fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
+    style F fill:#1a1a2e,stroke:#9ece6a,color:#c0caf5
+    style G fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
+    style H fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style I fill:#1a1a2e,stroke:#bb9af7,color:#c0caf5
 ```
 
 ```sql
@@ -687,6 +642,10 @@ SELECT name, recovery_model_desc FROM sys.databases WHERE name = 'analytics_db';
 ## Index Structures at the Page Level
 
 ### Clustered Index B-Tree — The Physical Table
+
+> [!abstract] Clustered Index as Physical Storage
+>
+> In SQL Server, a clustered index IS the table. The leaf level of the B-tree contains the actual data rows, ordered by the clustered index key. There is no separate "heap" -- the clustered index IS the physical storage.
 
 A clustered index defines the physical layout of the table. The leaf level IS the data.
 
@@ -746,6 +705,10 @@ Typical depths:
 
 ### Nonclustered Index — Separate B-Tree with Bookmarks
 
+> [!abstract] Nonclustered Index Structure
+>
+> A nonclustered index is a separate B-tree whose leaf level contains the index key columns plus a "bookmark" (pointer) back to the data row. For a clustered table, the bookmark is the clustering key. For a heap, it's a Row ID (file:page:slot).
+
 A nonclustered index is a separate B-tree. Its leaf entries contain the index key columns plus a **bookmark** back to the clustered index (or a RID for heaps).
 
 ```
@@ -795,6 +758,10 @@ optimizer ignores the index.
 ---
 
 ### Page Splits — The Cost of Random Inserts
+
+> [!abstract] Page Splits and Fragmentation
+>
+> When a new row must be inserted into a page that is already full, SQL Server splits the page: allocates a new page, moves roughly half the rows to it, and updates the page chain pointers. This is expensive (extra I/O, fragmentation) and is the primary reason GUIDs as clustered keys cause poor performance.
 
 When a new row must be inserted into a full page (to maintain clustered key order), SQL Server performs a page split:
 
@@ -878,22 +845,42 @@ ALTER INDEX PK_scores ON gold.scores REBUILD WITH (FILLFACTOR = 80);
 
 ### Normal Operation — The Checkpoint Cycle
 
-```
-                  Buffer Pool (RAM)                    Disk
-              ┌─────────────────────┐
-              │ Clean page (3840)   │           ┌─────────────┐
-              │ Dirty page (3842) ● │ ─ ─ ─ ─ ─│  .mdf       │
-              │ Dirty page (3844) ● │    (not   │  (stale     │
-              │ Clean page (3846)   │    yet     │   copy of   │
-              └─────────────────────┘  flushed)  │   3842/44)  │
-                                                 └─────────────┘
-                                                 ┌─────────────┐
-                 Log buffer (RAM)                │  .ldf       │
-              ┌─────────────────────┐            │  (current   │
-              │ LSN 100: INSERT     │ ──────────►│   truth)    │
-              │ LSN 101: UPDATE     │  (flushed  └─────────────┘
-              │ LSN 102: COMMIT     │  on commit)
-              └─────────────────────┘
+> [!abstract] The Checkpoint Cycle
+>
+> A checkpoint flushes all dirty pages (modified in memory but not yet on disk) from the buffer pool to the data files. This bounds crash recovery time -- after a crash, only changes since the last checkpoint need to be replayed from the transaction log.
+
+```mermaid
+flowchart LR
+    subgraph RAM["Buffer Pool (RAM)"]
+        A["Clean page 3840"]:::green
+        B["Dirty page 3842"]:::yellow
+        C["Dirty page 3844"]:::yellow
+        D["Clean page 3846"]:::green
+    end
+
+    subgraph LOG["Log Buffer (RAM)"]
+        E["LSN 100: INSERT\nLSN 101: UPDATE\nLSN 102: COMMIT"]:::blue
+    end
+
+    subgraph DISK["Disk"]
+        F[".mdf\n(stale copy of\n3842/3844)"]:::purple
+        G[".ldf\n(current truth)"]:::green
+    end
+
+    B -.->|"not yet flushed"| F
+    C -.->|"not yet flushed"| F
+    E -->|"flushed on commit"| G
+
+    style RAM fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style LOG fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style DISK fill:#1a1a2e,stroke:#bb9af7,color:#c0caf5
+    style A fill:#1a1a2e,stroke:#9ece6a,color:#c0caf5
+    style B fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
+    style C fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
+    style D fill:#1a1a2e,stroke:#9ece6a,color:#c0caf5
+    style E fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style F fill:#1a1a2e,stroke:#bb9af7,color:#c0caf5
+    style G fill:#1a1a2e,stroke:#9ece6a,color:#c0caf5
 ```
 
 Checkpoint writes dirty pages to `.mdf` and records the checkpoint LSN in the log. On recovery, SQL Server only needs to replay log records AFTER the last checkpoint LSN.
@@ -912,27 +899,20 @@ CHECKPOINT;
 
 ### Crash Recovery — Three Phases
 
+> [!abstract] Crash Recovery Process
+>
+> When SQL Server starts after an unexpected shutdown, it replays the transaction log in three phases: Analysis (determine what was dirty), Redo (replay committed transactions not yet on disk), Undo (roll back uncommitted transactions). This guarantees ACID properties are maintained even after a crash.
+
 When SQL Server starts after an unexpected shutdown:
 
-```
-Phase 1: ANALYSIS
-├── Read the log from the last checkpoint LSN
-├── Build a list of:
-│   ├── Dirty pages that need redo (committed but not in .mdf)
-│   └── Active transactions that need undo (uncommitted)
-└── Duration: fast (just reading log metadata)
+```mermaid
+flowchart TD
+    A["Phase 1: ANALYSIS\nRead log from last checkpoint LSN\nBuild dirty page list (redo)\nBuild active transaction list (undo)\nFast — reads log metadata only"]:::blue --> B["Phase 2: REDO (roll forward)\nReplay committed changes\nnot yet in .mdf\nApply in LSN order\nDuration ~ log records since checkpoint"]:::green
+    B --> C["Phase 3: UNDO (roll back)\nFind uncommitted transactions\nRead log records in reverse\nApply before-images\nDuration ~ uncommitted work at crash"]:::yellow
 
-Phase 2: REDO (roll forward)
-├── Replay all committed changes from the log that haven't reached .mdf
-├── Applies log records in LSN order
-├── After this phase: .mdf matches all committed state
-└── Duration: proportional to log records since last checkpoint
-
-Phase 3: UNDO (roll back)
-├── Find transactions that were active (not committed) at crash time
-├── Read their log records in reverse
-├── Apply the before-images to undo partial changes
-└── Duration: proportional to uncommitted work at crash time
+    style A fill:#1a1a2e,stroke:#7aa2f7,color:#c0caf5
+    style B fill:#1a1a2e,stroke:#9ece6a,color:#c0caf5
+    style C fill:#1a1a2e,stroke:#e0af68,color:#c0caf5
 ```
 
 #### sys.dm_exec_requests percent_complete — monitor crash recovery progress
@@ -976,6 +956,14 @@ tempdb is a system database that SQL Server recreates from scratch on every rest
 | **DBCC CHECKDB** | Internal snapshots for online consistency checks | Periodic integrity validation |
 
 #### TempDB interaction with CRUD — sort spills, RCSI versions, hash joins
+
+> [!abstract] TempDB Role in CRUD Operations
+>
+> TempDB is a shared workspace used by SQL Server for sort spills (when a sort exceeds the memory grant), version store (row versions for RCSI snapshot isolation), temp tables, and internal worktables for hash joins and spools.
+
+> [!warning] TempDB Version Store Growth
+>
+> Under Read Committed Snapshot Isolation (RCSI), every UPDATE generates a row version in tempdb. Long-running transactions prevent version cleanup, causing the version store to grow unboundedly. Monitor with `sys.dm_tran_version_store_space_usage`. A single forgotten open transaction can fill tempdb silently.
 
 ```
 INSERT with ORDER BY into a table with a different clustered key:
@@ -1165,6 +1153,10 @@ ORDER BY pages_in_memory DESC;
 
 ## The Lock Manager
 
+> [!abstract] The Lock Manager
+>
+> SQL Server uses a lock manager to coordinate concurrent access to data. Every read or write operation acquires locks at an appropriate granularity (row, page, or table). The lock manager prevents conflicting operations from executing simultaneously -- ensuring isolation between transactions.
+
 Every CRUD operation acquires locks. The lock manager tracks all locks in memory and detects deadlocks.
 
 #### Lock compatibility matrix — S, X, U, IS, IX interactions
@@ -1234,6 +1226,10 @@ ALTER TABLE gold.index_performance SET (LOCK_ESCALATION = DISABLE);
 ---
 
 ### Full Subsystem Interaction — Write Path (Pipeline INSERT)
+
+> [!abstract] Full Write Path
+>
+> This diagram traces a single INSERT statement through every SQL Server subsystem -- from the query processor parsing the SQL, through the storage engine finding the target page, to the buffer pool writing the page, the transaction log recording the change, and the checkpoint eventually flushing it to disk.
 
 ```
 Python pipeline: pymssql executemany() → 50 rows for market_index, 2026-03-10
