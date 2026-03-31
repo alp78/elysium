@@ -79,8 +79,6 @@ using Plotly.NET.CSharp;
 using Plotly.NET.LayoutObjects;
 ```
 
-    Loading extensions from `C:\Users\aperi\.nuget\packages\plotly.net.interactive\5.0.0\lib\netstandard2.1\Plotly.NET.Interactive.dll`
-
 ```csharp
 // Load .env and define project constants
 DotNetEnv.Env.Load();

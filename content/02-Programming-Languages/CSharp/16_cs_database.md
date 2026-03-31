@@ -64,7 +64,6 @@ var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 
 
-
 // extension method to .Head() datatables
 static DataTable Head(this DataTable dt, int n = 5) 
     => dt.AsEnumerable().Take(n).CopyToDataTable();
@@ -146,7 +145,7 @@ cmd.CommandText = @"
 cmd.ExecuteNonQuery();
 ```
 
-    Created table: trades
+    trades
 
 #### SQLite — INSERT with parameterised queries using `@param` placeholders
 
@@ -270,10 +269,9 @@ cmd.ExecuteScalar()  // total trades
 conn.Close();
 ```
 
-    === Transaction Example ===
       Transaction committed (2 trades inserted)
     
-    Total trades: 7
+    7
 
 #### SQLite — PRAGMA overview and connection setup
 
@@ -303,7 +301,7 @@ cmd.CommandText = "PRAGMA journal_mode=WAL";
 cmd.ExecuteScalar()  // journal_mode
 ```
 
-    journal_mode:    memory
+    memory
 
 #### SQLite — `synchronous` for durability vs speed
 
@@ -317,7 +315,7 @@ cmd.CommandText = "PRAGMA synchronous";
 cmd.ExecuteScalar()  // synchronous (0=OFF, 1=NORMAL, 2=FULL)
 ```
 
-    synchronous:     1 (0=OFF, 1=NORMAL, 2=FULL)
+    1 (0=OFF, 1=NORMAL, 2=FULL)
 
 #### SQLite — `cache_size` for in-memory page cache
 
@@ -334,8 +332,8 @@ cmd.CommandText = "PRAGMA page_size";
 cmd.ExecuteScalar()  // page_size (bytes)
 ```
 
-    cache_size:      -20000 (negative = KB)
-    page_size:       4096 bytes
+    -20000 (negative = KB)
+    4096 bytes
 
 #### SQLite — `busy_timeout` for lock contention retry
 
@@ -348,7 +346,7 @@ cmd.CommandText = "PRAGMA busy_timeout";
 cmd.ExecuteScalar()  // busy_timeout (ms)
 ```
 
-    busy_timeout:    5000 ms
+    5000 ms
 
 #### SQLite — `mmap_size` for memory-mapped I/O
 
@@ -362,7 +360,7 @@ cmd.CommandText = "PRAGMA mmap_size";
 Convert.ToInt64(cmd.ExecuteScalar()) / 1024 / 1024  // mmap_size (MB)
 ```
 
-    mmap_size:       0 MB
+    0 MB
 
 #### SQLite — `temp_store` and `foreign_keys`
 
@@ -382,8 +380,8 @@ cmd.CommandText = "PRAGMA foreign_keys";
 cmd.ExecuteScalar()  // foreign_keys (0=OFF, 1=ON)
 ```
 
-    temp_store:      2 (0=DEFAULT, 1=FILE, 2=MEMORY)
-    foreign_keys:    1 (0=OFF, 1=ON)
+    2 (0=DEFAULT, 1=FILE, 2=MEMORY)
+    1 (0=OFF, 1=ON)
 
 #### SQLite — CREATE TABLE for index demos
 
@@ -405,7 +403,7 @@ cmd.CommandText = @"
 cmd.ExecuteNonQuery();
 ```
 
-    Created table: ohlcv
+    ohlcv
 
 #### SQLite — INSERT 5000 sample OHLCV rows
 
@@ -472,10 +470,9 @@ cmd.ExecuteNonQuery();
 // Would fail here because our sample data has duplicates
 ```
 
-    === Creating Indexes ===
-      Created: idx_ohlcv_symbol (single column)
-      Created: idx_ohlcv_symbol_date (composite)
-      UNIQUE INDEX: prevents duplicate (symbol, date) pairs
+      idx_ohlcv_symbol (single column)
+      idx_ohlcv_symbol_date (composite)
+      prevents duplicate (symbol, date) pairs
 
 #### SQLite — EXPLAIN QUERY PLAN with index (index scan)
 
@@ -483,7 +480,6 @@ cmd.ExecuteNonQuery();
 // Same query now uses the composite index instead of full table scan
 
 QueryToTable(pragmaConn, "EXPLAIN QUERY PLAN SELECT * FROM ohlcv WHERE symbol = 'ASML.AS' AND date > '2024-06-01'")
-
 
 
 // OUTPUT: SEARCH ohlcv USING INDEX idx_ohlcv_symbol_date (symbol=? AND date>?)
@@ -510,7 +506,7 @@ cmd.CommandText = "ANALYZE";
 cmd.ExecuteNonQuery();
 ```
 
-    ANALYZE: query planner statistics updated
+    query planner statistics updated
 
 #### SQLite — list all indexes and tables with row counts
 
@@ -520,7 +516,6 @@ cmd.ExecuteNonQuery();
 QueryToTable(pragmaConn, "SELECT name AS [Index Name], tbl_name AS [Table] FROM sqlite_master WHERE type = 'index' ORDER BY tbl_name, name")
 ```
 
-    === Indexes ===
 
 <table><thead><tr><th>Index Name</th><th>Table</th></tr></thead><tbody><tr><td>idx_ohlcv_symbol</td><td>ohlcv</td></tr><tr><td>idx_ohlcv_symbol_date</td><td>ohlcv</td></tr></tbody></table>
 
@@ -560,7 +555,7 @@ var pageSize = Convert.ToInt64(countCmd.ExecuteScalar());
 $"{pageCount} pages x {pageSize} bytes = {pageCount * pageSize / 1024.0:F1} KB"
 ```
 
-    Database: 135 pages x 4096 bytes = 540.0 KB
+    135 pages x 4096 bytes = 540.0 KB
 
 #### SQLite — VACUUM, REINDEX, and integrity check
 
@@ -583,9 +578,9 @@ cmd.ExecuteScalar()  // integrity_check
 pragmaConn.Close();
 ```
 
-    VACUUM: database file compacted
-    REINDEX: all indexes rebuilt
-    Integrity:   ok
+    database file compacted
+    all indexes rebuilt
+    ok
 
 #### SQLite — PRAGMA reference
 
@@ -642,7 +637,7 @@ QueryToTable(conn, @"
     ORDER BY s.name, t.name")
 ```
 
-    Connected to SQL Server: stoxx database
+    stoxx database
 
 <table><thead><tr><th>Schema</th><th>Table</th><th>Rows</th></tr></thead><tbody><tr><td>bronze</td><td>dim_country</td><td>212</td></tr><tr><td>bronze</td><td>dim_index</td><td>4</td></tr><tr><td>bronze</td><td>eurostoxx50_ohlcv</td><td>50</td></tr><tr><td>bronze</td><td>index_dim</td><td>169</td></tr><tr><td>bronze</td><td>oil20_ohlcv</td><td>19</td></tr><tr><td>bronze</td><td>pulse</td><td>40</td></tr><tr><td>bronze</td><td>pulse_tickers</td><td>40</td></tr><tr><td>bronze</td><td>signals_daily</td><td>169</td></tr><tr><td>bronze</td><td>signals_quarterly</td><td>169</td></tr><tr><td>bronze</td><td>stoxxasia50_ohlcv</td><td>50</td></tr><tr><td>bronze</td><td>stoxxusa50_ohlcv</td><td>50</td></tr><tr><td>bronze</td><td>trading_calendar</td><td>29,335</td></tr><tr><td>gold</td><td>index_performance</td><td>5,281</td></tr><tr><td>gold</td><td>scores_daily</td><td>466</td></tr><tr><td>gold</td><td>scores_quarterly</td><td>170</td></tr><tr><td>silver</td><td>eurostoxx50_ohlcv</td><td>66,355</td></tr><tr><td>silver</td><td>index_dim</td><td>169</td></tr><tr><td>silver</td><td>oil20_ohlcv</td><td>24,738</td></tr><tr><td>silver</td><td>signals_daily</td><td>466</td></tr><tr><td>silver</td><td>signals_quarterly</td><td>177</td></tr><tr><td>silver</td><td>stoxxasia50_ohlcv</td><td>64,045</td></tr><tr><td>silver</td><td>stoxxusa50_ohlcv</td><td>65,100</td></tr></tbody></table>
 
@@ -715,7 +710,7 @@ sqlCmd.Parameters.AddWithValue("@d", "2026-03-15");
 sqlCmd.ExecuteNonQuery()  // INSERT
 ```
 
-    INSERT: 1 row
+    1 row
 
 #### SQL Server — UPDATE with parameterised WHERE
 
@@ -728,7 +723,7 @@ sqlCmd.Parameters.AddWithValue("@id", "TRD_001");
 sqlCmd.ExecuteNonQuery()  // UPDATE
 ```
 
-    UPDATE: 1 row
+    1 row
 
 #### SQL Server — DELETE with parameterised WHERE
 
@@ -740,7 +735,7 @@ sqlCmd.Parameters.AddWithValue("@id", "TRD_001");
 sqlCmd.ExecuteNonQuery()  // DELETE
 ```
 
-    DELETE: 1 row
+    1 row
 
 #### SQL Server — DROP TABLE cleanup
 
@@ -831,7 +826,7 @@ sw.Stop();
 $"Full table scan: {rows1} symbols | {sw.ElapsedMilliseconds} ms"
 ```
 
-    Full table scan: 50 symbols | 17 ms
+    50 symbols | 17 ms
 
 #### SQL Server — benchmark indexed single-symbol lookup
 
@@ -856,7 +851,7 @@ sw.Stop();
 $"Index seek: {rows2} rows | {sw.ElapsedMilliseconds} ms"
 ```
 
-    Index seek:      100 rows | 6 ms
+    100 rows | 6 ms
 
 #### SQL Server — benchmark cross-table JOIN
 
@@ -1049,18 +1044,18 @@ sw.Stop();
 $"All {indexesToRebuild.Count} indexes rebuilt in {sw.ElapsedMilliseconds} ms"
 ```
 
-      REBUILT: [bronze].[trading_calendar].[PK_trading_calendar] (was 98.7%)
-      REBUILT: [bronze].[eurostoxx50_ohlcv].[IX_bronze_eurostoxx50_ohlcv_symbol_date] (was 98%)
-      REBUILT: [bronze].[stoxxusa50_ohlcv].[IX_bronze_stoxxusa50_ohlcv_symbol_date] (was 98%)
-      REBUILT: [bronze].[oil20_ohlcv].[PK__oil20_oh__3213E83F22CF352A] (was 95%)
-      REBUILT: [bronze].[oil20_ohlcv].[IX_bronze_oil20_ohlcv_symbol_date] (was 95%)
-      REBUILT: [bronze].[stoxxasia50_ohlcv].[IX_bronze_stoxxasia50_ohlcv_symbol_date] (was 94.1%)
-      REBUILT: [silver].[stoxxasia50_ohlcv].[IX_silver_stoxxasia50_ohlcv_symbol_date] (was 49.4%)
-      REBUILT: [silver].[stoxxusa50_ohlcv].[IX_silver_stoxxusa50_ohlcv_symbol_date] (was 47.4%)
-      REBUILT: [silver].[eurostoxx50_ohlcv].[IX_silver_eurostoxx50_ohlcv_symbol_date] (was 47.2%)
-      REBUILT: [silver].[oil20_ohlcv].[IX_silver_oil20_ohlcv_symbol_date] (was 46.2%)
-      REBUILT: [gold].[index_performance].[UX_gold_index_performance] (was 31.8%)
-      REBUILT: [gold].[scores_daily].[PK__scores_d__3213E83F41C788A9] (was 30.4%)
+      [bronze].[trading_calendar].[PK_trading_calendar] (was 98.7%)
+      [bronze].[eurostoxx50_ohlcv].[IX_bronze_eurostoxx50_ohlcv_symbol_date] (was 98%)
+      [bronze].[stoxxusa50_ohlcv].[IX_bronze_stoxxusa50_ohlcv_symbol_date] (was 98%)
+      [bronze].[oil20_ohlcv].[PK__oil20_oh__3213E83F22CF352A] (was 95%)
+      [bronze].[oil20_ohlcv].[IX_bronze_oil20_ohlcv_symbol_date] (was 95%)
+      [bronze].[stoxxasia50_ohlcv].[IX_bronze_stoxxasia50_ohlcv_symbol_date] (was 94.1%)
+      [silver].[stoxxasia50_ohlcv].[IX_silver_stoxxasia50_ohlcv_symbol_date] (was 49.4%)
+      [silver].[stoxxusa50_ohlcv].[IX_silver_stoxxusa50_ohlcv_symbol_date] (was 47.4%)
+      [silver].[eurostoxx50_ohlcv].[IX_silver_eurostoxx50_ohlcv_symbol_date] (was 47.2%)
+      [silver].[oil20_ohlcv].[IX_silver_oil20_ohlcv_symbol_date] (was 46.2%)
+      [gold].[index_performance].[UX_gold_index_performance] (was 31.8%)
+      [gold].[scores_daily].[PK__scores_d__3213E83F41C788A9] (was 30.4%)
     
     All 12 indexes rebuilt in 167 ms
 
@@ -1075,17 +1070,17 @@ foreach (var (schema, table, _, _) in indexesToRebuild.DistinctBy(x => x.schema 
 }
 ```
 
-      STATS UPDATED: [bronze].[trading_calendar]
-      STATS UPDATED: [bronze].[eurostoxx50_ohlcv]
-      STATS UPDATED: [bronze].[stoxxusa50_ohlcv]
-      STATS UPDATED: [bronze].[oil20_ohlcv]
-      STATS UPDATED: [bronze].[stoxxasia50_ohlcv]
-      STATS UPDATED: [silver].[stoxxasia50_ohlcv]
-      STATS UPDATED: [silver].[stoxxusa50_ohlcv]
-      STATS UPDATED: [silver].[eurostoxx50_ohlcv]
-      STATS UPDATED: [silver].[oil20_ohlcv]
-      STATS UPDATED: [gold].[index_performance]
-      STATS UPDATED: [gold].[scores_daily]
+      [bronze].[trading_calendar]
+      [bronze].[eurostoxx50_ohlcv]
+      [bronze].[stoxxusa50_ohlcv]
+      [bronze].[oil20_ohlcv]
+      [bronze].[stoxxasia50_ohlcv]
+      [silver].[stoxxasia50_ohlcv]
+      [silver].[stoxxusa50_ohlcv]
+      [silver].[eurostoxx50_ohlcv]
+      [silver].[oil20_ohlcv]
+      [gold].[index_performance]
+      [gold].[scores_daily]
 
 #### SQL Server — verify fragmentation after rebuild
 
@@ -1456,7 +1451,7 @@ multiSymbol.Count()  // multi-symbol IN
 ```
 
     Filtered (SAP + vol>3M): 10 rows
-    Multi-symbol IN:         10 rows
+    10 rows
 
 #### Dapper — `QueryFirst`, `QuerySingle`, `ExecuteScalar`
 
@@ -1532,10 +1527,10 @@ var deleted = dapperConn.Execute(
 deleted  // DELETE
 ```
 
-    INSERT: 1 row
-    BATCH INSERT: 3 rows
-    UPDATE: 1 row
-    DELETE: 1 row
+    1 row
+    3 rows
+    1 row
+    1 row
 
 #### Dapper — verify trades table after INSERT/UPDATE/DELETE
 
@@ -1671,7 +1666,6 @@ Entity classes = tables, properties = columns. `DbContext` maps entities via `Db
 > - For complex analytics or bulk operations — use Dapper or SqlBulkCopy
 
 
-
 // Entity classes — each class = one database table
 // Properties = columns. Navigation properties = foreign key relationships.
 
@@ -1799,7 +1793,7 @@ db.SaveChanges();
 $"{db.Stocks.Count()} stocks, {db.Prices.Count()} prices"  // seeded
 ```
 
-    Seeded: 4 stocks, 120 prices
+    4 stocks, 120 prices
 
 #### EF Core — LINQ queries (no SQL strings)
 
@@ -1903,10 +1897,10 @@ db.SaveChanges();
 db.Trades.Count()  // trades remaining
 ```
 
-    INSERT: TRD_001 added
-    UPDATE: TRD_001 price -> 700.00
-    DELETE: TRD_001 removed
-    Trades remaining: 0
+    TRD_001 added
+    TRD_001 price -> 700.00
+    TRD_001 removed
+    0
 
 #### EF Core — `AsNoTracking()` for read-only performance
 
@@ -1952,7 +1946,6 @@ foreach (var s in techStocks)
     $"  {s.Symbol,-10} {s.Name,-20} {s.Sector}"
 ```
 
-    === LINQ query (InMemory) — FromSqlRaw requires relational provider ===
       ASML.AS    ASML Holding         Technology
       SAP.DE     SAP SE               Technology
 
@@ -2115,9 +2108,9 @@ dkCmd.CommandText = "SELECT MAX(close) FROM ohlcv";
 dkCmd.ExecuteScalar()  // max close
 ```
 
-    Row count:      66355
-    Distinct stocks: 50
-    Max close:      2839
+    66355
+    50
+    2839
 
 #### DuckDB ADO.NET — filter rows with $1 $2 positional parameters
 
@@ -2152,7 +2145,7 @@ dt.Load(dkCmd.ExecuteReader());
 dt
 ```
 
-    UPDATE: 1 row
+    1 row
 
 <table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr></thead><tbody><tr><td>SAP.DE</td><td>12-Mar-26</td><td>999.99</td></tr><tr><td>SAP.DE</td><td>11-Mar-26</td><td>165.44</td></tr><tr><td>SAP.DE</td><td>10-Mar-26</td><td>169.6</td></tr></tbody></table>
 
@@ -2171,9 +2164,9 @@ dkCmd.CommandText = "SELECT COUNT(*) FROM ohlcv WHERE symbol = 'SAP.DE'";
 dkCmd.ExecuteScalar()  // after DELETE: SAP.DE rows
 ```
 
-    Before DELETE: 1324 SAP.DE rows
-    DELETE: 512 rows
-    After DELETE:  812 SAP.DE rows
+    1324 SAP.DE rows
+    512 rows
+    812 SAP.DE rows
 
 #### DuckDB ADO.NET — inspect schema with DESCRIBE and information_schema
 
@@ -2187,7 +2180,6 @@ dt.Load(dkCmd.ExecuteReader());
 dt
 ```
 
-    === DESCRIBE ===
 
 <table><thead><tr><th>column_name</th><th>column_type</th><th>null</th><th>key</th><th>default</th><th>extra</th></tr></thead><tbody><tr><td>symbol</td><td>VARCHAR</td><td>NO</td><td></td><td></td><td></td></tr><tr><td>date</td><td>DATE</td><td>NO</td><td></td><td></td><td></td></tr><tr><td>open</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>high</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>low</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>close</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>volume</td><td>BIGINT</td><td>YES</td><td></td><td></td><td></td></tr></tbody></table>
 
@@ -2344,7 +2336,7 @@ sw.Stop();
 $"Appender: loaded {bulkCount} rows in {sw.ElapsedMilliseconds} ms"
 ```
 
-    Appender: loaded 66355 rows in 62 ms
+    loaded 66355 rows in 62 ms
 
 ### DuckDB with Dapper
 
@@ -2421,9 +2413,9 @@ var deleted = duck.Execute(
 deleted  // Dapper DELETE
 ```
 
-    Dapper INSERT: 1 row
-    Dapper UPDATE: 1 row
-    Dapper DELETE: 1 row
+    1 row
+    1 row
+    1 row
 
 #### DuckDB Dapper — SELECT single row with QueryFirst<T> and single value with ExecuteScalar
 
@@ -2440,8 +2432,8 @@ var count = duck.ExecuteScalar<long>("SELECT COUNT(*) FROM ohlcv");
 count  // ExecuteScalar (rows)
 ```
 
-    QueryFirst: ASML.AS | 2026-03-12 | 1190.80
-    ExecuteScalar: 65843 rows
+    ASML.AS | 2026-03-12 | 1190.80
+    65843 rows
 
 ### DuckDB-Specific SQL Features
 
@@ -2487,7 +2479,7 @@ dt.Load(dkCmd.ExecuteReader());
 dt
 ```
 
-    Loaded from Parquet: 66355 rows
+    66355 rows
 
 <table><thead><tr><th>column_name</th><th>column_type</th><th>null</th><th>key</th><th>default</th><th>extra</th></tr></thead><tbody><tr><td>id</td><td>BIGINT</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>symbol</td><td>VARCHAR</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>date</td><td>DATE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>open</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>high</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>low</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>close</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>adj_close</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>volume</td><td>BIGINT</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>dividends</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>stock_splits</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>is_filled</td><td>BOOLEAN</td><td>YES</td><td></td><td></td><td></td></tr></tbody></table>
 
@@ -2510,7 +2502,7 @@ dt
 // DuckDB auto-detects column types from the CSV content
 ```
 
-    Created from CSV: 66355 rows
+    66355 rows
 
 <table><thead><tr><th>column_name</th><th>column_type</th><th>null</th><th>key</th><th>default</th><th>extra</th></tr></thead><tbody><tr><td>id</td><td>BIGINT</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>symbol</td><td>VARCHAR</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>date</td><td>DATE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>open</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>high</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>low</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>close</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>adj_close</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>volume</td><td>BIGINT</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>dividends</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>stock_splits</td><td>DOUBLE</td><td>YES</td><td></td><td></td><td></td></tr><tr><td>is_filled</td><td>BOOLEAN</td><td>YES</td><td></td><td></td><td></td></tr></tbody></table>
 
@@ -2561,8 +2553,8 @@ dkCmd.CommandText = "CREATE UNIQUE INDEX idx_ohlcv_sym_date ON ohlcv(symbol, dat
 dkCmd.ExecuteNonQuery();
 ```
 
-    Created: idx_ohlcv_symbol (ART index)
-    Created: idx_ohlcv_sym_date (UNIQUE, composite)
+    idx_ohlcv_symbol (ART index)
+    idx_ohlcv_sym_date (UNIQUE, composite)
 
 #### DuckDB — list all indexes
 
@@ -2595,8 +2587,8 @@ using (var r = dkCmd.ExecuteReader())
         r.GetString(0)  // remaining index
 ```
 
-    Dropped: idx_ohlcv_symbol
-      Remaining: idx_ohlcv_sym_date
+    idx_ohlcv_symbol
+      idx_ohlcv_sym_date
 
 #### DuckDB — PRAGMA database_size and memory usage
 
@@ -2746,8 +2738,8 @@ dkCmd.ExecuteNonQuery();
 // Not needed for in-memory databases
 ```
 
-    VACUUM: space reclaimed
-    VACUUM ANALYZE: stats updated + space reclaimed
+    space reclaimed
+    stats updated + space reclaimed
 
 #### DuckDB — tuning reference
 
@@ -2909,7 +2901,7 @@ var df = DataFrame.ReadParquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.p
 df.Select("symbol", "date", "close", "volume").Head(5)
 ```
 
-    Shape: (66355, 12)
+    (66355, 12)
 
 <style>.pl-dataframe,.pl-dataframe *{background:transparent!important;background-color:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse;width:auto}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>
 <style>

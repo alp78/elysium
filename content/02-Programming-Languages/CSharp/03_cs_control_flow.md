@@ -251,9 +251,9 @@ else
     Console.WriteLine("Is null");
 ```
 
-    ??:  default
-    ??=: fallback
-    Has value: fallback
+    default
+    fallback
+    fallback
 
 ## Loops
 
@@ -283,7 +283,7 @@ Console.WriteLine();
 ```
 
       0  1  2  3  4
-    Step 3:   0  3  6  9  12  15  18
+    0  3  6  9  12  15  18
 
 #### Count down with for
 
@@ -296,7 +296,7 @@ for (int i = 10; i > 0; i -= 2)
 Console.WriteLine();
 ```
 
-    Down:     10  8  6  4  2
+    10  8  6  4  2
 
 #### Enumerate and Zip
 
@@ -371,7 +371,7 @@ int[][] m = { new[] { 1, 2 }, new[] { 3, 4 } };
 Console.WriteLine(FindFirst(m, 3));
 ```
 
-    Found: True
+    True
     100
 
 ## Iterators & Generators
@@ -434,7 +434,7 @@ string.Join(", ", oneLevel.SelectMany(x => x))   // SelectMany (1 level)
 // Does NOT work for deep nesting — SelectMany only peels one layer
 ```
 
-    SelectMany (1 level): [1, 2, 3, 4, 5, 6]
+    [1, 2, 3, 4, 5, 6]
 
 #### Iterative flatten with Stack&lt;T&gt;
 
@@ -467,8 +467,8 @@ IEnumerable<int> FlatLinq(IEnumerable<object> items) =>
 string.Join(", ", FlatLinq(nested))   // LINQ recursive
 ```
 
-    Iterative flatten:    [1, 2, 3, 4, 5, 6, 7]
-    LINQ recursive:       [1, 2, 3, 4, 5, 6, 7]
+    [1, 2, 3, 4, 5, 6, 7]
+    [1, 2, 3, 4, 5, 6, 7]
 
 #### Eager vs lazy evaluation — ToList() vs deferred
 
@@ -484,9 +484,9 @@ squaresLazy.GetType().Name   // Lazy type
 string.Join(", ", squaresLazy)   // As list
 ```
 
-    Eager list: [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
-    Lazy type:  RangeSelectIterator`2
-    As list:    [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+    [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+    RangeSelectIterator`2
+    [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
 
 #### yield break — early termination
 
@@ -504,7 +504,7 @@ IEnumerable<int> TakeWhilePositive(int[] arr)
 string.Join(", ", TakeWhilePositive(new[] { 3, 7, -2, 5 }))   // TakeWhile
 ```
 
-    TakeWhile: [3, 7]
+    [3, 7]
 
 #### Recursive iterator — flatten a deeply nested structure with yield return
 
@@ -526,7 +526,7 @@ var nestedArr = new object[] { 1, new object[] { 2, 3 }, new object[] { 4, new o
 string.Join(", ", Flatten(nestedArr))   // Flatten
 ```
 
-    Flatten: [1, 2, 3, 4, 5, 6, 7]
+    [1, 2, 3, 4, 5, 6, 7]
 
 ## LINQ & Functional Equivalents
 
@@ -564,10 +564,10 @@ var flat = matrix.SelectMany(row => row).ToList();
 string.Join(", ", flat)   // Flat
 ```
 
-    Squares:  [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
-    Evens:    [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
-    Long upper: [HELLO, WORLD, CSHARP, GREAT]
-    Flat:     [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+    [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
+    [HELLO, WORLD, CSHARP, GREAT]
+    [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 #### Query syntax vs method syntax
 
@@ -588,8 +588,8 @@ var methodResult = words.Where(w => w.Length > 3).OrderBy(w => w.Length).Select(
 string.Join(", ", methodResult)   // Method
 ```
 
-    Query:    [HELLO, WORLD, GREAT, CSHARP]
-    Method:   [HELLO, WORLD, GREAT, CSHARP]
+    [HELLO, WORLD, GREAT, CSHARP]
+    [HELLO, WORLD, GREAT, CSHARP]
 
 #### ToDictionary and ToHashSet
 
@@ -616,9 +616,9 @@ var uniqueLengths = words.Select(w => w.Length).ToHashSet();
 string.Join(", ", uniqueLengths)   // Unique lengths
 ```
 
-    Squares dict: 0:0, 1:1, 2:4, 3:9, 4:16, 5:25
-    Passed:       Alice:85, Bob:92, Diana:95
-    Unique lengths: [5, 6, 2]
+    0:0, 1:1, 2:4, 3:9, 4:16, 5:25
+    Alice:85, Bob:92, Diana:95
+    [5, 6, 2]
 
 #### Aggregate and built-in aggregations (Sum, Max, Any, All)
 
@@ -646,14 +646,14 @@ nums.Count(x => x > 2)   // Count()
 nums.Average()   // Average
 ```
 
-    Sum:     15
-    Product: 120
-    Sum():   15
-    Max():   5
-    Min():   1
-    All():   True
-    Any():   True
-    Count(): 3
+    15
+    120
+    15
+    5
+    1
+    True
+    True
+    3
     Average:3
 
 #### Ordering — OrderBy, OrderByDescending with a key selector
@@ -675,10 +675,10 @@ string.Join(", ", names.OrderByDescending(n => n))   // Descending
 string.Join(", ", names.OrderBy(n => n[^1]))   // By last char
 ```
 
-    Alphabetical:  [Alice, Bob, Charlie, Diana]
-    By length:     [Bob, Alice, Diana, Charlie]
-    Descending:    [Diana, Charlie, Bob, Alice]
-    By last char:  [Diana, Bob, Charlie, Alice]
+    [Alice, Bob, Charlie, Diana]
+    [Bob, Alice, Diana, Charlie]
+    [Diana, Charlie, Bob, Alice]
+    [Diana, Bob, Charlie, Alice]
 
 #### Deferred execution — chained LINQ pipeline materialized by ToList()
 
@@ -702,7 +702,7 @@ var result = Enumerable.Range(1, 20)
 string.Join(", ", result)   // Chained
 ```
 
-    Chained: [400, 324, 256]
+    [400, 324, 256]
 
 #### Infinite generator and common sequence methods
 
@@ -747,11 +747,11 @@ string.Join(", ", new[] { 1, 2 }.Concat(new[] { 3, 4 }))   // Concat (chain)
 string.Join(", ", Enumerable.Repeat("x", 3))   // Repeat
 ```
 
-    First 5 naturals: [0, 1, 2, 3, 4]
-    From 10:          [10, 11, 12, 13, 14]
-    Range:          [0, 1, 2, 3, 4]
-    Select (map):   [A, B]
-    Where (filter): [3, 4]
-    Reverse:        [3, 2, 1]
-    Concat (chain): [1, 2, 3, 4]
-    Repeat:         [x, x, x]
+    [0, 1, 2, 3, 4]
+    [10, 11, 12, 13, 14]
+    [0, 1, 2, 3, 4]
+    [A, B]
+    [3, 4]
+    [3, 2, 1]
+    [1, 2, 3, 4]
+    [x, x, x]

@@ -78,9 +78,9 @@ Console.WriteLine($"  FRED_KEY:        {(FRED_KEY.Length > 0 ? "set" : "MISSING"
 Console.WriteLine($"  FINNHUB_KEY:     {(FINNHUB_KEY.Length > 0 ? "set" : "MISSING")}");
 ```
 
-      TWELVE_DATA_KEY: 70bed658...
-      FRED_KEY:        16f307ff...
-      FINNHUB_KEY:     d63iuhhr...
+      70bed658...
+      16f307ff...
+      d63iuhhr...
 
 ## TPL Dataflow
 
@@ -205,9 +205,9 @@ await batchConsumer.Completion;
 Console.WriteLine("  All batches processed.");
 ```
 
-      Batch of 3: [A, B, C]
-      Batch of 3: [D, E, F]
-      Batch of 2: [G, H]
+      [A, B, C]
+      [D, E, F]
+      [G, H]
       All batches processed.
 
 #### TPL Dataflow — multi-stage pipeline with real API
@@ -382,13 +382,13 @@ await foreach (var (id, title) in FetchFredSeriesAsync("GDP", limit: 8))
 ```
 
       FRED series matching 'GDP':
-        GFDEGDQ188S          Federal Debt: Total Public Debt as Percent of Gros
+        Total Public Debt as Percent of Gros
         FYFSGDA188S          Federal Surplus or Deficit [-] as Percent of Gross
         FYFSDFYGDP           Federal Surplus or Deficit [-] as Percent of Gross
         GDP                  Gross Domestic Product
         FYONGDA188S          Federal Net Outlays as Percent of Gross Domestic P
         GFDGDPA188S          Gross Federal Debt as Percent of Gross Domestic Pr
-        FYOIGDA188S          Federal Outlays: Interest as Percent of Gross Dome
+        Interest as Percent of Gross Dome
         FYFRGDA188S          Federal Receipts as Percent of Gross Domestic Prod
 
 #### Parallel fetch with Channel batching
@@ -442,8 +442,8 @@ if (batch.Count > 0)
 await producer; // ensure producer completed without exceptions
 ```
 
-      Batch: [SAP=$171.00, ASML=$1399.42, TTE=$88.79]
-      Batch: [DEO=$72.47, UL=$60.62]
+      [SAP=$171.00, ASML=$1399.42, TTE=$88.79]
+      [DEO=$72.47, UL=$60.62]
 
 ## Cross-Process Execution
 
@@ -506,9 +506,9 @@ jsonDoc.Dispose();
 Console.WriteLine($"  Parsed: source={source}, value={value}");
 ```
 
-      Exit code: 0
+      0
       stdout: {"source": "python", "value": 42}
-      Parsed: source=python, value=42
+      source=python, value=42
 
 #### Concurrent process execution
 

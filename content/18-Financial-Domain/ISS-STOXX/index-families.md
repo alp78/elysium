@@ -47,7 +47,7 @@ A stock market index composed of shares in the largest, most liquid, and most fi
 - **Review frequency:** Quarterly or semi-annually
 
 > [!tip] Related terms
-> [DAX](#dax) | [EURO STOXX 50](#euro-stoxx-50) | [STOXX Europe 600](#stoxx-europe-600) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float%20Market%20Capitalisation)
+> [DAX](#dax) | [EURO STOXX 50](#euro-stoxx-50) | [STOXX Europe 600](#stoxx-europe-600) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -112,7 +112,7 @@ The DAX (Deutscher Aktienindex) is the blue-chip index of the 40 largest and mos
 - **Base value:** 1,000
 
 > [!tip] Related terms
-> [MDAX](#mdax) | [SDAX](#sdax) | [TecDAX](#tecdax) | [DAX 50 ESG](#dax-50-esg) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float%20Factor)
+> [MDAX](#mdax) | [SDAX](#sdax) | [TecDAX](#tecdax) | [DAX 50 ESG](#dax-50-esg) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -176,7 +176,7 @@ The DAX 50 ESG index comprises 50 large and liquid German equities selected from
 - **ESG data provider:** ISS ESG (formerly Sustainalytics data supplemented by ISS)
 
 > [!tip] Related terms
-> [DAX](#dax) | [DAX ESG Target](#dax-esg-target) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#ESG%20Screening) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Exclusion%20Criteria)
+> [DAX](#dax) | [DAX ESG Target](#dax-esg-target) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -236,7 +236,7 @@ The DAX ESG Target index is derived from the DAX universe and applies a best-in-
 - **Tracking error target:** Minimised relative to DAX
 
 > [!tip] Related terms
-> [DAX](#dax) | [DAX 50 ESG](#dax-50-esg) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Best-in-Class%20Selection) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Tracking%20Error)
+> [DAX](#dax) | [DAX 50 ESG](#dax-50-esg) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -298,7 +298,7 @@ The eb.rexx index family tracks the performance of the most liquid German govern
 - **Review frequency:** Monthly (rebalancing on the last business day)
 
 > [!tip] Related terms
-> [EUROGOV Bond Indices](#eurogov-bond-indices) | [STOXX ICE Fixed Income Sustainability Indices](#stoxx-ice-fixed-income-sustainability-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Bond%20Index)
+> [EUROGOV Bond Indices](#eurogov-bond-indices) | [STOXX ICE Fixed Income Sustainability Indices](#stoxx-ice-fixed-income-sustainability-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (3)
 >
@@ -350,7 +350,7 @@ The EURO STOXX 50 is Europe's leading blue-chip index, comprising 50 of the larg
 - **Derivatives:** Among the most traded index futures globally (Eurex)
 
 > [!tip] Related terms
-> [EURO STOXX Banks](#euro-stoxx-banks) | [EURO STOXX Select Dividend 30](#euro-stoxx-select-dividend-30) | [STOXX Europe 600](#stoxx-europe-600) | [VSTOXX](#vstoxx) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float%20Market%20Capitalisation)
+> [EURO STOXX Banks](#euro-stoxx-banks) | [EURO STOXX Select Dividend 30](#euro-stoxx-select-dividend-30) | [STOXX Europe 600](#stoxx-europe-600) | [VSTOXX](#vstoxx) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -418,7 +418,7 @@ The EURO STOXX 50 Volatility (VSTOXX) subindex family extends the headline VSTOX
 - **Derivatives:** Selected subindices serve as underlyings for Eurex-listed futures
 
 > [!tip] Related terms
-> [VSTOXX](#vstoxx) | [EURO STOXX 50](#euro-stoxx-50) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Implied%20Volatility) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Variance%20Swap)
+> [VSTOXX](#vstoxx) | [EURO STOXX 50](#euro-stoxx-50) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -486,7 +486,7 @@ The EURO STOXX Banks index tracks the performance of Eurozone banking-sector sto
 - **Volatility profile:** Higher than broad Eurozone benchmarks
 
 > [!tip] Related terms
-> [EURO STOXX 50](#euro-stoxx-50) | [STOXX Europe 600](#stoxx-europe-600) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#ICB%20Classification) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Sector%20Index)
+> [EURO STOXX 50](#euro-stoxx-50) | [STOXX Europe 600](#stoxx-europe-600) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -552,7 +552,7 @@ The EURO STOXX Select Dividend 30 index selects 30 high-dividend-yielding stocks
 - **Income focus:** Designed for yield-oriented investment strategies
 
 > [!tip] Related terms
-> [STOXX Select Dividend Indices](#stoxx-select-dividend-indices) | [EURO STOXX 50](#euro-stoxx-50) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Dividend%20Yield%20Weighting) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Payout%20Ratio)
+> [STOXX Select Dividend Indices](#stoxx-select-dividend-indices) | [EURO STOXX 50](#euro-stoxx-50) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (4)
 >
@@ -614,7 +614,7 @@ The EUROGOV index family measures the performance of euro-denominated government
 - **Country sub-indices:** Available for individual Eurozone issuers
 
 > [!tip] Related terms
-> [eb.rexx Bond Indices](#ebrexx-bond-indices) | [STOXX ICE Fixed Income Sustainability Indices](#stoxx-ice-fixed-income-sustainability-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Bond%20Index) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Yield%20Curve)
+> [eb.rexx Bond Indices](#ebrexx-bond-indices) | [STOXX ICE Fixed Income Sustainability Indices](#stoxx-ice-fixed-income-sustainability-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (2)
 >
@@ -663,7 +663,7 @@ The ISS STOXX Biodiversity index family integrates biodiversity-related data fro
 - **Thematic focus:** Biodiversity impact reduction, nature-positive tilting
 
 > [!tip] Related terms
-> [ISS STOXX Net Zero Transition Indices](#iss-stoxx-net-zero-transition-indices) | [DAX 50 ESG](#dax-50-esg) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#ESG%20Screening) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Thematic%20Index)
+> [ISS STOXX Net Zero Transition Indices](#iss-stoxx-net-zero-transition-indices) | [DAX 50 ESG](#dax-50-esg) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -731,7 +731,7 @@ The ISS STOXX Net Zero Transition index family is designed to align investment p
 - **Review frequency:** Quarterly
 
 > [!tip] Related terms
-> [ISS STOXX Biodiversity Indices](#iss-stoxx-biodiversity-indices) | [DAX ESG Target](#dax-esg-target) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Paris-Aligned%20Benchmark) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Climate%20Transition%20Benchmark)
+> [ISS STOXX Biodiversity Indices](#iss-stoxx-biodiversity-indices) | [DAX ESG Target](#dax-esg-target) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -796,7 +796,7 @@ The MDAX comprises 50 mid-cap companies that rank immediately below the DAX cons
 - **Relationship to DAX:** Second tier; companies promoted to DAX are removed from MDAX
 
 > [!tip] Related terms
-> [DAX](#dax) | [SDAX](#sdax) | [TecDAX](#tecdax) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float%20Factor) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Mid-Cap)
+> [DAX](#dax) | [SDAX](#sdax) | [TecDAX](#tecdax) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -856,7 +856,7 @@ The SDAX comprises 70 small-cap companies ranking below the MDAX constituents in
 - **Relationship to MDAX:** Third tier; companies promoted to MDAX are removed from SDAX
 
 > [!tip] Related terms
-> [DAX](#dax) | [MDAX](#mdax) | [TecDAX](#tecdax) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Small-Cap) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float%20Factor)
+> [DAX](#dax) | [MDAX](#mdax) | [TecDAX](#tecdax) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -916,7 +916,7 @@ The STOXX AI Global Artificial Intelligence index identifies and tracks companie
 - **Thematic focus:** Artificial intelligence value chain
 
 > [!tip] Related terms
-> [STOXX Global Metaverse](#stoxx-global-metaverse) | [STOXX Digital Asset Indices](#stoxx-digital-asset-indices) | [STOXX Europe 600](#stoxx-europe-600) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Thematic%20Index)
+> [STOXX Global Metaverse](#stoxx-global-metaverse) | [STOXX Digital Asset Indices](#stoxx-digital-asset-indices) | [STOXX Europe 600](#stoxx-europe-600) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -978,7 +978,7 @@ The STOXX Asia/Pacific 600 index tracks 600 companies across developed markets i
 - **Base value:** 100
 
 > [!tip] Related terms
-> [STOXX Global 1800](#stoxx-global-1800) | [STOXX North America 600](#stoxx-north-america-600) | [STOXX Europe 600](#stoxx-europe-600) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float%20Market%20Capitalisation)
+> [STOXX Global 1800](#stoxx-global-1800) | [STOXX North America 600](#stoxx-north-america-600) | [STOXX Europe 600](#stoxx-europe-600) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -1044,7 +1044,7 @@ The STOXX Digital Asset index family provides benchmarks for the digital asset a
 - **Product use cases:** ETPs, futures, structured products, fund benchmarks
 
 > [!tip] Related terms
-> [STOXX AI Global Artificial Intelligence Index](#stoxx-ai-global-artificial-intelligence-index) | [STOXX Global Metaverse](#stoxx-global-metaverse) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Multi-Exchange%20Pricing)
+> [STOXX AI Global Artificial Intelligence Index](#stoxx-ai-global-artificial-intelligence-index) | [STOXX Global Metaverse](#stoxx-global-metaverse) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (1)
 >
@@ -1084,7 +1084,7 @@ The STOXX Emerging Markets index family provides broad equity coverage of emergi
 - **Role:** Complement to developed-market STOXX indices within the World Equity framework
 
 > [!tip] Related terms
-> [STOXX World Equity Indices](#stoxx-world-equity-indices) | [STOXX Global 1800](#stoxx-global-1800) | [STOXX All Europe 800](#stoxx-all-europe-800) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Emerging%20Markets) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float%20Market%20Capitalisation)
+> [STOXX World Equity Indices](#stoxx-world-equity-indices) | [STOXX Global 1800](#stoxx-global-1800) | [STOXX All Europe 800](#stoxx-all-europe-800) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -1151,7 +1151,7 @@ The STOXX Europe 600 index covers 600 companies across 17 European countries, re
 - **Base value:** 100
 
 > [!tip] Related terms
-> [EURO STOXX 50](#euro-stoxx-50) | [STOXX Europe Total Market](#stoxx-europe-total-market) | [STOXX Global 1800](#stoxx-global-1800) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float%20Market%20Capitalisation) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Size%20Segment)
+> [EURO STOXX 50](#euro-stoxx-50) | [STOXX Europe Total Market](#stoxx-europe-total-market) | [STOXX Global 1800](#stoxx-global-1800) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -1215,7 +1215,7 @@ The STOXX Europe Large 200 index comprises the 200 largest constituents of the S
 - **Base value:** 100
 
 > [!tip] Related terms
-> [STOXX Europe 600](#stoxx-europe-600) | [STOXX Europe Mid 200](#stoxx-europe-mid-200) | [STOXX Europe Small 200](#stoxx-europe-small-200) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Size%20Segment) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Large-Cap)
+> [STOXX Europe 600](#stoxx-europe-600) | [STOXX Europe Mid 200](#stoxx-europe-mid-200) | [STOXX Europe Small 200](#stoxx-europe-small-200) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (4)
 >
@@ -1272,7 +1272,7 @@ The STOXX Europe Small 200 index comprises the 200 smallest constituents of the 
 - **Base value:** 100
 
 > [!tip] Related terms
-> [STOXX Europe 600](#stoxx-europe-600) | [STOXX Europe Large 200](#stoxx-europe-large-200) | [STOXX Europe Mid 200](#stoxx-europe-mid-200) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Size%20Segment) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Small-Cap)
+> [STOXX Europe 600](#stoxx-europe-600) | [STOXX Europe Large 200](#stoxx-europe-large-200) | [STOXX Europe Mid 200](#stoxx-europe-mid-200) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (1)
 >
@@ -1307,7 +1307,7 @@ The STOXX Europe Total Market index is the broadest European equity benchmark in
 - **Role:** Parent universe for STOXX Europe 600 and sub-indices
 
 > [!tip] Related terms
-> [STOXX Europe 600](#stoxx-europe-600) | [STOXX World Equity Indices](#stoxx-world-equity-indices) | [STOXX Global 1800](#stoxx-global-1800) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Total%20Market%20Index)
+> [STOXX Europe 600](#stoxx-europe-600) | [STOXX World Equity Indices](#stoxx-world-equity-indices) | [STOXX Global 1800](#stoxx-global-1800) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -1371,7 +1371,7 @@ The STOXX Global 1800 index comprises 1,800 stocks from developed markets worldw
 - **Base value:** 100
 
 > [!tip] Related terms
-> [STOXX Europe 600](#stoxx-europe-600) | [STOXX USA 500](#stoxx-usa-500) | [STOXX World Equity Indices](#stoxx-world-equity-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Regional%20Decomposition)
+> [STOXX Europe 600](#stoxx-europe-600) | [STOXX USA 500](#stoxx-usa-500) | [STOXX World Equity Indices](#stoxx-world-equity-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -1432,7 +1432,7 @@ The STOXX Global Metaverse index captures companies positioned to benefit from t
 - **Selection methodology:** Revenue exposure, patents, and strategic analysis
 
 > [!tip] Related terms
-> [STOXX AI Global Artificial Intelligence Index](#stoxx-ai-global-artificial-intelligence-index) | [STOXX Digital Asset Indices](#stoxx-digital-asset-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Thematic%20Index)
+> [STOXX AI Global Artificial Intelligence Index](#stoxx-ai-global-artificial-intelligence-index) | [STOXX Digital Asset Indices](#stoxx-digital-asset-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -1499,7 +1499,7 @@ The STOXX Global Select Dividend 100 index selects the 100 highest-dividend-yiel
 - **Parent universe:** STOXX Global 1800
 
 > [!tip] Related terms
-> [STOXX Select Dividend Indices](#stoxx-select-dividend-indices) | [EURO STOXX Select Dividend 30](#euro-stoxx-select-dividend-30) | [STOXX Global 1800](#stoxx-global-1800) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Dividend%20Yield%20Weighting) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Payout%20Ratio)
+> [STOXX Select Dividend Indices](#stoxx-select-dividend-indices) | [EURO STOXX Select Dividend 30](#euro-stoxx-select-dividend-30) | [STOXX Global 1800](#stoxx-global-1800) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (4)
 >
@@ -1555,7 +1555,7 @@ The STOXX ICE Fixed Income Sustainability index family, developed in partnership
 - **Review frequency:** Monthly rebalancing
 
 > [!tip] Related terms
-> [eb.rexx Bond Indices](#ebrexx-bond-indices) | [EUROGOV Bond Indices](#eurogov-bond-indices) | [ISS STOXX Net Zero Transition Indices](#iss-stoxx-net-zero-transition-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Bond%20Index) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#ESG%20Screening)
+> [eb.rexx Bond Indices](#ebrexx-bond-indices) | [EUROGOV Bond Indices](#eurogov-bond-indices) | [ISS STOXX Net Zero Transition Indices](#iss-stoxx-net-zero-transition-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (3)
 >
@@ -1610,7 +1610,7 @@ The STOXX Industry Neutral Ax Factor index family isolates single risk-factor ex
 - **Parent indices:** STOXX Europe 600, STOXX USA 500, STOXX Global 1800
 
 > [!tip] Related terms
-> [STOXX Minimum Variance Indices](#stoxx-minimum-variance-indices) | [STOXX Europe 600](#stoxx-europe-600) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Factor%20Index) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#ICB%20Classification) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Risk%20Factor)
+> [STOXX Minimum Variance Indices](#stoxx-minimum-variance-indices) | [STOXX Europe 600](#stoxx-europe-600) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (4)
 >
@@ -1670,7 +1670,7 @@ The STOXX Minimum Variance index family uses portfolio optimisation techniques t
 - **Parent indices:** STOXX Europe 600, STOXX USA 500, STOXX Global 1800
 
 > [!tip] Related terms
-> [STOXX Industry Neutral Ax Factor Indices](#stoxx-industry-neutral-ax-factor-indices) | [STOXX Europe 600](#stoxx-europe-600) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Minimum%20Variance) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Variance-Covariance%20Matrix)
+> [STOXX Industry Neutral Ax Factor Indices](#stoxx-industry-neutral-ax-factor-indices) | [STOXX Europe 600](#stoxx-europe-600) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -1732,7 +1732,7 @@ The STOXX North America 600 index tracks 600 companies across the United States 
 - **Base value:** 100
 
 > [!tip] Related terms
-> [STOXX Global 1800](#stoxx-global-1800) | [STOXX USA 500](#stoxx-usa-500) | [STOXX Europe 600](#stoxx-europe-600) | [STOXX Asia/Pacific 600](#stoxx-asiapacific-600) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float%20Market%20Capitalisation)
+> [STOXX Global 1800](#stoxx-global-1800) | [STOXX USA 500](#stoxx-usa-500) | [STOXX Europe 600](#stoxx-europe-600) | [STOXX Asia/Pacific 600](#stoxx-asiapacific-600) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -1800,7 +1800,7 @@ The STOXX Select Dividend index family identifies high-dividend-yielding stocks 
 - **Regional variants:** Europe 30, North America 40, Asia/Pacific 50, Global 100
 
 > [!tip] Related terms
-> [EURO STOXX Select Dividend 30](#euro-stoxx-select-dividend-30) | [STOXX Europe 600](#stoxx-europe-600) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Dividend%20Yield%20Weighting) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Payout%20Ratio)
+> [EURO STOXX Select Dividend 30](#euro-stoxx-select-dividend-30) | [STOXX Europe 600](#stoxx-europe-600) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (3)
 >
@@ -1849,7 +1849,7 @@ The STOXX USA 500 index tracks 500 of the largest US equities by free-float mark
 - **Role:** US component of the STOXX Global 1800 framework
 
 > [!tip] Related terms
-> [STOXX Global 1800](#stoxx-global-1800) | [STOXX Europe 600](#stoxx-europe-600) | [STOXX World Equity Indices](#stoxx-world-equity-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float%20Market%20Capitalisation)
+> [STOXX Global 1800](#stoxx-global-1800) | [STOXX Europe 600](#stoxx-europe-600) | [STOXX World Equity Indices](#stoxx-world-equity-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -1910,7 +1910,7 @@ The STOXX World Equity index family provides comprehensive coverage of global eq
 - **Variants:** Developed Markets, Emerging Markets, All Countries
 
 > [!tip] Related terms
-> [STOXX Global 1800](#stoxx-global-1800) | [STOXX Europe Total Market](#stoxx-europe-total-market) | [STOXX USA 500](#stoxx-usa-500) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Total%20Market%20Index) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Emerging%20Markets)
+> [STOXX Global 1800](#stoxx-global-1800) | [STOXX Europe Total Market](#stoxx-europe-total-market) | [STOXX USA 500](#stoxx-usa-500) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -1975,7 +1975,7 @@ The TecDAX comprises the 30 largest and most liquid technology stocks listed on 
 - **Base value:** 1,000
 
 > [!tip] Related terms
-> [DAX](#dax) | [MDAX](#mdax) | [SDAX](#sdax) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Sector%20Index) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float%20Market%20Capitalisation)
+> [DAX](#dax) | [MDAX](#mdax) | [SDAX](#sdax) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -2044,7 +2044,7 @@ The VSTOXX index measures the implied volatility of the EURO STOXX 50 index over
 - **Analogue:** Comparable to the CBOE VIX for S&P 500
 
 > [!tip] Related terms
-> [EURO STOXX 50](#euro-stoxx-50) | [Blue-Chip Index](#blue-chip-index) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Implied%20Volatility) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Variance%20Swap)
+> [EURO STOXX 50](#euro-stoxx-50) | [Blue-Chip Index](#blue-chip-index) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -2106,7 +2106,7 @@ The STOXX Europe 50 index comprises 50 blue-chip stocks from 17 European countri
 - **Base value:** 1,000
 
 > [!tip] Related terms
-> [EURO STOXX 50](#euro-stoxx-50) | [STOXX Europe 600](#stoxx-europe-600) | [Blue-Chip Index](#blue-chip-index) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float%20Market%20Capitalisation)
+> [EURO STOXX 50](#euro-stoxx-50) | [STOXX Europe 600](#stoxx-europe-600) | [Blue-Chip Index](#blue-chip-index) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -2167,7 +2167,7 @@ The STOXX Europe 600 Sector index family breaks the STOXX Europe 600 into its co
 - **Review frequency:** Quarterly (aligned with STOXX Europe 600 reviews)
 
 > [!tip] Related terms
-> [STOXX Europe 600](#stoxx-europe-600) | [EURO STOXX Banks](#euro-stoxx-banks) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#ICB%20Classification) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Sector%20Index)
+> [STOXX Europe 600](#stoxx-europe-600) | [EURO STOXX Banks](#euro-stoxx-banks) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (3)
 >
@@ -2217,7 +2217,7 @@ The STOXX ESG-X index family applies exclusionary ESG screening to standard STOX
 - **Tracking error:** Very low relative to parent index
 
 > [!tip] Related terms
-> [DAX 50 ESG](#dax-50-esg) | [ISS STOXX Net Zero Transition Indices](#iss-stoxx-net-zero-transition-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Exclusion%20Criteria) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#ESG%20Screening)
+> [DAX 50 ESG](#dax-50-esg) | [ISS STOXX Net Zero Transition Indices](#iss-stoxx-net-zero-transition-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >
@@ -2280,7 +2280,7 @@ The STOXX True Exposure index family redefines geographic allocation based on wh
 - **Use case:** Investors seeking exposure based on economic activity, not listing location
 
 > [!tip] Related terms
-> [STOXX Global 1800](#stoxx-global-1800) | [STOXX World Equity Indices](#stoxx-world-equity-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Revenue%20Exposure) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Geographic%20Allocation)
+> [STOXX Global 1800](#stoxx-global-1800) | [STOXX World Equity Indices](#stoxx-world-equity-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (1)
 >
@@ -2316,7 +2316,7 @@ The STOXX Sustainability index family selects companies from standard STOXX benc
 - **History:** Among the earliest European sustainability benchmarks (launched 2001)
 
 > [!tip] Related terms
-> [STOXX ESG-X Indices](#stoxx-esg-x-indices) | [DAX 50 ESG](#dax-50-esg) | [ISS STOXX Biodiversity Indices](#iss-stoxx-biodiversity-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Best-in-Class%20Selection) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#ESG%20Screening)
+> [STOXX ESG-X Indices](#stoxx-esg-x-indices) | [DAX 50 ESG](#dax-50-esg) | [ISS STOXX Biodiversity Indices](#iss-stoxx-biodiversity-indices) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (3)
 >
@@ -2363,7 +2363,7 @@ The iSTOXX index family is a range of customisable and innovative indices design
 - **Review frequency:** Varies by specific index
 
 > [!tip] Related terms
-> [STOXX Europe 600](#stoxx-europe-600) | [EURO STOXX 50](#euro-stoxx-50) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Risk%20Control%20Index) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Decrement%20Index)
+> [STOXX Europe 600](#stoxx-europe-600) | [EURO STOXX 50](#euro-stoxx-50) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (3)
 >
@@ -2411,7 +2411,7 @@ The STOXX Maximum Dividend 40 index selects the 40 stocks from the STOXX Global 
 - **Unique feature:** Uses implied (expected) dividends rather than trailing dividends
 
 > [!tip] Related terms
-> [STOXX Select Dividend Indices](#stoxx-select-dividend-indices) | [EURO STOXX Select Dividend 30](#euro-stoxx-select-dividend-30) | [STOXX Global 1800](#stoxx-global-1800) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Dividend%20Yield%20Weighting)
+> [STOXX Select Dividend Indices](#stoxx-select-dividend-indices) | [EURO STOXX Select Dividend 30](#euro-stoxx-select-dividend-30) | [STOXX Global 1800](#stoxx-global-1800) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (4)
 >
@@ -2468,7 +2468,7 @@ The DAX Risk Control index family applies a volatility-targeting mechanism to th
 - **Use cases:** Structured products, insurance portfolios, risk-managed mandates
 
 > [!tip] Related terms
-> [DAX](#dax) | [iSTOXX Indices](#istoxx-indices) | [VSTOXX](#vstoxx) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Risk%20Control%20Index) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Volatility%20Targeting)
+> [DAX](#dax) | [iSTOXX Indices](#istoxx-indices) | [VSTOXX](#vstoxx) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (2)
 >
@@ -2514,7 +2514,7 @@ The STOXX Global ESG Leaders index selects companies from the STOXX Global 1800 
 - **Sub-indices:** Environmental Leaders, Social Leaders, Governance Leaders
 
 > [!tip] Related terms
-> [STOXX Sustainability Indices](#stoxx-sustainability-indices) | [STOXX ESG-X Indices](#stoxx-esg-x-indices) | [STOXX Global 1800](#stoxx-global-1800) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Best-in-Class%20Selection) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#ESG%20Screening)
+> [STOXX Sustainability Indices](#stoxx-sustainability-indices) | [STOXX ESG-X Indices](#stoxx-esg-x-indices) | [STOXX Global 1800](#stoxx-global-1800) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) | [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
 > [!example]- Source excerpts (5)
 >

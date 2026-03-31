@@ -105,14 +105,14 @@ fs_client    = firestore.Client(project=PROJECT_ID, database=FIRESTORE_DB)
 gcs_client   = storage.Client(project=PROJECT_ID)
 bucket       = gcs_client.bucket(BUCKET_NAME)
 
-print(f'  Project:   {PROJECT_ID}')
-print(f'  Firestore: {FIRESTORE_DB}')
+PROJECT_ID  # Project
+FIRESTORE_DB  # Firestore
 print(f'  GCS:       gs://{BUCKET_NAME}')
 ```
 
-      Project:   seclab-dev-ap-26
-      Firestore: seclab-scores
-      GCS:       gs://seclab-dev-ap-26-data
+      seclab-dev-ap-26
+      seclab-scores
+      gs://seclab-dev-ap-26-data
 
 #### Formatting helpers
 
@@ -255,7 +255,7 @@ async def ws_handler(websocket):
         pass
 
 ws_server = await websockets.serve(ws_handler, 'localhost', WS_PORT)
-print(f'  WebSocket server running on ws://localhost:{WS_PORT}')
+WS_PORT  # WebSocket server running on ws://localhost
 ```
 
       WebSocket server running on ws://localhost:8765

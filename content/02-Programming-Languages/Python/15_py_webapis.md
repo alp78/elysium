@@ -52,20 +52,18 @@ One function per HTTP method: `requests.get/post/put/delete`. `params=` for quer
 ```python
 resp = requests.get("https://httpbin.org/get", params={"ticker": "AAPL", "date": "2024-03-15"})
 
-print("=== GET Request ===")
-print(f"Status code: {resp.status_code}")
-print(f"URL sent:    {resp.url}")
-print(f"Content-Type: {resp.headers['Content-Type']}")
+resp.status_code  # Status code
+resp.url  # URL sent
+resp.headers['Content-Type']  # Content-Type
 
 data = resp.json()
-print(f"Args echoed: {data['args']}")
+data['args']  # Args echoed
 ```
 
-    === GET Request ===
-    Status code: 200
-    URL sent:    https://httpbin.org/get?ticker=AAPL&date=2024-03-15
-    Content-Type: application/json
-    Args echoed: {'date': '2024-03-15', 'ticker': 'AAPL'}
+    200
+    https://httpbin.org/get?ticker=AAPL&date=2024-03-15
+    application/json
+    {'date': '2024-03-15', 'ticker': 'AAPL'}
 
 #### requests.post — send JSON data
 
@@ -83,15 +81,13 @@ trade_order = {
 
 resp = requests.post("https://httpbin.org/post", json=trade_order)
 
-print("=== POST Request ===")
-print(f"Status: {resp.status_code}")
+resp.status_code  # Status
 data = resp.json()
-print(f"Body echoed: {data['json']}")
+data['json']  # Body echoed
 ```
 
-    === POST Request ===
-    Status: 200
-    Body echoed: {'limit_price': 178.5, 'order_type': 'LIMIT', 'quantity': 100, 'side': 'BUY', 'ticker': 'AAPL'}
+    200
+    {'limit_price': 178.5, 'order_type': 'LIMIT', 'quantity': 100, 'side': 'BUY', 'ticker': 'AAPL'}
 
 #### requests headers — API keys and Bearer token authentication
 
@@ -105,13 +101,11 @@ headers = {
 }
 resp = requests.get("https://httpbin.org/headers", headers=headers)
 
-print("=== Custom Headers ===")
 for k, v in resp.json()["headers"].items():
     if k.startswith(("Authorization", "X-Client", "Accept")):
         print(f"  {k}: {v}")
 ```
 
-    === Custom Headers ===
       Accept: application/json
       Accept-Encoding: gzip, deflate, br
       Authorization: Bearer sk_demo_fake_key_12345
@@ -122,7 +116,6 @@ for k, v in resp.json()["headers"].items():
 ```python
 # Status code handling — check success/failure, raise_for_status()
 
-print("=== Status Code Handling ===")
 for status_code in [200, 201, 400, 401, 404, 500]:
     resp = requests.get(f"https://httpbin.org/status/{status_code}")
     print(f"  {status_code}: {resp.status_code} {'OK' if resp.ok else 'FAILED'}")
@@ -139,7 +132,6 @@ except requests.HTTPError as e:
 >
 > Raises `HTTPError` for 4xx/5xx responses. Without it, a 500 response is silently treated as success. Call it after every request in production code.
 
-    === Status Code Handling ===
       200: 200 OK
       201: 201 OK
       400: 400 FAILED
@@ -155,14 +147,12 @@ Same API as `requests` for sync usage, plus async support. `httpx.Client()` pool
 
 ```python
 resp = httpx.get("https://httpbin.org/get", params={"source": "httpx"})
-print("=== httpx (sync) ===")
-print(f"Status: {resp.status_code}")
-print(f"Args: {resp.json()['args']}")
+resp.status_code  # Status
+resp.json()['args']  # Args
 ```
 
-    === httpx (sync) ===
-    Status: 200
-    Args: {'source': 'httpx'}
+    200
+    {'source': 'httpx'}
 
 #### httpx.Client — connection pooling
 
@@ -170,7 +160,6 @@ print(f"Args: {resp.json()['args']}")
 # Client with connection pooling — reuse connections across requests
 # C# equivalent: single HttpClient instance (IHttpClientFactory in DI)
 
-print("=== httpx.Client (connection pooling) ===")
 with httpx.Client(base_url="https://httpbin.org", timeout=10.0) as client:
     r1 = client.get("/get", params={"req": "1"})
     r2 = client.get("/get", params={"req": "2"})
@@ -180,7 +169,6 @@ with httpx.Client(base_url="https://httpbin.org", timeout=10.0) as client:
     print(f"  POST /post:     {r3.status_code}")
 ```
 
-    === httpx.Client (connection pooling) ===
       GET /get?req=1: 200
       GET /get?req=2: 200
       POST /post:     200
@@ -209,16 +197,14 @@ async def fetch_all_tickers():
         results = await asyncio.gather(*tasks)
     return results
 
-print("=== httpx.AsyncClient (concurrent fetches) ===")
 start = time.perf_counter()
 results = await fetch_all_tickers()
 elapsed = time.perf_counter() - start
 for r in results:
     print(f"  {r['ticker']}: {r['status']}")
-print(f"  All {len(results)} tickers in {elapsed:.2f}s")
+len(results), f"{elapsed:.2f}s"  # tickers fetched, elapsed
 ```
 
-    === httpx.AsyncClient (concurrent fetches) ===
       AAPL: 200
       MSFT: 200
       GOOG: 200
@@ -317,18 +303,16 @@ def fetch_paginated(base_url, endpoint, page_size=100):
         page += 1
     return all_records
 
-print("=== Pagination ===")
 pages = fetch_paginated("https://httpbin.org", "/get", page_size=50)
 for p in pages:
     print(f"  Page {p['page']}: fetched (params: {p['params']})")
-print(f"  Total pages fetched: {len(pages)}")
+len(pages)  # Total pages fetched
 ```
 
-    === Pagination ===
       Page 1: fetched (params: {'page': '1', 'per_page': '50'})
       Page 2: fetched (params: {'page': '2', 'per_page': '50'})
       Page 3: fetched (params: {'page': '3', 'per_page': '50'})
-      Total pages fetched: 3
+    3
 
 #### requests retry with exponential backoff — transient error recovery
 
@@ -352,13 +336,11 @@ def fetch_with_retry(url, max_retries=3, base_delay=0.5):
             time.sleep(delay)
     raise Exception(f"Failed after {max_retries} retries: {url}")
 
-print("=== Retry with Backoff ===")
 resp = fetch_with_retry("https://httpbin.org/get?ticker=AAPL")
-print(f"  Success: {resp.status_code}")
+resp.status_code  # Success
 ```
 
-    === Retry with Backoff ===
-      Success: 200
+    200
 
 #### requests bulk POST — batch multiple records in one call
 
@@ -366,7 +348,6 @@ print(f"  Success: {resp.status_code}")
 # Bulk POST — send multiple records in one request
 # Financial example: batch-submit trade confirmations
 
-print("=== Bulk POST ===")
 batch = [
     {"trade_id": "TRD_001", "ticker": "AAPL", "qty": 100, "price": 178.50},
     {"trade_id": "TRD_002", "ticker": "MSFT", "qty": 50,  "price": 415.20},
@@ -375,15 +356,14 @@ batch = [
 
 resp = httpx.post("https://httpbin.org/post", json={"trades": batch}, timeout=10.0)
 data = resp.json()
-print(f"  Sent {len(batch)} trades")
-print(f"  Status: {resp.status_code}")
-print(f"  Server received: {len(data['json']['trades'])} trades")
+len(batch)  # trades sent
+resp.status_code  # Status
+len(data['json']['trades'])  # trades received by server
 ```
 
-    === Bulk POST ===
       Sent 3 trades
-      Status: 200
-      Server received: 3 trades
+    200
+    3 trades
 
 ## Building a REST API (FastAPI)
 
@@ -527,13 +507,12 @@ server_thread = threading.Thread(target=server.run, daemon=True)
 server_thread.start()
 time.sleep(1)
 
-print(f"FastAPI server running on http://127.0.0.1:{PORT}")
-print(f"Swagger docs: http://127.0.0.1:{PORT}/docs")
-print(f"Run the next cells to test, then run the shutdown cell when done.")
+PORT  # FastAPI server running on http://127.0.0.1
+# Swagger docs: http://127.0.0.1:{PORT}/docs
 ```
 
     FastAPI server running on http://127.0.0.1:8769
-    Swagger docs: http://127.0.0.1:8769/docs
+    http://127.0.0.1:8769/docs
     Run the next cells to test, then run the shutdown cell when done.
 
 #### Test FastAPI GET endpoints with httpx — health and positions
@@ -544,39 +523,31 @@ print(f"Run the next cells to test, then run the shutdown cell when done.")
 BASE = "http://127.0.0.1:8765"
 
 # Health check
-print("=== Health Check ===")
 resp = httpx.get(f"{BASE}/health")
-print(f"  {resp.status_code}: {resp.json()}")
+resp.json()  # {resp.status_code}
 
 # GET all positions
-print("\n=== GET /positions ===")
 resp = httpx.get(f"{BASE}/positions")
 for p in resp.json()["positions"]:
     print(f"  {p['ticker']}: {p['shares']} shares @ ${p['avg_cost']:.2f}")
 
 # GET single position
-print("\n=== GET /positions/AAPL ===")
 resp = httpx.get(f"{BASE}/positions/AAPL")
-print(f"  {resp.status_code}: {resp.json()}")
+resp.json()  # {resp.status_code}
 
 # GET missing position → 404
-print("\n=== GET /positions/TSLA (not found) ===")
 resp = httpx.get(f"{BASE}/positions/TSLA")
-print(f"  {resp.status_code}: {resp.json()}")
+resp.json()  # {resp.status_code}
 ```
 
-    === Health Check ===
       200: {'status': 'healthy', 'service': 'trading-api'}
     
-    === GET /positions ===
       AAPL: 500 shares @ $165.00
       MSFT: 200 shares @ $380.50
       GOOG: 100 shares @ $140.25
     
-    === GET /positions/AAPL ===
       200: {'ticker': 'AAPL', 'shares': 500, 'avg_cost': 165.0, 'market_value': 89250.0}
     
-    === GET /positions/TSLA (not found) ===
       404: {'detail': 'No position for TSLA'}
 
 #### Test FastAPI POST endpoint with httpx — submit and validate trades
@@ -584,7 +555,6 @@ print(f"  {resp.status_code}: {resp.json()}")
 ```python
 # POST trades — submit orders and test validation
 
-print("=== POST /trades ===")
 trades = [
     {"trade_id": "TRD_001", "ticker": "AAPL", "side": "BUY", "quantity": 100, "price": 178.50},
     {"trade_id": "TRD_002", "ticker": "MSFT", "side": "SELL", "quantity": 50, "price": 415.20},
@@ -594,24 +564,19 @@ for trade in trades:
     print(f"  {resp.status_code}: {resp.json()}")
 
 # POST duplicate → 409 Conflict
-print("\n=== POST duplicate trade (conflict) ===")
 resp = httpx.post(f"{BASE}/trades", json=trades[0])
-print(f"  {resp.status_code}: {resp.json()}")
+resp.json()  # {resp.status_code}
 
 # POST invalid data → 422 (Pydantic validation)
-print("\n=== POST invalid trade (validation error) ===")
 resp = httpx.post(f"{BASE}/trades", json={"trade_id": "TRD_X", "ticker": "", "side": "INVALID", "quantity": -1, "price": 0})
-print(f"  {resp.status_code}: {resp.json()['detail'][0]['msg']}")
+resp.json()['detail'][0]['msg']  # {resp.status_code}
 ```
 
-    === POST /trades ===
       409: {'detail': 'Trade TRD_001 already exists'}
       409: {'detail': 'Trade TRD_002 already exists'}
     
-    === POST duplicate trade (conflict) ===
       409: {'detail': 'Trade TRD_001 already exists'}
     
-    === POST invalid trade (validation error) ===
       422: String should have at least 1 character
 
 #### Test FastAPI GET and DELETE endpoints with httpx — list and cancel trades
@@ -619,26 +584,22 @@ print(f"  {resp.status_code}: {resp.json()['detail'][0]['msg']}")
 ```python
 # GET all trades and DELETE one
 
-print("=== GET /trades ===")
 resp = httpx.get(f"{BASE}/trades")
-print(f"  {resp.json()['count']} trades")
+resp.json()['count']  # trades
 
 # DELETE trade
-print("\n=== DELETE /trades/TRD_001 ===")
 resp = httpx.delete(f"{BASE}/trades/TRD_001")
-print(f"  {resp.status_code}: {resp.json()}")
+resp.json()  # {resp.status_code}
 
 # Verify deletion
 resp = httpx.get(f"{BASE}/trades")
-print(f"  Remaining trades: {resp.json()['count']}")
+resp.json()['count']  # Remaining trades
 ```
 
-    === GET /trades ===
       2 trades
     
-    === DELETE /trades/TRD_001 ===
       200: {'status': 'CANCELLED', 'trade_id': 'TRD_001'}
-      Remaining trades: 1
+    1
 
 #### uvicorn graceful shutdown — stop FastAPI server
 
@@ -778,12 +739,12 @@ class User(BaseModel):
 
 # Valid
 user = User(name="Alice", age=30, email="alice@example.com")
-print(f"Valid:   {user}")
-print(f"Dict:   {user.model_dump()}")
+user  # Valid
+user.model_dump()  # Dict
 
 # Coercion — string "25" becomes int 25
 user2 = User(name="Bob", age="25", email="bob@test.com")
-print(f"Coerced: {user2.age} (type: {type(user2.age).__name__})")
+user2.age, type(user2.age).__name__  # coerced value, type
 
 # Invalid — raises ValidationError
 try:
@@ -792,10 +753,10 @@ except Exception as e:
     print(f"Error:  {e.errors()[0]['msg']}")
 ```
 
-    Valid:   name='Alice' age=30 email='alice@example.com' active=True tags=[]
-    Dict:   {'name': 'Alice', 'age': 30, 'email': 'alice@example.com', 'active': True, 'tags': []}
-    Coerced: 25 (type: int)
-    Error:  Input should be a valid integer, unable to parse string as an integer
+    name='Alice' age=30 email='alice@example.com' active=True tags=[]
+    {'name': 'Alice', 'age': 30, 'email': 'alice@example.com', 'active': True, 'tags': []}
+    25 (type: int)
+    Input should be a valid integer, unable to parse string as an integer
 
 #### Field constraints — min, max, regex, Literal for value restrictions
 
@@ -817,7 +778,7 @@ class TradeOrder(BaseModel):
 
 # Valid order
 order = TradeOrder(trade_id="TRD_001", ticker="AAPL", side="BUY", quantity=100, price=178.50)
-print(f"Valid: {order}")
+order  # Valid
 
 # Invalid — ticker must be uppercase letters, quantity must be > 0
 for bad_data, label in [
@@ -834,7 +795,7 @@ for bad_data, label in [
         print(f"  {label}: REJECTED — {e.errors()[0]['msg']}")
 ```
 
-    Valid: trade_id='TRD_001' ticker='AAPL' side='BUY' quantity=100 price=178.5 notes=None
+    trade_id='TRD_001' ticker='AAPL' side='BUY' quantity=100 price=178.5 notes=None
       trade_id too short: REJECTED — String should have at least 3 characters
       ticker lowercase: REJECTED — String should match pattern '^[A-Z]+$'
       invalid side: REJECTED — Input should be 'BUY' or 'SELL'
@@ -884,7 +845,7 @@ cfg = PipelineConfig(
     name="daily_etl", source_table="raw.events", target_table="analytics.events_agg",
     batch_size=5000, start_date="2024-01-01", end_date="2024-03-15"
 )
-print(f"Valid: {cfg.name} | {cfg.source_table} -> {cfg.target_table}")
+cfg.name, cfg.source_table, cfg.target_table  # valid config
 
 # Invalid — various validation failures
 for bad, label in [
@@ -902,7 +863,7 @@ for bad, label in [
         print(f"  {label}: REJECTED — {msg}")
 ```
 
-    Valid: daily_etl | raw.events -> analytics.events_agg
+    daily_etl | raw.events -> analytics.events_agg
       non-snake_case name: REJECTED — Value error, name must be snake_case (lowercase + underscores)
       table without dataset: REJECTED — Value error, table must be dataset.table format (e.g. raw.events)
       end before start: REJECTED — Value error, end_date (2024-01-01) must be after start_date (2024-06-01)
@@ -950,9 +911,9 @@ order = MultiLegOrder(
         OrderLeg(ticker="MSFT", side="SELL", quantity=50, price=415.20),
     ]
 )
-print(f"Order: {order.order_id} | {order.strategy} | {len(order.legs)} legs | {order.status.value}")
-print(f"Legs:  {[(l.ticker, l.side, l.quantity) for l in order.legs]}")
-print(f"JSON:  {order.model_dump_json()[:100]}...")
+order.order_id, order.strategy, len(order.legs), order.status.value  # order summary
+[(l.ticker, l.side, l.quantity) for l in order.legs]  # legs
+order.model_dump_json()[:100]  # JSON preview
 
 # Invalid — PAIRS with 3 legs
 try:
@@ -965,9 +926,9 @@ except Exception as e:
     print(f"PAIRS+3 legs: REJECTED — {e.errors()[0]['msg']}")
 ```
 
-    Order: MLO_001 | PAIRS | 2 legs | pending
-    Legs:  [('AAPL', 'BUY', 100), ('MSFT', 'SELL', 50)]
-    JSON:  {"order_id":"MLO_001","strategy":"PAIRS","legs":[{"ticker":"AAPL","side":"BUY","quantity":100,"price...
+    MLO_001 | PAIRS | 2 legs | pending
+    [('AAPL', 'BUY', 100), ('MSFT', 'SELL', 50)]
+    {"order_id":"MLO_001","strategy":"PAIRS","legs":[{"ticker":"AAPL","side":"BUY","quantity":100,"price...
     PAIRS+3 legs: REJECTED — Value error, PAIRS strategy requires exactly 2 legs
 
 #### Serialization — `model_dump`, `model_dump_json`, and field aliases
@@ -993,31 +954,28 @@ class APIResponse(BaseModel):
 resp = APIResponse(pipeline_id="etl_daily", row_count=15000, status="success")
 
 # Serialize with aliases (camelCase for JSON API)
-print("by_alias=True (for API response):")
-print(f"  {resp.model_dump(by_alias=True)}")
+# Serialize with aliases (camelCase for JSON API)
+resp.model_dump(by_alias=True)  # by_alias=True (for API response)
 
 # Serialize with field names (for internal use)
-print("\nby_alias=False (for internal):")
-print(f"  {resp.model_dump()}")
+resp.model_dump()  # by_alias=False (for internal)
 
 # Exclude fields, include only specific fields
-print(f"\nexclude processed_at: {resp.model_dump(exclude={'processed_at'})}")
-print(f"include only status:  {resp.model_dump(include={'pipeline_id', 'status'})}")
+resp.model_dump(exclude={'processed_at'})  # exclude processed_at
+resp.model_dump(include={'pipeline_id', 'status'})  # include only status
 
 # JSON string output
-print(f"\nJSON: {resp.model_dump_json(by_alias=True, indent=2)}")
+resp.model_dump_json(by_alias=True, indent=2)  # JSON
 ```
 
-    by_alias=True (for API response):
-      {'pipelineId': 'etl_daily', 'rowCount': 15000, 'status': 'success', 'processed_at': datetime.datetime(2026, 3, 27, 21, 34, 48, 392382)}
+    {'pipelineId': 'etl_daily', 'rowCount': 15000, 'status': 'success', 'processed_at': datetime.datetime(2026, 3, 27, 21, 34, 48, 392382)}
     
-    by_alias=False (for internal):
-      {'pipeline_id': 'etl_daily', 'row_count': 15000, 'status': 'success', 'processed_at': datetime.datetime(2026, 3, 27, 21, 34, 48, 392382)}
+    {'pipeline_id': 'etl_daily', 'row_count': 15000, 'status': 'success', 'processed_at': datetime.datetime(2026, 3, 27, 21, 34, 48, 392382)}
     
-    exclude processed_at: {'pipeline_id': 'etl_daily', 'row_count': 15000, 'status': 'success'}
-    include only status:  {'pipeline_id': 'etl_daily', 'status': 'success'}
+    {'pipeline_id': 'etl_daily', 'row_count': 15000, 'status': 'success'}
+    {'pipeline_id': 'etl_daily', 'status': 'success'}
     
-    JSON: {
+    {
       "pipelineId": "etl_daily",
       "rowCount": 15000,
       "status": "success",
@@ -1041,7 +999,7 @@ class ImmutableConfig(BaseModel):
     ssl: bool = True
 
 cfg = ImmutableConfig(db_host="db.prod.internal")
-print(f"Config: {cfg}")
+cfg  # Config
 
 try:
     cfg.db_port = 9999   # frozen — can't modify
@@ -1064,13 +1022,13 @@ except Exception as e:
 
 # Strict: correct types work
 trade = StrictTrade(ticker="AAPL", quantity=100, price=178.5)
-print(f"Valid strict: {trade}")
+trade  # Valid strict
 ```
 
-    Config: db_host='db.prod.internal' db_port=5432 ssl=True
-    Frozen: Instance is frozen
-    Strict: Input should be a valid integer
-    Valid strict: ticker='AAPL' quantity=100 price=178.5
+    db_host='db.prod.internal' db_port=5432 ssl=True
+    Instance is frozen
+    Input should be a valid integer
+    ticker='AAPL' quantity=100 price=178.5
 
 #### JSON Schema generation — `model_json_schema()` for API docs
 
@@ -1083,11 +1041,9 @@ descriptions, and required/optional markers — no manual documentation needed.
 # FastAPI uses this automatically to build Swagger/OpenAPI docs
 
 schema = TradeOrder.model_json_schema()
-print("=== TradeOrder JSON Schema ===")
-print(json.dumps(schema, indent=2))
+json.dumps(schema, indent=2)
 ```
 
-    === TradeOrder JSON Schema ===
     {
       "properties": {
         "trade_id": {

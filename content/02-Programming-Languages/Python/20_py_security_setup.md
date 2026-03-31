@@ -74,10 +74,10 @@ WIF_PROVIDER = "github-provider"
 
 os.environ["GCP_SQL_PASSWORD"] = "EsgDev2026Pass1"
 
-print(f"  Project: {PROJECT_ID}  |  SA: {SA_EMAIL}")
+PROJECT_ID, SA_EMAIL  # project, service account
 ```
 
-      Project: seclab-dev-ap-26  |  SA: notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
+      seclab-dev-ap-26  |  notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
 
 ```python
 # Install all security, cloud and crypto packages needed throughout this notebook
@@ -984,7 +984,7 @@ conn = http.client.HTTPSConnection("api.ipify.org")
 conn.request("GET", "/")
 my_ip = conn.getresponse().read().decode().strip()
 conn.close()
-print(f"  Your public IP: {my_ip}")
+my_ip  # Your public IP
 
 subprocess.run(
     f"gcloud sql instances patch {SQL_INSTANCE} --project={PROJECT_ID} --authorized-networks={my_ip}/32 --quiet",
@@ -1011,12 +1011,12 @@ print("  Authorized")
 # Set credentials for Python client libraries.
 # Points to the SA key created earlier in this notebook.
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./gcp-sa-key.json"
-print(f"  Credentials: {os.environ['GOOGLE_APPLICATION_CREDENTIALS']}")
-print(f"  File exists: {os.path.exists(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])}")
+os.environ['GOOGLE_APPLICATION_CREDENTIALS']  # Credentials
+os.path.exists(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])  # File exists
 ```
 
       Credentials: ./gcp-sa-key.json
-      File exists: True
+      True
 
 #### google-cloud-storage Client — upload local data files to GCS
 
@@ -1090,7 +1090,6 @@ conn0 = pymssql.connect(server=SQL_IP, user="sqlserver", password=SQL_PASSWORD, 
 conn0.autocommit(True)
 cur0 = conn0.cursor()
 cur0.execute("IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'stoxx') CREATE DATABASE stoxx")
-print("  Database stoxx: ready")
 cur0.close(); conn0.close()
 
 # Step 2: create tables and bulk-load via bcp
@@ -1193,7 +1192,7 @@ table_id = f'{PROJECT_ID}.{BQ_DATASET}.bronze_ohlcv'
 job_config = bigquery.LoadJobConfig(write_disposition='WRITE_TRUNCATE')
 job = bq.load_table_from_dataframe(ohlcv_df, table_id, job_config=job_config)
 job.result()
-print(f'  Bronze: {job.output_rows} rows loaded into {table_id}')
+job.output_rows, table_id  # rows loaded, table
 
 # Bronze -> Silver (add daily returns)
 silver_sql = f'''
@@ -1473,7 +1472,7 @@ PROJECT_NUMBER = subprocess.check_output(
     'gcloud projects describe seclab-dev-ap-26 --format=value(projectNumber)',
     shell=True, text=True
 ).strip()
-print(f'  Project number: {PROJECT_NUMBER}')
+PROJECT_NUMBER  # Project number
 !gcloud iam service-accounts add-iam-policy-binding notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com --role="roles/iam.workloadIdentityUser" --member="principalSet://iam.googleapis.com/projects/{PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-pool/attribute.repository/alp78/security-lab"
 ```
 

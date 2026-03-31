@@ -72,31 +72,30 @@ import secrets as secrets_module
 from dotenv import load_dotenv
 
 print("  Library versions:")
-print(f"    google-auth:          {google.auth.__version__}")
-print(f"    google-cloud-kms:     {kms.__version__}")
-print(f"    google-cloud-storage: {storage.__version__}")
-print(f"    cryptography:         {cryptography.__version__}")
-print(f"    paramiko:             {paramiko.__version__}")
-print(f"    pyopenssl:            {OpenSSL.__version__}")
+google.auth.__version__  # google-auth
+kms.__version__  # google-cloud-kms
+storage.__version__  # google-cloud-storage
+cryptography.__version__  # cryptography
+paramiko.__version__  # paramiko
+OpenSSL.__version__  # pyopenssl
 ```
 
-      Library versions:
-        google-auth:          2.49.1
-        google-cloud-kms:     3.11.0
-        google-cloud-storage: 3.9.0
-        cryptography:         46.0.5
-        paramiko:             4.0.0
-        pyopenssl:            26.0.0
+      google-auth:          2.49.1
+      google-cloud-kms:     3.11.0
+      google-cloud-storage: 3.9.0
+      cryptography:         46.0.5
+      paramiko:             4.0.0
+      pyopenssl:            26.0.0
 
 #### python-dotenv load_dotenv — load .env configuration
 
 ```python
 # Load .env so all GCP config is available as env vars
 load_dotenv(override=True)
-print(f"  .env loaded: {os.path.exists('.env')}")
+os.path.exists('.env')  # .env loaded
 ```
 
-      .env loaded: True
+      True
 
 #### Define project constants
 
@@ -125,14 +124,14 @@ WIF_POOL         = "github-pool"
 WIF_PROVIDER     = "github-provider"
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = SA_KEY_PATH
-print(f"  Project:     {PROJECT_ID}")
-print(f"  SA:          {SA_EMAIL}")
+PROJECT_ID  # Project
+SA_EMAIL  # SA
 print(f"  Credentials: {SA_KEY_PATH} (exists: {os.path.exists(SA_KEY_PATH)})")
 ```
 
-      Project:     seclab-dev-ap-26
-      SA:          notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
-      Credentials: ./gcp-sa-key.json (exists: True)
+      seclab-dev-ap-26
+      notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
+      ./gcp-sa-key.json (exists: True)
 
 #### google-auth credentials.refresh — verify GCP authentication
 
@@ -147,14 +146,14 @@ credentials = service_account.Credentials.from_service_account_file(
 auth_request = google.auth.transport.requests.Request()
 credentials.refresh(auth_request)
 
-print(f"  Authenticated as:  {credentials.service_account_email}")
-print(f"  Token valid:       {credentials.valid}")
-print(f"  Token expiry:      {credentials.expiry}")
+credentials.service_account_email  # Authenticated as
+credentials.valid  # Token valid
+credentials.expiry  # Token expiry
 ```
 
-      Authenticated as:  notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
-      Token valid:       True
-      Token expiry:      2026-03-26 04:40:02.725789
+      notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
+      True
+      2026-03-26 04:40:02.725789
 
 ## Identity and Authentication
 
@@ -190,14 +189,14 @@ sa_credentials = service_account.Credentials.from_service_account_file(
     scopes=["https://www.googleapis.com/auth/cloud-platform"]
 )
 
-print(f"  SA email:    {sa_credentials.service_account_email}")
-print(f"  Project:     {sa_credentials.project_id}")
-print(f"  Scoped:      {sa_credentials.scopes}")
+sa_credentials.service_account_email  # SA email
+sa_credentials.project_id  # Project
+sa_credentials.scopes  # Scoped
 ```
 
-      SA email:    notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
-      Project:     seclab-dev-ap-26
-      Scoped:      ['https://www.googleapis.com/auth/cloud-platform']
+      notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
+      seclab-dev-ap-26
+      ['https://www.googleapis.com/auth/cloud-platform']
 
 #### google-auth credentials.with_scopes — restrict API access
 
@@ -210,14 +209,14 @@ readonly_creds = sa_credentials.with_scopes(readonly_scopes)
 auth_req = google.auth.transport.requests.Request()
 readonly_creds.refresh(auth_req)
 
-print(f"  Scopes:      {readonly_creds.scopes}")
-print(f"  Token valid: {readonly_creds.valid}")
+readonly_creds.scopes  # Scopes
+readonly_creds.valid  # Token valid
 print(f"  Token (first 20): {readonly_creds.token[:20]}...")
 ```
 
-      Scopes:      ['https://www.googleapis.com/auth/cloud-platform.read-only']
-      Token valid: True
-      Token (first 20): ya29.c.c0AZ4bNpZ6cVv...
+      ['https://www.googleapis.com/auth/cloud-platform.read-only']
+      True
+      ya29.c.c0AZ4bNpZ6cVv...
 
 #### google-cloud-resourcemanager ProjectsClient — list IAM roles
 
@@ -238,9 +237,9 @@ except Exception as e:
     !gcloud projects describe {PROJECT_ID} --format="value(name, projectId, lifecycleState)"
 ```
 
-      Project:  seclab-dev-ap-26
-      Name:     Security Lab
-      State:    ACTIVE
+      seclab-dev-ap-26
+      Security Lab
+      ACTIVE
 
 > **Security Note:** JSON key files are the **least secure** authentication method.
 > Risks: key leakage via git commits, no automatic rotation, no audit trail of key usage.
@@ -255,10 +254,9 @@ adc_credentials, adc_project = google.auth.default(
     scopes=["https://www.googleapis.com/auth/cloud-platform"]
 )
 
-print(f"  ADC credential type: {type(adc_credentials).__name__}")
-print(f"  ADC project:         {adc_project}")
+type(adc_credentials).__name__  # ADC credential type
+adc_project  # ADC project
 print(f"  Source:              GOOGLE_APPLICATION_CREDENTIALS={os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', 'not set')}")
-print()
 print("  ADC lookup chain:")
 print("    1. GOOGLE_APPLICATION_CREDENTIALS env var  ← ACTIVE (SA key file)")
 print("    2. gcloud CLI user credentials")
@@ -266,9 +264,9 @@ print("    3. Compute Engine metadata server")
 print("    4. Workload Identity Federation config")
 ```
 
-      ADC credential type: Credentials
-      ADC project:         seclab-dev-ap-26
-      Source:              GOOGLE_APPLICATION_CREDENTIALS=./gcp-sa-key.json
+      Credentials
+      seclab-dev-ap-26
+      GOOGLE_APPLICATION_CREDENTIALS=./gcp-sa-key.json
     
       ADC lookup chain:
         1. GOOGLE_APPLICATION_CREDENTIALS env var  ← ACTIVE (SA key file)
@@ -302,16 +300,16 @@ impersonated_creds = impersonated_credentials.Credentials(
 auth_req = google.auth.transport.requests.Request()
 impersonated_creds.refresh(auth_req)
 
-print(f"  Source identity:       {getattr(source_credentials, 'service_account_email', 'user')}")
-print(f"  Impersonating:         {impersonated_creds.service_account_email}")
-print(f"  Token valid:           {impersonated_creds.valid}")
-print(f"  Token expiry:          {impersonated_creds.expiry}")
+getattr(source_credentials, 'service_account_email', 'user')  # Source identity
+impersonated_creds.service_account_email  # Impersonating
+impersonated_creds.valid  # Token valid
+impersonated_creds.expiry  # Token expiry
 ```
 
-      Source identity:       notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
-      Impersonating:         notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
-      Token valid:           True
-      Token expiry:          2026-03-26 04:56:17
+      notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
+      notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
+      True
+      2026-03-26 04:56:17
 
 #### google-cloud-storage Client — list GCS buckets with impersonated credentials
 
@@ -348,13 +346,13 @@ short_token = token_response.access_token
 token_expiry = token_response.expire_time
 
 print(f"  Token (first 30):  {short_token[:30]}...")
-print(f"  Expires at:        {token_expiry}")
+token_expiry  # Expires at
 print(f"  Lifetime:          600 seconds")
 ```
 
-      Token (first 30):  ya29.c.c0AZ4bNpbofv3VOpJ9-P6A0...
-      Expires at:        2026-03-26 01:32:01+00:00
-      Lifetime:          600 seconds
+      ya29.c.c0AZ4bNpbofv3VOpJ9-P6A0...
+      2026-03-26 01:32:01+00:00
+      600 seconds
 
 #### requests + Bearer token — call GCP REST API with raw access token
 
@@ -376,10 +374,10 @@ else:
     print(f"  Error {response.status_code}: {response.text[:200]}")
 ```
 
-      Bucket:       seclab-dev-ap-26-data
-      Location:     EUROPE-WEST1
-      Storage class: STANDARD
-      Encryption:   projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key
+      seclab-dev-ap-26-data
+      EUROPE-WEST1
+      STANDARD
+        projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key
 
 #### Workload Identity Federation — GitHub Actions OIDC flow
 
@@ -387,12 +385,11 @@ Workload Identity Federation allows external identities (GitHub, AWS, Azure) to 
 
 ```python
 print("  Workload Identity Federation Configuration:")
-print(f"    Pool:           {WIF_POOL}")
-print(f"    Provider:       {WIF_PROVIDER}")
+WIF_POOL  # Pool
+WIF_PROVIDER  # Provider
 print(f"    Issuer:         https://token.actions.githubusercontent.com")
-print(f"    Target SA:      {SA_EMAIL}")
-print(f"    Bound repo:     {GITHUB_REPO}")
-print()
+SA_EMAIL  # Target SA
+GITHUB_REPO  # Bound repo
 
 
 # Verify the pool exists
@@ -422,14 +419,14 @@ else:
 ```
 
       Workload Identity Federation Configuration:
-        Pool:           github-pool
-        Provider:       github-provider
-        Issuer:         https://token.actions.githubusercontent.com
-        Target SA:      notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
-        Bound repo:     alp78/security-lab
+      github-pool
+      github-provider
+        https://token.actions.githubusercontent.com
+      notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
+      alp78/security-lab
     
-      Pool:     GitHub Actions Pool	ACTIVE
-      Provider: ACTIVE
+      GitHub Actions Pool	ACTIVE
+      ACTIVE
 
 #### GitHub Actions workflow for Workload Identity Federation
 
@@ -472,7 +469,7 @@ jobs:
             'SELECT COUNT(*) as rows FROM `{PROJECT_ID}.{BQ_DATASET}.gold_scores`'
 """
 
-print(wif_workflow)
+wif_workflow
 
 # Save to file for reference
 Path("wif-demo-workflow.yml").write_text(wif_workflow.strip())
@@ -492,27 +489,27 @@ print("  Saved to: wif-demo-workflow.yml")
       gcp-auth:
         runs-on: ubuntu-latest
         steps:
-          - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
     
-          - id: auth
+      - id: auth
             name: Authenticate to GCP via Workload Identity Federation
             uses: google-github-actions/auth@v2
             with:
               project_id: seclab-dev-ap-26
               workload_identity_provider: >-
-                projects/922174528852/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+      projects/922174528852/locations/global/workloadIdentityPools/github-pool/providers/github-provider
               service_account: notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
     
-          - name: Verify GCP access
+      - name: Verify GCP access
             run: |
-              gcloud auth list
-              gcloud projects describe seclab-dev-ap-26
+      gcloud auth list
+      gcloud projects describe seclab-dev-ap-26
               gcloud storage ls gs://seclab-dev-ap-26-data
     
-          - name: Query BigQuery
+      - name: Query BigQuery
             run: |
-              bq query --use_legacy_sql=false \
-                'SELECT COUNT(*) as rows FROM `seclab-dev-ap-26.index_data.gold_scores`'
+      bq query --use_legacy_sql=false \
+      'SELECT COUNT(*) as rows FROM `seclab-dev-ap-26.index_data.gold_scores`'
     
       Saved to: wif-demo-workflow.yml
 
@@ -558,14 +555,12 @@ print("  JWT Header:")
 for k, v in header.items():
     print(f"    {k}: {v}")
 
-print()
 print("  JWT Payload (claims):")
 for k, v in payload.items():
     if k in ("iat", "exp"):
         v = f"{v} ({datetime.datetime.fromtimestamp(v, tz=datetime.timezone.utc).isoformat()})"
     print(f"    {k}: {v}")
 
-print()
 print("  Key differences:")
 print("    ID Token:     iss, sub, aud, email, exp — identity assertion")
 print("    Access Token: scope-based, opaque string — API authorization")
@@ -678,7 +673,7 @@ response = sm_client.access_secret_version(name=version_path)
 
 print(f"  Secret:   test-api-key")
 print(f"  Version:  1")
-print(f"  State:    {response.name}")
+response.name  # State
 print(f"  Created:  {response.payload.data.decode('utf-8')[:8]}...")
 ```
 
@@ -760,8 +755,8 @@ version = sm_client.add_secret_version(
     payload=SecretPayload(data=new_password.encode("utf-8"))
 )
 
-print(f"  New version:   {version.name.split("/")[-1]}")
-print(f"  State:         {version.state.name}")
+version.name.split("/")[-1]  # New version
+version.state.name  # State
 print(f"  Value (first 8): {new_password[:8]}...")
 ```
 
@@ -855,7 +850,6 @@ cache = SecretCache(ttl_seconds=60)
 api_key = cache.get("test-api-key")
 print(f"  Cached secret (first 8): {api_key[:8]}...")
 print(f"  Cache TTL:               60 seconds")
-print()
 print("  ✗ Anti-pattern: NEVER hardcode secrets in source code")
 print('    password = "SecLabPass2026"  # ← WRONG')
 print('    password = cache.get("db-password")  # ← CORRECT')
@@ -918,8 +912,8 @@ encrypt_response = kms_client.encrypt(
 )
 
 ciphertext = encrypt_response.ciphertext
-print(f"  Key:              {KMS_KEY}")
-print(f"  Plaintext:        {plaintext.decode()}")
+KMS_KEY  # Key
+plaintext.decode()  # Plaintext
 print(f"  Ciphertext (b64): {base64.b64encode(ciphertext)[:60].decode()}...")
 print(f"  Ciphertext size:  {len(ciphertext)} bytes")
 ```
@@ -940,8 +934,8 @@ decrypt_response = kms_client.decrypt(
 )
 
 decrypted = decrypt_response.plaintext
-print(f"  Decrypted:        {decrypted.decode()}")
-print(f"  Match:            {decrypted == plaintext}")
+decrypted.decode()  # Decrypted
+decrypted == plaintext  # Match
 ```
 
       Decrypted:        Sensitive financial data: EUROSTOXX50 daily returns
@@ -970,7 +964,6 @@ print(f"  Wrapped DEK:      {len(wrapped_dek)} bytes")
 
 # Store: encrypted_data + nonce + wrapped_dek
 # To decrypt: unwrap DEK with KMS → decrypt data locally
-print()
 print("  Envelope encryption result:")
 print(f"    Encrypted data:  {len(encrypted_data)} bytes")
 print(f"    Nonce:           {len(nonce)} bytes")
@@ -1000,9 +993,9 @@ recovered_dek = unwrap_response.plaintext
 aesgcm = AESGCM(recovered_dek)
 recovered_data = aesgcm.decrypt(nonce, encrypted_data, None)
 
-print(f"  DEK recovered:    {recovered_dek == dek}")
+recovered_dek == dek  # DEK recovered
 print(f"  Data decrypted:   {len(recovered_data)} bytes")
-print(f"  Data matches:     {recovered_data == large_data}")
+recovered_data == large_data  # Data matches
 ```
 
       DEK recovered:    True
@@ -1017,7 +1010,7 @@ print(f"  Data matches:     {recovered_data == large_data}")
 sizes = [1024, 10_240, 64_000]
 
 print(f"  {'Size':>10s}  {'Encrypt (ms)':>12s}  {'Decrypt (ms)':>12s}")
-print(f"  {'─'*10}  {'─'*12}  {'─'*12}")
+'─'*10}  {'─'*12}  {'─'*12
 
 for size in sizes:
     payload = os.urandom(min(size, 64000))
@@ -1034,15 +1027,14 @@ for size in sizes:
 
     print(f"  {size:>10,d}  {t_enc:>12.1f}  {t_dec:>12.1f}")
 
-print()
 print("  Note: >64KB payloads require envelope encryption (local DEK + KMS wrap)")
 ```
 
-            Size  Encrypt (ms)  Decrypt (ms)
+      Size  Encrypt (ms)  Decrypt (ms)
       ──────────  ────────────  ────────────
-           1,024          72.2          65.2
-          10,240          75.7          74.9
-          64,000         139.9         133.2
+      1,024          72.2          65.2
+      10,240          75.7          74.9
+      64,000         139.9         133.2
     
       Note: >64KB payloads require envelope encryption (local DEK + KMS wrap)
 
@@ -1069,7 +1061,7 @@ print(f"  Uploaded:          encrypted/csv/dim_index.csv.enc ({len(enc_response.
 print(f"  Double encrypted:  client-side KMS + server-side CMEK")
 ```
 
-      Source file:       bronze/csv/dim_index.csv (247 bytes)
+      bronze/csv/dim_index.csv (247 bytes)
       Uploaded:          encrypted/csv/dim_index.csv.enc (330 bytes)
       Double encrypted:  client-side KMS + server-side CMEK
 
@@ -1085,8 +1077,7 @@ recovered_content = dec_response.plaintext
 
 print(f"  Downloaded:        {len(encrypted_content)} bytes (encrypted)")
 print(f"  Decrypted:         {len(recovered_content)} bytes")
-print(f"  Content matches:   {recovered_content == original_data}")
-print()
+recovered_content == original_data  # Content matches
 print("  First 3 lines:")
 for line in recovered_content.decode().split("\n")[:3]:
     print(f"    {line}")
@@ -1110,13 +1101,12 @@ for line in recovered_content.decode().split("\n")[:3]:
 key_name_full = kms_client.crypto_key_path(PROJECT_ID, KMS_LOCATION, KMS_KEYRING, KMS_KEY)
 
 key = kms_client.get_crypto_key(name=key_name_full)
-print(f"  Key:             {KMS_KEY}")
-print(f"  Purpose:         {key.purpose.name}")
-print(f"  Primary version: {key.primary.name.split('/')[-1]}")
-print(f"  Algorithm:       {key.primary.algorithm.name}")
-print(f"  Protection:      {key.primary.protection_level.name}")
-print(f"  Created:         {key.primary.create_time}")
-print()
+KMS_KEY  # Key
+key.purpose.name  # Purpose
+key.primary.name.split('/')[-1]  # Primary version
+key.primary.algorithm.name  # Algorithm
+key.primary.protection_level.name  # Protection
+key.primary.create_time  # Created
 
 # List all versions
 versions = kms_client.list_crypto_key_versions(parent=key_name_full)
@@ -1152,15 +1142,14 @@ else:
     print(f"  Bucket:           {BUCKET_NAME}")
     print(f"  Encryption:       Google-managed (default)")
 
-print()
 print("  Encryption comparison:")
 print("    Google-default: Google manages the key — zero config, no control")
 print("    CMEK:           You manage the key in KMS — control rotation, disable, destroy")
 print("    CSEK:           You supply the key in each request — max control, max risk")
 ```
 
-      Bucket:           seclab-dev-ap-26-data
-      Encryption:       CMEK (Customer-Managed)
+      seclab-dev-ap-26-data
+      CMEK (Customer-Managed)
       Default KMS key:  projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key
     
       Encryption comparison:
@@ -1228,16 +1217,15 @@ except Exception as e:
 # OS Login centralizes SSH key management — no need to edit authorized_keys on each VM
 # List all SSH keys registered with OS Login for the current user
 !gcloud compute os-login ssh-keys list --format="table(fingerprint, key.len())"
-print()
 print("  OS Login vs metadata SSH keys:")
 print("    OS Login:    centralized, tied to Google identity, auto-managed")
 print("    Metadata:    per-VM or project-wide, manual management, legacy")
 ```
 
     FINGERPRINT  FINGERPRINT
-                 64
-                 64
-                 64
+      64
+      64
+      64
     
       OS Login vs metadata SSH keys:
         OS Login:    centralized, tied to Google identity, auto-managed
@@ -1279,7 +1267,6 @@ gcloud compute ssh notebook-vm --zone=europe-west1-b --tunnel-through-iap
 # VMs authenticate to GCP via the metadata server — no key file needed
 # The metadata server provides access tokens for the VM's attached service account
 print("  VM metadata server endpoints (accessible from inside the VM):")
-print()
 endpoints = {
     "Access token":    "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token",
     "SA email":        "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email",
@@ -1292,7 +1279,6 @@ endpoints = {
 for name, url in endpoints.items():
     print(f"  {name:20s} → {url}")
 
-print()
 print("  Usage from inside the VM:")
 print('    curl -H "Metadata-Flavor: Google" \\')
 print('      "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"')
@@ -1310,7 +1296,7 @@ print('      "http://metadata.google.internal/computeMetadata/v1/instance/servic
     
       Usage from inside the VM:
         curl -H "Metadata-Flavor: Google" \
-          "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"
+      "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"
 
 #### google-cloud-compute FirewallsClient — audit permissive firewall rules
 
@@ -1322,7 +1308,7 @@ firewalls = compute_client.list(project=PROJECT_ID)
 
 print(f"  Firewall rules for {PROJECT_ID}:")
 print(f"  {'Name':25s} {'Direction':10s} {'Action':8s} {'Source Ranges':25s} {'Ports':20s} {'Warning':10s}")
-print(f"  {'─'*25} {'─'*10} {'─'*8} {'─'*25} {'─'*20} {'─'*10}")
+'─'*25} {'─'*10} {'─'*8} {'─'*25} {'─'*20} {'─'*10
 
 for fw in firewalls:
     source_ranges = ", ".join(fw.source_ranges) if fw.source_ranges else "—"
@@ -1337,7 +1323,6 @@ for fw in firewalls:
 
     print(f"  {fw.name:25s} {fw.direction:10s} {'ALLOW':8s} {source_ranges:25s} {ports_str:20s} {warning}")
 
-print()
 print("  ⚠️ Rules with 0.0.0.0/0 allow traffic from ANY IP — restrict in production")
 ```
 
@@ -1389,7 +1374,7 @@ Cloud SQL only accepts connections from authorized IPs. This cell detects your p
 
 ```python
 my_ip = http_requests.get("https://api.ipify.org").text.strip()
-print(f"  Your public IP: {my_ip}")
+my_ip  # Your public IP
 
 subprocess.run(
     f"gcloud sql instances patch {SQL_INSTANCE} --project={PROJECT_ID} --authorized-networks={my_ip}/32 --quiet",
@@ -1579,10 +1564,8 @@ curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/clou
 # List authorized networks (IP addresses allowed to connect)
 # Only IPs in this list can reach the public IP of the SQL instance
 !gcloud sql instances describe {SQL_INSTANCE} --format="yaml(settings.ipConfiguration)"
-print()
 print("  To add your current IP:")
 print(f"    gcloud sql instances patch {SQL_INSTANCE} --authorized-networks=YOUR_IP/32")
-print()
 print("  ⚠️ Never use 0.0.0.0/0 — it allows connections from any IP on the internet")
 ```
 
@@ -1609,7 +1592,6 @@ Check if the instance uses CMEK or Google-default encryption for data at rest. E
 
 ```python
 !gcloud sql instances describe {SQL_INSTANCE} --format="yaml(diskEncryptionConfiguration, diskEncryptionStatus)"
-print()
 print("  (empty = Google-default encryption, not CMEK)")
 ```
 
@@ -1679,7 +1661,7 @@ print(results.to_string(index=False))
 
       BigQuery query via impersonation:
      total_rows  best_rank  worst_rank
-             50          1          50
+      50          1          50
 
 #### google-cloud-kms + BigQuery — column-level encryption before insert
 
@@ -1762,7 +1744,7 @@ for _, row in results.iterrows():
 
 # Cleanup
 bq_client.delete_table(table_id, not_found_ok=True)
-print(f"  Cleaned up: {table_id}")
+table_id  # Cleaned up
 ```
 
       Decrypted data:
@@ -1777,9 +1759,8 @@ print(f"  Cleaned up: {table_id}")
 # Check encryption settings on the BigQuery dataset and tables
 dataset = bq_client.get_dataset(f"{PROJECT_ID}.{BQ_DATASET}")
 
-print(f"  Dataset: {BQ_DATASET}")
-print(f"  Default encryption: {dataset.default_encryption_configuration or 'Google-managed'}")
-print()
+BQ_DATASET  # Dataset
+dataset.default_encryption_configuration or 'Google-managed'  # Default encryption
 
 # Check table-level encryption
 tables = list(bq_client.list_tables(f"{PROJECT_ID}.{BQ_DATASET}"))
@@ -1854,7 +1835,7 @@ docs = fs_client.collection("scores_latest").order_by("composite_rank").limit(5)
 
 print(f"  Top 5 scores from Firestore ({FIRESTORE_DB}):")
 print(f"  {'Symbol':12s} {'Close':>10s} {'Rank':>6s} {'Momentum':>10s}")
-print(f"  {'─'*12} {'─'*10} {'─'*6} {'─'*10}")
+'─'*12} {'─'*10} {'─'*6} {'─'*10
 
 for doc in docs:
     d = doc.to_dict()
@@ -1893,7 +1874,7 @@ print(f"  Written: DEMO_STOCK to scores_latest")
 
 # Read it back
 doc = fs_client.collection("scores_latest").document("DEMO_STOCK").get()
-print(f"  Verified: {doc.to_dict()['symbol']} rank={doc.to_dict()['composite_rank']}")
+doc.to_dict()['symbol'], doc.to_dict()['composite_rank']  # verified: symbol, rank
 ```
 
       Written: DEMO_STOCK to scores_latest
@@ -1913,8 +1894,8 @@ doc_ref.update({
 
 updated = doc_ref.get().to_dict()
 print(f"  Updated DEMO_STOCK:")
-print(f"    close:        {updated['close']}")
-print(f"    daily_return: {updated['daily_return']}")
+updated['close']  # close
+updated['daily_return']  # daily_return
 print(f"    created_by:   {updated['created_by']}  ← preserved from original")
 ```
 
@@ -1986,10 +1967,10 @@ dec_notes = kms_client.decrypt(
 ).plaintext.decode()
 
 print(f"  Decrypted document: encrypted_positions/AAPL")
-print(f"    symbol:       {data['symbol']}")
-print(f"    portfolio_id: {dec_portfolio}")
-print(f"    position:     {data['position_size']:,.2f}")
-print(f"    risk_notes:   {dec_notes}")
+data['symbol']  # symbol
+dec_portfolio  # portfolio_id
+data['position_size']:,.2f  # position
+dec_notes  # risk_notes
 ```
 
       Decrypted document: encrypted_positions/AAPL
@@ -2023,7 +2004,7 @@ fs_client.collection("access_test").document("iam_demo").set({
 })
 doc = fs_client.collection("access_test").document("iam_demo").get()  # type: ignore[union-attr]
 print(f"  Write + read with SA: OK")
-print(f"  Data: {doc.to_dict()}")  # type: ignore[union-attr]
+doc.to_dict()  # type: ignore[union-attr]
 ```
 
       Write + read with SA: OK
@@ -2066,7 +2047,7 @@ r = subprocess.run(
      "--format=value(name,type)"],
     capture_output=True, text=True, shell=True
 )
-print(f"  Database: {r.stdout.strip()}")
+r.stdout.strip()  # Database
 
 # Check SA roles
 r2 = subprocess.run(
@@ -2128,18 +2109,18 @@ blob.upload_from_string(test_content, content_type="text/csv")
 blob.reload()
 print(f"  Uploaded:          security-demo/test_upload.csv")
 print(f"  Size:              {blob.size} bytes")
-print(f"  KMS key:           {blob.kms_key_name or 'Google-managed'}")
-print(f"  Content type:      {blob.content_type}")
-print(f"  Storage class:     {blob.storage_class}")
-print(f"  CRC32C:            {blob.crc32c}")
-print(f"  MD5:               {blob.md5_hash}")
+blob.kms_key_name or 'Google-managed'  # KMS key
+blob.content_type  # Content type
+blob.storage_class  # Storage class
+blob.crc32c  # CRC32C
+blob.md5_hash  # MD5
 ```
 
       Uploaded:          security-demo/test_upload.csv
       Size:              46 bytes
       KMS key:           projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key/cryptoKeyVersions/1
       Content type:      text/csv
-      Storage class:     STANDARD
+      STANDARD
       CRC32C:            Z58l3A==
       MD5:               DZTKSZ2pzrW0OKa+1XDM9A==
 
@@ -2171,14 +2152,14 @@ blob_key.upload_from_string(wrapped_key)
 
 print(f"  Encrypted file:    confidential.enc ({len(encrypted_data)} bytes)")
 print(f"  Wrapped key:       confidential.key ({len(wrapped_key)} bytes)")
-print(f"  Nonce:             {base64.b64encode(nonce).decode()}")
+base64.b64encode(nonce).decode()  # Nonce
 print(f"  Encryption:        AES-256-GCM (client) + CMEK (server)")
 ```
 
       Encrypted file:    confidential.enc (71 bytes)
       Wrapped key:       confidential.key (113 bytes)
       Nonce:             46KNSAuwqqS34IEe
-      Encryption:        AES-256-GCM (client) + CMEK (server)
+      AES-256-GCM (client) + CMEK (server)
 
 #### cryptography AESGCM — download and decrypt client-side encrypted file
 
@@ -2198,8 +2179,8 @@ recovered_key = kms_client.decrypt(name=key_name, ciphertext=wrapped).plaintext
 aesgcm = AESGCM(recovered_key)
 recovered_data = aesgcm.decrypt(stored_nonce, enc_data, None)
 
-print(f"  Decrypted: {recovered_data.decode()}")
-print(f"  Match:     {recovered_data == plaintext_data}")
+recovered_data.decode()  # Decrypted
+recovered_data == plaintext_data  # Match
 ```
 
       Decrypted: Confidential: Q4 portfolio allocations and risk metrics
@@ -2231,9 +2212,8 @@ print(f"  Uploaded with CSEK: csek_test.txt")
 # Download with same CSEK key
 blob_csek_dl = bucket.blob("security-demo/csek_test.txt", encryption_key=csek_key)
 content = blob_csek_dl.download_as_string()
-print(f"  Downloaded with CSEK: {content.decode()}")
+content.decode()  # Downloaded with CSEK
 
-print()
 print("  ⚠️ CSEK risk: if you lose this key, the data is IRRECOVERABLE")
 print("  Google does not store CSEK keys — you must manage them yourself")
 ```
@@ -2268,13 +2248,12 @@ signed_url = blob_to_sign.generate_signed_url(
 print(f"  Signed URL for bronze/csv/dim_index.csv:")
 print(f"    {signed_url[:100]}...")
 print(f"    Expires in: 15 minutes")
-print()
 
 # Access the signed URL with no authentication
 response = http_requests.get(signed_url)
-print(f"  GET response: {response.status_code}")
+response.status_code  # GET response
 print(f"  Content size: {len(response.content)} bytes")
-print(f"  First line:   {response.text.split(chr(10))[0]}")
+response.text.split(chr(10))[0]  # First line
 ```
 
       Signed URL for bronze/csv/dim_index.csv:
@@ -2307,12 +2286,12 @@ response = http_requests.put(
 )
 
 print(f"  Signed upload URL generated (expires in 15 min)")
-print(f"  PUT response:  {response.status_code}")
+response.status_code  # PUT response
 
 # Verify the upload
 uploaded_blob = bucket.blob("security-demo/signed_upload_test.txt")
 content = uploaded_blob.download_as_string()
-print(f"  Verified:      {content.decode()}")
+content.decode()  # Verified
 ```
 
       Signed upload URL generated (expires in 15 min)
@@ -2326,8 +2305,7 @@ print(f"  Verified:      {content.decode()}")
 bucket_iam = bucket.get_iam_policy(requested_policy_version=3)
 
 print(f"  IAM policy for gs://{BUCKET_NAME}:")
-print(f"  Version: {bucket_iam.version}")
-print()
+bucket_iam.version  # Version
 for binding in bucket_iam.bindings:
     print(f"  Role: {binding['role']}")
     for member in binding['members']:
@@ -2378,7 +2356,7 @@ print(f"     Secret: db-password, length: {len(db_pw)} chars")
 ```
 
       1. DB password retrieved from Secret Manager
-         Secret: db-password, length: 15 chars
+      Secret: db-password, length: 15 chars
 
 #### Step 2 — Query BigQuery with SA authentication
 
@@ -2414,11 +2392,11 @@ print(bq_data.to_string(index=False))
 data_json = bq_data.to_json()
 enc_data = kms_client.encrypt(name=key_name, plaintext=data_json.encode()).ciphertext
 print(f"  3. Encrypted with KMS: {len(data_json)} bytes plaintext → {len(enc_data)} bytes ciphertext")
-print(f"     Key: {KMS_KEYRING}/{KMS_KEY}")
+KMS_KEYRING, KMS_KEY  # keyring, key
 ```
 
       3. Encrypted with KMS: 185 bytes plaintext → 268 bytes ciphertext
-         Key: notebook-keyring/notebook-encrypt-key
+      Key: notebook-keyring/notebook-encrypt-key
 
 #### Step 4 — Store encrypted results in Firestore
 
@@ -2439,7 +2417,7 @@ print(f"     Collection: pipeline_results, doc: latest_run")
 ```
 
       4. Written encrypted results to Firestore
-         Collection: pipeline_results, doc: latest_run
+      Collection: pipeline_results, doc: latest_run
 
 #### Step 5 — Archive encrypted data to CMEK-encrypted GCS
 
@@ -2451,13 +2429,12 @@ pipeline_blob.upload_from_string(enc_data)
 print("  5. Uploaded to CMEK-encrypted GCS bucket")
 print(f"     Path: gs://{BUCKET_NAME}/pipeline/latest_scores.enc")
 print(f"     Size: {len(enc_data)} bytes")
-print()
 print("  Pipeline complete: SA-authenticated + KMS-encrypted + audit-logged")
 ```
 
       5. Uploaded to CMEK-encrypted GCS bucket
-         Path: gs://seclab-dev-ap-26-data/pipeline/latest_scores.enc
-         Size: 268 bytes
+      Path: gs://seclab-dev-ap-26-data/pipeline/latest_scores.enc
+      Size: 268 bytes
     
       Pipeline complete: SA-authenticated + KMS-encrypted + audit-logged
 
@@ -2468,7 +2445,6 @@ print("  Pipeline complete: SA-authenticated + KMS-encrypted + audit-logged")
 # Cloud SQL, HTTPS endpoints, and other services use Google-managed certificates
 
 print("  Certificate chain for googleapis.com:")
-print()
 
 try:
     # Fetch the certificate chain from a Google API endpoint
@@ -2497,7 +2473,6 @@ except Exception as e:
     print(f"  Certificate inspection: {e}")
     print("  This may fail in restricted network environments")
 
-print()
 print("  GCP certificate chain:")
 print("    Root CA:        Google Trust Services (GTS Root R1-R4)")
 print("    Intermediate:   GTS CA 1C3 / 1D4")
@@ -2588,7 +2563,7 @@ except Exception as e:
 # Stop the SQL Server instance to avoid charges when not in use
 # It takes ~2 minutes to stop and ~5 minutes to restart
 !gcloud sql instances patch {SQL_INSTANCE} --activation-policy=NEVER --quiet
-print(f"  Stopped: {SQL_INSTANCE}")
+SQL_INSTANCE  # Stopped
 print(f"  Restart: gcloud sql instances patch {SQL_INSTANCE} --activation-policy=ALWAYS")
 ```
 
@@ -2597,7 +2572,7 @@ print(f"  Restart: gcloud sql instances patch {SQL_INSTANCE} --activation-policy
 ```python
 # Stop the VM to avoid compute charges (disk charges still apply)
 !gcloud compute instances stop {VM_NAME} --zone={ZONE} --quiet
-print(f"  Stopped: {VM_NAME}")
+VM_NAME  # Stopped
 print(f"  Restart: gcloud compute instances start {VM_NAME} --zone={ZONE}")
 ```
 

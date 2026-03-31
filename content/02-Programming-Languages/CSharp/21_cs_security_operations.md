@@ -44,8 +44,6 @@ optionsField.SetValue(csharpKernel, newOptions);
 
 ```
 
-      WarningLevel set to 0
-
 ```csharp
 #r "nuget: Google.Cloud.SecretManager.V1"
 #r "nuget: Google.Cloud.Kms.V1"
@@ -92,16 +90,12 @@ using DotNetEnv;
 
 ```
 
-      Namespaces loaded
-
 #### Load environment variables from .env
 
 ```csharp
 // Load .env file so all GCP config is available
 DotNetEnv.Env.Load();
 ```
-
-      .env loaded: True
 
 #### Define project constants
 

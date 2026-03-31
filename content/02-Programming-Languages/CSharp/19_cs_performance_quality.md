@@ -188,7 +188,6 @@ $"PointClass[100K]: {(after - before) / 1024.0:F0} KB"
 
     PointStruct[100K]: 789 KB
     PointClass[100K]:  3150 KB
-    Struct is significantly smaller (no object header, no GC tracking).
 
 ## Span<T> & Zero-Allocation Patterns
 
@@ -372,8 +371,8 @@ try {
 }
 ```
 
-    Valid email: alice@example.com
-    Caught: Invalid email
+    alice@example.com
+    Invalid email
 
 ## Nullable Reference Types & Static Analysis
 
@@ -417,9 +416,9 @@ string? result = maybeName?.ToUpper()?.Trim();
 result ?? "(null)"  // chained
 ```
 
-    Safe name: Unknown, length: 0
-    It's a string: HELLO
-    Chained: (null)
+    Unknown, length: 0
+    HELLO
+    (null)
 
 ## LINQ Performance Pitfalls
 
@@ -464,7 +463,7 @@ MeasureTime(() => {
 
       [OrderBy().First()] 0.97ms
       [Max()] 1.39ms
-    Materialized: 50000 items
+    50000
       [LINQ chain] 3.47ms
       [Manual loop] 0.46ms
 

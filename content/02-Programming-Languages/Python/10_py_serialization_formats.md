@@ -70,7 +70,6 @@ tmp_dir = Path(tempfile.mkdtemp(prefix="parquet_"))
 ```python
 # Write parquet from Arrow table — column-oriented creation
 
-print("=== Write parquet from Arrow table ===")
 # Data Engineering scenario: write pipeline output to a parquet file in a data lake.
 
 # Step 1: Define the schema (column names and types)
@@ -98,34 +97,29 @@ parquet_file = tmp_dir / "events.parquet"
 pq.write_table(table, parquet_file, compression="snappy")
 #   compression options: 'snappy' (default, fast), 'gzip' (smaller), 'zstd' (best ratio), 'none'
 
-print(f"  Written: {parquet_file.name}")
-print(f"  Size: {parquet_file.stat().st_size} bytes (compressed)")
-print(f"  Rows: {table.num_rows}, Columns: {table.num_columns}")
+parquet_file.name  # Written
+f"{parquet_file.stat().st_size} bytes (compressed)"  # Size
+f"Rows: {table.num_rows}, Columns: {table.num_columns}"
 
 # ─────────────────────────────────────────────
 # READ PARQUET
 # ─────────────────────────────────────────────
 ```
 
-    === Write parquet from Arrow table ===
-      Written: events.parquet
-      Size: 1594 bytes (compressed)
-      Rows: 5, Columns: 5
+    events.parquet
+    1594 bytes (compressed)
+    Rows: 5, Columns: 5
 
 #### pyarrow pq.read_table — read entire Parquet file
 
 ```python
 # Read entire parquet file — schema discovery and full table load
 
-print("\n=== Read entire parquet file ===")
-
 table_read = pq.read_table(parquet_file)  # returns an Arrow table
-print(f"  Schema:\n{table_read.schema}")
-print(f"\n  Data:\n{table_read.to_pandas()}")  # convert to pandas DataFrame for display
+f"Schema:\n{table_read.schema}"
+f"Data:\n{table_read.to_pandas()}"  # convert to pandas DataFrame for display
 ```
 
-    
-    === Read entire parquet file ===
       Schema:
     event_id: string
     event_type: string
@@ -146,21 +140,18 @@ print(f"\n  Data:\n{table_read.to_pandas()}")  # convert to pandas DataFrame for
 ```python
 # Column pruning — read only selected columns from parquet
 
-print("\n=== Column pruning (read only selected columns) ===")
 # Data Engineering key feature: only read the columns you need.
 # On a 100-column table, this can be 50x faster than CSV.
 
 partial = pq.read_table(parquet_file, columns=["event_id", "revenue"])
-print(f"  Columns read: {partial.column_names}")
-print(f"  Revenue total: {partial.column('revenue').to_pylist()}")  # Arrow column → Python list
-print(f"  Sum: {sum(partial.column('revenue').to_pylist()):.2f}")
+partial.column_names  # Columns read
+partial.column('revenue').to_pylist()  # Revenue total — Arrow column → Python list
+f"{sum(partial.column('revenue').to_pylist()):.2f}"  # Sum
 ```
 
-    
-    === Column pruning (read only selected columns) ===
-      Columns read: ['event_id', 'revenue']
-      Revenue total: [0.0, 49.99, 0.0, 0.0, 129.99]
-      Sum: 179.98
+    ['event_id', 'revenue']
+    [0.0, 49.99, 0.0, 0.0, 129.99]
+    179.98
 
 #### pyarrow pq.read_table filters= — predicate pushdown
 
@@ -171,15 +162,15 @@ filtered = pq.read_table(
     parquet_file,
     filters=[("event_type", "==", "purchase")]
 )
-print(f"  Purchases only ({filtered.num_rows} rows):")
-print(f"  {filtered.to_pandas()}")
+f"Purchases only ({filtered.num_rows} rows):"
+f"{filtered.to_pandas()}"
 
 # Metadata — read schema and row count without loading data (instant, even for huge files)
 meta = pq.read_metadata(parquet_file)
-print(f"Rows: {meta.num_rows}, Columns: {meta.num_columns}, Row groups: {meta.num_row_groups}")
+f"Rows: {meta.num_rows}, Columns: {meta.num_columns}, Row groups: {meta.num_row_groups}"
 
 schema_read = pq.read_schema(parquet_file)
-print(f"  Schema:")
+# Schema
 for i, field in enumerate(schema_read):
     print(f"    [{i}] {field.name}: {field.type}")
 ```
@@ -208,21 +199,20 @@ pq.write_to_dataset(
     partition_cols=["event_type"],
 )
 
-print("  Partitioned dir structure:")
 for f in sorted(partitioned_dir.rglob("*.parquet")):
     rel = f.relative_to(partitioned_dir)
     print(f"    {rel} ({f.stat().st_size} bytes)")
 
 # Read back — pyarrow discovers partitions automatically
 dataset = pq.read_table(str(partitioned_dir))
-print(f"Read back: {dataset.num_rows} rows, columns: {dataset.column_names}")
+f"{dataset.num_rows} rows, columns: {dataset.column_names}"  # Read back
 ```
 
       Partitioned dir structure:
         event_type=page_view\9f62ef0dd3b74960a0f065356a69591c-0.parquet (1266 bytes)
         event_type=purchase\9f62ef0dd3b74960a0f065356a69591c-0.parquet (1274 bytes)
         event_type=signup\9f62ef0dd3b74960a0f065356a69591c-0.parquet (1255 bytes)
-    Read back: 5 rows, columns: ['event_id', 'user_id', 'revenue', 'is_mobile', 'event_type']
+    5 rows, columns: ['event_id', 'user_id', 'revenue', 'is_mobile', 'event_type']
 
 #### Parquet in memory — BytesIO
 
@@ -231,16 +221,16 @@ print(f"Read back: {dataset.num_rows} rows, columns: {dataset.column_names}")
 
 buffer = BytesIO()
 pq.write_table(table, buffer)
-print(f"  Buffer size: {buffer.tell()} bytes")
+f"{buffer.tell()} bytes"  # Buffer size
 
 # Read back from the same buffer
 buffer.seek(0)
 table_from_mem = pq.read_table(buffer)
-print(f"  Read from memory: {table_from_mem.num_rows} rows")
+f"{table_from_mem.num_rows} rows"  # Read from memory
 ```
 
-      Buffer size: 1594 bytes
-      Read from memory: 5 rows
+    1594 bytes
+    5 rows
 
 #### CSV vs Parquet comparison
 
@@ -252,9 +242,9 @@ table.to_pandas().to_csv(csv_file, index=False)
 
 csv_size = csv_file.stat().st_size
 parquet_size = parquet_file.stat().st_size
-print(f"  CSV size:     {csv_size} bytes")
-print(f"  Parquet size: {parquet_size} bytes")
-print(f"  Ratio:        {csv_size / parquet_size:.1f}x smaller with parquet")
+f"{csv_size} bytes"  # CSV size
+f"{parquet_size} bytes"  # Parquet size
+f"Ratio:        {csv_size / parquet_size:.1f}x smaller with parquet"
 
 print("""
 Feature              CSV                         Parquet
@@ -268,9 +258,9 @@ Use case             Simple exchange, legacy      Data lakes, analytics, BigQuer
 """)
 ```
 
-      CSV size:     214 bytes
-      Parquet size: 1594 bytes
-      Ratio:        0.1x smaller with parquet
+    214 bytes
+    1594 bytes
+    0.1x smaller with parquet
     
     Feature              CSV                         Parquet
     ──────────────────────────────────────────────────────────────
@@ -322,12 +312,12 @@ avro_schema = {
 
 # Parse and validate the schema
 parsed_schema = fastavro.parse_schema(avro_schema)
-print(f"  Schema: {avro_schema['name']} ({len(avro_schema['fields'])} fields)")
+f"{avro_schema['name']} ({len(avro_schema['fields'])} fields)"  # Schema
 for f in avro_schema["fields"]:
     print(f"    {f['name']}: {f['type']}")
 ```
 
-      Schema: StockQuote (4 fields)
+    StockQuote (4 fields)
         symbol: string
         price: double
         volume: long
@@ -353,8 +343,8 @@ records = [
 with open(avro_file, "wb") as f:
     fastavro.writer(f, parsed_schema, records)
 
-print(f"  Written: {os.path.basename(avro_file)}")
-print(f"  Records: {len(records)}, Size: {os.path.getsize(avro_file)} bytes")
+os.path.basename(avro_file)  # Written
+f"Records: {len(records)}, Size: {os.path.getsize(avro_file)} bytes"
 
 # Read — schema is read from the file header automatically
 with open(avro_file, "rb") as f:
@@ -367,9 +357,9 @@ with open(avro_file, "rb") as f:
 shutil.rmtree(avro_dir)
 ```
 
-      Written: quotes.avro
-      Records: 4, Size: 399 bytes
-      Schema from file: stoxx.StockQuote
+    quotes.avro
+    Records: 4, Size: 399 bytes
+    stoxx.StockQuote
         SAP.DE     €  166.52  vol=   82621  exch=XETR
         ASML.AS    €  685.40  vol=   45000  exch=XAMS
         TTE.PA     €   58.20  vol=  120000  exch=XPAR
@@ -384,18 +374,18 @@ shutil.rmtree(avro_dir)
 avro_buffer = BytesIO()
 fastavro.writer(avro_buffer, parsed_schema, records)
 avro_bytes = avro_buffer.getvalue()
-print(f"  Avro in memory: {len(avro_bytes)} bytes ({len(records)} records)")
+f"{len(avro_bytes)} bytes ({len(records)} records)"  # Avro in memory
 
 # Read back from memory
 avro_buffer.seek(0)
 mem_records = list(fastavro.reader(avro_buffer))
-print(f"  Read from memory: {len(mem_records)} records")
+f"{len(mem_records)} records"  # Read from memory
 
 # Compare sizes
 json_size = len(json.dumps(records).encode())
-print(f"\n  JSON size:  {json_size} bytes")
-print(f"  Avro size:  {len(avro_bytes)} bytes")
-print(f"  Savings:    {(1 - len(avro_bytes)/json_size)*100:.0f}%")
+f"{json_size} bytes"  # JSON size
+f"{len(avro_bytes)} bytes"  # Avro size
+f"Savings:    {(1 - len(avro_bytes)/json_size)*100:.0f}%"
 
 # Schema evolution rules
 print("""
@@ -405,14 +395,13 @@ print("""
 """)
 ```
 
-      Avro in memory: 399 bytes (4 records)
-      Read from memory: 4 records
+    399 bytes (4 records)
+    4 records
     
-      JSON size:  300 bytes
-      Avro size:  399 bytes
-      Savings:    -33%
+    300 bytes
+    399 bytes
+    -33%
     
-      Schema Evolution Rules:
         SAFE:   add field with default, remove field with default, add aliases
         UNSAFE: change field type, remove field WITHOUT default
 
@@ -460,29 +449,29 @@ factory = _reflection.GeneratedProtocolMessageType(
 )
 
 # Create a message, serialize, deserialize
-quote = factory(symbol="SAP.DE", price=166.52, volume=82621)  # type: ignore[call-arg]  # fields are dynamic (runtime reflection)
+quote = factory(symbol="SAP.DE", price=166.52, volume=82621)  # type: ignore[call-arg] — fields are dynamic (runtime reflection)
 binary = quote.SerializeToString()  # type: ignore[attr-defined]
-print(f"  Message:    symbol={quote.symbol}, price={quote.price}, volume={quote.volume}")  # type: ignore[attr-defined]
-print(f"  Binary:     {len(binary)} bytes ({binary.hex()[:40]}...)")
+f"Message:    symbol={quote.symbol}, price={quote.price}, volume={quote.volume}"  # type: ignore[attr-defined]
+f"{len(binary)} bytes ({binary.hex()[:40]}...)"  # Binary
 
 # Deserialize from bytes
 parsed = factory.FromString(binary)  # type: ignore[attr-defined]
-print(f"  Parsed:     symbol={parsed.symbol}, price={parsed.price}, volume={parsed.volume}")  # type: ignore[attr-defined]
+f"Parsed:     symbol={parsed.symbol}, price={parsed.price}, volume={parsed.volume}"  # type: ignore[attr-defined]
 
 # Compare sizes
 json_size = len(json.dumps({"symbol": "SAP.DE", "price": 166.52, "volume": 82621}).encode())
-print(f"\n  JSON size:     {json_size} bytes")
-print(f"  Protobuf size: {len(binary)} bytes")
-print(f"  Savings:       {(1 - len(binary)/json_size)*100:.0f}%")
+f"{json_size} bytes"  # JSON size
+f"{len(binary)} bytes"  # Protobuf size
+f"Savings:       {(1 - len(binary)/json_size)*100:.0f}%"
 ```
 
-      Message:    symbol=SAP.DE, price=166.52, volume=82621
-      Binary:     21 bytes (0a065341502e444511713d0ad7a3d0644018bd85...)
-      Parsed:     symbol=SAP.DE, price=166.52, volume=82621
+    symbol=SAP.DE, price=166.52, volume=82621
+    21 bytes (0a065341502e444511713d0ad7a3d0644018bd85...)
+    symbol=SAP.DE, price=166.52, volume=82621
     
-      JSON size:     54 bytes
-      Protobuf size: 21 bytes
-      Savings:       61%
+    54 bytes
+    21 bytes
+    61%
 
 #### Protobuf with protoc (production pattern)
 
@@ -524,7 +513,6 @@ print("""
 """)
 ```
 
-    
       ── Step 1: Define schema (stock_quote.proto) ──
     
       syntax = "proto3";
@@ -591,10 +579,10 @@ def generate_data(count: int) -> list[dict]:
 small  = generate_data(100)
 medium = generate_data(10_000)
 large  = generate_data(100_000)
-print(f"  Small: {len(small):,}, Medium: {len(medium):,}, Large: {len(large):,}")
+f"Small: {len(small):,}, Medium: {len(medium):,}, Large: {len(large):,}"
 ```
 
-      Small: 100, Medium: 10,000, Large: 100,000
+    Small: 100, Medium: 10,000, Large: 100,000
 
 #### Format benchmarks — write/read speed across CSV, Parquet, Avro, Protobuf, MessagePack
 
@@ -701,7 +689,6 @@ for label, data in [("small", small), ("medium", medium), ("large", large)]:
     ]:
         bench(fmt, label + ext, data, wfn, rfn)
 
-print("  All benchmarks complete.")
 ```
 
       All benchmarks complete.
@@ -1069,7 +1056,6 @@ print("""
 shutil.rmtree(bench_dir)
 ```
 
-    
       ═══ WHEN TO USE WHAT ═══
     
       Scenario                        Best Format     Why

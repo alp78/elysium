@@ -80,44 +80,44 @@ class Dog:
 dog1 = Dog("Rex", 5)
 dog2 = Dog("Buddy", 3)
 
-print(f"dog1:        {dog1}")                    # calls __str__
-print(f"dog1.name:   {dog1.name}")               # access attribute
-print(f"dog1.bark(): {dog1.bark()}")             # call method
-print(f"species:     {dog1.species}")             # class attribute (shared)
-print(f"older?:      {dog1.is_older_than(dog2)}")
+dog1  # calls __str__
+dog1.name  # access attribute
+dog1.bark()  # call method
+dog1.species  # class attribute (shared)
+dog1.is_older_than(dog2)   # older?
 
 dog1.color = "brown"                              # works because we declared it in __init__
-print(f"dog1.color:  {dog1.color}")
-print(f"dog2.color:  {dog2.color}")                # None — default from __init__
+dog1.color   # dog1.color
+dog2.color  # None — default from __init__
 ```
 
-    dog1:        Dog(Rex, age=5)
-    dog1.name:   Rex
-    dog1.bark(): Rex says Woof!
-    species:     Canis familiaris
-    older?:      True
-    dog1.color:  brown
-    dog2.color:  None
+    Dog(Rex, age=5)
+    Rex
+    Rex says Woof!
+    Canis familiaris
+    True
+    brown
+    None
 
 #### Class vs instance attribute shadowing
 
 ```python
 # Class vs instance attribute shadowing — shared vs per-instance state
 
-print(f"Dog.species:  {Dog.species}")             # access on class
-print(f"dog1.species: {dog1.species}")            # access on instance (falls back to class)
+Dog.species  # access on class
+dog1.species  # access on instance (falls back to class)
 
 dog1.species = "Modified"                         # creates INSTANCE attribute, doesn't change class
-print(f"dog1.species: {dog1.species}")            # "Modified" (instance)
-print(f"dog2.species: {dog2.species}")            # still "Canis familiaris" (class)
-print(f"Dog.species:  {Dog.species}")             # still "Canis familiaris" (class)
+dog1.species  # "Modified" (instance)
+dog2.species  # still "Canis familiaris" (class)
+Dog.species  # still "Canis familiaris" (class)
 ```
 
-    Dog.species:  Canis familiaris
-    dog1.species: Canis familiaris
-    dog1.species: Modified
-    dog2.species: Canis familiaris
-    Dog.species:  Canis familiaris
+    Canis familiaris
+    Canis familiaris
+    Modified
+    Canis familiaris
+    Canis familiaris
 
 #### @property — controlled access with validation
 
@@ -145,10 +145,10 @@ class Circle:
         return math.pi * self._radius ** 2
 
 c = Circle(5)
-print(f"radius: {c.radius}")                     # calls getter (no parentheses!)
-print(f"area:   {c.area:.2f}")                    # computed, read-only
+c.radius  # calls getter (no parentheses!)
+f"{c.area:.2f}"  # computed, read-only
 c.radius = 10                                     # calls setter (validates)
-print(f"new radius: {c.radius}")
+c.radius   # new radius
 ```
 
 > [!info] Property Validation
@@ -218,16 +218,16 @@ class Cat(Animal):
 dog = Dog("Rex", "German Shepherd")
 cat = Cat("Whiskers")
 
-print(f"dog.speak():  {dog.speak()}")      # inherited from Animal
-print(f"dog.fetch():  {dog.fetch()}")      # Dog-specific
-print(f"cat.speak():  {cat.speak()}")      # overridden version
-print(f"dog.breed:    {dog.breed}")
+dog.speak()  # inherited from Animal
+dog.fetch()  # Dog-specific
+cat.speak()  # overridden version
+dog.breed   # dog.breed
 ```
 
-    dog.speak():  Rex says Woof!
-    dog.fetch():  Rex fetches the ball!
-    cat.speak():  Whiskers says Meow... when it feels like it.
-    dog.breed:    German Shepherd
+    Rex says Woof!
+    Rex fetches the ball!
+    Whiskers says Meow... when it feels like it.
+    German Shepherd
 
 #### Polymorphism and type checking
 
@@ -244,19 +244,19 @@ def animal_roll_call(animals):
 animals = [Dog("Rex", "Shepherd"), Cat("Whiskers"), Dog("Buddy", "Lab")]
 animal_roll_call(animals)                  # each calls its own speak()
 
-print(f"isinstance(dog, Dog):    {isinstance(dog, Dog)}")      # True
-print(f"isinstance(dog, Animal): {isinstance(dog, Animal)}")   # True (Dog IS an Animal)
-print(f"isinstance(cat, Dog):    {isinstance(cat, Dog)}")      # False
-print(f"issubclass(Dog, Animal): {issubclass(Dog, Animal)}")   # True
+isinstance(dog, Dog)  # True
+isinstance(dog, Animal)  # True (Dog IS an Animal)
+isinstance(cat, Dog)  # False
+issubclass(Dog, Animal)  # True
 ```
 
-      Dog(Rex): Rex says Woof!
-      Cat(Whiskers): Whiskers says Meow... when it feels like it.
-      Dog(Buddy): Buddy says Woof!
-    isinstance(dog, Dog):    True
-    isinstance(dog, Animal): True
-    isinstance(cat, Dog):    False
-    issubclass(Dog, Animal): True
+       Rex says Woof!
+       Whiskers says Meow... when it feels like it.
+       Buddy says Woof!
+    True
+    True
+    False
+    True
 
 #### Mixin classes — add capabilities via multiple inheritance
 
@@ -281,16 +281,16 @@ class Duck(Animal, Flyable, Swimmable):    # inherits from 3 classes!
         super().__init__(name, "Quack")
 
 duck = Duck("Donald")
-print(f"speak: {duck.speak()}")
-print(f"fly:   {duck.fly()}")
-print(f"swim:  {duck.swim()}")
-print(f"MRO:   {[c.__name__ for c in Duck.__mro__]}") # Method Resolution Order (from left to right)
+duck.speak()   # speak
+duck.fly()   # fly
+duck.swim()   # swim
+[c.__name__ for c in Duck.__mro__]  # Method Resolution Order (from left to right)
 ```
 
     speak: Donald says Quack!
-    fly:   Donald is flying!
-    swim:  Donald is swimming!
-    MRO:   ['Duck', 'Animal', 'Flyable', 'Swimmable', 'object']
+    Donald is flying!
+    Donald is swimming!
+    ['Duck', 'Animal', 'Flyable', 'Swimmable', 'object']
 
 ## Abstract Classes & Interfaces
 
@@ -364,18 +364,18 @@ class Circle(Shape):
 rect = Rectangle(5, 3, "red")
 circ = Circle(4, "blue")
 
-print(f"rect: {rect.describe()}")
-print(f"circ: {circ.describe()}")
+rect.describe()   # rect
+circ.describe()   # circ
 
 # Polymorphism with abstract class
 shapes: list[Shape] = [rect, circ]
 total_area = sum(s.area() for s in shapes)
-print(f"Total area: {total_area:.2f}")
+f"{total_area:.2f}"   # Total area
 ```
 
     rect: red Rectangle: area=15.00
     circ: blue Circle: area=50.27
-    Total area: 65.27
+    65.27
 
 #### Protocol — structural typing without explicit inheritance
 
@@ -414,7 +414,7 @@ def render(widget: Drawable):
 
 render(Button())
 render(TextBox())
-print(f"Button is Drawable? {isinstance(Button(), Drawable)}")  # True!
+isinstance(Button(), Drawable)  # True!
 ```
 
       Drawing button
@@ -459,17 +459,17 @@ class BankAccount:
         return pin == self.__pin
 
 acc = BankAccount("Alice", 1000)
-print(f"owner:    {acc.owner}")           # public — OK
-print(f"_balance: {acc._balance}")        # "protected" — works but shouldn't
+acc.owner  # public — OK
+acc._balance  # "protected" — works but shouldn't
 # print(acc.__pin)                        # AttributeError! Name mangled
-print(f"__pin:    {acc._BankAccount__pin}")  # name mangling — still accessible!  # type: ignore
-print(f"dir(acc) with __: {[a for a in dir(acc) if 'pin' in a.lower()]}")
+acc._BankAccount__pin  # name mangling — still accessible!  # type: ignore
+[a for a in dir(acc) if 'pin' in a.lower()]   # dir(acc) with __
 # Shows _BankAccount__pin — Python renamed it
 ```
 
-    owner:    Alice
+    Alice
     _balance: 1000
-    __pin:    1234
+    1234
     dir(acc) with __: ['_BankAccount__pin', '_BankAccount__validate_pin']
 
 #### Access comparison
@@ -484,8 +484,8 @@ _name               protected           accessible in class + subclasses (conven
 (no equivalent)     protected internal  protected OR internal
 (no equivalent)     private protected   protected AND internal
 """
-print(comparison)
-print("Python: conventions only — nothing is truly private")
+comparison
+# Python: conventions only — nothing is truly private
 ```
 
     
@@ -567,27 +567,27 @@ class Employee:
 
 emp1 = Employee("Alice", 95000)
 emp1.give_raise(10)
-print(f"Instance: {emp1}")
+emp1   # Instance
 
 # Class method — called on the class, creates an object
 emp2 = Employee.from_string("Bob,85000")
-print(f"Factory:  {emp2}")
+emp2   # Factory
 
 # Static method — no instance needed
-print(f"Static:   valid salary? {Employee.is_valid_salary(50000)}")
-print(f"Static:   valid salary? {Employee.is_valid_salary(-100)}")
+Employee.is_valid_salary(50000)   # Static:   valid salary?
+Employee.is_valid_salary(-100)   # Static:   valid salary?
 
 # Class attribute
-print(f"Count:    {Employee.get_count()} employees")
-print(f"Company:  {Employee.company}")
+f"Count:    {Employee.get_count()} employees"
+Employee.company   # Company
 ```
 
-    Instance: Alice @ Acme Corp: $104,500
-    Factory:  Bob @ Acme Corp: $85,000
-    Static:   valid salary? True
-    Static:   valid salary? False
-    Count:    2 employees
-    Company:  Acme Corp
+    Alice @ Acme Corp: $104,500
+    Bob @ Acme Corp: $85,000
+    valid salary? True
+    valid salary? False
+    2 employees
+    Acme Corp
 
 #### @classmethod inheritance — cls is the subclass
 
@@ -599,11 +599,11 @@ class Manager(Employee):
 
 # cls is Manager, not Employee — creates a Manager object!
 mgr = Manager.from_string("Charlie,120000")
-print(f"Type: {type(mgr).__name__}")       # Manager, not Employee
+type(mgr).__name__  # Manager, not Employee
 # If from_string used @staticmethod with Employee(), it would always create Employee
 ```
 
-    Type: Manager
+    Manager
 
 ## Dataclasses & Records
 
@@ -636,12 +636,10 @@ class Order:
 # order = Order(customer_id=123, amout=99.99)      # TypeError IMMEDIATELY
 order = Order(customer_id=123, amount=99.99)
 
-print(f"Dict typo:      silent bug (amout instead of amount)")
-print(f"Dataclass typo: TypeError at creation time")
 ```
 
-    Dict typo:      silent bug (amout instead of amount)
-    Dataclass typo: TypeError at creation time
+    silent bug (amout instead of amount)
+    TypeError at creation time
 
 #### Autocomplete, refactoring, and type safety
 
@@ -690,11 +688,10 @@ Logging / error reports          @dataclass
 Shared library / team code       @dataclass (self-documenting)
 Unknown/dynamic JSON schema      dict (can't define class upfront)
 """
-print(recs)
+recs
 ```
 
     
-    USE CASE                        RECOMMENDATION
     ─────────────────────────────── ──────────────────────────
     Quick script / notebook          dict
     Pandas / Spark data processing   DataFrame (not classes)
@@ -723,14 +720,14 @@ p1 = Point(3.0, 4.0)
 p2 = Point(3.0, 4.0)
 p3 = Point(1.0, 2.0)
 
-print(f"p1:        {p1}")                     # auto __repr__
-print(f"p1 == p2:  {p1 == p2}")               # auto __eq__ (compares by value!)
-print(f"p1 == p3:  {p1 == p3}")
+p1  # auto __repr__
+p1 == p2  # auto __eq__ (compares by value!)
+p1 == p3   # p1 == p3
 ```
 
-    p1:        Point(x=3.0, y=4.0)
-    p1 == p2:  True
-    p1 == p3:  False
+    Point(x=3.0, y=4.0)
+    True
+    False
 
 #### field() — customizing dataclass fields
 
@@ -749,11 +746,11 @@ class Employee:
         self._id = hash(self.name)                 # computed field
 
 emp = Employee("Alice", "Engineering", 95000, ["senior", "lead"])
-print(f"Employee: {emp}")
-print(f"Hidden _id: {emp._id}")
+emp   # Employee
+emp._id   # Hidden _id
 ```
 
-    Employee: Employee(name='Alice', department='Engineering', salary=95000, tags=['senior', 'lead'])
+    Employee(name='Alice', department='Engineering', salary=95000, tags=['senior', 'lead'])
     Hidden _id: -5760575203000102949
 
 #### frozen=True — immutable dataclass
@@ -772,17 +769,17 @@ class Config:
     ssl: bool = True
 
 config = Config("localhost", 5432)
-print(f"Config: {config}")
+config
 # config.host = "other"  # FrozenInstanceError! Immutable
 
 # Can use as dict key or set element (hashable because frozen)
 # hashable = can compute a fixed integer fingerprint (hash) for the object
 configs = {config: "primary"}
-print(f"As dict key: {configs}")
+configs   # As dict key
 ```
 
-    Config: Config(host='localhost', port=5432, ssl=True)
-    As dict key: {Config(host='localhost', port=5432, ssl=True): 'primary'}
+    Config(host='localhost', port=5432, ssl=True)
+    {Config(host='localhost', port=5432, ssl=True): 'primary'}
 
 #### order=True — comparable dataclass
 
@@ -797,12 +794,12 @@ class Version:
     patch: int
 
 versions = [Version(2, 0, 0), Version(1, 9, 5), Version(2, 1, 0)]
-print(f"Sorted: {sorted(versions)}")
-print(f"Max:    {max(versions)}")
+sorted(versions)   # Sorted
+max(versions)   # Max
 ```
 
-    Sorted: [Version(major=1, minor=9, patch=5), Version(major=2, minor=0, patch=0), Version(major=2, minor=1, patch=0)]
-    Max:    Version(major=2, minor=1, patch=0)
+    [Version(major=1, minor=9, patch=5), Version(major=2, minor=0, patch=0), Version(major=2, minor=1, patch=0)]
+    Version(major=2, minor=1, patch=0)
 
 #### PipelineRecord and boilerplate comparison
 
@@ -838,19 +835,14 @@ for r in records:
 ```python
 # Summary — class vs dataclass boilerplate comparison
 
-print("""
-class Point:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-    def __repr__(self):
-        return f"Point(x={self.x}, y={self.y})"
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y
-    def __hash__(self):
-        return hash((self.x, self.y))
-""")
-print("With @dataclass: just 3 lines — all methods auto-generated!")
+# Without @dataclass — 12 lines of boilerplate:
+#   class Point:
+#       def __init__(self, x, y): ...
+#       def __repr__(self): ...
+#       def __eq__(self, other): ...
+#       def __hash__(self): ...
+
+# With @dataclass: just 3 lines — all methods auto-generated!
 ```
 
     

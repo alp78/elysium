@@ -36,8 +36,8 @@ s1   // String: \"\"
 $"Char:           '{c1}' (type: {c1.GetType().Name})"
 ```
 
-    String:         "hello"
-    Char:           'A' (type: Char)
+    "hello"
+    'A' (type: Char)
 
 #### Verbatim & Raw Strings
 
@@ -51,8 +51,8 @@ s3   // Escaped
 s2 == s3   // Same?
 ```
 
-    Verbatim:       C:\Users\new\test
-    Escaped:        C:\Users\new\test
+    C:\Users\new\test
+    C:\Users\new\test
     Same? True
 
 #### Multiline Strings
@@ -72,12 +72,9 @@ string s5 = """
     """;
 s5   // Raw string literal:\n
 ```
-
-    Verbatim multiline:
     This is
     a multiline
     string
-    Raw string literal:
     This is a
     raw string literal
 
@@ -96,11 +93,11 @@ object? obj = null;
 obj?.ToString() ?? "(null)"   // obj?.ToString()
 ```
 
-    42.ToString():      '42'
-    3.14.ToString():    '3.14'
-    true.ToString():    'True'
-    Convert.ToString(): '42'
-    obj?.ToString():    '(null)'
+    '42'
+    '3.14'
+    'True'
+    '42'
+    '(null)'
 
 #### Repetition & Concatenation
 
@@ -112,9 +109,9 @@ string.Concat(Enumerable.Repeat("ha", 3))
 "hello" + " " + "world"
 ```
 
-    new string('*', 5):  '*****'
-    string.Concat(Enumerable.Repeat("ha", 3)): 'hahaha'
-    "hello" + " " + "world": 'hello world'
+    '*****'
+    'hahaha'
+    'hello world'
 
 #### Empty String & Null Checks
 
@@ -132,14 +129,14 @@ string.IsNullOrWhiteSpace("  ")
 string.IsNullOrWhiteSpace("")
 ```
 
-    empty == "":       True
-    string.Empty:      ""
-    empty.Length:       0
-    string.IsNullOrEmpty(" "): False
-    string.IsNullOrEmpty(""): True
-    string.IsNullOrEmpty(null): True
-    string.IsNullOrWhiteSpace("  "): True
-    string.IsNullOrWhiteSpace(""): True
+    True
+    ""
+    0
+    False
+    True
+    True
+    True
+    True
 
 #### String Immutability
 
@@ -152,7 +149,7 @@ s = 'H' + s.Substring(1);  // must create a new string
 s   // Modified
 ```
 
-    Modified: Hello
+    Hello
 
 ## Indexing & Slicing
 
@@ -181,15 +178,15 @@ s[^6..]
 s[7..12]
 ```
 
-    s[0]:     'H'
-    s[1]:     'e'
-    s[^1]:    '!'
-    s[^2]:    'd'
-    s[0..5]:  'Hello'
-    s[..5]:   'Hello'
-    s[7..]:   'World!'
-    s[^6..]:  'World!'
-    s[7..12]: 'World'
+    'H'
+    'e'
+    '!'
+    'd'
+    'Hello'
+    'Hello'
+    'World!'
+    'World!'
+    'World'
 
 #### Substring & Stride
 
@@ -209,11 +206,11 @@ Array.Reverse(arr);
 new string(arr)   // Reversed
 ```
 
-    Substring(7):    'World!'
-    Substring(7,5):  'World'
-    Every 2nd:  'Hlo ol!'
-    Reversed:   '!dlroW ,olleH'
-    Reversed:   '!dlroW ,olleH'
+    'World!'
+    'World'
+    'Hlo ol!'
+    '!dlroW ,olleH'
+    '!dlroW ,olleH'
 
 #### Out of range — throws IndexOutOfRangeException
 
@@ -233,7 +230,7 @@ foreach (char ch in s[..5])
     Console.Write($"{ch} ");
 ```
 
-    Chars: H e l l o
+    H e l l o
 
 #### Index + character — LINQ Select with index
 
@@ -243,8 +240,6 @@ foreach (char ch in s[..5])
 foreach (var (ch, i) in s[..5].Select((c, i) => (c, i)))
     Console.WriteLine($"  [{i}] = '{ch}'");
 ```
-
-    Enumerated (LINQ):
       [0] = 'H'
       [1] = 'e'
       [2] = 'l'
@@ -259,8 +254,6 @@ foreach (var (ch, i) in s[..5].Select((c, i) => (c, i)))
 for (int i = 0; i < 5; i++)
     Console.WriteLine($"  [{i}] = '{s[i]}'");
 ```
-
-    Enumerated (for loop):
       [0] = 'H'
       [1] = 'e'
       [2] = 'l'
@@ -295,9 +288,9 @@ CultureInfo.CurrentCulture.TextInfo.ToTitleCase("hello world")   // ToTitleCase(
 // No swapcase or casefold — must implement manually
 ```
 
-    ToUpper():     'HELLO WORLD'
-    ToLower():     'hello world'
-    ToTitleCase(): 'Hello World'
+    'HELLO WORLD'
+    'hello world'
+    'Hello World'
 
 #### Whitespace & Padding
 
@@ -314,14 +307,14 @@ s.TrimEnd()   // TrimEnd()
 "42".PadLeft(8, '0')   // PadLeft(8,'0')
 ```
 
-    Trim():        'Hello, World!'
-    TrimStart():   'Hello, World!  '
-    TrimEnd():     '  Hello, World!'
-    Trim('!'):     'Hello'
-    PadLeft(20):   '               hello'
-    PadRight(20):  'hello               '
-    PadLeft(20,'*'):'***************hello'
-    PadLeft(8,'0'):'00000042'
+    'Hello, World!'
+    'Hello, World!  '
+    '  Hello, World!'
+    'Hello'
+    '               hello'
+    'hello               '
+    '***************hello'
+    '00000042'
 
 #### Character & String Checks
 
@@ -343,17 +336,17 @@ char.IsLower('a')
 "Hello".All(c => c < 128)   // All ASCII
 ```
 
-      char.IsLetter('A'):    True
-      char.IsDigit('5'):     True
-      char.IsWhiteSpace(' '):True
-      char.IsUpper('A'):     True
-      char.IsLower('a'):     True
-      All letters:  True
-      All digits:   True
-      All alnum:    True
-      All upper:    True
-      All lower:    True
-      All ASCII:    True
+      True
+      True
+      True
+      True
+      True
+      True
+      True
+      True
+      True
+      True
+      True
 
 #### Searching
 
@@ -374,14 +367,14 @@ int count = s.Split("Hello").Length - 1;
 count   // Count \"Hello\"
 ```
 
-    IndexOf("Hello"):     0
-    IndexOf("Hello",1):   14
-    LastIndexOf("Hello"): 14
-    IndexOf("Java"):      -1
-    Contains("World"):    True
-    StartsWith("Hello"): True
-    EndsWith("!"):       True
-    Count "Hello":       2
+    0
+    14
+    14
+    -1
+    True
+    True
+    True
+    2
 
 #### Replace, Split & Join
 
@@ -399,11 +392,11 @@ string.Join(", ", words.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntri
 string.Join(", ", words.Split(' '))   // Split(' ')
 ```
 
-    Replace:           'Hi, World! Hi, C#!'
-    Split(','):        [apple, banana, cherry]
-    Split(',', 2):     [apple, banana,cherry]
-    Split():           [hello, world]
-    Split(' '):        [, , hello, , world, , ]
+    'Hi, World! Hi, C#!'
+    [apple, banana, cherry]
+    [apple, banana,cherry]
+    [hello, world]
+    [, , hello, , world, , ]
 
 #### StringSplitOptions
 
@@ -421,12 +414,12 @@ string.Join("->", parts)   // Join('->')
 string.Concat(parts)   // Concat
 ```
 
-    RemoveEmpty:       [a, b, c]
-    TrimEntries:       [a, b, c]
-    Join(' '):         'hello world csharp'
-    Join(', '):        'hello, world, csharp'
-    Join('->'):        'hello->world->csharp'
-    Concat:            'helloworldcsharp'
+    [a, b, c]
+    [a, b, c]
+    'hello world csharp'
+    'hello, world, csharp'
+    'hello->world->csharp'
+    'helloworldcsharp'
 
 #### Encoding.UTF8.GetBytes / GetString — text encoding
 
@@ -440,9 +433,9 @@ string.Join(", ", ascii)   // ASCII
 System.Text.Encoding.UTF8.GetString(utf8)   // Back
 ```
 
-    UTF8:  [104, 101, 108, 108, 111]
-    ASCII: [104, 101, 108, 108, 111]
-    Back:  'hello'
+    [104, 101, 108, 108, 111]
+    [104, 101, 108, 108, 111]
+    'hello'
 
 ## String Formatting
 
@@ -467,11 +460,11 @@ age + 1   // Expression
 name.ToUpper()   // Method call
 ```
 
-    Name: Alice, Age: 30
-    Expression: 31
-    Method call: ALICE
-    Name: Alice, Age: 30
-    Name: Alice, Age: 30, Alice again
+    30
+    31
+    ALICE
+    30
+    30, Alice again
 
 #### Numeric Format Specifiers
 
@@ -496,20 +489,20 @@ Convert.ToString(x, 2)   // Binary
 Convert.ToString(x, 8)   // Octal
 ```
 
-    Fixed 2 dec:    1234567.89
-    Fixed 0 dec:    1234568
-    Comma sep:      1'234'567.89
-    Scientific:     1.23E+006
-    General:        1.235E+06
-    Percentage:     85.6%
-    Currency:       $1,234,567.89
-    Phone:          123-456-7890
-    Decimal:        255
-    Hex upper:      FF
-    Hex lower:      ff
-    Zero-padded:    00000255
-    Binary:         11111111
-    Octal:          377
+    1234567.89
+    1234568
+    1'234'567.89
+    1.23E+006
+    1.235E+06
+    85.6%
+    $1,234,567.89
+    123-456-7890
+    255
+    FF
+    ff
+    00000255
+    11111111
+    377
 
 #### Alignment & Culture-Specific Formatting
 
@@ -531,16 +524,16 @@ amt.ToString("C2", new CultureInfo("pt-BR"))   // BRL
 amt.ToString("C2", new CultureInfo("en-GB"))   // GBP
 ```
 
-    Left 10:        'hi        '
-    Right 10:       '        hi'
-    PadLeft(*):     '********hi'
-    PadRight(*):    'hi********'
-    US:  $1,234,567.89
-    EUR: 1 234 567,89 €
-    JPY: ￥1,234,568
-    CNY: ¥1,234,567.89
-    BRL: R$ 1.234.567,89
-    GBP: £1,234,567.89
+    'hi        '
+    '        hi'
+    '********hi'
+    'hi********'
+    $1,234,567.89
+    1 234 567,89 €
+    ￥1,234,568
+    ¥1,234,567.89
+    R$ 1.234.567,89
+    £1,234,567.89
 
 ## Efficient String Building (StringBuilder)
 
@@ -578,8 +571,8 @@ $"StringBuilder (50k): {t2:F4}s  len={result.Length}"
 t1/t2   // StringBuilder is x faster
 ```
 
-    + in loop (50k):     4.2222s  len=238890
-    StringBuilder (50k): 0.0005s  len=238890
+    4.2222s  len=238890
+    0.0005s  len=238890
     StringBuilder is 8989.1x faster
 
 #### StringBuilder Append, Insert, Replace, Remove — mutable string building
@@ -602,14 +595,12 @@ sb.Capacity   // Capacity
 var sb2 = new StringBuilder(1000);        // pre-allocate
 sb2.Capacity   // Pre-alloc capacity
 ```
-
-    Result:
     >>> Hello, C#!
-    Number: 42
+    42
     
-    Length:   28
-    Capacity: 33
-    Pre-alloc capacity: 1000
+    28
+    33
+    1000
 
 #### string.Join, string.Concat — efficient multi-string assembly
 
@@ -626,10 +617,10 @@ string full = first + " " + last;     // compiler optimizes small concats
 full   // Small concat
 ```
 
-    Join: 'item_0, item_1, item_2, item_3, item_4'
-    Concat: '01234'
-    Small concat: 'Hello World'
-    Rule: use + for 2-5 strings, StringBuilder for loops
+    'item_0, item_1, item_2, item_3, item_4'
+    '01234'
+    'Hello World'
+    use + for 2-5 strings, StringBuilder for loops
 
 ## Regular Expressions
 
@@ -669,13 +660,13 @@ Regex.IsMatch("12345", @"^\d+$")   // IsMatch(digits)
 Regex.IsMatch("123a5", @"^\d+$")   // IsMatch(mixed)
 ```
 
-    Found: 123-456-7890 at [59:71]
-    Phones: 123-456-7890, 987-654-3210
-    Emails: support@email.com, sales@company.org.
+    123-456-7890 at [59:71]
+    123-456-7890, 987-654-3210
+    support@email.com, sales@company.org.
       123-456-7890 at [59:71]
       987-654-3210 at [75:87]
-    IsMatch(digits): True
-    IsMatch(mixed):  False
+    True
+    False
 
 #### Regex capture groups — numbered and named (?&lt;name&gt;...)
 
@@ -700,12 +691,12 @@ if (match.Success)
 }
 ```
 
-    Full:     123-456-7890
-    Area:     123
-    Mid:      456
-    Last:     7890
-    User:     support
-    Domain:   email.com
+    123-456-7890
+    123
+    456
+    7890
+    support
+    email.com
 
 #### Regex.Replace, Regex.Split, new Regex() — replace, split, compile
 
@@ -730,7 +721,7 @@ phonePat.Replace(text, "REDACTED")
 ```
 
     Contact us at support@email.com or sales@company.org. Call ***-***-**** or ***-***-****.
-    price: 100, qty: 6
+    6
     host/user
     Hello World, How are you, Fine, 
     a, b, c
@@ -829,9 +820,9 @@ string.Join(", ", ml.Select(m => m.Value))   // Multiline
 Regex.IsMatch(text, @"Hello.world", RegexOptions.Singleline)   // Singleline
 ```
 
-    IgnoreCase:  Hello, HELLO
-    Multiline:   Hello, world, HELLO
-    Singleline:  True
+    Hello, HELLO
+    Hello, world, HELLO
+    True
 
 #### IgnorePatternWhitespace — verbose patterns with inline comments
 
@@ -849,7 +840,7 @@ var m2 = pattern.Match("Call 123-456-7890");
 if (m2.Success) Console.WriteLine($"Verbose:     {m2.Groups[1]}-{m2.Groups[2]}-{m2.Groups[3]}");
 ```
 
-    Verbose:     123-456-7890
+    123-456-7890
 
 #### RegexOptions bitwise OR — combine multiple flags
 
@@ -860,7 +851,7 @@ var combined = Regex.Matches(text, @"^hello", RegexOptions.IgnoreCase | RegexOpt
 string.Join(", ", combined.Select(m => m.Value))   // Combined
 ```
 
-    Combined:    Hello, HELLO
+    Hello, HELLO
 
 #### RegexOptions Reference
 

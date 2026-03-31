@@ -540,9 +540,9 @@ def bad_append(item, lst=[]):
     return lst
 
 print("Mutable default bug:")
-print(f"  Call 1: {bad_append(1)}")
-print(f"  Call 2: {bad_append(2)}")  # Still has [1] from call 1!
-print(f"  Call 3: {bad_append(3)}")  # [1, 2, 3] — list is shared!
+bad_append(1)  # Call 1
+bad_append(2)  # Still has [1] from call 1!
+bad_append(3)  # [1, 2, 3] — list is shared!
 
 def good_append(item, lst=None):
     if lst is None:
@@ -551,9 +551,9 @@ def good_append(item, lst=None):
     return lst
 
 print("\nFixed:")
-print(f"  Call 1: {good_append(1)}")
-print(f"  Call 2: {good_append(2)}")
-print(f"  Call 3: {good_append(3)}")
+good_append(1)  # Call 1
+good_append(2)  # Call 2
+good_append(3)  # Call 3
 ```
 
     Mutable default bug:
@@ -646,8 +646,8 @@ def fetch(id: int, as_dict: bool = True) -> dict | list:
     data = {"id": id, "name": "test"}
     return data if as_dict else list(data.values())
 
-print(f"Type hints: {process_typed('hello', True)}")
-print(f"Overload:   {fetch(1, as_dict=True)}")
+process_typed('hello', True)  # Type hints
+fetch(1, as_dict=True)  # Overload
 ```
 
     Type hints: HELLO

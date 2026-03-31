@@ -157,9 +157,9 @@ print(f'  GCS:        gs://{BUCKET_NAME}')
 ```
 
       SQL Server: Microsoft SQL Server 2022 (RTM-CU23) (KB5078297) - 16.0.4236...
-      BigQuery:   index_data (seclab-dev-ap-26)
-      Firestore:  seclab-scores (seclab-dev-ap-26)
-      GCS:        gs://seclab-dev-ap-26-data
+      index_data (seclab-dev-ap-26)
+      seclab-scores (seclab-dev-ap-26)
+      gs://seclab-dev-ap-26-data
 
 #### Formatting helpers
 
@@ -2144,7 +2144,7 @@ print('  Cleanup done')
 ```
 
       SQL Server: ohlcv_bench dropped
-      BigQuery: ohlcv_bench dropped
-      Firestore: ohlcv_bench cleared
-      GCS: exports/ and staging/ cleaned
+      ohlcv_bench dropped
+      ohlcv_bench cleared
+      exports/ and staging/ cleaned
       Cleanup done

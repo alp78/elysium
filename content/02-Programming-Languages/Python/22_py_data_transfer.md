@@ -101,16 +101,16 @@ bq_client = bigquery.Client(project=PROJECT_ID)
 kms_client = kms.KeyManagementServiceClient()
 kms_key_name = kms_client.crypto_key_path(PROJECT_ID, REGION, KMS_KEYRING, KMS_KEY)
 
-print(f"  Project: {PROJECT_ID}")
-print(f"  SQL IP:  {SQL_IP}")
-print(f"  VM IP:   {VM_IP}")
-print(f"  Bucket:  {BUCKET_NAME}")
+PROJECT_ID  # Project
+SQL_IP  # SQL IP
+VM_IP  # VM IP
+BUCKET_NAME  # Bucket
 ```
 
-      Project: seclab-dev-ap-26
-      SQL IP:  34.22.129.89
-      VM IP:   34.38.193.79
-      Bucket:  seclab-dev-ap-26-data
+      seclab-dev-ap-26
+      34.22.129.89
+      34.38.193.79
+      seclab-dev-ap-26-data
 
 #### Formatting helpers
 
@@ -1599,7 +1599,7 @@ def sequential_upload(files):
         _upload_one(f)
 
 r = bench_parallel("sequential", sequential_upload)
-print(f"  {r['files']} files  {r['total_size']}  {r['elapsed']}  {r['throughput']}")
+r['files']} files  {r['total_size']}  {r['elapsed']}  {r['throughput']
 ```
 
       8 files  1.51 GB  3.7min  7.0 MB/s
@@ -1628,7 +1628,7 @@ def threaded_upload(files):
             fut.result()
 
 r = bench_parallel('threaded_8', threaded_upload)
-print(f"  {r['files']} files  {r['total_size']}  {r['elapsed']}  {r['throughput']}")
+r['files']} files  {r['total_size']}  {r['elapsed']}  {r['throughput']
 ```
 
       8 files  1.51 GB  4.1min  6.3 MB/s
@@ -1651,7 +1651,7 @@ def multiprocess_upload(files):
         result = fut.result()
 
 r = bench_parallel('multiprocess_4', multiprocess_upload)
-print(f"  {r['files']} files  {r['total_size']}  {r['elapsed']}  {r['throughput']}")
+r['files']} files  {r['total_size']}  {r['elapsed']}  {r['throughput']
 ```
 
       8 files  1.51 GB  4.1min  6.3 MB/s
@@ -1926,7 +1926,7 @@ print(f"  Total size: {fmt_bytes(total_size)}  Avg: {fmt_bytes(total_size // len
 ```
 
       Generated 1000 files in small_files_1000/
-      Total size: 1.19 GB  Avg: 1.2 MB
+      1.19 GB total  Avg: 1.2 MB
 
 #### Compression benchmark helper
 
@@ -2352,10 +2352,10 @@ print(f"  Compressed: {fmt_bytes(comp_size)} ({ratio:.1f}x ratio)")
 print(f"  Time: {fmt_time(compress_ms)}  Throughput: {fmt_bytes(tp)}/s")
 ```
 
-      Source: large_upload.csv (1.19 GB)
-      Original MD5: 054b516bca00fe7ebcfeb6516a5d3789 (1.5s)
-      Compressed: 438.8 MB (2.8x ratio)
-      Time: 5.2s  Throughput: 234.8 MB/s
+      large_upload.csv (1.19 GB)
+      054b516bca00fe7ebcfeb6516a5d3789 (1.5s)
+      438.8 MB (2.8x ratio)
+      5.2s  Throughput: 234.8 MB/s
 
 #### Step 2 — Split into 8 chunks with per-chunk MD5
 
@@ -2512,7 +2512,7 @@ for name, expected_md5, _ in chunk_manifest:
         all_ok = False
     print(f"  {name:<16s} {expected_md5:>34s} {actual_md5:>34s} {status}")
 
-print(f"  {'All chunks verified OK' if all_ok else 'CHECKSUM FAILURE — transfer corrupted'}")
+'All chunks verified OK' if all_ok else 'CHECKSUM FAILURE — transfer corrupted'
 ```
 
       chunk                                      expected                             actual status
@@ -2560,15 +2560,15 @@ restored_md5 = hashlib.md5(final_output.read_bytes()).hexdigest()
 verify_ms = (time.perf_counter() - t0) * 1000
 
 match = restored_md5 == original_md5
-print(f"  Restored MD5:  {restored_md5}")
-print(f"  Original MD5:  {original_md5}")
-print(f"  {'MATCH ✓ — pipeline verified end-to-end' if match else 'MISMATCH ✗ — data corrupted'}")
+restored_md5  # Restored MD5
+original_md5  # Original MD5
+'MATCH ✓ — pipeline verified end-to-end' if match else 'MISMATCH ✗ — data corrupted'
 ```
 
       Merged 8 chunks in 283ms
-      Decompressed: 1.19 GB in 1.7s  (733.7 MB/s)
-      Restored MD5:  054b516bca00fe7ebcfeb6516a5d3789
-      Original MD5:  054b516bca00fe7ebcfeb6516a5d3789
+      1.19 GB in 1.7s  (733.7 MB/s)
+      054b516bca00fe7ebcfeb6516a5d3789
+      054b516bca00fe7ebcfeb6516a5d3789
       MATCH ✓ — pipeline verified end-to-end
 
 #### Parallel upload, merge, verify — pipeline summary
@@ -2601,7 +2601,7 @@ print(f"  Original: {fmt_bytes(orig_size)}  Wire: {fmt_bytes(comp_size)}  Ratio:
       decompress (zstd)          1.7s     733.7 MB/s
                                                     
       TOTAL                    1.3min      15.9 MB/s
-      Original: 1.19 GB  Wire: 438.8 MB  Ratio: 2.8x
+      1.19 GB  Wire: 438.8 MB  Ratio: 2.8x
 
 #### Cleanup pipeline files
 

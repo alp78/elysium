@@ -129,7 +129,7 @@ using (Stream fs = File.OpenWrite(parquetFile))
 $"  Written: {Path.GetFileName(parquetFile)} ({new FileInfo(parquetFile).Length} bytes)"
 ```
 
-      Written: events.parquet (1045 bytes)
+      events.parquet (1045 bytes)
 
 #### Read parquet — DataColumn API
 
@@ -155,8 +155,8 @@ using (Stream fs = File.OpenRead(parquetFile))
 }
 ```
 
-      Schema: event_id:String, event_type:String, user_id:Int64, revenue:Double, is_mobile:Boolean
-      Rows: 5
+      event_id:String, event_type:String, user_id:Int64, revenue:Double, is_mobile:Boolean
+      5
         evt_001: page_view, user=1001, revenue=$0.00
         evt_002: purchase, user=1002, revenue=$49.99
         evt_003: page_view, user=1001, revenue=$0.00
@@ -188,7 +188,7 @@ foreach (var e in loaded)
     $"    {e.EventId}: {e.EventType}, user={e.UserId}, revenue=${e.Revenue:F2}"
 ```
 
-      Written: events_typed.parquet (1037 bytes)
+      events_typed.parquet (1037 bytes)
       Loaded 5 records:
         evt_001: page_view, user=1001, revenue=$0.00
         evt_002: purchase, user=1002, revenue=$49.99
@@ -210,7 +210,7 @@ using (Stream fs = File.OpenRead(parquetFile))
 }
 ```
 
-      Row groups: 1
+      1
         event_id: String (nullable=True)
         event_type: String (nullable=True)
         user_id: Int64 (nullable=False)
@@ -234,8 +234,8 @@ using (Stream fs = File.OpenRead(parquetFile))
 }
 ```
 
-      MemoryStream size: 1037 bytes
-      Read from memory: 5 records
+      1037 bytes
+      5 records
 
 #### CSV vs Parquet comparison
 
@@ -353,11 +353,11 @@ while (!cis.IsAtEnd)
 $"  Decoded:   symbol={sym}, price={price}, volume={vol}"
 ```
 
-      Protobuf:  21 bytes
-      Hex:       0a065341502e444511713d0ad7a3d0644018bd8505
-      JSON:      49 bytes
-      Savings:   57%
-      Decoded:   symbol=SAP.DE, price=166.52, volume=82621
+      21 bytes
+      0a065341502e444511713d0ad7a3d0644018bd8505
+      49 bytes
+      57%
+      symbol=SAP.DE, price=166.52, volume=82621
 
 #### Production protobuf pattern
 
@@ -473,7 +473,7 @@ foreach (var f in schema.Fields)
     $"    {f.Name}: {f.Schema}"
 ```
 
-      Schema: StockQuote (4 fields)
+      StockQuote (4 fields)
         symbol: {"type":"string"}
         price: {"type":"double"}
         volume: {"type":"long"}
@@ -522,8 +522,8 @@ $"  Written: {avroFile}"
 $"  Records: {records.Count}, Size: {fileSize} bytes"
 ```
 
-      Written: C:\Users\aperi\AppData\Local\Temp\avro_cs_89f4466f\quotes.avro
-      Records: 4, Size: 390 bytes
+      C:\Users\aperi\AppData\Local\Temp\avro_cs_89f4466f\quotes.avro
+      4, Size: 390 bytes
 
 #### Read Avro file
 
@@ -549,8 +549,7 @@ using (var reader = DataFileReader<GenericRecord>.OpenReader(avroFile))
 }
 ```
 
-      Schema from file: StockQuote
-      Records:
+      StockQuote
         SAP.DE     €  166.52  vol=   82621  exch=XETR
         ASML.AS    €  685.40  vol=   45000  exch=XAMS
         TTE.PA     €   58.20  vol=  120000  exch=XPAR
@@ -588,7 +587,7 @@ $"  {"Savings",-12} {(1.0 - (double)avroBytes.Length / jsonSize) * 100:F0}%"
 Directory.Delete(tmpDir, recursive: true);
 ```
 
-      Avro in memory: 390 bytes (4 records)
+      390 bytes (4 records)
     
       Format           Size   Per record
       ──────────────────────────────────
@@ -620,9 +619,6 @@ Directory.Delete(tmpDir, recursive: true);
 ```
 
     
-      Schema Evolution Rules:
-    
-      SAFE:
         + Add field with default    →  old readers get default, new readers get value
         + Remove field with default →  old readers ignore extra bytes
         + Add aliases               →  renamed fields still recognized
@@ -651,7 +647,6 @@ var symbols = new[] { "SAP.DE","ASML.AS","TTE.PA","BAS.DE","BAYN.DE","BMW.DE","S
                       "ADS.DE","DTE.DE","ENEL.MI","ENI.MI","BNP.PA","MC.PA","OR.PA","AIR.PA",
                       "SAN.PA","CS.PA","DG.PA","SU.PA","INGA.AS","AD.AS","PRX.AS","WKL.AS",
                       "UCG.MI","ISP.MI","RACE.MI","ABI.BR","ARGX.BR","ITX.MC" };
-
 
 
 List<OhlcvRecord> GenerateData(int count)
@@ -684,9 +679,9 @@ $"  Large:  {large.Count:N0} records"
 record OhlcvRecord(string Symbol, string Date, double Open, double High, double Low, double Close, long Volume);
 ```
 
-      Small:  100 records
-      Medium: 10'000 records
-      Large:  100'000 records
+      100 records
+      10'000 records
+      100'000 records
 
 #### Benchmark helpers
 

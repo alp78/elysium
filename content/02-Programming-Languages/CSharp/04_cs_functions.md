@@ -51,7 +51,7 @@ RunDemo();
 
     Hello, Alice!
       Hi, Bob!
-      Local Add: 7
+      7
 
 #### Expression-bodied and tuple return
 
@@ -79,9 +79,9 @@ Divide(17, 5)   // As tuple
 ```
 
     Hello, Diana!
-    Square(5): 25
+    25
     17 / 5 = 3 remainder 2
-    As tuple: (3, 2)
+    (3, 2)
 
 #### Func&lt;T, TResult&gt; — function with return value
 
@@ -141,7 +141,7 @@ FetchData("api/users",
     onError: err => Console.WriteLine($"  Error: {err}"));
 ```
 
-      Got: data from api/users
+      data from api/users
 
 #### Strategy pattern — swap behavior via Func
 
@@ -161,9 +161,9 @@ Console.WriteLine($"  20% off:  ${Calculate(100, discount20):F2}");
 Console.WriteLine($"  Member:   ${Calculate(100, memberDiscount):F2}");
 ```
 
-      Full:     $100.00
-      20% off:  $80.00
-      Member:   $70.00
+      $100.00
+      $80.00
+      $70.00
 
 #### Pipeline — chained Func steps with Aggregate
 
@@ -225,7 +225,7 @@ var order1 = ProcessOrder(new Dictionary<string, object> { ["id"] = 1 });
 Console.WriteLine($"  Production: {order1["processed_at"]}");
 ```
 
-      Production: 25-Mar-26 1:21:14
+      25-Mar-26 1:21:14
 
 #### Dependency injection — test with injected fake DateTime
 
@@ -238,7 +238,7 @@ var order2 = ProcessOrder(
 Console.WriteLine($"  Test:       {order2["processed_at"]}");
 ```
 
-      Test:       01-Jan-24 12:00:00
+      01-Jan-24 12:00:00
 
 #### Progress callback
 
@@ -348,7 +348,7 @@ DoubleIt(ref val);
 val   // ref
 ```
 
-      ref: 10
+      10
 
 #### out — must-assign output
 
@@ -365,7 +365,7 @@ if (TryDivide(10, 3, out int answer))
     Console.WriteLine($"  out: {answer}");
 ```
 
-      out: 3
+      3
 
 #### in — read-only reference
 
@@ -377,7 +377,7 @@ double Distance(in (double x, double y) point)
 Distance((3, 4))   // in
 ```
 
-      in: 5
+      5
 
 #### params — variable arguments
 
@@ -396,9 +396,9 @@ int[] nums = { 1, 2, 3, 4, 5 };
 Total(nums)   // Total(array)
 ```
 
-    Total(1,2,3):   6
-    Total(10,20):   30
-    Total(array):   15
+    6
+    30
+    15
 
 #### No **kwargs — alternatives
 
@@ -445,8 +445,8 @@ square(5)
 add(3, 4)
 ```
 
-    square(5): 25
-    add(3, 4): 7
+    25
+    7
 
 #### Statement lambda — multi-line body with { }
 
@@ -466,7 +466,7 @@ Func<int, string> classify = (x) => {
 classify(-5)
 ```
 
-    classify(-5): negative
+    negative
 
 #### Lambdas with LINQ
 
@@ -486,11 +486,11 @@ var youngest = people.MinBy(p => p.Item2);
 youngest   // Youngest
 ```
 
-    By length:    [Bob, Alice, Diana, Charlie]
-    By last char: [Diana, Bob, Charlie, Alice]
-    Squared: [1, 4, 9, 16, 25]
-    Evens:   [2, 4]
-    Youngest: (Bob, 25)
+    [Bob, Alice, Diana, Charlie]
+    [Diana, Bob, Charlie, Alice]
+    [1, 4, 9, 16, 25]
+    [2, 4]
+    (Bob, 25)
 
 #### Action, Predicate, and closure capture
 
@@ -511,8 +511,8 @@ list.Exists(x => x > 5)   // Exists > 5
 ```
 
       HELLO!
-    FindAll even: [2, 4, 6]
-    Exists > 5:   True
+    [2, 4, 6]
+    True
 
 #### Closure capture — variable, not value
 
@@ -526,8 +526,8 @@ multiplier = 10;                                // change captured variable
 times(5)
 ```
 
-    times(5): 15
-    times(5): 50
+    15
+    50
 
 #### Lambdas vs named methods
 
@@ -555,7 +555,7 @@ C# uses block-level scoping defined by `{}`. A variable is visible from its decl
 // x is not accessible here — block scope ended
 ```
 
-      Inside block: 10
+      10
 
 #### Closures capture variables
 
@@ -573,8 +573,8 @@ add5(3)
 add10(3)
 ```
 
-    add5(3):  8
-    add10(3): 13
+    8
+    13
 
 #### Closure modifies outer variable
 
@@ -589,7 +589,7 @@ increment();
 counter
 ```
 
-    counter: 3
+    3
 
 #### Closure as state — counter factory
 
@@ -609,9 +609,9 @@ var c2 = MakeCounter(0);              // independent closure
 c2()
 ```
 
-    c1(): 11
-    c1(): 12
-    c2(): 1
+    11
+    12
+    1
 
 #### Range validator factory — parameterized closure
 
@@ -627,8 +627,8 @@ isValidAge(25)   // age 25
 isValidAge(150)   // age 150
 ```
 
-    age 25:  True
-    age 150: False
+    True
+    False
 
 #### Loop capture gotcha
 
@@ -652,8 +652,8 @@ for (int i = 0; i < 3; i++)
 string.Join(", ", funcsGood.Select(f => f()))   // Good
 ```
 
-    Bad:  [3, 3, 3]
-    Good: [0, 1, 2]
+    [3, 3, 3]
+    [0, 1, 2]
 
 ## Delegates & Events
 
@@ -677,8 +677,8 @@ op(3, 4)   // Mul
 delegate int MathOp(int a, int b);     // custom delegate type
 ```
 
-    Add: 7
-    Mul: 12
+    7
+    12
 
 #### Multicast delegates — += to chain, invoke all subscribers
 
@@ -696,8 +696,6 @@ pipeline("hello world");    // all 3 functions execute
 
 > [!info] Delegate Removal
 > Delegates support `-=` to remove handlers from the invocation list, enabling dynamic pipeline step management at runtime.
-
-    Calling pipeline:
       Step 1: hello world
       Step 2: HELLO WORLD
       Step 3: 11 chars
@@ -742,7 +740,7 @@ ProcessData(new[] { 1, 2, 3 }, result => Console.Write($"{result} "));
 Console.WriteLine();
 ```
 
-    Results: 2 4 6
+    2 4 6
 
 ## Method Overloading & Extension Methods
 
@@ -772,10 +770,10 @@ Format("hello")
 Format(10, 20)
 ```
 
-    int: 42
-    double: 3.14
-    string: 'hello'
-    two ints: 10 + 20 = 30
+    42
+    3.14
+    'hello'
+    10 + 20 = 30
 
 #### Extension methods and LINQ
 
@@ -791,4 +789,4 @@ var nums = new[] { 1, 2, 3, 4, 5 };
 string.Join(", ", nums.Where(x => x > 2).Select(x => x * 10))   // Where+Select
 ```
 
-    Where+Select: [30, 40, 50]
+    [30, 40, 50]

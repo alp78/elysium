@@ -83,11 +83,11 @@ currentTime  // TimeOnly
 now.GetType()  // type
 ```
 
-    DateTime.Now:    25-Mar-26 5:25:13
-    DateTime.UtcNow: 25-Mar-26 4:25:13
-    DateOnly:        25-Mar-26
-    TimeOnly:        5:25
-    type:            System.DateTime
+    25-Mar-26 5:25:13
+    25-Mar-26 4:25:13
+    25-Mar-26
+    5:25
+    System.DateTime
 
 #### Creating specific dates and times
 
@@ -106,10 +106,10 @@ dtTicks  // With ticks
 ```
 
     
-    Specific DateTime: 15-Mar-24 14:30:45
-    Specific DateOnly: 15-Mar-24
-    Specific TimeOnly: 14:30
-    With ticks:        15-Mar-24 14:30:45
+    15-Mar-24 14:30:45
+    15-Mar-24
+    14:30
+    15-Mar-24 14:30:45
 
 #### DateTime .Year, .Month, .Day, .Hour — accessing components
 
@@ -133,19 +133,18 @@ System.Globalization.ISOWeek.GetWeekOfYear(dt)  // Week (ISO)
 dt.Kind            // Unspecified, Local, or Utc
 ```
 
-    === Components ===
-    Year:        2024
-    Month:       3
-    Day:         15
-    Hour:        14
-    Minute:      30
-    Second:      45
-    Millisecond: 123
-    Ticks:       638461098451234560
-    DayOfWeek:   Friday
-    DayOfYear:   75
-    Week (ISO):  11
-    Kind:        Unspecified
+    2024
+    3
+    15
+    14
+    30
+    45
+    123
+    638461098451234560
+    Friday
+    75
+    11
+    Unspecified
 
 #### Unix timestamp conversions
 
@@ -163,9 +162,9 @@ tsSeconds  // Timestamp (seconds)
 tsMillis  // Timestamp (millis)
 ```
 
-    Timestamp: 25-Mar-26 5:25:13 +01:00
-    Timestamp (seconds): 1774412713
-    Timestamp (millis):  1774412713988
+    25-Mar-26 5:25:13 +01:00
+    1774412713
+    1774412713988
 
 #### Unix timestamp to DateTime
 
@@ -179,8 +178,8 @@ fromTsUtc  // From timestamp (UTC)
 ```
 
     
-    From timestamp (local): 25-Mar-26 5:25:13
-    From timestamp (UTC):   25-Mar-26 4:25:13
+    25-Mar-26 5:25:13
+    25-Mar-26 4:25:13
 
 #### .NET Ticks — sub-millisecond precision
 
@@ -193,7 +192,7 @@ new DateTime(now.Ticks)  // From ticks
 
     
     .NET Ticks: 639100131139884609
-    From ticks: 25-Mar-26 5:25:13
+    25-Mar-26 5:25:13
 
 #### Unix epoch reference — 1970-01-01 UTC
 
@@ -205,7 +204,7 @@ epoch  // Epoch
 ```
 
     
-    Epoch: 01-Jan-70 0:00:00
+    01-Jan-70 0:00:00
 
 #### Parsing strings to DateTime
 
@@ -233,7 +232,6 @@ foreach (var (s, d) in inputs)
     $"  {("'" + s + "'"),-32} -> {d}"
 ```
 
-    === String -> DateTime (ParseExact) ===
       '2024-03-15 14:30:45'            -> 15-Mar-24 14:30:45
       '15/03/2024'                     -> 15-Mar-24 0:00:00
       'March 15, 2024 2:30 PM'         -> 15-Mar-24 14:30:00
@@ -265,7 +263,7 @@ var auto = DateTime.Parse("2024-03-15T14:30:45");
 auto  // Auto-parsed
 ```
 
-    Auto-parsed: 15-Mar-24 14:30:45
+    15-Mar-24 14:30:45
 
 #### Formatting — ToString
 
@@ -287,17 +285,17 @@ dt.ToString("s")  // s  Sortable
 dt.ToString("o")  // o  Round-trip
 ```
 
-    d  Short date:    15-Mar-24
-    D  Long date:     Friday, March 15, 2024
-    t  Short time:    14:30
-    T  Long time:     14:30:45
-    f  Full short:    Friday, March 15, 2024 14:30
-    F  Full long:     Friday, March 15, 2024 14:30:45
-    g  General short: 15-Mar-24 14:30
-    G  General long:  15-Mar-24 14:30:45
-    R  RFC 1123:      Fri, 15 Mar 2024 14:30:45 GMT
-    s  Sortable:      2024-03-15T14:30:45
-    o  Round-trip:    2024-03-15T14:30:45.1234560
+    15-Mar-24
+    Friday, March 15, 2024
+    14:30
+    14:30:45
+    Friday, March 15, 2024 14:30
+    Friday, March 15, 2024 14:30:45
+    15-Mar-24 14:30
+    15-Mar-24 14:30:45
+    Fri, 15 Mar 2024 14:30:45 GMT
+    2024-03-15T14:30:45
+    2024-03-15T14:30:45.1234560
 
 #### Custom format strings
 
@@ -316,16 +314,16 @@ dt.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff")  // With fraction
 dt.ToString("yyyyMMddHHmmss")  // Compact
 ```
 
-    ISO 8601:       2024-03-15T14:30:45
-    Date only:      2024-03-15
-    Time only:      14:30:45
-    US format:      03-15-2024
-    EU format:      15-03-2024
-    Long date:      March 15, 2024
-    12-hour:        02:30 PM
-    Day of week:    Friday
-    With fraction:  2024-03-15T14:30:45.1234560
-    Compact:        20240315143045
+    2024-03-15T14:30:45
+    2024-03-15
+    14:30:45
+    03-15-2024
+    15-03-2024
+    March 15, 2024
+    02:30 PM
+    Friday
+    2024-03-15T14:30:45.1234560
+    20240315143045
 
 #### Format specifier reference
 
@@ -367,9 +365,9 @@ dtLocal.ToString("zzz")  // zzz (Local)
       dddd     = Friday                 (Weekday full)
       ddd      = Fri                    (Weekday abbr)
     
-      K (UTC):       Z
-      K (Local):     +01:00
-      zzz (Local):   +01:00
+      Z
+      +01:00
+      +01:00
 
 #### ISO 8601 conversions
 
@@ -383,9 +381,9 @@ $"Sortable (s):    {dt:s}"                           // 2024-03-15T14:30:45
 dt:yyyy-MM-ddTHH:mm:ss.fff  // Custom ISO
 ```
 
-    Round-trip (o):  2024-03-15T14:30:45.1234560
-    Sortable (s):    2024-03-15T14:30:45
-    Custom ISO:      2024-03-15T14:30:45.123
+    2024-03-15T14:30:45.1234560
+    2024-03-15T14:30:45
+    2024-03-15T14:30:45.123
 
 #### Parsing ISO 8601 strings
 
@@ -401,8 +399,8 @@ $"From ISO (Z):    {fromIso2} Kind={fromIso2.Kind}"
 $"From ISO (+5:30):{fromIso3} Offset={fromIso3.Offset}"
 ```
 
-    From ISO:        15-Mar-24 14:30:45
-    From ISO (Z):    15-Mar-24 15:30:45 Kind=Local
+    15-Mar-24 14:30:45
+    15-Mar-24 15:30:45 Kind=Local
     From ISO (+5:30):15-Mar-24 14:30:45 +05:30 Offset=05:30:00
 
 #### DateTimeOffset preserves timezone
@@ -417,10 +415,10 @@ dto.LocalDateTime  // Local
 dto.Offset  // Offset
 ```
 
-    DateTimeOffset:  15-Mar-24 14:30:45 +05:30
-      UTC:           15-Mar-24 9:00:45
-      Local:         15-Mar-24 10:00:45
-      Offset:        05:30:00
+    15-Mar-24 14:30:45 +05:30
+      15-Mar-24 9:00:45
+      15-Mar-24 10:00:45
+      05:30:00
 
 #### TimeZoneInfo.FindSystemTimeZoneById — timezone management
 
@@ -436,9 +434,9 @@ $"Local:       {local}, Kind={local.Kind}"
 $"UTC:         {utc}, Kind={utc.Kind}"
 ```
 
-    Unspecified: 15-Mar-24 14:30:45, Kind=Unspecified
-    Local:       15-Mar-24 14:30:45, Kind=Local
-    UTC:         15-Mar-24 14:30:45, Kind=Utc
+    15-Mar-24 14:30:45, Kind=Unspecified
+    15-Mar-24 14:30:45, Kind=Local
+    15-Mar-24 14:30:45, Kind=Utc
 
 #### TimeZoneInfo.ConvertTime — converting between timezones
 
@@ -460,12 +458,12 @@ TimeZoneInfo.ConvertTimeFromUtc(utcNow, sydney)  // -> Sydney
 TimeZoneInfo.ConvertTimeFromUtc(utcNow, india)  // -> India
 ```
 
-    UTC now:     25-Mar-26 4:30:20
-    -> Eastern:  25-Mar-26 0:30:20
-    -> London:   25-Mar-26 4:30:20
-    -> Tokyo:    25-Mar-26 13:30:20
-    -> Sydney:   25-Mar-26 15:30:20
-    -> India:    25-Mar-26 10:00:20
+    25-Mar-26 4:30:20
+    25-Mar-26 0:30:20
+    25-Mar-26 4:30:20
+    25-Mar-26 13:30:20
+    25-Mar-26 15:30:20
+    25-Mar-26 10:00:20
 
 #### DateTimeOffset — carries the offset with it
 
@@ -486,11 +484,11 @@ foreach (var tz in TimeZoneInfo.GetSystemTimeZones().Take(5))
     $"  {tz.Id} ({tz.DisplayName})"
 ```
 
-    DateTimeOffset UTC:   15-Mar-24 14:30:45 +00:00
-    -> New York (-4):     15-Mar-24 10:30:45 -04:00
+    15-Mar-24 14:30:45 +00:00
+    15-Mar-24 10:30:45 -04:00
     -> India (+5:30):     15-Mar-24 20:00:45 +05:30
     
-    Available timezones: 141
+    141
       Dateline Standard Time ((UTC-12:00) International Date Line West)
       UTC-11 ((UTC-11:00) Coordinated Universal Time-11)
       Aleutian Standard Time ((UTC-10:00) Aleutian Islands)
@@ -514,14 +512,14 @@ dt.AddMonths(6)  // + 6 months
 dt.AddYears(1)  // + 1 year
 ```
 
-    Original:           15-Mar-24 14:30:45
-    + 7 days:           22-Mar-24 14:30:45
-    - 30 days:          14-Feb-24 14:30:45
-    + 2 hours:          15-Mar-24 16:30:45
-    + 90 minutes:       15-Mar-24 16:00:45
-    + 1w 3h 30m:        22-Mar-24 18:00:45
-    + 6 months:         15-Sep-24 14:30:45
-    + 1 year:           15-Mar-25 14:30:45
+    15-Mar-24 14:30:45
+    22-Mar-24 14:30:45
+    14-Feb-24 14:30:45
+    15-Mar-24 16:30:45
+    15-Mar-24 16:00:45
+    22-Mar-24 18:00:45
+    15-Sep-24 14:30:45
+    15-Mar-25 14:30:45
 
 #### TimeSpan — difference between dates
 
@@ -540,10 +538,10 @@ diff.TotalHours  // Total hours
 ```
 
     From 15-Mar-24 to 25-Dec-24
-    Difference:         285.00:00:00
-    Days:               285
-    Total days:         285
-    Total hours:        6840
+    285.00:00:00
+    285
+    285
+    6840
 
 #### DateTime.Compare, CompareTo — comparing dates
 
@@ -556,10 +554,10 @@ dt1 > dt2  // dt1 > dt2
 DateTime.Compare(dt1, dt2)  // Compare
 ```
 
-    dt1 < dt2:   True
-    dt1 == dt2:  False
-    dt1 > dt2:   False
-    Compare:     -1
+    True
+    False
+    False
+    -1
 
 #### Arithmetic on different date/time types
 
@@ -582,17 +580,16 @@ $"+ 1 year:        {dt.AddYears(1)}"        // built-in!
 $"Combined:        {dt.Add(new TimeSpan(1, 2, 30, 15))}"  // 1d 2h 30m 15s
 ```
 
-    === DateTime arithmetic ===
-    Original:        15-Mar-24 14:30:45
-    + 1 day:         16-Mar-24 14:30:45
-    - 2 hours:       15-Mar-24 12:30:45
-    + 30 minutes:    15-Mar-24 15:00:45
-    + 45 seconds:    15-Mar-24 14:31:30
-    + 500ms:         15-Mar-24 14:30:45
-    + 1.5 days:      17-Mar-24 2:30:45
-    + 1 month:       15-Apr-24 14:30:45
-    + 1 year:        15-Mar-25 14:30:45
-    Combined:        16-Mar-24 17:01:00
+    15-Mar-24 14:30:45
+    16-Mar-24 14:30:45
+    15-Mar-24 12:30:45
+    15-Mar-24 15:00:45
+    15-Mar-24 14:31:30
+    15-Mar-24 14:30:45
+    17-Mar-24 2:30:45
+    15-Apr-24 14:30:45
+    15-Mar-25 14:30:45
+    16-Mar-24 17:01:00
 
 #### DateOnly: only days/months/years
 
@@ -614,13 +611,12 @@ $"Diff {d} to {d2}: {daysDiff} days"
 ```
 
     
-    === DateOnly arithmetic ===
-    Original:        15-Mar-24
-    + 7 days:        22-Mar-24
-    - 30 days:       14-Feb-24
-    + 1 month:       15-Apr-24
-    + 1 year:        15-Mar-25
-    Diff 15-Mar-24 to 25-Dec-24: 285 days
+    15-Mar-24
+    22-Mar-24
+    14-Feb-24
+    15-Apr-24
+    15-Mar-25
+    285 days
 
 #### TimeOnly: hours/minutes/seconds arithmetic
 
@@ -640,14 +636,13 @@ $"+ 12 hours:      {t.AddHours(12)}"  // wraps past midnight
 ```
 
     
-    === TimeOnly arithmetic ===
-    Original:        14:30
-    + 2h 15m:        16:45
-    - 45m:           13:45
-    + 30 seconds:    14:31
-    AddHours(3):     17:30
-    AddMinutes(90):  16:00
-    + 12 hours:      2:30
+    14:30
+    16:45
+    13:45
+    14:31
+    17:30
+    16:00
+    2:30
 
 #### Timestamp: arithmetic via DateTimeOffset
 
@@ -666,13 +661,12 @@ DateTimeOffset.FromUnixTimeSeconds(ts + 86400).DateTime  // Back to DateTime
 ```
 
     
-    === Timestamp arithmetic ===
-    Original:        1710513045
-    + 1 day:         1710599445
-    + 1 hour:        1710516645
-    + 30 minutes:    1710514845
-    + 45 seconds:    1710513090
-    Back to DateTime: 16-Mar-24 14:30:45
+    1710513045
+    1710599445
+    1710516645
+    1710514845
+    1710513090
+    16-Mar-24 14:30:45
 
 #### Month arithmetic handles edge cases
 
@@ -687,10 +681,9 @@ $"Jan 31 + 1 year:  {jan31.AddYears(1)}"   // Jan 31
 ```
 
     
-    === Month edge cases ===
-    Jan 31 + 1 month: 29-Feb-24 0:00:00
+    29-Feb-24 0:00:00
     Jan 31 + 2 months:31-Mar-24 0:00:00
-    Jan 31 + 1 year:  31-Jan-25 0:00:00
+    31-Jan-25 0:00:00
 
 ## Math and Random
 
@@ -712,9 +705,9 @@ Math.Min(10, 20)  // Min(10, 20)
 $"Clamp(15, 0, 10):{Math.Clamp(15, 0, 10)}"
 ```
 
-    Abs(-42):        42
-    Max(10, 20):     20
-    Min(10, 20):     10
+    42
+    20
+    10
     Clamp(15, 0, 10):10
 
 #### Math.Floor, Math.Ceiling, Math.Round — rounding strategies
@@ -730,12 +723,12 @@ $"Round(2.5, AwayFromZero): {Math.Round(2.5, MidpointRounding.AwayFromZero)}" //
 Math.Truncate(3.9)  // Truncate(3.9)
 ```
 
-    Floor(3.7):      3
-    Ceiling(3.2):    4
-    Round(3.5):      4
-    Round(2.5):      2
+    3
+    4
+    4
+    2
     Round(2.5, AwayFromZero): 3
-    Truncate(3.9):   3
+    3
 
 #### Math.Sqrt, Math.Log, Math.Pow — powers, roots, logarithms
 
@@ -751,13 +744,13 @@ $"Log2(1024):      {Math.Log2(1024)}"         // log base 2
 Math.Exp(1)  // Exp(1)
 ```
 
-    Pow(2, 10):      1024
-    Sqrt(144):       12
-    Cbrt(27):        3
-    Log(100):        4.605170185988092
-    Log10(100):      2
-    Log2(1024):      10
-    Exp(1):          2.718281828459045
+    1024
+    12
+    3
+    4.605170185988092
+    2
+    10
+    2.718281828459045
 
 #### Math.Sin, Math.Cos, Math.PI, Math.E — trigonometry and constants
 
@@ -772,12 +765,12 @@ Math.Cos(0)  // Cos(0)
 Math.Atan2(1, 1)  // Atan2(1, 1)
 ```
 
-    PI:              3.141592653589793
-    E:               2.718281828459045
-    Tau:             6.283185307179586
-    Sin(π/2):        1
-    Cos(0):          1
-    Atan2(1, 1):     0.7853981633974483
+    3.141592653589793
+    2.718281828459045
+    6.283185307179586
+    1
+    1
+    0.7853981633974483
 
 #### double.NaN, double.IsNaN, double.PositiveInfinity — special values
 
@@ -790,10 +783,10 @@ double.IsNaN(0.0 / 0.0)  // IsNaN(0.0/0.0)
 double.IsInfinity(1.0 / 0.0)  // IsInfinity(1.0/0.0)
 ```
 
-    double.NaN:            NaN
-    double.PositiveInf:    ∞
-    IsNaN(0.0/0.0):        True
-    IsInfinity(1.0/0.0):   True
+    NaN
+    ∞
+    True
+    True
 
 #### LINQ OrderBy + ElementAt — percentile calculation
 
@@ -810,8 +803,8 @@ $"Latencies: [{string.Join(", ", latencies.Select(l => $"{l:F1}"))}]"
 $"P95 latency: {p95:F2} ms"
 ```
 
-    Latencies: [3.1, 6.7, 12.5, 15.3, 22.0, 33.4, 45.2, 51.8, 78.9, 99.1]
-    P95 latency: 90.01 ms
+    [3.1, 6.7, 12.5, 15.3, 22.0, 33.4, 45.2, 51.8, 78.9, 99.1]
+    90.01 ms
 
 #### Random.Shared.Next, NextDouble — random number generation
 
@@ -849,10 +842,10 @@ rng.Shuffle(items);
 $"Shuffled: [{string.Join(", ", items)}]"
 ```
 
-    Bytes: [158, 86, 240, 173, 191, 58, 111, 183]
+    [158, 86, 240, 173, 191, 58, 111, 183]
     
-    Original: [A, B, C, D, E]
-    Shuffled: [E, D, B, C, A]
+    [A, B, C, D, E]
+    [E, D, B, C, A]
 
 #### Random pick
 
@@ -863,7 +856,7 @@ var colors = new[] { "red", "green", "blue", "yellow" };
 colors[rng.Next(colors.Length)]  // Random pick
 ```
 
-    Random pick: red
+    red
 
 #### Random + DateTime — synthetic OHLCV test data generation
 
@@ -933,15 +926,15 @@ The standard .NET logging abstraction — same API for console, file, and cloud 
 ```
 
     dbug: PipelineDemo[0]
-          Debug: starting pipeline
+          starting pipeline
     info: PipelineDemo[0]
-          Info: processed 42 rows
+          processed 42 rows
     warn: PipelineDemo[0]
-          Warning: schema drift detected in events_raw
+          schema drift detected in events_raw
     fail: PipelineDemo[0]
-          Error: failed to write partition 2024-03-15
+          failed to write partition 2024-03-15
     crit: PipelineDemo[0]
-          Critical: pipeline halted — data loss risk
+          pipeline halted — data loss risk
 
 #### ILogger.LogInformation, LogWarning, LogError — structured log levels
 
@@ -982,9 +975,9 @@ The standard .NET logging abstraction — same API for console, file, and cloud 
     info: ETL[0]
           Loaded events_raw: 6714 rows in 876ms
     info: ETL[0]
-          Loaded users: 1342 rows in 2709ms
+          1342 rows in 2709ms
     info: ETL[0]
-          Loaded transactions: 1767 rows in 1460ms
+          1767 rows in 1460ms
     info: ETL[0]
           Pipeline completed at 03/25/2026 04:35:25
 
@@ -1017,12 +1010,12 @@ Environment.SetEnvironmentVariable("PIPELINE_ENV", "staging");
 Environment.GetEnvironmentVariable("PIPELINE_ENV")  // PIPELINE_ENV
 ```
 
-    USERNAME:              Alex
-    COMPUTERNAME:          ELYSIUM
-    OS:                    Windows_NT
+    Alex
+    ELYSIUM
+    Windows_NT
     
     DATABASE_HOST (default): localhost
-    PIPELINE_ENV:          staging
+    staging
 
 #### Environment.GetEnvironmentVariables — list all env vars
 
@@ -1103,12 +1096,11 @@ config["Pipeline:Enabled"]  // Enabled
 config["ConnectionStrings:Warehouse"]  // Connection
 ```
 
-    === Read Configuration ===
-    Pipeline name: events_etl
-    Batch size:    5000
-    Max retries:   3
-    Enabled:       True
-    Connection:    Server=prod-db;Database=analytics;Trusted_Connection=true
+    events_etl
+    5000
+    3
+    True
+    Server=prod-db;Database=analytics;Trusted_Connection=true
 
 #### IConfiguration GetValue, GetSection, Bind — reading config values
 
@@ -1128,12 +1120,10 @@ foreach (var child in loggingSection.GetChildren())
 ```
 
     
-    === GetValue<T> with defaults ===
-    BatchSize (int):    5000
-    Enabled (bool):     True
-    Timeout (missing):  30
+    5000
+    True
+    30
     
-    === Nested Section: Logging:LogLevel ===
       Default = Information
 
 #### Override config with environment variables
@@ -1159,8 +1149,7 @@ tmpDir  // Cleaned up
 ```
 
     
-    === Env Var Override ===
-    BatchSize (from JSON):    5000
-    BatchSize (after envvar): 10000
+    5000
+    10000
     
-    Cleaned up: C:\Users\aperi\AppData\Local\Temp\config_demo_1c1e72c6
+    C:\Users\aperi\AppData\Local\Temp\config_demo_1c1e72c6

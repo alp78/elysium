@@ -47,9 +47,8 @@ var args = doc.RootElement.GetProperty("args");
 $"ticker={args.GetProperty("ticker").GetString()}, date={args.GetProperty("date").GetString()}"  // args
 ```
 
-    === GET Request ===
-    Status: 200 OK
-    Args: ticker=AAPL, date=2024-03-15
+    200 OK
+    ticker=AAPL, date=2024-03-15
 
 #### GET with typed JSON deserialization
 
@@ -60,8 +59,7 @@ var data = JsonSerializer.Deserialize<JsonElement>(await dataResp.Content.ReadAs
 data.GetProperty("origin").GetString()  // origin
 ```
 
-    === GET with JSON deserialization ===
-    Origin: 86.49.254.12
+    86.49.254.12
 
 #### POST request — send JSON data
 
@@ -86,9 +84,8 @@ var postData = JsonSerializer.Deserialize<JsonElement>(await resp.Content.ReadAs
 postData.GetProperty("json")  // body echoed
 ```
 
-    === POST Request ===
-    Status: 200
-    Body echoed: {
+    200
+    {
         "limit_price": 178.5, 
         "order_type": "LIMIT", 
         "quantity": 100, 
@@ -110,9 +107,8 @@ headers.GetProperty("Authorization").GetString()  // Authorization
 headers.GetProperty("X-Client-Id").GetString()  // X-Client-Id
 ```
 
-    === Custom Headers ===
-      Authorization: Bearer sk_demo_fake_key_12345
-      X-Client-Id: trading-pipeline-v2
+      Bearer sk_demo_fake_key_12345
+      trading-pipeline-v2
 
 #### HttpClient REST API — status code handling
 
@@ -137,7 +133,6 @@ catch (HttpRequestException ex)
 }
 ```
 
-    === Status Code Handling ===
       200: 200 OK
       201: 201 OK
       400: 400 FAILED
@@ -145,7 +140,7 @@ catch (HttpRequestException ex)
       404: 404 FAILED
       500: 500 FAILED
     
-      EnsureSuccessStatusCode() caught: Response status code does not indicate success: 500 (INTERNAL SERVER ERROR).
+      Response status code does not indicate success: 500 (INTERNAL SERVER ERROR).
 
 ## REST API Patterns for Data Engineering
 
@@ -176,20 +171,19 @@ for (int page = 1; page <= 3; page++)
 allPages.Count  // total pages
 ```
 
-    === Pagination ===
-      Page 1: fetched (args: {
+      fetched (args: {
         "page": "1", 
         "per_page": "50"
       })
-      Page 2: fetched (args: {
+      fetched (args: {
         "page": "2", 
         "per_page": "50"
       })
-      Page 3: fetched (args: {
+      fetched (args: {
         "page": "3", 
         "per_page": "50"
       })
-      Total pages: 3
+      3
 
 #### REST API Retry with exponential backoff
 
@@ -229,8 +223,7 @@ var result = await FetchWithRetry(client, "https://httpbin.org/get?ticker=AAPL")
 (int)result.StatusCode  // success
 ```
 
-    === Retry with Backoff ===
-      Success: 200
+      200
 
 #### REST API Bulk POST — batch multiple records
 
@@ -252,10 +245,9 @@ batch.Length  // trades sent
 postData.GetProperty("json").GetProperty("trades").GetArrayLength()  // server received
 ```
 
-    === Bulk POST ===
       Sent 3 trades
-      Status: 200
-      Server received: 3 trades
+      200
+      3 trades
 
 ## Building a REST API (ASP.NET Minimal APIs)
 
@@ -297,7 +289,6 @@ var positions = new Dictionary<string, PortfolioPosition>
 $"{{ status: healthy }}"
 ```
 
-    === GET /health ===
       { status: healthy }
 
 #### ASP.NET REST API — GET /positions with optional filter
@@ -331,13 +322,10 @@ var (s3, b3) = GetPositions("TSLA");
 $"{s3}: {b3}"
 ```
 
-    === GET /positions ===
       200 OK: 3 positions
     
-    === GET /positions?ticker=AAPL ===
       200 OK: PortfolioPosition { Ticker = AAPL, Shares = 500, AvgCost = 165, MarketValue = 89250 }
     
-    === GET /positions?ticker=TSLA ===
       404 Not Found: No position for TSLA
 
 #### ASP.NET REST API — GET /positions/{ticker} single lookup
@@ -361,10 +349,8 @@ var (s2, b2) = GetPosition("TSLA");
 $"{s2}: {b2}"
 ```
 
-    === GET /positions/MSFT ===
       200 OK: PortfolioPosition { Ticker = MSFT, Shares = 200, AvgCost = 380.5, MarketValue = 83040 }
     
-    === GET /positions/TSLA ===
       404 Not Found: No position for TSLA
 
 #### ASP.NET REST API — POST /trades submit a trade order
@@ -390,10 +376,8 @@ var (s2, b2) = PostTrade(new Trade("TRD_001", "AAPL", "BUY", 100, 178.50));
 $"{s2}: {b2}"
 ```
 
-    === POST /trades (new order) ===
       201 Created: TradeResponse { TradeId = TRD_001, Status = ACCEPTED, Message = BUY 100 AAPL @ 178.5 }
     
-    === POST /trades (duplicate) ===
       409 Conflict: Trade TRD_001 already exists
 
 #### ASP.NET REST API — DELETE /trades/{tradeId} cancel a trade
@@ -417,10 +401,8 @@ var (s2, b2) = DeleteTrade("TRD_999");
 $"{s2}: {b2}"
 ```
 
-    === DELETE /trades/TRD_001 ===
       200 OK: { status = CANCELLED, trade_id = TRD_001 }
     
-    === DELETE /trades/TRD_999 (not found) ===
       404 Not Found: Trade TRD_999 not found
 
 #### ASP.NET Minimal API wiring (outside notebooks)
@@ -521,9 +503,9 @@ foreach (var (label, dto) in badCases)
 }
 ```
 
-    Valid: TradeOrderDto { TradeId = TRD_001, Ticker = AAPL, Side = BUY, Quantity = 100, Price = 178.5, Notes =  }
-    Valid: True
-      short ID: PASSED
+    TradeOrderDto { TradeId = TRD_001, Ticker = AAPL, Side = BUY, Quantity = 100, Price = 178.5, Notes =  }
+    True
+      PASSED
       lowercase ticker: PASSED
       invalid side: PASSED
       zero quantity: PASSED
@@ -595,8 +577,8 @@ Validator.TryValidateObject(badName, new ValidationContext(badName), nameResults
 nameResults.Count > 0 ? $"REJECTED — {nameResults[0].ErrorMessage}" : "PASSED"  // non-snake_case
 ```
 
-    Valid config: True
-    End before start: REJECTED — EndDate (01-Jan-24) must be after StartDate (01-Jun-24)
+    True
+    REJECTED — EndDate (01-Jan-24) must be after StartDate (01-Jun-24)
     Non-snake_case: PASSED
 
 #### Nested records and enums — compose complex API schemas
@@ -656,8 +638,8 @@ Validator.TryValidateObject(bad3, new ValidationContext(bad3), r3, true);
 r3.Count > 0 ? $"REJECTED — {r3[0].ErrorMessage}" : "PASSED"  // PAIRS+3 legs
 ```
 
-    Order: MLO_001 | PAIRS | 2 legs | Pending
-    PAIRS+3 legs: REJECTED — PAIRS strategy requires exactly 2 legs
+    MLO_001 | PAIRS | 2 legs | Pending
+    REJECTED — PAIRS strategy requires exactly 2 legs
 
 #### JSON serialization control — `JsonPropertyName`, `JsonStringEnumConverter`
 
@@ -685,7 +667,6 @@ var deserialized = JsonSerializer.Deserialize<MultiLegOrder>(json, jsonOpts);
 $"{deserialized?.OrderId} | {deserialized?.Status}"  // deserialized
 ```
 
-    === JSON output (camelCase + string enum) ===
     {
       "orderId": "MLO_001",
       "strategy": "PAIRS",
@@ -706,7 +687,7 @@ $"{deserialized?.OrderId} | {deserialized?.Status}"  // deserialized
       "status": "Pending"
     }
     
-    Deserialized: MLO_001 | Pending
+    MLO_001 | Pending
 
 #### Immutable records and init-only properties
 

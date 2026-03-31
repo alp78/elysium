@@ -111,9 +111,9 @@ projectId   // project
 bucketName  // bucket
 ```
 
-    Authenticated: UserCredential
-    Project: index-lab-2
-    Bucket:  index-lab-2-index-data
+    UserCredential
+    index-lab-2
+    index-lab-2-index-data
 
 ## Cloud Storage (GCS)
 
@@ -161,20 +161,17 @@ storageClient.DeleteObject(bucketName, blobName);
 Console.WriteLine($"\n  Deleted: {blobName}");
 ```
 
-    === List Bronze Blobs ===
       bronze/.keep                                                0 bytes
       bronze/ohlcv/20260322_ohlcv.csv                        35'426 bytes
     
-    === Upload CSV ===
-      Uploaded: gs://index-lab-2-index-data/bronze/ohlcv/20260322_test_cs.csv (67 bytes)
+      gs://index-lab-2-index-data/bronze/ohlcv/20260322_test_cs.csv (67 bytes)
     
-    === Download & Verify ===
       Downloaded (67 bytes):
         symbol,date,close
         ASML.AS,2026-03-20,685.40
         MC.PA,2026-03-20,890.20
     
-      Deleted: bronze/ohlcv/20260322_test_cs.csv
+      bronze/ohlcv/20260322_test_cs.csv
 
 ## BigQuery
 
@@ -214,7 +211,6 @@ foreach (var row in bqClient.ExecuteQuery(sql, parameters: null))
     Console.WriteLine($"  {row["composite_rank"],2}. {row["symbol"],-10} close={row["close"],8}  momentum={row["momentum_pct"],+6}%  vol={row["vol_ratio"]}");
 ```
 
-    === Query Bronze OHLCV ===
     Symbol     Date              Close         Volume
     ──────────────────────────────────────────────────
       ASML.AS    20-Mar-26 0:00:00     1128.2        2685518
@@ -228,7 +224,6 @@ foreach (var row in bqClient.ExecuteQuery(sql, parameters: null))
       SIE.DE     19-Mar-26 0:00:00      210.3        2407185
       TTE.PA     19-Mar-26 0:00:00      78.59       13162837
     
-    === Query Gold Scores ===
        1. TTE.PA     close=   76.96  momentum= 12.82%  vol=1.61
        2. ASML.AS    close=  1128.2  momentum= -6.15%  vol=3.01
        3. SAP.DE     close=  153.82  momentum=  -8.7%  vol=2.84
@@ -291,12 +286,10 @@ if (ackIds.Count > 0)
 }
 ```
 
-    === Publish Events ===
-      Published: ohlcv_loaded_cs (msg_id=18105610464022399)
-      Published: silver_computed_cs (msg_id=18105731398234272)
-      Published: gold_scored_cs (msg_id=18105493728682506)
+      ohlcv_loaded_cs (msg_id=18105610464022399)
+      silver_computed_cs (msg_id=18105731398234272)
+      gold_scored_cs (msg_id=18105493728682506)
     
-    === Pull Messages ===
       "2026-03-22T13:37:42.738Z" | {"event": "ohlcv_loaded_cs", "source": "csharp"}
       "2026-03-22T13:37:42.865Z" | {"event": "silver_computed_cs", "source": "csharp"}
       "2026-03-22T13:37:42.973Z" | {"event": "gold_scored_cs", "source": "csharp"}
@@ -392,10 +385,8 @@ foreach (var s in scores)
 Console.WriteLine($"\n  Cleaned up {scores.Length} score documents");
 ```
 
-    === Write to Firestore ===
       Written 3 documents
     
-    === Read Pulse Live Data (REST API) ===
       ASML.AS     price=   1128.20  change= -+3.46%
       MC.PA       price=    457.95  change= -+0.50%
       SAP.DE      price=    153.82  change= -+3.86%
@@ -478,7 +469,6 @@ for (int i = 0; i < 4; i++)  // 4 polls x 30s = 2 minutes
 Console.WriteLine($"\nPolling complete. {pollCount} polls, {previousPrices.Count} tickers tracked.");
 ```
 
-    === Firestore Polling (REST API) ===
     Polling pulse_live every 30s for 2 minutes...
     
     [Poll #1 at 14:38:00]
@@ -544,11 +534,9 @@ foreach (var secret in smClient.ListSecrets(new Google.Cloud.SecretManager.V1.Li
     Console.WriteLine($"  {secret.SecretName.SecretId}");
 ```
 
-    === Read Secrets ===
       index-db-password: Esg************
       index-api-key: dem***************
     
-    === List Secrets ===
       index-api-key
       index-db-password
 
@@ -614,12 +602,10 @@ Console.WriteLine($"  Logs:    https://console.cloud.google.com/logs?project={pr
 Console.WriteLine($"  Metrics: https://console.cloud.google.com/monitoring/metrics-explorer?project={projectId}");
 ```
 
-    === Write Custom Metric ===
-      Wrote metric: rows_loaded = 250
+      rows_loaded = 250
     
-    === View in GCP Console ===
-      Logs:    https://console.cloud.google.com/logs?project=index-lab-2
-      Metrics: https://console.cloud.google.com/monitoring/metrics-explorer?project=index-lab-2
+      https://console.cloud.google.com/logs?project=index-lab-2
+      https://console.cloud.google.com/monitoring/metrics-explorer?project=index-lab-2
 
 ## Summary
 

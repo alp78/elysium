@@ -53,7 +53,7 @@ elif score >= 60:
     grade = "D"
 else:                  # catches everything else (< 60)
     grade = "F"
-print(f"Score {score} → Grade {grade}")
+f"Score {score} → Grade {grade}"
 
 x = 10
 if x > 0: print(f"{x} is positive")
@@ -69,12 +69,12 @@ Inline conditional: `value_if_true if condition else value_if_false`. Reads like
 ```python
 age = 20
 status = "adult" if age >= 18 else "minor"
-print(f"age={age} → {status}")
+f"age={age} → {status}"
 
 # Nested ternary (avoid — hard to read)
 val = 15
 label = "high" if val > 20 else "mid" if val > 10 else "low"
-print(f"val={val} → {label}")
+f"val={val} → {label}"
 ```
 
     age=20 → adult
@@ -136,9 +136,9 @@ match command:
     case "stop" | "quit" | "exit":    # multiple values with |
         print("Stopping...")
     case str(cmd) if cmd.startswith("go"):  # guard condition
-        print(f"Going: {cmd}")
+        cmd   # Going
     case _:                            # wildcard: default case
-        print(f"Unknown: {command}")
+        command   # Unknown
 ```
 
     Stopping...
@@ -151,13 +151,12 @@ match command:
 point = (3, 0)
 match point:
     case (0, 0):
-        print("Origin")
     case (x, 0):                       # destructure: bind x from tuple
-        print(f"On x-axis at {x}")
+        x   # On x-axis at
     case (0, y):
-        print(f"On y-axis at {y}")
+        y   # On y-axis at
     case (x, y):
-        print(f"Point at ({x}, {y})")
+        f"Point at ({x}, {y})"
 ```
 
     On x-axis at 3
@@ -231,25 +230,21 @@ for fruit in ["apple", "banana", "cherry"]:
 > - Lazy — constant memory regardless of size; `500 in range(1000)` is O(1)
 
 ```python
-print("range(5):")
+# range(5)
 for i in range(5):              # 0, 1, 2, 3, 4
     print(f"  {i}", end=" ")
-print()
 
-print("range(2, 8):")
+# range(2, 8)
 for i in range(2, 8):           # 2, 3, 4, 5, 6, 7
     print(f"  {i}", end=" ")
-print()
 
-print("range(0, 20, 3):")
+# range(0, 20, 3)
 for i in range(0, 20, 3):      # 0, 3, 6, 9, 12, 15, 18 (step=3)
     print(f"  {i}", end=" ")
-print()
 
-print("range(10, 0, -2):")
+# range(10, 0, -2)
 for i in range(10, 0, -2):     # 10, 8, 6, 4, 2 (count down)
     print(f"  {i}", end=" ")
-print()
 ```
 
     range(5):
@@ -266,12 +261,9 @@ print()
 Strings yield characters one at a time. Dicts yield keys by default; `.items()` for `(key, value)`, `.values()` for values only. Don't use `for key in dict: dict[key]` — use `for k, v in dict.items()`.
 
 ```python
-print("Over string:")
 for ch in "Hello":
     print(f"  '{ch}'", end=" ")
-print()
 
-print("\nOver dict:")
 d = {"name": "Alice", "age": 30, "city": "NYC"}
 for key in d:                    # iterates over keys by default
     print(f"  {key} = {d[key]}")
@@ -280,10 +272,8 @@ for key, value in d.items():     # key-value pairs
     print(f"  {key}: {value}")
 ```
 
-    Over string:
       'H'   'e'   'l'   'l'   'o' 
     
-    Over dict:
       name = Alice
       age = 30
       city = NYC
@@ -302,7 +292,6 @@ for key, value in d.items():     # key-value pairs
 > > [!warning] `zip` with unequal lengths silently truncates — use `zip_longest` if needed.
 
 ```python
-print("enumerate:")
 for i, fruit in enumerate(["apple", "banana", "cherry"]):
     print(f"  [{i}] {fruit}")
 
@@ -311,7 +300,6 @@ for i, fruit in enumerate(["apple", "banana"], start=1):  # custom start
 
 # zip — pairs up elements by position; stops at the shortest iterable
 # pairs elements from multiple iterables
-print("\nzip:")
 names = ["Alice", "Bob", "Charlie"]
 ages = [30, 25, 35]
 for name, age in zip(names, ages):
@@ -382,7 +370,7 @@ for i in range(3):
     print()
 ```
 
-      Got value: 42
+      42
       (0,0)  (0,1)  (0,2)
       (1,0)  (1,1)  (1,2)
       (2,0)  (2,1)  (2,2)
@@ -405,7 +393,6 @@ for i in range(10):
         print(f"  Breaking at {i}")
         break
     print(f"  {i}", end=" ")
-print()
 ```
 
       0   1   2   3   4   Breaking at 5
@@ -423,14 +410,12 @@ for i in range(10):
     if i % 2 == 0:
         continue           # skip even numbers
     print(f"  {i}", end=" ")
-print()
 
 for i in range(5):
     if i == 3:
         pass               # handle this case later
     else:
         print(f"  {i}", end=" ")
-print()
 
 # pass is also used for empty class/function bodies
 class Placeholder:
@@ -470,7 +455,7 @@ for i in range(3):
             break
     if found:
         break
-print(f"  Broke at ({i},{j})")
+f"  Broke at ({i},{j})"
 
 # Method 2: wrap in function + return
 def find_pair():
@@ -479,11 +464,11 @@ def find_pair():
             if i == 1 and j == 1:
                 return (i, j)
     return None
-print(f"  Found: {find_pair()}")
+find_pair()   # Found
 ```
 
       Broke at (1,1)
-      Found: (1, 1)
+      (1, 1)
 
 #### Walrus operator — :=
 
@@ -501,7 +486,7 @@ if (n := len(data)) > 5:             # assigns n AND checks condition
 
 # Walrus in list comprehension
 results = [y for x in range(10) if (y := x ** 2) > 20]
-print(f"  Squares > 20: {results}")
+results   # Squares > 20
 ```
 
       'line1'
@@ -535,7 +520,6 @@ def countdown(n):
 # Using in a for loop (most common)
 for val in countdown(5):
     print(f"  {val}", end=" ")
-print()
 ```
 
       Starting countdown from 5
@@ -547,9 +531,9 @@ print()
 
 ```python
 gen = countdown(3)
-print(f"  next: {next(gen)}")    # 3
-print(f"  next: {next(gen)}")    # 2
-print(f"  next: {next(gen)}")    # 1
+next(gen)  # 3
+next(gen)  # 2
+next(gen)  # 1
 # next(gen) would raise StopIteration
 ```
 
@@ -569,26 +553,26 @@ print(f"  next: {next(gen)}")    # 1
 
 ```python
 squares_list = [x**2 for x in range(10)]
-print(f"List: {squares_list}")
+squares_list   # List
 
 # Generator expression — lazy: creates values on demand
 squares_gen = (x**2 for x in range(10))
-print(f"Generator: {squares_gen}")      # <generator object>
-print(f"As list:   {list(squares_gen)}") # consume it
+squares_gen  # <generator object>
+list(squares_gen)  # consume it
 
 # Memory difference: list stores everything, generator stores nothing
 big_list = [x for x in range(100000)]
 big_gen = (x for x in range(100000))
-print(f"\nList size:      {sys.getsizeof(big_list):>8} bytes")
-print(f"Generator size: {sys.getsizeof(big_gen):>8} bytes")
+f"\nList size:      {sys.getsizeof(big_list):>8} bytes"
+f"Generator size: {sys.getsizeof(big_gen):>8} bytes"
 ```
 
-    List: [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
-    Generator: <generator object <genexpr> at 0x0000018C86002740>
-    As list:   [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+    [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+    <generator object <genexpr> at 0x0000018C86002740>
+    [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
     
-    List size:        800984 bytes
-    Generator size:      192 bytes
+    800984 bytes
+    192 bytes
 
 #### yield from
 
@@ -603,10 +587,10 @@ def flatten(nested):
             yield item
 
 nested = [1, [2, 3], [4, [5, 6]], 7]
-print(f"Flatten: {list(flatten(nested))}")
+list(flatten(nested))   # Flatten
 ```
 
-    Flatten: [1, 2, 3, 4, 5, 6, 7]
+    [1, 2, 3, 4, 5, 6, 7]
 
 #### Infinite generators — islice, map, filter, reversed
 
@@ -623,26 +607,26 @@ def naturals(start=0):
         yield n
         n += 1
 
-print(f"First 5 naturals: {list(islice(naturals(), 5))}")
-print(f"From 10:          {list(islice(naturals(10), 5))}")
+list(islice(naturals(), 5))   # First 5 naturals
+list(islice(naturals(10), 5))   # From 10
 
 # Built-in iterators — all lazy; wrap in list() to materialise
-print(f"range(5):       {list(range(5))}")
-print(f"enumerate:      {list(enumerate('abc'))}")
-print(f"zip:            {list(zip([1,2], ['a','b']))}")
-print(f"map:            {list(map(str.upper, ['a','b']))}")
-print(f"filter:         {list(filter(lambda x: x > 2, [1,2,3,4]))}")
-print(f"reversed:       {list(reversed([1,2,3]))}")
+list(range(5))   # range(5)
+list(enumerate('abc'))   # enumerate
+list(zip([1,2], ['a','b']))   # zip
+list(map(str.upper, ['a','b']))   # map
+list(filter(lambda x: x > 2, [1,2,3,4]))   # filter
+list(reversed([1,2,3]))   # reversed
 ```
 
     First 5 naturals: [0, 1, 2, 3, 4]
-    From 10:          [10, 11, 12, 13, 14]
-    range(5):       [0, 1, 2, 3, 4]
-    enumerate:      [(0, 'a'), (1, 'b'), (2, 'c')]
-    zip:            [(1, 'a'), (2, 'b')]
-    map:            ['A', 'B']
-    filter:         [3, 4]
-    reversed:       [3, 2, 1]
+    [10, 11, 12, 13, 14]
+    [0, 1, 2, 3, 4]
+    [(0, 'a'), (1, 'b'), (2, 'c')]
+    [(1, 'a'), (2, 'b')]
+    ['A', 'B']
+    [3, 4]
+    [3, 2, 1]
 
 #### itertools
 
@@ -657,16 +641,16 @@ print(f"reversed:       {list(reversed([1,2,3]))}")
 > > [!warning] Never `list(cycle(...))` — infinite memory.
 
 ```python
-print(f"chain:          {list(chain([1,2], [3,4]))}")
-print(f"repeat:         {list(repeat('x', 3))}")
-print(f"accumulate:     {list(accumulate([1,2,3,4]))}")
-print(f"product:        {list(product('ab', '12'))}")
+list(chain([1,2], [3,4]))   # chain
+list(repeat('x', 3))   # repeat
+list(accumulate([1,2,3,4]))   # accumulate
+list(product('ab', '12'))   # product
 ```
 
-    chain:          [1, 2, 3, 4]
-    repeat:         ['x', 'x', 'x']
-    accumulate:     [1, 3, 6, 10]
-    product:        [('a', '1'), ('a', '2'), ('b', '1'), ('b', '2')]
+    [1, 2, 3, 4]
+    ['x', 'x', 'x']
+    [1, 3, 6, 10]
+    [('a', '1'), ('a', '2'), ('b', '1'), ('b', '2')]
 
 #### Iterator protocol — __iter__ and __next__
 
@@ -686,10 +670,10 @@ class Squares:
         self.i += 1
         return val
 
-print(f"Squares(5): {list(Squares(5))}")
+list(Squares(5))   # Squares(5)
 ```
 
-    Squares(5): [0, 1, 4, 9, 16]
+    [0, 1, 4, 9, 16]
 
 #### Flatten nested iterables — four approaches
 
@@ -705,13 +689,13 @@ nested = [1, [2, 3], [4, [5, 6]], 7]
 
 ```python
 one_level = list(chain.from_iterable([[1, 2], [3, 4], [5, 6]]))
-print(f"chain (1 level):  {one_level}")
+one_level   # chain (1 level)
 
-print(f"collapse (deep):  {list(collapse(nested))}")
+list(collapse(nested))   # collapse (deep)
 ```
 
-    chain (1 level):  [1, 2, 3, 4, 5, 6]
-    collapse (deep):  [1, 2, 3, 4, 5, 6, 7]
+    [1, 2, 3, 4, 5, 6]
+    [1, 2, 3, 4, 5, 6, 7]
 
 #### Iterative Flatten with Stack
 
@@ -731,10 +715,10 @@ def flatten_iter(nested):
     return result
 
 nested = [1, [2, 3], [4, [5, 6]], 7]
-print(f"Iterative flatten: {flatten_iter(nested)}")
+flatten_iter(nested)   # Iterative flatten
 ```
 
-    Iterative flatten: [1, 2, 3, 4, 5, 6, 7]
+    [1, 2, 3, 4, 5, 6, 7]
 
 #### pandas json_normalize
 
@@ -746,7 +730,7 @@ nested_records = [
     {"name": "Bob", "address": {"city": "LA", "zip": "90001"}},
 ]
 df = pd.json_normalize(nested_records)
-print(f"\npandas json_normalize:\n{df}")
+df   # pandas json_normalize:\n
 ```
 
     
@@ -776,20 +760,20 @@ print(f"\npandas json_normalize:\n{df}")
 
 ```python
 squares = [x**2 for x in range(10)]
-print(f"Squares:  {squares}")
+squares
 
 evens = [x for x in range(20) if x % 2 == 0]
-print(f"Evens:    {evens}")
+evens
 
 # With transformation + filter
 words = ["hello", "world", "python", "is", "great"]
 long_upper = [w.upper() for w in words if len(w) > 3]
-print(f"Long upper: {long_upper}")
+long_upper
 ```
 
-    Squares:  [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
-    Evens:    [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
-    Long upper: ['HELLO', 'WORLD', 'PYTHON', 'GREAT']
+    [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+    [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
+    ['HELLO', 'WORLD', 'PYTHON', 'GREAT']
 
 #### Nested comprehensions
 
@@ -798,15 +782,15 @@ print(f"Long upper: {long_upper}")
 ```python
 matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 flat = [n for row in matrix for n in row]    # read left-to-right: for row, then for n
-print(f"Flat:     {flat}")
+flat
 
 # Nested comprehension (create 2D)
 grid = [[(i, j) for j in range(3)] for i in range(3)]
-print(f"Grid:     {grid}")
+grid
 ```
 
-    Flat:     [1, 2, 3, 4, 5, 6, 7, 8, 9]
-    Grid:     [[(0, 0), (0, 1), (0, 2)], [(1, 0), (1, 1), (1, 2)], [(2, 0), (2, 1), (2, 2)]]
+    [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    [[(0, 0), (0, 1), (0, 2)], [(1, 0), (1, 1), (1, 2)], [(2, 0), (2, 1), (2, 2)]]
 
 #### Dict and set comprehensions
 
@@ -821,28 +805,28 @@ print(f"Grid:     {grid}")
 
 ```python
 squares_dict = {x: x**2 for x in range(6)}
-print(f"Squares dict: {squares_dict}")
+squares_dict
 
 # Swap keys and values
 original = {"a": 1, "b": 2, "c": 3}
 swapped = {v: k for k, v in original.items()}
-print(f"Swapped:      {swapped}")
+swapped
 
 # Filter dict
 scores = {"Alice": 85, "Bob": 92, "Charlie": 78, "Diana": 95}
 passed = {name: score for name, score in scores.items() if score >= 80}
-print(f"Passed:       {passed}")
+passed
 
 # {expression for item in iterable} — duplicates automatically removed
 words = ["hello", "world", "python", "is", "great"]
 unique_lengths = {len(w) for w in words}
-print(f"Unique lengths: {unique_lengths}")
+unique_lengths
 ```
 
-    Squares dict: {0: 0, 1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
-    Swapped:      {1: 'a', 2: 'b', 3: 'c'}
-    Passed:       {'Alice': 85, 'Bob': 92, 'Diana': 95}
-    Unique lengths: {2, 5, 6}
+    {0: 0, 1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
+    {1: 'a', 2: 'b', 3: 'c'}
+    {'Alice': 85, 'Bob': 92, 'Diana': 95}
+    {2, 5, 6}
 
 #### map and filter
 
@@ -856,19 +840,19 @@ print(f"Unique lengths: {unique_lengths}")
 ```python
 nums = [1, 2, 3, 4, 5]
 doubled = list(map(lambda x: x * 2, nums))    # lambda = anonymous function
-print(f"Doubled: {doubled}")
+doubled
 
 # Comprehension equivalent (preferred in Python):
 doubled2 = [x * 2 for x in nums]
-print(f"Same:    {doubled2}")
+doubled2   # Same
 
 evens = list(filter(lambda x: x % 2 == 0, nums))
-print(f"Evens:   {evens}")
+evens
 ```
 
-    Doubled: [2, 4, 6, 8, 10]
-    Same:    [2, 4, 6, 8, 10]
-    Evens:   [2, 4]
+    [2, 4, 6, 8, 10]
+    [2, 4, 6, 8, 10]
+    [2, 4]
 
 #### reduce and built-in aggregations
 
@@ -880,25 +864,25 @@ print(f"Evens:   {evens}")
 ```python
 nums = [1, 2, 3, 4, 5]
 total = reduce(lambda acc, x: acc + x, nums, 0)
-print(f"Sum:     {total}")
+total   # Sum
 product = reduce(lambda acc, x: acc * x, nums, 1)
-print(f"Product: {product}")
+product
 
 # Built-in alternatives (preferred over reduce for common cases):
-print(f"sum():   {sum(nums)}")
-print(f"max():   {max(nums)}")
-print(f"min():   {min(nums)}")
-print(f"all():   {all(x > 0 for x in nums)}")    # True if ALL match
-print(f"any():   {any(x > 3 for x in nums)}")    # True if ANY match
+sum(nums)   # sum()
+max(nums)   # max()
+min(nums)   # min()
+all(x > 0 for x in nums)  # True if ALL match
+any(x > 3 for x in nums)  # True if ANY match
 ```
 
-    Sum:     15
-    Product: 120
-    sum():   15
-    max():   5
-    min():   1
-    all():   True
-    any():   True
+    15
+    120
+    15
+    5
+    1
+    True
+    True
 
 #### sorted() with key function — custom sort order, multi-key, reverse
 
@@ -913,16 +897,16 @@ print(f"any():   {any(x > 3 for x in nums)}")    # True if ANY match
 
 ```python
 names = ["Charlie", "Alice", "Bob", "Diana"]
-print(f"Alphabetical:  {sorted(names)}")
-print(f"By length:     {sorted(names, key=len)}")
-print(f"Reverse:       {sorted(names, reverse=True)}")
-print(f"By last char:  {sorted(names, key=lambda n: n[-1])}")
+sorted(names)   # Alphabetical
+sorted(names, key=len)   # By length
+sorted(names, reverse=True)   # Reverse
+sorted(names, key=lambda n: n[-1])   # By last char
 ```
 
-    Alphabetical:  ['Alice', 'Bob', 'Charlie', 'Diana']
-    By length:     ['Bob', 'Alice', 'Diana', 'Charlie']
-    Reverse:       ['Diana', 'Charlie', 'Bob', 'Alice']
-    By last char:  ['Diana', 'Bob', 'Charlie', 'Alice']
+    ['Alice', 'Bob', 'Charlie', 'Diana']
+    ['Bob', 'Alice', 'Diana', 'Charlie']
+    ['Diana', 'Charlie', 'Bob', 'Alice']
+    ['Diana', 'Bob', 'Charlie', 'Alice']
 
 #### Choosing the right iteration construct
 

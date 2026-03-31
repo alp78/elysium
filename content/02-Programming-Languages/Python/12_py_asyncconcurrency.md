@@ -115,25 +115,23 @@ conc_results = await concurrent()
 print(f"\nResults match: {seq_results == conc_results}")
 ```
 
-    === Sequential (one after another) ===
       [06:59:52] Starting fetch: users_api
       [06:59:53] Completed fetch: users_api
       [06:59:53] Starting fetch: events_api
       [06:59:54] Completed fetch: events_api
       [06:59:54] Starting fetch: products_api
       [06:59:55] Completed fetch: products_api
-      Total: 2.33s (sum of all delays)
+    2.33s (sum of all delays)
     
-    === Concurrent (asyncio.gather) ===
       [06:59:55] Starting fetch: users_api
       [06:59:55] Starting fetch: events_api
       [06:59:55] Starting fetch: products_api
       [06:59:55] Completed fetch: products_api
       [06:59:56] Completed fetch: events_api
       [06:59:56] Completed fetch: users_api
-      Total: 1.00s (max of all delays)
+    1.00s (max of all delays)
     
-    Results match: True
+    True
 
 #### asyncio.gather and TaskGroup
 
@@ -167,7 +165,6 @@ for r in results:
         print(f"  OK:    {r}")
 ```
 
-    === asyncio.gather (return_exceptions=True) ===
       OK:    {'table': 'events', 'rows': 300}
       ERROR: Fetch failed: users
       OK:    {'table': 'products', 'rows': 100}
@@ -200,8 +197,6 @@ except* RuntimeError as eg:
         print(f"  t3 (products) completed: {t3.result()}")
 ```
 
-    
-    === TaskGroup (structured concurrency) ===
       Caught 1 error(s):
         - Fetch failed: users
       t3 (products) completed: {'table': 'products', 'rows': 100}
@@ -237,7 +232,6 @@ for r in results[:3]:
 print(f"    ... ({len(results) - 3} more)")
 ```
 
-    === Semaphore (max 3 concurrent) ===
       Fetched 10 pages in 1.28s (max 3 at a time)
         https://api.example.com/page/0 (0.28s)
         https://api.example.com/page/1 (0.27s)
@@ -261,8 +255,6 @@ except asyncio.TimeoutError:
     print("  Query timed out after 1.0s — cancelled automatically")
 ```
 
-    
-    === Timeout (asyncio.wait_for) ===
       Query timed out after 1.0s — cancelled automatically
 
 #### Retry with exponential backoff — asyncio transient error recovery
@@ -297,8 +289,6 @@ result = await retry_with_backoff(flaky_api, "/data/events")
 print(f"  Success on attempt {attempt_count}: {result}")
 ```
 
-    
-    === Retry with Exponential Backoff ===
       Attempt 1 failed: Connection refused (attempt 1). Retrying in 0.1s...
       Attempt 2 failed: Connection refused (attempt 2). Retrying in 0.2s...
       Success on attempt 3: {'endpoint': '/data/events', 'status': 'ok'}
@@ -352,8 +342,6 @@ for r in results[:4]:
 print(f"    ... ({len(results) - 4} more)")
 ```
 
-    
-    === Producer-Consumer (asyncio.Queue) ===
       Processed 12 events in 0.73s with 3 workers
         worker-1 processed evt_000
         worker-2 processed evt_001
@@ -399,7 +387,7 @@ async for item in fetch_pages(10, 3):
       Fetching page 3...
         Received: page3_item1
         Received: page3_item2
-      Total: 6 items
+    6 items
     
       First 4 items only:
       Fetching page 1...
@@ -543,10 +531,8 @@ with ThreadPoolExecutor(max_workers=5) as pool:
 print(f"  {len(thread_results)} fetches in {time.perf_counter() - start:.2f}s")
 ```
 
-    === Sequential (blocking) ===
       5 fetches in 2.50s
     
-    === ThreadPoolExecutor (5 threads) ===
       5 fetches in 0.50s
 
 #### submit() + as_completed() — process results as they finish
@@ -568,8 +554,6 @@ with ThreadPoolExecutor(max_workers=5) as pool:
             print(f"  Error: {url} -> {e}")
 ```
 
-    
-    === submit + as_completed (results as they arrive) ===
       Done: events -> 3600 bytes
       Done: users -> 3500 bytes
       Done: sessions -> 3800 bytes
@@ -598,7 +582,6 @@ seq_time = time.perf_counter() - start
 print(f"  {len(seq_hashes)} hashes in {seq_time:.2f}s")
 ```
 
-    === Sequential (single core) ===
       8 hashes in 0.00s
 
 #### ThreadPoolExecutor — GIL limits CPU-bound speedup
@@ -621,10 +604,9 @@ print(f"  Speedup vs sequential: {seq_time / thread_time:.1f}x (GIL limits CPU-b
 print(f"  Results match: {seq_hashes == thread_hashes}")
 ```
 
-    === ThreadPoolExecutor (16 workers) ===
       8 hashes in 0.00s
-      Speedup vs sequential: 0.6x (GIL limits CPU-bound threads)
-      Results match: True
+    0.6x (GIL limits CPU-bound threads)
+    True
 
 #### ProcessPoolExecutor — true multi-core speedup
 
@@ -674,11 +656,10 @@ print(result.stdout.strip())
 os.unlink(tmp_script)
 ```
 
-    === ProcessPoolExecutor (via subprocess — real multi-core) ===
-    Sequential:   0.00s
-    ProcessPool:  0.10s  (16 cores)
-    Speedup:      0.0x
-    Results match: True
+    0.00s
+    0.10s  (16 cores)
+    0.0x
+    True
 
 #### Comparison table
 
@@ -696,9 +677,6 @@ ProcessPoolExecutor   CPU-bound work    No (separate)  Parallel.ForEach()
 """)
 ```
 
-    
-    === When to use what ===
-    
     Approach              Best for          GIL issue?  C# equivalent
     ─────────────────────────────────────────────────────────────────
     asyncio               I/O (async libs)  No (1 thread)  async/await
@@ -738,8 +716,8 @@ for expr, result in results:
 >
 > `asyncio.create_subprocess_exec` doesn't work reliably on Windows ProactorEventLoop in notebooks. Use `ThreadPoolExecutor` with `subprocess.run` as a cross-platform alternative.
 
-      Exit code: 0
-      Parsed: source=child, pid=40052, result=4950
+    0
+    source=child, pid=40052, result=4950
       2**10                     = 1024
       sum(range(1000))          = 499500
       3.14159 * 2               = 6.28318
@@ -793,15 +771,14 @@ print(f"  Results: {results}")
 print(f"  Active threads: {threading.active_count()}")
 ```
 
-    === Basic Threads ===
       [T-fetch_users] fetch_users starting
       [T-fetch_events] fetch_events starting
       [T-fetch_products] fetch_products starting
       [T-fetch_products] fetch_products finished
       [T-fetch_users] fetch_users finished
       [T-fetch_events] fetch_events finished
-      Results: ['fetch_products done', 'fetch_users done', 'fetch_events done']
-      Active threads: 7
+    ['fetch_products done', 'fetch_users done', 'fetch_events done']
+    7
 
 #### Threading Locks
 
@@ -832,9 +809,8 @@ print(f"  Expected: 400,000")
 print(f"  Got:      {counter_unsafe:,}  {'(WRONG — race condition!)' if counter_unsafe != 400_000 else '(got lucky this time)'}")
 ```
 
-    === Race Condition (no lock) ===
-      Expected: 400,000
-      Got:      400,000  (got lucky this time)
+    400,000
+    400,000  (got lucky this time)
 
 #### threading.Lock — fix race condition with mutual exclusion
 
@@ -859,10 +835,8 @@ print(f"  Expected: 400,000")
 print(f"  Got:      {counter_safe:,}  (correct — lock prevents race)")
 ```
 
-    
-    === With Lock (safe) ===
-      Expected: 400,000
-      Got:      400,000  (correct — lock prevents race)
+    400,000
+    400,000  (correct — lock prevents race)
 
 #### Thread-safe data structures and patterns
 
@@ -919,7 +893,6 @@ for w, c in sorted(worker_counts.items()):
     print(f"    {w}: {c} events")
 ```
 
-    === Thread-safe Queue (producer-consumer) ===
       Processed 20 events in 0.49s
         worker-0: 7 events
         worker-1: 7 events
@@ -955,8 +928,6 @@ processor.join()
 print("  Both threads done")
 ```
 
-    
-    === threading.Event (coordination) ===
       Processor: waiting for data...
       Loader: fetching data...
       Loader: data ready, signaling

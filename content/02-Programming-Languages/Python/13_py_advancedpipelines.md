@@ -41,14 +41,14 @@ TWELVE_DATA_KEY = os.environ.get('TWELVE_DATA_KEY', '')
 FRED_KEY = os.environ.get('FRED_KEY', '')
 FINNHUB_KEY = os.environ.get('FINNHUB_KEY', '')
 
-print(f'  TWELVE_DATA_KEY: {"set" if TWELVE_DATA_KEY else "MISSING"}')
-print(f'  FRED_KEY:        {"set" if FRED_KEY else "MISSING"}')
-print(f'  FINNHUB_KEY:     {"set" if FINNHUB_KEY else "MISSING"}')
+"set" if TWELVE_DATA_KEY else "MISSING"  # TWELVE_DATA_KEY
+"set" if FRED_KEY else "MISSING"  # FRED_KEY
+"set" if FINNHUB_KEY else "MISSING"  # FINNHUB_KEY
 ```
 
-      TWELVE_DATA_KEY: set
-      FRED_KEY:        set
-      FINNHUB_KEY:     set
+    set
+    set
+    set
 
 ## Async Generators with Real APIs
 
@@ -93,7 +93,6 @@ async def fetch_fred_series(search_text: str, limit: int = 10, page_size: int = 
             offset += page_size
 
 # async for — consume items as they stream in from FRED
-print('  FRED series matching "inflation":')
 async for series_id, title in fetch_fred_series('inflation', limit=8):
     print(f'    {series_id:20} {title[:50]}')
 ```
@@ -159,7 +158,7 @@ async with aiohttp.ClientSession() as session:
 elapsed = time.perf_counter() - start
 for symbol, price in results:
     print(f'  {symbol:6} €{price:>8.2f}')
-print(f'\n  Fetched {len(results)} quotes in {elapsed:.2f}s (3 concurrent max)')
+f"Fetched {len(results)} quotes in {elapsed:.2f}s (3 concurrent max)"
 ```
 
       SAP    €  171.05
@@ -195,7 +194,6 @@ async def fetch_quote_fh(session, symbol):
     change = data.get('dp', 0)  # 'dp' = percent change
     return (symbol, price, change, elapsed)
 
-print('  Results in completion order (fastest first):')
 async with aiohttp.ClientSession() as session:
     coros = [fetch_quote_fh(session, s) for s in ['SAP', 'ASML', 'TTE', 'UL']]
     for coro in asyncio.as_completed(coros):
@@ -296,7 +294,7 @@ result = subprocess.run(
     capture_output=True, text=True, timeout=10,
 )
 parsed = json.loads(result.stdout)
-print(f'  Child PID: {parsed["pid"]}, result: {parsed["result"]}')
+f'Child PID: {parsed["pid"]}, result: {parsed["result"]}'
 
 # Concurrent subprocesses via ThreadPoolExecutor
 def run_expr(expr: str) -> tuple:
@@ -310,7 +308,7 @@ for expr, val in results:
     print(f'  {expr:25} = {val}')
 ```
 
-      Child PID: 31988, result: 499500
+    31988, result: 499500
       2**20                     = 1048576
       sum(range(10000))         = 49995000
       3.14159 * 100             = 314.159

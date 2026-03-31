@@ -115,7 +115,7 @@ def load_config(path):
 load_config("missing.json")
 ```
 
-      Config not found: missing.json
+      missing.json
       Attempt to load: missing.json (always runs)
 
 #### finally — guaranteed cleanup even on exception
@@ -136,7 +136,6 @@ def process_with_cleanup(throw_error):
         print("  Closing resource (finally)")
 
 process_with_cleanup(False)
-print()
 process_with_cleanup(True)
 ```
 
@@ -147,7 +146,7 @@ process_with_cleanup(True)
 
       Opening resource...
       Processing...
-      Error caught: Something went wrong
+      Something went wrong
       Closing resource (finally)
 
 #### raise vs raise from — exception chaining
@@ -173,7 +172,7 @@ except RuntimeError as e:
     print(f"  Caused by: {e.__cause__}")
 ```
 
-      Outer: Pipeline failed during validation
+      Pipeline failed during validation
       Caused by: invalid literal for int() with base 10: 'bad_value'
 
 ## Exception Types and Hierarchy
@@ -215,9 +214,9 @@ except ValueError as e:
     print(f"  type(e): {type(e).__name__}")
 ```
 
-      str(e):  ('salary must be positive', -500)
-      e.args:  ('salary must be positive', -500)
-      type(e): ValueError
+      ('salary must be positive', -500)
+      ('salary must be positive', -500)
+       ValueError
 
 #### Common exceptions in data engineering
 
@@ -233,7 +232,7 @@ except ValueError as e:
 
 row = {"name": "Alice", "dept": "Engineering"}
 salary = row.get("salary", 0)  # .get() avoids KeyError
-print(f"  KeyError avoided: salary = {salary}")
+salary   # KeyError avoided: salary =
 
 try:
     total = sum("not_a_list")  # type: ignore
@@ -252,12 +251,12 @@ except TypeError as e:
 
 optional_field = None
 safe = optional_field.upper() if optional_field is not None else ""  # type: ignore
-print(f"  AttributeError avoided: '{safe}'")
+safe   # AttributeError avoided
 
 def safe_avg(values):
     return sum(values) / len(values) if values else None
-print(f"  safe_avg([10,20]): {safe_avg([10, 20])}")
-print(f"  safe_avg([]):      {safe_avg([])}")
+safe_avg([10, 20])   # safe_avg([10,20])
+safe_avg([])   # safe_avg([])
 
 try:
     with open("missing_data.csv") as f:
@@ -267,8 +266,8 @@ except FileNotFoundError as e:
 ```
 
       AttributeError avoided: ''
-      safe_avg([10,20]): 15.0
-      safe_avg([]):      None
+       15.0
+      None
       FileNotFoundError: missing_data.csv — No such file or directory
 
 #### Catching multiple exception types in one clause
@@ -388,10 +387,10 @@ except ConfigError as e:
     print(f"  __cause__: {e.__cause__}")  # None — suppressed
 ```
 
-      Pipeline: sales_etl
-      Stage:    transform
-      Root:     row 42, col 'amount', value '$$$'
-      Config file not found: config.yaml
+      sales_etl
+      transform
+      row 42, col 'amount', value '$$$'
+      config.yaml
       __cause__: None
 
 ## Context Managers — with statement
@@ -444,7 +443,7 @@ with open(out_tmp.name) as f:
       name,salary,dept
       Alice,95000,Engineering
       Bob,65000,Sales
-      Output: name,salary,dept,tax
+      name,salary,dept,tax
     Alice,95000,Engineering,28500
     Bob,65000,Sales,19500
 
@@ -484,10 +483,10 @@ for f in [tmp.name, out_tmp.name, out2]:
         print(f"  Deleted: {f}")
 ```
 
-      Closed: C:\Users\aperi\AppData\Local\Temp\tmpkqxh9yf4.csv (2 rows written)
-      Deleted: C:\Users\aperi\AppData\Local\Temp\tmp8z18xzfq.csv
-      Deleted: C:\Users\aperi\AppData\Local\Temp\tmpxzwt778q.csv
-      Deleted: C:\Users\aperi\AppData\Local\Temp\tmpkqxh9yf4.csv
+      C:\Users\aperi\AppData\Local\Temp\tmpkqxh9yf4.csv (2 rows written)
+      C:\Users\aperi\AppData\Local\Temp\tmp8z18xzfq.csv
+      C:\Users\aperi\AppData\Local\Temp\tmpxzwt778q.csv
+      C:\Users\aperi\AppData\Local\Temp\tmpkqxh9yf4.csv
 
 #### Class-based context manager — __enter__ and __exit__ protocol
 
@@ -519,7 +518,7 @@ with DatabaseConnection("postgresql://localhost/mydb") as db:
 ```
 
       Connecting to postgresql://localhost/mydb...
-      Query: SELECT * FROM employees LIMIT 3
+      SELECT * FROM employees LIMIT 3
       Disconnecting from postgresql://localhost/mydb
 
 ## Data Engineering — error accumulation and resilience patterns
@@ -607,12 +606,12 @@ results = [parse_employee(row, i + 1) for i, row in enumerate(input_rows)]
 good = [r for r in results if r.is_valid]
 bad  = [r for r in results if not r.is_valid]
 
-print(f"  Processed: {len(results)} rows, Valid: {len(good)}, Rejected: {len(bad)}")
+f"  Processed: {len(results)} rows, Valid: {len(good)}, Rejected: {len(bad)}"
 for r in good: print(f"    {r.name:<10} ${r.salary:,}")
 for r in bad:  print(f"    ERROR: {r.error}")
 ```
 
-      Processed: 6 rows, Valid: 3, Rejected: 3
+      6 rows, Valid: 3, Rejected: 3
         Alice      $95,000
         Diana      $78,000
         Frank      $72,000
@@ -648,7 +647,7 @@ def flaky_load():
     return "data loaded successfully"
 
 result = with_retry(flaky_load, exceptions=(ConnectionError,))
-print(f"  Result after {call_count} attempts: {result}")
+f"  Result after {call_count} attempts: {result}"
 ```
 
       Attempt 1 failed: Connection timeout (attempt 1). Retrying...
@@ -674,16 +673,15 @@ if sys.version_info >= (3, 11):
             ValueError("Bad value in file C"),
         ])
     except* ValueError as eg:
-        print(f"  ValueError group ({len(eg.exceptions)} errors):")
+        f"  ValueError group ({len(eg.exceptions)} errors):"
         for e in eg.exceptions:
             print(f"    - {e}")
     except* IOError as eg:
-        print(f"  IOError group: {eg.exceptions[0]}")
+        eg.exceptions[0]   # IOError group
 else:
     print("  ExceptionGroup requires Python 3.11+ (skipped)")
 ```
 
-      ValueError group (2 errors):
         - Bad value in file A
         - Bad value in file C
       IOError group: File B not found

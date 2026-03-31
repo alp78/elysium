@@ -32,7 +32,6 @@ import time
 
 DATA = "C:/Users/aperi/DEV/LANG/data"
 
-
 # Polars: strip quotes from string values in HTML display
 _html_fmt = get_ipython().display_formatter.formatters["text/html"]
 _html_fmt.for_type(pl.DataFrame, lambda df: df.to_pandas().style.hide(axis="index").to_html())
@@ -68,10 +67,10 @@ cur.execute("""
         price      REAL NOT NULL CHECK(price > 0),
         trade_date TEXT NOT NULL DEFAULT (Date('now'))
     )""")
-print("Created table: trades")
+# Created table: trades
 ```
 
-    Created table: trades
+    trades
 
 #### SQLite — INSERT with ? parameterised queries
 
@@ -88,7 +87,7 @@ trades = [
 ]
 cur.executemany("INSERT INTO trades VALUES (?,?,?,?,?,?)", trades)
 conn.commit()
-print(f"Inserted {len(trades)} trades")
+len(trades)  # trades inserted
 ```
 
     Inserted 6 trades
@@ -298,16 +297,16 @@ pd.read_sql("""
 ```python
 # UPDATE
 cur.execute("UPDATE trades SET price = ? WHERE trade_id = ?", (700.00, "TRD_004"))
-print(f"UPDATE: {cur.rowcount} row")
+cur.rowcount  # UPDATE rows affected
 
 # DELETE
 cur.execute("DELETE FROM trades WHERE trade_id = ?", ("TRD_006",))
-print(f"DELETE: {cur.rowcount} row")
+cur.rowcount  # DELETE rows affected
 conn.commit()
 ```
 
-    UPDATE: 1 row
-    DELETE: 1 row
+    1 row
+    1 row
 
 #### SQLite — transaction with context manager
 
@@ -324,11 +323,11 @@ try:
 except Exception as e:
     print(f"Transaction rolled back: {e}")
 
-print(f"Total trades: {conn.execute('SELECT COUNT(*) FROM trades').fetchone()[0]}")
+conn.execute('SELECT COUNT(*) FROM trades').fetchone()[0]  # Total trades
 ```
 
     Transaction committed (2 trades)
-    Total trades: 7
+    7
 
 #### SQLite — PRAGMA settings for performance
 
@@ -359,7 +358,6 @@ for pragma, value in [
 # Create index and compare query plans
 
 cur.execute("CREATE INDEX IF NOT EXISTS idx_trades_ticker ON trades(ticker)")
-print("Created: idx_trades_ticker")
 
 # EXPLAIN QUERY PLAN
 plan = cur.execute("EXPLAIN QUERY PLAN SELECT * FROM trades WHERE ticker = 'ASML.AS'").fetchall()
@@ -369,7 +367,7 @@ for row in plan:
 conn.close()
 ```
 
-    Created: idx_trades_ticker
+    idx_trades_ticker
       {'id': 3, 'parent': 0, 'notused': 0, 'detail': 'SEARCH trades USING INDEX idx_trades_ticker (ticker=?)'}
 
 ## SQL Server — pyodbc (ODBC Driver 18)
@@ -408,10 +406,10 @@ cur = sql_conn.cursor()
 odbc_params = urllib.parse.quote_plus(conn_str)
 sql_engine = create_engine(f"mssql+pyodbc:///?odbc_connect={odbc_params}")
 
-print("Connected to SQL Server: stoxx database")
+# Connected to SQL Server: stoxx database
 ```
 
-    Connected to SQL Server: stoxx database
+    stoxx database
 
 #### SQL Server — SELECT with parameterised query
 
@@ -656,23 +654,23 @@ cur.execute("""
         side NVARCHAR(4), quantity INT, price DECIMAL(10,2))""")
 cur.execute("INSERT INTO dbo.trades_demo VALUES (?,?,?,?,?)",
     "TRD_001", "ASML.AS", "BUY", 100, 685.40)
-print(f"INSERT: {cur.rowcount} row")
+cur.rowcount  # INSERT rows affected
 
 # UPDATE
 cur.execute("UPDATE dbo.trades_demo SET price = ? WHERE trade_id = ?", 700.00, "TRD_001")
-print(f"UPDATE: {cur.rowcount} row")
+cur.rowcount  # UPDATE rows affected
 
 # DELETE
 cur.execute("DELETE FROM dbo.trades_demo WHERE trade_id = ?", "TRD_001")
-print(f"DELETE: {cur.rowcount} row")
+cur.rowcount  # DELETE rows affected
 
 cur.execute("DROP TABLE dbo.trades_demo")
 sql_conn.commit()
 ```
 
-    INSERT: 1 row
-    UPDATE: 1 row
-    DELETE: 1 row
+    1 row
+    1 row
+    1 row
 
 #### SQL Server — list indexes on a table
 
@@ -852,10 +850,8 @@ pd.read_sql("""
 ```python
 # Database and table sizes
 
-print("=== Database Size ===")
 display(pd.read_sql("SELECT DB_NAME() AS db, CAST(SUM(size)*8.0/1024 AS DECIMAL(10,2)) AS size_mb FROM sys.database_files", sql_engine))
 
-print("\n=== Table Sizes ===")
 pd.read_sql("""
     SELECT TOP 10 s.name + '.' + t.name AS [table],
            FORMAT(SUM(p.rows), 'N0') AS rows,
@@ -867,8 +863,6 @@ pd.read_sql("""
     JOIN sys.allocation_units a ON p.partition_id = a.container_id
     GROUP BY s.name, t.name ORDER BY SUM(a.total_pages) DESC""", sql_engine)
 ```
-
-    === Database Size ===
 
 <div>
 <table>
@@ -888,9 +882,6 @@ pd.read_sql("""
   </tbody>
 </table>
 </div>
-
-    
-    === Table Sizes ===
 
 <div>
 <table>
@@ -1120,7 +1111,7 @@ sample = pd.DataFrame({
 })
 
 sample.to_sql("pandas_demo", engine, schema="dbo", if_exists="replace", index=False)
-print("Written to dbo.pandas_demo")
+# Written to dbo.pandas_demo
 
 # Read back
 display(pd.read_sql("SELECT * FROM dbo.pandas_demo", engine))
@@ -1192,7 +1183,6 @@ class StockPrice(Base):
 # Create in-memory SQLite for demo
 orm_engine = create_engine("sqlite:///:memory:")
 Base.metadata.create_all(orm_engine)
-print("ORM tables created")
 ```
 
     ORM tables created
@@ -1330,7 +1320,6 @@ duck.execute("""
         symbol VARCHAR, date DATE, open DOUBLE,
         high DOUBLE, low DOUBLE, close DOUBLE, volume BIGINT
     )""")
-print("DuckDB connected + table created")
 ```
 
     DuckDB connected + table created
@@ -1352,7 +1341,7 @@ rows = cur.fetchall()
 duck.executemany("INSERT INTO ohlcv VALUES (?,?,?,?,?,?,?)",
     [(r[0], r[1], float(r[2]), float(r[3]), float(r[4]), float(r[5]), int(r[6])) for r in rows])
 
-print(f"Loaded {duck.execute('SELECT COUNT(*) FROM ohlcv').fetchone()[0]} rows")
+duck.execute('SELECT COUNT(*) FROM ohlcv').fetchone()[0]  # rows loaded
 ```
 
     Loaded 66355 rows
@@ -1832,7 +1821,7 @@ duck.execute(f"""
     COPY (SELECT symbol, COUNT(*) AS days, ROUND(AVG(close), 2) AS avg_close
           FROM ohlcv GROUP BY symbol ORDER BY avg_close DESC)
     TO '{DATA}/duckdb_py_export.parquet' (FORMAT PARQUET)""")
-print("Exported to duckdb_py_export.parquet")
+# Exported to duckdb_py_export.parquet
 ```
 
     Exported to duckdb_py_export.parquet

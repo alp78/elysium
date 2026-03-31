@@ -87,10 +87,10 @@ First(new[] { 1.1, 2.2, 3.3 })    // double
 First<string>(new[] { "x", "y" })  // explicit
 ```
 
-    int:    1
-    string: a
-    double: 1.1
-    explicit: x
+    1
+    a
+    1.1
+    x
 
 #### Generic constraints — `where T : ...`
 
@@ -108,8 +108,8 @@ Max("apple", "banana")             // banana
 
 ```
 
-    Max(3, 7):              7
-    Max("apple", "banana"): banana
+    7
+    banana
 
 > [!info] Common generic constraints
 >
@@ -143,10 +143,10 @@ pair1    // (name, 42)
 pair2    // (1, True)
 ```
 
-    List<int>: [1, 2, 3]
-    Dict:      Alice: 85, Bob: 92
-    pair1: (name, 42)
-    pair2: (1, True)
+    [1, 2, 3]
+    92
+    (name, 42)
+    (1, True)
 
 ## Advanced LINQ
 
@@ -213,13 +213,9 @@ foreach (var s in deptStats)
       Engineering     (3 people): [Alice, Charlie, Eve] avg=$97'667
       Sales           (2 people): [Bob, Diana] avg=$71'500
       Marketing       (1 people): [Frank] avg=$72'000
-    
-    Max salary per dept:
       Engineering     top earner: Charlie $110'000
       Sales           top earner: Diana $78'000
       Marketing       top earner: Frank $72'000
-    
-    Multiple aggregations:
       Engineering     count=3 avg=$97'667 range=[$88'000-$110'000] total=$293'000
       Sales           count=2 avg=$71'500 range=[$65'000-$78'000] total=$143'000
       Marketing       count=1 avg=$72'000 range=[$72'000-$72'000] total=$72'000
@@ -254,13 +250,9 @@ var leftJoin = departments.GroupJoin(
 foreach (var r in leftJoin)
     $"  {r.Dept,-15} head={r.Head,-10} employees={r.Count}"
 ```
-
-    Inner Join:
       Alice      Engineering     head=CTO        budget=$500'000
       Bob        Sales           head=VP Sales   budget=$300'000
       Charlie    Engineering     head=CTO        budget=$500'000
-    
-    Left Join (GroupJoin):
       Engineering     head=CTO        employees=3
       Sales           head=VP Sales   employees=2
       Marketing       head=CMO        employees=1
@@ -293,17 +285,11 @@ var raises = employees.Select(e => e.Salary * 0.1);
 foreach (var (name, salary, raise_amt) in names.Zip(salaries, raises))
     $"  {name,-10} ${salary,8:N0} + ${raise_amt,7:N0} raise"
 ```
-
-    Top 3 earners (>75k) with tax:
       Charlie    salary=$110'000  tax=$33'000
       Alice      salary=$95'000  tax=$28'500
       Eve        salary=$88'000  tax=$26'400
-    
-    Lookup (multi-value dictionary):
     Engineering: [Alice, Charlie, Eve]
     Unknown:     []
-    
-    Zip (parallel processing):
       Alice      $  95'000 + $  9'500 raise
       Bob        $  65'000 + $  6'500 raise
       Charlie    $ 110'000 + $ 11'000 raise
@@ -353,7 +339,6 @@ var matrix = new List<List<int>>
 };
 $"Flat matrix: [{string.Join(", ", matrix.SelectMany(row => row))}]"
 ```
-
     Select (nested):
       [C#, LINQ, SQL]
       [Python, SQL]
@@ -425,9 +410,9 @@ $"  Scores: {scores.Count:N0} rows"
 $"  Date range: {ohlcv.Min(r => r.Date):yyyy-MM-dd} to {ohlcv.Max(r => r.Date):yyyy-MM-dd}"
 ```
 
-      OHLCV: 66'355 rows, 50 symbols
-      Scores: 466 rows
-      Date range: 2021-01-04 to 2026-03-12
+      66'355 rows, 50 symbols
+      466 rows
+      2021-01-04 to 2026-03-12
 
 #### LINQ — `GroupBy` with Aggregates
 
@@ -737,7 +722,7 @@ $"  Polars: {df.Height} rows x {df.Width} columns"
 df.Head(3)
 ```
 
-      Polars: 66355 rows x 12 columns
+      66355 rows x 12 columns
 
 <!-- Polars DataFrame: (3 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>false</td></tr></tbody></table>
 
@@ -1069,7 +1054,7 @@ new DataFrame(
     Series.From("Volume", linqInsert.Select(r => r.Volume).ToArray()))
 ```
 
-      LINQ: 66355 + 1 = 66356 rows (Concat)
+      66355 + 1 = 66356 rows (Concat)
 
 <!-- Polars DataFrame: (3 rows, 4 columns) --><table><thead><tr><th>Symbol</th><th>Date</th><th>Close</th><th>Volume</th></tr></thead><tbody><tr><td>WKL.AS</td><td>2026-03-12</td><td>67.32</td><td>210379</td></tr><tr><td>DSY.PA</td><td>2026-03-12</td><td>18.37</td><td>434417</td></tr><tr><td>TEST.XX</td><td>2026-03-28</td><td>102</td><td>50000</td></tr></tbody></table>
 
@@ -1098,7 +1083,7 @@ $"  Polars: {df.Height} + {newDf.Height} = {dfInserted.Height} rows (VStack)"
 dfInserted.Tail(3)
 ```
 
-      Polars: 66355 + 1 = 66356 rows (VStack)
+      66355 + 1 = 66356 rows (VStack)
 
 <!-- Polars DataFrame: (3 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>66877</td><td>WKL.AS</td><td>2026-03-11</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66929</td><td>WKL.AS</td><td>2026-03-12</td><td>67</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0</td><td>0</td><td>false</td></tr><tr><td>0</td><td>TEST.XX</td><td>2026-03-28</td><td>100</td><td>105</td><td>95</td><td>102</td><td>102</td><td>50000</td><td>0</td><td>0</td><td>false</td></tr></tbody></table>
 
@@ -1136,7 +1121,7 @@ var linqDelete = ohlcv.Where(r => r.Symbol != "ASML.AS");
 $"  LINQ: {ohlcv.Count} - ASML rows = {linqDelete.Count()} remaining"
 ```
 
-      LINQ: 66355 - ASML rows = 65024 remaining
+      66355 - ASML rows = 65024 remaining
 
 #### Polars DataFrame — Delete rows
 
@@ -1146,7 +1131,7 @@ var dfFiltered = df.Filter(Col("symbol") != Lit("ASML.AS"));
 $"  Polars: {df.Height} - ASML rows = {dfFiltered.Height} remaining"
 ```
 
-      Polars: 66355 - ASML rows = 65024 remaining
+      66355 - ASML rows = 65024 remaining
 
 #### LINQ — Drop column
 

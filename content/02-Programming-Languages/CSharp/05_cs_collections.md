@@ -52,13 +52,13 @@ string.Join(", ", nums[1..4])   // [1..4]
 > [!info] Arrays Are Fixed Size
 > Arrays have no `Add()` or `Remove()`. Use `List<T>` for resizable collections.
 
-    nums:    [1, 2, 3, 4, 5]
-    zeros:   [0, 0, 0, 0, 0]
-    ranged:  [0, 1, 2, 3, 4]
-    Length:  5
-    nums[0]: 1
-    nums[^1]:5
-    [1..4]:  [2, 3, 4]
+    [1, 2, 3, 4, 5]
+    [0, 0, 0, 0, 0]
+    [0, 1, 2, 3, 4]
+    5
+    1
+    5
+    [2, 3, 4]
 
 #### List&lt;T&gt; — adding and removing
 
@@ -95,13 +95,13 @@ lst.Clear();                                  // remove all
 string.Join(", ", lst)   // Clear()
 ```
 
-    list:    [1, 2, 3, 4, 5]
-    Count:   5
-    After adds: [0, 1, 2, 3, 4, 5, 6]
-    Remove(2):  [1, 3, 2, 4, 5]
-    RemoveAt(0):[3, 2, 4, 5]
-    Pop last:   [3, 2, 4] (popped: 5)
-    Clear():    []
+    [1, 2, 3, 4, 5]
+    5
+    [0, 1, 2, 3, 4, 5, 6]
+    [1, 3, 2, 4, 5]
+    [3, 2, 4, 5]
+    5)
+    []
 
 #### List Contains, IndexOf, Find, Exists — search and membership
 
@@ -118,11 +118,11 @@ lst.Exists(x => x > 40)   // Exists(>40)
 lst.Find(x => x > 25)   // Find(>25)
 ```
 
-    Contains(30):  True
-    IndexOf(30):   2
-    FindAll(>25):  [30, 40, 30, 50]
-    Exists(>40):   True
-    Find(>25):     30
+    True
+    2
+    [30, 40, 30, 50]
+    True
+    30
 
 #### List Sort, OrderBy, ThenBy — sorting and custom comparers
 
@@ -148,13 +148,13 @@ string.Join(", ", wordList.OrderByDescending(w => w.Length))   // By length DESC
 string.Join(", ", wordList.OrderByDescending(w => w.Length).ThenBy(w => w))   // By length DESC then Alpha
 ```
 
-    OrderBy:     [1, 1, 2, 3, 4, 5, 6, 9]
-    original:    [3, 1, 4, 1, 5, 9, 2, 6]
-    Sort():      [1, 1, 2, 3, 4, 5, 6, 9]
-    Desc:        [9, 6, 5, 4, 3, 2, 1, 1]
-    By length ASC:   [apple, banana, cherry]
-    By length DESC:   [banana, cherry, apple]
-    By length DESC then Alpha:   [banana, cherry, apple]
+    [1, 1, 2, 3, 4, 5, 6, 9]
+    [3, 1, 4, 1, 5, 9, 2, 6]
+    [1, 1, 2, 3, 4, 5, 6, 9]
+    [9, 6, 5, 4, 3, 2, 1, 1]
+    [apple, banana, cherry]
+    [banana, cherry, apple]
+    [banana, cherry, apple]
 
 #### List ToArray, ToList, shallow copy — copying and conversion
 
@@ -177,7 +177,7 @@ int[] arr = list.ToArray();                    // List → Array
 var backToList = arr.ToList();                 // Array → List
 ```
 
-    original: [1, 2, 3]
+    [1, 2, 3]
 
 #### Range and Index operators — slicing syntax
 
@@ -218,22 +218,22 @@ nums[last]   // Index ^1
 string.Join(", ", nums[middle])   // Range 2..^2
 ```
 
-    nums[0]:   10
-    nums[9]:   100
-    nums[^1]:  100
-    nums[^2]:  90
-    nums[^10]: 10
-    [0..3]:    [10, 20, 30]
-    [3..7]:    [40, 50, 60, 70]
-    [..3]:     [10, 20, 30]
-    [7..]:     [80, 90, 100]
-    [..]:      [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    [^3..]:    [80, 90, 100]
-    [..^3]:    [10, 20, 30, 40, 50, 60, 70]
-    [^5..^2]:  [60, 70, 80]
-    [1..^1]:   [20, 30, 40, 50, 60, 70, 80, 90]
-    Index ^1:  100
-    Range 2..^2: [30, 40, 50, 60, 70, 80]
+    10
+    100
+    100
+    90
+    10
+    [10, 20, 30]
+    [40, 50, 60, 70]
+    [10, 20, 30]
+    [80, 90, 100]
+    [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    [80, 90, 100]
+    [10, 20, 30, 40, 50, 60, 70]
+    [60, 70, 80]
+    [20, 30, 40, 50, 60, 70, 80, 90]
+    100
+    [30, 40, 50, 60, 70, 80]
 
 #### Span&lt;T&gt; — zero-allocation slicing
 
@@ -277,17 +277,17 @@ string.Join(", ", nums[middle])   // Range 2..^2
 }
 ```
 
-    full:    [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    slice:   [30, 40, 50, 60, 70]
-    ranged:  [40, 50, 60, 70]
-    arr[0] after span mutation: 999
-    s[..3]:    [10, 20, 30]
-    s[^3..]:   [80, 90, 100]
-    s[2..^2]:  [30, 40, 50, 60, 70, 80]
-    Sort:          [1, 2, 3, 4, 5]
-    Reverse:       [5, 4, 3, 2, 1]
-    Fill(0):       [0, 0, 0, 0, 0]
-    CopyTo:        [1, 2, 3]
+    [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    [30, 40, 50, 60, 70]
+    [40, 50, 60, 70]
+    999
+    [10, 20, 30]
+    [80, 90, 100]
+    [30, 40, 50, 60, 70, 80]
+    [1, 2, 3, 4, 5]
+    [5, 4, 3, 2, 1]
+    [0, 0, 0, 0, 0]
+    [1, 2, 3]
 
 #### ReadOnlySpan&lt;char&gt; for strings
 
@@ -310,9 +310,9 @@ sub1   // Substring
 }
 ```
 
-    Substring:     'World'
-    Span:          'World'
-    Span[..5]:     'Hello'
+    'World'
+    'World'
+    'Hello'
 
 #### When to use Array vs List vs Span
 
@@ -354,8 +354,8 @@ string.Join(", ", person.Select(kv => $"{kv.Key}:{kv.Value}"))   // person
 string.Join(", ", scores.Select(kv => $"{kv.Key}:{kv.Value}"))   // scores
 ```
 
-    person: name:Alice, age:30, city:NYC
-    scores: Alice:85, Bob:92, Charlie:78
+    name:Alice, age:30, city:NYC
+    Alice:85, Bob:92, Charlie:78
 
 #### Dictionary [], TryGetValue, ContainsKey — access and update
 
@@ -373,10 +373,10 @@ if (scores.TryGetValue("Bob", out int bobScore))
 scores.GetValueOrDefault("Unknown", -1)   // GetValueOrDefault
 ```
 
-    person["name"]:        Alice
-    Updated age:          31
-    Bob's score:          92
-    GetValueOrDefault:    -1
+    Alice
+    31
+    92
+    -1
 
 #### Dictionary Remove, Clear — removing entries
 
@@ -390,8 +390,8 @@ d.Clear();
 d.Count   // After Clear: Count
 ```
 
-    After Remove(b): a:1, c:3
-    After Clear:     Count=0
+    a:1, c:3
+    Count=0
 
 #### Dictionary foreach KeyValuePair — iterating and membership
 
@@ -411,10 +411,10 @@ string.Join(", ", dd.Values)   // Values
       name: Alice
       age: 30
       city: NYC
-    ContainsKey(name):    True
-    ContainsValue(NYC):   True
-    Keys:   [name, age, city]
-    Values: [Alice, 30, NYC]
+    True
+    True
+    [name, age, city]
+    [Alice, 30, NYC]
 
 #### LINQ Where, GroupBy, Count — dictionary filtering and grouping
 
@@ -445,7 +445,7 @@ foreach (var (key, value) in sorted)
     Console.WriteLine($"  {key}: {value}");
 ```
 
-    Score >= 80: Alice:85, Bob:92
+    Alice:85, Bob:92
       a: [apple, avocado]
       b: [banana, blueberry]
       c: [cherry]
@@ -485,9 +485,9 @@ string.Join(", ", fromList)   // fromList
 string.Join(", ", fromStr)   // fromStr
 ```
 
-    nums:     {1, 2, 3, 4, 5}
-    fromList: {1, 2, 3}
-    fromStr:  {a, b, r, c, d}
+    {1, 2, 3, 4, 5}
+    {1, 2, 3}
+    {a, b, r, c, d}
 
 #### HashSet Add, Remove, RemoveWhere — modify set elements
 
@@ -501,10 +501,10 @@ s.Remove(1)   // Remove(1)
 string.Join(", ", s)   // Set
 ```
 
-    Add(4):  True
-    Add(2):  False
-    Remove(1): True
-    Set: {2, 3, 4}
+    True
+    False
+    True
+    {2, 3, 4}
 
 #### HashSet UnionWith, IntersectWith, ExceptWith, SymmetricExceptWith
 
@@ -525,10 +525,10 @@ string.Join(", ", diff)   // Except
 string.Join(", ", symm)   // Symmetric
 ```
 
-    Union:     {1, 2, 3, 4, 5, 6, 7}
-    Intersect: {3, 4, 5}
-    Except:    {1, 2}
-    Symmetric: {1, 2, 7, 6}
+    {1, 2, 3, 4, 5, 6, 7}
+    {3, 4, 5}
+    {1, 2}
+    {1, 2, 7, 6}
 
 #### HashSet Except — data comparison for missing and extra items
 
@@ -544,8 +544,8 @@ string.Join(", ", unsold)   // Unsold
 string.Join(", ", unknown)   // Unknown
 ```
 
-    Unsold:  {P001, P003}
-    Unknown: {P005}
+    {P001, P003}
+    {P005}
 
 #### SortedSet
 
@@ -560,8 +560,8 @@ string.Join(", ", sorted)   // SortedSet
 $"Min: {sorted.Min}, Max: {sorted.Max}"
 ```
 
-    SortedSet: {1, 2, 3, 4, 5}
-    Min: 1, Max: 5
+    {1, 2, 3, 4, 5}
+    5
 
 ## Tuples and Enums
 
@@ -585,10 +585,10 @@ person.Name
 person.Age
 ```
 
-    point:     (3, 4)
-    point.Item1: 3
-    person.Name: Alice
-    person.Age:  30
+    (3, 4)
+    3
+    Alice
+    30
 
 #### Tuple deconstruction (var (a,b) = ...) and swap
 
@@ -604,8 +604,8 @@ int a2 = 1, b2 = 2;
 $"Swapped: a={a2}, b={b2}"
 ```
 
-    Deconstructed: x=3, y=4
-    Swapped: a=2, b=1
+    x=3, y=4
+    a=2, b=1
 
 #### Records as an alternative to namedtuple
 
@@ -639,10 +639,10 @@ Enum.Parse<Color>("Blue")   // Parse
 string.Join(", ", Enum.GetValues<Color>())   // All values
 ```
 
-    Color.Red:       Red
-    (int)Color.Red:  1
-    Parse:           Blue
-    All values:      [Red, Green, Blue]
+    Red
+    1
+    Blue
+    [Red, Green, Blue]
 
 ## Stacks, Queues, and Linked Lists
 
@@ -669,11 +669,11 @@ stack.Peek()   // Peek
 stack.Count   // Count
 ```
 
-    Stack: [third, second, first]
-    Pop:   third
-    Pop:   second
-    Peek:  first
-    Count: 1
+    [third, second, first]
+    third
+    second
+    first
+    1
 
 #### Queue — Queue&lt;T&gt; (FIFO)
 
@@ -689,9 +689,9 @@ queue.Dequeue()   // Dequeue
 queue.Peek()   // Peek
 ```
 
-    Queue:   [first, second, third]
-    Dequeue: first
-    Peek:    second
+    [first, second, third]
+    first
+    second
 
 #### LinkedList&lt;T&gt;
 
@@ -709,8 +709,8 @@ ll.RemoveFirst();
 string.Join(", ", ll)   // After removes
 ```
 
-    LinkedList: [A, B, C, D]
-    After removes: [B, D]
+    [A, B, C, D]
+    [B, D]
 
 #### PriorityQueue&lt;T, TPriority&gt;
 
@@ -726,8 +726,8 @@ pq.Dequeue()   // Dequeue
 pq.Dequeue()   // Dequeue
 ```
 
-    Dequeue: high priority
-    Dequeue: medium priority
+    high priority
+    medium priority
 
 #### ETL task queue
 

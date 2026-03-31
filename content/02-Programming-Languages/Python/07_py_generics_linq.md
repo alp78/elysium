@@ -43,14 +43,14 @@ def first_element(items):
         return item
     return None
 
-print(f"list:   {first_element([1, 2, 3])}")
-print(f"string: {first_element('hello')}")
-print(f"tuple:  {first_element((10, 20))}")
+first_element([1, 2, 3])   # list
+first_element('hello')   # string
+first_element((10, 20))   # tuple
 ```
 
-    list:   1
+    1
     string: h
-    tuple:  10
+    10
 
 #### TypeVar — generic type hints
 
@@ -65,7 +65,7 @@ def first(items: list[T]) -> Optional[T]:
 
 result_int: Optional[int] = first([1, 2, 3])
 result_str: Optional[str] = first(["a", "b", "c"])
-print(f"int: {result_int}, str: {result_str}")
+f"int: {result_int}, str: {result_str}"
 
 # Constrained TypeVar — restrict T to specific types
 Number = TypeVar("Number", int, float)
@@ -73,13 +73,13 @@ Number = TypeVar("Number", int, float)
 def add(a: Number, b: Number) -> Number:
     return a + b
 
-print(f"int:   {add(3, 4)}")
-print(f"float: {add(3.5, 4.5)}")
+add(3, 4)   # int
+add(3.5, 4.5)   # float
 # add("a", "b")  # type checker would flag this (but Python still runs it)
 ```
 
     int: 1, str: a
-    int:   7
+    7
     float: 8.0
 
 #### Generic class — Generic[T]
@@ -113,18 +113,18 @@ int_stack: Stack[int] = Stack()
 int_stack.push(1)
 int_stack.push(2)
 int_stack.push(3)
-print(f"Stack: {int_stack}")
-print(f"Pop:   {int_stack.pop()}")
+int_stack   # Stack
+int_stack.pop()   # Pop
 
 str_stack: Stack[str] = Stack()
 str_stack.push("hello")
 str_stack.push("world")
-print(f"Stack: {str_stack}")
+str_stack   # Stack
 ```
 
-    Stack: Stack([1, 2, 3])
-    Pop:   3
-    Stack: Stack(['hello', 'world'])
+    Stack([1, 2, 3])
+    3
+    Stack(['hello', 'world'])
 
 #### Built-in generic type hints — list[int], dict[str, T], Optional
 
@@ -164,14 +164,14 @@ scores = pd.read_sql('SELECT symbol, sector, country, composite_score, composite
 
 pldf = pl.read_parquet('C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet')
 
-print(f'  Pandas: {len(ohlcv):,} rows, {ohlcv.symbol.nunique()} symbols')
-print(f'  Polars: {pldf.height:,} rows')
-print(f'  Date range: {ohlcv.date.min()} to {ohlcv.date.max()}')
+f"  Pandas: {len(ohlcv):,} rows, {ohlcv.symbol.nunique()} symbols"
+f"  Polars: {pldf.height:,} rows"
+f"  Date range: {ohlcv.date.min()} to {ohlcv.date.max()}"
 ```
 
-      Pandas: 66,355 rows, 50 symbols
-      Polars: 66,355 rows
-      Date range: 2021-01-04 to 2026-03-12
+      66,355 rows, 50 symbols
+      66,355 rows
+      2021-01-04 to 2026-03-12
 
 ### Basic Operations
 
@@ -345,17 +345,17 @@ pldf.row(0, named=True)
 ```
 
     {'id': 21160,
-     'symbol': 'ABI.BR',
-     'date': datetime.date(2021, 1, 4),
-     'open': 58.15,
-     'high': 58.85,
-     'low': 56.78,
-     'close': 57.21,
-     'adj_close': 53.5761,
-     'volume': 1513937,
-     'dividends': 0.0,
-     'stock_splits': 0.0,
-     'is_filled': False}
+    'symbol': 'ABI.BR',
+    'date': datetime.date(2021, 1, 4),
+    'open': 58.15,
+    'high': 58.85,
+    'low': 56.78,
+    'close': 57.21,
+    'adj_close': 53.5761,
+    'volume': 1513937,
+    'dividends': 0.0,
+    'stock_splits': 0.0,
+    'is_filled': False}
 
 #### Pandas — Subset with loc[] label filter
 
@@ -1556,7 +1556,7 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').with_columns(
 ```python
 # Pandas: delete rows
 filtered = ohlcv[ohlcv.symbol != 'ASML.AS']
-print(f'  {len(ohlcv)} - ASML rows = {len(filtered)} remaining')
+f"  {len(ohlcv)} - ASML rows = {len(filtered)} remaining"
 ```
 
       66355 - ASML rows = 65024 remaining
@@ -1566,7 +1566,7 @@ print(f'  {len(ohlcv)} - ASML rows = {len(filtered)} remaining')
 ```python
 # Polars: delete rows
 filtered = pldf.filter(pl.col('symbol') != 'ASML.AS')
-print(f'  {pldf.height} - ASML rows = {filtered.height} remaining')
+f"  {pldf.height} - ASML rows = {filtered.height} remaining"
 ```
 
       66355 - ASML rows = 65024 remaining

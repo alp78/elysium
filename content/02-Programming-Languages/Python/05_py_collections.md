@@ -55,30 +55,30 @@ nested = [[1, 2], [3, 4], [5, 6]]          # list of lists (2D)
 from_range = list(range(5))                 # [0, 1, 2, 3, 4]
 repeated = [0] * 5                          # [0, 0, 0, 0, 0]
 
-print(f"empty:      {empty}")
-print(f"nums:       {nums}")
-print(f"mixed:      {mixed}")
-print(f"nested:     {nested}")
-print(f"from_range: {from_range}")
-print(f"repeated:   {repeated}")
-print(f"nums[0]:    {nums[0]}")             # first
-print(f"nums[-1]:   {nums[-1]}")            # last
-print(f"nums[1:4]:  {nums[1:4]}")           # slice [2, 3, 4]
-print(f"nums[::-1]: {nums[::-1]}")          # reversed
-print(f"nested[1][0]: {nested[1][0]}")      # 2D access: row 1, col 0
+empty
+nums
+mixed
+nested
+from_range
+repeated
+nums[0]  # first
+nums[-1]  # last
+nums[1:4]  # slice [2, 3, 4]
+nums[::-1]  # reversed
+nested[1][0]  # 2D access: row 1, col 0
 ```
 
-    empty:      []
-    nums:       [1, 2, 3, 4, 5]
-    mixed:      [1, 'hello', True, 3.14, None]
-    nested:     [[1, 2], [3, 4], [5, 6]]
-    from_range: [0, 1, 2, 3, 4]
-    repeated:   [0, 0, 0, 0, 0]
-    nums[0]:    1
-    nums[-1]:   5
-    nums[1:4]:  [2, 3, 4]
-    nums[::-1]: [5, 4, 3, 2, 1]
-    nested[1][0]: 3
+    []
+    [1, 2, 3, 4, 5]
+    [1, 'hello', True, 3.14, None]
+    [[1, 2], [3, 4], [5, 6]]
+    [0, 1, 2, 3, 4]
+    [0, 0, 0, 0, 0]
+    1
+    5
+    [2, 3, 4]
+    [5, 4, 3, 2, 1]
+    3
 
 #### List append, insert, extend, remove, pop — add and remove elements
 
@@ -89,24 +89,24 @@ lst = [1, 2, 3]
 lst.append(4)                               # add to end: [1, 2, 3, 4]
 lst.insert(0, 0)                            # insert at index: [0, 1, 2, 3, 4]
 lst.extend([5, 6])                          # add multiple: [0, 1, 2, 3, 4, 5, 6]
-print(f"After adds: {lst}")
+lst   # After adds
 
 lst = [1, 2, 3, 2, 4, 5]
 lst.remove(2)                               # remove FIRST occurrence of value
-print(f"remove(2):  {lst}")
+lst   # remove(2)
 del lst[0]                                  # remove at index
-print(f"del [0]:    {lst}")
+lst   # del [0]
 last = lst.pop()                            # pop last (returns value)
-print(f"pop():      {lst} (popped: {last})")
+f"pop():      {lst} (popped: {last})"
 lst.clear()                                 # remove all
-print(f"clear():    {lst}")
+lst   # clear()
 ```
 
-    After adds: [0, 1, 2, 3, 4, 5, 6]
-    remove(2):  [1, 3, 2, 4, 5]
-    del [0]:    [3, 2, 4, 5]
-    pop():      [3, 2, 4] (popped: 5)
-    clear():    []
+    [0, 1, 2, 3, 4, 5, 6]
+    [1, 3, 2, 4, 5]
+    [3, 2, 4, 5]
+    [3, 2, 4] (popped: 5)
+    []
 
 #### List search — in operator, index(), count()
 
@@ -114,16 +114,16 @@ print(f"clear():    {lst}")
 # Search and membership — in, index, count for finding elements
 
 lst = [10, 20, 30, 40, 30, 50]
-print(f"30 in lst:      {30 in lst}")       # True (membership check)
-print(f"99 in lst:      {99 in lst}")       # False
-print(f"index(30):      {lst.index(30)}")   # 2 (first occurrence)
-print(f"count(30):      {lst.count(30)}")   # 2 (how many times)
+30 in lst  # True (membership check)
+99 in lst  # False
+lst.index(30)  # 2 (first occurrence)
+lst.count(30)  # 2 (how many times)
 ```
 
-    30 in lst:      True
-    99 in lst:      False
-    index(30):      2
-    count(30):      2
+    True
+    False
+    2
+    2
 
 #### List sort() and sorted() — in-place vs new list
 
@@ -131,23 +131,23 @@ print(f"count(30):      {lst.count(30)}")   # 2 (how many times)
 # Sorting — sorted() returns new list, .sort() mutates in place
 
 nums = [3, 1, 4, 1, 5, 9, 2, 6]
-print(f"sorted():       {sorted(nums)}")            # returns NEW list, original unchanged
-print(f"original:       {nums}")                     # unchanged
+sorted(nums)  # returns NEW list, original unchanged
+nums  # unchanged
 nums.sort()                                          # sorts IN-PLACE, returns None
-print(f"sort():         {nums}")                     # modified
+nums  # modified
 nums.sort(reverse=True)                              # descending
-print(f"reverse sort:   {nums}")
+nums   # reverse sort
 
 words = ["banana", "apple", "cherry"]
-print(f"by length:      {sorted(words, key=len)}")
-print(f"case-insensitive: {sorted(['Banana', 'apple', 'Cherry'], key=str.lower)}")
+sorted(words, key=len)   # by length
+sorted(['Banana', 'apple', 'Cherry'], key=str.lower)   # case-insensitive
 ```
 
-    sorted():       [1, 1, 2, 3, 4, 5, 6, 9]
-    original:       [3, 1, 4, 1, 5, 9, 2, 6]
-    sort():         [1, 1, 2, 3, 4, 5, 6, 9]
-    reverse sort:   [9, 6, 5, 4, 3, 2, 1, 1]
-    by length:      ['apple', 'banana', 'cherry']
+    [1, 1, 2, 3, 4, 5, 6, 9]
+    [3, 1, 4, 1, 5, 9, 2, 6]
+    [1, 1, 2, 3, 4, 5, 6, 9]
+    [9, 6, 5, 4, 3, 2, 1, 1]
+    ['apple', 'banana', 'cherry']
     case-insensitive: ['apple', 'Banana', 'Cherry']
 
 #### Copying — shallow vs deep
@@ -158,16 +158,16 @@ print(f"case-insensitive: {sorted(['Banana', 'apple', 'Cherry'], key=str.lower)}
 original = [[1, 2], [3, 4]]
 shallow = original.copy()                    # or: list(original) or original[:]
 shallow[0][0] = 99                           # modifies original too! (shared inner lists)
-print(f"original after shallow copy mutation: {original}")  # [[99, 2], [3, 4]]
+original  # [[99, 2], [3, 4]]
 
 original = [[1, 2], [3, 4]]
 deep = copy.deepcopy(original)               # fully independent copy
 deep[0][0] = 99
-print(f"original after deep copy mutation:   {original}")   # [[1, 2], [3, 4]] — unchanged
+original  # [[1, 2], [3, 4]] — unchanged
 ```
 
     original after shallow copy mutation: [[99, 2], [3, 4]]
-    original after deep copy mutation:   [[1, 2], [3, 4]]
+    [[1, 2], [3, 4]]
 
 #### List as stack
 
@@ -178,14 +178,14 @@ stack = []
 stack.append("a")    # push
 stack.append("b")
 stack.append("c")
-print(f"stack:  {stack}")
-print(f"pop:    {stack.pop()}")   # "c" (last in, first out)
-print(f"stack:  {stack}")
+stack
+stack.pop()  # "c" (last in, first out)
+stack
 ```
 
-    stack:  ['a', 'b', 'c']
-    pop:    c
-    stack:  ['a', 'b']
+    ['a', 'b', 'c']
+    c
+    ['a', 'b']
 
 ## Dictionaries
 
@@ -207,15 +207,15 @@ from_kwargs = dict(name="Bob", age=25)             # from keyword args
 from_keys = dict.fromkeys(["x", "y", "z"], 0)      # all same value
 comprehension = {x: x**2 for x in range(5)}        # dict comprehension
 
-print(f"person:  {person}")
-print(f"from_pairs: {from_pairs}")
-print(f"from_keys:  {from_keys}")
-print(f"comprehension: {comprehension}")
+person
+from_pairs
+from_keys
+comprehension
 ```
 
-    person:  {'name': 'Alice', 'age': 30, 'city': 'NYC'}
+    {'name': 'Alice', 'age': 30, 'city': 'NYC'}
     from_pairs: {'a': 1, 'b': 2}
-    from_keys:  {'x': 0, 'y': 0, 'z': 0}
+    {'x': 0, 'y': 0, 'z': 0}
     comprehension: {0: 0, 1: 1, 2: 4, 3: 9, 4: 16}
 
 #### Dict access — [], .get(), .setdefault(), KeyError
@@ -223,21 +223,21 @@ print(f"comprehension: {comprehension}")
 ```python
 # Dict access and update — bracket, .get(), .setdefault(), .update()
 
-print(f"person['name']:    {person['name']}")          # KeyError if missing
-print(f"person.get('name'):{person.get('name')}")      # None if missing (safe)
-print(f"person.get('zip', 'N/A'): {person.get('zip', 'N/A')}")  # default value
+person['name']  # KeyError if missing
+person.get('name')  # None if missing (safe)
+person.get('zip', 'N/A')  # default value
 
 person["email"] = "alice@example.com"                   # add new key
 person["age"] = 31                                      # update existing
 person.update({"city": "LA", "zip": "90001"})          # update multiple
 person |= {"phone": "555-0123"}                        # merge (Python 3.9+)
-print(f"Updated: {person}")
+person   # Updated
 ```
 
-    person['name']:    Alice
-    person.get('name'):Alice
-    person.get('zip', 'N/A'): N/A
-    Updated: {'name': 'Alice', 'age': 31, 'city': 'LA', 'email': 'alice@example.com', 'zip': '90001', 'phone': '555-0123'}
+    Alice
+    Alice
+    N/A
+    {'name': 'Alice', 'age': 31, 'city': 'LA', 'email': 'alice@example.com', 'zip': '90001', 'phone': '555-0123'}
 
 #### Dict del, pop, clear — removing and iterating with .items()
 
@@ -249,7 +249,7 @@ del d["a"]                                             # delete key (KeyError if
 popped = d.pop("b")                                    # remove and return (KeyError if missing)
 popped_safe = d.pop("z", "default")                    # safe pop with default
 last = d.popitem()                                     # remove and return last (k, v) pair
-print(f"After removes: {d}")
+d   # After removes
 
 d = {"name": "Alice", "age": 30, "city": "NYC"}
 for key in d:                                          # keys (default)
@@ -259,12 +259,12 @@ for key, value in d.items():                           # key-value pairs
 for value in d.values():                               # values only
     print(f"  value: {value}")
 
-print(f"'name' in d:  {'name' in d}")                 # checks KEYS, not values
-print(f"'Alice' in d: {'Alice' in d}")                 # False — not a key
-print(f"len(d):       {len(d)}")
+'name' in d  # checks KEYS, not values
+'Alice' in d  # False — not a key
+len(d)   # len(d)
 ```
 
-    After removes: {'c': 3}
+    {'c': 3}
       key: name
       key: age
       key: city
@@ -274,9 +274,9 @@ print(f"len(d):       {len(d)}")
       value: Alice
       value: 30
       value: NYC
-    'name' in d:  True
+    True
     'Alice' in d: False
-    len(d):       3
+    3
 
 #### Dict merging — | operator, .update(), **unpacking
 
@@ -287,7 +287,7 @@ a = {"x": 1, "y": 2}
 b = {"y": 3, "z": 4}
 merged = {**a, **b}                                    # b overwrites a's 'y'
 merged2 = a | b                                        # Python 3.9+ (same result)
-print(f"merged: {merged}")                             # {'x': 1, 'y': 3, 'z': 4}
+merged  # {'x': 1, 'y': 3, 'z': 4}
 ```
 
     merged: {'x': 1, 'y': 3, 'z': 4}
@@ -303,10 +303,10 @@ words = ["apple", "banana", "avocado", "cherry", "blueberry"]
 groups = defaultdict(list)                             # missing key → empty list
 for word in words:
     groups[word[0]].append(word)                       # no KeyError!
-print(f"Groups: {dict(groups)}")
+dict(groups)   # Groups
 ```
 
-    Groups: {'a': ['apple', 'avocado'], 'b': ['banana', 'blueberry'], 'c': ['cherry']}
+    {'a': ['apple', 'avocado'], 'b': ['banana', 'blueberry'], 'c': ['cherry']}
 
 #### Count occurrences
 
@@ -316,19 +316,19 @@ print(f"Groups: {dict(groups)}")
 counts = defaultdict(int)                              # missing key → 0
 for word in words:
     counts[word[0]] += 1
-print(f"Counts: {dict(counts)}")
+dict(counts)   # Counts
 
 text = "abracadabra"
 c = Counter(text)
-print(f"Counter:      {c}")
-print(f"Most common:  {c.most_common(3)}")
-print(f"Total:        {c.total()}")
+c   # Counter
+c.most_common(3)   # Most common
+c.total()   # Total
 ```
 
-    Counts: {'a': 2, 'b': 2, 'c': 1}
-    Counter:      Counter({'a': 5, 'b': 2, 'r': 2, 'c': 1, 'd': 1})
-    Most common:  [('a', 5), ('b', 2), ('r', 2)]
-    Total:        11
+    {'a': 2, 'b': 2, 'c': 1}
+    Counter({'a': 5, 'b': 2, 'r': 2, 'c': 1, 'd': 1})
+    [('a', 5), ('b', 2), ('r', 2)]
+    11
 
 ## Sets
 
@@ -354,16 +354,16 @@ from_list = set([1, 2, 2, 3, 3, 3])    # duplicates removed: {1, 2, 3}
 from_str = set("abracadabra")           # unique chars
 comprehension = {x**2 for x in range(5)}
 
-print(f"nums:         {nums}")
-print(f"from_list:    {from_list}")
-print(f"from_str:     {from_str}")
-print(f"comprehension:{comprehension}")
+nums
+from_list
+from_str
+comprehension
 ```
 
-    nums:         {1, 2, 3, 4, 5}
-    from_list:    {1, 2, 3}
-    from_str:     {'d', 'b', 'r', 'a', 'c'}
-    comprehension:{0, 1, 4, 9, 16}
+    {1, 2, 3, 4, 5}
+    {1, 2, 3}
+    {'d', 'b', 'r', 'a', 'c'}
+    {0, 1, 4, 9, 16}
 
 #### Set add, remove, discard, pop — modify set elements
 
@@ -373,15 +373,15 @@ print(f"comprehension:{comprehension}")
 s = {1, 2, 3}
 s.add(4)                               # add one element
 s.update([5, 6, 7])                    # add multiple
-print(f"After adds:   {s}")
+s   # After adds
 s.remove(7)                            # remove (KeyError if missing)
 s.discard(99)                          # remove (NO error if missing)
 popped = s.pop()                       # remove and return arbitrary element
-print(f"After removes:{s}")
+s   # After removes
 ```
 
-    After adds:   {1, 2, 3, 4, 5, 6, 7}
-    After removes:{2, 3, 4, 5, 6}
+    {1, 2, 3, 4, 5, 6, 7}
+    {2, 3, 4, 5, 6}
 
 #### Set union, intersection, difference, symmetric_difference
 
@@ -391,28 +391,28 @@ print(f"After removes:{s}")
 a = {1, 2, 3, 4, 5}
 b = {4, 5, 6, 7, 8}
 
-print(f"a:              {a}")
-print(f"b:              {b}")
-print(f"union |:        {a | b}")           # all elements from both
-print(f"intersection &: {a & b}")           # elements in BOTH
-print(f"difference -:   {a - b}")           # in a but NOT in b
-print(f"symmetric ^:    {a ^ b}")           # in one but NOT both
+a
+b
+a | b  # all elements from both
+a & b  # elements in BOTH
+a - b  # in a but NOT in b
+a ^ b  # in one but NOT both
 
 # Subset / superset
-print(f"{{1,2}} <= a:    {{1, 2}} is subset: {({1, 2} <= a)}")
-print(f"a >= {{1,2}}:    a is superset: {(a >= {1, 2})}")
-print(f"a.isdisjoint(b): {a.isdisjoint({10, 20})}")  # no common elements
+f"{{1,2}} <= a:    {{1, 2}} is subset: {({1, 2} <= a)}"
+f"a >= {{1,2}}:    a is superset: {(a >= {1, 2})}"
+a.isdisjoint({10, 20})  # no common elements
 ```
 
-    a:              {1, 2, 3, 4, 5}
-    b:              {4, 5, 6, 7, 8}
-    union |:        {1, 2, 3, 4, 5, 6, 7, 8}
-    intersection &: {4, 5}
-    difference -:   {1, 2, 3}
-    symmetric ^:    {1, 2, 3, 6, 7, 8}
-    {1,2} <= a:    {1, 2} is subset: True
-    a >= {1,2}:    a is superset: True
-    a.isdisjoint(b): True
+    {1, 2, 3, 4, 5}
+    {4, 5, 6, 7, 8}
+    {1, 2, 3, 4, 5, 6, 7, 8}
+    {4, 5}
+    {1, 2, 3}
+    {1, 2, 3, 6, 7, 8}
+    {1, 2} is subset: True
+    a is superset: True
+    True
 
 #### Set difference for data comparison — find missing and extra items
 
@@ -422,16 +422,16 @@ print(f"a.isdisjoint(b): {a.isdisjoint({10, 20})}")  # no common elements
 prod_ids = {"P001", "P002", "P003", "P004"}
 warehouse_ids = {"P002", "P003", "P005"}
 
-print(f"In prod only:      {prod_ids - warehouse_ids}")
-print(f"In warehouse only: {warehouse_ids - prod_ids}")
-print(f"In both:           {prod_ids & warehouse_ids}")
-print(f"All unique:        {prod_ids | warehouse_ids}")
+prod_ids - warehouse_ids   # In prod only
+warehouse_ids - prod_ids   # In warehouse only
+prod_ids & warehouse_ids   # In both
+prod_ids | warehouse_ids   # All unique
 ```
 
-    In prod only:      {'P004', 'P001'}
-    In warehouse only: {'P005'}
-    In both:           {'P003', 'P002'}
-    All unique:        {'P005', 'P001', 'P003', 'P002', 'P004'}
+    {'P004', 'P001'}
+    {'P005'}
+    {'P003', 'P002'}
+    {'P005', 'P001', 'P003', 'P002', 'P004'}
 
 #### frozenset
 
@@ -440,15 +440,15 @@ print(f"All unique:        {prod_ids | warehouse_ids}")
 
 fs = frozenset([1, 2, 3])
 # fs.add(4)  # Error! Immutable
-print(f"frozenset:    {fs}")
+fs   # frozenset
 
 # Can use as dict key (set can't)
 cache = {frozenset({"a", "b"}): "result1"}
-print(f"As dict key:  {cache}")
+cache   # As dict key
 ```
 
-    frozenset:    frozenset({1, 2, 3})
-    As dict key:  {frozenset({'b', 'a'}): 'result1'}
+    frozenset({1, 2, 3})
+    {frozenset({'b', 'a'}): 'result1'}
 
 ## Tuples & Enums
 
@@ -463,15 +463,15 @@ point = (3, 4)
 person = ("Alice", 30, "NYC")
 nested = ((1, 2), (3, 4))
 
-print(f"point:    {point}")
-print(f"point[0]: {point[0]}")
-print(f"person:   {person}")
+point
+point[0]   # point[0]
+person
 # point[0] = 99  # TypeError! Immutable
 ```
 
-    point:    (3, 4)
-    point[0]: 3
-    person:   ('Alice', 30, 'NYC')
+    (3, 4)
+    3
+    ('Alice', 30, 'NYC')
 
 #### Tuple unpacking
 
@@ -480,22 +480,22 @@ print(f"person:   {person}")
 
 x, y = point
 name, age, city = person
-print(f"Unpacked: x={x}, y={y}")
-print(f"Unpacked: name={name}, age={age}")
+f"Unpacked: x={x}, y={y}"
+f"Unpacked: name={name}, age={age}"
 
 # Swap values (tuple unpacking trick)
 a, b = 1, 2
 a, b = b, a
-print(f"Swapped:  a={a}, b={b}")
+f"Swapped:  a={a}, b={b}"
 
 # Ignore values with _
 first, *_, last = [1, 2, 3, 4, 5]
-print(f"first={first}, last={last}")
+f"first={first}, last={last}"
 ```
 
     Unpacked: x=3, y=4
     Unpacked: name=Alice, age=30
-    Swapped:  a=2, b=1
+    a=2, b=1
     first=1, last=5
 
 #### namedtuple and NamedTuple
@@ -511,9 +511,9 @@ An immutable tuple subclass with named fields. `Point = namedtuple('Point', ['x'
 
 Point = namedtuple("Point", ["x", "y"])
 p = Point(3, 4)
-print(f"p.x={p.x}, p.y={p.y}")
-print(f"p[0]={p[0]}")                   # still supports index access
-print(f"_asdict: {p._asdict()}")        # convert to dict
+f"p.x={p.x}, p.y={p.y}"
+p[0]  # still supports index access
+p._asdict()  # convert to dict
 ```
 
     p.x=3, p.y=4
@@ -526,7 +526,7 @@ print(f"_asdict: {p._asdict()}")        # convert to dict
 # Tuple immutability — _replace for non-destructive updates
 
 p2 = p._replace(x=10)
-print(f"_replace: {p2}")
+p2   # _replace
 
 
 class Employee(NamedTuple):
@@ -535,13 +535,13 @@ class Employee(NamedTuple):
     salary: float
 
 emp = Employee("Alice", "Engineering", 95000)
-print(f"\nEmployee: {emp}")
-print(f"  name: {emp.name}, salary: ${emp.salary:,.0f}")
+emp   # Employee
+f"  name: {emp.name}, salary: ${emp.salary:,.0f}"
 ```
 
     _replace: Point(x=10, y=4)
     
-    Employee: Employee(name='Alice', department='Engineering', salary=95000)
+    Employee(name='Alice', department='Engineering', salary=95000)
       name: Alice, salary: $95,000
 
 #### Enum
@@ -562,18 +562,18 @@ class Direction(Enum):
     EAST = auto()
     WEST = auto()
 
-print(f"Color.RED:       {Color.RED}")
-print(f"Color.RED.name:  {Color.RED.name}")
-print(f"Color.RED.value: {Color.RED.value}")
-print(f"Color(2):        {Color(2)}")          # lookup by value
-print(f"Color['BLUE']:   {Color['BLUE']}")     # lookup by name
+Color.RED   # Color.RED
+Color.RED.name   # Color.RED.name
+Color.RED.value   # Color.RED.value
+Color(2)  # lookup by value
+Color['BLUE']  # lookup by name
 ```
 
-    Color.RED:       Color.RED
-    Color.RED.name:  RED
+    Color.RED
+    RED
     Color.RED.value: 1
-    Color(2):        Color.GREEN
-    Color['BLUE']:   Color.BLUE
+    Color.GREEN
+    Color.BLUE
 
 #### Iterating over enum
 
@@ -593,12 +593,12 @@ for color in Color:
 ```python
 # Enum comparison — identity vs value comparison
 
-print(f"RED == RED: {Color.RED == Color.RED}")
-print(f"RED == 1:   {Color.RED == 1}")          # False! Enum != int
+Color.RED == Color.RED   # RED == RED
+Color.RED == 1  # False! Enum != int
 ```
 
     RED == RED: True
-    RED == 1:   False
+    False
 
 #### IntEnum and pipeline status
 
@@ -610,8 +610,8 @@ class Priority(IntEnum):
     MEDIUM = 2
     HIGH = 3
 
-print(f"Priority.HIGH > Priority.LOW: {Priority.HIGH > Priority.LOW}")
-print(f"Priority.HIGH == 3: {Priority.HIGH == 3}")   # True! IntEnum == int
+Priority.HIGH > Priority.LOW   # Priority.HIGH > Priority.LOW
+Priority.HIGH == 3  # True! IntEnum == int
 
 class PipelineStatus(Enum):
     PENDING = "pending"
@@ -656,16 +656,16 @@ stack = []
 stack.append("first")       # push
 stack.append("second")
 stack.append("third")
-print(f"Stack: {stack}")
-print(f"Pop:   {stack.pop()}")     # "third" (last in, first out)
-print(f"Pop:   {stack.pop()}")     # "second"
-print(f"Peek:  {stack[-1]}")       # look at top without removing
+stack
+stack.pop()  # "third" (last in, first out)
+stack.pop()  # "second"
+stack[-1]  # look at top without removing
 ```
 
-    Stack: ['first', 'second', 'third']
-    Pop:   third
-    Pop:   second
-    Peek:  first
+    ['first', 'second', 'third']
+    third
+    second
+    first
 
 #### collections.deque — Queue (FIFO) with append and popleft
 
@@ -676,16 +676,16 @@ queue = deque()
 queue.append("first")       # enqueue (add to right)
 queue.append("second")
 queue.append("third")
-print(f"Queue:    {list(queue)}")
-print(f"Dequeue:  {queue.popleft()}")   # "first" (first in, first out)
-print(f"Dequeue:  {queue.popleft()}")   # "second"
-print(f"Peek:     {queue[0]}")          # look at front without removing
+list(queue)   # Queue
+queue.popleft()  # "first" (first in, first out)
+queue.popleft()  # "second"
+queue[0]  # look at front without removing
 ```
 
-    Queue:    ['first', 'second', 'third']
-    Dequeue:  first
-    Dequeue:  second
-    Peek:     third
+    ['first', 'second', 'third']
+    first
+    second
+    third
 
 #### deque — double-ended queue
 
@@ -697,19 +697,19 @@ d.append(4)                 # add right: [1, 2, 3, 4]
 d.appendleft(0)             # add left:  [0, 1, 2, 3, 4]
 d.pop()                     # remove right: [0, 1, 2, 3]
 d.popleft()                 # remove left:  [1, 2, 3]
-print(f"Deque: {list(d)}")
+list(d)   # Deque
 
 # Rotate
 d = deque([1, 2, 3, 4, 5])
 d.rotate(2)                 # rotate right by 2: [4, 5, 1, 2, 3]
-print(f"Rotate(2): {list(d)}")
+list(d)   # Rotate(2)
 d.rotate(-2)                # rotate left by 2: [1, 2, 3, 4, 5]
-print(f"Rotate(-2):{list(d)}")
+list(d)   # Rotate(-2)
 ```
 
-    Deque: [1, 2, 3]
-    Rotate(2): [4, 5, 1, 2, 3]
-    Rotate(-2):[1, 2, 3, 4, 5]
+    [1, 2, 3]
+    [4, 5, 1, 2, 3]
+    [1, 2, 3, 4, 5]
 
 #### deque with maxlen
 
@@ -719,10 +719,10 @@ print(f"Rotate(-2):{list(d)}")
 d = deque(maxlen=3)          # fixed-size buffer
 d.append(1); d.append(2); d.append(3);
 d.append(4)                 # [2, 3, 4] — 1 was auto-removed
-print(f"maxlen=3:  {list(d)}")
+list(d)   # maxlen=3
 ```
 
-    maxlen=3:  [2, 3, 4]
+    [2, 3, 4]
 
 #### Priority queue — heapq
 
@@ -736,14 +736,14 @@ heapq.heappush(pq, (3, "low priority"))
 heapq.heappush(pq, (1, "high priority"))
 heapq.heappush(pq, (2, "medium priority"))
 
-print(f"Heap:    {pq}")
-print(f"Pop:     {heapq.heappop(pq)}")     # (1, "high priority") — smallest first
-print(f"Pop:     {heapq.heappop(pq)}")     # (2, "medium priority")
+pq   # Heap
+heapq.heappop(pq)  # (1, "high priority") — smallest first
+heapq.heappop(pq)  # (2, "medium priority")
 ```
 
-    Heap:    [(1, 'high priority'), (3, 'low priority'), (2, 'medium priority')]
-    Pop:     (1, 'high priority')
-    Pop:     (2, 'medium priority')
+    [(1, 'high priority'), (3, 'low priority'), (2, 'medium priority')]
+    (1, 'high priority')
+    (2, 'medium priority')
 
 #### ETL task queue
 
@@ -785,7 +785,7 @@ heapq         | Partial | Yes     | Yes        | O(log n)| Priority queue, top-N
 
 * dict/defaultdict/Counter are insertion-ordered since Python 3.7
 """
-print(comparison)
+comparison
 ```
 
     
@@ -828,7 +828,7 @@ Need LIFO stack?        → list (or deque)
 Need priority ordering? → heapq
 Need fast middle insert?→ (use database — no Python collection is good at this)
 """
-print(guide)
+guide
 ```
 
     

@@ -101,7 +101,6 @@ optionsField.SetValue(csharpKernel, newOptions);
 // In notebooks, this avoids NuGet assembly version warnings.
 
 
-
 // Attribute stubs for notebook use (real xUnit uses [Fact] and [Theory])
 [AttributeUsage(AttributeTargets.Method)] public class FactAttribute : Attribute { }
 [AttributeUsage(AttributeTargets.Method)] public class TheoryAttribute : Attribute { }
@@ -282,7 +281,6 @@ void RunTest(string name, Action test)
 
 ```
 
-    === Basic xUnit Tests ===
 
 #### Basic Fact tests
 
@@ -405,7 +403,6 @@ foreach (var (vol, bps) in feeCases)
     RunTest($"Volume ${vol:N0} → {bps} bps", () => Assert.Equal(bps, GetFeeBps(vol)));
 ```
 
-    === Fee Tier [Theory] ===
       ✓ Volume $50'000 → 30 bps
       ✓ Volume $500'000 → 20 bps
       ✓ Volume $5'000'000 → 10 bps
@@ -433,7 +430,6 @@ foreach (var (amt, rate, exp, label) in fxCases)
 ```
 
     
-    === Currency Conversion [Theory] ===
       ✓ USD→EUR: 1000 × 0.92 = 920
       ✓ USD→JPY: 1000 × 149.5 = 149500
       ✓ USD→GBP: 1000 × 0.79 = 790
@@ -466,7 +462,6 @@ foreach (var tc in ohlcvCases)
 ```
 
     
-    === OHLCV Validation [Theory] ===
       ✓ valid bar
       ✓ high < open
       ✓ negative volume
@@ -489,7 +484,6 @@ foreach (var (ticker, valid) in tickerCases)
 ```
 
     
-    === Ticker Validation [Theory] ===
       ✓ "AAPL" → True
       ✓ "BRK.B" → True
       ✓ "" → False
@@ -520,7 +514,6 @@ void RunTest(string name, Action test)
 
 ```
 
-    === Mock Basics ===
 
 #### Interface + mock classes — IMarketDataClient, IBroker for testability
 
@@ -699,7 +692,6 @@ RunTest("Mock with transient failure + retry", () =>
 
       ✓ Mock with transient failure + retry
     
-    === Moq Equivalent (for real projects) ===
     
       // In a real test project with Moq (NuGet: Moq):
       var mock = new Mock<IMarketDataClient>();
@@ -839,7 +831,6 @@ RunTest("NormalizeTrades empty list", () =>
 });
 ```
 
-    === Transform Tests ===
       ✓ NormalizeTrades basic
       ✓ NormalizeTrades drops missing ID
       ✓ NormalizeTrades empty list
@@ -871,7 +862,6 @@ RunTest("Index weight calculation with mock", () =>
 ```
 
     
-    === Mock External Service ===
       ✓ Index weight calculation with mock
 
 #### Data quality checks
@@ -934,7 +924,6 @@ RunTest("Catches invalid prices", () =>
 ```
 
     
-    === Data Quality Tests ===
       ✓ Valid EOD data passes
       ✗ Catches invalid prices: Assert.Equal failed: expected <3>, got <4>
 
@@ -1023,12 +1012,12 @@ var hasFake = QueryScalar<int>(
 AssertTest("silver has fake_column (expected FAIL)", hasFake == 1);
 ```
 
-      PASS: table bronze.eurostoxx50_ohlcv exists
-      PASS: table silver.eurostoxx50_ohlcv exists
-      PASS: table gold.index_performance exists
-      PASS: table gold.scores_daily exists
-      PASS: silver has is_filled column
-      FAIL: silver has fake_column (expected FAIL)
+      table bronze.eurostoxx50_ohlcv exists
+      table silver.eurostoxx50_ohlcv exists
+      table gold.index_performance exists
+      table gold.scores_daily exists
+      silver has is_filled column
+      silver has fake_column (expected FAIL)
 
 #### Data completeness tests
 
@@ -1054,10 +1043,10 @@ var dimIndices = QueryScalar<int>("SELECT COUNT(*) FROM bronze.dim_index");
 AssertTest($"gold has {goldIndices} indices (expected {dimIndices})", goldIndices >= dimIndices);
 ```
 
-      PASS: bronze has 50 distinct symbols (expected 50)
-      PASS: silver (66'355) > bronze (50)
-      PASS: silver has 0 NULL close prices (expected 0)
-      PASS: gold has 4 indices (expected 4)
+      bronze has 50 distinct symbols (expected 50)
+      silver (66'355) > bronze (50)
+      silver has 0 NULL close prices (expected 0)
+      gold has 4 indices (expected 4)
 
 #### Data quality tests
 
@@ -1087,11 +1076,11 @@ var negVol = QueryScalar<int>("SELECT COUNT(*) FROM silver.eurostoxx50_ohlcv WHE
 AssertTest($"no negative volume ({negVol} violations)", negVol == 0);
 ```
 
-      PASS: high >= low (0 violations)
-      PASS: close between low/high (0 violations)
-      PASS: no negative prices (0 violations)
-      PASS: no future dates (0 violations)
-      PASS: no negative volume (0 violations)
+      high >= low (0 violations)
+      close between low/high (0 violations)
+      no negative prices (0 violations)
+      no future dates (0 violations)
+      no negative volume (0 violations)
 
 #### Cross-layer consistency tests
 
@@ -1125,11 +1114,11 @@ var extremeReturns = QueryScalar<int>(
 AssertTest($"daily returns within +/-20% ({extremeReturns} violations)", extremeReturns == 0);
 ```
 
-      PASS: silver symbols (50) >= bronze (50)
-      PASS: filled rows = 6 (0.009%, expected < 1%)
-      FAIL: composite_score in [0,1] (216 violations — it's a z-score, not a percentage)
-      PASS: composite_score in [-2,2] z-score range (0 violations)
-      PASS: daily returns within +/-20% (0 violations)
+      silver symbols (50) >= bronze (50)
+      filled rows = 6 (0.009%, expected < 1%)
+      composite_score in [0,1] (216 violations — it's a z-score, not a percentage)
+      composite_score in [-2,2] z-score range (0 violations)
+      daily returns within +/-20% (0 violations)
 
 ## DI Validation Testing
 
@@ -1189,9 +1178,9 @@ class PipelineRunner : IPipelineRunner
 }
 ```
 
-        Running with SAP: 100.00
-      PASS: IPipelineRunner resolved and ran successfully
-      PASS: correctly caught missing IDisposable (expected FAIL)
+        100.00
+      IPipelineRunner resolved and ran successfully
+      correctly caught missing IDisposable (expected FAIL)
 
 ## CI/CD — Running Tests in GitHub Actions
 
@@ -1225,8 +1214,6 @@ KEY GITHUB ACTIONS CONCEPTS:
 "
 ```
 
-    
-    KEY GITHUB ACTIONS CONCEPTS:
     
       Trigger              Description
       ──────────────────   ──────────────────────────────────────

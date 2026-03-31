@@ -142,16 +142,14 @@ EXCHANGE_MAP = {
     "TKS": "XTKS",    # Tokyo
 }
 
-print(f"Pipeline config loaded")
-print(f"  Export dir:  {EXPORT_DIR}")
-print(f"  Universe:    {SYMBOLS}")
-print(f"  Date range:  {START_DATE} → {END_DATE}")
+EXPORT_DIR
+SYMBOLS
+START_DATE, END_DATE  # date range
 ```
 
-    Pipeline config loaded
-      Export dir:  C:\Users\aperi\DEV\LANG\data\pipeline
-      Universe:    ['SAP.DE', 'SIE.DE', 'ALV.DE', 'DTE.DE', 'BAS.DE']
-      Date range:  2024-03-29 → 2026-03-29
+      C:\Users\aperi\DEV\LANG\data\pipeline
+      ['SAP.DE', 'SIE.DE', 'ALV.DE', 'DTE.DE', 'BAS.DE']
+      2024-03-29 → 2026-03-29
 
 ## 2. Pydantic DTOs — Schema Validation at Every Boundary
 
@@ -214,10 +212,10 @@ sample = RawOHLCV(
     open=144.5, high=146.0, low=143.8, close=145.2,
     adj_close=145.2, volume=1_200_000
 )
-print(f"RawOHLCV validated: {sample.symbol} {sample.date} close={sample.close}")
+sample.symbol, sample.date, sample.close  # RawOHLCV validated
 ```
 
-    RawOHLCV validated: SAP.DE 2024-01-02 close=145.2
+    SAP.DE 2024-01-02 close=145.2
 
 #### Pydantic — define Silver validation model with `BaseModel` and `Field()`
 
@@ -253,7 +251,6 @@ class CleanOHLCV(BaseModel):
             raise ValueError(f"high ({self.high}) < low ({self.low})")
         return self
 
-print(f"CleanOHLCV model defined — {len(CleanOHLCV.model_fields)} fields")
 ```
 
     CleanOHLCV model defined — 14 fields
@@ -290,12 +287,12 @@ class SymbolProfile(BaseModel):
     last_date:           Date  = Field(...)
     batch_id:            str   = Field(...)
 
-print(f"DailySummary:  {len(DailySummary.model_fields)} fields")
-print(f"SymbolProfile: {len(SymbolProfile.model_fields)} fields")
+len(DailySummary.model_fields)   # DailySummary fields
+len(SymbolProfile.model_fields)  # SymbolProfile fields
 ```
 
-    DailySummary:  8 fields
-    SymbolProfile: 10 fields
+    8 fields
+    10 fields
 
 #### Pydantic — define lineage tracking models with `BaseModel` and `Field()`
 
@@ -422,11 +419,10 @@ GOLD_PROFILE_COLUMNS = [
                  source_columns=["silver.dividends"], valid_range=(0, 10000), is_derived=True),
 ]
 
-print(f"Column registries: Bronze={len(BRONZE_COLUMNS)}, Silver={len(SILVER_COLUMNS)}, "
-      f"Gold Daily={len(GOLD_DAILY_COLUMNS)}, Gold Profile={len(GOLD_PROFILE_COLUMNS)}")
+len(BRONZE_COLUMNS), len(SILVER_COLUMNS), len(GOLD_DAILY_COLUMNS), len(GOLD_PROFILE_COLUMNS)  # column registries
 ```
 
-    Column registries: Bronze=10, Silver=13, Gold Daily=7, Gold Profile=7
+    Bronze=10, Silver=13, Gold Daily=7, Gold Profile=7
 
 #### Pydantic — define business context model with `BaseModel`
 
@@ -558,10 +554,8 @@ def export_data_contracts(export_dir: Path) -> list[Path]:
         log.info(f"  Contract exported: {path.name}")
     return paths
 
-print("export_data_contracts() defined")
 ```
 
-    export_data_contracts() defined
 
 ## 3. Lineage & Context Infrastructure
 
@@ -590,10 +584,10 @@ def generate_batch_id() -> str:
 
 # Demo: generate a batch_id
 demo_batch = generate_batch_id()
-print(f"Sample batch_id: {demo_batch}")
+demo_batch  # Sample batch_id
 ```
 
-    Sample batch_id: 22d9d5c9-3ea5-4474-b7e1-702da6e2e599
+    22d9d5c9-3ea5-4474-b7e1-702da6e2e599
 
 #### hashlib — compute deterministic DataFrame hash with `sha256()`
 
@@ -610,10 +604,10 @@ def compute_hash(df: pl.DataFrame) -> str:
 
 # Demo with a small frame
 demo_df = pl.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
-print(f"Hash of demo frame: {compute_hash(demo_df)}")
+compute_hash(demo_df)  # Hash of demo frame
 ```
 
-    Hash of demo frame: f67a232f1bb81bfa
+    f67a232f1bb81bfa
 
 #### Python — define stage start and end tracker with `datetime.now()`
 
@@ -648,10 +642,8 @@ def end_stage(ctx: dict, output_df: pl.DataFrame,
         output_hash=compute_hash(output_df),
     )
 
-print("start_stage() / end_stage() defined")
 ```
 
-    start_stage() / end_stage() defined
 
 #### Pydantic — save run context to JSON with `model_dump_json()`
 
@@ -667,7 +659,6 @@ def save_run_context(ctx: RunContext) -> Path:
     path.write_text(ctx.model_dump_json(indent=2), encoding="utf-8")
     return path
 
-print(f"save_run_context() defined — writes to {LINEAGE_DIR}")
 ```
 
     save_run_context() defined — writes to C:\Users\aperi\DEV\LANG\data\pipeline\lineage
@@ -727,7 +718,6 @@ CREATE TABLE bronze_ohlcv (
 )
 """)
 sql_conn.commit()
-print("bronze_ohlcv table ready (with UNIQUE on symbol+date)")
 ```
 
     bronze_ohlcv table ready (with UNIQUE on symbol+date)
@@ -764,7 +754,6 @@ CREATE TABLE silver_ohlcv (
 )
 """)
 sql_conn.commit()
-print("silver_ohlcv table ready (with UNIQUE on symbol+date)")
 ```
 
     silver_ohlcv table ready (with UNIQUE on symbol+date)
@@ -793,10 +782,8 @@ CREATE TABLE gold_daily_summary (
 )
 """)
 sql_conn.commit()
-print("gold_daily_summary table ready")
 ```
 
-    gold_daily_summary table ready
 
 #### SQL Server — create Gold symbol profile table with `cursor.execute()`
 
@@ -824,10 +811,8 @@ CREATE TABLE gold_symbol_profile (
 )
 """)
 sql_conn.commit()
-print("gold_symbol_profile table ready")
 ```
 
-    gold_symbol_profile table ready
 
 #### SQL Server — create SCD Type 2 symbol dimension with `cursor.execute()`
 
@@ -862,7 +847,6 @@ CREATE TABLE dim_symbol (
 )
 """)
 sql_conn.commit()
-print("dim_symbol table ready (SCD Type 2)")
 ```
 
     dim_symbol table ready (SCD Type 2)
@@ -892,7 +876,6 @@ CREATE TABLE dim_calendar (
 )
 """)
 sql_conn.commit()
-print("dim_calendar table ready (per-exchange)")
 ```
 
     dim_calendar table ready (per-exchange)
@@ -920,10 +903,8 @@ CREATE TABLE lineage_stages (
 )
 """)
 sql_conn.commit()
-print("lineage_stages table ready")
 ```
 
-    lineage_stages table ready
 
 #### SQL Server — create quarantine table for rejected rows with `cursor.execute()`
 
@@ -947,7 +928,6 @@ CREATE TABLE quarantine (
 )
 """)
 sql_conn.commit()
-print("quarantine table ready (dead letter queue)")
 ```
 
     quarantine table ready (dead letter queue)
@@ -977,7 +957,6 @@ sql_conn.commit()
 log.info("context_log table ready")
 ```
 
-    23:19:35 | INFO  | context_log table ready
 
 #### SQL Server — define context persistence helper with `cursor.execute()`
 
@@ -1003,10 +982,8 @@ def persist_context(stage_ctx: StageContext | None) -> None:
     )
     sql_conn.commit()
 
-print("persist_context() defined")
 ```
 
-    persist_context() defined
 
 #### SQL Server — define lineage persistence helper with `cursor.execute()`
 
@@ -1034,7 +1011,6 @@ def persist_lineage(lineage: StageLineage) -> None:
     )
     sql_conn.commit()
 
-print("persist_lineage() defined — idempotent: deletes before insert")
 ```
 
     persist_lineage() defined — idempotent: deletes before insert
@@ -1056,10 +1032,8 @@ def write_to_sql(df: pl.DataFrame, table: str, truncate: bool = True) -> int:
     pdf.to_sql(table, sql_engine, if_exists="append", index=False, chunksize=100)
     return len(pdf)
 
-print("write_to_sql() defined")
 ```
 
-    write_to_sql() defined
 
 #### SQL Server — define Bronze MERGE upsert with `MERGE INTO`
 
@@ -1099,10 +1073,8 @@ def merge_bronze(df: pl.DataFrame, batch_id: str) -> int:
     sql_conn.commit()
     return rows_affected
 
-print("merge_bronze() defined")
 ```
 
-    merge_bronze() defined
 
 #### SQL Server — define Silver MERGE upsert with `MERGE INTO`
 
@@ -1146,10 +1118,8 @@ def merge_silver(df: pl.DataFrame, batch_id: str) -> int:
     sql_conn.commit()
     return rows_affected
 
-print("merge_silver() defined")
 ```
 
-    merge_silver() defined
 
 #### SQL Server — define quarantine persistence helper with `cursor.execute()`
 
@@ -1213,10 +1183,8 @@ class DataQualityError(Exception):
     """Raised when a data quality gate fails."""
     pass
 
-print("DataQualityError defined")
 ```
 
-    DataQualityError defined
 
 #### Polars — assert DataFrame is not empty with `len()`
 
@@ -1231,10 +1199,8 @@ def dq_check_not_empty(df: pl.DataFrame, stage: str) -> tuple[bool, str]:
     ok = len(df) > 0
     return ok, f"{stage}: {len(df)} rows" if ok else f"{stage}: EMPTY DataFrame"
 
-print("dq_check_not_empty() defined")
 ```
 
-    dq_check_not_empty() defined
 
 #### Polars — assert no nulls in key columns with `null_count()`
 
@@ -1254,10 +1220,8 @@ def dq_check_no_null_keys(df: pl.DataFrame, keys: list[str], stage: str) -> tupl
             return False, f"{stage}: {nulls} nulls in '{col}'"
     return True, f"{stage}: no null keys in {keys}"
 
-print("dq_check_no_null_keys() defined")
 ```
 
-    dq_check_no_null_keys() defined
 
 #### Polars — assert no duplicate rows with `unique()`
 
@@ -1275,10 +1239,8 @@ def dq_check_no_duplicates(df: pl.DataFrame, keys: list[str], stage: str) -> tup
     ok = dupes == 0
     return ok, f"{stage}: {dupes} duplicates on {keys}" if not ok else f"{stage}: no duplicates"
 
-print("dq_check_no_duplicates() defined")
 ```
 
-    dq_check_no_duplicates() defined
 
 #### Polars — assert values within range with `filter()`
 
@@ -1296,10 +1258,8 @@ def dq_check_range(df: pl.DataFrame, col: str, min_val: float, max_val: float, s
     ok = out_of_range == 0
     return ok, f"{stage}: {out_of_range} values outside [{min_val}, {max_val}] in '{col}'" if not ok else f"{stage}: '{col}' within range"
 
-print("dq_check_range() defined")
 ```
 
-    dq_check_range() defined
 
 #### Polars — assert data freshness against SLA with `max()`
 
@@ -1321,10 +1281,8 @@ def dq_check_freshness(df: pl.DataFrame, date_col: str, max_age_days: int, stage
     ok = age <= max_age_days
     return ok, f"{stage}: latest date {latest} ({age}d ago)" + ("" if ok else f" EXCEEDS {max_age_days}d SLA")
 
-print("dq_check_freshness() defined")
 ```
 
-    dq_check_freshness() defined
 
 #### Polars — assert minimum row count with `len()`
 
@@ -1339,10 +1297,8 @@ def dq_check_row_count(df: pl.DataFrame, min_rows: int, stage: str) -> tuple[boo
     ok = len(df) >= min_rows
     return ok, f"{stage}: {len(df)} rows" + ("" if ok else f" BELOW minimum {min_rows}")
 
-print("dq_check_row_count() defined")
 ```
 
-    dq_check_row_count() defined
 
 #### Pipeline — run all quality gate assertions with `log.info()`
 
@@ -1369,10 +1325,8 @@ def run_quality_gate(checks: list[tuple[bool, str]], stage: str, fail_fast: bool
 
     return pl.DataFrame(results)
 
-print("run_quality_gate() defined")
 ```
 
-    run_quality_gate() defined
 
 ## 5. Dimension Tables — Symbol Metadata (SCD2) & Trading Calendar
 
@@ -1438,10 +1392,8 @@ def fetch_symbols_to_landing(symbols: list[str]) -> Path:
     log.info(f"Landed: {landing_path} ({len(records)} symbols)")
     return landing_path
 
-print("fetch_symbols_to_landing() defined")
 ```
 
-    fetch_symbols_to_landing() defined
 
 #### JSON — load symbol metadata from landing zone with `json.loads()`
 
@@ -1456,10 +1408,8 @@ def load_symbols_from_landing() -> list[dict]:
     landing_path = LANDING_DIR / "dim_symbol.json"
     return json.loads(landing_path.read_text(encoding="utf-8"))
 
-print("load_symbols_from_landing() defined")
 ```
 
-    load_symbols_from_landing() defined
 
 #### SQL Server — define SCD Type 2 upsert for one symbol with `MERGE INTO`
 
@@ -1542,10 +1492,8 @@ def scd2_upsert_symbol(rec: dict) -> str:
     sql_conn.commit()
     return "SCD2_UPDATE"
 
-print("scd2_upsert_symbol() defined")
 ```
 
-    scd2_upsert_symbol() defined
 
 #### SQL Server — orchestrate SCD Type 2 upsert for all symbols with `cursor.execute()`
 
@@ -1566,25 +1514,20 @@ def populate_dim_symbol_from_landing() -> pl.DataFrame:
         log.info(f"  {rec['symbol']}: {action}")
     return pl.DataFrame(results)
 
-print("populate_dim_symbol_from_landing() defined")
 ```
 
-    populate_dim_symbol_from_landing() defined
 
 #### SQL Server — load symbols from landing and SCD2 upsert with `MERGE INTO`
 
 ```python
 # Step 1: Fetch from yfinance API → JSON landing zone
-print("Step 1: Fetching symbol metadata to landing zone...\n")
 fetch_symbols_to_landing(SYMBOLS)
 
 # Step 2: Load from landing JSON → SCD2 upsert into dim_symbol
-print("\nStep 2: SCD2 upsert from landing zone...\n")
 dim_symbol_df = populate_dim_symbol_from_landing()
 dim_symbol_df.select("symbol", "longName", "sector", "country", "exchange", "_action")
 ```
 
-    Step 1: Fetching symbol metadata to landing zone...
 
     23:19:35 | INFO  |   SAP.DE: fetched (SAP SE)
     23:19:36 | INFO  |   SIE.DE: fetched (Siemens Aktiengesellschaft)
@@ -1597,8 +1540,6 @@ dim_symbol_df.select("symbol", "longName", "sector", "country", "exchange", "_ac
     23:19:36 | INFO  |   ALV.DE: UNCHANGED
     23:19:36 | INFO  |   DTE.DE: UNCHANGED
     23:19:36 | INFO  |   BAS.DE: UNCHANGED
-
-    Step 2: SCD2 upsert from landing zone...
 
 
 <table id="T_eadf6">
@@ -1720,18 +1661,12 @@ def generate_dim_calendar(start: str, end: str, exchange_codes: list[str]) -> pl
 # Get exchanges from dim_symbol (just populated)
 exchanges = dim_symbol_df.select("exchange").unique().to_series().to_list()
 exchanges = [e for e in exchanges if e is not None]
-print(f"Building calendar for exchanges: {exchanges}\n")
-
 cal_df = generate_dim_calendar(START_DATE, END_DATE, exchanges)
-print(f"\nCalendar total: {len(cal_df)} rows")
 cal_df.head()
 ```
 
-    Building calendar for exchanges: ['GER']
     
-      GER (XETR): 505 trading days, 226 non-trading
     
-    Calendar total: 731 rows
 
 
 <table id="T_a4580">
@@ -1855,7 +1790,6 @@ def persist_dim_calendar(cal_df: pl.DataFrame) -> int:
 persist_dim_calendar(cal_df)
 ```
 
-    dim_calendar: 731 rows upserted
 
 ```
 731
@@ -1874,11 +1808,9 @@ holidays = cal_df.filter(
     (pl.col("is_trading_day") == 0)
 ).select("date", "exchange_code", "day_of_week").sort("exchange_code", "date")
 
-print(f"Holidays detected: {len(holidays)} (weekdays with no trading)")
+len(holidays)  # holidays detected (weekdays with no trading)
 holidays.head()
 ```
-
-    Holidays detected: 16 (weekdays with no trading)
 
 
 <table id="T_72a57">
@@ -1968,10 +1900,8 @@ def fetch_ohlcv_to_landing(symbol: str, start: str, end: str) -> Path | None:
     landing_path.write_text(json.dumps(records, indent=2), encoding="utf-8")
     return landing_path
 
-print("fetch_ohlcv_to_landing() defined")
 ```
 
-    fetch_ohlcv_to_landing() defined
 
 #### Polars — load OHLCV from JSON landing zone with `pl.DataFrame()`
 
@@ -1996,10 +1926,8 @@ def load_ohlcv_from_landing(symbol: str) -> pl.DataFrame:
     df = df.with_columns(pl.col("date").str.to_date("%Y-%m-%d"))
     return df
 
-print("load_ohlcv_from_landing() defined")
 ```
 
-    load_ohlcv_from_landing() defined
 
 #### yfinance — test single symbol landing zone fetch with `fetch_ohlcv_to_landing()`
 
@@ -2013,12 +1941,9 @@ else:
     print("No data returned")
 
 test_df = load_ohlcv_from_landing("SAP.DE")
-print(f"Loaded: {len(test_df)} rows, columns: {test_df.columns}")
+len(test_df), test_df.columns  # rows, columns
 test_df.head()
 ```
-
-    Landed: C:\Users\aperi\DEV\LANG\data\pipeline\landing\ohlcv_SAP_DE.json (5.8 KB)
-    Loaded: 20 rows, columns: ['symbol', 'date', 'open', 'high', 'low', 'close', 'adj_close', 'volume', 'dividends', 'stock_splits']
 
 
 <table id="T_e147e">
@@ -2149,11 +2074,9 @@ log.info("validate_bronze() defined \u2014 rejects go to quarantine")
 # Should pass all rows since yfinance data is generally clean
 
 valid_df, rejected = validate_bronze(test_df, batch_id="test")
-print(f"Valid: {len(valid_df)} rows | Rejected: {rejected} rows")
+len(valid_df), rejected  # valid rows, rejected rows
 valid_df.head(5)
 ```
-
-    Valid: 20 rows | Rejected: 0 rows
 
 
 <table id="T_cc2d1">
@@ -2306,7 +2229,6 @@ def ingest_bronze(symbols: list[str], start: str, end: str, batch_id: str) -> tu
 
     return bronze_full, lineage
 
-print("ingest_bronze() defined \u2014 landing zone + incremental MERGE")
 ```
 
     ingest_bronze() defined — landing zone + incremental MERGE
@@ -2831,7 +2753,6 @@ def transform_silver(bronze_df: pl.DataFrame) -> pl.DataFrame:
     df = compute_sma(df, window=20)
     return df
 
-print("transform_silver() defined — composes all Silver transforms")
 ```
 
     transform_silver() defined — composes all Silver transforms
@@ -2920,7 +2841,6 @@ def process_silver(bronze_df: pl.DataFrame, batch_id: str) -> tuple[pl.DataFrame
 
     return silver_full, lineage
 
-print("process_silver() defined — MERGE upsert, returns full dataset")
 ```
 
     process_silver() defined — MERGE upsert, returns full dataset
@@ -3235,11 +3155,9 @@ def build_daily_summary(silver_df: pl.DataFrame, batch_id: str) -> pl.DataFrame:
     return summary
 
 daily_summary_df = build_daily_summary(silver_df, batch_id)
-print(f"Daily summary: {len(daily_summary_df)} trading days")
+len(daily_summary_df)  # trading days
 daily_summary_df.head(5)
 ```
-
-    Daily summary: 506 trading days
 
 
 <table id="T_87885">
@@ -3351,11 +3269,9 @@ def build_symbol_profile(silver_df: pl.DataFrame, batch_id: str) -> pl.DataFrame
     return pl.DataFrame(profiles)
 
 symbol_profile_df = build_symbol_profile(silver_df, batch_id)
-print(f"Symbol profiles: {len(symbol_profile_df)} symbols")
+len(symbol_profile_df)  # symbol profiles
 symbol_profile_df
 ```
-
-    Symbol profiles: 5 symbols
 
 
 <table id="T_3e314">
@@ -3455,10 +3371,9 @@ def validate_gold_daily(df: pl.DataFrame) -> tuple[pl.DataFrame, int]:
     return (pl.DataFrame(valid_rows) if valid_rows else pl.DataFrame()), rejected
 
 valid_daily, rej_daily = validate_gold_daily(daily_summary_df)
-print(f"Daily summary validation: {len(valid_daily)} valid, {rej_daily} rejected")
+len(valid_daily), rej_daily  # daily summary validation: valid, rejected
 ```
 
-    Daily summary validation: 506 valid, 0 rejected
 
 #### Pydantic — validate Gold symbol profiles with `BaseModel()` row-level check
 
@@ -3479,10 +3394,9 @@ def validate_gold_profiles(df: pl.DataFrame) -> tuple[pl.DataFrame, int]:
     return (pl.DataFrame(valid_rows) if valid_rows else pl.DataFrame()), rejected
 
 valid_profiles, rej_profiles = validate_gold_profiles(symbol_profile_df)
-print(f"Symbol profile validation: {len(valid_profiles)} valid, {rej_profiles} rejected")
+len(valid_profiles), rej_profiles  # symbol profile validation: valid, rejected
 ```
 
-    Symbol profile validation: 5 valid, 0 rejected
 
 #### SQL Server — define Gold persistence function with `TRUNCATE` + `to_sql()`
 
@@ -3513,10 +3427,8 @@ def persist_gold(daily_df: pl.DataFrame, profile_df: pl.DataFrame, batch_id: str
     persist_lineage(lineage)
     return lineage
 
-print("persist_gold() defined")
 ```
 
-    persist_gold() defined
 
 #### SQL Server — persist Gold marts with `TRUNCATE` + `to_sql()`
 
@@ -3710,10 +3622,10 @@ The serving layer reads Parquet files, not SQL Server. This is the **pre-materia
 daily_path = EXPORT_DIR / "gold_daily_summary.parquet"
 valid_daily.write_parquet(daily_path)
 size_kb = daily_path.stat().st_size / 1024
-print(f"Exported: {daily_path.name} ({size_kb:.1f} KB, {len(valid_daily)} rows)")
+daily_path.name, size_kb, len(valid_daily)  # exported file, KB, rows
 ```
 
-    Exported: gold_daily_summary.parquet (21.2 KB, 506 rows)
+    gold_daily_summary.parquet (21.2 KB, 506 rows)
 
 #### Polars — export symbol profiles to Parquet with `write_parquet()`
 
@@ -3723,10 +3635,10 @@ print(f"Exported: {daily_path.name} ({size_kb:.1f} KB, {len(valid_daily)} rows)"
 profile_path = EXPORT_DIR / "gold_symbol_profile.parquet"
 valid_profiles.write_parquet(profile_path)
 size_kb = profile_path.stat().st_size / 1024
-print(f"Exported: {profile_path.name} ({size_kb:.1f} KB, {len(valid_profiles)} rows)")
+profile_path.name, size_kb, len(valid_profiles)  # exported file, KB, rows
 ```
 
-    Exported: gold_symbol_profile.parquet (3.9 KB, 5 rows)
+    gold_symbol_profile.parquet (3.9 KB, 5 rows)
 
 #### Polars — export Silver data to Parquet with `write_parquet()`
 
@@ -3739,10 +3651,10 @@ print(f"Exported: {profile_path.name} ({size_kb:.1f} KB, {len(valid_profiles)} r
 silver_path = EXPORT_DIR / "silver_ohlcv.parquet"
 silver_df.write_parquet(silver_path)
 size_kb = silver_path.stat().st_size / 1024
-print(f"Exported: {silver_path.name} ({size_kb:.1f} KB, {len(silver_df)} rows)")
+silver_path.name, size_kb, len(silver_df)  # exported file, KB, rows
 ```
 
-    Exported: silver_ohlcv.parquet (96.9 KB, 2530 rows)
+    silver_ohlcv.parquet (96.9 KB, 2530 rows)
 
 #### Lineage — record export stage with `end_stage()`
 
@@ -3761,10 +3673,10 @@ export_combined = pl.concat([
 export_lineage = end_stage(export_ctx, export_combined, 0)
 persist_lineage(export_lineage)
 
-print(f"Export lineage recorded: {export_lineage.output_rows} total rows, hash={export_lineage.output_hash}")
+export_lineage.output_rows, export_lineage.output_hash  # export lineage: total rows, hash
 ```
 
-    Export lineage recorded: 3041 total rows, hash=5daff78bb463b750
+    3041 total rows, hash=5daff78bb463b750
 
 #### Polars — verify exported Parquet files with `read_parquet()`
 
@@ -3777,9 +3689,9 @@ for name in ["gold_daily_summary", "gold_symbol_profile", "silver_ohlcv"]:
     print(f"  {name}: {len(df)} rows, {len(df.columns)} cols")
 ```
 
-    gold_daily_summary: 506 rows, 8 cols
-      gold_symbol_profile: 5 rows, 10 cols
-      silver_ohlcv: 2530 rows, 14 cols
+    506 rows (gold_daily_summary), 8 cols
+      5 rows (gold_symbol_profile), 10 cols
+      2530 rows (silver_ohlcv), 14 cols
 
 #### Pydantic \u2014 export data contracts as JSON Schema with `model_json_schema()`
 
@@ -3796,10 +3708,10 @@ for p in contract_paths:
     23:19:41 | INFO  |   Contract exported: gold_daily_summary_contract.json
     23:19:41 | INFO  |   Contract exported: gold_symbol_profile_contract.json
 
-    bronze_ohlcv_contract.json: 5,031 bytes
-      silver_ohlcv_contract.json: 6,711 bytes
-      gold_daily_summary_contract.json: 3,453 bytes
-      gold_symbol_profile_contract.json: 4,606 bytes
+    5,031 bytes
+      6,711 bytes
+      3,453 bytes
+      4,606 bytes
 
 ## 10. Lineage Review — Pipeline Execution Audit
 
@@ -3829,14 +3741,14 @@ run_context = RunContext(
 
 ctx_path = save_run_context(run_context)
 total_ms = sum(s.duration_ms for s in run_context.stages)
-print(f"RunContext saved: {ctx_path.name}")
-print(f"Batch: {batch_id[:8]}... | Warnings: {len(run_context.data_warnings)}")
-print(f"Processing time: {total_ms:.0f}ms")
+ctx_path.name  # RunContext saved
+batch_id[:8], len(run_context.data_warnings)  # batch prefix, warnings
+total_ms  # processing time (ms)
 ```
 
-    RunContext saved: run_05a35d97.json
-    Batch: 05a35d97... | Warnings: 1
-    Processing time: 3187ms
+    run_05a35d97.json
+    05a35d97... | Warnings: 1
+    3187ms
 
 #### Polars — display lineage summary as DataFrame
 
@@ -3918,7 +3830,7 @@ ctx_json = json.loads(ctx_path.read_text(encoding="utf-8"))
 # Display key fields without the bulky stages array
 display_ctx = {k: v for k, v in ctx_json.items() if k != "stages"}
 display_ctx["stages"] = f"[{len(ctx_json.get('stages', []))} stage records]"
-print(json.dumps(display_ctx, indent=2, default=str))
+json.dumps(display_ctx, indent=2, default=str)
 ```
 
     {
@@ -4133,29 +4045,15 @@ if contract_path.exists():
             print()
 ```
 
-    Contract: silver_ohlcv_contract.json
-      Version: 1.0
-      Generated: 2026-03-29T21:19:41.390034+00:00
-      Fields: 14
-      Column contexts: 13
     
       daily_return:
         Close-to-close return
-        Computation: pct_change(close).over(symbol)
-        Sources: ['bronze.close']
-        Null means: first_row_in_series
     
       intraday_range:
         (high-low)/close
-        Computation: (high - low) / close
-        Sources: ['bronze.high', 'bronze.low', 'bronze.close']
-        Null means: not_applicable
     
       sma_20:
         20-day moving average of close
-        Computation: close.rolling_mean(20).over(symbol)
-        Sources: ['bronze.close']
-        Null means: insufficient_data
 
 ## 11. FastAPI Serving Layer — Pre-Materialized Parquet API
 
@@ -4178,10 +4076,8 @@ class DailySummaryResponse(BaseModel):
     total_volume:     int
     avg_intraday_pct: float
 
-print("DailySummaryResponse defined")
 ```
 
-    DailySummaryResponse defined
 
 #### Pydantic — define symbol profile API response model with `BaseModel`
 
@@ -4199,10 +4095,8 @@ class SymbolProfileResponse(BaseModel):
     first_date:          Date
     last_date:           Date
 
-print("SymbolProfileResponse defined")
 ```
 
-    SymbolProfileResponse defined
 
 #### Pydantic — define timeseries row API response model with `BaseModel`
 
@@ -4220,10 +4114,8 @@ class TimeSeriesRow(BaseModel):
     intraday_range: float
     sma_20:         float | None
 
-print("TimeSeriesRow defined")
 ```
 
-    TimeSeriesRow defined
 
 #### FastAPI — create application instance with `FastAPI()`
 
@@ -4232,7 +4124,6 @@ print("TimeSeriesRow defined")
 
 app = FastAPI(title="Gold Data Pipeline API", version="1.0.0")
 
-print(f"FastAPI app created")
 ```
 
     FastAPI app created
@@ -4248,10 +4139,8 @@ def health():
     files = {f.stem: f.stat().st_size for f in EXPORT_DIR.glob("*.parquet")}
     return {"status": "healthy", "files": files}
 
-print("GET /health registered")
 ```
 
-    GET /health registered
 
 #### FastAPI — define daily summary endpoint with `@app.get()`
 
@@ -4268,10 +4157,8 @@ def get_daily_summary(start_date: Date | None = None, end_date: Date | None = No
         df = df.filter(pl.col("date") <= end_date)
     return df.drop("batch_id").sort("date").to_dicts()
 
-print("GET /daily-summary registered")
 ```
 
-    GET /daily-summary registered
 
 #### FastAPI — define symbol profile endpoint with `@app.get()`
 
@@ -4284,10 +4171,8 @@ def get_symbol_profiles():
     df = pl.read_parquet(EXPORT_DIR / "gold_symbol_profile.parquet")
     return df.drop("batch_id").sort("symbol").to_dicts()
 
-print("GET /symbol-profile registered")
 ```
 
-    GET /symbol-profile registered
 
 #### FastAPI — define symbol timeseries endpoint with `@app.get()`
 
@@ -4306,10 +4191,8 @@ def get_timeseries(symbol: str, limit: int = 100):
         "daily_return", "intraday_range", "sma_20"
     ).sort("date", descending=True).head(limit).to_dicts()
 
-print("GET /symbol/{symbol}/timeseries registered")
 ```
 
-    GET /symbol/{symbol}/timeseries registered
 
 #### FastAPI — define lineage endpoint with `@app.get()`
 
@@ -4324,7 +4207,6 @@ def get_lineage(batch_id_prefix: str):
         raise HTTPException(status_code=404, detail="Batch not found")
     return json.loads(matches[0].read_text(encoding="utf-8"))
 
-print(f"GET /lineage/{{batch_id}} registered \u2014 {len(app.routes)} total routes")
 ```
 
     GET /lineage/{batch_id} registered — 9 total routes
@@ -4351,14 +4233,13 @@ server_thread.start()
 
 # Wait briefly for server to start
 time.sleep(2)
-print(f"FastAPI server running at http://127.0.0.1:{API_PORT}")
-print(f"Swagger docs: http://127.0.0.1:{API_PORT}/docs")
+API_PORT  # FastAPI server running at http://127.0.0.1
 ```
 
     ERROR:    [Errno 10048] error while attempting to bind on address ('127.0.0.1', 8099): only one usage of each socket address (protocol/network address/port) is normally permitted
 
     FastAPI server running at http://127.0.0.1:8099
-    Swagger docs: http://127.0.0.1:8099/docs
+    http://127.0.0.1:8099/docs
 
 #### httpx — test health endpoint with `httpx.get()`
 
@@ -4366,13 +4247,13 @@ print(f"Swagger docs: http://127.0.0.1:{API_PORT}/docs")
 # Verify the API server is running and Parquet files are accessible
 
 resp = httpx.get(f"http://127.0.0.1:{API_PORT}/health")
-print(f"Status: {resp.status_code}")
-print(json.dumps(resp.json(), indent=2))
+resp.status_code  # Status
+json.dumps(resp.json(), indent=2)
 ```
 
     23:19:43 | INFO  | HTTP Request: GET http://127.0.0.1:8099/health "HTTP/1.1 200 OK"
 
-    Status: 200
+    200
     {
       "status": "healthy",
       "files": {
@@ -4389,7 +4270,7 @@ print(json.dumps(resp.json(), indent=2))
 
 five_days_ago = (Date.today() - timedelta(days=10)).isoformat()
 resp = httpx.get(f"http://127.0.0.1:{API_PORT}/daily-summary", params={"start_date": five_days_ago})
-print(f"Status: {resp.status_code}, rows: {len(resp.json())}")
+resp.status_code, len(resp.json())  # status, rows
 
 # Display as Polars DataFrame
 pl.DataFrame(resp.json())
@@ -4397,7 +4278,7 @@ pl.DataFrame(resp.json())
 
     23:19:43 | INFO  | HTTP Request: GET http://127.0.0.1:8099/daily-summary?start_date=2026-03-19 "HTTP/1.1 200 OK"
 
-    Status: 200, rows: 7
+    200, rows: 7
 
 
 <table id="T_81074">
@@ -4485,14 +4366,14 @@ pl.DataFrame(resp.json())
 # Fetch all symbol profiles from the API
 
 resp = httpx.get(f"http://127.0.0.1:{API_PORT}/symbol-profile")
-print(f"Status: {resp.status_code}, profiles: {len(resp.json())}")
+resp.status_code, len(resp.json())  # status, profiles
 
 pl.DataFrame(resp.json())
 ```
 
     23:19:44 | INFO  | HTTP Request: GET http://127.0.0.1:8099/symbol-profile "HTTP/1.1 200 OK"
 
-    Status: 200, profiles: 5
+    200, profiles: 5
 
 
 <table id="T_ed367">
@@ -4574,14 +4455,14 @@ pl.DataFrame(resp.json())
 # Fetch last 10 days of SAP.DE time series data
 
 resp = httpx.get(f"http://127.0.0.1:{API_PORT}/symbol/SAP.DE/timeseries", params={"limit": 10})
-print(f"Status: {resp.status_code}, rows: {len(resp.json())}")
+resp.status_code, len(resp.json())  # status, rows
 
 pl.DataFrame(resp.json()).head()
 ```
 
     23:19:44 | INFO  | HTTP Request: GET http://127.0.0.1:8099/symbol/SAP.DE/timeseries?limit=10 "HTTP/1.1 200 OK"
 
-    Status: 200, rows: 10
+    200, rows: 10
 
 
 <table id="T_3f094">
@@ -4663,17 +4544,17 @@ pl.DataFrame(resp.json()).head()
 # Fetch pipeline execution metadata for this run
 
 resp = httpx.get(f"http://127.0.0.1:{API_PORT}/lineage/{batch_id[:8]}")
-print(f"Status: {resp.status_code}")
+resp.status_code  # Status
 data = resp.json()
-print(f"Batch: {data['batch_id'][:8]}... | Status: {data['status']}")
+data['batch_id'][:8], data['status']  # batch, status
 
 pl.DataFrame(data["stages"]).select("stage", "input_rows", "output_rows", "rows_rejected", "output_hash")
 ```
 
     23:19:44 | INFO  | HTTP Request: GET http://127.0.0.1:8099/lineage/05a35d97 "HTTP/1.1 200 OK"
 
-    Status: 200
-    Batch: 05a35d97... | Status: completed
+    200
+    05a35d97... | completed
 
 
 <table id="T_3e520">
@@ -4915,7 +4796,6 @@ silver_audit = pl.read_database(
     connection=sql_engine
 )
 print("Silver table (enriched, 3-day window):")
-print()
 
 # Manually verify the return calculation
 rows = silver_audit.to_dicts()
@@ -5047,8 +4927,7 @@ batch_from_bronze = pl.read_database(
 )["batch_id"][0]
 
 print(f"Disputed row: SAP.DE / 2026-01-29")
-print(f"Batch ID (from row): {batch_from_bronze}")
-print()
+batch_from_bronze  # Batch ID (from row)
 
 # Trace that batch through every pipeline stage
 lineage_audit = pl.read_database(
@@ -5062,8 +4941,8 @@ print("Full pipeline execution for this batch:")
 lineage_audit
 ```
 
-    Disputed row: SAP.DE / 2026-01-29
-    Batch ID (from row): 9c135c08-937d-4413-8bb4-1b66407ed9a5
+    SAP.DE / 2026-01-29
+    9c135c08-937d-4413-8bb4-1b66407ed9a5
     
     Full pipeline execution for this batch:
 
@@ -5143,13 +5022,7 @@ else:
     print(f"No RunContext found for batch {batch_from_bronze[:8]}")
 ```
 
-    RunContext: run_9c135c08.json
-      Status:       completed
-      Symbols:      ['SAP.DE', 'SIE.DE', 'ALV.DE', 'DTE.DE', 'BAS.DE']
-      Date range:   ['2024-03-29', '2026-03-29']
-      Polars:       1.39.3
-      Rejected:     0 rows (all data passed validation)
-      Output hash:  914eccd231d933a2 (tamper-proof)
+        ['2024-03-29', '2026-03-29']
 
 #### yfinance — corroborate with live API data using `Ticker.history()`
 
@@ -5182,7 +5055,7 @@ else:
     print(f"In production, landing files are archived and would contain this record")
 ```
 
-    Landing file covers: 2026-03-27 to 2026-03-27
+    2026-03-27 to 2026-03-27
     Jan 29 not in current file (overwritten by incremental fetch)
     In production, landing files are archived and would contain this record
 
@@ -5211,7 +5084,6 @@ print("  - Same close price in Bronze and Silver")
 print("  - Daily return verified mathematically from consecutive closes")
 print("  - Zero rows rejected by Pydantic validation")
 print("  - Output hash proves no post-ingestion tampering")
-print()
 audit_summary
 ```
 
@@ -5468,7 +5340,7 @@ if silver_warnings:
 </table>
 
     Expected nulls: 95 (19 x 5 symbols)  |  Actual: 95  |  Unexplained: 0
-    Context recorded: sma_20: 95 NULL values (first 19 rows per symbol)
+    sma_20: 95 NULL values (first 19 rows per symbol)
 
 #### Data Contract — Column Semantics as Structured Data
 
@@ -5641,4 +5513,4 @@ print(f"\nContract says: '{vol_meta['description']}'")
   </tbody>
 </table>
 
-    Contract says: 'Standard deviation of daily returns — annualize by multiplying by sqrt(252)'
+    'Standard deviation of daily returns — annualize by multiplying by sqrt(252)'

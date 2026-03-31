@@ -33,7 +33,6 @@ LINQ transforms → Silver → LINQ aggregation → Gold → Parquet → HttpLis
 >
 > — **Rich Hickey**, *Simple Made Easy*, Strange Loop talk (2011)
 
-
 ```csharp
 #r "nuget: Microsoft.Data.SqlClient"
 #r "nuget: Dapper"
@@ -100,10 +99,6 @@ Formatter.Register<DataTable>((dt, writer) => {
 }, "text/html");
 ```
 
-    Installed Packages: Dapper 2.1.72, FluentValidation 12.1.1,
-    Microsoft.Data.SqlClient 7.0.0, ParquetSharp 21.0.0,
-    Plotly.NET 5.1.0, Polars.NET 0.4.0, Polly 8.6.6
-
 ## 1. Configuration & Constants
 
 Central configuration: paths, SQL connection, stock universe, date range.
@@ -150,10 +145,9 @@ string.Join(", ", SYMBOLS)  // universe
 $"{START_DATE} → {END_DATE}"  // date range
 ```
 
-    Pipeline config loaded
-      Export dir:  C:\Users\aperi\DEV\LANG\data\pipeline
-      Universe:    SAP.DE, SIE.DE, ALV.DE, DTE.DE, BAS.DE
-      Date range:  2024-03-30 → 2026-03-30
+    C:\Users\aperi\DEV\LANG\data\pipeline
+    SAP.DE, SIE.DE, ALV.DE, DTE.DE, BAS.DE
+    2024-03-30 → 2026-03-30
 
 ## 2. Records + FluentValidation — Schema Validation at Every Boundary
 
@@ -222,7 +216,7 @@ var validator = new RawOhlcvValidator();
 var result = validator.Validate(sample);
 ```
 
-    RawOhlcv validated: SAP.DE 2024-01-02 close=145.2
+    SAP.DE 2024-01-02 close=145.2
 
 #### record — define Silver validation model with `record` and properties
 
@@ -267,8 +261,6 @@ public class CleanOhlcvValidator : AbstractValidator<CleanOhlcv>
 
 ```
 
-    CleanOhlcv record defined — 14 fields
-
 #### record — define Gold validation models with `record` and properties
 
 > [!info] Gold Contracts: Two Mart Tables
@@ -300,8 +292,8 @@ public record SymbolProfile(
 
 ```
 
-    DailySummary:  8 fields
-    SymbolProfile: 10 fields
+    8 fields
+    10 fields
 
 #### record — define lineage tracking models with `record` and properties
 
@@ -424,7 +416,7 @@ Console.WriteLine($"Column registries: Bronze={BRONZE_COLUMNS.Count}, Silver={SI
     $"Gold Daily={GOLD_DAILY_COLUMNS.Count}, Gold Profile={GOLD_PROFILE_COLUMNS.Count}");
 ```
 
-    Column registries: Bronze=10, Silver=13, Gold Daily=7, Gold Profile=7
+    Bronze=10, Silver=13, Gold Daily=7, Gold Profile=7
 
 #### record — define business context model with `record`
 
@@ -587,8 +579,6 @@ List<string> ExportDataContracts(string exportDir)
 
 ```
 
-    ExportDataContracts() defined
-
 ## 3. Lineage & Context Infrastructure
 
 These functions implement the ability to trace any data point from Gold back to its raw source with cryptographic proof. `batch_id` is the thread — every row in every table carries the UUID of the pipeline run that created it. `compute_hash()` produces a deterministic SHA-256: same data → same hash. If someone modifies a Silver row after the pipeline ran, the recomputed hash won't match the recorded one. `RunContext` captures the full execution envelope — which symbols, what date range, which library versions, how many rejections.
@@ -618,7 +608,7 @@ string GenerateBatchId()
 var demoBatch = GenerateBatchId();
 ```
 
-    Sample batch_id: 4af95c21-c810-416d-81ec-75d175e0d6d3
+    4af95c21-c810-416d-81ec-75d175e0d6d3
 
 #### SHA256 — compute deterministic DataTable hash with `SHA256.HashData()`
 
@@ -646,7 +636,7 @@ demoDt.Columns.Add("b", typeof(int));
 demoDt.Rows.Add(1, 4); demoDt.Rows.Add(2, 5); demoDt.Rows.Add(3, 6);
 ```
 
-    Hash of demo table: 68135205be4bfc0c
+    68135205be4bfc0c
 
 #### C# — define stage start and end tracker with `DateTime.UtcNow`
 
@@ -684,8 +674,6 @@ StageLineage EndStage(Dictionary<string, object> ctx, DataTable outputDt,
 
 ```
 
-    StartStage() / EndStage() defined
-
 #### C# — save run context to JSON with `JsonSerializer.Serialize()`
 
 > [!info] Save RunContext to JSON
@@ -702,8 +690,6 @@ string SaveRunContext(RunContext ctx)
 }
 
 ```
-
-    SaveRunContext() defined — writes to C:\Users\aperi\DEV\LANG\data\pipeline\lineage
 
 ## 4. SQL Server Schema — Medallion Tables + Lineage
 
@@ -757,8 +743,6 @@ CREATE TABLE bronze_ohlcv (
 ");
 ```
 
-    bronze_ohlcv table ready (with UNIQUE on symbol+date)
-
 #### SQL Server — create Silver OHLCV table with `sqlConn.Execute()`
 
 > [!info] Silver Table DDL
@@ -792,8 +776,6 @@ CREATE TABLE silver_ohlcv (
 ");
 ```
 
-    silver_ohlcv table ready (with UNIQUE on symbol+date)
-
 #### SQL Server — create Gold daily summary table with `sqlConn.Execute()`
 
 > [!info] Gold Daily Summary DDL
@@ -818,8 +800,6 @@ CREATE TABLE gold_daily_summary (
 )
 ");
 ```
-
-    gold_daily_summary table ready
 
 #### SQL Server — create Gold symbol profile table with `sqlConn.Execute()`
 
@@ -847,8 +827,6 @@ CREATE TABLE gold_symbol_profile (
 )
 ");
 ```
-
-    gold_symbol_profile table ready
 
 #### SQL Server — create SCD Type 2 symbol dimension with `sqlConn.Execute()`
 
@@ -884,8 +862,6 @@ CREATE TABLE dim_symbol (
 ");
 ```
 
-    dim_symbol table ready (SCD Type 2)
-
 #### SQL Server — create per-exchange trading calendar with `sqlConn.Execute()`
 
 > [!info] Trading Calendar Dimension
@@ -912,8 +888,6 @@ CREATE TABLE dim_calendar (
 ");
 ```
 
-    dim_calendar table ready (per-exchange)
-
 #### SQL Server — create lineage tracking table with `Execute()`
 
 > [!info] Lineage Table DDL
@@ -938,8 +912,6 @@ CREATE TABLE lineage_stages (
 ");
 ```
 
-    lineage_stages table ready
-
 #### SQL Server — create quarantine table for rejected rows with `Execute()`
 
 > [!info] Quarantine: Dead Letter Queue
@@ -963,8 +935,6 @@ CREATE TABLE quarantine (
 ");
 ```
 
-    quarantine table ready (dead letter queue)
-
 #### SQL Server — create context log table with `Execute()`
 
 ```csharp
@@ -987,8 +957,6 @@ CREATE TABLE context_log (
 )
 ");
 ```
-
-    context_log table ready
 
 #### SQL Server — define context persistence helper with `Execute()`
 
@@ -1027,8 +995,6 @@ void PersistContext(StageContext stageCtx)
 
 ```
 
-    PersistContext() defined
-
 #### SQL Server — define lineage persistence helper with `Execute()`
 
 > [!tip] Idempotent Lineage Persistence
@@ -1053,8 +1019,6 @@ void PersistLineage(StageLineage lineage)
 }
 
 ```
-
-    PersistLineage() defined — idempotent: deletes before insert
 
 #### Dapper — define DataFrame write helper with `Execute()`
 
@@ -1092,8 +1056,6 @@ void WriteToCsv(DataTable dt, string table, bool truncate = true)
 }
 
 ```
-
-    QueryToTable() + WriteToCsv() defined
 
 #### SQL Server — define Bronze MERGE upsert with `MERGE INTO`
 
@@ -1137,8 +1099,6 @@ int MergeBronze(DataTable dt, string batchId)
 }
 
 ```
-
-    MergeBronze() defined
 
 #### SQL Server — define Silver MERGE upsert with `MERGE INTO`
 
@@ -1189,8 +1149,6 @@ int MergeSilver(DataTable dt, string batchId)
 
 ```
 
-    MergeSilver() defined
-
 #### SQL Server — define quarantine persistence helper with `Execute()`
 
 ```csharp
@@ -1212,8 +1170,6 @@ void QuarantineRow(string batchId, string stage, Dictionary<string, object> rowD
 
 ```
 
-    QuarantineRow() defined — dead letter queue helper
-
 #### Polly — define API retry wrapper with `WaitAndRetryAsync()` exponential backoff
 
 > [!info] Polly Retry Policy
@@ -1234,8 +1190,6 @@ AsyncRetryPolicy retryPolicy = Policy
 
 ```
 
-    retryPolicy defined — 3 attempts, exponential backoff
-
 #### C# — define custom `Exception` subclass for quality gate failures
 
 > [!info] Quality Gate Exception
@@ -1250,8 +1204,6 @@ public class DataQualityException : Exception
 }
 
 ```
-
-    DataQualityException defined
 
 #### C# — assert DataTable is not empty with `Rows.Count`
 
@@ -1268,8 +1220,6 @@ public class DataQualityException : Exception
 }
 
 ```
-
-    DqCheckNotEmpty() defined
 
 #### C# — assert no nulls in key columns with `DBNull` check
 
@@ -1294,8 +1244,6 @@ public class DataQualityException : Exception
 
 ```
 
-    DqCheckNoNullKeys() defined
-
 #### C# — assert no duplicate rows with `GroupBy()`
 
 > [!info] Assert: No Duplicates
@@ -1317,8 +1265,6 @@ public class DataQualityException : Exception
 
 ```
 
-    DqCheckNoDuplicates() defined
-
 #### C# — assert values within range with `Where()`
 
 > [!info] Assert: Value Range
@@ -1339,8 +1285,6 @@ public class DataQualityException : Exception
 }
 
 ```
-
-    DqCheckRange() defined
 
 #### C# — assert data freshness against SLA with `Max()`
 
@@ -1368,8 +1312,6 @@ public class DataQualityException : Exception
 
 ```
 
-    DqCheckFreshness() defined
-
 #### C# — assert minimum row count with `Rows.Count`
 
 > [!info] Assert: Minimum Row Count
@@ -1385,8 +1327,6 @@ public class DataQualityException : Exception
 }
 
 ```
-
-    DqCheckRowCount() defined
 
 #### Pipeline — run all quality gate assertions with `Console.WriteLine()`
 
@@ -1418,8 +1358,6 @@ DataTable RunQualityGate(IEnumerable<(bool Passed, string Message)> checks, stri
 }
 
 ```
-
-    RunQualityGate() defined
 
 ## 5. Dimension Tables — Symbol Metadata (SCD2) & Trading Calendar
 
@@ -1501,8 +1439,6 @@ async Task<string> FetchSymbolsToLanding(IEnumerable<string> symbols)
 
 ```
 
-    FetchSymbolsToLanding() defined
-
 #### JSON — load symbol metadata from landing zone with `JsonSerializer.Deserialize()`
 
 > [!info] Load Symbols from Landing
@@ -1529,8 +1465,6 @@ List<Dictionary<string, object>> LoadSymbolsFromLanding()
 }
 
 ```
-
-    LoadSymbolsFromLanding() defined
 
 #### SQL Server — define SCD Type 2 upsert for one symbol with `MERGE INTO`
 
@@ -1611,8 +1545,6 @@ string Scd2UpsertSymbol(Dictionary<string, object> rec)
 
 ```
 
-    Scd2UpsertSymbol() defined
-
 #### SQL Server — orchestrate SCD Type 2 upsert for all symbols with `Execute()`
 
 > [!info] SCD2 Upsert Orchestration
@@ -1644,8 +1576,6 @@ DataTable PopulateDimSymbolFromLanding()
 }
 
 ```
-
-    PopulateDimSymbolFromLanding() defined
 
 #### SQL Server — load symbols from landing and SCD2 upsert with `MERGE INTO`
 
@@ -1797,8 +1727,6 @@ async Task<string> FetchOhlcvToLanding(string symbol, string start, string end)
 
 ```
 
-    FetchOhlcvToLanding() defined
-
 #### C# — load OHLCV from JSON landing zone with `JsonSerializer.Deserialize()`
 
 > [!info] Load OHLCV from Landing
@@ -1848,8 +1776,6 @@ DataTable LoadOhlcvFromLanding(string symbol)
 }
 
 ```
-
-    LoadOhlcvFromLanding() defined
 
 #### HttpClient — test single symbol landing zone fetch with `FetchOhlcvToLanding()`
 
@@ -1911,8 +1837,6 @@ testDt.AsEnumerable().Take(5).CopyToDataTable()
 }
 
 ```
-
-    ValidateBronze() defined — rejects go to quarantine
 
 #### FluentValidation — test Bronze validation on sample data
 
@@ -2017,8 +1941,6 @@ async Task<(DataTable, StageLineage)> IngestBronze(string[] symbols, string star
 }
 
 ```
-
-    IngestBronze() defined — landing zone + incremental MERGE
 
 #### Bronze — execute incremental ingestion for all symbols
 
@@ -2298,8 +2220,6 @@ DataTable TransformSilver(DataTable bronzeDt)
 
 ```
 
-    TransformSilver() defined — composes all Silver transforms
-
 #### FluentValidation — validate Silver rows with `Validate()` row-level check
 
 > [!info] Silver Row-Level Validation
@@ -2345,8 +2265,6 @@ DataTable TransformSilver(DataTable bronzeDt)
 
 ```
 
-    ValidateSilver() defined — rejects go to quarantine
-
 #### Silver — define enrichment pipeline with transform + `MERGE INTO`
 
 > [!info] Silver Enrichment Pipeline
@@ -2387,8 +2305,6 @@ DataTable TransformSilver(DataTable bronzeDt)
 }
 
 ```
-
-    ProcessSilver() defined — MERGE upsert, returns full dataset
 
 #### Silver — execute enrichment on full Bronze data
 
@@ -2750,8 +2666,6 @@ StageLineage PersistGold(DataTable dailyDt, DataTable profileDt, string batchId)
 }
 
 ```
-
-    PersistGold() defined
 
 #### SQL Server — persist Gold marts with `TRUNCATE` + `WriteToCsv()`
 
@@ -3270,8 +3184,6 @@ public record DailySummaryResponse(
 
 ```
 
-    DailySummaryResponse defined
-
 #### C# — define symbol profile API response record
 
 ```csharp
@@ -3291,8 +3203,6 @@ public record SymbolProfileResponse(
 
 ```
 
-    SymbolProfileResponse defined
-
 #### C# — define timeseries row API response record
 
 ```csharp
@@ -3311,8 +3221,6 @@ public record TimeSeriesRow(
 );
 
 ```
-
-    TimeSeriesRow defined
 
 #### HttpListener — create listener instance with `HttpListener()`
 
@@ -3375,8 +3283,6 @@ string HandleHealth()
 
 ```
 
-    GET /health handler defined
-
 #### HttpListener — define daily summary endpoint handler
 
 ```csharp
@@ -3388,8 +3294,6 @@ string HandleDailySummary()
 }
 
 ```
-
-    GET /daily-summary handler defined
 
 #### HttpListener — define symbol profile endpoint handler
 
@@ -3403,8 +3307,6 @@ string HandleSymbolProfile()
 
 ```
 
-    GET /symbol-profile handler defined
-
 #### HttpListener — define symbol timeseries endpoint handler
 
 ```csharp
@@ -3416,8 +3318,6 @@ string HandleTimeseries(string symbol)
 }
 
 ```
-
-    GET /symbol/{symbol}/timeseries handler defined
 
 #### HttpListener — define lineage endpoint handler
 
@@ -3431,8 +3331,6 @@ string HandleLineage(string batchIdPrefix)
 }
 
 ```
-
-    GET /lineage/{batch_id} handler defined
 
 #### HttpListener — start server in background with `Thread()`
 
@@ -3877,7 +3775,6 @@ var silverAudit = QueryToTable(
       FROM silver_ohlcv
       WHERE symbol = 'SAP.DE' AND date BETWEEN '2026-01-28' AND '2026-01-30'
       ORDER BY date");
-
 
 if (silverAudit.Rows.Count >= 2)
 {

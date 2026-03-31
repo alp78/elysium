@@ -328,9 +328,9 @@ pip --version
 ```python
 # Confirm venv is active from within Python
 import sys
-print(f"Prefix: {sys.prefix}")
-print(f"Base prefix: {sys.base_prefix}")
-print(f"In venv: {sys.prefix != sys.base_prefix}")
+sys.prefix  # Prefix
+sys.base_prefix  # Base prefix
+sys.prefix != sys.base_prefix  # In venv
 ```
 
 #### pip list — all installed packages
@@ -348,7 +348,7 @@ pip list --format=freeze
 ```python
 # Find where a package is physically installed
 import pandas
-print(pandas.__file__)
+pandas.__file__
 # .venv/lib/python3.12/site-packages/pandas/__init__.py
 ```
 

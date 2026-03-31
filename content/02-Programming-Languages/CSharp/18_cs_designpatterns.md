@@ -134,16 +134,14 @@ public class PipelineService
 }
 ```
 
-    === Dependency Injection ===
-      SqlRepository connected to: Server=prod-db;Database=stoxx...
-      SqlRepository: saved 1 scores
-      Slack: Pipeline done: ASML.AS scored 0.85
-      Result: ASML.AS: momentum=0.85
+      Server=prod-db;Database=stoxx...
+      saved 1 scores
+      Pipeline done: ASML.AS scored 0.85
+      ASML.AS: momentum=0.85
     
-    === Test (with mocks) ===
-      Result: TEST.XX: momentum=0.85
-      Saved to mock: TEST.XX
-      Notifications: Pipeline done: TEST.XX scored 0.85
+      TEST.XX: momentum=0.85
+      TEST.XX
+      Pipeline done: TEST.XX scored 0.85
 
 ## Design Patterns
 
@@ -225,12 +223,10 @@ public static class StorageFactory
 }
 ```
 
-    === Singleton ===
       Config loaded (once)
       c1 == c2: True
-      ProjectId: index-lab-2
+      index-lab-2
     
-    === Factory ===
       gcs   -> gs://bucket/data.csv (100 bytes)
       s3    -> s3://bucket/data.csv (100 bytes)
       local -> file://data.csv (100 bytes)
@@ -319,14 +315,12 @@ public class StockScorer
 }
 ```
 
-    === Observer ===
       [LOG]    ohlcv_load: ok
       [METRIC] rows=306
       [LOG]    gold_score: error
       [ALERT]  BQ timeout
     
-    === Strategy ===
-    Prices: [685, 690, 680, 695, 710, 700, 685]
+    [685, 690, 680, 695, 710, 700, 685]
     
       Momentum        score=-+0.0103
       Volatility      score=-+0.0138
@@ -402,10 +396,8 @@ public class OhlcvRecord : IValidatableObject
 }
 ```
 
-    === Valid Data ===
-      Valid: True
+      True
     
-    === Invalid Data ===
       Symbol="" Open=-5 High=10 Vol=100
         -> Symbol is required
         -> Price must be positive
@@ -488,20 +480,17 @@ public class TradeOrder
 }
 ```
 
-    === Type Inspection ===
-      Type name:     TradeOrder
-      Full name:     Submission#9+TradeOrder
-      Is class:      True
-      Is sealed:     False
+      TradeOrder
+      Submission#9+TradeOrder
+      True
+      False
     
-    === Properties ===
       Ticker       String     = ASML.AS
       Side         String     = BUY
       Quantity     Int32      = 100
       Price        Double     = 685.4
       Notional     Double     = 68540
     
-    === Methods (declared) ===
       String get_Ticker()
       String get_Side()
       Int32 get_Quantity()
@@ -509,20 +498,17 @@ public class TradeOrder
       Double get_Notional()
       String ToString()
     
-    === Dynamic Access ===
       Ticker = ASML.AS
       Side = BUY
       Quantity = 100
       Price = 685.4
     
-    === Constructor Parameters ===
       ticker: String
       side: String
       quantity: Int32
       price: Double
     
-    === Create via Reflection ===
-      Created: TradeOrder(MC.PA, SELL, 50, 890.2)
+      TradeOrder(MC.PA, SELL, 50, 890.2)
 
 ## Project Structure & Best Practices
 
@@ -588,8 +574,6 @@ IndexPipeline/
 ```
 
     
-    === Recommended Project Layout ===
-    
     IndexPipeline/
     ├── IndexPipeline.sln                # Solution file
     │
@@ -615,32 +599,31 @@ IndexPipeline/
     └── docker/
         └── Dockerfile                   # Multi-stage build
     
-    === Key Principles ===
     
     1. DEPENDENCY INVERSION
        Core defines interfaces. Infra implements them.
        Core NEVER references Infra. API wires them together via DI.
-       Python equiv: ABC in models.py, implementations in fetchers/.
+       ABC in models.py, implementations in fetchers/.
     
     2. CONSTRUCTOR INJECTION
        builder.Services.AddScoped<IDataRepository, SqlRepository>();
        .NET DI container auto-resolves the dependency graph.
-       Python equiv: pass objects via __init__.
+       pass objects via __init__.
     
     3. VALIDATE AT BOUNDARIES
        DataAnnotations on DTOs. FluentValidation for complex rules.
        Internal code trusts validated models.
-       Python equiv: Pydantic BaseModel.
+       Pydantic BaseModel.
     
     4. CONFIGURATION
        appsettings.json + env vars (IConfiguration).
        builder.Services.Configure<PipelineOptions>(config);
-       Python equiv: .env + os.environ + Pydantic Settings.
+       .env + os.environ + Pydantic Settings.
     
     5. TEST THE LOGIC, MOCK THE BOUNDARY
        Unit test PipelineService with MockRepository.
        Integration test SqlRepository against real DB.
-       Python equiv: pytest + unittest.mock.
+       pytest + unittest.mock.
 
 ## Summary
 

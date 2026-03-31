@@ -119,35 +119,31 @@ class PipelineService:
         return score
 
 # ─── Production wiring ───
-print("=== Production ===")
 prod_service = PipelineService(
     repo=SqlRepository("Server=prod-db;Database=stoxx"),
     notifier=SlackNotifier(),
 )
 result = prod_service.run("ASML.AS")
-print(f"  Result: {result}")
+result  # Result
 
 # ─── Test wiring — swap implementations, same PipelineService ───
-print("\n=== Test (with mocks) ===")
 mock_repo = MockRepository()
 mock_notifier = MockNotifier()
 test_service = PipelineService(repo=mock_repo, notifier=mock_notifier)
 result = test_service.run("TEST.XX")
-print(f"  Result: {result}")
-print(f"  Saved to mock DB: {mock_repo.saved}")
-print(f"  Notifications sent: {mock_notifier.messages}")
+result  # Result
+mock_repo.saved  # Saved to mock DB
+mock_notifier.messages  # Notifications sent
 ```
 
-    === Production ===
       SqlRepository connected to: Server=prod-db;Database=stoxx...
       SqlRepository: saved 1 scores to database
       Slack: Pipeline done: ASML.AS scored 0.85
-      Result: {'ticker': 'ASML.AS', 'momentum': 0.85, 'rank': 1}
+      {'ticker': 'ASML.AS', 'momentum': 0.85, 'rank': 1}
     
-    === Test (with mocks) ===
-      Result: {'ticker': 'TEST.XX', 'momentum': 0.85, 'rank': 1}
-      Saved to mock DB: [{'ticker': 'TEST.XX', 'momentum': 0.85, 'rank': 1}]
-      Notifications sent: ['Pipeline done: TEST.XX scored 0.85']
+      {'ticker': 'TEST.XX', 'momentum': 0.85, 'rank': 1}
+      [{'ticker': 'TEST.XX', 'momentum': 0.85, 'rank': 1}]
+      ['Pipeline done: TEST.XX scored 0.85']
 
 ## Design Patterns
 
@@ -181,11 +177,10 @@ class Config:
         self.batch_size = 5000
         print(f"  Config loaded (project={self.project_id})")
 
-print("=== Singleton ===")
 c1 = Config()
 c2 = Config()  # same instance — __init__ skipped
-print(f"  c1 is c2: {c1 is c2}")  # True
-print(f"  c1.project_id: {c1.project_id}")
+c1 is c2  # True
+c1.project_id
 
 # ─── Simpler alternative: module-level singleton ───
 # Just create the instance at module level. Python modules are singletons.
@@ -193,10 +188,9 @@ print(f"  c1.project_id: {c1.project_id}")
 # def get_config(): return _config
 ```
 
-    === Singleton ===
       Config loaded (project=index-lab-2)
-      c1 is c2: True
-      c1.project_id: index-lab-2
+      True
+      index-lab-2
 
 ### Factory — create objects without specifying the exact class
 
@@ -233,14 +227,12 @@ def create_storage_client(provider: str = "gcs") -> StorageClient:
         raise ValueError(f"Unknown provider: {provider}. Choose from: {list(clients.keys())}")
     return clients[provider]()
 
-print("=== Factory ===")
 for provider in ["gcs", "s3", "local"]:
     client = create_storage_client(provider)
     result = client.upload("bronze/data.csv", b"OHLCV data")
     print(f"  {provider:5s} -> {result}")
 ```
 
-    === Factory ===
       gcs   -> gs://bucket/bronze/data.csv (10 bytes)
       s3    -> s3://bucket/bronze/data.csv (10 bytes)
       local -> file://bronze/data.csv (10 bytes)
@@ -278,7 +270,6 @@ def metrics_handler(data: dict):
         print(f"  [METRIC] rows_loaded = {data['rows']}")
 
 # ─── Wire up and use ───
-print("=== Observer (Event Bus) ===")
 bus = PipelineEventBus()
 bus.subscribe("step_completed", log_handler)
 bus.subscribe("step_completed", metrics_handler)
@@ -290,7 +281,6 @@ bus.publish("step_completed", {"step": "silver_transform", "status": "ok", "rows
 bus.publish("step_completed", {"step": "gold_score", "status": "error", "message": "BQ timeout"})
 ```
 
-    === Observer (Event Bus) ===
       [LOG]   {'step': 'ohlcv_load', 'status': 'ok', 'rows': 306}
       [METRIC] rows_loaded = 306
       [LOG]   {'step': 'silver_transform', 'status': 'ok', 'rows': 306}
@@ -351,9 +341,8 @@ class StockScorer:
         }
 
 # ─── Same data, different strategies ───
-print("=== Strategy ===")
 prices = [685.0, 690.0, 680.0, 695.0, 710.0, 700.0, 685.0]
-print(f"Prices: {prices}\n")
+prices
 
 for strategy in [MomentumStrategy(), VolatilityStrategy(), MeanReversionStrategy()]:
     scorer = StockScorer(strategy)
@@ -361,8 +350,7 @@ for strategy in [MomentumStrategy(), VolatilityStrategy(), MeanReversionStrategy
     print(f"  {result['strategy']:15s} score={result['score']:+.4f}")
 ```
 
-    === Strategy ===
-    Prices: [685.0, 690.0, 680.0, 695.0, 710.0, 700.0, 685.0]
+    [685.0, 690.0, 680.0, 695.0, 710.0, 700.0, 685.0]
     
       Momentum        score=-0.0103
       Volatility      score=-0.0138
@@ -416,23 +404,21 @@ class PipelineConfig(BaseModel):
     dry_run: bool = False
 
 # ─── Valid data ───
-print("=== Valid Data ===")
 record = OhlcvRecord(
     symbol="ASML.AS", trade_date=date(2026, 3, 20),
     open=685.0, high=710.0, low=680.0, close=700.0, volume=1_500_000
 )
-print(f"  {record}")
-print(f"  Dict: {record.model_dump()}")
+record
+record.model_dump()  # Dict
 
 config = PipelineConfig(
     name="events_etl",
     source_bucket="index-lab-2-data",
     destination_table="index_data.bronze_ohlcv",
 )
-print(f"  Config: {config}")
+config  # Config
 
 # ─── Invalid data — caught at boundary ───
-print("\n=== Validation Errors ===")
 bad_inputs = [
     {"label": "Negative price", "data": {"symbol": "X", "trade_date": "2026-01-01", "open": -5, "high": 10, "low": 8, "close": 9, "volume": 100}},
     {"label": "High < Low", "data": {"symbol": "X", "trade_date": "2026-01-01", "open": 10, "high": 5, "low": 8, "close": 9, "volume": 100}},
@@ -451,12 +437,10 @@ for case in bad_inputs:
         print(f"  {case['label']}: CAUGHT — {e.errors()[0]['msg']}")
 ```
 
-    === Valid Data ===
       symbol='ASML.AS' trade_date=datetime.date(2026, 3, 20) open=685.0 high=710.0 low=680.0 close=700.0 volume=1500000
-      Dict: {'symbol': 'ASML.AS', 'trade_date': datetime.date(2026, 3, 20), 'open': 685.0, 'high': 710.0, 'low': 680.0, 'close': 700.0, 'volume': 1500000}
-      Config: name='events_etl' batch_size=5000 max_retries=3 source_bucket='index-lab-2-data' destination_table='index_data.bronze_ohlcv' dry_run=False
+      {'symbol': 'ASML.AS', 'trade_date': datetime.date(2026, 3, 20), 'open': 685.0, 'high': 710.0, 'low': 680.0, 'close': 700.0, 'volume': 1500000}
+      name='events_etl' batch_size=5000 max_retries=3 source_bucket='index-lab-2-data' destination_table='index_data.bronze_ohlcv' dry_run=False
     
-    === Validation Errors ===
       Negative price: CAUGHT — Input should be greater than 0
       High < Low: CAUGHT — Value error, high (5.0) must be >= low (8.0)
       Empty symbol: CAUGHT — String should have at least 1 character
@@ -486,22 +470,18 @@ class TradeOrder:
 order = TradeOrder("ASML.AS", "BUY", 100, 685.40)
 
 # ─── type() and isinstance() ───
-print("=== Type Inspection ===")
-print(f"  type(order):          {type(order)}")
-print(f"  type(order).__name__: {type(order).__name__}")
-print(f"  isinstance(order, TradeOrder): {isinstance(order, TradeOrder)}")
+type(order)
+type(order).__name__
+isinstance(order, TradeOrder)
 
 # ─── dir() — list all attributes and methods ───
-print("\n=== dir() — public members ===")
 public = [m for m in dir(order) if not m.startswith("_")]
-print(f"  {public}")
+public
 
 # ─── vars() / __dict__ — instance attributes ───
-print("\n=== vars() — instance attributes ===")
-print(f"  {vars(order)}")
+vars(order)
 
 # ─── getattr() / hasattr() — dynamic attribute access ───
-print("\n=== Dynamic Access ===")
 for attr in ["ticker", "side", "quantity", "notional"]:
     if hasattr(order, attr):
         val = getattr(order, attr)
@@ -511,9 +491,8 @@ for attr in ["ticker", "side", "quantity", "notional"]:
             print(f"  {attr} = {val}")
 
 # ─── inspect module — deeper introspection ───
-print("\n=== inspect module ===")
-print(f"  Is class: {inspect.isclass(TradeOrder)}")
-print(f"  Methods: {[m[0] for m in inspect.getmembers(order, predicate=inspect.ismethod)]}")
+inspect.isclass(TradeOrder)  # Is class
+[m[0] for m in inspect.getmembers(order, predicate=inspect.ismethod)]  # Methods
 try:
     print(f"  Source file: {inspect.getfile(TradeOrder)}")
 except OSError:
@@ -521,35 +500,28 @@ except OSError:
 
 # ─── Signature introspection ───
 sig = inspect.signature(TradeOrder.__init__)
-print(f"\n=== Constructor Signature ===")
 for name, param in sig.parameters.items():
     if name == "self": continue
     print(f"  {name}: {param.annotation.__name__ if param.annotation != inspect.Parameter.empty else 'Any'}")
 ```
 
-    === Type Inspection ===
-      type(order):          <class '__main__.TradeOrder'>
-      type(order).__name__: TradeOrder
+               <class '__main__.TradeOrder'>
+      TradeOrder
       isinstance(order, TradeOrder): True
     
-    === dir() — public members ===
       ['MAX_QUANTITY', 'notional', 'price', 'quantity', 'side', 'ticker']
     
-    === vars() — instance attributes ===
       {'ticker': 'ASML.AS', 'side': 'BUY', 'quantity': 100, 'price': 685.4}
     
-    === Dynamic Access ===
       ticker = ASML.AS
       side = BUY
       quantity = 100
       notional() = 68540.0
     
-    === inspect module ===
-      Is class: True
-      Methods: ['__init__', '__repr__', 'notional']
-      Source file: <notebook cell> (no file on disk)
+      True
+      ['__init__', '__repr__', 'notional']
+      <notebook cell> (no file on disk)
     
-    === Constructor Signature ===
       ticker: str
       side: str
       quantity: int
@@ -632,8 +604,6 @@ index-pipeline/
 ```
 
     
-    === Recommended Project Layout ===
-    
     index-pipeline/
     ├── pyproject.toml           # Project metadata, dependencies, tool config
     ├── requirements.txt         # Pinned dependencies (pip freeze)
@@ -674,8 +644,6 @@ index-pipeline/
     └── scripts/                 # CLI entry points
         ├── run_pipeline.py      # python scripts/run_pipeline.py --step ohlcv
         └── setup_index.py       # One-time index setup
-    
-    === Key Principles ===
     
     1. SEPARATION OF CONCERNS
        fetchers/ only fetch, transforms/ only transform, loaders/ only write.

@@ -86,12 +86,12 @@ foreach (var (line, i) in allLines.Select((l, i) => (l, i)))
     $"  [{i}]: {line}"
 ```
 
-    Working dir: C:\Users\aperi\AppData\Local\Temp\fileio_cs_da9b60f9
+    C:\Users\aperi\AppData\Local\Temp\fileio_cs_da9b60f9
     
-      Written: pipeline_output.txt (97 bytes)
-      Content (94 chars): pipeline_id|status|rows_processed
+      pipeline_output.txt (97 bytes)
+      pipeline_id|status|rows_processed
     etl_001|success|...
-      Lines: 4
+      4
       [0]: pipeline_id|status|rows_processed
       [1]: etl_001|success|15000
       [2]: etl_002|failed|0
@@ -124,11 +124,11 @@ using (var writer = new StreamWriter(logFile, append: false, Encoding.UTF8))
 $"  Written: {Path.GetFileName(logFile)}"
 ```
 
-      Line 0: pipeline_id|status|rows_processed
-      Line 1: etl_001|success|15000
-      Line 2: etl_002|failed|0
-      Line 3: etl_003|success|8200
-      Written: etl_log.txt
+      pipeline_id|status|rows_processed
+      etl_001|success|15000
+      etl_002|failed|0
+      etl_003|success|8200
+      etl_log.txt
 
 #### Append, Binary I/O, and Path operations
 
@@ -164,17 +164,17 @@ foreach (var f in Directory.GetFiles(tmpDir))
 Directory.Delete(tmpDir, recursive: true);
 ```
 
-      Total lines: 6, Last: 2024-01-15T03:02:00|INFO|Pipeline completed
-      Binary: 89-50-4E-47
-      FileName:  events.parquet
-      Extension: .parquet
-      Directory: \data\lake\raw\events\2024\01
-      Combine:   C:\Users\aperi\AppData\Local\Temp\fileio_cs_da9b60f9\output\data.csv
+      6, Last: 2024-01-15T03:02:00|INFO|Pipeline completed
+      89-50-4E-47
+      events.parquet
+      .parquet
+      \data\lake\raw\events\2024\01
+      C:\Users\aperi\AppData\Local\Temp\fileio_cs_da9b60f9\output\data.csv
         etl_log.txt
         pipeline_output.txt
         sample.bin
     
-      Cleaned up: C:\Users\aperi\AppData\Local\Temp\fileio_cs_da9b60f9
+      C:\Users\aperi\AppData\Local\Temp\fileio_cs_da9b60f9
 
 ## CSV Files
 
@@ -218,8 +218,8 @@ using (var reader = new StreamReader(csvFile, Encoding.UTF8))
 }
 ```
 
-      Written: pipeline_runs.csv
-      Header: [pipeline_id, status, rows_processed, duration_s]
+      pipeline_runs.csv
+      [pipeline_id, status, rows_processed, duration_s]
       etl_001: success, 15'000 rows
       etl_002: failed, 0 rows
       etl_003: success, 8'200 rows
@@ -281,9 +281,9 @@ foreach (var line in pipeData.Split('\n'))
     $"  Pipe: [{string.Join(", ", line.Split('|'))}]"
 ```
 
-      Pipe: [id, name, region]
-      Pipe: [1, Alice, EMEA]
-      Pipe: [2, Bob, APAC]
+      [id, name, region]
+      [1, Alice, EMEA]
+      [2, Bob, APAC]
 
 #### In-memory CSV — StringWriter
 
@@ -299,7 +299,7 @@ sw.ToString().TrimEnd()   // In-memory CSV
 Directory.Delete(tmpDir, recursive: true);
 ```
 
-      In-memory CSV: event_id,event_type,timestamp
+      event_id,event_type,timestamp
     evt_001,page_view,2024-01-15T10:30:00Z
 
 ## JSON
@@ -414,9 +414,9 @@ run2.Status          // Status
 run2.ErrorMessage    // Error
 ```
 
-      Pipeline: etl_purchases
-      Status:   failed
-      Error:    Source table not found
+      etl_purchases
+      failed
+      Source table not found
 
 #### JSON file I/O and JsonDocument
 
@@ -449,11 +449,11 @@ var apiResponse = @"{
 }
 ```
 
-      Loaded: etl_events_daily, 1'500'000 rows
+      etl_events_daily, 1'500'000 rows
     
-      Job:       bq_job_12345
-      Rows:      1'500'000
-      Cache hit: False
+      bq_job_12345
+      1'500'000
+      False
 
 #### JSON Lines (JSONL)
 
@@ -544,7 +544,6 @@ var jsonConfig = @"{
 jsonConfig
 ```
 
-    JSON:
     {
         "pipeline": {
             "name": "etl_events_daily",
@@ -585,7 +584,6 @@ tags: [production, clickstream, daily]
 yamlConfig
 ```
 
-    YAML:
     # Pipeline configuration (YAML supports comments — JSON does not)
     pipeline:
       name: etl_events_daily
@@ -736,8 +734,8 @@ using (var ms = new MemoryStream())
 }
 ```
 
-      Position: 36, Length: 36 bytes
-      Content: PIPELINE_DATA
+      36, Length: 36 bytes
+      PIPELINE_DATA
     etl_001|success|15000
 
 #### MemoryStream + StreamWriter — build CSV in memory for cloud upload
@@ -761,8 +759,8 @@ using (var ms = new MemoryStream())
 ```
 
     
-      Upload payload: 73 bytes
-      Preview: ﻿event_id,type,user_id
+      73 bytes
+      ﻿event_id,type,user_id
     evt_001,page_view,1001
     evt_002,purchase,1002
 
@@ -779,7 +777,6 @@ var builtString = sw.ToString();
 builtString.TrimEnd()   // StringWriter output
 ```
 
-      StringWriter:
       pipeline_id|status|rows
     etl_001|success|15000
     etl_002|failed|0
@@ -796,9 +793,9 @@ while ((line = sr.ReadLine()) != null)
     $"  StringReader line {lineNum++}: {line}"
 ```
 
-      StringReader line 0: pipeline_id|status|rows
-      StringReader line 1: etl_001|success|15000
-      StringReader line 2: etl_002|failed|0
+      pipeline_id|status|rows
+      etl_001|success|15000
+      etl_002|failed|0
 
 #### BinaryReader / BinaryWriter
 
@@ -816,7 +813,7 @@ using (var bw = new BinaryWriter(fs))
 new FileInfo(binFile).Length   // bytes written
 ```
 
-      Written: 39 bytes
+      39 bytes
 
 #### BinaryReader — read back in same order and types
 
@@ -836,9 +833,9 @@ using (var br = new BinaryReader(fs))
 }
 ```
 
-      Sensor 42: 23.5, alert=True
-      Sensor 43: 19.8, alert=False
-      Sensor 44: 31.2, alert=True
+      23.5, alert=True
+      19.8, alert=False
+      31.2, alert=True
 
 #### Binary in memory
 
@@ -861,7 +858,7 @@ using (var br = new BinaryReader(fs))
 }
 ```
 
-      From memory: sensor=42, value=23.5, alert=True, region=EMEA
+      sensor=42, value=23.5, alert=True, region=EMEA
 
 #### FileStream — low-level byte I/O
 
@@ -892,7 +889,7 @@ Directory.Delete(tmpDir, recursive: true);
 ```
 
       Wrote 5 bytes
-      Read 3 bytes from offset 2: [0x03, 0x04, 0x05]
+      [0x03, 0x04, 0x05]
 
 ## Async File I/O
 
@@ -940,11 +937,11 @@ Directory.Delete(tmpDir, recursive: true);
 ```
 
       Written async
-      Read async: line1, line2, line3
-        Async line 0: line1
-        Async line 1: line2
-        Async line 2: line3
-      Async log: 2024-01-15 INFO Pipeline started
+      line1, line2, line3
+        line1
+        line2
+        line3
+      2024-01-15 INFO Pipeline started
     2024-01-15 INFO Processing 1M rows
 
 ## Advanced JSON Patterns
@@ -986,7 +983,7 @@ var parsed = JsonSerializer.Deserialize(json, QuoteContext.Default.StockQuote);
     [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower)]
     [JsonSerializable(typeof(StockQuote))]
     [JsonSerializable(typeof(List<StockQuote>))]
-    partial class QuoteContext : JsonSerializerContext { }
+    JsonSerializerContext { }
     
     // 3. Use the context instead of default options
     var json = JsonSerializer.Serialize(quote, QuoteContext.Default.StockQuote);
@@ -1029,8 +1026,8 @@ var parsed = JsonSerializer.Deserialize(json, QuoteContext.Default.StockQuote);
 }
 ```
 
-      Extracted 3 symbols: [SAP.DE, ASML.AS, TTE.PA]
-      Memory: zero heap allocations during parsing (only the result list)
+      [SAP.DE, ASML.AS, TTE.PA]
+      zero heap allocations during parsing (only the result list)
 
 ## Memory-Mapped Files
 
@@ -1080,9 +1077,9 @@ using (var accessor = mmf.CreateViewAccessor(0, 100))
 Directory.Delete(tmpDir, recursive: true);
 ```
 
-      Bytes at offset 500000: 32, 33
-      Expected: 32, 33
-      First 10 bytes: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+      32, 33
+      32, 33
+      [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     
       // Named MMF for inter-process shared memory:
       // Process A: MemoryMappedFile.CreateNew("shared_data", 1024)
@@ -1157,7 +1154,7 @@ async Task ReadPipeAsync(PipeReader reader) {
         }
     }
     
-      Pipelines: used by ASP.NET Core Kestrel for HTTP parsing
+      used by ASP.NET Core Kestrel for HTTP parsing
 
 ## High-Performance Parsing with Span
 
@@ -1203,9 +1200,9 @@ $"  Split: {parts[0]}, close={parts[2]}"
 }
 ```
 
-      Split: SAP.DE, close=166.52
-      Span: SAP.DE, close=166.52
-      Allocations: 0 during parsing, 1 string for final ToString()
+      SAP.DE, close=166.52
+      SAP.DE, close=166.52
+      0 during parsing, 1 string for final ToString()
 
 ## Encoding and Decoding
 
@@ -1245,12 +1242,12 @@ var bom = Encoding.UTF8.GetPreamble();
 $"  UTF-8 BOM: [{string.Join(", ", bom.Select(b => $"0x{b:X2}"))}] ({bom.Length} bytes)"
 ```
 
-      UTF-8:    44 bytes, roundtrip=True
-      ASCII:    40 bytes, roundtrip=False (€ lost!)
-      ASCII:    "Euro Stoxx 50: SAP ?166.52, ASML ?685.40"
-      UTF-16:   80 bytes (2x larger than UTF-8 for ASCII text)
-      Latin-1:  40 bytes, roundtrip=False
-      UTF-8 BOM: [0xEF, 0xBB, 0xBF] (3 bytes)
+      44 bytes, roundtrip=True
+      40 bytes, roundtrip=False (€ lost!)
+      "Euro Stoxx 50: SAP ?166.52, ASML ?685.40"
+      80 bytes (2x larger than UTF-8 for ASCII text)
+      40 bytes, roundtrip=False
+      [0xEF, 0xBB, 0xBF] (3 bytes)
 
 #### Convert.ToBase64String / FromBase64String — Base64 encoding
 
@@ -1277,16 +1274,16 @@ base64     // Standard
 urlSafe    // URL-safe
 ```
 
-      Original:  SAP.DE|2024-03-12|166.52
-      Base64:    U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
-      Decoded:   SAP.DE|2024-03-12|166.52
-      Roundtrip: True
+      SAP.DE|2024-03-12|166.52
+      U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
+      SAP.DE|2024-03-12|166.52
+      True
     
-      Raw bytes: [89-50-4E-47]
-      Base64:    iVBORw==
+      [89-50-4E-47]
+      iVBORw==
     
-      Standard:  U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
-      URL-safe:  U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
+      U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
+      U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
 
 #### Convert.ToHexString / FromHexString — hexadecimal encoding
 
@@ -1308,13 +1305,13 @@ Convert.ToHexString(sha256).ToLower()     // SHA-256 of "SAP.DE"
 $"  Length: {sha256.Length} bytes = {sha256.Length * 2} hex chars"
 ```
 
-      Bytes:     [DE-AD-BE-EF-CA-FE]
-      Hex:       DEADBEEFCAFE
-      Hex lower: deadbeefcafe
-      Roundtrip: True
+      [DE-AD-BE-EF-CA-FE]
+      DEADBEEFCAFE
+      deadbeefcafe
+      True
     
       SHA-256 of "SAP.DE": a80ae49a0c54581271b2fa37bc9113425072ca8b559941b00b916d37af0c4e58
-      Length: 32 bytes = 64 hex chars
+      32 bytes = 64 hex chars
 
 #### Uri.EscapeDataString, WebUtility.UrlEncode — URL encoding
 
@@ -1343,16 +1340,16 @@ escaped      // EscapeDataStr
 // Difference: space → + (WebUtility) vs %20 (EscapeDataString)
 ```
 
-      Raw:       SAP.DE close=166.52 change=+2.5% sector=Tech&Finance
-      Escaped:   SAP.DE%20close%3D166.52%20change%3D%2B2.5%25%20sector%3DTech%26Finance
-      Unescaped: SAP.DE close=166.52 change=+2.5% sector=Tech&Finance
-      Roundtrip: True
+      SAP.DE close=166.52 change=+2.5% sector=Tech&Finance
+      SAP.DE%20close%3D166.52%20change%3D%2B2.5%25%20sector%3DTech%26Finance
+      SAP.DE close=166.52 change=+2.5% sector=Tech&Finance
+      True
     
-      Safe URL: https://api.example.com/quote?symbol=BRK.B&note=Q1%202024%20earnings%20%26%20revenue
+      https://api.example.com/quote?symbol=BRK.B&note=Q1%202024%20earnings%20%26%20revenue
     
-      WebUtility:     SAP.DE+close%3D166.52+change%3D%2B2.5%25+sector%3DTech%26Finance
-      EscapeDataStr:  SAP.DE%20close%3D166.52%20change%3D%2B2.5%25%20sector%3DTech%26Finance
-      Difference: space → + (WebUtility) vs %20 (EscapeDataString)
+      SAP.DE+close%3D166.52+change%3D%2B2.5%25+sector%3DTech%26Finance
+      SAP.DE%20close%3D166.52%20change%3D%2B2.5%25%20sector%3DTech%26Finance
+      space → + (WebUtility) vs %20 (EscapeDataString)
 
 #### Encoding comparison
 
@@ -1376,11 +1373,11 @@ $"  {"Hex",-15} {Convert.ToHexString(sampleBytes).Length + " chars",-40} {Conver
 $"  {"URL",-15} {Uri.EscapeDataString(sample).Length + " chars",-40} {Uri.EscapeDataString(sample).Length,5}"
 ```
 
-      Original:   SAP €166.52
-      UTF-8 bytes: [0x53, 0x41, 0x50, 0x20, 0xE2, 0x82, 0xAC, 0x31, 0x36, 0x36, 0x2E, 0x35, 0x32]
-      Base64:      U0FQIOKCrDE2Ni41Mg==
-      Hex:         53415020E282AC3136362E3532
-      URL:         SAP%20%E2%82%AC166.52
+      SAP €166.52
+      [0x53, 0x41, 0x50, 0x20, 0xE2, 0x82, 0xAC, 0x31, 0x36, 0x36, 0x2E, 0x35, 0x32]
+      U0FQIOKCrDE2Ni41Mg==
+      53415020E282AC3136362E3532
+      SAP%20%E2%82%AC166.52
     
       Format          Output                                    Size
       --------------------------------------------------------------

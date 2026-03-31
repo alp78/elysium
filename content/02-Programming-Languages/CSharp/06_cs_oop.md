@@ -97,11 +97,11 @@ dog1.IsOlderThan(dog2)   // Older?
 > [!info] No Dynamic Attributes
 > Unlike Python, C# only allows attributes declared in the class. Use `Dictionary<string, object>` for dynamic key-value storage.
 
-    dog1:        Dog(Rex, age=5)
-    dog1.Name:   Rex
-    dog1.Bark(): Rex says Woof!
-    Species:     Canis familiaris
-    Older?:      True
+    Dog(Rex, age=5)
+    Rex
+    Rex says Woof!
+    Canis familiaris
+    True
 
 #### Using Circle — property with validation
 
@@ -118,9 +118,9 @@ c.Radius   // New radius
 > [!info] Property Validation
 > Setters throw exceptions for invalid values. Read-only properties (no setter) produce compile errors on assignment.
 
-    Radius: 5
-    Area:   78.54
-    New radius: 10
+    5
+    78.54
+    10
 
 ## Inheritance & Polymorphism
 
@@ -203,10 +203,10 @@ cat.Speak()
 dog.Breed
 ```
 
-    dog.Speak():  Rex says Woof!
-    dog.Fetch():  Rex fetches the ball!
-    cat.Speak():  Whiskers says Meow... when it feels like it.
-    dog.Breed:    German Shepherd
+    Rex says Woof!
+    Rex fetches the ball!
+    Whiskers says Meow... when it feels like it.
+    German Shepherd
 
 #### Polymorphism — virtual dispatch via base class reference
 
@@ -251,12 +251,12 @@ maybeDog?.Name ?? "null"   // as Dog
 maybeCat?.Name ?? "null"   // as Cat
 ```
 
-    a is Dog:    True
-    a is Animal: True
-    a is Cat:    False
-    It's a dog: Shepherd
-    as Dog: Rex
-    as Cat: null
+    True
+    True
+    False
+    Shepherd
+    Rex
+    null
 
 ## Abstract Classes & Interfaces
 
@@ -375,9 +375,9 @@ double totalArea = shapes.Sum(s => s.Area());
 totalArea   // Total area
 ```
 
-    rect: red Rectangle: area=15.00
-    circ: blue CircleShape: area=50.27
-    Total area: 65.27
+    area=15.00
+    area=50.27
+    65.27
 
 #### Using interfaces — is, as, pattern matching, polymorphic dispatch
 
@@ -404,7 +404,7 @@ Console.WriteLine($"  TextBox is IResizable? {txt is IResizable}");  // False
 
       Drawing button 'OK' size=1.0
       Drawing textbox
-      Resized button: Drawing button 'OK' size=2.0
+      Drawing button 'OK' size=2.0
       TextBox is IResizable? False
 
 | Feature | Abstract class | Interface |
@@ -557,11 +557,11 @@ Employee.EmployeeCount   // Count
 Employee.Company   // Company
 ```
 
-    Instance: Alice @ Acme Corp: $104'500
-    Factory:  Bob @ Acme Corp: $85'000
-    Static:   valid? True
-    Count:    2
-    Company:  Acme Corp
+    $104'500
+    $85'000
+    valid? True
+    2
+    Acme Corp
 
 ## Records & Init-Only Properties
 
@@ -585,8 +585,8 @@ Console.WriteLine("Record typo: compile error → caught before code even runs")
 > [!tip] Records Catch Typos at Compile Time
 > Named parameters like `CustomerId:` are verified against the record definition. A typo like `Amout:` instead of `Amount:` is a compile error.
 
-    Dict typo:   silent bug → KeyNotFoundException at runtime
-    Record typo: compile error → caught before code even runs
+    silent bug → KeyNotFoundException at runtime
+    compile error → caught before code even runs
 
 #### Autocomplete and refactoring
 
@@ -620,10 +620,10 @@ Console.WriteLine($"dict1 == dict2:  {dict1 == dict2}");     // False! Reference
 Console.WriteLine("Records:         == compares VALUES (all fields checked automatically)");
 ```
 
-    Dictionary<string, object>: any garbage in, no error
-    Record:                     wrong type = compile error
-    dict1 == dict2:  False
-    Records:         == compares VALUES (all fields checked automatically)
+    any garbage in, no error
+    wrong type = compile error
+    False
+    == compares VALUES (all fields checked automatically)
 
 #### When to use what
 
@@ -698,10 +698,10 @@ var (x, y) = p1;
 $"Deconstructed: x={x}, y={y}"
 ```
 
-    p1:        Point { X = 3, Y = 4 }
-    p1 == p2:  True
-    p1 == p3:  False
-    Deconstructed: x=3, y=4
+    Point { X = 3, Y = 4 }
+    True
+    False
+    x=3, y=4
 
 #### Non-destructive mutation — with expression
 
@@ -719,11 +719,11 @@ config   // Config
 config.ConnectionString   // ConnStr
 ```
 
-    Original:  Employee { Name = Alice, Department = Engineering, Salary = 95000 }
-    Promoted:  Employee { Name = Alice, Department = Engineering, Salary = 110000 }
+    Employee { Name = Alice, Department = Engineering, Salary = 95000 }
+    Employee { Name = Alice, Department = Engineering, Salary = 110000 }
     Same?      False
-    Config: Config { Host = localhost, Port = 5432, Ssl = True, ConnectionString = https://localhost:5432 }
-    ConnStr: https://localhost:5432
+    Config { Host = localhost, Port = 5432, Ssl = True, ConnectionString = https://localhost:5432 }
+    https://localhost:5432
 
 #### Record struct and PipelineRecord
 
@@ -744,7 +744,7 @@ foreach (var r in records)
     Console.WriteLine($"  {r.TableName}: {r.Status} (ok={r.IsSuccess})");
 ```
 
-    v1 == v2: True
+    True
       users: success (ok=True)
       orders: failed (ok=False)
       products: pending (ok=False)

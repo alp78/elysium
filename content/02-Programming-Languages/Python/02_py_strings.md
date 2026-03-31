@@ -32,9 +32,9 @@ import time
 import locale
 s1 = 'hello'
 s2 = "hello"
-print(f"Single quotes:  '{s1}'")
-print(f"Double quotes:  \"{s2}\"")
-print(f"Same? {s1 == s2}")
+s1   # Single quotes
+f"Double quotes:  \"{s2}\""
+s1 == s2   # Same?
 ```
 
 #### Multiline & Raw Strings
@@ -48,59 +48,58 @@ string"""
 s4 = '''Also works
 with single
 quotes'''
-print(f"Triple-quoted:\n{s3}")
+s3   # Triple-quoted:\n
 
 # Raw strings — no escape processing
 s5 = r"C:\Users\new\test"     # backslashes NOT interpreted
 s6 = "C:\\Users\\new\\test"    # same result, but must escape
-print(f"\nRaw string:     {s5}")
-print(f"Escaped string: {s6}")
-print(f"Same? {s5 == s6}")
+s5   # Raw string
+s6   # Escaped string
+s5 == s6   # Same?
 ```
 
-    Triple-quoted:
     This is
     a multiline
     string
     
-    Raw string:     C:\Users\new\test
-    Escaped string: C:\Users\new\test
-    Same? True
+    C:\Users\new\test
+    C:\Users\new\test
+    True
 
 #### str() — convert other types to string
 
 ```python
 # Type-to-string conversion — str(), repetition, and empty checks
 
-print(f"str(42):        '{str(42)}'")
-print(f"str(3.14):      '{str(3.14)}'")
-print(f"str(True):      '{str(True)}'")
-print(f"str([1,2,3]):   '{str([1,2,3])}'")
-print(f"str(None):      '{str(None)}'")
+str(42)   # str(42)
+str(3.14)   # str(3.14)
+str(True)   # str(True)
+str([1,2,3])   # str([1,2,3])
+str(None)   # str(None)
 
 # String repetition and concatenation
-print(f"'ha' * 3:       '{'ha' * 3}'")
-print(f"'hello' + ' ' + 'world': '{'hello' + ' ' + 'world'}'")
+'ha' * 3   # 'ha' * 3
+'hello' + ' ' + 'world'   # 'hello' + ' ' + 'world'
 
 # Empty string and truthiness
 empty = ""
-print(f"empty == '':    {empty == ''}")
-print(f"len(empty):     {len(empty)}")
-print(f"bool(''):       {bool('')}")       # False (falsy)
-print(f"bool('a'):      {bool('a')}")      # True (truthy)
+empty == ''   # empty == ''
+len(empty)   # len(empty)
+bool('')  # False (falsy)
+bool('a')  # True (truthy)
 ```
 
-    str(42):        '42'
-    str(3.14):      '3.14'
-    str(True):      'True'
-    str([1,2,3]):   '[1, 2, 3]'
-    str(None):      'None'
-    'ha' * 3:       'hahaha'
+    '42'
+    '3.14'
+    'True'
+    '[1, 2, 3]'
+    'None'
+    'hahaha'
     'hello' + ' ' + 'world': 'hello world'
-    empty == '':    True
-    len(empty):     0
-    bool(''):       False
-    bool('a'):      True
+    True
+    0
+    False
+    True
 
 #### String Immutability
 
@@ -108,10 +107,10 @@ print(f"bool('a'):      {bool('a')}")      # True (truthy)
 # String immutability — strings cannot be modified in place
 
 s = 'H' + s[1:]  # must create a new string
-print(f"Modified: {s}")
+s   # Modified
 ```
 
-    Modified: Hello
+    Hello
 
 ## Indexing & Slicing
 
@@ -129,56 +128,53 @@ print(f"Modified: {s}")
 ```python
 #     0123456789...
 
-print(f"s[0]:     '{s[0]}'")        # H
-print(f"s[1]:     '{s[1]}'")        # e
-print(f"s[-1]:    '{s[-1]}'")       # ! (last char)
-print(f"s[-2]:    '{s[-2]}'")       # d (second to last)
-print(f"s[0:5]:   '{s[0:5]}'")      # Hello (stop is exclusive)
-print(f"s[:5]:    '{s[:5]}'")        # Hello (start defaults to 0)
-print(f"s[7:]:    '{s[7:]}'")        # World! (stop defaults to end)
-print(f"s[-6:]:   '{s[-6:]}'")       # orld! (negative index)
-print(f"s[::2]:   '{s[::2]}'")      # Hlo ol! (every 2nd char)
-print(f"s[::-1]:  '{s[::-1]}'")      # !dlroW ,olleH (reversed)
-print(f"s[7:12]:  '{s[7:12]}'")     # World
-print(f"s[2:10:2]:'{s[2:10:2]}'")   # lo o (slice with step)
+s[0]  # H
+s[1]  # e
+s[-1]  # ! (last char)
+s[-2]  # d (second to last)
+s[0:5]  # Hello (stop is exclusive)
+s[:5]  # Hello (start defaults to 0)
+s[7:]  # World! (stop defaults to end)
+s[-6:]  # orld! (negative index)
+s[::2]  # Hlo ol! (every 2nd char)
+s[::-1]  # !dlroW ,olleH (reversed)
+s[7:12]  # World
+s[2:10:2]  # lo o (slice with step)
 ```
 
-    s[0]:     'H'
-    s[1]:     'e'
-    s[-1]:    '!'
-    s[-2]:    'd'
-    s[0:5]:   'Hello'
-    s[:5]:    'Hello'
-    s[7:]:    'World!'
-    s[-6:]:   'World!'
-    s[::2]:   'Hlo ol!'
-    s[::-1]:  '!dlroW ,olleH'
-    s[7:12]:  'World'
-    s[2:10:2]:'lo o'
+    'H'
+    'e'
+    '!'
+    'd'
+    'Hello'
+    'Hello'
+    'World!'
+    'World!'
+    'Hlo ol!'
+    '!dlroW ,olleH'
+    'World'
+    'lo o'
 
 #### String iteration — enumerate(), slicing out of range
 
 ```python
 # Out-of-range behavior and character iteration
 
-print(f"s[0:100]: '{s[0:100]}'")     # Hello, World! (no error!)
+s[0:100]  # Hello, World! (no error!)
 # print(s[100])                       # IndexError!
 
 # Iterate over characters
 print("Chars:", end=" ")
 for ch in s[:5]:
     print(ch, end=" ")
-print()
 
 # Enumerate — index + character
-print("Enumerated:")
 for i, ch in enumerate(s[:5]):
     print(f"  [{i}] = '{ch}'")
 ```
 
-    s[0:100]: 'Hello, World!'
-    Chars: H e l l o 
-    Enumerated:
+    'Hello, World!'
+    H e l l o
       [0] = 'H'
       [1] = 'e'
       [2] = 'l'
@@ -200,45 +196,45 @@ for i, ch in enumerate(s[:5]):
 ```python
 s = "  Hello, World!  "
 
-print(f"upper():       '{'hello world'.upper()}'")
-print(f"lower():       '{'HELLO WORLD'.lower()}'")
-print(f"title():       '{'hello world'.title()}'")
-print(f"capitalize():  '{'hello world'.capitalize()}'")
-print(f"swapcase():    '{'Hello World'.swapcase()}'")
-print(f"casefold():    '{'Straße'.casefold()}'")       # aggressive lowercase for comparison
+'hello world'.upper()   # upper()
+'HELLO WORLD'.lower()   # lower()
+'hello world'.title()   # title()
+'hello world'.capitalize()   # capitalize()
+'Hello World'.swapcase()   # swapcase()
+'Straße'.casefold()  # aggressive lowercase for comparison
 ```
 
-    upper():       'HELLO WORLD'
-    lower():       'hello world'
-    title():       'Hello World'
-    capitalize():  'Hello world'
-    swapcase():    'hELLO wORLD'
-    casefold():    'strasse'
+    'HELLO WORLD'
+    'hello world'
+    'Hello World'
+    'Hello world'
+    'hELLO wORLD'
+    'strasse'
 
 #### Whitespace & Padding
 
 ```python
 # Whitespace and padding — strip, ljust, rjust, center, zfill
 
-print(f"lstrip():      '{s.lstrip()}'")          # left only
-print(f"rstrip():      '{s.rstrip()}'")          # right only
-print(f"strip('!'):    '{'Hello!!'.strip('!')}'")  # strip specific chars
-print(f"center(20):    '{'hello'.center(20)}'")
-print(f"center(20,'*'):'{'hello'.center(20, '*')}'")
-print(f"ljust(20):     '{'hello'.ljust(20)}'")
-print(f"rjust(20):     '{'hello'.rjust(20)}'")
-print(f"zfill(8):      '{'42'.zfill(8)}'")       # zero-pad numbers
+s.lstrip()  # left only
+s.rstrip()  # right only
+'Hello!!'.strip('!')  # strip specific chars
+'hello'.center(20)   # center(20)
+'hello'.center(20, '*')   # center(20,'*')
+'hello'.ljust(20)   # ljust(20)
+'hello'.rjust(20)   # rjust(20)
+'42'.zfill(8)  # zero-pad numbers
 ```
 
-    strip():       'Hello, World!'
-    lstrip():      'Hello, World!  '
-    rstrip():      '  Hello, World!'
-    strip('!'):    'Hello'
-    center(20):    '       hello        '
-    center(20,'*'):'*******hello********'
-    ljust(20):     'hello               '
-    rjust(20):     '               hello'
-    zfill(8):      '00000042'
+    'Hello, World!'
+    'Hello, World!  '
+    '  Hello, World!'
+    'Hello'
+    '       hello        '
+    '*******hello********'
+    'hello               '
+    '               hello'
+    '00000042'
 
 #### String Type Checks
 
@@ -283,92 +279,92 @@ for method, example in checks.items():
 ```python
 # Searching — find, index, count, startswith, endswith, in
 
-print(f"find('Hello'):      {s.find('Hello')}")        # 0 (first occurrence)
-print(f"find('Hello', 1):   {s.find('Hello', 1)}")     # 14 (start from index 1)
-print(f"rfind('Hello'):     {s.rfind('Hello')}")       # 14 (last occurrence)
-print(f"find('Java'):       {s.find('Java')}")         # -1 (not found)
-print(f"index('World'):     {s.index('World')}")       # 7 (like find but raises ValueError)
-print(f"count('Hello'):     {s.count('Hello')}")       # 2
-print(f"startswith('Hello'):{s.startswith('Hello')}")
-print(f"endswith('!'):      {s.endswith('!')}")
-print(f"'World' in s:       {'World' in s}")            # True (membership)
+s.find('Hello')  # 0 (first occurrence)
+s.find('Hello', 1)  # 14 (start from index 1)
+s.rfind('Hello')  # 14 (last occurrence)
+s.find('Java')  # -1 (not found)
+s.index('World')  # 7 (like find but raises ValueError)
+s.count('Hello')  # 2
+s.startswith('Hello')   # startswith('Hello')
+s.endswith('!')   # endswith('!')
+'World' in s  # True (membership)
 ```
 
-    find('Hello'):      0
-    find('Hello', 1):   14
-    rfind('Hello'):     14
-    find('Java'):       -1
-    index('World'):     7
-    count('Hello'):     2
-    startswith('Hello'):True
-    endswith('!'):      True
-    'World' in s:       True
+    0
+    14
+    14
+    -1
+    7
+    2
+    True
+    True
+    True
 
 #### Replace, Split & Join
 
 ```python
 # Replace, split, and join — substitution, tokenization, and reassembly
 
-print(f"replace:           '{s.replace('Hello', 'Hi')}'")
-print(f"replace(max=1):    '{s.replace('Hello', 'Hi', 1)}'")
+s.replace('Hello', 'Hi')   # replace
+s.replace('Hello', 'Hi', 1)   # replace(max=1)
 
 csv = "apple,banana,cherry"
 
 # split — split on delimiter; optional second arg limits number of splits
-print(f"split(','):        {csv.split(',')}")
-print(f"split(',', 1):     {csv.split(',', 1)}")
+csv.split(',')   # split(',')
+csv.split(',', 1)   # split(',', 1)
 
 words = "  hello  world  "
 
 # split() with no args splits on any whitespace and strips leading/trailing
-print(f"split():           {words.split()}")
+words.split()   # split()
 
 # split(' ') splits on exact space character, preserving empty strings
-print(f"split(' '):        {words.split(' ')}")
+words.split(' ')   # split(' ')
 
 # rsplit — like split but starts from the right
-print(f"rsplit(',', 1):    {csv.rsplit(',', 1)}")
+csv.rsplit(',', 1)   # rsplit(',', 1)
 
 lines = "line1\nline2\nline3"
 
 # splitlines — splits on line boundaries (\n, \r\n, \r, etc.)
-print(f"splitlines():      {lines.splitlines()}")
+lines.splitlines()   # splitlines()
 
 # partition — splits into exactly (before, separator, after) on first occurrence
-print(f"partition(','):    {csv.partition(',')}")
+csv.partition(',')   # partition(',')
 
 # rpartition — same but finds last occurrence
-print(f"rpartition(','):   {csv.rpartition(',')}")
+csv.rpartition(',')   # rpartition(',')
 
 parts = ["hello", "world", "python"]
 
 # join — concatenate iterable with separator between elements
-print(f"' '.join():        '{' '.join(parts)}'")
-print(f"', '.join():       '{', '.join(parts)}'")
-print(f"'->'.join():       '{'->'.join(parts)}'")
-print(f"''.join():         '{''.join(parts)}'")
+' '.join(parts)   # ' '.join()
+', '.join(parts)   # ', '.join()
+'->'.join(parts)   # '->'.join()
+''.join(parts)   # ''.join()
 
 tab_str = "a\tb\tc"
 
 # expandtabs — replace tab characters with spaces aligned to tab stops
-print(f"expandtabs(4):     '{tab_str.expandtabs(4)}'")
+tab_str.expandtabs(4)   # expandtabs(4)
 ```
 
-    replace:           '  Hi, World!  '
-    replace(max=1):    '  Hi, World!  '
-    split(','):        ['apple', 'banana', 'cherry']
-    split(',', 1):     ['apple', 'banana,cherry']
-    split():           ['hello', 'world']
-    split(' '):        ['', '', 'hello', '', 'world', '', '']
-    rsplit(',', 1):    ['apple,banana', 'cherry']
-    splitlines():      ['line1', 'line2', 'line3']
-    partition(','):    ('apple', ',', 'banana,cherry')
-    rpartition(','):   ('apple,banana', ',', 'cherry')
-    ' '.join():        'hello world python'
-    ', '.join():       'hello, world, python'
-    '->'.join():       'hello->world->python'
-    ''.join():         'helloworldpython'
-    expandtabs(4):     'a   b   c'
+    '  Hi, World!  '
+    '  Hi, World!  '
+    ['apple', 'banana', 'cherry']
+    ['apple', 'banana,cherry']
+    ['hello', 'world']
+    ['', '', 'hello', '', 'world', '', '']
+    ['apple,banana', 'cherry']
+    ['line1', 'line2', 'line3']
+    ('apple', ',', 'banana,cherry')
+    ('apple,banana', ',', 'cherry')
+    'hello world python'
+    'hello, world, python'
+    'hello->world->python'
+    'helloworldpython'
+    'a   b   c'
 
 #### Translate & Encode
 
@@ -376,20 +372,20 @@ print(f"expandtabs(4):     '{tab_str.expandtabs(4)}'")
 # Translate and encode — character-level replacement and byte conversion
 
 table = str.maketrans("aeiou", "12345")
-print(f"translate(vowels): '{'hello world'.translate(table)}'")
+'hello world'.translate(table)   # translate(vowels)
 
 # Remove characters
 table2 = str.maketrans("", "", "aeiou")
-print(f"remove vowels:     '{'hello world'.translate(table2)}'")
+'hello world'.translate(table2)   # remove vowels
 
-print(f"encode('utf-8'):   {'hello'.encode('utf-8')}")
-print(f"encode('ascii'):   {'hello'.encode('ascii')}")
+'hello'.encode('utf-8')   # encode('utf-8')
+'hello'.encode('ascii')   # encode('ascii')
 ```
 
-    translate(vowels): 'h2ll4 w4rld'
-    remove vowels:     'hll wrld'
-    encode('utf-8'):   b'hello'
-    encode('ascii'):   b'hello'
+    'h2ll4 w4rld'
+    'hll wrld'
+    b'hello'
+    b'hello'
 
 ## String Formatting
 
@@ -412,20 +408,20 @@ n = 1234567.89123
 pct = 0.856
 
 
-print(f"Name: {name}, Age: {age}")
-print(f"Expression: {age + 1}")
-print(f"Method call: {name.upper()}")
+f"Name: {name}, Age: {age}"
+age + 1   # Expression
+name.upper()   # Method call
 
-print("Name: {}, Age: {}".format(name, age))
-print("Name: {0}, Age: {1}, {0} again".format(name, age))  # reuse by index
-print("Name: {n}, Age: {a}".format(n=name, a=age))          # named
+"Name: {}, Age: {}".format(name, age)
+"Name: {0}, Age: {1}, {0} again".format(name, age)  # reuse by index
+"Name: {n}, Age: {a}".format(n=name, a=age)  # named
 
-print("Name: %s, Age: %d, Pi: %.2f" % (name, age, 3.14))
+"Name: %s, Age: %d, Pi: %.2f" % (name, age, 3.14)
 ```
 
     Name: Alice, Age: 30
-    Expression: 31
-    Method call: ALICE
+    31
+    ALICE
     Name: Alice, Age: 30
     Name: Alice, Age: 30, Alice again
     Name: Alice, Age: 30
@@ -436,36 +432,36 @@ print("Name: %s, Age: %d, Pi: %.2f" % (name, age, 3.14))
 ```python
 # Numeric format specifiers — .2f, .2e, ,.2f, .1%, d, x, o, b
 
-print(f"Fixed 2 dec:    {n:.2f}")
-print(f"Fixed 0 dec:    {n:.0f}")
-print(f"Comma sep:      {n:,.2f}")
-print(f"Scientific:     {n:.2e}")
-print(f"General:        {n:.4g}")
-print(f"Percentage:     {pct:.1%}")
+f"{n:.2f}"   # Fixed 2 dec
+f"{n:.0f}"   # Fixed 0 dec
+f"{n:,.2f}"   # Comma sep
+f"{n:.2e}"   # Scientific
+f"{n:.4g}"   # General
+f"{pct:.1%}"   # Percentage
 
 x = 255
-print(f"Decimal:        {x:d}")
-print(f"Binary:         {x:b}")
-print(f"Octal:          {x:o}")
-print(f"Hex lower:      {x:x}")
-print(f"Hex upper:      {x:X}")
-print(f"With prefix:    {x:#x}")
-print(f"Zero-padded:    {x:08d}")
+x:d   # Decimal
+x:b   # Binary
+x:o   # Octal
+x:x   # Hex lower
+x:X   # Hex upper
+f"{x:#x}"   # With prefix
+f"{x:08d}"   # Zero-padded
 ```
 
-    Fixed 2 dec:    1234567.89
-    Fixed 0 dec:    1234568
-    Comma sep:      1,234,567.89
-    Scientific:     1.23e+06
-    General:        1.235e+06
-    Percentage:     85.6%
-    Decimal:        255
-    Binary:         11111111
-    Octal:          377
-    Hex lower:      ff
-    Hex upper:      FF
-    With prefix:    0xff
-    Zero-padded:    00000255
+    1234567.89
+    1234568
+    1,234,567.89
+    1.23e+06
+    1.235e+06
+    85.6%
+    255
+    11111111
+    377
+    ff
+    FF
+    0xff
+    00000255
 
 #### Alignment & Locale Currency
 
@@ -473,12 +469,12 @@ print(f"Zero-padded:    {x:08d}")
 # Alignment and locale currency — layout control and locale-aware output
 
 s = "hi"
-print(f"Left 10:        '{s:<10}'")
-print(f"Right 10:       '{s:>10}'")
-print(f"Center 10:      '{s:^10}'")
-print(f"Fill char:      '{s:*^10}'")
-print(f"Sign always:    {42:+d}")
-print(f"Space for pos:  {42: d}")
+f"{s:<10}"   # Left 10
+f"{s:>10}"   # Right 10
+f"{s:^10}"   # Center 10
+f"{s:*^10}"   # Fill char
+f"{42:+d}"   # Sign always
+f"{42: d}"   # Space for pos
 
 try:
     locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
@@ -496,13 +492,13 @@ except ImportError:
     print("(babel not installed — pip install babel)")
 ```
 
-    Left 10:        'hi        '
-    Right 10:       '        hi'
-    Center 10:      '    hi    '
-    Fill char:      '****hi****'
-    Sign always:    +42
-    Space for pos:   42
-    US:  $1,234,567.89
+    'hi        '
+    '        hi'
+    '    hi    '
+    '****hi****'
+    +42
+    42
+    $1,234,567.89
     EUR: 1.234.567,89 €
     JPY: ￥1,234,568
     BRL: R$ 1.234.567,89
@@ -525,18 +521,18 @@ result = ""
 for i in range(50000):
     result += str(i)
 t1 = time.perf_counter() - start
-print(f"+ in loop (50k):     {t1:.4f}s  len={len(result)}")
+f"+ in loop (50k):     {t1:.4f}s  len={len(result)}"
 
 # GOOD: O(n) — join builds once
 start = time.perf_counter()
 result = "".join(str(i) for i in range(50000))
 t2 = time.perf_counter() - start
-print(f"join() (50k):        {t2:.4f}s  len={len(result)}")
-print(f"join is {t1/t2:.1f}x faster")
+f"join() (50k):        {t2:.4f}s  len={len(result)}"
+f"join is {t1/t2:.1f}x faster"
 ```
 
-    + in loop (50k):     0.0542s  len=238890
-    join() (50k):        0.0037s  len=238890
+    0.0542s  len=238890
+    0.0037s  len=238890
     join is 14.7x faster
 
 #### io.StringIO & List Building
@@ -550,22 +546,22 @@ buf.write(", ")
 buf.write("World!")
 buf.write(f" Number: {42}")
 result = buf.getvalue()
-print(f"Result: '{result}'")
+result
 buf.close()
 
 parts = []
 for i in range(5):
     parts.append(f"item_{i}")
 result = ", ".join(parts)
-print(f"Result: '{result}'")
+result
 
 result = ", ".join(f"item_{i}" for i in range(5))
-print(f"Comprehension: '{result}'")
+result   # Comprehension
 ```
 
-    Result: 'Hello, World! Number: 42'
-    Result: 'item_0, item_1, item_2, item_3, item_4'
-    Comprehension: 'item_0, item_1, item_2, item_3, item_4'
+    'Hello, World! Number: 42'
+    'item_0, item_1, item_2, item_3, item_4'
+    'item_0, item_1, item_2, item_3, item_4'
 
 #### Small number of concatenations — readability wins
 
@@ -575,12 +571,12 @@ print(f"Comprehension: '{result}'")
 first = "Hello"
 last = "World"
 full = first + " " + last    # perfectly fine
-print(f"Small concat: '{full}'")
-print("Rule: use + for 2-5 strings, join() for loops/many strings")
+full   # Small concat
+# Rule: use + for 2-5 strings, join() for loops/many strings
 ```
 
-    Small concat: 'Hello World'
-    Rule: use + for 2-5 strings, join() for loops/many strings
+    'Hello World'
+    use + for 2-5 strings, join() for loops/many strings
 
 ## Regular Expressions
 
@@ -602,20 +598,20 @@ if match:
 # re.findall — returns all non-overlapping matches as a list of strings
 phones = re.findall(r'\d{3}-\d{3}-\d{4}', text)
 emails = re.findall(r'[\w.+-]+@[\w-]+\.[\w.]+', text)
-print(f"Phones: {phones}")
-print(f"Emails: {emails}")
+phones
+emails
 
 # re.finditer — like findall but yields match objects, giving access to position and groups
 for m in re.finditer(r'\d{3}-\d{3}-\d{4}', text):
     print(f"  {m.group()} at [{m.start()}:{m.end()}]")
 
 # re.match — only matches at the START of the string (unlike search)
-print(f"match('Contact'): {bool(re.match(r'Contact', text))}")
-print(f"match('support'): {bool(re.match(r'support', text))}")
+bool(re.match(r'Contact', text))   # match('Contact')
+bool(re.match(r'support', text))   # match('support')
 
 # re.fullmatch — the entire string must match the pattern
-print(f"fullmatch digits: {bool(re.fullmatch(r'\d+', '12345'))}")
-print(f"fullmatch digits: {bool(re.fullmatch(r'\d+', '123a5'))}")
+bool(re.fullmatch(r'\d+', '12345'))   # fullmatch digits
+bool(re.fullmatch(r'\d+', '123a5'))   # fullmatch digits
 ```
 
 #### Regex capture groups — numbered and named (?P&lt;name&gt;...)
@@ -643,23 +639,23 @@ if match:
 ```python
 # re.sub, re.split, re.compile — replace, split, and precompile patterns
 
-print(re.sub(r'\d{3}-\d{3}-\d{4}', '***-***-****', text))
+re.sub(r'\d{3}-\d{3}-\d{4}', '***-***-****', text)
 
 # Replace with a function — doubles every number found
-print(re.sub(r'\d+', lambda m: str(int(m.group()) * 2), "price: 50, qty: 3"))
+re.sub(r'\d+', lambda m: str(int(m.group()) * 2), "price: 50, qty: 3")
 
 # Replace with backreference — \1 and \2 refer to capture groups
-print(re.sub(r'(\w+)@(\w+)', r'\2/\1', "user@host"))
+re.sub(r'(\w+)@(\w+)', r'\2/\1', "user@host")
 
 # Split on sentence-ending punctuation
-print(re.split(r'[.!?]\s*', "Hello World. How are you? Fine!"))
+re.split(r'[.!?]\s*', "Hello World. How are you? Fine!")
 # Split on comma with optional surrounding spaces
-print(re.split(r'\s*,\s*', "a , b , c"))
+re.split(r'\s*,\s*', "a , b , c")
 
 # Compiled pattern — reuse for findall and sub
 phone_pat = re.compile(r'\d{3}-\d{3}-\d{4}')
-print(phone_pat.findall(text))
-print(phone_pat.sub('REDACTED', text))
+phone_pat.findall(text)
+phone_pat.sub('REDACTED', text)
 ```
 
     Hello
@@ -712,38 +708,32 @@ syntax = r"""
   [a-z]     Range a through z         [a-zA-Z0-9]  Alphanumeric
   |         OR (alternation)
 """
-print(syntax)
+syntax
 ```
 
     
-      CHARACTERS
       .         Any character (except newline)
       \d        Digit [0-9]              \D  Non-digit
       \w        Word char [a-zA-Z0-9_]   \W  Non-word
       \s        Whitespace [ \t\n\r]     \S  Non-whitespace
       \b        Word boundary             \B  Non-word boundary
     
-      QUANTIFIERS
       *         0 or more (greedy)        *?  0 or more (lazy)
       +         1 or more (greedy)        +?  1 or more (lazy)
       ?         0 or 1 (optional)         ??  0 or 1 (lazy)
       {n}       Exactly n                 {n,m}  Between n and m
       {n,}      n or more                 {n,m}? Between n and m (lazy)
     
-      ANCHORS
       ^         Start of string/line      $   End of string/line
       \A        Start of string only      \Z  End of string only
     
-      GROUPS
       (...)     Capture group             (?:...)  Non-capture group
       (?P<name>...) Named group           (?P=name) Backreference
       \1, \2    Backreference by number
     
-      LOOKAROUND
       (?=...)   Lookahead (positive)      (?!...)  Lookahead (negative)
       (?<=...)  Lookbehind (positive)     (?<!...) Lookbehind (negative)
     
-      CHARACTER CLASSES
       [abc]     Any of a, b, c            [^abc]  NOT a, b, c
       [a-z]     Range a through z         [a-zA-Z0-9]  Alphanumeric
       |         OR (alternation)
@@ -754,9 +744,9 @@ print(syntax)
 # Regex flags — IGNORECASE, MULTILINE, DOTALL, VERBOSE
 
 text = "Hello\nworld\nHELLO"
-print(f"IGNORECASE: {re.findall(r'hello', text, re.IGNORECASE)}")
-print(f"MULTILINE:  {re.findall(r'^\\w+', text, re.MULTILINE)}")
-print(f"DOTALL:     {bool(re.search(r'Hello.world', text, re.DOTALL))}")  # . matches \n
+re.findall(r'hello', text, re.IGNORECASE)   # IGNORECASE
+re.findall(r'^\\w+', text, re.MULTILINE)   # MULTILINE
+bool(re.search(r'Hello.world', text, re.DOTALL))  # . matches \n
 
 # VERBOSE allows comments and whitespace in pattern
 pattern = re.compile(r"""
@@ -766,17 +756,17 @@ pattern = re.compile(r"""
     [-.]        # separator
     (\d{4})     # last 4 digits
 """, re.VERBOSE)
-print(f"VERBOSE:    {pattern.findall('Call 123-456-7890')}")
+pattern.findall('Call 123-456-7890')   # VERBOSE
 
 # Combine flags
-print(f"Combined:   {re.findall(r'^hello', text, re.IGNORECASE | re.MULTILINE)}")
+re.findall(r'^hello', text, re.IGNORECASE | re.MULTILINE)   # Combined
 ```
 
     IGNORECASE: ['Hello', 'HELLO']
-    MULTILINE:  []
-    DOTALL:     True
-    VERBOSE:    [('123', '456', '7890')]
-    Combined:   ['Hello', 'HELLO']
+    []
+    True
+    [('123', '456', '7890')]
+    ['Hello', 'HELLO']
 
 #### Common Regex Patterns
 

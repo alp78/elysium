@@ -91,14 +91,13 @@ sw.Stop();
 $"  Total: {sw.Elapsed.TotalSeconds:F2}s (sum of all delays)"
 ```
 
-    === Sequential (one after another) ===
       [06:36:58] Starting fetch: users_api
       [06:36:59] Completed fetch: users_api
       [06:36:59] Starting fetch: events_api
       [06:37:00] Completed fetch: events_api
       [06:37:00] Starting fetch: products_api
       [06:37:00] Completed fetch: products_api
-      Total: 2.32s (sum of all delays)
+      2.32s (sum of all delays)
 
 #### Concurrent execution with Task.WhenAll
 
@@ -116,15 +115,14 @@ $"  Results: {results.Length} dictionaries"
 ```
 
     
-    === Concurrent (Task.WhenAll) ===
       [06:37:03] Starting fetch: users_api
       [06:37:03] Starting fetch: events_api
       [06:37:03] Starting fetch: products_api
       [06:37:03] Completed fetch: products_api
       [06:37:04] Completed fetch: events_api
       [06:37:04] Completed fetch: users_api
-      Total: 1.01s (max of all delays)
-      Results: 3 dictionaries
+      1.01s (max of all delays)
+      3 dictionaries
 
 #### Task.WhenAll and Task.WhenAny
 
@@ -163,8 +161,7 @@ catch
 }
 ```
 
-    === Task.WhenAll (error handling) ===
-      ERROR: Fetch failed: users
+      Fetch failed: users
 
 #### Task.WhenAny — first to complete wins
 
@@ -185,8 +182,7 @@ await fastest  // First to finish
 ```
 
     
-    === Task.WhenAny (first wins) ===
-      First to finish: replica-eu: 300 rows
+      replica-eu: 300 rows
 
 #### CancellationToken
 
@@ -232,8 +228,7 @@ catch (OperationCanceledException)
 }
 ```
 
-    === CancellationToken (timeout) ===
-      Starting export: huge_events
+      huge_events
       huge_events: chunk 1/10
       huge_events: chunk 2/10
       huge_events: chunk 3/10
@@ -268,8 +263,7 @@ catch (OperationCanceledException)
 ```
 
     
-    === Manual cancellation ===
-      Starting export: daily_clicks
+      daily_clicks
       daily_clicks: chunk 1/10
       daily_clicks: chunk 2/10
       [Supervisor] Cancelling export...
@@ -311,7 +305,6 @@ foreach (var r in results.Take(3))
 $"    ... ({results.Length - 3} more)"
 ```
 
-    === SemaphoreSlim (max 3 concurrent) ===
       Fetched 10 pages in 1.33s
         https://api.example.com/page/0 (175ms)
         https://api.example.com/page/1 (397ms)
@@ -357,10 +350,9 @@ $"  Success on attempt {attemptCount}: {apiResult}"
 ```
 
     
-    === Retry with Exponential Backoff ===
-      Attempt 1 failed: Connection refused (attempt 1). Retrying in 100ms...
-      Attempt 2 failed: Connection refused (attempt 2). Retrying in 200ms...
-      Success on attempt 3: /data/events: ok
+      Connection refused (attempt 1). Retrying in 100ms...
+      Connection refused (attempt 2). Retrying in 200ms...
+      /data/events: ok
 
 #### Channel<T> — async producer-consumer
 
@@ -412,7 +404,6 @@ $"  Processed {processedCount} events in {sw.Elapsed.TotalSeconds:F2}s with 3 wo
 ```
 
     
-    === Channel<T> (async producer-consumer) ===
       Processed 12 events in 0.78s with 3 workers
 
 #### IAsyncEnumerable&lt;T&gt; — async streaming with yield
@@ -445,15 +436,15 @@ $"  Total: {count} items in {sw.ElapsedMilliseconds}ms"
 ```
 
       Fetching page 1...
-        Received: page1_item1
-        Received: page1_item2
+        page1_item1
+        page1_item2
       Fetching page 2...
-        Received: page2_item1
-        Received: page2_item2
+        page2_item1
+        page2_item2
       Fetching page 3...
-        Received: page3_item1
-        Received: page3_item2
-      Total: 6 items in 326ms
+        page3_item1
+        page3_item2
+      6 items in 326ms
 
 #### IAsyncEnumerable with cancellation and LINQ
 
@@ -482,7 +473,7 @@ catch (OperationCanceledException) { }
 $"  Collected {collected.Count} items before cancellation: [{string.Join(", ", collected)}]"
 ```
 
-      Collected 3 items before cancellation: [0, 1, 2]
+      [0, 1, 2]
 
 #### IAsyncEnumerable with break — early exit disposes the enumerator
 
@@ -558,13 +549,11 @@ $"  Speedup: {seqTime / parTime:F1}x"
 seqHashes.SequenceEqual(parHashes)  // Results match
 ```
 
-    === Sequential (single thread) ===
       8 hashes in 0.00s
     
-    === Task.Run (thread pool, 16 cores) ===
       8 hashes in 0.00s
-      Speedup: 0.5x
-      Results match: True
+      0.5x
+      True
 
 #### Parallel.ForEach — partition and process
 
@@ -584,9 +573,8 @@ seqHashes.SequenceEqual(hashResults)  // Results match
 ```
 
     
-    === Parallel.ForEach ===
       8 hashes in 0.00s (max 4 threads)
-      Results match: True
+      True
 
 #### Parallel.ForEachAsync — async I/O with controlled concurrency
 
@@ -613,7 +601,6 @@ foreach (var t in fetchedTables.Take(3))
     $"    {t}"
 ```
 
-    === Parallel.ForEachAsync (max 3 concurrent) ===
       Fetched 10 tables in 1.20s
         table_08: 1841 rows
         table_09: 6788 rows
@@ -656,10 +643,9 @@ $"  Sequential: {sw.Elapsed.TotalSeconds:F2}s  |  PLINQ was faster on large data
 ```
 
     
-    === PLINQ (.AsParallel()) ===
       Parsed 1'000'000 records -> 985'050 filtered in 0.10s
-      Sample: { EventId = evt_0005001, User = user_001, Value = 50.01 }
-      Sequential: 0.16s  |  PLINQ was faster on large data
+      { EventId = evt_0005001, User = user_001, Value = 50.01 }
+      0.16s  |  PLINQ was faster on large data
 
 ## Threading and Concurrency
 
@@ -715,14 +701,13 @@ foreach (var t in threads)
 $"  Results: [{string.Join(", ", threadResults)}]"
 ```
 
-    === Basic Threads ===
       [104] fetch_users starting
       [102] fetch_events starting
       [101] fetch_products starting
       [101] fetch_products finished
       [104] fetch_users finished
       [102] fetch_events finished
-      Results: [fetch_events done, fetch_users done, fetch_products done]
+      [fetch_events done, fetch_users done, fetch_products done]
 
 > [!danger] ++ and += are not atomic
 >
@@ -753,9 +738,8 @@ $"  Expected: 400,000"
 $"  Got:      {unsafeCounter:N0}  {(unsafeCounter != 400_000 ? "(WRONG — race condition!)" : "(got lucky this time)")}"
 ```
 
-    === Race Condition (no lock) ===
-      Expected: 400,000
-      Got:      398'731  (WRONG — race condition!)
+      400,000
+      398'731  (WRONG — race condition!)
 
 #### lock statement — fix race condition with mutual exclusion
 
@@ -787,9 +771,8 @@ $"  Got:      {safeCounter:N0}  (correct — lock prevents race)"
 ```
 
     
-    === With lock (safe) ===
-      Expected: 400,000
-      Got:      400'000  (correct — lock prevents race)
+      400,000
+      400'000  (correct — lock prevents race)
 
 #### Interlocked — lock-free atomic operations
 
@@ -815,9 +798,8 @@ $"  Got:      {atomicCounter:N0}  (correct — atomic operation)"
 ```
 
     
-    === Interlocked (lock-free) ===
-      Expected: 400,000
-      Got:      400'000  (correct — atomic operation)
+      400,000
+      400'000  (correct — atomic operation)
 
 #### ConcurrentDictionary — thread-safe aggregation
 
@@ -846,13 +828,12 @@ foreach (var kvp in eventCounts.OrderBy(k => k.Key))
 eventCounts.Values.Sum():N0  // Total
 ```
 
-    === ConcurrentDictionary (thread-safe aggregation) ===
       Event counts (100K events across 4 types):
         click: 25'000
         purchase: 25'000
         signup: 25'000
         view: 25'000
-      Total: 100'000
+      100'000
 
 #### BlockingCollection — thread concurrency producer-consumer
 
@@ -905,7 +886,6 @@ foreach (var g in processed.GroupBy(p => p.Split(":")[0]).OrderBy(g => g.Key))
 ```
 
     
-    === BlockingCollection (producer-consumer) ===
       Processed 20 events in 0.63s
         worker-1: 7 events
         worker-2: 7 events
@@ -980,13 +960,13 @@ await Task.WhenAll(readTasks.Append(writeTask));
 $"  Final cache: {string.Join(", ", cache.Select(kv => $"{kv.Key}={kv.Value}"))}"
 ```
 
-      Writer: updated ETL_002 → completed
-      Reader 3: ETL_001 = success
-      Reader 2: ETL_001 = success
-      Reader 0: ETL_001 = success
-      Reader 4: ETL_001 = success
-      Reader 1: ETL_001 = success
-      Final cache: ETL_001=success, ETL_002=completed
+      updated ETL_002 → completed
+      ETL_001 = success
+      ETL_001 = success
+      ETL_001 = success
+      ETL_001 = success
+      ETL_001 = success
+      ETL_001=success, ETL_002=completed
 
 #### ManualResetEventSlim and CountdownEvent
 
@@ -1030,19 +1010,18 @@ countdown.Wait();  // blocks until count reaches 0 (all 3 workers signaled)
 //   Main: all 3 workers finished setup, proceeding
 ```
 
-      Worker 0: waiting for signal...
-      Worker 1: waiting for signal...
-      Worker 2: waiting for signal...
-      Main: initialization done, signaling workers
-      Worker 2: proceeding!
-      Worker 0: proceeding!
-      Worker 1: proceeding!
+      waiting for signal...
+      waiting for signal...
+      waiting for signal...
+      initialization done, signaling workers
+      proceeding!
+      proceeding!
+      proceeding!
     
-      CountdownEvent:
-      Worker 0: setup done
-      Worker 1: setup done
-      Worker 2: setup done
-      Main: all 3 workers finished setup, proceeding
+      setup done
+      setup done
+      setup done
+      all 3 workers finished setup, proceeding
 
 #### Barrier — phased synchronization
 
@@ -1074,17 +1053,15 @@ var phasedWorkers = Enumerable.Range(0, 3).Select(i => Task.Run(async () =>
 await Task.WhenAll(phasedWorkers);
 ```
 
-      Worker 0: extract done
-      Worker 1: extract done
-      Worker 2: extract done
-      === All workers reached phase 0 ===
-      Worker 0: transform done
-      Worker 1: transform done
-      Worker 2: transform done
-      === All workers reached phase 1 ===
-      Worker 2: load done
-      Worker 0: load done
-      Worker 1: load done
+      extract done
+      extract done
+      extract done
+      transform done
+      transform done
+      transform done
+      load done
+      load done
+      load done
 
 #### PeriodicTimer — modern scheduled polling
 

@@ -82,16 +82,16 @@ BQ_DATASET = "index_data"
 
 # Verify authentication
 creds_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', 'NOT SET')
-print(f"GOOGLE_APPLICATION_CREDENTIALS: {creds_path}")
-print(f"File exists: {os.path.exists(creds_path) if creds_path != 'NOT SET' else False}")
-print(f"Project: {PROJECT_ID}")
-print(f"Region:  {REGION}")
+creds_path  # GOOGLE_APPLICATION_CREDENTIALS
+os.path.exists(creds_path) if creds_path != 'NOT SET' else False  # File exists
+PROJECT_ID  # Project
+REGION  # Region
 ```
 
-    GOOGLE_APPLICATION_CREDENTIALS: NOT SET
-    File exists: False
-    Project: index-lab-2
-    Region:  europe-west1
+    NOT SET
+    False
+    index-lab-2
+    europe-west1
 
 ## Cloud Storage (GCS)
 
@@ -108,7 +108,6 @@ bucket = gcs.bucket(BUCKET_NAME)
 
 # ─── Fetch OHLCV from yfinance ───
 tickers = ["ASML.AS", "MC.PA", "SAP.DE", "SIE.DE", "TTE.PA"]
-print("=== Fetching OHLCV from yfinance ===")
 
 end_date = datetime.now()
 start_date = end_date - timedelta(days=90)
@@ -131,7 +130,6 @@ ohlcv_df = pd.concat(all_data, ignore_index=True)
 print(f"\nTotal: {len(ohlcv_df)} rows")
 
 # ─── Upload to GCS (bronze layer) ───
-print("\n=== Upload to GCS ===")
 csv_buffer = ohlcv_df.to_csv(index=False)
 blob_path = f"bronze/ohlcv/{datetime.now().strftime('%Y%m%d')}_ohlcv.csv"
 blob = bucket.blob(blob_path)
@@ -141,22 +139,19 @@ blob.upload_from_string(csv_buffer, content_type='text/csv')
 print(f"  Uploaded: gs://{BUCKET_NAME}/{blob_path} ({len(csv_buffer):,} bytes)")
 
 # ─── List blobs in bronze/ ───
-print("\n=== List Bronze Blobs ===")
 # List objects in a prefix — like `ls` for a folder in GCS
 for blob in gcs.list_blobs(BUCKET_NAME, prefix="bronze/", max_results=10):
     print(f"  {blob.name:50s} {blob.size or 0:>10,} bytes")
 
 # ─── Download and read back ───
-print("\n=== Download & Verify ===")
 # Download blob content as string — for verification or reprocessing
 downloaded = bucket.blob(blob_path).download_as_text()
 df_check = pd.read_csv(io.StringIO(downloaded))
 print(f"  Downloaded: {len(df_check)} rows, {len(df_check.columns)} columns")
-print(f"  Columns: {list(df_check.columns)}")
-print(f"  Tickers: {sorted(df_check["symbol"].unique())}")
+list(df_check.columns)  # Columns
+sorted(df_check["symbol"].unique())  # Tickers
 ```
 
-    === Fetching OHLCV from yfinance ===
       ASML.AS: 62 rows
       MC.PA: 62 rows
       SAP.DE: 60 rows
@@ -165,17 +160,14 @@ print(f"  Tickers: {sorted(df_check["symbol"].unique())}")
     
     Total: 306 rows
     
-    === Upload to GCS ===
       Uploaded: gs://index-lab-2-index-data/bronze/ohlcv/20260322_ohlcv.csv (35,426 bytes)
     
-    === List Bronze Blobs ===
       bronze/.keep                                                0 bytes
       bronze/ohlcv/20260322_ohlcv.csv                        35,426 bytes
     
-    === Download & Verify ===
       Downloaded: 306 rows, 10 columns
-      Columns: ['Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume', 'Dividends', 'Stock Splits', 'symbol']
-      Tickers: ['ASML.AS', 'MC.PA', 'SAP.DE', 'SIE.DE', 'TTE.PA']
+      ['Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume', 'Dividends', 'Stock Splits', 'symbol']
+      ['ASML.AS', 'MC.PA', 'SAP.DE', 'SIE.DE', 'TTE.PA']
 
 ## BigQuery
 
@@ -188,7 +180,6 @@ A **dataset** is a container for tables (like a schema in SQL Server). Tables us
 bq = bigquery.Client(project=PROJECT_ID)
 
 # ─── Load DataFrame into BigQuery (bronze) ───
-print("=== Load into BigQuery bronze_ohlcv ===")
 
 # Rename columns to match BigQuery schema
 load_df = ohlcv_df.rename(columns={
@@ -211,7 +202,6 @@ job.result()  # wait for completion
 print(f"  Loaded {job.output_rows} rows into {table_id}")
 
 # ─── Query: bronze → silver (add daily returns) ───
-print("\n=== BigQuery: Bronze → Silver ===")
 silver_sql = f'''
     SELECT *,
         SAFE_DIVIDE(close - LAG(close) OVER (PARTITION BY symbol ORDER BY date),
@@ -230,7 +220,6 @@ job.result()
 print(f"  Silver table: {bq.get_table(silver_table).num_rows} rows")
 
 # ─── Query: silver → gold (compute scores) ───
-print("\n=== BigQuery: Silver → Gold ===")
 gold_sql = f'''
     WITH latest AS (
         SELECT symbol, date AS score_date, close, daily_return, volume,
@@ -258,7 +247,6 @@ job.result()
 print(f"  Gold scores: {bq.get_table(gold_table).num_rows} rows")
 
 # ─── Query results ───
-print("\n=== Gold Scores ===")
 results = bq.query(f'''
     SELECT symbol, score_date, ROUND(close, 2) AS close,
         ROUND(momentum_score * 100, 2) AS momentum_pct,
@@ -270,16 +258,12 @@ for row in results:
     print(f"  {row.composite_rank:>2d}. {row.symbol:10s} close={row.close:>8.2f}  momentum={row.momentum_pct:>+6.2f}%  vol_ratio={row.vol_ratio:.2f}")
 ```
 
-    === Load into BigQuery bronze_ohlcv ===
       Loaded 306 rows into index-lab-2.index_data.bronze_ohlcv
     
-    === BigQuery: Bronze → Silver ===
       Silver table: 306 rows
     
-    === BigQuery: Silver → Gold ===
       Gold scores: 5 rows
     
-    === Gold Scores ===
        1. TTE.PA     close=   76.96  momentum=+12.82%  vol_ratio=1.61
        2. ASML.AS    close= 1128.20  momentum= -6.15%  vol_ratio=3.01
        3. SAP.DE     close=  153.82  momentum= -8.70%  vol_ratio=2.84
@@ -306,7 +290,6 @@ topic_path = publisher.topic_path(PROJECT_ID, TOPIC)
 sub_path = subscriber.subscription_path(PROJECT_ID, SUBSCRIPTION)
 
 # ─── Publish pipeline events ───
-print("=== Publish Pipeline Events ===")
 events = [
     {"event": "ohlcv_loaded", "table": "bronze_ohlcv", "rows": len(ohlcv_df), "tickers": tickers},
     {"event": "silver_computed", "table": "silver_ohlcv", "status": "success"},
@@ -324,7 +307,6 @@ for event in events:
 time.sleep(2)  # let messages propagate
 
 # ─── Pull and process messages ───
-print("\n=== Pull Messages ===")
 # Pull messages — synchronous pull (for batch processing)
 # In production, use streaming pull for real-time processing
 response = subscriber.pull(request={'subscription': sub_path, 'max_messages': 10})
@@ -345,12 +327,10 @@ else:
     print("  No messages to pull")
 ```
 
-    === Publish Pipeline Events ===
       Published: ohlcv_loaded (msg_id=18105666298433432)
       Published: silver_computed (msg_id=18105683355927302)
       Published: gold_scored (msg_id=18105673114676996)
     
-    === Pull Messages ===
       [13:48:15] ohlcv_loaded         | attrs={'pipeline': 'index_etl', 'source': 'notebook'}
       [13:48:16] silver_computed      | attrs={'pipeline': 'index_etl', 'source': 'notebook'}
       [13:48:16] gold_scored          | attrs={'pipeline': 'index_etl', 'source': 'notebook'}
@@ -372,7 +352,6 @@ db = firestore.Client(project=PROJECT_ID)
 bq = bigquery.Client(project=PROJECT_ID)
 
 # --- Write gold scores to Firestore ---
-print("=== Write Scores to Firestore ===")
 
 # Query the gold table to display final rankings
 results = bq.query(f'SELECT * FROM `{PROJECT_ID}.{BQ_DATASET}.gold_scores` ORDER BY composite_rank')
@@ -400,7 +379,6 @@ batch.commit()
 print(f"  Written {count} scores to Firestore (scores_latest collection)")
 
 # --- Read pulse_live (latest snapshots from scheduler) ---
-print("\n=== Read Pulse Live Data ===")
 docs = db.collection('pulse_live').stream()
 pulse_count = 0
 for doc in docs:
@@ -417,10 +395,8 @@ if pulse_count == 0:
     print('  No pulse data yet. Run: python pulse_scheduler.py --once')
 ```
 
-    === Write Scores to Firestore ===
       Written 5 scores to Firestore (scores_latest collection)
     
-    === Read Pulse Live Data ===
       ASML.AS     price=    1128.2  change=  -3.46%  vol_ratio=  3.01  ts=03+00:00
       MC.PA       price=    457.95  change=  -0.50%  vol_ratio=  1.97  ts=59+00:00
       SAP.DE      price=    153.82  change=  -3.86%  vol_ratio=  2.84  ts=74+00:00
@@ -460,7 +436,6 @@ def on_snapshot(doc_snapshot, changes, read_time):
 # on_snapshot fires immediately with current state (ADDED events),
 # then fires again on every subsequent change (MODIFIED events).
 
-print('=== Firestore Real-Time Listener ===')
 print('Listening to pulse_live collection...')
 print('(Run pulse_scheduler.py in another terminal to see live updates)\n')
 
@@ -480,7 +455,7 @@ time.sleep(LISTEN_SECONDS)
 # Unsubscribe
 # Stop listening — releases the gRPC stream to Firestore
 listener.unsubscribe()
-print(f'\nListener stopped. Total events received: {len(events_received)}')
+len(events_received)  # \nListener stopped. Total events received
 
 # Show summary
 if events_received:
@@ -491,7 +466,6 @@ if events_received:
     print(f'  REMOVED:  {type_counts.get("REMOVED", 0)}')
 ```
 
-    === Firestore Real-Time Listener ===
     Listening to pulse_live collection...
     (Run pulse_scheduler.py in another terminal to see live updates)
     
@@ -531,7 +505,6 @@ A **secret** is a named container for sensitive data. Each update creates a new 
 sm = secretmanager.SecretManagerServiceClient()
 
 # ─── Read a secret ───
-print("=== Read Secrets ===")
 for secret_id in ['index-db-password', 'index-api-key']:
     name = f'projects/{PROJECT_ID}/secrets/{secret_id}/versions/latest'
     # Access the latest version of a secret — returns encrypted bytes
@@ -542,7 +515,6 @@ for secret_id in ['index-db-password', 'index-api-key']:
     print(f"  {secret_id}: {masked}")
 
 # ─── Create a new secret + version ───
-print("\n=== Create New Secret ===")
 parent = f'projects/{PROJECT_ID}'
 try:
     # Create a new secret container (the value is added separately as a 'version')
@@ -570,10 +542,9 @@ print('  Added version 1')
 resp = sm.access_secret_version(request={
     'name': f'{parent}/secrets/index-notebook-demo/versions/latest'
 })
-print(f'  Value: {resp.payload.data.decode()}')
+resp.payload.data.decode()  # Value
 
 # ─── List all secrets ───
-print("\n=== List Secrets ===")
 for secret in sm.list_secrets(request={'parent': parent}):
     print(f'  {secret.name.split("/")[-1]}')
 
@@ -583,16 +554,13 @@ sm.delete_secret(request={'name': f'{parent}/secrets/index-notebook-demo'})
 print('\n  Deleted: index-notebook-demo')
 ```
 
-    === Read Secrets ===
       index-db-password: Esg************
       index-api-key: dem***************
     
-    === Create New Secret ===
       Created secret: index-notebook-demo
       Added version 1
       Value: my-secret-value-v1
     
-    === List Secrets ===
       index-api-key
       index-db-password
       index-notebook-demo
@@ -607,7 +575,6 @@ Two components: **Cloud Logging** writes structured log entries queryable in Log
 
 ```python
 # ─── Cloud Logging ───
-print("=== Cloud Logging ===")
 # Create Cloud Logging client
 # Pipeline role: structured logs for every pipeline step
 # Queryable in Log Explorer — filter by event, severity, timestamp
@@ -631,7 +598,6 @@ logger.log_struct({
 print("  Wrote INFO log: scores_computed")
 
 # ─── Custom Metrics ───
-print("\n=== Custom Metrics ===")
 # Create Monitoring client for custom metrics
 # Pipeline role: track quantitative KPIs over time
 # Examples: rows loaded, pipeline duration, error count, data freshness
@@ -673,20 +639,16 @@ series.points = [point]
 metric_client.create_time_series(request={'name': project_name, 'time_series': [series]})
 print(f"  Wrote metric: rows_loaded = {len(ohlcv_df)}")
 
-print("\n=== View in GCP Console ===")
 print(f"  Logs:    https://console.cloud.google.com/logs?project={PROJECT_ID}")
 print(f"  Metrics: https://console.cloud.google.com/monitoring/metrics-explorer?project={PROJECT_ID}")
 ```
 
-    === Cloud Logging ===
       Wrote INFO log: pipeline_completed
       Wrote INFO log: scores_computed
     
-    === Custom Metrics ===
       Created metric: custom.googleapis.com/index_pipeline/rows_loaded
       Wrote metric: rows_loaded = 306
     
-    === View in GCP Console ===
       Logs:    https://console.cloud.google.com/logs?project=index-lab-2
       Metrics: https://console.cloud.google.com/monitoring/metrics-explorer?project=index-lab-2
 

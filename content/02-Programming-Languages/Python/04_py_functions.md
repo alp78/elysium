@@ -45,8 +45,8 @@ def greet(name):
     """Return a greeting message."""
     return f"Hello, {name}!"
 
-print(greet("Alice"))
-print(greet("Bob"))
+greet("Alice")
+greet("Bob")
 ```
 
     Hello, Alice!
@@ -65,11 +65,11 @@ def print_greeting(name):
     print(f"Hi, {name}!")
 
 result = print_greeting("Charlie")
-print(f"Return value: {result}")       # None
+result  # None
 ```
 
     Hi, Charlie!
-    Return value: None
+    None
 
 #### Default parameters, *args, **kwargs — tuple return and unpacking
 
@@ -90,9 +90,9 @@ print(f"Return value: {result}")       # None
 def greet(name, greeting="Hello"):
     return f"{greeting}, {name}!"
 
-print(greet("Alice"))                          # positional, default greeting
-print(greet("Bob", "Hi"))                      # both positional
-print(greet(greeting="Yo", name="Diana"))      # both keyword (any order)
+greet("Alice")                          # positional, default greeting
+greet("Bob", "Hi")                      # both positional
+greet(greeting="Yo", name="Diana")      # both keyword (any order)
 ```
 
     Hello, Alice!
@@ -105,11 +105,11 @@ Functions are objects — assign to variables, pass as arguments, store in lists
 
 ```python
 say_hello = greet                      # assign to variable
-print(say_hello("Diana"))
+say_hello("Diana")
 
 def apply(func, value):                # pass as argument
     return func(value)
-print(apply(greet, "Eve"))
+apply(greet, "Eve")
 ```
 
     Hello, Diana!
@@ -133,16 +133,16 @@ def make_multiplier(n):
 
 double = make_multiplier(2)
 triple = make_multiplier(3)
-print(f"double(5) = {double(5)}")
-print(f"triple(5) = {triple(5)}")
+double(5)   # double(5) =
+triple(5)   # triple(5) =
 
 # __doc__ — the docstring is accessible as an attribute
-print(f"greet.__doc__: {greet.__doc__}")
+greet.__doc__   # greet.__doc__
 ```
 
     double(5) = 10
     triple(5) = 15
-    greet.__doc__: None
+    None
 
 #### Callbacks — onSuccess / onError
 
@@ -163,7 +163,7 @@ fetch_data("api/users",
     on_error=lambda err: print(f"  Error: {err}"))
 ```
 
-      Got: data from api/users
+      data from api/users
 
 #### Strategy pattern — swap behavior via functions
 
@@ -179,14 +179,14 @@ member_discount = lambda price: price * 0.7
 def calculate(price, strategy):
     return strategy(price)
 
-print(f"  Full:     ${calculate(100, full_price):.2f}")
-print(f"  20% off:  ${calculate(100, discount_20):.2f}")
-print(f"  Member:   ${calculate(100, member_discount):.2f}")
+f"{calculate(100, full_price):.2f}"   # Full:     $
+f"{calculate(100, discount_20):.2f}"   # 20% off:  $
+f"{calculate(100, member_discount):.2f}"   # Member:   $
 ```
 
-      Full:     $100.00
-      20% off:  $80.00
-      Member:   $70.00
+      $100.00
+      $80.00
+      $70.00
 
 #### Pipeline — chained steps with reduce
 
@@ -207,10 +207,10 @@ steps = [
 
 raw = "   Hello   WORLD   "
 result = reduce(lambda s, fn: fn(s), steps, raw)
-print(f"  Pipeline: '{raw}' → '{result}'")
+f"  Pipeline: '{raw}' → '{result}'"
 ```
 
-      Pipeline: '   Hello   WORLD   ' → 'hello world'
+      '   Hello   WORLD   ' → 'hello world'
 
 #### Dependency injection — inject fake time for testing
 
@@ -231,15 +231,15 @@ def process_order(order, get_now=None):
 
 # Production
 order1 = process_order({"id": 1})
-print(f"  Production: {order1['processed_at']}")
+order1['processed_at']   # Production
 
 # Test — inject fake time
 order2 = process_order({"id": 2}, get_now=lambda: datetime(2024, 1, 1, 12, 0, 0))
-print(f"  Test:       {order2['processed_at']}")
+order2['processed_at']   # Test
 ```
 
-      Production: 2026-03-25 01:34:08.803144+00:00
-      Test:       2024-01-01 12:00:00
+      2026-03-25 01:34:08.803144+00:00
+      2024-01-01 12:00:00
 
 #### Progress callback
 
@@ -316,16 +316,16 @@ for e in by_salary:
 def bad_append(item, lst=[]):         # BAD: shared across calls
     lst.append(item)
     return lst
-print(bad_append(1))                  # [1]
-print(bad_append(2))                  # [1, 2] — surprise!
+bad_append(1)                  # [1]
+bad_append(2)                  # [1, 2] — surprise!
 
 def good_append(item, lst=None):      # GOOD: create new each time
     if lst is None:
         lst = []
     lst.append(item)
     return lst
-print(good_append(1))                 # [1]
-print(good_append(2))                 # [2]
+good_append(1)                 # [1]
+good_append(2)                 # [2]
 ```
 
     [1]
@@ -341,17 +341,17 @@ print(good_append(2))                 # [2]
 def build_profile(**kwargs):
     print(f"  kwargs = {kwargs}  (type: {type(kwargs).__name__})")
     return kwargs
-print(build_profile(name="Alice", age=30))
+build_profile(name="Alice", age=30)
 
 data = {"host": "localhost", "port": 5432}
 def connect(host, port=5432):
     return f"{host}:{port}"
-print(f"connect(**dict): {connect(**data)}")
+connect(**data)   # connect(**dict)
 ```
 
       kwargs = {'name': 'Alice', 'age': 30}  (type: dict)
     {'name': 'Alice', 'age': 30}
-    connect(**dict): localhost:5432
+    localhost:5432
 
 #### Combined *args/**kwargs and positional/keyword-only
 
@@ -367,8 +367,8 @@ kitchen_sink("a", "b", "c", keyword_only="custom", x=1, y=2)
 ```
 
       required: a
-      *args:    ('b', 'c')
-      kw_only:  custom
+      ('b', 'c')
+      custom
       **kwargs: {'x': 1, 'y': 2}
 
 #### Positional-only (/) and keyword-only (*) parameters
@@ -382,8 +382,8 @@ kitchen_sink("a", "b", "c", keyword_only="custom", x=1, y=2)
 ```python
 def func(pos_only, /, normal, *, kw_only):
     return f"{pos_only}, {normal}, {kw_only}"
-print(func(1, 2, kw_only=3))
-print(func(1, normal=2, kw_only=3))
+func(1, 2, kw_only=3)
+func(1, normal=2, kw_only=3)
 # func(pos_only=1, ...)  # Error! pos_only is positional-only
 # func(1, 2, 3)          # Error! kw_only must be keyword
 ```
@@ -405,10 +405,10 @@ print(func(1, normal=2, kw_only=3))
 
 ```python
 add = lambda a, b: a + b              # same as: def add(a, b): return a + b
-print(f"lambda add: {add(3, 4)}")
+add(3, 4)   # lambda add
 ```
 
-    lambda add: 7
+    7
 
 #### Lambdas with sorted, map, filter
 
@@ -420,18 +420,18 @@ print(f"lambda add: {add(3, 4)}")
 
 ```python
 names = ["Charlie", "Alice", "Bob", "Diana"]
-print(f"By length:    {sorted(names, key=lambda n: len(n))}")
-print(f"By last char: {sorted(names, key=lambda n: n[-1])}")
+sorted(names, key=lambda n: len(n))   # By length
+sorted(names, key=lambda n: n[-1])   # By last char
 
 nums = [1, 2, 3, 4, 5]
-print(f"Squared: {list(map(lambda x: x**2, nums))}")
-print(f"Evens:   {list(filter(lambda x: x % 2 == 0, nums))}")
+list(map(lambda x: x**2, nums))   # Squared
+list(filter(lambda x: x % 2 == 0, nums))   # Evens
 ```
 
-    By length:    ['Bob', 'Alice', 'Diana', 'Charlie']
-    By last char: ['Diana', 'Bob', 'Charlie', 'Alice']
-    Squared: [1, 4, 9, 16, 25]
-    Evens:   [2, 4]
+    ['Bob', 'Alice', 'Diana', 'Charlie']
+    ['Diana', 'Bob', 'Charlie', 'Alice']
+    [1, 4, 9, 16, 25]
+    [2, 4]
 
 #### Closures and variable scope — LEGB rule
 
@@ -451,7 +451,7 @@ def outer():
     inner()
     print(f"  outer: {x}")
 outer()
-print(f"  global: {x}")
+x   # global
 ```
 
       inner: local
@@ -474,16 +474,16 @@ def make_counter(start=0):
     return increment
 
 counter = make_counter(10)
-print(f"counter(): {counter()}")    # 11
-print(f"counter(): {counter()}")    # 12
+counter()  # 11
+counter()  # 12
 
 counter2 = make_counter(0)          # independent closure
-print(f"counter2(): {counter2()}")  # 1
+counter2()  # 1
 ```
 
-    counter(): 11
-    counter(): 12
-    counter2(): 1
+    11
+    12
+    1
 
 #### global keyword
 
@@ -514,12 +514,12 @@ def slow_sum(n):
     return sum(range(n))
 
 result = slow_sum(1_000_000)
-print(f"  Result: {result}")
-print(f"  Name: {slow_sum.__name__}")     # 'slow_sum' (preserved by wraps)
+result
+slow_sum.__name__  # 'slow_sum' (preserved by wraps)
 ```
 
       slow_sum took 0.016651s
-      Result: 499999500000
+      499999500000
       Name: slow_sum
 
 #### Lambda loop capture gotcha — closures bind by reference
@@ -530,14 +530,14 @@ print(f"  Name: {slow_sum.__name__}")     # 'slow_sum' (preserved by wraps)
 
 ```python
 funcs_bad = [lambda: i for i in range(3)]
-print(f"Bad:  {[f() for f in funcs_bad]}")     # [2, 2, 2] — all see final i!
+[f() for f in funcs_bad]  # [2, 2, 2] — all see final i!
 
 funcs_good = [lambda i=i: i for i in range(3)] # fix: capture value via default arg
-print(f"Good: {[f() for f in funcs_good]}")    # [0, 1, 2]
+[f() for f in funcs_good]  # [0, 1, 2]
 ```
 
-    Bad:  [2, 2, 2]
-    Good: [0, 1, 2]
+    [2, 2, 2]
+    [0, 1, 2]
 
 #### *args — variable positional arguments as tuple
 
@@ -547,16 +547,16 @@ print(f"Good: {[f() for f in funcs_good]}")    # [0, 1, 2]
 def total(*args):
     print(f"  args = {args}  (type: {type(args).__name__})")
     return sum(args)
-print(f"total(1,2,3): {total(1, 2, 3)}")
+total(1, 2, 3)   # total(1,2,3)
 
 numbers = [1, 2, 3, 4, 5]
-print(f"total(*list): {total(*numbers)}")      # unpack list into args
+total(*numbers)  # unpack list into args
 ```
 
       args = (1, 2, 3)  (type: tuple)
-    total(1,2,3): 6
+    6
       args = (1, 2, 3, 4, 5)  (type: tuple)
-    total(*list): 15
+    15
 
 ## Decorators
 
@@ -608,12 +608,12 @@ except ValueError as e:
 def add(a: int, b: int) -> int:
     return a + b
 
-print(f"add(3, 4):     {add(3, 4)}")
-print(f"add('a', 'b'): {add('a', 'b')}")   # works! Python doesn't enforce  # type: ignore
+add(3, 4)   # add(3, 4)
+add('a', 'b')  # works! Python doesn't enforce  # type: ignore
 ```
 
-    add(3, 4):     7
-    add('a', 'b'): ab
+    7
+    ab
 
 #### Built-in decorators — @property, @staticmethod, @classmethod
 
@@ -642,14 +642,14 @@ class MyClass:
         return cls(int(s))
 
 obj = MyClass(21)
-print(f"@property:     {obj.doubled}")            # 42 (no parentheses!)
-print(f"@staticmethod: {MyClass.utility()}")
-print(f"@classmethod:  {MyClass.from_string('99').value}")
+obj.doubled  # 42 (no parentheses!)
+MyClass.utility()   # @staticmethod
+MyClass.from_string('99').value   # @classmethod
 ```
 
-    @property:     42
+    42
     @staticmethod: No instance needed
-    @classmethod:  99
+    99
 
 #### Closure as validator factory
 
@@ -663,11 +663,11 @@ def make_validator(min_val, max_val):
 
 is_valid_age = make_validator(0, 120)
 is_valid_score = make_validator(0, 100)
-print(f"age 25:  {is_valid_age(25)}")
-print(f"age 150: {is_valid_age(150)}")
+is_valid_age(25)   # age 25
+is_valid_age(150)   # age 150
 ```
 
-    age 25:  True
+    True
     age 150: False
 
 ## Type Hints
@@ -686,7 +686,7 @@ def process(
 ) -> dict[str, object]:
     return {"name": name, "age": age, "score": score, "active": active, "tags": tags or []}
 
-print(process("Alice", 30, 85.5, tags=["admin"]))
+process("Alice", 30, 85.5, tags=["admin"])
 ```
 
     {'name': 'Alice', 'age': 30, 'score': 85.5, 'active': True, 'tags': ['admin']}
@@ -700,12 +700,12 @@ def find_user(user_id: int) -> Optional[str]:   # same as str | None
     users = {1: "Alice", 2: "Bob"}
     return users.get(user_id)
 
-print(f"find_user(1): {find_user(1)}")
-print(f"find_user(9): {find_user(9)}")
+find_user(1)   # find_user(1)
+find_user(9)   # find_user(9)
 ```
 
-    find_user(1): Alice
-    find_user(9): None
+    Alice
+    None
 
 #### Callable type hints
 
@@ -720,8 +720,8 @@ def apply_func(func: Callable[[int], int], value: int) -> int:
 def apply_func_nohint(func, value):
     return func(value)
 
-print(f"apply: {apply_func(lambda x: x * 2, 5)}")
-print(f"apply_nohint: {apply_func_nohint(lambda x: x * 2, 5)}")
+apply_func(lambda x: x * 2, 5)   # apply
+apply_func_nohint(lambda x: x * 2, 5)   # apply_nohint
 ```
 
     apply: 10
@@ -742,12 +742,12 @@ UserMap = dict[UserId, UserName]
 
 def get_users() -> UserMap:
     return {1: "Alice", 2: "Bob"}
-print(f"get_users(): {get_users()}")
+get_users()   # get_users()
 
-print(f"add:     {add.__annotations__}")
-print(f"process: {process.__annotations__}")
+add.__annotations__   # add
+process.__annotations__   # process
 ```
 
-    get_users(): {1: 'Alice', 2: 'Bob'}
-    add:     {'a': <class 'int'>, 'b': <class 'int'>, 'return': <class 'int'>}
+    {1: 'Alice', 2: 'Bob'}
+    {'a': <class 'int'>, 'b': <class 'int'>, 'return': <class 'int'>}
     process: {'name': <class 'str'>, 'age': <class 'int'>, 'score': <class 'float'>, 'active': <class 'bool'>, 'tags': list[str] | None, 'return': dict[str, object]}

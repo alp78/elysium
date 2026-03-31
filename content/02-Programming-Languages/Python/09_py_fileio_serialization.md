@@ -91,17 +91,16 @@ html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 # Temp directory — isolated workspace for file demos
 
 tmp_dir = Path(tempfile.mkdtemp(prefix="fileio_"))
-print(f"Working dir: {tmp_dir}\n")
+f"Working dir: {tmp_dir}\n"
 ```
 
-    Working dir: C:\Users\aperi\AppData\Local\Temp\fileio_yk2nuyou
+    C:\Users\aperi\AppData\Local\Temp\fileio_yk2nuyou
 
 #### open() mode 'w' — write file (creates new or truncates existing)
 
 ```python
 # Write file — mode 'w' creates new or truncates existing
 
-print("=== Write file (mode='w') ===")
 # Data Engineering scenario: write pipeline output to a staging file
 staging_file = tmp_dir / "pipeline_output.txt"  # Path / operator joins paths (like os.path.join)
 
@@ -111,46 +110,40 @@ with open(staging_file, "w", encoding="utf-8") as f:
     f.write("etl_002|failed|0\n")
     f.write("etl_003|success|8200\n")
 
-print(f"  Written: {staging_file}")
-print(f"  Size: {staging_file.stat().st_size} bytes")  # .stat() returns file metadata
+staging_file  # Written
+f"{staging_file.stat().st_size} bytes"  # Size — .stat() returns file metadata
 ```
 
 > [!warning] Write Mode Overwrites Silently
 >
 > `'w'` mode destroys existing content without warning. `f.write()` does NOT add a newline — you must add `\n` yourself.
 
-    === Write file (mode='w') ===
-      Written: C:\Users\aperi\AppData\Local\Temp\fileio_yk2nuyou\pipeline_output.txt
-      Size: 98 bytes
+    C:\Users\aperi\AppData\Local\Temp\fileio_yk2nuyou\pipeline_output.txt
+    98 bytes
 
 #### open() mode 'r' — read entire file
 
 ```python
 # Read entire file — mode 'r' loads all content into a string
 
-print("\n=== Read entire file ===")
-
 # Method 1: read() — returns the entire file as one string
 with open(staging_file, "r", encoding="utf-8") as f:
     content = f.read()  # read everything into memory at once
-print(f"  read(): {repr(content[:60])}...")
+f"read(): {repr(content[:60])}..."
 
 # Method 2: Path.read_text() — one-liner, opens/reads/closes automatically
 content = staging_file.read_text(encoding="utf-8")  # pathlib shorthand
-print(f"  Path.read_text(): {len(content)} chars")
+f"{len(content)} chars"  # Path.read_text()
 ```
 
-    
-    === Read entire file ===
-      read(): 'pipeline_id|status|rows_processed\netl_001|success|15000\netl_'...
-      Path.read_text(): 94 chars
+    'pipeline_id|status|rows_processed\netl_001|success|15000\netl_'...
+    94 chars
 
 #### open() line-by-line iteration — memory efficient for large files
 
 ```python
 # Read line by line — memory efficient for large files
 
-print("\n=== Read line by line (memory efficient) ===")
 # For large files (multi-GB data lake exports), don't read all into memory.
 # Iterating the file object yields one line at a time — uses almost no memory.
 
@@ -160,8 +153,6 @@ with open(staging_file, "r", encoding="utf-8") as f:
         print(f"  Line {i}: {line.rstrip()}")
 ```
 
-    
-    === Read line by line (memory efficient) ===
       Line 0: pipeline_id|status|rows_processed
       Line 1: etl_001|success|15000
       Line 2: etl_002|failed|0
@@ -171,8 +162,6 @@ with open(staging_file, "r", encoding="utf-8") as f:
 
 ```python
 # readlines() vs readline() — bulk vs single-line reading
-
-print("\n=== readlines() vs readline() ===")
 
 with open(staging_file, "r", encoding="utf-8") as f:
     # readlines() reads ALL lines into a list at once (like read() but split by \n)
@@ -188,10 +177,8 @@ with open(staging_file, "r", encoding="utf-8") as f:
     print(f"  readline() #2: {second.rstrip()!r}")
 ```
 
-    
-    === readlines() vs readline() ===
       readlines() → list of 4 strings
-      First: 'pipeline_id|status|rows_processed'
+    'pipeline_id|status|rows_processed'
       readline() #1: 'pipeline_id|status|rows_processed'
       readline() #2: 'etl_001|success|15000'
 
@@ -200,7 +187,6 @@ with open(staging_file, "r", encoding="utf-8") as f:
 ```python
 # Append — mode 'a' adds to end, never truncates
 
-print("\n=== Append file (mode='a') ===")
 # Data Engineering scenario: append new pipeline results to the log
 
 with open(staging_file, "a", encoding="utf-8") as f:
@@ -211,21 +197,18 @@ with open(staging_file, "a", encoding="utf-8") as f:
 
 # Verify: now has 5 data rows + 1 header = 6 lines
 lines = staging_file.read_text(encoding="utf-8").splitlines()  # splitlines() strips \n
-print(f"  Total lines after append: {len(lines)}")
-print(f"  Last line: {lines[-1]!r}")
+len(lines)  # Total lines after append
+lines[-1]!r  # Last line
 ```
 
-    
-    === Append file (mode='a') ===
-      Total lines after append: 6
-      Last line: 'etl_005|success|3100'
+    6
+    'etl_005|success|3100'
 
 #### open() mode 'x' — exclusive create, fail if file exists
 
 ```python
 # Exclusive create — mode 'x' fails if file already exists
 
-print("\n=== Exclusive create (mode='x') ===")
 # Prevents accidental overwrites — useful for ensuring unique output files
 
 new_file = tmp_dir / "unique_output.txt"
@@ -240,17 +223,14 @@ except FileExistsError:
     print(f"  FileExistsError: '{new_file.name}' already exists (mode='x' prevents overwrite)")
 ```
 
-    
-    === Exclusive create (mode='x') ===
-      Created: unique_output.txt
-      FileExistsError: 'unique_output.txt' already exists (mode='x' prevents overwrite)
+    unique_output.txt
+    'unique_output.txt' already exists (mode='x' prevents overwrite)
 
 #### open() binary mode 'rb' / 'wb' — read and write bytes
 
 ```python
 # Binary mode — 'rb' / 'wb' for non-text data
 
-print("\n=== Binary mode ===")
 # Use binary mode for: images, parquet files, protobuf, avro, compressed archives.
 # No encoding parameter — you work with bytes, not strings.
 
@@ -265,53 +245,47 @@ with open(bin_file, "rb") as f:     # 'rb' = read binary
     print(f"  Type: {type(raw)}, Content: {raw.hex()}")
 ```
 
-    
-    === Binary mode ===
-      Type: <class 'bytes'>, Content: 89504e47
+    <class 'bytes'>, Content: 89504e47
 
 #### pathlib — modern file path operations
 
 ```python
 # pathlib — modern file path operations replacing os.path
 
-print("\n=== pathlib.Path operations ===")
 # pathlib.Path is the modern replacement for os.path.join, os.path.exists, etc.
 
 p = Path("/data/lake/raw/events/2024/01/events.parquet")
-print(f"  name:     {p.name}")        # 'events.parquet' — filename with extension
-print(f"  stem:     {p.stem}")        # 'events' — filename without extension
-print(f"  suffix:   {p.suffix}")      # '.parquet' — extension including the dot
-print(f"  parent:   {p.parent}")      # '/data/lake/raw/events/2024/01' — directory containing this file
-print(f"  parts:    {p.parts}")       # all path components as a tuple
+p.name  # name — 'events.parquet' — filename with extension
+p.stem  # stem — 'events' — filename without extension
+p.suffix  # suffix — '.parquet' — extension including the dot
+p.parent  # parent — '/data/lake/raw/events/2024/01' — directory containing this file
+p.parts  # parts — all path components as a tuple
 
 # Path operations
 output = tmp_dir / "output"          # / operator joins paths
 output.mkdir(exist_ok=True)          # mkdir -p equivalent; exist_ok=True avoids error if already exists
-print(f"  Created dir: {output}")
-print(f"  Exists: {output.exists()}")          # True
-print(f"  Is dir: {output.is_dir()}")          # True
-print(f"  Is file: {staging_file.is_file()}")  # True
+output  # Created dir
+output.exists()  # Exists — True
+output.is_dir()  # Is dir — True
+staging_file.is_file()  # Is file — True
 
 # Glob — find files matching a pattern
-print(f"\n  Files in tmp_dir:")
+# Files in tmp_dir
 for f in sorted(tmp_dir.glob("*")):  # glob("*") = all files/dirs in tmp_dir
     print(f"    {f.name}")
 # Recursive glob: tmp_dir.glob("**/*.csv") — all .csv files in any subdirectory
 ```
 
+    events.parquet
+    events
+    .parquet
+    \data\lake\raw\events\2024\01
+    ('\\', 'data', 'lake', 'raw', 'events', '2024', '01', 'events.parquet')
+    C:\Users\aperi\AppData\Local\Temp\fileio_yk2nuyou\output
+    True
+    True
+    True
     
-    === pathlib.Path operations ===
-      name:     events.parquet
-      stem:     events
-      suffix:   .parquet
-      parent:   \data\lake\raw\events\2024\01
-      parts:    ('\\', 'data', 'lake', 'raw', 'events', '2024', '01', 'events.parquet')
-      Created dir: C:\Users\aperi\AppData\Local\Temp\fileio_yk2nuyou\output
-      Exists: True
-      Is dir: True
-      Is file: True
-    
-      Files in tmp_dir:
         output
         pipeline_output.txt
         sample.bin
@@ -332,7 +306,6 @@ The `csv` module handles quoting, escaping, and delimiters automatically. `csv.r
 ```python
 # csv.writer — write CSV rows as lists
 
-print("=== csv.writer (list-based) ===")
 # Data Engineering scenario: export pipeline results to CSV for downstream consumers
 
 tmp_dir = Path(tempfile.mkdtemp(prefix="csv_"))
@@ -352,12 +325,11 @@ with open(csv_file, "w", newline="", encoding="utf-8") as f:
         ["etl_005", "success", 3100, 0.8],
     ])
 
-print(f"  Written: {csv_file.name}")
-print(f"  Content:\n{csv_file.read_text(encoding='utf-8')}")
+csv_file.name  # Written
+f"Content:\n{csv_file.read_text(encoding='utf-8')}"
 ```
 
-    === csv.writer (list-based) ===
-      Written: pipeline_runs.csv
+    pipeline_runs.csv
       Content:
     pipeline_id,status,rows_processed,duration_s
     etl_001,success,15000,2.3
@@ -371,8 +343,6 @@ print(f"  Content:\n{csv_file.read_text(encoding='utf-8')}")
 ```python
 # csv.reader — read CSV rows as lists of strings
 
-print("=== csv.reader (list-based) ===")
-
 with open(csv_file, "r", encoding="utf-8") as f:
     reader = csv.reader(f)            # returns an iterator of lists
     header = next(reader)             # first row = header; next() advances the iterator
@@ -384,8 +354,7 @@ with open(csv_file, "r", encoding="utf-8") as f:
         print(f"  {pipeline_id}: {status}, {int(rows):,} rows, {float(duration):.1f}s")
 ```
 
-    === csv.reader (list-based) ===
-      Header: ['pipeline_id', 'status', 'rows_processed', 'duration_s']
+    ['pipeline_id', 'status', 'rows_processed', 'duration_s']
       etl_001: success, 15,000 rows, 2.3s
       etl_002: failed, 0 rows, 0.1s
       etl_003: success, 8,200 rows, 1.7s
@@ -397,7 +366,6 @@ with open(csv_file, "r", encoding="utf-8") as f:
 ```python
 # csv.DictReader — read rows as dictionaries with named columns
 
-print("\n=== csv.DictReader (dict-based) ===")
 # DictReader uses the first row as keys. Each subsequent row is an OrderedDict.
 # Access columns by name — safer and more readable than row[2].
 
@@ -412,9 +380,7 @@ with open(csv_file, "r", encoding="utf-8") as f:
             print(f"  OK:     {row['pipeline_id']} ({int(row['rows_processed']):,} rows)")
 ```
 
-    
-    === csv.DictReader (dict-based) ===
-      Columns: ['pipeline_id', 'status', 'rows_processed', 'duration_s']
+    ['pipeline_id', 'status', 'rows_processed', 'duration_s']
       OK:     etl_001 (15,000 rows)
       FAILED: etl_002 (0 rows)
       OK:     etl_003 (8,200 rows)
@@ -426,7 +392,6 @@ with open(csv_file, "r", encoding="utf-8") as f:
 ```python
 # csv.DictWriter — write rows from dictionaries
 
-print("\n=== csv.DictWriter (dict-based) ===")
 # Data Engineering scenario: transform and write enriched records
 
 enriched_file = tmp_dir / "enriched_runs.csv"
@@ -443,13 +408,11 @@ with open(enriched_file, "w", newline="", encoding="utf-8") as f:
     writer.writeheader()            # writes the header row from fieldnames
     writer.writerows(records)       # writes all dicts at once (or use writer.writerow(dict) one by one)
 
-print(f"  Written: {enriched_file.name}")
-print(f"  Content:\n{enriched_file.read_text(encoding='utf-8')}")
+enriched_file.name  # Written
+f"Content:\n{enriched_file.read_text(encoding='utf-8')}"
 ```
 
-    
-    === csv.DictWriter (dict-based) ===
-      Written: enriched_runs.csv
+    enriched_runs.csv
       Content:
     pipeline_id,status,rows_processed,cost_usd
     etl_001,success,15000,0.45
@@ -460,8 +423,6 @@ print(f"  Content:\n{enriched_file.read_text(encoding='utf-8')}")
 
 ```python
 # Custom delimiters — pipe-delimited and tab-delimited formats
-
-print("=== Custom delimiters (pipe, tab) ===")
 
 # Pipe-delimited (common in legacy data warehouses)
 pipe_data = "id|name|region\n1|Alice|EMEA\n2|Bob|APAC"
@@ -476,20 +437,18 @@ for row in reader:
     print(f"  Tab:  {row}")
 ```
 
-    === Custom delimiters (pipe, tab) ===
-      Pipe: ['id', 'name', 'region']
-      Pipe: ['1', 'Alice', 'EMEA']
-      Pipe: ['2', 'Bob', 'APAC']
-      Tab:  ['id', 'name', 'region']
-      Tab:  ['1', 'Alice', 'EMEA']
-      Tab:  ['2', 'Bob', 'APAC']
+    ['id', 'name', 'region']
+    ['1', 'Alice', 'EMEA']
+    ['2', 'Bob', 'APAC']
+    ['id', 'name', 'region']
+    ['1', 'Alice', 'EMEA']
+    ['2', 'Bob', 'APAC']
 
 #### csv module — quoting, embedded commas, newlines in fields
 
 ```python
 # CSV edge cases — quoting, embedded commas, and newlines in fields
 
-print("\n=== Edge cases (quoting, embedded commas) ===")
 # csv module handles these automatically — no manual splitting needed
 
 tricky_data = '''name,address,note
@@ -501,17 +460,14 @@ for row in reader:
     print(f"  Name: {row['name']:<15} Address: {row['address']}")
 ```
 
-    
-    === Edge cases (quoting, embedded commas) ===
-      Name: Smith, John     Address: 123 Main St, Apt 4
-      Name: O'Brien         Address: 456 Oak "Ave"
+    Smith, John     Address: 123 Main St, Apt 4
+    O'Brien         Address: 456 Oak "Ave"
 
 #### StringIO — CSV in memory (no disk I/O)
 
 ```python
 # StringIO — CSV in memory without disk I/O
 
-print("\n=== StringIO — CSV in memory ===")
 # Data Engineering scenario: build CSV payload for an API call or S3 upload
 # without writing to disk first.
 
@@ -522,13 +478,11 @@ writer.writerow(["evt_001", "page_view", "2024-01-15T10:30:00Z"])
 writer.writerow(["evt_002", "purchase", "2024-01-15T10:31:00Z"])
 
 csv_string = output.getvalue()                 # retrieve the entire CSV as a string
-print(f"  In-memory CSV ({len(csv_string)} chars):")
-print(f"  {csv_string.strip()}")
+f"In-memory CSV ({len(csv_string)} chars):"
+f"{csv_string.strip()}"
 # Now csv_string can be sent to an API, uploaded to GCS, or written to Kafka.
 ```
 
-    
-    === StringIO — CSV in memory ===
       In-memory CSV (110 chars):
       event_id,event_type,timestamp
     evt_001,page_view,2024-01-15T10:30:00Z
@@ -548,7 +502,6 @@ print(f"  {csv_string.strip()}")
 tmp_dir = Path(tempfile.mkdtemp(prefix="json_yaml_"))
 
 # json.dumps — dict → JSON string
-print("=== json.dumps (dict → JSON string) ===")
 # Data Engineering scenario: build a pipeline metadata payload
 
 pipeline_meta = {
@@ -572,10 +525,9 @@ pipeline_meta = {
 
 # dumps = dump-to-string. indent=2 for pretty print. ensure_ascii=False for unicode.
 json_str = json.dumps(pipeline_meta, indent=2, ensure_ascii=False)
-print(json_str)
+json_str
 ```
 
-    === json.dumps (dict → JSON string) ===
     {
       "pipeline_id": "etl_events_daily",
       "schedule": "0 3 * * *",
@@ -604,7 +556,6 @@ print(json_str)
 ```python
 # json.loads — parse JSON string to dict
 
-print("\n=== json.loads (JSON string → dict) ===")
 # Data Engineering scenario: parse an API response or Kafka message
 
 api_response = '''
@@ -624,23 +575,19 @@ data = json.loads(api_response)  # JSON string → Python dict
 #   object {} → dict,  array [] → list,  string → str
 #   number (int) → int,  number (float) → float
 #   true/false → True/False,  null → None
-print(f"  Job:  {data['job_id']}")
-print(f"  Rows: {data['statistics']['total_rows']:,}")
-print(f"  Cache hit: {data['statistics']['cache_hit']}")  # Python bool
+data['job_id']  # Job
+f"{data['statistics']['total_rows']:,}"  # Rows
+data['statistics']['cache_hit']  # Cache hit — Python bool
 ```
 
-    
-    === json.loads (JSON string → dict) ===
-      Job:  bq_job_12345
-      Rows: 1,500,000
-      Cache hit: False
+    bq_job_12345
+    1,500,000
+    False
 
 #### json.dump / json.load — write/read JSON files
 
 ```python
 # json.dump / json.load — write and read JSON files
-
-print("\n=== json.dump / json.load (file I/O) ===")
 
 json_file = tmp_dir / "pipeline_config.json"
 
@@ -648,20 +595,18 @@ json_file = tmp_dir / "pipeline_config.json"
 with open(json_file, "w", encoding="utf-8") as f:
     json.dump(pipeline_meta, f, indent=2, ensure_ascii=False)
     # dump (no 's') writes directly to a file object
-print(f"  Written: {json_file.name} ({json_file.stat().st_size} bytes)")
+f"{json_file.name} ({json_file.stat().st_size} bytes)"  # Written
 
 # Read JSON file → dict
 with open(json_file, "r", encoding="utf-8") as f:
     loaded = json.load(f)  # load (no 's') reads from a file object
-print(f"  Loaded pipeline: {loaded['pipeline_id']}")
-print(f"  Source: {loaded['source']['dataset']}.{loaded['source']['table']}")
+loaded['pipeline_id']  # Loaded pipeline
+f"Source: {loaded['source']['dataset']}.{loaded['source']['table']}"
 ```
 
-    
-    === json.dump / json.load (file I/O) ===
-      Written: pipeline_config.json (421 bytes)
-      Loaded pipeline: etl_events_daily
-      Source: raw_events.clickstream
+    pipeline_config.json (421 bytes)
+    etl_events_daily
+    raw_events.clickstream
 
 #### json.dumps default parameter — serialize datetime, Decimal, custom objects
 
@@ -695,13 +640,10 @@ pipeline_run = {
     "unique_users": {1001, 1002, 1003},
 }
 
-print("\n=== Custom JSON serialization (datetime, Decimal) ===")
 json_str = json.dumps(pipeline_run, indent=2, default=json_serializer)
-print(json_str)
+json_str
 ```
 
-    
-    === Custom JSON serialization (datetime, Decimal) ===
     {
       "pipeline_id": "etl_events_daily",
       "started_at": "2024-01-15T03:00:00",
@@ -718,7 +660,6 @@ print(json_str)
 ```python
 # JSON Lines (JSONL) — one JSON object per line for streaming
 
-print("\n=== JSON Lines (JSONL) — streaming format ===")
 # JSONL is the standard format for:
 # - BigQuery exports / imports
 # - Kafka messages (one event per line)
@@ -745,8 +686,6 @@ with open(jsonl_file, "r", encoding="utf-8") as f:
         print(f"  {event['event_id']}: {event['type']} by user {event['user_id']}")
 ```
 
-    
-    === JSON Lines (JSONL) — streaming format ===
       evt_001: page_view by user 1001
       evt_002: purchase by user 1002
       evt_003: logout by user 1001
@@ -765,7 +704,6 @@ with open(jsonl_file, "r", encoding="utf-8") as f:
 tmp_dir = Path(tempfile.mkdtemp(prefix="yaml_"))
 
 # yaml.safe_load — YAML string → dict
-print("\n=== yaml.safe_load (YAML → dict) ===")
 # Data Engineering scenario: parse a dbt project config or Airflow DAG config
 
 yaml_config = """
@@ -800,27 +738,24 @@ tags: [production, clickstream, daily]
 # ALWAYS use safe_load — never yaml.load() without Loader= (security risk).
 config = yaml.safe_load(yaml_config)
 
-print(f"  Pipeline: {config['pipeline']['name']}")
-print(f"  Source:   {config['source']['dataset']}.{config['source']['table']}")
-print(f"  Sink:     gs://{config['sink']['bucket']}/{config['sink']['format']}")
-print(f"  Checks:   {[c['name'] for c in config['quality_checks']]}")
-print(f"  Tags:     {config['tags']}")
+config['pipeline']['name']  # Pipeline
+f"Source:   {config['source']['dataset']}.{config['source']['table']}"
+f"Sink:     gs://{config['sink']['bucket']}/{config['sink']['format']}"
+[c['name'] for c in config['quality_checks']]  # Checks
+config['tags']  # Tags
 ```
 
-    
-    === yaml.safe_load (YAML → dict) ===
-      Pipeline: etl_events_daily
-      Source:   raw_events.clickstream
-      Sink:     gs://data-lake-prod/parquet
-      Checks:   ['row_count_check', 'null_check']
-      Tags:     ['production', 'clickstream', 'daily']
+    etl_events_daily
+    raw_events.clickstream
+    gs://data-lake-prod/parquet
+    ['row_count_check', 'null_check']
+    ['production', 'clickstream', 'daily']
 
 #### yaml.dump — dict → YAML string
 
 ```python
 # yaml.dump — serialize dict to YAML string
 
-print("\n=== yaml.dump (dict → YAML) ===")
 # Data Engineering scenario: generate a config file programmatically
 
 new_config = {
@@ -834,11 +769,9 @@ new_config = {
 
 # default_flow_style=False → block style (readable); sort_keys=False → preserve insertion order
 yaml_str = yaml.dump(new_config, default_flow_style=False, sort_keys=False)
-print(yaml_str)
+yaml_str
 ```
 
-    
-    === yaml.dump (dict → YAML) ===
     pipeline:
       name: etl_purchases_hourly
       schedule: 0 * * * *
@@ -856,31 +789,27 @@ print(yaml_str)
 ```python
 # YAML file I/O — read and write YAML files
 
-print("=== YAML file I/O ===")
-
 yaml_file = tmp_dir / "pipeline_config.yaml"
 
 # Write
 with open(yaml_file, "w", encoding="utf-8") as f:
     yaml.dump(new_config, f, default_flow_style=False, sort_keys=False)
-print(f"  Written: {yaml_file.name}")
+yaml_file.name  # Written
 
 # Read
 with open(yaml_file, "r", encoding="utf-8") as f:
     loaded_config = yaml.safe_load(f)
-print(f"  Loaded: {loaded_config['pipeline']['name']}")
+loaded_config['pipeline']['name']  # Loaded
 ```
 
-    === YAML file I/O ===
-      Written: pipeline_config.yaml
-      Loaded: etl_purchases_hourly
+    pipeline_config.yaml
+    etl_purchases_hourly
 
 #### Multi-document YAML (--- separator)
 
 ```python
 # Multi-document YAML — multiple documents in one file separated by ---
 
-print("\n=== Multi-document YAML ===")
 # Some tools (dbt, K8s) use multiple YAML documents in one file, separated by '---'
 
 multi_doc = """
@@ -900,17 +829,14 @@ for doc in docs:
     print(f"  Model: {doc['name']} ({doc['materialized']})")
 ```
 
-    
-    === Multi-document YAML ===
-      Model: staging_events (view)
-      Model: mart_daily_events (table)
+    staging_events (view)
+    mart_daily_events (table)
 
 #### JSON vs YAML comparison
 
 ```python
 # JSON vs YAML comparison — when to use each format
 
-print("\n=== JSON vs YAML ===")
 print("""
 Feature           JSON                    YAML
 ─────────────────────────────────────────────────────
@@ -926,9 +852,6 @@ Multi-document    No                      Yes (--- separator)
 """)
 ```
 
-    
-    === JSON vs YAML ===
-    
     Feature           JSON                    YAML
     ─────────────────────────────────────────────────────
     Comments          NO                      YES (#)
@@ -970,7 +893,6 @@ tmp_dir = Path(tempfile.mkdtemp(prefix="serial_"))
 ```python
 # StringIO — in-memory text stream with file-like API
 
-print("=== StringIO (in-memory text stream) ===")
 buffer = StringIO()                  # create an empty text buffer
 buffer.write("line 1\n")            # write to it like a file
 buffer.write("line 2\n")
@@ -978,7 +900,7 @@ buffer.write("line 3\n")
 
 # getvalue() returns the entire content as a string
 content = buffer.getvalue()
-print(f"  Content: {content!r}")
+content!r  # Content
 
 # seek(0) resets the read position to the beginning (like rewinding a tape)
 buffer.seek(0)
@@ -988,11 +910,10 @@ for line in buffer:                  # iterate like a file
 buffer.close()                       # free the buffer (or use 'with')
 ```
 
-    === StringIO (in-memory text stream) ===
-      Content: 'line 1\nline 2\nline 3\n'
-      Read: line 1
-      Read: line 2
-      Read: line 3
+    'line 1\nline 2\nline 3\n'
+    line 1
+    line 2
+    line 3
 
 #### BytesIO — in-memory binary stream
 
@@ -1003,34 +924,29 @@ buffer.close()                       # free the buffer (or use 'with')
 ```python
 # BytesIO — in-memory binary stream with file-like API
 
-print("\n=== BytesIO (in-memory binary stream) ===")
 bin_buffer = BytesIO()
 bin_buffer.write(b"HEADER")         # write bytes (not strings)
 bin_buffer.write(b"\x00\x01\x02")  # raw binary data
-print(f"  Size: {bin_buffer.tell()} bytes")  # tell() returns current position
+f"{bin_buffer.tell()} bytes"  # Size — tell() returns current position
 
 # Read back
 bin_buffer.seek(0)                   # rewind to start
 raw = bin_buffer.read()
-print(f"  Content: {raw}")
-print(f"  Type: {type(raw)}")        # bytes
+raw  # Content
+type(raw)  # Type — bytes
 ```
 
-    
-    === BytesIO (in-memory binary stream) ===
-      Size: 9 bytes
-      Content: b'HEADER\x00\x01\x02'
-      Type: <class 'bytes'>
+    9 bytes
+    b'HEADER\x00\x01\x02'
+    <class 'bytes'>
 
 #### IO streams as function arguments — write once, use with file or memory
 
 ```python
 # Streams as function arguments — write once, use with file or memory
 
-print("\n=== Streams as function arguments ===")
 # Data Engineering scenario: a function that writes CSV, accepting any file-like object.
 # Can be called with a real file OR a StringIO — same interface.
-
 
 def write_events_csv(dest, events):
     """Write events to any file-like object (real file, StringIO, GCS blob, etc.)."""
@@ -1047,22 +963,20 @@ events = [
 # Option 1: write to in-memory stream (for API upload, unit test, etc.)
 mem_file = StringIO()
 write_events_csv(mem_file, events)
-print(f"  In-memory CSV:\n  {mem_file.getvalue().strip()}")
+f"In-memory CSV:\n  {mem_file.getvalue().strip()}"
 
 # Option 2: write to real file on disk (same function, different argument)
 disk_file = tmp_dir / "events.csv"
 with open(disk_file, "w", newline="", encoding="utf-8") as f:
     write_events_csv(f, events)
-print(f"  Disk file: {disk_file.name} ({disk_file.stat().st_size} bytes)")
+f"{disk_file.name} ({disk_file.stat().st_size} bytes)"  # Disk file
 ```
 
-    
-    === Streams as function arguments ===
       In-memory CSV:
       event_id,type,user_id
     evt_001,page_view,1001
     evt_002,purchase,1002
-      Disk file: events.csv (70 bytes)
+    events.csv (70 bytes)
 
 #### @dataclass — define typed domain model for serialization
 
@@ -1085,8 +999,6 @@ class PipelineRun:
 ```python
 # Serialize — dataclass to dict to JSON string
 
-print("\n=== Serialize: dataclass → JSON ===")
-
 run = PipelineRun(
     pipeline_id="etl_events_daily",
     status="success",
@@ -1101,11 +1013,9 @@ run_dict = asdict(run)  # {'pipeline_id': 'etl_events_daily', 'status': 'success
 # Step 2: json.dumps() converts the dict to a JSON string
 # Need default= for datetime (not natively JSON-serializable)
 json_str = json.dumps(run_dict, indent=2, default=str)  # default=str: fallback for non-serializable types
-print(json_str)
+json_str
 ```
 
-    
-    === Serialize: dataclass → JSON ===
     {
       "pipeline_id": "etl_events_daily",
       "status": "success",
@@ -1120,8 +1030,6 @@ print(json_str)
 ```python
 # Deserialize — JSON string to dict to dataclass
 
-print("\n=== Deserialize: JSON → dataclass ===")
-
 json_input = '{"pipeline_id":"etl_purchases","status":"failed","rows_processed":0,"started_at":"2024-01-15T04:00:00","cost_usd":0.01,"error_message":"Source table not found"}'
 
 data = json.loads(json_input)          # JSON string → dict
@@ -1129,18 +1037,16 @@ data = json.loads(json_input)          # JSON string → dict
 data["started_at"] = datetime.fromisoformat(data["started_at"])
 # Unpack dict into dataclass constructor with **
 run2 = PipelineRun(**data)             # dict → dataclass instance
-print(f"  Pipeline: {run2.pipeline_id}")
-print(f"  Status:   {run2.status}")
-print(f"  Error:    {run2.error_message}")
-print(f"  Type:     {type(run2)}")
+run2.pipeline_id  # Pipeline
+run2.status  # Status
+run2.error_message  # Error
+type(run2)  # Type
 ```
 
-    
-    === Deserialize: JSON → dataclass ===
-      Pipeline: etl_purchases
-      Status:   failed
-      Error:    Source table not found
-      Type:     <class '__main__.PipelineRun'>
+    etl_purchases
+    failed
+    Source table not found
+    <class '__main__.PipelineRun'>
 
 #### pickle.dumps / pickle.loads — serialize to/from bytes
 
@@ -1151,56 +1057,48 @@ print(f"  Type:     {type(run2)}")
 ```python
 # pickle.dumps / pickle.loads — serialize any Python object to bytes
 
-print("\n=== pickle.dumps / pickle.loads ===")
 pickled = pickle.dumps(run)            # PipelineRun → bytes
-print(f"  Pickled size: {len(pickled)} bytes")
-print(f"  Type: {type(pickled)}")
-print(f"  First 30 bytes: {pickled[:30]}")
+f"{len(pickled)} bytes"  # Pickled size
+type(pickled)  # Type
+pickled[:30]  # First 30 bytes
 
 unpickled = pickle.loads(pickled)      # bytes → PipelineRun
-print(f"  Unpickled: {unpickled.pipeline_id}, {unpickled.status}")
-print(f"  Type: {type(unpickled)}")
+f"Unpickled: {unpickled.pipeline_id}, {unpickled.status}"
+type(unpickled)  # Type
 ```
 
-    
-    === pickle.dumps / pickle.loads ===
-      Pickled size: 212 bytes
-      Type: <class 'bytes'>
-      First 30 bytes: b'\x80\x04\x95\xc9\x00\x00\x00\x00\x00\x00\x00\x8c\x08__main__\x94\x8c\x0bPipeli'
-      Unpickled: etl_events_daily, success
-      Type: <class '__main__.PipelineRun'>
+    212 bytes
+    <class 'bytes'>
+    b'\x80\x04\x95\xc9\x00\x00\x00\x00\x00\x00\x00\x8c\x08__main__\x94\x8c\x0bPipeli'
+    etl_events_daily, success
+    <class '__main__.PipelineRun'>
 
 #### pickle.dump / pickle.load — serialize to/from file
 
 ```python
 # pickle.dump / pickle.load — serialize to/from binary files
 
-print("\n=== pickle file I/O ===")
-
 pkl_file = tmp_dir / "pipeline_run.pkl"
 
 # Write — binary mode required ('wb')
 with open(pkl_file, "wb") as f:
     pickle.dump(run, f)
-print(f"  Written: {pkl_file.name} ({pkl_file.stat().st_size} bytes)")
+f"{pkl_file.name} ({pkl_file.stat().st_size} bytes)"  # Written
 
 # Read — binary mode required ('rb')
 with open(pkl_file, "rb") as f:
     loaded_run = pickle.load(f)
-print(f"  Loaded: {loaded_run.pipeline_id}, {loaded_run.rows_processed:,} rows")
+f"Loaded: {loaded_run.pipeline_id}, {loaded_run.rows_processed:,} rows"
 ```
 
-    
-    === pickle file I/O ===
-      Written: pipeline_run.pkl (212 bytes)
-      Loaded: etl_events_daily, 1,500,000 rows
+    pipeline_run.pkl (212 bytes)
+    etl_events_daily, 1,500,000 rows
 
 #### When to use pickle vs JSON
 
 ```python
 # Pickle vs JSON comparison — when to use each
 
-print("\n=== Pickle vs JSON ===")
 print("""
 Feature         pickle                          JSON
 ──────────────────────────────────────────────────────────
@@ -1218,14 +1116,8 @@ DE use case     Sklearn model artifacts,        BigQuery loads, API payloads,
 # STRUCT — binary packing (C-compatible layout)
 # ─────────────────────────────────────────────
 
-print("="*60)
-print("struct (binary packing)")
-print("="*60)
 ```
 
-    
-    === Pickle vs JSON ===
-    
     Feature         pickle                          JSON
     ──────────────────────────────────────────────────────────
     Types           Any Python object               dict, list, str, int, float, bool, None
@@ -1237,9 +1129,7 @@ print("="*60)
     DE use case     Sklearn model artifacts,        BigQuery loads, API payloads,
                     Airflow XCom (legacy)           Kafka messages, config files
     
-    ============================================================
     struct (binary packing)
-    ============================================================
 
 #### struct.pack / struct.unpack — fixed-size binary records
 
@@ -1250,28 +1140,25 @@ print("="*60)
 ```python
 # struct.pack / struct.unpack — fixed-size binary records
 
-print("\n=== struct.pack / struct.unpack ===")
 # Data Engineering scenario: pack a sensor reading into compact binary format
 # Format: '<i f d ?' = little-endian: int32 sensor_id, float32 value, float64 timestamp, bool alert
 fmt = '<ifd?'
-print(f"  Format: {fmt}")
-print(f"  Size: {struct.calcsize(fmt)} bytes")  # how many bytes this format needs
+fmt  # Format
+f"{struct.calcsize(fmt)} bytes"  # Size — how many bytes this format needs
 
 # Pack: Python values → bytes
 packed = struct.pack(fmt, 42, 23.5, 1705312200.0, True)
-print(f"  Packed: {packed.hex()}")
+packed.hex()  # Packed
 
 # Unpack: bytes → Python tuple
 sensor_id, value, ts, alert = struct.unpack(fmt, packed)
-print(f"  Unpacked: sensor={sensor_id}, value={value:.1f}, ts={ts}, alert={alert}")
+f"Unpacked: sensor={sensor_id}, value={value:.1f}, ts={ts}, alert={alert}"
 ```
 
-    
-    === struct.pack / struct.unpack ===
-      Format: <ifd?
-      Size: 17 bytes
-      Packed: 2a0000000000bc41000000f23f69d94101
-      Unpacked: sensor=42, value=23.5, ts=1705312200.0, alert=True
+    <ifd?
+    17 bytes
+    2a0000000000bc41000000f23f69d94101
+    sensor=42, value=23.5, ts=1705312200.0, alert=True
 
 ## Encoding and Decoding
 
@@ -1289,7 +1176,7 @@ text = "Euro Stoxx 50: SAP €166.52, ASML €685.40"
 
 # UTF-8: variable-length, ASCII-compatible, the internet standard
 utf8 = text.encode("utf-8")
-print(f"  UTF-8:   {len(utf8)} bytes, roundtrip={text == utf8.decode('utf-8')}")
+f"{len(utf8)} bytes, roundtrip={text == utf8.decode('utf-8')}"  # UTF-8
 
 # ASCII: 7-bit only — non-ASCII chars raise UnicodeEncodeError
 try:
@@ -1299,7 +1186,7 @@ except UnicodeEncodeError as e:
 
 # ASCII with replace — replaces unknown chars with ?
 ascii_safe = text.encode("ascii", errors="replace")
-print(f"  ASCII:   {ascii_safe.decode('ascii')} (€ replaced with ?)")
+f"{ascii_safe.decode('ascii')} (€ replaced with ?)"  # ASCII
 
 # Latin-1 (ISO 8859-1): single-byte Western European
 # Note: € is NOT in Latin-1 (it was added in Latin-9/ISO 8859-15)
@@ -1312,15 +1199,15 @@ except UnicodeEncodeError as e:
 
 # UTF-16: 2 bytes per char (4 for supplementary) — used internally by Java/.NET
 utf16 = text.encode("utf-16")
-print(f"  UTF-16:  {len(utf16)} bytes (includes 2-byte BOM)")
+f"{len(utf16)} bytes (includes 2-byte BOM)"  # UTF-16
 ```
 
-      UTF-8:   44 bytes, roundtrip=True
-      ASCII:   FAILED — 'ascii' codec can't encode character '\u20ac' in position 19: ordinal not in range(128)
-      ASCII:   Euro Stoxx 50: SAP ?166.52, ASML ?685.40 (€ replaced with ?)
-      Latin-1: FAILED — 'latin-1' codec can't encode character '\u20ac' in position 19: ordinal not in range(256)
-      Latin-1: 40 bytes (with replacements)
-      UTF-16:  82 bytes (includes 2-byte BOM)
+    44 bytes, roundtrip=True
+    FAILED — 'ascii' codec can't encode character '\u20ac' in position 19: ordinal not in range(128)
+    Euro Stoxx 50: SAP ?166.52, ASML ?685.40 (€ replaced with ?)
+    FAILED — 'latin-1' codec can't encode character '\u20ac' in position 19: ordinal not in range(256)
+    40 bytes (with replacements)
+    82 bytes (includes 2-byte BOM)
 
 #### base64.b64encode / b64decode — Base64 encoding for binary-safe text
 
@@ -1330,24 +1217,24 @@ print(f"  UTF-16:  {len(utf16)} bytes (includes 2-byte BOM)")
 original = "SAP.DE|2024-03-12|166.52"
 b64 = base64.b64encode(original.encode("utf-8"))
 decoded = base64.b64decode(b64).decode("utf-8")
-print(f"  Original: {original}")
-print(f"  Base64:   {b64.decode()}")
-print(f"  Decoded:  {decoded}")
-print(f"  Roundtrip: {original == decoded}")
+original  # Original
+b64.decode()  # Base64
+decoded  # Decoded
+original == decoded  # Roundtrip
 
 # URL-safe Base64 (replaces + and / with - and _)
 url_safe = base64.urlsafe_b64encode(original.encode("utf-8"))
-print(f"\n  Standard: {b64.decode()}")
-print(f"  URL-safe: {url_safe.decode()}")
+b64.decode()  # Standard
+url_safe.decode()  # URL-safe
 ```
 
-      Original: SAP.DE|2024-03-12|166.52
-      Base64:   U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
-      Decoded:  SAP.DE|2024-03-12|166.52
-      Roundtrip: True
+    SAP.DE|2024-03-12|166.52
+    U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
+    SAP.DE|2024-03-12|166.52
+    True
     
-      Standard: U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
-      URL-safe: U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
+    U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
+    U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
 
 #### bytes.hex / bytes.fromhex — hexadecimal encoding
 
@@ -1357,22 +1244,22 @@ print(f"  URL-safe: {url_safe.decode()}")
 raw = b"\xde\xad\xbe\xef\xca\xfe"
 hex_str = raw.hex()
 back = bytes.fromhex(hex_str)
-print(f"  Bytes:     {raw}")
-print(f"  Hex:       {hex_str}")
-print(f"  Roundtrip: {raw == back}")
+raw  # Bytes
+hex_str  # Hex
+raw == back  # Roundtrip
 
 # SHA-256 hash displayed as hex (standard format)
 sha = hashlib.sha256(b"SAP.DE").hexdigest()
-print(f"\n  SHA-256:   {sha}")
-print(f"  Length:    {len(sha)} hex chars = {len(sha)//2} bytes")
+sha  # SHA-256
+f"{len(sha)} hex chars = {len(sha)//2} bytes"  # Length
 ```
 
-      Bytes:     b'\xde\xad\xbe\xef\xca\xfe'
-      Hex:       deadbeefcafe
-      Roundtrip: True
+    b'\xde\xad\xbe\xef\xca\xfe'
+    deadbeefcafe
+    True
     
-      SHA-256:   a80ae49a0c54581271b2fa37bc9113425072ca8b559941b00b916d37af0c4e58
-      Length:    64 hex chars = 32 bytes
+    a80ae49a0c54581271b2fa37bc9113425072ca8b559941b00b916d37af0c4e58
+    64 hex chars = 32 bytes
 
 #### urllib.parse quote / unquote — URL percent-encoding
 
@@ -1381,23 +1268,23 @@ print(f"  Length:    {len(sha)} hex chars = {len(sha)//2} bytes")
 
 raw = "SAP.DE close=166.52 change=+2.5% sector=Tech&Finance"
 encoded = quote(raw)
-print(f"  Raw:     {raw}")
-print(f"  Encoded: {encoded}")
-print(f"  Decoded: {unquote(encoded)}")
+raw  # Raw
+encoded  # Encoded
+unquote(encoded)  # Decoded
 
 # Build safe query string from dict
 params = {"symbol": "BRK.B", "note": "Q1 2024 earnings & revenue"}
 qs = urlencode(params)
-print(f"\n  Query string: {qs}")
-print(f"  Full URL: https://api.example.com/quote?{qs}")
+qs  # Query string
+f"Full URL: https://api.example.com/quote?{qs}"
 ```
 
-      Raw:     SAP.DE close=166.52 change=+2.5% sector=Tech&Finance
-      Encoded: SAP.DE%20close%3D166.52%20change%3D%2B2.5%25%20sector%3DTech%26Finance
-      Decoded: SAP.DE close=166.52 change=+2.5% sector=Tech&Finance
+    SAP.DE close=166.52 change=+2.5% sector=Tech&Finance
+    SAP.DE%20close%3D166.52%20change%3D%2B2.5%25%20sector%3DTech%26Finance
+    SAP.DE close=166.52 change=+2.5% sector=Tech&Finance
     
-      Query string: symbol=BRK.B&note=Q1+2024+earnings+%26+revenue
-      Full URL: https://api.example.com/quote?symbol=BRK.B&note=Q1+2024+earnings+%26+revenue
+    symbol=BRK.B&note=Q1+2024+earnings+%26+revenue
+    https://api.example.com/quote?symbol=BRK.B&note=Q1+2024+earnings+%26+revenue
 
 ## Async File I/O
 
@@ -1416,12 +1303,11 @@ async_file = os.path.join(tmp, "data.txt")
 # Async write
 async with aiofiles.open(async_file, "w") as f:
     await f.write("line1\nline2\nline3\n")
-print("  Written async")
 
 # Async read
 async with aiofiles.open(async_file, "r") as f:
     content = await f.read()
-print(f"  Read async: {content.strip().replace(chr(10), ', ')}")
+content.strip().replace(chr(10), ', ')  # Read async
 
 # Async line-by-line
 async with aiofiles.open(async_file, "r") as f:
@@ -1434,7 +1320,7 @@ shutil.rmtree(tmp)
 ```
 
       Written async
-      Read async: line1, line2, line3
+    line1, line2, line3
         Line 0: line1
         Line 1: line2
         Line 2: line3
@@ -1454,11 +1340,11 @@ shutil.rmtree(tmp)
 # orjson.dumps returns bytes, not str
 data = {"symbol": "SAP.DE", "price": 166.52, "timestamp": datetime(2024, 3, 12, 14, 30)}
 fast_json = orjson.dumps(data, option=orjson.OPT_INDENT_2)
-print(f"  orjson output (bytes): {fast_json.decode()}")
+fast_json.decode()  # orjson output (bytes)
 
 # Parse back
 parsed = orjson.loads(fast_json)
-print(f"  Parsed: {parsed}")
+parsed  # Parsed
 
 # Benchmark: orjson vs json
 big = [{"id": i, "value": i * 1.5, "name": f"item_{i}"} for i in range(10000)]
@@ -1471,21 +1357,21 @@ start = time.perf_counter()
 for _ in range(100): orjson.dumps(big)
 orj_time = time.perf_counter() - start
 
-print(f"\n  json:   {std_time:.3f}s")
-print(f"  orjson: {orj_time:.3f}s")
-print(f"  Speedup: {std_time/orj_time:.1f}x")
+f"json:   {std_time:.3f}s"
+f"orjson: {orj_time:.3f}s"
+f"Speedup: {std_time/orj_time:.1f}x"
 ```
 
-      orjson output (bytes): {
+    {
       "symbol": "SAP.DE",
       "price": 166.52,
       "timestamp": "2024-03-12T14:30:00"
     }
-      Parsed: {'symbol': 'SAP.DE', 'price': 166.52, 'timestamp': '2024-03-12T14:30:00'}
+    {'symbol': 'SAP.DE', 'price': 166.52, 'timestamp': '2024-03-12T14:30:00'}
     
-      json:   0.299s
-      orjson: 0.038s
-      Speedup: 7.9x
+    0.299s
+    0.038s
+    7.9x
 
 ## Schema Validation with Pydantic
 
@@ -1508,12 +1394,12 @@ class StockQuote(BaseModel):
 
 # Valid data — parsed and validated
 quote = StockQuote(symbol="SAP.DE", price=166.52, volume=82621)
-print(f"  Valid: {quote}")
-print(f"  JSON:  {quote.model_dump_json()}")
+quote  # Valid
+quote.model_dump_json()  # JSON
 
 # Type coercion — "166.52" auto-converted to float
 coerced = StockQuote(symbol="ASML.AS", price="685.40", volume="45000")
-print(f"  Coerced: price={coerced.price} (type={type(coerced.price).__name__})")
+f"Coerced: price={coerced.price} (type={type(coerced.price).__name__})"
 
 # Validation error — negative price rejected
 try:
@@ -1522,10 +1408,10 @@ except ValidationError as e:
     print(f"  Validation error: {e.errors()[0]['msg']}")
 ```
 
-      Valid: symbol='SAP.DE' price=166.52 volume=82621 exchange=None
-      JSON:  {"symbol":"SAP.DE","price":166.52,"volume":82621,"exchange":null}
-      Coerced: price=685.4 (type=float)
-      Validation error: Input should be greater than 0
+    symbol='SAP.DE' price=166.52 volume=82621 exchange=None
+    {"symbol":"SAP.DE","price":166.52,"volume":82621,"exchange":null}
+    price=685.4 (type=float)
+    Input should be greater than 0
 
 ## High-Performance CSV Parsing
 
@@ -1540,9 +1426,9 @@ csv_data += "\n".join(f"SYM_{i},2024-03-{i%28+1:02d},{100+i*0.5},{1000*i}" for i
 
 # Polars: read CSV from string (in production: pl.read_csv("path.csv"))
 df = pl.read_csv(csv_data.encode())
-print(f"  Polars: {df.shape[0]} rows, {df.shape[1]} cols")
-print(f"  Schema: {dict(zip(df.columns, [str(t) for t in df.dtypes]))}")
-print(f"  Head:\n{df.head(3)}")
+f"{df.shape[0]} rows, {df.shape[1]} cols"  # Polars
+dict(zip(df.columns, [str(t) for t in df.dtypes]))  # Schema
+f"Head:\n{df.head(3)}"
 
 # Benchmark: csv module vs Polars
 
@@ -1557,15 +1443,15 @@ for _ in range(100):
     df = pl.read_csv(csv_data.encode())
 pl_time = time.perf_counter() - start
 
-print(f"\n  csv module: {csv_time:.3f}s")
-print(f"  Polars:     {pl_time:.3f}s")
-print(f"  Speedup:    {csv_time/pl_time:.1f}x")
+f"csv module: {csv_time:.3f}s"
+f"Polars:     {pl_time:.3f}s"
+f"Speedup:    {csv_time/pl_time:.1f}x"
 ```
 
-      Polars: 1000 rows, 4 cols
-      Schema: {'symbol': 'String', 'date': 'String', 'close': 'Float64', 'volume': 'Int64'}
+    1000 rows, 4 cols
+    {'symbol': 'String', 'date': 'String', 'close': 'Float64', 'volume': 'Int64'}
       Head:
-    shape: (3, 4)
+    (3, 4)
     ┌────────┬────────────┬───────┬────────┐
     │ symbol ┆ date       ┆ close ┆ volume │
     │ ---    ┆ ---        ┆ ---   ┆ ---    │
@@ -1576,9 +1462,9 @@ print(f"  Speedup:    {csv_time/pl_time:.1f}x")
     │ SYM_2  ┆ 2024-03-03 ┆ 101.0 ┆ 2000   │
     └────────┴────────────┴───────┴────────┘
     
-      csv module: 0.065s
-      Polars:     0.012s
-      Speedup:    5.4x
+    0.065s
+    0.012s
+    5.4x
 
 > [!tip] Related pattern
 >
@@ -1603,16 +1489,16 @@ with fsspec.open(local_path, "r") as f:
     print(f"  fsspec local: {f.read().strip()}")
 
 # In production, just change the path:
-print("\n  # Cloud URIs (same API, just change the path):")
-print("  fsspec.open('s3://bucket/data.csv')       # AWS S3")
-print("  fsspec.open('gs://bucket/data.csv')       # Google Cloud Storage")
-print("  fsspec.open('abfs://container/data.csv')  # Azure Blob")
-print("  fsspec.open('https://api.example.com/data') # HTTP")
+# Cloud URIs (same API, just change the path):
+# fsspec.open('s3://bucket/data.csv
+# fsspec.open('gs://bucket/data.csv
+# fsspec.open('abfs://container/data.csv
+# fsspec.open('https://api.example.com/data
 
 shutil.rmtree(tmp)
 ```
 
-      fsspec local: symbol,price
+    symbol,price
     SAP.DE,166.52
     ASML.AS,685.40
     

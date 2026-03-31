@@ -1603,7 +1603,7 @@ print("  --tb=short               Short tracebacks (cleaner CI logs)")
 print("  -x                       Stop on first failure")
 ```
     # .github/workflows/test.yml
-    name: Tests
+    Tests
     
     on:
       push:
@@ -1648,14 +1648,14 @@ print("  -x                       Stop on first failure")
             if: always()  # upload even if tests fail
             uses: actions/upload-artifact@v4
             with:
-              name: test-results-py${{ matrix.python-version }}
+    test-results-py${{ matrix.python-version }}
               path: test-results.xml
     
           - name: Upload coverage
             if: always()
             uses: actions/upload-artifact@v4
             with:
-              name: coverage-py${{ matrix.python-version }}
+    coverage-py${{ matrix.python-version }}
               path: coverage.xml
     
     ────────────────────────────────────────────────────────────
