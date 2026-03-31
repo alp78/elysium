@@ -21,6 +21,8 @@ Git's history inspection tools — `git log`, `git diff`, `git blame`, and `git 
 
 ## git log — The Commit Timeline
 
+The commit log is a reverse-chronological list of every commit in the current branch's history, showing who made each change, when, and why (the commit message). Each entry includes a SHA hash (a unique commit identifier), author, date, and message. The log is your primary tool for understanding how a codebase evolved over time.
+
 ```bash
 # Show compact one-line-per-commit history
 git log --oneline
@@ -123,6 +125,8 @@ index 3c4a5b6..7d8e9f0 100644
 
 ## git blame — Who Changed Each Line
 
+Blame shows who last modified each line of a file and in which commit. Despite the name, it is a diagnostic tool, not an accusation — it answers "who wrote this line and when?" which is essential for understanding why code looks the way it does. Combined with `git show`, blame lets you trace any line back to the commit that introduced it.
+
 ```bash
 # Show who last modified each line of a file
 git blame src/transform.py
@@ -175,6 +179,8 @@ git show v1.0.0:src/config.py
 ## Finding Changes Quickly
 
 ### When Did a Bug Appear? — git bisect
+
+Bisect uses binary search to find the exact commit that introduced a bug. You tell Git "this commit is good" and "this commit is bad," and it automatically checks out the midpoint for you to test. After a few iterations, it pinpoints the exact commit that broke things — far faster than checking every commit manually.
 
 ```bash
 git bisect start

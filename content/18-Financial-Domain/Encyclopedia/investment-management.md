@@ -35,7 +35,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 **Real-world example:** A university endowment fund might allocate 30% of its portfolio to alternative investments such as a timber fund, a venture capital fund, and a real estate fund, because these assets tend to move independently of the stock market.
 
-**Related terms:** [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset Management), [Hedge Funds](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Hedge Funds), [Private Equity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Private Equity)
+**Related terms:** [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset%20Management), [Hedge Funds](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Hedge%20Funds), [Private Equity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Private%20Equity)
 
 ---
 
@@ -52,7 +52,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 **Real-world example:** A pension fund with EUR 10 billion in assets hires an asset management firm to invest the money across global equities, government bonds, and real estate. The manager charges 0.5% of assets annually (EUR 50 million) and aims to generate returns that exceed the fund's benchmark.
 
-**Related terms:** [Wealth Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Wealth Management), [Portfolio Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Portfolio Management), [Mutual Funds](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Mutual Funds), [Alternative Investments](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Alternative Investments), [Hedge Funds](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Hedge Funds)
+**Related terms:** [Wealth Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Wealth%20Management), [Portfolio Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Portfolio%20Management), [Mutual Funds](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Mutual%20Funds), [Alternative Investments](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Alternative%20Investments), [Hedge Funds](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Hedge%20Funds)
 
 ---
 
@@ -69,7 +69,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 **Real-world example:** A trust officer at a bank manages a USD 10 million trust fund established for a minor child. The officer has a fiduciary duty to invest the funds prudently, avoid conflicts of interest, and make distributions only for the child's benefit as specified in the trust document.
 
-**Related terms:** [Trust Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Trust Banking), [Wealth Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Wealth Management), [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset Management)
+**Related terms:** [Trust Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Trust%20Banking), [Wealth Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Wealth%20Management), [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset%20Management)
 
 ---
 
@@ -86,7 +86,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 **Real-world example:** A hedge fund manager identifies an overvalued pharmaceutical company and short-sells its stock (borrowing shares and selling them, hoping to buy them back cheaper later). Simultaneously, the manager buys shares of an undervalued competitor. This "long-short" strategy aims to profit regardless of whether the overall market goes up or down.
 
-**Related terms:** [Alternative Investments](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Alternative Investments), [Prime Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Prime Brokerage), [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives), [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset Management)
+**Related terms:** [Alternative Investments](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Alternative%20Investments), [Prime Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Prime%20Brokerage), [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives), [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset%20Management)
 
 ---
 
@@ -103,7 +103,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 **Real-world example:** When a major oil company wants to acquire a smaller rival for USD 20 billion, it hires an investment bank to advise on the deal structure, conduct financial due diligence, negotiate with the target company's board, arrange the financing (a mix of cash and debt), and manage the regulatory approval process.
 
-**Related terms:** [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Markets), [Mergers and Acquisitions (M&A)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Mergers and Acquisitions (M&A)), [Equity Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equity Underwriting), [Bond Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Bond Underwriting)
+**Related terms:** [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital%20Markets), [Mergers and Acquisitions (M&A)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Mergers%20and%20Acquisitions%20(M&A)), [Equity Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equity%20Underwriting), [Bond Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Bond%20Underwriting)
 
 ---
 
@@ -120,7 +120,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 **Real-world example:** An investor with USD 5,000 purchases shares in a global equity mutual fund. The fund manager invests the pooled money across 200 companies in 30 countries. The investor gets instant diversification and professional management for an annual fee of 0.75% of assets. If the fund's portfolio increases by 10%, the investor's USD 5,000 becomes USD 5,500.
 
-**Related terms:** [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset Management), [Portfolio Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Portfolio Management), [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Fixed Income](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Fixed Income), [Index](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Index)
+**Related terms:** [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset%20Management), [Portfolio Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Portfolio%20Management), [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Fixed Income](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Fixed%20Income), [Index](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Index)
 
 ---
 
@@ -137,7 +137,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 **Real-world example:** A public school teacher contributes 5% of her salary to her pension fund each month, with the school district matching 7%. Over a 30-year career, the pension fund invests these contributions across global equities, government bonds, and real estate. Upon retirement, the teacher receives a monthly pension payment equal to 60% of her final salary.
 
-**Related terms:** [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset Management), [Annuity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Annuity), [Superannuation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Superannuation), [Fiduciary](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Fiduciary)
+**Related terms:** [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset%20Management), [Annuity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Annuity), [Superannuation](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Superannuation), [Fiduciary](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Fiduciary)
 
 ---
 
@@ -154,7 +154,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 **Real-world example:** A portfolio manager at an asset management firm manages a USD 2 billion global equity fund. She allocates 40% to US stocks, 30% to European stocks, 20% to Asian stocks, and 10% to emerging market stocks. She selects individual companies based on fundamental analysis, adjusts allocations based on economic outlook, and rebalances quarterly to maintain the target mix.
 
-**Related terms:** [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset Management), [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Fixed Income](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Fixed Income), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk Management), [scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology), [factor-profile-and-composition](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/factor-profile-and-composition)
+**Related terms:** [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset%20Management), [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Fixed Income](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Fixed%20Income), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk%20Management), [scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology), [factor-profile-and-composition](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/factor-profile-and-composition)
 
 ---
 
@@ -171,7 +171,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 **Real-world example:** A hedge fund uses Morgan Stanley as its prime broker. Morgan Stanley lends the fund shares of a company to facilitate short selling, provides margin financing for leveraged positions, holds the fund's portfolio in custody, and generates daily risk reports showing the fund's exposure to various market factors.
 
-**Related terms:** [Hedge Funds](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Hedge Funds), [Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Brokerage), [Market-Making](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Market-Making), [Securities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Securities)
+**Related terms:** [Hedge Funds](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Hedge%20Funds), [Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Brokerage), [Market-Making](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Market-Making), [Securities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Securities)
 
 ---
 
@@ -188,7 +188,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 **Real-world example:** A successful entrepreneur with EUR 20 million in liquid assets becomes a private banking client. Her dedicated banker manages a diversified investment portfolio, arranges a structured loan against her art collection, sets up a family trust for estate planning, and provides access to exclusive investment opportunities in private equity and real estate.
 
-**Related terms:** [Wealth Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Wealth Management), [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset Management), [Trust Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Trust Banking), [Fiduciary](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Fiduciary)
+**Related terms:** [Wealth Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Wealth%20Management), [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset%20Management), [Trust Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Trust%20Banking), [Fiduciary](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Fiduciary)
 
 ---
 
@@ -205,7 +205,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 **Real-world example:** A private equity firm acquires a family-owned logistics company for USD 500 million, using USD 200 million of investor equity and USD 300 million of debt. Over five years, the PE firm professionalizes management, expands into new markets, and improves profit margins. It then sells the company for USD 1.2 billion, generating a 3x return for its investors.
 
-**Related terms:** [Alternative Investments](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Alternative Investments), [Venture Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Venture Capital), [Capital Raising](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Raising)
+**Related terms:** [Alternative Investments](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Alternative%20Investments), [Venture Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Venture%20Capital), [Capital Raising](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital%20Raising)
 
 ---
 
@@ -222,7 +222,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 **Real-world example:** An Australian employee earning AUD 100,000 per year has AUD 11,500 contributed by their employer into a superannuation fund. The fund invests this money in a diversified portfolio. Over a 40-year career, with investment returns of 7% per year, the superannuation balance grows to over AUD 2 million, providing income throughout retirement.
 
-**Related terms:** [Pension Fund](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Pension Fund), [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset Management), [Wealth Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Wealth Management)
+**Related terms:** [Pension Fund](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Pension%20Fund), [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset%20Management), [Wealth Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Wealth%20Management)
 
 ---
 
@@ -239,7 +239,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 **Real-world example:** A venture capital firm invests USD 5 million in a two-year-old AI startup in exchange for a 20% equity stake. Over the next five years, the startup grows rapidly, raises additional funding rounds at increasing valuations, and eventually goes public at a USD 2 billion valuation. The VC firm's 20% stake is now worth USD 400 million — an 80x return on its original USD 5 million investment.
 
-**Related terms:** [Private Equity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Private Equity), [Capital Raising](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Raising), [Initial Public Offering (IPO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Initial Public Offering (IPO)), [Alternative Investments](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Alternative Investments)
+**Related terms:** [Private Equity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Private%20Equity), [Capital Raising](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital%20Raising), [Initial Public Offering (IPO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Initial%20Public%20Offering%20(IPO)), [Alternative Investments](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Alternative%20Investments)
 
 ---
 
@@ -256,7 +256,7 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 **Real-world example:** A tech entrepreneur who has just sold her company for USD 50 million engages a wealth management firm. The firm creates a comprehensive plan that includes investing the proceeds across a diversified portfolio, establishing trusts for her children, implementing tax-loss harvesting strategies to minimize capital gains taxes, setting up a charitable foundation, and purchasing umbrella liability insurance to protect her assets.
 
-**Related terms:** [Private Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Private Banking), [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset Management), [Fiduciary](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Fiduciary), [Trust Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Trust Banking), [Portfolio Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Portfolio Management)
+**Related terms:** [Private Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Private%20Banking), [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset%20Management), [Fiduciary](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Fiduciary), [Trust Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Trust%20Banking), [Portfolio Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Portfolio%20Management)
 
 ---
 
@@ -268,4 +268,4 @@ Encyclopedia of investment management terms covering asset management, wealth ma
 
 **Real-world example:** A financial advisor manages portfolios for 200 clients using a wrap platform. Through the platform, the advisor can view each client's total holdings across equities, bonds, and cash; execute trades for multiple clients simultaneously; generate consolidated tax reports; and monitor whether each portfolio remains aligned with the client's investment strategy.
 
-**Related terms:** [Wealth Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Wealth Management), [Portfolio Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Portfolio Management), [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset Management), [Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Brokerage)
+**Related terms:** [Wealth Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Wealth%20Management), [Portfolio Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Portfolio%20Management), [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset%20Management), [Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Brokerage)

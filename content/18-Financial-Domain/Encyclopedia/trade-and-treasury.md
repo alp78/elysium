@@ -36,7 +36,7 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 **Real-world example:** A multinational corporation with bank accounts in 40 countries uses a bank's cash management service to automatically sweep excess balances from subsidiary accounts into a central treasury account each evening, ensuring optimal liquidity and maximizing interest earned on idle funds.
 
-**Related terms:** [Treasury Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Treasury Services), [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Working Capital), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction Banking), [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Trade Finance)
+**Related terms:** [Treasury Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Treasury%20Services), [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Working%20Capital), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction%20Banking), [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Trade%20Finance)
 
 ---
 
@@ -53,7 +53,7 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 **Real-world example:** A Japanese heavy machinery manufacturer sells a fleet of excavators to a construction company in Indonesia. The Japanese export credit agency provides insurance to the manufacturer's bank against the risk that the Indonesian buyer might default on payment, enabling the bank to offer favorable financing terms.
 
-**Related terms:** [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Trade Finance), [Project Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Project Finance), [Structured Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Structured Finance), [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Working Capital)
+**Related terms:** [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Trade%20Finance), [Project Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Project%20Finance), [Structured Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Structured%20Finance), [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Working%20Capital)
 
 ---
 
@@ -70,7 +70,7 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 **Real-world example:** A customer buys a new Toyota sedan priced at USD 35,000 but cannot pay cash. Toyota Financial Services offers a 60-month installment loan at 4.9% APR. The customer pays USD 660/month, and Toyota earns interest income over the life of the loan. The financing arrangement makes the vehicle affordable and drives incremental vehicle sales for Toyota.
 
-**Related terms:** [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer Finance), [Wholesale Financing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Wholesale Financing), [Leasing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Leasing), [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Working Capital)
+**Related terms:** [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer%20Finance), [Wholesale Financing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Wholesale%20Financing), [Leasing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Leasing), [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Working%20Capital)
 
 ---
 
@@ -87,7 +87,7 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 **Real-world example:** A German manufacturer exports machinery to a buyer in Brazil. The buyer's bank issues a letter of credit guaranteeing payment of EUR 2 million upon proof of shipment. The German manufacturer ships the machinery, presents the shipping documents to its bank, and receives payment. The letter of credit eliminates the risk of non-payment for the exporter and the risk of non-delivery for the importer.
 
-**Related terms:** [Export Credit Agency Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Export Credit Agency Finance), [Factoring](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Factoring), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply Chain), [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Working Capital), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction Banking)
+**Related terms:** [Export Credit Agency Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Export%20Credit%20Agency%20Finance), [Factoring](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Factoring), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply%20Chain), [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Working%20Capital), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction%20Banking)
 
 ---
 
@@ -99,7 +99,7 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 **Real-world example:** A multinational corporation's treasury department uses a bank's treasury management system to forecast daily cash positions across all subsidiaries, invest overnight surplus in money market instruments, execute foreign exchange hedges for anticipated receivables in emerging market currencies, and ensure compliance with debt covenants.
 
-**Related terms:** [Cash Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Cash Management), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Risk Management), [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Working Capital), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction Banking), [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives)
+**Related terms:** [Cash Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Cash%20Management), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Risk%20Management), [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Working%20Capital), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction%20Banking), [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives)
 
 ---
 
@@ -116,7 +116,7 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 **Real-world example:** A Toyota dealership receives a shipment of 50 new vehicles worth USD 2 million. Instead of paying Toyota cash upfront, the dealership uses a wholesale financing arrangement from Toyota Financial Services. The dealership pays monthly interest on the outstanding inventory. When a customer buys a car for USD 40,000, the dealership repays the wholesale loan for that unit and pockets the profit margin.
 
-**Related terms:** [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer Finance), [Sales Financing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Sales Financing), [Leasing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Leasing), [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Working Capital), [Distributors](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Distributors)
+**Related terms:** [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer%20Finance), [Sales Financing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Sales%20Financing), [Leasing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Leasing), [Working Capital](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Working%20Capital), [Distributors](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Distributors)
 
 ---
 
@@ -133,4 +133,4 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 **Real-world example:** A manufacturing company has USD 5 million in cash, USD 8 million in receivables, and USD 4 million in inventory (total current assets: USD 17 million). It owes USD 6 million to suppliers and USD 3 million in short-term loans (total current liabilities: USD 9 million). Its working capital is USD 8 million (USD 17M - USD 9M), indicating sufficient liquidity to operate smoothly.
 
-**Related terms:** [Cash Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Cash Management), [Factoring](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Factoring), [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Trade Finance), [Treasury Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Treasury Services), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction Banking)
+**Related terms:** [Cash Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Cash%20Management), [Factoring](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Factoring), [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Trade%20Finance), [Treasury Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Treasury%20Services), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction%20Banking)

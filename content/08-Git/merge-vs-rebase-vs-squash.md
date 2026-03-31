@@ -29,6 +29,8 @@ Three strategies for integrating changes from one branch into another. Each prod
 
 ### git merge — standard merge with merge commit
 
+A standard merge joins two branches by creating a new commit with two parents. It preserves the complete history of both branches — every individual commit on the feature branch remains visible in the log. This is the default merge behavior in Git.
+
 ```bash
 git checkout main
 git merge feat/new-feature
@@ -39,6 +41,8 @@ Creates a merge commit that preserves the full branch topology. Both parent hist
 **Use when:** The branch has meaningful intermediate commits that reviewers or future debuggers will want to see.
 
 ### git rebase — replay commits for linear history
+
+Rebasing detaches your commits from where they originally branched off and replays them one by one on top of the target branch's latest commit. The result is a clean, linear history with no merge commits — as if you started your work after everyone else finished theirs. Because each replayed commit gets a new SHA, rebasing rewrites history.
 
 ```bash
 git checkout feat/new-feature
@@ -56,6 +60,8 @@ Replays your commits on top of main's latest commit. Creates a linear history wi
 **Use when:** You want a linear history and the branch is private to you.
 
 ### git merge --squash — collapse branch into single commit
+
+Squash merging takes all the commits on a feature branch and condenses them into a single new commit on the target branch. The individual commit history from the branch is discarded — only the final combined result appears in the target's log. This is ideal when a branch has many small "work in progress" commits that would clutter the main branch history.
 
 ```bash
 git checkout main

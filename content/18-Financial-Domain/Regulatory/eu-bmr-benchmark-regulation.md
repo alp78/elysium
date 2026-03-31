@@ -80,9 +80,9 @@ updated: 2026-03-23
 
 ## ISS & STOXX Glossary
 
-- [Benchmark Regulation (EU BMR)](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Benchmark Regulation (EU BMR)) — formal definition and scope
-- [Benchmark Administrator](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Benchmark Administrator) — administrator obligations
-- [CTB](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Climate Transition Benchmark (CTB)) and [PAB](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#PAB (Paris-Aligned Benchmark)) — climate benchmark definitions
+- [Benchmark Regulation (EU BMR)](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Benchmark%20Regulation%20(EU%20BMR)) — formal definition and scope
+- [Benchmark Administrator](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Benchmark%20Administrator) — administrator obligations
+- [CTB](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Climate%20Transition%20Benchmark%20(CTB)) and [PAB](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#PAB%20(Paris-Aligned%20Benchmark)) — climate benchmark definitions
 - [Index Construction Glossary](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction) — methodology terms referenced in BMR compliance
 
 ## Related

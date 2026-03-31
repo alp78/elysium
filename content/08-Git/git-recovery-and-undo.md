@@ -250,6 +250,8 @@ rm -f .git/index.lock
 
 ### Advanced: Cherry-pick
 
+Cherry-picking copies a single commit from one branch and applies it as a new commit on your current branch. Unlike merging (which brings in an entire branch's history), cherry-pick lets you surgically extract exactly one commit. This is useful when a bug fix landed on a different branch and you need just that fix without everything else.
+
 ```bash
 # Apply a specific commit onto the current branch
 git cherry-pick abc1234
@@ -259,6 +261,8 @@ git cherry-pick abc1234
 ```
 
 ### Advanced: Interactive Rebase
+
+Interactive rebase lets you rewrite your recent commit history — reorder commits, combine multiple commits into one (squash), edit commit messages, or drop commits entirely. It opens an editor showing your recent commits as a todo list where you choose what to do with each one. This is a powerful cleanup tool before pushing or opening a PR.
 
 ```bash
 # Reorder, squash, edit, or drop the last 5 commits

@@ -40,8 +40,8 @@ date: 2026-03-28
 a benchmark is the yardstick. When a fund manager says "we track the STOXX Europe 600," that index is the benchmark instrument — the thing every return is compared against, and the thing that determines what the fund must hold.
 
 > [!tip] Related Terms
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO STOXX 50)
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Benchmark Selection)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Benchmark%20Selection)
 > - See also: **Index Fund**, **ETF**, **Passive Investment** in this file
 
 > [!example]- Source excerpts (5)
@@ -97,7 +97,7 @@ a bond is an IOU with a schedule. You lend money, receive regular interest, and 
 
 > [!tip] Related Terms
 > - See also: **Corporate Bond**, **Sovereign Bond**, **Green Bond**, **High-Yield Bond**, **Investment Grade Bond** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX Fixed Income Indices)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Fixed%20Income%20Indices)
 
 > [!example]- Source excerpts (5)
 >
@@ -154,7 +154,7 @@ a call option is a bet that the index will go up. You pay a premium for the righ
 
 > [!tip] Related Terms
 > - See also: **Put Option**, **Index Option**, **Options on Indices**, **Covered Call Strategy** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO STOXX 50)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
 
 > [!example]- Source excerpts (5)
 >
@@ -208,7 +208,7 @@ Think of a certificate as a simplified way to "buy" an entire index through a si
 
 > [!tip] Related Terms
 > - See also: **Delta-One Product**, **Index-Linked Note**, **Structured Product** in this file
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Price Return Index)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Price%20Return%20Index)
 
 > [!example]- Source excerpts (5)
 >
@@ -263,7 +263,7 @@ A convertible bond is a bond with an embedded stock option. You receive regular 
 
 > [!tip] Related Terms
 > - See also: **Bond**, **Corporate Bond**, **Equity** in this file
-> - [corporate-governance](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/corporate-governance#Shareholder Dilution)
+> - [corporate-governance](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/corporate-governance#Shareholder%20Dilution)
 
 > [!example]- Source excerpts (5)
 >
@@ -317,7 +317,7 @@ A corporate bond is a loan you make to a company. The company pays you interest 
 
 > [!tip] Related Terms
 > - See also: **Bond**, **Investment Grade Bond**, **High-Yield Bond**, **Convertible Bond** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX Corporate Bond Indices)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Corporate%20Bond%20Indices)
 
 > [!example]- Source excerpts (5)
 >
@@ -374,8 +374,8 @@ you own the index and sell someone else the right to buy it above a certain pric
 
 > [!tip] Related Terms
 > - See also: **Index Option**, **Options on Indices** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO STOXX 50)
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Strategy Index)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Strategy%20Index)
 
 > [!example]- Source excerpts (5)
 >
@@ -431,7 +431,7 @@ A credit default swap is essentially insurance against a borrower defaulting. Yo
 
 > [!tip] Related Terms
 > - See also: **Swap**, **Corporate Bond**, **Sovereign Bond** in this file
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Credit Risk Indicators)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Credit%20Risk%20Indicators)
 
 > [!example]- Source excerpts (2)
 >
@@ -469,8 +469,8 @@ Equity means ownership. When you buy a share of stock, you own a small piece of 
 
 > [!tip] Related Terms
 > - See also: **ETF**, **Index Fund**, **Convertible Bond**, **Passive Investment** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX Europe 600)
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float Market Capitalization)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Europe%20600)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float%20Market%20Capitalization)
 
 > [!example]- Source excerpts (5)
 >
@@ -526,8 +526,8 @@ An ETF lets you buy and sell a whole index as easily as a single stock. It holds
 
 > [!tip] Related Terms
 > - See also: **ETP**, **Index Fund**, **Passive Investment**, **Portfolio Replication** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX Europe 600)
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Full Replication)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Europe%20600)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Full%20Replication)
 
 > [!example]- Source excerpts (5)
 >
@@ -581,7 +581,7 @@ An ETC works like an ETF, but for commodities — gold, oil, copper, agricultura
 
 > [!tip] Related Terms
 > - See also: **ETP**, **ETN** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX Commodity Indices)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Commodity%20Indices)
 
 > [!example]- Source excerpts (5)
 >
@@ -635,7 +635,7 @@ An ETN is essentially a bank's IOU linked to an index. You get precise index tra
 
 > [!tip] Related Terms
 > - See also: **ETP**, **Certificate**, **Delta-One Product** in this file
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Price Return Index)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Price%20Return%20Index)
 
 > [!example]- Source excerpts (5)
 >
@@ -690,7 +690,7 @@ ETP is the big tent. Whenever someone says "exchange-traded product," they mean 
 
 > [!tip] Related Terms
 > - See also: **ETF**, **ETN**, **ETC** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX Global Indices)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Global%20Indices)
 
 > [!example]- Source excerpts (5)
 >
@@ -739,7 +739,7 @@ Eurex futures let you make a binding agreement today to buy or sell the value of
 
 > [!tip] Related Terms
 > - See also: **Futures Contract**, **Options on Indices**, **Index Option** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO STOXX 50)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#DAX)
 
 > [!example]- Source excerpts (5)
@@ -798,8 +798,8 @@ an index future is a bet on where the index will be at a specific date. You neve
 
 > [!tip] Related Terms
 > - See also: **Eurex Futures**, **Delta-One Product**, **Index Option** in this file
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Settlement Price)
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO STOXX 50)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Settlement%20Price)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
 
 > [!example]- Source excerpts (5)
 >
@@ -857,7 +857,7 @@ A green bond works exactly like a regular bond (fixed coupon, maturity date, cre
 > [!tip] Related Terms
 > - See also: **GSSS Bond**, **Social Bond**, **Sustainability Bond**, **Sustainability-Linked Bond**, **Labeled Debt** in this file
 > - [[esg-terms#Green Bond Principles]]
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX ESG Indices)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20ESG%20Indices)
 
 > [!example]- Source excerpts (5)
 >
@@ -912,7 +912,7 @@ A high-yield bond pays more interest because the issuer is riskier — it has a 
 
 > [!tip] Related Terms
 > - See also: **Bond**, **Corporate Bond**, **Investment Grade Bond**, **Credit Default Swap** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX High Yield Indices)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20High%20Yield%20Indices)
 
 > [!example]- Source excerpts (2)
 >
@@ -951,8 +951,8 @@ An index fund is the original passive investment. You give money to the fund man
 
 > [!tip] Related Terms
 > - See also: **ETF**, **Passive Investment**, **Portfolio Replication** in this file
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Full Replication)
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX Europe 600)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Full%20Replication)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Europe%20600)
 
 > [!example]- Source excerpts (5)
 >
@@ -1006,7 +1006,7 @@ Before a bank can launch an ETF on the EURO STOXX 50, it must obtain a license f
 
 > [!tip] Related Terms
 > - See also: **ETF**, **Futures Contract**, **Structured Product** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX Licensing Overview)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Licensing%20Overview)
 
 > [!example]- Source excerpts (5)
 >
@@ -1063,7 +1063,7 @@ An index option is like insurance — or a lottery ticket — on the index's dir
 
 > [!tip] Related Terms
 > - See also: **Options on Indices**, **Covered Call Strategy**, **Futures Contract** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO STOXX 50)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
 
 > [!example]- Source excerpts (5)
 >
@@ -1119,7 +1119,7 @@ An interest rate swap is a deal where two parties trade interest payments. One p
 
 > [!tip] Related Terms
 > - See also: **Swap**, **Total Return Swap**, **Credit Default Swap** in this file
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Risk Management)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Risk%20Management)
 
 > [!example]- Source excerpts (1)
 >
@@ -1169,7 +1169,7 @@ A money market fund is the closest thing to a savings account in the investment 
 
 > [!tip] Related Terms
 > - See also: **Commercial Paper**, **Treasury Bill / Treasury Bond**, **Bond** in this file
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Money Market Benchmarks)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Money%20Market%20Benchmarks)
 
 > [!example]- Source excerpts (1)
 >
@@ -1198,7 +1198,7 @@ A municipal bond is a loan to a local government. The city or state uses the mon
 
 > [!tip] Related Terms
 > - See also: **Bond**, **Sovereign Bond**, **Investment Grade Bond** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#Fixed Income Indices)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#Fixed%20Income%20Indices)
 
 > [!example]- Source excerpts (2)
 >
@@ -1235,8 +1235,8 @@ Passive investing means you buy the index and hold it. You do not try to pick wi
 
 > [!tip] Related Terms
 > - See also: **ETF**, **Index Fund**, **Portfolio Replication** in this file
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Market-Cap Weighting)
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX Global Indices)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Market-Cap%20Weighting)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Global%20Indices)
 
 > [!example]- Source excerpts (5)
 >
@@ -1288,8 +1288,8 @@ Replication is the mechanics behind passive investing. Full replication is the m
 
 > [!tip] Related Terms
 > - See also: **ETF**, **Index Fund**, **Total Return Swap**, **Passive Investment** in this file
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Full Replication)
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Optimized Replication)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Full%20Replication)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Optimized%20Replication)
 
 > [!example]- Source excerpts (1)
 >
@@ -1319,7 +1319,7 @@ A put option is the mirror image of a call option. You pay a premium for the rig
 
 > [!tip] Related Terms
 > - See also: **Call Option**, **Index Option**, **Options on Indices**, **Covered Call Strategy** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO STOXX 50)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
 
 > [!example]- Source excerpts (5)
 >
@@ -1378,8 +1378,8 @@ A REIT lets you invest in real estate without buying property directly. The REIT
 
 > [!tip] Related Terms
 > - See also: **Equity**, **ETF**, **Index Fund** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX Real Estate Indices)
-> - [corporate-governance](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/corporate-governance#Board Structure)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Real%20Estate%20Indices)
+> - [corporate-governance](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/corporate-governance#Board%20Structure)
 
 > [!example]- Source excerpts (5)
 >
@@ -1473,7 +1473,7 @@ A sovereign bond is a loan to a country. Germany, France, the United States, and
 
 > [!tip] Related Terms
 > - See also: **Bond**, **Treasury Bill / Treasury Bond**, **Municipal Bond**, **Investment Grade Bond** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX Sovereign Bond Indices)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#STOXX%20Sovereign%20Bond%20Indices)
 
 > [!example]- Source excerpts (5)
 >
@@ -1530,8 +1530,8 @@ A structured product is a custom-built financial instrument — usually a bond p
 
 > [!tip] Related Terms
 > - See also: **Certificate**, **Index-Linked Note**, **Delta-One Product**, **Warrant** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO STOXX 50)
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Strategy Index)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Strategy%20Index)
 
 > [!example]- Source excerpts (5)
 >
@@ -1664,7 +1664,7 @@ A swap is a private agreement to trade one stream of payments for another. The s
 
 > [!tip] Related Terms
 > - See also: **Total Return Swap**, **Interest Rate Swap**, **Credit Default Swap** in this file
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Synthetic Replication)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Synthetic%20Replication)
 
 > [!example]- Source excerpts (5)
 >
@@ -1722,8 +1722,8 @@ A total return swap is a private deal between two parties. One side says, "I wil
 
 > [!tip] Related Terms
 > - See also: **Delta-One Product**, **Portfolio Replication**, **ETF** in this file
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Total Return Index)
-> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Net Total Return Index)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Total%20Return%20Index)
+> - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Net%20Total%20Return%20Index)
 
 > [!example]- Source excerpts (3)
 >
@@ -1792,7 +1792,7 @@ A warrant is essentially a long-dated option packaged as a tradeable security. Y
 
 > [!tip] Related Terms
 > - See also: **Index Option**, **Options on Indices**, **Structured Product** in this file
-> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO STOXX 50)
+> - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#EURO%20STOXX%2050)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families#DAX)
 
 > [!example]- Source excerpts (5)

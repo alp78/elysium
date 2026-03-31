@@ -35,7 +35,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** When you visit your local bank branch to open a savings account, the banker might also offer you a life insurance policy underwritten by the bank's insurance partner. The bank earns a commission on each policy sold, and the insurer gets access to the bank's millions of customers.
 
-**Related terms:** [Insurance (Life)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance (Life)), [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail Banking), [Insurance Premium](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance Premium)
+**Related terms:** [Insurance (Life)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance%20(Life)), [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail%20Banking), [Insurance Premium](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance%20Premium)
 
 ---
 
@@ -47,7 +47,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** JPMorgan Chase & Co. is a bank holding company that owns JPMorgan Chase Bank (a national bank), J.P. Morgan Securities (a broker-dealer), and various asset management entities, all under one corporate umbrella.
 
-**Related terms:** [Holding Company](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Holding Company), [Commercial Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Commercial Banking)
+**Related terms:** [Holding Company](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Holding%20Company), [Commercial Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Commercial%20Banking)
 
 ---
 
@@ -64,7 +64,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** A mid-sized manufacturer obtains a USD 5 million revolving credit facility from its commercial bank to manage seasonal fluctuations in cash flow. The bank also provides the company with a lockbox service to accelerate the collection of customer payments.
 
-**Related terms:** [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail Banking), [Wholesale Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Wholesale Banking), [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Trade Finance), [Cash Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Cash Management), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction Banking)
+**Related terms:** [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail%20Banking), [Wholesale Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Wholesale%20Banking), [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Trade%20Finance), [Cash Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Cash%20Management), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction%20Banking)
 
 ---
 
@@ -81,7 +81,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** A consumer applies for a personal loan through a bank's mobile app to finance a home renovation. The bank's algorithm assesses the applicant's credit score, income, and existing debts within seconds, approving a USD 25,000 loan at 7.5% interest with automatic monthly payments over five years.
 
-**Related terms:** [Credit Cards](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Credit Cards), [Mortgage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Mortgage), [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail Banking), [Fintech](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Fintech)
+**Related terms:** [Credit Cards](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Credit%20Cards), [Mortgage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Mortgage), [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail%20Banking), [Fintech](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Fintech)
 
 ---
 
@@ -93,7 +93,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** A consumer uses an American Express Platinum card to purchase airline tickets costing USD 2,000. If the full balance is paid by the due date, no interest is charged. The merchant pays approximately 2.5% (USD 50) as an interchange fee, which is shared between American Express and the card-issuing bank.
 
-**Related terms:** [Issuing (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Issuing (Payments)), [Merchant Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Merchant Services), [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer Finance), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments Processing)
+**Related terms:** [Issuing (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Issuing%20(Payments)), [Merchant Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Merchant%20Services), [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer%20Finance), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments%20Processing)
 
 ---
 
@@ -110,7 +110,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** A local teachers' credit union accepts deposits from its members (teachers and school staff) and uses those funds to offer mortgages and auto loans at interest rates 0.5-1% lower than nearby commercial banks. Members elect a volunteer board of directors to oversee the credit union's operations.
 
-**Related terms:** [Commercial Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Commercial Banking), [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail Banking), [Non-Bank Lender](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Non-Bank Lender)
+**Related terms:** [Commercial Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Commercial%20Banking), [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail%20Banking), [Non-Bank Lender](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Non-Bank%20Lender)
 
 ---
 
@@ -127,7 +127,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** A bank customer opens a savings account entirely through a mobile app, completes identity verification by scanning their passport with their phone camera, deposits money via instant transfer, and uses the app's AI advisor feature to create a personalized savings plan — all without ever visiting a branch.
 
-**Related terms:** [Fintech](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Fintech), [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail Banking)
+**Related terms:** [Fintech](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Fintech), [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail%20Banking)
 
 ---
 
@@ -139,7 +139,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** A financial holding company owns a commercial bank, an insurance subsidiary, a brokerage firm, and an asset management company. The holding company structure allows each subsidiary to specialize in its area while the parent coordinates strategy and allocates capital across the group.
 
-**Related terms:** [Bank Holding Company](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Bank Holding Company), [Holding Company](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Holding Company)
+**Related terms:** [Bank Holding Company](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Bank%20Holding%20Company), [Holding Company](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Holding%20Company)
 
 ---
 
@@ -156,7 +156,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** A law firm leases a fleet of 50 luxury sedans from BMW for its partners under a 3-year operating lease. The firm pays EUR 600 per month per vehicle, which includes maintenance and insurance. At the end of 3 years, the cars are returned to BMW, and the firm can lease new models.
 
-**Related terms:** [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer Finance)
+**Related terms:** [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer%20Finance)
 
 ---
 
@@ -173,7 +173,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** An investor with AUD 100,000 in shares uses margin lending to borrow an additional AUD 50,000 to buy more stocks. If the portfolio value rises to AUD 180,000, the investor has a profit of AUD 30,000 on a AUD 100,000 investment. But if the portfolio drops to AUD 120,000, the loss is AUD 30,000 against the original investment of AUD 100,000, and the broker may issue a margin call.
 
-**Related terms:** [Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Brokerage), [Collateral](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Collateral), [Prime Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Prime Brokerage)
+**Related terms:** [Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Brokerage), [Collateral](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Collateral), [Prime Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Prime%20Brokerage)
 
 ---
 
@@ -190,7 +190,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** A young couple purchases their first home for USD 350,000 with a 20% down payment (USD 70,000) and a 30-year fixed-rate mortgage at 6.5% interest. Their monthly payment is approximately USD 1,770, and over the life of the loan, they will pay about USD 357,000 in interest in addition to repaying the USD 280,000 principal.
 
-**Related terms:** [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer Finance), [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail Banking), [Securitization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Securitization), [Collateral](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Collateral)
+**Related terms:** [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer%20Finance), [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail%20Banking), [Securitization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Securitization), [Collateral](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Collateral)
 
 ---
 
@@ -202,7 +202,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** A fintech non-bank lender offers unsecured personal loans entirely through a mobile app. It uses AI and alternative data (such as utility bill payment history and educational background) to assess creditworthiness, often approving borrowers who might be rejected by traditional banks. It funds these loans through warehouse credit facilities provided by larger banks.
 
-**Related terms:** [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer Finance), [Fintech](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Fintech), [Securitization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Securitization), [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail Banking)
+**Related terms:** [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer%20Finance), [Fintech](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Fintech), [Securitization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Securitization), [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail%20Banking)
 
 ---
 
@@ -219,7 +219,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** A college graduate opens a checking account, sets up direct deposit, gets a debit card, downloads the bank's mobile app, and applies for a credit card — all at a single branch visit. Over the next few years, the same bank helps them open a savings account, get a car loan, and eventually obtain a mortgage, building a long-term banking relationship.
 
-**Related terms:** [Commercial Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Commercial Banking), [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer Finance), [Digital Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Digital Banking), [Mortgage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Mortgage)
+**Related terms:** [Commercial Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Commercial%20Banking), [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer%20Finance), [Digital Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Digital%20Banking), [Mortgage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Mortgage)
 
 ---
 
@@ -236,7 +236,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** A multinational retailer uses a bank's transaction banking platform to manage its global payment operations. The platform processes supplier payments in 30 currencies, collects customer payments through various channels, provides real-time cash position visibility across 50 countries, and automatically executes FX transactions for cross-border payments.
 
-**Related terms:** [Cash Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Cash Management), [Treasury Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Treasury Services), [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Trade Finance), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments Processing)
+**Related terms:** [Cash Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Cash%20Management), [Treasury Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Treasury%20Services), [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Trade%20Finance), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments%20Processing)
 
 ---
 
@@ -253,7 +253,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** A multinational corporation with bank accounts in 40 countries uses a bank's cash management service to automatically sweep excess balances from subsidiary accounts into a central treasury account each evening, ensuring optimal liquidity and maximizing interest earned on idle funds.
 
-**Related terms:** [Treasury Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Treasury Services), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction Banking)
+**Related terms:** [Treasury Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Treasury%20Services), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction%20Banking)
 
 ---
 
@@ -265,7 +265,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** A multinational corporation's treasury department uses a bank's treasury management system to forecast daily cash positions across all subsidiaries, invest overnight surplus in money market instruments, execute foreign exchange hedges for anticipated receivables in emerging market currencies, and ensure compliance with debt covenants.
 
-**Related terms:** [Cash Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Cash Management), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk Management), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction Banking)
+**Related terms:** [Cash Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Cash%20Management), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk%20Management), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction%20Banking)
 
 ---
 
@@ -282,7 +282,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** A wealthy individual establishes a trust with a bank as trustee to manage USD 30 million for the benefit of her grandchildren. The bank invests the trust assets according to the trust document's guidelines, distributes income to the grandchildren for education and living expenses, and eventually distributes the principal to them when they reach age 35.
 
-**Related terms:** [Private Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Private Banking), [Wealth Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Wealth Management)
+**Related terms:** [Private Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Private%20Banking), [Wealth Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Wealth%20Management)
 
 ---
 
@@ -299,7 +299,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** A wholesale banking division provides a Fortune 500 company with a USD 2 billion revolving credit facility, manages its global cash pooling across 25 countries, processes thousands of supplier payments daily through its transaction banking platform, and provides foreign exchange hedging for the company's multi-currency revenue streams.
 
-**Related terms:** [Commercial Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Commercial Banking), [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail Banking), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction Banking), [Loan Syndication](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Loan Syndication)
+**Related terms:** [Commercial Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Commercial%20Banking), [Retail Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Retail%20Banking), [Transaction Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Transaction%20Banking), [Loan Syndication](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Loan%20Syndication)
 
 ---
 
@@ -311,7 +311,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** A Toyota dealership receives a shipment of 50 new vehicles worth USD 2 million. Instead of paying Toyota cash upfront, the dealership uses a wholesale financing arrangement from Toyota Financial Services. The dealership pays monthly interest on the outstanding inventory. When a customer buys a car for USD 40,000, the dealership repays the wholesale loan for that unit and pockets the profit margin.
 
-**Related terms:** [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer Finance), [Leasing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Leasing)
+**Related terms:** [Consumer Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Consumer%20Finance), [Leasing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Leasing)
 
 ---
 
@@ -328,4 +328,4 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 **Real-world example:** A manufacturing company has USD 5 million in cash, USD 8 million in receivables, and USD 4 million in inventory (total current assets: USD 17 million). It owes USD 6 million to suppliers and USD 3 million in short-term loans (total current liabilities: USD 9 million). Its working capital is USD 8 million (USD 17M - USD 9M), indicating sufficient liquidity to operate smoothly.
 
-**Related terms:** [Cash Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Cash Management), [Factoring](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Factoring), [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Trade Finance), [Treasury Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Treasury Services)
+**Related terms:** [Cash Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Cash%20Management), [Factoring](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Factoring), [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Trade%20Finance), [Treasury Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Treasury%20Services)

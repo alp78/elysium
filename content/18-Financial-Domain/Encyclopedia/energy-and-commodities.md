@@ -34,7 +34,7 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 **Real-world example:** An oil company captures CO2 from its natural gas processing plant in Western Australia, compresses it, and injects it into a deep geological formation two kilometers underground, permanently storing millions of tonnes of CO2 that would otherwise have been released into the atmosphere.
 
-**Related terms:** [Green Hydrogen](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Green Hydrogen), [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable Energy), [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Downstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Downstream), [Net-Zero](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#Net-Zero)
+**Related terms:** [Green Hydrogen](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Green%20Hydrogen), [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable%20Energy), [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Downstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Downstream), [Net-Zero](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#Net-Zero)
 
 ---
 
@@ -51,7 +51,7 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 **Real-world example:** A chemical factory installs a cogeneration system that burns natural gas to generate electricity for its production lines. The waste heat from the gas turbine is captured and used to produce steam for the factory's chemical processes, reducing the facility's overall fuel consumption by 30%.
 
-**Related terms:** [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable Energy), [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Downstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Downstream), [Energy Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Energy Storage)
+**Related terms:** [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable%20Energy), [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Downstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Downstream), [Energy Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Energy%20Storage)
 
 ---
 
@@ -68,7 +68,7 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 **Real-world example:** A commodities trading firm buys 1 million barrels of crude oil in the Middle East at USD 75 per barrel, arranges tanker transportation, and sells the oil to a refinery in Asia at USD 77 per barrel, earning a profit on the price differential while managing logistics and price risk through hedging with futures contracts.
 
-**Related terms:** [Futures and Options](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Futures and Options), [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives), [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Refining](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Refining)
+**Related terms:** [Futures and Options](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Futures%20and%20Options), [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives), [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Refining](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Refining)
 
 ---
 
@@ -97,7 +97,7 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 **Real-world example:** A solar farm generates more electricity than the grid needs during sunny midday hours. The excess energy charges a Tesla Megapack battery storage system on site. In the evening when solar production drops but demand peaks, the stored energy is discharged into the grid, providing clean electricity when it is needed most.
 
-**Related terms:** [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable Energy), [Carbon Capture and Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Carbon Capture and Storage), [Green Hydrogen](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Green Hydrogen)
+**Related terms:** [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable%20Energy), [Carbon Capture and Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Carbon%20Capture%20and%20Storage), [Green Hydrogen](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Green%20Hydrogen)
 
 ---
 
@@ -114,7 +114,7 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 **Real-world example:** A wind farm in Northern Europe produces excess electricity on windy days. Instead of curtailing (wasting) this excess power, it powers an electrolyzer that splits water into hydrogen and oxygen. The green hydrogen is compressed and transported to a nearby steel plant, where it replaces coal as a reducing agent in the steelmaking process.
 
-**Related terms:** [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable Energy), [Carbon Capture and Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Carbon Capture and Storage), [Energy Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Energy Storage), [Cogeneration](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Cogeneration), [Net-Zero](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#Net-Zero)
+**Related terms:** [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable%20Energy), [Carbon Capture and Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Carbon%20Capture%20and%20Storage), [Energy Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Energy%20Storage), [Cogeneration](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Cogeneration), [Net-Zero](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#Net-Zero)
 
 ---
 
@@ -131,7 +131,7 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 **Real-world example:** An LNG producer in Qatar cools natural gas to liquid form, loads it onto a specialized tanker, and ships it to a regasification terminal in Japan. There, the LNG is warmed back to gas and fed into Japan's pipeline network, providing fuel for power plants and heating systems.
 
-**Related terms:** [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Midstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Midstream), [Downstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Downstream), [Commodity Trading](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Commodity Trading), [Pipeline (Energy)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Pipeline (Energy))
+**Related terms:** [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Midstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Midstream), [Downstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Downstream), [Commodity Trading](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Commodity%20Trading), [Pipeline (Energy)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Pipeline%20(Energy))
 
 ---
 
@@ -148,7 +148,7 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 **Real-world example:** A midstream company operates a 1,500-kilometer pipeline that transports crude oil from production wells in West Texas to refineries on the Gulf Coast. The company charges oil producers a per-barrel transportation fee, earning steady revenue regardless of whether oil prices are high or low.
 
-**Related terms:** [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Downstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Downstream), [Pipeline (Energy)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Pipeline (Energy)), [Liquefied Natural Gas (LNG)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Liquefied Natural Gas (LNG))
+**Related terms:** [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Downstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Downstream), [Pipeline (Energy)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Pipeline%20(Energy)), [Liquefied Natural Gas (LNG)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Liquefied%20Natural%20Gas%20(LNG))
 
 ---
 
@@ -172,7 +172,7 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 **Real-world example:** A natural gas pipeline stretches 3,000 kilometers from a gas field in western Siberia to a distribution hub in Germany. Compressor stations spaced every 200 kilometers maintain pressure to keep the gas flowing. The pipeline operator charges gas producers a per-cubic-meter tariff for transportation, earning predictable revenue over a 30-year contract.
 
-**Related terms:** [Midstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Midstream), [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Liquefied Natural Gas (LNG)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Liquefied Natural Gas (LNG))
+**Related terms:** [Midstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Midstream), [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Liquefied Natural Gas (LNG)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Liquefied%20Natural%20Gas%20(LNG))
 
 ---
 
@@ -189,7 +189,7 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 **Real-world example:** A refinery in Texas processes 300,000 barrels of crude oil per day. The crude oil enters a distillation tower where it is heated and separated into different products based on boiling points: lighter gases rise to the top, gasoline and jet fuel are collected in the middle, and heavier products like diesel and asphalt are drawn from the bottom. The refinery earns profit based on the spread between crude oil costs and refined product prices.
 
-**Related terms:** [Downstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Downstream), [Petrochemicals](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Petrochemicals), [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Commodity Trading](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Commodity Trading)
+**Related terms:** [Downstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Downstream), [Petrochemicals](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Petrochemicals), [Upstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Upstream), [Commodity Trading](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Commodity%20Trading)
 
 ---
 
@@ -206,7 +206,7 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 **Real-world example:** A utility company builds a 500 MW offshore wind farm in the North Sea consisting of 50 wind turbines. The wind farm generates enough clean electricity to power 350,000 homes annually, displacing approximately 700,000 tonnes of CO2 emissions per year compared to gas-fired power generation.
 
-**Related terms:** [Green Hydrogen](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Green Hydrogen), [Carbon Capture and Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Carbon Capture and Storage), [Energy Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Energy Storage), [Cogeneration](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Cogeneration), [ESG](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#ESG)
+**Related terms:** [Green Hydrogen](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Green%20Hydrogen), [Carbon Capture and Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Carbon%20Capture%20and%20Storage), [Energy Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Energy%20Storage), [Cogeneration](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Cogeneration), [ESG](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#ESG)
 
 ---
 
@@ -223,4 +223,4 @@ Encyclopedia of energy and commodities terms covering the oil and gas value chai
 
 **Real-world example:** An oil company identifies a promising geological formation beneath the seabed off the coast of Brazil. It spends USD 100 million on seismic surveys, drills exploratory wells at USD 50 million each, discovers a commercially viable oil reservoir, and then invests USD 5 billion to develop the field and begin production of 100,000 barrels per day.
 
-**Related terms:** [Midstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Midstream), [Downstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Downstream), [Refining](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Refining), [Liquefied Natural Gas (LNG)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Liquefied Natural Gas (LNG))
+**Related terms:** [Midstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Midstream), [Downstream](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Downstream), [Refining](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Refining), [Liquefied Natural Gas (LNG)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Liquefied%20Natural%20Gas%20(LNG))

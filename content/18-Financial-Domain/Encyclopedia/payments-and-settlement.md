@@ -34,7 +34,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 **Real-world example:** When you pay for a coffee with your debit card, the coffee shop's acquirer (e.g., Adyen or a traditional bank) receives the transaction request, routes it to your bank for approval, and then deposits the funds into the shop's business account, typically within one to two business days.
 
-**Related terms:** [Gateway (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Gateway (Payments)), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Settlement), [Issuing (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Issuing (Payments)), [Authorization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Authorization), [Merchant Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Merchant Services)
+**Related terms:** [Gateway (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Gateway%20(Payments)), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Settlement), [Issuing (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Issuing%20(Payments)), [Authorization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Authorization), [Merchant Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Merchant%20Services)
 
 ---
 
@@ -51,7 +51,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 **Real-world example:** When you tap your credit card at a grocery store, the terminal sends a request to Visa's network, which forwards it to your bank. Your bank checks your credit limit, confirms the card is valid, and sends back an approval code — all within about two seconds. Only then does the terminal display "Approved."
 
-**Related terms:** [Acquiring (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Acquiring (Payments)), [Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Clearing), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Settlement), [Gateway (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Gateway (Payments))
+**Related terms:** [Acquiring (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Acquiring%20(Payments)), [Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Clearing), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Settlement), [Gateway (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Gateway%20(Payments))
 
 ---
 
@@ -68,7 +68,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 **Real-world example:** When an investor in Hong Kong buys 1,000 shares of a company listed on the Hong Kong Stock Exchange, the Hong Kong Securities Clearing Company (a subsidiary of HKEX) steps in as the central counterparty, guaranteeing that the buyer receives the shares and the seller receives the payment.
 
-**Related terms:** [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Settlement), [Securities Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Securities Clearing), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Exchange (Stock/Futures))
+**Related terms:** [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Settlement), [Securities Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Securities%20Clearing), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Exchange%20(Stock/Futures))
 
 ---
 
@@ -85,7 +85,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 **Real-world example:** A large pension fund holds USD 50 billion in global equities. A custodian bank safekeeps all these securities, processes dividend payments into the fund's account, provides daily portfolio valuations, handles corporate action notifications (such as stock splits), and generates year-end tax reporting.
 
-**Related terms:** [Securities Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Securities Clearing), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Settlement)
+**Related terms:** [Securities Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Securities%20Clearing), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Settlement)
 
 ---
 
@@ -102,7 +102,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 **Real-world example:** A commuter in Tokyo loads JPY 5,000 onto a rechargeable transit card (like Suica). This stored value can be used to pay for train rides, vending machine purchases, and convenience store transactions by simply tapping the card — the balance decreases electronically with each use.
 
-**Related terms:** [Digital Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Digital Banking), [Fintech](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Fintech), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments Processing), [Prepaid Cards](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Prepaid Cards)
+**Related terms:** [Digital Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Digital%20Banking), [Fintech](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Fintech), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments%20Processing), [Prepaid Cards](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Prepaid%20Cards)
 
 ---
 
@@ -119,7 +119,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 **Real-world example:** When you buy a pair of shoes from an online store, the payment gateway encrypts your credit card number, sends it to the payment processor, receives authorization from your bank, and transmits the approval back to the store's website — all within seconds, enabling the store to confirm your order.
 
-**Related terms:** [Acquiring (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Acquiring (Payments)), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments Processing), [Authorization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Authorization), [Merchant Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Merchant Services)
+**Related terms:** [Acquiring (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Acquiring%20(Payments)), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments%20Processing), [Authorization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Authorization), [Merchant Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Merchant%20Services)
 
 ---
 
@@ -136,7 +136,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 **Real-world example:** A bank issues a Visa credit card to a consumer with a USD 10,000 credit limit. The bank manages the cardholder's account, sends monthly statements, collects payments, charges interest on outstanding balances, and earns interchange fees each time the cardholder uses the card for a purchase.
 
-**Related terms:** [Acquiring (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Acquiring (Payments)), [Credit Cards](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Credit Cards), [Prepaid Cards](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Prepaid Cards), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments Processing)
+**Related terms:** [Acquiring (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Acquiring%20(Payments)), [Credit Cards](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Credit%20Cards), [Prepaid Cards](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Prepaid%20Cards), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments%20Processing)
 
 ---
 
@@ -153,7 +153,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 **Real-world example:** A new restaurant signs up for merchant services with a payment processor, receiving a card terminal, access to an online payment portal for catering orders, and a dashboard for tracking daily sales. The processor charges 2.3% on each card transaction plus a monthly terminal fee.
 
-**Related terms:** [Acquiring (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Acquiring (Payments)), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments Processing), [Point-of-Sale](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Point-of-Sale), [Gateway (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Gateway (Payments))
+**Related terms:** [Acquiring (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Acquiring%20(Payments)), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments%20Processing), [Point-of-Sale](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Point-of-Sale), [Gateway (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Gateway%20(Payments))
 
 ---
 
@@ -170,7 +170,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 **Real-world example:** When a customer taps their Mastercard at a retail store, the transaction passes through multiple steps in seconds: the terminal reads the card, the payment processor encrypts and routes the data, Mastercard's network directs it to the issuing bank for authorization, the bank approves or declines, and the response returns to the terminal. Settlement of funds to the merchant occurs within one to two business days.
 
-**Related terms:** [Gateway (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Gateway (Payments)), [Acquiring (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Acquiring (Payments)), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Settlement), [Authorization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Authorization), [Merchant Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Merchant Services)
+**Related terms:** [Gateway (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Gateway%20(Payments)), [Acquiring (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Acquiring%20(Payments)), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Settlement), [Authorization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Authorization), [Merchant Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Merchant%20Services)
 
 ---
 
@@ -187,7 +187,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 **Real-world example:** A coffee shop uses a tablet-based POS system that accepts credit cards, debit cards, and mobile payments. When a customer taps their phone to pay, the POS system processes the payment, records the sale in the inventory system, deducts the sold items from stock, and updates the owner's real-time sales dashboard.
 
-**Related terms:** [Merchant Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Merchant Services), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments Processing), [Acquiring (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Acquiring (Payments))
+**Related terms:** [Merchant Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Merchant%20Services), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments%20Processing), [Acquiring (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Acquiring%20(Payments))
 
 ---
 
@@ -204,7 +204,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 **Real-world example:** A parent loads USD 50 onto a Visa prepaid card for their teenager to use for school lunches. The card is accepted wherever Visa is accepted, but spending is limited to the preloaded balance, making it a controlled budgeting tool.
 
-**Related terms:** [Issuing (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Issuing (Payments)), [Electronic Money](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Electronic Money), [Credit Cards](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Credit Cards)
+**Related terms:** [Issuing (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Issuing%20(Payments)), [Electronic Money](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Electronic%20Money), [Credit Cards](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Credit%20Cards)
 
 ---
 
@@ -216,7 +216,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 **Real-world example:** On a given day, millions of stock trades occur on a major exchange. Instead of settling each trade individually, a clearinghouse nets all the buy and sell orders for each security. A broker that bought and sold the same stock multiple times may end up with a single net obligation, dramatically reducing the volume of actual securities and cash that must be transferred at settlement.
 
-**Related terms:** [Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Clearing), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Settlement), [Custodian Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Custodian Services)
+**Related terms:** [Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Clearing), [Settlement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Settlement), [Custodian Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Custodian%20Services)
 
 ---
 
@@ -233,7 +233,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 **Real-world example:** An investor buys 1,000 shares of Toyota on the Tokyo Stock Exchange on Monday. Under T+2 settlement, the actual transfer of shares to the investor's account and the debit of cash from the investor's account occurs on Wednesday. During this two-day window, the clearinghouse ensures both parties fulfill their obligations.
 
-**Related terms:** [Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Clearing), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments Processing), [Custodian Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Custodian Services), [Authorization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Authorization)
+**Related terms:** [Clearing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Clearing), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments%20Processing), [Custodian Services](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Custodian%20Services), [Authorization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Authorization)
 
 ---
 
@@ -250,7 +250,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 **Real-world example:** When you add your credit card to Apple Pay, the actual card number is never stored on your phone. Instead, a unique token is created and stored in the phone's secure element. When you tap your phone to pay at a store, the token is transmitted instead of your real card number, so even if the data is intercepted, it cannot be used for fraudulent transactions.
 
-**Related terms:** [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments Processing), [Cybersecurity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cybersecurity), [Gateway (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Gateway (Payments))
+**Related terms:** [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments%20Processing), [Cybersecurity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cybersecurity), [Gateway (Payments)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Gateway%20(Payments))
 
 ---
 
@@ -262,4 +262,4 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 **Real-world example:** A company's accounts payable department generates a unique virtual card number with a USD 5,000 limit to pay a one-time office furniture supplier. After the payment is processed, the virtual number becomes inactive. Even if the supplier's systems are hacked, the stolen virtual number is useless because it has already expired and cannot be used for additional purchases.
 
-**Related terms:** [Credit Cards](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Credit Cards), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments Processing), [Tokenization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Tokenization), [Cybersecurity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cybersecurity)
+**Related terms:** [Credit Cards](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Credit%20Cards), [Payments Processing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Payments%20Processing), [Tokenization](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/payments-and-settlement#Tokenization), [Cybersecurity](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Cybersecurity)

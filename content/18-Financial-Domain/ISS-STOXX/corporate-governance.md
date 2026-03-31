@@ -676,7 +676,7 @@ burn rate measures how fast a company is handing out shares to employees. A high
 >
 > options. A company's annual VABR is calculated as follows: WWW.ISSGOVERNANCE.COM 3 of 7 UNITED
 > STATES FAQ: GICS UPDATES AND VALUE-ADJUSTED **BURN RATE** Annual Value-Adjusted **Burn Rate** =
-> ((# of options * option’s dollar value using a Black-Scholes model) + (# of full-value awards *
+> ((#%20of%20options%20*%20option’s%20dollar%20value%20using%20a%20Black-Scholes%20model) + (# of full-value awards *
 > stock price)) / (We
 >
 > — [Us Gics Changes Value Adjusted Burn Rate Faq (PDF), p. 4](https://www.issgovernance.com/file/policy/2022/americas/US-GICS-Changes-Value-Adjusted-Burn-Rate-FAQ.pdf)

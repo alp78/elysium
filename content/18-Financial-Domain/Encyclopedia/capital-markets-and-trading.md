@@ -35,7 +35,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 **Real-world example:** A city government wants to build a new bridge costing USD 500 million. It hires an investment bank to underwrite a municipal bond issuance. The bank prices the bonds, purchases the entire issue from the city, and then sells the bonds to institutional and retail investors.
 
-**Related terms:** [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Markets), [Equity Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equity Underwriting), [Debt Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Debt Capital Markets), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment Banking)
+**Related terms:** [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital%20Markets), [Equity Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equity%20Underwriting), [Debt Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Debt%20Capital%20Markets), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment%20Banking)
 
 ---
 
@@ -52,7 +52,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 **Real-world example:** An individual investor opens an account with an online brokerage firm, deposits USD 10,000, and uses the platform to buy shares of Apple and Tesla. The brokerage firm executes the trades on a stock exchange and holds the shares in the investor's account.
 
-**Related terms:** [Securities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Securities), [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Prime Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Prime Brokerage), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment Banking)
+**Related terms:** [Securities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Securities), [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Prime Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Prime%20Brokerage), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment%20Banking)
 
 ---
 
@@ -69,7 +69,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 **Real-world example:** When a technology company conducts an IPO on the Nasdaq exchange, it is using the capital markets to raise money from investors. Those investors can later sell their shares on the secondary market to other investors through the same exchange.
 
-**Related terms:** [Debt Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Debt Capital Markets), [Equity Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equity Underwriting), [Securities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Securities), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment Banking)
+**Related terms:** [Debt Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Debt%20Capital%20Markets), [Equity Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equity%20Underwriting), [Securities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Securities), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment%20Banking)
 
 ---
 
@@ -86,7 +86,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 **Real-world example:** A biotechnology startup raises USD 100 million by selling new shares to institutional investors in a private placement, giving the investors a 20% stake in the company while providing the startup with funds for clinical trials.
 
-**Related terms:** [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Markets), [Equity Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equity Underwriting), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment Banking), [Initial Public Offering (IPO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Initial Public Offering (IPO))
+**Related terms:** [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital%20Markets), [Equity Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equity%20Underwriting), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment%20Banking), [Initial Public Offering (IPO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Initial%20Public%20Offering%20(IPO))
 
 ---
 
@@ -98,7 +98,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 **Real-world example:** A large utility company issues USD 2 billion in 10-year corporate bonds at 4.5% interest to finance the construction of renewable energy projects. An investment bank underwrites the offering, prices the bonds, and distributes them to pension funds and insurance companies.
 
-**Related terms:** [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Markets), [Bond Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Bond Underwriting), [Fixed Income](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Fixed Income), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment Banking)
+**Related terms:** [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital%20Markets), [Bond Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Bond%20Underwriting), [Fixed Income](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Fixed%20Income), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment%20Banking)
 
 ---
 
@@ -115,7 +115,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 **Real-world example:** An airline hedges against rising fuel prices by purchasing crude oil futures contracts that lock in today's price for delivery in six months. If fuel prices rise, the gain on the futures contracts offsets the higher fuel costs. If prices fall, the airline pays more than the market price but gains budget certainty.
 
-**Related terms:** [Futures and Options](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Futures and Options), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk Management), [Commodity Trading](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Commodity Trading), [Market-Making](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Market-Making)
+**Related terms:** [Futures and Options](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Futures%20and%20Options), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk%20Management), [Commodity Trading](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Commodity%20Trading), [Market-Making](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Market-Making)
 
 ---
 
@@ -132,7 +132,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 **Real-world example:** An investor purchases 100 shares of Siemens AG on the Frankfurt Stock Exchange for EUR 150 per share, investing EUR 15,000. If the share price rises to EUR 180 and Siemens pays a EUR 4 annual dividend, the investor earns EUR 3,000 in capital appreciation plus EUR 400 in dividends.
 
-**Related terms:** [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Markets), [Fixed Income](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Fixed Income), [Equity Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equity Underwriting), [Securities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Securities), [Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Brokerage)
+**Related terms:** [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital%20Markets), [Fixed Income](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Fixed%20Income), [Equity Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equity%20Underwriting), [Securities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Securities), [Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Brokerage)
 
 ---
 
@@ -144,7 +144,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 **Real-world example:** A technology startup decides to go public through an IPO. Morgan Stanley, as the lead underwriter, helps the company prepare its prospectus, conducts a roadshow with potential investors, prices the IPO at USD 25 per share (valuing the company at USD 5 billion), and purchases 50 million shares from the company to distribute to investors on the first day of trading.
 
-**Related terms:** [Capital Raising](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Raising), [Initial Public Offering (IPO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Initial Public Offering (IPO)), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment Banking), [Bond Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Bond Underwriting)
+**Related terms:** [Capital Raising](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital%20Raising), [Initial Public Offering (IPO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Initial%20Public%20Offering%20(IPO)), [Investment Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Investment%20Banking), [Bond Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Bond%20Underwriting)
 
 ---
 
@@ -173,7 +173,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 **Real-world example:** A retiree invests USD 200,000 in a portfolio of government bonds paying 4% annually. Each year, the retiree receives USD 8,000 in interest payments. When the bonds mature in 10 years, the full USD 200,000 principal is returned.
 
-**Related terms:** [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Bond Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Bond Underwriting), [Debt Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Debt Capital Markets), [Portfolio Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Portfolio Management)
+**Related terms:** [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Bond Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Bond%20Underwriting), [Debt Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Debt%20Capital%20Markets), [Portfolio Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Portfolio%20Management)
 
 ---
 
@@ -190,7 +190,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 **Real-world example:** A wheat farmer sells futures contracts for 100,000 bushels of wheat at USD 7.50 per bushel for delivery in September. Regardless of what the market price is at harvest time, the farmer is guaranteed to sell at USD 7.50. Meanwhile, a bakery buys the same futures to lock in its flour costs.
 
-**Related terms:** [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives), [Commodity Trading](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Commodity Trading), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk Management), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Exchange (Stock/Futures))
+**Related terms:** [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives), [Commodity Trading](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Commodity%20Trading), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk%20Management), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Exchange%20(Stock/Futures))
 
 ---
 
@@ -207,7 +207,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 **Real-world example:** A major European equity index tracks the 50 largest companies in the Eurozone by market capitalization. An investor who buys an ETF tracking this index gets exposure to all 50 companies in one transaction, and the ETF's performance mirrors that of the index.
 
-**Related terms:** [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Exchange (Stock/Futures)), [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Portfolio Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Portfolio Management), [scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology), [index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics)
+**Related terms:** [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Exchange%20(Stock/Futures)), [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Portfolio Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Portfolio%20Management), [scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology), [index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics)
 
 ---
 
@@ -224,7 +224,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 **Real-world example:** A ride-sharing company that has been privately funded by venture capitalists decides to go public. It files an S-1 registration statement with the SEC, works with investment banks to set an initial price of USD 45 per share, and lists on the NYSE. On the first day of trading, the shares open at USD 60, giving early investors a significant return.
 
-**Related terms:** [Capital Raising](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Raising), [Equity Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equity Underwriting), [Listing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Listing), [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Markets)
+**Related terms:** [Capital Raising](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital%20Raising), [Equity Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equity%20Underwriting), [Listing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Listing), [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital%20Markets)
 
 ---
 
@@ -241,7 +241,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 **Real-world example:** A fast-growing technology company in Shenzhen applies to list its shares on the Hong Kong Stock Exchange. After meeting the exchange's requirements for financial reporting, corporate governance, and minimum market capitalization, the company is admitted to trading. Its shares are now available to investors worldwide through the exchange.
 
-**Related terms:** [Initial Public Offering (IPO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Initial Public Offering (IPO)), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Exchange (Stock/Futures)), [Capital Raising](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Raising)
+**Related terms:** [Initial Public Offering (IPO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Initial%20Public%20Offering%20(IPO)), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Exchange%20(Stock/Futures)), [Capital Raising](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital%20Raising)
 
 ---
 
@@ -258,7 +258,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 **Real-world example:** A market maker in Apple shares continuously displays a bid of USD 189.95 and an ask of USD 190.05 on the stock exchange. When a seller wants to sell shares, the market maker buys at USD 189.95. When a buyer wants to buy, the market maker sells at USD 190.05. The USD 0.10 spread on each share, multiplied by thousands of daily transactions, generates the market maker's profit.
 
-**Related terms:** [Securities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Securities), [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives), [Prime Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Prime Brokerage)
+**Related terms:** [Securities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Securities), [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives), [Prime Brokerage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Prime%20Brokerage)
 
 ---
 
@@ -275,7 +275,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 **Real-world example:** A government issues 10-year treasury bonds (debt securities) to fund infrastructure projects. A technology company issues new shares (equity securities) through an IPO to raise capital for expansion. An investor buys call options (derivative securities) on gold futures to speculate on rising gold prices.
 
-**Related terms:** [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Fixed Income](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Fixed Income), [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives), [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Markets)
+**Related terms:** [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Fixed Income](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Fixed%20Income), [Derivatives](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Derivatives), [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital%20Markets)
 
 ---
 
@@ -292,4 +292,4 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 **Real-world example:** When a homeowner applies for property insurance, an underwriter examines the home's location (is it in a flood zone?), construction (wood or brick?), value, claims history, and security features to determine whether to offer coverage and at what premium. A home in a hurricane-prone coastal area will have a higher premium than an identical home in a low-risk inland location.
 
-**Related terms:** [Insurance Premium](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance Premium), [Bond Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Bond Underwriting), [Equity Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equity Underwriting), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk Management)
+**Related terms:** [Insurance Premium](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance%20Premium), [Bond Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Bond%20Underwriting), [Equity Underwriting](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equity%20Underwriting), [Risk Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Risk%20Management)

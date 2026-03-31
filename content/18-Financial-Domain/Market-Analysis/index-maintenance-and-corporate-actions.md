@@ -674,13 +674,13 @@ ORDER BY esg_tilted_weight DESC;
 
 For formal definitions of the index construction terms discussed above, see the [ISS & STOXX Glossary](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/_index):
 
-- [Divisor](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Divisor) and [Divisor Adjustment](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Divisor Adjustment) — formal definition and formula
-- [Free-Float](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float) and [Free-Float Factor](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float Factor) — weighting methodology
-- [Capping](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Capping) and [Capping Factor](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Capping Factor) — weight cap mechanics
-- [Reconstitution](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Reconstitution) and [Buffer Rule](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Buffer Rule) — periodic review process
-- [Corporate Action Treatment](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Corporate Action Treatment) — how indices handle splits, mergers, dividends
-- [Total Return Index](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Total Return Index) vs [Net Return Index](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Net Return Index) vs [Price Return Index](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Price Return Index)
-- [EU BMR](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Benchmark Regulation (EU BMR)) and [SFDR](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#SFDR (Sustainable Finance Disclosure Regulation)) — regulatory framework details
+- [Divisor](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Divisor) and [Divisor Adjustment](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Divisor%20Adjustment) — formal definition and formula
+- [Free-Float](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float) and [Free-Float Factor](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Free-Float%20Factor) — weighting methodology
+- [Capping](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Capping) and [Capping Factor](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Capping%20Factor) — weight cap mechanics
+- [Reconstitution](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Reconstitution) and [Buffer Rule](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Buffer%20Rule) — periodic review process
+- [Corporate Action Treatment](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Corporate%20Action%20Treatment) — how indices handle splits, mergers, dividends
+- [Total Return Index](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Total%20Return%20Index) vs [Net Return Index](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Net%20Return%20Index) vs [Price Return Index](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction#Price%20Return%20Index)
+- [EU BMR](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Benchmark%20Regulation%20(EU%20BMR)) and [SFDR](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#SFDR%20(Sustainable%20Finance%20Disclosure%20Regulation)) — regulatory framework details
 
 ## Related
 

@@ -35,7 +35,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 **Real-world example:** After purchasing a commercial jet engine, an airline continues to buy replacement turbine blades, lubricants, and scheduled overhaul services from the engine manufacturer for 20–30 years — this ongoing business is the aftermarket.
 
-**Related terms:** [Maintenance Repair and Overhaul (MRO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Maintenance Repair and Overhaul (MRO)), [OEM (Original Equipment Manufacturer)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#OEM (Original Equipment Manufacturer)), [Distributors](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Distributors)
+**Related terms:** [Maintenance Repair and Overhaul (MRO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Maintenance%20Repair%20and%20Overhaul%20(MRO)), [OEM (Original Equipment Manufacturer)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#OEM%20(Original%20Equipment%20Manufacturer)), [Distributors](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Distributors)
 
 ---
 
@@ -52,7 +52,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 **Real-world example:** A French construction company wins a 40-year concession to operate a 200-kilometer motorway. The company invests EUR 2 billion to build the road, then collects toll revenues from drivers for the concession period. After 40 years, the motorway reverts to the French government.
 
-**Related terms:** [Project Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Project Finance), [Franchise](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Franchise), [Licensing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Licensing), [Real Estate Investment](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Real Estate Investment)
+**Related terms:** [Project Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Project%20Finance), [Franchise](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#Franchise), [Licensing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/compliance-and-risk-management#Licensing), [Real Estate Investment](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Real%20Estate%20Investment)
 
 ---
 
@@ -69,7 +69,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 **Real-world example:** Coca-Cola does not sell directly to every corner store. Instead, an independent bottler/distributor in a specific region buys concentrated syrup from Coca-Cola, manufactures the finished beverage, and delivers it to thousands of retail stores, restaurants, and vending machines in its territory.
 
-**Related terms:** [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply Chain), [Wholesale Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Wholesale Banking), [Resellers](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Resellers), [Logistics](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Logistics)
+**Related terms:** [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply%20Chain), [Wholesale Banking](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Wholesale%20Banking), [Resellers](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Resellers), [Logistics](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Logistics)
 
 ---
 
@@ -86,7 +86,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 **Real-world example:** A delivery company with 500 vans uses a fleet management platform to track each vehicle's location in real time, optimize delivery routes to reduce fuel consumption, schedule preventive maintenance based on mileage data, and monitor driver behavior to reduce accidents and insurance costs.
 
-**Related terms:** [Leasing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Leasing), [Logistics](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Logistics), [Internet of Things (IoT)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Internet of Things (IoT)), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply Chain)
+**Related terms:** [Leasing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/banking-and-lending#Leasing), [Logistics](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Logistics), [Internet of Things (IoT)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Internet%20of%20Things%20(IoT)), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply%20Chain)
 
 ---
 
@@ -103,7 +103,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 **Real-world example:** An online retailer uses a logistics company to store products in warehouses near major cities. When a customer places an order, the logistics system automatically selects the nearest warehouse, picks and packs the item, and arranges delivery via the fastest and most cost-effective route, achieving same-day or next-day delivery.
 
-**Related terms:** [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply Chain), [Fleet Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Fleet Management), [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#E-Commerce), [Procurement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Procurement), [Distributors](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Distributors)
+**Related terms:** [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply%20Chain), [Fleet Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Fleet%20Management), [E-Commerce](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#E-Commerce), [Procurement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Procurement), [Distributors](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Distributors)
 
 ---
 
@@ -120,7 +120,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 **Real-world example:** After a commercial jet engine accumulates 20,000 flight hours, the airline sends it to the manufacturer's MRO facility for a scheduled overhaul. Technicians disassemble the engine, inspect every component, replace worn parts, reassemble and test it, and return it to service — a process that takes about two months and costs several million dollars.
 
-**Related terms:** [Aftermarket](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Aftermarket), [OEM (Original Equipment Manufacturer)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#OEM (Original Equipment Manufacturer)), [Procurement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Procurement)
+**Related terms:** [Aftermarket](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Aftermarket), [OEM (Original Equipment Manufacturer)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#OEM%20(Original%20Equipment%20Manufacturer)), [Procurement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Procurement)
 
 ---
 
@@ -137,7 +137,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 **Real-world example:** BASF produces paint and coatings that car manufacturers like BMW use to paint their vehicles on the assembly line. BASF is the OEM coatings supplier, and its paint becomes part of the finished BMW vehicle. When the car later needs repainting after an accident, BMW-authorized body shops use BASF's refinish coatings.
 
-**Related terms:** [Aftermarket](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Aftermarket), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply Chain), [Procurement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Procurement), [Resellers](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Resellers), [Maintenance Repair and Overhaul (MRO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Maintenance Repair and Overhaul (MRO))
+**Related terms:** [Aftermarket](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Aftermarket), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply%20Chain), [Procurement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Procurement), [Resellers](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Resellers), [Maintenance Repair and Overhaul (MRO)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Maintenance%20Repair%20and%20Overhaul%20(MRO))
 
 ---
 
@@ -154,7 +154,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 **Real-world example:** A hospital uses a procurement platform to source medical supplies. The system sends requests for proposals to approved suppliers, compares bids on price, quality, and delivery time, and automatically generates purchase orders for the winning suppliers. The platform tracks deliveries, manages inventory levels, and processes payments.
 
-**Related terms:** [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply Chain), [Logistics](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Logistics), [Enterprise Resource Planning (ERP)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Enterprise Resource Planning (ERP)), [OEM (Original Equipment Manufacturer)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#OEM (Original Equipment Manufacturer))
+**Related terms:** [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply%20Chain), [Logistics](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Logistics), [Enterprise Resource Planning (ERP)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/technology-and-digital#Enterprise%20Resource%20Planning%20(ERP)), [OEM (Original Equipment Manufacturer)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#OEM%20(Original%20Equipment%20Manufacturer))
 
 ---
 
@@ -171,7 +171,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 **Real-world example:** A pension fund allocates 10% of its EUR 20 billion portfolio to real estate by investing in a diversified European REIT that owns shopping centers, office parks, and logistics warehouses. The REIT distributes rental income quarterly and provides the pension fund with long-term inflation-protected returns that are relatively uncorrelated with equity markets.
 
-**Related terms:** [Alternative Investments](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Alternative Investments), [Project Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Project Finance), [Concessions](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Concessions), [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset Management)
+**Related terms:** [Alternative Investments](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Alternative%20Investments), [Project Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/corporate-finance-and-strategy#Project%20Finance), [Concessions](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Concessions), [Asset Management](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Asset%20Management)
 
 ---
 
@@ -188,7 +188,7 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 **Real-world example:** A technology reseller purchases 500 Dell servers and combines them with networking equipment, storage systems, and management software to create a complete data center solution for a hospital. The reseller installs the equipment, migrates the hospital's data, and provides ongoing technical support.
 
-**Related terms:** [Distributors](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Distributors), [OEM (Original Equipment Manufacturer)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#OEM (Original Equipment Manufacturer)), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply Chain), [Business-to-Business (B2B)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#B2B)
+**Related terms:** [Distributors](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Distributors), [OEM (Original Equipment Manufacturer)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#OEM%20(Original%20Equipment%20Manufacturer)), [Supply Chain](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Supply%20Chain), [Business-to-Business (B2B)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/business-models-and-commerce#B2B)
 
 ---
 
@@ -205,4 +205,4 @@ Encyclopedia of real estate, industrial operations, and physical asset managemen
 
 **Real-world example:** A smartphone manufacturer's supply chain spans dozens of countries: rare earth minerals mined in Africa, semiconductors fabricated in Taiwan, screens manufactured in South Korea, final assembly in China, and distribution to retail stores worldwide. Supply chain management software coordinates all these activities, tracking every component from mine to consumer.
 
-**Related terms:** [Logistics](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Logistics), [Procurement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Procurement), [OEM (Original Equipment Manufacturer)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#OEM (Original Equipment Manufacturer)), [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Trade Finance), [Distributors](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Distributors)
+**Related terms:** [Logistics](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Logistics), [Procurement](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Procurement), [OEM (Original Equipment Manufacturer)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#OEM%20(Original%20Equipment%20Manufacturer)), [Trade Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/trade-and-treasury#Trade%20Finance), [Distributors](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/real-estate-and-industrial#Distributors)

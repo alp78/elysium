@@ -41,7 +41,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 **Real-world example:** An investment fund evaluates a potential investment in a mining company by examining its ESG performance: environmental factors (does it have a plan to reduce carbon emissions?), social factors (how does it engage with local communities near its mines?), and governance factors (does the board have independent directors and transparent executive compensation?).
 
-**Related terms:** [Sustainable Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#Sustainable Finance), [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable Energy), [Carbon Capture and Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Carbon Capture and Storage), [Compliance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Compliance)
+**Related terms:** [Sustainable Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#Sustainable%20Finance), [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable%20Energy), [Carbon Capture and Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Carbon%20Capture%20and%20Storage), [Compliance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/pharma-and-healthcare#Compliance)
 
 ---
 
@@ -61,7 +61,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 **Real-world example:** A major European airline commits to net-zero carbon emissions by 2050. Its plan includes switching to sustainable aviation fuels (SAF) for 50% of flights by 2035, modernizing its fleet with more fuel-efficient aircraft, purchasing verified carbon offsets for residual emissions, and investing in direct air capture technology.
 
-**Related terms:** [ESG](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#ESG (Environmental, Social, and Governance)), [Sustainable Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#Sustainable Finance), [Carbon Capture and Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Carbon Capture and Storage), [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable Energy), [Green Hydrogen](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Green Hydrogen)
+**Related terms:** [ESG](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#ESG%20(Environmental,%20Social,%20and%20Governance)), [Sustainable Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#Sustainable%20Finance), [Carbon Capture and Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Carbon%20Capture%20and%20Storage), [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable%20Energy), [Green Hydrogen](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Green%20Hydrogen)
 
 ---
 
@@ -78,7 +78,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 **Real-world example:** A wind farm developer issues a EUR 500 million green bond to finance the construction of offshore wind turbines. The bond is certified under the Green Bond Principles, ensuring that the proceeds are used exclusively for renewable energy projects. ESG-focused investors buy the bond, accepting a slightly lower yield in exchange for the environmental impact.
 
-**Related terms:** [ESG](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#ESG (Environmental, Social, and Governance)), [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable Energy), [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital Markets)
+**Related terms:** [ESG](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#ESG%20(Environmental,%20Social,%20and%20Governance)), [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable%20Energy), [Capital Markets](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Capital%20Markets)
 
 ---
 
@@ -90,10 +90,10 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 **Real-world example:** A utility company builds a 500 MW offshore wind farm in the North Sea consisting of 50 wind turbines. The wind farm generates enough clean electricity to power 350,000 homes annually, displacing approximately 700,000 tonnes of CO2 emissions per year compared to gas-fired power generation.
 
-**Related terms:** [Green Hydrogen](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Green Hydrogen), [Carbon Capture and Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Carbon Capture and Storage), [Energy Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Energy Storage), [Cogeneration](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Cogeneration), [ESG](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#ESG (Environmental, Social, and Governance))
+**Related terms:** [Green Hydrogen](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Green%20Hydrogen), [Carbon Capture and Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Carbon%20Capture%20and%20Storage), [Energy Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Energy%20Storage), [Cogeneration](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Cogeneration), [ESG](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#ESG%20(Environmental,%20Social,%20and%20Governance))
 
 > [!info] Cross-Reference
-> For renewable energy as part of the broader energy value chain, see also [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable Energy) in the Energy and Commodities encyclopedia.
+> For renewable energy as part of the broader energy value chain, see also [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Renewable%20Energy) in the Energy and Commodities encyclopedia.
 
 ---
 
@@ -110,7 +110,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 **Real-world example:** Companies like Apple, LVMH, Toyota, and Allianz are considered blue chip stocks in their respective markets. Institutional investors including pension funds and insurance companies hold significant positions in these companies for their stability, dividend income, and long-term capital appreciation.
 
-**Related terms:** [Index](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Index), [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Pension Fund](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Pension Fund)
+**Related terms:** [Index](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Index), [Equities](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Equities), [Pension Fund](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Pension%20Fund)
 
 ---
 
@@ -127,7 +127,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 **Real-world example:** A South African mining company lists its shares on the Johannesburg Stock Exchange (its primary listing) and also lists on the London Stock Exchange. By being dual-listed, the company attracts European institutional investors who might not otherwise invest in South African-only listed stocks, increasing liquidity and broadening its shareholder base.
 
-**Related terms:** [Listing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Listing), [Stock Connect](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Stock Connect), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Exchange (Stock/Futures))
+**Related terms:** [Listing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Listing), [Stock Connect](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Stock%20Connect), [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Exchange%20(Stock/Futures))
 
 ---
 
@@ -144,7 +144,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 **Real-world example:** Hurricane Ian makes landfall in Florida as a Category 4 storm, causing an estimated USD 65 billion in insured losses. Primary insurers that wrote homeowners' and commercial property policies in Florida trigger their reinsurance contracts, transferring billions in losses to their reinsurance partners. Parametric insurance products that were triggered by wind speed data pay out within days.
 
-**Related terms:** [Reinsurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Reinsurance), [Insurance (Property-Casualty)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance (Property-Casualty)), [Parametric Insurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Parametric Insurance), [ESG](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#ESG (Environmental, Social, and Governance))
+**Related terms:** [Reinsurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Reinsurance), [Insurance (Property-Casualty)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Insurance%20(Property-Casualty)), [Parametric Insurance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/insurance-and-risk#Parametric%20Insurance), [ESG](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#ESG%20(Environmental,%20Social,%20and%20Governance))
 
 ---
 
@@ -161,7 +161,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 **Real-world example:** A homeowner installs a 10 kW rooftop photovoltaic system for EUR 15,000. The system generates 10,000 kWh of electricity annually, covering most of the household's energy needs. Excess electricity is sold back to the grid, and the system pays for itself within 8-10 years. Over its 25-year lifespan, it saves the homeowner thousands in electricity costs.
 
-**Related terms:** [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#Renewable Energy), [Energy Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Energy Storage), [ESG](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#ESG (Environmental, Social, and Governance))
+**Related terms:** [Renewable Energy](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#Renewable%20Energy), [Energy Storage](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/energy-and-commodities#Energy%20Storage), [ESG](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#ESG%20(Environmental,%20Social,%20and%20Governance))
 
 ---
 
@@ -178,7 +178,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 **Real-world example:** A property developer acquires a former industrial site in a city center for USD 50 million. Over three years, the developer obtains planning permission, builds a mixed-use development with 300 apartments, 50,000 sq ft of retail space, and a hotel. The completed project is valued at USD 300 million, delivering a substantial return after construction costs and financing.
 
-**Related terms:** [Real Estate Investment](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Real Estate Investment), [Project Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Project Finance)
+**Related terms:** [Real Estate Investment](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/investment-management#Real%20Estate%20Investment), [Project Finance](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/structured-finance#Project%20Finance)
 
 ---
 
@@ -190,4 +190,4 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 **Real-world example:** A European fund manager wants to invest in a China-based consumer company listed on the Shanghai Stock Exchange. Through Stock Connect's Northbound Trading Link, the fund can buy the company's A-shares via Hong Kong brokers without needing a separate license to invest in mainland Chinese markets.
 
-**Related terms:** [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Exchange (Stock/Futures)), [Dual-Listed](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#Dual-Listed), [Listing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Listing)
+**Related terms:** [Exchange (Stock/Futures)](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Exchange%20(Stock/Futures)), [Dual-Listed](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/esg-and-sustainability#Dual-Listed), [Listing](https://alp78.github.io/elysium/18-Financial-Domain/Encyclopedia/capital-markets-and-trading#Listing)

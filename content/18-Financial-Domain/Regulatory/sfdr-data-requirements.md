@@ -86,12 +86,12 @@ def compute_waci(weights: pd.DataFrame, emissions: pd.DataFrame) -> float:
 
 ## ISS & STOXX Glossary
 
-- [SFDR](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#SFDR (Sustainable Finance Disclosure Regulation)) — formal regulatory definition and scope
-- [Article 8](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Article 8 Fund (SFDR)) and [Article 9](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Article 9 Fund (SFDR)) — fund classification definitions
-- [PAI](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#PAI (Principal Adverse Impact)) and [PAI Indicators](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#PAI Indicators) — indicator framework
-- [WACI](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/sustainability-themes#Weighted Average Carbon Intensity (WACI)) — carbon intensity methodology
-- [Emissions Scopes](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/sustainability-themes#Emissions Scopes) — Scope 1, 2, 3 definitions
-- [Norm-Based Screening](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-ratings#Norm-Based Screening) — UNGC violations screening methodology
+- [SFDR](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#SFDR%20(Sustainable%20Finance%20Disclosure%20Regulation)) — formal regulatory definition and scope
+- [Article 8](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Article%208%20Fund%20(SFDR)) and [Article 9](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#Article%209%20Fund%20(SFDR)) — fund classification definitions
+- [PAI](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#PAI%20(Principal%20Adverse%20Impact)) and [PAI Indicators](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/regulatory#PAI%20Indicators) — indicator framework
+- [WACI](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/sustainability-themes#Weighted%20Average%20Carbon%20Intensity%20(WACI)) — carbon intensity methodology
+- [Emissions Scopes](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/sustainability-themes#Emissions%20Scopes) — Scope 1, 2, 3 definitions
+- [Norm-Based Screening](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-ratings#Norm-Based%20Screening) — UNGC violations screening methodology
 
 ## Related
 
