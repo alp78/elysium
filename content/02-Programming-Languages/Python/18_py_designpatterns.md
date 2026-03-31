@@ -151,7 +151,13 @@ print(f"  Notifications sent: {mock_notifier.messages}")
 
 ## Design Patterns
 
+### Singleton — ensure exactly one instance of a class
+
 Ensures a class has exactly ONE instance — useful for database connection pools, configuration managers, or loggers. In Python, use a module-level variable (simplest) or `__new__`. C# equivalent: `static readonly` instance, or `AddSingleton<T>()` in DI. Singletons make testing harder (global state) — prefer DI with a single instance when possible.
+
+> [!tip] Modules are natural singletons
+>
+> In Python, a module is only imported once. A database connection created at module level (`conn = create_connection()`) is effectively a singleton. No pattern needed.
 
 ```python
 class Config:
@@ -192,7 +198,9 @@ print(f"  c1.project_id: {c1.project_id}")
       c1 is c2: True
       c1.project_id: index-lab-2
 
-Creates objects without specifying the exact class — select the right implementation based on config or environment. In Python, use a function or `@classmethod` that returns the right subclass. C# equivalent: static factory method, or `IServiceProvider.GetService<T>()`.
+### Factory — create objects without specifying the exact class
+
+Creates objects without specifying the exact class — select the right implementation based on config or environment. A factory function or method decides which class to instantiate based on input. `create_parser("csv")` returns a CSVParser; `create_parser("json")` returns a JSONParser. The caller doesn't need to know the concrete classes. In Python, use a function or `@classmethod` that returns the right subclass. C# equivalent: static factory method, or `IServiceProvider.GetService<T>()`.
 
 ```python
 class StorageClient(ABC):
@@ -237,7 +245,9 @@ for provider in ["gcs", "s3", "local"]:
       s3    -> s3://bucket/bronze/data.csv (10 bytes)
       local -> file://bronze/data.csv (10 bytes)
 
-Notifies multiple listeners when something happens — pipeline events (step completed, error occurred, data ready). Multiple consumers react to the same event without coupling. C# equivalent: `event`/`delegate` pattern, or `IObservable<T>`. GCP equivalent: Pub/Sub (same pattern, distributed).
+### Observer — one-to-many event notification
+
+One-to-many notification: when a subject changes state, all registered observers are notified. In Python, implement with callbacks (list of functions) or the built-in `property` setter that triggers notifications. Notifies multiple listeners when something happens — pipeline events (step completed, error occurred, data ready). Multiple consumers react to the same event without coupling. C# equivalent: `event`/`delegate` pattern, or `IObservable<T>`. GCP equivalent: Pub/Sub (same pattern, distributed).
 
 ```python
 class PipelineEventBus:
@@ -288,7 +298,9 @@ bus.publish("step_completed", {"step": "gold_score", "status": "error", "message
       [LOG]   {'step': 'gold_score', 'status': 'error', 'message': 'BQ timeout'}
       [ALERT] Pipeline error: BQ timeout
 
-Swaps algorithms at runtime — different scoring algorithms, export formats, or retry policies. The context class delegates to a strategy object. C# equivalent: interface + DI, or `Func<T>` delegate.
+### Strategy — swap algorithms at runtime
+
+Swap algorithms at runtime by passing functions or objects with a common interface. Instead of if/else chains selecting a scoring method, accept the scoring function as a parameter. Python's first-class functions make this trivial: just pass the function directly. Useful for different scoring algorithms, export formats, or retry policies. The context class delegates to a strategy object. C# equivalent: interface + DI, or `Func<T>` delegate.
 
 ```python
 class ScoringStrategy(ABC):
@@ -355,6 +367,14 @@ for strategy in [MomentumStrategy(), VolatilityStrategy(), MeanReversionStrategy
       Momentum        score=-0.0103
       Volatility      score=-0.0138
       MeanReversion   score=+0.0103
+
+### Decorator pattern — wrap an object with additional behavior
+
+Not to be confused with Python's `@decorator` syntax (which is a language feature). The decorator PATTERN wraps an object with additional behavior while keeping the same interface. Example: a `LoggingConnection` wraps a `DatabaseConnection`, adding logging to every query without modifying the original class. In Python, function decorators (`@functools.wraps`) are the most common form, but the OOP pattern applies when you need to compose behaviors on class instances.
+
+### Repository pattern — abstract data access behind a clean interface
+
+Abstracts data access behind a clean interface. `repo.get_prices(symbol, date)` works whether the data comes from SQL Server, BigQuery, a CSV file, or a mock. The pipeline code depends on the interface, not the storage technology. Combined with dependency injection, this is the foundation for testable data pipelines — swap `SqlRepository` for `MockRepository` in tests without changing any pipeline logic.
 
 ## Data Validation
 

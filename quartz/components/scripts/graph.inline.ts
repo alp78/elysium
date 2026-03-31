@@ -195,7 +195,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
           if (tier === 0) return -500   // index pushes MOCs outward
           if (tier === 1) return -250   // MOCs push domains outward
           if (tier === 2) return -150   // domains push pages outward
-          return -120                    // pages repel each other — spread around parent
+          return -200                    // pages repel each other — spread around parent
         })
         .distanceMin(15)
         .distanceMax(600)
@@ -210,7 +210,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
           const minTier = Math.min(srcTier, tgtTier)
           if (minTier === 0) return 180  // index → MOC: wide orbit
           if (minTier === 1) return 80   // MOC → domain: room to breathe
-          return 60                       // domain → page: loose petal
+          return 90                       // domain → page: loose petal, room to spread
         })
         .strength((l) => {
           const srcTier = getNodeTier((l.source as NodeData).id)
@@ -218,7 +218,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
           const minTier = Math.min(srcTier, tgtTier)
           if (minTier === 0) return 0.35 // MOCs orbit index
           if (minTier === 1) return 0.6  // domains stay near their MOC
-          return 0.25                     // pages loosely orbit domain — fan out
+          return 0.1                      // pages loosely orbit domain — fan out wide
         }),
     )
     .force("center", forceCenter(cx, cy).strength(0.003))

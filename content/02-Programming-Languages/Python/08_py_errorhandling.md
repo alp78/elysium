@@ -57,7 +57,13 @@ except IndexError as e:
 >
 > `logging.error(f"Failed: {e}")` loses the traceback. Use `logging.exception("msg")` or `logging.error("msg", exc_info=True)` to capture the full stack trace in logs. Without the traceback, production debugging is nearly impossible.
 
-#### Multiple except clauses
+#### Multiple except clauses — handle different exception types differently
+
+Handle different exception types with different recovery strategies. Python evaluates except blocks top-to-bottom and executes the first match, so place the most specific types first and the broadest (`Exception`) last as a fallback.
+
+> [!danger] Bare except catches everything
+>
+> `except:` without a type catches ALL exceptions including `KeyboardInterrupt` and `SystemExit`, making your program impossible to kill. Always specify the exception type: `except ValueError:`. At broadest, use `except Exception:`.
 
 ```python
 # Multiple except clauses — match most specific exception first
@@ -86,7 +92,9 @@ parse_row(None, 4)           # TypeError (int(None))
       Row 3: value error — Salary cannot be negative: -100
       Row 4: type error — int() argument must be a string, a bytes-like object or a real number, not 'NoneType'
 
-#### else and finally
+#### else and finally — success-only code and guaranteed cleanup
+
+`else` runs only if no exception was raised in the `try` block — useful for code that should only execute on success (separating "risky" from "safe" logic). `finally` runs ALWAYS, whether an exception occurred or not, guaranteeing cleanup such as closing files and releasing locks.
 
 ```python
 # else — runs only when try succeeds (no exception raised)
@@ -388,7 +396,9 @@ except ConfigError as e:
 
 ## Context Managers — with statement
 
-#### Basic with statement
+#### Basic with statement — guaranteed cleanup via context managers
+
+The `with` statement guarantees cleanup even if an exception occurs. `with open(f) as fh:` ensures the file is closed whether the block succeeds or raises. Custom context managers use `@contextmanager` (generator-based) or `__enter__`/`__exit__` (class-based). Prefer `with` over manual `try`/`finally` for any resource that needs cleanup.
 
 > [!info] Context manager protocol
 >
@@ -559,6 +569,8 @@ for v in values:
 
 #### Error accumulation — ETL pattern
 
+Instead of failing on the first error, collect all errors during processing and report them at the end. Essential for batch pipelines where one bad row should not halt 10,000 good ones. Append errors to a list, continue processing, then decide at the end whether to fail or quarantine the bad records.
+
 ```python
 # ParseResult dataclass — structured result type for error accumulation
 
@@ -643,7 +655,13 @@ print(f"  Result after {call_count} attempts: {result}")
       Attempt 2 failed: Connection timeout (attempt 2). Retrying...
       Result after 3 attempts: data loaded successfully
 
-#### ExceptionGroup — parallel errors
+#### ExceptionGroup — parallel errors (Python 3.11+)
+
+An `ExceptionGroup` bundles multiple exceptions into a single object, raised with `raise ExceptionGroup("msg", [e1, e2, ...])`. Caught with `except*` which can match specific types within the group and let the rest propagate. This is Python's equivalent of `AggregateException` in C#, designed for concurrent and parallel error handling.
+
+> [!warning] except* is Python 3.11+ only
+>
+> `ExceptionGroup` and `except*` syntax require Python 3.11 or later. On older versions, use a list of caught exceptions manually (the error accumulation pattern above).
 
 ```python
 # ExceptionGroup — aggregate multiple exceptions (Python 3.11+)

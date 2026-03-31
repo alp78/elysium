@@ -62,6 +62,8 @@ The event loop is a single-threaded scheduler that multiplexes coroutines. While
 
 #### async def / await — basic coroutine
 
+`async def` declares a coroutine — a function that can pause execution and resume later. `await` pauses the coroutine until the awaited operation completes, releasing the thread to do other work. This is cooperative multitasking: coroutines voluntarily yield control.
+
 ```python
 # Basic coroutine — async def with await asyncio.sleep
 
@@ -74,6 +76,12 @@ async def fetch_data(source: str, delay: float) -> dict:
 ```
 
 #### asyncio.gather — sequential vs concurrent execution
+
+Runs multiple coroutines concurrently and waits for all to complete. Returns results in the same order as the input. Use `return_exceptions=True` to collect errors instead of failing on the first one.
+
+> [!warning] gather vs TaskGroup
+>
+> `gather` continues running other tasks if one fails (unless `return_exceptions=False`). `TaskGroup` (Python 3.11+) cancels all remaining tasks on first failure — safer for operations that should be all-or-nothing.
 
 ```python
 # Sequential vs concurrent — await one-by-one vs asyncio.gather
@@ -166,6 +174,8 @@ for r in results:
 
 #### TaskGroup (Python 3.11+) — structured concurrency
 
+Structured concurrency: all tasks within the group must complete (or be cancelled) before the `async with` block exits. If any task raises, all others are cancelled. This prevents orphaned tasks running after an error.
+
 ```python
 # TaskGroup (Python 3.11+) — structured concurrency with auto-cancellation
 
@@ -197,6 +207,12 @@ except* RuntimeError as eg:
       t3 (products) completed: {'table': 'products', 'rows': 100}
 
 #### asyncio.Semaphore — concurrency rate limiting
+
+Limits the number of concurrent coroutines accessing a resource. `Semaphore(10)` allows 10 coroutines to proceed simultaneously; the 11th waits until one finishes. Essential for rate-limiting API calls and preventing resource exhaustion.
+
+> [!danger] Semaphore doesn't limit creation
+>
+> A semaphore limits concurrent EXECUTION, not creation. If you create 10,000 tasks with a semaphore of 10, all 10,000 task objects exist in memory. Create tasks lazily or use a bounded queue.
 
 ```python
 # Semaphore — limit concurrent async operations (rate limiting)
@@ -500,6 +516,8 @@ await asyncio.gather(*worker_tasks)
 
 #### ThreadPoolExecutor — I/O-bound work
 
+Runs blocking I/O operations (file reads, HTTP calls, database queries) in a thread pool without blocking the event loop. Use `loop.run_in_executor(pool, blocking_func)` to bridge sync and async code. Threads share memory but are limited by the GIL for CPU work.
+
 ```python
 # ThreadPoolExecutor — I/O-bound parallelism with blocking libraries
 
@@ -610,6 +628,12 @@ print(f"  Results match: {seq_hashes == thread_hashes}")
 
 #### ProcessPoolExecutor — true multi-core speedup
 
+Runs CPU-bound operations (data transformation, compression, hashing) in separate processes, bypassing the GIL. Each process has its own memory space — data must be serializable (pickle). Higher overhead than threads but true parallelism.
+
+> [!warning] GIL limits threads for CPU work
+>
+> Python's Global Interpreter Lock means threads don't speed up CPU-bound code (only one thread executes Python bytecode at a time). Use `ProcessPoolExecutor` for CPU work, `ThreadPoolExecutor` for I/O work.
+
 ```python
 # ProcessPoolExecutor — true multi-core speedup for CPU-bound work
 
@@ -683,6 +707,8 @@ ProcessPoolExecutor   CPU-bound work    No (separate)  Parallel.ForEach()
 
 #### multiprocessing.Queue — inter-process communication
 
+A process-safe queue for passing data between processes. Unlike `queue.Queue` (thread-safe), this works across process boundaries using pipes and serialization. Use for producer-consumer patterns with `ProcessPoolExecutor`.
+
 ```python
 # Inter-process communication — subprocess for cross-process data exchange
 
@@ -735,6 +761,8 @@ Threads provide true concurrency for I/O-bound work (the GIL is released during 
 > - For async I/O, prefer `asyncio` (lighter than thread pools)
 
 #### threading.Thread — basic thread creation and join
+
+The low-level threading API. Use `ThreadPoolExecutor` instead for most cases — it handles thread lifecycle, reuse, and exception propagation. Direct `Thread` usage is for long-lived background tasks (heartbeats, watchers).
 
 ```python
 # Basic threading — create, start, join, and collect results

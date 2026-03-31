@@ -53,6 +53,8 @@ print(f'  FINNHUB_KEY:     {"set" if FINNHUB_KEY else "MISSING"}')
 
 #### Paginated FRED API with async for
 
+Many REST APIs return results in pages (100 items per response with a `next_page` token). An async generator fetches each page, yields individual items, and follows pagination links — providing a clean `async for item in paginate(url)` interface that hides the pagination complexity.
+
 ```python
 # Async generator for paginated FRED API — stream economic data series
 #
@@ -117,6 +119,8 @@ async for series_id, title in fetch_fred_series('inflation', limit=8):
 
 #### asyncio.Semaphore + aiohttp — parallel fetch with rate limiting
 
+Combines rate limiting (semaphore) with async HTTP (aiohttp) for parallel API fetches that respect rate limits. The semaphore caps concurrent requests; aiohttp reuses connections via a session pool. This is the standard pattern for fetching data from rate-limited financial APIs.
+
 ```python
 # Parallel fetch with asyncio.Semaphore — limit concurrent API requests
 #
@@ -170,6 +174,8 @@ print(f'\n  Fetched {len(results)} quotes in {elapsed:.2f}s (3 concurrent max)')
 
 #### asyncio.as_completed with real API
 
+Returns an iterator of futures that yields results in completion order (fastest first), not submission order. Use when you want to process results as they arrive rather than waiting for all to finish.
+
 ```python
 # asyncio.as_completed — process results as they arrive, not in submission order
 #
@@ -209,6 +215,8 @@ async with aiohttp.ClientSession() as session:
 ## Async Batching
 
 #### Async Batching — asyncio.Queue + asyncio.wait_for, time and count bounded
+
+Combines an async queue with a batch consumer: producers push individual items to the queue, a consumer drains N items at a time and processes them as a batch. Provides backpressure (bounded queue) and efficient batched I/O.
 
 ```python
 # Async batching — accumulate items by count OR time, whichever comes first
@@ -265,6 +273,12 @@ await consumer_task
 ## Cross-Process Execution
 
 #### subprocess — spawn external programs
+
+The `subprocess` module spawns external programs from Python. `subprocess.run()` is the simple synchronous API; `asyncio.create_subprocess_exec()` is the async version. Use for invoking CLI tools (gcloud, bq, sqlcmd) from pipeline scripts.
+
+> [!danger] subprocess with shell=True
+>
+> `subprocess.run(cmd, shell=True)` passes the command through a shell, enabling command injection if `cmd` contains user input. Always use `shell=False` (default) with a list of arguments: `subprocess.run(["gcloud", "compute", "instances", "list"])`.
 
 ```python
 # subprocess — spawn child processes with full isolation

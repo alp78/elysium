@@ -294,6 +294,8 @@ print(f"merged: {merged}")                             # {'x': 1, 'y': 3, 'z': 4
 
 #### defaultdict and Counter
 
+A `defaultdict` is a dictionary subclass that automatically creates missing keys with a factory function. `defaultdict(list)` creates an empty list for any new key, eliminating the `if key not in d: d[key] = []` pattern. Essential for grouping operations. `Counter` is a dictionary subclass for counting hashable objects. `Counter(items)` builds a frequency table. Supports arithmetic: `counter_a - counter_b` gives the difference in counts.
+
 ```python
 # defaultdict — auto-create missing keys with a factory function
 
@@ -498,6 +500,12 @@ print(f"first={first}, last={last}")
 
 #### namedtuple and NamedTuple
 
+An immutable tuple subclass with named fields. `Point = namedtuple('Point', ['x', 'y'])` creates a lightweight record type. Accessed by name (`p.x`) or index (`p[0]`). Use `typing.NamedTuple` for the type-annotated version.
+
+> [!tip] dataclass vs NamedTuple
+>
+> Use `@dataclass` when you need mutability, methods, or inheritance. Use `NamedTuple` when you need immutability, tuple unpacking, and minimal memory footprint.
+
 ```python
 # namedtuple and NamedTuple — tuples with named field access
 
@@ -537,6 +545,8 @@ print(f"  name: {emp.name}, salary: ${emp.salary:,.0f}")
       name: Alice, salary: $95,000
 
 #### Enum
+
+A class for defining named constants with meaningful values. `class Color(Enum): RED = 1` prevents magic numbers scattered through code. Enums are iterable, comparable, and can have methods.
 
 ```python
 # Enum — named constants with type safety and iteration
@@ -633,6 +643,12 @@ Each data structure enforces a specific access pattern:
 
 #### collections.deque — Stack (LIFO) with append and pop
 
+A double-ended queue with O(1) append and pop from both ends. Unlike a list (O(n) for `insert(0, x)`), deque is efficient for FIFO queues and sliding windows. Use `maxlen` for a fixed-size buffer that automatically drops oldest items.
+
+> [!warning] List as queue is O(n)
+>
+> `list.pop(0)` shifts every element left. For queues, use `collections.deque` which is O(1) for both ends.
+
 ```python
 # Stack (LIFO) — list with append/pop from the end
 
@@ -709,6 +725,8 @@ print(f"maxlen=3:  {list(d)}")
     maxlen=3:  [2, 3, 4]
 
 #### Priority queue — heapq
+
+A min-heap implementation using a regular list. `heappush` adds items maintaining heap order; `heappop` removes the smallest. Use for top-N queries, task scheduling, and merge-sorting multiple sorted streams. For max-heap, negate the values.
 
 ```python
 # heapq — priority queue using a min-heap on a regular list

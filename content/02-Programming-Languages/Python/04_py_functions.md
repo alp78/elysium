@@ -117,6 +117,8 @@ print(apply(greet, "Eve"))
 
 #### Closures — return a function from a function
 
+A closure is a function that remembers variables from its enclosing scope even after that scope has finished executing. The inner function "closes over" the outer variables. Closures are how decorators and factory functions work.
+
 Inner functions capture variables from the enclosing scope. `make_multiplier(3)` returns a function that multiplies by 3 — each call creates independent state. Use for factory functions, parameterized callbacks, and partial application. For complex state, prefer a class.
 
 > [!warning] Don't mutate captured variables without nonlocal
@@ -144,6 +146,8 @@ print(f"greet.__doc__: {greet.__doc__}")
 
 #### Callbacks — onSuccess / onError
 
+A callback is a function passed as an argument to another function, to be called later when a specific event occurs. In Python, any callable (function, lambda, method) can serve as a callback. The caller decides what happens on success or failure.
+
 Accept `on_success` and `on_error` as callable parameters — the caller defines the response. Decouples operation from side effects, making it testable. Use for async completion, event-driven processing, and plugin hooks.
 
 ```python
@@ -162,6 +166,8 @@ fetch_data("api/users",
       Got: data from api/users
 
 #### Strategy pattern — swap behavior via functions
+
+The strategy pattern passes different scoring, calculation, or formatting functions as parameters, letting you swap behavior without modifying the consumer. Each strategy function has the same signature but different logic — the caller picks which one to use at runtime.
 
 Define interchangeable functions and pass the desired one to the consumer. Change behavior without modifying code (open/closed principle). Use for pricing rules, validation, sorting strategies, formatters.
 
@@ -184,6 +190,12 @@ print(f"  Member:   ${calculate(100, member_discount):.2f}")
 
 #### Pipeline — chained steps with reduce
 
+A pipeline chains transformation steps where each function's output feeds the next function's input. This pattern decomposes complex transformations into small, testable, reorderable units.
+
+> [!tip] functools.reduce for pipelines
+>
+> `reduce(lambda data, fn: fn(data), steps, initial)` composes a pipeline from a list of functions. Each step receives the previous step's output — no intermediate variables needed.
+
 Store steps as a list of functions. `reduce` applies them sequentially — each receives the previous step's output. Steps are composable, reorderable, and independently testable.
 
 ```python
@@ -201,6 +213,8 @@ print(f"  Pipeline: '{raw}' → '{result}'")
       Pipeline: '   Hello   WORLD   ' → 'hello world'
 
 #### Dependency injection — inject fake time for testing
+
+Dependency injection means passing dependencies (like a time source, database connection, or API client) as parameters instead of hardcoding them. This makes the function testable — tests inject fakes or stubs, while production code passes the real implementations. No mocking framework required.
 
 Accept a `get_now` callable with default `None` (uses real time). Tests inject a lambda returning a fixed datetime — makes time-dependent code deterministic. No mocking framework needed.
 
@@ -473,6 +487,8 @@ print(f"counter2(): {counter2()}")  # 1
 
 #### global keyword
 
+A decorator wraps a function with additional behavior without modifying its source code. The `@decorator` syntax is syntactic sugar for `func = decorator(func)`. Common uses include logging, timing, retry logic, and authentication checks.
+
 A decorator takes a function and returns a modified version. `@decorator` applies at definition time. `@functools.wraps` preserves the original `__name__` and `__doc__`. Use for cross-cutting concerns: timing, logging, retry, caching, authentication.
 
 > [!warning] Decorator pitfalls
@@ -581,6 +597,10 @@ except ValueError as e:
       Final failure: bad luck
 
 #### Stacking decorators — execution order and composition
+
+> [!warning] Decorator order matters — decorators are applied bottom-up
+>
+> `@retry @log def f()` means `f = retry(log(f))`, not `log(retry(f))`. The bottom decorator wraps the function first, and each outer decorator wraps the result. Reversing the order changes behavior — e.g., logging may or may not see retries depending on stack order.
 
 `@a @b @c def f()` means `f = a(b(c(f)))` — bottom decorator wraps first, each receives the result of the one below. Order matters. Avoid stacking more than 3 decorators.
 

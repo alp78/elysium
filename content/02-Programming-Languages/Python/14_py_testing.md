@@ -98,6 +98,8 @@ ipytest.autoconfig()
 
 #### pytest assert — basic test functions
 
+pytest uses plain `assert` statements instead of special assertion methods. When an assertion fails, pytest introspects the expression and shows the actual vs expected values. No need for `assertEqual`, `assertTrue` — just `assert result == expected`.
+
 ```python
 # TEST: basic price calculation — quantity * unit_price = total
 def test_price_calculation():
@@ -185,6 +187,8 @@ ipytest.run()
 
 #### pytest.raises — testing exceptions
 
+A context manager that verifies a specific exception is raised. The test passes only if the expected exception type is raised within the `with` block. Use `match=` to also verify the error message matches a regex.
+
 ```python
 # TEST: negative quantity raises ValueError (fail-fast validation)
 def test_invalid_quantity_raises():
@@ -240,6 +244,12 @@ pytest rewrites plain `assert` for rich error messages — no `assertEqual` or `
 | `pytest.approx()` | `Assert.Equal(expected, actual, precision)` |
 
 #### Numeric assertions — pytest.approx for float tolerance
+
+`pytest.approx` compares floating-point numbers with a tolerance, avoiding the classic `0.1 + 0.2 != 0.3` problem. `assert 0.3 == pytest.approx(0.1 + 0.2)` passes. Default tolerance is 1e-6 (relative). Essential for financial calculations where small floating-point errors accumulate.
+
+> [!danger] Never use == for floats
+>
+> `assert 0.1 + 0.2 == 0.3` fails in Python because IEEE 754 floating-point arithmetic is not exact. Always use `pytest.approx()` or `math.isclose()` for float comparison.
 
 ```python
 # TEST: PnL = (exit - entry) * quantity
@@ -435,6 +445,12 @@ ipytest.run()
 
 ## Fixtures and Parametrize
 
+Fixtures provide setup/teardown for tests. `@pytest.fixture` creates reusable test dependencies (database connections, test data, temporary files). Fixtures can be scoped: `function` (default, fresh for each test), `class`, `module`, or `session` (shared across all tests).
+
+> [!tip] conftest.py for shared fixtures
+>
+> Put fixtures in `conftest.py` and they're automatically available to all tests in the directory and subdirectories. No imports needed.
+
 > [!info] Fixtures
 >
 > - `@pytest.fixture` — marks a function that provides test data or resources
@@ -590,7 +606,9 @@ ipytest.run()
 <span style="color:#4ec9b0">20 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.03s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
-#### @pytest.mark.parametrize
+#### @pytest.mark.parametrize — run one test with multiple inputs
+
+`@pytest.mark.parametrize` runs the same test function with multiple input/output combinations. Instead of writing 10 separate test functions for 10 ticker formats, write one parametrized test. Each parameter set appears as a separate test case in the output.
 
 The `@pytest.mark.parametrize` decorator takes a comma-separated string of parameter names and a list of tuples. pytest runs the test function once per tuple, unpacking values into the named parameters. Each row runs independently — if row 3 fails, rows 1–2 still show as PASSED.
 
@@ -820,6 +838,8 @@ ipytest.run()
 > If `my_module.py` does `from datetime import datetime`, patch `"my_module.datetime"`, NOT `"datetime.datetime"`.
 
 #### Dependency injection — testable market hours check
+
+Instead of calling `datetime.now()` or `requests.get()` directly, accept them as parameters. Tests inject fakes (fixed time, mock responses); production injects real implementations. This is how you test time-dependent, network-dependent, and database-dependent code without those dependencies.
 
 ```python
 # Function under test: market hours check
@@ -1074,6 +1094,12 @@ ipytest.run()
 &lt;ExitCode.OK: 0&gt;</pre>
 
 #### unittest.mock Mock(spec=Class) — mock an external API client
+
+`Mock(spec=Class)` creates a mock object that mimics a class's interface. `Mock(spec=DatabaseConnection)` has the same attributes and methods as `DatabaseConnection` but returns `Mock` objects for every call. `spec=` prevents accessing attributes that don't exist on the real class, catching typos.
+
+> [!warning] Mock without spec is dangerous
+>
+> `Mock()` without `spec` accepts ANY attribute access and method call, always returning another Mock. A typo like `mock.conect()` instead of `mock.connect()` silently succeeds, and your test passes while the real code would fail.
 
 ```python
 # Mock an external API
@@ -1340,6 +1366,8 @@ assert_test(f"no negative volume ({neg_vol} violations)", neg_vol == 0)
       PASS: no negative volume (0 violations)
 
 #### Cross-layer consistency tests
+
+Tests that verify data consistency across medallion layers: row counts match between bronze and silver, aggregates in gold equal sums from silver, foreign keys resolve. These catch pipeline bugs that unit tests miss.
 
 ```python
 # Cross-layer consistency — verify bronze → silver → gold pipeline integrity

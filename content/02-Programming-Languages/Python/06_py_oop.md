@@ -121,6 +121,8 @@ print(f"Dog.species:  {Dog.species}")             # still "Canis familiaris" (cl
 
 #### @property — controlled access with validation
 
+The `@property` decorator turns a method into an attribute-style accessor with optional validation. The getter looks like `obj.radius` (no parentheses), but runs validation code behind the scenes. Pair with `@name.setter` for write access.
+
 ```python
 # @property — controlled access with validation and computed attributes
 
@@ -158,6 +160,12 @@ print(f"new radius: {c.radius}")
 ## Inheritance & Polymorphism
 
 #### Inheritance — base class, super().__init__, method override
+
+A child class acquires all attributes and methods of a parent class and can extend or override them. Python supports multiple inheritance (a class can have multiple parents), resolved via the Method Resolution Order (MRO).
+
+> [!warning] Diamond inheritance — multiple parents sharing a grandparent
+>
+> With multiple inheritance, if two parents share a grandparent, methods could be called twice. Python's MRO (C3 linearization) prevents this, but the order may surprise you. Check with `ClassName.__mro__`.
 
 `class Dog(Animal)` inherits from `Animal`. Override methods by redefining them; `super().__init__()` calls the parent constructor. Python supports multiple inheritance via MRO (C3 linearization). Use inheritance for IS-A relationships; prefer composition (attributes) for HAS-A.
 
@@ -221,6 +229,8 @@ print(f"dog.breed:    {dog.breed}")
 
 #### Polymorphism and type checking
 
+A variable can hold objects of different types and calling the same method executes the correct version for each type at runtime. In Python, this works via duck typing — no base class or interface required. If it has a `.speak()` method, it's valid.
+
 ```python
 # Polymorphism and type checking — duck typing and isinstance
 
@@ -247,6 +257,8 @@ print(f"issubclass(Dog, Animal): {issubclass(Dog, Animal)}")   # True
     issubclass(Dog, Animal): True
 
 #### Mixin classes — add capabilities via multiple inheritance
+
+A mixin is a class designed to be combined with other classes via multiple inheritance, adding a specific capability (logging, serialization, comparison) without being a standalone base class. Mixins have no `__init__` of their own and assume the host class provides certain attributes.
 
 ```python
 # Mixin — add capabilities via multiple inheritance
@@ -363,7 +375,9 @@ print(f"Total area: {total_area:.2f}")
     circ: blue Circle: area=50.27
     Total area: 65.27
 
-#### Protocol — structural typing
+#### Protocol — structural typing without explicit inheritance
+
+A Protocol defines a set of methods that a class must have, checked by type checkers (mypy) without requiring explicit inheritance. It is Python's answer to Go interfaces — "if it quacks like a duck." Classes satisfy a Protocol simply by having the right methods with the right signatures.
 
 ```python
 # Protocol — structural typing without inheritance (duck typing formalized)
@@ -480,6 +494,14 @@ print("Python: conventions only — nothing is truly private")
     (no equivalent)     private protected   protected AND internal
     
     Python: conventions only — nothing is truly private
+
+#### __slots__ — restrict attributes and reduce memory usage
+
+`__slots__` restricts a class to a fixed set of attributes, preventing dynamic attribute creation via `__dict__`. This reduces memory usage by ~40% for classes with many instances (e.g., millions of price records). Any attempt to set an attribute not listed in `__slots__` raises `AttributeError`.
+
+> [!warning] __slots__ disables dynamic attributes
+>
+> With `__slots__`, you cannot add arbitrary attributes at runtime (`obj.new_attr = 1` raises `AttributeError`). Subclasses without their own `__slots__` reintroduce `__dict__`, negating the memory savings. If you need both slots and dataclass, use `@dataclass(slots=True)` (Python 3.10+).
 
 ## Static & Class Methods
 
@@ -701,6 +723,8 @@ print(recs)
 
 #### @dataclass declarations
 
+The `@dataclass` decorator automatically generates `__init__`, `__repr__`, `__eq__` and optionally `__hash__` and `__order__` from class field declarations. It eliminates boilerplate for data-holding classes while keeping full IDE autocomplete and type-checker support.
+
 ```python
 # @dataclass — auto-generated __init__, __repr__, __eq__ from field declarations
 
@@ -747,6 +771,10 @@ print(f"Hidden _id: {emp._id}")
     Hidden _id: -5760575203000102949
 
 #### frozen=True — immutable dataclass
+
+> [!tip] frozen=True for immutability
+>
+> `@dataclass(frozen=True)` makes instances immutable and hashable — essential for using dataclass instances as dictionary keys or set members. Any attempt to reassign a field raises `FrozenInstanceError`.
 
 ```python
 # frozen=True — immutable dataclass that raises on assignment
