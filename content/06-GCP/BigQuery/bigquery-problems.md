@@ -23,37 +23,37 @@ BigQuery is deceptively simple — write SQL, get results. But in a production d
 ## Table of Contents
 
 **Critical — Cost Explosion / Data Loss**
-1. [1. Uncontrolled Full-Table Scans ($$$)](#1-uncontrolled-full-table-scans-)
-2. [2. DML Quota Exceeded (20 Concurrent Mutations)](#2-dml-quota-exceeded-20-concurrent-mutations)
-3. [3. Resources Exceeded During Query](#3-resources-exceeded-during-query)
-4. [4. Accidental Table/Dataset Deletion](#4-accidental-tabledataset-deletion)
-5. [5. Streaming Insert Cost Explosion](#5-streaming-insert-cost-explosion)
+1. [Uncontrolled Full-Table Scans ($$$)](#1-uncontrolled-full-table-scans-)
+2. [DML Quota Exceeded (20 Concurrent Mutations)](#2-dml-quota-exceeded-20-concurrent-mutations)
+3. [Resources Exceeded During Query](#3-resources-exceeded-during-query)
+4. [Accidental Table/Dataset Deletion](#4-accidental-tabledataset-deletion)
+5. [Streaming Insert Cost Explosion](#5-streaming-insert-cost-explosion)
 
 **High — Data Quality / Performance**
-6. [6. FLOAT64 Precision Loss in Financial Calculations](#6-float64-precision-loss-in-financial-calculations)
-7. [7. Partition Pruning Not Triggered](#7-partition-pruning-not-triggered)
-8. [8. No Clustering on Filter Columns](#8-no-clustering-on-filter-columns)
-9. [9. MERGE Scans Everything (Expensive Incremental)](#9-merge-scans-everything-expensive-incremental)
-10. [10. Slot Starvation During Peak Hours](#10-slot-starvation-during-peak-hours)
-11. [11. NULL Propagation Hiding Data Quality Issues](#11-null-propagation-hiding-data-quality-issues)
-12. [12. Materialized View Silently Stale](#12-materialized-view-silently-stale)
+1. [FLOAT64 Precision Loss in Financial Calculations](#6-float64-precision-loss-in-financial-calculations)
+2. [Partition Pruning Not Triggered](#7-partition-pruning-not-triggered)
+3. [No Clustering on Filter Columns](#8-no-clustering-on-filter-columns)
+4. [MERGE Scans Everything (Expensive Incremental)](#9-merge-scans-everything-expensive-incremental)
+5. [Slot Starvation During Peak Hours](#10-slot-starvation-during-peak-hours)
+6. [NULL Propagation Hiding Data Quality Issues](#11-null-propagation-hiding-data-quality-issues)
+7. [Materialized View Silently Stale](#12-materialized-view-silently-stale)
 
 **Moderate — Operational Pain**
-13. [13. Schema Evolution Breaks Downstream](#13-schema-evolution-breaks-downstream)
-14. [14. Scheduled Query Fails Silently](#14-scheduled-query-fails-silently)
-15. [15. Cross-Region Query Costs](#15-cross-region-query-costs)
-16. [16. DML Concurrency Conflict on Same Table](#16-dml-concurrency-conflict-on-same-table)
-17. [17. External Table Performance Trap](#17-external-table-performance-trap)
-18. [18. Authorized View + Column-Level Security Conflict](#18-authorized-view-column-level-security-conflict)
-19. [19. INFORMATION_SCHEMA Queries Are Expensive](#19-information_schema-queries-are-expensive)
-20. [20. Time Travel Expiry — Can't Reproduce Historical Calculation](#20-time-travel-expiry-cant-reproduce-historical-calculation)
+1. [Schema Evolution Breaks Downstream](#13-schema-evolution-breaks-downstream)
+2. [Scheduled Query Fails Silently](#14-scheduled-query-fails-silently)
+3. [Cross-Region Query Costs](#15-cross-region-query-costs)
+4. [DML Concurrency Conflict on Same Table](#16-dml-concurrency-conflict-on-same-table)
+5. [External Table Performance Trap](#17-external-table-performance-trap)
+6. [Authorized View + Column-Level Security Conflict](#18-authorized-view-column-level-security-conflict)
+7. [INFORMATION_SCHEMA Queries Are Expensive](#19-information_schema-queries-are-expensive)
+8. [Time Travel Expiry — Can't Reproduce Historical Calculation](#20-time-travel-expiry-cant-reproduce-historical-calculation)
 
 **Low — Annoyances / Technical Debt**
-21. [21. No require_partition_filter Enforced](#21-no-require_partition_filter-enforced)
-22. [22. Label/Tag Discipline Missing](#22-labeltag-discipline-missing)
-23. [23. Wildcard Table Queries (Legacy Sharding)](#23-wildcard-table-queries-legacy-sharding)
-24. [24. BI Engine Cache Misses](#24-bi-engine-cache-misses)
-25. [25. Stale Views After Source Rename](#25-stale-views-after-source-rename)
+1. [No require_partition_filter Enforced](#21-no-require_partition_filter-enforced)
+2. [Label/Tag Discipline Missing](#22-labeltag-discipline-missing)
+3. [Wildcard Table Queries (Legacy Sharding)](#23-wildcard-table-queries-legacy-sharding)
+4. [BI Engine Cache Misses](#24-bi-engine-cache-misses)
+5. [Stale Views After Source Rename](#25-stale-views-after-source-rename)
 
 ---
 

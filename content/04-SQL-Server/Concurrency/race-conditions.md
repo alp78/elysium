@@ -53,38 +53,109 @@ Race conditions are more dangerous than deadlocks because:
 
 Two processes read the same row, compute a new value, and write it back. The second write overwrites the first.
 
-```sql
--- Process A                          -- Process B
-SELECT val FROM t WHERE id = 1
--- val = 10                           SELECT val FROM t WHERE id = 1
-                                      -- val = 10
-UPDATE t SET val = 15 WHERE id = 1
-                                      UPDATE t SET val = 20 WHERE id = 1
--- A's update is lost!
-```
+#### Step 1 | Session A | Read current value
 
-#### UPDATE SET counter += 1 — fix lost update with atomic operation
+Session A reads `val` for `id = 1` under the default READ COMMITTED isolation level. The shared (S) lock taken for the SELECT is released immediately after the read completes — it is not held until the end of a transaction. Session A now holds `val = 10` in application memory.
 
 ```sql
-UPDATE t SET val = val + 5 WHERE id = 1
+SELECT val FROM t WHERE id = 1;
 ```
 
-No gap between read and write — the lock is held for the duration of the single statement.
+#### Step 2 | Session B | Read the same value
+
+Before Session A writes anything back, Session B reads the same row. Because A's shared lock was already released, B acquires its own shared lock without blocking. Both sessions now hold an in-memory copy of `val = 10`.
+
+```sql
+SELECT val FROM t WHERE id = 1;
+```
+
+> [!info] Shared Lock Behavior Under READ COMMITTED
+>
+> Under READ COMMITTED (SQL Server's default), shared locks are released as soon as the SELECT statement finishes — not when the transaction ends. This means another session can read and modify the same row in the gap between Session A's read and write. REPEATABLE READ would hold the S lock until transaction end, preventing this interleaving.
+
+#### Step 3 | Session A | Write computed value
+
+Session A computes `10 + 5 = 15` in application code and writes it back. An exclusive (X) lock is acquired on the row for the UPDATE.
+
+```sql
+UPDATE t SET val = 15 WHERE id = 1;
+```
+
+#### Step 4 | Session B | Overwrite with stale computation
+
+Session B computes `10 + 10 = 20` using its stale copy of `val = 10` — unaware that the value is now 15. Session B's UPDATE acquires an exclusive lock (waiting for A's lock to release if still held) and writes 20, overwriting A's update entirely.
+
+```sql
+UPDATE t SET val = 20 WHERE id = 1;
+```
+
+> [!danger] Lost Update
+>
+> The final value is 20 instead of the correct 25 (10 + 5 + 10). Session A's write is silently overwritten because both sessions computed their new value from the same stale read of 10. No error is raised — the application reports success for both operations.
+
+> [!success] Fix — Use Atomic Update Expressions
+>
+> Replace the read-then-write pattern with a single UPDATE statement that computes the new value inline. The exclusive lock held for the duration of the UPDATE prevents any interleaving.
+
+#### Atomic UPDATE — fix lost update by eliminating the read-write gap
+
+The database engine reads and writes in a single atomic step. No other session can read or modify the value between the read and write phases.
+
+```sql
+UPDATE t SET val = val + 5 WHERE id = 1;
+```
 
 ### Pattern 2: Phantom Insert (Check-Then-Insert)
 
 Two processes check if a row exists, both find it doesn't, both insert — causing duplicates or primary key violations.
 
+#### Step 1 | Session A | Check for existing row
+
+Session A checks whether `'ASML'` exists in the table. Under READ COMMITTED, the shared lock on the scanned range is released immediately after the read. Session A sees zero rows and decides to insert.
+
 ```sql
--- Process A                          -- Process B
-IF NOT EXISTS (SELECT 1 FROM t
-    WHERE symbol = 'ASML')            IF NOT EXISTS (SELECT 1 FROM t
-INSERT INTO t (symbol) VALUES ('ASML')     WHERE symbol = 'ASML')
-                                      INSERT INTO t (symbol) VALUES ('ASML')
--- Duplicate or PK violation!
+SELECT 1 FROM t WHERE symbol = 'ASML';
 ```
 
+#### Step 2 | Session B | Check for the same row
+
+Session B executes the same existence check before Session A performs its insert. Because A's shared lock was already released, B reads freely and also finds no matching row. Both sessions now believe `'ASML'` does not exist.
+
+```sql
+SELECT 1 FROM t WHERE symbol = 'ASML';
+```
+
+> [!info] Key-Range Locking and SERIALIZABLE
+>
+> Under READ COMMITTED, SQL Server does not take key-range locks — it only locks rows it actually reads. The "gap" where `'ASML'` would be inserted is unprotected. Under SERIALIZABLE isolation, a key-range lock would cover this gap, blocking Session B's check until Session A commits or rolls back.
+
+#### Step 3 | Session A | Insert the new row
+
+Believing the row does not exist, Session A inserts `'ASML'`. The insert succeeds and acquires an exclusive lock on the new row.
+
+```sql
+INSERT INTO t (symbol) VALUES ('ASML');
+```
+
+#### Step 4 | Session B | Attempt duplicate insert
+
+Session B also believes the row does not exist (based on its stale check) and attempts the same insert. Without a unique constraint, this creates a silent duplicate. With a unique constraint, it fails with error 2627.
+
+```sql
+INSERT INTO t (symbol) VALUES ('ASML');
+```
+
+> [!danger] Phantom Insert
+>
+> Without a unique constraint, both inserts succeed and the table contains two `'ASML'` rows — silent data corruption. With a unique constraint, the second insert fails with error 2627 (unique constraint violation), which is the correct behavior: loud failure prevents corruption. The root cause is the gap between the existence check and the INSERT — two separate statements with no lock continuity.
+
+> [!success] Fix — Use MERGE for Atomic Upsert
+>
+> MERGE combines the existence check and insert into a single atomic statement. The engine holds locks across both the check and the write phase, eliminating the gap that allows phantom inserts.
+
 #### MERGE WHEN NOT MATCHED — fix phantom insert with atomic upsert
+
+The MERGE statement acquires and holds appropriate locks for the entire check-and-insert sequence. No other session can insert the same key between the check and the write.
 
 ```sql
 MERGE INTO t AS target
@@ -102,32 +173,91 @@ WHEN NOT MATCHED THEN
 
 Process A reads data that Process B has written but not yet committed. If B rolls back, A is working with data that never existed.
 
+#### Step 1 | Session B | Begin transaction and write uncommitted data
+
+Session B begins an explicit transaction and updates the row. The exclusive (X) lock is held until the transaction ends (COMMIT or ROLLBACK) — not just until the statement finishes.
+
 ```sql
--- Process B                          -- Process A
-BEGIN TRAN
-UPDATE t SET val = 999 WHERE id = 1
-                                      SELECT val FROM t WHERE id = 1
-                                      -- val = 999 (uncommitted!)
-ROLLBACK
-                                      -- A now has phantom value 999
+BEGIN TRAN;
+UPDATE t SET val = 999 WHERE id = 1;
 ```
 
-#### SET TRANSACTION ISOLATION LEVEL — fix dirty read with proper isolation
+> [!info] Lock Duration in Explicit Transactions
+>
+> Inside an explicit `BEGIN TRAN` block, exclusive locks acquired by UPDATE or DELETE are held until `COMMIT` or `ROLLBACK`. This is true across all isolation levels. Whether this lock blocks *readers* depends on the reading session's isolation level.
 
-SQL Server's default isolation level (READ COMMITTED) prevents dirty reads. Process A would wait for B to commit or rollback before seeing the data. With RCSI enabled, A would see the pre-update snapshot instead — without any blocking.
+#### Step 2 | Session A | Read uncommitted value
+
+If Session A runs under READ UNCOMMITTED (or uses the `NOLOCK` hint), it bypasses the exclusive lock and reads the uncommitted value of 999. Under READ COMMITTED (the default), Session A would block here and wait for Session B to commit or roll back.
+
+```sql
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+SELECT val FROM t WHERE id = 1;
+```
+
+#### Step 3 | Session B | Roll back the transaction
+
+Session B decides to abort. The ROLLBACK undoes the UPDATE, restoring the original value. The exclusive lock is released. The value 999 never existed in committed state.
+
+```sql
+ROLLBACK;
+```
+
+#### Step 4 | Session A | Operate on phantom data
+
+Session A is now using `val = 999` — a value that was never committed to the database. Any computations, reports, or downstream writes based on this value are incorrect.
+
+> [!danger] Dirty Read
+>
+> Session A read and acted on data that was subsequently rolled back — the value 999 never existed in committed state. Any decisions or writes based on this read are silently wrong. This is especially dangerous in financial pipelines where a dirty read of a price or score feeds downstream calculations.
+
+> [!success] Fix — Use READ COMMITTED or Higher
+>
+> SQL Server's default isolation level (READ COMMITTED) prevents dirty reads entirely. Session A blocks until Session B commits or rolls back, then reads the final committed value. With Read Committed Snapshot Isolation (RCSI) enabled at the database level, Session A reads the pre-update snapshot instead — no blocking and no dirty read.
 
 ### Pattern 4: Overlapping Truncate-Reload
 
-Two processes both truncate and reload the same table. Depending on timing, one process's data gets deleted by the other's truncate.
+Two processes both delete and reload the same partition of a table. Depending on timing, one process's freshly inserted data gets wiped by the other's delete.
 
-```
-Process A: DELETE FROM t WHERE _index='X'  →  INSERT 50 rows
-Process B:     DELETE FROM t WHERE _index='X'  →  INSERT 50 rows
-→ Process A's 50 rows are deleted by Process B's DELETE
-→ Only Process B's data survives
+#### Step 1 | Process A | Delete existing rows for index X
+
+Process A begins its reload cycle by deleting all rows for `_index = 'X'`. Without an explicit transaction wrapping both DELETE and INSERT, the exclusive locks on the deleted rows are released after the statement completes.
+
+```sql
+DELETE FROM t WHERE _index = 'X';
 ```
 
-**Fix — serialization (ensure only one process writes at a time).** See Strategy 1 below.
+#### Step 2 | Process A | Insert fresh data
+
+Process A inserts 50 new rows for index X. The reload appears complete from A's perspective.
+
+```sql
+INSERT INTO t SELECT ... WHERE _index = 'X';
+```
+
+#### Step 3 | Process B | Delete rows for the same index
+
+Process B starts its own reload cycle for the same index, slightly behind Process A. Its DELETE removes all rows for `_index = 'X'` — including the 50 rows that Process A just inserted.
+
+```sql
+DELETE FROM t WHERE _index = 'X';
+```
+
+#### Step 4 | Process B | Insert its own data
+
+Process B inserts its own 50 rows. Only Process B's data survives in the table.
+
+```sql
+INSERT INTO t SELECT ... WHERE _index = 'X';
+```
+
+> [!danger] Data Loss From Overlapping Reload
+>
+> Process A's entire insert batch is silently deleted by Process B's DELETE. No error is raised. The table contains only Process B's data, which may be identical — masking the fact that a race condition occurred. If the two processes carried different data (e.g., different API response windows), the loss is undetectable without `loaded_at` timestamp auditing.
+
+> [!success] Fix — Serialize or Wrap in a Transaction
+>
+> **Serialization**: Set `max_active_runs=1` on the Airflow DAG so only one reload process runs at a time. **Transaction wrapping**: Wrap both DELETE and INSERT in a single explicit transaction — the exclusive lock from the DELETE is held until COMMIT, blocking Process B's DELETE until Process A's INSERT completes. See Strategy 1 and Strategy 4 below.
 
 ---
 

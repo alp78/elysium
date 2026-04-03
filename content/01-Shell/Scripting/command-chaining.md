@@ -20,7 +20,7 @@ Command chaining operators use process exit codes to decide what runs next. Ever
 >
 > — **Doug McIlroy**, *Bell System Technical Journal* (1978)
 
-## The Four Operators
+## Linux — Command Chaining Operators
 
 ### AND Operator (&&) — Fail-Fast Chaining
 
@@ -42,17 +42,6 @@ echo "Deploy complete at $(date)"
 ```
 
 If `git pull` fails (merge conflict, network error), the build never starts. If the build fails (syntax error, missing dependency), the container is never restarted with broken code. This is **fail-fast chaining** — the backbone of every safe deployment script.
-
-#### PowerShell && and $LASTEXITCODE — AND chain (7+ only)
-```powershell
-# AND chain (PowerShell 7+ only)
-command_a && command_b
-
-# PowerShell 5.1 — no && support, use explicit error checking
-command_a; if ($LASTEXITCODE -eq 0) { command_b }
-# $LASTEXITCODE = exit code of the last native (non-PowerShell) command
-# For PowerShell cmdlets, use $? (True if last command succeeded)
-```
 
 ### Semicolon (;) — Sequential with No Error Checking
 

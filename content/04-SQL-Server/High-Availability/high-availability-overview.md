@@ -40,21 +40,31 @@ A single SQL Server instance is a single point of failure. If the VM crashes, th
 
 The primary HA mechanism for SQL Server on Linux. A group of databases replicated together across 2–9 replicas (1 primary + up to 8 secondaries). The primary accepts reads and writes; secondaries receive transaction log records and replay them.
 
-```
-                     ┌──────────────────────────────┐
-                     │         Listener VIP          │
-                     │   analytics-sql-ag.internal:1433  │
-                     └──────────┬───────────────────┘
-                                │
-              ┌─────────────────┼─────────────────┐
-              ▼                 ▼                  ▼
-   ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐
-   │   Primary (RW)   │ │  Secondary (RO)  │ │  Secondary (RO)  │
-   │  analytics-sql-01    │ │  analytics-sql-02    │ │  analytics-sql-03    │
-   │  zone-b          │ │  zone-c          │ │  zone-d          │
-   └──────────────────┘ └──────────────────┘ └──────────────────┘
-         │  log send ────────►│  log send ────────►│
-         │◄──── ack ──────────│◄──── ack ──────────│
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    VIP(["Listener VIP<br/>analytics-sql-ag.internal:1433"])
+    VIP --> P
+    VIP --> S1
+    VIP --> S2
+    P["Primary · RW<br/>analytics-sql-01<br/>zone-b"]
+    S1["Secondary · RO<br/>analytics-sql-02<br/>zone-c"]
+    S2["Secondary · RO<br/>analytics-sql-03<br/>zone-d"]
+    P -- "log send" --> S1
+    P -- "log send" --> S2
+    S1 -. "ack" .-> P
+    S2 -. "ack" .-> P
 ```
 
 #### Replication modes
