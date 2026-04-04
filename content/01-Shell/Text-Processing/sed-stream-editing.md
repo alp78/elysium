@@ -1,9 +1,12 @@
 ---
-tags: [shell, text-processing]
+title: "sed — Stream Editor Reference"
+tags:
+  - shell
+  - text-processing
 aliases: [sed, stream editor, find and replace, text substitution, in-place editing, -i flag]
 description: "Exhaustive reference for sed (stream editor) covering substitution, deletion, insertion, addressing, regex capture groups, and in-place file editing — with PowerShell equivalents for every command."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-04
 status: complete
 ---
 
@@ -24,52 +27,91 @@ status: complete
 
 ## How sed Works
 
-### Stream Processing Model
+sed reads input line by line into a working buffer called the pattern space, applies all matching commands, then prints the result. Understanding this cycle — along with addresses, flags, and the hold space — is the key to writing correct sed scripts.
 
-sed operates on a cycle: for each line of input, it executes this sequence:
+### sed | stream processing model
 
-```text
-Read one line into pattern space
-↓
-Apply all commands that match (address + command)
-↓
-Print pattern space to stdout (unless -n suppresses it)
-↓
-Clear pattern space
-↓
-Repeat for next line
+sed operates on a cycle: for each line of input, it reads the line into the pattern space, applies all matching commands, prints the result (unless `-n` suppresses it), clears the pattern space, and repeats.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A["Read one line into<br/>pattern space"] --> B["Apply all commands<br/>that match address"]
+    B --> C{"**-n** flag<br/>active?"}
+    C -->|No| D["Print pattern space<br/>to stdout"]
+    C -->|Yes| E["Print only if explicit<br/>**p** command matched"]
+    D --> F["Clear pattern space"]
+    E --> F
+    F --> G{"More input<br/>lines?"}
+    G -->|Yes| A
+    G -->|No| H["Exit"]
+
+    style A fill:#292e42,stroke:#565f89,color:#c0caf5
+    style H fill:#1a1b26,stroke:#565f89,color:#9ece6a
 ```
 
-#### sed pattern space vs hold space
+#### sed | pattern space vs hold space
 
 | Space | Purpose |
 |---|---|
 | Pattern space | The current line being processed — this is where substitutions happen |
 | Hold space | A persistent scratch buffer that survives across lines (advanced use) |
 
-#### sed invocation forms — command-line, file, stdin
+#### sed | invocation forms
+
+sed can receive commands inline (`-e`), from a script file (`-f`), or as a single expression. Input comes from a file argument or from standard input via pipe.
 
 ```bash
-# Command-line expression
 sed 'command' file
+```
 
-# Multiple expressions
+```bash
 sed -e 'command1' -e 'command2' file
+```
 
-# Read commands from a script file
+```bash
 sed -f script.sed file
+```
 
-# Suppress default output (print only what you explicitly p-rint)
+Suppress default output with `-n` so only explicitly printed lines appear.
+
+```bash
 sed -n 'command' file
+```
 
-# In-place edit (GNU sed)
+Edit the file in place with `-i` (GNU sed). Add a suffix like `.bak` to create a backup automatically.
+
+```bash
 sed -i 'command' file
+```
 
-# In-place edit with backup (GNU sed)
+```bash
 sed -i.bak 'command' file
 ```
 
-### Address Types
+| Flag | Syntax | Description |
+|---|---|---|
+| `-e 'cmd'` | `sed -e 's/a/b/' -e 's/c/d/' file` | Add a command expression (multiple allowed) |
+| `-f file` | `sed -f script.sed file` | Read commands from a script file |
+| `-n` | `sed -n '/pat/p' file` | Suppress default output — print only with explicit `p` |
+| `-i` | `sed -i 's/a/b/' file` | Edit file in place (GNU: no suffix needed; BSD: requires `''`) |
+| `-i.bak` | `sed -i.bak 's/a/b/' file` | Edit in place with backup (works on both GNU and BSD) |
+| `-E` / `-r` | `sed -E 's/(a|b)/c/' file` | Enable Extended Regular Expressions (ERE) |
+| `--posix` | `sed --posix 's/a/b/' file` | Disable all GNU extensions (portability testing) |
+| `-z` | `sed -z 's/\n/,/g' file` | Null-delimited mode — treat NUL as line separator (GNU sed) |
+
+### sed | address types
 
 Every sed command can be preceded by an address that controls which lines it applies to. Without an address, the command applies to every line.
 
@@ -103,7 +145,9 @@ s/pattern/replacement/flags
 **Replacement** is literal text plus special sequences: `&` (entire match), `\1`–`\9` (capture groups), `\n` (newline in GNU sed).
 **Flags** modify behaviour.
 
-### Substitution Flags
+### sed s | substitution flags
+
+Flags follow the closing delimiter of the `s` command and modify how the substitution is applied.
 
 | Flag | Meaning |
 |---|---|
@@ -113,64 +157,89 @@ s/pattern/replacement/flags
 | `p` | Print the line if a substitution was made |
 | `w file` | Write the line to file if a substitution was made |
 
-### First Occurrence Per Line (Default)
+### sed s | first occurrence per line (default)
+
+Without the `g` flag, sed replaces only the first match on each line. This is the default behaviour.
 
 ```bash
-# Replace the first occurrence of 'ERROR' with 'WARN' on each line
 sed 's/ERROR/WARN/' application.log
+```
 
-# Replace only the first occurrence of a delimiter in a CSV
+Replace only the first comma — useful for splitting a CSV at a specific column boundary.
+
+```bash
 sed 's/,/|/' data.csv
 ```
 
-### Global Replacement
+### sed s/g | global replacement
+
+The `g` flag replaces all occurrences on each line. This is the flag you almost always want for bulk find-and-replace.
 
 ```bash
-# Replace ALL occurrences on each line — the flag you almost always want
 sed 's/old_schema/new_schema/g' migration.sql
+```
 
-# Replace all tabs with four spaces
+Replace all tabs with four spaces.
+
+```bash
 sed 's/\t/    /g' messy.py
+```
 
-# Remove all double quotes from a CSV field
+Remove all double quotes.
+
+```bash
 sed 's/"//g' quoted.csv
 ```
 
-### Case-Insensitive Global Replacement
+### sed s/gi | case-insensitive global replacement
+
+The `i` (or `I`) flag enables case-insensitive matching. GNU sed only — BSD sed does not support it.
 
 ```bash
-# Match 'error', 'ERROR', 'Error', 'ErRoR' — all replaced (GNU sed)
 sed 's/error/WARN/gi' application.log
+```
 
-# Case-insensitive match for config key regardless of casing
+```bash
 sed 's/db_host/DB_HOST/gi' legacy.conf
 ```
 
-### Replace the Nth Occurrence Only
+### sed s/N | replace the Nth occurrence only
+
+An integer flag replaces only the Nth match on each line. Useful for splitting at a specific delimiter position.
+
+Replace only the second comma on each line.
 
 ```bash
-# Replace only the second comma on each line (e.g., to split a 3-column CSV at column 2)
 sed 's/,/|/2' three-col.csv
+```
 
-# Replace only the third occurrence
+Replace only the third occurrence.
+
+```bash
 sed 's/foo/bar/3' input.txt
 ```
 
-### Alternative Delimiters
+### sed s | alternative delimiters
 
 When the pattern or replacement contains forward slashes (common in file paths, URLs, schema names), swap the `/` delimiter for any other character to avoid escaping.
 
+Escaping every forward slash creates noise. Use `|` as the delimiter instead.
+
 ```bash
-# BAD: lots of backslash noise
 sed 's/\/var\/log\/old/\/var\/log\/new/g' paths.conf
+```
 
-# GOOD: use | as delimiter — identical behaviour
+```bash
 sed 's|/var/log/old|/var/log/new|g' paths.conf
+```
 
-# Using # as delimiter (common for SQL paths and URLs)
+Use `#` for URLs and SQL paths, or `@` when `|` conflicts with shell pipes.
+
+```bash
 sed 's#https://old.example.com#https://new.example.com#g' bookmarks.sql
+```
 
-# Using @ for file paths on systems where | conflicts with shell
+```bash
 sed 's@/data/raw@/data/processed@g' pipeline.sh
 ```
 
@@ -193,52 +262,69 @@ By default sed writes to stdout and leaves the source file untouched. The `-i` f
 > [!success] Use sed -i.bak for cross-platform safety
 > `sed -i.bak 's/old/new/g' file` creates `file.bak` as a backup and works identically on GNU sed (Linux) and BSD sed (macOS). Delete the backup with `rm file.bak` once you've verified the result.
 
-### Edit File Directly (Linux/GNU sed)
+### sed -i | edit file directly (Linux / GNU sed)
+
+On GNU sed, `-i` without a suffix edits the file in place with no backup.
 
 ```bash
-# Edit in place with no backup — be certain before running
 sed -i 's/localhost/prod-db-host/g' application.properties
+```
 
-# Multiple expressions in one in-place pass
+Multiple expressions in one in-place pass.
+
+```bash
 sed -i -e 's/old_schema/new_schema/g' -e 's/old_owner/new_owner/g' schema.sql
 ```
 
-### Edit File Directly (macOS/BSD sed)
+### sed -i '' | edit file directly (macOS / BSD sed)
+
+On BSD sed, the suffix argument after `-i` is mandatory. Pass an empty string `''` for no backup.
 
 ```bash
-# The empty string '' is mandatory on macOS
 sed -i '' 's/localhost/prod-db-host/g' application.properties
+```
 
-# Multiple expressions on macOS
+```bash
 sed -i '' -e 's/old_schema/new_schema/g' -e 's/old_owner/new_owner/g' schema.sql
 ```
 
-### Create Backup Before Editing
+### sed -i.bak | create backup before editing
+
+Adding a suffix like `.bak` creates a backup copy before modifying the file. This syntax works identically on both GNU and BSD sed.
 
 ```bash
-# Creates file.bak before modifying file
 sed -i.bak 's/old/new/g' config.yaml
+```
 
-# Works identically on GNU and BSD sed
+```bash
 sed -i.bak 's/localhost/10.0.0.1/g' database.conf
+```
 
-# After verifying, remove backups
+Remove backups after verifying results.
+
+```bash
 rm *.bak
 ```
 
-### Edit Multiple Files in a Single Pass
+### sed -i | edit multiple files in a single pass
+
+sed accepts multiple file arguments and edits each one in place. For recursive directory trees, combine `find` with `xargs`.
 
 ```bash
-# Apply the same substitution to every Python file in current directory
 sed -i 's/import old_module/import new_module/g' *.py
+```
 
-# Recursively edit all SQL files (requires find + xargs, or GNU sed with find)
+```bash
 find . -name '*.sql' -print0 | xargs -0 sed -i 's/dbo\./schema_name\./g'
+```
 
-# Edit all YAML config files under a directory tree
+```bash
 find ./config -name '*.yaml' -print0 | xargs -0 sed -i 's/v1\.0/v2\.0/g'
+```
 
-# GNU sed can take multiple file arguments directly — all edited in place
+GNU sed accepts multiple file arguments directly.
+
+```bash
 sed -i 's/DEBUG/INFO/g' service-a.log service-b.log service-c.log
 ```
 
@@ -253,144 +339,227 @@ sed -i 's/DEBUG/INFO/g' service-a.log service-b.log service-c.log
 
 ## Line Selection and Addressing
 
-### By Specific Line Number
+Every sed command can be prefixed with an address to restrict which lines it acts on. Addresses can be line numbers, patterns, ranges, or negations. Without an address, the command applies to every line.
+
+### sed | select by specific line number
+
+Substitute only on line 1 — safe for fixing a CSV header without touching data rows.
 
 ```bash
-# Substitute only on line 1 (e.g., fix a CSV header without touching data rows)
 sed '1s/timestamp/event_time/' events.csv
+```
 
-# Substitute only on the last line
+Substitute only on the last line.
+
+```bash
 sed '$s/old/new/' file.txt
+```
 
-# Substitute on lines 10 through 20
+Substitute on a range of lines.
+
+```bash
 sed '10,20s/old/new/g' large_file.txt
 ```
 
-### By Pattern Match
+### sed /pattern/ | select by pattern match
+
+A regex address applies the command only to lines matching the pattern.
 
 ```bash
-# Apply substitution only to lines containing the word ERROR
 sed '/ERROR/s/localhost/prod-host/g' app.log
-
-# Apply substitution only to lines containing a SQL SELECT statement
-sed '/^SELECT/s/dbo\./reporting\./g' queries.sql
-
-# Delete all lines that match a pattern
-sed '/^#/d' config.conf          # Remove comment lines
-sed '/^$/d' data.csv             # Remove blank lines
-sed '/^[[:space:]]*$/d' data.txt # Remove lines with only whitespace
 ```
 
-### By Pattern Range
+```bash
+sed '/^SELECT/s/dbo\./reporting\./g' queries.sql
+```
+
+#### Delete all lines matching a pattern
 
 ```bash
-# Apply command from the line matching START through the line matching END (inclusive)
+sed '/^#/d' config.conf
+```
+
+```bash
+sed '/^$/d' data.csv
+```
+
+```bash
+sed '/^[[:space:]]*$/d' data.txt
+```
+
+### sed /start/,/end/ | select by pattern range
+
+A range address applies the command from the first line matching `start` through the next line matching `end` (inclusive).
+
+```bash
 sed '/BEGIN TRANSACTION/,/COMMIT/s/old_table/new_table/g' migration.sql
+```
 
-# Delete everything between (and including) the marker lines
+Delete everything between (and including) marker lines.
+
+```bash
 sed '/<!-- START REMOVE -->/,/<!-- END REMOVE -->/d' template.html
+```
 
-# Strip the header block from a file (lines 1 through the first blank line)
+Strip the header block — lines 1 through the first blank line.
+
+```bash
 sed '1,/^$/d' report.txt
 ```
 
-### Negation (Operate on Non-Matching Lines)
+### sed addr! | negation (operate on non-matching lines)
+
+The `!` suffix inverts the address — the command applies to every line that does NOT match.
+
+Delete all lines that do NOT contain `ERROR` or `WARN` (keep only those two).
 
 ```bash
-# Delete all lines that do NOT contain 'ERROR' or 'WARN' (keep only those two)
-sed '/ERROR|WARN/!d' app.log
+sed '/ERROR\|WARN/!d' app.log
+```
 
-# Suppress blank lines (print only non-blank lines)
-sed '/^$/d' file.txt
+Apply substitution to every line except the header (line 1).
 
-# Apply substitution to every line EXCEPT the header (line 1)
+```bash
 sed '1!s/,/|/g' data.csv
+```
 
-# Apply substitution to every line that does NOT start with #
+Apply substitution to every line that does not start with `#`.
+
+```bash
 sed '/^#/!s/old/new/g' config.file
 ```
 
-### Step Addressing (GNU sed Only)
+### sed 1~N | step addressing (GNU sed only)
+
+The `first~step` syntax selects lines at regular intervals. `1~2` selects every odd line, `2~2` every even line.
 
 ```bash
-# Every 2nd line starting from line 1 (odd lines): 1, 3, 5, ...
 sed -n '1~2p' file.txt
+```
 
-# Every 2nd line starting from line 2 (even lines): 2, 4, 6, ...
+```bash
 sed -n '2~2p' file.txt
+```
 
-# Every 5th line
+Every 5th line.
+
+```bash
 sed -n '0~5p' file.txt
+```
 
-# Process only even data rows in a CSV (skip odd rows)
-sed -n '1p; 0~2p' data.csv    # Keep header (line 1) + all even lines
+Keep the CSV header (line 1) plus all even-numbered data rows.
+
+```bash
+sed -n '1p; 0~2p' data.csv
 ```
 
 ---
 
 ## Deletion, Insertion, and Append
 
-### Delete Lines
+Beyond substitution, sed provides commands for removing lines (`d`), inserting text before a line (`i`), appending text after a line (`a`), and replacing an entire line (`c`). These commands use the same addressing as substitution.
+
+### sed d | delete lines
+
+The `d` command removes lines from the output. Combine with addresses to target specific lines, patterns, or ranges.
 
 ```bash
-# Delete lines matching a pattern
 sed '/^DEBUG/d' verbose.log
+```
 
-# Delete a range of lines by number
-sed '1,5d' file.txt           # Delete first 5 lines (skip a header block)
+Delete the first 5 lines (skip a header block).
 
-# Delete the last line
+```bash
+sed '1,5d' file.txt
+```
+
+Delete the last line.
+
+```bash
 sed '$d' file.txt
+```
 
-# Delete all blank lines
+Delete all blank lines.
+
+```bash
 sed '/^$/d' file.txt
+```
 
-# Delete trailing whitespace (not the line, just the whitespace at line end)
+Delete trailing whitespace from every line (the line itself stays).
+
+```bash
 sed 's/[[:space:]]*$//' file.txt
+```
 
-# Delete lines that contain only whitespace
+Delete lines that contain only whitespace.
+
+```bash
 sed '/^[[:space:]]*$/d' file.txt
+```
 
-# Delete lines between two patterns (inclusive)
+Delete lines between two patterns (inclusive).
+
+```bash
 sed '/^---BEGIN---/,/^---END---/d' report.md
 ```
 
-### Insert Before a Line
+### sed i | insert before a line
+
+The `i` command inserts text before the addressed line.
 
 ```bash
-# Insert a new line BEFORE line 3
 sed '3i\This is inserted before line 3' file.txt
+```
 
-# Insert before the first line matching a pattern
+Insert a comment before every CREATE TABLE statement.
+
+```bash
 sed '/^CREATE TABLE/i\-- Migration: run as data_owner' schema.sql
+```
 
-# Insert a blank line before every section header
+Insert a blank line before every section header.
+
+```bash
 sed '/^## /i\\' document.md
 ```
 
-### Append After a Line
+### sed a | append after a line
+
+The `a` command appends text after the addressed line.
 
 ```bash
-# Append a new line AFTER line 3
 sed '3a\This is appended after line 3' file.txt
+```
 
-# Append after the last line
+Append after the last line.
+
+```bash
 sed '$a\-- End of migration script' migration.sql
+```
 
-# Append after every line matching a pattern
+Append after every line matching a pattern.
+
+```bash
 sed '/^COMMIT/a\-- Transaction complete' script.sql
 ```
 
-### Replace an Entire Line
+### sed c | replace an entire line
+
+The `c` command replaces the entire matching line with the provided text.
 
 ```bash
-# Replace the entire content of any line matching a pattern
 sed '/^DB_HOST=.*/c\DB_HOST=prod-db.internal' .env
+```
 
-# Replace line 1 entirely (e.g., rewrite a shebang)
+Replace line 1 entirely (e.g., rewrite a shebang).
+
+```bash
 sed '1c\#!/usr/bin/env python3' old_script.py
+```
 
-# Replace the last line
+Replace the last line.
+
+```bash
 sed '$c\-- generated by migration tool' migration.sql
 ```
 
@@ -398,71 +567,107 @@ sed '$c\-- generated by migration tool' migration.sql
 
 ## Advanced Substitution with Regex
 
-### Capture Groups and Back-References (BRE — Default)
+sed's substitution command gains precision through capture groups, back-references, and the `&` token. BRE (default) requires `\(` and `\)` for grouping; ERE via `sed -E` uses unescaped `(` and `)` and adds `+`, `?`, and `|`.
+
+### sed | capture groups and back-references (BRE)
 
 In basic regex mode (default, no `-E`), group with `\(` and `\)` and back-reference with `\1`, `\2`.
 
+#### Swap key and value around an equals sign
+
+Input: `name=Alice` → Output: `Alice=name`
+
 ```bash
-# Swap the key and value around an equals sign
-# Input:  name=Alice
-# Output: Alice=name
 sed 's/\(.*\)=\(.*\)/\2=\1/' keyvalue.txt
+```
 
-# Reformat a date from YYYY-MM-DD to DD/MM/YYYY
-# Input:  2024-03-15
-# Output: 15/03/2024
+#### Reformat a date from YYYY-MM-DD to DD/MM/YYYY
+
+Input: `2024-03-15` → Output: `15/03/2024`
+
+```bash
 sed 's/\([0-9]\{4\}\)-\([0-9]\{2\}\)-\([0-9]\{2\}\)/\3\/\2\/\1/' dates.txt
+```
 
-# Extract the value from a key=value line and wrap it in quotes
-# Input:  DB_NAME=analytics
-# Output: DB_NAME="analytics"
+#### Wrap a captured value in quotes
+
+Input: `DB_NAME=analytics` → Output: `DB_NAME="analytics"`
+
+```bash
 sed 's/\(DB_NAME=\)\(.*\)/\1"\2"/' config.env
+```
 
-# Prefix every captured SQL table name with a schema
-# Input:  FROM orders WHERE
-# Output: FROM dw.orders WHERE
+#### Prefix captured table names with a schema
+
+Input: `FROM orders WHERE` → Output: `FROM dw.orders WHERE`
+
+```bash
 sed 's/FROM \([a-z_]*\)/FROM dw.\1/g' query.sql
 ```
 
-### Extended Regex (ERE) with -E
+### sed -E | extended regex (ERE)
 
-With `sed -E`, use `(` and `)` without backslashes, and gain `+`, `?`, `|`, `{n,m}`.
+With `sed -E`, use `(` and `)` without backslashes, and gain `+`, `?`, `|`, `{n,m}`. Named groups are NOT supported by sed — use positional `\1`, `\2`.
+
+#### Alternation — replace either pattern
 
 ```bash
-# Using alternation: replace either 'foo' or 'bar' with 'baz'
 sed -E 's/(foo|bar)/baz/g' input.txt
+```
 
-# Match one or more digits (+ requires -E)
+#### Match one or more digits
+
+```bash
 sed -E 's/[0-9]+/NUM/g' log.txt
+```
 
-# Optional character (? requires -E)
-sed -E 's/colou?r/color/g' british.txt    # Matches 'colour' and 'color'
+#### Optional character
 
-# Named groups are NOT supported by sed; use positional \1, \2
-# Capture the first word and repeat it
+Matches both `colour` and `color`.
+
+```bash
+sed -E 's/colou?r/color/g' british.txt
+```
+
+#### Capture and repeat the first word
+
+```bash
 sed -E 's/^([a-z]+).*/\1 \1/' file.txt
+```
 
-# Reformat log lines: extract level and message
-# Input:  [2024-03-15 12:00:00] [ERROR] Something failed
-# Output: ERROR: Something failed
+#### Reformat log lines — extract level and message
+
+Input: `[2024-03-15 12:00:00] [ERROR] Something failed` → Output: `ERROR: Something failed`
+
+```bash
 sed -E 's/^\[[^]]+\] \[([A-Z]+)\] (.*)/\1: \2/' app.log
 ```
 
-### The & Special Replacement Token
+### sed & | the entire-match replacement token
 
 `&` in the replacement string stands for the entire matched text. Use it to wrap matches without restating the pattern.
 
+#### Wrap every number in square brackets
+
 ```bash
-# Wrap every number in the line with square brackets
 sed 's/[0-9]\+/[&]/g' numbers.txt
+```
 
-# Quote every word that starts with uppercase (BRE)
+#### Quote every capitalised word
+
+```bash
 sed 's/[A-Z][a-z]*/\"&\"/g' proper_nouns.txt
+```
 
-# Surround each comma-separated value with single quotes
+#### Surround each CSV value with single quotes
+
+```bash
 sed "s/[^,]*/'&'/g" flat.csv
+```
 
-# Add parentheses around a matched IP address
+#### Add parentheses around matched IP addresses
+
+```bash
 sed -E 's/([0-9]{1,3}\.){3}[0-9]{1,3}/(&)/g' access.log
 ```
 
@@ -470,29 +675,52 @@ sed -E 's/([0-9]{1,3}\.){3}[0-9]{1,3}/(&)/g' access.log
 
 ## Print, Quiet Mode, and Line Extraction
 
+The `-n` flag suppresses sed's default "print every line" behaviour. Combined with the `p` command, this lets sed act as a selective extractor — printing only lines that match an address or were modified by a substitution.
+
+### sed -n p | print matching lines
+
+Print only lines matching a pattern (equivalent to `grep`).
+
 ```bash
-# -n suppresses default output; p explicitly prints matched lines (like grep)
 sed -n '/ERROR/p' app.log
+```
 
-# Print only line 5
+#### Print a specific line or range
+
+```bash
 sed -n '5p' file.txt
+```
 
-# Print lines 5 through 10
+```bash
 sed -n '5,10p' file.txt
+```
 
-# Print from pattern to end of file
+#### Print from a pattern to the end of the file
+
+```bash
 sed -n '/START SECTION/,$p' report.txt
+```
 
-# Print lines between two patterns (inclusive)
+#### Print lines between two patterns (inclusive)
+
+```bash
 sed -n '/BEGIN/,/END/p' script.sql
+```
 
-# Extract a value from key=value (like grep + cut in one command)
-# Input: DB_HOST=prod-db.internal
-# Output: prod-db.internal
+#### Extract a value from key=value
+
+Combine `-n` with `s///p` to match, transform, and print in one pass. Input: `DB_HOST=prod-db.internal` → Output: `prod-db.internal`.
+
+```bash
 sed -n 's/^DB_HOST=//p' .env
+```
 
-# Print line numbers alongside lines (with = command)
-sed -n '/ERROR/{=; p}' app.log    # Prints line number, then the line
+#### Print line numbers alongside matching lines
+
+The `=` command prints the current line number. Use braces to combine `=` and `p` under one address.
+
+```bash
+sed -n '/ERROR/{=; p}' app.log
 ```
 
 > [!tip] sed as a grep replacement
@@ -503,23 +731,32 @@ sed -n '/ERROR/{=; p}' app.log    # Prints line number, then the line
 
 ## Multi-Command and Script Files
 
-### Multiple -e Expressions
+sed can apply multiple commands in a single pass through the file using `-e` flags, semicolons, or external script files. Braces `{}` group multiple commands under a single address.
+
+### sed -e | multiple expressions
+
+Each `-e` flag adds a command. All commands are applied in order during a single pass through the file.
 
 ```bash
-# Chain two substitutions in one sed call (single pass through the file)
 sed -e 's/\r$//' -e 's/[[:space:]]*$//' windows_file.txt
+```
 
-# Three operations: fix schema, fix owner, add comment header
+Three operations in one pass: fix schema, fix owner, add a comment header.
+
+```bash
 sed -e 's/dbo\./reporting\./g' \
     -e 's/sa/data_owner/g' \
     -e '1i\-- Patched by migration script' \
     schema.sql
+```
 
-# Remove comments and blank lines from a config in one pass
+Remove comments and blank lines from a config.
+
+```bash
 sed -e '/^#/d' -e '/^$/d' application.conf
 ```
 
-### sed Script Files
+### sed -f | script files
 
 For complex or reusable transformations, write commands in a `.sed` file.
 
@@ -546,16 +783,22 @@ sed -f normalize-log.sed raw.log > clean.log
 sed -i -f normalize-log.sed raw.log
 ```
 
-### Combining Addresses and Commands with Braces
+### sed {} | combining addresses and commands with braces
+
+Braces group multiple commands under a single address. All commands inside the braces apply only to lines matching the outer address.
+
+Apply multiple substitutions only to lines containing `ERROR`.
 
 ```bash
-# Apply multiple commands only to lines matching a pattern
 sed '/ERROR/ {
   s/old_host/new_host/g
   s/port 5432/port 5433/g
 }' app.log
+```
 
-# Within a line range, apply multiple transformations
+Within a line range, delete comments and perform a substitution.
+
+```bash
 sed '/BEGIN_BLOCK/,/END_BLOCK/ {
   /^#/d
   s/old/new/g
@@ -576,19 +819,36 @@ The hold space lets sed carry information across line boundaries.
 | `G` | Append hold space to pattern space |
 | `x` | Exchange pattern space and hold space |
 
+#### Reverse the order of two consecutive lines
+
+Hold line N, read line N+1, print N+1 first, then print N.
+
 ```bash
-# Reverse the order of two consecutive lines:
-# When we see line N, hold it; print line N+1 first, then line N
 sed -n 'h; n; p; g; p' pairs.txt
+```
 
-# Delete duplicate consecutive lines (keep first occurrence)
+#### Delete duplicate consecutive lines
+
+Keep the first occurrence of each duplicated pair.
+
+```bash
 sed '$!N; /^\(.*\)\n\1$/!P; D' file.txt
+```
 
-# Join every pair of lines with a comma
+#### Join every pair of lines with a comma
+
+`N` appends the next line into the pattern space, separated by `\n`.
+
+```bash
 sed 'N; s/\n/,/' pairs.txt
+```
 
-# Append a blank line after every 5th line (for visual grouping)
-sed '5~5G' long_file.txt      # GNU sed only
+#### Append a blank line after every 5th line
+
+`G` appends the (empty) hold space to the pattern space, adding a blank line. GNU sed only.
+
+```bash
+sed '5~5G' long_file.txt
 ```
 
 > [!info] Hold space is advanced
@@ -597,27 +857,149 @@ sed '5~5G' long_file.txt      # GNU sed only
 
 ---
 
+## Additional sed Commands
+
+sed has several commands beyond `s`, `d`, `i`, `a`, and `c` that handle transliteration, early exit, file I/O, and multi-line operations.
+
+### sed q | quit after first match
+
+The `q` command stops processing immediately after the current line. Useful for extracting the first match from a large file without reading the rest.
+
+```bash
+sed -n '/ERROR/{p; q}' huge_app.log
+```
+
+Print only the first 10 lines (equivalent to `head -10`).
+
+```bash
+sed '10q' file.txt
+```
+
+### sed y | transliterate characters
+
+The `y` command performs character-by-character replacement (like `tr`). Every character in the first set is replaced by the corresponding character in the second set.
+
+```bash
+sed 'y/abc/ABC/' file.txt
+```
+
+Convert all lowercase letters to uppercase (GNU sed also supports `\U` in substitution).
+
+```bash
+sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/' file.txt
+```
+
+### sed r, w | read and write files
+
+The `r` command reads a file and inserts its contents after the addressed line. The `w` command writes the pattern space to a file.
+
+#### Insert a file's contents after a marker line
+
+```bash
+sed '/INSERT_HEADER_HERE/r header.sql' template.sql
+```
+
+#### Write matching lines to a separate file
+
+```bash
+sed -n '/ERROR/w errors.log' app.log
+```
+
+### sed N, P, D | multi-line operations
+
+These commands extend sed beyond single-line processing by manipulating the pattern space across line boundaries.
+
+| Command | Action |
+|---|---|
+| `N` | Append next input line to pattern space (separated by `\n`) |
+| `P` | Print up to the first `\n` in the pattern space |
+| `D` | Delete up to the first `\n` in the pattern space, then restart cycle |
+
+#### Join a continuation line to the previous line
+
+If a line ends with `\`, append the next line and remove the backslash-newline.
+
+```bash
+sed -e :a -e '/\\$/N; s/\\\n//; ta' continuation.txt
+```
+
+#### Delete blank lines that follow other blank lines (squeeze)
+
+```bash
+sed '/^$/N; /^\n$/d' file.txt
+```
+
+### sed Commands Reference
+
+| Command | Syntax | Description |
+|---|---|---|
+| `s` | `s/pat/rep/flags` | Substitute — replace pattern with replacement |
+| `d` | `[addr]d` | Delete the pattern space; start next cycle |
+| `p` | `[addr]p` | Print the pattern space |
+| `i` | `[addr]i\text` | Insert text before the addressed line |
+| `a` | `[addr]a\text` | Append text after the addressed line |
+| `c` | `[addr]c\text` | Replace the addressed line with text |
+| `q` | `[addr]q` | Quit — exit sed after printing the current line |
+| `Q` | `[addr]Q` | Quit — exit sed without printing (GNU sed) |
+| `y` | `y/src/dst/` | Transliterate characters (like `tr`) |
+| `r` | `[addr]r file` | Read file and append its contents after the addressed line |
+| `w` | `[addr]w file` | Write the pattern space to file |
+| `=` | `[addr]=` | Print the current line number |
+| `l` | `[addr]l` | Print the pattern space unambiguously (show non-printable chars) |
+| `n` | `[addr]n` | Read next line into pattern space (replacing current) |
+| `N` | `[addr]N` | Append next line to pattern space (separated by `\n`) |
+| `P` | `[addr]P` | Print up to first `\n` in pattern space |
+| `D` | `[addr]D` | Delete up to first `\n`, restart cycle |
+| `h` | `[addr]h` | Copy pattern space to hold space (overwrite) |
+| `H` | `[addr]H` | Append pattern space to hold space |
+| `g` | `[addr]g` | Copy hold space to pattern space (overwrite) |
+| `G` | `[addr]G` | Append hold space to pattern space |
+| `x` | `[addr]x` | Exchange pattern space and hold space |
+| `b label` | `[addr]b label` | Branch (jump) to label |
+| `t label` | `[addr]t label` | Branch to label if a substitution was made |
+| `: label` | `: label` | Define a label for `b` and `t` branching |
+
+---
+
 ## Data Engineering Scenarios
 
 This section covers the patterns data engineers reach for most often. Every command is production-ready.
 
-### Fix CSV Headers
+### sed | fix CSV headers
+
+All edits target line 1 only (`1s/`) to leave data rows untouched.
+
+#### Rename a single column header
 
 ```bash
-# Rename a single column header (line 1 only, safe for data rows)
 sed '1s/timestamp/event_time/' events.csv
-sed '1s/user_id/userId/' api-export.csv
+```
 
-# Rename multiple headers in one pass
+#### Rename multiple headers in one pass
+
+```bash
 sed '1s/ts/timestamp/; 1s/uid/user_id/; 1s/val/value/' raw.csv
+```
 
-# Lowercase all header names
-sed '1s/.*/\L&/' data.csv            # GNU sed — \L lowercases entire match
+#### Lowercase all header names
 
-# Add a new column header to the end of the header row
+`\L` lowercases the entire match (GNU sed only).
+
+```bash
+sed '1s/.*/\L&/' data.csv
+```
+
+#### Add a new column header at the end
+
+```bash
 sed '1s/$/,loaded_at/' incremental.csv
+```
 
-# Remove a trailing comma from the header (common export artifact)
+#### Remove a trailing comma from the header
+
+A common export artifact.
+
+```bash
 sed '1s/,$//' exported.csv
 ```
 
@@ -633,135 +1015,212 @@ sed '1s/,$//' exported.csv
 Many Windows tools add a Byte Order Mark (BOM: `EF BB BF`) to UTF-8 files. This breaks `head` comparisons, SQL loaders, and Python readers.
 
 ```bash
-# Remove the UTF-8 BOM from the first line of a file (GNU sed)
 sed -i '1s/^\xEF\xBB\xBF//' file_with_bom.csv
+```
 
-# Verify BOM is gone (should show no output if clean)
+Verify the BOM is gone (should show no output if clean).
+
+```bash
 head -c 3 file_with_bom.csv | xxd
+```
 
-# Remove BOM from all CSV files in a directory
+Remove BOM from all CSV files in a directory.
+
+```bash
 find . -name '*.csv' -print0 | xargs -0 sed -i '1s/^\xEF\xBB\xBF//'
 ```
 
-### Strip Trailing Whitespace
+### sed | strip trailing whitespace
+
+Remove trailing spaces and tabs from every line. Common as a pre-commit cleanup step.
 
 ```bash
-# Remove trailing spaces and tabs from every line
 sed 's/[[:space:]]*$//' file.py
+```
 
-# In-place (common before committing code)
+In-place across multiple file types.
+
+```bash
 sed -i 's/[[:space:]]*$//' *.py *.sql *.yaml
+```
 
-# POSIX portable alternative (avoids [[:space:]] where not supported)
+POSIX portable alternative (avoids `[[:space:]]` where not supported).
+
+```bash
 sed 's/[ \t]*$//' file.txt
 ```
 
-### Convert Windows Line Endings (CRLF → LF)
+### sed | convert Windows line endings (CRLF → LF)
+
+Remove the carriage return (`\r`) from the end of each line. Windows editors and tools write CRLF; Linux and macOS expect LF.
 
 ```bash
-# Remove carriage return (\r) from end of each line
 sed 's/\r$//' windows_export.csv
+```
 
-# In-place conversion (Linux target)
+In-place conversion.
+
+```bash
 sed -i 's/\r$//' windows_export.csv
+```
 
-# Process multiple files
+Process all SQL files recursively.
+
+```bash
 find . -name '*.sql' -print0 | xargs -0 sed -i 's/\r$//'
-
-# Verify: should show no ^M characters after
-cat -A clean.csv | head -3
 ```
 
 > [!tip] dos2unix shortcut
 >
 > If `dos2unix` is installed, `dos2unix file.txt` is shorter. Use sed when `dos2unix` is unavailable (containers, minimal images) or when you need to combine CRLF conversion with other transforms in one pass.
 
-### Add Prefix or Suffix to Every Line (Bulk INSERT Generation)
+### sed | add prefix or suffix to every line
+
+Use `^` to anchor a prefix at the start and `$` to anchor a suffix at the end.
+
+#### Wrap each line as a SQL INSERT values row
 
 ```bash
-# Wrap each line as a SQL INSERT values row
 sed "s/^/INSERT INTO events (data) VALUES ('/; s/$/');" raw_values.txt
+```
 
-# Add a tab prefix to every line (indent a block of SQL)
+#### Indent every line with a tab
+
+```bash
 sed 's/^/\t/' subquery.sql
+```
 
-# Add a suffix comment to every line
+#### Add a suffix comment
+
+```bash
 sed 's/$/ -- auto-generated/' generated.sql
+```
 
-# Wrap each filename in single quotes and add a comma (build a SQL IN list)
+#### Build a SQL IN list from filenames
+
+```bash
 sed "s/^/'/; s/$/',/" filenames.txt
 ```
 
-### Comment and Uncomment Lines in Config Files
+### sed | comment and uncomment lines in config files
+
+Comment out lines by prefixing `# `. Uncomment by removing the leading `#` and optional space.
 
 ```bash
-# Comment out all lines containing 'debug' in an Airflow config
 sed -i '/debug/s/^/# /' airflow.cfg
+```
 
-# Uncomment lines (remove leading # and optional space)
+```bash
 sed -i 's/^# *//' commented_block.conf
+```
 
-# Toggle: uncomment only lines that match a specific pattern
+Uncomment only lines matching a specific pattern.
+
+```bash
 sed -i '/^#.*MAX_CONNECTIONS/s/^#[[:space:]]*//' postgresql.conf
+```
 
-# Comment out a specific named key
+Comment out a specific named key.
+
+```bash
 sed -i 's/^\(LOG_LEVEL=\)/#\1/' .env
 ```
 
-### Extract Values from key=value Config Files
+### sed | extract values from key=value config files
+
+Combine `-n` with `s///p` to strip the key prefix and print only the value.
 
 ```bash
-# Print the value of DB_HOST from a .env file
 sed -n 's/^DB_HOST=//p' .env
+```
 
-# Extract multiple keys in one pass
+Extract multiple keys in one pass.
+
+```bash
 sed -n -e 's/^DB_HOST=//p' -e 's/^DB_PORT=//p' .env
+```
 
-# Extract and export as shell variables
+Extract and export as a shell variable.
+
+```bash
 eval "$(sed -n 's/^DB_HOST=\(.*\)/DB_HOST=\1/p' .env)"
+```
 
-# Extract value regardless of surrounding whitespace
+Handle keys with surrounding whitespace.
+
+```bash
 sed -n 's/^[[:space:]]*DB_HOST[[:space:]]*=[[:space:]]*//p' .env
 ```
 
-### Modify SQL Migration Files
+### sed | modify SQL migration files
+
+Common transforms for database migrations: schema renames, function replacements, and identifier format conversion.
 
 ```bash
-# Rename a schema across an entire SQL file
 sed -i 's/\bdbo\b/reporting/g' migration_v2.sql
+```
 
-# Add a table prefix to all table names in FROM and JOIN clauses
+Add a schema prefix to table names in FROM and JOIN clauses.
+
+```bash
 sed -i -E 's/(FROM|JOIN)[[:space:]]+([a-z_]+)/\1 staging.\2/gi' etl.sql
+```
 
-# Replace a deprecated function name
+Replace a deprecated function name.
+
+```bash
 sed -i 's/GETDATE()/CURRENT_TIMESTAMP/g' stored_procs.sql
+```
 
-# Update a database name reference
+Update a database name reference.
+
+```bash
 sed -i 's/USE \[OldDatabase\]/USE [NewDatabase]/g' *.sql
+```
 
-# Strip square brackets from SQL Server identifiers (for BigQuery migration)
+Strip SQL Server square brackets and replace with BigQuery backticks.
+
+```bash
 sed -i 's/\[\([^]]*\)\]/`\1`/g' mssql_to_bq.sql
+```
 
-# Add schema qualification to bare table names (simple cases)
+Add schema qualification to bare table names.
+
+```bash
 sed -E -i 's/\bFROM ([a-z_]+)\b/FROM myschema.\1/g' query.sql
 ```
 
-### Fix YAML Frontmatter
+### sed | fix YAML frontmatter
+
+Repair Obsidian and Hugo frontmatter — tag formatting, date updates, and field manipulation.
+
+Remove accidental `#` prefixes from tags within the `tags:` block.
 
 ```bash
-# Remove # prefix accidentally added to tags (Obsidian frontmatter repair)
 sed -i '/^tags:/,/^[^[:space:]]/ s/#//g' note.md
+```
 
-# Normalise tag format: remove spaces after commas in a tags list
+Remove spaces after commas in a tags list.
+
+```bash
 sed -i 's/tags: \[/tags: [/; s/, /,/g' note.md
+```
 
-# Update the 'updated' date in frontmatter to today
+Update the `updated` date to today.
+
+```bash
 sed -i "s/^updated: .*/updated: $(date +%Y-%m-%d)/" note.md
+```
 
-# Remove a frontmatter field entirely
+Remove a frontmatter field entirely.
+
+```bash
 sed -i '/^draft: /d' published_note.md
+```
 
-# Add a status field after the type field
+Add a `status` field after the `type` field.
+
+```bash
 sed -i '/^type: /a\status: complete' note.md
 ```
 
@@ -770,75 +1229,116 @@ sed -i '/^type: /a\status: complete' note.md
 ANSI escape sequences appear as `\e[31m` (red), `\e[0m` (reset), etc. They corrupt log parsing and grep output.
 
 ```bash
-# Remove all ANSI escape sequences from a log file (GNU sed)
 sed 's/\x1b\[[0-9;]*[mGKHF]//g' coloured.log
-
-# In-place strip (then re-open with less or grep normally)
-sed -i 's/\x1b\[[0-9;]*[mGKHF]//g' app.log
-
-# More aggressive — strip any ESC sequence
-sed 's/\x1b\[[0-9;]*[a-zA-Z]//g; s/\x1b[^[]*\[[0-9;]*[a-zA-Z]//g' log.txt
-
-# Verify result is clean
-grep -P '\x1b' cleaned.log | wc -l   # Should return 0
 ```
 
-### Transform Date Formats in Data Files
+In-place strip.
 
 ```bash
-# US date MM/DD/YYYY → ISO 8601 YYYY-MM-DD
+sed -i 's/\x1b\[[0-9;]*[mGKHF]//g' app.log
+```
+
+More aggressive variant — strip any ESC sequence.
+
+```bash
+sed 's/\x1b\[[0-9;]*[a-zA-Z]//g; s/\x1b[^[]*\[[0-9;]*[a-zA-Z]//g' log.txt
+```
+
+### sed | transform date formats in data files
+
+Use capture groups to rearrange date components between formats.
+
+#### US date MM/DD/YYYY → ISO 8601 YYYY-MM-DD
+
+```bash
 sed -E 's|([0-9]{2})/([0-9]{2})/([0-9]{4})|\3-\1-\2|g' us_dates.csv
+```
 
-# ISO date YYYY-MM-DD → BigQuery DATETIME literal
+#### ISO date → BigQuery DATETIME literal
+
+```bash
 sed -E "s/([0-9]{4}-[0-9]{2}-[0-9]{2})/DATETIME '\1'/g" bq_query.sql
+```
 
-# Remove time component from datetime — keep only date part
+#### Remove time component from datetime
+
+```bash
 sed -E 's/([0-9]{4}-[0-9]{2}-[0-9]{2})T[0-9:]+Z?/\1/g' events.jsonl
+```
 
-# Convert epoch seconds to a string placeholder for reprocessing
+#### Replace epoch timestamps with a placeholder
+
+```bash
 sed -E 's/[0-9]{10}/EPOCH_TS/g' raw.json
 ```
 
-### Bulk Rename Patterns in Terraform Files
+### sed | bulk rename patterns in Terraform files
+
+Recursive find-and-replace across `.tf` files using `find | xargs sed -i`.
 
 ```bash
-# Rename a Terraform resource type across all .tf files
 find . -name '*.tf' -print0 | xargs -0 sed -i 's/google_bigquery_dataset_access/google_bigquery_dataset_iam_binding/g'
+```
 
-# Update a variable name referenced across modules
+```bash
 find . -name '*.tf' -print0 | xargs -0 sed -i 's/var\.project_id/var.gcp_project_id/g'
+```
 
-# Rename a module source path
+```bash
 sed -i 's|source = "./modules/old-name"|source = "./modules/new-name"|g' main.tf
+```
 
-# Update Terraform required_version constraint
+```bash
 sed -i 's/required_version = ">= 1\.3"/required_version = ">= 1.6"/' versions.tf
+```
 
-# Replace a hardcoded region with a variable reference
+Replace a hardcoded region with a variable reference.
+
+```bash
 find . -name '*.tf' -print0 | xargs -0 sed -i 's/"europe-west1"/var.region/g'
 ```
 
-### Sanitise PII from Log Output
+### sed | sanitise PII from log output
+
+Regex-based redaction for local log inspection. Replace identifiable patterns with placeholders before sharing or uploading log files.
+
+#### Redact email addresses
 
 ```bash
-# Redact email addresses
 sed -E 's/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/EMAIL_REDACTED/g' app.log
+```
 
-# Redact key=value pairs for sensitive keys
-sed 's/email=[^ ]*/email=REDACTED/g' query.log
+#### Redact key=value pairs for sensitive keys
+
+```bash
 sed 's/password=[^ &]*/password=REDACTED/g' access.log
+```
+
+```bash
 sed 's/api_key=[^ &]*/api_key=REDACTED/g' api.log
+```
 
-# Redact credit card numbers (16-digit groups)
+#### Redact credit card numbers (16-digit groups)
+
+```bash
 sed -E 's/\b[0-9]{4}[[:space:]-]?[0-9]{4}[[:space:]-]?[0-9]{4}[[:space:]-]?[0-9]{4}\b/CARD_REDACTED/g' transactions.log
+```
 
-# Redact IPv4 addresses
+#### Redact IPv4 addresses
+
+```bash
 sed -E 's/\b([0-9]{1,3}\.){3}[0-9]{1,3}\b/IP_REDACTED/g' access.log
+```
 
-# Redact bearer tokens
+#### Redact bearer tokens
+
+```bash
 sed -E 's/Bearer [A-Za-z0-9._-]+/Bearer TOKEN_REDACTED/g' api.log
+```
 
-# Multi-pattern PII scrub in one pass
+#### Multi-pattern PII scrub in one pass
+
+```bash
 sed -E \
   -e 's/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/EMAIL_REDACTED/g' \
   -e 's/password=[^ &]*/password=REDACTED/g' \
@@ -853,20 +1353,20 @@ sed -E \
 > [!success] Use Cloud DLP or Presidio for compliance-critical redaction
 > For production pipelines, Google Cloud DLP and Microsoft Presidio use ML-based detection that handles obfuscated formats, context-aware identification, and audit trails. Reserve sed redaction for local development log inspection only — never use it to gate a production data flow that must be compliant.
 
-### Idempotent Pipeline: Normalise Input Before Loading
+### sed | idempotent normalisation pipeline
+
+Chain all cleanup operations into a single sed pass. Each transform is idempotent — running the pipeline twice produces the same output as running it once.
 
 ```bash
-# Full normalisation pipeline — chain multiple sed passes or use -e flags
 sed \
-  -e 's/\r$//' \               # Strip CRLF
-  -e 's/[[:space:]]*$//' \     # Strip trailing whitespace
-  -e '/^$/d' \                 # Remove blank lines
-  -e '1s/^\xEF\xBB\xBF//' \   # Remove UTF-8 BOM
+  -e 's/\r$//' \
+  -e 's/[[:space:]]*$//' \
+  -e '/^$/d' \
+  -e '1s/^\xEF\xBB\xBF//' \
   raw_export.csv > normalised.csv
-
-# Make the pipeline idempotent — running it twice produces the same output
-# (all transforms above are already idempotent by nature)
 ```
+
+This strips CRLF line endings, trailing whitespace, blank lines, and the UTF-8 BOM in a single pass.
 
 ---
 
@@ -878,81 +1378,89 @@ PowerShell uses the `-replace` operator, which accepts .NET regular expressions 
 >
 > .NET regex is more powerful than POSIX: named groups `(?<name>...)`, lookaheads, lookbehinds, and non-greedy quantifiers are all supported. The `-replace` operator is case-insensitive by default; use `-creplace` for case-sensitive matching.
 
-### Basic Substitution
+### -replace | basic substitution
+
+PowerShell's `-replace` operator replaces ALL occurrences by default (equivalent to sed's `g` flag) and is case-insensitive. Use `-creplace` for case-sensitive matching.
 
 ```powershell
-# Replace first occurrence (PowerShell -replace replaces ALL by default)
 (Get-Content file.txt) -replace 'old','new' | Set-Content file.txt
-
-# Global replacement — same as above (all occurrences, PowerShell default)
-(Get-Content data.csv) -replace 'old_schema','new_schema' | Set-Content data.csv
-
-# Case-sensitive replacement
-(Get-Content file.txt) -creplace 'Old','NEW' | Set-Content file.txt
-
-# Case-insensitive (default in PowerShell, explicit for clarity)
-(Get-Content file.txt) -replace '(?i)error','WARN' | Set-Content file.txt
 ```
 
-### In-Place Editing
+```powershell
+(Get-Content file.txt) -creplace 'Old','NEW' | Set-Content file.txt
+```
+
+### -replace | in-place editing
+
+PowerShell has no `-i` flag. Read the file, transform in memory, then write back.
 
 ```powershell
-# PowerShell equivalent of sed -i (read → transform → write back)
-$content = Get-Content 'config.yaml'
-$content -replace 'localhost','prod-db-host' | Set-Content 'config.yaml'
-
-# One-liner using pipeline
 (Get-Content '.\app.properties') -replace 'DEBUG','INFO' | Set-Content '.\app.properties'
+```
 
-# With backup (copy first)
+Create a backup before editing by copying the file first.
+
+```powershell
 Copy-Item 'schema.sql' 'schema.sql.bak'
 (Get-Content 'schema.sql') -replace 'dbo\.','reporting.' | Set-Content 'schema.sql'
 ```
 
-### Multiple Files
+### -replace | multiple files
+
+Iterate with `ForEach-Object` to apply the same replacement across all matching files.
 
 ```powershell
-# Apply same replacement to all .py files in current directory
 Get-ChildItem -Filter '*.py' | ForEach-Object {
     (Get-Content $_.FullName) -replace 'import old_module','import new_module' |
     Set-Content $_.FullName
 }
+```
 
-# Recursive across all subdirectories
+Recursive across all subdirectories.
+
+```powershell
 Get-ChildItem -Recurse -Filter '*.sql' | ForEach-Object {
     (Get-Content $_.FullName) -replace 'dbo\.','schema_name.' |
     Set-Content $_.FullName
 }
 ```
 
-### Line Filtering (Deletion)
+### Where-Object | line filtering (deletion)
+
+`Where-Object` with `-notmatch` is the PowerShell equivalent of `sed '/pattern/d'`.
 
 ```powershell
-# Delete lines matching a pattern (equivalent to sed '/pattern/d')
 (Get-Content file.log) | Where-Object { $_ -notmatch '^DEBUG' } | Set-Content clean.log
+```
 
-# Delete blank lines
+```powershell
 (Get-Content file.txt) | Where-Object { $_ -ne '' } | Set-Content file.txt
+```
 
-# Delete lines not matching a pattern (keep only matching lines)
+Keep only matching lines (equivalent to `sed -n '/pattern/p'`).
+
+```powershell
 (Get-Content app.log) | Where-Object { $_ -match 'ERROR|WARN' } | Set-Content filtered.log
 ```
 
-### Line Selection and Extraction
+### Select-String | line selection and extraction
+
+Print only lines matching a pattern.
 
 ```powershell
-# Print only lines matching a pattern (like sed -n '/pattern/p')
 Select-String -Pattern 'ERROR' -Path app.log | Select-Object -ExpandProperty Line
+```
 
-# Print lines 5 through 10 (1-indexed)
-(Get-Content file.txt)[4..9]   # PowerShell arrays are 0-indexed
+Print lines 5 through 10 (PowerShell arrays are 0-indexed).
 
-# Extract a value from key=value
+```powershell
+(Get-Content file.txt)[4..9]
+```
+
+Extract a value from key=value.
+
+```powershell
 $val = (Get-Content .env | Select-String '^DB_HOST=') -replace '^DB_HOST=',''
-
-# Print only the first match
-Select-String -Pattern '^DB_PORT=' .env | Select-Object -First 1 -ExpandProperty Line |
-  ForEach-Object { $_ -replace '^DB_PORT=','' }
 ```
 
 ### Capture Groups and Back-References
@@ -975,10 +1483,11 @@ PowerShell uses `$1`, `$2` (not `\1`, `\2`) in the replacement string for captur
 # $0 = entire match (equivalent to sed's &)
 ```
 
-### Advanced: [regex]::Replace() for Complex Patterns
+### [regex]::Replace() | complex patterns
+
+For named capture groups, non-greedy matching, multiline mode, and callback replacements, use the .NET `[regex]::Replace()` method.
 
 ```powershell
-# Named capture groups — not available in -replace operator directly, use [regex]
 $pattern = '(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})'
 $replacement = '${day}/${month}/${year}'
 (Get-Content dates.txt) | ForEach-Object {
@@ -998,10 +1507,11 @@ $result = [regex]::Replace($content, '\d+', { param($m) [int]$m.Value * 2 })
 $result | Set-Content doubled.txt
 ```
 
-### CRLF to LF Conversion
+### -replace | CRLF to LF conversion
+
+PowerShell is Windows-native and writes CRLF by default. Use `-Raw` to read the file as a single string and replace `\r\n` with `\n`. The `-NoNewline` switch prevents `Set-Content` from appending its own trailing newline.
 
 ```powershell
-# Convert CRLF to LF (PowerShell is Windows-native — requires explicit handling)
 (Get-Content file.txt -Raw) -replace "`r`n","`n" | Set-Content -NoNewline file_lf.txt
 
 # Alternative using StreamReader/StreamWriter for large files
@@ -1012,30 +1522,31 @@ while (-not $reader.EndOfStream) { $writer.WriteLine($reader.ReadLine()) }
 $reader.Close(); $writer.Close()
 ```
 
-### Strip ANSI Colour Codes
+### -replace | strip ANSI colour codes
+
+Remove ANSI escape sequences from log output captured on Windows.
 
 ```powershell
-# Remove ANSI escape sequences
 (Get-Content coloured.log) -replace '\x1b\[[0-9;]*[mGKHF]','' | Set-Content clean.log
+```
 
-# Using [regex] for the same pattern
+Using `[regex]` for a more flexible pattern.
+
+```powershell
 $ansi = [regex]'\x1b\[[0-9;]*[a-zA-Z]'
 (Get-Content coloured.log) | ForEach-Object { $ansi.Replace($_,'') } | Set-Content clean.log
 ```
 
-### PII Redaction
+### -replace | PII redaction
+
+Chain multiple `-replace` operators to scrub different PII patterns in a single pipeline pass.
 
 ```powershell
-# Redact email addresses
 (Get-Content api.log) -replace '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}','EMAIL_REDACTED' |
   Set-Content sanitised.log
+```
 
-# Redact sensitive query parameters
-(Get-Content access.log) -replace 'password=[^& ]*','password=REDACTED' |
-  -replace 'api_key=[^& ]*','api_key=REDACTED' |
-  Set-Content sanitised.log
-
-# Multiple replacements chained
+```powershell
 (Get-Content app.log) |
   ForEach-Object {
     $_ -replace '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}','EMAIL_REDACTED' `
@@ -1047,6 +1558,8 @@ $ansi = [regex]'\x1b\[[0-9;]*[a-zA-Z]'
 ---
 
 ## sed vs PowerShell Comparison Table
+
+Every sed command mapped to its closest PowerShell equivalent. Abbreviations: `GC` = `Get-Content`, `SC` = `Set-Content`, `SS` = `Select-String`, `GCI` = `Get-ChildItem`, `?{` = `Where-Object {`, `%{` = `ForEach-Object {`.
 
 | sed command | PowerShell equivalent | Notes |
 |---|---|---|
@@ -1074,11 +1587,11 @@ $ansi = [regex]'\x1b\[[0-9;]*[a-zA-Z]'
 | `sed -f script.sed file` | Script file with `ForEach-Object` blocks | No direct -f equivalent |
 | `find . -name '*.sql' | xargs sed -i 's/a/b/g'` | `GCI -R -Filter '*.sql' | %{ (GC $_.FullName) -replace 'a','b' | SC $_.FullName }` | Recursive multi-file edit |
 
-**Abbreviations in table:** `GC` = `Get-Content`, `SC` = `Set-Content`, `SS` = `Select-String`, `GCI` = `Get-ChildItem`, `?{` = `Where-Object {`, `%{` = `ForEach-Object {`
-
 ---
 
 ## Portability Notes
+
+GNU sed (Linux default) and BSD sed (macOS default) share the same core syntax but diverge on extensions. Scripts that must run on both platforms need to avoid GNU-only features or use conditional detection.
 
 ### GNU sed vs BSD sed (macOS) Key Differences
 
@@ -1101,21 +1614,29 @@ $ansi = [regex]'\x1b\[[0-9;]*[a-zA-Z]'
 > 3. Avoid `\w`, `\d` — use POSIX classes `[[:alpha:]]`, `[0-9]`
 > 4. Test on both platforms before automating
 
-### Minimal Portable One-Liners
+### Minimal portable one-liners
+
+Three approaches for cross-platform in-place editing that works on both GNU and BSD sed.
+
+#### Method 1: use .bak suffix and then delete it
 
 ```bash
-# Cross-platform in-place edit (works on both GNU and BSD sed)
-# Method 1: use .bak and then delete it
 sed -i.bak 's/old/new/g' file && rm file.bak
+```
 
-# Method 2: detect OS
+#### Method 2: detect OS at runtime
+
+```bash
 if [[ "$(uname)" == "Darwin" ]]; then
     sed -i '' 's/old/new/g' file
 else
     sed -i 's/old/new/g' file
 fi
+```
 
-# Method 3: use a temp file (most portable of all)
+#### Method 3: use a temp file (most portable)
+
+```bash
 sed 's/old/new/g' file > file.tmp && mv file.tmp file
 ```
 
@@ -1141,6 +1662,8 @@ POSIX character classes work in both GNU and BSD sed, unlike `\w`, `\d` shorthan
 ---
 
 ## Quick Reference Card
+
+A condensed cheat sheet of the most common sed commands, addresses, and flags. See the sections above for full explanations and examples.
 
 ```text
 SUBSTITUTION

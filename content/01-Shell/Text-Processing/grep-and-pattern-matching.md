@@ -1,5 +1,8 @@
 ---
-tags: [shell, text-processing]
+title: "grep and Pattern Matching"
+tags:
+  - shell
+  - text-processing
 aliases:
   - grep
   - egrep
@@ -42,7 +45,7 @@ keywords:
   - compressed file search
 description: "Exhaustive reference for grep and pattern matching in bash and PowerShell, covering basic flags, regular expressions, advanced features, data engineering scenarios, and ripgrep. Every bash example paired with its PowerShell Select-String equivalent."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-04
 status: complete
 ---
 
@@ -61,54 +64,83 @@ This note covers `grep` exhaustively alongside PowerShell's `Select-String` equi
 
 ## Basic Pattern Matching
 
-### Syntax fundamentals
+The core grep flags cover the most frequent search operations: case-insensitive matching, whole-word search, line counting, filename-only output, recursive directory traversal, and result inversion. Each flag maps directly to a PowerShell `Select-String` parameter or pipeline pattern.
+
+### grep | syntax fundamentals
+
+The basic invocation takes a pattern and one or more file paths. grep reads each file line by line and prints every line containing a match for the pattern. When no file is specified, grep reads from standard input.
+
+#### Search a single file
 
 ```bash
-# Basic form: grep <options> <pattern> <file(s)>
 grep 'pattern' file.txt
+```
 
-# Multiple files
+#### Search multiple files
+
+```bash
 grep 'pattern' file1.txt file2.txt
+```
 
-# With a glob (searches all .log files in current directory)
+When searching multiple files, grep prefixes each matching line with the filename.
+
+#### Search with a glob pattern
+
+```bash
 grep 'ERROR' *.log
+```
 
-# stdin — read from a pipe instead of a file
+The shell expands `*.log` to all `.log` files in the current directory before passing them to grep.
+
+#### Read from standard input via pipe
+
+```bash
 cat file.txt | grep 'pattern'
 ```
 
-#### Select-String — PowerShell grep equivalent
+Piping input to grep is the standard pattern for filtering output from other commands.
+
+#### Select-String | syntax fundamentals
+
+`Select-String` (alias: `sls`) is the PowerShell equivalent of grep. It accepts `-Pattern` for the regex and `-Path` for the target file. `Get-Content` replaces `cat` for pipeline input.
 
 ```powershell
-# Select-String (alias: sls) — the PowerShell grep
 Select-String -Pattern 'pattern' -Path file.txt
+```
 
-# Multiple files via glob
+```powershell
 Select-String -Pattern 'ERROR' -Path *.log
+```
 
-# Reading from pipeline (Get-Content replaces cat)
+```powershell
 Get-Content file.txt | Select-String 'pattern'
 ```
 
 ---
 
-### Case-insensitive search (`grep -i`)
+### grep -i | case-insensitive search
+
+The `-i` flag makes grep ignore case distinctions in both the pattern and the input, matching uppercase, lowercase, and mixed-case variations such as `ERROR`, `error`, `Error`, and `eRRoR`.
 
 ```bash
-# Match ERROR, error, Error, eRRoR — any case variation
 grep -i 'error' application.log
+```
 
-# Case-insensitive recursive search
+Combine `-i` with `-r` to search an entire directory tree case-insensitively.
+
+```bash
 grep -ri 'password' /etc/
 ```
 
-#### Select-String — case-insensitive search (default behavior)
+#### Select-String | case-insensitive search
+
+`Select-String` is case-insensitive by default — no flag is needed. To force case-sensitive matching, add the `-CaseSensitive` switch.
 
 ```powershell
-# Select-String is case-insensitive BY DEFAULT
 Select-String -Pattern 'error' -Path application.log
+```
 
-# To force case-sensitive matching, add -CaseSensitive
+```powershell
 Select-String -Pattern 'error' -Path application.log -CaseSensitive
 ```
 
@@ -118,75 +150,98 @@ Select-String -Pattern 'error' -Path application.log -CaseSensitive
 
 ---
 
-### Whole-word matching (`grep -w`)
+### grep -w | whole-word matching
+
+The `-w` flag restricts matches to whole words only — the pattern must be bounded by non-word characters (or the start/end of a line). This prevents `log` from matching `logfile`, `catalog`, or `blog`.
 
 ```bash
-# Matches 'log' but NOT 'logfile', 'catalog', 'blog'
 grep -w 'log' deployment.log
+```
 
-# Whole-word + case-insensitive
+Combine `-w` with `-i` for case-insensitive whole-word matching.
+
+```bash
 grep -wi 'error' app.log
+```
 
-# Whole-word match on 'DROP' — avoids matching 'DROPDOWN', 'TEARDROP'
+Useful for SQL safety — avoids matching `DROPDOWN` or `TEARDROP` when searching for `DROP`.
+
+```bash
 grep -w 'DROP' schema_migration.sql
 ```
 
-#### Select-String — whole-word matching with \b anchors
+#### Select-String | whole-word matching
+
+PowerShell has no `-w` equivalent flag. Use `\b` word boundary anchors in the regex pattern instead.
 
 ```powershell
-# Use word boundary anchors \b in the regex pattern
 Select-String -Pattern '\blog\b' deployment.log
+```
 
-# Case-sensitive whole-word match
+```powershell
 Select-String -Pattern '\bDROP\b' schema_migration.sql -CaseSensitive
 ```
 
 ---
 
-### Line numbers (`grep -n`)
+### grep -n | line numbers
+
+The `-n` flag prefixes each matching line with its line number, essential for navigating large files and pinpointing matches.
 
 ```bash
-# Show line number before each matching line — essential for navigating large files
 grep -n 'FAILED' etl_pipeline.log
+```
 
-# Combine with -i for case-insensitive with line numbers
+Combine with `-i` for case-insensitive search with line numbers.
+
+```bash
 grep -ni 'timeout' job.log
 ```
 
-#### Select-String .LineNumber — line numbers in output
+#### Select-String | line numbers in output
+
+`Select-String` always populates the `.LineNumber` property on its output objects — it appears in default output. To see only the line number and matched text, project with `Select-Object`.
 
 ```powershell
-# Select-String always includes line numbers in its output object
-# The LineNumber property is always populated; it shows in default output
 Select-String -Pattern 'FAILED' etl_pipeline.log
+```
 
-# To see only the line number and matched line (similar to grep -n output):
+```powershell
 Select-String -Pattern 'FAILED' etl_pipeline.log |
     Select-Object LineNumber, Line
 ```
 
 ---
 
-### Count matches (`grep -c`)
+### grep -c | count matches
+
+The `-c` flag prints the count of matching lines instead of the lines themselves. Each line counts once regardless of how many times the pattern appears within it.
 
 ```bash
-# Print count of matching lines (not total matches — each line counts once)
 grep -c 'ERROR' application.log
+```
 
-# Count across multiple files — prints filename:count for each file
+When searching multiple files, grep prints `filename:count` for each file.
+
+```bash
 grep -c 'ERROR' *.log
+```
 
-# Count non-matching lines (lines without ERROR)
+Combine with `-v` to count non-matching lines (lines without `ERROR`).
+
+```bash
 grep -cv 'ERROR' application.log
 ```
 
-#### Select-String | Measure-Object — count matches
+#### Select-String | count matches
+
+Access the `.Count` property on the result array, or use `Measure-Object` for more detail. For per-file counts across multiple files, iterate with `ForEach-Object`.
 
 ```powershell
-# Count matching lines — pipeline the results to Measure-Object
 (Select-String -Pattern 'ERROR' application.log).Count
+```
 
-# Count per file across multiple files
+```powershell
 Get-ChildItem *.log | ForEach-Object {
     $count = (Select-String -Pattern 'ERROR' $_.FullName).Count
     [PSCustomObject]@{ File = $_.Name; Count = $count }
@@ -195,27 +250,38 @@ Get-ChildItem *.log | ForEach-Object {
 
 ---
 
-### Files with matches (`grep -l`) and files without (`grep -L`)
+### grep -l, -L | files with and without matches
+
+The `-l` flag prints only the filenames that contain at least one match — not the matching lines themselves. The `-L` flag is its inverse: it prints filenames that do not contain the pattern.
+
+#### List files containing the pattern
 
 ```bash
-# Print only the filenames that contain the pattern — not the matching lines
 grep -l 'api_key' *.py *.cfg *.env
+```
 
-# Print only the filenames that DO NOT contain the pattern
+#### List files NOT containing the pattern
+
+```bash
 grep -L 'logging.basicConfig' *.py
+```
 
-# Find which log files have any errors today
+#### Find which log files have errors
+
+```bash
 grep -l 'ERROR' /var/log/myapp/*.log
 ```
 
-#### Select-String .Filename — files with and without matches
+#### Select-String | files with and without matches
+
+For files with matches, project the `.Filename` property with `-Unique`. For files without matches, compute the set difference manually.
 
 ```powershell
-# Files WITH matches — select unique Filename property
 Select-String -Pattern 'api_key' -Path *.py, *.cfg |
     Select-Object -ExpandProperty Filename -Unique
+```
 
-# Files WITHOUT matches
+```powershell
 $allFiles = Get-ChildItem *.py | Select-Object -ExpandProperty FullName
 $withMatches = Select-String -Pattern 'logging.basicConfig' -Path *.py |
     Select-Object -ExpandProperty Filename -Unique
@@ -224,38 +290,63 @@ $allFiles | Where-Object { $_ -notin $withMatches }
 
 ---
 
-### Recursive search (`grep -r` / `grep -R`)
+### grep -r | recursive search
+
+The `-r` flag searches all files under a directory recursively. `-R` is identical but also follows symbolic links. Combine with `--include` and `--exclude-dir` to narrow scope.
+
+#### Recursively search all files under a directory
 
 ```bash
-# Recursively search all files under a directory
 grep -r 'TODO' ./src/
+```
 
-# -R follows symlinks; -r does not
+#### Follow symlinks during recursive search
+
+`-R` follows symbolic links; `-r` does not. Use `-R` when your project includes symlinked directories.
+
+```bash
 grep -R 'TODO' ./src/
+```
 
-# Recursive + case-insensitive + line numbers — common combo for code archaeology
+#### Combine recursive with case-insensitive and line numbers
+
+A common combo for code archaeology across a project.
+
+```bash
 grep -rin 'deprecated' ./dags/
+```
 
-# Recursive search with file type filter (--include)
+#### Filter by file type with --include
+
+```bash
 grep -r --include='*.py' 'def transform' ./pipelines/
+```
 
-# Exclude a directory from recursive search
+#### Exclude directories from recursive search
+
+```bash
 grep -r --exclude-dir='.git' --exclude-dir='__pycache__' 'secret' .
+```
 
-# Multiple include patterns
+#### Use multiple --include patterns
+
+```bash
 grep -r --include='*.sql' --include='*.py' 'staging_table' ./
 ```
 
-#### Get-ChildItem -Recurse | Select-String — recursive search
+#### Get-ChildItem -Recurse | Select-String | recursive search
+
+PowerShell achieves recursive search by piping `Get-ChildItem -Recurse` into `Select-String`. Use `-Filter` for file type filtering and `Where-Object` for directory exclusion.
 
 ```powershell
-# Recursive search using Get-ChildItem -Recurse to feed Select-String
 Get-ChildItem -Recurse -Filter *.py | Select-String -Pattern 'def transform'
+```
 
-# Recursive, all file types
+```powershell
 Get-ChildItem -Recurse | Select-String -Pattern 'TODO'
+```
 
-# Recursive with directory exclusion
+```powershell
 Get-ChildItem -Recurse |
     Where-Object { $_.FullName -notmatch '\\\.git\|__pycache__' } |
     Select-String -Pattern 'secret'
@@ -263,40 +354,61 @@ Get-ChildItem -Recurse |
 
 ---
 
-### Invert match / exclude lines (`grep -v`)
+### grep -v | invert match (exclude lines)
+
+The `-v` flag inverts the match — grep prints every line that does NOT contain the pattern. This is used for filtering out noise (debug lines, comments, blanks) from output.
+
+#### Exclude all lines containing a pattern
 
 ```bash
-# Print every line that does NOT match the pattern
 grep -v 'DEBUG' application.log
+```
 
-# Exclude comment lines (lines starting with #) from a config file
-grep -v '^#' my_config.ini | grep -v '^$'   # also removes blank lines
+#### Exclude comment lines and blank lines from a config file
 
-# The classic self-exclusion trick in process lists
-ps aux | grep python | grep -v grep
+Chain two `-v` calls: one for comment lines, one for empty lines.
 
-# Exclude multiple patterns by chaining -v
-grep -v 'INFO' app.log | grep -v 'DEBUG' | grep -v '^$'
+```bash
+grep -v '^#' my_config.ini | grep -v '^$'
+```
 
-# More elegant: use extended regex to exclude multiple patterns at once
+#### The self-exclusion trick in process lists
+
+When grepping `ps` output, the grep process itself matches. The bracket trick avoids this by making the regex differ from the literal process name.
+
+```bash
+ps aux | grep '[p]ython'
+```
+
+#### Exclude multiple patterns with grep -Ev
+
+Chaining multiple `grep -v` calls reads the data multiple times through the pipe. Using `grep -Ev` with alternation applies all exclusions in a single pass.
+
+```bash
 grep -Ev 'INFO|DEBUG|^$' app.log
 ```
 
-#### Select-String -NotMatch — invert match (exclude lines)
+#### Select-String -NotMatch | invert match (exclude lines)
+
+The `-NotMatch` switch inverts the match. Use alternation in the pattern to exclude multiple patterns in one call.
 
 ```powershell
-# Invert match with -NotMatch switch
 Select-String -Pattern 'DEBUG' application.log -NotMatch
+```
 
-# Exclude comment lines and blank lines
+```powershell
 Get-Content my_config.ini |
     Select-String -Pattern '^#' -NotMatch |
     Select-String -Pattern '^\s*$' -NotMatch
+```
 
-# Exclude multiple patterns — use alternation in one call
+```powershell
 Select-String -Pattern 'INFO|DEBUG|^\s*$' application.log -NotMatch
+```
 
-# PowerShell pipeline self-exclusion (no need for grep -v grep trick)
+In PowerShell, the self-exclusion trick is unnecessary — `Get-Process` returns typed objects, so there is no grep process to match.
+
+```powershell
 Get-Process | Where-Object { $_.ProcessName -like '*python*' }
 ```
 
@@ -308,127 +420,251 @@ Get-Process | Where-Object { $_.ProcessName -like '*python*' }
 
 ## Regular Expression Patterns
 
-### Basic regex (BRE — Basic Regular Expressions)
+grep supports three regex dialects with increasing expressive power: Basic Regular Expressions (BRE) are the default, Extended Regular Expressions (ERE) via `-E` add quantifiers and alternation without escaping, and Perl-Compatible Regular Expressions (PCRE) via `-P` unlock lookahead, lookbehind, and shorthand character classes. PowerShell's `Select-String` uses .NET regex, which provides PCRE-equivalent features by default.
 
-`grep` without `-E` uses Basic Regular Expressions (BRE). Some metacharacters require backslash escaping.
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A["Need regex<br/>in grep?"] --> B{"Need +, ?, |,<br/>or grouping?"}
+    B -->|No| C["BRE — default grep<br/>Escaping required for metacharacters"]
+    B -->|Yes| D{"Need lookahead<br/>or lookbehind?"}
+    D -->|No| E["ERE — grep -E<br/>Covers most use cases"]
+    D -->|Yes| F{"On macOS?"}
+    F -->|No| G["PCRE — grep -P<br/>GNU grep only"]
+    F -->|Yes| H["Use rg -P<br/>or install ggrep via Homebrew"]
 
-```bash
-# . — matches any single character (except newline)
-grep 'err.r' app.log          # matches 'error', 'err0r', 'err r', etc.
-
-# * — zero or more of the preceding character
-grep 'err*or' app.log         # matches 'eror', 'error', 'errror', etc.
-
-# ^ — anchor to start of line
-grep '^2026-03' app.log       # lines starting with 2026-03 (date prefix)
-
-# $ — anchor to end of line
-grep 'success$' app.log       # lines ending with 'success'
-
-# ^$ — match completely blank lines
-grep '^$' file.txt
-
-# [] — character class (match any one character in the set)
-grep '[Ee]rror' app.log       # matches 'Error' or 'error'
-grep '[0-9]' data.csv         # any line containing a digit
-
-# [^] — negated character class (match any character NOT in the set)
-grep '[^0-9]' data.csv        # lines containing a non-digit character
-
-# Escaping in BRE — these chars need backslash to be literal metacharacters
-grep 'function\(\)' code.py   # match literal 'function()'
-grep 'table_name\.' query.sql # match 'table_name.' (literal dot)
-
-# Combining anchors and classes for strict matching
-grep '^[A-Z]' names.txt       # lines starting with an uppercase letter
+    style A fill:#292e42,stroke:#565f89,color:#c0caf5
+    style C fill:#1a1b26,stroke:#565f89,color:#9ece6a
+    style E fill:#1a1b26,stroke:#565f89,color:#9ece6a
+    style G fill:#1a1b26,stroke:#565f89,color:#9ece6a
+    style H fill:#1a1b26,stroke:#565f89,color:#e0af68
 ```
 
-#### Select-String .NET regex — PCRE-equivalent for all calls
+### grep | basic regular expressions (BRE)
+
+`grep` without `-E` uses Basic Regular Expressions (BRE). In BRE, metacharacters `(`, `)`, `{`, `}`, `+`, `?`, and `|` require backslash escaping to function as regex operators. The characters `.`, `*`, `^`, `$`, `[`, and `]` are active by default.
+
+#### . — match any single character
+
+The dot matches any single character except newline.
+
+```bash
+grep 'err.r' app.log
+```
+
+Matches `error`, `err0r`, `err r`, and any other five-character string starting with `err` and ending with `r`.
+
+#### * — zero or more of the preceding character
+
+The asterisk matches zero or more occurrences of the preceding character. Unlike shell globbing where `*` means "anything," in regex `*` specifically repeats the previous element.
+
+```bash
+grep 'err*or' app.log
+```
+
+Matches `eror` (zero `r`s), `error` (one `r`), `errror` (two `r`s), and so on.
+
+#### ^ and $ — line anchors
+
+`^` anchors to the start of a line, `$` anchors to the end. Together, `^$` matches completely blank lines.
+
+```bash
+grep '^2026-03' app.log
+```
+
+```bash
+grep 'success$' app.log
+```
+
+```bash
+grep '^$' file.txt
+```
+
+#### [] and [^] — character classes
+
+Square brackets define a character class — matching any one character in the set. Prefix with `^` inside the brackets to negate the class and match any character NOT in the set.
+
+```bash
+grep '[Ee]rror' app.log
+```
+
+```bash
+grep '[0-9]' data.csv
+```
+
+```bash
+grep '[^0-9]' data.csv
+```
+
+#### Escaping metacharacters in BRE
+
+In BRE, parentheses and dots have special meaning. Backslash-escape them to match literal characters.
+
+```bash
+grep 'function\(\)' code.py
+```
+
+```bash
+grep 'table_name\.' query.sql
+```
+
+#### Combining anchors and character classes
+
+Combine `^` with a character class to match lines starting with specific character types.
+
+```bash
+grep '^[A-Z]' names.txt
+```
+
+#### Select-String | basic regex
+
+PowerShell's `Select-String` uses .NET regex, where the same metacharacters (`.`, `*`, `^`, `$`, `[]`) apply without dialect differences. Use `-SimpleMatch` for literal string matching (equivalent to `grep -F`).
 
 ```powershell
-# .NET regex — the same metacharacters apply
 Select-String -Pattern 'err.r' app.log
-Select-String -Pattern '^2026-03' app.log
-Select-String -Pattern '[Ee]rror' app.log
-Select-String -Pattern '^$' file.txt
+```
 
-# Literal string match (no regex interpretation) — equivalent to grep -F
+```powershell
+Select-String -Pattern '^2026-03' app.log
+```
+
+```powershell
+Select-String -Pattern '[Ee]rror' app.log
+```
+
+```powershell
 Select-String -Pattern 'function()' code.py -SimpleMatch
 ```
 
 ---
 
-### Extended regex (`grep -E` / `egrep`)
+### grep -E | extended regular expressions (ERE)
 
-Extended Regular Expressions (ERE) enable `+`, `?`, `|`, `()`, `{}` without backslash escaping. Always prefer `-E` over BRE for readability.
+Extended Regular Expressions (ERE) enable `+`, `?`, `|`, `()`, and `{}` without backslash escaping. Always prefer `grep -E` over BRE for readability.
+
+#### + — one or more of the preceding element
 
 ```bash
-# + — one or more of the preceding element
-grep -E 'err+or' app.log      # matches 'error', 'errror', but NOT 'eror'
-
-# ? — zero or one of the preceding element (optional)
-grep -E 'colou?r' docs.txt    # matches 'color' or 'colour'
-
-# | — alternation (OR)
-grep -E 'ERROR|FATAL|CRITICAL' app.log
-
-# () — grouping
-grep -E '(ERROR|WARN): ' app.log    # colon+space must follow the level word
-
-# {} — quantifiers
-grep -E '[0-9]{4}-[0-9]{2}-[0-9]{2}' logs.txt   # ISO date YYYY-MM-DD
-grep -E '[0-9]{1,3}' data.csv                     # 1, 2, or 3 digit number
-
-# Combine grouping and quantifiers
-grep -E '([0-9]{1,3}\.){3}[0-9]{1,3}' access.log  # rough IP address match
-
-# egrep is identical to grep -E (deprecated in some systems; prefer grep -E)
-egrep 'ERROR|WARN' app.log
+grep -E 'err+or' app.log
 ```
 
-#### Select-String .NET regex — ERE features always available
+Matches `error` (one `r`), `errror` (two `r`s), but NOT `eror` (zero `r`s — `+` requires at least one).
+
+#### ? — zero or one (optional match)
+
+```bash
+grep -E 'colou?r' docs.txt
+```
+
+Matches both `color` and `colour` — the `u` is optional.
+
+#### | — alternation (OR)
+
+```bash
+grep -E 'ERROR|FATAL|CRITICAL' app.log
+```
+
+#### () — grouping
+
+Parentheses group sub-expressions. The group can be quantified or followed by a required suffix.
+
+```bash
+grep -E '(ERROR|WARN): ' app.log
+```
+
+The colon and space must immediately follow the matched level word.
+
+#### {} — repetition quantifiers
+
+Curly braces specify exact or range repetitions: `{4}` means exactly four, `{1,3}` means one to three.
+
+```bash
+grep -E '[0-9]{4}-[0-9]{2}-[0-9]{2}' logs.txt
+```
+
+```bash
+grep -E '[0-9]{1,3}' data.csv
+```
+
+#### Combine grouping and quantifiers
+
+Repeat a grouped sub-expression to match structured patterns like IP addresses.
+
+```bash
+grep -E '([0-9]{1,3}\.){3}[0-9]{1,3}' access.log
+```
+
+> [!info] egrep is deprecated
+>
+> `egrep` is identical to `grep -E` but deprecated on many systems. Always use `grep -E` in new scripts for portability.
+
+#### Select-String | extended regex
+
+All ERE features — `+`, `?`, `|`, `()`, `{}` — work natively in .NET regex without any flags.
 
 ```powershell
-# All ERE features work natively in Select-String
 Select-String -Pattern 'err+or' app.log
+```
+
+```powershell
 Select-String -Pattern 'colou?r' docs.txt
+```
+
+```powershell
 Select-String -Pattern 'ERROR|FATAL|CRITICAL' app.log
+```
+
+```powershell
 Select-String -Pattern '[0-9]{4}-[0-9]{2}-[0-9]{2}' logs.txt
+```
+
+```powershell
 Select-String -Pattern '([0-9]{1,3}\.){3}[0-9]{1,3}' access.log
 ```
 
 ---
 
-### POSIX character classes
+### grep | POSIX character classes
 
-POSIX character classes work inside `[]` and are more portable than ASCII ranges.
+POSIX character classes work inside `[:]` brackets and are more portable than hardcoded ASCII ranges. They are locale-aware, so `[:alpha:]` matches accented characters in locales that include them.
+
+| Class | Matches | Equivalent range |
+|---|---|---|
+| `[:alpha:]` | Any letter (a–z, A–Z), locale-aware | `[a-zA-Z]` |
+| `[:digit:]` | Any digit (0–9) | `[0-9]` |
+| `[:alnum:]` | Letters and digits | `[a-zA-Z0-9]` |
+| `[:space:]` | Space, tab, newline, CR, form feed, vertical tab | `[ \t\n\r\f\v]` |
+| `[:blank:]` | Space and tab only (subset of `[:space:]`) | `[ \t]` |
+| `[:upper:]` | Uppercase letters | `[A-Z]` |
+| `[:lower:]` | Lowercase letters | `[a-z]` |
+| `[:punct:]` | Punctuation characters | — |
+
+#### Find lines starting with an uppercase letter
 
 ```bash
-# [:alpha:] — any letter (a-z, A-Z), locale-aware
-grep '[[:alpha:]]' file.txt
+grep '^[[:upper:]]' file.txt
+```
 
-# [:digit:] — any digit (0-9)
-grep '[[:digit:]]' file.txt
+#### Find CSV lines where the first field is non-numeric
 
-# [:alnum:] — letters and digits
-grep '[[:alnum:]]' file.txt
-
-# [:space:] — space, tab, newline, carriage return, form feed, vertical tab
-grep '[[:space:]]' file.txt
-
-# [:upper:] / [:lower:]
-grep '^[[:upper:]]' file.txt   # lines starting with uppercase
-
-# [:punct:] — punctuation characters
-grep '[[:punct:]]' file.txt
-
-# [:blank:] — space and tab only (subset of space)
-grep '[[:blank:]]' file.txt
-
-# Practical: find CSV lines where first field is non-numeric
+```bash
 grep '^[[:alpha:]]' data.csv
+```
 
-# Find lines with leading whitespace (indented lines)
+#### Find lines with leading whitespace (indented lines)
+
+```bash
 grep '^[[:space:]]' script.py
 ```
 
@@ -438,33 +674,39 @@ grep '^[[:space:]]' script.py
 
 ---
 
-### Common data engineering regex patterns
+### grep | common data engineering regex patterns
 
-#### Regex pattern — match IPv4 addresses
+Recurring patterns that data engineers encounter daily: IP addresses, dates, emails, SQL references, JSON structures, log levels, and numeric values. Each pattern is shown in its simplest usable form and then refined for precision where needed.
+
+#### Match IPv4 addresses
+
+The simplified pattern matches any four groups of 1–3 digits separated by dots. It is fast but accepts invalid addresses like `999.999.999.999`. The precise version validates each octet to 0–255.
 
 ```bash
-# Strict IPv4 — each octet 0-255 (simplified to 1-3 digits for most log use)
 grep -E '([0-9]{1,3}\.){3}[0-9]{1,3}' access.log
+```
 
-# More precise (rejects 999.999.999.999):
+```bash
 grep -E '\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b' access.log
 ```
 
 ```powershell
-# PowerShell — precise IPv4
 Select-String -Pattern '\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b' access.log
 ```
 
-#### Regex pattern — match ISO 8601 dates (YYYY-MM-DD)
+#### Match ISO 8601 dates (YYYY-MM-DD)
+
+ISO dates are the most common timestamp prefix in structured logs and data files. Anchor with `^` when the date is always the first field on the line. Extend with `T` and time components for full ISO datetime matching.
 
 ```bash
-# ISO date — common in log timestamps and data files
 grep -E '[0-9]{4}-[0-9]{2}-[0-9]{2}' events.log
+```
 
-# Anchored: lines that START with an ISO date (typical log format)
+```bash
 grep -E '^[0-9]{4}-[0-9]{2}-[0-9]{2}' events.log
+```
 
-# ISO datetime with time component: 2026-03-22T14:30:00
+```bash
 grep -E '[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}' events.log
 ```
 
@@ -472,26 +714,33 @@ grep -E '[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}' events.log
 Select-String -Pattern '^[0-9]{4}-[0-9]{2}-[0-9]{2}' events.log
 ```
 
-#### Regex pattern — match various date formats
+#### Match various date formats
+
+Different systems use different date formats. `MM/DD/YYYY` is common in US-locale applications, `DD-Mon-YYYY` appears in Oracle and SQL Server logs, and 10-digit Unix epoch timestamps appear in event systems.
 
 ```bash
-# MM/DD/YYYY (US format)
 grep -E '[0-9]{2}/[0-9]{2}/[0-9]{4}' report.log
+```
 
-# DD-Mon-YYYY (Oracle/SQL Server format: 22-Mar-2026)
+```bash
 grep -E '[0-9]{2}-[A-Za-z]{3}-[0-9]{4}' oracle.log
+```
 
-# Unix epoch timestamp (10 digits)
+```bash
 grep -E '\b[0-9]{10}\b' events.log
 ```
 
-#### Regex pattern — match email addresses
+#### Match email addresses
+
+This pattern is not RFC-5321 compliant but covers 99% of real-world email addresses. Use it for quick scans of data files and source code — not for email validation.
 
 ```bash
-# Practical email match (not RFC-5321 compliant, but covers 99% of real cases)
 grep -E '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' contacts.csv
+```
 
-# Find emails in Python source code
+Recursive variant to find email addresses embedded in Python source.
+
+```bash
 grep -rE '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' --include='*.py' .
 ```
 
@@ -499,37 +748,43 @@ grep -rE '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' --include='*.py' .
 Select-String -Pattern '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' contacts.csv
 ```
 
-#### Regex pattern — match SQL table names (schema.table)
+#### Match SQL table names (schema.table)
+
+Match schema-qualified table references like `dbo.fact_sales` or `raw.events`, CREATE TABLE statements, and INSERT INTO targets across SQL files.
 
 ```bash
-# Match schema-qualified table references: dbo.fact_sales, raw.events
 grep -E '\b[a-zA-Z_][a-zA-Z0-9_]*\.[a-zA-Z_][a-zA-Z0-9_]*\b' query.sql
+```
 
-# Match CREATE TABLE statements
+```bash
 grep -iE '^[[:space:]]*CREATE[[:space:]]+TABLE' schema.sql
+```
 
-# Match INSERT INTO targets
+```bash
 grep -iE 'INSERT[[:space:]]+INTO[[:space:]]+[`"]?[a-zA-Z_][a-zA-Z0-9_.]*[`"]?' *.sql
 ```
 
 ```powershell
-# SQL CREATE TABLE detection
 Select-String -Pattern '(?i)^\s*CREATE\s+TABLE' schema.sql
+```
 
-# INSERT INTO targets
+```powershell
 Select-String -Pattern '(?i)INSERT\s+INTO\s+[`"]?[a-zA-Z_][a-zA-Z0-9_.]*' *.sql
 ```
 
-#### Regex pattern — match JSON keys
+#### Match JSON keys
+
+The `"key_name":` pattern matches JSON object keys. Use `-o` to extract key-value pairs. For structured JSON querying beyond simple key scans, use `jq` (bash) or `ConvertFrom-Json` (PowerShell).
 
 ```bash
-# JSON key pattern: "key_name":
 grep -E '"[a-zA-Z_][a-zA-Z0-9_]*"\s*:' response.json
+```
 
-# Find specific keys in JSON logs
+```bash
 grep -E '"(error|status|message)"\s*:' api_log.json
+```
 
-# Extract nested key paths (rudimentary — use jq for proper JSON parsing)
+```bash
 grep -oE '"[a-zA-Z_][a-zA-Z0-9_]*"\s*:\s*"[^"]*"' data.json
 ```
 
@@ -544,19 +799,29 @@ Select-String -Pattern '"[a-zA-Z_][a-zA-Z0-9_]*"\s*:' response.json
 > [!success] Use jq for structured JSON queries
 > `jq '.level' app.log` extracts the `level` field from every NDJSON record. `Get-Content app.log | ConvertFrom-Json | Where-Object level -eq 'ERROR'` achieves the same in PowerShell. Both handle nested structures, arrays, and multiline JSON that grep cannot.
 
-#### Regex pattern — match log levels (ERROR, WARN, INFO, DEBUG)
+#### Match log levels (ERROR, WARN, INFO, DEBUG)
+
+Standard log levels appear in application logs in various formats. Word-boundary anchors prevent matching substrings like `INFORMATION` when searching for `INFO`. The loop pattern counts occurrences per severity level for quick triage.
 
 ```bash
-# Standard log levels — case-insensitive, word-bounded
 grep -iE '\b(ERROR|FATAL|CRITICAL|WARN|WARNING|INFO|DEBUG|TRACE)\b' app.log
+```
 
-# Only high-severity lines
+Filter to high-severity lines only.
+
+```bash
 grep -E '\b(ERROR|FATAL|CRITICAL)\b' app.log
+```
 
-# Lines with log level at start (structured log format)
+Match lines where the log level appears at the start (structured log format).
+
+```bash
 grep -E '^(ERROR|WARN|INFO|DEBUG)[[:space:]]' structured.log
+```
 
-# Count errors per log level
+Count errors per log level in a single loop.
+
+```bash
 for level in ERROR WARN INFO DEBUG; do
     count=$(grep -c "\\b${level}\\b" app.log 2>/dev/null || echo 0)
     echo "${level}: ${count}"
@@ -564,29 +829,41 @@ done
 ```
 
 ```powershell
-# High-severity log lines
 Select-String -Pattern '\b(ERROR|FATAL|CRITICAL)\b' app.log
+```
 
-# Count per level
+```powershell
 foreach ($level in @('ERROR','WARN','INFO','DEBUG')) {
     $count = (Select-String -Pattern "\b$level\b" app.log).Count
     [PSCustomObject]@{ Level = $level; Count = $count }
 }
 ```
 
-#### Regex pattern — match numeric ranges
+#### Match numeric ranges
+
+Grep cannot perform numeric comparisons, but digit-count patterns and leading-digit patterns cover most practical filtering needs.
+
+Lines containing a 3-to-5-digit number (HTTP status codes, port numbers).
 
 ```bash
-# Lines containing a 3-5 digit number (e.g., HTTP status codes, port numbers)
 grep -E '\b[0-9]{3,5}\b' access.log
+```
 
-# HTTP 5xx errors specifically
+HTTP 5xx server errors specifically.
+
+```bash
 grep -E '\b5[0-9]{2}\b' access.log
+```
 
-# Negative numbers (for detecting data quality issues)
+Negative numbers — useful for detecting data quality issues in financial data.
+
+```bash
 grep -E '-[0-9]+' financial_data.csv
+```
 
-# Numbers with optional decimal (float values)
+Numbers with an optional decimal component (float values).
+
+```bash
 grep -E '\b[0-9]+(\.[0-9]+)?\b' metrics.log
 ```
 
@@ -594,36 +871,57 @@ grep -E '\b[0-9]+(\.[0-9]+)?\b' metrics.log
 
 ## Advanced grep Usage
 
-### Context lines (`grep -A`, `-B`, `-C`)
+Beyond basic searching, grep offers context extraction, match-part isolation, pattern files, and fine-grained file filtering that transform it from a simple search tool into a log analysis and code archaeology instrument.
 
-Context lines are critical for log analysis — the error message alone rarely tells the full story.
+### grep -A, -B, -C | context lines
+
+Context lines are critical for log analysis — the error message alone rarely tells the full story. `-A N` prints N lines after each match, `-B N` prints N lines before, and `-C N` prints N lines on both sides.
+
+#### Show lines after a match (grep -A)
 
 ```bash
-# -A N — print N lines AFTER each match (After)
-grep -A 3 'EXCEPTION' app.log    # show the 3 lines of stack trace after the exception header
+grep -A 3 'EXCEPTION' app.log
+```
 
-# -B N — print N lines BEFORE each match (Before)
-grep -B 2 'Connection refused' app.log   # see what triggered the connection attempt
+Shows the 3 lines of stack trace after each exception header.
 
-# -C N — print N lines before AND after each match (Context, symmetric)
-grep -C 5 'OOM' worker.log       # 5 lines of context around out-of-memory events
+#### Show lines before a match (grep -B)
 
-# Context with multiple matches — grep separates blocks with '--'
-grep -C 2 'FATAL' app.log
+```bash
+grep -B 2 'Connection refused' app.log
+```
 
-# Combine context with recursive search
+Shows what triggered the connection attempt.
+
+#### Show symmetric context (grep -C)
+
+```bash
+grep -C 5 'OOM' worker.log
+```
+
+Shows 5 lines before and after each out-of-memory event. When multiple matches appear, grep separates blocks with `--`.
+
+#### Combine context with recursive search
+
+```bash
 grep -r -C 3 'raise ValueError' ./src/
 ```
 
-#### Select-String -Context — lines before and after match
+#### Select-String -Context | lines before and after match
+
+`-Context` takes two values: lines before, lines after. `-Context 0,3` is equivalent to `grep -A 3`, `-Context 2,0` to `grep -B 2`, and `-Context 5,5` to `grep -C 5`.
 
 ```powershell
-# -Context takes two values: lines before, lines after
-Select-String -Pattern 'EXCEPTION' app.log -Context 0,3    # 0 before, 3 after (= grep -A 3)
-Select-String -Pattern 'Connection refused' app.log -Context 2,0   # 2 before, 0 after (= grep -B 2)
-Select-String -Pattern 'OOM' worker.log -Context 5,5      # symmetric (= grep -C 5)
+Select-String -Pattern 'EXCEPTION' app.log -Context 0,3
+```
 
-# Display the context lines alongside the match
+```powershell
+Select-String -Pattern 'OOM' worker.log -Context 5,5
+```
+
+Format context output for readability by iterating over `PreContext` and `PostContext` arrays.
+
+```powershell
 Select-String -Pattern 'FATAL' app.log -Context 2,2 |
     ForEach-Object {
         $_.Context.PreContext  | ForEach-Object { "  $_" }
@@ -635,34 +933,60 @@ Select-String -Pattern 'FATAL' app.log -Context 2,2 |
 
 ---
 
-### Print only the matching part (`grep -o`)
+### grep -o | print only the matching part
+
+The `-o` flag prints only the matched substring — one match per line — instead of the full line. This turns grep into an extraction tool: pull dates, emails, IPs, or any structured value out of unstructured text.
+
+#### Extract all dates from a log file
 
 ```bash
-# -o — print only the matched substring, one match per line (not the whole line)
-grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' app.log     # extract all dates
-grep -oE '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' contacts.txt  # extract emails
-grep -oE '\b[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\b' access.log  # extract IPs
+grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' app.log
+```
 
-# Count unique values extracted with -o
+#### Extract all email addresses
+
+```bash
+grep -oE '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' contacts.txt
+```
+
+#### Extract all IP addresses
+
+```bash
+grep -oE '\b[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\b' access.log
+```
+
+#### Count unique extracted values
+
+Pipe `-o` output through `sort | uniq -c | sort -rn` for a frequency-sorted histogram.
+
+```bash
 grep -oE '\b5[0-9]{2}\b' access.log | sort | uniq -c | sort -rn
+```
 
-# Extract and deduplicate table names from SQL files
+#### Deduplicate extracted table names
+
+The `-h` flag suppresses filenames when searching multiple files, producing clean output for `sort -u`.
+
+```bash
 grep -ohE '\b[a-zA-Z_][a-zA-Z0-9_]*\.[a-zA-Z_][a-zA-Z0-9_]*\b' *.sql | sort -u
 ```
 
-#### Select-String .Matches — print only the matching part
+#### Select-String .Matches | print only the matching part
+
+Access the `.Matches.Value` property on `Select-String` output objects to get captured text. Pipe through `ForEach-Object` and `Sort-Object -Unique` for deduplication.
 
 ```powershell
-# Use the Matches property of Select-String output to get captured text
 (Select-String -Pattern '[0-9]{4}-[0-9]{2}-[0-9]{2}' app.log).Matches.Value
+```
 
-# Extract all matches from all lines
+```powershell
 Select-String -Pattern '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' contacts.txt |
     ForEach-Object { $_.Matches } |
     Select-Object -ExpandProperty Value |
     Sort-Object -Unique
+```
 
-# Count unique HTTP status codes
+```powershell
 Select-String -Pattern '\b[0-9]{3}\b' access.log |
     ForEach-Object { $_.Matches.Value } |
     Group-Object |
@@ -671,50 +995,85 @@ Select-String -Pattern '\b[0-9]{3}\b' access.log |
 
 ---
 
-### Perl-compatible regex (`grep -P`)
+### grep -P | Perl-compatible regular expressions (PCRE)
 
-`grep -P` enables PCRE (Perl-Compatible Regular Expressions), which adds lookahead, lookbehind, non-greedy quantifiers, and `\d`, `\w`, `\s` shortcuts. Not available on all systems (macOS `grep` does not support `-P`; install `ggrep` via Homebrew).
+`grep -P` enables PCRE (Perl-Compatible Regular Expressions), which adds lookahead, lookbehind, non-greedy quantifiers, named capture groups, and the `\d`, `\w`, `\s` shorthand classes. Not available on all systems — macOS's BSD grep does not support `-P`.
+
+#### \d, \w, \s — PCRE shorthand character classes
+
+`\d` matches a digit, `\w` matches a word character (letter, digit, or underscore), and `\s` matches whitespace.
 
 ```bash
-# \d — digit, \w — word character, \s — whitespace (PCRE shortcuts)
-grep -P '\d{4}-\d{2}-\d{2}' events.log         # ISO date using \d
-grep -P '\s+ERROR\s+' app.log                   # ERROR surrounded by whitespace
-
-# Lookahead — match 'user' only when followed by '='
-grep -P 'user(?==)' config.ini
-
-# Negative lookahead — match 'password' NOT followed by '_hash'
-grep -P 'password(?!_hash)' config.py
-
-# Lookbehind — match a number only when preceded by 'port='
-grep -oP '(?<=port=)\d+' config.ini
-
-# Non-greedy quantifier *? — match the shortest possible string
-echo '<tag>content</tag>' | grep -oP '<.*?>'   # matches <tag> and </tag> separately
-
-# Named capture groups (with -o to extract)
-grep -oP '(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})' events.log
-
-# \b word boundary in PCRE
-grep -P '\bETL\b' documentation.md    # avoids matching 'ETLX' or 'non-ETL'
+grep -P '\d{4}-\d{2}-\d{2}' events.log
 ```
 
-#### Select-String .NET regex — lookahead and lookbehind
+```bash
+grep -P '\s+ERROR\s+' app.log
+```
+
+#### Lookahead — match only when followed by a pattern
+
+Match `user` only when immediately followed by `=`.
+
+```bash
+grep -P 'user(?==)' config.ini
+```
+
+#### Negative lookahead — match only when NOT followed by a pattern
+
+Match `password` unless followed by `_hash` — catches potential plaintext credential references.
+
+```bash
+grep -P 'password(?!_hash)' config.py
+```
+
+#### Lookbehind — extract the value after a known prefix
+
+Match a number only when preceded by `port=`. Combined with `-o`, this extracts just the port number.
+
+```bash
+grep -oP '(?<=port=)\d+' config.ini
+```
+
+#### Non-greedy quantifier *? — match the shortest possible string
+
+Greedy `.*` would match `<tag>content</tag>` as a single match. Non-greedy `.*?` produces two separate matches: `<tag>` and `</tag>`.
+
+```bash
+echo '<tag>content</tag>' | grep -oP '<.*?>'
+```
+
+#### Named capture groups
+
+```bash
+grep -oP '(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})' events.log
+```
+
+#### Select-String | lookahead and lookbehind
+
+PowerShell's .NET regex supports `\d`, `\w`, `\s`, lookahead, lookbehind, and non-greedy quantifiers natively — no special flag is needed.
 
 ```powershell
-# \d, \w, \s are always available in PowerShell regex
 Select-String -Pattern '\d{4}-\d{2}-\d{2}' events.log
+```
 
-# Lookahead
+```powershell
 Select-String -Pattern 'user(?==)' config.ini
+```
 
-# Negative lookahead
+```powershell
 Select-String -Pattern 'password(?!_hash)' config.py
+```
 
-# Lookbehind — extract port number
+Extract the port number using lookbehind.
+
+```powershell
 (Select-String -Pattern '(?<=port=)\d+' config.ini).Matches.Value
+```
 
-# Non-greedy
+Non-greedy matching with `-AllMatches` to capture each tag separately.
+
+```powershell
 '<tag>content</tag>' | Select-String -Pattern '<.*?>' -AllMatches |
     ForEach-Object { $_.Matches.Value }
 ```
@@ -728,76 +1087,91 @@ Select-String -Pattern 'password(?!_hash)' config.py
 
 ---
 
-### Patterns from a file (`grep -f`)
+### grep -f | patterns from a file
+
+The `-f` flag reads search patterns from a file — one pattern per line. This is useful for maintaining a curated watchlist of error signatures in version control alongside your runbooks.
+
+Given a pattern file `error_patterns.txt` containing one pattern per line (`EXCEPTION`, `Connection refused`, `OOM`, `Segmentation fault`):
 
 ```bash
-# Read patterns from a file — one pattern per line
-cat error_patterns.txt
-# EXCEPTION
-# Connection refused
-# OOM
-# Segmentation fault
-
 grep -f error_patterns.txt application.log
-
-# Combine -f with other flags
-grep -if error_patterns.txt application.log   # case-insensitive
-grep -rf error_patterns.txt /var/log/         # recursive
-
-# Useful for maintaining a curated watchlist of error signatures
-# Keep error_patterns.txt in version control alongside your runbooks
 ```
 
-#### Select-String — patterns from a file
+Combine `-f` with other flags for case-insensitive or recursive searches.
+
+```bash
+grep -if error_patterns.txt application.log
+```
+
+```bash
+grep -rf error_patterns.txt /var/log/
+```
+
+#### Select-String | patterns from a file
+
+PowerShell has no direct `-f` equivalent. Read the patterns, join them with `|` into an alternation string, and pass the result to `-Pattern`.
 
 ```powershell
-# Read patterns from file and build alternation string
 $patterns = Get-Content error_patterns.txt
 $combined = $patterns -join '|'
 Select-String -Pattern $combined application.log
-
-# Or loop over each pattern:
-$patterns | ForEach-Object {
-    Select-String -Pattern $_ application.log
-}
 ```
 
 ---
 
-### File filtering in recursive search (`--include`, `--exclude`, `--exclude-dir`)
+### grep --include, --exclude | file filtering in recursive search
+
+When searching recursively, `--include` restricts the search to matching filenames, `--exclude` skips matching filenames, and `--exclude-dir` skips entire directories. These filters prevent grep from wasting time on irrelevant or binary files.
+
+#### Search only Python files
 
 ```bash
-# Search only Python files
 grep -r --include='*.py' 'import pandas' ./
+```
 
-# Search only SQL and Python files (multiple --include)
+#### Search multiple file types
+
+```bash
 grep -r --include='*.sql' --include='*.py' 'staging_' ./pipelines/
+```
 
-# Exclude test files from search
+#### Exclude test files from search
+
+```bash
 grep -r --include='*.py' --exclude='test_*.py' 'def load' ./
+```
 
-# Exclude directories
+#### Exclude directories
+
+```bash
 grep -r --exclude-dir='.git' --exclude-dir='__pycache__' --exclude-dir='node_modules' 'TODO' .
+```
 
-# Exclude compiled/binary files
+#### Exclude compiled and binary files
+
+```bash
 grep -r --exclude='*.pyc' --exclude='*.pyo' --exclude-dir='.git' 'connection_string' .
 ```
 
-#### Get-ChildItem -Include -Exclude — file filtering in recursive search
+#### Get-ChildItem -Include -Exclude | file filtering in recursive search
+
+PowerShell achieves file filtering through `Get-ChildItem` parameters (`-Filter`, `-Include`) and pipeline filtering (`Where-Object`) before piping to `Select-String`.
 
 ```powershell
-# Include filter via Get-ChildItem -Filter
 Get-ChildItem -Recurse -Filter *.py | Select-String -Pattern 'import pandas'
+```
 
-# Multiple file types
+```powershell
 Get-ChildItem -Recurse -Include *.sql, *.py | Select-String -Pattern 'staging_'
+```
 
-# Exclude directories
+```powershell
 Get-ChildItem -Recurse -Filter *.py |
     Where-Object { $_.FullName -notmatch '\\\.git\|__pycache__' } |
     Select-String -Pattern 'TODO'
+```
 
-# Exclude specific file name patterns
+```powershell
 Get-ChildItem -Recurse -Filter *.py |
     Where-Object { $_.Name -notlike 'test_*' } |
     Select-String -Pattern 'def load'
@@ -805,93 +1179,245 @@ Get-ChildItem -Recurse -Filter *.py |
 
 ---
 
-### Null-delimited output (`grep -z`, `-Z`)
+### grep -z, -Z | null-delimited output
+
+The `-Z` flag prints a NUL byte (`\0`) after each filename instead of a newline, making the output safe for `xargs -0` when paths contain spaces or special characters. The `-z` flag treats input as NUL-delimited.
+
+#### Pipe filenames safely to xargs
 
 ```bash
-# -Z — print NUL byte after each filename (used with xargs -0 to handle spaces in paths)
 grep -rlZ 'TODO' . | xargs -0 sed -i 's/TODO/FIXME/g'
+```
 
-# -z — treat input as NUL-delimited (for processing filenames with newlines/spaces)
+#### Process find output with spaces in paths
+
+```bash
 find . -name '*.log' -print0 | xargs -0 grep -l 'ERROR'
 ```
 
 ---
 
-### Combining grep with pipes
+### grep | combining with pipes
+
+Grep's power multiplies when piped with other Unix tools. Chain grep calls for progressive narrowing, pipe to `cut` or `awk` for field extraction, and pipe to `wc -l` for counting.
+
+#### The self-exclusion bracket trick
+
+When grepping `ps` output, the grep process itself appears in the results. The bracket trick `[p]ython` creates a regex that matches `python` but does not match the literal string `[p]ython` in the process list.
 
 ```bash
-# The self-exclusion pattern — grep your own grep from ps output
-ps aux | grep '[p]ython'         # bracket trick: avoids matching the grep process itself
-ps aux | grep python | grep -v grep   # explicit exclusion (less elegant)
+ps aux | grep '[p]ython'
+```
 
-# Chain to narrow down progressively
+#### Chain grep for progressive narrowing
+
+```bash
 cat access.log | grep 'POST' | grep '/api/' | grep '500'
+```
 
-# Count after filtering
+#### Count after filtering
+
+```bash
 grep 'ERROR' app.log | grep '2026-03-22' | wc -l
+```
 
-# Extract fields after pattern match (grep + cut)
+#### Extract fields after pattern match (grep + cut)
+
+```bash
 grep 'user_id' events.log | cut -d'=' -f2 | sort -u
+```
 
-# Combine with awk for field extraction
-grep 'FAILED' pipeline.log | awk '{print $NF}'   # last field of each matched line
+#### Extract the last field with awk
 
-# Find and immediately display with head (stop after first few matches)
+```bash
+grep 'FAILED' pipeline.log | awk '{print $NF}'
+```
+
+#### Stop after the first N matches with head
+
+```bash
 grep -r 'deprecated_function' ./src/ | head -20
 ```
 
-#### Select-String pipeline — combining with pipes for progressive filtering
+#### Select-String | combining with pipes for progressive filtering
+
+PowerShell pipelines pass objects rather than text, so progressive narrowing uses chained `Select-String` calls. Field extraction uses `-split` or `.Line` property access.
 
 ```powershell
-# Progressive narrowing via pipeline
 Get-Content access.log |
     Select-String 'POST' |
     Select-String '/api/' |
     Select-String '500'
+```
 
-# Count after filtering
+```powershell
 (Get-Content app.log | Select-String 'ERROR' | Select-String '2026-03-22').Count
+```
 
-# Extract fields after match — split on delimiter
+```powershell
 Select-String 'user_id' events.log |
     ForEach-Object { ($_.Line -split '=')[1].Trim() } |
     Sort-Object -Unique
+```
 
-# Equivalent of grep + head
+`Select-Object -First N` replaces `head -N` in PowerShell.
+
+```powershell
 Select-String -Pattern 'deprecated_function' (Get-ChildItem -Recurse -Filter *.py) |
     Select-Object -First 20
 ```
 
 ---
 
+### grep -q | quiet mode (exit code only)
+
+The `-q` flag suppresses all output and makes grep return only an exit code: `0` if at least one match was found, `1` if no match, `2` on error. This is the idiomatic way to use grep in shell conditionals.
+
+```bash
+if grep -q 'ERROR' app.log; then
+    echo "Errors found — sending alert"
+fi
+```
+
+```bash
+grep -q 'pattern' file.txt && echo "found" || echo "not found"
+```
+
+#### Select-String -Quiet | exit code only
+
+`Select-String -Quiet` returns `$true` or `$false` instead of match objects, making it suitable for conditionals.
+
+```powershell
+if (Select-String -Pattern 'ERROR' app.log -Quiet) {
+    Write-Output "Errors found — sending alert"
+}
+```
+
+---
+
+### grep -e | multiple explicit patterns
+
+The `-e` flag specifies an explicit pattern. Multiple `-e` flags act as an OR — any pattern match produces output. This is an alternative to `grep -E 'pat1|pat2'` that does not require regex alternation syntax and works with fixed strings.
+
+```bash
+grep -e 'ERROR' -e 'FATAL' -e 'CRITICAL' app.log
+```
+
+```bash
+grep -e 'TODO' -e 'FIXME' -e 'HACK' ./src/*.py
+```
+
+---
+
+### grep -m | stop after N matches
+
+The `-m N` flag tells grep to stop reading the file after N matching lines. On large files this saves significant time when you only need to confirm the presence of a pattern or see the first few occurrences.
+
+```bash
+grep -m 5 'ERROR' large_app.log
+```
+
+The recursive variant with `-m 1` stops at the first match per file — equivalent to checking each file for the existence of a pattern.
+
+```bash
+grep -rm 1 'deprecated_function' ./src/
+```
+
+#### Select-Object -First | stop after N matches
+
+```powershell
+Select-String -Pattern 'ERROR' large_app.log | Select-Object -First 5
+```
+
+---
+
+### grep -x | match entire lines
+
+The `-x` flag matches only entire lines — the pattern must match the full line, not just a substring. Useful for exact-match lookups against a list of known values.
+
+```bash
+grep -x 'COMPLETED' status_codes.txt
+```
+
+Combine with `-F` for fixed-string whole-line matching without regex.
+
+```bash
+grep -xF 'admin@example.com' allowed_users.txt
+```
+
+---
+
+### grep --color | highlight matches
+
+The `--color` flag highlights the matching text in terminal output using ANSI escape codes. Values are `auto` (color when output is a terminal), `always` (force color even through pipes), and `never` (disable).
+
+```bash
+grep --color=auto 'ERROR' app.log
+```
+
+Use `always` when piping to `less` or `tee`, since `auto` disables color for non-terminal output. Pass `-R` to `less` so it renders ANSI codes.
+
+```bash
+grep --color=always 'pattern' file.txt | less -R
+```
+
+> [!tip] Add grep color alias to .bashrc
+>
+> Add `alias grep='grep --color=auto'` to your `~/.bashrc` or `~/.zshrc` to enable color highlighting by default in all interactive grep calls. Most modern Linux distributions already set this alias.
+
+---
+
 ## Data Engineering Scenarios
+
+The patterns in this section combine grep flags and regex techniques from the previous sections into complete, copy-paste-ready solutions for the tasks data engineers face daily: log analysis, deadlock hunting, table reference tracking, credential scanning, CSV validation, and error frequency analysis.
 
 ### Search log files for errors
 
+Searching application logs for errors is the most common data engineering use of grep. Combine severity-level patterns, date filters, and real-time tailing to isolate issues quickly.
+
+#### Find high-severity lines across all logs in a directory
+
 ```bash
-# Find any high-severity log line across all logs in a directory
 grep -rE '\b(ERROR|FATAL|CRITICAL|EXCEPTION)\b' /var/log/myapp/
+```
 
-# Find errors in today's log file (if logs are named by date)
+#### Find errors in today's log file
+
+```bash
 grep -E '\b(ERROR|FATAL)\b' /var/log/myapp/app-$(date +%Y-%m-%d).log
+```
 
-# Find errors from the last hour (using timestamp pattern — adjust format to your logs)
+#### Filter errors by timestamp range
+
+Chain a timestamp pattern with a severity filter to narrow to a specific time window. Adjust the hour pattern to match your log format.
+
+```bash
 grep -E '^2026-03-22 1[4-5]:' app.log | grep -E 'ERROR|FATAL'
+```
 
-# Tail-and-grep in real time
+#### Tail-and-grep in real time
+
+The `--line-buffered` flag forces grep to flush each match immediately, preventing output delays during live monitoring.
+
+```bash
 tail -f /var/log/myapp/app.log | grep --line-buffered -E 'ERROR|FATAL'
+```
 
-# Count errors per hour from a day's log
+#### Count errors per hour for spike detection
+
+```bash
 grep 'ERROR' app.log | grep -oE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}' | sort | uniq -c
 ```
 
-#### Get-Content -Wait | Select-String — search log files for errors
+#### Get-Content -Wait | Select-String | search log files for errors
+
+`Get-Content -Wait -Tail 0` is the PowerShell equivalent of `tail -f`, monitoring the file for new lines and piping them to `Select-String`.
 
 ```powershell
-# Real-time monitoring equivalent of tail -f | grep
 Get-Content -Path app.log -Wait -Tail 0 | Select-String -Pattern 'ERROR|FATAL'
+```
 
-# Errors from today's log
+```powershell
 $today = (Get-Date).ToString('yyyy-MM-dd')
 Select-String -Pattern 'ERROR|FATAL' -Path "app-$today.log"
 ```
@@ -900,21 +1426,27 @@ Select-String -Pattern 'ERROR|FATAL' -Path "app-$today.log"
 
 ### Find SQL deadlocks in logs
 
+Deadlock evidence appears differently across database platforms. SQL Server raises error 1205 and optionally captures XML deadlock graphs via Extended Events. PostgreSQL logs `deadlock detected` with the process wait chain. Always include context lines (`-B`) to see the transactions involved.
+
 ```bash
-# SQL Server deadlock evidence in application logs
 grep -iE 'deadlock|lock timeout|transaction.*rolled back|1205' sqlserver.log
-
-# SQL Server deadlock XML events (if captured from Extended Events)
-grep -n 'deadlock-list' *.xel.txt
-
-# PostgreSQL deadlock detection
-grep -iE 'deadlock detected|process.*waits for' /var/log/postgresql/postgresql-*.log
-
-# Find deadlock candidates by looking for conflicting lock waits
-grep -B5 'deadlock' sqlserver.log   # show 5 lines before each deadlock mention
 ```
 
-#### Select-String — find SQL deadlocks in logs (PowerShell)
+```bash
+grep -n 'deadlock-list' *.xel.txt
+```
+
+```bash
+grep -iE 'deadlock detected|process.*waits for' /var/log/postgresql/postgresql-*.log
+```
+
+Show 5 lines before each deadlock mention to see the conflicting lock waits.
+
+```bash
+grep -B5 'deadlock' sqlserver.log
+```
+
+#### Select-String | find SQL deadlocks in logs
 
 ```powershell
 Select-String -Pattern '(?i)deadlock|lock timeout|transaction.*rolled back' sqlserver.log -Context 5,0
@@ -924,28 +1456,42 @@ Select-String -Pattern '(?i)deadlock|lock timeout|transaction.*rolled back' sqls
 
 ### Search pipeline code for table references
 
+Track which tables are referenced across Python DAGs, SQL scripts, and config files. This is essential for impact analysis before schema changes, migration planning, and detecting hardcoded environment names.
+
+#### Find all references to a specific table
+
 ```bash
-# Find all references to a specific table across all Python, SQL, and config files
 grep -rE '\bfact_sales\b' --include='*.py' --include='*.sql' --include='*.yaml' ./
+```
 
-# Find all tables in a schema that are referenced
+#### Deduplicate all tables in a schema
+
+```bash
 grep -rE '\braw\.[a-zA-Z_]+\b' --include='*.sql' . | grep -oE '\braw\.[a-zA-Z_]+\b' | sort -u
+```
 
-# Find hardcoded table names (potential issue for multi-environment pipelines)
+#### Find hardcoded environment names in table references
+
+Hardcoded `dev.`, `staging.`, or `prod.` prefixes break multi-environment pipelines.
+
+```bash
 grep -rE '"(dev|staging|prod)\.' --include='*.py' ./dags/
+```
 
-# Find all INSERT/UPDATE/DELETE DML touching a table
+#### Find DML statements touching a specific table
+
+```bash
 grep -iE '(INSERT INTO|UPDATE|DELETE FROM)[[:space:]]+[`"]?orders[`"]?' *.sql
 ```
 
-#### Select-String — search pipeline code for table references (PowerShell)
+#### Select-String | search pipeline code for table references
 
 ```powershell
-# Find all table references across code files
 Get-ChildItem -Recurse -Include *.py, *.sql, *.yaml |
     Select-String -Pattern '\bfact_sales\b'
+```
 
-# Deduplicated raw-schema references
+```powershell
 Get-ChildItem -Recurse -Filter *.sql |
     Select-String -Pattern '\braw\.[a-zA-Z_]+\b' |
     ForEach-Object { $_.Matches.Value } |
@@ -956,29 +1502,41 @@ Get-ChildItem -Recurse -Filter *.sql |
 
 ### Find environment variable usage across configs
 
+Audit how your codebase reads configuration to ensure secrets are not hardcoded and all environment dependencies are documented.
+
+#### Find all environment variable reads in Python code
+
 ```bash
-# Find all environment variable reads in Python code
 grep -rE 'os\.environ|os\.getenv' --include='*.py' ./
+```
 
-# Find references to a specific env var
+#### Find references to a specific env var
+
+```bash
 grep -rE '\bDB_PASSWORD\b|\bDATABASE_URL\b' --include='*.py' --include='*.env.example' .
+```
 
-# Find .env files (potential credential exposure)
+#### Find .env files with potential credential exposure
+
+```bash
 find . -name '*.env' | xargs grep -l 'password|secret|key' 2>/dev/null
+```
 
-# Find hardcoded credential patterns in source code
+#### Find hardcoded credential patterns in source code
+
+```bash
 grep -rE '(password|secret|api_key|token)\s*=\s*["\x27][^"\x27]+["\x27]' \
     --include='*.py' --include='*.js' --include='*.yaml' .
 ```
 
-#### Select-String — find environment variable usage across configs (PowerShell)
+#### Select-String | find environment variable usage across configs
 
 ```powershell
-# Find env var usage in Python files
 Get-ChildItem -Recurse -Filter *.py |
     Select-String -Pattern 'os\.environ|os\.getenv'
+```
 
-# Credential pattern detection
+```powershell
 Get-ChildItem -Recurse -Include *.py, *.yaml, *.json |
     Select-String -Pattern '(password|secret|api_key|token)\s*=\s*["\x27][^"\x27]+'
 ```
@@ -994,34 +1552,59 @@ Get-ChildItem -Recurse -Include *.py, *.yaml, *.json |
 
 ### Extract specific fields from CSV using grep + cut
 
+Grep can filter CSV rows by content, then `cut` extracts specific columns by delimiter. For numeric comparisons, grep pre-filters and `awk` handles the arithmetic. For structured CSV work in PowerShell, `Import-Csv` is always preferable to text-based parsing.
+
+#### Extract a column from matching rows
+
+Extract email (column 3) from lines where status is `active`.
+
 ```bash
-# Extract email column (column 3) from lines where status is 'active'
 grep 'active' users.csv | cut -d',' -f3
+```
 
-# Extract rows where revenue column (col 5) is above a threshold
-# (grep can't do math — use awk for numeric comparisons, grep to pre-filter)
+#### Pre-filter for awk numeric comparisons
+
+Grep pre-filters by date prefix, then awk checks whether the revenue column (field 5) exceeds a threshold.
+
+```bash
 grep '2026-03' sales.csv | awk -F',' '$5 > 10000 {print $0}'
+```
 
-# Extract rows matching a date prefix
+#### Extract specific columns from date-filtered rows
+
+```bash
 grep '^2026-03-22' timeseries.csv | cut -d',' -f1,4,5
+```
 
-# Find CSV rows with empty mandatory fields (consecutive commas)
+#### Find CSV rows with empty mandatory fields
+
+Consecutive commas indicate an empty field.
+
+```bash
 grep ',,' required_fields.csv
+```
 
-# Find rows with the wrong number of columns (should be 7 fields = 6 commas)
+#### Find rows with the wrong number of columns
+
+For a file that should have 7 fields (6 commas per line), invert-match the expected pattern.
+
+```bash
 grep -v '^[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*,[^,]*$' data.csv
 ```
 
-#### Import-Csv | Select-Object — extract CSV fields (PowerShell)
+#### Import-Csv | Select-Object | extract CSV fields (PowerShell)
+
+`Import-Csv` turns every row into a typed object with named properties. Use `Where-Object` for filtering and `Select-Object` for projection — no delimiter counting needed.
 
 ```powershell
-# Import-Csv is far superior for structured CSV work
 $active = Import-Csv users.csv | Where-Object { $_.status -eq 'active' } | Select-Object email
+```
 
-# Find rows with empty mandatory fields
+```powershell
 Get-Content required_fields.csv | Select-String -Pattern ',,'
+```
 
-# Wrong column count (6 commas = 7 fields)
+```powershell
 Get-Content data.csv | Where-Object { ($_ -split ',').Count -ne 7 }
 ```
 
@@ -1031,35 +1614,49 @@ Get-Content data.csv | Where-Object { ($_ -split ',').Count -ne 7 }
 
 ---
 
-### Search compressed log files (`zgrep`)
+### zgrep | search compressed log files
+
+`zgrep` transparently decompresses gzip files and searches them without extracting to disk. Variants exist for other compression formats: `bzgrep` for bzip2 and `xzgrep` for xz.
 
 ```bash
-# zgrep — transparent grep over gzip-compressed files
 zgrep 'ERROR' application.log.gz
+```
 
-# Works with multiple compressed files
+Search multiple compressed files with extended regex.
+
+```bash
 zgrep -E 'ERROR|FATAL' /var/log/myapp/app.log.*.gz
+```
 
-# With line numbers
+```bash
 zgrep -n 'EXCEPTION' archive.log.gz
+```
 
-# Combine with regular grep for mixed compressed/uncompressed
+Combine compressed and uncompressed log searches in a single stream.
+
+```bash
 { zgrep 'ERROR' old.log.gz; grep 'ERROR' current.log; } | sort
+```
 
-# bzgrep for bzip2, xzgrep for xz-compressed files
+`bzgrep` and `xzgrep` follow the same syntax for bzip2 and xz archives.
+
+```bash
 bzgrep 'ERROR' archive.log.bz2
+```
+
+```bash
 xzgrep 'ERROR' archive.log.xz
 ```
 
-#### PowerShell Expand-Archive — search compressed files
+#### PowerShell | search compressed files
+
+PowerShell has no built-in zgrep equivalent. Use 7-Zip to decompress to stdout and pipe the result, or use .NET `GZipStream` for a native approach.
 
 ```powershell
-# Expand-Archive for .zip; for .gz use a .NET approach or external tool
-# Option 1: Use 7-Zip (if installed) to decompress and pipe
 & 7z e -so application.log.gz | Select-String 'ERROR'
+```
 
-# Option 2: .NET GZipStream
-Add-Type -AssemblyName System.IO.Compression.FileSystem
+```powershell
 $fs = [System.IO.File]::OpenRead('application.log.gz')
 $gz = New-Object System.IO.Compression.GZipStream($fs, [System.IO.Compression.CompressionMode]::Decompress)
 $reader = New-Object System.IO.StreamReader($gz)
@@ -1073,31 +1670,47 @@ $reader.Close()
 
 ### Count error frequency
 
+Counting errors by type, time window, or source file is the first step in triage. The patterns below combine `grep -c`, `grep -o`, and `sort | uniq -c` for frequency analysis.
+
+#### Count total errors
+
 ```bash
-# Count total ERROR occurrences in a log
 grep -c 'ERROR' app.log
+```
 
-# Count errors per type (extract the error code/class after ERROR:)
+#### Count errors by type
+
+Extract the error class after `ERROR:` and produce a frequency-sorted histogram.
+
+```bash
 grep 'ERROR' app.log | grep -oE 'ERROR: \w+' | sort | uniq -c | sort -rn
+```
 
-# Count errors per minute (for spike detection)
+#### Count errors per minute for spike detection
+
+```bash
 grep 'ERROR' app.log | grep -oE '[0-9]{2}:[0-9]{2}' | sort | uniq -c
+```
 
-# Count errors per source file in a recursive search
+#### Count errors per source file
+
+Filter out files with zero matches by excluding lines ending in `:0`.
+
+```bash
 grep -rc 'ERROR' /var/log/myapp/ | grep -v ':0$' | sort -t: -k2 -rn
 ```
 
-#### Select-String | Group-Object — count error frequency (PowerShell)
+#### Select-String | Group-Object | count error frequency
 
 ```powershell
-# Count per error type
 Select-String -Pattern 'ERROR' app.log |
     ForEach-Object { [regex]::Match($_.Line, 'ERROR: \w+').Value } |
     Where-Object { $_ } |
     Group-Object |
     Sort-Object Count -Descending
+```
 
-# Count per minute
+```powershell
 Select-String -Pattern 'ERROR' app.log |
     ForEach-Object { [regex]::Match($_.Line, '\d{2}:\d{2}').Value } |
     Group-Object |
@@ -1108,35 +1721,54 @@ Select-String -Pattern 'ERROR' app.log |
 
 ### Find files containing credential patterns
 
+Scan your codebase for hardcoded secrets before committing. Always use `-l` (filenames only) when reporting results to avoid printing actual secrets into logs or terminals.
+
+#### Search for potential secret keywords
+
 ```bash
-# Search for potential secrets across a codebase
 grep -r 'password|secret|api_key|token|private_key' \
     --include='*.py' --include='*.yaml' --include='*.json' \
-    --include='*.env' --include='*.config' . | grep -v '#'   # skip comment lines
+    --include='*.env' --include='*.config' . | grep -v '#'
+```
 
-# Looks for patterns that look like assigned secrets (not just the word)
+#### Find patterns that look like assigned secrets
+
+Match credential keywords followed by an assignment operator and a quoted value at least 8 characters long.
+
+```bash
 grep -rE '(password|passwd|secret|api_key|apikey|token|auth)\s*[=:]\s*["\x27][^"\x27]{8,}' \
     --include='*.py' --include='*.js' .
+```
 
-# Find AWS key patterns
+#### Find AWS access key patterns
+
+AWS access key IDs always start with `AKIA` followed by 16 uppercase alphanumeric characters.
+
+```bash
 grep -rE 'AKIA[0-9A-Z]{16}' .
+```
 
-# Find private key headers
+#### Find private key headers
+
+```bash
 grep -rE '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----' .
+```
 
-# Print only the filenames (not the secrets themselves) to avoid log exposure
+#### Print only filenames to avoid log exposure
+
+```bash
 grep -rl 'password.*=.*["\x27]' --include='*.py' .
 ```
 
-#### Select-String — find credential patterns in files (PowerShell)
+#### Select-String | find credential patterns in files
 
 ```powershell
-# Find credential patterns — filenames only
 Get-ChildItem -Recurse -Include *.py, *.yaml, *.json, *.config |
     Select-String -Pattern '(password|secret|api_key)\s*[=:]\s*["\x27][^"\x27]{8,}' |
     Select-Object -ExpandProperty Filename -Unique
+```
 
-# AWS key pattern
+```powershell
 Get-ChildItem -Recurse | Select-String -Pattern 'AKIA[0-9A-Z]{16}' |
     Select-Object Filename, LineNumber
 ```
@@ -1145,115 +1777,278 @@ Get-ChildItem -Recurse | Select-String -Pattern 'AKIA[0-9A-Z]{16}' |
 
 ## Performance and Alternatives
 
-### Fixed-string search (`grep -F` / `fgrep`)
+When grep is too slow for large codebases or its regex engine is too limited, faster alternatives exist. `grep -F` avoids regex overhead for literal strings, and `ripgrep` (`rg`) offers 5–10x faster recursive search with automatic `.gitignore` awareness.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A["Text search task"] --> B{"Single file<br/>or pipe?"}
+    B -->|Yes| C{"Pattern is a<br/>literal string?"}
+    C -->|Yes| D["grep -F<br/>Fastest single-file search"]
+    C -->|No| E["grep -E<br/>Standard regex"]
+    B -->|No| F{"Recursive<br/>codebase search?"}
+    F -->|Yes| G["rg — ripgrep<br/>5-10x faster, .gitignore-aware"]
+    F -->|No| H{"Need lookahead<br/>or lookbehind?"}
+    H -->|Yes| I["rg -P or grep -P<br/>PCRE2 engine"]
+    H -->|No| E
+
+    style A fill:#292e42,stroke:#565f89,color:#c0caf5
+    style D fill:#1a1b26,stroke:#565f89,color:#9ece6a
+    style E fill:#1a1b26,stroke:#565f89,color:#9ece6a
+    style G fill:#1a1b26,stroke:#565f89,color:#9ece6a
+    style I fill:#1a1b26,stroke:#565f89,color:#e0af68
+```
+
+### grep -F | fixed-string search
+
+The `-F` flag treats the pattern as a fixed (literal) string with no regex interpretation. This is significantly faster than regex matching because grep skips the regex engine entirely — use it whenever you know the exact string.
 
 ```bash
-# -F treats pattern as a fixed string — no regex interpretation
-# Significantly faster when you know the exact string (no regex engine overhead)
 grep -F 'SELECT * FROM orders WHERE' query_log.txt
+```
 
-# Useful when the pattern contains regex metacharacters you want literally
-grep -F 'price * quantity' formulas.txt      # the * is literal, not a quantifier
-grep -F 'error.log' file_list.txt            # the . is literal, not "any char"
-grep -F '(production)' environment.txt       # parens are literal
+Fixed-string mode is also the safest way to search for strings containing regex metacharacters (`*`, `.`, `(`, `)`) without escaping each character.
 
-# fgrep is identical to grep -F (deprecated name, prefer grep -F)
-fgrep 'literal string' file.txt
+```bash
+grep -F 'price * quantity' formulas.txt
+```
 
-# -F with -i for case-insensitive fixed string
+```bash
+grep -F 'error.log' file_list.txt
+```
+
+```bash
+grep -F '(production)' environment.txt
+```
+
+Combine with `-i` for case-insensitive literal matching.
+
+```bash
 grep -Fi 'select * from' query_log.txt
 ```
 
-#### Select-String -SimpleMatch — fixed-string search (no regex)
+> [!info] fgrep is deprecated
+>
+> `fgrep` is identical to `grep -F` but deprecated on many systems. Always use `grep -F` in new scripts.
+
+#### Select-String -SimpleMatch | fixed-string search
+
+The `-SimpleMatch` flag disables regex and treats the pattern as a literal string.
 
 ```powershell
-# -SimpleMatch flag disables regex and treats pattern as literal string
 Select-String -Pattern 'SELECT * FROM orders' query_log.txt -SimpleMatch
+```
 
-# Case-sensitive literal match
+```powershell
 Select-String -Pattern 'price * quantity' formulas.txt -SimpleMatch -CaseSensitive
 ```
 
 ---
 
-### ripgrep (`rg`) — the modern alternative
+### grep -a, -I | binary file handling
 
-`ripgrep` (`rg`) is a Rust-based tool that is 5–10x faster than GNU grep for recursive searches. It respects `.gitignore` by default, has better Unicode support, and provides a cleaner output format.
+By default, grep prints a `Binary file ... matches` message when it encounters a binary file. The `-I` flag skips binary files entirely — equivalent to `--binary-files=without-match`. The `-a` flag forces grep to treat binary files as text.
 
 ```bash
-# Install
-# Ubuntu/Debian: apt install ripgrep
-# macOS: brew install ripgrep
-# Windows: winget install BurntSushi.ripgrep.MSVC  (or via Scoop/Chocolatey)
-
-# Basic usage — same syntax as grep
-rg 'ERROR' app.log
-
-# Recursive search (default — no -r flag needed)
-rg 'def transform' ./pipelines/
-
-# Case insensitive
-rg -i 'error' app.log
-
-# Fixed string (no regex)
-rg -F 'literal string' file.txt
-
-# With line numbers (on by default in rg)
-rg 'FATAL' app.log
-
-# Show only filenames
-rg -l 'TODO' ./
-
-# Count matches
-rg -c 'ERROR' *.log
-
-# Context lines
-rg -C 3 'EXCEPTION' app.log
-
-# Only matching part (like grep -o)
-rg -o '[0-9]{4}-[0-9]{2}-[0-9]{2}' events.log
-
-# File type filter (rg has built-in type definitions)
-rg --type py 'import pandas' ./
-rg --type sql 'CREATE TABLE' ./
-
-# Show available types
-rg --type-list | grep sql
-
-# Ignore specific files/dirs (in addition to .gitignore)
-rg 'secret' --glob '!*.test.py' --glob '!node_modules'
-
-# Search hidden files (rg ignores hidden files by default)
-rg --hidden 'password' .
-
-# Search inside .gitignore'd files (bypasses .gitignore)
-rg --no-ignore 'TODO' .
-
-# Multiline matching
-rg --multiline 'BEGIN.*\nCOMMIT' transactions.sql
-
-# PCRE2 for advanced regex (lookahead, lookbehind)
-rg -P '(?<=user=)\w+' config.ini
-
-# Output as JSON (useful for scripting)
-rg --json 'ERROR' app.log | jq '.data.lines.text // empty'
+grep -I 'ERROR' *
 ```
 
-#### rg (ripgrep) in PowerShell
-
-```powershell
-# rg works identically on Windows — install via winget or scoop
-rg 'ERROR' app.log
-rg -l 'TODO' ./src
-rg --type py 'def transform' ./
-
-# Combine with PowerShell pipeline
-rg --json 'ERROR' app.log | ConvertFrom-Json | Where-Object { $_.type -eq 'match' }
+```bash
+grep -a 'ERROR' mixed_content.bin
 ```
+
+> [!warning] grep -a on binary files
+>
+> Using `-a` on binary files can produce unprintable characters that corrupt terminal state. Use with caution.
+
+> [!success] Use -I or ripgrep for safe binary handling
+> `grep -rI 'pattern' .` skips all binary files. `rg` skips binary files by default without any flag.
 
 ---
 
-### grep vs rg vs ag comparison
+### LC_ALL=C | locale trick for performance
+
+Setting the locale to `C` (ASCII) before grep disables multibyte character handling, which can yield 3–10x speedup on large files. This is safe when the input is pure ASCII (which covers most English-language logs and code).
+
+```bash
+LC_ALL=C grep 'ERROR' huge_app.log
+```
+
+```bash
+LC_ALL=C grep -rF 'connection_string' /var/log/
+```
+
+> [!warning] LC_ALL=C breaks Unicode matching
+>
+> Character classes like `[:alpha:]` and `\b` may produce incorrect results on files containing multibyte UTF-8 characters when `LC_ALL=C` is set. Only use on known-ASCII inputs.
+
+> [!success] Combine LC_ALL=C with grep -F for maximum speed
+> Application logs, CSV files, and source code in English are safe targets: `LC_ALL=C grep -F 'literal' huge.log`.
+
+---
+
+### rg | ripgrep — the modern alternative
+
+`ripgrep` (`rg`) is a Rust-based tool that is 5–10x faster than GNU grep for recursive searches. It respects `.gitignore` by default, skips binary files, uses parallel directory traversal, and has full Unicode support. Install with `apt install ripgrep` (Debian/Ubuntu), `brew install ripgrep` (macOS), or `winget install BurntSushi.ripgrep.MSVC` (Windows).
+
+#### Basic search
+
+Syntax is the same as grep. Recursive search is the default — no `-r` flag needed. Line numbers are shown by default.
+
+```bash
+rg 'ERROR' app.log
+```
+
+```bash
+rg 'def transform' ./pipelines/
+```
+
+#### Case-insensitive and fixed-string search
+
+```bash
+rg -i 'error' app.log
+```
+
+```bash
+rg -F 'literal string' file.txt
+```
+
+#### Show only filenames or count matches
+
+```bash
+rg -l 'TODO' ./
+```
+
+```bash
+rg -c 'ERROR' *.log
+```
+
+#### Context lines
+
+```bash
+rg -C 3 'EXCEPTION' app.log
+```
+
+#### Only matching part (like grep -o)
+
+```bash
+rg -o '[0-9]{4}-[0-9]{2}-[0-9]{2}' events.log
+```
+
+#### File type filter
+
+`rg` has built-in type definitions (use `rg --type-list` to see all available types).
+
+```bash
+rg --type py 'import pandas' ./
+```
+
+```bash
+rg --type sql 'CREATE TABLE' ./
+```
+
+#### Ignore specific files or directories
+
+In addition to `.gitignore`, use `--glob` with `!` prefix to exclude patterns.
+
+```bash
+rg 'secret' --glob '!*.test.py' --glob '!node_modules'
+```
+
+#### Search hidden and .gitignore'd files
+
+By default, rg skips hidden files and respects `.gitignore`. Override with `--hidden` and `--no-ignore`.
+
+```bash
+rg --hidden 'password' .
+```
+
+```bash
+rg --no-ignore 'TODO' .
+```
+
+#### Multiline matching
+
+```bash
+rg --multiline 'BEGIN.*\nCOMMIT' transactions.sql
+```
+
+#### PCRE2 for advanced regex
+
+`rg -P` enables PCRE2 for lookahead and lookbehind — works on Linux, macOS, and Windows.
+
+```bash
+rg -P '(?<=user=)\w+' config.ini
+```
+
+#### JSON output for scripting
+
+```bash
+rg --json 'ERROR' app.log | jq '.data.lines.text // empty'
+```
+
+#### rg | ripgrep in PowerShell
+
+`rg` works identically on Windows. Combine with `ConvertFrom-Json` to process JSON output in PowerShell pipelines.
+
+```powershell
+rg 'ERROR' app.log
+```
+
+```powershell
+rg -l 'TODO' ./src
+```
+
+```powershell
+rg --type py 'def transform' ./
+```
+
+```powershell
+rg --json 'ERROR' app.log | ConvertFrom-Json | Where-Object { $_.type -eq 'match' }
+```
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `-i` | `rg -i 'pat'` | Case-insensitive search |
+| `-F` | `rg -F 'str'` | Fixed/literal string (no regex) |
+| `-w` | `rg -w 'pat'` | Whole-word matching |
+| `-l` | `rg -l 'pat'` | Show only filenames with matches |
+| `-c` | `rg -c 'pat'` | Count matches per file |
+| `-o` | `rg -o 'pat'` | Print only matching part |
+| `-n` | `rg -n 'pat'` | Show line numbers (default: on) |
+| `-A N` | `rg -A 3 'pat'` | N lines after each match |
+| `-B N` | `rg -B 3 'pat'` | N lines before each match |
+| `-C N` | `rg -C 3 'pat'` | N lines context (before + after) |
+| `-m N` | `rg -m 5 'pat'` | Stop after N matches per file |
+| `-v` | `rg -v 'pat'` | Invert match (exclude lines) |
+| `-x` | `rg -x 'pat'` | Match entire lines only |
+| `-P` | `rg -P 'pat'` | Enable PCRE2 regex engine |
+| `-U` | `rg -U 'pat'` | Enable multiline matching |
+| `-r` | `rg -r 'rep' 'pat'` | Replace matches with a string |
+| `--type` | `rg --type py 'pat'` | Search only files of a given type |
+| `--type-list` | `rg --type-list` | List all built-in file types |
+| `--glob` | `rg --glob '!*.test.py'` | Include/exclude files by glob |
+| `--hidden` | `rg --hidden 'pat'` | Include hidden files in search |
+| `--no-ignore` | `rg --no-ignore 'pat'` | Bypass .gitignore rules |
+| `--json` | `rg --json 'pat'` | Output results as JSON |
+| `--stats` | `rg --stats 'pat'` | Print search statistics after results |
+| `--sort` | `rg --sort path 'pat'` | Sort results by path, modified, created |
+| `--count-matches` | `rg --count-matches 'pat'` | Count individual matches (not lines) |
+
+---
+
+### grep vs rg vs ag | comparison
 
 | Feature | `grep` | `rg` (ripgrep) | `ag` (silver searcher) |
 |---|---|---|---|
@@ -1282,7 +2077,11 @@ rg --json 'ERROR' app.log | ConvertFrom-Json | Where-Object { $_.type -eq 'match
 
 ## PowerShell Equivalents
 
+This section consolidates PowerShell-specific tooling that does not fit under a Linux grep subsection: the complete flag mapping table, the legacy `findstr` command, the `MatchInfo` output object anatomy, and the `-AllMatches` parameter for multi-match extraction.
+
 ### Complete flag comparison table
+
+Every grep flag mapped to its PowerShell `Select-String` equivalent or pipeline pattern.
 
 | bash `grep` flag | Description | PowerShell `Select-String` equivalent |
 |---|---|---|
@@ -1311,53 +2110,110 @@ rg --json 'ERROR' app.log | ConvertFrom-Json | Where-Object { $_.type -eq 'match
 | `-q` | Quiet (exit code only) | `[bool](Select-String ...)` |
 | `-s` | Suppress error messages | `2>$null` or `-ErrorAction SilentlyContinue` |
 | `-z` / `-Z` | Null-delimited | Not needed in PowerShell (objects, not text) |
+| `-q` | Quiet (exit code only) | `-Quiet` (returns `$true`/`$false`) |
+| `-e pat` | Explicit pattern (multiple) | Use alternation: `'pat1\|pat2'` |
+| `-x` | Match entire line | Anchor pattern: `'^pattern$'` |
+| `--color` | Highlight matches | N/A (Select-String highlights by default in console) |
+| `-a` | Force text on binary files | N/A |
+| `-I` | Skip binary files | N/A (Select-String only reads text files) |
 
 ---
 
-### findstr — the legacy Windows alternative
+### findstr | the legacy Windows alternative
 
-`findstr` is the built-in Windows command-line string search tool (predates PowerShell). It is less capable than `grep` but available on every Windows system without any installation, including contexts where PowerShell is restricted.
+`findstr` is the built-in Windows command-line string search tool (predates PowerShell). It is less capable than `grep` but available on every Windows system without installation, including contexts where PowerShell is restricted (e.g., Group Policy–constrained servers, `.bat` scripts).
+
+#### Basic literal string search
 
 ```powershell
-# Basic literal string search
 findstr "ERROR" application.log
+```
 
-# Case-insensitive (findstr is case-insensitive by default for literal strings)
+#### Case-insensitive search (/I)
+
+```powershell
 findstr /I "error" application.log
+```
 
-# Regular expression search (/R flag)
+#### Regular expression search (/R)
+
+```powershell
 findstr /R "ERR[0-9][0-9]" application.log
+```
 
-# Recursive search through directories (/S flag)
+#### Recursive search (/S)
+
+```powershell
 findstr /S "password" C:\Projects\*.py
+```
 
-# Search multiple files with wildcard
-findstr "FATAL" *.log
+#### Print line numbers (/N)
 
-# Print line numbers (/N flag)
+```powershell
 findstr /N "EXCEPTION" application.log
+```
 
-# Match only whole words (/W flag)
+#### Whole-word match (/W)
+
+```powershell
 findstr /W "log" application.log
+```
 
-# Invert match — lines NOT containing pattern (/V flag)
+#### Invert match (/V)
+
+```powershell
 findstr /V "DEBUG" application.log
+```
 
-# Patterns from file (/G flag)
+#### Patterns from a file (/G)
+
+```powershell
 findstr /G:patterns.txt application.log
+```
 
-# Literal search (no regex interpretation) (/C flag)
+#### Literal search with spaces (/C)
+
+The `/C:` prefix treats the entire string (including spaces) as a single literal pattern.
+
+```powershell
 findstr /C:"literal string with spaces" application.log
+```
 
-# Show only filenames (/M flag)
+#### Show only filenames (/M)
+
+```powershell
 findstr /S /M "api_key" C:\Projects\*.py
+```
 
-# Multiple search strings (must be space-separated, matches any)
+#### Multiple search strings
+
+Space-separated strings match any of the terms.
+
+```powershell
 findstr "ERROR FATAL CRITICAL" application.log
+```
 
-# Combine flags: recursive, case-insensitive, line numbers
+#### Combine flags
+
+```powershell
 findstr /S /I /N "password" C:\Projects\*.cfg
 ```
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `/I` | `findstr /I "pat" file` | Case-insensitive search |
+| `/R` | `findstr /R "pat" file` | Regular expression mode |
+| `/S` | `findstr /S "pat" *.ext` | Recursive search through subdirectories |
+| `/N` | `findstr /N "pat" file` | Prefix each match with its line number |
+| `/W` | `findstr /W "pat" file` | Match whole words only |
+| `/V` | `findstr /V "pat" file` | Invert match — print non-matching lines |
+| `/G:file` | `findstr /G:pats.txt file` | Read patterns from a file |
+| `/C:"str"` | `findstr /C:"str" file` | Literal string search (spaces included) |
+| `/M` | `findstr /M "pat" *.ext` | Print matching filenames only |
+| `/B` | `findstr /B "pat" file` | Match at the beginning of a line |
+| `/E` | `findstr /E "pat" file` | Match at the end of a line |
+| `/X` | `findstr /X "pat" file` | Match entire lines exactly |
+| `/A:attr` | `findstr /A:1F "pat" file` | Set color attribute for matching text |
 
 > [!tip] Prefer Select-String over findstr
 >
@@ -1400,26 +2256,35 @@ Select-String -Pattern 'ERROR' *.log |
 
 ---
 
-### AllMatches — find multiple matches per line
+### Select-String -AllMatches | find multiple matches per line
+
+By default, `Select-String` returns one `MatchInfo` object per line, capturing only the first match. The `-AllMatches` switch captures every match within each line — essential when multiple values of interest appear on a single line.
+
+#### Without -AllMatches — first match only
 
 ```powershell
-# By default, Select-String returns one MatchInfo per LINE (not per match)
-# -AllMatches makes it capture every match within each line
-
 $line = '192.168.1.1 GET /api/v1 200 192.168.1.2 GET /api/v2 404'
-
-# Without -AllMatches: finds first IP only
 $line | Select-String -Pattern '\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b' |
     ForEach-Object { $_.Matches.Value }
-# Output: 192.168.1.1
+```
 
-# With -AllMatches: finds all IPs on the line
+Returns only `192.168.1.1`.
+
+#### With -AllMatches — all matches on the line
+
+```powershell
 $line | Select-String -Pattern '\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b' -AllMatches |
     ForEach-Object { $_.Matches } |
     Select-Object -ExpandProperty Value
-# Output: 192.168.1.1, 192.168.1.2
+```
 
-# Real use case: extract all table names from a SQL file (multiple per line possible)
+Returns both `192.168.1.1` and `192.168.1.2`.
+
+#### Extract all table names from a SQL file
+
+Multiple schema-qualified references can appear on a single line (e.g., in JOIN clauses).
+
+```powershell
 Select-String -Pattern '\b[a-zA-Z_]\w*\.[a-zA-Z_]\w*\b' query.sql -AllMatches |
     ForEach-Object { $_.Matches.Value } |
     Sort-Object -Unique
@@ -1428,6 +2293,8 @@ Select-String -Pattern '\b[a-zA-Z_]\w*\.[a-zA-Z_]\w*\b' query.sql -AllMatches |
 ---
 
 ## Quick Reference Card
+
+A condensed set of copy-paste one-liners for the most common grep and `Select-String` tasks, organized by use case. See the sections above for full explanations and context.
 
 ### Most-used grep one-liners for data engineers
 
