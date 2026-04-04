@@ -3,7 +3,7 @@ tags: [sql, sql-server, tsql]
 aliases: [SQL Server pages, extents, buffer pool, WAL, write-ahead logging, checkpoint, LSN, log sequence number, heap, dirty page, ghost record, page split, tempdb internals, VLF, virtual log files, IAM, GAM, SGAM, PFS, B-tree, row offset array, forwarding pointer]
 description: "SQL Server storage internals: the 8 KB page and 64 KB extent model, the file architecture (.mdf and .ldf), page anatomy (96-byte header, row offset array), how WAL and checkpoints work, CRUD mechanics at the page level, B-tree structures, page splits, tempdb consumers, the buffer pool, and the lock manager's compatibility matrix."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-04
 status: complete
 ---
 
@@ -18,12 +18,12 @@ SQL Server reads and writes in fixed 8 KB pages — every I/O operation moves ex
 
 ---
 
-### Glossary — Key Terms
+## Glossary — Key Terms
 
 | Term | Definition |
 |---|---|
 | **Page** | The fundamental unit of I/O in SQL Server. A fixed 8 KB (8,192 bytes) block. Every read or write operation happens at the page level — SQL Server never reads less than one page. |
-| **Extent** | A group of 8 contiguous pages (64 KB). SQL Server allocates space in extents. **Uniform extents** belong to one object; **mixed extents** are shared by small tables. |
+| **Extent** | A group of 8 contiguous pages (64 KB). SQL Server allocates space in extents. **Uniform extents** belong to one object; **mixed extents** are shared by small tables. Before SQL Server 2016, new objects used mixed extents for their first 8 pages, then switched to uniform; from 2016 onward all allocations default to uniform (`MIXED_PAGE_ALLOCATION OFF`), making trace flag T1118 obsolete. |
 | **Data file (.mdf)** | The primary data file. Stores all data pages, index pages, and allocation maps. This is where your rows physically live. A database has exactly one `.mdf` plus optional secondary `.ndf` files. |
 | **Log file (.ldf)** | The transaction log. A sequential, append-only record of every modification. Guarantees durability (the "D" in ACID). If the server crashes, SQL Server replays the log to recover to a consistent state. |
 | **Buffer pool** | SQL Server's in-memory cache of data pages. Pages are read from `.mdf` into the buffer pool, modified there, and eventually flushed back to disk. Most query execution works against the buffer pool, not disk. |
@@ -36,8 +36,8 @@ SQL Server reads and writes in fixed 8 KB pages — every I/O operation moves ex
 | **Row offset array (slot array)** | An array at the bottom of each page that stores the byte offset of each row. Enables direct jump to row N without scanning the page sequentially. |
 | **Page split** | When a page is full and a new row must be inserted in the middle (to maintain sort order), SQL Server splits the page: allocates a new page, moves roughly half the rows there, and updates the page chain pointers. Expensive — causes fragmentation. |
 | **IAM (Index Allocation Map)** | A special page that tracks which extents belong to a specific table or index. SQL Server consults IAM pages during table scans to find all pages for an object. |
-| **GAM / SGAM** | **Global Allocation Map** and **Shared GAM** — bitmap pages that track whether each extent in a data file is free, allocated as uniform, or allocated as mixed. One bit per extent. |
-| **PFS (Page Free Space)** | A page that tracks the approximate free space in each data page (empty, 1-50%, 51-80%, 81-95%, 96-100%). Used to find a page with room for a new row. |
+| **GAM / SGAM** | **Global Allocation Map** and **Shared GAM** — bitmap pages that track whether each extent in a data file is free, allocated as uniform, or allocated as mixed. One bit per extent. A GAM/SGAM pair repeats every ~64,000 extents (~4 GB of data file). SQL Server 2022 introduced System Page Latch Concurrency Enhancements allowing concurrent GAM/SGAM updates, reducing allocation contention under heavy INSERT workloads. |
+| **PFS (Page Free Space)** | A page that tracks the approximate free space in each data page using 1 byte per page across five fill states (empty, 1–50%, 51–80%, 81–95%, 96–100%). PFS pages repeat every 8,088 pages (~64 MB). Used by the storage engine to find a page with room for a new row. |
 | **Forwarding pointer** | In a heap, when an UPDATE makes a row too large for its current page, the row moves to a new page and leaves behind a pointer. Causes extra I/O on reads — too many forwarding pointers degrade performance. |
 | **B-tree** | Balanced tree structure used for all rowstore indexes. Interior (non-leaf) nodes contain key values and pointers to child pages. Leaf nodes contain the actual data (clustered) or key + bookmark (nonclustered). |
 | **Bookmark lookup (Key lookup)** | When a nonclustered index finds the matching rows but the query needs columns not in the index, SQL Server must look up the full row from the clustered index. Eliminated by covering indexes. |
@@ -45,6 +45,8 @@ SQL Server reads and writes in fixed 8 KB pages — every I/O operation moves ex
 ---
 
 ## Database File Architecture
+
+SQL Server organizes every database into a set of operating-system files that separate data storage from transaction logging. This separation is fundamental to the WAL protocol: the data files (`.mdf` / `.ndf`) hold the current state of all objects, while the log file (`.ldf`) records every modification as a sequential, append-only stream. The log file must reside on low-latency storage because every `COMMIT` waits for a synchronous write to it, making log write latency the single largest contributor to transaction response time.
 
 Every SQL Server database consists of at least two files:
 
@@ -67,7 +69,7 @@ Database "analytics_db"
         └── ... (append-only, circular reuse after backup)
 ```
 
-#### ALTER DATABASE ADD FILE — secondary data file for I/O distribution
+### ALTER DATABASE ADD FILE — secondary data file for I/O distribution
 
 ```sql
 -- Add a secondary file for distributing I/O across disks
@@ -79,7 +81,7 @@ ALTER DATABASE analytics_db ADD FILE (
 );
 ```
 
-#### sys.database_files — check current data and log file layout
+### sys.database_files — check current data and log file layout
 
 ```sql
 SELECT
@@ -100,6 +102,8 @@ FROM sys.database_files;
 ---
 
 ## Page Anatomy
+
+The page is SQL Server's fundamental unit of I/O — every read or write operation transfers exactly one 8 KB (8,192-byte) page. This fixed size has remained unchanged since SQL Server 2000 and matches the buffer pool frame size, so one page equals one buffer pool slot. Understanding page layout matters because row size limits, fragmentation, and space-efficiency calculations all derive from the 8,096 usable bytes per page (8,192 minus the 96-byte header). The page architecture applies uniformly to data pages, index pages, LOB pages, and allocation map pages — they all share the same header structure.
 
 Every page, regardless of type, has the same 96-byte header:
 
@@ -138,7 +142,7 @@ Every page, regardless of type, has the same 96-byte header:
 └─────────────────────────────────────────────────────────┘
 ```
 
-#### KB data page — row structure: header, fixed columns, null bitmap, variable columns
+### KB data page — row structure: header, fixed columns, null bitmap, variable columns
 
 ```
 ┌────────────────────────────────────────────────────────┐
@@ -159,14 +163,16 @@ Every page, regardless of type, has the same 96-byte header:
 └────────────────────────────────────────────────────────┘
 ```
 
-#### KB page practical capacity — rows per page by row size
+### KB page practical capacity — rows per page by row size
 
 - Usable space per page: 8,096 bytes (8,192 − 96 header)
 - Maximum row size: 8,060 bytes (leaves room for slot array)
 - A row with 100-byte fixed columns: ~80 rows per page
 - A row with 4,000-byte columns: 2 rows per page
 
-#### DBCC PAGE — inspect raw page contents
+### DBCC PAGE — inspect raw page contents
+
+`DBCC PAGE` is an undocumented (but widely used) command that dumps the raw contents of a single page. From SQL Server 2019 onward, the supported alternative for reading page header metadata is the `sys.dm_db_page_info` DMF, which does not require trace flags and is safe for production use.
 
 ```sql
 -- Turn on trace flag to see DBCC PAGE output in messages
@@ -191,9 +197,23 @@ DBCC PAGE('analytics_db', 1, 3842, 3) WITH TABLERESULTS;
 
 ## The Transaction Log (.ldf) — How WAL Works
 
-The log file is the safety net. Every modification follows this sequence:
+SQL Server implements the ARIES (Algorithm for Recovery and Isolation Exploiting Semantics) recovery protocol, whose core guarantee is Write-Ahead Logging (WAL): every change must be recorded in the log file *before* the corresponding data page is written to disk. This means the `.ldf` is always ahead of the `.mdf` — after a crash, SQL Server can reconstruct any committed change by replaying the log, and roll back any uncommitted change by reading the before-images stored in it. The log file is opened with `FILE_FLAG_WRITE_THROUGH`, bypassing the OS cache to write directly to stable storage.
+
+Every modification follows this sequence:
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
 flowchart TD
     A["BEGIN TRAN"]:::blue --> B["MODIFY page\nin buffer pool"]:::blue
     B --> C["COMMIT TRAN"]:::blue
@@ -213,7 +233,7 @@ flowchart TD
 >
 > When a COMMIT returns success, the data might NOT be in the `.mdf` yet. It is guaranteed to be in the `.ldf`. If the server crashes before the checkpoint, recovery replays the log (called **redo** or **roll forward**) to apply committed changes to the `.mdf`. Uncommitted changes found in the log are undone (**undo** or **roll back**).
 
-#### Log record anatomy — LSN, transaction ID, operation, before/after images
+### Log record anatomy — LSN, transaction ID, operation, before/after images
 
 - **LSN** — unique identifier for this record
 - **Transaction ID** — which transaction this belongs to
@@ -222,7 +242,7 @@ flowchart TD
 - **Before image** — the original data (for undo)
 - **After image** — the new data (for redo)
 
-#### sys.fn_dblog — view recent transaction log records
+### sys.fn_dblog — view recent transaction log records
 
 ```sql
 -- View recent log records
@@ -244,7 +264,7 @@ ORDER BY [Current LSN] DESC;
 | 00000027:0000014f:0002 | LOP_MODIFY_ROW | LCX_PFS | 0000:0000041a | 1:1 | PFS |
 | 00000027:0000014e:0001 | LOP_BEGIN_XACT | LCX_NULL | 0000:0000041a | NULL | NULL |
 
-#### DBCC LOGINFO — Virtual Log Files (VLF) count and status
+### DBCC LOGINFO — Virtual Log Files (VLF) count and status
 
 The `.ldf` is internally divided into Virtual Log Files. Too many VLFs (hundreds or thousands) slow down recovery and backups.
 
@@ -256,7 +276,7 @@ SELECT COUNT(*) AS vlf_count FROM sys.dm_db_log_info(DB_ID('analytics_db'));
 -- Fix: shrink log, set a proper initial size and growth increment
 ```
 
-#### Log flush triggers — COMMIT, checkpoint, lazy writer
+### Log flush triggers — COMMIT, checkpoint, lazy writer
 
 | Event | What happens |
 |---|---|
@@ -265,7 +285,7 @@ SELECT COUNT(*) AS vlf_count FROM sys.dm_db_log_info(DB_ID('analytics_db'));
 | `CHECKPOINT` | Checkpoint record written to log. Dirty pages flushed to .mdf. |
 | `sp_flush_log` | Force flush without committing (for delayed durability scenarios). |
 
-#### ALTER DATABASE SET DELAYED_DURABILITY — trade durability for write speed
+### ALTER DATABASE SET DELAYED_DURABILITY — trade durability for write speed
 
 ```sql
 -- Trades durability for performance: COMMIT returns before log fsync
@@ -282,7 +302,11 @@ COMMIT WITH (DELAYED_DURABILITY = ON);  -- returns immediately, log flushed late
 
 ## CRUD Operations — The Full Internal Flow
 
+This section traces each DML statement through the full internal path — from the storage engine locating the target page, through the buffer pool modification, to the log write and eventual checkpoint flush. Understanding these flows explains why certain operations are slow, what generates log volume, and where locking contention occurs.
+
 ### INSERT — Adding a New Row
+
+An INSERT must find a page with enough free space, serialize the row bytes into that page in the buffer pool, write a log record, and update every nonclustered index covering any column in the inserted row. For a clustered table, the target page is determined by a B-tree seek on the clustering key; for a heap, SQL Server consults the PFS page to find a page with available space.
 
 ```sql
 INSERT INTO gold.index_performance (index_key, trade_date, close_value)
@@ -292,6 +316,18 @@ VALUES ('market_index', '2026-03-10', 4892.34);
 #### INSERT internal flow — buffer pool, log write, dirty page, checkpoint
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
 flowchart TD
     A["1. BEGIN IMPLICIT TRANSACTION\nLog: LOP_BEGIN_XACT (LSN 100)"]:::blue --> B{"2. FIND TARGET PAGE\nHeap → PFS lookup\nClustered → B-tree seek"}
     B --> C{"Page in buffer pool?"}
@@ -343,6 +379,8 @@ ORDER BY total_pages DESC;
 ---
 
 ### SELECT — Reading Data
+
+A SELECT does not modify data pages, but it still requires I/O — either logical reads from the buffer pool or physical reads from the `.mdf`. The access path the optimizer chooses (clustered index seek, nonclustered index seek + key lookup, or full table/index scan) determines how many pages SQL Server must read. Under the default READ COMMITTED isolation level, SELECT acquires and immediately releases shared (S) locks; under RCSI, it reads from the version store instead, taking no data locks at all.
 
 ```sql
 SELECT close_value
@@ -455,6 +493,8 @@ SET STATISTICS IO OFF;
 
 ### UPDATE — Modifying an Existing Row
 
+An UPDATE combines a read path (find the row) with a write path (modify it). SQL Server first acquires an update (U) lock while seeking the target row — preventing other UPDATE/DELETE operations from targeting the same row simultaneously — then converts it to an exclusive (X) lock for the actual modification. Whether the update happens in-place or triggers a page split depends on whether the row size changes and whether the current page has room for the larger row.
+
 ```sql
 UPDATE gold.index_performance
 SET close_value = 4905.12
@@ -465,6 +505,18 @@ WHERE index_key = 'market_index'
 #### UPDATE internal flow — find row, log before/after, modify in-place or split
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
 flowchart TD
     A["1. BEGIN IMPLICIT TRANSACTION\nLog: LOP_BEGIN_XACT (LSN 200)"]:::blue --> B["2. FIND THE ROW\nB-tree seek or scan\nLocate page + row slot"]:::blue
     B --> C["3. LOG BEFORE IMAGE\nLOP_MODIFY_ROW (LSN 201)\nold value → new value"]:::blue
@@ -545,6 +597,18 @@ WHERE index_key = 'market_index'
 #### DELETE internal flow — ghost record marking and deferred cleanup
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
 flowchart TD
     A["1. BEGIN IMPLICIT TRANSACTION\nLog: LOP_BEGIN_XACT (LSN 300)"]:::blue --> B["2. FIND THE ROW\nB-tree seek or scan"]:::blue
     B --> C["3. GHOST THE ROW\nSet GHOST bit in status byte A\nRow invisible but physically present"]:::yellow
@@ -564,9 +628,18 @@ flowchart TD
 
 #### Ghost cleanup task — why deferred removal instead of immediate delete
 
-- **Performance:** DELETE returns faster because it only flips a bit
-- **Concurrency:** Other transactions that started before the DELETE (snapshot isolation) might still need to see the old row
+- **Performance:** DELETE returns faster because it only flips a bit in the row header
+- **Concurrency:** Other transactions that started before the DELETE (snapshot isolation) might still need to see the old row — ghost rows are preserved until no active snapshot transaction references the version
 - **Rollback efficiency:** If the transaction rolls back, just unset the ghost bit — no data reconstruction needed
+- **Cleanup mechanics:** A single background thread handles ghost cleanup for all databases on the instance. It periodically scans databases flagged as having ghosted rows. Trace flag 661 disables ghost cleanup globally (useful only for diagnostics — never leave it on in production, as ghost rows accumulate and waste space, eventually causing page splits)
+
+> [!warning] Ghost Records vs Version Store Entries
+>
+> Ghost records (tombstones on data pages) and version store entries (old row copies in tempdb) are distinct mechanisms that are often conflated. Ghost cleanup removes the tombstone from the data page. Version store cleanup (`version_store_cleanup`) separately removes the tempdb copy. A long-running snapshot transaction blocks both — ghost records stay on pages *and* version store grows in tempdb.
+
+> [!success] Monitor Both Ghost and Version Store Backlogs
+>
+> Check `ghost_record_count` in `sys.dm_db_index_physical_stats` for page-level bloat and `version_store_reserved_page_count` in `sys.dm_db_file_space_usage` for tempdb pressure. Identify the blocking transaction with `sys.dm_tran_active_snapshot_database_transactions` and either wait for it to complete or terminate the session.
 
 #### sys.dm_db_index_physical_stats ghost_record_count — check for ghost records
 
@@ -602,6 +675,18 @@ WITH (FIELDTERMINATOR = ',', ROWTERMINATOR = '\n', FIRSTROW = 2);
 #### BULK INSERT internal flow — minimal logging, extent allocation, bulk lock
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
 flowchart TD
     A["1. MINIMAL LOGGING\n(SIMPLE or BULK_LOGGED)\n~100 log records per extent\nvs 100,000 row-by-row"]:::green --> B["2. EXTENT ALLOCATION\nPre-allocate 64 KB extents\nSequential fill, all uniform\nNo PFS lookups"]:::blue
     B --> C{"3. PAGE FILLING\nClustered index?"}
@@ -625,17 +710,17 @@ flowchart TD
     style I fill:#1a1a2e,stroke:#bb9af7,color:#c0caf5
 ```
 
-```sql
--- Check if your database can use minimal logging
-SELECT name, recovery_model_desc FROM sys.databases WHERE name = 'analytics_db';
+SIMPLE or BULK_LOGGED recovery models enable minimal logging for bulk operations. Under FULL recovery, all bulk operations are fully logged (same I/O overhead as row-by-row inserts).
 
--- SIMPLE or BULK_LOGGED → minimal logging available
--- FULL → all bulk operations are fully logged (same I/O as row-by-row)
+```sql
+SELECT name, recovery_model_desc FROM sys.databases WHERE name = 'analytics_db';
 ```
 
 ---
 
 ## Index Structures at the Page Level
+
+This section examines how SQL Server physically implements indexes at the page level — the B-tree structure that underpins both clustered and nonclustered rowstore indexes, how leaf pages link to each other via a doubly-linked list for range scans, and what happens when page splits fragment the logical ordering.
 
 ### Clustered Index B-Tree — The Physical Table
 
@@ -643,7 +728,7 @@ SELECT name, recovery_model_desc FROM sys.databases WHERE name = 'analytics_db';
 >
 > In SQL Server, a clustered index IS the table. The leaf level of the B-tree contains the actual data rows, ordered by the clustered index key. There is no separate "heap" -- the clustered index IS the physical storage.
 
-A clustered index defines the physical layout of the table. The leaf level IS the data.
+The B-tree typically has 2–4 levels depending on table size and index key width (see depth table below). Leaf pages are linked by prev/next page pointers forming a doubly-linked list, enabling efficient range scans without revisiting interior nodes.
 
 ```
                          ┌───────────────────┐
@@ -705,7 +790,7 @@ Typical depths:
 >
 > A nonclustered index is a separate B-tree whose leaf level contains the index key columns plus a "bookmark" (pointer) back to the data row. For a clustered table, the bookmark is the clustering key. For a heap, it's a Row ID (file:page:slot).
 
-A nonclustered index is a separate B-tree. Its leaf entries contain the index key columns plus a **bookmark** back to the clustered index (or a RID for heaps).
+The cost of a nonclustered index seek depends on whether the query can be satisfied from the index alone (a *covering* index) or requires a key lookup back to the clustered index for additional columns. Each key lookup adds ~3 more page reads, which is why the optimizer switches to a full scan when more than ~1–3% of the table matches the filter.
 
 ```
 Nonclustered index on (symbol):
@@ -759,7 +844,7 @@ optimizer ignores the index.
 >
 > When a new row must be inserted into a page that is already full, SQL Server splits the page: allocates a new page, moves roughly half the rows to it, and updates the page chain pointers. This is expensive (extra I/O, fragmentation) and is the primary reason GUIDs as clustered keys cause poor performance.
 
-When a new row must be inserted into a full page (to maintain clustered key order), SQL Server performs a page split:
+Page splits only occur for mid-page inserts where the clustered key order forces the new row between existing rows on a full page. Monotonically increasing keys (IDENTITY, sequential datetime) always append to the last page — SQL Server uses a last-page optimization that allocates a new page at the end without splitting. Fill factor has no useful effect on append-only patterns because the reserved space is never used before the next page is allocated.
 
 ```
 BEFORE (page full, inserting 'D' in sorted order):
@@ -789,12 +874,14 @@ AFTER (page split):
 
 #### sys.dm_db_index_physical_stats avg_fragmentation — detect page split damage
 
+`avg_fragmentation_in_percent` above 30% is the traditional threshold for considering a rebuild, but `avg_page_space_used_in_percent` (page density) is often the more impactful metric — low page density means wasted buffer pool memory and more I/O for the same data. High fragmentation with high page density has less performance impact than low page density with low fragmentation.
+
 ```sql
 SELECT
     OBJECT_NAME(object_id) AS table_name,
     index_type_desc,
-    avg_fragmentation_in_percent,  -- >30% = consider rebuild
-    avg_page_space_used_in_percent, -- low values = many splits
+    avg_fragmentation_in_percent,
+    avg_page_space_used_in_percent,
     page_count,
     fragment_count                  -- ideally close to 1 for sequential scans
 FROM sys.dm_db_index_physical_stats(
@@ -818,26 +905,27 @@ WHERE counter_name = 'Page Splits/sec'
 
 #### Page split prevention — sequential keys, fill factor, index design
 
+Three strategies reduce or eliminate page splits:
+
+1. **Sequential clustered key** — an IDENTITY or datetime column always inserts at the end of the index, so no mid-page inserts occur and no splits happen.
+2. **Fill factor** — `FILLFACTOR = 80` tells SQL Server to leave 20% free space on each leaf page during a REBUILD, absorbing future mid-page inserts. Trade-off: more pages to scan for range queries. `ALTER INDEX REORGANIZE` compacts pages *up to* the fill factor but cannot add free space to already-full pages, and does not update statistics. `ALTER INDEX REBUILD` applies the fill factor to every leaf page and does update statistics.
+3. **Avoid random GUIDs** — `NEWID()` as a clustered key produces random insert positions, causing near-constant splits. If GUIDs are required, use `NEWSEQUENTIALID()` instead.
+
 ```sql
--- 1. Use a sequential clustered key (identity, datetime) — no mid-page inserts
 CREATE TABLE gold.scores (
-    id INT IDENTITY(1,1),  -- always inserts at the end, no splits
+    id INT IDENTITY(1,1),
     ...
     CONSTRAINT PK_scores PRIMARY KEY CLUSTERED (id)
 );
 
--- 2. Set a fill factor — leave free space on pages for future inserts
 ALTER INDEX PK_scores ON gold.scores REBUILD WITH (FILLFACTOR = 80);
--- Each page is only 80% filled, leaving 20% for future inserts
--- Trade-off: more pages to scan, but fewer splits
-
--- 3. Avoid GUID (uniqueidentifier) clustered keys — random order = constant splits
--- If you must use GUIDs, use NEWSEQUENTIALID() instead of NEWID()
 ```
 
 ---
 
 ## Checkpoint, Recovery, and Crash Scenarios
+
+Checkpoints and crash recovery are the mechanisms that bridge the gap between the in-memory buffer pool (where changes happen) and the on-disk data files (where changes are durable). SQL Server supports several checkpoint types: **automatic** checkpoints (triggered when the estimated recovery time exceeds the `recovery interval` setting, default ~1 minute), **indirect** checkpoints (database-level `TARGET_RECOVERY_TIME`, default 60 seconds from SQL Server 2016 onward — a background writer continuously flushes dirty pages to stay within the target), **manual** (`CHECKPOINT`), and **internal** (triggered by backup, snapshot creation, or service stop). Indirect checkpoints became the default for all new databases in SQL Server 2016 and received scalability improvements in 2019 to avoid non-yielding scheduler errors under heavy workloads.
 
 ### Normal Operation — The Checkpoint Cycle
 
@@ -846,6 +934,18 @@ ALTER INDEX PK_scores ON gold.scores REBUILD WITH (FILLFACTOR = 80);
 > A checkpoint flushes all dirty pages (modified in memory but not yet on disk) from the buffer pool to the data files. This bounds crash recovery time -- after a crash, only changes since the last checkpoint need to be replayed from the transaction log.
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
 flowchart LR
     subgraph RAM["Buffer Pool (RAM)"]
         A["Clean page 3840"]:::green
@@ -879,7 +979,7 @@ flowchart LR
     style G fill:#1a1a2e,stroke:#9ece6a,color:#c0caf5
 ```
 
-Checkpoint writes dirty pages to `.mdf` and records the checkpoint LSN in the log. On recovery, SQL Server only needs to replay log records AFTER the last checkpoint LSN.
+Checkpoint writes dirty pages to `.mdf` and records the checkpoint LSN in the log. On recovery, SQL Server only needs to replay log records after the last checkpoint LSN. The `recovery interval` server-level setting (default 0, which targets ~1 minute) controls how frequently automatic checkpoints fire — a higher value reduces checkpoint I/O but increases recovery time after a crash.
 
 ```sql
 -- See last checkpoint time
@@ -899,9 +999,25 @@ CHECKPOINT;
 >
 > When SQL Server starts after an unexpected shutdown, it replays the transaction log in three phases: Analysis (determine what was dirty), Redo (replay committed transactions not yet on disk), Undo (roll back uncommitted transactions). This guarantees ACID properties are maintained even after a crash.
 
-When SQL Server starts after an unexpected shutdown:
+When SQL Server starts after an unexpected shutdown, it follows the three-phase ARIES recovery process. The analysis phase is fast (reads only log metadata); redo duration depends on log volume since the last checkpoint; undo duration depends on how much uncommitted work was in flight at crash time.
+
+> [!info] Accelerated Database Recovery (ADR) — SQL Server 2019+
+>
+> ADR redesigns the recovery process using a Persistent Version Store (PVS) in the user database and a secondary log stream (SLOG). The undo phase becomes nearly instantaneous because uncommitted changes are rolled back from the PVS rather than by scanning the transaction log backwards. This makes recovery time bounded by the last checkpoint, not by the longest active transaction. Enable with `ALTER DATABASE analytics_db SET ACCELERATED_DATABASE_RECOVERY = ON`.
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
 flowchart TD
     A["Phase 1: ANALYSIS\nRead log from last checkpoint LSN\nBuild dirty page list (redo)\nBuild active transaction list (undo)\nFast — reads log metadata only"]:::blue --> B["Phase 2: REDO (roll forward)\nReplay committed changes\nnot yet in .mdf\nApply in LSN order\nDuration ~ log records since checkpoint"]:::green
     B --> C["Phase 3: UNDO (roll back)\nFind uncommitted transactions\nRead log records in reverse\nApply before-images\nDuration ~ uncommitted work at crash"]:::yellow
@@ -988,7 +1104,13 @@ UPDATE/DELETE under Snapshot Isolation (RCSI):
 
 > [!tip] One tempdb File Per CPU Core
 >
-> Best practice: create one tempdb data file per logical CPU core (up to 8), all equally sized. This reduces **PFS/GAM/SGAM page contention** — a bottleneck where multiple sessions compete for allocation pages. See [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) for the configuration steps.
+> Best practice: create one tempdb data file per logical CPU core (up to 8), all equally sized with matching autogrowth settings. This reduces **PFS/GAM/SGAM page contention** — a bottleneck where multiple sessions compete for allocation pages. From SQL Server 2016 onward, Setup automatically creates up to `min(logical_processors, 8)` files and enforces `AUTOGROW_ALL_FILES` for the tempdb PRIMARY filegroup. See [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) for the configuration steps.
+
+> [!info] tempdb Improvements Across SQL Server Versions
+>
+> - **2016+:** Trace flags T1117 (simultaneous autogrowth) and T1118 (uniform extent allocation) are obsolete — both behaviors are now default and the flags have no effect.
+> - **2019+:** Memory-optimized tempdb metadata (`ALTER SERVER CONFIGURATION SET MEMORY_OPTIMIZED TEMPDB_METADATA = ON`, requires restart) eliminates latch contention on system tables (`sysschobjs`, `sysrowsets`) by moving them to latch-free, memory-optimized structures. Verify with `SELECT SERVERPROPERTY('IsTempdbMetadataMemoryOptimized')`. Keep transactions on temp tables short — long-running DDL transactions prevent memory reclamation.
+> - **2022:** System Page Latch Concurrency Enhancements allow concurrent updates to GAM and SGAM pages, further reducing allocation contention under heavy workloads.
 
 #### sys.dm_db_file_space_usage — monitor TempDB space by category
 
@@ -1026,6 +1148,8 @@ ORDER BY qs.total_spills DESC;
 ---
 
 ## System Databases — The Four Pillars
+
+Every SQL Server instance ships with four system databases that control instance-level configuration, job scheduling, database templating, and temporary storage. Losing `master` or `msdb` can be catastrophic — understanding what each contains determines your backup strategy for the instance itself, separate from your user database backups.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -1068,7 +1192,7 @@ ORDER BY database_id, type;
 
 ## The Buffer Pool — SQL Server's Memory Manager
 
-The buffer pool is where pages live between disk and CPU. Nearly all CRUD operations happen against the buffer pool, not disk.
+The buffer pool is SQL Server's in-memory page cache — virtually all CRUD operations happen against pages resident in the buffer pool, not directly against disk. SQL Server evicts cold pages using an LRU-K algorithm (a variant of Least Recently Used that considers the K-th most recent access rather than just the last one, preventing a single large scan from flushing frequently-accessed pages). Three background processes write dirty pages back to disk: the **checkpoint** (periodic bulk flush), the **lazy writer** (evicts cold dirty pages under memory pressure, tracked via the `Lazy writes/sec` counter), and the **eager writer** (for minimally logged bulk operations). All three use asynchronous I/O.
 
 ```
                          SQL SERVER MEMORY
@@ -1129,11 +1253,11 @@ WHERE a.counter_name = 'Buffer cache hit ratio'
   AND a.object_name LIKE '%Buffer Manager%';
 
 -- Page life expectancy (seconds a page stays in buffer pool — higher is better)
+-- On NUMA systems, check per-node values in the 'Buffer Node' perf object
 SELECT cntr_value AS page_life_expectancy_seconds
 FROM sys.dm_os_performance_counters
 WHERE counter_name = 'Page life expectancy'
   AND object_name LIKE '%Buffer Manager%';
--- Target: >300 seconds. Below 300 = severe memory pressure.
 
 -- Top tables consuming buffer pool memory
 SELECT
@@ -1148,6 +1272,14 @@ WHERE bd.database_id = DB_ID('analytics_db')
 GROUP BY p.object_id
 ORDER BY pages_in_memory DESC;
 ```
+
+> [!warning] PLE 300 Is Not an Official Threshold
+>
+> The widely cited "PLE below 300 seconds = memory pressure" originated from a guideline for servers with 4 GB RAM. Microsoft documentation does not define a fixed PLE floor. The correct approach is to baseline PLE for your specific workload and watch for sudden drops that indicate buffer pool churn. On NUMA systems, check per-node PLE values in the `Buffer Node` performance object — the aggregate can mask imbalanced nodes.
+
+> [!success] Meaningful PLE Monitoring
+>
+> A community heuristic that scales better: target ~300 seconds per 4 GB of buffer pool memory (e.g., ~7,500 seconds for a 100 GB buffer pool). Use trending over absolute thresholds — a sustained PLE decline of 50%+ from baseline warrants investigation, even if the absolute value is above 300.
 
 ---
 
@@ -1191,11 +1323,15 @@ Every CRUD operation acquires locks. The lock manager tracks all locks in memory
 
 > [!warning] Lock Escalation
 >
-> When a single transaction holds >5,000 row/page locks on one table, SQL Server escalates to a table lock to save memory. This can cause unexpected blocking of all other sessions. Watch for this during bulk updates.
+> When a single T-SQL statement acquires ≥5,000 locks on a single table reference, SQL Server attempts escalation to a table lock. The engine checks at every 1,250 newly acquired locks and retries at each subsequent 1,250 if blocked. Escalation also triggers when lock memory exceeds 24% of the buffer pool. Escalation is always to TABLE level — never to page level. If escalation is disabled and lock memory hits the 60% cap, new lock requests fail with error 1204. The 5,000 threshold is per single table reference in a single statement — not per transaction total.
 
 > [!success] Safe Pattern: Batch Large Updates to Stay Below Escalation Threshold
 >
-> Split large UPDATE or DELETE statements into batches of 2,000–4,000 rows using a `WHILE` loop with `TOP (4000)`. Each batch commits before the lock count reaches the escalation threshold of 5,000. Alternatively, disable escalation on specific tables with `ALTER TABLE gold.index_performance SET (LOCK_ESCALATION = DISABLE)` — but only on tables where row-level locking is safe and memory allows it.
+> Split large UPDATE or DELETE statements into batches of 2,000–4,000 rows using a `WHILE` loop with `TOP (4000)`. Each batch commits before the lock count reaches the escalation threshold. Alternatively, disable escalation on specific tables with `ALTER TABLE ... SET (LOCK_ESCALATION = DISABLE)` — but only where memory allows it. For partitioned tables, use `LOCK_ESCALATION = AUTO` to escalate to partition (HoBT) level instead of table level, reducing contention across partitions.
+
+> [!info] Optimized Locking — SQL Server 2022
+>
+> SQL Server 2022 introduces *optimized locking*: row and page locks are released immediately after a row modification rather than held for the transaction duration. Only a lightweight TID (Transaction ID) lock is held until COMMIT, dramatically reducing lock memory consumption and escalation frequency. This feature is automatic when the database compatibility level is 160.
 
 #### Lock operations per CRUD — SELECT(S), INSERT(X), UPDATE(U→X), DELETE(X)
 
@@ -1223,13 +1359,12 @@ WHERE resource_database_id = DB_ID('analytics_db')
   AND resource_type IN ('KEY', 'PAGE', 'OBJECT')
 ORDER BY request_session_id;
 
--- Prevent escalation on a specific table (use with caution)
 ALTER TABLE gold.index_performance SET (LOCK_ESCALATION = DISABLE);
 ```
 
 ---
 
-### Full Subsystem Interaction — Write Path (Pipeline INSERT)
+## Full Subsystem Interaction — Write Path (Pipeline INSERT)
 
 > [!abstract] Full Write Path
 >
@@ -1340,7 +1475,7 @@ Python pipeline: pymssql executemany() → 50 rows for market_index, 2026-03-10
 
 ---
 
-### Related
+## Related
 
 - [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) — how clustered, nonclustered, covering, filtered, and columnstore indexes use these structures
 - [index-maintenance](https://alp78.github.io/elysium/04-SQL-Server/Performance/index-maintenance) — fragmentation, REORGANIZE vs REBUILD, fill factor

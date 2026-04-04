@@ -242,31 +242,22 @@ parquet_size = parquet_file.stat().st_size
 f"{csv_size} bytes"  # CSV size
 f"{parquet_size} bytes"  # Parquet size
 f"Ratio:        {csv_size / parquet_size:.1f}x smaller with parquet"
-
-print("""
-Feature              CSV                         Parquet
-──────────────────────────────────────────────────────────────
-Format               Text (row-based)            Binary (columnar)
-Schema               No (header row only)        Embedded (typed, nullable)
-Compression          None (manual gzip)          Built-in (snappy/gzip/zstd)
-Column pruning       No (read all columns)       Yes (read only what you need)
-Partitioning         Manual (directory naming)    Native (Hive-style)
-Use case             Simple exchange, legacy      Data lakes, analytics, BigQuery
-""")
 ```
 
-    214 bytes
-    1594 bytes
-    0.1x smaller with parquet
-    
-    Feature              CSV                         Parquet
-    ──────────────────────────────────────────────────────────────
-    Format               Text (row-based)            Binary (columnar)
-    Schema               No (header row only)        Embedded (typed, nullable)
-    Compression          None (manual gzip)          Built-in (snappy/gzip/zstd)
-    Column pruning       No (read all columns)       Yes (read only what you need)
-    Partitioning         Manual (directory naming)    Native (Hive-style)
-    Use case             Simple exchange, legacy      Data lakes, analytics, BigQuery
+```text
+214 bytes
+1594 bytes
+0.1x smaller with parquet
+```
+
+| Feature | CSV | Parquet |
+|---|---|---|
+| Format | Text (row-based) | Binary (columnar) |
+| Schema | No (header row only) | Embedded (typed, nullable) |
+| Compression | None (manual gzip) | Built-in (snappy/gzip/zstd) |
+| Column pruning | No (read all columns) | Yes (read only what you need) |
+| Partitioning | Manual (directory naming) | Native (Hive-style) |
+| Use case | Simple exchange, legacy | Data lakes, analytics, BigQuery |
 
 ## Enterprise Message Serialization
 

@@ -1,7 +1,7 @@
 ---
-tags: [sql, bigquery, gcp]
+tags: [bigquery, gcp, fundamentals]
 aliases: [BigQuery fundamentals, BigQuery SQL, Standard SQL, BQ queries, BigQuery basics]
-description: "BigQuery Standard SQL fundamentals with executable examples and cell outputs — covers querying, data types, arrays, structs, UNNEST, and BigQuery-specific functions."
+description: "BigQuery GoogleSQL fundamentals with executable examples — covers schema exploration, SELECT/filtering, aggregation, JOINs across medallion layers, window functions, CTEs, data quality checks, and bronze-silver-gold transforms."
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -34,11 +34,10 @@ Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 
 ### Schema Exploration — List All Tables
 
-First thing in any database — see what's there. The medallion layers (bronze/silver/gold) are schemas.
+First thing in any database — see what's there. The Python client library lists all tables across the three medallion-layer datasets (bronze, silver, gold), which BigQuery organizes as separate schemas (called "datasets"). The result shows table names, row counts, and storage sizes.
 
 
 ```python
-# List all tables across bronze / silver / gold datasets
 from google.cloud import bigquery
 bq = bigquery.Client(project='bq-wh-nb')
 
@@ -111,7 +110,6 @@ Check data types before writing queries — `float` vs `int` vs `varchar` change
 
 
 ```sql
--- Inspect columns of a specific table
 SELECT
     column_name,
     data_type,
@@ -193,8 +191,6 @@ The fundamental query: pick columns, filter rows, sort results. `LIMIT N` limits
 > BigQuery requires backticks around `project.dataset.table` when the project ID contains hyphens: `` `my-project.dataset.table` ``. Without backticks, the parser interprets the hyphen as minus. Column names that are reserved words (`close`, `open`) also need backticks, whereas SQL Server uses `[brackets]`.
 
 ```sql
--- Latest 10 trading days for ASML
--- Basic SELECT with WHERE, ORDER BY, TOP
 SELECT
     symbol,
     date,
@@ -273,14 +269,12 @@ LIMIT 10
 
 
 
-### SELECT & Filtering — Multi-Condition WHERE
+### SELECT, Filtering & Sorting — Multi-Condition WHERE
 
 Combine conditions with `AND` / `OR`. Use `ABS()` for absolute values. This finds high-volume days with large price swings — potential breakout or crash days.
 
 
 ```sql
--- Filter with multiple conditions
--- Find high-volume days where price moved more than 3%
 SELECT
     symbol,
     date,
@@ -288,8 +282,8 @@ SELECT
     volume,
     ROUND((`close` - `open`) / `open` * 100, 2) AS daily_move_pct
 FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
-WHERE volume > 5000000                       -- high volume
-  AND ABS((`close` - `open`) / `open`) > 0.03  -- >3% move
+WHERE volume > 5000000
+  AND ABS((`close` - `open`) / `open`) > 0.03
   AND date >= '2025-01-01'
 ORDER BY ABS((`close` - `open`) / `open`) DESC
 LIMIT 15
@@ -366,8 +360,6 @@ LIMIT 15
 
 
 ```sql
--- Average daily volume by stock (top 10 most liquid)
--- GROUP BY + aggregate functions: AVG, COUNT, MIN, MAX
 SELECT
     symbol,
     COUNT(*) AS trading_days,
@@ -462,8 +454,6 @@ Group by `EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date)` to build time-serie
 > BigQuery uses `IFNULL(expr, default)` where SQL Server uses `ISNULL(expr, default)`. `COALESCE()` works identically in both. BigQuery also has `SAFE_DIVIDE(a, b)` which returns `NULL` instead of error on division by zero — SQL Server has no equivalent.
 
 ```sql
--- Monthly performance summary for ASML
--- GROUP BY with date functions: YEAR, MONTH
 SELECT
     EXTRACT(YEAR FROM date) AS yr,
     EXTRACT(MONTH FROM date) AS mo,
@@ -545,6 +535,10 @@ LIMIT 15
 
 ## JOINs Across Medallion Layers
 
+> [!info] Cross-engine comparison
+>
+> BigQuery supports all standard JOIN types (INNER, LEFT, RIGHT, FULL, CROSS). SQL Server adds `CROSS APPLY` and `OUTER APPLY` for correlated lateral joins. Firestore has no server-side joins — denormalize your data model or perform client-side joins.
+
 > [!warning] BigQuery JOINs Cause Data Shuffles
 >
 > BigQuery JOINs can produce massive data shuffles across slots.
@@ -565,8 +559,6 @@ The subquery with `ROW_NUMBER()` picks only the most recent price per symbol.
 
 
 ```sql
--- JOIN silver OHLCV with silver dimension (company info)
--- Get latest price + sector + country for each stock
 SELECT
     d.symbol,
     d.short_name,
@@ -577,7 +569,6 @@ SELECT
     p.volume
 FROM `bq-wh-nb.stoxx_silver.index_dim` d
 JOIN (
-    -- Subquery: get the latest price per symbol
     SELECT symbol, `close`, date, volume,
            ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY date DESC) AS rn
     FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
@@ -657,7 +648,6 @@ The gold layer has pre-computed composite scores. We join with the dimension tab
 
 
 ```sql
--- JOIN gold scores with dimension for a complete stock dashboard view
 SELECT
     s.composite_rank AS `rank`,
     s.symbol,
@@ -761,6 +751,12 @@ LIMIT 15
 
 ## Window Functions
 
+Window functions compute a value for each row based on a "window" of related rows — without collapsing the result set like `GROUP BY`. The `OVER()` clause defines the window: `PARTITION BY` groups rows (like GROUP BY but without collapsing), `ORDER BY` sorts within each partition, and the frame clause (`ROWS BETWEEN`) controls which rows the function sees. BigQuery distributes window function computation across slots — each slot handles a subset of partitions in parallel.
+
+> [!info] Cross-engine comparison
+>
+> Window functions are available in BigQuery (GoogleSQL) and SQL Server (T-SQL) with near-identical syntax. Key difference: BigQuery supports `QUALIFY` for filtering on window results without a subquery (not ANSI SQL, not available in SQL Server). Firestore has no window functions — ranking and running totals must be computed client-side.
+
 ### Window Functions — Moving Averages (SMA)
 
 A **moving average** smooths price data over N days. Used for trend detection:
@@ -772,9 +768,6 @@ A **moving average** smooths price data over N days. Used for trend detection:
 
 
 ```sql
--- Moving averages: SMA 30 and SMA 90
--- OVER (PARTITION BY symbol ORDER BY date ROWS BETWEEN 29 PRECEDING AND CURRENT ROW)
---   ↑ group by stock    ↑ sort by date   ↑ sliding window of 30 rows
 SELECT
     symbol,
     date,
@@ -852,14 +845,11 @@ LIMIT 15
 
 Use cases:
 - **Daily returns**: `(close - LAG(close)) / LAG(close)`
-- **Gap detection**: `DATEDIFF(DAY, LAG(date), date)` — if >1, there was a holiday/weekend
+- **Gap detection**: `DATE_DIFF(date, LAG(date), DAY)` — a `days_gap` value >1 indicates a weekend (normal: 3 for Fri→Mon) or holiday (>3 is unusual and worth investigating)
 - **Trend direction**: compare today vs yesterday
 
 
 ```sql
--- LAG: get previous row's value within each stock's time series
--- LAG(`close`) OVER (PARTITION BY symbol ORDER BY date)
---   ↑ previous close    ↑ within each stock  ↑ in date order
 SELECT
     symbol,
     date,
@@ -870,7 +860,7 @@ SELECT
         / LAG(`close`) OVER (PARTITION BY symbol ORDER BY date) * 100,
     2) AS daily_return_pct,
     DATE_DIFF(date
-    , LAG(date) OVER (PARTITION BY symbol ORDER BY date), DAY) AS days_gap  -- >1 means weekend or holiday
+    , LAG(date) OVER (PARTITION BY symbol ORDER BY date), DAY) AS days_gap
 FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
 WHERE symbol = 'ASML.AS'
 ORDER BY date DESC
@@ -950,7 +940,6 @@ This is the core of the gold scoring engine — rank stocks by composite score.
 > CTE `bounds` computes the year's first and last trading dates in one scan. CTE `ytd` self-joins to get the opening and closing prices for each symbol. The final SELECT ranks by YTD return.
 
 ```sql
--- CTE 1: year boundary dates (single row)
 WITH bounds AS (
     SELECT
         MIN(CASE WHEN EXTRACT(YEAR FROM date)
@@ -958,7 +947,6 @@ WITH bounds AS (
         MAX(date) AS last_date
     FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
 ),
--- CTE 2: YTD return per symbol via self-join
 ytd AS (
     SELECT f.symbol,
         ROUND((l.`close` - f.`close`) / NULLIF(f.`close`, 0), 4) AS ytd_return
@@ -966,10 +954,6 @@ ytd AS (
     JOIN `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv` l ON f.symbol = l.symbol
     JOIN bounds b ON f.date = b.first_date AND l.date = b.last_date
 )
-```
-
-```sql
--- Final: rank by YTD return with window functions
 SELECT symbol, ytd_return,
     RANK() OVER (ORDER BY ytd_return DESC) AS rank_best,
     RANK() OVER (ORDER BY ytd_return ASC) AS rank_worst,
@@ -1032,6 +1016,12 @@ ORDER BY rank_best LIMIT 10
 
 ## CTEs & Subqueries
 
+A CTE (`WITH name AS (SELECT ...)`) creates a named temporary result set scoped to the enclosing query. CTEs improve readability by breaking complex queries into named steps. BigQuery also supports recursive CTEs (covered in the [advanced patterns](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-advanced) file).
+
+> [!info] Cross-engine comparison
+>
+> BigQuery supports recursive CTEs (500 iteration default). SQL Server also supports recursive CTEs (100 iteration default). Firestore has no query-level CTE or subquery capability.
+
 ### CTEs & Subqueries — Sector Heatmap
 
 A **CTE** (`WITH name AS (SELECT ...)`) is a named temporary result set. Chaining CTEs makes complex queries readable — each step has a name.
@@ -1040,8 +1030,6 @@ This builds a sector heatmap: average score, best/worst rank per sector.
 
 
 ```sql
--- CTE (Common Table Expression) — readable multi-step queries
--- Build a sector heatmap: avg composite score by sector
 WITH latest_scores AS (
     SELECT s.symbol, s.composite_score, s.relative_value_score,
            s.momentum_score, s.sentiment_score, s.composite_rank,
@@ -1137,8 +1125,6 @@ Multiple CTEs chained together. Compares YTD performance, volatility, and valuat
 
 
 ```sql
--- Chained CTEs: cross-index performance comparison
--- Compare latest performance metrics across all 4 indices
 WITH latest_perf AS (
     SELECT *,
            ROW_NUMBER() OVER (PARTITION BY _index ORDER BY perf_date DESC) AS rn
@@ -1227,7 +1213,9 @@ ORDER BY ytd_pct DESC
 
 ## Data Quality Checks
 
-### Data Quality Checks
+Quality gates validate data integrity at each medallion layer boundary. Run these checks after every load — if any check returns a non-zero count, investigate before promoting data to the next layer. The `UNION ALL` pattern below stacks multiple independent checks into a single result set, making it easy to scan for issues in one query.
+
+### Data Quality Checks — UNION ALL Quality Gate
 
 Every pipeline needs quality gates. `UNION ALL` stacks multiple checks into one result. Run this after every load — if any check returns non-zero, investigate before promoting to gold.
 
@@ -1236,8 +1224,9 @@ Every pipeline needs quality gates. `UNION ALL` stacks multiple checks into one 
 >
 > Stack multiple checks into one result set. Each check returns a named row with an issue count. Any non-zero value needs investigation before promoting to gold.
 
+The first cell checks structural integrity (null prices, negative values, high < low). The second checks operational health (gap-filled row count, data freshness).
+
 ```sql
--- Structural checks: NULLs and invalid values
 SELECT 'null_prices' AS check_name, COUNT(*) AS issues
 FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
 WHERE `close` IS NULL OR `open` IS NULL
@@ -1252,7 +1241,6 @@ WHERE high < low
 ```
 
 ```sql
--- Operational checks: gap-fill count and freshness
 SELECT 'gap_filled_rows' AS check_name, COUNT(*) AS issues
 FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
 WHERE is_filled = TRUE
@@ -1298,6 +1286,26 @@ FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
 
 ## Bronze → Silver → Gold Transforms
 
+The medallion architecture organizes data into three progressive layers: **bronze** (raw ingestion, minimal transformation), **silver** (cleaned, enriched, business-typed), and **gold** (aggregated, scored, dashboard-ready). Each transform query reads from the layer below and writes to the layer above.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    B["Bronze<br>Raw OHLCV + dimensions<br>_ingested_at audit column"] --> S["Silver<br>Daily returns, gap-filling<br>is_filled flag, type casting"]
+    S --> G["Gold<br>Z-score normalization<br>Composite rank, index performance"]
+```
+
 > [!tip] Related pattern
 >
 > The transforms below query data that was first ingested through the [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) pipeline. Understanding how data arrives in bronze helps explain the schemas these queries target.
@@ -1308,8 +1316,6 @@ The silver transform adds computed columns to raw data. Here, `LAG()` computes d
 
 
 ```sql
--- Example: how the bronze → silver transform works
--- Silver adds daily returns and detects gap-filled rows
 SELECT
     symbol,
     date,
@@ -1383,8 +1389,6 @@ The gold transform normalizes scores across the index using z-scores: `(value - 
 
 
 ```sql
--- Example: how the gold scoring works
--- Z-score normalization within index → composite rank
 WITH base AS (
     SELECT symbol, composite_score,
            AVG(composite_score) OVER () AS mean_score,

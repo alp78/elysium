@@ -1,6 +1,6 @@
 ---
 tags: [api, csharp]
-aliases: [REST API, HTTP client, web server, FastAPI, ASP.NET, Flask, minimal API, requests]
+aliases: [REST API, HTTP client, web server, ASP.NET, minimal API]
 description: "C# web and APIs reference with executable examples and cell outputs — covers HttpClient, ASP.NET Core minimal APIs, controllers, middleware, and authentication. See [15_py_webapis](https://alp78.github.io/elysium/02-Programming-Languages/Python/15_py_webapis) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -17,26 +17,29 @@ status: complete
 
 ## HTTP Clients & REST API Calls
 
+`HttpClient` is the standard .NET HTTP client for all HTTP operations. Import these namespaces to use JSON serialization and HTTP primitives in .NET Interactive notebooks.
+
 ```csharp
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 ```
 
+### Making HTTP requests
+
+The three cells below cover the most common HTTP operations: a simple GET to read data, typed JSON deserialization, and a POST to send a JSON body. All use `HttpClient` — in production, a single long-lived instance (or `IHttpClientFactory`) should be shared across requests.
+
 #### HttpClient setup and GET request
 
-```csharp
-// HttpClient — the standard .NET HTTP client for all HTTP operations
+`HttpClient.GetAsync` sends a GET request and returns an `HttpResponseMessage`. Read the status code from `resp.StatusCode` and the body with `resp.Content.ReadAsStringAsync()`. Chain `JsonDocument.Parse` to navigate the JSON without defining a type. For financial pipelines this covers one-off calls — fetching quotes, EOD prices, or index composition data.
 
+```csharp
 var client = new HttpClient();
 client.DefaultRequestHeaders.Add("Accept", "application/json");
 
-// GET request — fetch data from an API endpoint
-// Financial example: fetch quotes, index data, EOD prices.
 var resp = await client.GetAsync("https://httpbin.org/get?ticker=AAPL&date=2024-03-15");
 $"{(int)resp.StatusCode} {resp.StatusCode}"  // status
 
-// Parse JSON response
 var json = await resp.Content.ReadAsStringAsync();
 var doc = JsonDocument.Parse(json);
 var args = doc.RootElement.GetProperty("args");
@@ -48,8 +51,9 @@ $"ticker={args.GetProperty("ticker").GetString()}, date={args.GetProperty("date"
 
 #### GET with typed JSON deserialization
 
+`JsonSerializer.Deserialize<T>` deserializes the response body into a typed C# object. Use `JsonElement` for dynamic JSON navigation without defining a class, or provide a typed `record` or `class` for compile-time safety. Python equivalent: `resp.json()` returns a dict directly; C# requires an explicit deserialization call.
+
 ```csharp
-// ReadFromJsonAsync deserializes the response body directly into a typed object
 var dataResp = await client.GetAsync("https://httpbin.org/get?source=dotnet");
 var data = JsonSerializer.Deserialize<JsonElement>(await dataResp.Content.ReadAsStringAsync());
 data.GetProperty("origin").GetString()  // origin
@@ -59,9 +63,9 @@ data.GetProperty("origin").GetString()  // origin
 
 #### POST request — send JSON data
 
+`HttpClient.PostAsync` with `StringContent` sends a JSON body. Serialize the payload with `JsonSerializer.Serialize`, wrap it in `StringContent` with UTF-8 encoding and `application/json` content type. Python equivalent: `requests.post(url, json=data)` handles serialization and the `Content-Type` header automatically; C# requires both to be set explicitly.
+
 ```csharp
-// POST request — send a JSON body to an API endpoint
-// Financial example: submit trade order, upload events.
 var tradeOrder = new
 {
     ticker = "AAPL",
@@ -71,8 +75,6 @@ var tradeOrder = new
     order_type = "LIMIT"
 };
 
-// PostAsync with StringContent: serialize + set Content-Type manually.
-// Python equivalent: requests.post(url, json=data)
 resp = await client.PostAsync("https://httpbin.org/post",
     new StringContent(JsonSerializer.Serialize(tradeOrder), Encoding.UTF8, "application/json"));
 var postData = JsonSerializer.Deserialize<JsonElement>(await resp.Content.ReadAsStringAsync());
@@ -89,10 +91,15 @@ postData.GetProperty("json")  // body echoed
         "ticker": "AAPL"
       }
 
+### Headers and error handling
+
+Custom HTTP headers pass authentication tokens and client identifiers to financial data providers. Status code checking ensures pipelines handle transient API errors gracefully rather than silently processing failed responses.
+
 #### HttpClient REST API — headers and authentication
 
+Add headers to `DefaultRequestHeaders` once on the client instance — they are sent with every subsequent request. `Authorization: Bearer <token>` is the standard pattern for API key authentication. For per-request headers, create a new `HttpRequestMessage` with a `Headers` collection rather than using the shared client.
+
 ```csharp
-// Custom headers — API keys, bearer tokens for financial data providers
 var authClient = new HttpClient();
 authClient.DefaultRequestHeaders.Add("Authorization", "Bearer sk_demo_fake_key_12345");
 authClient.DefaultRequestHeaders.Add("X-Client-Id", "trading-pipeline-v2");
@@ -108,16 +115,15 @@ headers.GetProperty("X-Client-Id").GetString()  // X-Client-Id
 
 #### HttpClient REST API — status code handling
 
+`resp.IsSuccessStatusCode` returns `true` for 2xx responses. `EnsureSuccessStatusCode()` throws `HttpRequestException` for 4xx/5xx — equivalent to Python's `resp.raise_for_status()`. Use it to fail fast in pipelines where a non-200 response should halt processing rather than continue with empty or partial data.
+
 ```csharp
-// Status code handling — check success/failure and EnsureSuccessStatusCode
 foreach (var statusCode in new[] { 200, 201, 400, 401, 404, 500 })
 {
     resp = await client.GetAsync($"https://httpbin.org/status/{statusCode}");
     Console.WriteLine($"  {statusCode}: {(int)resp.StatusCode} {(resp.IsSuccessStatusCode ? "OK" : "FAILED")}");
 }
 
-// EnsureSuccessStatusCode() — throws HttpRequestException for 4xx/5xx
-// Python equivalent: resp.raise_for_status()
 try
 {
     resp = await client.GetAsync("https://httpbin.org/status/500");
@@ -139,6 +145,10 @@ catch (HttpRequestException ex)
       Response status code does not indicate success: 500 (INTERNAL SERVER ERROR).
 
 ## REST API Patterns for Data Engineering
+
+### Pagination, retry, and bulk batching
+
+These three cells each demonstrate one core integration pattern. Combine them — a paginated fetch that retries on each page failure and batches results for downstream POSTs — to cover 90% of data pipeline API integrations.
 
 #### REST API Pagination — fetch data in pages
 
@@ -187,10 +197,9 @@ allPages.Count  // total pages
 
 #### REST API Retry with exponential backoff
 
-```csharp
-// Retry with exponential backoff — recover from transient API failures
-// Python equivalent: for attempt in range(max_retries): try/except with time.sleep()
+`FetchWithRetry` wraps a GET with up to `maxRetries` attempts. On a 429 (rate limited), it reads the `Retry-After` header and waits exactly that long before retrying. On other errors, exponential backoff applies: 0.5 s, 1 s, 2 s. After all retries are exhausted it throws so the caller can decide whether to skip or abort the pipeline. Python equivalent: a `for attempt in range(max_retries): try/except` loop with `time.sleep(base * 2 ** attempt)`.
 
+```csharp
 async Task<HttpResponseMessage> FetchWithRetry(HttpClient c, string url, int maxRetries = 3)
 {
     double baseDelay = 0.5;
@@ -227,9 +236,9 @@ var result = await FetchWithRetry(client, "https://httpbin.org/get?ticker=AAPL")
 
 #### REST API Bulk POST — batch multiple records
 
+Serialize multiple records as a JSON array in a single POST body. A batch of 100 trade confirmations in one request reduces round trips from 100 to 1, staying well under most API rate limits. Match the `trades` key to whatever the receiving API expects in its request schema.
+
 ```csharp
-// Bulk POST — send multiple records in one request
-// Financial example: batch-submit trade confirmations.
 var batch = new[]
 {
     new { trade_id = "TRD_001", ticker = "AAPL", qty = 100, price = 178.50 },
@@ -251,23 +260,48 @@ postData.GetProperty("json").GetProperty("trades").GetArrayLength()  // server r
 
 ## Building a REST API (ASP.NET Minimal APIs)
 
+Define `record` DTOs for request and response shapes, write handler functions that return typed results, and wire them to routes with `app.MapGet`/`MapPost`/`MapDelete`. Each handler is a pure C# function testable without a running web server. `Results.Ok`/`NotFound`/`Created` map directly to HTTP status codes.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    C["HTTP Client\nrequests / httpx"] -->|"HTTP Request"| MW["ASP.NET Core\nMiddleware"]
+    MW --> R["Route matching\napp.Map*()"]
+    R --> V["Data Annotations\nIValidatableObject"]
+    V --> H["Handler function\n(pure C# function)"]
+    H -->|"Results.Ok()\nResults.NotFound()\nResults.Created()"| S["JSON Response\n200 / 201 / 404 / 409"]
+    V -->|"invalid input"| E["400 Bad Request"]
+```
+
+### Data models and in-memory store
+
+Define `record` DTOs for all request and response shapes, then set up the shared state that handler functions read and write. In production, replace the in-memory `Dictionary` with EF Core, Dapper, or direct SQL.
+
 #### ASP.NET REST API — DTO record declarations
 
-Define record DTOs (like Pydantic models), write handler functions that return typed results, and wire them to routes with `app.MapGet`/`MapPost`/`MapDelete`. Each handler is a pure function testable without a running web server. `Results.Ok`/`NotFound`/`Created` map directly to HTTP status codes. For complex APIs with middleware, use full ASP.NET MVC controllers.
+C# `record` types are the equivalent of Pydantic `BaseModel` — immutable value objects with automatic value equality and JSON serialization. Define one `record` per request or response shape. For complex APIs with middleware or controllers, use full ASP.NET MVC instead of Minimal APIs.
 
 > [!warning] Anti-patterns
 >
-> - **Business logic in route handlers** — extract to testable functions
+> - **Business logic in route handlers** — extract to testable pure functions
 > - **`Dictionary<string, object>` for API models** — use typed records
 
 > [!success] Clean minimal API design
 >
-> Keep route handlers as thin delegates that call a pure handler function. Define all request and response shapes as `record` DTOs — this gives compile-time safety, automatic JSON binding, and makes handlers unit-testable without a running web server.
+> Keep route handlers as thin delegates that call a pure handler function. Use `record` DTOs for all shapes — compile-time type safety, automatic JSON binding, and handlers testable without a running web server.
 
 ```csharp
-// DTOs — C# records = Python Pydantic models
-// Immutable, value equality, auto-generated ToString.
-
 record Trade(string TradeId, string Ticker, string Side, int Quantity, double Price);
 record TradeResponse(string TradeId, string Status, string Message);
 record PortfolioPosition(string Ticker, int Shares, double AvgCost, double MarketValue);
@@ -275,10 +309,9 @@ record PortfolioPosition(string Ticker, int Shares, double AvgCost, double Marke
 
 #### ASP.NET REST API — in-memory store and health check
 
-```csharp
-// In-memory store — simulates a database for the API
-// In production: replace with EF Core, Dapper, or direct SQL.
+The in-memory `Dictionary` simulates a database for notebook execution. In production, replace with EF Core (`DbContext`), Dapper (`IDbConnection`), or direct SQL. The health endpoint is the first route to add — Kubernetes uses it as a liveness probe to determine whether to route traffic to the pod.
 
+```csharp
 var tradesDb = new Dictionary<string, Trade>();
 var positions = new Dictionary<string, PortfolioPosition>
 {
@@ -287,23 +320,21 @@ var positions = new Dictionary<string, PortfolioPosition>
     ["GOOG"] = new("GOOG", 100, 140.25, 17_230.00),
 };
 
-// Health check — K8s liveness probe
-// ASP.NET: app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
-// Python:  @app.get("/health")
 $"{{ status: healthy }}"
 ```
 
       { status: healthy }
 
+### Route handlers
+
+Each handler is a pure C# function that takes typed parameters and returns a `(status, body)` tuple. This keeps every endpoint unit-testable without spinning up a web server. In a real ASP.NET project, the handler body is passed as a lambda to `app.MapGet` / `app.MapPost` / `app.MapDelete`.
+
 #### ASP.NET REST API — GET /positions with optional filter
+
+The handler accepts an optional `ticker` query-string parameter (`/positions?ticker=AAPL`). `#nullable enable` is required to declare `string?` in .NET Interactive cells. The function returns a status-and-body tuple so the logic is verifiable without a live HTTP call.
 
 ```csharp
 #nullable enable
-// List positions — with optional ticker filter
-// ASP.NET: app.MapGet("/positions", (string? ticker) => { ... });
-// Python:  @app.get("/positions")
-
-// Handler function — testable without a web server
 (string status, object body) GetPositions(string? ticker = null)
 {
     if (ticker is not null)
@@ -334,11 +365,9 @@ $"{s3}: {b3}"
 
 #### ASP.NET REST API — GET /positions/{ticker} single lookup
 
-```csharp
-// Get single position by ticker — path parameter
-// ASP.NET: app.MapGet("/positions/{ticker}", (string ticker) => { ... });
-// Python:  @app.get("/positions/{ticker}")
+Path parameters are declared in the route template as `{ticker}` and passed as method arguments. `TryGetValue` avoids a `KeyNotFoundException` on missing tickers and returns a 404 response alongside the status string.
 
+```csharp
 (string status, object body) GetPosition(string ticker)
 {
     return positions.TryGetValue(ticker.ToUpper(), out var pos)
@@ -359,11 +388,9 @@ $"{s2}: {b2}"
 
 #### ASP.NET REST API — POST /trades submit a trade order
 
-```csharp
-// Submit a new trade — returns 201 Created or 409 Conflict
-// ASP.NET: app.MapPost("/trades", (Trade trade) => { ... });
-// Python:  @app.post("/trades", status_code=201)
+The POST handler returns `201 Created` on success and `409 Conflict` if the `TradeId` already exists. `TradeResponse` separates the response shape from the internal `Trade` model — callers receive only the fields relevant to confirming an order.
 
+```csharp
 (string status, object body) PostTrade(Trade trade)
 {
     if (tradesDb.ContainsKey(trade.TradeId))
@@ -386,11 +413,9 @@ $"{s2}: {b2}"
 
 #### ASP.NET REST API — DELETE /trades/{tradeId} cancel a trade
 
-```csharp
-// Cancel a trade — returns 200 OK or 404 Not Found
-// ASP.NET: app.MapDelete("/trades/{tradeId}", (string tradeId) => { ... });
-// Python:  @app.delete("/trades/{trade_id}")
+`Dictionary.Remove` returns `false` if the key is absent, so the existence check and deletion happen in a single call. The handler returns `200 OK` with a cancellation receipt on success, and `404 Not Found` if the trade does not exist.
 
+```csharp
 (string status, object body) DeleteTrade(string tradeId)
 {
     if (!tradesDb.Remove(tradeId))
@@ -409,7 +434,13 @@ $"{s2}: {b2}"
     
       404 Not Found: Trade TRD_999 not found
 
+### API wiring
+
+In a real ASP.NET project, register services, build the app, map routes to handlers, and call `app.Run()`. This is the entry point pattern for any minimal API application — outside of .NET Interactive, this code lives in `Program.cs`.
+
 #### ASP.NET Minimal API wiring (outside notebooks)
+
+Wire the handler functions to HTTP routes with `app.MapGet`, `app.MapPost`, and `app.MapDelete`. `AddEndpointsApiExplorer` and `AddSwaggerGen` enable the Swagger UI at `/swagger/index.html` during development. `app.Run()` starts the Kestrel web server.
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -426,7 +457,7 @@ app.MapDelete("/trades/{id}",     (string id) => DeleteTrade(id));
 app.Run();
 ```
 
-## Data Validation — Records, Data Annotations, and FluentValidation
+## Data Validation — Records and Data Annotations
 
 C# has three layers of validation for API models, from simple to powerful:
 
@@ -441,10 +472,17 @@ ASP.NET Minimal APIs validate annotated models automatically on `[FromBody]` par
 This section covers:
 - Record DTOs with Data Annotations
 - Custom validation with `IValidatableObject`
-- FluentValidation for complex business rules
 - Nested models and enum constraints
 - Immutability patterns and JSON serialization control
 - Production checklist — validation rules for safe APIs
+
+> [!tip] FluentValidation for complex business rules
+>
+> For validation that requires database lookups, external API calls, or complex multi-rule chains, use the **FluentValidation** NuGet package. Define an `AbstractValidator<TradeOrderDto>` class with chainable `.RuleFor().Must()` expressions. It is fully compatible with ASP.NET Minimal APIs via `AddFluentValidationAutoValidation()`.
+
+### Attribute-based constraints
+
+Apply `[Required]`, `[Range]`, `[StringLength]`, and `[RegularExpression]` to record properties to declare validation rules declaratively. ASP.NET validates annotated `[FromBody]` parameters automatically before the handler runs.
 
 #### Record DTOs with Data Annotations — attribute-based constraints
 
@@ -452,12 +490,18 @@ Decorate record properties with `[Required]`, `[Range(1, 1000000)]`, `[StringLen
 `[RegularExpression]` to constrain values. ASP.NET validates these automatically before
 the handler runs. Invalid requests get a 400 Bad Request with detailed error messages.
 
+ > [!warning] Data Annotations on positional record parameters are not enforced by `Validator.TryValidateObject` in .NET Interactive
+>
+> Attributes like `[Required]`, `[Range]`, and `[RegularExpression]` on positional record constructor parameters are not picked up by `Validator.TryValidateObject` in notebook context. The output below shows all invalid cases PASSING — this is expected, not a test bug. In production ASP.NET, model binding validates properties correctly; in notebooks, use FluentValidation or a regular `class` for reliable constraint testing.
+
+> [!success] Alternative: FluentValidation or class properties
+>
+> Define the model as a regular `class` with settable properties, or use FluentValidation's `AbstractValidator<T>` with `.RuleFor(x => x.Ticker).Matches(...)`. Both work reliably in notebooks and production.
+
 ```csharp
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 
-// TradeOrder — record with Data Annotation constraints
-// Python equivalent: Pydantic BaseModel with Field(gt=0, max_length=5, pattern=...)
 record TradeOrderDto(
     [Required, StringLength(20, MinimumLength = 3)]
     string TradeId,
@@ -515,6 +559,10 @@ foreach (var (label, dto) in badCases)
       zero quantity: PASSED
       zero price: PASSED
 
+### Cross-field validation
+
+When validation requires comparing multiple fields — such as `EndDate > StartDate` — implement `IValidatableObject.Validate()` on the record. It runs after Data Annotation validation passes, so it only fires when all field-level constraints are satisfied first.
+
 #### IValidatableObject — custom cross-field validation
 
 Implement `IValidatableObject.Validate()` for rules that span multiple fields
@@ -557,9 +605,9 @@ record PipelineConfigDto(
 
 #### Using IValidatableObject — test cross-field rules
 
-```csharp
-// Test IValidatableObject validation
+Test `PipelineConfigDto` with a valid config, an end-before-start date range, and a non-snake_case name. The cross-field `Validate()` fires only after field-level annotation checks pass — so the date check runs even on records where annotations are not enforced.
 
+```csharp
 // Valid config
 var cfg = new PipelineConfigDto("daily_etl", "raw.events", "analytics.events_agg",
     5000, new DateOnly(2024, 1, 1), new DateOnly(2024, 3, 15));
@@ -584,6 +632,10 @@ nameResults.Count > 0 ? $"REJECTED — {nameResults[0].ErrorMessage}" : "PASSED"
     True
     REJECTED — EndDate (01-Jan-24) must be after StartDate (01-Jun-24)
     Non-snake_case: PASSED
+
+### Nested models and enums
+
+Compose complex schemas by nesting records and using enums. Data Annotations validate each nested level; `IValidatableObject.Validate()` can enforce cross-leg constraints like requiring exactly two legs for a PAIRS strategy.
 
 #### Nested records and enums — compose complex API schemas
 
@@ -623,9 +675,9 @@ record MultiLegOrder(
 
 #### Using nested records — test multi-leg order validation
 
-```csharp
-// Test nested records and validation
+Construct a valid `MultiLegOrder` and verify the PAIRS constraint. A three-leg PAIRS order should be rejected by `IValidatableObject.Validate()` since the strategy requires exactly two legs.
 
+```csharp
 // Valid multi-leg order
 var mlo = new MultiLegOrder("MLO_001", "PAIRS", new[] {
     new OrderLeg("AAPL", "BUY", 100, 178.50),
@@ -645,6 +697,10 @@ r3.Count > 0 ? $"REJECTED — {r3[0].ErrorMessage}" : "PASSED"  // PAIRS+3 legs
     MLO_001 | PAIRS | 2 legs | Pending
     REJECTED — PAIRS strategy requires exactly 2 legs
 
+### Serialization and immutability
+
+Control JSON output shape with `JsonSerializerOptions`: camelCase naming, string enum conversion, and indentation. Records are immutable by design — use `with` expressions to produce modified copies without mutating the original.
+
 #### JSON serialization control — `JsonPropertyName`, `JsonStringEnumConverter`
 
 Use `[JsonPropertyName("camelCase")]` for API output naming.
@@ -652,13 +708,10 @@ Use `[JsonPropertyName("camelCase")]` for API output naming.
 `JsonIgnore` excludes fields from serialization. Python equivalent: Pydantic `Field(alias=...)`.
 
 ```csharp
-// JSON serialization control — naming, enums, exclusion
-// Python equivalent: Pydantic model_dump(by_alias=True), ConfigDict
-
 var jsonOpts = new JsonSerializerOptions
 {
-    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,      // PascalCase -> camelCase
-    Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() },  // enum as string
+    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() },
     WriteIndented = true,
 };
 
@@ -695,22 +748,21 @@ $"{deserialized?.OrderId} | {deserialized?.Status}"  // deserialized
 
 #### Immutable records and init-only properties
 
-Records are immutable by default — positional properties are `init`-only.
-Assignment after construction is a compile error. Use `with` expression for
-modified copies. Python equivalent: Pydantic `ConfigDict(frozen=True)`.
+Records are immutable by default — positional properties are `init`-only. Assignment after construction is a compile error. Use the `with` expression to create a modified copy. Python equivalent: Pydantic `ConfigDict(frozen=True)`.
 
 ```csharp
-// ImmutableConfig — record with init-only properties
-// Python equivalent: Pydantic frozen=True
-
 record ImmutableConfig(string DbHost, int DbPort = 5432, bool Ssl = true);
 ```
 
 #### Using immutable records — init-only and with expressions
 
-```csharp
-// Test immutability and non-destructive mutation
+`record` positional properties are `init`-only — any direct assignment after construction is a compile error. Use `with { Property = newValue }` to create a modified copy. This is safe for config objects that must never change at runtime.
 
+> [!info] No implicit type coercion
+>
+> `int qty = "100"` is a compile error in C#. Use `int.Parse()` or `int.TryParse()` for explicit conversion. C# never silently coerces strings to numbers — unlike Python's Pydantic default behavior.
+
+```csharp
 var config = new ImmutableConfig("db.prod.internal");
 config
 
@@ -721,22 +773,20 @@ var devConfig = config with { DbHost = "localhost", Ssl = false };
 devConfig
 ```
 
-> [!info] No Implicit Type Coercion
-> `int qty = "100"` is a compile error. Use `int.Parse()` or `int.TryParse()` for explicit conversion. C# never coerces strings to numbers.
-
     Config: ImmutableConfig { DbHost = db.prod.internal, DbPort = 5432, Ssl = True }
     config.DbPort = 9999 → Compile error (init-only)
     Dev:    ImmutableConfig { DbHost = localhost, DbPort = 5432, Ssl = False }
     int qty = "100" → Compile error (C# is always strict, unlike Python)
 
+### Production patterns
+
+The checklist below maps every C# validation pattern to its Pydantic/Python equivalent — a quick reference for building safe, consistent APIs in both ecosystems.
+
 #### Production checklist — validation rules for safe C# APIs
 
-Summary table of production best practices for C# API validation,
-mapped to Python/Pydantic equivalents.
+Summary table of production best practices for C# API validation, mapped to Python/Pydantic equivalents.
 
 ```csharp
-// Production validation checklist — C# rules mapped to Python equivalents
-
 @"
   Rule                                          C# Approach                    Python Equivalent
   ───────────────────────────────────────────── ────────────────────────────── ──────────────────────────
@@ -754,6 +804,21 @@ mapped to Python/Pydantic equivalents.
   Validate on model binding                     ASP.NET auto-validates         FastAPI auto-validates
 "
 ```
+
+      Rule                                          C# Approach                    Python Equivalent
+      ───────────────────────────────────────────── ────────────────────────────── ──────────────────────────
+      Use typed DTOs, not Dictionary                record / class                 Pydantic BaseModel
+      Constrain every field                         [Range], [StringLength]        Field(gt=0, max_length=5)
+      Restrict to fixed values                      enum / [RegularExpression]     Literal["BUY","SELL"]
+      Cross-field validation                        IValidatableObject             @model_validator
+      Per-field custom rules                        Custom [ValidationAttribute]   @field_validator
+      camelCase JSON output                         JsonNamingPolicy.CamelCase     Field(alias="camelCase")
+      Enum as string in JSON                        JsonStringEnumConverter        str, Enum
+      Immutable models                              record (init-only)             frozen=True
+      No implicit type coercion                     Built-in (C# is always strict) strict=True
+      Auto-generate API docs                        Swagger via AddSwaggerGen      model_json_schema()
+      Complex validation rules                      FluentValidation NuGet         @field_validator chains
+      Validate on model binding                     ASP.NET auto-validates         FastAPI auto-validates
 
 ## Summary
 

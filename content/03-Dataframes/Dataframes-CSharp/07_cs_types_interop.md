@@ -1,5 +1,5 @@
 ---
-tags: [pipeline, csharp, deedle, polars, dataframes]
+tags: [csharp, deedle, polars, dataframes]
 aliases:
   - categoricals, Arrow, zero-copy, type conversion
 description: "Polars.NET / C# DataFrames reference 07/10 — Advanced Types & Interop (categoricals, Arrow, zero-copy). Executable examples with cell outputs. See [07_py_types_interop](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/07_py_types_interop) for the Python equivalent."
@@ -18,6 +18,12 @@ status: complete
 Polars.NET vs Deedle: Categoricals, nested types, library conversions, I/O deep dive.
 
 ---
+## Setup
+
+### Setup | Suppress assembly version warnings
+
+.NET Interactive raises CS1701/CS1702 assembly version warnings when NuGet packages target an older .NET version than the kernel. This cell reduces the compiler warning level to 0 using reflection — run it once before any NuGet cell.
+
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
@@ -37,7 +43,9 @@ var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 ```
 
-#### Setup — Install NuGet packages and configure formatters
+### Setup | NuGet packages and formatters
+
+Install `Polars.NET`, `Polars.NET.Native.win-x64`, `Deedle`, and `Deedle.Interactive`. The `Formatter.Register` calls override the default .NET Interactive display for `DataFrame` and `Series`, rendering them as styled HTML tables. The `FSharp.Core` resolver prevents Deedle's F# dependency from failing to load at runtime.
 
 ```csharp
 #r "nuget: Polars.NET, 0.4.0"
@@ -77,7 +85,9 @@ Formatter.Register<Polars.CSharp.Series>((s, writer) =>
 var DATA = Path.Combine("..", "data");
 ```
 
-#### Load data — eurostoxx50_ohlcv.csv into Polars and Deedle
+### Polars.NET / Deedle | Load eurostoxx50_ohlcv.csv
+
+Load the EuroStoxx 50 OHLCV dataset (66,355 rows, 12 columns) into both a Polars.NET `DataFrame` (`dfP`) and a Deedle `Frame` (`dfD`). `tryParseDates: true` instructs Polars to detect and parse ISO-format date columns during CSV read. Deedle reads the same file but treats the date column as a string until explicitly converted.
 
 ```csharp
 var dfP = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), tryParseDates: true);
@@ -94,10 +104,20 @@ Polars supports a rich type system beyond numeric and string columns. The most u
 
 Other advanced types (Enum, List columns, Struct, Binary) exist in the Rust Polars library but are not fully exposed in Polars.NET 0.4.0. Deedle has no categorical type at all.
 
-#### Categorical cast: convert string column to categorical
+> [!info] Polars.NET 0.4.0 is eager-only
+> Unlike Python Polars, Polars.NET 0.4.0 has no `LazyFrame`. All operations execute immediately. Query optimization, predicate pushdown, and column pruning that Python Polars performs automatically are not available from C#. For large-file scan-then-filter workloads, consider using Python Polars and sharing results via Parquet.
+
+### Polars.NET | Categorical
+
+> [!tip] When to use Categorical
+> Cast to `Categorical` for low-cardinality string columns: symbols, sector codes, country codes, status flags. Polars replaces 66K individual string values with 50 dictionary entries + 66K integer indices, reducing memory and accelerating GroupBy key matching.
+
+#### Polars.NET | Cast string column to Categorical
+
+`Cast(DataType.Categorical)` replaces the `str` type with `cat` in the column schema. `WithColumns` is non-destructive — it returns a new `DataFrame`, leaving the original `dfP` unchanged.
 
 ```csharp
-// Polars.NET — check original data type of symbol column
+var symbolSeries = dfP.Column("symbol");
 var symbolSeries = dfP.Column("symbol");
 Console.WriteLine($"Original type: {symbolSeries.DataTypeName}");
 Console.WriteLine($"Unique symbols: {symbolSeries.NUnique}");
@@ -125,10 +145,12 @@ Console.WriteLine("With 50 symbols repeated over 66K rows, this significantly re
     Categorical stores each unique string once, then uses integer indices.
     With 50 symbols repeated over 66K rows, this significantly reduces memory.
 
-#### Schema after categorical cast
+#### Polars.NET | Schema after Categorical cast
+
+`DataTypeName` on each `Series` returns the Polars type string. After the cast, `symbol` shows `cat`, confirming dictionary encoding is active. All other columns retain their original types.
 
 ```csharp
-// Polars.NET — display schema showing the Categorical type
+var colNames = dfCat.ColumnNames;
 // DataTypeName on each column shows the type after casting
 var colNames = dfCat.ColumnNames;
 Console.WriteLine("Column schema after categorical cast:");
@@ -155,10 +177,12 @@ foreach (var name in colNames)
       stock_splits         f64
       is_filled            bool
 
-#### Categorical speeds up GroupBy operations
+#### Polars.NET | GroupBy on Categorical column
+
+GroupBy on a Categorical column operates on integer indices rather than string comparisons, which is faster for hashing and matching. The result is identical to grouping on the original string column — Categorical is transparent to the consumer.
 
 ```csharp
-// Polars.NET — GroupBy on categorical column
+var aggCat = dfCat
 // Categorical uses integer keys internally, making group operations faster
 var aggCat = dfCat
     .GroupBy("symbol")
@@ -177,10 +201,17 @@ aggCat.Head(10)
 
 <!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>avg_close</th><th>total_volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>3.147987207</td><td>115704541969</td></tr><tr><td>SAN.MC</td><td>4.42584763</td><td>55513641918</td></tr><tr><td>ENEL.MI</td><td>6.820438304</td><td>32600561934</td></tr><tr><td>BBVA.MC</td><td>8.651954101</td><td>22133773194</td></tr><tr><td>UCG.MI</td><td>28.45710447</td><td>18366801099</td></tr><tr><td>ENI.MI</td><td>13.39762453</td><td>17141570967</td></tr><tr><td>INGA.AS</td><td>14.03818783</td><td>17041577555</td></tr><tr><td>IBE.MC</td><td>12.25531151</td><td>15994295949</td></tr><tr><td>DTE.DE</td><td>22.43009743</td><td>10029411390</td></tr><tr><td>NDA-FI.HE</td><td>10.84807887</td><td>7020342991</td></tr></tbody></table></div>
 
-#### Deedle: no categorical type
+### Deedle | Categorical
+
+> [!warning] No native Categorical in Deedle
+> Deedle stores every string value individually — there is no dictionary encoding. For 50 symbols repeated 66K times, Deedle allocates 66K full string objects. Manual encoding (below) is possible but not built-in and loses all the performance benefits of Polars Categorical.
+
+#### Deedle | No native Categorical — manual encoding
+
+Deedle has no `Categorical` type. The manual encoding below maps unique symbols to integers using a `Dictionary<string, int>` — this mimics Categorical semantics but provides no native GroupBy acceleration or automatic decoding.
 
 ```csharp
-// Deedle — no native Categorical type
+var symbolsDeedle = dfD.GetColumn<string>("symbol");
 // All string columns are stored as full string values per row.
 // Manual dictionary encoding is possible but not built-in.
 
@@ -208,10 +239,17 @@ Console.WriteLine("This is purely manual — no Deedle API support for categoric
     First 5 encoded values: 0, 0, 0, 0, 0
     This is purely manual — no Deedle API support for categoricals.
 
-#### Other advanced types: not exposed in Polars.NET 0.4.0
+### Polars.NET | Available data types
+
+> [!info] Polars.NET 0.4.0 type coverage
+> The C# bindings expose only a subset of the full Polars type system. Enum, List, Struct, and Binary types exist in the underlying Rust library but are not accessible from Polars.NET 0.4.0. `DataType` is a class with static properties (not an enum), so reflection is required to enumerate available types.
+
+#### Polars.NET | Available DataType properties
+
+Enumerate the `DataType` static properties via reflection to confirm what is accessible in this version. Use this as a compatibility check when porting Polars logic from Python to C#.
 
 ```csharp
-// Polars.NET 0.4.0 — advanced type availability
+Console.WriteLine("Available DataType static properties:");
 // DataType is a class with static properties, not an enum
 Console.WriteLine("Available DataType static properties:");
 Console.WriteLine(new string('-', 50));
@@ -252,10 +290,16 @@ foreach (var name in dtProps)
 
 Real projects often need to move data between libraries. This section covers extracting data from Polars and Deedle into .NET collections, and converting between the two libraries.
 
-#### Polars.NET to .NET collections: extract columns as arrays
+### Polars.NET | Extract to .NET collections
+
+`ToArray<T>()` is the primary bridge from Polars.NET to any .NET library that operates on arrays — LINQ, Math.NET Numerics, ML.NET feature engineering, or any custom analytics code.
+
+#### Polars.NET | Extract columns as typed arrays
+
+`ToArray<T>()` requires the generic type to match the Polars column type: `string` for `Utf8`/`String`, `double` for `Float64`, `long` for `Int64`. Once extracted, arrays support the full LINQ surface and standard .NET array operations.
 
 ```csharp
-// Polars.NET — extract columns as typed .NET arrays via ToArray<T>()
+var symbols = dfP.Column("symbol").ToArray<string>();
 var symbols = dfP.Column("symbol").ToArray<string>();
 var closes = dfP.Column("close").ToArray<double>();
 var volumes = dfP.Column("volume").ToArray<long>();
@@ -276,10 +320,16 @@ Console.WriteLine($"\nLINQ on extracted arrays: avg close = {avgClose:F2}, max v
     
     LINQ on extracted arrays: avg close = 197.03, max volume = 376'391'539
 
-#### Polars.NET to DataTable: manual conversion
+### Polars.NET | Convert to DataTable
+
+`System.Data.DataTable` is the standard .NET in-memory tabular structure used by ADO.NET, SSRS, and many reporting libraries. Polars.NET 0.4.0 has no built-in `AsDataTable()` method, so conversion requires manual column-by-column extraction.
+
+#### Polars.NET | Convert to System.Data.DataTable
+
+Build a `DataTable` by mapping each Polars column's `DataTypeName` to a .NET `Type`, then populating rows from column arrays extracted via `ToArray<T>()`. This produces a full data copy — use only for small subsets where DataTable compatibility is required.
 
 ```csharp
-// Polars.NET — convert to System.Data.DataTable
+var dfSmall = dfP.Head(100);
 // AsDataReader() may not exist in 0.4.0, so we build the DataTable manually.
 
 // Use a small subset for the demo
@@ -351,10 +401,17 @@ Console.WriteLine($"\nFirst row: {string.Join(", ", dataTable.Rows[0].ItemArray.
     
     First row: , ABI.BR, , , ,
 
-#### Deedle to Polars.NET: extract columns and rebuild
+### Polars.NET / Deedle | Cross-library conversion
+
+> [!info] Cross-library conversion pattern
+> Neither Polars.NET nor Deedle has a format the other can read directly. The only reliable bridge is: extract columns as .NET arrays → rebuild in the target library. This is a full data copy. For large datasets, prefer Parquet as a shared format: write with one library, read with the other.
+
+#### Deedle | Convert to Polars.NET DataFrame
+
+Extract Deedle column values using `.GetColumn<T>().Values.ToArray()`, then construct Polars `Series` objects with `Series.From("name", array)` and combine them into a new `DataFrame`. Type conversion may be required — Deedle stores `volume` as `double`; Polars expects `long`.
 
 ```csharp
-// Deedle — extract columns as .NET arrays, then build Polars Series and DataFrame
+var dfDSmall = dfD.GetRowsAt(Enumerable.Range(0, 100).ToArray());
 // Use a small Deedle frame for the conversion demo
 var dfDSmall = dfD.GetRowsAt(Enumerable.Range(0, 100).ToArray());
 
@@ -381,10 +438,12 @@ dfFromDeedle.Head(5)
 
 <!-- Polars DataFrame: (5 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>open</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>ABI.BR</td><td>58.15</td><td>57.21</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>56.9</td><td>57.18</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>57.96</td><td>58.77</td><td>1370204</td></tr><tr><td>ABI.BR</td><td>58.68</td><td>58.4</td><td>1469911</td></tr><tr><td>ABI.BR</td><td>58.16</td><td>57.86</td><td>1428681</td></tr></tbody></table></div>
 
-#### Polars.NET to Deedle: extract columns and rebuild
+#### Polars.NET | Convert to Deedle Frame
+
+Extract Polars columns via `ToArray<T>()`, then use `FrameBuilder.Columns<int, string>()` to assemble a Deedle `Frame`. Each column must be wrapped in a `Series<int, T>` with an explicit integer row index.
 
 ```csharp
-// Polars.NET — extract columns as .NET arrays, build Deedle Frame
+var dfPSmall = dfP.Head(100);
 var dfPSmall = dfP.Head(100);
 
 var pSymbols = dfPSmall.Column("symbol").ToArray<string>();
@@ -423,10 +482,12 @@ dfFromPolars.Rows[Enumerable.Range(0, 5)]
 
 </div>
 
-#### Round-trip verification: Polars -> Deedle -> Polars
+#### Polars.NET / Deedle | Round-trip verification
+
+Extract from the Deedle frame built in the previous cell, convert back to Polars, and compare numeric columns value by value. Floating-point equality uses an epsilon of `1e-10` to tolerate any precision rounding during the double conversion step.
 
 ```csharp
-// Verify that Polars -> Deedle -> Polars preserves data
+var rtSymbols = dfFromPolars.GetColumn<string>("symbol").Values.ToArray();
 // Extract from Deedle frame we just built, convert back to Polars
 var rtSymbols = dfFromPolars.GetColumn<string>("symbol").Values.ToArray();
 var rtCloses = dfFromPolars.GetColumn<double>("close").Values.ToArray();
@@ -452,10 +513,19 @@ Console.WriteLine($"Close values match after round-trip: {match}");
 
 Polars.NET and Deedle both support CSV I/O. Polars also supports Parquet and JSON natively. This section explores format options, separators, and round-trip integrity.
 
-#### CSV read with options: separator, date parsing, row limits
+### Polars.NET / Deedle | CSV
+
+Both libraries support CSV read and write. Polars.NET is more feature-rich: it accepts `tryParseDates`, a row limit (`nRows`), and any single-character `separator`. Deedle uses a multi-character `separators` string parameter and does not parse dates automatically.
+
+> [!info] CSV parameter naming differs
+> Polars.NET `ReadCsv` → `separator` (single `char`), `tryParseDates` (`bool`), `nRows` (`int`). Deedle `Frame.ReadCsv` → `separators` (string, plural). Both support TSV and SSV via separator override.
+
+#### Polars.NET | Read CSV — separator, date parsing, row limits
+
+`tryParseDates: true` detects ISO-format date columns and parses them as the Polars `date` type during read, avoiding a separate conversion step. `nRows` limits rows loaded — useful for quick inspection of large files without reading the full dataset.
 
 ```csharp
-// Polars.NET — CSV with tryParseDates
+var dfCsv = DataFrame.ReadCsv(
 var dfCsv = DataFrame.ReadCsv(
     Path.Combine(DATA, "eurostoxx50_ohlcv.csv"),
     tryParseDates: true,
@@ -489,10 +559,12 @@ dfTsv.Head(5)
 
 <!-- Polars DataFrame: (5 rows, 2 columns) --><table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr></thead><tbody><tr><td>Afghanistan</td><td>AF</td></tr><tr><td>Albania</td><td>AL</td></tr><tr><td>Algeria</td><td>DZ</td></tr><tr><td>American Samoa</td><td>AS</td></tr><tr><td>Andorra</td><td>AD</td></tr></tbody></table></div>
 
-#### CSV read with Deedle: format comparison
+#### Deedle | Read CSV — separator, format comparison
+
+Deedle's `Frame.ReadCsv` accepts a `separators` string (plural, not a `char`). Pass `"\t"` for TSV or `";"` for SSV. Date columns are read as strings by default — explicit conversion is required afterward.
 
 ```csharp
-// Deedle — standard CSV read
+var dfDCsv = Frame.ReadCsv(Path.Combine(DATA, "dim_country.csv"));
 var dfDCsv = Frame.ReadCsv(Path.Combine(DATA, "dim_country.csv"));
 Console.WriteLine($"Deedle CSV: {dfDCsv.RowCount} x {dfDCsv.ColumnCount}");
 
@@ -525,10 +597,12 @@ dfDTsv.Rows[dfDTsv.RowKeys.Take(5)]
 
 </div>
 
-#### CSV write: Polars and Deedle
+#### Polars.NET / Deedle | Write CSV
+
+`df.WriteCsv(path)` (Polars.NET) and `frame.SaveCsv(path)` (Deedle) both produce standard comma-separated output with column headers. Polars writes the full schema types as a header row; Deedle includes an integer row-index column by default.
 
 ```csharp
-// Polars.NET — write CSV
+var csvOutPath = Path.Combine(DATA, "_temp_polars_write.csv");
 var csvOutPath = Path.Combine(DATA, "_temp_polars_write.csv");
 var dfWrite = dfP.Head(50);
 dfWrite.WriteCsv(csvOutPath);
@@ -555,10 +629,17 @@ Console.WriteLine($"\nPolars read-back: {dfReadBack.Shape}");
     
     Polars read-back: (50, 12)
 
-#### Parquet read: schema and data
+### Polars.NET | Parquet
+
+> [!info] Deedle has no native Parquet support
+> Deedle cannot read or write Parquet files. For Parquet interop in .NET, use Polars.NET to read the file, then convert to Deedle via arrays if needed. `Microsoft.Data.Analysis` (the official .NET ML DataFrame library) also lacks native Parquet I/O as of 2026.
+
+#### Polars.NET | Read Parquet — schema and data
+
+`DataFrame.ReadParquet(path)` reads a Parquet file directly into a Polars.NET `DataFrame`. Parquet preserves column types across write/read cycles — unlike CSV, which represents all values as text and requires re-parsing. Files are typically 40–60% smaller than the equivalent CSV due to columnar compression.
 
 ```csharp
-// Polars.NET — read Parquet natively
+var dfParquet = DataFrame.ReadParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));
 var dfParquet = DataFrame.ReadParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));
 Console.WriteLine($"Parquet read: {dfParquet.Shape}");
 
@@ -597,10 +678,12 @@ Console.WriteLine($"Compression:  {(1.0 - (double)parquetSize / csvSize) * 100:F
     Parquet size: 2'484'896 bytes (2.4 MB)
     Compression:  53% smaller
 
-#### Parquet write and verify
+#### Polars.NET | Write Parquet — round-trip verification
+
+`df.WriteParquet(path)` writes a Parquet file with Snappy compression by default. Reading the file back and comparing shapes confirms that Parquet preserves data integrity across the write/read cycle. Verify that types are preserved by inspecting column `DataTypeName` on the re-read frame.
 
 ```csharp
-// Polars.NET — write Parquet
+var parquetOutPath = Path.Combine(DATA, "_temp_polars_write.parquet");
 var parquetOutPath = Path.Combine(DATA, "_temp_polars_write.parquet");
 dfWrite.WriteParquet(parquetOutPath);
 Console.WriteLine($"Parquet written: {parquetOutPath}");
@@ -622,10 +705,18 @@ Console.WriteLine("Workaround: use Polars to read Parquet, convert to arrays, bu
     Deedle has no native Parquet I/O.
     Workaround: use Polars to read Parquet, convert to arrays, build Deedle Frame.
 
-#### JSON read/write (Polars.NET)
+### Polars.NET | JSON
+
+`ReadJson` and `WriteJson` are available in Polars.NET 0.4.0 and support NDJSON (newline-delimited JSON), where each line is a separate JSON object. NDJSON is the preferred format for large datasets and streaming append scenarios. Deedle has no JSON I/O.
+
+#### Polars.NET | Read and write JSON (NDJSON)
+
+`DataFrame.ReadJson(path)` reads NDJSON format. The `try/catch` handles the case where the method signature differs in earlier builds. For standard JSON arrays, use `System.Text.Json` to deserialize to typed records, then construct Polars `Series` manually.
 
 ```csharp
-// Polars.NET — JSON read (newline-delimited JSON / NDJSON format)
+try
+{
+    var dfJson = DataFrame.ReadJson(Path.Combine(DATA, "dim_country.json"));
 // ReadJson/WriteJson may not exist in 0.4.0 — try with fallback
 try
 {
@@ -654,10 +745,14 @@ catch (Exception ex)
     JSON written: ..\data\_temp_polars_write.json
     File size: 9'868 bytes
 
-#### Round-trip test: CSV -> Polars -> Parquet -> read back -> verify
+### Polars.NET | Round-trip
+
+#### Polars.NET | Full round-trip — CSV → Parquet → CSV
+
+Five-step integrity test: read CSV → write Parquet → read Parquet → write CSV → read CSV, comparing shapes and content at each step. This confirms that Polars I/O preserves both structure and data values across format conversions.
 
 ```csharp
-// Polars.NET — full round-trip: CSV -> DataFrame -> Parquet -> read back -> compare
+var rtCsvPath = Path.Combine(DATA, "dim_country.csv");
 var rtCsvPath = Path.Combine(DATA, "dim_country.csv");
 var rtParquetPath = Path.Combine(DATA, "_temp_roundtrip.parquet");
 var rtCsvOutPath = Path.Combine(DATA, "_temp_roundtrip.csv");
@@ -701,10 +796,12 @@ Console.WriteLine($"Content match: {allMatch}");
     Shapes match: True
     Content match: True
 
-#### Cleanup temp files
+#### Polars.NET | Cleanup temp files
+
+Delete temporary files created during the I/O demos. Always run this cell after the notebook to keep the data directory clean.
 
 ```csharp
-// Clean up temporary files created during I/O demos
+var tempFiles = new[]
 var tempFiles = new[]
 {
     "_temp_polars_write.csv",
@@ -739,7 +836,9 @@ Console.WriteLine("\nCleanup complete.");
 ---
 ## Summary
 
-#### Comparison table
+### Polars.NET / Deedle | Feature comparison
+
+Side-by-side reference for type support and I/O capabilities across the two libraries.
 
 | Feature | Polars.NET 0.4.0 | Deedle 4.0.1 |
 |---|---|---|
@@ -757,7 +856,7 @@ Console.WriteLine("\nCleanup complete.");
 | **JSON read/write** | `ReadJson` / `WriteJson` (if available) | Not supported |
 | **TSV/SSV** | `ReadCsv(path, separator: '\t')` | `ReadCsv(path, separators: "\t")` |
 
-#### Key takeaways
+### Key takeaways
 
 - **Use Categorical** for low-cardinality string columns (like symbol) to save memory and speed up GroupBy.
 - **Cross-library conversion** is straightforward: extract columns as .NET arrays, then rebuild in the target library.

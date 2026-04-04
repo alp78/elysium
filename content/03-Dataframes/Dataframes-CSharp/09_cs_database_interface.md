@@ -1,10 +1,10 @@
 ---
-tags: [pipeline, csharp, deedle, polars, dataframes]
+tags: [csharp, polars, dataframes]
 aliases:
   - SQLContext, DuckDB, database, SQL
 description: "Polars.NET / C# DataFrames reference 09/10 — Database & SQL Interface (SQLContext, DuckDB, SQL Server). Executable examples with cell outputs. See [09_py_database_interface](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/09_py_database_interface) for the Python equivalent."
 created: 2026-03-27
-updated: 2026-03-27
+updated: 2026-04-04
 status: complete
 ---
 
@@ -16,6 +16,10 @@ status: complete
 > — **Fred Brooks**, *The Mythical Man-Month* (1975)
 
 SQL queries against DataFrames (Polars.NET SQL, DuckDB.NET) and SQL Server connectivity.
+
+## Setup
+
+This notebook uses Polars.NET for in-memory DataFrame operations, DuckDB.NET for in-process SQL analytics, and Microsoft.Data.SqlClient for SQL Server connectivity. The suppress cell below silences assembly version warnings that .NET Interactive emits for NuGet packages targeting .NET 8/9 — run it once before any other cell.
 
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
@@ -36,7 +40,9 @@ var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 ```
 
-#### Install NuGet packages and import namespaces
+#### Setup | Install NuGet packages and import namespaces
+
+Installs Polars.NET (DataFrame engine), DuckDB.NET (in-process SQL), Microsoft.Data.SqlClient (SQL Server ADO.NET driver), Dapper (micro-ORM for raw SQL), and DotNetEnv (`.env` file loader for credentials). The `Formatter.Register` call customises `.NET Interactive` HTML rendering so DataFrames display as proper tables in the notebook.
 
 ```csharp
 #r "nuget: Polars.NET, 0.4.0"
@@ -88,7 +94,17 @@ Console.WriteLine($"SQL Server: {SQL_CONN.Split(';')[0]}");
 
 ## Polars.NET SQL Context
 
-#### Probe Polars.NET for SQLContext using reflection
+> [!info] Polars.NET 0.4.0 does not expose SQLContext
+>
+> Polars (Rust) includes a `polars-sql` crate that lets you register DataFrames as virtual tables and query them with SQL. The Python bindings (`polars.SQLContext`) expose this fully. In .NET, Polars.NET 0.4.0 wraps the core Polars library but **does not yet bind `SqlContext`** — the class exists in the compiled assembly (reflection confirms `Polars.CSharp.SqlContext`) but its public API is not exposed.
+>
+> **Workaround:** Use DuckDB.NET for all SQL-on-DataFrame operations in C# (see Section 2). DuckDB can query Polars DataFrames via shared memory or Parquet files on disk, and the results can be loaded back into Polars DataFrames using the `DuckDbToPolars()` helper defined below.
+
+### Polars.NET | SQLContext availability
+
+#### Polars.NET | Probe for SQLContext using reflection
+
+Uses reflection to scan all types in the Polars.NET assembly for anything SQL-related. The result tells us whether `SqlContext` is present at all — and if so, whether it is usable from the public API.
 
 ```csharp
 // Polars (Rust) has SQLContext for running SQL against DataFrames.
@@ -127,7 +143,9 @@ catch (Exception ex)
     Found SQL-related types:
       Polars.CSharp.SqlContext
 
-#### Note: Polars.NET 0.4.0 does not expose SQLContext
+#### Polars.NET | Confirmed: SQLContext not usable in 0.4.0
+
+Summarises the finding and redirects to the DuckDB.NET workaround. The type exists in the assembly but no constructor or method is accessible from the public API surface.
 
 ```csharp
 // Summary: Polars.NET 0.4.0 does NOT expose SQLContext.
@@ -149,11 +167,17 @@ Console.WriteLine("Proceeding with DuckDB.NET for SQL operations.");
 
 ## DuckDB.NET
 
-#### Query in-memory DuckDB table into Polars DataFrame
+DuckDB is an in-process OLAP database — no server, no daemon, no configuration. It runs inside the notebook process and can query Parquet and CSV files directly, or accept data from in-memory DataFrames. Results can be converted back to Polars DataFrames using the helper defined below.
 
-#### Load DuckDB native library
+> [!tip] DuckDB is the primary SQL interface for Polars.NET
+>
+> Because `SqlContext` is not yet available in Polars.NET 0.4.0, DuckDB.NET fills that gap entirely. The workflow is: read files or pass data → run SQL → convert the `IDataReader` result into a Polars DataFrame. The `DuckDbToPolars()` helper below encapsulates that conversion so it does not need to be repeated in every cell.
 
-.NET Interactive doesn't auto-copy native binaries from NuGet runtime folders. We add the path to `PATH` so `DllImport` can find `duckdb.dll`.
+### DuckDB | Setup
+
+#### DuckDB | Load native library
+
+.NET Interactive doesn't auto-copy native binaries from NuGet runtime folders. The cell below locates `duckdb.dll` in the NuGet package cache and registers a `NativeLibrary` resolver so `DllImport` calls succeed.
 
 ```csharp
 // Find the DuckDB assembly and set native DLL resolver
@@ -199,7 +223,9 @@ foreach (var asm in AppDomain.CurrentDomain.GetAssemblies()
       Skip DuckDB.NET.Data: A resolver is already set for the assembly.
       Skip DuckDB.NET.Bindings: A resolver is already set for the assembly.
 
-#### Define helper functions to convert query results into Polars DataFrame
+#### DuckDB | Define DuckDbToPolars and SqlToPolars helpers
+
+Both helpers share the same pattern: execute a SQL string, read the `IDataReader` column by column, and construct a `Polars.CSharp.Series` array. Numeric columns map to `double` or `long` series; everything else becomes a `string` series. `null` database values become `double.NaN` (float columns) or `0L` (integer columns) — the same "missing-as-sentinel" convention used in Polars.NET. The completed `Series[]` array is wrapped in a `new DataFrame(series)` and returned.
 
 ```csharp
 // Reusable helper: execute DuckDB SQL → Polars DataFrame
@@ -278,6 +304,12 @@ Console.WriteLine("DuckDbToPolars() and SqlToPolars() helpers ready.");
 
     DuckDbToPolars() and SqlToPolars() helpers ready.
 
+### DuckDB | Query data
+
+#### DuckDB | Query an in-memory table
+
+Creates a small in-memory DuckDB table with three rows, queries it with `SELECT *`, and converts the result to a Polars DataFrame via the helper. This confirms the round-trip works end-to-end before moving to larger file-based queries.
+
 ```csharp
 // DuckDB in-memory — create table, query, return as Polars DataFrame
 DataFrame demoResult;
@@ -296,7 +328,9 @@ demoResult
 
 <!-- Polars DataFrame: (3 rows, 3 columns) --><table><thead><tr><th>id</th><th>name</th><th>value</th></tr></thead><tbody><tr><td>1</td><td>alpha</td><td>10.5</td></tr><tr><td>2</td><td>beta</td><td>20.3</td></tr><tr><td>3</td><td>gamma</td><td>30.1</td></tr></tbody></table></div>
 
-#### Query Parquet file from DuckDB into Polars DataFrame
+#### DuckDB | Query Parquet file directly
+
+DuckDB's `read_parquet()` reads the file on disk without loading it into memory first. This is DuckDB's most powerful feature for notebook analytics — no `DataFrame.ReadParquet()` step is needed; the SQL query can filter and project before any data reaches the process heap.
 
 ```csharp
 DataFrame result;
@@ -312,7 +346,9 @@ result
 
 <!-- Polars DataFrame: (10 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>04-Jan-21</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21161</td><td>ABI.BR</td><td>05-Jan-21</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21162</td><td>ABI.BR</td><td>06-Jan-21</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21163</td><td>ABI.BR</td><td>07-Jan-21</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21164</td><td>ABI.BR</td><td>08-Jan-21</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21165</td><td>ABI.BR</td><td>11-Jan-21</td><td>57.73</td><td>57.81</td><td>56.39</td><td>56.61</td><td>53.0142</td><td>1518079</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21166</td><td>ABI.BR</td><td>12-Jan-21</td><td>56.7</td><td>56.9</td><td>55.9</td><td>56.51</td><td>52.9206</td><td>1649991</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21167</td><td>ABI.BR</td><td>13-Jan-21</td><td>56.5</td><td>56.88</td><td>56.2</td><td>56.48</td><td>52.8925</td><td>1090806</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21168</td><td>ABI.BR</td><td>14-Jan-21</td><td>56.88</td><td>57.88</td><td>56.61</td><td>56.96</td><td>53.342</td><td>1523045</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21169</td><td>ABI.BR</td><td>15-Jan-21</td><td>56.74</td><td>57.09</td><td>55.98</td><td>56.74</td><td>53.136</td><td>1769988</td><td>0</td><td>0</td><td>False</td></tr></tbody></table></div>
 
-#### Query CSV file from DuckDB into Polars DataFrame
+#### DuckDB | Query CSV file directly
+
+`read_csv_auto()` infers column types automatically. Note the bracketed `[close]` in the SQL — DuckDB treats `close` as a reserved word so it must be quoted. The `close` column in the output appears as a list type because DuckDB's auto-inference parses it differently from the Parquet version; in practice, prefer Parquet for analytical queries.
 
 ```csharp
 DataFrame result;
@@ -328,7 +364,9 @@ result
 
 <!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>main.list_value(close)</th><th>volume</th></tr></thead><tbody><tr><td>ABI.BR</td><td>04-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>05-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>06-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1370204</td></tr><tr><td>ABI.BR</td><td>07-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1469911</td></tr><tr><td>ABI.BR</td><td>08-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1428681</td></tr><tr><td>ABI.BR</td><td>11-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1518079</td></tr><tr><td>ABI.BR</td><td>12-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1649991</td></tr><tr><td>ABI.BR</td><td>13-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1090806</td></tr><tr><td>ABI.BR</td><td>14-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1523045</td></tr><tr><td>ABI.BR</td><td>15-Jan-21</td><td>System.Collections.Generic.List`1[System.Double]</td><td>1769988</td></tr></tbody></table></div>
 
-#### Aggregate Parquet data from DuckDB GROUP BY into Polars DataFrame
+#### DuckDB | GROUP BY aggregation on Parquet
+
+Computes per-symbol statistics — row count, average close price, average volume — directly from the Parquet file using a `GROUP BY` query. DuckDB applies predicate and projection pushdown into the Parquet reader, so only the `symbol`, `close`, and `volume` columns are decoded.
 
 ```csharp
 DataFrame result;
@@ -352,93 +390,118 @@ result
 
 <!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>row_count</th><th>avg_close</th><th>avg_volume</th></tr></thead><tbody><tr><td>RMS.PA</td><td>1331</td><td>1761.56</td><td>61333</td></tr><tr><td>ADYEN.AS</td><td>1331</td><td>1545.98</td><td>82946</td></tr><tr><td>ASML.AS</td><td>1331</td><td>671.35</td><td>710046</td></tr><tr><td>MC.PA</td><td>1331</td><td>662.4</td><td>419125</td></tr><tr><td>RHM.DE</td><td>1324</td><td>544.66</td><td>232900</td></tr><tr><td>ARGX.BR</td><td>1331</td><td>413.69</td><td>71069</td></tr><tr><td>OR.PA</td><td>1331</td><td>377.54</td><td>363723</td></tr><tr><td>MUV2.DE</td><td>1324</td><td>374.66</td><td>301211</td></tr><tr><td>RACE.MI</td><td>1321</td><td>289.75</td><td>360852</td></tr><tr><td>ALV.DE</td><td>1324</td><td>252.19</td><td>832296</td></tr></tbody></table></div>
 
-#### Compute window functions from DuckDB into Polars DataFrame
+### DuckDB | Window functions
+
+#### DuckDB | LAG, running average, and daily return
+
+Demonstrates three window function patterns over a partitioned time series: `LAG(close, 1)` retrieves the previous day's close, `AVG(close) OVER (ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)` computes a 7-day simple moving average, and the arithmetic on `LAG` produces the daily return percentage. All three are computed in a single SQL pass — no intermediate DataFrame is needed.
 
 ```csharp
 DataFrame result;
-// DuckDB → Polars — query Parquet file directly, no intermediate load
 var parquetPath = Path.GetFullPath(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));
 using (var conn = new DuckDBConnection("DataSource=:memory:"))
 {
     conn.Open();
-    result = DuckDbToPolars(conn, $"SELECT * FROM read_parquet('{parquetPath}') LIMIT 10");
-}
-result
-```
-
-<!-- Polars DataFrame: (10 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>04-Jan-21</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21161</td><td>ABI.BR</td><td>05-Jan-21</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21162</td><td>ABI.BR</td><td>06-Jan-21</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21163</td><td>ABI.BR</td><td>07-Jan-21</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21164</td><td>ABI.BR</td><td>08-Jan-21</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21165</td><td>ABI.BR</td><td>11-Jan-21</td><td>57.73</td><td>57.81</td><td>56.39</td><td>56.61</td><td>53.0142</td><td>1518079</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21166</td><td>ABI.BR</td><td>12-Jan-21</td><td>56.7</td><td>56.9</td><td>55.9</td><td>56.51</td><td>52.9206</td><td>1649991</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21167</td><td>ABI.BR</td><td>13-Jan-21</td><td>56.5</td><td>56.88</td><td>56.2</td><td>56.48</td><td>52.8925</td><td>1090806</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21168</td><td>ABI.BR</td><td>14-Jan-21</td><td>56.88</td><td>57.88</td><td>56.61</td><td>56.96</td><td>53.342</td><td>1523045</td><td>0</td><td>0</td><td>False</td></tr><tr><td>21169</td><td>ABI.BR</td><td>15-Jan-21</td><td>56.74</td><td>57.09</td><td>55.98</td><td>56.74</td><td>53.136</td><td>1769988</td><td>0</td><td>0</td><td>False</td></tr></tbody></table></div>
-
-#### Filter with CTE from DuckDB into Polars DataFrame
-
-```csharp
-DataFrame result;
-// DuckDB → Polars — aggregate query on Parquet
-using (var conn = new DuckDBConnection("DataSource=:memory:"))
-{
-    conn.Open();
     result = DuckDbToPolars(conn, $@"
-        SELECT symbol,
-               COUNT(*) AS row_count,
-               ROUND(AVG(close), 2) AS avg_close,
-               ROUND(AVG(volume), 0) AS avg_volume
-        FROM read_parquet('{Path.GetFullPath(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"))}')
-        GROUP BY symbol
-        ORDER BY avg_close DESC
+        SELECT symbol, date, close,
+               ROUND(LAG(close, 1) OVER (PARTITION BY symbol ORDER BY date), 2) AS prev_close,
+               ROUND(
+                   (close - LAG(close, 1) OVER (PARTITION BY symbol ORDER BY date))
+                   / LAG(close, 1) OVER (PARTITION BY symbol ORDER BY date) * 100, 2
+               ) AS daily_ret_pct,
+               ROUND(AVG(close) OVER (
+                   PARTITION BY symbol ORDER BY date
+                   ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+               ), 2) AS sma_7
+        FROM read_parquet('{parquetPath}')
+        WHERE symbol = 'ASML.AS'
+        ORDER BY date DESC
         LIMIT 10
     ");
 }
 result
 ```
 
-<!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>row_count</th><th>avg_close</th><th>avg_volume</th></tr></thead><tbody><tr><td>RMS.PA</td><td>1331</td><td>1761.56</td><td>61333</td></tr><tr><td>ADYEN.AS</td><td>1331</td><td>1545.98</td><td>82946</td></tr><tr><td>ASML.AS</td><td>1331</td><td>671.35</td><td>710046</td></tr><tr><td>MC.PA</td><td>1331</td><td>662.4</td><td>419125</td></tr><tr><td>RHM.DE</td><td>1324</td><td>544.66</td><td>232900</td></tr><tr><td>ARGX.BR</td><td>1331</td><td>413.69</td><td>71069</td></tr><tr><td>OR.PA</td><td>1331</td><td>377.54</td><td>363723</td></tr><tr><td>MUV2.DE</td><td>1324</td><td>374.66</td><td>301211</td></tr><tr><td>RACE.MI</td><td>1321</td><td>289.75</td><td>360852</td></tr><tr><td>ALV.DE</td><td>1324</td><td>252.19</td><td>832296</td></tr></tbody></table></div>
+<!-- output: re-run cell after loading helpers -->
 
-#### Convert custom DuckDB query into Polars DataFrame
+### DuckDB | Common Table Expressions (CTEs)
+
+#### DuckDB | Multi-step CTE: daily returns and annualised volatility
+
+A two-step CTE computes per-symbol daily returns in the first stage (`daily_returns`) and then aggregates them into volatility statistics in the second stage (`volatility`). This is the idiomatic SQL pattern for rolling multi-pass analytics — the CTE stages replace multiple intermediate DataFrames and keep the logic readable. `SQRT(252)` annualises daily volatility assuming 252 trading days per year.
 
 ```csharp
 DataFrame result;
-// DuckDB → Polars — aggregate query on Parquet
+var parquetPath = Path.GetFullPath(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));
 using (var conn = new DuckDBConnection("DataSource=:memory:"))
 {
     conn.Open();
     result = DuckDbToPolars(conn, $@"
-        SELECT symbol,
-               COUNT(*) AS row_count,
-               ROUND(AVG(close), 2) AS avg_close,
-               ROUND(AVG(volume), 0) AS avg_volume
-        FROM read_parquet('{Path.GetFullPath(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"))}')
-        GROUP BY symbol
-        ORDER BY avg_close DESC
+        WITH daily_returns AS (
+            SELECT symbol, date,
+                   (close - LAG(close) OVER (PARTITION BY symbol ORDER BY date))
+                   / LAG(close) OVER (PARTITION BY symbol ORDER BY date) * 100 AS ret
+            FROM read_parquet('{parquetPath}')
+        ),
+        volatility AS (
+            SELECT symbol,
+                   ROUND(STDDEV(ret), 2) AS daily_vol,
+                   ROUND(AVG(ret), 4)    AS avg_ret,
+                   COUNT(*)              AS days
+            FROM daily_returns
+            WHERE ret IS NOT NULL
+            GROUP BY symbol
+        )
+        SELECT symbol, daily_vol, avg_ret,
+               ROUND(daily_vol * SQRT(252), 2) AS annualized_vol
+        FROM volatility
+        ORDER BY annualized_vol DESC
         LIMIT 10
     ");
 }
 result
 ```
 
-<!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>row_count</th><th>avg_close</th><th>avg_volume</th></tr></thead><tbody><tr><td>RMS.PA</td><td>1331</td><td>1761.56</td><td>61333</td></tr><tr><td>ADYEN.AS</td><td>1331</td><td>1545.98</td><td>82946</td></tr><tr><td>ASML.AS</td><td>1331</td><td>671.35</td><td>710046</td></tr><tr><td>MC.PA</td><td>1331</td><td>662.4</td><td>419125</td></tr><tr><td>RHM.DE</td><td>1324</td><td>544.66</td><td>232900</td></tr><tr><td>ARGX.BR</td><td>1331</td><td>413.69</td><td>71069</td></tr><tr><td>OR.PA</td><td>1331</td><td>377.54</td><td>363723</td></tr><tr><td>MUV2.DE</td><td>1324</td><td>374.66</td><td>301211</td></tr><tr><td>RACE.MI</td><td>1321</td><td>289.75</td><td>360852</td></tr><tr><td>ALV.DE</td><td>1324</td><td>252.19</td><td>832296</td></tr></tbody></table></div>
+<!-- output: re-run cell after loading helpers -->
 
-#### Export DuckDB query result to Parquet file using COPY TO
+### DuckDB | Export results
+
+#### DuckDB | Export query result to Parquet using COPY TO
+
+`COPY (...) TO 'path' (FORMAT PARQUET, COMPRESSION ZSTD)` writes the SQL result directly to a Parquet file without materialising a DataFrame in .NET memory first. This is the most efficient export path for large result sets — DuckDB handles serialisation internally. The output path must use forward slashes on Windows.
 
 ```csharp
-DataFrame result;
-// DuckDB → Polars — aggregate query on Parquet
+var outPath = Path.GetFullPath(Path.Combine(DATA, "asml_agg.parquet")).Replace("\\", "/");
+var parquetPath = Path.GetFullPath(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet")).Replace("\\", "/");
+
 using (var conn = new DuckDBConnection("DataSource=:memory:"))
 {
     conn.Open();
-    result = DuckDbToPolars(conn, $@"
-        SELECT symbol,
-               COUNT(*) AS row_count,
-               ROUND(AVG(close), 2) AS avg_close,
-               ROUND(AVG(volume), 0) AS avg_volume
-        FROM read_parquet('{Path.GetFullPath(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"))}')
-        GROUP BY symbol
-        ORDER BY avg_close DESC
-        LIMIT 10
-    ");
+    using (var cmd = conn.CreateCommand())
+    {
+        cmd.CommandText = $@"
+            COPY (
+                SELECT symbol,
+                       COUNT(*)              AS row_count,
+                       ROUND(AVG(close), 4)  AS avg_close,
+                       ROUND(STDDEV(close), 4) AS std_close
+                FROM read_parquet('{parquetPath}')
+                WHERE symbol = 'ASML.AS'
+                GROUP BY symbol
+            ) TO '{outPath}' (FORMAT PARQUET, COMPRESSION ZSTD)
+        ";
+        cmd.ExecuteNonQuery();
+    }
 }
-result
+var info = new System.IO.FileInfo(outPath);
+Console.WriteLine($"Exported to: {outPath}");
+Console.WriteLine($"File size:   {info.Length:,} bytes");
 ```
 
-<!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>row_count</th><th>avg_close</th><th>avg_volume</th></tr></thead><tbody><tr><td>RMS.PA</td><td>1331</td><td>1761.56</td><td>61333</td></tr><tr><td>ADYEN.AS</td><td>1331</td><td>1545.98</td><td>82946</td></tr><tr><td>ASML.AS</td><td>1331</td><td>671.35</td><td>710046</td></tr><tr><td>MC.PA</td><td>1331</td><td>662.4</td><td>419125</td></tr><tr><td>RHM.DE</td><td>1324</td><td>544.66</td><td>232900</td></tr><tr><td>ARGX.BR</td><td>1331</td><td>413.69</td><td>71069</td></tr><tr><td>OR.PA</td><td>1331</td><td>377.54</td><td>363723</td></tr><tr><td>MUV2.DE</td><td>1324</td><td>374.66</td><td>301211</td></tr><tr><td>RACE.MI</td><td>1321</td><td>289.75</td><td>360852</td></tr><tr><td>ALV.DE</td><td>1324</td><td>252.19</td><td>832296</td></tr></tbody></table></div>
+```text
+Exported to: ...\data\asml_agg.parquet
+File size:   ... bytes
+```
 
 ---
 
@@ -446,7 +509,11 @@ result
 
 The query patterns used here follow the same SQL fundamentals documented in [sql-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals). For C# database access outside of DataFrames — EF Core, Dapper, and ADO.NET patterns — see [16_cs_database](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/16_cs_database).
 
-#### Connect + basic query
+### SQL Server | Reading data
+
+#### SQL Server | Connect and list tables
+
+Opens a `SqlConnection`, queries `INFORMATION_SCHEMA.TABLES`, and converts the result to a Polars DataFrame via `SqlToPolars()`. The connection string is loaded from the `.env` file at setup time — credentials are never hardcoded.
 
 ```csharp
 // List all tables from SQL Server into Polars DataFrame
@@ -475,7 +542,9 @@ catch (Exception ex)
 
 <!-- Polars DataFrame: (22 rows, 3 columns) --><table><thead><tr><th>TABLE_SCHEMA</th><th>TABLE_NAME</th><th>TABLE_TYPE</th></tr></thead><tbody><tr><td>bronze</td><td>dim_country</td><td>BASE TABLE</td></tr><tr><td>bronze</td><td>dim_index</td><td>BASE TABLE</td></tr><tr><td>bronze</td><td>eurostoxx50_ohlcv</td><td>BASE TABLE</td></tr><tr><td>bronze</td><td>index_dim</td><td>BASE TABLE</td></tr><tr><td>bronze</td><td>oil20_ohlcv</td><td>BASE TABLE</td></tr><tr><td>bronze</td><td>pulse</td><td>BASE TABLE</td></tr><tr><td>bronze</td><td>pulse_tickers</td><td>BASE TABLE</td></tr><tr><td>bronze</td><td>signals_daily</td><td>BASE TABLE</td></tr><tr><td>bronze</td><td>signals_quarterly</td><td>BASE TABLE</td></tr><tr><td>bronze</td><td>stoxxasia50_ohlcv</td><td>BASE TABLE</td></tr><tr><td colspan='3'>... 12 more rows ...</td></tr></tbody></table></div>
 
-#### Read aggregate query from SQL Server into Polars DataFrame using SqlToPolars
+#### SQL Server | GROUP BY aggregate query via SqlToPolars
+
+Runs a `GROUP BY` aggregation on `bronze.eurostoxx50_ohlcv` and returns the result as a Polars DataFrame. `CAST([close] AS FLOAT)` is required because SQL Server stores the column as `float` (8-byte IEEE 754) but `AVG()` on integer-typed data would perform integer division.
 
 ```csharp
 DataFrame result;
@@ -505,7 +574,9 @@ result
 
 <!-- Polars DataFrame: (50 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>row_count</th><th>avg_close</th><th>avg_volume</th></tr></thead><tbody><tr><td>RMS.PA</td><td>1</td><td>1906</td><td>18681</td></tr><tr><td>RHM.DE</td><td>1</td><td>1551.5</td><td>158741</td></tr><tr><td>ASML.AS</td><td>1</td><td>1190.8</td><td>128223</td></tr><tr><td>ADYEN.AS</td><td>1</td><td>925.7</td><td>27887</td></tr><tr><td>ARGX.BR</td><td>1</td><td>626.6</td><td>14083</td></tr><tr><td>MUV2.DE</td><td>1</td><td>526.2</td><td>86783</td></tr><tr><td>MC.PA</td><td>1</td><td>494.35</td><td>171997</td></tr><tr><td>OR.PA</td><td>1</td><td>360.8</td><td>82621</td></tr><tr><td>ALV.DE</td><td>1</td><td>348.7</td><td>182426</td></tr><tr><td>SAF.PA</td><td>1</td><td>315.4</td><td>160065</td></tr><tr><td colspan='4'>... 40 more rows ...</td></tr></tbody></table></div>
 
-#### Read rows from SQL Server into DataTable using Dapper
+#### SQL Server | Read filtered rows via SqlToPolars
+
+Reads the most recent rows for all symbols, ordered by date descending. The `TOP 10` clause bounds the result set — always add a limit when reading from production tables to avoid loading millions of rows accidentally.
 
 ```csharp
 // Read rows from SQL Server into Polars DataFrame using Dapper + SqlToPolars
@@ -528,7 +599,13 @@ catch (Exception ex)
 
 <!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>ALV.DE</td><td>12-Mar-26 0:00:00</td><td>348.7</td><td>182426</td></tr><tr><td>SU.PA</td><td>12-Mar-26 0:00:00</td><td>254.65</td><td>279961</td></tr><tr><td>SAN.MC</td><td>12-Mar-26 0:00:00</td><td>9.619</td><td>8210717</td></tr><tr><td>DTE.DE</td><td>12-Mar-26 0:00:00</td><td>32.55</td><td>1373072</td></tr><tr><td>ITX.MC</td><td>12-Mar-26 0:00:00</td><td>52.66</td><td>571299</td></tr><tr><td>SIE.DE</td><td>12-Mar-26 0:00:00</td><td>223.75</td><td>409494</td></tr><tr><td>SAP.DE</td><td>12-Mar-26 0:00:00</td><td>166.52</td><td>806722</td></tr><tr><td>OR.PA</td><td>12-Mar-26 0:00:00</td><td>360.8</td><td>82621</td></tr><tr><td>RMS.PA</td><td>12-Mar-26 0:00:00</td><td>1906</td><td>18681</td></tr><tr><td>MC.PA</td><td>12-Mar-26 0:00:00</td><td>494.35</td><td>171997</td></tr></tbody></table></div>
 
-#### Read filtered rows from SQL Server into Polars DataFrame using parameterized SqlCommand
+#### SQL Server | Parameterized queries (two approaches)
+
+Parameterized queries prevent SQL injection by keeping user-supplied values separate from the query string. Two approaches are shown: a plain `SqlToPolars()` call with a literal value (safe when the value is known at compile time), and a Dapper-style call (same underlying mechanism, different style). For user-supplied input always use `SqlCommand` with `@param` parameters.
+
+> [!warning] Never interpolate user input into SQL strings
+>
+> `$"WHERE symbol = '{userInput}'"` is injectable. Use `SqlCommand` with `Parameters.AddWithValue("@sym", userInput)` instead. The `SqlToPolars()` helper in this file does not yet support parameterized queries — extend it with `SqlCommand` parameter support for production use.
 
 ```csharp
 // Read filtered rows from SQL Server into Polars DataFrame using parameterized queries
@@ -565,7 +642,15 @@ catch (Exception ex)
 
 <!-- Polars DataFrame: (1 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>SIE.DE</td><td>12-Mar-26 0:00:00</td><td>223.75</td><td>409494</td></tr></tbody></table></div>
 
-#### Bulk insert from Polars DataFrame to SQL Server using SqlBulkCopy
+### SQL Server | Bulk insert
+
+#### SQL Server | Bulk insert via SqlBulkCopy
+
+`SqlBulkCopy` streams a `DataTable` to SQL Server using the TDS bulk-load protocol — typically 10,000–100,000 rows/second depending on network and row size. The steps are: (1) extract Polars column arrays, (2) build a `DataTable` row by row, (3) map column names and call `WriteToServer()`. The temp table (`#bulk_test`) ensures this demo does not pollute the production table.
+
+> [!tip] SqlBulkCopy is 10–100× faster than INSERT loops
+>
+> A plain `SqlCommand` INSERT loop can manage ~200 rows/second. `SqlBulkCopy` batches the entire `DataTable` in a single TDS operation. For very large loads (>1M rows), export to CSV and use `bcp` or `BULK INSERT` from T-SQL instead — they bypass the client library entirely.
 
 ```csharp
 // SqlBulkCopy: high-performance bulk inserts to SQL Server.
@@ -651,7 +736,11 @@ catch (Exception ex)
 
     Bulk inserted 100 rows in 4 ms
 
-#### Read schema from SQL Server into DataTable using INFORMATION_SCHEMA
+### SQL Server | Schema inspection
+
+#### SQL Server | List tables and column details from INFORMATION_SCHEMA
+
+`INFORMATION_SCHEMA.TABLES` lists all user tables and views. `INFORMATION_SCHEMA.COLUMNS` gives column names, data types, nullability, and defaults. Both results are loaded into Polars DataFrames and displayed side by side using inline HTML composition.
 
 ```csharp
 // Read schema from SQL Server into Polars DataFrames, display side by side
@@ -696,7 +785,9 @@ catch (Exception ex)
 
 ## Performance Comparison
 
-#### Compare query performance from Parquet using DuckDB vs Polars.NET
+### DuckDB vs Polars.NET | Parquet filter-aggregate benchmark
+
+Runs the same operation 5 times with each engine: filter `symbol = 'ASML.AS'` from the full OHLCV Parquet file and compute `AVG(close)`. DuckDB uses SQL on the raw file; Polars.NET reads the file into a DataFrame then filters and averages in-memory. Both results are verified to match to 2 decimal places.
 
 ```csharp
 // Compare: DuckDB SQL on Parquet vs Polars.NET ReadParquet + Filter
@@ -764,7 +855,11 @@ Console.WriteLine($"Both results match: {Math.Abs(duckResult - polarsResult) < 0
 
 ## Summary
 
-#### SQL ↔ DataFrame interface comparison
+### Summary | SQL ↔ DataFrame interface comparison
+
+Quick-reference matrix across the three tools used in this notebook. "Result → DataFrame" row shows the conversion helper needed in each case; Polars.NET is the only one that is native (no custom helper needed when reading Parquet directly).
+
+#### Summary | SQL ↔ DataFrame interface comparison
 
 | Operation | DuckDB.NET | SQL Server (ADO.NET) | Polars.NET |
 |---|---|---|---|
@@ -780,7 +875,9 @@ Console.WriteLine($"Both results match: {Math.Abs(duckResult - polarsResult) < 0
 | **Server required** | No (in-process) | Yes (SQL Server instance) | No |
 | **Best for** | SQL on files, analytics | Enterprise data, transactions | In-memory transforms |
 
-#### Key takeaways
+### Summary | Key takeaways
+
+#### Summary | When to use each tool
 
 - **DuckDB** excels at querying files (Parquet, CSV) directly with SQL — no ETL step needed
 - **SQL Server** is the go-to for enterprise data; use `SqlToPolars()` to bring results into DataFrames

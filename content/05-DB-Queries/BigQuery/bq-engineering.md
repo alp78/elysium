@@ -1,7 +1,7 @@
 ---
-tags: [sql, bigquery, gcp]
-aliases: [BigQuery engineering, BigQuery partitioning, BigQuery clustering, BigQuery DML, BigQuery cost, BigQuery materialized views]
-description: "BigQuery engineering patterns with executable examples — covers partitioning, clustering, DML, INFORMATION_SCHEMA, cost optimization, security, and materialized views."
+tags: [bigquery, gcp, engineering]
+aliases: [BigQuery engineering, BigQuery partitioning, BigQuery clustering, BigQuery DML, BigQuery cost, BigQuery views]
+description: "BigQuery engineering patterns with executable examples — covers views, stored procedures, table functions, clustering, DML, SCD, deduplication, query optimization, transactions, bulk loading, and partitioning."
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -56,9 +56,9 @@ Connecting to &#x27;bigquery://bq-wh-nb&#x27;
 >
 > The `bigquery://` connection uses Application Default Credentials — no password in the connection string. See [gcloud-authentication > The ADC Credential Search Order](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication#the-adc-credential-search-order).
 
+BigQuery uses **datasets** as the equivalent of SQL Server schemas. The `CREATE SCHEMA` statement below creates a `demo` dataset for lab objects — it is idempotent and safe to re-run.
+
 ```sql
--- Create a demo dataset for our objects (idempotent)
--- BigQuery uses datasets instead of schemas
 CREATE SCHEMA IF NOT EXISTS demo
 OPTIONS(location="europe-west1")
 ```
@@ -77,12 +77,14 @@ OPTIONS(location="europe-west1")
 
 ### Regular Views — Simplify Complex Queries
 
-A view is a saved query. It doesn't store data — it runs the query every time you SELECT from it.
-Use case: wrap the "latest price per stock" pattern so downstream queries are simple.
+A view is a saved query — it stores no data and re-executes the underlying query on every `SELECT`. This means each read from a view incurs the full scan cost of the base tables. Use case: wrap the "latest price per stock" pattern so downstream queries use a clean interface instead of duplicating complex logic.
+
+> [!tip] Views re-scan on every read
+>
+> Unlike materialized views, regular views offer no caching — BigQuery runs the full query and charges bytes scanned each time. For dashboard queries hit repeatedly throughout the day, consider a materialized view (`CREATE MATERIALIZED VIEW`) or a scheduled query that writes to a gold-layer table.
 
 
 ```sql
--- Create a view that always returns the latest price per stock
 CREATE OR REPLACE VIEW bq-wh-nb.stoxx_gold.v_latest_prices AS
 SELECT symbol, date, `open`, high, low, `close`, volume
 FROM (
@@ -106,8 +108,9 @@ WHERE rn = 1;
     <tbody>
 </table>
 
+The complex `ROW_NUMBER` pattern is now hidden behind a simple `SELECT` — downstream queries no longer need to know the dedup logic.
+
 ```sql
--- Now the complex ROW_NUMBER pattern is hidden behind a simple SELECT
 SELECT * FROM bq-wh-nb.stoxx_gold.v_latest_prices ORDER BY `close` DESC
 LIMIT 10
 ```
@@ -182,7 +185,6 @@ Join multiple tables into a single business-friendly view. Dashboards query this
 
 
 ```sql
--- Dashboard view: scores + company info + latest price
 CREATE OR REPLACE VIEW bq-wh-nb.stoxx_gold.v_stock_dashboard AS
 SELECT
     s.composite_rank AS `rank`,
@@ -225,7 +227,6 @@ JOIN `bq-wh-nb.stoxx_silver.index_dim` d ON s.symbol = d.symbol AND d._index = s
 
 
 ```sql
--- Use the dashboard view
 SELECT * FROM bq-wh-nb.stoxx_gold.v_stock_dashboard
 WHERE _index = 'euro_stoxx_50'
   AND score_date = (SELECT MAX(score_date) FROM `bq-wh-nb.stoxx_gold.scores_daily` WHERE _index = 'euro_stoxx_50')
@@ -333,24 +334,18 @@ LIMIT 10
 >
 > Tools like [dbt's BigQuery adapter](https://alp78.github.io/elysium/11-dbt/Adapters/dbt-bigquery-adapter) generate many of the parameterized query and view patterns shown below, removing the need to hand-write stored procedures for routine transforms.
 
-### Stored Procedures — Basic SP with Parameters
+### Stored Procedures — Parameterized Queries
 
-A stored procedure is precompiled SQL that lives in the database.
-Use case: pipeline steps as SPs — each step has consistent parameters and error handling.
+A stored procedure is precompiled SQL that lives in the database. BigQuery supports `CREATE OR REPLACE PROCEDURE` with `CALL`, but jupysql magic cannot execute `CALL` statements. BigQuery procedures also use `EXECUTE IMMEDIATE` for dynamic SQL.
 
-### Stored Procedures — BigQuery vs SQL Server Comparison
+The **idiomatic BigQuery pattern** for reusable parameterized logic is a CTE with a `params` row or a table function — not a stored procedure. Stored procedures are reserved for multi-statement scripting blocks with control flow (`IF`, `LOOP`, `BEGIN...EXCEPTION`).
 
-BigQuery supports `CREATE OR REPLACE PROCEDURE` with `CALL`, but:
-- jupysql magic can't execute `CALL` statements
-- BigQuery procedures use `EXECUTE IMMEDIATE` for dynamic SQL
-- The **idiomatic BigQuery pattern** is parameterized CTEs or table functions
-
-Below: the equivalent as a reusable CTE query (production BigQuery style).
+> [!info] Cross-engine comparison
+>
+> SQL Server stored procedures compile and cache execution plans — a major performance feature. BigQuery procedures offer no plan caching; they simply execute statements sequentially. For parameterized reads, prefer table functions (`CREATE TABLE FUNCTION`) over procedures.
 
 
 ```sql
--- Reusable parameterized query (BigQuery-native pattern)
--- In production, wrap this in a scheduled query or Cloud Function
 WITH params AS (
     SELECT 'euro_stoxx_50' AS index_key, 5 AS top_n
 )
@@ -411,10 +406,9 @@ LIMIT 5
 
 
 
-### Stored Procedures — Error Handling with TRY/CATCH
+### Stored Procedures — Error Handling with BEGIN...EXCEPTION
 
-Production SPs wrap logic in `TRY/CATCH` with explicit transactions.
-If anything fails, the entire operation rolls back — no partial loads.
+Production scripts wrap logic in `BEGIN...EXCEPTION...END` with explicit transactions. If anything fails inside the block, execution jumps to the `EXCEPTION` handler where you can roll back and log the error. This is BigQuery's equivalent of SQL Server's `TRY/CATCH`.
 
 
 > [!info] BEGIN...EXCEPTION...END Pattern
@@ -422,7 +416,6 @@ If anything fails, the entire operation rolls back — no partial loads.
 > BigQuery uses `BEGIN...EXCEPTION...END` for error handling (not TRY/CATCH like SQL Server). Transactions wrap the DML so failures roll back the entire operation — no partial loads.
 
 ```sql
--- BigQuery scripting: transaction + error handling
 DECLARE index_key STRING DEFAULT 'euro_stoxx_50';
 DECLARE rows_loaded INT64 DEFAULT 0;
 
@@ -455,19 +448,18 @@ END
         </tr>
 </table>
 
-
+> [!warning] jupysql limitation — multi-statement scripts
+>
+> The `Undeclared variable: rows_loaded` error occurs because jupysql sends each `%%sql` cell as a standalone query — `DECLARE` in one cell is not visible to subsequent statements. In BigQuery Console or `bq query`, the full script block executes as a unit and variables persist across statements. This is a notebook environment limitation, not a BigQuery bug.
 
 ## User-Defined Functions
 
-### User-Defined Functions — Inline Table-Valued Function
+### User-Defined Functions — Table Function
 
-An **iTVF** is like a parameterized view — the optimizer inlines it into the outer query.
-Always prefer iTVFs over scalar UDFs or multi-statement TVFs.
+A BigQuery **table function** (`CREATE TABLE FUNCTION`) is like a parameterized view — you pass arguments, and it returns a table result that the optimizer can inline into the outer query. This is BigQuery's equivalent of SQL Server's inline table-valued function (iTVF). Always prefer table functions over scalar UDFs for returning result sets.
 
 
 ```sql
--- Table function: get price history for a symbol within a date range
--- BigQuery: CREATE TABLE FUNCTION (not iTVF)
 CREATE OR REPLACE TABLE FUNCTION demo.fn_price_history(
     sym STRING,
     from_date DATE,
@@ -492,7 +484,6 @@ AS (
 
 
 ```sql
--- Call the table function
 SELECT * FROM demo.fn_price_history('ASML.AS', '2026-03-01', '2026-03-21')
 ORDER BY date DESC
 LIMIT 15
@@ -564,20 +555,25 @@ LIMIT 15
 
 ## Indexes
 
-### Indexes — Types and When to Use Each
+### Indexes — BigQuery Storage Optimization
 
-| Type | What | When |
-|------|------|------|
-| **Clustered** | Physical row order. One per table. | PK (symbol, date) for time-series |
-| **Non-clustered** | Separate B-tree pointing to rows. | Filter/sort columns (sector, _index) |
-| **Covering** | Includes extra columns in leaf. | Avoids key lookups for SELECT columns |
-| **Filtered** | Index only subset of rows. | `WHERE is_current = TRUE` on dims |
-| **Columnstore** | Columnar storage, batch processing. | Analytical aggregations on OHLCV |
+BigQuery does not have traditional B-tree indexes. Instead, it offers storage-level optimizations that serve the same purpose — reducing bytes scanned and improving query performance.
 
+| Strategy | What | When |
+|----------|------|------|
+| **Partitioning** | Splits table into segments by column value (date, integer range, ingestion time). Query planner skips irrelevant partitions. | Time-series data — always partition by the date column used in WHERE filters. |
+| **Clustering** | Sorts data within each partition by up to 4 columns. Colocates related rows for efficient scanning. | High-cardinality filter/join columns (`symbol`, `_index`). Order matters — put equality filters first. |
+| **Search Index** | Full-text index using `CREATE SEARCH INDEX`. Enables `SEARCH()` function for string matching. | Log tables, free-text fields. Not needed for structured query patterns. |
+| **Materialized Views** | Precomputed, auto-refreshed query result. BigQuery rewrites queries to use the materialized view when possible. | Expensive aggregations run repeatedly (dashboard queries). |
+
+> [!info] SQL Server parallel
+>
+> SQL Server's clustered index (physical row order) maps conceptually to BigQuery's clustering (sort order within partitions). SQL Server's non-clustered indexes have no direct BigQuery equivalent — partition pruning and clustering replace them. SQL Server's columnstore indexes are unnecessary in BigQuery because BigQuery is *already* columnar.
+
+
+BigQuery has no manual index creation. Instead, inspect table metadata to verify clustering and partitioning configuration.
 
 ```sql
--- BigQuery manages indexes automatically (no manual index creation).
--- Instead, inspect table metadata and clustering/partitioning info.
 SELECT
     table_name,
     clustering_ordinal_position,
@@ -629,14 +625,40 @@ LIMIT 15
 
 
 
-### Indexes — Design Principles for Data Pipelines
+### Clustering — Design Principles for Data Pipelines
 
-1. **Equality columns first** in composite keys: `WHERE _index = 'X' AND date >= '2026-01-01'` → index on `(_index, date)`
-2. **Include columns** to avoid lookups: `INCLUDE (close, volume)` if you SELECT those
-3. **Don't over-index**: each index slows writes. Monitor with `sys.dm_db_index_usage_stats`
-4. **Filtered indexes** for hot subsets: `WHERE is_current = TRUE` on dimension tables
+1. **Equality columns first** in the clustering key: `WHERE _index = 'X' AND date >= '2026-01-01'` → cluster on `(_index, date)`. BigQuery prunes blocks where the clustering column's min/max range doesn't overlap the filter.
+2. **Maximum 4 clustering columns** per table. Choose columns that appear most often in WHERE and JOIN clauses.
+3. **Partition first, cluster second**: partition by date (coarse pruning), then cluster by the next most-filtered column (fine pruning within each partition).
+4. **Monitor with INFORMATION_SCHEMA**: `INFORMATION_SCHEMA.TABLE_STORAGE` shows total bytes and `INFORMATION_SCHEMA.COLUMNS` shows `clustering_ordinal_position` for each table.
 
 ## Slowly Changing Dimensions (SCD)
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A[Dimension attribute changed] --> B{Does history matter<br>for calculations?}
+    B -->|No — typo fix,<br>display name| C[SCD Type 1<br>Overwrite in place]
+    B -->|Yes — sector change,<br>index membership| D[SCD Type 2<br>Expire old + insert new]
+    C --> E[UPDATE row directly]
+    D --> F[Set is_current = FALSE,<br>valid_to = NOW on old row]
+    F --> G[INSERT new row with<br>is_current = TRUE,<br>valid_from = NOW]
+```
+
+> [!info] Cross-engine comparison
+>
+> SCD patterns are engine-agnostic SQL — the same Type 1/Type 2 logic works in BigQuery and SQL Server. Firestore handles versioning differently: store historical snapshots as subcollections (`/company/{id}/history/{timestamp}`) or use a `versions` array field within the document.
 
 > [!danger] SCD Type 1 Destroys History
 >
@@ -653,9 +675,9 @@ Simply UPDATE the row. History is lost. Use when you don't care about old values
 Example: fix a typo in a company name.
 
 
+This simulation shows the before/after of an SCD Type 1 overwrite: ASML's sector changes from its current value to "Information Technology". In production, this would be a direct `UPDATE` statement.
+
 ```sql
--- SCD Type 1: overwrite in place (simulated with CTE)
--- Shows the before/after: ASML sector changes from its current value
 WITH original AS (
     SELECT symbol, short_name, sector, is_current
     FROM `bq-wh-nb.stoxx_silver.index_dim`
@@ -730,9 +752,9 @@ Expire the old row (`is_current=0, valid_to=NOW`) and insert a new row (`is_curr
 This is how `silver.index_dim` works — it has `valid_from`, `valid_to`, `is_current` columns.
 
 
+The `stoxx_silver.index_dim` table already implements SCD Type 2 with `valid_from`, `valid_to`, and `is_current` columns. Rows with `is_current = TRUE` and `valid_to = NULL` represent the current state.
+
 ```sql
--- SCD Type 2: the `bq-wh-nb.stoxx_silver.index_dim` already implements this
--- Show the SCD columns
 SELECT
     symbol, short_name, sector,
     is_current,
@@ -810,9 +832,9 @@ The classic SQL pattern: identify contiguous groups (islands) and missing period
 in a time series. Uses the difference between ROW_NUMBER and the date to group consecutive days.
 
 
+`LAG` compares each date to its predecessor within the same symbol's time series. A gap of more than 3 calendar days is flagged as unusual — normal weekends produce a 3-day gap (Friday → Monday), so anything larger indicates a holiday, data issue, or delisting event.
+
 ```sql
--- Detect gaps in ASML trading data (days with no price)
--- LAG compares each date to the previous; gap > 3 calendar days = unusual
 SELECT
     symbol, date,
     LAG(date) OVER (PARTITION BY symbol ORDER BY date) AS prev_date,
@@ -885,22 +907,19 @@ The standard approach: assign `ROW_NUMBER()` within each duplicate group,
 keep `rn = 1`, delete the rest.
 
 
+The simulation below uses `UNION ALL` to create an artificial duplicate, then applies `ROW_NUMBER()` partitioned by the natural key (`symbol, date`) to assign `rn = 1` to the row to keep (highest volume wins). In production, filter to `rn = 1` and write the deduplicated result to the target table.
+
 ```sql
--- Deduplication with ROW_NUMBER: detect and resolve duplicates
--- Simulated: UNION ALL the same rows to create duplicates in a CTE
 WITH raw_data AS (
-    -- Original rows
     SELECT symbol, date, `close`, volume, 'original' AS source
     FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
     WHERE symbol = 'ASML.AS' AND date >= '2026-03-10'
     UNION ALL
-    -- Simulate duplicate: same key, slightly different values
     SELECT symbol, date, `close` + 0.5, volume + 999, 'duplicate'
     FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
     WHERE symbol = 'ASML.AS' AND date = (SELECT MAX(date) FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv` WHERE symbol = 'ASML.AS')
 ),
 numbered AS (
-    -- ROW_NUMBER: assign rn=1 to the row we want to keep (highest volume)
     SELECT *,
            ROW_NUMBER() OVER (PARTITION BY symbol, date ORDER BY volume DESC) AS rn,
            COUNT(*) OVER (PARTITION BY symbol, date) AS copies
@@ -967,17 +986,17 @@ For a broader look at controlling BigQuery spend through slot management and res
 
 | Anti-Pattern | Problem | Fix |
 |-------------|---------|-----|
-| `WHERE EXTRACT(YEAR FROM date) = 2025` | Function on column prevents index seek | `WHERE date >= '2025-01-01' AND date < '2026-01-01'` |
-| `SELECT *` | Reads all columns, can't use covering index | Select only needed columns |
+| `WHERE EXTRACT(YEAR FROM date) = 2025` | Function on partition column prevents partition pruning | `WHERE date >= '2025-01-01' AND date < '2026-01-01'` |
+| `SELECT *` | Reads all columns — BigQuery is columnar, so more columns = more bytes scanned = higher cost | Select only needed columns |
 | `WHERE col = NULL` | Always FALSE (NULL != NULL) | `WHERE col IS NULL` |
-| Implicit conversion | VARCHAR compared to NVARCHAR causes scan | Match data types in predicates |
-| Missing index | Table scan on large table | Add non-clustered index on filter columns |
+| No partition filter | Scans all partitions on a partitioned table | Always filter on partition column; use `require_partition_filter` |
+| `ORDER BY` without `LIMIT` | Full sort across all slots — expensive on large result sets | Always pair `ORDER BY` with `LIMIT` |
+| Cross-join with large tables | Cartesian product multiplies bytes scanned | Ensure at least one side is small; use JOIN instead |
 
+
+Both queries return the same count, but the sargable version enables partition pruning. The `EXTRACT` version wraps the column in a function, preventing BigQuery from using partition metadata to skip irrelevant partitions. The range filter version allows direct partition elimination.
 
 ```sql
--- Compare: both return the same count, but the sargable version is faster
--- BAD:  WHERE EXTRACT(YEAR FROM date) = 2025  → function on column prevents index seek
--- GOOD: WHERE date >= ... AND date < ...  → index can seek directly
 SELECT
     (SELECT COUNT(*) FROM `bq-wh-nb.stoxx_silver.eurostoxx50_ohlcv`
      WHERE EXTRACT(YEAR FROM date) = 2025) AS bad_function_on_column,
@@ -1003,42 +1022,52 @@ SELECT
 
 
 
-## Transaction Isolation Levels
+## Transaction Model
 
-### Transaction Isolation Levels — Guide for Data Engineering
+### Transaction Model — BigQuery Snapshot Isolation
 
-| Level | Dirty Reads | Non-Repeatable | Phantoms | Use Case |
-|-------|------------|----------------|----------|----------|
-| READ UNCOMMITTED | Yes | Yes | Yes | Stale-tolerant dashboards, quick counts |
-| READ COMMITTED (default) | No | Yes | Yes | Most pipeline reads |
-| REPEATABLE READ | No | No | Yes | Financial calculations |
-| SERIALIZABLE | No | No | No | Critical writes (score computation) |
-| SNAPSHOT | No | No | No | Analytics reads (no blocking, uses tempdb) |
+BigQuery does not expose configurable isolation levels like SQL Server. Every query runs under **snapshot isolation** automatically — each statement sees a consistent snapshot of the data as of the statement's start time. There is no risk of dirty reads, non-repeatable reads, or phantom reads.
 
-**Recommendation for pipelines**: READ COMMITTED for writes, SNAPSHOT for reads.
+| Feature | BigQuery | SQL Server |
+|---------|----------|------------|
+| Default isolation | Snapshot (automatic) | READ COMMITTED |
+| Configurable levels | No | Yes (5 levels) |
+| Multi-statement transactions | `BEGIN TRANSACTION ... COMMIT` (scripting only) | `BEGIN TRAN ... COMMIT` |
+| Concurrent writers | Last-writer-wins per row | Lock-based concurrency |
+| Deadlock risk | None (no row-level locks) | Yes (lock escalation) |
 
-> [!warning] SERIALIZABLE Kills Concurrency
+> [!warning] Multi-statement transactions have strict limits
 >
-> SERIALIZABLE Kills Concurrency at Scale.
-> SERIALIZABLE takes range locks that block all other transactions touching overlapping key ranges. In a pipeline with concurrent writers (e.g., two Airflow tasks writing to overlapping date ranges), SERIALIZABLE causes cascading blocking and potential deadlocks. Only use it for single-row critical writes where correctness is non-negotiable.
+> BigQuery multi-statement transactions (using `BEGIN TRANSACTION`) are limited to tables in a single region, cannot span datasets in different locations, and must complete within 10 minutes. Each transaction counts toward the 1,500 DML/day quota per table. They are designed for short atomic operations — not long-running ETL pipelines.
 
 > [!success] Safe Pattern
 >
-> Use **READ COMMITTED** for most pipeline writes and **SNAPSHOT isolation** for analytics reads — SNAPSHOT provides consistent reads without blocking writers. In BigQuery, transactions are automatically serializable within a single DML statement; for multi-statement scripts, wrap only the critical writes in `BEGIN TRANSACTION ... COMMIT`.
+> For most pipeline patterns, single DML statements (INSERT, MERGE, DELETE) are already atomic — no explicit transaction needed. Use `BEGIN TRANSACTION ... COMMIT` only when you need multiple DML statements to succeed or fail as a unit (e.g., delete old partition + insert new data). Keep transactions short and targeted.
+
+> [!info] Cross-engine comparison
+>
+> SQL Server offers five isolation levels (READ UNCOMMITTED through SERIALIZABLE) plus SNAPSHOT. BigQuery offers only snapshot isolation with no configuration. Firestore offers serializable transactions with a 500-document-per-transaction limit and optimistic concurrency (transaction retries on conflict).
 
 ## Bulk Loading Patterns
 
 ### Bulk Loading Strategies
 
-| Strategy | Speed | When |
-|----------|-------|------|
-| `INSERT INTO ... SELECT` | Medium | Small-medium loads from staging |
-| `INSERT ... WITH (TABLOCK)` | Fast | Minimal logging in SIMPLE/BULK_LOGGED |
-| `BULK INSERT` | Fastest | Loading from CSV files on disk |
-| Batched inserts (TOP N loop) | Controlled | Large loads with checkpoints |
-| Drop indexes → load → rebuild | Fastest | Full table reloads |
+BigQuery offers several ingestion mechanisms, each with different quotas, costs, and latency characteristics. The choice depends on data volume, frequency, and whether you need exactly-once semantics.
 
-**Pipeline pattern**: load to staging table → validate → MERGE to target → truncate staging.
+| Strategy | Latency | Cost | When |
+|----------|---------|------|------|
+| `bq load` (CLI) | Seconds–minutes | Free (batch) | CSV/JSON/Parquet files from GCS or local disk |
+| `LOAD DATA` (SQL) | Seconds–minutes | Free (batch) | Same as `bq load` but executed as a SQL statement |
+| `INSERT INTO ... SELECT` | Seconds | Bytes scanned | Small-medium loads from other BQ tables or CTEs |
+| **Storage Write API** (batch) | Seconds | Free (batch) | Programmatic loads from Python/Java with exactly-once semantics |
+| **Storage Write API** (committed) | Sub-second | Streaming pricing | High-frequency inserts with exactly-once guarantee |
+| `insertAll` (legacy streaming) | Sub-second | Streaming pricing ($0.05/GB) | Real-time inserts — simpler API but at-least-once delivery |
+
+> [!tip] Batch loads are free
+>
+> BigQuery does not charge for batch loading (`bq load`, `LOAD DATA`, Storage Write API in batch mode). You pay only for storage after the data lands. Streaming inserts (`insertAll`, Storage Write API in committed mode) are charged at $0.05/GB. For cost-sensitive pipelines, prefer batch loading on a schedule over streaming.
+
+**Pipeline pattern**: load to staging table (batch) → validate with quality checks → MERGE to target → truncate staging. See [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) for implementation details.
 
 ## Data Lineage & Audit Columns
 
@@ -1048,15 +1077,16 @@ Every table in the stoxx database has audit columns:
 
 | Column | Type | Purpose |
 |--------|------|--------|
-| `_ingested_at` | DATETIME2 | When the row was loaded (bronze) |
-| `_scored_at` | DATETIME2 | When the score was computed (gold) |
-| `_computed_at` | DATETIME2 | When the performance was calculated |
-| `is_filled` | BIT | Whether the row was gap-filled (silver) |
-| `is_current` | BIT | SCD Type 2 current flag (dimension) |
+| `_ingested_at` | TIMESTAMP | When the row was loaded (bronze) |
+| `_scored_at` | TIMESTAMP | When the score was computed (gold) |
+| `_computed_at` | TIMESTAMP | When the performance was calculated |
+| `is_filled` | BOOL | Whether the row was gap-filled (silver) |
+| `is_current` | BOOL | SCD Type 2 current flag (dimension) |
 
+
+A data freshness check across all medallion layers — if any table's `last_update` is more than 1 day behind the current date, the pipeline may have stalled.
 
 ```sql
--- Data freshness check: when was each table last updated?
 SELECT '`bq-wh-nb.stoxx_bronze.eurostoxx50_ohlcv`' AS `table`, MAX(_ingested_at) AS last_update
 FROM `bq-wh-nb.stoxx_bronze.eurostoxx50_ohlcv`
 UNION ALL
@@ -1112,28 +1142,38 @@ Partition large tables (millions of rows) by a date column for:
 
 The OHLCV tables (~65K rows each) are too small to benefit. In production with 100M+ rows, partition by year or month.
 
-<!-- 
+> [!danger] Querying without a partition filter scans ALL partitions
+>
+> If a table is partitioned by `date` but your query has no `WHERE date = ...` or `WHERE date BETWEEN ...` filter, BigQuery scans every partition — negating the cost benefit entirely. You pay for the full table scan.
+
+> [!success] Safe Pattern
+>
+> Always filter on the partition column in WHERE clauses. Enable `require_partition_filter` when creating the table to enforce this at the schema level: queries without a partition filter will fail with an error instead of silently scanning everything.
 
 ```sql
--- Example: partition by year (conceptual — don't run)
-CREATE PARTITION FUNCTION pf_yearly(DATE)
-    AS RANGE RIGHT FOR VALUES ('2022-01-01', '2023-01-01', '2024-01-01', '2025-01-01', '2026-01-01');
-
-CREATE PARTITION SCHEME ps_yearly
-    AS PARTITION pf_yearly ALL TO ([PRIMARY]);
-
-CREATE TABLE silver.ohlcv_partitioned (
-    symbol VARCHAR(20), date DATE, [close] FLOAT, ...
-) ON ps_yearly(date);
+CREATE TABLE IF NOT EXISTS demo.ohlcv_partitioned (
+    symbol STRING,
+    date DATE,
+    open FLOAT64,
+    high FLOAT64,
+    low FLOAT64,
+    close FLOAT64,
+    volume INT64
+)
+PARTITION BY DATE_TRUNC(date, MONTH)
+CLUSTER BY symbol
+OPTIONS(
+    require_partition_filter = TRUE,
+    description = 'Partitioned by month, clustered by symbol'
+)
 ```
 
- -->
+For partition pruning cost details and slot management, see [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization).
 
 ## Cleanup
 
 
 ```python
-# Clean up demo objects
 from google.cloud import bigquery
 bq = bigquery.Client(project="bq-wh-nb")
 

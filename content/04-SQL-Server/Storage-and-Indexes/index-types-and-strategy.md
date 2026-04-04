@@ -3,7 +3,7 @@ tags: [sql, sql-server, tsql]
 aliases: [clustered index, nonclustered index, covering index, filtered index, columnstore index, CCI, NCCI, composite index, index key, INCLUDE columns, bookmark lookup, key lookup, index seek, index scan, B-tree, fill factor, fragmentation, REORGANIZE, REBUILD, statistics]
 description: "All SQL Server index types (clustered, nonclustered, covering, filtered, columnstore) with creation syntax, usage guidance, the decision tree for choosing the right type, anti-patterns, fragmentation detection and maintenance, statistics management, and the data pipeline index strategy."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-04
 status: complete
 ---
 
@@ -22,7 +22,11 @@ Indexes are the single most impactful lever for SQL Server query performance. Th
 
 ### B-Tree Rowstore Indexes (Default)
 
-The standard index type. Data is organized in a balanced tree structure where leaf nodes contain the indexed columns (or full rows for clustered). Every query path in OLTP workloads relies on B-tree indexes.
+The standard index type in SQL Server. Although the documentation uses the term "B-tree," the engine actually implements a B+ tree — a variant where all data resides in the leaf nodes and internal (non-leaf) nodes contain only key values and pointers to child pages. This distinction matters: in a B+ tree, leaf pages are linked in a doubly linked list, enabling efficient range scans without returning to the root. Each page is 8 KB, and a typical 3–4 level B+ tree can index millions of rows — a root page, one or two intermediate levels, and leaf pages containing either the full data rows (clustered) or index keys plus a pointer back to the clustered key (nonclustered). Every query path in OLTP workloads relies on B-tree indexes.
+
+> [!info] SQL Server 2019+ | OPTIMIZE_FOR_SEQUENTIAL_KEY
+>
+> When a large number of concurrent threads insert rows into an index with a sequential key (e.g., `IDENTITY`, `DATETIME2 DEFAULT SYSUTCDATETIME()`), all inserts target the last page, causing `PAGELATCH_EX` contention. SQL Server 2019 introduced `OPTIMIZE_FOR_SEQUENTIAL_KEY = ON` as a `CREATE INDEX` option — it adds an internal optimization that reduces latch contention on hot pages without changing the B+ tree structure. Enable it on any index with high-concurrency sequential inserts.
 
 | Index Type | What It Does | When to Use |
 |---|---|---|
@@ -35,12 +39,24 @@ The standard index type. Data is organized in a balanced tree structure where le
 
 ### Columnstore Indexes
 
-Data is stored column-by-column instead of row-by-row, compressed in segments of ~1M rows. Designed for analytics — aggregations over millions of rows scan only the needed columns.
+Data is stored column-by-column instead of row-by-row, compressed into segments of approximately 1,048,576 rows (1M). Each segment stores a single column's values using dictionary encoding, run-length encoding, or bit-packing, achieving 10x or better compression compared to rowstore. Queries that aggregate or scan large datasets benefit from batch mode execution — the engine processes up to 900 rows at a time per operator instead of one row at a time, dramatically reducing CPU overhead. Columnstore is designed for analytics workloads; single-row lookups should still use B-tree rowstore indexes.
 
 | Index Type | What It Does | When to Use |
 |---|---|---|
 | **Clustered Columnstore (CCI)** | Replaces the entire table storage with columnar format. No B-tree. One per table. | Pure analytics/warehouse tables with bulk loads and aggregate queries. Not for single-row lookups. |
 | **Nonclustered Columnstore (NCCI)** | Adds a columnar index alongside the existing rowstore table. Both coexist. | Hybrid OLTP+analytics — keep the rowstore for transactional writes, add NCCI for reporting queries. Example: add NCCI on `dbo.market_data` for dashboard aggregate queries while keeping rowstore for pipeline upserts. |
+
+> [!info] Columnstore Version Differences — SQL Server 2019 vs 2022
+>
+> | Feature | SQL Server 2019 | SQL Server 2022 |
+> |---|---|---|
+> | **Ordered CCI** | Not available | `ORDER (col1, col2)` clause sorts data within segments for efficient segment elimination |
+> | **Segment elimination data types** | Numeric, date, time, `datetimeoffset` (scale ≤ 2) only | Extended to string, binary, GUID, and `datetimeoffset` (scale > 2) |
+> | **LIKE predicate elimination** | Not supported | Supports prefix `LIKE 'string%'` segment elimination (not `'%string'`) |
+> | **Tuple mover background merge** | Available (introduced in 2019) — merges small OPEN delta rowgroups automatically | Inherited from 2019 |
+> | **Online CCI build/rebuild** | Available (introduced in 2019) | Available |
+>
+> After upgrading to 2022, existing columnstore indexes must be rebuilt (`ALTER INDEX REBUILD`) to benefit from the new string/binary segment elimination.
 
 ### When Columnstore Beats Rowstore
 
@@ -56,7 +72,9 @@ Data is stored column-by-column instead of row-by-row, compressed in segments of
 
 ## Exploring Existing Indexes
 
-#### sys.indexes + sys.index_columns — list all indexes on a table
+SQL Server exposes index metadata through a set of system catalog views — tables maintained by the engine that describe every object in the database. The three most important views for index inspection are `sys.indexes` (one row per index, including type and uniqueness), `sys.index_columns` (one row per column in each index, including key position and sort direction), and `sys.dm_db_index_physical_stats` (a dynamic management function that returns runtime metrics like page counts and fragmentation). Querying these views is the first step in any index review: before creating, dropping, or modifying indexes, you need to know exactly what already exists, how large each index is, and whether any tables are stored as heaps (no clustered index at all).
+
+### sys.indexes + sys.index_columns — list all indexes on a table
 
 ```sql
 -- List ALL indexes on a specific table
@@ -79,7 +97,7 @@ ORDER BY i.index_id;
 -- filter_definition = WHERE clause for filtered indexes
 ```
 
-#### sys.indexes + sys.tables — list all indexes across the database
+### sys.indexes + sys.tables — list all indexes across the database
 
 ```sql
 -- List ALL indexes across the entire database
@@ -94,7 +112,7 @@ WHERE OBJECTPROPERTY(i.object_id, 'IsUserTable') = 1
 ORDER BY table_name, i.index_id;
 ```
 
-#### sys.dm_db_index_physical_stats — detailed index sizes and page counts
+### sys.dm_db_index_physical_stats — detailed index sizes and page counts
 
 ```sql
 -- Detailed index info with sizes
@@ -114,7 +132,7 @@ ORDER BY size_mb DESC;
 -- Largest indexes are candidates for review — are they actually used?
 ```
 
-#### sys.indexes type = 0 — check if a table is a heap
+### sys.indexes type = 0 — check if a table is a heap
 
 ```sql
 -- Check if a table is a HEAP (no clustered index)
@@ -127,7 +145,7 @@ WHERE type = 0  -- 0 = HEAP
 -- Almost always add a clustered index (exception: staging tables with truncate-reload)
 ```
 
-#### sys.index_columns is_descending_key — view columns with sort direction
+### sys.index_columns is_descending_key — view columns with sort direction
 
 ```sql
 -- View index columns with sort direction
@@ -148,7 +166,9 @@ ORDER BY i.index_id, ic.key_ordinal;
 
 ## Index Usage Analysis — Are Your Indexes Being Used?
 
-#### sys.dm_db_index_usage_stats — index reads vs writes since restart
+Every index imposes a write-side cost: each `INSERT`, `UPDATE`, or `DELETE` must maintain every index on the table. If an index is never used for reads, it is pure overhead — consuming disk space, slowing DML, and adding maintenance work for zero benefit. SQL Server tracks index usage through the dynamic management view `sys.dm_db_index_usage_stats`, which records cumulative counts of seek, scan, lookup, and update operations per index since the last service restart. By comparing read operations (seeks + scans + lookups) against write operations (updates), you can identify dead indexes that should be dropped, underperforming indexes that need redesign, and healthy indexes that justify their cost. This section also covers detection of duplicate indexes — multiple indexes with identical key columns on the same table — which waste space and write I/O with no additional query benefit.
+
+### sys.dm_db_index_usage_stats — index reads vs writes since restart
 
 ```sql
 -- Index usage statistics (reads vs. writes)
@@ -177,7 +197,7 @@ ORDER BY total_reads DESC;
 > - **High user_updates, zero reads** — dead index; drop it to save write overhead
 > - **user_lookups > 0** — key lookup happening; consider adding INCLUDE columns
 
-#### dm_db_index_usage_stats user_seeks = 0 — find unused indexes
+### dm_db_index_usage_stats user_seeks = 0 — find unused indexes
 
 ```sql
 -- UNUSED indexes (zero reads since last restart)
@@ -210,7 +230,7 @@ ORDER BY s.user_updates DESC;
 >
 > Run `SELECT sqlserver_start_time FROM sys.dm_os_sys_info` first. Only proceed if uptime is at least 7 days covering a full workload cycle. Before dropping, disable the index for a week (`ALTER INDEX IX_name ON table DISABLE`) to confirm no query plan breaks, then drop it.
 
-#### sys.index_columns STRING_AGG — find duplicate indexes (same key columns)
+### sys.index_columns STRING_AGG — find duplicate indexes (same key columns)
 
 ```sql
 -- DUPLICATE indexes (same key columns — waste of space and write I/O)
@@ -242,7 +262,9 @@ JOIN IndexColumns b ON a.object_id = b.object_id AND a.key_cols = b.key_cols AND
 
 ## Missing Index Recommendations
 
-#### sys.dm_db_missing_index_details — built-in missing index recommendations
+SQL Server continuously monitors query execution and records situations where the optimizer believes an index would have improved a query plan. This information is exposed through a group of dynamic management views collectively known as the missing index DMV framework: `sys.dm_db_missing_index_details` (the table, equality columns, inequality columns, and suggested INCLUDE columns), `sys.dm_db_missing_index_groups` (links details to group statistics), and `sys.dm_db_missing_index_group_stats` (cumulative cost savings — seeks, scans, average user impact as a percentage). The framework also embeds `<MissingIndex>` elements directly into cached XML execution plans, allowing you to find specific slow queries that would benefit from a new index. These suggestions are a starting point, not a prescription — they tend to recommend one index per query pattern, which can lead to an explosion of overlapping indexes if followed blindly. Always validate against existing indexes, consolidate overlapping suggestions into composite indexes, and test on a non-production copy before deploying.
+
+### sys.dm_db_missing_index_details — built-in missing index recommendations
 
 ```sql
 -- SQL Server's built-in missing index suggestions
@@ -283,7 +305,7 @@ ORDER BY improvement_score DESC;
 >
 > Before creating any suggested index: check `sys.dm_db_index_usage_stats` for an existing similar index, run `sp_estimate_data_compression_savings` to evaluate size impact, and test the candidate index on a non-production copy with `SET STATISTICS IO ON` to confirm the improvement. Prefer extending an existing composite index with INCLUDE columns over adding a new standalone index.
 
-#### XML plan MissingIndex — find cached plans with missing index warnings
+### XML plan MissingIndex — find cached plans with missing index warnings
 
 ```sql
 -- Missing index suggestions from a specific query plan
@@ -484,6 +506,43 @@ WHERE date >= '2024-01-01';
 > - **Filtered NCCI** — columnstore on a subset of rows. Smaller index, faster to build and maintain.
 > - **Pipeline strategy:** keep rowstore clustered index for MERGE upserts, add NCCI for dashboard aggregate queries.
 
+### Resumable Index Operations (SQL Server 2019+)
+
+> [!abstract] Resumable Index Operations
+>
+> Starting with SQL Server 2019, index create and rebuild operations can be paused and resumed without losing progress. This is critical for large tables where an index build may take hours — if a maintenance window closes, you can pause the operation and resume it later rather than starting over.
+
+```sql
+-- Resumable index create
+CREATE NONCLUSTERED INDEX IX_market_data_symbol
+ON dbo.market_data (symbol)
+WITH (ONLINE = ON, RESUMABLE = ON, MAX_DURATION = 60);
+```
+
+The `RESUMABLE = ON` option enables pause/resume capability. `MAX_DURATION` sets the maximum runtime in minutes before the operation automatically pauses — the partially built index is preserved and can be resumed later. `ONLINE = ON` is required for resumable operations.
+
+```sql
+-- Pause a running resumable index operation
+ALTER INDEX IX_market_data_symbol ON dbo.market_data PAUSE;
+
+-- Resume a paused index operation
+ALTER INDEX IX_market_data_symbol ON dbo.market_data RESUME;
+
+-- Abort a paused index operation (discards progress)
+ALTER INDEX IX_market_data_symbol ON dbo.market_data ABORT;
+```
+
+> [!warning] Resumable Index Limitations
+>
+> - Not supported for columnstore indexes, filtered indexes, or indexes with computed/`timestamp` key columns.
+> - `SORT_IN_TEMPDB = ON` cannot be combined with `RESUMABLE = ON`.
+> - The initial `MAXDOP` value cannot be changed after pausing.
+> - Cannot be executed inside an explicit transaction.
+
+> [!success] Safe Pattern: Use Resumable Rebuilds in Limited Maintenance Windows
+>
+> For large tables where a full `REBUILD` would exceed the available maintenance window, use `ALTER INDEX ... REBUILD WITH (ONLINE = ON, RESUMABLE = ON, MAX_DURATION = 120)`. The operation automatically pauses after 2 hours and can be resumed during the next window. Check progress with `SELECT * FROM sys.index_resumable_operations`.
+
 ### Unique Constraints and Primary Keys
 
 ```sql
@@ -507,6 +566,10 @@ ADD CONSTRAINT UQ_instrument_tickers_isin UNIQUE (isin);
 
 ## Index Fragmentation — Detection and Maintenance
 
+Index fragmentation is a physical storage problem that develops over time as DML operations modify data. SQL Server stores index data in 8 KB pages organized into a B+ tree. When an `INSERT` targets a full page, the engine performs a page split — it allocates a new page, moves roughly half the rows to it, and inserts the new row. The new page is typically not physically adjacent to the original, creating logical fragmentation (out-of-order pages on disk) and reducing page density (pages that are only ~50% full instead of ~100%). `UPDATE` operations that increase row size and `DELETE` operations that leave gaps cause similar effects. Fragmentation degrades range-scan performance because the storage engine must issue random I/O instead of sequential reads, and low page density means more pages must be read to retrieve the same number of rows. SQL Server provides two maintenance operations to address this: `REORGANIZE` (an online, lightweight compaction that reorders leaf pages) and `REBUILD` (a heavier operation that drops and recreates the index from scratch, resetting fragmentation to near zero and updating statistics).
+
+### sys.dm_db_index_physical_stats — check fragmentation for a specific table
+
 ```sql
 -- Check fragmentation for all indexes on a table
 SELECT
@@ -518,7 +581,7 @@ SELECT
     ips.fragment_count
 FROM sys.dm_db_index_physical_stats(DB_ID(), OBJECT_ID('dbo.market_data'), NULL, NULL, 'LIMITED') ips
 JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id;
--- 'LIMITED' = fast scan (reads only parent pages, not leaf). Use 'DETAILED' for full accuracy.
+-- 'LIMITED' = fast scan (reads only parent/non-leaf pages). Use 'SAMPLED' (1% of pages) for large tables, 'DETAILED' for full accuracy.
 ```
 
 > [!info] Fragmentation Thresholds
@@ -530,7 +593,7 @@ JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id;
 > - `avg_fragmentation_in_percent` = logical fragmentation (out-of-order pages)
 > - `avg_page_space_used_in_percent` = how full each page is (low = wasted space)
 
-#### sys.dm_db_index_physical_stats — check fragmentation across all indexes
+### sys.dm_db_index_physical_stats — check fragmentation across all indexes
 
 ```sql
 -- Fragmentation across ALL indexes in the database
@@ -611,6 +674,8 @@ ALTER INDEX CCI_archive ON dbo.market_data_archive REBUILD;
 
 ### Automated Maintenance Script
 
+Rather than manually checking fragmentation and running individual `REORGANIZE` or `REBUILD` commands, most production environments use a cursor-based or set-based script that iterates over all indexes, reads their fragmentation level from `sys.dm_db_index_physical_stats`, and applies the appropriate action based on the thresholds defined above (5–30% → REORGANIZE, >30% → REBUILD). The script below skips indexes with fewer than 100 pages (where fragmentation has negligible performance impact) and uses `ONLINE = ON` for rebuilds to avoid blocking production queries. For enterprise environments, consider replacing this script with Ola Hallengren's maintenance solution, which handles edge cases (columnstore, partitioned tables, lock timeouts) and is the industry standard.
+
 This script automates the rebuild/reorganize decision based on fragmentation thresholds. Run it weekly during low-usage windows.
 
 ```sql
@@ -657,9 +722,24 @@ DEALLOCATE idx_cursor;
 
 ## Statistics — The Optimizer's Data Map
 
-Statistics tell the query optimizer how data is distributed in each column. Without accurate statistics, the optimizer makes bad guesses about row counts, leading to terrible execution plans.
+Statistics are metadata objects that describe how data values are distributed across a column or set of columns. Each statistics object contains a histogram with up to 200 steps, a density vector (average selectivity per column combination), and header metadata (last update time, sample rate, total rows). The query optimizer uses this information to estimate how many rows will pass through each operator in a query plan — a process called cardinality estimation (CE). If statistics are stale or missing, the CE produces inaccurate row counts, and the optimizer may choose a nested loop join when a hash join would be 100x faster, or vice versa.
 
-#### sys.stats + dm_db_stats_properties — view all statistics on a table
+SQL Server maintains statistics automatically through three database-level settings: `AUTO_CREATE_STATISTICS` (creates single-column statistics on columns used in `WHERE` predicates when no existing stats cover them — these auto-created stats have names starting with `_WA`), `AUTO_UPDATE_STATISTICS` (refreshes stats when the number of row modifications exceeds an internal threshold), and `AUTO_UPDATE_STATISTICS_ASYNC` (performs the refresh in the background so the triggering query does not wait). All three should be `ON` for most workloads.
+
+> [!info] Auto-Update Threshold — Exact Behavior
+>
+> The auto-update trigger depends on the SQL Server version and compatibility level:
+> - **SQL Server 2014 and earlier (or compat level < 130):** statistics are refreshed after approximately 20% of rows have been modified (plus a fixed offset of 500 rows). For a 1M-row table, this means ~200,500 modifications before an update fires — far too late for tables with skewed data.
+> - **SQL Server 2016+ with compat level ≥ 130** (or trace flag 2371 on earlier versions): a dynamic, decreasing threshold based on `SQRT(1000 × table_rows)`. For a 1M-row table, this fires after ~31,623 modifications instead of 200,000 — a 6x improvement in freshness.
+>
+> Even with the dynamic threshold, bulk pipeline loads that insert or update more than 10% of a table should be followed by an explicit `UPDATE STATISTICS ... WITH FULLSCAN`.
+
+> [!info] SQL Server 2022 | Cardinality Estimation Feedback and AUTO_DROP
+>
+> - **CE Feedback:** SQL Server 2022 introduced cardinality estimation feedback as part of Intelligent Query Processing. When the optimizer detects repeated CE inaccuracies for a query (estimated vs. actual row counts differ significantly), it automatically adjusts future estimates for that query pattern without requiring manual intervention or statistics updates.
+> - **AUTO_DROP statistics:** SQL Server 2022 added the `AUTO_DROP = ON` option for manually created statistics. When enabled, schema changes (like dropping a column) will automatically drop dependent statistics instead of blocking the DDL. Auto-created statistics always behave as if `AUTO_DROP = ON` in SQL Server 2022+.
+
+### sys.stats + dm_db_stats_properties — view all statistics on a table
 
 ```sql
 -- View all statistics on a table
@@ -680,7 +760,7 @@ ORDER BY sp.last_updated;
 -- rows_sampled / rows = sample rate (< 100% means stats may be approximate)
 ```
 
-#### dm_db_stats_properties modification_counter — find stale statistics
+### dm_db_stats_properties modification_counter — find stale statistics
 
 ```sql
 -- STALE statistics (changed significantly since last update)
@@ -700,7 +780,7 @@ ORDER BY sp.modification_counter DESC;
 -- Auto-update triggers at ~20% modifications (or sqrt(1000 * rows) in SQL Server 2016+)
 ```
 
-#### UPDATE STATISTICS WITH FULLSCAN — refresh statistics after bulk loads
+### UPDATE STATISTICS WITH FULLSCAN — refresh statistics after bulk loads
 
 ```sql
 -- Update statistics for a specific index
@@ -720,7 +800,7 @@ EXEC sp_updatestats;
 -- Uses default sample rate (not full scan)
 ```
 
-#### DBCC SHOW_STATISTICS — view histogram data distribution
+### DBCC SHOW_STATISTICS — view histogram data distribution
 
 ```sql
 -- View the histogram (data distribution) for a statistic
@@ -728,7 +808,7 @@ DBCC SHOW_STATISTICS('dbo.market_data', 'IX_market_data_symbol_date');
 -- Returns 3 result sets:
 -- 1. Header: name, last updated, rows, rows sampled
 -- 2. Density vector: average selectivity per column combination
--- 3. Histogram: up to 200 steps showing value distribution
+-- 3. Histogram: up to 200 steps showing value distribution (leftmost column only)
 --    RANGE_HI_KEY = upper bound of the step
 --    EQ_ROWS = rows matching exactly this value
 --    RANGE_ROWS = rows between previous step and this one
@@ -736,7 +816,15 @@ DBCC SHOW_STATISTICS('dbo.market_data', 'IX_market_data_symbol_date');
 --    AVG_RANGE_ROWS = average rows per distinct value in range
 ```
 
-#### ALTER DATABASE SET AUTO_CREATE_STATISTICS ON — enable auto stats
+> [!warning] Histogram Limitations
+>
+> The histogram captures data distribution for the **leftmost column only** — second and subsequent columns in a multi-column statistics object are described only by the density vector (average selectivity), not by individual value distribution. Additionally, the histogram is capped at **200 steps** regardless of table size, so on very large tables with highly skewed data, the optimizer may estimate row counts poorly for values that fall between histogram step boundaries. For critical query predicates on non-leading columns, create dedicated single-column statistics.
+
+> [!success] Safe Pattern: Supplement Multi-Column Statistics
+>
+> If a query filters on a non-leading column of a composite index (e.g., `WHERE date = '2025-03-09'` on an index keyed `(symbol, date)`), create explicit single-column statistics on that column: `CREATE STATISTICS ST_market_data_date ON dbo.market_data (date)`. This gives the optimizer a dedicated histogram for accurate cardinality estimation.
+
+### ALTER DATABASE SET AUTO_CREATE_STATISTICS ON — enable auto stats
 
 ```sql
 -- Enable auto-create and auto-update (should always be ON)
@@ -755,11 +843,23 @@ ALTER DATABASE analytics_db SET AUTO_UPDATE_STATISTICS_ASYNC ON;
 
 ---
 
-### Index Strategy Decision Tree
+## Index Strategy Decision Tree
 
 Use this flowchart to decide which index type to create:
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
 flowchart TD
     START{{"What query pattern?"}}
     POINT["Point lookup<br/>WHERE col = value"]
@@ -843,7 +943,7 @@ flowchart TD
 
 ---
 
-### Index Anti-Patterns and Common Mistakes
+## Index Anti-Patterns and Common Mistakes
 
 | Mistake | Why It's Bad | Fix |
 |---|---|---|
@@ -860,7 +960,7 @@ flowchart TD
 
 ---
 
-### Pipeline Index Strategy
+## Pipeline Index Strategy
 
 Recommended index layout for the example data model:
 
@@ -895,7 +995,7 @@ ON dbo.gold_scores (symbol, date, composite_score, rank_overall, _index, sector)
 
 ---
 
-### Related
+## Related
 
 - [storage-internals](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/storage-internals) — B-tree page structure, page splits, and how indexes are stored
 - [index-maintenance](https://alp78.github.io/elysium/04-SQL-Server/Performance/index-maintenance) — dedicated maintenance procedures and scheduling

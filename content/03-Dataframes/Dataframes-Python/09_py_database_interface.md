@@ -1,10 +1,10 @@
 ---
-tags: [pipeline, python, pandas, polars]
+tags: [python, pandas, polars, dataframes]
 aliases:
   - SQLContext, DuckDB, SQL Server, database queries
 description: "Pandas/Polars DataFrame reference 09/10 — Database & SQL Interface (SQLContext, DuckDB, SQL Server connectivity). Side-by-side executable examples with cell outputs."
 created: 2026-03-24
-updated: 2026-03-24
+updated: 2026-04-04
 status: complete
 ---
 
@@ -58,8 +58,15 @@ import sqlalchemy as sa
 
 ## Polars SQLContext
 
+Register Polars DataFrames as virtual SQL tables and query them with standard SQL. `pl.SQLContext` compiles SQL into Polars lazy expressions — no data copy, no network roundtrip. Results are returned as `LazyFrame` and must be materialized with `.collect()`.
 
-- **SQL Context**: Register Polars DataFrames as SQL tables, query with standard SQL.
+> [!info] `pl.SQLContext` is Python-only — no C# equivalent in Polars.NET 0.4.0
+>
+> The .NET bindings (Polars.NET 0.4.0) do not implement `SQLContext`. C# code must use the Polars expression API directly, or route SQL through DuckDB.NET. See [09_cs_database_interface](https://alp78.github.io/elysium/03-Dataframes/Dataframes-CSharp/09_cs_database_interface) for the DuckDB.NET approach.
+
+### Polars | Basic SELECT
+
+Register DataFrames as named tables in a `SQLContext` instance, then run SQL against them. The `execute()` method returns a `LazyFrame`; call `.collect()` to materialize rows into a `DataFrame`.
 
 ```python
 ctx=pl.SQLContext(ohlcv=ohlcv_pl, dim=dim_pl, scores=scores_pl)
@@ -67,6 +74,10 @@ display(ctx.execute("SELECT * FROM ohlcv LIMIT 5").collect())
 ```
 
 <div><!-- shape: (5, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
+
+### Polars | GROUP BY aggregation
+
+Aggregate over all rows grouped by a key column using standard `GROUP BY ... ORDER BY` SQL. The query runs against the registered `ohlcv` table and returns per-symbol statistics across the full date range.
 
 ```python
 display(ctx.execute("""
@@ -79,6 +90,10 @@ display(ctx.execute("""
 ```
 
 <div><!-- shape: (10, 3) --><table><thead><tr><th>symbol</th><th>avg_close</th><th>days</th></tr><tr><td>str</td><td>f64</td><td>u32</td></tr></thead><tbody><tr><td>RMS.PA</td><td>1761.555748</td><td>1331</td></tr><tr><td>ADYEN.AS</td><td>1545.976409</td><td>1331</td></tr><tr><td>ASML.AS</td><td>671.348911</td><td>1331</td></tr><tr><td>MC.PA</td><td>662.404508</td><td>1331</td></tr><tr><td>RHM.DE</td><td>544.661533</td><td>1324</td></tr><tr><td>ARGX.BR</td><td>413.691961</td><td>1331</td></tr><tr><td>OR.PA</td><td>377.544365</td><td>1331</td></tr><tr><td>MUV2.DE</td><td>374.659932</td><td>1324</td></tr><tr><td>RACE.MI</td><td>289.753823</td><td>1321</td></tr><tr><td>ALV.DE</td><td>252.193731</td><td>1324</td></tr></tbody></table></div>
+
+### Polars | JOIN query
+
+Join two registered tables on a shared key using `JOIN ... USING (column)`. Equivalent to a Polars expression `join(dim_pl, on="symbol")`, but expressed in SQL for readability when combining many tables or when porting SQL from another system.
 
 ```python
 display(ctx.execute("""
@@ -97,12 +112,15 @@ display(ctx.execute("""
 
 The SQL syntax used in Polars SQLContext follows the same patterns as [sql-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals) for SQL Server and [bq-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-fundamentals) for BigQuery. For direct Python database access with pyodbc and SQLAlchemy outside of DataFrames, see [16_py_database](https://alp78.github.io/elysium/02-Programming-Languages/Python/16_py_database).
 
-- **Rolling Window**: Compute statistics over a sliding window of N consecutive rows (e.g., 7-day moving average).
-- **With Columns**: Add new columns or replace existing ones. All original columns are kept.
+> [!warning] `ROWS BETWEEN` is not supported in `pl.SQLContext`
+>
+> Polars SQLContext does not implement the `ROWS BETWEEN N PRECEDING AND CURRENT ROW` frame specification as of Polars 1.x. Use the Polars expression API (`pl.col().rolling_mean(window_size)`) for sliding-window aggregations. DuckDB (see [DuckDB — Embedded Analytical Database](#duckdb--embedded-analytical-database)) supports the full `ROWS BETWEEN` syntax.
+
+### Polars | SQL window function (cumulative average)
+
+Compute a cumulative average over all rows up to and including the current row, partitioned by symbol and ordered by date, using `AVG(col) OVER (PARTITION BY ... ORDER BY ...)`. This form of window function is supported in `pl.SQLContext`; `ROWS BETWEEN` frame specifications are not.
 
 ```python
-# Polars SQL does not yet support custom ROWS BETWEEN frames.
-# Use the expression API for rolling windows instead:
 result = (
     ctx.execute("""
         SELECT symbol, date, close,
@@ -114,8 +132,15 @@ result = (
     """).collect()
 )
 display(result)
+```
 
-# For SMA-7, use the expression API:
+<div><!-- shape: (10, 4) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>cumulative_avg</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>2026-03-12</td><td>1190.8</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-11</td><td>1198.8</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-10</td><td>1200.0</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-09</td><td>1147.6</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-06</td><td>1147.0</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-05</td><td>1186.0</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-04</td><td>1199.8</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-03</td><td>1161.8</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-02</td><td>1210.4</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-02-27</td><td>1233.4</td><td>671.348911</td></tr></tbody></table></div>
+
+### Polars | Expression API rolling window (SMA-7)
+
+For sliding-window aggregations (e.g., a 7-day simple moving average), use `pl.col().rolling_mean(window_size)` via the Polars expression API. This is the preferred approach when `ROWS BETWEEN` SQL syntax is needed but not yet available in `pl.SQLContext`.
+
+```python
 sma_result = (
     ohlcv_pl
     .filter(pl.col("symbol") == "ASML.AS")
@@ -127,8 +152,6 @@ sma_result = (
 )
 display(sma_result)
 ```
-
-<div><!-- shape: (10, 4) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>cumulative_avg</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>2026-03-12</td><td>1190.8</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-11</td><td>1198.8</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-10</td><td>1200.0</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-09</td><td>1147.6</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-06</td><td>1147.0</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-05</td><td>1186.0</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-04</td><td>1199.8</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-03</td><td>1161.8</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-02</td><td>1210.4</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-02-27</td><td>1233.4</td><td>671.348911</td></tr></tbody></table></div>
 
 <div><!-- shape: (10, 4) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>sma_7</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>2026-03-12</td><td>1190.8</td><td>1181.428571</td></tr><tr><td>ASML.AS</td><td>2026-03-11</td><td>1198.8</td><td>1177.285714</td></tr><tr><td>ASML.AS</td><td>2026-03-10</td><td>1200.0</td><td>1178.942857</td></tr><tr><td>ASML.AS</td><td>2026-03-09</td><td>1147.6</td><td>1183.714286</td></tr><tr><td>ASML.AS</td><td>2026-03-06</td><td>1147.0</td><td>1195.828571</td></tr><tr><td>ASML.AS</td><td>2026-03-05</td><td>1186.0</td><td>1216.028571</td></tr><tr><td>ASML.AS</td><td>2026-03-04</td><td>1199.8</td><td>1227.085714</td></tr><tr><td>ASML.AS</td><td>2026-03-03</td><td>1161.8</td><td>1234.142857</td></tr><tr><td>ASML.AS</td><td>2026-03-02</td><td>1210.4</td><td>1247.542857</td></tr><tr><td>ASML.AS</td><td>2026-02-27</td><td>1233.4</td><td>1251.514286</td></tr></tbody></table></div>
 
@@ -486,6 +509,12 @@ display(db.execute("""
 </table>
 
 ### Query DataFrames Directly (Zero-Copy)
+
+DuckDB resolves Python variable names in the caller's scope as SQL table references. Any Pandas `DataFrame` or Polars `DataFrame`/`LazyFrame` in scope can be queried by name — no `CREATE TABLE` or data copy needed.
+
+> [!tip] Zero-copy scan: DuckDB reads Pandas/Polars DataFrames without duplicating data
+>
+> When you reference `ohlcv_pd` in a DuckDB SQL query, DuckDB uses Apache Arrow zero-copy to scan the DataFrame's underlying memory buffers directly. This means you can run analytical SQL against a 66K-row Pandas DataFrame without incurring a serialization/deserialization cost. Works for both Pandas (`DataFrame`) and Polars (`DataFrame` and `LazyFrame`).
 
 ```python
 # DuckDB can query Pandas DataFrames by variable name — no import needed
@@ -2983,7 +3012,7 @@ print("DuckDB cleanup done")
 | SQL dialect | Standard SQL | PostgreSQL-like |
 
 ---
-# Part 2: SQL Server Integration
+## Part 2: SQL Server Integration
 
 Connect Pandas and Polars directly to SQL Server tables for reading, writing, and querying.
 
@@ -3081,7 +3110,7 @@ print("Connection OK")
 > In SQLAlchemy use bound parameters: `text("SELECT * FROM t WHERE symbol = :s")` with
 > `conn.execute(stmt, {"s": symbol})`.
 
-### Pandas — pd.read_sql()
+### Pandas | pd.read_sql()
 
 ```python
 # Read entire table
@@ -3248,7 +3277,7 @@ print(f"\nShape: \n{df.shape}")
     Shape: 
     (169, 24)
 
-### Polars — pl.read_database()
+### Polars | pl.read_database()
 
 ```python
 # Polars with SQLAlchemy engine
@@ -3285,7 +3314,7 @@ display(df)
 
 ## Chunked Reading (Large Tables)
 
-### Pandas
+### Pandas | Chunked read
 
 ```python
 # Read in chunks for memory efficiency
@@ -3297,7 +3326,7 @@ print(f"Read {total:,} rows in chunks of 10,000")
 
     Read 50 rows in chunks of 10,000
 
-### Polars
+### Polars | Chunked read
 
 ```python
 # Polars reads the full result but ConnectorX streams internally
@@ -3344,7 +3373,7 @@ print(f"First batch: {df.shape}")
 > `df.to_sql("table", engine, if_exists="append", index=False)`. For partial replacements,
 > use a `MERGE` statement instead.
 
-### Pandas — df.to_sql()
+### Pandas | df.to_sql()
 
 ```python
 # Create a test DataFrame
@@ -3466,7 +3495,7 @@ display(pd.read_sql("SELECT * FROM dbo._test_pandas", ENGINE))
   </tbody>
 </table>
 
-### Polars — write via Pandas or pyodbc
+### Polars | write via Pandas or pyodbc
 
 ```python
 # Polars doesn't have a native write_sql yet — convert to Pandas first

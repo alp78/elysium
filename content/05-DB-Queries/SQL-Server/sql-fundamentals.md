@@ -1,5 +1,5 @@
 ---
-tags: [sql, sql-server, tsql]
+tags: [sql-server, tsql, fundamentals]
 aliases: [SQL fundamentals, T-SQL basics, SQL queries, SELECT, JOIN, WHERE, GROUP BY]
 description: "SQL Server T-SQL fundamentals with executable examples and cell outputs — covers SELECT, filtering, joins, aggregation, subqueries, and set operations."
 created: 2026-03-22
@@ -24,7 +24,9 @@ status: complete
 %sql mssql+pyodbc://sa:EsgDev2026Pass1@localhost:1434/stoxx?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes&MARS_Connection=yes
 ```
 
-Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?TrustServerCertificate=yes&amp;driver=ODBC+Driver+18+for+SQL+Server&#x27;
+```text
+Connecting to 'mssql+pyodbc://sa:***@localhost:1434/stoxx?TrustServerCertificate=yes&driver=ODBC+Driver+18+for+SQL+Server'
+```
 
 > [!danger] Lab-Only Credentials
 >
@@ -34,16 +36,42 @@ Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?TrustServerCertif
 >
 > In production, retrieve the connection string from GCP Secret Manager at runtime: `secretmanager.SecretManagerServiceClient().access_secret_version(name=...)`. Never hardcode passwords in notebooks, scripts, or source control. Use environment variables or secret injection via Cloud Run / GKE secrets.
 
+This file is the first of three in the SQL Server query cookbook, progressing from fundamentals through engineering patterns to advanced techniques.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    F["<b>Fundamentals</b><br/>SELECT · JOINs · Aggregation<br/>Window Functions · CTEs"]
+    E["<b>Engineering</b><br/>Views · Stored Procedures<br/>Indexes · Transactions · SCD"]
+    A["<b>Advanced</b><br/>Recursive CTEs · PIVOT<br/>MERGE · APPLY · GROUPING SETS"]
+    F --> E --> A
+
+    style F fill:#292e42,stroke:#7aa2f7,stroke-width:2px,color:#c0caf5
+    style E fill:#1a1b26,stroke:#565f89,stroke-width:1px,color:#c0caf5
+    style A fill:#1a1b26,stroke:#565f89,stroke-width:1px,color:#c0caf5
+```
+
 ## Schema Exploration
+
+SQL Server exposes database metadata through system catalog views (`sys.tables`, `sys.schemas`, `sys.columns`) and the ANSI-standard `INFORMATION_SCHEMA` views. Querying these is always the first step when working with an unfamiliar database — understanding what tables exist, how they are organized across schemas (which map to medallion layers in this architecture), and what data types each column uses.
 
 ### Schema Exploration — List All Tables
 
-First thing in any database — see what's there. The medallion layers (bronze/silver/gold) are schemas.
+This query joins `sys.tables`, `sys.schemas`, and `sys.partitions` to list every table with its schema name and row count. The medallion layers (bronze, silver, gold) are implemented as SQL Server schemas. The filter `index_id IN (0, 1)` targets heaps (0) and clustered indexes (1) to avoid double-counting rows from non-clustered indexes.
 
 
 ```sql
--- List all tables by schema (bronze / silver / gold)
--- This is the first thing you do in any new database
 SELECT TOP 15
     s.name AS [schema],
     t.name AS [table],
@@ -94,12 +122,10 @@ ORDER BY s.name, t.name
 
 ### Schema Exploration — Inspect Column Types
 
-Check data types before writing queries — `float` vs `int` vs `varchar` changes how you aggregate and join.
+The `INFORMATION_SCHEMA.COLUMNS` view is the ANSI-standard metadata interface — portable across SQL Server, PostgreSQL, and MySQL. It exposes column names, data types, maximum lengths, and nullability. Check data types before writing queries — `float` vs `int` vs `varchar` changes how you aggregate and join. The alternative `sys.columns` view is SQL Server-specific but exposes additional details like computed column definitions and default constraints.
 
 
 ```sql
--- Inspect columns of a specific table
--- Always check data types before writing queries
 SELECT TOP 15
     COLUMN_NAME,
     DATA_TYPE,
@@ -156,7 +182,7 @@ ORDER BY ORDINAL_POSITION
 
 ## SELECT, Filtering & Sorting
 
-> [!tip]- SQL Server vs BigQuery Syntax
+> [!info]- SQL Server vs BigQuery Syntax
 >
 > | Concept | SQL Server | BigQuery |
 > |---|---|---|
@@ -171,6 +197,14 @@ ORDER BY ORDINAL_POSITION
 >
 > For the full cross-platform comparison including Python and C#, see [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) and [05_cs_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-CSharp/05_cs_aggregation_reshaping).
 
+> [!danger] Avoid SELECT * in production code
+>
+> `SELECT *` reads every column from the table, preventing the optimizer from using covering indexes (which satisfy the query from the index alone without a key lookup to the base table). It also breaks queries silently when columns are added, removed, or reordered. In BigQuery, `SELECT *` on a large table scans every column — and BigQuery charges per byte scanned.
+
+> [!success] Safe Pattern
+>
+> Always list the columns you need explicitly: `SELECT symbol, date, [close], volume FROM ...`. This enables covering index scans, reduces I/O, and makes the query's data contract explicit. Use `SELECT *` only for ad-hoc exploration in SSMS or notebooks, never in production code or stored procedures.
+
 ### SELECT, Filtering & Sorting — Basic SELECT with WHERE
 
 The fundamental query: pick columns, filter rows, sort results. `TOP N` limits output (SQL Server). PostgreSQL uses `LIMIT N`.
@@ -184,8 +218,6 @@ The fundamental query: pick columns, filter rows, sort results. `TOP N` limits o
 > Always pair `TOP N` with `ORDER BY` to get a deterministic result: `SELECT TOP 10 ... ORDER BY date DESC`. If you only need to check whether any row exists (e.g., in an `IF EXISTS` guard), use `SELECT TOP 1 1 FROM ...` with no `ORDER BY` — that is the one case where order genuinely doesn't matter.
 
 ```sql
--- Latest 10 trading days for ASML
--- Basic SELECT with WHERE, ORDER BY, TOP
 SELECT TOP 10
     symbol,
     date,
@@ -261,9 +293,9 @@ ORDER BY date DESC
 
 
 
-### SELECT & Filtering — Multi-Condition WHERE
+### SELECT, Filtering & Sorting — Multi-Condition WHERE
 
-Combine conditions with `AND` / `OR`. Use `ABS()` for absolute values. This finds high-volume days with large price swings — potential breakout or crash days.
+Combine conditions with `AND` / `OR`. Use `ABS()` for absolute values. This query finds high-volume days (over 5 million shares) with price swings exceeding 3% — potential breakout or crash days.
 
 > [!warning] FLOAT is approximate — ROUND() can surprise
 >
@@ -274,8 +306,6 @@ Combine conditions with `AND` / `OR`. Use `ABS()` for absolute values. This find
 > Use `DECIMAL(18, 4)` or `DECIMAL(18, 8)` for financial values that require exact arithmetic (NAV, index weights, fees). Use `FLOAT` only for analytics columns (daily returns, z-scores, volatility) where a sub-penny binary approximation error is acceptable. Never use `=` to compare `FLOAT` columns — use `ABS(a - b) < 0.0001` instead.
 
 ```sql
--- Filter with multiple conditions
--- Find high-volume days where price moved more than 3%
 SELECT TOP 15
     symbol,
     date,
@@ -283,8 +313,8 @@ SELECT TOP 15
     volume,
     ROUND(([close] - [open]) / [open] * 100, 2) AS daily_move_pct
 FROM silver.eurostoxx50_ohlcv
-WHERE volume > 5000000                       -- high volume
-  AND ABS(([close] - [open]) / [open]) > 0.03  -- >3% move
+WHERE volume > 5000000
+  AND ABS(([close] - [open]) / [open]) > 0.03
   AND date >= '2025-01-01'
 ORDER BY ABS(([close] - [open]) / [open]) DESC
 ```
@@ -341,14 +371,14 @@ ORDER BY ABS(([close] - [open]) / [open]) DESC
 
 ## Aggregation (GROUP BY)
 
+`GROUP BY` collapses rows sharing common values into summary rows, evaluated after `WHERE` filtering. SQL Server chooses between two physical operators — **stream aggregate** (efficient when input is pre-sorted by the grouping key via an index) and **hash match aggregate** (builds a hash table in memory, spills to tempdb if it exceeds the memory grant). Pairing `GROUP BY` with a covering index on the grouping columns avoids a separate sort step. See [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) for index design guidance.
+
 ### Aggregation GROUP BY — Aggregate by Stock
 
-`GROUP BY` collapses rows into groups. Aggregate functions (`AVG`, `COUNT`, `SUM`, `MIN`, `MAX`) summarize each group. This ranks stocks by average trading volume — a liquidity measure.
+`GROUP BY` collapses rows into groups. Aggregate functions (`AVG`, `COUNT`, `SUM`, `MIN`, `MAX`) summarize each group. This query ranks stocks by average daily trading volume — a standard liquidity measure. The `CAST(volume AS FLOAT)` prevents integer overflow on large volume sums before the average is computed.
 
 
 ```sql
--- Average daily volume by stock (top 10 most liquid)
--- GROUP BY + aggregate functions: AVG, COUNT, MIN, MAX
 SELECT TOP 10
     symbol,
     COUNT(*) AS trading_days,
@@ -433,8 +463,6 @@ Group by `YEAR(date), MONTH(date)` to build time-series summaries. Shows monthly
 
 
 ```sql
--- Monthly performance summary for ASML
--- GROUP BY with date functions: YEAR, MONTH
 SELECT TOP 15
     YEAR(date) AS yr,
     MONTH(date) AS mo,
@@ -513,6 +541,12 @@ ORDER BY yr, mo
 
 ## JOINs Across Medallion Layers
 
+A `JOIN` combines rows from two or more tables based on a related column. In the medallion architecture, joins connect fact tables (OHLCV prices in silver) with dimension tables (company metadata) and pre-computed analytics (gold scores). SQL Server's optimizer evaluates three physical join operators — **nested loop** (best for small outer inputs with an indexed inner table), **hash match** (best for large unsorted inputs), and **merge join** (best when both inputs are pre-sorted on the join key). The operator choice depends on table sizes, available indexes, and estimated cardinalities.
+
+> [!info] Cross-engine note
+>
+> SQL Server extends standard JOINs with `CROSS APPLY` and `OUTER APPLY` (lateral joins that run a correlated subquery per outer row). BigQuery supports standard JOINs but has no APPLY equivalent — use correlated subqueries or `UNNEST` instead. Firestore has no server-side joins at all — denormalize data or perform client-side joins.
+
 > [!danger] JOINs Multiply Rows on Duplicates
 >
 > JOINs silently multiply rows when keys have duplicates.
@@ -544,8 +578,6 @@ The subquery with `ROW_NUMBER()` picks only the most recent price per symbol.
 
 
 ```sql
--- JOIN silver OHLCV with silver dimension (company info)
--- Get latest price + sector + country for each stock
 SELECT TOP 15
     d.symbol,
     d.short_name,
@@ -556,7 +588,6 @@ SELECT TOP 15
     p.volume
 FROM silver.index_dim d
 JOIN (
-    -- Subquery: get the latest price per symbol
     SELECT symbol, [close], date, volume,
            ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY date DESC) AS rn
     FROM silver.eurostoxx50_ohlcv
@@ -629,11 +660,10 @@ ORDER BY p.[close] DESC
 
 ### JOIN Across Medallion Layers — Gold Scores + Dimension (Cross-Layer)
 
-The gold layer has pre-computed composite scores. We join with the dimension table to add human-readable names and sector labels — this is what a dashboard query looks like.
+The gold layer has pre-computed composite scores. This join adds human-readable names and sector labels from the dimension table — the typical shape of a dashboard query. The `WHERE` clause uses a correlated scalar subquery (`SELECT MAX(score_date) ...`) to restrict results to the most recent scoring date without hardcoding a value. The optimizer evaluates this subquery once and caches the result.
 
 
 ```sql
--- JOIN gold scores with dimension for a complete stock dashboard view
 SELECT TOP 15
     s.composite_rank AS [rank],
     s.symbol,
@@ -734,6 +764,12 @@ ORDER BY s.composite_rank
 
 ## Window Functions
 
+Window functions compute a value for each row based on a related set of rows (the "window") without collapsing the result set like `GROUP BY`. SQL Server implements them using sort and segment operators in the execution plan — data is sorted by the `PARTITION BY` / `ORDER BY` columns, then streamed through computing each function. Large partitions may spill the sort to tempdb. For optimal performance, create a covering index matching the partition and order columns (e.g., `(symbol, date) INCLUDE (close, volume)` for per-stock time-series windows).
+
+> [!info] Cross-engine note
+>
+> Window functions are available in both SQL Server and BigQuery (with near-identical syntax). Firestore has no window function support — aggregation queries added in 2023 cover `COUNT`, `SUM`, and `AVG` only at the collection level.
+
 > [!warning] Window Functions Keep All Rows
 >
 > Window functions do NOT reduce row count — unlike GROUP BY.
@@ -753,13 +789,10 @@ A **moving average** smooths price data over N days. Used for trend detection:
 - **SMA 90** (long-term): filters out noise
 - Price above SMA = bullish momentum. Below = bearish.
 
-`AVG() OVER (ROWS BETWEEN N PRECEDING AND CURRENT ROW)` — the window slides forward one row at a time.
+`AVG() OVER (ROWS BETWEEN N PRECEDING AND CURRENT ROW)` — the window slides forward one row at a time. The `OVER` clause has three parts: `PARTITION BY symbol` groups rows by stock, `ORDER BY date` establishes the time sequence within each group, and `ROWS BETWEEN 29 PRECEDING AND CURRENT ROW` defines a sliding window of exactly 30 rows (29 preceding + current).
 
 
 ```sql
--- Moving averages: SMA 30 and SMA 90
--- OVER (PARTITION BY symbol ORDER BY date ROWS BETWEEN 29 PRECEDING AND CURRENT ROW)
---   ↑ group by stock    ↑ sort by date   ↑ sliding window of 30 rows
 SELECT TOP 15
     symbol,
     date,
@@ -839,9 +872,6 @@ Use cases:
 
 
 ```sql
--- LAG: get previous row's value within each stock's time series
--- LAG([close]) OVER (PARTITION BY symbol ORDER BY date)
---   ↑ previous close    ↑ within each stock  ↑ in date order
 SELECT TOP 15
     symbol,
     date,
@@ -854,7 +884,7 @@ SELECT TOP 15
     DATEDIFF(DAY,
         LAG(date) OVER (PARTITION BY symbol ORDER BY date),
         date
-    ) AS days_gap  -- >1 means weekend or holiday
+    ) AS days_gap
 FROM silver.eurostoxx50_ohlcv
 WHERE symbol = 'ASML.AS'
 ORDER BY date DESC
@@ -923,14 +953,11 @@ ORDER BY date DESC
 - **ROW_NUMBER()**: unique, no ties (1, 2, 3, 4)
 - **NTILE(N)**: divide rows into N equal buckets (quartiles, deciles)
 
-This is the core of the gold scoring engine — rank stocks by composite score.
+This is the core of the gold scoring engine — rank stocks by composite score. The query below uses a self-join on pre-computed boundary dates (first and last trading day of the year from a `bounds` CTE) to calculate YTD return per stock, then applies `RANK()` and `NTILE(4)` to rank and bucket the results into quartiles.
 
 
 ```sql
--- Rank stocks by YTD return
--- Use self-join on pre-computed boundary dates (no subquery inside aggregate)
 WITH bounds AS (
-    -- First and last trading date of the year (single row)
     SELECT
         MIN(CASE WHEN YEAR(date) = YEAR(GETDATE()) THEN date END) AS first_date,
         MAX(date) AS last_date
@@ -1006,6 +1033,12 @@ ORDER BY rank_best
 
 ## CTEs & Subqueries
 
+A **Common Table Expression** (CTE) is a named temporary result set defined with `WITH name AS (SELECT ...)` that exists only for the duration of the enclosing statement. CTEs improve readability by breaking complex queries into named logical steps. Unlike temp tables, CTEs are not materialized in SQL Server — the optimizer inlines them into the outer query plan and may re-execute the CTE logic for each reference. For multi-step analytical queries like sector heatmaps or cross-index comparisons, chaining multiple CTEs reads top-to-bottom like a data pipeline.
+
+> [!info] Cross-engine note
+>
+> Both SQL Server and BigQuery support CTEs including recursive CTEs (BigQuery caps recursion at 500 iterations by default). Firestore has no query composition mechanism — complex data retrieval requires multiple sequential SDK calls orchestrated in application code.
+
 ### CTEs & Subqueries — Sector Heatmap
 
 A **CTE** (`WITH name AS (SELECT ...)`) is a named temporary result set. Chaining CTEs makes complex queries readable — each step has a name.
@@ -1014,8 +1047,6 @@ This builds a sector heatmap: average score, best/worst rank per sector.
 
 
 ```sql
--- CTE (Common Table Expression) — readable multi-step queries
--- Build a sector heatmap: avg composite score by sector
 WITH latest_scores AS (
     SELECT s.symbol, s.composite_score, s.relative_value_score,
            s.momentum_score, s.sentiment_score, s.composite_rank,
@@ -1105,12 +1136,10 @@ ORDER BY avg_score DESC
 
 ### CTEs & Subqueries — Chained CTEs Cross-Index Comparison
 
-Multiple CTEs chained together. Compares YTD performance, volatility, and valuation across all 4 indices — the kind of query an index provider runs daily.
+Multiple CTEs chained together, each building on the previous. This query compares YTD performance, rolling 30-day return and volatility, P/E ratio, and dividend yield across all 4 indices — the kind of cross-index comparison an index provider runs daily. The `ROW_NUMBER()` pattern in `latest_perf` picks the most recent date per index, avoiding repeated `MAX(date)` subqueries.
 
 
 ```sql
--- Chained CTEs: cross-index performance comparison
--- Compare latest performance metrics across all 4 indices
 WITH latest_perf AS (
     SELECT *,
            ROW_NUMBER() OVER (PARTITION BY _index ORDER BY perf_date DESC) AS rn
@@ -1197,9 +1226,11 @@ ORDER BY ytd_pct DESC
 
 ## Data Quality Checks
 
-### Data Quality Checks
+Quality gates validate data integrity at each pipeline stage — catching NULLs, invalid values, and freshness delays before data is promoted downstream. Stacking multiple checks into a single `UNION ALL` result set gives a compact pass/fail summary that can be evaluated programmatically after every load.
 
-Every pipeline needs quality gates. `UNION ALL` stacks multiple checks into one result. Run this after every load — if any check returns non-zero, investigate before promoting to gold.
+### Data Quality Checks — Structural & Operational Validation
+
+Every pipeline needs quality gates. The checks below are split into two categories: **structural** (NULLs, negative prices, impossible high/low values) and **operational** (gap-fill count, data freshness). `UNION ALL` stacks them into a single result set. Run this after every load — any non-zero value needs investigation before promoting to gold.
 
 
 > [!tip] UNION ALL Quality Gate Pattern
@@ -1207,7 +1238,6 @@ Every pipeline needs quality gates. `UNION ALL` stacks multiple checks into one 
 > Stack multiple checks into one result set with `UNION ALL`. Each check returns a named row with an issue count. Run after every load — any non-zero value needs investigation before promoting to gold.
 
 ```sql
--- Structural checks: NULLs and invalid values
 SELECT 'null_prices' AS check_name,
        COUNT(*) AS issues
 FROM silver.eurostoxx50_ohlcv
@@ -1227,7 +1257,6 @@ WHERE high < low
 ```
 
 ```sql
--- Operational checks: gap-fill count and freshness
 SELECT 'gap_filled_rows' AS check_name,
        COUNT(*) AS issues
 FROM silver.eurostoxx50_ohlcv
@@ -1274,6 +1303,8 @@ FROM silver.eurostoxx50_ohlcv
 
 ## Bronze → Silver → Gold Transforms
 
+The medallion architecture (bronze → silver → gold) is a progressive refinement pipeline. Bronze stores raw ingested data, silver adds computed columns and data cleansing (daily returns, gap-fill flags), and gold produces business-ready analytical outputs (z-score normalization, composite rankings). Each layer's transforms are idempotent — safe to re-run without duplicating data.
+
 > [!tip] Related pattern
 >
 > The SQL that creates and populates the bronze tables queried here is covered in [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading), which walks through the ingestion pipeline that feeds this medallion architecture.
@@ -1284,8 +1315,6 @@ The silver transform adds computed columns to raw data. Here, `LAG()` computes d
 
 
 ```sql
--- Example: how the bronze → silver transform works
--- Silver adds daily returns and detects gap-filled rows
 SELECT TOP 10
     symbol,
     date,
@@ -1356,8 +1385,6 @@ The gold transform normalizes scores across the index using z-scores: `(value - 
 
 
 ```sql
--- Example: how the gold scoring works
--- Z-score normalization within index → composite rank
 WITH base AS (
     SELECT symbol, composite_score,
            AVG(composite_score) OVER () AS mean_score,

@@ -1,5 +1,5 @@
 ---
-tags: [python]
+tags: [python, design-patterns]
 aliases: [design patterns, singleton, factory, observer, strategy, repository, dependency injection]
 description: "Python design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and dependency injection. See [18_cs_designpatterns](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/18_cs_designpatterns) for the C# equivalent."
 created: 2026-03-22
@@ -49,8 +49,6 @@ A class receives its dependencies (DB connection, API client, logger) through it
 from abc import ABC, abstractmethod
 
 # ─── Define interfaces (abstract base classes) ───
-# In Python, we use ABC. In C#, we use interface.
-# The consumer depends on the abstraction, not the implementation.
 
 from datetime import date
 from pydantic import BaseModel, Field, model_validator, ValidationError
@@ -112,14 +110,12 @@ class MockNotifier(NotificationService):
         self.messages.append(message)
 
 # ─── Service that uses DI ───
-# PipelineService doesn't know or care which implementation it gets.
-# It just calls the interface methods.
 
 class PipelineService:
     """Orchestrates the pipeline — dependencies injected via constructor."""
     def __init__(self, repo: DataRepository, notifier: NotificationService):
-        self.repo = repo          # could be SqlRepository or MockRepository
-        self.notifier = notifier  # could be SlackNotifier or MockNotifier
+        self.repo = repo
+        self.notifier = notifier
 
     def run(self, ticker: str) -> dict:
         prices = self.repo.get_prices(ticker)
@@ -134,32 +130,36 @@ prod_service = PipelineService(
     notifier=SlackNotifier(),
 )
 result = prod_service.run("ASML.AS")
-result  # Result
+result
 
 # ─── Test wiring — swap implementations, same PipelineService ───
 mock_repo = MockRepository()
 mock_notifier = MockNotifier()
 test_service = PipelineService(repo=mock_repo, notifier=mock_notifier)
 result = test_service.run("TEST.XX")
-result  # Result
-mock_repo.saved  # Saved to mock DB
-mock_notifier.messages  # Notifications sent
+result
+mock_repo.saved
+mock_notifier.messages
 ```
 
-      SqlRepository connected to: Server=prod-db;Database=stoxx...
-      SqlRepository: saved 1 scores to database
-      Slack: Pipeline done: ASML.AS scored 0.85
-      {'ticker': 'ASML.AS', 'momentum': 0.85, 'rank': 1}
-    
-      {'ticker': 'TEST.XX', 'momentum': 0.85, 'rank': 1}
-      [{'ticker': 'TEST.XX', 'momentum': 0.85, 'rank': 1}]
-      ['Pipeline done: TEST.XX scored 0.85']
+```text
+SqlRepository connected to: Server=prod-db;Database=stoxx...
+SqlRepository: saved 1 scores to database
+Slack: Pipeline done: ASML.AS scored 0.85
+{'ticker': 'ASML.AS', 'momentum': 0.85, 'rank': 1}
+
+{'ticker': 'TEST.XX', 'momentum': 0.85, 'rank': 1}
+[{'ticker': 'TEST.XX', 'momentum': 0.85, 'rank': 1}]
+['Pipeline done: TEST.XX scored 0.85']
+```
 
 ## Design Patterns
 
+Design patterns are reusable solutions to common software design problems. In data engineering, they structure pipelines for testability, extensibility, and separation of concerns. The patterns below — singleton, factory, observer, strategy, decorator, and repository — appear frequently in production index-calculation and ETL codebases. Python's first-class functions and duck typing make many patterns lighter than their C# counterparts.
+
 ### Singleton — ensure exactly one instance of a class
 
-Ensures a class has exactly ONE instance — useful for database connection pools, configuration managers, or loggers. In Python, use a module-level variable (simplest) or `__new__`. C# equivalent: `static readonly` instance, or `AddSingleton<T>()` in DI. Singletons make testing harder (global state) — prefer DI with a single instance when possible.
+Ensures a class has exactly ONE instance — useful for database connection pools, configuration managers, or loggers. In Python, the `__new__` method controls instance creation (it runs *before* `__init__`): if an instance already exists, return it instead of creating a new one. The `__init__` guard (`if self._initialized: return`) prevents re-running setup on subsequent calls. Singletons make testing harder (global state) — prefer DI with a single instance when possible.
 
 > [!tip] Modules are natural singletons
 >
@@ -171,7 +171,6 @@ class Config:
     _instance = None
 
     def __new__(cls):
-        # __new__ is called BEFORE __init__ — controls instance creation
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._initialized = False
@@ -179,9 +178,8 @@ class Config:
 
     def __init__(self):
         if self._initialized:
-            return  # skip re-initialization
+            return
         self._initialized = True
-        # Load config once
         self.project_id = "index-lab-2"
         self.region = "europe-west1"
         self.batch_size = 5000
@@ -198,9 +196,11 @@ c1.project_id
 # def get_config(): return _config
 ```
 
-      Config loaded (project=index-lab-2)
-      True
-      index-lab-2
+```text
+Config loaded (project=index-lab-2)
+True
+index-lab-2
+```
 
 ### Factory — create objects without specifying the exact class
 
@@ -224,7 +224,6 @@ class LocalClient(StorageClient):
         return f"file://{path} ({len(data)} bytes)"
 
 # ─── Factory function ───
-# Returns the right client based on config — caller doesn't need to know.
 
 def create_storage_client(provider: str = "gcs") -> StorageClient:
     """Factory: create storage client based on provider name."""
@@ -243,9 +242,11 @@ for provider in ["gcs", "s3", "local"]:
     print(f"  {provider:5s} -> {result}")
 ```
 
-      gcs   -> gs://bucket/bronze/data.csv (10 bytes)
-      s3    -> s3://bucket/bronze/data.csv (10 bytes)
-      local -> file://bronze/data.csv (10 bytes)
+```text
+gcs   -> gs://bucket/bronze/data.csv (10 bytes)
+s3    -> s3://bucket/bronze/data.csv (10 bytes)
+local -> file://bronze/data.csv (10 bytes)
+```
 
 ### Observer — one-to-many event notification
 
@@ -291,12 +292,14 @@ bus.publish("step_completed", {"step": "silver_transform", "status": "ok", "rows
 bus.publish("step_completed", {"step": "gold_score", "status": "error", "message": "BQ timeout"})
 ```
 
-      [LOG]   {'step': 'ohlcv_load', 'status': 'ok', 'rows': 306}
-      [METRIC] rows_loaded = 306
-      [LOG]   {'step': 'silver_transform', 'status': 'ok', 'rows': 306}
-      [METRIC] rows_loaded = 306
-      [LOG]   {'step': 'gold_score', 'status': 'error', 'message': 'BQ timeout'}
-      [ALERT] Pipeline error: BQ timeout
+```text
+[LOG]   {'step': 'ohlcv_load', 'status': 'ok', 'rows': 306}
+[METRIC] rows_loaded = 306
+[LOG]   {'step': 'silver_transform', 'status': 'ok', 'rows': 306}
+[METRIC] rows_loaded = 306
+[LOG]   {'step': 'gold_score', 'status': 'error', 'message': 'BQ timeout'}
+[ALERT] Pipeline error: BQ timeout
+```
 
 ### Strategy — swap algorithms at runtime
 
@@ -360,21 +363,25 @@ for strategy in [MomentumStrategy(), VolatilityStrategy(), MeanReversionStrategy
     print(f"  {result['strategy']:15s} score={result['score']:+.4f}")
 ```
 
-    [685.0, 690.0, 680.0, 695.0, 710.0, 700.0, 685.0]
-    
-      Momentum        score=-0.0103
-      Volatility      score=-0.0138
-      MeanReversion   score=+0.0103
+```text
+[685.0, 690.0, 680.0, 695.0, 710.0, 700.0, 685.0]
 
-### Decorator pattern — wrap an object with additional behavior
+Momentum        score=-0.0103
+Volatility      score=-0.0138
+MeanReversion   score=+0.0103
+```
+
+### Decorator — wrap an object with additional behavior
 
 Not to be confused with Python's `@decorator` syntax (which is a language feature). The decorator PATTERN wraps an object with additional behavior while keeping the same interface. Example: a `LoggingConnection` wraps a `DatabaseConnection`, adding logging to every query without modifying the original class. In Python, function decorators (`@functools.wraps`) are the most common form, but the OOP pattern applies when you need to compose behaviors on class instances.
 
-### Repository pattern — abstract data access behind a clean interface
+### Repository — abstract data access behind a clean interface
 
 Abstracts data access behind a clean interface. `repo.get_prices(symbol, date)` works whether the data comes from SQL Server, BigQuery, a CSV file, or a mock. The pipeline code depends on the interface, not the storage technology. Combined with dependency injection, this is the foundation for testable data pipelines — swap `SqlRepository` for `MockRepository` in tests without changing any pipeline logic.
 
 ## Data Validation
+
+Pydantic validates data at construction time using Python type hints — if the input doesn't match the schema, a `ValidationError` is raised before bad data enters the pipeline. This catches problems at the boundary (API input, file parse, config load) rather than deep inside transformation logic where the root cause is harder to trace.
 
 > [!info] Pydantic data validation
 >
@@ -447,14 +454,16 @@ for case in bad_inputs:
         print(f"  {case['label']}: CAUGHT — {e.errors()[0]['msg']}")
 ```
 
-      symbol='ASML.AS' trade_date=datetime.date(2026, 3, 20) open=685.0 high=710.0 low=680.0 close=700.0 volume=1500000
-      {'symbol': 'ASML.AS', 'trade_date': datetime.date(2026, 3, 20), 'open': 685.0, 'high': 710.0, 'low': 680.0, 'close': 700.0, 'volume': 1500000}
-      name='events_etl' batch_size=5000 max_retries=3 source_bucket='index-lab-2-data' destination_table='index_data.bronze_ohlcv' dry_run=False
-    
-      Negative price: CAUGHT — Input should be greater than 0
-      High < Low: CAUGHT — Value error, high (5.0) must be >= low (8.0)
-      Empty symbol: CAUGHT — String should have at least 1 character
-      Bad config name: CAUGHT — String should match pattern '^[a-z][a-z0-9_]*$'
+```text
+symbol='ASML.AS' trade_date=datetime.date(2026, 3, 20) open=685.0 high=710.0 low=680.0 close=700.0 volume=1500000
+{'symbol': 'ASML.AS', 'trade_date': datetime.date(2026, 3, 20), 'open': 685.0, 'high': 710.0, 'low': 680.0, 'close': 700.0, 'volume': 1500000}
+name='events_etl' batch_size=5000 max_retries=3 source_bucket='index-lab-2-data' destination_table='index_data.bronze_ohlcv' dry_run=False
+
+Negative price: CAUGHT — Input should be greater than 0
+High < Low: CAUGHT — Value error, high (5.0) must be >= low (8.0)
+Empty symbol: CAUGHT — String should have at least 1 character
+Bad config name: CAUGHT — String should match pattern '^[a-z][a-z0-9_]*$'
+```
 
 ## Reflection / Introspection
 
@@ -515,39 +524,39 @@ for name, param in sig.parameters.items():
     print(f"  {name}: {param.annotation.__name__ if param.annotation != inspect.Parameter.empty else 'Any'}")
 ```
 
-               <class '__main__.TradeOrder'>
-      TradeOrder
-      isinstance(order, TradeOrder): True
-    
-      ['MAX_QUANTITY', 'notional', 'price', 'quantity', 'side', 'ticker']
-    
-      {'ticker': 'ASML.AS', 'side': 'BUY', 'quantity': 100, 'price': 685.4}
-    
-      ticker = ASML.AS
-      side = BUY
-      quantity = 100
-      notional() = 68540.0
-    
-      True
-      ['__init__', '__repr__', 'notional']
-      <notebook cell> (no file on disk)
-    
-      ticker: str
-      side: str
-      quantity: int
-      price: float
+```text
+<class '__main__.TradeOrder'>
+TradeOrder
+isinstance(order, TradeOrder): True
+
+['MAX_QUANTITY', 'notional', 'price', 'quantity', 'side', 'ticker']
+
+{'ticker': 'ASML.AS', 'side': 'BUY', 'quantity': 100, 'price': 685.4}
+
+ticker = ASML.AS
+side = BUY
+quantity = 100
+notional() = 68540.0
+
+True
+['__init__', '__repr__', 'notional']
+<notebook cell> (no file on disk)
+
+ticker: str
+side: str
+quantity: int
+price: float
+```
+
+The output demonstrates Python's introspection toolkit: `type()` returns the class object, `dir()` lists all public attributes and methods (filtered to exclude dunder names), `vars()` returns the instance's `__dict__` (instance attributes only — class attributes like `MAX_QUANTITY` and methods are excluded), `getattr()` with `callable()` distinguishes data attributes from methods, `inspect.getmembers()` finds methods, and `inspect.signature()` extracts constructor parameter names and type annotations.
 
 ## Project Structure & Best Practices
 
-```python
-# Project Structure — how to organize a Python data pipeline project.
-#
-# C# equivalent: Solution → Projects → Namespaces → Classes.
-# Python: Package → Modules → Classes/Functions.
+A well-organized Python project separates concerns by responsibility (fetching, transforming, loading), keeps configuration external, and mirrors the source layout in tests. The structure below follows the package conventions used in production index-calculation pipelines.
 
-print("""
-=== Recommended Project Layout ===
+### Recommended project layout
 
+```text
 index-pipeline/
 ├── pyproject.toml           # Project metadata, dependencies, tool config
 ├── requirements.txt         # Pinned dependencies (pip freeze)
@@ -588,94 +597,50 @@ index-pipeline/
 └── scripts/                 # CLI entry points
     ├── run_pipeline.py      # python scripts/run_pipeline.py --step ohlcv
     └── setup_index.py       # One-time index setup
-
-=== Key Principles ===
-
-1. SEPARATION OF CONCERNS
-   fetchers/ only fetch, transforms/ only transform, loaders/ only write.
-   No fetcher should know about BigQuery. No loader should know about yfinance.
-
-2. DEPENDENCY INJECTION
-   PipelineService receives DataRepository, NotificationService via __init__.
-   Tests swap in MockRepository. Production wires SqlRepository.
-
-3. VALIDATE AT BOUNDARIES
-   Use Pydantic models when data enters the system (API input, file parse, config).
-   Internal code trusts the validated models — no redundant checks.
-
-4. CONFIGURATION FROM ENVIRONMENT
-   Never hardcode credentials, hosts, bucket names.
-   Use os.environ.get() with defaults, or Pydantic Settings.
-
-5. TEST THE TRANSFORM, MOCK THE BOUNDARY
-   Transforms are pure functions — test directly.
-   Loaders/fetchers touch external systems — mock them.
-""")
 ```
 
-    
-    index-pipeline/
-    ├── pyproject.toml           # Project metadata, dependencies, tool config
-    ├── requirements.txt         # Pinned dependencies (pip freeze)
-    ├── .env                     # Local env vars (NEVER commit)
-    ├── .gitignore               # Ignore .env, __pycache__, .venv, *.pyc
-    │
-    ├── src/                     # Source code
-    │   ├── __init__.py
-    │   ├── config.py            # Configuration (env vars, defaults)
-    │   ├── models.py            # Pydantic models (OhlcvRecord, PipelineConfig)
-    │   ├── db.py                # Database connection factory
-    │   │
-    │   ├── fetchers/            # Data ingestion
-    │   │   ├── __init__.py
-    │   │   ├── ohlcv.py         # yfinance OHLCV fetcher
-    │   │   └── signals.py       # Daily/quarterly signal fetcher
-    │   │
-    │   ├── transforms/          # Bronze → Silver → Gold
-    │   │   ├── __init__.py
-    │   │   ├── clean.py         # Bronze → Silver (dedup, gap-fill)
-    │   │   └── score.py         # Silver → Gold (z-scores, ranks)
-    │   │
-    │   ├── loaders/             # Write to storage/DB
-    │   │   ├── __init__.py
-    │   │   ├── bigquery.py      # BigQuery loader
-    │   │   └── firestore.py     # Firestore writer
-    │   │
-    │   └── services/            # Business logic
-    │       ├── __init__.py
-    │       └── pipeline.py      # PipelineService (DI, orchestration)
-    │
-    ├── tests/                   # Test code (mirrors src/)
-    │   ├── conftest.py          # Shared fixtures
-    │   ├── test_transforms.py   # Pure function tests
-    │   ├── test_loaders.py      # Mock external services
-    │   └── test_pipeline.py     # Integration tests
-    │
-    └── scripts/                 # CLI entry points
-        ├── run_pipeline.py      # python scripts/run_pipeline.py --step ohlcv
-        └── setup_index.py       # One-time index setup
-    
-    1. SEPARATION OF CONCERNS
-       fetchers/ only fetch, transforms/ only transform, loaders/ only write.
-       No fetcher should know about BigQuery. No loader should know about yfinance.
-    
-    2. DEPENDENCY INJECTION
-       PipelineService receives DataRepository, NotificationService via __init__.
-       Tests swap in MockRepository. Production wires SqlRepository.
-    
-    3. VALIDATE AT BOUNDARIES
-       Use Pydantic models when data enters the system (API input, file parse, config).
-       Internal code trusts the validated models — no redundant checks.
-    
-    4. CONFIGURATION FROM ENVIRONMENT
-       Never hardcode credentials, hosts, bucket names.
-       Use os.environ.get() with defaults, or Pydantic Settings.
-    
-    5. TEST THE TRANSFORM, MOCK THE BOUNDARY
-       Transforms are pure functions — test directly.
-       Loaders/fetchers touch external systems — mock them.
+### Key principles
+
+**Separation of concerns** — `fetchers/` only fetch, `transforms/` only transform, `loaders/` only write. No fetcher should know about BigQuery. No loader should know about yfinance.
+
+**Dependency injection** — `PipelineService` receives `DataRepository` and `NotificationService` via `__init__`. Tests swap in `MockRepository`. Production wires `SqlRepository`.
+
+**Validate at boundaries** — Use Pydantic models when data enters the system (API input, file parse, config). Internal code trusts the validated models — no redundant checks downstream.
+
+**Configuration from environment** — Never hardcode credentials, hosts, or bucket names. Use `os.environ.get()` with defaults, or Pydantic `BaseSettings` for typed config with automatic env-var binding.
+
+**Test the transform, mock the boundary** — Transforms are pure functions — test directly with known inputs and expected outputs. Loaders and fetchers touch external systems — mock them with `unittest.mock` or `pytest-mock`.
 
 ## Summary
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A["Which pattern?"] --> B{"Need exactly\none instance?"}
+    A --> C{"Need to create objects\nwithout knowing the class?"}
+    A --> D{"Need to notify\nmultiple listeners?"}
+    A --> E{"Need to swap\nalgorithms at runtime?"}
+    A --> F{"Need to add behavior\nwithout modifying a class?"}
+    A --> G{"Need to abstract\ndata access?"}
+
+    B -->|Yes| B1["<b>Singleton</b>\n__new__ or module-level\nvariable"]
+    C -->|Yes| C1["<b>Factory</b>\ndict dispatch\n{'gcs': GCS}[t]()"]
+    D -->|Yes| D1["<b>Observer</b>\ncallback list\nbus.publish()"]
+    E -->|Yes| E1["<b>Strategy</b>\ninject via __init__\nself.strategy.score()"]
+    F -->|Yes| F1["<b>Decorator</b>\n@functools.wraps or\nclass wrapping"]
+    G -->|Yes| G1["<b>Repository</b>\nABC + __init__ DI\nswap impl in tests"]
+```
 
 > [!abstract]- Design Patterns Quick Reference
 >
@@ -686,6 +651,8 @@ index-pipeline/
 > | **Factory** | `def create_client(t)` | `return {"gcs": GCS, "s3": S3}[t]()` — return right subclass |
 > | **Observer** | `bus.subscribe("event", cb)` | Register listeners, `bus.publish("event", data)` notifies all |
 > | **Strategy** | `def __init__(self, strategy)` | Inject algorithm, delegate via `self.strategy.evaluate()` |
+> | **Decorator** | `class Wrapper(Interface)` | Wraps inner instance via composition, or `@functools.wraps` for functions |
+> | **Repository** | `class Repo(ABC)` | Abstract data access, swap `SqlRepo` / `MockRepo` via DI |
 > | **Validation** | `class Model(BaseModel)` | Pydantic auto-validates on creation with type hints + `Field()` |
 > | **Reflection** | `type()`, `dir()`, `getattr()` | Type checking, attribute listing, dynamic access, `inspect.signature()` |
 >

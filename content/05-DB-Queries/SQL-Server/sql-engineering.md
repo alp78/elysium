@@ -1,5 +1,5 @@
 ---
-tags: [sql, sql-server, tsql]
+tags: [sql-server, tsql, engineering]
 aliases: [SQL engineering, SQL performance, transactions, error handling, indexing, temp tables, table variables, dynamic SQL, stored procedures]
 description: "SQL Server T-SQL engineering patterns with executable examples — covers transactions, error handling, temp tables, dynamic SQL, stored procedures, and performance tuning."
 created: 2026-03-22
@@ -32,7 +32,9 @@ status: complete
 %sql mssql+pyodbc://sa:EsgDev2026Pass1@localhost:1434/stoxx?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes&MARS_Connection=yes
 ```
 
-Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=yes&amp;TrustServerCertificate=yes&amp;driver=ODBC+Driver+18+for+SQL+Server&#x27;
+```text
+Connecting to 'mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=yes&TrustServerCertificate=yes&driver=ODBC+Driver+18+for+SQL+Server'
+```
 
 > [!danger] Lab-Only Credentials
 >
@@ -42,8 +44,9 @@ Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=y
 >
 > In production, retrieve the connection string from GCP Secret Manager at runtime: `secretmanager.SecretManagerServiceClient().access_secret_version(name=...)`. Never hardcode passwords in notebooks, scripts, or source control. Use environment variables or secret injection via Cloud Run / GKE secrets.
 
+The demo schema isolates all objects created in this file from the production `stoxx` schemas. The `IF NOT EXISTS` guard makes this idempotent — safe to re-run.
+
 ```sql
--- Create a demo schema for our objects (idempotent)
 IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'demo')
     EXEC('CREATE SCHEMA demo');
 ```
@@ -61,6 +64,12 @@ IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'demo')
 
 ## Views
 
+SQL Server views encapsulate reusable queries as named database objects. They simplify complex query logic for consumers while centralizing maintenance — when the underlying table structure changes, only the view definition needs updating. SQL Server expands a view inline at query time: the optimizer merges the view definition with the outer query into a single execution plan, so a well-written view carries no extra cost over writing the query directly. Indexed views (created with `SCHEMABINDING`) pre-compute and persist the result set, trading storage for instant read access on expensive aggregations.
+
+> [!info] Cross-Engine: Views
+>
+> **SQL Server** expands views inline — no performance penalty vs. writing the query directly. Indexed views persist pre-computed results for expensive aggregations. **BigQuery** supports logical views (inline) and materialized views (with a configurable refresh schedule). **Firestore** has no view concept — queries always run against raw document collections; reuse is achieved through query abstraction in application code.
+
 ### Regular Views — Simplify Complex Queries
 
 A view is a saved query. It doesn't store data — it runs the query every time you SELECT from it.
@@ -68,7 +77,6 @@ Use case: wrap the "latest price per stock" pattern so downstream queries are si
 
 
 ```sql
--- Create a view that always returns the latest price per stock
 CREATE OR ALTER VIEW demo.v_latest_prices AS
 SELECT symbol, date, [open], high, low, [close], volume
 FROM (
@@ -90,8 +98,9 @@ WHERE rn = 1;
 
 
 
+Once the view is created, the `ROW_NUMBER` deduplication logic is hidden — consumers write a simple `SELECT` against the view.
+
 ```sql
--- Now the complex ROW_NUMBER pattern is hidden behind a simple SELECT
 SELECT TOP 10 * FROM demo.v_latest_prices ORDER BY [close] DESC
 ```
 
@@ -209,7 +218,6 @@ Join multiple tables into a single business-friendly view. Dashboards query this
 
 
 ```sql
--- Dashboard view: scores + company info + latest price
 CREATE OR ALTER VIEW demo.v_stock_dashboard AS
 SELECT
     s.composite_rank AS [rank],
@@ -241,7 +249,6 @@ JOIN silver.index_dim d ON s.symbol = d.symbol AND d._index = s._index AND d.is_
 
 
 ```sql
--- Use the dashboard view
 SELECT TOP 10 * FROM demo.v_stock_dashboard
 WHERE _index = 'euro_stoxx_50'
   AND score_date = (SELECT MAX(score_date) FROM gold.scores_daily WHERE _index = 'euro_stoxx_50')
@@ -413,6 +420,12 @@ ORDER BY [rank]
 
 ## Stored Procedures
 
+Stored procedures encapsulate reusable T-SQL logic as named database objects with optional input/output parameters. SQL Server compiles and caches the execution plan on first execution — subsequent calls reuse the cached plan, eliminating parse and optimization overhead. This plan caching comes with a trade-off: **parameter sniffing** means the optimizer builds the plan around the first set of parameter values it sees. A plan optimized for a small result set (`@top_n = 5`) can perform catastrophically when the same SP is called with a large result set (`@top_n = 10000`), because the plan was compiled with row estimates tuned to the original parameters. See the parameter sniffing callout in the section below.
+
+> [!info] Cross-Engine: Stored Procedures
+>
+> **SQL Server** stored procedures are compiled, parameterized objects with plan caching, output parameters, and full ACID transaction support. **BigQuery** supports scripting procedures (`CREATE PROCEDURE`) introduced in 2021, but there is no plan caching — every call incurs full query compilation. **Firestore** delegates server-side logic to Cloud Functions, which run outside the database engine entirely.
+
 > [!tip] Related pattern
 >
 > The [dbt-sqlserver-adapter](https://alp78.github.io/elysium/11-dbt/Adapters/dbt-sqlserver-adapter) generates parameterized queries and materialization logic similar to these stored procedures, providing a version-controlled alternative to hand-written SPs.
@@ -431,7 +444,6 @@ Use case: pipeline steps as SPs — each step has consistent parameters and erro
 > Use `sp_executesql` with typed parameters for all variable values: `EXEC sp_executesql N'SELECT ... WHERE symbol = @sym', N'@sym VARCHAR(20)', @sym = @input`. For dynamic object names (table/column names), always validate the input against `sys.tables` or `sys.columns` before concatenating it into SQL — never trust caller input directly.
 
 ```sql
--- SP: get top N stocks by composite score for a given index
 CREATE OR ALTER PROCEDURE demo.sp_top_stocks
     @index_key NVARCHAR(50),
     @top_n INT = 10
@@ -521,12 +533,17 @@ EXEC demo.sp_top_stocks @index_key = 'euro_stoxx_50', @top_n = 5
 
 ### Stored Procedures — Error Handling with TRY/CATCH
 
-Production SPs wrap logic in `TRY/CATCH` with explicit transactions.
-If anything fails, the entire operation rolls back — no partial loads.
+Production SPs wrap logic in `TRY/CATCH` with explicit transactions. If anything fails, the entire operation rolls back — no partial loads. The `@@TRANCOUNT > 0` guard before `ROLLBACK` is essential: if the error occurred outside an open transaction (e.g., in a trigger), calling `ROLLBACK` unconditionally would raise an additional error.
 
+> [!warning] Parameter Sniffing
+>
+> SQL Server sniffs parameter values on first SP execution and optimizes the plan for those specific values. A plan compiled for `@top_n = 5` may perform catastrophically when called with `@top_n = 10000` — the optimizer chose a nested loops join expecting 5 rows, but now processes 10,000. Plan cache invalidation (after an index rebuild or `sp_recompile`) resets the sniffed values.
+
+> [!success] Mitigations
+>
+> Three options in order of preference: (1) `OPTION (RECOMPILE)` on the statement — recompiles every call using the actual parameter values, best for plans that vary dramatically by input; (2) `OPTION (OPTIMIZE FOR (@param UNKNOWN))` — uses average statistics rather than the sniffed value; (3) reassign to a local variable inside the SP (`DECLARE @local = @param`) — prevents sniffing but may produce suboptimal plans for all inputs.
 
 ```sql
--- SP with transaction + error handling
 CREATE OR ALTER PROCEDURE demo.sp_load_scores
     @index_key NVARCHAR(50),
     @rows_loaded INT OUTPUT
@@ -538,7 +555,6 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
         
-        -- Simulate a load: count rows that would be processed
         SELECT @rows_loaded = COUNT(*)
         FROM gold.scores_daily
         WHERE _index = @index_key;
@@ -569,6 +585,8 @@ END;
 
 ## User-Defined Functions
 
+SQL Server supports three types of user-defined functions: scalar functions (return a single value), inline table-valued functions (iTVFs, return a table via a single `SELECT`), and multi-statement table-valued functions (MSTVFs, build a result set row by row). **iTVFs are the only type the optimizer can inline and parallelize** — always prefer them. Scalar UDFs and MSTVFs force row-by-row execution and disable parallelism. SQL Server 2019 introduced scalar UDF inlining, but many patterns remain ineligible (functions with `TRY/CATCH`, `RAND`, `NEWID`, recursion, or side effects); verify with `sys.sql_modules.is_inlineable = 1`.
+
 > [!danger] Scalar UDFs Kill Performance
 >
 > Scalar UDFs Force Row-by-Row Execution.
@@ -585,7 +603,6 @@ Always prefer iTVFs over scalar UDFs or multi-statement TVFs.
 
 
 ```sql
--- iTVF: get price history for a symbol within a date range
 CREATE OR ALTER FUNCTION demo.fn_price_history(
     @symbol VARCHAR(20),
     @from_date DATE,
@@ -611,8 +628,9 @@ AS RETURN (
 
 
 
+The iTVF is called in the `FROM` clause exactly like a table — the optimizer inlines it into the outer query plan.
+
 ```sql
--- Use the function like a table
 SELECT TOP 10 * FROM demo.fn_price_history('ASML.AS', '2026-03-01', '2026-03-31')
 ORDER BY date DESC
 ```
@@ -718,7 +736,15 @@ ORDER BY date DESC
 
 ## Indexes
 
+Index selection is the single highest-leverage performance decision in SQL Server. The right index can turn a multi-second table scan into a sub-millisecond seek; the wrong index imposes unnecessary write overhead on every `INSERT`, `UPDATE`, and `DELETE`. Index design for data pipelines requires balancing read-query patterns (equality filters, range scans, analytical aggregations) against write throughput. See [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) for columnstore internals, fragmentation maintenance, and missing index DMV analysis.
+
+> [!tip] Covering Indexes for Pipeline Queries
+>
+> A covering index includes all columns needed by a query in the index leaf pages, eliminating key lookups back to the clustered index. For the `fn_price_history` pattern — `WHERE symbol = @symbol AND date BETWEEN @from AND @to`, selecting `symbol, date, open, high, low, close, volume` — a covering index `(symbol, date) INCLUDE (open, high, low, close, volume)` satisfies the entire query from the index alone. Use `sys.dm_db_missing_index_details` to identify queries that would benefit from a covering index.
+
 ### Indexes — Types and When to Use Each
+
+The table below summarizes SQL Server index types and their primary use cases for time-series financial data. Index selection depends on the dominant query pattern for each table.
 
 | Type | What | When |
 |------|------|------|
@@ -728,9 +754,9 @@ ORDER BY date DESC
 | **Filtered** | Index only subset of rows. | `WHERE is_current = 1` on dims |
 | **Columnstore** | Columnar storage, batch processing. | Analytical aggregations on OHLCV |
 
+The query below inspects existing indexes on the `silver.eurostoxx50_ohlcv` table using catalog views. `STRING_AGG` aggregates the key column names in ordinal order to show the composite key layout.
 
 ```sql
--- Inspect existing indexes on silver.eurostoxx50_ohlcv
 SELECT
     i.name AS index_name,
     i.type_desc,
@@ -773,10 +799,16 @@ ORDER BY i.type_desc
 
 ### Indexes — Design Principles for Data Pipelines
 
+Query-pattern-first design: identify the three or four most common predicates and projections for each table before creating any index.
+
 1. **Equality columns first** in composite keys: `WHERE _index = 'X' AND date >= '2026-01-01'` → index on `(_index, date)`
 2. **Include columns** to avoid lookups: `INCLUDE (close, volume)` if you SELECT those
 3. **Don't over-index**: each index slows writes. Monitor with `sys.dm_db_index_usage_stats`
 4. **Filtered indexes** for hot subsets: `WHERE is_current = 1` on dimension tables
+
+> [!info] Redundancy Note
+>
+> This section covers index usage patterns for query tuning. For full index internals — B-tree structure, columnstore encodings, fragmentation mechanics, and automated maintenance scripts — see [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) in Chapter 04.
 
 ## Slowly Changing Dimensions (SCD)
 
@@ -789,22 +821,22 @@ Example: fix a typo in a company name.
 
 
 ```sql
--- SCD Type 1: just overwrite (demo with temp table)
 SELECT TOP 5 symbol, short_name, sector, is_current
 INTO #scd_demo
 FROM silver.index_dim
 WHERE _index = 'euro_stoxx_50' AND is_current = 1;
 
--- Type 1: overwrite the sector
 UPDATE #scd_demo SET sector = 'Information Technology' WHERE symbol = 'ASML.AS';
 SELECT * FROM #scd_demo
 ```
 
+```text
 5 rows affected.
+```
 
-
-
+```text
 1 rows affected.
+```
 
 <table>
     <thead>
@@ -858,8 +890,6 @@ This is how `silver.index_dim` works — it has `valid_from`, `valid_to`, `is_cu
 
 
 ```sql
--- SCD Type 2: the silver.index_dim already implements this
--- Show the SCD columns
 SELECT TOP 10
     symbol, short_name, sector,
     is_current,
@@ -969,15 +999,14 @@ ORDER BY symbol, valid_from
 
 ## Gap Detection & Gap Filling
 
-### Gap Detection & Gap Filling — Islands and Gaps
+Time-series data in financial pipelines frequently contains gaps: missing trading days due to market holidays, exchange closures, or ingestion failures. Detecting and classifying these gaps is a prerequisite for accurate signal computation — undetected gaps produce incorrect rolling averages, momentum scores, and drawdown calculations. SQL Server provides two primary techniques: the **LAG/DATEDIFF approach** (detect a gap by comparing each row's date to the previous row's date within the same symbol partition) and the classical **islands-and-gaps pattern** (use `ROW_NUMBER` minus the date value to assign the same group number to consecutive days, then find the spaces between groups).
 
-The classic SQL pattern: identify contiguous groups (islands) and missing periods (gaps)
-in a time series. Uses the difference between ROW_NUMBER and the date to group consecutive days.
+### Gap Detection & Gap Filling — Detect Gaps with LAG
+
+Uses `LAG()` to compare each trading date to the previous date for the same symbol. A gap larger than 3 calendar days (accounting for weekends) signals a missing trading session or ingestion failure.
 
 
 ```sql
--- Detect gaps in ASML trading data (days with no price)
--- LAG compares each date to the previous; gap > 3 calendar days = unusual
 SELECT TOP 10
     symbol, date,
     LAG(date) OVER (PARTITION BY symbol ORDER BY date) AS prev_date,
@@ -1077,28 +1106,26 @@ ORDER BY date DESC
 
 ## Deduplication Strategies
 
+Duplicate rows in source data are one of the most common data quality issues in financial pipelines: broker feeds retry failed deliveries, ETL jobs re-run after failures, and `UNION` operations occasionally double-count rows. SQL Server's `ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...)` window function is the standard deduplication tool — assign rank 1 to the row to keep within each duplicate group, then delete or exclude the rest. The `ORDER BY` clause controls which duplicate survives: highest volume, latest ingestion timestamp, or most complete record.
+
 ### Deduplication Strategies — ROW_NUMBER Pattern
 
-The standard approach: assign `ROW_NUMBER()` within each duplicate group,
-keep `rn = 1`, delete the rest.
+Assigns `ROW_NUMBER()` within each `(symbol, date)` group ordered by descending volume. Rows with `rn = 1` are the canonical records; rows with `rn > 1` are duplicates to remove. The `COUNT(*) OVER` window simultaneously flags which keys have multiple rows, so you can isolate only the affected dates for inspection.
 
+
+The CTE simulates a duplicate by `UNION ALL`-ing the same latest-date row with a slightly modified close and volume. `ROW_NUMBER()` partitioned by `(symbol, date)` and ordered by descending volume assigns `rn = 1` to the row with the highest volume (the tie-breaking rule). `COUNT(*) OVER` counts how many copies exist per key — the outer `WHERE copies > 1` isolates only the duplicated dates for inspection.
 
 ```sql
--- Deduplication with ROW_NUMBER: detect and resolve duplicates
--- Simulated: UNION ALL the same rows to create duplicates in a CTE
 WITH raw_data AS (
-    -- Original rows
     SELECT symbol, date, [close], volume, 'original' AS source
     FROM silver.eurostoxx50_ohlcv
     WHERE symbol = 'ASML.AS' AND date >= '2026-03-10'
     UNION ALL
-    -- Simulate duplicate: same key, slightly different values
     SELECT symbol, date, [close] + 0.5, volume + 999, 'duplicate'
     FROM silver.eurostoxx50_ohlcv
     WHERE symbol = 'ASML.AS' AND date = (SELECT MAX(date) FROM silver.eurostoxx50_ohlcv WHERE symbol = 'ASML.AS')
 ),
 numbered AS (
-    -- ROW_NUMBER: assign rn=1 to the row we want to keep (highest volume)
     SELECT *,
            ROW_NUMBER() OVER (PARTITION BY symbol, date ORDER BY volume DESC) AS rn,
            COUNT(*) OVER (PARTITION BY symbol, date) AS copies
@@ -1106,7 +1133,7 @@ numbered AS (
 )
 SELECT TOP 10 symbol, date, ROUND([close], 2) AS [close], volume, source, rn, copies
 FROM numbered
-WHERE copies > 1  -- only show the duplicated date
+WHERE copies > 1
 ORDER BY date DESC, rn
 ```
 
@@ -1148,7 +1175,47 @@ ORDER BY date DESC, rn
 
 ## Execution Plans & Query Optimization
 
+SQL Server's cost-based optimizer compiles a query into an execution plan that specifies the physical operations (seeks, scans, joins, sorts) and their estimated costs. The plan is cached and reused for subsequent identical queries. Use `SET STATISTICS IO, TIME ON` to measure actual logical reads and elapsed time; query `sys.dm_exec_query_stats` to identify the most expensive cached plans. Understanding the common anti-patterns below — non-sargable predicates, implicit type conversions, missing indexes — is the first step in pipeline performance tuning.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A[T-SQL Query Submitted] --> B[Parse & Tokenize]
+    B --> C[Bind / Algebrize]
+    C --> D{Plan Cache Lookup}
+    D -->|Cache Hit| E[Reuse Cached Plan]
+    D -->|Cache Miss| F[Optimization Phase]
+    F --> G{Trivial Plan?}
+    G -->|Yes - single table\nno joins/aggs| H[Use Trivial Plan\nno cost estimation]
+    G -->|No| I[Cost-Based Optimization\nestimate rows + cost per op]
+    I --> J[Select Lowest-Cost Plan\ncached for reuse]
+    H --> K[Execute Plan]
+    J --> K
+    E --> K
+    K --> L[Return Result Set]
+
+    style A fill:#1a1b26,stroke:#565f89,color:#c0caf5
+    style D fill:#292e42,stroke:#bb9af7,color:#c0caf5
+    style F fill:#292e42,stroke:#7aa2f7,color:#c0caf5
+    style I fill:#24283b,stroke:#7aa2f7,color:#c0caf5
+    style K fill:#1a1b26,stroke:#9ece6a,color:#c0caf5
+    style L fill:#1a1b26,stroke:#9ece6a,color:#c0caf5
+```
+
 ### Execution Plans & Query Optimization — Common Anti-Patterns
+
+The following patterns prevent SQL Server from using indexes efficiently. Each forces a table scan where an index seek would suffice, often increasing query cost by orders of magnitude on large tables.
 
 | Anti-Pattern | Problem | Fix |
 |-------------|---------|-----|
@@ -1159,10 +1226,9 @@ ORDER BY date DESC, rn
 | Missing index | Table scan on large table | Add non-clustered index on filter columns |
 
 
+Both queries return the same count, but the non-sargable version (`YEAR(date) = 2025`) wraps the column in a function, preventing the index seek — SQL Server must evaluate `YEAR()` for every row. The sargable version (`date >= '2025-01-01' AND date < '2026-01-01'`) expresses the same filter as a range predicate the index can seek directly.
+
 ```sql
--- Compare: both return the same count, but the sargable version is faster
--- BAD:  WHERE YEAR(date) = 2025  → function on column prevents index seek
--- GOOD: WHERE date >= ... AND date < ...  → index can seek directly
 SELECT
     (SELECT COUNT(*) FROM silver.eurostoxx50_ohlcv
      WHERE YEAR(date) = 2025) AS bad_function_on_column,
@@ -1189,7 +1255,15 @@ SELECT
 
 ## Transaction Isolation Levels
 
+SQL Server's transaction isolation levels control how reads interact with concurrent writes — the trade-off between data consistency and blocking. The default `READ COMMITTED` blocks readers when a writer holds a row lock. For analytics reads in a data pipeline, `SNAPSHOT` isolation provides point-in-time consistency with no blocking by reading row versions stored in tempdb. **Read Committed Snapshot Isolation (RCSI)** extends snapshot behavior automatically to all `READ COMMITTED` statements database-wide — enable it with `ALTER DATABASE stoxx SET READ_COMMITTED_SNAPSHOT ON` — eliminating reader/writer blocking without changing any application code.
+
+> [!info] Cross-Engine: Isolation Levels
+>
+> **SQL Server** implements all ANSI isolation levels plus `SNAPSHOT` (optimistic, row-versioned via tempdb) and RCSI. **BigQuery** uses serializable isolation for multi-statement transactions by default; single statements are always atomic and isolated. **Firestore** transactions are serializable and limited to 500 documents per transaction; reads outside a transaction use strong consistency by default for server-side reads, eventual consistency for mobile/web clients.
+
 ### Transaction Isolation Levels — Guide for Data Engineering
+
+Each isolation level is a commitment about which read anomalies the engine prevents. Higher levels prevent more anomalies but increase blocking — lower levels scale better but may return stale or inconsistent reads.
 
 | Level | Dirty Reads | Non-Repeatable | Phantoms | Use Case |
 |-------|------------|----------------|----------|----------|
@@ -1212,7 +1286,11 @@ SELECT
 
 ## Bulk Loading Patterns
 
-### Bulk Loading Strategies
+Bulk data loading is the performance-critical path for bronze-layer ingestion and silver-layer transforms. SQL Server provides several insertion strategies spanning orders of magnitude in throughput — from simple `INSERT INTO ... SELECT` to minimally-logged `BULK INSERT` from flat files. The choice depends on data source (query result vs. file), load size, recovery model (`FULL` vs. `SIMPLE`/`BULK_LOGGED`), and whether you need checkpointing for loads that exceed available transaction log space.
+
+### Bulk Loading Strategies — Insert Method Comparison
+
+Choose an insert strategy based on data source, batch size, and recovery model. Minimal logging (requires `SIMPLE` or `BULK_LOGGED` recovery model) is needed to achieve the fastest throughput with `INSERT ... WITH (TABLOCK)` and `BULK INSERT`.
 
 | Strategy | Speed | When |
 |----------|-------|------|
@@ -1225,6 +1303,8 @@ SELECT
 **Pipeline pattern**: load to staging table → validate → MERGE to target → truncate staging.
 
 ## Data Lineage & Audit Columns
+
+The stoxx database implements audit columns on every table to support data lineage tracking: when each row was ingested, computed, and last modified. These columns enable freshness checks (is the data stale?), replay detection (has this batch already been loaded?), and pipeline debugging (which layer introduced a discrepancy?). The query below checks the latest timestamp across all four layers of the medallion architecture to confirm a successful end-to-end pipeline run.
 
 ### Data Lineage & Audit — Standard Audit Columns
 
@@ -1240,7 +1320,6 @@ Every table in the stoxx database has audit columns:
 
 
 ```sql
--- Data freshness check: when was each table last updated?
 SELECT 'bronze.eurostoxx50_ohlcv' AS [table], MAX(_ingested_at) AS last_update
 FROM bronze.eurostoxx50_ohlcv
 UNION ALL
@@ -1286,6 +1365,8 @@ ORDER BY last_update DESC
 
 ## Partitioning Strategies
 
+Table partitioning divides a large table's data into physically separate segments based on a column value range (typically a date). SQL Server's partition elimination allows the query optimizer to skip entire partitions that cannot satisfy the `WHERE` clause predicate — equivalent to a physical shard filter at the storage level. Partitioning also enables instant data archival via `SWITCH`: moving an entire partition between tables is a metadata-only operation requiring no row movement. See [partitioning-strategies](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/partitioning-strategies) for full implementation details including partition functions, schemes, sliding windows, and maintenance scripts.
+
 ### Partitioning Strategies — When to Partition
 
 Partition large tables (millions of rows) by a date column for:
@@ -1295,10 +1376,9 @@ Partition large tables (millions of rows) by a date column for:
 
 The OHLCV tables (~65K rows each) are too small to benefit. In production with 100M+ rows, partition by year or month.
 
-<!-- 
+The schema below shows how a partition function and scheme would be defined — for reference only; do not run in the lab environment.
 
 ```sql
--- Example: partition by year (conceptual — don't run)
 CREATE PARTITION FUNCTION pf_yearly(DATE)
     AS RANGE RIGHT FOR VALUES ('2022-01-01', '2023-01-01', '2024-01-01', '2025-01-01', '2026-01-01');
 
@@ -1310,13 +1390,10 @@ CREATE TABLE silver.ohlcv_partitioned (
 ) ON ps_yearly(date);
 ```
 
- -->
-
 ## Cleanup
 
 
 ```sql
--- Drop demo objects created in this notebook
 DROP VIEW IF EXISTS demo.v_latest_prices;
 DROP VIEW IF EXISTS demo.v_stock_dashboard;
 DROP PROCEDURE IF EXISTS demo.sp_top_stocks;

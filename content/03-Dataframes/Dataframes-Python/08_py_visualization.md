@@ -1,5 +1,5 @@
 ---
-tags: [pipeline, python, pandas, polars]
+tags: [python, pandas, polars, dataframes, matplotlib, seaborn, plotly]
 aliases:
   - matplotlib, seaborn, plotting, charts
 description: "Pandas/Polars DataFrame reference 08/10 — Visualization (matplotlib, seaborn, static charts). Side-by-side executable examples with cell outputs."
@@ -94,7 +94,7 @@ Line charts connect data points in order, revealing **trends**, **cycles**, and 
 
 **Best for:** Time-series data, continuous measurements over ordered intervals (stock prices, sensor readings, revenue over months). Not suitable for unordered categories.
 
-### Basic Line (Pandas built-in)
+### Pandas | Basic line
 
 ```python
 # Close price evolution for ASML over the last year
@@ -106,7 +106,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_01.png)
 
-### Multi-Series
+### Matplotlib | Multi-series line
 
 ```python
 # Close price comparison for 5 stocks on the same time axis
@@ -122,7 +122,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_02.png)
 
-### Line Styles & Markers
+### Matplotlib | Line styles & markers
 
 ```python
 # Close vs Open price with different line styles and monthly markers
@@ -139,7 +139,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_03.png)
 
-### Fill Between
+### Matplotlib | Fill between
 
 ```python
 # Close price with shaded high-low range showing daily volatility
@@ -154,7 +154,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_04.png)
 
-### Dual Y-Axis
+### Matplotlib | Dual y-axis
 
 ```python
 # Price on left axis, volume bars on right axis — shows if volume spikes align with price moves
@@ -180,7 +180,7 @@ Bar charts compare **discrete categories** by encoding values as bar lengths. Ho
 
 **Best for:** Categorical comparisons (revenue by department, scores by sector, counts by group). Use when you have a small-to-medium number of categories (<20). For many categories, consider sorting or filtering.
 
-### Horizontal Bar
+### Pandas | Horizontal bar
 
 ```python
 # Horizontal ranking of sectors by average composite score
@@ -192,7 +192,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_06.png)
 
-### Vertical Bar
+### Pandas | Vertical bar
 
 ```python
 # Same ranking as vertical bars (easier axis labels when few categories)
@@ -205,7 +205,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_07.png)
 
-### Grouped Bar
+### Pandas | Grouped bar
 
 ```python
 # Side-by-side comparison of momentum and value scores per sector
@@ -220,7 +220,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_08.png)
 
-### Stacked Bar
+### Pandas | Stacked bar
 
 ```python
 # Stacked view: total score magnitude per sector, split by metric
@@ -233,7 +233,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_09.png)
 
-### Bar with Error Bars
+### Pandas | Bar with error bars
 
 ```python
 # Mean composite score per sector with standard deviation error bars showing dispersion
@@ -254,7 +254,7 @@ Histograms bin continuous data to show its **distribution shape** — normal, sk
 
 **Best for:** Exploring a single continuous variable (prices, returns, test scores). Answers: "What is the typical range? Are there outliers? Is the data symmetric?"
 
-### Basic Histogram
+### Pandas | Basic histogram
 
 ```python
 # Distribution of all close prices across all stocks — reveals price clustering and outliers
@@ -266,7 +266,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_11.png)
 
-### Overlaid Histograms
+### Matplotlib | Overlaid histograms
 
 ```python
 # Overlaid histograms to compare price distributions of 3 stocks
@@ -282,7 +282,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_12.png)
 
-### Histogram + KDE
+### Pandas | Histogram + KDE
 
 ```python
 # ASML price histogram with KDE overlay showing the smooth probability density
@@ -297,7 +297,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_13.png)
 
-### 2D Histogram (hexbin)
+### Matplotlib | 2D hexbin histogram
 
 ```python
 # 2D density of momentum vs value scores — reveals where most stocks cluster
@@ -321,7 +321,7 @@ Scatter plots reveal **relationships between two continuous variables** — corr
 
 **Best for:** Exploring correlation between two numeric columns (price vs volume, momentum vs value). Works well up to ~10K points; beyond that, use hexbin or density plots to avoid overplotting.
 
-### Basic Scatter
+### Pandas | Basic scatter
 
 ```python
 # Relationship between momentum and relative value scores across all stocks
@@ -333,7 +333,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_15.png)
 
-### Color-Mapped Scatter
+### Matplotlib | Color-mapped scatter
 
 ```python
 # Same scatter, color-mapped by composite score to reveal which quadrant has highest scores
@@ -350,7 +350,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_16.png)
 
-### Bubble Chart (size + color)
+### Matplotlib | Bubble chart (size + color)
 
 ```python
 # Bubble chart: position = momentum vs value, size & color = composite score magnitude
@@ -375,7 +375,7 @@ Area charts are line charts with the region below filled, emphasizing **magnitud
 
 **Best for:** Time-series composition data (market share over time, portfolio allocation, traffic sources). Keep to 3–5 series; too many layers become unreadable.
 
-### Basic Area
+### Pandas | Basic area
 
 ```python
 # ASML close price as filled area — emphasizes magnitude relative to zero
@@ -387,7 +387,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_18.png)
 
-### Stacked Area
+### Pandas | Stacked area
 
 ```python
 # Pivot daily volume for top 3 stocks
@@ -408,7 +408,7 @@ Pie charts show **part-to-whole proportions** for a single categorical variable.
 
 **Best for:** Showing composition when there are few categories with distinct proportions (market share, budget allocation). For precise comparison or many categories, prefer bar charts.
 
-### Pie Chart
+### Matplotlib | Pie chart
 
 ```python
 # Proportion of stocks in each sector within the EuroStoxx 50 index
@@ -429,7 +429,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_20.png)
 
-### Donut Chart
+### Matplotlib | Donut chart
 
 ```python
 # Same proportions as donut — center space available for a KPI or total
@@ -458,7 +458,7 @@ Seaborn provides high-level functions for **statistical visualization** — dist
 
 **Best for:** Exploratory data analysis (EDA) when you need to understand distributions (violin, box, KDE), relationships (regression, pair plots), and group differences (strip, swarm). Accepts Pandas DataFrames directly with column-name-based API.
 
-### Box Plot
+### Seaborn | Box plot
 
 
 #### How to read
@@ -480,7 +480,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_22.png)
 
-### Violin Plot
+### Seaborn | Violin plot
 
 
 #### How to read
@@ -501,7 +501,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_23.png)
 
-### Strip Plot
+### Seaborn | Strip plot
 
 
 #### How to read
@@ -522,7 +522,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_24.png)
 
-### Swarm Plot
+### Seaborn | Swarm plot
 
 
 #### How to read
@@ -543,7 +543,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_25.png)
 
-### Heatmap
+### Seaborn | Heatmap
 
 
 #### How to read
@@ -567,7 +567,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_26.png)
 
-### Clustermap (hierarchical clustering)
+### Seaborn | Clustermap (hierarchical clustering)
 
 
 #### How to read
@@ -587,7 +587,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_27.png)
 
-### Pair Plot
+### Seaborn | Pair plot
 
 
 #### How to read
@@ -608,7 +608,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_28.png)
 
-### Joint Plot
+### Seaborn | Joint plot
 
 
 #### How to read
@@ -628,7 +628,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_29.png)
 
-### KDE Plot
+### Seaborn | KDE plot
 
 
 #### How to read
@@ -652,7 +652,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_30.png)
 
-### Regression Plot
+### Seaborn | Regression plot
 
 
 #### How to read
@@ -674,7 +674,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_31.png)
 
-### Residual Plot
+### Seaborn | Residual plot
 
 
 #### How to read
@@ -696,7 +696,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_32.png)
 
-### Count Plot
+### Seaborn | Count plot
 
 
 #### How to read
@@ -715,7 +715,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_33.png)
 
-### ECDF (Empirical CDF)
+### Seaborn | ECDF (Empirical CDF)
 
 
 #### How to read
@@ -736,7 +736,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_34.png)
 
-### Rug Plot
+### Seaborn | Rug plot
 
 
 #### How to read
@@ -764,7 +764,7 @@ Matplotlib is the low-level engine behind Pandas and Seaborn plots. Use it direc
 
 **Best for:** Publication-quality figures, custom dashboards, unconventional chart types (radar, stem), and any scenario where you need pixel-level control over every element.
 
-### Subplots Grid
+### Matplotlib | Subplots grid
 
 ```python
 # 2x2 dashboard: close price, volume, distribution, and open-vs-close scatter for ASML
@@ -784,7 +784,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_36.png)
 
-### Step Plot
+### Matplotlib | Step plot
 
 
 #### How to read
@@ -803,7 +803,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_37.png)
 
-### Stem Plot
+### Matplotlib | Stem plot
 
 
 #### How to read
@@ -824,7 +824,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_38.png)
 
-### Stackplot (matplotlib native)
+### Matplotlib | Stackplot
 
 ```python
 # Native matplotlib stacked area — same as Pandas .plot.area but with more control
@@ -841,7 +841,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_39.png)
 
-### Polar / Radar Chart
+### Matplotlib | Polar / radar chart
 
 
 #### How to read
@@ -871,7 +871,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_40.png)
 
-### Error Bar Plot
+### Matplotlib | Error bar plot
 
 
 #### How to read
@@ -894,7 +894,7 @@ plt.show()
 
 ![chart](/static/img/df_py_08/viz_41.png)
 
-### Annotations & Text
+### Matplotlib | Annotations & text
 
 ```python
 # Close price with annotated max/min points and mean reference line
@@ -925,8 +925,19 @@ plt.show()
 
 ## Polars to Pandas for Plotting
 
+Polars has no built-in `.plot()` method. Matplotlib and Seaborn both operate on NumPy arrays and Pandas DataFrames — they cannot consume a Polars DataFrame directly. The standard workflow is `.to_pandas()` for conversion.
+
+> [!info] Polars + Plotly: no conversion needed (Plotly 6+)
+>
+> **Plotly Express** accepts Polars DataFrames directly since **Plotly 6.0** (released 2025). Column names are resolved via the `__dataframe__` protocol. This means `px.line(df_polars, x="date", y="close")` works without `.to_pandas()`. See the `## Plotly with Polars DataFrames` section below for examples.
+>
+> **Matplotlib and Seaborn** do not support the `__dataframe__` protocol — always convert with `.to_pandas()` before using these libraries.
+
+> [!warning] `.to_pandas()` memory cost on large Polars frames
+>
+> `.to_pandas()` copies the entire DataFrame into memory as a new Pandas object. For a 5M-row frame, this can double peak memory usage. If you only need to plot a subset, filter and slice in Polars **before** converting: `df.filter(...).head(10_000).to_pandas()`. For `LazyFrame`, call `.collect().to_pandas()` — `.collect()` triggers full evaluation first.
+
 ```python
-# Polars DataFrame converted to Pandas for matplotlib plotting — standard workflow
 asml_pl = ohlcv_pl.filter(pl.col("symbol") == "ASML.AS").sort("date").tail(90)
 asml_pl.to_pandas().plot(x="date", y="close", title="ASML (Polars → Pandas plot)",
                          figsize=(10, 4), legend=False)
@@ -937,6 +948,14 @@ plt.show()
 ![chart](/static/img/df_py_08/viz_43.png)
 
 ## Matplotlib / Seaborn Summary
+
+> [!question] When to use Matplotlib/Seaborn vs Plotly?
+>
+> - **Matplotlib/Pandas `.plot()`** — publication-quality static figures (PNG/SVG/PDF), fine-grained layout control, integration with reporting pipelines that don't render HTML. Required for Seaborn's statistical plots (violin, pair, joint, clustermap).
+> - **Seaborn** — EDA shortcut for statistical visualization: distribution comparison, regression overlays, clustered correlation matrices. Accepts DataFrames directly with column-name API; handles grouping and confidence intervals automatically.
+> - **Plotly** — interactive exploration in notebooks and dashboards (hover, zoom, dropdown filters). Best for stakeholder-facing output or when you need to explore specific data points. Polars DataFrames accepted directly since Plotly 6.
+>
+> Default workflow: use **Seaborn/Matplotlib** for analysis you'll export to a report; use **Plotly** for analysis you'll share as a notebook or web dashboard.
 
 | Chart | Matplotlib / Pandas | Seaborn |
 |---|---|---|
@@ -964,9 +983,10 @@ plt.show()
 | Fill between | `ax.fill_between()` | — |
 
 ---
-# Part 2: Plotly — Interactive Charts
 
-Plotly Express for quick interactive charts, and Graph Objects for full control.
+## Plotly — Interactive Charts
+
+Plotly Express (`px`) provides a one-function API for common chart types; Graph Objects (`go`) gives full control over every trace attribute. Plotly accepts **Pandas DataFrames**, **Polars DataFrames** (since Plotly 6), or plain Python lists/arrays — no `.to_pandas()` conversion required for `px` functions.
 
 ```python
 pio.renderers.default = "notebook_connected"
@@ -1003,7 +1023,7 @@ Plotly line charts are **interactive** — hover for values, zoom, pan, and expo
 
 **Best for:** Interactive exploration of time-series data in notebooks or dashboards. Ideal when stakeholders need to zoom into specific date ranges or compare series on hover.
 
-### Basic Line
+### Plotly | Basic line
 
 ```python
 # Interactive close price for ASML — hover for exact values, drag to zoom
@@ -1019,7 +1039,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_01.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Multi-Series (color)
+### Plotly | Multi-series (color)
 
 ```python
 # Multi-stock comparison — unified hover shows all prices at the same date
@@ -1031,7 +1051,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_02.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Faceted Lines
+### Plotly | Faceted lines
 
 ```python
 # Each stock in its own panel — independent y-axes reveal individual patterns
@@ -1043,7 +1063,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_03.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Dual Y-Axis (Graph Objects)
+### Plotly | Dual y-axis (Graph Objects)
 
 ```python
 # ASML price (line) + volume (bars) on dual axes — volume spikes often precede price moves
@@ -1058,7 +1078,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_04.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Line Styles & Markers
+### Plotly | Line styles & markers
 
 ```python
 # Close vs Open with different line styles — solid, dashed, with markers
@@ -1083,7 +1103,7 @@ Interactive bars support hover tooltips, click-to-filter, and animated transitio
 
 **Best for:** Presentations and dashboards where viewers need to read exact values via hover, or explore subsets by clicking legend items to toggle categories.
 
-### Basic Bar
+### Plotly | Basic bar
 
 ```python
 # Horizontal bar ranking of sectors — color intensity reinforces score magnitude
@@ -1096,7 +1116,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_06.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Grouped Bar
+### Plotly | Grouped bar
 
 ```python
 # Compare momentum vs value scores by sector
@@ -1110,7 +1130,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_07.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Stacked Bar
+### Plotly | Stacked bar
 
 ```python
 # Stacked version of the same data — total bar height = combined score
@@ -1123,7 +1143,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_08.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Bar with Text Labels
+### Plotly | Bar with text labels
 
 ```python
 # Bars with explicit numeric labels — no need to reference the axis
@@ -1147,7 +1167,7 @@ Plotly scatter adds **hover details**, marginal distributions, trendlines, and 3
 
 **Best for:** Multi-dimensional exploration — when you want to encode 3–5 variables in a single view. OLS trendlines quantify relationships; marginals show distributions along each axis. 3D scatter is useful for PCA or factor analysis visualization.
 
-### Basic Scatter
+### Plotly | Basic scatter
 
 ```python
 # Interactive momentum vs value scatter — hover to identify individual stocks
@@ -1158,7 +1178,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_10.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Color, Size, Hover
+### Plotly | Color, size & hover
 
 ```python
 # Colored by sector — hover shows symbol and composite score
@@ -1171,7 +1191,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_11.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Marginal Distributions
+### Plotly | Marginal distributions
 
 
 #### How to read
@@ -1190,7 +1210,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_12.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Trendline (OLS)
+### Plotly | Trendline (OLS)
 
 
 #### How to read
@@ -1209,7 +1229,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_13.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### 3D Scatter
+### Plotly | 3D scatter
 
 ```python
 # 3D view of momentum, value, and composite — rotate to find cluster structure
@@ -1229,7 +1249,7 @@ Interactive histograms let you zoom into tails, hover for bin counts, and overla
 
 **Best for:** Comparing distributions across groups interactively. Use violin when shape matters (bimodality), box when you need quartile summary, strip/swarm for small datasets where every point counts.
 
-### Basic Histogram
+### Plotly | Basic histogram
 
 ```python
 # Distribution of all close prices — zoom into tails to inspect outliers
@@ -1240,7 +1260,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_15.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Overlaid by Category
+### Plotly | Overlaid by category
 
 ```python
 # Overlaid distributions per stock — toggle stocks via legend clicks
@@ -1252,7 +1272,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_16.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Histogram with Rug/Box
+### Plotly | Histogram with rug/box
 
 ```python
 # Composite score by sector with rug marks showing individual stock positions
@@ -1264,7 +1284,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_17.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Violin Plot
+### Plotly | Violin plot
 
 
 #### How to read
@@ -1284,7 +1304,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_18.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Box Plot
+### Plotly | Box plot
 
 
 #### How to read
@@ -1303,7 +1323,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_19.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Strip Plot
+### Plotly | Strip plot
 
 
 #### How to read
@@ -1328,7 +1348,7 @@ Interactive area charts support hover, zoom, and range selection. Stacked areas 
 
 **Best for:** Interactive time-series composition in dashboards (trading volume by stock, resource usage by service).
 
-### Basic Area
+### Plotly | Basic area
 
 ```python
 # ASML close as filled area — emphasizes cumulative magnitude
@@ -1338,7 +1358,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_21.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Stacked Area
+### Plotly | Stacked area
 
 ```python
 # Daily volume by stock (stacked)
@@ -1356,7 +1376,7 @@ Sunbursts and treemaps extend pie charts to **hierarchical data** — drill from
 
 **Best for:** Hierarchical/nested categorical data (org structures, file sizes, market segments). Treemaps work well for space-efficient dashboards; sunbursts for exploring parent-child relationships.
 
-### Pie Chart
+### Plotly | Pie chart
 
 ```python
 # Sector composition of the index — hover for exact counts
@@ -1368,7 +1388,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_23.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Donut Chart
+### Plotly | Donut chart
 
 ```python
 # Donut variant — center space for a KPI or label
@@ -1380,7 +1400,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_24.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Sunburst
+### Plotly | Sunburst
 
 ```python
 # Hierarchy: sector -> symbol
@@ -1394,7 +1414,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_25.html" width="100%" height="950" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Treemap
+### Plotly | Treemap
 
 ```python
 # Same hierarchy as rectangles — area encodes count, easier to compare than pie angles
@@ -1413,7 +1433,7 @@ Heatmaps encode a **matrix of values** as colors, ideal for correlation matrices
 
 **Best for:** Correlation analysis, confusion matrices, time x category pivot tables, and any data naturally represented as a 2D grid (weekday x hour, gene expression matrices).
 
-### Correlation Matrix
+### Plotly | Correlation matrix
 
 
 #### How to read
@@ -1435,7 +1455,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_27.html" width="100%" height="1050" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Pivot Heatmap
+### Plotly | Pivot heatmap
 
 ```python
 # Average close by stock and month
@@ -1465,7 +1485,7 @@ Candlestick and OHLC charts are standard for **price action analysis**. Each bar
 
 **Best for:** Financial time-series (stocks, forex, crypto). Essential for technical analysis; the volume subplot helps distinguish meaningful moves from noise.
 
-### Candlestick
+### Plotly | Candlestick
 
 
 #### How to read
@@ -1487,7 +1507,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_29.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### OHLC
+### Plotly | OHLC
 
 
 #### How to read
@@ -1509,7 +1529,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_30.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Candlestick + Volume Subplot
+### Plotly | Candlestick + volume subplot
 
 ```python
 dates = pd.to_datetime(dates)
@@ -1540,7 +1560,7 @@ Subplots arrange multiple charts in a grid for **dashboard-style views**. Shared
 
 **Best for:** Dashboards, multi-metric monitoring, comparing the same metric across categories (one chart per stock, per sensor, per region).
 
-### Grid of Subplots
+### Plotly | Grid of subplots
 
 ```python
 # 2x2 dashboard for ASML: price, volume, daily range, and return distribution
@@ -1564,7 +1584,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_32.html" width="100%" height="650" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Faceting with Plotly Express
+### Plotly | Faceting with Plotly Express
 
 ```python
 # Per-stock histograms in a facet grid — compare distribution shapes side by side
@@ -1583,7 +1603,7 @@ Choropleth maps color regions by a metric — great for showing **geographic dis
 
 **Best for:** Any data with a geographic dimension (sales by country, offices on a map, sensor locations). Use ISO-3 country codes for reliable matching.
 
-### Choropleth
+### Plotly | Choropleth
 
 ```python
 # Map of Europe colored by number of index constituents per country
@@ -1618,7 +1638,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_34.html" width="100%" height="650" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Scatter Map
+### Plotly | Scatter map
 
 ```python
 # Bubble map — bubble size = number of stocks headquartered in each country
@@ -1649,7 +1669,7 @@ Animation adds a **time dimension** to any chart type. `animation_frame` in Plot
 
 **Best for:** Showing evolution over time (rankings changing, clusters drifting, distributions shifting). Most impactful in presentations; less useful for static analysis (hard to compare frames).
 
-### Animated Line (cumulative)
+### Plotly | Animated line (cumulative)
 
 ```python
 # Monthly aggregation for animation
@@ -1679,7 +1699,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_36.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Animated Scatter (built-in)
+### Plotly | Animated scatter (built-in)
 
 ```python
 # Scatter by sector over months
@@ -1707,7 +1727,7 @@ Templates control the overall look: background, grid, fonts, color palette. Buil
 
 **Best for:** Ensuring visual consistency across a project or org. Set a default template once and all subsequent charts inherit it.
 
-### Built-in Templates
+### Plotly | Built-in templates
 
 ```python
 # Show built-in templates in a 2x3 grid using HTML
@@ -1728,7 +1748,7 @@ display(HTML(js_tag + grid))
 
 <iframe src="/static/plotly/df_py_08_38.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Custom Styling
+### Plotly | Custom styling
 
 ```python
 # Custom-styled close price with filled area and range slider for navigation
@@ -1749,7 +1769,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_39.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Annotations & Shapes
+### Plotly | Annotations & shapes
 
 ```python
 # Close price with reference lines, annotations at max/min, and a highlighted region
@@ -1786,7 +1806,7 @@ Dropdowns, range selectors, and custom hover templates turn charts into **mini-a
 
 **Best for:** Stakeholder-facing dashboards where users need self-service exploration without writing code. Also useful in Jupyter for rapid what-if exploration.
 
-### Dropdown Buttons
+### Plotly | Dropdown buttons
 
 ```python
 # Dropdown selector to switch between stocks without redrawing
@@ -1813,7 +1833,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_41.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Range Slider & Selector
+### Plotly | Range slider & selector
 
 ```python
 # Range presets (1M, 3M, 6M, All) plus a draggable slider for custom zoom
@@ -1834,7 +1854,7 @@ fig.show()
 
 <iframe src="/static/plotly/df_py_08_42.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-### Custom Hover Templates
+### Plotly | Custom hover templates
 
 ```python
 # Custom hover showing date, close, volume, high, low in a formatted tooltip
@@ -1857,6 +1877,10 @@ fig.show()
 <iframe src="/static/plotly/df_py_08_43.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 ## Plotly with Polars DataFrames
+
+> [!info] How Plotly consumes Polars DataFrames
+>
+> Plotly Express uses the [Python DataFrame Interchange Protocol](https://data-apis.org/dataframe-protocol/latest/) (`__dataframe__`) introduced in Plotly 6.0. Column names passed as strings (e.g., `x="date"`) are resolved against this protocol rather than the Pandas API. **Graph Objects (`go.Scatter`, `go.Candlestick`, etc.) do not support this protocol** — pass `.to_list()` or `.to_pandas()` arrays for `go` traces.
 
 ```python
 # Plotly Express works directly with Polars DataFrames (since Plotly 6+)

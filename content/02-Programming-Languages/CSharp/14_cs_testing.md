@@ -1,6 +1,6 @@
 ---
 tags: [testing, csharp]
-aliases: [unit testing, pytest, xUnit, NUnit, test driven development, mocking, assertions]
+aliases: [unit testing, xUnit, NUnit, test driven development, mocking, assertions]
 description: "C# testing reference with executable examples and cell outputs — covers xUnit, NUnit, Moq, FluentAssertions, data-driven tests, and test-driven development patterns. See [14_py_testing](https://alp78.github.io/elysium/02-Programming-Languages/Python/14_py_testing) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -39,6 +39,28 @@ Tests are organized in layers, from fast/cheap at the bottom to slow/expensive a
 **Rule of thumb**: 70% unit, 20% integration, 10% E2E.
 Unit tests run on every commit. Integration tests run on every PR. E2E tests run on deploy.
 
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    PERF["⚡ Performance\n~10s · BenchmarkDotNet\nfew tests"]
+    E2E["🔁 End-to-End\n~1s+ · WebApplicationFactory\n10%"]
+    INT["🔗 Integration\n~100ms · xUnit + SqlClient\n20%"]
+    UNIT["✅ Unit\n~1ms · xUnit · Assert · Moq\n70%"]
+
+    PERF --> E2E --> INT --> UNIT
+```
+
 ### C# Testing Ecosystem
 
 - **xUnit** — the most widely used .NET test framework. `[Fact]` marks a single test, `[Theory]` + `[InlineData]` marks a parametrized test. Constructor injection gives each test a fresh instance (isolation).
@@ -59,6 +81,8 @@ Unit tests run on every commit. Integration tests run on every PR. E2E tests run
 7. **CI/CD**: GitHub Actions workflow with `dotnet test`, coverage thresholds
 
 #### Warning suppression
+
+This cell suppresses CS1701/CS1702 assembly version mismatch warnings that appear in .NET Interactive when loading certain NuGet packages. It uses reflection to call `WithWarningLevel(0)` on the Roslyn script options — effectively the same as `/warn:0` on the command line. Required once per session; omitting it fills the output with noisy but harmless warnings.
 
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings and import namespaces
@@ -267,12 +291,15 @@ xUnit is the most widely used testing framework in .NET. `[Fact]` marks a single
 >
 > xUnit normally runs via `dotnet test` with a test project. In notebooks, we call test methods directly and report results. In production, tests live in a separate `MyProject.Tests` project.
 
+### Notebook test runner
+
+The `RunTest` helper wraps each test call in a `try/catch` and prints `✓`/`✗`. In a real project, `dotnet test` discovers and runs `[Fact]` and `[Theory]` methods automatically.
+
 #### Helper to run tests in notebook
 
-```csharp
-// In a real project, `dotnet test` discovers and runs these automatically.
-// Here we call them manually and catch failures.
+`RunTest` wraps each test invocation in a `try/catch`. If the assertion passes, it prints `✓ name`. If it throws (any exception — assertion failure, `NullReferenceException`, etc.), it prints `✗ name: message`. In a real project, xUnit provides this automatically via `dotnet test` — you never write this helper yourself.
 
+```csharp
 void RunTest(string name, Action test)
 {
     try { test(); Console.WriteLine($"  ✓ {name}"); }
@@ -284,25 +311,23 @@ void RunTest(string name, Action test)
 
 #### Basic Fact tests
 
+Each `[Fact]` test follows three phases — **Arrange** (set up inputs), **Act** (call the code under test), **Assert** (verify the result). Each test is self-contained: it arranges its own data and asserts one outcome. The four tests below cover price arithmetic, ticker normalization, portfolio weight validation, and required-field checking — all core assertions in a financial data pipeline.
+
 ```csharp
-// Basic Fact tests
 RunTest("Price calculation", () =>
 {
-    // Trade price: quantity × unit_price
     int quantity = 150;
     decimal unitPrice = 42.75m;
     decimal total = quantity * unitPrice;
     Assert.Equal(6412.50m, total);
 });
 
-// TEST: ticker strings are trimmed and uppercased ("  aapl  " → "AAPL")
 RunTest("Ticker normalization", () =>
 {
     string rawTicker = "  aapl  ";
     Assert.Equal("AAPL", rawTicker.Trim().ToUpper());
 });
 
-// TEST: a normalized portfolio's weights add up to exactly 1.0
 RunTest("Portfolio weights sum to 1", () =>
 {
     var weights = new Dictionary<string, double>
@@ -312,7 +337,6 @@ RunTest("Portfolio weights sum to 1", () =>
     Assert.Equal(1.0, weights.Values.Sum(), precision: 10);
 });
 
-// TEST: a trade dictionary contains all mandatory keys
 RunTest("Trade record has required fields", () =>
 {
     var trade = new Dictionary<string, object>
@@ -331,12 +355,13 @@ RunTest("Trade record has required fields", () =>
       ✓ Portfolio weights sum to 1
       ✓ Trade record has required fields
 
+### Exception and error testing
+
 #### Testing exceptions
 
-```csharp
-// Assert.Throws<T>() verifies an exception is thrown.
+`Assert.Throws<T>(action)` invokes `action` and expects exactly one exception of type `T` to be thrown. The test fails if no exception is raised, or if a different exception type is thrown. It returns the caught exception so you can make further assertions on the message or properties — useful for verifying that validation logic not only throws but provides a useful error message.
 
-// TEST: negative quantity is rejected with ArgumentException (fail-fast validation)
+```csharp
 RunTest("Invalid quantity throws ArgumentException", () =>
 {
     static void ValidateTrade(int qty)
@@ -349,7 +374,6 @@ RunTest("Invalid quantity throws ArgumentException", () =>
     Assert.Contains("Invalid quantity", ex.Message);
 });
 
-// TEST: accessing a non-existent dict key throws KeyNotFoundException
 RunTest("Missing key throws KeyNotFoundException", () =>
 {
     var positions = new Dictionary<string, int> { ["AAPL"] = 100, ["MSFT"] = 50 };
@@ -367,6 +391,10 @@ RunTest("Missing key throws KeyNotFoundException", () =>
 > - `[Fact]` — single test case
 > - `[Theory]` + `[InlineData]` — parametrized (runs once per data set); C# equivalent of `@pytest.mark.parametrize`
 > - In notebooks we simulate with a loop; in real projects, xUnit discovers automatically
+
+### Parametrized test examples
+
+Each parametrized test below defines an array of named tuples (the test cases), then loops over them calling `RunTest`. In a real xUnit project, replace the loop with `[Theory]` + `[InlineData]` attributes — the runner handles iteration automatically.
 
 ```csharp
 void RunTest(string name, Action test)
@@ -492,13 +520,10 @@ foreach (var (ticker, valid) in tickerCases)
 
 ## Mocking with Moq
 
+In production C#, use Moq (NuGet) to auto-generate mocks from interfaces: `new Mock<IService>()` → `mock.Setup(s => s.Method()).Returns(value)`. In notebooks, we write mocks by hand — same pattern, but Moq has assembly version conflicts on .NET 10+. The core idea is identical: implement the interface with fake behavior, track calls, verify arguments.
+
 ```csharp
 #nullable enable
-
-// In production C#, use Moq (NuGet) to auto-generate mocks from interfaces:
-//   new Mock<IService>() → mock.Setup(s => s.Method()).Returns(value)
-// In notebooks, we write mocks by hand (same pattern, Moq has assembly warnings on .NET 10).
-// Core idea: implement the interface with fake behavior, verify correct method calls.
 
 void RunTest(string name, Action test)
 {
@@ -507,13 +532,9 @@ void RunTest(string name, Action test)
 }
 ```
 
-#### Interfaces — define contracts for dependency injection
+### Mock interfaces and test doubles
 
-```csharp
-// In C#, you mock interfaces (not concrete classes).
-
-```
-
+In C#, you mock **interfaces** (not concrete classes). An interface declares a contract — what methods exist, what they accept, what they return — without any implementation. Production code depends on the interface; tests inject a mock implementation with canned behavior. This is what enables swapping a real `MarketDataClient` for a `MockMarketDataClient` without changing the code under test.
 
 #### Interface + mock classes — IMarketDataClient, IBroker for testability
 
@@ -547,9 +568,10 @@ public class OrderResult
 
 #### Hand-written mock classes — implement interface with canned data
 
+Each mock class implements the interface and adds two tracking fields: a `*ToReturn` property that the test sets to control output, and a `CallCount`/`Last*` property that the test inspects to verify the call. This is exactly what Moq generates automatically with `mock.Setup(...).Returns(...)` and `mock.Verify(...)` — writing it by hand makes the mechanism visible.
+
 ```csharp
-# nullable enable
-// Each implements the interface + adds tracking fields for verification.
+#nullable enable
 
 public class MockMarketDataClient : IMarketDataClient
 {
@@ -591,9 +613,13 @@ public class MockExchangeGateway : IExchangeGateway
 }
 ```
 
+### Verifying mock behavior
+
+After calling code that depends on a mock, you verify two things: the return value was handled correctly, and the mock was called with the right arguments. The tracking fields (`LastRequestedTicker`, `CallCount`) exist specifically for this second check.
+
 #### Mock: market data client
 
-Hand-written mock: implements the interface with canned return values, records what was called (`LastRequestedSymbol`, `CallCount`). Moq equivalent: `new Mock<IMarketDataClient>()`. Both achieve the same goal — hand-written is clearer for learning.
+Hand-written mock: implements the interface with canned return values, records what was called (`LastRequestedTicker`, `CallCount`). Moq equivalent: `new Mock<IMarketDataClient>()`. Both achieve the same goal — hand-written is clearer for learning.
 
 ```csharp
 // TEST: mock returns canned price, records which symbol was requested
@@ -614,10 +640,9 @@ RunTest("Mock market data quote", () =>
 
 #### Mock: broker order submission
 
-```csharp
-// Moq equivalent: mock.Setup(b => b.SubmitOrder(It.IsAny<Order>())).Returns(...)
+The broker mock records the full `Order` object that was passed to `SubmitOrder`. After the call, `mock.LastOrder` lets you assert that the caller constructed the order correctly — ticker, side, quantity, and limit price. Order submission bugs (wrong ticker, wrong quantity) can cause real financial losses; verifying the exact arguments is essential.
 
-// TEST: mock records the order that was submitted for later verification
+```csharp
 RunTest("Mock order submission", () =>
 {
     var mock = new MockBrokerClient();
@@ -723,6 +748,10 @@ void RunTest(string name, Action test)
     catch (Exception ex) { Console.WriteLine($"  ✗ {name}: {ex.Message}"); }
 }
 ```
+
+### Domain types and transform tests
+
+The types below (`IIndexDataClient`, `Constituent`, `EodPrice`) are the building blocks for pipeline tests. Define them once and reuse across multiple test classes — they reflect the real domain model without requiring live connections.
 
 #### Domain types — IIndexDataClient, Constituent, EodPrice for pipeline testing
 
@@ -864,6 +893,8 @@ RunTest("Index weight calculation with mock", () =>
     
       ✓ Index weight calculation with mock
 
+### Data quality validation
+
 #### Data quality checks
 
 > [!info] EOD price validation invariants
@@ -929,6 +960,8 @@ RunTest("Catches invalid prices", () =>
 
 ## Integration Testing with Real Database
 
+### Connection setup
+
 #### Database connection and test helper
 
 Integration tests verify code against real dependencies (DB, APIs, files) — not just mocked interfaces. The stoxx database uses a medallion architecture: `bronze` (raw OHLCV), `silver` (cleaned + gap-filled), `gold` (scores, index performance).
@@ -983,6 +1016,8 @@ void AssertTest(string name, bool condition)
 ```
 
       DB connection ready.
+
+### Medallion layer assertions
 
 #### Schema validation tests
 
@@ -1126,6 +1161,8 @@ AssertTest($"daily returns within +/-20% ({extremeReturns} violations)", extreme
 
 ## DI Validation Testing
 
+### Service registration smoke tests
+
 #### IServiceCollection — validate dependency injection registration
 
 > [!info] DI registration testing
@@ -1134,9 +1171,9 @@ AssertTest($"daily returns within +/-20% ({extremeReturns} violations)", extreme
 > - `GetRequiredService<T>()` throws if not registered — catches missing DI at test time
 > - The #1 startup crash in .NET is forgetting `services.AddScoped<IFoo, Foo>()`
 
-> [!warning] Resolve root services (they pull
+> [!warning] Resolve root services — not leaf services
 >
-> Resolve root services (they pull the full dependency graph). Don't register services in tests that aren't in production. Watch lifetime mismatches: Scoped into Singleton throws at runtime.
+> Resolving a root service pulls the full dependency graph. Don't register services in tests that aren't registered in production. Watch lifetime mismatches: a Scoped service injected into a Singleton throws `InvalidOperationException` at runtime.
 
 > [!success] DI validation pattern
 >
@@ -1191,6 +1228,8 @@ class PipelineRunner : IPipelineRunner
       correctly caught missing IDisposable (expected FAIL)
 
 ## CI/CD — Running Tests in GitHub Actions
+
+### Automating tests on push and PR
 
 #### GitHub Actions workflow
 
@@ -1361,6 +1400,8 @@ workflow
             with:
               name: coverage
               path: ./test-results/**/coverage.cobertura.xml
+
+### Reference
 
 #### Testing cheat sheet
 

@@ -1,6 +1,6 @@
 ---
 tags: [testing, python]
-aliases: [unit testing, pytest, xUnit, NUnit, test driven development, mocking, assertions]
+aliases: [unit testing, pytest, unittest, ipytest, hypothesis, test driven development, mocking, assertions]
 description: "Python testing reference with executable examples and cell outputs — covers pytest, unittest, fixtures, mocking, parametrize, and test-driven development patterns. See [14_cs_testing](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/14_cs_testing) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -39,6 +39,28 @@ Tests are organized in layers, from fast/cheap at the bottom to slow/expensive a
 **Rule of thumb**: 70% unit, 20% integration, 10% E2E.
 Unit tests run on every commit. Integration tests run on every PR. E2E tests run on deploy.
 
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    PERF["⚡ Performance\n~10s · pytest-benchmark · locust\nfew tests"]
+    E2E["🔁 End-to-End\n~1s+ · FastAPI.TestClient · httpx\n10%"]
+    INT["🔗 Integration\n~100ms · pytest + pyodbc · pandera\n20%"]
+    UNIT["✅ Unit\n~1ms · pytest · assert · unittest.mock\n70%"]
+
+    PERF --> E2E --> INT --> UNIT
+```
+
 ### Python Testing Ecosystem
 
 - **pytest** — the standard test framework. Discovers `test_` functions automatically, rewrites `assert` for rich error messages, supports fixtures, parametrize, and plugins.
@@ -69,9 +91,9 @@ import pyodbc
 from sqlalchemy import create_engine
 from urllib.parse import quote_plus
 import pandas as pd
-import pandera as pa
-from pandera import Column, Check, DataFrameSchema
-from pandera.errors import SchemaError
+import pandera.pandas as pa
+from pandera.pandas import Column, Check, DataFrameSchema
+from pandera.pandas import SchemaError
 from unittest.mock import Mock, MagicMock, patch, call
 from datetime import datetime, date
 from dotenv import load_dotenv
@@ -91,6 +113,8 @@ ipytest.autoconfig()
 > [!info] Running pytest in notebooks
 >
 > pytest runs from the command line (`pytest test_mymodule.py`). In notebooks, we use `ipytest` to run pytest cells interactively. In production, test files live in a `tests/` directory.
+
+### Basic test functions
 
 #### pytest assert — basic test functions
 
@@ -181,6 +205,8 @@ ipytest.run()
 <span style="color:#4ec9b0">4 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.01s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+### Exception testing
+
 #### pytest.raises — testing exceptions
 
 A context manager that verifies a specific exception is raised. The test passes only if the expected exception type is raised within the `with` block. Use `match=` to also verify the error message matches a regex.
@@ -238,6 +264,8 @@ pytest rewrites plain `assert` for rich error messages — no `assertEqual` or `
 | `assert x is None` | `Assert.Null(x)` |
 | `assert "foo" in bar` | `Assert.Contains("foo", bar)` |
 | `pytest.approx()` | `Assert.Equal(expected, actual, precision)` |
+
+### Numeric and collection assertions
 
 #### Numeric assertions — pytest.approx for float tolerance
 
@@ -319,6 +347,8 @@ ipytest.run()
 
 #### Collection assertions — in, issubset, all()
 
+Use `in` to test membership, `.issubset()` to verify required keys are all present, and `all(...)` to assert a condition holds for every element. These patterns appear constantly in financial data tests: verifying an ETF holds a known ticker, checking a trade record has all mandatory fields, confirming no price is negative.
+
 ```python
 # TEST: Euro Stoxx 50 index has exactly 50 constituents
 def test_index_constituents():
@@ -360,7 +390,11 @@ ipytest.run()
 <span style="color:#4ec9b0">11 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+### String and type assertions
+
 #### String assertions — len, isalpha, re.match
+
+String assertions validate structured identifiers: ISIN codes, ticker formats, log line patterns. Use `len()` for fixed-length checks, `.isalpha()` and `.isupper()` for character-class validation, and `re.match()` for structured format validation. These catch data corruption that would otherwise propagate silently through string-keyed joins.
 
 ```python
 # TEST: ISIN matches 2-letter country + 9 alphanum + 1 check digit
@@ -403,6 +437,8 @@ ipytest.run()
 &lt;ExitCode.OK: 0&gt;</pre>
 
 #### Type & None assertions — isinstance, is None
+
+`isinstance(value, type)` verifies that a field carries the expected type — catching cases where an API returns `"178.50"` (string) instead of `178.50` (float), which would cause silent errors in arithmetic. `is None` explicitly tests for absent optional fields without accidentally matching falsy values like `0` or `""`.
 
 ```python
 # TEST: market data dict fields have correct types (str, float, int)
@@ -457,6 +493,8 @@ Fixtures provide setup/teardown for tests. `@pytest.fixture` creates reusable te
 > - Tests declare the fixture as a parameter — pytest injects it automatically
 > - `yield` separates setup (before) from teardown (after)
 > - `scope` controls lifetime: `"function"` (default, fresh per test), `"module"`, or `"session"`
+
+### Fixtures — reusable test setup
 
 #### Fixture: sample trade data
 
@@ -606,6 +644,8 @@ ipytest.run()
 <span style="color:#4ec9b0">20 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.03s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+### Parametrized test cases
+
 #### @pytest.mark.parametrize — run one test with multiple inputs
 
 `@pytest.mark.parametrize` runs the same test function with multiple input/output combinations. Instead of writing 10 separate test functions for 10 ticker formats, write one parametrized test. Each parameter set appears as a separate test case in the output.
@@ -740,6 +780,8 @@ ipytest.run()
 >
 > Don't call real Bloomberg API / exchange / database in tests. Tests must be fast, isolated, and deterministic. Mock the boundary (API client), test the logic (transform, validate).
 
+### Mock() — return values and call verification
+
 #### unittest.mock Mock() — return_value, assert_called_once_with
 
 > [!info] Mock pattern
@@ -837,6 +879,8 @@ ipytest.run()
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 <span style="color:#4ec9b0">38 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.05s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
+
+### patch() — replacing objects at test time
 
 #### unittest.mock patch() — temporarily replace objects with mocks
 
@@ -1002,9 +1046,15 @@ Key testing patterns for data engineering and finance:
 3. **Fixtures for sample data** — market data, trade records, temp files
 4. **Parametrize for edge cases** — splits, dividends, halts, holidays
 
+> [!info] No DI container validation in Python
+>
+> The C# equivalent ([14_cs_testing](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/14_cs_testing)) has a dedicated "DI Validation Testing" section that smoke-tests `IServiceCollection` registrations using `GetRequiredService<T>()`. Python has no IoC container — dependencies are injected via function parameters, `@pytest.fixture`, or protocol typing. There is no equivalent of "resolve all root services and check for missing registrations" because there is no service registry to query. Use `@pytest.fixture` with `scope="session"` to share expensive dependencies, and type hints with `Protocol` to enforce interface contracts.
+
 > [!tip] Related pattern
 >
 > The pytest patterns here (fixtures, parametrize, assertion style) have direct parallels in [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework), where dbt tests validate SQL transforms the same way pytest validates Python transforms. For the broader quality strategy that both test layers feed into, see [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework).
+
+### Transform and quality tests
 
 #### Pure function testing — normalize_trades transform
 
@@ -1110,6 +1160,8 @@ ipytest.run()
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 <span style="color:#4ec9b0">46 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.06s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
+
+### Mocking external services
 
 #### unittest.mock Mock(spec=Class) — mock an external API client
 
@@ -1248,13 +1300,15 @@ ipytest.run()
 
 ## Integration Testing with Real Database
 
+### Connection setup
+
 #### Database connection and test helpers
 
 Integration tests execute real SQL against SQL Server — mocked tests can pass while real queries fail (SQL syntax differences, schema drift, data constraints). The stoxx database uses medallion architecture: `bronze` (raw OHLCV) → `silver` (cleaned + gap-filled) → `gold` (scores, index performance).
 
-> [!warning] Don't run against production. Don't
+> [!warning] Integration test isolation
 >
-> Don't run against production. Don't depend on specific values — test invariants. In CI, use Testcontainers for ephemeral DBs.
+> Never run integration tests against production. Don't assert on specific data values that change daily — test invariants (row counts, ranges, absence of NULLs). In CI, use Testcontainers for ephemeral DB instances that are destroyed after the run.
 
 > [!success] Safe integration test practices
 >
@@ -1294,6 +1348,8 @@ print("  DB connection ready.")
 ```
 
       DB connection ready.
+
+### Medallion layer assertions
 
 #### Schema validation tests
 
@@ -1435,6 +1491,8 @@ assert_test(f"daily returns within +/-20% ({extreme} violations)", extreme == 0)
 
 ## Data Quality with Pandera
 
+### Schema validation with pandera
+
 #### pandera — DataFrame schema validation
 
 Pandera defines a schema (column names, types, ranges, nullability) and validates a DataFrame against it — invalid data raises `SchemaError`. Validates ALL columns at once and reports ALL violations. Integrates with pytest.
@@ -1451,14 +1509,14 @@ Pandera defines a schema (column names, types, ranges, nullability) and validate
 
 ```python
 # Define schema for silver OHLCV data
-ohlcv_schema = DataFrameSchema({
-    "symbol":    Column(str, Check.str_length(min_value=1)),
-    "date":      Column("datetime64[ns]"),
-    "open":      Column(float, Check.greater_than(0), nullable=True),
-    "high":      Column(float, Check.greater_than(0), nullable=True),
-    "low":       Column(float, Check.greater_than(0), nullable=True),
-    "close":     Column(float, Check.greater_than(0)),
-    "volume":    Column(int, Check.greater_than_or_equal_to(0), nullable=True),
+ohlcv_schema = pa.DataFrameSchema({
+    "symbol":    pa.Column(str, pa.Check.str_length(min_value=1)),
+    "date":      pa.Column("datetime64[ns]"),
+    "open":      pa.Column(float, pa.Check.greater_than(0), nullable=True),
+    "high":      pa.Column(float, pa.Check.greater_than(0), nullable=True),
+    "low":       pa.Column(float, pa.Check.greater_than(0), nullable=True),
+    "close":     pa.Column(float, pa.Check.greater_than(0)),
+    "volume":    pa.Column(int, pa.Check.greater_than_or_equal_to(0), nullable=True),
 })
 
 # Load sample data from silver layer using SQLAlchemy engine
@@ -1479,9 +1537,9 @@ try:
 except SchemaError as e:
     print(f"  FAIL: {e}")
 
-# TEST (deliberate FAIL): schema that requires volume > 1000
-strict_schema = DataFrameSchema({
-    "volume": Column(int, Check.greater_than(1_000_000), coerce=True),
+# TEST (deliberate FAIL): schema that requires volume > 1,000,000
+strict_schema = pa.DataFrameSchema({
+    "volume": pa.Column(int, pa.Check.greater_than(1_000_000), coerce=True),
 })
 try:
     strict_schema.validate(df[["volume"]])
@@ -1522,6 +1580,8 @@ except SchemaError:
 
 ## API Integration Tests
 
+### Live API validation
+
 #### Test live API responses
 Call real APIs and verify responses. Cross-check live prices against DB values to catch stale data. APIs change without notice — these tests catch breakages before production.
 
@@ -1550,7 +1610,10 @@ assert_test(f"SAP live={live:.2f} vs DB={db_close:.2f} (ratio={ratio:.2f})", 0.2
       PASS: SAP live=171.00 vs DB=166.52 (ratio=1.03)
 
 ## CI/CD — Running Tests in GitHub Actions
+
 GitHub Actions workflow: `.github/workflows/test.yml`. Triggers on push/PR/schedule. Matrix tests across Python versions. Secrets injected via GitHub Secrets. Artifacts: test reports, coverage, logs.
+
+### Workflow configuration
 
 ```python
 workflow = '''
@@ -1736,7 +1799,12 @@ print("  -x                       Stop on first failure")
 >
 > **C# equivalents:** `assert` → `Assert.Equal` | `@pytest.fixture` → constructor + `IDisposable` | `@parametrize` → `[Theory]` + `[InlineData]` | `unittest.mock` → Moq
 
+### Reference
+
 #### GitHub Actions CI/CD — typical project layout
+
+Separate source code from tests using `src/` and `tests/` directories. Each source module gets its own test module. Shared fixtures go in `conftest.py` — pytest auto-discovers it, no imports needed. This layout works with `pytest tests/` and integrates cleanly with coverage tools.
+
 ```
 trading_pipeline/
 ├── src/

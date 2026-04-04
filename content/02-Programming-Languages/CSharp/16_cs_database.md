@@ -15,6 +15,10 @@ status: complete
 > — **Edgar F. Codd**, *A Relational Model of Data for Large Shared Data Banks* (1970)
 
 
+## Setup
+
+### NuGet packages and imports
+
 > [!info] Run this cell once before
 >
 > Run this cell once before any cells that use NuGet packages — suppresses harmless CS1701/CS1702 assembly version warnings.
@@ -85,7 +89,11 @@ Formatter.Register<Polars.CSharp.Series>((s, writer) =>
 }, "text/html");
 ```
 
+### Shared helper functions
+
 #### DataTable helper for query display
+
+`QueryToTable` is a convenience wrapper used throughout this notebook. It executes a raw SQL string against either a `SqlConnection` or `SqliteConnection` and loads the result into a `DataTable`, which the notebook kernel renders as an HTML table. This avoids repeating the `SqlCommand` → `ExecuteReader` → `dt.Load` boilerplate for every display query.
 
 ```csharp
 // Helper: execute SQL query and return a DataTable for styled display
@@ -110,6 +118,8 @@ DataTable QueryToTable(SqliteConnection c, string sql)
 ```
 
 ## SQLite — Lightweight Embedded Database
+
+### Connection, Schema, and CRUD
 
 #### SQLite — create in-memory database and trades table
 
@@ -141,13 +151,23 @@ cmd.CommandText = @"
 cmd.ExecuteNonQuery();
 ```
 
-    trades
+```text
+trades
+```
 
 #### SQLite — INSERT with parameterised queries using `@param` placeholders
 
-```csharp
-// INSERT — parameterised to prevent SQL injection
+Always use `@param` named placeholders instead of string concatenation. `AddWithValue` binds the parameter by name, so SQLite escapes it safely before execution. String concatenation (`$"INSERT ... '{ticker}'"`) allows SQL injection — a value like `'; DROP TABLE trades;--` would execute as a second statement.
 
+> [!danger] Never concatenate user input into SQL strings
+>
+> `cmd.CommandText = $"INSERT INTO trades VALUES ('{id}', '{ticker}', ...)"` — a ticker value of `'; DROP TABLE trades;--` truncates your query and executes arbitrary SQL.
+
+> [!success] Always use parameterised queries
+>
+> `cmd.Parameters.AddWithValue("@ticker", ticker)` — SQLite treats the value as data, not code, regardless of what it contains.
+
+```csharp
 var trades = new (string id, string ticker, string side, int qty, double price, string date)[]
 {
     ("TRD_001", "ASML.AS", "BUY",  100, 685.40, "2026-03-15"),
@@ -173,9 +193,13 @@ foreach (var t in trades)
 trades.Length  // inserted
 ```
 
-    Inserted 6 trades
+```text
+6
+```
 
 #### SQLite — SELECT with computed columns and WHERE filter
+
+`SqliteDataReader` streams rows from the database without loading the full result set into memory. For display in notebooks, `QueryToTable` (the helper defined above) wraps the reader and loads into a `DataTable`, which the kernel renders as HTML. SQLite supports all standard SQL expressions in the `SELECT` list — `ROUND(quantity * price, 2) AS notional` is computed in the database, not in C#.
 
 ```csharp
 // SELECT all trades with computed notional column
@@ -186,6 +210,8 @@ QueryToTable(conn, "SELECT *, ROUND(quantity * price, 2) AS notional FROM trades
 <table><thead><tr><th>trade_id</th><th>ticker</th><th>side</th><th>quantity</th><th>price</th><th>trade_date</th><th>notional</th></tr></thead><tbody><tr><td>TRD_001</td><td>ASML.AS</td><td>BUY</td><td>100</td><td>685.4</td><td>2026-03-15</td><td>68540</td></tr><tr><td>TRD_002</td><td>MC.PA</td><td>BUY</td><td>50</td><td>890.2</td><td>2026-03-15</td><td>44510</td></tr><tr><td>TRD_003</td><td>SAP.DE</td><td>SELL</td><td>75</td><td>245.8</td><td>2026-03-15</td><td>18435</td></tr><tr><td>TRD_004</td><td>ASML.AS</td><td>SELL</td><td>30</td><td>690</td><td>2026-03-16</td><td>20700</td></tr><tr><td>TRD_005</td><td>RMS.PA</td><td>BUY</td><td>20</td><td>2850</td><td>2026-03-16</td><td>57000</td></tr><tr><td>TRD_006</td><td>SIE.DE</td><td>BUY</td><td>200</td><td>198.5</td><td>2026-03-17</td><td>39700</td></tr></tbody></table>
 
 #### SQLite — aggregate queries with GROUP BY for portfolio summary
+
+`GROUP BY` collapses rows with the same key column into a single row per group. `SUM(CASE WHEN side='BUY' THEN quantity ELSE -quantity END)` is the standard SQL pattern for computing net position — buys add, sells subtract. All aggregation (SUM, AVG, COUNT, MIN, MAX) happens inside the database engine, so only the summary rows are returned to C#.
 
 ```csharp
 // Aggregate — net position per ticker
@@ -202,8 +228,9 @@ QueryToTable(conn, @"
 
 #### SQLite — UPDATE and DELETE rows
 
+`UPDATE` and `DELETE` follow the same parameterised pattern as INSERT. `ExecuteNonQuery()` returns the number of affected rows — check this value to confirm the operation matched your intended rows (0 means the `WHERE` clause matched nothing). Both run under the connection's implicit autocommit by default; wrap in a transaction if you need atomicity.
+
 ```csharp
-// UPDATE price
 cmd = conn.CreateCommand();
 cmd.CommandText = "UPDATE trades SET price = @price WHERE trade_id = @id";
 cmd.Parameters.AddWithValue("@price", 700.00);
@@ -217,8 +244,12 @@ cmd.Parameters.AddWithValue("@id", "TRD_006");
 cmd.ExecuteNonQuery()  // Deleted TRD_006
 ```
 
-    Updated TRD_004 price -> $700.00 (1 row affected)
-    Deleted TRD_006 (1 row affected)
+```text
+1  // Updated TRD_004 price -> $700.00 (1 row affected)
+1  // Deleted TRD_006 (1 row affected)
+```
+
+### Transactions
 
 #### SQLite — transaction with atomic multi-row insert and rollback
 
@@ -265,9 +296,12 @@ cmd.ExecuteScalar()  // total trades
 conn.Close();
 ```
 
-      Transaction committed (2 trades inserted)
-    
-    7
+```text
+Transaction committed (2 trades inserted)
+7
+```
+
+### PRAGMA Configuration
 
 #### SQLite — PRAGMA overview and connection setup
 
@@ -294,28 +328,35 @@ var cmd = pragmaConn.CreateCommand();
 
 #### SQLite — `journal_mode=WAL` for concurrent reads
 
+WAL (Write-Ahead Log) separates writes into a separate file and merges later, allowing readers to continue while a write is in progress. The default `DELETE` journal mode holds an exclusive lock during every write, blocking all readers. For SQLite files accessed by multiple threads or processes, WAL mode is almost always the right choice.
+
+> [!tip] Use WAL mode for any SQLite file with concurrent readers
+>
+> `PRAGMA journal_mode=WAL` returns `"memory"` for in-memory databases (WAL has no effect there). For file-backed databases it returns `"wal"`. Set it once right after opening the connection.
+
 ```csharp
-// WAL (Write-Ahead Log) allows concurrent reads during writes
-// DELETE (default): exclusive lock during writes, readers blocked
 cmd.CommandText = "PRAGMA journal_mode=WAL";
 cmd.ExecuteScalar()  // journal_mode
 ```
 
-    memory
+```text
+memory
+```
 
 #### SQLite — `synchronous` for durability vs speed
 
+Controls when SQLite calls `fsync()` to flush writes to physical storage. `FULL` syncs after every commit (safest, slowest). `NORMAL` syncs only at critical moments — safe with WAL mode. `OFF` skips syncs entirely (fastest, but risks database corruption if the OS crashes mid-write). For production use, `NORMAL` with WAL mode provides the best balance.
+
 ```csharp
-// FULL: fsync after every commit (safest, slowest)
-// NORMAL: fsync at critical moments (good balance for WAL)
-// OFF: no fsync (fastest, risk of corruption on crash)
 cmd.CommandText = "PRAGMA synchronous=NORMAL";
 cmd.ExecuteNonQuery();
 cmd.CommandText = "PRAGMA synchronous";
 cmd.ExecuteScalar()  // synchronous (0=OFF, 1=NORMAL, 2=FULL)
 ```
 
-    1 (0=OFF, 1=NORMAL, 2=FULL)
+```text
+1  // 0=OFF, 1=NORMAL, 2=FULL
+```
 
 #### SQLite — `cache_size` for in-memory page cache
 
@@ -332,8 +373,10 @@ cmd.CommandText = "PRAGMA page_size";
 cmd.ExecuteScalar()  // page_size (bytes)
 ```
 
-    -20000 (negative = KB)
-    4096 bytes
+```text
+-20000  // cache_size (negative = KB)
+4096    // page_size (bytes)
+```
 
 #### SQLite — `busy_timeout` for lock contention retry
 
@@ -346,7 +389,9 @@ cmd.CommandText = "PRAGMA busy_timeout";
 cmd.ExecuteScalar()  // busy_timeout (ms)
 ```
 
-    5000 ms
+```text
+5000  // ms
+```
 
 #### SQLite — `mmap_size` for memory-mapped I/O
 
@@ -360,7 +405,9 @@ cmd.CommandText = "PRAGMA mmap_size";
 Convert.ToInt64(cmd.ExecuteScalar()) / 1024 / 1024  // mmap_size (MB)
 ```
 
-    0 MB
+```text
+0  // MB (returns 0 for in-memory databases — mmap applies to file-backed DBs)
+```
 
 #### SQLite — `temp_store` and `foreign_keys`
 
@@ -380,8 +427,12 @@ cmd.CommandText = "PRAGMA foreign_keys";
 cmd.ExecuteScalar()  // foreign_keys (0=OFF, 1=ON)
 ```
 
-    2 (0=DEFAULT, 1=FILE, 2=MEMORY)
-    1 (0=OFF, 1=ON)
+```text
+2  // temp_store: 0=DEFAULT, 1=FILE, 2=MEMORY
+1  // foreign_keys: 0=OFF, 1=ON
+```
+
+### Indexes and Query Performance
 
 #### SQLite — CREATE TABLE for index demos
 
@@ -403,7 +454,9 @@ cmd.CommandText = @"
 cmd.ExecuteNonQuery();
 ```
 
-    ohlcv
+```text
+ohlcv
+```
 
 #### SQLite — INSERT 5000 sample OHLCV rows
 
@@ -424,7 +477,9 @@ for (int i = 0; i < 5000; i++)
 }
 ```
 
-    Inserted 5000 OHLCV rows
+```text
+Inserted 5000 OHLCV rows
+```
 
 #### SQLite — EXPLAIN QUERY PLAN without index (full table scan)
 
@@ -470,9 +525,10 @@ cmd.ExecuteNonQuery();
 // Would fail here because our sample data has duplicates
 ```
 
-      idx_ohlcv_symbol (single column)
-      idx_ohlcv_symbol_date (composite)
-      prevents duplicate (symbol, date) pairs
+```text
+idx_ohlcv_symbol created (single column)
+idx_ohlcv_symbol_date created (composite)
+```
 
 #### SQLite — EXPLAIN QUERY PLAN with index (index scan)
 
@@ -506,7 +562,9 @@ cmd.CommandText = "ANALYZE";
 cmd.ExecuteNonQuery();
 ```
 
-    query planner statistics updated
+```text
+query planner statistics updated
+```
 
 #### SQLite — list all indexes and tables with row counts
 
@@ -555,7 +613,9 @@ var pageSize = Convert.ToInt64(countCmd.ExecuteScalar());
 $"{pageCount} pages x {pageSize} bytes = {pageCount * pageSize / 1024.0:F1} KB"
 ```
 
-    135 pages x 4096 bytes = 540.0 KB
+```text
+135 pages x 4096 bytes = 540.0 KB
+```
 
 #### SQLite — VACUUM, REINDEX, and integrity check
 
@@ -578,9 +638,11 @@ cmd.ExecuteScalar()  // integrity_check
 pragmaConn.Close();
 ```
 
-    database file compacted
-    all indexes rebuilt
-    ok
+```text
+database file compacted
+all indexes rebuilt
+ok
+```
 
 #### SQLite — PRAGMA reference
 
@@ -605,6 +667,12 @@ Quick reference of all important SQLite PRAGMAs — set these right after `Open(
 > **Indexing:** `CREATE INDEX idx ON t(col)` | composite: `t(col1, col2)` | unique: `CREATE UNIQUE INDEX` | check usage: `EXPLAIN QUERY PLAN SELECT ...`
 
 ## SQL Server
+
+### Connection and CRUD
+
+> [!warning] Connection strings in source code
+>
+> The examples below embed credentials directly in the connection string for notebook clarity. In production, load credentials from environment variables (`Environment.GetEnvironmentVariable`) or a secrets manager (Azure Key Vault, AWS Secrets Manager). Never commit passwords to source control.
 
 #### SQL Server — connect and list schemas/tables
 
@@ -637,7 +705,9 @@ QueryToTable(conn, @"
     ORDER BY s.name, t.name")
 ```
 
-    stoxx database
+```text
+stoxx database
+```
 
 <table><thead><tr><th>Schema</th><th>Table</th><th>Rows</th></tr></thead><tbody><tr><td>bronze</td><td>dim_country</td><td>212</td></tr><tr><td>bronze</td><td>dim_index</td><td>4</td></tr><tr><td>bronze</td><td>eurostoxx50_ohlcv</td><td>50</td></tr><tr><td>bronze</td><td>index_dim</td><td>169</td></tr><tr><td>bronze</td><td>oil20_ohlcv</td><td>19</td></tr><tr><td>bronze</td><td>pulse</td><td>40</td></tr><tr><td>bronze</td><td>pulse_tickers</td><td>40</td></tr><tr><td>bronze</td><td>signals_daily</td><td>169</td></tr><tr><td>bronze</td><td>signals_quarterly</td><td>169</td></tr><tr><td>bronze</td><td>stoxxasia50_ohlcv</td><td>50</td></tr><tr><td>bronze</td><td>stoxxusa50_ohlcv</td><td>50</td></tr><tr><td>bronze</td><td>trading_calendar</td><td>29,335</td></tr><tr><td>gold</td><td>index_performance</td><td>5,281</td></tr><tr><td>gold</td><td>scores_daily</td><td>466</td></tr><tr><td>gold</td><td>scores_quarterly</td><td>170</td></tr><tr><td>silver</td><td>eurostoxx50_ohlcv</td><td>66,355</td></tr><tr><td>silver</td><td>index_dim</td><td>169</td></tr><tr><td>silver</td><td>oil20_ohlcv</td><td>24,738</td></tr><tr><td>silver</td><td>signals_daily</td><td>466</td></tr><tr><td>silver</td><td>signals_quarterly</td><td>177</td></tr><tr><td>silver</td><td>stoxxasia50_ohlcv</td><td>64,045</td></tr><tr><td>silver</td><td>stoxxusa50_ohlcv</td><td>65,100</td></tr></tbody></table>
 
@@ -693,13 +763,15 @@ var sqlCmd = new SqlCommand(@"
 sqlCmd.ExecuteNonQuery();
 ```
 
-    Created dbo.trades_demo
+```text
+Created dbo.trades_demo
+```
 
 #### SQL Server — INSERT with parameterised values
 
-```csharp
-// INSERT — parameterised to prevent SQL injection
+SQL Server uses `@named` parameters (same as SQLite). `AddWithValue` infers the SQL type from the C# type — `string` → `NVARCHAR`, `int` → `INT`, `decimal` → `DECIMAL`. For production use, prefer `Add(name, SqlDbType.NVarChar, 20)` to specify types explicitly and avoid implicit conversion overhead.
 
+```csharp
 var sqlCmd = new SqlCommand("INSERT INTO dbo.trades_demo VALUES (@id, @t, @s, @q, @p, @d)", conn);
 sqlCmd.Parameters.AddWithValue("@id", "TRD_001");
 sqlCmd.Parameters.AddWithValue("@t", "ASML.AS");
@@ -710,9 +782,13 @@ sqlCmd.Parameters.AddWithValue("@d", "2026-03-15");
 sqlCmd.ExecuteNonQuery()  // INSERT
 ```
 
-    1 row
+```text
+1
+```
 
 #### SQL Server — UPDATE with parameterised WHERE
+
+`UPDATE` changes column values in rows that match the `WHERE` predicate. Without a `WHERE` clause it updates every row in the table — always include a predicate. Returns the number of affected rows from `ExecuteNonQuery()`.
 
 ```csharp
 // UPDATE — change price for a specific trade
@@ -723,9 +799,13 @@ sqlCmd.Parameters.AddWithValue("@id", "TRD_001");
 sqlCmd.ExecuteNonQuery()  // UPDATE
 ```
 
-    1 row
+```text
+1
+```
 
 #### SQL Server — DELETE with parameterised WHERE
+
+`DELETE` removes rows matching the `WHERE` predicate. Without a `WHERE` clause it removes all rows (equivalent to `TRUNCATE` but slower, as it logs each deletion). Use `TRUNCATE TABLE` to empty a table in one operation — but `TRUNCATE` cannot be rolled back in most configurations and does not fire row-level triggers.
 
 ```csharp
 // DELETE — remove a specific trade
@@ -735,7 +815,9 @@ sqlCmd.Parameters.AddWithValue("@id", "TRD_001");
 sqlCmd.ExecuteNonQuery()  // DELETE
 ```
 
-    1 row
+```text
+1
+```
 
 #### SQL Server — DROP TABLE cleanup
 
@@ -746,7 +828,9 @@ var sqlCmd = new SqlCommand("DROP TABLE dbo.trades_demo", conn);
 sqlCmd.ExecuteNonQuery();
 ```
 
-    Dropped dbo.trades_demo
+```text
+Dropped dbo.trades_demo
+```
 
 #### SQL Server — transactions with BEGIN/COMMIT/ROLLBACK
 
@@ -776,8 +860,12 @@ sqlCmd = new SqlCommand("DROP TABLE dbo.tx_demo", conn);
 sqlCmd.ExecuteNonQuery();
 ```
 
-    Transaction committed (2 rows inserted)
-    Rows in tx_demo: 2
+```text
+Transaction committed (2 rows inserted)
+Rows in tx_demo: 2
+```
+
+### Indexes and Query Performance
 
 #### SQL Server — list all indexes on a table
 
@@ -826,7 +914,9 @@ sw.Stop();
 $"Full table scan: {rows1} symbols | {sw.ElapsedMilliseconds} ms"
 ```
 
-    50 symbols | 17 ms
+```text
+50 symbols | 17 ms
+```
 
 #### SQL Server — benchmark indexed single-symbol lookup
 
@@ -851,7 +941,9 @@ sw.Stop();
 $"Index seek: {rows2} rows | {sw.ElapsedMilliseconds} ms"
 ```
 
-    100 rows | 6 ms
+```text
+100 rows | 6 ms
+```
 
 #### SQL Server — benchmark cross-table JOIN
 
@@ -872,7 +964,9 @@ $"JOIN completed in {sw.ElapsedMilliseconds} ms"
 joinResult
 ```
 
-    JOIN completed in 9 ms
+```text
+JOIN completed in 9 ms
+```
 
 <table><thead><tr><th>Index</th><th>OHLCV Rows</th><th>First Date</th><th>Last Date</th></tr></thead><tbody><tr><td>Euro Stoxx 50</td><td>66355</td><td>2021-01-04</td><td>2026-03-12</td></tr></tbody></table>
 
@@ -1027,7 +1121,9 @@ using (var reader = sqlCmd.ExecuteReader())
 indexesToRebuild.Count  // indexes to rebuild (>30% fragmentation)
 ```
 
-    Found 12 indexes to rebuild (>30% fragmentation)
+```text
+12  // indexes to rebuild (>30% fragmentation)
+```
 
 #### SQL Server — ALTER INDEX REBUILD on each fragmented index
 
@@ -1044,20 +1140,21 @@ sw.Stop();
 $"All {indexesToRebuild.Count} indexes rebuilt in {sw.ElapsedMilliseconds} ms"
 ```
 
-      [bronze].[trading_calendar].[PK_trading_calendar] (was 98.7%)
-      [bronze].[eurostoxx50_ohlcv].[IX_bronze_eurostoxx50_ohlcv_symbol_date] (was 98%)
-      [bronze].[stoxxusa50_ohlcv].[IX_bronze_stoxxusa50_ohlcv_symbol_date] (was 98%)
-      [bronze].[oil20_ohlcv].[PK__oil20_oh__3213E83F22CF352A] (was 95%)
-      [bronze].[oil20_ohlcv].[IX_bronze_oil20_ohlcv_symbol_date] (was 95%)
-      [bronze].[stoxxasia50_ohlcv].[IX_bronze_stoxxasia50_ohlcv_symbol_date] (was 94.1%)
-      [silver].[stoxxasia50_ohlcv].[IX_silver_stoxxasia50_ohlcv_symbol_date] (was 49.4%)
-      [silver].[stoxxusa50_ohlcv].[IX_silver_stoxxusa50_ohlcv_symbol_date] (was 47.4%)
-      [silver].[eurostoxx50_ohlcv].[IX_silver_eurostoxx50_ohlcv_symbol_date] (was 47.2%)
-      [silver].[oil20_ohlcv].[IX_silver_oil20_ohlcv_symbol_date] (was 46.2%)
-      [gold].[index_performance].[UX_gold_index_performance] (was 31.8%)
-      [gold].[scores_daily].[PK__scores_d__3213E83F41C788A9] (was 30.4%)
-    
-    All 12 indexes rebuilt in 167 ms
+```text
+[bronze].[trading_calendar].[PK_trading_calendar] (was 98.7%)
+[bronze].[eurostoxx50_ohlcv].[IX_bronze_eurostoxx50_ohlcv_symbol_date] (was 98%)
+[bronze].[stoxxusa50_ohlcv].[IX_bronze_stoxxusa50_ohlcv_symbol_date] (was 98%)
+[bronze].[oil20_ohlcv].[PK__oil20_oh__3213E83F22CF352A] (was 95%)
+[bronze].[oil20_ohlcv].[IX_bronze_oil20_ohlcv_symbol_date] (was 95%)
+[bronze].[stoxxasia50_ohlcv].[IX_bronze_stoxxasia50_ohlcv_symbol_date] (was 94.1%)
+[silver].[stoxxasia50_ohlcv].[IX_silver_stoxxasia50_ohlcv_symbol_date] (was 49.4%)
+[silver].[stoxxusa50_ohlcv].[IX_silver_stoxxusa50_ohlcv_symbol_date] (was 47.4%)
+[silver].[eurostoxx50_ohlcv].[IX_silver_eurostoxx50_ohlcv_symbol_date] (was 47.2%)
+[silver].[oil20_ohlcv].[IX_silver_oil20_ohlcv_symbol_date] (was 46.2%)
+[gold].[index_performance].[UX_gold_index_performance] (was 31.8%)
+[gold].[scores_daily].[PK__scores_d__3213E83F41C788A9] (was 30.4%)
+All 12 indexes rebuilt in 167 ms
+```
 
 #### SQL Server — UPDATE STATISTICS after rebuild
 
@@ -1070,17 +1167,20 @@ foreach (var (schema, table, _, _) in indexesToRebuild.DistinctBy(x => x.schema 
 }
 ```
 
-      [bronze].[trading_calendar]
-      [bronze].[eurostoxx50_ohlcv]
-      [bronze].[stoxxusa50_ohlcv]
-      [bronze].[oil20_ohlcv]
-      [bronze].[stoxxasia50_ohlcv]
-      [silver].[stoxxasia50_ohlcv]
-      [silver].[stoxxusa50_ohlcv]
-      [silver].[eurostoxx50_ohlcv]
-      [silver].[oil20_ohlcv]
-      [gold].[index_performance]
-      [gold].[scores_daily]
+```text
+Statistics updated:
+[bronze].[trading_calendar]
+[bronze].[eurostoxx50_ohlcv]
+[bronze].[stoxxusa50_ohlcv]
+[bronze].[oil20_ohlcv]
+[bronze].[stoxxasia50_ohlcv]
+[silver].[stoxxasia50_ohlcv]
+[silver].[stoxxusa50_ohlcv]
+[silver].[eurostoxx50_ohlcv]
+[silver].[oil20_ohlcv]
+[gold].[index_performance]
+[gold].[scores_daily]
+```
 
 #### SQL Server — verify fragmentation after rebuild
 
@@ -1164,7 +1264,9 @@ for (int i = 0; i < 5; i++)
 
 ```
 
-    Ran 13 queries on unindexed columns to provoke recommendations
+```text
+Ran 13 queries on unindexed columns to provoke recommendations
+```
 
 #### SQL Server — missing index recommendations from the query optimizer
 
@@ -1193,6 +1295,8 @@ QueryToTable(conn, @"
 ```
 
 <table><thead><tr><th>Table</th><th>Equality Columns</th><th>Inequality Columns</th><th>Include Columns</th><th>Impact %</th><th>Queries</th></tr></thead><tbody><tr><td>eurostoxx50_ohlcv</td><td>-</td><td>[close]</td><td>[symbol], [date], [open], [high], [low], [adj_close], [volume], [dividends], [stock_splits], [is_filled]</td><td>65.7</td><td>5</td></tr><tr><td>eurostoxx50_ohlcv</td><td>-</td><td>[volume]</td><td>[symbol], [date], [open], [high], [low], [close], [adj_close], [dividends], [stock_splits], [is_filled]</td><td>65.7</td><td>5</td></tr><tr><td>eurostoxx50_ohlcv</td><td>-</td><td>[close]</td><td>[symbol], [date], [volume]</td><td>66.7</td><td>1</td></tr><tr><td>eurostoxx50_ohlcv</td><td>-</td><td>[date]</td><td>[symbol], [high], [low], [close]</td><td>65.1</td><td>1</td></tr><tr><td>eurostoxx50_ohlcv</td><td>-</td><td>[volume]</td><td>[symbol], [date]</td><td>37.0</td><td>1</td></tr></tbody></table>
+
+### Server Configuration and Administration
 
 #### SQL Server — server configuration and version
 
@@ -1276,6 +1380,8 @@ tuning, and troubleshooting.
 > **Maintenance:** `DBCC CHECKDB` (integrity) | `sp_spaceused 'table'` (table size) | `BACKUP DATABASE db TO DISK = 'path'` (full backup)
 >
 > **Configuration:** `sp_configure 'max server memory', 4096` | `sp_configure 'max degree of parallelism', 4` | `RECONFIGURE` (apply changes)
+
+### ODBC Provider
 
 #### SQL Server — ODBC Provider with positional parameters
 
@@ -1633,6 +1739,8 @@ EF Core is the **dominant ORM in .NET** — used by ~60-70% of .NET applications
 Unlike Dapper (you write SQL, it maps results), EF Core generates SQL from LINQ
 and manages the full object lifecycle: change tracking, migrations, relationships.
 
+### Overview
+
 #### How it works
 1. Define **entity classes** (C# classes = database tables)
 2. Define a **DbContext** (connection + table mappings + configuration)
@@ -1654,6 +1762,8 @@ and manages the full object lifecycle: change tracking, migrations, relationship
 structure for migrations. In notebooks, we demonstrate the API patterns with an
 in-memory database. In production, use SQL Server/PostgreSQL with migrations.
 
+### Model and DbContext
+
 #### EF Core — NuGet packages and entity classes
 
 Entity classes = tables, properties = columns. `DbContext` maps entities via `DbSet<T>`. LINQ queries are compile-time checked. Change tracking generates SQL on `SaveChanges()`. In-memory provider for notebooks; SQL Server for production.
@@ -1669,6 +1779,7 @@ Entity classes = tables, properties = columns. `DbContext` maps entities via `Db
 >
 > Add `.AsNoTracking()` on every read-only query. Use `.Include()` explicitly instead of lazy loading to control join depth. Filter with `.Where()` before `.ToList()` so EF pushes the predicate to SQL. Switch to Dapper for bulk inserts, aggregations, or CTEs where LINQ becomes unwieldy.
 
+```csharp
 // Entity classes — each class = one database table
 // Properties = columns. Navigation properties = foreign key relationships.
 
@@ -1749,6 +1860,8 @@ public class TradingContext : DbContext
     }
 }
 ```
+
+### CRUD and Queries
 
 #### EF Core — seed data with `Add`, `AddRange`, `SaveChanges`
 
@@ -1873,6 +1986,8 @@ dt
 
 <table><thead><tr><th>Sector</th><th>Stocks</th><th>Price Rows</th><th>Avg Close</th></tr></thead><tbody><tr><td>Consumer</td><td>1</td><td>30</td><td>849.20</td></tr><tr><td>Technology</td><td>2</td><td>60</td><td>468.34</td></tr><tr><td>Energy</td><td>1</td><td>30</td><td>60.31</td></tr></tbody></table>
 
+### Change Tracking and Performance
+
 #### EF Core — change tracking and `SaveChanges()`
 
 Modify objects in memory — EF Core tracks all changes and generates
@@ -1955,6 +2070,8 @@ foreach (var s in techStocks)
 
       ASML.AS    ASML Holding         Technology
       SAP.DE     SAP SE               Technology
+
+### Migrations and Reference
 
 #### EF Core — migrations workflow (reference)
 

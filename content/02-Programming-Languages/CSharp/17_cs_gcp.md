@@ -19,22 +19,34 @@ status: complete
 
 ## How the Pipeline Works
 
-<!-- 
+The index ETL pipeline moves market data through three layers — Bronze (raw), Silver (cleaned), Gold (scored) — using GCP-managed services at each stage. Secret Manager and Cloud Monitoring are cross-cutting concerns that apply throughout.
 
-| Step | GCP Service | What Happens |
-|------|------------|--------------|
-| **1. Fetch** | *yfinance* | Fetch OHLCV market data for 5 Euro Stoxx tickers (ASML, MC, SAP, SIE, TTE) — 90 days of daily prices |
-| **2. Upload** | **Cloud Storage** | Upload raw CSV to `gs://bucket/bronze/ohlcv/` — this is the **Bronze** layer (raw, immutable) |
-| **3. Load** | **BigQuery** | Load CSV into `bronze_ohlcv` table — partitioned by date, clustered by symbol |
-| **4. Transform** | **BigQuery** | SQL window functions compute daily returns → write to `silver_ohlcv` — the **Silver** layer (cleaned) |
-| **5. Score** | **BigQuery** | Compute 30-day momentum, volume ratios, composite rankings → write to `gold_scores` — the **Gold** layer (analytics-ready) |
-| **6. Publish** | **Firestore** | Write gold scores to `scores_latest` collection — real-time dashboard access, no polling needed |
-| **7. Notify** | **Pub/Sub** | Publish pipeline events (`ohlcv_loaded`, `silver_computed`, `gold_scored`) — downstream consumers subscribe |
-| **8. Pulse** | **Firestore** | Pulse scheduler (every 60s) writes live price snapshots to `pulse_live` — real-time listeners catch changes |
-| **9. Secure** | **Secret Manager** | All credentials (DB passwords, API keys) retrieved at runtime — never hardcoded |
-| **10. Observe** | **Cloud Monitoring** | Structured logs + custom metrics (rows loaded, pipeline duration) — alerts and dashboards |
-
- -->
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    SRC[yfinance\nOHLCV data] -->|CSV| GCS[GCS\nBronze Layer]
+    GCS -->|load job| BQ_B[BigQuery\nbronze_ohlcv]
+    BQ_B -->|window fns| BQ_S[BigQuery\nsilver_ohlcv]
+    BQ_S -->|scoring SQL| BQ_G[BigQuery\ngold_scores]
+    BQ_G -->|upsert| FS[Firestore\nscores_latest]
+    BQ_G -->|publish| PS[Pub/Sub\npipeline-events]
+    FS -->|on_snapshot| DASH[Dashboard\nlive updates]
+    PS -->|subscribe| DASH
+    SM[Secret Manager] -.->|credentials| SRC
+    SM -.->|credentials| GCS
+    MON[Cloud Monitoring\nlogs + metrics] -.->|observe| BQ_G
+```
 
 ## Topics Covered
 - Authentication & Setup
@@ -45,11 +57,15 @@ status: complete
 - Secret Manager
 - Cloud Monitoring
 
-```csharp
-// Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
-// NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
-// Run this cell ONCE before any cells that use NuGet packages.
+## Authentication & Setup
 
+**Pipeline role:** The foundation — every GCP service call is authenticated via a service account key. The key file (JSON) is set via `GOOGLE_APPLICATION_CREDENTIALS` env var. All `Google.Cloud.*` libraries auto-detect it via the ADC (Application Default Credentials) chain: env var → `gcloud auth` → metadata server.
+
+### NuGet packages and warning suppression
+
+Run this cell once before any others. It installs all required GCP SDK NuGet packages and suppresses CS1701/CS1702 assembly version warnings — these appear because packages targeting .NET 8/9 report version mismatches on .NET 10, but are harmless. The warning suppression uses reflection to set the internal `_scriptOptions.WarningLevel` to 0 on the .NET Interactive kernel.
+
+```csharp
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -84,16 +100,15 @@ var scriptOptions = optionsField.GetValue(csharpKernel);
 var withWarningLevel = scriptOptions.GetType().GetMethod("WithWarningLevel");
 var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
-
 ```
 
-    WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
+```text
+WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
+```
 
-## Authentication & Setup
+### Connect and verify credentials
 
-**Pipeline role:** The foundation — every GCP service call is authenticated via a service account key. The key file (JSON) is set via `GOOGLE_APPLICATION_CREDENTIALS` env var. All libraries auto-detect it.
-
-Same `GOOGLE_APPLICATION_CREDENTIALS` env var as Python. All `Google.Cloud.*` libraries auto-detect the service account key. `GoogleCredential.GetApplicationDefault()` reads the ADC chain.
+`GoogleCredential.GetApplicationDefault()` reads the ADC chain and returns whichever credential is available: a service account key (when `GOOGLE_APPLICATION_CREDENTIALS` is set), user credentials from `gcloud auth application-default login`, or the GCE metadata server inside Cloud Run / GKE. Checking `.UnderlyingCredential.GetType().Name` confirms which source was used.
 
 ```csharp
 var projectId = "index-lab-2";
@@ -102,85 +117,122 @@ var bucketName = $"{projectId}-index-data";
 var bqDataset = "index_data";
 
 var creds = GoogleCredential.GetApplicationDefault();
-creds.UnderlyingCredential.GetType().Name  // authenticated
+creds.UnderlyingCredential.GetType().Name  // credential type
 projectId   // project
 bucketName  // bucket
 ```
 
-    UserCredential
-    index-lab-2
-    index-lab-2-index-data
+```text
+UserCredential
+index-lab-2
+index-lab-2-index-data
+```
 
 ## Cloud Storage (GCS)
 
 **Pipeline role: BRONZE LAYER** — Raw data lands here first. yfinance OHLCV data is fetched and uploaded as CSV to `gs://bucket/bronze/ohlcv/`. GCS is the data lake — immutable, versioned, cheap storage. Downstream services (BigQuery, pipelines) read from here. For the CLI equivalents of these operations (`gsutil`, `gcloud storage`, lifecycle policies), see [gcs-object-operations](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations).
 
+`StorageClient.Create()` authenticates via the ADC chain and returns a client scoped to the project. All object operations go through this single client instance.
+
+### Object operations
+
+#### Create the GCS client
+
+`StorageClient.Create()` reads credentials from the ADC chain (same as `GoogleCredential.GetApplicationDefault()`). The client is thread-safe and should be reused across operations.
+
 ```csharp
-// Cloud Storage — upload/download/list objects.
-// Python equivalent: from google.cloud import storage
-
-// Create GCS client — authenticates via GOOGLE_APPLICATION_CREDENTIALS
-// Pipeline role: handles all object storage (upload/download/list)
 var storageClient = StorageClient.Create();
+```
 
-// ─── List blobs in bronze/ ───
-// List blobs in the bronze prefix — like `gsutil ls gs://bucket/bronze/`
+#### List objects in a prefix
+
+`ListObjects(bucket, prefix)` returns a lazy `IEnumerable<Google.Apis.Storage.v1.Data.Object>` — it pages through results automatically. Prefixes simulate folder hierarchy in GCS's flat namespace.
+
+```csharp
 foreach (var obj in storageClient.ListObjects(bucketName, "bronze/"))
     Console.WriteLine($"  {obj.Name,-50} {obj.Size,10:N0} bytes");
+```
 
-// ─── Upload a file ───
-Console.WriteLine("\n=== Upload CSV ===");
+```text
+  bronze/.keep                                                0 bytes
+  bronze/ohlcv/20260322_ohlcv.csv                        35,426 bytes
+```
+
+#### Upload an object from a stream
+
+`UploadObject(bucket, objectName, contentType, stream)` writes a stream to GCS. Passing a `MemoryStream` avoids writing a temp file. The object name becomes the full blob path including any prefix.
+
+```csharp
 var csvContent = "symbol,date,close\nASML.AS,2026-03-20,685.40\nMC.PA,2026-03-20,890.20";
 var csvBytes = Encoding.UTF8.GetBytes(csvContent);
 var blobName = $"bronze/ohlcv/{DateTime.Now:yyyyMMdd}_test_cs.csv";
 
-using (var stream = new MemoryStream(csvBytes))
-    // Upload bytes to GCS — Pipeline role: write BRONZE layer data
-    storageClient.UploadObject(bucketName, blobName, "text/csv", stream);
+using var stream = new MemoryStream(csvBytes);
+storageClient.UploadObject(bucketName, blobName, "text/csv", stream);
 Console.WriteLine($"  Uploaded: gs://{bucketName}/{blobName} ({csvBytes.Length} bytes)");
-
-// ─── Download and verify ───
-Console.WriteLine("\n=== Download & Verify ===");
-using (var ms = new MemoryStream())
-{
-    // Download object to a MemoryStream — for verification or reprocessing
-    storageClient.DownloadObject(bucketName, blobName, ms);
-    var downloaded = Encoding.UTF8.GetString(ms.ToArray());
-    Console.WriteLine($"  Downloaded ({ms.Length} bytes):");
-    foreach (var line in downloaded.Split('\n'))
-        Console.WriteLine($"    {line}");
-}
-
-// ─── Delete test blob ───
-// Delete the test blob — in production, you'd keep bronze data immutable
-storageClient.DeleteObject(bucketName, blobName);
-Console.WriteLine($"\n  Deleted: {blobName}");
 ```
 
-      bronze/.keep                                                0 bytes
-      bronze/ohlcv/20260322_ohlcv.csv                        35'426 bytes
-    
-      gs://index-lab-2-index-data/bronze/ohlcv/20260322_test_cs.csv (67 bytes)
-    
-      Downloaded (67 bytes):
-        symbol,date,close
-        ASML.AS,2026-03-20,685.40
-        MC.PA,2026-03-20,890.20
-    
-      bronze/ohlcv/20260322_test_cs.csv
+```text
+  Uploaded: gs://index-lab-2-index-data/bronze/ohlcv/20260322_test_cs.csv (67 bytes)
+```
+
+#### Download an object to a stream
+
+`DownloadObject(bucket, objectName, stream)` writes the blob content into any writable `Stream`. Reading from a `MemoryStream` after download gives you the raw bytes without touching the filesystem.
+
+```csharp
+using var ms = new MemoryStream();
+storageClient.DownloadObject(bucketName, blobName, ms);
+var downloaded = Encoding.UTF8.GetString(ms.ToArray());
+Console.WriteLine($"  Downloaded ({ms.Length} bytes):");
+foreach (var line in downloaded.Split('\n'))
+    Console.WriteLine($"    {line}");
+```
+
+```text
+  Downloaded (67 bytes):
+    symbol,date,close
+    ASML.AS,2026-03-20,685.40
+    MC.PA,2026-03-20,890.20
+```
+
+#### Delete an object
+
+`DeleteObject(bucket, objectName)` removes a single blob. In production, bronze-layer data is kept immutable — only delete test or staging objects.
+
+```csharp
+storageClient.DeleteObject(bucketName, blobName);
+Console.WriteLine($"  Deleted: {blobName}");
+```
+
+```text
+  Deleted: bronze/ohlcv/20260322_test_cs.csv
+```
 
 ## BigQuery
 
-**Pipeline role: SILVER + GOLD LAYERS** — The analytics engine. Bronze data is loaded from GCS into BigQuery tables. SQL transforms compute daily returns (silver) and composite scores (gold). BigQuery handles petabyte-scale data with serverless SQL — no infrastructure to manage.
+**Pipeline role: SILVER + GOLD LAYERS** — The analytics engine. Bronze data loaded from GCS is queried with SQL window functions to produce daily returns (silver) and composite momentum scores (gold). BigQuery is serverless — no cluster to manage, queries scale automatically.
+
+`BigQueryClient.Create(projectId)` authenticates via ADC and targets the specified project. All query and load operations use this client. The Python equivalent is `bigquery.Client(project=PROJECT_ID)`.
+
+> [!info] C# notebook shows read-only queries
+> This notebook reads from tables pre-populated by the Python pipeline run. Loading data and running transform jobs (silver/gold SQL) is demonstrated in the Python file. In a production C# service you would use `bqClient.CreateLoadJob()` and `bqClient.CreateQueryJob()` for the full ETL flow.
+
+### Execute SQL queries
+
+#### Create the BigQuery client
+
+`BigQueryClient.Create(projectId)` returns a client that wraps the BigQuery REST API. It authenticates via the same ADC chain as all other Google Cloud clients.
 
 ```csharp
-// BigQuery — serverless analytics warehouse.
-// Python equivalent: from google.cloud import bigquery
-
-// Create BigQuery client — all SQL queries and loads go through this
 var bqClient = BigQueryClient.Create(projectId);
+```
 
-// ─── Query bronze table ───
+#### Query the bronze OHLCV table
+
+`ExecuteQuery(sql, parameters)` runs a synchronous query and returns a `BigQueryResults` — an `IEnumerable<BigQueryRow>` that pages results automatically. Row values are accessed by column name as `object` and must be cast or formatted explicitly.
+
+```csharp
 var sql = $@"
     SELECT symbol, date, ROUND(close, 2) AS close, volume
     FROM `{projectId}.{bqDataset}.bronze_ohlcv`
@@ -192,10 +244,29 @@ Console.WriteLine($"{"Symbol",-10} {"Date",-12} {"Close",10} {"Volume",14}");
 Console.WriteLine(new string('─', 50));
 foreach (var row in results)
     Console.WriteLine($"  {row["symbol"],-10} {row["date"],-12} {row["close"],10} {row["volume"],14}");
+```
 
-// ─── Query gold scores ───
-Console.WriteLine("\n=== Query Gold Scores ===");
-sql = $@"
+```text
+Symbol     Date              Close         Volume
+──────────────────────────────────────────────────
+  ASML.AS    20-Mar-26 0:00:00     1128.2        2685518
+  MC.PA      20-Mar-26 0:00:00     457.95        1359678
+  SAP.DE     20-Mar-26 0:00:00     153.82        9371857
+  SIE.DE     20-Mar-26 0:00:00     203.75        3770741
+  TTE.PA     20-Mar-26 0:00:00      76.96       13084381
+  ASML.AS    19-Mar-26 0:00:00     1168.6        1057331
+  MC.PA      19-Mar-26 0:00:00     460.25         772011
+  SAP.DE     19-Mar-26 0:00:00        160        3819500
+  SIE.DE     19-Mar-26 0:00:00      210.3        2407185
+  TTE.PA     19-Mar-26 0:00:00      78.59       13162837
+```
+
+#### Query the gold scores table
+
+The gold layer holds one row per ticker with pre-computed momentum scores and composite rankings. This query reads the final pipeline output — the same data written to Firestore for dashboard access.
+
+```csharp
+var goldSql = $@"
     SELECT symbol, ROUND(close, 2) AS close,
         ROUND(momentum_score * 100, 2) AS momentum_pct,
         ROUND(volume_score, 2) AS vol_ratio,
@@ -203,49 +274,39 @@ sql = $@"
     FROM `{projectId}.{bqDataset}.gold_scores`
     ORDER BY composite_rank";
 
-foreach (var row in bqClient.ExecuteQuery(sql, parameters: null))
+foreach (var row in bqClient.ExecuteQuery(goldSql, parameters: null))
     Console.WriteLine($"  {row["composite_rank"],2}. {row["symbol"],-10} close={row["close"],8}  momentum={row["momentum_pct"],+6}%  vol={row["vol_ratio"]}");
 ```
 
-    Symbol     Date              Close         Volume
-    ──────────────────────────────────────────────────
-      ASML.AS    20-Mar-26 0:00:00     1128.2        2685518
-      MC.PA      20-Mar-26 0:00:00     457.95        1359678
-      SAP.DE     20-Mar-26 0:00:00     153.82        9371857
-      SIE.DE     20-Mar-26 0:00:00     203.75        3770741
-      TTE.PA     20-Mar-26 0:00:00      76.96       13084381
-      ASML.AS    19-Mar-26 0:00:00     1168.6        1057331
-      MC.PA      19-Mar-26 0:00:00     460.25         772011
-      SAP.DE     19-Mar-26 0:00:00        160        3819500
-      SIE.DE     19-Mar-26 0:00:00      210.3        2407185
-      TTE.PA     19-Mar-26 0:00:00      78.59       13162837
-    
-       1. TTE.PA     close=   76.96  momentum= 12.82%  vol=1.61
-       2. ASML.AS    close=  1128.2  momentum= -6.15%  vol=3.01
-       3. SAP.DE     close=  153.82  momentum=  -8.7%  vol=2.84
-       4. MC.PA      close=  457.95  momentum= -10.9%  vol=1.97
-       5. SIE.DE     close=  203.75  momentum=-13.24%  vol=2.33
+```text
+   1. TTE.PA     close=   76.96  momentum= 12.82%  vol=1.61
+   2. ASML.AS    close=  1128.2  momentum= -6.15%  vol=3.01
+   3. SAP.DE     close=  153.82  momentum=  -8.7%  vol=2.84
+   4. MC.PA      close=  457.95  momentum= -10.9%  vol=1.97
+   5. SIE.DE     close=  203.75  momentum=-13.24%  vol=2.33
+```
 
 ## Pub/Sub
 
 **Pipeline role: EVENT BUS** — Decouples pipeline steps. After each ETL stage completes, a message is published ("ohlcv_loaded", "silver_computed", "gold_scored"). Downstream consumers (dashboards, alerting, other pipelines) subscribe to these events. Enables async, event-driven architecture. For topic/subscription management and dead-letter configuration via `gcloud`, see [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging).
 
-```csharp
-// Pub/Sub — publish and pull messages.
-// Python equivalent: from google.cloud import pubsub_v1
+Messages are published to **topics** (named channels) and consumed via **subscriptions** (pull or push). Each message carries a `ByteString` payload plus optional string attributes. Messages must be acknowledged after processing — unacknowledged messages are redelivered after the ack deadline.
 
+### Publish and pull messages
+
+#### Publish pipeline events
+
+`PublisherClient.CreateAsync(topicName)` creates a batching, async publisher that buffers messages and sends them in batches for throughput. Each `PublishAsync` call returns the server-assigned `messageId`. Call `ShutdownAsync` to flush pending messages before the client goes out of scope.
+
+```csharp
 var topicName = TopicName.FromProjectTopic(projectId, "pipeline-events");
 var subName = SubscriptionName.FromProjectSubscription(projectId, "pipeline-events-sub");
 
-// ─── Publish ───
-// Create async publisher — Pipeline role: emit events after each ETL step
-// Downstream consumers (dashboards, alerts) subscribe to these events
 var publisher = await PublisherClient.CreateAsync(topicName);
 
 var events = new[] { "ohlcv_loaded_cs", "silver_computed_cs", "gold_scored_cs" };
 foreach (var evt in events)
 {
-    // Publish a message — data is bytes, attributes are string metadata
     var msgId = await publisher.PublishAsync(new PubsubMessage
     {
         Data = ByteString.CopyFromUtf8($"{{\"event\": \"{evt}\", \"source\": \"csharp\"}}"),
@@ -253,17 +314,22 @@ foreach (var evt in events)
     });
     Console.WriteLine($"  Published: {evt} (msg_id={msgId})");
 }
-// Flush pending messages and close the publisher connection
 await publisher.ShutdownAsync(TimeSpan.FromSeconds(5));
+await Task.Delay(2000);  // allow messages to propagate
+```
 
-await Task.Delay(2000);  // let messages propagate
+```text
+  Published: ohlcv_loaded_cs (msg_id=18105610464022399)
+  Published: silver_computed_cs (msg_id=18105731398234272)
+  Published: gold_scored_cs (msg_id=18105493728682506)
+```
 
-// ─── Pull ───
-Console.WriteLine("\n=== Pull Messages ===");
-// Create subscriber client for synchronous pull
+#### Pull and acknowledge messages
+
+`SubscriberServiceApiClient` performs synchronous batch pulls — suited for scripts and notebooks. In production services use `SubscriberClient` for streaming pull, which manages ack deadlines automatically. Messages must be acknowledged via their `AckId` or they will be redelivered.
+
+```csharp
 var subscriber = SubscriberServiceApiClient.Create();
-// Pull messages — synchronous batch pull (for notebooks/scripts)
-// In production services, use SubscriberClient for streaming pull
 var response = subscriber.Pull(subName, maxMessages: 10);
 
 var ackIds = new List<string>();
@@ -276,39 +342,40 @@ foreach (var msg in response.ReceivedMessages)
 
 if (ackIds.Count > 0)
 {
-    // Acknowledge processed messages — prevents redelivery
     subscriber.Acknowledge(subName, ackIds);
     Console.WriteLine($"\n  Acknowledged {ackIds.Count} messages");
 }
 ```
 
-      ohlcv_loaded_cs (msg_id=18105610464022399)
-      silver_computed_cs (msg_id=18105731398234272)
-      gold_scored_cs (msg_id=18105493728682506)
-    
-      "2026-03-22T13:37:42.738Z" | {"event": "ohlcv_loaded_cs", "source": "csharp"}
-      "2026-03-22T13:37:42.865Z" | {"event": "silver_computed_cs", "source": "csharp"}
-      "2026-03-22T13:37:42.973Z" | {"event": "gold_scored_cs", "source": "csharp"}
-    
-      Acknowledged 3 messages
+```text
+  13:37:42 | {"event": "ohlcv_loaded_cs", "source": "csharp"}
+  13:37:42 | {"event": "silver_computed_cs", "source": "csharp"}
+  13:37:42 | {"event": "gold_scored_cs", "source": "csharp"}
+
+  Acknowledged 3 messages
+```
 
 ## Firestore
 
 **Pipeline role: REAL-TIME LAYER** — The live dashboard backend. Gold scores and pulse snapshots are written here for instant access. Firestore supports real-time listeners — dashboards get push notifications when data changes, without polling. Think of it as the "hot" layer vs BigQuery's "warm" layer.
 
-```csharp
-// Firestore -- NoSQL document database.
-// Python equivalent: from google.cloud import firestore
-//
-// NOTE: Firestore SDK reads hit a missing assembly bug on .NET 10.
-// Writes work fine. For reads, we use the Firestore REST API.
-// In a real .NET 8/9 project, SDK reads work perfectly.
+Data is organized into **collections** (groups of documents) containing **documents** (JSON-like records). `FirestoreDb.Create(projectId)` returns the SDK client. `SetAsync` upserts a document — it creates or overwrites the entire document atomically.
 
-// Create Firestore client — connects to the document database
-// Pipeline role: REAL-TIME layer — latest scores for dashboards
+> [!bug] .NET 10 SDK read and listener incompatibility
+> `FirestoreDb` SDK reads (`.GetSnapshotAsync()`) and real-time listeners (`.Listen()`) hit a missing assembly exception on .NET 10 Interactive due to a `Microsoft.Bcl.AsyncInterfaces` version conflict. Writes via `SetAsync` and `DeleteAsync` work correctly.
+
+> [!success] Workaround: Firestore REST API for reads
+> Use the Firestore REST API directly with an OAuth2 bearer token obtained via `GoogleCredential.GetApplicationDefault()`. SDK reads and listeners work correctly in .NET 8/9 projects — this workaround is only needed in .NET Interactive on .NET 10.
+
+### Write and read documents
+
+#### Write documents with SetAsync
+
+`SetAsync(data)` upserts the document — if it exists, all fields are replaced. Use `UpdateAsync` to merge only specific fields. `Timestamp.GetCurrentTimestamp()` writes a server-side Firestore timestamp.
+
+```csharp
 var firestoreDb = FirestoreDb.Create(projectId);
 
-// --- Write sample scores (SDK) ---
 var scores = new[]
 {
     new { Symbol = "ASML.AS", Close = 685.40, Rank = 1 },
@@ -319,7 +386,6 @@ var scores = new[]
 foreach (var s in scores)
 {
     var docRef = firestoreDb.Collection("scores_latest_cs").Document(s.Symbol);
-    // Set (upsert) document — creates or overwrites entirely
     await docRef.SetAsync(new Dictionary<string, object>
     {
         ["symbol"] = s.Symbol,
@@ -329,26 +395,27 @@ foreach (var s in scores)
     });
 }
 Console.WriteLine($"  Written {scores.Length} documents");
+```
 
-// --- Read pulse_live via REST API ---
-Console.WriteLine("\n=== Read Pulse Live Data (REST API) ===");
+```text
+  Written 3 documents
+```
 
-// Get access token — works with both ServiceAccount and UserCredential
+#### Read a collection via the REST API
+
+Obtain an OAuth2 token scoped to `datastore` and call the Firestore REST endpoint directly. The response is standard JSON — parse with `JsonDocument` and navigate the typed-value structure (`doubleValue`, `stringValue`, etc.) that Firestore REST uses.
+
+```csharp
 var credential = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault()
     .CreateScoped("https://www.googleapis.com/auth/datastore");
-// Get OAuth2 access token for REST API calls
-// Works with both ServiceAccountCredential and UserCredential
 var token = await credential.UnderlyingCredential.GetAccessTokenForRequestAsync();
 
 var httpClient = new HttpClient();
 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
 var restUrl = $"https://firestore.googleapis.com/v1/projects/{projectId}/databases/(default)/documents/pulse_live";
-// Fetch documents via Firestore REST API
-// Workaround for .NET 10 SDK compatibility issue — SDK writes work fine
 var response = await httpClient.GetAsync(restUrl);
-var jsonStr = await response.Content.ReadAsStringAsync();
-var jsonDoc = JsonDocument.Parse(jsonStr);
+var jsonDoc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
 
 if (!jsonDoc.RootElement.TryGetProperty("documents", out var documents))
 {
@@ -358,230 +425,209 @@ else
 {
     foreach (var fdoc in documents.EnumerateArray())
     {
-        var docName = fdoc.GetProperty("name").GetString();
-        var symbol = docName.Split("/")[^1];
+        var symbol = fdoc.GetProperty("name").GetString().Split("/")[^1];
         var fields = fdoc.GetProperty("fields");
 
-        var price = "N/A";
-        if (fields.TryGetProperty("current_price", out var pv))
-            price = pv.GetProperty("doubleValue").GetDouble().ToString("F2");
-
-        double? chgPct = null;
-        if (fields.TryGetProperty("price_change_pct", out var cv))
-            chgPct = cv.GetProperty("doubleValue").GetDouble();
-
+        var price = fields.TryGetProperty("current_price", out var pv)
+            ? pv.GetProperty("doubleValue").GetDouble().ToString("F2") : "N/A";
+        var chgPct = fields.TryGetProperty("price_change_pct", out var cv)
+            ? (double?)cv.GetProperty("doubleValue").GetDouble() : null;
         var chgStr = chgPct.HasValue ? string.Format("{0:+0.00}%", chgPct.Value) : "N/A";
+
         Console.WriteLine($"  {symbol,-10}  price={price,10}  change={chgStr,8}");
     }
 }
 
-// --- Cleanup scores ---
 foreach (var s in scores)
     await firestoreDb.Collection("scores_latest_cs").Document(s.Symbol).DeleteAsync();
 Console.WriteLine($"\n  Cleaned up {scores.Length} score documents");
 ```
 
-      Written 3 documents
-    
-      ASML.AS     price=   1128.20  change= -+3.46%
-      MC.PA       price=    457.95  change= -+0.50%
-      SAP.DE      price=    153.82  change= -+3.86%
-      SIE.DE      price=    203.75  change= -+3.11%
-      TTE.PA      price=     76.96  change= -+2.07%
-    
-      Cleaned up 3 score documents
+```text
+  ASML.AS     price=   1128.20  change=  -3.46%
+  MC.PA       price=    457.95  change=  -0.50%
+  SAP.DE      price=    153.82  change=  -3.86%
+  SIE.DE      price=    203.75  change=  -3.11%
+  TTE.PA      price=     76.96  change=  -2.07%
+
+  Cleaned up 3 score documents
+```
+
+### Poll for live updates via REST
+
+#### Poll pulse_live on an interval
+
+Because `Listen()` is unavailable on .NET 10 Interactive, polling simulates real-time awareness. Each poll fetches the full collection and compares prices against the previous poll to detect `NEW` / `CHANGED` / `UNCHANGED` states. In a .NET 8/9 project, replace this with `firestoreDb.Collection("pulse_live").Listen(snapshot => { ... })` for true push delivery.
 
 ```csharp
-// Firestore Real-Time Polling via REST API.
-//
-// The SDK's Listen() also hits the AsyncInterfaces bug on .NET 10.
-// In a real .NET 8/9 project, use the push listener:
-//   firestoreDb.Collection("pulse_live").Listen(snapshot => { ... });
-//
-// Python equivalent: collection.on_snapshot(callback) -- true push listener.
-//
-// Run pulse_scheduler.py in a separate terminal first:
-//   python pulse_scheduler.py --minutes 5
-
 var cred = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault()
     .CreateScoped("https://www.googleapis.com/auth/datastore");
 var accessToken = await cred.UnderlyingCredential.GetAccessTokenForRequestAsync();
 
 var client = new HttpClient();
 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-
 var apiUrl = $"https://firestore.googleapis.com/v1/projects/{projectId}/databases/(default)/documents/pulse_live";
 
 Console.WriteLine("Polling pulse_live every 30s for 2 minutes...\n");
-
 var previousPrices = new Dictionary<string, string>();
 var pollCount = 0;
 
-for (int i = 0; i < 4; i++)  // 4 polls x 30s = 2 minutes
+for (int i = 0; i < 4; i++)
 {
     pollCount++;
-    var resp = await client.GetAsync(apiUrl);
-    var body = await resp.Content.ReadAsStringAsync();
-    var parsed = JsonDocument.Parse(body);
-
+    var parsed = JsonDocument.Parse(await (await client.GetAsync(apiUrl)).Content.ReadAsStringAsync());
     Console.WriteLine($"[Poll #{pollCount} at {DateTime.Now:HH:mm:ss}]");
 
     if (parsed.RootElement.TryGetProperty("documents", out var docs))
     {
         foreach (var fdoc in docs.EnumerateArray())
         {
-            var docName = fdoc.GetProperty("name").GetString();
-            var sym = docName.Split("/")[^1];
+            var sym = fdoc.GetProperty("name").GetString().Split("/")[^1];
             var fields = fdoc.GetProperty("fields");
 
-            var priceStr = "N/A";
-            if (fields.TryGetProperty("current_price", out var pv))
-                priceStr = pv.GetProperty("doubleValue").GetDouble().ToString("F2");
+            var priceStr = fields.TryGetProperty("current_price", out var pv)
+                ? pv.GetProperty("doubleValue").GetDouble().ToString("F2") : "N/A";
+            var change = fields.TryGetProperty("price_change_pct", out var cv)
+                ? (double?)cv.GetProperty("doubleValue").GetDouble() : null;
 
-            double? change = null;
-            if (fields.TryGetProperty("price_change_pct", out var cv))
-                change = cv.GetProperty("doubleValue").GetDouble();
-
-            var status = "UNCHANGED";
-            if (!previousPrices.ContainsKey(sym))
-                status = "NEW";
-            else if (previousPrices[sym] != priceStr)
-                status = "CHANGED";
-
+            var status = !previousPrices.ContainsKey(sym) ? "NEW"
+                : previousPrices[sym] != priceStr ? "CHANGED" : "UNCHANGED";
             previousPrices[sym] = priceStr;
 
             var chgStr = change.HasValue ? string.Format("{0:+0.00}%", change.Value) : "N/A";
             Console.WriteLine($"  [{status,-9}] {sym,-10}  price={priceStr,10}  change={chgStr,8}");
         }
     }
-
-    if (i < 3)
-    {
-        Console.WriteLine("  Next poll in 30s...\n");
-        await Task.Delay(30_000);
-    }
+    if (i < 3) { Console.WriteLine("  Next poll in 30s...\n"); await Task.Delay(30_000); }
 }
-
 Console.WriteLine($"\nPolling complete. {pollCount} polls, {previousPrices.Count} tickers tracked.");
 ```
 
-    Polling pulse_live every 30s for 2 minutes...
-    
-    [Poll #1 at 14:38:00]
-      [NEW      ] ASML.AS     price=   1128.20  change= -+3.46%
-      [NEW      ] MC.PA       price=    457.95  change= -+0.50%
-      [NEW      ] SAP.DE      price=    153.82  change= -+3.86%
-      [NEW      ] SIE.DE      price=    203.75  change= -+3.11%
-      [NEW      ] TTE.PA      price=     76.96  change= -+2.07%
-      Next poll in 30s...
-    
-    [Poll #2 at 14:38:30]
-      [UNCHANGED] ASML.AS     price=   1128.20  change= -+3.46%
-      [UNCHANGED] MC.PA       price=    457.95  change= -+0.50%
-      [UNCHANGED] SAP.DE      price=    153.82  change= -+3.86%
-      [UNCHANGED] SIE.DE      price=    203.75  change= -+3.11%
-      [UNCHANGED] TTE.PA      price=     76.96  change= -+2.07%
-      Next poll in 30s...
-    
-    [Poll #3 at 14:39:00]
-      [UNCHANGED] ASML.AS     price=   1128.20  change= -+3.46%
-      [UNCHANGED] MC.PA       price=    457.95  change= -+0.50%
-      [UNCHANGED] SAP.DE      price=    153.82  change= -+3.86%
-      [UNCHANGED] SIE.DE      price=    203.75  change= -+3.11%
-      [UNCHANGED] TTE.PA      price=     76.96  change= -+2.07%
-      Next poll in 30s...
-    
-    [Poll #4 at 14:39:30]
-      [UNCHANGED] ASML.AS     price=   1128.20  change= -+3.46%
-      [UNCHANGED] MC.PA       price=    457.95  change= -+0.50%
-      [UNCHANGED] SAP.DE      price=    153.82  change= -+3.86%
-      [UNCHANGED] SIE.DE      price=    203.75  change= -+3.11%
-      [UNCHANGED] TTE.PA      price=     76.96  change= -+2.07%
-    
-    Polling complete. 4 polls, 5 tickers tracked.
+```text
+Polling pulse_live every 30s for 2 minutes...
+
+[Poll #1 at 14:38:00]
+  [NEW      ] ASML.AS     price=   1128.20  change=  -3.46%
+  [NEW      ] MC.PA       price=    457.95  change=  -0.50%
+  [NEW      ] SAP.DE      price=    153.82  change=  -3.86%
+  [NEW      ] SIE.DE      price=    203.75  change=  -3.11%
+  [NEW      ] TTE.PA      price=     76.96  change=  -2.07%
+  Next poll in 30s...
+
+[Poll #2 at 14:38:30]
+  [UNCHANGED] ASML.AS     price=   1128.20  change=  -3.46%
+  [UNCHANGED] MC.PA       price=    457.95  change=  -0.50%
+  [UNCHANGED] SAP.DE      price=    153.82  change=  -3.86%
+  [UNCHANGED] SIE.DE      price=    203.75  change=  -3.11%
+  [UNCHANGED] TTE.PA      price=     76.96  change=  -2.07%
+  Next poll in 30s...
+
+[Poll #3 at 14:39:00]
+  [UNCHANGED] ASML.AS     price=   1128.20  change=  -3.46%
+  [UNCHANGED] MC.PA       price=    457.95  change=  -0.50%
+  [UNCHANGED] SAP.DE      price=    153.82  change=  -3.86%
+  [UNCHANGED] SIE.DE      price=    203.75  change=  -3.11%
+  [UNCHANGED] TTE.PA      price=     76.96  change=  -2.07%
+  Next poll in 30s...
+
+[Poll #4 at 14:39:30]
+  [UNCHANGED] ASML.AS     price=   1128.20  change=  -3.46%
+  [UNCHANGED] MC.PA       price=    457.95  change=  -0.50%
+  [UNCHANGED] SAP.DE      price=    153.82  change=  -3.86%
+  [UNCHANGED] SIE.DE      price=    203.75  change=  -3.11%
+  [UNCHANGED] TTE.PA      price=     76.96  change=  -2.07%
+
+Polling complete. 4 polls, 5 tickers tracked.
+```
 
 ## Secret Manager
 
 **Pipeline role: CREDENTIAL VAULT** — All secrets (DB passwords, API keys, connection strings) live here. Pipeline code retrieves them at runtime — never hardcoded, never in git. Supports versioning and rotation. In production, Cloud Run and GKE inject secrets automatically.
 
-```csharp
-// Secret Manager — secure credential storage.
-// Python equivalent: from google.cloud import secretmanager
+A **secret** is a named container. Each update creates a new immutable **version** — old versions can be disabled or destroyed for rotation. `SecretManagerServiceClient.Create()` authenticates via ADC.
 
-// Create Secret Manager client
-// Pipeline role: ALL credentials retrieved at runtime — never hardcoded
+> [!info] Secret lifecycle not shown in C#
+> This notebook demonstrates read and list only. Creating secrets, adding versions, and deleting secrets is demonstrated in the Python file — the API structure is identical (`CreateSecret`, `AddSecretVersion`, `DeleteSecret`).
+
+### Read and list secrets
+
+#### Read the latest version of a secret
+
+`AccessSecretVersion(name)` fetches the secret payload for a specific version. Using `versions/latest` always retrieves the current active version. The response payload is a `ByteString` — call `.ToStringUtf8()` to decode. Never print or log raw secret values.
+
+```csharp
 var smClient = SecretManagerServiceClient.Create();
 
-// ─── Read secrets ───
 foreach (var secretId in new[] { "index-db-password", "index-api-key" })
 {
     var name = $"projects/{projectId}/secrets/{secretId}/versions/latest";
-    // Read the latest version of a secret — returns encrypted payload
     var response = smClient.AccessSecretVersion(name);
     var value = response.Payload.Data.ToStringUtf8();
     var masked = value[..3] + new string('*', value.Length - 3);
     Console.WriteLine($"  {secretId}: {masked}");
 }
+```
 
-// ─── List secrets ───
-Console.WriteLine("\n=== List Secrets ===");
-// List all secrets in the project
+```text
+  index-db-password: Esg************
+  index-api-key: dem***************
+```
+
+#### List all secrets in the project
+
+`ListSecrets` returns a lazy paginated enumerable of `Secret` objects. Each `Secret` has a `SecretName` property that parses the resource path — use `.SecretId` to extract just the name.
+
+```csharp
 foreach (var secret in smClient.ListSecrets(new Google.Cloud.SecretManager.V1.ListSecretsRequest { Parent = $"projects/{projectId}" }))
     Console.WriteLine($"  {secret.SecretName.SecretId}");
 ```
 
-      index-db-password: Esg************
-      index-api-key: dem***************
-    
-      index-api-key
-      index-db-password
+```text
+  index-api-key
+  index-db-password
+```
 
 ## Cloud Monitoring
 
 **Pipeline role: OBSERVABILITY** — Two components: Cloud Logging (structured log entries for every pipeline event) and Cloud Monitoring (custom metrics for quantitative KPIs). Enables alerting ("pipeline failed", "row count dropped 50%"), dashboards, and post-mortem debugging.
 
-```csharp
-// Cloud Monitoring — write custom metrics and structured logs.
-// Python equivalent: from google.cloud import monitoring_v3
+Custom metrics are written as **time series** — a metric type identifier, a monitored resource (e.g., `global`), and one or more `Point` values with timestamps. Data appears in Metrics Explorer within ~60 seconds of writing.
 
-// Create Monitoring client for custom metrics
-// Pipeline role: quantitative KPIs — rows loaded, latency, errors
+> [!info] Cloud Logging not shown in C#
+> Writing structured log entries via the Cloud Logging SDK (`Google.Cloud.Logging.V2`) is demonstrated in the Python file. The C# equivalent is `LoggingServiceV2Client` with `WriteLogEntries`. This notebook focuses on custom metrics only.
+
+### Write custom metrics
+
+#### Write a data point to a custom metric
+
+`CreateTimeSeries` writes one or more time series points to Cloud Monitoring. The metric type string must follow the `custom.googleapis.com/` prefix convention. Cloud Monitoring can return transient `Internal` gRPC errors — a retry loop with backoff handles these gracefully.
+
+```csharp
 var metricClient = MetricServiceClient.Create();
 var projectName = $"projects/{projectId}";
 
-// ─── Write custom metric ───
-
 var now = DateTimeOffset.UtcNow;
-var interval = new TimeInterval
-{
-    EndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTimeOffset(now),
-};
-
-var point = new Point
-{
-    Interval = interval,
-    Value = new TypedValue { Int64Value = 250 },  // simulated row count
-};
-
 var timeSeries = new TimeSeries
 {
     Metric = new Google.Api.Metric
     {
         Type = "custom.googleapis.com/index_pipeline/rows_loaded",
     },
-    Resource = new MonitoredResource
-    {
-        Type = "global",
-    },
+    Resource = new MonitoredResource { Type = "global" },
 };
-timeSeries.Points.Add(point);
+timeSeries.Points.Add(new Point
+{
+    Interval = new TimeInterval
+    {
+        EndTime = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTimeOffset(now),
+    },
+    Value = new TypedValue { Int64Value = 250 },
+});
 
-// Retry — Cloud Monitoring sometimes returns transient Internal errors
 for (int attempt = 1; attempt <= 3; attempt++)
 {
     try
     {
-        // Write the data point — visible in Metrics Explorer within ~60s
         metricClient.CreateTimeSeries(projectName, new[] { timeSeries });
         break;
     }
@@ -592,16 +638,15 @@ for (int attempt = 1; attempt <= 3; attempt++)
     }
 }
 Console.WriteLine("  Wrote metric: rows_loaded = 250");
-
-Console.WriteLine($"\n=== View in GCP Console ===");
 Console.WriteLine($"  Logs:    https://console.cloud.google.com/logs?project={projectId}");
 Console.WriteLine($"  Metrics: https://console.cloud.google.com/monitoring/metrics-explorer?project={projectId}");
 ```
 
-      rows_loaded = 250
-    
-      https://console.cloud.google.com/logs?project=index-lab-2
-      https://console.cloud.google.com/monitoring/metrics-explorer?project=index-lab-2
+```text
+  Wrote metric: rows_loaded = 250
+  Logs:    https://console.cloud.google.com/logs?project=index-lab-2
+  Metrics: https://console.cloud.google.com/monitoring/metrics-explorer?project=index-lab-2
+```
 
 ## Summary
 

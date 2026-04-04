@@ -1,9 +1,10 @@
 ---
-tags: [performance, sql, sql-server, tsql]
-aliases: [buffer pool, page life expectancy, PLE, buffer cache hit ratio, memory pressure, max server memory, memory clerks, DBCC FREEPROCCACHE, DBCC DROPCLEANBUFFERS]
+title: "Memory and the Buffer Pool"
+tags: [sql, sql-server, tsql]
+aliases: [buffer pool, page life expectancy, PLE, buffer cache hit ratio, memory pressure, max server memory, memory clerks, DBCC FREEPROCCACHE, DBCC DROPCLEANBUFFERS, Lock Pages in Memory, LPIM]
 description: "How SQL Server's buffer pool manages data pages in RAM, how to measure memory pressure using Page Life Expectancy and buffer cache hit ratio, and how to configure max server memory correctly on GCP Compute Engine VMs."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-04
 status: complete
 ---
 
@@ -14,40 +15,53 @@ status: complete
 >
 > — **Jim Gray**, *Transaction Processing: Concepts and Techniques* (1992)
 
-SQL Server's buffer pool is its primary data cache — it holds database pages (8 KB each) in RAM so they don't need to be read from disk on every query. Memory is the single biggest performance lever on most SQL Server instances: when data fits in the buffer pool, queries run from RAM (nanoseconds); when it doesn't, they read from disk (milliseconds to seconds, 100–1000x slower).
+SQL Server's buffer pool (also called the buffer cache) is its primary data cache — a region of memory that holds 8 KB database pages (data and index pages) in RAM so they don't need to be read from disk on every query. Memory is the single biggest performance lever on most SQL Server instances: when data fits in the buffer pool, queries read from RAM at nanosecond latency; when it doesn't, they read from disk at millisecond latency — 100x to 1,000x slower.
 
-### Key Terms
+The buffer manager coordinates three background processes that move pages between disk and the buffer pool:
+
+- **Lazy writer** — a background thread that monitors the free list (a list of buffer frames available for reuse). When the free list runs low, the lazy writer scans the buffer pool for the least recently used clean pages, evicts them, and adds the frames back to the free list. If a page is dirty (modified but not yet persisted), the lazy writer writes it to disk first before freeing the frame. The `Lazy writes/sec` performance counter tracks this activity — high values indicate sustained memory pressure.
+- **Checkpoint** — a periodic process that writes all dirty pages from the buffer pool to disk, creating a recovery point. After a checkpoint, those pages become clean (their on-disk copy matches their in-memory copy) but remain cached in the buffer pool. The target recovery interval (default: 60 seconds) controls how frequently automatic checkpoints occur.
+- **Free list stalls** — when a thread needs a buffer frame and the free list is empty, it must wait for the lazy writer to free one. The `Free list stalls/sec` counter tracks this — any non-zero sustained value signals that the buffer pool is too small for the current workload.
+
+## Key Terms
 
 | Term | Definition |
 |------|-----------|
-| **Buffer pool** | Main SQL Server memory region holding data pages read from disk |
-| **Page Life Expectancy (PLE)** | Average seconds a data page stays in the buffer pool before eviction. Higher is better. |
+| **Buffer pool** | Main SQL Server memory region holding data and index pages read from disk. Shared across all databases on the instance. |
+| **Dirty page** | A page in the buffer pool that has been modified in memory but not yet written to disk. Dirty pages are persisted by checkpoint or lazy writer. |
+| **Clean page** | A page whose in-memory copy matches the on-disk copy. Clean pages can be evicted without writing to disk. |
+| **Page Life Expectancy (PLE)** | Average seconds a data page stays in the buffer pool before eviction. Higher is better — it means pages remain cached longer. |
 | **Buffer Cache Hit Ratio** | Percentage of page reads served from RAM vs. disk. Target: > 99%. |
-| **Memory clerk** | Internal component tracking memory allocations by type (buffer pool, plan cache, lock manager) |
-| **Memory grant** | RAM pre-allocated to a query for sort and hash operations before it can execute |
-| **max server memory** | Hard cap on how much RAM SQL Server can allocate. Must always be set — never leave at default (see [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) for the exact `sp_configure` commands). |
+| **Memory clerk** | Internal SQL Server component tracking memory allocations by type (buffer pool, plan cache, lock manager, CLR, etc.) |
+| **Memory grant** | RAM pre-allocated to a query for sort and hash operations before execution begins. If the grant is insufficient, the operation spills to TempDB. |
+| **max server memory** | Hard cap on how much RAM SQL Server can allocate for the buffer pool and most memory clerks. Must always be set — never leave at default (see [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration)). |
 
-### Memory Sizing Rule
+## Memory Configuration
+
+### Max Server Memory Sizing Rule
+
+The `max server memory` setting controls the upper limit of SQL Server's buffer pool and internal caches. It does not cover all memory consumed by the SQL Server process — thread stacks, linked server providers, CLR assemblies, and backup buffers allocate memory outside this cap.
 
 > [!tip] The Max Memory Rule
 >
-> The One Rule for max server memory.
-> `max server memory = Total VM RAM − 1 GB`
->
-> Leave at least 1 GB for the OS, kernel, and any other processes on the VM. On a 16 GB GCP VM: set max server memory to 15 GB (15,360 MB).
+> For VMs up to 16 GB: `max server memory = Total VM RAM − 1 GB`. Leave at least 1 GB for the OS, kernel, and other processes. On a 16 GB GCP VM: set max server memory to 15,360 MB.
 
-For VMs with > 32 GB RAM, reserve 10–15% for OS:
+For VMs with > 32 GB RAM, reserve 10–15% for the OS and non-buffer-pool allocations:
 - 32 GB VM → 28–29 GB for SQL Server
 - 64 GB VM → 54–58 GB for SQL Server
 
-Set with `sp_configure`:
+### Set max server memory with sp_configure
+
+The change takes effect immediately — no SQL Server restart is required. The `RECONFIGURE` command applies the new value to `value_in_use`.
 
 ```sql
--- Set max server memory (takes effect immediately, no restart needed)
-EXEC sp_configure 'max server memory', 15360;  -- 15 GB on a 16 GB VM
+EXEC sp_configure 'max server memory', 15360;
 RECONFIGURE;
+```
 
--- Verify the change took effect
+### Verify the current setting
+
+```sql
 SELECT name, value, value_in_use, description
 FROM sys.configurations
 WHERE name = 'max server memory (MB)';
@@ -55,97 +69,103 @@ WHERE name = 'max server memory (MB)';
 
 > [!warning] Never Leave at Default
 >
-> The default max server memory is 2,147,483,647 MB (unlimited). SQL Server will consume nearly all available RAM, starving the OS and creating instability. On GCP VMs, this can cause the OOM killer to terminate the `sqlservr` process during spikes. Always set this before going to production.
+> The default max server memory is 2,147,483,647 MB (effectively unlimited). SQL Server will consume nearly all available RAM, starving the OS and potentially causing instability. On Linux or GCP VMs, the OOM killer may terminate the `sqlservr` process during memory spikes. Always set this before going to production.
 
-> [!success] Set `max server memory` to total RAM minus at least 1 GB before going to production
+> [!success] Set `max server memory` before going to production
 >
 > `EXEC sp_configure 'max server memory', <total_RAM_MB - 1024>; RECONFIGURE;` — run this immediately after installing SQL Server. On a 16 GB VM, use 15360 MB. Verify with `SELECT name, value_in_use FROM sys.configurations WHERE name = 'max server memory (MB)';`
 
 ## Checking Available System Memory
 
-For OS-level memory monitoring with `free`, `vmstat`, and other Linux tools, see [system-resources](https://alp78.github.io/elysium/01-Shell/Process-Management/system-resources).
+SQL Server's internal Resource Monitor continuously tracks both external memory (OS-level physical RAM availability) and internal memory (how much of the buffer pool target has been committed). The two DMVs below expose these states. For OS-level memory monitoring with `free`, `vmstat`, and other Linux tools, see [system-resources](https://alp78.github.io/elysium/01-Shell/Process-Management/system-resources).
 
-#### sys.dm_os_sys_memory — OS-level memory status
+### sys.dm_os_sys_memory — OS-level memory status
+
+This DMV reports the OS-visible physical memory. The `system_memory_state_desc` column reflects the current memory pressure state as detected by SQL Server's Resource Monitor:
+- `Available physical memory is high` — healthy, no pressure
+- `Physical memory usage is low` — SQL Server will begin reducing its buffer pool to release RAM
+- `Physical memory usage is steady` — stable state
+- `Physical memory state is transitioning` — SQL Server is actively adjusting allocations in response to changing pressure
 
 ```sql
--- Available OS memory
 SELECT
     total_physical_memory_kb / 1024   AS total_ram_mb,
     available_physical_memory_kb / 1024 AS available_memory_mb,
     system_memory_state_desc
 FROM sys.dm_os_sys_memory;
--- system_memory_state_desc values:
--- 'Available physical memory is high'  = good
--- 'Physical memory is low'              = SQL Server will reduce its buffer pool
--- 'Physical memory state is transitioning' = under pressure
 ```
 
+### sys.dm_os_sys_info — SQL Server committed memory vs target
+
+The `committed_kb` column shows how much physical memory SQL Server has currently committed (allocated and in use). The `committed_target_kb` shows how much SQL Server wants to commit based on its max server memory setting and current workload. When `committed_kb` significantly exceeds `committed_target_kb`, SQL Server is under internal memory pressure and is actively trying to shrink — the lazy writer will be highly active. When the two values are approximately equal, memory is stable.
+
 ```sql
--- SQL Server committed memory vs. target
 SELECT
     physical_memory_kb / 1024    AS physical_memory_mb,
     committed_kb / 1024          AS committed_mb,
     committed_target_kb / 1024   AS target_mb
 FROM sys.dm_os_sys_info;
--- If committed_mb >> target_mb: SQL Server is trying to shrink (memory pressure)
--- If committed_mb ≈ target_mb: memory is stable
 ```
 
 ## Page Life Expectancy (PLE)
 
-PLE is the most important single metric for buffer pool health.
+Page Life Expectancy is the most important single metric for buffer pool health. It measures the average number of seconds a data page remains in the buffer pool without being referenced before it is evicted. A high PLE means pages stay cached long enough to serve multiple queries from RAM; a low PLE means pages are being evicted before they can be reused, forcing repeated disk reads.
+
+PLE is exposed via the `Buffer Manager` performance object in `sys.dm_os_performance_counters`. On NUMA systems, SQL Server reports a separate PLE per buffer node (one per NUMA node) plus an aggregate `Buffer Manager` value.
+
+### Current PLE
 
 ```sql
--- Current PLE
 SELECT cntr_value AS PLE_seconds
 FROM sys.dm_os_performance_counters
 WHERE counter_name = 'Page life expectancy'
   AND object_name LIKE '%Buffer Manager%';
 ```
 
-#### Page Life Expectancy — interpretation thresholds
+### PLE interpretation thresholds
 
 | PLE Value | Interpretation | Action |
 |-----------|---------------|--------|
 | > 1000 seconds | Healthy — pages live in memory a long time | None |
-| 300–1000 seconds | Acceptable for busy servers | Monitor trend |
-| < 300 seconds | Memory pressure — pages evicted frequently, queries hitting disk | Increase `max server memory` or upgrade VM |
-| Sudden drops | A large table scan or index rebuild flushed the buffer pool | Identify the query; schedule off-peak |
+| 300–1000 seconds | Acceptable for busy OLTP servers | Monitor trend; investigate if declining |
+| < 300 seconds | Memory pressure — pages evicted frequently, queries hitting disk | Increase `max server memory`, upgrade VM, or optimize queries causing large scans |
+| Sudden drops | A large table scan, index rebuild, or `DBCC DROPCLEANBUFFERS` flushed the buffer pool | Identify the query with `sys.dm_exec_requests`; schedule off-peak |
 
-> [!info] PLE Context
+> [!info] The 300-Second Rule Is Outdated
 >
-> The classic "300 second" threshold was written when SQL Server had much less RAM. On modern systems with 16+ GB, PLE should routinely be 1000–5000+ seconds. A consistently low PLE means your working set doesn't fit in RAM.
+> The classic "300 second" PLE threshold was established when servers had 4 GB of RAM. On modern systems with 16+ GB, PLE should routinely be 1,000–5,000+ seconds. A more useful formula: PLE should be at least `(RAM_GB / 4) × 300` seconds. On a 16 GB server, that means a healthy baseline of at least 1,200 seconds. A consistently low PLE means the working set (the set of pages actively needed by queries) does not fit in RAM.
 
 ### Buffer Cache Hit Ratio
 
+The buffer cache hit ratio measures the percentage of page reads that were satisfied from the buffer pool (RAM) without requiring a physical disk read. A ratio above 99% means virtually all reads are served from cache. Below 95% indicates significant memory pressure; below 90% is critical. Note: this counter is a cumulative average since server startup, so it can mask short bursts of cache misses — PLE is a better real-time indicator.
+
 ```sql
--- Buffer cache hit ratio (0–100, higher is better)
 SELECT cntr_value AS hit_ratio
 FROM sys.dm_os_performance_counters
 WHERE counter_name = 'Buffer cache hit ratio'
   AND object_name LIKE '%Buffer Manager%';
--- Target: > 99%
--- < 95% = problem, < 90% = critical
 ```
 
 ### Buffer Pool Distribution by Database
 
+The `sys.dm_os_buffer_descriptors` DMV reports every page currently cached in the buffer pool, including which database it belongs to. This query aggregates those pages to show how many MB each database is consuming. If a small database disproportionately occupies the buffer pool (e.g., due to a large scan or missing index), it can evict pages from the production database, causing cache misses on critical queries.
+
 ```sql
--- How much buffer pool each database is using
 SELECT
     DB_NAME(database_id) AS db_name,
     COUNT(*) * 8 / 1024 AS buffer_pool_mb
 FROM sys.dm_os_buffer_descriptors
 GROUP BY database_id
 ORDER BY buffer_pool_mb DESC;
--- If one database dominates and others get almost nothing,
--- those other databases will have frequent disk reads.
 ```
 
 ## Memory Clerks — Where Memory Is Being Used
 
+Memory clerks are SQL Server's internal accounting system for memory. Each clerk tracks allocations for a specific purpose — the buffer pool has its own clerk, the plan cache has one, memory grants have one, and so on. By querying `sys.dm_os_memory_clerks`, you can see exactly which components are consuming memory and whether the distribution is healthy.
+
+### Top memory consumers by clerk type
+
 ```sql
--- SQL Server memory by consumer type
 SELECT TOP 10
     type AS clerk_type,
     pages_kb / 1024 AS memory_mb
@@ -154,20 +174,29 @@ WHERE pages_kb > 0
 ORDER BY pages_kb DESC;
 ```
 
-#### sys.dm_os_memory_clerks — common clerks and their meaning
+### Common clerks and their meaning
 
-| Clerk | What It Is | Concern |
+| Clerk | What It Is | Healthy State / Concern |
 |-------|-----------|---------|
-| `MEMORYCLERK_SQLBUFFERPOOL` | Buffer pool (data cache) | Should be the largest by far |
-| `CACHESTORE_SQLCP` | Plan cache (compiled query plans) | If > 20% of total, enable "optimize for ad hoc workloads" |
-| `MEMORYCLERK_SQLQUERYEXEC` | Memory grants (sort/hash operations) | If large, queries are doing big sorts — add indexes |
+| `MEMORYCLERK_SQLBUFFERPOOL` | Buffer pool — cached data and index pages | Should be the largest by far (typically 80–90% of total) |
+| `CACHESTORE_SQLCP` | Plan cache — compiled ad-hoc and prepared query plans | If > 20% of total, ad-hoc query strings are bloating the cache — enable "optimize for ad hoc workloads" |
+| `CACHESTORE_OBJCP` | Plan cache — stored procedure, trigger, and function plans | Typically smaller than SQLCP; large values indicate many compiled procedures |
+| `MEMORYCLERK_SQLQUERYEXEC` | Memory grants — workspace memory for sort and hash operations | If large relative to buffer pool, queries are doing big sorts — add covering indexes or fix cardinality estimates |
 | `MEMORYCLERK_SQLCLR` | CLR objects | Should be small unless using CLR assemblies |
-| `OBJECTSTORE_LOCK_MANAGER` | Lock memory | If large, many concurrent locks — check for [blocking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) |
+| `OBJECTSTORE_LOCK_MANAGER` | Lock memory — tracks row, page, and table locks | If large, many concurrent locks are held — check for [blocking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) or long-running transactions |
+| `USERSTORE_TOKENPERM` | Security token store — caches permission tokens for logins and database users | If disproportionately large (> 500 MB), many distinct security contexts are being evaluated; this clerk competes directly with the buffer pool and can cause both elevated CPU and unexpected memory pressure |
 
 ## Pending Memory Grants
 
+Before a query that requires sort, hash, or bitmap operations can begin executing, the query optimizer estimates how much workspace memory (also called a memory grant) is needed and requests it from the memory grant scheduler. If sufficient memory is available, the grant is allocated immediately and the query begins execution. If not, the query enters the `RESOURCE_SEMAPHORE` wait queue and sits idle until enough memory is freed by other completing queries.
+
+The `sys.dm_exec_query_memory_grants` DMV shows all queries that currently hold or are waiting for a memory grant. Rows where `grant_time IS NULL` represent queries that are still waiting — these are the ones actively blocked by memory pressure.
+
+### Queries waiting for memory grants
+
+A healthy system returns zero rows from this query. Any rows returned mean queries are sitting idle, waiting for workspace memory before they can execute.
+
 ```sql
--- Queries waiting for a memory grant before they can execute
 SELECT
     session_id,
     requested_memory_kb / 1024  AS requested_mb,
@@ -177,20 +206,31 @@ SELECT
     wait_time_ms / 1000         AS wait_sec
 FROM sys.dm_exec_query_memory_grants
 WHERE grant_time IS NULL;
--- Good: 0 rows (no one waiting)
--- Bad: any rows = memory oversubscribed, queries sitting idle waiting for RAM
 ```
 
-When queries appear here, `RESOURCE_SEMAPHORE` appears in [wait statistics](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis).
+When queries appear here, `RESOURCE_SEMAPHORE` appears in [wait statistics](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis). If a query receives its grant but the actual data exceeds the grant size, the sort or hash operation spills to TempDB, degrading performance — look for Sort Warnings and Hash Warnings in execution plans.
 
-#### RESOURCE_SEMAPHORE memory grant queue — causes and fixes
+### RESOURCE_SEMAPHORE memory grant queue — causes and fixes
 
 | Cause | Fix |
 |-------|-----|
 | `max server memory` too low | Increase it |
-| MAXDOP too high — parallel queries each request memory grants | Reduce MAXDOP (see [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration)) |
-| Missing indexes causing large sort/hash operations | Add indexes to eliminate the sort |
-| Many concurrent queries all requesting memory simultaneously | Reduce query concurrency or add RAM |
+| MAXDOP too high — each parallel thread requests its own memory grant portion | Reduce MAXDOP (see [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration)) |
+| Stale statistics causing over-estimated cardinality → oversized grants | Run `UPDATE STATISTICS ... WITH FULLSCAN` on affected tables |
+| Missing indexes causing large sort/hash operations | Add covering indexes to eliminate the sort |
+| Many concurrent queries all requesting memory simultaneously | Reduce query concurrency, add RAM, or use Resource Governor to cap per-query grants |
+
+> [!info] Resource Governor Can Limit Memory Grants
+>
+> By default, a single query in the `default` workload group can request up to 25% of total available grant memory. Resource Governor allows you to create workload groups with lower `REQUEST_MAX_MEMORY_GRANT_PERCENT` values to prevent any single query from monopolizing grant memory. Example: `ALTER WORKLOAD GROUP [default] WITH (REQUEST_MAX_MEMORY_GRANT_PERCENT = 10); ALTER RESOURCE GOVERNOR RECONFIGURE;`
+
+> [!info] SQL Server Maintains Two Memory Grant Queues
+>
+> SQL Server routes memory grant requests to two queues. The **regular queue** handles queries requesting large workspace allocations. The **small-query gateway** handles queries requesting less than 5 MB with an estimated cost below 3 units — these bypass the main queue and receive grants without waiting behind large sort or hash operations. Check the `queue_id` column in `sys.dm_exec_query_memory_grants`: `0` = regular queue, `1` = small-query gateway. If only queue 1 is blocked, small queries are being starved — a sign of very high concurrency, not just large grant requests.
+
+> [!info] Memory Grant Feedback (SQL Server 2017+)
+>
+> Starting with SQL Server 2017 (batch mode) and SQL Server 2019 (row mode), the query execution engine can automatically adjust memory grants based on prior execution history. If a query consistently uses less memory than granted, the feedback mechanism reduces the grant on subsequent runs. If it spills, the grant is increased. SQL Server 2022 adds on-disk persistence via Query Store and percentile-based grants for more stable adjustments.
 
 ### Freeing Memory (Diagnostic/Testing Only)
 
@@ -203,43 +243,55 @@ When queries appear here, `RESOURCE_SEMAPHORE` appears in [wait statistics](http
 >
 > Instead of `DBCC FREEPROCCACHE` (all plans), use `DBCC FLUSHPROCINDB(@db_id)` to flush only one database's plans. Instead of `DBCC DROPCLEANBUFFERS` (all cached pages), target a cold-cache benchmark in a dedicated test environment, not production.
 
-```sql
--- Free plan cache (forces query recompilation on next run)
-DBCC FREEPROCCACHE;
+#### Flush the entire plan cache
 
--- Free plan cache for a single database only (less disruptive)
+Forces every cached plan to be discarded. All queries must recompile on next execution, causing a temporary CPU spike.
+
+```sql
+DBCC FREEPROCCACHE;
+```
+
+#### Flush the plan cache for a single database
+
+Less disruptive — only plans for the specified database are cleared.
+
+```sql
 DECLARE @db_id INT = DB_ID('analytics_db');
 DBCC FLUSHPROCINDB(@db_id);
+```
 
--- Checkpoint (flush dirty pages to disk) then clear buffer pool
--- ONLY use for: testing a "cold cache" scenario or before benchmarking
+#### Flush the buffer pool (cold-cache test only)
+
+`CHECKPOINT` writes all dirty pages to disk, then `DBCC DROPCLEANBUFFERS` evicts all clean pages from the buffer pool. This simulates a cold cache — useful for benchmarking to measure true I/O cost, but never appropriate in production.
+
+```sql
 CHECKPOINT;
 DBCC DROPCLEANBUFFERS;
 ```
 
 ### Memory Pressure Diagnosis Flow
 
-When `RESOURCE_SEMAPHORE` is your top [wait type](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis):
+When `RESOURCE_SEMAPHORE` is your top [wait type](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis), use this decision tree to identify the root cause:
 
-```
-RESOURCE_SEMAPHORE is dominant
-         │
-         ▼
-Check sys.dm_exec_query_memory_grants
-Are queries queued? (grant_time IS NULL)
-         │
-    YES  │
-         ▼
-What is requested_memory_kb?
-    ├── Very large (> 512 MB per query)
-    │   → Stale statistics causing over-estimation
-    │   → Run UPDATE STATISTICS WITH FULLSCAN
-    │   → Fix cardinality estimation (see query-plan-analysis)
-    │
-    └── Reasonable per query, but many concurrent queries
-        → Reduce MAXDOP or query concurrency
-        → Add more RAM (upgrade GCP VM)
-        → Add indexes to eliminate sort operations
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A["RESOURCE_SEMAPHORE is dominant wait type"] --> B["Check sys.dm_exec_query_memory_grants\ngrant_time IS NULL?"]
+    B -->|"YES — queries queued"| C["Examine requested_memory_kb\nper waiting query"]
+    B -->|"NO — no queued queries"| D["Memory pressure was transient\nMonitor for recurrence"]
+    C -->|"> 512 MB per query"| E["Stale statistics → over-estimated cardinality\n1. UPDATE STATISTICS WITH FULLSCAN\n2. Fix cardinality estimation\n3. Check for implicit conversions"]
+    C -->|"Reasonable per query\nbut many concurrent"| F["Concurrency overload\n1. Reduce MAXDOP\n2. Add covering indexes\n3. Add RAM / upgrade VM\n4. Use Resource Governor"]
 ```
 
 ### Memory Configuration for GCP VMs
@@ -266,19 +318,35 @@ GCP VMs have fixed memory per machine type. Recommended sizing for SQL Server 20
 >
 > On a 16 GB VM, SQL Server can maintain a healthy buffer pool for typical data pipeline tables (up to ~10 GB working set). Scale to `n2-highmem-4` (32 GB) once the working set — measured by `sys.dm_os_buffer_descriptors` — consistently exceeds 12 GB.
 
+### Lock Pages in Memory (LPIM)
+
+By default, SQL Server's buffer pool pages are allocated through the Windows Virtual Memory Manager, which means the OS can page them to the swap file under external memory pressure. When this happens, SQL Server's buffer pool is effectively swapped to disk — dramatically degrading performance. Error 17890 in the SQL Server error log (`A significant part of sql server process memory has been paged out`) indicates this is occurring.
+
+Lock Pages in Memory (LPIM) is a Windows privilege that prevents the OS from paging SQL Server's buffer pool to disk. When enabled, buffer pool pages are locked in physical RAM using the AWE (Address Windowing Extensions) API. This is a best practice for all production SQL Server instances.
+
+#### Check whether LPIM is enabled
+
+The `sql_memory_model_desc` column reports the current memory model: `CONVENTIONAL` means LPIM is not active, `LOCK_PAGES` means it is active, and `LARGE_PAGES` means LPIM with large page allocations is active (trace flag 834, Enterprise only).
+
+```sql
+SELECT sql_memory_model_desc FROM sys.dm_os_sys_info;
+```
+
+> [!warning] LPIM Requires Setting max server memory
+>
+> When LPIM is enabled, SQL Server's locked pages cannot be reclaimed by the OS under any circumstances. If `max server memory` is left at the default (unlimited), SQL Server will lock nearly all physical RAM, potentially starving the OS, SQL Agent, SSIS, and other processes. Always set `max server memory` to an explicit value before enabling LPIM.
+
+> [!success] Enable LPIM and set max server memory together
+>
+> On Windows: grant the "Lock pages in memory" privilege to the SQL Server service account via `gpedit.msc` → Local Policies → User Rights Assignment. Then restart the SQL Server service. Always verify with `SELECT sql_memory_model_desc FROM sys.dm_os_sys_info;` — the value should change from `CONVENTIONAL` to `LOCK_PAGES`.
+
 ## Buffer Pool Health Queries
 
 SQL Server deliberately consumes as much memory as possible for the buffer pool — caching data pages in RAM to avoid disk reads. This is by design, not a memory leak. The queries below help you determine whether the buffer pool is healthy, whether the right databases are cached, and whether plan cache bloat is wasting memory.
 
 ### Page Life Expectancy per NUMA Node — PLE across all buffer nodes
 
-> [!warning] The 300-Second Rule Is Outdated
->
-> The "300 seconds" rule of thumb dates from servers with 4 GB RAM. On modern servers with 64+ GB, PLE should be in the thousands. A more useful rule: PLE should be at least `(RAM_GB / 4) * 300` seconds. A sudden PLE drop (not a low baseline) indicates memory pressure — typically caused by a large scan flushing the buffer pool.
-
-> [!success] Use `(RAM_GB / 4) * 300` as the PLE baseline and alert on sudden drops
->
-> On a 16 GB server the healthy PLE baseline is at least 1,200 seconds. Configure a Datadog or SQL Agent alert to fire when PLE drops more than 50% within 5 minutes — this identifies large scans or index rebuilds that are flushing the buffer pool mid-day.
+On NUMA systems, SQL Server partitions the buffer pool across NUMA nodes. Each node has its own PLE counter under the `Buffer Node` performance object (e.g., `Buffer Node:000`, `Buffer Node:001`). The aggregate `Buffer Manager` PLE is the overall value. If one NUMA node has a significantly lower PLE than others, memory pressure is localized — typically caused by queries with thread affinity to that node.
 
 ```sql
 SELECT
@@ -294,7 +362,7 @@ ORDER BY object_name;
 
 ### Buffer Pool Usage by Database — cached pages, dirty pages, and clean pages
 
-Shows which databases are consuming the buffer pool. If a 50 MB database occupies 80% of the buffer pool while your 200 GB production database has 20%, something is wrong — likely a scan on the small database flushed the production cache.
+This query shows how much of the buffer pool each database is consuming, broken down into dirty pages (modified, pending write to disk) and clean pages (matching on-disk copy, can be evicted without I/O). The `WHERE database_id <> 32767` filter excludes the Resource Database (mssqlsystemresource), which is an internal read-only database. If a small database disproportionately occupies the buffer pool while your production database has almost nothing cached, a scan or missing index on the small database likely flushed the production cache.
 
 ```sql
 SELECT
@@ -329,6 +397,10 @@ ORDER BY pages_mb DESC;
 
 ### Plan Cache Stats — cache size by object type and single-use plan waste
 
+> [!info] Plan Cache Has an Object Count Limit
+>
+> SQL Server caps the plan cache at approximately **160,000 objects** (compiled plans plus execution contexts combined). When the limit is reached, SQL Server begins evicting plans on a least-recently-used basis, which can cause recompilation pressure on high-throughput systems with many distinct procedures. Trace flag 174 (`DBCC TRACEON(174, -1)`) raises the cap to approximately **640,000 objects** — relevant on OLTP servers with hundreds of stored procedures under sustained concurrent load.
+
 > [!warning] Single-Use Plan Bloat
 >
 > A plan cache with thousands of single-use plans (use_count = 1) is a sign of non-parameterized queries. Each unique query string gets its own cached plan, wasting memory. Enable "optimize for ad hoc workloads" to cache only a stub on first execution.
@@ -337,8 +409,11 @@ ORDER BY pages_mb DESC;
 >
 > `EXEC sp_configure 'optimize for ad hoc workloads', 1; RECONFIGURE;` — SQL Server caches a lightweight stub on the first execution and only promotes it to a full plan when the same query runs a second time, recovering the wasted plan cache memory.
 
+#### Plan cache size by object type
+
+Groups cached plans by type (`Adhoc`, `Prepared`, `Proc`, `Trigger`, etc.) showing count, total memory consumed, and average reuse. A healthy cache has high `avg_use_count` for `Proc` plans and low `cache_mb` for `Adhoc`.
+
 ```sql
--- Overall cache by object type
 SELECT
     objtype         AS plan_type,
     COUNT(*)        AS plan_count,
@@ -350,8 +425,11 @@ GROUP BY objtype
 ORDER BY cache_mb DESC;
 ```
 
+#### Single-use ad hoc plans wasting memory
+
+Counts ad-hoc plans that were compiled, used exactly once, and never reused — each consumes memory for a plan that will likely never execute again. If `wasted_mb` is significant (e.g., > 500 MB), enable "optimize for ad hoc workloads."
+
 ```sql
--- Single-use ad hoc plans wasting memory
 SELECT
     COUNT(*)                        AS single_use_plans,
     SUM(size_in_bytes) / 1048576.0  AS wasted_mb
@@ -360,8 +438,11 @@ WHERE usecounts = 1
   AND objtype = 'Adhoc';
 ```
 
+#### Top 20 most expensive cached plans by total logical reads
+
+Identifies the plans that have consumed the most buffer pool pages across all executions. High `total_logical_reads` indicates queries that scan large amounts of data — candidates for index optimization or query rewrite.
+
 ```sql
--- Top 20 most expensive cached plans by total logical reads
 SELECT TOP 20
     total_logical_reads / execution_count
                                     AS avg_logical_reads,
@@ -388,42 +469,62 @@ ORDER BY total_logical_reads DESC;
 >
 > Find the plan handle from `sys.dm_exec_cached_plans` and run `DBCC FREEPROCCACHE(<plan_handle>);` to evict just that plan. The rest of the cache remains intact, and only the one problematic query recompiles on its next execution.
 
+#### Flush the entire plan cache
+
 ```sql
--- Flush entire plan cache (causes full recompilation storm)
 DBCC FREEPROCCACHE;
 ```
 
+#### Flush a single plan by handle (production-safe)
+
 ```sql
--- Flush a single plan by handle (safe for production)
 DBCC FREEPROCCACHE(<plan_handle>);
 ```
 
+#### Flush the plan cache for a specific database
+
 ```sql
--- Flush plan cache for a specific database
 DBCC FLUSHPROCINDB(<database_id>);
 ```
 
+#### Flush only ad hoc and prepared plans, keep stored procedure plans
+
+`WITH MARK_IN_USE_FOR_REMOVAL` lets currently executing queries finish before their plans are evicted — plans are not yanked mid-execution. Stored procedure, trigger, and view plans in `CACHESTORE_OBJCP` are untouched; only `CACHESTORE_SQLCP` (ad-hoc and prepared plans) is cleared. This is safer than `DBCC FREEPROCCACHE` when the goal is recovering memory from single-use plan bloat while preserving compiled procedure plans.
+
 ```sql
--- Drop clean buffer pool pages (dev/test only — cold cache on prod)
+DBCC FREESYSTEMCACHE('SQL Plans') WITH MARK_IN_USE_FOR_REMOVAL;
+```
+
+#### Flush the plan cache for the current database (SQL Server 2016+)
+
+Clears only plans belonging to the current database context without affecting other databases on the instance. Equivalent to `DBCC FLUSHPROCINDB` but usable by non-sysadmin principals with `ALTER` permission on the database.
+
+```sql
+ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE;
+```
+
+#### Drop clean buffer pool pages (dev/test only)
+
+```sql
 DBCC DROPCLEANBUFFERS;
 ```
 
+#### Check current max server memory setting
+
 ```sql
--- Check current max server memory setting
 SELECT name, value_in_use
 FROM sys.configurations
 WHERE name = 'max server memory (MB)';
 ```
 
+#### Set max server memory
+
 ```sql
--- Set max server memory (leave 10-15% for OS)
 EXEC sp_configure 'max server memory (MB)', 28672;
 RECONFIGURE;
 ```
 
----
-
-### Related
+## Related
 
 - [wait-stats-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis) — `PAGEIOLATCH_SH` and `RESOURCE_SEMAPHORE` are the wait types indicating buffer pool problems
 - [query-plan-analysis](https://alp78.github.io/elysium/04-SQL-Server/Performance/query-plan-analysis) — Cardinality estimation errors cause over-sized memory grants
@@ -431,7 +532,11 @@ RECONFIGURE;
 - [index-maintenance](https://alp78.github.io/elysium/04-SQL-Server/Performance/index-maintenance) — Fragmented indexes cause excessive page reads that evict good pages from the buffer pool
 - [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/Administration/essential-dba-queries) — Combined health dashboard queries
 
-### References
+## References
 
-- [Server Memory Configuration (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/server-memory-server-configuration-options)
+- [Memory Management Architecture Guide (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/relational-databases/memory-management-architecture-guide)
+- [Server Memory Configuration Options (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/server-memory-server-configuration-options)
+- [Enable the Lock Pages in Memory Option (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/enable-the-lock-pages-in-memory-option-windows)
 - [sys.dm_os_memory_clerks (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-os-memory-clerks-transact-sql)
+- [Troubleshoot Memory Grant Issues (Microsoft Docs)](https://learn.microsoft.com/en-us/troubleshoot/sql/database-engine/performance/troubleshoot-memory-grant-issues)
+- [SQL Server Buffer Manager Object (Microsoft Docs)](https://learn.microsoft.com/en-us/sql/relational-databases/performance-monitor/sql-server-buffer-manager-object)

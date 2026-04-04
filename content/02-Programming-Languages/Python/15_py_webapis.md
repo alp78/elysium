@@ -1,6 +1,6 @@
 ---
 tags: [api, python]
-aliases: [REST API, HTTP client, web server, FastAPI, ASP.NET, Flask, minimal API, requests]
+aliases: [REST API, HTTP client, web server, FastAPI, Flask, requests]
 description: "Python web and APIs reference with executable examples and cell outputs — covers HTTP clients with requests/httpx, REST API building with FastAPI and Flask, and authentication patterns. See [15_cs_webapis](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/15_cs_webapis) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -15,6 +15,8 @@ status: complete
 > — **Greg Brockman**
 
 ## HTTP Clients & REST API Calls
+
+`requests` and `httpx` are the two standard Python HTTP libraries. `requests` is synchronous and has no default timeout — best for simple scripts and one-off calls. `httpx` adds async support, connection pooling, and enforced timeouts — better suited for production pipelines. Import the full set of libraries used across this section.
 
 ```python
 import requests
@@ -34,6 +36,10 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic import ConfigDict, EmailStr
 from typing import Literal
 ```
+
+### Making HTTP requests with requests
+
+The `requests` library covers GET, POST, and all standard HTTP verbs with a simple, consistent API. These cells cover the most common patterns: GET with query params, POST with JSON body, custom headers, and status code handling.
 
 #### requests — REST API sync GET and response parsing
 
@@ -69,10 +75,9 @@ data['args']  # Args echoed
 
 #### requests.post — send JSON data
 
-```python
-# POST — send a JSON body to an API endpoint
-# Financial example: submit trade order, upload events, trigger pipeline.
+Pass a Python dict to `json=` — `requests` serializes it to JSON and sets `Content-Type: application/json` automatically. The server echoes the body in `resp.json()["json"]`. Python equivalent of C#'s `HttpClient.PostAsync` with `StringContent` and explicit UTF-8 encoding.
 
+```python
 trade_order = {
     "ticker": "AAPL",
     "side": "BUY",
@@ -93,9 +98,9 @@ data['json']  # Body echoed
 
 #### requests headers — API keys and Bearer token authentication
 
-```python
-# Custom headers — API keys, bearer tokens for financial data providers
+Pass a `headers` dict to any request call. For headers shared across multiple calls, create a `requests.Session()` and call `session.headers.update(headers)` once — the session sends them on every request. Never hardcode API keys; load them from environment variables or a secrets manager.
 
+```python
 headers = {
     "Authorization": "Bearer sk_demo_fake_key_12345",
     "X-Client-Id": "trading-pipeline-v2",
@@ -115,24 +120,19 @@ for k, v in resp.json()["headers"].items():
 
 #### requests .status_code, .raise_for_status() — HTTP error handling
 
-```python
-# Status code handling — check success/failure, raise_for_status()
+`resp.ok` is `True` for 2xx status codes. `raise_for_status()` raises `requests.HTTPError` for 4xx and 5xx — equivalent to C#'s `EnsureSuccessStatusCode()`. Call it after every request in production pipelines to fail fast rather than silently processing empty responses.
 
+```python
 for status_code in [200, 201, 400, 401, 404, 500]:
     resp = requests.get(f"https://httpbin.org/status/{status_code}")
     print(f"  {status_code}: {resp.status_code} {'OK' if resp.ok else 'FAILED'}")
 
-# raise_for_status() — raises HTTPError for 4xx/5xx
 try:
     resp = requests.get("https://httpbin.org/status/500")
     resp.raise_for_status()
 except requests.HTTPError as e:
     print(f"\n  raise_for_status() caught: {e}")
 ```
-
-> [!info] raise_for_status()
->
-> Raises `HTTPError` for 4xx/5xx responses. Without it, a 500 response is silently treated as success. Call it after every request in production code.
 
       200: 200 OK
       201: 201 OK
@@ -142,6 +142,10 @@ except requests.HTTPError as e:
       500: 500 FAILED
     
       raise_for_status() caught: 500 Server Error: INTERNAL SERVER ERROR for url: https://httpbin.org/status/500
+
+### Async and concurrent calls with httpx
+
+`httpx` is a modern drop-in replacement for `requests` that adds async support and enforces timeouts by default. Use it when you need concurrent API calls (`AsyncClient`) or connection pooling (`Client`) for high-throughput pipelines.
 
 #### httpx — sync usage (drop-in requests replacement)
 
@@ -158,10 +162,9 @@ resp.json()['args']  # Args
 
 #### httpx.Client — connection pooling
 
-```python
-# Client with connection pooling — reuse connections across requests
-# C# equivalent: single HttpClient instance (IHttpClientFactory in DI)
+Use `httpx.Client` as a context manager to pool connections across multiple requests to the same host, reducing TCP handshake overhead. C# equivalent: a single long-lived `HttpClient` instance or `IHttpClientFactory` in DI.
 
+```python
 with httpx.Client(base_url="https://httpbin.org", timeout=10.0) as client:
     r1 = client.get("/get", params={"req": "1"})
     r2 = client.get("/get", params={"req": "2"})
@@ -189,9 +192,6 @@ with httpx.Client(base_url="https://httpbin.org", timeout=10.0) as client:
 > Wrap the fetch inside `async with asyncio.Semaphore(n):` to cap concurrent connections. For free-tier financial APIs (e.g., Twelve Data 8 req/min), use `Semaphore(3)` combined with `asyncio.sleep(0.5)` between batches. See [13_py_advancedpipelines](https://alp78.github.io/elysium/02-Programming-Languages/Python/13_py_advancedpipelines) for the complete pattern.
 
 ```python
-# Async — fetch multiple tickers concurrently
-# Financial example: fetch quotes for 6 tickers in parallel
-
 async def fetch_ticker_data(client, ticker):
     resp = await client.get("/get", params={"ticker": ticker})
     return {"ticker": ticker, "status": resp.status_code}
@@ -222,8 +222,6 @@ len(results), f"{elapsed:.2f}s"  # tickers fetched, elapsed
 #### requests vs httpx comparison
 
 ```python
-# requests vs httpx feature comparison
-
 comparison = pd.DataFrame({
     "Feature": ["Sync support", "Async support", "HTTP/2", "Default timeout",
                "Connection pooling", "Streaming", "C# equivalent"],
@@ -284,6 +282,10 @@ comparison.style.set_properties(**{"text-align": "left"}).hide(axis="index")
 
 ## REST API Patterns for Data Engineering
 
+### Pagination, retry, and bulk batching
+
+The three core patterns for robust API integration: pagination to traverse large datasets, exponential backoff to recover from transient failures, and bulk batching to minimize round trips. These patterns apply equally whether you use `requests`, `httpx`, or a vendor SDK.
+
 #### REST API pagination — fetch data in pages with requests
 
 Three essential patterns for API integrations: **pagination** loops through pages until exhausted, **retry with exponential backoff** handles transient 429/5xx errors, and **bulk POST** batches records into one request to reduce round trips by 10-100x. For streaming APIs (WebSocket, SSE), use async streaming instead.
@@ -329,8 +331,6 @@ len(pages)  # Total pages fetched
 #### requests retry with exponential backoff — transient error recovery
 
 ```python
-# Retry — recover from transient API failures with increasing delay
-
 def fetch_with_retry(url, max_retries=3, base_delay=0.5):
     for attempt in range(max_retries):
         try:
@@ -357,9 +357,6 @@ resp.status_code  # Success
 #### requests bulk POST — batch multiple records in one call
 
 ```python
-# Bulk POST — send multiple records in one request
-# Financial example: batch-submit trade confirmations
-
 batch = [
     {"trade_id": "TRD_001", "ticker": "AAPL", "qty": 100, "price": 178.50},
     {"trade_id": "TRD_002", "ticker": "MSFT", "qty": 50,  "price": 415.20},
@@ -379,6 +376,34 @@ len(data['json']['trades'])  # trades received by server
 
 ## Building a REST API (FastAPI)
 
+Define Pydantic models for request and response shapes, decorate handler functions with `@app.get`/`post`/`delete`, and serve with `uvicorn`. FastAPI validates request bodies against the declared Pydantic models before the handler runs, auto-generates Swagger docs at `/docs`, and returns 422 responses for invalid input.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    C["HTTP Client\nrequests / httpx"] -->|"HTTP Request"| MW["FastAPI / Starlette\nASGI middleware"]
+    MW --> R["Route matching\n@app.get / post / delete"]
+    R --> V["Pydantic validation\nBaseModel.__init__()"]
+    V --> H["Handler function\n(Python def / async def)"]
+    H -->|"return dict\nreturn BaseModel"| S["JSON Response\n200 / 201 / 404 / 409"]
+    V -->|"ValidationError"| E["422 Unprocessable Entity\n{detail: [...]}"]
+```
+
+### Pydantic models and app setup
+
+Define all request and response shapes as Pydantic `BaseModel` subclasses. FastAPI uses these models to validate incoming requests automatically, generate 422 error responses on invalid input, and build Swagger documentation.
+
 #### Pydantic models — REST API request/response schemas
 
 Define Pydantic models for request/response validation. `@app.get`/`post`/`delete` decorators wire handlers to routes. FastAPI auto-generates Swagger docs at `/docs`. `uvicorn` serves the ASGI app. Type hints drive validation, serialization, and documentation simultaneously.
@@ -396,9 +421,6 @@ Define Pydantic models for request/response validation. `@app.get`/`post`/`delet
 > - Add `@field_validator` and `@model_validator` to Pydantic models for business rules (e.g., `end_date > start_date`, valid ticker format)
 
 ```python
-# Pydantic models — like C# record types
-# FastAPI auto-validates incoming requests against these.
-
 class Trade(BaseModel):
     trade_id: str = Field(..., description="Unique trade identifier")
     ticker: str = Field(..., min_length=1, max_length=5)
@@ -420,9 +442,9 @@ class PortfolioPosition(BaseModel):
 
 #### FastAPI app and in-memory store
 
-```python
-# FastAPI app instance + in-memory data store
+Instantiate `FastAPI()` with a title and version for the Swagger documentation header. The in-memory `dict` is sufficient for notebook testing; in production, inject a database connection via FastAPI's dependency injection (`Depends(get_db)`).
 
+```python
 app = FastAPI(title="Trading Pipeline API", version="1.0.0")
 
 # In-memory store (in production: database)
@@ -434,11 +456,15 @@ positions: dict[str, PortfolioPosition] = {
 }
 ```
 
+### Route handlers
+
+Each route handler is a plain Python function decorated with `@app.get`, `@app.post`, or `@app.delete`. FastAPI validates parameters and request bodies against the declared types before the handler runs. Use `HTTPException` to return error responses with the appropriate status code.
+
 #### FastAPI REST API — GET endpoints health, positions
 
-```python
-# GET endpoints — read data from the API
+The health endpoint returns a fixed JSON response used by Kubernetes liveness probes. The positions endpoint accepts an optional `ticker` query parameter (`Query(None)`) and raises `HTTPException(404)` for missing tickers — FastAPI converts it to `{"detail": "..."}` automatically.
 
+```python
 @app.get("/health")
 def health_check():
     """Health check endpoint — used by load balancers, K8s probes."""
@@ -465,9 +491,9 @@ def get_position(ticker: str):
 
 #### FastAPI REST API — POST endpoint submit trades
 
-```python
-# POST endpoint — create new trade orders with Pydantic validation
+`response_model=TradeResponse` tells FastAPI to serialize the return value using `TradeResponse`'s schema, excluding any extra fields from the internal `Trade` model. `status_code=201` sets the default success response code. FastAPI validates the request body against `Trade` before the handler runs.
 
+```python
 @app.post("/trades", response_model=TradeResponse, status_code=201)
 def submit_trade(trade: Trade):
     """Submit a new trade order. Pydantic validates the request body."""
@@ -495,9 +521,9 @@ def get_trade(trade_id: str):
 
 #### FastAPI REST API — DELETE endpoint cancel trades
 
-```python
-# DELETE endpoint — remove a trade by ID
+`HTTPException(404)` fast-exits the handler — FastAPI converts it to `{"detail": "Trade TRD_001 not found"}`. No need to manually build error dicts or set response status codes.
 
+```python
 @app.delete("/trades/{trade_id}")
 def cancel_trade(trade_id: str):
     """Cancel (delete) a trade."""
@@ -507,6 +533,10 @@ def cancel_trade(trade_id: str):
     return {"status": "CANCELLED", "trade_id": trade_id}
 ```
 
+### Running and testing the server
+
+Run the FastAPI application in a background thread for notebook testing. `uvicorn.Server` exposes a programmatic API for startup and graceful shutdown — unlike `uvicorn.run()`, it does not block the kernel.
+
 #### uvicorn.Server — start FastAPI server programmatically in background
 
 > [!info] Uvicorn in Background Thread
@@ -514,8 +544,6 @@ def cancel_trade(trade_id: str):
 > `uvicorn.Server` API allows programmatic startup and shutdown from notebook cells. Unlike `uvicorn.run()` which blocks forever, the Server API runs in a background thread.
 
 ```python
-# Run uvicorn in a background thread so we can test from the next cells
-
 PORT = 8769
 
 config = uvicorn.Config(app, host="127.0.0.1", port=PORT, log_level="warning")
@@ -535,10 +563,10 @@ PORT  # FastAPI server running on http://127.0.0.1
 
 #### Test FastAPI GET endpoints with httpx — health and positions
 
-```python
-# Test the API with httpx — same as calling any external API
+Use `httpx` to call the live server, treating it exactly like any external API. This exercises the full FastAPI stack — Pydantic validation, exception handling, and response serialization — without any mocking.
 
-BASE = "http://127.0.0.1:8765"
+```python
+BASE = f"http://127.0.0.1:{PORT}"
 
 # Health check
 resp = httpx.get(f"{BASE}/health")
@@ -570,9 +598,9 @@ resp.json()  # {resp.status_code}
 
 #### Test FastAPI POST endpoint with httpx — submit and validate trades
 
-```python
-# POST trades — submit orders and test validation
+Submit valid trades, then test the conflict (409) and validation error (422) branches. FastAPI returns `{"detail": [...]}` for 422 responses — each element describes one failed constraint. The output may show 409 for both trades if the server state persists from the previous run.
 
+```python
 trades = [
     {"trade_id": "TRD_001", "ticker": "AAPL", "side": "BUY", "quantity": 100, "price": 178.50},
     {"trade_id": "TRD_002", "ticker": "MSFT", "side": "SELL", "quantity": 50, "price": 415.20},
@@ -599,9 +627,9 @@ resp.json()['detail'][0]['msg']  # {resp.status_code}
 
 #### Test FastAPI GET and DELETE endpoints with httpx — list and cancel trades
 
-```python
-# GET all trades and DELETE one
+Verify that `DELETE /trades/{id}` removes the trade and that subsequent `GET /trades` reflects the updated count. Tests the full lifecycle: submit → list → delete → verify.
 
+```python
 resp = httpx.get(f"{BASE}/trades")
 resp.json()['count']  # trades
 
@@ -621,11 +649,9 @@ resp.json()['count']  # Remaining trades
 
 #### uvicorn graceful shutdown — stop FastAPI server
 
-```python
-# ─── Shutdown the FastAPI server ───
-# Call server.should_exit to gracefully stop uvicorn.
-# Without this, the server keeps running until the kernel restarts.
+Set `server.should_exit = True` and join the thread to ensure the server finishes handling in-flight requests before releasing the port. Without this, the server continues running until the Jupyter kernel restarts, and subsequent cells cannot rebind to the same port.
 
+```python
 server.should_exit = True
 server_thread.join(timeout=3)
 
@@ -640,8 +666,6 @@ else:
 #### FastAPI vs C# ASP.NET mapping
 
 ```python
-# Python FastAPI vs C# ASP.NET Minimal API comparison
-
 pd.DataFrame({
     "Feature": ["Define GET route", "Define POST route", "Define DELETE route",
                "404 error", "Return JSON", "Request model",
@@ -740,6 +764,10 @@ This section covers Pydantic from basics to production patterns:
 - JSON Schema generation for API documentation
 - Production checklist — 12 rules for safe APIs
 
+### Field types and constraints
+
+`BaseModel` is Pydantic's core class. Fields are declared as typed class attributes; Pydantic validates and coerces values on construction. `Field()` adds constraints, descriptions, and aliases to individual fields.
+
 #### BaseModel basics — field types, defaults, and validation
 
 Define a model with typed fields. Pydantic validates on construction: wrong types raise `ValidationError`.
@@ -747,7 +775,6 @@ Auto-coercion converts compatible types (`"25"` → `int 25`). `model_dump()` se
 Fields without defaults are required; fields with defaults are optional.
 
 ```python
-# Basic model — fields with types, defaults, and required markers
 class User(BaseModel):
     name: str                          # required — no default
     age: int                           # required, auto-coerces "30" -> 30
@@ -783,8 +810,6 @@ Use `Field(gt=0, max_length=5, pattern=r"^[A-Z]+$")` to constrain values at the 
 Demonstrates rejection of: too-short IDs, lowercase tickers, invalid sides, negative quantities, zero prices.
 
 ```python
-# Field() — add constraints, descriptions, and examples to fields
-
 class TradeOrder(BaseModel):
     trade_id: str = Field(..., min_length=3, max_length=20, description="Unique trade ID")
     ticker: str = Field(..., min_length=1, max_length=5, pattern=r"^[A-Z]+$",
@@ -820,6 +845,10 @@ for bad_data, label in [
       negative qty: REJECTED — Input should be greater than 0
       zero price: REJECTED — Input should be greater than 0
 
+### Custom validators
+
+For validation logic that cannot be expressed as a `Field()` constraint — format checks, normalization, or cross-field rules — use `@field_validator` and `@model_validator`.
+
 #### Custom validators — `@field_validator` and `@model_validator`
 
 `@field_validator("name")` adds custom validation to a single field (e.g. enforce snake_case, require dataset.table format).
@@ -827,9 +856,6 @@ for bad_data, label in [
 Both raise `ValueError` with a descriptive message that Pydantic wraps into `ValidationError`.
 
 ```python
-# @field_validator — custom validation logic per field
-# @model_validator — cross-field validation (access multiple fields)
-
 class PipelineConfig(BaseModel):
     name: str
     source_table: str
@@ -886,6 +912,10 @@ for bad, label in [
       table without dataset: REJECTED — Value error, table must be dataset.table format (e.g. raw.events)
       end before start: REJECTED — Value error, end_date (2024-01-01) must be after start_date (2024-06-01)
 
+### Nested models and enums
+
+Build complex schemas by composing Pydantic models. Nested models are validated recursively; `Enum` and `Literal` restrict fields to fixed value sets.
+
 #### Nested models and enums — compose complex API schemas
 
 Pydantic models can contain other models (`legs: list[OrderLeg]`) and enums (`status: OrderStatus`).
@@ -893,8 +923,6 @@ Pydantic models can contain other models (`legs: list[OrderLeg]`) and enums (`st
 cross-field rules (PAIRS strategy requires exactly 2 legs). `model_dump_json()` serializes the entire tree.
 
 ```python
-# Nested models — compose complex schemas from smaller models
-
 class OrderStatus(str, Enum):
     PENDING = "pending"
     FILLED = "filled"
@@ -949,6 +977,10 @@ except Exception as e:
     {"order_id":"MLO_001","strategy":"PAIRS","legs":[{"ticker":"AAPL","side":"BUY","quantity":100,"price...
     PAIRS+3 legs: REJECTED — Value error, PAIRS strategy requires exactly 2 legs
 
+### Serialization and immutability
+
+Control how models serialize to JSON. Use field aliases to produce camelCase API responses while keeping Python's snake_case internally. Frozen models prevent mutation after construction.
+
 #### Serialization — `model_dump`, `model_dump_json`, and field aliases
 
 Control JSON output with `by_alias=True` for camelCase API responses (`pipeline_id` → `pipelineId`).
@@ -956,8 +988,6 @@ Control JSON output with `by_alias=True` for camelCase API responses (`pipeline_
 formatted JSON strings. `ConfigDict(populate_by_name=True)` accepts both alias and field name on input.
 
 ```python
-# Serialization — convert models to dict/JSON with control over output
-
 class APIResponse(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,      # accept both alias and field name
@@ -971,8 +1001,6 @@ class APIResponse(BaseModel):
 # Create with Python snake_case names
 resp = APIResponse(pipeline_id="etl_daily", row_count=15000, status="success")
 
-# Serialize with aliases (camelCase for JSON API)
-# Serialize with aliases (camelCase for JSON API)
 resp.model_dump(by_alias=True)  # by_alias=True (for API response)
 
 # Serialize with field names (for internal use)
@@ -1055,9 +1083,6 @@ Swagger/OpenAPI documentation automatically. The schema includes field types, co
 descriptions, and required/optional markers — no manual documentation needed.
 
 ```python
-# model_json_schema() — generate JSON Schema for API documentation
-# FastAPI uses this automatically to build Swagger/OpenAPI docs
-
 schema = TradeOrder.model_json_schema()
 json.dumps(schema, indent=2)
 ```
@@ -1126,6 +1151,10 @@ json.dumps(schema, indent=2)
       "type": "object"
     }
 
+### Production patterns
+
+The checklist below distills 12 rules for production Pydantic APIs — from constraint coverage to alias usage to strict mode. Each rule includes the reason it matters.
+
 #### Production checklist — 12 rules for safe Pydantic APIs
 
 Summary table of production best practices: always use `BaseModel` (not dicts), always add
@@ -1133,8 +1162,6 @@ Summary table of production best practices: always use `BaseModel` (not dicts), 
 use aliases for public APIs, freeze config models, enable strict mode for financial data.
 
 ```python
-# Production Pydantic checklist — rules for safe, maintainable APIs
-
 checklist = pd.DataFrame({
     "Rule": [
         "Always use BaseModel for request/response",

@@ -1,5 +1,5 @@
 ---
-tags: [pipeline, python, pandas, polars]
+tags: [python, pandas, polars, dataframes]
 aliases:
   - groupby, agg, window functions, join, concat, pivot, melt
 description: "Pandas/Polars DataFrame reference 05/10 — Aggregation & Reshaping (groupby, agg, window functions, joins, pivot, melt). Side-by-side executable examples with cell outputs."
@@ -182,8 +182,7 @@ display(
 
 ## Multiple Grouping Columns
 
-
-- **DateTime Accessor**: Extract date parts: .dt.year(), .dt.month(), .dt.weekday().
+Pass a list of column names to `groupby()` / `group_by()` to create composite group keys. A common pattern is extracting a date part (year, month, quarter) as a new column and grouping on both symbol and that period — giving per-symbol per-period aggregates without a MultiIndex. Polars expresses the extraction inline with `.dt.year()` in a `.with_columns()` step; Pandas extracts to a new column first via `pd.to_datetime(...).dt.year`.
 
 ```python
 # Pandas: group by symbol + year
@@ -264,7 +263,7 @@ display(
 
 ## Multiple Aggregation Functions
 
-
+Both libraries support computing multiple aggregation functions in a single `groupby` pass, avoiding the cost of repeated scans. Pandas uses **named aggregation** syntax — `.agg(output_col=("input_col", "func"))` — which produces a flat DataFrame with explicitly named columns. Polars uses a list of expressions in `.agg()`, each chained with `.alias()`. Named aggregation in Pandas is preferred over the dict-of-lists form `.agg({"col": ["mean", "sum"]})`, which produces confusing MultiIndex column headers.
 
 ```python
 # Pandas: named aggregation
@@ -415,8 +414,7 @@ display(
 
 ## Transform: Same-Length Output
 
-
-- **Tail**: Return the last N rows.
+`groupby().transform()` broadcasts a group-level statistic back to every row in the original DataFrame without collapsing it. Use this when you need both the raw value and its group context on the same row — e.g., "what is ASML's close price vs its all-time group mean?". The output is always the same length as the input. Pandas uses `.transform("mean")` for this; Polars uses `.mean().over("group_col")` (covered in detail in Part 2).
 
 ```python
 # Pandas: group mean alongside each row
@@ -521,32 +519,16 @@ display(asml_pd[["symbol", "date", "close", "group_avg", "vs_avg"]].tail(10))
   </tbody>
 </table>
 
-### Polars: .over() window expression
-
-
-- **Window (.over)**: Compute a value per row based on its group, without collapsing rows. Like SQL OVER(PARTITION BY).
-- **With Columns**: Add new columns or replace existing ones. All original columns are kept.
-
-```python
-# Polars: .over() — same concept, different syntax
-display(
-    ohlcv_pl.filter(pl.col("symbol") == "ASML.AS")
-    .with_columns(
-        pl.col("close").mean().over("symbol").round(2).alias("group_avg"),
-    )
-    .with_columns(
-        ((pl.col("close") - pl.col("group_avg")) / pl.col("group_avg") * 100).round(2).alias("vs_avg"),
-    )
-    .select("symbol", "date", "close", "group_avg", "vs_avg")
-    .tail(10)
-)
-```
-
-<div><!-- shape: (10, 5) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>group_avg</th><th>vs_avg</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>2026-02-27</td><td>1233.4</td><td>671.35</td><td>83.72</td></tr><tr><td>ASML.AS</td><td>2026-03-02</td><td>1210.4</td><td>671.35</td><td>80.29</td></tr><tr><td>ASML.AS</td><td>2026-03-03</td><td>1161.8</td><td>671.35</td><td>73.05</td></tr><tr><td>ASML.AS</td><td>2026-03-04</td><td>1199.8</td><td>671.35</td><td>78.71</td></tr><tr><td>ASML.AS</td><td>2026-03-05</td><td>1186.0</td><td>671.35</td><td>76.66</td></tr><tr><td>ASML.AS</td><td>2026-03-06</td><td>1147.0</td><td>671.35</td><td>70.85</td></tr><tr><td>ASML.AS</td><td>2026-03-09</td><td>1147.6</td><td>671.35</td><td>70.94</td></tr><tr><td>ASML.AS</td><td>2026-03-10</td><td>1200.0</td><td>671.35</td><td>78.74</td></tr><tr><td>ASML.AS</td><td>2026-03-11</td><td>1198.8</td><td>671.35</td><td>78.57</td></tr><tr><td>ASML.AS</td><td>2026-03-12</td><td>1190.8</td><td>671.35</td><td>77.37</td></tr></tbody></table></div>
+> [!info] Polars equivalent: `.over()` window expression
+>
+> Polars replaces `.transform()` with `.mean().over("symbol")` inside `.with_columns()`.
+> The result is identical — one group mean value broadcast across all rows — but Polars
+> computes it as a window expression without mutating the DataFrame. See the full
+> `.over()` examples in **Part 2 — Window Functions** below.
 
 ## Sector Analysis with Scores
 
-
+Group the `scores` dimension table by `sector` to compute portfolio-level metrics: count of constituents, average composite and momentum scores, and total index weight per sector. This is a typical index analytics query — the result is a small 10-row frame (one row per sector) regardless of how many stocks are in the dataset.
 
 ```python
 # Pandas: sector aggregation
@@ -671,7 +653,16 @@ display(
 
 ## Group By + Sort Pattern
 
+To retrieve the top-N rows per group (e.g., top 3 stocks per sector by rank), pre-sort the DataFrame and then call `.group_by().head(n)`. This is more efficient than filtering with `rank().over()` and avoids a second sort pass. Polars `.group_by()` is unordered by default, so the pre-sort is essential — it determines which rows each group "sees first".
 
+> [!info] Pandas equivalent: sort + groupby + head
+>
+> Pandas has no direct `.group_by().head()` method. The equivalent pattern is:
+> ```python
+> scores_pd.sort_values("composite_rank").groupby("sector", as_index=False).head(3)
+> ```
+> This works but returns rows in the original sorted order across all groups, not grouped.
+> Chain `.sort_values(["sector", "composite_rank"])` after to match the Polars output layout.
 
 ```python
 # Top 3 stocks per sector by composite score (Polars)
@@ -699,13 +690,18 @@ display(
 | Filter groups | .filter(func) | .filter() after group_by |
 
 ---
-# Part 2: Window Functions
+## Part 2: Window Functions
 
 ## Window Transform
 
+Window functions compute per-row values that depend on a partition (group) of the data — without collapsing rows. They are the DataFrame equivalent of SQL `OVER(PARTITION BY col ORDER BY ...)`. Common uses: broadcasting a group mean or sum back to each row, computing within-group ranks, and rolling statistics scoped to a symbol's own history.
+
 Window functions like `PARTITION BY` and `ROWS BETWEEN` appear across SQL and DataFrame APIs. The SQL Server gold layer in [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) applies the same ranking and running-total logic, and [bq-advanced](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-advanced) covers BigQuery window functions for identical analytical needs.
 
-### Pandas Window Transform — groupby().transform()
+### Pandas | Window transform (groupby().transform())
+
+`.groupby().transform(func)` applies `func` to each group and broadcasts the result back to the full-length DataFrame. It is the Pandas idiom for "add a group-level column without collapsing rows". The function receives each group's Series and must return a same-length Series. Common functions: `"mean"`, `"sum"`, `"rank"`, or a custom lambda.
+
 ```python
 asml=ohlcv_pd[ohlcv_pd["symbol"]=="ASML.AS"].copy()
 asml["avg_close"]=asml.groupby("symbol")["close"].transform("mean")
@@ -797,7 +793,10 @@ display(asml[["date","close","avg_close","rank"]].tail(10))
   </tbody>
 </table>
 
-### Polars Window Transform — .over()
+### Polars | Window transform (.over())
+
+`.expr.over("group_col")` in Polars computes the expression within each partition defined by `group_col` and broadcasts the result back to each row — the exact equivalent of Pandas `.transform()`. Unlike `.transform()`, `.over()` can be chained with any expression (`.mean()`, `.rank()`, `.cum_sum()`) inside a single `.with_columns()` call without multiple passes. Multiple `.over()` expressions in one `.with_columns()` are computed in parallel.
+
 ```python
 display(
     ohlcv_pl.filter(pl.col("symbol")=="ASML.AS")
@@ -812,10 +811,14 @@ display(
 
 ## Rolling Windows
 
+A rolling window aggregation computes a statistic over the last N consecutive rows per row — the classic moving average. Pandas uses `.rolling(n).mean()` / `.rolling(n).max()` on a Series. Polars uses `.rolling_mean(window_size=n)` / `.rolling_max(window_size=n)` as expressions in `.with_columns()`. Both produce `null` / `NaN` for the first `n-1` rows where the window is incomplete.
 
-- **Rolling Window**: Compute statistics over a sliding window of N consecutive rows.
-- **Assign**: Add columns via method chaining (Pandas). Returns new DataFrame.
-- **Tail**: Return the last N rows.
+> [!warning] Polars 1.x deprecated positional window size
+>
+> In Polars 0.x, `rolling_mean(7)` accepted the window size as a positional argument.
+> **Polars 1.x requires the keyword argument:** `rolling_mean(window_size=7)`.
+> The positional form raises a `DeprecationWarning` in 0.x and a `TypeError` in 1.x.
+> Always use `window_size=` explicitly to future-proof your code.
 
 ```python
 asml_s=ohlcv_pd[ohlcv_pd["symbol"]=="ASML.AS"].sort_values("date")
@@ -913,8 +916,8 @@ display(asml_s.assign(
 display(
     ohlcv_pl.filter(pl.col("symbol")=="ASML.AS").sort("date")
     .with_columns(
-        pl.col("close").rolling_mean(7).alias("sma_7"),
-        pl.col("close").rolling_max(30).alias("rolling_max"),
+        pl.col("close").rolling_mean(window_size=7).alias("sma_7"),
+        pl.col("close").rolling_max(window_size=30).alias("rolling_max"),
     ).select("date","close","sma_7","rolling_max").tail(10)
 )
 ```
@@ -923,11 +926,21 @@ display(
 
 ## Cumulative
 
-
-- **Cumulative Sum**: Running total from the first row to the current row.
-- **Cumulative Max**: Running maximum from the first row to the current row.
+Cumulative (running) aggregations compute a running total, maximum, or count from the first row to the current row. Use `cum_sum` on volume to track total shares traded to date; use `cum_max` on price to track the running all-time high. Both operations produce the same length as the input. Ensure the DataFrame is sorted by date before applying cumulative operations — both Pandas and Polars process rows in storage order.
 
 ```python
+# Pandas: cumulative volume and running high
+asml_pd_c = ohlcv_pd[ohlcv_pd["symbol"] == "ASML.AS"].sort_values("date")
+display(
+    asml_pd_c.assign(
+        cum_vol=asml_pd_c["volume"].cumsum(),
+        run_high=asml_pd_c["close"].cummax(),
+    )[["date", "close", "volume", "cum_vol", "run_high"]].tail(10)
+)
+```
+
+```python
+# Polars: cum_sum / cum_max
 display(
     ohlcv_pl.filter(pl.col("symbol")=="ASML.AS").sort("date")
     .with_columns(
@@ -941,12 +954,21 @@ display(
 
 ## Rank Within Groups
 
-
-- **Window (.over)**: Compute a value per row based on its group, without collapsing rows. Like SQL OVER(PARTITION BY).
-- **Rank**: Assign a rank number to each row within its group, ordered by a column.
-- **With Columns**: Add new columns or replace existing ones. All original columns are kept.
+Within-group ranking assigns each row a rank number based on its value within its group, without collapsing the DataFrame. Use this to find the top-N stocks per sector, or to flag outliers within a group. Polars uses `.rank(descending=True).over("sector")` inside `.with_columns()`. Pandas uses `.groupby()["col"].rank(ascending=False)`, which also broadcasts the rank back to every row.
 
 ```python
+# Pandas: rank within sector
+display(
+    scores_pd.assign(
+        sector_rank=scores_pd.groupby("sector")["composite_score"].rank(ascending=False)
+    )[["sector", "symbol", "composite_score", "sector_rank"]]
+    .sort_values(["sector", "sector_rank"])
+    .head(15)
+)
+```
+
+```python
+# Polars: .rank().over()
 display(
     scores_pl.with_columns(
         pl.col("composite_score").rank(descending=True).over("sector").alias("sector_rank")
@@ -959,11 +981,21 @@ display(
 
 ## Lead / Lag
 
-
-- **Shift (Lag/Lead)**: Access the previous row (shift(1)) or next row (shift(-1)) within each group.
-- **With Columns**: Add new columns or replace existing ones. All original columns are kept.
+Shift (lag/lead) accesses the value from a previous (`shift(1)`) or future (`shift(-1)`) row. Use lag to compute daily returns (`close / prev_close - 1`) or to detect price-direction changes. The first row of a lag series and the last row of a lead series are `NaN` (Pandas) or `null` (Polars). Both use `.shift(n)` with the same sign convention: positive = look back, negative = look forward.
 
 ```python
+# Pandas: shift
+asml_pd_s = ohlcv_pd[ohlcv_pd["symbol"] == "ASML.AS"].sort_values("date")
+display(
+    asml_pd_s.assign(
+        prev_close=asml_pd_s["close"].shift(1),
+        next_close=asml_pd_s["close"].shift(-1),
+    )[["date", "close", "prev_close", "next_close"]].tail(10)
+)
+```
+
+```python
+# Polars: shift
 display(
     ohlcv_pl.filter(pl.col("symbol")=="ASML.AS").sort("date")
     .with_columns(
@@ -980,13 +1012,15 @@ display(
 | Op | Pandas | Polars |
 |---|---|---|
 | Window avg | groupby().transform() | .mean().over() |
-| Rolling | .rolling(n).mean() | .rolling_mean(n) |
+| Rolling | .rolling(n).mean() | .rolling_mean(window_size=n) |
 | Cumulative | .cumsum() | .cum_sum() |
 | Rank | .rank() | .rank().over() |
 | Shift | .shift(n) | .shift(n) |
 
 ---
-# Part 3: Combining DataFrames
+## Part 3: Combining DataFrames
+
+Combining DataFrames covers joins (key-based row matching), concatenation (stacking frames), and set-based filters (anti/semi). Both Pandas and Polars use SQL-style join semantics: inner, left, right, full outer, anti, semi, cross. The key API difference is that Pandas uses `.merge()` / `pd.merge()` while Polars uses `.join()`.
 
 ```python
 # Additional datasets
@@ -1190,8 +1224,17 @@ display(result_pl.select("symbol", "date", "close", "composite_score").head(5))
 
 ## Anti Join
 
+An anti join returns rows from the left DataFrame that have **no match** in the right DataFrame. Use it to find coverage gaps: symbols in OHLCV that are not yet in the scores table, or securities missing from a dimension file. It is more readable than a `.merge()` followed by `df[df["col"].isna()]`.
 
-- **Unique**: Return distinct values or deduplicate rows.
+> [!info] No native Pandas anti join
+>
+> Pandas has no `how='anti'` parameter. The equivalent is a left join with an indicator column:
+> ```python
+> result = ohlcv_pd.merge(scores_pd[["symbol"]].drop_duplicates(),
+>                          on="symbol", how="left", indicator=True)
+> anti = result[result["_merge"] == "left_only"].drop(columns="_merge")
+> ```
+> Or use `~df["symbol"].isin(other["symbol"])` for simple key-exclusion filters.
 
 ```python
 # Polars: symbols in OHLCV not in scores
@@ -1206,8 +1249,15 @@ display(result)
 
 ## Semi Join
 
+A semi join returns rows from the left DataFrame that have **at least one match** in the right DataFrame — but it does not add any columns from the right side. Use it to filter a large fact table (OHLCV) down to only the symbols that exist in a dimension or scoring table, without risk of row duplication.
 
-- **Unique**: Return distinct values or deduplicate rows.
+> [!info] No native Pandas semi join
+>
+> Pandas has no `how='semi'` parameter. The equivalent filter is:
+> ```python
+> semi = ohlcv_pd[ohlcv_pd["symbol"].isin(scores_pd["symbol"].unique())]
+> ```
+> This is efficient for simple key membership tests but does not generalize to multi-column join keys.
 
 ```python
 result = ohlcv_pl.join(scores_pl.select("symbol").unique(), on="symbol", how="semi")
@@ -1218,7 +1268,13 @@ print(f"OHLCV rows with scores: {result.height} (of {ohlcv_pl.height})")
 
 ## Cross Join
 
+A cross join produces the Cartesian product of two DataFrames: every row in the left is paired with every row in the right. Result row count = `len(left) × len(right)`. Use this to generate all (symbol, date) combinations for a universe/calendar scaffold, then left-join actual prices onto it to expose gaps.
 
+> [!warning] Row explosion risk
+>
+> Joining two tables of 50 and 1331 rows produces 66,550 rows. Joining OHLCV (66K rows)
+> with itself produces 4.4 billion rows. Always apply `.select()` to the smallest possible
+> subset before a cross join.
 
 ```python
 syms = pl.DataFrame({"symbol": ["ASML.AS", "MC.PA"]})
@@ -1230,8 +1286,7 @@ display(syms.join(dts, how="cross"))
 
 ## Vertical Concat
 
-
-- **Concatenation**: Stack DataFrames vertically (add rows) or horizontally (add columns).
+Vertical concatenation stacks DataFrames on top of each other (adds rows). Both DataFrames must have compatible schemas — same column names and compatible types. Use this to combine data from multiple time periods, markets, or API pages into a single frame. Polars uses `pl.concat([df1, df2])`; Pandas uses `pd.concat([df1, df2], ignore_index=True)`. Always pass `ignore_index=True` in Pandas to reset the row index after concat — without it, duplicate index values are preserved, which breaks many downstream operations.
 
 ```python
 # Pandas
@@ -1298,8 +1353,13 @@ display(combined_pl.select("symbol", "date", "close"))
 
 ## Horizontal Concat
 
+Horizontal concatenation adds columns side by side. Both DataFrames must have the same number of rows and no overlapping column names. Use this to attach a computed Series or a separate feature frame to an existing DataFrame. Polars uses `pl.concat([left, right], how="horizontal")`.
 
-- **Concatenation**: Stack DataFrames vertically (add rows) or horizontally (add columns).
+> [!info] Pandas equivalent: `pd.concat([left, right], axis=1)`
+>
+> In Pandas, horizontal concat is `pd.concat([df1, df2], axis=1)`. Unlike Polars, Pandas
+> aligns on the index, so mismatched indexes produce `NaN` fill rather than an error.
+> Use `.reset_index(drop=True)` on both frames before concat to avoid unintended alignment.
 
 ```python
 left = pl.DataFrame({"symbol": ["A", "B"], "price": [100, 200]})
@@ -1311,8 +1371,13 @@ display(pl.concat([left, right], how="horizontal"))
 
 ## Diagonal Concat (Polars Only)
 
+Diagonal concat stacks DataFrames vertically even when their schemas differ. Columns present in one frame but absent in another are filled with `null`. Use this when combining data from heterogeneous sources — e.g., merging two API responses with slightly different field sets — without needing to align schemas manually first.
 
-- **Concatenation**: Stack DataFrames vertically (add rows) or horizontally (add columns).
+> [!info] No Pandas equivalent
+>
+> Pandas `pd.concat()` raises a column mismatch error when schemas differ unless
+> `join='outer'` is specified, which fills missing columns with `NaN` — functionally
+> similar but uses `NaN` (float) rather than native `null`, causing type coercion.
 
 ```python
 a = pl.DataFrame({"symbol": ["A"], "close": [100.0]})
@@ -1335,13 +1400,13 @@ display(pl.concat([a, b], how="diagonal"))
 | Diagonal | N/A | pl.concat(how='diagonal') |
 
 ---
-# Part 4: Reshaping
+## Part 4: Reshaping
+
+Reshaping transforms the structure of a DataFrame without changing the underlying data. The two fundamental operations are **wide to long** (melt/unpivot — spread column names into rows) and **long to wide** (pivot — collapse row values into columns). Additional operations include explode (list column to rows), implode (rows to list), transpose, and one-hot encoding.
 
 ## Wide to Long: melt / unpivot
 
-
-- **Melt**: Convert wide format to long: column names become values in a new column (Pandas).
-- **Tail**: Return the last N rows.
+Melt (Pandas) / unpivot (Polars) converts a wide DataFrame — where multiple columns represent the same measurement at different points — into a long format where column names become values in a `variable` column and their values go into a `value` column. This is required before plotting multi-series charts, applying long-format aggregations, or loading into a normalized database table.
 
 ```python
 # Pandas melt
@@ -1444,8 +1509,7 @@ display(asml_pl.unpivot(index="date", variable_name="price_type", value_name="pr
 
 ## Long to Wide: pivot
 
-
-- **Pivot**: Convert long format to wide: values in a column become new column headers.
+Pivot converts a long-format DataFrame into wide format by spreading the unique values of an `on` column into new columns, filling each cell with a corresponding `values` column. Use pivot to create a symbol-by-year close-price matrix from daily time series data, or to produce a sector-by-metric scorecard. Polars `.pivot(on=, index=, values=)` performs this eagerly; Pandas uses `pivot_table()` which also supports aggregation functions for duplicate index combinations.
 
 ```python
 # Polars pivot
@@ -1462,8 +1526,7 @@ display(pivoted)
 
 ## Explode
 
-
-- **Explode**: Expand a list column into multiple rows, one per list element.
+Explode expands a list-typed column so that each element in the list becomes its own row, repeating the non-list columns. Use this after a `group_by().agg(pl.col("x").implode())` to restore a collected list back to rows, or when ingesting JSON/Parquet data where one field contains a list of tags or events. Both Pandas and Polars support `.explode("col")`.
 
 ```python
 df = pl.DataFrame({"symbol": ["ASML.AS","MC.PA"], "tags": [["tech","nl"],["luxury","fr"]]})
@@ -1474,8 +1537,7 @@ display(df.explode("tags"))
 
 ## Implode
 
-
-- **Implode**: Collect multiple rows into a single list value per group.
+Implode (Polars only) is the inverse of explode: it collects all values in a group into a single `list[T]` column. Use it to create a "bag of symbols per sector" column, or to bundle related values before serializing to JSON. Pandas has no direct equivalent — the closest is `.groupby("sector")["symbol"].apply(list)`.
 
 ```python
 display(scores_pl.group_by("sector").agg(pl.col("symbol").implode()).sort("sector").head(5))
@@ -1485,8 +1547,7 @@ display(scores_pl.group_by("sector").agg(pl.col("symbol").implode()).sort("secto
 
 ## Transpose
 
-
-- **Transpose**: Swap rows and columns.
+Transpose swaps rows and columns — the row index becomes column names and vice versa. Use it to convert a small "symbol × metric" frame into a "metric × symbol" view, e.g., for display in a dashboard table. Polars `.transpose(include_header=True, column_names=col)` names the output columns from a string column in the input. Pandas uses `.T` (the transposed property). Both require a homogeneous schema (all numeric, or all string) for the transposed columns.
 
 ```python
 # Need unique rows per symbol for transpose (scores has multiple dates)
@@ -1507,8 +1568,7 @@ display(small.transpose(include_header=True, column_names="symbol"))
 
 ## One-Hot Encoding
 
-
-- **One-Hot Encoding**: Convert categories into binary 0/1 columns.
+One-hot encoding converts a categorical column into N binary columns (one per unique value), where each cell is 1 if the row belongs to that category and 0 otherwise. Required for ML feature engineering — most scikit-learn estimators require numeric input. Polars uses `.to_dummies()` on the DataFrame; Pandas uses `pd.get_dummies(df, columns=["sector"])`.
 
 ```python
 df = pl.DataFrame({"sector": ["Tech","Luxury","Tech","Energy"]})

@@ -1,5 +1,5 @@
 ---
-tags: [csharp, nosql, gcp, firestore]
+tags: [csharp, nosql, gcp, firestore, fundamentals]
 aliases: [Firestore C#, Firestore queries C#, NoSQL C#, document database C#]
 description: "Firestore operations in C# with executable examples and cell outputs — covers CRUD, queries, transactions, batches, snapshots, and typed document mapping."
 created: 2026-03-22
@@ -25,8 +25,6 @@ status: complete
 Comprehensive reference for querying, writing, and managing Firestore collections
 using the `Google.Cloud.Firestore` C# SDK and REST API.
 
-#### Firestore collections — stocks, prices, scores, index_performance
-
 | Collection | Description | Key Features |
 |---|---|---|
 | `stocks` | 50 Euro Stoxx constituents | Nested maps, arrays, booleans |
@@ -37,7 +35,33 @@ using the `Google.Cloud.Firestore` C# SDK and REST API.
 | `watchlists` | User watchlists | Ownership, public/private |
 | `config` | App configuration | Singleton documents |
 
-### Topics Covered — Firestore C# Operations
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    P["Project: bq-wh-nb"] --> C1["Collection: stocks"]
+    P --> C2["Collection: alerts"]
+    P --> C3["Collection: config"]
+    C1 --> D1["Document: ASML.AS<br/>short_name, sector, scores{}, tags[]"]
+    C1 --> D2["Document: MC.PA"]
+    C1 --> D3["Document: SAP.DE"]
+    D1 --> SC1["Subcollection: prices"]
+    SC1 --> SD1["Document: 2026-03-12<br/>open, high, low, close, volume"]
+    SC1 --> SD2["Document: 2026-03-11"]
+    C2 --> DA["Document: alert_001<br/>symbol, severity, metadata{}"]
+    C3 --> DC["Document: pipeline<br/>fetch_interval, thresholds{}"]
+```
+
 1. Setup & Connection
 2. Read Operations
 3. Filtering & Ordering
@@ -51,8 +75,11 @@ using the `Google.Cloud.Firestore` C# SDK and REST API.
 11. Pagination & Cursors
 12. Maintenance & Monitoring
 
+## Setup & Connection
+
+The Polyglot Notebooks kernel emits CS1701 assembly version warnings when loading NuGet packages on .NET 10. This cell suppresses them globally so subsequent output stays clean.
+
 ```csharp
-// Suppress CS1701 assembly version warnings (.NET 10 + NuGet packages)
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -71,7 +98,7 @@ Console.WriteLine("Warnings suppressed");
     Warnings suppressed
     
 
-## Setup & Connection
+### SDK and REST Client Initialization
 
 This cell:
 
@@ -87,6 +114,14 @@ This cell:
 > [!success] Safe Pattern
 >
 > Add `#r "nuget: Microsoft.Bcl.AsyncInterfaces"` before loading the Firestore SDK, and use the REST client (`HttpClient` + OAuth2 token) for all collection reads. Single-document reads via `GetSnapshotAsync()` work normally on .NET 10.
+
+> [!warning] Key File for Local Dev Only
+>
+> Setting `GOOGLE_APPLICATION_CREDENTIALS` to a local key file works for development but is a security liability. On production VMs and Cloud Run, remove this env var — the metadata server provides credentials automatically. See [gcp-identity-and-connection-patterns > Metadata Server](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns#metadata-server-gce-vms-cloud-run--the-production-standard).
+
+> [!success] Safe Pattern
+>
+> Store the key path in a `.env` file excluded from version control, and never commit `gcp-*-key.json` to git. In production, rely on the metadata server — no env var or key file needed.
 
 > [!info] Two Clients — SDK and REST
 >
@@ -104,14 +139,11 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
-// Credentials (local dev only — use metadata server in production)
 Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS",
     @"C:\Users\aperi\DEV\LANG\gcp-bq-key.json");
 
-// SDK client
 var db = FirestoreDb.Create("bq-wh-nb");
 
-// REST client
 var credential = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault()
     .CreateScoped("https://www.googleapis.com/auth/datastore");
 var token = await credential.UnderlyingCredential.GetAccessTokenForRequestAsync();
@@ -143,23 +175,15 @@ This cell:
 Used by all filter/query cells below.
 
 ```csharp
-// ── RestQuery: send a structured query and return parsed documents ──
-// Input:  JSON string with a "structuredQuery" object
-// Output: List of JsonElement, each representing one Firestore document
-//         Each document has "name" (full path) and "fields" (the data)
-
 async Task<List<JsonElement>> RestQuery(string queryJson)
 {
-    // Send the structured query to Firestore REST API
     var resp = await http.PostAsync(
         $"{baseUrl}:runQuery",
         new StringContent(queryJson, Encoding.UTF8, "application/json"));
 
-    // Parse the response — it is a JSON array of results
     var body = await resp.Content.ReadAsStringAsync();
     var results = JsonDocument.Parse(body).RootElement;
 
-    // Extract only items that contain a "document" (some may be empty/metadata)
     var docs = new List<JsonElement>();
     foreach (var item in results.EnumerateArray())
         if (item.TryGetProperty("document", out var doc))
@@ -188,26 +212,18 @@ These helpers unwrap the type envelope and return the native C# value.
 Without them, every field access would need 2 levels of `TryGetProperty()`.
 
 ```csharp
-// ── GetStr: extract a string field ──
-// Firestore REST: { "fieldName": { "stringValue": "..." } }
 string GetStr(JsonElement fields, string key) =>
     fields.TryGetProperty(key, out var v) && v.TryGetProperty("stringValue", out var s)
         ? s.GetString() ?? "" : "";
 
-// ── GetDbl: extract a double field ──
-// Firestore REST: { "fieldName": { "doubleValue": 178.50 } }
 double GetDbl(JsonElement fields, string key) =>
     fields.TryGetProperty(key, out var v) && v.TryGetProperty("doubleValue", out var d)
         ? d.GetDouble() : 0;
 
-// ── GetBool: extract a boolean field ──
-// Firestore REST: { "fieldName": { "booleanValue": true } }
 bool GetBool(JsonElement fields, string key) =>
     fields.TryGetProperty(key, out var v) && v.TryGetProperty("booleanValue", out var b)
         && b.GetBoolean();
 
-// ── GetInt: extract an integer field ──
-// Firestore REST returns integers as strings: { "fieldName": { "integerValue": "1500000" } }
 long GetInt(JsonElement fields, string key) =>
     fields.TryGetProperty(key, out var v) && v.TryGetProperty("integerValue", out var i)
         ? long.Parse(i.GetString() ?? "0") : 0;
@@ -431,7 +447,6 @@ This cell:
 Run this after setup to confirm the connection works and data is populated.
 
 ```csharp
-// Verify connection: list all collections and document counts
 Console.WriteLine("=== Firestore Collections ===");
 foreach (var coll in new[] { "stocks", "sectors", "alerts", "pipeline_runs", "watchlists", "config" })
 {
@@ -463,7 +478,6 @@ This cell:
 4. Extracts array: `tags`
 
 ```csharp
-// Get a single document by ID (SDK — single-doc reads work on .NET 10)
 var doc = await db.Collection("stocks").Document("ASML.AS").GetSnapshotAsync();
 
 if (doc.Exists)
@@ -507,7 +521,6 @@ This cell:
 > ```
 
 ```csharp
-// List first 10 stocks via REST
 var listResp = await http.GetAsync($"{baseUrl}/stocks?pageSize=10");
 var listJson = JsonDocument.Parse(await listResp.Content.ReadAsStringAsync());
 
@@ -548,7 +561,6 @@ This cell:
 > Unlike Python's `db.get_all()` (one round-trip), the C# SDK requires individual `GetSnapshotAsync()` calls. In production on .NET 8/9, use `db.GetAllSnapshotsAsync()` for batch reads.
 
 ```csharp
-// Get multiple documents by ID
 Console.WriteLine("=== Multiple Documents ===");
 foreach (var sym in new[] { "ASML.AS", "MC.PA", "SAP.DE" })
 {
@@ -565,6 +577,12 @@ foreach (var sym in new[] { "ASML.AS", "MC.PA", "SAP.DE" })
     
 
 ## Filtering & Ordering
+
+Firestore supports equality, range, `IN`, `NOT-IN`, `array_contains`, and `array_contains_any` operators. Each query returns at most **1 MB** of data or **1,000 documents**, whichever limit is reached first. For larger result sets, use pagination with cursors.
+
+> [!info] Cross-Engine — No JOINs in Firestore
+>
+> Firestore has no JOIN support. For relational-style queries across collections, denormalize the data model or perform client-side joins. BigQuery and SQL Server support all standard JOIN types; SQL Server adds `CROSS APPLY` / `OUTER APPLY`.
 
 ### Equality Filter
 
@@ -591,7 +609,6 @@ This cell:
 > ```
 
 ```csharp
-// Equality filter: country == "Germany"
 var germanQuery = @"{
     ""structuredQuery"": {
         ""from"": [{""collectionId"": ""stocks""}],
@@ -632,7 +649,7 @@ foreach (var fdoc in await RestQuery(germanQuery))
       SIE.DE       Industrials
     
 
-### Range Filter
+### Range Filter with Ordering
 
 This cell:
 
@@ -650,7 +667,6 @@ This cell:
 > ```
 
 ```csharp
-// Range filter: price > 500, ordered descending
 var rangeQuery = @"{
     ""structuredQuery"": {
         ""from"": [{""collectionId"": ""stocks""}],
@@ -683,7 +699,7 @@ foreach (var fdoc in await RestQuery(rangeQuery))
       MUV2.DE      price=526.20
     
 
-### Compound Filter (AND)
+### Compound Filters (AND)
 
 This cell:
 
@@ -702,13 +718,11 @@ This cell:
 > ```
 
 ```csharp
-// Compound query needs a composite index
 await EnsureIndex("stocks", new[] {
     ("country", "ASCENDING"),
     ("current_price", "ASCENDING"),
 });
 
-// Compound filter: country == "France" AND price < 200
 var compoundQuery = @"{
     ""structuredQuery"": {
         ""from"": [{""collectionId"": ""stocks""}],
@@ -763,7 +777,6 @@ This cell:
 > ```
 
 ```csharp
-// Array contains: stocks tagged with "germany"
 var arrayQuery = @"{
     ""structuredQuery"": {
         ""from"": [{""collectionId"": ""stocks""}],
@@ -804,7 +817,7 @@ foreach (var fdoc in await RestQuery(arrayQuery))
       SIE.DE       Germany
     
 
-### ii. array_contains_any
+### Array Contains Any
 
 This cell:
 
@@ -822,7 +835,6 @@ This cell:
 > ```
 
 ```csharp
-// Array contains any: French OR Dutch stocks
 var acaQuery = @"{
     ""structuredQuery"": {
         ""from"": [{""collectionId"": ""stocks""}],
@@ -863,7 +875,59 @@ foreach (var fdoc in await RestQuery(acaQuery))
       OR.PA        France
     
 
-### Order By Nested Field + Limit
+### IN and NOT-IN Filters
+
+The `IN` operator matches documents where a field equals any value in a list (up to 30 values). `NOT_IN` returns documents where the field does not match any value in the list and the field exists.
+
+> [!info] IN Operator Limit: 30 Values
+>
+> `IN` and `NOT_IN` support up to 30 values. For more, split into multiple queries and merge client-side. Adding `order_by` on a different field with an IN filter requires a composite index — sort client-side instead for small result sets.
+
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var docs = await db.Collection("stocks")
+>     .WhereIn("sector", new[] { "Technology", "Health Care" })
+>     .Limit(10)
+>     .GetSnapshotAsync();
+> ```
+
+```csharp
+// IN filter: Technology or Health Care sectors
+var inQuery = @"{
+    ""structuredQuery"": {
+        ""from"": [{""collectionId"": ""stocks""}],
+        ""where"": {
+            ""fieldFilter"": {
+                ""field"": {""fieldPath"": ""sector""},
+                ""op"": ""IN"",
+                ""value"": {""arrayValue"": {""values"": [{""stringValue"": ""Technology""}, {""stringValue"": ""Health Care""}]}}
+            }
+        },
+        ""limit"": 10
+    }
+}";
+
+Console.WriteLine("=== Tech & Healthcare ===");
+var inResults = (await RestQuery(inQuery))
+    .Select(d => {
+        var f = d.GetProperty("fields");
+        return new { Name = d.GetProperty("name").GetString().Split("/")[^1], Sector = GetStr(f, "sector"), Price = GetDbl(f, "current_price") };
+    })
+    .OrderByDescending(x => x.Price);
+foreach (var r in inResults)
+    Console.WriteLine($"  {r.Name,-12} {r.Sector,-15} — {r.Price:F2}");
+```
+
+    === Tech & Healthcare ===
+      ASML.AS      Technology      — 1191.20
+      ADYEN.AS     Technology      — 923.10
+      SAP.DE       Technology      — 153.82
+      IFX.DE       Technology      — 40.73
+      DSY.PA       Technology      — 18.37
+    
+
+### Ordering and Limiting
 
 This cell:
 
@@ -880,7 +944,6 @@ This cell:
 > ```
 
 ```csharp
-// Order by nested field: scores.composite DESC, limit 5
 var topQuery = @"{
     ""structuredQuery"": {
         ""from"": [{""collectionId"": ""stocks""}],
@@ -913,7 +976,7 @@ foreach (var fdoc in await RestQuery(topQuery))
 
 ## Nested Fields & Arrays
 
-### Query Nested Map Fields
+### Query on Nested Map Fields
 
 This cell:
 
@@ -931,7 +994,6 @@ This cell:
 > ```
 
 ```csharp
-// Filter on nested map: scores.momentum > 0.05
 var momentumQuery = @"{
     ""structuredQuery"": {
         ""from"": [{""collectionId"": ""stocks""}],
@@ -971,9 +1033,65 @@ foreach (var fdoc in await RestQuery(momentumQuery))
       SU.PA        momentum=0.5633
     
 
+### Read Nested Maps from Documents
+
+This cell:
+
+1. Reads first 5 documents from the `alerts` collection
+2. For each alert, extracts the `metadata` nested map (contains `source` and `run_id`)
+3. Prints alert type alongside metadata fields
+
+Nested maps in the REST API are wrapped in a `mapValue.fields` envelope — you must unwrap two levels to reach the actual key-value pairs.
+
+> [!info] SDK Equivalent (.NET 8/9)
+>
+> ```csharp
+> var doc = await db.Collection("alerts").Document("alert_001").GetSnapshotAsync();
+> var meta = doc.GetValue<Dictionary<string, object>>("metadata");
+> ```
+
+```csharp
+var alertMetaQuery = @"{
+    ""structuredQuery"": {
+        ""from"": [{""collectionId"": ""alerts""}],
+        ""limit"": 5
+    }
+}";
+
+Console.WriteLine("=== Alert Metadata ===");
+foreach (var fdoc in await RestQuery(alertMetaQuery))
+{
+    var name = fdoc.GetProperty("name").GetString().Split("/")[^1];
+    var f = fdoc.GetProperty("fields");
+    var alertType = GetStr(f, "type");
+    var source = "";
+    var runId = "";
+    if (f.TryGetProperty("metadata", out var meta)
+        && meta.TryGetProperty("mapValue", out var mv)
+        && mv.TryGetProperty("fields", out var mf))
+    {
+        source = mf.TryGetProperty("source", out var sv)
+            && sv.TryGetProperty("stringValue", out var svv)
+            ? svv.GetString() ?? "" : "";
+        runId = mf.TryGetProperty("run_id", out var rv)
+            && rv.TryGetProperty("stringValue", out var rvv)
+            ? rvv.GetString() ?? "" : "";
+    }
+    Console.WriteLine($"  {name}: type={alertType,-15} source={source,-15} run={runId}");
+}
+```
+
+    === Alert Metadata ===
+      alert_001: type=PRICE_DROP      source=scheduler       run=run_028
+      alert_002: type=PRICE_DROP      source=manual          run=run_019
+      alert_003: type=PRICE_DROP      source=manual          run=run_050
+      alert_004: type=PRICE_DROP      source=cloud_function  run=run_042
+      alert_005: type=MOMENTUM_FLIP   source=manual          run=run_024
+    
+
 ## Subcollections
 
-### Read Price History Subcollection
+### Read a Subcollection
 
 This cell:
 
@@ -992,7 +1110,6 @@ This cell:
 > ```
 
 ```csharp
-// Read subcollection: stocks/ASML.AS/prices (last 5 days)
 var priceQuery = @"{
     ""structuredQuery"": {
         ""from"": [{""collectionId"": ""prices""}],
@@ -1044,7 +1161,6 @@ This cell:
 > ```
 
 ```csharp
-// Query subcollection: ASML days above 700
 var subQuery = @"{
     ""structuredQuery"": {
         ""from"": [{""collectionId"": ""prices""}],
@@ -1089,7 +1205,7 @@ foreach (var item in subResults.RootElement.EnumerateArray())
 
 ## Write Operations
 
-### Set, Update & Delete
+### Set — Create or Overwrite
 
 > [!danger] Document Size Limit — 1 MiB
 >
@@ -1122,7 +1238,6 @@ This cell:
 > Use `SetAsync(data, SetOptions.MergeAll)` for upserts, and `UpdateAsync(fields)` when you only want to touch specific fields on an existing document. Reserve bare `SetAsync(data)` for explicit full-document replacements where you intentionally want to clear all other fields.
 
 ```csharp
-// SET: create a document
 var testRef = db.Collection("watchlists").Document("test_cs");
 await testRef.SetAsync(new Dictionary<string, object>
 {
@@ -1135,7 +1250,6 @@ await testRef.SetAsync(new Dictionary<string, object>
 });
 Console.WriteLine("Created test_cs");
 
-// UPDATE: add to array + increment counter
 await testRef.UpdateAsync(new Dictionary<string, object>
 {
     { "symbols", FieldValue.ArrayUnion("MC.PA") },
@@ -1143,7 +1257,6 @@ await testRef.UpdateAsync(new Dictionary<string, object>
 });
 Console.WriteLine("Updated: added MC.PA, incremented count");
 
-// DELETE
 await testRef.DeleteAsync();
 Console.WriteLine("Deleted test_cs");
 ```
@@ -1164,7 +1277,6 @@ This cell:
 5. Reads back to verify, then deletes
 
 ```csharp
-// Create a test doc first
 var updRef = db.Collection("watchlists").Document("test_update_cs");
 await updRef.SetAsync(new Dictionary<string, object>
 {
@@ -1173,25 +1285,16 @@ await updRef.SetAsync(new Dictionary<string, object>
     ["stock_count"] = 2,
 });
 
-// ArrayUnion: add without duplicates
 await updRef.UpdateAsync("symbols", FieldValue.ArrayUnion("TTE.PA"));
-
-// ArrayRemove: remove from array
 await updRef.UpdateAsync("symbols", FieldValue.ArrayRemove("MC.PA"));
-
-// Increment: atomic counter
 await updRef.UpdateAsync("stock_count", FieldValue.Increment(1));
-
-// ServerTimestamp: set by Firestore server
 await updRef.UpdateAsync("last_modified", FieldValue.ServerTimestamp);
 
-// Verify
 var snap = await updRef.GetSnapshotAsync();
 Console.WriteLine($"Symbols: [{string.Join(", ", snap.GetValue<List<object>>("symbols"))}]");
 Console.WriteLine($"Count: {snap.GetValue<long>("stock_count")}");
 Console.WriteLine($"Modified: {snap.GetValue<Timestamp>("last_modified")}");
 
-// Cleanup
 await updRef.DeleteAsync();
 Console.WriteLine("Deleted test_update_cs");
 ```
@@ -1219,10 +1322,8 @@ This cell:
 > Before deleting a parent document, enumerate and delete all subcollection documents first. In production, use a Cloud Function triggered on document deletion to cascade the cleanup, or use the Firebase Admin SDK's `recursiveDelete()` method (available server-side) which handles the full tree automatically.
 
 ```csharp
-// DELETE: remove a document
 var delRef = db.Collection("watchlists").Document("test_delete_cs");
 
-// Create a temp doc to delete
 await delRef.SetAsync(new Dictionary<string, object>
 {
     ["name"] = "To Be Deleted",
@@ -1230,11 +1331,9 @@ await delRef.SetAsync(new Dictionary<string, object>
 });
 Console.WriteLine($"Created: {delRef.Id}");
 
-// Delete it
 await delRef.DeleteAsync();
 Console.WriteLine($"Deleted: {delRef.Id}");
 
-// Verify
 var delCheck = await delRef.GetSnapshotAsync();
 Console.WriteLine($"Exists after delete: {delCheck.Exists}");
 ```
@@ -1246,6 +1345,10 @@ Console.WriteLine($"Exists after delete: {delCheck.Exists}");
 
 ## Batch Operations & Transactions
 
+> [!info] Cross-Engine — Transaction Models
+>
+> Firestore transactions use optimistic concurrency (retry on conflict) and are limited to 500 operations per batch/transaction. SQL Server provides full ACID with pessimistic locking and no operation-count limit. BigQuery has limited multi-statement transactions scoped to a single query job.
+
 ### Batch — Atomic Multi-Write
 
 This cell:
@@ -1255,7 +1358,6 @@ This cell:
 3. Cleans up the test documents
 
 ```csharp
-// BATCH: atomic multi-write (max 500 operations)
 var batch = db.StartBatch();
 for (int i = 0; i < 3; i++)
 {
@@ -1272,7 +1374,6 @@ for (int i = 0; i < 3; i++)
 await batch.CommitAsync();
 Console.WriteLine("Batch committed: 3 alerts");
 
-// Clean up
 for (int i = 0; i < 3; i++)
     await db.Collection("alerts").Document($"cs_batch_{i}").DeleteAsync();
 Console.WriteLine("Cleaned up");
@@ -1295,7 +1396,6 @@ This cell:
 The transaction retries automatically if another client modifies the document mid-read.
 
 ```csharp
-// TRANSACTION: read-modify-write
 var alertRef = db.Collection("alerts").Document("alert_001");
 
 var result = await db.RunTransactionAsync(async transaction =>
@@ -1317,7 +1417,6 @@ var result = await db.RunTransactionAsync(async transaction =>
 Console.WriteLine($"=== Transaction Result ===");
 Console.WriteLine($"  {result}");
 
-// Reset
 await alertRef.UpdateAsync(new Dictionary<string, object> { { "acknowledged", false } });
 Console.WriteLine("  [RESET] alert_001.acknowledged = false");
 ```
@@ -1327,7 +1426,9 @@ Console.WriteLine("  [RESET] alert_001.acknowledged = false");
       [RESET] alert_001.acknowledged = false
     
 
-### Real-Time Listeners — Firestore C# on_snapshot Push Notifications
+## Real-Time Listeners
+
+### on_snapshot Push Notifications
 
 > [!warning] .NET 10 Listeners Fail
 >
@@ -1353,32 +1454,127 @@ await listener.StopAsync();
 For .NET 10 notebooks, use REST polling (same pattern as the GCP notebook, Section 15)
 or run the Python listener instead.
 
-### Aggregation Queries — Firestore C# Count Sum Avg
+## Aggregation Queries
 
-> [!warning] .NET 10 Aggregations Fail
+Firestore added server-side `COUNT`, `SUM`, and `AVG` aggregation queries in 2023. These run entirely on the server and return a single value — no documents are downloaded to the client.
+
+> [!info] Cross-Engine — Aggregation Limitations
 >
-> Firestore C# SDK aggregation methods (`Count`, `Sum`, `Avg`) also fail on .NET 10 due to the `AsyncInterfaces` assembly issue.
+> Firestore aggregation is limited to COUNT, SUM, and AVG over a single field with no GROUP BY, HAVING, or window functions. For complex aggregation (pivots, percentiles, multi-dimensional rollups), export data to BigQuery. SQL Server and BigQuery support the full SQL aggregation spectrum.
+
+### COUNT — Server-Side
+
+This cell runs a server-side `COUNT` aggregation for each country. Each aggregation query costs 1 read operation regardless of how many documents match — much cheaper than streaming all documents.
+
+> [!warning] .NET 10 SDK Aggregations Fail
+>
+> Firestore C# SDK aggregation methods (`Count`, `Sum`, `Avg`) fail on .NET 10 due to the `AsyncInterfaces` assembly issue. The REST `runAggregationQuery` endpoint works as a workaround.
 
 > [!success] Safe Pattern
 >
-> On .NET 10, use the REST `runAggregationQuery` endpoint directly. POST a structured aggregation body with `"aggregations": [{"count": {}}]` to get a count without reading individual documents. This costs one read operation regardless of collection size and avoids the SDK issue entirely.
-
-In a real .NET 8/9 project:
+> On .NET 10, POST to the `runAggregationQuery` endpoint with a structured body. On .NET 8/9, use the SDK directly: `db.Collection("stocks").WhereEqualTo("country", "Germany").Count().GetSnapshotAsync()`.
 
 ```csharp
-var count = await db.Collection("stocks")
-    .WhereEqualTo("country", "Germany")
-    .Count()
-    .GetSnapshotAsync();
-Console.WriteLine($"Count: {count.Count}");
+Console.WriteLine("=== Stock Count by Country ===");
+foreach (var country in new[] { "Germany", "France", "Netherlands", "Italy", "Spain" })
+{
+    var aggQuery = $@"{{
+        ""structuredAggregationQuery"": {{
+            ""structuredQuery"": {{
+                ""from"": [{{""collectionId"": ""stocks""}}],
+                ""where"": {{
+                    ""fieldFilter"": {{
+                        ""field"": {{""fieldPath"": ""country""}},
+                        ""op"": ""EQUAL"",
+                        ""value"": {{""stringValue"": ""{country}""}}
+                    }}
+                }}
+            }},
+            ""aggregations"": [{{""count"": {{}}, ""alias"": ""count""}}]
+        }}
+    }}";
+    var resp = await http.PostAsync($"{baseUrl}:runAggregationQuery",
+        new StringContent(aggQuery, Encoding.UTF8, "application/json"));
+    var body = await resp.Content.ReadAsStringAsync();
+    var result = JsonDocument.Parse(body).RootElement;
+    var countVal = "0";
+    foreach (var item in result.EnumerateArray())
+        if (item.TryGetProperty("result", out var r)
+            && r.TryGetProperty("aggregateFields", out var af)
+            && af.TryGetProperty("count", out var cv)
+            && cv.TryGetProperty("integerValue", out var iv))
+            countVal = iv.GetString() ?? "0";
+    Console.WriteLine($"  {country,-15}: {countVal} stocks");
+}
 ```
 
-For .NET 10 notebooks, use the REST API `runAggregationQuery` endpoint,
-or run the Python aggregation cells.
+    === Stock Count by Country ===
+      Germany        : 16 stocks
+      France         : 15 stocks
+      Netherlands    : 8 stocks
+      Italy          : 5 stocks
+      Spain          : 4 stocks
+    
+
+### SUM and AVG — Server-Side
+
+This cell runs three server-side aggregations across all 50 stocks:
+
+1. **SUM** of `index_weight` — should total ~1.0 for a well-formed index
+2. **AVG** of `current_price` — average stock price
+3. **COUNT** — total documents
+
+The client receives a single number per aggregation, not 50 documents.
+
+```csharp
+var sumAvgQuery = @"{
+    ""structuredAggregationQuery"": {
+        ""structuredQuery"": {
+            ""from"": [{""collectionId"": ""stocks""}]
+        },
+        ""aggregations"": [
+            {""count"": {}, ""alias"": ""total""},
+            {""sum"": {""field"": {""fieldPath"": ""index_weight""}}, ""alias"": ""weight_sum""},
+            {""avg"": {""field"": {""fieldPath"": ""current_price""}}, ""alias"": ""avg_price""}
+        ]
+    }
+}";
+
+var aggResp = await http.PostAsync($"{baseUrl}:runAggregationQuery",
+    new StringContent(sumAvgQuery, Encoding.UTF8, "application/json"));
+var aggBody = await aggResp.Content.ReadAsStringAsync();
+var aggResult = JsonDocument.Parse(aggBody).RootElement;
+
+foreach (var item in aggResult.EnumerateArray())
+{
+    if (!item.TryGetProperty("result", out var r)
+        || !r.TryGetProperty("aggregateFields", out var af)) continue;
+    var total = af.TryGetProperty("total", out var tv)
+        && tv.TryGetProperty("integerValue", out var tiv) ? tiv.GetString() : "?";
+    var weightSum = af.TryGetProperty("weight_sum", out var ws)
+        && ws.TryGetProperty("doubleValue", out var wsv) ? wsv.GetDouble().ToString("F4") : "?";
+    var avgPrice = af.TryGetProperty("avg_price", out var ap)
+        && ap.TryGetProperty("doubleValue", out var apv) ? apv.GetDouble().ToString("F2") : "?";
+    Console.WriteLine($"Total index weight: {weightSum}");
+    Console.WriteLine($"Average stock price: {avgPrice}");
+    Console.WriteLine($"Total stocks: {total}");
+}
+```
+
+    Total index weight: 1.0000
+    Average stock price: 234.17
+    Total stocks: 50
+    
 
 ## Collection Group Queries
 
-### Query Across ALL Price Subcollections
+Collection group queries search across all subcollections with the same name in a single request. Without them, querying prices across 50 stocks would require 50 separate queries.
+
+> [!info] Cross-Engine — Querying Across Partitions
+>
+> Collection group queries are Firestore's equivalent of querying across partitions. BigQuery achieves this with partition pruning on partitioned tables. SQL Server uses partitioned views or `UNION ALL` across multiple tables.
+
+### Query Across ALL Subcollections
 
 This cell:
 
@@ -1399,10 +1595,8 @@ This cell:
 > ```
 
 ```csharp
-// Collection group needs a field exemption
 await EnsureIndex("prices", new[] { ("close", "DESCENDING") }, scope: "COLLECTION_GROUP");
 
-// Collection group query: highest closes across ALL stocks
 var cgQuery = @"{
     ""structuredQuery"": {
         ""from"": [{""collectionId"": ""prices"", ""allDescendants"": true}],
@@ -1461,10 +1655,8 @@ This cell:
 > ```
 
 ```csharp
-// Collection group + date filter needs a field exemption
 await EnsureIndex("prices", new[] { ("date", "ASCENDING") }, scope: "COLLECTION_GROUP");
 
-// Find latest available date
 var latestQuery = @"{
     ""structuredQuery"": {
         ""from"": [{""collectionId"": ""prices""}],
@@ -1480,7 +1672,6 @@ foreach (var item in latestResults.RootElement.EnumerateArray())
     if (item.TryGetProperty("document", out var ld))
         targetDate = GetStr(ld.GetProperty("fields"), "date");
 
-// Collection group: all prices on that date
 var dateQuery = $@"{{
     ""structuredQuery"": {{
         ""from"": [{{""collectionId"": ""prices"", ""allDescendants"": true}}],
@@ -1543,7 +1734,6 @@ This cell:
 > ```
 
 ```csharp
-// Paginate: 5 stocks per page, 2 pages
 Console.WriteLine("=== Paginated Stock List ===");
 string nextToken = null;
 for (int page = 1; page <= 2; page++)
@@ -1589,7 +1779,7 @@ for (int page = 1; page <= 2; page++)
 
 ## Maintenance & Monitoring
 
-### Collection Inventory
+### List Collections and Document Counts
 
 This cell:
 
@@ -1608,7 +1798,6 @@ This cell:
 > ```
 
 ```csharp
-// List collections and count documents
 Console.WriteLine("=== Collections ===");
 foreach (var coll in new[] { "stocks", "sectors", "alerts", "pipeline_runs", "watchlists", "config" })
 {
@@ -1645,7 +1834,6 @@ This cell:
 > ```
 
 ```csharp
-// List subcollections of a document
 var subCollUrl = $"{baseUrl}/stocks/ASML.AS/prices?pageSize=1";
 var subCollResp = await http.GetAsync(subCollUrl);
 var subCollJson = JsonDocument.Parse(await subCollResp.Content.ReadAsStringAsync());
@@ -1685,7 +1873,6 @@ This cell:
 > ```
 
 ```csharp
-// Find stale pipeline runs (>48h old)
 var cutoff = DateTime.UtcNow.AddHours(-48).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
 var staleQuery = $@"{{
     ""structuredQuery"": {{
@@ -1734,7 +1921,6 @@ This cell:
 > ```
 
 ```csharp
-// Failed pipeline runs
 var failedQuery = @"{
     ""structuredQuery"": {
         ""from"": [{""collectionId"": ""pipeline_runs""}],
@@ -1782,13 +1968,11 @@ This cell:
 > ```
 
 ```csharp
-// Compound query on alerts needs a composite index
 await EnsureIndex("alerts", new[] {
     ("severity", "ASCENDING"),
     ("acknowledged", "ASCENDING"),
 });
 
-// Unacknowledged HIGH alerts
 var alertQuery = @"{
     ""structuredQuery"": {
         ""from"": [{""collectionId"": ""alerts""}],
@@ -1827,8 +2011,11 @@ foreach (var fdoc in await RestQuery(alertQuery))
 
 This cell:
 
-1. Reads `config/pipeline` — fetch interval, retries, thresholds
-2. Prints all key-value pairs
+1. Reads `config/pipeline` — contains `fetch_interval_seconds`, `max_retries`, `enabled_indices`, `alert_thresholds`
+2. Reads `config/display` — contains `default_index`, `rows_per_page`, `theme`, `currency`
+3. Prints all key-value pairs
+
+Config documents are **singletons** — one document per config type. Change a value here and all clients see it instantly (via real-time listeners).
 
 > [!info] SDK Equivalent (.NET 8/9)
 >
@@ -1840,7 +2027,6 @@ This cell:
 > ```
 
 ```csharp
-// Read config document
 Console.WriteLine("=== Pipeline Config ===");
 var configResp = await http.GetAsync($"{baseUrl}/config/pipeline");
 var configJson = JsonDocument.Parse(await configResp.Content.ReadAsStringAsync());
@@ -1886,4 +2072,27 @@ if (configJson.RootElement.TryGetProperty("fields", out var configFields))
               }
             }
           }
+    
+
+```csharp
+Console.WriteLine("=== Display Config ===");
+var displayResp = await http.GetAsync($"{baseUrl}/config/display");
+var displayJson = JsonDocument.Parse(await displayResp.Content.ReadAsStringAsync());
+
+if (displayJson.RootElement.TryGetProperty("fields", out var displayFields))
+{
+    foreach (var prop in displayFields.EnumerateObject())
+    {
+        var val = prop.Value.EnumerateObject().First();
+        Console.WriteLine($"  {prop.Name}: {val.Value}");
+    }
+}
+```
+
+    === Display Config ===
+      default_index: euro_stoxx_50
+      theme: dark
+      decimal_places: 4
+      currency: EUR
+      rows_per_page: 25
     

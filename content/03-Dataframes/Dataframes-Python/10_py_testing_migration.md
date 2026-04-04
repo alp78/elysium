@@ -1,5 +1,5 @@
 ---
-tags: [pipeline, python, pandas, polars]
+tags: [pipeline, python, pandas, polars, dataframes]
 aliases:
   - end-to-end project, validation, migration guide
 description: "Pandas/Polars DataFrame reference 10/10 — Real-World Project, Testing & Migration (end-to-end, validation, migration guide). Side-by-side executable examples with cell outputs."
@@ -62,15 +62,14 @@ import time
 
     OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
 
-## Load All Data
-
 ## Enrich with Company Info
 
-> [!info] This section builds a complete
->
-> This section builds a complete analytical pipeline: enrich OHLCV with company
-> metadata via left join, compute returns with window functions, aggregate by sector, and
-> visualize. Each step chains Polars expressions — the same pattern used in production.
+> [!info] End-to-end Polars pipeline
+> This section builds a complete analytical pipeline: enrich OHLCV with company metadata via left join, compute returns with window functions, aggregate by sector, and visualize. Each step chains Polars expressions — the same pattern used in production.
+
+### Polars | Left join OHLCV with dimension table
+
+Adds `short_name`, `sector`, and `country` from the dimension table to the OHLCV fact table via a left join on `symbol`. Left join preserves all OHLCV rows — symbols with no dimension record get `null` for the added columns.
 
 ```python
 enriched=ohlcv_pl.join(dim_pl.select("symbol","short_name","sector","country"),on="symbol",how="left")
@@ -80,6 +79,13 @@ display(enriched.select("symbol","short_name","date","close","sector").head(5))
 <div><!-- shape: (5, 5) --><table><thead><tr><th>symbol</th><th>short_name</th><th>date</th><th>close</th><th>sector</th></tr><tr><td>str</td><td>str</td><td>date</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>ABI.BR</td><td>AB INBEV</td><td>2021-01-04</td><td>57.21</td><td>Consumer Defensive</td></tr><tr><td>ABI.BR</td><td>AB INBEV</td><td>2021-01-05</td><td>57.18</td><td>Consumer Defensive</td></tr><tr><td>ABI.BR</td><td>AB INBEV</td><td>2021-01-06</td><td>58.77</td><td>Consumer Defensive</td></tr><tr><td>ABI.BR</td><td>AB INBEV</td><td>2021-01-07</td><td>58.4</td><td>Consumer Defensive</td></tr><tr><td>ABI.BR</td><td>AB INBEV</td><td>2021-01-08</td><td>57.86</td><td>Consumer Defensive</td></tr></tbody></table></div>
 
 ## Compute Returns
+
+### Polars | Daily return with window function
+
+Computes percentage daily return per symbol using `.shift(1).over("symbol")` — a window function that applies the shift within each symbol group without requiring a `group_by`. The `.over()` call is a key Polars pattern: it allows per-group computations within a `with_columns` expression without collapsing the frame.
+
+> [!info] `.over()` vs `.group_by()`
+> `.shift(1).over("symbol")` computes within each symbol partition and returns one value per original row — the frame shape is unchanged. This is equivalent to Pandas `groupby().shift(1)` used with `transform`. Using `group_by().agg()` would collapse to one row per symbol.
 
 ```python
 with_ret=enriched.sort("symbol","date").with_columns(
@@ -91,6 +97,10 @@ display(with_ret.filter(pl.col("symbol")=="ASML.AS").select("symbol","date","clo
 <div><!-- shape: (10, 4) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>daily_return</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>2026-02-27</td><td>1233.4</td><td>0.08</td></tr><tr><td>ASML.AS</td><td>2026-03-02</td><td>1210.4</td><td>-1.86</td></tr><tr><td>ASML.AS</td><td>2026-03-03</td><td>1161.8</td><td>-4.02</td></tr><tr><td>ASML.AS</td><td>2026-03-04</td><td>1199.8</td><td>3.27</td></tr><tr><td>ASML.AS</td><td>2026-03-05</td><td>1186.0</td><td>-1.15</td></tr><tr><td>ASML.AS</td><td>2026-03-06</td><td>1147.0</td><td>-3.29</td></tr><tr><td>ASML.AS</td><td>2026-03-09</td><td>1147.6</td><td>0.05</td></tr><tr><td>ASML.AS</td><td>2026-03-10</td><td>1200.0</td><td>4.57</td></tr><tr><td>ASML.AS</td><td>2026-03-11</td><td>1198.8</td><td>-0.1</td></tr><tr><td>ASML.AS</td><td>2026-03-12</td><td>1190.8</td><td>-0.67</td></tr></tbody></table></div>
 
 ## Sector Performance
+
+### Polars | Aggregate daily returns by sector
+
+Groups the enriched frame by `sector` and computes mean return, volatility (std dev), and unique stock count. Filters out null returns first (the first trading day per symbol has no prior close).
 
 ```python
 sector=with_ret.filter(pl.col("daily_return").is_not_null()).group_by("sector").agg(
@@ -105,6 +115,10 @@ display(sector)
 
 ## Top Performers
 
+### Polars | Rank by composite score
+
+Sorts the scores frame by `composite_rank` and selects the top 10. The scores frame has one row per symbol per scoring date — sorting by rank and taking head(10) returns the top-ranked stocks on the most recent scoring run.
+
 ```python
 display(scores_pl.sort("composite_rank").head(10).select("symbol","short_name","sector","composite_score","composite_rank","current_price"))
 ```
@@ -112,6 +126,13 @@ display(scores_pl.sort("composite_rank").head(10).select("symbol","short_name","
 <div><!-- shape: (10, 6) --><table><thead><tr><th>symbol</th><th>short_name</th><th>sector</th><th>composite_score</th><th>composite_rank</th><th>current_price</th></tr><tr><td>str</td><td>str</td><td>str</td><td>f64</td><td>i64</td><td>f64</td></tr></thead><tbody><tr><td>BNP.PA</td><td>BNP PARIBAS ACT.A</td><td>Financial Services</td><td>0.683947</td><td>1</td><td>89.32</td></tr><tr><td>BNP.PA</td><td>BNP PARIBAS ACT.A</td><td>Financial Services</td><td>0.663971</td><td>1</td><td>86.35</td></tr><tr><td>BNP.PA</td><td>BNP PARIBAS ACT.A</td><td>Financial Services</td><td>0.679599</td><td>1</td><td>87.44</td></tr><tr><td>DVN</td><td>Devon Energy Corporation</td><td>Energy</td><td>0.665507</td><td>1</td><td>45.36</td></tr><tr><td>8001.T</td><td>ITOCHU CORP</td><td>Industrials</td><td>0.478444</td><td>1</td><td>2066.5</td></tr><tr><td>6981.T</td><td>MURATA MANUFACTURING CO</td><td>Technology</td><td>0.494602</td><td>1</td><td>3783.0</td></tr><tr><td>6981.T</td><td>MURATA MANUFACTURING CO</td><td>Technology</td><td>0.546581</td><td>1</td><td>3720.0</td></tr><tr><td>MU</td><td>Micron Technology, Inc.</td><td>Technology</td><td>0.925838</td><td>1</td><td>400.77</td></tr><tr><td>MU</td><td>Micron Technology, Inc.</td><td>Technology</td><td>0.862677</td><td>1</td><td>370.3</td></tr><tr><td>MU</td><td>Micron Technology, Inc.</td><td>Technology</td><td>1.287144</td><td>1</td><td>418.69</td></tr></tbody></table></div>
 
 ## Visualize
+
+### Pandas | Horizontal bar chart via `.to_pandas()`
+
+Polars does not have native plotting. Convert to Pandas with `.to_pandas()` then use Matplotlib via the Pandas `.plot` accessor. The Tokyo Night theme was configured in the setup cell.
+
+> [!info] Polars → Pandas for plotting
+> `.to_pandas()` is a zero-copy conversion when the Polars frame uses Arrow-compatible types. For plotting in production pipelines, prefer Matplotlib directly with `df["col"].to_numpy()` to avoid the Pandas conversion overhead.
 
 ```python
 sector.to_pandas().plot.barh(x="sector",y="avg_return",title="Avg Daily Return by Sector",figsize=(10,5))
@@ -122,7 +143,7 @@ plt.show()
     <Figure size 1000x500 with 1 Axes>
 
 ---
-# Part 2: Testing & Debugging
+## Part 2: Testing & Debugging
 
 Comprehensive testing, validation, debugging, and profiling strategies for Pandas and Polars.
 
@@ -135,9 +156,12 @@ scores_pl = pl.read_parquet(DATA / "scores_daily.parquet")
 
 ## assert_frame_equal
 
-Verify two DataFrames are identical. Raises `AssertionError` with a detailed diff if they differ. Essential for unit testing data transformations.
+Verifies two DataFrames are identical. Raises `AssertionError` with a detailed diff if they differ. Essential for unit testing data transformations — use in `pytest` or any test runner by wrapping in a function that calls these assertions.
 
-### Pandas
+> [!info] Pandas vs Polars testing APIs
+> Both libraries provide dedicated testing utilities: `pandas.testing.assert_frame_equal` and `polars.testing.assert_frame_equal`. The parameter names differ: Pandas uses `atol`/`check_like`/`check_dtype`, Polars uses `abs_tol`/`check_column_order`/`check_row_order`/`check_dtypes`.
+
+### Pandas | assert_frame_equal
 
 ```python
 # Exact match
@@ -179,6 +203,8 @@ print("Series match: OK")
     Ignore index: OK
     Series match: OK
 
+#### Pandas | Failure message format
+
 ```python
 # Demonstrate failure messages
 try:
@@ -196,7 +222,7 @@ except AssertionError as e:
     [left]:  [1, 2, 3]
     [right]: [1, 2, 99]
 
-### Polars
+### Polars | assert_frame_equal
 
 ```python
 # Exact match
@@ -237,6 +263,8 @@ print("Series match: OK")
     Ignore row order: OK
     Series match: OK
 
+#### Polars | Failure message format
+
 ```python
 # Demonstrate failure messages
 try:
@@ -267,7 +295,10 @@ except AssertionError as e:
 
 Verify column names, data types, and shape before processing. Catches data pipeline issues early — wrong column names, changed types, unexpected nulls.
 
-### Pandas
+> [!tip] Validate at pipeline entry points
+> Run schema checks immediately after reading from external sources (CSV, Parquet, database). Failing fast on schema mismatches prevents type errors and silent data corruption from propagating through a pipeline.
+
+### Pandas | Schema validation function
 
 ```python
 def assert_schema_pd(df, expected_cols, expected_dtypes=None, min_rows=1):
@@ -301,7 +332,12 @@ assert_schema_pd(
       Warning: extra columns: {'id', 'adj_close', 'dividends', 'stock_splits', 'is_filled'}
       Schema OK: (66355, 12), 12 cols
 
-### Polars
+### Polars | Schema validation function
+
+Polars schemas use `df.schema` — a dict mapping column name to `polars.DataType`. Compare against expected types using direct equality (`df[col].dtype == pl.Float64`).
+
+> [!info] Polars dtype objects vs Pandas dtype strings
+> Pandas dtypes are strings (`"float64"`, `"object"`). Polars dtypes are objects (`pl.Float64`, `pl.String`, `pl.Int64`). In the Polars validator, pass the actual type object as the dict value, not a string.
 
 ```python
 def assert_schema_pl(df, expected_schema, min_rows=1):
@@ -329,7 +365,7 @@ assert_schema_pl(
 
 Business rules that data must satisfy: no nulls in key columns, value ranges, referential integrity, uniqueness constraints, and temporal consistency. These checks map directly to the quality dimensions (completeness, uniqueness, validity) defined in [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework), and dbt implements the same patterns declaratively via [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework).
 
-### Polars
+### Polars | OHLCV validation rules
 
 ```python
 def validate_ohlcv(df: pl.DataFrame) -> list[str]:
@@ -379,7 +415,7 @@ else:
 
       All validation rules passed
 
-### Pandas
+### Pandas | OHLCV validation rules
 
 ```python
 def validate_ohlcv_pd(df: pd.DataFrame) -> list[str]:
@@ -424,6 +460,13 @@ else:
 
 Verify that foreign key relationships hold: every symbol in the fact table exists in the dimension table.
 
+### Polars / Pandas | Check orphan symbols
+
+Finds symbols in the OHLCV fact table that have no matching row in the dimension table — "orphan" symbols. The Polars approach uses `.is_in()` on a Series; the Pandas approach uses Python `set` subtraction.
+
+> [!info] Polars vs Pandas for set membership
+> Polars: `series.filter(~series.is_in(other.to_list()))` — expression-based, returns a filtered Series. Pandas: `set(df["col"]) - set(other["col"])` — Python set subtraction, works for small dimension tables but doesn't scale to millions of keys.
+
 ```python
 # Polars: symbols in ohlcv that are NOT in dim
 ohlcv_symbols = ohlcv_pl["symbol"].unique()
@@ -446,7 +489,9 @@ print(f"Pandas orphans: {orphans_pd}")
 
 When a long chain produces unexpected results, break it into steps and inspect each intermediate result.
 
-### Step-by-Step Inspection
+### Polars | Step-by-step inspection
+
+Break a chained pipeline into named variables and print shape at each step. This is the simplest debugging technique — no framework needed. Polars DataFrames are immutable so intermediate variables have no mutation risk.
 
 ```python
 # Instead of one long chain, break into steps and inspect each
@@ -473,7 +518,12 @@ display(step4)
 
 <div><!-- shape: (10, 3) --><table><thead><tr><th>date</th><th>close</th><th>daily_return</th></tr><tr><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>-0.11</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>1.48</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>-2.09</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>2.46</td></tr><tr><td>2026-03-05</td><td>1186.0</td><td>-1.05</td></tr><tr><td>2026-03-06</td><td>1147.0</td><td>-3.29</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>7.05</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>0.98</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>0.88</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>-0.33</td></tr></tbody></table></div>
 
-### Debug with .pipe() (Pandas)
+### Pandas | Debug with .pipe()
+
+Inserts a debug function into any position of a Pandas method chain using `.pipe()`. The function receives the full DataFrame, prints diagnostics, and returns it unchanged — the chain continues.
+
+> [!tip] `.pipe()` is available in both Pandas and Polars
+> Both libraries support `.pipe(fn, *args)` — pass a function that takes `DataFrame` as first argument and returns `DataFrame`. This is the idiomatic way to inject debug steps, assertions, or logging into a method chain without breaking it.
 
 ```python
 def debug_step(df, label=""):
@@ -500,7 +550,9 @@ result = (
       [after assign] shape=(1331, 13), cols=['id', 'symbol', 'date', 'open', 'high']...
       [final] shape=(5, 3), cols=['date', 'close', 'daily_return']...
 
-### Debug with .map_batches() (Polars)
+### Polars | Debug with .pipe()
+
+Same `.pipe()` pattern for Polars. The debug function takes a `pl.DataFrame`, prints shape, and returns it unchanged.
 
 ```python
 def debug_polars(df: pl.DataFrame, label: str = "") -> pl.DataFrame:
@@ -534,7 +586,12 @@ result = (
 
 Measure execution time and memory usage to find bottlenecks in data pipelines.
 
-### Timing with %%timeit and time.perf_counter
+### Pandas / Polars | Manual timing with `time.perf_counter`
+
+Wraps each operation in `time.perf_counter()` calls to measure wall-clock time in seconds. Use this when comparing Pandas vs Polars performance on the same operation — the output here shows Polars is ~1.3× faster on this group_by.
+
+> [!tip] Polars is typically faster on aggregations
+> Polars uses multi-threaded execution and Apache Arrow columnar storage. For group_by and filter operations on 50K+ rows, Polars is consistently faster than Pandas. The gap widens significantly at 1M+ rows.
 
 ```python
 # Manual timing
@@ -552,7 +609,12 @@ print(f"Pandas groupby: {elapsed*1000:.1f}ms")
     Polars group_by: 1.7ms
     Pandas groupby: 2.2ms
 
-### Memory Usage
+### Pandas / Polars | Memory usage
+
+Compares in-memory footprint between Pandas and Polars for the same dataset. `deep=True` in Pandas measures actual object memory (including Python strings); Polars `estimated_size()` measures the Arrow buffer size.
+
+> [!info] Why Polars uses less memory
+> Polars stores data in Apache Arrow columnar format — strings are stored in a dictionary-encoded buffer, not as individual Python `str` objects. The output here shows Polars at ~5.2 MB vs Pandas at ~10.6 MB for the same 66K-row dataset. The `symbol` column alone accounts for 3.49 MB in Pandas (Python string objects) vs negligible in Polars (Arrow dictionary encoding).
 
 ```python
 # Pandas memory usage
@@ -586,7 +648,12 @@ print(f"\nPolars estimated size: {est:.2f} MB")
     
     Polars estimated size: 5.20 MB
 
-### Polars Query Plan (explain)
+### Polars | Query plan inspection (`.explain()`)
+
+Calls `.explain()` on a `LazyFrame` to print the optimized query plan before execution. The plan shows which columns are projected (pruned) and where filters are pushed down — key signals that the optimizer is working correctly.
+
+> [!info] Lazy evaluation and predicate pushdown
+> `ohlcv_pl.lazy()` converts an eager DataFrame to a `LazyFrame`. No computation runs until `.collect()` is called. `.explain()` shows the **optimized** plan — note `PROJECT["close", "symbol"] 2/12 COLUMNS` in the output, meaning the optimizer reads only 2 of 12 columns from disk (column pruning). Pandas has no equivalent — all operations are eager and all columns are always materialized.
 
 ```python
 # Inspect the optimized query plan before collecting
@@ -608,7 +675,12 @@ print(plan.explain())
       FROM
         DF ["id", "symbol", "date", "open", ...]; PROJECT["close", "symbol"] 2/12 COLUMNS
 
-### Polars .profile() (execution timing per node)
+### Polars | Execution profiling (`.profile()`)
+
+Runs the lazy pipeline and returns `(result_df, timings_df)` — the timings DataFrame shows each query plan node with `start` and `end` in nanoseconds.
+
+> [!info] Reading `.profile()` output
+> The `timings` DataFrame has columns `node` (plan step name), `start` (ns since execution start), `end` (ns). Subtract `end - start` per row to get each step's duration. The `optimization` node is the query optimizer itself — typically < 200 µs. For this pipeline: filter (170 µs) → sort (192 µs) → rolling_mean (31 µs).
 
 ```python
 # Profile shows time spent at each stage
@@ -633,7 +705,10 @@ display(timings)
 
 Comprehensive null detection across all columns, with percentage and sample rows.
 
-### Pandas
+> [!info] Pandas `NaN` vs Polars `null`
+> Pandas uses `NaN` (a floating-point sentinel) for missing values in numeric columns — this silently coerces integer columns to `float64` when a null is introduced. Polars uses a native `null` bitmask that works across all types without type coercion. `df.isnull()` in Pandas vs `df.is_null()` in Polars — note the underscore difference.
+
+### Pandas | Null audit function
 
 ```python
 # Null audit for Pandas
@@ -681,7 +756,9 @@ if len(result) > 0:
 </table>
 </div>
 
-### Polars
+### Polars | Null audit function
+
+Uses `df.null_count()` which returns a one-row DataFrame of null counts per column, then `.unpivot()` to reshape into a long format for filtering and sorting.
 
 ```python
 # Null audit for Polars
@@ -717,7 +794,7 @@ if result.height > 0:
 
 Find exact duplicates and duplicates on key columns.
 
-### Pandas
+### Pandas | Duplicate detection
 
 ```python
 # Exact duplicates
@@ -737,7 +814,10 @@ if key_dupes > 0:
     Exact duplicate rows: 0
     Duplicate (symbol, date) pairs: 0
 
-### Polars
+### Polars | Duplicate detection
+
+> [!info] Pandas `duplicated()` vs Polars `unique()`
+> Pandas `.duplicated(subset=...)` returns a boolean mask — use `.sum()` to count. Polars has no `.duplicated()` method; instead compute `df.height - df.unique(subset=...).height`. For showing duplicate groups with counts, Polars' `group_by().agg(pl.len())` approach is more expressive than Pandas' `keep=False` approach.
 
 ```python
 # Exact duplicates
@@ -765,6 +845,13 @@ if key_dupes > 0:
 ## Statistical Sanity Checks
 
 Quick checks for outliers, unexpected distributions, and data drift.
+
+> [!info] Parity note — C# counterpart
+> Statistical sanity checks are covered in the Python file only. The C# Polars.NET file covers OHLC domain-specific validation but not general-purpose statistical outlier detection. Use the Python layer for statistical analysis; use C# for in-pipeline business rule enforcement.
+
+### Polars | Summary stats and outlier detection
+
+Computes mean, std, min, max, percentiles, median, and skew in a single `.select()` expression. Flags rows beyond 3 standard deviations as statistical outliers.
 
 ```python
 # Polars: summary stats with outlier flags
@@ -816,6 +903,28 @@ if symbol_gaps.height > 0:
 
 Embed assertions inside data pipelines to catch issues early. If any assertion fails, the pipeline stops with a clear error.
 
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#a9b1d6", "primaryBorderColor": "#3b4261", "lineColor": "#7aa2f7", "secondaryColor": "#24283b", "tertiaryColor": "#1a1b26", "background": "#1a1b26", "mainBkg": "#24283b", "nodeBorder": "#3b4261", "clusterBkg": "#1a1b26", "titleColor": "#a9b1d6", "edgeLabelBackground": "#1a1b26", "attributeBackgroundColorEven": "#1a1b26", "attributeBackgroundColorOdd": "#24283b"}}}%%
+flowchart LR
+    A[read_parquet] --> B[.pipe\nassert_row_count]
+    B --> C[.pipe\nassert_no_nulls]
+    C --> D[.pipe\nassert_unique]
+    D --> E[.pipe\nassert_positive]
+    E --> F[.filter\nsymbol]
+    F --> G[result]
+    B -- AssertionError --> X[pipeline\nstops]
+    C -- AssertionError --> X
+    D -- AssertionError --> X
+    E -- AssertionError --> X
+```
+
+### Polars | Chainable assertion functions with .pipe()
+
+Each function takes a `pl.DataFrame`, validates a constraint, and returns the same frame — enabling use with `.pipe()` to insert assertions inline in a method chain.
+
+> [!tip] Use `.pipe()` for inline assertions
+> `.pipe(assert_no_nulls, ["symbol", "date"])` is equivalent to calling `assert_no_nulls(df, [...])` and reassigning. The `.pipe()` version keeps the chain readable and removes the need for intermediate variables. Both Pandas and Polars support `.pipe()`.
+
 ```python
 def assert_no_nulls(df: pl.DataFrame, cols: list[str]) -> pl.DataFrame:
     """Raise if any specified column has nulls."""
@@ -859,9 +968,12 @@ print(f"Pipeline passed all assertions. Result: {result.shape}")
 
 ## DataFrame Diff
 
-Compare two versions of a DataFrame to find what changed: added rows, removed rows, modified values.
+Compare two versions of a DataFrame to find what changed: added rows, removed rows, modified values. Use this to audit incremental data loads — compare yesterday's snapshot against today's to detect unexpected changes.
 
-### Pandas
+> [!info] Parity note — C# counterpart
+> DataFrame diff is not covered in the C# Polars.NET file. In C#, use the same anti-join and inner-join pattern shown in the Polars section below.
+
+### Pandas | DataFrame diff via outer merge
 
 ```python
 # Simulate two versions
@@ -929,7 +1041,12 @@ print(f"Added: {len(added)}, Removed: {len(removed)}, Changed: {len(changed)}, U
 
     Added: 1, Removed: 1, Changed: 1, Unchanged: 1
 
-### Polars
+### Polars | DataFrame diff via anti-join
+
+Uses anti-joins to find added/removed rows and an inner join with a suffix to find changed values.
+
+> [!info] Pandas `_merge` indicator vs Polars anti-join
+> Pandas outer merge with `indicator=True` gives a `_merge` column (`both`, `left_only`, `right_only`) in a single pass. Polars requires separate anti-join calls — one for each direction — then an inner join for changed values. The Polars approach is more explicit but requires more steps.
 
 ```python
 v1 = pl.DataFrame({"id": [1, 2, 3], "val": [10, 20, 30]})
@@ -958,6 +1075,13 @@ if changed.height > 0:
 ## Error Handling in Data Pipelines
 
 Gracefully handle bad data: catch exceptions, log errors, quarantine bad rows.
+
+### Polars | Quarantine pattern
+
+Splits the frame into `good_rows` and `bad_rows` by evaluating quality rules as filter expressions. Transforms only the good partition, leaving bad rows untouched for investigation.
+
+> [!info] Parity note — C# counterpart
+> The equivalent quarantine pattern is demonstrated in the C# file under `## Data Quality Pipeline > ### Polars.NET | Quarantine pattern`.
 
 ```python
 def safe_transform(df: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFrame]:
@@ -992,6 +1116,11 @@ if bad.height > 0:
 ## Type Coercion & Cast Safety
 
 Test that type casts succeed and don't silently lose data.
+
+> [!info] Parity note — C# counterpart
+> Strict vs non-strict casting is covered in the Python file only. C# Polars.NET uses `col.Cast(DataType.Int64)` — there is no `strict` parameter; failed casts raise an exception by default.
+
+### Polars | Strict vs non-strict cast
 
 ```python
 # Polars: strict vs non-strict casting
@@ -1051,7 +1180,7 @@ display(small)
 | Error quarantine | Filter + transform | Filter + transform |
 
 ---
-# Part 3: Pandas to Polars Migration Guide
+## Part 3: Pandas to Polars Migration Guide
 
 ```python
 ohlcv_pd=pd.read_parquet(DATA/"eurostoxx50_ohlcv.parquet")
@@ -1060,9 +1189,7 @@ ohlcv_pl=pl.read_parquet(DATA/"eurostoxx50_ohlcv.parquet")
 
 ## Concepts to Unlearn
 
-> [!warning] Three Pandas habits that don't
->
-> Three Pandas habits that don't exist in Polars
+> [!warning] Three Pandas habits that don't exist in Polars
 > 1. **Index:** Polars has no index. Use `sort()` + `filter()` instead of `set_index()`
 > 2. **inplace:** Polars never mutates. Every operation returns a new DataFrame
 > 3. **iterrows:** Polars expressions replace row-by-row loops entirely
@@ -1073,6 +1200,8 @@ ohlcv_pl=pl.read_parquet(DATA/"eurostoxx50_ohlcv.parquet")
 >    use `df.filter(pl.col("date") == date)` for row selection.
 > 2. **inplace → reassign:** Always reassign: `df = df.sort("date")`. No mutation needed.
 > 3. **iterrows → expressions:** Replace row loops with `df.with_columns(pl.col("a") - pl.col("b"))`.
+
+### Pandas / Polars | Index vs sort/filter
 
 ```python
 # Pandas: index
@@ -1086,7 +1215,7 @@ print("Polars: just use sort/filter")
     Pandas index: date
     Polars: just use sort/filter
 
-### No inplace
+### Pandas / Polars | No inplace in Polars
 
 ```python
 df=ohlcv_pd.copy()
@@ -1099,7 +1228,7 @@ print(f"Polars: original {ohlcv_pl.shape}, new {df2.shape}")
     Pandas: mutated
     Polars: original (66355, 12), new (66355, 12)
 
-### No iloc/loc
+### Pandas / Polars | No iloc/loc in Polars
 
 ```python
 # Pandas
@@ -1146,10 +1275,7 @@ display(ohlcv_pl.select(ohlcv_pl.columns[1:4]).head(3))
 ## Translation Table
 
 > [!tip] Bookmark this table
->
-> Bookmark this table — it covers the 15 most common Pandas→Polars translations.
-> The biggest behavioral differences: Polars has no index, no inplace mutation, and uses
-> expression-based column references (`pl.col("name")`) instead of bracket indexing.
+> Covers the 15 most common Pandas→Polars translations. The biggest behavioral differences: Polars has no index, no inplace mutation, and uses expression-based column references (`pl.col("name")`) instead of bracket indexing.
 
 ```python
 table = '''
@@ -1199,9 +1325,7 @@ display(Markdown(table))
 
 ## Common Anti-Patterns
 
-
-- **With Columns**: Add new columns or replace existing ones. All original columns are kept.
-- **pl.col**: Reference a column by name. The foundation of all Polars expressions.
+Patterns that work in Pandas but are wrong in Polars — and their correct replacements.
 
 ```python
 # Anti-pattern: iterrows

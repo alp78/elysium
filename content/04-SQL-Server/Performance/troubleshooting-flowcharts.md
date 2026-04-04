@@ -3,7 +3,7 @@ tags: [sql, sql-server, tsql]
 aliases: [SQL Server troubleshooting, why is it slow, pipeline failed, disk space emergency, should I add an index, decision tree, troubleshooting guide]
 description: "Visual troubleshooting flowcharts for SQL Server: diagnosing slowness via wait stats, pipeline failure root cause analysis, the index decision tree, and disk space emergency recovery steps."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-04
 status: complete
 ---
 
@@ -20,9 +20,11 @@ Four decision trees for the most common SQL Server problems: slowness, pipeline 
 
 ## Flowchart 1: "Why Is It Slow?" — The Master Flowchart
 
-Start here when users report slowness or pipeline runs are taking longer than usual. The first step is always [wait statistics](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis).
+When a task executes in SQL Server, it moves between three scheduler states: **RUNNING** (actively executing on a CPU core), **RUNNABLE** (ready to execute but waiting for a CPU quantum — the thread is queued on the scheduler), and **SUSPENDED** (blocked on an external resource — disk I/O, a lock, a latch, network, or memory). A *wait* is recorded every time a task enters SUSPENDED or RUNNABLE. SQL Server accumulates these events in `sys.dm_os_wait_stats`, making the cumulative wait type distribution the single most informative signal about what is limiting throughput.
 
-```
+Start here when users report slowness or pipeline runs are taking longer than usual. The first step is always [wait statistics](https://alp78.github.io/elysium/04-SQL-Server/Performance/wait-stats-analysis): identify which wait type dominates by running the query below, then follow the corresponding branch of the flowchart to the specific resolution.
+
+```text
                             ┌──────────────────────┐
                             │   "IT'S SLOW!"       │
                             └──────────┬───────────┘
@@ -83,7 +85,22 @@ Start here when users report slowness or pipeline runs are taking longer than us
                                                     └──────────────────┘
 ```
 
+### Wait statistics diagnostic queries
+
+The queries below support the flowchart: the first identifies which wait type dominates; the table maps each wait type to its root cause and resolution path.
+
 #### sys.dm_os_wait_stats — the first query to run for slow pipelines
+
+`sys.dm_os_wait_stats` is a server-scoped DMV (Dynamic Management View) that accumulates wait statistics for all completed waits since the SQL Server instance started or since the counters were last cleared with `DBCC SQLPERF('sys.dm_os_wait_stats', CLEAR)`. It captures waits that have already finished — for currently active waits, use `sys.dm_os_waiting_tasks`.
+
+The four columns that matter for diagnosis:
+
+- **`wait_time_ms`** — total elapsed wait time in milliseconds, *inclusive* of signal wait time. It is not a pure resource wait measure on its own.
+- **`signal_wait_time_ms`** — time (ms) the thread spent in the RUNNABLE queue after the resource was granted but before it could get a CPU scheduler quantum. Signal waits measure CPU scheduling pressure, not I/O or lock contention. If `signal_wait_time_ms` exceeds 10–15% of `wait_time_ms` across all wait types, the server is CPU-bound.
+- **Resource wait time** = `wait_time_ms - signal_wait_time_ms` — time the thread was actually SUSPENDED, blocked on a resource. This is the diagnostic column for all non-CPU bottlenecks.
+- **`waiting_tasks_count`** — total number of times this wait type was entered. Divide `wait_time_ms` by `waiting_tasks_count` to compute the average wait duration per event, which distinguishes high-frequency short waits from rare catastrophic waits.
+
+The `WHERE` clause below excludes benign system background waits — idle worker sleep loops, XE timer events, Service Broker internals, and HADR file stream operations — that would otherwise dominate the output without indicating a real workload bottleneck.
 
 ```sql
 -- Top 10 wait types (filtered for noise)
@@ -116,6 +133,10 @@ ORDER BY wait_time_ms DESC;
 
 #### Wait type diagnosis — PAGEIOLATCH, LCK_M, CXPACKET resolution guide
 
+Each wait type surfaces a specific bottleneck layer. `PAGEIOLATCH_SH` (shared) occurs on read operations: the buffer pool needs a data page that is not cached in RAM and must wait for the disk I/O to complete. `PAGEIOLATCH_EX` (exclusive) occurs on page modifications — typically sort spills to tempdb or bulk load operations. Both indicate the same root cause: insufficient buffer pool cache coverage, forcing disk reads. `WRITELOG` is distinct and applies only to transaction log writes (`.ldf` file), not data page I/O.
+
+`CXPACKET` and `CXCONSUMER` are parallel query synchronization waits. `CXPACKET` is recorded on the query coordinator thread waiting for a parallel worker thread to finish its partition; `CXCONSUMER` is recorded on the worker threads consuming rows from another thread. These waits are benign when threads finish within milliseconds of each other, but indicate skew when one thread processes far more rows than others (often caused by a non-uniform partition key distribution).
+
 | Wait Type | Root Cause | Resolution |
 |---|---|---|
 | `PAGEIOLATCH_SH / PAGEIOLATCH_EX` | Buffer pool miss — reading from disk because data isn't cached | Add RAM; add covering indexes to reduce scan volume; move to pd-ssd |
@@ -130,9 +151,11 @@ ORDER BY wait_time_ms DESC;
 
 ## Flowchart 2: "Pipeline Failed" — Data Pipeline Troubleshooting
 
-Start here when an Airflow task turns red.
+When an Airflow task fails with a SQL Server error, the failure almost always falls into one of six categories: connection or network failure (SQL Server unreachable), deadlock (SQL Server error 1205 — two sessions blocked each other and one was chosen as the victim), query timeout (the query ran longer than the pipeline's `command_timeout` setting), disk space exhaustion, authentication failure (error 18456), or data integrity constraint violation. Each category has a different first diagnostic step and a different resolution path.
 
-```
+Start here when an Airflow task turns red. Check the Airflow task logs first to identify the error class, then follow the corresponding branch.
+
+```text
                             ┌──────────────────────┐
                             │  PIPELINE FAILED     │
                             │  (Airflow task red)   │
@@ -194,7 +217,15 @@ Start here when an Airflow task turns red.
                                                     └──────────────────┘
 ```
 
+### Connection and authentication failure diagnostics
+
+The commands and queries below support the left and center branches of the flowchart: verifying SQL Server is running and reachable, and diagnosing login failures.
+
 #### nc, ss, gcloud firewall-rules — connection refused/timeout quick checks
+
+A "connection refused" or "connection timeout" error means the pipeline's network path to SQL Server is broken at one of three layers: the SQL Server process is not running, the IAP tunnel is not open, or a VPC firewall rule is blocking port 1433.
+
+**IAP (Identity-Aware Proxy) tunnel** is a GCP service that creates an authenticated, encrypted TCP tunnel from a local port on the connecting machine to a private GCP VM's port, without requiring a public IP address or VPN. SQL Server on GCP runs on a private VM (no external IP); the IAP tunnel maps `localhost:1433` on the Airflow worker or developer machine to the VM's internal `1433` port. If the tunnel is not open or was disconnected, all connections fail immediately with "connection refused."
 
 ```bash
 # Is SQL Server running?
@@ -209,6 +240,8 @@ gcloud compute start-iap-tunnel analytics-sql-01 1433 --local-host-port=localhos
 
 #### sys.sql_logins is_disabled — login failed, check disabled accounts
 
+"Login failed" errors surface as SQL Server error **18456**. The two most common causes are a disabled login (`is_disabled = 1`) and a locked-out SQL login after repeated failed authentication attempts. `sys.server_principals` covers all server-level principals — both SQL logins and Windows accounts. `xp_readerrorlog` is an extended stored procedure that reads directly from the SQL Server error log file on disk; it always captures login failures with the exact login name, timestamp, and source IP, even when Windows Event Log access is restricted.
+
 ```sql
 -- Check if login is disabled
 SELECT name, is_disabled, is_locked_out
@@ -219,7 +252,11 @@ WHERE name = 'your_login_name';
 EXEC xp_readerrorlog 0, 1, N'Login failed';
 ```
 
+### Data integrity failure diagnostics
+
 #### Data integrity errors — duplicate key, constraint violation, type mismatch
+
+Constraint violations surface in Airflow logs as specific SQL Server error numbers: **2627** (unique key constraint — a row with this key already exists), **547** (foreign key or check constraint violation — the referenced parent row doesn't exist, or the value fails a `CHECK` predicate), **515** (NOT NULL constraint — the source column contains `NULL` in a column defined as `NOT NULL`). Identifying the error number narrows the diagnosis immediately.
 
 - **Duplicate key:** The MERGE or INSERT logic doesn't properly handle existing rows. See [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/merge-and-upsert).
 - **NULL constraint violation:** Source data has NULLs in a NOT NULL column. Add validation in the bronze loader.
@@ -229,7 +266,13 @@ EXEC xp_readerrorlog 0, 1, N'Login failed';
 
 ## Flowchart 3: "Should I Add an Index?" — Index Decision Tree
 
-```
+Adding an index is not always the right answer to a slow query. Every index improves read performance for the specific access pattern it covers, but adds write overhead to every `INSERT`, `UPDATE`, and `DELETE` on that table — SQL Server must update the index B-tree structure on every row modification. For a table with frequent writes and many indexes, the cumulative maintenance cost can slow down the entire pipeline.
+
+The decision hinges on the execution plan operator: a **table scan** or **clustered index scan** reads every row in the table; a **nonclustered index seek** jumps directly to matching rows via the B-tree; a **key lookup** occurs when an index seek finds matching rows but the query also needs columns not included in the index, forcing an additional access back to the clustered index per row.
+
+Use this flowchart when a query is identified as slow and you want to determine whether an index would help, or whether the bottleneck is elsewhere (RAM shortage, blocking, or a plan regression).
+
+```text
                      ┌──────────────────────────┐
                      │ Query is slow. Should I   │
                      │ add an index?             │
@@ -280,7 +323,23 @@ EXEC xp_readerrorlog 0, 1, N'Login failed';
   └─────────────────────────────────────────────────────┘
 ```
 
+### Index analysis queries
+
+The two queries below support the decision tree: the first surfaces the optimizer's index suggestions ranked by expected benefit; the second identifies existing indexes that consume write overhead but are never accessed for reads.
+
 #### sys.dm_db_missing_index_details — quick index checks
+
+`sys.dm_db_missing_index_details` records index suggestions generated by the query optimizer during plan compilation. It does not proactively scan tables — it only captures suggestions for queries that have actually executed. The suggestions reset on SQL Server restart and are not persisted to disk (SQL Server 2022 can persist them to Query Store).
+
+The `improvement_measure` expression (`avg_total_user_cost × avg_user_impact × (user_seeks + user_scans)`) is a composite priority score with three factors:
+
+- **`avg_total_user_cost`** — optimizer-estimated cost of the affected queries *without* the index (in optimizer cost units). Higher means more expensive queries.
+- **`avg_user_impact`** — estimated percentage cost reduction if the index were created (e.g., `80.0` means queries would cost approximately 80% less). Range: 0–100.
+- **`(user_seeks + user_scans)`** — total number of times the optimizer determined this index could have been used. Multiplies the benefit by frequency.
+
+The product has no absolute unit — it is only meaningful relative to other rows in the same result set, sorted descending to rank candidates by expected total benefit. Treat suggestions with `improvement_measure < 10` as negligible.
+
+The second query identifies *zombie indexes*: indexes with high `user_updates` (write overhead on every INSERT/UPDATE/DELETE) but zero `user_seeks` and `user_scans` (never used for reads). These are candidates for removal after verifying they are not required for uniqueness constraints.
 
 ```sql
 -- What does the optimizer think is missing?
@@ -318,7 +377,15 @@ ORDER BY s.user_updates DESC;
 
 ## Flowchart 4: "Disk Space Emergency" — Storage Recovery
 
-```
+SQL Server uses three distinct storage spaces, each with its own growth behavior and recovery procedure:
+
+- **Data files** (`.mdf` primary + `.ndf` secondary): store tables, indexes, and all user data. Grow as rows are inserted; space is only reclaimed by deleting rows and running `DBCC SHRINKFILE`, or by adding a secondary `.ndf` file on a different disk.
+- **Transaction log file** (`.ldf`): records every data modification for crash recovery, point-in-time restore, and replication. The log grows when SQL Server cannot truncate (reuse) its inactive portion — most commonly because log backups are not being taken under the FULL recovery model, or because an active transaction holds old log records open.
+- **OS disk**: hosts the SQL Server binaries, error logs, temporary files, and apt/yum cache. Exhaustion here does not directly block SQL Server writes to data/log files, but can prevent error log rotation and cause `sp_cycle_errorlog` failures.
+
+Diagnosing which file or disk is full is always the first step — the resolution for each is completely different.
+
+```text
                      ┌──────────────────────────┐
                      │ ALERT: Disk space low    │
                      │ or database cannot grow  │
@@ -358,7 +425,13 @@ ORDER BY s.user_updates DESC;
                               └───────────────┘
 ```
 
+### Data file recovery
+
+When the `.mdf` or an `.ndf` file is full, SQL Server cannot allocate new pages and all `INSERT` and `UPDATE` operations fail with error 1105 ("Could not allocate space"). Options: add a secondary `.ndf` file on a different disk (preferred — no fragmentation), run `DBCC SHRINKFILE` to reclaim allocated-but-empty space inside the file (a last resort — causes index fragmentation), or archive and delete old data then reclaim space.
+
 #### ALTER DATABASE MODIFY FILE — data file (.mdf) full, grow or add files
+
+SQL Server stores all data in 8 KB pages grouped into 64 KB extents. `sys.database_files` reports file sizes in *pages* (8 KB each) — the query below converts to MB by multiplying by `8/1024`. The three derived columns show: `size_mb` (total disk space allocated to the file), `used_mb` (space occupied by actual data pages), and `free_mb` (allocated space inside the file not yet used by data — `DBCC SHRINKFILE` can reclaim this). If `free_mb ≈ 0` and `size_mb` is at the disk limit, you must either add a new `.ndf` file on a different disk or expand the underlying disk volume.
 
 ```sql
 -- Check file sizes and free space
@@ -379,7 +452,20 @@ ALTER DATABASE analytics_db ADD FILE (
 );
 ```
 
+### Log file recovery
+
+When the `.ldf` log file is full, all write operations fail with error 9002 ("The transaction log for database is full"). The log cannot be truncated (its inactive portion reused) until the specific impediment recorded in `log_reuse_wait_desc` is resolved. Taking a log backup alone does not always fix it — you must address the root cause first.
+
 #### BACKUP LOG, DBCC SHRINKFILE — log file (.ldf) full recovery
+
+`log_reuse_wait_desc` in `sys.databases` reports what is preventing log truncation at the last checkpoint. Key values:
+
+- **`LOG_BACKUP`**: under the FULL recovery model, the log cannot truncate until a log backup is taken. The log grows indefinitely between backups. Fix: take a `BACKUP LOG` immediately, then schedule log backups every 15 minutes going forward.
+- **`ACTIVE_TRANSACTION`**: an open or deferred transaction spans log records that cannot be discarded. The log grows until the transaction commits or rolls back, regardless of how many log backups are taken. Use `DBCC OPENTRAN` to find the oldest active transaction and its `session_id`, then either wait for it to complete or kill it with `KILL <session_id>`.
+- **`CHECKPOINT`**: transient — a checkpoint has not yet occurred since the last truncation point. Resolves automatically within seconds. If it persists, run `CHECKPOINT` manually.
+- **`REPLICATION`**: the Log Reader Agent (transactional replication) or CDC log reader has not consumed log records up to the truncation point. The agent must be running and caught up. Log backups alone will not free space.
+- **`AVAILABILITY_REPLICA`**: an Always On AG secondary replica has not applied log records up to the truncation point. Check replica synchronization lag.
+- **`XTP_CHECKPOINT`**: an In-Memory OLTP (Hekaton) checkpoint is required — triggered when the log has grown more than 1.5 GB since the last XTP checkpoint. SQL Server 2014+.
 
 ```sql
 -- Check why the log cannot be reused
@@ -403,7 +489,11 @@ DBCC SHRINKFILE (mydb_log, 1024);  -- shrink to 1 GB minimum
 >
 > Configure a SQL Server Agent job (or Airflow DAG) to run `BACKUP LOG analytics_db TO DISK = '...'` every 15 minutes under the FULL recovery model. This keeps the active log portion small and eliminates emergency SHRINKFILE situations. Right-size the initial `.ldf` allocation to the expected steady-state size so it never needs to auto-grow under load.
 
+### OS disk cleanup
+
 #### du, find, journalctl — OS disk full Linux cleanup
+
+When the OS disk (typically `/dev/sda1`, mounted at `/`) is full, SQL Server may still write to its data and log files (if they live on a separate disk), but cannot write new error log entries or create temporary files. The most common OS disk consumers on a SQL Server Linux host are: accumulated SQL Server error logs under `/var/opt/mssql/log/`, OS package cache (`/var/cache/apt/`), and large files in `/tmp`. Run `du` to identify the top consumers before deleting anything.
 
 ```bash
 # Find large files consuming OS disk

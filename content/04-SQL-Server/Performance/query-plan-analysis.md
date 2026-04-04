@@ -18,6 +18,8 @@ SQL Server execution plans are the map SQL Server uses to execute a query. Readi
 
 ## How to Read an Execution Plan
 
+When SQL Server receives a T-SQL query, the **Query Optimizer** determines *how* to execute it. The optimizer is a cost-based engine: it enumerates possible execution strategies — different join orders, index access methods, parallelism configurations — and selects the one with the lowest estimated cost, measured in abstract units of CPU and I/O work. The output is an **execution plan**: a tree of physical operators that each specify a concrete algorithm for retrieving, filtering, joining, sorting, or aggregating data. The optimizer does not guarantee the globally optimal plan; it guarantees the plan with the best *estimated* cost given current statistics. When those statistics are wrong or missing, the optimizer makes poor choices — and the execution plan is where that failure becomes visible.
+
 SQL Server execution plans read **right-to-left, bottom-to-top**. Data sources (table/index scans and seeks) are on the right. Data flows left through transformations (joins, sorts, aggregations) until reaching the leftmost operator — the final SELECT, INSERT, or UPDATE result.
 
 ```
@@ -40,6 +42,10 @@ SQL Server execution plans read **right-to-left, bottom-to-top**. Data sources (
   │   ───────  thin arrow  = few rows flowing                               │
   └─────────────────────────────────────────────────────────────────────────┘
 ```
+
+### Plan Operators and Tree Structure
+
+A plan tree is composed of **physical operators** — the concrete algorithms SQL Server selects to execute each step. Each operator receives input rows from the operator(s) to its right, applies its operation, and passes output rows to the left. The SSMS graphical plan renders this as a left-to-right arrow network; reading it right-to-left follows the data flow from source to output.
 
 #### Reading the visual tree — operators, arrows, cost tooltips
 
@@ -68,6 +74,8 @@ SQL Server execution plans read **right-to-left, bottom-to-top**. Data sources (
 
 ### Estimated vs. Actual Plans
 
+SQL Server can generate plans at three points in the query lifecycle. An **estimated plan** is built at compile time without executing the query — it reflects the optimizer's predictions based on statistics. An **actual plan** is generated after execution and layers real runtime measurements (row counts, memory usage, spill events, elapsed time) on top of the optimizer's predictions. The delta between estimated and actual values is the primary diagnostic signal. A **live plan** streams real-time operator progress as the query executes, useful for diagnosing long-running queries that cannot be interrupted.
+
 | Plan Type | How to Get It | What It Shows |
 |-----------|--------------|---------------|
 | **Estimated** | SSMS: Ctrl+L, or `SET SHOWPLAN_XML ON` | What the optimizer predicts — no actual execution |
@@ -80,7 +88,15 @@ SQL Server execution plans read **right-to-left, bottom-to-top**. Data sources (
 
 ## Capturing Plans from the Pipeline (Without SSMS)
 
+SQL Server stores compiled execution plans in the **plan cache** — a memory region within the buffer pool. When a batch executes, SQL Server first checks whether a valid, reusable plan already exists. If found, it skips compilation entirely and executes directly, saving CPU overhead. Plans remain in cache until evicted by memory pressure, a schema change invalidating the plan, or a manual `DBCC FREEPROCCACHE`. This persistence makes post-run capture possible: pipeline queries leave their plans in cache after execution, where they can be retrieved by DMVs without rerunning the query.
+
+Four capture methods are available without SSMS: two DMV-based approaches that interrogate the live cache, one session-scoped instrumentation approach (`SET STATISTICS`), and one Query Store approach for plans that must survive restarts.
+
+### Plan Cache and Live Capture
+
 #### sys.dm_exec_query_plan — capture from plan cache after pipeline runs
+
+Queries `sys.dm_exec_query_stats` for cached execution statistics and cross-applies `sys.dm_exec_query_plan` to retrieve the corresponding plan XML. The `WHERE` clause filters by query text to isolate pipeline queries. Click the XML result in SSMS to open the graphical plan viewer.
 
 ```sql
 -- Find plans for pipeline queries by text snippet
@@ -99,6 +115,8 @@ ORDER BY qs.total_worker_time DESC;
 
 #### SET STATISTICS XML ON — capture a live XML plan
 
+Session-scoped instrumentation that outputs a full plan XML alongside the query result set. Use when you need the actual plan for a query running in your current session, rather than retrieving a previously cached plan. The XML output appears as a separate result set in the Messages tab — click it to open the graphical plan viewer.
+
 ```sql
 SET STATISTICS XML ON;
 -- Run the pipeline query here
@@ -107,6 +125,8 @@ SET STATISTICS XML OFF;
 ```
 
 #### SET STATISTICS TIME/IO — get actual timing and logical reads
+
+Reports CPU time, elapsed time, and logical read counts per table in the SSMS Messages tab. Logical reads are the most direct measure of I/O pressure: each logical read represents one 8 KB page read from the buffer pool (or disk, if not cached). CPU time isolates compute-heavy operators. These metrics are the ground truth for measuring query cost and complement the plan's percentage-based cost estimates.
 
 ```sql
 SET STATISTICS TIME ON;
@@ -123,7 +143,11 @@ SET STATISTICS IO OFF;
 -- SQL Server Execution Times: CPU time = 15 ms, elapsed time = 23 ms.
 ```
 
+### Query Store Plan Capture
+
 #### sys.query_store_plan — Query Store persisted plans across restarts
+
+Retrieves persisted execution statistics and plan XML from Query Store. Unlike the plan cache — which is volatile and cleared on server restart — Query Store retains plan history, runtime statistics, and wait data across restarts. It is the preferred source for comparing plan performance over time or after a statistics update or index change.
 
 ```sql
 SELECT
@@ -169,7 +193,11 @@ Every operator shows an **Estimated Operator Cost** as a percentage of total que
 >
 > Always run queries with **Include Actual Execution Plan** (Ctrl+M) and `SET STATISTICS IO ON` before drawing conclusions from cost percentages. Use actual row counts versus estimated row counts as the primary signal. If estimated and actual rows diverge by more than 10x on a key operator, run `UPDATE STATISTICS <table> WITH FULLSCAN` and re-examine the plan.
 
+### Programmatic Cost Extraction
+
 #### XML plan nodes //RelOp — extract operator costs programmatically
+
+Each operator in the plan XML is represented by a `RelOp` element under the ShowPlan namespace. The `@EstimatedTotalSubtreeCost` attribute accumulates all costs beneath that node, making it the correct field for ranking operators by total contribution. This query retrieves and sorts all operators by subtree cost for a given plan handle — replace `<your_sql_handle>` with the value from `sys.dm_exec_query_stats`.
 
 ```sql
 ;WITH XMLNAMESPACES (DEFAULT 'http://schemas.microsoft.com/sqlserver/2004/07/showplan')
@@ -188,7 +216,19 @@ ORDER BY subtree_cost DESC;
 
 ## Cardinality Estimation — Detecting Bad Row Count Guesses
 
-The **cardinality estimator** predicts how many rows each operator will process. When predictions are wrong, the optimizer chooses bad strategies — wrong join types, insufficient memory grants, unnecessary sorts.
+The **cardinality estimator** (CE) is the component of the Query Optimizer that predicts how many rows each operator will process. These predictions feed directly into the cost model: the optimizer selects join algorithms, allocates memory grants, and decides on parallelism based on estimated row counts. When predictions are wrong, the optimizer systematically makes bad decisions — choosing Nested Loops for joins that produce millions of rows, allocating a 1 MB memory grant for a Sort that needs 512 MB, or building an unnecessary intermediate Sort because it cannot infer the data is already ordered.
+
+The CE derives row count estimates primarily from **statistics histograms** — per-column data distribution summaries created automatically when an index is built or when statistics are created manually. Each histogram is capped at **200 steps** regardless of table size, so for large tables with skewed distributions, many distinct values collapse into a single step and their individual frequencies are lost. The histogram covers only the **leftmost column** of a multi-column index; all other columns get density-based estimates (the *all density* value — the reciprocal of the number of distinct values), which are far less precise than histogram-based estimates.
+
+SQL Server has shipped two major CE architectures:
+
+| CE Version | Compat Level | Default Since | Key Change |
+|---|---|---|---|
+| CE 70 (Legacy) | ≤ 110 | SQL Server 7.0 | Pre-2014 model; more conservative join estimates |
+| CE 120 (New) | 120 | SQL Server 2014 | Redesigned with four documented assumptions |
+| CE 160 | 160 | SQL Server 2022 | Adds CE feedback, PSP optimization, adaptive memory grants |
+
+The new CE (120+) is built on four assumptions: **uniformity** (values are evenly distributed within histogram steps), **independence** (predicates on different columns are uncorrelated), **containment** (matching attribute values always exist on both sides of a join), and **inclusion** (constant comparisons always match at least one row). These assumptions hold for many workloads but break badly on correlated columns, skewed distributions, and multi-predicate queries — leading to the cardinality mismatches visible in execution plans.
 
 **The golden rule:** Compare **Estimated Number of Rows** vs. **Actual Number of Rows** for every operator. A ratio > 10x in either direction signals a problem.
 
@@ -209,6 +249,8 @@ The **cardinality estimator** predicts how many rows each operator will process.
                                          └────────────────────────────────┘
 ```
 
+### Diagnosing Cardinality Estimation Errors
+
 #### SSMS Actual Execution Plan — spot bad cardinality estimates
 
 1. Run query with **Include Actual Execution Plan** (Ctrl+M)
@@ -226,7 +268,11 @@ The **cardinality estimator** predicts how many rows each operator will process.
 | Estimates wrong with local variables | Optimizer cannot sniff variable values | Use `OPTION (RECOMPILE)` or parameterize the query |
 | Estimates wrong on filtered data | Statistics histogram has insufficient granularity | `UPDATE STATISTICS ... WITH FULLSCAN` or filtered statistics |
 
+### CE Versions and SQL Server 2022 Improvements
+
 #### sys.databases compatibility_level — check and set CE version
+
+The database compatibility level determines which CE model is active. CE feedback (SQL Server 2022) requires compat level 160 and Query Store in `READ_WRITE` mode. Use trace flags `QUERYTRACEON 2312` to force the new CE on an older compat level, or `QUERYTRACEON 9481` to force the legacy CE — useful for isolating regressions introduced by a CE model upgrade. The `LEGACY_CARDINALITY_ESTIMATION` database scoped configuration applies the override at the database level without changing compat level.
 
 ```sql
 -- Check which CE model your database uses
@@ -241,11 +287,46 @@ WHERE _index = 'market_index'
 OPTION (USE HINT('FORCE_LEGACY_CARDINALITY_ESTIMATION'));
 ```
 
+#### SQL Server 2022 — CE feedback via Query Store
+
+SQL Server 2022 (compat level 160) introduces **Cardinality Estimation Feedback**: the optimizer detects when its CE assumptions produce large estimation errors at runtime, tests an alternate model assumption, and — if the alternate produces better plans across repeated executions — persists the corrected assumption as a Query Store hint. This happens automatically without query or index changes. CE feedback currently handles predicate selectivity (correlation model) and join predicate scenarios (containment model).
+
+CE feedback requires Query Store to be enabled and in `READ_WRITE` mode on the database. Feedback activity is visible via `sys.query_store_plan_feedback` and the `query_feedback_analysis` extended event.
+
+```sql
+-- Disable CE feedback at database level if it causes regressions
+ALTER DATABASE SCOPED CONFIGURATION SET CE_FEEDBACK = OFF;
+
+-- Inspect what CE feedback has persisted for specific queries
+SELECT
+    q.query_id,
+    qt.query_sql_text,
+    qpf.feedback_data,
+    qpf.state_desc
+FROM sys.query_store_plan_feedback qpf
+JOIN sys.query_store_plan qsp ON qpf.plan_id = qsp.plan_id
+JOIN sys.query_store_query q ON qsp.query_id = q.query_id
+JOIN sys.query_store_query_text qt ON q.query_text_id = qt.query_text_id
+ORDER BY qpf.create_time DESC;
+```
+
+> [!info] CE Feedback Prerequisite
+>
+> CE feedback is active only when: (1) database compatibility level = 160, (2) Query Store is `ON` and `OPERATION_MODE = READ_WRITE`, (3) no manual query hint or forced plan overrides the query. If any condition is not met, CE feedback silently does nothing.
+
+> [!tip] Extended Events for CE Diagnosis
+>
+> The `query_optimizer_estimate_cardinality` and `inaccurate_cardinality_estimate` extended events expose CE internals at execution time — useful for diagnosing bad estimates without needing full Profiler traces. Pair with the `query_feedback_analysis` XEvent to see CE feedback decisions in real time.
+
 ## Wait Stats Inside Execution Plans
 
-SQL Server 2016+ embeds **query-level wait statistics** directly into the actual execution plan XML. This lets you see exactly what each query waited on, not just server-wide waits.
+SQL Server 2016+ embeds **query-level wait statistics** directly into the actual execution plan XML. This lets you see exactly what each query waited on, not just server-wide waits. Server-wide wait stats from `sys.dm_os_wait_stats` show aggregated totals across all queries — useful for identifying dominant wait categories, but impossible to tie to a specific query. Per-query wait stats in execution plans bridge that gap: they show exactly how many milliseconds a specific execution spent on each wait type, disambiguating performance problems that look similar from server-wide stats alone.
+
+### Reading Wait Stats from SSMS
 
 #### SSMS WaitStats node — per-query wait stats in execution plans
+
+Opens the per-query wait stats breakdown embedded in the execution plan's root operator properties. The `WaitStats` node appears only in actual plans (not estimated) and only when at least one wait occurred during execution.
 
 1. Run query with Include Actual Execution Plan (Ctrl+M)
 2. Right-click on the root operator (leftmost: SELECT, INSERT, etc.)
@@ -272,7 +353,11 @@ SQL Server 2016+ embeds **query-level wait statistics** directly into the actual
   • 5ms waiting for client to consume rows
 ```
 
+### Querying Wait Stats from Plan Cache
+
 #### XML plan //WaitStats/Wait — extract per-query waits from plan cache
+
+XQuery-based extraction of the `WaitStats/Wait` nodes from cached actual plans. Use this to identify which wait type dominates specific pipeline queries without opening SSMS. Results are sorted by `WaitTimeMs` descending so the most expensive wait type surfaces first.
 
 ```sql
 ;WITH XMLNAMESPACES (DEFAULT 'http://schemas.microsoft.com/sqlserver/2004/07/showplan')
@@ -291,7 +376,19 @@ ORDER BY ws.value('@WaitTimeMs', 'bigint') DESC;
 
 ## Parameter Sniffing
 
-Parameter sniffing occurs when SQL Server compiles a query plan based on the first set of parameters it sees, then reuses that plan for all subsequent executions — even when different parameters would benefit from a different plan.
+Parameter sniffing is the mechanism by which SQL Server captures — "sniffs" — the actual parameter values at query compile time and uses them to generate a plan optimized for those specific values. Sniffing occurs for three types of batches: **stored procedures**, **queries submitted via `sp_executesql`**, and **prepared statements**. When the sniffed values are representative of the typical workload, sniffing is beneficial — it produces efficient, data-aware plans without recompiling every execution.
+
+The problem arises when data is unevenly distributed. A plan compiled for a rare, high-selectivity parameter value (e.g., a small customer with 5 orders) will use Nested Loops — efficient for 5 rows. When the same cached plan executes for a large customer with 500,000 orders, it runs 500,000 Nested Loop iterations instead of a Hash Join, and performance collapses. The symptom is a query that runs fine sometimes and catastrophically slowly other times, with no code change between executions.
+
+> [!warning] Statistics Updates Can Trigger Sniffing Regressions
+>
+> A statistics update or index rebuild forces a plan recompile. If the recompile happens to be triggered by a rare parameter value being executed first, the new plan will be suboptimal for the common case — even though the data distribution itself has not changed.
+
+> [!success] Monitor Plan Age and Recompile Triggers
+>
+> Track `sys.dm_exec_query_stats.creation_time` for high-variance queries. If a plan was recently compiled (within the last few hours), check what triggered the recompile with the `sql_statement_recompile` Extended Event.
+
+### Detecting Parameter Sniffing
 
 #### sys.dm_exec_query_stats min/max variance — detect parameter sniffing
 
@@ -312,17 +409,29 @@ WHERE qs.min_elapsed_time > 0
 ORDER BY qs.max_elapsed_time DESC;
 ```
 
-#### OPTIMIZE FOR UNKNOWN, RECOMPILE — parameter sniffing fixes
+### Fixes for Parameter Sniffing
+
+#### OPTIMIZE FOR UNKNOWN, RECOMPILE, and PSP — parameter sniffing fixes
+
+Each fix trades plan quality for a different resource: `RECOMPILE` trades CPU (recompile overhead) for optimal per-execution plans; `OPTIMIZE FOR UNKNOWN` trades plan accuracy for plan stability; PSP (SQL Server 2022) is the only native fix that requires no query modification.
 
 | Fix | When to Use | Command |
 |-----|------------|---------|
 | `OPTION (RECOMPILE)` | Query is cheap to compile, parameters vary widely | Add to the query |
 | `OPTION (OPTIMIZE FOR UNKNOWN)` | Use average statistics instead of sniffed values | Add to the query |
 | `OPTIMIZE FOR (@param = value)` | One specific value is most common | Add to the query with the common value |
+| `OPTION (USE HINT('DISABLE_PARAMETER_SNIFFING'))` | Disable sniffing for a specific query without RECOMPILE | Add to the query |
 | Query Store plan forcing | Lock a known-good plan for a specific query | `sp_query_store_force_plan` |
+| **PSP optimization** (SQL Server 2022) | Automatic; no query change needed; compat level 160 required | `ALTER DATABASE ... COMPATIBILITY_LEVEL = 160` |
 | Split into separate queries | Different parameter ranges need fundamentally different plans | Application-level routing |
 
+> [!info] Parameter-Sensitive Plan (PSP) Optimization — SQL Server 2022
+>
+> PSP optimization (compat level 160) addresses parameter sniffing natively without requiring query hints. When enabled, SQL Server generates multiple plan variants — called **dispatcher plans** — for a single query, each optimized for a different range of parameter values. At execution time, the optimizer dispatches to the variant whose statistics best match the current parameter. PSP is enabled by default at compat level 160 and integrates with Query Store for plan tracking. Disable per query with `OPTION (USE HINT('DISABLE_PARAMETER_SENSITIVE_PLAN'))` or per database with `ALTER DATABASE SCOPED CONFIGURATION SET PARAMETER_SENSITIVE_PLAN_OPTIMIZATION = OFF`.
+
 #### OPTION (RECOMPILE) — for pipeline queries with variable parameters
+
+Forces a plan recompile on every execution. Unlike standard plan reuse, `OPTION (RECOMPILE)` treats the current parameter values as compile-time constants, allowing the optimizer to constant-fold predicates and select the most selective index for the actual values. Best suited for pipeline queries that run infrequently but with highly variable filters.
 
 ```sql
 -- Forces recompile every time — optimal plan for each execution
@@ -334,7 +443,15 @@ OPTION (RECOMPILE);
 
 ## Query Store Setup and Regression Detection
 
-Query Store persists execution statistics and plans across restarts, enabling before/after comparison and plan forcing.
+**Query Store** is SQL Server's built-in flight recorder for query performance. It captures query text, execution plans, and runtime statistics — execution count, average and total duration, logical reads, CPU time, and wait statistics — and persists all of it to disk, so the data survives server restarts. This distinguishes it from the plan cache, which is purely in-memory and volatile.
+
+Query Store serves three primary functions: (1) **regression detection** — comparing a query's current performance against a historical baseline to identify plan regressions after statistics updates or index changes; (2) **plan forcing** — pinning a query to a known-good plan, overriding the optimizer's current choice; (3) **intelligent query processing integration** — in SQL Server 2022 (compat 160), CE feedback, PSP optimization, memory grant feedback, and DOP feedback all require Query Store to be enabled in `READ_WRITE` mode.
+
+> [!info] SQL Server 2022 — Query Store Enabled by Default
+>
+> Starting with SQL Server 2022, Query Store is enabled by default for all **newly created databases** with `OPERATION_MODE = READ_WRITE` and `QUERY_CAPTURE_MODE = AUTO`. For databases upgraded from older versions, it must still be enabled manually.
+
+### Enabling and Configuring Query Store
 
 #### ALTER DATABASE SET QUERY_STORE — enable and configure
 
@@ -363,7 +480,11 @@ SELECT
 FROM sys.database_query_store_options;
 ```
 
+### Finding Regressed Queries
+
 #### sys.query_store_runtime_stats — find regressed queries vs baseline
+
+Compares recent query performance (last 24 hours) against a 7-day historical baseline. The `regression_factor` column shows how many times slower the query has become — a value above 2 means the query is running at least twice as slow as its baseline. Filter further with `recent_executions > 5` to exclude queries that ran only once (which may have been outliers).
 
 ```sql
 WITH recent AS (
@@ -409,7 +530,11 @@ WHERE r.recent_avg_ms > b.baseline_avg_ms * 2
 ORDER BY r.recent_avg_ms / NULLIF(b.baseline_avg_ms, 0) DESC;
 ```
 
+### Forcing Plans and Applying Hints
+
 #### sp_query_store_force_plan — force a known-good plan
+
+Pins a query to a specific historical plan ID. Once forced, the optimizer will use that plan for all future executions regardless of statistics changes, index modifications, or parameter values. Forcing is appropriate when a query has regressed to a bad plan after a statistics update and a quick fix is needed while the root cause is investigated. Always document forced plans and set a review schedule — forced plans prevent the optimizer from benefiting from future improvements (new indexes, statistics corrections).
 
 ```sql
 -- List available plans for a specific query
@@ -433,6 +558,46 @@ EXEC sp_query_store_force_plan @query_id = @query_id, @plan_id = @plan_id;
 -- EXEC sp_query_store_unforce_plan @query_id = @query_id, @plan_id = @plan_id;
 ```
 
+#### sp_query_store_set_hints — apply query hints without modifying code (SQL Server 2022)
+
+**Query Store Hints** (SQL Server 2022) allow applying query hints — `RECOMPILE`, `MAXDOP`, `OPTIMIZE FOR UNKNOWN`, `FORCE_LEGACY_CARDINALITY_ESTIMATION`, and others — to a specific query identified by its `query_id`, without modifying the query text or stored procedure. This is the preferred mechanism when modifying application code is not feasible, such as when queries are generated by an ORM or a third-party ETL tool.
+
+```sql
+-- Find the query_id for a target query
+SELECT q.query_id, qt.query_sql_text
+FROM sys.query_store_query_text qt
+JOIN sys.query_store_query q ON qt.query_text_id = q.query_text_id
+WHERE qt.query_sql_text LIKE '%silver.signals_daily%'
+  AND qt.query_sql_text NOT LIKE '%query_store%';
+
+-- Apply a hint to a specific query (no code change needed)
+EXEC sys.sp_query_store_set_hints
+    @query_id = 42,  -- replace with actual query_id
+    @query_hints = N'OPTION(RECOMPILE)';
+
+-- Combine multiple hints in one call
+EXEC sys.sp_query_store_set_hints
+    @query_id = 42,
+    @query_hints = N'OPTION(RECOMPILE, MAXDOP 4)';
+
+-- Remove hints when no longer needed
+EXEC sys.sp_query_store_clear_hints @query_id = 42;
+
+-- Inspect currently applied hints
+SELECT q.query_id, qt.query_sql_text, qh.query_hint_text
+FROM sys.query_store_query_hints qh
+JOIN sys.query_store_query q ON qh.query_id = q.query_id
+JOIN sys.query_store_query_text qt ON q.query_text_id = qt.query_text_id;
+```
+
+> [!warning] Query Store Hints Override CE Feedback
+>
+> If a query has Query Store Hints applied — whether manually via `sp_query_store_set_hints` or automatically by CE feedback — the hints take precedence. CE feedback will not apply further corrections to a query that already has active hints.
+
+> [!success] Use Hints as a Temporary Fix, Root Cause as the Goal
+>
+> Query Store Hints are a surgical temporary fix. Always track which queries have active hints (`sys.query_store_query_hints`), document the reason and date, and schedule a root-cause investigation. Permanent fixes — updating statistics, creating covering indexes, or fixing implicit conversions — are always preferable to long-lived hints.
+
 ### Common Plan Problems and Fixes
 
 | Problem | Symptom in Plan | Fix |
@@ -448,15 +613,17 @@ EXEC sp_query_store_force_plan @query_id = @query_id, @plan_id = @plan_id;
 
 ### Tagging Pipeline Queries for Correlation
 
-Add a SQL comment header to every pipeline query with DAG context so monitoring tools can slice by DAG, task, and run:
+SQL Server surfaces query text via `sys.dm_exec_sql_text` and in Query Store's `query_sql_text` column. By embedding structured metadata in a SQL comment header — DAG id, task id, Airflow run id — every query becomes attributable to the exact pipeline execution that submitted it, enabling direct correlation between Airflow task timing and SQL Server query performance spikes.
+
+#### Inject DAG context comment into pipeline queries
+
+Prefixes every SQL statement submitted by a pipeline task with a structured comment block. The comment is invisible to the query optimizer but visible to monitoring queries against `sys.dm_exec_sql_text`, `sys.query_store_query_text`, and the Query Store UI.
 
 ```python
 # In your pipeline task function
 dag_context = f"/* dag={dag_id} task={task_id} run={run_id} */"
 cursor.execute(f"{dag_context} MERGE INTO silver.stock_dim ...")
 ```
-
-These comments appear in `sys.dm_exec_sql_text` and in Query Store, enabling correlation between Airflow DAG timing and SQL Server query performance spikes.
 
 ### Related
 

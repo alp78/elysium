@@ -487,6 +487,33 @@ display("Deedle has no built-in linear interpolation — forward fill is the clo
 
     Deedle has no built-in linear interpolation — forward fill is the closest built-in.
 
+### Coalesce
+
+`Coalesce` returns the first non-null value across multiple columns for each row. This is the equivalent of SQL's `COALESCE()` and Python Polars' `pl.coalesce()`. Use it to build fallback chains — for example, prefer the primary data source, else the secondary, else a default. Polars.NET 0.4.0 does not expose a top-level `Coalesce` function, but chaining `FillNull` across columns achieves the same result.
+
+#### Polars.NET | Coalesce via chained FillNull
+
+Chain `FillNull(Col("secondary")).FillNull(Col("fallback"))` on the primary column to cascade through fallback sources. Each `FillNull` replaces remaining nulls with the next column's values.
+
+```csharp
+var coalDf = DataFrame.FromColumns(
+    ("primary",   new double?[] { 100.0, null, 300.0, null }),
+    ("secondary", new double?[] { null, 200.0, null, 400.0 }),
+    ("fallback",  new double?[] { 50.0, 50.0, 50.0, 50.0 })
+);
+
+var coalResult = coalDf.WithColumns(
+    Col("primary")
+        .FillNull(Col("secondary"))
+        .FillNull(Col("fallback"))
+        .Alias("best")
+);
+
+coalResult
+```
+
+<!-- Polars DataFrame: (4 rows, 4 columns) --><table><thead><tr><th>primary</th><th>secondary</th><th>fallback</th><th>best</th></tr></thead><tbody><tr><td>100</td><td class='pl-null'>null</td><td>50</td><td>100</td></tr><tr><td class='pl-null'>null</td><td>200</td><td>50</td><td>200</td></tr><tr><td>300</td><td class='pl-null'>null</td><td>50</td><td>300</td></tr><tr><td class='pl-null'>null</td><td>400</td><td>50</td><td>400</td></tr></tbody></table>
+
 ---
 
 ## String Operations
@@ -901,6 +928,88 @@ builder.Frame
 
 </div>
 
+### Concatenation
+
+Combining values from multiple string columns into a single formatted string — for example, building display labels like `"ASML HOLDING (Netherlands)"`. Polars.NET 0.4.0 does not expose `ConcatStr`, so extract columns to C# arrays and use string interpolation.
+
+#### Polars.NET | Concatenate strings via C# Zip
+
+Extract string columns to arrays, combine with `Zip` and string interpolation, then stack the result back as a new series.
+
+```csharp
+var nameArr = dimP.Column("short_name").ToArray<string>();
+var countryArr = dimP.Column("country").ToArray<string>();
+var displayNames = nameArr.Zip(countryArr, (n, c) => $"{n} ({c})").ToArray();
+var dnSeries = Polars.CSharp.Series.From("display_name", displayNames);
+dimP.Select("short_name", "country").HStack(dnSeries).Head(10)
+```
+
+<!-- Polars DataFrame: (10 rows, 3 columns) --><table><thead><tr><th>short_name</th><th>country</th><th>display_name</th></tr></thead><tbody><tr><td>ASML HOLDING</td><td>Netherlands</td><td>ASML HOLDING (Netherlands)</td></tr><tr><td>LVMH</td><td>France</td><td>LVMH (France)</td></tr><tr><td>HERMES INTL</td><td>France</td><td>HERMES INTL (France)</td></tr><tr><td>L'OREAL</td><td>France</td><td>L'OREAL (France)</td></tr><tr><td>SAP SE</td><td>Germany</td><td>SAP SE (Germany)</td></tr><tr><td>SIEMENS AG</td><td>Germany</td><td>SIEMENS AG (Germany)</td></tr><tr><td>INDUSTRIA DE DISE...O TEXTIL S.</td><td>Spain</td><td>INDUSTRIA DE DISE...O TEXTIL S. (Spain)</td></tr><tr><td>DEUTSCHE TELEKOM AG</td><td>Germany</td><td>DEUTSCHE TELEKOM AG (Germany)</td></tr><tr><td>BANCO SANTANDER S.A.</td><td>Spain</td><td>BANCO SANTANDER S.A. (Spain)</td></tr><tr><td>SCHNEIDER ELECTRIC SE</td><td>France</td><td>SCHNEIDER ELECTRIC SE (France)</td></tr></tbody></table>
+
+#### Deedle | Concatenate strings via LINQ Zip
+
+Same pattern — extract, combine, rebuild frame.
+
+```csharp
+var dNames = dimD.GetColumn<string>("short_name").Values.ToArray();
+var dCountries = dimD.GetColumn<string>("country").Values.ToArray();
+var dDisplay = dNames.Zip(dCountries, (n, c) => $"{n} ({c})").ToArray();
+var dIdx = Enumerable.Range(0, dDisplay.Length).ToArray();
+
+var builder = new FrameBuilder.Columns<int, string>();
+builder.Add("short_name", new Series<int, string>(dIdx, dNames));
+builder.Add("country", new Series<int, string>(dIdx, dCountries));
+builder.Add("display_name", new Series<int, string>(dIdx, dDisplay));
+builder.Frame.Rows[dIdx.Take(10)]
+```
+
+<div><table><thead><th></th><th></th><th>short_name</th><th>country</th><th>display_name</th></thead><thead><th></th><th></th><th>(string)</th><th>(string)</th><th>(string)</th></thead><tr><td><b>0</b></td><td class="no-wrap">-></td><td>ASML HOLDING</td><td>Netherlands</td><td>ASML HOLDING (Netherlands)</td></tr><tr><td><b>1</b></td><td class="no-wrap">-></td><td>LVMH</td><td>France</td><td>LVMH (France)</td></tr><tr><td><b>2</b></td><td class="no-wrap">-></td><td>HERMES INTL</td><td>France</td><td>HERMES INTL (France)</td></tr><tr><td><b>3</b></td><td class="no-wrap">-></td><td>L'OREAL</td><td>France</td><td>L'OREAL (France)</td></tr><tr><td><b>4</b></td><td class="no-wrap">-></td><td>SAP SE</td><td>Germany</td><td>SAP SE (Germany)</td></tr><tr><td><b>5</b></td><td class="no-wrap">-></td><td>SIEMENS AG</td><td>Germany</td><td>SIEMENS AG (Germany)</td></tr><tr><td><b>6</b></td><td class="no-wrap">-></td><td>INDUSTRIA DE DISE...O TEXTIL S.</td><td>Spain</td><td>INDUSTRIA DE DISE...O TEXTIL S. (Spain)</td></tr><tr><td><b>7</b></td><td class="no-wrap">-></td><td>DEUTSCHE TELEKOM AG</td><td>Germany</td><td>DEUTSCHE TELEKOM AG (Germany)</td></tr><tr><td><b>8</b></td><td class="no-wrap">-></td><td>BANCO SANTANDER S.A.</td><td>Spain</td><td>BANCO SANTANDER S.A. (Spain)</td></tr><tr><td><b>9</b></td><td class="no-wrap">-></td><td>SCHNEIDER ELECTRIC SE</td><td>France</td><td>SCHNEIDER ELECTRIC SE (France)</td></tr></table><p><b>10</b> rows x <b>3</b> columns</p><p><b>0</b> missing values</p></div>
+
+### Stripping / Trimming
+
+Remove leading and trailing whitespace (or specified characters) from strings. Polars.NET 0.4.0 does not expose `Str.Strip` — use C#'s `string.Trim()` as a workaround.
+
+#### Polars.NET | Strip whitespace via C# Trim
+
+Extract to array, apply `Trim()`, and stack back.
+
+```csharp
+var dirtyArr = new[] { "  ASML  ", "  SAP ", " MC" };
+var dirtySeries = Polars.CSharp.Series.From("name", dirtyArr);
+var dirtyDf = DataFrame.FromSeries(dirtySeries);
+var trimmedArr = dirtyArr.Select(s => s.Trim()).ToArray();
+var trimSeries = Polars.CSharp.Series.From("stripped", trimmedArr);
+dirtyDf.HStack(trimSeries)
+```
+
+<!-- Polars DataFrame: (3 rows, 2 columns) --><table><thead><tr><th>name</th><th>stripped</th></tr></thead><tbody><tr><td>  ASML  </td><td>ASML</td></tr><tr><td>  SAP </td><td>SAP</td></tr><tr><td> MC</td><td>MC</td></tr></tbody></table>
+
+### Regex Extract All
+
+Extract all matches of a pattern from each string — not just the first. Returns a collected list of matched substrings. Polars.NET 0.4.0 does not expose `Str.ExtractAll` — use `System.Text.RegularExpressions.Regex.Matches` via C#.
+
+#### Polars.NET | Extract all regex matches via C# Regex.Matches
+
+Apply `Regex.Matches` per string, join results, and stack back as columns.
+
+```csharp
+var textArr = new[] {
+    "ASML closed at 900.5 up from 895.2",
+    "No numbers",
+    "PE: 45.3, PB: 12.1"
+};
+var numRegex = new Regex(@"[0-9]+\.?[0-9]*");
+var textSeries = Polars.CSharp.Series.From("text", textArr);
+var textDf = DataFrame.FromSeries(textSeries);
+var numbersArr = textArr.Select(s => string.Join(", ", numRegex.Matches(s).Select(m => m.Value))).ToArray();
+var countArr = textArr.Select(s => (double)numRegex.Matches(s).Count).ToArray();
+textDf
+    .HStack(Polars.CSharp.Series.From("numbers", numbersArr))
+    .HStack(Polars.CSharp.Series.From("count", countArr))
+```
+
+<!-- Polars DataFrame: (3 rows, 3 columns) --><table><thead><tr><th>text</th><th>numbers</th><th>count</th></tr></thead><tbody><tr><td>ASML closed at 900.5 up from 895.2</td><td>900.5, 895.2</td><td>2</td></tr><tr><td>No numbers</td><td></td><td>0</td></tr><tr><td>PE: 45.3, PB: 12.1</td><td>45.3, 12.1</td><td>2</td></tr></tbody></table>
+
 ---
 
 ## DateTime Operations
@@ -1212,6 +1321,186 @@ jan2024D.Columns[new[] { "symbol", "date", "close", "volume" }]
 
 </div>
 
+### Date Range Generation
+
+Generate a sequence of dates between a start and end point. Useful for building trading calendars, creating time-axis DataFrames, or filling date gaps in sparse data. Polars.NET 0.4.0 does not expose `DateRange` — generate dates in C# and parse to Polars `Date` type via `Str.ToDate`.
+
+#### Polars.NET | Generate date range via C# Enumerable
+
+Build date strings with `Enumerable.Range` and `AddDays`, then parse to Polars `Date` type.
+
+```csharp
+var start = new DateTime(2026, 1, 1);
+var end = new DateTime(2026, 1, 10);
+var dates = Enumerable.Range(0, (end - start).Days + 1)
+    .Select(i => start.AddDays(i).ToString("yyyy-MM-dd"))
+    .ToArray();
+
+var dateRangeSeries = Polars.CSharp.Series.From("date_str", dates);
+var dateRangeDf = DataFrame.FromSeries(dateRangeSeries)
+    .WithColumns(Col("date_str").Str.ToDate("%Y-%m-%d").Alias("date"));
+display($"Date range: {dates.Length} days from {dates.First()} to {dates.Last()}");
+dateRangeDf.Select("date")
+```
+
+    Date range: 10 days from 2026-01-01 to 2026-01-10
+
+<!-- Polars DataFrame: (10 rows, 1 columns) --><table><thead><tr><th>date</th></tr></thead><tbody><tr><td>2026-01-01</td></tr><tr><td>2026-01-02</td></tr><tr><td>2026-01-03</td></tr><tr><td>2026-01-04</td></tr><tr><td>2026-01-05</td></tr><tr><td>2026-01-06</td></tr><tr><td>2026-01-07</td></tr><tr><td>2026-01-08</td></tr><tr><td>2026-01-09</td></tr><tr><td>2026-01-10</td></tr></tbody></table>
+
+### Rolling Windows
+
+Compute statistics over a sliding window of N consecutive rows — moving averages, rolling standard deviations, or rolling correlations. The window slides one row at a time, producing a smoothed series. The first `N-1` rows are null since there aren't enough preceding values to fill the window.
+
+> [!tip] Rolling windows for financial analysis
+>
+> Short-term moving averages (SMA-7) respond quickly to price changes; long-term averages (SMA-30) smooth out noise. Crossover of short-over-long is a classic trading signal.
+
+#### Polars.NET | Rolling mean with RollingMean()
+
+`RollingMean("7")` computes the 7-period simple moving average. The window size is passed as a string in Polars.NET 0.4.0. Combine with `WithColumns` and `Alias` for multiple rolling columns.
+
+```csharp
+var asmlP = dfP.Filter(Col("symbol") == Lit("ASML.AS")).Sort("date");
+var asmlRolling = asmlP.WithColumns(
+    Col("close").RollingMean("7").Alias("sma_7"),
+    Col("close").RollingMean("30").Alias("sma_30")
+);
+asmlRolling.Select(new[] { "date", "close", "sma_7", "sma_30" }).Tail(10)
+```
+
+<!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>date</th><th>close</th><th>sma_7</th><th>sma_30</th></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1251.514286</td><td>1201.4</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>1247.542857</td><td>1204.4</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>1234.142857</td><td>1205.126667</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>1227.085714</td><td>1206.626667</td></tr><tr><td>2026-03-05</td><td>1186</td><td>1216.028571</td><td>1206.946667</td></tr><tr><td>2026-03-06</td><td>1147</td><td>1195.828571</td><td>1205.906667</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1183.714286</td><td>1204.893333</td></tr><tr><td>2026-03-10</td><td>1200</td><td>1178.942857</td><td>1204.306667</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1177.285714</td><td>1204.453333</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1181.428571</td><td>1204.413333</td></tr></tbody></table>
+
+#### Deedle | Rolling mean via manual sliding window
+
+Deedle does not have a built-in `RollingMean`. Compute it manually by iterating over the values array and averaging each window.
+
+```csharp
+var asmlD = dfD.Where(row => row.Value.GetAs<string>("symbol") == "ASML.AS");
+var closeVals = asmlD.GetColumn<double>("close").Values.ToArray();
+var closeKeys = asmlD.GetColumn<double>("close").Keys.ToArray();
+int window = 7;
+var sma7 = new double?[closeVals.Length];
+for (int i = 0; i < closeVals.Length; i++)
+{
+    if (i < window - 1) { sma7[i] = null; continue; }
+    double sum = 0;
+    for (int j = i - window + 1; j <= i; j++) sum += closeVals[j];
+    sma7[i] = sum / window;
+}
+
+display("ASML.AS — last 10 rows with SMA-7:");
+var lastKeys = closeKeys.Skip(closeVals.Length - 10).ToArray();
+foreach (var k in lastKeys)
+{
+    int i = Array.IndexOf(closeKeys, k);
+    var smaStr = sma7[i].HasValue ? sma7[i].Value.ToString("F2") : "null";
+    Console.WriteLine($"  close={closeVals[i],10:F2}   sma_7={smaStr,10}");
+}
+```
+
+```text
+ASML.AS — last 10 rows with SMA-7:
+  close=   1233.40   sma_7=   1251.51
+  close=   1210.40   sma_7=   1247.54
+  close=   1161.80   sma_7=   1234.14
+  close=   1199.80   sma_7=   1227.09
+  close=   1186.00   sma_7=   1216.03
+  close=   1147.00   sma_7=   1195.83
+  close=   1147.60   sma_7=   1183.71
+  close=   1200.00   sma_7=   1178.94
+  close=   1198.80   sma_7=   1177.29
+  close=   1190.80   sma_7=   1181.43
+```
+
+### Resampling
+
+Change time frequency — downsampling daily data to monthly OHLC bars. Polars.NET 0.4.0 does not expose `GroupByDynamic`, so use `Dt.Year()` / `Dt.Month()` with `GroupBy` as a reliable alternative.
+
+#### Polars.NET | Monthly OHLC via GroupBy year and month
+
+Extract year and month components with the `.Dt` accessor, group by both, then aggregate with `First` (open), `Max` (high), `Min` (low), `Last` (close), and `Sum` (volume).
+
+```csharp
+var asmlSorted = dfP.Filter(Col("symbol") == Lit("ASML.AS")).Sort("date");
+var asmlMonthly = asmlSorted
+    .WithColumns(
+        Col("date").Dt.Year().Alias("year"),
+        Col("date").Dt.Month().Alias("month")
+    )
+    .GroupBy("year", "month")
+    .Agg(
+        Col("open").First().Alias("open"),
+        Col("high").Max().Alias("high"),
+        Col("low").Min().Alias("low"),
+        Col("close").Last().Alias("close"),
+        Col("volume").Sum().Alias("volume")
+    )
+    .Sort(new[] { "year", "month" });
+display("ASML.AS — Monthly OHLC (last 6 months):");
+asmlMonthly.Tail(6)
+```
+
+    ASML.AS — Monthly OHLC (last 6 months):
+
+<!-- Polars DataFrame: (6 rows, 7 columns) --><table><thead><tr><th>year</th><th>month</th><th>open</th><th>high</th><th>low</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>2025</td><td>10</td><td>818</td><td>938.6</td><td>812.1</td><td>918.1</td><td>16383868</td></tr><tr><td>2025</td><td>11</td><td>917</td><td>930.9</td><td>822.2</td><td>903.4</td><td>12064891</td></tr><tr><td>2025</td><td>12</td><td>910</td><td>977.1</td><td>866.4</td><td>921.4</td><td>10360738</td></tr><tr><td>2026</td><td>1</td><td>919.4</td><td>1309</td><td>919.2</td><td>1215.6</td><td>16549130</td></tr><tr><td>2026</td><td>2</td><td>1178.6</td><td>1312.8</td><td>1117.6</td><td>1233.4</td><td>11528098</td></tr><tr><td>2026</td><td>3</td><td>1192.8</td><td>1231.4</td><td>1060.2</td><td>1190.8</td><td>6344179</td></tr></tbody></table>
+
+### Cumulative Max and Min
+
+Running maximum and minimum track the all-time high and all-time low from the first row to the current row. Combined with cumulative sum of volume, these provide a complete picture of accumulated trading activity and price extremes.
+
+#### Polars.NET | Cumulative max, min, and sum with CumMax(), CumMin(), CumSum()
+
+`CumMax()` and `CumMin()` return running aggregates. Each row's value is the max (or min) of all values from the first row to the current row.
+
+```csharp
+var asmlCum = asmlSorted.WithColumns(
+    Col("volume").CumSum().Alias("cum_volume"),
+    Col("close").CumMax().Alias("running_high"),
+    Col("close").CumMin().Alias("running_low")
+);
+asmlCum.Select(new[] { "date", "close", "volume", "cum_volume", "running_high", "running_low" }).Tail(10)
+```
+
+<!-- Polars DataFrame: (10 rows, 6 columns) --><table><thead><tr><th>date</th><th>close</th><th>volume</th><th>cum_volume</th><th>running_high</th><th>running_low</th></tr></thead><tbody><tr><td>2026-02-27</td><td>1233.4</td><td>1010698</td><td>938726541</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-02</td><td>1210.4</td><td>871267</td><td>939597808</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-03</td><td>1161.8</td><td>941945</td><td>940539753</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-04</td><td>1199.8</td><td>714587</td><td>941254340</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-05</td><td>1186</td><td>778081</td><td>942032421</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-06</td><td>1147</td><td>857271</td><td>942889692</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>689086</td><td>943578778</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-10</td><td>1200</td><td>800815</td><td>944379593</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>562904</td><td>944942497</td><td>1288.4</td><td>397.45</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>128223</td><td>945070720</td><td>1288.4</td><td>397.45</td></tr></tbody></table>
+
+#### Deedle | Cumulative max and min via manual running aggregates
+
+Deedle has no built-in `CumMax` or `CumMin`. Compute manually by iterating over the values and tracking running extremes.
+
+```csharp
+var asmlClose = asmlD.GetColumn<double>("close");
+var keys = asmlClose.Keys.ToArray();
+var vals = asmlClose.Values.ToArray();
+
+var cumMax = new double[vals.Length];
+var cumMin = new double[vals.Length];
+cumMax[0] = vals[0];
+cumMin[0] = vals[0];
+for (int i = 1; i < vals.Length; i++)
+{
+    cumMax[i] = Math.Max(cumMax[i - 1], vals[i]);
+    cumMin[i] = Math.Min(cumMin[i - 1], vals[i]);
+}
+
+display("ASML.AS — last 10 rows with running high/low:");
+for (int i = vals.Length - 10; i < vals.Length; i++)
+    Console.WriteLine($"  close={vals[i],10:F2}   running_high={cumMax[i],10:F2}   running_low={cumMin[i],10:F2}");
+```
+
+```text
+ASML.AS — last 10 rows with running high/low:
+  close=   1233.40   running_high=   1288.40   running_low=    397.45
+  close=   1210.40   running_high=   1288.40   running_low=    397.45
+  close=   1161.80   running_high=   1288.40   running_low=    397.45
+  close=   1199.80   running_high=   1288.40   running_low=    397.45
+  close=   1186.00   running_high=   1288.40   running_low=    397.45
+  close=   1147.00   running_high=   1288.40   running_low=    397.45
+  close=   1147.60   running_high=   1288.40   running_low=    397.45
+  close=   1200.00   running_high=   1288.40   running_low=    397.45
+  close=   1198.80   running_high=   1288.40   running_low=    397.45
+  close=   1190.80   running_high=   1288.40   running_low=    397.45
+```
+
 ---
 
 ## Summary
@@ -1242,4 +1531,12 @@ Quick reference comparing Polars.NET expression-based API to Deedle's lambda-bas
 | **Date arithmetic** | `.Dt.OffsetBy("7d")` | Lambda: `.AddDays(7)` |
 | **Shift/Lag** | `Col("c").Shift(1)` | `series.Shift(1)` |
 | **Cumulative sum** | `Col("c").CumSum()` | Manual running total |
+| **Cumulative max/min** | `Col("c").CumMax()` / `.CumMin()` | Manual running max/min |
 | **Date filter** | `.Dt.Year() == Lit(2024)` | Lambda: `dt.Year == 2024` |
+| **Date range** | C# `Enumerable.Range` → `Str.ToDate` | C# `Enumerable.Range` + `AddDays` |
+| **Rolling mean** | `Col("c").RollingMean("7")` | Manual sliding window |
+| **Resample (monthly)** | `GroupBy("year", "month").Agg(...)` | Manual grouping |
+| **Coalesce** | Chained `FillNull(Col("b")).FillNull(Col("c"))` | N/A |
+| **String concat** | C# `Zip` + `HStack` | C# `Zip` + `FrameBuilder` |
+| **String trim** | C# `Trim()` + `HStack` | C# `Trim()` + `FrameBuilder` |
+| **Regex extract all** | C# `Regex.Matches` + `HStack` | C# `Regex.Matches` |

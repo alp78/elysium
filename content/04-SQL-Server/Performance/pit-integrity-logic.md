@@ -30,6 +30,15 @@ Index constituents change at every quarterly rebalancing and on corporate action
 
 ### T-SQL: SCD Type 2 for Constituent Membership
 
+**SCD Type 2** (Slowly Changing Dimension Type 2) is a data warehousing pattern that preserves the complete history of changes to a record by inserting a **new row** for each change instead of overwriting the existing one. Each row carries an `effective_date` (the date the row became the current truth) and an `expiry_date` (the date it was superseded). An open-ended record — the one currently active — uses the sentinel value `'9999-12-31'` as `expiry_date`, indicating no defined end.
+
+The table below implements this pattern for index constituents. Every membership event — quarterly rebalancing, IPO addition, merger removal, or delisting — inserts a new row with the updated `effective_date`. The prior row's `expiry_date` is set to that same date, closing the old record. This produces an immutable, append-only audit trail: no historical record is ever modified after it is written.
+
+Key design decisions:
+- `DECIMAL(18,10)` for `weight_pct` and factors — exact base-10 fixed-point arithmetic avoids the IEEE 754 rounding errors inherent in `FLOAT` or `REAL`.
+- The `UNIQUE (index_code, instrument_isin, effective_date)` constraint prevents duplicate membership records for the same security on the same effective date, which would corrupt PIT queries.
+- `change_reason` captures the business event that triggered the row (`REBALANCE`, `IPO_ADD`, `MERGER_REMOVE`, `DELIST`) — required for EU BMR audit trail.
+
 ```sql
 CREATE TABLE dbo.index_constituent_history (
     constituent_id    INT IDENTITY PRIMARY KEY,
@@ -47,7 +56,6 @@ CREATE TABLE dbo.index_constituent_history (
         UNIQUE (index_code, instrument_isin, effective_date)
 );
 
--- Covering index for PIT queries
 CREATE NONCLUSTERED INDEX ix_pit_lookup
     ON dbo.index_constituent_history (index_code, effective_date, expiry_date)
     INCLUDE (instrument_isin, weight_pct, free_float_factor, capping_factor);
@@ -55,8 +63,11 @@ CREATE NONCLUSTERED INDEX ix_pit_lookup
 
 ### PIT Query: "Who was in the index on a given date?"
 
+A PIT (point-in-time) query reconstructs the exact membership of a table at a specific historical date. It scans the SCD Type 2 rows and returns only those whose validity window contains the target date: the row must have started on or before the target date (`effective_date <= @as_of_date`) and must not yet have expired (`expiry_date > @as_of_date`). Any date outside a row's `[effective_date, expiry_date)` interval is invisible to the query.
+
+This is the foundational query for every historical calculation: back-tests, index level reconstructions, and regulatory audits all begin with a PIT constituent lookup to establish which securities were active and at what weights.
+
 ```sql
--- Point-in-time constituent lookup
 DECLARE @as_of_date DATE = '2025-06-15';
 
 SELECT
@@ -82,8 +93,11 @@ WHERE index_code = 'EURO_STOXX_50'
 
 ### BigQuery: PIT with DATE Ranges
 
+BigQuery does not provide a native system-versioned temporal table feature comparable to SQL Server's `SYSTEM_VERSIONING = ON`. The SCD Type 2 pattern with explicit `effective_date`/`expiry_date` columns is therefore the standard approach on BigQuery as well. The PIT predicate is identical in logic; BigQuery's `DATE` type (a calendar date with no time component) maps directly to SQL Server's `DATE`, so the half-open interval convention transfers without change.
+
+When multiple overlapping rows exist for the same `(index_code, instrument_isin)` — a data quality failure — `ROW_NUMBER()` with `ORDER BY effective_date DESC, loaded_at DESC` surfaces the latest-loaded, latest-effective record and the outer `WHERE rn = 1` discards duplicates.
+
 ```sql
--- BigQuery equivalent using Standard SQL
 SELECT
     index_code,
     instrument_isin,
@@ -117,6 +131,18 @@ WHERE rn = 1;
 
 ## Bi-Temporal Model
 
+**Bi-temporal modeling** is an extension of SCD Type 2 that tracks **two independent time dimensions simultaneously**. SCD Type 2 only records *when a fact was true in the real world* (valid time). Bi-temporal modeling adds a second axis: *when the system became aware of the fact* (transaction time). These two axes are orthogonal — a data vendor can correct a historical weight three days after publication, and the two are not the same event.
+
+This distinction matters acutely in regulated financial publishing. Under EU BMR, an index provider must prove that a specific index level was calculated correctly using the data that was actually available at the time of publication — not the corrected data that arrived later. SCD Type 2 alone cannot answer this question: once a record is updated, the "as-known-at-publication" state is gone. Bi-temporal modeling preserves both states permanently.
+
+The two axes answer different categories of question:
+- **Valid time query**: "What were the index constituents on date X?" — filters on `valid_from`/`valid_to`.
+- **Transaction time query**: "What did our system know on date Y about the index on date X?" — filters on both `sys_start`/`sys_end` and `valid_from`/`valid_to`. This is the regulatory reproducibility query.
+
+> [!tip] Connection to look-ahead bias
+>
+> In backtesting and algorithmic trading, **look-ahead bias** refers to using data that would not have been available at the time a trading decision was made — for example, an ESG score corrected by the vendor three days after its initial publication. A bi-temporal model is the technical solution to look-ahead-free analysis: querying with `FOR SYSTEM_TIME AS OF <publication_date>` guarantees that only data known at that moment is included. Any backtest or index history reconstruction that queries the current state of the data (without transaction-time filtering) is implicitly look-ahead-biased and will produce results that cannot be reproduced in a live environment.
+
 Two independent time axes:
 
 | Axis | Columns | Question Answered |
@@ -125,6 +151,25 @@ Two independent time axes:
 | **Transaction time** | `recorded_at`, `superseded_at` | When did we know about it in our system? |
 
 ### T-SQL: System-Versioned Temporal Table
+
+SQL Server's **system-versioned temporal tables** implement the transaction time axis automatically. When `SYSTEM_VERSIONING = ON`, the engine attaches two `datetime2(7)` period columns — `sys_start` and `sys_end` — and a linked history table. On every `UPDATE` or `DELETE`, the engine copies the prior row version to the history table with `sys_end` set to the transaction start time, then writes the new version to the current table with `sys_start` set to the same transaction time. This happens at the storage layer; the application issues normal DML and versioning is transparent.
+
+Three rules govern the period columns:
+1. `GENERATED ALWAYS AS ROW START/END` — their values are set by the engine and cannot be overridden by the application.
+2. `PERIOD FOR SYSTEM_TIME (sys_start, sys_end)` — registers the pair as the system-time period. Without this declaration the versioning cannot be enabled.
+3. The history table (`dbo.constituent_bitemporal_history`) is append-only while `SYSTEM_VERSIONING = ON`. Direct `UPDATE`, `DELETE`, or `TRUNCATE` on the history table requires temporarily disabling versioning.
+
+> [!info] History Table Indexing for Analytical Workloads
+>
+> The default auto-created history table index is a clustered B-tree rowstore on `(sys_end, sys_start)`. For PIT queries spanning long date ranges, Microsoft recommends replacing this with a **clustered columnstore index (CCI)**. History rows are insert-only — never updated in place — making CCI compression and batch-mode scanning highly effective. On large history tables, a CCI provides up to 10× compression and significantly faster range-scan performance over `FOR SYSTEM_TIME AS OF` queries.
+
+> [!danger] Long-running transactions cause tempdb version store bloat
+>
+> SQL Server stores row versions for temporal tables in the `tempdb` version store. A transaction that remains open — for example, a batch ETL job holding a single large transaction — prevents the engine from cleaning up superseded row versions, causing `tempdb` to grow unboundedly. The key performance counters to monitor are `Version Store Size (KB)`, `Version Generation rate (KB/s)`, `Version Cleanup rate (KB/s)`, and `Longest Transaction Running Time` in `sys.dm_os_performance_counters`. A version store that grows during batch loads indicates transactions are not being committed promptly.
+
+> [!success] Commit frequently and monitor version store counters
+>
+> Batch inserts or updates against system-versioned temporal tables should commit every 10,000–50,000 rows rather than holding a single large transaction open. For bulk historical loads where versioning is not needed, temporarily set `SYSTEM_VERSIONING = OFF`, load in batches, then re-enable with `SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.constituent_bitemporal_history, DATA_CONSISTENCY_CHECK = ON)`.
 
 ```sql
 CREATE TABLE dbo.constituent_bitemporal (
@@ -149,9 +194,19 @@ WITH (SYSTEM_VERSIONING = ON (
 
 ### Bi-Temporal Query: "What did we know on Date Y about the index on Date X?"
 
+`FOR SYSTEM_TIME AS OF <timestamp>` is SQL Server's native PIT syntax for system-versioned temporal tables. Internally, the engine rewrites the query as a **UNION** of the current table and the history table, applying the filter `sys_start <= @point AND sys_end > @point` to both sides. This makes the clause SARGable — the `(sys_end, sys_start)` index on the history table is used directly. The engine also automatically excludes zero-duration rows (`sys_start = sys_end`), which can arise when multiple DML statements hit the same key within a single transaction.
+
+In the bi-temporal query below, `FOR SYSTEM_TIME AS OF` filters the transaction time axis (what the system knew as of the publication date), while the explicit `valid_from`/`valid_to` predicates filter the valid time axis (what the business fact was on the target date). Combining both axes answers the regulatory question precisely.
+
+> [!warning] Period columns store UTC — never apply time zone conversion to the column itself
+>
+> Wrapping a period column in `AT TIME ZONE` (e.g., `sys_start AT TIME ZONE 'Central European Time'`) defeats SARGability and forces a full scan of both the current and history tables. Always convert the **input parameter** to UTC instead: `@local_time AT TIME ZONE 'Central European Time' AT TIME ZONE 'UTC'`.
+
+> [!success] Safe Pattern — Convert the parameter, not the column
+>
+> Pass UTC timestamps directly to `FOR SYSTEM_TIME AS OF`. If the source time is local, convert it before the query: `CAST(@local_time AT TIME ZONE 'Central European Time' AT TIME ZONE 'UTC' AS datetime2)`.
+
 ```sql
--- Valid time: index composition on 2025-06-15
--- Transaction time: as known on 2025-06-20 (before a late correction arrived)
 SELECT
     index_code,
     instrument_isin,
@@ -176,6 +231,14 @@ WHERE index_code = 'EURO_STOXX_50'
 ## Weight Normalization
 
 After applying free-float factors and capping, constituent weights must sum to exactly **1.00000000** (8 decimal places). Rounding errors accumulate across 50+ constituents.
+
+> [!warning] Never use FLOAT or REAL for financial weights
+>
+> `FLOAT` and `REAL` use IEEE 754 binary floating-point representation. Most decimal fractions — including 0.1 — cannot be represented exactly in base 2 (0.1 in binary is an infinite repeating fraction: 0.000110011…). Summing 50 `FLOAT` weights will produce a result like `0.9999999999999998` or `1.0000000000000002`, triggering a validation failure even when the weights are mathematically correct. A `DECIMAL(18,10)` is an exact base-10 fixed-point type: arithmetic is performed in base 10 and intermediate results are truncated to the specified precision — no hidden binary conversion occurs.
+
+> [!success] Use DECIMAL(18,10) for all weight columns
+>
+> Declare all weight and factor columns as `DECIMAL(18,10)`. This gives 10 significant decimal places after the point, which is sufficient to represent a 0.0000000001 rounding residual on a weight. Use `CAST(ROUND(value, 10) AS DECIMAL(18,10))` explicitly at each normalization step to control where truncation occurs rather than letting SQL Server decide.
 
 ### T-SQL: Normalization with Residual Distribution
 
@@ -318,6 +381,12 @@ Joining 10 years of daily price history (~2.5M rows per 50-constituent index) wi
 
 ### T-SQL: Indexing Strategy
 
+PIT workloads require indexes that serve three distinct access patterns simultaneously, and each demands a different design:
+
+1. **Constituent lookup by date** — `WHERE index_code = X AND effective_date <= Y AND expiry_date > Y` — needs a covering nonclustered index with `(index_code, effective_date, expiry_date)` as the key and the payload columns in `INCLUDE`. The selectivity of `index_code` is low (few distinct values), so the index is narrowed by the date range.
+2. **Price range scans per instrument** — `WHERE instrument_isin = X AND price_date BETWEEN A AND B` — needs a clustered index on `(instrument_isin, price_date)`. Clustering ensures that all rows for a given instrument are physically adjacent on disk, making multi-year date range scans sequential reads rather than random I/O.
+3. **Analytical aggregations over historical data** — `GROUP BY`, `SUM`, `AVG` across millions of rows — benefits from a nonclustered columnstore index (NCCI). Columnstore stores data in compressed columnar format and processes aggregations with SIMD batch-mode execution, which is 10–100× faster than rowstore for read-heavy analytical queries.
+
 ```sql
 -- Price history: clustered on (instrument, date) for range scans
 CREATE CLUSTERED INDEX ix_prices_pk
@@ -342,6 +411,14 @@ CREATE NONCLUSTERED COLUMNSTORE INDEX ixcs_prices_analytics
 ```
 
 ### T-SQL: Materialized PIT + Forward-Filled ESG Join
+
+Large-scale PIT joins fail when the query optimizer chooses a nested loop plan over the full price history before filtering by the constituent list. Without materialization, the optimizer may scan all 2.5M price rows for every constituent — an O(n × m) cross-product. The **materialization pattern** forces an explicit evaluation order that the optimizer cannot resequence:
+
+1. Isolate the PIT constituent list into a temp table (`#pit_constituents`) — typically 50 rows. SQL Server builds statistics on the temp table, which the optimizer uses in subsequent steps.
+2. Retrieve prices only for those 50 instruments — reducing the price working set from 2.5M to ~125K rows.
+3. Apply the ESG forward-fill join against the already-reduced set.
+
+SQL Server lacks `IGNORE NULLS` in window functions (unlike BigQuery's `LAST_VALUE(... IGNORE NULLS)`). The ESG forward-fill is implemented with `OUTER APPLY` + `TOP 1 ORDER BY score_date DESC`, which returns the most recent ESG score on or before the current price date for each instrument.
 
 ```sql
 -- Step 1: Materialize PIT constituents into a temp table
@@ -423,6 +500,14 @@ ORDER BY p.price_date, p.instrument_isin;
 ---
 
 ## Reconciliation Queries
+
+Reconciliation queries verify that the output of a calculation pipeline satisfies known mathematical invariants before results are published or propagated to downstream systems. Unlike application-level tests that check code logic, reconciliation queries run against the actual calculated data and act as a **hard publication gate** — a failed check halts the pipeline.
+
+Three reconciliation checks are standard for index calculation systems:
+
+1. **Weight sum validation** — the sum of all constituent weights for a given `(index_code, calc_date)` must equal exactly `1.0000000000` within a tolerance of `1E-9`. This is a binary pass/fail gate: even a single failing date blocks publication of the entire index history.
+2. **Historical return verification** — daily returns derived from the calculated index level series must match the independently published return series within `1E-8`. A mismatch indicates rounding, data feed, or replication divergence.
+3. **Cross-system reconciliation** — when SQL Server and BigQuery compute the same index independently, their daily levels must agree within `1E-5`. Larger divergences indicate a platform-specific defect: typically a floating-point type mismatch (`FLOAT` vs `NUMERIC`), a date boundary difference, or a data load gap.
 
 ### Daily Weight Sum Validation
 

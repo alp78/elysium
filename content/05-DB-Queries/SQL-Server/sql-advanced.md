@@ -1,5 +1,5 @@
 ---
-tags: [sql, sql-server, tsql]
+tags: [sql-server, tsql, advanced]
 aliases: [SQL advanced, window functions, CTE, common table expression, PIVOT, UNPIVOT, JSON, recursive CTE, ROW_NUMBER, RANK, LAG, LEAD]
 description: "Advanced SQL Server T-SQL patterns with executable examples — covers window functions, CTEs, PIVOT/UNPIVOT, JSON, CROSS APPLY, and recursive queries."
 created: 2026-03-22
@@ -24,7 +24,9 @@ status: complete
 %sql mssql+pyodbc://sa:EsgDev2026Pass1@localhost:1434/stoxx?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes&MARS_Connection=yes
 ```
 
-Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=yes&amp;TrustServerCertificate=yes&amp;driver=ODBC+Driver+18+for+SQL+Server&#x27;
+```text
+Connecting to 'mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=yes&TrustServerCertificate=yes&driver=ODBC+Driver+18+for+SQL+Server'
+```
 
 > [!danger] Lab-Only Credentials
 >
@@ -36,17 +38,14 @@ Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=y
 
 ## Advanced Window Functions
 
-The window functions and SCD patterns in this section are used extensively in the [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) and [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) layers of the medallion pipeline to produce cleaned and analytical datasets.
+The window functions in this section are used extensively in the [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) and [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) layers of the medallion pipeline to produce cleaned and analytical datasets. For the foundational `RANK`, `DENSE_RANK`, `LAG`, `LEAD`, and `SUM() OVER` patterns, see [sql-fundamentals > Window Functions](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals#window-functions).
 
 ### Window Functions — ROW_NUMBER for Deduplication
 
-Assign a unique sequential number within each partition. The classic pattern for picking
-one row per key (e.g., latest price per stock, or deduplicating loads).
+Assigns a unique sequential integer within each partition, ordered by the specified column. The outer query filters to `rn = 1` to retain only the most recent row per symbol — the standard deduplication pattern for picking the latest record per key.
 
 
 ```sql
--- Pick the latest price per stock using ROW_NUMBER
--- rn=1 means the most recent date for each symbol
 SELECT TOP 10 symbol, date, [close], volume
 FROM (
     SELECT symbol, date, [close], volume,
@@ -110,7 +109,6 @@ Use case: "ASML is in the 90th percentile of composite scores."
 
 
 ```sql
--- Percentile ranking of stocks by composite score
 SELECT TOP 15
     symbol,
     ROUND(composite_score, 4) AS score,
@@ -186,12 +184,10 @@ ORDER BY composite_rank
 >
 > Always specify an explicit frame with `LAST_VALUE`: `LAST_VALUE(col) OVER (PARTITION BY x ORDER BY y ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)`. For "last value in partition" scenarios, consider using `FIRST_VALUE` with a descending `ORDER BY` instead — it is less error-prone because the default frame works correctly for `FIRST_VALUE`.
 
-Use case: compare every day's close to the first close of the year (YTD return).
+`FIRST_VALUE` retrieves the first trading day's close for the year (the January opening price). Every subsequent row divides the current close by that anchor to compute the year-to-date return percentage.
 
 
 ```sql
--- Compare each day to first close of the year
--- FIRST_VALUE gets Jan 2 close; every row computes YTD return from it
 SELECT TOP 15
     symbol, date,
     ROUND([close], 2) AS [close],
@@ -268,7 +264,6 @@ Use case: cumulative volume, cumulative return, running P&L.
 
 
 ```sql
--- Cumulative volume for ASML in 2025
 SELECT TOP 15
     symbol, date, volume,
     SUM(volume) OVER (
@@ -326,7 +321,7 @@ ORDER BY date DESC
 
 ### Window Functions — Frame Deep Dive (ROWS BETWEEN, RANGE)
 
-The frame clause controls which rows the function sees:
+The frame clause controls which rows within the current partition a window function sees. It is specified after `ORDER BY` inside the `OVER` clause. The two frame units are `ROWS` (physical row count) and `RANGE` (logical value range, grouping ties together). Without an explicit frame clause, SQL Server defaults to `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` — a default that produces incorrect moving averages when the `ORDER BY` column has tied values.
 
 | Frame | Meaning |
 |-------|--------|
@@ -345,20 +340,17 @@ The frame clause controls which rows the function sees:
 >
 > Use `ROWS BETWEEN N PRECEDING AND CURRENT ROW` for all moving average calculations. Reserve `RANGE` only for scenarios where you explicitly need tie-grouping behavior (e.g., cumulative totals where tied ranks should share the same running total). When in doubt, `ROWS` is the safer, more predictable default.
 
+The query demonstrates three `OVER` variants side by side: `sma_5_rows` uses `ROWS BETWEEN 4 PRECEDING AND CURRENT ROW` (exactly 5 physical rows), `avg_all` uses no frame clause (full-partition average for comparison), and `vol_30d` uses `ROWS BETWEEN 29 PRECEDING AND CURRENT ROW` (30-day rolling standard deviation as a volatility proxy).
+
 ```sql
--- ROWS vs RANGE: ROWS counts physical rows, RANGE groups by value
--- For SMA, always use ROWS (precise count)
 SELECT TOP 10
     symbol, date, [close],
-    -- ROWS: exactly 5 rows
     ROUND(AVG([close]) OVER (
         PARTITION BY symbol ORDER BY date ROWS BETWEEN 4 PRECEDING AND CURRENT ROW
     ), 2) AS sma_5_rows,
-    -- Full partition average (all rows)
     ROUND(AVG([close]) OVER (
         PARTITION BY symbol
     ), 2) AS avg_all,
-    -- Rolling 30-day volatility
     ROUND(STDEV([close]) OVER (
         PARTITION BY symbol ORDER BY date ROWS BETWEEN 29 PRECEDING AND CURRENT ROW
     ), 2) AS vol_30d
@@ -425,10 +417,15 @@ ORDER BY date DESC
 
 ## Recursive CTEs
 
+A recursive CTE consists of an **anchor member** (the starting row) and a **recursive member** that references the CTE itself. SQL Server executes the anchor once, then repeatedly applies the recursive member — appending new rows each iteration — until the recursive member produces no more rows or hits the `MAXRECURSION` limit (default: 100). Recursive CTEs are the standard pattern for generating continuous date sequences, traversing hierarchies (org charts, account trees), and computing graph paths without procedural loops.
+
+> [!info] Cross-Engine: Recursive CTEs
+>
+> **SQL Server** caps recursion at 100 by default (`OPTION (MAXRECURSION N)` to override). **BigQuery** supports recursive CTEs (`WITH RECURSIVE`) with a default limit of 500 iterations. **Firestore** has no query language capable of recursion — hierarchical traversal must be done in application code.
+
 ### Recursive CTEs — Date Series Generation
 
-A **recursive CTE** has an anchor (starting row) and a recursive member that references itself.
-Classic use: generate a continuous date sequence to detect missing trading days.
+A **recursive CTE** has an anchor member (the starting row) and a recursive member that references itself. The anchor provides the initial date; the recursive member extends the series by one day per iteration via `DATEADD(DAY, 1, dt)`. A `LEFT JOIN` to the OHLCV table then reveals which calendar dates have no price record for a given symbol.
 
 > [!warning] SQL Server limits recursion to 100
 >
@@ -439,12 +436,9 @@ Classic use: generate a continuous date sequence to detect missing trading days.
 > Add `OPTION (MAXRECURSION 0)` at the end of the statement whenever a recursive CTE is used to generate sequences longer than 100 rows (e.g., `OPTION (MAXRECURSION 0)` for a full-year date series). Set a specific limit (e.g., `MAXRECURSION 366`) rather than 0 in production to prevent runaway recursion from buggy CTEs.
 
 ```sql
--- Generate all dates in March 2026, then check which are missing from OHLCV
 WITH dates AS (
-    -- Anchor: first date
     SELECT CAST('2026-03-01' AS DATE) AS dt
     UNION ALL
-    -- Recursive: add one day
     SELECT DATEADD(DAY, 1, dt) FROM dates WHERE dt < '2026-03-31'
 )
 SELECT TOP 15
@@ -503,15 +497,18 @@ ORDER BY d.dt
 
 ## CROSS JOIN / CROSS APPLY / OUTER APPLY
 
+`CROSS JOIN` produces the Cartesian product of two tables — every row from A paired with every row from B. `CROSS APPLY` is a lateral join: it evaluates a correlated subquery for each row of the outer table and returns the inner results as additional rows, enabling `TOP N per group` patterns that `CROSS JOIN` alone cannot express. `OUTER APPLY` extends this with `LEFT JOIN` semantics — preserving outer rows even when the inner query returns nothing. Both `APPLY` operators are SQL Server-specific syntax.
+
+> [!info] Cross-Engine: APPLY and Lateral Joins
+>
+> **SQL Server** uses `CROSS APPLY` and `OUTER APPLY` for lateral (per-row) subqueries. **BigQuery** achieves the same with `CROSS JOIN` + lateral subqueries or `UNNEST` for array columns — there is no `APPLY` keyword. **Firestore** has no join concept; multi-collection relationships require client-side joins or data denormalization.
+
 ### CROSS JOIN / CROSS APPLY — Build a Complete Grid
 
-`CROSS JOIN` = cartesian product. Every row from A paired with every row from B.
-Use case: generate all (symbol, date) combinations to find missing data.
+`CROSS JOIN` produces the Cartesian product: every row from A paired with every row from B. Use case: generate all (symbol, date) combinations to expose missing bronze data. The silver layer is gap-filled, so the check targets the bronze table directly.
 
 
 ```sql
--- Cross join symbols x trading calendar → find dates with no bronze data
--- Silver is gap-filled, so we check bronze instead
 WITH symbols AS (
     SELECT DISTINCT symbol FROM bronze.eurostoxx50_ohlcv
 ),
@@ -575,8 +572,6 @@ Like a correlated subquery, but returns multiple rows. Use case: top 3 highest-v
 
 
 ```sql
--- Top 3 highest-volume days for each stock
--- CROSS APPLY runs the inner query once per symbol
 SELECT TOP 15
     d.symbol, d.short_name,
     t.date, t.volume, t.[close]
@@ -648,7 +643,6 @@ Use case: latest score per stock — some stocks may not have scores yet.
 
 
 ```sql
--- Latest score per stock (NULL if no score exists)
 SELECT TOP 15
     d.symbol, d.short_name, d.sector,
     s.composite_score, s.composite_rank, s.score_date
@@ -721,13 +715,18 @@ ORDER BY s.composite_rank
 
 ## PIVOT / UNPIVOT
 
+`PIVOT` transforms row values into column headers — converting long-format data (one row per metric) into wide format (one column per metric). `UNPIVOT` does the reverse, normalizing wide tables back to long format for easier aggregation and charting. SQL Server's `PIVOT` operator requires a **static column list** known at query compile time; for dynamic column lists, use conditional aggregation with `CASE WHEN` instead — this is also the portable approach that works across SQL engines.
+
+> [!info] Cross-Engine: PIVOT
+>
+> **SQL Server** `PIVOT` requires a static, hard-coded column list — dynamic column lists need dynamic SQL with `sp_executesql`. **BigQuery** has no `PIVOT` keyword (as of 2024 it does support PIVOT syntax); the portable alternative is `CASE WHEN` conditional aggregation, which works across BigQuery, PostgreSQL, and SQL Server. **Firestore** has no aggregation operators.
+
 ### PIVOT / UNPIVOT — Rows to Columns
 
 Turn row values into column headers. Classic use: monthly close prices as columns.
 
 
 ```sql
--- ASML monthly average close, pivoted to columns
 SELECT *
 FROM (
     SELECT symbol, MONTH(date) AS mo, [close]
@@ -770,7 +769,6 @@ Works in any SQL engine (BigQuery, PostgreSQL, etc.).
 
 
 ```sql
--- Same result using CASE — works everywhere
 SELECT
     symbol,
     ROUND(AVG(CASE WHEN MONTH(date) = 1 THEN [close] END), 2) AS Jan,
@@ -816,7 +814,6 @@ The reverse — turn multiple score columns into rows for easier comparison/char
 
 
 ```sql
--- Turn score components into rows
 SELECT TOP 15 symbol, score_type, ROUND(score_value, 4) AS score_value
 FROM (
     SELECT symbol, relative_value_score, momentum_score, sentiment_score
@@ -870,6 +867,12 @@ ORDER BY symbol, score_type
 
 ## MERGE (Upsert)
 
+The `MERGE` statement performs INSERT, UPDATE, and DELETE in a single atomic operation against a target table, driven by a source dataset. It is the core tool for incremental pipeline loads — upsert new data, update changed rows, optionally delete rows absent from the source. See [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) for how `MERGE` fits into a broader re-runnable load strategy.
+
+> [!info] Cross-Engine: MERGE / Upsert
+>
+> **SQL Server** `MERGE` has known concurrency bugs (see callout below) — always add `WITH (HOLDLOCK)`. **BigQuery** `MERGE` is stable and widely used for incremental DML; it supports `WHEN NOT MATCHED BY SOURCE THEN DELETE` for full table synchronization. **Firestore** has no `MERGE` equivalent — use batched writes (up to 500 operations per batch) or transactions for atomic multi-document updates.
+
 > [!warning] MERGE Has Concurrency Bugs
 >
 > MERGE Has Known Bugs in SQL Server.
@@ -888,7 +891,6 @@ This is the core of incremental pipeline loads — "upsert" new data, update cha
 
 
 ```sql
--- Setup: staging table simulates incoming OHLCV data
 CREATE TABLE #staging (
     symbol VARCHAR(20), date DATE, [close] FLOAT, volume BIGINT)
 INSERT INTO #staging VALUES
@@ -900,7 +902,6 @@ CREATE TABLE #target (
 ```
 
 ```sql
--- MERGE: insert new rows, update existing
 MERGE #target AS t
 USING #staging AS s ON t.symbol = s.symbol AND t.date = s.date
 WHEN MATCHED THEN
@@ -914,7 +915,9 @@ DROP TABLE #staging
 DROP TABLE #target
 ```
 
+```text
 2 rows affected.
+```
 
 <table>
     <thead>
@@ -944,6 +947,24 @@ DROP TABLE #target
 
 ## EXISTS vs IN vs JOIN
 
+`EXISTS` checks whether a correlated subquery returns at least one row and **short-circuits at the first match** — it never reads more rows than necessary. `IN` with a subquery evaluates the full subquery result set and checks membership; it has a critical behavioral difference from `EXISTS` when the subquery can return `NULL`: `NOT IN` returns zero rows if any `NULL` is present in the subquery result, silently filtering out the entire outer query. `JOIN` as a semi-join alternative is generally equivalent to `EXISTS` but returns duplicate outer rows when the inner table has multiple matches.
+
+> [!warning] NOT IN with NULLs Returns Zero Rows
+>
+> `NOT IN (SELECT key FROM t WHERE ...)` returns an empty result set if the subquery returns even one `NULL`. SQL Server evaluates `outer.key NOT IN (NULL, ...)` as `UNKNOWN`, which is treated as `FALSE` for filtering. This is one of the most common silent data bugs in T-SQL — the query runs successfully and returns no rows without any error.
+
+> [!success] Safe Pattern
+>
+> Always use `NOT EXISTS` instead of `NOT IN` when the subquery column is nullable: `WHERE NOT EXISTS (SELECT 1 FROM t WHERE t.key = outer.key)`. `NOT EXISTS` is immune to the NULL trap and typically produces the same or better execution plan.
+
+> [!info] Cross-Engine: EXISTS / NOT EXISTS
+>
+> `EXISTS` and `NOT EXISTS` are standard ANSI SQL and work identically in SQL Server and BigQuery. The `NOT IN` NULL trap applies equally to both engines. **Firestore** has no subquery support — multi-collection filtering must be done in application code or via collection group queries.
+
+> [!question] Content Gap
+>
+> This section covers `EXISTS` semi-joins and `NOT EXISTS` anti-joins. The `IN` operator and `JOIN` as alternatives are not yet covered with dedicated examples — see the introductory text above for the key behavioral differences.
+
 ### EXISTS vs IN vs JOIN — Semi-Join with EXISTS
 
 `WHERE EXISTS (SELECT 1 FROM ... WHERE ...)` — returns TRUE if the subquery finds **any** row.
@@ -951,7 +972,6 @@ Stops at the first match (efficient). Use for "does a related row exist?" questi
 
 
 ```sql
--- Stocks that have gold scores (EXISTS = semi-join)
 SELECT TOP 15 d.symbol, d.short_name, d.sector
 FROM silver.index_dim d
 WHERE d._index = 'euro_stoxx_50' AND d.is_current = 1
@@ -1002,12 +1022,10 @@ ORDER BY d.symbol
 
 ### EXISTS vs IN vs JOIN — Anti-Join with NOT EXISTS
 
-Find rows in A that have **no match** in B. More efficient than `LEFT JOIN WHERE b.key IS NULL` in most cases.
+Find rows in A that have **no match** in B — the anti-join pattern. `NOT EXISTS` is more efficient than `LEFT JOIN WHERE b.key IS NULL` in most cases and avoids the NULL trap of `NOT IN`. The example finds Euro Stoxx 50 members that are not also constituents of the Oil & Gas 20 index.
 
 
 ```sql
--- Stocks in Euro Stoxx 50 but NOT in Oil & Gas 20 (different index)
--- Demonstrates NOT EXISTS as an anti-join
 SELECT TOP 15 d.symbol, d.short_name, d.sector
 FROM silver.index_dim d
 WHERE d._index = 'euro_stoxx_50' AND d.is_current = 1
@@ -1058,6 +1076,12 @@ ORDER BY d.symbol
 
 ## Grouping Sets, ROLLUP, CUBE
 
+`GROUPING SETS`, `ROLLUP`, and `CUBE` are extensions to `GROUP BY` that generate multiple aggregation levels in a single query pass — more efficient than `UNION ALL`-ing separate aggregations. `GROUPING SETS` specifies exactly which column combinations to aggregate. `ROLLUP(a, b)` generates hierarchical subtotals rolling up from right to left: `(a, b)`, `(a)`, `()`. `CUBE(a, b)` generates all possible combinations: `(a, b)`, `(a)`, `(b)`, `()`. Use `GROUPING()` or `GROUPING_ID()` to distinguish subtotal rows from actual data rows in the output — both return `1` for a NULL introduced by the grouping operation.
+
+> [!info] Cross-Engine: GROUPING SETS / ROLLUP / CUBE
+>
+> All three operators (`GROUPING SETS`, `ROLLUP`, `CUBE`) are supported in both **SQL Server** and **BigQuery** (BigQuery added `ROLLUP` and `CUBE` support in 2023). **Firestore** has no aggregation operators beyond basic `count()`, `sum()`, and `avg()` introduced in 2023.
+
 ### Grouping Sets, ROLLUP, CUBE — GROUPING SETS
 
 Run multiple GROUP BY queries in one pass. Instead of UNION ALL of separate aggregations,
@@ -1065,7 +1089,6 @@ use `GROUPING SETS` — more efficient and readable.
 
 
 ```sql
--- Aggregate scores by sector, by country, and overall — in one query
 SELECT TOP 15
     COALESCE(d.sector, '(all sectors)') AS sector,
     COALESCE(d.country, '(all countries)') AS country,
@@ -1133,7 +1156,6 @@ ORDER BY GROUPING(d.sector), GROUPING(d.country), avg_score DESC
 
 
 ```sql
--- Volume by sector with subtotals and grand total
 SELECT TOP 15
     COALESCE(d.sector, '*** TOTAL ***') AS sector,
     COUNT(DISTINCT s.symbol) AS stocks,
@@ -1194,6 +1216,8 @@ ORDER BY GROUPING(d.sector), total_volume DESC
 
 ## String Aggregation & Functions
 
+SQL Server 2017 introduced `STRING_AGG` as the standard way to concatenate row values into a delimited string — replacing the legacy `FOR XML PATH('')` hack. The string functions (`CHARINDEX`, `SUBSTRING`, `LEFT`, `RIGHT`, `REPLACE`, `STRING_SPLIT`) are used in financial pipelines to parse ticker symbols, normalize exchange codes, and transform text identifiers between source formats.
+
 ### String Aggregation — STRING_AGG
 
 Concatenate values from multiple rows into a single comma-separated string.
@@ -1201,7 +1225,6 @@ Use case: list all tickers in a sector as one field.
 
 
 ```sql
--- Comma-separated list of symbols per sector
 SELECT TOP 10
     sector,
     COUNT(*) AS stocks,
@@ -1256,7 +1279,6 @@ Extract exchange suffix from ticker symbols (e.g., 'AS' from 'ASML.AS').
 
 
 ```sql
--- Parse exchange from symbol: everything after the dot
 SELECT TOP 10
     symbol,
     LEFT(symbol, CHARINDEX('.', symbol) - 1) AS ticker_only,
@@ -1313,7 +1335,11 @@ ORDER BY symbol
 
 ## NULL Handling Patterns
 
+SQL Server's three-valued logic (TRUE / FALSE / UNKNOWN) is the source of many silent data bugs in T-SQL. Any comparison or arithmetic involving `NULL` produces `NULL` (unknown) — not `FALSE` and not zero. Aggregates (`SUM`, `AVG`, `COUNT(col)`) silently ignore `NULL` rows, so `COUNT(col)` and `COUNT(*)` can return different totals for the same result set. In financial pipelines, the three key handling functions are `COALESCE` (ANSI standard, N arguments, returns the first non-`NULL`), `ISNULL` (T-SQL only, 2 arguments, output type follows the first argument), and `NULLIF` (returns `NULL` when two expressions are equal — used as the standard safe-division pattern: `x / NULLIF(denominator, 0)`).
+
 ### NULL Handling — Rules and COALESCE, ISNULL, NULLIF
+
+The table below summarizes how `NULL` propagates through common SQL expressions and which functions to use in each scenario.
 
 | Expression | Result | Why |
 |-----------|--------|-----|
@@ -1326,16 +1352,14 @@ ORDER BY symbol
 | `NULLIF(a, b)` | NULL if a = b | Prevents divide-by-zero: `x / NULLIF(y, 0)` |
 
 
+The query demonstrates three NULL-handling patterns: `COALESCE` formats `forward_pe` as `'N/A'` when the value is `NULL`; `NULLIF` prevents divide-by-zero when computing earnings per share; `COUNT(*)` counts all rows while `COUNT(forward_pe)` counts only rows where PE is not `NULL` — showing the difference between the two in the same result set.
+
 ```sql
--- NULL handling in practice: safe division, defaults, counting
 SELECT TOP 10
     symbol,
     forward_pe,
-    -- COALESCE: use 'N/A' default if PE is null
     COALESCE(CAST(ROUND(forward_pe, 1) AS VARCHAR), 'N/A') AS pe_display,
-    -- NULLIF: safe division (denominator could be zero)
     ROUND(current_price / NULLIF(forward_pe, 0), 2) AS earnings_per_share,
-    -- COUNT(*) vs COUNT(column)
     COUNT(*) OVER () AS total_rows,
     COUNT(forward_pe) OVER () AS rows_with_pe
 FROM silver.signals_daily
@@ -1401,6 +1425,12 @@ ORDER BY forward_pe
 
 ## Set Operations
 
+Set operations combine the results of two or more `SELECT` statements with matching column counts and compatible data types. `UNION ALL` stacks rows without deduplication and is the fastest option. `UNION` performs an implicit `DISTINCT` — it sorts the result to eliminate duplicates, adding cost; use it only when deduplication is required. `INTERSECT` returns only rows that appear in both result sets. `EXCEPT` returns rows from the first set not present in the second — functionally equivalent to a `NOT EXISTS` anti-join and typically more readable for index membership comparisons.
+
+> [!info] Cross-Engine: Set Operations
+>
+> `UNION ALL`, `UNION`, `INTERSECT`, and `EXCEPT` are ANSI SQL and work identically in **SQL Server** and **BigQuery**. BigQuery uses `EXCEPT DISTINCT` (matching its `UNION DISTINCT` naming convention) — functionally the same as SQL Server's `EXCEPT`. **Firestore** has no set operations; multi-collection merging must be done in application code.
+
 ### Set Operations — UNION / INTERSECT / EXCEPT
 
 - `UNION ALL`: stack result sets (keep duplicates) — fast
@@ -1410,8 +1440,6 @@ ORDER BY forward_pe
 
 
 ```sql
--- EXCEPT: Euro Stoxx 50 symbols that are NOT in STOXX Asia 50
--- Set difference — finds members exclusive to one index
 SELECT TOP 5 symbol FROM silver.index_dim
 WHERE _index = 'euro_stoxx_50' AND is_current = 1
 EXCEPT
@@ -1448,6 +1476,8 @@ ORDER BY symbol
 
 ## Date & Calendar Table Patterns
 
+Financial date arithmetic cannot rely on `DATEADD` alone — markets observe holidays and early closes that `DATEADD(DAY, N, date)` has no awareness of. The `trading_calendar` table in the bronze layer maps every calendar date to exchange trading status, enabling business-day-aware calculations: counting trading days between two dates, finding the next or previous trading day, and detecting missing price data for a given exchange. For generating a continuous date spine to join against the calendar, use the recursive CTE date-series pattern described in the Recursive CTEs section above.
+
 ### Date & Calendar — Business Day Arithmetic
 
 Use the `trading_calendar` table to count trading days between dates.
@@ -1455,7 +1485,6 @@ Weekend/holiday-aware calculations are essential for financial data.
 
 
 ```sql
--- Count trading days in Q1 2026 per exchange
 SELECT TOP 10
     exchange_code,
     SUM(CAST(is_trading_day AS INT)) AS trading_days,
@@ -1513,7 +1542,15 @@ ORDER BY trading_days DESC
 
 ## Temp Tables vs Table Variables vs CTEs
 
+CTEs, `#temp` tables, and `@table` variables are three ways to name and reuse intermediate result sets. The choice affects materialization, statistics availability, index support, and scope. CTEs are syntactic sugar — they are not materialized and re-execute on every reference in the same query. `#temp` tables are materialized to `tempdb`, support full index creation, and survive the duration of the session, making them suitable for large intermediate sets that are referenced more than once. `@table` variables are batch-scoped; they reside in memory for small sets but carry no full statistics — the optimizer assumes 1 row, producing poor plans when the variable holds more than ~100 rows.
+
+> [!info] Cross-Engine: Temporary Storage
+>
+> **SQL Server** provides three mechanisms: CTEs (non-materialized, query-scoped), `#temp` tables (session-scoped in `tempdb` with full index support), and `@table` variables (batch-scoped, memory-optimized for small sets). **BigQuery** supports CTEs for intra-query reuse and `CREATE TEMP TABLE` in multi-statement scripts for materialized intermediate storage. **Firestore** has no concept of temporary tables or intermediate query storage.
+
 ### Temp Tables vs CTEs vs Table Variables — Decision Guide
+
+The table below compares the three mechanisms across the dimensions that most affect query performance and pipeline design.
 
 | Feature | CTE | \#Temp Table | @Table Variable |
 |---------|-----|-------------|----------------|
@@ -1524,6 +1561,29 @@ ORDER BY trading_days DESC
 | Performance | Re-runs each ref | One-time compute | Fast for small sets |
 
 **Rule of thumb**: start with CTE. If the query is slow and the CTE is referenced multiple times, materialize into \#temp.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A[Need intermediate\nresult set?] --> B{Referenced more\nthan once in query?}
+    B -- No --> D[CTE\nReadability, single-use]
+    B -- Yes --> C{Large set or\nneeds an index?}
+    C -- Yes --> E[#temp table\nMaterialize into tempdb,\nadd index on join key]
+    C -- No --> F{Under ~100 rows?}
+    F -- Yes --> G[@table variable\nMemory-resident,\nfast for tiny lookups]
+    F -- No --> E
+```
 
 > [!warning] CTEs Re-execute Every Reference
 >

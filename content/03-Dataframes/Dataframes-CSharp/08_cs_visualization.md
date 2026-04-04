@@ -1,5 +1,5 @@
 ---
-tags: [pipeline, csharp, deedle, polars, dataframes]
+tags: [csharp, polars, dataframes, plotly]
 aliases:
   - charts, plots, Plotly, matplotlib, seaborn
 description: "Polars.NET / C# DataFrames reference 08/10 — Visualization (charts, plots, interactive graphics). Executable examples with cell outputs. See [08_py_visualization](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/08_py_visualization) for the Python equivalent."
@@ -19,11 +19,15 @@ Plotly.NET for interactive charts, ScottPlot for static/performance, OxyPlot for
 
 ---
 
-```csharp
-// Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
-// NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
-// Run this cell ONCE before any cells that use NuGet packages.
+## Setup
 
+.NET Interactive notebooks require a one-time warning suppression for NuGet version mismatches, package installation via `#r "nuget:"` directives, and data loading before any chart cell can run.
+
+### Suppress assembly version warnings
+
+NuGet packages targeting .NET 8/9 trigger CS1701/CS1702 on .NET 10 — harmless version-mismatch noise. Run this cell once, before any cell that loads NuGet packages.
+
+```csharp
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -38,7 +42,9 @@ var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 ```
 
-#### Install NuGet packages and import namespaces
+### Plotly.NET | Install NuGet packages and import namespaces
+
+Install the required packages: Polars.NET for data manipulation, Plotly.NET + Plotly.NET.CSharp for interactive charts, and ScottPlot for static PNG export. The `DATA` variable points to the shared dataset folder.
 
 ```csharp
 #r "nuget: Polars.NET, 0.4.0"
@@ -60,16 +66,15 @@ using Plotly.NET.TraceObjects;
 var DATA = Path.Combine("..", "data");
 ```
 
-#### Load OHLCV data and prepare arrays
+### Polars.NET | Load OHLCV data and prepare arrays
+
+Load the EuroStoxx 50 OHLCV dataset and extract typed arrays for use in chart traces. Polars.NET's `ToArray<T>()` requires homogeneous column types — date columns must be cast to `string` first because `ToArray<string>()` does not coerce `Date` types directly.
 
 ```csharp
-// Load OHLCV data and extract arrays for charting
 var dfP = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), tryParseDates: true);
 display($"Loaded: {dfP.Shape}");
 
-// Filter to ASML.AS for single-stock charts
 var asml = dfP.Filter(Col("symbol") == Lit("ASML.AS")).Sort("date");
-// Cast date to string for array extraction (Date type can't ToArray<string> directly)
 var asmlDatesDf = asml.WithColumns(Col("date").Cast(DataType.String).Alias("date_str"));
 var asmlDates = asmlDatesDf.Column("date_str").ToArray<string>();
 var asmlClose = asml.Column("close").ToArray<double>();
@@ -88,10 +93,15 @@ display($"ASML rows: {asmlDates.Length}");
 
 ## Line Charts
 
-#### Single line — ASML close price over time
+Line charts connect ordered data points to reveal **trends, cycles, and rate of change** over time. In Plotly.NET, `Chart.Line<TX, TY, TName>()` produces an interactive trace; `Chart.Combine()` merges multiple traces into a single figure. `WithAxisAnchor()` binds a trace to a specific y-axis for dual-axis layouts.
+
+**Best for:** Time-series data — stock prices, sensor readings, cumulative returns. Avoid for unordered categories.
+
+### Plotly.NET | Single line — ASML close price over time
+
+Plots ASML's closing price as a single interactive trace. Date strings are parsed to `DateTime` to enable Plotly's built-in date axis formatting.
 
 ```csharp
-// Single-line chart — ASML closing price
 var dates = asmlDates.Select(d => DateTime.Parse(d)).ToArray();
 Plotly.NET.CSharp.Chart.Line<DateTime, double, string>(x: dates, y: asmlClose)
     .WithTitle("ASML — Close Price")
@@ -106,10 +116,11 @@ Plotly.NET.CSharp.Chart.Line<DateTime, double, string>(x: dates, y: asmlClose)
 
 <iframe src="/static/plotly/df_cs_08_01.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### Multi-line — overlay ASML, SAP, SIE close prices
+### Plotly.NET | Multi-line — overlay ASML, SAP, SIE close prices
+
+Build one trace per symbol via LINQ and combine them with `Chart.Combine()`. Each trace is automatically colored by Plotly's default palette; the legend identifies each symbol.
 
 ```csharp
-// Multi-line chart — compare three stocks
 var symbols = new[] { "ASML.AS", "SAP.DE", "SIE.DE" };
 var traces = symbols.Select(sym =>
 {
@@ -133,20 +144,19 @@ Plotly.NET.CSharp.Chart.Combine(traces)
 
 <iframe src="/static/plotly/df_cs_08_02.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### Dual y-axis — ASML price + volume
+### Plotly.NET | Dual y-axis — ASML price + volume
+
+Overlays a price line (left axis, full height) with volume bars (right axis, scaled to occupy the bottom third). Plotly.NET exposes `yaxis2` via `DynamicObj` since the typed API does not yet have a direct `WithYAxis2` helper. Setting `range` to `[0, maxVol * 4]` effectively confines the bars to the lower quarter of the chart area.
 
 ```csharp
-// Price + Volume on dual y-axis — volume confined to bottom third
 var dates = asmlDates.Select(d => DateTime.Parse(d)).ToArray();
 var asmlVolDouble = asmlVol.Select(v => (double)v / 1_000_000.0).ToArray();
 var maxVol = asmlVolDouble.Max();
 
-// Price on y1 (full height)
 var priceLine = Plotly.NET.CSharp.Chart.Line<DateTime, double, string>(
     x: dates, y: asmlClose, Name: "Close (EUR)")
     .WithAxisAnchor(Y: 1);
 
-// Volume on y2 (bottom third — set range to 3x max so bars fill ~33%)
 var volArea = Plotly.NET.CSharp.Chart.Column<double, DateTime, string>(
     values: asmlVolDouble, Keys: dates, Name: "Volume (M)")
     .WithAxisAnchor(Y: 2)
@@ -157,7 +167,6 @@ var layout = Layout.init<string>(
     PlotBGColor: Color.fromString("transparent"),
     Font: Font.init(Color: Color.fromHex("#cccccc")));
 
-// yaxis2: overlays y1, right side, range 0..3x max so bars stay in bottom third, no grid
 var yaxis2 = new global::DynamicObj.DynamicObj();
 yaxis2.SetValue("title", "Volume (M)");
 yaxis2.SetValue("overlaying", "y");
@@ -179,10 +188,15 @@ Plotly.NET.CSharp.Chart.Combine(new[] { volArea, priceLine })
 
 ## Bar Charts
 
-#### Grouped bar — average close price by top 5 symbols
+Bar charts compare discrete categories by encoding values as bar lengths. `Chart.Column<TValue, TKeys, TName>()` produces vertical bars; `Chart.Combine()` with `BarMode.Stack` produces stacked bars.
+
+**Best for:** Ranking (top N symbols by price or volume), part-to-whole composition (up vs down day volume). Horizontal orientation works better when category labels are long.
+
+### Plotly.NET | Grouped bar — average close price by top 5 symbols
+
+Groups by symbol, computes mean close, sorts descending, and takes the top 5. `Chart.Column` maps `barValues` (heights) to `barSymbols` (x-axis categories).
 
 ```csharp
-// Grouped bar — average close price for top 5 symbols by mean close
 var avgClose = dfP.GroupBy("symbol")
     .Agg(Col("close").Mean().Alias("avg_close"))
     .Sort("avg_close", descending: true)
@@ -204,10 +218,11 @@ Plotly.NET.CSharp.Chart.Column<double, string, string>(barValues, Keys: barSymbo
 
 <iframe src="/static/plotly/df_cs_08_04.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### Stacked bar — total volume by top 5 symbols
+### Plotly.NET | Stacked bar — total volume by top 5 symbols
+
+Splits each symbol's total volume into "up days" (close > open) and "down days" (close ≤ open) to reveal whether buying or selling pressure dominates. `BarMode.Stack` stacks the two bar series; `Chart.Combine()` merges the two traces before applying layout.
 
 ```csharp
-// Stacked bar — split total volume into open-above-close vs close-above-open days
 var top5Syms = avgClose.Column("symbol").ToArray<string>();
 
 var upVolumes = new double[top5Syms.Length];
@@ -245,10 +260,15 @@ Plotly.NET.CSharp.Chart.Combine(new[] { upBar, downBar })
 
 ## Scatter & Distribution
 
-#### Scatter — close vs volume (ASML)
+Scatter plots reveal relationships between two continuous variables. Histograms show distribution shape. Box plots summarize with quartiles and flag outliers. In Plotly.NET: `Chart.Point` for scatter, `Chart.Histogram` for distribution, `Chart.BoxPlot` for quartile summaries.
+
+**How to read a scatter plot:** each dot is one observation. Dots rising left-to-right = positive correlation; no pattern = no linear relationship (non-linear patterns may still exist). Dense clusters = common value combinations.
+
+### Plotly.NET | Scatter — close vs volume (ASML)
+
+Plots ASML's closing price against daily volume to explore whether high-volume days correlate with price levels. `Opacity: 0.6` reduces overplotting for overlapping points.
 
 ```csharp
-// Scatter — does volume correlate with close price?
 var scatterVol = asmlVol.Select(v => (double)v).ToArray();
 
 Plotly.NET.CSharp.Chart.Point<double, double, string>(scatterVol, asmlClose)
@@ -265,10 +285,13 @@ Plotly.NET.CSharp.Chart.Point<double, double, string>(scatterVol, asmlClose)
 
 <iframe src="/static/plotly/df_cs_08_06.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### Histogram — ASML daily returns distribution
+### Plotly.NET | Histogram — ASML daily returns distribution
+
+**How to read:** bar height = frequency (count of days) in each return bucket. A roughly symmetric bell shape centered near zero is expected for daily stock returns. Heavy tails (bars far from zero taller than expected) indicate fat-tail risk — more extreme moves than a normal distribution predicts.
+
+Computes daily percentage returns as `(close[i] - close[i-1]) / close[i-1] * 100`. The array is one element shorter than the close price array.
 
 ```csharp
-// Histogram — daily percentage returns
 var returns = new double[asmlClose.Length - 1];
 for (int i = 1; i < asmlClose.Length; i++)
     returns[i - 1] = (asmlClose[i] - asmlClose[i - 1]) / asmlClose[i - 1] * 100.0;
@@ -287,10 +310,13 @@ Plotly.NET.CSharp.Chart.Histogram<double, double, string>(X: returns)
 
 <iframe src="/static/plotly/df_cs_08_07.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### Box plot — close price distribution by symbol (top 5)
+### Plotly.NET | Box plot — close price distribution by symbol (top 5)
+
+**How to read:** the box spans Q1–Q3 (the middle 50% of values). The horizontal line inside is the median. Whiskers extend to the farthest point within 1.5× the IQR. Points beyond whiskers are outliers. Compare box positions to see which symbol trades at a higher median price; compare box widths to see which has more price dispersion.
+
+Builds one `BoxPlot` trace per symbol using LINQ and combines them with `Chart.Combine()`.
 
 ```csharp
-// Box plot — close price spread for top 5 symbols
 var boxTraces = top5Syms.Select(sym =>
 {
     var sub = dfP.Filter(Col("symbol") == Lit(sym));
@@ -316,14 +342,17 @@ Plotly.NET.CSharp.Chart.Combine(boxTraces)
 
 ## Financial Charts
 
+Candlestick and combined price+volume charts are the standard display for OHLCV data in financial analysis. Each candlestick encodes four values per period; adding volume below helps distinguish meaningful price moves from noise.
+
 > [!tip] Related pattern
 >
 > The financial metrics rendered in these charts — daily returns, OHLC spreads, volume — are defined in [chart-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/chart-metrics). For the dashboard-level KPIs these charts feed into, see [index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics).
 
-#### Candlestick — ASML OHLC
+### Plotly.NET | Candlestick — ASML OHLC
+
+**How to read:** the body of each candle spans open to close. A green (hollow) body means close > open (bullish); a red (filled) body means close < open (bearish). The upper wick reaches the daily high; the lower wick reaches the daily low. Long wicks signal price rejection — buying or selling pressure reversed the move. A small body with long wicks (doji) indicates indecision.
 
 ```csharp
-// Candlestick — ASML open/high/low/close
 Plotly.NET.CSharp.Chart.Candlestick<double, string, string>(asmlOpen, asmlHigh, asmlLow, asmlClose, asmlDates)
     .WithTitle("ASML — Candlestick Chart")
     .WithXAxisStyle(Title.init("Date"))
@@ -337,11 +366,12 @@ Plotly.NET.CSharp.Chart.Candlestick<double, string, string>(asmlOpen, asmlHigh, 
 
 <iframe src="/static/plotly/df_cs_08_09.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### Candlestick + volume overlay
+### Plotly.NET | Candlestick + volume overlay
+
+Renders candlestick and volume as two separate chart objects displayed sequentially via `display()` and the implicit return. Restricts to the last 130 trading days (~6 months) for readability — full history makes individual candles too narrow to read interactively.
 
 ```csharp
-// Candlestick with volume area below (last 6 months for readability)
-var nCandle = Math.Min(130, asmlDates.Length);  // ~6 months of trading days
+var nCandle = Math.Min(130, asmlDates.Length);
 var cDates = asmlDates.TakeLast(nCandle).Select(d => DateTime.Parse(d)).ToArray();
 var cOpen = asmlOpen.TakeLast(nCandle).ToArray();
 var cHigh = asmlHigh.TakeLast(nCandle).ToArray();
@@ -381,10 +411,15 @@ volArea
 
 ## Heatmap
 
-#### Correlation heatmap — OHLCV numeric columns (ASML)
+Heatmaps encode a matrix of values as colors — ideal for correlation matrices and pivot tables. Plotly.NET's `Chart.Heatmap` takes a `List<double[]>` as the z-matrix, with row and column labels provided as string arrays.
+
+**How to read a correlation matrix:** values range from −1 to +1. Dark warm colors (close to +1) = variables move together; dark cool colors (close to −1) = variables move in opposite directions; near-zero = no linear relationship. The diagonal is always 1.0 (a variable is perfectly correlated with itself). Look for off-diagonal clusters of strong color — these reveal groups of collinear variables.
+
+### Plotly.NET | Correlation heatmap — OHLCV numeric columns (ASML)
+
+Computes the 5×5 Pearson correlation matrix for OHLCV columns using a local helper function. Note that Polars.NET does not expose a built-in `.corr()` method, so the matrix is computed manually via array iteration.
 
 ```csharp
-// Correlation heatmap — Pearson correlation between OHLCV columns
 var colNames = new[] { "open", "high", "low", "close", "volume" };
 var arrays = colNames.Select(c =>
 {
@@ -434,13 +469,57 @@ Plotly.NET.CSharp.Chart.Heatmap<double, string, string, string>(corrMatrix, X: c
 
 ## Static Export with ScottPlot
 
----
-## Pie, Donut & Radar
+ScottPlot generates static PNG/SVG images without JavaScript — ideal for batch export, server-side reporting, or embedding in non-HTML contexts. The `Plot` class manages the figure; `plt.Add.Scatter()` adds traces; `plt.SavePng()` writes to disk. Date axes require OADate (OLE Automation date = days since 1899-12-30) for the x-axis tick formatter.
 
-#### Pie chart — Volume share by top symbols
+> [!tip] ScottPlot vs Plotly.NET for static export
+>
+> Use **ScottPlot** when you need PNG/SVG/PDF files at scale (batch scripts, CI pipelines, PDF reports) — no browser required, fast rendering even for 100k+ points.
+> Use **Plotly.NET** for interactive exploration in notebooks where hover, zoom, and pan add value.
+
+### ScottPlot | Line chart — ASML close price saved as PNG
+
+Converts date strings to OADate (required by ScottPlot's `DateTimeTicksBottom()` formatter), adds a scatter trace, applies a dark theme, and saves to PNG.
 
 ```csharp
-// Pie chart — volume share by top 8 symbols
+var plt = new ScottPlot.Plot();
+
+var oaDates = asmlDates.Select(d => DateTime.Parse(d).ToOADate()).ToArray();
+
+var sig = plt.Add.Scatter(oaDates, asmlClose);
+sig.LineWidth = 1.5f;
+sig.MarkerSize = 0;
+
+plt.Title("ASML — Close Price (ScottPlot)");
+plt.XLabel("Date");
+plt.YLabel("Close (EUR)");
+plt.Axes.DateTimeTicksBottom();
+
+plt.Axes.Color(ScottPlot.Color.FromHex("#cccccc"));
+plt.FigureBackground.Color = ScottPlot.Color.FromHex("#1e1e1e");
+plt.DataBackground.Color = ScottPlot.Color.FromHex("#2d2d2d");
+
+var pngPath = Path.Combine(DATA, "asml_scottplot.png");
+plt.SavePng(pngPath, 900, 450);
+Console.WriteLine($"Saved: {Path.GetFullPath(pngPath)}");
+```
+
+    Saved: c:\Users\aperi\DEV\LANG\data\asml_scottplot.png
+
+---
+
+## Pie, Donut & Radar
+
+Pie and donut charts show part-to-whole composition for a single categorical variable. Radar charts (spider/polar charts) compare a single entity across multiple normalized dimensions. Use `Chart.Pie`, `Chart.Doughnut`, and `Chart.ScatterPolar` in Plotly.NET.CSharp.
+
+**Best for pie/donut:** ≤6 slices with clearly distinct proportions (market share, budget allocation). For precise comparisons or many categories, prefer bar charts — humans judge bar lengths more accurately than angles.
+
+**Best for radar:** profiling a single entity across 4–8 metrics (e.g., comparing OHLCV magnitude ratios across three stocks). Not suitable for many entities — overlapping polygons become unreadable.
+
+### Plotly.NET | Pie chart — Volume share by top symbols
+
+Groups by symbol, sums total traded volume, takes the top 8 by volume. `Chart.Pie` renders slices proportional to `pieVals`.
+
+```csharp
 var volBySymbol = dfP.GroupBy("symbol")
     .Agg(Col("volume").Cast(DataType.Float64).Sum().Alias("total_vol"))
     .Sort("total_vol", descending: true)
@@ -460,10 +539,11 @@ Plotly.NET.CSharp.Chart.Pie<double, string, string>(values: pieVals, Labels: pie
 
 <iframe src="/static/plotly/df_cs_08_13.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### Donut chart — Trade count by exchange suffix
+### Plotly.NET | Donut chart — Trade count by exchange suffix
+
+Extracts exchange suffix from each symbol ticker (e.g., `.AS` from `ASML.AS`) using LINQ string splitting, then counts rows per exchange. `Chart.Doughnut` is identical to `Chart.Pie` but adds a hole in the center — useful for placing a KPI label or total count.
 
 ```csharp
-// Donut chart — trade count by exchange suffix
 var symbolArr = dfP.Column("symbol").ToArray<string>();
 var exchangeCounts = symbolArr
     .Select(s => "." + s.Split('.').Last())
@@ -486,10 +566,13 @@ Plotly.NET.CSharp.Chart.Doughnut<double, string, string>(values: donutVals, Labe
 
 <iframe src="/static/plotly/df_cs_08_14.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### Radar chart — Normalized metrics for top 3 symbols
+### Plotly.NET | Radar chart — Normalized metrics for top 3 symbols
+
+**How to read:** each spoke represents one metric. Distance from the center = normalized magnitude (0 = global minimum, 1 = global maximum for that metric). A larger polygon area = higher overall magnitude across all dimensions. Compare polygon shapes: if one stock is much larger on `volume` but similar on `close`, it trades with higher activity relative to its price level.
+
+Normalizes each metric to [0, 1] by dividing the per-symbol average by the global maximum. Closes the polygon by appending `vals[0]` and `metrics[0]` at the end.
 
 ```csharp
-// Radar chart — compare avg OHLCV metrics for 3 symbols (normalized 0-1)
 var radarSyms = new[] { "ASML.AS", "SAP.DE", "SIE.DE" };
 var metrics = new[] { "open", "high", "low", "close", "volume" };
 
@@ -535,41 +618,19 @@ Plotly.NET.CSharp.Chart.Combine(radarTraces)
 
 <iframe src="/static/plotly/df_cs_08_15.html" width="100%" height="600" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### ScottPlot line chart — ASML close price saved as PNG
-
-```csharp
-// ScottPlot — static line chart exported as PNG
-var plt = new ScottPlot.Plot();
-
-// Convert dates to OADate for ScottPlot x-axis
-var oaDates = asmlDates.Select(d => DateTime.Parse(d).ToOADate()).ToArray();
-
-var sig = plt.Add.Scatter(oaDates, asmlClose);
-sig.LineWidth = 1.5f;
-sig.MarkerSize = 0;
-
-plt.Title("ASML — Close Price (ScottPlot)");
-plt.XLabel("Date");
-plt.YLabel("Close (EUR)");
-plt.Axes.DateTimeTicksBottom();
-
-// Dark theme
-plt.Axes.Color(ScottPlot.Color.FromHex("#cccccc"));
-plt.FigureBackground.Color = ScottPlot.Color.FromHex("#1e1e1e");
-plt.DataBackground.Color = ScottPlot.Color.FromHex("#2d2d2d");
-
-var pngPath = Path.Combine(DATA, "asml_scottplot.png");
-plt.SavePng(pngPath, 900, 450);
-Console.WriteLine($"Saved: {Path.GetFullPath(pngPath)}");
-```
-
-    Saved: c:\Users\aperi\DEV\LANG\data\asml_scottplot.png
-
 ---
 
 ## Summary
 
-#### Library decision guide
+> [!question] Which library should I use?
+>
+> - **Plotly.NET** — interactive notebook exploration, hover tooltips, click-to-filter. Use when end consumers are data analysts working in .NET Interactive or VS Code.
+> - **ScottPlot** — batch PNG/SVG export, server-side report generation, CI pipelines. No JS dependency; handles 100k+ points faster than Plotly.
+> - **OxyPlot** — PDF export and WPF/Avalonia desktop embedding. Note: has known NuGet compatibility issues with .NET 10 Interactive (prefer ScottPlot for static export in notebooks).
+>
+> For the Quartz published site, all Plotly charts are pre-rendered as iframe embeds — interactive features are preserved in the HTML output files.
+
+### Library decision guide
 
 | Library | Strengths | Weaknesses | Best For |
 |---|---|---|---|
