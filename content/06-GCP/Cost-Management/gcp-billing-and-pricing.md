@@ -1,15 +1,4 @@
 ---
-type: reference
-category: gcp
-technology:
-  - gcp
-  - bigquery
-  - cloud-run
-  - pubsub
-  - gcs
-  - firestore
-  - compute-engine
-  - dataflow
 tags: [cost, infrastructure, bigquery, gcp, firestore, billing]
 aliases:
   - GCP billing
@@ -27,46 +16,6 @@ aliases:
   - on-demand pricing
   - per-TB pricing
   - per-slot pricing
-keywords:
-  - billing account
-  - billing export
-  - BigQuery pricing
-  - on-demand query cost
-  - TB scanned
-  - slot pricing
-  - editions pricing
-  - Compute Engine pricing
-  - sustained use discount
-  - SUD
-  - committed use discount
-  - CUD
-  - preemptible VM
-  - spot VM
-  - Cloud Run pricing
-  - vCPU-second
-  - GB-second
-  - Pub/Sub pricing
-  - message volume
-  - GCS storage classes
-  - nearline coldline archive
-  - Firestore reads writes deletes
-  - Dataflow worker cost
-  - shuffle cost
-  - Cloud Logging ingestion cost
-  - Cloud NAT cost
-  - static IP cost
-  - free tier limits
-  - resource labels cost attribution
-  - budget alerts
-  - cost optimization
-  - right-sizing
-  - idle resources
-  - billing export dataset
-  - INFORMATION_SCHEMA JOBS
-  - dry run query
-  - per-second billing
-  - egress cost
-  - long-term storage
 description: Definitive reference on how every GCP data engineering service is billed — pricing models, billing dimensions, free tiers, discount mechanisms, cost formulas, and gcloud/BigQuery commands for ongoing cost analysis and optimization.
 created: 2026-03-22
 updated: 2026-03-29
@@ -192,6 +141,9 @@ gcloud compute instances describe VM_NAME --format='get(labels)'
 >
 > Labels only appear on billing export rows created after the label was applied. Label resources at creation time via IaC (Terraform, etc.) to ensure full coverage.
 
+> [!success] Enforce labels at creation time with Terraform
+> Declare a `locals { common_labels = {...} }` block in every Terraform module and apply it to every resource. This ensures all resources are labeled from their first billing row. For existing unlabeled resources, apply labels immediately and accept that pre-label history will be unattributed.
+
 ### Budget Alerts
 
 Set budget alerts before costs spiral. Alerts do not cap spending; they notify.
@@ -264,6 +216,9 @@ Snapshots: **$0.050/GB/month** (regional) or **$0.065/GB/month** (multi-regional
 >
 > N1 and M1/M2 series get up to ~30% SUD. N2, N2D, and C2 series get up to ~20% SUD. **E2 machines do NOT qualify for SUDs at all.** The table below shows the N1/M1/M2 tiers; N2/N2D/C2 tiers are lower.
 
+> [!success] Use N1/N2 for sustained workloads; use CUDs for E2
+> If a VM runs 24/7 for months, prefer N1 or N2 to benefit from automatic SUDs. For E2 machines (which have no SUD), use a 1-year CUD to get ~37% off on-demand — the only discount path for the E2 family.
+
 | Usage in month | Discount (N1/M1/M2) | Discount (N2/N2D/C2) |
 |----------------|---------------------|----------------------|
 | 0–25% | 0% | 0% |
@@ -313,6 +268,9 @@ gcloud compute instances create INSTANCE_NAME \
 > [!warning] Cost Trap: Idle VMs
 >
 > A stopped VM still charges for its attached persistent disk and any reserved static IP. To pay zero, delete the disk or resize to the minimum, and release the static IP. Stopping alone does NOT eliminate all costs.
+
+> [!success] Release disks and IPs before long-term VM shutdown
+> When stopping a VM for more than a few days, snapshot the disk, delete it, and release any reserved static IPs. Restore from snapshot when needed. This eliminates all idle storage charges. Automate with a Cloud Scheduler job that stops VMs nightly and optionally cleans up unattached resources.
 
 #### Special Licensing Costs
 
@@ -380,6 +338,9 @@ BigQuery has two fundamentally different pricing models. Choose based on workloa
 >
 > Cost Trap: Full-Table Scans.
 > `SELECT * FROM huge_table` scans every byte. A 10 TB table costs $62.50 per full scan. Always filter on partitioned columns and cluster keys to minimize bytes scanned.
+
+> [!success] Partition tables and use `--dry_run` before executing
+> Partition every large table by date and cluster on common filter columns. Use `bq query --dry_run` to see bytes-to-be-scanned before running any query. Set `require_partition_filter = TRUE` on the table so unfiltered queries are rejected at the API level.
 
 #### Model 2: Editions (Capacity / Slot-Based)
 
@@ -627,6 +588,9 @@ Daily cost = 1 × 300 × (2 × 0.0000240 + 4 × 0.0000025)
 > Cost Trap: min-instances > 0.
 > Setting `--min-instances=1` on a Cloud Run Service keeps one container always warm. CPU allocated between requests at the idle rate. For low-traffic services that don't need sub-second cold start, keep min-instances at 0.
 
+> [!success] Keep min-instances at 0 for batch and low-traffic services
+> Deploy Cloud Run Jobs and infrequent services with `--min-instances=0`. Cold start for most container images is under 2 seconds — acceptable for batch jobs and internal tools. Only set `min-instances=1` for user-facing services with strict sub-second latency SLAs.
+
 ```bash
 # Deploy a Cloud Run Job with cost-efficient defaults
 gcloud run jobs create JOB_NAME \
@@ -689,10 +653,16 @@ Cost   = (500 - 10) × $0.04 = 490 × $0.04 = $19.60/month
 > Cost Trap: Large Message Payloads.
 > Pub/Sub is billed on raw bytes. If you publish 1 MB JSON blobs, you pay 1000× more than publishing a 1 KB event ID and fetching the payload from GCS. Store large payloads in GCS; publish a reference to Pub/Sub.
 
+> [!success] Use the claim-check pattern for large payloads
+> Write the large payload to GCS, then publish only the GCS URI as the Pub/Sub message. The subscriber fetches the full payload from GCS only when needed. This keeps message cost near the 1 KB minimum and decouples payload size from messaging throughput.
+
 > [!warning] Retained Acknowledged Messages
 >
 > Cost Trap: Retained Acknowledged Messages.
 > If a subscription has message retention enabled (for replay), all acknowledged messages are stored at $0.27/GB/month. This can accumulate fast for high-volume topics. Set retention only as long as needed.
+
+> [!success] Set the shortest retention period that satisfies your replay needs
+> Use `gcloud pubsub subscriptions modify-config SUBSCRIPTION_ID --message-retention-duration=1d` to cap retention. For most pipelines, 24-hour replay is sufficient. Only extend to 7 days if you have an explicit replay or audit requirement.
 
 ```bash
 # Check message volume on a subscription (via Cloud Monitoring metrics)
@@ -730,6 +700,9 @@ See [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-
 >
 > Deleting a Nearline object before 30 days charges you for the remaining duration. Deleting a Coldline object at day 45 of 90 charges you for the remaining 45 days of minimum. Plan lifecycle transitions carefully.
 
+> [!success] Set lifecycle rules to match minimum storage durations
+> Configure GCS lifecycle rules so objects transition to Nearline only after 30 days, to Coldline only after 90 days, and to Archive only after 365 days. This aligns transitions with the minimum duration guarantees and eliminates early-deletion charges entirely.
+
 #### Operations Pricing
 
 | Class | Operations | Price |
@@ -753,6 +726,9 @@ Class A ops are 12.5× more expensive than Class B. Minimizing unnecessary bucke
 >
 > Cost Trap: Data Egress.
 > Downloading 1 TB from GCS to the internet costs $122.88. Keep downstream compute in the same region as your GCS buckets. If data must leave GCP, compress it first.
+
+> [!success] Co-locate compute and storage; compress before external transfer
+> Deploy BigQuery, Dataflow, Cloud Run, and GCS in the same region to keep all internal data transfer free. When data must reach an external partner, compress to gzip or Parquet first to reduce egress volume by 60–80% before it leaves GCP.
 
 #### Free Tier
 
@@ -832,6 +808,9 @@ Free tier resets daily (not monthly), making Firestore effectively free for deve
 >
 > Cost Trap: Unindexed Collection-Group Queries.
 > A query that cannot use an index falls back to a collection scan, reading every document in the collection. A 1M-document collection with 10 such queries/day = 10M reads = $6/day = $180/month. Always verify query plans and index coverage.
+
+> [!success] Define composite indexes and verify query plans before production
+> Add composite indexes for every multi-field query in `firestore.indexes.json` and deploy them before the query goes live. Test queries in the Firebase emulator or staging environment to confirm index coverage. Firestore surfaces missing index errors with a direct link to create the required index.
 
 #### Firestore cost estimation — reads, writes, deletes, storage
 
@@ -914,10 +893,16 @@ Total   ≈ $6.62
 > Cost Trap: Over-Provisioned Worker Counts.
 > Dataflow autoscaling helps, but setting `--num-workers` too high wastes money on idle workers. Let autoscaling determine worker count, or profile the job first with a small `--num-workers=2` run to establish a baseline.
 
+> [!success] Profile first, then let autoscaling manage scale
+> Run the job with `--num-workers=2 --max-workers=20` and no `--num-workers` floor. Inspect the autoscaler's chosen worker count in the Dataflow UI after the first run. Set `--num-workers` to that baseline only if autoscaling ramp-up lag is causing SLA issues.
+
 > [!warning] Streaming Jobs Running 24/7
 >
 > Cost Trap: Streaming Jobs Running 24/7.
 > A 10-worker streaming Dataflow job at $0.069/vCPU/hour with 4 vCPUs/worker = $0.276/worker/hour × 10 = $2.76/hour = $66.24/day = ~$2,000/month just for compute. Evaluate whether Cloud Run, Cloud Functions, or Pub/Sub + BigQuery streaming inserts can replace a Dataflow streaming job.
+
+> [!success] Evaluate Pub/Sub → BigQuery direct subscription as a zero-worker alternative
+> For high-volume streaming into BigQuery, a **Pub/Sub BigQuery subscription** writes messages directly to a BigQuery table with no worker VMs — billed at $0.05/GB delivered, eliminating Dataflow compute cost entirely for simple insert workloads.
 
 ```bash
 # Submit a batch Dataflow job with cost-conscious defaults
@@ -1036,9 +1021,15 @@ gcloud secrets versions disable VERSION_NUMBER --secret=SECRET_NAME
 > Cost Trap: DEBUG-Level Logging in Production.
 > A service logging at DEBUG level can generate 10–100× more log volume than INFO level. At $0.50/GB, 1 TB/month of logs = $476.84 (after 50 GB free). Always use INFO or WARNING in production; use log sampling for high-throughput services.
 
+> [!success] Set log level to WARNING in production and create exclusion filters
+> Configure your service's log level to `WARNING` or `ERROR` in production via environment variables. Additionally, create a Cloud Logging exclusion for `severity<=DEBUG` on the `_Default` sink to drop any debug output from libraries before it is ingested and billed.
+
 > [!warning] Log Exclusion Filters
 >
 > Use log exclusion filters to drop high-volume, low-value logs before they are ingested and billed.
+
+> [!success] Add exclusion filters for health checks and noisy paths
+> Create exclusions for `/healthz`, `/readiness`, and any other high-frequency low-value endpoints using `gcloud logging exclusions create`. This keeps the same observability for real errors while eliminating the bulk of unnecessary log volume.
 
 ```bash
 # Check current log volume (bytes ingested this month)
@@ -1120,6 +1111,9 @@ gcloud artifacts repositories set-cleanup-policies REPO_NAME \
 > [!warning] Hidden Cloud NAT Cost
 >
 > Public NAT costs $0.0014/hr per VM using the gateway, capping at $0.044/hr (~$32/month) for 32+ VMs. Even with zero traffic, the per-VM charge applies while the gateway exists. If you have NAT gateways in multiple regions "just in case," that adds up. Disable NAT in regions where VMs do not need internet access.
+
+> [!success] Enable Private Google Access instead of NAT for GCP API traffic
+> Enable **Private Google Access** on the subnet (`gcloud compute networks subnets update SUBNET --enable-private-ip-google-access`) so VMs can reach GCP APIs (BigQuery, GCS, Pub/Sub) without a NAT gateway. Only provision NAT for VMs that genuinely need to reach external internet services.
 
 ```bash
 # List all NAT gateways (check for orphaned ones)

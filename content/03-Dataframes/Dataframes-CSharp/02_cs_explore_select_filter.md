@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - csharp
-  - dotnet
-  - polars
 tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - head, tail, describe, filter, where, isin
-keywords: [head, tail, describe, select, filter, where, isin, column selection, row filtering, boolean indexing]
 description: "Polars.NET / C# DataFrames reference 02/10 — Explore, Select & Filter (head/tail, describe, where, isin). Executable examples with cell outputs. See [02_py_explore_select_filter](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/02_py_explore_select_filter) for the Python equivalent."
 created: 2026-03-27
 updated: 2026-03-27

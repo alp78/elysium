@@ -1,7 +1,5 @@
 ---
 tags: [git, github]
-type: reference
-technology: git
 status: stable
 updated: 2026-03-23
 description: "Comprehensive catalog of Git and GitHub problems in distributed data engineering teams — 25 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures."
@@ -176,6 +174,10 @@ obj/
 > [!danger] Rotate Credentials First
 >
 > Rotate credentials FIRST — assume the secret is compromised the moment you discover it. Do not clean history before rotating. Cleaning history is housekeeping; rotating is security.
+
+> [!success] Safe Fix Order
+>
+> 1. Rotate the exposed credential immediately (GCP console, Azure portal, or CLI). 2. Add the file path to `.gitignore`. 3. Only then run `git filter-repo` or BFG to scrub history. 4. Force-push and require all clones to re-clone.
 
 1. **Immediately rotate all exposed credentials.** Do not skip this step.
 
@@ -382,6 +384,10 @@ git nuke origin/main
 >
 > Branch protection rules on GitHub only block pushes. A local pre-commit hook blocks the commit BEFORE it's created — catching the mistake at the earliest possible point. This hook exits with error 1, which aborts the commit.
 
+> [!success] Always Work on a Feature Branch
+>
+> Run `git checkout -b feature/your-feature` before making any changes. This keeps main clean and ensures your work goes through a PR with review before merging.
+
 ```bash
 # .git/hooks/pre-commit (make executable: chmod +x)
 #!/bin/bash
@@ -398,6 +404,10 @@ fi
 > [!warning] Do Not Run gc After Reset
 >
 > Do NOT run `git gc`, `git gc --prune=now`, or `git prune` after an accidental reset. This permanently destroys the orphaned commits. Recovery depends on the reflog being intact.
+
+> [!success] Recover via Reflog Immediately
+>
+> Run `git reflog` right away to find the commit SHA from before the reset. Use `git checkout -b rescue/work <SHA>` to restore it on a new branch, then open a PR as normal.
 
 1. **Open the reflog immediately:**
 
@@ -474,6 +484,10 @@ VS Code's merge editor shows "Incoming", "Current", and the merged result simult
 > [!danger] Strategy Merge Silently Discards Changes
 >
 > `git merge -X theirs` accepts the other branch's version for every conflict without showing conflict markers. Your changes are silently discarded — no warning, no diff, no undo. Never use this on logic files (SQL, Python, dbt models). Resolve conflicts manually.
+
+> [!success] Use a 3-Way Merge Tool
+>
+> Open the conflicted file in VS Code's merge editor (`git config --global merge.tool vscode`). The editor shows both sides and the base, letting you selectively accept, reject, or manually combine each change before committing.
 
 ```bash
 # DANGEROUS — silently accepts one whole side
@@ -1035,6 +1049,10 @@ The primary goal is a **clean, linear history**. With rebase, main's log reads a
 > The Golden Rule of Rebasing.
 > **Never rebase a branch that you have already pushed to a shared remote if others might be basing their work on it.** Because rebase creates brand new commits (different SHAs), teammates who pulled the original commits will have diverged histories. Their next `git pull` will see conflicts between the old commits and the new rebased ones — even though the code is identical. This causes severe history conflicts and lost work. Only rebase **local, private** feature branches before you open a pull request.
 
+> [!success] Rebase Only Before Opening a PR
+>
+> Keep rebase to your local feature branch before the first push (or before re-requesting review). Once teammates have checked out your branch, switch to `git merge origin/main` to incorporate upstream changes without rewriting shared history.
+
 #### Handling Conflicts During Rebase
 
 When Git reapplies your commits one by one, any commit that touches lines also changed on main will produce a conflict. Unlike merge (one conflict resolution for everything), rebase may require you to resolve conflicts **for each commit** being replayed:
@@ -1058,6 +1076,10 @@ git rebase --abort
 > [!warning] Multiple Conflicts per Rebase
 >
 > If your branch has 10 commits and 3 of them touch the same file that changed on main, you may need to resolve conflicts 3 separate times — once per commit being replayed. This is why keeping branches short-lived (fewer commits to replay) dramatically reduces rebase pain.
+
+> [!success] Enable rerere to Reuse Conflict Resolutions
+>
+> Run `git config rerere.enabled true`. Git will remember how you resolved each conflict and reapply that resolution automatically the next time the same conflict appears during rebase, saving repeated manual work.
 
 **Consequences**
 

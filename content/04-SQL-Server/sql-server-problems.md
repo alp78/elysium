@@ -1,7 +1,5 @@
 ---
 tags: [sql, sql-server, tsql]
-type: reference
-technology: sql-server
 status: stable
 updated: 2026-03-23
 description: "Comprehensive catalog of SQL Server production problems for data engineers — 25 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures. Covers performance, concurrency, data loading, backup, and operational issues on SQL Server 2022 Linux/GCP."
@@ -156,6 +154,10 @@ DBCC SHRINKFILE (analytics_db_log, 1024);  -- shrink to 1 GB
 >
 > Shrinking the log file fragments it into many small VLFs, which degrades future log write performance. Use only in emergencies, then grow it back to the correct size immediately. Never automate log shrink.
 
+> [!success] Safe Pattern
+>
+> After an emergency shrink, immediately regrow the log to the correct operational size: `ALTER DATABASE analytics_db MODIFY FILE (NAME = analytics_db_log, SIZE = 10GB);`. This prevents VLF fragmentation from persisting. Schedule regular log backups every 15 minutes to prevent the log from ever filling again.
+
 5. Verify recovery and restart the Airflow pipeline tasks.
 
 ---
@@ -193,6 +195,10 @@ SELECT name, is_read_committed_snapshot_on FROM sys.databases WHERE name = 'anal
 > [!warning] RCSI and TempDB
 >
 > RCSI stores row versions in TempDB. Monitor TempDB growth after enabling. On high-throughput pipelines, version store can grow significantly. See [memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/Performance/memory-and-buffer-pool) for TempDB sizing.
+
+> [!success] Safe Pattern
+>
+> Before enabling RCSI, pre-size TempDB to at least 4 × the size of the largest table modified in a single transaction. After enabling, monitor `sys.dm_db_file_space_usage.version_store_reserved_page_count` daily for the first two weeks and adjust TempDB autogrowth settings accordingly.
 
 2. Capture deadlock graphs from the `system_health` Extended Events session (always-on):
 ```sql
@@ -980,6 +986,10 @@ WHERE index_code = 'MSCI_WORLD' AND effective_date >= '2026-01-01';
 >
 > `WITH (NOLOCK)` / `READUNCOMMITTED` can return uncommitted rows, skip rows, or return the same row twice due to page splits. Never use on financial calculations, only on non-critical dashboard queries where approximate data is acceptable.
 
+> [!success] Safe Pattern
+>
+> Enable RCSI (`ALTER DATABASE analytics_db SET READ_COMMITTED_SNAPSHOT ON`) instead of using `NOLOCK`. With RCSI, readers see a consistent row-version snapshot without dirty reads and without blocking writers — eliminating the need for `NOLOCK` entirely on this database.
+
 ---
 
 ### Stale Statistics
@@ -1321,6 +1331,10 @@ WHEN NOT MATCHED THEN INSERT ...;
 >
 > Microsoft has acknowledged bugs in `MERGE` related to duplicate key errors and unexpected behavior with concurrent access. The general recommendation for high-concurrency ETL is to avoid `MERGE` and use explicit `DELETE + INSERT` or `UPDATE + INSERT` patterns. See [KB2647913](https://support.microsoft.com/kb/2647913).
 
+> [!success] Safe Pattern
+>
+> Replace concurrent `MERGE` with a serialized `DELETE + INSERT` in an explicit transaction, or add `WITH (HOLDLOCK)` to the `MERGE` target and serialize concurrent executions via an Airflow pool with `slots=1`. Add a unique constraint on the business key columns to guarantee the database enforces uniqueness even if application-level deduplication fails.
+
 **Fix procedure**
 
 1. Identify and remove duplicate rows:
@@ -1567,6 +1581,10 @@ ALTER DATABASE tempdb ADD FILE (NAME = tempdev8, FILENAME = '/var/opt/mssql/data
 >
 > TempDB file changes take effect after `sudo systemctl restart mssql-server`. Plan a maintenance window.
 
+> [!success] Safe Pattern
+>
+> Schedule TempDB file additions during a planned low-traffic window (e.g., Sunday 02:00 UTC). Pre-create all TempDB files at the same initial size so SQL Server's proportional fill algorithm distributes allocations evenly from the start. Verify the file count with `SELECT COUNT(*) FROM sys.master_files WHERE database_id = DB_ID('tempdb') AND type = 0` after restart.
+
 3. Enable trace flag 1118 (uniform extent allocation, reduces GAM contention):
 ```bash
 # Add to /var/opt/mssql/mssql.conf or SQL Server Agent startup
@@ -1707,6 +1725,10 @@ ORDER BY wait_time_ms DESC;
 > [!warning] CXPACKET waits
 >
 > High `CXPACKET` waits indicate parallelism skew (one thread finishes, others wait). This is a symptom of bad MAXDOP or CTFP settings. Raising cost threshold for parallelism is usually the correct fix — not blindly setting MAXDOP 1.
+
+> [!success] Safe Pattern
+>
+> Set `cost threshold for parallelism` to 50 (from the default of 5) to prevent small queries from going parallel. Set `MAXDOP` to half the logical CPU count (4 on an 8-core VM). Then add `OPTION (MAXDOP 1)` only to the specific small queries that are confirmed to perform worse with parallelism.
 
 **Fix procedure**
 

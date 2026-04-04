@@ -1,10 +1,6 @@
 ---
-type: concept
-category: dataops
-technology: [sql-server, python, airflow, terraform]
 tags: [python, sql, terraform, airflow, leadership]
 aliases: [code review best practices, technical design document, ADR template, architecture decision record, blameless post-mortem, incident response, war room, technical debt management, RACI matrix, matrixed organization, mentoring junior engineers, stakeholder communication, senior engineer skills, staff engineer, data engineering leadership]
-keywords: [code review, design doc, ADR, architecture decision record, post-mortem, RCA, root cause analysis, blameless, incident commander, war room, SEV-1, technical debt, RACI, matrixed organization, mentoring, pair programming, stakeholder management, sprint, technical communication, on-call, escalation, salary, career progression, index provider, data engineering leadership, expand-and-contract, contract, ratchet principle, review pyramid, 5 whys]
 description: "Leadership and collaboration skills for senior data engineers at scale: the code review as a teaching tool (review pyramid, feedback principles), technical design documents, stakeholder expectation management, mentoring progression, navigating matrixed organizations (RACI), Architecture Decision Records (ADRs), managing technical debt (four quadrants, technical debt register, when to say no), and incident response with blameless post-mortems (war room roles, 5-whys RCA, Euro market index incident case study). Includes all templates and frameworks."
 created: 2026-03-22
 updated: 2026-03-22
@@ -45,6 +41,9 @@ Code reviews are not quality gates — they are the primary mechanism through wh
 > [!warning] Approve-without-running risk
 >
 > In data engineering, the most dangerous PRs look correct in review but produce wrong results at scale. A SQL query that works on 1,000 rows may produce duplicates or incorrect aggregations on 10M rows. For any PR that modifies a gold-layer query or calculation, request that the author include a diff of before/after query results on a representative dataset -- not just "tests pass."
+
+> [!success] Fix: Require a Row-Count or Result Diff in Gold-Layer PRs
+> Add a PR template checklist item for any gold-layer or calculation change: "Include a before/after row count, aggregate diff, or spot-check table for a representative date range." Make this a blocking check in code review — the test suite passing is necessary but not sufficient for financial calculation changes.
 
 #### What senior reviewers look for in data pipeline PRs
 
@@ -403,6 +402,9 @@ A senior data engineer's career is defined not by how many incidents they preven
 > [!warning] Separate debugging from communication
 >
 > The golden rule: never let the person debugging also communicate. Debugging requires focus. Status updates require context switching. Assign different people.
+
+> [!success] Fix: Assign Roles Before Debugging Starts
+> The first 60 seconds of a war room must produce three named role assignments: Incident Commander, Technical Lead, Communications Lead. Use a Slack message template: "IC: @name | Tech Lead: @name | Comms: @name — scribe thread starts now." The IC owns all status updates; the Tech Lead never types in the main channel until the fix is deployed.
 
 #### Incident severity levels for a financial data platform
 

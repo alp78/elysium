@@ -1,10 +1,6 @@
 ---
-type: concept
-category: data-architecture
-technology: [sql-server, python, pyodbc]
 tags: [data-architecture, architecture, pipeline, medallion, python, sql]
 aliases: [medallion architecture, bronze silver gold, bronze/silver/gold, data lakehouse, three layer architecture, medallion pattern]
-keywords: [medallion architecture, bronze, silver, gold, raw data, cleaned data, analytics, pipeline, schema, layers, data warehouse, data-pipeline, sql server, pyodbc, parameterized queries]
 description: "The medallion architecture (bronze/silver/gold) implemented in SQL Server — raw data landing, cleaning and deduplication, and analytics-ready aggregation across three schema layers."
 created: 2026-03-22
 updated: 2026-03-22
@@ -89,6 +85,10 @@ CREATE SCHEMA ref;   -- reference data (static lookups)
 >
 > Never UPDATE or DELETE bronze rows. The entire medallion architecture depends on bronze being a faithful record of what arrived from the source. If you apply corrections or deduplication in bronze, you lose the ability to reprocess silver/gold from scratch. All cleaning, deduplication, and type casting belongs in silver. If source data is genuinely wrong, append a correction row with a later `_ingested_at` timestamp -- do not overwrite the original.
 
+> [!success] Append corrections to bronze — never overwrite
+>
+> When a source sends a corrected value, insert the new row with a later `_ingested_at` timestamp alongside the original. The silver deduplication step selects the latest row per business key. Bronze stays immutable, the correction is captured, and you retain a full audit trail of what the source sent and when.
+
 ### Bronze (Raw)
 - 1:1 mapping with source data
 - No transformations -- data lands exactly as received
@@ -116,6 +116,10 @@ Gold tables are pre-computed for specific consumers — a dashboard, a compariso
 >
 > If you cannot rebuild gold entirely from silver (and silver from bronze), your medallion architecture is broken. Test this regularly by running a full-refresh of gold in a dev environment. Any gold table that depends on external state (API calls, cached files) outside the silver layer is a hidden dependency that will cause silent failures during reprocessing.
 
+> [!success] Run a full-refresh of gold from silver in dev on every schema change
+>
+> Add a CI step that runs `TRUNCATE gold.*; INSERT INTO gold.* SELECT ... FROM silver.*` in the dev environment on every PR that touches transform logic. If the full-refresh fails or produces unexpected row counts, the PR is blocked before it reaches staging. Gold must always be fully reproducible from silver — this gate enforces it.
+
 ### Why Medallion Architecture Matters
 
 The medallion architecture enables [idempotent pipelines](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design):
@@ -134,6 +138,10 @@ The medallion architecture enables [idempotent pipelines](https://alp78.github.i
 > immutable by design — no need for a "bronze" preservation layer), or
 > streaming-first systems where data flows continuously through transformations
 > without landing in intermediate tables.
+
+> [!success] Use the kappa/streaming pattern for sub-second latency requirements
+>
+> When the use case demands continuous processing without stage-boundary landing, use a streaming architecture (Pub/Sub + Dataflow) instead of medallion. The two are complementary: financial index platforms typically run medallion for official end-of-day values and streaming for intraday approximations. See [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture).
 
 For streaming-first alternatives, see [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture).
 

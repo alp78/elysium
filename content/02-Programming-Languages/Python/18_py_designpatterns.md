@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python]
 tags: [python]
 aliases: [design patterns, singleton, factory, observer, strategy, repository, dependency injection]
-keywords: [singleton, factory, observer, strategy, repository, dependency injection, SOLID, decorator pattern]
 description: "Python design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and dependency injection. See [18_cs_designpatterns](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/18_cs_designpatterns) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -34,6 +30,20 @@ A class receives its dependencies (DB connection, API client, logger) through it
 >         self.db = PostgresConnection("prod-host")  # hardcoded!
 > ```
 > Instead, inject via constructor: `def __init__(self, db, storage):`
+
+> [!success] Inject dependencies via constructor
+>
+> ```python
+> class PipelineService:
+>     def __init__(self, db: DatabaseClient, storage: StorageClient):
+>         self.db = db          # injected — swap for mock in tests
+>         self.storage = storage
+>
+> # Production
+> svc = PipelineService(db=PostgresConnection("prod-host"), storage=GCSClient())
+> # Test
+> svc = PipelineService(db=MockDatabase(), storage=MockStorage())
+> ```
 
 ```python
 from abc import ABC, abstractmethod

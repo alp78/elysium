@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python]
 tags: [python]
 aliases: [serialization formats, JSON, CSV, Parquet, Avro, Protocol Buffers]
-keywords: [serialization, JSON, CSV, Parquet, Avro, protobuf, msgpack, pickle, arrow, feather, data formats, schema evolution, compression]
 description: "Python serialization formats reference with executable examples and cell outputs — covers JSON, CSV, Parquet, Avro, Protocol Buffers, MessagePack, and format comparison benchmarks. See [10_cs_serialization_formats](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/10_cs_serialization_formats) for the C# equivalent."
 created: 2026-03-25
 updated: 2026-03-25
@@ -60,6 +56,10 @@ Parquet stores data **column-by-column** with per-column compression (snappy, gz
 > - **Small files** (<1MB) — Parquet overhead exceeds benefit
 > - **Frequent appends** — Parquet is immutable; use Avro/JSONL for streaming
 > - **Simple data exchange** — CSV is more universal
+
+> [!success] Use Parquet for analytics; JSONL or Avro for streaming appends
+>
+> For batch analytics (BigQuery, Spark, Athena, DuckDB) with files >1 MB: Parquet with snappy compression. For event streams where records arrive continuously: JSONL (one object per line) or Avro with a schema registry. For simple hand-off to non-engineering consumers: CSV.
 
 ```python
 tmp_dir = Path(tempfile.mkdtemp(prefix="parquet_"))
@@ -284,6 +284,10 @@ Binary formats provide schema enforcement, cross-language support, and compact s
 > Why not JSON or pickle at scale?
 > - **JSON:** text-based, no schema enforcement, slow to parse at scale
 > - **pickle:** Python-only, insecure (arbitrary code execution), no schema — never use in production
+
+> [!success] Use Avro for Kafka, Protobuf for gRPC — both enforce schema
+>
+> Avro stores the schema in the file/message header — consumers always know the shape of the data. Protobuf uses compiled `.proto` files — ideal for gRPC where both sides share the generated code. Both are cross-language (Python, Java, Go, C#) and 50-80% smaller than equivalent JSON.
 
 | Format | Size | Speed | Schema | Cross-lang | Use case |
 |---|---|---|---|---|---|

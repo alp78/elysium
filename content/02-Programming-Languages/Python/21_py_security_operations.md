@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python, gcp]
 tags: [python, gcp, security, encryption, identity]
 aliases: [Security Operations Python, Encryption and Identity Python]
-keywords: [encryption, KMS, Secret Manager, certificates, Workload Identity, OAuth, JWT, IAM, SSH, paramiko, Cloud SQL, BigQuery, Firestore, GCS, signed URLs, CMEK, CSEK, envelope encryption, IAP tunnel, service account impersonation]
 description: "Python security operations reference — encryption, certificates, identity, and secure access across GCP services. Executable examples with cell outputs. Built on infrastructure from [20_py_security_setup](https://alp78.github.io/elysium/02-Programming-Languages/Python/20_py_security_setup). See [21_cs_security_operations](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/21_cs_security_operations) for the C# equivalent."
 created: 2026-03-27
 updated: 2026-03-27
@@ -283,6 +279,17 @@ Impersonation: act as another SA without holding its key. The source requests a 
 > - Granting `serviceAccountTokenCreator` at project level — scope to specific SAs
 > - Using impersonation for long-running workloads — prefer WIF or attached SA
 > - Not auditing who can impersonate — `tokenCreator` is effectively "become this identity"
+
+> [!success] Scope impersonation to the minimum SA and audit it
+>
+> ```bash
+> # Grant tokenCreator on a specific SA only, not at project level
+> gcloud iam service-accounts add-iam-policy-binding target-sa@project.iam.gserviceaccount.com \
+>   --member="serviceAccount:source-sa@project.iam.gserviceaccount.com" \
+>   --role="roles/iam.serviceAccountTokenCreator"
+> # Audit who can impersonate: check IAM bindings on the target SA
+> gcloud iam service-accounts get-iam-policy target-sa@project.iam.gserviceaccount.com
+> ```
 
 ```python
 source_credentials, _ = google.auth.default(
@@ -708,6 +715,16 @@ Use Secret Manager for API keys, passwords, certificates shared across services.
 >
 > Never hardcode secrets in code, bake them into Docker images, or store them in GCS/BigQuery instead of Secret Manager.
 
+> [!success] Store in Secret Manager and access at runtime
+>
+> ```python
+> from google.cloud import secretmanager
+> client = secretmanager.SecretManagerServiceClient()
+> # Access latest version at runtime — no value in code or image
+> name = f"projects/{PROJECT_ID}/secrets/my-api-key/versions/latest"
+> payload = client.access_secret_version(request={"name": name}).payload.data.decode()
+> ```
+
 ```python
 new_secret_id = "notebook-demo-secret"
 
@@ -745,6 +762,13 @@ Recommended frequency: API/SA keys 90 days, DB passwords 30–90 days, certifica
 > [!warning] Don't rotate without updating consumers
 >
 > Don't rotate without updating consumers first (outages). Don't destroy old versions immediately (breaks services). Don't skip rotation because "it has never been leaked" — you wouldn't know.
+
+> [!success] Follow a staged rotation: add new version, update consumers, then destroy old
+>
+> 1. Add the new secret version (`add_secret_version`).
+> 2. Update all consumers to read from `latest` (or pin the new version number).
+> 3. Verify no consumer reads the old version in logs/metrics.
+> 4. Disable the old version; wait 24 h; then destroy it (`versions destroy`).
 
 ```python
 new_password = secrets_module.token_urlsafe(24)
@@ -1366,6 +1390,13 @@ Four Cloud SQL authentication methods, from simplest to most secure:
 > - **Shared admin account** across services → create per-service SQL logins with least-privilege
 > - **Stale IP allowlist entries** after debugging → remove when done
 
+> [!success] Safe Cloud SQL connection practices
+>
+> - Read credentials from Secret Manager or environment at runtime — never in source.
+> - Use Cloud SQL Auth Proxy for production; for dev, allowlist only your current IP and remove it when done.
+> - Enable `require_ssl` on the instance and supply a CA cert in the connection string.
+> - Create a dedicated SQL login per service with only the needed schema permissions.
+
 #### SQL Server password authentication — direct connect
 
 #### Authorize current IP in Cloud SQL
@@ -1499,6 +1530,19 @@ The server CA certificate proves you're talking to the real Cloud SQL instance (
 > [!danger] Never use TrustServerCertificate=yes in production
 >
 > Never use `TrustServerCertificate=yes` in production — accepts any cert. Don't assume encryption = authentication (encrypted channel to the wrong server is still compromised).
+
+> [!success] Provide the server CA certificate and verify the hostname
+>
+> ```python
+> import os, pymssql
+> # Download the Cloud SQL CA cert from the GCP console and supply it explicitly
+> os.environ["TDSCAFILE"] = "/path/to/server-ca.pem"
+> os.environ["TDSSSL"]    = "1"
+> conn = pymssql.connect(
+>     server=CLOUD_SQL_IP, user=SQL_USER, password=SQL_PASS,
+>     database="stoxx", tls_verify_certificate=True
+> )
+> ```
 
 pymssql uses FreeTDS — TLS via `TDSSSL` env var, cert validation via `TDSCAFILE`.
 
@@ -1670,6 +1714,12 @@ Encrypt individual field values with KMS before inserting into BigQuery — the 
 > [!warning] Don’t encrypt columns you need
 >
 > Don’t encrypt columns you need to query/filter/join on — ciphertext is not searchable (use tokenization instead). Don’t use the same KMS key for all tenants.
+
+> [!success] Encrypt only opaque PII; use per-tenant keys for isolation
+>
+> - Encrypt storage-only fields (SSN, IBAN, DOB) — values displayed but never queried.
+> - For fields you need to filter on (email, account ID), use deterministic tokenization (HMAC or format-preserving encryption) so equality lookups still work.
+> - Create a separate KMS key per tenant: `{project}/cryptoKeys/{tenant-id}-key` — compromising one key does not expose other tenants’ data.
 
 ```python
 sample_data = [
@@ -2194,6 +2244,13 @@ CSEK: you provide a 256-bit AES key in the request header. Google uses it but **
 >
 > Never store the CSEK key in GCS or any Google service. Never use the same key for all objects. Always have a key backup strategy. Prefer CMEK when it satisfies compliance — CSEK adds significant operational burden.
 
+> [!success] Store CSEK keys in an HSM or offline backup; use per-object keys
+>
+> - Store the 256-bit key in a hardware security module (HSM) or an encrypted offline vault — never in GCS, BigQuery, or Secret Manager.
+> - Generate a unique key per object (or per batch) so a single key loss is bounded.
+> - Maintain at least two encrypted copies in geographically separate locations.
+> - Evaluate CMEK first: it satisfies most compliance requirements with far lower operational risk.
+
 ```python
 csek_key = os.urandom(32)
 csek_key_b64 = base64.b64encode(csek_key).decode()
@@ -2233,6 +2290,12 @@ Signed URLs grant time-limited access to a private GCS object without requiring 
 > [!warning] Don't log signed URLs (anyone
 >
 > Don't log signed URLs (anyone reading logs gets access). Use the shortest expiration needed. Don't use the same SA for signing and production (key rotation invalidates all URLs).
+
+> [!success] Use minimal expiry, mask in logs, and isolate the signing SA
+>
+> - Set `expiration` to the minimum needed (e.g., `timedelta(minutes=15)` for one-time downloads).
+> - Never log the full URL — log only the GCS path and the expiry timestamp.
+> - Use a dedicated signing-only SA (`signing-sa@...`) with `roles/iam.serviceAccountTokenCreator`; keep it separate from the SA used by production services so key rotation does not break active workloads.
 
 ```python
 blob_to_sign = bucket.blob("bronze/csv/dim_index.csv")
@@ -2606,3 +2669,9 @@ print(f"  Restart: gcloud compute instances start {VM_NAME} --zone={ZONE}")
 > # Delete the entire project (nuclear option)
 > gcloud projects delete $PROJECT_ID --quiet
 > ```
+
+> [!success] Dry-run and export before teardown; prefer project deletion only as a last resort
+>
+> - Before running any delete command, export critical data: `bq extract`, `gcloud storage cp`, `gcloud sql export`.
+> - Prefer stopping/disabling resources over deleting them during a review period.
+> - Use `gcloud projects delete` only for completely disposable sandbox projects — it triggers a 30-day soft-delete window before permanent removal, giving time to recover if run by mistake.

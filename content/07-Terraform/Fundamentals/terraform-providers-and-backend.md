@@ -1,10 +1,6 @@
 ---
-type: concept
-category: terraform
-technology: [terraform, gcp, gcs]
 tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform provider, terraform backend, GCS backend, terraform GCS, google provider, remote state backend]
-keywords: [terraform provider, hashicorp google, backend gcs, remote state, state file, tfstate, gcs bucket, pessimistic constraint, version constraint, provider configuration, terraform init]
 description: "How to configure the Terraform Google provider and GCS remote state backend — version constraints, project defaults, and why remote state matters."
 created: 2026-03-22
 updated: 2026-03-22
@@ -83,6 +79,10 @@ Tells Terraform to store its **state file** remotely in a Google Cloud Storage b
 >
 > The Backend Bucket Must Exist First.
 > The `backend` block is **exclusively** for storing the `.tfstate` file. It has nothing to do with providers, resources, or any other Terraform concept. The GCS bucket must be created manually (or by a separate Terraform config) before running `terraform init`.
+
+> [!success] Bootstrap the State Bucket First
+>
+> Create the state bucket with a one-time `gcloud` command before running `terraform init`: `gcloud storage buckets create gs://<project>-terraform-state --location=<region> --uniform-bucket-level-access`. Enable versioning on the bucket so corrupted state files can be recovered from a previous object version.
 
 ### Why Remote State?
 

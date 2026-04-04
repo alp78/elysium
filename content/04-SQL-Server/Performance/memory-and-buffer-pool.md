@@ -1,10 +1,6 @@
 ---
-type: concept
-category: performance
-technology: [sql-server]
 tags: [performance, sql, sql-server, tsql]
 aliases: [buffer pool, page life expectancy, PLE, buffer cache hit ratio, memory pressure, max server memory, memory clerks, DBCC FREEPROCCACHE, DBCC DROPCLEANBUFFERS]
-keywords: [buffer pool, page life expectancy, PLE, buffer cache hit ratio, max server memory, memory clerks, MEMORYCLERK_SQLBUFFERPOOL, RESOURCE_SEMAPHORE, memory grant, pending memory grant, sys.dm_os_sys_memory, sys.dm_os_memory_clerks, sys.dm_os_buffer_descriptors, memory pressure, SQL Server memory, GCP VM memory sizing]
 description: "How SQL Server's buffer pool manages data pages in RAM, how to measure memory pressure using Page Life Expectancy and buffer cache hit ratio, and how to configure max server memory correctly on GCP Compute Engine VMs."
 created: 2026-03-22
 updated: 2026-03-22
@@ -60,6 +56,10 @@ WHERE name = 'max server memory (MB)';
 > [!warning] Never Leave at Default
 >
 > The default max server memory is 2,147,483,647 MB (unlimited). SQL Server will consume nearly all available RAM, starving the OS and creating instability. On GCP VMs, this can cause the OOM killer to terminate the `sqlservr` process during spikes. Always set this before going to production.
+
+> [!success] Set `max server memory` to total RAM minus at least 1 GB before going to production
+>
+> `EXEC sp_configure 'max server memory', <total_RAM_MB - 1024>; RECONFIGURE;` — run this immediately after installing SQL Server. On a 16 GB VM, use 15360 MB. Verify with `SELECT name, value_in_use FROM sys.configurations WHERE name = 'max server memory (MB)';`
 
 ## Checking Available System Memory
 
@@ -199,6 +199,10 @@ When queries appear here, `RESOURCE_SEMAPHORE` appears in [wait statistics](http
 > Do Not Run in Production Without Cause.
 > These commands are for testing and diagnosis. Running them in production flushes caches that queries depend on, causing temporary performance degradation.
 
+> [!success] Use per-database or per-plan variants to minimize production impact
+>
+> Instead of `DBCC FREEPROCCACHE` (all plans), use `DBCC FLUSHPROCINDB(@db_id)` to flush only one database's plans. Instead of `DBCC DROPCLEANBUFFERS` (all cached pages), target a cold-cache benchmark in a dedicated test environment, not production.
+
 ```sql
 -- Free plan cache (forces query recompilation on next run)
 DBCC FREEPROCCACHE;
@@ -258,6 +262,10 @@ GCP VMs have fixed memory per machine type. Recommended sizing for SQL Server 20
 >
 > SQL Server 2022 on a 2 GB e2-small VM is critically undersized. The SQL Server engine alone reserves ~700 MB–1 GB, leaving almost nothing for the buffer pool. Any table scan or bulk load will constantly thrash the disk. Minimum production recommendation: 16 GB.
 
+> [!success] Use at least `e2-standard-4` (16 GB) for any production SQL Server workload
+>
+> On a 16 GB VM, SQL Server can maintain a healthy buffer pool for typical data pipeline tables (up to ~10 GB working set). Scale to `n2-highmem-4` (32 GB) once the working set — measured by `sys.dm_os_buffer_descriptors` — consistently exceeds 12 GB.
+
 ## Buffer Pool Health Queries
 
 SQL Server deliberately consumes as much memory as possible for the buffer pool — caching data pages in RAM to avoid disk reads. This is by design, not a memory leak. The queries below help you determine whether the buffer pool is healthy, whether the right databases are cached, and whether plan cache bloat is wasting memory.
@@ -267,6 +275,10 @@ SQL Server deliberately consumes as much memory as possible for the buffer pool 
 > [!warning] The 300-Second Rule Is Outdated
 >
 > The "300 seconds" rule of thumb dates from servers with 4 GB RAM. On modern servers with 64+ GB, PLE should be in the thousands. A more useful rule: PLE should be at least `(RAM_GB / 4) * 300` seconds. A sudden PLE drop (not a low baseline) indicates memory pressure — typically caused by a large scan flushing the buffer pool.
+
+> [!success] Use `(RAM_GB / 4) * 300` as the PLE baseline and alert on sudden drops
+>
+> On a 16 GB server the healthy PLE baseline is at least 1,200 seconds. Configure a Datadog or SQL Agent alert to fire when PLE drops more than 50% within 5 minutes — this identifies large scans or index rebuilds that are flushing the buffer pool mid-day.
 
 ```sql
 SELECT
@@ -321,6 +333,10 @@ ORDER BY pages_mb DESC;
 >
 > A plan cache with thousands of single-use plans (use_count = 1) is a sign of non-parameterized queries. Each unique query string gets its own cached plan, wasting memory. Enable "optimize for ad hoc workloads" to cache only a stub on first execution.
 
+> [!success] Enable "optimize for ad hoc workloads" to stop single-use plan accumulation
+>
+> `EXEC sp_configure 'optimize for ad hoc workloads', 1; RECONFIGURE;` — SQL Server caches a lightweight stub on the first execution and only promotes it to a full plan when the same query runs a second time, recovering the wasted plan cache memory.
+
 ```sql
 -- Overall cache by object type
 SELECT
@@ -367,6 +383,10 @@ ORDER BY total_logical_reads DESC;
 > [!danger] DBCC FREEPROCCACHE Clears the Entire Plan Cache
 >
 > Clears the ENTIRE plan cache. Every query must be recompiled on next execution, causing a CPU spike. Never run in production without understanding the impact. Use `DBCC FREEPROCCACHE(plan_handle)` to clear a single plan instead.
+
+> [!success] Clear only a specific bad plan with `DBCC FREEPROCCACHE(plan_handle)`
+>
+> Find the plan handle from `sys.dm_exec_cached_plans` and run `DBCC FREEPROCCACHE(<plan_handle>);` to evict just that plan. The rest of the cache remains intact, and only the one problematic query recompiles on its next execution.
 
 ```sql
 -- Flush entire plan cache (causes full recompilation storm)

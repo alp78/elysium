@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: git
-technology: [git]
 tags: [git, github]
 aliases: [git reset, git revert, git reflog, git stash, undo commit, recover lost commit, git undo]
-keywords: [git reset, git revert, git reflog, git restore, git stash, reset --soft, reset --hard, reset --mixed, HEAD~1, reflog, recover, undo, cherry-pick, lost commit, detached HEAD, branch deleted, merge conflict abort]
 description: "Complete guide to undoing changes in Git — safe methods (restore, revert) and destructive methods (reset --hard), using reflog to recover lost commits, and stash for temporary shelving."
 created: 2026-03-22
 updated: 2026-03-22
@@ -95,6 +91,10 @@ git reset --hard HEAD~1
 > `git reset --hard` is DESTRUCTIVE.
 > Uncommitted work is permanently lost. Only use on local, unpushed commits.
 
+> [!success] Use --soft or --mixed to Keep Your Work
+>
+> Prefer `git reset --soft HEAD~1` (keeps changes staged) or `git reset --mixed HEAD~1` (keeps changes in working directory) over `--hard`. Both let you revise and recommit without losing work.
+
 > [!danger] Nuclear option destroys everything
 >
 > Resets your local branch to match the remote exactly. All local changes AND all local-only commits are permanently destroyed.
@@ -102,6 +102,10 @@ git reset --hard HEAD~1
 ```bash
 git reset --hard origin/main
 ```
+
+> [!success] Stash First to Preserve Local Work
+>
+> Run `git stash` before any `reset --hard` to preserve uncommitted changes. After the reset, restore them with `git stash pop`. For local-only commits you want to keep, use `git reset --soft origin/main` instead.
 
 ---
 
@@ -152,6 +156,10 @@ git stash clear
 > [!danger] stash clear Deletes ALL Stashes
 >
 > `git stash clear` permanently removes every entry in the stash stack — not just the top one. There is no undo. If you meant to drop just one entry, use `git stash drop stash@{N}` with the specific index. Always run `git stash list` first to verify what's in the stack.
+
+> [!success] Drop a Single Stash Entry Safely
+>
+> Run `git stash list` to review the stack, then `git stash drop stash@{N}` to remove only the specific entry you no longer need. This leaves all other stash entries intact.
 
 ---
 
@@ -213,6 +221,10 @@ When `git stash pop` produces conflicts, files will contain conflict markers:
 > Stash Is Still Preserved on Conflict.
 > When `git stash pop` conflicts, the stash entry is NOT auto-dropped. Your work is safe. After resolving, manually drop it: `git stash drop`.
 
+> [!success] Resolve Conflicts Then Drop Manually
+>
+> Edit the conflict markers in each file, stage them with `git add`, then run `git stash drop` to clean up the preserved stash entry. Your changes are now fully applied to the working tree.
+
 ```bash
 git add ingestion/loaders/load_ohlcv.py    # stage each resolved file
 git stash drop                              # manually drop the stash (pop didn't auto-drop due to conflicts)
@@ -264,6 +276,10 @@ git cherry-pick abc1234
 >
 > The cherry-picked commit gets a new SHA on your branch. If you later merge the source branch, Git may flag the duplicated changes as a conflict. Cherry-pick sparingly — prefer merging or rebasing entire branches when possible.
 
+> [!success] Merge or Rebase the Full Branch When Possible
+>
+> Instead of cherry-picking, merge or rebase the entire source branch. If you only need one fix from a long-lived branch, open a focused PR on that branch with just the fix commit so it can be merged cleanly without duplication risk.
+
 ### Advanced: Interactive Rebase
 
 Interactive rebase lets you rewrite your recent commit history — reorder commits, combine multiple commits into one (squash), edit commit messages, or drop commits entirely. It opens an editor showing your recent commits as a todo list where you choose what to do with each one. This is a powerful cleanup tool before pushing or opening a PR.
@@ -280,9 +296,17 @@ git rebase -i HEAD~5
 >
 > If you change `pick` to `drop` (or delete a line) in the interactive rebase editor, that commit's changes are permanently removed from the branch. Unlike `git reset --soft`, the changes are not preserved in your working directory. If you drop the wrong commit, use `git reflog` to find the pre-rebase state and `git reset --hard` to restore it.
 
+> [!success] Use fixup Instead of drop to Preserve Changes
+>
+> If you want to discard a commit's message but keep its changes, use `fixup` instead of `drop` — it squashes the commit into the previous one silently. To truly remove a commit's changes, first confirm via `git show <SHA>` that you have no need for them.
+
 > [!warning] Only Rebase Unpushed Commits
 >
 > Interactive rebase rewrites history. Only use on commits that haven't been pushed to a shared branch.
+
+> [!success] Push Only After Rebase Is Complete
+>
+> Finish the entire interactive rebase session and verify your history with `git log --oneline` before pushing. Then use `git push --force-with-lease` to safely update your remote feature branch.
 
 ### Advanced: Bisect — Find the Breaking Commit
 

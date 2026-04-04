@@ -1,10 +1,6 @@
 ---
-type: reference
-category: observability
-technology: [datadog, sql-server, t-sql]
 tags: [monitoring, observability, sql, datadog]
 aliases: [Custom SQL Metrics, Datadog custom_queries, DMV metrics]
-keywords: [datadog custom queries, custom_queries, sqlserver, DMV, dm_exec_sessions, dm_os_performance_counters, connections by login, deadlock count, monotonic_count, gauge, tag column, metric prefix, sqlserver prefix]
 description: "How to configure custom SQL Server DMV queries in the Datadog SQL Server integration to track connections by login and deadlock counts as custom metrics."
 created: 2026-03-22
 updated: 2026-03-22
@@ -22,6 +18,9 @@ Custom queries let you track application-specific metrics from SQL Server DMVs. 
 
 > [!warning] Metric Name Prefix
 > The Datadog SQL Server integration automatically prepends `sqlserver.` to all custom query column names. To avoid a double prefix like `sqlserver.sqlserver.xyz`, name your columns **without** the `sqlserver.` prefix — e.g., `connections.by_login` becomes `sqlserver.connections.by_login` in Datadog.
+
+> [!success] Safe Naming Pattern
+> Name all `columns[].name` values without any prefix: `connections.by_login`, `deadlocks.total`. Datadog adds `sqlserver.` automatically, producing the correct final metric names `sqlserver.connections.by_login` and `sqlserver.deadlocks.total`.
 
 ---
 

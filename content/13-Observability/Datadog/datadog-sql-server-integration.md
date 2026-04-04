@@ -1,10 +1,6 @@
 ---
-type: reference
-category: observability
-technology: [datadog, sql-server]
 tags: [monitoring, observability, sql, datadog]
 aliases: [SQL Server Integration, sqlserver check, Datadog SQL integration]
-keywords: [datadog, sql server integration, sqlserver check, odbc, odbc driver 18, conf.yaml, dd_agent, connections, buffer pool, waits, batch requests, page life expectancy, DMV, TrustServerCertificate, custom_queries]
 description: "Complete configuration reference for the Datadog SQL Server integration on the example SQL VM — connection setup, ODBC driver, and the full conf.yaml with custom queries."
 created: 2026-03-22
 updated: 2026-03-22
@@ -60,6 +56,9 @@ instances:
 > [!warning] TrustServerCertificate
 > SQL Server 2022 uses a self-signed certificate by default. Without `TrustServerCertificate=yes`, the ODBC driver will refuse to connect. Do not use this in production environments with real certificates — instead, configure a proper certificate and remove this setting. See [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/Administration/server-configuration) for the full SQL Server instance setup including certificate and network configuration.
 
+> [!success] Production Certificate Setup
+> Provision a CA-signed certificate for SQL Server, configure it in SQL Server Configuration Manager, then remove `TrustServerCertificate=yes` from `connection_string`. This ensures the ODBC driver validates the certificate and the connection is genuinely encrypted.
+
 ---
 
 ### Built-in SQL Server Metrics Collected by Datadog
@@ -87,6 +86,9 @@ The integration automatically collects these metric groups from SQL Server DMVs:
 > [!danger] Missing VIEW SERVER STATE permission
 >
 > If the `dd_agent` SQL login lacks `VIEW SERVER STATE` permission, the Datadog agent connects successfully but returns zero values for most metrics (connections, buffer pool, waits). The agent logs no error -- it simply reports `0` for every DMV-backed metric. Always verify with `SELECT HAS_PERMS_BY_NAME(null, null, 'VIEW SERVER STATE')` from the `dd_agent` session.
+
+> [!success] Fix: Grant VIEW SERVER STATE
+> Connect as `sa` and run: `GRANT VIEW SERVER STATE TO dd_agent;`. Restart the Datadog agent, then verify with `sudo datadog-agent check sqlserver` — metric values should now be non-zero.
 
 ### Verifying the SQL Server Integration
 
@@ -118,6 +120,9 @@ sudo datadog-agent check sqlserver 2>&1 | grep -i "error|ok|instance"
 > sudo cat -A /etc/datadog-agent/conf.d/sqlserver.d/conf.yaml | head -40
 > ```
 > Tabs appear as `^I`. Replace all with spaces.
+
+> [!success] Fix: Replace Tabs with Spaces
+> Run `sudo sed -i 's/\t/  /g' /etc/datadog-agent/conf.d/sqlserver.d/conf.yaml` to replace all tab characters with two spaces. Re-verify with `cat -A`, then restart the agent with `sudo systemctl restart datadog-agent`.
 
 ---
 

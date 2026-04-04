@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, dbt]
-type: reference
-technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "Jinja2 fundamentals, writing macros, dbt-utils patterns, dispatch, hooks, and anti-patterns for financial data pipelines"
@@ -396,6 +394,9 @@ from {{ ref('int_portfolio_analytics') }}
 >
 > `run_query()` only works during the execution phase, not during parsing. Always wrap in `{% if execute %}` to prevent errors during `dbt parse` or `dbt compile`.
 
+> [!success] Standard execute guard pattern
+> Wrap every `run_query()` call in `{% if execute %}...{% else %}{{ return([]) }}{% endif %}`. The `else` branch returns a safe empty default so macros that call this helper also receive a valid type during parse/compile without crashing.
+
 ---
 
 ## Pre-hook and Post-hook Patterns
@@ -487,6 +488,9 @@ on-run-end:
 ### Jinja and Macro Anti-Patterns
 
 > [!danger] Anti-patterns to avoid
+
+> [!success] Safe macro design principles
+> Keep macros as thin SQL fragment generators. Business logic belongs in model SQL where it is version-controlled and testable. Use `{% if execute %}` guards around all `run_query()` calls. Prefer `var('is_production', false)` over `target.name` string comparisons. Ensure macros that call `run_query()` cache results in a Jinja variable so they are evaluated only once per compile pass.
 
 **1. Logic in macros instead of models**
 Macros are for reusable SQL *fragments*, not entire transformation logic. Complex business rules (constituent eligibility, factor construction) belong in model SQL where they are testable and documented.

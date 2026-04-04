@@ -1,6 +1,4 @@
 ---
-type: reference
-category: dataops
 tags: [dataops]
 aliases:
   - data team
@@ -9,35 +7,6 @@ aliases:
   - RACI matrix
   - career ladder
   - team structure
-keywords:
-  - data team
-  - team topology
-  - team structure
-  - data engineering roles
-  - career ladder
-  - career progression
-  - RACI matrix
-  - centralized data team
-  - embedded data engineers
-  - hub and spoke
-  - federated data
-  - data mesh team
-  - collaboration model
-  - data engineer
-  - analytics engineer
-  - data analyst
-  - data scientist
-  - data architect
-  - data platform engineer
-  - data product manager
-  - T-shaped engineer
-  - principal engineer
-  - staff engineer
-  - on-call rotation
-  - incident management
-  - remote data team
-  - team metrics
-  - hiring data engineers
 description: "How to build, organize, and scale data engineering teams — team topologies, role definitions, career ladders, RACI matrices, and collaboration models."
 created: 2026-03-22
 updated: 2026-03-22
@@ -367,6 +336,9 @@ RACI defines **Responsible** (does the work), **Accountable** (owns the outcome,
 > [!warning] One Accountable Owner Per Activity
 > The most common RACI failure is having multiple "Accountable" owners, which means nobody is truly accountable. If multiple teams share accountability, you need to pick one — and ensure that person has the authority to make decisions.
 
+> [!success] Fix: Assign Accountability Before Work Begins
+> During sprint planning or project kick-off, explicitly name a single accountable owner for each activity in the RACI matrix. Record the assignment in writing. If two teams both claim accountability, escalate to a manager to arbitrate — do not leave it unresolved.
+
 ---
 
 ## On-Call and Incident Management
@@ -510,6 +482,9 @@ Track these metrics to understand team health and improve continuously:
 
 > [!warning] Don't Optimize for Velocity Alone
 > A team that maximizes story points by cutting corners on testing, documentation, and code review will appear high-performing in the short term and will collapse in the medium term. Velocity is a leading indicator; quality and reliability are the outcomes that matter.
+
+> [!success] Fix: Track Quality Metrics Alongside Velocity
+> Balance your sprint dashboard with paired metrics: velocity alongside change failure rate, and story points alongside MTTR. Set a team policy that velocity targets can only be met if quality thresholds (e.g., test coverage > 80%, change failure rate < 10%) are also maintained.
 
 ---
 

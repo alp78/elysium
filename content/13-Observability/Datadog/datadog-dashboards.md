@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: observability
-technology: [datadog, sql-server, airflow, gcp, cloud-run]
 tags: [monitoring, observability, sql, airflow, datadog, gcp]
 aliases: [Pipeline Watch Dashboard, SQL Server DBA Dashboard, Datadog Dashboards, Airflow Dashboard]
-keywords: [datadog dashboard, pipeline watch, SQL server DBA dashboard, screenboard, query value, timeseries, top list, buffer cache hit ratio, page life expectancy, deadlock, connections by login, batch requests, lock waits, buffer pool, Cloud Run metrics, airflow metrics, StatsD, DAG run duration]
 description: "Step-by-step instructions for building the Pipeline Watch and SQL Server DBA dashboards in Datadog, plus the Airflow Orchestration Dashboard — covering all widgets, metrics, and layout tips."
 created: 2026-03-22
 updated: 2026-03-22
@@ -106,6 +102,9 @@ This breaks down each pipeline step by name and shows how long each took. The st
 
 > [!warning] Correct Metric Name
 > Use `gcp.run.container.memory.usage` (not `utilizations`). Cloud Run jobs are ephemeral (1-2 min runtime), so timeseries charts show tiny blips — Query Value with `max` aggregator is better.
+
+> [!success] Correct Widget Config
+> Set metric to `avg:gcp.run.container.memory.usage{job_name:data-pipeline-pipeline}`, type **Query Value**, aggregator **max**. This shows peak memory used during the job's short execution window rather than a nearly-invisible timeseries blip.
 
 ---
 
@@ -210,6 +209,9 @@ This breaks down each pipeline step by name and shows how long each took. The st
 > - **Temporal aggregation** (right side): `reduce values in timeframe to max` — takes the peak value across the selected time window
 >
 > Using `sum` for either will inflate the numbers (sums every 15-second check interval). Always use `max` for both to see realistic connection counts.
+
+> [!success] Correct Aggregation Setup
+> In the Top List widget editor: spatial aggregation = **max by `login_name`**, temporal aggregation (reduce values) = **max**. This correctly shows the peak concurrent connection count per login over the selected timeframe without artificial inflation from polling intervals.
 
 #### Widget: SQL Server — Buffer Cache Hit Ratio (Timeseries)
 

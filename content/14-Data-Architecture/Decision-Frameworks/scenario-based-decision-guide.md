@@ -1,10 +1,6 @@
 ---
-type: reference
-category: data-architecture
-technology: [sql-server, bigquery, gcp, python, airflow, terraform]
 tags: [data-architecture, architecture, python, sql, terraform, airflow, bigquery, gcp]
 aliases: [scenario guide, use case guide, reference architecture, solution patterns, architecture decisions, what to use when]
-keywords: [scenario-based architecture, decision guide, reference architecture, solution patterns, daily batch pipeline, streaming pipeline, data warehouse, multi-source integration, small team data platform, large team data platform, financial index calculation, machine learning feature pipeline, data migration, cost optimization, medallion architecture, star schema, ETL, ELT, BigQuery, SQL Server, Cloud Run, Airflow, Terraform, dbt, Pub/Sub, Dataflow, Firestore, GCS, Cloud Scheduler, Dataplex, data mesh, feature store, strangler fig, cost-optimized pipeline]
 description: "Practical scenario-based decision guide — 'I have THIS business need, what do I use?' — covering ten real-world data engineering scenarios with recommended stacks, Mermaid architecture diagrams, key decisions explained, cost estimates, and links to detailed vault notes."
 created: 2026-03-22
 updated: 2026-03-22
@@ -36,6 +32,10 @@ Every scenario in this guide has been built from patterns proven in production. 
 
 > [!warning] These Are Starting Points
 > No two organizations are identical. Use these scenarios as a foundation and adapt. If your team has deep Snowflake expertise, do not switch to BigQuery just because this guide recommends it. If you already run Kafka, do not rip it out for Pub/Sub. The best architecture is the one your team can build, operate, and debug at 2 AM.
+
+> [!success] Adapt to Your Constraints, Not the Guide's Defaults
+>
+> For each scenario, identify the two or three constraints that differ from the default (existing tooling, team skill, budget, regulatory requirements). Adjust the recommended stack only where those constraints apply — preserve the rest. Document your deviations in an Architecture Decision Record (ADR) so future engineers know why you diverged, and re-evaluate each deviation at the next major milestone.
 
 #### Scenarios covered
 
@@ -1221,6 +1221,10 @@ flowchart TD
 
 > [!danger] Common Mistakes
 > These are patterns that look reasonable but cause pain at scale. Learn from others' mistakes.
+
+> [!success] Recognize Anti-Patterns Early and Apply the Canonical Fix
+>
+> Each anti-pattern below has a well-known fix. When you encounter one in a real project, apply the fix before the pattern calcifies into "how we do things here." The cost of correction grows exponentially with time — a schema-less data lake caught at 3 months is a week of work; caught at 3 years, it is a full platform migration.
 
 ### "We'll Build a Data Lake and Figure Out the Schema Later"
 

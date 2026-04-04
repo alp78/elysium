@@ -1,11 +1,4 @@
 ---
-type: reference
-category: gcp
-technology:
-  - gcp
-  - firestore
-  - nosql
-  - python
 tags: [data-modeling, infrastructure, python, gcp, firestore]
 aliases:
   - Firestore
@@ -16,38 +9,6 @@ aliases:
   - collection
   - subcollection
   - document reference
-keywords:
-  - firestore
-  - cloud firestore
-  - nosql
-  - document database
-  - datastore mode
-  - native mode
-  - collection
-  - subcollection
-  - document
-  - real-time listeners
-  - on_snapshot
-  - pipeline state
-  - config store
-  - feature flags
-  - batch writes
-  - transactions
-  - composite index
-  - collection group query
-  - geopoint
-  - firestore.Increment
-  - firestore.ArrayUnion
-  - server-side aggregation
-  - count query
-  - hot spot
-  - index explosion
-  - terraform google_firestore_database
-  - gcloud firestore export
-  - event sourcing
-  - audit log
-  - data engineering
-  - python sdk
 description: >
   Definitive reference for Cloud Firestore in data engineering pipelines. Covers
   Native mode vs Datastore mode, the document/collection/subcollection data
@@ -113,6 +74,10 @@ Firestore has two operating modes. The mode is chosen at database creation time 
 >
 > Once a Firestore database is created in Native mode or Datastore mode, it cannot be switched. Plan the mode choice before any data is written. For all new data engineering projects, prefer Native mode.
 
+> [!success] Default to Native Mode
+>
+> Choose Native mode for all new projects. It is strictly a superset of Datastore mode: it adds real-time listeners, offline support, collection group queries, and server-side aggregations. There is no runtime cost difference. Decide before writing any data — you cannot change it later.
+
 ---
 
 ### Firestore vs BigQuery vs Cloud SQL — Positioning
@@ -155,6 +120,10 @@ Firestore pricing is operation-based, not instance-based. There is no cost when 
 >
 > Reads are per document returned, not per query.
 > A query that returns 10,000 documents costs 10,000 read operations regardless of how many fields are projected. Design queries to be selective. Use `limit()` and filters aggressively.
+
+> [!success] Limit and Filter Aggressively
+>
+> Always add `.limit()` to queries and use equality filters to narrow the result set before ordering. For dashboard-style reads, maintain a denormalized summary document per pipeline that is updated on each state transition — one document read instead of a collection scan.
 
 ---
 
@@ -231,6 +200,10 @@ A Firestore document is a set of key-value pairs. Values can be any supported ty
 >
 > Firestore arrays cannot nest other arrays directly. Use a list of maps instead when you need complex array elements.
 
+> [!success] Use a List of Maps for Complex Elements
+>
+> Replace a nested array with a list of maps: `[{"key": "a", "value": 1}, {"key": "b", "value": 2}]`. Each map element can hold multiple fields and is fully queryable with `array_contains`.
+
 ---
 
 ### Document IDs: Auto-Generated vs Custom
@@ -252,6 +225,10 @@ doc_ref = db.collection("pipelines").document("daily-ingest")
 >
 > Avoid timestamps as document IDs.
 > Using timestamps or monotonically increasing integers as IDs creates a "hot spot" — all writes go to the same tablet shard. Firestore throttles hot spots. Use auto-generated IDs or hash-prefixed IDs for high-throughput write scenarios.
+
+> [!success] Use Auto-Generated or Hash-Prefixed IDs
+>
+> Call `.document()` with no argument to get a random collision-resistant ID. For sequential data that must be queried by time, store the timestamp as a field and sort by it — keep the document ID random to avoid hot spots.
 
 ---
 
@@ -544,10 +521,18 @@ query = (
 > Inequality filters on a single field only.
 > Firestore only allows inequality filters (`<`, `<=`, `>`, `>=`, `!=`) on **one field per query**. Filtering on two different fields with inequalities requires a composite index and is not supported as a standard query — restructure your data model or use equality for one field.
 
+> [!success] Use Equality for One Field, Inequality for the Other
+>
+> Convert one of the range conditions into an equality filter by bucketing the value (e.g., status `== "failed"` instead of `!= "success"`), or split into two queries and merge results in Python. Alternatively, denormalize a combined field (e.g., `pipeline_status_date`) to enable a single inequality query.
+
 > [!warning] No Cross-Field OR Queries
 >
 > No native OR across different fields.
 > Firestore does not support `field_a == x OR field_b == y`. Use `in` for OR conditions on the same field. For cross-field OR, run two queries and merge results in Python.
+
+> [!success] Merge Two Queries in Python
+>
+> Run both queries independently, collect results into a dict keyed by document ID to deduplicate, then merge: `{doc.id: doc.to_dict() for q in [query_a, query_b] for doc in q.stream()}`. For same-field OR, use the `in` operator: `.where("status", "in", ["failed", "error"])`.
 
 ---
 
@@ -888,6 +873,10 @@ service cloud.firestore {
 >
 > Security rules do not apply to Admin SDK or service accounts.
 > Rules only affect client-side Firebase/Firestore SDKs. All server-side Python (`google-cloud-firestore`) access is governed purely by IAM. Never assume rules protect server-side pipeline data access.
+
+> [!success] Use IAM Roles for Server-Side Access Control
+>
+> Grant `roles/datastore.user` for read/write and `roles/datastore.viewer` for read-only to the pipeline's service account. Apply IAM at the project level for broad access, or use per-database IAM conditions for fine-grained control. See [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for binding commands.
 
 ---
 
@@ -1244,6 +1233,10 @@ Or restructure to store dynamic keys as an array of `{key, value}` objects rathe
 >
 > Large maps can silently inflate costs.
 > Monitor write costs if you store variable-key maps (e.g., arbitrary metadata dicts). A document with 100 map keys costs 100+ index write units per document write.
+
+> [!success] Exempt High-Cardinality Maps From Indexing
+>
+> Use a single-field index exemption to disable auto-indexing on the dynamic map field: `gcloud firestore indexes fields update metadata --collection-group=pipeline_runs --index-config=no-index`. Alternatively, serialize the map to a JSON string field — one indexed string instead of N index entries.
 
 ---
 

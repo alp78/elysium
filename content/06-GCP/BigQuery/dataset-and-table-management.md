@@ -1,10 +1,6 @@
 ---
-type: concept
-category: gcp
-technology: [gcp, bigquery]
 tags: [infrastructure, bigquery, gcp]
 aliases: [BigQuery datasets, BigQuery tables, bq ls, bq show, bq mk, BQ schema, BigQuery table management]
-keywords: [bigquery, bq, dataset, table, schema, metadata, bq ls, bq show, bq mk, bq rm, create table, delete table, partitioning, clustering, time partitioning, location, EU, US, data residency, view, materialized view]
 description: "How to list, inspect, create, and delete BigQuery datasets and tables using the bq CLI — including schemas, metadata, partitioning, and clustering configuration."
 created: 2026-03-22
 updated: 2026-03-22
@@ -56,6 +52,10 @@ bq mk --dataset --location=EU --description="data pipeline data" project_data
 > [!warning] Dataset Location Is Permanent
 >
 > The `--location` flag sets data residency for all tables in the dataset. Once created, location cannot be changed. For EU data residency compliance, always specify `--location=EU` (multi-region EU) or a specific European region like `europe-west1`.
+
+> [!success] Always Specify Location at Dataset Creation
+>
+> Pass `--location=EU` (or the appropriate region) explicitly when running `bq mk --dataset`. Enforce this in Terraform with a `location` variable so the correct region is set consistently across all environments and cannot be omitted.
 
 ## Creating Tables
 

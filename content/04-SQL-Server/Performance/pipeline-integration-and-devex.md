@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: sql-server
-technology: [sql-server, python, airflow]
 tags: [pipeline, python, sql, airflow, sql-server, tsql]
 aliases: [pipeline integration, SQL comment tagging, Airflow SQL correlation, schema migrations, Flyway SQL Server, Liquibase SQL Server, connection pool management, developer experience]
-keywords: [query tagging, SQL comment, dag_id, task_id, run_id, dm_exec_sql_text, Query Store, schema migrations, Flyway, Liquibase, sqlpackage, dacpac, migration runner, schema_migrations table, connection pool, pymssql, sqlalchemy, ADO.NET, pool_size, max_overflow, connection count, dm_exec_sessions, Datadog tagging, pipeline observability, CI/CD SQL, GitHub Actions, PARSEONLY, idempotent migration]
 description: "Developer experience patterns for SQL Server pipeline integration: tagging queries with Airflow context for monitoring correlation, schema migration management (Flyway/Python runner), and connection pool management for pymssql and ADO.NET."
 created: 2026-03-22
 updated: 2026-03-22
@@ -264,6 +260,10 @@ WHERE is_user_process = 1
 > [!warning] Never Automate Session Kills
 >
 > Automatically killing sleeping sessions can terminate legitimate long-running transactions mid-write, causing data corruption or extended rollback times. Always identify the session and understand why it's sleeping before killing it manually with `KILL <session_id>`.
+
+> [!success] Safe Pattern — Manual Review Before Kill
+>
+> Use the identification query to inspect `login_name`, `program_name`, and `last_request_end_time` before acting. If the session belongs to an Airflow task that crashed without closing its connection, coordinate with the pipeline team and close the connection at the application level first. Only use `KILL <session_id>` after confirming the session is truly orphaned and holds no active transaction.
 
 ---
 

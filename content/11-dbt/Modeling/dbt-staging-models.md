@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, dbt]
-type: reference
-technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "Staging models 1:1 with source, source freshness"
@@ -435,6 +433,9 @@ Wire freshness failures into your orchestration layer to block downstream runs w
 ### Staging Model Anti-Patterns
 
 > [!WARNING] Anti-patterns to avoid in staging
+
+> [!success] Correct staging scope
+> Staging models should contain only: column renames, type casts, `UPPER`/`TRIM` normalisation, surrogate key generation, and ingestion metadata passthrough. Any join, filter, or business rule belongs in an intermediate model where it can be independently tested and documented.
 
 **Joining to other models**: Staging models should reference only their own source. Any join introduces a dependency that belongs in the intermediate layer.
 

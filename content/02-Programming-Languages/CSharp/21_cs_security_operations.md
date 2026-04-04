@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet, gcp]
 tags: [csharp, gcp, security, encryption, identity]
 aliases: [Security Operations CSharp, Encryption and Identity CSharp]
-keywords: [encryption, KMS, Secret Manager, certificates, service account, OAuth, ADC, IAM, Cloud SQL, SSL, envelope encryption, Polars.NET, Google.Cloud.SecretManager, Google.Cloud.Kms]
 description: "C# security operations reference — encryption, certificates, identity, and secure access across GCP services. Executable examples with cell outputs. Built on infrastructure from [20_py_security_setup](https://alp78.github.io/elysium/02-Programming-Languages/Python/20_py_security_setup). See [21_py_security_operations](https://alp78.github.io/elysium/02-Programming-Languages/Python/21_py_security_operations) for the Python equivalent."
 created: 2026-03-27
 updated: 2026-03-27
@@ -324,6 +320,9 @@ Console.WriteLine($"  Value (first 8): {newPassword[..8]}...");
 
 > [!warning] Secret Rotation Grace Period
 > After creating a new secret version, disable (don't destroy) the old one. Schedule destruction after a grace period to allow in-flight operations using the old version to complete.
+
+> [!success] Safe Rotation Pattern
+> Disable the old version immediately after adding the new one. Set a reminder to destroy it after your grace period (e.g., 24–48 hours). All in-flight operations complete against the disabled version; the destroy step is a deliberate, audited action.
 
 ```csharp
 var parent = SecretName.FromProjectSecret(PROJECT_ID, newSecretId);

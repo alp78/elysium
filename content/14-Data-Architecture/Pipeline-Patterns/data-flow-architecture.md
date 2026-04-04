@@ -1,8 +1,5 @@
 ---
 title: "Data Flow Architecture"
-type: concept
-category: data-architecture
-technology: [gcp, sql-server, bigquery, python, airflow]
 tags:
   - data-architecture
   - pipeline
@@ -22,7 +19,6 @@ tags:
 aliases:
   - "Data Movement Patterns"
   - "Data Flow Topology"
-keywords: [data flow, data movement, transfer method, push vs pull, batch vs streaming, cross-database join, format selection, compression, topology, architecture]
 description: "Complete data movement topology, transfer method selection, format decisions, and flow patterns for the GCP + SQL Server stack."
 created: 2026-03-29
 updated: 2026-03-29
@@ -242,6 +238,10 @@ graph TD
 > See [streaming-architecture > Streaming vs Batch Decision Matrix](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture#streaming-vs-batch-decision-matrix) for the full
 > decision framework.
 
+> [!success] Default to Batch, Escalate Deliberately
+>
+> Start every new pipeline as a daily Airflow DAG. If stakeholders request faster data, move to micro-batch (Cloud Scheduler → Cloud Run) — this delivers near-real-time refresh with no streaming infrastructure. Only introduce CDC + Pub/Sub streaming when a documented latency SLA of under 5 minutes cannot be met by micro-batch and the source system supports change capture.
+
 ---
 
 ## The Cross-Database Join Problem
@@ -324,6 +324,10 @@ Best for ad-hoc analysis and small-to-medium joins. Use when both datasets fit i
 > | **Mixed push and pull for same flow** | CDC to Pub/Sub AND a batch pull = duplicates | Choose one: event-driven OR batch, not both |
 > | **No source-destination validation** | Row count mismatches go unnoticed | Compare `COUNT(*)` after every load — see [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) |
 > | **Loading directly to production** | No validation, no rollback | Always load to staging first — see [sql-server-loading-patterns > Loading Directly to Production — no staging, no validation](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-loading-patterns#loading-directly-to-production--no-staging-no-validation) |
+
+> [!success] Safe Data Flow Patterns
+>
+> Run all pipeline jobs on GCE VMs or Cloud Run — never on a local machine. Always stage data in GCS before loading to BigQuery (`bcp queryout` → `gcloud storage cp` → `bq load`). Compress all network transfers with `rsync -z` or `zstd`. Always compare `COUNT(*)` source vs destination after every load. Use a single flow model per dataset (either CDC streaming or batch — not both) and load to a staging table first, then swap or merge into production.
 
 ---
 

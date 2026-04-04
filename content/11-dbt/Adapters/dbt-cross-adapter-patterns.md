@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, dbt]
-type: how-to
-technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "Dispatch macros, adapter-conditional SQL, cross-adapter testing strategy, and a SQL Server to BigQuery migration guide."
@@ -260,6 +258,9 @@ from {{ source('esg_provider', 'raw_scores') }}
 > [!warning] Inline target.type is a code smell
 >
 > Inline `target.type` branches work for 1-2 differences but become unmaintainable as divergence grows. If you find yourself writing 3+ `target.type` branches in a single model, extract the adapter-specific expressions into dispatch macros.
+
+> [!success] Refactor to dispatch macros
+> When a model accumulates 3 or more `target.type` branches, extract each adapter-specific expression into a dedicated dispatch macro under `macros/cross_db/`. Register the namespace in `dbt_project.yml` under the `dispatch:` key. The model SQL then calls the abstract macro name, keeping model files adapter-agnostic.
 
 ### `target.type` in schema tests
 

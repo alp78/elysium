@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: observability
-technology: [datadog, sql-server, airflow, docker]
 tags: [monitoring, observability, sql, docker, airflow, datadog]
 aliases: [Log Collection, SQL Server Log Collection, Datadog Logs, errorlog, log tailing]
-keywords: [datadog log collection, SQL server errorlog, log tailing, logs.yaml, file tailing, source sqlserver, dd-agent mssql group, bytes read, start_position beginning, container logs, docker autodiscovery, DD_LOGS_ENABLED, DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL, Live Tail, Log Explorer]
 description: "How to configure Datadog log collection for the data platform — SQL Server errorlog file tailing on the SQL VM and Docker container log collection on the Airflow VM."
 created: 2026-03-22
 updated: 2026-03-22
@@ -22,6 +18,9 @@ Log collection for the data platform uses two separate mechanisms: **file tailin
 
 > [!warning] Logs Require Separate Config
 > The Datadog Agent collects SQL Server metrics automatically via the [SQL Server integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-sql-server-integration), but **log collection requires a separate config file** (`logs.yaml`). Metrics and logs are configured independently.
+
+> [!success] Correct Setup
+> Create `/etc/datadog-agent/conf.d/sqlserver.d/logs.yaml` with the file tailing config and ensure `logs_enabled: true` is set in `datadog.yaml`. See [datadog-sql-server-logs](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-sql-server-logs) for the full setup steps including the `mssql` group permission fix.
 
 ---
 
@@ -88,6 +87,9 @@ In Datadog: **Logs > Explorer** → filter by:
 ```powershell
 gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=data-pipeline-pipeline" --limit=50 --format="table(timestamp,textPayload)"
 ```
+
+> [!success] Correct Approach for Cloud Run Logs
+> Use `gcloud logging read` or the GCP Console Log Explorer to view Cloud Run job logs. Filter by `resource.type=cloud_run_job AND resource.labels.job_name=data-pipeline-pipeline`. Set `LOG_FORMAT=json` on the job so logs are structured and queryable via `jsonPayload` fields.
 
 The `LOG_FORMAT=json` env var on the Cloud Run Job formats logs as JSON, which enables log-to-trace correlation when viewed in APM — but those logs remain in GCP Cloud Logging, not Datadog.
 

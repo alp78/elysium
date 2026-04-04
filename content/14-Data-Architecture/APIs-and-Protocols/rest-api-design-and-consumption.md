@@ -1,11 +1,4 @@
 ---
-type: reference
-category: data-architecture
-technology:
-  - python
-  - fastapi
-  - bash
-  - gcp
 tags: [data-architecture, architecture, api, python, bash, gcp]
 aliases:
   - REST API
@@ -24,44 +17,6 @@ aliases:
   - status codes
   - API versioning
   - HATEOAS
-keywords:
-  - rest
-  - api
-  - http
-  - json
-  - fastapi
-  - python
-  - requests
-  - httpx
-  - pagination
-  - cursor
-  - offset
-  - rate limiting
-  - backoff
-  - exponential backoff
-  - jitter
-  - authentication
-  - oauth2
-  - bearer token
-  - api key
-  - mtls
-  - gcp
-  - service account
-  - openapi
-  - swagger
-  - crud
-  - idempotent
-  - retry
-  - circuit breaker
-  - dead letter queue
-  - semaphore
-  - asyncio
-  - webhook
-  - grpc
-  - websocket
-  - graphql
-  - versioning
-  - hateoas
 description: >
   Definitive reference on REST APIs for data engineers — consuming external APIs
   (market data feeds, SaaS platforms) and building internal data APIs (serving
@@ -116,6 +71,9 @@ Key constraints of REST:
 
 > [!warning] POST is not idempotent
 > If a `POST /v1/orders` call times out before you receive the response, you don't know if the order was created. Naively retrying can create duplicate records. Use idempotency keys (`Idempotency-Key: <uuid>`) to let the server deduplicate — this pattern is standard in payment APIs and is worth implementing in your own data APIs.
+
+> [!success] Idempotency Key Pattern
+> Generate a stable UUID per logical operation (e.g., derived from `f"{pipeline_run_id}:{entity_id}"` hashed to UUID5) and pass it as `Idempotency-Key` on every POST. The server stores the key and returns the original response on duplicate requests. On your pipeline side, always retry POST calls with the same key — the operation becomes safely idempotent.
 
 ### URL Structure Anatomy
 
@@ -231,6 +189,9 @@ response = session.post(
 > [!warning] Redirect loops
 > `requests` follows redirects by default (up to 30). Disable with `allow_redirects=False` when debugging or when redirects indicate a misconfiguration. Log the final URL: `response.url` gives you where you actually landed.
 
+> [!success] Safe Redirect Handling
+> In production pipelines, log `response.url` after every request to confirm you landed on the expected endpoint. Use `allow_redirects=True` (the default) but cap with `max_redirects=5` via the session adapter. If the final URL differs from the configured URL by more than a path prefix (e.g., a full domain change), raise an alert — it may indicate a misconfigured base URL or a vendor domain migration.
+
 ### 4xx — Client Errors
 
 | Code | Name                  | Meaning                                      | Pipeline action               |
@@ -248,6 +209,9 @@ response = session.post(
 > [!danger] 401 vs 403 distinction
 > **401** means "I don't know who you are" — your token is missing, expired, or malformed. Refresh and retry.
 > **403** means "I know who you are, and you can't do this" — your account doesn't have permission. Retrying will never help. Alert and fix the IAM/API plan.
+
+> [!success] Correct Response Per Status
+> On 401: call your token refresh logic, update the session header, and retry the request once. If the retry also returns 401, stop and alert — the credentials themselves are broken. On 403: do not retry. Log the full request URL and the authenticated identity, then raise a `PermissionError` that surfaces in your pipeline monitoring. Fix the IAM binding or API plan before the next run.
 
 ### 5xx — Server Errors
 
@@ -302,6 +266,9 @@ For more curl recipes and CLI-based API interaction patterns, see [http-requests
 
 > [!warning] Never log query params containing secrets
 > Many logging frameworks capture full URLs. If the API key is a query parameter, it ends up in your logs. Use header-based auth and scrub Authorization headers from logs.
+
+> [!success] Safe Logging Pattern
+> Pass secrets exclusively via headers (`Authorization`, `X-API-Key`), never as query parameters. Configure your logging middleware to redact the `Authorization` header value: replace the token value with `[REDACTED]` before writing to logs. The `structlog` processor pipeline or a `requests` event hook can apply this scrubbing automatically on every request, so no individual caller needs to remember.
 
 ### Bearer Token (OAuth2)
 

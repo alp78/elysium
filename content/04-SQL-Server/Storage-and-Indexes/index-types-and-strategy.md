@@ -1,10 +1,6 @@
 ---
-type: concept
-category: sql-server
-technology: [sql-server]
 tags: [sql, sql-server, tsql]
 aliases: [clustered index, nonclustered index, covering index, filtered index, columnstore index, CCI, NCCI, composite index, index key, INCLUDE columns, bookmark lookup, key lookup, index seek, index scan, B-tree, fill factor, fragmentation, REORGANIZE, REBUILD, statistics]
-keywords: [clustered index, nonclustered index, covering index, filtered index, columnstore index, CCI, NCCI, composite index, INCLUDE, bookmark lookup, key lookup, index seek, index scan, B-tree, fill factor, fragmentation, REORGANIZE, REBUILD, statistics, UPDATE STATISTICS, FULLSCAN, missing index DMV, sys.dm_db_missing_index_details, sys.dm_db_index_usage_stats, sys.dm_db_index_physical_stats, heap, GUID clustered key, NEWSEQUENTIALID, unique index, primary key, index anti-patterns, index decision tree, auto update statistics, DBCC SHOW_STATISTICS, index maintenance]
 description: "All SQL Server index types (clustered, nonclustered, covering, filtered, columnstore) with creation syntax, usage guidance, the decision tree for choosing the right type, anti-patterns, fragmentation detection and maintenance, statistics management, and the data pipeline index strategy."
 created: 2026-03-22
 updated: 2026-03-22
@@ -210,6 +206,10 @@ ORDER BY s.user_updates DESC;
 >
 > `dm_db_index_usage_stats` resets on service restart. Check uptime first: `SELECT sqlserver_start_time FROM sys.dm_os_sys_info`. Only drop unused indexes if uptime covers a full business cycle (at least 1 week).
 
+> [!success] Safe Pattern: Verify Uptime Before Dropping Indexes
+>
+> Run `SELECT sqlserver_start_time FROM sys.dm_os_sys_info` first. Only proceed if uptime is at least 7 days covering a full workload cycle. Before dropping, disable the index for a week (`ALTER INDEX IX_name ON table DISABLE`) to confirm no query plan breaks, then drop it.
+
 #### sys.index_columns STRING_AGG — find duplicate indexes (same key columns)
 
 ```sql
@@ -278,6 +278,10 @@ ORDER BY improvement_score DESC;
 > - Is the table heavily written to? (more indexes = slower inserts)
 > - Can you extend an existing index with INCLUDE instead of creating a new one?
 > - These suggestions reset on service restart — only trust after sufficient uptime
+
+> [!success] Safe Pattern: Validate Before Creating Suggested Indexes
+>
+> Before creating any suggested index: check `sys.dm_db_index_usage_stats` for an existing similar index, run `sp_estimate_data_compression_savings` to evaluate size impact, and test the candidate index on a non-production copy with `SET STATISTICS IO ON` to confirm the improvement. Prefer extending an existing composite index with INCLUDE columns over adding a new standalone index.
 
 #### XML plan MissingIndex — find cached plans with missing index warnings
 
@@ -399,6 +403,10 @@ SELECT * FROM dbo.instrument_tickers WHERE symbol = @sym AND active = 1 OPTION (
 > - Query WHERE clause must be a superset of the filter, or SQL Server won't use the index
 > - Parameterized queries require `OPTION(RECOMPILE)` because the optimizer doesn't know the parameter value at compile time (trade-off: compilation cost vs. better plan)
 
+> [!success] Safe Pattern: Force Filtered Index Usage with OPTION(RECOMPILE)
+>
+> For parameterized queries that should use a filtered index, append `OPTION(RECOMPILE)` to the query. This forces per-execution compilation so the optimizer sees the actual parameter value and can evaluate the filter predicate. Alternatively, use local variables inside a stored procedure — the optimizer treats them as known constants at compile time.
+
 ### Clustered Index (Primary Key)
 
 > [!abstract] Clustered Index Definition
@@ -437,6 +445,10 @@ CREATE TABLE dbo.bad_example (
 > [!danger] GUID as Clustered Key
 >
 > Random GUIDs (`NEWID()`) cause massive page splits and fragmentation. If you must use GUID, use `NEWSEQUENTIALID()` instead.
+
+> [!success] Safe Pattern: Use Sequential Keys for Clustered Indexes
+>
+> Prefer `INT IDENTITY(1,1)` or `BIGINT IDENTITY` as the clustered key — values always insert at the end, causing no page splits. If a GUID is required for uniqueness (e.g., distributed systems), use `NEWSEQUENTIALID()` as the column default, which generates monotonically increasing GUIDs and avoids random fragmentation.
 
 ### Columnstore Index
 

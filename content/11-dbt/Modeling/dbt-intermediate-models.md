@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, dbt]
-type: reference
-technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "Business logic transforms, silver layer"
@@ -490,6 +488,11 @@ from {{ ref('stg_market_data__daily_prices') }}
 ### Intermediate Model Anti-Patterns
 
 > [!WARNING] Common intermediate model mistakes
+
+> [!success] Safe patterns
+> - Reference staging models via `ref('stg_...')` exclusively in intermediate models — never call `source()` directly.
+> - Keep each intermediate model focused on one concept; decompose wide models into a chain of narrow, testable steps.
+> - If a BI tool needs a result, promote the `int_` model to a mart with full YAML documentation rather than exposing intermediate models directly.
 
 **Referencing sources directly**: Intermediate models should only call `ref()`, never `source()`. This preserves the staging layer as the single point of source contact.
 

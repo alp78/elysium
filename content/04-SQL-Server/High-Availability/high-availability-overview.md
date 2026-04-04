@@ -1,10 +1,6 @@
 ---
-type: concept
-category: high-availability
-technology: [sql-server, gcp, linux, pacemaker, corosync]
 tags: [sql, gcp, sql-server, tsql]
 aliases: [AG, Always On AG, Always On Availability Groups, SQL Server HA, HADR, Failover Clustering]
-keywords: [high availability, availability groups, always on, pacemaker, corosync, failover, RTO, RPO, SLA, synchronous commit, asynchronous commit, log shipping, FCI, failover cluster instance, hadr, endpoint, certificate, seeding, DMV, redo queue, log send queue, read-only routing, split-brain, STONITH, GCP ILB, internal load balancer, mssql-server-ha]
 description: "Complete guide to SQL Server 2022 High Availability on Linux GCP VMs: Always On Availability Groups setup with Pacemaker/Corosync, monitoring DMVs, failover operations, read-only routing, troubleshooting, and GCP-specific considerations including Internal Load Balancer configuration."
 created: 2026-03-22
 updated: 2026-03-22
@@ -92,6 +88,10 @@ A single SQL Server instance that runs on one node at a time but can fail over t
 > [!warning] GCP and FCI
 >
 > **On GCP, AGs are strongly preferred** because GCP doesn't offer native shared storage like AWS EBS Multi-Attach or Azure Shared Disks. You'd need to set up GlusterFS or an NFS server, adding complexity and another failure point.
+
+> [!success] Safe Pattern — Use Always On AGs on GCP
+>
+> Deploy Always On Availability Groups with each replica on its own GCP persistent disk. Each replica maintains its own copy of the data files — no shared storage required. Use an Internal TCP/UDP Load Balancer as the listener VIP since GCP does not support Gratuitous ARP for floating IPs.
 
 ### Option 3: Log Shipping
 
@@ -578,6 +578,10 @@ Used when: the primary is down and cannot be recovered quickly.
 >
 > Forced failover may result in committed transactions being lost if the secondary was not fully synchronized. Always prefer planned failover when possible.
 
+> [!success] Safe Pattern — Verify LSN Before Forcing Failover
+>
+> Before issuing `FORCE_FAILOVER_ALLOW_DATA_LOSS`, query `last_hardened_lsn` on all available secondaries to identify which replica is most current: `SELECT ar.replica_server_name, drs.last_hardened_lsn FROM sys.dm_hadr_database_replica_states drs JOIN sys.availability_replicas ar ON drs.replica_id = ar.replica_id`. Promote the secondary with the highest LSN to minimise data loss.
+
 #### Force failover on the target secondary
 
 ```sql
@@ -779,6 +783,10 @@ Two nodes both think they're the primary. This is the most dangerous HA failure.
 > [!warning] Split-Brain is Critical
 >
 > Two primaries will diverge immediately. Stop all writes as soon as possible and determine which node has the most recent `last_hardened_lsn`.
+
+> [!success] Safe Pattern — Prevent Split-Brain with STONITH and Odd-Node Quorum
+>
+> Configure `fence_gce` as the STONITH fencing agent so Pacemaker can forcibly power off a node that loses quorum, preventing it from accepting writes while isolated. Set `REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT = 1` so the primary halts writes if it cannot reach a synchronous secondary — eliminating the split-brain write window at the SQL Server level.
 
 #### Prevention
 - Always configure proper fencing (STONITH) — Pacemaker can use `fence_gce` to forcibly shut down a GCP VM

@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [string manipulation, string formatting, regex, f-strings, string interpolation]
-keywords: [string, StringBuilder, interpolation, Regex, Split, Join, Trim, Replace, Span, Format]
 description: "C# strings reference with executable examples and cell outputs — covers string creation, indexing, methods, interpolation, StringBuilder, and regular expressions. See [02_py_strings](https://alp78.github.io/elysium/02-Programming-Languages/Python/02_py_strings) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -274,6 +270,18 @@ for (int i = 0; i < 5; i++)
 > [!warning] Anti-pattern
 >
 > Don't use `ToUpper()` for case-insensitive comparison — use `StringComparison.OrdinalIgnoreCase` instead.
+
+> [!success] Correct pattern
+>
+> Use `StringComparison.OrdinalIgnoreCase` directly in `string.Equals`, `IndexOf`, `StartsWith`, or `Contains` — no intermediate uppercase string is created and locale edge cases (e.g., Turkish `I`) are avoided:
+> ```csharp
+> // Anti-pattern
+> if (s.ToUpper() == "HELLO") { }
+>
+> // Correct
+> if (string.Equals(s, "hello", StringComparison.OrdinalIgnoreCase)) { }
+> if (s.Contains("hello", StringComparison.OrdinalIgnoreCase)) { }
+> ```
 
 ```csharp
 #nullable enable
@@ -638,6 +646,27 @@ full   // Small concat
 >
 > - **Not checking `.Success`** before reading `.Value` — empty match is not null
 > - **Recompiling the same pattern in a loop** — cache with `new Regex()`
+
+> [!success] Correct patterns
+>
+> Always check `.Success` before accessing match data, and cache compiled `Regex` instances outside loops:
+> ```csharp
+> // Anti-pattern: no Success check
+> string val = Regex.Match(text, @"\d+").Value;  // returns "" if no match — silent bug
+>
+> // Correct: guard with Success
+> var m = Regex.Match(text, @"\d+");
+> if (m.Success) Console.WriteLine(m.Value);
+>
+> // Anti-pattern: recompile every iteration
+> foreach (var line in lines)
+>     Regex.IsMatch(line, @"\d{3}-\d{4}");
+>
+> // Correct: compile once, reuse
+> var pat = new Regex(@"\d{3}-\d{4}", RegexOptions.Compiled);
+> foreach (var line in lines)
+>     pat.IsMatch(line);
+> ```
 
 ```csharp
 string text = "Contact us at support@email.com or sales@company.org. Call 123-456-7890 or 987-654-3210.";

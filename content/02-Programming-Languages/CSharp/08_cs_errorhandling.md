@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [exceptions, try catch, error handling, custom exceptions, exception hierarchy]
-keywords: [try, catch, finally, throw, Exception, custom exception, when filter, IDisposable, using, Result]
 description: "C# error handling reference with executable examples and cell outputs — covers try/catch/finally, exception hierarchy, custom exceptions, exception filters, and IDisposable/using. See [08_py_errorhandling](https://alp78.github.io/elysium/02-Programming-Languages/Python/08_py_errorhandling) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -30,6 +26,10 @@ Wrap risky code in `try { }` and catch specific exception types in `catch (Excep
 > - **Empty catch blocks** — silently swallows errors
 > - **Exceptions for flow control** — slow; use `TryParse`/`if` instead
 
+> [!success] Best practice
+>
+> Catch the most specific exception type applicable, always log or handle meaningfully, and use `TryParse`/null checks for expected conditions rather than exceptions for flow control.
+
 ```csharp
 // Basic try/catch — wrap risky code in try; catch handles specific exception types
 using System.IO;
@@ -52,10 +52,18 @@ catch (IndexOutOfRangeException ex)
 > `catch (Exception)` with empty body silently hides bugs
 > An empty `catch (Exception) { }` swallows *all* errors including `NullReferenceException`, `StackOverflowException` side effects, and data corruption. At minimum, log the exception. In production, prefer `catch (SpecificException)` and let unexpected errors propagate to global handlers.
 
+> [!success] Always handle or log
+>
+> At minimum, log the exception before swallowing it. Prefer `catch (SpecificException)` blocks and let unexpected exceptions propagate to a global handler (e.g., `AppDomain.UnhandledException`) where they can be recorded and acted on.
+
 > [!warning] async void methods
 >
 > `async void` methods — exceptions crash the process
 > Exceptions thrown in `async void` methods cannot be caught by the caller — they propagate to the `SynchronizationContext` and crash the process. Always use `async Task` for async methods. The only acceptable use of `async void` is for event handlers in UI frameworks.
+
+> [!success] Use async Task
+>
+> Always declare async methods as `async Task` or `async Task<T>`. This allows callers to `await` them, catch exceptions normally, and compose them with `Task.WhenAll`/`Task.WhenAny`. Reserve `async void` exclusively for UI event handlers.
 
 #### Multiple catch blocks
 
@@ -63,6 +71,10 @@ Multiple catch blocks let you handle different exception types with different re
 
 > [!danger] Catch order matters
 > `catch (Exception)` before `catch (SqlException)` means SQL errors are caught by the general handler and your SQL-specific retry logic never runs. The compiler warns about this in some cases, but not all. Always order: most specific → most general.
+
+> [!success] Order most specific first
+>
+> Always order catch blocks from most specific subclass to most general base class. Place `catch (Exception)` last as a fallback only. This ensures each exception type receives the correct recovery logic.
 
 ```csharp
 // Multiple catch blocks — match most specific exception first
@@ -199,6 +211,10 @@ ProcessWithCleanup(true);
 >
 > `throw ex` resets the stack trace — use `throw` to preserve it
 > `throw ex;` replaces the original stack trace with the current location, destroying the information needed to find the actual error source. Use bare `throw;` to re-throw with the original trace intact, or `throw new WrapperException("msg", ex)` to wrap with `InnerException`.
+
+> [!success] Use bare throw or wrap with InnerException
+>
+> Use `throw;` to re-throw and preserve the full original stack trace, or `throw new WrapperException("context", ex)` to add domain context while keeping the root cause accessible via `InnerException`. Never use `throw ex;`.
 
 ```csharp
 // throw vs throw ex — preserving the original stack trace
@@ -656,6 +672,10 @@ When multiple tasks run in parallel and several fail, .NET wraps all their excep
 
 > [!warning] await unwraps, .Result doesn't
 > `await task` automatically unwraps the AggregateException and throws the first inner exception. `task.Result` throws the AggregateException itself. This means catch blocks behave differently depending on whether you use `await` or `.Result` — a common source of confusion in mixed async/sync code.
+
+> [!success] Prefer await and inspect allTasks.Exception
+>
+> Use `await Task.WhenAll(tasks)` so the compiler unwraps cleanly, then access `allTasks.Exception!.Flatten().InnerExceptions` to inspect every failure. Avoid `.Result` or `.Wait()` in async code paths to prevent deadlocks and unexpected `AggregateException` wrapping.
 
 ```csharp
 // AggregateException — collect all errors from parallel/async operations

@@ -1,8 +1,5 @@
 ---
-type: reference
-category: shell
-technology: [bash, powershell, grep]
-tags: [shell, bash, linux, powershell]
+tags: [shell, text-processing]
 aliases:
   - grep
   - egrep
@@ -544,6 +541,9 @@ Select-String -Pattern '"[a-zA-Z_][a-zA-Z0-9_]*"\s*:' response.json
 >
 > `grep` can find JSON keys but cannot handle multiline JSON, nested structures, or arrays correctly. For structured JSON querying, use `jq` in bash or `ConvertFrom-Json` in PowerShell. Grep is appropriate for quick scans of NDJSON (newline-delimited JSON) log files.
 
+> [!success] Use jq for structured JSON queries
+> `jq '.level' app.log` extracts the `level` field from every NDJSON record. `Get-Content app.log | ConvertFrom-Json | Where-Object level -eq 'ERROR'` achieves the same in PowerShell. Both handle nested structures, arrays, and multiline JSON that grep cannot.
+
 #### Regex pattern — match log levels (ERROR, WARN, INFO, DEBUG)
 
 ```bash
@@ -722,6 +722,9 @@ Select-String -Pattern 'password(?!_hash)' config.py
 > [!warning] grep -P is not portable
 >
 > `grep -P` is GNU grep only. macOS's BSD grep does not support it. On macOS, install `grep` via Homebrew (`brew install grep`) and use `ggrep -P`, or use `perl -ne 'print if /pattern/'` as a portable alternative. In CI/CD pipelines targeting Linux, `-P` is safe.
+
+> [!success] Use grep -E for portable extended regex, or ripgrep for PCRE everywhere
+> `grep -E` (ERE) covers the vast majority of regex needs and works on both GNU and BSD grep. If you need lookaheads or lookbehinds, `rg -P` (ripgrep) supports PCRE2 on all platforms — Linux, macOS, and Windows — without any additional setup.
 
 ---
 
@@ -983,6 +986,9 @@ Get-ChildItem -Recurse -Include *.py, *.yaml, *.json |
 > [!warning] Never commit real credentials
 >
 > When searching for credential patterns to audit, run the search BEFORE a `git add` and add detected files to `.gitignore`. If credentials already appear in git history, use `git filter-repo` (not `git filter-branch`) to purge them.
+
+> [!success] Scan before staging and add patterns to .gitignore
+> Run `grep -rE 'AKIA[0-9A-Z]{16}|password\s*=' .` before `git add`. Add matching file paths to `.gitignore` immediately. For ongoing protection, use a pre-commit hook (`pre-commit` framework with `detect-secrets` or `gitleaks`) that blocks commits containing credential patterns.
 
 ---
 

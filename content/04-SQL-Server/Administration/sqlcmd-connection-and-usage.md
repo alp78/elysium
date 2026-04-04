@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: sql-server
-technology: [sql-server]
 tags: [sql, sql-server, tsql]
 aliases: [sqlcmd, go-sqlcmd, mssql-tools, Invoke-Sqlcmd, sql server command line]
-keywords: [sqlcmd, sql server command line, mssql-tools18, connection flags, -S -U -P -d -C, execute query, script file, CSV export, PowerShell Invoke-Sqlcmd, go-sqlcmd, IAP tunnel, TDS, ODBC]
 description: "How to connect to SQL Server from the command line using sqlcmd, including all common flags, inline queries, script execution, and CSV export in both Linux and PowerShell."
 created: 2026-03-22
 updated: 2026-03-22
@@ -118,6 +114,10 @@ gcloud compute start-iap-tunnel analytics-sql 1433 --local-host-port=0.0.0.0:143
 >
 > Use `0.0.0.0:1435` rather than `localhost:1435` or `127.0.0.1:1435`. Using a specific address may bind to only one IP version, causing connection timeouts in sqlcmd/SSMS.
 
+> [!success] Safe Pattern — Bind to All Interfaces
+>
+> Always use `--local-host-port=0.0.0.0:1435` in the `gcloud compute start-iap-tunnel` command. This binds the tunnel listener to all IPv4 interfaces, ensuring both sqlcmd and SSMS can connect without address mismatch errors.
+
 #### sqlcmd -S localhost — Step 2: connect through the IAP tunnel
 
 ```powershell
@@ -189,6 +189,10 @@ rm "${BACKUP_PATH}"  # remove local copy after upload
 >
 > `sqlcmd -S 10.132.0.2 -U sa -P 'MyPassword123'` — the password is visible in the process list.
 > Always use environment variables: `sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD"`
+
+> [!success] Safe Pattern — Use Environment Variables or SQLCMDPASSWORD
+>
+> Store the password in an environment variable before invoking sqlcmd: `export SQLCMDPASSWORD="$SA_PASSWORD"` and omit `-P` entirely, or use `-P "$SA_PASSWORD"`. For CI/CD, inject the secret from a secrets manager (e.g., `gcloud secrets versions access`) into the environment rather than passing it as a flag argument.
 
 ---
 

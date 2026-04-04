@@ -12,7 +12,6 @@ tags:
 aliases:
   - "GCP Security Model"
   - "Connection Patterns"
-keywords: [identity, authentication, authorization, OAuth2, access token, refresh token, service account key, metadata server, WIF, workload identity federation, ADC, application default credentials, OIDC, IAP, VPC-SC, certificate, TLS, KMS, envelope encryption, connection pattern, trust chain]
 created: 2026-03-29
 updated: 2026-03-29
 status: complete
@@ -81,6 +80,10 @@ For SA creation and IAM binding commands, see [service-accounts-and-iam > GCP Se
 > generate fresh access tokens.
 > Use case: local development only.
 
+> [!success] Revoke Refresh Tokens When No Longer Needed
+>
+> Run `gcloud auth revoke` when leaving a project or rotating credentials. For CI environments, prefer WIF over refresh tokens entirely — WIF tokens expire in minutes with no revocation step required.
+
 > [!danger] Permanent Credentials — Never Expire
 >
 > **SA Key File (JSON)** — Never expires
@@ -94,6 +97,10 @@ For SA creation and IAM binding commands, see [service-accounts-and-iam > GCP Se
 > Never in production. Never committed to git. Rotate every 90 days if you
 > must use one.
 
+> [!success] Use Metadata Server or WIF Instead
+>
+> On GCE VMs and Cloud Run: the metadata server provides a short-lived, auto-refreshing token with nothing on disk. In CI/CD: WIF exchanges an OIDC token for a GCP token that expires in minutes. For local dev: `gcloud auth application-default login` creates a refresh token (long-lived but revocable) with no key file.
+
 > [!danger] Key File Leak Response
 >
 > If you suspect a key file was leaked (committed to git, found in a Docker
@@ -102,6 +109,10 @@ For SA creation and IAM binding commands, see [service-accounts-and-iam > GCP Se
 > repos for GCP key patterns. See
 > [service-accounts-and-iam > Service Account Key Files — Local Development Only](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam#service-account-key-files--local-development-only)
 > for the deletion and rotation procedure.
+
+> [!success] Immediate Containment Steps
+>
+> 1. `gcloud iam service-accounts keys delete KEY_ID --iam-account=SA_EMAIL` — deletes the key immediately. 2. Rotate every secret the SA had access to in Secret Manager. 3. Review Cloud Audit Logs for API calls made with that key ID since the suspected leak date. 4. Use `git filter-branch` or BFG Repo Cleaner to purge the key from git history and force-push — assume it was already copied before removal.
 
 ### The OAuth2 Token Flow — What Actually Happens
 
@@ -157,6 +168,10 @@ ADC is the mechanism that answers "which credential should my code use?" without
 >
 > If `GOOGLE_APPLICATION_CREDENTIALS` points to a stale key file from an old project, ADC uses that key even when you're on a VM with a perfectly good metadata server token. ADC stops at the first match — it does not pick the "best" one. Unset the env var on VMs: `unset GOOGLE_APPLICATION_CREDENTIALS`.
 
+> [!success] Unset GOOGLE_APPLICATION_CREDENTIALS on VMs
+>
+> Add `unset GOOGLE_APPLICATION_CREDENTIALS` to the VM's startup script or Cloud Run container entrypoint. On Cloud Run, simply do not set the variable — the metadata server is always available and ADC will use it at priority 3. Verify which credential is active with `gcloud auth application-default print-access-token` and check the source.
+
 For the gcloud reference, see [gcloud-authentication > The ADC Credential Search Order](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication#the-adc-credential-search-order). For the Python ADC lookup implementation, see [21_py_security_operations > google.auth.default — Application Default Credentials (ADC) lookup chain](https://alp78.github.io/elysium/02-Programming-Languages/Python/21_py_security_operations#googleauthdefault--application-default-credentials-adc-lookup-chain). For C#, see [21_cs_security_operations > Application Default Credentials (ADC) lookup chain](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/21_cs_security_operations#application-default-credentials-adc-lookup-chain).
 
 ---
@@ -176,6 +191,10 @@ For the gcloud reference, see [gcloud-authentication > The ADC Credential Search
 > [!warning] VM Scopes Are Set at Creation
 >
 > If the VM was created with `--scopes=compute-ro`, the metadata server token only works for Compute Engine read operations — even if the attached SA has broader IAM roles. Use `--scopes=cloud-platform` (all APIs) unless you have a specific reason to restrict.
+
+> [!success] Use --scopes=cloud-platform When Creating VMs
+>
+> Always pass `--scopes=cloud-platform` with `gcloud compute instances create`. If the VM was already created with restricted scopes, stop it, modify the scopes (`gcloud compute instances set-scopes`), and restart. Scopes cannot be changed on a running VM.
 
 - Python implementation: [21_py_security_operations > VM instance identity — metadata server credentials](https://alp78.github.io/elysium/02-Programming-Languages/Python/21_py_security_operations#vm-instance-identity--metadata-server-credentials)
 - SA attachment to VM: [service-accounts-and-iam > ADC and the GCE Metadata Server](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam#adc-and-the-gce-metadata-server)
@@ -236,9 +255,17 @@ sequenceDiagram
 > `gcloud auth application-default login` for local development.
 > The key that doesn't exist can't be leaked.
 
+> [!success] Choose the Right Keyless Method
+>
+> GCP workload (VM/Cloud Run): use the attached service account — metadata server handles tokens automatically. External workload (GitHub Actions, AWS): use WIF. Local development: use `gcloud auth application-default login`. In all three cases, zero key files exist and nothing needs rotation.
+
 > [!danger] Key Files Never Expire
 >
 > A downloaded JSON key file grants full access to the service account's permissions with no expiration. If it leaks to a git repo, a log file, or a shared drive, the attacker has permanent access until someone manually deletes the key.
+
+> [!success] Enforce 90-Day Rotation and Audit Existing Keys
+>
+> Run `gcloud iam service-accounts keys list --iam-account=SA_EMAIL` to see all active keys and their creation dates. Delete any key older than 90 days. Add an Org Policy (`iam.managed.restrictServiceAccountKeyCreation`) to prevent new key downloads in production projects.
 
 - **When justified:** local development against GCP APIs where `gcloud auth application-default login` isn't sufficient (rare — e.g., testing impersonation flows)
 - **The rule:** if you can use metadata server or WIF, you must. Key files are the absolute last resort
@@ -262,6 +289,10 @@ sequenceDiagram
 > [!warning] The Common Mistake
 >
 > Running `gcloud auth login` and then wondering why `bigquery.Client()` in Python gets "permission denied." Python doesn't use gcloud's CLI credentials — it uses ADC. You need `gcloud auth application-default login` separately.
+
+> [!success] Run Both Commands for Local Development
+>
+> `gcloud auth login` — for gcloud CLI tools. `gcloud auth application-default login` — for Python, C#, and Go client libraries. Both must be run once per workstation per project. Verify ADC is set correctly with `gcloud auth application-default print-access-token`.
 
 - `gcloud auth login`: [gcloud-authentication > gcloud auth login — interactive authentication for human users](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication#gcloud-auth-login--interactive-authentication-for-human-users)
 - `gcloud auth application-default login`: [gcloud-authentication > gcloud auth application-default login — ADC for application code](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication#gcloud-auth-application-default-login--adc-for-application-code)
@@ -297,6 +328,10 @@ Every source→destination pair in the stack, with the complete trust chain, req
 >
 > Forgetting the IAP firewall rule. The tunnel command hangs silently if the VM's firewall doesn't allow traffic from Google's IAP IP range `35.235.240.0/20`.
 
+> [!success] Add the IAP Firewall Rule Before Opening Tunnels
+>
+> `gcloud compute firewall-rules create allow-iap --allow=tcp:1433,tcp:22 --source-ranges=35.235.240.0/20`. Verify the rule is active with `gcloud compute firewall-rules list --filter="name=allow-iap"`. If the tunnel hangs with no error, a missing or mismatched firewall rule is the first thing to check.
+
 ### Airflow VM → SQL Server VM (same VPC)
 
 **Trust chain:** `Airflow VM → direct TCP over VPC private network → VM port 1433 → SQL Server auth (login/password)`
@@ -312,6 +347,10 @@ Every source→destination pair in the stack, with the complete trust chain, req
 > [!warning] Common Mistake
 >
 > Using an IAP tunnel between VMs in the same VPC. IAP adds latency and complexity when the VMs can already communicate directly over private IPs. Only use IAP when crossing a network boundary (e.g., workstation → cloud).
+
+> [!success] Connect Directly Over Private IPs Within the VPC
+>
+> VMs in the same VPC can reach each other via private IP without any tunnel. Use the target VM's internal IP or its internal DNS name. Reserve the IAP tunnel pattern for workstation-to-cloud connections only.
 
 ### Python/C# → BigQuery (serverless API)
 
@@ -331,6 +370,10 @@ Every source→destination pair in the stack, with the complete trust chain, req
 > [!warning] Common Mistake
 >
 > Granting `roles/bigquery.admin` when the pipeline only reads data. Use `roles/bigquery.dataViewer` for read-only access. See [service-accounts-and-iam > Minimum IAM Permission Set for a Data Pipeline](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam#minimum-iam-permission-set-for-a-data-pipeline) for the minimum role set.
+
+> [!success] Grant roles/bigquery.dataViewer + roles/bigquery.jobUser for Read-Only Pipelines
+>
+> `roles/bigquery.dataViewer` grants SELECT on tables; `roles/bigquery.jobUser` grants the ability to run query jobs. Together these are the minimum for a read-only pipeline. Apply both at the dataset level, not the project level, to limit the scope to only the datasets the pipeline needs.
 
 ### Python/C# → Firestore (serverless API)
 
@@ -387,6 +430,10 @@ Every source→destination pair in the stack, with the complete trust chain, req
 >
 > Forgetting the VPC connector. Cloud Run is serverless — it does not live in your VPC by default. Without a connector, Cloud Run cannot reach private IPs. Configure a Serverless VPC Access connector or enable Direct VPC Egress.
 
+> [!success] Configure a Serverless VPC Access Connector
+>
+> Create a connector: `gcloud compute networks vpc-access connectors create CONNECTOR_NAME --region=REGION --network=VPC_NAME --range=10.8.0.0/28`. Deploy Cloud Run with `--vpc-connector=CONNECTOR_NAME`. Alternatively, enable Direct VPC Egress on the Cloud Run service to route traffic directly into the VPC without a connector resource.
+
 ### GitHub Actions → GCP (external, WIF)
 
 **Trust chain:** `GitHub OIDC token → WIF pool/provider → STS token exchange → short-lived GCP access token → GCP APIs`
@@ -421,6 +468,10 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 > [!warning] Common Mistake
 >
 > Forgetting that the IAP tunnel command needs time to establish before `sqlcmd` connects. Add a `sleep 5` after starting the tunnel in the workflow. See [sql-server-loading-patterns > Schema Migration CI/CD with GitHub Actions](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-loading-patterns#schema-migration-cicd-with-github-actions) for a working workflow example.
+
+> [!success] Start the Tunnel in the Background, Then Sleep
+>
+> In GitHub Actions: `gcloud compute start-iap-tunnel VM_NAME 1433 --local-host-port=localhost:1433 --zone=ZONE &` then `sleep 5` before running `sqlcmd`. The `&` runs the tunnel as a background process; the sleep gives it time to establish the WebSocket connection before the SQL client attempts to connect.
 
 ### Connection Quick Reference Matrix
 
@@ -465,6 +516,10 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 > [!warning] Self-Signed Certificate on Linux
 >
 > SQL Server on Linux generates a self-signed TLS certificate at startup. No CA chain exists — it is not signed by a trusted authority. `TrustServerCertificate=yes` tells the client to accept any certificate without validation.
+
+> [!success] Accept Self-Signed Only Behind an IAP Tunnel
+>
+> `TrustServerCertificate=yes` is acceptable when every connection passes through an IAP tunnel — the tunnel provides end-to-end TLS encryption between the workstation and the Google edge, so the SQL Server's own certificate is a secondary layer. For any public-facing SQL Server without a tunnel, replace the self-signed cert with one signed by a trusted CA.
 
 - **Why this is acceptable:** the IAP tunnel already encrypts the transport end-to-end (workstation → Google edge → VM). The self-signed cert encrypts SQL Server's TDS protocol layer, but the outer layer is already protected by IAP
 - **When this is NOT acceptable:** public-facing SQL Server with no tunnel — use a CA-signed certificate from Let's Encrypt or an internal CA

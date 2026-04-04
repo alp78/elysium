@@ -1,10 +1,6 @@
 ---
-type: reference
-category: infrastructure
-technology: [terraform, gcp]
 tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform VPC, terraform networking, GCP VPC terraform, firewall rules terraform, Cloud NAT terraform]
-keywords: [VPC, subnet, Cloud NAT, firewall, IAP, Identity-Aware Proxy, google_compute_network, google_compute_subnetwork, google_compute_router_nat, google_compute_firewall, CIDR, ingress, egress, network topology, private IP]
 description: "Terraform configuration for GCP networking: VPC, subnet, Cloud Router, Cloud NAT, and firewall rules for SQL Server, Airflow UI, APM, IAP SSH, and deny-all ingress."
 created: 2026-03-22
 updated: 2026-03-22
@@ -149,6 +145,10 @@ resource "google_compute_router_nat" "main" {
 > Cloud NAT Port Exhaustion Under High Concurrency.
 > Cloud NAT allocates 64 ports per VM by default. If a pipeline opens many concurrent outbound connections (e.g., hundreds of parallel API calls), you can exhaust the NAT port pool and see `RESOURCE_EXHAUSTED` errors. Increase the minimum ports per VM with `min_ports_per_vm` in the NAT config, or use `enable_dynamic_port_allocation = true` for bursty workloads.
 
+> [!success] Safe Pattern — Enable Dynamic Port Allocation for Variable Workloads
+>
+> Add `enable_dynamic_port_allocation = true` and set `min_ports_per_vm = 256` (or higher) in the `google_compute_router_nat` resource for workloads with bursty outbound concurrency. Dynamic allocation lets Cloud NAT scale port usage automatically up to the configured maximum, preventing `RESOURCE_EXHAUSTED` errors without permanently reserving a large static port range.
+
 ---
 
 ## Firewall Rules
@@ -283,6 +283,10 @@ resource "google_compute_firewall" "deny_all_ingress" {
 >
 > Overly Broad `source_ranges` Are the Number One Firewall Mistake.
 > Setting `source_ranges = ["0.0.0.0/0"]` on any allow rule exposes that port to the entire internet. This is the most common cause of database breaches in cloud environments. Always restrict source ranges to known CIDR blocks (VPC subnet, IAP range, office IP). If you need temporary access, use IAP tunneling instead of opening ports.
+
+> [!success] Safe Pattern — Restrict Source Ranges
+>
+> Always scope `source_ranges` to the narrowest possible CIDR. For database ports, use only the VPC subnet (`10.0.0.0/24`). For SSH, use only the IAP range (`35.235.240.0/20`). For admin UI access, use a specific office or home IP with a `/32` mask. Never set `0.0.0.0/0` on any allow rule.
 
 ---
 

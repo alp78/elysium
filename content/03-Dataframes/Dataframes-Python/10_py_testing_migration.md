@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - python
-  - pandas
-  - polars
 tags: [pipeline, python, pandas, polars]
 aliases:
   - end-to-end project, validation, migration guide
-keywords: [pytest, assert_frame_equal, testing, validation, migration, pandas to polars, refactor]
 description: "Pandas/Polars DataFrame reference 10/10 — Real-World Project, Testing & Migration (end-to-end, validation, migration guide). Side-by-side executable examples with cell outputs."
 created: 2026-03-24
 updated: 2026-03-24
@@ -1073,6 +1066,13 @@ ohlcv_pl=pl.read_parquet(DATA/"eurostoxx50_ohlcv.parquet")
 > 1. **Index:** Polars has no index. Use `sort()` + `filter()` instead of `set_index()`
 > 2. **inplace:** Polars never mutates. Every operation returns a new DataFrame
 > 3. **iterrows:** Polars expressions replace row-by-row loops entirely
+
+> [!success] Adopt the Polars mental model directly
+>
+> 1. **Index → sort/filter:** Replace `df.set_index("date")` with `df.sort("date")` and
+>    use `df.filter(pl.col("date") == date)` for row selection.
+> 2. **inplace → reassign:** Always reassign: `df = df.sort("date")`. No mutation needed.
+> 3. **iterrows → expressions:** Replace row loops with `df.with_columns(pl.col("a") - pl.col("b"))`.
 
 ```python
 # Pandas: index

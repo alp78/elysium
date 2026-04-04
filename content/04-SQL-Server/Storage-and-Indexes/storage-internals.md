@@ -1,10 +1,6 @@
 ---
-type: concept
-category: sql-server
-technology: [sql-server]
 tags: [sql, sql-server, tsql]
 aliases: [SQL Server pages, extents, buffer pool, WAL, write-ahead logging, checkpoint, LSN, log sequence number, heap, dirty page, ghost record, page split, tempdb internals, VLF, virtual log files, IAM, GAM, SGAM, PFS, B-tree, row offset array, forwarding pointer]
-keywords: [page, extent, data file, mdf, ldf, log file, buffer pool, dirty page, checkpoint, WAL, write-ahead logging, LSN, log sequence number, heap, clustered index, B-tree, row offset array, slot array, page split, IAM, GAM, SGAM, PFS, forwarding pointer, ghost record, tempdb, version store, RCSI, VLF, virtual log files, system databases, master msdb model tempdb, lock manager, lock escalation, CRUD internals, bulk insert, minimal logging, crash recovery, redo roll forward, undo roll back]
 description: "SQL Server storage internals: the 8 KB page and 64 KB extent model, the file architecture (.mdf and .ldf), page anatomy (96-byte header, row offset array), how WAL and checkpoints work, CRUD mechanics at the page level, B-tree structures, page splits, tempdb consumers, the buffer pool, and the lock manager's compatibility matrix."
 created: 2026-03-22
 updated: 2026-03-22
@@ -965,6 +961,10 @@ tempdb is a system database that SQL Server recreates from scratch on every rest
 >
 > Under Read Committed Snapshot Isolation (RCSI), every UPDATE generates a row version in tempdb. Long-running transactions prevent version cleanup, causing the version store to grow unboundedly. Monitor with `sys.dm_tran_version_store_space_usage`. A single forgotten open transaction can fill tempdb silently.
 
+> [!success] Safe Pattern: Monitor and Kill Long-Running Open Transactions
+>
+> Query `sys.dm_tran_active_transactions` joined with `sys.dm_exec_sessions` to identify transactions open longer than 5 minutes. Set alerts on `sys.dm_tran_version_store_space_usage` when `version_store_reserved_page_count * 8 / 1024 > 1024` MB. For pipeline sessions, always wrap UPDATE/DELETE batches in explicit transactions and commit them immediately rather than leaving connections in an uncommitted state.
+
 ```
 INSERT with ORDER BY into a table with a different clustered key:
 ┌────────────────────┐     ┌──────────────────────┐     ┌──────────────────┐
@@ -1192,6 +1192,10 @@ Every CRUD operation acquires locks. The lock manager tracks all locks in memory
 > [!warning] Lock Escalation
 >
 > When a single transaction holds >5,000 row/page locks on one table, SQL Server escalates to a table lock to save memory. This can cause unexpected blocking of all other sessions. Watch for this during bulk updates.
+
+> [!success] Safe Pattern: Batch Large Updates to Stay Below Escalation Threshold
+>
+> Split large UPDATE or DELETE statements into batches of 2,000–4,000 rows using a `WHILE` loop with `TOP (4000)`. Each batch commits before the lock count reaches the escalation threshold of 5,000. Alternatively, disable escalation on specific tables with `ALTER TABLE gold.index_performance SET (LOCK_ESCALATION = DISABLE)` — but only on tables where row-level locking is safe and memory allows it.
 
 #### Lock operations per CRUD — SELECT(S), INSERT(X), UPDATE(U→X), DELETE(X)
 

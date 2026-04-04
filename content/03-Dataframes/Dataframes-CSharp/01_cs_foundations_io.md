@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - csharp
-  - dotnet
-  - polars
 tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - Series, DataFrames, types, CSV, Parquet
-keywords: [Series, DataFrame, Index, dtypes, read_csv, read_parquet, to_csv, to_parquet, Polars.NET, Microsoft.Data.Analysis]
 description: "Polars.NET / C# DataFrames reference 01/10 — Foundations & I/O (Series, DataFrames, types, CSV/Parquet). Executable examples with cell outputs. See [01_py_foundations_io](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/01_py_foundations_io) for the Python equivalent."
 created: 2026-03-27
 updated: 2026-03-27
@@ -1113,6 +1106,17 @@ foreach (var f in files)
 > encoding. Polars.NET raises an error on non-UTF-8 bytes — preprocess with
 > `File.ReadAllText(path, Encoding.Latin1)` and write to a temp file, or use
 > `CsvReader` from `CsvHelper` which supports arbitrary encodings.
+
+> [!success] Convert to UTF-8 before reading
+>
+> Re-encode the file before passing it to `ReadCsv`:
+> ```csharp
+> var text = File.ReadAllText(path, Encoding.Latin1);
+> var tmpPath = Path.GetTempFileName();
+> File.WriteAllText(tmpPath, text, Encoding.UTF8);
+> var df = DataFrame.ReadCsv(tmpPath, tryParseDates: true);
+> ```
+> Alternatively, use `CsvHelper` with `configuration.Encoding = Encoding.Latin1` to read the source directly and then materialise a `DataFrame` from the resulting records.
 
 > [!tip] tryParseDates: true enables automatic date
 >

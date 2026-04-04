@@ -1,7 +1,5 @@
 ---
 tags: [data-architecture, architecture, pipeline, testing, data-quality, python, sql, airflow, bigquery, medallion, quarantine, anomaly-detection, sla, dbt, great-expectations, soda, dataplex]
-type: concept
-technology: [sql-server, bigquery, airflow, python]
 status: stable
 updated: 2026-03-29
 ---
@@ -28,6 +26,10 @@ Completeness means every row and every required field that should exist actually
 > [!danger] Silent row loss is the hardest quality failure to detect
 > If your pipeline silently drops rows during ingestion (e.g., a malformed CSV line), downstream aggregates look plausible but are wrong. A 50-constituent index calculated from 49 prices is published before anyone notices.
 
+> [!success] Assert Row Counts Against Expected Baseline
+>
+> After every ingestion load, compare the incoming row count against the prior-day count (or a source manifest if available). Fail the pipeline if the count falls below 80% of the prior load. Also assert `NOT NULL` on all required columns before any rows leave bronze. Use a source manifest or API metadata endpoint to get the authoritative expected count when the source provides one.
+
 **How to detect:** Compare incoming row counts against expected counts (prior day, reference dimension, source manifest). Assert non-null on required columns.
 
 - Python row count assertion: [25_py_functional_pipeline > Polars — assert minimum row count with len()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-minimum-row-count-with-len)
@@ -42,6 +44,10 @@ Uniqueness means each entity appears exactly once per grain. Duplicate rows infl
 > [!danger] Duplicate rows silently corrupt every downstream aggregate
 > A duplicated price row doubles a constituent's weight contribution in a market-cap-weighted index. The index level shifts, and because the number looks reasonable, no human catches it until an investor reconciles against the exchange.
 
+> [!success] Assert Uniqueness on Natural Keys Before Every Transform
+>
+> At the silver quality gate, assert that the natural key (instrument + trade_date, or equivalent) is unique before any aggregation or join runs. Use `dbt_utils.unique_combination_of_columns` in dbt and a Polars `df.is_duplicated().any()` assertion in Python. If duplicates exist, route the batch to quarantine and investigate the source before allowing any downstream run.
+
 **How to detect:** Assert uniqueness on natural keys (instrument + trade_date). Hash-based dedup on composite keys.
 
 - Python duplicate assertion: [25_py_functional_pipeline > Polars — assert no duplicate rows with unique()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#polars--assert-no-duplicate-rows-with-unique)
@@ -54,6 +60,10 @@ Validity means values fall within acceptable domains and pass business logic rul
 
 > [!warning] Business rules that live only in someone's head are never enforced
 > If the rule "weights must sum to 1.0" is documented in a wiki but not coded as an assertion, it will eventually be violated. Encode every business rule as a testable assertion.
+
+> [!success] Encode Every Business Rule as a Tested Assertion
+>
+> For each business rule, write a corresponding dbt custom test (a SQL query that returns rows on failure) or a Python assertion. Examples: a `tests/assert_weights_sum_to_100.sql` that fails if any index's weight deviates beyond 0.5%, and a `dbt_utils.expression_is_true` check that `open_price <= high_price`. Store these tests in version control alongside the models they protect.
 
 **How to detect:** Range checks, regex patterns, enum membership, cross-field logic (e.g., open <= high, low <= close).
 
@@ -69,6 +79,10 @@ Timeliness means data is available when downstream consumers need it. Late data 
 
 > [!danger] A pipeline that succeeds with stale data is worse than one that fails
 > If your pipeline runs on schedule but processes yesterday's file because today's hasn't arrived, you publish stale index values with no alert. Always assert data freshness, not just pipeline completion.
+
+> [!success] Assert Data Freshness Separately from Pipeline Completion
+>
+> After every load, assert that `MAX(trade_date)` or `MAX(loaded_at)` in the target table is within the SLA window (e.g., today's date for a daily pipeline). Use a dbt source freshness check in CI and a Python `assert max_date >= today - timedelta(days=1)` assertion in the production Airflow task. A dead man's switch (an alert that fires if no successful load is recorded by the SLA deadline) catches the case where the pipeline never ran at all.
 
 **How to detect:** Compare max timestamp in the dataset against expected freshness SLA. Implement dead man's switch for expected-but-missing loads.
 
@@ -91,6 +105,10 @@ Accuracy means recorded values match the real-world truth. A price of 150.00 is 
 > [!warning] Accuracy is the hardest dimension to automate
 > You cannot validate accuracy without an independent reference source. For financial data, corroborate against a second vendor, an exchange API, or a manual check for high-impact values.
 
+> [!success] Use Statistical Anomaly Detection Plus Cross-Vendor Corroboration
+>
+> Apply a rolling z-score (30-day window, 3-sigma threshold) to flag price and score values that deviate unusually from recent history. For high-impact values (index levels, published weights), cross-check against a second vendor or the exchange API as part of the gold quality gate. Flag anomalies for manual review rather than auto-failing — a genuine market event can produce a valid 5-sigma move.
+
 **How to detect:** Cross-reference against independent sources. Statistical anomaly detection (z-score) to flag outliers for manual review. Reconciliation queries between systems.
 
 - Python API corroboration: [25_py_functional_pipeline > yfinance — corroborate with live API data using Ticker.history()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#yfinance--corroborate-with-live-api-data-using-tickerhistory)
@@ -102,6 +120,10 @@ Consistency means the same logical entity has the same value in every system tha
 
 > [!warning] Cross-system inconsistency erodes trust faster than any other quality failure
 > When a client sees one index level on a website and a different level in a downloaded file, they lose confidence in all your data, even the parts that are correct.
+
+> [!success] Run Cross-System Reconciliation Queries After Every Publication
+>
+> After each export from SQL Server gold to BigQuery, run a reconciliation query comparing `COUNT(*)`, `SUM(index_level)`, and `MIN/MAX(trade_date)` between both systems. Hash the entire gold table using `hashlib.sha256` on a sorted export and store the hash as a pipeline artifact. Any mismatch halts publication until the source of the discrepancy is identified and resolved.
 
 **How to detect:** Reconciliation queries comparing row counts, checksums, and key aggregates across systems. Hash-based comparison of entire datasets.
 
@@ -122,10 +144,18 @@ Bronze ([medallion-architecture > Bronze (Raw)](https://alp78.github.io/elysium/
 > - File hash verification: SHA-256 matches source manifest
 > - Zero-byte / empty file detection
 
+> [!success] Fix: Halt and Quarantine on Tier 1 Failure
+>
+> If schema conformance fails, do not load any rows — raise a `SchemaDriftError` and quarantine the entire file. Verify the SHA-256 hash against the source manifest before opening the file. Detect zero-byte files with a pre-check (`os.path.getsize`) and alert immediately. Resume only after the upstream issue is confirmed resolved.
+
 > [!warning] Tier 2 — Standard (quarantine bad rows)
 > - Null rate exceeds threshold on required fields (>5%)
 > - Duplicate detection on natural keys
 > - Malformed rows (parse failures, encoding errors)
+
+> [!success] Fix: Separate Good and Bad Rows, Continue with Good
+>
+> Split the batch into passing and failing rows. Write failing rows to the quarantine table with `failure_reason`, `gate_name`, and `rejected_at` metadata. Load the passing rows downstream so the pipeline continues without the bad rows. Alert the data team and set a `replayed_at` target of < 24 hours.
 
 > [!abstract] Tier 3 — Advisory (log for review)
 > - Row count outside 80-120% of prior load
@@ -145,10 +175,18 @@ Silver ([medallion-architecture > Silver (Cleaned)](https://alp78.github.io/elys
 > - Referential integrity failure (instrument not in dimension table)
 > - Deduplication check fails after cleaning
 
+> [!success] Fix: Halt Silver Pipeline on Critical Business Rule Failures
+>
+> If any price ≤ 0 or volume < 0 rows survive bronze, halt the silver pipeline and quarantine the affected instruments. Validate referential integrity with a `LEFT JOIN` against the dimension table before any fact transform — reject rows with no matching dimension entry. Re-run deduplication and assert uniqueness before promoting to silver; if duplicates persist, investigate the bronze load strategy.
+
 > [!warning] Tier 2 — Standard (quarantine bad rows)
 > - Values outside expected statistical range (z-score > 3)
 > - Staleness: data older than freshness SLA
 > - Cross-field logic violations (open > high, low > close)
+
+> [!success] Fix: Quarantine Outliers and Cross-Field Violations
+>
+> Compute a 30-day rolling z-score per instrument; quarantine rows where `|z| > 3` for manual review. Assert `open_price <= high_price AND low_price <= close_price` with a dbt `expression_is_true` test. For stale rows, check `MAX(trade_date)` against the SLA before running transforms — fall back to T-1 values only when explicitly configured, and log every fallback occurrence.
 
 > [!abstract] Tier 3 — Advisory (log for review)
 > - Rows requiring fallback to T-1 values
@@ -177,16 +215,28 @@ Gold ([medallion-architecture > Gold (Analytics)](https://alp78.github.io/elysiu
 > [!danger] Gold is publication — treat every Gold check as a circuit breaker
 > If a quality gate at the Gold layer fails and the pipeline continues anyway (e.g., because the check was set to `severity: warn` instead of `error`), incorrect index values reach clients and regulatory filings. Gold-layer checks that affect publication integrity must ALWAYS halt the pipeline. See esg circuit breaker fired for a real incident where this saved us.
 
+> [!success] Set All Gold-Layer dbt Tests to severity: error
+>
+> In every gold model's `schema.yml`, set `config: severity: error` on every test — not `warn`. Use a `ShortCircuitOperator` in the Airflow DAG after `dbt test` so that any single gold test failure halts publication immediately. Never route gold-layer quality failures to a log-and-continue path.
+
 > [!danger] Tier 1 — Critical (halt publication)
 > - Weights sum to 1.0: `ABS(SUM(weight) - 1.0) < 1e-9`
 > - No missing constituents: count matches target (e.g., 50)
 > - Index level sanity: daily change within +/-15%
 > - Cross-dataset consistency: SQL Server gold = BigQuery published
 
+> [!success] Fix: Implement Weight and Constituent Circuit Breakers
+>
+> Assert `ABS(SUM(weight_pct) - 1.0) < 1e-9` per `index_code + trade_date` in a custom dbt test. Assert `COUNT(DISTINCT instrument_isin) = target_count` for each index. Compare the calculated index level against the prior day's level and reject if the daily change exceeds ±15%. Cross-check SQL Server gold vs BigQuery row count and checksum before publishing to any downstream consumer.
+
 > [!warning] Tier 2 — Standard (quarantine and alert)
 > - ESG score outside normalized 0-100 range
 > - Sector allocation drift beyond threshold
 > - Turnover exceeds rebalance limits
+
+> [!success] Fix: Alert and Hold on Tier 2 Gold Failures
+>
+> For ESG scores outside 0–100, quarantine the affected instruments and send an immediate alert to the data team — do not publish affected scores until reviewed. For sector drift and turnover threshold breaches, compare against the prior rebalance snapshot and hold publication pending a manual sign-off from the index operations team.
 
 > [!abstract] Tier 3 — Advisory (log for review)
 > - Minor rounding differences across systems (<1e-6)
@@ -210,6 +260,10 @@ Gold ([medallion-architecture > Gold (Analytics)](https://alp78.github.io/elysiu
 > [!warning] Anti-pattern: writing dbt tests that duplicate warehouse constraints
 > If your warehouse enforces NOT NULL and UNIQUE via DDL constraints, dbt tests on the same columns are redundant cost. Use dbt tests for business rules the warehouse cannot enforce.
 
+> [!success] Reserve dbt Tests for Business Logic the Warehouse Cannot Enforce
+>
+> Audit your `schema.yml` for `not_null` and `unique` tests on columns already covered by DDL `NOT NULL` and `UNIQUE` constraints. Remove the duplicates. Instead, invest dbt test slots in cross-field logic (`expression_is_true`), range checks (`accepted_range`), referential integrity (`relationships`), and aggregate rules (weight sums, constituent counts) that no DDL constraint can express.
+
 - Built-in generic tests: [dbt-testing-framework > dbt Built-in Generic Tests](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework#dbt-built-in-generic-tests)
 - Statistical tests: [dbt-testing-framework > dbt-expectations — row count and statistical tests](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework#dbt-expectations--row-count-and-statistical-tests)
 - CI/CD integration: [data-pipeline-testing-strategy > CI/CD Test Automation](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy#cicd-test-automation)
@@ -224,6 +278,10 @@ Gold ([medallion-architecture > Gold (Analytics)](https://alp78.github.io/elysiu
 
 > [!warning] Anti-pattern: auto-profiling in production without review
 > Great Expectations can auto-generate expectations from data. If you deploy auto-profiled suites without human review, you encode current data quirks as rules — including bugs. Always review and curate generated expectations.
+
+> [!success] Treat Auto-Profiled Suites as a Draft, Not a Final Rule Set
+>
+> Run `great_expectations suite new --profile` against a representative data sample to generate the initial expectation suite, then manually review every generated expectation before committing it to the repository. Remove expectations that reflect current bugs or data anomalies. For each expectation kept, add a comment explaining the business reason so future reviewers understand its intent.
 
 ### Soda Core — YAML-defined checks with SodaCL
 
@@ -275,6 +333,10 @@ A quarantine isolates rows that fail quality checks so they can be investigated 
 
 > [!danger] Never silently drop bad rows
 > Dropping rows that fail validation means you lose evidence of upstream data issues. Quarantined rows are your forensic trail: they tell you what went wrong, when, and how often. Without quarantine, you discover data loss only when a client reports it.
+
+> [!success] Always Route Rejected Rows to the Quarantine Table
+>
+> In every quality gate, split the batch into passing and failing rows using a Polars filter or a SQL `CASE` expression. Insert failing rows into `bronze.quarantine` with `source_table`, `source_row_json`, `failure_reason`, `gate_name`, and `rejected_at`. Never use `DROP`, `DELETE`, or silent filtering — every rejected row must be traceable and replayable.
 
 - Quarantine pattern overview: [functional-pipeline-architecture > The Quarantine Pattern](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/functional-pipeline-architecture#the-quarantine-pattern)
 - Dead letter queue (same concept, different name): [error-handling-and-retry-patterns > Dead Letter Queue (DLQ) — don't drop, don't retry forever](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns#dead-letter-queue-dlq--dont-drop-dont-retry-forever)
@@ -345,6 +407,10 @@ is_anomaly = abs(z_score) > threshold
 
 > [!warning] Seasonal adjustment is critical for volume data
 > Trading volumes spike predictably around index rebalance dates, options expiry, and quarter-end. A naive z-score flags every predictable spike as anomalous. Either exclude known event dates from the rolling window or use a seasonal decomposition model.
+
+> [!success] Exclude Known Event Dates from the Rolling Window
+>
+> Maintain a reference table of known high-volume event dates (quarterly rebalance dates, options expiry dates, index reconstitution dates). When computing the rolling z-score for volume anomaly detection, filter out these dates from the lookback window using a `LEFT JOIN` anti-pattern: `WHERE trade_date NOT IN (SELECT event_date FROM ref.known_volume_events)`. This eliminates false positives on predictable spikes while retaining sensitivity to genuine anomalies.
 
 ## Quality Gate Orchestration
 

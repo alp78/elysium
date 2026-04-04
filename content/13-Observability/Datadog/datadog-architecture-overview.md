@@ -1,10 +1,6 @@
 ---
-type: concept
-category: observability
-technology: [datadog, gcp, sql-server, airflow, cloud-run]
 tags: [monitoring, observability, sql, airflow, datadog, gcp]
 aliases: [Datadog Overview, the data pipeline project Observability, Datadog Architecture]
-keywords: [datadog, observability, monitoring, metrics, logs, traces, APM, three pillars, data-pipeline, EU region, datadoghq.eu, agent, GCP integration, Cloud Run, infrastructure, DogStatsD]
 description: "Architecture overview of Datadog monitoring for the data platform — two agents (Airflow VM + SQL VM) plus GCP Integration cover metrics, logs, and traces across the full stack."
 created: 2026-03-22
 updated: 2026-03-22
@@ -192,6 +188,9 @@ After setup, go to **Infrastructure > Host Map** in Datadog. You should see GCE 
 > [!warning] Agent resource overhead
 >
 > The Datadog Agent consumes approximately 1-2% CPU and 200-400 MB RAM continuously. On an e2-small (2 vCPU, 2 GB RAM) running SQL Server, the agent takes 10-20% of available memory. If SQL Server starts experiencing memory pressure (buffer cache hit ratio dropping below 99%), investigate agent overhead before resizing the VM. Use `systemctl stop datadog-agent` temporarily to confirm.
+
+> [!success] Reduce Agent Memory Pressure
+> Stop the agent temporarily to confirm it is the cause (`sudo systemctl stop datadog-agent`), then check the buffer cache hit ratio. If confirmed, reduce agent overhead by disabling unused checks in `/etc/datadog-agent/conf.d/` (e.g., process collection) or upgrade the SQL VM to `e2-medium` (4 GB RAM) if full observability is required.
 
 ### Disabling Datadog Agents and Integration
 

@@ -1,12 +1,4 @@
 ---
-type: reference
-category: observability
-technology:
-  - bigquery
-  - datadog
-  - python
-  - csharp
-  - sql-server
 tags: [monitoring, observability, python, csharp, sql, bigquery, datadog]
 aliases:
   - compliance
@@ -18,48 +10,6 @@ aliases:
   - price adjustment factor
   - divisor
   - EU BMR
-keywords:
-  - compliance
-  - audit trail
-  - data lineage
-  - corporate actions
-  - EU BMR
-  - stock split
-  - reverse split
-  - special dividend
-  - spin-off
-  - merger
-  - rights issue
-  - price adjustment factor
-  - divisor adjustment
-  - restatement
-  - record retention
-  - oversight function
-  - complaint handling
-  - shadow calculation
-  - materiality threshold
-  - index calculation
-  - financial index
-  - pipeline lineage
-  - reproducibility test
-  - data quality
-  - monitoring
-  - alerting
-  - BigQuery
-  - Datadog
-  - SQL Server
-  - Python
-  - C#
-  - Dapper
-  - GCS
-  - SFTP
-  - SHA-256
-  - Bronze Silver Gold
-  - run_id
-  - calc_date
-  - BMR Article 11
-  - BMR Article 21
-  - five year retention
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -1220,6 +1170,10 @@ The reproducibility test is executed. The `pipeline_lineage_metadata` row for th
 >
 > The European Benchmarks Regulation (EU 2016/1011) applies to administrators of benchmarks used in financial instruments, financial contracts, or investment funds within the EU. Non-compliance can result in withdrawal of the index from use in new EU financial instruments. This section summarises operational obligations; it is not legal advice. Always consult your compliance and legal teams. For a detailed breakdown of the regulation's scope and applicability, see [eu-bmr-benchmark-regulation](https://alp78.github.io/elysium/18-Financial-Domain/Regulatory/eu-bmr-benchmark-regulation).
 
+> [!success] Establish a compliance controls register
+>
+> Map each BMR article to a specific operational control, a responsible owner, and a verification cadence. Maintain the register in version control alongside the methodology document. Use the Annual Review Checklist at the bottom of this page to verify completeness annually and after any material methodology change.
+
 ### EU BMR Compliance — Article 11 Input Data Governance
 
 > [!important] Article 11(1) sufficiency
@@ -1264,6 +1218,10 @@ CREATE INDEX IX_idtl_calc_date ON dbo.input_data_tier_log (calc_date, index_code
 > [!warning] Five-year minimum retention
 >
 > Article 21 requires administrators to retain records for at least five years. Records must include: all input data, the methodology and its basis, all calculations and their results, subscriber identity, and any identified significant changes to the benchmark.
+
+> [!success] Enforce retention at the storage layer
+>
+> Set GCS bucket retention policies to `MINIMUM_RETENTION_DAYS = 5 * 365 + 2` using the `enforce_gcs_retention()` function. For BigQuery, set `default_table_expiration = 0` on audit datasets and apply a policy tag that prevents deletion. Verify SQL Server agent jobs do not issue `DELETE` or `TRUNCATE` against audit tables using the verification query in this section.
 
 Retention implementation:
 

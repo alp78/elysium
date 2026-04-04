@@ -15,7 +15,6 @@ tags:
 aliases:
   - "Retry Patterns"
   - "Error Handling Strategy"
-keywords: [error handling, retry, backoff, exponential backoff, jitter, circuit breaker, dead letter queue, DLQ, transient error, permanent error, partial failure, idempotent, alerting, SLA, retry budget, fail-fast, compensating action, quarantine]
 created: 2026-03-29
 updated: 2026-03-29
 status: complete
@@ -54,6 +53,10 @@ Every error falls into one of five categories. The classification determines the
 >
 > Retrying a permanent error in a loop. A `pyodbc.ProgrammingError` (bad SQL syntax) will never succeed no matter how many times you retry it. Catch it, log it, fail the task, and fix the code.
 
+> [!success] Classify errors before retrying — only retry transient errors
+>
+> Define a `TRANSIENT_ERRORS` tuple containing only retryable exception types (`pyodbc.OperationalError`, HTTP 429/503). Catch all others with a separate handler that logs and re-raises immediately without retry. This keeps retry logic fast for recoverable failures and loud for permanent ones.
+
 ---
 
 ## Retry Strategies
@@ -65,6 +68,10 @@ No delay between attempts. Only appropriate for extremely fast transient failure
 > [!warning] Hammers the Target
 >
 > If the failure persists for even a few seconds, immediate retry sends hundreds of requests per second to an already-struggling service. Almost never the right choice for data pipelines.
+
+> [!success] Use exponential backoff with jitter as the default retry strategy
+>
+> Replace immediate retry with `delay = min(base * 2^attempt + random(0, jitter), max_delay)`. Even a 1-second base delay with 3 attempts costs at most 7 seconds of wall clock time while giving the failing service meaningful recovery time.
 
 ### Fixed-Interval Retry — predictable recovery time
 
@@ -197,6 +204,10 @@ class CircuitBreaker:
 >
 > A DLQ is NOT a garbage dump. If the DLQ is growing, something is systematically wrong. Alert when `DLQ_count > 0` (warning) and when DLQ is growing steadily (critical). See [gcp-pipeline-health-and-sla > Alerting Runbook for Data Engineers](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#alerting-runbook-for-data-engineers).
 
+> [!success] Configure a Cloud Monitoring alert on DLQ message count
+>
+> Create a metric alert that fires at warning when `DLQ_count > 0` and at critical when the DLQ message count has grown over consecutive 5-minute windows. A DLQ that grows indicates a systematic data quality problem requiring human investigation, not more retries.
+
 ---
 
 ## Failure Propagation in Multi-Step Pipelines
@@ -269,6 +280,10 @@ For SQL Server, idempotency ensures that a retry after partial failure doesn't c
 >
 > A DAG with 10 tasks, each with 3 retries at 5-minute delay, has a worst case of 150 minutes of wall clock time before final failure. If your SLA is "data fresh within 4 hours" and the pipeline normally takes 30 minutes, the retry budget is 3.5 hours — but 2.5 hours of retries leaves only 1 hour of slack. Set `retries=2` or `retry_delay=timedelta(minutes=3)` to stay within budget.
 
+> [!success] Size retries to the SLA: total retry time must be less than half the SLA window
+>
+> Apply the formula `total_retries × retry_delay < SLA_window / 2`. For a 4-hour SLA: maximum retry budget is 2 hours. With 10 tasks, each task gets at most 12 minutes of retries total — `retries=2` at `retry_delay=6 minutes`, or `retries=3` at `retry_delay=4 minutes`.
+
 For SLA definitions and tracking, see [gcp-pipeline-health-and-sla > Defining Pipeline SLAs](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#defining-pipeline-slas).
 
 ---
@@ -300,6 +315,10 @@ For SLA definitions and tracking, see [gcp-pipeline-health-and-sla > Defining Pi
 >
 > Alerting on every first retry creates hundreds of noise alerts per day. Engineers stop reading them. When a real incident happens, the alert is buried. Reserve critical alerts for exhausted retries and growing DLQs only.
 
+> [!success] Alert only on final failure and growing DLQs — log everything else
+>
+> Set Airflow's `on_failure_callback` (not `on_retry_callback`) to trigger the PagerDuty notification. First and second retries write to structured logs only. This keeps the alert signal-to-noise ratio high and ensures on-call engineers respond to every alert they receive.
+
 ---
 
 ## Anti-Patterns
@@ -309,6 +328,10 @@ For SLA definitions and tracking, see [gcp-pipeline-health-and-sla > Defining Pi
 > [!danger] Each One Causes Incidents
 >
 > Every anti-pattern below has been seen in production.
+
+> [!success] Adopt the five-rule error handling baseline for every pipeline task
+>
+> (1) Classify errors before retrying. (2) Use exponential backoff with jitter. (3) Ensure every retried operation is idempotent. (4) Always log errors — never swallow them silently. (5) Alert on exhausted retries only, not on first retry. These five rules eliminate the anti-patterns below.
 
 ### Retrying permanent errors — infinite waste
 

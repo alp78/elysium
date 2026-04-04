@@ -1,10 +1,6 @@
 ---
-type: concept
-category: gcp
-technology: [gcp, compute-engine]
 tags: [infrastructure, gcp, compute-engine]
 aliases: [gcloud compute ssh, gcloud compute scp, IAP tunnel, VM remote access, VM file transfer]
-keywords: [gcloud compute ssh, IAP, Identity-Aware Proxy, tunnel-through-iap, scp, file transfer, remote command, secure copy, no public IP, pscp, permission denied, sudo cp, SSH into VM]
 description: "How to SSH into Compute Engine VMs through the IAP tunnel (no public IP required), run remote commands non-interactively, and copy files to and from VMs using gcloud compute scp."
 created: 2026-03-22
 updated: 2026-03-22
@@ -74,6 +70,10 @@ gcloud compute scp --recurse ./dags/ data-pipeline-airflow:/tmp/dags/ --zone=eur
 >   --command="sudo cp /tmp/local_file.py /opt/airflow/dags/ && sudo chown 50000:0 /opt/airflow/dags/local_file.py"
 > ```
 > On Windows with `pscp`, remember: it doesn't expand `~` — always use absolute paths.
+
+> [!success] SCP to /tmp First, Then sudo cp to Target
+>
+> Always SCP files to `/tmp/` (world-writable) first, then SSH in and use `sudo cp` to move them to the restricted destination. Follow with `sudo chown` to set the correct ownership. This two-step pattern works regardless of directory ownership.
 
 ### IAP Tunnel Architecture for VM Access
 

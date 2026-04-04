@@ -1,10 +1,6 @@
 ---
-type: concept
-category: gcp
-technology: [gcp, compute-engine]
 tags: [infrastructure, gcp, compute-engine]
 aliases: [GCE disks, persistent disk snapshots, disk resize, serial console, disk snapshot GCP]
-keywords: [persistent disk, snapshot, disk resize, serial console, backup, restore, incremental snapshot, resize2fs, xfs_growfs, boot problems, disk management, pd-ssd, pd-balanced, disk list]
 description: "How to manage Compute Engine persistent disks — creating incremental snapshots before risky changes, resizing disks, restoring from snapshots, and using the serial console when a VM won't boot."
 created: 2026-03-22
 updated: 2026-03-22
@@ -74,6 +70,10 @@ gcloud compute disks resize data-pipeline-sql-disk --zone=europe-west1-b --size=
 > - **xfs:** `sudo xfs_growfs /`
 >
 > Skipping this step leaves your application still seeing the old, smaller disk.
+
+> [!success] Run Filesystem Expansion Immediately After Disk Resize
+>
+> After `gcloud compute disks resize`, SSH into the VM and run `sudo resize2fs /dev/sda1` (ext4) or `sudo xfs_growfs /` (xfs). Verify with `df -h` that the filesystem now reflects the new capacity before resuming any application workloads.
 
 ### Serial Console — When SSH Fails
 

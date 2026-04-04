@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, dbt]
-type: concept
-technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "View table incremental ephemeral snapshot deep dive"
@@ -87,6 +85,16 @@ dbt first checks whether the relation exists. If it does, it runs the model's `{
 
 > [!danger] Incremental Models Silently Skip Data if the is_incremental() Filter Is Wrong
 > The `is_incremental()` branch determines which rows are processed. If the filter references `max(price_date) FROM {{ this }}` but the table was loaded with a gap (e.g., a weekend backfill was skipped), data for the gap will never be loaded. Always use a lookback window (e.g., `max(price_date) - 3 days`) instead of an exact boundary to catch late-arriving data and backfill gaps.
+
+> [!success] Safe pattern: lookback window
+> Always subtract a lookback offset from `max()` in the incremental filter:
+> ```sql
+> where price_date >= (
+>     select dateadd(day, -{{ var('lookback_days', 3) }}, max(price_date))
+>     from {{ this }}
+> )
+> ```
+> Pair with `unique_key` and `merge` strategy so re-processed rows are updated, not duplicated.
 
 ### Basic Pattern
 
@@ -191,6 +199,9 @@ where price_date >= date_sub(current_date(), interval {{ var('lookback_days', 3)
 > [!warning] on_schema_change: ignore Is the Default -- New Columns Are Silently Lost
 > If you add a column to your incremental model but forget to set `on_schema_change`, dbt defaults to `ignore`. The new column appears in your dev environment (where the table is created fresh) but is silently dropped in production (where the existing table lacks the column). Set `on_schema_change: 'append_new_columns'` on all incremental models to prevent this.
 
+> [!success] Safe default
+> Set `on_schema_change: 'append_new_columns'` in every incremental model config. This ensures new columns are added to the existing table in production without requiring a full refresh or manual DDL.
+
 ### dbt on_schema_change Behaviour
 
 Controls what happens when the model's column set changes compared to the existing table.
@@ -212,6 +223,9 @@ Controls what happens when the model's column set changes compared to the existi
 
 > [!WARNING] sync_all_columns in production
 > `sync_all_columns` will drop columns that were removed from your model SQL. This can break downstream BI tools and APIs that reference those columns. Prefer `append_new_columns` and handle removals explicitly via `--full-refresh`.
+
+> [!success] Safe removal workflow
+> Use `append_new_columns` in production. To retire a column: (1) deprecate it in documentation, (2) notify consumers, (3) schedule a `--full-refresh` in a maintenance window after all consumers have migrated.
 
 ---
 

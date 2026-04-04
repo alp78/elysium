@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python, gcp]
 tags: [python, gcp, security, infrastructure]
 aliases: [Security Setup, GCP Security Infrastructure, Workload Identity Setup]
-keywords: [gcloud, service account, KMS, Secret Manager, Cloud SQL, Workload Identity Federation, OIDC, IAM, CMEK, SSH, Artifact Registry, Compute Engine, BigQuery, Firestore, GCS]
 description: "GCP security infrastructure setup — provisions service accounts, KMS keys, secrets, Cloud SQL, Compute Engine, Workload Identity Federation, and populates demo data. Prerequisite for [21_py_security_operations](https://alp78.github.io/elysium/02-Programming-Languages/Python/21_py_security_operations) and [21_cs_security_operations](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/21_cs_security_operations)."
 created: 2026-03-27
 updated: 2026-03-27
@@ -233,6 +229,12 @@ PROJECT_ID, SA_EMAIL  # project, service account
 > keys: store them in Secret Manager, never commit them to git, and rotate every 90 days.
 > See the Workload Identity Federation section below for the keyless alternative.
 
+> [!success] Prefer Workload Identity Federation; if keys are unavoidable, secure them
+>
+> - Use WIF for GitHub Actions, Cloud Run, and cross-project access — no key file needed.
+> - If a JSON key is required: store it in Secret Manager, add `.json` to `.gitignore`, and set `GOOGLE_APPLICATION_CREDENTIALS` at runtime only.
+> - Rotate keys every 90 days: `gcloud iam service-accounts keys create` + `keys delete` the old key ID.
+
 #### gcloud iam service-accounts create
 
 ```python
@@ -258,6 +260,16 @@ PROJECT_ID, SA_EMAIL  # project, service account
 > [!danger] Service Account Key Security
 >
 > The JSON key file contains the private key. NEVER commit to git. Store in `.env` or a secret manager. In production, prefer Workload Identity Federation (keyless).
+
+> [!success] Keep the key file out of source control and load it at runtime only
+>
+> ```bash
+> # Add to .gitignore immediately after creation
+> echo "*.json" >> .gitignore
+> echo "gcp-sa-key.json" >> .gitignore
+> # Set at runtime, never hardcode the path in source
+> export GOOGLE_APPLICATION_CREDENTIALS="/run/secrets/gcp-sa-key.json"
+> ```
 
 ```python
 !gcloud iam service-accounts keys create ./gcp-sa-key.json --iam-account=notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
@@ -616,6 +628,12 @@ print("  GCP_SA_KEY_PATH set")
 >
 > KMS key rings cannot be deleted once created. Choose the location (region) carefully — it determines where encryption/decryption operations execute.
 
+> [!success] Plan key ring names and locations before creation
+>
+> - Match the KMS location to the region of the resources that will use it (e.g., `europe-west1` for a Cloud SQL instance in the same region) to avoid cross-region latency.
+> - Use a clear naming convention such as `{project}-{purpose}-keyring` so key rings are identifiable without deletion.
+> - To audit existing rings before adding new ones: `gcloud kms keyrings list --location=europe-west1`
+
 ```python
 !gcloud kms keyrings create notebook-keyring --location=europe-west1
 ```
@@ -638,17 +656,50 @@ print("  GCP_SA_KEY_PATH set")
 > values to temp files — these are deleted after creation, but ensure `/tmp` is not
 > world-readable on shared systems.
 
+> [!success] Pull secrets from Secret Manager at runtime
+>
+> ```python
+> from google.cloud import secretmanager
+> client = secretmanager.SecretManagerServiceClient()
+> name = f"projects/{PROJECT_ID}/secrets/my-secret/versions/latest"
+> secret = client.access_secret_version(request={"name": name})
+> value = secret.payload.data.decode("utf-8")  # never stored in env or image
+> ```
+
 > [!warning] Secret versions are immutable and billable
 >
 > Each `add-version` creates a new immutable version. Old versions remain accessible (and
 > billable) until explicitly destroyed. Use `gcloud secrets versions destroy` to clean up
 > old versions after rotation.
 
+> [!success] Destroy old versions after rotation
+>
+> ```bash
+> # List versions to identify old ones
+> gcloud secrets versions list my-secret
+> # Destroy a specific old version
+> gcloud secrets versions destroy 1 --secret=my-secret
+> # Keep only the latest: disable then destroy
+> gcloud secrets versions disable 2 --secret=my-secret
+> ```
+
 #### Helper: create secret from value
 
 > [!warning] Windows gcloud secret creation workaround
 >
 > On Windows, `echo -n value | gcloud ...` does not work: `cmd.exe` has no `-n` flag, so echo outputs the literal text `-n value`. The workaround is to write the secret value to a temp file and pass its path via `--data-file`. Forward slashes are required because gcloud on Windows rejects backslash paths inside f-strings.
+
+> [!success] Write secret to a temp file and use --data-file on Windows
+>
+> ```python
+> import tempfile, os, subprocess
+> with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
+>     f.write(secret_value)
+>     tmp_path = f.name.replace("\\", "/")
+> subprocess.run(["gcloud", "secrets", "create", secret_name,
+>                 "--data-file", tmp_path, "--replication-policy=automatic"])
+> os.unlink(tmp_path)  # delete immediately after use
+> ```
 
 > [!info] --replication-policy=automatic
 >
@@ -878,6 +929,19 @@ Installs the packages needed for GCS upload benchmarking. Debian 12 enforces PEP
 > [!warning] Cloud SQL service agent is NOT your service account
 >
 > Cloud SQL uses a Google-managed service agent (`service-PROJECT_NUMBER@gcp-sa-cloud-sql.iam.gserviceaccount.com`) to encrypt/decrypt disks. This is NOT the `notebook-sa` we created -- it is an internal agent auto-provisioned by Google when the Cloud SQL API is enabled. It must have `cryptoKeyEncrypterDecrypter` on the KMS key BEFORE the instance is created with `--disk-encryption-key`.
+
+> [!success] Grant the service agent KMS access before creating the instance
+>
+> ```bash
+> # 1. Get the project number
+> PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
+> # 2. Grant cryptoKeyEncrypterDecrypter to the Cloud SQL service agent
+> gcloud kms keys add-iam-policy-binding $KMS_KEY \
+>   --keyring=$KMS_KEYRING --location=$KMS_LOCATION \
+>   --member="serviceAccount:service-${PROJECT_NUMBER}@gcp-sa-cloud-sql.iam.gserviceaccount.com" \
+>   --role="roles/cloudkms.cryptoKeyEncrypterDecrypter"
+> # 3. Only then create the Cloud SQL instance with --disk-encryption-key
+> ```
 
 ```python
 !gcloud kms keys add-iam-policy-binding {KMS_KEY} --keyring={KMS_KEYRING} --location={KMS_LOCATION} --project={PROJECT_ID} --member="serviceAccount:service-{PROJECT_NUMBER}@gcp-sa-cloud-sql.iam.gserviceaccount.com" --role="roles/cloudkms.cryptoKeyEncrypterDecrypter"

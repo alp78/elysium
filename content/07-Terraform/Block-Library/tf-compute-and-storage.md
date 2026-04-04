@@ -1,55 +1,10 @@
 ---
-type: reference
-category: terraform
-technology:
-  - terraform
-  - gcp
 tags: [infrastructure, terraform, iac, gcp]
 aliases:
   - terraform-compute-storage
   - gcp-terraform-blocks
   - tf-gcp-vm
   - tf-gcs-bucket
-keywords:
-  - terraform
-  - gcp
-  - google cloud
-  - compute engine
-  - google_compute_instance
-  - google_compute_disk
-  - google_compute_snapshot
-  - google_compute_resource_policy
-  - google_compute_instance_template
-  - google_compute_instance_group_manager
-  - google_compute_autoscaler
-  - google_compute_attached_disk
-  - google_storage_bucket
-  - google_storage_bucket_iam_member
-  - google_storage_bucket_iam_binding
-  - google_storage_bucket_object
-  - google_storage_notification
-  - persistent disk
-  - pd-ssd
-  - pd-balanced
-  - shielded vm
-  - spot vm
-  - preemptible
-  - managed instance group
-  - autoscaler
-  - lifecycle rule
-  - nearline
-  - coldline
-  - archive
-  - data lake
-  - landing zone
-  - terraform state backend
-  - bucket versioning
-  - uniform bucket access
-  - pub/sub notification
-  - startup script
-  - service account
-  - container-optimized os
-  - ubuntu
 description: >
   Atomic Terraform block library for GCP Compute Engine and Cloud Storage resources.
   Self-contained, heavily commented blocks covering VM instances (database server,

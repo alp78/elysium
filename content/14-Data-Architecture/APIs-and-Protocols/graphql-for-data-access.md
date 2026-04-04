@@ -1,9 +1,4 @@
 ---
-type: reference
-category: data-architecture
-technology:
-  - python
-  - graphql
 tags: [data-architecture, architecture, api, python]
 aliases:
   - GraphQL
@@ -19,39 +14,6 @@ aliases:
   - Apollo
   - Strawberry
   - Ariadne
-keywords:
-  - graphql
-  - gql
-  - query language
-  - schema
-  - resolver
-  - mutation
-  - subscription
-  - introspection
-  - fragment
-  - federation
-  - strawberry
-  - ariadne
-  - apollo
-  - dataloader
-  - n+1 problem
-  - pagination
-  - cursor
-  - relay
-  - overfetching
-  - underfetching
-  - type system
-  - sdl
-  - schema definition language
-  - directive
-  - union
-  - interface
-  - authentication
-  - authorization
-  - data mesh
-  - github api
-  - bigquery
-  - sql resolver
 description: >
   Comprehensive reference on GraphQL for data engineers covering schema
   definition, resolvers, the N+1 problem and DataLoader, Relay-style
@@ -576,6 +538,9 @@ subscription WatchPortfolio($portfolioId: ID!) {
 
 > [!warning] Subscriptions vs. gRPC Streaming
 > GraphQL subscriptions are WebSocket-based and not appropriate for high-throughput data (thousands of events per second). For real-time market data feeds, use [gRPC server streaming](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines) or a message broker from [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture). Use GraphQL subscriptions for user-facing real-time updates at human-readable frequencies.
+
+> [!success] Right Tool for Each Frequency
+> Use GraphQL subscriptions for dashboard-level updates (portfolio value refreshing every few seconds, pipeline status notifications) where human-readable frequency is sufficient. For tick-level market data or high-throughput pipeline events (>100 events/sec), route through gRPC server streaming or a Pub/Sub topic and expose a separate WebSocket or SSE endpoint — keeping the GraphQL API clean for query-oriented use cases.
 
 ---
 
@@ -1885,6 +1850,9 @@ async def wait_for_ci(owner: str, repo: str, branch: str, timeout: int = 600) ->
 > **Teams unfamiliar with the N+1 problem**: An unoptimized GraphQL API can be dramatically slower than REST because of accidental N+1 queries. The DataLoader pattern must be applied diligently. REST endpoints are easier to profile.
 >
 > **Public APIs requiring aggressive HTTP caching**: Because GraphQL queries are typically POST requests with unique query strings, standard HTTP caching (ETags, CDNs) does not apply without specialized tooling like persisted queries. REST APIs on GET endpoints cache naturally.
+
+> [!success] When GraphQL Is the Right Choice
+> GraphQL excels when multiple consumer teams need different projections of the same data — a trading dashboard, a regulatory pipeline, and a Jupyter notebook each compose their own query without requiring new REST endpoints. Pair it with DataLoaders from day one, enable introspection in development and disable in production, and use persisted queries if aggressive HTTP caching is required. For file uploads, use signed GCS URLs and call the GraphQL mutation with the URL only, never the file bytes.
 
 ---
 

@@ -1,7 +1,5 @@
 ---
 tags: [infrastructure, terraform, iac]
-type: reference
-technology: terraform
 status: stable
 updated: 2026-03-23
 description: "Comprehensive catalog of Terraform production problems — 25 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures for data engineering teams on GCP."
@@ -158,6 +156,10 @@ fi
 > [!danger] Deleted Data Is Unrecoverable
 >
 > If `deletion_protection` was NOT enabled and resources are gone, data on deleted Persistent Disks is permanently unrecoverable without snapshots.
+
+> [!success] Safe Pattern — Enable deletion_protection and Scheduled Snapshots
+>
+> Set `deletion_protection = true` on all GCE instances and `lifecycle { prevent_destroy = true }` on GCS buckets and BigQuery datasets. Enable GCS bucket versioning and configure a Cloud Scheduler job to take daily disk snapshots. With snapshots in place, a destroyed VM's data can be restored by creating a new disk from the most recent snapshot.
 
 1. Confirm what was destroyed via Cloud Audit Logs:
 
@@ -410,6 +412,10 @@ echo "Plan check passed: no protected resources destroyed."
 > [!danger] Boot Disk Data May Be Lost
 >
 > If the VM was destroyed and `deletion_protection` was NOT enabled, the boot disk data is gone unless a snapshot existed. Check snapshots immediately.
+
+> [!success] Safe Pattern — Pre-emptive Snapshots Before Risky Operations
+>
+> Before any Terraform operation that touches a VM (`machine_type` change, image update, or zone migration), manually create a disk snapshot: `gcloud compute disks snapshot data-pipeline-sql --zone=europe-west1-b --snapshot-names=pre-change-$(date +%Y%m%d)`. Also set `deletion_protection = true` on all production VMs in Terraform so GCP refuses API-level deletion even if Terraform state is manipulated.
 
 1. Check for existing disk snapshots:
 
@@ -691,6 +697,10 @@ terraform plan  # Should not show a lock error
 
 > [!warning] CI/CD-only applies for production
 > The `terraform-apply.yml` workflow is the ONLY path to apply in production. Engineers must NOT run `terraform apply` locally against prod state. If the workflow is running, wait for it to complete. Do not force-unlock.
+
+> [!success] Safe Pattern — Lock State via CI/CD and Restrict Local Access
+>
+> Store Terraform state in a GCS backend with a separate lock bucket. Grant `roles/storage.objectAdmin` on the state bucket only to the CI service account, not to individual engineers' accounts. For local debugging, run `terraform plan` against a dev workspace only. If a lock must be broken after a confirmed dead process, use `terraform force-unlock <lock-id>` with the specific lock ID from the error message — never unlock blindly.
 
 **Fix procedure**
 

@@ -1,10 +1,6 @@
 ---
-type: concept
-category: sql-server
-technology: [sql-server]
 tags: [sql, sql-server, tsql]
 aliases: [SARGable, search argument, index seek, non-sargable, predicate]
-keywords: [SARGable, search argument, index seek, index scan, predicate, WHERE clause, YEAR function, CAST, CONVERT, LEFT, LIKE, functions on columns, implicit conversion, computed column, query optimization, execution plan, scan vs seek]
 description: "SARGable query patterns that enable SQL Server index seeks vs non-SARGable patterns that force full scans. Includes a complete reference table and fix strategies."
 created: 2026-03-22
 updated: 2026-03-22
@@ -42,6 +38,10 @@ status: complete
 > Same result, index seek instead of scan. This applies to ALL functions:
 > `CAST()`, `CONVERT()`, `UPPER()`, `ISNULL()`, `DATEPART()`.
 
+> [!success] Safe Pattern
+>
+> Move all transformations to the value (right) side of the predicate, never the column side. Replace `WHERE YEAR(trade_date) = @yr` with `WHERE trade_date >= DATEFROMPARTS(@yr, 1, 1) AND trade_date < DATEFROMPARTS(@yr + 1, 1, 1)`. The column stays bare and the index can seek.
+
 ### SARGable vs Non-SARGable — Calculations and Implicit Conversions
 
 | Non-SARGable (Bad) | SARGable (Good) | Why |
@@ -56,6 +56,10 @@ status: complete
 >
 > SARGability Is Not Flagged by SQL Server.
 > SQL Server silently falls back to a full index scan when you wrap a column in a function. There is no warning, no error, and no plan hint. The query returns correct results -- just 100x slower. The only way to detect this is reading the execution plan and looking for Scan operators with a Predicate (not a Seek Predicate).
+
+> [!success] Safe Pattern
+>
+> After writing or reviewing any WHERE clause, open the actual execution plan in SSMS and verify that the index operator shows a **Seek Predicate**, not just a **Predicate**. Add the `sys.dm_exec_query_stats` XML query (below) to the post-deployment checklist to surface non-SARGable predicates from the plan cache.
 
 ---
 
@@ -137,6 +141,10 @@ ON silver.ohlcv_market_index (trade_year);
 >
 > To create an index on a computed column, it must be deterministic. If the expression uses non-deterministic functions, the column must be marked `PERSISTED` — SQL Server stores the computed value physically instead of recalculating on every read. Also, certain SET options (ANSI_NULLS ON, QUOTED_IDENTIFIER ON) must be active when the index is created AND when queries run — pyodbc connections may not set these by default.
 
+> [!success] Safe Pattern
+>
+> Always mark computed columns `PERSISTED` when adding an index on them. In pyodbc, add `ANSI_NULLS=yes;QUOTED_IDENTIFIER=yes;` to the connection string, or execute `SET ANSI_NULLS ON; SET QUOTED_IDENTIFIER ON;` at session start, to ensure the filtered index is eligible for use.
+
 **Option 2: Filtered index (if the predicate is always the same value)**
 
 ```sql
@@ -149,9 +157,17 @@ WHERE YEAR(signal_date) = 2025;
 >
 > The query must use the exact same predicate expression as the filtered index definition. Even logically equivalent rewrites will not match.
 
+> [!success] Safe Pattern
+>
+> When creating a filtered index, document the exact predicate string and add a code-review rule that WHERE clauses targeting that column must match it verbatim. If the query needs a different predicate form, create a separate filtered index or use a computed column approach instead.
+
 > [!warning] Filtered Index SET Option Requirements
 >
 > Filtered indexes require specific SET options active for both creation and query use: ANSI_NULLS ON, ANSI_PADDING ON, ANSI_WARNINGS ON, ARITHABORT ON, CONCAT_NULL_YIELDS_NULL ON, QUOTED_IDENTIFIER ON. If pyodbc or another driver doesn't set these, SQL Server silently ignores the filtered index and falls back to a table scan.
+
+> [!success] Safe Pattern
+>
+> In pyodbc, set all required options at connection time: `cursor.execute("SET ANSI_NULLS, ANSI_PADDING, ANSI_WARNINGS, ARITHABORT, CONCAT_NULL_YIELDS_NULL, QUOTED_IDENTIFIER ON")`. Verify the filtered index is being used by checking the execution plan for the index name in the Seek Predicate after applying these settings.
 
 ---
 
@@ -161,6 +177,10 @@ WHERE YEAR(signal_date) = 2025;
 >
 > Implicit Conversions Cause Full Table Scans with Zero Warnings.
 > When `pyodbc` sends an `NVARCHAR` parameter against a `VARCHAR` column, SQL Server silently converts every row in the table to `NVARCHAR` for comparison. This means: correct results, zero errors, but a full clustered index scan on every query. A table with 50M rows that used to seek in 2ms now scans for 8 seconds. The execution plan shows a `PlanAffectingConvert` warning, but only if you look for it.
+
+> [!success] Safe Pattern
+>
+> In pyodbc, call `conn.setencoding(encoding='utf-8')` and `conn.setdecoding(pyodbc.SQL_CHAR, encoding='utf-8')` on the connection, or cast the parameter in SQL: `WHERE symbol = CAST(? AS VARCHAR(12))`. In C# Dapper, use `new DbString { Value = val, IsAnsi = true, Length = 12 }` for `VARCHAR` columns to prevent the default `NVARCHAR` mapping.
 
 The most common silent performance killer in Python-to-SQL pipelines. Python's `pyodbc` sends parameters as `NVARCHAR` by default, but SQL columns may be `VARCHAR`. This forces a per-row conversion and prevents index seeks.
 
@@ -201,6 +221,10 @@ cursor.executemany("INSERT INTO ...", rows)
 > [!warning] Parameter Sniffing Interaction
 >
 > A SARGable predicate with a parameterized query can still perform poorly if SQL Server "sniffs" an atypical parameter value on the first execution and caches a plan optimized for that value. Subsequent executions with typical values use the misoptimized plan. Monitor with `sys.dm_exec_query_stats` and consider `OPTION (RECOMPILE)` for volatile parameter distributions.
+
+> [!success] Safe Pattern
+>
+> For stored procedures with highly skewed parameter distributions (e.g., flagship index with 8,000 rows vs boutique index with 12 rows), add `OPTION (RECOMPILE)` to the query or use `OPTION (OPTIMIZE FOR UNKNOWN)` to prevent the optimizer from sniffing any single value. Enable Query Store to detect plan regressions after the first atypical execution.
 
 At-a-glance reference for common predicate patterns — use this when reviewing WHERE clauses in pipeline SQL.
 

@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet]
 tags: [csharp, performance, testing]
 aliases: [performance profiling, code quality, Stopwatch, BenchmarkDotNet, Span, nullable reference types]
-keywords: [Stopwatch, BenchmarkDotNet, GC.GetTotalMemory, Span, stackalloc, ArrayPool, LINQ performance, Roslyn Analyzers, nullable reference types, code smells, Big-O]
 description: "C# performance and code quality reference with executable examples and cell outputs — covers timing, memory measurement, Span<T>, Big-O, LINQ pitfalls, code smells, and static analysis. See [19_py_performance_quality](https://alp78.github.io/elysium/02-Programming-Languages/Python/19_py_performance_quality) for the Python equivalent."
 created: 2026-03-24
 updated: 2026-03-24
@@ -317,6 +313,9 @@ try {
 > 11. **`dynamic` when static types exist** — bypasses all type checking. Use generics or interfaces.
 > 12. **Ignoring CA/IDE warnings** — Roslyn analyzers exist for a reason. Fix warnings, don't suppress blindly.
 
+> [!success] Production-safe alternatives
+> Use `StringBuilder` for concatenation, `using` for all `IDisposable` resources, `async Task` for all async methods, and `await` instead of `.Result`/`.Wait()`. Store secrets in `IConfiguration`, user-secrets, or Key Vault. Register `IHttpClientFactory` in DI and use pattern-matched `is` checks over `GetType()` comparisons.
+
 ```csharp
 // BAD: resource leak if exception occurs
 // var conn = new SqlConnection(connString);
@@ -340,6 +339,9 @@ try {
 > 5. **Deep inheritance** — prefer composition over inheritance
 > 6. **Service locator** — hidden dependency. Use constructor injection
 > 7. **Boolean parameters** — `Process(data, true, false, true)` → use enums or named params
+
+> [!success] Refactoring to clean code
+> Apply SRP to split large classes, introduce value objects for domain primitives (e.g., `record Email`), replace magic literals with `enum`, and use constructor injection throughout. Roslyn analyzers (CA rules) flag most of these automatically — treat warnings as errors in CI.
 
 ```csharp
 record Email {
@@ -431,6 +433,9 @@ result ?? "(null)"  // chained
 > - **`OrderBy().First()`** — sorts everything to get one item. Use `MinBy()`
 > - **Deferred execution** — `.Where()` doesn't execute until consumed. Returning deferred queries causes multiple enumerations
 > - **Closure allocations** — lambdas capture variables, allocating on heap
+
+> [!success] LINQ best practices
+> Materialize with `ToList()` or `ToArray()` before reuse, use `.Any()` over `.Count() > 0`, replace `OrderBy().First()` with `MinBy()`/`MaxBy()`, and prefer manual loops for hot paths where allocations matter. Profiling with BenchmarkDotNet confirms the right trade-off.
 
 ```csharp
 var data = Enumerable.Range(0, 100_000).ToList();

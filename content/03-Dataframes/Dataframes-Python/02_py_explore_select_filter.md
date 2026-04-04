@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - python
-  - pandas
-  - polars
 tags: [pipeline, python, pandas, polars]
 aliases:
   - head, tail, describe, info, select, filter, isin, where
-keywords: [head, tail, describe, info, shape, dtypes, select, filter, isin, between, query, loc, iloc]
 description: "Pandas/Polars DataFrame reference 02/10 — Explore, Select & Filter (head/tail, describe, column selection, row filtering). Side-by-side executable examples with cell outputs."
 created: 2026-03-24
 updated: 2026-03-24
@@ -5883,6 +5876,10 @@ ohlcv_pl.head(3)
 >
 > Polars has no chained indexing — all operations return new DataFrames, eliminating this
 > entire class of bugs.
+
+> [!success] Use .loc[] for all conditional assignment in Pandas
+>
+> Replace any chained write (`df[mask]["col"] = val`) with a single `.loc[]` call: `df.loc[df["close"] > 50, "close"] = 0`. In Pandas 3+, Copy-on-Write is the default and chained assignment raises a hard error — migrating to `.loc[]` now is future-proof. In Polars, use `pl.when(condition).then(value).otherwise(pl.col("col"))` inside `with_columns`.
 
 ### Pandas Boolean Indexing — bracket notation filtering
 

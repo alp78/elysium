@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: sql-server
-technology: [sql-server]
 tags: [sql, sql-server, tsql]
 aliases: [SQL Server restore, point-in-time recovery, PITR, RESTORE DATABASE, NORECOVERY, STOPAT, restore to new database]
-keywords: [restore, RESTORE DATABASE, RESTORE LOG, NORECOVERY, RECOVERY, REPLACE, STOPAT, point-in-time recovery, PITR, full restore, differential restore, log restore, side-by-side restore, MOVE, disaster recovery, crash recovery]
 description: "How to restore a SQL Server database from backup including full restore, point-in-time recovery (PITR) with log replaying, and restoring to a new database for side-by-side comparison."
 created: 2026-03-22
 updated: 2026-03-22
@@ -41,6 +37,10 @@ WITH REPLACE, RECOVERY;
 > [!warning] REPLACE Destroys Existing Data
 >
 > `WITH REPLACE` overwrites the existing database without confirmation. Ensure you are targeting the correct database and server before running. Consider a side-by-side restore first if you are uncertain.
+
+> [!success] Restore to a New Name First
+>
+> When uncertain, restore to `analytics_db_verify` using `WITH MOVE` (see Side-by-Side section below) before overwriting production. Verify the data looks correct, then drop the test database and proceed with `WITH REPLACE` on the production target. This costs a few extra minutes and avoids an unrecoverable mistake.
 
 ---
 

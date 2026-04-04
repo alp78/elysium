@@ -1,10 +1,6 @@
 ---
-type: concept
-category: gcp
-technology: [gcp, compute-engine]
 tags: [infrastructure, gcp, compute-engine]
 aliases: [Compute Engine VM lifecycle, VM start stop, VM resize, VM machine types, GCE lifecycle]
-keywords: [compute engine, VM, virtual machine, start, stop, reset, resize, machine type, e2, n2, c2, m2, right-sizing, scheduling, resource policy, instance schedule, cost optimization, RUNNING, STOPPED, TERMINATED]
 description: "How to manage Compute Engine VM lifecycle operations — start, stop, reset, resize machine types, schedule start/stop windows, and right-size VMs using monitoring data."
 created: 2026-03-22
 updated: 2026-03-22
@@ -46,6 +42,10 @@ gcloud compute instances reset data-pipeline-sql --zone=europe-west1-b
 > [!warning] Disk Charges Continue When Stopped
 >
 > Stopping a VM eliminates compute charges but disk storage charges continue. For VMs you need to stop long-term, consider snapshotting the disk and deleting the VM entirely — then recreating from the snapshot when needed.
+
+> [!success] Snapshot and Delete for Long-Term Suspension
+>
+> For VMs idle for more than a few days, create a snapshot with `gcloud compute disks snapshot`, then delete the VM and its disk. Recreate from the snapshot when needed. This eliminates both compute and disk charges for the suspension period.
 
 ### Resizing a VM by Changing Machine Type
 

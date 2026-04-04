@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - csharp
-  - dotnet
-  - polars
 tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - lazy evaluation, query optimization, benchmarks
-keywords: [lazy, collect, scan_csv, scan_parquet, query plan, optimization, streaming, benchmark, performance]
 description: "Polars.NET / C# DataFrames reference 06/10 — Lazy API & Performance (lazy/collect, query plan, benchmarks). Executable examples with cell outputs. See [06_py_lazy_performance](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/06_py_lazy_performance) for the Python equivalent."
 created: 2026-03-27
 updated: 2026-03-27

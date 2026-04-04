@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet, gcp]
 tags: [csharp, gcp, pipeline, streaming]
 aliases: [Streaming CSharp, Real-Time Data CSharp, WebSocket, SSE, Pub/Sub]
-keywords: [streaming, real-time, WebSocket, SSE, server-sent events, Pub/Sub, Firestore listener, ClientWebSocket, HttpClient, latency, throughput, MFT, Transfer Service]
 description: "C# streaming and real-time data reference — WebSocket, SSE, Pub/Sub, Firestore listeners, and latency benchmarks. See [24_py_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/Python/24_py_streaming_realtime) for the Python equivalent."
 created: 2026-03-28
 updated: 2026-03-28

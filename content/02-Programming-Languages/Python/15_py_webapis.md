@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python]
 tags: [api, python]
 aliases: [REST API, HTTP client, web server, FastAPI, ASP.NET, Flask, minimal API, requests]
-keywords: [requests, FastAPI, Flask, httpx, REST, HTTP, JSON, authentication, middleware, routing]
 description: "Python web and APIs reference with executable examples and cell outputs — covers HTTP clients with requests/httpx, REST API building with FastAPI and Flask, and authentication patterns. See [15_cs_webapis](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/15_cs_webapis) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -48,6 +44,12 @@ One function per HTTP method: `requests.get/post/put/delete`. `params=` for quer
 > - **No timeout** — `requests` has no default timeout; always pass `timeout=`
 > - **New session per request** — use `requests.Session()` for connection reuse
 > - **Hardcoded API keys** — use env vars or secret managers
+
+> [!success] Best practices for requests
+>
+> - Always set `timeout=(connect_timeout, read_timeout)` — e.g., `timeout=(5, 30)` to avoid hanging pipelines
+> - Reuse `requests.Session()` across calls to the same host for connection pooling and shared headers
+> - Load API keys from environment variables or a secrets manager; never commit them to source control
 
 ```python
 resp = requests.get("https://httpbin.org/get", params={"ticker": "AAPL", "date": "2024-03-15"})
@@ -182,6 +184,10 @@ with httpx.Client(base_url="https://httpbin.org", timeout=10.0) as client:
 > data APIs reject bursts above 5-10 req/s. Use `asyncio.Semaphore(5)` to cap concurrency.
 > See [13_py_advancedpipelines](https://alp78.github.io/elysium/02-Programming-Languages/Python/13_py_advancedpipelines) for the full rate-limited pattern.
 
+> [!success] Gate concurrent requests with a Semaphore
+>
+> Wrap the fetch inside `async with asyncio.Semaphore(n):` to cap concurrent connections. For free-tier financial APIs (e.g., Twelve Data 8 req/min), use `Semaphore(3)` combined with `asyncio.sleep(0.5)` between batches. See [13_py_advancedpipelines](https://alp78.github.io/elysium/02-Programming-Languages/Python/13_py_advancedpipelines) for the complete pattern.
+
 ```python
 # Async — fetch multiple tickers concurrently
 # Financial example: fetch quotes for 6 tickers in parallel
@@ -288,6 +294,12 @@ Three essential patterns for API integrations: **pagination** loops through page
 > - **Linear retry (no backoff)** — hammers the failing service
 > - **One POST per record** — N round trips instead of 1
 
+> [!success] Robust REST integration patterns
+>
+> - Add a `max_pages` guard to pagination loops to prevent infinite loops on broken APIs
+> - Use exponential backoff (`delay = base * 2 ** attempt`) with a cap (e.g., 60s) and honour `Retry-After` headers
+> - Batch records into bulk POSTs (100-1000 items) to reduce round trips by 2-3 orders of magnitude
+
 ```python
 def fetch_paginated(base_url, endpoint, page_size=100):
     all_records = []
@@ -376,6 +388,12 @@ Define Pydantic models for request/response validation. `@app.get`/`post`/`delet
 > - **Business logic in route handlers** — extract to service functions
 > - **In-memory storage in production** — use a database
 > - **No input validation** — Pydantic handles types, but add business rules too
+
+> [!success] Clean FastAPI architecture
+>
+> - Keep route handlers thin: validate with Pydantic, delegate to a service function, return the response
+> - Use a real database (PostgreSQL, BigQuery, Cloud Spanner) for persistence — in-memory dicts are for prototyping only
+> - Add `@field_validator` and `@model_validator` to Pydantic models for business rules (e.g., `end_date > start_date`, valid ticker format)
 
 ```python
 # Pydantic models — like C# record types

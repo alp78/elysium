@@ -1,10 +1,6 @@
 ---
-type: concept
-category: gcp
-technology: [gcp, bigquery, gcs]
 tags: [infrastructure, bigquery, gcp]
 aliases: [BigQuery load, bq load, BigQuery export, bq extract, time travel, BigQuery GCS load, Parquet BigQuery]
-keywords: [bq load, bq extract, CSV, Parquet, AVRO, ORC, NEWLINE_DELIMITED_JSON, GCS, hive partitioning, autodetect schema, time travel, FOR SYSTEM_TIME AS OF, restore, bq cp, compression, GZIP, export, data loading, ingestion]
 description: "How to load data into BigQuery from GCS using CSV, Parquet, and other formats — including hive-partitioned layouts — and export BigQuery tables back to GCS. Also covers BigQuery time travel for querying and restoring historical data."
 created: 2026-03-22
 updated: 2026-03-22
@@ -44,6 +40,10 @@ bq load --source_format=PARQUET project_data.ohlcv gs://data-pipeline-bucket/exp
 >
 > `--autodetect` Infers Schema from a Sample and Can Be Wrong.
 > `--autodetect` reads the first 500 rows of a CSV to infer types. If row 501 has a longer string or a different date format, the load fails or silently truncates data. For production loads, always define an explicit schema with `--schema` or a JSON schema file. Parquet avoids this entirely because the schema is embedded in the file.
+
+> [!success] Specify an Explicit Schema for CSV Loads
+>
+> Pass `--schema` or a `schema.json` file to `bq load` for all CSV loads in production. This eliminates sampling ambiguity entirely. For new pipelines, switch to Parquet — the schema is embedded in the file and `--autodetect` is never needed.
 
 > [!tip] Use Parquet for Production
 >
@@ -112,6 +112,10 @@ bq cp project_data.ohlcv@-86400000 project_data.ohlcv_restored
 >
 > Time Travel Has a 7-Day Hard Limit.
 > If a table was dropped or corrupted more than 7 days ago, time travel data is permanently gone. For critical tables, extend the time travel window to the maximum (7 days is the default, configurable up to 7 days for Standard edition). For longer retention, set up scheduled table snapshots or export to GCS on a regular cadence. Once a table is deleted and 7 days pass, there is no recovery path.
+
+> [!success] Supplement Time Travel with Snapshots and GCS Exports
+>
+> Set `max_time_travel_hours = 168` on all critical tables and add a scheduled `CREATE SNAPSHOT TABLE` job for long-term audit retention. Export to GCS via `bq extract` on a regular cadence so recovery beyond 7 days is always possible.
 
 > [!tip] Related pattern
 >

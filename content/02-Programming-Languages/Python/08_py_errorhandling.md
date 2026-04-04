@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python]
 tags: [python]
 aliases: [exceptions, try catch, error handling, custom exceptions, exception hierarchy]
-keywords: [try, except, finally, raise, Exception, BaseException, custom exception, logging, contextmanager]
 description: "Python error handling reference with executable examples and cell outputs — covers try/except/finally, exception hierarchy, custom exceptions, re-raising, and context managers. See [08_cs_errorhandling](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/08_cs_errorhandling) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -30,6 +26,10 @@ Wrap risky code in `try:` and catch specific exception types with `except Except
 > - **`except Exception` with `pass`** — silently swallows all errors
 > - **Exceptions for flow control** — slow; use `if`/`else` instead
 
+> [!success] Always catch specific exception types and log with traceback
+>
+> Use `except ValueError as e:` (never bare `except:`). Log with `logging.exception("msg")` or `logging.error("msg", exc_info=True)` to preserve the full stack trace. Reserve `except Exception` only for top-level handlers that re-raise or report.
+
 ```python
 # Basic try/except — wrap risky code in try; except handles specific exception types
 from dataclasses import dataclass, field
@@ -53,9 +53,17 @@ except IndexError as e:
 >
 > A bare `except:` (no exception type) catches *everything* including `KeyboardInterrupt` and `SystemExit`, making your program impossible to kill with Ctrl+C. Always catch `Exception` at broadest, and only when you re-raise or log.
 
+> [!success] Name the exception type in every except clause
+>
+> Replace `except:` with `except Exception as e:` at a minimum. At narrow handlers, be even more specific: `except ValueError:`, `except FileNotFoundError:`. This allows `KeyboardInterrupt` and `SystemExit` to propagate normally.
+
 > [!warning] Always use exc_info=True
 >
 > `logging.error(f"Failed: {e}")` loses the traceback. Use `logging.exception("msg")` or `logging.error("msg", exc_info=True)` to capture the full stack trace in logs. Without the traceback, production debugging is nearly impossible.
+
+> [!success] Use logging.exception() inside every except block
+>
+> `logging.exception("Pipeline failed")` is the one-liner that logs the message AND the full stack trace automatically. Use it inside `except` blocks in all production code. It is equivalent to `logging.error("msg", exc_info=True)`.
 
 #### Multiple except clauses — handle different exception types differently
 
@@ -64,6 +72,10 @@ Handle different exception types with different recovery strategies. Python eval
 > [!danger] Bare except catches everything
 >
 > `except:` without a type catches ALL exceptions including `KeyboardInterrupt` and `SystemExit`, making your program impossible to kill. Always specify the exception type: `except ValueError:`. At broadest, use `except Exception:`.
+
+> [!success] Order except clauses from most specific to most general
+>
+> Place `except ValueError:` before `except Exception:`. Python executes the first matching clause — if `Exception` comes first it swallows everything. End with `except Exception as e:` only as a fallback that logs and optionally re-raises.
 
 ```python
 # Multiple except clauses — match most specific exception first
@@ -156,6 +168,10 @@ process_with_cleanup(True)
 > Always use `raise ... from e` when wrapping exceptions
 > Plain `raise NewException("msg")` inside an `except` block sets `__context__` (implicit chaining) but not `__cause__`. Use `raise NewException("msg") from e` to explicitly link the cause. Use `raise ... from None` to deliberately suppress the chain when internal details should be hidden from callers.
 
+> [!success] Use raise ... from e to preserve the root cause
+>
+> `raise PipelineError("stage failed") from e` sets `e.__cause__` explicitly, giving debuggers and log parsers the full chain. When you want to hide implementation details from callers (e.g., database errors exposed as API errors), use `raise PublicError("msg") from None`.
+
 ```python
 # raise from — exception chaining preserving the original cause
 
@@ -203,6 +219,10 @@ except RuntimeError as e:
 >     ├── ArithmeticError   (ZeroDivisionError, OverflowError)
 >     └── OSError           (FileNotFoundError, PermissionError)
 > ```
+
+> [!success] Catch Exception, not BaseException
+>
+> `except Exception as e:` is the safe broadest catch — it excludes `SystemExit`, `KeyboardInterrupt`, and `GeneratorExit`. This lets Ctrl+C and interpreter shutdown work normally. Use `except BaseException` only in frameworks that must intercept process termination signals.
 
 ```python
 # Exception properties — args, __cause__, __traceback__
@@ -410,6 +430,10 @@ The `with` statement guarantees cleanup even if an exception occurs. `with open(
 >
 > - **Manual `try`/`finally`** when `with` is available — more verbose, easier to forget
 > - **Not closing** files, connections, or cursors — resource leaks
+
+> [!success] Use with for all resource acquisition
+>
+> Any object with `__enter__`/`__exit__` (files, DB connections, locks, thread pools) should be opened with `with`. Nest multiple resources in one statement: `with open(src) as f1, open(dst, 'w') as f2:` — both are closed even if an exception occurs inside the block.
 
 ```python
 # with statement — calls __enter__ on start, __exit__ on end (even on exception)
@@ -661,6 +685,10 @@ An `ExceptionGroup` bundles multiple exceptions into a single object, raised wit
 > [!warning] except* is Python 3.11+ only
 >
 > `ExceptionGroup` and `except*` syntax require Python 3.11 or later. On older versions, use a list of caught exceptions manually (the error accumulation pattern above).
+
+> [!success] Guard ExceptionGroup with a version check
+>
+> Wrap `ExceptionGroup` usage in `if sys.version_info >= (3, 11):` to keep code backward compatible. For older runtimes, the error accumulation pattern (collect errors into a list, report at the end) achieves the same result without the 3.11 dependency.
 
 ```python
 # ExceptionGroup — aggregate multiple exceptions (Python 3.11+)

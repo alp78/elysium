@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet, gcp]
 tags: [csharp, gcp, pipeline, sql, bigquery]
 aliases: [Data Ingestion CSharp, SQL Server Bulk Insert, BigQuery Load]
-keywords: [ingestion, SqlBulkCopy, BigQuery load, Firestore batch, GCS, CSV, Parquet, ADO.NET, Google.Cloud.BigQuery, benchmark, throughput, latency]
 description: "C# data ingestion reference — bulk loading into SQL Server, BigQuery, and Firestore from local and GCS sources with performance benchmarks. See [23_py_data_ingestion](https://alp78.github.io/elysium/02-Programming-Languages/Python/23_py_data_ingestion) for the Python equivalent."
 created: 2026-03-28
 updated: 2026-03-28

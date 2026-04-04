@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python]
 tags: [python]
 aliases: [file IO, JSON serialization, CSV, file reading, file writing, serialization, deserialization]
-keywords: [open, read, write, json, csv, pickle, pathlib, shutil, os.path, serialization]
 description: "Python file I/O and serialization reference with executable examples and cell outputs — covers file reading/writing, JSON, CSV, pickle, and pathlib. See [09_cs_fileio_serialization](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/09_cs_fileio_serialization) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -76,14 +72,26 @@ html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 > - `'w'` mode truncates existing files immediately — no undo
 > - Omitting `encoding=` causes platform-dependent behavior
 
+> [!success] Always open files with with and explicit encoding
+>
+> Use `with open(path, "r", encoding="utf-8") as f:` for all text files. The `with` block guarantees the file handle is closed on both success and exception. Specifying `encoding="utf-8"` makes behavior identical across Windows, Linux, and macOS.
+
 > [!danger] Omitting encoding= causes platform-dependent behavior
 >
 > On Windows, `open()` defaults to `cp1252` (not UTF-8). A file written on Linux (UTF-8) and read on Windows (cp1252) silently corrupts non-ASCII characters like accented names, currency symbols, and emoji. Always pass `encoding='utf-8'` explicitly.
+
+> [!success] Pass encoding='utf-8' on every open() call
+>
+> Treat `encoding='utf-8'` as a required argument, not an optional one. Set it as a team convention or lint rule (`flake8-bugbear B019`). For source files that must be portable, use `pathlib.Path.read_text(encoding="utf-8")` which enforces the encoding at the call site.
 
 > [!warning] Windows newline translation silently corrupts
 >
 > Windows newline translation silently corrupts binary-like text
 > Python's text mode translates `\n` to `\r\n` on Windows. For CSV files, this causes double-newlines (blank rows) unless you pass `newline=""` to `open()`. For binary formats (Parquet, Avro, images), always use `'rb'`/`'wb'` mode.
+
+> [!success] Pass newline='' for CSV, use binary mode for all other formats
+>
+> For CSV: `open(path, "w", newline="", encoding="utf-8")` — the `csv` module handles its own newlines. For Parquet, Avro, images, and compressed files: `open(path, "wb")` — no encoding argument, no newline translation.
 
 #### tempfile.mkdtemp — create isolated temp directory
 
@@ -117,6 +125,10 @@ f"{staging_file.stat().st_size} bytes"  # Size — .stat() returns file metadata
 > [!warning] Write Mode Overwrites Silently
 >
 > `'w'` mode destroys existing content without warning. `f.write()` does NOT add a newline — you must add `\n` yourself.
+
+> [!success] Use 'x' mode or check existence before writing critical files
+>
+> To prevent accidental overwrites of important output files, use `open(path, "x")` (exclusive create — fails if the file exists) or check `Path(path).exists()` first. For log/audit files that must be preserved, always use append mode `"a"` instead of `"w"`.
 
     C:\Users\aperi\AppData\Local\Temp\fileio_yk2nuyou\pipeline_output.txt
     98 bytes
@@ -300,6 +312,10 @@ The `csv` module handles quoting, escaping, and delimiters automatically. `csv.r
 > - **Never use `split(',')`** — breaks on quoted commas. Always use the `csv` module.
 > - **Avoid positional indexing** with `csv.reader` — fragile if columns reorder. Use `DictReader` instead.
 > - **For large CSV (>100MB)** — use pandas, Polars, or DuckDB instead of the built-in module.
+
+> [!success] Use DictReader/DictWriter and always pass newline=''
+>
+> `csv.DictReader` accesses columns by name, so column reordering never breaks the code. Always open CSV files with `newline=""` on Windows to prevent the csv module from adding extra blank lines. For files over 100 MB, switch to `polars.read_csv()` for 5-10x faster parsing.
 
 #### csv.writer — write CSV rows as lists
 
@@ -615,6 +631,10 @@ f"Source: {loaded['source']['dataset']}.{loaded['source']['table']}"
 > `json.dumps()` raises `TypeError` on datetime, Decimal, set, bytes, and dataclasses
 > The built-in JSON encoder only handles `dict`, `list`, `str`, `int`, `float`, `bool`, and `None`. Any other type raises `TypeError: Object of type X is not JSON serializable`. Always provide a `default=` handler or use `orjson` which handles these natively.
 
+> [!success] Provide a default= handler or switch to orjson
+>
+> For stdlib json: pass `default=json_serializer` where `json_serializer` handles `datetime`, `Decimal`, `set`, and dataclasses. For high-throughput pipelines, use `orjson.dumps()` which natively serializes `datetime`, `numpy` arrays, and dataclasses without a custom handler.
+
 ```python
 # Custom serializer for types json can't handle natively
 
@@ -699,6 +719,10 @@ with open(jsonl_file, "r", encoding="utf-8") as f:
 > [!danger] Never use yaml.load() without SafeLoader
 >
 > Never use `yaml.load()` without `SafeLoader` — security risk. Always use `yaml.safe_load()`.
+
+> [!success] Always use yaml.safe_load() for all YAML parsing
+>
+> `yaml.safe_load()` restricts deserialization to standard Python types (dict, list, str, int, float, bool, None). It blocks `!!python/object` tags that allow arbitrary code execution. The safe variant handles all legitimate config YAML with no functional difference.
 
 ```python
 tmp_dir = Path(tempfile.mkdtemp(prefix="yaml_"))
@@ -875,6 +899,10 @@ Serialization converts in-memory objects to bytes/string. JSON for text intercha
 > [!danger] Never unpickle data from untrusted sources
 >
 > Never unpickle data from untrusted sources — arbitrary code execution risk.
+
+> [!success] Restrict pickle to trusted internal caches only
+>
+> Use pickle only for caching Python objects between runs of the same codebase (ML model artifacts, Airflow XCom between known tasks). For any data crossing a process or service boundary, use JSON, Avro, or Protobuf — all of which are safe to deserialize from untrusted input.
 
 ```python
 tmp_dir = Path(tempfile.mkdtemp(prefix="serial_"))
@@ -1053,6 +1081,10 @@ type(run2)  # Type
 > [!danger] Pickle Executes Arbitrary Code
 >
 > pickle can serialize almost any Python object. But NEVER unpickle data from untrusted sources — a crafted payload can execute arbitrary code including `os.system('rm -rf /')`.
+
+> [!success] Audit all pickle.loads() call sites in the codebase
+>
+> Search for `pickle.loads` and `pickle.load` in the codebase. Verify each call site reads from a local file or in-process object you wrote, not from a network socket, database column, or user-supplied input. Replace cross-service serialization with JSON or Protobuf.
 
 ```python
 # pickle.dumps / pickle.loads — serialize any Python object to bytes

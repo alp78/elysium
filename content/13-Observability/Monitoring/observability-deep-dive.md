@@ -1,10 +1,6 @@
 ---
-type: concept
-category: observability
-technology: [datadog, python, sql-server, great-expectations, polars]
 tags: [monitoring, observability, python, sql, datadog, polars]
 aliases: [DataDog pipeline monitoring, data lineage, data catalog, data quality framework, schema drift, data drift, entitlement, Great Expectations, data freshness]
-keywords: [datadog, observability, metrics, logs, traces, APM, statsd, data freshness, data lineage, data catalog, data quality, schema drift, data drift, kolmogorov-smirnov, KS test, great expectations, OpenMetadata, DataHub, Google Data Catalog, Unity Catalog, data entitlement, RBAC, pipeline SLA, monitoring, alerting, completeness, accuracy, uniqueness, validity, consistency, drift detection, pipeline health, SQL Server monitoring]
 description: "Observability deep dive for data engineering: DataDog custom metrics and APM traces for pipeline health, data freshness tracking, data lineage implementation, data catalog tooling, data quality frameworks (Great Expectations + SQL checks), and automated schema and statistical drift detection for financial pipelines."
 created: 2026-03-22
 updated: 2026-03-22
@@ -27,6 +23,10 @@ Observability in data engineering is not just "monitoring with a fancier name." 
 > [!warning] Financial Data Stakes
 > In financial indexing, a monitoring gap is not just an operational inconvenience — it can result in incorrect index values published to the market, incorrect ETF NAVs, failed rebalancing trades, and regulatory scrutiny. Observability at this level is a compliance requirement, not an engineering nicety.
 
+> [!success] Treat observability as a pipeline deliverable
+>
+> Instrument every pipeline stage at design time: push row counts, freshness metrics, and quality check results as custom metrics on every run. Add a pre-publication quality gate that halts the pipeline and pages on-call if any critical check fails, preventing incorrect values from reaching downstream consumers.
+
 ---
 
 ### The Three Pillars (Metrics, Logs, Traces) Applied to Data Pipelines
@@ -48,6 +48,10 @@ Most data teams have metrics and logs but lack traces. Without traces, debugging
 
 > [!warning] Metrics Without Context Are Noise
 > A metric that says "pipeline duration = 47 minutes" is useless without context. Is 47 minutes normal? Was it 12 minutes yesterday? Did it spike because of a slow upstream API or because the MERGE hit 10x more rows than usual? Always pair metrics with baselines and dimensional tags (stage name, index key, date) so alerts carry actionable context.
+
+> [!success] Add dimensional tags and baselines to every metric
+>
+> Emit every pipeline metric with tags for `stage`, `index_key`, and `run_date`. Store a 7-day rolling average in a summary table or use Cloud Monitoring's anomaly detection policies to alert on percentage deviation rather than fixed thresholds. This makes every alert self-describing and immediately actionable.
 
 ---
 
@@ -175,6 +179,10 @@ Data freshness is the single most important metric for a data pipeline. It answe
 > [!danger] Stale Data in Financial Indexing
 > A stale gold layer in a financial index pipeline means the published index value is based on yesterday's prices. If an ETF tracking the index rebalances based on stale weights, trades execute at incorrect allocations. The correction cost scales with AUM — a 0.1% allocation error on a $1B ETF is $1M of tracking error. Freshness monitoring with automatic halt-before-publish is not optional.
 
+> [!success] Implement a pre-publication freshness gate
+>
+> Query `pipeline.data_freshness` before every index publication run. If `freshness_sec` exceeds the SLA for any critical table, abort the publication step and page on-call. Push `pipeline.data_freshness_seconds` as a custom metric to DataDog or Cloud Monitoring so the SLA breach also triggers an alert with full context.
+
 ### SQL Implementation: Freshness Tracking Table
 
 #### Create a freshness tracking table with a computed freshness column
@@ -237,6 +245,10 @@ For a regulated financial index, an auditor may ask: "Show me exactly how the EU
 
 > [!warning] Lineage Gaps Are Invisible Until an Audit
 > If your lineage graph has gaps (stages not logged), you won't notice until someone asks "how was this number calculated?" and you can't answer. The most common gap: Python scripts that load data outside of dbt — these don't appear in the dbt lineage graph unless you manually log them.
+
+> [!success] Log lineage for every non-dbt pipeline stage
+>
+> Insert a row into `pipeline.lineage` at the end of every Python loader, SQL Agent job, and custom transform script. Capture `run_id`, `source_table`, `target_table`, `transform_type`, `source_rows`, `target_rows`, and `sql_hash`. This closes the lineage gap for stages outside dbt and gives a complete audit trail when an investigator traces a value back to source.
 
 ### Column-Level Lineage for an Index Calculation
 
@@ -329,6 +341,10 @@ Data entitlement goes beyond standard RBAC. In index providers, access control i
 > [!danger] Pre-Announcement Data Leakage
 > Index reconstitution decisions (which stocks enter/exit the index) are market-moving information. If a data engineer with gold-layer access queries `reconstitution_candidates` before the official announcement date, that constitutes potential insider trading exposure — even if the query was for debugging. Entitlement rules must enforce time-based access: reconstitution tables are restricted until T+0 (announcement date).
 
+> [!success] Enforce time-based access controls on reconstitution tables
+>
+> Grant SELECT on `gold.reconstitution_candidates` only to the `index_analyst` role, and add a row-level security predicate that filters out rows where `announcement_date > CAST(GETDATE() AS DATE)`. Log all access to this table via SQL Server Audit. Review the access log monthly to confirm no queries were issued before announcement date.
+
 > [!info] Entitlement Dimensions for Financial Data
 > - **Role-based** — data_consumer vs data_engineer vs compliance_auditor
 > - **Schema-based** — gold layer is read-only for consumers; bronze/silver require engineer role
@@ -393,6 +409,10 @@ The six dimensions below form the standard framework for data quality assessment
 
 > [!warning] The Hardest Dimension: Accuracy
 > Completeness, uniqueness, and validity can be checked with SQL alone. Accuracy requires an *external reference* — you need a second source of truth to compare against. For financial data, this means cross-referencing your calculated index value against a published benchmark, or comparing your ingested prices against a second data vendor. Without a reference, you can only check that data *looks reasonable*, not that it's *correct*.
+
+> [!success] Implement shadow calculation for accuracy validation
+>
+> Run a shadow calculation engine in parallel with the production engine using a second data vendor as the input source. Compare the two index levels daily and store the divergence in `dbo.oversight_signoff`. Alert if divergence exceeds 1 basis point. This is the only reliable accuracy check for a financial index — it replaces the missing external reference with a fully independent calculation path.
 
 #### Automated data quality checks stored in pipeline.quality_checks
 
@@ -523,6 +543,10 @@ Schema drift occurs when the *structure* of incoming data changes without the pi
 > [!danger] The Silent NULL Problem
 > When a source renames `adj_close` to `adjusted_close`, a pipeline that maps by column name will load NULLs into `adj_close` (the column exists in the target but has no matching source data). No error is thrown. The pipeline reports success. Downstream calculations silently use NULL values, which in many SQL aggregations are simply ignored — producing numerically plausible but wrong results. Schema drift detection before loading is the only defense.
 
+> [!success] Run schema drift detection before every load
+>
+> Call `detect_schema_drift()` on the incoming DataFrame before writing to the warehouse. Raise `RuntimeError` on any CRITICAL drift (COLUMN_MISSING). Log HIGH and LOW drifts to a `pipeline.drift_monitor` record. Never load a DataFrame that has a missing critical column — fail fast and page on-call rather than silently propagating NULLs.
+
 #### Python function to detect schema drift against a reference schema
 
 ```python
@@ -617,6 +641,10 @@ Statistical drift detection compares the *distribution* of today's data against 
 > - **Seasonality** — volume spikes on options expiration days, year-end rebalancing, and earnings seasons are predictable but look anomalous to a naive baseline.
 >
 > Use drift detection as an *early warning signal*, not an automated halt. A human must decide whether a CRITICAL drift alert is a data error or a genuine market event.
+
+> [!success] Tune thresholds per asset class and add market-event context
+>
+> Maintain separate Z-score and KS thresholds per asset class (e.g., higher tolerance for emerging market equities). Annotate drift alerts with calendar events (earnings dates, central bank meetings, options expiry) so the on-call engineer has immediate context. Use drift results as a signal for investigation, not as an automated pipeline halt for STATISTICAL severity.
 
 #### Z-score and Kolmogorov-Smirnov test for distribution drift
 
@@ -781,6 +809,10 @@ flowchart TB
 >
 > Schema and data drift checks run *before* your Great Expectations suite. They catch problems that rule-based checks miss: a column silently renamed, a data provider switching currency conventions, a third-party API returning yesterday's data instead of today's. In financial indexing, a drift alert at 8:55 AM that says "mean price of the Asia/Pacific index constituents dropped 30% — likely a JPY/USD feed error" is the difference between catching a bad index value before publication and issuing a correction after €500M in ETF trades have already settled.
 
+> [!success] Position drift detection as Gate 1 in the Bronze-to-Silver pipeline
+>
+> Run `detect_schema_drift()` and `detect_data_drift()` immediately after the Bronze load, before any transform step. Log all drift events to `pipeline.drift_monitor`. Halt on CRITICAL schema drift (missing column) and page on-call. For STATISTICAL drift, log, alert, and let the engineer decide whether to proceed — this preserves the human judgment needed for genuine market events.
+
 ---
 
 ### Observability Gotchas and Edge Cases
@@ -788,8 +820,16 @@ flowchart TB
 > [!warning] DataDog statsd vs DogStatsD
 > The standard `statsd` client works but lacks DataDog-specific features (histograms, service checks, events). Use the `datadog` Python client (`pip install datadog`) for full DogStatsD support. If you use the generic `statsd` client, histograms silently degrade to timers and you lose percentile calculations.
 
+> [!success] Use the official DataDog Python client
+>
+> Replace `import statsd` with `from datadog import statsd` (after `pip install datadog`). Initialize with `datadog.initialize(api_key=..., statsd_host=...)`. This enables true histograms with p50/p95/p99 percentiles, service checks, and DataDog-specific event emission — all unavailable in the generic statsd client.
+
 > [!warning] Drift Thresholds for Financial Data
 > Z-score threshold of 3.0 and KS p-value of 0.05 are starting points only. Financial time series have fat tails and regime changes — tune thresholds based on your specific asset class and market conditions. A 30% single-day move in an emerging market equity index might be a genuine market event, not a data error. Consider separate thresholds for different asset classes and market regimes.
+
+> [!success] Calibrate thresholds from historical data per asset class
+>
+> After the first two weeks of running drift detection, query `pipeline.drift_monitor` for CRITICAL events that were resolved as "genuine market event." Use the observed Z-scores from those events as the new calibrated thresholds per asset class. Store thresholds in a `drift_thresholds` configuration table, not in code, so they can be updated without a deployment.
 
 > [!tip] Catalog Tooling Selection
 > Google Data Catalog is ideal if your stack is GCP-native (BigQuery auto-discovery, Dataplex integration). For mixed environments (SQL Server + BigQuery + GCS), OpenMetadata or DataHub offer better multi-system connectors. Evaluate on three axes: connector coverage for your stack, lineage depth (table vs column level), and operational burden (managed vs self-hosted).
@@ -797,8 +837,16 @@ flowchart TB
 > [!warning] Freshness SLAs Must Be Per-Table
 > Different tables have different SLAs. The gold layer might have a 30-minute SLA during market hours; bronze tables might have a 5-minute SLA. Track SLA per table, not a single global threshold. A single "pipeline freshness" metric hides the table that's 3 hours stale behind the table that was just refreshed.
 
+> [!success] Define SLAs per table in a configuration table
+>
+> Create a `pipeline.sla_config` table with columns `table_name`, `freshness_sla_minutes`, `availability_sla_pct`, and `owner`. Reference this table in the health check job to apply the correct threshold per table. Emit `pipeline.data_freshness_seconds` with a `table` label so DataDog alerts can filter to the specific table breaching its SLA.
+
 > [!danger] Lineage Completeness
 > dbt generates lineage automatically for dbt models. External processes (Python loaders, SQL Agent jobs) must manually log to `pipeline.lineage`. Without this, your lineage graph has holes — and holes in lineage are invisible until an auditor asks "how was this number calculated?" and you can't trace it back to source.
+
+> [!success] Wrap every non-dbt load in a lineage logging decorator
+>
+> Create a Python decorator `@log_lineage(source, target, transform_type)` that inserts a row to `pipeline.lineage` after each successful load. Apply it to all Python loaders, scheduled SQL scripts, and Cloud Functions that write to warehouse tables. Run a weekly query against `pipeline.lineage` to identify tables that have received data but have no lineage record — these are the gaps.
 
 ## Related
 - [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) — DataDog agent setup and infrastructure monitoring

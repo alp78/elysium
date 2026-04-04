@@ -1,10 +1,4 @@
 ---
-type: reference
-category: github-actions
-technology:
-  - github
-  - github-actions
-  - yaml
 tags: [ci-cd, github-actions]
 aliases:
   - GitHub Actions
@@ -16,32 +10,6 @@ aliases:
   - artifacts
   - concurrency
   - reusable workflows
-keywords:
-  - github actions
-  - workflow
-  - yaml
-  - trigger
-  - runner
-  - job
-  - step
-  - secret
-  - artifact
-  - cache
-  - concurrency
-  - matrix
-  - expression
-  - context
-  - environment variable
-  - GITHUB_TOKEN
-  - permissions
-  - schedule
-  - workflow_dispatch
-  - pull_request
-  - push
-  - release
-  - workflow_call
-  - needs
-  - if conditional
 description: "GitHub Actions fundamentals — workflow anatomy, triggers, runners, jobs, steps, secrets, caching, artifacts, and concurrency."
 created: 2026-03-22
 updated: 2026-03-22
@@ -174,6 +142,10 @@ Cron syntax: `minute hour day-of-month month day-of-week`
 
 > [!warning] Schedule jitter
 > Scheduled workflows may run up to 15 minutes late under heavy load. Do not rely on exact timing for SLA-critical operations.
+
+> [!success] Design for schedule jitter
+>
+> For SLA-critical operations, use `workflow_dispatch` with explicit timing control, or trigger pipelines from external schedulers (Cloud Scheduler, Airflow) that have guaranteed timing and retry logic. If using `schedule`, design the workflow to be idempotent — safe to run slightly early or late without producing incorrect results.
 
 ### workflow_dispatch (manual trigger)
 

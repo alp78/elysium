@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, dbt]
-type: reference
-technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "Project layout, naming conventions, config inheritance, multi-adapter"

@@ -1,11 +1,7 @@
 ---
-type: concept
-category: foundations
-technology: [bash, powershell]
 tags: [shell]
-aliases: [find, fd, locate, file search, find command, xargs]
-keywords: [find, fd, locate, xargs, file search, recursive search, find by name, find by size, find by time, mtime, mmin, find and delete, empty directories, parallel processing, Get-ChildItem, Where-Object, find large files]
-description: "Targeted file searching with find, fd, and locate — searching by name pattern, size, modification time, and content. Includes parallel processing with xargs and PowerShell equivalents."
+aliases: [find, fd, locate, file search, find command, xargs, parallel]
+description: "Targeted file searching with find, fd, and locate — searching by name pattern, size, modification time, and content. Includes parallel processing with xargs and GNU parallel, and PowerShell equivalents."
 created: 2026-03-22
 updated: 2026-04-03
 status: complete
@@ -272,6 +268,67 @@ find /data/ -name "*.csv" -print0 | xargs -0 -P 4 gzip
 | `-a` | `xargs -a file.txt` | Read arguments from a file instead of stdin |
 | `--no-run-if-empty` | `xargs --no-run-if-empty cmd` | Do not run command if stdin is empty |
 | `-t` | `xargs -t cmd` | Print each command before executing (dry-run visibility) |
+
+### Linux | parallel | batch parallel execution
+
+GNU `parallel` executes shell commands in parallel, reading one argument per line from stdin or from a file list. Compared to `xargs -P`, it provides richer argument substitution (`{.}`, `{/}`, `{//}`), per-job output grouping to prevent line interleaving, structured progress reporting, and controlled failure semantics for pipeline automation. Install with `sudo apt install parallel` (Debian/Ubuntu) or `brew install parallel` (macOS).
+
+#### Compress found files in parallel
+
+`{}` is replaced with each input line. `-j+0` uses all available CPU cores, making the degree of parallelism self-tuning across different hardware.
+
+```bash
+find /data/ -name "*.csv" | parallel -j+0 gzip {}
+```
+
+#### Convert formats with extension substitution
+
+`{.}` strips the last file extension from the argument. Use it when the output filename differs only in extension, eliminating a separate rename step.
+
+```bash
+find /data/ -name "*.json" | parallel -j 4 "python convert.py {} {.}.parquet"
+```
+
+`{}` expands to `/data/events/2026-04-01.json`; `{.}` expands to `/data/events/2026-04-01`, so the output path becomes `/data/events/2026-04-01.parquet`.
+
+#### Preview commands before executing
+
+`--dry-run` prints each command that would be executed without running it. Always preview before committing to a long-running batch operation.
+
+```bash
+find /data/ -name "*.csv" | parallel --dry-run gzip {}
+```
+
+```text
+gzip /data/raw/2024/01/trades.csv
+gzip /data/raw/2024/01/quotes.csv
+gzip /data/staging/2026-03-30.csv
+```
+
+> [!warning] --citation prompt blocks automation on first run
+>
+> On any machine where `parallel` has not been previously acknowledged, its first invocation prints a citation prompt and hangs waiting for user input. This silently blocks unattended cron jobs and pipeline runs.
+
+> [!success] Pre-acknowledge citation before using in automation
+>
+> Run once interactively: `echo 'will cite' | parallel --citation`. This writes the acknowledgement to `~/.parallel/will-cite` and suppresses all future prompts on that machine. Alternatively, pass `--will-cite` per invocation: `find /data/ -name "*.csv" | parallel --will-cite -j+0 gzip {}`.
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `-j N` | `parallel -j 4 cmd {}` | Run N jobs concurrently |
+| `-j+0` | `parallel -j+0 cmd {}` | Use all available CPU cores |
+| `-j N%` | `parallel -j 200% cmd {}` | Use N% of logical cores (200% = 2× core count) |
+| `{}` | `parallel cmd {}` | Full input argument |
+| `{.}` | `parallel cmd {.}` | Input without last file extension |
+| `{/}` | `parallel cmd {/}` | Basename of input |
+| `{//}` | `parallel cmd {//}` | Directory of input |
+| `{/.}` | `parallel cmd {/.}` | Basename without file extension |
+| `--dry-run` | `parallel --dry-run cmd {}` | Print commands without executing |
+| `--progress` | `parallel --progress cmd {}` | Show live job progress counter |
+| `--eta` | `parallel --eta cmd {}` | Show estimated time to completion |
+| `--keep-order` | `parallel --keep-order cmd {}` | Print output in input argument order |
+| `--halt` | `parallel --halt now,fail=1 cmd {}` | Abort all jobs on first failure |
+| `--will-cite` | `parallel --will-cite cmd {}` | Suppress citation prompt (for automation) |
 
 ### Linux | fd | interactive search
 

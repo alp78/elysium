@@ -1,10 +1,6 @@
 ---
-type: reference
-category: orchestration
-technology: [bash, linux]
 tags: [orchestration, bash, scheduling, cron]
 aliases: [cron, crontab, systemd timer, at, anacron, Linux scheduling, cron job, cron expression, crontab syntax, cron schedule, crond, cron daemon, task scheduler linux]
-keywords: [cron, crontab, crontab -e, crontab -l, crontab -r, systemd timer, systemd.timer, OnCalendar, at command, batch command, atq, atrm, anacron, anacrontab, flock, overlap prevention, cron overlap, MAILTO, cron logging, cron debugging, cron environment, cron PATH, cron TZ, cron syslog, "/etc/cron.d", "/etc/crontab", cron.daily, cron.weekly, "@reboot", "@hourly", "@daily", "@weekly", "@monthly", journalctl timer, persistent timer, ssh config, ssh key, ed25519, ssh-copy-id, ssh tunnel, ProxyCommand, IAP tunnel, cron vs airflow, cloud scheduler, task scheduling linux, job scheduling, recurring job, scheduled task linux]
 description: "Exhaustive reference for Linux task scheduling covering cron, systemd timers, at/batch, and anacron. Includes crontab syntax, overlap prevention with flock, environment handling, output logging, SSH configuration for remote scheduling, and a decision table for choosing between cron, Airflow, and Cloud Scheduler."
 created: 2026-03-22
 updated: 2026-03-22
@@ -56,6 +52,9 @@ The crontab format uses five time fields followed by the command. Memorize this 
 
 > [!warning] Day-of-week numbering
 > Both `0` and `7` mean Sunday in standard cron. Vixie cron (the most common Linux implementation) accepts `0–7`. Always verify on your target system.
+
+> [!success] Safe pattern: use named day abbreviations to avoid ambiguity
+> Write `sun`, `mon`, ..., `sat` instead of numeric day-of-week values in crontab entries. Named abbreviations are unambiguous across all crond implementations and make schedules self-documenting.
 
 ### Crontab Management Commands
 
@@ -199,6 +198,9 @@ Set the day-of-month field to a fixed date (or comma-separated dates).
 > [!warning] Day-of-month and day-of-week are OR'd, not AND'd
 > In standard Vixie cron, `0 6 1 * 1` means 06:00 on the 1st **or** any Monday -- not both. To target the first Monday of the month, restrict the day-of-month range to `1-7` and guard inside the script. For precise calendar targeting, switch to systemd timers with `OnCalendar=Mon *-*-1..7`.
 
+> [!success] Fix: use a systemd timer or a script guard for compound calendar logic
+> For "first Monday of the month", use a systemd timer with `OnCalendar=Mon *-*-1..7 06:00:00`. If you must use cron, set `0 6 1-7 * 1` and add `[ $(date +\%u) -eq 1 ] || exit 0` at the top of the script to short-circuit on non-Monday days.
+
 ```bash
 0 6 1-7 * 1   /path/script.sh  # runs every Monday + every 1st–7th
 # Script body: [ $(date +\%u) -eq 1 ] || exit 0  — only proceed if it's Monday
@@ -306,6 +308,9 @@ sudo timedatectl set-timezone UTC
 >
 > This is the #1 source of "it works in terminal but not in cron." Always test a failing cron job by running it exactly as cron would: `env -i HOME=/root SHELL=/bin/bash PATH=/usr/bin:/bin /path/to/your/script.sh`. This strips your environment down to cron's defaults and surfaces missing PATH entries immediately.
 
+> [!success] Fix: set a full PATH at the top of the crontab
+> Add `PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/pipeline/.local/bin` as the first line of your crontab (before any schedule entries). This gives all jobs a consistent, explicit PATH without relying on system defaults.
+
 #### PowerShell equivalent (Windows Task Scheduler environment)
 
 ```powershell
@@ -340,6 +345,9 @@ If `MAILTO` is not set and a mail transport is configured, cron emails both stdo
 
 > [!warning] Silent mode hides failures
 > Discarding all output means you will never know if a job failed unless you add separate health checks or alerting.
+
+> [!success] Fix: log to a file and implement a dead man's snitch
+> Replace `> /dev/null 2>&1` with `>> /var/log/pipeline/job.log 2>&1`. For failure detection without email, add a dead man's snitch: ping a monitoring URL such as `https://hc-ping.com/<uuid>` at the end of every successful run. If the URL isn't called within the expected window, the monitoring service fires an alert.
 
 ```bash
 0 * * * * /path/to/script.sh > /dev/null 2>&1
@@ -480,6 +488,9 @@ flock -n /tmp/pipeline.lock echo "No lock held" || echo "Lock is currently held"
 > [!warning] PID files vs flock
 > Older scripts use PID file patterns (`echo $$ > /tmp/script.pid; kill -0 $(cat /tmp/script.pid)`). These are fragile: if the process crashes, the PID file is left behind and blocks future runs. `flock` uses kernel-level file locks that are automatically released on process exit — always prefer `flock`.
 
+> [!success] Fix: replace PID file patterns with flock
+> Remove all `echo $$ > /tmp/script.pid` and `kill -0 $(cat /tmp/script.pid)` logic. Replace with `exec 9>/tmp/script.lock; flock -n 9 || { echo "Already running"; exit 0; }` at the top of the script. The kernel releases the lock automatically on exit — no cleanup code needed.
+
 #### PowerShell equivalent (Windows mutex)
 
 ```powershell
@@ -592,6 +603,9 @@ env -i HOME=/home/pipeline SHELL=/bin/bash \
 
 > [!warning] Change `"0 3 * * *"` to `"* * * * *"` in `crontab -e` to run every minute. Watch with `journalctl -u cron -f`. Change it back when done — never leave a per-minute schedule in production.
 
+> [!success] Safe pattern: use a test-only crontab or a dedicated test user
+> Instead of editing the production crontab in place, create a separate file like `/tmp/test-cron.txt` and install it with `crontab /tmp/test-cron.txt`. When done, restore the production crontab from version control: `crontab /etc/cron-backup/pipeline.crontab`. This avoids the risk of forgetting to revert the `* * * * *` interval.
+
 #### Check if crond is running — verify the daemon is active
 
 ```bash
@@ -614,6 +628,9 @@ dos2unix /home/pipeline/scripts/run_etl.sh  # fix it
 ```
 
 > [!warning] Cron's working directory is `/`, so relative paths in your script will fail silently. Use absolute paths: `/home/pipeline/venv/bin/python /home/pipeline/etl/etl.py`, or `cd` first with `cd /home/pipeline/etl && ...`.
+
+> [!success] Fix: always `cd` into the project directory at the top of the script
+> Add `cd /home/pipeline/etl || exit 1` as the first line after the shebang. The `|| exit 1` guard ensures the script aborts immediately if the directory does not exist, rather than running in `/` and producing cryptic "file not found" errors.
 
 ```bash
 # 4. Missing environment variable (e.g. DB_HOST)
@@ -1181,6 +1198,9 @@ ssh-keygen -lf ~/.ssh/gcp_ed25519.pub
 >
 > If your private key file is group- or world-readable, SSH will ignore it without a clear error. If `~/.ssh` itself is too open, `authorized_keys` is ignored entirely. Always set these permissions immediately after creating keys.
 
+> [!success] Fix: apply correct permissions immediately after key generation
+> Run this block once after creating any key: `chmod 700 ~/.ssh && chmod 600 ~/.ssh/config ~/.ssh/authorized_keys && chmod 600 ~/.ssh/id_ed25519 && chmod 644 ~/.ssh/id_ed25519.pub`. Add it as a post-keygen step in any provisioning script so new machines start with correct permissions automatically.
+
 ```bash
 chmod 700 ~/.ssh
 chmod 600 ~/.ssh/config
@@ -1334,6 +1354,9 @@ Always invoke the virtualenv Python binary directly (not `python3` from PATH). C
 > [!warning] Percent signs must be escaped in crontab
 >
 > Cron interprets `%` as a newline. Use `\%` for date formatting inside crontab entries (e.g., `\%Y-\%m-\%d`). This does not apply inside wrapper scripts.
+
+> [!success] Safe pattern: move date formatting into a wrapper script
+> Instead of embedding `$(date +\%Y-\%m-\%d)` in the crontab line, move the log filename construction into the wrapper script where `%` is not special. The crontab entry then becomes a single clean call to the wrapper, with no escaping concerns.
 
 ```bash
 # In crontab or /etc/cron.d/pipeline:

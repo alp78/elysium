@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - csharp
-  - dotnet
-  - polars
 tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - SQLContext, DuckDB, database, SQL
-keywords: [SQLContext, DuckDB, SQL Server, database, query, connection, ADO.NET, SQLAlchemy]
 description: "Polars.NET / C# DataFrames reference 09/10 — Database & SQL Interface (SQLContext, DuckDB, SQL Server). Executable examples with cell outputs. See [09_py_database_interface](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/09_py_database_interface) for the Python equivalent."
 created: 2026-03-27
 updated: 2026-03-27

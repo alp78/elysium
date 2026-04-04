@@ -1,10 +1,6 @@
 ---
-type: reference
-category: db-queries
-technology: [sql-server, t-sql]
 tags: [sql, sql-server, tsql]
 aliases: [SQL engineering, SQL performance, transactions, error handling, indexing, temp tables, table variables, dynamic SQL, stored procedures]
-keywords: [transactions, error handling, try catch, temp tables, table variables, dynamic sql, stored procedures, user defined functions, indexing, query hints, set statistics, execution plan, deadlock, isolation level, snapshot]
 description: "SQL Server T-SQL engineering patterns with executable examples — covers transactions, error handling, temp tables, dynamic SQL, stored procedures, and performance tuning."
 created: 2026-03-22
 updated: 2026-03-22
@@ -22,6 +18,10 @@ status: complete
 >
 > All objects are created in a `demo` schema or use temp tables to avoid modifying the production stoxx schema.
 
+> [!success] Safe Pattern
+>
+> All persistent objects in this notebook use a dedicated `demo` schema (`CREATE OR ALTER ... demo.object_name`) and are dropped in the Cleanup section at the end. Always use a non-production schema for experimental objects, and include a cleanup block to ensure idempotent re-runs.
+
 ```python
 %load_ext sql
 %config SqlMagic.displaycon = False
@@ -37,6 +37,10 @@ Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=y
 > [!danger] Lab-Only Credentials
 >
 > The connection string above contains a plaintext password for a local lab environment. In production, credentials are stored in GCP Secret Manager and fetched at runtime — never hardcoded. See [secrets-management > Access from Python](https://alp78.github.io/elysium/06-GCP/Security/secrets-management#access-from-python).
+
+> [!success] Safe Pattern
+>
+> In production, retrieve the connection string from GCP Secret Manager at runtime: `secretmanager.SecretManagerServiceClient().access_secret_version(name=...)`. Never hardcode passwords in notebooks, scripts, or source control. Use environment variables or secret injection via Cloud Run / GKE secrets.
 
 ```sql
 -- Create a demo schema for our objects (idempotent)
@@ -422,6 +426,10 @@ Use case: pipeline steps as SPs — each step has consistent parameters and erro
 >
 > `EXEC('SELECT * FROM ' + @tableName)` is vulnerable to SQL injection if `@tableName` comes from user input. Always use `sp_executesql` with parameterized queries for values. For dynamic object names, validate against `sys.tables` / `sys.columns` before building the string.
 
+> [!success] Safe Pattern
+>
+> Use `sp_executesql` with typed parameters for all variable values: `EXEC sp_executesql N'SELECT ... WHERE symbol = @sym', N'@sym VARCHAR(20)', @sym = @input`. For dynamic object names (table/column names), always validate the input against `sys.tables` or `sys.columns` before concatenating it into SQL — never trust caller input directly.
+
 ```sql
 -- SP: get top N stocks by composite score for a given index
 CREATE OR ALTER PROCEDURE demo.sp_top_stocks
@@ -565,6 +573,10 @@ END;
 >
 > Scalar UDFs Force Row-by-Row Execution.
 > T-SQL scalar UDFs (non-inlineable) disable parallelism and force SQL Server to call the function once per row. A simple scalar UDF on a 10M-row table can turn a 2-second query into a 2-minute query. Always use inline table-valued functions (iTVFs) instead -- the optimizer can fold them into the outer query plan. SQL Server 2019+ has "scalar UDF inlining," but many patterns are still not eligible.
+
+> [!success] Safe Pattern
+>
+> Replace scalar UDFs with inline table-valued functions (`RETURNS TABLE AS RETURN (SELECT ...)`). The optimizer can fold an iTVF into the outer query plan and parallelize it. If you must retain a scalar UDF, verify it qualifies for SQL Server 2019+ scalar UDF inlining by checking `sys.sql_modules.is_inlineable = 1` and test with `SET STATISTICS IO, TIME ON` to confirm the plan is not row-by-row.
 
 ### User-Defined Functions — Inline Table-Valued Function
 
@@ -1193,6 +1205,10 @@ SELECT
 >
 > READ UNCOMMITTED (NOLOCK) Can Return Wrong Data.
 > `NOLOCK` / `READ UNCOMMITTED` can read rows that are being moved by a page split, causing the same row to appear twice or not at all in the result. It can also read uncommitted data that is later rolled back. Never use NOLOCK for counts, sums, or any calculation where accuracy matters -- even for "approximate" dashboards, the error can be larger than expected.
+
+> [!success] Safe Pattern
+>
+> Use `SNAPSHOT` isolation for analytics reads instead of `NOLOCK`: `SET TRANSACTION ISOLATION LEVEL SNAPSHOT`. SNAPSHOT provides point-in-time read consistency with no blocking, using row versions from tempdb rather than dirty reads. Enable it at the database level with `ALTER DATABASE stoxx SET ALLOW_SNAPSHOT_ISOLATION ON`.
 
 ## Bulk Loading Patterns
 

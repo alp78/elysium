@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python]
 tags: [python, performance, testing]
 aliases: [performance profiling, code quality, timeit, cProfile, tracemalloc, ruff, mypy]
-keywords: [timeit, perf_counter, cProfile, line_profiler, tracemalloc, sys.getsizeof, Big-O, collections performance, ruff, pylint, mypy, black, bandit, type hints]
 description: "Python performance and code quality reference with executable examples and cell outputs — covers timing, memory profiling, Big-O, code smells, type hints, and linting tools. See [19_cs_performance_quality](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/19_cs_performance_quality) for the C# equivalent."
 created: 2026-03-24
 updated: 2026-03-24
@@ -37,6 +33,18 @@ status: complete
 > [!warning] Don't use time.time() for benchmarks
 >
 > Don't use `time.time()` for benchmarks (lower resolution). Don't time a single run (cache/OS scheduling skew results).
+
+> [!success] Use timeit or perf_counter with multiple repetitions
+>
+> ```python
+> import timeit, time
+> # timeit: best of multiple runs, disables GC
+> elapsed = timeit.timeit("sum(range(10_000))", number=1000) / 1000
+> # perf_counter: high-resolution wall clock for coarse timing
+> t0 = time.perf_counter()
+> result = expensive_function()
+> print(time.perf_counter() - t0)
+> ```
 
 ```python
 import time
@@ -141,6 +149,18 @@ print(f".sort() (in-place):  {t_sort*1000:.1f}ms")
 > [!warning] sys.getsizeof on containers only shows
 >
 > `sys.getsizeof` on containers only shows the container, not elements. Don't use `memory_profiler` in production.
+
+> [!success] Use tracemalloc for accurate memory tracking
+>
+> ```python
+> import tracemalloc, sys
+> # tracemalloc captures real allocations including element memory
+> tracemalloc.start()
+> data = [i for i in range(100_000)]
+> current, peak = tracemalloc.get_traced_memory()
+> tracemalloc.stop()
+> print(f"Peak: {peak / 1024:.1f} KB")
+> ```
 
 ```python
 # --- sys.getsizeof (shallow) ---
@@ -533,6 +553,22 @@ fib_cached.cache_clear()
 > 11. **`is` for value comparison** — `x is 256` works by accident. Use `==`
 > 12. **Not closing resources** — `open()` without `with` leaks file handles
 
+> [!success] Safe replacements for the most common no-go's
+>
+> ```python
+> # #1 — join instead of +=
+> result = "".join(parts)
+> # #3 — catch specific exceptions
+> try: ...
+> except ValueError as e: log(e)
+> # #4 — None sentinel for mutable defaults
+> def f(lst=None): lst = lst if lst is not None else []
+> # #6 — ast.literal_eval instead of eval
+> import ast; value = ast.literal_eval(user_input)
+> # #12 — context manager for resources
+> with open("file.txt") as fh: data = fh.read()
+> ```
+
 ```python
 # --- Demo: Mutable default argument (NO-GO #4) ---
 def bad_append(item, lst=[]):
@@ -580,6 +616,21 @@ good_append(3)  # Call 3
 > 5. **Boolean blindness** — `process(data, True, False, True)` → use keyword args or enums
 > 6. **Premature abstraction** — YAGNI: abstract when you see the pattern 3 times
 > 7. **Comments explaining "what"** — `# increment x` is useless; `# retry because race condition` is valuable
+
+> [!success] Refactor toward clarity and single responsibility
+>
+> ```python
+> # #2 — guard clauses flatten deep nesting
+> def process(item):
+>     if not item: return
+>     if not item.is_valid(): return
+>     save(item)
+> # #3 — named constants replace magic numbers
+> SECONDS_PER_DAY = 86_400
+> if elapsed > SECONDS_PER_DAY: purge()
+> # #5 — keyword args eliminate boolean blindness
+> process(data, validate=True, dry_run=False, verbose=True)
+> ```
 
 ```python
 # --- Demo: Deep nesting vs guard clauses ---

@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [serialization formats, JSON, CSV, Parquet, Avro, Protocol Buffers]
-keywords: [serialization, JSON, CSV, Parquet, Avro, protobuf, msgpack, System.Text.Json, Newtonsoft, data formats, schema evolution, compression]
 description: "C# serialization formats reference with executable examples and cell outputs — covers JSON, CSV, Parquet, Avro, Protocol Buffers, MessagePack, and format comparison benchmarks. See [10_py_serialization_formats](https://alp78.github.io/elysium/02-Programming-Languages/Python/10_py_serialization_formats) for the Python equivalent."
 created: 2026-03-25
 updated: 2026-03-25
@@ -284,6 +280,12 @@ Directory.Delete(tmpDir, recursive: true);
 > - Don't change field numbers in existing `.proto` -- breaks all consumers
 > - Don't use for one-off scripts -- JSON is simpler for ad-hoc work
 
+> [!success] Protobuf best practices
+>
+> - Define schemas in `.proto` files and commit them to version control alongside the service code
+> - Use field numbers 1–15 for the most frequent fields (single-byte tag encoding)
+> - Add new fields with unused numbers and never reuse retired field numbers
+
 > [!tip] When to use Protobuf
 >
 > gRPC services, Kafka events, high-frequency data feeds, inter-service communication, mobile APIs (bandwidth matters). In production, `protoc` generates C# classes from `.proto` files. In notebooks, use the dynamic message API (same binary format).
@@ -451,6 +453,12 @@ Schema is defined in JSON format and embedded in every file header — readers d
 > - Don't use Avro for analytics queries -- use Parquet (columnar = column pruning)
 > - Don't change field types in schema evolution -- only add/remove fields
 > - Don't use Avro without a schema registry in production Kafka
+
+> [!success] Avro best practices
+>
+> - Always provide a `default` value when adding new fields to ensure backward and forward compatibility
+> - Use Confluent Schema Registry with FULL compatibility mode for Kafka topics
+> - Keep the writer schema alongside the data or in a registry — never discard it
 
 ```csharp
 // Define Avro schema as JSON string (Avro schemas are always JSON, even for binary data)

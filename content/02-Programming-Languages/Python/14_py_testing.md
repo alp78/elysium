@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python]
 tags: [testing, python]
 aliases: [unit testing, pytest, xUnit, NUnit, test driven development, mocking, assertions]
-keywords: [pytest, unittest, mock, patch, fixture, parametrize, assert, coverage, TDD]
 description: "Python testing reference with executable examples and cell outputs — covers pytest, unittest, fixtures, mocking, parametrize, and test-driven development patterns. See [14_cs_testing](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/14_cs_testing) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -250,6 +246,10 @@ pytest rewrites plain `assert` for rich error messages — no `assertEqual` or `
 > [!danger] Never use == for floats
 >
 > `assert 0.1 + 0.2 == 0.3` fails in Python because IEEE 754 floating-point arithmetic is not exact. Always use `pytest.approx()` or `math.isclose()` for float comparison.
+
+> [!success] Use pytest.approx for float assertions
+>
+> `assert result == pytest.approx(expected)` applies a default relative tolerance of 1e-6, which is safe for financial calculations. For tighter control, pass `rel=1e-4` or `abs=0.01`. Use `math.isclose()` outside of test code for the same protection.
 
 ```python
 # TEST: PnL = (exit - entry) * quantity
@@ -620,6 +620,12 @@ Use parametrize when the **logic is the same but the data varies**: fee tier cal
 > - Don't put too many cases in one parametrize — hard to find which row failed
 > - Use `ids=` to name each case: `@pytest.mark.parametrize(..., ids=["valid", "negative"])`
 
+> [!success] Effective parametrize patterns
+>
+> - Group cases by what they test: valid inputs, boundary values, and invalid inputs
+> - Use `ids=["valid_ticker", "empty", "too_long"]` so failure messages identify the case immediately
+> - Keep each parametrize focused on one logical behaviour — use multiple `@pytest.mark.parametrize` decorators on the same test to combine independent dimensions
+
 #### Parametrize: validate ticker formats
 
 ```python
@@ -718,6 +724,10 @@ ipytest.run()
 > Patch the reference in the consuming module: `@patch("mymodule.get")`. This is the #1
 > source of "my mock isn't working" — the real function still runs because you patched
 > the wrong location.
+
+> [!success] Find the correct patch target
+>
+> Look at the import in the module under test. If it does `from requests import get`, patch `"mymodule.get"`. If it does `import requests`, patch `"mymodule.requests.get"`. The rule: patch the name as the consuming module sees it, not where it originates.
 
 > [!info] Mocking library
 >
@@ -837,6 +847,10 @@ ipytest.run()
 > Patch where the object is **used**, not where it's defined.
 > If `my_module.py` does `from datetime import datetime`, patch `"my_module.datetime"`, NOT `"datetime.datetime"`.
 
+> [!success] Prefer dependency injection over patching
+>
+> Accepting `now=None` and defaulting to `datetime.now()` inside the function eliminates the need for `@patch` entirely. Pass a fixed `datetime` in tests, let the real clock run in production. This is simpler, more readable, and avoids the patch-target confusion entirely.
+
 #### Dependency injection — testable market hours check
 
 Instead of calling `datetime.now()` or `requests.get()` directly, accept them as parameters. Tests inject fakes (fixed time, mock responses); production injects real implementations. This is how you test time-dependent, network-dependent, and database-dependent code without those dependencies.
@@ -917,6 +931,10 @@ ipytest.run()
 > [!warning] If env vars are already
 >
 > If env vars are already set (from `.env`, Docker, or a previous cell), default-value tests will fail. Fix: use `@patch.dict(os.environ, {}, clear=True)` to guarantee a clean env.
+
+> [!success] Use clear=True for isolated env tests
+>
+> `@patch.dict(os.environ, {"KEY": "value"}, clear=True)` starts with a completely empty environment, then injects only the keys you specify. This ensures default-value tests are not contaminated by the developer's local environment or CI secrets.
 
 ```python
 def get_exchange_config():
@@ -1101,6 +1119,10 @@ ipytest.run()
 >
 > `Mock()` without `spec` accepts ANY attribute access and method call, always returning another Mock. A typo like `mock.conect()` instead of `mock.connect()` silently succeeds, and your test passes while the real code would fail.
 
+> [!success] Always use Mock(spec=RealClass)
+>
+> `Mock(spec=MyClient)` restricts the mock to attributes that actually exist on `MyClient`. Accessing a non-existent attribute raises `AttributeError` immediately, catching interface drift before it reaches production.
+
 ```python
 # Mock an external API
 class MarketDataClient:
@@ -1233,6 +1255,12 @@ Integration tests execute real SQL against SQL Server — mocked tests can pass 
 > [!warning] Don't run against production. Don't
 >
 > Don't run against production. Don't depend on specific values — test invariants. In CI, use Testcontainers for ephemeral DBs.
+
+> [!success] Safe integration test practices
+>
+> - Point integration tests at a dedicated test database, never production
+> - Test invariants (row counts > 0, no NULLs in required columns) rather than exact values that change daily
+> - In CI, use Testcontainers or a Docker Compose service to spin up an ephemeral SQL Server instance that is destroyed after the run
 
 ```python
 # Load credentials from .env — never hardcode passwords in notebooks
@@ -1414,6 +1442,12 @@ Pandera defines a schema (column names, types, ranges, nullability) and validate
 > [!warning] Don't make schemas too strict
 >
 > Don't make schemas too strict — allow NULL where the source allows it. Don't validate bronze data with silver schema — each layer has its own.
+
+> [!success] Match schema strictness to the medallion layer
+>
+> - Bronze schemas: allow NULLs everywhere and use broad type checks — raw data is messy by design
+> - Silver schemas: enforce non-null on critical columns (`close`, `date`, `symbol`), add range checks (`close > 0`), mark optional columns as `nullable=True`
+> - Gold schemas: strict — no NULLs, tight ranges, column names must match downstream consumer contracts exactly
 
 ```python
 # Define schema for silver OHLCV data

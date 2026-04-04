@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [if else, loops, for loop, while loop, switch, pattern matching, match case]
-keywords: [if, else, switch, for, foreach, while, break, continue, pattern matching, LINQ]
 description: "C# control flow reference with executable examples and cell outputs — covers conditionals, switch expressions, loops, pattern matching, and iterators. See [03_py_control_flow](https://alp78.github.io/elysium/02-Programming-Languages/Python/03_py_control_flow) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -27,6 +23,10 @@ Conditions must be explicit `bool` expressions — no truthy/falsy (unlike Pytho
 > [!warning] Always use braces
 >
 > Always use braces — omitting them leads to bugs when adding statements later. Don't use deep `if`/`else` nesting — extract to methods or use switch expressions.
+
+> [!success] Best practice
+>
+> Always wrap `if`/`else` bodies in braces, even for single-line branches. Replace deep nesting with guard clauses or switch expressions to keep methods flat and readable.
 
 ```csharp
 #nullable enable
@@ -138,6 +138,10 @@ switch (command)
 > [!warning] Missing _ default causes MatchFailureException
 >
 > Missing `_` default causes `MatchFailureException` at runtime. Keep switch arms pure — no side effects.
+
+> [!success] Always add a wildcard arm
+>
+> Always close a switch expression with `_ => ...` to handle unmatched inputs gracefully. Keep arms side-effect-free and return values rather than mutating state.
 
 ```csharp
 string result = command switch
@@ -269,6 +273,10 @@ else
 >
 > Don't modify a collection during `foreach` — throws `InvalidOperationException`. Use `for` loop or `ToList()` first.
 
+> [!success] Safe modification pattern
+>
+> To remove or add items while iterating, snapshot the collection first with `.ToList()`, then `foreach` over the snapshot while modifying the original. For indexed removal, iterate backwards with a `for` loop.
+
 ```csharp
 // for — index-based iteration with explicit counter
 for (int i = 0; i < 5; i++)
@@ -383,6 +391,10 @@ A method returning `IEnumerable<T>` with `yield return` pauses execution, return
 > [!warning] The method body doesn't run
 >
 > The method body doesn't run until the first `MoveNext()` — not when the method is called.
+
+> [!success] Validate eagerly, yield lazily
+>
+> Place argument validation before the first `yield` in a separate non-iterator wrapper method. This ensures validation runs immediately at call time, not deferred to first enumeration.
 
 ```csharp
 IEnumerable<int> Countdown(int n)
@@ -543,6 +555,10 @@ string.Join(", ", Flatten(nestedArr))   // Flatten
 > [!warning] Don't use foreach with if
 >
 > Don't use `foreach` with `if` + add to list — use `.Where().Select()`. Don't enumerate a deferred query multiple times — materialize with `ToList()`.
+
+> [!success] Prefer LINQ pipelines
+>
+> Replace manual `foreach`/`if`/`Add` patterns with `.Where().Select()` chains. Call `.ToList()` once at the end to materialize, then reuse the list freely without re-executing the query.
 
 ```csharp
 // Select — transforms each element (map)
@@ -715,6 +731,10 @@ string.Join(", ", result)   // Chained
 > [!danger] Infinite sequences cause OOM
 >
 > Never call `ToList()`, `Count()`, or `foreach` without `break` on infinite sequences — hangs or OOM.
+
+> [!success] Always bound infinite sequences
+>
+> Always pair an infinite generator with `Take(n)`, `TakeWhile(...)`, or `First(...)` before materializing. This keeps memory bounded and gives callers explicit control over how many values are consumed.
 
 ```csharp
 IEnumerable<int> Naturals(int start = 0)

@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: git
-technology: [git, github]
 tags: [git, github]
 aliases: [git remote, git fetch, upstream, force-with-lease, fork workflow, git remote -v, git fetch origin, git fetch prune, safe force push, origin remote]
-keywords: [git remote, remote repositories, git fetch, git push, fetch prune, force-with-lease, upstream, fork, origin, remote tracking, git remote add, git remote -v, prune deleted branches, safe push, overwrite remote branch, fork workflow, synchronize fork]
 description: "How to manage git remote connections — view, add, fetch, prune, and safely force-push to remote repositories including upstream fork synchronization."
 created: 2026-03-22
 updated: 2026-03-22
@@ -129,6 +125,10 @@ This is the correct way to push a branch after rebasing. Rebasing rewrites commi
 > Never force-push to main or shared branches.
 > `git push --force` and `git push --force-with-lease` overwrite remote history. They are only safe on your own personal feature branches. **Never force-push to `main`, `master`, or any branch other people have checked out.** If `main` needs a commit removed, use `git revert` instead — see [git-recovery-and-undo](https://alp78.github.io/elysium/08-Git/git-recovery-and-undo).
 
+> [!success] Use git revert for Shared Branch Corrections
+>
+> To undo a commit already on `main`, run `git revert <SHA>` and push the resulting revert commit. History is preserved, teammates' local copies remain consistent, and the change is traceable in the audit log.
+
 ### Difference Between --force and --force-with-lease
 
 | Command | Behaviour |
@@ -141,6 +141,10 @@ Always use `--force-with-lease`. The only reason to use bare `--force` is if you
 > [!warning] force-with-lease Requires Recent Fetch
 >
 > `--force-with-lease` checks against your last-fetched remote state. If you haven't fetched in hours, someone else's push won't be detected — the lease is stale. Always run `git fetch origin` immediately before `git push --force-with-lease` to ensure you have the latest remote state.
+
+> [!success] Always Fetch Immediately Before Force-Push
+>
+> Run `git fetch origin && git push --force-with-lease origin <branch>` as a single sequence. The fetch refreshes the lease reference so the safety check is based on the current remote state, not a stale snapshot.
 
 ### Common Force-Push Scenario: Rebase Then Push
 

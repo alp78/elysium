@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - csharp
-  - dotnet
-  - polars
 tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - groupby, window functions, joins, pivot, melt
-keywords: [groupby, agg, window, rolling, join, merge, pivot, melt, unpivot, cross join]
 description: "Polars.NET / C# DataFrames reference 05/10 — Aggregation & Reshaping (groupby, windows, joins, pivot, melt). Executable examples with cell outputs. See [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) for the Python equivalent."
 created: 2026-03-27
 updated: 2026-03-27
@@ -589,6 +582,24 @@ dfDWithRolling.Columns[new[] { "symbol", "date", "close", "rolling_mean_20" }].R
 >
 > Polars.NET `Join()` has no built-in `validate` parameter like Pandas. Verify key
 > uniqueness before joining: `df.Select(Col("key")).Unique().Shape` should match `df.Shape`.
+
+> [!success] Validate key uniqueness before joining
+>
+> Assert uniqueness on both sides before calling `Join()`:
+> ```csharp
+> // Verify left key is unique
+> var leftKeys = left.Select(Col("key"));
+> if (leftKeys.Unique().Shape.Item1 != leftKeys.Shape.Item1)
+>     throw new InvalidOperationException("Left join key contains duplicates.");
+>
+> // Verify right key is unique
+> var rightKeys = right.Select(Col("key"));
+> if (rightKeys.Unique().Shape.Item1 != rightKeys.Shape.Item1)
+>     throw new InvalidOperationException("Right join key contains duplicates.");
+>
+> var result = left.Join(right, new[] { Col("key") }, new[] { Col("key") });
+> ```
+> After the join, always confirm `result.Shape.Item1` equals the expected row count.
 
 #### Polars.NET — Inner join on exchange suffix
 

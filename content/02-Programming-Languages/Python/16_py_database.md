@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python]
 tags: [python]
 aliases: [database access, SQL, ORM, pyodbc, Entity Framework, Dapper, SQLAlchemy, connection strings]
-keywords: [pyodbc, SQLAlchemy, sqlite3, connection string, ORM, query, transaction, pandas, read_sql]
 description: "Python database reference with executable examples and cell outputs — covers pyodbc, SQLAlchemy ORM, raw SQL, transactions, and pandas integration. See [16_cs_database](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/16_cs_database) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -53,6 +49,15 @@ _html_fmt.for_type(pl.DataFrame, lambda df: df.to_pandas().style.hide(axis="inde
 >
 > Never use f-strings in SQL — always use `?` parameter placeholders.
 
+> [!success] Use parameterized queries
+>
+> ```python
+> # Safe: parameter placeholder
+> cur.execute("SELECT * FROM trades WHERE ticker = ?", (ticker,))
+> # Safe: multiple parameters
+> cur.execute("INSERT INTO trades VALUES (?, ?, ?)", (id, ticker, price))
+> ```
+
 ```python
 conn = sqlite3.connect(":memory:")
 conn.row_factory = sqlite3.Row  # dict-like row access
@@ -98,6 +103,17 @@ len(trades)  # trades inserted
 >
 > `cursor.fetchall()` loads the entire result set into memory
 > For large tables (millions of rows), `fetchall()` or `pd.read_sql()` without a `WHERE`/`LIMIT` clause can exhaust RAM and crash your process. Use `fetchmany(batch_size)` for streaming, or push filtering to SQL with `WHERE`/`LIMIT`. For analytics, prefer DuckDB which streams columnar data efficiently.
+
+> [!success] Stream large results with fetchmany or push filtering to SQL
+>
+> ```python
+> # Stream in batches instead of loading all rows
+> cur.execute("SELECT * FROM trades")
+> while batch := cur.fetchmany(1000):
+>     process(batch)
+> # Or push filtering to SQL
+> cur.execute("SELECT * FROM trades WHERE trade_date >= ?", ("2024-01-01",))
+> ```
 
 ```python
 # SELECT — display as pandas DataFrame
@@ -378,8 +394,23 @@ The SQL patterns used below (parameterised queries, window functions, CTEs) foll
 
 > [!danger] Connection pool exhaustion
 >
-> Connection pool exhaustion — always close connections
+> Connection pool exhausting — always close connections
 > `pyodbc.connect()` without `with` or explicit `.close()` leaks connections. SQL Server defaults to a max pool of 100 connections — once exhausted, new connections block or fail with timeout errors. Always use `with conn:` or wrap in try/finally. For SQLAlchemy, `engine.dispose()` reclaims all pooled connections.
+
+> [!success] Always close connections with a context manager or try/finally
+>
+> ```python
+> # Preferred: context manager auto-closes on exit
+> with pyodbc.connect(conn_str) as conn:
+>     with conn.cursor() as cur:
+>         cur.execute("SELECT 1")
+> # Alternative: explicit close in finally
+> conn = pyodbc.connect(conn_str)
+> try:
+>     ...
+> finally:
+>     conn.close()
+> ```
 
 > [!info] SQL Server connection pattern
 >
@@ -1036,6 +1067,14 @@ pd.read_sql("""
 > - **`pd.read_sql` with raw `pyodbc`** — works but triggers Pylance/UserWarning
 > - **Reading entire large table** — add `WHERE`/`LIMIT` clauses
 
+> [!success] Use a SQLAlchemy engine and add filters
+>
+> ```python
+> # Pass a SQLAlchemy engine, not a raw pyodbc connection
+> engine = create_engine(f"mssql+pyodbc:///?odbc_connect={odbc_params}")
+> df = pd.read_sql("SELECT * FROM trades WHERE trade_date >= '2024-01-01'", engine)
+> ```
+
 ```python
 odbc_params = urllib.parse.quote_plus(
     'Driver={ODBC Driver 18 for SQL Server};'
@@ -1167,6 +1206,19 @@ Python's equivalent of EF Core. Define model classes inheriting from `Declarativ
 >
 > - **N+1 queries** — use `joinedload()` or `selectinload()`
 > - **Session per query** — reuse sessions within a request
+
+> [!success] Eager-load relationships and reuse sessions
+>
+> ```python
+> # Eager load to avoid N+1
+> stmt = select(Portfolio).options(joinedload(Portfolio.positions))
+> portfolios = session.scalars(stmt).unique().all()
+> # Reuse session within a unit of work
+> with Session(engine) as session:
+>     session.add(obj1)
+>     session.add(obj2)
+>     session.commit()
+> ```
 
 ```python
 class Base(DeclarativeBase):
@@ -1330,6 +1382,17 @@ duck.execute("""
 >
 > `fetchall()` on large tables loads everything into Python memory
 > The 66K rows below are fine, but `fetchall()` on a million-row table can OOM your process. For large transfers, use `fetchmany(batch_size)` in a loop, or let DuckDB read files directly (`SELECT * FROM 'data.parquet'`).
+
+> [!success] Stream with fetchmany or query files directly in DuckDB
+>
+> ```python
+> # Stream in batches from pyodbc into DuckDB
+> mssql_cur.execute("SELECT * FROM large_table")
+> while batch := mssql_cur.fetchmany(10_000):
+>     ddb.executemany("INSERT INTO target VALUES (?, ?)", batch)
+> # Or let DuckDB read the file directly — no Python memory overhead
+> ddb.execute("CREATE TABLE target AS SELECT * FROM 'export.parquet'")
+> ```
 
 ```python
 # Load from SQL Server via pyodbc into DuckDB

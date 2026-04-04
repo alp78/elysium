@@ -1,10 +1,6 @@
 ---
-type: concept
-category: performance
-technology: [sql-server]
 tags: [performance, sql, sql-server, tsql]
 aliases: [execution plans, query plans, parameter sniffing, cardinality estimation, plan cache, Query Store, SARGability, SHOWPLAN, key lookup, index seek, index scan, table scan]
-keywords: [execution plan, query plan, SSMS, estimated rows, actual rows, cardinality estimation, parameter sniffing, plan cache, Query Store, index seek, index scan, table scan, key lookup, nested loops, hash match, merge join, STATISTICS XML, SET STATISTICS TIME, SET STATISTICS IO, logical reads, plan regression, force plan, sp_query_store_force_plan, implicit conversion, plan reuse, OPTION RECOMPILE]
 description: "How to read, capture, and analyze SQL Server execution plans to identify performance problems — covers plan operators, cardinality estimation errors, parameter sniffing, Query Store setup, and plan forcing to fix regressions."
 created: 2026-03-22
 updated: 2026-03-22
@@ -168,6 +164,10 @@ Every operator shows an **Estimated Operator Cost** as a percentage of total que
 > [!warning] Cost Percentages Are Estimates
 >
 > Costs are based on the optimizer's statistics, not actual execution. If statistics are stale, cost distribution can be completely wrong. Always cross-reference with actual row counts and SET STATISTICS IO output.
+
+> [!success] Safe Pattern — Validate with Actual Plans and STATISTICS IO
+>
+> Always run queries with **Include Actual Execution Plan** (Ctrl+M) and `SET STATISTICS IO ON` before drawing conclusions from cost percentages. Use actual row counts versus estimated row counts as the primary signal. If estimated and actual rows diverge by more than 10x on a key operator, run `UPDATE STATISTICS <table> WITH FULLSCAN` and re-examine the plan.
 
 #### XML plan nodes //RelOp — extract operator costs programmatically
 

@@ -1,7 +1,4 @@
 ---
-type: reference
-category: terraform
-technology: [terraform, gcp, bigquery, firestore, dataflow]
 tags: [infrastructure, terraform, iac, bigquery, gcp, firestore]
 aliases:
   - terraform data services
@@ -13,58 +10,6 @@ aliases:
   - google_bigquery_table terraform
   - google_firestore_database terraform
   - google_dataflow_job terraform
-keywords:
-  - google_bigquery_dataset
-  - google_bigquery_table
-  - google_bigquery_routine
-  - google_bigquery_data_transfer_config
-  - google_bigquery_connection
-  - google_bigquery_reservation
-  - google_bigquery_reservation_assignment
-  - google_bigquery_dataset_iam_member
-  - google_firestore_database
-  - google_firestore_index
-  - google_firestore_document
-  - google_firestore_backup_schedule
-  - google_firebaserules_ruleset
-  - google_dataflow_job
-  - google_dataflow_flex_template_job
-  - google_sql_database_instance
-  - google_sql_database
-  - google_sql_user
-  - google_logging_project_sink
-  - google_logging_project_exclusion
-  - google_monitoring_alert_policy
-  - google_monitoring_notification_channel
-  - google_monitoring_uptime_check_config
-  - google_monitoring_metric_descriptor
-  - google_monitoring_dashboard
-  - google_billing_budget
-  - BigQuery dataset
-  - BigQuery table schema
-  - BigQuery partitioning
-  - BigQuery clustering
-  - BigQuery view
-  - BigQuery materialized view
-  - BigQuery UDF
-  - BigQuery external table
-  - BigQuery scheduled query
-  - BigQuery slots reservation
-  - Firestore native mode
-  - Firestore composite index
-  - Firestore backup schedule
-  - Dataflow batch job
-  - Dataflow streaming job
-  - Dataflow flex template
-  - Cloud SQL PostgreSQL
-  - log sink BigQuery
-  - monitoring alert policy
-  - billing budget threshold
-  - time partitioning
-  - range partitioning
-  - ingestion time partitioning
-  - data warehouse
-  - GCP data services
 description: "Atomic Terraform block library for GCP data services — BigQuery datasets, tables, views, materialized views, UDFs, external tables, scheduled queries, reservations, Firestore databases, indexes, backup schedules, Dataflow batch and streaming jobs, Cloud SQL instances, log sinks, monitoring alert policies, and billing budgets. Every argument is commented inline."
 created: 2026-03-22
 updated: 2026-03-22

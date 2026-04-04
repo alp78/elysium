@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python]
 tags: [python, pipeline]
 aliases: [advanced pipelines, async generators, parallel ingestion, subprocess]
-keywords: [async generator, asyncio.gather, as_completed, semaphore, rate limiting, subprocess, aiohttp, parallel API, batch consumer, distributed task queue, celery, dask]
 description: "Python advanced parallel pipelines reference with executable examples and cell outputs — covers async generators, parallel API ingestion with rate limiting, async batching, subprocess execution, and distributed task queues. See [13_cs_advancedpipelines](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/13_cs_advancedpipelines) for the C# equivalent."
 created: 2026-03-25
 updated: 2026-03-25
@@ -21,6 +17,12 @@ status: complete
 > [!danger] Secrets Management
 >
 > Load API keys from `.env` for local development. In production, use GCP Secret Manager, AWS Secrets Manager, or Azure Key Vault. NEVER commit `.env` to git.
+
+> [!success] Safe secrets pattern
+>
+> - Use `python-dotenv` with a `.env` file locally; add `.env` to `.gitignore` before the first commit
+> - In production (GCP), read secrets at runtime via `google-cloud-secret-manager` — never bake them into images or config files
+> - Rotate keys in the secret manager without touching code; inject via `os.environ` or a dedicated secrets-loader function
 
 ```python
 # Imports and API keys from .env file
@@ -116,6 +118,12 @@ async for series_id, title in fetch_fred_series('inflation', limit=8):
 > Most financial data APIs have strict rate limits (Twelve Data: 8/min, Alpha Vantage:
 > 5/min). Without a semaphore, every request after the limit returns `429 Too Many
 > Requests` — and your pipeline processes empty/error responses as valid data.
+
+> [!success] Always gate gather() with a Semaphore
+>
+> - Wrap the fetch coroutine in `async with semaphore:` to cap concurrent requests (e.g., `asyncio.Semaphore(3)` for Twelve Data free tier)
+> - Check `resp.status` for 429 inside the coroutine and raise so gather reports the error instead of silently returning empty data
+> - For strict rate limits (requests-per-minute), combine the semaphore with `asyncio.sleep` between batches
 
 #### asyncio.Semaphore + aiohttp — parallel fetch with rate limiting
 
@@ -274,6 +282,12 @@ The `subprocess` module spawns external programs from Python. `subprocess.run()`
 > [!danger] subprocess with shell=True
 >
 > `subprocess.run(cmd, shell=True)` passes the command through a shell, enabling command injection if `cmd` contains user input. Always use `shell=False` (default) with a list of arguments: `subprocess.run(["gcloud", "compute", "instances", "list"])`.
+
+> [!success] Use shell=False with a list of arguments
+>
+> - Always pass commands as a list: `subprocess.run(["gcloud", "compute", "instances", "list"])` — each element is a separate token, never shell-interpreted
+> - Pass secrets via environment variables (`env={"MY_SECRET": value}`) rather than as command arguments, which are visible in `ps` output
+> - Set `timeout=` on every `subprocess.run()` call to prevent hung child processes from blocking the pipeline
 
 ```python
 # subprocess — spawn child processes with full isolation

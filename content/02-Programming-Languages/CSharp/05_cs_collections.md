@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [lists, dictionaries, sets, tuples, arrays, List, Dictionary, HashSet, LINQ]
-keywords: [List, Dictionary, HashSet, Queue, Stack, IEnumerable, LINQ, array, SortedDictionary, ConcurrentDictionary]
 description: "C# collections reference with executable examples and cell outputs — covers List, Dictionary, HashSet, arrays, Queue, Stack, and immutable collections. See [05_py_collections](https://alp78.github.io/elysium/02-Programming-Languages/Python/05_py_collections) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -32,6 +28,11 @@ Arrays are fixed-size, contiguous memory with O(1) index access — the fastest 
 >
 > - **`Array.Resize`** creates a new array and copies — it's not in-place
 > - **Resizing arrays manually** — use `List<T>` for dynamic collections
+
+> [!success] Correct patterns
+>
+> - Use `List<T>` whenever size is dynamic; reserve arrays for fixed buffers, interop, or performance-critical paths
+> - Pre-allocate with `new T[n]` when size is known upfront to avoid resize overhead
 
 ```csharp
 int[] nums = { 1, 2, 3, 4, 5 };                      // literal
@@ -67,8 +68,14 @@ string.Join(", ", nums[1..4])   // [1..4]
 > [!warning] Lists Are Single-Type
 > `List<T>` holds one type only. `List<object>` allows mixed types but loses type safety — avoid in production code.
 
+> [!success] Use generics for type safety
+> Model mixed-type data with a strongly typed `record` or class rather than `List<object>`. This preserves IntelliSense, compile-time checks, and serialization compatibility.
+
 > [!warning] List capacity doubling
 > When a List exceeds its internal capacity, it allocates a new array twice the size and copies all elements. For large lists (millions of items), this causes memory spikes and GC pressure. If you know the final size, set it upfront: `new List<T>(capacity: 1_000_000)`.
+
+> [!success] Pre-size large lists
+> Always specify `new List<T>(capacity: n)` when loading large datasets (e.g., from a database or file). This eliminates resize copies and reduces GC pressure significantly.
 
 ```csharp
 // List<T> — dynamic array with Add, Insert, Remove operations
@@ -162,6 +169,9 @@ These methods create new collections from existing ones. `ToArray()` and `ToList
 
 > [!danger] Shallow copy trap
 > `var copy = original.ToList()` creates a new List, but both lists contain references to the SAME objects. Mutating `copy[0].Name = "changed"` also changes `original[0].Name`. For true independence, you need deep cloning.
+
+> [!success] Deep clone when independence is required
+> Use `Select(item => item with { })` (record copy expressions) or implement `ICloneable` to produce a truly independent copy. For value-type collections (`List<int>`, `int[]`) shallow copy is always safe.
 
 ```csharp
 // Copying and conversion — shallow copy, ToArray, ToList
@@ -335,6 +345,12 @@ Hash-based mapping with O(1) average lookup, insert, and remove. Keys must imple
 > - **Bracket access without checking** key exists — `KeyNotFoundException`
 > - **Mutable keys** — changing a key's hash after insertion breaks lookup
 
+> [!success] Safe dictionary access
+>
+> - Always use `TryGetValue` or `ContainsKey` before bracket access in uncertain lookups
+> - Use `GetValueOrDefault(key, fallback)` for concise fallback reads
+> - Prefer immutable or struct keys (`string`, `int`, `record struct`) to avoid hash mutation bugs
+
 ```csharp
 var empty = new Dictionary<string, int>();
 var person = new Dictionary<string, object>
@@ -473,6 +489,11 @@ foreach (var (key, value) in sorted)
 >
 > - **`List` + `Contains`** for uniqueness checks — O(n) per check vs O(1) for `HashSet`
 > - **Mutable elements** — hash changes break lookup
+
+> [!success] Correct HashSet usage
+>
+> - Use `HashSet<T>` whenever membership testing or deduplication is needed — it is O(1) vs O(n) for `List`
+> - Use immutable or value-type elements (`string`, `int`, `record struct`) to guarantee stable hash codes
 
 ```csharp
 var empty = new HashSet<int>();

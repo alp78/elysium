@@ -1,10 +1,6 @@
 ---
-type: reference
-category: db-queries
-technology: [sql-server, t-sql]
 tags: [sql, sql-server, tsql]
 aliases: [SQL fundamentals, T-SQL basics, SQL queries, SELECT, JOIN, WHERE, GROUP BY]
-keywords: [sql, t-sql, select, join, inner join, left join, where, group by, having, order by, subquery, union, aggregate, count, sum, avg, distinct, null, like, between, in, case, coalesce]
 description: "SQL Server T-SQL fundamentals with executable examples and cell outputs — covers SELECT, filtering, joins, aggregation, subqueries, and set operations."
 created: 2026-03-22
 updated: 2026-03-22
@@ -33,6 +29,10 @@ Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?TrustServerCertif
 > [!danger] Lab-Only Credentials
 >
 > The connection string above contains a plaintext password for a local lab environment. In production, credentials are stored in GCP Secret Manager and fetched at runtime — never hardcoded. See [secrets-management > Access from Python](https://alp78.github.io/elysium/06-GCP/Security/secrets-management#access-from-python).
+
+> [!success] Safe Pattern
+>
+> In production, retrieve the connection string from GCP Secret Manager at runtime: `secretmanager.SecretManagerServiceClient().access_secret_version(name=...)`. Never hardcode passwords in notebooks, scripts, or source control. Use environment variables or secret injection via Cloud Run / GKE secrets.
 
 ## Schema Exploration
 
@@ -179,6 +179,10 @@ The fundamental query: pick columns, filter rows, sort results. `TOP N` limits o
 >
 > `SELECT TOP 10 * FROM table` returns an ARBITRARY 10 rows — not the first 10, not the newest 10. The engine picks whichever rows it finds first based on the execution plan. Always pair `TOP` with `ORDER BY` unless you genuinely don't care which rows you get.
 
+> [!success] Safe Pattern
+>
+> Always pair `TOP N` with `ORDER BY` to get a deterministic result: `SELECT TOP 10 ... ORDER BY date DESC`. If you only need to check whether any row exists (e.g., in an `IF EXISTS` guard), use `SELECT TOP 1 1 FROM ...` with no `ORDER BY` — that is the one case where order genuinely doesn't matter.
+
 ```sql
 -- Latest 10 trading days for ASML
 -- Basic SELECT with WHERE, ORDER BY, TOP
@@ -264,6 +268,10 @@ Combine conditions with `AND` / `OR`. Use `ABS()` for absolute values. This find
 > [!warning] FLOAT is approximate — ROUND() can surprise
 >
 > `FLOAT` stores binary approximations. `ROUND(3.145, 2)` on a `FLOAT` column may return `3.14` instead of `3.15`. For financial calculations or exact comparisons, use `DECIMAL(18, 4)`. OHLCV prices stored as `FLOAT` are acceptable for analytics but not for accounting.
+
+> [!success] Safe Pattern
+>
+> Use `DECIMAL(18, 4)` or `DECIMAL(18, 8)` for financial values that require exact arithmetic (NAV, index weights, fees). Use `FLOAT` only for analytics columns (daily returns, z-scores, volatility) where a sub-penny binary approximation error is acceptable. Never use `=` to compare `FLOAT` columns — use `ABS(a - b) < 0.0001` instead.
 
 ```sql
 -- Filter with multiple conditions
@@ -419,6 +427,10 @@ Group by `YEAR(date), MONTH(date)` to build time-series summaries. Shows monthly
 >
 > `WHERE YEAR(date) = 2025` cannot use an index on `date` — the engine evaluates `YEAR()` on every row. Rewrite as `WHERE date >= '2025-01-01' AND date < '2026-01-01'`. Functions in `GROUP BY` are fine (no index needed). Functions in `WHERE` are the problem. See [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries).
 
+> [!success] Safe Pattern
+>
+> Replace any function-on-column `WHERE` predicate with a range: `WHERE date >= '2025-01-01' AND date < '2026-01-01'` instead of `WHERE YEAR(date) = 2025`. For string patterns, use `WHERE symbol LIKE 'ASML%'` rather than `WHERE LEFT(symbol, 4) = 'ASML'`. This allows the engine to seek directly into the index rather than scanning every row.
+
 
 ```sql
 -- Monthly performance summary for ASML
@@ -509,12 +521,20 @@ ORDER BY yr, mo
 > 2,662 rows for ASML — silently doubling your data with no error. Always verify row
 > counts after a JOIN: `SELECT COUNT(*) FROM result` vs expected.
 
+> [!success] Safe Pattern
+>
+> Before joining, verify the join key is unique on the "one" side: `SELECT symbol, COUNT(*) FROM silver.index_dim WHERE is_current = 1 GROUP BY symbol HAVING COUNT(*) > 1`. If duplicates exist, use a subquery with `ROW_NUMBER()` to deduplicate before joining, or add `AND d.is_current = 1` to restrict to the current row.
+
 > [!warning] NULL Keys Break LEFT JOINs
 >
 > LEFT JOIN with NULL keys — rows disappear silently.
 > `NULL = NULL` returns `FALSE` in SQL, not `TRUE`. If join keys contain NULLs, those
 > rows never match. Use `COALESCE(key, 'UNKNOWN')` or `IS NOT DISTINCT FROM` (SQL Server
 > doesn't support this — use `WHERE key1 = key2 OR (key1 IS NULL AND key2 IS NULL)`).
+
+> [!success] Safe Pattern
+>
+> If the join key can be NULL, use `COALESCE(key, '')` on both sides: `ON COALESCE(a.symbol, '') = COALESCE(b.symbol, '')`. Alternatively, filter out NULLs before joining with `WHERE key IS NOT NULL`. After a LEFT JOIN, check whether expected matches were lost: `SELECT COUNT(*) WHERE right_side_column IS NULL` should be close to zero if the join key is meant to be populated.
 
 ### JOIN Across Medallion Layers — OHLCV + Dimension (Silver)
 
@@ -721,6 +741,10 @@ ORDER BY s.composite_rank
 > Forgetting this and expecting aggregated output is the most common window function
 > mistake. If you want one row per group, use GROUP BY. If you want the aggregate on
 > every row alongside the detail, use OVER().
+
+> [!success] Safe Pattern
+>
+> Use `GROUP BY` when you want one output row per group (e.g., average volume per stock). Use `OVER (PARTITION BY ...)` when you want the aggregate attached to every detail row (e.g., a running total or the partition average alongside each row for normalization). If the query is slow, wrap the window function in an outer SELECT with `WHERE` to filter after the window computation.
 
 ### Window Functions — Moving Averages (SMA)
 

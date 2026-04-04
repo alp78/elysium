@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: git
-technology: [git, github, gcp]
 tags: [ci-cd, gcp, git, github-actions]
 aliases: [GitHub Actions, CI/CD, workflow, gh run, workflow_dispatch, matrix testing, secrets management]
-keywords: [GitHub Actions, workflow, YAML, trigger, push, pull_request, schedule, workflow_dispatch, matrix, secrets, GCP_SA_KEY, gh run, gh workflow run, deploy, Cloud Run, Artifact Registry, google-github-actions/auth]
 description: "GitHub Actions CI/CD workflows for data engineering teams — triggers, matrix testing, secrets management, GCP authentication, and monitoring workflow runs with the GitHub CLI."
 created: 2026-03-22
 updated: 2026-03-22
@@ -112,6 +108,10 @@ The `credentials_json` field receives the full JSON content of the service accou
 >
 > When `GCP_SA_KEY` is missing or empty, the expression `${{ secrets.GCP_SA_KEY }}` resolves to an empty string. The `google-github-actions/auth` action then fails with `must specify exactly one of workload_identity_provider or credentials_json` -- not "secret is missing." Always verify secrets exist with `gh secret list` before debugging authentication failures.
 
+> [!success] Verify before debugging auth
+>
+> Run `gh secret list` to confirm `GCP_SA_KEY` exists in the repository. If missing, set it with `gh secret set GCP_SA_KEY < your-ci-key.json`. For new projects, prefer Workload Identity Federation (`workload_identity_provider` + `service_account`) over long-lived JSON keys — it eliminates this class of secret-missing errors entirely.
+
 #### Common secrets for GCP projects
 
 | Secret name | What it contains | Used by |
@@ -126,6 +126,10 @@ The `credentials_json` field receives the full JSON content of the service accou
 > - Secrets are NOT passed to workflows triggered from forks (including Dependabot) — this is a GitHub security feature
 > - A missing or mistyped secret resolves to `""` silently — no error, just blank credentials downstream
 > - Rotate secrets periodically: delete old key in GCP/Datadog, generate new, update GitHub secret
+
+> [!success] Robust secret management pattern
+>
+> Add `.json`, `.env`, and `*.pem` to `.gitignore` before the first commit. Store all secrets in GitHub Settings → Secrets. Use `gh secret list` to audit what is configured. For GCP authentication, prefer Workload Identity Federation to avoid long-lived key rotation entirely. Set a calendar reminder for periodic secret rotation.
 
 ---
 

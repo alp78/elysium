@@ -1,35 +1,7 @@
 ---
-type: reference
-category: shell
-technology: [bash, powershell, sed]
-tags: [shell, bash, linux, powershell]
+tags: [shell, text-processing]
 aliases: [sed, stream editor, find and replace, text substitution, in-place editing, -i flag]
-keywords:
-  - sed
-  - stream editor
-  - text substitution
-  - find and replace
-  - regex replace
-  - in-place editing
-  - -i flag
-  - bash text processing
-  - PowerShell replace
-  - line deletion
-  - pattern matching
-  - capture groups
-  - back-references
-  - global substitution
-  - address range
-  - POSIX sed
-  - GNU sed
-  - extended regex
-  - ETL text transformation
-  - log file processing
-  - CSV manipulation
-  - BOM removal
-  - ANSI strip
-  - CRLF to LF
-description: "Exhaustive reference for sed (stream editor) covering substitution, deletion, insertion, addressing, regex capture groups, and in-place file editing — with PowerShell equivalents for every command. Includes data engineering scenarios such as CSV header fixes, BOM removal, CRLF conversion, SQL migration edits, PII sanitisation, and ANSI colour stripping."
+description: "Exhaustive reference for sed (stream editor) covering substitution, deletion, insertion, addressing, regex capture groups, and in-place file editing — with PowerShell equivalents for every command."
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -56,7 +28,7 @@ status: complete
 
 sed operates on a cycle: for each line of input, it executes this sequence:
 
-```
+```text
 Read one line into pattern space
 ↓
 Apply all commands that match (address + command)
@@ -218,6 +190,9 @@ By default sed writes to stdout and leaves the source file untouched. The `-i` f
 > **BSD sed (macOS):** `sed -i '' 's/old/new/g' file` — the suffix argument is mandatory; pass an empty string `''` for no backup. Omitting the `''` causes a syntax error.
 > Use `sed -i.bak` when you need behaviour identical on both platforms.
 
+> [!success] Use sed -i.bak for cross-platform safety
+> `sed -i.bak 's/old/new/g' file` creates `file.bak` as a backup and works identically on GNU sed (Linux) and BSD sed (macOS). Delete the backup with `rm file.bak` once you've verified the result.
+
 ### Edit File Directly (Linux/GNU sed)
 
 ```bash
@@ -270,6 +245,9 @@ sed -i 's/DEBUG/INFO/g' service-a.log service-b.log service-c.log
 > [!warning] No undo for in-place edits
 >
 > `sed -i` modifies files immediately. Always test with `sed 's/old/new/g' file | head` before committing to `-i`. Use `-i.bak` for safety on large or critical files.
+
+> [!success] Dry-run before using -i, use -i.bak on critical files
+> Test with `sed 's/old/new/g' file | diff - file` to preview all changes before applying. Add `-i.bak` to automatically create a backup; remove it with `rm file.bak` only after confirming the result is correct.
 
 ---
 
@@ -647,6 +625,9 @@ sed '1s/,$//' exported.csv
 >
 > sed operates on raw text and does not understand CSV quoting rules. If your CSV has quoted fields that may contain commas or newlines, use Python's `csv` module or `awk` with FPAT instead.
 
+> [!success] Use Python csv module or awk FPAT for quoted CSV fields
+> For CSV files with quoted fields: Python `csv.reader()` handles RFC 4180 quoting correctly. In awk, `FPAT='([^,]*)|("[^"]+")` splits fields respecting double-quoted values containing commas. Use sed only for simple unquoted CSV transformations.
+
 ### Remove BOM from UTF-8 Files
 
 Many Windows tools add a Byte Order Mark (BOM: `EF BB BF`) to UTF-8 files. This breaks `head` comparisons, SQL loaders, and Python readers.
@@ -868,6 +849,9 @@ sed -E \
 > [!warning] PII regex is not data governance
 >
 > Regex-based redaction handles common patterns but will miss obfuscated or unusual formats. Use a dedicated PII detection library (e.g., Google Cloud DLP, Microsoft Presidio) for compliance-critical use cases. sed redaction is appropriate for quick local log inspection, not production pipelines.
+
+> [!success] Use Cloud DLP or Presidio for compliance-critical redaction
+> For production pipelines, Google Cloud DLP and Microsoft Presidio use ML-based detection that handles obfuscated formats, context-aware identification, and audit trails. Reserve sed redaction for local development log inspection only — never use it to gate a production data flow that must be compliant.
 
 ### Idempotent Pipeline: Normalise Input Before Loading
 
@@ -1158,7 +1142,7 @@ POSIX character classes work in both GNU and BSD sed, unlike `\w`, `\d` shorthan
 
 ## Quick Reference Card
 
-```
+```text
 SUBSTITUTION
   s/pat/rep/       Replace first match per line
   s/pat/rep/g      Replace all matches per line

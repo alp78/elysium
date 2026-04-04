@@ -1,10 +1,6 @@
 ---
-type: concept
-category: data-architecture
-technology: [gcp, python, bigquery]
 tags: [data-architecture, architecture, python, bigquery, gcp]
 aliases: [data lake, data swamp, landing zone, raw zone, curated zone, GCS data lake, S3 data lake, ADLS data lake, bronze zone, silver zone, gold zone, schema-on-read, Hive-style partitioning, object storage lake, cloud data lake]
-keywords: [data lake, data swamp, schema-on-read, schema-on-write, object storage, landing zone, raw zone, cleansed zone, curated zone, zones, GCS, S3, ADLS, Azure Data Lake Storage, cloud storage, Hive partitioning, Hive-style, partition discovery, Parquet, Avro, ORC, CSV, JSON, file format, data catalog, data lineage, data governance, PII, access control, lifecycle policy, storage class, BigQuery external tables, Dataproc, ETL, ELT, medallion architecture, data lakehouse, Apache Iceberg, Delta Lake, open table formats, cost optimization, retention policy, naming convention, file organization, compaction, small files problem]
 description: "Comprehensive reference on data lake architecture — zone organization (Landing, Cleansed, Curated), Hive-style partitioning, file format selection, governance and cataloging, anti-patterns (data swamp), GCS/S3/ADLS comparison, and GCP-specific lake implementation using GCS, BigQuery external tables, and Dataproc."
 created: 2026-03-22
 updated: 2026-03-22
@@ -40,6 +36,9 @@ Understanding this distinction is the architectural foundation of the data lake 
 
 > [!warning] Schema-on-Read Is Not Free
 > Schema-on-read means the lake accepts anything — but it also means bad data silently enters the lake and corrupts downstream queries. A well-run data lake enforces quality at zone boundaries (see the zone architecture below), not at every raw file. The real discipline is enforcing schemas at the *transition* from raw to curated zones, not at ingest.
+
+> [!success] Zone Boundary Enforcement
+> Accept any format in the landing zone (raw, immutable copy) but enforce a declared schema at the landing → cleansed transition. Use Spark's `DROPMALFORMED` mode or a Python Pydantic validator to reject or quarantine records that fail the schema. Any quarantined record lands in a `_rejected/` partition alongside the cleansed data, preserving the audit trail without polluting the cleansed zone.
 
 ---
 
@@ -160,6 +159,9 @@ df.filter(df.year == 2026).filter(df.month == 3)
 > [!warning] Partition Cardinality Balance
 > Partition on columns with moderate cardinality. Date (YYYY/MM/DD) is the most common and usually ideal. Avoid partitioning by high-cardinality columns (instrument_id with 50,000 values creates 50,000 directories — object listing becomes the bottleneck). Avoid partitioning by low-cardinality columns (market = [US, EU, APAC] → only 3 directories, no pruning benefit for most queries).
 
+> [!success] Recommended Partition Strategy
+> Partition first by date (year/month/day for daily data, year/month for monthly aggregates). If a secondary dimension is needed, choose one with 10–500 distinct values (e.g., asset class, region, exchange). For very high-cardinality secondary dimensions like instrument_id, use clustering (BigQuery) or sorting within Parquet row groups instead of directory-level partitioning.
+
 ### File Naming Conventions
 
 ```
@@ -230,6 +232,9 @@ Curated zone:   Parquet (compressed, partitioned, clustered)
 
 > [!warning] Never Use CSV or JSON in the Curated Zone
 > CSV and JSON have no embedded schema, no columnar storage, and no compression interoperability. A 10 GB CSV file in the curated zone will be read end-to-end for every query. The same data as Parquet with Snappy compression is typically 2–5 GB and scanned 3–10x faster because query engines read only the relevant columns. See [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) for the full format comparison.
+
+> [!success] Convert at the Cleansed Zone Boundary
+> Run a conversion step as the final action of every cleansing pipeline: read the raw CSV/JSON from landing, validate the schema, and write the output as Parquet with Snappy compression and Hive-style date partitioning. The cleansed zone should contain only Parquet (or Avro for Kafka-origin data). Any analyst or BI tool that claims to need CSV can be served by a one-off export, not by storing CSV in the lake permanently.
 
 #### Parquet configuration for data lake
 
@@ -360,6 +365,9 @@ See [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/s
 
 > [!warning] Don't Grant Project-Level Storage Roles
 > Granting `roles/storage.objectViewer` at the project level gives access to all buckets in the project. Assign bucket-level IAM bindings to enforce zone separation. Use [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam)'s condition-based IAM for attribute-level access control.
+
+> [!success] Bucket-Level IAM Pattern
+> Create one service account per pipeline stage (e.g., `sa-landing-writer`, `sa-cleanse-reader`, `sa-curate-writer`) and bind each to its specific bucket with the minimum required role. Analysts get `roles/storage.objectViewer` on the curated bucket only. Enforce this via Terraform so IAM bindings are code-reviewed and version-controlled, not applied ad hoc via the console.
 
 ### PII Handling in the Lake
 
@@ -657,6 +665,9 @@ Implement automatic storage class transitions to minimize cost for aging data. S
 
 > [!warning] NEARLINE and COLDLINE Minimum Storage Durations
 > GCS charges a minimum storage duration for NEARLINE (30 days) and COLDLINE (90 days). If you delete a COLDLINE object after 10 days, you are charged for 90 days. Design lifecycle transitions so objects have lived in the current class for at least the minimum duration before transitioning or deleting. See [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) for the full cost model.
+
+> [!success] Safe Lifecycle Transition Design
+> Structure the lifecycle rule chain so each transition fires only after the object has fully served its minimum duration in the current class: STANDARD for the first 30 days, transition to NEARLINE at day 30 (not before), transition to COLDLINE at day 90, and delete at day 180 (or retain permanently in COLDLINE for the cleansed zone). This avoids minimum-duration charges and aligns transitions with natural access patterns — recently ingested data is accessed more frequently.
 
 ### Columnar Compression Efficiency
 

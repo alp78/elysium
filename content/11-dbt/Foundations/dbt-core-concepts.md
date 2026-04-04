@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, sql, dbt, bigquery]
-type: concept
-technology: [dbt, sql-server, bigquery]
 status: stable
 updated: 2026-03-23
 description: "What dbt is, how it compiles, the DAG, materializations, profiles, adapters, and packages."
@@ -139,6 +137,9 @@ See [dbt-materializations](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-m
 > [!warning] env_var() in profiles.yml Fails Silently with Empty String
 > If `SQL_PASSWORD` is not set, `{{ env_var('SQL_PASSWORD') }}` resolves to an empty string -- dbt will not raise an error at parse time. The connection will then fail at runtime with a misleading authentication error. Always use `{{ env_var('SQL_PASSWORD', 'MISSING') }}` with a sentinel default, or validate environment variables in your CI startup script.
 
+> [!success] Use a sentinel default and a preflight check
+> Write `{{ env_var('SQL_PASSWORD', 'MISSING') }}` in `profiles.yml`. Add a CI startup step that runs `dbt debug` before `dbt run` — `dbt debug` will surface a connection failure immediately if the sentinel value is used, stopping the pipeline before any models execute.
+
 ### dbt Profiles and Targets
 
 `profiles.yml` defines where dbt connects. Each profile has multiple targets (environments):
@@ -235,8 +236,14 @@ models:
 > [!danger] dbt run --full-refresh on Incremental Models Silently Drops and Rebuilds the Table
 > Running `dbt run --full-refresh` on an incremental model drops the existing table and rebuilds from scratch. If your incremental model filters on `is_incremental()`, the full-refresh path must produce the correct full dataset -- otherwise you lose historical data. Always test `--full-refresh` in a dev target before running it in production. For snapshot tables, `--full-refresh` destroys all SCD2 history permanently (see [dbt-snapshots-and-scd](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-snapshots-and-scd)).
 
+> [!success] Test full-refresh in dev, validate row counts before prod
+> Always run `dbt run --full-refresh --target dev` first and verify the rebuilt table has the expected row count and date range. Ensure the model SQL outside the `{% if is_incremental() %}` block selects the full historical dataset. Gate the production full-refresh behind a manual approval step in CI to prevent accidental execution.
+
 > [!warning] dbt build vs dbt run -- Use build in CI/CD
 > `dbt run` executes models but does NOT run tests. `dbt build` runs models AND their downstream tests in dependency order. In CI/CD, always use `dbt build` -- otherwise bad data can propagate to the gold layer before tests catch it.
+
+> [!success] Use dbt build in all CI/CD pipelines
+> Replace every `dbt run && dbt test` invocation in CI with a single `dbt build` command. For slim CI, use `dbt build --select state:modified+ --defer --state ./prod_artifacts`. This ensures tests gate downstream execution and no failing data reaches the gold layer.
 
 ### dbt Anti-Patterns
 

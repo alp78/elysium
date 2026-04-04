@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, dbt]
-type: how-to
-technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "Model contracts, access levels, versioning, and breaking-change detection for financial data pipelines"
@@ -338,6 +336,9 @@ The PR is blocked until the column is restored or the contract YAML is updated a
 > [!warning] Breaking schema changes
 >
 > Removing a declared column or changing its data type is always a breaking change regardless of version. To remove a column gracefully: publish a new version, deprecate the old one, give consumers a migration window, then delete the old version.
+
+> [!success] Safe pattern: version-bump before removal
+> Increment `latest_version`, define the new schema in the new version, set a `deprecation_date` on the old version, and notify consumers. Only delete the old version SQL file and YAML entry once no `ref(..., v=N)` calls to it remain in any downstream project.
 
 ### `dbt source freshness` in CI
 

@@ -1,10 +1,6 @@
 ---
-type: reference
-category: db-queries
-technology: [firestore, csharp, dotnet, gcp]
 tags: [csharp, nosql, gcp, firestore]
 aliases: [Firestore C#, Firestore queries C#, NoSQL C#, document database C#]
-keywords: [firestore, csharp, dotnet, Google.Cloud.Firestore, DocumentReference, CollectionReference, query, where, order, limit, batch, transaction, snapshot, WriteBatch, FieldValue]
 description: "Firestore operations in C# with executable examples and cell outputs — covers CRUD, queries, transactions, batches, snapshots, and typed document mapping."
 created: 2026-03-22
 updated: 2026-03-22
@@ -21,6 +17,10 @@ status: complete
 > [!danger] .NET 10 Breaks Firestore SDK Reads
 >
 > On .NET 10, the `Google.Cloud.Firestore` SDK fails on document reads, real-time listeners, and aggregation queries due to a missing `AsyncInterfaces` assembly. Writes work normally. This page uses the Firestore REST API as a workaround for reads. Check for SDK updates before upgrading to .NET 10 in production.
+
+> [!success] Safe Pattern
+>
+> Stay on .NET 8 or .NET 9 for production Firestore workloads until the SDK ships a .NET 10-compatible release. For .NET 10 notebooks or exploratory code, use the Firestore REST API (`runQuery` / `runAggregationQuery`) as shown throughout this page. Writes via `SetAsync` / `UpdateAsync` are unaffected and can be used normally.
 
 Comprehensive reference for querying, writing, and managing Firestore collections
 using the `Google.Cloud.Firestore` C# SDK and REST API.
@@ -83,6 +83,10 @@ This cell:
 > [!warning] .NET 10 SDK Read Failure
 >
 > On .NET 10, Firestore SDK reads fail due to a missing `AsyncInterfaces` assembly. Writes work fine. For reads, we use the Firestore REST API as a workaround.
+
+> [!success] Safe Pattern
+>
+> Add `#r "nuget: Microsoft.Bcl.AsyncInterfaces"` before loading the Firestore SDK, and use the REST client (`HttpClient` + OAuth2 token) for all collection reads. Single-document reads via `GetSnapshotAsync()` work normally on .NET 10.
 
 > [!info] Two Clients — SDK and REST
 >
@@ -273,6 +277,10 @@ async Task EnsureIndex(string collection,
 >
 > `create_index` returns immediately. The index is not usable until it reaches `READY` state. The polling loop checks every 5 seconds for up to 2.5 minutes.
 
+> [!success] Safe Pattern
+>
+> Always call `EnsureIndex()` before the first query that requires a composite index. The helper polls for `READY` state before returning, so the subsequent query is guaranteed to find the index available. In production CI, pre-create all required indexes via `gcloud firestore indexes composite create` and include them in the deployment pipeline.
+
 ```csharp
     var resp = await http.PostAsync($"{parent}/indexes",
         new StringContent(body, Encoding.UTF8, "application/json"));
@@ -344,6 +352,10 @@ async Task EnsureFieldExemption(
 > [!warning] Preserve Existing COLLECTION Indexes
 >
 > The PATCH request replaces the entire index config for the field. Existing `COLLECTION`-scoped indexes must be included in the body or they will be deleted.
+
+> [!success] Safe Pattern
+>
+> Always GET the current field config before issuing a PATCH, extract all existing `COLLECTION`-scoped index entries, and include them in the new PATCH body alongside the new `COLLECTION_GROUP` entries. The `EnsureFieldExemption()` helper in this page does this correctly.
 
 ```csharp
     // Preserve existing COLLECTION indexes
@@ -559,6 +571,10 @@ foreach (var sym in new[] { "ASML.AS", "MC.PA", "SAP.DE" })
 > [!warning] Reads Billed per Document Returned
 >
 > A query returning 10,000 documents costs 10,000 read operations regardless of field projections. Use filters aggressively and apply limits for list operations.
+
+> [!success] Safe Pattern
+>
+> Always add a `limit` to list queries. For counts and aggregates, use `runAggregationQuery` (REST) or `Count().GetSnapshotAsync()` (.NET 8/9) — aggregation queries cost one read regardless of how many documents they scan.
 
 This cell:
 
@@ -1079,9 +1095,17 @@ foreach (var item in subResults.RootElement.EnumerateArray())
 >
 > A single Firestore document cannot exceed 1,048,576 bytes. If you store arrays that grow over time, they WILL eventually hit this limit. Move growing arrays to a subcollection.
 
+> [!success] Safe Pattern
+>
+> Never store unbounded arrays (e.g., price history, audit log entries) directly in a document. Use a subcollection instead — each entry becomes its own document with no practical size ceiling. For fixed-size arrays (e.g., a watchlist of up to 50 symbols), a document field is safe.
+
 > [!warning] Document Write Hotspot — 1 write/sec
 >
 > A single document can sustain ~1 write per second. Higher rates cause contention. Use sharded counters or separate documents for high-write scenarios.
+
+> [!success] Safe Pattern
+>
+> For counters updated by multiple writers, use a sharded counter pattern: split the counter across N shard documents (e.g., `counters/hits_0` … `counters/hits_9`), write to a random shard, and sum all shards at read time. For per-symbol pipelines, write to separate documents per symbol rather than aggregating into one shared document.
 
 This cell:
 
@@ -1092,6 +1116,10 @@ This cell:
 > [!danger] SetAsync Overwrites Everything
 >
 > `SetAsync(data)` **replaces the entire document** — all fields not in `data` are deleted. Use `SetAsync(data, SetOptions.MergeAll)` to upsert: creates if missing, updates only specified fields if exists.
+
+> [!success] Safe Pattern
+>
+> Use `SetAsync(data, SetOptions.MergeAll)` for upserts, and `UpdateAsync(fields)` when you only want to touch specific fields on an existing document. Reserve bare `SetAsync(data)` for explicit full-document replacements where you intentionally want to clear all other fields.
 
 ```csharp
 // SET: create a document
@@ -1185,6 +1213,10 @@ This cell:
 > [!danger] Deletion Does NOT Cascade
 >
 > Deleting a document does NOT delete its subcollections. Subcollection documents become orphans — accessible only if you know their path. You must delete subcollection documents individually.
+
+> [!success] Safe Pattern
+>
+> Before deleting a parent document, enumerate and delete all subcollection documents first. In production, use a Cloud Function triggered on document deletion to cascade the cleanup, or use the Firebase Admin SDK's `recursiveDelete()` method (available server-side) which handles the full tree automatically.
 
 ```csharp
 // DELETE: remove a document
@@ -1301,6 +1333,10 @@ Console.WriteLine("  [RESET] alert_001.acknowledged = false");
 >
 > Firestore C# SDK's `Listen()` method fails on .NET 10 due to the same `AsyncInterfaces` assembly issue that affects collection reads.
 
+> [!success] Safe Pattern
+>
+> On .NET 10, replace real-time listeners with a REST polling loop: call `runQuery` on a short interval (e.g., every 5–10 seconds) and compare results against a local snapshot to detect changes. For production event-driven workflows, use a Cloud Pub/Sub trigger or Cloud Function instead of an in-process listener.
+
 In a real .NET 8/9 project:
 
 ```csharp
@@ -1322,6 +1358,10 @@ or run the Python listener instead.
 > [!warning] .NET 10 Aggregations Fail
 >
 > Firestore C# SDK aggregation methods (`Count`, `Sum`, `Avg`) also fail on .NET 10 due to the `AsyncInterfaces` assembly issue.
+
+> [!success] Safe Pattern
+>
+> On .NET 10, use the REST `runAggregationQuery` endpoint directly. POST a structured aggregation body with `"aggregations": [{"count": {}}]` to get a count without reading individual documents. This costs one read operation regardless of collection size and avoids the SDK issue entirely.
 
 In a real .NET 8/9 project:
 

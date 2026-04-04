@@ -1,10 +1,6 @@
 ---
-type: concept
-category: docker
-technology: [docker]
 tags: [docker]
 aliases: [Docker Compose, docker compose, docker-compose, compose, multi-container, compose file, docker-compose.yaml, docker-compose.yml]
-keywords: [docker compose, up, down, build, restart, logs, pull, prune, multi-container, orchestration, services, volumes, detached, scale, exec, run, config, healthcheck, depends_on, networks, env_file, bind mount, named volume, override, force-recreate, rolling update, docker system prune, compose lifecycle, service restart]
 description: "Complete Docker Compose reference — compose file structure, lifecycle commands (up/down/start/stop/restart), scaling, logs, exec/debug, config overrides, and cleanup. Includes a full data engineering stack example with Airflow, PostgreSQL, and Redis."
 created: 2026-03-22
 updated: 2026-03-22
@@ -232,6 +228,10 @@ depends_on:
 > `depends_on` Without `service_healthy` Causes Silent Startup Failures.
 > `service_started` only waits for the container process to start, not for the application inside to be ready. If Airflow starts before PostgreSQL finishes initialization, the scheduler crashes with a connection error, enters a restart loop, and the logs fill with misleading "database does not exist" errors. Always use `condition: service_healthy` with a `healthcheck` that verifies the service is actually accepting connections.
 
+> [!success] Correct depends_on pattern
+>
+> Always pair `condition: service_healthy` with a `healthcheck` block on the dependency. For PostgreSQL: `test: ["CMD", "pg_isready", "-U", "airflow"]`. For Redis: `test: ["CMD", "redis-cli", "ping"]`. Set `start_period` to account for slow initialization on first boot.
+
 **Network configuration**
 
 ```yaml
@@ -286,6 +286,10 @@ WEBSERVER_SECRET_KEY=changeme-use-a-real-secret
 >
 > `.env` Files Are Loaded Automatically and Often Leaked.
 > `docker compose` silently loads `.env` from the compose file's directory -- even if you did not specify `env_file`. If this file contains production secrets and gets committed to git, the credentials are exposed in git history permanently. Add `.env` to `.gitignore` on day one. For production, use a secrets manager (GCP Secret Manager, Vault) and inject values via CI/CD -- never store production credentials in `.env` files on disk.
+
+> [!success] Safe .env handling
+>
+> Add `.env` to `.gitignore` immediately when creating the project. Commit a `.env.example` file with placeholder values so the team knows what variables are required. In CI/CD, inject secrets via GitHub Actions secrets or GCP Secret Manager rather than a `.env` file on disk.
 
 > [!tip] Related pattern
 >
@@ -352,6 +356,10 @@ docker compose stop airflow-scheduler  # stop a specific service
 > `docker compose down -v` is Destructive.
 > This deletes all named volumes — including your database data. Run `docker compose down` (without `-v`) when you just want to stop the stack. Only use `-v` when you explicitly want to wipe state and start fresh.
 
+> [!success] Safe teardown pattern
+>
+> Use `docker compose down` (no flags) to stop and remove containers and networks while preserving all volume data. Only add `-v` when you explicitly need a clean slate — for example, when resetting a local dev environment after a schema migration.
+
 ### Starting and Restarting
 
 ```bash
@@ -404,6 +412,10 @@ docker compose pull postgres && docker compose up -d --force-recreate postgres
 >
 > Scaling Services with Published Ports.
 > If a service has `ports: - "5432:5432"`, you cannot scale it beyond 1 replica — only one process can bind to host port 5432. Remove the `ports` key or use host-port 0 (dynamic assignment) before scaling.
+
+> [!success] Scaling without port conflicts
+>
+> Remove the `ports:` key from any service you intend to scale. Allow inter-service communication to use the internal Docker network (containers reach each other by service name). For services that need external access, put a load balancer (e.g., nginx) in front and scale only the backend workers.
 
 ---
 
@@ -613,6 +625,10 @@ docker system df -v
 > [!warning] Volume Pruning
 >
 > `docker volume prune` removes ALL volumes not currently mounted by at least one container. If your database container is stopped (but not removed), its volume is still "in use" — but if the container was removed (via `docker compose down`), the volume becomes "unused" and will be deleted. Always run `docker compose down` (without `-v`) instead of letting volumes accumulate for pruning.
+
+> [!success] Safe volume management
+>
+> Prefer `docker compose down` (no flags) to stop stacks — this removes containers and networks but preserves named volumes. Only run `docker volume prune` after explicitly confirming you have no data in those volumes. Use `docker volume ls` to review volumes before pruning.
 
 > [!tip] Routine Cleanup Pattern
 >

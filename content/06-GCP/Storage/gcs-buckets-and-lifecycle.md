@@ -1,10 +1,6 @@
 ---
-type: concept
-category: gcp
-technology: [gcp, cloud-storage]
 tags: [infrastructure, gcp, gcs]
 aliases: [GCS buckets, GCS lifecycle, GCS storage classes, GCS versioning, Cloud Storage lifecycle rules, STANDARD NEARLINE COLDLINE ARCHIVE]
-keywords: [GCS bucket, cloud storage, storage class, STANDARD, NEARLINE, COLDLINE, ARCHIVE, lifecycle rules, versioning, SetStorageClass, auto-transition, auto-delete, uniform bucket level access, location, data residency, lifecycle.json, cost optimization, retrieval cost]
 description: "How to create GCS buckets with appropriate storage classes and configure lifecycle rules to automatically transition objects through STANDARD → NEARLINE → COLDLINE → ARCHIVE, reducing storage costs for aging pipeline data."
 created: 2026-03-22
 updated: 2026-03-22
@@ -53,6 +49,10 @@ Choosing the right storage class is one of the most impactful [finops-cost-optim
 >
 > Minimum Storage Duration Charges.
 > Moving an object to NEARLINE before 30 days charges you for the full 30 days regardless. COLDLINE has a 90-day minimum, ARCHIVE has 365 days. Only transition objects when you are confident they won't need to be deleted before the minimum duration expires.
+
+> [!success] Align Lifecycle Ages to Access Patterns
+>
+> Set lifecycle transition ages to exceed the minimum storage durations: transition to NEARLINE at 30+ days, COLDLINE at 90+ days, ARCHIVE at 365+ days. For pipeline staging buckets, a reliable pattern is: STANDARD for 30 days (active pipeline window) → NEARLINE at day 30 → COLDLINE at day 90 → delete at day 365. This guarantees no early-deletion charges while still reducing storage costs progressively.
 
 ### GCS Lifecycle Rules for Auto-Tiering
 

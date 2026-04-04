@@ -1,10 +1,6 @@
 ---
-type: concept
-category: data-architecture
-technology: [python, gcp, spark, bigquery, databricks]
 tags: [data-architecture, architecture, lakehouse, python, bigquery, gcp]
 aliases: [lakehouse, data lakehouse, lake house, Delta Lake, Apache Iceberg, Apache Hudi, BigLake, Unity Catalog, Tabular, Databricks Lakehouse, lakehouse architecture]
-keywords: [lakehouse, data lakehouse, lake house, data lake, data warehouse, ACID transactions, object storage, schema enforcement, time travel, Delta Lake, Apache Iceberg, Apache Hudi, open table format, medallion architecture, bronze silver gold, BigLake, Unity Catalog, Tabular, Databricks, Snowflake, BigQuery, Spark, Trino, Presto, DuckDB, governance, schema evolution, partition pruning, query engine, Parquet, GCS, S3, cost optimization, lakehouse vs warehouse, lakehouse vs data lake]
 description: "The lakehouse architecture combines the low-cost flexible storage of a data lake with the transactional guarantees and governance of a data warehouse, enabled by open table formats (Delta Lake, Apache Iceberg, Apache Hudi) that add ACID transactions, time travel, and schema enforcement directly on object storage."
 created: 2026-03-22
 updated: 2026-03-22
@@ -39,6 +35,9 @@ The original data lake premise was compelling: store all raw data cheaply on obj
 
 > [!warning] The Data Swamp Anti-Pattern
 > A data lake without governance is a liability, not an asset. Teams that dumped data into S3 "to process later" typically found that "later" never came, the schema was undocumented, and the cost of making the data usable exceeded the cost of re-extracting from source.
+
+> [!success] Safe Pattern: Govern from the First Byte
+> Apply an open table format (Iceberg or Delta Lake) from the very first write — even to raw/Bronze tables. Register all tables in a catalog (BigLake Metastore, AWS Glue, Nessie) at creation time, enforce schema-on-write, and document grain and ownership before any downstream pipeline reads the data. Governance applied retroactively is orders of magnitude more expensive than governance applied at ingestion.
 
 ### The Data Warehouse Problem (2000–present)
 
@@ -325,6 +324,9 @@ ORDER BY event_date;
 
 > [!warning] Operational Complexity
 > A lakehouse is a distributed system. You are now responsible for compaction (merging small files into large ones), snapshot expiration (cleaning up old table versions), catalog management, and compute cluster sizing. Managed services (Databricks, Tabular, Google Dataproc Metastore) reduce this burden but do not eliminate it. Budget for operational engineering from day one.
+
+> [!success] Safe Pattern: Automate Maintenance from Day One
+> Schedule compaction, snapshot expiration, and orphan-file removal as recurring jobs in your orchestrator (Airflow, Databricks Workflows) at launch — not after performance degrades. Start with conservative defaults (compact daily, expire snapshots after 7 days, remove orphans weekly) and tune based on observed file-size distributions and query latency metrics.
 
 ---
 

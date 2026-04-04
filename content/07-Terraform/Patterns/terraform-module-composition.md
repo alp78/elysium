@@ -1,10 +1,6 @@
 ---
-type: concept
-category: infrastructure
-technology: [terraform]
 tags: [infrastructure, terraform, iac]
 aliases: [terraform modules, terraform module composition, multi-environment terraform, terraform workspaces, DRY terraform]
-keywords: [terraform modules, module composition, multi-environment, dev staging prod, module source, module variables, module outputs, terraform workspaces, DRY infrastructure, environment promotion, reusable modules]
 description: "How to use Terraform modules to create reusable, composable infrastructure for multiple environments (dev, staging, prod), avoiding copy-paste between configurations."
 created: 2026-03-22
 updated: 2026-03-22

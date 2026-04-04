@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: sql-server
-technology: [sql-server]
 tags: [performance, sql, sql-server, tsql]
 aliases: [SQL Server audit, performance audit, health check, DBA audit, instance audit]
-keywords: [performance audit, health check, wait stats, PLE, page life expectancy, buffer cache hit ratio, IO latency, missing indexes, unused indexes, blocking, deadlocks, stale statistics, plan cache, ad hoc plans, implicit conversion, TempDB, auto_shrink, MAXDOP, max server memory, cost threshold, RCSI, log reuse wait, sysadmin members, guest access, DMV, post-pipeline health check]
 description: "Step-by-step SQL Server performance audit playbook covering 11 phases: instance overview, memory pressure, wait statistics, IO performance, expensive queries, index health, TempDB, blocking and deadlocks, statistics and plan quality, database sizes, and security. Includes all diagnostic queries and a post-pipeline health check script."
 created: 2026-03-22
 updated: 2026-03-22
@@ -138,6 +134,10 @@ ORDER BY name;
 > [!warning] auto_shrink = ON is Critical
 >
 > Auto-shrink causes massive fragmentation and CPU spikes. It shrinks the file, then the next insert grows it again, endlessly. Disable immediately: `ALTER DATABASE [db] SET AUTO_SHRINK OFF;`
+
+> [!success] Disable auto_shrink immediately and set fixed-size file growth
+>
+> `ALTER DATABASE [db] SET AUTO_SHRINK OFF;` — then pre-size the data file to its expected steady-state and set growth to a fixed value (e.g., 256 MB) so autogrow events are infrequent and predictable.
 
 - `auto_stats = 0` or `auto_update_stats = 0` — SQL Server can't optimize queries without current statistics. Enable: `ALTER DATABASE [db] SET AUTO_CREATE_STATISTICS ON; ALTER DATABASE [db] SET AUTO_UPDATE_STATISTICS ON;`
 - `RCSI = 0` on an OLTP database — readers block writers. Consider enabling for mixed read/write workloads.
@@ -362,6 +362,10 @@ ORDER BY (fs.io_stall_read_ms + fs.io_stall_write_ms) DESC;
 >
 > Every transaction must wait for the log write to complete before returning success. A 10ms log write latency means every INSERT/UPDATE/DELETE takes at least 10ms regardless of how fast the query itself runs.
 
+> [!success] Place the log file on a dedicated SSD and separate it from data files
+>
+> Move the `.ldf` file to its own disk (or its own GCP persistent disk) separate from `.mdf`. Log writes are sequential — a dedicated SSD delivers sub-2ms latency. Also batch multiple INSERTs into one transaction to reduce the number of log flushes per pipeline run.
+
 #### High IO latency remediation — SSD, separate data/log, add indexes
 - Move to SSD if on spinning disk (biggest single improvement possible)
 - Separate data and log files onto different disks (prevents read/write contention)
@@ -495,6 +499,10 @@ ORDER BY us.user_updates DESC;
 >
 > Only Drop After Verifying Uptime > 7 Days.
 > If the server restarted yesterday, the index might be used by a weekly job that hasn't run yet. An index with `user_updates = 48000` and `user_seeks = 0` is a good drop candidate: `DROP INDEX IX_scores_old ON gold.scores;`
+
+> [!success] Disable the index first, run a full business cycle, then drop if no complaints
+>
+> `ALTER INDEX IX_scores_old ON gold.scores DISABLE;` stops the write maintenance cost while keeping the index structure intact. After a month-end cycle passes without query errors, then `DROP INDEX IX_scores_old ON gold.scores;`.
 
 ### Index Fragmentation
 
@@ -783,6 +791,10 @@ WHERE log_reuse_wait_desc <> 'NOTHING';
 > LOG_BACKUP with No Backup Schedule is an Emergency.
 > The log will grow until the disk fills up and the database stops accepting writes. If the disk is nearly full, this is a P1 incident.
 
+> [!success] Take an immediate log backup, then schedule regular log backups or switch to SIMPLE recovery
+>
+> Run `BACKUP LOG [db] TO DISK = N'/backup/db_log.bak';` to truncate the log now. Then either set up a SQL Agent job to back up the log every 15–60 minutes, or — if point-in-time recovery is not needed — `ALTER DATABASE [db] SET RECOVERY SIMPLE;` to allow automatic log truncation.
+
 ---
 
 ## Phase 11: Security Quick Check
@@ -968,6 +980,10 @@ Invoke-Sqlcmd -ServerInstance "localhost,1433" -Username "sa" -Password "EsgDev2
 > [!danger] Shrink Causes Massive Index Fragmentation
 >
 > DBCC SHRINKDATABASE causes massive index fragmentation. After shrinking, every index must be rebuilt — which grows the file again. Only shrink when reclaiming space from a one-time event (large data deletion, log backup catch-up). Never schedule regular shrinks.
+
+> [!success] After any shrink, immediately rebuild all indexes to restore performance
+>
+> Run `ALTER INDEX ALL ON table REBUILD WITH (ONLINE = ON);` for every table in the shrunk database. Better still, avoid shrinking — pre-size files at deployment and only shrink as a one-time recovery action, never on a schedule.
 
 ```sql
 -- Shrink database (reclaim free space)

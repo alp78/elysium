@@ -1,10 +1,6 @@
 ---
-type: reference
-category: db-queries
-technology: [firestore, python, gcp]
 tags: [python, nosql, gcp, firestore]
 aliases: [Firestore Python, Firestore queries Python, NoSQL Python, document database Python]
-keywords: [firestore, python, google-cloud-firestore, document, collection, query, where, order_by, limit, batch, transaction, real-time, on_snapshot, subcollection, array_contains, composite index]
 description: "Firestore operations in Python with executable examples and cell outputs — covers CRUD, queries, transactions, batches, real-time listeners, and subcollections."
 created: 2026-03-22
 updated: 2026-03-22
@@ -60,6 +56,10 @@ This cell:
 > [!warning] Key File for Local Dev Only
 >
 > Setting `GOOGLE_APPLICATION_CREDENTIALS` to a local key file works for development but is a security liability. On production VMs and Cloud Run, remove this env var — the metadata server provides credentials automatically. See [gcp-identity-and-connection-patterns > Metadata Server (GCE VMs, Cloud Run) — the production standard](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns#metadata-server-gce-vms-cloud-run--the-production-standard).
+
+> [!success] Safe Pattern
+>
+> Use `os.environ.setdefault(...)` so the env var is only set if not already present — this lets Cloud Run's metadata server take precedence in production. Store the key path in a `.env` file excluded from version control, and never commit `gcp-*-key.json` to git.
 
 ```python
 import os
@@ -138,6 +138,10 @@ def ensure_index(collection: str, fields: list[dict],
 > [!warning] Index Build Is Asynchronous
 >
 > `create_index()` returns a long-running operation. The index is not usable until the operation completes. Queries that need the index will fail with `FAILED_PRECONDITION` until it's ready. The polling loop below waits for completion.
+
+> [!success] Safe Pattern
+>
+> Always call `ensure_index()` before the first query that requires a composite index. The helper polls until `state != CREATING`, so the subsequent query is guaranteed to find the index available. In production CI, pre-create all required indexes via `gcloud firestore indexes composite create` and include them in the deployment pipeline — never rely on runtime index creation in production flows.
 
 ```python
         # Poll until the operation completes
@@ -232,6 +236,10 @@ def _ensure_field_exemption(collection: str, field: dict) -> None:
 > [!warning] Preserve Existing COLLECTION Indexes
 >
 > The PATCH request replaces the entire index config for the field. You must include the existing `COLLECTION`-scoped indexes in the body, or they will be deleted. The code below fetches current indexes, strips the `state` field (API rejects it), and appends the new `COLLECTION_GROUP` entries.
+
+> [!success] Safe Pattern
+>
+> Always GET the current field config before issuing a PATCH: extract all `queryScope == "COLLECTION"` entries, strip the `state` key (the API rejects it on write), then append the new `COLLECTION_GROUP` entries. The `_ensure_field_exemption()` helper in this page implements this pattern correctly.
 
 ```python
     # Preserve existing COLLECTION indexes + add COLLECTION_GROUP
@@ -358,6 +366,10 @@ This cell:
 >
 > `.stream()` downloads every document in the collection. Fine for 50 stocks, dangerous for millions. For large collections, use pagination or server-side aggregation.
 
+> [!success] Safe Pattern
+>
+> Always chain `.limit(N)` before `.stream()` for list operations in production. For counts, use `.count().get()` — it is charged as 1 read regardless of collection size and transfers no document data. For large exports, paginate with `.start_after(last_doc)` rather than streaming the entire collection.
+
 ```python
 # List all documents in the stocks collection
 print("=== Stocks (top 10) ===")
@@ -426,6 +438,10 @@ for doc in docs:
 > [!warning] Reads Billed per Document Returned
 >
 > A query returning 10,000 documents costs 10,000 read operations regardless of field projections. There is no "column-level" cost savings like BigQuery. Use `where()` filters aggressively and always apply `limit()` for list operations.
+
+> [!success] Safe Pattern
+>
+> Filter as tightly as possible with `where()` before streaming results, and always add `limit()`. For counts and totals, use `.count().get()` or `.sum(field).get()` — these aggregation queries cost one read regardless of how many documents they touch.
 
 This cell:
 
@@ -508,6 +524,10 @@ This cell:
 > [!warning] No OR in Chained Filters
 >
 > Firestore evaluates all `.where()` clauses as AND only (no OR support in chained filters). Each unique field combination may require a composite index — Firestore returns an error URL to auto-create it on first run.
+
+> [!success] Safe Pattern
+>
+> For OR-style queries, run two separate queries and merge the results client-side (deduplicating by document ID). For the common case of OR across a finite set of values, use `.where(filter=FieldFilter("field", "in", [val1, val2, ...]))` which supports up to 30 values.
 
 ```python
 # Compound query needs a composite index — ensure it exists first
@@ -864,9 +884,17 @@ for doc in prices:
 >
 > A single Firestore document cannot exceed 1,048,576 bytes including all field names, values, and nested data. If you store arrays that grow over time (e.g., pipeline run history), they WILL eventually hit this limit. Move growing arrays to a subcollection instead.
 
+> [!success] Safe Pattern
+>
+> Never store unbounded arrays (price history, run steps, log entries) in a document field. Use a subcollection — each entry becomes its own document with no practical size ceiling. Reserve document-level arrays for fixed-size lists (e.g., a watchlist of up to 50 symbols) where growth is bounded.
+
 > [!warning] Document Write Hotspot — 1 write/sec
 >
 > A single document can sustain ~1 write per second. Higher rates cause contention and increased latency. If multiple pipeline runs update the same status document simultaneously, writes queue and slow down. Use sharded counters or separate documents for high-write scenarios.
+
+> [!success] Safe Pattern
+>
+> For shared counters (e.g., total pipeline runs), implement a sharded counter: maintain N shard documents and write to a randomly chosen shard. Read by summing all shards. For per-symbol pipelines, write to separate documents per symbol rather than aggregating into one shared status document.
 
 This cell:
 
@@ -877,6 +905,10 @@ This cell:
 > [!danger] SET Without Merge Overwrites Everything
 >
 > `set(data)` **replaces the entire document** — all fields not in `data` are deleted. Use `set(data, merge=True)` to upsert: creates if missing, updates only specified fields if exists.
+
+> [!success] Safe Pattern
+>
+> Use `set(data, merge=True)` for upserts, and `update(fields)` when you only want to touch specific fields on a document you know exists. Reserve bare `set(data)` for cases where you intentionally want to replace the entire document (e.g., a full refresh of a config singleton).
 
 ```python
 # SET: create a new document (or overwrite)
@@ -957,6 +989,10 @@ This cell:
 > [!danger] Deletion Does NOT Cascade
 >
 > Deleting a document does NOT delete its subcollections. Subcollection documents become orphans — accessible only if you know their path. You must delete subcollection documents individually.
+
+> [!success] Safe Pattern
+>
+> Before deleting a parent document, enumerate and delete all subcollection documents first. In production, use a Cloud Function triggered on document deletion to cascade the cleanup, or use the Firebase Admin SDK's `delete_collection()` helper which recursively deletes all subcollection documents in batches of 500.
 
 ```python
 # DELETE: remove a document

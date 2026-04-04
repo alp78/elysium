@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, dbt]
-type: troubleshooting
-technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "Systematic diagnosis of dbt compilation errors, runtime failures, test failures, incremental drift, snapshot corruption, and a reference table of 12 common errors with causes and fixes."
@@ -293,6 +291,9 @@ dbt run --full-refresh --select fct_esg_scores+
 >
 > `--full-refresh` on an incremental model drops and recreates the table. Schedule it during a maintenance window for large tables to avoid breaking downstream queries mid-execution.
 
+> [!success] Safe full-refresh procedure
+> Schedule `--full-refresh` in an off-peak window, notify downstream consumers in advance, and use `dbt run --full-refresh --select <model>` (not `<model>+`) to limit scope. Verify row counts match the expected full-history baseline before re-opening the table to consumers.
+
 ---
 
 ## Snapshot Corruption
@@ -351,6 +352,9 @@ dbt snapshot --full-refresh --select snap_issuer_details
 > [!warning] Full-refresh destroys snapshot history
 >
 > `--full-refresh` on a snapshot drops the full history. Only do this if the source system retains the full history of changes. Coordinate with the data governance team before destroying SCD history in regulated environments.
+
+> [!success] Safe snapshot recovery
+> Before running `--full-refresh` on a snapshot, archive the existing table to a backup (`CREATE TABLE snap_issuer_details_bak AS SELECT * FROM snap_issuer_details`). Confirm the source system holds the complete change history, obtain data-governance sign-off, then rebuild. Restore from backup if the rebuilt snapshot diverges from expectations.
 
 ---
 

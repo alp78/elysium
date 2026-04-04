@@ -1,10 +1,6 @@
 ---
-type: concept
-category: sql-server
-technology: [sql-server]
 tags: [sql, sql-server, tsql]
 aliases: [SQL Server locking, lock manager, isolation level, lock escalation, shared lock, exclusive lock, blocking chain, intent lock]
-keywords: [blocking, locking, shared lock, exclusive lock, update lock, intent lock, IX, IS, SIX, lock escalation, lock granularity, row lock, page lock, table lock, isolation level, READ COMMITTED, REPEATABLE READ, SERIALIZABLE, READ UNCOMMITTED, RCSI, Read Committed Snapshot Isolation, version store, blocking chain, head blocker, XACT_ABORT, HOLDLOCK, NOLOCK, WITH UPDLOCK, deadlock, LCK_M, sys.dm_tran_locks, lock compatibility matrix]
 description: "SQL Server lock types, lock granularity hierarchy, lock compatibility matrix, isolation levels, and RCSI. Includes blocking chain detection, lock escalation prevention, and how each CRUD operation interacts with the lock manager."
 created: 2026-03-22
 updated: 2026-03-22
@@ -113,6 +109,10 @@ ALTER TABLE gold.index_performance SET (LOCK_ESCALATION = DISABLE);
 > LOCK_ESCALATION = DISABLE Has Risks.
 > Disabling escalation means SQL Server maintains all row-level locks indefinitely, consuming significant lock manager memory during large batch operations. Only use this when escalation-caused blocking is a confirmed problem, not preemptively.
 
+> [!success] Safe Pattern — Process in Batches Instead
+>
+> Rather than disabling lock escalation, break large UPDATE or DELETE operations into batches of ~5,000 rows using a `WHILE` loop with `TOP (5000)`. Each batch commits its own transaction, releasing locks before the next batch begins — preventing escalation without accumulating unbounded row-level locks.
+
 ---
 
 ### How Each CRUD Operation Acquires Locks
@@ -173,6 +173,10 @@ ALTER DATABASE analytics_db SET READ_COMMITTED_SNAPSHOT ON;
 >
 > RCSI Requires a Maintenance Window.
 > Enabling RCSI requires that no other connections are active on the database at the time the ALTER DATABASE statement runs. On a production database, run this during a maintenance window. The operation converts all existing transactions to use versioning — it can take seconds to minutes depending on active workload.
+
+> [!success] Safe Pattern — Drain Connections Before Enabling RCSI
+>
+> Set the database to single-user mode to force-disconnect all other sessions, then enable RCSI, then restore multi-user mode: `ALTER DATABASE analytics_db SET SINGLE_USER WITH ROLLBACK IMMEDIATE; ALTER DATABASE analytics_db SET READ_COMMITTED_SNAPSHOT ON; ALTER DATABASE analytics_db SET MULTI_USER;`
 
 #### RCSI version store — TempDB space usage and monitoring
 
@@ -255,6 +259,10 @@ SQL Server allows explicit lock hints in queries. Use these only when you know e
 >
 > NOLOCK Is Not a Performance Optimization.
 > `WITH (NOLOCK)` (also written `READ UNCOMMITTED`) is sometimes used as a "performance hint" but it risks returning incorrect, inconsistent data — including rows that don't exist (from rolled-back transactions) or missing rows. Enable [RCSI](#read-committed-snapshot-isolation-rcsi) instead — it provides consistent reads without blocking and without dirty reads.
+
+> [!success] Safe Pattern — Enable RCSI for Consistent Non-Blocking Reads
+>
+> Replace all `WITH (NOLOCK)` hints with RCSI at the database level. RCSI gives every `SELECT` a consistent snapshot of committed data from the version store without acquiring shared locks — eliminating reader-writer blocking while preserving data integrity. Remove `NOLOCK` from queries after RCSI is enabled.
 
 ---
 
@@ -473,6 +481,10 @@ ORDER BY chain;
 > [!danger] Never Kill System Sessions
 >
 > Sessions with `session_id <= 50` are SQL Server system processes. Killing them can crash the instance or corrupt TempDB. Always verify the session belongs to a user process before issuing KILL. Use `KILL ... WITH STATUSONLY` to check rollback progress on long-running transactions — the KILL itself may take minutes if a large transaction must roll back.
+
+> [!success] Safe Pattern — Verify Before Killing
+>
+> Always query `sys.dm_exec_sessions WHERE session_id = <id>` and confirm `is_user_process = 1` and `session_id > 50` before issuing KILL. After issuing KILL, use `KILL <id> WITH STATUSONLY` to monitor rollback progress rather than issuing a second KILL.
 
 ```sql
 -- Verify the session before killing it

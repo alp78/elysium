@@ -1,10 +1,6 @@
 ---
-type: concept
-category: gcp
-technology: [gcp, gcloud]
 tags: [infrastructure, gcp, gcloud]
 aliases: [gcloud auth, GCP authentication, Application Default Credentials, ADC, gcloud login]
-keywords: [gcloud auth login, application-default, ADC, OAuth2, service account authentication, key file, workload identity, GOOGLE_APPLICATION_CREDENTIALS, metadata server, gcloud auth list, access token, credential search order]
 description: "How GCP authentication works with gcloud CLI: interactive login, Application Default Credentials (ADC), service account key files, and the credential search order that client libraries follow."
 created: 2026-03-22
 updated: 2026-03-22
@@ -41,6 +37,14 @@ gcloud auth login
 > - `application-default login` = credentials for **client libraries** (Python `google-cloud-*`, Go, Java)
 > - Your pipeline code calls BigQuery via the Python SDK, which reads ADC
 > - If you only run `gcloud auth login`, your pipeline still gets "permission denied"
+
+> [!success] Run both commands for local development
+> For local development, always run both:
+> ```bash
+> gcloud auth login                        # for gcloud CLI commands
+> gcloud auth application-default login   # for Python/SDK client libraries
+> ```
+> This ensures both the CLI and your application code use the correct identity.
 
 ```bash
 gcloud auth application-default login
@@ -94,12 +98,18 @@ gcloud auth revoke
 > Service Account Key Files Are Permanent Credentials.
 > Unlike OAuth tokens, SA key files never expire. A leaked key file in a git repo, a Docker image layer, or a log file grants permanent access until the key is explicitly revoked in the GCP console. Attackers actively scan public repos for GCP key patterns. If you suspect a key was leaked, immediately delete the key in IAM, then rotate all secrets the SA had access to. See [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for key rotation procedures.
 
+> [!success] Prefer keyless authentication
+> On GCE VMs, Cloud Run, and GKE, use the **metadata server** — no key files needed at all. For CI/CD, use **Workload Identity Federation** to authenticate GitHub Actions or other OIDC providers without any long-lived credentials. Key files should only exist as a last resort for non-GCP environments without Workload Identity support.
+
 ### GCP Authentication Gotchas and Edge Cases
 
 > [!warning] ADC Token Caching Issues
 >
 > ADC Token Caching Can Cause Stale Permissions.
 > `gcloud auth application-default login` caches the token in `~/.config/gcloud/application_default_credentials.json`. If your IAM roles change after login, the cached token still carries the old scopes until it refreshes (up to 1 hour). Force a refresh with `gcloud auth application-default login` again. This is a frequent source of "works on my machine but fails in CI" issues.
+
+> [!success] Force a fresh ADC token after IAM changes
+> After updating IAM roles, re-run `gcloud auth application-default login` to immediately pick up the new scopes. In CI/CD, avoid caching ADC tokens between jobs — authenticate fresh on each run to ensure permissions are current.
 
 - `gcloud auth login` and `gcloud auth application-default login` are **different credentials** for different purposes. You often need both for local development.
 - Service account key files (`key.json`) do not expire. If leaked, attackers have permanent access until the key is explicitly deleted. See [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for key rotation.

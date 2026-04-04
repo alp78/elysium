@@ -1,10 +1,6 @@
 ---
-type: troubleshooting
-category: observability
-technology: [datadog, docker, gcp, sql-server, terraform]
 tags: [monitoring, observability, sql, terraform, docker, datadog, gcp]
 aliases: [Datadog Troubleshooting, DD Agent Troubleshooting, Datadog Common Issues]
-keywords: [agent not appearing, invalid API key, APM traces missing, no logs, COS filesystem, read-only opt, ghost hosts, ghost host, INACTIVE host, Windows line endings, CRLF, bash\r, terraform apply metadata, VM reset, dd-api-key missing, Airflow VM, startup script, Cloud Run metrics not showing, pipeline logs not in Datadog, Cloud Logging]
 description: "Troubleshooting guide for Datadog agent issues on the data platform — covering agent not appearing, missing APM traces, no logs, COS filesystem constraints, ghost hosts, and Windows line ending issues."
 created: 2026-03-22
 updated: 2026-03-22
@@ -77,6 +73,9 @@ gcloud compute instances reset data-pipeline-airflow --zone=europe-west1-b
 > [!warning] Apply does not restart the VM
 >
 > `terraform apply` only updates the VM's **metadata** stored in GCP — it does NOT restart the VM or re-run the startup script. The startup script only executes on boot. You must manually reset the VM after applying metadata changes.
+
+> [!success] Fix: Reset the VM After Metadata Changes
+> After `terraform apply` completes, run `gcloud compute instances reset data-pipeline-airflow --zone=europe-west1-b` to trigger a reboot and re-execute the startup script. Wait 2–3 minutes, then verify all containers are running with `sudo docker ps`.
 
 #### Step 5 — Wait 2–3 minutes, then verify
 

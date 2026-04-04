@@ -1,10 +1,6 @@
 ---
-type: concept
-category: data-architecture
-technology: []
 tags: [data-architecture, data-engineering, architecture]
 aliases: [golden rules, engineering principles, data engineering philosophy, first principles, trade-off analysis, YAGNI, KISS, build vs buy, undifferentiated heavy lifting, reversible decisions, two-way doors]
-keywords: [golden rules, data engineering principles, first principles, trade-off analysis, decision framework, YAGNI, KISS, build vs buy, undifferentiated heavy lifting, reversible decisions, two-way doors, boring technology, innovation tokens, schema evolution, idempotent pipelines, raw data preservation, bronze layer, complexity debt, cloud cost optimization, observability, automation, infrastructure as code, CI/CD, shadow pipelines, canary deployments, blue-green deployments, resume-driven development, tight coupling, loose coupling, expand and contract, premature optimization, operational pragmatism, dimensional clarity, lifecycle thinking, data engineering philosophy, simplicity, reliability, cost awareness, anti-patterns]
 description: "The golden rules of data engineering — ten foundational principles that guide every architectural decision, technology choice, and trade-off evaluation. Inspired by Reis & Housley, Kleppmann, Kimball, Densmore, and the five pillars of senior data engineering."
 created: 2026-03-22
 updated: 2026-03-22
@@ -53,6 +49,9 @@ Resume-Driven Development (RDD) is the practice of choosing technologies because
 
 > [!warning] The Resume-Driven Development Test
 > If you removed the technology from your resume, would you still choose it for this problem? If the answer is no, you are optimizing for your career at the expense of your employer's money. That is a conflict of interest.
+
+> [!success] Safe Pattern: Justify Every Technology Choice from Requirements
+> Write a one-sentence requirement justification before selecting any non-trivial tool: e.g., "We are using Kafka because we need sub-second delivery to three independent consumers." If you cannot write that sentence, the technology is not justified by requirements. Share the justification in the design document or PR description so the team can validate it independently.
 
 ### Decision Test
 
@@ -145,6 +144,9 @@ From loosest to tightest coupling:
 > [!warning] The Shared Database Anti-Pattern
 > When two systems communicate through a shared database, every schema change, every index addition, every performance regression in one system directly affects the other. This is not integration — it is entanglement. Use it only when both systems are owned by the same team and deployed together.
 
+> [!success] Safe Pattern: Communicate Through Explicit Interfaces
+> Replace shared-database coupling with a file-based interface (Parquet on object storage), a message queue (Pub/Sub, Kafka), or a versioned REST API. Each interface gives both sides an independent schema contract. Use contract tests (e.g., Pact) to ensure producer and consumer schemas stay aligned without sharing infrastructure.
+
 ### Decision Test
 
 > [!question] Rule 3 Decision Test
@@ -224,6 +226,9 @@ Some sources do not offer historical re-extraction. APIs return only current sta
 
 > [!danger] The Deletion Anti-Pattern
 > Never delete raw data to save storage costs without explicit sign-off from the data owner AND a documented analysis showing that re-ingestion is possible if needed. "We can always pull it again" is only true if you have verified that the source retains history. Many do not.
+
+> [!success] Safe Pattern: Use Lifecycle Policies Instead of Manual Deletion
+> Apply cloud storage lifecycle policies (GCS Object Lifecycle, S3 Lifecycle Rules, Azure Blob Lifecycle Management) to automatically transition raw data from Standard to Nearline/Cold storage after 90 days and Archive after 365 days. This reduces cost by 70–90% without deleting anything — and restores optionality when a bug is discovered two years later.
 
 ### The Cost Argument
 
@@ -381,6 +386,9 @@ Every production deployment — every one — must have a documented rollback pl
 > [!warning] The 15-Minute Recovery Standard
 > If your rollback takes more than 15 minutes, your deployment strategy is too risky for the rollback mechanism you have. Either make rollback faster or make deployments more conservative (smaller changes, more canary time, shadow pipelines).
 
+> [!success] Safe Pattern: Practice the Rollback Before the Deployment
+> Include rollback as a required step in every deployment runbook. Before deploying to production, execute the rollback in staging and measure how long it takes. If it takes longer than 15 minutes in staging, it will take longer in production. Fix the rollback path first, then deploy.
+
 ### What This Does NOT Mean
 
 Testing in production does not mean:
@@ -510,6 +518,9 @@ Both are necessary. Infrastructure observability tells you the pipeline ran. Dat
 
 > [!danger] The Silent Failure Problem
 > The most dangerous pipeline failure is the one that does not throw an error. The pipeline runs, returns exit code 0, loads data into the table — but the data is wrong. Maybe the source sent an empty file. Maybe a filter condition excluded all rows. Maybe a type mismatch caused silent truncation. Only data quality checks catch these failures.
+
+> [!success] Safe Pattern: Assert Row Count and Freshness at Every Stage
+> After every pipeline step, assert: (1) row count is above a minimum threshold (e.g., `ASSERT COUNT(*) > 0`), (2) the maximum `load_timestamp` is within the expected freshness window, and (3) key business metrics (total notional, index count) are within ±5% of yesterday's value. Fail the pipeline — with an alert — if any assertion fails. A pipeline that fails loudly is vastly safer than one that succeeds silently with wrong data.
 
 ### Decision Test
 

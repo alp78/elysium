@@ -1,10 +1,6 @@
 ---
-type: reference
-category: observability
-technology: [datadog, airflow, docker]
 tags: [monitoring, orchestration, observability, docker, airflow, datadog]
 aliases: [Airflow Observability, Airflow StatsD Metrics, Airflow Datadog Dashboard]
-keywords: [StatsD, DogStatsD, STATSD_ON, STATSD_HOST, STATSD_PORT, STATSD_PREFIX, airflow.scheduler_heartbeat, dagrun.duration, ti.finish, dagrun.schedule_delay, dag_processing.import_errors, dagbag_size, executor.open_slots, pool.starving_tasks, triggerer_heartbeat, microseconds, airflow_dashboard.json, import dashboard JSON, recommended monitors]
 description: "Airflow-specific observability for the project — how to enable StatsD metrics from Airflow containers, key metrics for scheduler health and DAG run tracking, the Airflow Orchestration dashboard, and recommended Datadog monitors."
 created: 2026-03-22
 updated: 2026-03-22

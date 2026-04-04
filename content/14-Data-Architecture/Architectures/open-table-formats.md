@@ -1,10 +1,6 @@
 ---
-type: concept
-category: lakehouse-architecture
-technology: [iceberg, delta-lake, apache-hudi, spark, bigquery, gcp]
 tags: [data-architecture, architecture, lakehouse, bigquery, gcp]
 aliases: [Apache Iceberg, Delta Lake, Apache Hudi, open table format, lakehouse, data lakehouse, BigLake, ACID transactions on data lake, table format comparison]
-keywords: [iceberg, delta lake, hudi, open table format, lakehouse, parquet, ACID, time travel, snapshot isolation, schema evolution, partition evolution, hidden partitioning, merge-on-read, copy-on-write, compaction, medallion architecture, bronze silver gold, GDPR deletion, right to be forgotten, BigLake Metastore, Nessie catalog, manifest file, snapshot, BigQuery Iceberg, GCS, S3, PII registry, data privacy, Databricks, Spark]
 description: "Open table formats (Apache Iceberg, Delta Lake, Apache Hudi) add a metadata layer on top of Parquet files on cloud storage to provide ACID transactions, snapshot isolation, time travel, schema evolution, and partition evolution. Covers the metadata tree, Iceberg vs Delta Lake vs Hudi comparison, BigQuery/GCP integration, table maintenance, medallion architecture mapping, and GDPR deletion patterns."
 created: 2026-03-22
 updated: 2026-03-22
@@ -266,6 +262,9 @@ CALL data-pipeline.system.rewrite_manifests('silver.daily_ohlcv');
 > [!warning] Snapshot Expiry and Time Travel Trade-off
 > Expiring snapshots frees storage but permanently loses the ability to time-travel to those snapshots. For financial audit purposes, keep at least 90 days of snapshots for active tables. For bronze/raw tables, 30 days is usually sufficient.
 
+> [!success] Safe Pattern: Tiered Retention Policy
+> Set `older_than` in `expire_snapshots` to enforce layer-specific retention: 90 days for gold/audit tables, 30 days for silver, 14 days for bronze. Always use `retain_last => N` (at minimum 5) as a safety floor so a very quiet table never has all snapshots expired. Document the policy in the table's `TBLPROPERTIES` as a `comment` or custom property.
+
 ---
 
 ## The Medallion Architecture on a Lakehouse
@@ -413,6 +412,9 @@ CREATE TABLE data_catalog.pii_registry (
 
 > [!warning] GDPR Deletion Is an Architecture Decision, Not an Afterthought
 > If you design your lakehouse without thinking about deletion, you will spend weeks retrofitting it when the first GDPR request arrives. The best pattern is **PII isolation**: keep all personally identifiable data in separate tables joined by a surrogate key. To "forget" a person, you delete one row from the mapping table and run a single compaction job — instead of scanning every table in the lake. Design for deletion from day one.
+
+> [!success] Safe Pattern: PII Isolation with Surrogate Keys
+> Store PII in a dedicated `pii_registry` or `client_identity` table keyed by a surrogate (UUID). All other tables reference only the surrogate — never raw PII fields. On a GDPR deletion request: (1) delete from the identity table, (2) compact the identity table and expire its snapshots, (3) the surrogate in remaining tables becomes a dangling key pointing to no data, satisfying the deletion obligation without touching the wider data estate.
 
 ---
 

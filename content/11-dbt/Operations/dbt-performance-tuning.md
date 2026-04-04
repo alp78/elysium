@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, performance, dbt]
-type: how-to
-technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "Identifying slow models from run_results.json, BigQuery and SQL Server tuning, thread configuration, incremental strategy optimisation, and model refactoring with dbt-audit-helper."
@@ -21,6 +19,9 @@ Performance problems in dbt manifest as three distinct symptoms: slow model exec
 > [!warning] Slowest model sets the SLA
 >
 > A dbt project with 50 models where 49 run in 10 seconds and 1 runs in 20 minutes has a pipeline SLA of 20+ minutes. Focus optimization on the single slowest model first -- it dominates total runtime because dbt executes models in dependency order and downstream models wait. Use `run_results.json` to identify the critical path, not just the slowest individual model.
+
+> [!success] Diagnosis-first approach
+> Parse `run_results.json` with the `slow_models.py` script (below) to rank models by `execution_time`. Fix the top-ranked bottleneck — split it into intermediate tables, add partition pruning, or reduce its source scan — before touching anything else. Re-run and compare.
 
 ## Identifying Slow Models from `run_results.json`
 
@@ -437,6 +438,9 @@ bq query --use_legacy_sql=false < target/compiled/.../audit_fct_index_weights.sq
 > [!warning] Audit helper before merging
 >
 > Always run `audit_helper` comparisons in a feature branch against the production dataset before merging. For ESG benchmark models, even a 0.0001% deviation in `constituent_weight` can constitute a material change requiring Methodology Committee review.
+
+> [!success] Validation workflow
+> Build both the original and refactored models in a dev dataset, run `audit_helper.compare_relations` and `audit_helper.compare_column_values` for each key column, confirm zero row discrepancies, then open the PR. Gate the merge on these comparisons passing.
 
 ---
 

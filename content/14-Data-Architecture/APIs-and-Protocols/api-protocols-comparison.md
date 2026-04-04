@@ -1,9 +1,4 @@
 ---
-type: reference
-category: data-architecture
-technology:
-  - python
-  - gcp
 tags: [data-architecture, architecture, api, python, gcp]
 aliases:
   - API comparison
@@ -19,50 +14,6 @@ aliases:
   - FIX protocol
   - SFTP
   - API selection
-keywords:
-  - REST
-  - gRPC
-  - GraphQL
-  - WebSocket
-  - SSE
-  - server-sent events
-  - MQTT
-  - AMQP
-  - webhook
-  - SFTP
-  - FIX protocol
-  - HTTP
-  - Protobuf
-  - JSON
-  - TCP
-  - pub/sub
-  - streaming
-  - request-response
-  - data ingestion
-  - data pipeline
-  - API design
-  - protocol selection
-  - message queue
-  - IoT
-  - real-time
-  - financial data
-  - market data
-  - trading
-  - GCP
-  - Cloud Pub/Sub
-  - HTTP/2
-  - HTTP/3
-  - QUIC
-  - ConnectRPC
-  - AsyncAPI
-  - OpenAPI
-  - mTLS
-  - HMAC
-  - paramiko
-  - paho-mqtt
-  - websockets
-  - httpx
-  - FastAPI
 description: Master decision framework comparing all API and data exchange protocols relevant to data engineering — REST, gRPC, GraphQL, WebSocket, SSE, MQTT, AMQP, Webhooks, SFTP, FIX, and GCP Pub/Sub. Includes working Python code examples, a protocol comparison matrix, and decision tables by use case and constraint.
 created: 2026-03-22
 updated: 2026-03-22
@@ -205,6 +156,9 @@ if __name__ == "__main__":
 
 > [!warning] WebSocket Reliability
 > Exchanges drop WebSocket connections without warning — during maintenance windows, market circuit breakers, or network instability. Production feed handlers must implement exponential backoff reconnection, sequence number gap detection, and a REST fallback to re-snapshot state after reconnecting.
+
+> [!success] Resilient WebSocket Pattern
+> Wrap the connection loop with exponential backoff (start at 1s, cap at 60s) and track the last received sequence number. On reconnect, call the REST snapshot endpoint to re-establish current state, then resume streaming from the WebSocket. The Python example above shows the outer `while True` reconnect loop as the baseline; add sequence gap detection by comparing each message's `sequence` field against the last seen value.
 
 ---
 
@@ -535,6 +489,9 @@ async def is_already_processed(key: str) -> bool:
 
 > [!warning] Webhook Reliability Expectations
 > You cannot guarantee webhook delivery from the sender's side. Network failures, sender bugs, and IP allowlist issues all cause gaps. For financial data pipelines, always maintain a reconciliation process that independently fetches the complete state from the sender's REST API on a schedule. Webhooks are notifications, not guaranteed delivery.
+
+> [!success] Webhook + Reconciliation Pattern
+> Treat webhooks as a fast-path notification, not as the source of truth. Run a scheduled reconciliation job (e.g., nightly) that fetches the complete state from the sender's REST API and compares against your local records. Any gap detected by reconciliation is filled by the batch fetch. This dual-mode approach provides near-real-time delivery via webhooks and guaranteed completeness via the scheduled reconciliation.
 
 ---
 

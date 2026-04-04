@@ -1,10 +1,6 @@
 ---
-type: concept
-category: sql-server
-technology: [sql-server]
 tags: [sql, sql-server, tsql]
 aliases: [SQL Server backup, full backup, differential backup, transaction log backup, copy-only backup, 3-2-1 rule, backup strategy]
-keywords: [backup, full backup, differential backup, transaction log backup, copy-only backup, BACKUP DATABASE, BACKUP LOG, RESTORE VERIFYONLY, 3-2-1 rule, GCS backup, recovery model, RPO, RTO, .bak, .trn, compression, checksum, PITR, point-in-time recovery]
 description: "SQL Server backup types (full, differential, transaction log, copy-only), the 3-2-1 backup rule, recovery model selection, and an automated GCS backup script."
 created: 2026-03-22
 updated: 2026-03-22
@@ -105,6 +101,10 @@ WITH CHECKSUM;
 >
 > An unverified backup is not a backup. Run `RESTORE VERIFYONLY` after every important backup. Also schedule monthly test restores to verify recoverability end-to-end.
 
+> [!success] Automate Verification
+>
+> Add `RESTORE VERIFYONLY` as a second step in every backup Agent job or cron script. A backup job that writes `.bak` and then immediately verifies it gives you confidence at no extra cost. Pair with monthly restore drills to a staging database for end-to-end confirmation.
+
 ---
 
 ### The 3-2-1 Backup Rule
@@ -137,6 +137,10 @@ rm "${BACKUP_PATH}"  # remove local copy after upload
 > Test Your Restores, Not Just Your Backups.
 > A backup that cannot be restored is worse than no backup -- it gives false confidence. Schedule quarterly restore drills to a separate database. Common failures that only surface during restore: corrupt `.bak` files from disk errors, missing log chain gaps (skipped a log backup), and cross-version incompatibilities when restoring to a different SQL Server edition.
 
+> [!success] Schedule Quarterly Restore Drills
+>
+> Create a recurring calendar event or Agent job that restores the latest full backup to a separate `analytics_db_restore_test` database, runs a spot-check query, then drops it. Automate the process so it runs with zero manual effort — the only human step is reading the success/failure notification.
+
 ---
 
 ## Recovery Model Decision Matrix
@@ -157,6 +161,10 @@ The recovery model determines how transaction logs are managed and what kind of 
 > FULL Recovery Without Log Backups Fills Your Disk.
 > Never leave a database in FULL recovery model without regular log backups. The transaction log will grow without bound until it fills the disk, at which point **all writes fail across all databases on the instance**. This is the single most common production outage for SQL Server. If you see the log file growing past 10 GB, check `SELECT log_reuse_wait_desc FROM sys.databases` -- if it says `LOG_BACKUP`, no log backups are running.
 
+> [!success] Pair FULL Recovery with a Log Backup Job
+>
+> Any time you set a database to FULL recovery, immediately create a log backup Agent job running every 5–15 minutes. Verify with `SELECT log_reuse_wait_desc FROM sys.databases WHERE name = 'analytics_db'` — the value should be `NOTHING` or `CHECKPOINT`, not `LOG_BACKUP`.
+
 ### Switching Recovery Models
 
 ```sql
@@ -173,6 +181,10 @@ ALTER DATABASE [analytics_db] SET RECOVERY FULL;
 > [!danger] Take a full backup immediately after switching to FULL
 >
 > After switching from SIMPLE to FULL recovery model, take a full backup immediately. Without it, the transaction log cannot be backed up and will grow indefinitely until the server runs out of disk.
+
+> [!success] Full Backup + Log Backup Job Immediately
+>
+> Run `BACKUP DATABASE analytics_db TO DISK = '...' WITH COMPRESSION, CHECKSUM;` right after `ALTER DATABASE ... SET RECOVERY FULL;`, then start the log backup schedule. These three actions must be done as a unit — never set the recovery model and walk away.
 
 ### After Switching from FULL to SIMPLE — Reclaim Log Space
 
@@ -197,6 +209,10 @@ DBCC SHRINKFILE(N'mydb_log', 64);
 > Never Shrink Data Files as Routine Maintenance.
 > `DBCC SHRINKFILE` on data files (`.mdf`) causes massive index fragmentation, forcing expensive rebuilds afterward. Shrinking the log file (`.ldf`) after switching to SIMPLE recovery is fine -- shrinking data files as a regular practice is almost always counterproductive.
 
+> [!success] Reclaim Space Without Fragmentation
+>
+> If you genuinely need to free data file space, use `DBCC SHRINKFILE` once on the `.ldf` after switching to SIMPLE recovery. For `.mdf` files, address growth at the source instead: archive old data to a separate table, partition older ranges to a cheaper disk, or use PAGE compression to reduce size without touching file layout.
+
 ---
 
 ### Point-in-Time Recovery Sequence
@@ -218,6 +234,10 @@ See [restore-and-recovery](https://alp78.github.io/elysium/04-SQL-Server/Adminis
 > tests to a separate database: verify the backup completes, the database
 > comes online, and a spot-check query returns expected data. A backup
 > strategy without a restore test strategy is wishful thinking.
+
+> [!success] Document the Restore Procedure
+>
+> Write a one-page restore runbook and store it outside the database (in this vault or a shared drive). Include: the exact RESTORE commands for full, differential, and log restores; the expected time to restore; and the name of who is responsible. Practice it quarterly so the procedure is muscle memory before you need it under pressure.
 
 ### Production HA Backup Schedule
 

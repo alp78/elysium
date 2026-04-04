@@ -1,10 +1,6 @@
 ---
-type: concept
-category: prompt-engineering
-technology: [claude, gpt-4, gemini, llm]
 tags: [ai, prompt-engineering]
 aliases: [prompt structure, 4-layer prompt, prompt layering, role goal constraints format, XML prompting, JSON schema prompting, meta-prompting, chain of thought, prompt template]
-keywords: [prompt architecture, role, goal, constraints, format, XML tags, JSON schema, paragraph form, modular prompts, layering, chain of thought, meta-prompting, structured output, prompt template, 4-layer, system prompt design, constraint types, output format]
 description: "The 4-layer prompt architecture (Role, Goal, Constraints, Format) with complete worked examples, plus modular structural formats — XML tags, JSON schemas, and paragraph form — with guidance on when to use each. Covers meta-prompting and chain-of-thought structuring."
 created: 2026-03-22
 updated: 2026-03-22
@@ -80,6 +76,9 @@ The goal is the **single most important sentence** in your prompt. If the model 
 > [!warning] Buried goals produce poor output
 >
 > If your goal is in paragraph 3, the model has already started pattern-matching against the opening words. Put the goal in the **first sentence** of the user prompt. See [intent vs. output misalignment](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#42-intent-vs-output-misalignment) for the failure mode this prevents.
+
+> [!success] Fix: Lead Every Prompt with a Single-Sentence Goal Statement
+> Rewrite the opening of your prompt to a one-sentence imperative that states the task directly. Example: "Analyze the five biggest contributors to index underperformance in Q3" — before any context or background. The context follows; it never precedes the goal.
 
 ### Layer 3: Constraints — Defining the Negative Space
 
@@ -181,6 +180,9 @@ For each issue found:
 > [!warning] LLM JSON syntax errors
 >
 > Models occasionally produce invalid JSON -- trailing commas, unescaped quotes, missing brackets, or markdown code fence wrappers around the JSON. Always wrap `json.loads()` in a try/except and implement a retry-with-repair strategy. Adding "Return ONLY valid JSON, no markdown formatting" to the prompt reduces but does not eliminate this issue. For production pipelines, use the model's structured output mode (Anthropic's tool_use, OpenAI's JSON mode) instead of parsing free-text JSON.
+
+> [!success] Fix: Use Tool Use / Structured Output Mode for Production JSON
+> Replace free-text JSON prompting with the model's native structured output API: Anthropic's `tool_use` or OpenAI's `response_format: {type: "json_object"}`. These modes enforce schema-valid JSON at generation time, eliminating the parsing failure class entirely. Reserve free-text JSON only for exploratory or low-stakes use cases.
 
 ### JSON Schema: Machine-Readable Structured Output
 
@@ -299,6 +301,9 @@ Rewrite the prompt to produce the desired output.
 
 > [!warning] Meta-Prompting Limitations
 > The model evaluating its own prompt inherits its own blind spots. Use a different role for evaluation than for generation — if the generator was a "data engineer," make the evaluator a "prompt engineer" or "technical writer." See [evaluation agent pattern](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#51-workflows-loops-and-multi-agent-systems) for the architectural solution.
+
+> [!success] Fix: Assign a Distinct Evaluator Role in the Meta-Prompt
+> When using meta-prompting, switch the role explicitly before asking for evaluation. After generating with "You are a senior data engineer," start the evaluation turn with "You are a technical writer reviewing a prompt for clarity and constraint precision — not for technical accuracy." The role switch breaks the self-confirmation loop and surfaces structural weaknesses the generator role would miss.
 
 ---
 

@@ -2,8 +2,6 @@
 title: "MOC: Programming Languages"
 tags:
   - moc
-  - python
-  - csharp
   - data-engineering
 ---
 

@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: sql-server
-technology: [sql-server, gcp]
 tags: [performance, cost, sql, gcp, sql-server, tsql]
 aliases: [SQL Server cost optimization, FinOps SQL Server, GCP disk snapshots, committed use discount, spot instances, application-consistent snapshot, right-sizing SQL Server]
-keywords: [finops, cost optimization, disk snapshot, committed use discount, CUD, spot instance, preemptible VM, right-sizing, GCP Recommender, billing export, BigQuery billing, SUSPEND_FOR_SNAPSHOT_BACKUP, DBCC FREEZEIO, DBCC THAWIO, Nearline, Coldline, pd-balanced, pd-ssd, Cloud Scheduler, snapshot schedule, gcloud compute resource-policies, PITR, application-consistent, crash-consistent, on-demand]
 description: "Cost optimization strategies for SQL Server on GCP: disk snapshot schedules, application-consistent snapshot technique with SQL Server 2022 SUSPEND_FOR_SNAPSHOT_BACKUP, committed use discounts vs spot instances, and right-sizing the VM using GCP Recommender."
 created: 2026-03-22
 updated: 2026-03-22
@@ -80,6 +76,10 @@ DBCC THAWIO('analytics_db');       -- Resume writes
 >
 > SUSPEND_FOR_SNAPSHOT_BACKUP Is SQL Server 2022+.
 > `ALTER DATABASE ... SET SUSPEND_FOR_SNAPSHOT_BACKUP = ON` is available only in SQL Server 2022. For older versions, use the `DBCC FREEZEIO` / `DBCC THAWIO` approach. The freeze duration should be minimized (seconds) — all writes are blocked during the freeze.
+
+> [!success] Use DBCC FREEZEIO for Older Versions
+>
+> On SQL Server 2019 and earlier, wrap the GCP snapshot call with `DBCC FREEZEIO('analytics_db');` before and `DBCC THAWIO('analytics_db');` after. Keep a timer — if the freeze exceeds 30 seconds, the application will notice write latency. Test freeze duration in staging before rolling out to production.
 
 ---
 

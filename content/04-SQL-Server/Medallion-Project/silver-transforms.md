@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: data-engineering
-technology: [sql-server, python]
 tags: [python, sql, sql-server, tsql, medallion-project]
 aliases: [Silver Layer, Silver Transforms, Bronze to Silver, SCD2 Transform, Silver DDL, Cleaned Layer, Gap Fill, Forward Fill]
-keywords: [silver layer, medallion architecture, SCD Type 2, slowly changing dimensions, deduplication, gap fill, forward fill, is_filled, trading calendar, upsert, unique index, filtered index, valid_from, valid_to, is_current, OHLCV transform, signals daily, signals quarterly, index_dim SCD2, upserting, insert or update, parameterized queries, silver schema]
 description: "Complete SQL patterns for the example silver layer — covers SCD Type 2 dimension tracking, OHLCV gap-filling against the trading calendar, daily and quarterly signal upserts, and unique index design for deduplication."
 created: 2026-03-22
 updated: 2026-03-22
@@ -327,6 +323,16 @@ WHERE symbol = ?
 > DELETE FROM silver.index_europe_ohlcv WHERE date > CAST(GETDATE() AS DATE) AND is_filled = 1;
 > ```
 > See common pipeline errors for details.
+
+> [!success] Fix: Delete Future-Dated Filled Rows
+>
+> Run the cleanup query for all OHLCV tables, then re-run the pipeline. Real data will re-insert cleanly because the UNIQUE constraint is no longer blocked:
+> ```sql
+> DELETE FROM silver.index_europe_ohlcv WHERE date > CAST(GETDATE() AS DATE) AND is_filled = 1;
+> DELETE FROM silver.index_asia_ohlcv   WHERE date > CAST(GETDATE() AS DATE) AND is_filled = 1;
+> DELETE FROM silver.index_usa_ohlcv    WHERE date > CAST(GETDATE() AS DATE) AND is_filled = 1;
+> ```
+> To prevent recurrence, ensure the gap-fill loop is bounded by `date <= CAST(GETDATE() AS DATE)` before inserting any forward-filled row.
 
 #### SELECT COUNT gaps — verify gap-fill completeness (should return 0)
 

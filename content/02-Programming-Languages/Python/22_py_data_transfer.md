@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python, gcp]
 tags: [python, gcp, data-transfer, benchmarks]
 aliases: [Data Transfer Python, GCS Transfer, BigQuery Load]
-keywords: [GCS, gsutil, gcloud storage, Cloud SQL, BigQuery, upload, download, transfer, SCP, SSH, parallel, compression, gzip, tar, benchmark, latency, throughput]
 description: "Python data transfer reference — GCS upload/download, VM file copy, SQL Server bulk insert, BigQuery load benchmarks with interactive charts. See [22_cs_data_transfer](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/22_cs_data_transfer) for the C# equivalent."
 created: 2026-03-27
 updated: 2026-03-27
@@ -186,6 +182,13 @@ for name, files in [("SQL Insert", sql_insert_files), ("BigQuery", bq_files)]:
 > resumable uploads (default for `google-cloud-storage` client) and verify with
 > checksums after upload. For critical data, upload to a staging prefix first, then
 > rename (which IS atomic in GCS).
+
+> [!success] Safe Pattern: Stage-then-Rename
+>
+> Upload to a staging prefix (e.g. `gs://bucket/staging/file.parquet`), verify the
+> CRC32C checksum matches the local file, then move to the final path with
+> `bucket.rename_blob()` — which is an atomic server-side operation in GCS.
+> This guarantees readers never see a partial object at the production prefix.
 
 > [!tip] google-cloud-storage resumable uploads resume automatically
 >
@@ -1507,6 +1510,13 @@ fig.show()
 > during network I/O. For CPU-bound work like compression, use `ProcessPoolExecutor`
 > instead. Mixing CPU and I/O in the same pool causes stalls.
 
+> [!success] Correct Executor Choice
+>
+> Use `ThreadPoolExecutor` for GCS/network I/O (GIL released during socket wait).
+> Use `ProcessPoolExecutor` for CPU-bound work (compression, serialisation).
+> For pipelines that compress then upload, run the two stages in separate pools —
+> compress with processes, then upload the resulting files with threads.
+
 Compares three concurrency strategies for uploading 8 medium-size files to GCS using the top transfer
 method (`streamed` / `blob.upload_from_file`, ranked #1 by mean throughput): sequential, multithreaded
 (8 threads), and multiprocessing (8 processes). Measures total wall-clock time and aggregate throughput.
@@ -2309,6 +2319,13 @@ fig.show()
 > GCS stores CRC32C and MD5 checksums for every object — verify after download. Without
 > verification, you won't know a 1GB Parquet file is corrupt until a query fails on row
 > 800,000.
+
+> [!success] Checksum Verification Pattern
+>
+> After downloading, compute the local CRC32C (using `google-crc32c`) and compare it
+> against `blob.crc32c` (base64-encoded). Raise an exception if they differ — do not
+> silently continue. For multi-chunk transfers, verify each chunk individually before
+> merging so corruption is localised and only the affected chunk needs re-downloading.
 
 End-to-end pipeline that mirrors how production systems (Kafka, ClickHouse, cloud ETL) handle
 massive file transfers: compress with zstd, split into chunks, upload in parallel, download in

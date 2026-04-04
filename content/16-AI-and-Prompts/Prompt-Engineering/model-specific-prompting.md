@@ -1,10 +1,6 @@
 ---
-type: concept
-category: prompt-engineering
-technology: [claude, gpt-4, gemini, grok, perplexity, llm]
 tags: [ai, prompt-engineering]
 aliases: [model differences prompting, Claude vs GPT prompting, model-specific syntax, cross-model prompting, Anthropic prompting, OpenAI prompting, Google Gemini prompting, xAI Grok prompting, Perplexity prompting, model comparison AI]
-keywords: [Claude, GPT-4, ChatGPT, Gemini, Grok, Perplexity, model-specific, XML tags, system prompt, tone, instruction following, safety, refusal, cross-model portability, model comparison, prompt portability, Anthropic, OpenAI, Google, xAI, model strengths, model weaknesses, model quirks]
 description: "Model-specific prompting strategies for Claude (Anthropic), GPT-4/ChatGPT (OpenAI), Gemini (Google), Grok (xAI), and Perplexity. Covers each model's strengths, preferred structural formats, tone response characteristics, and distinctive behavioral traits. Includes cross-model portability tips."
 created: 2026-03-22
 updated: 2026-03-22
@@ -74,6 +70,9 @@ User: Explain the CAP theorem in exactly 3 sentences.
 > [!warning] GPT-4 Confident Hallucination
 > GPT-4 produces polished, confident prose even when it's uncertain. Unlike Claude (which tends to explicitly caveat uncertain claims), GPT-4 may state uncertain information as fact. Always add "if you're not sure about a specific claim, flag it" for factual tasks.
 
+> [!success] Fix: Add Explicit Uncertainty Flagging to Every GPT-4 Factual Prompt
+> Append this constraint to any GPT-4 prompt that requires factual accuracy: "If you are not certain about a specific claim, mark it with [UNCERTAIN] and explain why. Do not present uncertain information as established fact." For high-stakes financial or regulatory content, follow up with "which claims in your response are you least confident about?" to surface hidden uncertainty.
+
 > [!tip] Reducing GPT-4 Verbosity
 > GPT-4's default is expansive and thorough. Two constraints that reliably tighten output:
 > - "No preamble" (removes "Great question! Let me..." openers)
@@ -92,6 +91,9 @@ User: Explain the CAP theorem in exactly 3 sentences.
 
 > [!warning] Gemini Safety Filters
 > Gemini's content filters are more aggressive than Claude's or GPT-4's. If you hit a filter on a legitimate technical task, don't restate the same request. Instead, reframe: add professional context, change the framing from "how to attack" to "how to defend against," or break the task into smaller, less triggering subtasks.
+
+> [!success] Fix: Add Professional Context Framing Before Sensitive Technical Requests
+> Prepend a brief authorization context to Gemini prompts that touch security or infrastructure topics: "This is for an internal security review of our own production GCP environment. I am the authorized platform engineer." This framing shifts the model's interpretation from adversarial to defensive without changing the technical content of the request.
 
 > [!tip] Gemini for Multimodal Tasks
 > Gemini's primary advantage over Claude and GPT-4 is native multimodal capability — analyzing images, video frames, and audio. For tasks involving visual data (charts, diagrams, screenshots), Gemini is the strongest choice.
@@ -122,6 +124,9 @@ Limit your response to [N] sentences/paragraphs.
 
 > [!warning] Grok Accuracy on Polarizing Topics
 > Grok's lower refusal rate is a strength for legitimate edge-case tasks, but also a risk — it may prioritize an engaging, confident answer over an accurate one on contested or polarizing topics. Cross-verify Grok's factual claims on sensitive subjects.
+
+> [!success] Fix: Use Grok for Speed, Perplexity or Claude for Verification
+> Use Grok as a first-pass tool to quickly gather perspectives on contested technical or market topics. Before acting on any Grok output involving contested facts, cross-verify with Perplexity (for source-cited confirmation) or Claude (for nuanced reasoning with caveats). Never use Grok as a sole source for regulatory, financial, or security-critical decisions.
 
 > [!tip] Grok for Real-Time Information
 > Grok's real-time web access makes it the best choice for "what is the current state of X" queries where timeliness matters. For questions where training cutoff is a limiting factor (stock prices, recent events, current documentation), Grok outperforms offline models.

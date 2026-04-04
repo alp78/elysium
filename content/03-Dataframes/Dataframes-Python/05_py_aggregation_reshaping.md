@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - python
-  - pandas
-  - polars
 tags: [pipeline, python, pandas, polars]
 aliases:
   - groupby, agg, window functions, join, concat, pivot, melt
-keywords: [groupby, agg, over, rolling, shift, join, merge, concat, pivot, melt, explode, window functions]
 description: "Pandas/Polars DataFrame reference 05/10 — Aggregation & Reshaping (groupby, agg, window functions, joins, pivot, melt). Side-by-side executable examples with cell outputs."
 created: 2026-03-24
 updated: 2026-03-24
@@ -64,6 +57,12 @@ print(f"OHLCV: {ohlcv_pd.shape}, Dim: {dim_pd.shape}, Scores: {scores_pd.shape}"
 > operations. Always use `as_index=False` for pipeline code to get a flat DataFrame.
 >
 > Polars `group_by()` always returns a flat DataFrame — no index concept exists.
+
+> [!success] Always pass `as_index=False` in pipeline groupby calls
+>
+> Use `df.groupby("col", as_index=False).agg(...)` to get a flat DataFrame with group
+> keys as regular columns. This makes the result chainable with `.merge()`, `.sort_values()`,
+> and any downstream operation. In Polars, `group_by()` is always flat — no change needed.
 
 > [!tip] Pandas named aggregation
 >
@@ -1015,11 +1014,25 @@ perf_pl = pl.read_parquet(DATA / "index_performance.parquet")
 > result = ohlcv_pd.merge(dim_pd, on="symbol", validate="many_to_one")
 > ```
 
+> [!success] Use `validate=` on every merge to detect unexpected duplicates
+>
+> Pass `validate='many_to_one'` or `validate='one_to_one'` to `pd.merge()` / `.merge()`.
+> A `MergeError` is raised immediately if the key cardinality violates the constraint,
+> preventing silent row explosions. In Polars, use `.join_where()` or assert
+> `result.shape[0] == left.shape[0]` after the join when the relationship should be many-to-one.
+
 > [!warning] Pandas vs Polars merge defaults
 >
 > - Pandas `merge()` defaults to `how='inner'` — rows without matches are silently dropped
 > - Polars `join()` defaults to `how='inner'` too, but uses different suffix behavior:
 >   Pandas appends `_x`/`_y`, Polars appends `_right`
+
+> [!success] Always specify `how=` explicitly and verify row counts after joining
+>
+> Always pass `how='inner'`, `how='left'`, etc. explicitly — never rely on defaults.
+> After any join, assert `len(result) == expected` to catch silent row drops or explosions.
+> In Polars, use `suffix="_right"` awareness or `rename()` the conflicting column before
+> joining to avoid ambiguous column names.
 
 ```python
 # Pandas
@@ -1104,6 +1117,13 @@ display(result_pl.select("symbol", "short_name", "date", "close", "sector").head
 > This left join produces more rows than the left DataFrame because `scores_pd` has
 > multiple rows per symbol (one per date). The output has `len(ohlcv) × scores_per_symbol`
 > rows — a classic accidental many-to-many. Always check `len(result)` after a join.
+
+> [!success] Deduplicate the right side before joining, or use `validate=`
+>
+> Before a left join, deduplicate the right DataFrame to one row per key:
+> `scores_pd.drop_duplicates("symbol")`. Or keep only the latest score with
+> `.sort_values("date").groupby("symbol").last().reset_index()`. Then assert
+> `len(result) == len(ohlcv_pd)` to confirm no row multiplication occurred.
 
 ```python
 # Pandas

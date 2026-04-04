@@ -1,8 +1,5 @@
 ---
 title: "SQL Server Pipeline Anti-Patterns"
-type: reference
-category: data-engineering
-technology: [sql-server]
 tags:
   - sql-server
   - tsql
@@ -12,7 +9,6 @@ tags:
   - performance
   - data-quality
 aliases: [Anti-Patterns, Pipeline Mistakes, SQL Server Gotchas, Common Mistakes]
-keywords: [anti-patterns, row-by-row insert, SELECT star, silent truncation, cursor etl, NOLOCK, implicit conversion, identity business key, VARCHAR MAX, no staging, no transaction, deadlock, race condition, SCD2 duplicate, float comparison, window function spill]
 description: "A dedicated anti-pattern reference for SQL Server data pipelines — 20+ mistakes that cause incidents, data quality issues, or performance crises, with the fix for each."
 created: 2026-03-29
 updated: 2026-03-29
@@ -56,6 +52,10 @@ cursor.fast_executemany = True
 cursor.executemany("INSERT INTO bronze.signals (...) VALUES (?, ...)", rows)
 ```
 
+> [!success] Use `fast_executemany = True` for all bulk inserts
+>
+> Set `cursor.fast_executemany = True` before `executemany()`. This batches all rows into a single network call, reducing 100K round-trips to one and cutting load time from ~45s to ~1.2s.
+
 ### Loading Directly to Production — no staging, no validation
 
 > [!danger] No Rollback Path
@@ -65,6 +65,10 @@ cursor.executemany("INSERT INTO bronze.signals (...) VALUES (?, ...)", rows)
 **Why people do it:** staging tables feel like "extra work" for small pipelines.
 
 **The fix:** always load to staging first, validate (row count, NULL rates, schema check), then promote. See [sql-server-loading-patterns > Staging Table + Swap](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-loading-patterns#staging-table--swap) for the swap pattern.
+
+> [!success] Load to staging, validate, then swap atomically
+>
+> Load into `stg.*`, run row count and NULL checks, then rename or `INSERT INTO ... SELECT` into the production table inside a transaction. A failed validation aborts before production data is touched.
 
 ### No Transaction Wrapper on Multi-Step Loads
 
@@ -85,6 +89,10 @@ INSERT INTO silver.signals_daily (...) SELECT ... FROM bronze;
 COMMIT;
 ```
 
+> [!success] Wrap every multi-step load in `BEGIN TRANSACTION … COMMIT`
+>
+> A transaction guarantees that either all steps succeed or none do. If the process dies mid-run, SQL Server rolls back automatically, leaving the table in its previous clean state.
+
 ### Silent Truncation with bcp — data loss without warning
 
 > [!danger] bcp Silently Truncates Data
@@ -95,6 +103,10 @@ COMMIT;
 
 **The fix:** validate data lengths before loading, or use `-e error_file` with `-m 0` (zero tolerance for errors). Always spot-check loaded data against source. See [sql-server-loading-patterns > bcp Gotchas](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-loading-patterns#bcp-gotchas).
 
+> [!success] Use `-m 0 -e error_file` and pre-validate column lengths
+>
+> Run `bcp` with `-m 0` to fail on the first truncation error, and `-e err.log` to capture rejected rows. Pre-check source data with `MAX(LEN(column))` against the target column width before loading.
+
 ### IDENTITY as a Business Key — breaks on truncate and differs per environment
 
 > [!warning] IDENTITY Values Are Not Stable
@@ -102,6 +114,10 @@ COMMIT;
 > IDENTITY resets on TRUNCATE, has gaps after rollbacks, and differs between dev/staging/prod. Any system that stores or references the IDENTITY value externally breaks when the table is rebuilt.
 
 **The fix:** use natural keys (symbol + date) or deterministic surrogate keys (hash of business columns) for anything shared externally. Reserve IDENTITY for internal-only surrogate keys. See [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design).
+
+> [!success] Use deterministic surrogate keys for anything shared externally
+>
+> Replace external IDENTITY references with a hash key derived from business columns (e.g., `HASHBYTES('SHA2_256', symbol + CAST(date AS VARCHAR))`). The key is stable across environments, survives TRUNCATE, and has no gaps.
 
 ---
 
@@ -115,6 +131,10 @@ COMMIT;
 
 **The fix:** use schema-per-layer (`bronze`, `silver`, `gold`). See [sql-server-schema-layering](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-schema-layering).
 
+> [!success] Create explicit schemas for each pipeline layer
+>
+> `CREATE SCHEMA bronze; CREATE SCHEMA silver; CREATE SCHEMA gold;` — then always qualify table names. Schema-level `GRANT SELECT ON SCHEMA::gold` replaces dozens of table-level grants.
+
 ### VARCHAR(MAX) for Everything — memory and performance waste
 
 > [!warning] VARCHAR(MAX) Allocation
@@ -123,6 +143,10 @@ COMMIT;
 
 **The fix:** size columns to realistic maximums. `VARCHAR(20)` for tickers, `NVARCHAR(200)` for company names, `VARCHAR(500)` for URLs.
 
+> [!success] Size columns to realistic maximums, not `VARCHAR(MAX)`
+>
+> Audit actual data lengths with `SELECT MAX(LEN(col)) FROM source_table` before creating the DDL. Use `VARCHAR(MAX)` only for genuinely unbounded free-text fields that cannot fit in `VARCHAR(4000)` or less.
+
 ### Missing Metadata Columns — impossible to debug
 
 > [!warning] No _ingested_at, No Debugging
@@ -130,6 +154,10 @@ COMMIT;
 > Without `_ingested_at` and `_source_file` in bronze tables, you cannot determine when a row arrived, trace bad data to its source, or verify pipeline freshness.
 
 **The fix:** add `_ingested_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()` and `_source_file VARCHAR(500)` to every bronze table. Cost: ~16 bytes per row. Value: hours saved debugging.
+
+> [!success] Add `_ingested_at` and `_source_file` to every bronze table
+>
+> Include `_ingested_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()` and `_source_file VARCHAR(500)` in every bronze DDL. These two columns cost ~16 bytes per row and make bad data traceable to its exact source file and load time.
 
 ### No Schema Separation Between Layers
 
@@ -149,6 +177,10 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 
 **The fix:** always list columns explicitly in ETL queries: `SELECT col1, col2, col3 FROM ...`
 
+> [!success] Always list columns explicitly in ETL `SELECT` and `INSERT` statements
+>
+> `SELECT col1, col2, col3 FROM ...` is immune to schema additions. If a new column appears in the source, the ETL continues to select only the columns it knows about, and any mismatch surfaces as a clear error rather than silent data corruption.
+
 ### Implicit Type Conversions in WHERE Clauses — kills indexes
 
 > [!warning] Implicit Conversion = Table Scan
@@ -156,6 +188,10 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 > `WHERE varchar_column = 123` forces SQL Server to convert every row's `varchar_column` to `INT` for comparison, preventing index seeks. The query plan shows a CONVERT_IMPLICIT warning.
 
 **The fix:** match types exactly. `WHERE varchar_column = '123'`. See [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries) for the full list of index-killing patterns.
+
+> [!success] Match parameter types to column types — quote strings, cast numerics
+>
+> Use `WHERE varchar_column = '123'` (not `= 123`) and ensure pyodbc sends `VARCHAR` parameters, not `NVARCHAR`. Check for `CONVERT_IMPLICIT` warnings in execution plans to catch remaining mismatches.
 
 ### NOLOCK as a "Performance Fix" — dirty reads in production
 
@@ -167,6 +203,10 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 
 **The fix:** enable RCSI (`ALTER DATABASE SET READ_COMMITTED_SNAPSHOT ON`). Readers get a consistent snapshot without blocking writers. See [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) for the RCSI setup.
 
+> [!success] Enable RCSI for consistent reads without `NOLOCK`
+>
+> `ALTER DATABASE analytics_db SET READ_COMMITTED_SNAPSHOT ON;` — readers see a consistent snapshot of committed data with no shared locks, eliminating blocking without risking dirty reads.
+
 ### Cursor-Based ETL — row-by-row processing in T-SQL
 
 > [!warning] Cursors Are Row-by-Row
@@ -175,6 +215,10 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 
 **The fix:** rewrite as a single set-based INSERT/UPDATE with JOINs, window functions, or CTEs.
 
+> [!success] Replace cursors with set-based `INSERT … SELECT` or window functions
+>
+> Rewrite cursor logic as a single `INSERT INTO target SELECT … FROM source JOIN …` statement. SQL Server processes the entire set in one optimized operation, using parallelism and index seeks instead of row-by-row loops.
+
 ### Non-SARGable Date Filters — index-killing date functions
 
 > [!warning] Functions on Columns Prevent Index Seeks
@@ -182,6 +226,10 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 > `WHERE YEAR(signal_date) = 2025` applies `YEAR()` to every row, preventing an index seek on `signal_date`. The query scans the entire table.
 
 **The fix:** use range predicates. `WHERE signal_date >= '2025-01-01' AND signal_date < '2026-01-01'`. See [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries) for more examples.
+
+> [!success] Use range predicates instead of functions in `WHERE` clauses
+>
+> `WHERE signal_date >= '2025-01-01' AND signal_date < '2026-01-01'` is SARGable — SQL Server can navigate the B-tree index directly to the matching date range instead of scanning the whole table.
 
 ---
 
@@ -195,6 +243,10 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 
 **The fix:** use SCD Type 2 (close old row, insert new row) or temporal tables. See [sql-server-change-tracking](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-change-tracking).
 
+> [!success] Use SCD Type 2 or temporal tables to preserve full history
+>
+> SCD2: `UPDATE SET valid_to = GETUTCDATE(), is_current = 0` on the old row, then `INSERT` a new row with the updated value and `valid_to = '9999-12-31'`. Temporal tables (`SYSTEM_VERSIONING = ON`) handle this automatically at the engine level.
+
 ### SCD2 Without Filtered Unique Index — duplicate current rows
 
 > [!danger] Silent Duplicate Active Rows
@@ -202,6 +254,10 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 > Without `CREATE UNIQUE INDEX ... WHERE is_current = 1`, a bug in the close/insert logic creates two rows with `is_current = 1` for the same key. JOINs return duplicates; dashboard shows wrong data.
 
 **The fix:** always create a filtered unique index on the active key columns. See [sql-server-change-tracking > SCD2 Schema](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-change-tracking#scd2-schema).
+
+> [!success] Add a filtered unique index on the active key to enforce SCD2 integrity
+>
+> `CREATE UNIQUE INDEX UX_dim_stock_current ON dim_stock (symbol) WHERE is_current = 1;` — SQL Server rejects the INSERT if a duplicate active row already exists, surfacing bugs in the close/insert logic immediately rather than silently.
 
 ### Comparing NULLable Columns Without ISNULL — missed changes
 
@@ -220,6 +276,10 @@ WHERE ISNULL(old_sector, '___NULL___') <> ISNULL(new_sector, '___NULL___')
 WHERE old_sector IS DISTINCT FROM new_sector
 ```
 
+> [!success] Use `ISNULL(col, sentinel)` or `IS DISTINCT FROM` for NULLable comparisons
+>
+> `WHERE ISNULL(old_sector, '___NULL___') <> ISNULL(new_sector, '___NULL___')` correctly detects all four cases: value-to-value, NULL-to-value, value-to-NULL, and NULL-to-NULL (no change). On SQL Server 2022+, `IS DISTINCT FROM` is cleaner.
+
 ### Comparing Floating-Point Values for Equality — false change detection
 
 > [!warning] Float Equality Fails
@@ -227,6 +287,10 @@ WHERE old_sector IS DISTINCT FROM new_sector
 > `3.14` stored as `FLOAT` may become `3.1400000000000001`. A direct `<>` comparison flags this as a "change" and triggers an unnecessary SCD2 close/insert.
 
 **The fix:** round to fixed precision (`ROUND(val, 4)`) or use epsilon comparison (`ABS(old - new) < 0.0001`).
+
+> [!success] Use `DECIMAL`/`NUMERIC` for financial values, or compare with epsilon
+>
+> Store monetary and ratio values as `DECIMAL(18,6)` instead of `FLOAT` to eliminate representation errors. For existing `FLOAT` columns, detect real changes with `ABS(old_val - new_val) > 0.0001` instead of `<>`.
 
 ---
 
@@ -240,6 +304,10 @@ WHERE old_sector IS DISTINCT FROM new_sector
 
 **The fix:** batch large transforms into chunks (e.g., 10K rows per transaction). Or schedule heavy transforms during off-hours. See [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) for lock escalation thresholds.
 
+> [!success] Batch large transforms into chunks of 10K rows or fewer
+>
+> Process updates in a `WHILE` loop with `TOP (10000)` per transaction and a short `COMMIT` between each batch. This keeps the row lock count below the 5,000-lock escalation threshold and releases locks frequently, allowing concurrent dashboard reads.
+
 ### MERGE Without Proper Locking Hints — race conditions
 
 > [!danger] Concurrent MERGE = Duplicate Inserts
@@ -248,6 +316,10 @@ WHERE old_sector IS DISTINCT FROM new_sector
 
 **The fix:** add `WITH (HOLDLOCK)` on the target table, or serialize MERGE operations. See [race-conditions](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/race-conditions) for the full analysis.
 
+> [!success] Add `WITH (HOLDLOCK)` to the MERGE target table
+>
+> `MERGE silver.signals_daily WITH (HOLDLOCK) AS target USING …` — `HOLDLOCK` holds a range lock on the matched key set for the duration of the statement, preventing a concurrent MERGE from inserting the same key simultaneously.
+
 ### No Retry Logic for Deadlocks — pipeline fails on transient errors
 
 > [!warning] Deadlocks Are Normal
@@ -255,6 +327,10 @@ WHERE old_sector IS DISTINCT FROM new_sector
 > In a concurrent system, deadlocks happen. SQL Server kills one transaction (victim) and continues the other. Without retry logic, the killed pipeline run fails permanently instead of retrying.
 
 **The fix:** catch error 1205 and retry with exponential backoff (3 attempts, 1s/2s/4s delay). See [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) for C# and Python retry patterns.
+
+> [!success] Catch error 1205 and retry with exponential backoff
+>
+> Wrap the database call in a retry loop that catches `pyodbc.Error` with SQL state `40001` (deadlock victim) and retries up to 3 times with delays of 1s, 2s, and 4s. Most deadlocks resolve on the first retry.
 
 ---
 
@@ -267,6 +343,10 @@ WHERE old_sector IS DISTINCT FROM new_sector
 > `ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY date)` without a clustered index on `(symbol, date)` forces a full sort. On a 100M-row table, the sort spills to TempDB disk.
 
 **The fix:** ensure the clustered index matches `PARTITION BY + ORDER BY`. See [sql-server-incremental-transforms > Window Function Performance](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-incremental-transforms#window-function-performance).
+
+> [!success] Align the clustered index key order with `PARTITION BY` + `ORDER BY`
+>
+> `CREATE CLUSTERED INDEX CIX_signals ON silver.signals_daily (symbol, date)` satisfies `ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY date)` without a sort operator. The optimizer reads pre-ordered pages directly, eliminating the TempDB spill.
 
 ### Full-Table Aggregation That Could Be Incremental
 

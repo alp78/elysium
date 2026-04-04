@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [lambda, closures, decorators, delegates, higher-order functions, generators, iterators]
-keywords: [method, delegate, Func, Action, lambda, closure, extension method, IEnumerable, yield, nullable]
 description: "C# functions reference with executable examples and cell outputs — covers methods, delegates, Func/Action, lambdas, closures, extension methods, and iterators. See [04_py_functions](https://alp78.github.io/elysium/02-Programming-Languages/Python/04_py_functions) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -29,6 +25,12 @@ C# methods must declare a return type (`int`, `string`, `void`). Parameters are 
 > - Returning `null` instead of a meaningful empty value or `Optional`
 > - Very long parameter lists — use a config object or builder
 > - Methods doing too much — single responsibility principle
+
+> [!success] Follow these instead
+>
+> - Return a typed result or throw a specific exception rather than `null`
+> - Use a config/options object or builder pattern when you need more than 3–4 parameters
+> - Keep each method focused on one responsibility — extract helpers freely
 
 ```csharp
 string Greet(string name) { return $"Hello, {name}!"; }
@@ -205,6 +207,10 @@ Accept `Func<DateTime> getNow` with default `DateTime.UtcNow`. Production uses t
 >
 > Don't use `DateTime.Now` directly — untestable and non-deterministic.
 
+> [!success] Inject time as a dependency
+>
+> Accept `Func<DateTime>? getNow = null` with `getNow ??= () => DateTime.UtcNow` as default. Production uses real time; tests inject a fixed `DateTime` — fully deterministic.
+
 ```csharp
 Dictionary<string, object> ProcessOrder(
     Dictionary<string, object> order,
@@ -281,6 +287,10 @@ LoadData(new[] { "users", "orders", "products" },
 > [!warning] OrderBy replaces previous sort
 >
 > `OrderBy` then another `OrderBy` **replaces** the first — use `ThenBy` for secondary sort.
+
+> [!success] Chain ThenBy for multi-column sort
+>
+> Use `.OrderBy(e => e.Dept).ThenBy(e => e.Salary)` to apply a stable secondary sort without discarding the primary one.
 
 ```csharp
 var employees = new[]
@@ -437,6 +447,10 @@ LogDict("click", new Dictionary<string, object> { ["page"] = "home", ["button"] 
 >
 > Keep lambdas short (≤3 lines). Extract complex logic to named methods. Don't use lambdas with side effects in LINQ — use `foreach`.
 
+> [!success] Named methods for complex logic
+>
+> Extract anything beyond 3 lines into a named method. Side-effecting operations belong in `foreach` loops, not LINQ chains — keeps each part readable and independently testable.
+
 ```csharp
 Func<int, int> square = x => x * x;
 Func<int, int, int> add = (a, b) => a + b;
@@ -541,6 +555,10 @@ times(5)
 >
 > Don't write complex lambdas that should be methods. Don't create named methods for trivial one-liners used once.
 
+> [!success] Right tool for the right job
+>
+> Inline lambda for short, single-use LINQ predicates and callbacks; named method for anything reusable, > 3 lines, or that needs a doc comment.
+
 ## Closures & Scope
 
 #### Block scope — variables declared inside { } are local
@@ -636,6 +654,10 @@ isValidAge(150)   // age 150
 >
 > Lambdas in a `for` loop capture the variable itself — after the loop, all see the final value. Fix: `int captured = i` inside the loop body. Note: `foreach` in C# 5+ captures per-iteration automatically.
 
+> [!success] Copy the loop variable before capturing
+>
+> Declare `int captured = i;` at the top of the loop body and close over `captured` instead of `i`. Each iteration creates a new variable, so each lambda holds an independent snapshot.
+
 ```csharp
 var funcs = new List<Func<int>>();
 for (int i = 0; i < 3; i++)
@@ -664,6 +686,10 @@ Delegates declare a function signature as a type — type-safe function pointers
 > [!warning] Multicast delegate return values
 >
 > With multicast delegates, only the **last** handler's return value is kept. Use `Func`/`Action` for simple cases — custom delegate types add unnecessary ceremony.
+
+> [!success] Use Action for fire-and-forget multicasting
+>
+> When all subscribers perform side effects (logging, UI updates, pipeline steps), use `Action<T>` — return values are irrelevant and the multicast discard issue never arises.
 
 ```csharp
 int Add(int a, int b) => a + b;
@@ -753,6 +779,12 @@ Console.WriteLine();
 > - Overloads that do fundamentally different things — confusing API
 > - Too many overloads — use optional/named parameters or generics instead
 > - Ambiguous overloads cause compiler errors when it can't decide
+
+> [!success] Clean overloading guidelines
+>
+> - All overloads should do the same logical operation on different input types
+> - Prefer optional/named parameters when the logic is identical; use generics when one method can handle all types
+> - If the compiler reports ambiguity, add an explicit cast at the call site or consolidate overloads
 
 #### Method overloading — same name, different parameters
 

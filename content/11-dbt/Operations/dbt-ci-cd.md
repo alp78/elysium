@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, dbt, github-actions]
-type: how-to
-technology: [dbt, github-actions]
 status: stable
 updated: 2026-03-23
 description: "GitHub Actions CI with slim builds and manifest diffing, Workload Identity Federation, pre-commit hooks, and CD via Git pull or Docker rebuild."

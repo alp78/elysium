@@ -1,10 +1,6 @@
 ---
-type: concept
-category: gcp
-technology: [gcp, iam, security]
 tags: [security, infrastructure, gcp, iam]
 aliases: [GCP service accounts, IAM bindings, GCP IAM roles, least privilege GCP, service account keys, Workload Identity, IAM policy, gcloud iam]
-keywords: [service account, IAM, identity and access management, least privilege, roles, bindings, gcloud iam service-accounts create, gcloud projects add-iam-policy-binding, roles/bigquery.dataEditor, roles/storage.objectAdmin, roles/run.invoker, key file, Workload Identity, custom roles, service account email, roles/bigquery.jobUser, test permissions, remove role]
 description: "How to create GCP service accounts, generate and rotate keys, grant minimum IAM roles for data pipeline workloads, and verify permissions — implementing least-privilege access as the baseline security standard."
 created: 2026-03-22
 updated: 2026-03-22
@@ -52,6 +48,10 @@ gcloud iam service-accounts keys delete <KEY_ID> --iam-account=data-pipeline-pip
 > [!warning] Key Files Are Permanent Credentials
 >
 > A service account key file (`key.json`) does not expire and grants the same access as the service account itself. A single leak in a git commit — even one later removed from history — can result in permanent unauthorized access. In production on GCP (VMs, Cloud Run), use the metadata server for automatic credentials instead. Key files are only justified for local development against GCP APIs.
+
+> [!success] Use the Metadata Server in Production
+>
+> On Cloud Run and GCE VMs, attach the pipeline service account at deploy time — no key file is ever created. The metadata server issues short-lived, auto-refreshing tokens automatically. For local dev, `gcloud auth application-default login` provides ADC credentials without downloading a JSON key. Delete any existing key with `gcloud iam service-accounts keys delete KEY_ID --iam-account=SA_EMAIL` once you have migrated to keyless auth.
 
 ### IAM Bindings — Granting Roles to Service Accounts
 

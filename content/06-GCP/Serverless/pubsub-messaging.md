@@ -1,10 +1,6 @@
 ---
-type: concept
-category: gcp
-technology: [gcp, pubsub]
 tags: [infrastructure, gcp, pubsub]
 aliases: [Pub/Sub publish, Pub/Sub consume, Pub/Sub pull, gcloud pubsub publish, message attributes, Pub/Sub backlog, ordering keys, exactly-once, idempotent]
-keywords: [pubsub, publish, consume, pull, auto-ack, attributes, message ordering, ordering keys, exactly-once delivery, at-least-once, idempotent, backlog, num_undelivered_messages, pipeline lag, MERGE upsert]
 description: "How to publish messages to Pub/Sub topics and consume them from subscriptions — including attributes, ordering keys, backlog monitoring, and the idempotency requirements of at-least-once delivery."
 created: 2026-03-22
 updated: 2026-03-22
@@ -57,6 +53,10 @@ gcloud pubsub subscriptions pull pipeline-sub --limit=10 --auto-ack
 > `--auto-ack` is for Testing Only.
 > In production consumer code, never auto-acknowledge. Acknowledge only after successfully processing the message. If you auto-ack and your processing fails, the message is lost — no retry, no dead letter. Ack only on success.
 
+> [!success] Ack Only After Successful Processing
+>
+> In production consumer code (Python `google-cloud-pubsub` or C# `Google.Cloud.PubSub.V1`), call `ack()` only inside the success path of your message handler. Wrap the processing block in a try/except: on failure, either let the message timeout and be redelivered, or nack it explicitly. Pair with a dead letter topic so unprocessable messages don't block the queue indefinitely.
+
 ### Monitoring the Pub/Sub Subscription Backlog
 
 ```bash
@@ -81,6 +81,10 @@ A growing backlog is the primary indicator of pipeline lag. If messages arrive f
 > 2. **If you need ordering**, use ordering keys: `--message-ordering-key=market_index` ensures all messages with the same key arrive in order. But this limits throughput to a single publisher thread per key.
 >
 > 3. **Exactly-once delivery** is available but requires enabling it on the subscription and adds latency.
+
+> [!success] Design for Idempotency by Default
+>
+> Write all Pub/Sub consumers to be idempotent regardless of delivery mode. Use the Pub/Sub-provided `messageId` as part of your idempotency key, write to a staging table first, then MERGE into the production table. This pattern is safe under at-least-once, exactly-once, and replayed messages alike — no delivery guarantee changes require consumer code changes.
 
 ### Pub/Sub Idempotency Requirement for At-Least-Once
 

@@ -1,10 +1,6 @@
 ---
-type: concept
-category: gcp
-technology: [gcp, cloud-run]
 tags: [infrastructure, gcp, cloud-run]
 aliases: [Cloud Run Jobs, Cloud Run Services, gcloud run jobs, serverless containers, Cloud Run ETL, cold start]
-keywords: [cloud run, cloud run jobs, cloud run services, serverless, containers, docker, execute job, cold start, ETL batch job, pipeline stage, gcloud run jobs execute, gcloud run jobs update, memory, CPU, timeout, retries, image size, multi-stage build, min instances]
 description: "How to manage Cloud Run Jobs vs Services for data pipeline workloads — executing jobs, viewing logs, updating configuration, and mitigating cold start latency for ETL containers."
 created: 2026-03-22
 updated: 2026-03-22

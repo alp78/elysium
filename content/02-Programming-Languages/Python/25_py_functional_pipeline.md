@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python, polars, pydantic, fastapi, sqlserver]
 tags: [python, pipeline, data-quality, lineage, polars, pydantic, fastapi, streamlit, sql-server, medallion, parquet, airflow, validation, plotly]
 aliases: [functional pipeline, medallion pipeline, data lineage, pydantic validation]
-keywords: [pipeline, medallion, bronze, silver, gold, pydantic, validation, lineage, fastapi, streamlit, plotly, airflow, parquet]
 description: "End-to-end functional data pipeline with Pydantic validation, lineage tracking, Parquet export, FastAPI serving, and Plotly visualization. See [25_cs_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline) for the C# equivalent."
 created: 2026-03-29
 updated: 2026-03-30
@@ -176,6 +172,14 @@ The models divide into three groups along two orthogonal dimensions — **struct
 >
 > A renamed API field silently loads NULLs into bronze — every row, every day. A negative volume passes through to silver unchallenged. A NaN daily return poisons the gold aggregation. By the time a dashboard user notices, the damage is three layers deep and every downstream consumer has absorbed corrupt data. Contracts catch bad data at ingestion — one layer, one fix.
 
+> [!success] Fix: Pydantic Validation at Ingestion
+>
+> Define a Pydantic `BaseModel` for each bronze schema with `Field()` constraints
+> (e.g. `gt=0` for price, `ge=0` for volume, `@model_validator` for `high >= low`).
+> Parse every API response through the model before writing to SQL Server. Invalid
+> rows raise `ValidationError` — catch, log to quarantine, and continue. No bad row
+> ever reaches bronze.
+
 #### Pydantic — define Bronze validation model with `BaseModel` and `Field()`
 
 > [!info] Bronze Contract: RawOHLCV
@@ -330,6 +334,13 @@ This is where the two dimensions of the architecture intersect. The structural m
 > [!danger] Without Semantic Context
 >
 > An AI agent queries gold_symbol_profile and sees `volatility: 0.0187`. It doesn't know if that's a percentage or a decimal, daily or annual, what formula produced it, or what NULL would mean. It guesses — or hallucinates an interpretation. The data contract eliminates this: unit=decimal_ratio, formula=std(daily_return), annualize with sqrt(252). The number becomes self-describing.
+
+> [!success] Fix: Attach ColumnContext to Every Computed Field
+>
+> Define a `ColumnContext` Pydantic model carrying `unit`, `formula`, `source_columns`,
+> `null_meaning`, and `valid_range`. Attach one instance to each column in the gold
+> schema and export it alongside the Parquet file as a `context.json` sidecar. Any
+> downstream consumer — human or AI — reads the sidecar before interpreting the number.
 
 #### Pydantic — define column semantic metadata model with `BaseModel`
 
@@ -570,6 +581,14 @@ These functions implement the ability to trace any data point from Gold back to 
 > row to its run, the hash proves no tampering, the RunContext shows zero
 > rejections and the exact date range processed.
 
+> [!success] Fix: UUID Batch IDs and SHA-256 Row Hashes
+>
+> Assign a `uuid4()` batch ID to every pipeline run and stamp every written row
+> with it. Compute a SHA-256 hash of each row's immutable fields at write time and
+> store it in `bronze_ohlcv.row_hash`. On dispute, re-hash the stored row and compare
+> against the stored hash — any mismatch proves post-write modification. The
+> `lineage_stages` table provides the full audit trail by batch and stage.
+
 #### uuid — generate unique batch ID with `uuid4()`
 
 > [!info] Batch ID: Unique Run Identifier
@@ -674,6 +693,14 @@ Nine tables implementing the full architecture — not just data storage but the
 > existed, never know what was wrong with them, can never replay them.
 > Without `context_log`: the pipeline's knowledge about holidays, expected
 > nulls, and business triggers is lost the moment the process exits.
+
+> [!success] Fix: Create All Three Operational Tables at Schema Init
+>
+> Provision `lineage_stages`, `quarantine`, and `context_log` in the same DDL
+> script that creates `bronze_ohlcv`. Write to `lineage_stages` at every stage
+> boundary (start + finish + row count). Route every `ValidationError` to
+> `quarantine` with the raw payload and error message. Flush `StageContext.warnings`
+> to `context_log` at the end of each run.
 
 | Table | Purpose | Key |
 |---|---|---|
@@ -1340,6 +1367,14 @@ Dimensions are the pipeline's external knowledge — facts about the world that 
 > pipeline classifies each zero-volume date at ingestion and records the
 > classification as a context warning.
 
+> [!success] Fix: Populate dim_calendar with Exchange Holidays
+>
+> Load `dim_calendar` from a known holiday source (e.g. `pandas_market_calendars`
+> for the relevant exchange). During bronze validation, join each date against
+> `dim_calendar` and automatically classify zero-volume rows as `holiday`,
+> `weekend`, or `genuine_anomaly`. Record the classification as a `StageContext`
+> warning — not an error — so the pipeline continues without false alerts.
+
 #### yfinance — fetch symbol metadata to JSON landing zone with `Ticker.info`
 
 > [!info] Fetch Symbol Metadata
@@ -1861,6 +1896,14 @@ Bronze implements two principles. The **landing zone** decouples API fetching fr
 > are loaded, 2 are missing, and there's no way to replay because the API
 > response is gone. With the landing zone, the raw JSON is on disk —
 > fix the parser, re-run the load, no re-fetch needed.
+
+> [!success] Fix: Write Raw API Response to Landing Zone First
+>
+> Persist every API response as a timestamped JSON file in the landing zone
+> (`landing/<symbol>/<date>.json`) before parsing or loading. The fetch stage
+> and the load stage are now independent — a parser bug can be fixed and the
+> load re-run against the saved JSON without a second API call. Retain files
+> for at least 30 days to cover any delayed re-processing need.
 
 #### yfinance — fetch OHLCV to JSON landing zone with `Ticker.history()`
 
@@ -2524,6 +2567,14 @@ Silver is where the **Functional Core** principle (Gary Bernhardt, 'Boundaries' 
 > transforms pure means the only thing that can go wrong is the formula —
 > and formulas can be verified with a unit test in milliseconds.
 
+> [!success] Fix: Pure Functions — Input DataFrame, Output DataFrame
+>
+> Write every silver transform as a function that accepts a Polars `DataFrame`
+> and returns a new `DataFrame` — no database calls, no file I/O, no global state.
+> The caller (imperative shell) handles reading from SQL Server and writing back.
+> This pattern makes every transform unit-testable with `pl.DataFrame(...)` literals
+> in under a second, with no mocking required.
+
 #### Polars — compute daily returns with `pct_change().over()`
 
 > [!info] Transform: Daily Returns
@@ -3132,6 +3183,14 @@ Gold produces consumption-ready data products from Silver. Two aggregations, bot
 > le=0 constraint, the bad value reaches the dashboard. A portfolio
 > manager sees "positive drawdown" and makes decisions on nonsensical data.
 
+> [!success] Fix: Gold Quality Gate with Invariant Assertions
+>
+> Define a Pydantic `GoldRecord` model with mathematically-constrained fields:
+> `max_drawdown: float = Field(le=0)`, `volatility: float = Field(ge=0)`, etc.
+> Run every aggregated row through the model before writing to the gold table.
+> Rows that violate an invariant are rejected to quarantine with the constraint
+> name and the actual value — never silently written.
+
 #### Polars — build daily cross-sectional summary with `group_by().agg()`
 
 > [!info] Aggregation: Daily Summary
@@ -3610,6 +3669,14 @@ The serving layer reads Parquet files, not SQL Server. This is the **pre-materia
 > response. A database restart takes the API down. With Parquet files,
 > the API has no database dependency — it reads a file that the pipeline
 > pre-computed. The API can serve data even if SQL Server is down.
+
+> [!success] Fix: Pipeline Writes Parquet, API Reads File
+>
+> At the end of each pipeline run, export the gold aggregation to a
+> versioned Parquet file (`gold/daily_summary_<date>.parquet`). The FastAPI
+> endpoint reads the latest file at startup and caches it in memory — zero
+> database queries at serve time. Cache invalidation is a file replacement:
+> re-run the pipeline, the next request loads the new file.
 
 #### Polars — export daily summary to Parquet with `write_parquet()`
 

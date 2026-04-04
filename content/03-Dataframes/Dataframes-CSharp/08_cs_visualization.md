@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - csharp
-  - dotnet
-  - polars
 tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - charts, plots, Plotly, matplotlib, seaborn
-keywords: [plot, bar, line, scatter, histogram, heatmap, Plotly, Plotly.NET, matplotlib, seaborn, visualization]
 description: "Polars.NET / C# DataFrames reference 08/10 — Visualization (charts, plots, interactive graphics). Executable examples with cell outputs. See [08_py_visualization](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/08_py_visualization) for the Python equivalent."
 created: 2026-03-27
 updated: 2026-03-27

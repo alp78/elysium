@@ -1,13 +1,4 @@
 ---
-type: concept
-category: gcp
-technology:
-  - gcp
-  - firestore
-  - pubsub
-  - cloud-functions
-  - dataflow
-  - python
 tags: [pipeline, infrastructure, python, gcp, firestore]
 aliases:
   - real-time pipeline
@@ -17,42 +8,6 @@ aliases:
   - change streams
   - CDC NoSQL
   - serverless pipeline
-keywords:
-  - firestore
-  - real-time
-  - nosql
-  - pipeline state
-  - event-driven
-  - cloud functions
-  - eventarc
-  - pub/sub
-  - dataflow
-  - apache beam
-  - change data capture
-  - CDC
-  - streaming
-  - on_snapshot
-  - firestore listener
-  - bigquery
-  - document database
-  - collection
-  - subcollection
-  - composite index
-  - TTL
-  - batch write
-  - transaction
-  - service account
-  - IAM
-  - VPC service controls
-  - cost optimization
-  - free tier
-  - dead letter
-  - windowing
-  - feature store
-  - config management
-  - IoT ingestion
-  - pipeline orchestration
-  - denormalization
 description: >
   Definitive reference for building real-time data pipelines with Firestore and
   complementary GCP services. Covers when to use NoSQL for pipeline state,
@@ -98,6 +53,10 @@ Most pipeline metadata use cases (dashboards, alerting, config) need **operation
 >
 > Real-time latency does not mean high throughput. Firestore is optimized for low-latency access to individual documents and small query sets, not for scanning millions of rows per second. If you need both, use Firestore for hot operational data and BigQuery for the analytical layer.
 
+> [!success] Use the Dual-Tier Pattern
+>
+> Write operational state to Firestore (hot path, <10ms reads) and stream aggregated or historical data to BigQuery (cold path, analytics). Dataflow or a Cloud Function bridges the two tiers, writing the same event to both destinations in parallel. See Pattern 4 in this note for the full architecture.
+
 ---
 
 ### Use Cases Where Firestore Fits
@@ -136,6 +95,10 @@ Gold scores computed in BigQuery are written to Firestore (`stocks` collection) 
 > [!danger] The Expensive Anti-Pattern
 >
 > Using Firestore as an analytics database — running `collection.stream()` over tens of thousands of documents to compute aggregations — generates enormous read costs with no performance advantage over a SQL query. Materialize aggregations into dedicated summary documents or export to BigQuery instead.
+
+> [!success] Materialize Aggregations or Export to BigQuery
+>
+> For counts and sums, use Firestore's server-side `count()` / `sum()` aggregation queries — billed as a single read. For complex analytics, schedule a daily `gcloud firestore export` to GCS and load into BigQuery with `bq load --source_format=DATASTORE_BACKUP`. Never stream the full collection to Python just to aggregate.
 
 ---
 
@@ -357,6 +320,10 @@ unsubscribe = col_ref.on_snapshot(on_change)
 > [!warning] Listener Process Availability
 >
 > The real-time CDC listener is a long-running process. Run it on [Cloud Run (service)](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) with a health check, not as a one-shot job. Ensure it reconnects on transient Firestore errors.
+
+> [!success] Deploy as a Cloud Run Service With Reconnect Logic
+>
+> Wrap the `on_snapshot()` call in a retry loop with exponential backoff. Set `min-instances=1` on the Cloud Run service to prevent cold starts that would miss changes. Add a `/healthz` endpoint that returns 200 only when the listener is active, and configure a Cloud Monitoring uptime check against it.
 
 ---
 
@@ -893,6 +860,10 @@ gcloud projects set-iam-policy PROJECT_ID policy.json
 >
 > DATA_READ logs for Firestore can generate millions of log entries per day at scale. Filter aggressively with log-based metrics rather than exporting all audit logs to BigQuery.
 
+> [!success] Use Log-Based Metrics and Targeted Sinks
+>
+> Create a log-based metric for `DATA_WRITE` audit events only, and set up a Cloud Monitoring alert on that metric. If you need audit data in BigQuery, create a log sink with a filter like `protoPayload.serviceName="firestore.googleapis.com" AND protoPayload.methodName:"Write"` — writes only, not reads — to keep volume manageable.
+
 ### Structured Logging From Pipeline Code
 
 ```python
@@ -1076,6 +1047,10 @@ gcloud access-context-manager perimeters update PERIMETER_NAME \
 > [!warning] VPC-SC and Cloud Functions
 >
 > If Firestore is in a VPC-SC perimeter and a Cloud Function writes to it, the function's service account must be inside the perimeter's access policy. Misconfiguration results in `PERMISSION_DENIED` errors that can be difficult to distinguish from IAM errors.
+
+> [!success] Add the Function's SA to the VPC-SC Ingress Policy
+>
+> Create an ingress rule in the VPC-SC perimeter that allows `FROM serviceAccount:FUNCTION_SA_EMAIL` to access `firestore.googleapis.com`. Verify by checking Cloud Audit Logs for `"VPC Service Controls"` denials — they appear under `protoPayload.status.code=7` in Cloud Logging.
 
 ### Data Encryption
 

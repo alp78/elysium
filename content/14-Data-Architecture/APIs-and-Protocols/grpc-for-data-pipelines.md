@@ -1,10 +1,4 @@
 ---
-type: reference
-category: data-architecture
-technology:
-  - python
-  - grpc
-  - protobuf
 tags: [data-architecture, architecture, pipeline, api, python]
 aliases:
   - gRPC
@@ -20,38 +14,6 @@ aliases:
   - service definition
   - channel
   - stub
-keywords:
-  - grpc
-  - protocol buffers
-  - protobuf
-  - rpc
-  - remote procedure call
-  - http2
-  - streaming
-  - unary
-  - server streaming
-  - client streaming
-  - bidirectional streaming
-  - proto file
-  - service definition
-  - code generation
-  - channel
-  - stub
-  - interceptor
-  - load balancing
-  - service discovery
-  - health check
-  - reflection
-  - status codes
-  - deadline
-  - metadata
-  - compression
-  - tls
-  - authentication
-  - microservices
-  - data pipeline
-  - high throughput
-  - binary serialization
 description: >
   Comprehensive reference on gRPC for data engineers covering Protocol Buffers,
   all four RPC types, Python server and client implementations, error handling,
@@ -1555,6 +1517,9 @@ class EnrichWithGrpc(DoFn):
 > **Teams unfamiliar with protobuf**: The codegen pipeline adds cognitive overhead. If the team is small and velocity matters more than performance, REST + FastAPI is faster to ship.
 >
 > **File transfers**: gRPC has a 4 MB default message size limit. Large file transfers are better handled via signed GCS URLs or multipart uploads.
+
+> [!success] When gRPC Is the Right Choice
+> Use gRPC for internal service-to-service communication where you control both sides, need binary-compact payloads, or want streaming without bolting on WebSocket infrastructure. For browser-facing needs, expose a REST or GraphQL endpoint and let an internal gRPC layer handle high-throughput backend communication. For large file transfers, use signed GCS URLs passed through a small unary gRPC call — keep the heavy bytes in object storage, not in protobuf messages.
 
 ---
 

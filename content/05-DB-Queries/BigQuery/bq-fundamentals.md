@@ -1,10 +1,6 @@
 ---
-type: reference
-category: db-queries
-technology: [bigquery, gcp]
 tags: [sql, bigquery, gcp]
 aliases: [BigQuery fundamentals, BigQuery SQL, Standard SQL, BQ queries, BigQuery basics]
-keywords: [bigquery, standard sql, select, join, aggregation, array, struct, unnest, date functions, string functions, cast, safe_cast, ifnull, coalesce, countif, any_value, except, replace]
 description: "BigQuery Standard SQL fundamentals with executable examples and cell outputs — covers querying, data types, arrays, structs, UNNEST, and BigQuery-specific functions."
 created: 2026-03-22
 updated: 2026-03-22
@@ -188,6 +184,10 @@ The fundamental query: pick columns, filter rows, sort results. `LIMIT N` limits
 >
 > `SELECT * FROM table LIMIT 10` still scans the ENTIRE table — BigQuery reads all matching data, then truncates the result. You pay for the full scan regardless of LIMIT. To reduce cost, select only the columns you need and filter on partitioned/clustered columns. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization).
 
+> [!success] Safe Pattern
+>
+> Name specific columns instead of `SELECT *`, and always filter on the partition column when querying large tables: `WHERE date >= '2026-01-01'`. Use `bq query --dry_run` to preview bytes before running an unfamiliar query.
+
 > [!tip] Backtick escaping for table references
 >
 > BigQuery requires backticks around `project.dataset.table` when the project ID contains hyphens: `` `my-project.dataset.table` ``. Without backticks, the parser interprets the hyphen as minus. Column names that are reserved words (`close`, `open`) also need backticks, whereas SQL Server uses `[brackets]`.
@@ -356,6 +356,10 @@ LIMIT 15
 > Always `SELECT` only the columns you need. A `GROUP BY` that reads all columns before
 > aggregating is expensive. Use `SELECT col1, col2, AGG(col3)` not `SELECT *, AGG(col3)`.
 
+> [!success] Safe Pattern
+>
+> Always name only the columns your aggregation needs. In GROUP BY queries, list the grouping key and aggregate inputs explicitly — never `SELECT *`. Run `bq query --dry_run --use_legacy_sql=false 'SELECT ...'` to confirm bytes billed before executing expensive queries.
+
 ### Aggregation GROUP BY — Aggregate by Stock
 
 `GROUP BY` collapses rows into groups. Aggregate functions (`AVG`, `COUNT`, `SUM`, `MIN`, `MAX`) summarize each group. This ranks stocks by average trading volume — a liquidity measure.
@@ -448,6 +452,10 @@ Group by `EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date)` to build time-serie
 > | `TIMESTAMP` | UTC (absolute) | Pipeline timestamps, audit logs |
 >
 > `CURRENT_TIMESTAMP()` returns UTC. `CURRENT_DATE()` returns date in UTC. For a specific timezone: `DATE(CURRENT_TIMESTAMP(), 'Europe/Prague')`. Mixing types in JOIN/WHERE causes implicit coercion.
+
+> [!success] Safe Pattern
+>
+> Use `DATE` for trade/report dates, `TIMESTAMP` for pipeline audit columns. When comparing across types, cast explicitly: `CAST(my_datetime AS TIMESTAMP)`. Never rely on implicit coercion in JOIN keys — it masks type mismatches that surface only on certain data.
 
 > [!tip] BigQuery NULL handling differences
 >
@@ -544,6 +552,10 @@ LIMIT 15
 > worker nodes. Joining two large tables forces a full data shuffle. For repeated joins,
 > denormalize into a single wide table or use clustering on the join key to reduce shuffle
 > cost.
+
+> [!success] Safe Pattern
+>
+> Cluster large tables on the most common JOIN key (e.g., `symbol`, `_index`). For small dimension tables (< a few hundred MB), BigQuery will automatically broadcast them, avoiding a full shuffle. For repeated cross-table joins, consider materializing the joined result as a gold-layer table instead of re-joining on every query.
 
 ### JOIN Across Medallion Layers — OHLCV + Dimension (Silver)
 

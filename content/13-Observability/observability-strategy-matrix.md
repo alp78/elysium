@@ -1,10 +1,6 @@
 ---
-type: reference
-category: observability
-technology: [datadog, gcp, cloud-monitoring, cloud-logging]
 tags: [observability, monitoring, alerting, dashboards, sla, datadog, gcp, cloud-monitoring, cloud-logging, sql-server, airflow, bigquery, cloud-run, pubsub, firestore, pipeline, on-call]
 aliases: [monitoring strategy, what to monitor, observability matrix]
-keywords: [metrics, logs, traces, alerts, dashboards, freshness, data quality, SLA, dead man switch, on-call]
 description: "What to monitor for every component: metrics, logs, alerts, dashboards — the strategy layer above tool configuration."
 created: 2026-03-29
 updated: 2026-03-29
@@ -69,6 +65,13 @@ Dashboard: **DBA Dashboard** | Config: [datadog-sql-server-integration > Built-i
 > - **Deadlocks > 0/min** — P2: transactions are being killed. Pipeline MERGE operations may fail and need retry logic
 > - **CPU > 90% sustained 5min** — P2: queries are CPU-bound. Check for missing indexes, implicit conversions, or parameter sniffing
 
+> [!success] Response patterns for SQL Server alerts
+>
+> - **PLE low**: check buffer pool size and identify large table scans via `sys.dm_exec_query_stats`; add indexes or increase VM memory
+> - **Disk > 85%**: shrink or archive old backup files; verify TempDB auto-growth is not runaway; resize disk online with `resize2fs` if on Linux
+> - **Deadlocks**: capture the deadlock graph from `system_health` XEvent session; add `WITH (NOLOCK)` to read-heavy queries or reorder update sequences in MERGE logic
+> - **CPU high**: run `sys.dm_exec_requests` to find the blocking query; check for implicit type conversions or missing covering indexes
+
 ---
 
 ### Airflow
@@ -97,6 +100,13 @@ Dashboard: **Pipeline Watch** | Config: [datadog-airflow-observability > Key Met
 > - **Heartbeat > 60s** — P1: scheduler is down. No new tasks will be scheduled until it recovers
 > - **Parse time > 30s** — P3: slow DAG parsing delays scheduling. Usually caused by expensive imports at module level
 
+> [!success] Response patterns for Airflow alerts
+>
+> - **SLA miss**: check task logs for the failed or slow task; verify upstream dependencies completed; trigger a manual backfill if data is recoverable
+> - **Task failure after retries**: inspect the final task log for the root exception; fix the root cause before manually clearing the failed task instance
+> - **Heartbeat > 60s**: SSH to the Airflow VM and check `systemctl status airflow-scheduler`; restart the scheduler service and monitor for recurrence
+> - **Parse time > 30s**: move expensive imports inside task functions rather than at module level; reduce the number of active DAG files if the DAG folder has grown large
+
 ---
 
 ### BigQuery
@@ -121,6 +131,12 @@ Dashboard: **Cost + Performance** | Config: [gcp-cloud-monitoring-deep-dive > Bi
 > - **Bytes scanned > threshold** — P3: a query is scanning more data than expected. Likely a missing partition filter or `SELECT *`
 > - **Failed queries > 0** — P3: investigate immediately. Common causes: DML quota exceeded, table deleted, permission revoked
 > - **Duration p99 > 5min** — P3: slowest queries are degrading. Check for unpartitioned tables or slot starvation
+
+> [!success] Response patterns for BigQuery alerts
+>
+> - **Bytes over threshold**: find the offending query in `INFORMATION_SCHEMA.JOBS_BY_PROJECT` ordered by `total_bytes_processed`; add a `WHERE DATE(_PARTITIONTIME) = ...` filter or enable `require_partition_filter` on the table
+> - **Failed queries**: check the `error_result` field in `INFORMATION_SCHEMA.JOBS`; for quota errors, reduce scheduling concurrency; for permission errors, audit IAM role assignments
+> - **p99 duration high**: identify unpartitioned tables being full-scanned; add partition and cluster keys, or purchase additional slot capacity if slot starvation is the cause
 
 ---
 
@@ -149,6 +165,13 @@ Dashboard: **Service Health** | Config: [gcp-cloud-monitoring-deep-dive > Built-
 > - **Memory > 90%** — P2: close to OOM kill. Increase memory allocation or fix memory leaks
 > - **OOM kills > 0** — P1: container is being killed for exceeding memory. Data loss possible if writes are in progress
 
+> [!success] Response patterns for Cloud Run alerts
+>
+> - **Error rate > 1%**: check container stdout/stderr logs via `gcloud logging read`; look for unhandled exceptions or upstream dependency timeouts; redeploy previous revision if a recent deploy is the cause
+> - **Latency p99 high**: check cold start frequency and set `--min-instances=1` for latency-sensitive services; profile the slowest requests with Cloud Trace
+> - **Memory > 90%**: increase `--memory` on the service revision; profile heap allocation if a memory leak is suspected
+> - **OOM kills**: set `--min-instances=1` to reduce churn; increase `--memory`; verify the pipeline checkpoints progress so a restart does not reprocess already-written data
+
 ---
 
 ### Pub/Sub
@@ -173,6 +196,12 @@ Dashboard: **Messaging Health** | Config: [gcp-cloud-monitoring-deep-dive > Pub/
 > - **Oldest unacked > 5min** — P2: messages are aging. If retention window is short, data loss is imminent
 > - **DLQ > 0** — P2: messages are failing permanently. Investigate the DLQ for error patterns
 
+> [!success] Response patterns for Pub/Sub alerts
+>
+> - **Backlog growing**: check the consumer Cloud Run service for crash loops; increase `--max-instances` and `--concurrency` to scale out processing; verify acknowledgement deadlines are long enough for slow messages
+> - **Oldest unacked > 5min**: increase the subscription's message retention duration immediately to prevent expiry; scale up consumers in parallel; if messages have expired, replay from the source if available
+> - **DLQ > 0**: pull a sample from the DLQ to read the original payload and error; fix the consumer bug; republish DLQ messages after the fix is deployed
+
 ---
 
 ### Cloud Storage (GCS)
@@ -195,6 +224,11 @@ Dashboard: **Storage Dashboard** | Config: [gcp-cloud-monitoring-deep-dive > Clo
 > - **Unexpected deletes** — P2: object count dropped without a known lifecycle rule or pipeline action. Possible accidental deletion
 > - **Object count anomaly** — P3: sudden spike or drop outside normal growth patterns
 
+> [!success] Response patterns for GCS alerts
+>
+> - **Unexpected deletes**: check Cloud Audit Logs for `storage.objects.delete` events in the affected bucket; if accidental, restore from a versioned bucket (enable object versioning on all landing-zone buckets); identify the IAM principal that issued the delete and restrict permissions if necessary
+> - **Object count anomaly**: correlate with pipeline run history; a spike may indicate a runaway write loop — check Cloud Run job execution counts and add a maximum-objects-per-run guard to the pipeline
+
 ---
 
 ### Firestore
@@ -216,6 +250,11 @@ Dashboard: **Real-Time Store** | Config: [gcp-cloud-monitoring-deep-dive > Fires
 >
 > - **Write rate > 80% quota** — P2: approaching the per-document write limit (1 write/sec). Contention will cause latency spikes
 > - **Security denials > 0** — P3: investigate whether rules are too restrictive or an unauthorized client is probing
+
+> [!success] Response patterns for Firestore alerts
+>
+> - **Write rate near quota**: batch writes using `WriteBatch` instead of individual document writes; distribute heartbeat state across multiple documents keyed by pipeline name to avoid hotspotting on a single document
+> - **Security denials**: check Cloud Audit Log for the denied request's principal and resource path; update security rules to permit legitimate access or revoke the client's credentials if unauthorized
 
 ---
 
@@ -244,6 +283,13 @@ Dashboard: **VM Health** | Config: [datadog-agent-sql-vm](https://alp78.github.i
 > - **OOM detected** — P1: a process was killed for memory. Data corruption possible if SQL Server was the victim
 > - **Service stopped** — P1: SQL Server or Airflow systemd service is down. Pipeline is blocked
 
+> [!success] Response patterns for GCE VM alerts
+>
+> - **CPU > 90%**: identify the top process with `top` or `htop`; for SQL Server, run `sys.dm_exec_requests` to find the high-CPU query; right-size the VM machine type if the workload is consistently high
+> - **Disk > 85%**: run `df -h` to identify the full partition; archive or delete old backup files; resize the disk with `gcloud compute disks resize` followed by `resize2fs`
+> - **OOM**: check `dmesg | grep -i "killed process"` for the victim; increase VM memory or fix the memory-leaking process; verify SQL Server data consistency after an OOM kill
+> - **Service stopped**: run `systemctl restart airflow-scheduler` or `systemctl restart mssql-server`; check `journalctl -u <service>` for the failure reason before restarting
+
 ---
 
 ### The Data Pipeline
@@ -269,6 +315,13 @@ Dashboard: **Data Quality** | Config: [gcp-pipeline-health-and-sla > Data Freshn
 > - **Schema change detected** — P3: upstream schema changed. Contract tests should have caught this — investigate why they didn't
 > - **Duplicates > 0** — P2: deduplication logic failed. MERGE key mismatch or race condition in concurrent loads
 
+> [!success] Response patterns for data pipeline alerts
+>
+> - **Stale data**: check Cloud Run job execution history for the pipeline; if no execution exists, verify the Cloud Scheduler trigger fired; re-trigger manually with `gcloud run jobs execute` after identifying the root cause
+> - **Row count anomaly**: compare today's count against the 7-day average in BigQuery `__TABLES__` or the `pipeline_freshness` table; for spikes, check for duplicate loads; for drops, check for missing source partitions
+> - **Schema change**: run `check_schema_drift()` against the current table and the reference schema JSON; if a column was renamed upstream, update the reference schema and pipeline mapping; add a contract test to catch this earlier
+> - **Duplicates**: identify the duplicate key values with the duplicate detection query; re-run the MERGE with the correct natural key; verify the dedup logic covers all load concurrency scenarios
+
 ## Alert Severity Framework
 
 > [!info] Severity Determines Response
@@ -285,6 +338,10 @@ Dashboard: **Data Quality** | Config: [gcp-pipeline-health-and-sla > Data Freshn
 > [!warning] Alert Fatigue from Over-Paging
 >
 > Avoid making everything P1. If on-call gets paged for P3 issues, alert fatigue sets in and real P1s get ignored. Review severity assignments quarterly.
+
+> [!success] Enforce the severity framework in your alerting tool
+>
+> Assign PagerDuty phone-call urgency only to P1 monitors. Map P2 to PagerDuty alert (no phone call outside business hours). Map P3 and P4 to Slack only. Schedule a quarterly severity review meeting: pull alert history, count false-positive P1 pages, and downgrade any alert that has never required immediate action. This keeps the on-call rotation sustainable and P1 responses fast.
 
 ## Dashboard Strategy
 
@@ -323,6 +380,10 @@ Dashboard: **Data Quality** | Config: [gcp-pipeline-health-and-sla > Data Freshn
 >
 > Running both tools on the same metric is acceptable for redundancy, but alerting should fire from **one** tool only. Duplicate alerts from Datadog and GCP for the same condition cause confusion and double-paging.
 
+> [!success] Designate a primary alerting tool per metric category
+>
+> Use the decision table above to assign alerting ownership: Datadog owns SQL Server and Airflow alerts; GCP Cloud Monitoring owns Cloud Run, Pub/Sub, GCS, and Firestore alerts. Disable the secondary tool's alerting policies (keep the metric collection active for redundancy). Document the ownership in each alert's description field so on-call engineers know where to look.
+
 ## Anti-Patterns
 
 > [!danger] Observability Anti-Patterns
@@ -336,3 +397,7 @@ Dashboard: **Data Quality** | Config: [gcp-pipeline-health-and-sla > Data Freshn
 > - **Threshold from a guess** — alert thresholds must come from baseline data, not intuition; run a component for two weeks before setting static thresholds
 > - **Monitoring only the happy path** — if you only track success counts, a silent failure (zero rows, no errors) will never fire an alert; always monitor for the *absence* of expected events
 > - **Single-tool dependency** — if Datadog goes down and you have no GCP-native alerts, you are blind; critical P1 alerts should exist in both systems
+
+> [!success] Quarterly observability posture checklist
+>
+> Run a 30-minute audit against this list each quarter: (1) list all custom metrics and confirm each has a linked alert; (2) list all alerts and confirm each has a runbook URL in the description; (3) list all dashboards and confirm each has a named owner and a "last verified" date; (4) review a sample of pipeline logs and confirm JSON structure is consistent; (5) review alert history and recalibrate thresholds that fired zero or more than 10 times in the quarter; (6) verify at least one P1 alert exists in both Datadog and GCP-native for each critical component.

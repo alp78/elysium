@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet]
 tags: [api, csharp]
 aliases: [REST API, HTTP client, web server, FastAPI, ASP.NET, Flask, minimal API, requests]
-keywords: [HttpClient, ASP.NET, minimal API, controller, middleware, routing, authentication, Swagger, IHttpClientFactory]
 description: "C# web and APIs reference with executable examples and cell outputs — covers HttpClient, ASP.NET Core minimal APIs, controllers, middleware, and authentication. See [15_py_webapis](https://alp78.github.io/elysium/02-Programming-Languages/Python/15_py_webapis) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -154,6 +150,10 @@ Three essential patterns for API integrations: **pagination** loops through page
 > - **Linear retry (no backoff)** — hammers the failing service
 > - **One POST per record** — N round trips instead of 1
 
+> [!success] Robust API integration patterns
+>
+> Cap pagination loops with a `maxPages` guard. Use exponential backoff (0.5s → 1s → 2s) with a `Retry-After` header check for 429s. Batch records into bulk POSTs — 100 records per request reduces round trips and stays under most API rate limits.
+
 ```csharp
 var client = new HttpClient();
 
@@ -259,6 +259,10 @@ Define record DTOs (like Pydantic models), write handler functions that return t
 >
 > - **Business logic in route handlers** — extract to testable functions
 > - **`Dictionary<string, object>` for API models** — use typed records
+
+> [!success] Clean minimal API design
+>
+> Keep route handlers as thin delegates that call a pure handler function. Define all request and response shapes as `record` DTOs — this gives compile-time safety, automatic JSON binding, and makes handlers unit-testable without a running web server.
 
 ```csharp
 // DTOs — C# records = Python Pydantic models

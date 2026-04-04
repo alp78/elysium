@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: git
-technology: [git, github]
 tags: [git, github]
 aliases: [pull request, PR, code review, gh pr, GitHub CLI, PR workflow, merge PR, squash merge]
-keywords: [pull request, PR, code review, gh pr create, gh pr merge, squash merge, rebase merge, draft PR, branch protection, auto-merge, force-with-lease, merge conflict, PR workflow, github cli, gh pr checkout]
 description: "Pull request creation, review, and merge workflows using GitHub CLI — including squash merge, handling diverged branches with rebase, branch protection rules, and resolving 'not mergeable' errors."
 created: 2026-03-22
 updated: 2026-03-22
@@ -64,6 +60,10 @@ gh pr merge --rebase
 > [!warning] Draft PRs block merge
 >
 > A `--draft` PR cannot be merged until explicitly marked as "Ready for review" via the GitHub UI or `gh pr ready`. CI checks still run on draft PRs, but the merge button is disabled. This prevents accidental merges of incomplete work.
+
+> [!success] Mark Ready When All Work Is Complete
+>
+> Run `gh pr ready <number>` or click "Ready for review" in the GitHub UI once your branch is complete and all CI checks pass. This unblocks the merge button and signals to reviewers that the PR is ready for evaluation.
 
 ### Merge Strategy Comparison
 
@@ -140,6 +140,10 @@ git stash pop
 > [!warning] Stash Pop Can Conflict
 >
 > If the stashed changes touch the same lines that differ between branches, `git stash pop` will produce merge conflicts. This is expected — the stash is still preserved (not dropped) when conflicts occur, so your work is safe.
+
+> [!success] Resolve Conflict Markers, Then Drop the Stash
+>
+> Open each conflicted file, edit the `<<<<<<<`/`=======`/`>>>>>>>` markers to keep the correct code, then run `git add <file>` and `git stash drop` to finalize. Your stash remains available until you explicitly drop it.
 
 ### Step 2: Resolve stash pop conflicts
 

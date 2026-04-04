@@ -1,7 +1,4 @@
 ---
-type: concept
-category: dataops
-technology: []
 tags: [dataops]
 aliases:
   - DataOps
@@ -13,38 +10,6 @@ aliases:
   - SPC
   - continuous data delivery
   - data value stream
-keywords:
-  - DataOps
-  - data operations
-  - agile data
-  - DevOps for data
-  - data pipeline
-  - CI/CD data
-  - shift-left testing
-  - data quality
-  - statistical process control
-  - SPC
-  - continuous delivery
-  - lean data
-  - data manifesto
-  - automation
-  - orchestration
-  - data governance
-  - data-as-code
-  - value stream mapping
-  - data value stream
-  - DORA metrics
-  - maturity model
-  - data testing
-  - environment management
-  - data observability
-  - data contracts
-  - data catalog
-  - cultural transformation
-  - feedback loops
-  - data reliability
-  - deployment frequency
-  - change failure rate
 description: "DataOps principles and practices — the intersection of Agile, DevOps, and Lean applied to data engineering, covering the DataOps manifesto, CI/CD for data, shift-left testing, and maturity models."
 created: 2026-03-22
 updated: 2026-03-22
@@ -154,6 +119,9 @@ This is the foundation behind tools like Monte Carlo Data, Bigeye, and the anoma
 
 > [!warning] SPC Requires Stability First
 > SPC only works on a **stable process**. If your pipelines are constantly being rewritten, your baselines will be meaningless. Stabilize your architecture before adding SPC-style monitoring.
+
+> [!success] Fix: Establish a Freeze Window Before Baselining
+> Before activating SPC monitoring on a pipeline, declare a two-week stabilization freeze: no schema changes, no logic rewrites, no source changes. Collect baseline metrics during this window. Activate control limits only once the process has operated stably for at least 14 days.
 
 ---
 
@@ -309,9 +277,15 @@ Continuous Integration and Continuous Delivery for data pipelines follows the sa
 >
 > Unlike stateless web services, data pipelines have state (the data itself). A bad deploy doesn't just affect new requests -- it can corrupt historical data or create gaps that are invisible until a downstream consumer notices weeks later. Always test in staging with production-representative data volumes before promoting to production. Have a rollback plan that includes both code rollback AND data repair (re-running from the last known-good state).
 
+> [!success] Fix: Mandatory Staging Sign-Off with Data Repair Runbook
+> For every pipeline promotion, require a sign-off checklist: (1) tests passed on production-representative data, (2) rollback command documented in the PR description, (3) data repair runbook exists for the last-known-good re-run window. Use shadow mode deployment (new pipeline runs in parallel, output not served) before full cutover for high-risk changes.
+
 > [!warning] Schema migrations are not reversible
 >
 > Adding a column is easy to roll back. Dropping or renaming a column is not -- any downstream consumers that depend on the old schema will break immediately. Always deploy schema changes as additive operations (add new columns, deprecate old ones, remove after all consumers migrate). Never drop a column and deploy new pipeline code in the same release.
+
+> [!success] Fix: Expand-and-Contract Migration Pattern
+> Use the expand-and-contract pattern: (1) add the new column alongside the old one, (2) deploy the new pipeline logic writing to both, (3) migrate all consumers to the new column, (4) in a separate release, drop the old column. This makes every schema change reversible at any intermediate step.
 
 ---
 
@@ -421,6 +395,9 @@ Development → Staging → Production
 > [!warning] Staging data must represent production
 >
 > The most common reason staging tests don't catch production bugs is that staging data doesn't represent production data. Either use a recent anonymized copy of production, or generate synthetic data that matches production distributions and edge cases.
+
+> [!success] Fix: Automated Weekly Staging Refresh
+> Schedule an automated weekly job that copies a recent anonymized snapshot of production into staging. Record the snapshot date in a `staging_metadata` table. Any test run older than 7 days flags a staleness warning. Synthetic data generation should be seeded from production statistical distributions, not invented from scratch.
 
 ---
 

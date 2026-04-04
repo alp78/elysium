@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - csharp
-  - dotnet
-  - polars
 tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - categoricals, Arrow, zero-copy, type conversion
-keywords: [categorical, Enum, Arrow, zero-copy, interop, type casting, schema, nested types, struct]
 description: "Polars.NET / C# DataFrames reference 07/10 — Advanced Types & Interop (categoricals, Arrow, zero-copy). Executable examples with cell outputs. See [07_py_types_interop](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/07_py_types_interop) for the Python equivalent."
 created: 2026-03-27
 updated: 2026-03-27

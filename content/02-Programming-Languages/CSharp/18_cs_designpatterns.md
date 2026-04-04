@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [design patterns, singleton, factory, observer, strategy, repository, dependency injection]
-keywords: [singleton, factory, observer, strategy, repository, dependency injection, SOLID, IServiceCollection, DI container]
 description: "C# design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and ASP.NET Core dependency injection. See [18_py_designpatterns](https://alp78.github.io/elysium/02-Programming-Languages/Python/18_py_designpatterns) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -151,6 +147,9 @@ The Singleton pattern ensures a class has exactly one instance throughout the ap
 
 > [!warning] Singleton and testing
 > Singletons make unit testing difficult because they carry global state between tests. Test A modifies the singleton's state, and Test B sees the modified state. Prefer dependency injection with a singleton LIFETIME (registered once in the DI container) over the classic Singleton pattern — it gives you the same single-instance behavior but with testability.
+
+> [!success] Testable singleton via DI
+> Register the dependency as `AddSingleton<T>()` in `IServiceCollection`. The DI container manages the single instance — tests can inject a mock or a fresh instance per test suite, eliminating shared state between test runs.
 
 #### Factory — create objects without specifying exact class
 
@@ -412,6 +411,9 @@ Reflection lets you examine a type's properties, methods, and constructors at ru
 
 > [!warning] Reflection performance
 > `GetProperty().GetValue()` uses late binding on every call. If you need to read properties in a tight loop (e.g., mapping 100K database rows), cache the `PropertyInfo` objects or use compiled expressions / source generators instead. A single reflection call is fine; a million is not.
+
+> [!success] Cache PropertyInfo for hot paths
+> Retrieve `PropertyInfo` objects once at startup and store them in a static dictionary. For maximum throughput, compile them into typed delegates with `Expression.Lambda<Func<T, object>>()` — this brings reflection-based access down to near-direct-call performance.
 
 ```csharp
 // Reflection — inspect types, properties, methods at runtime.

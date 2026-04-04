@@ -1,10 +1,6 @@
 ---
-type: concept
-category: gcp
-technology: [gcp, pubsub]
 tags: [infrastructure, gcp, pubsub]
 aliases: [Pub/Sub topics, Pub/Sub subscriptions, gcloud pubsub, dead letter queue, push subscription, pull subscription]
-keywords: [pubsub, pub/sub, topic, subscription, pull subscription, push subscription, dead letter, ack deadline, message retention, at-least-once delivery, acknowledgement, gcloud pubsub topics create, gcloud pubsub subscriptions create, decoupling, asynchronous messaging]
 description: "How to create Pub/Sub topics and subscriptions — including pull vs push models, acknowledgement deadlines, message retention, and dead letter queues for failed message handling."
 created: 2026-03-22
 updated: 2026-03-22

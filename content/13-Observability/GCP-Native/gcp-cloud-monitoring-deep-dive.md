@@ -1,10 +1,4 @@
 ---
-type: reference
-category: observability
-technology:
-  - gcp
-  - cloud-monitoring
-  - python
 tags: [monitoring, observability, python, gcp]
 aliases:
   - Cloud Monitoring
@@ -17,44 +11,6 @@ aliases:
   - uptime check
   - SLI
   - SLO
-keywords:
-  - cloud monitoring
-  - stackdriver
-  - GCP observability
-  - metric descriptor
-  - monitored resource
-  - time series
-  - MQL
-  - monitoring query language
-  - alerting policy
-  - notification channel
-  - uptime check
-  - SLI
-  - SLO
-  - error budget
-  - ops agent
-  - custom metrics
-  - GAUGE
-  - DELTA
-  - CUMULATIVE
-  - dashboard
-  - data engineering monitoring
-  - bigquery monitoring
-  - pubsub monitoring
-  - cloud run monitoring
-  - compute engine monitoring
-  - firestore monitoring
-  - cloud storage monitoring
-  - pipeline health
-  - data freshness
-  - slot utilization
-  - backlog monitoring
-  - metric alignment
-  - metric aggregation
-  - gcloud monitoring
-  - python monitoring sdk
-  - monitoring_v3
-  - ops agent sql server
 description: >
   Definitive reference for using GCP Cloud Monitoring (formerly Stackdriver) to
   monitor data engineering infrastructure. Covers metric types, monitored resources,
@@ -126,6 +82,9 @@ Understanding metric kinds is critical for correct MQL aggregation and alerting.
 
 > [!warning] Aggregation Pitfall
 > Summing a GAUGE metric (e.g., CPU utilization) across instances gives a meaningless number. Always use `mean()` or `max()` for GAUGE. For CUMULATIVE metrics, always call `rate()` first to convert to a per-second rate before aggregating across resources.
+
+> [!success] Safe Aggregation Pattern
+> For GAUGE metrics: use `mean()` or `max()` as the per-series aligner, then `mean` or `max` as the cross-series reducer. For CUMULATIVE metrics: apply `rate()` first (converts to per-second), then aggregate across resources with `sum()` or `mean()` as appropriate.
 
 ### Metric Descriptors
 
@@ -238,6 +197,9 @@ These metrics are collected automatically by GCP infrastructure:
 
 > [!warning] Memory Metrics
 > Built-in GCP metrics do NOT include OS-level memory utilization without the Ops Agent. The `balloon_ram_used` metric only applies to VMs with the virtio balloon driver configured. Install the Ops Agent to get real memory metrics.
+
+> [!success] Fix: Install the Ops Agent
+> Install the Ops Agent on all GCE VMs to expose `agent.googleapis.com/memory/percent_used` and related OS-level metrics. With the Ops Agent running, use `agent.googleapis.com/memory/bytes_used` grouped by `state` for full memory breakdown (used, cached, free).
 
 #### Ops Agent: Installation
 
@@ -626,6 +588,9 @@ gcloud pubsub subscriptions get-iam-policy SUB_NAME
 
 > [!danger] Pipeline Stall Alert
 > `oldest_unacked_message_age` is the single most important Pub/Sub metric. If a consumer crashes or falls behind, this value climbs. Alert at 300 seconds (5 minutes) for P1 pipelines. At 3600 seconds (1 hour), messages may be at risk of expiry depending on retention settings.
+
+> [!success] Recommended Alert Configuration
+> Create a Cloud Monitoring alerting policy on `pubsub.googleapis.com/subscription/oldest_unacked_message_age` with threshold 300 seconds (5 minutes), evaluation period 1 minute, for P1 pipelines. Set a second policy at 600 seconds to page on-call. Ensure subscription `ackDeadlineSeconds` and message retention settings are configured to give enough time for recovery before messages expire.
 
 #### Consumer Lag Analysis
 
@@ -1720,6 +1685,9 @@ Cloud Monitoring can alert when the error budget burn rate is too high — the s
 > - You need rich **browser-based synthetic monitoring** (Datadog Synthetics vs basic uptime checks)
 > - You have a large SQL Server footprint and need the full 200+ SQL Server metric set out of the box
 > - Your on-call workflow depends on the **Datadog Mobile App**
+
+> [!success] Recommended Decision Path
+> If any of the above conditions apply, adopt a hybrid approach: use Cloud Monitoring for GCP-native service metrics (BigQuery, Pub/Sub, Cloud Run) and Datadog for host-level observability, APM, and multi-cloud correlation. This avoids paying Datadog host fees for serverless GCP services while preserving Datadog's strengths where they matter most.
 
 > [!tip] Hybrid Approach
 > Many teams run both: **Datadog for infrastructure observability** (hosts, services, APM) and **Cloud Monitoring for GCP-native service metrics** (BigQuery, Pub/Sub, Cloud Run). Use Cloud Monitoring alerting policies to forward critical alerts to PagerDuty, which also receives Datadog alerts. This avoids paying Datadog host fees for GCP-managed services (Cloud Run, BigQuery) where Cloud Monitoring is clearly superior.

@@ -1,10 +1,6 @@
 ---
-type: reference
-category: observability
-technology: [datadog, sql-server, airflow]
 tags: [monitoring, observability, sql, airflow, datadog]
 aliases: [Datadog Monitors, Datadog Alerts, Deadlock Alert, Airflow Monitors]
-keywords: [datadog monitors, alerts, deadlock alert, scheduler down, airflow monitor, metric monitor, change alert, notification, email alert, P1 critical, P2 high, conditional formatting, monitor message, recovery]
 description: "Recommended Datadog monitors for the data platform — deadlock detection on SQL Server, Airflow scheduler health, task failure alerts, and pool starvation warnings."
 created: 2026-03-22
 updated: 2026-03-22
@@ -77,9 +73,15 @@ To verify the full pipeline (deadlock → metric → monitor → email):
 >
 > Datadog evaluates monitors on a fixed interval (typically 60 seconds). A deadlock that occurs and resolves within one evaluation cycle may never trigger the alert. For critical monitors, set the evaluation window to the smallest supported interval and consider enabling `require_full_window: false` so partial data triggers the alert rather than waiting for a full window.
 
+> [!success] Minimize Missed Deadlock Alerts
+> Set the monitor's evaluation window to `last 1 minute` (the minimum), enable `require_full_window: false` in the monitor's advanced settings, and use a **Change Alert** on `sqlserver.deadlocks.total` rather than a threshold — this fires as soon as the counter increments, even within a single collection cycle.
+
 > [!warning] Recovery notification flood
 >
 > When a monitor recovers, Datadog sends a recovery notification to all channels. If a flapping metric (e.g., scheduler heartbeat on a slow VM) triggers and recovers repeatedly, the on-call engineer receives dozens of notifications. Use `notify_no_data: true` with `no_data_timeframe: 10` (minutes) instead of a tight threshold to reduce noise for heartbeat-style monitors.
+
+> [!success] Suppress Flapping Notifications
+> For heartbeat-style monitors, set **Alert condition** to "no data for 5 minutes" rather than a threshold, enable `notify_no_data: true` with `no_data_timeframe: 10`, and add a **renotification** interval of at least 30 minutes. This ensures a single alert per incident rather than a flood for each flap cycle.
 
 ## Airflow Orchestration Monitors
 

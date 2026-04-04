@@ -1,10 +1,6 @@
 ---
-type: reference
-category: observability
-technology: [datadog, gcp]
 tags: [monitoring, observability, performance, cost, datadog, gcp]
 aliases: [Datadog Costs, Datadog Pricing, DD Agent Cost, Datadog Cost Reference, Datadog Monthly Cost]
-keywords: [datadog cost, datadog pricing, host cost, trial, infrastructure monitoring, APM pro, logs pricing, EU region, datadoghq.eu, 14-day trial, per host, dd-agent free, ram usage 350mb, disable datadog, dd_api_key empty, SaaS pricing, GCP infrastructure cost comparison, 50-80 per host, log volume, trace volume]
 description: "Datadog pricing breakdown for the data platform — agent RAM overhead, trial vs paid costs, and how to cleanly disable all Datadog components by setting dd_api_key to empty."
 created: 2026-03-22
 updated: 2026-03-22

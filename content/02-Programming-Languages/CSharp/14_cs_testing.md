@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet]
 tags: [testing, csharp]
 aliases: [unit testing, pytest, xUnit, NUnit, test driven development, mocking, assertions]
-keywords: [xUnit, NUnit, MSTest, Moq, FluentAssertions, Theory, Fact, fixture, mock, TDD]
 description: "C# testing reference with executable examples and cell outputs — covers xUnit, NUnit, Moq, FluentAssertions, data-driven tests, and test-driven development patterns. See [14_py_testing](https://alp78.github.io/elysium/02-Programming-Languages/Python/14_py_testing) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -262,6 +258,10 @@ xUnit is the most widely used testing framework in .NET. `[Fact]` marks a single
 > - Don't **share state** between tests — each test should be independent
 > - Don't **test private methods** — test the public API that uses them
 > - Don't **assert on implementation details** — assert on observable behavior
+
+> [!success] Good test structure
+>
+> Each test is a self-contained `[Fact]` or `[Theory]` that arranges its own data, acts on a single unit, and asserts one outcome. Constructor injection provides fresh state per test — no `[SetUp]` or shared mutable fields.
 
 > [!info] Running xUnit in notebooks
 >
@@ -940,6 +940,10 @@ Integration tests verify code against real dependencies (DB, APIs, files) — no
 > - Don't depend on specific data values — test invariants and ranges
 > - Don't mutate shared test data — use transactions that rollback
 
+> [!success] Safe integration test setup
+>
+> Point tests at a dedicated staging database or a Testcontainers ephemeral instance. Read connection strings from environment variables (`DB_HOST`, `DB_PASSWORD`) injected by CI. Wrap mutating tests in a `TransactionScope` that rolls back in `Dispose` so the next run starts clean.
+
 ```csharp
 var connStr = "Data Source=localhost,1434;Initial Catalog=stoxx;"
             + "User ID=sa;Password=EsgDev2026Pass1;"
@@ -1133,6 +1137,10 @@ AssertTest($"daily returns within +/-20% ({extremeReturns} violations)", extreme
 > [!warning] Resolve root services (they pull
 >
 > Resolve root services (they pull the full dependency graph). Don't register services in tests that aren't in production. Watch lifetime mismatches: Scoped into Singleton throws at runtime.
+
+> [!success] DI validation pattern
+>
+> Call `provider.GetRequiredService<T>()` for every root service in a dedicated DI smoke test. A fast, zero-setup test that catches missing registrations and lifetime mismatches before the app starts — cheaper than debugging a production startup crash.
 
 ```csharp
 // Register services

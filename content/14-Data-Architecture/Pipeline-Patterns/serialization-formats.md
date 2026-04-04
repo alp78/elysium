@@ -1,10 +1,6 @@
 ---
-type: reference
-category: data-formats
-technology: [python, kafka, protobuf, avro]
 tags: [data-architecture, architecture, pipeline, python]
 aliases: [serialization, data formats comparison, format decision matrix, JSON vs Parquet, Avro vs Protobuf, MessagePack, Pickle, compression codecs, Snappy, Zstd, Gzip, LZ4]
-keywords: [serialization, json, yaml, csv, parquet, avro, protobuf, messagepack, pickle, compression, snappy, zstd, gzip, lz4, schema, binary format, text format, kafka, gRPC, data lake, format comparison, encoding, decoding, schema evolution, cross-language]
 description: "Comprehensive comparison of every serialization format a data engineer encounters — JSON, YAML, CSV, MessagePack, Protobuf, Avro, Parquet, and Pickle — with a format decision matrix and compression codec comparison (Snappy, LZ4, Zstd, Gzip)."
 created: 2026-03-22
 updated: 2026-03-22
@@ -82,6 +78,10 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 > [!warning] YAML Implicit Type Coercion
 > YAML silently converts strings: `yes`, `no`, `on`, `off`, `true`, `false` → boolean; `2026-03-10` → date object; `1e5` → 100000.0 (float). This breaks when a field value happens to look like a boolean or date. Always quote strings in YAML config files when they contain ambiguous values.
 
+> [!success] Quote all ambiguous string values in YAML config files
+>
+> Write `enabled: "yes"` not `enabled: yes`, and `date: "2026-03-10"` not `date: 2026-03-10`. Use a YAML linter (yamllint) in CI to catch unquoted boolean-like and date-like values before they reach production.
+
 ### CSV
 
 - **Text format, tabular**
@@ -145,6 +145,10 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 > even if only 1% of rows match the filter. Target 128 MB per row group
 > (Parquet default) or 50K-1M rows for typical financial datasets.
 
+> [!success] Target 128 MB per row group and partition by date for financial datasets
+>
+> Use PyArrow's `max_rows_per_group` or set the row group size explicitly when writing Parquet files. Partition files by `trade_date` so queries that filter on date only scan the relevant partition. This combination gives optimal predicate pushdown and keeps per-file metadata overhead low.
+
 ### Pickle
 
 - **Python-specific binary format**
@@ -155,6 +159,10 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 > [!warning] Never Unpickle Untrusted Data
 > `pickle.load()` can execute arbitrary Python code. If an attacker controls a `.pkl` file you load, they own your process. Only use Pickle for Python-to-Python workflows where you control both the writer and the reader and the data never travels over a network or through untrusted storage.
 
+> [!success] Use MessagePack or JSON for any inter-system data exchange instead of Pickle
+>
+> MessagePack is a safe, fast, cross-language binary format that replaces Pickle for internal Python pipelines where you need speed. For anything that crosses a network boundary or comes from an external source, use JSON or Avro. Reserve Pickle exclusively for short-lived, local Python-to-Python caching where you control both the writer and reader.
+
 > [!danger] Pickle Arbitrary Code Execution
 >
 > `pickle.loads(untrusted_bytes)` can execute ARBITRARY Python code.
@@ -164,6 +172,10 @@ Choose your format based on the primary constraint: speed, size, schema enforcem
 > data from external APIs, or any source you don't fully control.
 > Pickle is safe ONLY for Python-to-Python within a single trusted system
 > (e.g., caching intermediate pipeline results on the same machine).
+
+> [!success] Validate the source before any deserialization; use safer formats for untrusted data
+>
+> If you must deserialize data from any external or user-controlled source, use JSON (`json.loads`) or Avro with a schema registry. Both formats are incapable of executing code during deserialization. Add a CI lint rule that flags any new `pickle.load` call that reads from a non-local path.
 
 ---
 

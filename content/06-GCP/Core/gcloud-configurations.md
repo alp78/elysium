@@ -1,10 +1,6 @@
 ---
-type: concept
-category: gcp
-technology: [gcp, gcloud]
 tags: [infrastructure, gcp, gcloud]
 aliases: [gcloud config, gcloud configurations, GCP project switching, named configurations]
-keywords: [gcloud config configurations, gcloud config set, project switching, named configurations, multi-project, dev staging production, gcloud config list, activate configuration, environment safety, production protection]
 description: "How to use gcloud named configurations to safely manage multiple GCP projects (dev, staging, production) and switch between them without error-prone manual config changes."
 created: 2026-03-22
 updated: 2026-03-22
@@ -91,6 +87,9 @@ gcloud config set compute/zone europe-west1-b
 > PS1='$(gcloud_env) \w\$ '
 > ```
 > Now your prompt shows `[PROD]` in red when targeting production — a visual safety net against running a destructive command in the wrong project.
+
+> [!success] Confirm the active project before destructive commands
+> Before any destructive operation, run `gcloud config get-value project` to confirm you are targeting the expected project. Combined with the color-coded prompt, this two-step check prevents the most common class of accidental production changes.
 
 ### Why Named Configurations Matter for Multi-Project Safety
 

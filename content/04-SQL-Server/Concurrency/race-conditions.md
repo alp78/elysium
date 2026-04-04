@@ -1,10 +1,6 @@
 ---
-type: concept
-category: sql-server
-technology: [sql-server, python, airflow]
 tags: [python, sql, airflow, sql-server, tsql]
 aliases: [race condition, lost update, phantom insert, dirty read, concurrent write, data corruption]
-keywords: [race condition, lost update, phantom insert, dirty read, concurrent write, data corruption, serialization, atomic operation, MERGE, isolation level, READ COMMITTED, SERIALIZABLE, RCSI, Airflow max_active_runs, transaction, unique constraint, check-then-insert, read-then-write, overlapping pipeline, pipeline race condition]
 description: "SQL Server race conditions in data pipelines: the four common patterns (lost update, phantom insert, dirty read, overlapping truncate-reload), detection queries, and five prevention strategies including Airflow serialization, atomic SQL operations, transactions, and unique constraints. Includes a complete data pipeline audit."
 created: 2026-03-22
 updated: 2026-03-22
@@ -408,6 +404,10 @@ ALTER TABLE gold.scores_daily
 >
 > Prefer Loud Failure Over Silent Corruption.
 > A primary key violation is far better than silent data corruption — the application fails loudly and the problem is immediately visible. Add unique constraints to every table that should have unique rows.
+
+> [!success] Safe Pattern — Add Unique Constraints as Guardrails
+>
+> Add a unique constraint on the natural key of every table that participates in concurrent writes: `ALTER TABLE gold.scores_daily ADD CONSTRAINT UQ_scores_daily UNIQUE (_index, symbol, score_date);`. The constraint catches any race that slips past serialization or transaction wrapping, turning silent corruption into a loud, immediately visible error 2627.
 
 ---
 

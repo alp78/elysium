@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - csharp
-  - dotnet
-  - polars
 tags: [pipeline, csharp, deedle, polars, dataframes]
 aliases:
   - unit testing, validation, migration guide
-keywords: [testing, pytest, xUnit, assert_frame_equal, validation, migration, pandas to polars, best practices]
 description: "Polars.NET / C# DataFrames reference 10/10 — Project, Testing & Migration (end-to-end, validation, migration guide). Executable examples with cell outputs. See [10_py_testing_migration](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/10_py_testing_migration) for the Python equivalent."
 created: 2026-03-27
 updated: 2026-03-27

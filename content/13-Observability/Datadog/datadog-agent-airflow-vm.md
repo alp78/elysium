@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: observability
-technology: [datadog, airflow, docker, gcp, cos]
 tags: [monitoring, orchestration, observability, docker, airflow, datadog, gcp]
 aliases: [DD Agent Airflow, Datadog Airflow VM, dd-agent COS]
-keywords: [datadog agent, airflow vm, docker, container-optimized os, COS, dd-agent, autodiscovery, docker labels, statsd, DogStatsD, port 8126, APM, startup script, airflow-net, e2-medium]
 description: "How to set up the Datadog Agent as a Docker container on the example Airflow VM (Container-Optimized OS), covering startup script, autodiscovery labels, StatsD metrics, and memory budget."
 created: 2026-03-22
 updated: 2026-03-22
@@ -69,6 +65,9 @@ docker run -d \
 
 > [!warning] COS Filesystem Constraint
 > Container-Optimized OS has a read-only `/opt` filesystem. The standard Datadog volume mount `-v /opt/datadog-agent/run:/opt/datadog-agent/run:rw` will **fail silently** on COS. Always use `/var/lib/datadog-agent/run` on the host side. See [datadog-troubleshooting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-troubleshooting) for the exact fix.
+
+> [!success] Correct Volume Mount for COS
+> Use `/var/lib/datadog-agent/run` as the host-side path: `-v /var/lib/datadog-agent/run:/opt/datadog-agent/run:rw`. This directory is writable on COS and persists across container restarts.
 
 > [!tip] Startup Script Guard
 > The agent launch is guarded by `|| echo "WARNING..."` so a failure doesn't block Airflow startup. If the agent fails to start, the Airflow containers still launch normally.
@@ -235,6 +234,9 @@ resource "google_compute_instance" "airflow" {
 
 > [!warning] Missing dd-api-key
 > The `dd-api-key` metadata must be present on the Airflow VM. During infrastructure changes (e.g., Cloud SQL to SQL VM migration), this key can accidentally be omitted, causing dd-agent to not start. Always verify both VMs have `dd-api-key` in their metadata. This is the most common cause of missing APM traces — see [datadog-troubleshooting](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-troubleshooting).
+
+> [!success] Verify and Restore the API Key
+> Check that the key is present with `gcloud compute instances describe data-pipeline-airflow --zone=europe-west1-b --format="get(metadata.items)"`. If missing, re-add it: `gcloud compute instances add-metadata data-pipeline-airflow --zone=europe-west1-b --metadata dd-api-key=<your-key>`, then rerun the startup script or manually restart the agent.
 
 ---
 

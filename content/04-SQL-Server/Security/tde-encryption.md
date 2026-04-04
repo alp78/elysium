@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: security
-technology: [sql-server, gcp, linux, cloud-kms]
 tags: [security, sql, gcp, sql-server, tsql]
 aliases: [TDE, Transparent Data Encryption, database encryption, at-rest encryption, DEK, Database Encryption Key]
-keywords: [transparent data encryption, TDE, database encryption key, DEK, database master key, DMK, service master key, SMK, certificate, AES_256, encryption at rest, Cloud KMS, KMS keyring, analytics-keyring, analytics-sql-tde, EKM, extensible key management, mdf, ldf, tempdb, GDPR, SOC 2, compliance, backup certificate, restore certificate, percent_complete, encryption_state, AES-NI, hardware acceleration]
 description: "Step-by-step guide to enabling Transparent Data Encryption (TDE) on SQL Server 2022 Linux with GCP Cloud KMS key protection. Covers the encryption key hierarchy, certificate-based TDE setup, critical certificate backup to GCS, disaster recovery restore procedure, and performance impact benchmarks."
 created: 2026-03-22
 updated: 2026-03-22
@@ -225,6 +221,10 @@ ORDER BY db.name;
 >
 > Without the certificate and its private key, encrypted database backups are **completely unrestorable** on another SQL Server instance. This is the single most important step in TDE setup. Treat the certificate backup with the same care as the database backup itself.
 
+> [!success] Safe Pattern: Back Up Immediately After TDE Setup
+>
+> Run `BACKUP CERTIFICATE project_tde_cert TO FILE ... WITH PRIVATE KEY (...)` immediately after enabling TDE. Copy both files to GCS with KMS encryption (Step 5), then delete local copies. Verify the backup is recoverable by performing a test restore on a non-production instance before relying on it for DR.
+
 #### BACKUP CERTIFICATE TO FILE — export certificate and private key
 
 ```sql
@@ -334,6 +334,10 @@ WHERE db.name = 'analytics_db';
 > [!warning] Certificate Renewal Alert Threshold
 >
 > Alert when `days_until_cert_expiry < 180`. Rotating the TDE certificate requires creating a new certificate, re-encrypting the DEK, and backing up the new certificate to GCS before the old one expires.
+
+> [!success] Safe Pattern: Certificate Rotation Procedure
+>
+> Create a new certificate (`CREATE CERTIFICATE project_tde_cert_new WITH SUBJECT = '...' EXPIRY_DATE = '...'`), then re-encrypt the DEK: `ALTER DATABASE analytics_db SET ENCRYPTION ON WITH ENCRYPTION KEY CERTIFICATE project_tde_cert_new`. Back up the new certificate to GCS before the old one expires. Only then drop the old certificate.
 
 ---
 

@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python]
 tags: [python]
 aliases: [async await, concurrency, parallelism, tasks, threads, asyncio, Task]
-keywords: [asyncio, async, await, coroutine, Task, threading, multiprocessing, concurrent.futures, GIL]
 description: "Python async and concurrency reference with executable examples and cell outputs — covers asyncio, async/await, tasks, threading, multiprocessing, and concurrent.futures. See [12_cs_asyncconcurrency](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/12_cs_asyncconcurrency) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -55,10 +51,23 @@ The event loop is a single-threaded scheduler that multiplexes coroutines. While
 > - **Missing `await`** — the coroutine is created but never executed
 > - For **CPU-bound work**, use `ProcessPoolExecutor` instead (the GIL blocks threads)
 
+> [!success] Correct async patterns
+>
+> - Use `asyncio.sleep` for delays and `aiohttp`/`httpx.AsyncClient` for HTTP inside coroutines
+> - In Jupyter, `await` directly at top level — the event loop is already running
+> - Always `await` a coroutine call; an un-awaited coroutine silently does nothing
+> - Use `ProcessPoolExecutor` for CPU-intensive work to bypass the GIL
+
 > [!danger] Nested asyncio.run() not allowed
 >
 > `asyncio.run()` cannot be nested inside a running event loop.
 > Calling `asyncio.run()` from within an already-running loop (Jupyter, FastAPI, Airflow tasks) raises `RuntimeError: This event loop is already running`. In notebooks, use `await` directly at top level. In sync code that may run inside an existing loop, use `nest_asyncio.apply()` as a last resort, or restructure to propagate `async` up the call chain.
+
+> [!success] Correct async entry points
+>
+> - Use `asyncio.run(main())` only at the top-level script entry point (outside any existing loop)
+> - In Jupyter and FastAPI, `await` coroutines directly — the loop is already managed by the framework
+> - To bridge sync and async, use `loop.run_until_complete()` or `asyncio.get_event_loop().run_in_executor()`
 
 #### async def / await — basic coroutine
 
@@ -82,6 +91,12 @@ Runs multiple coroutines concurrently and waits for all to complete. Returns res
 > [!warning] gather vs TaskGroup
 >
 > `gather` continues running other tasks if one fails (unless `return_exceptions=False`). `TaskGroup` (Python 3.11+) cancels all remaining tasks on first failure — safer for operations that should be all-or-nothing.
+
+> [!success] Choose the right primitive
+>
+> - Use `asyncio.gather(..., return_exceptions=True)` when partial failure is acceptable and all results (including errors) should be collected
+> - Use `TaskGroup` (Python 3.11+) for all-or-nothing operations where any failure should abort the group
+> - Use `asyncio.as_completed()` when you want to process results as they arrive, not in submission order
 
 ```python
 # Sequential vs concurrent — await one-by-one vs asyncio.gather
@@ -208,6 +223,10 @@ Limits the number of concurrent coroutines accessing a resource. `Semaphore(10)`
 > [!danger] Semaphore doesn't limit creation
 >
 > A semaphore limits concurrent EXECUTION, not creation. If you create 10,000 tasks with a semaphore of 10, all 10,000 task objects exist in memory. Create tasks lazily or use a bounded queue.
+
+> [!success] Combine semaphore with lazy task creation
+>
+> For large task sets, create tasks lazily in batches or feed them through an `asyncio.Queue`. This caps both concurrent execution (semaphore) and memory usage (bounded queue), preventing OOM errors on large API ingestion jobs.
 
 ```python
 # Semaphore — limit concurrent async operations (rate limiting)
@@ -502,6 +521,12 @@ await asyncio.gather(*worker_tasks)
 > - Not setting `max_workers` — defaults may spawn too many threads
 > - For simple async I/O, `asyncio` is lighter than thread pools
 
+> [!success] Match executor to workload
+>
+> - I/O-bound with sync libraries: `ThreadPoolExecutor` with explicit `max_workers`
+> - I/O-bound with async libraries: `asyncio` + `aiohttp`/`httpx.AsyncClient` (lighter, no thread overhead)
+> - CPU-bound: `ProcessPoolExecutor` — each process has its own GIL, enabling true multi-core parallelism
+
 #### ThreadPoolExecutor — I/O-bound work
 
 Runs blocking I/O operations (file reads, HTTP calls, database queries) in a thread pool without blocking the event loop. Use `loop.run_in_executor(pool, blocking_func)` to bridge sync and async code. Threads share memory but are limited by the GIL for CPU work.
@@ -591,6 +616,10 @@ print(f"  {len(seq_hashes)} hashes in {seq_time:.2f}s")
 > GIL makes threads *slower* than sequential for CPU-bound work.
 > The GIL forces only one thread to execute Python bytecode at a time. For CPU-bound tasks, threads add context-switching overhead with zero parallelism gain. The result below shows a speedup less than 1.0x. Use `ProcessPoolExecutor` for CPU-bound work.
 
+> [!success] Use ProcessPoolExecutor for CPU-bound work
+>
+> Each worker process has its own interpreter and GIL, enabling true multi-core parallelism. Swap `ThreadPoolExecutor` for `ProcessPoolExecutor` with a single line change — the `executor.map()` API is identical. Ensure all arguments are picklable (no lambdas, no open file handles).
+
 ```python
 # ThreadPoolExecutor for CPU-bound — demonstrates GIL limitation
 
@@ -615,6 +644,10 @@ Runs CPU-bound operations (data transformation, compression, hashing) in separat
 > [!warning] GIL limits threads for CPU work
 >
 > Python's Global Interpreter Lock means threads don't speed up CPU-bound code (only one thread executes Python bytecode at a time). Use `ProcessPoolExecutor` for CPU work, `ThreadPoolExecutor` for I/O work.
+
+> [!success] ProcessPoolExecutor bypasses the GIL
+>
+> Wrap CPU-bound functions with `ProcessPoolExecutor` and the `if __name__ == "__main__":` guard (required on Windows). Use `pool.map(fn, iterable)` for ordered results or `pool.submit` + `as_completed` for processing results as they finish.
 
 ```python
 # ProcessPoolExecutor — true multi-core speedup for CPU-bound work
@@ -741,6 +774,12 @@ Threads provide true concurrency for I/O-bound work (the GIL is released during 
 > - **Not joining threads** — main thread may exit before workers finish
 > - For async I/O, prefer `asyncio` (lighter than thread pools)
 
+> [!success] Safe threading patterns
+>
+> - Always call `.join()` on threads before the main thread exits to prevent orphaned workers
+> - Use `queue.Queue` for inter-thread communication — it handles locking internally
+> - Prefer `ThreadPoolExecutor` over raw `threading.Thread` for managed lifecycle, exception propagation, and result collection
+
 #### threading.Thread — basic thread creation and join
 
 The low-level threading API. Use `ThreadPoolExecutor` instead for most cases — it handles thread lifecycle, reuse, and exception propagation. Direct `Thread` usage is for long-lived background tasks (heartbeats, watchers).
@@ -785,6 +824,10 @@ print(f"  Active threads: {threading.active_count()}")
 > [!danger] += is not thread-safe
 >
 > Python's `+=` on an integer involves three operations (read, add, write) that can interleave across threads. Even though the GIL ensures atomicity of single bytecode instructions, `+=` compiles to multiple instructions. Always use `threading.Lock` or `queue.Queue` for shared mutable state between threads.
+
+> [!success] Protect shared state with Lock or Queue
+>
+> Use `with lock:` to guard any read-modify-write sequence on shared variables. For producer-consumer patterns, prefer `queue.Queue` — it is inherently thread-safe and removes the need to manage locks manually.
 
 #### Threading race condition demo (WITHOUT lock)
 

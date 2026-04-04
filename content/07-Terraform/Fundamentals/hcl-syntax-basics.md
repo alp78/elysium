@@ -1,10 +1,6 @@
 ---
-type: concept
-category: terraform
-technology: [terraform, hcl]
 tags: [infrastructure, terraform, iac]
 aliases: [HCL, HashiCorp Configuration Language, HCL syntax, terraform syntax, tf syntax]
-keywords: [hcl, hashicorp configuration language, terraform syntax, blocks, arguments, resource block, terraform name, gcp name, file naming, tf files, declarative, infrastructure as code]
 description: "HCL (HashiCorp Configuration Language) syntax fundamentals — blocks, arguments, resource naming, file organization, and the difference between Terraform-internal and GCP names."
 created: 2026-03-22
 updated: 2026-03-22

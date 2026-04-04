@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - python
-  - pandas
-  - polars
 tags: [pipeline, python, pandas, polars]
 aliases:
   - null handling, string methods, datetime parsing, timezones
-keywords: [NaN, fillna, fill_null, dropna, str accessor, dt accessor, timezone, timedelta]
 description: "Pandas/Polars DataFrame reference 04/10 — Missing Data, Strings & DateTime (nulls, .str, .dt, timezones). Side-by-side executable examples with cell outputs."
 created: 2026-03-24
 updated: 2026-03-24
@@ -78,12 +71,25 @@ perf_pl = pl.read_parquet(DATA / "index_performance.parquet")
 >
 > Polars uses a single `null` representation for all types — no silent type coercion.
 
+> [!success] Use nullable integer dtype to prevent silent float coercion
+>
+> Declare integer columns with nullable dtype so nulls stay as `pd.NA` instead of
+> being upcast to float: `pd.array([1, 2, None, 4], dtype="Int64")`. When reading
+> files, use `pd.read_parquet(..., dtype_backend="numpy_nullable")` or
+> `dtype_backend="pyarrow"` to get nullable integers across all columns automatically.
+
 > [!warning] NaN != NaN in Pandas
 >
 > `NaN != NaN` in Pandas — equality comparisons on missing values
 > `np.nan == np.nan` returns `False`. This means `df[df["col"] == np.nan]` matches
 > **nothing**. Always use `df["col"].isna()` or `df["col"].isnull()` to detect missing
 > values. Polars `null == null` also returns `null` (not True), requiring `.is_null()`.
+
+> [!success] Always use `.isna()` / `.is_null()` to detect missing values
+>
+> Never compare against `np.nan` directly. Use `df["col"].isna()` (Pandas) or
+> `pl.col("col").is_null()` (Polars). To filter rows with missing values:
+> `df[df["col"].isna()]` in Pandas, `df.filter(pl.col("col").is_null())` in Polars.
 
 - Pandas: NaN (float), None (object), pd.NA (nullable)
 - Polars: null (universal, all dtypes)

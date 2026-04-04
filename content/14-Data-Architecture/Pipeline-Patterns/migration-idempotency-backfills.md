@@ -1,10 +1,6 @@
 ---
-type: concept
-category: data-architecture
-technology: [sql-server, python, bigquery, gcp, airflow, terraform]
 tags: [data-architecture, architecture, pipeline, python, sql, terraform, airflow, bigquery, gcp]
 aliases: [idempotency patterns, backfill strategies, migration playbook, data architect playbook, strangler fig pattern, schema evolution, expand-and-contract, event-driven architecture, data contracts, schema registry, FinOps, cloud cost optimization, streaming windowing, Dataflow pipeline, exactly-once processing]
-keywords: [idempotency, backfill, migration, strangler fig, re-platform, re-architect, lift-and-shift, shadow comparison, MERGE, upsert, delete-insert, SCD type 2, truncate-reload, schema evolution, expand-and-contract, event-driven, Pub/Sub, Cloud Functions, Cloud Run, Dataflow, Apache Beam, windowing, tumbling window, sliding window, watermark, late data, data contracts, Protobuf, Avro, schema registry, FinOps, BigQuery cost, reservations, on-demand, partition pruning, clustering, GCS lifecycle, exactly-once, idempotency key, technical debt]
 description: "The data architect's playbook covering migration patterns (lift-and-shift through re-architecture, strangler fig), idempotency deep dive (truncate-reload, upsert, delete-insert, SCD Type 2), backfill strategies, exactly-once processing, schema evolution without downtime, event-driven architecture on GCP (Pub/Sub + Cloud Functions + Dataflow), data contracts (Protobuf, Avro, Schema Registry), FinOps for BigQuery, and advanced streaming patterns with Apache Beam. Includes all code examples and diagrams."
 created: 2026-03-22
 updated: 2026-03-22
@@ -536,6 +532,10 @@ schema_registry.set_compatibility("daily-ohlcv-value", "BACKWARD")
 > [!warning] Contracts are organizational
 >
 > The hardest part of data contracts is not the Protobuf definition — it is getting agreement from the producing team that they will not change the schema without going through the contract evolution process. This requires management support, documented ownership (RACI matrix), and CI/CD enforcement. A contract without enforcement is just documentation.
+
+> [!success] Enforce contracts in CI/CD with `buf lint` and `buf breaking`
+>
+> Add a GitHub Actions step that runs `buf breaking --against .git#branch=main` on every PR that touches a `.proto` file. This automatically rejects backward-incompatible changes (removing a field, changing a field type) before merge. Pair with a documented RACI matrix that assigns schema ownership — the CI gate enforces what the organization has agreed upon.
 
 ## FinOps: Cloud Cost Optimization for Data Platforms
 

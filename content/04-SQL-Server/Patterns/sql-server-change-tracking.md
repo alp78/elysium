@@ -1,8 +1,5 @@
 ---
 title: "SQL Server Change Tracking"
-type: reference
-category: data-engineering
-technology: [sql-server]
 tags:
   - sql-server
   - tsql
@@ -13,7 +10,6 @@ tags:
   - cdc
   - temporal-tables
 aliases: [Change Tracking, SCD2 SQL Server, Temporal Tables, CDC, Change Data Capture, Slowly Changing Dimensions]
-keywords: [change tracking, SCD Type 2, temporal tables, SYSTEM_VERSIONING, CDC, change data capture, change tracking CT, triggers, dbt snapshots, valid_from, valid_to, is_current, filtered unique index, history table, FOR SYSTEM_TIME, audit trail, data history, slowly changing dimension]
 description: "Every method SQL Server offers for tracking data changes over time — manual SCD2, temporal tables, CDC, Change Tracking, dbt snapshots — with a decision matrix and side-by-side comparisons."
 created: 2026-03-29
 updated: 2026-03-29
@@ -117,6 +113,13 @@ INSERT INTO silver.index_dim (
 - **Forgetting the filtered index:** without `WHERE is_current = 1`, the unique index prevents inserting a new version because the old `(_index, symbol)` pair still exists
 - **Float comparison:** `3.14 <> 3.14000000001` — never compare floats for change detection. Round to a fixed precision or use `ABS(a - b) < epsilon`
 
+> [!success] Safe SCD2 Patterns
+>
+> - Use `DATETIME2` (not `DATE`) for `valid_from`/`valid_to` to avoid same-day collisions.
+> - Always wrap NULL comparisons: `ISNULL(old_val, '') <> ISNULL(new_val, '')` or use `IS NOT DISTINCT FROM` (SQL Server 2022+).
+> - Create the filtered unique index `WHERE is_current = 1` before running SCD2 logic — it enforces one active row per key and will catch close/insert bugs at the DB level.
+> - For float columns, compare with `ABS(old_val - new_val) > 0.0001` instead of `<>` to avoid floating-point false-positives.
+
 ---
 
 ## SQL Server Temporal Tables (SYSTEM_VERSIONING)
@@ -178,6 +181,13 @@ ORDER BY valid_from;
 - **No TRUNCATE:** `TRUNCATE TABLE` is not allowed on temporal tables. Use `DELETE` instead (slower, fully logged)
 - **HIDDEN columns:** `valid_from` and `valid_to` are excluded from `SELECT *` by default. Query them explicitly when needed
 
+> [!success] Temporal Table Safe Practices
+>
+> - On SQL Server 2022+, set a retention policy at table creation: `HISTORY_RETENTION_PERIOD = 2 YEARS`. On older versions, schedule a periodic `DELETE FROM history.index_dim WHERE valid_to < DATEADD(YEAR, -2, SYSUTCDATETIME())`.
+> - Automate schema migrations with the OFF/ON dance: `SET (SYSTEM_VERSIONING = OFF)` → `ALTER TABLE` on both current and history tables → `SET (SYSTEM_VERSIONING = ON)`. Add a post-migration check to verify `temporal_type_desc = 'SYSTEM_VERSIONED_TEMPORAL_TABLE'`.
+> - Use `DELETE` (not `TRUNCATE`) for targeted removals; for full rebuilds, disable versioning first, truncate, then re-enable.
+> - Query temporal columns explicitly: `SELECT valid_from, valid_to FROM silver.index_dim FOR SYSTEM_TIME ALL WHERE symbol = 'ASML.AS'`.
+
 ---
 
 ## Manual SCD2 vs Temporal Tables — Side-by-Side
@@ -232,6 +242,19 @@ Use temporal tables on core reference/audit tables (e.g., customer master, regul
 > SELECT temporal_type_desc FROM sys.tables WHERE name = 'index_dim';
 > -- Must return 'SYSTEM_VERSIONED_TEMPORAL_TABLE', not 'NON_TEMPORAL_TABLE'
 > ```
+
+> [!success] Safe Temporal Migration Pattern
+>
+> Wrap every schema migration for a temporal table in a three-step script and include the verification query as the final step:
+> ```sql
+> ALTER TABLE silver.index_dim SET (SYSTEM_VERSIONING = OFF);
+> ALTER TABLE silver.index_dim    ADD new_column NVARCHAR(100) NULL;
+> ALTER TABLE history.index_dim   ADD new_column NVARCHAR(100) NULL;
+> ALTER TABLE silver.index_dim SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = history.index_dim));
+> -- Verify
+> SELECT temporal_type_desc FROM sys.tables WHERE name = 'index_dim';
+> ```
+> Include this pattern as a reusable template in your migration scripts folder so it is never skipped.
 
 ### SCD2 Change Detection in Python — the comparison engine
 
@@ -309,6 +332,12 @@ FROM cdc.fn_cdc_get_all_changes_bronze_signals_daily(
 - **Log reader agent must be running:** CDC depends on SQL Server Agent (see [sql-server-agent-jobs](https://alp78.github.io/elysium/04-SQL-Server/Administration/sql-server-agent-jobs) for Agent on Linux). If the agent stops, changes accumulate in the transaction log, potentially filling it
 - **Cleanup:** CDC change tables grow until you configure retention: `EXEC sys.sp_cdc_change_job @job_type = 'cleanup', @retention = 4320;` (minutes)
 - **Schema changes break CDC:** adding or dropping a column requires disabling and re-enabling CDC on that table — the capture instance must match the current schema
+
+> [!success] CDC Operational Safeguards
+>
+> - Configure cleanup retention immediately after enabling CDC: `EXEC sys.sp_cdc_change_job @job_type = 'cleanup', @retention = 4320;` (3 days). Monitor change table size weekly.
+> - Add a SQL Server Agent alert (or Airflow sensor) that fires when the log reader job is not running. Catching agent downtime early prevents transaction log fill.
+> - Include CDC disable/re-enable as part of every schema migration script for CDC-enabled tables: `EXEC sys.sp_cdc_disable_table` → apply change → `EXEC sys.sp_cdc_enable_table`. Automate and test this in your CI pipeline.
 
 ### CDC → Pub/Sub — streaming changes to GCP
 
@@ -433,6 +462,14 @@ FROM CHANGETABLE(CHANGES silver.signals_daily, @last_sync_version) AS ct;
 > [!warning] Version Window
 >
 > CT is version-based, not time-based. If you miss the retention window (don't sync within `CHANGE_RETENTION` days), the version history is purged and you must do a full sync.
+
+> [!success] Handling an Expired CT Version
+>
+> Detect a version gap before querying: call `CHANGE_TRACKING_MIN_VALID_VERSION(OBJECT_ID('silver.signals_daily'))` and compare against your stored `@last_sync_version`. If the stored version is older than the minimum valid version, fall back to a full sync and reset the stored version to `CHANGE_TRACKING_CURRENT_VERSION()`. Increase `CHANGE_RETENTION` to cover your worst-case sync latency:
+> ```sql
+> ALTER DATABASE analytics_db
+>     SET CHANGE_TRACKING (CHANGE_RETENTION = 14 DAYS, AUTO_CLEANUP = ON);
+> ```
 
 ---
 

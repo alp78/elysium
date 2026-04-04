@@ -1,7 +1,4 @@
 ---
-type: concept
-category: git
-technology: [git, github]
 tags: [git, github]
 aliases:
   - git config
@@ -14,28 +11,6 @@ aliases:
   - git identity
   - git global config
   - what is git
-keywords:
-  - git config
-  - git init
-  - git clone
-  - repository
-  - version control
-  - distributed version control
-  - git setup
-  - user.name
-  - user.email
-  - init.defaultBranch
-  - shallow clone
-  - depth
-  - staging area
-  - HEAD
-  - remote
-  - commit
-  - branch
-  - fork
-  - pull request
-  - SHA hash
-  - gitconfig
 description: "Core Git concepts glossary, initial identity and global configuration commands, and repository creation and cloning variants including shallow clone for CI/CD."
 created: 2026-03-22
 updated: 2026-03-22
@@ -153,6 +128,10 @@ git config --global user.email "your.email@company.com"
 > Email Must Match GitHub Account.
 > If your `user.email` does not match the email associated with your GitHub account, your commits will not be linked to your GitHub profile and will not count toward your contribution graph.
 
+> [!success] Set the Correct Email from GitHub Settings
+>
+> Go to GitHub → Settings → Emails to find your verified email address. Use that exact value: `git config --global user.email "your.verified@email.com"`. If you use a privacy noreply address, use that instead.
+
 ### Useful Global Settings
 
 #### git config --global init.defaultBranch main — set default branch name
@@ -208,6 +187,10 @@ git config --list
 > [!warning] credential.helper store is plaintext
 >
 > `credential.helper store` saves passwords in a plaintext file (`~/.git-credentials`). Anyone with access to your home directory can read them. On Windows, use `manager-core` (Windows Credential Manager) instead. On macOS, use `osxkeychain`.
+
+> [!success] Use the OS Credential Manager
+>
+> On Windows: `git config --global credential.helper manager-core`. On macOS: `git config --global credential.helper osxkeychain`. Both store credentials in the OS secure keychain, not a plaintext file.
 
 ```bash
 # All platforms — store credentials to disk (simple, less secure)
@@ -279,6 +262,10 @@ git clone --depth 1 https://github.com/org/repo.git
 >
 > A shallow clone cannot be used as the basis for a `git push` to the original remote without first unshallowing (`git fetch --unshallow`). It also cannot run `git bisect` or other commands that require full history traversal.
 
+> [!success] Unshallow When Full History Is Needed
+>
+> Run `git fetch --unshallow` to convert a shallow clone into a full clone. After that, all Git history commands (`git bisect`, `git log --all`, `git push`) work normally.
+
 ---
 
 ## Pre-Commit Hooks — Automated Quality Gates
@@ -336,6 +323,10 @@ pre-commit run gitleaks --all-files
 > [!warning] Hooks Run Locally Only
 >
 > Pre-commit hooks run on each developer's machine. They can be bypassed with `git commit --no-verify`. For mandatory enforcement, run the same checks in GitHub Actions CI — hooks are the fast first line of defense, CI is the mandatory second line.
+
+> [!success] Mirror Hook Checks in CI
+>
+> Add the same `pre-commit run --all-files` step to your GitHub Actions workflow. This ensures secrets scanning, linting, and format checks are enforced even if a developer bypasses local hooks with `--no-verify`.
 
 ---
 

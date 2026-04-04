@@ -1,10 +1,6 @@
 ---
-type: concept
-category: infrastructure
-technology: [terraform]
 tags: [infrastructure, terraform, iac]
 aliases: [terraform conditional, terraform count, terraform for_each, optional resources terraform, terraform ternary]
-keywords: [count, for_each, conditional resource creation, ternary operator, optional resources, "count = 0", "count = 1", conditional index notation, "resource[0]", compact, concat, terraform functions, dynamic blocks]
 description: "How Terraform uses count and for_each to conditionally create resources or create multiple instances, enabling optional integrations (like Datadog) and parameterized infrastructure."
 created: 2026-03-22
 updated: 2026-03-22
@@ -153,6 +149,10 @@ output "dataset_ids" {
 > [!warning] count Index Shift
 >
 > If you use `count = 3` to create 3 instances and then remove the first, Terraform renumbers index `[1]` to `[0]` and `[2]` to `[1]`, causing TWO resources to be destroyed and recreated. Use `for_each` with a map whenever the instances have distinct identities.
+
+> [!success] Safe Pattern — Use for_each with Distinct Keys
+>
+> Replace `count`-based repetition with `for_each` over a map or set when instances have unique identities. Removing a key deletes only that instance without renumbering others: `for_each = toset(["dashboard", "pipeline", "airflow"])`. Reserve `count` for binary conditional creation (`count = var.enable_x ? 1 : 0`).
 
 ---
 

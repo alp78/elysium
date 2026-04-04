@@ -1,10 +1,6 @@
 ---
-type: concept
-category: infrastructure
-technology: [terraform, gcp]
 tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform variables, tfvars, terraform outputs, HCL variables, input variables]
-keywords: [terraform, variables, outputs, tfvars, terraform.tfvars, variable types, sensitive, default, locals, TF_VAR, output values, terraform output command]
 description: "How to define and use Terraform input variables (variables.tf) and output values (outputs.tf), including sensitive variables, defaults, and the locals vs variables distinction."
 created: 2026-03-22
 updated: 2026-03-22
@@ -129,6 +125,10 @@ terraform apply
 > [!warning] Gitignore terraform.tfvars
 >
 > Always add `terraform.tfvars` to `.gitignore`. It contains passwords and API keys. If it is ever committed, rotate all credentials immediately.
+
+> [!success] Use Environment Variables or Secret Manager for CI/CD
+>
+> In CI/CD pipelines, pass sensitive variable values via environment variables (`TF_VAR_db_password`, `TF_VAR_dd_api_key`) or retrieve them from Secret Manager at pipeline start. Never store `terraform.tfvars` in the repository or in CI/CD artifact storage.
 
 ### Locals — Computed Values
 

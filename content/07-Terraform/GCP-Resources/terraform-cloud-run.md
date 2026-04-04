@@ -1,10 +1,6 @@
 ---
-type: reference
-category: infrastructure
-technology: [terraform, gcp]
 tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform Cloud Run, google_cloud_run_v2_service, google_cloud_run_v2_job, Cloud Run service terraform, Cloud Run job terraform]
-keywords: [Cloud Run, google_cloud_run_v2_service, google_cloud_run_v2_job, Cloud Run job, Cloud Run service, session affinity, direct VPC egress, startup probe, secret injection, task_count, max_retries, timeout, scaling, min_instances, PRIVATE_RANGES_ONLY]
 description: "Terraform configuration for Cloud Run services (long-running HTTP endpoints) and Cloud Run jobs (batch run-to-completion), including VPC access, secret injection, session affinity, scaling, and the double-nested job template structure."
 created: 2026-03-22
 updated: 2026-03-22

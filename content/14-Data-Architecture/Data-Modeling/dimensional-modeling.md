@@ -1,9 +1,4 @@
 ---
-type: concept
-category: data-modeling
-technology:
-  - sql-server
-  - bigquery
 tags: [data-architecture, architecture, data-modeling, sql, bigquery]
 aliases:
   - dimensional modeling
@@ -21,43 +16,6 @@ aliases:
   - bridge table
   - aggregate table
   - slowly changing dimension
-keywords:
-  - dimensional modeling
-  - Kimball methodology
-  - star schema design
-  - snowflake schema design
-  - fact table
-  - dimension table
-  - grain declaration
-  - bus matrix
-  - conformed dimension
-  - degenerate dimension
-  - junk dimension
-  - factless fact table
-  - bridge table
-  - aggregate table
-  - slowly changing dimension
-  - SCD Type 1
-  - SCD Type 2
-  - SCD Type 3
-  - SCD Type 6
-  - mini-dimension
-  - surrogate key
-  - natural key
-  - additive measure
-  - semi-additive measure
-  - non-additive measure
-  - columnstore index
-  - BigQuery partitioning
-  - BigQuery clustering
-  - dbt dimensional model
-  - date dimension
-  - role-playing dimension
-  - late-arriving fact
-  - late-arriving dimension
-  - data warehouse modeling
-  - OLAP star schema
-  - enterprise data warehouse
 description: >
   The definitive reference on Kimball dimensional modeling for data engineers.
   Covers the four-step design process, star and snowflake schemas, all SCD types,
@@ -122,6 +80,9 @@ The grain is the most important decision in dimensional modeling. It answers: **
 
 > [!warning] The grain rule
 > Declare the grain before identifying dimensions or facts. Every column in the fact table must be true for that single grain row. If a proposed measure does not live at the declared grain, it belongs in a different fact table.
+
+> [!success] Safe Pattern: Write the Grain in the Table's Description
+> Add a `COMMENT` on the table (or a `description:` in dbt) stating the grain explicitly — e.g., `"One row per index per trading day"`. At load time, assert uniqueness on the natural key that defines the grain before committing the batch. If uniqueness fails, abort and alert rather than letting mixed-grain rows corrupt the table.
 
 | Business Process | Grain Statement |
 |-----------------|----------------|
@@ -1778,6 +1739,9 @@ erDiagram
 >
 > In **most** cases — including the index provider domain — the star schema wins. Denormalize GICS into `dim_instrument` and `dim_sector`.
 
+> [!success] Safe Pattern: Default to Star, Snowflake Only with Justification
+> Start with a fully denormalized star schema dimension. If a specific hierarchy table grows beyond 500K rows or requires independent ownership, extract it into a separate normalized parent table at that point — documenting the rationale in the data model changelog. Do not snowflake preemptively.
+
 ---
 
 ## Slowly Changing Dimensions — All Types
@@ -1977,6 +1941,9 @@ WHERE isin = 'US0000000001'
 
 > [!warning] SCD Type 3 limitations
 > Only stores the single previous value. If the attribute changes again, the oldest value is lost. Use Type 2 if you need full history. Type 3 is best when you only need "before and after" comparisons.
+
+> [!success] Safe Pattern: Use Type 2 When in Doubt
+> If there is any chance a third change will occur, or if auditors might ask for the full change history, implement SCD Type 2 from the start. Migrating from Type 3 to Type 2 after the fact requires reconstructing history that was never stored. Type 2 is more storage-intensive but never loses historical data.
 
 ---
 
@@ -2621,6 +2588,9 @@ VALUES (
 
 > [!warning] Late-arriving fact pitfall
 > Always resolve dimension keys **as-of the fact's effective date**, not as-of the load date. If you use `is_current = 1`, you will join to today's dimension row, which may have different attributes than existed on the fact's actual date.
+
+> [!success] Safe Pattern: Point-in-Time Dimension Key Resolution
+> In your ETL, join to the dimension using `fact.effective_date BETWEEN dim.effective_start_date AND dim.effective_end_date` rather than `dim.is_current = 1`. This resolves the surrogate key to the version that was valid on the fact's event date, regardless of when the ETL job runs.
 
 #### Late-Arriving Dimensions
 
@@ -3286,6 +3256,9 @@ ORDER BY dd.full_date, asw.total_weight_pct DESC;
 >
 > **7. Missing the unknown / placeholder dimension member**
 > When a fact row arrives before its dimension data, the ETL fails or — worse — silently drops the row. Always have a strategy for late-arriving dimensions.
+
+> [!success] Safe Pattern: Pre-Flight Checklist Before Schema Promotion
+> Before promoting any new fact or dimension table to production, run through: (1) grain written in the table description, (2) uniqueness assertion on the grain key in CI, (3) all FK columns are integer surrogate keys, (4) no VARCHAR descriptive columns in the fact table, (5) each attribute has an explicit SCD type documented, (6) an unknown/default dimension member (`-1` or `0` surrogate key) exists for late-arriving handling. Block the deploy if any check fails.
 
 ---
 

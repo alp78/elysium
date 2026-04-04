@@ -1,10 +1,6 @@
 ---
-type: reference
-category: infrastructure
-technology: [terraform, gcp]
 tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform Artifact Registry, terraform CI service account, docker registry terraform, cleanup policies terraform]
-keywords: [Artifact Registry, google_artifact_registry_repository, cleanup policies, Docker registry, image cleanup, keep-latest-5, delete-untagged, CI service account, GitHub Actions, data-pipeline-ci, image tags, docker push, registry path]
 description: "Terraform configuration for GCP Artifact Registry (Docker image storage with cleanup policies) and the CI/CD service account used by GitHub Actions to push images and deploy Cloud Run services."
 created: 2026-03-22
 updated: 2026-03-22

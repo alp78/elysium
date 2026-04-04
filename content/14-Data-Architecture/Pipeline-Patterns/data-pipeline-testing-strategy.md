@@ -1,8 +1,5 @@
 ---
 title: "Data Pipeline Testing Strategy"
-type: concept
-category: data-architecture
-technology: [python, dbt, sql-server, bigquery, github-actions]
 tags:
   - data-architecture
   - patterns
@@ -16,7 +13,6 @@ tags:
 aliases:
   - "Testing Strategy"
   - "Pipeline Testing"
-keywords: [testing pyramid, unit test, integration test, contract test, data quality, regression test, test data, fixture, CI/CD, pytest, dbt test, schema validation, golden file]
 description: "The testing pyramid for data engineering: unit, integration, contract, quality, and regression testing across bronze/silver/gold layers."
 created: 2026-03-29
 updated: 2026-03-29
@@ -84,6 +80,10 @@ Unit tests validate individual functions, SQL transforms, and dbt models in isol
 >
 > Broken transforms reach production. A z-score function that divides by the wrong column, a deduplication query that keeps the wrong row, an aggregation that double-counts — all of these produce **silently wrong data** that the dashboard displays with full confidence. Nobody notices until a business user challenges a number weeks later.
 
+> [!success] Add Unit Tests for Every Transform Function
+>
+> For every transform function, write at least one pytest test with a hand-crafted DataFrame fixture that includes known inputs and expected outputs you can verify manually. For dbt models, declare `unique`, `not_null`, and `accepted_values` tests in `schema.yml`. These run in seconds with no infrastructure and catch logic errors before any data moves.
+
 ---
 
 ### Data Quality Assertions — data properties
@@ -108,6 +108,10 @@ Quality assertions validate data properties at layer boundaries: nulls, counts, 
 >
 > Silent data degradation. A source API starts returning NULLs for a field — your pipeline loads them without error. Over weeks, 50% of your gold table is NULL. Nobody notices because there's no row count drop, no schema change, no error in the logs. The dashboard just gradually becomes wrong.
 
+> [!success] Assert Data Properties After Every Pipeline Stage
+>
+> After each layer writes its output, run: row count > 0, row count within ±20% of the prior load, null percentage below threshold per required column, and uniqueness on the business key. Use dbt `not_null` + `dbt-expectations` `expect_column_proportion_of_unique_values_to_be_between` in CI, and the same checks as Python assertions in production after every Airflow task.
+
 ---
 
 ### Contract Tests — schema conformance
@@ -127,6 +131,10 @@ Contract tests verify that source data matches the expected schema before any tr
 >
 > An upstream API renames `price` to `current_price`. Your pipeline loads NULLs into the `price` column — every row, every day. The pipeline reports success, row counts match, no errors in logs. Nobody notices until a business user asks why the dashboard shows zero for everything. This is the #1 silent pipeline killer.
 
+> [!success] Validate Source Schema on Every Ingestion
+>
+> Define the expected schema in a contract YAML or dbt source YAML. At the start of every ingestion job, compare the actual incoming column names and types against the contract using a Pydantic model or a custom Python validator. Fail fast and quarantine the load if any column is missing, renamed, or has a type mismatch — before a single row enters bronze.
+
 ---
 
 ### Integration Tests — cross-system flow
@@ -145,6 +153,10 @@ Integration tests run the pipeline end-to-end with real connections but test dat
 >
 > "Works in dev, breaks in prod" — the #1 pipeline failure mode. Your SQL runs perfectly against your local Docker database but fails on the production SQL Server because of a different collation, a missing index, or a permission issue. Mocking the database doesn't test your SQL against a real query engine.
 
+> [!success] Spin Up Real Infrastructure in CI
+>
+> In GitHub Actions, use a `mcr.microsoft.com/mssql/server` Docker container as the test SQL Server. Seed it with 100–1000 rows of fixture data, run the full bronze → silver → gold transform pipeline against it, and assert output shape and row counts. This catches collation mismatches, missing indexes, and permission issues on every merge to main, not on first production deploy.
+
 ---
 
 ### E2E Pipeline Validation — full flow
@@ -162,6 +174,10 @@ E2E tests validate the complete pipeline from data fetch through gold output, in
 > [!danger] Skip E2E Tests And...
 >
 > Multi-step regressions go undetected. A subtle change in a silver transform produces correct-looking silver data, but when gold aggregates it, the composite scores shift by 5%. Unit tests pass (the function works). Quality tests pass (no nulls, no duplicates). Only the full end-to-end comparison catches the drift — because it checks the final answer, not intermediate steps.
+
+> [!success] Maintain a Golden File for E2E Comparison
+>
+> Save the known-correct gold output for a representative test dataset as a Parquet or CSV fixture ("golden file"). After every nightly pipeline run against the test dataset, compare actual output against the golden file using `pd.testing.assert_frame_equal()` with `atol=0.01` for numeric columns. Any difference beyond the tolerance triggers a review — even if all lower-layer tests passed.
 
 ---
 
@@ -182,6 +198,10 @@ This table maps testing to the **medallion architecture** — what specific chec
 > is visible to the business. Every gold model must have at minimum: `unique` + `not_null`
 > on the primary key, `accepted_values` on categorical columns, and a row count assertion
 > comparing today vs yesterday (detect data loss or explosion).
+
+> [!success] Mandatory Gold Quality Gates
+>
+> For every gold model, declare in `schema.yml`: `unique` + `not_null` on the primary key, `accepted_values` on all categorical columns, and a `dbt-expectations` row count test comparing today's result against yesterday's count within a ±20% band. Set all gold-layer tests to `severity: error` (not `warn`) so any failure halts publication before bad data reaches clients.
 
 ---
 
@@ -227,6 +247,10 @@ See [data-quality-framework > Data Quality Dimensions](https://alp78.github.io/e
 > data, volumes shift. dbt tests in CI catch code bugs. Production quality checks catch
 > data bugs. You need both.
 
+> [!success] Run Quality Checks in Both CI and Production
+>
+> In CI: run `dbt test --select state:modified+` on every PR to catch code-level regressions. In production: after every Airflow pipeline run, execute the same row count, null percentage, and freshness assertions as Python pipeline steps (not just dbt). Wire failures to PagerDuty or a Slack alert channel so production data bugs surface immediately, not when a business user notices.
+
 ### Contract tests — schema conformance
 
 Verify that source data matches the expected schema before any transform runs.
@@ -244,6 +268,10 @@ Verify that source data matches the expected schema before any transform runs.
 > renamed column silently loads NULLs — the pipeline reports success, row counts match,
 > and nobody notices until a business user asks why the dashboard shows zero. Contract
 > tests are the only defense against this.
+
+> [!success] Detect Schema Drift at Ingestion Time
+>
+> At the top of every ingestion function, validate the incoming payload's column names against the defined contract using a Pydantic model or an explicit column-presence check. If any expected column is absent or any unexpected column appears under a different name, raise a `SchemaDriftError`, quarantine the load, and alert immediately. Do not let schema-drifted data silently populate downstream tables.
 
 ### Integration tests
 
@@ -263,6 +291,10 @@ See [github-actions-data-engineering > Full Python Lint + Test Workflow](https:/
 > Integration tests must use real connections — even if that's a Docker SQL Server in
 > GitHub Actions. The cost is minutes of CI time; the payoff is catching "works in dev,
 > breaks in prod" before it reaches prod.
+
+> [!success] Use Docker Services in GitHub Actions for Real Connections
+>
+> In `.github/workflows`, declare a `services` block with `mcr.microsoft.com/mssql/server` as the SQL Server container. Run `bcp` or `pyodbc` against `localhost,1433` in the test job — these are real connections against a real query engine. For GCS, use a dedicated `test-*` bucket in the CI service account with lifecycle rules to auto-delete objects after 1 day.
 
 ### Regression tests — snapshot comparison
 
@@ -301,6 +333,10 @@ Verify today's output matches yesterday's expected output after a code change.
 > Production data tests the happy path — the data your pipeline already handles correctly.
 > It never tests the edge cases that will crash your pipeline when they first appear.
 > Always supplement production samples with hand-crafted edge case fixtures.
+
+> [!success] Build a Fixture Library Covering All Edge Cases
+>
+> Maintain a `tests/fixtures/` directory with hand-crafted CSV/Parquet files that explicitly cover: rows with NULLs in every nullable column, duplicate keys before deduplication, dates at boundary values (min date, max date, future date), out-of-range numeric values, empty strings vs NULL, and zero-length files. Update fixtures whenever a new `try/except` branch or business rule check is added to the code.
 
 ---
 
@@ -375,6 +411,10 @@ Data quality checks are the exception — they span both worlds. Run them in CI 
 > | Testing by visual inspection | "I looked at it and it seems right" — not reproducible | Automated assertions with explicit expected values |
 > | dbt tests without thresholds | Test passes with 99% NULLs (technically not ALL NULL) | Use `dbt-expectations` with `accepted_range` and percentage thresholds |
 > | Mocking the database | SQL logic never tested against a real engine | Use Docker SQL Server in CI for integration tests |
+
+> [!success] Minimum Viable Test Suite for a New Pipeline
+>
+> If starting from zero: (1) add `unique` + `not_null` dbt tests on every gold model primary key; (2) add a row count assertion comparing today vs yesterday as an Airflow task after every load; (3) write pytest unit tests for every transform function with hand-crafted fixtures covering NULLs and duplicates; (4) add a contract schema check at ingestion. These four steps cover the most common production failures and take less than a day to implement.
 
 ---
 

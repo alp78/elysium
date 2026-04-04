@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: prompt-engineering
-technology: [claude, gpt-4, gemini, llm, python, sql-server, bigquery, airflow, terraform]
 tags: [ai, prompt-engineering, python, sql, terraform, airflow, bigquery]
 aliases: [applied prompt engineering, prompt engineering examples, before after prompts, prompt optimization examples, research prompts, code generation prompts, data extraction prompts, content creation prompts]
-keywords: [applied prompting, research analysis, content creation, code generation, data extraction, before after optimization, medallion architecture, upsert Python SQL Server, JSON extraction, financial report, blog post, API review, Kubernetes explanation, React Svelte comparison, weak prompts, strong prompts, prompt examples, real-world prompting]
 description: "Applied prompt engineering with complete before/after examples for four core domains: research and analysis, content creation, code and technical tasks, and data analysis and extraction. Every example includes the weak prompt, the optimized prompt, and the principle behind the improvement."
 created: 2026-03-22
 updated: 2026-03-22
@@ -158,6 +154,9 @@ functionally necessary.
 > [!warning] The "Don't Add X" Constraint for Code
 > Without "Do not add logging, docstrings, or type hints beyond what's functionally necessary," the model will produce a heavily annotated function twice as long as needed. Be explicit about what you do not want added.
 
+> [!success] Fix: Add an Explicit Exclusion Block to Every Code Prompt
+> End your code generation prompt with a dedicated "Do NOT include" section listing unwanted additions. Example: "Do NOT include: logging calls, docstrings, type hints beyond function signatures, try/except around the main logic, or inline comments for obvious operations." This single block cuts generated noise by 30–50% and produces code closer to your team's actual style guide.
+
 ### Code Review Prompt Pattern
 
 #### Review for correctness bugs only (exclude style)
@@ -226,6 +225,9 @@ Output format:
 
 > [!warning] Derived Metrics
 > "Do not calculate derived metrics — only extract what's stated" prevents the model from silently computing values (e.g., subtracting costs to derive margin) when you expected direct extraction. Silent calculation produces data that looks correct but can't be traced back to the source.
+
+> [!success] Fix: Distinguish Extracted vs. Computed Fields in the Schema
+> Add a `"source": "extracted | computed"` field to every output schema. For extracted fields, require the model to include `"verbatim_quote": "..."` with the exact text from the source. For computed fields, include `"formula": "..."`. Any field returned with `source: computed` that you did not explicitly authorize should be treated as a hallucination risk and flagged for human review.
 
 ---
 

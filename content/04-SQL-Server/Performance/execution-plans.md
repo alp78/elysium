@@ -1,10 +1,6 @@
 ---
-type: concept
-category: sql-server
-technology: [sql-server]
 tags: [sql, sql-server, tsql]
 aliases: [query execution plan, estimated plan, actual plan, graphical plan, showplan, query plan]
-keywords: [execution plan, estimated plan, actual plan, SHOWPLAN_XML, STATISTICS XML, right-to-left, bottom-to-top, Index Seek, Index Scan, Key Lookup, Hash Match, Nested Loops, Sort, cardinality estimation, row count estimate, statistics, parameter sniffing, implicit conversion, batch mode, OPTION RECOMPILE, OPTIMIZE FOR UNKNOWN, wait stats in plan, WaitStats, plan cache, Query Store, cost percentage, operator cost, spill, memory grant, CXPACKET, PAGEIOLATCH, PhysicalOp]
 description: "How to read SQL Server execution plans in SSMS: right-to-left data flow, estimated vs actual plans, cost analysis, cardinality estimation errors, per-query wait stats, implicit conversions, parameter sniffing, and batch mode. Includes all programmatic XML queries."
 created: 2026-03-22
 updated: 2026-03-22
@@ -180,6 +176,10 @@ Each operator's cost is split into I/O cost and CPU cost:
 > [!warning] Cost Percentages Are Based on Estimates
 >
 > Cost percentages are based on the optimizer's **estimates**, not actual execution. If statistics are stale, the cost distribution can be completely wrong. A scan showing "5%" might actually dominate execution time if the optimizer underestimated the row count. Always cross-reference costs with **actual row counts** and `SET STATISTICS TIME/IO` output.
+
+> [!success] Always verify cost percentages against actual row counts and `SET STATISTICS TIME/IO`
+>
+> Run with `SET STATISTICS TIME ON; SET STATISTICS IO ON;` alongside the actual execution plan (Ctrl+M). Compare the reported elapsed time per statement against the plan's cost percentages — a mismatch signals stale statistics. Run `UPDATE STATISTICS table WITH FULLSCAN` to correct estimates.
 
 #### SET STATISTICS TIME/IO — get actual timing per query
 

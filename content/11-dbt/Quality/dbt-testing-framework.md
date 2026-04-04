@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, testing, dbt]
-type: reference
-technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "Schema tests dbt-utils dbt-expectations custom tests"
@@ -240,6 +238,9 @@ Singular tests are plain SQL files in the `tests/` directory. A test passes when
 > [!danger] Empty tables pass singular tests
 >
 > A singular test that queries an empty table returns zero rows and passes -- even though no data was validated. This is the most common false-positive in dbt testing. Always pair singular tests with a `dbt_expectations.expect_table_row_count_to_be_between` test to ensure the source table actually has data. Otherwise a broken ingestion pipeline produces an empty table that passes all quality checks.
+
+> [!success] Fix: guard every singular test with a row-count test
+> Add `dbt_expectations.expect_table_row_count_to_be_between` with a meaningful `min_value` to the same model. This ensures the pipeline fails visibly when no data was loaded, preventing a false-positive pass on an empty table.
 
 ### assert_no_negative_prices
 
@@ -504,6 +505,9 @@ Guidance by data type:
 > [!warning] Warn severity always exits 0
 >
 > A test with `severity: warn` will report failures in the dbt output but exit with code 0, meaning your CI pipeline treats it as a success. If you promote `warn` tests to detect real issues, add a post-run script that parses `run_results.json` and fails CI when warn-level failures exceed a threshold. Otherwise, warnings accumulate unnoticed.
+
+> [!success] Fix: parse run_results.json in CI to surface warn failures
+> After `dbt test`, run a script that reads `target/run_results.json` and counts results with `status: "warn"`. Fail the CI step if the warn count exceeds an acceptable threshold, turning silent warnings into actionable gate failures.
 
 ## Test Coverage Strategy by Layer
 

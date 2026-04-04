@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python]
 tags: [python]
 aliases: [string manipulation, string formatting, regex, f-strings, string interpolation]
-keywords: [str, f-string, format, regex, re, split, join, strip, replace, slice, encode]
 description: "Python strings reference with executable examples and cell outputs — covers string creation, indexing, slicing, methods, formatting, efficient building, and regular expressions. See [02_cs_strings](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/02_cs_strings) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -402,6 +398,10 @@ table2 = str.maketrans("", "", "aeiou")
 >
 > Never use f-strings in SQL or shell commands — use parameterized queries. For logging, use `logger.info("msg %s", val)` for lazy evaluation.
 
+> [!success] Correct pattern
+>
+> Use parameterized queries for SQL: `cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))`. For logging, use lazy `%s` formatting: `logger.info("User %s logged in", username)` — the string is only built if the log level is active.
+
 ```python
 name, age = "Alice", 30
 n = 1234567.89123
@@ -510,6 +510,10 @@ Strings are immutable — each `+=` copies the entire string. For *n* concatenat
 > [!warning] Don't use += in loops
 >
 > Each iteration copies the growing string into a new object. CPython may optimize simple cases, but this is not guaranteed. Always consider the building strategy for more than ~10 concatenations. For 2–5 concatenations, `+` is fine.
+
+> [!success] Correct pattern
+>
+> Use `"".join(parts)` for O(n) string assembly: `result = "".join(str(i) for i in range(50000))`. For incremental writes, use `io.StringIO`: `buf = io.StringIO(); buf.write(...); result = buf.getvalue()`.
 
 #### String concatenation performance — += in loops is O(n²)
 

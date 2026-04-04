@@ -1,10 +1,6 @@
 ---
-type: concept
-category: docker
-technology: [docker]
 tags: [docker]
 aliases: [container lifecycle, docker ps, docker logs, docker exec, docker stats, docker inspect, docker run, container management, docker commands, container operations]
-keywords: [docker, container, lifecycle, run, ps, start, stop, restart, pause, unpause, kill, wait, logs, exec, attach, stats, inspect, diff, top, port, rm, prune, exit code, OOM, crash loop, debugging, container management, detached, interactive, volume mount, port mapping, environment variables, restart policy, resource limits, network, env-file, SIGTERM, SIGKILL, graceful shutdown, docker cp, go template, filter, format]
 description: "Comprehensive Docker container lifecycle reference — running containers with all key flags, listing and filtering, lifecycle management (start/stop/kill/pause), logs, exec, file copying, inspection, debugging, and cleanup. Covers everything a data engineer needs to manage containers day-to-day."
 created: 2026-03-22
 updated: 2026-03-22
@@ -66,6 +62,10 @@ docker run -d --name postgres-db -p 127.0.0.1:5432:5432 postgres:16
 > `-p 5432:5432` Binds to All Interfaces by Default.
 > Without specifying a bind address, `-p 5432:5432` exposes the port on `0.0.0.0` -- every network interface, including the public IP. On a cloud VM, this means your database is accessible from the internet. Always use `-p 127.0.0.1:PORT:PORT` for services that should only be reachable locally, or rely on firewall rules to block external access.
 
+> [!success] Safe port binding pattern
+>
+> Always bind to `127.0.0.1` for services that must not be exposed publicly: `-p 127.0.0.1:5432:5432`. For services that need external access, apply GCP firewall rules or VPC network policies to restrict ingress rather than relying on the Docker bind address alone.
+
 #### docker run -v host:container — volume mounts for data persistence
 
 When bind-mounting host directories, the container process must have permission to read and write the mounted path. In [Airflow containers](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment), the default user (`50000:0`) often requires `chown` adjustments on the host side, similar to the [file permission patterns](https://alp78.github.io/elysium/01-Shell/File-Operations/file-manipulation) used in shell administration.
@@ -122,6 +122,10 @@ docker run -d --name my-pipeline \
 >
 > `-e` Flags Expose Secrets in Process Lists.
 > Environment variables passed with `-e VAR=value` are visible in `docker inspect` output and in `/proc/<pid>/environ` on the host. Anyone with Docker access can read them. For sensitive values (database passwords, API keys), prefer `--env-file` with a file that has restricted permissions (chmod 600), or mount secrets from a secrets manager at runtime.
+
+> [!success] Safe secret injection pattern
+>
+> Use `--env-file .env` with a file owned by the process user and set to `chmod 600`. For production, mount secrets from GCP Secret Manager at container startup, or pass them via a secrets manager sidecar — never hardcode them in `-e` flags on the command line.
 
 #### docker run --rm — auto-remove container on exit
 ```bash
@@ -184,6 +188,10 @@ docker inspect my-transform --format='Memory: {{.HostConfig.Memory}}, CPUs: {{.H
 > [!warning] OOM Kills
 >
 > If a container exceeds its `--memory` limit, the Linux kernel kills it with SIGKILL. The exit code will be 137. Always set memory limits on containers running untrusted or unpredictable workloads. See the [Exit Code Reference](#exit-code-reference) table below.
+
+> [!success] Prevent OOM kills
+>
+> Profile memory usage with `docker stats --no-stream` before setting limits, then set `--memory` to 20–30% above the observed peak. Set `--memory-swap` equal to `--memory` to disable swap and get a clean OOM kill rather than a degraded container. Confirm the exit code with `docker inspect <container> --format='{{.State.OOMKilled}}'`.
 
 #### docker run --network — attach to a specific Docker network
 ```bash
@@ -349,6 +357,10 @@ docker kill --signal SIGHUP nginx-container   # trigger config reload without re
 >
 > Data Loss Risk with `docker kill`.
 > `docker kill` bypasses graceful shutdown. Databases may corrupt write-ahead logs, pipelines may leave partial outputs, and in-flight transactions may be lost. Always prefer `docker stop` with an appropriate `-t` timeout.
+
+> [!success] Graceful shutdown pattern
+>
+> Use `docker stop -t 60 <container>` to allow up to 60 seconds for the application to flush buffers and close connections before SIGKILL is sent. For data pipeline containers, set the timeout equal to or greater than the maximum expected checkpoint interval.
 
 ### Pause and Unpause
 
@@ -637,6 +649,10 @@ docker rm -v my-container        # -v removes volumes created by the container
 > Stopped Containers Consume Disk.
 > Docker does not remove containers automatically (unless `--rm` was used at run time). A system running containers for months will accumulate hundreds of stopped containers. Run `docker system df` to see how much space they consume, and `docker container prune` to clean up.
 
+> [!success] Routine cleanup pattern
+>
+> Add `--rm` to all one-off and batch containers at run time. For long-running services, schedule a periodic `docker container prune -f` (e.g., via cron or a maintenance window). Always run `docker system df` first to confirm the reclaim size before pruning.
+
 ---
 
 ## Container Debugging Checklist
@@ -644,6 +660,10 @@ docker rm -v my-container        # -v removes volumes created by the container
 > [!warning] Debugging Restart Loops
 >
 > When a Container Keeps Crashing (Restart Loop).
+
+> [!success] Restart loop investigation steps
+>
+> Run `docker inspect <container> --format='{{.State.ExitCode}}'` to get the exit code. Check `docker logs <container> --tail 100` before the container restarts again. If it restarts too fast, temporarily set `--restart no` to prevent restarting and give time to inspect. Check `docker inspect <container> --format='{{.State.OOMKilled}}'` for memory issues.
 
 #### docker ps -a --filter status=restarting — identify crash-looping containers
 ```bash

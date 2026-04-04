@@ -1,10 +1,6 @@
 ---
-type: concept
-category: sql-server
-technology: [sql-server, csharp]
 tags: [csharp, sql, sql-server, tsql]
 aliases: [deadlocks, deadlock, error 1205, circular wait, deadlock victim, deadlock monitor, deadlock retry]
-keywords: [deadlock, detection, prevention, monitoring, error 1205, circular wait, RCSI, read committed snapshot isolation, extended events, blocking, lock, exclusive lock, shared lock, deadlock graph, retry logic, back-off]
 description: "SQL Server deadlock detection, prevention, and monitoring — what causes deadlocks, how to detect them with DMVs and Extended Events, RCSI as the primary prevention, and application-level retry logic."
 created: 2026-03-22
 updated: 2026-03-22
@@ -67,6 +63,10 @@ WHERE counter_name = 'Number of Deadlocks/sec'
 >
 > system_health Ring Buffer Has Limited Capacity.
 > The `system_health` ring buffer holds only a few MB of events. Under heavy deadlock activity, older reports are silently evicted. If you investigate a deadlock reported hours ago, the graph may already be gone. Set up a persistent Extended Events session (below) for any database that has ever had a production deadlock.
+
+> [!success] Fix — Create a Persistent Extended Events Session
+>
+> Create a dedicated `deadlock_monitor` Extended Events session that writes to an `.xel` file on disk (see the session definition below). Set `STARTUP_STATE = ON` so it survives restarts. File-backed sessions retain the full history up to the configured `max_file_size` limit regardless of ring buffer eviction.
 
 SQL Server's built-in `system_health` Extended Events session captures deadlock reports automatically:
 
@@ -214,6 +214,10 @@ This ensures: transparent recovery, incremental back-off, bounded retries (no in
 > Retry Logic Must Re-execute the Entire Transaction.
 > A deadlock rolls back the entire transaction, not just the last statement. If your retry logic only re-executes the failed statement, the preceding statements in the transaction are lost and the data ends up inconsistent. Always wrap the complete BEGIN TRAN...COMMIT sequence inside the retry loop.
 
+> [!success] Safe Pattern — Wrap the Full Transaction in the Retry Loop
+>
+> Structure the retry helper so the entire operation (all statements from BEGIN TRAN to COMMIT) is passed as a single delegate or callable. The `WithDeadlockRetryAsync` pattern above demonstrates this correctly: the `operation` lambda receives a fresh connection on each attempt and executes the full transactional unit, not individual statements.
+
 ## Reproducing a Deadlock for Testing
 
 #### CREATE TABLE — step 1: set up deadlock reproduction tables
@@ -250,9 +254,17 @@ SQL Server detects the circular wait within 5 seconds and kills one session.
 >
 > If RCSI is enabled, reader/writer deadlocks cannot be reproduced because readers use row-version snapshots. The writer/writer pattern above still works regardless of isolation level.
 
+> [!success] Safe Pattern — Use a Dedicated Test Database Without RCSI
+>
+> Run deadlock reproduction tests in an isolated test database with RCSI disabled so reader/writer patterns behave like production databases that haven't yet enabled RCSI. Never disable RCSI on a production database just to reproduce a deadlock.
+
 > [!danger] RCSI Has a Hidden tempdb Cost
 >
 > Enabling RCSI stores row versions in `tempdb`. Under heavy write load (bulk inserts, MERGE operations), `tempdb` can grow dramatically and become the new bottleneck. Monitor `tempdb` size and I/O after enabling RCSI -- especially during pipeline runs that INSERT/UPDATE millions of rows. If `tempdb` runs out of space, all transactions across all databases on the instance fail.
+
+> [!success] Fix — Size tempdb Appropriately and Monitor Version Store
+>
+> Pre-size `tempdb` data files to accommodate expected version store growth before enabling RCSI. Monitor version store size with `SELECT SUM(version_store_reserved_page_count) * 8 / 1024 AS version_store_mb FROM sys.dm_db_file_space_usage` (run in `tempdb`). If the version store grows beyond 1 GB, investigate long-running transactions that are preventing cleanup using `sys.dm_tran_active_snapshot_database_transactions`.
 
 #### DROP TABLE — cleanup deadlock test tables
 ```sql

@@ -1,15 +1,11 @@
 ---
 title: "GitHub Actions Problems"
-type: reference
-category: github-actions
-technology: [github-actions]
 tags: [ci-cd, github-actions, security, troubleshooting, cost-management]
 aliases:
   - "GitHub Actions Issues"
   - "CI/CD Problems"
   - "Workflow Troubleshooting"
   - "GitHub Actions Security"
-keywords: [supply chain attack, pull_request_target, secret exposure, workflow injection, YAML untestable, cache miss, runner inconsistency, permission model, cost surprise, concurrency confusion, matrix explosion, action pinning, feedback loop, reusable workflow limits]
 description: "Comprehensive catalog of GitHub Actions problems in distributed teams — 20 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures."
 status: stable
 created: 2026-03-23
@@ -167,6 +163,10 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >   env:
 >     API_KEY: ${{ secrets.API_KEY }}  # inject via env, not interpolation
 > ```
+
+> [!success] Safe secret injection pattern
+>
+> Always pass secrets via `env:` at the step level, never via `${{ secrets.* }}` inline in `run:` blocks. For derived values (base64, concatenations), use `echo "::add-mask::$derived"` immediately after computing them. Run `actionlint` in CI to catch direct secret interpolation in run steps before they reach the repo.
 
 #### Consequences — Secret Exposure in Logs and Fork PRs
 - Secrets visible in public repo logs to anyone with a GitHub account
@@ -439,6 +439,10 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 > if: contains(toJSON(github.event.pull_request.labels.*.name), 'deploy')
 > ```
 
+> [!success] Avoid YAML logic traps
+>
+> Use `actionlint` as a pre-push hook — it type-checks `if:` expressions and catches most of these traps before a CI run. For cleanup steps that must always run, use `if: always()`. For null-safe label checks, wrap with `toJSON()`. Add a `run: echo '${{ toJSON(github) }}'` debug step when tracing unexpected conditional behavior.
+
 #### Prevention protocol — YAML Is Untestable Locally
 1. Run `actionlint` in CI on every PR touching `.github/workflows/` — it type-checks expressions
 2. Use `yamllint` for structural YAML issues (indentation, duplicate keys):
@@ -565,6 +569,10 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >     echo "Cache hit: ${{ steps.npm-cache.outputs.cache-hit }}"
 > ```
 
+> [!success] Effective cache key pattern
+>
+> Use `${{ runner.os }}-<tool>-${{ hashFiles('**/lockfile') }}` as the primary key, with a `restore-keys` prefix fallback. Always add `id:` to the cache step and check `steps.<id>.outputs.cache-hit` in subsequent steps. Pin `runs-on` to a specific version (e.g., `ubuntu-22.04`) so runner OS upgrades do not silently bust the cache key.
+
 #### Prevention protocol — Silent Cache Misses
 1. Always use `id:` on cache steps and check `steps.<id>.outputs.cache-hit` in subsequent steps
 2. Pin the runner OS version (`ubuntu-22.04` not `ubuntu-latest`) so runner upgrades don't bust cache keys
@@ -632,6 +640,10 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >     secrets: inherit   # passes all caller's secrets — reduces maintenance burden
 > ```
 
+> [!success] Use secrets: inherit to reduce threading overhead
+>
+> Set `secrets: inherit` in the caller unless there is a specific security reason to enumerate secrets explicitly. Use composite actions (not reusable workflows) for steps that do not require separate job isolation — composite actions inherit the caller's environment automatically, eliminating the threading problem entirely.
+
 #### Consequences — Reusable Workflow Limitations
 - Reusable workflow changes require coordinated updates across every caller repo
 - New secrets added to the called workflow break all callers simultaneously
@@ -687,6 +699,10 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >     docker --version
 >     cat /etc/os-release
 > ```
+
+> [!success] Pin runner versions
+>
+> Replace all `ubuntu-latest`, `windows-latest`, and `macos-latest` references with specific versions (`ubuntu-22.04`, `windows-2022`, `macos-14`). Audit with: `grep -r "runs-on:.*latest" .github/workflows/`. When upgrading to a new runner version, do it in a dedicated PR so the full test suite validates compatibility before merging.
 
 #### Prevention protocol — Runner Environment Inconsistency
 1. Pin all `runs-on:` values to specific versions — audit with: `grep -r "runs-on:.*latest" .github/workflows/`
@@ -756,6 +772,10 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 > # - Upload SARIF results: security-events: write
 > ```
 
+> [!success] Least-privilege permission pattern
+>
+> Set `permissions: {}` at the workflow level to deny everything by default. Grant the minimum required permissions per job. Never use `write-all` — when a `403` occurs, read the error to identify the specific permission needed and add only that. Use `actionlint` to enforce explicit permissions on every workflow.
+
 #### Prevention protocol — Permission Model Confusion
 1. Set org-level default to read-only permissions (Settings → Actions → General → "Read repository contents and packages permissions")
 2. Always specify explicit `permissions:` in every workflow — `actionlint` can enforce this
@@ -822,6 +842,10 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >       ~/.cache/pip
 >     key: deps-${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 > ```
+
+> [!success] Cost control baseline
+>
+> Set a spending limit in GitHub org billing settings (even $0 alerts before charges accumulate). Add `timeout-minutes` and `concurrency: cancel-in-progress: true` to every PR workflow. Use `paths:` filters to skip runs on documentation-only changes. Monitor monthly minutes with `gh api /orgs/{org}/settings/billing/actions`.
 
 #### Prevention protocol — Cost Surprises
 1. Set a spending limit in GitHub org billing settings — even $0 hard cap will alert before charges accumulate
@@ -978,6 +1002,10 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >           github-token: ${{ secrets.GITHUB_TOKEN }}
 > ```
 
+> [!success] Immutable artifact reference pattern
+>
+> Always pass `run-id: ${{ needs.build.outputs.artifact-run-id }}` explicitly in `download-artifact`. Include the git SHA in the artifact name (`name: dist-${{ github.sha }}`) so the artifact itself encodes its source commit. For deployments, prefer container image tags (git SHA-based) over artifact files — they are immutable and verifiable.
+
 #### Prevention protocol — Stale Deployment Artifacts
 1. Always pass `run-id:` explicitly in `download-artifact` — use job outputs to thread the ID
 2. Include the git SHA in the artifact name: `name: dist-${{ github.sha }}`
@@ -1067,6 +1095,10 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >   cancel-in-progress: false
 > ```
 
+> [!success] Correct concurrency per workflow type
+>
+> For PR validation: `cancel-in-progress: true` — safe to cancel because CI just restarts. For deploy workflows: `cancel-in-progress: false` — never cancel a running deploy. Include the environment name in the concurrency group to allow parallel deploys to different environments while serializing within each environment.
+
 #### Consequences — Concurrency Control Confusion
 - Race conditions in deployments — two deploys stepping on each other
 - Cancelled deploy leaving environment in inconsistent state
@@ -1136,6 +1168,10 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >       python: '3.11'  # only test latest Python on Windows
 > ```
 
+> [!success] Use include: to test corners, not every combination
+>
+> Use `include:` to enumerate only the specific combinations that matter (primary platform + oldest/newest Python, Windows smoke test) rather than letting dimensions multiply. Set `max-parallel: 5` to cap concurrency and prevent queue starvation. Calculate job count before committing: multiply all dimension sizes.
+
 #### Prevention protocol — Matrix Build Explosion
 1. Calculate job count before committing a matrix change: multiply all dimension sizes
 2. Use `include:` instead of full dimensions when you want specific combinations
@@ -1182,6 +1218,10 @@ GitHub Actions is powerful but introduces a class of problems unique to CI/CD-as
 >         patterns:
 >           - "*"
 > ```
+
+> [!success] Manageable SHA pinning workflow
+>
+> Use `npx pin-github-action .github/workflows/*.yml` to convert all tag references to SHAs in one pass. Always append a `# vX.Y.Z` comment after the SHA for human readability. Configure Dependabot with a weekly schedule and `groups:` to batch official action updates into a single PR — this preserves security without generating daily noise.
 
 #### Consequences — Action Version Pinning Fatigue
 - Security hygiene vs. developer experience tension

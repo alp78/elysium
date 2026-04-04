@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: sql-server
-technology: [sql-server]
 tags: [sql, sql-server, tsql]
 aliases: [SQL Server configuration, max server memory, sp_configure, mssql-conf, RCSI, Read Committed Snapshot Isolation, TempDB configuration, swappiness, THP]
-keywords: [max server memory, sp_configure, mssql-conf, RCSI, Read Committed Snapshot Isolation, TempDB files, swappiness, transparent huge pages, THP, IO scheduler, trace flags, recovery model, memory limit, buffer pool, Linux optimization, GCP]
 description: "Non-negotiable SQL Server configuration settings: max server memory, RCSI, TempDB, recovery models, and Linux OS tuning (swappiness, THP, I/O scheduler) for SQL Server on Linux GCP."
 created: 2026-03-22
 updated: 2026-03-22
@@ -70,6 +66,10 @@ EXEC sp_configure 'max server memory';
 >
 > Without `max server memory`, SQL Server claims all available RAM on the VM. The OS runs out of memory, the OOM killer fires, and the process crashes. This is one of the 7 Deadly Sins of SQL Server.
 
+> [!success] Set Memory Limit Before First Restart
+>
+> Use the table above to pick the correct value for your VM size, then apply it with `sp_configure` immediately after provisioning — before any workload runs. Add verification (`EXEC sp_configure 'max server memory'`) to your post-deployment checklist so the value is always confirmed before go-live.
+
 > [!tip] mssql-conf vs sp_configure
 >
 > `sp_configure` takes effect immediately and persists, but gets overridden by `mssql-conf` on next restart if both are set. `mssql-conf` requires a restart to apply. Pick one method and stick with it.
@@ -113,6 +113,10 @@ ALTER DATABASE analytics_db SET READ_COMMITTED_SNAPSHOT ON;
 > [!warning] RCSI and TempDB Space
 >
 > RCSI requires TempDB space to store row versions. Monitor TempDB usage after enabling. A long-running read transaction with RCSI enabled can cause the TempDB version store to grow indefinitely.
+
+> [!success] Monitor the Version Store After Enabling RCSI
+>
+> After enabling RCSI, run `SELECT SUM(version_store_reserved_page_count) * 8.0 / 1024 AS version_store_mb FROM sys.dm_db_file_space_usage;` in `tempdb` to track version store growth. If it grows large, look for long-running open transactions using `sys.dm_exec_sessions` (high `open_transaction_count`). Terminate stale sessions to release version store space.
 
 ---
 
@@ -174,6 +178,10 @@ cat /proc/sys/vm/swappiness
 > [!warning] Never Set Swappiness to 0
 >
 > This completely disables swap and the OOM killer will terminate SQL Server under memory pressure. The value `1` means "swap only as a last resort."
+
+> [!success] Use swappiness = 1 as the Safe Setting
+>
+> Set `vm.swappiness = 1` as shown above and persist it in `/etc/sysctl.d/99-sqlserver.conf`. This keeps swap available as an emergency buffer while preventing the OS from eagerly swapping SQL Server buffer pool pages to disk during normal operation.
 
 ### Transparent Huge Pages (THP)
 

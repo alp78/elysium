@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet, fluentvalidation, polly, dapper, sqlserver]
 tags: [csharp, pipeline, data-quality, lineage, dotnet, fluentvalidation, polly, dapper, aspnet, sql-server, medallion, parquet, validation, plotly]
 aliases: [functional pipeline csharp, medallion pipeline dotnet, data lineage csharp]
-keywords: [pipeline, medallion, bronze, silver, gold, fluentvalidation, validation, lineage, aspnet, parquet, polly, dapper]
 description: "End-to-end functional data pipeline in C#/.NET with FluentValidation, Polly resilience, lineage tracking, Parquet export, and ASP.NET serving. See [25_py_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline) for the Python equivalent."
 created: 2026-03-29
 updated: 2026-03-30
@@ -174,6 +170,9 @@ The models divide into three groups along two orthogonal dimensions — **struct
 >
 > A renamed API field silently loads NULLs into bronze — every row, every day. A negative volume passes through to silver unchallenged. A NaN daily return poisons the gold aggregation. By the time a dashboard user notices, the damage is three layers deep and every downstream consumer has absorbed corrupt data. Contracts catch bad data at ingestion — one layer, one fix.
 
+> [!success] With Typed Contracts
+> C# `record` types with FluentValidation enforce schema and business rules at the bronze boundary. A renamed field throws a `ValidationException` on the first bad row — the pipeline stops, logs the rejection to quarantine, and the problem is fixed at the source before any corrupt data reaches silver or gold.
+
 #### record — define Bronze validation model with `record` and properties
 
 > [!info] Bronze Contract: RawOhlcv
@@ -328,6 +327,9 @@ This is where the two dimensions of the architecture intersect. The structural m
 > [!danger] Without Semantic Context
 >
 > An AI agent queries gold_symbol_profile and sees `volatility: 0.0187`. It doesn't know if that's a percentage or a decimal, daily or annual, what formula produced it, or what NULL would mean. It guesses — or hallucinates an interpretation. The data contract eliminates this: unit=decimal_ratio, formula=std(daily_return), annualize with sqrt(252). The number becomes self-describing.
+
+> [!success] With Semantic Context
+> `ColumnContext` records attach unit, formula, null semantics, and source columns to every field in the gold contract. Any consumer — API, AI agent, analyst — reads the contract and knows exactly what each number means without consulting the pipeline author.
 
 #### record — define column semantic metadata model with `record`
 
@@ -592,6 +594,9 @@ These functions implement the ability to trace any data point from Gold back to 
 > row to its run, the hash proves no tampering, the RunContext shows zero
 > rejections and the exact date range processed.
 
+> [!success] With Lineage Tracking
+> `batch_id` links every row to its pipeline run. SHA-256 hashes prove rows were not modified after ingestion. `RunContext` records symbol count, date range, and rejection count at commit time. Any dispute is resolved with three SQL queries — no manual archaeology.
+
 #### Guid — generate unique batch ID with `Guid.NewGuid()`
 
 > [!info] Batch ID: Unique Run Identifier
@@ -702,6 +707,9 @@ Nine tables implementing the full architecture — not just data storage but the
 > existed, never know what was wrong with them, can never replay them.
 > Without `context_log`: the pipeline's knowledge about holidays, expected
 > nulls, and business triggers is lost the moment the process exits.
+
+> [!success] With Operational Tables
+> `lineage_stages` makes every run auditable and replayable. `quarantine` preserves rejected rows with full error context — any bad batch can be fixed and replayed without re-fetching from the API. `context_log` persists pipeline decisions so post-run queries can explain every warning.
 
 | Table | Purpose | Key |
 |---|---|---|
@@ -1371,6 +1379,9 @@ Dimensions are the pipeline's external knowledge — facts about the world that 
 > pipeline classifies each zero-volume date at ingestion and records the
 > classification as a context warning.
 
+> [!success] With Trading Calendar
+> `dim_calendar` classifies each zero-volume day as a known holiday or a genuine anomaly at ingestion time. Engineers see pre-classified context warnings — holiday days are acknowledged automatically, only true anomalies trigger alerts.
+
 #### HttpClient — fetch symbol metadata to JSON landing zone with `GetStringAsync()`
 
 > [!info] Fetch Symbol Metadata
@@ -1673,6 +1684,9 @@ Bronze implements two principles. The **landing zone** decouples API fetching fr
 > are loaded, 2 are missing, and there's no way to replay because the API
 > response is gone. With the landing zone, the raw JSON is on disk —
 > fix the parser, re-run the load, no re-fetch needed.
+
+> [!success] With Landing Zone
+> Raw API responses are written to disk before any parsing or database operations. If the MERGE fails, re-run the load step against the saved files — no API call, no rate-limit risk, no missing symbols. The landing zone decouples the unreliable (API) from the recoverable (database).
 
 #### HttpClient — fetch OHLCV to JSON landing zone with `GetStringAsync()`
 
@@ -2075,6 +2089,9 @@ Silver is where the **Functional Core** principle (Gary Bernhardt, 'Boundaries' 
 > transforms pure means the only thing that can go wrong is the formula —
 > and formulas can be verified with a unit test in milliseconds.
 
+> [!success] With Pure Transforms
+> Each silver transform is a function: `DataTable in → DataTable out`, no I/O, no side effects. Unit tests pass a 10-row hardcoded `DataTable` and assert the output in milliseconds — no database, no network, no flakiness. The imperative shell (MERGE, lineage, context) wraps around pure transforms, never inside them.
+
 #### LINQ — compute daily returns with grouped percentage change
 
 > [!info] Transform: Daily Returns
@@ -2420,6 +2437,9 @@ Gold produces consumption-ready data products from Silver. Two aggregations, bot
 > le=0 constraint, the bad value reaches the dashboard. A portfolio
 > manager sees "positive drawdown" and makes decisions on nonsensical data.
 
+> [!success] With Gold Validation
+> The gold contract enforces mathematical invariants on every aggregated row before persistence — `max_drawdown <= 0`, `avg_volume >= 0`, `sharpe_ratio` finite. A bad aggregation is rejected at the gold boundary, not discovered by a portfolio manager three days later.
+
 #### LINQ — build daily cross-sectional summary with `GroupBy()`
 
 > [!info] Aggregation: Daily Summary
@@ -2727,6 +2747,9 @@ The serving layer reads Parquet files, not SQL Server. This is the **pre-materia
 > response. A database restart takes the API down. With Parquet files,
 > the API has no database dependency — it reads a file that the pipeline
 > pre-computed. The API can serve data even if SQL Server is down.
+
+> [!success] With Pre-Materialization
+> The pipeline exports finished Parquet files as part of each run. The ASP.NET API reads those files directly — zero SQL dependency at serving time. A SQL Server restart has no impact on API availability. Deployment is a file copy, not a migration.
 
 #### ParquetSharp — export daily summary to Parquet with `WriteDataTableToParquet()`
 

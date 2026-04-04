@@ -1,11 +1,4 @@
 ---
-type: reference
-category: gcp
-technology:
-  - gcp
-  - bigquery
-  - python
-  - bash
 tags: [observability, cost, infrastructure, python, bash, bigquery, gcp, billing]
 aliases:
   - cost monitoring
@@ -18,37 +11,6 @@ aliases:
   - idle resources
   - committed use
   - reserved capacity
-keywords:
-  - gcp billing export
-  - bigquery billing dataset
-  - budget alert threshold
-  - pub/sub billing notification
-  - cloud function auto-shutdown
-  - cost anomaly detection
-  - right-sizing recommender
-  - committed use discounts
-  - preemptible vm
-  - spot vm
-  - bigquery partitioning cost
-  - bigquery clustering
-  - storage lifecycle policy
-  - nearline coldline archive
-  - cloud run scale to zero
-  - pub/sub lite
-  - cloud logging exclusion
-  - log sink gcs
-  - cloud nat cost
-  - firestore batch writes
-  - idle vm detection
-  - unattached persistent disk
-  - unused static ip
-  - looker studio billing dashboard
-  - terraform budget resource
-  - finops gcp
-  - cost per pipeline
-  - monthly spend projection
-  - byte quota bigquery
-  - materialized view bigquery
 description: >
   Operational FinOps reference for GCP — covers billing export to BigQuery,
   budget alerts with Pub/Sub automation, cost anomaly detection, per-service
@@ -119,6 +81,9 @@ Enable **detailed usage cost export** if you want resource-level attribution (e.
 > [!warning] Export Lag
 >
 > Billing data typically lags by 24–48 hours. Do not alert on same-day data for critical decisions. Use a 2-day buffer in time-sensitive queries.
+
+> [!success] Filter on `usage_start_time >= TIMESTAMP_SUB(... INTERVAL 2 DAY)` for reliable anomaly detection
+> Always use a 2-day lag buffer when querying recent spend: `WHERE usage_start_time < TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 2 DAY)`. This ensures your anomaly queries operate on complete billing rows, avoiding false-negative alerts from partially ingested data.
 
 ### Key Columns in the Export Table
 
@@ -277,6 +242,9 @@ gcloud billing budgets delete BUDGET_ID --billing-account=ACCOUNT_ID
 > [!warning] Budget Alert Lag
 >
 > Budget alerts are based on spend data that can lag up to 24 hours. A 100% alert does not mean spending stops — charges continue to accrue. Use budget alerts as early warning signals, not hard cutoffs.
+
+> [!success] Set the 100% threshold alert and connect a Pub/Sub automation for enforcement
+> Configure alerts at 50%, 80%, and 100% thresholds. Attach a Pub/Sub topic to the budget and wire it to a Cloud Function that stops non-critical VMs when the 100% threshold fires. This provides automated enforcement rather than relying solely on email notifications.
 
 ### Budget Alert → Pub/Sub → Cloud Function
 
@@ -628,6 +596,9 @@ gcloud scheduler jobs create http start-dev-vms \
 >
 > Spot VMs can be preempted with 30 seconds notice. Never run stateful workloads or anything that cannot checkpoint. Use them for: batch ETL, ML training jobs, CI/CD workers, and parallelizable data processing.
 
+> [!success] Design Spot workloads with checkpointing or idempotent retries
+> Structure Spot-based jobs so each unit of work is independently retryable. For Dataflow, enable checkpointing. For Cloud Run Jobs, ensure each task execution is idempotent — if a task is re-run after preemption, it should produce the same result without duplication.
+
 #### Committed Use Discounts
 
 ```bash
@@ -670,6 +641,9 @@ gcloud compute instances create my-instance \
 > [!warning] On-Demand Cost Trap
 >
 > On-demand BigQuery pricing charges per byte scanned. A single `SELECT *` on a 10 TB table costs ~$50. Enforce partition filters and use `--dry_run` before running unfamiliar queries.
+
+> [!success] Enable `require_partition_filter` and run `--dry_run` before executing
+> Set `require_partition_filter = TRUE` on large tables so that any unfiltered query fails at the API level before scanning data. Always run `bq query --dry_run` on new queries to see the byte estimate before incurring cost.
 
 #### Partition and Cluster Tables
 
@@ -809,6 +783,9 @@ gcloud storage buckets describe gs://BUCKET_NAME \
 >
 > Nearline has a 30-day minimum storage duration. Coldline: 90 days. Archive: 365 days. If you delete or transition early, you still pay for the minimum. Design lifecycle rules so objects stay in each class at least as long as the minimum.
 
+> [!success] Match lifecycle transition ages to minimum storage durations
+> Configure lifecycle rules with `age: 30` for Nearline transitions, `age: 90` for Coldline, and `age: 365` for Archive. Never transition objects before these ages and you will never incur an early-deletion fee.
+
 ```bash
 # Find buckets without lifecycle policies
 gcloud storage ls --project=PROJECT_ID | while read bucket; do
@@ -908,6 +885,9 @@ gcloud pubsub subscriptions modify-config SUBSCRIPTION_NAME \
 > [!warning] Logging Cost Trap
 >
 > Cloud Logging charges $0.01/GB for ingestion beyond the free tier (first 50 GB/project/month are free). A verbose application logging at DEBUG level can easily exceed 100 GB/month. Always exclude DEBUG in production.
+
+> [!success] Add a `severity<=DEBUG` exclusion on the `_Default` sink
+> Run `gcloud logging sinks update _Default --add-exclusion="name=exclude-debug,filter=severity<=DEBUG"` to drop all DEBUG-level logs before ingestion. Monitor log volume weekly via Cloud Logging's ingestion metrics to catch regressions before they appear on the bill.
 
 #### Exclude Debug Logs
 

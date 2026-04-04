@@ -1,10 +1,6 @@
 ---
-type: concept
-category: sql-server
-technology: [sql-server]
 tags: [sql, sql-server, tsql]
 aliases: [SQL Server partitioning, table partitioning, partition function, partition scheme, partition elimination, SWITCH partition, horizontal partitioning, date-based partitioning]
-keywords: [partitioning, partition function, partition scheme, partition elimination, SWITCH, partition boundary, trade_date, monthly partitioning, yearly partitioning, FILEGROUP, sys.partitions, sys.partition_functions, sys.partition_schemes, partition_number, archiving, sliding window, columnstore partition, partition key, RIGHT vs LEFT partition function]
 description: "SQL Server table partitioning by date: partition functions, partition schemes, creating partitioned clustered indexes, partition elimination for query performance, SWITCH for fast archiving and loading, and the sliding window pattern for ongoing pipelines."
 created: 2026-03-22
 updated: 2026-03-22
@@ -33,6 +29,10 @@ On a partitioned table, each partition has its own independent B-tree for the cl
 > [!warning] Non-Partition-Key Queries Are Slower
 >
 > A query like `WHERE symbol = 'ASML'` without a trade_date filter must scan every partition's B-tree independently. On a non-partitioned table, this would be a single index seek. On a 7-partition table, it becomes 7 separate seeks merged together. Only partition tables where the vast majority of queries filter on the partition key.
+
+> [!success] Safe Pattern: Add a Nonclustered Index on Non-Partition-Key Columns
+>
+> For queries that filter on `symbol` without a `trade_date`, add a nonclustered index on `symbol` that includes frequently selected columns. This lets the optimizer perform a single B-tree seek across the entire table rather than scanning all partitions. Reserve partitioning for queries that consistently include the partition key.
 
 ---
 
@@ -161,6 +161,10 @@ WITH (DATA_COMPRESSION = PAGE);  -- can apply compression to all partitions at o
 > Partition Key Must Be in the Clustered Index Key.
 > The partition key column (`trade_date`) must be part of the clustered index key. If you try to create a partitioned table on a column not in the clustered index, SQL Server will raise an error. For a table partitioned by `trade_date`, the clustered index key should be `(trade_date, symbol)` — trade_date first (for partition elimination) or second (for symbol-first lookups, but then partition elimination only works if trade_date is also in the WHERE clause).
 
+> [!success] Safe Pattern: Always Include the Partition Key in the Clustered Index
+>
+> Design the clustered index key to include the partition key as its first or second column. For the `market_data` model, use `PRIMARY KEY CLUSTERED (trade_date, symbol) ON ps_trade_date_yearly (trade_date)`. This guarantees both correct table creation and effective partition elimination for date-range queries.
+
 ---
 
 ### Partition Elimination — How Queries Skip Partitions
@@ -196,6 +200,10 @@ ORDER BY partition_number;
 > Partition Elimination Requires a SARGable Predicate on the Partition Key.
 > `WHERE trade_date >= '2025-01-01'` — eliminates older partitions. Good.
 > `WHERE YEAR(trade_date) = 2025` — wraps the column in a function. SQL Server may NOT eliminate partitions. Use [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries) patterns: always filter directly on the column.
+
+> [!success] Safe Pattern: Filter Directly on the Partition Column
+>
+> Replace `WHERE YEAR(trade_date) = 2025` with `WHERE trade_date >= '2025-01-01' AND trade_date < '2026-01-01'`. This is SARGable: the optimizer can evaluate the boundary values against the partition function and skip non-matching partitions without scanning them. Verify elimination is working by checking "Actual Partition Count" in the execution plan properties.
 
 ---
 
@@ -288,6 +296,10 @@ SWITCH TO dbo.market_data_partitioned PARTITION 7;
 > - The target partition must be empty before a SWITCH IN
 > - Both tables must be in the same database
 
+> [!success] Safe Pattern: Script and Validate the Staging Table Schema
+>
+> Generate the staging table DDL by scripting the main table from SSMS (Script Table as → CREATE To) and adjusting the constraint names. Before each SWITCH, run `TRUNCATE TABLE dbo.staging` to guarantee the target partition is empty. Use `EXEC sp_help 'dbo.staging'` to confirm column definitions and index keys match the main table exactly before executing the SWITCH.
+
 ---
 
 ## Adding New Partitions — Sliding Window Pattern
@@ -333,6 +345,10 @@ A sliding window maintains a fixed number of active partitions by adding new one
 > [!danger] Always SWITCH Before MERGE
 >
 > MERGE RANGE removes a partition boundary but does NOT delete the data — it combines two partitions into one. If you merge without switching out the data first, both partitions' data ends up in one partition. Always SWITCH OUT the data to an archive table before merging the boundary.
+
+> [!success] Safe Pattern: SWITCH OUT Then MERGE in Two Steps
+>
+> First, switch the data out: `ALTER TABLE dbo.market_data_partitioned SWITCH PARTITION 1 TO dbo.market_data_archive`. Verify the source partition is empty by querying `sys.dm_db_partition_stats WHERE rows = 0`. Only then run `ALTER PARTITION FUNCTION pf_trade_date_yearly () MERGE RANGE ('2021-01-01')` to remove the now-empty boundary.
 
 ```sql
 -- Merge the empty partition boundary after switching out the data
@@ -415,6 +431,10 @@ JOIN sys.partition_functions pf ON ps.function_id = pf.function_id;
 > Partition when: the table exceeds 10M rows, queries consistently
 > filter on the partition key, and maintenance operations (archiving,
 > purging) need to operate on date ranges.
+
+> [!success] Safe Pattern: Use Covering Indexes Instead of Partitioning for Small Tables
+>
+> For tables under 10M rows, add a covering nonclustered index on the date column with frequently selected columns in INCLUDE. This achieves the same query performance benefit as partition elimination without the metadata overhead or schema complexity of a partition function and scheme.
 
 ### Partitioning Decision Tree
 

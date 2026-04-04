@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python]
 tags: [python, venv, pip, environments, dependencies]
 aliases: [virtual environments, venv, pip, requirements.txt, pyenv, python environments]
-keywords: [venv, pip, pip-tools, requirements.txt, pyenv, virtualenv, site-packages, pip freeze, pip install, docker python, cloud run python]
 description: "Python environment and dependency management — venv creation, pip workflows, requirements.txt lifecycle, pyenv version management, Docker/CI/CD/GCP deployment patterns, and anti-patterns."
 related:
   - "[[programming-languages-index]]"
@@ -35,6 +31,13 @@ Virtual environments solve this by creating a self-contained Python installation
 > package versions (`apt`, `yum` use system Python internally). On macOS,
 > `pip install --user` partially helps but still pollutes the global namespace.
 > ALWAYS use a virtual environment. There is no exception.
+
+> [!success] Fix: Always Create a venv Before pip install
+>
+> Before installing anything, run `python -m venv .venv` and activate it.
+> Verify the venv is active with `which python` (Linux/macOS) or `where python`
+> (Windows) — the path should point inside `.venv/`. If it doesn't, do not proceed.
+> One venv per project; never share venvs across projects.
 
 ## venv — create and activate virtual environments
 
@@ -91,6 +94,12 @@ deactivate
 > or even Python versions. Add `.venv/` to `.gitignore` immediately after creation.
 > The `requirements.txt` file is what gets committed — it's the reproducible
 > specification, not the venv itself.
+
+> [!success] Fix: .gitignore on Project Creation
+>
+> Add `.venv/` to `.gitignore` as the very first act after `git init` — before
+> creating the venv. Run `echo ".venv/" >> .gitignore && git add .gitignore && git commit -m "init: add .gitignore"`.
+> If `.venv/` was already tracked, remove it: `git rm -r --cached .venv/` then commit.
 
 #### .gitignore — standard entries for Python projects
 
@@ -160,6 +169,15 @@ pip install -e ".[dev]"
 > "it works on my machine" problems. If your terminal prompt doesn't show
 > `(.venv)` before the path, STOP and activate your environment first.
 
+> [!success] Fix: Check the Prompt Before Every pip Command
+>
+> Your terminal prompt should show `(.venv)` when the environment is active.
+> If it doesn't, run `source .venv/bin/activate` (Linux/macOS) or
+> `.venv\Scripts\Activate.ps1` (Windows) before proceeding. Alternatively,
+> run `python -m pip install pandas` instead of bare `pip install` — this
+> always installs into whichever Python the `python` binary resolves to,
+> making the target explicit.
+
 > [!info] Transitive Dependencies
 >
 > When you install `pandas`, pip also installs `numpy`, `python-dateutil`, and
@@ -224,6 +242,13 @@ pip install -r requirements.txt -c constraints.txt
 > for production: `pandas==2.1.4`. Use ranges only in library development, never
 > in application deployment.
 
+> [!success] Fix: pip freeze After Every Install
+>
+> Whenever you install or upgrade a package, immediately run `pip freeze > requirements.txt`
+> and commit the result. For a cleaner workflow, use `pip-tools`: maintain
+> `requirements.in` with loose constraints, compile to a fully pinned `requirements.txt`
+> with `pip-compile`, and update with `pip-compile --upgrade-package pandas`.
+
 ## pip — upgrade and manage installed packages
 
 #### pip install --upgrade — upgrade a package to latest
@@ -281,6 +306,13 @@ pip uninstall pandas
 > orphaned packages. The cleanest approach: delete the venv, recreate it, and
 > install from `requirements.txt`. This is why pinned requirements matter —
 > they let you rebuild a clean environment in seconds.
+
+> [!success] Fix: Nuke and Rebuild Rather Than Uninstall
+>
+> Instead of hunting orphaned packages after an uninstall, delete the venv entirely
+> and rebuild from the pinned `requirements.txt`: `rm -rf .venv && python -m venv .venv && pip install -r requirements.txt`.
+> This is faster and guaranteed clean. If you need to remove a package from the spec,
+> delete it from `requirements.txt` (or `requirements.in`) first, then rebuild.
 
 #### pip check — verify dependency compatibility
 
@@ -376,6 +408,13 @@ pandas.__file__
 > exactly what you tested against. In production, the first is a guaranteed
 > future outage. The second is a guaranteed identical environment.
 
+> [!success] Fix: Always Commit pip freeze Output
+>
+> Run `pip freeze > requirements.txt` after every `pip install` and commit it.
+> Every line must use `==` (exact pin). Never hand-edit the file to use `>=` —
+> if you need a range, maintain a `requirements.in` for intent and use
+> `pip-compile` to produce the pinned `requirements.txt` from it.
+
 ```
 # requirements.txt — production dependencies (pinned)
 pandas==2.1.4
@@ -470,6 +509,15 @@ pip freeze > requirements.txt
 > affects both features and speed. Pin your Python version in CI
 > (`actions/setup-python@v5` with `python-version: '3.12'`) and in Docker
 > (`FROM python:3.12-slim`). Never use `python:latest`.
+
+> [!success] Fix: Pin Python Version in Three Places
+>
+> 1. `.python-version` (or `pyenv local 3.12.0`) — for local development.
+> 2. `Dockerfile` — `FROM python:3.12-slim` (never `python:latest`).
+> 3. CI/CD — `python-version: '3.12'` in `actions/setup-python@v5`.
+>
+> All three must agree. A mismatch between local (3.11) and CI (3.12) will
+> surface as type errors or missing stdlib modules at the worst possible time.
 
 #### python --version — check what's installed
 
@@ -571,6 +619,13 @@ CMD ["python", "main.py"]
 > the pip install cache every time ANY source file changes — even a one-line fix.
 > Always copy `requirements.txt` first, install, THEN copy source code. This way
 > pip install is cached unless dependencies actually change.
+
+> [!success] Fix: Copy requirements.txt First, Source Second
+>
+> Structure the Dockerfile as: `COPY requirements.txt .` → `RUN pip install ...` →
+> `COPY . .`. Docker caches each layer by its inputs — the pip install layer is only
+> invalidated when `requirements.txt` changes, not on every source edit. Build times
+> drop from 90 seconds to under 5 seconds for typical dependency trees.
 
 #### .dockerignore — keep the image lean
 
@@ -791,6 +846,13 @@ functions-framework==3.5.0
 > update. Use the Composer UI or `gcloud composer environments update` to add
 > PyPI packages — these are persisted and managed by GCP.
 
+> [!success] Fix: Use gcloud composer environments update
+>
+> Maintain a `requirements-composer.txt` with pinned versions for all Airflow
+> operator dependencies. Apply it with:
+> `gcloud composer environments update my-env --location us-central1 --update-pypi-packages-from-file requirements-composer.txt`
+> This is idempotent, version-controlled, and survives environment updates.
+
 #### Cloud Composer — managed Airflow package installation
 
 ```bash
@@ -884,6 +946,13 @@ resource "google_cloudfunctions2_function" "processor" {
 >
 > Pin versions, freeze dependencies, document env vars. The environment
 > that isn't specified is the environment that breaks.
+
+> [!success] Fix: Specify Everything — Version, Dependencies, Env Vars
+>
+> Pin Python in `.python-version`, `Dockerfile`, and CI. Run `pip freeze > requirements.txt`
+> after every install. Enumerate all required environment variables in a `.env.example`
+> file (values redacted) committed to the repo, with a CI step that asserts each is set
+> before the test suite runs.
 
 | Anti-Pattern | Why It's Bad | Fix |
 |---|---|---|

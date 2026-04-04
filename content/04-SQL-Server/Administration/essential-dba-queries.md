@@ -1,10 +1,6 @@
 ---
-type: reference
-category: sql-server
-technology: [sql-server]
 tags: [sql, sql-server, tsql, dba, tempdb, transaction-log, disk-space, index-size, sys-configurations, SERVERPROPERTY]
 aliases: [DBA queries, SQL Server diagnostics, DMV queries, sys.dm_exec_sessions, sys.dm_exec_requests]
-keywords: [DBA queries, DMV, dynamic management views, server version, database size, active connections, running queries, blocking chains, kill session, wait stats, page life expectancy, sys.dm_exec_sessions, sys.dm_exec_requests, sys.dm_os_wait_stats, SERVERPROPERTY, sys.databases, sys.master_files, sys.configurations, sp_spaceused, sys.dm_db_partition_stats, index sizes, transaction log, VLF, TempDB, disk free space, sys.dm_os_volume_stats]
 description: "Essential T-SQL diagnostic queries for SQL Server DBAs: server version, database sizes, active connections, currently running queries, blocking chains, wait statistics, space and size analysis, transaction log health, TempDB monitoring, and disk capacity."
 created: 2026-03-22
 updated: 2026-03-30
@@ -249,6 +245,10 @@ ORDER BY total_mb DESC;
 >
 > A high VLF (Virtual Log File) count means the transaction log has been grown in many small increments instead of pre-sized. This fragments the log and slows backup/restore operations. If `DBCC LOGINFO` returns hundreds of rows, consider shrinking and pre-sizing the log file. The `log_reuse_wait_desc` column explains why the log can't be truncated — common values: `ACTIVE_TRANSACTION` (long-running query), `LOG_BACKUP` (no log backup taken), `REPLICATION` (replication agent behind).
 
+> [!success] Pre-Size the Log File
+>
+> Shrink the log to a small size, then immediately expand it to the expected working size in a single operation to create one large VLF instead of hundreds of small ones: `DBCC SHRINKFILE(N'mydb_log', 64);` followed by `ALTER DATABASE mydb MODIFY FILE (NAME = mydb_log, SIZE = 4096MB);`. Pre-sizing prevents auto-growth fragmentation going forward.
+
 ```sql
 DBCC SQLPERF(LOGSPACE);
 ```
@@ -270,6 +270,10 @@ DBCC LOGINFO;
 > [!warning] TempDB Is a Shared Bottleneck
 >
 > TempDB is shared by all sessions. A single query spilling to TempDB (hash joins, sorts exceeding memory grant) can fill TempDB and block every other query on the server. Monitor TempDB space during large ETL runs. If TempDB runs out of space, SQL Server returns error 1105 and the offending query fails — but other sessions may also fail if they need TempDB space at that moment.
+
+> [!success] Pre-Size TempDB and Tune Memory Grants
+>
+> Pre-size TempDB data files to cover peak ETL workload (check historical max usage with the `dm_db_session_space_usage` query below). For queries spilling due to memory grant underestimates, run `UPDATE STATISTICS` with `FULLSCAN` after bulk loads so the optimizer grants larger memory and avoids the spill. Use one TempDB data file per logical CPU (up to 8) to reduce contention.
 
 #### dm_db_session_space_usage — TempDB Allocation per Session
 
@@ -307,6 +311,10 @@ FROM sys.database_files;
 > [!danger] Full Disk Halts the Pipeline
 >
 > SQL Server stops accepting writes when the disk is full. The database goes read-only, transactions fail, and the pipeline halts. Monitor disk free space proactively — see [sql-server-disk-full](https://alp78.github.io/elysium/15-Runbooks/sql-server-disk-full) for the full runbook. As a rule of thumb, alert at 85% used, investigate at 90%, and treat 95% as a P1 incident.
+
+> [!success] Set Up Disk Alerts Before They Are Needed
+>
+> Create a Datadog monitor on the `pct_free` value from the `dm_os_volume_stats` query below: alert at < 15% free, page-on-call at < 10% free. Pair with a GCS backup lifecycle policy that automatically deletes local `.bak` files after upload, keeping the backup disk from accumulating stale copies.
 
 ```sql
 SELECT DISTINCT
@@ -370,6 +378,10 @@ KILL 82;
 > [!danger] Rollback Can Take Longer Than the Original Query
 >
 > Killing a session with an open transaction triggers a ROLLBACK — which can take longer than letting the query finish. A 2-hour INSERT that's 90% done will take ~1.8 hours to roll back. Always check what the session is doing first with the Running Queries query above.
+
+> [!success] Monitor Rollback Progress Before Killing
+>
+> Before killing a session, check `sys.dm_exec_requests` for `percent_complete` and `estimated_completion_time` on the target session. If the query is nearly done, let it finish. If it is a runaway with no end in sight, kill it — then monitor rollback progress with the same query filtered on `command = 'KILLED/ROLLBACK'`.
 
 ---
 
@@ -495,6 +507,10 @@ ORDER BY p.rows DESC;
 > [!warning] Heaps Are Dangerous
 >
 > A table without a clustered index forces every query into a full table scan. In silver and gold layers, every table must have a clustered index. See [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Storage-and-Indexes/index-types-and-strategy) for the correct clustered key selection.
+
+> [!success] Add a Clustered Index Immediately
+>
+> For any heap identified by the query above, add a clustered index on the natural sort key: `CREATE CLUSTERED INDEX CIX_tablename_key ON schema.tablename (date_col, id_col);`. Use `ONLINE = ON` to avoid blocking reads during the build. Prioritize silver and gold tables — bronze heaps are acceptable if data is always fully replaced.
 
 ---
 

@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, observability, dbt]
-type: reference
-technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "dbt docs generate, exposures, lineage graph, static hosting on GCS, Dataplex/DataHub integration, and regulatory traceability for EU BMR."

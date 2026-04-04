@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet]
 tags: [csharp, pipeline]
 aliases: [advanced pipelines, TPL Dataflow, channels, IAsyncEnumerable, cross-process]
-keywords: [TPL Dataflow, TransformBlock, ActionBlock, BatchBlock, Channel, IAsyncEnumerable, SemaphoreSlim, Process, rate limiting, parallel API, concurrent pipeline]
 description: "C# advanced parallel pipelines reference with executable examples and cell outputs — covers TPL Dataflow, Channel-based batching, IAsyncEnumerable for paginated APIs, rate-limited parallel fetch, and cross-process execution. See [13_py_advancedpipelines](https://alp78.github.io/elysium/02-Programming-Languages/Python/13_py_advancedpipelines) for the Python equivalent."
 created: 2026-03-25
 updated: 2026-03-25
@@ -98,6 +94,10 @@ Console.WriteLine($"  FINNHUB_KEY:     {(FINNHUB_KEY.Length > 0 ? "set" : "MISSI
 >
 > - **Not calling `Complete()`** — downstream blocks wait forever
 > - **Unbounded buffer** — set `BoundedCapacity` to prevent OOM
+
+> [!success] Always signal completion and bound your buffers
+>
+> Call `headBlock.Complete()` after posting all items, and use `PropagateCompletion = true` on every link so the shutdown signal cascades automatically. Set `BoundedCapacity` on `ExecutionDataflowBlockOptions` to apply backpressure and prevent unbounded memory growth.
 
 ```csharp
 // TPL Dataflow — build multi-stage concurrent pipelines with independent concurrency per stage
@@ -276,6 +276,10 @@ Console.WriteLine($"  Done in {sw.ElapsedMilliseconds}ms");
 > - **Unbounded concurrency** — gets rate-limited or banned by APIs
 > - **Not releasing semaphore on error** — deadlocks remaining tasks
 
+> [!success] Throttle with SemaphoreSlim and always release
+>
+> Use `SemaphoreSlim(n)` to cap concurrency to the API's rate limit. Always call `semaphore.Release()` in a `finally` block — if the HTTP call throws, the semaphore is still released and remaining tasks can proceed.
+
 ```csharp
 // Parallel fetch with SemaphoreSlim rate limiting
 //
@@ -398,6 +402,10 @@ This pattern combines `Channel<T>` (async producer-consumer queue) with parallel
 > [!warning] Unbounded channels in parallel fetch
 > An unbounded channel with 100 parallel fetchers and a slow consumer will buffer everything in memory. If each response is 1 MB and 10,000 are in flight, that's 10 GB of buffered data. Always use bounded channels for parallel fetch patterns and handle `WaitToWriteAsync` backpressure.
 
+> [!success] Use bounded channels with backpressure
+>
+> Create channels with `Channel.CreateBounded<T>(capacity)`. When the channel is full, `WriteAsync` awaits automatically — this backpressure slows producers to match consumer speed. Size the capacity to buffer a few seconds of throughput, not the entire dataset.
+
 ```csharp
 // Channel with parallel producers and batching consumer
 
@@ -459,6 +467,10 @@ await producer; // ensure producer completed without exceptions
 > [!danger] Security
 >
 > Never use `Shell=true` with user input — command injection risk. Always check `ExitCode` to catch silent failures.
+
+> [!success] Use UseShellExecute=false and validate ExitCode
+>
+> Always set `UseShellExecute = false` and pass arguments as a structured `ArgumentList` or validated string — never interpolate raw user input into `Arguments`. After `WaitForExitAsync`, check `proc.ExitCode != 0` and read `stderr` to surface failures before continuing the pipeline.
 
 ```csharp
 // System.Diagnostics.Process — spawn a child OS process, capture its output

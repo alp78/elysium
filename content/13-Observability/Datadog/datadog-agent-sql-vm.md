@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: observability
-technology: [datadog, sql-server, ubuntu, gcp]
 tags: [monitoring, observability, sql, datadog, gcp]
 aliases: [DD Agent SQL VM, Datadog SQL Server VM, datadog-agent systemd]
-keywords: [datadog agent, sql server vm, ubuntu, systemd, install_script_agent7, datadog.yaml, dd_agent login, sql server integration, manual install, bootstrap, startup script, odbc]
 description: "How to set up the Datadog Agent as a systemd service on the example SQL Server VM (Ubuntu 22.04), covering automated bootstrap, manual install steps, and the dd_agent SQL login."
 created: 2026-03-22
 updated: 2026-03-22

@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - python
-  - pandas
-  - polars
 tags: [pipeline, python, pandas, polars]
 aliases:
   - SQLContext, DuckDB, SQL Server, database queries
-keywords: [SQLContext, DuckDB, pyodbc, sqlalchemy, read_database, SQL, register, execute]
 description: "Pandas/Polars DataFrame reference 09/10 — Database & SQL Interface (SQLContext, DuckDB, SQL Server connectivity). Side-by-side executable examples with cell outputs."
 created: 2026-03-24
 updated: 2026-03-24
@@ -3002,10 +2995,22 @@ Connect Pandas and Polars directly to SQL Server tables for reading, writing, an
 > should be in `.gitignore` and never committed. See [environment-variables](https://alp78.github.io/elysium/01-Shell/Scripting/environment-variables) for secure
 > credential handling patterns.
 
+> [!success] Store credentials in environment variables
+>
+> Load credentials at runtime via `os.environ.get("DB_PASSWORD")` or `python-dotenv`.
+> Add `.env` to `.gitignore` and never commit it. For production, use a secret manager
+> (GCP Secret Manager, Azure Key Vault) and inject the value as an environment variable.
+
 > [!warning] TrustServerCertificate=yes disables certificate validation
 >
 > Acceptable for local development. In production, use a valid TLS certificate and
 > remove this flag — otherwise connections are vulnerable to man-in-the-middle attacks.
+
+> [!success] Use a valid TLS certificate in production
+>
+> Install a trusted certificate on the SQL Server instance and remove
+> `TrustServerCertificate=yes` from the connection string. Verify with
+> `openssl s_client -connect <host>:1433` before deploying.
 
 ```python
 load_dotenv(dotenv_path="../.env")
@@ -3056,12 +3061,25 @@ print("Connection OK")
 > Polars `pl.read_database()` has the same issue — neither library supports server-side
 > cursors by default.
 
+> [!success] Limit rows or use chunked reads
+>
+> Add a `WHERE` clause or `TOP N` / `LIMIT N` to bound the result set. For full-table
+> loads, iterate with `chunksize=`: `for chunk in pd.read_sql(q, engine, chunksize=50_000)`.
+> In Polars use `pl.read_database(q, conn, iter_batches=True, batch_size=50_000)`.
+
 > [!warning] SQL injection risk with string
 >
 > SQL injection risk with string formatting in queries
 > Never use f-strings for user input: `f"WHERE symbol = '{user_input}'"` is injectable.
 > Use parameterized queries: `pd.read_sql("SELECT * FROM t WHERE symbol = ?", engine,
 > params=["ASML"])`.
+
+> [!success] Always use parameterized queries
+>
+> Pass user-supplied values as parameters, never via string formatting:
+> `pd.read_sql("SELECT * FROM t WHERE symbol = ?", engine, params=[symbol])`.
+> In SQLAlchemy use bound parameters: `text("SELECT * FROM t WHERE symbol = :s")` with
+> `conn.execute(stmt, {"s": symbol})`.
 
 ### Pandas — pd.read_sql()
 
@@ -3307,11 +3325,24 @@ print(f"First batch: {df.shape}")
 > For tables >100K rows, use `bcp` instead — it's 10-50x faster than any ORM approach.
 > See [data-transfer](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer) for bcp patterns.
 
+> [!success] Enable fast_executemany or use bcp for bulk loads
+>
+> Set `fast_executemany=True` on the SQLAlchemy engine to batch ODBC inserts and reach
+> ~10K rows/second. For datasets >100K rows, export to CSV and bulk-load with `bcp` or
+> `BULK INSERT` to reach millions of rows per minute.
+
 > [!danger] if_exists="replace" drops the table
 >
 > This destroys indexes, constraints, permissions, and foreign keys. Use
 > `if_exists="append"` with a preceding `DELETE` for controlled replacement, or use
 > `MERGE`/upsert patterns from [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/merge-and-upsert).
+
+> [!success] Use if_exists="append" with a preceding DELETE
+>
+> Truncate or delete the target rows before appending, preserving the table schema,
+> indexes, and permissions: `conn.execute(text("DELETE FROM schema.table"))` then
+> `df.to_sql("table", engine, if_exists="append", index=False)`. For partial replacements,
+> use a `MERGE` statement instead.
 
 ### Pandas — df.to_sql()
 

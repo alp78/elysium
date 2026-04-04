@@ -1,7 +1,5 @@
 ---
 tags: [data-modeling, pipeline, dbt]
-type: reference
-technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "SCD Type 2 snapshots with timestamp and check strategies, PIT queries, ESG audit trails, and gotchas for financial data pipelines"
@@ -172,6 +170,9 @@ from {{ source('esg_providers_raw', 'raw_esg_ratings') }}
 > [!warning] check_cols all is expensive
 >
 > Setting `check_cols = 'all'` compares every column. For wide ESG tables with 80+ columns, this creates a very large hash and adds significant compute. Explicitly list the columns that represent meaningful business changes.
+
+> [!success] Enumerate check_cols explicitly
+> Define `check_cols` as a YAML list containing only the columns that represent a meaningful business change (scores, flags, ratings). Exclude metadata columns like `_ingested_at`, `_loaded_at`, and `company_name` that change frequently but do not affect business logic. This keeps the hash small and prevents spurious SCD2 row creation.
 
 ### `timestamp` vs `check` Decision Matrix
 
@@ -479,6 +480,9 @@ order by esg_provider_id, dbt_valid_from
 
 > [!danger] Critical snapshot gotchas
 
+> [!success] Preventive checklist
+> Before deploying any snapshot: (1) deduplicate the source query on `unique_key`; (2) set `invalidate_hard_deletes = true` for membership tables; (3) never run `dbt snapshot --full-refresh` in production without a backup; (4) store `effective_date` or `provider_updated_at` as source columns and use them — not `dbt_valid_from` — for business-logic PIT queries; (5) set `on_schema_change = 'append_new_columns'` to survive additive schema changes.
+
 ### Duplicate `unique_key` in Source
 
 If the source query returns multiple rows with the same `unique_key` value, dbt will raise an error or produce unpredictable results depending on the adapter. Always deduplicate before the snapshot.
@@ -518,6 +522,9 @@ where rn = 1
 > [!warning] Full-refresh on incremental models upstream
 > If an incremental model that feeds a snapshot is full-refreshed and re-seeded from a different date, the snapshot will receive "new" rows that look like changes and create spurious SCD2 records. Always full-refresh incrementals and their downstream snapshots together, or avoid full-refresh in production.
 
+> [!success] Full-refresh incrementals and snapshots together
+> When a full-refresh of an upstream incremental is necessary, also drop and recreate the downstream snapshot table from the warehouse directly (preserving history structure), then re-run `dbt snapshot` to re-seed from the corrected source. Use a branch and review the row diff with `audit_helper.compare_relations` before promoting to production.
+
 ### Hard Deletes Not Handled by Default
 
 When a constituent is removed from an index, the source row disappears. By default, dbt does **not** close the snapshot record — the `dbt_valid_to` stays null, and the constituent appears to be still active.
@@ -540,6 +547,9 @@ When a constituent is removed from an index, the source row disappears. By defau
 > [!danger] Pipeline time vs business time
 >
 > This is the single most misunderstood aspect of dbt snapshots. `dbt_valid_from` does NOT contain the business effective date -- it contains when the pipeline last ran. If your pipeline runs Monday through Friday but misses Saturday/Sunday, weekend changes all get stamped with Monday's timestamp. PIT queries using `dbt_valid_from` will show incorrect results for weekend dates. Always store and query on the source `effective_date` for business-logic PIT joins.
+
+> [!success] Use source effective_date for PIT queries
+> Always include `effective_date` (or `provider_updated_at`) as a column in the snapshot's `select` query. Build all business-logic PIT joins against this source column, not `dbt_valid_from`. Reserve `dbt_valid_from` / `dbt_valid_to` for pipeline-level audit queries only — for example, determining when dbt last processed a given record.
 
 ### Snapshot Timestamps Use `current_timestamp`
 

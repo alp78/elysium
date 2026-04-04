@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, orchestration, airflow, dbt]
-type: how-to
-technology: [dbt, airflow]
 status: stable
 updated: 2026-03-23
 description: "BashOperator, astronomer-cosmos, and CloudRunJobOperator patterns for orchestrating dbt in Airflow, with a full ESG pipeline DAG."
@@ -308,6 +306,9 @@ bash_command=(
 > [!warning] XCom variable constraints
 >
 > XCom values pulled into `--vars` must be strings or simple scalars. Never pass secrets through XComs; use Airflow Connections or Secret Manager instead.
+
+> [!success] Safe variable passing
+> Pass secrets to dbt via environment variables using Airflow's `env` parameter on `BashOperator` (sourced from an Airflow Connection or Secret Manager backend). Use `--vars` only for non-sensitive run-time parameters such as `run_date` or `provider_code`.
 
 ---
 

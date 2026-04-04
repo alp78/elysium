@@ -1,10 +1,6 @@
 ---
-type: concept
-category: sql-server
-technology: [sql-server]
 tags: [sql, sql-server, tsql]
 aliases: [MERGE, upsert, WHEN MATCHED, WHEN NOT MATCHED, SCD Type 2, truncate and reload, delete and insert, fast_executemany]
-keywords: [MERGE, upsert, WHEN MATCHED, WHEN NOT MATCHED, SCD, SCD2, Slowly Changing Dimension, truncate reload, delete insert, fast_executemany, pyodbc, NORECOVERY, XACT_ABORT, "@@ROWCOUNT", "@@ERROR", "@@TRANCOUNT", XACT_STATE, TRY CATCH, savepoint, SAVE TRAN, RCSI, version store, U lock, X lock, phantom insert, race condition, atomic, idempotent, bronze silver gold, medallion]
 description: "MERGE statement patterns and upsert strategies for the bronze→silver→gold medallion pipeline: truncate-reload for snapshots, merge for OHLCV corrections, SCD Type 2 close-and-insert for dimensions, and delete-and-insert for gold. Includes transaction management, @@ROWCOUNT guards, and XACT_ABORT best practices."
 created: 2026-03-22
 updated: 2026-03-22
@@ -73,6 +69,9 @@ except Exception:
 > Missing Transaction = Empty Table on Crash.
 > If the process crashes between DELETE and INSERT without a transaction, the table is left empty. The explicit `conn.commit()` after both operations ensures all-or-nothing behavior. Never delete without having the INSERT in the same transaction.
 
+> [!success] Safe Pattern
+>
+> Always wrap DELETE + INSERT pairs in a single explicit transaction. In Python: open the connection, execute DELETE, execute INSERT (or `executemany`), then call `conn.commit()` once — with `conn.rollback()` in the `except` block to undo both operations on failure.
 
 ---
 
@@ -298,6 +297,10 @@ WHEN NOT MATCHED THEN INSERT (
 >
 > MERGE is one of the few T-SQL statements that REQUIRES a trailing semicolon. Omitting it causes cryptic syntax errors that point to the line AFTER the MERGE. Always terminate with `;`.
 
+> [!success] Safe Pattern
+>
+> End every `MERGE` statement with a semicolon on its own line. As a code-review habit, treat a MERGE block without a trailing `;` as a syntax error regardless of whether it parses — the error surfaces unpredictably depending on what follows.
+
 #### MERGE WHEN NOT MATCHED THEN INSERT — prevent phantom duplicate inserts
 
 ```sql
@@ -317,13 +320,25 @@ WHEN NOT MATCHED THEN
 > two rows with the same `(symbol, date)`. Always deduplicate the source
 > CTE before the MERGE: `WITH src AS (SELECT DISTINCT ... FROM staging)`.
 
+> [!success] Safe Pattern
+>
+> Always deduplicate the source before MERGE: `WITH src AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY symbol, date ORDER BY load_id DESC) AS rn FROM staging) SELECT ... FROM src WHERE rn = 1`. This guarantees at most one source row per target key, preventing error 8672.
+
 > [!danger] Concurrent MERGE Race Condition
 >
 > Two concurrent MERGE statements against the same target can produce duplicate inserts — a phantom read between the NOT MATCHED check and the INSERT. Fix: add `WITH (HOLDLOCK)` on the target table or wrap in SERIALIZABLE isolation. Without this, pipeline retry logic that runs MERGE concurrently will create duplicates.
 
+> [!success] Safe Pattern
+>
+> Add `WITH (HOLDLOCK)` to the target table reference: `MERGE INTO silver.signals_daily WITH (HOLDLOCK) AS target`. This promotes the shared lock to a range lock during the NOT MATCHED check, preventing concurrent sessions from passing the check simultaneously and inserting duplicate rows.
+
 > [!warning] OUTPUT with MERGE Limitations
 >
 > The OUTPUT clause with MERGE has restrictions: it cannot use `OUTPUT INTO` when the target table has triggers. The `$action` column returns 'INSERT', 'UPDATE', or 'DELETE' — use it to log which rows were affected by which operation.
+
+> [!success] Safe Pattern
+>
+> If the target table has triggers and you need `OUTPUT INTO`, capture output into a `@table` variable first and then INSERT from it: `OUTPUT $action, inserted.id INTO @audit_table; INSERT INTO audit_log SELECT * FROM @audit_table;`. Alternatively, remove triggers and replace with explicit audit logic inside the MERGE batch.
 
 > [!info] MERGE and RCSI Locking
 >
@@ -468,6 +483,10 @@ IF @@ROWCOUNT = 0
 >
 > Must be read **immediately** after the statement. Even `SET @var = ...` resets it — use `SET @var = @@ROWCOUNT` as the first line after the statement.
 
+> [!success] Safe Pattern
+>
+> Immediately after any DML statement, add `SET @affected = @@ROWCOUNT;` as the very next line — before any IF, PRINT, or SET. Use `@affected` downstream for validation guards. Never read `@@ROWCOUNT` more than one statement after the operation.
+
 ---
 
 **`@@ERROR`** — error number from the last statement (0 = success).
@@ -557,6 +576,10 @@ END CATCH
 > [!danger] XACT_ABORT OFF Commits Partial Work
 >
 > Without `XACT_ABORT ON`, a failing statement does NOT abort the transaction. Subsequent statements still execute and COMMIT saves an inconsistent state. With `XACT_ABORT ON`, any error immediately rolls back the entire transaction and jumps to CATCH.
+
+> [!success] Safe Pattern
+>
+> Add `SET XACT_ABORT ON;` as the first line before `BEGIN TRY` in every stored procedure and every T-SQL batch that uses explicit transactions. Pair it with a `TRY/CATCH` block that checks `XACT_STATE() <> 0` before issuing `ROLLBACK`.
 
 ```sql
 -- Without XACT_ABORT ON (dangerous):
@@ -694,6 +717,10 @@ flowchart TD
 > [!warning] Long-Running Reads Kill TempDB With RCSI
 >
 > A long-running SELECT (e.g., a slow dashboard query or an open transaction) holds a snapshot LSN. SQL Server cannot clean up version store entries older than that LSN. The version store grows without bound until TempDB fills and all writes fail. Monitor TempDB usage and kill long-running read sessions if TempDB space becomes critical.
+
+> [!success] Safe Pattern
+>
+> Monitor TempDB version store size with `SELECT SUM(version_store_reserved_page_count) * 8 / 1024 AS version_store_mb FROM sys.dm_db_file_space_usage`. Set a `LOCK_TIMEOUT` on dashboard sessions and route long-running BI queries to a read replica or a BigQuery export to prevent version store runaway on the production instance.
 
 ---
 

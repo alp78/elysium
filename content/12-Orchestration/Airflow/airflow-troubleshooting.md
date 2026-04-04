@@ -1,7 +1,4 @@
 ---
-type: troubleshooting
-category: orchestration
-technology: [airflow, python]
 tags: [orchestration, python, airflow]
 aliases:
   - Airflow DAG import errors
@@ -25,35 +22,6 @@ aliases:
   - Airflow webserver port 8080
   - airflow db check
   - airflow db clean
-keywords:
-  - airflow troubleshooting
-  - dag import error
-  - airflow syntax error
-  - missing module airflow
-  - task non-zero exit code
-  - scheduler not picking up dags
-  - tasks stuck queued
-  - tasks stuck running
-  - connection refused postgres
-  - xcom too large
-  - xcom size limit
-  - airflow deadlock
-  - worker killed OOM
-  - out of memory celery worker
-  - zombie task
-  - airflow dags list
-  - airflow tasks test
-  - airflow tasks run
-  - airflow tasks clear
-  - airflow dags trigger
-  - airflow log location
-  - dag serialization error
-  - airflow db maintenance
-  - scheduler heartbeat
-  - slow dag parsing
-  - too many dags
-  - airflow performance
-  - airflow webserver not starting
 description: "Comprehensive Airflow troubleshooting guide covering the most common errors with exact error messages and fixes: DAG import errors, stuck tasks, scheduler issues, XCom size limits, metadata DB deadlocks, OOM worker kills, and slow DAG parsing. Includes the full debugging CLI reference."
 created: 2026-03-22
 updated: 2026-03-22
@@ -81,6 +49,9 @@ A reference for diagnosing and fixing the most common Apache Airflow problems en
 > [!danger] Silent DAG import errors
 >
 > When a DAG file has a Python syntax error or missing import, the Scheduler logs a warning but continues processing other DAGs. The broken DAG simply vanishes from the UI with no alert. If you rely on DAG-level failure callbacks for alerting, they will NOT fire for import errors because the DAG never loads. Monitor the `airflow.dag_processing.import_errors` metric in Datadog and alert when it exceeds 0.
+
+> [!success] Fix: monitor import errors metric and validate DAGs in CI
+> Create an alert on the `airflow.dag_processing.import_errors` StatsD/Datadog metric so any import error triggers an immediate notification. Additionally, add `airflow dags list-import-errors` (exit code non-zero on any error) as a mandatory CI gate before deploying new DAG files.
 
 ## Issue 1: DAG Import Errors
 
@@ -338,6 +309,9 @@ dag_dir_list_interval = 30       # Rescan the dags folder every 30 seconds (defa
 
 > [!warning] Parse Interval in Production
 > Setting `min_file_process_interval` very low (< 10s) in production with many DAG files will overload the Scheduler CPU. The Scheduler spends significant time parsing — balance discovery speed against resource usage.
+
+> [!success] Safe setting: tune parse interval based on DAG count
+> Set `min_file_process_interval=30` (the default) in production. For fast DAG discovery during development use `10s`. If you have many DAG files, increase `parsing_processes` to parallelise parsing rather than lowering the interval.
 
 ---
 

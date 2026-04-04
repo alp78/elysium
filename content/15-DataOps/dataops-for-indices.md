@@ -1,12 +1,4 @@
 ---
-type: reference
-category: dataops
-technology:
-  - github-actions
-  - bigquery
-  - python
-  - sql-server
-  - terraform
 tags: [python, sql, terraform, bigquery, github-actions, dataops]
 aliases:
   - parallel backtesting
@@ -15,32 +7,6 @@ aliases:
   - regression testing
   - blue-green data
   - calculation validation
-keywords:
-  - parallel backtesting
-  - shadow dataset
-  - calculation engine
-  - index calculation
-  - regression testing
-  - blue-green deployment
-  - data validation
-  - methodology versioning
-  - schema migration
-  - incident response
-  - SEV-1
-  - restatement
-  - corporate actions
-  - divisor
-  - index level
-  - weight sum
-  - ESG freshness
-  - workload identity federation
-  - BigQuery diff
-  - Cloud Run
-  - GitHub Actions
-  - cron validation
-  - synonym swap
-  - dataset expiry
-  - flat-rate slots
 created: 2026-03-22
 updated: 2026-03-22
 status: complete
@@ -781,6 +747,9 @@ SELECT * FROM `project.dataset.index_levels_blue`;
 > [!warning] Authorized views and row-level security
 > If the production view has authorized view bindings or row-level security policies, those must be reapplied to the new view definition. Automate this via Terraform so the swap never silently drops access controls.
 
+> [!success] Fix: Terraform-Managed View Swap with Access Controls
+> Define both the view and its IAM bindings in the same `google_bigquery_table` and `google_bigquery_dataset_iam_binding` Terraform resources. A `terraform plan` before the swap shows any access delta. The apply is atomic from the infrastructure perspective — access controls are never left detached.
+
 ### SQL Server Implementation (Synonym Swap)
 
 On SQL Server, synonyms provide a named alias that can be swapped atomically within a transaction, giving consumers a stable object name while the underlying table changes.
@@ -1000,6 +969,9 @@ GO
 
 > [!danger] SEV-1 is a restatement event
 > Regulatory frameworks (IOSCO, EU Benchmarks Regulation, SEC) require formal disclosure of material restatements. Engage compliance immediately; do not attempt to quietly correct and republish without a documented restatement notice. See [compliance-and-auditability](https://alp78.github.io/elysium/13-Observability/Monitoring/compliance-and-auditability).
+
+> [!success] Safe Pattern: Pre-Authorized Restatement Workflow
+> Maintain a pre-approved restatement notice template with your compliance team. When a SEV-1 is confirmed, open the incident channel, tag compliance immediately, and follow the runbook below — do not wait for root cause before notifying. The notice template allows fast publication of the initial subscriber alert while the full investigation continues.
 
 ### SEV-1 Runbook
 

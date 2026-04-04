@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, dbt, bigquery]
-type: reference
-technology: [dbt, bigquery]
 status: stable
 updated: 2026-03-23
 description: "BigQuery adapter partitioning, clustering, incremental strategies, slot estimation, cost control, and BigQuery-specific SQL patterns."
@@ -145,6 +143,9 @@ from {{ ref('int_esg_scores_validated') }}
 >
 > Enabling `require_partition_filter = true` on mart tables prevents accidental full-table scans from BI tools. Any query that does not include a filter on the partition column will be rejected with an error. Set this on all mart tables. Do not set it on staging tables — dbt internal queries (e.g., `is_incremental()` checks) may not include partition filters.
 
+> [!success] Safe pattern
+> Set `require_partition_filter = true` only in `config()` blocks for mart and incremental models. Leave staging models without this setting. In dbt config: `require_partition_filter = true` at the mart layer, omit it entirely in staging model configs.
+
 ### Integer Range Partitioning
 
 For tables without a natural date column — e.g., a universe table partitioned by index code hash:
@@ -278,6 +279,9 @@ prod:
 > [!warning] Threads vs BigQuery slots
 >
 > `threads: 16` means dbt submits 16 queries concurrently. Each of those queries may consume hundreds or thousands of slots. Setting threads too high on a shared project can cause slot exhaustion and query queuing. Start with `threads: 8` and increase after confirming slot availability via the BigQuery Admin Console.
+
+> [!success] Safe starting configuration
+> Begin with `threads: 8` and `priority: batch` in production profiles. Monitor slot utilisation in the BigQuery Admin Console (`INFORMATION_SCHEMA.JOBS_BY_PROJECT`) for at least one full pipeline cycle before increasing thread count. Reserve slots via BigQuery Reservations if you need guaranteed capacity.
 
 ---
 

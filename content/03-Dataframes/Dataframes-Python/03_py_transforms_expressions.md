@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - python
-  - pandas
-  - polars
 tags: [pipeline, python, pandas, polars]
 aliases:
   - with_columns, assign, apply, map, when/then, method chaining
-keywords: [with_columns, assign, apply, map_elements, when, then, otherwise, pipe, method chaining, expressions]
 description: "Pandas/Polars DataFrame reference 03/10 — Transforms, Expressions & Chaining (with_columns, when/then, apply). Side-by-side executable examples with cell outputs."
 created: 2026-03-24
 updated: 2026-03-24
@@ -165,6 +158,10 @@ ohlcv_pl.head(3)
 > [!warning] Direct assignment mutates the original
 >
 > Direct assignment mutates the original DataFrame. Always `.copy()` first in pipelines to avoid corrupting shared references.
+
+> [!success] .copy() before any column assignment in pipeline stages
+>
+> At the start of each pipeline stage, call `df = source_df.copy()` before adding or modifying columns. This prevents silent mutation of the shared source reference across multiple consumers. In Polars, `with_columns` always returns a new DataFrame — no copy needed.
 
 ```python
 df = ohlcv_pd.copy()
@@ -416,6 +413,10 @@ ohlcv_pl.select(
 >
 > `apply()` is 10-100x slower than vectorized operations. Use it only when no vectorized alternative exists (e.g., calling an external API per row, complex branching logic). For arithmetic, string, or date operations, always use vectorized methods first.
 
+> [!success] Replace apply() with vectorized operations
+>
+> For string operations use `.str` accessor (`df["col"].str.split(".").str[0]`). For arithmetic use standard operators or NumPy ufuncs. For conditional logic use `np.where` / `np.select`. Reserve `apply()` only for row-wise calls to external APIs or logic that cannot be expressed with native methods.
+
 ```python
 # map — element-wise transformation on a Series
 ohlcv_pd["symbol"].map(lambda t: t.split(".")[0]).head()
@@ -561,6 +562,10 @@ ohlcv_pd["close"].apply(lambda x: round(x, 0)).head()
 > [!warning] map_elements breaks Polars' query optimizer
 >
 > `map_elements` breaks Polars' query optimizer and runs in Python, not Rust. Always prefer native expressions. Use `map_elements` only when no expression equivalent exists.
+
+> [!success] Use native Polars expressions instead of map_elements
+>
+> Replace `map_elements(lambda s: s.split(".")[0])` with `pl.col("symbol").str.split(".").list.first()`. For math operations use Polars arithmetic expressions directly. Native expressions stay in the Lazy query graph and benefit from predicate pushdown and parallel execution.
 
 ```python
 # map_elements — per-element Python function (slow, use sparingly)
@@ -838,6 +843,10 @@ print(df["symbol"].cat.categories[:5].tolist())
 > [!warning] .cast(strict=True) (default) raises an error
 >
 > `.cast(strict=True)` (default) raises an error on invalid values. Use `strict=False` to get nulls instead of errors — useful for dirty data.
+
+> [!success] Use strict=False when casting dirty or untrusted data
+>
+> For columns sourced from external files or APIs, cast with `pl.col("col").cast(pl.Int64, strict=False)` — invalid values become `null` instead of raising. Follow with a null-count check (`df["col"].null_count()`) to quantify data quality before proceeding.
 
 ```python
 # cast — convert volume from Int64 to Float64
@@ -2278,6 +2287,10 @@ Imperative code mutates step by step; chained (declarative) code reads as a pipe
 > [!warning] Imperative style (separate statements per
 >
 > Imperative style (separate statements per step) is readable for beginners but creates many intermediate variables, makes it easy to accidentally reuse stale references, and is hard to compose into reusable pipelines. Prefer chained style below.
+
+> [!success] Prefer method chaining to eliminate stale intermediate variables
+>
+> Use Pandas method chaining — `(df.query(...).assign(...).sort_values(...))` — or wrap the chain in a `pipe()` call for named steps. In Polars, chain `.filter()`, `.with_columns()`, and `.sort()` directly on the LazyFrame. Both styles produce a single, immutable result with no reused intermediate names.
 
 ```python
 # Imperative: each step is a separate statement, intermediate variable "df" is reused

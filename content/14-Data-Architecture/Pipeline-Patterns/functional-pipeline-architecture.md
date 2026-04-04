@@ -1,8 +1,5 @@
 ---
 title: Functional Pipeline Architecture
-type: concept
-category: data-architecture
-technology: [python, csharp, pydantic, polars, dapper, sql-server]
 tags:
   - data-architecture
   - patterns
@@ -18,7 +15,6 @@ tags:
 aliases:
   - "Functional Pipeline"
   - "Pipeline Architecture Principles"
-keywords: [functional core, imperative shell, contract validation, quality gate, data provenance, lineage, immutable, value object, quarantine, dead letter queue, pydantic, fluentvalidation, batch_id, SHA-256]
 description: "Five architectural principles — functional core/imperative shell, contract validation, quality gates, data provenance, immutable value objects — applied to data pipeline construction."
 created: 2026-03-29
 updated: 2026-03-29
@@ -146,6 +142,10 @@ flowchart TB
 > core. The transform becomes untestable without a live database and unpredictable
 > under network failures. Keep I/O at the boundaries.
 
+> [!success] Move all I/O into the imperative shell — transforms take and return DataFrames only
+>
+> A correctly structured transform has this signature: `def compute_returns(df: pl.DataFrame) -> pl.DataFrame`. No database handles, no file paths, no network calls. All lookups needed by the transform are pre-fetched in the shell and passed in as parameters. The transform is then testable with a hardcoded DataFrame — no infrastructure required.
+
 ---
 
 ## Contract-First Validation
@@ -213,6 +213,10 @@ See [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architectur
 > production after every pipeline execution — they catch DATA bugs. You need both.
 > A pipeline with perfect tests but no quality gates will silently ingest corrupt
 > data from a source that changed its schema.
+
+> [!success] Implement both CI tests and runtime quality gates
+>
+> CI tests (pytest, dbt test) validate your code logic against known fixtures. Quality gates (row count, null check, freshness, range bounds) run after every pipeline execution in production and stop the next stage if data integrity fails. See [data-pipeline-testing-strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-pipeline-testing-strategy) for where each check belongs in the testing pyramid.
 
 ---
 
@@ -297,6 +301,10 @@ See [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-
 > someone asks why a symbol is missing from the gold report. Always quarantine —
 > the 5 lines of code to persist rejected rows save hours of investigation.
 
+> [!success] Persist every rejected row to the quarantine table with full error context
+>
+> Call `quarantine_row(batch_id, stage, raw_data, error_message)` for every row that fails validation. The quarantine table records what the row contained, which stage rejected it, and why. This enables investigation, replay after a fix, and quality metrics (rejection rate per source over time).
+
 ---
 
 ## Two Dimensions of Data Trustworthiness
@@ -330,6 +338,10 @@ Each column carries structured metadata: description, unit, computation formula,
 > what formula produced it, or what NULL would mean. The data contract
 > eliminates this: `unit=decimal_ratio`, `formula=std(daily_return)`,
 > annualize with √252. The number becomes self-describing.
+
+> [!success] Attach a ColumnContext record to every computed column
+>
+> For each column in a gold table, define a `ColumnContext` with `description`, `unit`, `formula`, `source_columns`, and `null_semantics`. Export these as `x-column-context` in the JSON Schema contract. Any consumer — a dashboard, another pipeline, an LLM — can interpret every value correctly without reading the pipeline source code.
 
 ### BusinessContext — Why This Run Happened
 

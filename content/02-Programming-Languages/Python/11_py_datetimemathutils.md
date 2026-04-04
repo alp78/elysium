@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python]
 tags: [python]
 aliases: [datetime, timezones, date arithmetic, math operations, utility functions]
-keywords: [datetime, timedelta, timezone, pytz, math, random, uuid, hashlib, date arithmetic]
 description: "Python date, time, math and utilities reference with executable examples and cell outputs — covers datetime, timezones, timedelta, math, random, and common utility functions. See [11_cs_datetimemathutils](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/11_cs_datetimemathutils) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -33,6 +29,12 @@ status: complete
 >
 > - **`datetime.now()` for storage** — timezone-naive; use `datetime.now(timezone.utc)`
 > - **Comparing naive and aware** datetimes — raises `TypeError`
+
+> [!success] Best practices
+>
+> - Always store and transmit datetimes as UTC: `datetime.now(timezone.utc)`
+> - Use `zoneinfo.ZoneInfo` (Python 3.9+) for timezone-aware local times
+> - Keep datetimes aware throughout the pipeline; convert to local time only for display
 
 ```python
 # Creating date and time objects
@@ -482,6 +484,10 @@ f"Diff {d} to {d2}: {diff.days} days"
 >
 > `time + timedelta(hours=1)` raises `TypeError`. Workaround: combine with a dummy date, do the arithmetic on the datetime, then extract the time component.
 
+> [!success] Use datetime.combine for time arithmetic
+>
+> Combine `time` with a dummy date via `datetime.combine(date.today(), t)`, perform the arithmetic on the resulting `datetime`, then extract `.time()`. This is the standard workaround.
+
 ```python
 # time arithmetic — must convert to datetime first
 
@@ -771,6 +777,12 @@ Loggers form a hierarchy (root > app > app.module) — set level on parent, chil
 > - **f-string in log calls** — always evaluated, even if level is filtered
 > - **`basicConfig` in library code** — should only be in the entry point
 
+> [!success] Best practices
+>
+> - Use `logger.info("msg %s", val)` (%-style) so the string is only formatted when the level is active
+> - Call `logging.basicConfig` once in the application entry point, never in library modules
+> - Use `logging.getLogger(__name__)` in each module for automatic hierarchy and filtering
+
 ```python
 # ── Basic logging setup ──
 logger = logging.getLogger("PipelineDemo")
@@ -884,6 +896,12 @@ json_logger.warning("Schema drift detected in %s", "users")
 >
 > - **Hardcoding secrets in code** — use env vars or secret managers
 > - **`os.environ["KEY"]` without handling `KeyError`** — crashes if missing
+
+> [!success] Best practices
+>
+> - Use `os.getenv("KEY", default)` for optional config and `os.environ["KEY"]` only for required values (fail-fast)
+> - Store secrets in environment variables or a secrets manager — never in source code or config files committed to git
+> - Validate required env vars at startup so the process fails immediately with a clear error, not deep in the pipeline
 
 ```python
 # Environment variables — the simplest config mechanism.
@@ -1050,6 +1068,10 @@ toml_config['database']['port']  # DB port — native int!
 > [!danger] Never Commit .env to Git
 >
 > `.env` files hold secrets for local development. `python-dotenv` loads them into `os.environ`. Always add `.env` to `.gitignore`. In production, use a secret manager instead.
+
+> [!success] Secure secret management
+>
+> Add `.env` to `.gitignore` immediately when creating the file. Use `python-dotenv` only for local development. In CI/CD and production, inject secrets through the platform's secret management (GCP Secret Manager, AWS Secrets Manager, GitHub Actions secrets, K8s Secrets).
 
 ```python
 # .env files — local secrets with python-dotenv

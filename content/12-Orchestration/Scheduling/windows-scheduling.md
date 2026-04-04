@@ -1,7 +1,4 @@
 ---
-type: reference
-category: orchestration
-technology: [powershell, windows]
 tags: [orchestration, scheduling, task-scheduler]
 aliases:
   - Task Scheduler
@@ -10,28 +7,6 @@ aliases:
   - Windows scheduling
   - ScheduledJob
   - Register-ScheduledTask
-keywords:
-  - task scheduler
-  - schtasks
-  - schtasks.exe
-  - scheduled task
-  - PowerShell scheduling
-  - Register-ScheduledTask
-  - New-ScheduledTaskTrigger
-  - New-ScheduledTaskAction
-  - New-ScheduledTaskSettingsSet
-  - PSScheduledJob
-  - Register-ScheduledJob
-  - FileSystemWatcher
-  - Windows cron
-  - cron alternative
-  - ONLOGON trigger
-  - ONEVENT trigger
-  - SQL Server Agent
-  - SSIS scheduling
-  - sqlcmd scheduling
-  - Python pipeline scheduling
-  - Windows automation
 description: "Exhaustive reference for scheduling tasks on Windows using schtasks.exe, the PowerShell ScheduledTasks module, and PSScheduledJob. Covers all trigger types, data engineering patterns (SSIS, sqlcmd, Python pipelines), event-based triggers, error notification, and a comparison with Linux cron."
 created: 2026-03-22
 updated: 2026-03-22
@@ -135,6 +110,9 @@ schtasks /create ^
 
 > [!warning] Quoting Paths with Spaces
 > When the script path contains spaces, wrap the entire path in escaped quotes inside the `/tr` value: `/tr "\"C:\My Scripts\run.ps1\""`. Without this, Task Scheduler truncates the path at the first space.
+
+> [!success] Fix: store scripts in paths without spaces, or always use escaped quotes
+> Place pipeline scripts under `C:\Scripts\` or `C:\Pipelines\` (no spaces) to avoid quoting issues entirely. When spaces are unavoidable, construct the `/tr` value as `"/tr \"\"C:\My Scripts\run.ps1\"\""`. With the PowerShell module, set `-Execute` and `-Argument` as separate parameters — spaces in the `-Execute` path are handled correctly by `New-ScheduledTaskAction`.
 
 #### WEEKLY — run on specific days
 ```cmd
@@ -551,6 +529,9 @@ Write-Host "Task '$taskName' registered in '$taskFolder'."
 > [!warning] Password Storage
 > When using `LogonType Password`, the service account password is stored encrypted in the task definition by the Task Scheduler service (using DPAPI). The password is not retrievable in plaintext but must be re-entered if changed. Consider using a Group Managed Service Account (gMSA) with `LogonType Password` and no explicit password — Windows manages gMSA passwords automatically.
 
+> [!success] Fix: use a gMSA or SYSTEM account to eliminate password management entirely
+> Create a Group Managed Service Account with `New-ADServiceAccount` and grant it logon-as-a-batch-job rights. Register the task with `-UserId "DOMAIN\svc-etl$"` (note the trailing `$`) and `-LogonType Password` but no `-Password` parameter — the domain controller rotates the password automatically. Alternatively, run under `SYSTEM` if the task does not need network credentials.
+
 ---
 
 ### Complete Example — Schedule a SQL Server Backup with sqlcmd
@@ -815,6 +796,9 @@ Register-ScheduledTask -TaskName "FileWatcher-DataDrop" -TaskPath "\DataEngineer
 > [!warning] FileSystemWatcher and network shares
 >
 > `FileSystemWatcher` does not reliably detect changes on UNC paths or mapped drives. For network share monitoring, poll the directory with `Get-ChildItem` on a scheduled interval instead.
+
+> [!success] Fix: poll network shares with Get-ChildItem on a short interval
+> Schedule a task to run every 1–5 minutes that calls `Get-ChildItem -Path "\\server\share\incoming" -Filter "*.csv"` and compares results against a state file of already-processed files. This is more reliable than `FileSystemWatcher` on network paths and survives transient network interruptions.
 
 ### Trigger on Service Failure
 

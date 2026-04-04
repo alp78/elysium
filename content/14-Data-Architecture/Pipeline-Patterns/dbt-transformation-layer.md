@@ -1,10 +1,6 @@
 ---
-type: concept
-category: data-transformation
-technology: [dbt, sql-server, bigquery, airflow, python]
 tags: [data-architecture, architecture, pipeline, python, sql, airflow, dbt, bigquery]
 aliases: [dbt Core, dbt Cloud, Data Build Tool, dbt models, dbt snapshots, dbt macros, dbt testing, transformation layer]
-keywords: [dbt, data build tool, dbt core, dbt cloud, staging models, intermediate models, mart models, dbt test, schema tests, custom tests, snapshots, SCD type 2, slowly changing dimensions, macros, jinja, incremental models, dbt run, dbt compile, sources, ref, dbt-utils, CI/CD, slim builds, state comparison, airflow dbt integration, medallion architecture, bronze silver gold, ELT]
 description: "dbt (Data Build Tool) is the standard SQL transformation layer for modern data platforms — it implements software engineering practices (version control, testing, documentation, CI/CD) for SQL transforms already inside your warehouse. Covers project structure, staging/intermediate/mart model layers, schema and custom tests, SCD Type 2 snapshots, Jinja macros, Airflow integration, and slim CI builds."
 created: 2026-03-22
 updated: 2026-03-22
@@ -437,6 +433,10 @@ with DAG('pipeline_daily', schedule_interval='0 9,17,22 * * *', start_date=datet
 
 > [!warning] BashOperator vs Cosmos
 > Using `BashOperator` wraps the entire `dbt run` as a single Airflow task — one failure stops everything. The `astronomer-cosmos` library explodes each dbt model into its own Airflow task, giving you granular retries, task-level SLAs, and visibility in the Airflow UI. For production pipelines with 20+ models, prefer Cosmos.
+
+> [!success] Use Cosmos for Production dbt + Airflow Pipelines
+>
+> Install `astronomer-cosmos` and replace the single `BashOperator` dbt run with a `DbtTaskGroup`. Each dbt model becomes its own Airflow task with individual retry configuration, task-level SLA alerts, and a visual dependency graph in the Airflow UI. When a single model fails, only that model and its downstream dependents are retried — the upstream models that already ran successfully are not re-executed.
 
 ---
 

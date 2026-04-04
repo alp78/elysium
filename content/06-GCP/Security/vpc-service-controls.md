@@ -1,10 +1,6 @@
 ---
-type: concept
-category: gcp
-technology: [gcp, security, vpc]
 tags: [infrastructure, gcp, security, iam]
 aliases: [VPC Service Controls, VPC-SC, service perimeter, access context manager, data exfiltration prevention, GCP data perimeter]
-keywords: [VPC service controls, VPC-SC, access context manager, service perimeter, access policy, ingress policy, egress policy, access level, data exfiltration, perimeter, restricted services, violation reason, RESOURCES_NOT_IN_SAME_SERVICE_PERIMETER, NO_MATCHING_ACCESS_LEVEL, financial data security, Terraform VPC-SC, gcloud access-context-manager]
 description: "How VPC Service Controls create a data perimeter that prevents exfiltration of BigQuery and GCS data — even for users with IAM admin permissions — and how to configure, audit, and debug VPC-SC violations."
 created: 2026-03-22
 updated: 2026-03-22
@@ -177,15 +173,27 @@ gcloud logging read 'protoPayload.status.code=7 AND
 > VPC-SC Is Non-Negotiable for Sensitive Data.
 > On a data platform, the processed and enriched data is among the most commercially sensitive assets in the system. A single leak of data before public release could have significant consequences. VPC-SC ensures that even an insider with admin-level IAM permissions cannot exfiltrate this data to an external project or bucket. Implement it from day one — retrofitting a perimeter onto existing services is significantly harder than designing with it.
 
+> [!success] Enforce VPC-SC from Day One
+>
+> Design perimeter boundaries before deploying any services. Define your restricted services list (`bigquery.googleapis.com`, `storage.googleapis.com`), enumerate all cross-project integrations (Airflow, partner exports), and encode them as explicit ingress/egress rules in Terraform (`google_access_context_manager_service_perimeter`). Starting with VPC-SC in place is an order of magnitude easier than retrofitting it onto a running platform.
+
 > [!danger] VPC-SC Dry Run First
 >
 > VPC-SC Dry Run Mode Before Enforcement.
 > Deploying VPC-SC in enforce mode without testing will instantly break every cross-project API call, Cloud Build trigger, and external service integration. Always start in **dry run mode** (`--perimeter-type=PERIMETER_TYPE_REGULAR --spec-type=DRY_RUN`) and monitor Cloud Audit Logs for would-be violations for at least one full pipeline cycle before switching to enforce. A single missing ingress rule can take down your entire data platform.
 
+> [!success] Dry Run Workflow
+>
+> Deploy the perimeter in dry run mode first. Run `gcloud logging read` filtering for `VpcServiceControlAuditMetadata` violations over one full pipeline cycle. For each violation, add the missing ingress or egress rule to the Terraform config. Only switch to enforce mode (`spec-type=ENFORCE`) once the audit log shows zero would-be denials for services that should be permitted.
+
 > [!warning] VPC-SC Skips Insider Access
 >
 > VPC-SC Does Not Protect Against Insider Data Access.
 > VPC-SC prevents data from leaving the perimeter, but it does not restrict what users can see within the perimeter. An engineer with BigQuery read access can still query all tables and view all results inside the project. For column-level and row-level restrictions within the perimeter, use BigQuery column-level security and authorized views.
+
+> [!success] Layer In-Perimeter Access Controls
+>
+> Use BigQuery column-level security (`INFORMATION_SCHEMA.COLUMN_FIELD_PATHS` + `CREATE ROW ACCESS POLICY`) and authorized views to restrict what data each role can see inside the perimeter. VPC-SC handles the "where data flows" boundary; column- and row-level policies handle the "what data can be seen" boundary within it.
 
 ### VPC-SC Ingress and Egress Policies
 

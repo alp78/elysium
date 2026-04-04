@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python, gcp]
 tags: [python, gcp, pipeline, sql, bigquery]
 aliases: [Data Ingestion Python, SQL Server Bulk Insert, BigQuery Load]
-keywords: [ingestion, bulk insert, bcp, BigQuery load, Firestore batch, GCS, CSV, Parquet, pyodbc, google-cloud-bigquery, benchmark, throughput, latency]
 description: "Python data ingestion reference — bulk loading into SQL Server, BigQuery, and Firestore from local and GCS sources with performance benchmarks. See [23_cs_data_ingestion](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/23_cs_data_ingestion) for the C# equivalent."
 created: 2026-03-28
 updated: 2026-03-28
@@ -410,6 +406,13 @@ Packs all rows into a single TDS packet. ODBC Driver 18 with TLS encryption. 5-1
 >
 > Always chunk large datasets — sending all rows in one `executemany()` causes `Communication link failure`. Always set `fast_executemany=True` — without it, falls back to row-by-row.
 
+> [!success] Safe Pattern: Chunked executemany
+>
+> Split the DataFrame into chunks of 10 000 rows and call `cursor.executemany()` per
+> chunk with `fast_executemany=True` set on the pyodbc connection. Wrap each chunk
+> in a `try/except` to log the failing range without rolling back the entire load —
+> then re-run only the failed chunks.
+
 ```python
 def pyodbc_fast(tier):
     _sql_truncate('ohlcv_bench')
@@ -446,6 +449,13 @@ The `bcp` CLI is the fastest bulk loader for SQL Server. Native TDS bulk-insert 
 > [!warning] Don't hardcode passwords in CLI args
 >
 > Don't hardcode passwords in CLI args — use `-T` (trusted) or env vars. Don't skip `-b` (batch size) — one failed row rolls back the entire load.
+
+> [!success] Safe Pattern: Trusted Auth with Batch Recovery
+>
+> Use `-T` (Windows Integrated Authentication) or pass credentials via environment
+> variables read at runtime — never interpolated into the shell command string.
+> Always supply `-b 10000` so that a bad row aborts only that batch, not the whole
+> load; failed batches are logged and can be re-run in isolation.
 
 ```python
 BCP = shutil.which('bcp') or 'bcp'
@@ -750,6 +760,13 @@ Write OHLCV data into Firestore. Each row becomes a document in the `ohlcv_bench
 > [!warning] Don't exceed 500 docs per
 >
 > Don't exceed 500 docs per batch (rejected). Don't forget to commit the final partial batch.
+
+> [!success] Safe Pattern: Flush on Limit
+>
+> Track a counter alongside the batch; when it reaches 500, call `batch.commit()`
+> and immediately open a new `fs_client.batch()`. After the loop, check whether the
+> counter is non-zero and commit the final partial batch — this guarantees no rows
+> are silently dropped even when the total is not an exact multiple of 500.
 
 ```python
 def fs_batch_write(tier):

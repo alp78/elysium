@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - python
-  - pandas
-  - polars
 tags: [pipeline, python, pandas, polars]
 aliases:
   - Series, DataFrames, indexes, data types
-keywords: [Series, DataFrame, Index, dtypes, int64, float64, object, category, read_csv, read_parquet, to_csv, to_parquet]
 description: "Pandas/Polars DataFrame reference 01/10 — Foundations & I/O (Series, DataFrames, types, CSV/Parquet). Side-by-side executable examples with cell outputs."
 created: 2026-03-24
 updated: 2026-03-24
@@ -2449,6 +2442,10 @@ display(size_df)
 > with any null values are silently upcast to `float64` — a common source of broken join
 > keys (`1.0 != 1` in string comparisons).
 
+> [!success] Always declare dtypes for critical columns
+>
+> Pass an explicit `dtype=` dict for columns used as join keys or numeric computations: `pd.read_csv(path, dtype={"id": "int64", "isin": "str"})`. For fully safe nullable types across all columns, use `dtype_backend="pyarrow"` — integer columns with nulls stay `int64[pyarrow]` instead of being silently upcast to `float64`.
+
 > [!warning] Encoding defaults differ between Pandas
 >
 > Encoding defaults differ between Pandas and Polars
@@ -2456,6 +2453,10 @@ display(size_df)
 > platforms. Polars only supports UTF-8 — non-UTF-8 files raise an error immediately.
 > For files from legacy systems (SQL Server BCP exports, Excel CSV), always specify
 > `encoding='utf-8-sig'` (to handle BOM) or `encoding='latin-1'`.
+
+> [!success] Specify encoding explicitly for legacy sources
+>
+> Always pass `encoding=` when reading files from SQL Server BCP exports, Excel CSV, or any legacy system: `pd.read_csv(path, encoding='utf-8-sig')` handles BOM-prefixed UTF-8; use `encoding='latin-1'` for Western European legacy files. For Polars, pre-convert non-UTF-8 files with `iconv` or Python's `codecs` module before ingestion.
 
 ```python
 # Basic read - small file

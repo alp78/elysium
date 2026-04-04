@@ -1,10 +1,6 @@
 ---
-type: concept
-category: data-architecture
-technology: [sql-server, bigquery, snowflake]
 tags: [data-architecture, architecture, data-warehouse, sql, bigquery]
 aliases: [data warehouse, DWH, dimensional modeling, star schema, snowflake schema, Kimball, Inmon, fact table, dimension table, OLAP, OLTP, data mart, conformed dimension, degenerate dimension, junk dimension, SCD, slowly changing dimensions, SCD Type 2, SCD Type 1, accumulating snapshot, periodic snapshot, transactional fact, enterprise data warehouse, EDW]
-keywords: [data warehouse, DWH, OLAP, OLTP, dimensional modeling, Kimball, Inmon, star schema, snowflake schema, fact table, dimension table, conformed dimensions, degenerate dimensions, junk dimensions, slowly changing dimensions, SCD, SCD Type 1, SCD Type 2, SCD Type 3, SCD Type 4, SCD Type 6, mini-dimension, data vault, hub, link, satellite, transactional fact, periodic snapshot, accumulating snapshot, BigQuery, Snowflake, Redshift, Azure Synapse, materialized views, aggregation tables, ELT, ETL, data mart, enterprise data warehouse, 3NF, normalization, surrogate key, business key, grain, conformed calendar, cost optimization, partitioning]
 description: "Comprehensive reference on data warehouse architecture covering the Kimball dimensional modeling methodology (star schema, fact and dimension table types, all SCD variants), the Inmon 3NF top-down approach, Data Vault 2.0, cloud DWH comparisons (BigQuery, Snowflake, Redshift, Synapse), and ELT/ETL positioning."
 created: 2026-03-22
 updated: 2026-03-22
@@ -62,6 +58,9 @@ The grain determines what goes in the fact table (the numeric measures at that g
 
 > [!warning] Grain Violation Destroys Accuracy
 > Mixing rows of different grains in a single fact table is one of the most destructive modeling errors. If your grain is "one row per order line" but you add a row representing the order header total, any SUM of amounts double-counts. Always state the grain in the table description comment and enforce it at load time.
+
+> [!success] Safe Pattern: Enforce a Single Grain
+> Document the grain in the table's description or a comment (e.g., `-- grain: one row per order line`). At load time, assert that no row violates the grain using a uniqueness check on the natural key(s) that define it. If header-level totals are needed, store them in a separate summary fact table or an aggregation table — never mix them into the line-level fact.
 
 ### Star Schema
 
@@ -150,6 +149,9 @@ CREATE TABLE fact_trades (
 
 > [!warning] Semi-Additive Measure Trap
 > Never SUM a balance or inventory count across time periods — you get the sum of every snapshot, not the current total. Use LAST_VALUE or MAX with appropriate window framing instead. See [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) for practical patterns.
+
+> [!success] Safe Pattern: Window Function for Period-End Balance
+> Use `LAST_VALUE(closing_balance) OVER (PARTITION BY account_sk ORDER BY snapshot_date_sk ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)` to retrieve the end-of-period balance, or `MAX(closing_balance)` when a single-period snapshot is required. Document each semi-additive measure with an explicit note on valid aggregation axes.
 
 ### Periodic Snapshot Fact Table
 

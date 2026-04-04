@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python]
 tags: [python]
 aliases: [lists, dictionaries, sets, tuples, arrays, List, Dictionary, HashSet, LINQ]
-keywords: [list, dict, set, tuple, frozenset, deque, Counter, defaultdict, namedtuple, comprehension]
 description: "Python collections reference with executable examples and cell outputs — covers lists, dictionaries, sets, tuples, and specialized collections from the collections module. See [05_cs_collections](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/05_cs_collections) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -38,6 +34,12 @@ status: complete
 > - **`list` for membership tests** — O(n); use `set` for large data
 > - **`insert(0, x)` frequently** — O(n) shift; use `deque.appendleft()`
 > - **Modifying during iteration** — use a copy or comprehension instead
+
+> [!success] Best practices
+>
+> - Use `set` for membership tests when the list may be large
+> - Use `deque.appendleft()` for O(1) prepend operations
+> - Use a list copy (`lst[:]`) or comprehension when iterating with modifications
 
 ```python
 from collections import Counter
@@ -199,6 +201,12 @@ Hash-based mapping with O(1) average lookup, insert, and delete. Insertion-order
 > - **Bracket access without checking** — `KeyError`; use `.get()`
 > - **`dict` for ordered data** when a list of tuples suffices
 
+> [!success] Best practices
+>
+> - Use tuples as dict keys when a composite key is needed
+> - Use `.get(key, default)` for safe access to optional fields
+> - Use a list of tuples `[(k, v)]` when insertion order and simple iteration suffice
+
 ```python
 empty = {}
 person = {"name": "Alice", "age": 30, "city": "NYC"}
@@ -346,6 +354,12 @@ c.total()   # Total
 > - **`list` + `in`** for uniqueness — O(n); use `set`
 > - **Mutable elements** (lists, dicts) — unhashable, raises `TypeError`
 > - **Relying on set order** — unordered (no guaranteed iteration order)
+
+> [!success] Best practices
+>
+> - Use `set` (or `set(list)`) for deduplication and O(1) membership tests
+> - Use `frozenset` or convert to tuples when elements must be hashable
+> - Iterate sets only when order is irrelevant; sort explicitly when order matters
 
 ```python
 empty = set()                           # NOT {} — that's an empty dict!
@@ -641,6 +655,10 @@ Each data structure enforces a specific access pattern:
 >
 > `list.pop(0)` is O(n) because it shifts all remaining elements. Use `deque.popleft()` which is O(1). Also avoid using a single list as both stack and queue — the semantics become confusing.
 
+> [!success] Use deque for queues
+>
+> `collections.deque` provides O(1) append and pop from both ends. Use `append`/`popleft` for FIFO queues and `append`/`pop` for LIFO stacks. Add `maxlen=` for a fixed-size circular buffer.
+
 #### collections.deque — Stack (LIFO) with append and pop
 
 A double-ended queue with O(1) append and pop from both ends. Unlike a list (O(n) for `insert(0, x)`), deque is efficient for FIFO queues and sliding windows. Use `maxlen` for a fixed-size buffer that automatically drops oldest items.
@@ -648,6 +666,10 @@ A double-ended queue with O(1) append and pop from both ends. Unlike a list (O(n
 > [!warning] List as queue is O(n)
 >
 > `list.pop(0)` shifts every element left. For queues, use `collections.deque` which is O(1) for both ends.
+
+> [!success] Prefer deque.popleft() for queues
+>
+> `deque.popleft()` is O(1) and semantically correct. Initialize with `deque()` and use `append`/`popleft` to express FIFO intent clearly.
 
 ```python
 # Stack (LIFO) — list with append/pop from the end

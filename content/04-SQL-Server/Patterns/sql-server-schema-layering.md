@@ -1,8 +1,5 @@
 ---
 title: "SQL Server Schema Layering"
-type: reference
-category: data-engineering
-technology: [sql-server]
 tags:
   - sql-server
   - tsql
@@ -12,7 +9,6 @@ tags:
   - medallion
   - security
 aliases: [Schema Layering, Schema per Layer, Database Organization, Schema Design Patterns]
-keywords: [schema layering, schema per layer, schema per domain, schema per source, naming conventions, cross-schema security, database roles, GRANT SELECT, CREATE SCHEMA, bronze silver gold, data mesh, staging schema, reserved words, metadata columns]
 description: "How to organize SQL Server databases and schemas for multi-layer data architectures — schema-per-layer, schema-per-domain, separate databases, naming conventions, and security."
 created: 2026-03-29
 updated: 2026-03-29
@@ -106,6 +102,10 @@ ALTER DATABASE gold_db SET RECOVERY SIMPLE;
 >
 > By default, SQL Server blocks cross-database queries unless ownership chaining is enabled or the calling login has access to both databases. Configure `TRUSTWORTHY` or use certificates — never enable `DB_CHAINING` server-wide.
 
+> [!success] Grant explicit cross-database permissions or use certificates instead of `DB_CHAINING`
+>
+> Grant the service login `CONNECT` and the required data permissions on each database individually, or use a database certificate to sign the cross-database module. This avoids the server-wide security hole of enabling `DB_CHAINING`.
+
 ---
 
 ## Schema-per-Domain (Data Mesh Style)
@@ -176,6 +176,10 @@ Consistent naming across all layers prevents confusion and makes automation easi
 > [!warning] SQL Server Reserved Words
 >
 > OHLCV data uses `open` and `close` as column names — both are reserved words. Always bracket them in DDL and queries, or use prefixes like `open_price`, `close_price`.
+
+> [!success] Always bracket reserved words with `[` `]` in DDL and queries
+>
+> Use `[open]` and `[close]` everywhere they appear — in `CREATE TABLE`, `SELECT`, `INSERT`, and `MERGE` statements. Alternatively, rename them to `open_price` and `close_price` at the schema layer to avoid bracketing entirely.
 
 ```sql
 -- Bracketing reserved words in CREATE TABLE

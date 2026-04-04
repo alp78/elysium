@@ -1,8 +1,5 @@
 ---
 title: "SQL Server Incremental Transforms"
-type: reference
-category: data-engineering
-technology: [sql-server]
 tags:
   - sql-server
   - tsql
@@ -13,7 +10,6 @@ tags:
   - partitioning
   - performance
 aliases: [Incremental Transforms, Watermark Loading, Partition SWITCH, Gap Fill, Pre-computed Aggregations, Indexed Views]
-keywords: [incremental transforms, watermark, high-water mark, partition switch, window functions, ROW_NUMBER, RANK, DENSE_RANK, moving average, gap detection, forward fill, pre-computed aggregation, indexed view, materialized view, SCHEMABINDING, ROWS BETWEEN, RANGE BETWEEN, incremental processing]
 description: "Building SQL Server transforms that process data incrementally — watermark-based loading, partition SWITCH, window functions at scale, gap detection, forward-fill, pre-computed aggregation tables, and indexed views."
 created: 2026-03-29
 updated: 2026-03-29
@@ -81,6 +77,10 @@ WHERE _index = @key
 >
 > Data that arrives after the watermark has advanced will be silently missed. This is especially common with timezone-shifted sources, retroactive corrections, and batch files that arrive out of order.
 
+> [!success] Overlap Window + Deduplication
+>
+> Subtract an overlap window from the watermark (e.g., 1 day for daily batches, 7 days for sources with weekly corrections) and pair with a `NOT EXISTS` or `UNIQUE` constraint check so re-processed rows are skipped rather than duplicated. Size the window to match the maximum expected lateness of your source.
+
 ```sql
 -- Mitigation: subtract an overlap window from the watermark
 DECLARE @safe_watermark DATE = DATEADD(DAY, -1, @watermark);
@@ -132,6 +132,16 @@ ALTER TABLE staging.signals_daily
 > [!warning] SWITCH Exclusive Lock
 >
 > `SWITCH` requires a brief schema modification lock (Sch-M) on both tables. If concurrent queries hold shared locks, `SWITCH` waits. Schedule partition switches during low-traffic windows or use `LOCK_TIMEOUT` to fail fast instead of blocking.
+
+> [!success] Minimise SWITCH Lock Contention
+>
+> Set a short `LOCK_TIMEOUT` before the SWITCH so the operation fails fast rather than blocking indefinitely — then retry at a low-traffic time:
+> ```sql
+> SET LOCK_TIMEOUT 5000;   -- fail after 5 seconds if locks are held
+> ALTER TABLE staging.signals_daily SWITCH TO silver.signals_daily PARTITION 3;
+> SET LOCK_TIMEOUT -1;     -- restore default (wait indefinitely)
+> ```
+> Alternatively, schedule partition switches in an off-peak Airflow window task (e.g., 03:00 UTC) to avoid contention entirely.
 
 ---
 
@@ -187,6 +197,10 @@ WHERE score_date = @date;
 > [!warning] ROWS vs RANGE
 >
 > `ROWS BETWEEN` counts physical rows — deterministic and predictable. `RANGE BETWEEN` groups rows with the same `ORDER BY` value (ties) into a single logical position — different results with duplicate values. Always use `ROWS` unless you specifically need tie-grouping behavior.
+
+> [!success] Always Prefer ROWS BETWEEN
+>
+> Default to `ROWS BETWEEN N PRECEDING AND CURRENT ROW` for all moving averages and running totals. Reserve `RANGE BETWEEN` only for the specific case where you need ties treated as a single logical period (e.g., summing all rows on the same date). When in doubt, validate with a test set that contains duplicate `ORDER BY` values.
 
 ### Window Function Performance
 
@@ -273,6 +287,12 @@ FROM silver.index_europe_ohlcv;
 - **Stale fills beyond today:** if the fill logic runs ahead of the current date, it creates future-dated synthetic rows. These block real data from being inserted (UNIQUE constraint). Clean up with: `DELETE WHERE date > GETDATE() AND is_filled = 1`
 - **Always mark fills:** the `is_filled BIT` column is essential. Without it, filled rows are indistinguishable from real data — corrupting aggregations that should only count real observations
 
+> [!success] Safe Gap-Fill Guard Rails
+>
+> - Bound the fill loop: `AND c.date <= CAST(GETDATE() AS DATE)` in the trading calendar query prevents future-dated synthetic rows from being generated.
+> - On initial load, skip symbols with no prior real data rather than filling from nothing — insert NULL rows only when there is a valid prior close to propagate.
+> - Add `is_filled = 1` to every forward-fill `INSERT` and exclude `is_filled = 1` rows from any aggregation that counts real observations (e.g., `WHERE is_filled = 0` in the freshness check).
+
 ---
 
 ## Pre-Computed Aggregation Tables
@@ -345,6 +365,10 @@ CREATE UNIQUE CLUSTERED INDEX IX_vw_daily_avg
 > [!warning] DML Overhead
 >
 > Every INSERT, UPDATE, or DELETE on the source table must update the indexed view. For high-write staging tables, this overhead can be severe. Use indexed views only for small, frequently-queried aggregations on stable data.
+
+> [!success] Avoid Indexed Views on High-Write Tables
+>
+> For bulk-load scenarios (bronze/staging tables), use an aggregation table with scheduled batch refresh instead. Drop or avoid indexed views on any table that receives `fast_executemany` or `BULK INSERT` loads. Reserve indexed views for small, stable reference aggregations (e.g., daily stock counts per sector) where zero-staleness justifies the maintenance cost.
 
 | Feature | Indexed View | Aggregation Table |
 |---------|-------------|-------------------|

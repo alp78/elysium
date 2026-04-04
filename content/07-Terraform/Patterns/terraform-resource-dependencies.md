@@ -1,10 +1,6 @@
 ---
-type: concept
-category: infrastructure
-technology: [terraform]
 tags: [infrastructure, terraform, iac]
 aliases: [terraform dependencies, terraform dependency graph, depends_on, terraform parallelism, resource references]
-keywords: [dependency graph, implicit dependency, explicit dependency, depends_on, resource reference, parallel creation, terraform plan order, ".id", ".name", ".email", "network_interface[0]"]
 description: "How Terraform builds and resolves the resource dependency graph — implicit dependencies from resource references, explicit depends_on, and how parallelism works during apply."
 created: 2026-03-22
 updated: 2026-03-22
@@ -144,6 +140,10 @@ resource "google_project_iam_member" "pipeline_bq_access" {
 >
 > Overusing `depends_on` creates unnecessary serialization, slowing down your apply. Use resource references wherever possible — they both express the dependency AND give you the attribute value.
 
+> [!success] Safe Pattern — Prefer Implicit Dependencies via References
+>
+> Let resource attribute references drive the dependency graph. Instead of `depends_on = [google_service_account.pipeline]`, use `member = "serviceAccount:${google_service_account.pipeline.email}"` — this both expresses the dependency and provides the value. Reserve `depends_on` for cases where a dependency exists through external state or data sources that Terraform cannot track.
+
 ---
 
 ### Viewing the Dependency Graph
@@ -187,6 +187,10 @@ Some changes can be applied in-place (updating an attribute without recreating t
 > [!warning] Forced Recreation Propagates
 >
 > If resource A is destroyed and recreated, any resource B that depends on A's ID will also be recreated (because A gets a new ID). This cascade can be surprising — destroying a VPC triggers recreation of all subnets, firewalls, VMs, and Cloud Run services that reference it.
+
+> [!success] Safe Pattern — Use lifecycle ignore_changes and deletion_protection
+>
+> For stable foundational resources (VPCs, subnets, service accounts), add `lifecycle { prevent_destroy = true }` to block accidental Terraform-driven destruction. For mutable attributes that should not trigger recreation (e.g., `labels`, `description`), use `lifecycle { ignore_changes = [labels] }`. Run `terraform plan` and inspect `-/+` lines before every apply to detect unexpected recreation cascades.
 
 ## Related
 

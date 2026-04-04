@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: data-engineering
-technology: [sql-server, python]
 tags: [python, sql, sql-server, tsql, medallion-project]
 aliases: [Gold Layer, Gold Transforms, Silver to Gold, Gold DDL, Scoring Tables, Pre-computed Analytics, Factor Scores]
-keywords: [gold layer, medallion architecture, z-score, zscore by group, factor scores, relative value, momentum, sentiment, quality score, governance score, health flags, index performance, cap-weighted, ROW_NUMBER, window functions, LAG, AVG OVER ROWS, CTE, SMA 30, SMA 90, moving average, composite score, composite rank, scores_daily, scores_quarterly, index_performance, dashboard ready, pre-computed, gold schema]
 description: "Complete SQL and Python patterns for the example gold layer — covers all gold table DDL, z-score computation, financial health flags, governance scoring, cap-weighted index performance, moving average CTEs, and dashboard consumption queries."
 created: 2026-03-22
 updated: 2026-03-22

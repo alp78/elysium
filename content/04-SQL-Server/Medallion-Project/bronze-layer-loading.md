@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: data-engineering
-technology: [sql-server, python]
 tags: [python, sql, sql-server, tsql, medallion-project]
 aliases: [Bronze Layer, Bronze DDL, Bronze Loading, JSON to Bronze, Raw Layer Loading, Bronze Tables, Bronze Schema]
-keywords: [bronze layer, raw layer, medallion architecture, DDL, pyodbc, parameterized queries, JSON loading, truncate reload, upsert, merge, OHLCV, trading calendar, index_dim, signals_daily, signals_quarterly, pulse, fast_executemany, executemany, batch insert, identity column, SYSUTCDATETIME, IS NOT EXISTS CREATE TABLE, idempotent DDL, bronze schema]
 description: "Complete DDL and Python loading patterns for the example medallion bronze layer — covers all table definitions, idempotent schema creation, pyodbc connection setup, truncate-and-reload vs merge loading strategies, and JSON-to-bronze data flow."
 created: 2026-03-22
 updated: 2026-03-22

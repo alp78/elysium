@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, sql, dbt]
-type: reference
-technology: [dbt, sql-server]
 status: stable
 updated: 2026-03-23
 description: "SQL Server adapter installation, auth, T-SQL differences, incremental strategy, index post-hooks, and known limitations."
@@ -40,6 +38,9 @@ apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18
 
 > [!warning] Driver version matters
 > `dbt-sqlserver` ≥ 1.7 defaults to ODBC Driver 18. Driver 17 is still accepted but requires setting `driver: ODBC Driver 17 for SQL Server` explicitly in `profiles.yml`. Do not mix driver versions across environments.
+
+> [!success] Pin driver version explicitly
+> Always set `driver: "ODBC Driver 18 for SQL Server"` explicitly in every `profiles.yml` output block. Verify with `odbcinst -q -d` before deploying to a new environment. Use the same driver string in dev, staging, and prod to prevent environment-specific failures.
 
 ---
 
@@ -172,6 +173,9 @@ select * from source
 > - **Halloween protection overhead**: SQL Server applies extra spool operators inside `MERGE` plans, increasing TempDB usage.
 >
 > Use `delete+insert` unless you specifically need the upsert semantics of `merge`.
+
+> [!success] Use delete+insert with a deduplication CTE
+> Set `incremental_strategy = 'delete+insert'` and wrap the source query in a CTE that deduplicates on `unique_key` using `ROW_NUMBER()`. This avoids MERGE lock escalation and produces deterministic results even when the upstream feed delivers duplicate rows.
 
 ### insert_overwrite is not supported
 

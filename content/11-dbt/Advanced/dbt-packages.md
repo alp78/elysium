@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, dbt]
-type: reference
-technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "dbt-utils, dbt-expectations, elementary, codegen, audit-helper, and writing custom packages for financial data pipelines"
@@ -520,6 +518,9 @@ packages:
 > [!warning] Private repos in CI
 > Use a deploy key or machine account token. Set `GITHUB_TOKEN` as an environment variable and reference it in the git URL:
 > `https://$GITHUB_TOKEN@github.com/your-org/dbt-financial-utils.git`
+
+> [!success] Use a scoped deploy key per repo
+> Create a read-only GitHub deploy key for the private package repository and store it as a CI secret (e.g., `DBT_PACKAGE_DEPLOY_KEY`). Configure the SSH agent in the CI pipeline step before running `dbt deps`. This avoids storing a personal access token and limits blast radius if the secret is rotated or exposed.
 
 ---
 

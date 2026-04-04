@@ -1,8 +1,5 @@
 ---
 title: "SQL Server Agent Jobs"
-type: reference
-category: sql-server
-technology: [sql-server, gcp]
 tags:
   - sql-server
   - tsql
@@ -13,7 +10,6 @@ tags:
   - airflow
   - gcp
 aliases: [SQL Server Agent, Agent Jobs, Job Scheduling, Task Scheduling SQL Server]
-keywords: [sql server agent, agent jobs, sqlagent, sp_add_job, sp_add_jobstep, sp_add_schedule, msdb, sysjobhistory, job triggering, airflow vs agent, cron vs agent, cloud scheduler, cloud run, cloud functions, CDC log reader, index maintenance, backup job, linux agent]
 description: "SQL Server Agent job scheduling — enabling on Linux, creating jobs, built-in CDC/backup agents, and a complete comparison of all five job triggering methods in the GCP + SQL Server + Airflow stack."
 created: 2026-03-29
 updated: 2026-03-29
@@ -61,6 +57,10 @@ FROM msdb.dbo.syssubsystems;
 > [!warning] Agent on Linux limitations
 >
 > SQL Server Agent on Linux supports only T-SQL and CmdExec (bash) job steps. No SSIS packages, no PowerShell, no ActiveX scripts. If your job needs Python, .NET, or GCP SDK calls — it does not belong in Agent.
+
+> [!success] Use Airflow for Non-T-SQL Automation
+>
+> If a task requires Python, GCP SDK calls, or multi-system coordination, move it to Airflow. Airflow's `BashOperator` can call any shell script, `PythonOperator` runs Python directly, and `MsSqlOperator` executes T-SQL — covering everything Agent supports and more, with dependency tracking and alerting.
 
 ### Docker Environment Variable — Agent in containers
 
@@ -212,6 +212,10 @@ EXEC msdb.dbo.sp_help_jobactivity;
 >
 > These jobs are created automatically by SQL Server features. Disabling or deleting them breaks the feature they support.
 
+> [!success] Verify Built-In Jobs Are Running After Every Restart
+>
+> Add a post-restart check to your runbook: `SELECT name, enabled FROM msdb.dbo.sysjobs WHERE name LIKE 'cdc%' OR name LIKE '%backup%';` — all built-in CDC and backup jobs must show `enabled = 1`. If any are disabled, re-enable them with `EXEC msdb.dbo.sp_update_job @job_name = N'...', @enabled = 1;`.
+
 | Feature | Jobs Created | What Happens If Stopped |
 |---------|-------------|------------------------|
 | CDC (`sp_cdc_enable_db`) | CDC log reader, CDC cleanup | Changes accumulate in transaction log → log fills up |
@@ -267,6 +271,10 @@ This is the most important section of the page. Five different ways to trigger w
 >
 > cron has no UI, no alerting, no retry, no dependency management. A failed cron job disappears into syslog. Use cron only for tasks where failure is obvious (disk fills up) or non-critical (cleanup). Never use cron for pipeline-critical tasks.
 
+> [!success] Make cron Failures Visible
+>
+> For any cron job that must not silently fail, add a notification line: `your-script.sh || echo "FAILURE: script failed at $(date)" | mail -s "cron alert" ops@company.com`. For pipeline-critical tasks, move the job to Airflow instead — even a single-task DAG gives you retry, logging, and a visible failure state in the UI.
+
 **Airflow — anything that orchestrates multiple systems or needs dependencies:**
 
 This is the primary orchestrator in the stack. [Airflow](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) owns:
@@ -281,6 +289,10 @@ This is the primary orchestrator in the stack. [Airflow](https://alp78.github.io
 > [!danger] Do not split pipeline ownership
 >
 > If Airflow loads bronze and Agent runs silver transforms, you have TWO systems to debug when the pipeline fails. One person checks the Airflow UI and sees green. Another checks Agent history and sees red. Neither sees the full picture. Rule: if a task is PART of a pipeline, Airflow owns it — even if the task itself is a T-SQL script. Airflow can execute T-SQL via `MsSqlOperator` or by calling a Python script that uses pyodbc.
+
+> [!success] Consolidate Pipeline Steps in Airflow
+>
+> If you have Agent jobs that are part of the pipeline (silver transforms, statistics updates after load), migrate them to Airflow tasks in the same DAG. Use `MsSqlOperator` or a `PythonOperator` calling pyodbc. The Agent jobs can remain for non-pipeline maintenance (CDC, backup, index rebuild), but the pipeline chain must be a single unbroken Airflow DAG.
 
 **Cloud Scheduler + Cloud Run — serverless batch tasks outside the pipeline:**
 
@@ -330,6 +342,10 @@ def on_stock_update(cloud_event):
 >
 > Cloud Functions react to events. They don't manage dependencies, retries with backoff, or SLAs. If a Function fails, it retries (or doesn't, depending on trigger type) — but nobody gets paged. Use Functions as the glue between events, not as pipeline steps.
 
+> [!success] Wire Cloud Functions to Pub/Sub Alerting
+>
+> For any Cloud Function doing important work (writing to SQL Server, publishing to downstream topics), add a dead-letter topic and a Cloud Monitoring alert on the DLQ message count. This gives visibility when Functions fail silently. For multi-step logic, use Cloud Workflows or move the orchestration to Airflow.
+
 ### The Architecture Diagram
 
 > [!info] Job triggering architecture
@@ -376,6 +392,10 @@ def on_stock_update(cloud_event):
 > [!danger] Job triggering anti-patterns
 >
 > Each of these has been seen in production. Each one caused an incident.
+
+> [!success] Apply the One-Orchestrator Rule
+>
+> Audit your current job inventory: list every scheduled task (Agent, cron, Airflow, Cloud Scheduler) in a single spreadsheet with its owner, trigger, and dependencies. Any pipeline task not in Airflow is a candidate for migration. Any cron job touching the database is a candidate for Agent or Airflow. Resolve ambiguity before the next incident — not during it.
 
 - **Pipeline steps split between Agent and Airflow:** bronze loads in Airflow, silver transforms in Agent. When silver fails, the Airflow DAG shows green. Nobody notices for days. Rule: entire pipeline in ONE orchestrator
 - **cron for pipeline-critical tasks:** cron has no alerting, no retry, no UI. A cron job failing at 3am is invisible until the dashboard shows stale data the next morning

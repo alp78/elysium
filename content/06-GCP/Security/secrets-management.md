@@ -1,7 +1,5 @@
 ---
 tags: [security, infrastructure, terraform, airflow, gcp, github-actions, iam]
-type: reference
-technology: [gcp, terraform, airflow, github-actions]
 status: stable
 updated: 2026-03-23
 ---
@@ -155,6 +153,10 @@ export SQL_CONN_STRING="Server=localhost;Database=analytics_db;User=sa;Password=
 > [!warning] Prefer Workload Identity
 >
 > Service account keys are a liability. Use Workload Identity Federation (GitHub Actions), attached service accounts (Compute Engine, Cloud Run), or Application Default Credentials wherever possible. Keys should be the last resort.
+
+> [!success] Replace Key-Based Auth With Keyless Alternatives
+>
+> GitHub Actions: configure WIF with `google-github-actions/auth@v2` — no key file stored in GitHub Secrets. Cloud Run and VMs: attach a dedicated service account at deploy/create time — the metadata server handles tokens automatically. Local dev: run `gcloud auth application-default login` — a revocable refresh token, no JSON key downloaded.
 
 ### Database Passwords
 

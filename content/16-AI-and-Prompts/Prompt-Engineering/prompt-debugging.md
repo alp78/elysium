@@ -1,10 +1,6 @@
 ---
-type: troubleshooting
-category: prompt-engineering
-technology: [claude, gpt-4, gemini, grok, llm]
 tags: [ai, prompt-engineering]
 aliases: [prompt debugging, prompt optimization, weak output diagnosis, intent misalignment, prompt system design, multi-agent prompting, prompt library, prompt mastery, feedback loop prompting, iterative refinement, memory layering, prompt workflows, prompt anti-patterns]
-keywords: [prompt debugging, diagnosing weak outputs, intent misalignment, rebuilding prompts, contextual reinforcement, phrasing rephrasing, logic steps, cross-model testing, consistency, workflows chains loops, multi-agent systems, planner researcher executor reviewer, memory layering, iterative refinement, feedback integration, prompt library, meta-analysis, mastery checklist, anti-patterns, universal modifiers, 4-layer template, quick reference, CLAUDE.md, memory file]
 description: "Complete guide to debugging weak AI prompts, diagnosing output failures, rebuilding prompts with three techniques (rephrasing, logic steps, contextual reinforcement), and designing prompt systems including workflows, loops, multi-agent architectures, memory layering, and feedback loops. Includes the full mastery checklist and prompt library structure."
 created: 2026-03-22
 updated: 2026-03-22
@@ -48,6 +44,9 @@ When a model produces poor output, the problem is almost always in the prompt, n
 >
 > When output is poor, the instinct is to add more instructions. But a 2,000-token prompt with contradictory constraints produces worse output than a 500-token prompt with clear structure. Before adding tokens, audit the existing prompt for (1) conflicting instructions, (2) buried goals, and (3) missing format specifications. Removing noise is often more effective than adding signal.
 
+> [!success] Fix: Audit Before Adding — Run the Three-Question Diagnostic
+> Before adding any new instruction, ask: (1) Does the prompt have a conflicting instruction? (2) Is the goal in the first sentence? (3) Is the output format explicitly specified? If any answer is no, fix that structural issue first. Only add new instructions after confirming the existing ones are internally consistent and structurally sound.
+
 ### Intent vs. Output Misalignment
 
 The most subtle prompt failure is when the output is **technically correct but doesn't serve your goal.** This happens when you describe the task but not the purpose.
@@ -74,6 +73,9 @@ and day change %. Format as a markdown table sorted by market cap desc."
 
 > [!warning] The Most Expensive Mistake
 > Intent misalignment is expensive because the output looks plausible. You spend time reviewing "correct" content before realizing it can't be used. Always specify the downstream use — whether that's a dashboard, a JSON parser, a client presentation, or a code file.
+
+> [!success] Fix: End Every Prompt with "This output will be used for: ..."
+> Add a single sentence at the end of every prompt describing the downstream use. This one addition reshapes format, tone, and level of detail without any other changes. If you cannot complete the sentence, it means your own goal is unclear — clarify it before sending the prompt.
 
 ---
 
@@ -218,6 +220,9 @@ Prompt: "Rewrite the description incorporating this feedback:
 > [!warning] Self-Evaluation Bias
 > Never use the same role and framing for both generation and evaluation. The model will find its own output acceptable. Use a different persona with different evaluation criteria. This is the single most common error in loop-based prompt systems.
 
+> [!success] Fix: Role-Switch Explicitly Between Generation and Evaluation
+> Structure your loop prompt as two separate turns with different role assignments: Turn 1 uses the generator role (e.g., "You are a copywriter"), Turn 2 uses the evaluator role (e.g., "You are a brand manager scoring this copy against the criteria below"). Pass the generator output as data to the evaluator turn — never let the evaluator see the original generation prompt.
+
 #### Multi-Agent Systems
 
 In agent architectures, different prompts act as specialized workers:
@@ -278,6 +283,9 @@ In multi-turn conversations, memory management determines output quality over ti
 
 > [!warning] Context Window Anti-Pattern
 > Do not rely on the model to "remember" everything from earlier in a long conversation. Context windows are finite. Important information should be in files or re-stated at the beginning of the current prompt. This is especially true for architectural decisions that must be consistent across many tasks.
+
+> [!success] Fix: Maintain a Permanent Memory File and Re-Inject at Session Start
+> Create a `MEMORY.md` or `CLAUDE.md` file in the project root with confirmed architecture decisions and preferences. At the start of every new session or after any context-clearing operation, re-inject the contents of this file as the first user message. This guarantees the model has stable facts regardless of how many turns the conversation contains.
 
 > [!tip] The CLAUDE.md Pattern
 > The `CLAUDE.md` file in the vault root (and in code project roots) is the canonical implementation of the permanent memory layer. It contains conventions the model should know and follow throughout the project. Keep it updated as decisions are made.
@@ -480,6 +488,9 @@ Format:
 > [!warning] Contradictory instructions
 >
 > "Be concise but thorough" forces the model into an unresolvable tradeoff and produces mediocre output in both directions. Every pair of constraints must be compatible. When you notice a tension, resolve it in the prompt by specifying which dimension takes priority.
+
+> [!success] Fix: Resolve the Tradeoff Explicitly in the Prompt
+> When two constraints tension (concise vs. thorough, formal vs. approachable), add a priority tiebreaker: "If conciseness and completeness conflict, prefer conciseness — omit detail rather than adding filler." One explicit priority rule eliminates the ambiguity and produces consistent output across model runs.
 
 > [!tip] The Fastest Path to Better Output
 > Add one universal modifier before sending any prompt: "Here is an example of what I want: [paste a representative example]." This single addition outperforms any amount of verbal description. Output examples are the highest-signal instruction a model can receive.

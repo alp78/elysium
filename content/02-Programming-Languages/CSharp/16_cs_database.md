@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [database access, SQL, ORM, pyodbc, Entity Framework, Dapper, SQLAlchemy, connection strings]
-keywords: [Entity Framework, Dapper, SqlConnection, DbContext, LINQ to SQL, migrations, connection string, ORM]
 description: "C# database reference with executable examples and cell outputs — covers Entity Framework Core, Dapper, raw ADO.NET, migrations, and connection string patterns. See [16_py_database](https://alp78.github.io/elysium/02-Programming-Languages/Python/16_py_database) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -285,6 +281,10 @@ WAL mode enables concurrent readers. Cache and mmap control memory usage.
 > - `busy_timeout` — retries instead of failing on lock
 >
 > > [!danger] Never use `synchronous=OFF` in production — data loss on crash.
+
+> [!success] Safe SQLite PRAGMA defaults
+>
+> Use `synchronous=NORMAL` (or leave at the default `FULL`) in production. Enable WAL mode (`journal_mode=WAL`) for concurrent read access. Set `busy_timeout=5000` so connections retry on lock contention rather than failing immediately.
 
 ```csharp
 var pragmaConn = new SqliteConnection("DataSource=:memory:");
@@ -1665,6 +1665,9 @@ Entity classes = tables, properties = columns. `DbContext` maps entities via `Db
 > - Loading entire tables — use `IQueryable`, not `ToList()`
 > - For complex analytics or bulk operations — use Dapper or SqlBulkCopy
 
+> [!success] EF Core performance checklist
+>
+> Add `.AsNoTracking()` on every read-only query. Use `.Include()` explicitly instead of lazy loading to control join depth. Filter with `.Where()` before `.ToList()` so EF pushes the predicate to SQL. Switch to Dapper for bulk inserts, aggregations, or CTEs where LINQ becomes unwieldy.
 
 // Entity classes — each class = one database table
 // Properties = columns. Navigation properties = foreign key relationships.
@@ -1935,6 +1938,10 @@ dt
 >
 > Never use string interpolation `$"...{var}..."` with `FromSqlRaw` — injection risk. Use `FromSqlInterpolated` instead (auto-parameterises `{var}` into `@p0`).
 
+> [!success] Safe raw SQL in EF Core
+>
+> Use `FromSqlInterpolated($"SELECT * FROM Stocks WHERE Sector = {sector}")` — EF Core converts the interpolated expression into a parameterised query automatically. For Dapper, pass an anonymous object: `conn.Query<T>(sql, new { sector })`. Neither approach ever concatenates user input into SQL text.
+
 ```csharp
 // Demo with LINQ instead (works with InMemory provider)
 var techStocks = db.Stocks
@@ -1987,6 +1994,10 @@ public partial class AddVolumeColumn : Migration
 > - Generate SQL scripts for production (`dotnet ef migrations script`)
 > - Never edit a migration after it has been applied
 > - Use `HasData()` for seed data that should be in every environment
+
+> [!success] Safe migration workflow
+>
+> Run `dotnet ef migrations add <Name>` on a feature branch, review the generated `Up()` and `Down()` methods, then run `dotnet ef migrations script --idempotent` to produce a SQL file for DBA review before applying to production. Keep migrations small and reversible so any deployment can be rolled back with `dotnet ef database update <PreviousMigration>`.
 
 #### EF Core — when to use EF Core vs Dapper
 

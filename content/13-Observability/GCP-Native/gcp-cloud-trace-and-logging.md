@@ -1,11 +1,4 @@
 ---
-type: reference
-category: observability
-technology:
-  - gcp
-  - cloud-logging
-  - cloud-trace
-  - python
 tags: [monitoring, observability, python, gcp]
 aliases:
   - Cloud Logging
@@ -19,44 +12,6 @@ aliases:
   - log-based metrics
   - Log Analytics
   - BigQuery log sink
-keywords:
-  - cloud logging
-  - cloud trace
-  - distributed tracing
-  - structured logs
-  - log explorer
-  - log router
-  - log sink
-  - log bucket
-  - log analytics
-  - bigquery log sink
-  - audit logs
-  - admin activity logs
-  - data access logs
-  - log-based metrics
-  - opentelemetry
-  - trace context
-  - span
-  - parent span
-  - child span
-  - trace propagation
-  - w3c trace context
-  - traceparent header
-  - cloud run logging
-  - airflow logging
-  - gcloud logging read
-  - gcloud logging tail
-  - gcloud logging sinks
-  - log exclusion filter
-  - log retention
-  - log ingestion cost
-  - severity levels
-  - jsonPayload
-  - httpRequest
-  - resource labels
-  - correlation id
-  - pipeline observability
-  - three pillars observability
 description: >
   Comprehensive reference for Cloud Logging and Cloud Trace in the context of
   data engineering pipelines on GCP. Covers structured log writing, Log Explorer
@@ -156,6 +111,9 @@ gcloud logging buckets create pipeline-logs \
 
 > [!warning] Retention Is Not Backup
 > Increasing retention in a log bucket does NOT protect you from accidental sink misconfiguration. For compliance archival, always set up a Cloud Storage sink (covered below) in addition to setting bucket retention.
+
+> [!success] Safe Archival Pattern
+> Combine bucket retention with a Cloud Storage sink: set the log bucket to your desired retention period AND create a `gcloud logging sinks create` sink to a GCS bucket for long-term archival. The sink provides an independent copy unaffected by bucket misconfiguration or deletion.
 
 ---
 
@@ -718,6 +676,9 @@ gcloud logging sinks update _Default \
 > [!warning] Exclusions Are Permanent
 > Excluded log entries are dropped immediately and permanently. You cannot recover them later. Only exclude logs you are certain you will never need. Test exclusion filters in Log Explorer first by verifying the matching entries are truly noise.
 
+> [!success] Safe Exclusion Workflow
+> Before adding an exclusion, run the candidate filter in Log Explorer and review at least 50 matching entries to confirm they are all noise. Then apply the exclusion with `--add-exclusion` and monitor ingestion volume for 24–48 hours to confirm the expected cost reduction without unexpected data loss.
+
 ---
 
 ### Log Analytics with BigQuery
@@ -903,6 +864,9 @@ gcloud projects set-iam-policy PROJECT /tmp/policy.json
 
 > [!warning] Data Access Log Volume
 > Enabling Data Access logs for BigQuery in a busy project can generate gigabytes of logs per day. Enable selectively. For compliance, consider enabling only `DATA_WRITE` logs or scoping to specific services. Route them to a low-cost Cloud Storage sink rather than keeping them in the default bucket.
+
+> [!success] Cost-Controlled Data Access Logging
+> Enable only `DATA_WRITE` audit logs for BigQuery and Cloud Storage. Add an exclusion on the `_Default` sink to drop `DATA_READ` audit logs from `_Default`, then route them via a separate sink to a Cloud Storage bucket (Nearline tier, ~$0.01/GiB/month) for compliance archival without paying default log ingestion rates.
 
 #### Querying Audit Logs
 

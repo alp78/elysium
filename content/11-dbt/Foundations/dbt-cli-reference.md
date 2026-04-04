@@ -1,7 +1,5 @@
 ---
 tags: [pipeline, dbt]
-type: cheat-sheet
-technology: [dbt]
 status: stable
 updated: 2026-03-23
 description: "CLI commands, node selection, flags, output interpretation"
@@ -445,6 +443,9 @@ Done. PASS=42 WARN=0 ERROR=0 SKIP=0 TOTAL=42
 
 > [!WARNING] SKIP propagation
 > A single `ERROR` in a staging model will `SKIP` all downstream intermediates and marts. Always check the first error in the log — it is usually the root cause.
+
+> [!success] Isolate the root cause before rerunning
+> Scroll to the first `ERROR` entry in the log — subsequent `SKIP` lines are consequences, not causes. Fix the root model, then use `dbt retry` to re-run only the failed and skipped nodes without rebuilding the whole graph. In CI, use `dbt run --fail-fast` to stop immediately and surface the root error clearly.
 
 ---
 

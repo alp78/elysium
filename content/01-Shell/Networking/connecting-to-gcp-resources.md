@@ -2,7 +2,7 @@
 type: concept
 category: foundations
 technology: [bash, powershell, gcp, bigquery, sql-server, airflow]
-tags: [shell, bash, linux, powershell, sql-server, airflow, bigquery, gcp]
+tags: [shell, gcp, networking]
 aliases: [GCP connectivity, gcloud compute ssh, bq query, Cloud Run, Airflow IAP, Datadog agent, connection matrix]
 keywords: [GCP connectivity, gcloud compute ssh, gcloud compute scp, bq query, bigquery client, Cloud Run, Airflow webserver, Datadog agent, IAP tunnel, pymssql, pyodbc, sqlcmd, SSMS, Invoke-Sqlcmd, GCS, BigQuery API, connection matrix, service account, application default credentials]
 description: "Complete guide to connecting to every GCP resource type: SSH to Compute Engine VMs, SQL Server via IAP tunnel, BigQuery direct API, Cloud Run HTTPS, Airflow webserver, and Datadog agent. Includes a connection quick reference matrix."
@@ -20,243 +20,390 @@ Every GCP resource has different connectivity patterns. This note provides the e
 >
 > — **Larry Ellison**, Oracle analyst conference (2008)
 
-## Compute Engine VMs (SSH)
+The connectivity model for GCP resources falls into three categories: resources you SSH into (Compute Engine VMs), resources that require an IAP tunnel before you can connect (SQL Server, Airflow, PostgreSQL on private VMs), and Google-managed services that expose HTTPS API endpoints directly (BigQuery, Cloud Run, Cloud Storage).
 
-The VM is your most direct resource — you SSH into it, run commands, and transfer files.
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
+flowchart LR
+    Dev["Developer\nWorkstation"]
 
-#### gcloud compute ssh — connect to GCE VM (Linux)
+    subgraph IAP["IAP-Protected (Private VMs)"]
+        SSH["GCE VM\nSSH port 22"]
+        SQL["SQL Server\nTDS port 1433"]
+        Airflow["Airflow\nHTTP port 8080"]
+        DD["Datadog Agent\nlocalhost only"]
+    end
 
-> [!info] SSH to GCE VM
->
-> Drops you into a bash prompt on the VM. First connection may take 10-30s
-> while gcloud propagates your SSH key to VM metadata.
+    subgraph API["Google-Managed APIs (HTTPS/443)"]
+        BQ["BigQuery\nbigquery.googleapis.com"]
+        CR["Cloud Run\n*.run.app"]
+        GCS["Cloud Storage\nstorage.googleapis.com"]
+    end
+
+    Dev -->|"gcloud compute ssh\n(IAP automatic)"| SSH
+    Dev -->|"gcloud start-iap-tunnel\nthen sqlcmd / SSMS"| SQL
+    Dev -->|"gcloud start-iap-tunnel\nthen browser"| Airflow
+    SSH -->|"SSH then\ndatadog-agent status"| DD
+    Dev -->|"bq / Python client\n(IAM only)"| BQ
+    Dev -->|"curl / Invoke-RestMethod\n(identity token)"| CR
+    Dev -->|"gsutil / Python client\n(IAM only)"| GCS
+```
+
+## PowerShell / Linux | Compute Engine | SSH access
+
+`gcloud compute ssh` wraps standard SSH with automatic IAP tunneling and OS Login key management. It connects you to a Compute Engine VM over port 22 through Google's Identity-Aware Proxy, meaning the VM itself does not need a public IP address. The first connection may take 10–30 seconds while gcloud propagates your SSH public key to VM metadata.
+
+### PowerShell / Linux | gcloud compute ssh | interactive and remote commands
+
+Use `gcloud compute ssh` for both interactive shells and one-off remote command execution. The `--tunnel-through-iap` flag routes the SSH connection through IAP, which is required for VMs with no external IP.
+
+#### Open an interactive SSH session on a GCE VM
 
 ```bash
 gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
 ```
 
-#### gcloud compute ssh --command — run a remote command without interactive session
+#### Run a single remote command without opening an interactive shell
 
-> [!info] Remote command execution
->
-> `--command` executes the command on the VM and returns output to your terminal.
-> Useful for quick health checks without opening an interactive shell.
+The `--command` flag executes a shell command on the VM and streams its output back to your terminal. This is useful for health checks and quick diagnostics without starting a full session.
 
 ```bash
 gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap \
     --command="free -h && df -h && ss -tlnp"
 ```
 
-> [!tip] Common SSH connection errors
+> [!warning] Common SSH connection errors
 >
-> - **"Permission denied"** → SSH key not propagated. Run `gcloud compute os-login ssh-keys add`
-> - **"Connection timed out"** → VM is stopped, or firewall blocks `35.235.240.0/20` on port 22
-> - **"Could not fetch resource"** → wrong zone, wrong instance name, or VM deleted
+> - **"Permission denied"** — SSH key not propagated yet. Run `gcloud compute os-login ssh-keys add` or wait for metadata sync.
+> - **"Connection timed out"** — VM is stopped, or the firewall blocks `35.235.240.0/20` on port 22.
+> - **"Could not fetch resource"** — wrong zone, wrong instance name, or the VM has been deleted.
 
-#### gcloud compute ssh — connect to GCE VM (PowerShell)
+> [!success] Verify before connecting
+>
+> Run `gcloud compute instances list` to confirm the VM name, zone, and status (`RUNNING`) before attempting SSH. For firewall issues, confirm the allow-ingress rule for `35.235.240.0/20` on port 22 is attached to the VM's network.
 
-```powershell
-# Same gcloud commands work identically
-gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap
-gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap `
-    --command="free -h && df -h"
+### PowerShell / Linux | gcloud compute scp | file transfer
 
-# For file transfer
-gcloud compute scp .\local-file.py data-pipeline-sql:/tmp/ --zone=europe-west1-b --tunnel-through-iap
-gcloud compute scp data-pipeline-sql:/tmp/output.csv .\local\ --zone=europe-west1-b --tunnel-through-iap
+`gcloud compute scp` transfers files between your local machine and a GCE VM using the same IAP-tunneled SSH channel. The remote path uses the format `instance-name:/path/on/vm`.
+
+#### Upload a local file to the VM
+
+```bash
+gcloud compute scp ./local-file.py data-pipeline-sql:/tmp/ \
+    --zone=europe-west1-b --tunnel-through-iap
 ```
 
-## SQL Server on Compute Engine (via IAP Tunnel)
+#### Download a file from the VM to local
 
-SQL Server on a private GCE VM requires a two-step connection: open the IAP tunnel, then connect through it.
+```bash
+gcloud compute scp data-pipeline-sql:/tmp/output.csv ./local/ \
+    --zone=europe-west1-b --tunnel-through-iap
+```
 
-#### gcloud start-iap-tunnel + sqlcmd — SQL Server via IAP (Linux)
+#### Upload a local file to the VM (PowerShell)
 
-> [!info] Two-step IAP tunnel connection
->
-> Step 1: Open the IAP tunnel in a dedicated terminal (or background with `&`).
-> Step 2: Connect through the tunnel using sqlcmd, SSMS, or Python.
+```powershell
+gcloud compute scp .\local-file.py data-pipeline-sql:/tmp/ `
+    --zone=europe-west1-b --tunnel-through-iap
+```
+
+#### Download a file from the VM to local (PowerShell)
+
+```powershell
+gcloud compute scp data-pipeline-sql:/tmp/output.csv .\local\ `
+    --zone=europe-west1-b --tunnel-through-iap
+```
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `--zone` | `--zone=europe-west1-b` | Zone of the target instance (required) |
+| `--tunnel-through-iap` | `--tunnel-through-iap` | Route SSH through IAP; required for VMs with no public IP |
+| `--command` | `--command="<shell-cmd>"` | Execute a single command on the VM and return output |
+| `--ssh-flag` | `--ssh-flag="-L 5432:localhost:5432"` | Pass arbitrary flags to the underlying SSH client |
+| `--project` | `--project=my-project-123` | Override the active gcloud project |
+| `--recurse` | `--recurse` | (scp only) Recursively copy a directory |
+
+## PowerShell / Linux | SQL Server on Compute Engine | IAP tunnel
+
+SQL Server runs on a private GCE VM and listens on TDS port 1433. Because the VM has no public IP, access requires a two-step process: open an IAP tunnel that forwards a local port to the VM's port 1433, then connect through that local port using any SQL Server client.
+
+### PowerShell / Linux | gcloud start-iap-tunnel | open tunnel to SQL Server
+
+The `gcloud compute start-iap-tunnel` command creates a TCP forwarding tunnel through IAP. While the tunnel process runs, any connection to `127.0.0.1:1435` (the local port) is transparently forwarded to port 1433 on the target VM.
+
+#### Open the IAP tunnel in the background (Linux)
+
+Run the tunnel in a background process so the terminal remains available for the sqlcmd connection step.
 
 ```bash
 gcloud compute start-iap-tunnel data-pipeline-sql 1433 \
     --local-host-port=127.0.0.1:1435 --zone=europe-west1-b &
 ```
 
-> [!warning] SQL Server uses comma for port
+#### Open the IAP tunnel in a separate window (PowerShell)
+
+In PowerShell, start the tunnel in a new window to keep it running while you work in the current session.
+
+```powershell
+gcloud compute start-iap-tunnel data-pipeline-sql 1433 `
+    --local-host-port=0.0.0.0:1435 `
+    --zone=europe-west1-b
+```
+
+```text
+Listening on port [1435].
+```
+
+> [!warning] SQL Server uses a comma separator for port in the connection string
 >
-> `sqlcmd -S 127.0.0.1,1435` — note the **comma** between host and port. This is
-> SQL Server's convention. A colon (`127.0.0.1:1435`) won't work.
+> `sqlcmd -S 127.0.0.1,1435` uses a **comma** between host and port — this is SQL Server's convention inherited from the TDS protocol. Using a colon (`127.0.0.1:1435`) will fail to parse correctly.
+
+> [!success] Always use comma syntax for SQL Server host:port
+>
+> Correct form: `127.0.0.1,1435` in sqlcmd, SSMS, and pyodbc connection strings. Only `pymssql` takes host and port as separate arguments.
+
+### PowerShell / Linux | sqlcmd | connect and query through tunnel
+
+`sqlcmd` is the SQL Server command-line client. After the IAP tunnel is open, connect to the local forwarding port as if SQL Server were running locally.
+
+#### Open an interactive sqlcmd session (Linux)
 
 ```bash
 sqlcmd -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d analytics_db
 ```
 
+#### Run a quick one-off query to verify the connection (Linux)
+
 ```bash
-# Quick test query
 sqlcmd -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d analytics_db \
     -Q "SELECT @@VERSION" -W
 ```
 
-#### Debug from the VM side — verify SQL Server is listening
+```text
+Microsoft SQL Server 2019 (RTM-CU18) 15.0.4261.1 (X64)
+```
 
-> [!tip] Debug from VM side
->
-> If the tunnel is up but connections fail, SSH in and check that `sqlservr` is
-> listening on port 1433.
+#### Verify SQL Server is listening on the VM before connecting
+
+If the tunnel is open but the connection fails, SSH into the VM and confirm that `sqlservr` is actively bound to port 1433.
 
 ```bash
 gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap \
     --command="ss -tlnp | grep 1433"
 ```
 
-#### pymssql — SQL Server through IAP tunnel (Python)
+```text
+LISTEN 0  128  0.0.0.0:1433  0.0.0.0:*  users:(("sqlservr",pid=1234,fd=12))
+```
+
+#### Connect and run a query via Invoke-Sqlcmd (PowerShell)
+
+```powershell
+Invoke-Sqlcmd -ServerInstance "127.0.0.1,1435" -Database "analytics_db" `
+    -Username "sa" -Password $env:SA_PASSWORD `
+    -TrustServerCertificate -Query "SELECT COUNT(*) AS cnt FROM gold.scores_daily"
+```
+
+```text
+cnt
+---
+891
+```
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `-S` | `-S 127.0.0.1,1435` | Server and port (comma-separated — SQL Server convention) |
+| `-U` | `-U sa` | SQL Server login username |
+| `-P` | `-P "$SA_PASSWORD"` | Password (use env var to avoid shell history exposure) |
+| `-d` | `-d analytics_db` | Database to connect to on login |
+| `-Q` | `-Q "SELECT @@VERSION"` | Execute query, print result, and exit |
+| `-W` | `-W` | Remove trailing spaces from column output |
+| `-o` | `-o output.txt` | Redirect output to a file |
+
+### PowerShell / Linux | pymssql | Python connection through IAP tunnel
+
+`pymssql` is a Python library that connects to SQL Server using the TDS protocol. It takes host and port as separate arguments, unlike pyodbc and SQLAlchemy which use the comma syntax in the connection string.
+
+#### Connect to SQL Server and query through the tunnel (Python)
+
+Extract the inline notes on driver syntax differences so they are explicit for comparison:
+
+- `pymssql`: `server="127.0.0.1", port="1435"` — separate arguments
+- `pyodbc`: `"SERVER=127.0.0.1,1435"` — comma syntax in the DSN string
+- `SQLAlchemy`: `"mssql+pyodbc://sa:pass@127.0.0.1,1435/analytics_db"` — comma syntax in the URL
 
 ```python
-# pymssql uses host and port as separate arguments
 import pymssql
+import os
+
 conn = pymssql.connect(
-    server="127.0.0.1",   # local end of the IAP tunnel
-    port="1435",           # local tunnel port (NOT 1433)
+    server="127.0.0.1",
+    port="1435",
     user="sa",
     password=os.environ["SA_PASSWORD"],
     database="analytics_db",
     as_dict=True
 )
-# NOTE: pymssql uses server + port separately
-# pyodbc uses "SERVER=127.0.0.1,1435" (comma syntax, like SSMS)
-# SQLAlchemy uses "mssql+pyodbc://sa:pass@127.0.0.1,1435/analytics_db"
 ```
 
-#### Invoke-Sqlcmd / SSMS — SQL Server through IAP tunnel (PowerShell)
+## PowerShell / Linux | BigQuery | direct API access
 
-> [!info] SSMS connection settings through IAP tunnel
->
-> - **Server name:** `127.0.0.1,1435` (comma between host and port — SQL Server convention)
-> - **Authentication:** SQL Server Authentication
-> - **Login:** `sa`
-> - **Password:** your SA password
+BigQuery is a serverless, multi-tenant analytics service. There is no server running on a VM — you do not need an IAP tunnel, a port, or a hostname. Every query is sent as an HTTPS request to `bigquery.googleapis.com`. BigQuery allocates compute resources on demand, executes the query, and returns results. The only access control is IAM: the calling identity must have the `bigquery.jobs.create` permission (typically granted via the BigQuery User or BigQuery Data Viewer role).
 
-```powershell
-# Step 1: Open tunnel (in a separate PowerShell window)
-gcloud compute start-iap-tunnel data-pipeline-sql 1433 `
-    --local-host-port=0.0.0.0:1435 `
-    --zone=europe-west1-b
-# Expected: "Listening on port [1435]."
+### PowerShell / Linux | bq | CLI queries and dataset inspection
 
-# Step 2: Connect via PowerShell
-Invoke-Sqlcmd -ServerInstance "127.0.0.1,1435" -Database "analytics_db" `
-    -Username "sa" -Password $env:SA_PASSWORD `
-    -TrustServerCertificate -Query "SELECT COUNT(*) AS cnt FROM gold.scores_daily"
-# Expected:
-# cnt
-# ---
-# 891
-```
+The `bq` CLI is part of the Google Cloud SDK and is available on both Linux and PowerShell. It sends queries directly to the BigQuery API. The `--use_legacy_sql=false` flag is required for all queries — without it, `bq` defaults to legacy SQL, which has different syntax and limitations.
 
-## BigQuery (Direct API — No Tunnel Needed)
+#### Count rows in a BigQuery table (Linux)
 
-BigQuery is a serverless service — there is no server to connect to. You authenticate with `gcloud` and queries go directly to the BigQuery API over HTTPS. No IAP, no tunnels, no port management.
-
-#### bq query — BigQuery interactive queries (Linux)
-
-> [!info] bq query requires standard SQL flag
->
-> `--use_legacy_sql=false` is required — without it, `bq` defaults to legacy SQL
-> which has different syntax and limitations. Backticks around the fully-qualified table
-> name must be escaped as `\`` in bash.
+Backtick-delimited fully-qualified table names (`project.dataset.table`) must be escaped as `\`` in bash to prevent shell interpretation.
 
 ```bash
 bq query --use_legacy_sql=false \
     "SELECT COUNT(*) AS row_count FROM \`data-platform-prod.data-pipeline.signals_daily\`"
 ```
 
-#### bq query --format=json — query output for scripting
+```text
++----------+
+| row_count|
++----------+
+|   1482930|
++----------+
+```
+
+#### Export query output as JSON for scripting (Linux)
 
 ```bash
 bq query --use_legacy_sql=false --format=json \
     "SELECT symbol, trade_date FROM \`data-platform-prod.data-pipeline.signals_daily\` LIMIT 3"
 ```
 
-#### bq ls — list datasets and tables
+```text
+[{"symbol":"AAPL","trade_date":"2024-12-31"},{"symbol":"MSFT","trade_date":"2024-12-31"},{"symbol":"GOOGL","trade_date":"2024-12-31"}]
+```
+
+#### List all datasets in a project (Linux)
 
 ```bash
 bq ls data-platform-prod:
+```
+
+#### List all tables in a dataset (Linux)
+
+```bash
 bq ls data-platform-prod:data-pipeline
 ```
 
-#### gcloud auth list — debug BigQuery authentication
+#### Debug authentication before running queries (Linux)
 
-> [!tip] Debug BigQuery authentication
->
-> The active account must have `bigquery.jobs.create` permission (typically via
-> BigQuery User or BigQuery Data Viewer role). If queries fail with "Access Denied,"
-> check which account is active.
+The active account must have `bigquery.jobs.create` on the target project. If queries fail with "Access Denied," verify which account is active.
 
 ```bash
 gcloud auth list
 ```
 
-#### google-cloud-bigquery Client — BigQuery queries (Python)
+```text
+   Credentialed Accounts
+ACTIVE  ACCOUNT
+*       user@example.com
+
+To set the active account, run:
+    $ gcloud config set account `ACCOUNT`
+```
+
+#### Run a BigQuery query from PowerShell
+
+In PowerShell, backtick is the escape character, so fully-qualified table names require double backticks to produce a literal backtick in the string passed to `bq`.
+
+```powershell
+bq query --use_legacy_sql=false `
+    "SELECT COUNT(*) FROM ``data-platform-prod.data-pipeline.signals_daily``"
+```
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `--use_legacy_sql` | `--use_legacy_sql=false` | Use standard SQL (required; legacy SQL is the default) |
+| `--format` | `--format=json` | Output format: `json`, `csv`, `pretty`, `sparse` |
+| `--max_rows` | `--max_rows=1000` | Maximum number of rows returned (default: 100) |
+| `--location` | `--location=EU` | BigQuery processing region |
+| `--project_id` | `--project_id=my-project-123` | Override the active project |
+| `--nouse_cache` | `--nouse_cache` | Bypass cached query results |
+
+### PowerShell / Linux | google-cloud-bigquery | Python client
+
+The `google-cloud-bigquery` Python library queries BigQuery using Application Default Credentials (ADC). On a developer workstation, ADC is configured by running `gcloud auth application-default login`. In production, ADC resolves automatically from the Workload Identity or service account attached to the compute resource.
+
+#### Query BigQuery and load results into a DataFrame (Python)
 
 ```python
 from google.cloud import bigquery
+
 client = bigquery.Client(project="data-platform-prod")
-# No host, no port, no tunnel — uses Application Default Credentials
-# Credentials come from: gcloud auth application-default login (local)
-# or: service account key / Workload Identity (production)
 
-df = client.query("SELECT * FROM data-pipeline.signals_daily LIMIT 10").to_dataframe()
+df = client.query(
+    "SELECT * FROM data-pipeline.signals_daily LIMIT 10"
+).to_dataframe()
 ```
 
-#### bq query — BigQuery interactive queries (PowerShell)
+## PowerShell / Linux | Cloud Run | HTTPS endpoint access
 
-```powershell
-# Same bq commands — gcloud CLI is cross-platform
-bq query --use_legacy_sql=false `
-    "SELECT COUNT(*) FROM ``data-platform-prod.data-pipeline.signals_daily``"
-# Note: backtick escaping in PowerShell requires double backticks ``
-```
+Cloud Run services expose an HTTPS endpoint at a `*.run.app` domain. Calling a Cloud Run service is identical to calling any REST API. Services can be public (accessible without authentication) or private (require an identity token in the `Authorization` header).
 
-> [!info] BigQuery needs no tunnel
->
-> BigQuery has no "server" running on a VM. It's a multi-tenant API endpoint at `bigquery.googleapis.com`. Your query is sent as an HTTPS request, BigQuery allocates compute on the fly, runs the query, and returns results. The only "firewall" is IAM: does your account have the `bigquery.jobs.create` permission?
+### PowerShell / Linux | gcloud + curl | authenticate and call Cloud Run
 
-### Cloud Run services — HTTPS endpoints with identity token auth
+A Google identity token (produced by `gcloud auth print-identity-token`) proves who the caller is — it is a short-lived JWT scoped to the caller's identity. This is distinct from an access token, which proves what a service account or user is permitted to do. Cloud Run uses identity tokens to enforce its IAM invoker policy.
 
-Cloud Run services expose an HTTPS endpoint. You call them like any API.
-
-> [!info] Cloud Run authentication
->
-> Cloud Run services can be public (`allUsers`) or require authentication. For authenticated services, you pass a **Google identity token** (not an access token) in the `Authorization: Bearer` header. `gcloud auth print-identity-token` generates this token from your active gcloud credentials. The token is a short-lived JWT scoped to your identity — it proves *who you are*, unlike an access token which proves *what you can do*.
+#### Retrieve the service URL (Linux)
 
 ```bash
-# Get the service URL
-gcloud run services describe data-pipeline-pipeline --region=europe-west1 --format="value(status.url)"
-# Expected: https://data-pipeline-pipeline-abc123-ew.a.run.app
+gcloud run services describe data-pipeline-pipeline \
+    --region=europe-west1 \
+    --format="value(status.url)"
+```
 
-# Call the service
+```text
+https://data-pipeline-pipeline-abc123-ew.a.run.app
+```
+
+#### Call an authenticated Cloud Run service (Linux)
+
+```bash
 curl -H "Authorization: Bearer $(gcloud auth print-identity-token)" \
     https://data-pipeline-pipeline-abc123-ew.a.run.app/health
-# Expected: {"status":"healthy"}
+```
 
-# For services that require no auth (allUsers):
+```text
+{"status":"healthy"}
+```
+
+#### Call a public Cloud Run service with no authentication (Linux)
+
+```bash
 curl https://data-pipeline-dashboard-abc123-ew.a.run.app
 ```
 
+#### Retrieve the service URL and call an authenticated endpoint (PowerShell)
+
 ```powershell
-# PowerShell equivalent
 $token = gcloud auth print-identity-token
-$url = gcloud run services describe data-pipeline-pipeline --region=europe-west1 --format="value(status.url)"
+$url = gcloud run services describe data-pipeline-pipeline `
+    --region=europe-west1 --format="value(status.url)"
 Invoke-RestMethod -Uri "$url/health" -Headers @{Authorization = "Bearer $token"}
 ```
 
-### Airflow webserver on Compute Engine — IAP tunnel to port 8080
+| Flag | Syntax | Description |
+|---|---|---|
+| `--region` | `--region=europe-west1` | Region where the Cloud Run service is deployed |
+| `--format` | `--format="value(status.url)"` | Extract a specific field from the resource description |
+| `--platform` | `--platform=managed` | Target managed Cloud Run (default; use `gke` for Cloud Run on GKE) |
 
-Airflow runs on port 8080 inside the VM. Same pattern as SQL Server: tunnel + connect.
+## PowerShell / Linux | Airflow on Compute Engine | IAP tunnel to port 8080
 
-> [!tip] Airflow access after tunnel opens
->
-> Once the tunnel is up, open `http://localhost:8080` in your browser and log in with your Airflow credentials.
+Airflow's webserver runs on port 8080 inside the VM and is not exposed publicly. The connection pattern is identical to SQL Server: open an IAP tunnel forwarding a local port to the VM's port 8080, then open the Airflow UI in a browser pointing at the local tunnel endpoint.
+
+### PowerShell / Linux | gcloud start-iap-tunnel | open tunnel to Airflow
+
+#### Open the IAP tunnel to Airflow (Linux)
 
 ```bash
 gcloud compute start-iap-tunnel data-pipeline-airflow 8080 \
@@ -264,59 +411,112 @@ gcloud compute start-iap-tunnel data-pipeline-airflow 8080 \
     --zone=europe-west1-b
 ```
 
+Once the tunnel is running, open `http://localhost:8080` in a browser and log in with your Airflow credentials.
+
+#### Verify Airflow is healthy via the REST API (Linux)
+
 ```bash
-# Quick health check via CLI
 curl -s http://localhost:8080/api/v1/health | python -m json.tool
-# Expected: {"metadatabase": {"status": "healthy"}, "scheduler": {"status": "healthy"}}
 ```
 
+```text
+{
+    "metadatabase": {
+        "status": "healthy"
+    },
+    "scheduler": {
+        "status": "healthy"
+    }
+}
+```
+
+#### Open the IAP tunnel and launch the browser (PowerShell)
+
 ```powershell
-# PowerShell
 gcloud compute start-iap-tunnel data-pipeline-airflow 8080 `
     --local-host-port=127.0.0.1:8080 `
     --zone=europe-west1-b
-# Then: Start-Process "http://localhost:8080"
+```
 
+After the tunnel is running, open the browser automatically:
+
+```powershell
+Start-Process "http://localhost:8080"
+```
+
+#### Verify Airflow health via the REST API (PowerShell)
+
+```powershell
 Invoke-RestMethod -Uri "http://localhost:8080/api/v1/health"
 ```
 
-### Datadog agent on Compute Engine — localhost-only access via SSH
+| Flag | Syntax | Description |
+|---|---|---|
+| `--local-host-port` | `--local-host-port=127.0.0.1:8080` | Local address and port to bind the tunnel on |
+| `--zone` | `--zone=europe-west1-b` | Zone of the target instance |
+| `--project` | `--project=my-project-123` | Override active project |
 
-Datadog agent listens on localhost only — you must SSH into the VM to interact with it.
+## PowerShell / Linux | Datadog Agent on Compute Engine | SSH-only access
 
-> [!info] Datadog agent ports
->
-> The Datadog agent runs three listeners, all bound to `127.0.0.1` (not externally reachable):
-> - **5000** — agent HTTP API (health, config, metadata)
-> - **5001** — agent IPC (internal process communication)
-> - **8126** — APM trace agent (receives application traces)
->
-> Because they listen on localhost only, you must SSH into the VM to query them. There is no way to open an IAP tunnel to these ports from outside — SSH is the only path.
+The Datadog agent binds all its listeners to `127.0.0.1` (localhost), not to any externally reachable interface. There is no way to open an IAP tunnel to these ports from outside the VM — you must SSH into the VM first and run agent commands from within the SSH session.
 
-> [!tip] Expected output from datadog-agent status
->
-> A healthy agent reports `Agent (running)` with version, status, and active checks
-> (`sqlserver`, `disk`, `cpu`, `memory`, `network`). Port verification via `ss` should
-> show all three listeners on `127.0.0.1` (ports 5000, 5001, 8126).
+The agent exposes three ports, all bound to `127.0.0.1`:
+
+- **5000** — agent HTTP API (health, configuration, metadata)
+- **5001** — agent IPC (internal process communication between agent components)
+- **8126** — APM trace agent (receives application traces from instrumented services)
+
+### PowerShell / Linux | gcloud compute ssh | Datadog agent diagnostics
+
+#### Check agent status and active checks
 
 ```bash
-# Check agent status
 gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap \
     --command="sudo datadog-agent status | head -30"
+```
 
-# Check if agent can reach Datadog intake
+```text
+Agent (running)
+...
+  Version: 7.50.0
+  ...
+  Active checks: sqlserver, disk, cpu, memory, network
+```
+
+#### Test connectivity from the agent to the Datadog intake endpoints
+
+```bash
 gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap \
     --command="sudo datadog-agent diagnose --include connectivity"
+```
 
-# Verify agent ports from the VM
+#### Verify all three agent ports are listening on localhost
+
+A healthy agent shows all three ports (`5000`, `5001`, `8126`) bound to `127.0.0.1`.
+
+```bash
 gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap \
     --command="ss -tlnp | grep -E '(5000|5001|8126)'"
 ```
 
-### Connection quick reference matrix — protocol and tunnel requirements by service
+```text
+LISTEN  0  128  127.0.0.1:5000   0.0.0.0:*  users:(("agent",pid=2345,fd=8))
+LISTEN  0  128  127.0.0.1:5001   0.0.0.0:*  users:(("agent",pid=2345,fd=9))
+LISTEN  0  128  127.0.0.1:8126   0.0.0.0:*  users:(("trace-agent",pid=2346,fd=5))
+```
+
+> [!tip] Pattern for localhost-only services
+>
+> Any service bound to `127.0.0.1` on a VM (Datadog, local databases, internal APIs) can only be reached by SSHing into the VM. IAP tunnels route traffic to the VM's network interface, not to localhost — so you cannot tunnel directly into a localhost-only listener.
+
+## Connection quick reference matrix
+
+The table below summarizes the connectivity model for every GCP resource type covered in this note. Use it as a first reference when diagnosing connection failures.
+
+### Connection requirements by resource type
 
 | Resource | Protocol | Needs Tunnel? | Local Command | Port |
-|----------|----------|---------------|---------------|------|
+|---|---|---|---|---|
 | **GCE VM (SSH)** | SSH | IAP (automatic) | `gcloud compute ssh` | 22 |
 | **SQL Server on GCE** | TDS | IAP tunnel | `gcloud start-iap-tunnel` → SSMS/sqlcmd | 1433 |
 | **PostgreSQL on GCE** | PostgreSQL | IAP tunnel | `gcloud start-iap-tunnel` → psql | 5432 |
@@ -329,7 +529,7 @@ gcloud compute ssh data-pipeline-sql --zone=europe-west1-b --tunnel-through-iap 
 
 > [!tip] The pattern
 >
-> Anything running on a VM with no public IP requires an IAP tunnel (or SSH). Anything that's a Google-managed service (BigQuery, Cloud Run, GCS) uses HTTPS APIs directly — no tunnel, no port management, just IAM.
+> Anything running on a VM with no public IP requires an IAP tunnel (or SSH). Anything that is a Google-managed service (BigQuery, Cloud Run, GCS) uses HTTPS APIs directly — no tunnel, no port management, just IAM.
 
 ## Related
 - [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns) — Security model behind these connections: trust chains, credential types, IAM requirements

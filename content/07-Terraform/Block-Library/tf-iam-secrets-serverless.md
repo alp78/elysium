@@ -1,9 +1,4 @@
 ---
-type: reference
-category: terraform
-technology:
-  - terraform
-  - gcp
 tags: [security, infrastructure, terraform, iac, gcp]
 aliases:
   - terraform iam blocks
@@ -12,46 +7,6 @@ aliases:
   - terraform cloud run
   - terraform cloud functions
   - terraform serverless gcp
-keywords:
-  - terraform
-  - gcp
-  - iam
-  - service account
-  - secret manager
-  - cloud run
-  - cloud run v2
-  - cloud functions
-  - cloud scheduler
-  - pubsub
-  - pub/sub
-  - artifact registry
-  - workload identity federation
-  - github actions
-  - project iam
-  - resource iam
-  - iam member
-  - iam binding
-  - roles
-  - permissions
-  - google_service_account
-  - google_project_iam_member
-  - google_secret_manager_secret
-  - google_cloud_run_v2_service
-  - google_cloud_run_v2_job
-  - google_cloudfunctions2_function
-  - google_cloud_scheduler_job
-  - google_pubsub_topic
-  - google_pubsub_subscription
-  - google_artifact_registry_repository
-  - data engineering
-  - pipeline
-  - serverless
-  - vpc connector
-  - startup probe
-  - dead letter topic
-  - cleanup policy
-  - conditional resource
-  - count pattern
 description: >
   Atomic Terraform block library for GCP IAM, Secret Manager, Cloud Run (v2),
   Cloud Functions v2, Cloud Scheduler, Pub/Sub, and Artifact Registry. Each

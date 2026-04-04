@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: observability
-technology: [datadog, sql-server, gcp]
 tags: [monitoring, observability, sql, datadog, gcp]
 aliases: [SQL Server Log Collection, Datadog SQL Logs, SQL Server Errorlog Datadog]
-keywords: [logs.yaml, errorlog, "/var/opt/mssql/log/errorlog", start_position beginning, Bytes Read 0, log collection, logs_enabled, dd-agent mssql group, source sqlserver, failed login, CHECKPOINT, log tailing, agent tails, "host:sql-vm", "service:sql-server", log explorer]
 description: "How to configure Datadog Agent to collect SQL Server errorlog entries from the example SQL VM — including the logs.yaml setup, permission fix, and how to test that logs are flowing."
 created: 2026-03-22
 updated: 2026-03-22

@@ -1,10 +1,6 @@
 ---
-type: concept
-category: data-architecture
-technology: [gcp, python]
 tags: [data-architecture, architecture, streaming, python, gcp]
 aliases: [streaming architecture, Lambda architecture, Kappa architecture, event-driven architecture, real-time pipeline, stream processing, CDC, change data capture, event streaming, micro-batch, continuous processing, stream-first architecture]
-keywords: [streaming, batch, micro-batch, Lambda architecture, Kappa architecture, event-driven, Kafka, Pub/Sub, Kinesis, Event Hubs, Spark Structured Streaming, Apache Flink, Apache Beam, Dataflow, ksqlDB, Debezium, SQL Server CDC, GCP Datastream, event sourcing, CQRS, exactly-once, at-least-once, tumbling window, sliding window, session window, watermark, late data, reprocessing, replay, real-time analytics, stream processing, CDC, change data capture, producer, consumer, broker, topic, partition, consumer group, offset, backpressure, checkpointing, state store, windowing]
 description: "Streaming architecture patterns — Lambda, Kappa, and event-driven — covering batch vs streaming trade-offs, message broker comparisons (Kafka, Pub/Sub, Kinesis), stream processing engines (Flink, Beam/Dataflow, Spark Structured Streaming), CDC tools (Debezium, GCP Datastream), and the GCP canonical streaming stack."
 created: 2026-03-22
 updated: 2026-03-22
@@ -98,6 +94,9 @@ flowchart TD
 
 > [!warning] Lambda's Dual Codebase Problem
 > In practice, the batch and speed layer implementations inevitably diverge. A bug is fixed in one but not the other. A new business rule is added to batch but forgotten in speed. The speed layer shows 10,000 events; the batch layer shows 9,847. Which is correct? Lambda's main failure mode is the complexity of maintaining two implementations of the same logic in different paradigms.
+
+> [!success] Safe Pattern: Shared Business Logic Library
+> Extract the core transformation logic (e.g., revenue calculation, risk scoring) into a shared library that both the batch Spark job and the streaming Flink/Beam job import. This does not fully eliminate divergence, but it ensures the business rules execute identically — reducing the problem to infrastructure differences (windowing, state management) rather than logic discrepancies. For new systems, prefer Kappa with a single codebase over Lambda.
 
 ---
 
@@ -474,6 +473,9 @@ Distributed streaming systems can guarantee one of three delivery semantics:
 
 > [!warning] Exactly-Once Is Not Magic
 > "Exactly-once" in streaming applies to the broker-to-processor-to-sink path. It does not protect against logic bugs (processing an event twice because your code has a bug), external system failures (the sink database rejecting a write), or clock skew. Always design for [idempotency](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) at the application level as a defense in depth.
+
+> [!success] Safe Pattern: Idempotent Sink with Deduplication Key
+> Design every sink write to be idempotent: include a stable, deterministic `event_id` (or composite deduplication key) in every output record. On the sink side, use `INSERT ... ON CONFLICT DO NOTHING` (PostgreSQL), `MERGE` (SQL Server / BigQuery), or Iceberg's row-level delete + re-insert pattern to safely absorb duplicate deliveries without double-counting. Exactly-once transport + idempotent sink = true end-to-end exactly-once guarantee.
 
 ---
 

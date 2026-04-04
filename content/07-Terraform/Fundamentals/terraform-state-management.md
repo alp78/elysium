@@ -1,10 +1,6 @@
 ---
-type: concept
-category: infrastructure
-technology: [terraform, gcp]
 tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform state, terraform.tfstate, remote state, state locking, terraform backend, GCS backend]
-keywords: [terraform state, tfstate, remote state, state file, GCS backend, state locking, terraform state commands, terraform state list, terraform state show, terraform state mv, terraform state rm, force-unlock, backend gcs, state bucket]
 description: "How Terraform state works, why remote state in GCS is essential, how state locking prevents concurrent applies, and the terraform state subcommands for safe state manipulation."
 created: 2026-03-22
 updated: 2026-03-22
@@ -32,6 +28,10 @@ The state file (`terraform.tfstate`) is a JSON document that maps every resource
 > [!warning] The State File Is Sacred
 >
 > If you lose the state file, Terraform doesn't know what exists and will try to recreate everything — causing duplicates, conflicts, and potentially destroying running services. Always use remote state. Never delete the state file.
+
+> [!success] Use Remote State with Versioning
+>
+> Configure the `backend "gcs"` block in `main.tf` to store state in a GCS bucket, and enable object versioning on that bucket. If the state file is corrupted or accidentally deleted, you can restore a previous version with `gcloud storage cp "gs://<bucket>/path/default.tfstate#<generation>" gs://<bucket>/path/default.tfstate`.
 
 ---
 
@@ -77,6 +77,10 @@ terraform {
 > Never Run Concurrent `terraform apply` on the Same State.
 > Even with GCS locking, two engineers running `terraform plan` simultaneously can both see the same "clean" state, then apply conflicting changes. The second apply may overwrite the first's changes or corrupt state. Use CI/CD pipelines (GitHub Actions, Cloud Build) as the single point of entry for `terraform apply` in shared environments.
 
+> [!success] Enforce a Single Apply Path
+>
+> Designate one CI/CD pipeline (e.g., a Cloud Build trigger or a GitHub Actions workflow) as the only entry point for `terraform apply` in shared environments. Engineers run `terraform plan` locally to review changes, then merge to main and let the pipeline apply. This eliminates race conditions and ensures the state lock is always held by a single, serialized process.
+
 ```bash
 # Create the state bucket (run once, before terraform init)
 gcloud storage buckets create gs://data-pipeline-tf-state \
@@ -111,6 +115,10 @@ terraform force-unlock <LOCK_ID>
 > [!warning] Force-Unlock Carefully
 >
 > Only force-unlock if you are certain no other `terraform apply` is running. Unlocking while an apply is in progress can corrupt the state file.
+
+> [!success] Verify Before Unlocking
+>
+> Before running `terraform force-unlock`, confirm that no pipeline, CI job, or team member is currently running an apply. Check your CI/CD platform's active job list and verify the GCS lock file timestamp. Only proceed with the unlock if the holding process has clearly crashed or been terminated.
 
 ---
 
@@ -181,10 +189,18 @@ terraform state rm google_compute_instance.airflow
 >
 > Never edit `terraform.tfstate` directly in a text editor. Use `terraform state mv` and `terraform state rm` for all state manipulation. Manual edits corrupt the state and can cause all resources to be destroyed on the next apply.
 
+> [!success] Use state subcommands for Safe Manipulation
+>
+> Use `terraform state mv <old> <new>` to rename a resource's Terraform-internal name after refactoring, and `terraform state rm <resource>` to detach a resource from management. Both commands update state safely without touching the real infrastructure.
+
 > [!danger] State rm Then Apply Destroys Resources
 >
 > `terraform state rm` Followed by `terraform apply` Destroys Resources.
 > If you `terraform state rm` a resource and then run `terraform apply`, Terraform sees the resource definition in your `.tf` files but not in state, so it tries to create a new one. If the resource already exists in GCP (which it does -- you just removed it from state), the apply either fails with a "resource already exists" error or, worse, creates a duplicate. Always pair `terraform state rm` with either removing the resource block from `.tf` files or immediately importing it back into a different state.
+
+> [!success] Remove the Block or Re-import Immediately
+>
+> After `terraform state rm <resource>`, immediately either delete the corresponding resource block from your `.tf` files (if you no longer want Terraform to manage it) or run `terraform import <resource_type>.<name> <gcp_id>` to re-attach it to the correct state. Run `terraform plan` after either action and confirm "No changes" before proceeding.
 
 ### Importing Existing Resources
 
@@ -240,6 +256,10 @@ terraform -chdir=infra validate
 >
 > State File Contains Plaintext Secrets.
 > Terraform stores all resource attributes in state -- including database passwords, API keys, and secret values passed via `google_secret_manager_secret_version`. Anyone with read access to the GCS state bucket can extract every secret in your infrastructure. Treat the state bucket with the same security as your secret manager: restrict access to the Terraform service account and human admins only, enable audit logging, and never download state files to local machines.
+
+> [!success] Lock Down the State Bucket
+>
+> Apply three controls to the state bucket: (1) restrict IAM to the Terraform service account and named admins only — no `allUsers` or `allAuthenticatedUsers`; (2) enable GCS audit logging so every state file read is recorded in Cloud Audit Logs; (3) enable bucket versioning for state recovery. Use `uniform_bucket_level_access = true` and `public_access_prevention = "enforced"` in the bucket's Terraform definition.
 
 The state file contains sensitive values (passwords, connection strings, secret versions). Secure the GCS bucket:
 

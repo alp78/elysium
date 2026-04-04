@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: infrastructure
-technology: [terraform, gcp]
 tags: [infrastructure, terraform, iac, gcp]
 aliases: [terraform workflow, terraform apply, terraform plan, terraform destroy, terraform init, terraform import]
-keywords: [terraform init, terraform plan, terraform apply, terraform destroy, terraform import, terraform state, tfplan, plan output, apply workflow, infrastructure deployment, terraform -chdir]
 description: "The core Terraform workflow: init, plan, apply, destroy, and importing existing resources into state. Includes the -chdir flag, targeted applies, and state inspection commands."
 created: 2026-03-22
 updated: 2026-03-22
@@ -66,6 +62,10 @@ terraform plan -out=tfplan
 >
 > Never run `terraform apply` without first reviewing `terraform plan`. Terraform can and will destroy production resources if the configuration changes. Look specifically for lines beginning with `-` (destroy) and `~` (update in-place).
 
+> [!success] Safe Apply Pattern
+>
+> Always save the plan first and apply from the saved file: `terraform plan -out=tfplan && terraform apply tfplan`. This guarantees that exactly what you reviewed is what gets applied — no surprises from state changes that occurred between `plan` and `apply`.
+
 #### Plan output symbols — +create, ~update, -destroy, -/+replace
 
 | Symbol | Meaning |
@@ -117,6 +117,10 @@ terraform destroy -target=google_compute_instance.airflow
 > [!warning] Destroy is Permanent
 >
 > `terraform destroy` will remove all GCP resources managed by this configuration — VMs, Cloud Run services, firewall rules, service accounts, and secrets. There is no undo. For production, set `deletion_protection = true` on critical resources.
+
+> [!success] Protect Critical Resources
+>
+> Set `deletion_protection = true` on VMs, Cloud SQL instances, and BigQuery tables. For non-critical dev resources, use `terraform destroy -target=<resource>` to remove only a specific resource instead of the entire configuration.
 
 ---
 

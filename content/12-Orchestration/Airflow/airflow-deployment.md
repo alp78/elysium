@@ -1,7 +1,4 @@
 ---
-type: how-to
-category: orchestration
-technology: [airflow, docker, gcp]
 tags: [orchestration, docker, airflow, gcp]
 aliases:
   - Cloud Composer
@@ -24,33 +21,6 @@ aliases:
   - git sync DAGs
   - Airflow StatsD
   - Airflow monitoring
-keywords:
-  - airflow deployment
-  - docker compose airflow
-  - cloud composer
-  - cloud composer 2
-  - managed airflow gcp
-  - MWAA
-  - managed workflows apache airflow
-  - astronomer astro
-  - airflow helm chart
-  - airflow kubernetes
-  - airflow self-hosted
-  - airflow gce
-  - airflow postgresql
-  - airflow.cfg settings
-  - parallelism
-  - dag_concurrency
-  - max_active_runs_per_dag
-  - airflow secrets
-  - secret manager airflow
-  - git sync dags
-  - gcs bucket dags
-  - airflow statsd metrics
-  - airflow health check
-  - airflow resource sizing
-  - celery executor deployment
-  - kubernetes executor deployment
 description: "Step-by-step how-to guide for deploying Apache Airflow: local Docker Compose development setup, self-hosted on GCE, GCP Cloud Composer managed service, AWS MWAA, configuration of airflow.cfg, DAG deployment strategies, secrets management, and monitoring integration."
 created: 2026-03-22
 updated: 2026-03-22
@@ -481,6 +451,9 @@ gcloud composer environments describe my-airflow-env \
 > [!warning] Cloud Composer Costs
 > Cloud Composer is expensive relative to self-hosted. A SMALL environment is ~$300-500/month. A MEDIUM environment with multiple workers can exceed $1500/month. Always set `--min-workers 1` and `--max-workers N` to enable auto-scaling and control costs. See the [Cost Comparison](#cost-comparison) section below.
 
+> [!success] Cost control: enable auto-scaling and set min-workers=1
+> Always specify `--min-workers 1` and a realistic `--max-workers` cap when creating or updating a Cloud Composer 2 environment. This enables the auto-scaler to scale down to a single worker during off-peak hours and avoids paying for idle pods.
+
 ### Installing PyPI Packages in Cloud Composer
 
 ```bash
@@ -784,6 +757,9 @@ backend_kwargs = {"connections_path": "airflow/connections", "variables_path": "
 > [!warning] No secrets in DAG files
 >
 > Never hardcode passwords, API keys, or service account JSON in DAG code. Use environment variables, Secret Manager, or the Connections/Variables store. DAG files are typically version-controlled and visible to all developers.
+
+> [!success] Safe pattern: store secrets in GCP Secret Manager or env vars
+> Configure the `CloudSecretManagerBackend` in `airflow.cfg` so that `Connection` and `Variable` lookups resolve from Secret Manager automatically. For Docker Compose environments, inject secrets as `AIRFLOW_CONN_*` or `AIRFLOW_VAR_*` environment variables — they override the Metadata DB and never appear in DAG code.
 
 ---
 

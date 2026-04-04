@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - python
-  - pandas
-  - polars
 tags: [pipeline, python, pandas, polars]
 aliases:
   - categoricals, nested types, Arrow, zero-copy
-keywords: [Categorical, Enum, Struct, List, Array, ArrowDtype, to_arrow, from_arrow, zero-copy, PyArrow]
 description: "Pandas/Polars DataFrame reference 07/10 — Advanced Types & Interoperability (categoricals, nested types, Arrow, zero-copy). Side-by-side executable examples with cell outputs."
 created: 2026-03-24
 updated: 2026-03-24

@@ -1,10 +1,6 @@
 ---
-type: reference
-category: sql-server
-technology: [sql-server]
 tags: [performance, sql, sql-server, tsql]
 aliases: [wait stats, wait statistics, sys.dm_os_wait_stats, PAGEIOLATCH, WRITELOG, LCK_M, CXPACKET, SOS_SCHEDULER_YIELD, RESOURCE_SEMAPHORE, wait type interpretation]
-keywords: [wait stats, wait statistics, sys.dm_os_wait_stats, PAGEIOLATCH_SH, PAGEIOLATCH_EX, WRITELOG, PAGELATCH, LCK_M_X, LCK_M_S, CXPACKET, CXCONSUMER, SOS_SCHEDULER_YIELD, RESOURCE_SEMAPHORE, ASYNC_NETWORK_IO, signal wait, resource wait, idle waits, benign waits, DBCC SQLPERF, wait type, performance diagnosis, query plan, page life expectancy, buffer pool, I/O latency, disk throughput]
 description: "How to read SQL Server wait statistics (sys.dm_os_wait_stats) to diagnose performance problems: the complete filtered wait query, signal vs. resource wait interpretation, common wait type meanings for pipeline workloads, I/O latency benchmarks, and Query Store setup for regression detection."
 created: 2026-03-22
 updated: 2026-03-22
@@ -255,6 +251,10 @@ ORDER BY (fs.io_stall_read_ms + fs.io_stall_write_ms) DESC;
 > [!warning] Log Latency Is the Most Impactful
 >
 > Every COMMIT waits for the log flush to complete (synchronous fsync). `avg_write_latency_ms` on the `.ldf` file directly adds to every transaction's response time. The log file must be on the fastest available disk — separate from the data files when possible.
+
+> [!success] Safe Pattern — Dedicated pd-ssd for the Log File
+>
+> Place the `.ldf` file on a dedicated GCP `pd-ssd` persistent disk, separate from the `.mdf` data files. Target `avg_write_latency_ms < 2ms`. If `WRITELOG` dominates wait stats despite fast disks, reduce transaction frequency by batching pipeline writes (e.g., bulk-insert staging rows then single MERGE commit) instead of row-by-row commits.
 
 ---
 

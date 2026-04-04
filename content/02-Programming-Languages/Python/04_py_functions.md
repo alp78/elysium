@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python]
 tags: [python]
 aliases: [lambda, closures, decorators, delegates, higher-order functions, generators, iterators]
-keywords: [def, lambda, closure, decorator, args, kwargs, type hints, functools, scope, LEGB]
 description: "Python functions reference with executable examples and cell outputs — covers function basics, parameters, lambda, closures, decorators, and type hints. See [04_cs_functions](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/04_cs_functions) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -35,6 +31,10 @@ status: complete
 > - Functions doing too much — single responsibility principle
 > - Missing docstrings on public functions — undocumented API
 
+> [!success] Correct pattern
+>
+> Keep functions focused on one task. For many parameters, pass a dataclass or dict: `def process(config: Config):`. Add a docstring to every public function: `"""Returns a greeting message."""`. Aim for functions that fit on one screen.
+
 ```python
 from datetime import datetime, timezone
 from functools import reduce
@@ -59,6 +59,10 @@ A function with no `return` (or bare `return`) returns `None` — Python's equiv
 > [!warning] None-returning function pitfalls
 >
 > Don't assign the result of a `None`-returning function — it's likely a bug. Don't mix `return None` and `return value` in the same function.
+
+> [!success] Correct pattern
+>
+> If a function mutates state or has side effects, don't `return` a value — callers shouldn't assign it. If a function can return a value or nothing, use `Optional[T]` and be explicit: `return None` at the end. Keep all return paths consistent.
 
 ```python
 def print_greeting(name):
@@ -85,6 +89,10 @@ result  # None
 >
 > - **Mutable defaults:** `def f(lst=[])` shares the list across all calls — use `lst=None` instead
 > - Too many defaulted params — use a config dict or dataclass
+
+> [!success] Correct pattern
+>
+> Use the `None` sentinel: `def f(lst=None): if lst is None: lst = []`. For functions with many options, group them: `def run(config: dict):` or use a `@dataclass` config object. Immutable defaults (`int`, `str`, `tuple`) are always safe.
 
 ```python
 def greet(name, greeting="Hello"):
@@ -124,6 +132,10 @@ Inner functions capture variables from the enclosing scope. `make_multiplier(3)`
 > [!warning] Don't mutate captured variables without nonlocal
 >
 > Don't mutate captured variables without `nonlocal` — Python creates a local shadow instead.
+
+> [!success] Correct pattern
+>
+> Declare `nonlocal var` before assigning to an enclosing-scope variable: `nonlocal count; count += 1`. For complex shared state, use a class instead of closures with multiple `nonlocal` declarations.
 
 ```python
 def make_multiplier(n):
@@ -222,6 +234,10 @@ Accept a `get_now` callable with default `None` (uses real time). Tests inject a
 >
 > Don't call `datetime.now()` directly in production code — it's untestable. Don't monkeypatch `datetime` in tests — it's fragile.
 
+> [!success] Correct pattern
+>
+> Inject time as a callable: `def process(get_now=None): if get_now is None: get_now = lambda: datetime.now(timezone.utc)`. Tests inject a fixed value: `process(get_now=lambda: datetime(2024, 1, 1))`. This makes time-dependent code fully deterministic and testable.
+
 ```python
 def process_order(order, get_now=None):
     if get_now is None:
@@ -311,6 +327,10 @@ for e in by_salary:
 > [!danger] Mutable default arguments (def f(lst=[],
 >
 > Mutable default arguments (`def f(lst=[], d={})`) cause shared state across calls. The same issue applies to dicts and sets — always use the `None` sentinel pattern.
+
+> [!success] Correct pattern
+>
+> Use `None` as the default, then initialize inside the function: `def f(lst=None): if lst is None: lst = []`. This guarantees a fresh object on every call. The same pattern applies to dicts: `def f(d=None): if d is None: d = {}`.
 
 ```python
 def bad_append(item, lst=[]):         # BAD: shared across calls
@@ -403,6 +423,10 @@ func(1, normal=2, kw_only=3)
 > - **Complex lambdas** — unreadable; extract to a named function
 > - **Lambda with side effects** — use `def` for clarity
 
+> [!success] Correct pattern
+>
+> Use lambdas only as inline arguments: `sorted(data, key=lambda x: x[1])`. For anything more complex, define a named function: `def by_salary(e): return e["salary"]`. Named functions show up in tracebacks and support docstrings.
+
 ```python
 add = lambda a, b: a + b              # same as: def add(a, b): return a + b
 add(3, 4)   # lambda add
@@ -440,6 +464,10 @@ Python resolves names in LEGB order: Local → Enclosing → Global → Built-in
 > [!warning] Modifying an enclosing variable without
 >
 > Modifying an enclosing variable without `nonlocal` creates a local shadow instead of updating the outer variable.
+
+> [!success] Correct pattern
+>
+> Declare `nonlocal x` at the top of the inner function before any assignment to `x`. Without it, any `x = ...` inside the inner function creates a new local and Python raises `UnboundLocalError` if `x` is read before assignment.
 
 ```python
 x = "global"
@@ -497,6 +525,10 @@ A decorator takes a function and returns a modified version. `@decorator` applie
 > - Side effects at import time — surprising behavior
 > - Too many stacked decorators (>3) — hard to debug order
 
+> [!success] Correct pattern
+>
+> Always use `@functools.wraps(func)` on the wrapper to preserve `__name__`, `__doc__`, and `__annotations__`. Keep decorator logic side-effect-free at definition time. If stacking more than 3 decorators, consider combining related concerns into one decorator.
+
 ```python
 def timer(func):                          # Step 1: receives original function
     @functools.wraps(func)                # preserves func.__name__ and __doc__ on wrapper
@@ -527,6 +559,10 @@ slow_sum.__name__  # 'slow_sum' (preserved by wraps)
 > [!danger] Lambdas in a loop capture
 >
 > Lambdas in a loop capture the variable itself — not the value. After the loop, all see the final value. Fix: default argument `i=i` captures the current value.
+
+> [!success] Correct pattern
+>
+> Capture the current value using a default argument: `lambda i=i: i`. The default is evaluated at definition time, binding the current value of `i` rather than the variable reference. This is the standard Pythonic fix for late-binding closures in loops.
 
 ```python
 funcs_bad = [lambda: i for i in range(3)]
@@ -601,6 +637,10 @@ except ValueError as e:
 > [!warning] Decorator order matters — decorators are applied bottom-up
 >
 > `@retry @log def f()` means `f = retry(log(f))`, not `log(retry(f))`. The bottom decorator wraps the function first, and each outer decorator wraps the result. Reversing the order changes behavior — e.g., logging may or may not see retries depending on stack order.
+
+> [!success] Correct pattern
+>
+> Read decorator stacks bottom-up: the decorator closest to `def` wraps first. Place `@functools.wraps` innermost. To log retries, put `@log` outside `@retry`: `@log @retry def f()` means `f = log(retry(f))` — every retry attempt is visible to the logger.
 
 `@a @b @c def f()` means `f = a(b(c(f)))` — bottom decorator wraps first, each receives the result of the one below. Order matters. Avoid stacking more than 3 decorators.
 

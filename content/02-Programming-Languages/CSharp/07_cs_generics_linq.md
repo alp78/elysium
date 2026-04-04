@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [generics, LINQ, type parameters, generic collections, comprehensions, functional programming]
-keywords: [generics, LINQ, where, select, orderby, groupby, IEnumerable, IQueryable, type constraints, variance]
 description: "C# generics and LINQ reference with executable examples and cell outputs — covers generic classes, constraints, LINQ query and method syntax, deferred execution, and functional patterns. See [07_py_generics_linq](https://alp78.github.io/elysium/02-Programming-Languages/Python/07_py_generics_linq) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -226,6 +222,9 @@ foreach (var s in deptStats)
 
 > [!warning] Join requires matching key types
 > The outer and inner key selectors must return the same type. If one returns `int` and the other returns `string`, the join silently produces zero results with no compile-time error. Always verify key types match.
+
+> [!success] Verify key types before joining
+> Confirm that both key selectors return the same type (e.g., both `string`). Use explicit casts or `.ToString()` if types differ, and add a unit test that asserts the join result count is greater than zero.
 
 ```csharp
 // Join and GroupJoin — combine collections by matching keys

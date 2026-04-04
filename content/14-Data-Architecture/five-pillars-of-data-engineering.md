@@ -1,10 +1,6 @@
 ---
-type: concept
-category: data-architecture
-technology: []
 tags: [data-architecture, data-engineering, architecture]
 aliases: [Five Pillars, Senior Data Engineer Pillars, data engineering principles, engineering pillars]
-keywords: [five pillars, reliability, observability, efficiency, security, operability, senior data engineer, mindset, principles, data engineering fundamentals]
 description: "The five pillars of senior data engineering — reliability, observability, efficiency, security, and operability — that every production system must be designed around."
 created: 2026-03-22
 updated: 2026-03-22
@@ -39,6 +35,10 @@ Your pipeline must produce correct data, every time. This means [idempotent tran
 > days. Three days of wrong NAV calculations for every ETF tracking it.
 > Idempotent transforms, quality gates, and lineage tracking prevent this.
 
+> [!success] Build reliability in from the design stage — idempotency, quality gates, lineage
+>
+> Use MERGE upserts with a correct business key (not an IDENTITY column) to make every load idempotent. Add a post-stage quality gate that checks for duplicate `(symbol, date)` pairs before the run completes. Track `batch_id` and row counts in a lineage table so any anomaly is traceable to its exact pipeline run within seconds.
+
 ## Observability
 
 You cannot fix what you cannot see. Every system you operate needs metrics (how much), logs (what happened), and traces (where did time go). The gap between "it works on my machine" and "it works in production" is entirely filled by observability. See [datadog-architecture-overview](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-architecture-overview) and [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging).
@@ -53,6 +53,10 @@ You cannot fix what you cannot see. Every system you operate needs metrics (how 
 > dashboard shows the failing stage, input row count, and error message
 > within 30 seconds.
 
+> [!success] Emit structured logs with stage, batch_id, row counts, and error context at every step
+>
+> Use a structured logging pattern: `log.error({"stage": "silver_enrich", "batch_id": batch_id, "input_rows": n, "error": str(e)})`. Ship logs to Datadog or Cloud Logging with a dashboard that surfaces failing stage and error type instantly. The on-call engineer should never need to SSH into a VM to diagnose a pipeline failure.
+
 ## Efficiency
 
 Cloud resources cost real money. A query that scans 10 TB when it could scan 10 GB is not just slow — it is a $50 billing event that happens every time someone runs it. Senior engineers think in dollars-per-query, IOPS-per-transaction, and cold-start-latency-per-invocation. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) and cost reference.
@@ -65,6 +69,10 @@ Cloud resources cost real money. A query that scans 10 TB when it could scan 10 
 > cost $0.01 with partition pruning. The fix is one line:
 > `WHERE _PARTITIONDATE = CURRENT_DATE()`. But nobody looked at the
 > billing dashboard until the invoice arrived.
+
+> [!success] Set up a BigQuery billing export and review it weekly
+>
+> Enable BigQuery billing export to a BigQuery dataset. Create a dashboard showing cost-per-query by user and by job. Set a Cloud Billing budget alert at 80% of the monthly threshold. Review the top-10 most expensive queries each week and add partition filters or clustering where missing. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) for the optimization techniques.
 
 ## Security
 
@@ -79,6 +87,10 @@ The data you move often contains financial information, personal identifiers, or
 > Workload Identity Federation eliminates key files entirely. The key
 > that doesn't exist can't be leaked.
 
+> [!success] Use Workload Identity Federation — eliminate all service account key files
+>
+> Configure GitHub Actions and Cloud Run to authenticate via WIF instead of key files. A federated identity has no downloadable credential — there is nothing to commit, nothing to leak, nothing to rotate. See [secrets-management > GitHub Actions — Workload Identity Federation (Keyless)](https://alp78.github.io/elysium/06-GCP/Security/secrets-management#github-actions--workload-identity-federation-keyless) for the setup pattern.
+
 ## Operability
 
 Every system you build will eventually be operated by someone who is not you, possibly at 3 AM during an outage. Clear naming conventions, documented runbooks, structured logging, and predictable deployment processes are what make a system operable. If your successor needs to read your mind to operate your system, you have failed as an engineer.
@@ -91,6 +103,10 @@ Every system you build will eventually be operated by someone who is not you, po
 > naming. It takes two weeks to understand what the pipeline does and
 > three months to feel confident making changes. Clear naming, documented
 > runbooks, and structured logging make this a two-day onboarding.
+
+> [!success] Write the runbook before the pipeline goes live — not after
+>
+> For every DAG, write a one-page runbook covering: what it does, what it depends on, what a failure looks like, and how to restart it safely. Use descriptive task names (`extract_daily_ohlcv`, not `task_3`). Document oncall steps in the same repo as the code so they stay in sync. See [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) for naming conventions and [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) for structured error output patterns.
 
 ## How These Pillars Map to the Vault
 

@@ -1,8 +1,5 @@
 ---
 title: "Environment Management Strategy"
-type: concept
-category: data-architecture
-technology: [gcp, sql-server, terraform, dbt, airflow]
 tags:
   - data-architecture
   - patterns
@@ -18,7 +15,6 @@ tags:
 aliases:
   - "Environment Strategy"
   - "Dev Staging Prod"
-keywords: [environment, dev, staging, prod, promotion, deployment, workspace, target, configuration, secret management, cost model, CI/CD]
 description: "Dev, staging, prod environment topology, promotion workflow, tool-by-tool environment separation, and cost model."
 created: 2026-03-29
 updated: 2026-03-29
@@ -85,6 +81,10 @@ Decision factors:
 > tier applies per billing account, not per project, so multiple projects don't increase
 > cost.
 
+> [!success] Use separate GCP projects per environment
+>
+> Create `data-platform-dev`, `data-platform-staging`, and `data-platform-prod` as distinct GCP projects under the same billing account. Use Terraform to provision all three from a shared module with environment-specific `tfvars`. Billing attribution, IAM boundaries, and blast radius are all scoped automatically.
+
 ---
 
 ## Tool-by-Tool Environment Separation
@@ -107,6 +107,10 @@ See [gcloud-configurations > gcloud config configurations create — named confi
 > or `bq rm` hits the wrong project. Always verify with `gcloud config get project`
 > before destructive operations. The terminal color-coding pattern in
 > [gcloud-configurations](https://alp78.github.io/elysium/06-GCP/Core/gcloud-configurations) makes the active project visible at a glance.
+
+> [!success] Verify the active project before every destructive operation
+>
+> Run `gcloud config get project` as the first line of any script that performs destructive operations. Use the terminal color-coding pattern in [gcloud-configurations](https://alp78.github.io/elysium/06-GCP/Core/gcloud-configurations) to keep the active project permanently visible in your shell prompt.
 
 ### Terraform — workspaces or variable files
 
@@ -131,6 +135,10 @@ terraform apply -var-file=environments/prod.tfvars
 > `terraform apply` in the wrong workspace creates or destroys resources in the wrong
 > environment. Always run `terraform workspace show` before `terraform plan`. In CI/CD,
 > set the workspace explicitly in the workflow — never rely on the last-used workspace.
+
+> [!success] Set workspace explicitly in every CI/CD workflow step
+>
+> Add `terraform workspace select prod` (or the target environment) as the first step in your GitHub Actions deploy job, immediately before `terraform plan`. Never assume the workspace state carried over from a previous run.
 
 ### dbt — profile targets
 
@@ -161,6 +169,10 @@ dbt run --target prod      # explicitly hits prod
 > A developer running `dbt run` locally to test a model change modifies production tables.
 > Always set the default to `dev`. CI/CD pipelines should use `--target prod` explicitly.
 
+> [!success] Set `target: dev` in profiles.yml and use `--target prod` explicitly in CI/CD
+>
+> The `profiles.yml` default must always be `dev`. All production deploys go through CI/CD with an explicit `dbt run --target prod`. No engineer should ever need to run `--target prod` locally — if they do, it is a process problem, not a tooling problem.
+
 ### Airflow — connections and variables
 
 Each environment has its own Airflow Connections (different SQL Server host, different BigQuery dataset) and Variables (environment name, feature flags).
@@ -175,6 +187,10 @@ Each environment has its own Airflow Connections (different SQL Server host, dif
 > dev DAG runs against the production database. Use connection IDs that include the
 > environment name (`sql_server_prod`, `sql_server_dev`) or use Airflow Variables to
 > resolve the connection dynamically.
+
+> [!success] Embed the environment name in every connection ID
+>
+> Name connections `sql_server_dev`, `sql_server_staging`, `sql_server_prod` — not just `sql_server`. Use an Airflow Variable `ENV` (`dev`/`staging`/`prod`) to build the connection ID dynamically: `conn_id = f"sql_server_{Variable.get('ENV')}"`. A copied DAG that still works correctly in dev is safe by construction.
 
 ### GitHub Actions — environment secrets and protection rules
 
@@ -204,6 +220,10 @@ GitHub Environments (`dev`, `staging`, `production`) provide per-environment sec
 > wrong database wipes production data. Separate instances — even if they're on the
 > same VM — provide process isolation that separate databases on the same instance cannot.
 
+> [!success] Run dev SQL Server as a local Docker container
+>
+> Use `docker run -e SA_PASSWORD=... mcr.microsoft.com/mssql/server` for dev — completely isolated from production with zero cross-contamination risk and no ongoing GCE cost. Production runs on its own dedicated GCE VM. The two instances cannot interact by design.
+
 ### BigQuery — separate datasets or projects
 
 - **Dev:** Dataset `dev_pipeline` in the dev GCP project
@@ -216,6 +236,10 @@ GitHub Environments (`dev`, `staging`, `production`) provide per-environment sec
 > configuration. If your gcloud config points to prod, your "dev" query runs against
 > production BigQuery — and you pay for the bytes scanned in prod. Always specify
 > `--project_id` or verify with `gcloud config get project`.
+
+> [!success] Always pass `--project_id` explicitly to bq commands
+>
+> Use `bq query --project_id=data-platform-dev ...` in all scripts. This makes the target project explicit and independent of the active gcloud configuration, eliminating the risk of running dev queries against prod BigQuery.
 
 ---
 
@@ -294,6 +318,10 @@ graph TD
 > | 9 | Resource limits | Dev has no quotas, prod hits BQ slot limits | Set quotas in dev project too |
 > | 10 | Feature flags | Feature enabled in dev, disabled in prod | Explicit feature flag management |
 
+> [!success] Use staging as a prod mirror to surface these failures before cutover
+>
+> Staging exists precisely to catch the discrepancies in the table above. Give staging prod-like IAM, prod-like data volumes (recent subset), Secret Manager (not `.env`), VPC network config, and BQ slot quotas. A failure caught in staging costs a deploy cycle. The same failure in prod costs an incident and SLA breach.
+
 ---
 
 ## Cost Model by Environment
@@ -333,6 +361,10 @@ What each environment actually costs per month. For full per-service pricing det
 > | No approval gate before prod deploy | Broken code reaches production automatically | GitHub Environment protection rules on `production` |
 > | Terraform state in same bucket for all envs | State corruption, accidental cross-env changes | Separate state buckets per environment |
 > | Different schemas between dev and prod | Queries that work in dev fail in prod | Automated schema comparison in CI, or use dbt to manage schema |
+
+> [!success] Treat environment config as infrastructure — version-controlled and automated
+>
+> Store all environment configuration (project IDs, connection strings, feature flags) in version-controlled `tfvars` files and GitHub Environment secrets. No hardcoding, no manual switches. When every environment property is declared in code, the anti-patterns above become structurally impossible.
 
 ---
 

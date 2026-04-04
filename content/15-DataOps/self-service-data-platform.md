@@ -1,6 +1,4 @@
 ---
-type: reference
-category: dataops
 tags: [dataops]
 aliases:
   - self-service data
@@ -11,35 +9,6 @@ aliases:
   - data literacy
   - data contracts
   - governed self-service
-keywords:
-  - self-service data
-  - data democratization
-  - data platform
-  - data catalog
-  - data products
-  - data contracts
-  - governed self-service
-  - data literacy
-  - semantic layer
-  - metrics layer
-  - data quality
-  - data discovery
-  - business intelligence
-  - natural language query
-  - cost governance
-  - data SLA
-  - data documentation
-  - data lineage
-  - access control
-  - data marketplace
-  - Dataplex
-  - DataHub
-  - Amundsen
-  - Alation
-  - Great Expectations
-  - dbt
-  - Soda
-  - Looker
 description: "Building self-service data platforms — from data catalogs and quality layers to governed access and data products, enabling non-engineers to use data without filing tickets."
 created: 2026-03-22
 updated: 2026-03-22
@@ -130,6 +99,9 @@ Before investing in self-service tooling, ensure:
 
 > [!warning] Premature Democratization Creates Distrust
 > Giving users access to raw, undocumented, inconsistent data does more harm than good. They will produce analyses with wrong numbers, present them to leadership, get caught, and blame the data team. Self-service must be built on a trusted foundation.
+
+> [!success] Fix: Gate Self-Service Access Behind a Quality Prerequisite
+> Before opening any dataset to self-service access, require it to pass the democratization prerequisites checklist above: semantic layer defined, owner documented, quality status visible in the catalog, and at least basic data literacy training available. Only promote datasets to the "self-service" tier in the catalog once these gates are cleared.
 
 ---
 
@@ -436,6 +408,9 @@ terms:
 
 > [!warning] Don't Let Contracts Become Bureaucracy
 > Data contracts are valuable when they are lightweight and machine-enforceable. Contracts that require a committee, a PDF, and three signature approvals to update will be ignored. Start simple: schema + SLA + owner. Automate enforcement.
+
+> [!success] Fix: Start with a Minimal YAML Contract in Git
+> Define each contract as a YAML file in the repository with three mandatory fields only: `owner`, `schema` (column names and types), and `sla.freshness_target`. Add CI validation that checks contract syntax on every PR. Expand the contract schema incrementally as teams prove they use the existing fields.
 
 ---
 

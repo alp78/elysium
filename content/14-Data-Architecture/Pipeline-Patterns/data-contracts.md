@@ -1,8 +1,5 @@
 ---
 title: "Data Contracts"
-type: concept
-category: data-architecture
-technology: [python, github-actions, protobuf, avro, dbt]
 tags:
   - data-architecture
   - architecture
@@ -20,7 +17,6 @@ tags:
 aliases:
   - "Schema Contracts"
   - "Data Contract"
-keywords: [data contract, schema, SLA, semver, breaking change, producer, consumer, ownership, validation, CI, JSON Schema, Protobuf, Avro, dbt contract, deprecation, enum, primary key]
 description: "Formal agreements between data producers and consumers — schema, SLAs, semantics, ownership, versioning — with YAML examples, CI enforcement, and breaking-change classification."
 status: complete
 created: 2026-03-23
@@ -59,6 +55,10 @@ The contract concept parallels [API contracts](https://alp78.github.io/elysium/1
 > the contract said it wouldn't happen. Enforce contracts automatically:
 > Pydantic at ingestion, dbt tests at transform, CI checks at deployment.
 > A contract that isn't tested is a lie.
+
+> [!success] Enforce Contracts Automatically
+>
+> Wire the contract into the pipeline at three points: (1) **Pydantic** model validation at ingestion time to reject non-conforming rows before they enter bronze; (2) **dbt contract tests** (`not_null`, `unique`, `accepted_values`) that run on every `dbt build`; (3) a **CI step** in GitHub Actions that runs `python scripts/validate_contracts.py contracts/` on every push to contracts or models. A contract enforced at all three points cannot silently drift.
 
 ### Contract-First Development Workflow
 
@@ -245,6 +245,10 @@ jobs:
 > new column. Additive changes are safe only when ALL consumers handle
 > unknown fields gracefully. In practice, announce additive changes
 > and give consumers a release window, even if they're "non-breaking."
+
+> [!success] Safe Pattern for Additive Changes
+>
+> Before adding any column, audit downstream consumers for `SELECT *` usage, strict Avro/Protobuf schemas, and Pydantic models with `extra='forbid'`. Publish the upcoming change in the contract YAML as a minor version bump with at least a two-sprint notice. Consumers should adopt `model_config = ConfigDict(extra='ignore')` for producer-owned schemas, and use explicit column lists (`SELECT col1, col2`) rather than `SELECT *` so new columns are invisible until they opt in.
 
 ### Producer and Consumer Responsibilities
 

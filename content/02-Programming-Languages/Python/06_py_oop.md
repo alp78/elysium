@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python]
 tags: [python]
 aliases: [classes, inheritance, polymorphism, interfaces, abstract classes, encapsulation, properties]
-keywords: [class, inheritance, polymorphism, encapsulation, property, dunder, dataclass, ABC, abstractmethod, super]
 description: "Python OOP reference with executable examples and cell outputs — covers classes, inheritance, polymorphism, encapsulation, properties, dataclasses, and abstract base classes. See [06_cs_oop](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/06_cs_oop) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -46,6 +42,12 @@ from dataclasses import dataclass, field
 > - **Mutable class attributes** (lists/dicts) — shared and mutated by all instances
 > - **Not defining `__repr__`** — defaults to unhelpful `<Dog at 0x...>`
 > - **`__init__` doing heavy work** — use factory methods for complex setup
+
+> [!success] Best practices
+>
+> - Use immutable class attributes (strings, numbers, tuples) or define mutable defaults inside `__init__` (`self.items = []`)
+> - Always define both `__repr__` (unambiguous, for debugging) and `__str__` (human-readable)
+> - Keep `__init__` to attribute assignment only; use `@classmethod` factories for complex construction
 
 ```python
 # Classes and objects — class is the blueprint; instances are created with ClassName()
@@ -169,6 +171,10 @@ A child class acquires all attributes and methods of a parent class and can exte
 >
 > With multiple inheritance, if two parents share a grandparent, methods could be called twice. Python's MRO (C3 linearization) prevents this, but the order may surprise you. Check with `ClassName.__mro__`.
 
+> [!success] Verify the MRO before relying on multiple inheritance
+>
+> Print `ClassName.__mro__` to confirm the resolution order. Use `super()` consistently in every class in the hierarchy — this ensures C3 linearization works correctly and each `__init__` is called exactly once.
+
 `class Dog(Animal)` inherits from `Animal`. Override methods by redefining them; `super().__init__()` calls the parent constructor. Python supports multiple inheritance via MRO (C3 linearization). Use inheritance for IS-A relationships; prefer composition (attributes) for HAS-A.
 
 > [!warning] Anti-patterns
@@ -176,6 +182,10 @@ A child class acquires all attributes and methods of a parent class and can exte
 > - **Deep hierarchies** (>3 levels) — prefer composition
 > - **Forgetting `super().__init__()`** — parent state not initialized
 > - **Diamond inheritance** without understanding MRO — confusing dispatch
+
+> [!success] Prefer composition for HAS-A relationships
+>
+> If a class needs the capability of another but isn't fundamentally a subtype, compose: `class Pipeline: def __init__(self): self.logger = Logger()`. Reserve inheritance for true IS-A relationships where the Liskov Substitution Principle holds.
 
 ```python
 # Inheritance and polymorphism — child classes extend a parent; method overriding enables runtime dispatch
@@ -309,6 +319,10 @@ duck.swim()   # swim
 > - **Forgetting `@abstractmethod`** — method becomes optional, not enforced
 > - **Too many abstract methods** — split into smaller ABCs
 
+> [!success] Use ABC for shared implementation, Protocol for contracts
+>
+> If the base class provides shared methods (like `describe()` above), use `ABC`. If you only need a structural contract with no shared code — especially for third-party classes — use `@runtime_checkable Protocol` instead. Keep ABCs focused: 2-4 abstract methods is usually the right size.
+
 ```python
 # Abstract class — Shape defines the contract; subclasses must implement area/perimeter
 
@@ -438,6 +452,10 @@ Python uses conventions, not enforcement: `name` is public, `_name` is protected
 > - **Overusing `__mangling`** — makes testing and inheritance harder
 > - **No access control at all** — public everything loses encapsulation
 
+> [!success] Use single underscore for internal state, @property for validated access
+>
+> Prefix internal attributes with `_` and expose them through `@property` with a setter that validates. Reserve `__` name mangling only for attributes that must survive subclass overrides — this keeps the class testable and subclassable.
+
 ```python
 # Encapsulation — Python uses naming conventions instead of enforced access modifiers
 
@@ -505,6 +523,10 @@ comparison
 >
 > With `__slots__`, you cannot add arbitrary attributes at runtime (`obj.new_attr = 1` raises `AttributeError`). Subclasses without their own `__slots__` reintroduce `__dict__`, negating the memory savings. If you need both slots and dataclass, use `@dataclass(slots=True)` (Python 3.10+).
 
+> [!success] Use @dataclass(slots=True) for modern slotted data classes
+>
+> In Python 3.10+, `@dataclass(slots=True)` automatically generates `__slots__` from field annotations, giving the memory benefit without manual slot maintenance. For high-volume instances (millions of price records), this reduces per-instance overhead by ~40%.
+
 ## Static & Class Methods
 
 #### @staticmethod and @classmethod — definition and factory methods
@@ -520,6 +542,10 @@ comparison
 > - **`@staticmethod` when a module-level function is clearer** — unnecessary nesting
 > - **Instance method when `self` is never used** — make it `@staticmethod`
 > - **Not using `cls` in `@classmethod`** — should be `@staticmethod` instead
+
+> [!success] Choose the right method type by what the method uses
+>
+> If the method uses `self` → instance method. If it uses `cls` (or creates new instances) → `@classmethod`. If it uses neither → `@staticmethod` (or move it to module level if it doesn't conceptually belong to the class).
 
 ```python
 # Static and class methods — @classmethod receives cls for factories; @staticmethod has no self/cls
@@ -664,6 +690,10 @@ def transform_typed(record: Order) -> Order:
 > - **Dict:** `{"customer_id": "not_a_number", "amount": "free"}` — no error at any point.
 > - **Dataclass:** type hints help the IDE catch type mismatches, but no runtime enforcement.
 > - **Pydantic:** runtime validation that auto-converts valid data and rejects bad data with clear error messages.
+
+> [!success] Use Pydantic for external data, dataclass for internal data
+>
+> Apply Pydantic `BaseModel` at the boundary (API input, CSV parsing, Kafka messages) where data is untrusted and validation is critical. Use `@dataclass` for internal pipeline state and metadata where you control the construction and want lighter weight.
 
 ```python
 bad_dict = {"customer_id": "not_a_number", "amount": "free"}  # no error!

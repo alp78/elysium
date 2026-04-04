@@ -1,10 +1,6 @@
 ---
-type: concept
-category: ai-and-prompts
-technology: [python, bigquery, gcp]
 tags: [ai, prompt-engineering, python, bigquery, gcp]
 aliases: [LLM data pipelines, RAG architecture, retrieval augmented generation, vector database, embeddings, AI-assisted development, Claude Code, GitHub Copilot, AI data engineering, LLM pipeline, corporate actions parsing with LLM, ESG extraction LLM, anomaly explanation LLM, Apache Iceberg AI, pgvector, ChromaDB, Pinecone, token budgeting]
-keywords: [LLM, RAG, retrieval augmented generation, embeddings, vector database, pgvector, ChromaDB, Pinecone, Weaviate, Qdrant, AlloyDB AI, langchain, VertexAI, text-embedding, Claude, Anthropic, GitHub Copilot, AI-assisted, corporate actions, press release parsing, anomaly explanation, data quality, schema documentation, SQL generation, token cost, daily budget, Iceberg, Apache Iceberg, structured unstructured, semantic search, AI productivity, hallucination, code review AI]
 description: "AI-augmented data engineering: practical LLM use cases (corporate actions parsing, anomaly explanation, schema documentation), RAG architecture for financial document retrieval, vector database comparison (pgvector, ChromaDB, Pinecone, Weaviate, Qdrant, AlloyDB AI), cost management and token budgeting, Apache Iceberg + AI hybrid architecture, and AI-assisted development workflow with Claude Code and GitHub Copilot. Includes all code examples."
 created: 2026-03-22
 updated: 2026-03-22
@@ -106,6 +102,9 @@ collection.add(
 > [!warning] Validate LLM extractions
 >
 > An LLM may extract the wrong split ratio (e.g., 1:4 instead of 4:1), invent an effective date, or misclassify a rights issue as a dividend. For index calculation pipelines, a wrong corporate action adjustment factor silently corrupts the entire price history. Treat LLM extraction as a first pass that must be confirmed against the vendor's structured data feed or a human review queue before it enters the pipeline.
+
+> [!success] Fix: Two-Stage Validation — Pydantic Schema + Vendor Cross-Check
+> Apply Pydantic validation immediately after the LLM call to enforce field types and enum constraints. Then cross-check every extraction against the vendor's structured data feed before inserting into the pipeline. If the vendor feed has not arrived yet, quarantine the extraction with `flagged=True` until the cross-check completes. Never allow an unconfirmed LLM extraction to propagate past the bronze layer.
 
 #### Corporate actions extraction from press releases
 
@@ -245,6 +244,9 @@ def validate_llm_output(raw_text: str) -> CorporateActionExtraction | None:
 > as an unknown action type, silently breaking every downstream JOIN that
 > filters on `action_type`.
 
+> [!success] Fix: Pydantic Boundary Validation with Quarantine on Failure
+> Wrap every LLM output in a `CorporateActionExtraction` Pydantic model before any downstream processing. On `ValidationError`, call `quarantine_llm_output()` with the raw text and error message — never silently discard. Review the quarantine queue regularly to identify systematic prompt failures and update the prompt or schema accordingly.
+
 ### Confidence Scoring and Human Review
 
 > [!abstract] What is confidence routing?
@@ -322,6 +324,9 @@ When LLM outputs feed into financial calculations, a wrong extraction corrupts i
 > (ratios are scale-invariant). Volatility looks normal. The error is
 > invisible to every automated check — only a human comparing absolute
 > price levels against an independent source catches it.
+
+> [!success] Fix: Multi-Source Ratio Verification Before Bronze Ingestion
+> Use `verify_corporate_action()` to cross-check the LLM-extracted ratio against the vendor's `split_factor` field before inserting into bronze. Additionally, add a post-load sanity check: after applying any split factor, verify that the adjusted close price on the day prior to the effective date is within 5% of the pre-adjustment close divided by the expected factor. Any breach blocks publication and routes to human review.
 
 ### Multi-Source Verification
 
@@ -443,6 +448,9 @@ No hallucination. No guessing. The interpretation comes from the contract, not f
 > confident, articulate, incorrect answer. With the contract, the interpretation
 > is deterministic — the metadata IS the ground truth, not the model's memory.
 
+> [!success] Fix: Export Column Context as Part of the Gold Table Artifact
+> Configure your pipeline to export a `gold_<table>_contract.json` alongside every gold table write. Include `x-column-context` entries for all derived columns with `description`, `unit`, `computation`, `null_semantics`, and `valid_range`. Any AI consumer that reads this contract before querying the table will interpret values deterministically without relying on model training data.
+
 ### The Context Architecture Behind It
 
 The column context is not a one-off export — it's part of a broader **context architecture** that flows through the pipeline alongside the data:
@@ -528,6 +536,9 @@ response = client.messages.create(
 > [!danger] LLM API cost explosion
 >
 > A pipeline processing 10,000 documents with no rate limiting or cost cap can burn through $500+ before anyone notices. Always implement a hard daily budget ceiling with an immediate circuit breaker (raise an exception, not just log a warning). Monitor cumulative spend in real-time via the `response.usage` fields, not via the billing dashboard (which has multi-hour delay).
+
+> [!success] Fix: Hard Daily Budget with Real-Time Circuit Breaker
+> Use the `call_llm_with_budget()` pattern shown below: track `daily_spend` against `DAILY_BUDGET` in real-time using `response.usage.input_tokens` and `output_tokens`. Raise `RuntimeError` (not a log warning) when the ceiling is reached so the pipeline fails loudly and the Airflow/Cloud Run job is retried or alerts. Reset the counter at UTC midnight via a scheduled job.
 
 ## Cost Management and Token Budgeting
 
@@ -729,6 +740,9 @@ def validate_index_weights(weights: pd.Series, index_key: str,
 > [!warning] AI tools are junior developers
 >
 > Treat AI-generated code the way you would treat a junior engineer's PR: assume it is probably correct for common patterns but might miss edge cases, security implications, or financial domain nuances. Never merge AI-generated code without a thorough review. The productivity gain comes from the speed of generation, not from skipping review. An AI that writes 10 tests in 30 seconds saves you time even if you spend 5 minutes reviewing and fixing 2 of them.
+
+> [!success] Fix: Mandatory Human Review Before Merge — No AI Auto-Approve
+> Add a CI check that labels any PR where the description includes "generated by" or "Claude" / "Copilot" as requiring an explicit senior engineer approval. Apply the standard review pyramid (correctness, data correctness, operational safety) to AI-generated code without relaxing any criteria. Document AI assistance in the PR description so reviewers know to apply extra scrutiny to edge cases.
 
 ## Related
 

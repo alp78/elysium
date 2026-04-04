@@ -1,12 +1,4 @@
 ---
-type: reference
-category: github-actions
-technology:
-  - github
-  - github-actions
-  - docker
-  - terraform
-  - gcp
 tags: [ci-cd, terraform, docker, gcp, github-actions]
 aliases:
   - matrix builds
@@ -15,32 +7,6 @@ aliases:
   - environment protection
   - deployment workflows
   - monorepo CI
-keywords:
-  - matrix builds
-  - reusable workflows
-  - composite actions
-  - docker actions
-  - environment protection
-  - deployment workflow
-  - terraform ci cd
-  - docker build
-  - artifact registry
-  - multi-environment
-  - monorepo
-  - path filters
-  - branch protection
-  - release automation
-  - semantic versioning
-  - self-hosted runners
-  - cost optimization
-  - workflow_call
-  - inputs
-  - outputs
-  - dorny paths-filter
-  - cloud run
-  - required reviewers
-  - changelog
-  - skip ci
 description: "Advanced GitHub Actions patterns — matrix builds, reusable workflows, composite actions, deployment strategies, Terraform CI/CD, Docker builds, and monorepo patterns."
 created: 2026-03-22
 updated: 2026-03-22
@@ -655,6 +621,10 @@ jobs:
 >
 > The `apply` job below runs `terraform apply -auto-approve` on merge to main. A bad Terraform change that passes plan review can still destroy resources if state drift occurred between plan and apply. Mitigations: (1) always use the `production` environment with required reviewers, (2) pin `terraform_version` to avoid behavior changes, (3) consider downloading the plan artifact from the PR workflow and running `terraform apply tfplan` instead of a fresh apply.
 
+> [!success] Safe apply pattern
+>
+> Use the `production` GitHub environment with required reviewers on the apply job. Upload the `tfplan` artifact in the plan job and download it in the apply job — this guarantees the apply executes exactly the reviewed plan, not a new one that may reflect state drift. Pin `terraform_version` in `hashicorp/setup-terraform` to prevent behavior changes on runner upgrades.
+
 ### Terraform CI/CD — Apply on Merge to Main
 
 ```yaml
@@ -1062,6 +1032,10 @@ jobs:
 > [!warning] Self-hosted runner security
 > Never use self-hosted runners with public repos — PRs from forks can execute arbitrary code. For public repos, use GitHub-hosted runners exclusively.
 
+> [!success] Safe self-hosted runner configuration
+>
+> For private repos, restrict self-hosted runners to specific branch patterns and require PR approval before running workflows from new contributors (Settings → Actions → General → "Require approval for first-time contributors"). For public repos, use GitHub-hosted runners exclusively to isolate untrusted code.
+
 ```yaml
 # Only allow self-hosted runners for internal branches
 jobs:
@@ -1100,6 +1074,10 @@ jobs:
 > [!warning] Cancel-in-progress kills deploys
 >
 > Setting `cancel-in-progress: true` at the workflow level cancels any in-flight run when a new push arrives. This is safe for PR checks but dangerous for deploy workflows -- cancelling a deployment mid-flight can leave infrastructure in an inconsistent state. Use `cancel-in-progress: ${{ github.event_name == 'pull_request' }}` to limit cancellation to PR events only.
+
+> [!success] Safe concurrency for mixed workflows
+>
+> Use `cancel-in-progress: ${{ github.event_name == 'pull_request' }}` — this cancels redundant PR runs (safe) but queues rather than cancels deploy runs triggered by push to main (safe). For deploy workflows, set a separate concurrency group per environment with `cancel-in-progress: false`.
 
 ```yaml
 concurrency:

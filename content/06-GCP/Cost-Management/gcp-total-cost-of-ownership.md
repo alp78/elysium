@@ -1,13 +1,4 @@
 ---
-type: reference
-category: gcp
-technology:
-  - gcp
-  - sql-server
-  - bigquery
-  - airflow
-  - cloud-run
-  - terraform
 tags: [cost, infrastructure, sql, terraform, airflow, bigquery, gcp, billing]
 aliases:
   - TCO
@@ -19,32 +10,6 @@ aliases:
   - cost calculator
   - budget planning
   - cost breakdown
-keywords:
-  - GCP total cost of ownership
-  - data pipeline cost
-  - BigQuery cost calculator
-  - Cloud Run pricing
-  - Compute Engine pricing
-  - SQL Server GCP cost
-  - Cloud Composer pricing
-  - Airflow self-hosted cost
-  - GCS storage cost
-  - Dataflow pricing
-  - Pub/Sub cost
-  - Cloud NAT pricing
-  - Datadog GCP
-  - GCP budget planning
-  - infrastructure cost breakdown
-  - batch pipeline cost
-  - streaming pipeline cost
-  - medallion architecture cost
-  - BigQuery on-demand vs slots
-  - GCP vs AWS cost comparison
-  - GCP vs Azure cost comparison
-  - hidden cloud costs
-  - BigQuery storage pricing
-  - persistent disk cost
-  - snapshot retention cost
 description: Concrete TCO calculations for classic data engineering pipeline architectures on GCP. Covers four reference architectures from small batch (~$100/month) to enterprise scale (~$3,000-10,000/month), with precise per-line-item cost breakdowns, Mermaid architecture diagrams, paused vs. running cost comparisons, multi-cloud comparisons, and a hidden costs checklist.
 created: 2026-03-22
 updated: 2026-03-22
@@ -63,6 +28,9 @@ This reference provides concrete, line-item TCO calculations for four archetypal
 > [!warning] Prices Change
 >
 > GCP pricing evolves. Always cross-check line items against the [GCP Pricing Calculator](https://cloud.google.com/products/calculator) before committing to a budget. The figures here are accurate reference points, not contractual quotes.
+
+> [!success] Validate estimates with the GCP Pricing Calculator before budgeting
+> Use the [GCP Pricing Calculator](https://cloud.google.com/products/calculator) to enter your exact specs (region, machine type, hours/month) and get a current quote. Save the calculator URL to share with stakeholders — it links directly to your configuration and always reflects the current price list.
 
 ---
 
@@ -297,6 +265,9 @@ A mid-size pipeline for a team of 2–4 engineers:
 >
 > Cloud NAT costs ~$32/month just to exist, before processing charges. Evaluate whether your VMs actually need outbound internet access. If only one VM needs external API access, consider a Cloud Run Job for ingestion instead (no NAT needed — Cloud Run has built-in internet access via Google's infrastructure).
 
+> [!success] Move external-API ingestion to Cloud Run Jobs to eliminate NAT
+> Cloud Run Jobs have native outbound internet access without a NAT gateway. Migrating API ingestion from a VM task to a Cloud Run Job removes the $32/month NAT cost entirely for that traffic path. Enable Private Google Access on the subnet for the remaining VM-to-GCP-API traffic.
+
 **Disk Snapshots — 200 GB total footprint**
 - 200 GB × $0.026 = **$5.20/month**
 
@@ -457,6 +428,9 @@ A production-grade platform for a team of 3–6 engineers with multiple data sou
 >
 > Cloud Composer 2's smallest configuration (1 scheduler, 1 web server, 1 worker, shared database) runs approximately $300–$350/month with no DAGs running. This is the floor. Every additional worker node adds ~$25–$50/month. If you have fewer than ~15 DAGs and a small team, self-hosted Airflow on an e2-standard-2 saves $250+/month.
 
+> [!success] Use self-hosted Airflow on e2-standard-2 for small teams
+> Deploy Airflow on an e2-standard-2 with Docker Compose. At ~$39/month (with SUD), this saves $260+/month vs Cloud Composer. Only move to Cloud Composer when operational overhead of Airflow upgrades, HA, and scaling becomes a real cost to the team.
+
 **BigQuery Queries — 10 TB scanned**
 - 10 TB × $6.25 = **$62.50/month**
 
@@ -506,6 +480,9 @@ A production-grade platform for a team of 3–6 engineers with multiple data sou
 > [!warning] Datadog Pricing Escalates Fast
 >
 > Datadog charges per host, per log GB, per APM span, per custom metric, and per synthetics test. The $86/month base assumes 2 infrastructure hosts and 1 APM host on annual Pro plan. Log ingestion ($0.10/GB after free tier), custom metrics ($0.008/metric), and real-user monitoring can double or triple this. Always review your Datadog bill monthly.
+
+> [!success] Review Datadog usage in the Plan & Usage page monthly
+> Check **Datadog → Plan & Usage → Usage** monthly for host count spikes (autoscaling workers), custom metric growth, and log ingestion volume. Set up Datadog's own cost usage alerts to catch unexpected host or metric growth before the invoice arrives.
 
 **Cloud Logging — 50 GB ingested**
 - Free tier: 50 GB/month → exactly at the boundary
@@ -680,6 +657,9 @@ Total Composer: **$1,062/month**
 >
 > Cloud Composer Large Environment.
 > A large Cloud Composer 2 environment with 3+ workers easily reaches $700–$1,000/month. At this scale, evaluate whether GCP Workflows + Cloud Run is a viable DAG-light alternative for simple dependency chains.
+
+> [!success] Evaluate GCP Workflows + Cloud Run for DAG-light orchestration
+> For pipelines with simple linear or fan-out dependencies, replace Cloud Composer with **GCP Workflows** calling Cloud Run Jobs. Workflows costs ~$0.01/1,000 steps and eliminates the $700+/month Composer environment entirely for those pipelines.
 
 **BigQuery — Enterprise Edition, 200 Reserved Slots (Prod)**
 

@@ -1,7 +1,5 @@
 ---
 tags: [infrastructure, bigquery, gcp]
-type: reference
-technology: bigquery
 status: stable
 updated: 2026-03-23
 description: "Comprehensive catalog of BigQuery production problems for data engineers — 25 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures. Covers cost control, query performance, DML concurrency, data types, and operational issues."
@@ -77,6 +75,10 @@ BigQuery uses columnar storage (Capacitor format) and charges $6.25 per TB scann
 > [!danger] Cost Trigger
 >
 > At $6.25/TB, a 5TB table costs $31.25 per unfiltered scan. A dashboard refreshing every 5 minutes on this table costs $4,500/day or $135,000/month. Always validate query cost before deploying to production dashboards.
+
+> [!success] Enable Partition Filter + Dry Run Before Deploying
+>
+> Always run `bq query --dry_run` before deploying any query to a production dashboard. Enable `require_partition_filter = TRUE` on all large partitioned tables so unfiltered queries are rejected at execution time rather than silently billed.
 
 **Prevention protocol**
 
@@ -222,6 +224,10 @@ BigQuery enforces a hard project-level quota of **20 concurrent interactive DML 
 >
 > The 20 concurrent interactive DML limit is project-wide, not per-table or per-dataset. All teams sharing a project compete for the same 20 slots. If another team's ETL is running 15 MERGEs, your pipeline has only 5 slots available.
 
+> [!success] Cap DML Concurrency with an Airflow Pool
+>
+> Create an Airflow pool (`bigquery_dml_pool`) with a max concurrency of 15–16 and assign all DML tasks to it. This ensures your pipeline never exceeds the project-wide quota, leaving headroom for other teams.
+
 **Prevention protocol**
 
 1. Inspect the current DML queue before running large parallelized pipelines:
@@ -341,6 +347,10 @@ BigQuery executes queries in a distributed shuffle-based execution engine. Large
 >
 > Check `totalBytesProcessed` vs `totalBytesBilled` in job metadata. Also check `INFORMATION_SCHEMA.JOBS.query_info.resource_warning` — BigQuery sometimes logs a warning before the failure.
 
+> [!success] Break Large Joins into Temp Tables
+>
+> Add partition filters to all tables in the JOIN before executing. If the query still exceeds memory, use `CREATE TEMP TABLE` to materialize filtered intermediate results, then join the smaller temp tables. This limits shuffle scope to manageable data volumes.
+
 **Prevention protocol**
 
 1. Inspect query execution stats to find the shuffle bottleneck:
@@ -458,6 +468,10 @@ BigQuery does not have a confirmation prompt for `DROP TABLE` or `DROP DATASET`.
 > [!danger] Irreversible After 7 Days
 >
 > BigQuery time travel defaults to 7 days. After that, deleted data is permanently gone unless you have snapshots or GCS exports. For EU BMR compliance, establish a snapshot routine for all critical reference and history tables.
+
+> [!success] Enable deletion_protection and Schedule Daily Snapshots
+>
+> Set `deletion_protection = true` in Terraform for all production tables. Create daily snapshot tables (`CREATE SNAPSHOT TABLE`) with a 5-year expiry for all tables that feed published index levels. For immediate recovery within 7 days, use `FOR SYSTEM_TIME AS OF`.
 
 **Prevention protocol**
 
@@ -586,6 +600,10 @@ BigQuery has three data ingestion mechanisms with dramatically different cost an
 > Use Load Jobs for Batch Data.
 > Load jobs from GCS are **free** in BigQuery. There is no per-byte charge for batch loads. For a financial platform moving data from SQL Server → GCS → BigQuery, load jobs should be the default ingestion path. Streaming is for real-time event streams only.
 
+> [!success] Refactor to GCS → bq load Pattern
+>
+> Replace all `insert_rows_json()` calls in batch pipelines with a two-step pattern: write Parquet to GCS first, then trigger a `bq load` job. This eliminates streaming costs entirely and makes data immediately available for DML operations.
+
 **Prevention protocol**
 
 1. Use load jobs (GCS → BigQuery) for all batch financial data — this is the standard Cloud Run export pattern:
@@ -702,6 +720,10 @@ Index constituent weights are stored as `FLOAT64` in the `analytics.index_weight
 >
 > Never Use FLOAT64 for Financial Data.
 > FLOAT64 is appropriate for scientific calculations where approximate values are acceptable. For index weights, prices, returns, and any value that feeds client-published index levels, use NUMERIC or BIGNUMERIC. This is a correctness issue, not just a precision preference.
+
+> [!success] Declare All Financial Columns as NUMERIC
+>
+> Define all financial value columns (`weight`, `close_price`, `market_cap_usd`, `adjustment_factor`) as `NUMERIC` in table schemas. Migrate existing `FLOAT64` columns by creating a new table with `CAST(col AS NUMERIC)` and swapping with `bq cp`.
 
 **Prevention protocol**
 
@@ -1220,6 +1242,10 @@ SQL's NULL semantics: any arithmetic operation involving NULL returns NULL. Aggr
 >
 > Silent NULL Propagation in Financial Calculations.
 > A NULL in a constituent weight silently reduces the effective index weight sum below 100%. The index level appears valid but is calculated on incomplete data. Always assert NULL counts explicitly before aggregation in financial pipelines.
+
+> [!success] Add NULL Gate Before Aggregation
+>
+> Insert a NULL-rate quality check after each transformation stage. Use `COUNTIF(weight IS NULL)` in the same SELECT as the aggregation and fail the pipeline explicitly if null counts exceed threshold — do not let NULLs flow silently into published calculations.
 
 **Prevention protocol**
 
@@ -2015,6 +2041,10 @@ BigQuery time travel retains all versions of table data for a configurable windo
 > [!danger] EU BMR Record-Keeping
 >
 > EU BMR requires data and methodology to be retained for a minimum of 5 years. BigQuery's 7-day time travel provides zero regulatory compliance. A dedicated snapshot and archival strategy is mandatory for all tables that feed client-published index levels.
+
+> [!success] Implement Daily Snapshots with 5-Year Retention
+>
+> Run a daily Cloud Run job that creates `CREATE SNAPSHOT TABLE` clones of all index-feeding tables with `expiration_timestamp` set 5 years out. Back this up with a `bq extract` to a GCS bucket with an immutable retention policy (`retention_period = 157766400`).
 
 **Prevention protocol**
 

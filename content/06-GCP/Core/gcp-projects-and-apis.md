@@ -1,10 +1,6 @@
 ---
-type: concept
-category: gcp
-technology: [gcp, gcloud]
 tags: [infrastructure, api, gcp, gcloud]
 aliases: [GCP projects, GCP APIs, gcloud services, enable API, project listing]
-keywords: [gcp projects, project list, gcloud projects list, enable API, gcloud services enable, bigquery API, cloud run API, pubsub API, compute API, service activation, API enablement, data engineering APIs]
 description: "How to list GCP projects, inspect project metadata, and enable or verify the APIs required for data engineering workloads including BigQuery, Cloud Run, Pub/Sub, and Compute Engine."
 created: 2026-03-22
 updated: 2026-03-22
@@ -87,6 +83,15 @@ gcloud services enable bigquery.googleapis.com run.googleapis.com pubsub.googlea
 > [!warning] APIs Are Per-Project
 >
 > Enabling an API in your dev project does not enable it in prod. Every project must have APIs enabled independently. When setting up a new environment (dev → staging → prod), API enablement must be repeated — or automated with [Terraform](https://alp78.github.io/elysium/07-Terraform/moc-terraform).
+
+> [!success] Automate API enablement with Terraform
+> Use the `google_project_service` Terraform resource to declare all required APIs as code. Running `terraform apply` on a new project enables every API in one step, eliminating the per-project manual gap:
+> ```hcl
+> resource "google_project_service" "apis" {
+>   for_each = toset(["bigquery.googleapis.com", "run.googleapis.com", "pubsub.googleapis.com"])
+>   service  = each.key
+> }
+> ```
 
 ### GCP API Lifecycle States
 

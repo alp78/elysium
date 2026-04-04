@@ -1,10 +1,6 @@
 ---
-type: reference
-category: data-architecture
-technology: [sql-server, bigquery, gcp, python, bash, powershell, csharp, terraform, airflow, docker]
 tags: [data-architecture, architecture, python, csharp, bash, sql, terraform, docker, airflow, bigquery, gcp]
 aliases: [technology selection, decision matrix, when to use, build vs buy, language comparison, Python vs C# vs bash, SQL Server vs BigQuery, Airflow vs cron, Terraform vs CLI]
-keywords: [technology selection, decision matrix, language selection, build vs buy, trade-off analysis, Python vs bash, Python vs C#, SQL vs Python, SQL Server vs BigQuery, Airflow vs cron, Terraform vs gcloud, Cloud Run vs Compute Engine, Pub/Sub vs direct calls, GCS vs BigQuery, star schema vs flat, ETL vs ELT, Firestore vs Bigtable, Cloud SQL vs SQL Server, orchestration selection, compute selection, storage selection, database selection, API protocol selection, architecture selection, data model selection, infrastructure as code, cost comparison, latency comparison, scaling comparison, managed vs self-hosted, serverless vs VM, batch vs streaming, Docker vs bare metal, dbt vs custom SQL, Datadog vs Cloud Monitoring, CI/CD selection, testing strategy selection]
 description: "Comprehensive decision-matrix reference for data engineering technology selection — language choice (Python/Bash/PowerShell/C#/SQL), database selection (SQL Server/BigQuery/Cloud SQL/Firestore/Bigtable), GCP component selection (compute/messaging/storage), orchestration (Airflow/cron/Cloud Scheduler/Composer), infrastructure tooling (Terraform/gcloud/Console), data modeling, API protocols, architecture patterns, and build-vs-buy frameworks. Every decision backed by trade-off analysis with specific thresholds and decision rules."
 created: 2026-03-22
 updated: 2026-03-22
@@ -90,6 +86,10 @@ Two languages every data engineer uses daily. The question is never "which one" 
 
 > [!warning] The 50-Line Rule
 > If your bash script exceeds 50 lines, rewrite it in Python. Bash scripts over 50 lines become unmaintainable — they accumulate quoting bugs, lack proper error handling, and become impossible to test. The rewrite takes an hour; the debugging you avoid saves days.
+
+> [!success] Rewrite Long Bash Scripts in Python with Proper Structure
+>
+> When a bash script reaches 50 lines, migrate it to Python: replace `set -euo pipefail` error handling with `try/except` blocks, replace untyped variables with typed function parameters, replace `echo` debugging with the `logging` module, and add a `pytest` test file alongside it. The resulting Python script is testable, type-checked by `mypy`, and maintainable by any engineer on the team — not just the one who wrote the original bash.
 
 **Example: Parsing a CSV**
 
@@ -268,6 +268,10 @@ Follow this top-down. The first "yes" is your answer.
 
 > [!warning] Migration Cost Is Real
 > If you already run SQL Server and it handles your workload, the cost of migrating to BigQuery or Cloud SQL is measured in months of engineering time, regression testing, and retraining. "Better" technology does not justify migration unless the current system is failing. The decision to migrate should be driven by a specific pain point (cost, scale, features), not by preference.
+
+> [!success] Justify Migration with a Specific Pain Point, Not Preference
+>
+> Before proposing any database migration, document the specific pain point driving it: a query that takes 4 hours in SQL Server and 5 minutes in BigQuery, a cost that exceeds a defined threshold, a scaling ceiling that is being hit in production. If no such pain point exists, document the decision to stay and revisit at the next annual architecture review. Migrations driven by preference rather than pain consistently deliver disappointment.
 
 ### Detailed Comparison: SQL Server vs BigQuery
 

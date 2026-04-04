@@ -1,8 +1,5 @@
 ---
 title: "SQL Server Loading Patterns"
-type: reference
-category: data-engineering
-technology: [sql-server, python, csharp]
 tags:
   - sql-server
   - tsql
@@ -13,7 +10,6 @@ tags:
   - bcp
   - etl
 aliases: [Loading Patterns, Bulk Loading, Data Ingestion SQL Server, fast_executemany, SqlBulkCopy, BULK INSERT, bcp]
-keywords: [loading patterns, bulk insert, bcp, fast_executemany, SqlBulkCopy, OPENROWSET, truncate reload, staging swap, incremental append, upsert, minimal logging, TABLOCK, batch size, row-by-row insert, executemany, parameterized insert, partition switch, data loading benchmark]
 description: "Every method of getting data into SQL Server — benchmarked and compared. Covers bcp, BULK INSERT, pyodbc fast_executemany, SqlBulkCopy, loading strategies (truncate-reload, staging swap, incremental, upsert), and minimal logging."
 created: 2026-03-29
 updated: 2026-03-29
@@ -103,6 +99,10 @@ COMMIT;
 >
 > `TRUNCATE TABLE` is faster (minimal logging, no row-by-row log entries) but requires `ALTER TABLE` permission, resets `IDENTITY`, and cannot be scoped with a `WHERE` clause. Use `DELETE` when you need to clear a subset (e.g., by `_index`). `TRUNCATE` cannot be rolled back in user transactions on all recovery models — see [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) for details.
 
+> [!success] Use Scoped DELETE Inside a Transaction
+>
+> For partition-key-scoped clears (e.g., clearing one index at a time), use `DELETE FROM table WHERE _index = @key` wrapped in `BEGIN TRANSACTION ... COMMIT`. This is fully rollback-safe, does not reset `IDENTITY`, and requires no elevated permissions. Reserve `TRUNCATE` for full-table resets on tables with no surrogate keys exposed downstream.
+
 ---
 
 ## Staging Table + Swap
@@ -133,6 +133,10 @@ EXEC sp_rename 'gold.signals_daily_old', 'signals_daily';  -- move old to stagin
 > [!warning] sp_rename Metadata Lock
 >
 > `sp_rename` takes a schema modification lock (Sch-M). Any concurrent queries on the table will block until the rename completes. For lock-free swaps, use partition `SWITCH` instead.
+
+> [!success] Use Partition SWITCH for Lock-Free Swaps
+>
+> Replace the `sp_rename` approach with `ALTER TABLE staging.signals_daily SWITCH TO gold.signals_daily PARTITION N`. The `SWITCH` is a metadata-only operation with no data movement and no Sch-M lock on the production table during the copy phase. Only partition the table if you need this level of concurrency; otherwise, schedule `sp_rename` during a low-traffic window.
 
 ### Partition SWITCH — instant, zero-lock swap
 
@@ -237,6 +241,10 @@ DECLARE @wm DATE = (
 >
 > If the target table is empty (first run, or after a truncate), `MAX()` returns `NULL`. Always handle the NULL case: `ISNULL(@wm, '1900-01-01')`. Also: if the target has millions of rows without a clustered index on the watermark column, the `MAX()` scan is expensive. Add a covering index.
 
+> [!success] Seed the NULL Case and Index the Watermark Column
+>
+> Always seed the `NULL` result: `DECLARE @wm DATE = ISNULL((SELECT MAX(date) FROM silver.index_europe_ohlcv WHERE is_filled = 0), '1900-01-01')`. Ensure a clustered or covering index exists on the watermark column so `MAX()` is an index seek, not a full table scan.
+
 #### Airflow Variable — orchestrator-managed
 
 Store the watermark in Airflow's metadata database. Visible and editable in the Airflow UI. Good for pipelines where reprocessing means manually changing the variable.
@@ -257,6 +265,10 @@ Variable.set("ohlcv_europe_watermark", str(new_max_date))
 >
 > `Variable.set()` commits immediately to Airflow's metadata DB. If the data load fails AFTER the variable is set, the watermark has advanced past data that was never loaded — causing a gap. Set the variable only after the database transaction commits.
 
+> [!success] Advance Airflow Variable Only After Successful Commit
+>
+> Structure your Airflow operator so the DB transaction commits first, then `Variable.set()` is called in the same `try` block after a confirmed commit. Alternatively, use a control table in the same DB as the load target and update it inside the same transaction — this is the most reliable approach when using SQL Server as both source and target.
+
 #### Pipeline Output File — simple but fragile
 
 Write the watermark to a file on disk or in GCS. Used in simple scripts that don't have access to a database or orchestrator.
@@ -276,6 +288,10 @@ with open("/opt/pipeline/watermarks/ohlcv_europe.txt", "w") as f:
 > [!danger] File-Based Watermarks Are Fragile
 >
 > Files can be accidentally deleted, are not transactional, don't survive VM reimaging, and have no audit trail. Use only for throwaway scripts. For anything running in production, use a control table or Airflow Variable.
+
+> [!success] Use a Control Table for Production Watermarks
+>
+> Create a `meta.watermarks` table in the same database as the pipeline target. Update the watermark inside the same `BEGIN TRANSACTION ... COMMIT` as the data load — if the load fails, the watermark is not advanced. This is atomic, survives VM reimaging, and provides a built-in audit trail via `updated_at` and `updated_by` columns.
 
 ### Watermark Lifecycle — from first run to steady state
 
@@ -308,6 +324,10 @@ DECLARE @wm DATE = ISNULL(
 > [!warning] Late-Arriving Data
 >
 > Data that arrives after the watermark has advanced is silently missed. This is the most common watermark bug. Sources that cause this: timezone-shifted batch files, retroactive corrections, API responses with stale timestamps, and source systems that backfill data.
+
+> [!success] Apply an Overlap Window with Deduplication
+>
+> Subtract an overlap window from the watermark (`DATEADD(DAY, -N, @wm)`) and pair every load with a `NOT EXISTS` check or rely on the target UNIQUE constraint to prevent duplicates. Size the window to your source's maximum expected lateness: 1 day for daily batches, 7 days for weekly corrections, 35 days for monthly restatements.
 
 ```sql
 -- Mitigation: subtract an overlap window from the watermark
@@ -373,6 +393,10 @@ WHERE pipeline_name = 'ohlcv_europe';
 > [!danger] Watermark Before Commit = Data Loss
 >
 > If you advance the watermark, then the INSERT fails, the watermark points past data that was never loaded. The next run skips that data forever. Always advance the watermark INSIDE the same transaction as the load, or AFTER the load transaction commits.
+
+> [!success] Advance Watermark Inside the Same Transaction
+>
+> In T-SQL, place the `UPDATE meta.watermarks` statement at the end of the same `BEGIN TRANSACTION ... COMMIT` block as the `INSERT`. In Python, call `Variable.set()` or update the control table only after `conn.commit()` confirms the data load succeeded. Never advance the watermark in a `finally` block that runs regardless of success or failure.
 
 ### No deduplication with overlap windows — duplicate rows
 
@@ -515,6 +539,10 @@ conn.commit()
 >
 > pyodbc sends Python `float('nan')` as the string `"nan"`, not `NULL`. Convert explicitly before loading: `None if math.isnan(v) else v`. Similarly, `numpy.int64` is not a native Python type — cast to `int()` before passing to pyodbc.
 
+> [!success] Sanitise Rows Before fast_executemany
+>
+> Apply a row-cleaning function before calling `executemany`: convert `float('nan')` → `None`, cast `numpy.int64` → `int`, and cast `numpy.float64` → `float`. A one-line list comprehension over the row tuple handles all three before the batch is sent to the driver.
+
 - **Batch size:** 5,000-10,000 rows per `executemany` call is optimal. Too large = memory pressure on the driver; too small = round-trip overhead
 - **Column type matching:** Python `float` maps to SQL `FLOAT`; Python `str` to `NVARCHAR`. Mismatches cause implicit conversions — see [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries) for why this kills performance
 - **None vs NULL:** `None` becomes SQL `NULL` — correct. But `numpy.nan` does not — convert first
@@ -549,9 +577,17 @@ bcp bronze.signals_daily in signals.csv \
 >
 > If a CSV field exceeds the target column width (e.g., 25-char string into `VARCHAR(20)`), bcp **silently truncates** the data. No error, no warning. Always validate row counts and spot-check loaded data.
 
+> [!success] Pre-Validate String Lengths Before bcp
+>
+> Before running `bcp`, query the source data for any field that exceeds the target column's declared width: `SELECT MAX(LEN(field)) FROM staging_table`. Alternatively, use a format file with wider intermediate columns and apply length validation in a post-load check. Always compare source row count against loaded row count — a mismatch is the first signal of silent truncation.
+
 > [!warning] Encoding and Date Formats
 >
 > bcp defaults to OEM codepage, not UTF-8. Use `-w` for Unicode data. Date parsing depends on the server's locale setting — `SET DATEFORMAT ymd` before load or use ISO 8601 format (`YYYY-MM-DD`) in source files.
+
+> [!success] Use -w for Unicode and ISO 8601 Dates
+>
+> Always pass `-w` when loading files that contain non-ASCII characters (accented names, CJK characters). Standardise date columns to ISO 8601 (`YYYY-MM-DD`) in the source file to avoid locale-dependent parsing — this works regardless of `DATEFORMAT` setting on the server.
 
 - **Format files:** `-c` (character/CSV), `-n` (native binary), `-w` (wide character/Unicode)
 - **Error handling:** `-e error_file` logs bad rows, `-m max_errors` sets failure threshold
@@ -643,6 +679,10 @@ transaction.Commit();
 >
 > Like bcp, `SqlBulkCopy` silently truncates strings exceeding the destination column width. A 250-character company name loaded into `NVARCHAR(200)` is silently cut to 200 characters — no error, no warning. Validate string lengths before loading or set `bulkCopy.EnableStreaming = true` with a validating `IDataReader` wrapper.
 
+> [!success] Validate String Widths Before SqlBulkCopy
+>
+> Before calling `WriteToServer`, iterate the `DataTable` columns and check `MaxLength` against the source data: any value exceeding the destination column's declared width should raise an exception rather than silently truncate. Alternatively, wrap a `DataTableReader` in an `IDataReader` implementation that throws on over-length strings, then pass that reader to `WriteToServer` with `EnableStreaming = true`.
+
 ---
 
 ## BULK INSERT — T-SQL Native Bulk Load
@@ -695,6 +735,10 @@ Minimal logging skips detailed transaction log writes for bulk operations, givin
 >
 > `BULK_LOGGED` allows minimal logging without losing transactional safety for non-bulk operations. However, if a log backup runs during the bulk operation, that backup contains the bulk-changed data extents — making it larger and non-restorable to a point within the bulk operation.
 
+> [!success] Schedule Bulk Loads Outside Backup Windows
+>
+> When using `BULK_LOGGED`, coordinate bulk load schedules with your backup schedule so no log backup runs during the bulk operation. For databases with continuous log backup (e.g., every 15 minutes), switch to `SIMPLE` recovery model for the load window, run the bulk load, then switch back — or accept full logging with `FULL` recovery model if point-in-time recoverability during the load is required.
+
 ---
 
 ## Schema Migration CI/CD with GitHub Actions
@@ -741,6 +785,10 @@ jobs:
 > [!warning] Migration ordering
 >
 > `for f in db/migrations/*.sql` relies on lexicographic ordering. Prefix migration files with timestamps: `20260329_001_add_column.sql`. The `-b` flag tells `sqlcmd` to abort on error — without it, a failing migration continues silently and subsequent scripts may break on missing objects.
+
+> [!success] Timestamp-Prefix Migrations and Enforce Abort on Error
+>
+> Name every migration file with a timestamp prefix (`YYYYMMDD_NNN_description.sql`) so lexicographic sort equals chronological order. Always pass `-b` to `sqlcmd` to abort on error, and check the exit code in the workflow step so the GitHub Actions job fails visibly rather than silently continuing with a broken schema.
 
 ---
 

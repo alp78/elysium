@@ -1,10 +1,6 @@
 ---
-type: concept
-category: data-architecture
-technology: [sql-server, python, airflow]
 tags: [data-architecture, architecture, pipeline, python, sql, airflow]
 aliases: [idempotent pipelines, idempotency, idempotent loads, safe re-runs, replayable pipelines]
-keywords: [idempotent, idempotency, safe re-run, replay, backfill, data pipeline, atomic load, upsert, MERGE, delete-insert, truncate-reload, exactly-once, at-least-once]
 description: "Idempotent pipeline design ensures running a pipeline multiple times with the same input produces the same result without duplicates or corruption — the foundation of reliable data engineering."
 created: 2026-03-22
 updated: 2026-03-22
@@ -66,6 +62,10 @@ COMMIT;
 > temporarily (`ALTER TABLE NOCHECK CONSTRAINT`), or use MERGE instead
 > of DELETE-INSERT when FK relationships exist.
 
+> [!success] Use MERGE instead of DELETE-INSERT when FK relationships exist
+>
+> `MERGE INTO silver.table AS target USING source ON target.key = source.key ...` updates and inserts in-place without deleting existing rows, so FK-referencing gold tables are never touched during the load. If DELETE-INSERT is required for correctness, disable the FK constraint with `ALTER TABLE gold.table NOCHECK CONSTRAINT ALL` and re-enable it after the load.
+
 ### MERGE (Upsert)
 
 Match on a business key. Update if exists, insert if new. See [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/merge-and-upsert) for the full T-SQL MERGE pattern. In dbt, the [incremental materialization](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-materializations) generates a MERGE statement under the hood, providing idempotency declaratively.
@@ -81,6 +81,10 @@ WHEN NOT MATCHED THEN INSERT (index_code, display_name) VALUES (source.index_cod
 > [!danger] MERGE Without a Partition Filter Can Full-Scan the Target Table
 > A `MERGE INTO silver.index_dim` without a `WHERE` clause on the source CTE scans every row in both the source and target. On a 100M-row table, this turns a 2-second incremental load into a 30-minute full scan. Always scope the MERGE source to the current partition (e.g., `WHERE trade_date = @trade_date`) and ensure the target has a matching index on the join key.
 
+> [!success] Scope the MERGE source CTE to the current partition and index the join key
+>
+> Wrap the MERGE source in a CTE with `WHERE trade_date = @trade_date`. Ensure the target table has a covering index on `(trade_date, index_code)` — the join key columns. This reduces both source and target scans to a single date partition, keeping incremental loads fast regardless of table size.
+
 > [!warning] Idempotency Is Not Exactly-Once
 >
 > Idempotency means "safe to re-run." Exactly-once means "processed
@@ -90,6 +94,10 @@ WHEN NOT MATCHED THEN INSERT (index_code, display_name) VALUES (source.index_cod
 > consumer — the message may be DELIVERED multiple times but must be
 > PROCESSED only once. Idempotent writes make exactly-once achievable:
 > if the write is idempotent, duplicate deliveries don't corrupt state.
+
+> [!success] Use idempotency keys to achieve exactly-once semantics in streaming
+>
+> Maintain a `pipeline.processing_log` table with an `idempotency_key` PRIMARY KEY. Before processing a message, check whether the key already exists with `status = 'SUCCESS'`. If it does, skip processing. If not, process and insert the key in the same transaction. Idempotent writes (MERGE) plus idempotency key tracking together guarantee that duplicate deliveries produce no duplicated side effects.
 
 ### Staging Table Pattern
 
@@ -106,6 +114,10 @@ This isolates the slow I/O (bulk load) from the fast atomic swap.
 
 > [!warning] TRUNCATE Cannot Be Rolled Back Inside a Transaction in SQL Server
 > `TRUNCATE TABLE` is minimally logged and cannot be wrapped in an explicit transaction for rollback purposes in all isolation levels. If the INSERT after TRUNCATE fails, the staging table is empty with no recovery path. Use `DELETE FROM staging` (which is transactional) instead of TRUNCATE when the staging table participates in a multi-statement transaction, or accept that TRUNCATE on the staging table is safe because staging is always repopulated.
+
+> [!success] Use `DELETE FROM staging` instead of TRUNCATE when inside a multi-statement transaction
+>
+> `DELETE FROM staging_table` (without a `WHERE`) is fully logged and rolls back cleanly if the subsequent INSERT fails. The table is empty either way when the transaction succeeds — the behavior is identical to TRUNCATE, but with transactional safety.
 
 ### Idempotency Anti-Patterns
 

@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: observability
-technology: [datadog, gcp, terraform]
 tags: [monitoring, observability, terraform, datadog, gcp]
 aliases: [Datadog GCP Integration, GCP Cloud Monitoring Integration, Datadog Cloud Run Metrics]
-keywords: [GCP integration, Google Cloud Platform, Cloud Monitoring API, data-pipeline-datadog service account, monitoring.viewer, compute.viewer, cloudasset.viewer, GCE automuting, resource collection, Cloud Run job metrics, gcp.run.job, datadoghq.eu, manual setup]
 description: "How to set up the Datadog GCP Integration for the project — enables pulling Cloud Run job metrics (CPU, memory, execution count) from Google Cloud Monitoring into Datadog without running an agent in Cloud Run."
 created: 2026-03-22
 updated: 2026-03-22

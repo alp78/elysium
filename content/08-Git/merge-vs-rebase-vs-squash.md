@@ -1,10 +1,6 @@
 ---
-type: reference
-category: reference
-technology: [git]
 tags: [git]
 aliases: [merge vs rebase, rebase vs squash, git merge strategies]
-keywords: [merge, rebase, squash, git, merge commit, fast-forward, history, linear, clean history, comparison]
 description: "Comparison of Git merge strategies — standard merge, rebase, and squash merge — with guidance on when to use each."
 created: 2026-03-22
 updated: 2026-03-22
@@ -58,6 +54,10 @@ Replays your commits on top of main's latest commit. Creates a linear history wi
 >
 > Rebasing rewrites commit hashes. If others have pulled your branch, rebase will cause conflicts. Only rebase local/private branches.
 
+> [!success] Use Merge to Update a Branch Under Active Review
+>
+> While your PR is open and teammates may have checked out your branch, use `git merge origin/main` to incorporate upstream changes. This adds a merge commit but does not rewrite any existing commits, keeping all SHA references stable.
+
 **Use when:** You want a linear history and the branch is private to you.
 
 ### git merge --squash — collapse branch into single commit
@@ -78,9 +78,17 @@ Collapses all branch commits into a single commit on main. The branch history is
 >
 > After a squash merge, all individual commits on the feature branch are collapsed into one. If you need to bisect or revert a specific change from within that branch later, you cannot — you can only revert the entire squash commit. For branches with multiple meaningful changes, consider a standard merge or rebase instead.
 
+> [!success] Use Standard Merge to Preserve Meaningful Commit History
+>
+> For feature branches with multiple distinct commits that reviewers or future debuggers will want to inspect individually, use `git merge` (without `--squash`). Each commit remains visible in `git log --graph` and can be individually reverted or bisected.
+
 > [!warning] Binary file merge conflicts
 >
 > Merge conflicts in binary files (images, compiled assets, Parquet files) cannot be resolved with text merge tools. Git will report the conflict but the file contents are meaningless to diff. You must choose one version entirely (`git checkout --ours file` or `git checkout --theirs file`) or replace the file manually.
+
+> [!success] Choose One Side Explicitly for Binary Conflicts
+>
+> Run `git checkout --ours path/to/file.parquet` to keep your version or `git checkout --theirs path/to/file.parquet` to keep the incoming version. Then `git add` the file and continue the merge. Coordinate with the file owner to decide which version is correct.
 
 ### Decision guide — which merge strategy by scenario
 

@@ -1,10 +1,6 @@
 ---
-type: concept
-category: data-modeling
-technology: [sql-server, bigquery, firestore]
 tags: [data-architecture, architecture, data-modeling, sql, bigquery, firestore]
 aliases: [data modeling patterns, normalized model, 3NF, Data Vault, hub satellite link, wide table, OBT, one big table, activity schema, graph model, document model, time-series model, anchor modeling]
-keywords: [data modeling, normalized model, third normal form, 3NF, BCNF, Boyce-Codd, Data Vault 2.0, hub, satellite, link, hash key, hash diff, wide table, one big table, OBT, denormalized table, activity schema, event schema, graph model, document model, time-series model, narrow model, wide model, hybrid model, OHLCV, anchor modeling, star schema, snowflake schema, dimensional modeling, OLTP, OLAP, entity-relationship, EAV, entity-attribute-value, semi-structured, schemaless, Firestore, BigQuery, SQL Server, Neo4j, TimescaleDB, InfluxDB, ClickHouse, columnar storage, partitioning, clustering, materialized view]
 description: "Comprehensive reference on data modeling patterns beyond dimensional modeling — normalized (3NF), Data Vault 2.0, wide/flat (OBT), activity schema, document, graph, and time-series models. Each pattern demonstrated with full DDL, SQL examples, and concrete scenarios from a financial index provider domain. Includes a decision framework for choosing the right model per use case."
 created: 2026-03-22
 updated: 2026-03-22
@@ -697,6 +693,9 @@ ORDER BY total_market_cap DESC;
 
 > [!warning] 3NF Is Not Wrong — It Is Wrong for Analytics
 > Normalized models excel at what they are designed for: transactional integrity, write efficiency, and eliminating update anomalies. The problem arises when people query a normalized OLTP system for analytical purposes. The correct architecture is: **3NF for source → denormalized for analytics**. See [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) for the layered approach.
+
+> [!success] Safe Pattern: Keep 3NF as the Source, Denormalize in the Analytics Layer
+> Preserve the normalized OLTP model untouched for write operations. Use an ELT pipeline (dbt, Spark, or Dataflow) to project the 3NF tables into a denormalized star schema or OBT in the analytics layer. Analysts query the denormalized layer; the 3NF model remains the system of record for correctness and re-derivation.
 
 ---
 
@@ -1757,6 +1756,9 @@ WHEN NOT MATCHED THEN INSERT VALUES (...);
 > [!warning] OBT Is a Derived Artifact, Not a Source of Truth
 > Never build an OBT as your primary data store. It should always be materialized from a properly modeled upstream layer (star schema, Data Vault, or normalized model). If the upstream changes, you rebuild the OBT. If the OBT is corrupted, you rebuild it from upstream. The OBT is disposable; the upstream model is not.
 
+> [!success] Safe Pattern: Materialize OBTs from a Canonical Upstream Model
+> Build OBTs as `dbt` incremental models or scheduled BigQuery materialized views that SELECT from the star schema or Data Vault information mart. Store the OBT in a dedicated `gold` schema with a clearly documented owner and refresh schedule. Never run direct inserts into the OBT from source systems — all writes must flow through the upstream model to preserve the single source of truth.
+
 ---
 
 ## Activity Schema
@@ -2570,6 +2572,9 @@ doc_ref.on_snapshot(on_snapshot)
 
 > [!warning] Document Databases and Analytics Do Not Mix
 > Firestore is excellent for operational reads (get a single document by key, query a collection with filters) but terrible for analytical queries (scan all documents, aggregate across collections, join collections). If you need analytics on document data, export it to BigQuery using the Firestore-to-BigQuery extension or a custom export pipeline. See [firestore-data-model-and-operations](https://alp78.github.io/elysium/06-GCP/Firestore/firestore-data-model-and-operations) for export patterns.
+
+> [!success] Safe Pattern: Firestore for Operations, BigQuery for Analytics
+> Use the Firestore → BigQuery Export extension (or a Dataflow pipeline) to continuously replicate Firestore document changes into a BigQuery table. All operational reads and writes stay in Firestore; all analytical queries run against BigQuery. The two layers use the same document IDs as join keys but are never queried across system boundaries.
 
 ---
 

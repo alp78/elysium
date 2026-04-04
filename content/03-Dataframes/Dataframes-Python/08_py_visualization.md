@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - python
-  - pandas
-  - polars
 tags: [pipeline, python, pandas, polars]
 aliases:
   - matplotlib, seaborn, plotting, charts
-keywords: [matplotlib, seaborn, plot, bar, line, scatter, histogram, heatmap, subplots, facet, savefig]
 description: "Pandas/Polars DataFrame reference 08/10 — Visualization (matplotlib, seaborn, static charts). Side-by-side executable examples with cell outputs."
 created: 2026-03-24
 updated: 2026-03-24

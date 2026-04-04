@@ -1,10 +1,6 @@
 ---
-type: reference
-category: db-queries
-technology: [sql-server, t-sql]
 tags: [sql, sql-server, tsql]
 aliases: [SQL advanced, window functions, CTE, common table expression, PIVOT, UNPIVOT, JSON, recursive CTE, ROW_NUMBER, RANK, LAG, LEAD]
-keywords: [window functions, cte, recursive cte, pivot, unpivot, json, row_number, rank, dense_rank, lag, lead, partition by, running total, moving average, ntile, percentile, cross apply, outer apply, for json, openjson]
 description: "Advanced SQL Server T-SQL patterns with executable examples — covers window functions, CTEs, PIVOT/UNPIVOT, JSON, CROSS APPLY, and recursive queries."
 created: 2026-03-22
 updated: 2026-03-22
@@ -33,6 +29,10 @@ Connecting to &#x27;mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=y
 > [!danger] Lab-Only Credentials
 >
 > The connection string above contains a plaintext password for a local lab environment. In production, credentials are stored in GCP Secret Manager and fetched at runtime — never hardcoded. See [secrets-management > Access from Python](https://alp78.github.io/elysium/06-GCP/Security/secrets-management#access-from-python).
+
+> [!success] Safe Pattern
+>
+> In production, retrieve the connection string from GCP Secret Manager at runtime: `secretmanager.SecretManagerServiceClient().access_secret_version(name=...)`. Never hardcode passwords in notebooks, scripts, or source control. Use environment variables or secret injection via Cloud Run / GKE secrets.
 
 ## Advanced Window Functions
 
@@ -181,6 +181,10 @@ ORDER BY composite_rank
 > [!danger] LAST_VALUE default frame trap
 >
 > Without an explicit frame, `LAST_VALUE()` uses `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` — it only sees rows up to the current row, making it identical to the current row's value. Always specify `ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING` when using `LAST_VALUE()`.
+
+> [!success] Safe Pattern
+>
+> Always specify an explicit frame with `LAST_VALUE`: `LAST_VALUE(col) OVER (PARTITION BY x ORDER BY y ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)`. For "last value in partition" scenarios, consider using `FIRST_VALUE` with a descending `ORDER BY` instead — it is less error-prone because the default frame works correctly for `FIRST_VALUE`.
 
 Use case: compare every day's close to the first close of the year (YTD return).
 
@@ -337,6 +341,10 @@ The frame clause controls which rows the function sees:
 >
 > If two rows have the same `ORDER BY` value, `RANGE` treats them as one logical position. `ROWS` counts them as separate physical rows. For moving averages (SMA-30, SMA-90), ALWAYS use `ROWS` — `RANGE` produces incorrect averages when dates have duplicates (multiple symbols on the same date).
 
+> [!success] Safe Pattern
+>
+> Use `ROWS BETWEEN N PRECEDING AND CURRENT ROW` for all moving average calculations. Reserve `RANGE` only for scenarios where you explicitly need tie-grouping behavior (e.g., cumulative totals where tied ranks should share the same running total). When in doubt, `ROWS` is the safer, more predictable default.
+
 ```sql
 -- ROWS vs RANGE: ROWS counts physical rows, RANGE groups by value
 -- For SMA, always use ROWS (precise count)
@@ -425,6 +433,10 @@ Classic use: generate a continuous date sequence to detect missing trading days.
 > [!warning] SQL Server limits recursion to 100
 >
 > A recursive CTE exceeding 100 iterations fails with error 530. Override with `OPTION (MAXRECURSION N)` or `OPTION (MAXRECURSION 0)` for unlimited. A date series generating 365 rows needs `MAXRECURSION 366`. BigQuery caps at 500 iterations by default.
+
+> [!success] Safe Pattern
+>
+> Add `OPTION (MAXRECURSION 0)` at the end of the statement whenever a recursive CTE is used to generate sequences longer than 100 rows (e.g., `OPTION (MAXRECURSION 0)` for a full-year date series). Set a specific limit (e.g., `MAXRECURSION 366`) rather than 0 in production to prevent runaway recursion from buggy CTEs.
 
 ```sql
 -- Generate all dates in March 2026, then check which are missing from OHLCV
@@ -862,6 +874,10 @@ ORDER BY symbol, score_type
 >
 > MERGE Has Known Bugs in SQL Server.
 > Microsoft has documented multiple concurrency bugs with MERGE that can cause missing rows, duplicate key violations, and incorrect results under concurrent access -- even with proper locking hints. For high-concurrency pipelines, consider using separate INSERT/UPDATE statements wrapped in a transaction instead. If using MERGE, always add `WITH (HOLDLOCK)` on the target table to prevent race conditions between the MATCHED check and the subsequent DML.
+
+> [!success] Safe Pattern
+>
+> For high-concurrency pipelines, replace MERGE with an explicit INSERT/UPDATE pattern inside a transaction: `BEGIN TRAN; UPDATE target SET ... WHERE key = @key; IF @@ROWCOUNT = 0 INSERT INTO target ...; COMMIT`. Add `WITH (HOLDLOCK, UPDLOCK)` on the target table in the UPDATE to prevent race conditions. If you must use MERGE, always include `WITH (HOLDLOCK)` on the USING clause.
 
 ### MERGE (Upsert) — Syntax and Patterns
 
@@ -1513,3 +1529,7 @@ ORDER BY trading_days DESC
 >
 > CTEs Are Not Materialized -- They Re-execute on Every Reference.
 > A CTE referenced three times in one query runs three times. If the CTE itself contains expensive joins or aggregations, this silently triples execution time. Check the execution plan -- if you see the same subtree repeated, switch to a `#temp` table. Table variables (`@t`) avoid this but have limited statistics, which can cause bad plans on more than ~100 rows.
+
+> [!success] Safe Pattern
+>
+> If a CTE is referenced more than once in a query, materialize it into a `#temp` table first: `SELECT ... INTO #my_cte FROM ...`, then reference `#my_cte` wherever needed. Add an index on the join or filter key with `CREATE INDEX ix ON #my_cte (key_col)` for queries over ~10,000 rows. Use CTEs only for readability when they are referenced exactly once.

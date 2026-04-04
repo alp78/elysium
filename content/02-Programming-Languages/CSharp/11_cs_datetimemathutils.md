@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [datetime, timezones, date arithmetic, math operations, utility functions]
-keywords: [DateTime, DateOnly, TimeOnly, TimeZoneInfo, TimeSpan, Math, Random, Guid, DateTimeOffset]
 description: "C# date, time, math and utilities reference with executable examples and cell outputs — covers DateTime, DateOnly, TimeSpan, timezones, Math, Random, and Guid. See [11_py_datetimemathutils](https://alp78.github.io/elysium/02-Programming-Languages/Python/11_py_datetimemathutils) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -66,6 +62,10 @@ optionsField.SetValue(csharpKernel, newOptions);
 >
 > - **`DateTime.Now` for storage** — timezone-dependent; use `UtcNow`
 > - **Comparing `DateTime` with different `Kind`s** — undefined behavior
+
+> [!success] Best practice
+>
+> Always use `DateTime.UtcNow` for storage and comparisons. Use `DateTimeOffset` when you need to preserve the original timezone offset alongside the value.
 
 ```csharp
 // Creating date and time objects
@@ -899,6 +899,10 @@ The standard .NET logging abstraction — same API for console, file, and cloud 
 > [!warning] Anti-pattern
 >
 > Don't use `Console.WriteLine` for logging — it has no levels, timestamps, or filtering.
+
+> [!success] Use structured logging
+>
+> Use `ILogger` from `Microsoft.Extensions.Logging` with named placeholders. This enables level filtering, timestamps, structured output to any backend (console, Seq, ELK, GCP), and is the same API across all .NET workloads.
 
 ```csharp
 // ── Basic console logging ──

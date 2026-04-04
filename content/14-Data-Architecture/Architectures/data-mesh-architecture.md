@@ -1,10 +1,6 @@
 ---
-type: concept
-category: data-architecture
-technology: []
 tags: [data-architecture, architecture, data-mesh]
 aliases: [data mesh, domain-driven data, data products, federated governance, data as a product, Zhamak Dehghani, decentralized data architecture, domain ownership, self-serve data platform, federated computational governance]
-keywords: [data mesh, data product, domain ownership, federated governance, self-serve platform, Zhamak Dehghani, domain-oriented, decentralized, data as a product, discoverability, addressability, trustworthiness, self-describing, interoperable, secure, data contract, schema registry, data catalog, DataHub, Amundsen, OpenMetadata, Kafka, centralized data team, data platform, data engineering, organizational design, data governance, medallion architecture, data mesh vs data lake, data mesh vs warehouse, data quality, data lineage, data steward, domain team, platform team, mesh topology]
 description: "Data mesh is an organizational and architectural approach (Zhamak Dehghani, 2019) that decentralizes data ownership to domain teams, treats data as a product, provides a self-serve infrastructure platform, and enforces governance through federation rather than central control. It is primarily an organizational design pattern, not a technology."
 created: 2026-03-22
 updated: 2026-03-22
@@ -58,6 +54,9 @@ Finance                ledger_entries, reconciliation_summaries
 
 > [!warning] The Hardest Principle
 > Domain ownership is the hardest principle to implement because it requires engineering teams to take on responsibilities they currently hand off: data quality monitoring, schema documentation, consumer SLA management. This is a culture change, not a technical one. Executive sponsorship and clear incentive structures are prerequisites.
+
+> [!success] Making Domain Ownership Succeed
+> Start with one high-value, willing domain team as a pilot. Provide an embedded data engineer for the first two sprints to build the tooling alongside the domain team, not for them. Define the ownership contract concretely: the domain team is responsible for freshness SLA, schema documentation, and a runbook for data quality incidents. Celebrate the first successful consumer who unblocked themselves without filing a ticket to the central team — that is the proof point that changes the culture.
 
 ---
 
@@ -349,6 +348,9 @@ Domains declare data products "done" when the pipeline runs. A data product is d
 
 > [!warning] The Platform Team Trap
 > Platform teams frequently revert to being a centralized bottleneck by handling too many implementation details for domain teams. The platform team's job is to make self-service so easy that domains never need to file a ticket. If the platform team is executing domain-specific work, the self-serve principle has failed.
+
+> [!success] Self-Serve Platform Design
+> Measure the platform by one metric: time-to-first-data-product for a new domain team, with zero platform team tickets. Build Terraform module templates, CI scaffolding, and dbt project generators so a domain team can provision GCS buckets, IAM bindings, schema registration, and a DataHub entry by running a single `make new-data-product` command. Any work that a domain team asks the platform team to do manually is a product backlog item for the platform — automate it or document the self-serve path.
 
 ---
 

@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: git
-technology: [git, github]
 tags: [git, github]
 aliases: [git tag, annotated tag, semantic versioning, release tags, lightweight tag, git push tags, version label, tag a release, SemVer git]
-keywords: [git tag, tagging, annotated tag, lightweight tag, release, versioning, semantic versioning, semver, v1.0.0, git push tags, push tag to github, list tags, mark release, tag message, tag annotation, production release, git tag -a]
 description: "How to create lightweight and annotated git tags, push them to GitHub, and use semantic versioning to mark production releases."
 created: 2026-03-22
 updated: 2026-03-22
@@ -108,6 +104,10 @@ git push origin --tags
 > --tags pushes all tags including drafts.
 > `git push origin --tags` pushes every tag, including work-in-progress or test tags you may have created locally. For cleaner release workflows, push individual tags by name (`git push origin v1.0.0`) rather than using `--tags`.
 
+> [!success] Push Tags by Name for Controlled Releases
+>
+> Use `git push origin v1.0.0` to push only the specific release tag. Delete local draft tags with `git tag -d v1.0.0-draft` before using `--tags` if you must push all at once.
+
 ## Semantic Versioning Context
 
 Git itself has no opinion on tag naming. The data engineering community convention is **semantic versioning (SemVer)**: `vMAJOR.MINOR.PATCH`.
@@ -155,9 +155,17 @@ git push origin --delete v1.0.0-draft
 > Deleting pushed tags affects others.
 > If collaborators have already fetched a tag, deleting it from the remote does not remove it from their local repos. Coordinate with your team before deleting published tags.
 
+> [!success] Announce Tag Deletion in Team Channel
+>
+> Before running `git push origin --delete <tag>`, post in your team's Slack channel with the tag name and reason. Teammates can then run `git fetch --prune --tags` to remove the stale reference from their local repos.
+
 > [!danger] Moving a tag rewrites history
 >
 > Re-tagging an existing name (delete + recreate) changes what commit a version points to. Anyone who cached or deployed from the original tag is now running different code than the tag implies. If a release tag was wrong, create a new patch version (`v1.0.1`) instead of moving `v1.0.0`.
+
+> [!success] Create a New Patch Version Instead
+>
+> Never delete and recreate an existing release tag. Instead, create `v1.0.1` (or the next appropriate patch) pointing to the corrected commit. This preserves the immutable release history and avoids confusion for anyone who already deployed from the original tag.
 
 ### Integration with GitHub Actions
 

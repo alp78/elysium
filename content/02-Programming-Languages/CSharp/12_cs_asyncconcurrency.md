@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [async await, concurrency, parallelism, tasks, threads, asyncio, Task]
-keywords: [async, await, Task, CancellationToken, Parallel, Thread, SemaphoreSlim, Channel, IAsyncEnumerable]
 description: "C# async and concurrency reference with executable examples and cell outputs — covers async/await, Task, parallel programming, CancellationToken, and Channels. See [12_py_asyncconcurrency](https://alp78.github.io/elysium/02-Programming-Languages/Python/12_py_asyncconcurrency) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -45,15 +41,27 @@ using System.Runtime.CompilerServices;
 > - **`await` in a loop** when `Task.WhenAll` works — sequential instead of concurrent
 > - For **CPU-bound work**, use `Task.Run` or `Parallel` instead
 
+> [!success] Correct async pattern
+>
+> Always `await` async methods directly. Use `async Task` (never `async void`) for all non-event-handler methods. Use `Task.WhenAll` to run independent I/O-bound tasks concurrently. Use `Task.Run` only for CPU-bound work.
+
 > [!danger] .Result and .Wait() cause deadlocks
 >
 > `.Result` and `.Wait()` cause deadlocks in synchronization contexts
 > Calling `.Result` or `.Wait()` on a `Task` from a thread with a `SynchronizationContext` (ASP.NET, WinForms, WPF) blocks the thread that the `await` continuation needs to resume on, causing a permanent deadlock. Always use `await` instead. In rare cases where sync-over-async is unavoidable, use `Task.Run(() => AsyncMethod()).Result` to escape the context.
 
+> [!success] Use await instead
+>
+> Replace `.Result`/`.Wait()` with `await`. If you must call async code from a sync context (e.g., legacy code), wrap in `Task.Run(() => MyMethodAsync()).GetAwaiter().GetResult()` to avoid capturing the synchronization context.
+
 > [!danger] async void
 >
 > `async void` — exceptions are unobservable and crash the process
 > Exceptions in `async void` methods propagate to the `SynchronizationContext` and terminate the process. The caller has no `Task` to `await` or catch. Always use `async Task`. The only valid use of `async void` is UI event handlers (`async void Button_Click`).
+
+> [!success] Use async Task
+>
+> Declare all async methods as `async Task` or `async Task<T>`. This makes exceptions observable and awaitable. Reserve `async void` exclusively for UI event handlers where the framework requires it.
 
 > [!tip] ConfigureAwait(false) in library code
 >
@@ -190,6 +198,10 @@ A CancellationToken is a cooperative cancellation mechanism — you pass it to a
 
 > [!warning] Cancellation is not instant
 > Passing a CancellationToken doesn't kill the operation immediately. The code must CHECK the token at regular intervals. A long-running SQL query or HTTP call won't stop until it returns — only then does the next token check abort. For true preemption, the underlying API must support cancellation natively (e.g., `HttpClient` does, raw socket reads may not).
+
+> [!success] Design for cooperative cancellation
+>
+> Call `ct.ThrowIfCancellationRequested()` at logical checkpoints within loops and between pipeline stages. Pass the token to all awaited calls (e.g., `Task.Delay(ms, ct)`, `HttpClient.GetAsync(url, ct)`) so they short-circuit immediately when cancelled.
 
 ```csharp
 // CancellationToken — cooperative cancellation for async operations
@@ -513,6 +525,10 @@ await foreach (var item in FetchPagesAsync(10, 3))
 > - Too many `Task.Run` calls — thread pool exhaustion
 > - Shared mutable state without locking — race conditions
 
+> [!success] Match the tool to the workload
+>
+> Use `async`/`await` for I/O-bound operations (no thread consumed while waiting). Use `Task.Run` or `Parallel.ForEach` for CPU-bound work. Protect shared state with `lock`, `Interlocked`, or `ConcurrentDictionary` — never share plain mutable fields across threads.
+
 #### Task.Run — offload CPU work to thread pool
 
 ```csharp
@@ -667,6 +683,10 @@ $"  Sequential: {sw.Elapsed.TotalSeconds:F2}s  |  PLINQ was faster on large data
 > - Not joining threads — orphaned threads may prevent shutdown
 > - Shared mutable state without synchronization — race conditions
 
+> [!success] Use the thread pool for short-lived work
+>
+> Use `Task.Run` for short CPU-bound work — it draws from the managed thread pool, avoiding OS thread creation overhead. Always `Join` or `await` threads you start. Mark background threads with `IsBackground = true` so they don't prevent process shutdown.
+
 #### Thread class — basic thread creation and Join
 
 ```csharp
@@ -713,6 +733,10 @@ $"  Results: [{string.Join(", ", threadResults)}]"
 >
 > `++` and `+=` are not atomic — they cause race conditions without synchronization
 > `counter++` in C# compiles to read-increment-write which can interleave across threads. Use `lock`, `Interlocked.Increment`, or `ConcurrentDictionary` for thread-safe mutation. Unlike Python's GIL, C# has true parallelism, making races more frequent and harder to reproduce.
+
+> [!success] Use Interlocked or lock for shared counters
+>
+> Replace `counter++` with `Interlocked.Increment(ref counter)` for simple integer counters — it's lock-free and faster than `lock`. For compound operations or non-integer types, use `lock(obj) { ... }`. For aggregation over keys, use `ConcurrentDictionary.AddOrUpdate`.
 
 #### Threading race condition demo (WITHOUT lock)
 
@@ -807,6 +831,10 @@ $"  Got:      {atomicCounter:N0}  (correct — atomic operation)"
 
 > [!danger] AddOrUpdate is not atomic end-to-end
 > The update delegate in `AddOrUpdate` may be called multiple times if there's contention — it's optimistic, not locked. Don't put side effects (database writes, API calls) inside the delegate. Only use it for pure computations.
+
+> [!success] Keep delegates pure
+>
+> Ensure the `AddOrUpdate` factory and update delegates are pure functions — no I/O, no side effects, no external calls. For operations that must be atomic with side effects, use `lock` or a dedicated synchronization primitive instead.
 
 ```csharp
 // ConcurrentDictionary — thread-safe aggregation with AddOrUpdate
@@ -905,6 +933,10 @@ foreach (var g in processed.GroupBy(p => p.Split(":")[0]).OrderBy(g => g.Key))
 > [!warning] Always release in finally
 >
 > Always release in `finally` — deadlock on exception otherwise.
+
+> [!success] Wrap lock operations in try/finally
+>
+> Always pair `EnterReadLock`/`EnterWriteLock` with `ExitReadLock`/`ExitWriteLock` inside a `try/finally` block. This guarantees the lock is released even if an exception is thrown, preventing permanent deadlock for all waiting threads.
 
 ```csharp
 // ReaderWriterLockSlim — allows many concurrent readers OR one exclusive writer

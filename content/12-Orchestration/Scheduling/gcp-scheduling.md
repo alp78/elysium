@@ -1,10 +1,6 @@
 ---
-type: reference
-category: orchestration
-technology: [gcp, python]
 tags: [orchestration, python, gcp, scheduling, cron]
 aliases: [Cloud Scheduler, Cloud Tasks, Cloud Workflows, Cloud Functions trigger, GCP scheduling, serverless scheduling, cron GCP, GCP cron, managed cron GCP, cloud scheduler http target, cloud scheduler pubsub]
-keywords: [cloud scheduler, cloud tasks, cloud workflows, gcloud scheduler, cron, managed cron, serverless scheduling, cloud run schedule, cloud functions trigger, pub/sub trigger, eventarc, task queue, rate limiting, retry backoff, workflow orchestration, YAML workflow, parallel branches, subworkflows, connectors, gcloud scheduler jobs create, gcloud scheduler jobs run, gcloud scheduler jobs pause, gcloud scheduler jobs resume, gcloud workflows run, gcloud tasks queues create, invoker role, scheduler service account, cost comparison, decision matrix, data pipeline schedule]
 description: "Exhaustive reference for all GCP scheduling and workflow services — Cloud Scheduler (managed cron), Cloud Tasks (task queues), Cloud Workflows (serverless orchestration), and patterns for triggering Cloud Run jobs and Cloud Functions on a schedule."
 created: 2026-03-22
 updated: 2026-03-22
@@ -65,6 +61,9 @@ Cloud Scheduler uses standard Unix cron syntax with full timezone support:
 
 > [!warning] Timezone Matters
 > Cloud Scheduler jobs default to UTC unless you specify `--time-zone`. For business-hour schedules (e.g., "run at 9 AM London time"), always set the timezone explicitly — otherwise DST shifts will silently move your schedule by an hour. Use tz database names: `Europe/London`, `America/New_York`, `Asia/Tokyo`.
+
+> [!success] Fix: always set --time-zone to a tz database name
+> Add `--time-zone="Europe/London"` (or the appropriate region) to every `gcloud scheduler jobs create` command that targets a business-hour window. Cloud Scheduler then adjusts for DST automatically using the IANA tz database, keeping the local time stable year-round.
 
 ---
 
@@ -215,6 +214,9 @@ retry N: min(min-backoff * 2^(N-1), max-backoff)  # capped at max-backoff
 
 > [!warning] Idempotency Requirement
 > Because Cloud Scheduler will retry on failure, your target endpoint MUST be idempotent — running it twice should produce the same result as running it once. Design Cloud Run jobs with this in mind: check whether work was already done before starting, use upserts instead of inserts, or use the execution ID as a deduplication key.
+
+> [!success] Fix: implement idempotent handlers in Cloud Run jobs
+> At the start of each Cloud Run Job execution, check whether the work for the current logical date or batch ID is already complete (e.g., query a status table or check for an output file in GCS). Use `MERGE`/`UPSERT` for all writes, and pass the Cloud Scheduler execution time as a deduplication key via the request body.
 
 ---
 
@@ -829,6 +831,9 @@ gcloud run jobs executions list --job=my-etl-job --region=europe-west1 --limit=3
 > `https://run.googleapis.com/v2/projects/{PROJECT}/locations/{REGION}/jobs/{JOB_NAME}:run`
 > The `:run` suffix is the action. Omitting it or using the wrong API version (v1 vs v2) will result in 404 errors that are difficult to diagnose from scheduler logs alone.
 
+> [!success] Fix: construct the URI from gcloud describe output
+> Retrieve the correct base URI with `gcloud run jobs describe JOB_NAME --region=REGION --format="value(name)"` and append `:run`. This avoids manual typos in the project, region, or job name components and always uses the v2 API path.
+
 ---
 
 ### Passing Runtime Arguments via Scheduler
@@ -850,6 +855,9 @@ gcloud scheduler jobs create http trigger-etl-with-args \
 
 > [!warning] Static Date in Scheduler Body
 > The `$(date +%Y-%m-%d)` in the `--message-body` is NOT evaluated by Cloud Scheduler — it is treated as a literal string. Cloud Scheduler does not support shell expansion or template variables. If you need dynamic dates, pass a sentinel value (e.g., `"--date","auto"`) and have the container compute the date itself.
+
+> [!success] Fix: compute dynamic dates inside the container
+> Pass `"--date", "auto"` (or omit the date argument entirely) in the scheduler body. Inside the Cloud Run Job container, compute `datetime.date.today() - timedelta(days=1)` for yesterday's data. This makes the job self-contained and removes any dependency on scheduler-side templating.
 
 ---
 
@@ -1255,6 +1263,9 @@ gcloud scheduler jobs create http scale-down-api \
 
 > [!warning] Scale-Down Risk
 > Scaling min-instances to 0 means the next request after scale-down will incur a cold start. If your API serves user-facing requests, test the cold start latency under production load conditions before implementing this pattern. For internal pipeline triggers where a 10-second cold start is acceptable, the cost savings are significant.
+
+> [!success] Fix: validate cold start latency before enabling scale-to-zero
+> Measure cold start time with `gcloud run services describe --format="value(status.latestReadyRevisionName)"` plus a timed `curl` to the service URL. If cold starts exceed your SLA, set `min-instances=1` for user-facing services and reserve scale-to-zero for internal pipeline APIs that tolerate a brief delay.
 
 ---
 

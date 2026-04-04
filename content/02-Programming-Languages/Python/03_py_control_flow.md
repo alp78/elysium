@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [python]
 tags: [python]
 aliases: [if else, loops, for loop, while loop, switch, pattern matching, match case]
-keywords: [if, elif, else, for, while, break, continue, pass, match, case, comprehension, generator, yield]
 description: "Python control flow reference with executable examples and cell outputs — covers conditionals, loops, loop control, iterators, generators, and comprehensions. See [03_cs_control_flow](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/03_cs_control_flow) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -31,6 +27,10 @@ Conditional chains check conditions top-to-bottom — the **first matching condi
 > - Deep `if`/`elif` nesting — extract to functions or use `match`/`case`
 > - Redundant `else` after `return` — `if cond: return x; return y` is cleaner
 > - Mixing tabs and spaces — causes `IndentationError`
+
+> [!success] Correct pattern
+>
+> Extract deeply nested branches into named functions. Use early `return` to flatten logic: `if not cond: return; do_work()`. Configure your editor to use 4 spaces consistently — never mix tabs and spaces.
 
 ```python
 from functools import reduce
@@ -93,6 +93,10 @@ f"val={val} → {label}"
 >
 > Don't use `if x == True` — just `if x`. But be careful with truthy checks when `0` or `""` is legitimate data — be explicit in those cases.
 
+> [!success] Correct pattern
+>
+> Use `if x:` for truthy checks. When `0`, `""`, or `False` are valid data values, be explicit: `if x is not None:` or `if count != 0:`. Reserve `if x == True` / `if x is True` only when you need to distinguish `True` from other truthy values.
+
 ```python
 items = [1, 2, 3]
 if items:                          # truthy: non-empty list
@@ -127,6 +131,10 @@ if 10 < x < 20:                   # Python exclusive! Chained comparison
 > [!warning] Bare variable names in case
 >
 > Bare variable names in `case` **capture** (don't compare) — use literals or guards. Don't forget the `_` default — unmatched values silently pass through.
+
+> [!success] Correct pattern
+>
+> Use string literals for equality: `case "start":`. For variable comparison, use a guard: `case cmd if cmd == expected:`. Always add a `case _:` wildcard as the final branch to handle unmatched values explicitly.
 
 ```python
 command = "quit"
@@ -210,6 +218,10 @@ for v in [42, -5, "hello", [1, 2, 3], 3.14]:
 > - `for i in range(len(items))` — use `for item in items` or `enumerate()`
 > - `while True` without `break` — always have an exit condition
 > - Modifying a list during iteration — use a copy or comprehension
+
+> [!success] Correct pattern
+>
+> Iterate directly: `for item in items:` or with index: `for i, item in enumerate(items):`. For `while True`, always include a clear exit: `if condition: break`. To filter during iteration, build a new list: `items = [x for x in items if keep(x)]`.
 
 ```python
 # Over a list
@@ -405,6 +417,10 @@ for i in range(10):
 >
 > Don't use `pass` in production `except` blocks — at minimum log the error.
 
+> [!success] Correct pattern
+>
+> In `except` blocks, always handle or log: `except ValueError as e: logger.warning("Invalid input: %s", e)`. Use `pass` only as a temporary placeholder during development or for intentionally empty class/function stubs.
+
 ```python
 for i in range(10):
     if i % 2 == 0:
@@ -509,6 +525,10 @@ Key concepts: `yield from` delegates to sub-generators, generator expressions `(
 > - Calling `list()` on a generator just to iterate — defeats lazy evaluation
 > - Generators are single-use — exhausted after one pass
 
+> [!success] Correct pattern
+>
+> Use `yield` to return values lazily: `def gen(): yield item`. Iterate directly with `for item in gen():` — no need to call `list()` first. If you need multiple passes, call the generator function again to create a fresh iterator.
+
 ```python
 def countdown(n):
     print(f"  Starting countdown from {n}")
@@ -599,6 +619,10 @@ list(flatten(nested))   # Flatten
 > [!danger] Never call list() or len()
 >
 > Never call `list()` or `len()` on an infinite generator — hangs or OOM. Always limit with `islice` or `break`.
+
+> [!success] Correct pattern
+>
+> Use `itertools.islice` to safely take a finite number of values: `list(islice(naturals(), 10))`. In loops, use `break` to exit when the desired condition is met: `for n in naturals(): if n > 100: break`.
 
 ```python
 def naturals(start=0):
@@ -757,6 +781,10 @@ df   # pandas json_normalize:\n
 > [!warning] Don't use comprehensions for side
 >
 > Don't use comprehensions for side effects (printing, writing). Don't nest beyond 2 levels — use explicit loops instead.
+
+> [!success] Correct pattern
+>
+> Use comprehensions only to build collections: `squares = [x**2 for x in range(10)]`. For side effects (printing, writing, mutating), use an explicit `for` loop. Keep nesting to 2 levels maximum; beyond that, extract the inner logic into a named function.
 
 ```python
 squares = [x**2 for x in range(10)]
@@ -920,6 +948,10 @@ sorted(names, key=lambda n: n[-1])   # By last char
 > [!warning] Avoid nested comprehensions with more
 >
 > Avoid nested comprehensions with more than 2 levels — use explicit loops instead. Don't use comprehensions for side effects; don't use `for` loops when a comprehension would be cleaner.
+
+> [!success] Correct pattern
+>
+> Keep comprehensions to one or two levels: `[n for row in matrix for n in row]`. For 3+ levels, break out the inner logic: `def process_row(row): return [transform(n) for n in row]`, then `[n for row in matrix for n in process_row(row)]`.
 
     Use comprehension: simple transform/filter → new collection
     Use for loop:      side effects, complex logic, multiple statements

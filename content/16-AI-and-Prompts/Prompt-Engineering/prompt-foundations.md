@@ -1,10 +1,6 @@
 ---
-type: concept
-category: prompt-engineering
-technology: [claude, gpt-4, gemini, grok, llm]
 tags: [ai, prompt-engineering]
 aliases: [prompt engineering basics, prompt fundamentals, prompt principles, LLM input design, context hierarchy, token efficiency]
-keywords: [prompt engineering, context hierarchy, system prompt, user prompt, token efficiency, clarity, specificity, intent alignment, ambiguity, structure, reasoning, creativity, factuality, completion engine, context window, front-load]
 description: "Core principles of prompt engineering: the three axioms of LLM completion, the four-level context hierarchy (system → user → history → model knowledge), and how to achieve clarity, specificity, and intent alignment. Covers how prompt structure shapes reasoning, creative, and factual outputs."
 created: 2026-03-22
 updated: 2026-03-22
@@ -65,6 +61,9 @@ System Prompt (highest authority)
 
 > [!warning] Context Decay
 > As a conversation grows long, the model's effective "memory" of earlier instructions degrades. This is why critical constraints must appear in the system prompt (highest persistence), not just as a one-time user message. See [prompt-debugging](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging) for how to reinforce constraints mid-conversation.
+
+> [!success] Fix: Place Critical Constraints in the System Prompt, Not the User Turn
+> Move any constraint that must hold for the entire conversation (role, output format, forbidden topics, tone) into the system prompt. Use the user turn only for task-specific instructions that change per request. If the system prompt is not editable (e.g., API-less chat interface), re-state critical constraints at the top of every new user message.
 
 > [!info] Multi-Agent Context
 > In [multi-agent systems](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#51-workflows-loops-and-multi-agent-systems), each agent has its own context hierarchy. A sub-agent's system prompt is set by the orchestrator — not the human user. This matters for designing agent architectures.
@@ -148,6 +147,9 @@ Constraints:
 >
 > Models will invent plausible-looking financial figures (stock prices, P/E ratios, revenue numbers) that are completely fabricated. Never use LLM output for any financial calculation, index value, or regulatory filing without verifying against a primary data source. The hallucination rate on specific numerical facts is significantly higher than on qualitative reasoning tasks.
 
+> [!success] Fix: Ground Financial Prompts with Provided Data Only
+> For any prompt involving financial figures, add two constraints: (1) "Use ONLY the data I have provided — do not generate or recall any financial figures from your training data." (2) "If a figure is not in the provided data, return null or 'not provided' for that field." This makes hallucination structurally impossible for the constrained fields. Validate all returned figures against a primary source before use.
+
 ### Factual Tasks: Source Grounding and Uncertainty Handling
 
 **Factual tasks** benefit from grounding and source awareness:
@@ -172,6 +174,9 @@ Question: What was the year-over-year revenue growth in Q3?
 
 > [!warning] Hallucination Risk on Factual Tasks
 > Without source grounding, models will confidently invent facts. Always include "use only the provided data" and "say 'unknown' if unsure" for any factual extraction task. See [diagnosing hallucinated facts](https://alp78.github.io/elysium/16-AI-and-Prompts/Prompt-Engineering/prompt-debugging#41-diagnosing-weak-outputs) for the full fix.
+
+> [!success] Fix: Two-Constraint Grounding Template for Factual Tasks
+> Apply this fixed ending to every factual extraction prompt: "Use only the text provided above. Do not use outside knowledge. If a value cannot be found in the text, return the string 'NOT_IN_SOURCE' for that field." The explicit string value (rather than null) makes hallucinations immediately visible in downstream validation — a non-null `NOT_IN_SOURCE` string is easier to detect and route to human review than a plausible-looking invented number.
 
 ---
 

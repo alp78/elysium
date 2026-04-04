@@ -1,7 +1,4 @@
 ---
-type: concept
-category: orchestration
-technology: [airflow, python]
 tags: [orchestration, python, airflow]
 aliases:
   - Apache Airflow
@@ -27,31 +24,6 @@ aliases:
   - KubernetesExecutor
   - LocalExecutor
   - SequentialExecutor
-keywords:
-  - airflow
-  - apache airflow
-  - DAG
-  - directed acyclic graph
-  - operator
-  - task
-  - sensor
-  - hook
-  - connection
-  - xcom
-  - executor
-  - scheduler
-  - worker
-  - metadata database
-  - taskflow
-  - python decorator
-  - workflow orchestration
-  - pipeline orchestration
-  - BashOperator
-  - PythonOperator
-  - KubernetesPodOperator
-  - celery
-  - dag scheduling
-  - airflow architecture
 description: "Comprehensive reference for Apache Airflow core concepts: architecture (Scheduler, Webserver, Worker, Metadata DB, Executor), DAGs, Operators, Sensors, Hooks, XComs, the TaskFlow API, and a comparison of all Executor types."
 created: 2026-03-22
 updated: 2026-03-22
@@ -70,6 +42,9 @@ Apache Airflow is an open-source **workflow orchestration platform** for program
 > [!warning] What Airflow is NOT
 >
 > Airflow is **not a data processing framework**. It does not move or transform data itself — it **orchestrates** tools that do. Think of Airflow as the conductor, not the orchestra. Data processing happens in Spark, dbt, BigQuery, or Python scripts that Airflow triggers. Treating Airflow as a data-processing engine (e.g., loading large DataFrames into XComs) is the single most common architectural mistake.
+
+> [!success] Correct pattern: delegate processing to external systems
+> Use `BashOperator`, `KubernetesPodOperator`, or `BigQueryInsertJobOperator` to trigger the actual compute — keep Airflow tasks thin. Pass only lightweight metadata (file paths, row counts, run IDs) between tasks via XCom, never raw data.
 
 ---
 
@@ -141,6 +116,9 @@ PostgreSQL (recommended) or MySQL database that stores:
 
 > [!warning] Database is Critical
 > The Metadata DB is a single point of failure. Use a managed database (Cloud SQL, RDS, AlloyDB) in production with automated backups and HA failover.
+
+> [!success] Safe pattern: managed DB with HA and automated backups
+> In GCP, use Cloud SQL for PostgreSQL with a read replica and daily automated backups. Set `sql_alchemy_pool_size` and `sql_alchemy_max_overflow` conservatively to avoid connection exhaustion under load.
 
 ### Executor
 
@@ -372,6 +350,9 @@ Runs a Kubernetes Pod. The preferred operator for GCP Cloud Composer and self-ma
 > [!warning] KubernetesPodOperator Image Tag :latest Causes Silent Stale Deploys
 > Using `:latest` as the image tag means Kubernetes may use a cached image from the node instead of pulling the newest version. Pin image tags to a specific version or SHA digest (e.g., `etl:1.2.3` or `etl@sha256:abc...`). Set `image_pull_policy="Always"` if you must use `:latest` during development.
 
+> [!success] Fix: pin image tags in CI/CD and set image_pull_policy
+> In your CI/CD pipeline, tag images with the git commit SHA (`gcr.io/my-project/etl:$GIT_SHA`) and reference that exact tag in the operator. In development, set `image_pull_policy="Always"` to force a fresh pull on every run.
+
 ```python
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 from kubernetes.client import models as k8s
@@ -419,6 +400,9 @@ Sensors are a special type of Operator that **poke** an external system until a 
 
 > [!warning] Sensor Mode: Poke vs Reschedule
 > Default sensor mode is `poke` — the sensor holds a worker slot the entire time it waits. For long-running sensors (hours), use `mode="reschedule"` — the sensor releases the slot between checks and reacquires it only to check again. This is critical for preventing slot starvation.
+
+> [!success] Fix: always set mode="reschedule" for long-running sensors
+> Set `mode="reschedule"` and `poke_interval` to a sensible interval (e.g., 60–300 seconds) for any sensor that may wait longer than a few minutes. Also set `timeout` to prevent an indefinitely blocked slot if the upstream condition never arrives.
 
 ```python
 from airflow.sensors.filesystem import FileSensor
@@ -546,6 +530,9 @@ XComs (Cross-Communications) allow tasks to exchange small messages via the Meta
 
 > [!warning] XCom Size Limit
 > XComs are stored in the Metadata DB. The default serialization backend (pickle/JSON) has a practical limit of **~48 KB** in most configurations. Do NOT use XComs to pass DataFrames, file contents, or large result sets. Instead, write data to GCS/S3 and pass the **path** as the XCom value. See [airflow-troubleshooting](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-troubleshooting) for the "XCom too large" error.
+
+> [!success] Fix: pass GCS/S3 paths instead of data in XComs
+> Write large results to an intermediate GCS path, then return that path string as the task's XCom value. Downstream tasks pull the path and read directly from storage — the Metadata DB is never touched by the data itself.
 
 ```python
 # --- Pushing XComs ---
@@ -685,6 +672,9 @@ branching_taskflow()
 
 > [!warning] Variable.get() at Module Level Runs on Every DAG Parse (Every 30s)
 > Code at module level runs during DAG parsing, not during task execution. A `Variable.get()` at module level hits the Metadata DB every 30 seconds per DAG file. With 50 DAG files, that is 100 DB queries per minute just for variable resolution. Always call `Variable.get()` inside task callables, never at the top of the DAG file.
+
+> [!success] Fix: call Variable.get() inside task callables only
+> Move all `Variable.get()` calls inside the Python callable of a `PythonOperator` or inside a `@task`-decorated function. This limits each fetch to task execution time, not parse time, and eliminates repeated DB hits from the Scheduler loop.
 
 ### Variables
 

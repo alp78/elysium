@@ -1,10 +1,6 @@
 ---
-type: concept
-category: sql-server
-technology: [sql-server]
 tags: [sql, sql-server, tsql]
 aliases: [SQL Server compression, page compression, row compression, DATA_COMPRESSION, sp_estimate_data_compression_savings, table compression]
-keywords: [compression, page compression, row compression, DATA_COMPRESSION, sp_estimate_data_compression_savings, REBUILD, ALTER INDEX, buffer pool, disk space, cold tables, gold layer, archival, financial time-series, prefix compression, dictionary compression, columnstore compression, ONLINE rebuild, compression savings]
 description: "How SQL Server page and row compression works, when to apply each type, how to estimate savings before committing, and how to apply compression with minimal blocking using ONLINE rebuilds. Includes data pipeline guidance for gold-layer tables."
 created: 2026-03-22
 updated: 2026-03-22
@@ -53,6 +49,10 @@ SQL Server offers two row-based compression types (plus columnstore, which is a 
 >
 > Compressed pages are decompressed when read into the buffer pool. On systems with small buffer pools where pages are frequently evicted and re-read, each re-read pays the decompression cost again. If your server has memory pressure (PLE < 300s), compression may increase CPU usage significantly as pages cycle in and out of the buffer pool.
 
+> [!success] Safe Pattern: Check PLE Before Applying Compression
+>
+> Query `sys.dm_os_performance_counters WHERE counter_name = 'Page life expectancy'`. If PLE is above 300 seconds, compression is safe to apply. If PLE is below 300 seconds, address memory pressure first (increase `max server memory`, identify large table consumers with `sys.dm_os_buffer_descriptors`) before adding the CPU cost of decompression to an already-stressed buffer pool.
+
 ---
 
 ## When to Apply Page Compression
@@ -73,6 +73,10 @@ SQL Server offers two row-based compression types (plus columnstore, which is a 
 > [!warning] Avoid Compressing Hot Tables
 >
 > Page compression is not free on write paths. If a table receives thousands of row-level updates per second (e.g., a hot bronze staging table), compressing it will increase CPU and may slow write throughput. Only compress tables that have stabilized and are primarily read.
+
+> [!success] Safe Pattern: Apply ROW Compression to Active Tables, PAGE to Cold Tables
+>
+> Use `sp_estimate_data_compression_savings` to measure projected savings for both ROW and PAGE. For active OLTP tables with frequent updates (bronze/silver), apply ROW compression only — it removes padding and trailing zeros with minimal CPU overhead. Reserve PAGE compression for read-only or rarely-updated tables such as gold-layer aggregates and historical archive partitions.
 
 ---
 
@@ -145,6 +149,10 @@ REBUILD WITH (
 >
 > Online index rebuilds are not available in Standard Edition. On Standard Edition, an index rebuild takes a schema modification (Sch-M) lock on the table — blocking all reads and writes for the duration. Schedule Standard Edition rebuilds during maintenance windows. See [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) for lock type details.
 
+> [!success] Safe Pattern: Schedule Standard Edition Rebuilds During Maintenance Windows
+>
+> On Standard Edition, run compression rebuilds during off-peak hours (e.g., Sunday 02:00 UTC). Use `sys.dm_exec_requests` to confirm no active sessions against the table before starting. For large gold-layer tables, apply compression one table at a time and monitor completion with `WHERE command LIKE '%ALTER INDEX%'` in `sys.dm_exec_requests`.
+
 #### CREATE TABLE WITH DATA_COMPRESSION = PAGE — apply at creation time
 
 ```sql
@@ -161,6 +169,10 @@ CREATE TABLE gold.index_performance_archive (
 > [!danger] REBUILD Resets Compression
 >
 > Running `ALTER INDEX ... REBUILD` without specifying `DATA_COMPRESSION` resets the index to NONE — silently removing compression. Always include `WITH (DATA_COMPRESSION = PAGE)` in every REBUILD statement for compressed indexes. Automated maintenance scripts that rebuild fragmented indexes must preserve the compression setting.
+
+> [!success] Safe Pattern: Read Current Compression Before REBUILD
+>
+> Before any REBUILD, query `sys.partitions WHERE object_id = OBJECT_ID('table') AND index_id = 1` and read `data_compression_desc`. Pass the same value to `WITH (DATA_COMPRESSION = ...)` in the REBUILD statement. In automated maintenance scripts, dynamically fetch the compression setting per index and always include it explicitly rather than omitting the clause.
 
 ---
 

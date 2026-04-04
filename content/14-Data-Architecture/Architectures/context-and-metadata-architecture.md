@@ -1,12 +1,4 @@
 ---
-type: concept
-category: data-architecture
-technology:
-  - sql-server
-  - gcp
-  - python
-  - bigquery
-  - firestore
 tags: [data-architecture, architecture, pipeline, python, sql, bigquery, gcp, firestore]
 aliases:
   - context store
@@ -23,41 +15,6 @@ aliases:
   - pipeline metadata
   - run context
   - temporal context
-keywords:
-  - context preservation
-  - metadata management
-  - data lineage
-  - bi-temporal tables
-  - data contracts
-  - schema registry
-  - provenance tracking
-  - pipeline observability
-  - data quality metadata
-  - business glossary
-  - data catalog
-  - run context
-  - temporal context
-  - event time
-  - processing time
-  - recording time
-  - envelope pattern
-  - sidecar metadata
-  - context propagation
-  - expand and contract
-  - schema evolution
-  - schema drift detection
-  - data classification
-  - data ownership
-  - column descriptions
-  - extended properties
-  - quality score
-  - freshness SLA
-  - data steward
-  - audit trail
-  - point in time query
-  - late arriving data
-  - context chain
-  - circuit breaker pattern
 description: >
   Definitive architectural reference for preserving context in data pipelines —
   how to ensure data never loses its meaning, provenance, temporal state, or
@@ -99,6 +56,9 @@ An ML model's predictions degrade over two weeks. The model hasn't changed. The 
 
 > [!danger] The True Cost
 > Context loss is not a technical inconvenience. It produces wrong business decisions, compliance violations, hours of debugging, and — most corrosively — a loss of trust in data. Once stakeholders stop trusting the data, they revert to spreadsheets and gut feelings. Rebuilding that trust takes months.
+
+> [!success] Building and Rebuilding Trust
+> Instrument every pipeline stage with a minimum context record: `_run_id`, `_extracted_at`, `_source_system`, and a row-count assertion. Surface these in a lightweight data health dashboard so consumers can see freshness and quality at a glance. When trust has been lost, start by making the metadata transparent — even imperfect data with honest quality scores is more trustworthy than perfect-looking data with no provenance.
 
 ---
 
@@ -681,6 +641,9 @@ API (market-data-api v3)
 > [!warning] Never Strip Provenance in Transformation
 > A common anti-pattern is to SELECT only business columns during transformation, dropping `_source_system` and `_extracted_at`. Always carry at least `_run_id` through every layer. It is your foreign key back to the full provenance chain.
 
+> [!success] Provenance Column Pattern
+> Add a standard provenance block to every transformation SELECT: `_run_id`, `_source_system`, `_extracted_at`, and `_processed_at`. Define these as a dbt macro or a Python dataclass so every pipeline applies them consistently without per-developer decisions. The overhead is negligible (4 columns); the debugging value when tracing a bad record through three layers is immense.
+
 ---
 
 ### Temporal Context — As of When Is This Data True?
@@ -1241,6 +1204,9 @@ class QualityGateFailure(Exception):
 
 > [!warning] Quality Context Is Not Optional
 > Without quality metadata, consumers face a binary choice: trust all data blindly or trust none of it. Quality scores give consumers the information they need to make nuanced decisions — use data with a 0.98 score for financial reports, but flag data below 0.90 for manual review.
+
+> [!success] Implementing Quality Scores
+> Compute a composite quality score at each pipeline stage: completeness (non-null rate on required columns), validity (business rule pass rate), freshness (lag from event time to landing time), and deduplication rate. Store the score alongside the data in a `_quality_score` column and in a separate `data_quality_runs` metadata table. Expose both in the data catalog so consumers can filter or alert based on score thresholds rather than discovering bad data in their own queries.
 
 ---
 
@@ -2226,6 +2192,9 @@ ALTER TABLE dbo.silver_daily_prices
 > [!warning] Never Skip Phase 3
 > Dropping a column before all consumers have migrated causes silent failures. Track consumer dependencies via data contracts or lineage before contracting.
 
+> [!success] Safe Column Removal Process
+> Before removing any column, query your data catalog or lineage graph to enumerate every downstream consumer that references it. Notify each owner, set a deprecation date at least 30 days out, and mark the column with `@deprecated` in the dbt schema or a `description: DEPRECATED - use new_column instead` in BigQuery. Only drop after all consumers confirm migration and the column shows zero query hits in the access logs for at least one full reporting cycle.
+
 ### BigQuery Schema Evolution Rules
 
 ```sql
@@ -2345,6 +2314,9 @@ ORDER BY created_at DESC;
 
 > [!danger] The Most Dangerous Anti-Pattern
 > The most dangerous anti-pattern is **context that exists only in someone's head**. "Oh, that column is adjusted for splits" — until that person leaves the team. Every piece of context must be written down: in column descriptions, extended properties, data contracts, or catalog entries.
+
+> [!success] Codifying Tribal Knowledge
+> Run a "knowledge audit" for every critical dataset: for each column, write a description that explains what it means, what its valid range is, and how it is calculated. Use `EXEC sp_addextendedproperty` in SQL Server or BigQuery column descriptions in the schema YAML. Treat undocumented columns as a pipeline defect — add documentation to the definition of done for every data model and schema change.
 
 ---
 

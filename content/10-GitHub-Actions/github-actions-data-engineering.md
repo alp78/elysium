@@ -1,14 +1,4 @@
 ---
-type: reference
-category: github-actions
-technology:
-  - github
-  - github-actions
-  - python
-  - gcp
-  - terraform
-  - dbt
-  - docker
 tags: [ci-cd, python, terraform, docker, dbt, gcp, github-actions]
 aliases:
   - data pipeline CI/CD
@@ -18,32 +8,6 @@ aliases:
   - Cloud Run deploy
   - Workload Identity Federation
   - data quality gates
-keywords:
-  - data pipeline
-  - ci cd
-  - cloud run
-  - workload identity federation
-  - keyless auth
-  - dbt
-  - great expectations
-  - data quality
-  - airflow dag
-  - sql validation
-  - bigquery dry-run
-  - schema migration
-  - ruff
-  - pytest
-  - docker build
-  - artifact registry
-  - terraform plan
-  - terraform apply
-  - drift detection
-  - slack notification
-  - cost monitoring
-  - secret rotation
-  - ACTIONS_STEP_DEBUG
-  - pipeline deployment
-  - sql server parseonly
 description: "GitHub Actions for data engineering — CI for pipelines, CD for Cloud Run, Terraform automation, dbt CI, data quality gates, and Workload Identity Federation."
 created: 2026-03-22
 updated: 2026-03-22
@@ -936,6 +900,10 @@ jobs:
 > [!danger] Missing attribute_condition risk
 >
 > The `--attribute-condition` in the OIDC provider setup restricts which GitHub repositories can request tokens. If you omit this condition or set it to a wildcard, ANY public GitHub repository can authenticate as your service account and access your GCP resources. Always restrict to your specific org/repo: `assertion.repository=='my-org/my-repo'`. For additional safety, add `assertion.ref=='refs/heads/main'` to restrict to the main branch only.
+
+> [!success] Correct attribute_condition pattern
+>
+> Always set `--attribute-condition="assertion.repository=='my-org/my-repo'"` when creating the OIDC provider. For production deployments, add a second condition on the branch: `assertion.ref=='refs/heads/main'`. This ensures only your specific repository on the main branch can exchange tokens — no other repository can impersonate your service account.
 
 ### One-Time GCP Setup
 

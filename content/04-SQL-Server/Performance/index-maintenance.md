@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: performance
-technology: [sql-server]
 tags: [sql, sql-server, tsql]
 aliases: [index fragmentation, index rebuild, index reorganize, fill factor, ALTER INDEX REBUILD, ALTER INDEX REORGANIZE, index defragmentation, Ola Hallengren]
-keywords: [index fragmentation, avg_fragmentation_in_percent, index rebuild, index reorganize, fill factor, ONLINE=ON, sys.dm_db_index_physical_stats, REORGANIZE, REBUILD, PAGE compression, DATA_COMPRESSION, columnstore reorganize, COMPRESS_ALL_ROW_GROUPS, statistics update after rebuild, index maintenance script, Ola Hallengren, maintenance window]
 description: "How to detect and fix SQL Server index fragmentation using REORGANIZE and REBUILD operations — includes fragmentation thresholds, automated maintenance script, fill factor guidance, and a recommended maintenance schedule for data pipeline workloads."
 created: 2026-03-22
 updated: 2026-03-22
@@ -81,6 +77,10 @@ ORDER BY ips.avg_fragmentation_in_percent DESC;
 >
 > The `'LIMITED'` mode reads only the parent-level pages and is fast but approximate. `'DETAILED'` reads all leaf pages for accurate fragmentation data but is slow on large tables. Use `'LIMITED'` for regular monitoring and `'DETAILED'` only before a targeted maintenance operation.
 
+> [!success] Use `'LIMITED'` for routine scans and `'DETAILED'` only before targeted maintenance
+>
+> Schedule the regular fragmentation check with `'LIMITED'` to keep the DMV query fast. Switch to `'DETAILED'` only for specific indexes you are about to REBUILD, where precise fragmentation data justifies the extra I/O scan.
+
 ### REORGANIZE — Online, Lightweight
 
 REORGANIZE physically reorders the leaf pages of an index to match logical order. It is an online operation — the table remains fully accessible during the operation.
@@ -156,6 +156,10 @@ ALTER INDEX CCI_archive ON dbo.market_data_archive REBUILD;
 >
 > REBUILD OFFLINE Locks the Table.
 > Without `WITH (ONLINE = ON)`, REBUILD takes a schema modification lock that blocks all reads and writes for the duration. On a large table this can take minutes to hours. Always use `ONLINE = ON` in production unless you have a maintenance window. Note: `ONLINE = ON` requires Developer or Enterprise edition.
+
+> [!success] Always use `WITH (ONLINE = ON)` for production REBUILDs
+>
+> `ALTER INDEX IX_name ON table REBUILD WITH (ONLINE = ON);` keeps the table fully accessible during the rebuild. Schedule offline REBUILDs only in a maintenance window when no reads or writes are expected, and only when running Standard edition.
 
 ### Fill Factor Guidance
 
@@ -363,6 +367,10 @@ ORDER BY total_reads DESC;
 >
 > These stats reset on SQL Server restart or index rebuild. If the server was recently restarted, the data is not representative — wait at least one full business cycle (1 week) before making drop decisions.
 
+> [!success] Check `sys.dm_os_sys_info.sqlserver_start_time` before making drop decisions
+>
+> Run `SELECT sqlserver_start_time FROM sys.dm_os_sys_info;` to verify uptime. If the server restarted within the last 7 days, defer any index drop decision until a full business cycle of usage data has accumulated.
+
 ### Unused Indexes — indexes with zero reads but ongoing write cost
 
 ```sql
@@ -389,11 +397,19 @@ ORDER BY ius.user_updates DESC;
 >
 > An unused index still costs write performance — every INSERT/UPDATE/DELETE must maintain it. But verify the stats cover a full business cycle. An index used only during month-end reporting shows zero usage for 29 days.
 
+> [!success] Wait for at least one full business cycle, then disable before dropping
+>
+> Before dropping, `ALTER INDEX IX_name ON table DISABLE;` to stop maintaining it without removing it. Run through a full month-end cycle. If no query complaints arise, then `DROP INDEX`. Disabling is reversible; dropping is not.
+
 ### Missing Index Suggestions — SQL Server's recommended indexes ranked by impact
 
 > [!warning] Never Blindly Create All Suggestions
 >
 > SQL Server's missing index suggestions are based on individual query plans, not workload analysis. They may suggest overlapping indexes, indexes that benefit one query but hurt ten others, or indexes on columns with low selectivity. Always review suggestions — never blindly create all of them.
+
+> [!success] Review suggestions for overlaps, then create only those with high `improvement_measure` scores
+>
+> Sort by `improvement_measure` and focus on the top 3–5. Check whether two suggestions differ only in `included_columns` — if so, merge them into one covering index. Test each new index on a non-production copy before applying to production.
 
 ```sql
 -- Missing indexes ranked by potential impact

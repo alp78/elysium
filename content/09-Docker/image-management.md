@@ -1,7 +1,4 @@
 ---
-type: concept
-category: docker
-technology: [docker, gcp]
 tags: [docker, gcp]
 aliases:
   - Docker images
@@ -20,46 +17,6 @@ aliases:
   - .dockerignore
   - slim base image
   - alpine image
-keywords:
-  - docker
-  - image
-  - build
-  - tag
-  - push
-  - pull
-  - multi-stage
-  - artifact registry
-  - dockerfile
-  - layer
-  - size
-  - registry
-  - pipeline image
-  - FROM
-  - RUN
-  - COPY
-  - ADD
-  - WORKDIR
-  - ENV
-  - ARG
-  - EXPOSE
-  - CMD
-  - ENTRYPOINT
-  - build context
-  - no-cache
-  - build-arg
-  - target stage
-  - platform
-  - linux/amd64
-  - M1 Mac
-  - docker hub
-  - ECR
-  - dangling image
-  - docker system prune
-  - docker system df
-  - image size optimization
-  - layer caching
-  - slim
-  - alpine
 description: "Comprehensive Docker image management reference — Dockerfile instructions, building with cache and multi-stage patterns, tagging strategies, pushing to GCP Artifact Registry, inspecting layers and size, and cleaning up disk usage."
 created: 2026-03-22
 updated: 2026-03-22
@@ -230,6 +187,10 @@ service-account.json
 >
 > Any file in the build context can end up in the image if a `COPY . .` instruction is used. Always add credential files to `.dockerignore`. Use `docker history` to verify no secrets were baked in.
 
+> [!success] Protect secrets from the build context
+>
+> Add `.env`, `*.pem`, `*.key`, `credentials.json`, and `service-account.json` to `.dockerignore`. Prefer explicit `COPY src/ .` over `COPY . .` to minimize what enters the image. Run `docker history --no-trunc <image>` after each build to confirm no sensitive files were included.
+
 ### Build Context
 
 The build context is the directory argument at the end of `docker build` (usually `.`). Docker tars the entire directory and sends it to the daemon before the build starts. A large build context (e.g., a directory with 500MB of data files) dramatically slows every build, even if those files are never COPYed into the image.
@@ -280,6 +241,10 @@ docker build --platform linux/amd64 -t data-pipeline-pipeline:latest .
 > [!warning] M1/M2 Mac + GCP
 >
 > If you build on Apple Silicon without `--platform linux/amd64`, the image will be `linux/arm64`. Cloud Run will refuse it with a cryptic error. Always set the platform when building for GCP.
+
+> [!success] Cross-platform build pattern
+>
+> Always pass `--platform linux/amd64` when building for GCP Cloud Run or any GCP service: `docker build --platform linux/amd64 -t myimage .`. In CI/CD (GitHub Actions), use `docker/setup-buildx-action` with `platforms: linux/amd64` to ensure consistent platform targeting regardless of the runner's native architecture.
 
 ### Build Cache and Layer Optimization
 
@@ -380,6 +345,10 @@ docker tag data-pipeline-pipeline:latest europe-west1-docker.pkg.dev/data-platfo
 >
 > Why `latest` is Dangerous in Production.
 > `latest` is mutable — it points to whatever was pushed last. Two deployments using `latest` may run different code if someone pushed between them. In Cloud Run job definitions, Terraform, or Kubernetes manifests, always pin to an immutable tag (git SHA or semantic version). Use `latest` only for local development and quick tests.
+
+> [!success] Immutable tagging strategy
+>
+> Tag every production image with the git SHA: `docker tag myimage:latest myimage:$(git rev-parse --short HEAD)`. Push both the SHA tag and `latest`, but reference only the SHA tag in Terraform, Cloud Run job definitions, and any deployment manifests. The SHA tag is immutable and fully traceable to a specific commit.
 
 ---
 
@@ -627,6 +596,10 @@ docker system prune -a
 >
 > docker system prune -a.
 > This removes every image not referenced by a running container, including base images you pulled but are not actively using. Your next build will re-pull them. Only run this when you explicitly want to reclaim maximum disk space and are prepared for slower next builds.
+
+> [!success] Targeted cleanup instead of nuclear prune
+>
+> Prefer targeted cleanup: use `docker image prune` (dangling images only) for routine maintenance, and `docker system df` to understand what is consuming space before pruning. Reserve `docker system prune -a` for demo resets or CI ephemeral runners where a clean slate is acceptable.
 
 ---
 

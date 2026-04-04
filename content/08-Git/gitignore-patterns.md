@@ -1,10 +1,6 @@
 ---
-type: reference
-category: git
-technology: [git]
 tags: [git, github]
 aliases: [.gitignore, gitignore, git ignore, exclude files, git rm --cached]
-keywords: [.gitignore, gitignore, patterns, exclude, secrets, .env, credentials, pyc, pycache, venv, node_modules, git rm --cached, BFG, filter-branch, stop tracking, git secrets, accidentally committed]
 description: "How to use .gitignore to exclude files from version control, patterns for Python data engineering projects, how to stop tracking already-committed files, and what to do if secrets were accidentally committed."
 created: 2026-03-22
 updated: 2026-03-22
@@ -62,6 +58,10 @@ The glob-style pattern syntax used in `.gitignore` is shared with shell expansio
 >
 > A `!` pattern (e.g., `!data/sample.csv`) only works if a preceding line ignores the parent. If the parent directory itself is ignored with a trailing slash (`data/`), Git never looks inside it, and the negation has no effect. To negate a file inside an ignored directory, ignore the contents with `data/*` (no trailing slash) instead, then negate the specific file.
 
+> [!success] Ignore Contents, Not the Directory, to Allow Exceptions
+>
+> Replace `data/` with `data/*` in your `.gitignore`, then add `!data/sample.csv` on the next line. Git will enter the directory to apply the exception, and only the specific file will be tracked.
+
 ---
 
 ### Stop Tracking a File That's Already Committed
@@ -88,6 +88,10 @@ git push
 >
 > This Does NOT Erase History.
 > `git rm --cached` removes the file from future commits. It remains in previous commits. If the file contained secrets, anyone with repository access can still see them in the history.
+
+> [!success] Scrub History with BFG or filter-repo for Secrets
+>
+> If the file contained sensitive data, use `git filter-repo --path <file> --invert-paths` or BFG Repo-Cleaner to remove it from all historical commits. Then force-push and require all collaborators to re-clone.
 
 ---
 
@@ -123,6 +127,10 @@ git push
 >
 > If you accidentally committed secrets (API keys, passwords), **rotate them immediately** — before scrubbing the history. Anyone who fetched the repo has already seen them.
 
+> [!success] Rotate in Your Cloud Console Before Any Git Work
+>
+> Go to GCP IAM, Azure Key Vault, or your secrets manager and revoke the exposed key immediately. Only after the old credential is invalidated should you proceed to clean the Git history with BFG or `git filter-repo`.
+
 Then use one of these tools to remove them from ALL history:
 
 #### BFG Repo-Cleaner (simpler, faster)
@@ -150,6 +158,10 @@ git push --force --all
 >
 > Force-Push After History Rewrite.
 > After using BFG or `filter-branch`, you must force-push all branches. This is destructive — every collaborator must reclone or run `git fetch --all && git reset --hard origin/main`.
+
+> [!success] Notify the Team Before Force-Pushing Rewritten History
+>
+> Announce the history rewrite in your team channel before force-pushing. Share the instruction for collaborators: `git fetch --all && git reset --hard origin/main` (or re-clone). Any local branch based on the old history must be rebased onto the new commits.
 
 ---
 
@@ -276,6 +288,10 @@ git push   # LFS uploads the file to the LFS server
 > [!warning] LFS Must Be Set Up Before First Commit
 >
 > If you commit a large file BEFORE running `git lfs track`, it goes into regular Git history. You must then use `git lfs migrate` to retroactively move it to LFS — which rewrites history and requires a force-push.
+
+> [!success] Migrate Existing Large Files to LFS
+>
+> Run `git lfs migrate import --include="*.parquet" --everything` to retroactively move large files into LFS across all history. Then force-push with `git push --force --all` and require teammates to re-clone.
 
 ```bash
 # Check which files are managed by LFS

@@ -1,10 +1,6 @@
 ---
-type: how-to
-category: sql-server
-technology: [sql-server, linux, gcp]
 tags: [sql, gcp, sql-server, tsql]
 aliases: [Always On AG, availability group, AOAG, AG, HA, Pacemaker HA, SQL Server HA, failover clustering, SQL Server Linux HA]
-keywords: [Always On Availability Groups, AOAG, availability group, Pacemaker, Corosync, WSFC, failover, synchronous commit, asynchronous commit, RPO, RTO, listener, virtual IP, read-only routing, log send queue, redo queue, seeding, split-brain, STONITH, quorum, mssql-server-ha, certificate authentication, endpoint, Hadr_endpoint, planned failover, forced failover, data loss, sys.dm_hadr_availability_replica_states, sys.dm_hadr_database_replica_states, SQL Server Linux, GCP, ILB, ApplicationIntent=ReadOnly]
 description: "Complete guide to SQL Server Always On Availability Groups on Linux (GCP): architecture, replication modes, step-by-step setup with Pacemaker, essential monitoring DMVs, planned and forced failover operations, read-only routing, and troubleshooting for 5 common issues."
 created: 2026-03-22
 updated: 2026-03-22

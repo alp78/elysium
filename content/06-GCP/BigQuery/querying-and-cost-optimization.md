@@ -1,10 +1,6 @@
 ---
-type: concept
-category: gcp
-technology: [gcp, bigquery]
 tags: [performance, cost, infrastructure, bigquery, gcp]
 aliases: [BigQuery cost optimization, bq query, BigQuery dry run, BigQuery caching, BigQuery SELECT star cost, BQ cost]
-keywords: [bigquery, bq query, cost optimization, dry run, --dry_run, bytes processed, TB scanned, partitioning, clustering, SELECT star, columnar, parameterized query, destination table, materialized view, INFORMATION_SCHEMA, JOBS, standard SQL, legacy SQL, allow_large_results, caching]
 description: "How to run BigQuery queries efficiently using the bq CLI — including dry runs for cost estimation, parameterized queries for caching, destination tables, and the 80/20 cost optimization practices."
 created: 2026-03-22
 updated: 2026-03-22
@@ -33,6 +29,10 @@ bq query --use_legacy_sql=false 'SELECT COUNT(*) AS total_rows FROM `data-platfo
 >
 > Always Set `--use_legacy_sql=false`.
 > BigQuery has two SQL dialects: legacy SQL (the original) and standard SQL (GoogleSQL, the modern version). Legacy SQL has different syntax and fewer features. Always use `--use_legacy_sql=false`. Some teams set this as an alias: `alias bq='bq --use_legacy_sql=false'`.
+
+> [!success] Set a Shell Alias to Enforce Standard SQL
+>
+> Add `alias bq='bq --use_legacy_sql=false'` to your `.bashrc` or `.zshrc` so the flag is applied automatically. In dbt profiles and Python client code, set `use_legacy_sql=False` in the job configuration to prevent accidental legacy SQL usage.
 
 ### BigQuery Dry Run — Estimate Cost Before Executing
 

@@ -3,8 +3,6 @@ title: "MOC: Shell"
 tags:
   - moc
   - shell
-  - bash
-  - cli
 ---
 
 # MOC: Shell

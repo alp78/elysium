@@ -1,10 +1,6 @@
 ---
-type: reference
-category: sql-server
-technology: [sql-server, t-sql, bigquery]
 tags: [performance, sql, bigquery, sql-server, tsql]
 aliases: [PIT, point-in-time, effective-dated, bi-temporal, as-of query, weight normalization, constituent list, rebalancing, index reconstitution, SCD Type 2, temporal join]
-keywords: [point-in-time, PIT query, effective date, expiry date, bi-temporal, valid time, transaction time, system versioning, temporal table, weight normalization, residual distribution, rounding error, constituent membership, rebalancing, reconstitution, free float, capping factor, index divisor, covering index, columnstore, LAST_VALUE IGNORE NULLS, forward fill, ESG temporal alignment, reconciliation, audit, EU BMR]
 description: "Point-in-Time data integrity patterns for stock index calculation and ESG scoring — covers effective-dated constituent lists, weight normalization to exactly 1.00000000, bi-temporal modeling, and performance tuning for large-scale price/ESG joins."
 created: 2026-03-22
 updated: 2026-03-22
@@ -21,6 +17,10 @@ status: complete
 > [!danger] Why This Matters
 >
 > A stock index provider must answer: "What were the exact constituents, weights, and ESG scores of Index X on Date Y?" with full audit trail. Getting this wrong means publishing incorrect index levels — a regulatory and reputational catastrophe under EU BMR.
+
+> [!success] Correct Approach — SCD Type 2 with Full Audit Trail
+>
+> Use SCD Type 2 effective-dated tables with `effective_date` / `expiry_date` columns and bi-temporal modeling to capture both valid time and transaction time. Run automated weight-sum validation (`ABS(SUM - 1.0) < 1E-9`) before every publication. Store `change_reason` on every row to satisfy the EU BMR audit trail requirement.
 
 ---
 
@@ -75,6 +75,10 @@ WHERE index_code = 'EURO_STOXX_50'
 > [!warning] Boundary Convention
 >
 > Use half-open intervals: `effective_date <= X AND expiry_date > X`. This prevents double-counting on transition dates. The convention means a constituent is "in" on its effective_date and "out" on its expiry_date.
+
+> [!success] Safe Pattern — Consistent Half-Open Interval
+>
+> Enforce the `effective_date <= @as_of_date AND expiry_date > @as_of_date` convention in all queries and stored procedures. Document it in the code and use a check constraint or unit test to verify that no two active rows for the same `(index_code, instrument_isin)` overlap on any given date.
 
 ### BigQuery: PIT with DATE Ranges
 
@@ -239,6 +243,10 @@ ORDER BY final_weight DESC;
 > [!danger] The Residual Rule
 >
 > Always assign the rounding residual to the **largest** constituent. This minimizes the relative impact. A 0.0000000001 residual on a 9.8% weight is negligible; on a 0.1% weight it would be material.
+
+> [!success] Safe Pattern — Residual Assigned to Largest Constituent
+>
+> Use `ROW_NUMBER() OVER (ORDER BY norm_weight DESC)` to identify `rn = 1` and add `(1.0000000000 - SUM(rounded_weight) OVER ())` to that row only. After normalization, always run the weight-sum validation query and gate publication on a `'PASS'` result.
 
 ### Validation: Weight Sum Check
 

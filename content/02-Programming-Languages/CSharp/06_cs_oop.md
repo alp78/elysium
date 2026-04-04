@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [classes, inheritance, polymorphism, interfaces, abstract classes, encapsulation, properties]
-keywords: [class, interface, abstract, inheritance, polymorphism, property, record, sealed, virtual, override]
 description: "C# OOP reference with executable examples and cell outputs — covers classes, interfaces, inheritance, polymorphism, properties, records, and encapsulation. See [06_py_oop](https://alp78.github.io/elysium/02-Programming-Languages/Python/06_py_oop) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -33,6 +29,12 @@ Classes define types with **auto-properties** (`get`/`set`), constructors for in
 > - **Public fields** instead of properties — loses validation and encapsulation
 > - **Constructors doing heavy work** — use factory methods or init logic
 > - **Not overriding `ToString`** — defaults to type name, which isn't useful
+
+> [!success] Best Practices
+>
+> - Use **auto-properties** (`{ get; set; }`) to expose state with encapsulation intact
+> - Keep constructors focused on initialization; delegate complex setup to factory methods
+> - Always `override ToString()` to return a meaningful representation for logging and debugging
 
 ```csharp
 // Classes and objects — type declarations must be in their own cell in notebooks
@@ -131,6 +133,9 @@ Inheritance lets a class (child/derived) acquire all the fields, properties, and
 > [!warning] Inheritance vs composition
 > Deep inheritance hierarchies (4+ levels) become brittle — a change to the base class ripples unpredictably through all descendants. Prefer composition ("has-a") over inheritance ("is-a") when the relationship isn't genuinely hierarchical. A `Pipeline` doesn't inherit from `Logger`; it HAS a logger.
 
+> [!success] Prefer Shallow Hierarchies and Composition
+> Keep inheritance to 2–3 levels maximum. For HAS-A relationships, inject dependencies as constructor parameters or properties. Compose objects from focused, single-responsibility types rather than stretching an inheritance chain.
+
 > [!info] Inheritance mechanics
 >
 > - `virtual` — marks a method for overriding
@@ -144,6 +149,12 @@ Inheritance lets a class (child/derived) acquire all the fields, properties, and
 > - **Deep hierarchies** (>3 levels) — prefer composition
 > - **Forgetting `virtual`** — method won't dispatch polymorphically
 > - **`new` keyword hiding** instead of `override` — silently breaks polymorphism
+
+> [!success] Best Practices
+>
+> - Mark overridable methods explicitly with `virtual`; use `sealed override` to stop further overriding
+> - Always use `override` (not `new`) when replacing a parent method to preserve polymorphic dispatch
+> - Flatten hierarchies early — restructuring deep trees after the fact is expensive
 
 ```csharp
 // Inheritance and polymorphism — child classes extend a parent; virtual/override enable runtime dispatch
@@ -269,6 +280,12 @@ An `abstract` class cannot be instantiated — `abstract` methods must be overri
 > - **Abstract class with no shared code** — use an interface instead
 > - **Too many abstract methods** — interface is more appropriate
 > - **Deep abstract hierarchies** — prefer composition over inheritance
+
+> [!success] Best Practices
+>
+> - Use an abstract class only when derived types genuinely share fields, constructors, or concrete methods
+> - If the contract has no shared implementation, define an interface instead — it supports multiple implementation
+> - Limit abstract hierarchies to a single level of abstraction; combine with interfaces for multi-capability types
 
 ```csharp
 // Abstract classes — can't be instantiated; define a contract with abstract methods and shared logic with concrete methods
@@ -434,6 +451,12 @@ Properties with `private set` allow read from outside, write only inside. `init`
 > - **Everything public** exposes implementation details and makes the API hard to evolve
 > - **`protected` for non-inheritance scenarios** — use `private` instead
 
+> [!success] Best Practices
+>
+> - Default to `private` for fields and `public` only for intentional API surface
+> - Use `{ get; private set; }` or `{ get; init; }` to expose read access while protecting writes
+> - Reserve `protected` strictly for members that derived classes legitimately need to access or override
+
 #### OOP theory — access modifiers and abstract vs interface
 
 ```csharp
@@ -502,6 +525,12 @@ Console.WriteLine(@"
 > - **Mutable static state** shared across threads — race conditions
 > - **Static methods that should be instance methods** — testability suffers
 > - **God classes** with many static methods — violates single responsibility
+
+> [!success] Best Practices
+>
+> - Keep static state immutable or use thread-safe constructs (`Interlocked`, `lock`) when mutation is unavoidable
+> - Use static methods only for pure utilities and factory methods that don't depend on instance state
+> - Prefer small, focused static helper classes (`MathHelper`, `DateUtils`) over large utility catch-alls
 
 ```csharp
 class Employee

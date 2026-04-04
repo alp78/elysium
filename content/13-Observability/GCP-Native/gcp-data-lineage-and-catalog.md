@@ -1,12 +1,4 @@
 ---
-type: reference
-category: observability
-technology:
-  - gcp
-  - dataplex
-  - bigquery
-  - python
-  - dataflow
 tags: [monitoring, observability, python, bigquery, gcp]
 aliases:
   - data lineage
@@ -22,38 +14,6 @@ aliases:
   - business glossary
   - data quality
   - auto-discovery
-keywords:
-  - data lineage
-  - data catalog
-  - Dataplex
-  - BigQuery lineage
-  - column-level lineage
-  - data governance
-  - metadata management
-  - tag templates
-  - business glossary
-  - data discovery
-  - Lineage API
-  - OpenLineage
-  - data quality scans
-  - auto-discovery
-  - GCP observability
-  - impact analysis
-  - GDPR lineage
-  - PII tracking
-  - data mesh governance
-  - Dataplex lakes
-  - Dataplex zones
-  - Dataplex assets
-  - data catalog search
-  - lineage events
-  - lineage processes
-  - data quality rules
-  - schema discovery
-  - entry groups
-  - data assets
-  - Cloud Composer lineage
-  - Spark OpenLineage
 description: >
   Definitive reference for achieving full end-to-end data lineage and cataloging
   within GCP. Covers Dataplex unified governance, Data Catalog tag templates and
@@ -99,6 +59,9 @@ Together, lineage and cataloging are the observability layer for your data — t
 
 > [!warning] GDPR and PII Tracking
 > If you process EU personal data, implementing lineage is not optional — it is a compliance requirement. Every pipeline that touches PII must be tracked. Use tag templates with a `pii_columns` field and set up lineage for all ingestion paths. Failure to track PII flows makes Article 17 erasure requests operationally impossible to fulfill correctly.
+
+> [!success] Compliant PII Governance Pattern
+> Create a Dataplex tag template with fields `pii_columns`, `pii_type` (e.g., name, email, national_id), and `erasure_policy`. Apply the tag to every BigQuery table containing PII. Register all ingestion paths with the Lineage API so Article 17 erasure requests can be fulfilled by querying lineage for the affected columns and propagating deletes downstream.
 
 ### Operational Drivers
 
@@ -671,6 +634,9 @@ gcloud dataplex glossaries terms list \
 
 > [!warning] Glossary Governance Process
 > A business glossary only has value if the process for adding and modifying terms is controlled. Establish a review process: proposed terms require sign-off from the domain data steward before being published. Unofficial definitions added without review create confusion rather than clarity. Treat glossary terms as a formal specification, not a wiki.
+
+> [!success] Governance Process Template
+> Define a lightweight review workflow: (1) engineer proposes a term via a tracked issue, (2) domain data steward reviews and approves, (3) term is published to Dataplex with `steward` and `review_date` fields set. Gate glossary updates behind the same change management process as schema changes — treat a glossary modification as a specification change.
 
 #### Link glossary terms to BigQuery columns via tags
 
@@ -1670,6 +1636,9 @@ Impact analysis is the discipline of querying lineage before making changes to u
 >
 > Renaming a column, changing a data type, or dropping a table without checking downstream lineage has caused production outages at every data team that has not enforced this practice. Make lineage impact analysis a mandatory step in your change management process — equivalent to running tests before deploying code.
 
+> [!success] Safe Change Management Pattern
+> Before any schema change: (1) query the Lineage API or Dataplex for all downstream assets referencing the source table or column, (2) notify owners of affected downstream tables, (3) coordinate a deployment window, (4) deploy the schema change and downstream updates together. Gate the deployment on sign-off from each affected team.
+
 ### Pre-Change Impact Analysis Workflow
 
 #### Step 1: Identify all downstream consumers of a table
@@ -1830,6 +1799,9 @@ sys.exit(0 if all_clear else 1)
 > [!warning] Lineage instrumentation gaps
 >
 > Every team that implements lineage discovers gaps: processing paths that write to BigQuery without going through a tracked process. Maintain an explicit inventory of lineage gaps alongside the lineage you do have.
+
+> [!success] Gap Remediation Strategy
+> Audit all BigQuery write operations in the project using the Data Access audit logs (filter `methodName:"bigquery.tables.insertAll" OR "jobs.insert"`). For each write path not covered by automatic lineage, add a manual `lineage.process_run` event via the Lineage API. Document remaining gaps in a tracked inventory and assign ownership so they are addressed before the next compliance review.
 
 | Pipeline Path | Auto-Captured? | How to Fill the Gap |
 |---|---|---|

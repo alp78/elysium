@@ -1,7 +1,4 @@
 ---
-type: reference
-category: orchestration
-technology: [airflow, python]
 tags: [orchestration, python, airflow]
 aliases:
   - Dynamic DAGs
@@ -23,32 +20,6 @@ aliases:
   - depends_on_past
   - cross_downstream
   - chain
-keywords:
-  - airflow dag patterns
-  - dynamic dags
-  - task groups
-  - branching
-  - BranchPythonOperator
-  - trigger rules
-  - all_success
-  - all_failed
-  - one_success
-  - none_failed
-  - all_done
-  - SubDAGs deprecated
-  - backfill
-  - parameterized dag
-  - dag run conf
-  - dataset scheduling
-  - data-aware scheduling
-  - SLA
-  - on_failure_callback
-  - idempotent pipeline
-  - depends_on_past
-  - max_active_runs
-  - chain operator
-  - cross_downstream
-  - medallion architecture airflow
 description: "Comprehensive reference for Apache Airflow DAG patterns: task dependencies, task groups, dynamic DAG generation, branching, trigger rules, idempotency, backfill, parameterization, dataset-driven scheduling, and SLA/callback configuration."
 created: 2026-03-22
 updated: 2026-03-22
@@ -150,6 +121,9 @@ Task Groups (introduced in Airflow 2.0, replacing SubDAGs) allow you to visually
 >
 > SubDAGs (using `SubDagOperator`) are deprecated as of Airflow 2.0 and removed in later versions. They caused deadlocks, were difficult to debug, and had separate executors. Always use **TaskGroups** instead.
 
+> [!success] Migration: replace SubDagOperator with TaskGroup
+> Replace `SubDagOperator` blocks with `with TaskGroup(group_id="...", tooltip="...")` context managers. Task IDs inside the group are prefixed with the group ID (e.g., `bronze.ingest_crm`), preserving logical grouping without the deadlock risk or separate executor overhead.
+
 ```python
 from airflow.utils.task_group import TaskGroup
 from airflow.operators.python import PythonOperator
@@ -213,6 +187,9 @@ Dynamic DAG generation creates tasks programmatically — from a config file, da
 > [!warning] Keep DAG parsing fast
 >
 > DAG files are parsed by the Scheduler repeatedly (every 30s by default). Code that runs at module level (outside of tasks) runs during parsing. Never make database queries, API calls, or heavy computations at module level. Generate dynamic tasks from a static config file or lightweight Python list, not from live queries. See [airflow-troubleshooting](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-troubleshooting) for slow DAG parsing symptoms.
+
+> [!success] Fix: load config from a static file at module level
+> Read a local YAML or JSON config file (not a DB query) at module level to generate tasks. The file I/O is fast and deterministic. Move any live-data fetches into a `@task` callable so they only run at task execution time, not on every Scheduler parse cycle.
 
 ### Pattern 1: Dynamic Tasks from a Config List
 
@@ -536,13 +513,22 @@ incremental_load = PythonOperator(
 > indefinitely. Rule: if you use `depends_on_past=True`, set
 > `max_active_runs=1` to ensure sequential execution.
 
+> [!success] Fix: pair depends_on_past=True with max_active_runs=1
+> Always set `max_active_runs=1` whenever `depends_on_past=True` is used on any task in the DAG. This enforces strict sequential execution of DAG runs and eliminates the cross-run blocking deadlock.
+
 > [!warning] depends_on_past pitfalls
 >
 > `depends_on_past=True` is powerful but creates a chain-of-dependency that must be manually broken if the first historical run fails. Never use it without a plan for recovery (use `airflow tasks clear` to reset the chain). Prefer idempotent `MERGE`/`UPSERT` logic in the task itself over `depends_on_past`.
 
+> [!success] Fix: prefer idempotent MERGE logic over depends_on_past
+> Design tasks to use `MERGE`/`UPSERT` so they can safely re-run for the same date without side effects. This eliminates the need for `depends_on_past` in most incremental load patterns and avoids the brittle chain that requires manual intervention to break.
+
 > [!danger] Non-transactional DELETE + INSERT
 >
 > If the pipeline crashes between DELETE and INSERT, the partition is empty. Always wrap delete-then-insert in a single transaction. In BigQuery, use scripted transactions (`BEGIN TRANSACTION ... COMMIT`). In SQL Server, use explicit `BEGIN TRAN ... COMMIT`. The MERGE pattern below is inherently atomic and preferred.
+
+> [!success] Fix: use transactional DELETE+INSERT or atomic MERGE
+> In BigQuery, wrap the DELETE and INSERT in a `BEGIN TRANSACTION ... COMMIT` block. In SQL Server, use `BEGIN TRAN ... COMMIT`. Alternatively, switch to a `MERGE` statement which is atomic by nature and eliminates the window between delete and insert entirely.
 
 ### Idempotent Task Design
 

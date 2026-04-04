@@ -1,7 +1,5 @@
 ---
 tags: [orchestration, airflow]
-type: reference
-technology: airflow
 status: stable
 updated: 2026-03-23
 description: "Comprehensive catalog of Airflow production problems — 25 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures for data engineering teams."

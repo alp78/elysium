@@ -1,14 +1,7 @@
 ---
-type: reference
-category: programming-languages
-technology:
-  - python
-  - pandas
-  - polars
 tags: [pipeline, python, pandas, polars]
 aliases:
   - lazy evaluation, query plan, collect, benchmarks
-keywords: [lazy, collect, scan_parquet, scan_csv, query plan, optimization, predicate pushdown, projection pushdown, benchmark]
 description: "Pandas/Polars DataFrame reference 06/10 — Lazy API & Performance (lazy/collect, query plan, benchmarks). Side-by-side executable examples with cell outputs."
 created: 2026-03-24
 updated: 2026-03-24
@@ -68,6 +61,13 @@ import time
 > larger than available memory, use lazy mode (`pl.scan_parquet()`) or Pandas
 > `read_parquet(columns=[...])` to only load needed columns.
 
+> [!success] Use lazy scanning or column selection to limit memory usage
+>
+> In Polars, replace `pl.read_parquet(path)` with `pl.scan_parquet(path)` and chain
+> `.select()` / `.filter()` before `.collect()` — Polars will apply projection and
+> predicate pushdown automatically. In Pandas, pass `columns=[...]` to `pd.read_parquet()`
+> to load only the columns you need.
+
 ```python
 df = pl.read_parquet(DATA / "eurostoxx50_ohlcv.parquet")
 print(f"Type: {type(df)}, Shape: {df.shape}")
@@ -98,6 +98,13 @@ print(f"Schema: {lf.collect_schema()}")
 > a variable and never collect, no computation happens. Unlike Pandas (where every
 > operation runs immediately), Polars lazy chains must end with `.collect()` to materialize
 > results.
+
+> [!success] Always end a Polars lazy chain with `.collect()`
+>
+> Every `pl.scan_*()` chain must terminate with `.collect()` to produce a DataFrame.
+> Use type annotations (`lf: pl.LazyFrame`, `df: pl.DataFrame`) to catch missing
+> `.collect()` calls at review time. If you need a partial result during development,
+> chain `.head(100).collect()` first to verify the plan before collecting the full dataset.
 
 ```python
 result = (
@@ -290,6 +297,14 @@ print(f"vectorized (66K): {good:.4f}s")
 > entirely. The example below shows a **743x** speedup from vectorization. Every
 > `apply(lambda r: ...)` in production code is a performance bug. Rewrite using column
 > arithmetic, `.where()`, or `np.select()` for conditional logic.
+
+> [!success] Replace `apply(axis=1)` with vectorized column arithmetic
+>
+> Rewrite row-wise lambdas as direct column operations:
+> `df["ret"] = (df["close"] - df["open"]) / df["open"] * 100`.
+> For conditional logic use `np.where()` or `np.select()` instead of `apply`.
+> In Polars, use `pl.when().then().otherwise()` — all operations execute in parallel
+> across columns in native Rust with no Python overhead.
 
 ```python
 start=time.perf_counter()

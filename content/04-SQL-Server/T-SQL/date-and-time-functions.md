@@ -1,10 +1,6 @@
 ---
-type: concept
-category: sql-server
-technology: [sql-server, python, csharp]
 tags: [python, csharp, sql, sql-server, tsql]
 aliases: [SQL Server date functions, datetime types, DATETIMEOFFSET, DATETIME2, DATEADD, DATEDIFF, EOMONTH, DATETRUNC, AT TIME ZONE, ISO 8601, date arithmetic]
-keywords: [date, datetime, DATETIME2, DATETIMEOFFSET, DATE, SMALLDATETIME, DATEADD, DATEDIFF, DATEDIFF_BIG, EOMONTH, DATETRUNC, DATEFROMPARTS, DATETIME2FROMPARTS, FORMAT, CONVERT, GETDATE, GETUTCDATE, SYSUTCDATETIME, SYSDATETIMEOFFSET, ISO 8601, UTC, timezone, AT TIME ZONE, DST daylight saving, trade_date, naive datetime, aware datetime, dateutil, relativedelta, ZoneInfo, DateTimeOffset, DateOnly, pipeline date patterns]
 description: "Complete reference for date and time handling in SQL Server T-SQL, Python, and C# — covering ISO 8601 formats, data type selection, parsing/formatting, date arithmetic, timezone conversion, and DST pitfalls that break pipelines."
 created: 2026-03-22
 updated: 2026-03-22
@@ -100,6 +96,10 @@ SELECT SYSDATETIMEOFFSET()    -- 2026-03-10 16:30:00.1234567 +01:00 (with offset
 >
 > `GETDATE()` returns server-local time — if the server timezone is ever changed, all your comparisons break. `SYSUTCDATETIME()` always returns UTC. Set servers to UTC (`timedatectl set-timezone UTC`) so they are the same, but always code defensively with `SYSUTCDATETIME()`.
 
+> [!success] Safe Pattern
+>
+> Always use `SYSUTCDATETIME()` for pipeline timestamps. Set the server timezone to UTC (`sudo timedatectl set-timezone UTC`) so `GETDATE()` and `SYSUTCDATETIME()` agree, eliminating any ambiguity at the OS level.
+
 ---
 
 ## Parsing and Formatting
@@ -152,6 +152,10 @@ SELECT CONVERT(VARCHAR(10), GETDATE(), 120)             -- 2026-03-10 (fast)
 >
 > `FORMAT()` uses .NET formatting under the hood and is 10-50x slower than `CONVERT`. In queries processing millions of rows (like the data pipeline), always use `CONVERT` for date-to-string formatting. Use `FORMAT` only for one-off display queries.
 
+> [!success] Safe Pattern
+>
+> Replace `FORMAT(date_col, 'yyyy-MM-dd')` with `CONVERT(VARCHAR(10), date_col, 120)` in all pipeline queries. Reserve `FORMAT()` for user-facing display statements where throughput is not a concern.
+
 ---
 
 ### Extracting Date Components
@@ -198,9 +202,17 @@ SELECT DATETIMEOFFSETFROMPARTS(2026, 3, 10, 15, 30, 0, 0, 1, 0, 7)     -- 2026-0
 > SET DATEFIRST 1;  -- Monday = 1 (ISO standard)
 > ```
 
+> [!success] Safe Pattern
+>
+> Add `SET DATEFIRST 1;` at the top of stored procedures and scripts that use `DATEPART(WEEKDAY, ...)`. Alternatively, use `DATENAME(WEEKDAY, date) NOT IN ('Saturday', 'Sunday')` for weekend filters — it is locale-independent.
+
 > [!warning] SET LANGUAGE Affects Date Parsing
 >
 > `SET LANGUAGE` changes how ambiguous date strings are interpreted AND how DATENAME returns month/day names. '03/10/2026' is March 10 in English but October 3 in British/European. DATENAME returns 'Tuesday' in English but 'Dienstag' in German. For international pipelines, always use ISO 8601 format ('2026-03-10') and numeric DATEPART instead of DATENAME.
+
+> [!success] Safe Pattern
+>
+> Always use unambiguous ISO 8601 date strings (`'2026-03-10'`) in T-SQL code and use `DATEPART(YEAR/MONTH/DAY, ...)` instead of `DATENAME` when the result must be numeric. This makes the code immune to `SET LANGUAGE` settings on any server.
 
 ---
 
@@ -241,13 +253,25 @@ SELECT DATETRUNC(WEEK, GETDATE())        -- 2026-03-09 00:00:00 (Monday of the w
 > DATEDIFF Counts Boundary Crossings, Not Full Periods.
 > `DATEDIFF(YEAR, '2025-12-31', '2026-01-01')` = 1, even though they are only 1 day apart. `DATEDIFF(MONTH, '2026-01-31', '2026-02-01')` = 1, even though they are 1 day apart. For "how many complete months," use more careful logic combining DATEDIFF with DAY comparison.
 
+> [!success] Safe Pattern
+>
+> To count complete months between two dates, combine `DATEDIFF` with a day-of-month adjustment: `DATEDIFF(MONTH, @start, @end) - CASE WHEN DAY(@end) < DAY(@start) THEN 1 ELSE 0 END`. For complete years, apply the same pattern with month and day components.
+
 > [!warning] DATEDIFF Counts Boundaries, Not Elapsed Time
 >
 > `DATEDIFF(YEAR, '2025-12-31', '2026-01-01')` returns 1 — one year boundary crossed — even though only one day elapsed. `DATEDIFF(MONTH, '2026-01-31', '2026-02-01')` returns 1 even though it's one day. DATEDIFF is a boundary counter, not a duration calculator.
 
+> [!success] Safe Pattern
+>
+> Use `DATEDIFF(DAY, @start, @end)` to measure actual elapsed days. For elapsed time in hours/minutes/seconds, use `DATEDIFF_BIG(SECOND, @start, @end)` and divide as needed. Avoid relying on `DATEDIFF(MONTH, ...)` or `DATEDIFF(YEAR, ...)` for "how much time passed" calculations.
+
 > [!danger] DATEADD Month-End Truncation
 >
 > `DATEADD(MONTH, 1, '2026-01-31')` returns `2026-02-28`, not February 31 (which doesn't exist). SQL Server silently truncates to the last day of the target month. This breaks month-end financial reporting if you expect the last business day of each month. Use `EOMONTH(DATEADD(MONTH, 1, date))` for reliable end-of-month calculations.
+
+> [!success] Safe Pattern
+>
+> Use `EOMONTH(DATEADD(MONTH, n, date))` for any end-of-month date arithmetic. For start-of-month, use `DATEFROMPARTS(YEAR(date), MONTH(DATEADD(MONTH, n, date)), 1)`. Both patterns are immune to month-end truncation.
 
 ---
 
@@ -341,6 +365,10 @@ Python has two kinds of datetimes — this distinction matters enormously in pip
 > aware = naive_from_api.replace(tzinfo=timezone.utc)  # because you KNOW the API returns UTC
 > ```
 
+> [!success] Safe Pattern
+>
+> Always construct datetimes with `datetime.now(timezone.utc)` or pass `tzinfo=timezone.utc` explicitly. When receiving a naive datetime from a third-party library, immediately call `.replace(tzinfo=timezone.utc)` before any arithmetic or comparison.
+
 #### Python datetime.now, datetime.utcnow — current date/time
 
 ```python
@@ -357,6 +385,10 @@ datetime.now().timestamp()              # 1773422200.123456 (Unix epoch as float
 > [!danger] Always Use Timezone-Aware Datetimes in Pipelines
 >
 > `datetime.now()` returns a naive datetime with no timezone — is it UTC? Local? Impossible to tell downstream. Always use `datetime.now(timezone.utc)` instead. A single naive datetime leaking into a pipeline can silently shift every timestamp by your server's UTC offset.
+
+> [!success] Safe Pattern
+>
+> Replace every `datetime.now()` with `datetime.now(timezone.utc)` and every `datetime.utcnow()` (deprecated in Python 3.12) with the same. Enforce this with a linting rule: `pylint --disable=W0611` or a `ruff` rule flagging `datetime.now()` calls without `tz=`.
 
 ```python
 # Correct — timezone-aware:
@@ -481,6 +513,10 @@ TimeOnly.FromDateTime(DateTime.Now)    // 16:30:00 (.NET 6+)
 >
 > `DateTime` has a broken `Kind` system (Local/Utc/Unspecified) that silently loses timezone information during serialization, database round-trips, and JSON conversion. Use `DateTimeOffset` for timestamps (preserves timezone) and `DateOnly` for trade dates (.NET 6+).
 
+> [!success] Safe Pattern
+>
+> Declare all timestamp properties as `DateTimeOffset` and all calendar-date properties as `DateOnly` (.NET 6+). Map them to `DATETIMEOFFSET` and `DATE` columns respectively in SQL Server. This eliminates the `Kind` ambiguity and rounds trips cleanly through Dapper and System.Text.Json.
+
 #### C# DateTime.ParseExact, ToString — parsing and formatting
 
 ```csharp
@@ -526,11 +562,19 @@ TimeZoneInfo.ConvertTime(utcNow, tokyo)     // +09:00 (no DST in Japan)
 >
 > Windows uses `"Central European Standard Time"` while Linux uses `"Europe/Paris"`. Code that hardcodes one format fails on the other OS. In .NET 6+, both formats are accepted — .NET auto-maps between them. For earlier versions, use the `TimeZoneConverter` NuGet package.
 
+> [!success] Safe Pattern
+>
+> Target .NET 6+ and use IANA IDs (`"Europe/Paris"`) throughout — they work on both Windows and Linux. If targeting earlier .NET, add the `TimeZoneConverter` NuGet package and call `TZConvert.GetTimeZoneInfo("Europe/Paris")` instead of `TimeZoneInfo.FindSystemTimeZoneById`.
+
 > [!warning] DateTime vs DateTimeOffset in C#
 >
 > `DateTime` has a `Kind` property (Local, Utc, Unspecified) that is not part of the value — it's metadata that gets silently lost during serialization, database round-trips, and JSON conversion. This causes bugs that are nearly impossible to track down. `DateTimeOffset` embeds the UTC offset directly in the value. It round-trips correctly through SQL Server (`DATETIMEOFFSET`), JSON, and API responses. Use `DateTimeOffset` for all timestamps in your code.
 >
 > `DateOnly` (.NET 6+) is perfect for trade dates — it cannot accidentally have a time component, eliminating an entire class of off-by-one bugs at day boundaries.
+
+> [!success] Safe Pattern
+>
+> Use `DateTimeOffset` for all timestamps and `DateOnly` for all trade/reference dates in .NET code. Configure Dapper to map `DateTimeOffset` → `DATETIMEOFFSET` and `DateOnly` → `DATE` without manual conversion. Enable `JsonSerializerOptions` to serialize `DateTimeOffset` as ISO 8601 with offset (`"O"` format) to preserve timezone through API responses.
 
 ---
 
@@ -542,17 +586,33 @@ Daylight Saving Time is the single biggest source of date/time bugs in data engi
 >
 > A pipeline scheduled at "09:00 CET" runs at 08:00 UTC in winter but 07:00 UTC in summer (when CET becomes CEST). If it depends on data arriving at 08:00 UTC, it breaks after the spring DST transition because the data is not there yet. **Fix:** Schedule in UTC — "08:00 UTC" is always 08:00 UTC regardless of DST.
 
+> [!success] Safe Pattern
+>
+> Define all Airflow DAGs, cron schedules, and Cloud Scheduler jobs in UTC. Replace `"09:00 CET"` with the equivalent fixed UTC time. The UTC time is stable year-round; CET/CEST offsets shift twice per year.
+
 > [!danger] DST Makes Days Shorter or Longer Than 24 Hours
 >
 > On DST spring-forward day (March 29, 2026 in Europe), 2:00 AM jumps to 3:00 AM — the day has only 23 hours. A rolling window of "24 hours ago" goes back to yesterday minus 1 hour, not midnight. **Fix:** Use calendar days (`date - 1 day`), not hours (`datetime - 24 hours`).
+
+> [!success] Safe Pattern
+>
+> Use `DATEADD(DAY, -1, CAST(SYSUTCDATETIME() AS DATE))` in SQL or `date.today() - timedelta(days=1)` in Python for "yesterday". Never compute a 24-hour window with `DATEADD(HOUR, -24, ...)` — use calendar-day subtraction instead.
 
 > [!danger] DST Fall-Back Creates Duplicate Timestamps
 >
 > On DST fall-back day (October 25, 2026 in Europe), 3:00 AM reverts to 2:00 AM. The hour 2:00-3:00 occurs TWICE — two different records can have the same local timestamp, breaking deduplication. **Fix:** Store UTC timestamps. 2:00 AM CEST (UTC+2) and 2:00 AM CET (UTC+1) are different UTC instants.
 
+> [!success] Safe Pattern
+>
+> Store all timestamps in UTC (`DATETIMEOFFSET` or `DATETIME2` with UTC values). Convert to local time only at the presentation layer using `AT TIME ZONE` in SQL or `astimezone()` in Python. UTC timestamps are always unique — no fall-back ambiguity.
+
 > [!danger] DST Transition Dates Differ Across Regions
 >
 > US (second Sunday in March), Europe (last Sunday in March), and Japan/China (no DST ever) change on different dates. For 2-3 weeks per year, the UTC offset between NYC and Paris changes. A pipeline that assumes "Paris is always 6 hours ahead of NYC" breaks silently. **Fix:** Always convert through UTC. Never hardcode offsets between non-UTC timezones.
+
+> [!success] Safe Pattern
+>
+> Always chain conversions through UTC: local A → UTC → local B. Use timezone names (`"Europe/Paris"`, `"America/New_York"`) rather than hardcoded numeric offsets. SQL Server's `AT TIME ZONE` and Python's `ZoneInfo` both handle DST transitions automatically when timezone names are used.
 
 #### DST rules — store UTC, convert at display, never schedule at 2 AM
 

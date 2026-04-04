@@ -1,12 +1,4 @@
 ---
-type: reference
-category: observability
-technology:
-  - gcp
-  - cloud-monitoring
-  - cloud-logging
-  - python
-  - bash
 tags: [monitoring, pipeline, observability, python, bash, gcp]
 aliases:
   - pipeline health
@@ -17,37 +9,6 @@ aliases:
   - freshness monitoring
   - pipeline heartbeat
   - dead man's switch
-keywords:
-  - pipeline health monitoring
-  - SLA tracking
-  - data freshness
-  - data staleness
-  - custom metrics
-  - Cloud Monitoring
-  - Cloud Logging
-  - BigQuery metadata
-  - row count validation
-  - null rate monitoring
-  - schema drift detection
-  - duplicate detection
-  - dead man's switch
-  - heartbeat monitoring
-  - alerting runbook
-  - on-call playbook
-  - self-healing pipelines
-  - auto-retry
-  - Cloud Functions remediation
-  - uptime checks
-  - Pub/Sub backlog
-  - freshness table
-  - SLA compliance
-  - pipeline availability
-  - data quality
-  - log sink
-  - Cloud Scheduler
-  - Firestore state
-  - exponential backoff
-  - incident response
 description: >
   End-to-end operational runbook for pipeline health monitoring and SLA tracking
   using GCP-native tooling. Covers data freshness, quality checks, SLA definition
@@ -284,6 +245,10 @@ if __name__ == "__main__":
 >
 > `__TABLES__` reflects DML completion, not streaming inserts. For streaming-insert pipelines, `last_modified_time` updates only after a query or DML touches the table. Use `INFORMATION_SCHEMA.STREAMING_TIMELINE` or a custom freshness metric instead.
 
+> [!success] Safe pattern for streaming pipelines
+>
+> Query `INFORMATION_SCHEMA.STREAMING_TIMELINE` for up-to-date ingestion stats on streaming-insert tables, or push a custom freshness metric after each streaming batch completes. This gives accurate freshness signals regardless of DML activity on the table.
+
 ---
 
 ## Data Quality Checks
@@ -475,6 +440,10 @@ bq show --schema --format=prettyjson PROJECT:DATASET.TABLE
 
 > [!warning] Schema drift alert strategy
 > Any NEW_COLUMN is informational. REMOVED_COLUMN or TYPE_CHANGED should be Critical. Automate this check as part of the pipeline post-load step, not as a separate scheduled job — catching drift at load time prevents downstream propagation.
+
+> [!success] Implement drift detection as a post-load gate
+>
+> Save the expected schema to a JSON file with `save_current_schema()` after a known-good run. Run `check_schema_drift()` in the pipeline's post-load step, raise on REMOVED_COLUMN or TYPE_CHANGED, and log NEW_COLUMN as informational. This halts propagation before downstream queries break.
 
 ### Duplicate Detection
 
@@ -1244,6 +1213,10 @@ gcloud functions deploy handle-pipeline-alert \
 
 > [!warning] Auto-remediation guard rails
 > Auto-remediation should only restart clearly safe operations (rerun idempotent pipeline, scale up consumers). Never auto-delete data, roll back schema, or auto-escalate costs. Log every automated action with full context.
+
+> [!success] Safe auto-remediation scope
+>
+> Limit automated actions to: re-executing idempotent Cloud Run jobs, scaling up Cloud Run max-instances, and publishing alert summaries to Slack. Gate every automated action behind a check that verifies the pipeline is truly idempotent before triggering, and log the `alert_policy`, `incident_id`, and `action_taken` to a `remediation_log` table for post-incident review.
 
 ### Scheduled Health Checks
 

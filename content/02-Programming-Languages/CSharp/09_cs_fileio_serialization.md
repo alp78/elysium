@@ -1,10 +1,6 @@
 ---
-type: reference
-category: programming-languages
-technology: [csharp, dotnet]
 tags: [csharp]
 aliases: [file IO, JSON serialization, CSV, file reading, file writing, serialization, deserialization]
-keywords: [File, StreamReader, StreamWriter, JsonSerializer, System.Text.Json, Newtonsoft, CsvHelper, Path, Directory]
 description: "C# file I/O and serialization reference with executable examples and cell outputs — covers File/Stream APIs, System.Text.Json, Newtonsoft.Json, CSV handling, and async file operations. See [09_py_fileio_serialization](https://alp78.github.io/elysium/02-Programming-Languages/Python/09_py_fileio_serialization) for the Python equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -185,6 +181,10 @@ Write header + rows with `string.Join`. Read with `Split(',')`. Works for simple
 > [!warning] Manual Split breaks on quoted commas
 >
 > Manual `Split` breaks on quoted commas — use `CsvHelper` for user-facing CSV.
+
+> [!success] Use CsvHelper for production CSV
+>
+> `CsvHelper` handles quoted commas, escaped quotes, and custom delimiters correctly. Use `string.Split` only for controlled internal data where field values are guaranteed to never contain commas.
 
 ```csharp
 #nullable enable
@@ -901,6 +901,10 @@ Async versions of every I/O method (`ReadAllTextAsync`, `ReadLineAsync`, `ReadAs
 >
 > Don't use `.Result` or `.Wait()` on async methods — deadlock risk. Don't forget `CancellationToken` for graceful shutdown. Don't mix sync and async in the same code path.
 
+> [!success] Always await async methods
+>
+> Use `await` throughout the call chain. Pass a `CancellationToken` from the caller to every async I/O method to support graceful shutdown. Use `await using` for `IAsyncDisposable` resources like `StreamWriter`.
+
 ```csharp
 var tmpDir = Path.Combine(Path.GetTempPath(), "async_cs_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
@@ -1213,6 +1217,10 @@ $"  Split: {parts[0]}, close={parts[2]}"
 > [!danger] Never use Encoding.Default (varies by
 >
 > Never use `Encoding.Default` (varies by OS) or ASCII for non-English text (silently loses characters like `€`).
+
+> [!success] Always specify Encoding.UTF8 explicitly
+>
+> Pass `Encoding.UTF8` to every `StreamReader`, `StreamWriter`, `File.ReadAllText`, and `File.WriteAllText` call. UTF-8 is the correct default for files, APIs, and cross-platform code.
 
 ```csharp
 var text = "Euro Stoxx 50: SAP €166.52, ASML €685.40";
