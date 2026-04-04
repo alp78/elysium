@@ -2,7 +2,9 @@
 title: Elysium
 ---
 
-![Elysium](/static/elysium_logo.jpg)
+<div style="text-align: center;">
+  <img src="/static/elysium_logo.jpg" alt="Elysium" width="280" />
+</div>
 
 > [!example]- Code and Queries
 >
