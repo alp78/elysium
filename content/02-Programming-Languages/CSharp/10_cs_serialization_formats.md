@@ -65,8 +65,6 @@ optionsField.SetValue(csharpKernel, newOptions);
 // WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
 ```
 
-    WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
-
 ## Parquet Files
 
 Parquet stores data column-by-column with per-column compression (snappy, gzip, zstd). Schema is embedded in the file footer — self-describing, no separate schema file needed. Supports column pruning (read only the columns you need), predicate pushdown, and partitioning. 5–10x smaller than CSV. Standard in data lakes (GCS, S3, ADLS), BigQuery, Spark, DuckDB, Athena. C# uses `Parquet.Net` (NuGet).
@@ -126,10 +124,12 @@ using (Stream fs = File.OpenWrite(parquetFile))
         new DataColumn(schema.DataFields[4], new bool[] { true, false, true, true, false }));
 }
 
-$"  Written: {Path.GetFileName(parquetFile)} ({new FileInfo(parquetFile).Length} bytes)"
+Path.GetFileName(parquetFile)
+new FileInfo(parquetFile).Length // Length in bytes
 ```
 
-      events.parquet (1045 bytes)
+      events.parquet
+      1045
 
 #### Read parquet — DataColumn API
 
@@ -149,19 +149,19 @@ using (Stream fs = File.OpenRead(parquetFile))
     var userIds = (await groupReader.ReadColumnAsync(reader.Schema.DataFields[2])).Data.Cast<long>().ToArray();
     var revenues = (await groupReader.ReadColumnAsync(reader.Schema.DataFields[3])).Data.Cast<double>().ToArray();
 
-    $"  Rows: {eventIds.Length}"
+    Console.WriteLine($"  Rows: {eventIds.Length}");
     for (int i = 0; i < eventIds.Length; i++)
-        $"    {eventIds[i]}: {eventTypes[i]}, user={userIds[i]}, revenue=${revenues[i]:F2}"
+        Console.WriteLine($"    {eventIds[i]}: {eventTypes[i]}, user={userIds[i]}, revenue=${revenues[i]:F2}");
 }
 ```
 
-      event_id:String, event_type:String, user_id:Int64, revenue:Double, is_mobile:Boolean
-      5
-        evt_001: page_view, user=1001, revenue=$0.00
-        evt_002: purchase, user=1002, revenue=$49.99
-        evt_003: page_view, user=1001, revenue=$0.00
-        evt_004: signup, user=1003, revenue=$0.00
-        evt_005: purchase, user=1002, revenue=$129.99
+  Schema: event_id:String, event_type:String, user_id:Int64, revenue:Double, is_mobile:Boolean
+  Rows: 5
+    evt_001: page_view, user=1001, revenue=$0.00
+    evt_002: purchase, user=1002, revenue=$49.99
+    evt_003: page_view, user=1001, revenue=$0.00
+    evt_004: signup, user=1003, revenue=$0.00
+    evt_005: purchase, user=1002, revenue=$129.99
 
 #### Class serialization and deserialization | ParquetSerializer high-level API
 
@@ -183,9 +183,9 @@ $"  Written: {Path.GetFileName(typedFile)} ({new FileInfo(typedFile).Length} byt
 
 // Deserialize back to typed objects
 var loaded = await ParquetSerializer.DeserializeAsync<EventRecord>(typedFile);
-$"  Loaded {loaded.Count} records:"
+Console.WriteLine($"  Loaded {loaded.Count} records:");
 foreach (var e in loaded)
-    $"    {e.EventId}: {e.EventType}, user={e.UserId}, revenue=${e.Revenue:F2}"
+    Console.WriteLine($"    {e.EventId}: {e.EventType}, user={e.UserId}, revenue=${e.Revenue:F2}");
 ```
 
       events_typed.parquet (1037 bytes)
@@ -206,18 +206,18 @@ Parquet embeds metadata in the file footer — you can read the schema, row coun
 using (Stream fs = File.OpenRead(parquetFile))
 {
     using var reader = await ParquetReader.CreateAsync(fs);
-    $"  Row groups: {reader.RowGroupCount}"
+    Console.WriteLine($"  Row groups: {reader.RowGroupCount}");
     foreach (var field in reader.Schema.DataFields)
-        $"    {field.Name}: {field.ClrType.Name} (nullable={field.IsNullable})"
+        Console.WriteLine($"    {field.Name}: {field.ClrType.Name} (nullable={field.IsNullable})");
 }
 ```
 
-      1
-        event_id: String (nullable=True)
-        event_type: String (nullable=True)
-        user_id: Int64 (nullable=False)
-        revenue: Double (nullable=False)
-        is_mobile: Boolean (nullable=False)
+  Row groups: 1
+    event_id: String (nullable=True)
+    event_type: String (nullable=True)
+    user_id: Int64 (nullable=False)
+    revenue: Double (nullable=False)
+    is_mobile: Boolean (nullable=False)
 
 #### Parquet in memory — MemoryStream | cloud upload without temp files
 
@@ -227,17 +227,17 @@ Serialize Parquet to a `MemoryStream` for direct cloud upload (GCS, S3, Azure Bl
 {
     var memStream = new MemoryStream();
     await ParquetSerializer.SerializeAsync(events, memStream);
-    $"  MemoryStream size: {memStream.Length} bytes"
+    Console.WriteLine($"  MemoryStream size: {memStream.Length} bytes");
 
     // Read back from the same buffer — verify roundtrip
     memStream.Seek(0, SeekOrigin.Begin);
     var fromMem = await ParquetSerializer.DeserializeAsync<EventRecord>(memStream);
-    $"  Read from memory: {fromMem.Count} records"
+    Console.WriteLine($"  Read from memory: {fromMem.Count} records");
 }
 ```
 
-      1037 bytes
-      5 records
+  MemoryStream size: 1037 bytes
+  Read from memory: 5 records
 
 #### CSV vs Parquet comparison
 
@@ -329,13 +329,13 @@ cos.WriteInt64(82621);
 cos.Flush();
 var protoBytes = ms.ToArray();
 
-$"  Protobuf:  {protoBytes.Length} bytes"
-Convert.ToHexString(protoBytes).ToLower()   // Hex
+Console.WriteLine($"  Protobuf:  {protoBytes.Length} bytes");
+Console.WriteLine($"  Hex:       {Convert.ToHexString(protoBytes).ToLower()}");
 
 // Compare with JSON
 var jsonStr = JsonSerializer.Serialize(new { symbol = "SAP.DE", price = 166.52, volume = 82621 });
-$"  JSON:      {Encoding.UTF8.GetByteCount(jsonStr)} bytes"
-$"  Savings:   {(1.0 - (double)protoBytes.Length / Encoding.UTF8.GetByteCount(jsonStr)) * 100:F0}%"
+Console.WriteLine($"  JSON:      {Encoding.UTF8.GetByteCount(jsonStr)} bytes");
+Console.WriteLine($"  Savings:   {(1.0 - (double)protoBytes.Length / Encoding.UTF8.GetByteCount(jsonStr)) * 100:F0}%");
 
 // Decode the bytes back using CodedInputStream
 var cis = new CodedInputStream(protoBytes);
@@ -351,14 +351,14 @@ while (!cis.IsAtEnd)
         default: cis.SkipLastField(); break;
     }
 }
-$"  Decoded:   symbol={sym}, price={price}, volume={vol}"
+Console.WriteLine($"  Decoded:   symbol={sym}, price={price}, volume={vol}");
 ```
 
-      21 bytes
-      0a065341502e444511713d0ad7a3d0644018bd8505
-      49 bytes
-      57%
-      symbol=SAP.DE, price=166.52, volume=82621
+  Protobuf:  21 bytes
+  Hex:       0a065341502e444511713d0ad7a3d0644018bd8505
+  JSON:      49 bytes
+  Savings:   57%
+  Decoded:   symbol=SAP.DE, price=166.52, volume=82621
 
 #### Production protobuf pattern | protoc-generated code workflow
 
@@ -479,16 +479,16 @@ var schemaJson = @"{
 
 // Parse the schema
 var schema = (RecordSchema)Schema.Parse(schemaJson);
-$"  Schema: {schema.Name} ({schema.Fields.Count} fields)"
+Console.WriteLine($"  Schema: {schema.Name} ({schema.Fields.Count} fields)");
 foreach (var f in schema.Fields)
-    $"    {f.Name}: {f.Schema}"
+    Console.WriteLine($"    {f.Name}: {f.Schema}");
 ```
 
-      StockQuote (4 fields)
-        symbol: {"type":"string"}
-        price: {"type":"double"}
-        volume: {"type":"long"}
-        exchange: ["null","string"]
+  Schema: StockQuote (4 fields)
+    symbol: {"type":"string"}
+    price: {"type":"double"}
+    volume: {"type":"long"}
+    exchange: ["null","string"]
 
 #### Write Avro file | GenericRecord API with embedded schema
 
@@ -529,12 +529,12 @@ using (var writer = DataFileWriter<GenericRecord>.OpenWriter(
 }
 
 var fileSize = new FileInfo(avroFile).Length;
-$"  Written: {avroFile}"
-$"  Records: {records.Count}, Size: {fileSize} bytes"
+Console.WriteLine($"  Written: {avroFile}");
+Console.WriteLine($"  Records: {records.Count}, Size: {fileSize} bytes");
 ```
 
-      C:\Users\aperi\AppData\Local\Temp\avro_cs_89f4466f\quotes.avro
-      4, Size: 390 bytes
+  Written: C:\Users\aperi\AppData\Local\Temp\avro_cs_89f4466f\quotes.avro
+  Records: 4, Size: 390 bytes
 
 #### Read Avro file | schema discovered from file header
 
@@ -545,7 +545,7 @@ using (var reader = DataFileReader<GenericRecord>.OpenReader(avroFile))
 {
     // Read the embedded schema
     var fileSchema = reader.GetSchema();
-    $"  Schema from file: {fileSchema.Name}"
+    Console.WriteLine($"  Schema from file: {fileSchema.Name}");
 
     // Iterate records
     while (reader.HasNext())
@@ -555,16 +555,17 @@ using (var reader = DataFileReader<GenericRecord>.OpenReader(avroFile))
         var price = record["price"];
         var vol = record["volume"];
         var exch = record["exchange"] ?? "N/A";
-        $"    {sym,-10} \u20ac{price,8:F2}  vol={vol,8}  exch={exch}"
+        Console.WriteLine($"    {sym,-10} \u20ac{price,8:F2}  vol={vol,8}  exch={exch}");
     }
 }
 ```
 
-      StockQuote
-        SAP.DE     €  166.52  vol=   82621  exch=XETR
-        ASML.AS    €  685.40  vol=   45000  exch=XAMS
-        TTE.PA     €   58.20  vol=  120000  exch=XPAR
-        BAS.DE     €   44.85  vol=   95000  exch=N/A
+  Schema from file: StockQuote
+  Records:
+    SAP.DE     €  166.52  vol=   82621  exch=XETR
+    ASML.AS    €  685.40  vol=   45000  exch=XAMS
+    TTE.PA     €   58.20  vol=  120000  exch=XPAR
+    BAS.DE     €   44.85  vol=   95000  exch=N/A
 
 ### In-memory, comparison, and schema evolution
 
@@ -583,30 +584,30 @@ using (var writer = DataFileWriter<GenericRecord>.OpenWriter(datumWriter, avroMs
 }
 
 var avroBytes = avroMs.ToArray();
-$"  Avro in memory: {avroBytes.Length} bytes ({records.Count} records)"
+Console.WriteLine($"  Avro in memory: {avroBytes.Length} bytes ({records.Count} records)");
 
 // Compare with JSON
 var jsonPayload = JsonSerializer.Serialize(
     quotes.Select(q => new { symbol = q.Item1, price = q.Item2, volume = q.Item3, exchange = q.Item4 }));
 var jsonSize = Encoding.UTF8.GetByteCount(jsonPayload);
 
-$"  {"Format",-12} {"Size",8} {"Per record",12}"
-$"  {new string('\u2500', 34)}"
-$"  {"Avro",-12} {avroBytes.Length,8} {avroBytes.Length / records.Count,12}"
-$"  {"JSON",-12} {jsonSize,8} {jsonSize / records.Count,12}"
-$"  {"Savings",-12} {(1.0 - (double)avroBytes.Length / jsonSize) * 100:F0}%"
+Console.WriteLine($"\n  {"Format",-12} {"Size",8} {"Per record",12}");
+Console.WriteLine($"  {new string('\u2500', 34)}");
+Console.WriteLine($"  {"Avro",-12} {avroBytes.Length,8} {avroBytes.Length / records.Count,12}");
+Console.WriteLine($"  {"JSON",-12} {jsonSize,8} {jsonSize / records.Count,12}");
+Console.WriteLine($"  {"Savings",-12} {(1.0 - (double)avroBytes.Length / jsonSize) * 100:F0}%");
 
 // Cleanup
 Directory.Delete(tmpDir, recursive: true);
 ```
 
-      390 bytes (4 records)
-    
-      Format           Size   Per record
-      ──────────────────────────────────
-      Avro              390           97
-      JSON              269           67
-      Savings      -45%
+  Avro in memory: 390 bytes (4 records)
+
+  Format           Size   Per record
+  ──────────────────────────────────
+  Avro              390           97
+  JSON              269           67
+  Savings      -45%
 
 #### Schema evolution | add fields without breaking existing consumers
 
@@ -672,16 +673,16 @@ var small  = GenerateData(100);
 var medium = GenerateData(10_000);
 var large  = GenerateData(100_000);
 
-$"  Small:  {small.Count:N0} records"
-$"  Medium: {medium.Count:N0} records"
-$"  Large:  {large.Count:N0} records"
+Console.WriteLine($"  Small:  {small.Count:N0} records");
+Console.WriteLine($"  Medium: {medium.Count:N0} records");
+Console.WriteLine($"  Large:  {large.Count:N0} records");
 
 record OhlcvRecord(string Symbol, string Date, double Open, double High, double Low, double Close, long Volume);
 ```
 
-      100 records
-      10'000 records
-      100'000 records
+  Small:  100 records
+  Medium: 10'000 records
+  Large:  100'000 records
 
 #### Benchmark helpers | write/read timing and file size measurement
 
@@ -929,9 +930,9 @@ foreach (var bucket in new[] { "large", "medium", "small" })
     var minRead = bucketResults.Where(r => r.ReadMs > 0).Min(r => r.ReadMs);
     var maxRead = bucketResults.Max(r => r.ReadMs);
 
-    $"\n  \u2550\u2550\u2550 {bucket.ToUpper()} ({bucketResults[0].Records:N0} records) \u2550\u2550\u2550"
-    $"  {"Format",-10} {"File Size",12} {"Bytes/Rec",10} {"Write ms",10} {"Read ms",10}"
-    $"  {new string('\u2500', 54)}"
+    Console.WriteLine($"\n  \u2550\u2550\u2550 {bucket.ToUpper()} ({bucketResults[0].Records:N0} records) \u2550\u2550\u2550");
+    Console.WriteLine($"  {"Format",-10} {"File Size",12} {"Bytes/Rec",10} {"Write ms",10} {"Read ms",10}");
+    Console.WriteLine($"  {new string('\u2500', 54)}");
 
     foreach (var r in bucketResults)
     {
@@ -946,7 +947,7 @@ foreach (var bucket in new[] { "large", "medium", "small" })
         var writeMark = r.WriteMs == minWrite ? " \u2714" : r.WriteMs == maxWrite ? " \u2718" : "";
         var readMark = r.ReadMs == minRead ? " \u2714" : r.ReadMs == maxRead ? " \u2718" : "";
 
-        $"  {r.Format,-10} {sizeStr,12} {bpr,8}{bprMark,-2} {r.WriteMs,8}{writeMark,-2} {readStr,8}{readMark}"
+        Console.WriteLine($"  {r.Format,-10} {sizeStr,12} {bpr,8}{bprMark,-2} {r.WriteMs,8}{writeMark,-2} {readStr,8}{readMark}");
     }
 }
 ```
