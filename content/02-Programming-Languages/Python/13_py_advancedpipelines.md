@@ -3,7 +3,7 @@ tags: [python, pipeline]
 aliases: [advanced pipelines, async generators, parallel ingestion, subprocess]
 description: "Python advanced parallel pipelines reference with executable examples and cell outputs — covers async generators, parallel API ingestion with rate limiting, async batching, subprocess execution, and distributed task queues. See [13_cs_advancedpipelines](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/13_cs_advancedpipelines) for the C# equivalent."
 created: 2026-03-25
-updated: 2026-03-25
+updated: 2026-04-04
 status: complete
 ---
 
@@ -25,7 +25,6 @@ status: complete
 > - Rotate keys in the secret manager without touching code; inject via `os.environ` or a dedicated secrets-loader function
 
 ```python
-# Imports and API keys from .env file
 import asyncio
 import time
 import os
@@ -36,43 +35,36 @@ from concurrent.futures import ThreadPoolExecutor
 import aiohttp
 from dotenv import load_dotenv
 
-# Load API keys from .env file
 load_dotenv()
 
 TWELVE_DATA_KEY = os.environ.get('TWELVE_DATA_KEY', '')
 FRED_KEY = os.environ.get('FRED_KEY', '')
 FINNHUB_KEY = os.environ.get('FINNHUB_KEY', '')
 
-"set" if TWELVE_DATA_KEY else "MISSING"  # TWELVE_DATA_KEY
-"set" if FRED_KEY else "MISSING"  # FRED_KEY
-"set" if FINNHUB_KEY else "MISSING"  # FINNHUB_KEY
+"set" if TWELVE_DATA_KEY else "MISSING"
+"set" if FRED_KEY else "MISSING"
+"set" if FINNHUB_KEY else "MISSING"
 ```
 
-    set
-    set
-    set
+```text
+TWELVE_DATA_KEY: set
+FRED_KEY:        set
+FINNHUB_KEY:     set
+```
 
 ## Async Generators with Real APIs
+
+> [!info] Python vs C# pipeline frameworks
+>
+> C# has `TPL Dataflow` — a built-in library of composable blocks (`TransformBlock`, `ActionBlock`, `BatchBlock`) with per-stage concurrency control and automatic backpressure. Python has no equivalent built-in. Instead, Python pipelines are assembled from `asyncio.Queue` chains, async generators, and manual batching. For production-grade orchestration, use Airflow, Prefect, or Dagster.
+
+### Paginated API streaming
 
 #### Paginated FRED API with async for
 
 Many REST APIs return results in pages (100 items per response with a `next_page` token). An async generator fetches each page, yields individual items, and follows pagination links — providing a clean `async for item in paginate(url)` interface that hides the pagination complexity.
 
 ```python
-# Async generator for paginated FRED API — stream economic data series
-#
-# WHAT: async def with yield produces items one at a time from an async source.
-#   async for pulls items lazily — only one page in memory at a time.
-#
-# WHY: FRED has thousands of series. Loading all into memory wastes resources.
-#   With async generator: fetch page 1 → yield items → fetch page 2 → yield...
-#   Consumer processes items as they arrive. break stops fetching further pages.
-#
-# WHEN TO USE: any paginated REST API, database cursors, streaming file reads
-# ANTI-PATTERNS:
-#   - Don't collect all items into a list unless you need random access
-#   - Don't use requests (blocking) — use aiohttp (async) inside async generators
-
 async def fetch_fred_series(search_text: str, limit: int = 10, page_size: int = 5):
     """Async generator — yields (id, title) tuples from FRED series search."""
     offset = 0
@@ -86,28 +78,29 @@ async def fetch_fred_series(search_text: str, limit: int = 10, page_size: int = 
                 data = await resp.json()
             series = data.get('seriess', [])
             if not series:
-                break  # no more pages
+                break
             for s in series:
                 if yielded >= limit:
                     break
-                yield (s['id'], s['title'])  # yield one item at a time
+                yield (s['id'], s['title'])
                 yielded += 1
             offset += page_size
 
-# async for — consume items as they stream in from FRED
 async for series_id, title in fetch_fred_series('inflation', limit=8):
     print(f'    {series_id:20} {title[:50]}')
 ```
 
-      FRED series matching "inflation":
-        DFII10               Market Yield on U.S. Treasury Securities at 10-Yea
-        FII10                Market Yield on U.S. Treasury Securities at 10-Yea
-        WFII10               Market Yield on U.S. Treasury Securities at 10-Yea
-        RIFLGFCY10XIINA      Market Yield on U.S. Treasury Securities at 10-Yea
-        T10YIE               10-Year Breakeven Inflation Rate
-        T10YIEM              10-Year Breakeven Inflation Rate
-        FPCPITOTLZGUSA       Inflation, consumer prices for the United States
-        CPIAUCSL             Consumer Price Index for All Urban Consumers: All
+```text
+FRED series matching "inflation":
+  DFII10               Market Yield on U.S. Treasury Securities at 10-Yea
+  FII10                Market Yield on U.S. Treasury Securities at 10-Yea
+  WFII10               Market Yield on U.S. Treasury Securities at 10-Yea
+  RIFLGFCY10XIINA      Market Yield on U.S. Treasury Securities at 10-Yea
+  T10YIE               10-Year Breakeven Inflation Rate
+  T10YIEM              10-Year Breakeven Inflation Rate
+  FPCPITOTLZGUSA       Inflation, consumer prices for the United States
+  CPIAUCSL             Consumer Price Index for All Urban Consumers: All
+```
 
 ## Parallel API Ingestion
 
@@ -125,31 +118,18 @@ async for series_id, title in fetch_fred_series('inflation', limit=8):
 > - Check `resp.status` for 429 inside the coroutine and raise so gather reports the error instead of silently returning empty data
 > - For strict rate limits (requests-per-minute), combine the semaphore with `asyncio.sleep` between batches
 
+### Rate-limited parallel fetch
+
 #### asyncio.Semaphore + aiohttp — parallel fetch with rate limiting
 
 Combines rate limiting (semaphore) with async HTTP (aiohttp) for parallel API fetches that respect rate limits. The semaphore caps concurrent requests; aiohttp reuses connections via a session pool. This is the standard pattern for fetching data from rate-limited financial APIs.
 
 ```python
-# Parallel fetch with asyncio.Semaphore — limit concurrent API requests
-#
-# WHAT: asyncio.Semaphore(n) limits how many coroutines run a section concurrently.
-#   Like SemaphoreSlim in C#. Combined with aiohttp for non-blocking HTTP.
-#
-# WHY: APIs have rate limits (e.g., 8 req/min for Twelve Data free tier).
-#   Without throttling: all requests fire at once → 429 Too Many Requests.
-#   Semaphore(3) ensures max 3 requests in flight at any time.
-#
-# ANTI-PATTERNS:
-#   - Don't use requests library in async code — it blocks the event loop
-#   - Don't create a new ClientSession per request — reuse one session
-#   - Don't forget to close the session (use async with)
-
-# Euro Stoxx 50 companies (ADR tickers available on Twelve Data free tier)
 SYMBOLS = ['SAP', 'ASML', 'TTE', 'UL', 'DEO', 'SNY', 'NVS', 'AZN']
 
 async def fetch_price(session, symbol, semaphore):
     """Fetch a single stock price with rate limiting."""
-    async with semaphore:  # limits concurrent requests
+    async with semaphore:
         url = f'https://api.twelvedata.com/price?symbol={symbol}&apikey={TWELVE_DATA_KEY}'
         async with session.get(url) as resp:
             data = await resp.json()
@@ -157,7 +137,7 @@ async def fetch_price(session, symbol, semaphore):
             return (symbol, price)
 
 start = time.perf_counter()
-sem = asyncio.Semaphore(3)  # max 3 concurrent requests
+sem = asyncio.Semaphore(3)
 
 async with aiohttp.ClientSession() as session:
     tasks = [fetch_price(session, sym, sem) for sym in SYMBOLS]
@@ -169,16 +149,20 @@ for symbol, price in results:
 f"Fetched {len(results)} quotes in {elapsed:.2f}s (3 concurrent max)"
 ```
 
-      SAP    €  171.05
-      ASML   € 1399.48
-      TTE    €   88.81
-      UL     €   60.65
-      DEO    €   72.47
-      SNY    €   45.13
-      NVS    €  148.64
-      AZN    €  185.84
-    
-      Fetched 8 quotes in 0.65s (3 concurrent max)
+```text
+SAP    €  171.05
+ASML   € 1399.48
+TTE    €   88.81
+UL     €   60.65
+DEO    €   72.47
+SNY    €   45.13
+NVS    €  148.64
+AZN    €  185.84
+
+Fetched 8 quotes in 0.65s (3 concurrent max)
+```
+
+### Completion-order processing
 
 #### asyncio.as_completed with real API
 
@@ -189,8 +173,6 @@ Returns an iterator of futures that yields results in completion order (fastest 
 > Wraps coroutines and yields futures in completion order, not submission order. The fastest API response is processed first, even if submitted last. Use when you want to start processing results immediately rather than waiting for all.
 
 ```python
-# asyncio.as_completed — process results as they arrive, not in submission order
-
 async def fetch_quote_fh(session, symbol):
     """Fetch a quote from Finnhub — returns current price and percent change."""
     url = f'https://finnhub.io/api/v1/quote?symbol={symbol}&token={FINNHUB_KEY}'
@@ -198,8 +180,8 @@ async def fetch_quote_fh(session, symbol):
     async with session.get(url) as resp:
         data = await resp.json()
     elapsed = time.perf_counter() - start
-    price = data.get('c', 0)  # 'c' = current price in Finnhub API
-    change = data.get('dp', 0)  # 'dp' = percent change
+    price = data.get('c', 0)
+    change = data.get('dp', 0)
     return (symbol, price, change, elapsed)
 
 async with aiohttp.ClientSession() as session:
@@ -209,71 +191,62 @@ async with aiohttp.ClientSession() as session:
         print(f'    {symbol:6} €{price:>8.2f}  {change:+.2f}%  ({elapsed:.3f}s)')
 ```
 
-      Results in completion order (fastest first):
-        TTE    €   88.79  -0.39%  (0.186s)
-        ASML   € 1399.42  +2.18%  (0.190s)
-        UL     €   60.62  -0.74%  (0.190s)
-        SAP    €  171.00  -4.02%  (0.191s)
+```text
+Results in completion order (fastest first):
+  TTE    €   88.79  -0.39%  (0.186s)
+  ASML   € 1399.42  +2.18%  (0.190s)
+  UL     €   60.62  -0.74%  (0.190s)
+  SAP    €  171.00  -4.02%  (0.191s)
+```
 
 ## Async Batching
 
-#### Async Batching — asyncio.Queue + asyncio.wait_for, time and count bounded
+### Time and count bounded batching
+
+#### Async batching — flush by count or timeout
 
 Combines an async queue with a batch consumer: producers push individual items to the queue, a consumer drains N items at a time and processes them as a batch. Provides backpressure (bounded queue) and efficient batched I/O.
 
 ```python
-# Async batching — accumulate items by count OR time, whichever comes first
-#
-# WHAT: an asyncio.Queue feeds items to a consumer that flushes:
-#   - when batch reaches max_size (e.g., 3 items), OR
-#   - when max_wait seconds elapse (e.g., 2s), whichever comes first.
-#
-# WHY: inserting rows one-by-one into BigQuery/Postgres = 1000 round trips.
-#   Batching into groups of 100 = 10 round trips. But you also need a time limit
-#   so the last partial batch doesn't wait forever for more items.
-#
-# WHEN TO USE: streaming ingestion, high-velocity event pipelines, DB bulk inserts
-# ANTI-PATTERNS:
-#   - Don't batch too large — increases latency and memory
-#   - Don't forget the time flush — last batch waits forever without it
-
 async def batch_consumer(queue: asyncio.Queue, max_size: int = 3, max_wait: float = 0.5):
     """Consume items from queue, flush when batch is full or timeout expires."""
     batch = []
     while True:
         try:
             item = await asyncio.wait_for(queue.get(), timeout=max_wait)
-            if item is None:  # sentinel — producer is done
+            if item is None:
                 break
             batch.append(item)
-            if len(batch) >= max_size:  # size trigger
+            if len(batch) >= max_size:
                 print(f'  Flush (size={len(batch)}): {batch}')
                 batch = []
-        except asyncio.TimeoutError:  # time trigger
+        except asyncio.TimeoutError:
             if batch:
                 print(f'  Flush (time={len(batch)}): {batch}')
                 batch = []
-    if batch:  # flush remaining
+    if batch:
         print(f'  Flush (final={len(batch)}): {batch}')
 
-# Producer pushes items at irregular intervals
 q = asyncio.Queue()
 consumer_task = asyncio.create_task(batch_consumer(q, max_size=3, max_wait=0.5))
 
-# Push 7 items with varying delays
 for i in range(7):
     await q.put(f'item_{i}')
-    await asyncio.sleep(0.1 if i < 5 else 0.8)  # slow down after item 5
+    await asyncio.sleep(0.1 if i < 5 else 0.8)
 
-await q.put(None)  # sentinel to stop consumer
+await q.put(None)
 await consumer_task
 ```
 
-      Flush (size=3): ['item_0', 'item_1', 'item_2']
-      Flush (size=3): ['item_3', 'item_4', 'item_5']
-      Flush (time=1): ['item_6']
+```text
+Flush (size=3): ['item_0', 'item_1', 'item_2']
+Flush (size=3): ['item_3', 'item_4', 'item_5']
+Flush (time=1): ['item_6']
+```
 
 ## Cross-Process Execution
+
+### subprocess — spawn and capture output
 
 #### subprocess — spawn external programs
 
@@ -290,19 +263,6 @@ The `subprocess` module spawns external programs from Python. `subprocess.run()`
 > - Set `timeout=` on every `subprocess.run()` call to prevent hung child processes from blocking the pipeline
 
 ```python
-# subprocess — spawn child processes with full isolation
-#
-# WHAT: subprocess.run() launches an OS process, waits for it, captures output.
-#   Each process has its own memory, GIL, and crash boundary.
-#
-# WHY: crash resilience (child crash doesn't kill parent), invoke external tools
-#   (gcloud, bq, dbt, C# scripts), bypass GIL for CPU-bound code.
-#
-# ANTI-PATTERNS:
-#   - Don't use shell=True with user input — command injection risk
-#   - Don't pass secrets via arguments — visible in process listings
-
-# Single subprocess — run a computation in an isolated process
 result = subprocess.run(
     ["python", "-c", "import json, os; print(json.dumps({'pid': os.getpid(), 'result': sum(range(1000))}))"],
     capture_output=True, text=True, timeout=10,
@@ -310,7 +270,6 @@ result = subprocess.run(
 parsed = json.loads(result.stdout)
 f'Child PID: {parsed["pid"]}, result: {parsed["result"]}'
 
-# Concurrent subprocesses via ThreadPoolExecutor
 def run_expr(expr: str) -> tuple:
     r = subprocess.run(["python", "-c", f"print({expr})"], capture_output=True, text=True)
     return (expr, r.stdout.strip())
@@ -322,16 +281,41 @@ for expr, val in results:
     print(f'  {expr:25} = {val}')
 ```
 
-    31988, result: 499500
-      2**20                     = 1048576
-      sum(range(10000))         = 49995000
-      3.14159 * 100             = 314.159
+```text
+Child PID: 31988, result: 499500
+  2**20                     = 1048576
+  sum(range(10000))         = 49995000
+  3.14159 * 100             = 314.159
+```
 
 ## Distributed Task Queues — Architecture Overview
 
+### Architecture and evolution
+
 A broker (Redis/RabbitMQ) distributes tasks to workers on multiple machines. Workers pull tasks from the queue, execute them, and report results. This is the standard architecture for production data engineering at scale.
 
-**Architecture:** `Producer → Broker (Redis) → Workers (N machines)`
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    P["Producer\n(pipeline script)"] --> B["Broker\n(Redis / RabbitMQ)"]
+    B --> W1["Worker 1"]
+    B --> W2["Worker 2"]
+    B --> W3["Worker N"]
+    W1 --> R["Results\n(DB / object store)"]
+    W2 --> R
+    W3 --> R
+```
 
 | Framework | Description | Use for |
 |---|---|---|
@@ -339,7 +323,10 @@ A broker (Redis/RabbitMQ) distributes tasks to workers on multiple machines. Wor
 | **Redis Queue (RQ)** | Simpler alternative to Celery. Less config. | Small/medium workloads |
 | **Dask** | Parallel computing, scales from laptop to cluster. Integrates with pandas/numpy. | Large DataFrame processing, ML pipelines |
 
-#### Evolution path
+#### Evolution path — from single process to distributed
+
+Each step adds a layer of scalability. Start with the simplest model that meets your throughput requirements and scale up only when needed.
+
 1. `asyncio.gather` → single process, concurrent I/O
 2. `ProcessPoolExecutor` → single machine, multiple cores
 3. Celery/RQ → multiple machines, distributed workers

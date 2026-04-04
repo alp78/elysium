@@ -49,6 +49,10 @@ optionsField.SetValue(csharpKernel, newOptions);
 
 ## Date and Time
 
+.NET provides four date/time types: `DateTime` (date + time, most common), `DateOnly` and `TimeOnly` (.NET 6+, for dates or times without the other half), and `DateTimeOffset` (carries timezone offset). Always use `DateTime.UtcNow` for storage — `DateTime.Now` is timezone-dependent and causes bugs across regions.
+
+### Creating date and time objects
+
 #### DateTime, DateOnly, TimeOnly, DateTimeOffset — creating objects
 
 > [!info] Date and time types
@@ -89,11 +93,11 @@ now.GetType()  // type
     5:25
     System.DateTime
 
-#### Creating specific dates and times
+#### Creating specific dates and times | constructor and factory methods
+
+Create `DateTime` with the `(year, month, day, hour, min, sec)` constructor. `DateOnly` and `TimeOnly` take only the relevant components. For sub-millisecond precision, use `AddTicks()` — one tick = 100 nanoseconds.
 
 ```csharp
-// Creating specific dates — constructor and factory methods
-
 var dt = new DateTime(2024, 3, 15, 14, 30, 45);       // year, month, day, hour, min, sec
 var d = new DateOnly(2024, 3, 15);                     // date only
 var t = new TimeOnly(14, 30, 45);                      // time only
@@ -113,12 +117,11 @@ dtTicks  // With ticks
 
 #### DateTime .Year, .Month, .Day, .Hour — accessing components
 
-```csharp
-// Accessing date/time components — Year, Month, Day, Hour, etc.
+Access individual components as properties: `.Year`, `.Month`, `.Day`, `.Hour`, `.Minute`, `.Second`, `.Millisecond`. `.Ticks` returns the raw 100-nanosecond count. `.DayOfWeek` returns a `DayOfWeek` enum; `.Kind` indicates whether the value is `Utc`, `Local`, or `Unspecified`.
 
+```csharp
 var dt = new DateTime(2024, 3, 15, 14, 30, 45).AddTicks(1234560);
 
-// === Components ===
 dt.Year  // Year
 dt.Month  // Month
 dt.Day  // Day
@@ -146,14 +149,15 @@ dt.Kind            // Unspecified, Local, or Utc
     11
     Unspecified
 
-#### Unix timestamp conversions
+### Unix timestamps and ticks
+
+#### Unix timestamp conversions | DateTime to/from epoch seconds
+
+Convert `DateTime` to Unix timestamp by wrapping in `DateTimeOffset` and calling `ToUnixTimeSeconds()` or `ToUnixTimeMilliseconds()`. The Unix epoch is 1970-01-01 00:00:00 UTC.
 
 ```csharp
-// Unix timestamp conversions — DateTime to/from epoch seconds
-
 var now = DateTime.Now;
 
-// DateTime -> Unix timestamp (seconds since 1970-01-01 00:00:00 UTC)
 var dto = new DateTimeOffset(now);
 long tsSeconds = dto.ToUnixTimeSeconds();
 long tsMillis = dto.ToUnixTimeMilliseconds();
@@ -166,11 +170,11 @@ tsMillis  // Timestamp (millis)
     1774412713
     1774412713988
 
-#### Unix timestamp to DateTime
+#### Unix timestamp to DateTime | convert epoch seconds back
+
+`DateTimeOffset.FromUnixTimeSeconds()` converts a Unix timestamp back. Use `.LocalDateTime` for local time or `.UtcDateTime` for UTC.
 
 ```csharp
-// Timestamp to DateTime — convert epoch seconds back to DateTime
-
 var fromTs = DateTimeOffset.FromUnixTimeSeconds(tsSeconds).LocalDateTime;
 var fromTsUtc = DateTimeOffset.FromUnixTimeSeconds(tsSeconds).UtcDateTime;
 fromTs  // From timestamp (local)
@@ -183,9 +187,9 @@ fromTsUtc  // From timestamp (UTC)
 
 #### .NET Ticks — sub-millisecond precision
 
-```csharp
-// .NET Ticks — 100-nanosecond intervals since 0001-01-01
+`.Ticks` is a `long` counting 100-nanosecond intervals since 0001-01-01. Reconstruct a `DateTime` from ticks with `new DateTime(ticks)`. Ticks provide higher precision than Unix timestamps (which are seconds or milliseconds).
 
+```csharp
 now.Ticks  // .NET Ticks
 new DateTime(now.Ticks)  // From ticks
 ```
@@ -197,8 +201,6 @@ new DateTime(now.Ticks)  // From ticks
 #### Unix epoch reference — 1970-01-01 UTC
 
 ```csharp
-// Unix epoch — the reference point for Unix timestamps
-
 var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 epoch  // Epoch
 ```
@@ -206,11 +208,13 @@ epoch  // Epoch
     
     01-Jan-70 0:00:00
 
-#### Parsing strings to DateTime
+### Parsing and formatting
+
+#### Parsing strings to DateTime | Parse, ParseExact, TryParseExact
+
+`DateTime.ParseExact` converts a string using an explicit format pattern. Pass `CultureInfo.InvariantCulture` for culture-independent parsing (month names, AM/PM). Use `TryParseExact` for safe parsing that returns `false` on invalid input instead of throwing.
 
 ```csharp
-// Parsing strings to DateTime — Parse, ParseExact, TryParseExact
-
 string s1 = "2024-03-15 14:30:45";
 string s2 = "15/03/2024";
 string s3 = "March 15, 2024 2:30 PM";
@@ -241,9 +245,9 @@ foreach (var (s, d) in inputs)
 
 #### DateTime.TryParseExact — safe parsing with explicit format
 
-```csharp
-// TryParseExact — safe date parsing that returns false on invalid input
+`TryParseExact` returns `false` on invalid input instead of throwing `FormatException`. Always prefer this in pipelines where input data quality is unknown.
 
+```csharp
 if (DateTime.TryParseExact("not-a-date", "yyyy-MM-dd", null,
     System.Globalization.DateTimeStyles.None, out DateTime result))
     result  // Parsed
@@ -256,19 +260,20 @@ else
 
 #### Auto-detect format with Parse
 
-```csharp
-// Auto-detect format — DateTime.Parse for common date formats
+`DateTime.Parse` auto-detects common date formats (ISO 8601, RFC, locale-specific). Simpler than `ParseExact` but less predictable with ambiguous formats like `01/02/2024` (Jan 2 or Feb 1 depending on locale).
 
+```csharp
 var auto = DateTime.Parse("2024-03-15T14:30:45");
 auto  // Auto-parsed
 ```
 
     15-Mar-24 14:30:45
 
-#### Formatting — ToString
+#### Formatting — ToString | standard format strings
+
+Standard format strings are single-letter shortcuts: `"d"` (short date), `"D"` (long date), `"t"`/`"T"` (short/long time), `"o"` (round-trip ISO 8601 with full precision), `"s"` (sortable). Pass to `ToString()` or use string interpolation `$"{dt:o}"`.
 
 ```csharp
-// Standard format strings — single-letter shortcuts for common patterns
 
 var dt = new DateTime(2024, 3, 15, 14, 30, 45).AddTicks(1234560);
 
@@ -297,10 +302,11 @@ dt.ToString("o")  // o  Round-trip
     2024-03-15T14:30:45
     2024-03-15T14:30:45.1234560
 
-#### Custom format strings
+#### Custom format strings | combine specifiers for any layout
+
+Custom format strings use specifiers like `yyyy` (4-digit year), `MM` (month), `dd` (day), `HH` (24-hour), `hh` (12-hour), `mm`, `ss`, `fffffff` (ticks), `tt` (AM/PM). Enclose literal characters in single quotes.
 
 ```csharp
-// Custom format strings — combine specifiers for any date/time layout
 
 dt.ToString("yyyy-MM-dd'T'HH:mm:ss")  // ISO 8601
 dt.ToString("yyyy-MM-dd")  // Date only
@@ -325,10 +331,9 @@ dt.ToString("yyyyMMddHHmmss")  // Compact
     2024-03-15T14:30:45.1234560
     20240315143045
 
-#### Format specifier reference
+#### Format specifier reference | complete list of date/time codes
 
 ```csharp
-// Format specifier reference — complete list of date/time codes
 
 var specs = new (string spec, string desc)[] {
     ("yyyy", "4-digit year"),     ("yy", "2-digit year"),
@@ -369,10 +374,13 @@ dtLocal.ToString("zzz")  // zzz (Local)
       +01:00
       +01:00
 
-#### ISO 8601 conversions
+### ISO 8601 and timezone handling
+
+#### ISO 8601 conversions | DateTime to standardized string format
+
+The `"o"` (round-trip) format produces full ISO 8601 with maximum precision. The `"s"` (sortable) format omits fractional seconds. Use these for data interchange, API responses, and log timestamps.
 
 ```csharp
-// ISO 8601 conversions — DateTime to standardized string format
 
 var dt = new DateTime(2024, 3, 15, 14, 30, 45).AddTicks(1234560);
 
@@ -387,8 +395,9 @@ dt:yyyy-MM-ddTHH:mm:ss.fff  // Custom ISO
 
 #### Parsing ISO 8601 strings
 
+`DateTime.Parse` auto-detects ISO 8601 format including `Z` (UTC) and `+HH:MM` offsets. Use `DateTimeOffset.Parse` when you need to preserve the original offset.
+
 ```csharp
-// Parsing ISO 8601 strings — auto-detect with DateTime.Parse
 
 var fromIso1 = DateTime.Parse("2024-03-15T14:30:45.1234560");
 var fromIso2 = DateTime.Parse("2024-03-15T14:30:45Z");                  // Z = UTC
@@ -405,8 +414,9 @@ $"From ISO (+5:30):{fromIso3} Offset={fromIso3.Offset}"
 
 #### DateTimeOffset preserves timezone
 
+`DateTimeOffset` stores the UTC offset as part of the value — `.UtcDateTime` extracts UTC, `.LocalDateTime` converts to the local timezone. Unlike `DateTime`, the offset is never lost.
+
 ```csharp
-// DateTimeOffset — preserves timezone offset as part of the value
 
 var dto = DateTimeOffset.Parse("2024-03-15T14:30:45+05:30");
 dto  // DateTimeOffset
@@ -422,8 +432,9 @@ dto.Offset  // Offset
 
 #### TimeZoneInfo.FindSystemTimeZoneById — timezone management
 
+`DateTime.Kind` marks a value as `Utc`, `Local`, or `Unspecified`. `Unspecified` (the default) means the timezone is unknown — comparing an unspecified DateTime with a UTC one produces undefined behavior.
+
 ```csharp
-// Timezone management — DateTime.Kind and timezone conversion
 
 var unspec = new DateTime(2024, 3, 15, 14, 30, 45);                          // Unspecified
 var local = new DateTime(2024, 3, 15, 14, 30, 45, DateTimeKind.Local);       // Local
@@ -440,8 +451,9 @@ $"UTC:         {utc}, Kind={utc.Kind}"
 
 #### TimeZoneInfo.ConvertTime — converting between timezones
 
+`TimeZoneInfo.ConvertTimeFromUtc` converts a UTC DateTime to a target timezone. Find timezone objects with `FindSystemTimeZoneById` using Windows timezone IDs (e.g., `"Eastern Standard Time"`, `"Tokyo Standard Time"`).
+
 ```csharp
-// Converting between timezones — UTC to Eastern, Tokyo, etc.
 
 var eastern = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
 var london = TimeZoneInfo.FindSystemTimeZoneById("GMT Standard Time");
@@ -467,8 +479,9 @@ TimeZoneInfo.ConvertTimeFromUtc(utcNow, india)  // -> India
 
 #### DateTimeOffset — carries the offset with it
 
+`ToOffset()` converts a `DateTimeOffset` to a different UTC offset while preserving the same instant in time. The underlying UTC value stays the same — only the displayed offset changes.
+
 ```csharp
-// DateTimeOffset — carries offset as part of the value
 
 var dtoUtc = new DateTimeOffset(2024, 3, 15, 14, 30, 45, TimeSpan.Zero);
 var dtoNy = dtoUtc.ToOffset(TimeSpan.FromHours(-4));
@@ -495,10 +508,13 @@ foreach (var tz in TimeZoneInfo.GetSystemTimeZones().Take(5))
       Hawaiian Standard Time ((UTC-10:00) Hawaii)
       Marquesas Standard Time ((UTC-09:30) Marquesas Islands)
 
-#### Arithmetic with TimeSpan
+### Date/time arithmetic
+
+#### Arithmetic with TimeSpan | adding and subtracting time intervals
+
+`DateTime.AddDays()`, `AddHours()`, `AddMinutes()`, etc. return a new `DateTime` (immutable). For combined offsets, pass a `TimeSpan` to `.Add()`. `AddMonths()` and `AddYears()` handle calendar edge cases (e.g., Jan 31 + 1 month = Feb 28/29).
 
 ```csharp
-// TimeSpan arithmetic — adding and subtracting time intervals
 
 var dt = new DateTime(2024, 3, 15, 14, 30, 45);
 
@@ -523,8 +539,9 @@ dt.AddYears(1)  // + 1 year
 
 #### TimeSpan — difference between dates
 
+Subtracting two `DateTime` values returns a `TimeSpan`. Access `.Days`, `.TotalDays`, `.TotalHours`, `.TotalSeconds` for the interval in different units.
+
 ```csharp
-// Difference between dates — subtracting DateTimes returns TimeSpan
 
 var dt1 = new DateTime(2024, 3, 15);
 var dt2 = new DateTime(2024, 12, 25);
@@ -545,8 +562,9 @@ diff.TotalHours  // Total hours
 
 #### DateTime.Compare, CompareTo — comparing dates
 
+`DateTime` supports `<`, `>`, `==` operators directly. `DateTime.Compare(a, b)` returns `-1`, `0`, or `1`.
+
 ```csharp
-// Comparing dates — operators and DateTime.Compare
 
 dt1 < dt2  // dt1 < dt2
 dt1 == dt2  // dt1 == dt2
@@ -559,15 +577,12 @@ DateTime.Compare(dt1, dt2)  // Compare
     False
     -1
 
-#### Arithmetic on different date/time types
-
 #### DateTime: full arithmetic with Add* methods
 
-```csharp
-// DateTime arithmetic — Add* methods for full date/time manipulation
+`DateTime` supports the full range of `Add*` methods. All return a new `DateTime` — the original is immutable. `Add(TimeSpan)` combines multiple units.
 
+```csharp
 var dt = new DateTime(2024, 3, 15, 14, 30, 45);
-// === DateTime arithmetic ===
 dt  // Original
 dt.AddDays(1)  // + 1 day
 dt.AddHours(-2)  // - 2 hours
@@ -593,8 +608,9 @@ $"Combined:        {dt.Add(new TimeSpan(1, 2, 30, 15))}"  // 1d 2h 30m 15s
 
 #### DateOnly: only days/months/years
 
+`DateOnly` supports `AddDays`, `AddMonths`, `AddYears` — no time-based methods. Difference is computed via `.DayNumber` (returns `int` days, not `TimeSpan`).
+
 ```csharp
-// DateOnly arithmetic — only days, months, and years
 
 var d = new DateOnly(2024, 3, 15);
 $"\n=== DateOnly arithmetic ==="
@@ -620,8 +636,9 @@ $"Diff {d} to {d2}: {daysDiff} days"
 
 #### TimeOnly: hours/minutes/seconds arithmetic
 
+`TimeOnly` supports `Add(TimeSpan)`, `AddHours`, `AddMinutes`. Time wraps around at midnight — `14:30 + 12 hours = 02:30` (next day).
+
 ```csharp
-// TimeOnly arithmetic — hours, minutes, seconds manipulation
 
 var t = new TimeOnly(14, 30, 45);
 $"\n=== TimeOnly arithmetic ==="
@@ -646,8 +663,9 @@ $"+ 12 hours:      {t.AddHours(12)}"  // wraps past midnight
 
 #### Timestamp: arithmetic via DateTimeOffset
 
+Unix timestamps are just integers — add `86400` for +1 day, `3600` for +1 hour, etc. Convert back with `DateTimeOffset.FromUnixTimeSeconds`.
+
 ```csharp
-// Timestamp arithmetic — add/subtract via DateTimeOffset and Unix epoch
 
 var dtoNow = new DateTimeOffset(2024, 3, 15, 14, 30, 45, TimeSpan.Zero);
 long ts = dtoNow.ToUnixTimeSeconds();
@@ -670,8 +688,9 @@ DateTimeOffset.FromUnixTimeSeconds(ts + 86400).DateTime  // Back to DateTime
 
 #### Month arithmetic handles edge cases
 
+`AddMonths` clamps to the last valid day of the target month. January 31 + 1 month = February 29 (leap year) or February 28 (non-leap). This avoids the `InvalidDate` errors seen in some languages.
+
 ```csharp
-// Month arithmetic edge cases — January 31 + 1 month = February 28/29
 
 var jan31 = new DateTime(2024, 1, 31);
 $"\n=== Month edge cases ==="
@@ -686,6 +705,8 @@ $"Jan 31 + 1 year:  {jan31.AddYears(1)}"   // Jan 31
     31-Jan-25 0:00:00
 
 ## Math and Random
+
+### Math class — arithmetic, rounding, powers
 
 #### Math class
 
@@ -806,10 +827,13 @@ $"P95 latency: {p95:F2} ms"
     [3.1, 6.7, 12.5, 15.3, 22.0, 33.4, 45.2, 51.8, 78.9, 99.1]
     90.01 ms
 
+### Random number generation
+
 #### Random.Shared.Next, NextDouble — random number generation
 
+`new Random(seed)` creates a seeded RNG for reproducible results (tests, simulations). `Next(min, max)` returns an integer in `[min, max)`. `NextDouble()` returns a double in `[0.0, 1.0)`. `Random.Shared` is a thread-safe singleton for casual use.
+
 ```csharp
-// Random number generation — seed for reproducibility, Next for integers
 
 var rng = new Random(42);  // seed for reproducibility
 
@@ -891,6 +915,8 @@ for (int i = 0; i < 8; i++)
     evt_0008     purchase     us-east-1        1.37
 
 ## Logging
+
+### Microsoft.Extensions.Logging — ILogger and LoggerFactory
 
 #### Microsoft.Extensions.Logging — ILogger, LoggerFactory setup
 
@@ -987,6 +1013,8 @@ The standard .NET logging abstraction — same API for console, file, and cloud 
 
 ## Configuration and Environment Variables
 
+### Environment variables
+
 #### Environment.GetEnvironmentVariable — read and set env vars
 
 > [!info] Environment variables
@@ -997,7 +1025,7 @@ The standard .NET logging abstraction — same API for console, file, and cloud 
 > - Always provide defaults with `??` for variables that may not exist
 > - For complex structured config, use `appsettings.json` + `IConfiguration`
 >
-> > [!warning] Never hardcode secrets in code.
+> [!warning] Never hardcode secrets in code.
 
 ```csharp
 // Read common env vars
@@ -1053,10 +1081,13 @@ Environment.SetEnvironmentVariable("PIPELINE_ENV", null);
       CHROME_CRASHPAD_PIPE_NAME = \\.\pipe\crashpad_6836_LBXSBGYJGPFYPULP
       ... (75 total)
 
+### IConfiguration — structured config from JSON and env vars
+
 #### IConfiguration — structured settings
 
+`IConfiguration` from `Microsoft.Extensions.Configuration` reads settings from multiple sources (JSON, env vars, command-line args) with a layered override model. Later sources override earlier ones — env vars override JSON settings.
+
 ```csharp
-// IConfiguration — structured settings from JSON, env vars, and more
 
 var tmpDir = Path.Combine(Path.GetTempPath(), "config_demo_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
@@ -1082,8 +1113,9 @@ File.WriteAllText(appSettings, @"{
 
 #### ConfigurationBuilder — JSON, env vars, command-line args
 
+`ConfigurationBuilder` chains sources in priority order. `AddJsonFile` loads the base config; `AddEnvironmentVariables` adds overrides from env vars. Access values with `config["Section:Key"]` colon-separated path syntax.
+
 ```csharp
-// Building configuration from multiple sources — JSON + env vars
 
 var config = new ConfigurationBuilder()
     .SetBasePath(tmpDir)
@@ -1108,8 +1140,9 @@ config["ConnectionStrings:Warehouse"]  // Connection
 
 #### IConfiguration GetValue, GetSection, Bind — reading config values
 
+`GetValue<T>("key", defaultValue)` reads a typed value with a fallback. `GetSection("path")` navigates nested config. `Bind(object)` maps an entire section onto a POCO class.
+
 ```csharp
-// Reading configuration values — GetValue<T>, GetSection, and binding
 
 $"\n=== GetValue<T> with defaults ==="
 config.GetValue<int>("Pipeline:BatchSize")  // BatchSize (int)
@@ -1130,10 +1163,11 @@ foreach (var child in loggingSection.GetChildren())
     
       Default = Information
 
-#### Override config with environment variables
+#### Override config with environment variables | __ separator for nested keys
+
+Environment variables use `__` (double underscore) as the separator for nested config keys: `Pipeline__BatchSize` maps to `Pipeline:BatchSize` in config. Later sources in the builder chain win — env vars override JSON.
 
 ```csharp
-// Environment variable override — __ separator for nested config keys
 
 Environment.SetEnvironmentVariable("Pipeline__BatchSize", "10000");
 var overriddenConfig = new ConfigurationBuilder()

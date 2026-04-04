@@ -12,7 +12,7 @@ tags:
 aliases: [Incremental Transforms, Watermark Loading, Partition SWITCH, Gap Fill, Pre-computed Aggregations, Indexed Views]
 description: "Building SQL Server transforms that process data incrementally — watermark-based loading, partition SWITCH, window functions at scale, gap detection, forward-fill, pre-computed aggregation tables, and indexed views."
 created: 2026-03-29
-updated: 2026-03-29
+updated: 2026-04-04
 status: complete
 ---
 
@@ -102,7 +102,9 @@ WHERE CAST(timestamp AS DATE) > @safe_watermark
 
 ## Partition-Based Incremental Processing
 
-Process one partition at a time: load staging, validate, `SWITCH` into production. The `SWITCH` operation is instantaneous — a metadata operation with zero data movement.
+**Table partitioning** splits a large table into physically separate segments (partitions) based on a range column — typically a date. Each partition is an independent unit of storage that can be loaded, truncated, backed up, and switched independently. This enables incremental processing at the partition level: load new data into a staging table, validate it, then `SWITCH` the staging table into the target partition.
+
+The `SWITCH` operation is instantaneous because it is a **metadata-only operation** — it reassigns page ownership from the staging table to the target partition by updating internal allocation pointers. No rows are copied, moved, or re-indexed. A 100-row staging table switches as fast as a 100M-row one.
 
 ### Partition SWITCH — instant partition replacement
 
@@ -121,8 +123,9 @@ ALTER TABLE staging.signals_daily
     CHECK (signal_date >= '2025-03-01' AND signal_date < '2025-04-01');
 
 -- Step 3: Clear the target partition (if reprocessing)
+-- Partition number comes from the partition function: $PARTITION.pf_monthly('2025-03-15') returns 3
 TRUNCATE TABLE silver.signals_daily
-    WITH (PARTITIONS (3));    -- SQL Server 2016+
+    WITH (PARTITIONS (3));    -- SQL Server 2016+ (per-partition TRUNCATE)
 
 -- Step 4: SWITCH — instant, metadata-only
 ALTER TABLE staging.signals_daily
@@ -135,25 +138,32 @@ ALTER TABLE staging.signals_daily
 
 > [!success] Minimise SWITCH Lock Contention
 >
-> Set a short `LOCK_TIMEOUT` before the SWITCH so the operation fails fast rather than blocking indefinitely — then retry at a low-traffic time:
+> **Option 1 — `LOCK_TIMEOUT`:** fail fast and retry at a low-traffic time:
 > ```sql
 > SET LOCK_TIMEOUT 5000;   -- fail after 5 seconds if locks are held
 > ALTER TABLE staging.signals_daily SWITCH TO silver.signals_daily PARTITION 3;
 > SET LOCK_TIMEOUT -1;     -- restore default (wait indefinitely)
 > ```
-> Alternatively, schedule partition switches in an off-peak Airflow window task (e.g., 03:00 UTC) to avoid contention entirely.
+> **Option 2 — `WAIT_AT_LOW_PRIORITY` (SQL Server 2014+):** wait at low priority for a duration, then choose an action if the lock isn't acquired:
+> ```sql
+> ALTER TABLE staging.signals_daily
+>     SWITCH TO silver.signals_daily PARTITION 3
+>     WITH (WAIT_AT_LOW_PRIORITY (MAX_DURATION = 1 MINUTES, ABORT_AFTER_WAIT = SELF));
+>     -- SELF = abort the SWITCH if lock not acquired; BLOCKERS = kill blocking sessions; NONE = keep waiting
+> ```
+> `WAIT_AT_LOW_PRIORITY` is preferred in production because it does not block other operations while waiting — `LOCK_TIMEOUT` acquires a normal-priority lock that can itself become a blocker. Schedule partition switches in an off-peak Airflow window task (e.g., 03:00 UTC) to avoid contention entirely.
 
 ---
 
 ## Window Function Transforms at Scale
 
-Window functions compute moving averages, running totals, z-scores, and rankings without self-joins. They're the backbone of gold-layer analytics.
+A **window function** operates on a set of rows (the "window") related to the current row and returns a value for each row without collapsing the result set. Unlike `GROUP BY` — which reduces many rows into one summary row per group — window functions preserve every input row and attach a computed value alongside it. This makes them essential for calculations that need both the individual row and its context: moving averages, running totals, rankings, z-scores, and lead/lag comparisons. They eliminate the need for correlated subqueries and self-joins, which are orders of magnitude slower on large tables.
 
 ### Moving Average — AVG() OVER with ROWS BETWEEN
 
 > [!info] Window Frame Syntax
 >
-> `ROWS BETWEEN N PRECEDING AND CURRENT ROW` defines a physical window of exactly N+1 rows. The `PARTITION BY` resets the window for each group. Ensure the clustered index matches `PARTITION BY + ORDER BY` for optimal performance.
+> `ROWS BETWEEN N PRECEDING AND CURRENT ROW` defines a physical window of exactly N+1 rows (N preceding rows plus the current row itself). For a 30-day moving average, use `29 PRECEDING` because 29 + 1 (current) = 30 rows. The `PARTITION BY` clause resets the window for each group — the moving average for stock A never bleeds into stock B. Ensure the clustered index matches `PARTITION BY + ORDER BY` for optimal performance.
 
 ```sql
 -- 30-day and 90-day simple moving averages
@@ -209,14 +219,15 @@ WHERE score_date = @date;
 > Window functions need sorted input. If the clustered index matches `PARTITION BY + ORDER BY`, the engine reads sequentially with no sort. If it doesn't, SQL Server spills to TempDB for the sort — which can be orders of magnitude slower on large tables.
 
 - **Ideal index:** `CREATE CLUSTERED INDEX IX ON ohlcv (symbol, date)` for `PARTITION BY symbol ORDER BY date`
-- **Memory grants:** large windows (89+ preceding rows) over millions of partitions request large memory grants. If the grant is insufficient, hash and sort operations spill to TempDB
+- **Memory grants:** large windows (89+ preceding rows) over millions of partitions request large memory grants. If the grant is insufficient, hash and sort operations **spill to TempDB** — the engine writes intermediate results to disk instead of keeping them in memory, which can make the operation 10–100x slower. Detect spills in execution plans (look for `Sort Warning` icons on sort/hash operators) or via `sys.dm_exec_query_stats` (`total_spills` column, SQL Server 2016 SP2 / 2017 CU3+)
+- **Memory grant feedback:** SQL Server can automatically adjust memory grants based on runtime feedback — batch mode in 2017 (compat level 140), row mode in 2019 (compat level 150), and persisted in Query Store in 2022 (survives cache evictions and server restarts, uses 90th percentile of historical grants). If you're on 2022+, ensure Query Store is enabled to benefit from persistent grant correction
 - **When to compute in SQL vs pandas:** SQL is better for simple aggregates over sorted data (SMA, running totals). Pandas is better for complex row-wise logic, multi-column transforms, and z-score computation across groups
 
 ---
 
 ## Gap Detection and Forward-Fill
 
-Detect missing dates in time series data and fill them from the last known value.
+Missing dates in time series data silently corrupt downstream calculations. A `ROWS BETWEEN 29 PRECEDING AND CURRENT ROW` window function assumes 30 contiguous trading days — but if 5 dates are missing, the window actually spans 35 calendar days, producing an incorrect moving average. Rankings, z-scores, and return calculations are equally affected. Gap detection identifies these missing dates; forward-fill propagates the last known value into the gaps so downstream calculations operate on a complete, continuous series.
 
 ### Gap Detection — reference calendar LEFT JOIN
 
@@ -297,7 +308,7 @@ FROM silver.index_europe_ohlcv;
 
 ## Pre-Computed Aggregation Tables
 
-Materialized aggregations for dashboard performance. Gold tables that pre-join and pre-aggregate silver data so dashboards never scan raw tables.
+A **pre-computed aggregation table** stores the results of expensive `GROUP BY`, `JOIN`, and window function queries in a permanent table so that dashboards read pre-calculated results instead of running the aggregation on every query. This is the gold-layer pattern: silver tables hold cleaned, row-level data; gold tables hold the aggregated, business-ready summaries that power dashboards. Without pre-computation, a dashboard query that joins 3 silver tables and computes rankings across 100M rows would run on every page load — pre-computation runs it once (on a schedule) and serves the result from a small, indexed table.
 
 ### Pre-Computed Aggregation — truncate and rebuild vs incremental
 
@@ -319,9 +330,11 @@ WHERE date >= DATEADD(DAY, -7, @max_date);
 
 ### Covering Indexes for Dashboard Queries
 
+A **covering index** is a non-clustered index that contains all the columns a query needs — both the filter/sort columns (in the index key) and the output columns (in the `INCLUDE` clause). When a query is fully covered, the optimizer reads only the index and never touches the base table, eliminating **bookmark lookups** (also called key lookups: the expensive operation where the engine finds a row in the index but then has to jump back to the clustered index to retrieve the remaining columns).
+
 > [!tip] Covering Index Pattern
 >
-> Create a non-clustered index that includes all columns the dashboard queries. The query is satisfied entirely from the index — no bookmark lookups, no table scan.
+> `INCLUDE` columns are stored in the leaf level of the index but are not part of the sort key — they add no overhead to the B-tree traversal and keep the index key narrow. Place filter and sort columns in the key; place output-only columns in `INCLUDE`.
 
 ```sql
 -- Covering index for "latest scores by index" dashboard query
@@ -335,13 +348,21 @@ CREATE NONCLUSTERED INDEX IX_scores_daily_dashboard
 
 ## Indexed Views vs Aggregation Tables
 
-SQL Server's answer to materialized views. The engine automatically maintains the indexed view on every DML — zero staleness, but with DML overhead.
+A regular view is a saved query — it runs from scratch every time you `SELECT` from it. An **indexed view** (SQL Server's implementation of a materialized view) physically stores the query's result set on disk and automatically updates it when the underlying data changes. This gives you zero-staleness aggregations at the cost of additional write overhead on every `INSERT`, `UPDATE`, or `DELETE` that touches the base tables.
 
 ### CREATE INDEXED VIEW — auto-maintained aggregation
 
 > [!info] Indexed View Requirements
 >
-> Indexed views require `SCHEMABINDING` (view is locked to the exact table schema), a unique clustered index, and no `OUTER JOIN`, subqueries, or non-deterministic functions.
+> Indexed views require:
+> - `WITH SCHEMABINDING` — binds the view to the exact table schema; prevents anyone from altering or dropping the base tables without first dropping the view
+> - A unique clustered index on the view — this is what triggers materialization; without it the view is just a regular saved query
+> - `COUNT_BIG(*)` in any grouped view — SQL Server uses this internally to maintain the aggregation incrementally (it needs the row count per group to correctly recompute `AVG` and `SUM` when rows are inserted or deleted)
+> - Two-part table names (`schema.table`, not just `table`) in the view definition
+> - Only `SUM` and `COUNT_BIG` aggregates are allowed. `AVG`, `MIN`, `MAX`, `STDEV`, `VAR`, `COUNT` (int), and CLR aggregates are prohibited — decompose `AVG` into `SUM / COUNT_BIG` manually
+> - No `OUTER JOIN`, subqueries, `UNION`, `DISTINCT`, `TOP`, `ORDER BY`, window functions (`OVER`), non-deterministic functions (`GETDATE()`, `NEWID()`), or `FLOAT`/`REAL` in index key columns
+> - Seven SET options must be active at view creation and during all DML: `ANSI_NULLS ON`, `ANSI_PADDING ON`, `ANSI_WARNINGS ON`, `ARITHABORT ON`, `CONCAT_NULL_YIELDS_NULL ON`, `NUMERIC_ROUNDABORT OFF`, `QUOTED_IDENTIFIER ON`
+> - On Standard edition, the optimizer only uses the indexed view when you explicitly reference it with `WITH (NOEXPAND)`. Enterprise edition automatically matches queries to indexed views even when the query references the base tables.
 
 ```sql
 CREATE VIEW gold.vw_daily_avg_scores
@@ -349,11 +370,13 @@ WITH SCHEMABINDING
 AS
 SELECT _index,
        score_date,
-       COUNT_BIG(*) AS stock_count,    -- required for indexed views
-       AVG(composite_score) AS avg_composite,
-       AVG(relative_value_score) AS avg_value
+       COUNT_BIG(*) AS stock_count,
+       SUM(ISNULL(composite_score, 0)) AS sum_composite,        -- AVG is prohibited;
+       SUM(ISNULL(relative_value_score, 0)) AS sum_value         -- decompose into SUM / COUNT_BIG
 FROM dbo.scores_daily    -- must use two-part name with SCHEMABINDING
 GROUP BY _index, score_date;
+-- Query the view: SELECT _index, score_date, sum_composite / stock_count AS avg_composite
+--                 FROM gold.vw_daily_avg_scores WITH (NOEXPAND);  -- NOEXPAND required on Standard edition
 GO
 
 CREATE UNIQUE CLUSTERED INDEX IX_vw_daily_avg
@@ -387,6 +410,8 @@ CREATE UNIQUE CLUSTERED INDEX IX_vw_daily_avg
 
 ## Anti-Patterns
 
+These are the most common mistakes in incremental transform implementations.
+
 ### Full-Table Recomputation Every Run
 
 Recomputing all gold tables from scratch on every pipeline run wastes CPU, locks tables, and makes the pipeline slower as data grows. Use watermark-based or partition-based incremental processing.
@@ -406,6 +431,10 @@ Without `is_filled = 1`, you can't distinguish real market data from synthetic f
 ### Incremental Load Without Deduplication
 
 Overlapping watermark windows (the late-arriving data mitigation) create duplicate rows if the target has no UNIQUE constraint and the INSERT doesn't check `NOT EXISTS`. Always pair overlap windows with deduplication.
+
+### Partition SWITCH Without a CHECK Constraint
+
+The `SWITCH` statement fails with an error if the staging table lacks a `CHECK` constraint that matches the target partition boundary. This is a runtime failure that interrupts the pipeline. Always add the `CHECK` constraint before the `SWITCH` and verify the constraint range matches the partition function boundary exactly.
 
 ### Indexed View on a High-Write Table
 

@@ -1,5 +1,6 @@
 ---
-tags: [pipeline, csharp, deedle, polars, dataframes]
+title: "Explore, Select & Filter"
+tags: [csharp, deedle, polars, dataframes]
 aliases:
   - head, tail, describe, filter, where, isin
 description: "Polars.NET / C# DataFrames reference 02/10 — Explore, Select & Filter (head/tail, describe, where, isin). Executable examples with cell outputs. See [02_py_explore_select_filter](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/02_py_explore_select_filter) for the Python equivalent."
@@ -18,11 +19,10 @@ status: complete
 Polars.NET vs Deedle: Inspect data, select columns, filter rows.
 
 ---
-```csharp
-// Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
-// NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
-// Run this cell ONCE before any cells that use NuGet packages.
 
+Suppress CS1701/CS1702 assembly version warnings in .NET Interactive. Run this cell once before any cells that use NuGet packages.
+
+```csharp
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -37,7 +37,7 @@ var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 ```
 
-#### Install NuGet packages and import namespaces
+Install NuGet packages and import namespaces.
 
 ```csharp
 #r "nuget: Polars.NET, 0.4.0"
@@ -80,35 +80,41 @@ var DATA = Path.Combine("..", "data");
 Console.WriteLine($"Data directory: {Path.GetFullPath(DATA)}");
 ```
 
-    Data directory: c:\Users\aperi\DEV\LANG\data
+```text
+Data directory: c:\Users\aperi\DEV\LANG\data
+```
 
-#### Load the primary datasets used throughout this notebook
+Load the primary datasets used throughout this notebook. Both libraries read the same CSV files — Polars.NET with date parsing enabled, Deedle with default inference.
 
 ```csharp
-// Polars.NET — load primary datasets
 var dfP = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), tryParseDates: true);
 var dimP = DataFrame.ReadCsv(Path.Combine(DATA, "dim_country.csv"));
 
 display($"OHLCV: {dfP.Shape}  |  DimCountry: {dimP.Shape}");
 
-// Deedle — load same datasets
 var dfD = Frame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
 var dimD = Frame.ReadCsv(Path.Combine(DATA, "dim_country.csv"));
 
 display($"OHLCV: {dfD.RowCount} x {dfD.ColumnCount}  |  DimCountry: {dimD.RowCount} x {dimD.ColumnCount}");
 ```
 
-    OHLCV: (66355, 12)  |  DimCountry: (212, 2)
-
-    OHLCV: 66355 x 12  |  DimCountry: 212 x 2
+```text
+OHLCV: (66355, 12)  |  DimCountry: (212, 2)
+OHLCV: 66355 x 12  |  DimCountry: 212 x 2
+```
 
 ---
 ## Data Exploration
 
-#### Polars.NET — Data Exploration: preview first and last rows with Head and Tail
+The first step after loading data is exploration: previewing rows, inspecting the schema, computing summary statistics, and checking for null values. Polars.NET provides built-in methods for most of these; Deedle requires manual approaches for some operations.
+
+### Head, Tail, and Sample
+
+#### Polars.NET | Preview first and last rows with Head and Tail
+
+`.Head(n)` and `.Tail(n)` return the first and last N rows. `.Sample(n)` returns N random rows. These are the most common entry points for data exploration.
 
 ```csharp
-// Polars.NET — Head / Tail
 display("Head(5):");
 display(dfP.Head(5));
 display("Tail(5):");
@@ -123,10 +129,11 @@ dfP.Tail(5)
 
 <!-- Polars DataFrame: (5 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>64828</td><td>WKL.AS</td><td>2026-03-06</td><td>69.02</td><td>69.36</td><td>67.82</td><td>68.52</td><td>68.52</td><td>1143729</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66875</td><td>WKL.AS</td><td>2026-03-09</td><td>68.78</td><td>69.16</td><td>67.64</td><td>68.64</td><td>68.64</td><td>841503</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66876</td><td>WKL.AS</td><td>2026-03-10</td><td>68.8</td><td>69.16</td><td>66.34</td><td>67.16</td><td>67.16</td><td>1355645</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66877</td><td>WKL.AS</td><td>2026-03-11</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66929</td><td>WKL.AS</td><td>2026-03-12</td><td>67</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-#### Deedle — Preview first and last rows with GetRowsAt
+#### Deedle | Preview first and last rows
+
+Deedle has no `.Head()` or `.Tail()` methods in the C# API. Use the `Rows` indexer with `Enumerable.Range()` to select row ranges by position.
 
 ```csharp
-// Deedle — Head / Tail
 display("Head(5):");
 display(dfD.Rows[Enumerable.Range(0, 5)]);
 display("Tail(5):");
@@ -165,19 +172,21 @@ dfD.Rows[Enumerable.Range(dfD.RowCount - 5, 5)]
 
 </div>
 
-#### Polars.NET — Random sample with Sample
+#### Polars.NET | Random sample with Sample
+
+`.Sample(n)` returns N random rows from the DataFrame. Useful for quick spot-checking of large datasets.
 
 ```csharp
-// Polars.NET — Sample(n) returns n random rows
 dfP.Sample(5)
 ```
 
 <!-- Polars DataFrame: (5 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>48632</td><td>BMW.DE</td><td>2025-03-21</td><td>79.5</td><td>80.1</td><td>77.94</td><td>79.16</td><td>75.1068</td><td>3215296</td><td>0</td><td>0</td><td>false</td></tr><tr><td>13368</td><td>ALV.DE</td><td>2021-07-26</td><td>209.15</td><td>211.15</td><td>207.8</td><td>211.15</td><td>173.0352</td><td>475414</td><td>0</td><td>0</td><td>false</td></tr><tr><td>54306</td><td>SGO.PA</td><td>2021-08-10</td><td>63.93</td><td>64.31</td><td>63.86</td><td>64.26</td><td>57.3201</td><td>700160</td><td>0</td><td>0</td><td>false</td></tr><tr><td>20409</td><td>IBE.MC</td><td>2023-03-24</td><td>11.085</td><td>11.085</td><td>10.96</td><td>11.07</td><td>9.7173</td><td>12976210</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5092</td><td>OR.PA</td><td>2025-05-13</td><td>394.15</td><td>394.25</td><td>385</td><td>385.15</td><td>385.15</td><td>318152</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-#### Deedle — Random sample via manual shuffling (no built-in Sample)
+#### Deedle | Random sample via manual shuffling
+
+Deedle has no built-in `.Sample()`. Shuffle row indices manually using `Random` and `OrderBy`, then select by index.
 
 ```csharp
-// Deedle — no built-in Sample; shuffle row indices manually
 var rng = new Random(42);
 var sampleIndices = Enumerable.Range(0, dfD.RowCount)
     .OrderBy(_ => rng.Next())
@@ -200,67 +209,80 @@ dfD.Rows[sampleIndices]
 
 </div>
 
-#### Polars.NET — Inspect shape with Height, Width, and Schema
+### Shape and Schema
+
+#### Polars.NET | Inspect shape with Height, Width, and Schema
+
+`.Shape` returns `(rows, columns)`, `.Height` and `.Width` return individual dimensions. `.PrintSchema()` displays the Arrow type for every column.
 
 ```csharp
-// Polars.NET — Shape and schema
 display($"Shape: {dfP.Shape}  |  Height: {dfP.Height}  |  Width: {dfP.Width}");
 dfP.PrintSchema();
 ```
 
-    Shape: (66355, 12)  |  Height: 66355  |  Width: 12
+```text
+Shape: (66355, 12)  |  Height: 66355  |  Width: 12
+```
 
-    root
-     |-- id: Int64
-     |-- symbol: String
-     |-- date: Date
-     |-- open: Float64
-     |-- high: Float64
-     |-- low: Float64
-     |-- close: Float64
-     |-- adj_close: Float64
-     |-- volume: Int64
-     |-- dividends: Float64
-     |-- stock_splits: Float64
-     |-- is_filled: Boolean
+```text
+root
+ |-- id: Int64
+ |-- symbol: String
+ |-- date: Date
+ |-- open: Float64
+ |-- high: Float64
+ |-- low: Float64
+ |-- close: Float64
+ |-- adj_close: Float64
+ |-- volume: Int64
+ |-- dividends: Float64
+ |-- stock_splits: Float64
+ |-- is_filled: Boolean
+```
 
-#### Deedle — Inspect shape with RowCount, ColumnCount, and ColumnTypes
+#### Deedle | Inspect shape with RowCount, ColumnCount, and ColumnTypes
+
+Deedle uses `.RowCount` and `.ColumnCount` for dimensions. Column types are accessed via `.ColumnTypes` (returns CLR `Type` objects).
 
 ```csharp
-// Deedle — Shape and column types
 display($"Shape: {dfD.RowCount} rows x {dfD.ColumnCount} cols");
 foreach (var (name, type) in dfD.ColumnKeys.Zip(dfD.ColumnTypes))
     Console.WriteLine($"  {name,-18} : {type.Name}");
 ```
 
-    Shape: 66355 rows x 12 cols
+```text
+Shape: 66355 rows x 12 cols
+id                 : Int32
+symbol             : String
+date               : DateTime
+open               : Decimal
+high               : Decimal
+low                : Decimal
+close              : Decimal
+adj_close          : Decimal
+volume             : Int32
+dividends          : Decimal
+stock_splits       : Decimal
+is_filled          : Boolean
+```
 
-      id                 : Int32
-      symbol             : String
-      date               : DateTime
-      open               : Decimal
-      high               : Decimal
-      low                : Decimal
-      close              : Decimal
-      adj_close          : Decimal
-      volume             : Int32
-      dividends          : Decimal
-      stock_splits       : Decimal
-      is_filled          : Boolean
+### Summary Statistics
 
-#### Polars.NET — Summary statistics with Describe
+#### Polars.NET | Summary statistics with Describe
+
+`.Describe()` returns a DataFrame with count, null_count, mean, std, min, percentiles (25%, 50%, 75%), and max for all numeric columns. Non-numeric columns are excluded.
 
 ```csharp
-// Polars.NET — Describe() returns a summary DataFrame
 dfP.Describe()
 ```
 
 <!-- Polars DataFrame: (9 rows, 10 columns) --><table><thead><tr><th>statistic</th><th>id</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th></tr></thead><tbody><tr><td>count</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td></tr><tr><td>null_count</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td>mean</td><td>33179.7331</td><td>197.0405202</td><td>199.364124</td><td>194.5857816</td><td>197.0349004</td><td>190.4949089</td><td>5942123.691</td><td>0.01175667386</td><td>0.0001720326822</td></tr><tr><td>std</td><td>19158.20139</td><td>363.1504839</td><td>367.8738291</td><td>358.011643</td><td>363.052047</td><td>359.6353012</td><td>16156185.53</td><td>0.2831418842</td><td>0.02271628163</td></tr><tr><td>min</td><td>1</td><td>1.601</td><td>1.6628</td><td>1.5842</td><td>1.6066</td><td>1.2013</td><td>0</td><td>0</td><td>0</td></tr><tr><td>25%</td><td>16590</td><td>29.79</td><td>30.09</td><td>29.47</td><td>29.7899</td><td>28.1461</td><td>509991</td><td>0</td><td>0</td></tr><tr><td>50%</td><td>33178</td><td>70.7</td><td>71.4</td><td>69.89</td><td>70.68</td><td>63.141</td><td>1415896</td><td>0</td><td>0</td></tr><tr><td>75%</td><td>49767</td><td>186</td><td>188</td><td>184</td><td>186.1</td><td>175.2609</td><td>4089463</td><td>0</td><td>0</td></tr><tr><td>max</td><td>66930</td><td>2926</td><td>2957</td><td>2813</td><td>2839</td><td>2802.9382</td><td>376391539</td><td>22.5</td><td>5</td></tr></tbody></table></div>
 
-#### Deedle — Summary statistics computed manually per numeric column
+#### Deedle | Summary statistics computed manually
+
+Deedle has no built-in `.Describe()`. Build a summary manually by iterating over numeric columns and calling `.Mean()`, `.StdDev()`, `.Min()`, `.Max()`.
 
 ```csharp
-// Deedle — manual describe for numeric columns
 var numericCols = new[] { "open", "high", "low", "close", "adj_close", "volume" };
 Console.WriteLine($"{"Column",-12} {"Count",8} {"Mean",12} {"StdDev",12} {"Min",12} {"Max",12}");
 Console.WriteLine(new string('-', 68));
@@ -271,20 +293,24 @@ foreach (var col in numericCols)
 }
 ```
 
-    Column          Count         Mean       StdDev          Min          Max
-    --------------------------------------------------------------------
-    open            66355       197.04       363.15         1.60      2926.00
-    high            66355       199.36       367.87         1.66      2957.00
-    low             66355       194.59       358.01         1.58      2813.00
-    close           66355       197.03       363.05         1.61      2839.00
-    adj_close       66355       190.49       359.64         1.20      2802.94
-    volume          66355   5942123.69  16156185.53         0.00 376391539.00
+```text
+Column          Count         Mean       StdDev          Min          Max
+--------------------------------------------------------------------
+open            66355       197.04       363.15         1.60      2926.00
+high            66355       199.36       367.87         1.66      2957.00
+low             66355       194.59       358.01         1.58      2813.00
+close           66355       197.03       363.05         1.61      2839.00
+adj_close       66355       190.49       359.64         1.20      2802.94
+volume          66355   5942123.69  16156185.53         0.00 376391539.00
+```
 
-#### Polars.NET — Count nulls per column with Series.NullCount property
+### Null Counts
+
+#### Polars.NET | Count nulls per column
+
+`.NullCount` is a property on each Series (not on DataFrame). Iterate columns and check for non-zero null counts to identify data quality issues.
 
 ```csharp
-// Polars.NET — NullCount is a property on Series, NOT a method on DataFrame
-// Use scores_daily which has real nulls
 var scP = DataFrame.ReadCsv(Path.Combine(DATA, "scores_daily.csv"), tryParseDates: true);
 Console.WriteLine($"scores_daily: {scP.Shape}");
 foreach (var col in scP.Columns)
@@ -295,15 +321,20 @@ foreach (var col in scP.Columns)
 }
 ```
 
-    scores_daily: (466, 36)
-      pe_zscore                       3 nulls
-      pb_zscore                       6 nulls
-      ev_ebitda_zscore               71 nulls
-      yield_zscore                   35 nulls
-      recommendation_mean            14 nulls
+```text
+scores_daily: (466, 36)
+  pe_zscore                       3 nulls
+  pb_zscore                       6 nulls
+  ev_ebitda_zscore               71 nulls
+  yield_zscore                   35 nulls
+  recommendation_mean            14 nulls
+```
+
+#### Deedle | Count missing values per column
+
+Deedle tracks missing values via `OptionalValue<T>`. The missing count for a column is `RowCount - ValueCount`.
 
 ```csharp
-// Deedle — count missing values per column (using scores_daily with real nulls)
 var scD = Frame.ReadCsv(Path.Combine(DATA, "scores_daily.csv"));
 Console.WriteLine($"scores_daily: {scD.RowCount} x {scD.ColumnCount}");
 foreach (var col in scD.ColumnKeys)
@@ -315,46 +346,32 @@ foreach (var col in scD.ColumnKeys)
 }
 ```
 
-    scores_daily: 466 x 36
-      pe_zscore                       3 missing
-      pb_zscore                       6 missing
-      ev_ebitda_zscore               71 missing
-      yield_zscore                   35 missing
-      recommendation_mean            14 missing
-
-```csharp
-// Deedle — count missing values per column (using scores_daily with real nulls)
-var scD2 = Frame.ReadCsv(Path.Combine(DATA, "scores_daily.csv"));
-Console.WriteLine($"scores_daily: {scD2.RowCount} x {scD2.ColumnCount}");
-foreach (var col in scD2.ColumnKeys)
-{
-    var s = scD2.Columns[col];
-    var missing = scD2.RowCount - s.ValueCount;
-    if (missing > 0)
-        Console.WriteLine($"  {col,-28} {missing,4} missing");
-}
+```text
+scores_daily: 466 x 36
+  pe_zscore                       3 missing
+  pb_zscore                       6 missing
+  ev_ebitda_zscore               71 missing
+  yield_zscore                   35 missing
+  recommendation_mean            14 missing
 ```
 
-    scores_daily: 466 x 36
-      pe_zscore                       3 missing
-      pb_zscore                       6 missing
-      ev_ebitda_zscore               71 missing
-      yield_zscore                   35 missing
-      recommendation_mean            14 missing
+### Value Counts and Unique Values
 
-#### Polars.NET — Frequency distribution with ValueCounts on a Series
+#### Polars.NET | Frequency distribution with ValueCounts
+
+`.ValueCounts()` on a Series returns a two-column DataFrame with each unique value and its count. Useful for understanding cardinality and distribution of categorical columns.
 
 ```csharp
-// Polars.NET — ValueCounts() on a Series returns a DataFrame
 dfP.Column("symbol").ValueCounts()
 ```
 
 <!-- Polars DataFrame: (50 rows, 2 columns) --><table><thead><tr><th>symbol</th><th>count</th></tr></thead><tbody><tr><td>ABI.BR</td><td>1331</td></tr><tr><td>AD.AS</td><td>1331</td></tr><tr><td>ADYEN.AS</td><td>1331</td></tr><tr><td>AI.PA</td><td>1331</td></tr><tr><td>AIR.PA</td><td>1331</td></tr><tr><td>ARGX.BR</td><td>1331</td></tr><tr><td>ASML.AS</td><td>1331</td></tr><tr><td>BN.PA</td><td>1331</td></tr><tr><td>BNP.PA</td><td>1331</td></tr><tr><td>CS.PA</td><td>1331</td></tr><tr><td colspan='2'>... 40 more rows ...</td></tr></tbody></table></div>
 
-#### Deedle — Frequency distribution via GroupBy and counting
+#### Deedle | Frequency distribution via GroupBy
+
+Deedle has no built-in `.ValueCounts()`. Use `.GroupBy()` on the column Series and count keys in each group.
 
 ```csharp
-// Deedle — value counts via GroupBy on the symbol column
 var valueCounts = dfD.GetColumn<string>("symbol")
     .GroupBy(kvp => kvp.Value)
     .Select(g => g.Value.KeyCount);
@@ -373,16 +390,19 @@ valueCounts
 
 </div>
 
-#### Polars.NET — Distinct values with Unique and count with NUnique
+#### Polars.NET | Distinct values with Unique and NUnique
+
+`.Unique()` returns a Series of distinct values. `.NUnique` (property) returns the count of distinct values.
 
 ```csharp
-// Polars.NET — Unique() returns distinct values, NUnique() counts them
 var symSeries = dfP.Column("symbol");
 display($"NUnique: {symSeries.NUnique}");
 symSeries.Unique()
 ```
 
-    NUnique: 50
+```text
+NUnique: 50
+```
 
 <pre style='font-size:14px'>shape: (50, 1)
 ┌─────────┐
@@ -403,10 +423,11 @@ symSeries.Unique()
 │ ABI.BR  │
 └─────────┘</pre>
 
-#### Deedle — Distinct values with Values.Distinct
+#### Deedle | Distinct values with Values.Distinct
+
+Use `.Values.Distinct()` (LINQ) to get unique values from a Deedle Series.
 
 ```csharp
-// Deedle — Distinct() on series values
 var uniqueSymbols = dfD.GetColumn<string>("symbol").Values.Distinct().ToArray();
 display($"Unique count: {uniqueSymbols.Length}");
 display(string.Join(", ", uniqueSymbols.Take(10)));
@@ -414,16 +435,19 @@ if (uniqueSymbols.Length > 10)
     Console.WriteLine($"  ... and {uniqueSymbols.Length - 10} more");
 ```
 
-    Unique count: 50
+```text
+Unique count: 50
+ABI.BR, AD.AS, ADS.DE, ADYEN.AS, AI.PA, AIR.PA, ALV.DE, ARGX.BR, ASML.AS, BAS.DE
+  ... and 40 more
+```
 
-    ABI.BR, AD.AS, ADS.DE, ADYEN.AS, AI.PA, AIR.PA, ALV.DE, ARGX.BR, ASML.AS, BAS.DE
+### Memory Estimation and Profiling
 
-      ... and 40 more
+#### Polars.NET | Estimate memory usage
 
-#### Polars.NET — Estimate memory usage with EstimatedSize
+Polars.NET 0.4.0 does not expose `EstimatedSize()` directly. Estimate by multiplying column length by byte size per Arrow type.
 
 ```csharp
-// Polars.NET — estimate size (no built-in EstimatedSize in 0.4.0)
 long estBytes = 0;
 foreach (var col in dfP.Columns)
 {
@@ -441,14 +465,16 @@ display($"Estimated size: {estBytes:N0} bytes ({estBytes / 1_048_576.0:F2} MB)")
 display($"Shape: {dfP.Shape}  |  {dfP.Height:N0} rows x {dfP.Width} cols");
 ```
 
-    Estimated size: 6'370'080 bytes (6.07 MB)
+```text
+Estimated size: 6,370,080 bytes (6.07 MB)
+Shape: (66355, 12)  |  66,355 rows x 12 cols
+```
 
-    Shape: (66355, 12)  |  66'355 rows x 12 cols
+#### Deedle | Memory estimate via heuristic
 
-#### Deedle — No built-in memory estimate (note only)
+Deedle has no built-in memory estimation. Apply a rough heuristic based on column types and row count.
 
 ```csharp
-// Deedle — no built-in EstimatedSize; rough heuristic based on column types
 long estBytes = 0;
 foreach (var (col, type) in dfD.ColumnKeys.Zip(dfD.ColumnTypes))
 {
@@ -466,12 +492,15 @@ foreach (var (col, type) in dfD.ColumnKeys.Zip(dfD.ColumnTypes))
 Console.WriteLine($"Rough estimate: {estBytes:N0} bytes ({estBytes / 1_048_576.0:F2} MB)");
 ```
 
-    Rough estimate: 7'498'115 bytes (7.15 MB)
+```text
+Rough estimate: 7,498,115 bytes (7.15 MB)
+```
 
-#### Polars.NET — Reusable quick-profile function for any DataFrame
+#### Polars.NET | Reusable quick-profile function
+
+A reusable profiler that returns column name, Arrow type, null count, and unique count for any DataFrame. Useful as a first step when exploring an unfamiliar dataset.
 
 ```csharp
-// Polars.NET — reusable profiler that returns a summary DataFrame
 DataFrame ProfilePolars(DataFrame df)
 {
     var cols = df.Columns.ToArray();
@@ -513,10 +542,19 @@ display(ProfilePolars(dimP));
 ---
 ## Column Selection
 
-#### Polars.NET — Column Selection: select a single column by name with Column
+Column selection is how you narrow a DataFrame to the columns you need. Polars.NET uses `.Select()` with column names or expressions. Deedle uses the `.Columns[]` indexer or `.GetColumn<T>()`.
+
+> [!info] Polars.NET vs Deedle | Expression API
+>
+> Polars.NET provides a powerful **expression API** (`Col()`, `Lit()`, `.Alias()`, `.Str.*`, `.Dt.*`) that enables compute-on-select, renaming, and chained transformations in a single `.Select()` call. Deedle has no expression system — column transforms require building new columns manually via arithmetic operators or LINQ.
+
+### Single Column Selection
+
+#### Polars.NET | Select a single column by name
+
+`.Column("name")` or the indexer `df["name"]` returns a Polars Series (untyped). The Series carries the column name and Arrow data type.
 
 ```csharp
-// Polars.NET — single column returns a Series (untyped)
 var closeSeries = dfP.Column("close");
 display($"Name: {closeSeries.Name}  |  Length: {closeSeries.Length}  |  Type: {closeSeries.DataTypeName}");
 
@@ -525,14 +563,16 @@ var symbolSeries = dfP["symbol"];
 display($"Name: {symbolSeries.Name}  |  Length: {symbolSeries.Length}");
 ```
 
-    Name: close  |  Length: 66355  |  Type: f64
+```text
+Name: close  |  Length: 66355  |  Type: f64
+Name: symbol  |  Length: 66355
+```
 
-    Name: symbol  |  Length: 66355
+#### Deedle | Select a single column by name
 
-#### Deedle — Select a single column by name with GetColumn<T>
+`.GetColumn<T>("name")` returns a typed `Series<int, T>`. Unlike Polars, the value type must be specified at compile time.
 
 ```csharp
-// Deedle — GetColumn<T> requires the value type
 var closeSeries = dfD.GetColumn<double>("close");
 display($"KeyCount: {closeSeries.KeyCount}");
 
@@ -541,23 +581,28 @@ var symbolSeries = dfD.GetColumn<string>("symbol");
 display($"KeyCount: {symbolSeries.KeyCount}");
 ```
 
-    KeyCount: 66355
+```text
+KeyCount: 66355
+KeyCount: 66355
+```
 
-    KeyCount: 66355
+### Multiple Column Selection
 
-#### Polars.NET — Select multiple columns by name with Select
+#### Polars.NET | Select multiple columns by name
+
+`.Select("a", "b", ...)` returns a new DataFrame containing only the specified columns, in the specified order.
 
 ```csharp
-// Polars.NET — Select("a", "b") returns a new DataFrame with those columns
 dfP.Select("date", "symbol", "close", "volume").Head(5)
 ```
 
 <!-- Polars DataFrame: (5 rows, 4 columns) --><table><thead><tr><th>date</th><th>symbol</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>2021-01-04</td><td>ABI.BR</td><td>57.21</td><td>1513937</td></tr><tr><td>2021-01-05</td><td>ABI.BR</td><td>57.18</td><td>1382722</td></tr><tr><td>2021-01-06</td><td>ABI.BR</td><td>58.77</td><td>1370204</td></tr><tr><td>2021-01-07</td><td>ABI.BR</td><td>58.4</td><td>1469911</td></tr><tr><td>2021-01-08</td><td>ABI.BR</td><td>57.86</td><td>1428681</td></tr></tbody></table></div>
 
-#### Deedle — Select multiple columns by name with Columns indexer
+#### Deedle | Select multiple columns by name
+
+Use the `.Columns[]` indexer with a string array. The result is a new Frame with only those columns.
 
 ```csharp
-// Deedle — Columns indexer with a list of column names
 dfD.Columns[new[] { "date", "symbol", "close", "volume" }]
     .Rows[Enumerable.Range(0, 5)]
 ```
@@ -576,10 +621,13 @@ dfD.Columns[new[] { "date", "symbol", "close", "volume" }]
 
 </div>
 
-#### Polars.NET — Select with expressions and rename with Alias
+### Expressions and Computed Columns
+
+#### Polars.NET | Select with expressions and rename with Alias
+
+Polars expressions allow compute-on-select: derive new columns, apply arithmetic, and rename — all in a single `.Select()` call.
 
 ```csharp
-// Polars.NET — expressions allow compute-on-select and renaming
 dfP.Select(
     Col("symbol"),
     Col("close").Alias("price"),
@@ -589,10 +637,11 @@ dfP.Select(
 
 <!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>symbol</th><th>price</th><th>range</th></tr></thead><tbody><tr><td>ABI.BR</td><td>57.21</td><td>2.07</td></tr><tr><td>ABI.BR</td><td>57.18</td><td>1.23</td></tr><tr><td>ABI.BR</td><td>58.77</td><td>1.55</td></tr><tr><td>ABI.BR</td><td>58.4</td><td>0.98</td></tr><tr><td>ABI.BR</td><td>57.86</td><td>0.97</td></tr></tbody></table></div>
 
-#### Deedle — No expression system; compute columns manually
+#### Deedle | Compute columns manually
+
+Deedle has no expression system. Build new columns with arithmetic operators on typed Series, then assemble into a new Frame via `FrameBuilder`.
 
 ```csharp
-// Deedle — no expression system; build columns with arithmetic
 var builder = new FrameBuilder.Columns<int, string>();
 builder.Add("symbol", dfD.GetColumn<string>("symbol"));
 builder.Add("price", dfD.GetColumn<double>("close"));
@@ -614,10 +663,13 @@ builder.Frame.Rows[Enumerable.Range(0, 5)]
 
 </div>
 
-#### Polars.NET — Exclude columns with Drop
+### Dropping, Filtering, and Renaming Columns
+
+#### Polars.NET | Exclude columns with Drop
+
+Drop columns by building a keep-list and passing it to `.Select()`. Polars.NET 0.4.0 does not have a `.Drop()` method — filter the column names in C# instead.
 
 ```csharp
-// Polars.NET — Drop columns by selecting the ones to keep
 var dropCols = new HashSet<string> { "id", "adj_close", "dividends", "stock_splits", "is_filled" };
 var keepCols = dfP.Columns.Where(c => !dropCols.Contains(c)).ToArray();
 var trimmed = dfP.Select(keepCols);
@@ -629,10 +681,11 @@ trimmed.Head(3)
 
 <!-- Polars DataFrame: (3 rows, 7 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>1370204</td></tr></tbody></table></div>
 
-#### Deedle — Exclude columns with DropColumn
+#### Deedle | Exclude columns
+
+Deedle's `DropColumn` removes one column at a time. For multiple drops, select the columns to keep instead.
 
 ```csharp
-// Deedle — DropColumn removes one at a time; chain or keep-list is easier
 var keepCols = new[] { "date", "symbol", "open", "high", "low", "close", "volume" };
 var trimmed = dfD.Columns[keepCols];
 display($"Columns: {string.Join(", ", trimmed.ColumnKeys)}");
@@ -655,10 +708,11 @@ trimmed.Rows[Enumerable.Range(0, 3)]
 
 </div>
 
-#### Polars.NET — Select columns matching a regex pattern
+#### Polars.NET | Select columns matching a regex pattern
+
+Filter the `.Columns` list with a `Regex` and pass the matches to `.Select()`.
 
 ```csharp
-// Polars.NET — select columns by regex (match OHLC price columns)
 var pattern = new Regex("^(open|high|low|close)$");
 var priceCols = dfP.Columns.Where(c => pattern.IsMatch(c)).ToArray();
 display($"Matched: {string.Join(", ", priceCols)}");
@@ -669,10 +723,11 @@ dfP.Select(priceCols).Head(5)
 
 <!-- Polars DataFrame: (5 rows, 4 columns) --><table><thead><tr><th>open</th><th>high</th><th>low</th><th>close</th></tr></thead><tbody><tr><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td></tr><tr><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td></tr><tr><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td></tr><tr><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td></tr><tr><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td></tr></tbody></table></div>
 
-#### Deedle — Select columns matching a regex pattern via LINQ
+#### Deedle | Select columns matching a regex pattern
+
+Filter `.ColumnKeys` with LINQ + `Regex`, then pass to the `.Columns[]` indexer.
 
 ```csharp
-// Deedle — filter column names with LINQ + Regex
 var pattern = new Regex("^(open|high|low|close)$");
 var priceCols = dfD.ColumnKeys.Where(c => pattern.IsMatch(c)).ToArray();
 display($"Matched: {string.Join(", ", priceCols)}");
@@ -695,10 +750,11 @@ dfD.Columns[priceCols].Rows[Enumerable.Range(0, 5)]
 
 </div>
 
-#### Polars.NET — Rename columns with Rename
+#### Polars.NET | Rename columns with Rename
+
+`.Rename()` accepts a `Dictionary<string, string>` mapping old names to new names.
 
 ```csharp
-// Polars.NET — Rename() accepts a dictionary of old -> new names
 var renamed = dfP.Select("symbol", "close", "volume")
     .Rename(new Dictionary<string, string>
     {
@@ -714,10 +770,11 @@ renamed.Head(3)
 
 <!-- Polars DataFrame: (3 rows, 3 columns) --><table><thead><tr><th>ticker</th><th>price</th><th>vol</th></tr></thead><tbody><tr><td>ABI.BR</td><td>57.21</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>57.18</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>58.77</td><td>1370204</td></tr></tbody></table></div>
 
-#### Deedle — Rename columns with RenameColumns
+#### Deedle | Rename columns by rebuilding
+
+Deedle has no built-in `.Rename()`. Rebuild the Frame with a `FrameBuilder`, mapping old column names to new ones.
 
 ```csharp
-// Deedle — rename by rebuilding with new column names
 var renames = new Dictionary<string, string>
 {
     ["symbol"] = "ticker",
@@ -749,10 +806,11 @@ renamed.Rows[Enumerable.Range(0, 3)]
 
 </div>
 
-#### Polars.NET — Reorder columns with Select
+#### Polars.NET | Reorder columns with Select
+
+Passing column names in a different order to `.Select()` reorders the columns in the result.
 
 ```csharp
-// Polars.NET — Select in desired order reorders columns
 var reordered = dfP.Select("symbol", "date", "volume", "open", "high", "low", "close");
 display($"Column order: {string.Join(", ", reordered.Columns)}");
 reordered.Head(3)
@@ -762,10 +820,11 @@ reordered.Head(3)
 
 <!-- Polars DataFrame: (3 rows, 7 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>volume</th><th>open</th><th>high</th><th>low</th><th>close</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>1513937</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>1382722</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>1370204</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td></tr></tbody></table></div>
 
-#### Deedle — Reorder columns with Columns indexer
+#### Deedle | Reorder columns with Columns indexer
+
+The `.Columns[]` indexer preserves the order of the array you pass.
 
 ```csharp
-// Deedle — Columns indexer with ordered list reorders
 var reordered = dfD.Columns[new[] { "symbol", "date", "volume", "open", "high", "low", "close" }];
 display($"Column order: {string.Join(", ", reordered.ColumnKeys)}");
 reordered.Rows[Enumerable.Range(0, 3)]
@@ -790,37 +849,47 @@ reordered.Rows[Enumerable.Range(0, 3)]
 ---
 ## Row Filtering
 
-> [!info] C# DataFrame libraries are immutable
->
-> C# DataFrame libraries are immutable by design
-> Unlike Pandas (which supports dangerous in-place mutation), Polars.NET and Deedle
-> return new DataFrames from filter operations — eliminating the chained-indexing bugs
-> that plague Pandas pipelines. The trade-off is slightly higher memory usage for
-> intermediate results, but `.Lazy()` in Polars.NET defers execution to avoid this.
+Row filtering selects a subset of rows based on conditions. Polars.NET uses the expression API (`Col()`, `Lit()`, comparison operators) within `.Filter()`. Deedle uses `.Where()` with a row-level C# lambda.
 
-#### Polars.NET — Boolean filter with Filter and Col expressions
+> [!info] Polars.NET vs Deedle | Both are immutable
+>
+> Unlike Pandas (which supports dangerous in-place mutation), both Polars.NET and Deedle return new DataFrames from filter operations — eliminating the chained-indexing bugs that plague Pandas pipelines. The trade-off is slightly higher memory usage for intermediate results, but `.Lazy()` in Polars.NET defers execution to avoid this.
+
+> [!tip] Performance | Expressions vs lambdas
+>
+> Polars expressions (`Col("x") > Lit(500)`) are compiled into a vectorized query plan — the engine processes entire columns at once. Deedle's `.Where()` evaluates a C# lambda per row, which is significantly slower on large datasets. For 66K+ rows, expect Polars filtering to be 5-50x faster.
+
+### Boolean Filters
+
+#### Polars.NET | Boolean filter with expressions
+
+`.Filter()` accepts a boolean expression built from `Col()`, `Lit()`, and C# operator overloads (`>`, `<`, `==`, `!=`, `&`, `|`).
 
 ```csharp
-// Polars.NET — Filter with a boolean expression (uses C# operator overloads)
 var expensive = dfP.Filter(Col("close") > Lit(500.0));
 display($"Rows where close > 500: {expensive.Height}");
 expensive.Head(5)
 ```
 
-    Rows where close > 500: 6155
+```text
+Rows where close > 500: 6155
+```
 
 <!-- Polars DataFrame: (5 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>60763</td><td>ADYEN.AS</td><td>2021-01-04</td><td>1900</td><td>1921.5</td><td>1856</td><td>1859.5</td><td>1859.5</td><td>99408</td><td>0</td><td>0</td><td>false</td></tr><tr><td>60764</td><td>ADYEN.AS</td><td>2021-01-05</td><td>1848.5</td><td>1857</td><td>1814</td><td>1829</td><td>1829</td><td>86256</td><td>0</td><td>0</td><td>false</td></tr><tr><td>60765</td><td>ADYEN.AS</td><td>2021-01-06</td><td>1822</td><td>1824</td><td>1706.5</td><td>1733</td><td>1733</td><td>156844</td><td>0</td><td>0</td><td>false</td></tr><tr><td>60766</td><td>ADYEN.AS</td><td>2021-01-07</td><td>1735</td><td>1754</td><td>1708.5</td><td>1714.5</td><td>1714.5</td><td>90183</td><td>0</td><td>0</td><td>false</td></tr><tr><td>60767</td><td>ADYEN.AS</td><td>2021-01-08</td><td>1730</td><td>1764.5</td><td>1715</td><td>1756.5</td><td>1756.5</td><td>97176</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-#### Deedle — Boolean filter with Where and row lambda
+#### Deedle | Boolean filter with Where lambda
+
+`.Where()` accepts a lambda that receives each row as a `KeyValuePair`. Access column values with `row.Value.GetAs<T>("col")`.
 
 ```csharp
-// Deedle — Where uses a row-level lambda
 var expensive = dfD.Where(row => row.Value.GetAs<double>("close") > 500.0);
 display($"Rows where close > 500: {expensive.RowCount}");
 expensive.Rows[Enumerable.Range(0, 5)]
 ```
 
-    Rows where close > 500: 6155
+```text
+Rows where close > 500: 6155
+```
 
 <div>
 
@@ -836,10 +905,11 @@ expensive.Rows[Enumerable.Range(0, 5)]
 
 </div>
 
-#### Polars.NET — Compound filters with AND, OR, NOT
+#### Polars.NET | Compound filters with AND, OR, NOT
+
+Combine conditions with `&` (AND), `|` (OR), and `!=` (NOT). Wrap each condition in parentheses due to C# operator precedence.
 
 ```csharp
-// Polars.NET — AND / OR / NOT with C# operators
 var filtered = dfP.Filter(
     (Col("symbol") == Lit("ASML.AS")) & (Col("close") > Lit(600.0))
 );
@@ -859,18 +929,22 @@ var notFilter = dfP.Filter(
 display($"NOT ASML: {notFilter.Height} rows");
 ```
 
-    ASML AND close > 600: 840 rows
+```text
+ASML AND close > 600: 840 rows
+```
 
 <!-- Polars DataFrame: (3 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>136</td><td>ASML.AS</td><td>2021-07-14</td><td>599.5</td><td>611.8</td><td>597.2</td><td>609.1</td><td>582.9708</td><td>641585</td><td>0</td><td>0</td><td>false</td></tr><tr><td>142</td><td>ASML.AS</td><td>2021-07-22</td><td>610</td><td>625.9</td><td>608.2</td><td>620.8</td><td>594.169</td><td>788099</td><td>0</td><td>0</td><td>false</td></tr><tr><td>143</td><td>ASML.AS</td><td>2021-07-23</td><td>622.9</td><td>639</td><td>617.5</td><td>638.8</td><td>611.3967</td><td>833737</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-    ASML OR SAP: 2655 rows
+```text
+ASML OR SAP: 2655 rows
+NOT ASML: 65024 rows
+```
 
-    NOT ASML: 65024 rows
+#### Deedle | Compound filters with && || ! in Where lambda
 
-#### Deedle — Compound filters with && || ! in Where lambda
+Standard C# boolean operators work in the lambda.
 
 ```csharp
-// Deedle — AND / OR / NOT with standard C# operators
 var filtered = dfD.Where(row =>
     row.Value.GetAs<string>("symbol") == "ASML.AS" &&
     row.Value.GetAs<double>("close") > 600.0);
@@ -886,16 +960,19 @@ var notFilter = dfD.Where(row =>
 display($"NOT ASML: {notFilter.RowCount} rows");
 ```
 
-    ASML AND close > 600: 840 rows
+```text
+ASML AND close > 600: 840 rows
+ASML OR SAP: 2655 rows
+NOT ASML: 65024 rows
+```
 
-    ASML OR SAP: 2655 rows
+### Membership and Range Filters
 
-    NOT ASML: 65024 rows
+#### Polars.NET | Filter by membership with IsIn
 
-#### Polars.NET — Filter by membership with IsIn
+`.IsIn()` filters rows where the column value is in a given Series. Build the lookup list as a Polars Series.
 
 ```csharp
-// Polars.NET — IsIn filters rows where the column value is in a list
 var techTickers = Polars.CSharp.Series.From("tickers",
     new[] { "ASML.AS", "SAP.DE", "SIE.DE" });
 var techRows = dfP.Filter(Col("symbol").IsIn(Lit(techTickers)));
@@ -903,21 +980,26 @@ display($"Tech tickers: {techRows.Height} rows");
 techRows.Head(5)
 ```
 
-    Tech tickers: 3979 rows
+```text
+Tech tickers: 3979 rows
+```
 
 <!-- Polars DataFrame: (5 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>1</td><td>ASML.AS</td><td>2021-01-04</td><td>404</td><td>411</td><td>402.25</td><td>406.25</td><td>387.709</td><td>789502</td><td>0</td><td>0</td><td>false</td></tr><tr><td>2</td><td>ASML.AS</td><td>2021-01-05</td><td>406.55</td><td>412.05</td><td>401.15</td><td>406.9</td><td>388.3294</td><td>798787</td><td>0</td><td>0</td><td>false</td></tr><tr><td>3</td><td>ASML.AS</td><td>2021-01-06</td><td>406.8</td><td>407.2</td><td>399.2</td><td>402.85</td><td>384.4644</td><td>875711</td><td>0</td><td>0</td><td>false</td></tr><tr><td>4</td><td>ASML.AS</td><td>2021-01-07</td><td>404.8</td><td>407.8</td><td>400.35</td><td>403.9</td><td>385.4664</td><td>874780</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5</td><td>ASML.AS</td><td>2021-01-08</td><td>414.25</td><td>419.1</td><td>413.4</td><td>416.05</td><td>397.0618</td><td>975243</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-#### Deedle — Filter by membership with Contains in Where
+#### Deedle | Filter by membership with HashSet
+
+Use a `HashSet<string>` for O(1) lookup in the `.Where()` lambda.
 
 ```csharp
-// Deedle — manual IsIn using HashSet + Where
 var techSet = new HashSet<string> { "ASML.AS", "SAP.DE", "SIE.DE" };
 var techRows = dfD.Where(row => techSet.Contains(row.Value.GetAs<string>("symbol")));
 display($"Tech tickers: {techRows.RowCount} rows");
 techRows.Rows[Enumerable.Range(0, 5)]
 ```
 
-    Tech tickers: 3979 rows
+```text
+Tech tickers: 3979 rows
+```
 
 <div>
 
@@ -933,10 +1015,11 @@ techRows.Rows[Enumerable.Range(0, 5)]
 
 </div>
 
-#### Polars.NET — Range filter with IsBetween
+#### Polars.NET | Range filter with IsBetween
+
+`.IsBetween(lo, hi)` filters rows where the column value falls within the inclusive range.
 
 ```csharp
-// Polars.NET — IsBetween for range filtering
 var midRange = dfP.Filter(Col("close").IsBetween(Lit(100.0), Lit(200.0)));
 display($"Close between 100 and 200: {midRange.Height} rows");
 midRange.Head(5)
@@ -946,10 +1029,11 @@ midRange.Head(5)
 
 <!-- Polars DataFrame: (5 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>62387</td><td>ADS.DE</td><td>2022-03-04</td><td>196.5</td><td>197.64</td><td>187</td><td>187</td><td>180.5918</td><td>1319891</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62388</td><td>ADS.DE</td><td>2022-03-07</td><td>177.1</td><td>183.4</td><td>170.08</td><td>176.9</td><td>170.8379</td><td>2345656</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62389</td><td>ADS.DE</td><td>2022-03-08</td><td>172.18</td><td>187.06</td><td>172</td><td>184.94</td><td>178.6024</td><td>1937346</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62391</td><td>ADS.DE</td><td>2022-03-10</td><td>211.35</td><td>211.8</td><td>196.68</td><td>197.08</td><td>190.3264</td><td>1375129</td><td>0</td><td>0</td><td>false</td></tr><tr><td>62415</td><td>ADS.DE</td><td>2022-04-13</td><td>198.52</td><td>199.74</td><td>194.16</td><td>197.76</td><td>190.9831</td><td>755573</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-#### Deedle — Range filter with compound condition in Where
+#### Deedle | Range filter with compound condition
+
+Manual range check using `>=` and `<=` in the lambda.
 
 ```csharp
-// Deedle — manual range check
 var midRange = dfD.Where(row =>
 {
     var close = row.Value.GetAs<double>("close");
@@ -975,10 +1059,13 @@ midRange.Rows[Enumerable.Range(0, 5)]
 
 </div>
 
-#### Polars.NET — Null checks with IsNull and IsNotNull
+### Null and String Predicates
+
+#### Polars.NET | Null checks with IsNull and IsNotNull
+
+`.IsNull()` and `.IsNotNull()` filter rows based on null presence.
 
 ```csharp
-// Polars.NET — IsNull / IsNotNull expressions
 var withNulls = dfP.Filter(Col("volume").IsNull());
 display($"Rows with null volume: {withNulls.Height}");
 
@@ -990,10 +1077,11 @@ display($"Rows with non-null volume: {noNulls.Height}");
 
     Rows with non-null volume: 66355
 
-#### Deedle — Filter missing values with TryGet and HasValue
+#### Deedle | Filter missing values
+
+Deedle tracks missing values via `OptionalValue<T>`. Compute missing count as `RowCount - ValueCount`.
 
 ```csharp
-// Deedle — check for missing values
 var volCol = dfD["volume"];
 var missingCount = dfD.RowCount - volCol.ValueCount;
 display($"Rows with missing volume: {missingCount}");
@@ -1004,10 +1092,11 @@ display($"Rows with present volume: {volCol.ValueCount}");
 
     Rows with present volume: 66355
 
-#### Polars.NET — String predicates with Str.StartsWith and Str.Contains
+#### Polars.NET | String predicates with Str accessor
+
+Polars provides `.Str.EndsWith()`, `.Str.Contains()`, `.Str.StartsWith()` for string-column filtering. These operate on the entire column vectorially.
 
 ```csharp
-// Polars.NET — string predicates on the symbol column
 var parisStocks = dfP.Filter(Col("symbol").Str.EndsWith(".PA"));
 display($"Paris-listed (.PA): {parisStocks.Height} rows");
 display(parisStocks.Select("symbol").Unique());
@@ -1025,10 +1114,11 @@ containsB.Select("symbol").Unique()
 
 <!-- Polars DataFrame: (2 rows, 1 columns) --><table><thead><tr><th>symbol</th></tr></thead><tbody><tr><td>BN.PA</td></tr><tr><td>BNP.PA</td></tr></tbody></table></div>
 
-#### Deedle — String predicates via lambda in Where
+#### Deedle | String predicates via lambda
+
+Use standard .NET string methods (`.EndsWith()`, `.Contains()`) inside the `.Where()` lambda.
 
 ```csharp
-// Deedle — string predicates via lambda
 var parisStocks = dfD.Where(row => row.Value.GetAs<string>("symbol").EndsWith(".PA"));
 display($"Paris-listed (.PA): {parisStocks.RowCount} rows");
 display(string.Join(", ", parisStocks.GetColumn<string>("symbol").Values.Distinct()));
@@ -1046,11 +1136,13 @@ display(string.Join(", ", containsB.GetColumn<string>("symbol").Values.Distinct(
 
     BN.PA, BNP.PA
 
-#### Polars.NET — Date predicates with Dt accessor for year and range
+### Date Predicates
+
+#### Polars.NET | Date predicates with Dt accessor
+
+The `.Dt` accessor provides `.Year()`, `.Month()`, `.Day()` for extracting date components. Combine with comparison operators for date range filtering.
 
 ```csharp
-// Polars.NET — date predicates
-// Filter for year 2023
 var year2023 = dfP.Filter(Col("date").Dt.Year() == Lit(2023));
 display($"Year 2023: {year2023.Height} rows");
 
@@ -1069,10 +1161,11 @@ dateRange.Head(5)
 
 <!-- Polars DataFrame: (5 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21930</td><td>ABI.BR</td><td>2024-01-02</td><td>58.72</td><td>58.95</td><td>58.17</td><td>58.77</td><td>56.7582</td><td>1049145</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21931</td><td>ABI.BR</td><td>2024-01-03</td><td>58.64</td><td>59.34</td><td>58.24</td><td>58.37</td><td>56.3719</td><td>1247000</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21932</td><td>ABI.BR</td><td>2024-01-04</td><td>58.36</td><td>58.92</td><td>58.3</td><td>58.81</td><td>56.7968</td><td>1009526</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21933</td><td>ABI.BR</td><td>2024-01-05</td><td>58.26</td><td>58.91</td><td>58.16</td><td>58.86</td><td>56.8451</td><td>1236000</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21934</td><td>ABI.BR</td><td>2024-01-08</td><td>58.47</td><td>59.5</td><td>58.39</td><td>59.38</td><td>57.3473</td><td>1033238</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-#### Deedle — Date predicates via parsing and comparison in Where
+#### Deedle | Date predicates via DateTime.Parse in lambda
+
+Deedle reads dates as strings from CSV. Parse with `DateTime.Parse()` inside the lambda and compare with standard operators.
 
 ```csharp
-// Deedle — date predicates (date column is a string; parse in lambda)
 var year2023 = dfD.Where(row =>
     DateTime.Parse(row.Value.GetAs<string>("date")).Year == 2023);
 display($"Year 2023: {year2023.RowCount} rows");
@@ -1107,10 +1200,15 @@ dateRange.Rows[Enumerable.Range(0, 5)]
 ---
 ## Row Access & Slicing
 
-#### Polars.NET — Access a single row by position with Head/Slice
+Access individual rows by position or extract row ranges. Polars.NET uses `.Slice(offset, length)` for ranges and `.GetValue<T>(index)` for individual cell values. Deedle uses the `.Rows[]` indexer.
+
+### Single Row Access
+
+#### Polars.NET | Access a single row by position
+
+`.Slice(0, 1)` returns a one-row DataFrame. Extract individual cell values with `.Column("col").GetValue<T>(index)`.
 
 ```csharp
-// Polars.NET — single row access (row 0)
 display("Row 0:");
 display(dfP.Slice(0, 1));
 
@@ -1127,10 +1225,11 @@ display($"Row 0, close:  {dfP.Column("close").GetValue<double>(0)}");
 
     Row 0, close:  57.21
 
-#### Deedle — Access a single row by position with GetRowAt
+#### Deedle | Access a single row by position
+
+Use `.Rows[new[] { index }]` for a one-row Frame, or `.Rows[index]` for an `ObjectSeries` of that row's values.
 
 ```csharp
-// Deedle — single row access
 display("Row 0:");
 var row0 = dfD.Rows[new[] { 0 }];
 display(row0);
@@ -1161,10 +1260,13 @@ display($"Row 0, close:  {firstRow.GetAs<double>("close")}");
 
     Row 0, close:  57.21
 
-#### Polars.NET — Row Slicing: select a range of rows with Slice(offset, length)
+### Row Slicing
+
+#### Polars.NET | Select a range of rows with Slice
+
+`.Slice(offset, length)` returns a contiguous range of rows by position.
 
 ```csharp
-// Polars.NET — Slice(offset, length)
 display("Rows 100..104:");
 dfP.Slice(100, 5)
 ```
@@ -1173,10 +1275,11 @@ dfP.Slice(100, 5)
 
 <!-- Polars DataFrame: (5 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21260</td><td>ABI.BR</td><td>2021-05-26</td><td>61.99</td><td>62.39</td><td>61.83</td><td>62.12</td><td>58.6701</td><td>940186</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21261</td><td>ABI.BR</td><td>2021-05-27</td><td>61.8</td><td>62.64</td><td>61.73</td><td>62.13</td><td>58.6795</td><td>1796477</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21262</td><td>ABI.BR</td><td>2021-05-28</td><td>62.14</td><td>62.58</td><td>61.96</td><td>62.34</td><td>58.8779</td><td>1004125</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21263</td><td>ABI.BR</td><td>2021-05-31</td><td>62.27</td><td>62.31</td><td>61.51</td><td>61.56</td><td>58.1412</td><td>851557</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21264</td><td>ABI.BR</td><td>2021-06-01</td><td>62.35</td><td>62.48</td><td>61.98</td><td>62.38</td><td>58.9157</td><td>1171646</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-#### Deedle — Slice a range of rows with GetRowsAt
+#### Deedle | Slice a range of rows
+
+Use `Enumerable.Range(offset, length)` with the `.Rows[]` indexer.
 
 ```csharp
-// Deedle — GetRowsAt with index range
 display("Rows 100..104:");
 dfD.Rows[Enumerable.Range(100, 5)]
 ```
@@ -1197,10 +1300,13 @@ dfD.Rows[Enumerable.Range(100, 5)]
 
 </div>
 
-#### Polars.NET — Sort rows with Sort
+### Sorting
+
+#### Polars.NET | Sort rows
+
+`.Sort("col", descending: true)` sorts by a single column. For multi-column sort, chain `.Sort()` calls — the last sort is the primary key.
 
 ```csharp
-// Polars.NET — Sort ascending and descending
 display("Top 5 by close (descending):");
 display(dfP.Sort("close", descending: true).Head(5));
 
@@ -1217,10 +1323,11 @@ dfP.Sort("close", descending: true).Sort("symbol").Head(5)
 
 <!-- Polars DataFrame: (5 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>22481</td><td>ABI.BR</td><td>2026-02-27</td><td>67.34</td><td>68.82</td><td>67.24</td><td>68.82</td><td>68.82</td><td>3482764</td><td>0</td><td>0</td><td>false</td></tr><tr><td>22470</td><td>ABI.BR</td><td>2026-02-12</td><td>65.9</td><td>68.64</td><td>65.52</td><td>68.54</td><td>68.54</td><td>3484641</td><td>0</td><td>0</td><td>false</td></tr><tr><td>22478</td><td>ABI.BR</td><td>2026-02-24</td><td>67.8</td><td>68.32</td><td>67.58</td><td>68.3</td><td>68.3</td><td>1936847</td><td>0</td><td>0</td><td>false</td></tr><tr><td>22477</td><td>ABI.BR</td><td>2026-02-23</td><td>66.52</td><td>67.76</td><td>66.5</td><td>67.76</td><td>67.76</td><td>2207904</td><td>0</td><td>0</td><td>false</td></tr><tr><td>22471</td><td>ABI.BR</td><td>2026-02-13</td><td>67.5</td><td>67.88</td><td>66.58</td><td>67.68</td><td>67.68</td><td>2951731</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-#### Deedle — Sort rows with SortRowsBy
+#### Deedle | Sort rows
+
+Deedle has no direct `.Sort()` on Frame. Sort by extracting the column as observations, ordering via LINQ, and selecting rows by the sorted keys.
 
 ```csharp
-// Deedle — sort by column value (descending)
 display("Top 5 by close (descending):");
 var sorted = dfD.GetColumn<double>("close")
     .Observations
@@ -1246,10 +1353,13 @@ dfD.Rows[sorted]
 
 </div>
 
-#### Polars.NET — Deduplicate rows with Unique
+### Deduplication
+
+#### Polars.NET | Deduplicate rows with Unique
+
+`.Unique(subset: columns)` keeps one row per distinct combination of the specified columns.
 
 ```csharp
-// Polars.NET — Unique() deduplicates based on subset of columns
 var uniqueSymbols = dfP.Unique(subset: new[] { "symbol" });
 display($"Unique symbols: {uniqueSymbols.Height} (from {dfP.Height} total rows)");
 uniqueSymbols.Select("symbol").Head(10)
@@ -1259,10 +1369,11 @@ uniqueSymbols.Select("symbol").Head(10)
 
 <!-- Polars DataFrame: (10 rows, 1 columns) --><table><thead><tr><th>symbol</th></tr></thead><tbody><tr><td>ABI.BR</td></tr><tr><td>AD.AS</td></tr><tr><td>ADS.DE</td></tr><tr><td>ADYEN.AS</td></tr><tr><td>AI.PA</td></tr><tr><td>AIR.PA</td></tr><tr><td>ALV.DE</td></tr><tr><td>ARGX.BR</td></tr><tr><td>ASML.AS</td></tr><tr><td>BAS.DE</td></tr></tbody></table></div>
 
-#### Deedle — Deduplicate rows with GroupBy and FirstValue
+#### Deedle | Deduplicate via Distinct
+
+Use `.Values.Distinct()` (LINQ) on the column to count unique values. For full-row dedup, group by the key column and take the first row from each group.
 
 ```csharp
-// Deedle — unique values by column
 var uniqueSymbols = dfD.GetColumn<string>("symbol").Values.Distinct().Count();
 display($"Unique symbols: {uniqueSymbols} (from {dfD.RowCount} total rows)");
 ```

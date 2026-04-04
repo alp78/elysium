@@ -59,6 +59,8 @@ html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 
 ## Read, Write, Append Files
 
+Python's built-in `open()` function handles all file I/O with mode strings controlling the operation. Always use `with` statements for automatic resource cleanup and pass `encoding='utf-8'` explicitly — the default varies by OS (Windows uses cp1252, not UTF-8).
+
 > [!info] File modes
 >
 > - `'r'` — read (default) | `'w'` — write (truncates!) | `'a'` — append | `'x'` — exclusive create
@@ -66,34 +68,36 @@ html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 > - Always specify `encoding='utf-8'` — the default varies by OS (Windows uses cp1252)
 > - Use `pathlib.Path` for modern path handling (preferred over `os.path`)
 
-> [!warning] Always use with for file operations
->
-> - `open()` without `with` leaks file handles if an exception occurs
-> - `'w'` mode truncates existing files immediately — no undo
-> - Omitting `encoding=` causes platform-dependent behavior
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    O["open(path, mode)"] --> R["'r' — read\n(default)"]
+    O --> W["'w' — write\n(truncates!)"]
+    O --> A["'a' — append\n(safe add)"]
+    O --> X["'x' — exclusive\n(fail if exists)"]
+    O --> B["add 'b' for binary\n'rb' / 'wb'"]
+    W -.- |"⚠ destroys existing"| W
+    X -.- |"✓ prevents overwrite"| X
+```
 
-> [!success] Always open files with with and explicit encoding
->
-> Use `with open(path, "r", encoding="utf-8") as f:` for all text files. The `with` block guarantees the file handle is closed on both success and exception. Specifying `encoding="utf-8"` makes behavior identical across Windows, Linux, and macOS.
-
-> [!danger] Omitting encoding= causes platform-dependent behavior
->
-> On Windows, `open()` defaults to `cp1252` (not UTF-8). A file written on Linux (UTF-8) and read on Windows (cp1252) silently corrupts non-ASCII characters like accented names, currency symbols, and emoji. Always pass `encoding='utf-8'` explicitly.
-
-> [!success] Pass encoding='utf-8' on every open() call
->
-> Treat `encoding='utf-8'` as a required argument, not an optional one. Set it as a team convention or lint rule (`flake8-bugbear B019`). For source files that must be portable, use `pathlib.Path.read_text(encoding="utf-8")` which enforces the encoding at the call site.
-
-> [!warning] Windows newline translation silently corrupts
->
-> Windows newline translation silently corrupts binary-like text
-> Python's text mode translates `\n` to `\r\n` on Windows. For CSV files, this causes double-newlines (blank rows) unless you pass `newline=""` to `open()`. For binary formats (Parquet, Avro, images), always use `'rb'`/`'wb'` mode.
-
-> [!success] Pass newline='' for CSV, use binary mode for all other formats
->
-> For CSV: `open(path, "w", newline="", encoding="utf-8")` — the `csv` module handles its own newlines. For Parquet, Avro, images, and compressed files: `open(path, "wb")` — no encoding argument, no newline translation.
+### Temporary directories
 
 #### tempfile.mkdtemp — create isolated temp directory
+
+`tempfile.mkdtemp` creates a unique temporary directory for file demos and intermediate pipeline outputs. The directory persists until explicitly deleted — use `shutil.rmtree()` for cleanup.
+
+
 
 ```python
 # Temp directory — isolated workspace for file demos
@@ -104,25 +108,13 @@ f"Working dir: {tmp_dir}\n"
 
     C:\Users\aperi\AppData\Local\Temp\fileio_yk2nuyou
 
+### Writing and reading files
+
 #### open() mode 'w' — write file (creates new or truncates existing)
 
-```python
-# Write file — mode 'w' creates new or truncates existing
+`open(path, "w")` creates a new file or truncates an existing one to zero length. `f.write()` writes a string to the file — it does NOT add a newline automatically, so you must include `\n` yourself. The `Path / operator` joins path segments (equivalent to `os.path.join`).
 
-# Data Engineering scenario: write pipeline output to a staging file
-staging_file = tmp_dir / "pipeline_output.txt"  # Path / operator joins paths (like os.path.join)
-
-with open(staging_file, "w", encoding="utf-8") as f:
-    f.write("pipeline_id|status|rows_processed\n")  # header
-    f.write("etl_001|success|15000\n")
-    f.write("etl_002|failed|0\n")
-    f.write("etl_003|success|8200\n")
-
-staging_file  # Written
-f"{staging_file.stat().st_size} bytes"  # Size — .stat() returns file metadata
-```
-
-> [!warning] Write Mode Overwrites Silently
+> [!warning] Write mode overwrites silently
 >
 > `'w'` mode destroys existing content without warning. `f.write()` does NOT add a newline — you must add `\n` yourself.
 
@@ -130,22 +122,41 @@ f"{staging_file.stat().st_size} bytes"  # Size — .stat() returns file metadata
 >
 > To prevent accidental overwrites of important output files, use `open(path, "x")` (exclusive create — fails if the file exists) or check `Path(path).exists()` first. For log/audit files that must be preserved, always use append mode `"a"` instead of `"w"`.
 
+```python
+staging_file = tmp_dir / "pipeline_output.txt"
+
+with open(staging_file, "w", encoding="utf-8") as f:
+    f.write("pipeline_id|status|rows_processed\n")  # header
+    f.write("etl_001|success|15000\n")
+    f.write("etl_002|failed|0\n")
+    f.write("etl_003|success|8200\n")
+
+staging_file
+f"{staging_file.stat().st_size} bytes"
+```
+
     C:\Users\aperi\AppData\Local\Temp\fileio_yk2nuyou\pipeline_output.txt
     98 bytes
 
 #### open() mode 'r' — read entire file
 
-```python
-# Read entire file — mode 'r' loads all content into a string
+`open(path, "r")` opens a file for reading (the default mode). `f.read()` returns the entire file as one string. `Path.read_text(encoding="utf-8")` is a one-liner shorthand that opens, reads, and closes automatically.
 
-# Method 1: read() — returns the entire file as one string
+> [!danger] Omitting encoding= causes platform-dependent behavior
+>
+> On Windows, `open()` defaults to `cp1252` (not UTF-8). A file written on Linux (UTF-8) and read on Windows (cp1252) silently corrupts non-ASCII characters like accented names, currency symbols, and emoji. Always pass `encoding='utf-8'` explicitly.
+
+> [!success] Pass encoding='utf-8' on every open() call
+>
+> Treat `encoding='utf-8'` as a required argument, not an optional one. Set it as a team convention or lint rule (`flake8-bugbear B019`). For source files that must be portable, use `pathlib.Path.read_text(encoding="utf-8")` which enforces the encoding at the call site.
+
+```python
 with open(staging_file, "r", encoding="utf-8") as f:
-    content = f.read()  # read everything into memory at once
+    content = f.read()
 f"read(): {repr(content[:60])}..."
 
-# Method 2: Path.read_text() — one-liner, opens/reads/closes automatically
-content = staging_file.read_text(encoding="utf-8")  # pathlib shorthand
-f"{len(content)} chars"  # Path.read_text()
+content = staging_file.read_text(encoding="utf-8")
+f"{len(content)} chars"
 ```
 
     'pipeline_id|status|rows_processed\netl_001|success|15000\netl_'...
@@ -153,15 +164,11 @@ f"{len(content)} chars"  # Path.read_text()
 
 #### open() line-by-line iteration — memory efficient for large files
 
+For large files (multi-GB data lake exports), don't load everything into memory. A file object is an iterator — `for line in f` yields one line at a time, using almost no memory regardless of file size. Each line includes the trailing `\n` — call `.rstrip()` to remove it.
+
 ```python
-# Read line by line — memory efficient for large files
-
-# For large files (multi-GB data lake exports), don't read all into memory.
-# Iterating the file object yields one line at a time — uses almost no memory.
-
 with open(staging_file, "r", encoding="utf-8") as f:
-    for i, line in enumerate(f):  # f is an iterator — yields one line at a time
-        # line includes the trailing \n — strip it
+    for i, line in enumerate(f):
         print(f"  Line {i}: {line.rstrip()}")
 ```
 
@@ -170,21 +177,19 @@ with open(staging_file, "r", encoding="utf-8") as f:
       Line 2: etl_002|failed|0
       Line 3: etl_003|success|8200
 
-#### readlines() vs readline()
+#### readlines() vs readline() | bulk vs single-line reading
+
+`readlines()` reads ALL lines into a `list[str]` at once — like `read()` but pre-split by `\n`. `readline()` reads ONE line per call, advancing the file position — use for manual control when you need to process the header separately from data rows.
 
 ```python
-# readlines() vs readline() — bulk vs single-line reading
-
 with open(staging_file, "r", encoding="utf-8") as f:
-    # readlines() reads ALL lines into a list at once (like read() but split by \n)
     all_lines = f.readlines()
     print(f"  readlines() → list of {len(all_lines)} strings")
     print(f"  First: {all_lines[0].rstrip()!r}")
 
 with open(staging_file, "r", encoding="utf-8") as f:
-    # readline() reads ONE line at a time (manual control)
-    first = f.readline()     # reads line 1
-    second = f.readline()    # reads line 2
+    first = f.readline()
+    second = f.readline()
     print(f"  readline() #1: {first.rstrip()!r}")
     print(f"  readline() #2: {second.rstrip()!r}")
 ```
@@ -194,16 +199,14 @@ with open(staging_file, "r", encoding="utf-8") as f:
       readline() #1: 'pipeline_id|status|rows_processed'
       readline() #2: 'etl_001|success|15000'
 
+### Append, exclusive create, and binary mode
+
 #### open() mode 'a' — append to end, never truncates
 
+`'a'` mode positions the cursor at the end of the file. Creates the file if it doesn't exist. Does NOT truncate — safe to call repeatedly for log files, audit trails, and incremental pipeline outputs.
+
 ```python
-# Append — mode 'a' adds to end, never truncates
-
-# Data Engineering scenario: append new pipeline results to the log
-
 with open(staging_file, "a", encoding="utf-8") as f:
-    # 'a' mode: positions cursor at end of file. Creates file if it doesn't exist.
-    # Does NOT truncate — safe to call repeatedly.
     f.write("etl_004|success|22000\n")
     f.write("etl_005|success|3100\n")
 
@@ -218,11 +221,9 @@ lines[-1]!r  # Last line
 
 #### open() mode 'x' — exclusive create, fail if file exists
 
+`'x'` mode creates the file only if it does not already exist — raises `FileExistsError` on collision. Use for ensuring unique output files where accidental overwrites would be destructive.
+
 ```python
-# Exclusive create — mode 'x' fails if file already exists
-
-# Prevents accidental overwrites — useful for ensuring unique output files
-
 new_file = tmp_dir / "unique_output.txt"
 with open(new_file, "x", encoding="utf-8") as f:
     f.write("This file was created exclusively.\n")
@@ -240,12 +241,9 @@ except FileExistsError:
 
 #### open() binary mode 'rb' / 'wb' — read and write bytes
 
+Binary mode works with `bytes` objects instead of strings. No `encoding` parameter — you work with raw bytes. Use for images, Parquet files, Protobuf, Avro, and compressed archives.
+
 ```python
-# Binary mode — 'rb' / 'wb' for non-text data
-
-# Use binary mode for: images, parquet files, protobuf, avro, compressed archives.
-# No encoding parameter — you work with bytes, not strings.
-
 bin_file = tmp_dir / "sample.bin"
 data = bytes([0x89, 0x50, 0x4E, 0x47])  # PNG magic bytes (header signature)
 
@@ -259,13 +257,13 @@ with open(bin_file, "rb") as f:     # 'rb' = read binary
 
     <class 'bytes'>, Content: 89504e47
 
-#### pathlib — modern file path operations
+### pathlib — modern path operations
+
+#### pathlib.Path | modern replacement for os.path
+
+`pathlib.Path` is the modern, object-oriented replacement for `os.path.join`, `os.path.exists`, etc. The `/` operator joins path segments. `.name`, `.stem`, `.suffix`, `.parent` extract path components. `.mkdir(exist_ok=True)` is equivalent to `mkdir -p`. `.glob("*")` finds files matching a pattern.
 
 ```python
-# pathlib — modern file path operations replacing os.path
-
-# pathlib.Path is the modern replacement for os.path.join, os.path.exists, etc.
-
 p = Path("/data/lake/raw/events/2024/01/events.parquet")
 p.name  # name — 'events.parquet' — filename with extension
 p.stem  # stem — 'events' — filename without extension
@@ -307,6 +305,14 @@ for f in sorted(tmp_dir.glob("*")):  # glob("*") = all files/dirs in tmp_dir
 
 The `csv` module handles quoting, escaping, and delimiters automatically. `csv.reader`/`csv.writer` work with list-based rows; `csv.DictReader`/`csv.DictWriter` use dict-based rows with named columns — preferred in data engineering since you access columns by name, not index.
 
+> [!warning] Windows newline translation silently corrupts CSV
+>
+> Python's text mode translates `\n` to `\r\n` on Windows. For CSV files, this causes double-newlines (blank rows) unless you pass `newline=""` to `open()`. For binary formats (Parquet, Avro, images), always use `'rb'`/`'wb'` mode.
+
+> [!success] Pass newline='' for CSV, use binary mode for all other formats
+>
+> For CSV: `open(path, "w", newline="", encoding="utf-8")` — the `csv` module handles its own newlines. For Parquet, Avro, images, and compressed files: `open(path, "wb")` — no encoding argument, no newline translation.
+
 > [!warning] CSV pitfalls
 >
 > - **Never use `split(',')`** — breaks on quoted commas. Always use the `csv` module.
@@ -317,13 +323,13 @@ The `csv` module handles quoting, escaping, and delimiters automatically. `csv.r
 >
 > `csv.DictReader` accesses columns by name, so column reordering never breaks the code. Always open CSV files with `newline=""` on Windows to prevent the csv module from adding extra blank lines. For files over 100 MB, switch to `polars.read_csv()` for 5-10x faster parsing.
 
+### csv.writer and csv.reader — list-based rows
+
 #### csv.writer — write CSV rows as lists
 
+`csv.writer` writes rows as lists of values. `writerow()` writes a single row; `writerows()` writes multiple rows at once. The writer handles quoting automatically — values containing commas are wrapped in double quotes per RFC 4180.
+
 ```python
-# csv.writer — write CSV rows as lists
-
-# Data Engineering scenario: export pipeline results to CSV for downstream consumers
-
 tmp_dir = Path(tempfile.mkdtemp(prefix="csv_"))
 csv_file = tmp_dir / "pipeline_runs.csv"
 
@@ -354,14 +360,14 @@ f"Content:\n{csv_file.read_text(encoding='utf-8')}"
     etl_004,success,22000,4.1
     etl_005,success,3100,0.8
 
-#### csv.reader — read CSV rows as lists
+#### csv.reader — read CSV rows as lists of strings
+
+`csv.reader` returns an iterator of lists — each row is a `list[str]`. All values are strings; you must cast manually (`int(row[2])`, `float(row[3])`). Use `next(reader)` to consume the header row before iterating data rows.
 
 ```python
-# csv.reader — read CSV rows as lists of strings
-
 with open(csv_file, "r", encoding="utf-8") as f:
-    reader = csv.reader(f)            # returns an iterator of lists
-    header = next(reader)             # first row = header; next() advances the iterator
+    reader = csv.reader(f)
+    header = next(reader)
     print(f"  Header: {header}")
     for row in reader:                # remaining rows = data
         # row is a list of strings: ['etl_001', 'success', '15000', '2.3']
@@ -377,17 +383,16 @@ with open(csv_file, "r", encoding="utf-8") as f:
       etl_004: success, 22,000 rows, 4.1s
       etl_005: success, 3,100 rows, 0.8s
 
+### csv.DictReader and csv.DictWriter — dict-based rows
+
 #### csv.DictReader — read rows as dictionaries (preferred in DE)
 
+`csv.DictReader` uses the first row as dictionary keys. Each subsequent row becomes a `dict` with named columns — access columns by name (`row["status"]`) instead of fragile positional indexing (`row[2]`). Preferred over `csv.reader` in data engineering because column reordering never breaks the code.
+
 ```python
-# csv.DictReader — read rows as dictionaries with named columns
-
-# DictReader uses the first row as keys. Each subsequent row is an OrderedDict.
-# Access columns by name — safer and more readable than row[2].
-
 with open(csv_file, "r", encoding="utf-8") as f:
-    reader = csv.DictReader(f)        # auto-reads first row as fieldnames
-    print(f"  Columns: {reader.fieldnames}")  # list of column names from header
+    reader = csv.DictReader(f)
+    print(f"  Columns: {reader.fieldnames}")
     for row in reader:
         # row is a dict: {'pipeline_id': 'etl_001', 'status': 'success', ...}
         if row["status"] == "failed":
@@ -405,11 +410,9 @@ with open(csv_file, "r", encoding="utf-8") as f:
 
 #### csv.DictWriter — write rows from dictionaries
 
+`csv.DictWriter` writes rows from dictionaries. Pass the `fieldnames` list to define column order. `writeheader()` writes the header row; `writerows()` writes all data dicts at once. Use for constructing output CSV from transformed records.
+
 ```python
-# csv.DictWriter — write rows from dictionaries
-
-# Data Engineering scenario: transform and write enriched records
-
 enriched_file = tmp_dir / "enriched_runs.csv"
 fieldnames = ["pipeline_id", "status", "rows_processed", "cost_usd"]
 
@@ -435,12 +438,13 @@ f"Content:\n{enriched_file.read_text(encoding='utf-8')}"
     etl_002,failed,0,0.01
     etl_003,success,8200,0.25
 
+### Delimiters, quoting, and in-memory CSV
+
 #### csv.reader delimiter parameter — pipe-delimited, tab-delimited
 
-```python
-# Custom delimiters — pipe-delimited and tab-delimited formats
+Pass `delimiter="|"` or `delimiter="\t"` to `csv.reader` to handle pipe-delimited and tab-delimited (TSV) files. `StringIO` wraps an in-memory string as a file-like object — useful for parsing CSV data received from an API or embedded in a variable.
 
-# Pipe-delimited (common in legacy data warehouses)
+```python
 pipe_data = "id|name|region\n1|Alice|EMEA\n2|Bob|APAC"
 reader = csv.reader(StringIO(pipe_data), delimiter="|")  # StringIO = in-memory file
 for row in reader:
@@ -462,11 +466,9 @@ for row in reader:
 
 #### csv module — quoting, embedded commas, newlines in fields
 
+The `csv` module handles RFC 4180 edge cases automatically: values containing commas are quoted, embedded quotes are escaped by doubling (`""`), and newlines within fields are preserved. Never use `str.split(",")` for CSV — it breaks on all of these cases.
+
 ```python
-# CSV edge cases — quoting, embedded commas, and newlines in fields
-
-# csv module handles these automatically — no manual splitting needed
-
 tricky_data = '''name,address,note
 "Smith, John","123 Main St, Apt 4","has a comma"
 "O'Brien","456 Oak ""Ave""","has quotes"'''
@@ -481,12 +483,9 @@ for row in reader:
 
 #### StringIO — CSV in memory (no disk I/O)
 
+`StringIO` is an in-memory text buffer that behaves like an open file. Use it to build CSV payloads for API calls or cloud uploads without writing to disk. Call `.getvalue()` to retrieve the complete string.
+
 ```python
-# StringIO — CSV in memory without disk I/O
-
-# Data Engineering scenario: build CSV payload for an API call or S3 upload
-# without writing to disk first.
-
 output = StringIO()                            # in-memory text buffer
 writer = csv.writer(output)
 writer.writerow(["event_id", "event_type", "timestamp"])
@@ -506,6 +505,10 @@ f"{csv_string.strip()}"
 
 ## JSON
 
+Python's built-in `json` module handles serialization (`dumps`/`dump`) and deserialization (`loads`/`load`). The `s` suffix means string — `dumps` returns a string, `dump` writes to a file. For types not natively serializable (`datetime`, `Decimal`, `set`), provide a `default=` handler. For high-throughput pipelines, use `orjson` (covered below) for 3–10x speed.
+
+### json module — dumps, loads, dump, load
+
 #### json.dumps — dict → JSON string
 
 > [!info] JSON serialization
@@ -516,9 +519,6 @@ f"{csv_string.strip()}"
 
 ```python
 tmp_dir = Path(tempfile.mkdtemp(prefix="json_yaml_"))
-
-# json.dumps — dict → JSON string
-# Data Engineering scenario: build a pipeline metadata payload
 
 pipeline_meta = {
     "pipeline_id": "etl_events_daily",
@@ -569,11 +569,9 @@ json_str
 
 #### json.loads — JSON string → dict
 
+`json.loads` parses a JSON string into Python objects: `{}` → `dict`, `[]` → `list`, `true`/`false` → `True`/`False`, `null` → `None`, numbers → `int` or `float`.
+
 ```python
-# json.loads — parse JSON string to dict
-
-# Data Engineering scenario: parse an API response or Kafka message
-
 api_response = '''
 {
     "status": "completed",
@@ -602,9 +600,9 @@ data['statistics']['cache_hit']  # Cache hit — Python bool
 
 #### json.dump / json.load — write/read JSON files
 
-```python
-# json.dump / json.load — write and read JSON files
+`json.dump` (no `s`) writes directly to a file object. `json.load` (no `s`) reads from a file object. Both require an open file handle — use with `with open(...)`.
 
+```python
 json_file = tmp_dir / "pipeline_config.json"
 
 # Write dict → JSON file
@@ -623,6 +621,8 @@ f"Source: {loaded['source']['dataset']}.{loaded['source']['table']}"
     pipeline_config.json (421 bytes)
     etl_events_daily
     raw_events.clickstream
+
+### Custom serialization and JSONL
 
 #### json.dumps default parameter — serialize datetime, Decimal, custom objects
 
@@ -650,9 +650,9 @@ def json_serializer(obj):
 
 #### json.dumps with default= — apply custom serializer
 
-```python
-# default= is called for any object json can't serialize natively
+The `default=` function is called for any object the encoder can't handle natively. It receives the unserializable object and must return a JSON-compatible value. Use `default=str` as a quick fallback that converts everything to strings.
 
+```python
 pipeline_run = {
     "pipeline_id": "etl_events_daily",
     "started_at": datetime(2024, 1, 15, 3, 0, 0),
@@ -677,15 +677,9 @@ json_str
 
 #### JSON Lines (JSONL) — one JSON object per line
 
+JSONL is the standard format for BigQuery exports/imports, Kafka messages, and streaming data pipelines. Each line is a complete, valid JSON object — no surrounding array, no commas between lines. Write with one `json.dumps` per line (no indent). Read with one `json.loads` per line.
+
 ```python
-# JSON Lines (JSONL) — one JSON object per line for streaming
-
-# JSONL is the standard format for:
-# - BigQuery exports / imports
-# - Kafka messages (one event per line)
-# - Streaming data pipelines
-# Each line is a complete, valid JSON object. No surrounding array, no commas between lines.
-
 events = [
     {"event_id": "evt_001", "type": "page_view", "user_id": 1001, "ts": "2024-01-15T10:30:00Z"},
     {"event_id": "evt_002", "type": "purchase",  "user_id": 1002, "ts": "2024-01-15T10:31:00Z"},
@@ -711,6 +705,10 @@ with open(jsonl_file, "r", encoding="utf-8") as f:
       evt_003: logout by user 1001
 
 ## YAML
+
+YAML is the standard configuration format for dbt, Airflow, Kubernetes, and Docker Compose. Python parses YAML with the `pyyaml` package (`pip install pyyaml`). Always use `yaml.safe_load()` — never `yaml.load()` without `SafeLoader`, as it can execute arbitrary code.
+
+### yaml.safe_load and yaml.dump
 
 #### yaml.safe_load — YAML string → dict
 
@@ -777,11 +775,9 @@ config['tags']  # Tags
 
 #### yaml.dump — dict → YAML string
 
+`yaml.dump` serializes a Python dict to a YAML string. Pass `default_flow_style=False` for block style (readable indented format) and `sort_keys=False` to preserve insertion order.
+
 ```python
-# yaml.dump — serialize dict to YAML string
-
-# Data Engineering scenario: generate a config file programmatically
-
 new_config = {
     "pipeline": {
         "name": "etl_purchases_hourly",
@@ -810,9 +806,9 @@ yaml_str
 
 #### yaml.safe_load / yaml.dump — read and write YAML files
 
-```python
-# YAML file I/O — read and write YAML files
+Combine `yaml.dump` with `open()` to write YAML files, and `yaml.safe_load` with `open()` to read them back. Always use `safe_load` (not `load`) for parsing.
 
+```python
 yaml_file = tmp_dir / "pipeline_config.yaml"
 
 # Write
@@ -829,13 +825,13 @@ loaded_config['pipeline']['name']  # Loaded
     pipeline_config.yaml
     etl_purchases_hourly
 
+### Multi-document YAML and comparison
+
 #### Multi-document YAML (--- separator)
 
+Some tools (Kubernetes manifests, dbt model configs) use multiple YAML documents in a single file, separated by `---`. `yaml.safe_load_all` returns a generator yielding one dict per document — iterate to process each.
+
 ```python
-# Multi-document YAML — multiple documents in one file separated by ---
-
-# Some tools (dbt, K8s) use multiple YAML documents in one file, separated by '---'
-
 multi_doc = """
 ---
 name: staging_events
@@ -856,11 +852,9 @@ for doc in docs:
     staging_events (view)
     mart_daily_events (table)
 
-#### JSON vs YAML comparison
+#### JSON vs YAML comparison | when to use each format
 
 ```python
-# JSON vs YAML comparison — when to use each format
-
 print("""
 Feature           JSON                    YAML
 ─────────────────────────────────────────────────────
@@ -892,24 +886,12 @@ Multi-document    No                      Yes (--- separator)
 
 For an architecture-level comparison of when to choose JSON, CSV, Parquet, or Avro for pipeline storage and interchange, see [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats).
 
-#### Serialization overview — object to bytes/string and back
+### In-memory streams
 
 Serialization converts in-memory objects to bytes/string. JSON for text interchange, `pickle` for Python caching (not safe for untrusted data), `struct` for binary protocols. `StringIO`/`BytesIO` for in-memory streams (API payloads, cloud uploads without disk).
 
-> [!danger] Never unpickle data from untrusted sources
->
-> Never unpickle data from untrusted sources — arbitrary code execution risk.
-
-> [!success] Restrict pickle to trusted internal caches only
->
-> Use pickle only for caching Python objects between runs of the same codebase (ML model artifacts, Airflow XCom between known tasks). For any data crossing a process or service boundary, use JSON, Avro, or Protobuf — all of which are safe to deserialize from untrusted input.
-
 ```python
 tmp_dir = Path(tempfile.mkdtemp(prefix="serial_"))
-
-# ─────────────────────────────────────────────
-# STREAMS — in-memory file-like objects
-# ─────────────────────────────────────────────
 ```
 
 #### StringIO — in-memory text stream
@@ -970,12 +952,9 @@ type(raw)  # Type — bytes
 
 #### IO streams as function arguments — write once, use with file or memory
 
+A function that accepts a file-like object (`dest`) works with both real files and in-memory streams. Write the function once using the file API, then call it with `open()` for disk or `StringIO()` for memory — same interface, different backend. This pattern is fundamental to testable I/O code.
+
 ```python
-# Streams as function arguments — write once, use with file or memory
-
-# Data Engineering scenario: a function that writes CSV, accepting any file-like object.
-# Can be called with a real file OR a StringIO — same interface.
-
 def write_events_csv(dest, events):
     """Write events to any file-like object (real file, StringIO, GCS blob, etc.)."""
     writer = csv.writer(dest)
@@ -1006,11 +985,13 @@ f"{disk_file.name} ({disk_file.stat().st_size} bytes)"  # Disk file
     evt_002,purchase,1002
     events.csv (70 bytes)
 
+### Dataclass serialization
+
 #### @dataclass — define typed domain model for serialization
 
-```python
-# Dataclass for serialization — typed domain model with field annotations
+`@dataclass` auto-generates `__init__`, `__repr__`, and `__eq__` from annotated fields. Use `Optional[str] = None` for fields that may be absent. Convert to a plain dict with `dataclasses.asdict()` for JSON serialization.
 
+```python
 @dataclass
 class PipelineRun:
     """Represents a single execution of a data pipeline."""
@@ -1024,9 +1005,9 @@ class PipelineRun:
 
 #### dataclasses.asdict + json.dumps — serialize dataclass to JSON
 
-```python
-# Serialize — dataclass to dict to JSON string
+`asdict()` converts a dataclass instance to a plain dict. Then `json.dumps()` converts the dict to a JSON string. Non-serializable types like `datetime` require a `default=` handler (here `default=str` converts everything to strings as a fallback).
 
+```python
 run = PipelineRun(
     pipeline_id="etl_events_daily",
     status="success",
@@ -1055,9 +1036,9 @@ json_str
 
 #### json.loads + dataclass(**dict) — deserialize JSON to dataclass
 
-```python
-# Deserialize — JSON string to dict to dataclass
+`json.loads` returns a plain dict. Convert datetime strings back to `datetime` objects manually, then unpack the dict into the dataclass constructor with `**`. Pydantic (covered below) automates this type coercion.
 
+```python
 json_input = '{"pipeline_id":"etl_purchases","status":"failed","rows_processed":0,"started_at":"2024-01-15T04:00:00","cost_usd":0.01,"error_message":"Source table not found"}'
 
 data = json.loads(json_input)          # JSON string → dict
@@ -1076,6 +1057,8 @@ type(run2)  # Type
     Source table not found
     <class '__main__.PipelineRun'>
 
+### pickle — Python-only binary serialization
+
 #### pickle.dumps / pickle.loads — serialize to/from bytes
 
 > [!danger] Pickle Executes Arbitrary Code
@@ -1087,8 +1070,6 @@ type(run2)  # Type
 > Search for `pickle.loads` and `pickle.load` in the codebase. Verify each call site reads from a local file or in-process object you wrote, not from a network socket, database column, or user-supplied input. Replace cross-service serialization with JSON or Protobuf.
 
 ```python
-# pickle.dumps / pickle.loads — serialize any Python object to bytes
-
 pickled = pickle.dumps(run)            # PipelineRun → bytes
 f"{len(pickled)} bytes"  # Pickled size
 type(pickled)  # Type
@@ -1107,9 +1088,9 @@ type(unpickled)  # Type
 
 #### pickle.dump / pickle.load — serialize to/from file
 
-```python
-# pickle.dump / pickle.load — serialize to/from binary files
+`pickle.dump` writes a serialized object to a binary file (`'wb'` mode required). `pickle.load` reads it back (`'rb'` mode). The file must be opened in binary mode — pickle produces bytes, not text.
 
+```python
 pkl_file = tmp_dir / "pipeline_run.pkl"
 
 # Write — binary mode required ('wb')
@@ -1126,11 +1107,9 @@ f"Loaded: {loaded_run.pipeline_id}, {loaded_run.rows_processed:,} rows"
     pipeline_run.pkl (212 bytes)
     etl_events_daily, 1,500,000 rows
 
-#### When to use pickle vs JSON
+#### When to use pickle vs JSON | comparison table
 
 ```python
-# Pickle vs JSON comparison — when to use each
-
 print("""
 Feature         pickle                          JSON
 ──────────────────────────────────────────────────────────
@@ -1163,6 +1142,8 @@ DE use case     Sklearn model artifacts,        BigQuery loads, API payloads,
     
     struct (binary packing)
 
+### struct — C-compatible binary packing
+
 #### struct.pack / struct.unpack — fixed-size binary records
 
 > [!info] struct Format Codes
@@ -1170,10 +1151,6 @@ DE use case     Sklearn model artifacts,        BigQuery loads, API payloads,
 > `struct` converts Python values to C-compatible binary data. Format codes: `i` = 32-bit int, `f` = 32-bit float, `d` = 64-bit double, `B` = unsigned byte, `?` = bool. Byte order: `<` = little-endian, `>` = big-endian, `!` = network order.
 
 ```python
-# struct.pack / struct.unpack — fixed-size binary records
-
-# Data Engineering scenario: pack a sensor reading into compact binary format
-# Format: '<i f d ?' = little-endian: int32 sensor_id, float32 value, float64 timestamp, bool alert
 fmt = '<ifd?'
 fmt  # Format
 f"{struct.calcsize(fmt)} bytes"  # Size — how many bytes this format needs
@@ -1193,6 +1170,8 @@ f"Unpacked: sensor={sensor_id}, value={value:.1f}, ts={ts}, alert={alert}"
     sensor=42, value=23.5, ts=1705312200.0, alert=True
 
 ## Encoding and Decoding
+
+### Character encoding
 
 #### str.encode / bytes.decode — UTF-8, ASCII, Latin-1 character encoding
 
@@ -1241,11 +1220,13 @@ f"{len(utf16)} bytes (includes 2-byte BOM)"  # UTF-16
     40 bytes (with replacements)
     82 bytes (includes 2-byte BOM)
 
+### Data encoding — Base64, Hex, URL
+
 #### base64.b64encode / b64decode — Base64 encoding for binary-safe text
 
-```python
-# Base64 encoding — binary data as printable ASCII text
+Base64 encodes arbitrary binary data as printable ASCII characters. `b64encode` returns `bytes` (call `.decode()` for a string). `urlsafe_b64encode` replaces `+` and `/` with `-` and `_` for URL-safe output.
 
+```python
 original = "SAP.DE|2024-03-12|166.52"
 b64 = base64.b64encode(original.encode("utf-8"))
 decoded = base64.b64decode(b64).decode("utf-8")
@@ -1270,9 +1251,9 @@ url_safe.decode()  # URL-safe
 
 #### bytes.hex / bytes.fromhex — hexadecimal encoding
 
-```python
-# Hexadecimal encoding — bytes as 0-9, a-f character pairs
+`bytes.hex()` encodes each byte as two hex characters (0–9, a–f). `bytes.fromhex()` decodes back. Standard format for displaying hash digests (SHA-256, MD5) and debugging binary data.
 
+```python
 raw = b"\xde\xad\xbe\xef\xca\xfe"
 hex_str = raw.hex()
 back = bytes.fromhex(hex_str)
@@ -1295,9 +1276,9 @@ f"{len(sha)} hex chars = {len(sha)//2} bytes"  # Length
 
 #### urllib.parse quote / unquote — URL percent-encoding
 
-```python
-# URL encoding — escape special characters for safe URL use
+`quote()` percent-encodes special characters for safe URL inclusion (spaces → `%20`). `unquote()` decodes back. `urlencode(dict)` builds a complete query string from a dictionary of parameters (spaces → `+` in form encoding).
 
+```python
 raw = "SAP.DE close=166.52 change=+2.5% sector=Tech&Finance"
 encoded = quote(raw)
 raw  # Raw
@@ -1319,6 +1300,8 @@ f"Full URL: https://api.example.com/quote?{qs}"
     https://api.example.com/quote?symbol=BRK.B&note=Q1+2024+earnings+%26+revenue
 
 ## Async File I/O
+
+### aiofiles — non-blocking file operations
 
 #### aiofiles — non-blocking file operations
 
@@ -1359,6 +1342,8 @@ shutil.rmtree(tmp)
 
 ## High-Performance JSON
 
+### orjson — Rust-based fast JSON
+
 #### orjson — fast JSON serialization
 
 > [!info] orjson
@@ -1369,7 +1354,6 @@ shutil.rmtree(tmp)
 > - Drop-in replacement for high-throughput APIs
 
 ```python
-# orjson.dumps returns bytes, not str
 data = {"symbol": "SAP.DE", "price": 166.52, "timestamp": datetime(2024, 3, 12, 14, 30)}
 fast_json = orjson.dumps(data, option=orjson.OPT_INDENT_2)
 fast_json.decode()  # orjson output (bytes)
@@ -1406,6 +1390,8 @@ f"Speedup: {std_time/orj_time:.1f}x"
     7.9x
 
 ## Schema Validation with Pydantic
+
+### Pydantic BaseModel — typed validation
 
 #### pydantic — typed models with validation
 
@@ -1446,6 +1432,8 @@ except ValidationError as e:
     Input should be greater than 0
 
 ## High-Performance CSV Parsing
+
+### Polars and DuckDB — vectorized CSV
 
 #### polars and DuckDB — vectorized CSV
 
@@ -1504,6 +1492,8 @@ f"Speedup:    {csv_time/pl_time:.1f}x"
 
 ## Cloud and Object Storage
 
+### fsspec — unified filesystem interface
+
 #### fsspec — unified filesystem interface
 
 `fsspec` provides a single `open()` API for local, S3, GCS, Azure Blob, HDFS, HTTP. Change the URI, not the code: `open("s3://bucket/data.csv")`. Supports streaming. Works with pandas, Polars, PyArrow, Dask.
@@ -1512,20 +1502,17 @@ f"Speedup:    {csv_time/pl_time:.1f}x"
 tmp = tempfile.mkdtemp(prefix="fsspec_")
 local_path = os.path.join(tmp, "data.csv")
 
-# fsspec write — same API for local and cloud
 with fsspec.open(local_path, "w") as f:
     f.write("symbol,price\nSAP.DE,166.52\nASML.AS,685.40\n")
 
-# fsspec read
 with fsspec.open(local_path, "r") as f:
     print(f"  fsspec local: {f.read().strip()}")
 
-# In production, just change the path:
-# Cloud URIs (same API, just change the path):
-# fsspec.open('s3://bucket/data.csv
-# fsspec.open('gs://bucket/data.csv
-# fsspec.open('abfs://container/data.csv
-# fsspec.open('https://api.example.com/data
+# Cloud URIs — same API, just change the path:
+# fsspec.open("s3://bucket/data.csv")       # AWS S3
+# fsspec.open("gs://bucket/data.csv")       # Google Cloud Storage
+# fsspec.open("abfs://container/data.csv")  # Azure Blob
+# fsspec.open("https://api.example.com/data") # HTTP
 
 shutil.rmtree(tmp)
 ```

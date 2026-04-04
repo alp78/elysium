@@ -2,13 +2,9 @@
 title: "SQL Server Agent Jobs"
 tags:
   - sql-server
-  - tsql
   - administration
   - scheduling
   - agent
-  - cdc
-  - airflow
-  - gcp
 aliases: [SQL Server Agent, Agent Jobs, Job Scheduling, Task Scheduling SQL Server]
 description: "SQL Server Agent job scheduling — enabling on Linux, creating jobs, built-in CDC/backup agents, and a complete comparison of all five job triggering methods in the GCP + SQL Server + Airflow stack."
 created: 2026-03-29
@@ -23,50 +19,66 @@ status: complete
 >
 > — **Tom Limoncelli**, *The Practice of System and Network Administration*
 
-SQL Server Agent is the native job scheduler built into SQL Server. It runs maintenance tasks, CDC log readers, backup schedules, and custom ETL steps. On Linux, it requires explicit enabling. Understanding when to use Agent vs [Airflow](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) vs cron is essential for a clean operations architecture.
+SQL Server Agent is the built-in job scheduling engine for SQL Server. On Windows, it runs as a dedicated Windows service (`SQLSERVERAGENT` for the default instance, `SQLAgent$<instance>` for named instances). On Linux (SQL Server 2017+), it runs in-process within the SQL Server engine itself — there is no separate service. All job metadata — definitions, steps, schedules, history — is stored in the `msdb` system database.
+
+Agent handles maintenance tasks (backups, index rebuilds, statistics updates), CDC log readers, replication agents, and custom T-SQL automation. On Linux, it ships disabled by default and requires explicit enabling. Understanding when to use Agent vs [Airflow](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) vs cron vs GCP serverless triggers is essential for a clean operations architecture.
 
 ---
 
 ## SQL Server Agent on Linux — Enabling and Configuring
 
-### mssql-conf set sqlagent.enabled — enable Agent on Linux
+SQL Server on Linux ships with Agent disabled. Unlike Windows — where Agent is a standalone Windows service that starts automatically — on Linux, Agent runs in-process within the SQL Server engine and must be explicitly enabled via `mssql-conf`. Once enabled, Agent supports only a subset of the Windows subsystems: `TSQL` and replication agents (Distribution, Snapshot, LogReader, Merge). CmdExec, PowerShell, SSIS, and SSAS steps are not available on Linux.
+
+### Linux | mssql-conf | enable SQL Server Agent
 
 > [!info] Agent is Disabled by Default
 >
 > SQL Server on Linux ships with Agent disabled. You must explicitly enable it and restart the service. Without Agent, CDC log reader jobs, backup schedules, and index maintenance jobs will not run.
 
+#### Enable Agent via mssql-conf
+
+The `mssql-conf` utility writes the setting to `/var/opt/mssql/mssql.conf`. The change does not take effect until the service is restarted.
+
 ```bash
-# Enable SQL Server Agent
 sudo /opt/mssql/bin/mssql-conf set sqlagent.enabled true
+```
 
-# Restart SQL Server (required for the change to take effect)
+#### Restart SQL Server to apply the change
+
+Agent runs in-process, so restarting SQL Server also starts Agent. There is no separate Agent service to manage on Linux.
+
+```bash
 sudo systemctl restart mssql-server
+```
 
-# Verify Agent is running
+#### Verify Agent is running
+
+Check the service status. The output should show `active (running)`. If Agent failed to start, the error appears in `/var/opt/mssql/log/sqlagent.out`.
+
+```bash
 sudo systemctl status mssql-server
 ```
 
-#### SELECT syssubsystems — verify Agent subsystems are loaded
+#### Verify Agent subsystems are loaded
+
+Query `msdb.dbo.syssubsystems` to confirm which subsystems Agent registered. On Linux, expect `TSQL` and replication subsystems only. On Windows, this returns all 11 subsystems (TSQL, CmdExec, PowerShell, SSIS, ANALYSISQUERY, ANALYSISCOMMAND, Distribution, Snapshot, LogReader, Merge, QueueReader).
 
 ```sql
--- Should return rows for T-SQL and CmdExec subsystems
 SELECT subsystem, description_id, agent_exe
 FROM msdb.dbo.syssubsystems;
 ```
 
-> [!warning] Agent on Linux limitations
+> [!warning] Agent on Linux — restricted subsystems
 >
-> SQL Server Agent on Linux supports only T-SQL and CmdExec (bash) job steps. No SSIS packages, no PowerShell, no ActiveX scripts. If your job needs Python, .NET, or GCP SDK calls — it does not belong in Agent.
+> SQL Server Agent on Linux supports **only TSQL and replication subsystems** (Distribution, Snapshot, LogReader, Merge). CmdExec, PowerShell, SSIS, and SSAS are **not available** on Linux. Alerts (SQL Server event, performance condition, WMI) are also unsupported on Linux. If your job needs shell commands, Python, .NET, or GCP SDK calls — it cannot run in Agent on Linux.
 
-> [!success] Use Airflow for Non-T-SQL Automation
+> [!success] Use Airflow for non-T-SQL automation
 >
-> If a task requires Python, GCP SDK calls, or multi-system coordination, move it to Airflow. Airflow's `BashOperator` can call any shell script, `PythonOperator` runs Python directly, and `MsSqlOperator` executes T-SQL — covering everything Agent supports and more, with dependency tracking and alerting.
+> Move non-T-SQL automation to Airflow. Airflow's `BashOperator` runs shell scripts, `PythonOperator` runs Python directly, and `MsSqlOperator` executes T-SQL — covering everything Agent supports and more, with dependency tracking, retry with backoff, and alerting. For jobs that must run even if Airflow is down, consider Cloud Scheduler + Cloud Run.
 
-### Docker Environment Variable — Agent in containers
+### Docker | MSSQL_AGENT_ENABLED | enable Agent in containers
 
-> [!info] Docker Configuration
->
-> For containerized SQL Server (e.g., on Cloud Run or local dev), set the environment variable at container startup.
+For containerized SQL Server (e.g., on Cloud Run or local dev), Agent is controlled via the `MSSQL_AGENT_ENABLED` environment variable at container startup. This is equivalent to `mssql-conf set sqlagent.enabled true` but applied before the first boot.
 
 ```bash
 docker run -e "ACCEPT_EULA=Y" \
@@ -76,39 +88,130 @@ docker run -e "ACCEPT_EULA=Y" \
     mcr.microsoft.com/mssql/server:2022-latest
 ```
 
+| Variable | Required | Description |
+|---|---|---|
+| `ACCEPT_EULA` | Yes | Must be `Y` to accept the license |
+| `MSSQL_SA_PASSWORD` | Yes | SA password (min 8 chars, complexity required) |
+| `MSSQL_AGENT_ENABLED` | No | `true` to enable Agent at startup (default: disabled) |
+| `MSSQL_PID` | No | Edition: `Developer` (default), `Express`, `Standard`, `Enterprise`, or product key |
+| `MSSQL_COLLATION` | No | Server collation (default: `SQL_Latin1_General_CP1_CI_AS`) |
+| `MSSQL_MEMORY_LIMIT_MB` | No | Max memory in MB (default: unlimited) |
+
 ---
 
 ## Agent Architecture
 
-### Jobs, Steps, Schedules, Operators — the four components
+SQL Server Agent is built around four core objects — jobs, steps, schedules, and operators — all persisted in the `msdb` system database. Understanding this object model is essential for creating, debugging, and monitoring Agent jobs. The `msdb` database is one of four system databases (along with `master`, `model`, and `tempdb`) and acts as the metadata store for Agent, Database Mail, log shipping, SSIS packages, and maintenance plans.
 
-> [!info] Agent Object Model
+### Agent | object model | jobs, steps, schedules, operators
+
+Every Agent job is composed of four objects that work together. Three `msdb` fixed database roles control who can create, view, and manage jobs:
+
+- **`SQLAgentUserRole`** — can manage only their own jobs
+- **`SQLAgentReaderRole`** — can view all jobs (read-only on others' jobs)
+- **`SQLAgentOperatorRole`** — can enable/disable, start/stop any job
+
+> [!info] Agent object model
 >
-> Every Agent job has four components. All metadata lives in the `msdb` database — querying `msdb` is how you monitor and debug Agent.
+> All metadata lives in the `msdb` database. The key tables are `dbo.sysjobs` (job definitions), `dbo.sysjobsteps` (step definitions), `dbo.sysschedules` (schedule definitions), and `dbo.sysjobhistory` (execution log). Querying `msdb` is how you monitor and debug Agent.
 
-- **Job:** a named unit of work (e.g., "Nightly Backup")
-- **Step:** one action within a job (T-SQL script, bash command). Jobs can have multiple steps with success/failure routing
-- **Schedule:** when the job runs (cron-like syntax: daily, weekly, every N minutes)
-- **Operator:** who to notify on success/failure (email via Database Mail)
+- **Job:** a named unit of work (e.g., "Nightly Backup"). Stored in `msdb.dbo.sysjobs`. Each job has an owner (`owner_sid`) and a notification level controlling whether success/failure is logged, emailed, or both.
+- **Step:** one action within a job. Each step specifies a subsystem (`TSQL`, `CmdExec`, `PowerShell`, etc.), a command to execute, and routing logic: `@on_success_action` and `@on_fail_action` control what happens next — quit with success (1), quit with failure (2), go to the next step (3), or jump to a specific step ID (4). This routing enables conditional branching within a job.
+- **Schedule:** when the job runs. Supports one-time, recurring (daily/weekly/monthly), on Agent startup, and on CPU idle triggers. Schedules are reusable — one schedule can be attached to multiple jobs, and one job can have multiple schedules. Minimum granularity is 10 seconds for sub-day recurrence.
+- **Operator:** who to notify on success/failure/completion. Operators receive notifications via Database Mail (email). Database Mail must be configured separately — it uses Service Broker to queue and send SMTP messages asynchronously.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+erDiagram
+    JOB ||--o{ STEP : "has 1..N"
+    JOB }o--o{ SCHEDULE : "attached M:N"
+    JOB }o--o| OPERATOR : "notifies"
+    STEP }o--o| PROXY : "runs under"
+    PROXY ||--|| CREDENTIAL : "maps to"
+
+    JOB {
+        string job_name
+        int enabled
+        int notify_level
+        string owner_login
+    }
+    STEP {
+        string step_name
+        string subsystem
+        string command
+        int on_success_action
+        int on_fail_action
+        int retry_attempts
+    }
+    SCHEDULE {
+        string schedule_name
+        int freq_type
+        int freq_interval
+        int active_start_time
+    }
+    OPERATOR {
+        string name
+        string email_address
+    }
+    PROXY {
+        string proxy_name
+        string credential_name
+    }
+    CREDENTIAL {
+        string identity
+        string secret
+    }
+```
+
+### Agent | proxy accounts | security context for non-T-SQL steps
+
+T-SQL job steps run under the Agent service account by default. All other subsystems (CmdExec, PowerShell, SSIS, SSAS, replication) require a **proxy account** — a named object that maps to a SQL Server credential, which in turn maps to an OS-level identity (Windows login or Linux user). Without a proxy, non-T-SQL steps fail with a permissions error.
+
+> [!warning] Proxy scope
+>
+> Each proxy is scoped to specific subsystems. A proxy granted access to `CmdExec` cannot run `PowerShell` steps unless explicitly granted. Grant the minimum subsystems needed.
+
+> [!success] Use least-privilege proxies
+>
+> Create a dedicated proxy per workload type (e.g., one for backup scripts, one for ETL). Map each to a credential with only the permissions that workload requires. Never reuse the Agent service account credential for CmdExec steps — if that account is compromised, every CmdExec job is compromised.
 
 ---
 
 ## Creating and Managing Jobs
 
-### sp_add_job + sp_add_jobstep — create a maintenance job
+Agent jobs are created and managed via the `sp_add_*` family of stored procedures in `msdb`. The standard pattern is: create the job (`sp_add_job`), add one or more steps (`sp_add_jobstep`), create or reuse a schedule (`sp_add_schedule`), attach the schedule to the job (`sp_attach_schedule`), and bind the job to a server (`sp_add_jobserver`). All five calls are required for a functional scheduled job.
 
-> [!info] Job Creation DDL
->
-> Use the `sp_add_*` stored procedures to create jobs programmatically. This is the pattern for all maintenance jobs — backups, index rebuilds, statistics updates.
+### T-SQL | sp_add_job + sp_add_jobstep | create a maintenance job
+
+The `sp_add_job` procedure creates the job container. The `sp_add_jobstep` procedure adds individual steps to it. Each step specifies which subsystem to use (default: `TSQL`), the command to execute, and the target database.
+
+#### Create the job
+
+`sp_add_job` registers a new job in `msdb.dbo.sysjobs`. The `@enabled` parameter controls whether the job is active (1) or paused (0). The `@notify_level_eventlog` parameter defaults to 2 (log on failure).
 
 ```sql
--- Create the job
 EXEC msdb.dbo.sp_add_job
     @job_name = N'Weekly Index Maintenance',
     @enabled = 1,
     @description = N'Rebuild fragmented indexes on silver and gold schemas';
+```
 
--- Add a T-SQL step
+#### Add a T-SQL step
+
+Each step runs under the specified subsystem. `ONLINE = ON` keeps the index available during rebuild (Enterprise edition only). `MAXDOP = 2` limits parallelism to 2 cores, reducing contention with concurrent queries.
+
+```sql
 EXEC msdb.dbo.sp_add_jobstep
     @job_name = N'Weekly Index Maintenance',
     @step_name = N'Rebuild silver indexes',
@@ -122,35 +225,89 @@ EXEC msdb.dbo.sp_add_jobstep
     @database_name = N'analytics_db';
 ```
 
-### sp_add_schedule — schedule the job
+| Parameter | Type | Description |
+|---|---|---|
+| `@job_name` | nvarchar(128) | Required. Must be unique. Cannot contain `%`. |
+| `@enabled` | tinyint | 1 = enabled (default), 0 = disabled |
+| `@description` | nvarchar(512) | Free text (default: `'No description available'`) |
+| `@start_step_id` | int | Which step to start from (default: 1) |
+| `@owner_login_name` | sysname | Only `sysadmin` can set for other users |
+| `@notify_level_eventlog` | int | 0 = never, 1 = success, 2 = failure (default), 3 = always |
+| `@step_name` | sysname | Required per step. Unique within the job. |
+| `@subsystem` | nvarchar(40) | `TSQL` (default), `CmdExec`, `PowerShell`, `SSIS`, etc. |
+| `@command` | nvarchar(max) | The T-SQL, shell command, or package reference to execute |
+| `@database_name` | sysname | Target database for TSQL steps (default: `master`) |
+| `@on_success_action` | tinyint | 1 = quit success (default), 2 = quit failure, 3 = next step, 4 = go to step ID |
+| `@on_fail_action` | tinyint | 1 = quit success, 2 = quit failure (default), 3 = next step, 4 = go to step ID |
+| `@retry_attempts` | int | Number of retries on failure (default: 0) |
+| `@retry_interval` | int | Minutes between retries (default: 0) |
+| `@output_file_name` | nvarchar(200) | Log step output to file (valid for TSQL, CmdExec, PowerShell, SSIS) |
+| `@proxy_name` | sysname | Proxy account for non-TSQL steps (TSQL runs as Agent service account) |
+
+### T-SQL | sp_add_schedule | attach a schedule to a job
+
+Schedules define when a job runs. They are reusable — one schedule can drive multiple jobs, and one job can have multiple schedules. After creating a schedule, attach it to the job with `sp_attach_schedule`, then bind the job to the local server with `sp_add_jobserver` (required before the job can execute).
+
+#### Create the schedule
+
+The `@freq_type` parameter defines the recurrence pattern. For weekly schedules (`freq_type = 8`), `@freq_interval` is a bitmask where each bit represents a day (1 = Sunday, 2 = Monday, 4 = Tuesday, ..., 64 = Saturday). Combine with bitwise OR for multiple days. `@active_start_time` uses `HHMMSS` format (no separators).
 
 ```sql
--- Run every Sunday at 03:00
 EXEC msdb.dbo.sp_add_schedule
     @schedule_name = N'Weekly Sunday 3am',
-    @freq_type = 8,            -- weekly
-    @freq_interval = 1,        -- Sunday
-    @active_start_time = 030000;   -- 03:00:00
+    @freq_type = 8,
+    @freq_interval = 1,
+    @active_start_time = 030000;
+```
 
--- Attach schedule to job
+#### Attach schedule to job
+
+A schedule has no effect until attached to at least one job. Attaching is a many-to-many relationship stored in `msdb.dbo.sysjobschedules`.
+
+```sql
 EXEC msdb.dbo.sp_attach_schedule
     @job_name = N'Weekly Index Maintenance',
     @schedule_name = N'Weekly Sunday 3am';
+```
 
--- Assign to local server
+#### Assign job to local server
+
+Every job must be bound to a target server before it can run. For single-server setups, use `@server_name = N'(local)'` (the default when omitted).
+
+```sql
 EXEC msdb.dbo.sp_add_jobserver
     @job_name = N'Weekly Index Maintenance';
 ```
 
-### Nightly Backup Job — full DDL example
+**`freq_type` reference:**
 
-> [!info] Automated Backup Job
->
-> See [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy) for backup theory and the 3-2-1 rule. This job automates the nightly full backup.
+| `freq_type` | Meaning | `freq_interval` interpretation |
+|---|---|---|
+| `1` | Once | Unused |
+| `4` | Daily | Every N days |
+| `8` | Weekly | Bitmask: 1=Sun, 2=Mon, 4=Tue, 8=Wed, 16=Thu, 32=Fri, 64=Sat |
+| `16` | Monthly | Day N of the month |
+| `32` | Monthly relative | 1=Sun, 2=Mon, ..., 8=Day, 9=Weekday, 10=Weekend day |
+| `64` | On Agent startup | Unused |
+| `128` | On CPU idle | Unused (not supported on Azure SQL MI) |
+
+**Sub-day recurrence** (`freq_subday_type`): 1 = at specified time, 2 = seconds, 4 = minutes, 8 = hours. Minimum sub-day interval is 10 seconds. Use `freq_recurrence_factor` to skip weeks or months between executions (e.g., `freq_recurrence_factor = 2` with `freq_type = 8` = every other week).
+
+### T-SQL | Agent backup job | full DDL example
+
+This is a complete, end-to-end example of an Agent job that performs a nightly full backup. See [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy) for backup theory and the 3-2-1 rule.
+
+#### Create the backup job
 
 ```sql
 EXEC msdb.dbo.sp_add_job @job_name = N'Nightly Full Backup';
+```
 
+#### Add the backup step
+
+The `BACKUP DATABASE` command runs in the context of `master`. `INIT` overwrites any existing backup in the file. `COMPRESSION` reduces backup size (typically 5–7x for data-heavy databases). `CHECKSUM` writes a checksum into the backup for integrity verification during restore. Note the doubled single quotes (`''`) — required because the command string is itself enclosed in `N'...'`.
+
+```sql
 EXEC msdb.dbo.sp_add_jobstep
     @job_name = N'Nightly Full Backup',
     @step_name = N'Backup analytics_db',
@@ -161,13 +318,23 @@ EXEC msdb.dbo.sp_add_jobstep
         WITH INIT, COMPRESSION, CHECKSUM;
     ',
     @database_name = N'master';
+```
 
+#### Schedule for nightly execution
+
+`freq_type = 4` means daily. `freq_interval = 1` means every 1 day. `active_start_time = 020000` means 02:00:00 (2 AM).
+
+```sql
 EXEC msdb.dbo.sp_add_schedule
     @schedule_name = N'Nightly 2am',
     @freq_type = 4,
     @freq_interval = 1,
     @active_start_time = 020000;
+```
 
+#### Attach and activate
+
+```sql
 EXEC msdb.dbo.sp_attach_schedule
     @job_name = N'Nightly Full Backup',
     @schedule_name = N'Nightly 2am';
@@ -176,18 +343,23 @@ EXEC msdb.dbo.sp_add_jobserver
     @job_name = N'Nightly Full Backup';
 ```
 
-### Viewing Job History — msdb.dbo.sysjobhistory
+### T-SQL | sysjobhistory | view job execution history
 
-#### SELECT sysjobhistory — check recent job execution results
+Job history is stored in `msdb.dbo.sysjobhistory`. Each row represents one step execution. Rows with `step_id = 0` are job-level summary records. The `run_status` column encodes the outcome: 0 = Failed, 1 = Succeeded, 2 = Retry, 3 = Canceled, 4 = In Progress. The `run_duration` column uses `HHMMSS` integer format (e.g., `13042` = 1 hour 30 minutes 42 seconds).
+
+> [!tip] History retention
+>
+> By default, Agent retains up to 1000 rows per job and 100,000 total rows. Use `sp_purge_jobhistory` to clean old records, or configure retention via SSMS → SQL Server Agent → Properties → History. For long-running production systems, purge history older than 30–90 days to prevent `msdb` bloat.
+
+#### Query recent job results
 
 ```sql
--- Recent job history (last 7 days)
 SELECT j.name AS job_name,
        h.step_name,
-       h.run_status,       -- 0=Failed, 1=Succeeded, 2=Retry, 3=Canceled
+       h.run_status,
        h.run_date,
        h.run_time,
-       h.run_duration,     -- HHMMSS format
+       h.run_duration,
        h.message
 FROM msdb.dbo.sysjobhistory h
 JOIN msdb.dbo.sysjobs j ON h.job_id = j.job_id
@@ -195,10 +367,19 @@ WHERE h.run_date >= CONVERT(INT, CONVERT(VARCHAR(8), DATEADD(DAY, -7, GETDATE())
 ORDER BY h.run_date DESC, h.run_time DESC;
 ```
 
-### Monitoring Running Jobs — sp_help_jobactivity
+| `run_status` | Meaning |
+|---|---|
+| `0` | Failed |
+| `1` | Succeeded |
+| `2` | Retry |
+| `3` | Canceled |
+| `4` | In Progress |
+
+### T-SQL | sp_help_jobactivity | monitor running jobs
+
+`sp_help_jobactivity` returns a snapshot of all jobs with their last execution status, next scheduled run, and whether they are currently running. This is the quickest way to check for stuck or long-running jobs.
 
 ```sql
--- Currently running jobs
 EXEC msdb.dbo.sp_help_jobactivity;
 ```
 
@@ -206,7 +387,9 @@ EXEC msdb.dbo.sp_help_jobactivity;
 
 ## Built-In Agent Jobs (Created by Other Features)
 
-### CDC, Backup, and AG Jobs — what Agent runs automatically
+Several SQL Server features create their own Agent jobs automatically when enabled. These jobs are critical infrastructure — disabling or deleting them breaks the feature they support. Understanding which jobs exist and what they do prevents accidental interference during maintenance.
+
+### Agent | built-in jobs | CDC, backup, and AG
 
 > [!warning] Don't Disable These Jobs
 >
@@ -232,7 +415,7 @@ EXEC msdb.dbo.sp_help_jobactivity;
 
 This is the most important section of the page. Five different ways to trigger work exist in this stack. Each has a legitimate use case. Using the wrong one creates operational confusion, split ownership, and debugging nightmares.
 
-### The Five Triggering Methods — Full Comparison
+### Stack | five triggering methods | full comparison
 
 > [!info] Triggering methods in the stack
 >
@@ -246,7 +429,7 @@ This is the most important section of the page. Five different ways to trigger w
 | **Cloud Scheduler + Cloud Run** | GCP serverless | Schedule, Pub/Sub, HTTP | Built-in | Via Pub/Sub | Cloud Logging |
 | **Cloud Functions** | GCP serverless | Pub/Sub, Firestore, HTTP, GCS | Built-in | Event-driven only | Cloud Logging |
 
-### When to Use Each — Scenario-Based Decision
+### Stack | scenario-based decision | when to use each
 
 > [!tip] The ownership principle
 >
@@ -301,8 +484,9 @@ This is the primary orchestrator in the stack. [Airflow](https://alp78.github.io
 - Jobs that scale to zero between runs (no idle VM cost)
 - HTTP-triggered tasks that other GCP services need to invoke
 
+This example creates a Cloud Scheduler job that publishes a message to a Pub/Sub topic at 2 AM daily, which in turn triggers a Cloud Run Job.
+
 ```bash
-# Cloud Scheduler → Pub/Sub → Cloud Run Job
 gcloud scheduler jobs create pubsub nightly-export \
     --schedule="0 2 * * *" \
     --topic=pipeline-triggers \
@@ -346,81 +530,197 @@ def on_stock_update(cloud_event):
 >
 > For any Cloud Function doing important work (writing to SQL Server, publishing to downstream topics), add a dead-letter topic and a Cloud Monitoring alert on the DLQ message count. This gives visibility when Functions fail silently. For multi-step logic, use Cloud Workflows or move the orchestration to Airflow.
 
-### The Architecture Diagram
+### Stack | architecture diagram | job triggering lanes
 
-> [!info] Job triggering architecture
->
-> Each system has a clear lane. Overlap between lanes is where incidents happen.
+Each system has a clear lane. Overlap between lanes is where incidents happen.
 
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    subgraph lane1["SQL Server Agent"]
+        A1[CDC log reader] --> SQL[(SQL Server)]
+        A2[Backup jobs] --> SQL
+        A3[Index maintenance] --> SQL
+    end
+
+    subgraph lane2["Airflow DAGs"]
+        AF[Airflow] -->|pyodbc / MsSqlOperator| SQL
+        AF -->|dbt run| SQL
+        AF -->|bq client| BQ[(BigQuery)]
+        AF -->|Firestore client| FS[(Firestore)]
+    end
+
+    subgraph lane3["GCP Serverless"]
+        CS[Cloud Scheduler] -->|Pub/Sub| CR[Cloud Run Jobs]
+        EV[Firestore / Pub/Sub / GCS triggers] --> CF[Cloud Functions]
+    end
+
+    subgraph lane4["Linux OS"]
+        CRON[cron] --> LR2[Log rotation]
+        CRON --> DC[Disk cleanup]
+    end
+
+    style lane1 fill:#1a1b26,stroke:#565f89
+    style lane2 fill:#1a1b26,stroke:#565f89
+    style lane3 fill:#1a1b26,stroke:#565f89
+    style lane4 fill:#1a1b26,stroke:#565f89
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Job Triggering Architecture                   │
-│                                                                  │
-│  ┌──────────────┐                                               │
-│  │ SQL Server   │  Agent: CDC, backups, index maintenance       │
-│  │ Agent        │  (things only SQL Server can do)              │
-│  └──────────────┘                                               │
-│                                                                  │
-│  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐    │
-│  │ Airflow      │────►│ SQL Server   │────►│ BigQuery     │    │
-│  │ (DAGs)       │     │ (pyodbc)     │     │ (bq client)  │    │
-│  │              │────►│ dbt run      │────►│ Firestore    │    │
-│  └──────────────┘     └──────────────┘     └──────────────┘    │
-│   Primary orchestrator for all pipeline tasks                   │
-│                                                                  │
-│  ┌──────────────┐     ┌──────────────┐                         │
-│  │ Cloud        │────►│ Cloud Run    │  Serverless batch tasks  │
-│  │ Scheduler    │     │ Jobs         │  outside the pipeline    │
-│  └──────────────┘     └──────────────┘                         │
-│                                                                  │
-│  ┌──────────────┐     ┌──────────────┐                         │
-│  │ Firestore /  │────►│ Cloud        │  Event-driven reactions  │
-│  │ Pub/Sub /    │     │ Functions    │  (glue, not pipeline)    │
-│  │ GCS triggers │     └──────────────┘                         │
-│  └──────────────┘                                               │
-│                                                                  │
-│  ┌──────────────┐                                               │
-│  │ Linux cron   │  OS tasks: log rotation, disk cleanup         │
-│  └──────────────┘  (not pipeline, not SQL Server)               │
-└─────────────────────────────────────────────────────────────────┘
+
+### Stack | decision flowchart | which triggering method to use
+
+Use this flowchart to determine which triggering method owns a given task.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    START{What kind of task?} -->|T-SQL only, no dependencies| Q1{Part of a pipeline?}
+    Q1 -->|No - maintenance only| AGENT["SQL Server Agent<br/>CDC, backup, index rebuild"]
+    Q1 -->|Yes| AIRFLOW
+
+    START -->|Multi-system or has dependencies| AIRFLOW["Airflow DAG<br/>Primary orchestrator"]
+
+    START -->|Event-driven reaction| Q2{Multi-step logic?}
+    Q2 -->|No - single reaction| CF["Cloud Functions<br/>Glue, not pipeline"]
+    Q2 -->|Yes| AIRFLOW
+
+    START -->|Serverless batch, no pipeline| Q3{Runs even if Airflow is down?}
+    Q3 -->|Yes| CR["Cloud Scheduler + Cloud Run"]
+    Q3 -->|No| AIRFLOW
+
+    START -->|OS-level, no SQL or pipeline| CRON["Linux cron<br/>Log rotation, disk cleanup"]
+
+    style AGENT fill:#292e42,stroke:#565f89,color:#c0caf5
+    style AIRFLOW fill:#292e42,stroke:#7aa2f7,color:#c0caf5
+    style CF fill:#292e42,stroke:#565f89,color:#c0caf5
+    style CR fill:#292e42,stroke:#565f89,color:#c0caf5
+    style CRON fill:#292e42,stroke:#565f89,color:#c0caf5
 ```
 
 ---
 
-## Anti-Patterns in Job Triggering
+## Anti-Patterns
 
-> [!danger] Job triggering anti-patterns
+Every anti-pattern below has been seen in production. Each one caused an incident or extended an outage. The common thread: ambiguous ownership, invisible failures, and resource contention.
+
+> [!tip] Job inventory audit
 >
-> Each of these has been seen in production. Each one caused an incident.
+> List every scheduled task (Agent, cron, Airflow, Cloud Scheduler) in a single spreadsheet with its owner, trigger, and dependencies. Any pipeline task not in Airflow is a candidate for migration. Any cron job touching the database is a candidate for Agent or Airflow. Resolve ambiguity before the next incident — not during it.
 
-> [!success] Apply the One-Orchestrator Rule
+### Anti-pattern | split pipeline ownership | Agent and Airflow
+
+Bronze loads in Airflow, silver transforms in Agent. When silver fails, the Airflow DAG shows green. Nobody notices for days. Agent has no dependency management — if `transform_silver` depends on `load_bronze` completing first, Agent cannot express that dependency. You end up with fragile time-based scheduling ("run silver 30 minutes after bronze") that breaks when bronze takes longer than expected.
+
+> [!danger] Split ownership hides failures
 >
-> Audit your current job inventory: list every scheduled task (Agent, cron, Airflow, Cloud Scheduler) in a single spreadsheet with its owner, trigger, and dependencies. Any pipeline task not in Airflow is a candidate for migration. Any cron job touching the database is a candidate for Agent or Airflow. Resolve ambiguity before the next incident — not during it.
+> Two systems means two places to debug. One person checks the Airflow UI and sees green. Another checks Agent history and sees red. Neither sees the full picture. Rule: if a task is PART of a pipeline, Airflow owns it — even if the task itself is a T-SQL script.
 
-- **Pipeline steps split between Agent and Airflow:** bronze loads in Airflow, silver transforms in Agent. When silver fails, the Airflow DAG shows green. Nobody notices for days. Rule: entire pipeline in ONE orchestrator
-- **cron for pipeline-critical tasks:** cron has no alerting, no retry, no UI. A cron job failing at 3am is invisible until the dashboard shows stale data the next morning
-- **Cloud Functions as pipeline steps:** Functions are stateless, have 9-minute timeout (gen1) or 60-minute (gen2), and have no dependency graph. A five-step pipeline in Cloud Functions is five independent retry-or-fail endpoints with no coordination
-- **Agent jobs calling external APIs:** Agent CmdExec steps running `curl` or `python3` scripts that call GCP APIs. If the script fails, Agent logs show "step failed" with no detail. Move the script to Airflow where logs are first-class and retries are configurable
-- **Overlapping schedules:** Agent backup at 02:00, Airflow index rebuild at 02:05, cron disk cleanup at 02:10. All compete for disk I/O on the same VM. Stagger schedules and document them in a single schedule registry
+> [!success] Consolidate in Airflow
+>
+> Migrate pipeline Agent jobs (silver transforms, statistics updates after load) to Airflow tasks in the same DAG. Use `MsSqlOperator` or `PythonOperator` with pyodbc. Agent retains non-pipeline maintenance (CDC, backup, index rebuild), but the pipeline chain must be a single unbroken DAG.
+
+### Anti-pattern | silent job failures | no alerting configured
+
+Agent jobs fail silently by default — the result goes into `sysjobhistory` but nobody is notified. A job that fails silently for weeks is worse than a job that doesn't exist.
+
+> [!danger] Silent failures accumulate
+>
+> Without notification, a failed CDC cleanup job quietly lets change tables grow until the disk fills. A failed backup job means no restore point when disaster strikes.
+
+> [!success] Configure notifications at every level
+>
+> Set `@notify_level_eventlog = 2` (log on failure) on every job. Configure Database Mail + Operators for email alerts. Forward the SQL Server error log to Cloud Logging for GCP-side visibility. Use the Datadog `sqlserver.agent.job.failed` metric for paging.
+
+### Anti-pattern | cron for pipeline-critical tasks
+
+cron has no alerting, no retry, no UI. A cron job failing at 3 AM is invisible until the dashboard shows stale data the next morning.
+
+> [!danger] cron failures are invisible
+>
+> Failed cron jobs disappear into syslog. There is no retry, no dependency graph, no visual status.
+
+> [!success] Move pipeline tasks to Airflow
+>
+> Even a single-task DAG gives you retry, logging, and a visible failure state. Reserve cron for true OS-level tasks (log rotation, disk cleanup) where failure is obvious or non-critical.
+
+### Anti-pattern | Cloud Functions as pipeline steps
+
+Cloud Functions are stateless, have a 9-minute timeout (gen1) or 60-minute timeout (gen2), and have no dependency graph. A five-step pipeline in Cloud Functions is five independent retry-or-fail endpoints with no coordination.
+
+> [!danger] No coordination between Functions
+>
+> Each Function fires independently. If step 3 fails, steps 4 and 5 still run on stale data. There is no rollback, no SLA tracking, no visual status.
+
+> [!success] Use Functions as glue, not pipeline
+>
+> Cloud Functions excel at single-event reactions (Firestore trigger → cache rebuild). For multi-step logic, use Cloud Workflows or move orchestration to Airflow.
+
+### Anti-pattern | CmdExec steps with hardcoded paths
+
+Agent CmdExec steps referencing `/home/alex/scripts/backup.sh` break on VM migration, OS upgrade, or user change.
+
+> [!danger] Hardcoded paths are brittle
+>
+> Any infrastructure change (new VM, user rename, OS upgrade) silently breaks the job.
+
+> [!success] Use well-known locations
+>
+> Store scripts in `/opt/mssql/scripts/` or another path that survives infrastructure changes. For CmdExec steps calling external APIs (`curl`, `python3`, `gcloud`), move the logic to Airflow where logs are first-class and retries are configurable.
+
+### Anti-pattern | overlapping resource-intensive schedules
+
+Agent backup at 02:00 and Airflow pipeline at 02:05 both hit the same disk. The backup holds locks on data files while the pipeline tries to write.
+
+> [!danger] I/O contention from overlapping schedules
+>
+> Concurrent disk-intensive operations (backup, index rebuild, bulk insert) cause mutual slowdown and can trigger timeouts or deadlocks.
+
+> [!success] Stagger and document all schedules
+>
+> Maintain at least 30-minute gaps between resource-intensive jobs. Document all schedules in a single registry (spreadsheet, Confluence page, or Terraform config) so no team schedules jobs in ignorance of what else runs at that time.
 
 ---
 
 ## Monitoring Agent Jobs from GCP
 
-### SQL Server → Cloud Logging → Datadog
+Agent job results live in `msdb.dbo.sysjobhistory`, but msdb is invisible outside SQL Server. For unified observability across the GCP + SQL Server stack, job failures must be forwarded through the SQL Server error log into Cloud Logging and Datadog.
 
-> [!info] Agent Observability
->
-> SQL Server Agent writes job results to `msdb.dbo.sysjobhistory`. Forward these to GCP Cloud Logging via the SQL Server error log, then to Datadog for unified alerting.
+### GCP | Agent → Cloud Logging → Datadog | observability pipeline
 
-- **Agent job failures** appear in the SQL Server error log → captured by Cloud Logging agent → visible in Cloud Logging console
-- **Datadog SQL Server integration** monitors agent job status natively: `sqlserver.agent.job.failed` metric
-- **Custom alerting:** query `sysjobhistory` for `run_status = 0` (failed) and push to Pub/Sub for alerting
+The three-stage pipeline for Agent observability:
 
-#### SELECT failed jobs — alert query for monitoring
+1. **SQL Server error log** — Agent writes job failures to the error log automatically. On Linux, this is at `/var/opt/mssql/log/errorlog`.
+2. **Cloud Logging agent** — the Ops Agent (`google-cloud-ops-agent`) on the VM captures the error log and forwards entries to Cloud Logging. Failures become searchable and alertable in the GCP console.
+3. **Datadog SQL Server integration** — Datadog's native SQL Server check monitors Agent job status via the `sqlserver.agent.job.failed` metric. See [datadog-sql-server-integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-sql-server-integration) for setup.
+
+For custom alerting beyond Datadog's built-in metrics, query `sysjobhistory` for `run_status = 0` (failed) and push results to Pub/Sub for downstream alerting.
+
+#### Query failed jobs in the last 24 hours
+
+This query surfaces all failed job executions. Use it as the basis for a custom monitoring script or an Airflow sensor that checks Agent health.
 
 ```sql
--- Failed jobs in the last 24 hours
 SELECT j.name, h.step_name, h.message, h.run_date, h.run_time
 FROM msdb.dbo.sysjobhistory h
 JOIN msdb.dbo.sysjobs j ON h.job_id = j.job_id
@@ -428,22 +728,3 @@ WHERE h.run_status = 0
   AND h.run_date >= CONVERT(INT, CONVERT(VARCHAR(8), DATEADD(DAY, -1, GETDATE()), 112));
 ```
 
----
-
-## Agent Job Anti-Patterns
-
-### Running ETL in Agent When Airflow Should Own It
-
-Agent has no dependency management. If your transform_silver job depends on load_bronze completing first, Agent can't express that dependency. You end up with fragile time-based scheduling ("run silver 30 minutes after bronze") that breaks when bronze takes longer than expected. Use Airflow for anything with dependencies.
-
-### No Alerting on Job Failures
-
-Agent jobs fail silently by default — the result goes into `sysjobhistory` but nobody is notified. Configure Database Mail + Operators, or forward failures to Cloud Logging. A job that fails silently for weeks is worse than a job that doesn't exist.
-
-### CmdExec Steps with Hardcoded Paths
-
-Agent CmdExec steps with `/home/alex/scripts/backup.sh` break on VM migration, OS upgrade, or user change. Use full paths from environment variables or store scripts in a well-known location (`/opt/mssql/scripts/`).
-
-### Scheduling Overlapping Resource-Intensive Jobs
-
-Agent backup at 02:00 and Airflow pipeline at 02:05 both hit the same disk. The backup holds locks on data files while the pipeline tries to write. Stagger schedules with at least 30-minute gaps between resource-intensive jobs, and document all schedules in a single registry (spreadsheet, Confluence page, or Terraform config).

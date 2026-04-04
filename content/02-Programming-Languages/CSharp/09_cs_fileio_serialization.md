@@ -44,25 +44,31 @@ optionsField.SetValue(csharpKernel, newOptions);
 
 ## Read, Write, Append Files
 
-#### File.WriteAllText and File.ReadAllText
+The `System.IO` namespace provides two tiers of file access: static convenience methods on the `File` class for simple one-shot operations, and `StreamReader`/`StreamWriter` for buffered, line-by-line processing of large files. All text methods default to UTF-8 encoding — always pass `Encoding.UTF8` explicitly to avoid platform-dependent behavior.
+
+### File class — static read/write methods
+
+#### File.WriteAllText and File.ReadAllText | read or write an entire file in one call
+
+`File.WriteAllText` creates or overwrites a file with a single string. `File.ReadAllText` loads the entire file contents into memory as one string. `File.ReadAllLines` returns a `string[]` with one element per line. These are the simplest file I/O methods — ideal for small files (configs, metadata, pipeline manifests) where the entire content fits comfortably in memory.
 
 > [!info] File class — one-line read/write
 >
 > - `WriteAllText` — creates or overwrites a file
 > - `ReadAllText` — reads entire file into a string
 > - UTF-8 by default
+
+> [!warning] Don't use on huge files
 >
-> > [!warning] Don't use on huge files (loads all into memory) — use `StreamReader` for line-by-line.
+> `File.ReadAllText` and `File.ReadAllLines` load the entire file into memory. For multi-GB data lake exports, use `StreamReader` for line-by-line processing instead.
 
 ```csharp
 #nullable enable
 
-// Write and read — File class static methods for simple one-shot operations
 var tmpDir = Path.Combine(Path.GetTempPath(), "fileio_cs_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
 $"Working dir: {tmpDir}"
 
-// WriteAllText — creates or overwrites the file
 var stagingFile = Path.Combine(tmpDir, "pipeline_output.txt");
 var content = "pipeline_id|status|rows_processed\n"
             + "etl_001|success|15000\n"
@@ -71,11 +77,9 @@ var content = "pipeline_id|status|rows_processed\n"
 File.WriteAllText(stagingFile, content, Encoding.UTF8);
 $"  Written: {Path.GetFileName(stagingFile)} ({new FileInfo(stagingFile).Length} bytes)"
 
-// ReadAllText — entire file into one string (fine for small files)
 var text = File.ReadAllText(stagingFile, Encoding.UTF8);
 $"  Content ({text.Length} chars): {text[..50]}..."
 
-// ReadAllLines — returns string[] with one element per line
 string[] allLines = File.ReadAllLines(stagingFile, Encoding.UTF8);
 $"  Lines: {allLines.Length}"
 foreach (var (line, i) in allLines.Select((l, i) => (l, i)))
@@ -93,14 +97,16 @@ foreach (var (line, i) in allLines.Select((l, i) => (l, i)))
       [2]: etl_002|failed|0
       [3]: etl_003|success|8200
 
-#### StreamReader and StreamWriter
+### StreamReader and StreamWriter — buffered line-by-line I/O
+
+#### StreamReader and StreamWriter | read and write files with buffered streams
+
+`StreamReader` reads a file line by line, keeping only one line in memory at a time — use it for large files (multi-GB exports, log files) where `File.ReadAllText` would exhaust memory. `StreamWriter` buffers writes and flushes in batches, making it more efficient than `File.WriteAllText` for many small writes. Both wrap a `FileStream` internally and handle encoding conversion.
 
 > [!info] StreamWriter for Buffered Writing
 > `StreamWriter` buffers writes and flushes in batches — more efficient than `WriteAllText` for many small writes.
 
 ```csharp
-// StreamReader — line-by-line reading for large files
-
 using (var reader = new StreamReader(stagingFile, Encoding.UTF8))
 {
     string? line;
@@ -126,53 +132,73 @@ $"  Written: {Path.GetFileName(logFile)}"
       etl_003|success|8200
       etl_log.txt
 
-#### Append, Binary I/O, and Path operations
+### Append, binary I/O, and path operations
+
+#### File.AppendAllText | append text to an existing file
+
+`File.AppendAllText` adds text to the end of a file without truncating existing content — equivalent to `open()` with mode `'a'` in Python. Creates the file if it doesn't exist. `StreamWriter` with `append: true` provides buffered appending for multiple writes.
 
 ```csharp
-// Append, binary I/O, and Path operations
-
 File.AppendAllText(logFile, "2024-01-15T03:01:00|WARN|Slow query detected\n", Encoding.UTF8);
 using (var writer = new StreamWriter(logFile, append: true, Encoding.UTF8))
     writer.WriteLine("2024-01-15T03:02:00|INFO|Pipeline completed");
 
 var lines = File.ReadAllLines(logFile);
 $"  Total lines: {lines.Length}, Last: {lines[^1]}"
+```
 
-// Binary I/O — File.WriteAllBytes / File.ReadAllBytes for raw bytes
+```text
+  Total lines: 6, Last: 2024-01-15T03:02:00|INFO|Pipeline completed
+```
+
+#### File.WriteAllBytes and File.ReadAllBytes | binary file I/O
+
+`File.WriteAllBytes` writes a `byte[]` to a file in one call. `File.ReadAllBytes` reads the entire file into a `byte[]`. Use for non-text data such as image headers, binary protocols, or inspection of raw file signatures. For large binary files (>100MB), prefer `FileStream` with buffered reads.
+
+```csharp
 var binFile = Path.Combine(tmpDir, "sample.bin");
 byte[] pngMagic = { 0x89, 0x50, 0x4E, 0x47 };
 File.WriteAllBytes(binFile, pngMagic);
 byte[] raw = File.ReadAllBytes(binFile);
-BitConverter.ToString(raw)   // Binary
+BitConverter.ToString(raw)
+```
 
-// Path operations — System.IO.Path for cross-platform path manipulation
+```text
+89-50-4E-47
+```
+
+#### Path and Directory operations | cross-platform path manipulation
+
+`System.IO.Path` provides static methods for extracting path components (`GetFileName`, `GetExtension`, `GetDirectoryName`) and joining segments (`Combine`). Always use `Path.Combine` instead of string concatenation — it handles platform-specific path separators automatically. `Directory.GetFiles` lists all files in a directory.
+
+```csharp
 var p = @"/data/lake/raw/events/2024/01/events.parquet";
-Path.GetFileName(p)                          // FileName
-Path.GetExtension(p)                         // Extension
-Path.GetDirectoryName(p)                     // Directory
-Path.Combine(tmpDir, "output", "data.csv")   // Combine
+Path.GetFileName(p)
+Path.GetExtension(p)
+Path.GetDirectoryName(p)
+Path.Combine(tmpDir, "output", "data.csv")
 
-// List files
 foreach (var f in Directory.GetFiles(tmpDir))
     Path.GetFileName(f)
 
-// Cleanup
 Directory.Delete(tmpDir, recursive: true);
 ```
 
-      6, Last: 2024-01-15T03:02:00|INFO|Pipeline completed
-      89-50-4E-47
-      events.parquet
-      .parquet
-      \data\lake\raw\events\2024\01
-      C:\Users\aperi\AppData\Local\Temp\fileio_cs_da9b60f9\output\data.csv
-        etl_log.txt
-        pipeline_output.txt
-        sample.bin
-    
-      C:\Users\aperi\AppData\Local\Temp\fileio_cs_da9b60f9
+```text
+events.parquet
+.parquet
+\data\lake\raw\events\2024\01
+C:\Users\aperi\AppData\Local\Temp\fileio_cs_da9b60f9\output\data.csv
+  etl_log.txt
+  pipeline_output.txt
+  sample.bin
+```
 
 ## CSV Files
+
+C# has no built-in CSV module like Python's `csv`. For simple, controlled data (no commas in values), write with `StreamWriter` and parse with `string.Split(',')`. For production data with quoting, embedded commas, or custom delimiters, use the `CsvHelper` NuGet package.
+
+### Manual CSV — StreamWriter and string.Split
 
 #### Write and read CSV manually
 
@@ -189,11 +215,9 @@ Write header + rows with `string.Join`. Read with `Split(',')`. Works for simple
 ```csharp
 #nullable enable
 
-// Write and read CSV — manual string.Split works for controlled data; use CsvHelper for production
 var tmpDir = Path.Combine(Path.GetTempPath(), "csv_cs_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
 
-// Write CSV with StreamWriter
 var csvFile = Path.Combine(tmpDir, "pipeline_runs.csv");
 using (var writer = new StreamWriter(csvFile, false, Encoding.UTF8))
 {
@@ -204,7 +228,6 @@ using (var writer = new StreamWriter(csvFile, false, Encoding.UTF8))
 }
 $"  Written: {Path.GetFileName(csvFile)}"
 
-// Read CSV with string.Split — works only if values never contain commas
 using (var reader = new StreamReader(csvFile, Encoding.UTF8))
 {
     var header = reader.ReadLine()?.Split(',');
@@ -224,11 +247,11 @@ using (var reader = new StreamReader(csvFile, Encoding.UTF8))
       etl_002: failed, 0 rows
       etl_003: success, 8'200 rows
 
-#### CSV quoting, DictReader pattern, and delimiters
+#### CSV quoting and DictReader pattern | safe field quoting and named-column access
+
+`CsvQuote` wraps fields containing commas, quotes, or newlines in double quotes per RFC 4180. `ReadCsvAsDict` maps each row to a `Dictionary<string, string>` using the header as keys — equivalent to Python's `csv.DictReader`. Access columns by name (`row["status"]`) instead of fragile positional indexing (`parts[1]`).
 
 ```csharp
-// CSV quoting, DictReader pattern, and custom delimiters
-
 string CsvQuote(string value)
 {
     if (value.Contains(',') || value.Contains('"') || value.Contains('\n'))
@@ -236,13 +259,9 @@ string CsvQuote(string value)
     return value;
 }
 
-// CsvRow: joins quoted fields with commas
 string CsvRow(params string[] fields) =>
     string.Join(",", fields.Select(CsvQuote));
 
-// DictReader pattern — map each row to Dictionary<string, string> using the header as keys
-// This is what Python's csv.DictReader does automatically.
-// Access columns by name (row["status"]) instead of by index (parts[1]).
 List<Dictionary<string, string>> ReadCsvAsDict(string path)
 {
     var results = new List<Dictionary<string, string>>();
@@ -271,11 +290,13 @@ foreach (var row in rows)
       etl_002: failed
       etl_003: success
 
+### Delimiters and in-memory CSV
+
 #### Custom delimiters — pipe and tab
 
-```csharp
-// Pipe-delimited and tab-delimited — alternative CSV formats
+Pipe-delimited (`|`) and tab-delimited (TSV) formats are common in legacy data warehouses and BigQuery/Redshift exports. Parse them the same way as CSV by splitting on the delimiter character instead of `,`.
 
+```csharp
 var pipeData = "id|name|region\n1|Alice|EMEA\n2|Bob|APAC";
 foreach (var line in pipeData.Split('\n'))
     $"  Pipe: [{string.Join(", ", line.Split('|'))}]"
@@ -285,11 +306,11 @@ foreach (var line in pipeData.Split('\n'))
       [1, Alice, EMEA]
       [2, Bob, APAC]
 
-#### In-memory CSV — StringWriter
+#### In-memory CSV — StringWriter | build CSV payload without disk I/O
+
+`StringWriter` builds a CSV string entirely in memory — useful for constructing API payloads or cloud upload content without writing to disk first. Call `ToString()` to retrieve the completed CSV string.
 
 ```csharp
-// In-memory CSV — StringWriter for API payloads and cloud uploads
-
 var sw = new StringWriter();
 sw.WriteLine("event_id,event_type,timestamp");
 sw.WriteLine("evt_001,page_view,2024-01-15T10:30:00Z");
@@ -302,7 +323,48 @@ Directory.Delete(tmpDir, recursive: true);
       event_id,event_type,timestamp
     evt_001,page_view,2024-01-15T10:30:00Z
 
+### CsvHelper — production CSV handling
+
+#### CsvHelper | NuGet library for robust CSV with header mapping
+
+`CsvHelper` (NuGet: `dotnet add package CsvHelper`) is the standard C# library for production CSV. It handles quoted commas, escaped quotes, custom delimiters, header mapping, and lazy streaming. Records are yielded one at a time via `GetRecords<T>()` — memory-efficient for large files. Use `ClassMap<T>` for custom column mapping. This is the C# equivalent of Python's `csv.DictReader` with type conversion.
+
+```csharp
+// CsvHelper pattern — production CSV reading with typed records and class mapping
+// Requires: dotnet add package CsvHelper
+
+// using CsvHelper;
+// using CsvHelper.Configuration;
+// using System.Globalization;
+
+// Define a typed record matching the CSV columns
+// record PipelineRun(string PipelineId, string Status, int RowsProcessed, double DurationS);
+
+// Read CSV → typed records (lazily streamed, memory-efficient)
+// using var reader = new StreamReader("pipeline_runs.csv");
+// using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+// foreach (var run in csv.GetRecords<PipelineRun>())
+//     Console.WriteLine($"{run.PipelineId}: {run.Status}, {run.RowsProcessed:N0} rows");
+
+// Write typed records → CSV
+// using var writer = new StreamWriter("output.csv");
+// using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+// csv.WriteRecords(records);
+```
+
+> [!tip] CsvHelper vs manual Split
+>
+> Use `string.Split(',')` only for controlled internal data where you guarantee no commas in values. For anything user-facing, cross-system, or with unknown data quality, use `CsvHelper` — it handles RFC 4180 quoting, BOM detection, and custom delimiters automatically.
+
 ## JSON
+
+`System.Text.Json` is the built-in JSON library in .NET (since .NET Core 3.0). It provides `JsonSerializer` for typed serialization/deserialization, `JsonDocument` for read-only DOM access, and `Utf8JsonReader`/`Utf8JsonWriter` for high-performance streaming. For naming conventions (PascalCase → snake_case), configure `JsonSerializerOptions` once and reuse the instance.
+
+> [!info] System.Text.Json vs Newtonsoft.Json
+>
+> `Newtonsoft.Json` (a.k.a. `Json.NET`) was the de facto standard before .NET Core 3.0. It supports `JObject` dynamic access, `JsonPath` queries, and richer customization. New projects should use `System.Text.Json` for performance and AOT compatibility. Migrate from Newtonsoft only if you need features like `[JsonConverter]` with complex inheritance or `JsonPath`.
+
+### System.Text.Json | JsonSerializer
 
 #### JsonSerializerOptions — configure camelCase, indentation, encoding
 
@@ -313,10 +375,11 @@ Directory.Delete(tmpDir, recursive: true);
 > - `Encoder` — Unicode handling
 > - Reuse one instance — don't create new options per call
 
+The setup cell below creates a shared `JsonSerializerOptions` instance (reused by all subsequent cells) and defines a `PipelineRun` record with `[JsonPropertyName]` attributes to map PascalCase C# properties to snake_case JSON keys.
+
 ```csharp
 #nullable enable
 
-// Shared JSON options — reuse everywhere
 var jsonOptions = new JsonSerializerOptions
 {
     WriteIndented = true,
@@ -327,7 +390,6 @@ var jsonOptions = new JsonSerializerOptions
 var tmpDir = Path.Combine(Path.GetTempPath(), "json_cs_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
 
-// PipelineRun — record with JsonPropertyName for snake_case mapping
 record PipelineRun(
     [property: JsonPropertyName("pipeline_id")] string PipelineId,
     [property: JsonPropertyName("status")] string Status,
@@ -340,9 +402,9 @@ record PipelineRun(
 
 #### Serialize — object to JSON string
 
-```csharp
-// Serialize — convert C# objects to JSON strings
+`JsonSerializer.Serialize` converts any C# object (anonymous types, records, classes) to a JSON string. Properties are renamed according to the `PropertyNamingPolicy` set in options. Anonymous types serialize by their property names.
 
+```csharp
 var pipelineMeta = new
 {
     PipelineId = "etl_events_daily",
@@ -370,11 +432,11 @@ JsonSerializer.Serialize(pipelineMeta, jsonOptions)
       "row_count": 1500000
     }
 
-#### Typed record serialization with JsonPropertyName
+#### Typed record serialization with JsonPropertyName | PascalCase to snake_case mapping
+
+When serializing a record or class with `[JsonPropertyName]` attributes, the attribute value takes precedence over the naming policy. Set `DefaultIgnoreCondition = WhenWritingNull` to omit null-valued properties from the output — useful for optional fields like `error_message`.
 
 ```csharp
-// Typed record with JsonPropertyName — PascalCase to snake_case mapping
-
 var run = new PipelineRun(
     PipelineId: "etl_events_daily",
     Status: "success",
@@ -396,9 +458,9 @@ JsonSerializer.Serialize(run, jsonOptions)
 
 #### Deserialize — JSON string to typed object
 
-```csharp
-// Deserialize — parse JSON string into a typed C# object
+`JsonSerializer.Deserialize<T>` parses a JSON string into a typed C# object. Property matching uses `[JsonPropertyName]` attributes or the `PropertyNamingPolicy`. The result is nullable — use the `!` operator or null-check before accessing properties.
 
+```csharp
 var jsonInput = @"{
     ""pipeline_id"": ""etl_purchases"",
     ""status"": ""failed"",
@@ -418,17 +480,18 @@ run2.ErrorMessage    // Error
       failed
       Source table not found
 
-#### JSON file I/O and JsonDocument
+### File I/O and dynamic JSON parsing
+
+#### JSON file I/O and JsonDocument | persist to disk and query without a class
+
+Combine `JsonSerializer.Serialize` with `File.WriteAllText` to persist JSON to disk, and `File.ReadAllText` with `Deserialize<T>` to load it back. For JSON with an unknown or dynamic schema (API responses, config files), use `JsonDocument.Parse` to navigate the tree without defining a class — access properties via `GetProperty` and typed getters (`GetString`, `GetInt64`, `GetBoolean`).
 
 ```csharp
-// JSON file I/O and JsonDocument — file persistence and dynamic parsing
-
 var jsonFile = Path.Combine(tmpDir, "pipeline_config.json");
 File.WriteAllText(jsonFile, JsonSerializer.Serialize(run, jsonOptions), Encoding.UTF8);
 var loaded = JsonSerializer.Deserialize<PipelineRun>(File.ReadAllText(jsonFile), jsonOptions);
 $"  Loaded: {loaded!.PipelineId}, {loaded.RowsProcessed:N0} rows"
 
-// JsonDocument — low-level read-only DOM for querying without a class
 var apiResponse = @"{
     ""status"": ""completed"",
     ""job_id"": ""bq_job_12345"",
@@ -455,11 +518,13 @@ var apiResponse = @"{
       1'500'000
       False
 
-#### JSON Lines (JSONL)
+### Streaming JSON formats
+
+#### JSON Lines (JSONL) | one JSON object per line for streaming
+
+JSONL is the standard format for BigQuery exports/imports, Kafka messages, and streaming pipelines. Each line is a complete, valid JSON object — no surrounding array, no commas between lines. Write with one `JsonSerializer.Serialize` per line (no indentation). Read with one `JsonDocument.Parse` per line.
 
 ```csharp
-// JSON Lines (JSONL) — one JSON object per line for streaming
-
 var events = new[]
 {
     new { EventId = "evt_001", Type = "page_view", UserId = 1001, Ts = "2024-01-15T10:30:00Z" },
@@ -470,13 +535,10 @@ var events = new[]
 var jsonlFile = Path.Combine(tmpDir, "events.jsonl");
 var compactOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
 
-// Write JSONL — one Serialize per line, no indentation
 using (var writer = new StreamWriter(jsonlFile, false, Encoding.UTF8))
     foreach (var evt in events)
         writer.WriteLine(JsonSerializer.Serialize(evt, compactOptions));
 
-
-// Read JSONL — one Deserialize per line
 using (var reader = new StreamReader(jsonlFile, Encoding.UTF8))
 {
     string? line;
@@ -493,11 +555,11 @@ using (var reader = new StreamReader(jsonlFile, Encoding.UTF8))
       evt_002: purchase by user 1002
       evt_003: logout by user 1001
 
-#### Utf8JsonWriter — write JSON directly to a stream
+#### Utf8JsonWriter — write JSON directly to a byte stream
+
+`Utf8JsonWriter` writes JSON tokens directly to a `Stream` or `IBufferWriter<byte>` as UTF-8 bytes — no intermediate string allocations. Use for high-throughput scenarios (logging, metrics export) where `JsonSerializer.Serialize` would create too much GC pressure. Call `WriteStartObject`, property writers, and `WriteEndObject` to construct the JSON structure imperatively.
 
 ```csharp
-// Utf8JsonWriter — write JSON directly to a byte stream
-
 {
     var ms = new MemoryStream();
     var utf8Writer = new Utf8JsonWriter(ms, new JsonWriterOptions { Indented = true });
@@ -522,6 +584,10 @@ Directory.Delete(tmpDir, recursive: true);
     }
 
 ## YAML
+
+YAML is the standard configuration format for dbt, Airflow, Kubernetes, and Docker Compose. It uses indentation for structure (like Python), supports comments (`#`), and is more readable than JSON for config files. C# parses YAML via the `YamlDotNet` NuGet package.
+
+### YAML format and syntax
 
 #### YAML format and comparison with JSON
 
@@ -556,11 +622,11 @@ jsonConfig
         }
     }
 
-#### YAML equivalent
+#### YAML equivalent of the JSON config
+
+The same pipeline configuration expressed in YAML — notice the cleaner syntax, support for inline comments, and lack of quoting requirements. YAML supports block lists (items prefixed with `-`) and inline lists (`[a, b, c]`).
 
 ```csharp
-// YAML equivalent of JSON config — comments and clean syntax
-
 var yamlConfig = @"# Pipeline configuration (YAML supports comments — JSON does not)
 pipeline:
   name: etl_events_daily
@@ -603,12 +669,13 @@ yamlConfig
     
     tags: [production, clickstream, daily]
 
-#### YamlDotNet usage pattern
+### YamlDotNet — serialize and deserialize YAML in C#
+
+#### YamlDotNet usage pattern | DeserializerBuilder and SerializerBuilder
+
+`YamlDotNet` provides a builder pattern for creating serializers and deserializers. Use `UnderscoredNamingConvention` to map PascalCase C# properties to snake_case YAML keys. This cell shows pseudo-code — `YamlDotNet` must be installed via NuGet (`dotnet add package YamlDotNet`) and requires a concrete `PipelineConfig` class definition.
 
 ```csharp
-// YamlDotNet usage pattern — serialize and deserialize YAML in C#
-
-// Deserialize YAML → object
 var deserializer = new DeserializerBuilder()
     .WithNamingConvention(UnderscoredNamingConvention.Instance)
     .Build();
@@ -640,40 +707,43 @@ var config2 = deserializer.Deserialize<PipelineConfig>(File.ReadAllText("config.
     // Read from file
     var config2 = deserializer.Deserialize<PipelineConfig>(File.ReadAllText("config.yaml"));
 
-#### JSON vs YAML comparison
+#### Multi-document YAML | multiple documents in one file with --- separator
+
+Some tools (Kubernetes manifests, dbt model configs) use multiple YAML documents in a single file, separated by `---`. `YamlDotNet` does not have a built-in `safe_load_all` equivalent — parse each document by splitting on `---` first, or use the `YamlStream` API to iterate documents.
 
 ```csharp
-// JSON vs YAML comparison — when to use each format
-
-// Feature           JSON                    YAML
-// ─────────────────────────────────────────────────────
-// Comments          NO                      YES (#)
-// Quoting           REQUIRED (double)       Optional
-// Trailing commas   NO                      N/A
-// Readability       Compact                 Human-friendly
-// Use case          APIs, data exchange     Config files (dbt, Airflow, K8s)
-// C# package        System.Text.Json        YamlDotNet
-// Security          Safe                    Use SafeYaml / safe_load ONLY
-// Multi-document    No                      Yes (--- separator)
+// Multi-document YAML parsing with YamlDotNet
+// var yamlStream = new YamlStream();
+// yamlStream.Load(new StringReader(multiDocYaml));
+// foreach (var doc in yamlStream.Documents)
+// {
+//     var root = (YamlMappingNode)doc.RootNode;
+//     var name = root.Children[new YamlScalarNode("name")];
+// }
 ```
 
-    
-    Feature           JSON                    YAML
-    ─────────────────────────────────────────────────────
-    Comments          NO                      YES (#)
-    Quoting           REQUIRED (double)       Optional
-    Trailing commas   NO                      N/A
-    Readability       Compact                 Human-friendly
-    Use case          APIs, data exchange     Config files (dbt, Airflow, K8s)
-    C# package        System.Text.Json        YamlDotNet
-    Security          Safe                    Use SafeYaml / safe_load ONLY
-    Multi-document    No                      Yes (--- separator)
+#### JSON vs YAML comparison | when to use each format
+
+| Feature | JSON | YAML |
+|---|---|---|
+| Comments | No | Yes (`#`) |
+| Quoting | Required (double quotes) | Optional |
+| Trailing commas | No | N/A |
+| Readability | Compact | Human-friendly |
+| Use case | APIs, data exchange | Config files (dbt, Airflow, K8s) |
+| C# package | `System.Text.Json` | `YamlDotNet` |
+| Security | Safe | Use `SafeYaml` / `safe_load` only |
+| Multi-document | No | Yes (`---` separator) |
 
 ## Serialization, Deserialization, and Streams
 
 For an architecture-level comparison of when to choose JSON, CSV, Parquet, or Avro across the full pipeline, see [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats). The `GZipStream` and `DeflateStream` wrappers used with these streams map to the codec decisions covered in [compression](https://alp78.github.io/elysium/01-Shell/File-Operations/compression).
 
-#### Serialization Streams — System.IO hierarchy FileStream, MemoryStream, StreamReader
+### System.IO stream hierarchy
+
+#### Stream class hierarchy | FileStream, MemoryStream, NetworkStream, and wrappers
+
+All I/O in .NET flows through the abstract `Stream` class. Concrete implementations handle different backends (file, memory, network, compression). Wrappers like `StreamReader`/`StreamWriter`, `BinaryReader`/`BinaryWriter`, and `Utf8JsonWriter` sit on top of any stream to provide typed access. Always dispose streams with `using` statements.
 
 > [!info] Stream hierarchy
 >
@@ -682,44 +752,43 @@ For an architecture-level comparison of when to choose JSON, CSV, Parquet, or Av
 > - `StreamReader`/`StreamWriter` — wrap streams for text I/O
 > - Uniform API with async support; always dispose streams
 
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    S["Stream\n(abstract base)"]
+    S --> FS["FileStream\nbytes ↔ file"]
+    S --> MS["MemoryStream\nbytes in memory"]
+    S --> NS["NetworkStream\nbytes over TCP"]
+    S --> GS["GZipStream\ncompress / decompress"]
+    S --> BS["BufferedStream\nadds buffering"]
+    S -.- W["Wrappers:\nStreamReader / StreamWriter\nBinaryReader / BinaryWriter\nUtf8JsonWriter"]
+```
+
 ```csharp
 #nullable enable
 
-// Stream hierarchy — all I/O in .NET flows through streams
 var tmpDir = Path.Combine(Path.GetTempPath(), "streams_cs_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
-
-// Stream (abstract base)
-// ├── FileStream         — bytes to/from a file
-// ├── MemoryStream       — bytes in memory (no disk)
-// ├── NetworkStream      — bytes over TCP
-// ├── GZipStream         — compress/decompress on the fly
-// └── BufferedStream     — adds buffering to any stream
-//
-// Wrappers (sit on top of a Stream):
-// ├── StreamReader / StreamWriter  — text I/O (encoding)
-// ├── BinaryReader / BinaryWriter  — primitive types
-// └── Utf8JsonWriter               — JSON to a stream
 ```
 
-    
-    Stream (abstract base)
-    ├── FileStream         — bytes to/from a file
-    ├── MemoryStream       — bytes in memory (no disk)
-    ├── NetworkStream      — bytes over TCP
-    ├── GZipStream         — compress/decompress on the fly
-    └── BufferedStream     — adds buffering to any stream
-    
-    Wrappers (sit on top of a Stream):
-    ├── StreamReader / StreamWriter  — text I/O (encoding)
-    ├── BinaryReader / BinaryWriter  — primitive types
-    └── Utf8JsonWriter               — JSON to a stream
+### In-memory streams
 
 #### MemoryStream — in-memory byte stream
 
-```csharp
-// MemoryStream — in-memory byte stream for testing and cloud uploads
+`MemoryStream` stores bytes in a resizable memory buffer — no disk I/O. Use for building payloads for cloud uploads, unit testing, or piping data between components. Write with `Write(byte[])`, rewind with `Seek(0, SeekOrigin.Begin)`, and retrieve all bytes with `ToArray()`.
 
+```csharp
 using (var ms = new MemoryStream())
 {
     byte[] header = Encoding.UTF8.GetBytes("PIPELINE_DATA\n");
@@ -738,11 +807,11 @@ using (var ms = new MemoryStream())
       PIPELINE_DATA
     etl_001|success|15000
 
-#### MemoryStream + StreamWriter — build CSV in memory for cloud upload
+#### MemoryStream + StreamWriter | build CSV in memory for cloud upload
+
+Wrap a `MemoryStream` in a `StreamWriter` to build text content (CSV, JSON) in memory. Pass `leaveOpen: true` so disposing the writer doesn't close the underlying stream — you still need it for the upload. Rewind with `Seek(0)` before reading or uploading.
 
 ```csharp
-// Cloud upload pattern — build CSV in MemoryStream and upload directly
-
 {
     var uploadStream = new MemoryStream();
     using (var writer = new StreamWriter(uploadStream, Encoding.UTF8, leaveOpen: true))
@@ -764,11 +833,11 @@ using (var ms = new MemoryStream())
     evt_001,page_view,1001
     evt_002,purchase,1002
 
-#### StringWriter / StringReader
+#### StringWriter / StringReader | text streams in memory
+
+`StringWriter` builds a string incrementally — equivalent to Python's `io.StringIO`. Use for constructing text payloads (pipe-delimited rows, log entries) without disk I/O. `StringReader` reads a string line by line, behaving like a file opened for reading.
 
 ```csharp
-// StringWriter / StringReader — text stream in memory
-
 var sw = new StringWriter();
 sw.WriteLine("pipeline_id|status|rows");
 sw.WriteLine("etl_001|success|15000");
@@ -783,9 +852,9 @@ builtString.TrimEnd()   // StringWriter output
 
 #### StringReader — line-by-line parsing of in-memory text
 
-```csharp
-// StringReader — read string line by line as if it were a file
+`StringReader` wraps an existing string and exposes `ReadLine()` — useful for parsing multi-line text (CSV data, log output) without writing it to disk first.
 
+```csharp
 var sr = new StringReader(builtString);
 string? line;
 int lineNum = 0;
@@ -797,11 +866,13 @@ while ((line = sr.ReadLine()) != null)
       etl_001|success|15000
       etl_002|failed|0
 
-#### BinaryReader / BinaryWriter
+### Binary serialization
+
+#### BinaryWriter | write primitive types in compact binary format
+
+`BinaryWriter` writes C# primitives (`int`, `double`, `bool`, `string`) directly to a stream as compact binary data. Each type has a fixed byte size (`int` = 4 bytes, `double` = 8 bytes, `bool` = 1 byte). Strings are length-prefixed. The reader must read in the exact same order and types — there is no self-describing schema.
 
 ```csharp
-// BinaryWriter — write primitive types in compact binary format
-
 var binFile = Path.Combine(tmpDir, "sensor_data.bin");
 using (var fs = new FileStream(binFile, FileMode.Create))
 using (var bw = new BinaryWriter(fs))
@@ -817,9 +888,9 @@ new FileInfo(binFile).Length   // bytes written
 
 #### BinaryReader — read back in same order and types
 
-```csharp
-// BinaryReader — read primitives back in exact same order and types
+`BinaryReader` reads primitives from a stream in the exact order they were written. Call the typed read method matching each value: `ReadInt32()` for `int`, `ReadDouble()` for `double`, `ReadBoolean()` for `bool`. A mismatch in read order corrupts all subsequent values.
 
+```csharp
 using (var fs = new FileStream(binFile, FileMode.Open))
 using (var br = new BinaryReader(fs))
 {
@@ -837,11 +908,11 @@ using (var br = new BinaryReader(fs))
       19.8, alert=False
       31.2, alert=True
 
-#### Binary in memory
+#### Binary in memory | BinaryWriter and BinaryReader on MemoryStream
+
+Combine `BinaryWriter`/`BinaryReader` with `MemoryStream` to serialize primitives in memory — useful for building binary protocol messages or testing serialization logic without disk I/O.
 
 ```csharp
-// Binary in memory — BinaryWriter/Reader on MemoryStream
-
 {
     var binaryMs = new MemoryStream();
     using (var bw = new BinaryWriter(binaryMs, Encoding.UTF8, leaveOpen: true))
@@ -860,11 +931,13 @@ using (var br = new BinaryReader(fs))
 
       sensor=42, value=23.5, alert=True, region=EMEA
 
-#### FileStream — low-level byte I/O
+### FileStream — low-level byte I/O
+
+#### FileStream | read and write with seek and buffer control
+
+`FileStream` provides direct byte-level access to a file with explicit control over mode (`Create`, `Open`), access (`Read`, `Write`), and seek position. Use for random-access patterns (reading a specific offset), appending raw bytes, or when you need fine-grained buffer management. For sequential text I/O, `StreamReader`/`StreamWriter` are simpler.
 
 ```csharp
-// FileStream — low-level byte I/O with buffer and seek control
-
 var rawFile = Path.Combine(tmpDir, "raw_data.bin");
 
 // Write raw bytes
@@ -893,6 +966,8 @@ Directory.Delete(tmpDir, recursive: true);
 
 ## Async File I/O
 
+### Async file methods — ReadAllTextAsync, StreamReader, StreamWriter
+
 #### Async read and write
 
 Async versions of every I/O method (`ReadAllTextAsync`, `ReadLineAsync`, `ReadAsync`) release the thread during I/O — essential for web servers handling concurrent requests. Same API, just add `Async` suffix and `await`.
@@ -910,14 +985,11 @@ var tmpDir = Path.Combine(Path.GetTempPath(), "async_cs_" + Guid.NewGuid().ToStr
 Directory.CreateDirectory(tmpDir);
 var asyncFile = Path.Combine(tmpDir, "data.txt");
 
-// Async write — File.WriteAllTextAsync releases the thread during disk write
 await File.WriteAllTextAsync(asyncFile, "line1\nline2\nline3\n", Encoding.UTF8);
 
-// Async read — File.ReadAllTextAsync releases the thread during disk read
 var content = await File.ReadAllTextAsync(asyncFile, Encoding.UTF8);
 content.TrimEnd().Replace("\n", ", ")   // Read async
 
-// Async line-by-line with StreamReader + CancellationToken
 var cts = new CancellationTokenSource();
 using (var reader = new StreamReader(asyncFile, Encoding.UTF8))
 {
@@ -927,7 +999,6 @@ using (var reader = new StreamReader(asyncFile, Encoding.UTF8))
         $"    Async line {lineNum++}: {line}"
 }
 
-// Async write with StreamWriter
 var asyncLog = Path.Combine(tmpDir, "log.txt");
 await using (var writer = new StreamWriter(asyncLog, false, Encoding.UTF8))
 {
@@ -949,6 +1020,8 @@ Directory.Delete(tmpDir, recursive: true);
     2024-01-15 INFO Processing 1M rows
 
 ## Advanced JSON Patterns
+
+### Compile-time and zero-allocation JSON
 
 #### System.Text.Json Source Generators — AOT-friendly serialization
 
@@ -997,9 +1070,9 @@ var parsed = JsonSerializer.Deserialize(json, QuoteContext.Default.StockQuote);
 
 #### Utf8JsonReader — forward-only zero-allocation parsing
 
-```csharp
-// Utf8JsonReader — forward-only zero-allocation JSON parsing
+`Utf8JsonReader` is a forward-only, zero-allocation reader that processes UTF-8 encoded JSON one token at a time. It operates on `ReadOnlySpan<byte>`, consuming constant memory regardless of JSON size. Use for extracting specific fields from large JSON arrays or streams without deserializing the entire document.
 
+```csharp
 {
     var utf8Data = Encoding.UTF8.GetBytes(@"[
       {""symbol"": ""SAP.DE"", ""close"": 166.52, ""volume"": 82621},
@@ -1034,6 +1107,8 @@ var parsed = JsonSerializer.Deserialize(json, QuoteContext.Default.StockQuote);
       zero heap allocations during parsing (only the result list)
 
 ## Memory-Mapped Files
+
+### MemoryMappedFile — OS-paged virtual address space
 
 #### MemoryMappedFile — OS-paged random access
 
@@ -1091,6 +1166,8 @@ Directory.Delete(tmpDir, recursive: true);
       // Both read/write the same memory region — no serialization needed
 
 ## System.IO.Pipelines
+
+### PipeReader and PipeWriter — producer-consumer buffer
 
 #### PipeReader and PipeWriter
 
@@ -1162,6 +1239,8 @@ async Task ReadPipeAsync(PipeReader reader) {
 
 ## High-Performance Parsing with Span
 
+### ReadOnlySpan&lt;char&gt; — zero-allocation text parsing
+
 #### Zero-allocation CSV parsing with ReadOnlySpan&lt;char&gt;
 
 > [!info] Zero-allocation CSV parsing
@@ -1210,6 +1289,8 @@ $"  Split: {parts[0]}, close={parts[2]}"
 
 ## Encoding and Decoding
 
+### Character encoding — UTF-8, ASCII, UTF-16, Latin-1
+
 #### Encoding.UTF8, Encoding.ASCII — character encoding conversion
 
 `Encoding.UTF8.GetBytes(string)` converts text to bytes. `.GetString(bytes)` converts back. C# strings are internally UTF-16; APIs/files use UTF-8. Always specify encoding explicitly — without it, you get mojibake or data corruption.
@@ -1257,11 +1338,13 @@ $"  UTF-8 BOM: [{string.Join(", ", bom.Select(b => $"0x{b:X2}"))}] ({bom.Length}
       40 bytes, roundtrip=False
       [0xEF, 0xBB, 0xBF] (3 bytes)
 
+### Data encoding — Base64, Hex, URL
+
 #### Convert.ToBase64String / FromBase64String — Base64 encoding
 
-```csharp
-// Base64 encoding — binary data as printable ASCII text
+Base64 encodes arbitrary binary data as printable ASCII characters (A–Z, a–z, 0–9, +, /). The output is ~33% larger than the input. Use for embedding binary data in JSON, XML, or email (MIME). URL-safe Base64 replaces `+` and `/` with `-` and `_` and strips padding `=`.
 
+```csharp
 var original = "SAP.DE|2024-03-12|166.52";
 var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(original));
 var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(base64));
@@ -1295,9 +1378,9 @@ urlSafe    // URL-safe
 
 #### Convert.ToHexString / FromHexString — hexadecimal encoding
 
-```csharp
-// Hexadecimal encoding — bytes as 0-9, A-F character pairs
+Hexadecimal encodes each byte as two characters (0–9, A–F). The output is exactly 2x the input size. Standard format for displaying hash digests (SHA-256, MD5), debugging binary data, and comparing byte sequences. `Convert.ToHexString` was added in .NET 5.
 
+```csharp
 var hashBytes = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE };
 var hex = Convert.ToHexString(hashBytes);           // .NET 5+
 var hexLower = Convert.ToHexString(hashBytes).ToLower();
@@ -1321,11 +1404,11 @@ $"  Length: {sha256.Length} bytes = {sha256.Length * 2} hex chars"
       SHA-256 of "SAP.DE": a80ae49a0c54581271b2fa37bc9113425072ca8b559941b00b916d37af0c4e58
       32 bytes = 64 hex chars
 
-#### Uri.EscapeDataString, WebUtility.UrlEncode — URL encoding
+#### Uri.EscapeDataString, WebUtility.UrlEncode — URL percent-encoding
+
+URL encoding (percent-encoding) replaces unsafe characters with `%XX` hex pairs so they can be safely included in URLs. `Uri.EscapeDataString` is the modern API — it encodes spaces as `%20`. `WebUtility.UrlEncode` is the older HTML-form-style API that encodes spaces as `+`. Prefer `EscapeDataString` for REST APIs.
 
 ```csharp
-// URL encoding — escape special characters for safe URL use
-
 var raw = "SAP.DE close=166.52 change=+2.5% sector=Tech&Finance";
 var escaped = Uri.EscapeDataString(raw);
 var unescaped = Uri.UnescapeDataString(escaped);
@@ -1359,11 +1442,11 @@ escaped      // EscapeDataStr
       SAP.DE%20close%3D166.52%20change%3D%2B2.5%25%20sector%3DTech%26Finance
       space → + (WebUtility) vs %20 (EscapeDataString)
 
-#### Encoding comparison
+#### Encoding comparison — same data in UTF-8, Base64, Hex, and URL formats
+
+Demonstrates the same string encoded in all four formats side by side — showing the size overhead of each encoding. UTF-8 is the most compact for ASCII-heavy text, while Hex is the most verbose (2x).
 
 ```csharp
-// Encoding comparison — same data in UTF-8, Base64, Hex, and URL formats
-
 var sample = "SAP €166.52";
 var sampleBytes = Encoding.UTF8.GetBytes(sample);
 

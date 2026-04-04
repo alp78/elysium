@@ -1,4 +1,5 @@
 ---
+title: "07. Generics & LINQ - C#"
 tags: [csharp]
 aliases: [generics, LINQ, type parameters, generic collections, comprehensions, functional programming]
 description: "C# generics and LINQ reference with executable examples and cell outputs — covers generic classes, constraints, LINQ query and method syntax, deferred execution, and functional patterns. See [07_py_generics_linq](https://alp78.github.io/elysium/02-Programming-Languages/Python/07_py_generics_linq) for the Python equivalent."
@@ -13,6 +14,8 @@ status: complete
 > "All non-trivial abstractions, to some degree, are leaky."
 >
 > — **Joel Spolsky**, *The Law of Leaky Abstractions*, blog post (2002)
+
+Generics let you write type-safe code that works across multiple types without duplication — the compiler enforces correctness at compile time rather than deferring to runtime casts. LINQ (Language Integrated Query) extends this with a declarative pipeline model for filtering, transforming, grouping, and joining collections directly in C#, mirroring SQL semantics while preserving strong typing. This note covers generic type parameters and constraints, core LINQ operators on in-memory collections, advanced analytics queries against live SQL Server data, and a side-by-side comparison of LINQ pipelines with Polars.NET DataFrames.
 
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
@@ -62,6 +65,12 @@ Formatter.Register<Polars.CSharp.Series>((s, writer) =>
 
 ## Generics
 
+Generics enable writing reusable, type-safe code by parameterizing classes, methods, and interfaces with type placeholders (`T`, `TKey`, `TValue`). The compiler substitutes concrete types at compile time, eliminating boxing for value types and catching type mismatches before runtime. Constraints (`where T : ...`) restrict what types are valid, unlocking access to interface methods, constructors, and base class members within the generic body.
+
+### C# | Generics | type parameters and constraints
+
+Generic type parameters are placeholders declared in angle brackets. The compiler infers `T` from arguments when possible, or you can specify it explicitly. Constraints narrow the allowed types, enabling the compiler to guarantee that operations like `.CompareTo()` or `new T()` are valid.
+
 #### Generic method
 
 > [!info] Generic methods
@@ -72,84 +81,99 @@ Formatter.Register<Polars.CSharp.Series>((s, writer) =>
 > - Avoid `object` instead of generics (loses type safety, requires casting)
 
 ```csharp
-// Generic method — one method works with any type T; compiler infers T from the argument
 T First<T>(T[] items) => items[0];
 
 First(new[] { 1, 2, 3 })          // int
 First(new[] { "a", "b", "c" })    // string
 First(new[] { 1.1, 2.2, 3.3 })    // double
 
-// Explicit type argument (sometimes needed when inference is ambiguous)
-First<string>(new[] { "x", "y" })  // explicit
+First<string>(new[] { "x", "y" })  // explicit type argument
 ```
 
-    1
-    a
-    1.1
-    x
+```text
+1
+a
+1.1
+x
+```
 
 #### Generic constraints — `where T : ...`
 
 Generic constraints restrict what types can be used as a type parameter. Without constraints, `T` could be anything — you can't call methods on it because the compiler doesn't know what `T` is. Adding `where T : IComparable` guarantees that `T` has a `CompareTo` method, enabling type-safe operations. Common constraints: `class` (reference type), `struct` (value type), `new()` (has parameterless constructor), `notnull`, and interface/base class requirements.
 
 ```csharp
-// Generic constraints — where T : IComparable restricts valid types
-
 T Max<T>(T a, T b) where T : IComparable<T>
     => a.CompareTo(b) >= 0 ? a : b;
 
 Max(3, 7)                          // 7
 Max("apple", "banana")             // banana
-// Max(new object(), new object());  // Compile error! object doesn't implement IComparable
-
+// Max(new object(), new object());  // Compile error — object doesn't implement IComparable
 ```
 
-    7
-    banana
+```text
+7
+banana
+```
 
 > [!info] Common generic constraints
 >
 > | Constraint | Meaning |
 > |---|---|
-> | `where T : struct` | T must be a value type (`int`, `bool`, `struct`) |
+> | `where T : struct` | T must be a value type (`int`, `bool`, custom `struct`) |
 > | `where T : class` | T must be a reference type (`string`, `class`) |
-> | `where T : new()` | T must have a parameterless constructor |
-> | `where T : IComparable<T>` | T must implement an interface |
+> | `where T : new()` | T must have a parameterless constructor (must appear last) |
+> | `where T : IComparable<T>` | T must implement the specified interface |
 > | `where T : BaseClass` | T must inherit from a specific class |
 > | `where T : notnull` | T cannot be `null` |
+> | `where T : unmanaged` | T must be an unmanaged type (no reference-type fields) |
+> | `where T : U` | T must be or derive from another type parameter U |
+> | `where T : default` | Resolves ambiguity when overriding unconstrained methods |
+> | `where T : allows ref struct` | T may be a `ref struct` (anti-constraint, C# 13+) |
+
+> [!warning] `where T : class` — `==` tests reference identity, not value equality
+> When using the `class` constraint, the `==` and `!=` operators on `T` compare reference identity, not value equality — even if the concrete type (e.g., `string`) overloads `==`. Two distinct `string` instances with the same content will compare as `false`.
+
+> [!success] Use `IEquatable<T>` for value comparison
+> Add `where T : IEquatable<T>` and call `a.Equals(b)` instead of `a == b` when you need value equality semantics inside a generic method or class.
 
 #### Generic class and multiple type parameters
 
 A generic class is parameterized by one or more types, allowing the same data structure to work with any type while maintaining compile-time type safety. `Result<TValue, TError>` can represent a success value OR an error without boxing or casting. Multiple type parameters let you build type-safe pairs, key-value mappings, and response wrappers.
 
 ```csharp
-// Generic class and multiple type parameters — List<T>, Dictionary<K,V>
-
 var ints = new List<int> { 1, 2, 3 };
 var lookup = new Dictionary<string, int> { ["Alice"] = 85, ["Bob"] = 92 };
-$"[{string.Join(", ", ints)}]"           // List<int>
-string.Join(", ", lookup.Select(kv => $"{kv.Key}: {kv.Value}"))  // Dict
+$"[{string.Join(", ", ints)}]"
+string.Join(", ", lookup.Select(kv => $"{kv.Key}: {kv.Value}"))
 
-// Multiple type parameters — a generic method can take more than one type parameter
 (TKey, TValue) MakePair<TKey, TValue>(TKey key, TValue value) => (key, value);
 
 var pair1 = MakePair("name", 42);
 var pair2 = MakePair(1, true);
-pair1    // (name, 42)
-pair2    // (1, True)
+pair1
+pair2
 ```
 
-    [1, 2, 3]
-    92
-    (name, 42)
-    (1, True)
+```text
+[1, 2, 3]
+92
+(name, 42)
+(1, True)
+```
 
 ## Advanced LINQ
 
+LINQ extends C# with a declarative query model over any `IEnumerable<T>`. Method syntax chains — `Where`, `Select`, `GroupBy`, `Join`, `SelectMany` — compose into lazy pipelines that execute only when enumerated. This section demonstrates core LINQ operators using in-memory anonymous-type collections, covering grouping with aggregations, inner and left joins, lookups, zipping parallel sequences, and flattening nested collections.
+
+### C# | LINQ | core operators
+
+The examples below use a shared dataset of employees and departments defined as anonymous types. Each operator is shown independently so the pipeline logic is clear.
+
 #### Sample data
 
+Shared in-memory collections used throughout the LINQ section — six employees across three departments and four department records (including one with no employees, to demonstrate left join behavior).
+
 ```csharp
-// Sample data used throughout the LINQ section
 var employees = new[]
 {
     new { Name = "Alice", Dept = "Engineering", Salary = 95000, Level = "senior" },
@@ -174,8 +198,6 @@ var departments = new[]
 `GroupBy` partitions a sequence into groups based on a key function, then lets you aggregate each group independently. It's the LINQ equivalent of SQL's `GROUP BY` — you specify what to group by (e.g., sector), then compute aggregates per group (count, sum, average). The result is an `IGrouping<TKey, TElement>` for each distinct key.
 
 ```csharp
-// GroupBy and aggregations — split-apply-combine pattern
-
 var byDept = employees.GroupBy(e => e.Dept);
 
 foreach (var group in byDept)
@@ -185,14 +207,12 @@ foreach (var group in byDept)
     $"  {group.Key,-15} ({group.Count()} people): [{names}] avg=${avgSalary:N0}"
 }
 
-// Top earner per department
 foreach (var group in byDept)
 {
     var top = group.MaxBy(e => e.Salary)!;
     $"  {group.Key,-15} top earner: {top.Name} ${top.Salary:N0}"
 }
 
-// Multiple aggregations per group
 var deptStats = employees.GroupBy(e => e.Dept).Select(g => new
 {
     Dept = g.Key,
@@ -206,15 +226,17 @@ foreach (var s in deptStats)
     $"  {s.Dept,-15} count={s.Count} avg=${s.AvgSalary:N0} range=[${s.MinSalary:N0}-${s.MaxSalary:N0}] total=${s.TotalSalary:N0}"
 ```
 
-      Engineering     (3 people): [Alice, Charlie, Eve] avg=$97'667
-      Sales           (2 people): [Bob, Diana] avg=$71'500
-      Marketing       (1 people): [Frank] avg=$72'000
-      Engineering     top earner: Charlie $110'000
-      Sales           top earner: Diana $78'000
-      Marketing       top earner: Frank $72'000
-      Engineering     count=3 avg=$97'667 range=[$88'000-$110'000] total=$293'000
-      Sales           count=2 avg=$71'500 range=[$65'000-$78'000] total=$143'000
-      Marketing       count=1 avg=$72'000 range=[$72'000-$72'000] total=$72'000
+```text
+Engineering     (3 people): [Alice, Charlie, Eve] avg=$97'667
+Sales           (2 people): [Bob, Diana] avg=$71'500
+Marketing       (1 people): [Frank] avg=$72'000
+Engineering     top earner: Charlie $110'000
+Sales           top earner: Diana $78'000
+Marketing       top earner: Frank $72'000
+Engineering     count=3 avg=$97'667 range=[$88'000-$110'000] total=$293'000
+Sales           count=2 avg=$71'500 range=[$65'000-$78'000] total=$143'000
+Marketing       count=1 avg=$72'000 range=[$72'000-$72'000] total=$72'000
+```
 
 #### `Join` and `GroupJoin`
 
@@ -227,19 +249,15 @@ foreach (var s in deptStats)
 > Confirm that both key selectors return the same type (e.g., both `string`). Use explicit casts or `.ToString()` if types differ, and add a unit test that asserts the join result count is greater than zero.
 
 ```csharp
-// Join and GroupJoin — combine collections by matching keys
-
 var innerJoin = employees.Join(
     departments,
-    e => e.Dept,                                // key from employees
-    d => d.Dept,                                // key from departments
+    e => e.Dept,
+    d => d.Dept,
     (e, d) => new { e.Name, e.Dept, d.Head, d.Budget }
 );
-// Inner Join
 foreach (var r in innerJoin.Take(3))
     $"  {r.Name,-10} {r.Dept,-15} head={r.Head,-10} budget=${r.Budget:N0}"
 
-// GroupJoin — left join (all departments, employees may be empty)
 var leftJoin = departments.GroupJoin(
     employees,
     d => d.Dept,
@@ -249,34 +267,33 @@ var leftJoin = departments.GroupJoin(
 foreach (var r in leftJoin)
     $"  {r.Dept,-15} head={r.Head,-10} employees={r.Count}"
 ```
-      Alice      Engineering     head=CTO        budget=$500'000
-      Bob        Sales           head=VP Sales   budget=$300'000
-      Charlie    Engineering     head=CTO        budget=$500'000
-      Engineering     head=CTO        employees=3
-      Sales           head=VP Sales   employees=2
-      Marketing       head=CMO        employees=1
-      HR              head=CHRO       employees=0
+```text
+Alice      Engineering     head=CTO        budget=$500'000
+Bob        Sales           head=VP Sales   budget=$300'000
+Charlie    Engineering     head=CTO        budget=$500'000
+Engineering     head=CTO        employees=3
+Sales           head=VP Sales   employees=2
+Marketing       head=CMO        employees=1
+HR              head=CHRO       employees=0
+```
 
 #### Chained pipeline, `Lookup`, and `Zip`
 
-```csharp
-// Chained pipeline, Lookup, and Zip — advanced LINQ composition
+LINQ pipelines compose by chaining operators — `Where` → `Select` → `OrderByDescending` → `Take` reads left to right as filter, project, sort, limit. `ToLookup` creates a dictionary-like structure that allows multiple values per key (unlike `ToDictionary` which throws on duplicates). `Zip` pairs elements from two or three sequences positionally, stopping at the shortest.
 
+```csharp
 var result = employees
     .Where(e => e.Salary > 75000)
     .Select(e => new { e.Name, e.Salary, Tax = e.Salary * 0.3 })
     .OrderByDescending(e => e.Salary)
     .Take(3);
-// Top 3 earners (>75k) with tax
 foreach (var r in result)
     $"  {r.Name,-10} salary=${r.Salary:N0}  tax=${r.Tax:N0}"
 
-// Lookup — like Dictionary but allows multiple values per key
 var empLookup = employees.ToLookup(e => e.Dept);
 $"Engineering: [{string.Join(", ", empLookup["Engineering"].Select(e => e.Name))}]"
-$"Unknown:     [{string.Join(", ", empLookup["Unknown"].Select(e => e.Name))}]"  // empty, no error
+$"Unknown:     [{string.Join(", ", empLookup["Unknown"].Select(e => e.Name))}]"
 
-// Zip — pair elements from parallel sequences
 var names = employees.Select(e => e.Name);
 var salaries = employees.Select(e => e.Salary);
 var raises = employees.Select(e => e.Salary * 0.1);
@@ -284,25 +301,25 @@ var raises = employees.Select(e => e.Salary * 0.1);
 foreach (var (name, salary, raise_amt) in names.Zip(salaries, raises))
     $"  {name,-10} ${salary,8:N0} + ${raise_amt,7:N0} raise"
 ```
-      Charlie    salary=$110'000  tax=$33'000
-      Alice      salary=$95'000  tax=$28'500
-      Eve        salary=$88'000  tax=$26'400
-    Engineering: [Alice, Charlie, Eve]
-    Unknown:     []
-      Alice      $  95'000 + $  9'500 raise
-      Bob        $  65'000 + $  6'500 raise
-      Charlie    $ 110'000 + $ 11'000 raise
-      Diana      $  78'000 + $  7'800 raise
-      Eve        $  88'000 + $  8'800 raise
-      Frank      $  72'000 + $  7'200 raise
+```text
+Charlie    salary=$110'000  tax=$33'000
+Alice      salary=$95'000  tax=$28'500
+Eve        salary=$88'000  tax=$26'400
+Engineering: [Alice, Charlie, Eve]
+Unknown:     []
+Alice      $  95'000 + $  9'500 raise
+Bob        $  65'000 + $  6'500 raise
+Charlie    $ 110'000 + $ 11'000 raise
+Diana      $  78'000 + $  7'800 raise
+Eve        $  88'000 + $  8'800 raise
+Frank      $  72'000 + $  7'200 raise
+```
 
 #### `SelectMany` — flatten nested collections
 
 `SelectMany` projects each element to a collection, then flattens all those collections into one sequence. It's the LINQ equivalent of a nested loop or SQL's `CROSS APPLY`. Common use: a list of orders where each order has multiple line items — `SelectMany` gives you a flat list of all line items across all orders.
 
 ```csharp
-// SelectMany — flatten nested collections into a single sequence
-
 var people = new[]
 {
     new { Name = "Alice", Skills = new[] { "C#", "LINQ", "SQL" } },
@@ -310,15 +327,12 @@ var people = new[]
     new { Name = "Charlie", Skills = new[] { "C#", "Go" } },
 };
 
-// Select → nested (array per person)
 foreach (var arr in people.Select(p => p.Skills))
     $"  [{string.Join(", ", arr)}]"
 
-// SelectMany → flat (one sequence)
 var allSkills = people.SelectMany(p => p.Skills);
 $"SelectMany (flat): [{string.Join(", ", allSkills)}]"
 
-// With result selector — keeps access to the outer item
 var pairs = people.SelectMany(
     p => p.Skills,
     (p, skill) => $"{p.Name}: {skill}"
@@ -326,10 +340,8 @@ var pairs = people.SelectMany(
 foreach (var pair in pairs)
     $"  {pair}"
 
-// Flatten + distinct
 $"Distinct skills: [{string.Join(", ", people.SelectMany(p => p.Skills).Distinct().OrderBy(s => s))}]"
 
-// Flatten a List<List<int>>
 var matrix = new List<List<int>>
 {
     new List<int> { 1, 2, 3 },
@@ -338,24 +350,26 @@ var matrix = new List<List<int>>
 };
 $"Flat matrix: [{string.Join(", ", matrix.SelectMany(row => row))}]"
 ```
-    Select (nested):
-      [C#, LINQ, SQL]
-      [Python, SQL]
-      [C#, Go]
-    
-    SelectMany (flat): [C#, LINQ, SQL, Python, SQL, C#, Go]
-    
-    SelectMany with result selector:
-      Alice: C#
-      Alice: LINQ
-      Alice: SQL
-      Bob: Python
-      Bob: SQL
-      Charlie: C#
-      Charlie: Go
-    
-    Distinct skills: [C#, Go, LINQ, Python, SQL]
-    Flat matrix: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+```text
+Select (nested):
+  [C#, LINQ, SQL]
+  [Python, SQL]
+  [C#, Go]
+
+SelectMany (flat): [C#, LINQ, SQL, Python, SQL, C#, Go]
+
+SelectMany with result selector:
+  Alice: C#
+  Alice: LINQ
+  Alice: SQL
+  Bob: Python
+  Bob: SQL
+  Charlie: C#
+  Charlie: Go
+
+Distinct skills: [C#, Go, LINQ, Python, SQL]
+Flat matrix: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+```
 
 ## LINQ Analytics on Live SQL Server Data
 
@@ -369,14 +383,15 @@ Tables used:
 - `silver.index_dim` — company metadata (sector, country, exchange)
 - `bronze.trading_calendar` — 29K trading day flags per exchange
 
-#### Connect to SQL Server and load OHLCV data via Dapper
+### C# | LINQ | SQL Server data setup
+
+Connection and DTO records for loading EUROSTOXX 50 OHLCV and composite score data from the local `stoxx` database using Dapper.
 
 #### DTO records for SQL Server data mapping
 
-```csharp
-// DTO records — Dapper maps SQL columns to these by matching property names.
-// Must be in their own cell because C# requires type declarations before top-level statements.
+Dapper maps SQL result columns to C# record properties by matching names. Records must be declared in a separate cell because C# requires type declarations before top-level statements in .NET Interactive.
 
+```csharp
 record Ohlcv(string Symbol, DateTime Date, double Open, double High, double Low,
              double Close, double AdjClose, long Volume);
 record ScoreRow(string Symbol, string Sector, string Country, double CompositeScore,
@@ -409,18 +424,21 @@ $"  Scores: {scores.Count:N0} rows"
 $"  Date range: {ohlcv.Min(r => r.Date):yyyy-MM-dd} to {ohlcv.Max(r => r.Date):yyyy-MM-dd}"
 ```
 
-      66'355 rows, 50 symbols
-      466 rows
-      2021-01-04 to 2026-03-12
+```text
+66'355 rows, 50 symbols
+466 rows
+2021-01-04 to 2026-03-12
+```
+
+### C# | LINQ | analytical queries on financial data
+
+Each query below demonstrates a LINQ pattern equivalent to a common SQL analytical operation — aggregation, window functions, filtering after grouping, and joins — applied to real EUROSTOXX 50 market data.
 
 #### LINQ — `GroupBy` with Aggregates
 
 Splits a collection into groups by key and applies multiple aggregate functions (Average, Sum, Min, Max, Count) to each group.
 
 ```csharp
-// SQL: SELECT symbol, AVG(close), SUM(volume), MIN(low), MAX(high), COUNT(*)
-//      FROM silver.eurostoxx50_ohlcv GROUP BY symbol ORDER BY AVG(close) DESC
-
 var summary = ohlcv
     .GroupBy(r => r.Symbol)
     .Select(g => new
@@ -453,8 +471,6 @@ new DataFrame(
 Assigns a sequential rank to each row within a partition, ordered by a column. Equivalent to SQL ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...).
 
 ```csharp
-// ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY volume DESC)
-
 var topVolumeDay = ohlcv
     .GroupBy(r => r.Symbol)
     .SelectMany(g => g
@@ -479,8 +495,6 @@ new DataFrame(
 Accesses the value from the previous row in a sorted sequence. Implemented via Zip with a shifted copy of the list.
 
 ```csharp
-// LAG(close, 1) OVER (PARTITION BY symbol ORDER BY date)
-
 var withReturns = ohlcv
     .GroupBy(r => r.Symbol)
     .SelectMany(g =>
@@ -512,8 +526,6 @@ new DataFrame(
 Computes a running total where each row includes the sum of all preceding rows. Implemented via Aggregate with an accumulator.
 
 ```csharp
-// Cumulative SUM(volume) OVER (PARTITION BY symbol ORDER BY date)
-
 var cumVol = ohlcv
     .Where(r => r.Symbol == "ASML.AS")
     .OrderBy(r => r.Date)
@@ -534,8 +546,6 @@ new DataFrame(
 Computes the average of a sliding window of N rows. Implemented via Skip/Take on a sorted list for each position.
 
 ```csharp
-// 20-day SMA: AVG(close) OVER (ORDER BY date ROWS 19 PRECEDING)
-
 var W = 20;
 var asml = ohlcv.Where(r => r.Symbol == "ASML.AS").OrderBy(r => r.Date).ToList();
 
@@ -557,8 +567,6 @@ new DataFrame(
 Distributes rows into N equal-sized buckets based on a sort order. Implemented via index arithmetic after OrderBy.
 
 ```csharp
-// NTILE(4) OVER (ORDER BY avg_close)
-
 var symbolCount = ohlcv.Select(r => r.Symbol).Distinct().Count();
 var quartiles = ohlcv
     .GroupBy(r => r.Symbol)
@@ -581,8 +589,6 @@ new DataFrame(
 Filters groups after aggregation. A Where clause applied after GroupBy + Select acts as the SQL HAVING clause.
 
 ```csharp
-// HAVING AVG(volume) > 5_000_000
-
 var highVol = ohlcv
     .GroupBy(r => r.Symbol)
     .Select(g => new { Symbol = g.Key, AvgVol = g.Average(r => (double)r.Volume) })
@@ -602,8 +608,6 @@ new DataFrame(
 Standard deviation of daily returns, annualized by multiplying by sqrt(252). No built-in LINQ StdDev — computed manually.
 
 ```csharp
-// Annualized volatility = STDEV(daily_return) * SQRT(252)
-
 double StdDev(IEnumerable<double> v)
 {
     var l = v.ToList(); var a = l.Average();
@@ -630,8 +634,6 @@ new DataFrame(
 Combines two collections on a matching key. Each OHLCV aggregate row is paired with its corresponding score row by symbol.
 
 ```csharp
-// JOIN ohlcv summary with scores
-
 var joined = ohlcv
     .GroupBy(r => r.Symbol)
     .Select(g => new { Symbol = g.Key, AvgClose = g.Average(r => r.Close), AvgVol = g.Average(r => (double)r.Volume) })
@@ -657,8 +659,6 @@ new DataFrame(
 Accesses the value from the next row in a sorted sequence. Implemented via Zip with a Skip(1) shifted copy. Used here to detect date gaps.
 
 ```csharp
-// LEAD(date, 1) OVER (PARTITION BY symbol ORDER BY date)
-
 var gaps = ohlcv
     .Where(r => r.Symbol == "ASML.AS")
     .OrderBy(r => r.Date)
@@ -682,8 +682,6 @@ new DataFrame(
 Groups by a key and computes nested aggregates including the best element per group via OrderBy + First().
 
 ```csharp
-// Sector summary from scores: avg score, best stock, count
-
 var sectorSummary = scores
     .GroupBy(s => s.Sector)
     .Select(g => new
@@ -714,14 +712,17 @@ Both operate on the same OHLCV data loaded from SQL Server.
 
 #### Load data into Polars DataFrame
 
+Polars.NET reads Parquet files directly into a columnar DataFrame backed by the Rust Polars engine — same data as the Dapper-loaded OHLCV list, but in a format optimized for vectorized operations.
+
 ```csharp
-// Load the same OHLCV data as a Polars DataFrame from Parquet
 var df = DataFrame.ReadParquet(@"C:\Users\aperi\DEV\LANG\data\eurostoxx50_ohlcv.parquet");
 $"  Polars: {df.Height} rows x {df.Width} columns"
 df.Head(3)
 ```
 
-      66355 rows x 12 columns
+```text
+66355 rows x 12 columns
+```
 
 <!-- Polars DataFrame: (3 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>false</td></tr></tbody></table>
 
@@ -730,7 +731,6 @@ df.Head(3)
 #### LINQ — Select columns
 
 ```csharp
-// LINQ: select specific properties
 var linqSelect = ohlcv.Select(r => new { r.Symbol, r.Date, r.Close }).Take(5).ToList();
 new DataFrame(
     Series.From("Symbol", linqSelect.Select(r => r.Symbol).ToArray()),
@@ -743,7 +743,6 @@ new DataFrame(
 #### Polars DataFrame — Select columns
 
 ```csharp
-// Polars: select columns by name
 df.Select("symbol", "date", "close").Head(5)
 ```
 
@@ -752,7 +751,6 @@ df.Select("symbol", "date", "close").Head(5)
 #### LINQ — Filter rows
 
 ```csharp
-// LINQ: Where clause
 var linqFilter = ohlcv.Where(r => r.Symbol == "ASML.AS" && r.Close > 600).Take(5).ToList();
 new DataFrame(
     Series.From("Symbol", linqFilter.Select(r => r.Symbol).ToArray()),
@@ -765,7 +763,6 @@ new DataFrame(
 #### Polars DataFrame — Filter rows
 
 ```csharp
-// Polars: Filter expression
 df.Filter((Col("symbol") == Lit("ASML.AS")) & (Col("close") > Lit(600.0)))
   .Select("symbol", "date", "close").Head(5)
 ```
@@ -775,7 +772,6 @@ df.Filter((Col("symbol") == Lit("ASML.AS")) & (Col("close") > Lit(600.0)))
 #### LINQ — Sort
 
 ```csharp
-// LINQ: OrderByDescending
 var linqSort = ohlcv.OrderByDescending(r => r.Volume).Take(5).ToList();
 new DataFrame(
     Series.From("Symbol", linqSort.Select(r => r.Symbol).ToArray()),
@@ -788,7 +784,6 @@ new DataFrame(
 #### Polars DataFrame — Sort
 
 ```csharp
-// Polars: Sort descending
 df.Sort("volume", descending: true).Head(5)
 ```
 
@@ -797,7 +792,6 @@ df.Sort("volume", descending: true).Head(5)
 #### LINQ — Add computed column
 
 ```csharp
-// LINQ: Select with new property
 var linqComputed = ohlcv.Take(5).Select(r => new { r.Symbol, r.Date, r.Close, Range = r.High - r.Low }).ToList();
 new DataFrame(
     Series.From("Symbol", linqComputed.Select(r => r.Symbol).ToArray()),
@@ -810,7 +804,6 @@ new DataFrame(
 #### Polars DataFrame — Add computed column
 
 ```csharp
-// Polars: WithColumn expression
 df.WithColumns((Col("high") - Col("low")).Alias("range")).Select("symbol", "close", "range").Head(5)
 ```
 
@@ -821,7 +814,6 @@ df.WithColumns((Col("high") - Col("low")).Alias("range")).Select("symbol", "clos
 #### LINQ — GroupBy with aggregates
 
 ```csharp
-// LINQ: GroupBy + multiple aggregates
 var linqAgg = ohlcv.GroupBy(r => r.Symbol)
     .Select(g => new { Symbol = g.Key, AvgClose = Math.Round(g.Average(r => r.Close), 2), Count = g.Count() })
     .OrderByDescending(s => s.AvgClose).Take(5).ToList();
@@ -836,7 +828,6 @@ new DataFrame(
 #### Polars DataFrame — GroupBy with aggregates
 
 ```csharp
-// Polars: GroupBy + Agg
 df.GroupBy("symbol").Agg(
     Col("close").Mean().Alias("avg_close"),
     Col("close").Count().Alias("count")
@@ -848,7 +839,6 @@ df.GroupBy("symbol").Agg(
 #### LINQ — HAVING
 
 ```csharp
-// LINQ: Where after GroupBy+Select = HAVING
 var linqHaving = ohlcv.GroupBy(r => r.Symbol)
     .Select(g => new { Symbol = g.Key, AvgVol = g.Average(r => (double)r.Volume) })
     .Where(s => s.AvgVol > 5_000_000)
@@ -863,7 +853,6 @@ new DataFrame(
 #### Polars DataFrame — HAVING
 
 ```csharp
-// Polars: GroupBy + Agg + Filter
 df.GroupBy("symbol").Agg(
     Col("volume").Mean().Alias("avg_vol")
 ).Filter(Col("avg_vol") > Lit(5_000_000.0)).Sort("avg_vol", descending: true)
@@ -876,7 +865,6 @@ df.GroupBy("symbol").Agg(
 #### LINQ — LAG
 
 ```csharp
-// LINQ: Zip with shifted list
 var asmlLinq = ohlcv.Where(r => r.Symbol == "ASML.AS").OrderBy(r => r.Date).ToList();
 var linqLag = asmlLinq.Skip(1).Zip(asmlLinq, (curr, prev) => new
     { curr.Date, curr.Close, PrevClose = prev.Close,
@@ -894,7 +882,6 @@ new DataFrame(
 #### Polars DataFrame — LAG
 
 ```csharp
-// Polars: Shift(1) over partition
 df.Filter(Col("symbol") == Lit("ASML.AS"))
   .Sort("date")
   .WithColumns(Col("close").Shift(1).Over("symbol").Alias("prev_close"))
@@ -908,7 +895,6 @@ df.Filter(Col("symbol") == Lit("ASML.AS"))
 #### LINQ — Cumulative SUM
 
 ```csharp
-// LINQ: Aggregate with running total
 var linqCum = ohlcv.Where(r => r.Symbol == "ASML.AS").OrderBy(r => r.Date)
     .Aggregate(new List<(string D, long V, long C)>(),
         (acc, r) => { acc.Add((r.Date.ToString("yyyy-MM-dd"), r.Volume,
@@ -925,7 +911,6 @@ new DataFrame(
 #### Polars DataFrame — Cumulative SUM
 
 ```csharp
-// Polars: CumSum over partition
 df.Filter(Col("symbol") == Lit("ASML.AS"))
   .Sort("date")
   .WithColumns(Col("volume").CumSum().Over("symbol").Alias("cum_vol"))
@@ -938,7 +923,6 @@ df.Filter(Col("symbol") == Lit("ASML.AS"))
 #### LINQ — Rolling average
 
 ```csharp
-// LINQ: Skip/Take sliding window
 var W = 20;
 var asmlSorted = ohlcv.Where(r => r.Symbol == "ASML.AS").OrderBy(r => r.Date).ToList();
 var linqSma = Enumerable.Range(W - 1, asmlSorted.Count - W + 1)
@@ -956,7 +940,6 @@ new DataFrame(
 #### Polars DataFrame — Rolling average
 
 ```csharp
-// Polars: RollingMean
 df.Filter(Col("symbol") == Lit("ASML.AS"))
   .Sort("date")
   .WithColumns(Col("close").RollingMean("20i").Over("symbol").Alias("sma_20"))
@@ -969,7 +952,6 @@ df.Filter(Col("symbol") == Lit("ASML.AS"))
 #### LINQ — ROW_NUMBER / Rank
 
 ```csharp
-// LINQ: GroupBy + OrderBy + index
 var linqRank = ohlcv.GroupBy(r => r.Symbol)
     .SelectMany(g => g.OrderByDescending(r => r.Volume)
         .Select((r, i) => new { r.Symbol, r.Date, r.Volume, Rank = i + 1 })
@@ -986,7 +968,6 @@ new DataFrame(
 #### Polars DataFrame — ROW_NUMBER / Rank
 
 ```csharp
-// Polars: Rank over partition
 df.WithColumns(Col("volume").Rank(descending: true).Over("symbol").Alias("vol_rank"))
   .Filter(Col("vol_rank") == Lit(1))
   .Sort("volume", descending: true)
@@ -1001,7 +982,6 @@ df.WithColumns(Col("volume").Rank(descending: true).Over("symbol").Alias("vol_ra
 #### LINQ — Inner Join
 
 ```csharp
-// LINQ: Join on symbol
 var linqJoin = ohlcv.GroupBy(r => r.Symbol)
     .Select(g => new { Symbol = g.Key, AvgClose = Math.Round(g.Average(r => r.Close), 2) })
     .Join(scores, o => o.Symbol, s => s.Symbol,
@@ -1019,10 +999,8 @@ new DataFrame(
 #### Polars DataFrame — Inner Join
 
 ```csharp
-// Polars: Join — same query as LINQ (avg close per symbol joined with scores)
 var dfAvg = df.GroupBy("symbol").Agg(Col("close").Mean().Alias("avg_close"));
 
-// Build scores DataFrame from the Dapper-loaded list
 var dfScores = new DataFrame(
     Series.From("symbol", scores.Select(s => s.Symbol).ToArray()),
     Series.From("sector", scores.Select(s => s.Sector).ToArray()),
@@ -1040,9 +1018,9 @@ dfAvg.Join(dfScores, new[] { Col("symbol") }, new[] { Col("symbol") })
 
 #### LINQ — Add rows with Concat()
 
+`Concat` appends one `IEnumerable` to another lazily — no copy, no allocation. It returns a new sequence that yields elements from both, equivalent to SQL `UNION ALL`.
+
 ```csharp
-// LINQ: Concat — appends one IEnumerable to another (lazy, no copy).
-// Returns a new sequence that yields elements from both. Equivalent to SQL UNION ALL.
 var newRows = new[] { new Ohlcv("TEST.XX", DateTime.Today, 100, 105, 95, 102, 102, 50000) };
 var linqInsert = ohlcv.Concat(newRows).TakeLast(3).ToList();
 $"  LINQ: {ohlcv.Count} + {newRows.Length} = {ohlcv.Count + newRows.Length} rows (Concat)"
@@ -1053,16 +1031,17 @@ new DataFrame(
     Series.From("Volume", linqInsert.Select(r => r.Volume).ToArray()))
 ```
 
-      66355 + 1 = 66356 rows (Concat)
+```text
+66355 + 1 = 66356 rows (Concat)
+```
 
 <!-- Polars DataFrame: (3 rows, 4 columns) --><table><thead><tr><th>Symbol</th><th>Date</th><th>Close</th><th>Volume</th></tr></thead><tbody><tr><td>WKL.AS</td><td>2026-03-12</td><td>67.32</td><td>210379</td></tr><tr><td>DSY.PA</td><td>2026-03-12</td><td>18.37</td><td>434417</td></tr><tr><td>TEST.XX</td><td>2026-03-28</td><td>102</td><td>50000</td></tr></tbody></table>
 
-#### Polars DataFrame — Add rows weith VStack()
+#### Polars DataFrame — Add rows with VStack()
+
+`VStack` vertically stacks two DataFrames (appends rows). Both must have identical column names and types. Equivalent to SQL `UNION ALL`.
 
 ```csharp
-// Polars: VStack — vertically stacks two DataFrames (appends rows).
-// Both must have the same column names and types. Equivalent to SQL UNION ALL.
-// Must match all 12 columns with exact types (Int64, Date, Float64, Bool).
 var newDf = new DataFrame(
     Series.From("id", new[] { 0L }),
     Series.From("symbol", new[] { "TEST.XX" }),
@@ -1082,14 +1061,17 @@ $"  Polars: {df.Height} + {newDf.Height} = {dfInserted.Height} rows (VStack)"
 dfInserted.Tail(3)
 ```
 
-      66355 + 1 = 66356 rows (VStack)
+```text
+66355 + 1 = 66356 rows (VStack)
+```
 
 <!-- Polars DataFrame: (3 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>66877</td><td>WKL.AS</td><td>2026-03-11</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66929</td><td>WKL.AS</td><td>2026-03-12</td><td>67</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0</td><td>0</td><td>false</td></tr><tr><td>0</td><td>TEST.XX</td><td>2026-03-28</td><td>100</td><td>105</td><td>95</td><td>102</td><td>102</td><td>50000</td><td>0</td><td>0</td><td>false</td></tr></tbody></table>
 
 #### LINQ — Update column
 
+LINQ doesn't mutate in place — `Select` projects each element into a new anonymous type with the modified property, leaving the original collection untouched.
+
 ```csharp
-// LINQ: Select with conditional
 var linqUpdate = ohlcv.Where(r => r.Symbol == "ASML.AS").Take(5)
     .Select(r => new { r.Symbol, r.Date, AdjClose = r.Close * 1.05 }).ToList();
 new DataFrame(
@@ -1102,8 +1084,9 @@ new DataFrame(
 
 #### Polars DataFrame — Update column
 
+`WithColumns` replaces or creates a column by expression — Polars is also immutable, returning a new DataFrame rather than modifying the original.
+
 ```csharp
-// Polars: WithColumns — replaces or creates a column by expression
 df.Filter(Col("symbol") == Lit("ASML.AS"))
   .WithColumns((Col("close") * Lit(1.05)).Alias("adj_close"))
   .Select("symbol", "date", "adj_close")
@@ -1114,28 +1097,35 @@ df.Filter(Col("symbol") == Lit("ASML.AS"))
 
 #### LINQ — Delete rows
 
+Deleting is the inverse of filtering — `Where` keeps non-matching rows, effectively excluding the "deleted" ones from the resulting sequence.
+
 ```csharp
-// LINQ: Where to keep, inverse of delete
 var linqDelete = ohlcv.Where(r => r.Symbol != "ASML.AS");
 $"  LINQ: {ohlcv.Count} - ASML rows = {linqDelete.Count()} remaining"
 ```
 
-      66355 - ASML rows = 65024 remaining
+```text
+66355 - ASML rows = 65024 remaining
+```
 
 #### Polars DataFrame — Delete rows
 
+Same pattern — `Filter` with a negated condition returns a new DataFrame without the excluded rows.
+
 ```csharp
-// Polars: Filter (keep non-matching)
 var dfFiltered = df.Filter(Col("symbol") != Lit("ASML.AS"));
 $"  Polars: {df.Height} - ASML rows = {dfFiltered.Height} remaining"
 ```
 
-      66355 - ASML rows = 65024 remaining
+```text
+66355 - ASML rows = 65024 remaining
+```
 
 #### LINQ — Drop column
 
+LINQ has no native `Drop` — project only the columns you want via `Select`, omitting the unwanted properties.
+
 ```csharp
-// LINQ: Select without the column (no native Drop — project only the columns you want)
 var linqDrop = ohlcv.Take(3).Select(r => new
     { r.Symbol, r.Date, r.Open, r.High, r.Low, r.Close, r.AdjClose, r.Volume }).ToList();
 new DataFrame(
@@ -1153,8 +1143,9 @@ new DataFrame(
 
 #### Polars DataFrame — Drop column
 
+Select all columns except the ones to remove — Polars doesn't have a `.Drop()` method, so you filter the column name list and pass it to `Select`.
+
 ```csharp
-// Polars: Drop columns — select all except the ones to remove
 var dropCols = new HashSet<string> { "dividends", "stock_splits", "is_filled" };
 var keepCols = df.Columns.Where(n => !dropCols.Contains(n)).ToArray();
 df.Select(keepCols).Head(3)

@@ -1,4 +1,5 @@
 ---
+title: "Collections"
 tags: [python]
 aliases: [lists, dictionaries, sets, tuples, arrays, List, Dictionary, HashSet, LINQ]
 description: "Python collections reference with executable examples and cell outputs — covers lists, dictionaries, sets, tuples, and specialized collections from the collections module. See [05_cs_collections](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/05_cs_collections) for the C# equivalent."
@@ -19,6 +20,12 @@ status: complete
 > — **Eric S. Raymond**, *The Cathedral and the Bazaar* (1999)
 
 ## Lists (Dynamic Arrays)
+
+Lists are Python's most versatile sequential collection — ordered, mutable, and heterogeneous. Internally backed by a dynamic array that grows by ~12.5% when full, giving amortized O(1) `append` and O(1) indexed access. For O(1) prepend/dequeue, use `collections.deque` instead. This section covers creation, mutation, searching, sorting, copying, and using lists as stacks.
+
+### List creation and mutation
+
+Creating lists, adding/removing elements, and basic indexing operations.
 
 #### List creation — literals, list(), range, nested
 
@@ -50,12 +57,13 @@ from enum import Enum, IntEnum, auto
 from typing import NamedTuple
 import copy
 import heapq
+
 empty = []
 nums = [1, 2, 3, 4, 5]
-mixed = [1, "hello", True, 3.14, None]     # mixed types allowed
-nested = [[1, 2], [3, 4], [5, 6]]          # list of lists (2D)
-from_range = list(range(5))                 # [0, 1, 2, 3, 4]
-repeated = [0] * 5                          # [0, 0, 0, 0, 0]
+mixed = [1, "hello", True, 3.14, None]
+nested = [[1, 2], [3, 4], [5, 6]]
+from_range = list(range(5))
+repeated = [0] * 5
 
 empty
 nums
@@ -63,137 +71,163 @@ mixed
 nested
 from_range
 repeated
-nums[0]  # first
-nums[-1]  # last
-nums[1:4]  # slice [2, 3, 4]
-nums[::-1]  # reversed
-nested[1][0]  # 2D access: row 1, col 0
+nums[0]
+nums[-1]
+nums[1:4]
+nums[::-1]
+nested[1][0]
 ```
 
-    []
-    [1, 2, 3, 4, 5]
-    [1, 'hello', True, 3.14, None]
-    [[1, 2], [3, 4], [5, 6]]
-    [0, 1, 2, 3, 4]
-    [0, 0, 0, 0, 0]
-    1
-    5
-    [2, 3, 4]
-    [5, 4, 3, 2, 1]
-    3
+```text
+[]
+[1, 2, 3, 4, 5]
+[1, 'hello', True, 3.14, None]
+[[1, 2], [3, 4], [5, 6]]
+[0, 1, 2, 3, 4]
+[0, 0, 0, 0, 0]
+1
+5
+[2, 3, 4]
+[5, 4, 3, 2, 1]
+3
+```
 
 #### List append, insert, extend, remove, pop — add and remove elements
 
-```python
-# Adding and removing — append, insert, extend, remove, pop, del
+`append` adds to end. `insert(i, x)` shifts elements right from index `i` (O(n)). `extend` merges another iterable. `remove` deletes the first matching value (O(n) search). `del lst[i]` removes by index. `pop()` removes and returns the last element (O(1)), or `pop(i)` for a specific index (O(n)).
 
+```python
 lst = [1, 2, 3]
-lst.append(4)                               # add to end: [1, 2, 3, 4]
-lst.insert(0, 0)                            # insert at index: [0, 1, 2, 3, 4]
-lst.extend([5, 6])                          # add multiple: [0, 1, 2, 3, 4, 5, 6]
-lst   # After adds
+lst.append(4)
+lst.insert(0, 0)
+lst.extend([5, 6])
+lst
 
 lst = [1, 2, 3, 2, 4, 5]
-lst.remove(2)                               # remove FIRST occurrence of value
-lst   # remove(2)
-del lst[0]                                  # remove at index
-lst   # del [0]
-last = lst.pop()                            # pop last (returns value)
+lst.remove(2)
+lst
+del lst[0]
+lst
+last = lst.pop()
 f"pop():      {lst} (popped: {last})"
-lst.clear()                                 # remove all
-lst   # clear()
+lst.clear()
+lst
 ```
 
-    [0, 1, 2, 3, 4, 5, 6]
-    [1, 3, 2, 4, 5]
-    [3, 2, 4, 5]
-    [3, 2, 4] (popped: 5)
-    []
+```text
+[0, 1, 2, 3, 4, 5, 6]
+[1, 3, 2, 4, 5]
+[3, 2, 4, 5]
+'pop():      [3, 2, 4] (popped: 5)'
+[]
+```
+
+### List search and sorting
+
+Linear search with `in`, `index()`, and `count()`. For frequent membership tests on large data, convert to a `set` first (O(1) vs O(n)). `sorted()` returns a new list; `sort()` mutates in place.
 
 #### List search — in operator, index(), count()
 
-```python
-# Search and membership — in, index, count for finding elements
+`in` checks membership (O(n)). `index()` returns the position of the first match (raises `ValueError` if missing). `count()` returns the number of occurrences.
 
+```python
 lst = [10, 20, 30, 40, 30, 50]
-30 in lst  # True (membership check)
-99 in lst  # False
-lst.index(30)  # 2 (first occurrence)
-lst.count(30)  # 2 (how many times)
+30 in lst
+99 in lst
+lst.index(30)
+lst.count(30)
 ```
 
-    True
-    False
-    2
-    2
+```text
+True
+False
+2
+2
+```
 
 #### List sort() and sorted() — in-place vs new list
 
-```python
-# Sorting — sorted() returns new list, .sort() mutates in place
+`sorted()` returns a new list without modifying the original — use it in functional chains. `sort()` mutates in place and returns `None`. Both accept `key=` for custom sort keys and `reverse=True` for descending order.
 
+```python
 nums = [3, 1, 4, 1, 5, 9, 2, 6]
-sorted(nums)  # returns NEW list, original unchanged
-nums  # unchanged
-nums.sort()                                          # sorts IN-PLACE, returns None
-nums  # modified
-nums.sort(reverse=True)                              # descending
-nums   # reverse sort
+sorted(nums)
+nums
+nums.sort()
+nums
+nums.sort(reverse=True)
+nums
 
 words = ["banana", "apple", "cherry"]
-sorted(words, key=len)   # by length
-sorted(['Banana', 'apple', 'Cherry'], key=str.lower)   # case-insensitive
+sorted(words, key=len)
+sorted(['Banana', 'apple', 'Cherry'], key=str.lower)
 ```
 
-    [1, 1, 2, 3, 4, 5, 6, 9]
-    [3, 1, 4, 1, 5, 9, 2, 6]
-    [1, 1, 2, 3, 4, 5, 6, 9]
-    [9, 6, 5, 4, 3, 2, 1, 1]
-    ['apple', 'banana', 'cherry']
-    case-insensitive: ['apple', 'Banana', 'Cherry']
+```text
+[1, 1, 2, 3, 4, 5, 6, 9]
+[3, 1, 4, 1, 5, 9, 2, 6]
+[1, 1, 2, 3, 4, 5, 6, 9]
+[9, 6, 5, 4, 3, 2, 1, 1]
+['apple', 'banana', 'cherry']
+['apple', 'Banana', 'Cherry']
+```
 
 #### Copying — shallow vs deep
 
+`list.copy()`, `list(original)`, and `original[:]` all create shallow copies — the outer list is new, but inner objects are shared references. For nested structures (list of lists), mutating an inner object in the copy also changes the original. Use `copy.deepcopy()` for fully independent copies.
+
+> [!danger] Shallow copy trap with nested lists
+> `shallow[0][0] = 99` also changes `original[0][0]` because both point to the same inner list object. This is the #1 source of data corruption bugs in ETL code that caches intermediate results.
+
+> [!success] Use deepcopy for nested structures
+> `copy.deepcopy(original)` recursively copies every nested object. For flat lists of primitives (`list[int]`, `list[str]`), shallow copy is safe.
+
 ```python
-# Copying — shallow vs deep copy
+original = [[1, 2], [3, 4]]
+shallow = original.copy()
+shallow[0][0] = 99
+original
 
 original = [[1, 2], [3, 4]]
-shallow = original.copy()                    # or: list(original) or original[:]
-shallow[0][0] = 99                           # modifies original too! (shared inner lists)
-original  # [[99, 2], [3, 4]]
-
-original = [[1, 2], [3, 4]]
-deep = copy.deepcopy(original)               # fully independent copy
+deep = copy.deepcopy(original)
 deep[0][0] = 99
-original  # [[1, 2], [3, 4]] — unchanged
+original
 ```
 
-    original after shallow copy mutation: [[99, 2], [3, 4]]
-    [[1, 2], [3, 4]]
+```text
+[[99, 2], [3, 4]]
+[[1, 2], [3, 4]]
+```
 
-#### List as stack
+#### List as stack — LIFO with append and pop
+
+Python lists work as stacks out of the box — `append()` pushes to the top and `pop()` removes from the top, both O(1).
 
 ```python
-# List as stack — LIFO with append and pop
-
 stack = []
-stack.append("a")    # push
+stack.append("a")
 stack.append("b")
 stack.append("c")
 stack
-stack.pop()  # "c" (last in, first out)
+stack.pop()
 stack
 ```
 
-    ['a', 'b', 'c']
-    c
-    ['a', 'b']
+```text
+['a', 'b', 'c']
+'c'
+['a', 'b']
+```
 
 ## Dictionaries
 
-#### Dict creation — literals, dict(), fromkeys, comprehension
+Hash-based key-value mapping with O(1) average lookup, insert, and delete. Insertion-ordered since Python 3.7 (guaranteed by language spec since 3.7, CPython implementation detail since 3.6). Keys must be hashable (immutable types: `str`, `int`, `float`, `tuple`, `frozenset` — NOT `list` or `dict`). `defaultdict` auto-creates missing keys with a factory function; `Counter` is a specialized dict for counting occurrences.
 
-Hash-based mapping with O(1) average lookup, insert, and delete. Insertion-ordered since Python 3.7. Keys must be hashable (immutable): `str`, `int`, `float`, `tuple`, `frozenset` — NOT `list` or `dict`. `defaultdict` auto-creates missing keys with a factory function; `Counter` is a specialized dict for counting occurrences.
+### Dictionary creation and access
+
+Creating dictionaries, reading values safely, and updating entries.
+
+#### Dict creation — literals, dict(), fromkeys, comprehension
 
 > [!warning] Anti-patterns
 >
@@ -221,124 +255,146 @@ from_keys
 comprehension
 ```
 
-    {'name': 'Alice', 'age': 30, 'city': 'NYC'}
-    from_pairs: {'a': 1, 'b': 2}
-    {'x': 0, 'y': 0, 'z': 0}
-    comprehension: {0: 0, 1: 1, 2: 4, 3: 9, 4: 16}
+```text
+{'name': 'Alice', 'age': 30, 'city': 'NYC'}
+{'a': 1, 'b': 2}
+{'x': 0, 'y': 0, 'z': 0}
+{0: 0, 1: 1, 2: 4, 3: 9, 4: 16}
+```
 
 #### Dict access — [], .get(), .setdefault(), KeyError
 
+Bracket access (`d[key]`) raises `KeyError` if the key is missing. `.get(key)` returns `None` instead — safer for optional fields. `.get(key, default)` provides a fallback value. `.update()` and `|=` (Python 3.9+) merge multiple key-value pairs at once.
+
 ```python
-# Dict access and update — bracket, .get(), .setdefault(), .update()
+person['name']
+person.get('name')
+person.get('zip', 'N/A')
 
-person['name']  # KeyError if missing
-person.get('name')  # None if missing (safe)
-person.get('zip', 'N/A')  # default value
-
-person["email"] = "alice@example.com"                   # add new key
-person["age"] = 31                                      # update existing
-person.update({"city": "LA", "zip": "90001"})          # update multiple
-person |= {"phone": "555-0123"}                        # merge (Python 3.9+)
-person   # Updated
+person["email"] = "alice@example.com"
+person["age"] = 31
+person.update({"city": "LA", "zip": "90001"})
+person |= {"phone": "555-0123"}
+person
 ```
 
-    Alice
-    Alice
-    N/A
-    {'name': 'Alice', 'age': 31, 'city': 'LA', 'email': 'alice@example.com', 'zip': '90001', 'phone': '555-0123'}
+```text
+'Alice'
+'Alice'
+'N/A'
+{'name': 'Alice', 'age': 31, 'city': 'LA', 'email': 'alice@example.com', 'zip': '90001', 'phone': '555-0123'}
+```
+
+### Dictionary modification and iteration
+
+Removing entries, iterating key-value pairs, merging dictionaries, and using specialized dict subclasses (`defaultdict`, `Counter`).
 
 #### Dict del, pop, clear — removing and iterating with .items()
 
-```python
-# Removing and iterating — del, pop, popitem, and key/value/item loops
+`del d[key]` raises `KeyError` if missing. `pop(key)` removes and returns the value (also `KeyError` if missing — use `pop(key, default)` for safe removal). `popitem()` removes the last-inserted pair. The `in` operator checks keys, not values.
 
+```python
 d = {"a": 1, "b": 2, "c": 3, "d": 4}
-del d["a"]                                             # delete key (KeyError if missing)
-popped = d.pop("b")                                    # remove and return (KeyError if missing)
-popped_safe = d.pop("z", "default")                    # safe pop with default
-last = d.popitem()                                     # remove and return last (k, v) pair
-d   # After removes
+del d["a"]
+popped = d.pop("b")
+popped_safe = d.pop("z", "default")
+last = d.popitem()
+d
 
 d = {"name": "Alice", "age": 30, "city": "NYC"}
-for key in d:                                          # keys (default)
+for key in d:
     print(f"  key: {key}")
-for key, value in d.items():                           # key-value pairs
+for key, value in d.items():
     print(f"  {key}: {value}")
-for value in d.values():                               # values only
+for value in d.values():
     print(f"  value: {value}")
 
-'name' in d  # checks KEYS, not values
-'Alice' in d  # False — not a key
-len(d)   # len(d)
+'name' in d
+'Alice' in d
+len(d)
 ```
 
-    {'c': 3}
-      key: name
-      key: age
-      key: city
-      name: Alice
-      age: 30
-      city: NYC
-      value: Alice
-      value: 30
-      value: NYC
-    True
-    'Alice' in d: False
-    3
+```text
+{'c': 3}
+  key: name
+  key: age
+  key: city
+  name: Alice
+  age: 30
+  city: NYC
+  value: Alice
+  value: 30
+  value: NYC
+True
+False
+3
+```
 
 #### Dict merging — | operator, .update(), **unpacking
 
-```python
-# Merging dicts — {**a, **b}, |, and |= operators
+Three ways to merge: `{**a, **b}` (unpacking, all Python 3), `a | b` (Python 3.9+, returns new dict), and `a |= b` (Python 3.9+, in-place update). When keys conflict, the right operand wins.
 
+```python
 a = {"x": 1, "y": 2}
 b = {"y": 3, "z": 4}
-merged = {**a, **b}                                    # b overwrites a's 'y'
-merged2 = a | b                                        # Python 3.9+ (same result)
-merged  # {'x': 1, 'y': 3, 'z': 4}
+merged = {**a, **b}
+merged2 = a | b
+merged
 ```
 
-    merged: {'x': 1, 'y': 3, 'z': 4}
+```text
+{'x': 1, 'y': 3, 'z': 4}
+```
 
 #### defaultdict and Counter
 
 A `defaultdict` is a dictionary subclass that automatically creates missing keys with a factory function. `defaultdict(list)` creates an empty list for any new key, eliminating the `if key not in d: d[key] = []` pattern. Essential for grouping operations. `Counter` is a dictionary subclass for counting hashable objects. `Counter(items)` builds a frequency table. Supports arithmetic: `counter_a - counter_b` gives the difference in counts.
 
-```python
-# defaultdict — auto-create missing keys with a factory function
+`defaultdict(list)` creates an empty list for any new key on first access, eliminating the `if key not in d: d[key] = []` boilerplate. Essential for grouping operations in ETL code.
 
+```python
 words = ["apple", "banana", "avocado", "cherry", "blueberry"]
-groups = defaultdict(list)                             # missing key → empty list
+groups = defaultdict(list)
 for word in words:
-    groups[word[0]].append(word)                       # no KeyError!
-dict(groups)   # Groups
+    groups[word[0]].append(word)
+dict(groups)
 ```
 
-    {'a': ['apple', 'avocado'], 'b': ['banana', 'blueberry'], 'c': ['cherry']}
+```text
+{'a': ['apple', 'avocado'], 'b': ['banana', 'blueberry'], 'c': ['cherry']}
+```
 
 #### Count occurrences
 
-```python
-# Counting occurrences — defaultdict(int) and Counter
+`defaultdict(int)` initializes missing keys to 0 — useful for manual counting. `Counter` is a dict subclass purpose-built for counting hashable objects. `most_common(n)` returns the top N by frequency. `total()` sums all counts.
 
-counts = defaultdict(int)                              # missing key → 0
+```python
+counts = defaultdict(int)
 for word in words:
     counts[word[0]] += 1
-dict(counts)   # Counts
+dict(counts)
 
 text = "abracadabra"
 c = Counter(text)
-c   # Counter
-c.most_common(3)   # Most common
-c.total()   # Total
+c
+c.most_common(3)
+c.total()
 ```
 
-    {'a': 2, 'b': 2, 'c': 1}
-    Counter({'a': 5, 'b': 2, 'r': 2, 'c': 1, 'd': 1})
-    [('a', 5), ('b', 2), ('r', 2)]
-    11
+```text
+{'a': 2, 'b': 2, 'c': 1}
+Counter({'a': 5, 'b': 2, 'r': 2, 'c': 1, 'd': 1})
+[('a', 5), ('b', 2), ('r', 2)]
+11
+```
 
 ## Sets
+
+Sets store unique hashable elements with O(1) membership testing, deduplication, and set algebra. Python provides `set` (mutable) and `frozenset` (immutable — can be used as dict keys or set elements). Set operations use both method syntax (`a.union(b)`) and operator syntax (`a | b`). Empty set must use `set()` because `{}` creates an empty dict.
+
+### Set operations
+
+Creating sets, adding/removing elements, and performing set algebra (union, intersection, difference, symmetric difference).
 
 #### Set creation — literals, set(), frozenset
 
@@ -374,101 +430,114 @@ from_str
 comprehension
 ```
 
-    {1, 2, 3, 4, 5}
-    {1, 2, 3}
-    {'d', 'b', 'r', 'a', 'c'}
-    {0, 1, 4, 9, 16}
+```text
+{1, 2, 3, 4, 5}
+{1, 2, 3}
+{'d', 'b', 'r', 'a', 'c'}
+{0, 1, 4, 9, 16}
+```
 
 #### Set add, remove, discard, pop — modify set elements
 
-```python
-# Set add and remove — add, update, remove, discard, pop
+`add` inserts one element. `update` adds multiple from an iterable. `remove` raises `KeyError` if missing; `discard` silently ignores missing elements. `pop` removes and returns an arbitrary element.
 
+```python
 s = {1, 2, 3}
-s.add(4)                               # add one element
-s.update([5, 6, 7])                    # add multiple
-s   # After adds
-s.remove(7)                            # remove (KeyError if missing)
-s.discard(99)                          # remove (NO error if missing)
-popped = s.pop()                       # remove and return arbitrary element
-s   # After removes
+s.add(4)
+s.update([5, 6, 7])
+s
+s.remove(7)
+s.discard(99)
+popped = s.pop()
+s
 ```
 
-    {1, 2, 3, 4, 5, 6, 7}
-    {2, 3, 4, 5, 6}
+```text
+{1, 2, 3, 4, 5, 6, 7}
+{2, 3, 4, 5, 6}
+```
 
 #### Set union, intersection, difference, symmetric_difference
 
-```python
-# Set operations — union, intersection, difference, symmetric difference
+`|` (union), `&` (intersection), `-` (difference), `^` (symmetric difference). `<=` and `>=` test subset/superset relationships. `isdisjoint` returns `True` if no elements are shared.
 
+```python
 a = {1, 2, 3, 4, 5}
 b = {4, 5, 6, 7, 8}
 
 a
 b
-a | b  # all elements from both
-a & b  # elements in BOTH
-a - b  # in a but NOT in b
-a ^ b  # in one but NOT both
+a | b
+a & b
+a - b
+a ^ b
 
-# Subset / superset
-f"{{1,2}} <= a:    {{1, 2}} is subset: {({1, 2} <= a)}"
-f"a >= {{1,2}}:    a is superset: {(a >= {1, 2})}"
-a.isdisjoint({10, 20})  # no common elements
+{1, 2} <= a
+a >= {1, 2}
+a.isdisjoint({10, 20})
 ```
 
-    {1, 2, 3, 4, 5}
-    {4, 5, 6, 7, 8}
-    {1, 2, 3, 4, 5, 6, 7, 8}
-    {4, 5}
-    {1, 2, 3}
-    {1, 2, 3, 6, 7, 8}
-    {1, 2} is subset: True
-    a is superset: True
-    True
+```text
+{1, 2, 3, 4, 5}
+{4, 5, 6, 7, 8}
+{1, 2, 3, 4, 5, 6, 7, 8}
+{4, 5}
+{1, 2, 3}
+{1, 2, 3, 6, 7, 8}
+True
+True
+True
+```
 
 #### Set difference for data comparison — find missing and extra items
 
-```python
-# Data comparison — set difference for finding missing/extra items
+A practical data engineering pattern — use set difference to find items present in one dataset but missing from another (e.g., unsold products, orphaned foreign keys).
 
+```python
 prod_ids = {"P001", "P002", "P003", "P004"}
 warehouse_ids = {"P002", "P003", "P005"}
 
-prod_ids - warehouse_ids   # In prod only
-warehouse_ids - prod_ids   # In warehouse only
-prod_ids & warehouse_ids   # In both
-prod_ids | warehouse_ids   # All unique
+prod_ids - warehouse_ids
+warehouse_ids - prod_ids
+prod_ids & warehouse_ids
+prod_ids | warehouse_ids
 ```
 
-    {'P004', 'P001'}
-    {'P005'}
-    {'P003', 'P002'}
-    {'P005', 'P001', 'P003', 'P002', 'P004'}
+```text
+{'P004', 'P001'}
+{'P005'}
+{'P003', 'P002'}
+{'P005', 'P001', 'P003', 'P002', 'P004'}
+```
 
-#### frozenset
+### frozenset — immutable set
+
+`frozenset` is an immutable variant of `set`. Because it's hashable, it can serve as a dictionary key or an element of another set — regular `set` cannot.
+
+#### frozenset creation and usage
 
 ```python
-# frozenset — immutable set for use as dict keys or set elements
-
 fs = frozenset([1, 2, 3])
-# fs.add(4)  # Error! Immutable
-fs   # frozenset
+fs
 
-# Can use as dict key (set can't)
 cache = {frozenset({"a", "b"}): "result1"}
-cache   # As dict key
+cache
 ```
 
-    frozenset({1, 2, 3})
-    {frozenset({'b', 'a'}): 'result1'}
+```text
+frozenset({1, 2, 3})
+{frozenset({'b', 'a'}): 'result1'}
+```
 
 ## Tuples & Enums
 
-#### Tuple basics
+Tuples are ordered, immutable sequences — once created, elements cannot be added, removed, or changed. Because they're hashable (if all elements are), tuples can serve as dict keys, set elements, and function return values — lists cannot. `namedtuple` adds named fields for a lightweight immutable class. Enums define named constants with type safety.
 
-Tuples are ordered, immutable sequences. Once created, elements can't be added, removed, or changed. Because they're hashable (if all elements are), tuples can serve as dict keys, set elements, and function return values — lists cannot. `namedtuple` adds named fields for a lightweight immutable class. Single-element tuples require a trailing comma: `(1,)` not `(1)`.
+### Tuple fundamentals
+
+Tuples are the immutable counterpart to lists. Single-element tuples require a trailing comma: `(1,)` not `(1)` (which is just grouping parentheses). Tuple unpacking allows concise destructuring of return values and swap idioms.
+
+#### Tuple basics
 
 ```python
 empty = ()
@@ -478,39 +547,40 @@ person = ("Alice", 30, "NYC")
 nested = ((1, 2), (3, 4))
 
 point
-point[0]   # point[0]
+point[0]
 person
-# point[0] = 99  # TypeError! Immutable
 ```
 
-    (3, 4)
-    3
-    ('Alice', 30, 'NYC')
+```text
+(3, 4)
+3
+('Alice', 30, 'NYC')
+```
 
 #### Tuple unpacking
 
-```python
-# Tuple unpacking — destructure into separate variables
+Unpacking destructures tuple elements into separate variables. The swap idiom `a, b = b, a` exchanges values without a temporary. The `*_` syntax captures and discards middle elements.
 
+```python
 x, y = point
 name, age, city = person
 f"Unpacked: x={x}, y={y}"
 f"Unpacked: name={name}, age={age}"
 
-# Swap values (tuple unpacking trick)
 a, b = 1, 2
 a, b = b, a
 f"Swapped:  a={a}, b={b}"
 
-# Ignore values with _
 first, *_, last = [1, 2, 3, 4, 5]
 f"first={first}, last={last}"
 ```
 
-    Unpacked: x=3, y=4
-    Unpacked: name=Alice, age=30
-    a=2, b=1
-    first=1, last=5
+```text
+'Unpacked: x=3, y=4'
+'Unpacked: name=Alice, age=30'
+'Swapped:  a=2, b=1'
+'first=1, last=5'
+```
 
 #### namedtuple and NamedTuple
 
@@ -520,28 +590,29 @@ An immutable tuple subclass with named fields. `Point = namedtuple('Point', ['x'
 >
 > Use `@dataclass` when you need mutability, methods, or inheritance. Use `NamedTuple` when you need immutability, tuple unpacking, and minimal memory footprint.
 
-```python
-# namedtuple and NamedTuple — tuples with named field access
+Access by name (`p.x`) or index (`p[0]`). `_asdict()` converts to an `OrderedDict`. `_replace()` creates a new instance with some fields changed (non-destructive).
 
+```python
 Point = namedtuple("Point", ["x", "y"])
 p = Point(3, 4)
 f"p.x={p.x}, p.y={p.y}"
-p[0]  # still supports index access
-p._asdict()  # convert to dict
+p[0]
+p._asdict()
 ```
 
-    p.x=3, p.y=4
-    p[0]=3
-    _asdict: {'x': 3, 'y': 4}
+```text
+'p.x=3, p.y=4'
+3
+{'x': 3, 'y': 4}
+```
 
 #### Tuple immutability — _replace for non-destructive updates
 
+`_replace` returns a new namedtuple with specified fields changed — the original is unchanged. `typing.NamedTuple` provides the same functionality with type annotations.
+
 ```python
-# Tuple immutability — _replace for non-destructive updates
-
 p2 = p._replace(x=10)
-p2   # _replace
-
+p2
 
 class Employee(NamedTuple):
     name: str
@@ -549,83 +620,92 @@ class Employee(NamedTuple):
     salary: float
 
 emp = Employee("Alice", "Engineering", 95000)
-emp   # Employee
+emp
 f"  name: {emp.name}, salary: ${emp.salary:,.0f}"
 ```
 
-    _replace: Point(x=10, y=4)
-    
-    Employee(name='Alice', department='Engineering', salary=95000)
-      name: Alice, salary: $95,000
+```text
+Point(x=10, y=4)
+Employee(name='Alice', department='Engineering', salary=95000)
+'  name: Alice, salary: $95,000'
+```
 
-#### Enum
+### Enum types
 
-A class for defining named constants with meaningful values. `class Color(Enum): RED = 1` prevents magic numbers scattered through code. Enums are iterable, comparable, and can have methods.
+Enums define a closed set of named constants. `class Color(Enum): RED = 1` prevents magic numbers scattered through code. Members are accessed by name (`Color.RED`), by value (`Color(1)`), or by string (`Color['RED']`). `auto()` auto-assigns integer values. Enums are iterable and can have custom methods.
+
+#### Enum declaration and access
+
+Each enum member has a `.name` (string) and `.value` (the assigned constant). `auto()` auto-assigns incrementing integers starting from 1. Lookup by value: `Color(2)`. Lookup by name: `Color['BLUE']`.
 
 ```python
-# Enum — named constants with type safety and iteration
-
 class Color(Enum):
     RED = 1
     GREEN = 2
     BLUE = 3
 
 class Direction(Enum):
-    NORTH = auto()                     # auto-assigns: 1, 2, 3, 4
+    NORTH = auto()
     SOUTH = auto()
     EAST = auto()
     WEST = auto()
 
-Color.RED   # Color.RED
-Color.RED.name   # Color.RED.name
-Color.RED.value   # Color.RED.value
-Color(2)  # lookup by value
-Color['BLUE']  # lookup by name
+Color.RED
+Color.RED.name
+Color.RED.value
+Color(2)
+Color['BLUE']
 ```
 
-    Color.RED
-    RED
-    Color.RED.value: 1
-    Color.GREEN
-    Color.BLUE
+```text
+<Color.RED: 1>
+'RED'
+1
+<Color.GREEN: 2>
+<Color.BLUE: 3>
+```
 
 #### Iterating over enum
 
-```python
-# Iterating over enum — loop yields each member in declaration order
+Iterating over an enum yields each member in declaration order.
 
+```python
 for color in Color:
     print(f"  {color.name} = {color.value}")
 ```
 
-      RED = 1
-      GREEN = 2
-      BLUE = 3
-
-#### Comparison
-
-```python
-# Enum comparison — identity vs value comparison
-
-Color.RED == Color.RED   # RED == RED
-Color.RED == 1  # False! Enum != int
+```text
+  RED = 1
+  GREEN = 2
+  BLUE = 3
 ```
 
-    RED == RED: True
-    False
+#### Enum comparison — identity vs value
+
+Standard `Enum` members compare by identity, not by value. `Color.RED == 1` is `False` because an Enum member is not an integer. Use `IntEnum` when integer comparison is needed.
+
+```python
+Color.RED == Color.RED
+Color.RED == 1
+```
+
+```text
+True
+False
+```
 
 #### IntEnum and pipeline status
 
-```python
-# IntEnum — integer-compatible enum for arithmetic and comparison
+`IntEnum` members are true integers — they support comparison, arithmetic, and equality with `int`. Use `IntEnum` for status codes and priorities where numeric comparison is meaningful. String-valued enums (like `PipelineStatus`) are useful for database values and API responses.
 
+```python
 class Priority(IntEnum):
     LOW = 1
     MEDIUM = 2
     HIGH = 3
 
-Priority.HIGH > Priority.LOW   # Priority.HIGH > Priority.LOW
-Priority.HIGH == 3  # True! IntEnum == int
+Priority.HIGH > Priority.LOW
+Priority.HIGH == 3
 
 class PipelineStatus(Enum):
     PENDING = "pending"
@@ -638,9 +718,11 @@ if status == PipelineStatus.RUNNING:
     print(f"Pipeline is {status.value}...")
 ```
 
-    Priority.HIGH > Priority.LOW: True
-    Priority.HIGH == 3: True
-    Pipeline is running...
+```text
+True
+True
+Pipeline is running...
+```
 
 ## Stacks, Queues & Deques
 
@@ -659,9 +741,9 @@ Each data structure enforces a specific access pattern:
 >
 > `collections.deque` provides O(1) append and pop from both ends. Use `append`/`popleft` for FIFO queues and `append`/`pop` for LIFO stacks. Add `maxlen=` for a fixed-size circular buffer.
 
-#### collections.deque — Stack (LIFO) with append and pop
+### Stack and Queue
 
-A double-ended queue with O(1) append and pop from both ends. Unlike a list (O(n) for `insert(0, x)`), deque is efficient for FIFO queues and sliding windows. Use `maxlen` for a fixed-size buffer that automatically drops oldest items.
+Stack (LIFO) uses `append`/`pop`. Queue (FIFO) uses `deque` with `append`/`popleft`. Both are O(1) operations on `deque`.
 
 > [!warning] List as queue is O(n)
 >
@@ -671,107 +753,122 @@ A double-ended queue with O(1) append and pop from both ends. Unlike a list (O(n
 >
 > `deque.popleft()` is O(1) and semantically correct. Initialize with `deque()` and use `append`/`popleft` to express FIFO intent clearly.
 
-```python
-# Stack (LIFO) — list with append/pop from the end
+#### collections.deque — Stack (LIFO) with append and pop
 
+`deque` (double-ended queue) provides O(1) append and pop from both ends. For LIFO stacks, use `append` and `pop`. Peek at the top with `stack[-1]`.
+
+```python
 stack = []
-stack.append("first")       # push
+stack.append("first")
 stack.append("second")
 stack.append("third")
 stack
-stack.pop()  # "third" (last in, first out)
-stack.pop()  # "second"
-stack[-1]  # look at top without removing
+stack.pop()
+stack.pop()
+stack[-1]
 ```
 
-    ['first', 'second', 'third']
-    third
-    second
-    first
+```text
+['first', 'second', 'third']
+'third'
+'second'
+'first'
+```
 
 #### collections.deque — Queue (FIFO) with append and popleft
 
-```python
-# Queue (FIFO) — deque with append/popleft
+For FIFO queues, use `append` (enqueue to right) and `popleft` (dequeue from left). Peek at the front with `queue[0]`.
 
+```python
 queue = deque()
-queue.append("first")       # enqueue (add to right)
+queue.append("first")
 queue.append("second")
 queue.append("third")
-list(queue)   # Queue
-queue.popleft()  # "first" (first in, first out)
-queue.popleft()  # "second"
-queue[0]  # look at front without removing
+list(queue)
+queue.popleft()
+queue.popleft()
+queue[0]
 ```
 
-    ['first', 'second', 'third']
-    first
-    second
-    third
+```text
+['first', 'second', 'third']
+'first'
+'second'
+'third'
+```
+
+### Deque operations
+
+`deque` supports O(1) operations on both ends: `append`/`pop` (right), `appendleft`/`popleft` (left). `rotate(n)` shifts elements circularly — positive rotates right, negative rotates left.
 
 #### deque — double-ended queue
 
 ```python
-# deque — double-ended queue with O(1) operations on both ends
-
 d = deque([1, 2, 3])
-d.append(4)                 # add right: [1, 2, 3, 4]
-d.appendleft(0)             # add left:  [0, 1, 2, 3, 4]
-d.pop()                     # remove right: [0, 1, 2, 3]
-d.popleft()                 # remove left:  [1, 2, 3]
-list(d)   # Deque
+d.append(4)
+d.appendleft(0)
+d.pop()
+d.popleft()
+list(d)
 
-# Rotate
 d = deque([1, 2, 3, 4, 5])
-d.rotate(2)                 # rotate right by 2: [4, 5, 1, 2, 3]
-list(d)   # Rotate(2)
-d.rotate(-2)                # rotate left by 2: [1, 2, 3, 4, 5]
-list(d)   # Rotate(-2)
+d.rotate(2)
+list(d)
+d.rotate(-2)
+list(d)
 ```
 
-    [1, 2, 3]
-    [4, 5, 1, 2, 3]
-    [1, 2, 3, 4, 5]
+```text
+[1, 2, 3]
+[4, 5, 1, 2, 3]
+[1, 2, 3, 4, 5]
+```
 
 #### deque with maxlen
 
-```python
-# deque with maxlen — fixed-size circular buffer
+`maxlen` creates a bounded deque that automatically drops the oldest element when a new one is appended beyond capacity. Useful for sliding windows and fixed-size buffers.
 
-d = deque(maxlen=3)          # fixed-size buffer
+```python
+d = deque(maxlen=3)
 d.append(1); d.append(2); d.append(3);
-d.append(4)                 # [2, 3, 4] — 1 was auto-removed
-list(d)   # maxlen=3
+d.append(4)
+list(d)
 ```
 
-    [2, 3, 4]
+```text
+[2, 3, 4]
+```
+
+### Priority queue and ETL patterns
+
+`heapq` provides a min-heap implementation using a regular list. `heappush` adds items maintaining heap order; `heappop` removes the smallest. Use for top-N queries, task scheduling, and merge-sorting multiple sorted streams. For max-heap, negate the values.
 
 #### Priority queue — heapq
 
-A min-heap implementation using a regular list. `heappush` adds items maintaining heap order; `heappop` removes the smallest. Use for top-N queries, task scheduling, and merge-sorting multiple sorted streams. For max-heap, negate the values.
+`heapq` operates on a regular list, maintaining the min-heap invariant. Elements are tuples where the first element is the priority (lower = higher priority). For max-heap behavior, negate the priority values.
 
 ```python
-# heapq — priority queue using a min-heap on a regular list
-
 pq = []
 heapq.heappush(pq, (3, "low priority"))
 heapq.heappush(pq, (1, "high priority"))
 heapq.heappush(pq, (2, "medium priority"))
 
-pq   # Heap
-heapq.heappop(pq)  # (1, "high priority") — smallest first
-heapq.heappop(pq)  # (2, "medium priority")
+pq
+heapq.heappop(pq)
+heapq.heappop(pq)
 ```
 
-    [(1, 'high priority'), (3, 'low priority'), (2, 'medium priority')]
-    (1, 'high priority')
-    (2, 'medium priority')
+```text
+[(1, 'high priority'), (3, 'low priority'), (2, 'medium priority')]
+(1, 'high priority')
+(2, 'medium priority')
+```
 
-#### ETL task queue
+#### ETL task queue — FIFO processing pattern
+
+A practical data engineering pattern — model extract/transform/load steps as a FIFO deque. Each job is dequeued and processed in submission order.
 
 ```python
-# ETL task queue — deque for FIFO job processing
-
 task_queue = deque()
 task_queue.append({"task": "extract", "table": "users"})
 task_queue.append({"task": "extract", "table": "orders"})
@@ -782,11 +879,17 @@ while task_queue:
     print(f"  Processing: {task['task']} {task['table']}")
 ```
 
-      Processing: extract users
-      Processing: extract orders
-      Processing: transform users
+```text
+  Processing: extract users
+  Processing: extract orders
+  Processing: transform users
+```
 
 ## Collection Comparison & Choosing the Right One
+
+Choosing the right collection type depends on access pattern, ordering requirements, uniqueness constraints, and performance characteristics. This section provides a quick-reference comparison table and a decision guide for common data engineering scenarios.
+
+### Collection comparison tables
 
 #### Collection cheat sheet
 
@@ -810,27 +913,26 @@ heapq         | Partial | Yes     | Yes        | O(log n)| Priority queue, top-N
 comparison
 ```
 
-    
-    Collection    | Ordered | Mutable | Duplicates | Lookup  | Use When
-    --------------+---------+---------+------------+---------+----------------------------------
-    list          | Yes     | Yes     | Yes        | O(n)    | General purpose, ordered data
-    tuple         | Yes     | No      | Yes        | O(n)    | Immutable data, dict keys, returns
-    dict          | Yes*    | Yes     | Keys: No   | O(1)    | Key-value mapping, config, lookup
-    set           | No      | Yes     | No         | O(1)    | Unique elements, membership test
-    frozenset     | No      | No      | No         | O(1)    | Immutable set, dict keys
-    deque         | Yes     | Yes     | Yes        | O(n)    | Queue/stack, fast append/pop both ends
-    namedtuple    | Yes     | No      | Yes        | O(n)    | Lightweight records with named fields
-    defaultdict   | Yes*    | Yes     | Keys: No   | O(1)    | Grouping, counting (auto-create keys)
-    Counter       | Yes*    | Yes     | Keys: No   | O(1)    | Counting occurrences
-    heapq         | Partial | Yes     | Yes        | O(log n)| Priority queue, top-N problems
-    
-    * dict/defaultdict/Counter are insertion-ordered since Python 3.7
+```text
+Collection    | Ordered | Mutable | Duplicates | Lookup  | Use When
+--------------+---------+---------+------------+---------+----------------------------------
+list          | Yes     | Yes     | Yes        | O(n)    | General purpose, ordered data
+tuple         | Yes     | No      | Yes        | O(n)    | Immutable data, dict keys, returns
+dict          | Yes*    | Yes     | Keys: No   | O(1)    | Key-value mapping, config, lookup
+set           | No      | Yes     | No         | O(1)    | Unique elements, membership test
+frozenset     | No      | No      | No         | O(1)    | Immutable set, dict keys
+deque         | Yes     | Yes     | Yes        | O(n)    | Queue/stack, fast append/pop both ends
+namedtuple    | Yes     | No      | Yes        | O(n)    | Lightweight records with named fields
+defaultdict   | Yes*    | Yes     | Keys: No   | O(1)    | Grouping, counting (auto-create keys)
+Counter       | Yes*    | Yes     | Keys: No   | O(1)    | Counting occurrences
+heapq         | Partial | Yes     | Yes        | O(log n)| Priority queue, top-N problems
+
+* dict/defaultdict/Counter are insertion-ordered since Python 3.7
+```
 
 #### Decision guide
 
 ```python
-# Decision guide — choose the right collection by access pattern
-
 guide = """
 Need ordered items?
   ├─ Need to modify? → list
@@ -853,24 +955,25 @@ Need fast middle insert?→ (use database — no Python collection is good at th
 guide
 ```
 
-    
-    Need ordered items?
-      ├─ Need to modify? → list
-      └─ Immutable?      → tuple
-    
-    Need key-value pairs?
-      ├─ Auto-create missing keys? → defaultdict
-      ├─ Count things?             → Counter
-      └─ General mapping?          → dict
-    
-    Need unique elements?
-      ├─ Need to modify?   → set
-      └─ Need as dict key? → frozenset
-    
-    Need FIFO queue?        → deque
-    Need LIFO stack?        → list (or deque)
-    Need priority ordering? → heapq
-    Need fast middle insert?→ (use database — no Python collection is good at this)
+```text
+Need ordered items?
+  ├─ Need to modify? → list
+  └─ Immutable?      → tuple
+
+Need key-value pairs?
+  ├─ Auto-create missing keys? → defaultdict
+  ├─ Count things?             → Counter
+  └─ General mapping?          → dict
+
+Need unique elements?
+  ├─ Need to modify?   → set
+  └─ Need as dict key? → frozenset
+
+Need FIFO queue?        → deque
+Need LIFO stack?        → list (or deque)
+Need priority ordering? → heapq
+Need fast middle insert?→ (use database — no Python collection is good at this)
+```
 
 #### Common data engineering patterns
 

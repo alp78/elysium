@@ -1,4 +1,5 @@
 ---
+title: "07. Generics & Functional Data Processing - Python"
 tags: [python]
 aliases: [generics, LINQ, type parameters, generic collections, comprehensions, functional programming]
 description: "Python generics and functional data processing reference with executable examples and cell outputs — covers TypeVar, Generic classes, Protocol, functional tools, and itertools. See [07_cs_generics_linq](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/07_cs_generics_linq) for the C# equivalent."
@@ -14,6 +15,8 @@ status: complete
 >
 > — **Joel Spolsky**, *The Law of Leaky Abstractions*, blog post (2002)
 
+Python's duck typing makes most code naturally generic — any iterable, any callable, any object with the right methods just works. Type hints with `TypeVar` and `Generic` add static analysis without changing runtime behavior, bridging the gap to C#-style type safety for library APIs and complex codebases. For data processing, Python replaces C#'s LINQ with built-in functional tools (`map`, `filter`, `zip`, `itertools.groupby`, comprehensions) and the pandas/Polars DataFrame libraries for analytical workloads. This note covers generic type hints, functional data processing patterns, and a side-by-side comparison of pandas vs Polars on live SQL Server data.
+
 ```python
 from typing import TypeVar, Generic, Optional
 from itertools import groupby
@@ -27,65 +30,67 @@ import polars as pl
 
 ## Generics
 
+Python's type system is fundamentally different from C#'s — duck typing means any object with the right interface already works without generic declarations. The `typing` module adds optional type hints that static analysis tools (mypy, pyright) check at development time, but the interpreter ignores them at runtime. `TypeVar` declares generic type variables, `Generic[T]` enables parameterized classes, and `Protocol` defines structural subtyping for duck-typed interfaces.
+
+### Python | Generics | duck typing and type hints
+
+Python functions are inherently generic through duck typing. Type hints with `TypeVar` and `Generic` add compile-time-like safety for IDE tooling and CI checks without changing runtime behavior.
+
 #### Duck typing — no generics needed
 
 Python's dynamic typing means functions work on any iterable — list, tuple, string, set, generator — without type declarations. This is "duck typing": if it quacks like a duck, it's a duck. Simpler than C#/Java generics for most use cases. For public library APIs, add type hints for documentation and type checking.
 
 ```python
-# Duck typing — Python functions already accept any type without generics
 def first_element(items):
     """Works with ANY iterable — list, tuple, string, set..."""
     for item in items:
         return item
     return None
 
-first_element([1, 2, 3])   # list
-first_element('hello')   # string
-first_element((10, 20))   # tuple
+first_element([1, 2, 3])
+first_element('hello')
+first_element((10, 20))
 ```
 
-    1
-    string: h
-    10
+```text
+1
+string: h
+10
+```
 
 #### TypeVar — generic type hints
 
 ```python
-# TypeVar — generic type hints for type checkers (not enforced at runtime)
-
 T = TypeVar("T")
 
 def first(items: list[T]) -> Optional[T]:
-    """Type hint says: list of T in → T out (same type)."""
     return items[0] if items else None
 
 result_int: Optional[int] = first([1, 2, 3])
 result_str: Optional[str] = first(["a", "b", "c"])
 f"int: {result_int}, str: {result_str}"
 
-# Constrained TypeVar — restrict T to specific types
 Number = TypeVar("Number", int, float)
 
 def add(a: Number, b: Number) -> Number:
     return a + b
 
-add(3, 4)   # int
-add(3.5, 4.5)   # float
-# add("a", "b")  # type checker would flag this (but Python still runs it)
+add(3, 4)
+add(3.5, 4.5)
+# add("a", "b")  # type checker flags this — Python still runs it
 ```
 
-    int: 1, str: a
-    7
-    float: 8.0
+```text
+int: 1, str: a
+7
+float: 8.0
+```
 
 #### Generic class — Generic[T]
 
 Inherit from `Generic[T]` so the type checker tracks what's inside. Use for custom container classes and typed wrappers — when built-in containers (`list`, `dict`) suffice, no custom class is needed. Runtime `isinstance` checks on generic types are not supported (type erasure).
 
 ```python
-# Generic class — inherit from Generic[T] so the type checker tracks what's inside
-
-# Stack[T] — type checker knows push/pop/peek operate on T
 class Stack(Generic[T]):
     def __init__(self) -> None:
         self._items: list[T] = []
@@ -109,18 +114,20 @@ int_stack: Stack[int] = Stack()
 int_stack.push(1)
 int_stack.push(2)
 int_stack.push(3)
-int_stack   # Stack
-int_stack.pop()   # Pop
+int_stack
+int_stack.pop()
 
 str_stack: Stack[str] = Stack()
 str_stack.push("hello")
 str_stack.push("world")
-str_stack   # Stack
+str_stack
 ```
 
-    Stack([1, 2, 3])
-    3
-    Stack(['hello', 'world'])
+```text
+Stack([1, 2, 3])
+3
+Stack(['hello', 'world'])
+```
 
 #### Built-in generic type hints — list[int], dict[str, T], Optional
 
@@ -133,17 +140,175 @@ str_stack   # Stack
 | `Optional[str]` | `str` or `None` |
 | `Callable[\[int], bool]` | Function signature |
 
+## Functional Data Processing
+
+Python's built-in functional tools — `map`, `filter`, `zip`, comprehensions, `itertools.groupby`, and `functools.reduce` — provide the same pipeline semantics as C#'s LINQ without a separate query language. These operate on plain iterables (lists, generators, tuples) and compose into lazy pipelines via generators. This section mirrors the C# "Advanced LINQ" section using Python's standard library equivalents.
+
+### Python | Functional tools | groupby, zip, comprehensions
+
+The examples below use the same employee/department data as the C# file, expressed as plain dictionaries.
+
+#### Sample data
+
+```python
+employees = [
+    {"name": "Alice", "dept": "Engineering", "salary": 95000, "level": "senior"},
+    {"name": "Bob", "dept": "Sales", "salary": 65000, "level": "junior"},
+    {"name": "Charlie", "dept": "Engineering", "salary": 110000, "level": "lead"},
+    {"name": "Diana", "dept": "Sales", "salary": 78000, "level": "senior"},
+    {"name": "Eve", "dept": "Engineering", "salary": 88000, "level": "junior"},
+    {"name": "Frank", "dept": "Marketing", "salary": 72000, "level": "senior"},
+]
+
+departments = [
+    {"dept": "Engineering", "budget": 500000, "head": "CTO"},
+    {"dept": "Sales", "budget": 300000, "head": "VP Sales"},
+    {"dept": "Marketing", "budget": 200000, "head": "CMO"},
+    {"dept": "HR", "budget": 150000, "head": "CHRO"},
+]
+```
+
+#### GroupBy and aggregations
+
+`itertools.groupby` requires the input to be sorted by the grouping key first. It yields `(key, group_iterator)` pairs — the group iterator is consumed once, so convert it to a list if you need multiple passes. Python's equivalent of C#'s `GroupBy` + `.Average()` / `.Sum()`.
+
+```python
+from itertools import groupby
+from statistics import mean
+
+sorted_emps = sorted(employees, key=lambda e: e["dept"])
+for dept, group in groupby(sorted_emps, key=lambda e: e["dept"]):
+    members = list(group)
+    names = [m["name"] for m in members]
+    avg_sal = mean(m["salary"] for m in members)
+    print(f"  {dept:<15} ({len(members)} people): {names} avg=${avg_sal:,.0f}")
+```
+
+```text
+Engineering     (3 people): ['Alice', 'Charlie', 'Eve'] avg=$97,667
+Marketing       (1 people): ['Frank'] avg=$72,000
+Sales           (2 people): ['Bob', 'Diana'] avg=$71,500
+```
+
+#### Join — dictionary lookup
+
+Python has no built-in join operator. The idiomatic approach is to build a dictionary from one collection, then look up matching keys from the other — equivalent to C#'s `Join`. For a left join (all departments, even those with no employees), use `dict.get` with a default.
+
+```python
+dept_lookup = {d["dept"]: d for d in departments}
+
+inner_join = [
+    {**e, "head": dept_lookup[e["dept"]]["head"], "budget": dept_lookup[e["dept"]]["budget"]}
+    for e in employees
+    if e["dept"] in dept_lookup
+]
+for r in inner_join[:3]:
+    print(f"  {r['name']:<10} {r['dept']:<15} head={r['head']:<10} budget=${r['budget']:,}")
+
+emp_by_dept = defaultdict(list)
+for e in employees:
+    emp_by_dept[e["dept"]].append(e)
+
+for d in departments:
+    count = len(emp_by_dept.get(d["dept"], []))
+    print(f"  {d['dept']:<15} head={d['head']:<10} employees={count}")
+```
+
+```text
+Alice      Engineering     head=CTO        budget=$500,000
+Bob        Sales           head=VP Sales   budget=$300,000
+Charlie    Engineering     head=CTO        budget=$500,000
+Engineering     head=CTO        employees=3
+Sales           head=VP Sales   employees=2
+Marketing       head=CMO        employees=1
+HR              head=CHRO       employees=0
+```
+
+#### Chained pipeline and zip
+
+Comprehensions chain naturally via nesting or sequential assignment. `zip` pairs elements from parallel iterables positionally, stopping at the shortest — equivalent to C#'s `Zip`.
+
+```python
+top3 = sorted(
+    [{"name": e["name"], "salary": e["salary"], "tax": e["salary"] * 0.3}
+     for e in employees if e["salary"] > 75000],
+    key=lambda x: -x["salary"]
+)[:3]
+for r in top3:
+    print(f"  {r['name']:<10} salary=${r['salary']:,}  tax=${r['tax']:,.0f}")
+
+names = [e["name"] for e in employees]
+salaries = [e["salary"] for e in employees]
+raises = [e["salary"] * 0.1 for e in employees]
+for name, salary, raise_amt in zip(names, salaries, raises):
+    print(f"  {name:<10} ${salary:>8,} + ${raise_amt:>7,.0f} raise")
+```
+
+```text
+Charlie    salary=$110,000  tax=$33,000
+Alice      salary=$95,000  tax=$28,500
+Eve        salary=$88,000  tax=$26,400
+Alice      $  95,000 + $  9,500 raise
+Bob        $  65,000 + $  6,500 raise
+Charlie    $ 110,000 + $ 11,000 raise
+Diana      $  78,000 + $  7,800 raise
+Eve        $  88,000 + $  8,800 raise
+Frank      $  72,000 + $  7,200 raise
+```
+
+#### SelectMany — flatten nested collections
+
+Nested list comprehensions are Python's equivalent of C#'s `SelectMany`. A double `for` in a comprehension iterates the outer collection then the inner, yielding a flat sequence.
+
+```python
+people = [
+    {"name": "Alice", "skills": ["Python", "LINQ", "SQL"]},
+    {"name": "Bob", "skills": ["C#", "SQL"]},
+    {"name": "Charlie", "skills": ["Python", "Go"]},
+]
+
+nested = [p["skills"] for p in people]
+print(f"Select (nested): {nested}")
+
+flat = [skill for p in people for skill in p["skills"]]
+print(f"SelectMany (flat): {flat}")
+
+pairs = [f"{p['name']}: {s}" for p in people for s in p["skills"]]
+for pair in pairs:
+    print(f"  {pair}")
+
+distinct = sorted(set(skill for p in people for skill in p["skills"]))
+print(f"Distinct skills: {distinct}")
+
+matrix = [[1, 2, 3], [4, 5], [6, 7, 8, 9]]
+print(f"Flat matrix: {[x for row in matrix for x in row]}")
+```
+
+```text
+Select (nested): [['Python', 'LINQ', 'SQL'], ['C#', 'SQL'], ['Python', 'Go']]
+SelectMany (flat): ['Python', 'LINQ', 'SQL', 'C#', 'SQL', 'Python', 'Go']
+  Alice: Python
+  Alice: LINQ
+  Alice: SQL
+  Bob: C#
+  Bob: SQL
+  Charlie: Python
+  Charlie: Go
+Distinct skills: ['C#', 'Go', 'LINQ', 'Python', 'SQL']
+Flat matrix: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+```
+
 ## Pandas vs Polars Analytics
 
-Side-by-side analytics on live SQL Server data. Each operation shown first in pandas,
-then in Polars. Mirrors the C# notebook's LINQ vs Polars.NET section.
+Side-by-side analytics on live SQL Server data. Each operation shown first in pandas, then in Polars. Mirrors the C# notebook's LINQ vs Polars.NET section. Tables: `silver.eurostoxx50_ohlcv` (66K rows), `gold.scores_daily` (466 rows).
 
-Tables: `silver.eurostoxx50_ohlcv` (66K rows), `gold.scores_daily` (466 rows).
+### Python | Data setup | SQL Server connection and data loading
+
+Loads OHLCV and composite score data from the local `stoxx` database via SQLAlchemy/pyodbc into pandas, and reads the same Parquet file into Polars.
 
 #### Connect to SQL Server and load data
 
 ```python
-# Connect via SQLAlchemy engine (suppresses pyodbc deprecation warning)
 from sqlalchemy import create_engine
 from urllib.parse import quote_plus
 
@@ -165,18 +330,17 @@ f"  Polars: {pldf.height:,} rows"
 f"  Date range: {ohlcv.date.min()} to {ohlcv.date.max()}"
 ```
 
-      66,355 rows, 50 symbols
-      66,355 rows
-      2021-01-04 to 2026-03-12
-
-### Basic Operations
+```text
+66,355 rows, 50 symbols
+66,355 rows
+2021-01-04 to 2026-03-12
+```
 
 ### Subsetting
 
 #### Pandas — Subset rows by slicing with iloc[]
 
 ```python
-# Pandas: iloc[] — positional slicing (rows 100-102)
 ohlcv.iloc[100:103]
 ```
 
@@ -240,7 +404,6 @@ ohlcv.iloc[100:103]
 #### Polars — Subset rows by slicing with slice()
 
 ```python
-# Polars: slice(offset, length) — positional slicing (rows 100-102)
 pldf.slice(100, 3)
 ```
 
@@ -250,7 +413,6 @@ pldf.slice(100, 3)
 #### Pandas — Subset columns with [[columns]] bracket notation
 
 ```python
-# Pandas: [[col_list]] — select columns by name
 ohlcv[['symbol', 'date', 'close', 'volume']].head(5)
 ```
 
@@ -308,7 +470,6 @@ ohlcv[['symbol', 'date', 'close', 'volume']].head(5)
 #### Polars — Subset columns with select()
 
 ```python
-# Polars: select() — select columns by name
 pldf.select('symbol', 'date', 'close', 'volume').head(5)
 ```
 
@@ -318,45 +479,46 @@ pldf.select('symbol', 'date', 'close', 'volume').head(5)
 #### Pandas — Subset single row with iloc[n]
 
 ```python
-# Pandas: iloc[n] — single row by position (returns Series)
 ohlcv.iloc[0]
 ```
 
-    symbol          ASML.AS
-    date         2021-01-04
-    open              404.0
-    high              411.0
-    low              402.25
-    close            406.25
-    adj_close       387.709
-    volume           789502
-    vol_rank            392
-    Name: 0, dtype: object
+```text
+symbol          ASML.AS
+date         2021-01-04
+open              404.0
+high              411.0
+low              402.25
+close            406.25
+adj_close       387.709
+volume           789502
+vol_rank            392
+Name: 0, dtype: object
+```
 
 #### Polars — Subset single row with row()
 
 ```python
-# Polars: row(n, named=True) — single row by position (returns dict)
 pldf.row(0, named=True)
 ```
 
-    {'id': 21160,
-    'symbol': 'ABI.BR',
-    'date': datetime.date(2021, 1, 4),
-    'open': 58.15,
-    'high': 58.85,
-    'low': 56.78,
-    'close': 57.21,
-    'adj_close': 53.5761,
-    'volume': 1513937,
-    'dividends': 0.0,
-    'stock_splits': 0.0,
-    'is_filled': False}
+```text
+{'id': 21160,
+'symbol': 'ABI.BR',
+'date': datetime.date(2021, 1, 4),
+'open': 58.15,
+'high': 58.85,
+'low': 56.78,
+'close': 57.21,
+'adj_close': 53.5761,
+'volume': 1513937,
+'dividends': 0.0,
+'stock_splits': 0.0,
+'is_filled': False}
+```
 
 #### Pandas — Subset with loc[] label filter
 
 ```python
-# Pandas: loc[condition, columns] — label-based filter + column selection
 ohlcv.loc[ohlcv.symbol == 'ASML.AS', ['date', 'close']].head(5)
 ```
 
@@ -402,7 +564,6 @@ ohlcv.loc[ohlcv.symbol == 'ASML.AS', ['date', 'close']].head(5)
 #### Polars — Subset with filter() + select()
 
 ```python
-# Polars: filter() + select() — expression-based filter + column selection
 pldf.filter(pl.col('symbol') == 'ASML.AS').select('date', 'close').head(5)
 ```
 
@@ -412,7 +573,6 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').select('date', 'close').head(5)
 #### Pandas — Subset multiple rows with iloc index
 
 ```python
-# Pandas: iloc[navigation-and-listing](https://alp78.github.io/elysium/01-Shell/File-Operations/navigation-and-listing) — multiple rows by position
 ohlcv.iloc[[0, 50, 100, 500]]
 ```
 
@@ -488,7 +648,6 @@ ohlcv.iloc[[0, 50, 100, 500]]
 #### Polars — Subset multiple rows with index list
 
 ```python
-# Polars: gather([list]) — multiple rows by position
 pldf[[0, 50, 100, 500]]
 ```
 
@@ -498,7 +657,6 @@ pldf[[0, 50, 100, 500]]
 #### Pandas — Select columns
 
 ```python
-# Pandas: select columns
 ohlcv[['symbol', 'date', 'close']].head(5)
 ```
 
@@ -550,7 +708,6 @@ ohlcv[['symbol', 'date', 'close']].head(5)
 #### Polars — Select columns
 
 ```python
-# Polars: select columns
 pldf.select('symbol', 'date', 'close').head(5)
 ```
 
@@ -560,7 +717,6 @@ pldf.select('symbol', 'date', 'close').head(5)
 #### Pandas — Filter rows
 
 ```python
-# Pandas: filter rows
 ohlcv[(ohlcv.symbol == 'ASML.AS') & (ohlcv['close'] > 600)][['symbol', 'date', 'close']].head(5)
 ```
 
@@ -612,7 +768,6 @@ ohlcv[(ohlcv.symbol == 'ASML.AS') & (ohlcv['close'] > 600)][['symbol', 'date', '
 #### Polars — Filter rows
 
 ```python
-# Polars: filter rows
 pldf.filter((pl.col('symbol') == 'ASML.AS') & (pl.col('close') > 600)).select('symbol', 'date', 'close').head(5)
 ```
 
@@ -622,7 +777,6 @@ pldf.filter((pl.col('symbol') == 'ASML.AS') & (pl.col('close') > 600)).select('s
 #### Pandas — Sort
 
 ```python
-# Pandas: sort
 ohlcv.sort_values('volume', ascending=False)[['symbol', 'date', 'volume']].head(5)
 ```
 
@@ -674,7 +828,6 @@ ohlcv.sort_values('volume', ascending=False)[['symbol', 'date', 'volume']].head(
 #### Polars — Sort
 
 ```python
-# Polars: sort
 pldf.sort('volume', descending=True).select('symbol', 'date', 'volume').head(5)
 ```
 
@@ -684,7 +837,6 @@ pldf.sort('volume', descending=True).select('symbol', 'date', 'volume').head(5)
 #### Pandas — Add computed column
 
 ```python
-# Pandas: add computed column
 ohlcv.assign(range=ohlcv.high - ohlcv.low)[['symbol', 'close', 'range']].head(5)
 ```
 
@@ -736,7 +888,6 @@ ohlcv.assign(range=ohlcv.high - ohlcv.low)[['symbol', 'close', 'range']].head(5)
 #### Polars — Add computed column
 
 ```python
-# Polars: add computed column
 pldf.with_columns((pl.col('high') - pl.col('low')).alias('range')).select('symbol', 'close', 'range').head(5)
 ```
 
@@ -748,7 +899,6 @@ pldf.with_columns((pl.col('high') - pl.col('low')).alias('range')).select('symbo
 #### Pandas — GroupBy with aggregates
 
 ```python
-# Pandas: groupby + agg
 ohlcv.groupby('symbol').agg(
     avg_close=('close', 'mean'),
     total_vol=('volume', 'sum'),
@@ -810,7 +960,6 @@ ohlcv.groupby('symbol').agg(
 #### Polars — GroupBy with aggregates
 
 ```python
-# Polars: group_by + agg
 pldf.group_by('symbol').agg(
     pl.col('close').mean().alias('avg_close'),
     pl.col('volume').sum().alias('total_vol'),
@@ -824,7 +973,6 @@ pldf.group_by('symbol').agg(
 #### Pandas — HAVING
 
 ```python
-# Pandas: filter after groupby = HAVING
 avg_vol = ohlcv.groupby('symbol')['volume'].mean()
 avg_vol[avg_vol > 5_000_000].sort_values(ascending=False).to_frame('avg_volume')
 ```
@@ -893,7 +1041,6 @@ avg_vol[avg_vol > 5_000_000].sort_values(ascending=False).to_frame('avg_volume')
 #### Polars — HAVING
 
 ```python
-# Polars: group_by + agg + filter
 pldf.group_by('symbol').agg(
     pl.col('volume').mean().alias('avg_vol')
 ).filter(pl.col('avg_vol') > 5_000_000).sort('avg_vol', descending=True)
@@ -907,7 +1054,6 @@ pldf.group_by('symbol').agg(
 #### Pandas — Window Function LAG()
 
 ```python
-# Pandas: LAG()
 asml = ohlcv[ohlcv.symbol == 'ASML.AS'].sort_values('date').copy()
 asml['prev_close'] = asml['close'].shift(1)
 asml['return_pct'] = ((asml['close'] - asml['prev_close']) / asml['prev_close'] * 100).round(2)
@@ -968,7 +1114,6 @@ asml[['date', 'close', 'prev_close', 'return_pct']].tail(5)
 #### Polars — Window Function LAG()
 
 ```python
-# Polars: LAG()
 pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
     pl.col('close').shift(1).over('symbol').alias('prev_close')
 ).with_columns(
@@ -982,7 +1127,6 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
 #### Pandas — Window Function Cumulative SUM()
 
 ```python
-# Pandas: Cumulative SUM()
 asml = ohlcv[ohlcv.symbol == 'ASML.AS'].sort_values('date').copy()
 asml['cum_vol'] = asml['volume'].cumsum()
 asml[['date', 'volume', 'cum_vol']].tail(5)
@@ -1036,7 +1180,6 @@ asml[['date', 'volume', 'cum_vol']].tail(5)
 #### Polars — Window Function Cumulative SUM()
 
 ```python
-# Polars: Cumulative SUM()
 pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
     pl.col('volume').cum_sum().over('symbol').alias('cum_vol')
 ).select('date', 'volume', 'cum_vol').tail(5)
@@ -1048,7 +1191,6 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
 #### Pandas — Window Function AVG() Moving Average
 
 ```python
-# Pandas: AVG() Moving Average
 asml = ohlcv[ohlcv.symbol == 'ASML.AS'].sort_values('date').copy()
 asml['sma_20'] = asml['close'].rolling(20).mean()
 asml[['date', 'close', 'sma_20']].tail(5).round(2)
@@ -1102,7 +1244,6 @@ asml[['date', 'close', 'sma_20']].tail(5).round(2)
 #### Polars — Window Function AVG() Moving Average
 
 ```python
-# Polars: AVG() Moving Average
 pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
     pl.col('close').rolling_mean(20).over('symbol').alias('sma_20')
 ).select('date', 'close', 'sma_20').tail(5)
@@ -1114,7 +1255,6 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
 #### Pandas — Window Function ROW_NUMBER()
 
 ```python
-# Pandas: ROW_NUMBER()
 ohlcv['vol_rank'] = ohlcv.groupby('symbol')['volume'].rank(ascending=False, method='first').astype(int)
 ohlcv[ohlcv.vol_rank == 1].sort_values('volume', ascending=False)[['symbol', 'date', 'volume']].head(5)
 ```
@@ -1167,7 +1307,6 @@ ohlcv[ohlcv.vol_rank == 1].sort_values('volume', ascending=False)[['symbol', 'da
 #### Polars — Window Function ROW_NUMBER()
 
 ```python
-# Polars: ROW_NUMBER()
 pldf.with_columns(
     pl.col('volume').rank(descending=True).over('symbol').alias('vol_rank')
 ).filter(pl.col('vol_rank') == 1).sort('volume', descending=True).select('symbol', 'date', 'volume').head(5)
@@ -1179,7 +1318,6 @@ pldf.with_columns(
 #### Pandas — Window Function LEAD()
 
 ```python
-# Pandas: LEAD()
 asml = ohlcv[ohlcv.symbol == 'ASML.AS'].sort_values('date').copy()
 asml['next_date'] = asml['date'].shift(-1)
 asml['gap_days'] = (pd.to_datetime(asml['next_date']) - pd.to_datetime(asml['date'])).dt.days
@@ -1234,7 +1372,6 @@ asml[asml.gap_days > 3][['date', 'next_date', 'gap_days']].sort_values('gap_days
 #### Polars — Window Function LEAD()
 
 ```python
-# Polars: LEAD()
 pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
     pl.col('date').shift(-1).over('symbol').alias('next_date')
 ).with_columns(
@@ -1250,7 +1387,6 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
 #### Pandas — JOIN
 
 ```python
-# Pandas: merge (inner join on symbol)
 avg_df = ohlcv.groupby('symbol')['close'].mean().round(2).reset_index(name='avg_close')
 avg_df.merge(scores[['symbol', 'sector', 'composite_rank']], on='symbol').sort_values('composite_rank').head(5)
 ```
@@ -1309,7 +1445,6 @@ avg_df.merge(scores[['symbol', 'sector', 'composite_rank']], on='symbol').sort_v
 #### Polars — JOIN
 
 ```python
-# Polars: join
 pl_avg = pldf.group_by('symbol').agg(pl.col('close').mean().alias('avg_close'))
 pl_scores = pl.DataFrame({
     'symbol': scores['symbol'].tolist(),
@@ -1325,7 +1460,6 @@ pl_avg.join(pl_scores, on='symbol').sort('composite_rank').head(5)
 #### Pandas — STDEV()
 
 ```python
-# Pandas: annualized volatility = std(daily_return) * sqrt(252)
 returns = ohlcv.sort_values(['symbol', 'date']).groupby('symbol')['close'].pct_change()
 vol = returns.groupby(ohlcv['symbol']).std() * np.sqrt(252) * 100
 vol.sort_values(ascending=False).head(10).round(2).to_frame('annual_vol_%')
@@ -1391,7 +1525,6 @@ vol.sort_values(ascending=False).head(10).round(2).to_frame('annual_vol_%')
 #### Polars — STDEV()
 
 ```python
-# Polars: annualized volatility
 pldf.sort('symbol', 'date').with_columns(
     pl.col('close').pct_change().over('symbol').alias('ret')
 ).group_by('symbol').agg(
@@ -1407,7 +1540,6 @@ pldf.sort('symbol', 'date').with_columns(
 #### Pandas — Add rows
 
 ```python
-# Pandas: add rows
 new_row = pd.DataFrame([{'symbol': 'TEST.XX', 'date': '2025-01-01', 'open': 100, 'high': 105,
     'low': 95, 'close': 102, 'adj_close': 102, 'volume': 50000}])
 pd.concat([ohlcv, new_row], ignore_index=True).tail(3)
@@ -1473,8 +1605,6 @@ pd.concat([ohlcv, new_row], ignore_index=True).tail(3)
 #### Polars — Add rows
 
 ```python
-# Polars: add rows
-# Polars: vstack — vertically stacks DataFrames (must match schema)
 new_row = pldf.head(1).with_columns(
     pl.lit('TEST.XX').alias('symbol'), pl.lit(102.0).alias('close'), pl.lit(50000).cast(pl.Int64).alias('volume'))
 pldf.vstack(new_row).tail(3)
@@ -1486,7 +1616,6 @@ pldf.vstack(new_row).tail(3)
 #### Pandas — Update column
 
 ```python
-# Pandas: update column
 ohlcv[ohlcv.symbol == 'ASML.AS'].assign(adj_close=lambda d: d['close'] * 1.05)[['symbol', 'date', 'adj_close']].head(5)
 ```
 
@@ -1538,7 +1667,6 @@ ohlcv[ohlcv.symbol == 'ASML.AS'].assign(adj_close=lambda d: d['close'] * 1.05)[[
 #### Polars — Update column
 
 ```python
-# Polars: update column
 pldf.filter(pl.col('symbol') == 'ASML.AS').with_columns(
     (pl.col('close') * 1.05).alias('adj_close')
 ).select('symbol', 'date', 'adj_close').head(5)
@@ -1550,27 +1678,28 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').with_columns(
 #### Pandas — Delete rows
 
 ```python
-# Pandas: delete rows
 filtered = ohlcv[ohlcv.symbol != 'ASML.AS']
 f"  {len(ohlcv)} - ASML rows = {len(filtered)} remaining"
 ```
 
-      66355 - ASML rows = 65024 remaining
+```text
+66355 - ASML rows = 65024 remaining
+```
 
 #### Polars — Delete rows
 
 ```python
-# Polars: delete rows
 filtered = pldf.filter(pl.col('symbol') != 'ASML.AS')
 f"  {pldf.height} - ASML rows = {filtered.height} remaining"
 ```
 
-      66355 - ASML rows = 65024 remaining
+```text
+66355 - ASML rows = 65024 remaining
+```
 
 #### Pandas — Drop column
 
 ```python
-# Pandas: drop column
 ohlcv.drop(columns=['dividends', 'stock_splits', 'is_filled'], errors='ignore').head(3)
 ```
 
@@ -1634,7 +1763,6 @@ ohlcv.drop(columns=['dividends', 'stock_splits', 'is_filled'], errors='ignore').
 #### Polars — Drop column
 
 ```python
-# Polars: drop column
 pldf.drop('dividends', 'stock_splits', 'is_filled').head(3)
 ```
 

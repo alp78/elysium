@@ -1,9 +1,10 @@
 ---
-tags: [python, sql, airflow, sql-server, tsql]
+title: "Race Conditions"
+tags: [sql-server, tsql]
 aliases: [race condition, lost update, phantom insert, dirty read, concurrent write, data corruption]
 description: "SQL Server race conditions in data pipelines: the four common patterns (lost update, phantom insert, dirty read, overlapping truncate-reload), detection queries, and five prevention strategies including Airflow serialization, atomic SQL operations, transactions, and unique constraints. Includes a complete data pipeline audit."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-04
 status: complete
 ---
 
@@ -29,21 +30,21 @@ Race conditions are more dangerous than deadlocks because:
 - **Hard to detect**: Data looks plausible but is subtly wrong
 - **Cumulative**: Errors compound over time without anyone noticing
 
----
-
-### Race Condition vs. Deadlock
-
-| | Race Condition | Deadlock |
-|---|---|---|
-| **Outcome** | Wrong data, both processes complete | No result, processes stuck |
-| **Detection** | Hard — requires data validation or auditing | Easy — SQL Server auto-detects (error 1205) |
-| **Symptoms** | Duplicate rows, lost updates, stale reads | Frozen queries, timeout errors |
-| **Fix** | Serialization, transactions, atomic operations | Lock ordering, RCSI, retry logic |
-| **Danger level** | High — silent corruption | Medium — loud failure |
+> [!tip] Race Condition vs Deadlock
+>
+> | | Race Condition | Deadlock |
+> |---|---|---|
+> | **Outcome** | Wrong data, both processes complete | No result, processes stuck |
+> | **Detection** | Hard — requires data validation or auditing | Easy — SQL Server auto-detects (error 1205) |
+> | **Symptoms** | Duplicate rows, lost updates, stale reads | Frozen queries, timeout errors |
+> | **Fix** | Serialization, transactions, atomic operations | Lock ordering, RCSI, retry logic |
+> | **Danger level** | High — silent corruption | Medium — loud failure |
 
 ---
 
 ## Common Race Condition Patterns in Data Pipelines
+
+Four patterns account for the vast majority of race conditions in data pipelines. Each pattern follows the same structure: two sessions interleave operations on the same data, and because the gap between steps is unprotected by locks, the second session acts on a stale view of reality. The patterns differ in which operation creates the gap (read, check, or delete) and in which data anomaly results (overwrite, duplicate, phantom, or loss).
 
 ### Pattern 1: Lost Update (Read-Then-Write)
 
@@ -151,15 +152,25 @@ INSERT INTO t (symbol) VALUES ('ASML');
 
 #### MERGE WHEN NOT MATCHED — fix phantom insert with atomic upsert
 
-The MERGE statement acquires and holds appropriate locks for the entire check-and-insert sequence. No other session can insert the same key between the check and the write.
+The MERGE statement combines the existence check and the insert into a single statement. However, under the default READ COMMITTED isolation level, MERGE does not acquire range locks — meaning two concurrent MERGE statements can both evaluate the `WHEN NOT MATCHED` branch for the same key and both attempt an INSERT. If a unique constraint exists, the second insert fails with error 2627; without one, a silent duplicate is created.
+
+To make MERGE truly safe under concurrency, add the `HOLDLOCK` table hint. HOLDLOCK is equivalent to SERIALIZABLE isolation on the target table — it holds range locks that block other sessions from inserting into the gap until the MERGE completes.
 
 ```sql
-MERGE INTO t AS target
+MERGE INTO t WITH (HOLDLOCK) AS target
 USING (SELECT 'ASML' AS symbol) AS source
     ON target.symbol = source.symbol
 WHEN NOT MATCHED THEN
     INSERT (symbol) VALUES (source.symbol);
 ```
+
+> [!warning] MERGE Is Not Atomic Under Concurrent Inserts Without HOLDLOCK
+>
+> Under READ COMMITTED, two concurrent MERGE statements can both pass the `WHEN NOT MATCHED` check and both INSERT the same key — producing a unique constraint violation (error 2627) or a silent duplicate if no constraint exists. This is documented in the official Microsoft MERGE reference. Always add `WITH (HOLDLOCK)` to the target table when using MERGE as an upsert under concurrent load.
+
+> [!success] Safe MERGE Pattern
+>
+> `MERGE INTO target WITH (HOLDLOCK)` acquires SERIALIZABLE-level range locks on the target, blocking concurrent sessions from inserting into the same key range. Combined with a unique constraint as a safety net, this eliminates phantom insert races entirely.
 
 > [!info] MERGE Reference
 >
@@ -259,57 +270,65 @@ INSERT INTO t SELECT ... WHERE _index = 'X';
 
 ## How to Detect Race Conditions
 
-Unlike deadlocks, SQL Server does not automatically detect race conditions. You must look for their symptoms.
+Unlike deadlocks, SQL Server does not automatically detect race conditions. You must look for their symptoms through data validation queries. Run these after pipeline completion or as part of a scheduled health check.
 
-#### GROUP BY HAVING COUNT > 1 — detect duplicate rows from phantom inserts
+### Detection queries
+
+Each query targets a specific race condition symptom. Run them after pipeline completion or on a schedule as a health check. A positive result does not always confirm a race — it flags an anomaly that warrants investigation.
+
+#### Duplicate rows from phantom inserts
+
+If the natural key should be unique, any duplicate indicates a race condition or missing constraint. This query groups by the expected unique key and reports rows with more than one occurrence.
 
 ```sql
--- Find duplicate keys that shouldn't exist
 SELECT _index, symbol, score_date, COUNT(*) AS cnt
 FROM gold.scores_daily
 GROUP BY _index, symbol, score_date
 HAVING COUNT(*) > 1;
 ```
 
-#### LAG() date gap detection — find missing rows from overlapping loads
+#### Missing rows from overlapping loads
+
+Compare expected row counts against actual counts. If a truncate-reload race occurred, the count will be lower than expected because one process's DELETE wiped the other's INSERT.
 
 ```sql
--- Compare expected stock count vs actual
 SELECT _index, COUNT(*) AS stock_count
 FROM silver.index_dim
 WHERE is_current = 1
 GROUP BY _index;
--- Should match known index sizes (50 per index)
 ```
 
-#### SELECT MAX(updated_at) — detect stale data from missed updates
+#### Stale data from missed updates
+
+Check the freshness of signal dates per index. If `hours_stale` is unexpectedly high, a pipeline step may have been overwritten by a concurrent process carrying older data.
 
 ```sql
--- Find rows where the signal date is older than expected
 SELECT _index, MAX(signal_date) AS latest, GETDATE() AS now,
        DATEDIFF(HOUR, MAX(signal_date), GETDATE()) AS hours_stale
 FROM silver.signals_daily
 GROUP BY _index;
 ```
 
-#### SELECT WHERE load_timestamp != expected — audit for missed load windows
+#### Load timestamp spread — audit for overlapping load windows
+
+A large `spread_sec` value (seconds between the earliest and latest `loaded_at` within the same index) indicates that multiple processes wrote to the same partition at different times — a strong indicator of a race condition.
 
 ```sql
 SELECT _index, MIN(loaded_at) AS earliest, MAX(loaded_at) AS latest,
        DATEDIFF(SECOND, MIN(loaded_at), MAX(loaded_at)) AS spread_sec
 FROM bronze.signals_daily
 GROUP BY _index;
--- If spread is large, multiple processes may have written at different times
 ```
 
-> [!tip] Add loaded_at to All Tables
+> [!tip] Add loaded_at to All Pipeline Tables
 >
-> Add loaded_at Columns to All Pipeline Tables.
-> Add `loaded_at DATETIME2 DEFAULT SYSUTCDATETIME()` to every bronze/silver/gold table. This column enables post-run validation and makes race condition detection trivial.
+> Add `loaded_at DATETIME2 DEFAULT SYSUTCDATETIME()` to every bronze/silver/gold table. This column enables post-run validation and makes race condition detection trivial — any table without it cannot be audited for timing-based anomalies.
 
 ---
 
 ## Prevention Strategies
+
+Race conditions are prevented by eliminating the unprotected gap between read and write. The five strategies below are ordered from coarsest (remove concurrency entirely) to finest (let the database reject violations). In practice, pipeline workloads combine multiple strategies as defense-in-depth — serialization removes most risk, atomic operations close the remaining gaps, and unique constraints catch anything that slips through.
 
 ### Strategy 1: Serialization (Most Effective for Pipelines)
 
@@ -360,17 +379,59 @@ WHEN NOT MATCHED THEN INSERT ...;
 
 ### Strategy 3: Transactions with Proper Isolation
 
-Wrap read-then-write sequences in explicit transactions. The isolation level determines what concurrent readers/writers can see.
+Wrap read-then-write sequences in explicit transactions. The isolation level determines what concurrent readers and writers can see, and which concurrency anomalies are prevented. SQL Server provides five isolation levels, split into two families: **pessimistic** (lock-based — READ UNCOMMITTED through SERIALIZABLE) and **optimistic** (version-based — RCSI and SNAPSHOT).
 
-| Isolation Level | Dirty Reads | Non-Repeatable Reads | Phantom Inserts | Performance |
-|---|---|---|---|---|
-| READ UNCOMMITTED | Yes | Yes | Yes | Fastest |
-| READ COMMITTED (default) | No | Yes | Yes | Good |
-| READ COMMITTED + RCSI | No | Snapshot | Snapshot | Good (no reader locks) |
-| REPEATABLE READ | No | No | Yes | Slower |
-| SERIALIZABLE | No | No | No | Slowest |
+| Isolation Level | Dirty Reads | Non-Repeatable Reads | Phantom Inserts | Lock Behavior | Performance |
+|---|---|---|---|---|---|
+| READ UNCOMMITTED | Yes | Yes | Yes | No shared locks acquired | Fastest |
+| READ COMMITTED (default) | No | Yes | Yes | S-locks acquired per statement, released immediately | Good |
+| REPEATABLE READ | No | No | Yes | S-locks held until transaction end | Slower |
+| SERIALIZABLE | No | No | No | Range locks held until transaction end | Slowest |
+| SNAPSHOT | No | No | No | No read locks — reads from version store | Good (no reader-writer blocking) |
 
-For most pipeline workloads, **READ COMMITTED** (the default) is sufficient when combined with serialization and atomic operations.
+REPEATABLE READ is the minimum isolation level that prevents lost updates in a read-then-write pattern. Under READ COMMITTED, shared locks are released as soon as the SELECT finishes, leaving a window for another session to modify the same row before the UPDATE.
+
+#### Set isolation level for a session
+
+Under REPEATABLE READ, the shared lock acquired by the SELECT is held until COMMIT — no other session can UPDATE the row in the gap between the read and the write. This eliminates the lost update window that exists under READ COMMITTED.
+
+```sql
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+BEGIN TRAN;
+    SELECT val FROM t WHERE id = 1;
+    UPDATE t SET val = val + 5 WHERE id = 1;
+COMMIT;
+```
+
+> [!info] Read Committed Snapshot Isolation (RCSI)
+>
+> RCSI is a **database-level option** that changes how READ COMMITTED behaves. When enabled, SELECT statements no longer acquire shared (S) locks. Instead, readers see the last committed version of each row as of statement start, retrieved from the **version store** in tempdb. Writers do not block readers, and readers do not block writers — eliminating the most common source of blocking in OLTP and mixed pipeline workloads.
+>
+> Internally, SQL Server adds up to **14 bytes** to the end of each modified row (a transaction sequence number + a pointer to the version store chain). These bytes are added the first time a row is modified after RCSI is enabled and removed only when all version-based features are turned off.
+>
+> **Enable RCSI:**
+> ```sql
+> ALTER DATABASE MyDatabase SET READ_COMMITTED_SNAPSHOT ON;
+> ```
+> No session-level changes are needed — all existing READ COMMITTED sessions automatically switch to version-based reads.
+>
+> **tempdb impact:** The version store lives in tempdb (unless Accelerated Database Recovery is enabled, available from SQL Server 2019, which moves the version store into the user database). Long-running transactions are the primary cause of version store bloat. If tempdb runs out of space, read operations that need a version fail with error 3966 and the transaction is rolled back.
+>
+> RCSI is ON by default in Azure SQL Database but OFF by default in SQL Server on-premises and Azure SQL Managed Instance.
+
+> [!tip] RCSI vs SNAPSHOT Isolation
+>
+> | | RCSI | SNAPSHOT |
+> |---|---|---|
+> | **Database option** | `READ_COMMITTED_SNAPSHOT ON` | `ALLOW_SNAPSHOT_ISOLATION ON` |
+> | **Read consistency point** | Start of each **statement** | Start of the **transaction** |
+> | **Session opt-in** | Automatic for all READ COMMITTED sessions | Explicit `SET TRANSACTION ISOLATION LEVEL SNAPSHOT` required |
+> | **Update conflict** | None (last writer wins) | Raises error — snapshot transaction terminated |
+> | **Use case** | General OLTP, mixed read/write workloads | Long-running reads needing transactional consistency |
+>
+> For pipeline workloads, RCSI is almost always the better choice — it eliminates reader-writer blocking with no application changes. SNAPSHOT isolation is useful for long-running reporting queries that need a consistent view across multiple statements.
+
+For most pipeline workloads, **READ COMMITTED** (the default) is sufficient when combined with serialization and atomic operations. If reader-writer blocking becomes a bottleneck, enable RCSI at the database level.
 
 ### Strategy 4: Truncate-Reload in a Single Transaction
 
@@ -394,16 +455,16 @@ If the process crashes between DELETE and INSERT without a transaction, the tabl
 
 Even with serialization, add unique constraints as a last line of defense. If a race condition does occur, the database rejects the duplicate instead of silently accepting it.
 
+This constraint prevents duplicate scores for the same stock on the same date. If a race condition causes a second insert with the same key combination, error 2627 fires instead of silently creating a duplicate row.
+
 ```sql
--- Prevent duplicate scores for the same stock on the same date
 ALTER TABLE gold.scores_daily
     ADD CONSTRAINT UQ_scores_daily UNIQUE (_index, symbol, score_date);
 ```
 
-> [!warning] Prefer Loud Failure
+> [!warning] Prefer Loud Failure Over Silent Corruption
 >
-> Prefer Loud Failure Over Silent Corruption.
-> A primary key violation is far better than silent data corruption — the application fails loudly and the problem is immediately visible. Add unique constraints to every table that should have unique rows.
+> A primary key or unique constraint violation is far better than silent data corruption — the application fails loudly and the problem is immediately visible. Add unique constraints to every table that should have unique rows.
 
 > [!success] Safe Pattern — Add Unique Constraints as Guardrails
 >
@@ -504,7 +565,7 @@ The data pipeline's primary defense is **serialization via Airflow** — `max_ac
 
 ---
 
-### Related
+## Related
 
 - [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) — the loudly-detected sibling of race conditions
 - [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) — lock types, isolation levels, and blocking chains

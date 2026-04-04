@@ -1,5 +1,6 @@
 ---
-tags: [pipeline, csharp, deedle, polars, dataframes]
+title: "Foundations and I/O"
+tags: [csharp, deedle, polars, dataframes]
 aliases:
   - Series, DataFrames, types, CSV, Parquet
 description: "Polars.NET / C# DataFrames reference 01/10 — Foundations & I/O (Series, DataFrames, types, CSV/Parquet). Executable examples with cell outputs. See [01_py_foundations_io](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/01_py_foundations_io) for the Python equivalent."
@@ -20,11 +21,9 @@ Polars.NET vs Deedle: Series, DataFrames, and Data Types
 ---
 ## Setup & Imports
 
-```csharp
-// Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
-// NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
-// Run this cell ONCE before any cells that use NuGet packages.
+Suppress CS1701/CS1702 assembly version warnings in .NET Interactive. NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless. Run this cell once before any cells that use NuGet packages.
 
+```csharp
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -41,7 +40,9 @@ optionsField.SetValue(csharpKernel, newOptions);
 Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.");
 ```
 
-    WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
+```text
+WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
+```
 
 ```csharp
 #r "nuget: Polars.NET, 0.4.0"
@@ -92,30 +93,41 @@ var DATA = Path.Combine("..", "data");
 Console.WriteLine($"Data directory: {Path.GetFullPath(DATA)}");
 ```
 
-    Data directory: c:\Users\aperi\DEV\LANG\data
+```text
+Data directory: c:\Users\aperi\DEV\LANG\data
+```
 
 ---
 ## Series
 
-- **Series**: A single column of typed, homogeneous data – the fundamental building block.
-- Polars.NET uses Arrow-backed memory with native null bitmaps.
-- Deedle uses .NET generics with `OptionalValue<T>` for missing data.
+A **Series** is a single column of typed, homogeneous data — the fundamental building block of any DataFrame library. Both Polars.NET and Deedle provide Series types, but their internal representations differ significantly: Polars.NET uses Apache Arrow-backed memory with native null bitmaps, while Deedle uses standard .NET generics wrapped in `OptionalValue<T>` for missing data tracking.
 
-#### Polars.NET – Create series from arrays with Series.From&lt;T&gt;
+> [!info] Polars.NET vs Deedle | Null representation
+>
+> Polars.NET represents missing values with Arrow's native null bitmap — no type coercion occurs. A `double` column with nulls stays `f64`. Deedle uses `OptionalValue<T>.Missing`, which preserves the .NET type but requires explicit handling via `.TryGet()` or key-based alignment.
+
+### Creating Series
+
+#### Polars.NET | Create Series from arrays
+
+`Series.From<T>(name, array)` creates a named, typed Series from any .NET array. Polars automatically maps .NET types to Arrow types (`double` → `f64`, `int` → `i32`, `string` → `str`). The name parameter is required because Polars Series always carry a column name — this becomes the column header when the Series is added to a DataFrame.
+
 ```csharp
-// Polars.NET – create a Series from an array
 var prices = Polars.CSharp.Series.From("prices", new[] { 100.0, 102.5, 101.8, 103.2, 104.1 });
 
 display($"Name: {prices.Name}  |  Length: {prices.Length}  |  DataType: {prices.DataTypeName}");
 prices
 ```
 
-    Name: prices  |  Length: 5  |  DataType: f64
+```text
+Name: prices  |  Length: 5  |  DataType: f64
+```
 
 <!-- Polars DataFrame: (5 rows, 1 columns) --><table><thead><tr><th>prices</th></tr></thead><tbody><tr><td>100</td></tr><tr><td>102.5</td></tr><tr><td>101.8</td></tr><tr><td>103.2</td></tr><tr><td>104.1</td></tr></tbody></table></div>
 
+Polars maps different .NET types to Arrow types automatically — `int[]` becomes `i32`, `string[]` becomes `str`, and `DateOnly[]` becomes `date`.
+
 ```csharp
-// From different .NET types -- Polars maps to Arrow types automatically
 var ints    = Polars.CSharp.Series.From("ids", new[] { 1, 2, 3, 4, 5 });
 var strings = Polars.CSharp.Series.From("tickers", new[] { "ASML.AS", "SAP.DE", "SIE.DE" });
 var dates   = Polars.CSharp.Series.From("dates", new[] {
@@ -125,17 +137,23 @@ var dates   = Polars.CSharp.Series.From("dates", new[] {
 display($"ints: {ints.DataTypeName}  |  strings: {strings.DataTypeName}  |  dates: {dates.DataTypeName}");
 ```
 
-    ints: i32  |  strings: str  |  dates: date
+```text
+ints: i32  |  strings: str  |  dates: date
+```
 
-#### Deedle – Create series with SeriesBuilder and ToOrdinalSeries
+#### Deedle | Create Series with ToOrdinalSeries
+
+The fastest way to create a Deedle Series is `.ToOrdinalSeries()`, which assigns integer keys starting from 0. Unlike Polars, Deedle Series are always keyed — the key type (`TRowKey`) determines how alignment and lookup work.
+
 ```csharp
-// Deedle – quickest way: .ToOrdinalSeries() (keys = 0, 1, 2, ...)
 var prices = new[] { 100.0, 102.5, 101.8, 103.2, 104.1 }.ToOrdinalSeries();
 display($"KeyCount: {prices.KeyCount}");
 prices
 ```
 
-    KeyCount: 5
+```text
+KeyCount: 5
+```
 
 <div>
 <table>
@@ -144,8 +162,9 @@ prices
 <p>Series of <b>5</b> items<p><b>0</b> missing values</p>
 </div>
 
+`SeriesBuilder<TKey, TValue>` provides explicit control over key-value pairs. This is useful when keys carry meaning (e.g., dates, ticker symbols) rather than being positional integers.
+
 ```csharp
-// Deedle – explicit keys via SeriesBuilder
 var tickers = new SeriesBuilder<int, string>
 {
     { 0, "ASML.AS" },
@@ -163,8 +182,9 @@ tickers
 <p>Series of <b>3</b> items<p><b>0</b> missing values</p>
 </div>
 
+For LINQ-heavy workflows, create a Series from `KeyValue` pairs. This integrates naturally with projection and transformation pipelines.
+
 ```csharp
-// Deedle – from KeyValue pairs (useful with LINQ)
 var indexed = Enumerable.Range(0, 5)
     .Select(i => KeyValue.Create(i, i * 10.0))
     .ToSeries();
@@ -180,10 +200,13 @@ indexed
 </div>
 
 ---
-#### Polars.NET – Handle nulls natively in Series
+### Null and Missing Values
+
+#### Polars.NET | Handle nulls natively in Series
+
+Polars.NET supports native nulls via C# nullable types (`double?`, `int?`, `string?`). Nulls are stored in Arrow's null bitmap — the column type is preserved without coercion. Use `.NullCount` to inspect how many values are missing.
 
 ```csharp
-// Polars.NET – native null support via nullable types
 var s = Polars.CSharp.Series.From<double?>("with_nulls",
     new double?[] { 1.0, null, 3.0, null, 5.0 });
 
@@ -191,13 +214,17 @@ display($"Length: {s.Length}  |  NullCount: {s.NullCount}");
 s
 ```
 
-    Length: 5  |  NullCount: 2
+```text
+Length: 5  |  NullCount: 2
+```
 
 <!-- Polars DataFrame: (5 rows, 1 columns) --><table><thead><tr><th>with_nulls</th></tr></thead><tbody><tr><td>1</td></tr><tr><td class='pl-null'>null</td></tr><tr><td>3</td></tr><tr><td class='pl-null'>null</td></tr><tr><td>5</td></tr></tbody></table></div>
 
-#### Deedle – Represent missing values with OptionalValue&lt;T&gt;
+#### Deedle | Represent missing values with OptionalValue&lt;T&gt;
+
+Deedle does not have a direct null constructor for Series. Missing values arise through key alignment — when you `.Realign()` a sparse Series to a full key range, gaps become `<missing>` values backed by `OptionalValue<T>.Missing`.
+
 ```csharp
-// Deedle – missing values arise when keys are absent after alignment
 var sparse = new SeriesBuilder<int, double>
 {
     { 0, 1.0 },
@@ -205,14 +232,15 @@ var sparse = new SeriesBuilder<int, double>
     { 4, 5.0 },
 }.Series;
 
-// Realign to include all keys 0..4 – keys 1 and 3 become <missing>
 var withGaps = sparse.Realign(Enumerable.Range(0, 5));
 
 display($"KeyCount: {withGaps.KeyCount}");
 withGaps
 ```
 
-    KeyCount: 5
+```text
+KeyCount: 5
+```
 
 <div>
 <table>
@@ -222,10 +250,13 @@ withGaps
 </div>
 
 ---
-#### Polars.NET & Deedle – Inspect Series data types across both libraries
+### Data Types
+
+#### Polars.NET | Inspect Series data types
+
+Polars.NET uses the Apache Arrow type system. Each `.NET` type maps to a specific Arrow type. Use `.DataTypeName` to inspect the Arrow type of any Series.
 
 ```csharp
-// Polars.NET – Arrow-based type system
 var examples = new (string Name, string Type)[]
 {
     ("Int32",    Polars.CSharp.Series.From("x", new[] { 1, 2, 3 }).DataTypeName),
@@ -241,18 +272,21 @@ foreach (var (name, type) in examples)
     Console.WriteLine($"  {name,-12} → {type}");
 ```
 
-      Int32        → i32
-      Int64        → i64
-      Float64      → f64
-      String       → str
-      Boolean      → bool
-      Date         → date
-      DateTime     → datetime[μs]
+```text
+Int32        → i32
+Int64        → i64
+Float64      → f64
+String       → str
+Boolean      → bool
+Date         → date
+DateTime     → datetime[μs]
+```
 
-#### Deedle – Inspect data types with standard .NET types
+#### Deedle | Inspect data types
+
+Deedle uses standard .NET types (`Int32`, `Double`, `String`, etc.) rather than Arrow types. Inspect column types through `Frame.ColumnTypes`, which returns the underlying CLR `Type` for each column.
 
 ```csharp
-// Deedle – uses standard .NET types
 var dfInt = Frame.FromRecords(new[] { new { x = 1 }, new { x = 2 } });
 var dfDbl = Frame.FromRecords(new[] { new { x = 1.0 }, new { x = 2.0 } });
 var dfStr = Frame.FromRecords(new[] { new { x = "a" }, new { x = "b" } });
@@ -262,15 +296,22 @@ Console.WriteLine($"  double[] → {dfDbl.ColumnTypes.First().Name}");
 Console.WriteLine($"  string[] → {dfStr.ColumnTypes.First().Name}");
 ```
 
-      int[]    → Int32
-      double[] → Double
-      string[] → String
+```text
+int[]    → Int32
+double[] → Double
+string[] → String
+```
 
 ---
-#### Polars.NET – Perform arithmetic operations on Series
+### Arithmetic Operations
+
+Both libraries support standard arithmetic operators (`+`, `-`, `*`, `/`) on Series. Operations are element-wise and return a new Series.
+
+#### Polars.NET | Perform arithmetic on Series
+
+Polars.NET overloads the standard arithmetic operators. The result is always a new Series — Polars Series are immutable.
 
 ```csharp
-// Polars.NET – operator overloads on Series
 var a = Polars.CSharp.Series.From("a", new[] { 10.0, 20.0, 30.0 });
 var b = Polars.CSharp.Series.From("b", new[] { 1.0, 2.0, 3.0 });
 
@@ -284,10 +325,11 @@ DataFrame.FromColumns(
 
 <!-- Polars DataFrame: (3 rows, 4 columns) --><table><thead><tr><th>a + b</th><th>a - b</th><th>a * b</th><th>a / b</th></tr></thead><tbody><tr><td>11</td><td>9</td><td>10</td><td>10</td></tr><tr><td>22</td><td>18</td><td>40</td><td>10</td></tr><tr><td>33</td><td>27</td><td>90</td><td>10</td></tr></tbody></table></div>
 
-#### Deedle – Perform arithmetic operations on Series
+#### Deedle | Perform arithmetic on Series
+
+Deedle also overloads arithmetic operators on `Series<K,V>`. When two Series have the same keys, the operation proceeds element-wise. When keys differ, Deedle automatically aligns by key — mismatched keys produce `<missing>` values.
 
 ```csharp
-// Deedle – operator overloads on Series<K,V>
 var a = new[] { 10.0, 20.0, 30.0 }.ToOrdinalSeries();
 var b = new[] { 1.0, 2.0, 3.0 }.ToOrdinalSeries();
 
@@ -308,10 +350,13 @@ builder.Frame
 </div>
 
 ---
-#### Polars.NET – Compute aggregations on Series (sum, mean, std, min, max)
+### Aggregations
+
+#### Polars.NET | Compute aggregations on Series
+
+Polars.NET provides generic aggregation methods (`.Sum<T>()`, `.Mean<T>()`, `.Std()`, `.Min<T>()`, `.Max<T>()`) that return scalar values. The generic type parameter specifies the return type. `.Std()` returns a single-element Series rather than a scalar.
 
 ```csharp
-// Polars.NET — basic aggregations as a summary DataFrame
 var s = Polars.CSharp.Series.From("vals", new[] { 10.0, 20.0, 30.0, 40.0, 50.0 });
 
 new DataFrame(new Polars.CSharp.Series[]
@@ -326,10 +371,11 @@ new DataFrame(new Polars.CSharp.Series[]
 
 <!-- Polars DataFrame: (5 rows, 2 columns) --><table><thead><tr><th>stat</th><th>value</th></tr></thead><tbody><tr><td>sum</td><td>150</td></tr><tr><td>mean</td><td>30</td></tr><tr><td>std</td><td>15.8113883</td></tr><tr><td>min</td><td>10</td></tr><tr><td>max</td><td>50</td></tr></tbody></table></div>
 
-#### Deedle – Compute aggregations on Series
+#### Deedle | Compute aggregations on Series
+
+Deedle aggregation methods (`.Sum()`, `.Mean()`, `.StdDev()`, `.Min()`, `.Max()`, `.Median()`) return `double` directly — no generic type parameter needed. Deedle also provides `.Median()` which Polars.NET does not expose as a direct Series method.
 
 ```csharp
-// Deedle — basic aggregations as a Deedle Frame
 var s = new[] { 10.0, 20.0, 30.0, 40.0, 50.0 }.ToOrdinalSeries();
 
 var stats = new[] { "sum", "mean", "stddev", "min", "max", "median" };
@@ -351,21 +397,25 @@ fb.Frame
 </div>
 
 ---
-#### Polars.NET – Summarise a Series with Describe
+### Describe (Summary Statistics)
+
+#### Polars.NET | Summarise a Series with Describe
+
+`Describe()` returns a DataFrame with count, null_count, mean, std, min, percentiles (25%, 50%, 75%), and max. Since `.Describe()` is a DataFrame method, wrap a single Series in a DataFrame first with `DataFrame.FromSeries()`.
+
 ```csharp
-// Polars.NET – built-in describe (returns a DataFrame)
 var s = Polars.CSharp.Series.From("prices", new[] { 100.0, 102.5, 101.8, 103.2, 104.1 });
-// describe() is on DataFrame, so wrap in a single-column DataFrame
 var df = DataFrame.FromSeries(s);
 df.Describe()
 ```
 
 <!-- Polars DataFrame: (9 rows, 2 columns) --><table><thead><tr><th>statistic</th><th>prices</th></tr></thead><tbody><tr><td>count</td><td>5</td></tr><tr><td>null_count</td><td>0</td></tr><tr><td>mean</td><td>102.32</td></tr><tr><td>std</td><td>1.551450934</td></tr><tr><td>min</td><td>100</td></tr><tr><td>25%</td><td>101.8</td></tr><tr><td>50%</td><td>102.5</td></tr><tr><td>75%</td><td>103.2</td></tr><tr><td>max</td><td>104.1</td></tr></tbody></table></div>
 
-#### Deedle – Compute summary statistics manually
+#### Deedle | Compute summary statistics manually
+
+Deedle does not have a built-in `Describe()` for individual Series. Build a summary Frame manually from the individual aggregation methods.
 
 ```csharp
-// Deedle — no built-in Series describe; build a summary Frame
 var s = new[] { 100.0, 102.5, 101.8, 103.2, 104.1 }.ToOrdinalSeries();
 
 var stats = new[] { "count", "mean", "stddev", "min", "max", "median" };
@@ -387,7 +437,7 @@ fb.Frame
 </div>
 
 ---
-#### Comparison Summary – Series
+### Comparison Summary | Series
 
 | Operation | Polars.NET | Deedle |
 |---|---|---|
@@ -403,13 +453,19 @@ fb.Frame
 ---
 ## DataFrames
 
-- **DataFrame**: A collection of named, typed columns – the primary data structure.
-- Polars.NET: column-oriented, Arrow-backed, no row index.
-- Deedle: `Frame<TRowKey, TColKey>` with a typed row index.
+A **DataFrame** is a collection of named, typed columns — the primary tabular data structure. Polars.NET DataFrames are column-oriented, Arrow-backed, and have no row index. Deedle uses `Frame<TRowKey, TColKey>` with a typed row index that enables label-based alignment and lookup.
 
-#### Polars.NET – Build DataFrames from columns with DataFrame.FromColumns
+> [!info] Polars.NET vs Deedle | Mutability
+>
+> Polars DataFrames are **immutable** — operations like `.WithColumns()`, `.Filter()`, and `.Sort()` always return a new DataFrame. The original is never modified. Deedle Frames are **mutable** — methods like `.ReplaceColumn()` modify the Frame in place.
+
+### Building DataFrames
+
+#### Polars.NET | Build DataFrames from columns
+
+`DataFrame.FromColumns()` accepts an anonymous object where each property becomes a column. This is the most concise way to create a small DataFrame inline. Column order follows property declaration order.
+
 ```csharp
-// Polars.NET – from an anonymous object (each property = column)
 var df = DataFrame.FromColumns(new
 {
     Symbol = new[] { "ASML.AS", "SAP.DE", "SIE.DE", "TTE.PA", "AIR.PA" },
@@ -421,12 +477,15 @@ display($"Shape: {df.Shape}");
 df
 ```
 
-    Shape: (5, 3)
+```text
+Shape: (5, 3)
+```
 
 <!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>Symbol</th><th>Sector</th><th>Price</th></tr></thead><tbody><tr><td>ASML.AS</td><td>Technology</td><td>680.5</td></tr><tr><td>SAP.DE</td><td>Technology</td><td>175.2</td></tr><tr><td>SIE.DE</td><td>Industrials</td><td>168.9</td></tr><tr><td>TTE.PA</td><td>Energy</td><td>58.3</td></tr><tr><td>AIR.PA</td><td>Industrials</td><td>152.7</td></tr></tbody></table></div>
 
+An alternative is named tuples, which avoids reflection and is slightly faster for construction.
+
 ```csharp
-// Polars.NET – from named tuples (no reflection needed)
 var df2 = DataFrame.FromColumns(
     ("Name",  new[] { "Alice", "Bob", "Carol" }),
     ("Age",   new[] { 30, 25, 35 }),
@@ -437,9 +496,11 @@ df2
 
 <!-- Polars DataFrame: (3 rows, 3 columns) --><table><thead><tr><th>Name</th><th>Age</th><th>Score</th></tr></thead><tbody><tr><td>Alice</td><td>30</td><td>95.5</td></tr><tr><td>Bob</td><td>25</td><td>88</td></tr><tr><td>Carol</td><td>35</td><td>92.3</td></tr></tbody></table></div>
 
-#### Deedle – Build DataFrames from records with Frame.FromRecords and FrameBuilder
+#### Deedle | Build DataFrames from records
+
+`Frame.FromRecords()` creates a Deedle Frame from an array of anonymous objects (row-oriented). Each property becomes a column, and rows receive integer keys starting from 0. This is analogous to creating a Pandas DataFrame from a list of dictionaries.
+
 ```csharp
-// Deedle – from anonymous records (row-oriented, like a list of dicts)
 var df = Frame.FromRecords(new[]
 {
     new { Symbol = "ASML.AS", Sector = "Technology",  Price = 680.5 },
@@ -453,7 +514,9 @@ display($"Shape: {df.RowCount} rows x {df.ColumnCount} cols");
 df
 ```
 
-    Shape: 5 rows x 3 cols
+```text
+Shape: 5 rows x 3 cols
+```
 
 <div>
 <table>
@@ -463,8 +526,9 @@ df
 <p><b>5</b> rows x <b>3</b> columns</p><p><b>0</b> missing values</p>
 </div>
 
+`FrameBuilder.Columns<TRow, TCol>` provides a column-oriented construction API that preserves insertion order. This is more natural when building DataFrames programmatically from computed Series.
+
 ```csharp
-// Deedle – from FrameBuilder (column-oriented, preserves insertion order)
 var builder = new FrameBuilder.Columns<int, string>();
 builder.Add("Name",  new[] { "Alice", "Bob", "Carol" }.ToOrdinalSeries());
 builder.Add("Age",   new[] { 30, 25, 35 }.ToOrdinalSeries());
@@ -482,9 +546,11 @@ df2
 </div>
 
 ---
-#### Polars.NET – Build DataFrames from record objects with DataFrame.From&lt;T&gt;
+#### Polars.NET | Build DataFrames from record objects
+
+`DataFrame.From<T>()` creates a DataFrame from any `IEnumerable<T>` — anonymous types, POCOs, or records. This is useful when your data is already structured as .NET objects (e.g., from a deserialized JSON response or a database query result).
+
 ```csharp
-// Polars.NET – from IEnumerable of records (anonymous types or POCOs)
 var records = new[]
 {
     new { Date = new DateOnly(2024, 1, 2), Open = 100.0, High = 105.0, Low = 99.0, Close = 103.5 },
@@ -498,9 +564,11 @@ df
 <!-- Polars DataFrame: (3 rows, 5 columns) --><table><thead><tr><th>Date</th><th>Open</th><th>High</th><th>Low</th><th>Close</th></tr></thead><tbody><tr><td>2024-01-02</td><td>100</td><td>105</td><td>99</td><td>103.5</td></tr><tr><td>2024-01-03</td><td>103.5</td><td>106</td><td>102</td><td>104.8</td></tr><tr><td>2024-01-04</td><td>104.8</td><td>107.5</td><td>103</td><td>106.2</td></tr></tbody></table></div>
 
 ---
-#### Polars.NET – Build DataFrames from existing Series with DataFrame.FromSeries
+#### Polars.NET | Build DataFrames from existing Series
+
+`DataFrame.FromSeries()` combines multiple pre-built Series into a DataFrame. All Series must have the same length; names become column headers.
+
 ```csharp
-// Polars.NET – from existing Series
 var names  = Polars.CSharp.Series.From("name", new[] { "Alice", "Bob" });
 var ages   = Polars.CSharp.Series.From("age", new[] { 30, 25 });
 var scores = Polars.CSharp.Series.From("score", new[] { 95.5, 88.0 });
@@ -512,10 +580,11 @@ df
 <!-- Polars DataFrame: (2 rows, 3 columns) --><table><thead><tr><th>name</th><th>age</th><th>score</th></tr></thead><tbody><tr><td>Alice</td><td>30</td><td>95.5</td></tr><tr><td>Bob</td><td>25</td><td>88</td></tr></tbody></table></div>
 
 ---
-#### Polars.NET – Create an empty DataFrame with a predefined schema
+#### Polars.NET | Create an empty DataFrame with a predefined schema
+
+An empty DataFrame with a predefined schema is useful as a sentinel or accumulator start value. Define the schema with `PolarsSchema`, then create the DataFrame with empty arrays matching those types.
 
 ```csharp
-// Polars.NET – empty DataFrame with predefined schema
 var schema = new PolarsSchema()
     .Add("id", DataType.Int32)
     .Add("name", DataType.String)
@@ -531,43 +600,53 @@ display($"Shape: {empty.Shape}");
 empty.PrintSchema();
 ```
 
-    Shape: (0, 3)
+```text
+Shape: (0, 3)
+```
 
-    root
-     |-- id: Int32
-     |-- name: String
-     |-- value: Float64
+```text
+root
+ |-- id: Int32
+ |-- name: String
+ |-- value: Float64
+```
 
-#### Deedle – Create an empty DataFrame
+#### Deedle | Create an empty DataFrame
+
+`Frame.CreateEmpty<TRowKey, TColKey>()` creates a completely empty Frame with no columns or rows. Unlike Polars, you cannot predefine a schema on an empty Deedle Frame — columns and their types are determined when data is added.
 
 ```csharp
-// Deedle – empty frame
 var empty = Frame.CreateEmpty<int, string>();
 display($"Shape: {empty.RowCount} x {empty.ColumnCount}");
 ```
 
-    Shape: 0 x 0
+```text
+Shape: 0 x 0
+```
 
 ---
 ## The Index Concept
 
-- **Polars.NET**: No row index. Rows are identified by position. This is deliberate – simpler, faster, no index alignment surprises.
-- **Deedle**: First-class `Frame<TRowKey, TColKey>` where `TRowKey` can be `int`, `DateTime`, `string`, etc. Enables label-based lookup and automatic alignment.
+The index is one of the most significant design differences between the two libraries. **Polars.NET** has no row index by design — rows are identified purely by position (0, 1, 2, …). This eliminates an entire class of alignment bugs and keeps the API simpler. **Deedle** has a first-class `Frame<TRowKey, TColKey>` where `TRowKey` can be `int`, `DateTime`, `string`, or any comparable type, enabling label-based lookup and automatic alignment when combining frames.
 
-#### Polars.NET – Access rows by position without an index
+> [!question] When does the index matter?
+>
+> If your workflow involves time-series alignment (e.g., joining price data from different sources by date), Deedle's automatic key alignment can be convenient. If you prefer explicit control over joins and merges, Polars' index-free design avoids surprises.
+
+### Positional vs Label-Based Access
+
+#### Polars.NET | Access rows by position
+
+Polars accesses rows by integer position. Use `.Head(n)` for the first N rows, `.Slice(offset, length)` for arbitrary ranges, or `.Filter()` with expressions for conditional access.
 
 ```csharp
-// Polars.NET – no index. Access rows by position.
 var df = DataFrame.FromColumns(new
 {
     Symbol = new[] { "ASML.AS", "SAP.DE", "SIE.DE" },
     Price  = new[] { 680.5, 175.2, 168.9 },
 });
 
-// Row 0
 display(df.Head(1));
-
-// Polars uses .Filter() or .Slice() instead of index-based lookup
 display(df.Filter(Col("Symbol") == Lit("SAP.DE")));
 ```
 
@@ -575,10 +654,11 @@ display(df.Filter(Col("Symbol") == Lit("SAP.DE")));
 
 <!-- Polars DataFrame: (1 rows, 2 columns) --><table><thead><tr><th>Symbol</th><th>Price</th></tr></thead><tbody><tr><td>SAP.DE</td><td>175.2</td></tr></tbody></table></div>
 
-#### Deedle – Set a column as the row index for label-based lookup
+#### Deedle | Set a column as the row index for label-based lookup
+
+`.IndexRows<T>(columnName)` promotes a column to the row index, enabling direct label-based access via `frame.Rows["key"]`. This is equivalent to Pandas' `.set_index()`.
 
 ```csharp
-// Deedle – set a column as the row index (like Pandas .set_index())
 var df = Frame.FromRecords(new[]
 {
     new { Symbol = "ASML.AS", Price = 680.5 },
@@ -586,10 +666,7 @@ var df = Frame.FromRecords(new[]
     new { Symbol = "SIE.DE",  Price = 168.9 },
 });
 
-// Index by Symbol for label-based lookup
 var indexed = df.IndexRows<string>("Symbol");
-
-// Label-based access
 display(indexed.Rows["SAP.DE"]);
 ```
 
@@ -600,13 +677,19 @@ display(indexed.Rows["SAP.DE"]);
 <p>Series of <b>1</b> items<p><b>0</b> missing values</p>
 </div>
 
-#### Deedle – Automatic index alignment when combining Series
+#### Deedle | Automatic index alignment when combining Series
 
-Deedle automatically aligns Series by their keys when performing operations –
-if keys don't match, the result has `missing` values. Polars.NET uses explicit joins instead.
+Deedle automatically aligns Series by their keys when performing operations. If keys don't match, the result contains `<missing>` values at those positions. This is powerful for time-series work but can introduce silent data loss if you're not careful. Polars.NET avoids this entirely — you must use explicit joins.
+
+> [!warning] Silent missing values from alignment
+>
+> When combining two Deedle Series with different keys, unmatched keys silently become `<missing>`. In a pipeline, this can propagate through multiple operations before being noticed.
+
+> [!success] Inspect alignment results
+>
+> Always check `.KeyCount` and missing value counts after combining Series with different keys. Use `.DropMissing()` to remove gaps, or `.FillMissing(strategy)` to interpolate.
 
 ```csharp
-// Deedle – automatic index alignment
 var s1 = new SeriesBuilder<string, double>
 {
     { "ASML", 680.5 }, { "SAP", 175.2 }, { "SIE", 168.9 }
@@ -617,7 +700,6 @@ var s2 = new SeriesBuilder<string, double>
     { "SAP", 5.0 }, { "SIE", 3.2 }, { "TTE", 58.3 }
 }.Series;
 
-// Keys are aligned automatically – ASML and TTE become <missing>
 var result = s1 + s2;
 result
 ```
@@ -632,38 +714,47 @@ result
 ---
 ## Data Types Deep Dive
 
-- Polars.NET uses **Apache Arrow** types: `Int8`..`Int64`, `UInt8`..`UInt64`, `Float32`, `Float64`, `Utf8` (String), `Date`, `Datetime`, `Duration`, `Boolean`, `Categorical`, `Enum`, `List`, `Struct`, `Binary`.
-- Deedle uses **standard .NET types**: `int`, `double`, `string`, `DateTime`, `bool`, etc. wrapped in `OptionalValue<T>` for null tracking.
+Polars.NET uses the **Apache Arrow** type system with a rich set of types: `Int8`..`Int64`, `UInt8`..`UInt64`, `Float32`, `Float64`, `Utf8` (String), `Date`, `Datetime`, `Duration`, `Boolean`, `Categorical`, `Enum`, `List`, `Struct`, and `Binary`. Deedle uses **standard .NET types** (`int`, `double`, `string`, `DateTime`, `bool`, etc.) wrapped in `OptionalValue<T>` for null tracking.
 
-#### Polars.NET – Inspect schema and data types of a real dataset
+The Arrow type system provides more precise type control (e.g., distinguishing `Date` from `Datetime`, or `Int32` from `Int64`), while Deedle relies on .NET's type inference which can sometimes produce unexpected results (e.g., CSV numeric columns read as `Decimal` instead of `Double`).
+
+### Schema Inspection
+
+#### Polars.NET | Inspect schema and data types of a real dataset
+
+`.PrintSchema()` displays the Arrow type for every column. `.Shape` returns a `(rows, columns)` tuple. Use these as a first step when exploring any new dataset to understand column names, types, and size.
 
 ```csharp
-// Polars.NET – inspect schema of a real dataset
 var df = DataFrame.ReadParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));
 df.PrintSchema();
 display($"Shape: {df.Shape}");
 ```
 
-    root
-     |-- id: Int64
-     |-- symbol: String
-     |-- date: Date
-     |-- open: Float64
-     |-- high: Float64
-     |-- low: Float64
-     |-- close: Float64
-     |-- adj_close: Float64
-     |-- volume: Int64
-     |-- dividends: Float64
-     |-- stock_splits: Float64
-     |-- is_filled: Boolean
+```text
+root
+ |-- id: Int64
+ |-- symbol: String
+ |-- date: Date
+ |-- open: Float64
+ |-- high: Float64
+ |-- low: Float64
+ |-- close: Float64
+ |-- adj_close: Float64
+ |-- volume: Int64
+ |-- dividends: Float64
+ |-- stock_splits: Float64
+ |-- is_filled: Boolean
+```
 
-    Shape: (66355, 12)
+```text
+Shape: (66355, 12)
+```
 
-#### Deedle – Inspect column types of a CSV-loaded frame
+#### Deedle | Inspect column types of a CSV-loaded frame
+
+Deedle exposes column metadata through `.ColumnKeys` (names) and `.ColumnTypes` (CLR types). There is no built-in schema printer, so you iterate and format the output yourself.
 
 ```csharp
-// Deedle — inspect types of a CSV-loaded frame as a summary Frame
 var df = Frame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
 display($"Shape: {df.RowCount} x {df.ColumnCount}");
 
@@ -677,7 +768,9 @@ fb.Add("type", new Series<int, string>(idx, colTypes));
 fb.Frame
 ```
 
-    Shape: 66355 x 12
+```text
+Shape: 66355 x 12
+```
 
 <div>
 <table>
@@ -688,10 +781,13 @@ fb.Frame
 </div>
 
 ---
-#### Polars.NET – Cast column types with expressions
+### Type Casting
+
+#### Polars.NET | Cast column types with expressions
+
+Use `.Cast(DataType.X)` within a `.WithColumns()` expression to change a column's type. Casting a string to a numeric type will produce `null` for unparseable values — no exception is thrown.
 
 ```csharp
-// Polars.NET – cast columns via expressions
 var df = DataFrame.FromColumns(new
 {
     Id    = new[] { "1", "2", "3" },
@@ -707,14 +803,17 @@ casted.PrintSchema();
 casted
 ```
 
-    root
-     |-- Id: Int32
-     |-- Value: Float64
+```text
+root
+ |-- Id: Int32
+ |-- Value: Float64
+```
 
 <!-- Polars DataFrame: (3 rows, 2 columns) --><table><thead><tr><th>Id</th><th>Value</th></tr></thead><tbody><tr><td>1</td><td>10</td></tr><tr><td>2</td><td>20</td></tr><tr><td>3</td><td>30</td></tr></tbody></table></div>
 
+Casting a string Series to `Int32` demonstrates safe coercion — unparseable values become `null` rather than throwing.
+
 ```csharp
-// Polars.NET – cast a string Series to Int32 (unparseable values become null)
 var s = Polars.CSharp.Series.From("mixed", new[] { "1", "two", "3" });
 var numeric = s.Cast(DataType.Int32);
 numeric
@@ -725,10 +824,15 @@ numeric
 ---
 ## Loading Real Data
 
-#### Polars.NET – Load data from CSV, Parquet, and JSON
+Polars.NET natively supports CSV, Parquet, and JSON formats. Deedle only supports CSV natively — other formats require workarounds through System.Text.Json or Polars.NET as an intermediary.
+
+### Multi-Format Loading
+
+#### Polars.NET | Load data from CSV, Parquet, and JSON
+
+Polars.NET reads all three formats through static methods on `DataFrame`. All three produce identical DataFrames from the same source data, differing only in I/O performance and type preservation.
 
 ```csharp
-// Polars.NET — load from CSV, Parquet, JSON — compare shapes
 var csvDf     = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), tryParseDates: true);
 var parquetDf = DataFrame.ReadParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));
 var jsonDf    = DataFrame.ReadJson(Path.Combine(DATA, "eurostoxx50_ohlcv.json"));
@@ -743,80 +847,86 @@ new DataFrame(new Polars.CSharp.Series[]
 
 <!-- Polars DataFrame: (3 rows, 3 columns) --><table><thead><tr><th>format</th><th>rows</th><th>cols</th></tr></thead><tbody><tr><td>CSV</td><td>66355</td><td>12</td></tr><tr><td>Parquet</td><td>66355</td><td>12</td></tr><tr><td>JSON</td><td>66355</td><td>12</td></tr></tbody></table></div>
 
-#### Deedle – Load data from CSV (Parquet and JSON not supported)
+#### Deedle | Load data from CSV
+
+Deedle only supports CSV natively via `Frame.ReadCsv()`. For Parquet, use Polars.NET or ParquetSharp as a reader and convert the result. For JSON, deserialize with `System.Text.Json` first, then create a Frame from the typed records.
 
 ```csharp
-// Deedle – load from CSV (Parquet and JSON are NOT natively supported)
 var csvDf = Frame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
 display($"CSV: {csvDf.RowCount} x {csvDf.ColumnCount}");
 
-// For Parquet: use Polars.NET or ParquetSharp, then convert
-// For JSON:    use System.Text.Json, then Frame.FromRecords()
 ```
 
-    CSV: 66355 x 12
+```text
+CSV: 66355 x 12
+```
 
 ---
 ## Inspecting DataFrames
 
-- `.Head(n)`, `.Tail(n)` – first/last N rows
-- `.Shape`, `.Schema`, `.Describe()` – metadata and summary statistics
+After loading data, the first step is always inspection: shape, column types, head/tail preview, summary statistics, and null counts. Both libraries provide these capabilities, though Polars.NET offers more built-in methods.
 
-#### Polars.NET – Inspect shape, schema, head, tail, nulls, and memory
+### Shape, Head, and Tail
+
+#### Polars.NET | Inspect shape, schema, head, tail, nulls, and memory
+
+`.Shape` returns `(rows, columns)`, `.Height` and `.Width` return individual dimensions. `.Head(n)` and `.Tail(n)` show the first and last N rows respectively.
 
 ```csharp
-// Polars.NET – load the main dataset
 var ohlcv = DataFrame.ReadParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));
 
 display($"Shape: {ohlcv.Shape}  |  Height: {ohlcv.Height}  |  Width: {ohlcv.Width}");
 ```
 
-    Shape: (66355, 12)  |  Height: 66355  |  Width: 12
+```text
+Shape: (66355, 12)  |  Height: 66355  |  Width: 12
+```
 
 ```csharp
-// Head and Tail
 display("First 3 rows:");
 display(ohlcv.Head(3));
 display("Last 3 rows:");
 display(ohlcv.Tail(3));
 ```
 
-    First 3 rows:
-
 <!-- Polars DataFrame: (3 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
-
-    Last 3 rows:
 
 <!-- Polars DataFrame: (3 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>66876</td><td>WKL.AS</td><td>2026-03-10</td><td>68.8</td><td>69.16</td><td>66.34</td><td>67.16</td><td>67.16</td><td>1355645</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66877</td><td>WKL.AS</td><td>2026-03-11</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0</td><td>0</td><td>false</td></tr><tr><td>66929</td><td>WKL.AS</td><td>2026-03-12</td><td>67</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
 ```csharp
-// Schema
 ohlcv.PrintSchema();
 ```
 
-    root
-     |-- id: Int64
-     |-- symbol: String
-     |-- date: Date
-     |-- open: Float64
-     |-- high: Float64
-     |-- low: Float64
-     |-- close: Float64
-     |-- adj_close: Float64
-     |-- volume: Int64
-     |-- dividends: Float64
-     |-- stock_splits: Float64
-     |-- is_filled: Boolean
+```text
+root
+ |-- id: Int64
+ |-- symbol: String
+ |-- date: Date
+ |-- open: Float64
+ |-- high: Float64
+ |-- low: Float64
+ |-- close: Float64
+ |-- adj_close: Float64
+ |-- volume: Int64
+ |-- dividends: Float64
+ |-- stock_splits: Float64
+ |-- is_filled: Boolean
+```
+
+`.Describe()` returns a DataFrame with summary statistics for all numeric columns. The output includes count, null_count, mean, std, min, percentiles (25%, 50%, 75%), and max. Non-numeric columns (strings, booleans) are excluded.
 
 ```csharp
-// Describe (summary statistics)
 ohlcv.Describe()
 ```
 
 <!-- Polars DataFrame: (9 rows, 10 columns) --><table><thead><tr><th>statistic</th><th>id</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th></tr></thead><tbody><tr><td>count</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td><td>66355</td></tr><tr><td>null_count</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td>mean</td><td>33179.7331</td><td>197.0405202</td><td>199.364124</td><td>194.5857816</td><td>197.0349004</td><td>190.4949089</td><td>5942123.691</td><td>0.01175667386</td><td>0.0001720326822</td></tr><tr><td>std</td><td>19158.20139</td><td>363.1504839</td><td>367.8738291</td><td>358.011643</td><td>363.052047</td><td>359.6353012</td><td>16156185.53</td><td>0.2831418842</td><td>0.02271628163</td></tr><tr><td>min</td><td>1</td><td>1.601</td><td>1.6628</td><td>1.5842</td><td>1.6066</td><td>1.2013</td><td>0</td><td>0</td><td>0</td></tr><tr><td>25%</td><td>16590</td><td>29.79</td><td>30.09</td><td>29.47</td><td>29.7899</td><td>28.1461</td><td>509991</td><td>0</td><td>0</td></tr><tr><td>50%</td><td>33178</td><td>70.7</td><td>71.4</td><td>69.89</td><td>70.68</td><td>63.141</td><td>1415896</td><td>0</td><td>0</td></tr><tr><td>75%</td><td>49767</td><td>186</td><td>188</td><td>184</td><td>186.1</td><td>175.2609</td><td>4089463</td><td>0</td><td>0</td></tr><tr><td>max</td><td>66930</td><td>2926</td><td>2957</td><td>2813</td><td>2839</td><td>2802.9382</td><td>376391539</td><td>22.5</td><td>5</td></tr></tbody></table></div>
 
+Key observations: **null_count** is 0 for all columns — this dataset is complete. The **std** for `volume` (16.2M) is nearly 3x the mean (5.9M), indicating high right-skew — a few stocks dominate trading volume. The `dividends` and `stock_splits` columns have mean ≈ 0, confirming that corporate actions are sparse events.
+
+Null counts per column are critical for data quality assessment. The `scores_daily` dataset has real nulls in several z-score columns.
+
 ```csharp
-// Null counts per column — use scores_daily which has real nulls
+// scores_daily has real nulls in z-score columns
 var scoresNulls = DataFrame.ReadCsv(Path.Combine(DATA, "scores_daily.csv"), tryParseDates: true);
 var ncCols = scoresNulls.Columns.ToArray();
 var ncNames = new List<string>();
@@ -836,36 +946,39 @@ new DataFrame(new Polars.CSharp.Series[]
 
 <!-- Polars DataFrame: (5 rows, 2 columns) --><table><thead><tr><th>column</th><th>null_count</th></tr></thead><tbody><tr><td>pe_zscore</td><td>3</td></tr><tr><td>pb_zscore</td><td>6</td></tr><tr><td>ev_ebitda_zscore</td><td>71</td></tr><tr><td>yield_zscore</td><td>35</td></tr><tr><td>recommendation_mean</td><td>14</td></tr></tbody></table></div>
 
+Estimated memory size gives a rough sense of the in-memory footprint. This multiplies each column's length by 8 bytes (approximate for 64-bit types).
+
 ```csharp
-// Estimated memory size (sum of column byte sizes)
 long totalBytes = 0;
 foreach (var col in ohlcv.Columns)
     totalBytes += ohlcv.Column(col).Length * 8; // rough estimate
 display($"Estimated size: ~{totalBytes / 1_048_576.0:F2} MB ({ohlcv.Height} rows x {ohlcv.Width} cols)");
 ```
 
-    Estimated size: ~6.07 MB (66355 rows x 12 cols)
+```text
+Estimated size: ~6.07 MB (66355 rows x 12 cols)
+```
 
-#### Deedle – Inspect shape, column types, head, tail, and describe
+#### Deedle | Inspect shape, column types, head, tail, and describe
+
+Deedle uses `.RowCount` and `.ColumnCount` for shape (no tuple property). `FrameModule.Take(n, df)` and `FrameModule.TakeLast(n, df)` serve as head/tail — there are no direct `.Head()` / `.Tail()` instance methods in the C# API.
 
 ```csharp
-// Deedle
 var ohlcv = Frame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
 
 display($"Shape: {ohlcv.RowCount} rows x {ohlcv.ColumnCount} cols");
 ```
 
-    Shape: 66355 rows x 12 cols
+```text
+Shape: 66355 rows x 12 cols
+```
 
 ```csharp
-// Head and Tail (via FrameModule)
 display("First 3 rows:");
 display(FrameModule.Take(3, ohlcv));
 display("Last 3 rows:");
 display(FrameModule.TakeLast(3, ohlcv));
 ```
-
-    First 3 rows:
 
 <div>
 <table>
@@ -874,8 +987,6 @@ display(FrameModule.TakeLast(3, ohlcv));
 </table>
 <p><b>3</b> rows x <b>12</b> columns</p><p><b>0</b> missing values</p>
 </div>
-
-    Last 3 rows:
 
 <div>
 <table>
@@ -886,26 +997,30 @@ display(FrameModule.TakeLast(3, ohlcv));
 </div>
 
 ```csharp
-// Column names and types
 foreach (var (name, type) in ohlcv.ColumnKeys.Zip(ohlcv.ColumnTypes))
     Console.WriteLine($"  {name,-10} : {type.Name}");
 ```
 
-      id         : Int32
-      symbol     : String
-      date       : DateTime
-      open       : Decimal
-      high       : Decimal
-      low        : Decimal
-      close      : Decimal
-      adj_close  : Decimal
-      volume     : Int32
-      dividends  : Decimal
-      stock_splits : Decimal
-      is_filled  : Boolean
+```text
+id         : Int32
+symbol     : String
+date       : DateTime
+open       : Decimal
+high       : Decimal
+low        : Decimal
+close      : Decimal
+adj_close  : Decimal
+volume     : Int32
+dividends  : Decimal
+stock_splits : Decimal
+is_filled  : Boolean
+```
+
+> [!info] Deedle reads CSV numerics as Decimal
+>
+> Deedle's CSV reader infers floating-point columns as `Decimal` rather than `Double`. This preserves precision but may cause issues with libraries that expect `double`. Use `.GetColumn<double>("col")` to convert when needed.
 
 ```csharp
-// Describe
 ohlcv.Describe()
 ```
 
@@ -920,44 +1035,61 @@ ohlcv.Describe()
 ---
 ## Edge Cases & Gotchas
 
-#### Polars.NET wraps native Rust memory – types are IDisposable
+Common pitfalls when working with Polars.NET and Deedle in the same project.
 
-Polars.NET types (`DataFrame`, `Series`, `LazyFrame`, `PolarsSchema`, `DataType`) wrap native Rust
-memory and implement `IDisposable`. For short notebook cells this is fine (GC + finalizer will clean up),
-but in production code or loops, use `using` statements to free memory deterministically.
+### IDisposable and Memory Management
+
+> [!warning] Polars.NET wraps native Rust memory — types are IDisposable
+>
+> `DataFrame`, `Series`, `LazyFrame`, `PolarsSchema`, and `DataType` all wrap native Rust memory and implement `IDisposable`. In notebook cells the GC and finalizer will clean up eventually, but in production code or loops, failing to dispose can cause memory leaks.
+
+> [!success] Use `using` statements in production code
+>
+> ```csharp
+> using var df = DataFrame.ReadParquet("big.parquet");
+> // df is disposed deterministically when scope exits
+> ```
+
+### Deedle C# API Ergonomics
+
+> [!info] Deedle was designed for F# — C# API requires workarounds
+>
+> - `FrameModule.Take(n, df)` instead of `df.Head(n)`
+> - `SeriesBuilder<K,V>` instead of a clean constructor
+> - Explicit type parameters: `frame.GetColumn<double>("col")`
+> - Casting to `dynamic` for quick column access: `dynamic dfd = df; var col = dfd.Close;`
+
+> [!info] Microsoft.Data.Analysis as an alternative
+>
+> For new .NET DataFrame projects, consider `Microsoft.Data.Analysis` (part of ML.NET). It provides a Pandas-like API with `DataFrame` and `DataFrameColumn` types, better C# ergonomics than Deedle, and native integration with ML.NET pipelines. However, it lacks Polars' performance and lazy evaluation capabilities.
+
+### Namespace Collisions
+
+> [!warning] Polars.CSharp.Series vs Deedle.Series
+>
+> Both libraries define a `Series` type. When both `using Polars.CSharp` and `using Deedle` are active, the compiler may report ambiguous references.
+
+> [!success] Disambiguate with fully qualified names
+>
+> - Use `Polars.CSharp.Series.From<T>(...)` for Polars.NET
+> - Use `Deedle.Series<K,V>` or `SeriesBuilder<K,V>` for Deedle
+> - The compiler usually resolves correctly because Polars Series is non-generic and Deedle Series is generic
+
+### Extracting Values to .NET Types
+
+#### Polars.NET | Extract values and metadata
+
+Use `.Name`, `.Length`, `.DataTypeName` for metadata inspection, `.GetValue<T>(index)` for single values, and `.ToArray<T>()` to convert the entire Series to a .NET array.
 
 ```csharp
-using var df = DataFrame.ReadParquet("big.parquet");
-// df is disposed when scope exits
-```
-
-#### Deedle is F#-first – C# API workarounds
-
-Deedle was designed for F#. The C# API sometimes requires:
-- `FrameModule.Take(n, df)` instead of `df.Head(n)`
-- `SeriesBuilder<K,V>` instead of a clean constructor
-- Explicit type parameters like `frame.GetColumn<double>("col")`
-- Casting to `dynamic` for quick column access: `dynamic dfd = df; var col = dfd.Close;`
-
-#### Namespace collision between Polars.CSharp.Series and Deedle.Series
-
-Both libraries define a `Series` type. When both `using Polars.CSharp` and `using Deedle` are active:
-- Use `Polars.CSharp.Series.From<T>(...)` for Polars.NET
-- Use `Deedle.Series<K,V>` or `SeriesBuilder<K,V>` for Deedle
-- The compiler usually resolves correctly (Polars = non-generic, Deedle = generic)
-
-```csharp
-// Polars.NET — extract values to .NET types
 var s = Polars.CSharp.Series.From("x", new[] { 1, 2, 3 });
 
-// Series metadata as DataFrame
 display(new DataFrame(new Polars.CSharp.Series[]
 {
     Polars.CSharp.Series.From("property", new[] { "Name", "Length", "DataType", "Value[0]" }),
     Polars.CSharp.Series.From("value", new[] { s.Name, s.Length.ToString(), s.DataTypeName, s.GetValue<int>(0).ToString() })
 }));
 
-// Converting to .NET array
 var arr = s.ToArray<int>();
 display($"As int[]: [{string.Join(", ", arr)}]");
 
@@ -968,25 +1100,28 @@ df
 
 <!-- Polars DataFrame: (4 rows, 2 columns) --><table><thead><tr><th>property</th><th>value</th></tr></thead><tbody><tr><td>Name</td><td>x</td></tr><tr><td>Length</td><td>3</td></tr><tr><td>DataType</td><td>i32</td></tr><tr><td>Value[0]</td><td>1</td></tr></tbody></table></div>
 
-    As int[]: [1, 2, 3]
+```text
+As int[]: [1, 2, 3]
+```
 
 <!-- Polars DataFrame: (3 rows, 2 columns) --><table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>x</td></tr><tr><td>2</td><td>y</td></tr><tr><td>3</td><td>z</td></tr></tbody></table></div>
 
-#### Deedle – Extract values, keys, and index from a Series
+#### Deedle | Extract values, keys, and index from a Series
+
+Access individual values by key with `series[key]`, all values with `.Values`, and all keys with `.Keys`. These return standard .NET collections.
 
 ```csharp
-// Deedle – extract values
 var s = new[] { 1.0, 2.0, 3.0 }.ToOrdinalSeries();
 display($"Value at key 0: {s[0]}");
 display($"Values: [{string.Join(", ", s.Values)}]");
 display($"Keys:   [{string.Join(", ", s.Keys)}]");
 ```
 
-    Value at key 0: 1
-
-    Values: [1, 2, 3]
-
-    Keys:   [0, 1, 2]
+```text
+Value at key 0: 1
+Values: [1, 2, 3]
+Keys:   [0, 1, 2]
+```
 
 ---
 ## Comparison Summary — Part 1
@@ -1012,15 +1147,15 @@ display($"Keys:   [{string.Join(", ", s.Keys)}]");
 | **IDisposable** | Yes (wraps native Rust memory) | No |
 
 ---
-# Part 2: Reading & Writing Data
+## Reading & Writing Data
 
----
-## Discovering Data Files
+This section covers I/O operations: discovering data files, reading from CSV/JSON/Parquet, writing output, and understanding format trade-offs.
 
-#### Polars.NET – List all data files with their sizes
+### Discovering Data Files
+
+List all available data files in the data directory with their sizes to understand what datasets are available.
 
 ```csharp
-// List all data files with sizes
 var dataDir = new DirectoryInfo(DATA);
 var files = dataDir.GetFiles("*.*")
     .Where(f => new[] { ".csv", ".parquet", ".json" }.Contains(f.Extension.ToLower()))
@@ -1033,9 +1168,10 @@ foreach (var f in files)
     Console.WriteLine($"{f.Name,-45} {f.SizeKB,10:F1}");
 ```
 
-    File                                           Size (KB)
-    --------------------------------------------------------
-    bench_large.csv                                1246870.5
+```text
+File                                           Size (KB)
+--------------------------------------------------------
+bench_large.csv                                1246870.5
     bench_large.parquet                             464593.8
     bench_medium.csv                                197738.9
     bench_medium.parquet                             57876.7
@@ -1095,10 +1231,11 @@ foreach (var f in files)
     vm_transfer_results_cs.json                          4.1
     vm_transfer_results.json                             4.1
     vm_upload_results_cs.json                            6.6
-    vm_upload_results.json                               9.5
+vm_upload_results.json                               9.5
+```
 
 ---
-## Reading CSV
+### Reading CSV
 
 > [!warning] Polars.NET ReadCsv UTF-8 only
 >
@@ -1124,9 +1261,11 @@ foreach (var f in files)
 > remain as strings. Always set this for data pipeline CSV reads to avoid downstream
 > type-casting issues.
 
-#### Polars.NET – Read CSV files with DataFrame.ReadCsv
+#### Polars.NET | Read CSV files with DataFrame.ReadCsv
+
+`DataFrame.ReadCsv()` reads a CSV file into an eager DataFrame. It infers column types from the first 1000 rows by default. Set `tryParseDates: true` to enable automatic date column detection.
+
 ```csharp
-// Polars.NET – basic CSV read
 var df = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"),
     tryParseDates: true);
 
@@ -1134,12 +1273,15 @@ display($"Shape: {df.Shape}");
 df.Head(3)
 ```
 
-    Shape: (66355, 12)
+```text
+Shape: (66355, 12)
+```
 
 <!-- Polars DataFrame: (3 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
+Use `nRows` to limit how many rows are read, and `nullValues` to specify which strings should be treated as null.
+
 ```csharp
-// Polars.NET – with options
 var df = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"),
     tryParseDates: true,
     nRows: 100,
@@ -1149,25 +1291,31 @@ display($"Shape: {df.Shape}");
 df.PrintSchema();
 ```
 
-    Shape: (100, 12)
+```text
+Shape: (100, 12)
+```
 
-    root
-     |-- id: Int64
-     |-- symbol: String
-     |-- date: Date
-     |-- open: Float64
-     |-- high: Float64
-     |-- low: Float64
-     |-- close: Float64
-     |-- adj_close: Float64
-     |-- volume: Int64
-     |-- dividends: Float64
-     |-- stock_splits: Float64
-     |-- is_filled: Boolean
+```text
+root
+ |-- id: Int64
+ |-- symbol: String
+ |-- date: Date
+ |-- open: Float64
+ |-- high: Float64
+ |-- low: Float64
+ |-- close: Float64
+ |-- adj_close: Float64
+ |-- volume: Int64
+ |-- dividends: Float64
+ |-- stock_splits: Float64
+ |-- is_filled: Boolean
+```
 
-#### Polars.NET – Lazy scan CSV with LazyFrame.ScanCsv
+#### Polars.NET | Lazy scan CSV with LazyFrame.ScanCsv
+
+`LazyFrame.ScanCsv()` reads only the schema and metadata — no data is loaded until `.Collect()` is called. The query optimizer can then push predicates and projections down to the file scan, reading only the rows and columns needed.
+
 ```csharp
-// Polars.NET – lazy scan CSV (reads schema only, data loaded on Collect)
 var lf = LazyFrame.ScanCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"),
     tryParseDates: true);
 
@@ -1182,24 +1330,29 @@ var result = lf
 result
 ```
 
-    Query plan:
-
-    Csv SCAN [../data/eurostoxx50_ohlcv.csv]
-    PROJECT */12 COLUMNS
-    ESTIMATED ROWS: 66910
+```text
+Query plan:
+Csv SCAN [../data/eurostoxx50_ohlcv.csv]
+PROJECT */12 COLUMNS
+ESTIMATED ROWS: 66910
+```
 
 <!-- Polars DataFrame: (5 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>1</td><td>ASML.AS</td><td>2021-01-04</td><td>404</td><td>411</td><td>402.25</td><td>406.25</td><td>387.709</td><td>789502</td><td>0</td><td>0</td><td>false</td></tr><tr><td>2</td><td>ASML.AS</td><td>2021-01-05</td><td>406.55</td><td>412.05</td><td>401.15</td><td>406.9</td><td>388.3294</td><td>798787</td><td>0</td><td>0</td><td>false</td></tr><tr><td>3</td><td>ASML.AS</td><td>2021-01-06</td><td>406.8</td><td>407.2</td><td>399.2</td><td>402.85</td><td>384.4644</td><td>875711</td><td>0</td><td>0</td><td>false</td></tr><tr><td>4</td><td>ASML.AS</td><td>2021-01-07</td><td>404.8</td><td>407.8</td><td>400.35</td><td>403.9</td><td>385.4664</td><td>874780</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5</td><td>ASML.AS</td><td>2021-01-08</td><td>414.25</td><td>419.1</td><td>413.4</td><td>416.05</td><td>397.0618</td><td>975243</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-#### Deedle – Read CSV files with Frame.ReadCsv
+#### Deedle | Read CSV files with Frame.ReadCsv
+
+`Frame.ReadCsv()` reads a CSV into an eager Deedle Frame. Use `inferRows` to control how many rows are sampled for type inference, and `maxRows` to limit the result.
+
 ```csharp
-// Deedle – basic CSV read
 var df = Frame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
 
 display($"Shape: {df.RowCount} x {df.ColumnCount}");
 FrameModule.Take(3, df)
 ```
 
-    Shape: 66355 x 12
+```text
+Shape: 66355 x 12
+```
 
 <div>
 <table>
@@ -1210,7 +1363,6 @@ FrameModule.Take(3, df)
 </div>
 
 ```csharp
-// Deedle – with options
 var df = Frame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"),
     inferRows: 1000,
     maxRows: 100,
@@ -1219,20 +1371,26 @@ var df = Frame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"),
 display($"Shape: {df.RowCount} x {df.ColumnCount}");
 ```
 
-    Shape: 100 x 12
+```text
+Shape: 100 x 12
+```
 
 ---
-## Reading JSON
+### Reading JSON
 
-#### Polars.NET – Read JSON files with DataFrame.ReadJson
+#### Polars.NET | Read JSON files with DataFrame.ReadJson
+
+`DataFrame.ReadJson()` reads a JSON array of objects into a DataFrame. Each object becomes a row, each key becomes a column. Polars also supports NDJSON (newline-delimited JSON) via `JsonFormat.JsonLines`.
+
 ```csharp
-// Polars.NET – read JSON
 var df = DataFrame.ReadJson(Path.Combine(DATA, "eurostoxx50_ohlcv.json"));
 display($"Shape: {df.Shape}");
 df.Head(3)
 ```
 
-    Shape: (66355, 12)
+```text
+Shape: (66355, 12)
+```
 
 <!-- Polars DataFrame: (3 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04T00:00:00.000</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05T00:00:00.000</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06T00:00:00.000</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
@@ -1243,12 +1401,11 @@ df.Head(3)
 > var lf = LazyFrame.ScanNdjson(path);  // lazy scan
 > ```
 
-#### Deedle – Read JSON via System.Text.Json workaround
+#### Deedle | Read JSON via System.Text.Json workaround
+
+Deedle does not natively support JSON. The workaround is to deserialize with `System.Text.Json` first, then create a Frame from the resulting typed records with `Frame.FromRecords()`.
 
 ```csharp
-// Deedle — JSON is NOT natively supported.
-// Workaround: deserialize with System.Text.Json, then Frame.FromRecords()
-
 var jsonText = File.ReadAllText(Path.Combine(DATA, "dim_country.json"));
 var jsonDoc = JsonDocument.Parse(jsonText);
 
@@ -1260,43 +1417,55 @@ Console.WriteLine($"Parsed {count} JSON records");
 Console.WriteLine("Use Frame.FromRecords() with a typed class to create a Deedle Frame.");
 ```
 
-    Parsed 212 JSON records
-    Use Frame.FromRecords() with a typed class to create a Deedle Frame.
+```text
+Parsed 212 JSON records
+Use Frame.FromRecords() with a typed class to create a Deedle Frame.
+```
 
 ---
-## Reading Parquet
+### Reading Parquet
 
-#### Polars.NET – Read Parquet files with DataFrame.ReadParquet
+#### Polars.NET | Read Parquet files with DataFrame.ReadParquet
+
+`DataFrame.ReadParquet()` reads a Parquet file into an eager DataFrame. Parquet preserves exact types (no inference needed), supports column projection via the `columns` parameter, and is typically 2-5x faster than CSV for the same data.
+
 ```csharp
-// Polars.NET – eager read Parquet
 var df = DataFrame.ReadParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));
 display($"Shape: {df.Shape}");
 df.Head(3)
 ```
 
-    Shape: (66355, 12)
+```text
+Shape: (66355, 12)
+```
 
 <!-- Polars DataFrame: (3 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
+Column projection reads only the specified columns from the file, skipping the rest entirely. This is significantly faster when you only need a few columns from a wide dataset.
+
 ```csharp
-// Polars.NET – column projection (only load specific columns)
 var df = DataFrame.ReadParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"),
     columns: new[] { "date", "symbol", "close" });
 display($"Shape: {df.Shape}");
 df.PrintSchema();
 ```
 
-    Shape: (66355, 3)
+```text
+Shape: (66355, 3)
+```
 
-    root
-     |-- date: Date
-     |-- symbol: String
-     |-- close: Float64
+```text
+root
+ |-- date: Date
+ |-- symbol: String
+ |-- close: Float64
+```
 
-#### Polars.NET – Lazy scan Parquet with predicate and projection pushdown
+#### Polars.NET | Lazy scan Parquet with predicate and projection pushdown
+
+`LazyFrame.ScanParquet()` builds a query plan without reading data. Combined with `.Select()` and `.Filter()`, the optimizer pushes both column selection (projection pushdown) and row filtering (predicate pushdown) down to the Parquet reader, reading only the necessary row groups and columns.
 
 ```csharp
-// Polars.NET – lazy scan Parquet (predicate & projection pushdown)
 var lf = LazyFrame.ScanParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));
 
 var result = lf
@@ -1309,30 +1478,35 @@ display($"Shape: {result.Shape}");
 result.Head(5)
 ```
 
-    Shape: (1324, 3)
+```text
+Shape: (1324, 3)
+```
 
 <!-- Polars DataFrame: (5 rows, 3 columns) --><table><thead><tr><th>date</th><th>symbol</th><th>close</th></tr></thead><tbody><tr><td>2021-01-04</td><td>SAP.DE</td><td>105.32</td></tr><tr><td>2021-01-05</td><td>SAP.DE</td><td>105.04</td></tr><tr><td>2021-01-06</td><td>SAP.DE</td><td>105.48</td></tr><tr><td>2021-01-07</td><td>SAP.DE</td><td>104.52</td></tr><tr><td>2021-01-08</td><td>SAP.DE</td><td>106.18</td></tr></tbody></table></div>
 
-#### Deedle – Parquet is not natively supported
+#### Deedle | Parquet is not natively supported
+
+Deedle has no Parquet reader. Three workaround paths exist:
+1. Read with Polars.NET, then convert via `AsDataReader()`
+2. Read with ParquetSharp + Microsoft.Data.Analysis bridge
+3. Export to CSV first, then read with `Frame.ReadCsv()`
 
 ```csharp
-// Deedle – Parquet is NOT natively supported.
-// Options:
-//   1. Use Polars.NET to read, then convert via AsDataReader()
-//   2. Use ParquetSharp + Microsoft.Data.Analysis bridge
-//   3. Export to CSV first
 Console.WriteLine("Deedle cannot read Parquet natively. Use Polars.NET and convert if needed.");
 ```
 
-    Deedle cannot read Parquet natively. Use Polars.NET and convert if needed.
+```text
+Deedle cannot read Parquet natively. Use Polars.NET and convert if needed.
+```
 
 ---
-## Loading All Datasets
+### Loading All Datasets
 
-#### Polars.NET – Load all Parquet datasets from the data directory
+#### Polars.NET | Load all Parquet datasets from the data directory
+
+Iterate over all `.parquet` files in the data directory (excluding benchmark files) and display their shapes. This gives a quick inventory of available datasets and their sizes.
 
 ```csharp
-// Polars.NET – load all .parquet files from the data directory
 var parquetFiles = Directory.GetFiles(DATA, "*.parquet")
     .Where(f => !Path.GetFileName(f).StartsWith("bench_"))
     .OrderBy(f => f);
@@ -1344,7 +1518,8 @@ foreach (var file in parquetFiles)
 }
 ```
 
-      dim_country.parquet                      (212, 2)
+```text
+dim_country.parquet                      (212, 2)
       dim_index.parquet                        (4, 5)
       duckdb_top10_export.parquet              (10, 4)
       eurostoxx50_ohlcv.parquet                (66355, 12)
@@ -1357,17 +1532,17 @@ foreach (var file in parquetFiles)
       signals_daily.parquet                    (466, 19)
       signals_quarterly.parquet                (177, 22)
       stoxxusa50_ohlcv.parquet                 (65100, 12)
-      trading_calendar.parquet                 (29335, 11)
+trading_calendar.parquet                 (29335, 11)
+```
 
 ---
-## Parameter Deep-Dives
+### Parameter Deep-Dives
 
-#### Polars.NET – Override column types at read time with schema overrides
+#### Polars.NET | Override column types at read time with schema overrides
 
-Force specific columns to particular types at read time.
+Force specific columns to particular types at read time using `dtypeOverride`. This is useful when Polars infers the wrong type (e.g., a numeric ID column parsed as `Int64` when you want `Int32`, or `volume` as integer when you need float for division).
 
 ```csharp
-// Polars.NET – schema overrides
 var schema = new PolarsSchema()
     .Add("volume", DataType.Float64);
 
@@ -1378,31 +1553,31 @@ var df = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"),
 df.PrintSchema();
 ```
 
-    root
-     |-- id: Int64
-     |-- symbol: String
-     |-- date: Date
-     |-- open: Float64
-     |-- high: Float64
-     |-- low: Float64
-     |-- close: Float64
-     |-- adj_close: Float64
-     |-- volume: Float64
-     |-- dividends: Float64
-     |-- stock_splits: Float64
-     |-- is_filled: Boolean
+```text
+root
+ |-- id: Int64
+ |-- symbol: String
+ |-- date: Date
+ |-- open: Float64
+ |-- high: Float64
+ |-- low: Float64
+ |-- close: Float64
+ |-- adj_close: Float64
+ |-- volume: Float64
+ |-- dividends: Float64
+ |-- stock_splits: Float64
+ |-- is_filled: Boolean
+```
 
-#### Polars.NET – Specify which string values to interpret as null
+#### Polars.NET | Specify which string values to interpret as null
 
-Specify which strings should be interpreted as null.
+The `nullValues` parameter accepts an array of strings that should be treated as null during parsing. This is critical for datasets from legacy systems that use varied null representations (`"NA"`, `"N/A"`, `"#N/A"`, `"-"`, empty strings).
 
 ```csharp
-// Polars.NET — custom null values (scores_daily has real nulls)
 var dfNulls = DataFrame.ReadCsv(Path.Combine(DATA, "scores_daily.csv"),
     nullValues: new[] { "", "NA", "N/A", "#N/A", "-", "null" },
     tryParseDates: true);
 
-// Build a null-count summary DataFrame (only columns with nulls)
 var ncNames = new List<string>();
 var ncCounts = new List<long>();
 foreach (var col in dfNulls.Columns)
@@ -1419,17 +1594,17 @@ new DataFrame(new Polars.CSharp.Series[]
 })
 ```
 
-    scores_daily: (466, 36) — 5 columns with nulls
+```text
+scores_daily: (466, 36) — 5 columns with nulls
+```
 
 <!-- Polars DataFrame: (5 rows, 2 columns) --><table><thead><tr><th>column</th><th>null_count</th></tr></thead><tbody><tr><td>pe_zscore</td><td>3</td></tr><tr><td>pb_zscore</td><td>6</td></tr><tr><td>ev_ebitda_zscore</td><td>71</td></tr><tr><td>yield_zscore</td><td>35</td></tr><tr><td>recommendation_mean</td><td>14</td></tr></tbody></table></div>
 
-#### Polars.NET – Use custom column separators and delimiters
+#### Polars.NET | Use custom column separators and delimiters
+
+`ReadCsv` defaults to comma (`,`) as the separator. For TSV (tab-separated) or SSV (semicolon-separated) files, pass the actual delimiter via `separator`. Without this, the entire line is parsed as a single column.
 
 ```csharp
-// Polars.NET — custom separator
-// TSV = tab-separated values, SSV = semicolon-separated values.
-// ReadCsv defaults to comma (',') so tab/semicolon files parse as a single column
-// unless you specify the actual delimiter via the separator parameter.
 var dfTsv = DataFrame.ReadCsv(Path.Combine(DATA, "dim_country.tsv"), separator: '\t');
 display($"TSV: {dfTsv.Shape}");
 display(dfTsv.Head(3));
@@ -1439,23 +1614,31 @@ display($"SSV: {dfSsv.Shape}");
 dfSsv.Head(3)
 ```
 
-    TSV: (212, 2)
+```text
+TSV: (212, 2)
+```
 
 <!-- Polars DataFrame: (3 rows, 2 columns) --><table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr></thead><tbody><tr><td>Afghanistan</td><td>AF</td></tr><tr><td>Albania</td><td>AL</td></tr><tr><td>Algeria</td><td>DZ</td></tr></tbody></table></div>
 
-    SSV: (212, 2)
+```text
+SSV: (212, 2)
+```
 
 <!-- Polars DataFrame: (3 rows, 2 columns) --><table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr></thead><tbody><tr><td>Afghanistan</td><td>AF</td></tr><tr><td>Albania</td><td>AL</td></tr><tr><td>Algeria</td><td>DZ</td></tr></tbody></table></div>
 
-#### Deedle – Use custom separators with Frame.ReadCsv
+#### Deedle | Use custom separators with Frame.ReadCsv
+
+Deedle uses `separators` (plural, string) instead of `separator` (char). Pass `"\t"` for tab-separated files.
+
 ```csharp
-// Deedle — custom separator
 var dfTsv = Frame.ReadCsv(Path.Combine(DATA, "dim_country.tsv"), separators: "\t");
 display($"TSV: {dfTsv.RowCount} rows x {dfTsv.ColumnCount} cols");
 dfTsv.Rows[Enumerable.Range(0, 3)]
 ```
 
-    TSV: 212 rows x 2 cols
+```text
+TSV: 212 rows x 2 cols
+```
 
 <div>
 <table>
@@ -1466,12 +1649,13 @@ dfTsv.Rows[Enumerable.Range(0, 3)]
 </div>
 
 ---
-## Writing Data
+### Writing Data
 
-#### Polars.NET – Write DataFrames to CSV, Parquet, and JSON
+#### Polars.NET | Write DataFrames to CSV, Parquet, and JSON
+
+Polars.NET writes to all three formats through `.WriteCsv()`, `.WriteParquet()`, and `.WriteJson()`. Parquet produces the smallest files due to columnar compression.
 
 ```csharp
-// Polars.NET – write to all formats
 var df = DataFrame.ReadParquet(Path.Combine(DATA, "dim_country.parquet"));
 
 var outDir = Path.Combine(DATA, "_output");
@@ -1491,43 +1675,75 @@ foreach (var f in Directory.GetFiles(outDir))
     Console.WriteLine($"  {Path.GetFileName(f),-35} {new FileInfo(f).Length / 1024.0,8:F1} KB");
 ```
 
-      dim_country_out.csv                      3.5 KB
-      dim_country_out.json                     9.6 KB
-      dim_country_out.parquet                  3.4 KB
+```text
+dim_country_out.csv                      3.5 KB
+dim_country_out.json                     9.6 KB
+dim_country_out.parquet                  3.4 KB
+```
 
-#### Deedle – Write DataFrames to CSV with SaveCsv
+#### Deedle | Write DataFrames to CSV with SaveCsv
+
+Deedle only supports CSV output natively via `.SaveCsv()`. For Parquet or JSON output, convert to Polars.NET or use a separate serialization library.
+
 ```csharp
-// Deedle – write CSV
 var df = Frame.ReadCsv(Path.Combine(DATA, "dim_country.csv"));
 var outPath = Path.Combine(DATA, "_output", "dim_country_deedle.csv");
 df.SaveCsv(outPath);
 Console.WriteLine($"Saved: {outPath} ({new FileInfo(outPath).Length / 1024.0:F1} KB)");
 ```
 
-    Saved: ..\data\_output\dim_country_deedle.csv (2.9 KB)
+```text
+Saved: ..\data\_output\dim_country_deedle.csv (2.9 KB)
+```
 
 ```csharp
-// Cleanup
 var outDir = Path.Combine(DATA, "_output");
 if (Directory.Exists(outDir)) Directory.Delete(outDir, true);
 Console.WriteLine("Cleaned up output files.");
 ```
 
-    Cleaned up output files.
+```text
+Cleaned up output files.
+```
 
 ---
-## Lazy Scanning vs Eager Reading (Polars.NET only)
+### Lazy Scanning vs Eager Reading (Polars.NET only)
 
-Polars.NET's lazy API defers computation until `.Collect()` is called.
-The query optimizer can:
-- **Predicate pushdown**: filter rows at the file level (Parquet)
-- **Projection pushdown**: skip unused columns entirely
-- **Common subexpression elimination**: avoid redundant work
+Polars.NET's lazy API defers computation until `.Collect()` is called. The query optimizer rewrites the plan to minimize I/O and memory usage through three key optimizations: **predicate pushdown** (filter rows at the file level), **projection pushdown** (skip unused columns entirely), and **common subexpression elimination** (avoid redundant work).
 
-#### Polars.NET – Compare eager reading vs lazy scanning performance
+> [!tip] When to use lazy vs eager
+>
+> Use **lazy** (`ScanCsv`, `ScanParquet`) when you only need a subset of rows or columns — the optimizer avoids reading unnecessary data. Use **eager** (`ReadCsv`, `ReadParquet`) when you need the full dataset or when the file is small enough that optimization overhead outweighs savings.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    subgraph Eager["Eager: ReadParquet"]
+        E1["Read ALL rows\nand columns"] --> E2["Filter in\nmemory"] --> E3["Select\ncolumns"]
+    end
+    subgraph Lazy["Lazy: ScanParquet"]
+        L1["Build\nquery plan"] --> L2["Optimizer:\npushdown"] --> L3["Read ONLY\nneeded data"]
+    end
+    style Eager fill:#292e42,stroke:#565f89
+    style Lazy fill:#1a1b26,stroke:#565f89
+```
+
+#### Polars.NET | Compare eager reading vs lazy scanning performance
+
+The eager path reads the entire file into memory, then applies filters and selects columns. The lazy path builds a query plan and reads only what's needed.
 
 ```csharp
-// Eager: reads ALL data into memory, THEN filters
 var sw = System.Diagnostics.Stopwatch.StartNew();
 var eager = DataFrame.ReadParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"))
     .Filter(Col("symbol") == Lit("ASML.AS"))
@@ -1536,10 +1752,11 @@ sw.Stop();
 display($"Eager: {eager.Height} rows in {sw.ElapsedMilliseconds} ms");
 ```
 
-    Eager: 1331 rows in 6 ms
+```text
+Eager: 1331 rows in 6 ms
+```
 
 ```csharp
-// Lazy: builds a query plan, optimizes, then reads only what's needed
 var sw = System.Diagnostics.Stopwatch.StartNew();
 var lazy = LazyFrame.ScanParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"))
     .Filter(Col("symbol") == Lit("ASML.AS"))
@@ -1549,10 +1766,13 @@ sw.Stop();
 display($"Lazy:  {lazy.Height} rows in {sw.ElapsedMilliseconds} ms");
 ```
 
-    Lazy:  1331 rows in 1 ms
+```text
+Lazy:  1331 rows in 1 ms
+```
+
+The `.Explain(optimized: true)` method shows the optimized query plan — how Polars will actually execute the query after optimization.
 
 ```csharp
-// Inspect the optimized query plan
 var plan = LazyFrame.ScanParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"))
     .Filter(Col("symbol") == Lit("ASML.AS"))
     .Select("date", "close")
@@ -1562,20 +1782,25 @@ Console.WriteLine("Optimized query plan:");
 Console.WriteLine(plan);
 ```
 
-    Optimized query plan:
-    simple π 2/2 ["date", "close"]
-      Parquet SCAN [../data/eurostoxx50_ohlcv.parquet]
-      PROJECT 3/12 COLUMNS
-      SELECTION: [(col("symbol")) == ("ASML.AS")]
-      ESTIMATED ROWS: 66355
+```text
+Optimized query plan:
+simple π 2/2 ["date", "close"]
+  Parquet SCAN [../data/eurostoxx50_ohlcv.parquet]
+  PROJECT 3/12 COLUMNS
+  SELECTION: [(col("symbol")) == ("ASML.AS")]
+  ESTIMATED ROWS: 66355
+```
+
+Reading the plan bottom-up: `Parquet SCAN` reads the file. `PROJECT 3/12 COLUMNS` means only 3 of 12 columns are loaded (projection pushdown — `date`, `symbol`, `close`; `symbol` is needed for the filter). `SELECTION` shows the predicate pushed down to the scan. `simple π 2/2` is the final projection that drops `symbol` after filtering, returning only `date` and `close`.
 
 ---
-## Format Comparison
+### Format Comparison
 
-#### Polars.NET – Compare file sizes across CSV, JSON, and Parquet formats
+Parquet consistently produces the smallest files due to columnar compression and efficient encoding. JSON is the largest due to verbose key repetition. CSV falls in between.
+
+#### Polars.NET | Compare file sizes across CSV, JSON, and Parquet formats
 
 ```csharp
-// Compare file sizes across formats as a Polars DataFrame
 var baseName = "eurostoxx50_ohlcv";
 var formats = new[] { "csv", "json", "parquet" };
 var fmtNames = new List<string>();
@@ -1600,10 +1825,11 @@ new DataFrame(new Polars.CSharp.Series[]
 
 <!-- Polars DataFrame: (3 rows, 2 columns) --><table><thead><tr><th>format</th><th>size_kb</th></tr></thead><tbody><tr><td>csv</td><td>5162</td></tr><tr><td>json</td><td>17668.3</td></tr><tr><td>parquet</td><td>2426.7</td></tr></tbody></table></div>
 
-#### Polars.NET – Benchmark read performance across formats
+#### Polars.NET | Benchmark read performance across formats
+
+Read performance varies significantly by format. Parquet and CSV are typically the fastest (Parquet due to columnar layout, CSV due to minimal parsing overhead for simple schemas). JSON is slowest due to per-row parsing.
 
 ```csharp
-// Read performance comparison (Polars.NET) as a DataFrame
 var path = Path.Combine(DATA, "eurostoxx50_ohlcv");
 var benchFormats = new List<string>();
 var benchTimes = new List<double>();
@@ -1632,15 +1858,13 @@ new DataFrame(new Polars.CSharp.Series[]
 <!-- Polars DataFrame: (3 rows, 2 columns) --><table><thead><tr><th>format</th><th>avg_ms</th></tr></thead><tbody><tr><td>CSV</td><td>5.2</td></tr><tr><td>JSON</td><td>41.8</td></tr><tr><td>Parquet</td><td>4</td></tr></tbody></table></div>
 
 ---
-## Gotchas & Tips
+### Gotchas & Tips
 
-#### Polars.NET – Parse date strings into proper date types
+#### Polars.NET | Parse date strings into proper date types
 
-Polars.NET: use `tryParseDates: true` in `ReadCsv` or parse strings explicitly with `.Str.ToDate()`.
-Deedle: dates are read as strings by default – use `DateTime.Parse` in a column transform.
+Polars.NET provides two approaches for date parsing: set `tryParseDates: true` in `ReadCsv` for automatic detection, or use `.Str.ToDate(format)` to parse string columns explicitly with a format string. Deedle reads dates as `DateTime` automatically from CSV but may misparse ambiguous formats.
 
 ```csharp
-// Polars.NET – parse dates from strings
 var df = DataFrame.FromColumns(new
 {
     DateStr = new[] { "2024-01-02", "2024-01-03", "2024-01-04" },
@@ -1654,20 +1878,20 @@ withDate.PrintSchema();
 withDate
 ```
 
-    root
-     |-- DateStr: String
-     |-- Value: Float64
-     |-- Date: Date
+```text
+root
+ |-- DateStr: String
+ |-- Value: Float64
+ |-- Date: Date
+```
 
 <!-- Polars DataFrame: (3 rows, 3 columns) --><table><thead><tr><th>DateStr</th><th>Value</th><th>Date</th></tr></thead><tbody><tr><td>2024-01-02</td><td>100</td><td>2024-01-02</td></tr><tr><td>2024-01-03</td><td>102.5</td><td>2024-01-03</td></tr><tr><td>2024-01-04</td><td>101.8</td><td>2024-01-04</td></tr></tbody></table></div>
 
-#### Polars.NET – Use Categorical type for low-cardinality string columns
+#### Polars.NET | Use Categorical type for low-cardinality string columns
 
-For columns with low cardinality (few unique values like "sector", "country"), use `Categorical` type
-in Polars.NET for significantly lower memory usage and faster group-by/filter operations.
+For columns with low cardinality (few unique values like "sector", "country"), casting to `Categorical` type in Polars.NET significantly reduces memory usage and speeds up group-by and filter operations. Internally, Polars stores a dictionary of unique values and uses integer indices.
 
 ```csharp
-// Polars.NET – cast to Categorical for memory savings
 var df = DataFrame.ReadParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));
 
 display($"Before: {df.Height} rows x {df.Width} cols");
@@ -1680,26 +1904,29 @@ display("Cast symbol to Categorical – reduces memory for repeated string value
 optimized.PrintSchema();
 ```
 
-    Before: 66355 rows x 12 cols
+```text
+Before: 66355 rows x 12 cols
+Cast symbol to Categorical – reduces memory for repeated string values.
+```
 
-    Cast symbol to Categorical – reduces memory for repeated string values.
-
-    root
-     |-- id: Int64
-     |-- symbol: Categorical
-     |-- date: Date
-     |-- open: Float64
-     |-- high: Float64
-     |-- low: Float64
-     |-- close: Float64
-     |-- adj_close: Float64
-     |-- volume: Int64
-     |-- dividends: Float64
-     |-- stock_splits: Float64
-     |-- is_filled: Boolean
+```text
+root
+ |-- id: Int64
+ |-- symbol: Categorical
+ |-- date: Date
+ |-- open: Float64
+ |-- high: Float64
+ |-- low: Float64
+ |-- close: Float64
+ |-- adj_close: Float64
+ |-- volume: Int64
+ |-- dividends: Float64
+ |-- stock_splits: Float64
+ |-- is_filled: Boolean
+```
 
 ---
-## Comparison Summary – Part 2
+### Comparison Summary | Part 2
 
 | Operation | Polars.NET | Deedle |
 |---|---|---|
@@ -1720,7 +1947,7 @@ optimized.PrintSchema();
 
 ---
 
-#### Key takeaways
+### Key Takeaways
 
 1. **Polars.NET** is the clear choice for I/O – it supports CSV, Parquet, JSON, NDJSON, IPC, Excel, Avro, and Delta Lake with lazy scanning and query optimization.
 2. **Deedle** only supports CSV natively. For other formats, use Polars.NET to read and convert via `AsDataReader()`.

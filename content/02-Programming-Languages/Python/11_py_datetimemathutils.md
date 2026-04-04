@@ -16,6 +16,10 @@ status: complete
 
 ## Date and Time
 
+Python's `datetime` module provides `datetime` (date + time), `date` (date only), `time` (time only), and `timedelta` (intervals). Naive datetimes have no timezone; always use `datetime.now(timezone.utc)` for storage and `zoneinfo.ZoneInfo` (Python 3.9+) for timezone-aware local times.
+
+### Creating date and time objects
+
 #### datetime module — creating date, time, datetime, timedelta objects
 
 > [!info] Date and time types
@@ -91,8 +95,9 @@ dt_micro  # With microseconds
 
 #### datetime .year, .month, .day, .hour — accessing components
 
+Access individual components as attributes: `.year`, `.month`, `.day`, `.hour`, `.minute`, `.second`, `.microsecond`. `.weekday()` returns 0=Monday through 6=Sunday; `.isoweekday()` returns 1=Monday through 7=Sunday.
+
 ```python
-# Accessing date/time components — year, month, day, hour, etc.
 
 dt = datetime(2024, 3, 15, 14, 30, 45, 123456)
 
@@ -121,10 +126,13 @@ dt.isocalendar()[1]  # Week number
     75
     11
 
+### Unix timestamps
+
 #### Timestamp (Unix epoch) conversions
 
+`.timestamp()` converts a datetime to a float of seconds since the Unix epoch (1970-01-01 UTC). `datetime.fromtimestamp(ts, tz=timezone.utc)` converts back — always pass `tz=timezone.utc` to get an aware datetime.
+
 ```python
-# Unix timestamp conversions — datetime to/from epoch seconds
 
 now = datetime.now()
 
@@ -159,10 +167,13 @@ f"{(now_utc - epoch).total_seconds():.0f}"  # Seconds since epoch
     1970-01-01 00:00:00+00:00
     1774414100
 
+### Parsing and formatting
+
 #### Parsing strings -> datetime (strptime)
 
+`datetime.strptime(string, format)` parses a date string using format codes: `%Y` (4-digit year), `%m` (month), `%d` (day), `%H` (24h hour), `%M` (minute), `%S` (second), `%f` (microsecond), `%p` (AM/PM).
+
 ```python
-# Parsing strings to datetime — strptime (string parse time)
 
 s1 = "2024-03-15 14:30:45"
 s2 = "15/03/2024"
@@ -195,8 +206,9 @@ f"'{s6}' -> {dt6}"
 
 #### Formatting datetime -> string (strftime)
 
+`dt.strftime(format)` formats a datetime as a string. Same format codes as `strptime`. Common patterns: `'%Y-%m-%dT%H:%M:%S'` (ISO 8601), `'%Y-%m-%d'` (date only), `'%I:%M %p'` (12-hour with AM/PM).
+
 ```python
-# Formatting datetime to string — strftime (string format time)
 
 dt = datetime(2024, 3, 15, 14, 30, 45, 123456)
 
@@ -273,10 +285,13 @@ for code, desc in codes.items():
       %z   =                       (UTC offset)
       %%   = %                     (Literal %)
 
-#### ISO 8601 conversions
+### ISO 8601 and timezone handling
+
+#### ISO 8601 conversions | isoformat() and fromisoformat()
+
+`.isoformat()` returns ISO 8601 format. `datetime.fromisoformat()` parses it back. Python 3.7+ supports offset strings (`+05:30`); Python 3.11+ supports `Z` (UTC marker).
 
 ```python
-# ISO 8601 conversions — isoformat() and fromisoformat()
 
 dt = datetime(2024, 3, 15, 14, 30, 45, 123456)
 
@@ -309,8 +324,9 @@ from_iso_z  # With Z (UTC)
 
 #### zoneinfo.ZoneInfo — timezone-aware datetime creation
 
+Pass `tzinfo=ZoneInfo("America/New_York")` to the `datetime` constructor to create a timezone-aware datetime. `timezone.utc` is the built-in UTC timezone. Naive datetimes (no `tzinfo`) should be avoided in pipelines.
+
 ```python
-# Timezone management — naive vs aware, zoneinfo, UTC
 
 naive = datetime(2024, 3, 15, 14, 30, 45)
 f"Naive (no tz):   {naive}, tzinfo={naive.tzinfo}"
@@ -339,8 +355,9 @@ india_dt  # India
 
 #### datetime.astimezone — converting between timezones
 
+`.astimezone(ZoneInfo('timezone'))` converts an aware datetime to a different timezone while preserving the same instant in time. The underlying UTC value stays the same — only the offset and display change.
+
 ```python
-# Converting between timezones — astimezone() for instant conversion
 
 utc_now = datetime.now(timezone.utc)
 utc_now  # UTC now
@@ -364,8 +381,9 @@ utc_now.astimezone(ZoneInfo('America/Sao_Paulo'))  # -> São Paulo
 
 #### DateTimeOffset equivalent — localize naive datetime
 
+`.replace(tzinfo=ZoneInfo(...))` attaches a timezone to a naive datetime without changing the time value. `timezone(timedelta(hours=5, minutes=30))` creates a fixed-offset timezone for systems that don't use IANA timezone names.
+
 ```python
-# Make naive datetime timezone-aware — replace(tzinfo=) or localize
 
 naive = datetime(2024, 3, 15, 14, 30, 45)
 aware = naive.replace(tzinfo=ZoneInfo("US/Eastern"))
@@ -380,10 +398,13 @@ dt_offset  # Fixed +5:30
     2024-03-15 14:30:45-04:00
     2024-03-15 14:30:45+05:30
 
-#### Date/time arithmetic with timedelta
+### Date/time arithmetic
+
+#### Date/time arithmetic with timedelta | add and subtract intervals
+
+`timedelta(days=, hours=, minutes=, seconds=, weeks=)` creates an interval. Add or subtract from a `datetime` with `+` and `-`. Subtracting two datetimes returns a `timedelta`. `.days` gives whole days; `.total_seconds()` gives the total interval in seconds.
 
 ```python
-# Date/time arithmetic with timedelta — add and subtract intervals
 
 dt = datetime(2024, 3, 15, 14, 30, 45)
 
@@ -527,8 +548,9 @@ datetime.fromtimestamp(ts + 86400)  # Back to datetime
 
 #### dateutil.relativedelta — add months and years to dates
 
+`timedelta` doesn't support months or years (variable-length intervals). `dateutil.relativedelta` handles this — `relativedelta(months=1)` correctly handles month-end clamping (Jan 31 + 1 month = Feb 29 in leap year). Install via `pip install python-dateutil`.
+
 ```python
-# dateutil.relativedelta — month and year arithmetic
 
 dt = datetime(2024, 1, 31, 14, 30, 0)
 dt  # Original
@@ -547,6 +569,8 @@ dt + relativedelta(years=1, months=2, days=3)  # + 1y 2m 3d
     2025-04-03 14:30:00
 
 ## Math and Random
+
+### Math built-ins and math module
 
 #### Built-in math — abs(), max(), min(), divmod(), clamp
 
@@ -684,10 +708,13 @@ f"{quantiles[-1]:.2f} ms"  # P95
     32.10
     108.19 ms
 
-#### random module
+### Random number generation
+
+#### random module | pseudo-random numbers with seed for reproducibility
+
+`random.seed(n)` makes results reproducible. `randint(a, b)` returns `[a, b]` inclusive. `random()` returns `[0.0, 1.0)`. `choice()` picks one element; `choices(k=n)` picks n with replacement; `sample(k=n)` picks n without replacement. `shuffle()` reorders in place.
 
 ```python
-# random module — pseudo-random numbers with seed for reproducibility
 
 random.seed(42)  # seed for reproducibility (like C# new Random(42))
 
@@ -723,8 +750,9 @@ items  # Shuffled
 
 #### random.choices weights= — weighted random selection
 
+Pass `weights=` to `random.choices` for non-uniform sampling. Weights don't need to sum to 100 — they're relative. Useful for generating realistic test data with skewed distributions (e.g., 60% page_view, 10% purchase).
+
 ```python
-# Weighted random — random.choices with weights for non-uniform sampling
 
 events = ["page_view", "click", "purchase", "signup"]
 weights = [60, 25, 10, 5]  # percentage weights
@@ -766,6 +794,8 @@ for i in range(8):
     evt_0008     click        us-east-1        0.00
 
 ## Logging
+
+### logging module — levels, handlers, formatters
 
 #### logging module — levels, handlers, formatters, basicConfig
 
@@ -882,6 +912,8 @@ json_logger.warning("Schema drift detected in %s", "users")
 
 ## Configuration and Environment Variables
 
+### Environment variables — os.environ
+
 #### os.environ — reading and setting environment variables
 
 > [!info] Environment variables
@@ -964,12 +996,13 @@ f"... ({len(os.environ)} total)"
       CLAUDE_CODE_MAX_OUTPUT_TOKENS = 64000
       ... (85 total)
 
-#### configparser — INI-style configuration files
+### Config files — configparser, TOML, .env
 
-#### configparser — INI-style config
+#### configparser — INI-style configuration
+
+`configparser` reads INI-format files (sections with `[name]`, key-value pairs). All values are strings — use `.getint()`, `.getboolean()`, `.getfloat()` for type-safe access with optional `fallback=` defaults. Built-in, no dependencies.
 
 ```python
-# configparser — INI-style configuration (built-in, no dependencies)
 
 tmp_dir = tempfile.mkdtemp(prefix="config_demo_")
 config_path = os.path.join(tmp_dir, "pipeline.ini")
@@ -1016,8 +1049,9 @@ config.getint('pipeline', 'timeout', fallback=30)  # Timeout
 
 #### configparser.sections, .get — reading config sections and keys
 
+`.sections()` lists all section names. Access keys with `config['section']['key']` or `config.get('section', 'key', fallback=default)`.
+
 ```python
-# Reading configparser — sections, keys, and type-safe access
 
 config.sections()  # Sections
 list(config['pipeline'].keys())  # Pipeline keys
@@ -1028,8 +1062,9 @@ list(config['pipeline'].keys())  # Pipeline keys
 
 #### tomllib — TOML modern config format (Python 3.11+)
 
+`tomllib` (read-only, built-in since Python 3.11) parses TOML files into dicts. Unlike `configparser`, TOML preserves native types: `int`, `bool`, `list`, `datetime`. Open in binary mode (`"rb"`). For writing TOML, use `tomli-w` (third-party).
+
 ```python
-# TOML — modern configuration format (built-in since Python 3.11)
 
 toml_path = os.path.join(tmp_dir, "pipeline.toml")
 with open(toml_path, "w") as f:

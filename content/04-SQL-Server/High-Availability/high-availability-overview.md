@@ -1,9 +1,10 @@
 ---
-tags: [sql, gcp, sql-server, tsql]
+title: "SQL Server High Availability Overview"
+tags: [sql-server, gcp, tsql]
 aliases: [AG, Always On AG, Always On Availability Groups, SQL Server HA, HADR, Failover Clustering]
 description: "Complete guide to SQL Server 2022 High Availability on Linux GCP VMs: Always On Availability Groups setup with Pacemaker/Corosync, monitoring DMVs, failover operations, read-only routing, troubleshooting, and GCP-specific considerations including Internal Load Balancer configuration."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-04
 status: complete
 ---
 
@@ -20,7 +21,7 @@ SQL Server 2022 on Linux GCP VMs supports multiple high availability mechanisms.
 
 A single SQL Server instance is a single point of failure. If the VM crashes, the disk corrupts, or you need to patch the OS, your database is down. High availability (HA) ensures the database remains accessible during planned maintenance and unplanned outages by maintaining redundant copies of your data that can take over automatically.
 
-#### Key HA metrics
+### Key HA metrics
 
 | Metric | Definition | Target |
 |--------|-----------|--------|
@@ -31,6 +32,8 @@ A single SQL Server instance is a single point of failure. If the VM crashes, th
 ---
 
 ## HA Options for SQL Server 2022 on Linux
+
+SQL Server on Linux supports three active HA mechanisms plus one deprecated option. The primary differentiators are whether shared storage is required, whether failover is automatic, and whether secondaries can serve read traffic. On GCP, Always On Availability Groups are the recommended choice because GCP lacks native shared block storage, making FCI impractical.
 
 ### Option 1: Always On Availability Groups (Recommended)
 
@@ -128,6 +131,8 @@ Removed in SQL Server 2022. Replaced by Always On Availability Groups. If you en
 
 ## Setting Up Always On Availability Groups on Linux (GCP)
 
+The setup follows 8 steps: enable HADR on each instance, create the database mirroring endpoint with certificate authentication, create the AG with the desired replication topology, join secondaries, add databases, and configure Pacemaker as the external cluster manager. All inter-replica communication flows through a single TCP endpoint (port 5022) per instance — the log stream is compressed before transmission. For a focused reference on the AG itself, see [always-on-availability-groups](https://alp78.github.io/elysium/04-SQL-Server/High-Availability/always-on-availability-groups).
+
 ### Prerequisites
 
 All nodes must have:
@@ -141,16 +146,13 @@ All nodes must have:
 
 #### Enable HADR cluster type on each SQL Server instance
 
+Run on each SQL Server instance. `EXTERNAL` tells SQL Server that an external cluster manager (Pacemaker) handles failover, not WSFC. Verify with `SERVERPROPERTY('IsHadrEnabled')` — it should return 1.
+
 ```sql
--- Run on each SQL Server instance
 ALTER SERVER CONFIGURATION SET HADR CLUSTER TYPE = EXTERNAL;
 
--- Verify
 SELECT SERVERPROPERTY('IsHadrEnabled') AS hadr_enabled;
--- Returns 1
 ```
-
-`EXTERNAL` tells SQL Server that an external cluster manager (Pacemaker) handles failover, not WSFC.
 
 ### Step 2: Create the Database Mirroring Endpoint on Every Node
 
@@ -174,8 +176,9 @@ AGs on Linux use **certificate-based authentication** (not Windows authenticatio
 
 #### Create the master key and AG certificate on the primary node
 
+On the primary, create a master key, generate the AG endpoint certificate, and export both the certificate and private key.
+
 ```sql
--- On primary
 CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'StrongMasterKeyP@ss!';
 
 CREATE CERTIFICATE dbm_cert
@@ -191,12 +194,12 @@ BACKUP CERTIFICATE dbm_cert
 
 #### Copy certificate files to each secondary and fix ownership
 
+Copy the certificate and private key to each secondary, then fix ownership so the `mssql` service account can read them.
+
 ```bash
-# Copy certificate files to each secondary
 scp /var/opt/mssql/data/dbm_cert.* user@analytics-sql-02:/var/opt/mssql/data/
 scp /var/opt/mssql/data/dbm_cert.* user@analytics-sql-03:/var/opt/mssql/data/
 
-# Fix ownership on secondaries
 ssh user@analytics-sql-02 'sudo chown mssql:mssql /var/opt/mssql/data/dbm_cert.*'
 ssh user@analytics-sql-03 'sudo chown mssql:mssql /var/opt/mssql/data/dbm_cert.*'
 ```
@@ -205,8 +208,9 @@ ssh user@analytics-sql-03 'sudo chown mssql:mssql /var/opt/mssql/data/dbm_cert.*
 
 #### Import the primary's certificate on each secondary node
 
+On each secondary, create a master key and import the certificate and private key copied from the primary.
+
 ```sql
--- On each secondary
 CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'StrongMasterKeyP@ss!';
 
 CREATE CERTIFICATE dbm_cert
@@ -225,7 +229,7 @@ CREATE CERTIFICATE dbm_cert
 CREATE AVAILABILITY GROUP [project_ag]
 WITH (
     CLUSTER_TYPE = EXTERNAL,
-    DB_FAILOVER = ON,          -- auto-failover on critical DB errors
+    DB_FAILOVER = ON,
     REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT = 1
 )
 FOR REPLICA ON
@@ -252,10 +256,9 @@ FOR REPLICA ON
     );
 ```
 
-> [!info] Synchronized Secondary Commitment
+> [!info] REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT
 >
-> REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT = 1.
-> The primary will not acknowledge a commit until at least 1 synchronous secondary has hardened the log. This prevents data loss during failover but means if both synchronous secondaries go down, the primary stops accepting writes.
+> Setting this to 1 means the primary will not acknowledge a commit until at least 1 synchronous secondary has hardened the log. This prevents data loss during failover but means if both synchronous secondaries go down, the primary stops accepting writes. `DB_FAILOVER = ON` triggers automatic failover when a critical database error (such as corruption) is detected. Available since SQL Server 2017.
 
 > [!tip] SEEDING_MODE = AUTOMATIC
 >
@@ -265,8 +268,9 @@ FOR REPLICA ON
 
 #### Join each secondary to the AG and grant seeding permission
 
+Run on each secondary. `GRANT CREATE ANY DATABASE` allows automatic seeding to create the database on the secondary.
+
 ```sql
--- On each secondary
 ALTER AVAILABILITY GROUP [project_ag] JOIN WITH (CLUSTER_TYPE = EXTERNAL);
 ALTER AVAILABILITY GROUP [project_ag] GRANT CREATE ANY DATABASE;
 ```
@@ -286,7 +290,6 @@ The database must be in FULL recovery model. If it's in SIMPLE:
 ```sql
 ALTER DATABASE [analytics_db] SET RECOVERY FULL;
 BACKUP DATABASE [analytics_db] TO DISK = '/var/opt/mssql/backup/mydb_full.bak';
--- Then add to AG
 ALTER AVAILABILITY GROUP [project_ag] ADD DATABASE [analytics_db];
 ```
 
@@ -294,24 +297,20 @@ ALTER AVAILABILITY GROUP [project_ag] ADD DATABASE [analytics_db];
 
 #### Install Pacemaker, Corosync, and the SQL Server HA resource agent
 
+Install Pacemaker, Corosync, and the SQL Server HA resource agent on all nodes.
+
 ```bash
-# Install on all nodes
 sudo apt install -y pacemaker pacemaker-cli-utils corosync resource-agents fence-agents
-
-# Install the SQL Server HA resource agent
 sudo apt install -y mssql-server-ha
-
-# Create pacemaker login on each SQL Server
-# (SQL Server uses this to check health)
 ```
 
 #### Create the Pacemaker login in SQL Server on each node
 
+On each node, create a dedicated SQL login for Pacemaker health checks and grant it AG management permissions.
+
 ```sql
--- On each node
 CREATE LOGIN [pacemakerLogin] WITH PASSWORD = 'PacemakerP@ss!';
 
--- Grant the AG health check permission
 GRANT ALTER, CONTROL, VIEW DEFINITION ON AVAILABILITY GROUP::[project_ag]
     TO [pacemakerLogin];
 GRANT VIEW SERVER STATE TO [pacemakerLogin];
@@ -319,8 +318,9 @@ GRANT VIEW SERVER STATE TO [pacemakerLogin];
 
 #### Store Pacemaker credentials on each node
 
+Store the Pacemaker login credentials on each node in a file readable only by root.
+
 ```bash
-# Store credentials for the resource agent on each node
 echo 'pacemakerLogin' | sudo tee /var/opt/mssql/secrets/passwd
 echo 'PacemakerP@ss!' | sudo tee -a /var/opt/mssql/secrets/passwd
 sudo chmod 400 /var/opt/mssql/secrets/passwd
@@ -329,8 +329,9 @@ sudo chown root:root /var/opt/mssql/secrets/passwd
 
 #### Configure Corosync cluster membership (run on primary, sync to all nodes)
 
+Configure Corosync on the primary, then copy the configuration file to all other nodes.
+
 ```bash
-# Configure Corosync (on primary, then sync to all nodes)
 sudo cat > /etc/corosync/corosync.conf << 'EOF'
 totem {
     version: 2
@@ -366,8 +367,9 @@ sudo systemctl restart pacemaker
 
 #### Create the AG resource and virtual IP in Pacemaker (run on one node only)
 
+Create the AG resource, virtual IP, and colocation constraint. Run on one node only — Pacemaker propagates the configuration to all cluster members.
+
 ```bash
-# Create the AG resource in Pacemaker (run on one node only)
 sudo pcs resource create ag_cluster \
     ocf:mssql:ag \
     ag_name="project_ag" \
@@ -380,14 +382,12 @@ sudo pcs resource create ag_cluster \
     op monitor timeout=60s interval=11s on-fail=restart role=Promoted \
     master notify=true
 
-# Create a virtual IP resource for the AG listener
 sudo pcs resource create ag_vip \
     ocf:heartbeat:IPaddr2 \
     ip=10.132.0.100 \
     cidr_netmask=32 \
     op monitor interval=30s
 
-# Colocate the VIP with the primary
 sudo pcs constraint colocation add ag_vip with master ag_cluster-clone INFINITY
 sudo pcs constraint order promote ag_cluster-clone then start ag_vip
 ```
@@ -396,12 +396,13 @@ The virtual IP (`10.132.0.100`) floats between nodes — it's always assigned to
 
 > [!info] Use ILB Instead of Floating VIP
 >
-> GCP Internal Load Balancer Instead of Floating VIP.
-> GCP doesn't support Gratuitous ARP. An Internal TCP/UDP Load Balancer is often used instead of a floating VIP. Create an ILB with a health check on port 1433 and a backend instance group containing all AG nodes. The ILB forwards traffic only to the node that responds as primary. See [Internal Load Balancer instead of floating VIP](#internal-load-balancer-instead-of-floating-vip) below.
+> GCP does not support Gratuitous ARP, so a floating VIP may not work reliably. An Internal TCP/UDP Load Balancer is the recommended alternative. Create an ILB with a health check on port 1433 and a backend instance group containing all AG nodes. The ILB forwards traffic only to the node that responds as primary. See [GCP-Specific HA Considerations](#gcp-specific-ha-considerations) below.
 
 ---
 
 ## Monitoring the AG — Essential DMVs
+
+AG health is monitored through the `sys.dm_hadr_*` family of Dynamic Management Views. The primary health signals are the **log send queue** (how far behind the secondary is in receiving log blocks from the primary) and the **redo queue** (how far behind the secondary is in replaying received log blocks into database pages). A growing send queue increases RPO risk and can cause transaction log file growth on the primary. A growing redo queue increases recovery time after failover and increases read latency on readable secondaries.
 
 ### Replica State and Synchronization Health
 
@@ -477,8 +478,9 @@ ORDER BY d.name, ar.replica_server_name;
 
 #### Check seeding status when adding a new database or replica
 
+Run when adding a new database or replica to check progress and diagnose failures.
+
 ```sql
--- Check seeding status when adding a new database or replica
 SELECT
     ag.name                          AS ag_name,
     ar.replica_server_name           AS replica,
@@ -548,23 +550,26 @@ ORDER BY ag.name, ars.role_desc DESC, ar.replica_server_name;
 
 ## Failover Operations
 
+AG failover transfers the primary role from one replica to another. There are two types: **planned** (zero data loss, initiated by an administrator during maintenance) and **forced** (emergency, possible data loss, used when the primary is unreachable). In both cases, the failover command is run on the *target* secondary, not the current primary. Pacemaker can also drive automatic failover when it detects the primary node is down.
+
 ### Planned Failover (Zero Downtime, Zero Data Loss)
 
 Used for: OS patching, SQL Server upgrades, VM maintenance.
 
 #### Verify sync state and perform planned failover
 
+First, verify on the primary that the target secondary shows `SYNCHRONIZED` (not `SYNCHRONIZING`). Then run the FAILOVER command on the target secondary.
+
 ```sql
--- Step 1: Verify the target secondary is synchronized (run on primary)
 SELECT
     ar.replica_server_name,
     drs.synchronization_state_desc
 FROM sys.dm_hadr_database_replica_states drs
 JOIN sys.availability_replicas ar ON drs.replica_id = ar.replica_id
 WHERE drs.synchronization_state_desc = 'SYNCHRONIZED';
--- The target must show SYNCHRONIZED, not SYNCHRONIZING
+```
 
--- Step 2: Failover (run on the TARGET secondary, not the primary)
+```sql
 ALTER AVAILABILITY GROUP [project_ag] FAILOVER;
 ```
 
@@ -584,8 +589,9 @@ Used when: the primary is down and cannot be recovered quickly.
 
 #### Force failover on the target secondary
 
+Run on the secondary you want to promote. This command does not wait for the original primary and may lose transactions not yet hardened on this secondary.
+
 ```sql
--- Run on the secondary you want to promote
 ALTER AVAILABILITY GROUP [project_ag] FORCE_FAILOVER_ALLOW_DATA_LOSS;
 ```
 
@@ -598,7 +604,6 @@ ALTER AVAILABILITY GROUP [project_ag] FORCE_FAILOVER_ALLOW_DATA_LOSS;
 #### Rejoin the old primary as secondary after forced failover
 
 ```sql
--- On the old primary (now rejoining as secondary)
 ALTER AVAILABILITY GROUP [project_ag]
     SET (ROLE = SECONDARY);
 ALTER AVAILABILITY GROUP [project_ag] JOIN WITH (CLUSTER_TYPE = EXTERNAL);
@@ -609,10 +614,8 @@ If the databases diverged too much, you may need to drop the database on the old
 #### Drop and reseed the database on the old primary if diverged
 
 ```sql
--- On the old primary
 DROP DATABASE [analytics_db];
 ALTER AVAILABILITY GROUP [project_ag] GRANT CREATE ANY DATABASE;
--- Wait for automatic seeding to complete
 ```
 
 ### Pacemaker-Driven Failover
@@ -621,33 +624,34 @@ When Pacemaker detects the primary node is down (health check fails), it automat
 
 #### Check Pacemaker cluster status and failover history
 
+Check cluster status, failover history, and Pacemaker logs. A healthy cluster shows all nodes in the `Masters`/`Slaves` set with the VIP assigned to the current primary.
+
 ```bash
-# Check cluster status
 sudo pcs status
-
-# Expected healthy output:
-# Master/Slave Set: ag_cluster-clone [ag_cluster]
-#     Masters: [ analytics-sql-01 ]
-#     Slaves: [ analytics-sql-02 analytics-sql-03 ]
-# ag_vip    (ocf:heartbeat:IPaddr2):    Started analytics-sql-01
-
-# View failover history
 sudo pcs resource failcount show ag_cluster
-
-# View Pacemaker logs
 sudo journalctl -u pacemaker --since "1 hour ago" | grep -i failover
+```
+
+```text
+Master/Slave Set: ag_cluster-clone [ag_cluster]
+    Masters: [ analytics-sql-01 ]
+    Slaves: [ analytics-sql-02 analytics-sql-03 ]
+ag_vip    (ocf:heartbeat:IPaddr2):    Started analytics-sql-01
 ```
 
 ---
 
 ## Read-Only Routing
 
-Offload read queries (dashboard, reporting) to secondaries, leaving the primary free for writes.
+Read-only routing allows the AG listener to redirect connections that specify `ApplicationIntent=ReadOnly` to a secondary replica, offloading read workloads (dashboards, reporting) away from the primary. The routing decision happens at connection time: the client connects to the listener, SQL Server inspects the `ApplicationIntent` property, and if it is `ReadOnly`, the primary consults its `READ_ONLY_ROUTING_LIST` to select a secondary. By default the list is ordered (first available wins); to distribute connections round-robin, nest replicas in parentheses (available since SQL Server 2016).
+
+### Routing configuration
 
 #### Configure read-only routing URLs on each replica
 
+Configure `READ_ONLY_ROUTING_URL` on each replica and `READ_ONLY_ROUTING_LIST` on each replica's `PRIMARY_ROLE`.
+
 ```sql
--- Configure read-only routing URLs on each replica
 ALTER AVAILABILITY GROUP [project_ag]
 MODIFY REPLICA ON N'analytics-sql-01' WITH (
     PRIMARY_ROLE (
@@ -673,28 +677,28 @@ MODIFY REPLICA ON N'analytics-sql-02' WITH (
 
 #### Application connection strings
 
-```
-# Read-write (goes to primary)
+The `ApplicationIntent=ReadOnly` property tells SQL Server to route the connection to a secondary. If no readable secondary is available, it falls back to the primary.
+
+```text
 Server=analytics-sql-ag.internal,1433;Database=analytics_db;ApplicationIntent=ReadWrite;
 
-# Read-only (routed to a secondary)
 Server=analytics-sql-ag.internal,1433;Database=analytics_db;ApplicationIntent=ReadOnly;
 ```
 
-The `ApplicationIntent=ReadOnly` in the connection string tells SQL Server to route the connection to a secondary. If no readable secondary is available, it falls back to the primary.
-
 #### Verify read-only routing is working
 
+Run on a read-only connection. The result should show a secondary server name and `READ_ONLY`. If it shows the primary, routing is not working.
+
 ```sql
--- Run on a read-only connection to see which server you're on
 SELECT @@SERVERNAME AS connected_to,
        DATABASEPROPERTYEX(DB_NAME(), 'Updateability') AS updateability;
--- Should show a secondary name and 'READ_ONLY'
 ```
 
 ---
 
 ## Common HA Issues and Troubleshooting
+
+The five issues below cover the most common AG failures. Each includes a diagnosis query and a cause/fix table. For more detail on each issue, see [always-on-availability-groups](https://alp78.github.io/elysium/04-SQL-Server/High-Availability/always-on-availability-groups).
 
 ### Issue 1: Secondary Shows NOT SYNCHRONIZING
 
@@ -703,7 +707,6 @@ SELECT @@SERVERNAME AS connected_to,
 #### Check if data movement is suspended
 
 ```sql
--- Check if data movement is suspended
 SELECT
     ar.replica_server_name,
     drs.is_suspended,
@@ -730,7 +733,6 @@ The secondary is receiving log records faster than it can replay them.
 #### Measure redo catchup time
 
 ```sql
--- Check redo rate vs log send rate
 SELECT
     ar.replica_server_name,
     drs.redo_queue_size AS redo_queue_kb,
@@ -754,17 +756,14 @@ WHERE drs.redo_queue_size > 0;
 
 #### Diagnose Pacemaker resource state
 
+Check Pacemaker resource status, clean up failed actions, and verify quorum.
+
 ```bash
-# Check Pacemaker resource status
 sudo pcs status
 sudo pcs resource show ag_cluster
-
-# Check for failed actions
 sudo pcs resource cleanup ag_cluster
-
-# View detailed Pacemaker log
-sudo corosync-quorumtool -s  # quorum status
-sudo crm_mon -1              # one-shot cluster status
+sudo corosync-quorumtool -s
+sudo crm_mon -1
 ```
 
 #### Common causes
@@ -795,8 +794,9 @@ Two nodes both think they're the primary. This is the most dangerous HA failure.
 
 #### Detect split-brain by checking both nodes for PRIMARY role
 
+Run on both nodes — if both return a row with `role_desc = 'PRIMARY'`, the cluster is in a split-brain state.
+
 ```sql
--- Run on both nodes — if both say PRIMARY, you have split-brain
 SELECT
     ars.role_desc,
     ar.replica_server_name
@@ -836,14 +836,17 @@ ALTER ENDPOINT [Hadr_endpoint]
 
 ## Performance Tuning for HA
 
+AG performance is bounded by how fast the primary can send transaction log records to secondaries and how fast they can harden and redo them. All log transport flows through a single database mirroring endpoint per instance — this is the scaling bottleneck when many databases or AGs share the same instance.
+
 ### Log Send Throughput
 
 The AG's performance is bounded by how fast the primary can send transaction log to secondaries and how fast they can harden + redo it.
 
 #### Monitor log send and redo rates with commit lag
 
+Monitor log send and redo rates over time. A persistent gap between `log_send_rate` and `redo_rate` indicates the secondary cannot replay log records as fast as they arrive.
+
 ```sql
--- Monitor log send and redo rates over time
 SELECT
     ar.replica_server_name,
     drs.log_send_queue_size / 1024.0      AS log_send_queue_mb,
@@ -874,12 +877,9 @@ Every write transaction on the primary must wait for at least one synchronous se
 
 #### Check the required sync secondaries setting
 
-```sql
--- Measure the impact: compare commit time on primary
--- with and without REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT
--- (don't do this in production — for testing only)
+Check the current setting. Changing this value affects commit latency and data loss protection — test in non-production environments.
 
--- Current setting
+```sql
 SELECT CAST(
     ag.required_synchronized_secondaries_to_commit AS INT
 ) AS required_sync
@@ -894,19 +894,22 @@ FROM sys.availability_groups ag;
 
 ## Backup Strategy with AGs
 
-Backups should run on a secondary to avoid I/O impact on the primary.
+Backups should run on a secondary to avoid I/O impact on the primary. SQL Server supports backup preference configuration at the AG level — you set which replicas are preferred for backups, and a built-in function (`sys.fn_hadr_backup_is_preferred_replica`) lets backup scripts check at runtime whether they should proceed or skip.
+
+### Backup preference configuration
 
 #### Set backup preference and priority on each replica
 
+Set the AG-level backup preference to prefer secondaries, then assign a priority to each replica (higher = more preferred, range 0-100).
+
 ```sql
--- Set backup preference: prefer secondary
 ALTER AVAILABILITY GROUP [project_ag]
 SET (AUTOMATED_BACKUP_PREFERENCE = SECONDARY);
 
 -- Configure which secondary is preferred for backups
 ALTER AVAILABILITY GROUP [project_ag]
 MODIFY REPLICA ON N'analytics-sql-02' WITH (
-    BACKUP_PRIORITY = 60  -- higher = more preferred (range 0-100)
+    BACKUP_PRIORITY = 60
 );
 ALTER AVAILABILITY GROUP [project_ag]
 MODIFY REPLICA ON N'analytics-sql-03' WITH (
@@ -916,15 +919,17 @@ MODIFY REPLICA ON N'analytics-sql-03' WITH (
 
 #### Check if this replica is the preferred backup replica
 
+Returns 1 if this replica is currently the preferred backup target. Use this in backup scripts to skip non-preferred replicas.
+
 ```sql
--- Returns 1 if this replica is the preferred backup replica
 SELECT sys.fn_hadr_backup_is_preferred_replica('analytics_db') AS is_preferred;
 ```
 
 #### Backup script that runs only on the preferred replica
 
+A wrapper script that checks whether this replica is the preferred backup target before running the backup. Deploy this as a cron job on every AG node.
+
 ```bash
-# Backup script wrapper
 #!/bin/bash
 IS_PREFERRED=$(sqlcmd -S localhost -U sa -P "$SA_PASSWORD" -Q \
     "SET NOCOUNT ON; SELECT sys.fn_hadr_backup_is_preferred_replica('analytics_db')" \
@@ -949,14 +954,17 @@ fi
 
 ## GCP-Specific HA Considerations
 
+GCP's networking model differs from on-premises and other clouds in ways that affect AG deployment. The three key considerations are: using an Internal Load Balancer instead of a floating VIP (GCP does not support Gratuitous ARP), cross-zone placement for zone-level fault tolerance, and persistent disk snapshots as an additional recovery layer.
+
 ### Internal Load Balancer Instead of Floating VIP
 
 GCP doesn't support Gratuitous ARP, so traditional floating VIPs don't work reliably. Use an Internal TCP Load Balancer instead:
 
 #### Create the GCP Internal Load Balancer for the AG listener
 
+Create a TCP health check, an unmanaged instance group containing all AG nodes, a backend service, and a forwarding rule. The forwarding rule IP becomes the AG listener VIP.
+
 ```bash
-# Create health check that identifies the primary
 gcloud compute health-checks create tcp ag-health-check \
     --port=1433 \
     --check-interval=5s \
@@ -964,14 +972,12 @@ gcloud compute health-checks create tcp ag-health-check \
     --unhealthy-threshold=2 \
     --healthy-threshold=2
 
-# Create instance group with all AG nodes
 gcloud compute instance-groups unmanaged create analytics-ag-group \
     --zone=europe-west1-b
 gcloud compute instance-groups unmanaged add-instances analytics-ag-group \
     --instances=analytics-sql-01,analytics-sql-02,analytics-sql-03 \
     --zone=europe-west1-b
 
-# Create backend service
 gcloud compute backend-services create analytics-ag-backend \
     --protocol=TCP \
     --health-checks=ag-health-check \
@@ -982,7 +988,6 @@ gcloud compute backend-services add-backend analytics-ag-backend \
     --instance-group-zone=europe-west1-b \
     --region=europe-west1
 
-# Create forwarding rule (this is the VIP)
 gcloud compute forwarding-rules create analytics-ag-ilb \
     --load-balancing-scheme=INTERNAL \
     --network=default \
@@ -997,8 +1002,9 @@ For the health check to route only to the primary, create a custom health check 
 
 #### Stored procedure that returns success only when called on the primary
 
+The stored procedure returns success only when called on the current primary. The ILB health check calls this — only the primary passes, so the ILB routes traffic exclusively to it.
+
 ```sql
--- Create a stored procedure that returns HTTP 200 only on primary
 CREATE OR ALTER PROCEDURE dbo.usp_ag_health_check
 AS
 BEGIN
@@ -1032,14 +1038,14 @@ Even with AG, schedule periodic disk snapshots of the secondary:
 
 #### Weekly snapshot with 4-week retention
 
+Snapshot the secondary's data disk weekly and retain the last 4 snapshots.
+
 ```bash
-# Snapshot the secondary's data disk weekly
 gcloud compute disks snapshot analytics-sql-02-data \
     --zone=europe-west1-c \
     --snapshot-names="analytics-sql-weekly-$(date +%Y%m%d)" \
     --storage-location=europe-west1
 
-# Retention: keep 4 weekly snapshots
 gcloud compute snapshots list \
     --filter="name~'analytics-sql-weekly'" \
     --sort-by=~creationTimestamp \
@@ -1050,6 +1056,8 @@ gcloud compute snapshots list \
 ---
 
 ## Maintenance Checklist
+
+A structured maintenance schedule ensures AG health is continuously verified and issues are caught before they cause outages. Automate the daily checks via SQL Agent jobs or external monitoring (Datadog, Prometheus); perform weekly and monthly checks manually during maintenance windows.
 
 ### Daily (Automated)
 
@@ -1081,7 +1089,7 @@ gcloud compute snapshots list \
 
 ---
 
-### Related
+## Related
 
 - [tde-encryption](https://alp78.github.io/elysium/04-SQL-Server/Security/tde-encryption) — Transparent Data Encryption for data-at-rest protection of AG databases
 - [sql-server-authentication](https://alp78.github.io/elysium/04-SQL-Server/Security/sql-server-authentication) — Service account hardening and SQL Server login security

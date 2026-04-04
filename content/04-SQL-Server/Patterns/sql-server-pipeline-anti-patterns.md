@@ -11,7 +11,7 @@ tags:
 aliases: [Anti-Patterns, Pipeline Mistakes, SQL Server Gotchas, Common Mistakes]
 description: "A dedicated anti-pattern reference for SQL Server data pipelines — 20+ mistakes that cause incidents, data quality issues, or performance crises, with the fix for each."
 created: 2026-03-29
-updated: 2026-03-29
+updated: 2026-04-04
 status: complete
 ---
 
@@ -29,6 +29,8 @@ Each anti-pattern follows the same structure: what it looks like, why people do 
 ---
 
 ## Loading Anti-Patterns
+
+Mistakes in how data enters SQL Server — wrong method, wrong transaction scope, or wrong assumptions about what the loader does silently.
 
 ### Row-by-Row INSERT in a Loop — the #1 performance killer
 
@@ -123,11 +125,13 @@ COMMIT;
 
 ## Schema Anti-Patterns
 
+Mistakes in table design and organization that make debugging harder, permissions impossible, and bulk loads slower.
+
 ### Everything in dbo — no isolation, no permissions
 
 > [!warning] Default Schema Trap
 >
-> Tables created without specifying a schema land in `dbo`. Mixing raw, cleaned, and gold tables in `dbo` makes layer-specific permissions impossible and forces `raw_`, `stg_`, `dim_` prefixes.
+> `dbo` (database owner) is SQL Server's default schema — every table created without an explicit `CREATE TABLE myschema.tablename` lands in `dbo` automatically. Mixing raw, cleaned, and gold tables in a single schema makes layer-specific permissions impossible and forces naming-convention prefixes (`raw_`, `stg_`, `dim_`) as a poor substitute for real isolation.
 
 **The fix:** use schema-per-layer (`bronze`, `silver`, `gold`). See [sql-server-schema-layering](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-schema-layering).
 
@@ -169,6 +173,8 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 
 ## Query Anti-Patterns
 
+Mistakes in how queries are written that kill index performance, introduce dirty reads, or force row-by-row processing instead of set-based operations.
+
 ### SELECT * in ETL Pipelines — breaks on schema change
 
 > [!warning] SELECT * Is Fragile
@@ -185,7 +191,7 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 
 > [!warning] Implicit Conversion = Table Scan
 >
-> `WHERE varchar_column = 123` forces SQL Server to convert every row's `varchar_column` to `INT` for comparison, preventing index seeks. The query plan shows a CONVERT_IMPLICIT warning.
+> An **implicit type conversion** occurs when SQL Server encounters a comparison between two different data types (e.g., a `VARCHAR` column compared to an `INT` literal) and must automatically convert one to the other. Because the conversion is applied to every row in the column — not to the literal — the engine cannot use the index's **B-tree** (the balanced tree structure that stores index keys in sorted order, enabling binary-search-like navigation from root → intermediate → leaf pages) to navigate directly to matching values. `WHERE varchar_column = 123` converts every row's `varchar_column` to `INT`, forcing a full table scan. The **execution plan** (the step-by-step recipe the optimizer builds to execute a query — viewable in SSMS with `SET STATISTICS XML ON` or `Ctrl+M`) shows a `CONVERT_IMPLICIT` warning.
 
 **The fix:** match types exactly. `WHERE varchar_column = '123'`. See [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries) for the full list of index-killing patterns.
 
@@ -197,11 +203,11 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 
 > [!danger] NOLOCK Reads Uncommitted Data
 >
-> `WITH (NOLOCK)` / `READ UNCOMMITTED` can read rows from transactions that will roll back, partially written pages, or rows that are being moved by an index rebuild. For dashboards and reports, this means displaying data that never actually existed.
+> `WITH (NOLOCK)` / `READ UNCOMMITTED` can read rows from transactions that will roll back, partially written pages, or rows that are being moved by an index rebuild. For dashboards and reports, this means displaying data that never actually existed. In severe cases, SQL Server raises **error 605** (severity 12) — a formal dirty-read corruption event where a transaction reads a row that never existed in the database.
 
 **Why people do it:** it "fixes" blocking without changing the application.
 
-**The fix:** enable RCSI (`ALTER DATABASE SET READ_COMMITTED_SNAPSHOT ON`). Readers get a consistent snapshot without blocking writers. See [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) for the RCSI setup.
+**The fix:** enable **RCSI (Read Committed Snapshot Isolation)** — a database-level setting that stores row versions in **TempDB's** version store. TempDB is SQL Server's shared system database used for temporary tables, sort spills, hash spills, and row versioning — it is recreated empty on every server restart. Readers see the last committed version of each row without taking shared locks, eliminating reader/writer blocking without risking dirty reads. See [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) for the RCSI setup.
 
 > [!success] Enable RCSI for consistent reads without `NOLOCK`
 >
@@ -211,7 +217,9 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 
 > [!warning] Cursors Are Row-by-Row
 >
-> A DECLARE CURSOR / FETCH NEXT loop processes one row at a time, defeating SQL Server's set-based optimizer. A 1M-row cursor transform can be 100x slower than the equivalent set-based query.
+> A `DECLARE CURSOR` / `FETCH NEXT` loop processes one row at a time, defeating SQL Server's **set-based** query optimizer. Set-based processing means the engine evaluates entire sets of rows in a single operation, choosing optimal strategies (hash joins, merge joins, parallelism across CPU cores) based on the data volume and available indexes. A cursor forces sequential, single-row processing — the optimizer cannot parallelize or batch the work. A 1M-row cursor transform can be 100x slower than the equivalent set-based query.
+
+**Why it's so much slower (measured):** updating 100 rows one at a time in a `WHILE` loop requires ~200 page reads and 100 separate execution plans. The equivalent set-based `UPDATE ... WHERE id <= 100` requires ~5 reads and 1 plan. SQL Server reads data in 8 KB pages — row-by-row iteration incurs full page reads for every individual operation regardless of row size. A common cursor variant is using `SCOPE_IDENTITY()` in a loop to capture generated keys — replace with `INSERT ... OUTPUT INSERTED.id INTO @temp` to retrieve all keys in a single set operation.
 
 **The fix:** rewrite as a single set-based INSERT/UPDATE with JOINs, window functions, or CTEs.
 
@@ -219,11 +227,23 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 >
 > Rewrite cursor logic as a single `INSERT INTO target SELECT … FROM source JOIN …` statement. SQL Server processes the entire set in one optimized operation, using parallelism and index seeks instead of row-by-row loops.
 
+> [!info] Why set-based matters: how the optimizer chooses join strategies
+>
+> When you write a set-based `JOIN`, the query optimizer picks the most efficient **physical join operator** based on data volume, available indexes, and memory:
+>
+> - **Nested Loop Join:** for each row in the outer (smaller) table, seeks into the inner table's index. Best when the outer set is small and the inner table has a supporting index. Cost: `O(outer × index_seek)`. Zero startup cost, no memory grant needed, and the only join type that works for non-equijoins (range conditions, `CROSS JOIN`).
+> - **Merge Join:** reads both inputs sorted on the join key and walks them in parallel. Requires both sides pre-sorted (from a clustered index or an explicit sort). Best for large, pre-sorted datasets. Cost: `O(n + m)` — linear. Caveat: if both inputs have duplicate join keys (**many-to-many**), the engine materializes duplicates into a worktable in TempDB, adding I/O overhead.
+> - **Hash Join:** builds a hash table in memory from the smaller input (the "build" side), then probes it with the larger input. This is a **blocking operator** during the build phase — no results flow until the entire build side is hashed. Requires a **memory grant** proportional to the build side's size; if the build side exceeds the grant, the hash table **spills to TempDB** (grace hash → recursive hash), degrading performance dramatically. Best for large unsorted datasets where no index exists on the join key.
+>
+> A cursor bypasses all three strategies — it forces the equivalent of a nested loop with no index seek (a full scan per row), which is the worst possible execution path. The optimizer cannot choose a better strategy because it never sees the full set.
+
 ### Non-SARGable Date Filters — index-killing date functions
+
+A predicate is **SARGable** (Search ARGument able) when it can be evaluated using an index seek — the engine navigates the B-tree directly to the matching rows. Wrapping a column in a function (`YEAR(date)`, `CAST(date AS DATE)`, `ISNULL(col, 0)`) makes the predicate non-SARGable because the function output is not stored in the index.
 
 > [!warning] Functions on Columns Prevent Index Seeks
 >
-> `WHERE YEAR(signal_date) = 2025` applies `YEAR()` to every row, preventing an index seek on `signal_date`. The query scans the entire table.
+> `WHERE YEAR(signal_date) = 2025` applies `YEAR()` to every row, converting an index seek into a full table scan. The engine cannot use the `signal_date` index because it stores date values, not the output of `YEAR()`.
 
 **The fix:** use range predicates. `WHERE signal_date >= '2025-01-01' AND signal_date < '2026-01-01'`. See [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/T-SQL/sargable-queries) for more examples.
 
@@ -234,6 +254,8 @@ Keeping bronze, silver, and gold tables in the same schema with naming prefixes 
 ---
 
 ## Change Tracking Anti-Patterns
+
+Mistakes in how data history is managed — overwriting instead of versioning, missing integrity constraints, and incorrect comparisons on NULLable or floating-point columns.
 
 ### Overwriting History in Place — destroyed audit trail
 
@@ -296,17 +318,19 @@ WHERE old_sector IS DISTINCT FROM new_sector
 
 ## Concurrency Anti-Patterns
 
+Mistakes that cause blocking, deadlocks, or race conditions — usually from misunderstanding how SQL Server's lock manager and isolation levels interact with long-running pipeline operations.
+
 ### Long-Running Transactions During Business Hours
 
 > [!warning] Lock Escalation
 >
-> A transform that processes millions of rows in a single transaction can trigger lock escalation (>5,000 row locks → table lock), blocking every other query on the table — including dashboard reads.
+> **Lock escalation** occurs when either of two thresholds is reached: (1) a single statement acquires more than **5,000 locks on a single table reference** (checked every 1,250 newly acquired locks), or (2) lock memory exceeds **24% of the buffer pool**. SQL Server replaces row/page locks with a single **table-level lock** (never a page-level lock — escalation always goes directly to table). A transform that processes millions of rows in a single transaction triggers this, converting row locks into an exclusive table lock that blocks every other query — including dashboard reads.
 
 **The fix:** batch large transforms into chunks (e.g., 10K rows per transaction). Or schedule heavy transforms during off-hours. See [blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/blocking-and-locking) for lock escalation thresholds.
 
 > [!success] Batch large transforms into chunks of 10K rows or fewer
 >
-> Process updates in a `WHILE` loop with `TOP (10000)` per transaction and a short `COMMIT` between each batch. This keeps the row lock count below the 5,000-lock escalation threshold and releases locks frequently, allowing concurrent dashboard reads.
+> Process updates in a `WHILE` loop with `TOP (10000)` per transaction and a short `COMMIT` between each batch. This keeps the row lock count below the 5,000-lock escalation threshold and releases locks frequently, allowing concurrent dashboard reads. For partitioned tables, set `ALTER TABLE SET (LOCK_ESCALATION = AUTO)` — this escalates to partition-level locks instead of table-level, allowing concurrent writes to different partitions. Monitor escalation pressure with `sys.dm_db_index_operational_stats` (`index_lock_promotion_attempt_count`, `index_lock_promotion_count`).
 
 ### MERGE Without Proper Locking Hints — race conditions
 
@@ -314,27 +338,29 @@ WHERE old_sector IS DISTINCT FROM new_sector
 >
 > Two concurrent MERGE statements can both evaluate `WHEN NOT MATCHED` for the same key and both INSERT — creating duplicates. MERGE does not take an exclusive lock on "not found" keys by default.
 
-**The fix:** add `WITH (HOLDLOCK)` on the target table, or serialize MERGE operations. See [race-conditions](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/race-conditions) for the full analysis.
+**The fix:** add `WITH (HOLDLOCK)` on the target table, or serialize MERGE operations. `HOLDLOCK` is equivalent to `SERIALIZABLE` isolation for that table reference — it holds range locks on the matched key set until the end of the transaction, preventing phantom inserts by other sessions. See [race-conditions](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/race-conditions) for the full analysis.
 
 > [!success] Add `WITH (HOLDLOCK)` to the MERGE target table
 >
-> `MERGE silver.signals_daily WITH (HOLDLOCK) AS target USING …` — `HOLDLOCK` holds a range lock on the matched key set for the duration of the statement, preventing a concurrent MERGE from inserting the same key simultaneously.
+> `MERGE silver.signals_daily WITH (HOLDLOCK) AS target USING …` �� `HOLDLOCK` acquires **range locks** on the matched key range. A range lock covers both existing key values and the gaps between them in the B-tree index, preventing **phantom inserts** — rows that appear in a range between two reads of the same query because another session inserted them into the gap. Without range locks, a concurrent session can insert a new key between the MERGE's "not found" check and its INSERT, creating the duplicate.
 
 ### No Retry Logic for Deadlocks — pipeline fails on transient errors
 
 > [!warning] Deadlocks Are Normal
 >
-> In a concurrent system, deadlocks happen. SQL Server kills one transaction (victim) and continues the other. Without retry logic, the killed pipeline run fails permanently instead of retrying.
+> A **deadlock** occurs when two transactions each hold a lock the other needs, forming a circular wait that can never resolve on its own. SQL Server's lock monitor detects this within 5 seconds and kills one transaction (the "deadlock victim", chosen by cost) so the other can proceed. Without retry logic, the killed pipeline run fails permanently instead of retrying on the next attempt.
 
 **The fix:** catch error 1205 and retry with exponential backoff (3 attempts, 1s/2s/4s delay). See [deadlock-detection-and-prevention](https://alp78.github.io/elysium/04-SQL-Server/Concurrency/deadlock-detection-and-prevention) for C# and Python retry patterns.
 
 > [!success] Catch error 1205 and retry with exponential backoff
 >
-> Wrap the database call in a retry loop that catches `pyodbc.Error` with SQL state `40001` (deadlock victim) and retries up to 3 times with delays of 1s, 2s, and 4s. Most deadlocks resolve on the first retry.
+> Wrap the database call in a retry loop that catches `pyodbc.Error` with SQL state `40001` (deadlock victim) and retries up to 3 times with delays of 1s, 2s, and 4s. Most deadlocks resolve on the first retry. To diagnose recurring deadlocks, query the **system_health** Extended Events session (enabled by default on every instance) — it captures deadlock graphs automatically via the `xml_deadlock_report` event, accessible in SSMS under Management → Extended Events → Sessions → system_health. No upfront tracing configuration needed.
 
 ---
 
 ## Performance Anti-Patterns
+
+Mistakes that turn fast queries into slow ones — usually from missing indexes, stale statistics, or unnecessary recomputation.
 
 ### Window Functions Without Supporting Indexes — TempDB spill
 
@@ -356,12 +382,28 @@ Recomputing gold tables from all of silver on every run is wasteful once the tab
 
 ### Missing Statistics on Filtered Indexes
 
-Filtered indexes (e.g., `WHERE is_current = 1`) have their own statistics. If these statistics are stale or missing, the optimizer underestimates cardinality and chooses a bad plan (e.g., scan instead of seek).
+**Statistics** are metadata objects that describe the distribution of values in an index or column — essentially a histogram of how data is spread. The query optimizer reads statistics to estimate how many rows a predicate will return (**cardinality estimation**), which determines the execution plan. Stale statistics mean wrong cardinality estimates, which mean wrong plans (e.g., a full scan when a seek would be faster). Filtered indexes (e.g., `WHERE is_current = 1`) have their own separate statistics that only reflect the filtered subset. If these are stale or missing, the optimizer underestimates cardinality for queries against the filtered index and chooses a suboptimal plan.
 
 **The fix:** `UPDATE STATISTICS silver.index_dim UX_silver_index_dim_current` after significant data changes. Or enable auto-stats: `ALTER DATABASE SET AUTO_UPDATE_STATISTICS ON`.
+
+### Parameter Sniffing in ETL Stored Procedures — wrong plan for the wrong batch size
+
+**Parameter sniffing** is SQL Server's behavior of reading the actual parameter values passed to a stored procedure at the time of **first compilation** and building an execution plan optimized for those specific values. The plan is then cached and reused for all subsequent executions, regardless of what parameters they pass.
+
+> [!danger] Plan Compiled for 10 Rows, Executed for 10 Million
+>
+> A staging load stored proc first compiled for a small batch (10 rows) produces a nested loop plan. A later full-load call with 10M rows reuses that plan — nested loops on 10M rows is catastrophically slow. Conversely, if first compiled during a full load, the hash join plan wastes memory grants on every subsequent small incremental call.
+
+This is especially common in medallion-architecture pipelines where the same stored proc handles both small incremental loads and large backfills.
+
+> [!success] Use `OPTION (RECOMPILE)` on variable-volume ETL statements
+>
+> For batch ETL stored procedures where data volume varies significantly between runs, add `OPTION (RECOMPILE)` to the critical `INSERT` or `MERGE` statement. This forces the optimizer to build a fresh plan using the current parameter values on every execution — eliminating the risk of a cached plan optimized for the wrong batch size. The per-execution compile cost is negligible for batch jobs that run minutes apart.
+>
+> On SQL Server 2022+ (compat level 160), **Parameter Sensitive Plan (PSP) Optimization** handles this automatically: the optimizer creates multiple plan variants (one per cardinality range) and routes each execution to the correct variant at runtime. Enable Query Store to monitor variant selection.
 
 ### Too Many Indexes on High-Write Staging Tables
 
 Every index on a staging table must be maintained on every INSERT during the bulk load. A staging table with 5 non-clustered indexes is 5x more expensive to load than one with zero.
 
-**The fix:** drop indexes on staging tables before bulk load, recreate after. Or use a heap (no clustered index) for staging tables that are always truncated and reloaded.
+**The fix:** drop indexes on staging tables before bulk load, recreate after. Or use a **heap** — a table with no clustered index, where rows are stored in no particular order. Heaps are faster for bulk inserts (no B-tree maintenance) but slower for reads (no sort order to exploit). This makes them ideal for staging tables that are always truncated and reloaded.

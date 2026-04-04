@@ -1,9 +1,9 @@
 ---
-tags: [python, sql, sql-server, tsql, medallion-project]
+tags: [sql, sql-server, tsql, medallion-project]
 aliases: [Gold Layer, Gold Transforms, Silver to Gold, Gold DDL, Scoring Tables, Pre-computed Analytics, Factor Scores]
 description: "Complete SQL and Python patterns for the example gold layer — covers all gold table DDL, z-score computation, financial health flags, governance scoring, cap-weighted index performance, moving average CTEs, and dashboard consumption queries."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-04
 status: complete
 ---
 
@@ -34,13 +34,15 @@ The gold layer contains pre-computed analytics scores ready for dashboard consum
 
 ## Gold Table DDL
 
-File: `db/ddl/gold_schema.sql`
+Gold tables are denormalized and consumption-ready — a single `SELECT *` returns everything the dashboard needs, with no joins. Each table follows a `DELETE + INSERT` refresh pattern: stale rows for the target date are deleted, then new scored rows are inserted. This makes every pipeline run idempotent — re-running produces the same result. All gold DDL lives in `db/ddl/gold_schema.sql` and uses the same `IF NOT EXISTS` idempotent pattern as bronze and silver.
 
 ### gold.scores_daily — Factor Scores
 
 Stores relative value, momentum, sentiment, and composite factor scores for each stock per day. Also includes SMA-based price metrics computed from OHLCV.
 
 #### CREATE TABLE gold.scores_daily — factor scores DDL
+
+The table stores four factor score groups plus OHLCV-derived price metrics. **Relative value** z-scores measure how cheap a stock is relative to its sector peers — `pe_zscore`, `pb_zscore`, and `ev_ebitda_zscore` are inverted (multiplied by -1) so that lower valuations produce positive scores; `yield_zscore` is not inverted because higher dividend yield is already desirable. `relative_value_score` is the row-wise average of the four z-scores, and `relative_value_rank` ranks stocks within the index (1 = cheapest). **Momentum** captures trend strength: `relative_strength` (52-week return minus benchmark return), SMA ratios (price divided by 50-day and 200-day moving averages — above 1.0 means the price is above its average), and distance from 52-week high. **Analyst sentiment** includes `implied_upside` ((target price / current price) - 1), `recommendation_mean` (1 = Strong Buy through 5 = Strong Sell), and a `price_falling_analysts_bullish` divergence flag (`BIT`) that fires when the price is declining but analysts remain bullish. **Composite** is the equal-weighted average of value, momentum, and sentiment scores. The OHLCV-derived columns (SMA 30/90, price changes, `index_weight` as market cap divided by sum of all market caps) are denormalized here to avoid joins in dashboard queries. `_scored_at` records when the scoring pipeline ran.
 
 ```sql
 CREATE TABLE gold.scores_daily (
@@ -50,43 +52,38 @@ CREATE TABLE gold.scores_daily (
     score_date                  DATE            NOT NULL,
     sector                      NVARCHAR(100),
 
-    -- Relative Value (z-scores, inverted: cheap = positive)
-    pe_zscore                   FLOAT,           -- P/E z-score within sector
-    pb_zscore                   FLOAT,           -- P/B z-score
-    ev_ebitda_zscore            FLOAT,           -- EV/EBITDA z-score
-    yield_zscore                FLOAT,           -- dividend yield z-score (not inverted)
-    relative_value_score        FLOAT,           -- composite of above 4
-    relative_value_rank         SMALLINT,        -- rank within index (1 = cheapest)
+    pe_zscore                   FLOAT,
+    pb_zscore                   FLOAT,
+    ev_ebitda_zscore            FLOAT,
+    yield_zscore                FLOAT,
+    relative_value_score        FLOAT,
+    relative_value_rank         SMALLINT,
 
-    -- Momentum
-    relative_strength           FLOAT,           -- 52w return vs benchmark
-    sma_50_ratio                FLOAT,           -- price / 50-day MA
-    sma_200_ratio               FLOAT,           -- price / 200-day MA
-    dist_from_52w_high          FLOAT,           -- how far below 52-week high
+    relative_strength           FLOAT,
+    sma_50_ratio                FLOAT,
+    sma_200_ratio               FLOAT,
+    dist_from_52w_high          FLOAT,
     momentum_score              FLOAT,
     momentum_rank               SMALLINT,
 
-    -- Analyst Sentiment
-    implied_upside              FLOAT,           -- (target / price) - 1
-    recommendation_mean         FLOAT,           -- 1-5 scale
-    price_falling_analysts_bullish BIT,          -- divergence flag
+    implied_upside              FLOAT,
+    recommendation_mean         FLOAT,
+    price_falling_analysts_bullish BIT,
     sentiment_score             FLOAT,
     sentiment_rank              SMALLINT,
 
-    -- Composite (average of value + momentum + sentiment)
     composite_score             FLOAT,
     composite_rank              SMALLINT,
 
-    -- From OHLCV (computed via SQL window functions)
-    sma_30_close                FLOAT,           -- 30-day moving average
-    sma_90_close                FLOAT,           -- 90-day moving average
+    sma_30_close                FLOAT,
+    sma_90_close                FLOAT,
     market_cap                  BIGINT,
-    index_weight                FLOAT,           -- market_cap / sum(market_cap)
+    index_weight                FLOAT,
     short_name                  NVARCHAR(200),
     country                     NVARCHAR(100),
     currency                    VARCHAR(10),
     current_price               FLOAT,
-    day_change_pct              FLOAT,           -- daily price change %
+    day_change_pct              FLOAT,
     five_day_change_pct         FLOAT,
     ytd_change_pct              FLOAT,
 
@@ -105,6 +102,8 @@ Stores quality z-scores, financial health flags, and governance (ISS) scores. Up
 
 #### CREATE TABLE gold.scores_quarterly — quarterly factor scores DDL
 
+The table stores three score groups. **Quality / Moat** z-scores measure profitability and capital efficiency within the sector: `gross_margin_zscore`, `roe_zscore` (return on equity), `operating_margin_zscore`, and `leverage_zscore` (inverted: lower debt-to-equity = positive score). `fcf_yield` is free cash flow divided by market cap — a metric that measures how much cash a company generates relative to its price; `fcf_yield_zscore` is its sector-normalized z-score. `quality_score` averages these into a composite, and `quality_rank` ranks within the index. **Financial health flags** are binary alerts (stored as `BIT`) that fire when a stock breaches predefined thresholds: `flag_liquidity` (current ratio below 1.0), `flag_leverage` (debt-to-equity above 200%), `flag_cashburn` (negative free cash flow), and `flag_double_decline` (both revenue and earnings growth negative simultaneously). `health_flags_count` (`TINYINT`, 0–4) totals the active flags, and `health_risk_level` maps the count to a text label: `'healthy'` (0), `'watch'` (1), `'warning'` (2), `'critical'` (3+). **Governance** stores the raw ISS risk scores (1–10, lower = better) and computes `governance_score` as `10 - avg(risk scores)` so that higher values mean better governance. `governance_vs_quality` measures the gap between governance and quality scores, surfacing stocks where good financials are paired with poor governance (or vice versa).
+
 ```sql
 CREATE TABLE gold.scores_quarterly (
     id                          INT IDENTITY(1,1) PRIMARY KEY,
@@ -113,34 +112,31 @@ CREATE TABLE gold.scores_quarterly (
     as_of_date                  DATE            NOT NULL,
     sector                      NVARCHAR(100),
 
-    -- Quality / Moat (z-scores within sector)
     gross_margin_zscore         FLOAT,
     roe_zscore                  FLOAT,
     operating_margin_zscore     FLOAT,
-    leverage_zscore             FLOAT,           -- inverted: lower D/E = positive
-    fcf_yield                   FLOAT,           -- free_cashflow / market_cap
+    leverage_zscore             FLOAT,
+    fcf_yield                   FLOAT,
     fcf_yield_zscore            FLOAT,
-    quality_score               FLOAT,           -- composite of above
+    quality_score               FLOAT,
     quality_rank                SMALLINT,
 
-    -- Financial Health Flags (binary alerts)
-    flag_liquidity              BIT,             -- current ratio < 1
-    flag_leverage               BIT,             -- D/E > 200%
-    flag_cashburn               BIT,             -- FCF < 0
-    flag_double_decline         BIT,             -- revenue AND margin both falling
-    health_flags_count          TINYINT,         -- count of active flags (0-4)
-    health_risk_level           VARCHAR(10),     -- 'healthy'/'watch'/'warning'/'critical'
+    flag_liquidity              BIT,
+    flag_leverage               BIT,
+    flag_cashburn               BIT,
+    flag_double_decline         BIT,
+    health_flags_count          TINYINT,
+    health_risk_level           VARCHAR(10),
 
-    -- Governance (ISS risk, 1-10 scale)
     overall_risk                FLOAT,
     audit_risk                  FLOAT,
     board_risk                  FLOAT,
     compensation_risk           FLOAT,
     shareholder_rights_risk     FLOAT,
-    governance_score            FLOAT,           -- 10 - avg(risk scores), higher = better
+    governance_score            FLOAT,
     governance_rank             SMALLINT,
-    beta                        FLOAT,           -- from daily signals
-    governance_vs_quality       FLOAT,           -- gap between governance and quality score
+    beta                        FLOAT,
+    governance_vs_quality       FLOAT,
 
     _scored_at                  DATETIME2       NOT NULL DEFAULT SYSUTCDATETIME()
 );
@@ -157,23 +153,23 @@ Stores cap-weighted index performance metrics: daily returns, rolling returns, v
 
 #### CREATE TABLE gold.index_performance — cap-weighted returns DDL
 
+This table stores one row per index per trading day, tracking index-level performance. **Cap-weighted returns** weight each stock's daily return by its market capitalization — larger companies have more influence on the index return, which is the standard methodology used by real-world indices like the S&P 500 and STOXX Europe 600. `daily_return` is the weighted average daily return across all stocks. `cumulative_factor` is the running product `(1 + r1)(1 + r2)...` from day one — multiplying any base value by this factor gives the total return since inception. Rolling returns (30-day, 90-day) and `ytd_return` are computed from cumulative factors over their respective windows. `rolling_30d_volatility` is the annualized standard deviation of daily returns over a 30-day window — a measure of how much the index fluctuates. **Cross-sectional aggregates** summarize the index's composition on each date: `stocks_count` (how many stocks had valid returns), and cap-weighted averages of P/E, P/B, and dividend yield.
+
 ```sql
 CREATE TABLE gold.index_performance (
     id                          INT IDENTITY(1,1) PRIMARY KEY,
     _index                      VARCHAR(20)     NOT NULL,
     perf_date                   DATE            NOT NULL,
 
-    -- Cap-weighted returns
-    daily_return                FLOAT,           -- weighted avg daily return across stocks
-    cumulative_factor           FLOAT,           -- (1 + r1)(1 + r2)... product from day 1
-    rolling_30d_return          FLOAT,           -- 30-day rolling total return
+    daily_return                FLOAT,
+    cumulative_factor           FLOAT,
+    rolling_30d_return          FLOAT,
     rolling_90d_return          FLOAT,
-    ytd_return                  FLOAT,           -- year-to-date cumulative return
-    rolling_30d_volatility      FLOAT,           -- annualized 30-day rolling std dev
+    ytd_return                  FLOAT,
+    rolling_30d_volatility      FLOAT,
 
-    -- Cross-sectional aggregates
-    stocks_count                SMALLINT,        -- number of stocks with valid returns
-    avg_pe                      FLOAT,           -- cap-weighted average P/E
+    stocks_count                SMALLINT,
+    avg_pe                      FLOAT,
     avg_pb                      FLOAT,
     avg_dividend_yield          FLOAT,
     avg_market_cap              BIGINT,
@@ -191,24 +187,18 @@ GO
 
 ## Gold Analytics Logic
 
-Z-score computation and composite scoring happens in Python/pandas (not SQL). The helper functions live in `transforms/_gold_utils.py`. SQL is used for data retrieval and the final write-back. For the pandas equivalents of the window functions used below (groupby, rolling averages, rank), see [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping).
+A z-score (also called a standard score) measures how many standard deviations a value lies from the mean of its group. The formula is `z = (value - group_mean) / group_std_dev`. A z-score of `+1.5` means the value is 1.5 standard deviations above the group average; `-2.0` means 2 standard deviations below. Z-scores are the foundation of all gold scoring because they make different metrics (P/E ratios, margins, yields) comparable on a common scale regardless of their original units or ranges.
+
+All z-score computation and composite scoring happens in Python/pandas, not SQL. The helper functions live in `transforms/_gold_utils.py`. SQL is used only for data retrieval and the final write-back. For the pandas equivalents of the window functions used below (groupby, rolling averages, rank), see [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping).
 
 ### Z-Score by Group (`_gold_utils.py`)
 
 #### zscore_by_group — standardize a column within sector/industry groups
 
+The function computes z-scores within groups (e.g., within each sector of an index). `group_cols` defines the grouping — typically `['_index', 'sector']` so that a Technology stock's P/E is compared only to other Technology stocks in the same index. `min_peers` (default 3) prevents unstable z-scores in small groups: if a sector has fewer than 3 stocks with non-null values, the z-score would be statistically meaningless, so it returns `NaN`. The `fallback_cols` parameter (e.g., `['_index']`) provides a wider grouping — if the sector is too small, the function falls back to computing the z-score across the entire index instead of returning `NaN`.
+
 ```python
-# _gold_utils.py — computes z-scores within groups (e.g. within sector)
-
 def zscore_by_group(df, col, group_cols, min_peers=3, fallback_cols=None):
-    """
-    Standardize a column within groups.
-    - group_cols: e.g. ['_index', 'sector'] — z-score PE within sector
-    - min_peers: need at least 3 stocks in a group (otherwise NaN)
-    - fallback_cols: if group is too small, fall back to broader group (e.g. ['_index'])
-
-    Formula: z = (value - group_mean) / group_std_dev
-    """
     def _z(s):
         valid = s.dropna()
         if len(valid) < min_peers:
@@ -217,7 +207,6 @@ def zscore_by_group(df, col, group_cols, min_peers=3, fallback_cols=None):
 
     result = df.groupby(group_cols)[col].transform(_z)
 
-    # If a sector has < 3 stocks, fall back to index-wide z-score
     if fallback_cols is not None:
         mask = result.isna() & df[col].notna()
         if mask.any():
@@ -231,30 +220,36 @@ def zscore_by_group(df, col, group_cols, min_peers=3, fallback_cols=None):
 
 #### Relative Value score — inverted P/E, P/B z-scores (cheap = positive)
 
+Valuation ratios like P/E are "lower is cheaper," but the scoring system uses "higher is better." The negation (`-`) inverts the z-score so that cheap stocks (low P/E relative to peers) get positive scores. Dividend yield is the exception — higher yield is already desirable, so it is not inverted. `nanmean` computes the row-wise average, ignoring `NaN` values so that a stock missing one ratio still gets a composite score from the remaining three.
+
 ```python
-df['pe_zscore']        = -zscore_by_group(df, 'forward_pe', ['_index', 'sector'])   # inverted
-df['pb_zscore']        = -zscore_by_group(df, 'price_to_book', ['_index', 'sector']) # inverted
-df['ev_ebitda_zscore'] = -zscore_by_group(df, 'ev_to_ebitda', ['_index', 'sector'])  # inverted
-df['yield_zscore']     =  zscore_by_group(df, 'dividend_yield', ['_index', 'sector']) # not inverted
-df['relative_value_score'] = nanmean(pe_z, pb_z, ev_z, yield_z)  # row-wise average
+df['pe_zscore']        = -zscore_by_group(df, 'forward_pe', ['_index', 'sector'])
+df['pb_zscore']        = -zscore_by_group(df, 'price_to_book', ['_index', 'sector'])
+df['ev_ebitda_zscore'] = -zscore_by_group(df, 'ev_to_ebitda', ['_index', 'sector'])
+df['yield_zscore']     =  zscore_by_group(df, 'dividend_yield', ['_index', 'sector'])
+df['relative_value_score'] = nanmean(pe_z, pb_z, ev_z, yield_z)
 ```
 
 #### Financial Health Flags — rules-based quality score (no z-scores)
 
+Health flags are binary (pass/fail) thresholds, not z-scores. Each flag fires when a stock breaches a fixed financial threshold. These thresholds are standard financial analysis heuristics: a current ratio below 1.0 means the company cannot cover its short-term obligations, debt-to-equity above 200% indicates heavy leverage, negative free cash flow means the company is consuming more cash than it generates, and simultaneous declines in both revenue and earnings signal a deteriorating business. The `health_risk_level` string maps flag counts to dashboard-ready severity labels.
+
 ```python
-df['flag_liquidity']      = current_ratio < 1        # can't cover short-term debts
-df['flag_leverage']       = debt_to_equity > 200      # over-leveraged (2x equity)
-df['flag_cashburn']       = free_cashflow < 0          # burning cash
-df['flag_double_decline'] = earnings_growth < 0 AND revenue_growth < 0  # both falling
+df['flag_liquidity']      = current_ratio < 1
+df['flag_leverage']       = debt_to_equity > 200
+df['flag_cashburn']       = free_cashflow < 0
+df['flag_double_decline'] = (earnings_growth < 0) & (revenue_growth < 0)
 df['health_flags_count']  = sum of above 4 flags (0-4)
 df['health_risk_level']   = {0: 'healthy', 1: 'watch', 2: 'warning', 3+: 'critical'}
 ```
 
 #### Governance Score — inverted ISS scale (higher = better)
 
+ISS (Institutional Shareholder Services) scores governance risk on a 1–10 scale where lower is better. The pipeline inverts this by subtracting the average risk score from 10, so that higher `governance_score` values mean better governance — consistent with all other gold scores where higher is better.
+
 ```python
 avg_risk = nanmean(overall_risk, audit_risk, board_risk, compensation_risk, shareholder_rights_risk)
-governance_score = 10.0 - avg_risk    # higher = better governance (inverted from ISS scale)
+governance_score = 10.0 - avg_risk
 ```
 
 ---
@@ -263,13 +258,15 @@ governance_score = 10.0 - avg_risk    # higher = better governance (inverted fro
 
 File: `ingestion/transforms/transform_scores_daily.py`
 
+This transform is the most complex in the pipeline. It reads the latest daily signals from silver, joins them with stock metadata from the SCD2 dimension, computes SMA and price change metrics from OHLCV via SQL window functions, then runs all z-score and composite scoring logic in pandas before writing the results to `gold.scores_daily`. The transform runs once per pipeline execution and scores all stocks for the most recent signal date.
+
 ### Step 1: Find the Latest Signal Date
 
 #### SELECT MAX(signal_date) — anchor date for all scoring
 
-```sql
--- transform_scores_daily.py (line 36)
+The transform first determines the most recent date for which silver has signal data. All subsequent queries filter to this single date, ensuring every stock is scored against the same point in time.
 
+```sql
 SELECT MAX(signal_date) FROM silver.signals_daily
 ```
 
@@ -279,37 +276,37 @@ SELECT MAX(signal_date) FROM silver.signals_daily
 
 #### JOIN signals + index_dim — pull latest signals with stock metadata
 
-```sql
--- transform_scores_daily.py (lines 45-58)
+This query joins `silver.signals_daily` with `silver.index_dim` to combine trading signals (prices, ratios, analyst targets) with company metadata (sector, name, country, currency). The `d.is_current = 1` filter ensures only the active SCD2 dimension record is used — if a stock recently changed sector, this join picks up the new sector classification. The `WHERE s.signal_date = ?` restricts to the anchor date from Step 1. All 15 signal columns plus 4 dimension columns are pulled into a pandas DataFrame for scoring.
 
-SELECT s._index,                    -- e.g. 'market_index'
-       s.symbol,                     -- e.g. 'ASML.AS'
-       s.signal_date,               -- e.g. '2025-03-05'
-       s.current_price,             -- current market price
-       s.forward_pe,                -- forward P/E ratio
-       s.price_to_book,             -- price-to-book
-       s.ev_to_ebitda,              -- enterprise value / EBITDA
-       s.dividend_yield,            -- annual yield
-       s.market_cap,                -- market cap
-       s.beta,                      -- systematic risk
-       s.fifty_two_week_change,     -- 52-week return
-       s.sandp_52_week_change,      -- benchmark 52-week return
-       s.fifty_day_average,         -- 50-day SMA
-       s.two_hundred_day_average,   -- 200-day SMA
-       s.dist_from_52_week_high,    -- distance from 52w high (negative)
-       s.target_median_price,       -- analyst target
-       s.recommendation_mean,       -- 1=Strong Buy ... 5=Strong Sell
-       s.upside_potential,          -- (target / price) - 1
-       d.sector,                    -- from silver.index_dim
-       d.short_name,                -- company short name
-       d.country,                   -- country of incorporation
-       d.currency                   -- trading currency
+```sql
+SELECT s._index,
+       s.symbol,
+       s.signal_date,
+       s.current_price,
+       s.forward_pe,
+       s.price_to_book,
+       s.ev_to_ebitda,
+       s.dividend_yield,
+       s.market_cap,
+       s.beta,
+       s.fifty_two_week_change,
+       s.sandp_52_week_change,
+       s.fifty_day_average,
+       s.two_hundred_day_average,
+       s.dist_from_52_week_high,
+       s.target_median_price,
+       s.recommendation_mean,
+       s.upside_potential,
+       d.sector,
+       d.short_name,
+       d.country,
+       d.currency
 FROM silver.signals_daily s
 JOIN silver.index_dim d
-    ON s._index = d._index           -- same index
-   AND s.symbol = d.symbol           -- same stock
-   AND d.is_current = 1              -- only active dimension records
-WHERE s.signal_date = ?              -- latest date only
+    ON s._index = d._index
+   AND s.symbol = d.symbol
+   AND d.is_current = 1
+WHERE s.signal_date = ?
 ```
 
 #### Sample result — signals joined with stock dimension
@@ -322,37 +319,34 @@ WHERE s.signal_date = ?              -- latest date only
 
 ### Step 3: Compute SMA 30/90 and Price Changes from OHLCV
 
-The most complex SQL in the transform — uses window functions and CTEs to compute moving averages and period returns in a single query.
+The most complex SQL in the transform — a three-CTE query that uses window functions to compute moving averages and period returns in a single pass, avoiding multiple table scans. This query runs once per index (e.g., against `silver.index_europe_ohlcv`).
 
 #### CTE with AVG() OVER — 30/90-day SMA, daily/5-day/YTD price changes
 
-```sql
--- transform_scores_daily.py (lines 179-221)
--- Runs once per index (e.g. silver.index_europe_ohlcv)
+The `ranked` CTE computes all per-row metrics in a single scan: `ROW_NUMBER()` assigns `rn=1` to the most recent date per symbol (used in the final `WHERE` to select only the latest row); `AVG() OVER (ROWS BETWEEN N PRECEDING AND CURRENT ROW)` computes N-day simple moving averages as a sliding window over the preceding N rows; `COUNT()` over the same window tracks how many rows actually fell within the window (a stock with only 20 days of history would have `cnt_30 = 20`, not 30); `LAG()` retrieves the close price from 1 and 5 trading days ago for change-percentage calculations.
 
+The `ytd` CTE finds the last trading day on or before January 1st of the current year using `DATEFROMPARTS(YEAR(GETDATE()), 1, 1)` — this is the YTD reference date. The `ytd_price` CTE joins back to `ranked` to get the actual close price on that reference date. The final `SELECT` uses `CASE WHEN cnt >= N` guards to return `NULL` if the window has insufficient data (a stock with only 10 days of history should not report a 30-day SMA). Division-by-zero is guarded by `CASE WHEN prev_close > 0`.
+
+```sql
 WITH ranked AS (
     SELECT symbol,
            date,
-           [close],                                              -- adjusted close price
+           [close],
 
-           -- Row numbering: rn=1 is the most recent date per symbol
            ROW_NUMBER() OVER (
                PARTITION BY symbol ORDER BY date DESC
            ) AS rn,
 
-           -- 30-day simple moving average (window of last 30 rows)
            AVG([close]) OVER (
                PARTITION BY symbol ORDER BY date
                ROWS BETWEEN 29 PRECEDING AND CURRENT ROW
            ) AS sma_30,
 
-           -- 90-day simple moving average
            AVG([close]) OVER (
                PARTITION BY symbol ORDER BY date
                ROWS BETWEEN 89 PRECEDING AND CURRENT ROW
            ) AS sma_90,
 
-           -- Count of rows in the window (to validate we have enough data)
            COUNT([close]) OVER (
                PARTITION BY symbol ORDER BY date
                ROWS BETWEEN 29 PRECEDING AND CURRENT ROW
@@ -363,17 +357,13 @@ WITH ranked AS (
                ROWS BETWEEN 89 PRECEDING AND CURRENT ROW
            ) AS cnt_90,
 
-           -- Previous day's close (for daily change %)
            LAG([close], 1) OVER (PARTITION BY symbol ORDER BY date) AS prev_close,
-
-           -- Close from 5 trading days ago (for 5-day change %)
            LAG([close], 5) OVER (PARTITION BY symbol ORDER BY date) AS close_5d_ago
 
     FROM silver.index_europe_ohlcv
     WHERE [close] IS NOT NULL
 ),
 
--- Find the last trading day of the previous year for YTD calculation
 ytd AS (
     SELECT symbol,
            MAX(CASE WHEN rn = 1 THEN [close] END) AS latest_close,
@@ -383,7 +373,6 @@ ytd AS (
     GROUP BY symbol
 ),
 
--- Get the actual close price on the YTD reference date
 ytd_price AS (
     SELECT y.symbol,
            r.[close] AS ytd_close
@@ -391,22 +380,21 @@ ytd_price AS (
     JOIN ranked r ON y.symbol = r.symbol AND r.date = y.ytd_date
 )
 
--- Final output: only the most recent row per symbol
 SELECT r.symbol,
-       CASE WHEN cnt_30 >= 30 THEN sma_30 END AS sma_30_close,      -- NULL if < 30 days of data
-       CASE WHEN cnt_90 >= 90 THEN sma_90 END AS sma_90_close,      -- NULL if < 90 days
+       CASE WHEN cnt_30 >= 30 THEN sma_30 END AS sma_30_close,
+       CASE WHEN cnt_90 >= 90 THEN sma_90 END AS sma_90_close,
        CASE WHEN prev_close > 0
-            THEN (r.[close] - prev_close) / prev_close               -- daily change %
+            THEN (r.[close] - prev_close) / prev_close
        END AS day_change_pct,
        CASE WHEN close_5d_ago > 0
-            THEN (r.[close] - close_5d_ago) / close_5d_ago           -- 5-day change %
+            THEN (r.[close] - close_5d_ago) / close_5d_ago
        END AS five_day_change_pct,
        CASE WHEN yp.ytd_close > 0
-            THEN (r.[close] - yp.ytd_close) / yp.ytd_close           -- YTD change %
+            THEN (r.[close] - yp.ytd_close) / yp.ytd_close
        END AS ytd_change_pct
 FROM ranked r
 LEFT JOIN ytd_price yp ON r.symbol = yp.symbol
-WHERE r.rn = 1          -- most recent date only
+WHERE r.rn = 1
 ```
 
 #### Sample result — SMA and price change metrics
@@ -421,10 +409,10 @@ WHERE r.rn = 1          -- most recent date only
 
 #### DELETE + INSERT by date — refresh daily factor scores
 
-```sql
--- transform_scores_daily.py (line 240)
+The write uses a `DELETE + INSERT` pattern rather than an upsert: all existing rows for the target `score_date` are deleted, then the freshly scored DataFrame is bulk-inserted. This is simpler and faster than row-by-row comparison for a date-partitioned table where every row changes on every run. The pattern is idempotent — re-running the transform for the same date produces identical results.
 
-DELETE FROM gold.scores_daily WHERE score_date = ?   -- e.g. '2025-03-05'
+```sql
+DELETE FROM gold.scores_daily WHERE score_date = ?
 
 INSERT INTO gold.scores_daily (
     _index, symbol, score_date, sector,
@@ -448,37 +436,38 @@ INSERT INTO gold.scores_daily (
 
 File: `ingestion/transforms/transform_scores_quarterly.py`
 
+This transform scores stocks on quality (profitability, capital efficiency), financial health (threshold-based flags), and governance (ISS risk scores). It reads the most recent quarterly fundamentals from silver, joins them with market cap and beta from daily signals, then computes z-scores and health flags in pandas before writing to `gold.scores_quarterly`.
+
 ### Step 1: Get Latest Quarterly Data Per Stock
 
 #### Correlated subquery MAX(quarter) — most recent quarter per stock
 
-```sql
--- transform_scores_quarterly.py (lines 38-53)
+The correlated subquery `WHERE q.as_of_date = (SELECT MAX(q2.as_of_date) ...)` selects only the most recent quarter for each `(_index, symbol)` pair. This is simpler than a `ROW_NUMBER()` approach when you only need the maximum value of one column. The join with `silver.index_dim` (filtered to `is_current = 1`) adds the stock's current sector classification for within-sector z-score grouping.
 
+```sql
 SELECT q._index,
        q.symbol,
        q.as_of_date,
-       q.gross_margins,               -- gross profit / revenue
-       q.operating_margins,           -- operating income / revenue
-       q.return_on_equity,            -- net income / equity
-       q.revenue_growth,              -- QoQ revenue change
-       q.earnings_growth,             -- QoQ earnings change
-       q.debt_to_equity,              -- total debt / equity (%)
-       q.current_ratio,               -- current assets / current liabilities
-       q.free_cashflow,               -- operating cash - capex
-       q.overall_risk,                -- ISS governance risk (1-10)
+       q.gross_margins,
+       q.operating_margins,
+       q.return_on_equity,
+       q.revenue_growth,
+       q.earnings_growth,
+       q.debt_to_equity,
+       q.current_ratio,
+       q.free_cashflow,
+       q.overall_risk,
        q.audit_risk,
        q.board_risk,
        q.compensation_risk,
        q.shareholder_rights_risk,
-       d.sector                       -- from silver.index_dim
+       d.sector
 FROM silver.signals_quarterly q
 JOIN silver.index_dim d
     ON q._index = d._index
    AND q.symbol = d.symbol
-   AND d.is_current = 1               -- current dimension record only
+   AND d.is_current = 1
 WHERE q.as_of_date = (
-    -- Correlated subquery: get the latest quarter for each stock
     SELECT MAX(q2.as_of_date)
     FROM silver.signals_quarterly q2
     WHERE q2._index = q._index
@@ -491,13 +480,13 @@ WHERE q.as_of_date = (
 
 #### JOIN market_cap + beta — FCF yield and risk-adjusted return inputs
 
-```sql
--- transform_scores_quarterly.py (lines 66-73)
+Market cap and beta are daily-frequency metrics (they change with the stock price), not quarterly. This separate query pulls them from the latest daily signal row so the quarterly transform can compute `fcf_yield` (free cash flow divided by market cap — a metric unavailable from quarterly data alone) and include `beta` in the gold output.
 
+```sql
 SELECT s._index,
        s.symbol,
-       s.market_cap,                  -- needed to compute FCF yield
-       s.beta                         -- systematic risk
+       s.market_cap,
+       s.beta
 FROM silver.signals_daily s
 WHERE s.signal_date = (
     SELECT MAX(s2.signal_date)
@@ -513,44 +502,44 @@ WHERE s.signal_date = (
 
 File: `ingestion/transforms/transform_index_performance.py`
 
-This transform is **incremental** — it only processes new dates, and refreshes the last 7 days for late-arriving signals.
+Unlike the daily and quarterly score transforms (which fully replace the target date), the index performance transform is **incremental** — it only processes dates newer than the last computed date. Additionally, it refreshes the last 7 days to account for late-arriving daily signals that may have corrected prices. The cap-weighted return calculation happens in pandas: each stock's daily return is multiplied by its market cap weight, then summed across all stocks to produce the index-level daily return.
 
 ### Step 1: Check OHLCV Table Exists
 
-#### OBJECT_ID IS NOT NULL — existence check before querying dynamic table
+#### sys.tables existence check — verify dynamic table before querying
+
+Because OHLCV tables are created dynamically per index (see [bronze DDL](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading#dynamic-ohlcv-tables)), the transform must verify the table exists before querying it. If a new index was configured but `setup_index.py` has not yet run, this check prevents a runtime error.
 
 ```sql
--- transform_index_performance.py (lines 67-70)
-
 SELECT 1
 FROM sys.tables t
 JOIN sys.schemas s ON t.schema_id = s.schema_id
-WHERE s.name = ?       -- e.g. 'silver'
-  AND t.name = ?       -- e.g. 'index_europe_ohlcv'
+WHERE s.name = ?
+  AND t.name = ?
 ```
 
 ### Step 2: Find Latest Computed Date
 
 #### SELECT MAX(perf_date) — incremental boundary for new dates only
 
-```sql
--- transform_index_performance.py (lines 77-79)
+Returns the most recent date already computed in gold for this index. The transform will process only dates after this boundary (minus 7 days for the refresh window). On the first run, this returns `NULL` and the transform processes the entire history.
 
+```sql
 SELECT MAX(perf_date)
 FROM gold.index_performance
-WHERE _index = ?       -- e.g. 'market_index'
+WHERE _index = ?
 ```
 
 ### Step 3: Pull OHLCV Close Prices
 
-#### SELECT close, LAG(close) — all prices for cap-weighted daily returns
+#### SELECT close — all prices for cap-weighted daily returns
+
+Retrieves the full adjusted close price history for all stocks in the index. Rows with `NULL` close prices (from forward-filled rows with no real data) are excluded. The Python code computes daily returns as `(close_today - close_yesterday) / close_yesterday` using pandas `pct_change()`.
 
 ```sql
--- transform_index_performance.py (lines 84-89)
-
 SELECT symbol,
        date,
-       [close]          -- adjusted close price
+       [close]
 FROM silver.index_europe_ohlcv
 WHERE [close] IS NOT NULL
 ORDER BY symbol, date
@@ -558,17 +547,17 @@ ORDER BY symbol, date
 
 ### Step 4: Pull Market Cap and Fundamentals
 
-#### SUM(market_cap * daily_return) / SUM(market_cap) — cap-weighted aggregation
+#### SELECT market_cap, fundamentals — inputs for cap-weighted aggregation
+
+Market cap is the weight in the cap-weighted return formula: `index_return = SUM(stock_return * market_cap) / SUM(market_cap)`. The valuation ratios (`forward_pe`, `price_to_book`, `dividend_yield`) are used to compute cross-sectional averages — the index-level average P/E, P/B, and yield on each date. Stocks with `NULL` or zero market cap are excluded to avoid division-by-zero in the weighting.
 
 ```sql
--- transform_index_performance.py (lines 105-112)
-
 SELECT symbol,
        CAST(signal_date AS DATE) AS sig_date,
-       market_cap,                   -- for cap-weighted returns
-       forward_pe,                   -- for cross-sectional avg PE
-       price_to_book,               -- for avg PB
-       dividend_yield               -- for avg yield
+       market_cap,
+       forward_pe,
+       price_to_book,
+       dividend_yield
 FROM silver.signals_daily
 WHERE _index = ?
   AND market_cap IS NOT NULL
@@ -580,12 +569,12 @@ ORDER BY symbol, signal_date
 
 #### DELETE + INSERT rolling 7 days — refresh index performance window
 
-```sql
--- transform_index_performance.py (lines 262-265)
+The 7-day refresh window ensures that late-arriving signal corrections (market cap updates, price adjustments) propagate into the index performance calculation. Rows from `max_existing_date - 7` onward are deleted, then the full set of new and refreshed rows is inserted.
 
+```sql
 DELETE FROM gold.index_performance
 WHERE _index = ?
-  AND perf_date >= ?     -- max_existing - 7 days
+  AND perf_date >= ?
 
 INSERT INTO gold.index_performance (
     _index, perf_date, daily_return, cumulative_factor,
@@ -600,13 +589,13 @@ INSERT INTO gold.index_performance (
 
 ## Dashboard Consumption Queries
 
-The Blazor dashboard reads gold tables through C# repositories using Dapper. All queries use parameterized SQL (`@Index`, `@From`, `@To`) to prevent injection.
+The Blazor dashboard reads gold tables through C# repository classes using Dapper (a lightweight .NET micro-ORM that maps SQL result sets directly to C# objects). All queries use parameterized SQL with `@Param` syntax (Dapper's convention for named parameters) to prevent SQL injection. Because gold tables are denormalized, every dashboard query is a simple `SELECT` against a single table — no joins required at consumption time. The `@Index IS NULL OR _index = @Index` pattern makes parameters optional: passing `NULL` returns data for all indexes.
 
 ### Latest Index Performance Snapshot (Overview Page)
 
 #### ROW_NUMBER() PARTITION BY _index — most recent performance per index
 
-Maps to `IndexPerformanceRepository.GetLatestSnapshotAsync()` — returns one row per index with the most recent performance data.
+Maps to `IndexPerformanceRepository.GetLatestSnapshotAsync()` — returns one row per index with the most recent performance data. The subquery finds the maximum `perf_date` per index, and the outer query joins back to retrieve the full row. This is preferred over `ROW_NUMBER()` here because the query needs only one row per group and the subquery approach is more readable.
 
 ```sql
 SELECT p._index AS [Index],
@@ -624,7 +613,6 @@ SELECT p._index AS [Index],
        p.avg_market_cap AS AvgMarketCap
 FROM gold.index_performance p
 INNER JOIN (
-    -- Subquery: find the latest date per index
     SELECT _index, MAX(perf_date) AS max_date
     FROM gold.index_performance
     GROUP BY _index
@@ -639,7 +627,7 @@ ORDER BY p._index
 
 #### SELECT WHERE _index = @idx AND perf_date BETWEEN — full time series query
 
-Maps to `IndexPerformanceRepository.GetPerformanceAsync()` — full time series, optionally filtered by index and date range.
+Maps to `IndexPerformanceRepository.GetPerformanceAsync()` — returns the complete performance time series for line chart rendering. All three parameters (`@Index`, `@From`, `@To`) are optional: passing `NULL` for any parameter removes that filter, returning all indexes and/or the full date range. Column aliases use PascalCase to match C# property naming conventions for automatic Dapper mapping.
 
 ```sql
 SELECT _index AS [Index],
@@ -655,8 +643,8 @@ SELECT _index AS [Index],
        avg_dividend_yield AS AvgDividendYield,
        avg_market_cap AS AvgMarketCap
 FROM gold.index_performance
-WHERE (@Index IS NULL OR _index = @Index)       -- optional index filter
-  AND (@From IS NULL OR perf_date >= @From)     -- optional date range
+WHERE (@Index IS NULL OR _index = @Index)
+  AND (@From IS NULL OR perf_date >= @From)
   AND (@To IS NULL OR perf_date <= @To)
 ORDER BY _index, perf_date
 ```
@@ -665,11 +653,10 @@ ORDER BY _index, perf_date
 
 #### CTE MAX(score_date) — latest factor scores for all stocks in an index
 
-Maps to `ScoresRepository.GetDailyScoresAsync()` — latest scores for all stocks in an index (or all indices).
+Maps to `ScoresRepository.GetDailyScoresAsync()` — returns all factor scores, ranks, and denormalized metadata for every stock in an index, as of the most recent scoring date. The CTE `max_dates` isolates the latest `score_date` per index, then the main query joins on both `_index` and `score_date` to retrieve the full row set. Results are ordered by `index_weight DESC` so that the largest stocks appear first in the dashboard table.
 
 ```sql
 WITH max_dates AS (
-    -- Find the latest score_date per index
     SELECT _index, MAX(score_date) AS max_date
     FROM gold.scores_daily
     WHERE @Index IS NULL OR _index = @Index
@@ -713,7 +700,7 @@ ORDER BY sd._index, sd.index_weight DESC
 
 #### ROW_NUMBER() PARTITION BY symbol — deduplicate to one row per stock
 
-Maps to `ScoresRepository.GetQuarterlyScoresAsync()` — deduplicates to one row per stock using the most recent quarter.
+Maps to `ScoresRepository.GetQuarterlyScoresAsync()`. Unlike the daily scores query (which uses a CTE with `MAX`), this uses `ROW_NUMBER() OVER (PARTITION BY _index, symbol ORDER BY as_of_date DESC)` to assign `rn = 1` to the most recent quarter per stock, then filters `WHERE rn = 1`. This approach is preferred here because different stocks may have different latest `as_of_date` values (earnings release dates vary), so a single `MAX(as_of_date)` per index would miss stocks with older reporting dates.
 
 ```sql
 WITH latest AS (
@@ -752,30 +739,26 @@ ORDER BY _index, quality_rank
 
 #### AVG() OVER ROWS BETWEEN — server-side SMA correct at date boundaries
 
-Maps to `StockRepository.GetOhlcvAsync()` — computes SMA 30/90 via SQL window functions to avoid client-side recalculation.
+Maps to `StockRepository.GetOhlcvAsync()` — computes SMA 30/90 via SQL window functions so the chart renders moving average lines without client-side recalculation. The `adj_ratio` (`adj_close / [close]`) converts raw OHLC prices to split-adjusted values: if a stock split 2:1, historical raw prices are halved but `adj_close` is retroactively corrected — multiplying `[open]`, `high`, and `low` by this ratio aligns all price columns to the adjusted scale. The `CASE WHEN cnt >= N` guards return `NULL` for SMAs with insufficient data points, preventing the chart from drawing misleading averages at the start of the series.
 
 ```sql
 WITH cte AS (
     SELECT symbol, date,
            [open], high, low, [close], adj_close, volume,
 
-           -- Adjustment ratio: converts raw OHLC to split-adjusted values
            CASE WHEN [close] <> 0
                 THEN adj_close / [close]
                 ELSE 1
            END AS adj_ratio,
 
-           -- 30-day moving average of adjusted close
            AVG(adj_close) OVER (
                ORDER BY date ROWS BETWEEN 29 PRECEDING AND CURRENT ROW
            ) AS sma_30,
 
-           -- 90-day moving average
            AVG(adj_close) OVER (
                ORDER BY date ROWS BETWEEN 89 PRECEDING AND CURRENT ROW
            ) AS sma_90,
 
-           -- Window row counts (for validation)
            COUNT(adj_close) OVER (ORDER BY date ROWS BETWEEN 29 PRECEDING AND CURRENT ROW) AS cnt_30,
            COUNT(adj_close) OVER (ORDER BY date ROWS BETWEEN 89 PRECEDING AND CURRENT ROW) AS cnt_90
 
@@ -785,15 +768,15 @@ WITH cte AS (
 )
 SELECT symbol AS Symbol,
        date AS Date,
-       [open] * adj_ratio AS [Open],         -- split-adjusted open
-       high * adj_ratio AS High,             -- split-adjusted high
-       low * adj_ratio AS Low,               -- split-adjusted low
-       adj_close AS [Close],                 -- adjusted close (used for charting)
-       [close] AS RawClose,                  -- unadjusted close (used for tooltip)
-       adj_close AS AdjClose,                -- same as Close (for explicit reference)
+       [open] * adj_ratio AS [Open],
+       high * adj_ratio AS High,
+       low * adj_ratio AS Low,
+       adj_close AS [Close],
+       [close] AS RawClose,
+       adj_close AS AdjClose,
        volume AS Volume,
-       CASE WHEN cnt_30 >= 30 THEN sma_30 END AS Sma30,   -- NULL if < 30 data points
-       CASE WHEN cnt_90 >= 90 THEN sma_90 END AS Sma90    -- NULL if < 90 data points
+       CASE WHEN cnt_30 >= 30 THEN sma_30 END AS Sma30,
+       CASE WHEN cnt_90 >= 90 THEN sma_90 END AS Sma90
 FROM cte
 WHERE (@From IS NULL OR date >= @From)
   AND (@To IS NULL OR date <= @To)
@@ -804,6 +787,8 @@ ORDER BY date
 ---
 
 ### Key SQL Techniques Used in Gold Transforms
+
+The following table summarizes the T-SQL patterns and SQL Server features used across gold transforms and dashboard queries. Window functions are the dominant pattern — they compute aggregates over sliding windows without collapsing the result set, enabling SMA, LAG, and ROW_NUMBER calculations in a single query pass.
 
 | Technique | Where | Why |
 |-----------|-------|-----|
@@ -821,28 +806,31 @@ ORDER BY date
 
 ## Gold Freshness Checks
 
+These diagnostic queries verify that gold data is up to date after a pipeline run. If the maximum dates are stale, the upstream silver transforms or the gold transforms themselves may have failed.
+
 #### SELECT MAX(score_date), MAX(perf_date) — gold freshness check
+
+Returns the most recent scoring date and performance date for each index. Both should match (or be within one trading day of) the current date after a successful pipeline run.
 
 ```sql
 SELECT _index, MAX(score_date) FROM gold.scores_daily GROUP BY _index
 SELECT _index, MAX(perf_date) FROM gold.index_performance GROUP BY _index
 ```
 
-#### DELETE WHERE score_date < cutoff — cleanup stale gold rows
+#### DELETE WHERE perf_date > today — cleanup future-dated gold rows
+
+If the pipeline accidentally computed performance for future dates (e.g., due to a timezone mismatch), this cleanup removes those rows. After cleanup, re-run the pipeline to recompute correctly.
 
 ```sql
--- Delete stale gold rows if needed
 DELETE FROM gold.index_performance WHERE perf_date > CAST(GETDATE() AS DATE);
 ```
-
-Then re-run the pipeline to rebuild: `gcloud run jobs execute analytics-pipeline --region=europe-west1 --args='--from,14,--to,16'`
 
 ---
 
 ### Related Notes
 
 - [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) — upstream: cleaned data that feeds all gold transforms
-- [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) — raw data layer
-- [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — architectural context
-- the pipeline steps — pipeline steps 14–16 drive gold transforms
-- common pipeline errors — troubleshooting stuck index_performance and stale scores
+- [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) — raw data layer and DDL conventions
+- [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — architectural context for all three layers
+- [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) — pandas groupby, rolling, and rank equivalents of the SQL window functions used here
+- [dbt-mart-models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-mart-models) — dbt's declarative approach to the same gold-layer role

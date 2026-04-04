@@ -738,14 +738,22 @@ Func<int, bool> MakeRangeValidator(int min, int max)
 
 var isValidAge = MakeRangeValidator(0, 120);
 var isValidScore = MakeRangeValidator(0, 100);
-isValidAge(25)   // age 25
-isValidAge(150)   // age 150
+isValidAge(25)
+isValidAge(150)
 ```
 
-    True
-    False
+```text
+True
+False
+```
 
-#### Loop capture gotcha
+### Closure pitfalls
+
+The most common closure bug in C# involves lambdas created inside a `for` loop — all lambdas share the same loop variable and see its final value.
+
+#### Loop capture gotcha — lambdas in a for loop
+
+Lambdas created in a `for` loop capture the loop variable `i` itself — not its value at each iteration. After the loop, `i` has its final value, so all lambdas return the same result. The fix is to copy the loop variable into a new local inside the loop body. Note: `foreach` in C# 5+ captures per-iteration automatically.
 
 > [!danger] Lambdas in a for loop
 >
@@ -768,13 +776,47 @@ for (int i = 0; i < 3; i++)
     int captured = i;                 // new variable each iteration
     funcsGood.Add(() => captured);
 }
-string.Join(", ", funcsGood.Select(f => f()))   // Good
+string.Join(", ", funcsGood.Select(f => f()))
 ```
 
-    [3, 3, 3]
-    [0, 1, 2]
+```text
+3, 3, 3
+0, 1, 2
+```
 
 ## Delegates & Events
+
+Delegates are type-safe function pointers — they declare a signature as a type and hold references to methods matching that signature. The built-in `Func<T>`, `Action<T>`, and `Predicate<T>` cover most cases; custom delegates add named semantics. Multicast delegates chain multiple handlers via `+=`, and the `event` keyword restricts delegate access to enforce the observer pattern.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A["Does the function return a value?"] -->|Yes| B["Func&lt;T, TResult&gt;"]
+    A -->|No| C["Action&lt;T&gt;"]
+    A -->|"Returns bool"| D["Predicate&lt;T&gt;"]
+    B --> E{"Need named semantics\nor custom signature?"}
+    C --> E
+    E -->|Yes| F["Custom delegate"]
+    E -->|No| G["Use built-in"]
+    G --> H{"Notify multiple\nsubscribers?"}
+    H -->|Yes| I["Multicast += / -="]
+    H -->|"Yes + restrict access"| J["event keyword"]
+```
+
+### Delegate fundamentals
+
+Custom delegates define a named function signature: `delegate int MathOp(int a, int b)`. Variables of that type can hold any method matching the signature. Multicast delegates (`+=`) chain multiple handlers for observer/notification patterns.
 
 #### Delegate, Func&lt;T&gt;, Action&lt;T&gt; — delegate type declarations
 
@@ -795,13 +837,15 @@ int Multiply(int a, int b) => a * b;
 MathOp op = Add;
 op(3, 4)   // Add
 op = Multiply;
-op(3, 4)   // Mul
+op(3, 4)
 
-delegate int MathOp(int a, int b);     // custom delegate type
+delegate int MathOp(int a, int b);
 ```
 
-    7
-    12
+```text
+7
+12
+```
 
 #### Multicast delegates — += to chain, invoke all subscribers
 
@@ -813,15 +857,21 @@ pipeline += msg => Console.WriteLine($"  Step 2: {msg.ToUpper()}");
 pipeline += msg => Console.WriteLine($"  Step 3: {msg.Length} chars");
 
 Console.WriteLine("Calling pipeline:");
-pipeline("hello world");    // all 3 functions execute
-
+pipeline("hello world");
 ```
 
-> [!info] Delegate Removal
+```text
+Step 1: hello world
+Step 2: HELLO WORLD
+Step 3: 11 chars
+```
+
+> [!info] Delegate removal
 > Delegates support `-=` to remove handlers from the invocation list, enabling dynamic pipeline step management at runtime.
-      Step 1: hello world
-      Step 2: HELLO WORLD
-      Step 3: 11 chars
+
+### Method groups and callbacks
+
+A method group is a method name without parentheses — the compiler creates the delegate automatically. This is more concise than wrapping in a lambda and is the preferred style when the method signature already matches the delegate type.
 
 #### Method groups and callbacks
 
@@ -834,15 +884,17 @@ Action<string> handler = PrintUpper;    // no () — passing the method itself
 handler("method group");
 ```
 
-> [!info] Lambda vs Method Group in LINQ
+```text
+METHOD GROUP
+```
+
+> [!info] Lambda vs method group in LINQ
 >
 > With LINQ you can pass a method directly instead of wrapping it in a lambda:
 > `names.Select(Transform)` instead of `names.Select(n => Transform(n))`.
 > However, instance methods like `string.ToUpper()` can't be used as method
 > groups because they require an instance — use a lambda instead:
 > `names.Select(n => n.ToUpper())`.
-
-      METHOD GROUP
 
 #### Callback via Action — processing with notification
 
@@ -863,13 +915,64 @@ ProcessData(new[] { 1, 2, 3 }, result => Console.Write($"{result} "));
 Console.WriteLine();
 ```
 
-    2 4 6
+```text
+Results: 2 4 6
+```
+
+### Events
+
+The `event` keyword wraps a delegate with access restrictions: external code can only subscribe (`+=`) and unsubscribe (`-=`), while only the declaring class can invoke the event. This enforces the observer pattern — publishers don't know their subscribers, and subscribers can't accidentally invoke or replace the handler list.
+
+#### Event declaration and EventHandler&lt;T&gt; pattern
+
+Declare events with `event EventHandler<TEventArgs>` where `TEventArgs` carries the event data. The standard pattern uses a protected `OnEventName` method to raise the event safely via `?.Invoke`. Subscribers attach with `+=` and detach with `-=`. Always unsubscribe when done to prevent memory leaks — the event holds a reference to the subscriber.
+
+> [!warning] Memory leaks from unsubscribed events
+>
+> Event handlers keep subscribers alive via strong references. If a short-lived object subscribes to a long-lived publisher's event and never unsubscribes, the subscriber can't be garbage collected.
+
+> [!success] Always unsubscribe
+>
+> Implement `IDisposable` on subscriber classes and unsubscribe in `Dispose()`. For UI components, unsubscribe in teardown/close handlers. Consider weak event patterns for long-lived publishers.
+
+```csharp
+class OrderEventArgs : EventArgs
+{
+    public int OrderId { get; }
+    public decimal Total { get; }
+    public OrderEventArgs(int id, decimal total) { OrderId = id; Total = total; }
+}
+
+class OrderProcessor
+{
+    public event EventHandler<OrderEventArgs>? OrderPlaced;
+
+    public void PlaceOrder(int id, decimal total)
+    {
+        Console.WriteLine($"  Processing order {id}...");
+        OrderPlaced?.Invoke(this, new OrderEventArgs(id, total));
+    }
+}
+
+var processor = new OrderProcessor();
+processor.OrderPlaced += (sender, e) => Console.WriteLine($"  Logger: Order {e.OrderId} placed (${e.Total})");
+processor.OrderPlaced += (sender, e) => Console.WriteLine($"  Notifier: Email sent for order {e.OrderId}");
+processor.PlaceOrder(101, 59.99m);
+```
+
+```text
+Processing order 101...
+Logger: Order 101 placed ($59.99)
+Notifier: Email sent for order 101
+```
+
+> [!info] event vs delegate
+>
+> A raw `public Action<string> OnClick;` lets any code invoke or reassign the handler list. `public event Action<string> OnClick;` restricts external code to `+=`/`-=` only — the owner class controls invocation. Always prefer `event` for public notification points.
 
 ## Method Overloading & Extension Methods
 
-**Method overloading:** multiple methods with the same name but different parameter types or counts. The compiler resolves the correct overload at compile time — clean API, no runtime overhead, backward compatible.
-
-**Extension methods:** add methods to existing types without modifying their source code. Defined as static methods in a static class with `this` before the first parameter. LINQ methods (`.Where`, `.Select`, `.OrderBy`) are all extension methods on `IEnumerable<T>`.
+Method overloading lets multiple methods share a name with different parameter types or counts — the compiler resolves the correct one. Extension methods add methods to existing types without modifying source code, enabling fluent APIs like LINQ.
 
 > [!warning] Overloading pitfalls
 >
@@ -882,6 +985,10 @@ Console.WriteLine();
 > - All overloads should do the same logical operation on different input types
 > - Prefer optional/named parameters when the logic is identical; use generics when one method can handle all types
 > - If the compiler reports ambiguity, add an explicit cast at the call site or consolidate overloads
+
+### Method overloading
+
+Multiple methods can share a name if their parameter lists differ in type or count. The compiler resolves the correct overload at compile time — no runtime overhead, clean API, and backward-compatible when adding new overloads.
 
 #### Method overloading — same name, different parameters
 
@@ -899,14 +1006,20 @@ Format("hello")
 Format(10, 20)
 ```
 
-    42
-    3.14
-    'hello'
-    10 + 20 = 30
+```text
+int: 42
+double: 3.14
+string: 'hello'
+two ints: 10 + 20 = 30
+```
+
+### Extension methods
+
+Extension methods add methods to existing types without modifying their source code — defined as static methods in a static class with `this` before the first parameter. LINQ is built entirely with extension methods on `IEnumerable<T>`.
 
 #### Extension methods and LINQ
 
-Static method in a static class with `this` as first parameter: `static int WordCount(this string s)`. Enables fluent syntax: `"hello".WordCount()`. LINQ is built entirely with extension methods on `IEnumerable<T>`. Don't extend `object` — pollutes IntelliSense for all types.
+Define a static method in a static class with `this` before the first parameter: `static int WordCount(this string s)`. This enables fluent syntax: `"hello".WordCount()`. Don't extend `object` — it pollutes IntelliSense for all types.
 
 > [!info] LINQ Is Built on Extension Methods
 >
@@ -915,7 +1028,9 @@ Static method in a static class with `this` as first parameter: `static int Word
 
 ```csharp
 var nums = new[] { 1, 2, 3, 4, 5 };
-string.Join(", ", nums.Where(x => x > 2).Select(x => x * 10))   // Where+Select
+string.Join(", ", nums.Where(x => x > 2).Select(x => x * 10))
 ```
 
-    [30, 40, 50]
+```text
+30, 40, 50
+```

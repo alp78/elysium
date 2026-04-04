@@ -1,5 +1,6 @@
 ---
-tags: [pipeline, python, pandas, polars]
+title: "Foundations and I/O"
+tags: [python, pandas, polars, dataframes]
 aliases:
   - Series, DataFrames, indexes, data types
 description: "Pandas/Polars DataFrame reference 01/10 — Foundations & I/O (Series, DataFrames, types, CSV/Parquet). Side-by-side executable examples with cell outputs."
@@ -9,7 +10,8 @@ status: complete
 ---
 
 # 01 — Foundations and Data Structures
-## Pandas vs Polars: Series, DataFrames, Indexes, and Data Types
+
+Pandas vs Polars: Series, DataFrames, Indexes, and Data Types
 
 > [!quote]
 > "Bad programmers worry about the code. Good programmers worry about data structures and their relationships."
@@ -45,26 +47,34 @@ import shutil
 import io
 ```
 
-    pandas  2.3.3
-    polars  1.39.3
-    numpy   2.4.3
+```text
+pandas  2.3.3
+polars  1.39.3
+numpy   2.4.3
+```
 
 ---
 ## Series
 
-A **Series** is a one-dimensional labelled (Pandas) or unnamed (Polars) array.
-Pandas Series carry an **index**; Polars Series carry only a **name**.
+A **Series** is a one-dimensional labelled (Pandas) or unnamed (Polars) array. Pandas Series carry an **index** that enables label-based alignment; Polars Series carry only a **name** and rely on positional access.
 
-### Creating a Series from a Python list
+> [!info] Pandas vs Polars | Null representation
+>
+> Pandas uses `NaN` (a float) for missing values, which silently promotes integer columns to `float64`. Polars uses a native Arrow **null bitmask** — the column dtype is preserved regardless of missing values. This is one of the most impactful behavioral differences between the two libraries.
+
+### Pandas / Polars | Creating a Series from a Python list
+
+`pd.Series()` accepts a Python list and auto-generates a `RangeIndex` (0, 1, 2, …). The `name` parameter becomes the column header when the Series is placed in a DataFrame.
 
 ```python
-# Pandas — Series from a list (auto-generates a RangeIndex)
 s_pd = pd.Series([10, 20, 30, 40], name="values")
 print(type(s_pd))
 display(s_pd)
 ```
 
-    <class 'pandas.core.series.Series'>
+```text
+<class 'pandas.core.series.Series'>
+```
 
 <table>
   <thead>
@@ -93,18 +103,21 @@ display(s_pd)
   </tbody>
 </table>
 
+`pl.Series(name, values)` creates a Polars Series. Unlike Pandas, there is no index — only a name and positional data.
+
 ```python
-# Polars — Series from a list (no index, just a name)
 s_pl = pl.Series("values", [10, 20, 30, 40])
 print(type(s_pl))
 display(s_pl)
 ```
 
-    <class 'polars.series.series.Series'>
+```text
+<class 'polars.series.series.Series'>
+```
 
 <div><!-- shape: (4,) --><table><thead><tr><th>values</th></tr><tr><td>i64</td></tr></thead><tbody><tr><td>10</td></tr><tr><td>20</td></tr><tr><td>30</td></tr><tr><td>40</td></tr></tbody></table></div>
 
-### Creating a Series from a NumPy array
+### Pandas / Polars | Creating a Series from a NumPy array
 
 ```python
 arr = np.array([1.1, 2.2, 3.3, np.nan, 5.5])
@@ -145,10 +158,13 @@ print(f"dtype: {s_pd.dtype}")  # float64
   </tbody>
 </table>
 
-    dtype: float64
+```text
+dtype: float64
+```
+
+Polars can wrap a NumPy array directly. Note that `np.nan` in NumPy is a float value, so Polars treats it as `NaN` (not `null`) when the source is a NumPy array.
 
 ```python
-# Polars can wrap a numpy array directly
 s_pl = pl.Series("from_numpy", arr)
 display(s_pl)
 print(f"dtype: {s_pl.dtype}")  # Float64
@@ -156,12 +172,15 @@ print(f"dtype: {s_pl.dtype}")  # Float64
 
 <div><!-- shape: (5,) --><table><thead><tr><th>from_numpy</th></tr><tr><td>f64</td></tr></thead><tbody><tr><td>1.1</td></tr><tr><td>2.2</td></tr><tr><td>3.3</td></tr><tr><td>NaN</td></tr><tr><td>5.5</td></tr></tbody></table></div>
 
-    dtype: Float64
+```text
+dtype: Float64
+```
 
-### Custom index (Pandas) vs named-only (Polars)
+### Pandas / Polars | Custom index vs named-only
+
+Pandas supports a custom index on a Series — keys can be strings, dates, or any hashable type. This enables label-based access via `.loc[]`.
 
 ```python
-# Pandas supports a custom index on a Series
 s_pd = pd.Series(
     [100, 200, 300],
     index=["a", "b", "c"],
@@ -194,13 +213,15 @@ print(f"Index: {s_pd.index.tolist()}")
   </tbody>
 </table>
 
-    Index: ['a', 'b', 'c']
+```text
+Index: ['a', 'b', 'c']
+```
+
+Polars has no index concept. To replicate Pandas' index behavior, pair the values with a label column in a DataFrame.
 
 ```python
-# Polars has NO index concept — use a DataFrame if you need a label column
 s_pl = pl.Series("amounts", [100, 200, 300])
 display(s_pl)
-# To replicate Pandas' index, pair with a label Series in a DataFrame:
 df_pl = pl.DataFrame({"label": ["a", "b", "c"], "amounts": [100, 200, 300]})
 display(df_pl)
 ```
@@ -209,19 +230,27 @@ display(df_pl)
 
 <div><!-- shape: (3, 2) --><table><thead><tr><th>label</th><th>amounts</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>a</td><td>100</td></tr><tr><td>b</td><td>200</td></tr><tr><td>c</td><td>300</td></tr></tbody></table></div>
 
-### Data types — inference and casting
+### Pandas / Polars | Data types — inference and casting
 
-Pandas defaults to `int64`/`float64`/`object`; Polars defaults to
-`Int64`/`Float64`/`String`.  Polars is stricter: no silent object fallback.
+Pandas defaults to `int64`/`float64`/`object`; Polars defaults to `Int64`/`Float64`/`String`. Polars is stricter: no silent `object` fallback. When Pandas encounters mixed types in a column, it falls back to `object` dtype (a catch-all that can hold anything). Polars attempts to find a common supertype or raises an error.
+
+> [!warning] Pandas `object` dtype is a catch-all
+>
+> A column with `object` dtype can silently hold integers, strings, floats, and `None` in the same column. This defeats type checking and causes hard-to-debug issues downstream (e.g., `1 + "two"` at runtime).
+
+> [!success] Use explicit dtypes or `StringDtype`
+>
+> For text columns, use `dtype="string"` (or `pd.StringDtype()`) instead of the default `object`. For fully type-safe nullable types across all columns, use `dtype_backend="pyarrow"` when reading data.
 
 ```python
-# Pandas — mixed types silently become object dtype
 mixed_pd = pd.Series([1, "two", 3.0], name="mixed")
 print(f"dtype: {mixed_pd.dtype}")  # object  ← watch out!
 display(mixed_pd)
 ```
 
-    dtype: object
+```text
+dtype: object
+```
 
 <table>
   <thead>
@@ -246,8 +275,9 @@ display(mixed_pd)
   </tbody>
 </table>
 
+Polars attempts to find a common supertype for mixed-type lists. With `strict=False`, it coerces all values to string. With `strict=True` (default), it raises an error if no common numeric supertype exists.
+
 ```python
-# Polars — mixed types? It will try to find a common supertype or raise
 try:
     mixed_pl = pl.Series("mixed", [1, "two", 3.0], strict=False)
     display(mixed_pl)
@@ -257,8 +287,9 @@ except Exception as e:
 
 <div><!-- shape: (3,) --><table><thead><tr><th>mixed</th></tr><tr><td>str</td></tr></thead><tbody><tr><td>1</td></tr><tr><td>two</td></tr><tr><td>3.0</td></tr></tbody></table></div>
 
+Pandas uses `.astype()` for type casting and `pd.array()` with nullable dtypes for null-safe integer columns. Polars uses `.cast()` and has first-class null support — no special nullable dtype is needed.
+
 ```python
-# Explicit casting in Pandas
 s_pd = pd.Series([1, 2, 3], dtype="float32")
 print(f"dtype after cast: {s_pd.dtype}")
 
@@ -267,28 +298,29 @@ s_pd_nullable = pd.array([1, 2, None], dtype=pd.Int64Dtype())
 print(f"Nullable Int64: {s_pd_nullable}")
 ```
 
-    dtype after cast: float32
-    Nullable Int64: <IntegerArray>
-    [1, 2, <NA>]
-    Length: 3, dtype: Int64
+```text
+dtype after cast: float32
+Nullable Int64: <IntegerArray>
+[1, 2, <NA>]
+Length: 3, dtype: Int64
+```
 
 ```python
-# Explicit casting in Polars
 s_pl = pl.Series("vals", [1, 2, 3]).cast(pl.Float32)
 print(f"dtype after cast: {s_pl.dtype}")
 
-# Polars has first-class null support — no special nullable dtype needed
 s_pl_null = pl.Series("vals", [1, 2, None])
 print(f"dtype with null: {s_pl_null.dtype}")  # Int64, null is native
 ```
 
-    dtype after cast: Float32
-    dtype with null: Int64
+```text
+dtype after cast: Float32
+dtype with null: Int64
+```
 
-### Basic Series operations
+### Pandas / Polars | Basic Series operations
 
-
-- **Describe**: Summary statistics: count, mean, std, min, max, quartiles.
+Both libraries provide aggregation methods (`.sum()`, `.mean()`, `.std()`) and `.describe()` for summary statistics. Polars' `.describe()` additionally includes `null_count`, which Pandas omits.
 
 ```python
 prices_pd = pd.Series([10.5, 20.3, 30.1, 40.8, 50.0], name="price")
@@ -302,12 +334,14 @@ print("nunique:", prices_pd.nunique())
 display(prices_pd.describe())
 ```
 
-    len   : 5
-    shape : (5,)
-    sum   : 151.7
-    mean  : 30.339999999999996
-    std   : 15.735405936930892
-    nunique: 5
+```text
+len   : 5
+shape : (5,)
+sum   : 151.7
+mean  : 30.339999999999996
+std   : 15.735405936930892
+nunique: 5
+```
 
 <table>
   <thead>
@@ -364,22 +398,28 @@ print("nunique:", prices_pl.n_unique())
 display(prices_pl.describe())
 ```
 
-    len   : 5
-    shape : (5,)
-    sum   : 151.7
-    mean  : 30.339999999999996
-    std   : 15.735405936930892
-    nunique: 5
+```text
+len   : 5
+shape : (5,)
+sum   : 151.7
+mean  : 30.339999999999996
+std   : 15.735405936930892
+nunique: 5
+```
 
 <div><!-- shape: (9, 2) --><table><thead><tr><th>statistic</th><th>value</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>count</td><td>5.0</td></tr><tr><td>null_count</td><td>0.0</td></tr><tr><td>mean</td><td>30.34</td></tr><tr><td>std</td><td>15.735406</td></tr><tr><td>min</td><td>10.5</td></tr><tr><td>25%</td><td>20.3</td></tr><tr><td>50%</td><td>30.1</td></tr><tr><td>75%</td><td>40.8</td></tr><tr><td>max</td><td>50.0</td></tr></tbody></table></div>
 
-### Gotcha — NaN vs null
+### Pandas / Polars | Gotcha — NaN vs null
 
-Pandas uses `NaN` (a float) for missing values, which silently promotes
-integer columns to float.  Polars uses a proper **null** bitmask.
+> [!warning] Pandas NaN silently promotes integers to float
+>
+> Inserting a missing value into an integer Series causes Pandas to upcast the entire column to `float64`. This is because `NaN` is a float value in IEEE 754 — there is no integer `NaN`. This silent promotion can break join keys (`1.0 != 1` in string comparisons) and accumulate floating-point error.
+
+> [!success] Use nullable integer dtypes or Polars
+>
+> Pandas 2.x supports nullable integer types (`pd.Int64Dtype()`) that handle `pd.NA` without float promotion. Polars uses native Arrow null bitmasks — the dtype is always preserved.
 
 ```python
-# Pandas: inserting a missing value promotes int → float
 s = pd.Series([1, 2, 3])
 print(f"Before: {s.dtype}")  # int64
 s.iloc[1] = np.nan # type: ignore
@@ -387,8 +427,10 @@ print(f"After:  {s.dtype}")  # float64  ← surprise!
 display(s)
 ```
 
-    Before: int64
-    After:  float64
+```text
+Before: int64
+After:  float64
+```
 
 <table>
   <thead>
@@ -413,26 +455,31 @@ display(s)
   </tbody>
 </table>
 
+Polars preserves the dtype — `null` is native and does not affect the column type. Use `.scatter(index, None)` to set a specific position to null.
+
 ```python
-# Polars: null is native — dtype stays Int64
 s = pl.Series("x", [1, 2, 3])
-# Replace value at index 1 with null using scatter
 s = s.scatter(1, None)
 print(f"dtype: {s.dtype}")  # Int64  ← no promotion
 display(s)
 ```
 
-    dtype: Int64
+```text
+dtype: Int64
+```
 
 <div><!-- shape: (3,) --><table><thead><tr><th>x</th></tr><tr><td>i64</td></tr></thead><tbody><tr><td>1</td></tr><tr><td>null</td></tr><tr><td>3</td></tr></tbody></table></div>
 
 ---
 ## DataFrame
 
-A **DataFrame** is a two-dimensional table of columns.
-Pandas DataFrames have a row index; Polars DataFrames do not.
+A **DataFrame** is a two-dimensional table of columns. Pandas DataFrames have a row index for label-based alignment; Polars DataFrames do not — all data lives in columns.
 
-### Creating a DataFrame from a dict
+> [!info] Pandas vs Polars | Mutability
+>
+> Pandas DataFrames are **mutable** — in-place operations like `df["col"] = values` modify the original object. Polars DataFrames are **immutable** — operations like `.with_columns()`, `.filter()`, and `.sort()` always return a new DataFrame. The original is never modified.
+
+### Pandas / Polars | Creating a DataFrame from a dict
 
 ```python
 data = {
@@ -447,8 +494,10 @@ print(f"shape: {df_pd.shape}")
 display(df_pd)
 ```
 
-    type : <class 'pandas.core.frame.DataFrame'>
-    shape: (4, 3)
+```text
+type : <class 'pandas.core.frame.DataFrame'>
+shape: (4, 3)
+```
 
 <table>
   <thead>
@@ -495,13 +544,15 @@ print(f"height: {df_pl.height}, width: {df_pl.width}")
 display(df_pl)
 ```
 
-    type  : <class 'polars.dataframe.frame.DataFrame'>
-    shape : (4, 3)
-    height: 4, width: 3
+```text
+type  : <class 'polars.dataframe.frame.DataFrame'>
+shape : (4, 3)
+height: 4, width: 3
+```
 
 <div><!-- shape: (4, 3) --><table><thead><tr><th>symbol</th><th>price</th><th>volume</th></tr><tr><td>str</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>AAPL</td><td>175.0</td><td>50000000</td></tr><tr><td>MSFT</td><td>340.0</td><td>30000000</td></tr><tr><td>GOOG</td><td>140.0</td><td>25000000</td></tr><tr><td>AMZN</td><td>180.0</td><td>40000000</td></tr></tbody></table></div>
 
-### Creating a DataFrame from a list of dicts (records)
+### Pandas / Polars | Creating a DataFrame from a list of dicts
 
 ```python
 records = [
@@ -552,7 +603,7 @@ display(df_pl)
 
 <div><!-- shape: (3, 3) --><table><thead><tr><th>name</th><th>age</th><th>city</th></tr><tr><td>str</td><td>i64</td><td>str</td></tr></thead><tbody><tr><td>Alice</td><td>30</td><td>London</td></tr><tr><td>Bob</td><td>25</td><td>Paris</td></tr><tr><td>Carol</td><td>35</td><td>Berlin</td></tr></tbody></table></div>
 
-### Creating a DataFrame from a NumPy array
+### Pandas / Polars | Creating a DataFrame from a NumPy array
 
 ```python
 arr = np.random.default_rng(42).standard_normal((5, 3))
@@ -605,14 +656,17 @@ print(f"dtypes:\n{df_pd.dtypes}")
   </tbody>
 </table>
 
-    dtypes:
-    A    float64
-    B    float64
-    C    float64
-    dtype: object
+```text
+dtypes:
+A    float64
+B    float64
+C    float64
+dtype: object
+```
+
+Polars does not accept a raw NumPy 2D array directly — pass a dict mapping column names to array slices.
 
 ```python
-# Polars — pass dict of column_name → array slice
 df_pl = pl.DataFrame({"A": arr[:, 0], "B": arr[:, 1], "C": arr[:, 2]})
 display(df_pl)
 print(f"dtypes: {df_pl.dtypes}")
@@ -620,12 +674,13 @@ print(f"dtypes: {df_pl.dtypes}")
 
 <div><!-- shape: (5, 3) --><table><thead><tr><th>A</th><th>B</th><th>C</th></tr><tr><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>0.304717</td><td>-1.039984</td><td>0.750451</td></tr><tr><td>0.940565</td><td>-1.951035</td><td>-1.30218</td></tr><tr><td>0.12784</td><td>-0.316243</td><td>-0.016801</td></tr><tr><td>-0.853044</td><td>0.879398</td><td>0.777792</td></tr><tr><td>0.066031</td><td>1.127241</td><td>0.467509</td></tr></tbody></table></div>
 
-    dtypes: [Float64, Float64, Float64]
+```text
+dtypes: [Float64, Float64, Float64]
+```
 
-### Shape, height, width, column names
+### Pandas / Polars | Shape, height, width, column names
 
-Pandas uses `.shape` and `.columns`.
-Polars adds `.height` and `.width` for clarity.
+Pandas uses `.shape` and `.columns`. Polars adds `.height` and `.width` as explicit properties, plus `.schema` which returns a dict-like mapping of column names to types.
 
 ```python
 df_pd = pd.DataFrame(data)  # reuse earlier dict
@@ -637,15 +692,17 @@ print(f"columns : {df_pd.columns.tolist()}")
 print(f"dtypes  :\n{df_pd.dtypes}")
 ```
 
-    shape   : (4, 3)
-    rows    : 4
-    cols    : 3
-    columns : ['symbol', 'price', 'volume']
-    dtypes  :
-    symbol     object
-    price     float64
-    volume      int64
-    dtype: object
+```text
+shape   : (4, 3)
+rows    : 4
+cols    : 3
+columns : ['symbol', 'price', 'volume']
+dtypes  :
+symbol     object
+price     float64
+volume      int64
+dtype: object
+```
 
 ```python
 df_pl = pl.DataFrame(data)
@@ -658,18 +715,23 @@ print(f"dtypes  : {df_pl.dtypes}")
 print(f"schema  : {df_pl.schema}")
 ```
 
-    shape   : (4, 3)
-    height  : 4
-    width   : 3
-    columns : ['symbol', 'price', 'volume']
-    dtypes  : [String, Float64, Int64]
-    schema  : Schema({'symbol': String, 'price': Float64, 'volume': Int64})
+```text
+shape   : (4, 3)
+height  : 4
+width   : 3
+columns : ['symbol', 'price', 'volume']
+dtypes  : [String, Float64, Int64]
+schema  : Schema({'symbol': String, 'price': Float64, 'volume': Int64})
+```
 
 ---
 ## The Index Concept
 
-Pandas relies heavily on **Index** objects for alignment, selection, and
-joins.  Polars **has no index** — all operations are column-based.
+Pandas relies heavily on **Index** objects for alignment, selection, and joins. Polars **has no index** — all operations are column-based. This is one of the most significant design differences between the two libraries.
+
+> [!question] When does the index matter?
+>
+> If your workflow involves time-series alignment (e.g., joining price data from different sources by date), Pandas' automatic index alignment can be convenient. If you prefer explicit control over joins and merges, Polars' index-free design avoids surprises from silent `NaN` injection.
 
 ### Pandas Index basics
 
@@ -711,12 +773,15 @@ print(f"Index vals : {df.index.tolist()}")
   </tbody>
 </table>
 
-    Index type : <class 'pandas.core.indexes.base.Index'>
-    Index name : key
-    Index vals : ['a', 'b', 'c']
+```text
+Index type : <class 'pandas.core.indexes.base.Index'>
+Index name : key
+Index vals : ['a', 'b', 'c']
+```
+
+`.set_index()` promotes a column to the row index; `.reset_index()` moves the index back to a column. This is a common pattern when switching between label-based and positional access.
 
 ```python
-# Setting and resetting the index
 df_pd = pd.DataFrame({"key": ["a", "b", "c"], "value": [10, 20, 30]})
 df_indexed = df_pd.set_index("key")
 display(df_indexed)
@@ -779,17 +844,13 @@ display(df_reset)
   </tbody>
 </table>
 
-### Polars — no index, use columns instead
+### Polars | No index, use columns instead
 
-
-- **pl.col**: Reference a column by name. The foundation of all Polars expressions.
+Polars keeps all data as regular columns. Filtering by a column value replaces Pandas' `.loc[]` on an index. The foundation of all Polars operations is the **expression API**: `pl.col("name")` references a column by name and is the starting point for all transformations.
 
 ```python
-# Polars simply keeps the key as a regular column
 df_pl = pl.DataFrame({"key": ["a", "b", "c"], "value": [10, 20, 30]})
 display(df_pl)
-
-# Filtering by 'key' replaces .loc on an index
 display(df_pl.filter(pl.col("key") == "b"))
 ```
 
@@ -797,10 +858,15 @@ display(df_pl.filter(pl.col("key") == "b"))
 
 <div><!-- shape: (1, 2) --><table><thead><tr><th>key</th><th>value</th></tr><tr><td>str</td><td>i64</td></tr></thead><tbody><tr><td>b</td><td>20</td></tr></tbody></table></div>
 
-### Gotcha — index alignment in Pandas
+### Pandas | Gotcha — index alignment
 
-When you combine two Pandas objects, they align on the index.
-This can produce unexpected NaNs if the indexes don't match.
+> [!warning] Silent NaN injection from index alignment
+>
+> When you combine two Pandas objects with different indexes, Pandas automatically aligns them by index label. Keys present in one but not the other produce `NaN` — silently expanding the result and potentially corrupting downstream computations.
+
+> [!success] Use explicit joins instead
+>
+> For predictable behavior, use `pd.merge()` or `.join()` with explicit `how=` parameters instead of relying on automatic alignment. Polars avoids this entirely — addition is positional, and joins must be explicit.
 
 ```python
 s1 = pd.Series([1, 2, 3], index=["a", "b", "c"])
@@ -811,7 +877,9 @@ print("Index alignment produces NaN where keys don't overlap:")
 display(result)
 ```
 
-    Index alignment produces NaN where keys don't overlap:
+```text
+Index alignment produces NaN where keys don't overlap:
+```
 
 <table>
   <thead>
@@ -840,8 +908,9 @@ display(result)
   </tbody>
 </table>
 
+Polars has no alignment surprises — addition is purely positional. Both Series must have the same length.
+
 ```python
-# Polars has no alignment surprises — addition is positional
 s1 = pl.Series("s1", [1, 2, 3])
 s2 = pl.Series("s2", [10, 20, 30])
 result = s1 + s2
@@ -849,11 +918,17 @@ print("Polars addition is purely positional:")
 display(result)
 ```
 
-    Polars addition is purely positional:
+```text
+Polars addition is purely positional:
+```
 
 <div><!-- shape: (3,) --><table><thead><tr><th>s1</th></tr><tr><td>i64</td></tr></thead><tbody><tr><td>11</td></tr><tr><td>22</td></tr><tr><td>33</td></tr></tbody></table></div>
 
-### Pandas MultiIndex vs Polars grouped columns
+### Pandas / Polars | MultiIndex vs grouped columns
+
+> [!info] Functional parity note
+>
+> Pandas `MultiIndex` has no equivalent in the C# counterpart's Deedle library. This is a Pandas-specific feature. Polars replaces MultiIndex with regular columns and group-by operations.
 
 ```python
 arrays = [
@@ -901,17 +976,19 @@ print(f"Index levels: {df_mi.index.nlevels}")
   </tbody>
 </table>
 
-    Index levels: 2
+```text
+Index levels: 2
+```
+
+In Polars, the equivalent is regular columns. Group-by operations replace MultiIndex workflows.
 
 ```python
-# Polars equivalent: just keep those levels as regular columns
 df_pl = pl.DataFrame({
     "first":  ["bar", "bar", "baz", "baz"],
     "second": ["one", "two", "one", "two"],
     "val":    [10, 20, 30, 40],
 })
 display(df_pl)
-# Grouping replaces multi-index workflows
 ```
 
 <div><!-- shape: (4, 3) --><table><thead><tr><th>first</th><th>second</th><th>val</th></tr><tr><td>str</td><td>str</td><td>i64</td></tr></thead><tbody><tr><td>bar</td><td>one</td><td>10</td></tr><tr><td>bar</td><td>two</td><td>20</td></tr><tr><td>baz</td><td>one</td><td>30</td></tr><tr><td>baz</td><td>two</td><td>40</td></tr></tbody></table></div>
@@ -919,33 +996,24 @@ display(df_pl)
 ---
 ## Data Types Deep Dive
 
-Understanding types is critical. Pandas inherited NumPy types plus
-its own Extension types; Polars uses Apache Arrow types.
+Understanding types is critical for data pipeline correctness. Pandas inherited NumPy types (`int64`, `float64`, `object`) plus its own Extension types (`Int64`, `Float64`, `string`, `category`). Polars uses Apache Arrow types exclusively (`Int64`, `Float64`, `String`, `Date`, `Datetime`, etc.), providing more precise control and consistent behavior.
 
-### Listing available types
+### Pandas / Polars | Listing available types
 
 ```python
-# Pandas common dtypes
 print("Pandas common dtypes:")
 for dt in ["int64", "float64", "bool", "object", "datetime64[ns]",
            "timedelta64[ns]", "category", "string", "Int64", "Float64"]:
     print(f"  {dt}")
 ```
 
-    Pandas common dtypes:
-      int64
-      float64
-      bool
-      object
-      datetime64[ns]
-      timedelta64[ns]
-      category
-      string
-      Int64
-      Float64
+```text
+Pandas common dtypes:
+  int64, float64, bool, object, datetime64[ns],
+  timedelta64[ns], category, string, Int64, Float64
+```
 
 ```python
-# Polars type hierarchy (a selection)
 print("Polars common dtypes:")
 for dt in [pl.Int8, pl.Int16, pl.Int32, pl.Int64,
            pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64,
@@ -955,28 +1023,16 @@ for dt in [pl.Int8, pl.Int16, pl.Int32, pl.Int64,
     print(f"  {dt}")
 ```
 
-    Polars common dtypes:
-      Int8
-      Int16
-      Int32
-      Int64
-      UInt8
-      UInt16
-      UInt32
-      UInt64
-      Float32
-      Float64
-      Boolean
-      String
-      Date
-      Datetime
-      Duration
-      Categorical
-      Null
+```text
+Polars common dtypes:
+  Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64,
+  Float32, Float64, Boolean, String, Date, Datetime,
+  Duration, Categorical, Null
+```
 
-### Inspecting types on real data
+### Pandas / Polars | Inspecting types on real data
 
-
+Load a small reference dataset and compare how each library infers and reports column types.
 
 ```python
 df_pd = pd.read_csv(DATA / "dim_country.csv")
@@ -1056,17 +1112,14 @@ print(f"Schema: {df_pl.schema}")
 
     Schema: Schema({'country_name': String, 'iso_alpha2': String})
 
-### Type casting
+### Pandas / Polars | Type casting
 
-
-- **Parse Dates**: Convert strings to datetime objects (Pandas).
-- **Astype**: Convert column to a different data type (Pandas).
+Pandas uses `.astype()` for column-level type conversion and `pd.to_datetime()` for date parsing. Polars uses `.cast()` within a `.with_columns()` expression, and `.str.to_date()` for date string parsing.
 
 ```python
 df_pd = pd.read_csv(DATA / "eurostoxx50_ohlcv.csv", nrows=5)
 display(df_pd.dtypes)
 
-# Cast volume to float, date to datetime
 df_pd_c = df_pd
 df_pd_c["volume"] = df_pd_c["volume"].astype("float64")
 df_pd_c["date"] = pd.to_datetime(df_pd_c["date"])
@@ -1209,10 +1262,15 @@ display(df_pl)
 
 <div><!-- shape: (5, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1.513937e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1.382722e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1.370204e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1.469911e6</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1.428681e6</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-### Gotcha — Pandas object vs string dtype
+### Pandas | Gotcha — object vs string dtype
 
-Pandas' default for text is `object` which can hold *anything*.
-Use `string` dtype (or `StringDtype()`) for type safety.
+> [!warning] Pandas `object` dtype accepts any Python type
+>
+> Pandas' default for text columns is `object`, which can silently hold integers, floats, `None`, and strings in the same column. Inserting a non-string value into an `object` column produces no error.
+
+> [!success] Use `string` dtype for type safety
+>
+> Pass `dtype="string"` when creating the Series, or convert existing columns with `.astype("string")`. The `StringDtype` rejects non-string insertions.
 
 ```python
 s_obj = pd.Series(["a", "b", "c"])
@@ -1226,19 +1284,20 @@ s_obj.iloc[0] = 42  # type: ignore # no error
 print(f"After inserting int into object Series: {s_obj.tolist()}")
 ```
 
-    Default dtype: object
-    String dtype:  string
-    After inserting int into object Series: [42, 'b', 'c']
+```text
+Default dtype: object
+String dtype:  string
+After inserting int into object Series: [42, 'b', 'c']
+```
 
 ---
 ## Loading Real Data from Multiple Formats
 
-The `../data/` directory contains CSV, JSON, and Parquet files.
-Let's compare how each library loads them.
+The `../data/` directory contains CSV, JSON, and Parquet files. Both Pandas and Polars can read all three formats, but with different APIs and performance characteristics.
 
-### CSV
+### Pandas / Polars | CSV
 
-
+Both libraries read CSV through `pd.read_csv()` and `pl.read_csv()`. Polars is typically 3-10x faster on larger files due to multi-threaded parsing and zero-copy Arrow construction.
 
 ```python
 df_pd = pd.read_csv(DATA / "index_performance.csv")
@@ -1327,9 +1386,6 @@ display(df_pd.head(3))
   </tbody>
 </table>
 
-    CPU times: total: 15.6 ms
-    Wall time: 20.9 ms
-
 ```python
 df_pl = pl.read_csv(DATA / "index_performance.csv")
 print(f"Shape: {df_pl.shape}")
@@ -1340,12 +1396,9 @@ display(df_pl.head(3))
 
 <div><!-- shape: (3, 15) --><table><thead><tr><th>id</th><th>_index</th><th>perf_date</th><th>daily_return</th><th>cumulative_factor</th><th>rolling_30d_return</th><th>rolling_90d_return</th><th>ytd_return</th><th>rolling_30d_volatility</th><th>stocks_count</th><th>avg_pe</th><th>avg_pb</th><th>avg_dividend_yield</th><th>avg_market_cap</th><th>_computed_at</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>1</td><td>euro_stoxx_50</td><td>2021-01-05</td><td>-0.004626</td><td>0.995374</td><td>null</td><td>null</td><td>-0.004626</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>2026-03-04 22:40:26.069309</td></tr><tr><td>2</td><td>euro_stoxx_50</td><td>2021-01-06</td><td>0.018394</td><td>1.013683</td><td>null</td><td>null</td><td>0.013683</td><td>null</td><td>48</td><td>null</td><td>null</td><td>null</td><td>null</td><td>2026-03-04 22:40:26.069309</td></tr><tr><td>3</td><td>euro_stoxx_50</td><td>2021-01-07</td><td>0.005412</td><td>1.019168</td><td>null</td><td>null</td><td>0.019168</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>2026-03-04 22:40:26.069309</td></tr></tbody></table></div>
 
-    CPU times: total: 0 ns
-    Wall time: 3.5 ms
+### Pandas / Polars | Parquet
 
-### Parquet
-
-
+Parquet preserves exact types, supports column projection, and is typically the fastest format to read for analytical workloads. Both `pd.read_parquet()` and `pl.read_parquet()` use the Apache Arrow Parquet reader under the hood.
 
 ```python
 df_pd = pd.read_parquet(DATA / "index_performance.parquet")
@@ -1434,9 +1487,6 @@ display(df_pd.head(3))
   </tbody>
 </table>
 
-    CPU times: total: 46.9 ms
-    Wall time: 366 ms
-
 ```python
 df_pl = pl.read_parquet(DATA / "index_performance.parquet")
 print(f"Shape: {df_pl.shape}")
@@ -1447,13 +1497,9 @@ display(df_pl.head(3))
 
 <div><!-- shape: (3, 15) --><table><thead><tr><th>id</th><th>_index</th><th>perf_date</th><th>daily_return</th><th>cumulative_factor</th><th>rolling_30d_return</th><th>rolling_90d_return</th><th>ytd_return</th><th>rolling_30d_volatility</th><th>stocks_count</th><th>avg_pe</th><th>avg_pb</th><th>avg_dividend_yield</th><th>avg_market_cap</th><th>_computed_at</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>datetime[ns]</td></tr></thead><tbody><tr><td>1</td><td>euro_stoxx_50</td><td>2021-01-05</td><td>-0.004626</td><td>0.995374</td><td>null</td><td>null</td><td>-0.004626</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>2026-03-04 22:40:26.069309</td></tr><tr><td>2</td><td>euro_stoxx_50</td><td>2021-01-06</td><td>0.018394</td><td>1.013683</td><td>null</td><td>null</td><td>0.013683</td><td>null</td><td>48</td><td>null</td><td>null</td><td>null</td><td>null</td><td>2026-03-04 22:40:26.069309</td></tr><tr><td>3</td><td>euro_stoxx_50</td><td>2021-01-07</td><td>0.005412</td><td>1.019168</td><td>null</td><td>null</td><td>0.019168</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>2026-03-04 22:40:26.069309</td></tr></tbody></table></div>
 
-    CPU times: total: 0 ns
-    Wall time: 22 ms
+### Pandas / Polars | JSON
 
-### JSON
-
-
-- **Read JSON**: Load a JSON file into a DataFrame.
+Both libraries read JSON arrays of objects via `pd.read_json()` and `pl.read_json()`. Polars also supports lazy scanning of NDJSON (newline-delimited JSON) via `pl.scan_ndjson()`.
 
 ```python
 df_pd = pd.read_json(DATA / "dim_country.json")
@@ -1503,11 +1549,9 @@ display(df_pl.head(3))
 ---
 ## Inspecting DataFrames
 
-### Head, tail, sample, describe
+After loading data, the first step is always inspection. Both libraries provide `.head()`, `.tail()`, `.describe()`, and memory usage estimation. Polars additionally provides `.sample()` with a `seed` parameter for reproducible random sampling.
 
-
-- **Tail**: Return the last N rows.
-- **Describe**: Summary statistics: count, mean, std, min, max, quartiles.
+### Pandas / Polars | Head, tail, sample, describe
 
 ```python
 df_pd = pd.read_parquet(DATA / "eurostoxx50_ohlcv.parquet")
@@ -1851,10 +1895,9 @@ display(df_pl.describe())
 
 <div><!-- shape: (9, 13) --><table><thead><tr><th>statistic</th><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>str</td><td>f64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>count</td><td>66355.0</td><td>66355</td><td>66355</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td><td>66355.0</td></tr><tr><td>null_count</td><td>0.0</td><td>0</td><td>0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>mean</td><td>33179.733102</td><td>null</td><td>2023-08-05 00:56:42.354005</td><td>197.04052</td><td>199.364124</td><td>194.585782</td><td>197.0349</td><td>190.494909</td><td>5.9421e6</td><td>0.011757</td><td>0.000172</td><td>0.00009</td></tr><tr><td>std</td><td>19158.201385</td><td>null</td><td>null</td><td>363.150484</td><td>367.873829</td><td>358.011643</td><td>363.052047</td><td>359.635301</td><td>1.6156e7</td><td>0.283142</td><td>0.022716</td><td>null</td></tr><tr><td>min</td><td>1.0</td><td>ABI.BR</td><td>2021-01-04</td><td>1.601</td><td>1.6628</td><td>1.5842</td><td>1.6066</td><td>1.2013</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>25%</td><td>16590.0</td><td>null</td><td>2022-04-20</td><td>29.79</td><td>30.09</td><td>29.47</td><td>29.7899</td><td>28.1461</td><td>509991.0</td><td>0.0</td><td>0.0</td><td>null</td></tr><tr><td>50%</td><td>33178.0</td><td>null</td><td>2023-08-03</td><td>70.7</td><td>71.4</td><td>69.89</td><td>70.68</td><td>63.141</td><td>1.415896e6</td><td>0.0</td><td>0.0</td><td>null</td></tr><tr><td>75%</td><td>49767.0</td><td>null</td><td>2024-11-19</td><td>186.0</td><td>188.0</td><td>184.0</td><td>186.1</td><td>175.2609</td><td>4.089463e6</td><td>0.0</td><td>0.0</td><td>null</td></tr><tr><td>max</td><td>66930.0</td><td>WKL.AS</td><td>2026-03-12</td><td>2926.0</td><td>2957.0</td><td>2813.0</td><td>2839.0</td><td>2802.9382</td><td>3.76391539e8</td><td>22.5</td><td>5.0</td><td>1.0</td></tr></tbody></table></div>
 
-### Memory usage
+### Pandas / Polars | Memory usage
 
-
-- **Memory Usage**: Measure RAM consumption (Pandas).
+Pandas reports memory usage via `.info(memory_usage="deep")` which accounts for Python object overhead. Polars uses `.estimated_size()` which reports the raw Arrow buffer size — typically smaller because Arrow avoids per-element Python object overhead.
 
 ```python
 print("Pandas memory usage:")
@@ -1890,10 +1933,11 @@ print(f"Polars estimated size: {size_bytes:,} bytes ({size_mb:.2f} MB)")
 
     Polars estimated size: 5,454,618 bytes (5.20 MB)
 
-### Null / NaN inspection
+### Pandas / Polars | Null and NaN inspection
+
+Check for null counts across all columns to assess data quality.
 
 ```python
-# Pandas
 print("Null counts per column:")
 display(df_pd.isnull().sum())
 print(f"\nTotal nulls: {df_pd.isnull().sum().sum()}")
@@ -1963,8 +2007,9 @@ print(f"\nTotal nulls: {df_pd.isnull().sum().sum()}")
     
     Total nulls: 0
 
+Polars provides `.null_count()` which returns a single-row DataFrame showing null counts per column.
+
 ```python
-# Polars
 print("Null counts per column:")
 display(df_pl.null_count())
 ```
@@ -1976,10 +2021,13 @@ display(df_pl.null_count())
 ---
 ## Edge Cases and Gotchas
 
-### Empty DataFrames
+Common pitfalls when working with Pandas and Polars, and how the two libraries handle them differently.
+
+### Pandas / Polars | Empty DataFrames
+
+Both libraries support creating empty DataFrames with a predefined schema — useful as sentinel values or accumulator start states.
 
 ```python
-# Pandas — empty DataFrame keeps dtypes
 df_empty_pd = pd.DataFrame({"a": pd.Series(dtype="int64"), "b": pd.Series(dtype="float64")})
 print(f"Shape: {df_empty_pd.shape}")
 display(df_empty_pd.dtypes)
@@ -2007,7 +2055,6 @@ display(df_empty_pd.dtypes)
 </table>
 
 ```python
-# Polars — explicit schema for empty DataFrame
 df_empty_pl = pl.DataFrame(schema={"a": pl.Int64, "b": pl.Float64})
 print(f"Shape: {df_empty_pl.shape}")
 print(f"Schema: {df_empty_pl.schema}")
@@ -2019,10 +2066,17 @@ display(df_empty_pl)
 
 <div><!-- shape: (0, 2) --><table><thead><tr><th>a</th><th>b</th></tr><tr><td>i64</td><td>f64</td></tr></thead><tbody></tbody></table></div>
 
-### Column name duplicates
+### Pandas / Polars | Column name duplicates
+
+> [!warning] Pandas allows duplicate column names
+>
+> Creating a DataFrame with duplicate column names is silently accepted. Selecting by name then returns multiple columns instead of one — a common source of hard-to-debug errors.
+
+> [!success] Polars rejects duplicate column names at creation
+>
+> Polars raises a `SchemaError` if you attempt to create a DataFrame with duplicate column names. This catches the bug immediately at construction time.
 
 ```python
-# Pandas allows duplicate column names (!) — leads to confusing bugs
 df_dup = pd.DataFrame([[1, 2]], columns=["x", "x"])
 display(df_dup)
 print(f"Selecting 'x' returns {df_dup['x'].shape[1]} columns — not 1!")
@@ -2070,10 +2124,17 @@ except Exception as e:
 
     Polars error on duplicate columns: column with name 'x' has more than one occurrence
 
-### Integer overflow
+### Pandas / Polars | Integer overflow
+
+> [!warning] Pandas silently wraps on integer overflow
+>
+> Adding 1 to `int64` max value wraps around to the most negative integer — no error, no warning. This is inherited from NumPy's C-level integer arithmetic.
+
+> [!success] Polars detects overflow
+>
+> In debug/development builds, Polars raises an error on integer overflow. In release builds, it may return the wrapped value but the behavior is documented and consistent.
 
 ```python
-# Pandas silently wraps on int overflow (numpy behavior)
 s = pd.Series([np.iinfo(np.int64).max], dtype="int64")
 print(f"Max int64: {s.iloc[0]}")
 s_overflow = s + 1
@@ -2097,23 +2158,23 @@ except Exception as e:
     Max int64: 9223372036854775807
     Max + 1  : -9223372036854775808
 
-### Gotcha — Pandas .values vs .to_numpy() vs .to_list()
+### Pandas / Polars | .values vs .to_numpy() vs .to_list()
 
-- **To NumPy**: Extract column as NumPy array.
+> [!warning] Pandas `.values` may return a view — mutations propagate
+>
+> `.values` returns a NumPy array that may share memory with the Series. Mutating the array silently mutates the original Series. Use `.to_numpy()` (recommended) or `.to_list()` for a safe copy.
+
+> [!success] Polars `.to_numpy()` always returns a copy
+>
+> Polars Series are backed by Arrow arrays (immutable). `.to_numpy()` always copies the data — mutations to the array never affect the original Series.
 
 ```python
 s = pd.Series([1, 2, 3])
 
-# .values returns a numpy array (legacy, may share memory)
 print(f".values type      : {type(s.values)}")
-
-# .to_numpy() is the recommended way
 print(f".to_numpy() type  : {type(s.to_numpy())}")
-
-# .to_list() gives a plain Python list
 print(f".to_list() type   : {type(s.to_list())}")
 
-# Gotcha: .values may return a view — mutating it mutates the Series!
 arr = s.values
 arr[0] = 999
 print(f"Series after mutating .values: {s.tolist()}  ← changed!")
@@ -2141,7 +2202,7 @@ print(f"Mutated Array: {arr.tolist()}")
     Mutated Array: [999, 2, 3]
 
 ---
-## Comparison Summary Table
+## Comparison Summary
 
 ```python
 comparison = pl.DataFrame({
@@ -2219,7 +2280,7 @@ display(comparison)
 <div><!-- shape: (20, 3) --><table><thead><tr><th>Feature</th><th>Pandas</th><th>Polars</th></tr><tr><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>1-D data structure</td><td>pd.Series (indexed)</td><td>pl.Series (named, no index)</td></tr><tr><td>2-D data structure</td><td>pd.DataFrame (indexed)</td><td>pl.DataFrame (no index)</td></tr><tr><td>Row index</td><td>Yes — RangeIndex, named, Multi</td><td>No — all data lives in columns</td></tr><tr><td>Missing values</td><td>NaN (float) or pd.NA</td><td>null (Arrow bitmask)</td></tr><tr><td>Default int type</td><td>int64</td><td>Int64</td></tr><tr><td>Default float type</td><td>float64</td><td>Float64</td></tr><tr><td>Default string type</td><td>object (or StringDtype)</td><td>String (Utf8)</td></tr><tr><td>Type safety</td><td>Low — object dtype is a catch-…</td><td>High — strict type checking</td></tr><tr><td>Duplicate column names</td><td>Allowed (bug-prone)</td><td>Rejected (error)</td></tr><tr><td>Memory layout</td><td>Column-major (BlockManager)</td><td>Column-major (Arrow arrays)</td></tr><tr><td>Lazy evaluation</td><td>No (eager only)</td><td>Yes — pl.LazyFrame</td></tr><tr><td>MultiIndex</td><td>Yes — pd.MultiIndex</td><td>No — use regular columns</td></tr><tr><td>Create from dict</td><td>pd.DataFrame(dict)</td><td>pl.DataFrame(dict)</td></tr><tr><td>Create from numpy</td><td>pd.DataFrame(arr, columns=…)</td><td>pl.DataFrame({&#x27;col&#x27;: arr})</td></tr><tr><td>Create from records</td><td>pd.DataFrame(list_of_dicts)</td><td>pl.DataFrame(list_of_dicts)</td></tr><tr><td>Shape attribute</td><td>.shape → (rows, cols)</td><td>.shape → (rows, cols)</td></tr><tr><td>Height / width attrs</td><td>No</td><td>Yes — .height, .width</td></tr><tr><td>Null counting</td><td>df.isnull().sum()</td><td>df.null_count()</td></tr><tr><td>Memory estimation</td><td>df.memory_usage(deep=True)</td><td>df.estimated_size()</td></tr><tr><td>Type casting</td><td>.astype() / pd.to_datetime()</td><td>.cast() / .str.to_date()</td></tr></tbody></table></div>
 
 ---
-#### Key takeaways
+### Key Takeaways
 - Polars has **no index** — this eliminates a whole class of alignment bugs.
 - Polars uses **Arrow-native nulls** — no NaN-induced type promotion.
 - Polars is **stricter** with types — catches errors earlier.
@@ -2228,11 +2289,11 @@ display(comparison)
 - For new projects, Polars' design avoids many Pandas footguns while being faster.
 
 ---
-# Part 2: Reading & Writing Data
+## Reading & Writing Data
 
-## Setup and Imports
+This section covers I/O operations: discovering data files, reading from CSV/JSON/Parquet, writing output, lazy scanning, and format benchmarks.
 
-## Discovering Data Files
+### Discovering Data Files
 
 We use `pathlib` and glob patterns to discover every file in the `../data/`
 directory, grouped by extension.
@@ -2427,11 +2488,9 @@ display(size_df)
   </tbody>
 </table>
 
-## Reading CSV Files
+### Reading CSV Files
 
-
-
-### Pandas read_csv
+#### Pandas | read_csv
 
 > [!danger] read_csv() dtype inference trap
 >
@@ -2459,7 +2518,6 @@ display(size_df)
 > Always pass `encoding=` when reading files from SQL Server BCP exports, Excel CSV, or any legacy system: `pd.read_csv(path, encoding='utf-8-sig')` handles BOM-prefixed UTF-8; use `encoding='latin-1'` for Western European legacy files. For Polars, pre-convert non-UTF-8 files with `iconv` or Python's `codecs` module before ingestion.
 
 ```python
-# Basic read - small file
 df_pd = pd.read_csv(DATA_DIR / "dim_country.csv")
 print(f"Shape: {df_pd.shape}")
 print(f"Dtypes:\n{df_pd.dtypes}")
@@ -2511,8 +2569,9 @@ display(df_pd.head())
 </table>
 </div>
 
+Read a larger file with explicit parameters: `dtype` for categorical columns, `parse_dates` for date detection, and `na_values` to specify additional null sentinels.
+
 ```python
-# Reading a larger file with explicit parameters
 df_pd_ohlcv = pd.read_csv(
     DATA_DIR / "eurostoxx50_ohlcv.csv",
     sep=",",               # separator (default)
@@ -2610,8 +2669,9 @@ display(df_pd_ohlcv.head(3))
 </table>
 </div>
 
+Use `usecols` to read only specific columns and `nrows` to limit rows — useful for peeking at large files without loading everything.
+
 ```python
-# Read only specific columns and limit rows (useful for peeking)
 df_peek = pd.read_csv(
     DATA_DIR / "trading_calendar.csv",
     usecols=lambda c: c in ["date", "exchange", "is_open"],
@@ -2656,12 +2716,11 @@ display(df_peek)
 </table>
 </div>
 
-### Polars read_csv (Eager)
+#### Polars | read_csv (Eager)
 
-
+Polars' eager `read_csv()` reads the entire file into memory. It uses multi-threaded parsing and infers types from the first 1000 rows by default. Use `try_parse_dates=True` for automatic date detection.
 
 ```python
-# Basic read - small file
 df_pl = pl.read_csv(DATA_DIR / "dim_country.csv")
 print(f"Shape: {df_pl.shape}")
 print(f"Schema: {df_pl.schema}")
@@ -2673,8 +2732,9 @@ display(df_pl.head())
 
 <div><!-- shape: (5, 2) --><table><thead><tr><th>country_name</th><th>iso_alpha2</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>Afghanistan</td><td>AF</td></tr><tr><td>Albania</td><td>AL</td></tr><tr><td>Algeria</td><td>DZ</td></tr><tr><td>American Samoa</td><td>AS</td></tr><tr><td>Andorra</td><td>AD</td></tr></tbody></table></div>
 
+Use `try_parse_dates`, `null_values`, and `schema_overrides` for more controlled parsing.
+
 ```python
-# Polars read_csv with parameters
 df_pl_ohlcv = pl.read_csv(
     DATA_DIR / "eurostoxx50_ohlcv.csv",
     separator=",",
@@ -2692,10 +2752,11 @@ display(df_pl_ohlcv.head(3))
 
 <div><!-- shape: (3, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-### Polars scan_csv (Lazy)
+#### Polars | scan_csv (Lazy)
+
+`scan_csv()` returns a `LazyFrame` — no data is read until `.collect()` is called. The query optimizer can push predicates and projections down to the scan, reading only what's needed.
 
 ```python
-# Lazy scan - no data is read yet!
 lf = pl.scan_csv(DATA_DIR / "eurostoxx50_ohlcv.csv", try_parse_dates=True)
 print(f"Type: {type(lf)}")
 print(f"Schema: {lf.collect_schema()}")
@@ -2706,8 +2767,9 @@ print("No data loaded yet - this is a query plan.")
     Schema: Schema({'id': Int64, 'symbol': String, 'date': Date, 'open': Float64, 'high': Float64, 'low': Float64, 'close': Float64, 'adj_close': Float64, 'volume': Int64, 'dividends': Float64, 'stock_splits': Float64, 'is_filled': Boolean})
     No data loaded yet - this is a query plan.
 
+Collect a filtered subset — Polars pushes the predicate down to the file scan.
+
 ```python
-# Collect a filtered subset - Polars pushes predicates down
 result = (
     lf
     .filter(pl.col("symbol") == "ADYEN.AS")
@@ -2775,14 +2837,9 @@ for f in csv_files:
       stoxxusa50_ohlcv               -> (65100, 12)  (0.003s)
       trading_calendar               -> (29335, 11)  (0.002s)
 
-## Reading JSON Files
+### Reading JSON Files
 
-
-- **Read JSON**: Load a JSON file into a DataFrame.
-
-### Pandas read_json
-
-- **Read JSON**: Load a JSON file into a DataFrame.
+#### Pandas | read_json
 
 ```python
 df_pd_json = pd.read_json(DATA_DIR / "dim_index.json")
@@ -2949,9 +3006,7 @@ display(df_pd_perf.head(3))
 </table>
 </div>
 
-### Polars read_json
-
-- **Read JSON**: Load a JSON file into a DataFrame.
+#### Polars | read_json
 
 ```python
 df_pl_json = pl.read_json(DATA_DIR / "dim_index.json")
@@ -2980,7 +3035,7 @@ display(df_pl_perf.head(3))
 
 <div><!-- shape: (3, 15) --><table><thead><tr><th>id</th><th>_index</th><th>perf_date</th><th>daily_return</th><th>cumulative_factor</th><th>rolling_30d_return</th><th>rolling_90d_return</th><th>ytd_return</th><th>rolling_30d_volatility</th><th>stocks_count</th><th>avg_pe</th><th>avg_pb</th><th>avg_dividend_yield</th><th>avg_market_cap</th><th>_computed_at</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>1</td><td>euro_stoxx_50</td><td>2021-01-05</td><td>-0.004626</td><td>0.995374</td><td>null</td><td>null</td><td>-0.004626</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>2026-03-04 22:40:26.069309</td></tr><tr><td>2</td><td>euro_stoxx_50</td><td>2021-01-06</td><td>0.018394</td><td>1.013683</td><td>null</td><td>null</td><td>0.013683</td><td>null</td><td>48</td><td>null</td><td>null</td><td>null</td><td>null</td><td>2026-03-04 22:40:26.069309</td></tr><tr><td>3</td><td>euro_stoxx_50</td><td>2021-01-07</td><td>0.005412</td><td>1.019168</td><td>null</td><td>null</td><td>0.019168</td><td>null</td><td>49</td><td>null</td><td>null</td><td>null</td><td>null</td><td>2026-03-04 22:40:26.069309</td></tr></tbody></table></div>
 
-### Polars scan_ndjson (Lazy)
+#### Polars | scan_ndjson (Lazy)
 
 `scan_ndjson` works with newline-delimited JSON files.  Standard JSON
 arrays need to be converted first.  We demonstrate by writing NDJSON
@@ -3061,11 +3116,9 @@ for f in json_files:
       stoxxusa50_ohlcv               -> (65100, 12)  (0.088s)
       trading_calendar               -> (29335, 11)  (0.035s)
 
-## Reading Parquet Files
+### Reading Parquet Files
 
-
-
-### Pandas read_parquet
+#### Pandas | read_parquet
 
 
 ```python
@@ -3165,9 +3218,7 @@ display(df_pd_pq_cols.head(3))
 </table>
 </div>
 
-### Polars read_parquet (Eager)
-
-
+#### Polars | read_parquet (Eager)
 
 ```python
 df_pl_pq = pl.read_parquet(DATA_DIR / "dim_country.parquet")
@@ -3195,9 +3246,9 @@ display(df_pl_pq_cols.head(3))
 
 <div><!-- shape: (3, 3) --><table><thead><tr><th>date</th><th>symbol</th><th>close</th></tr><tr><td>date</td><td>str</td><td>f64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>ABI.BR</td><td>57.21</td></tr><tr><td>2021-01-05</td><td>ABI.BR</td><td>57.18</td></tr><tr><td>2021-01-06</td><td>ABI.BR</td><td>58.77</td></tr></tbody></table></div>
 
-### Polars scan_parquet (Lazy)
+#### Polars | scan_parquet (Lazy)
 
-
+`scan_parquet()` reads only Parquet metadata — no row data is loaded until `.collect()`. Combined with `.filter()` and `.select()`, the optimizer pushes both predicates and projections down to the Parquet reader.
 
 ```python
 lf_pq = pl.scan_parquet(DATA_DIR / "eurostoxx50_ohlcv.parquet")
@@ -3278,15 +3329,14 @@ for f in pq_files:
       stoxxusa50_ohlcv               -> (65100, 12)  (0.004s)
       trading_calendar               -> (29335, 11)  (0.001s)
 
-## Parameter Deep-Dives
+### Parameter Deep-Dives
+
+#### Pandas / Polars | dtypes and schema_overrides
 
 
-
-### dtypes / schema_overrides
-
+Pandas uses `dtype=` to override column types at read time. Polars uses `schema_overrides=` for the same purpose. Both accept a dict mapping column names to types.
 
 ```python
-# Pandas: dtype parameter
 df_dtype_pd = pd.read_csv(
     DATA_DIR / "pulse.csv",
     dtype={
@@ -3423,7 +3473,6 @@ display(df_dtype_pd.head(3))
 </div>
 
 ```python
-# Polars: schema_overrides parameter
 df_dtype_pl = pl.read_csv(
     DATA_DIR / "pulse.csv",
     schema_overrides={
@@ -3440,12 +3489,11 @@ display(df_dtype_pl.head(3))
 
 <div><!-- shape: (3, 20) --><table><thead><tr><th>id</th><th>_index</th><th>_ingested_at</th><th>symbol</th><th>timestamp</th><th>current_price</th><th>open_price</th><th>day_high</th><th>day_low</th><th>previous_close</th><th>price_change</th><th>price_change_pct</th><th>bid</th><th>ask</th><th>bid_size</th><th>ask_size</th><th>spread</th><th>current_volume</th><th>average_volume_10day</th><th>volume_ratio</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>i64</td><td>f64</td></tr></thead><tbody><tr><td>20192</td><td>euro_stoxx_50</td><td>2026-03-12 12:50:13.639560</td><td>BMW.DE</td><td>2026-03-12 13:49:54</td><td>80.4</td><td>79.0</td><td>81.16</td><td>77.9</td><td>80.82</td><td>-0.42</td><td>-0.5197</td><td>80.38</td><td>80.52</td><td>0.0</td><td>0.0</td><td>0.14</td><td>770681</td><td>1209819</td><td>0.637</td></tr><tr><td>20193</td><td>euro_stoxx_50</td><td>2026-03-12 12:50:13.639560</td><td>RHM.DE</td><td>2026-03-12 13:49:55</td><td>1551.0</td><td>1536.0</td><td>1588.0</td><td>1535.0</td><td>1520.5</td><td>30.5</td><td>2.0059</td><td>1551.5</td><td>1552.0</td><td>267.0</td><td>45.0</td><td>0.5</td><td>159633</td><td>294973</td><td>0.5412</td></tr><tr><td>20194</td><td>euro_stoxx_50</td><td>2026-03-12 12:50:13.639560</td><td>BAS.DE</td><td>2026-03-12 13:49:55</td><td>47.67</td><td>46.3</td><td>48.1</td><td>45.96</td><td>46.31</td><td>1.36</td><td>2.9367</td><td>47.68</td><td>47.71</td><td>1393.0</td><td>165.0</td><td>0.03</td><td>1512800</td><td>4089134</td><td>0.37</td></tr></tbody></table></div>
 
-### null_values
+#### Pandas / Polars | null_values
 
+Pandas recognises many null sentinels by default (`NA`, `N/A`, `null`, empty string). You can extend with `na_values=`. Polars uses `null_values=` for the same purpose.
 
 ```python
-# Pandas recognises many null sentinels by default (NA, N/A, null, etc.)
-# You can extend with na_values
 df_null_pd = pd.read_csv(
     DATA_DIR / "scores_daily.csv",
     na_values=["", "NA", "N/A", "null", "-"],
@@ -3465,7 +3513,6 @@ display(null_counts_pd[null_counts_pd > 0])
     dtype: int64
 
 ```python
-# Polars: null_values parameter
 df_null_pl = pl.read_csv(
     DATA_DIR / "scores_daily.csv",
     null_values=["", "NA", "N/A", "null", "-"],
@@ -3479,12 +3526,11 @@ display(null_counts_pl)
 
 <div><!-- shape: (1, 36) --><table><thead><tr><th>id</th><th>_index</th><th>symbol</th><th>score_date</th><th>sector</th><th>pe_zscore</th><th>pb_zscore</th><th>ev_ebitda_zscore</th><th>yield_zscore</th><th>relative_value_score</th><th>relative_value_rank</th><th>relative_strength</th><th>sma_50_ratio</th><th>sma_200_ratio</th><th>dist_from_52w_high</th><th>momentum_score</th><th>momentum_rank</th><th>implied_upside</th><th>recommendation_mean</th><th>price_falling_analysts_bullish</th><th>sentiment_score</th><th>sentiment_rank</th><th>composite_score</th><th>composite_rank</th><th>_scored_at</th><th>sma_30_close</th><th>sma_90_close</th><th>market_cap</th><th>index_weight</th><th>short_name</th><th>country</th><th>current_price</th><th>day_change_pct</th><th>five_day_change_pct</th><th>ytd_change_pct</th><th>currency</th></tr><tr><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>3</td><td>6</td><td>71</td><td>35</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>14</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr></tbody></table></div>
 
-### separator
+#### Pandas / Polars | separator
 
+Pandas uses `sep=` while Polars uses `separator=`. Both default to comma.
 
 ```python
-# Demonstrate reading with explicit separator
-# (Our data uses comma, but showing the parameter)
 df_sep_pd = pd.read_csv(DATA_DIR / "dim_index.csv", sep=",")
 print(f"Pandas with explicit sep=',' -> shape {df_sep_pd.shape}")
 
@@ -3539,15 +3585,11 @@ display(df_sep_pd.head(3))
 </table>
 </div>
 
-## Writing Data
+### Writing Data
 
+Both Pandas and Polars write to CSV, JSON, and Parquet. Note the API naming difference: Pandas uses `.to_csv()` / `.to_json()` / `.to_parquet()`, while Polars uses `.write_csv()` / `.write_json()` / `.write_parquet()`.
 
-- **Write CSV**: Save DataFrame to CSV file.
-
-### Writing CSV
-
-
-- **Write CSV**: Save DataFrame to CSV file.
+#### Pandas / Polars | Writing CSV
 
 ```python
 OUT_DIR = Path("../data/_output")
@@ -3569,7 +3611,7 @@ print(f"Polars CSV written: {csv_path_pl.stat().st_size / 1024:.1f} KB")
     Pandas CSV written: 49.0 KB
     Polars CSV written: 49.3 KB
 
-### Writing JSON
+#### Pandas / Polars | Writing JSON
 
 ```python
 # Pandas to_json
@@ -3586,10 +3628,7 @@ print(f"Polars JSON written: {json_path_pl.stat().st_size / 1024:.1f} KB")
     Pandas JSON written: 143.6 KB
     Polars JSON written: 128.7 KB
 
-### Writing Parquet
-
-
-- **Write Parquet**: Save DataFrame to Parquet file.
+#### Pandas / Polars | Writing Parquet
 
 ```python
 # Pandas to_parquet
@@ -3670,16 +3709,37 @@ print(f"Cleaned up {OUT_DIR}")
 
     Cleaned up ..\data\_output
 
-## Lazy Scanning vs Eager Reading
+### Lazy Scanning vs Eager Reading
 
-Polars' `scan_*` functions return a `LazyFrame` that does **not** read
-data until `.collect()` is called.  This enables:
+Polars' `scan_*` functions return a `LazyFrame` that does **not** read data until `.collect()` is called. The query optimizer rewrites the plan for efficiency through three key mechanisms: **predicate pushdown** (filters applied at the file level), **projection pushdown** (only needed columns are read), and **common subexpression elimination** (avoid redundant work). Eager `read_*` loads everything into memory immediately.
 
-- **Predicate pushdown** - filters applied before reading data
-- **Projection pushdown** - only needed columns are read
-- **Query optimization** - Polars rewrites the plan for efficiency
+> [!tip] When to use lazy vs eager
+>
+> Use **lazy** (`scan_csv`, `scan_parquet`) when you only need a subset of rows or columns — the optimizer avoids reading unnecessary data. Use **eager** (`read_csv`, `read_parquet`) when you need the full dataset or when the file is small enough that optimization overhead outweighs savings.
 
-Eager `read_*` loads everything into memory immediately.
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    subgraph Eager["Eager: read_parquet"]
+        E1["Read ALL rows\nand columns"] --> E2["Filter in\nmemory"] --> E3["Select\ncolumns"]
+    end
+    subgraph Lazy["Lazy: scan_parquet"]
+        L1["Build\nquery plan"] --> L2["Optimizer:\npushdown"] --> L3["Read ONLY\nneeded data"]
+    end
+    style Eager fill:#292e42,stroke:#565f89
+    style Lazy fill:#1a1b26,stroke:#565f89
+```
 
 ```python
 # Eager: reads entire file into memory
@@ -3721,13 +3781,17 @@ print("=== Optimized Query Plan ===")
 print(plan.explain())
 ```
 
-    === Optimized Query Plan ===
-    SORT BY [col("date")]
-      simple π 3/3 ["date", "close", "volume"]
-        Parquet SCAN [../data/eurostoxx50_ohlcv.parquet]
-        PROJECT 4/12 COLUMNS
-        SELECTION: [(col("symbol")) == ("ADYEN.AS")]
-        ESTIMATED ROWS: 66355
+```text
+=== Optimized Query Plan ===
+SORT BY [col("date")]
+  simple π 3/3 ["date", "close", "volume"]
+    Parquet SCAN [../data/eurostoxx50_ohlcv.parquet]
+    PROJECT 4/12 COLUMNS
+    SELECTION: [(col("symbol")) == ("ADYEN.AS")]
+    ESTIMATED ROWS: 66355
+```
+
+Reading the plan bottom-up: `Parquet SCAN` reads the file. `PROJECT 4/12 COLUMNS` means only 4 of 12 columns are loaded (projection pushdown — `date`, `symbol`, `close`, `volume`; `symbol` is needed for the filter). `SELECTION` shows the predicate pushed down to the scan. `simple π 3/3` is the final projection that drops `symbol` after filtering. `SORT BY` sorts the result.
 
 ```python
 # Lazy scan_csv comparison
@@ -3751,11 +3815,9 @@ print(f"CSV lazy+filter: {df_csv_lazy.shape} in {csv_lazy_time:.4f}s")
     CSV eager: (24738, 12) in 0.0023s
     CSV lazy+filter: (0, 2) in 0.0034s
 
-## Format Comparison: Size and Speed
+### Format Comparison | Size and Speed
 
 For a deeper look at when to choose Parquet, CSV, or JSON across the full data pipeline, see [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats). The same Parquet I/O patterns shown here apply when loading data into BigQuery via [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export).
-
-- **Read JSON**: Load a JSON file into a DataFrame.
 
 ```python
 # Benchmark read speed: CSV vs JSON vs Parquet for Pandas and Polars
@@ -4007,11 +4069,9 @@ display(size_pivot)
 </table>
 </div>
 
-## Gotchas and Tips
+### Gotchas and Tips
 
-
-
-### Date Parsing
+#### Pandas / Polars | Date Parsing
 
 - **Pandas**: use `parse_dates=["col"]` in `read_csv`; JSON dates often
   need `pd.to_datetime()` after loading.
@@ -4032,7 +4092,7 @@ print(f"date column dtype WITH parse_dates:    {df_dates2['date'].dtype}")
     date column dtype WITHOUT parse_dates: object
     date column dtype WITH parse_dates:    datetime64[ns]
 
-### Memory and Large Files
+#### Pandas / Polars | Memory and Large Files
 
 - **Parquet** supports column projection - read only the columns you need.
 - **Polars lazy** scans avoid loading entire files.
@@ -4049,10 +4109,9 @@ print(f"Total rows via chunked reading: {total_rows:,}")
 
     Total rows via chunked reading: 66,355
 
-### Index Handling
+#### Pandas | Index Handling in CSV output
 
-
-- **Write CSV**: Save DataFrame to CSV file.
+Pandas' `.to_csv()` includes the index by default — always pass `index=False` when writing data intended for other systems.
 
 ```python
 # Pandas default to_csv includes the index
@@ -4077,7 +4136,7 @@ print(buf2.getvalue())
     1
     2
 
-### String vs Categorical
+#### Pandas / Polars | String vs Categorical
 
 - For columns with low cardinality (e.g. tickers, country codes),
   use `category` (Pandas) or `Categorical` (Polars) to save memory.
@@ -4096,11 +4155,13 @@ print(f"Category dtype memory: {mem_cat:,.1f} KB")
 print(f"Savings: {(1 - mem_cat/mem_str)*100:.1f}%")
 ```
 
-    String dtype memory:   3,569.2 KB
-    Category dtype memory: 69.7 KB
-    Savings: 98.0%
+```text
+String dtype memory:   3,569.2 KB
+Category dtype memory: 69.7 KB
+Savings: 98.0%
+```
 
-## Summary Comparison Table
+### Summary Comparison | Reading & Writing
 
 
 
@@ -4237,7 +4298,7 @@ display(comp_df.style.set_properties(**{"text-align": "left"}).hide(axis="index"
 
 ---
 
-#### Key takeaways
+### Key Takeaways | Reading & Writing
 
 1. **Parquet** is the best format for analytical workloads: smallest files,
    fastest reads, native schema preservation.

@@ -47,6 +47,8 @@ html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 
 ## Parquet Files
 
+### pyarrow — write and read Parquet
+
 #### Parquet overview — columnar format for analytics
 
 Parquet stores data **column-by-column** with per-column compression (snappy, gzip, zstd). Schema is embedded in the file footer — self-describing, no separate schema file needed. Supports column pruning (projection pushdown), predicate pushdown, and partitioning. 5-10x smaller than CSV. Standard in data lakes (GCS, S3, ADLS), BigQuery, Spark, DuckDB, Athena. Use `pyarrow` for parquet I/O in Python.
@@ -67,13 +69,9 @@ tmp_dir = Path(tempfile.mkdtemp(prefix="parquet_"))
 
 #### pyarrow pq.write_table — write Parquet from Arrow table
 
+Define an Arrow schema with `pa.schema()` using typed fields (`pa.string()`, `pa.int64()`, `pa.float64()`, `pa.bool_()`). Create a `pa.table` from column arrays, then write with `pq.write_table()`. The `compression` parameter controls the codec: `'snappy'` (default, fast), `'gzip'` (smaller), `'zstd'` (best ratio), `'none'`.
+
 ```python
-# Write parquet from Arrow table — column-oriented creation
-
-# Data Engineering scenario: write pipeline output to a parquet file in a data lake.
-
-# Step 1: Define the schema (column names and types)
-# Arrow types: pa.string(), pa.int64(), pa.float64(), pa.bool_(), pa.timestamp('us'), etc.
 schema = pa.schema([
     ("event_id", pa.string()),
     ("event_type", pa.string()),
@@ -112,9 +110,9 @@ f"Rows: {table.num_rows}, Columns: {table.num_columns}"
 
 #### pyarrow pq.read_table — read entire Parquet file
 
-```python
-# Read entire parquet file — schema discovery and full table load
+`pq.read_table()` reads the full Parquet file into an Arrow table. The schema is discovered from the file footer. Call `.to_pandas()` to convert to a pandas DataFrame for display or further processing.
 
+```python
 table_read = pq.read_table(parquet_file)  # returns an Arrow table
 f"Schema:\n{table_read.schema}"
 f"Data:\n{table_read.to_pandas()}"  # convert to pandas DataFrame for display
@@ -135,14 +133,13 @@ f"Data:\n{table_read.to_pandas()}"  # convert to pandas DataFrame for display
     3  evt_004     signup     1003     0.00       True
     4  evt_005   purchase     1002   129.99      False
 
+### Column pruning, pushdown, and partitioning
+
 #### pyarrow pq.read_table columns= — column pruning
 
+Pass `columns=["col1", "col2"]` to read only the columns you need. On a 100-column table, this can be 50x faster than CSV because Parquet stores columns independently — unneeded columns are never read from disk.
+
 ```python
-# Column pruning — read only selected columns from parquet
-
-# Data Engineering key feature: only read the columns you need.
-# On a 100-column table, this can be 50x faster than CSV.
-
 partial = pq.read_table(parquet_file, columns=["event_id", "revenue"])
 partial.column_names  # Columns read
 partial.column('revenue').to_pylist()  # Revenue total — Arrow column → Python list
@@ -155,9 +152,9 @@ f"{sum(partial.column('revenue').to_pylist()):.2f}"  # Sum
 
 #### pyarrow pq.read_table filters= — predicate pushdown
 
-```python
-# Predicate pushdown — filter rows at read time via row group statistics
+Pass `filters=[("column", "op", "value")]` to skip entire row groups whose statistics prove no matching rows exist. This avoids reading data that would be filtered out anyway — significant for partitioned datasets with millions of rows.
 
+```python
 filtered = pq.read_table(
     parquet_file,
     filters=[("event_type", "==", "purchase")]
@@ -189,9 +186,9 @@ for i, field in enumerate(schema_read):
 
 #### pyarrow pq.write_to_dataset — Hive-style partitioning
 
-```python
-# Hive-style partitioning — split files into subdirectories by column value
+`pq.write_to_dataset()` splits a table into subdirectories by partition column values (e.g., `event_type=purchase/`). Readers discover partitions automatically. This is the standard storage pattern for data lakes — BigQuery, Athena, and Spark all understand Hive-style layout.
 
+```python
 partitioned_dir = tmp_dir / "events_partitioned"
 pq.write_to_dataset(
     table,
@@ -214,11 +211,13 @@ f"{dataset.num_rows} rows, columns: {dataset.column_names}"  # Read back
         event_type=signup\9f62ef0dd3b74960a0f065356a69591c-0.parquet (1255 bytes)
     5 rows, columns: ['event_id', 'user_id', 'revenue', 'is_mobile', 'event_type']
 
-#### Parquet in memory — BytesIO
+### In-memory and comparison
+
+#### Parquet in memory — BytesIO | cloud upload without temp files
+
+Serialize Parquet to a `BytesIO` buffer for direct cloud upload (GCS, S3) without writing to disk. Rewind with `seek(0)` before reading or uploading.
 
 ```python
-# Parquet in memory — BytesIO for cloud upload without temp files
-
 buffer = BytesIO()
 pq.write_table(table, buffer)
 f"{buffer.tell()} bytes"  # Buffer size
@@ -232,11 +231,9 @@ f"{table_from_mem.num_rows} rows"  # Read from memory
     1594 bytes
     5 rows
 
-#### CSV vs Parquet comparison
+#### CSV vs Parquet comparison | size, features, and use cases
 
 ```python
-# CSV vs Parquet comparison — size, features, and use cases
-
 csv_file = tmp_dir / "events.csv"
 table.to_pandas().to_csv(csv_file, index=False)
 
@@ -297,11 +294,13 @@ Binary formats provide schema enforcement, cross-language support, and compact s
 | pickle | Medium | Fast | No | No | Never in prod |
 | struct | Tiny | Fastest | Manual | Manual | IoT, binary protocols |
 
-#### Avro serialization with fastavro
+### Apache Avro — fastavro
+
+#### Avro serialization with fastavro | define schema and parse
+
+Avro schemas are defined as JSON dicts with `type`, `name`, `fields`. `fastavro.parse_schema()` validates the schema. Records are plain Python dicts — `fastavro` validates them against the schema on write.
 
 ```python
-# Apache Avro with fastavro — binary serialization with embedded schema
-
 avro_schema = {
     "type": "record",
     "name": "StockQuote",
@@ -327,11 +326,11 @@ for f in avro_schema["fields"]:
         volume: long
         exchange: ['null', 'string']
 
-#### Write and read Avro file
+#### Write and read Avro file | fastavro.writer with embedded schema
+
+`fastavro.writer` embeds the schema in the file header and writes records as compact binary. `fastavro.reader` discovers the schema from the file header automatically — no external schema file needed.
 
 ```python
-# Write and read Avro file — records with embedded schema
-
 avro_dir = tempfile.mkdtemp(prefix="avro_py_")
 avro_file = os.path.join(avro_dir, "quotes.avro")
 
@@ -369,12 +368,11 @@ shutil.rmtree(avro_dir)
         TTE.PA     €   58.20  vol=  120000  exch=XPAR
         BAS.DE     €   44.85  vol=   95000  exch=N/A
 
-#### Avro in memory and schema evolution
+#### Avro in memory and schema evolution | BytesIO for Kafka payloads
+
+Serialize Avro records to `BytesIO` for Kafka producer payloads or API responses without disk I/O. Schema evolution rules: adding a field with a default is safe (backward compatible); changing a field type breaks consumers.
 
 ```python
-# Avro in memory and schema evolution — BytesIO and field addition
-
-# Avro in memory — serialize to BytesIO for Kafka or API payloads
 avro_buffer = BytesIO()
 fastavro.writer(avro_buffer, parsed_schema, records)
 avro_bytes = avro_buffer.getvalue()
@@ -409,11 +407,13 @@ print("""
         SAFE:   add field with default, remove field with default, add aliases
         UNSAFE: change field type, remove field WITHOUT default
 
-#### Protobuf in Python — manual message building
+### Protocol Buffers — protobuf
+
+#### Protobuf in Python — dynamic message building
+
+In notebooks or dynamic scenarios without `protoc`-generated classes, use `descriptor_pb2` to define the schema at runtime and `_reflection.GeneratedProtocolMessageType` to create a message class. `SerializeToString()` produces the same binary format as `protoc`-generated code.
 
 ```python
-# Protobuf in Python — manual message building with struct
-
 DESCRIPTOR = descriptor_pb2.FileDescriptorProto(
     name="stock_quote.proto",
     package="stoxx",
@@ -477,11 +477,11 @@ f"Savings:       {(1 - len(binary)/json_size)*100:.0f}%"
     21 bytes
     61%
 
-#### Protobuf with protoc (production pattern)
+#### Protobuf with protoc (production pattern) | protoc-generated code workflow
+
+In production, define schemas in `.proto` files, compile with `protoc --python_out=.` to generate `_pb2.py` modules, then serialize/deserialize with `SerializeToString()` and `FromString()`. Schema evolution: old code ignores new fields; new code uses defaults for missing fields.
 
 ```python
-# Production Protobuf workflow — protoc-generated code pattern
-
 print("""
   ── Step 1: Define schema (stock_quote.proto) ──
 
@@ -553,10 +553,13 @@ print("""
 
 For the architecture-level decision guide on when to use each format across the full pipeline (ingestion, storage, interchange), see [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats). The benchmarks below focus on Python-specific library performance, while [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) covers how format choice affects BigQuery load throughput.
 
+### Test data and benchmark setup
+
 #### Generate synthetic OHLCV test data — three sizes for benchmarks
 
+Generates synthetic OHLCV (open/high/low/close/volume) data matching the stoxx database schema. Three sizes — 100 (small), 10K (medium), 100K (large) — to show how format overhead scales.
+
 ```python
-# Generate OHLCV test data — same schema as stoxx database
 random.seed(42)
 
 symbols = ["SAP.DE","ASML.AS","TTE.PA","BAS.DE","BAYN.DE","BMW.DE","SIE.DE","ALV.DE",
@@ -588,10 +591,13 @@ f"Small: {len(small):,}, Medium: {len(medium):,}, Large: {len(large):,}"
 
     Small: 100, Medium: 10,000, Large: 100,000
 
-#### Format benchmarks — write/read speed across CSV, Parquet, Avro, Protobuf, MessagePack
+### Benchmark execution
+
+#### Format benchmarks — write/read speed across CSV, Parquet, Avro, Protobuf
+
+Benchmarks each format at all three sizes, measuring write time (ms), read time (ms), and file size (bytes). Each format uses its standard Python library: `csv` module, `json` module, `pandas`/`pyarrow` for Parquet, `fastavro` for Avro, and raw wire-format encoding for Protobuf.
 
 ```python
-# Run benchmarks — write/read all 5 formats at all 3 sizes
 
 bench_dir = tempfile.mkdtemp(prefix="bench_py_")
 results = []  # (format, size_label, records, write_ms, read_ms, file_bytes)
@@ -697,10 +703,11 @@ for label, data in [("small", small), ("medium", medium), ("large", large)]:
 
       All benchmarks complete.
 
+### Results and analysis
+
 #### Benchmark results — write/read performance matrix
 
 ```python
-# Results table — pandas styled DataFrame with performance metrics
 
 df_bench = pd.DataFrame(results, columns=["Format", "File", "Records", "Write_ms", "Read_ms", "Bytes"])
 df_bench["Bucket"] = df_bench["File"].str.extract(r"(small|medium|large)")
@@ -921,7 +928,6 @@ display(
 #### Write vs Read speed chart — Plotly grouped bar
 
 ```python
-# Write/Read speed chart — Plotly grouped bar for large tier
 
 colors = {"CSV": "#4285F4", "JSON": "#FBBC05", "Parquet": "#34A853", "Avro": "#EA4335", "Protobuf": "#9C27B0"}
 large = df_bench[df_bench["Bucket"] == "large"].sort_values("Bytes")
@@ -940,10 +946,9 @@ fig.show()
 
 <iframe src="/static/plotly/pyser_01.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### Compression comparison — snappy, gzip, zstd, lz4 ratios and speed
+#### Compression comparison — file size per format for large tier
 
 ```python
-# Compression comparison — file size per format for large tier
 
 csv_bytes = df_bench[(df_bench["Format"] == "CSV") & (df_bench["Bucket"] == "large")]["Bytes"].iloc[0]
 comp = df_bench[df_bench["Bucket"] == "large"][["Format", "Bytes"]].sort_values("Bytes").copy()
@@ -1002,7 +1007,6 @@ display(
 #### File size bar chart — Plotly horizontal bars
 
 ```python
-# File size bar chart — Plotly horizontal bars for visual comparison
 
 colors_list = [colors.get(f, "#999") for f in comp["Format"]]
 fig2 = go.Figure(go.Bar(
@@ -1026,60 +1030,29 @@ fig2.show()
 
 <iframe src="/static/plotly/pyser_02.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### Recommendation matrix
+#### Recommendation matrix | best format for each scenario
+
+| Scenario | Best Format | Why |
+|---|---|---|
+| Data lake / analytics queries | Parquet | Columnar: read 2 of 50 columns = skip 96% of data |
+| Kafka event streaming | Avro | Schema embedded, schema registry, compact |
+| gRPC microservices | Protobuf | Fastest parse, smallest size, code-generated types |
+| REST API responses | JSON | Human-readable, universal, self-describing |
+| Config files | JSON / YAML | Human-editable, comments (YAML), versioned in git |
+| Legacy data warehouse export | CSV | Universal, every tool reads it |
+| Debug / logging | JSON | Human-readable, structured, grep-friendly |
+| High-freq trading feed | Protobuf | Lowest latency, smallest payload |
+| ML feature store | Parquet | Column pruning, predicate pushdown, partitioned |
+| Cross-language IPC | Protobuf/Avro | Protobuf for speed, Avro for schema |
+| Batch ETL intermediate | Parquet | Compressed, typed, Spark/BigQuery/Polars |
+| Small config payloads (<1KB) | JSON | Binary format overhead not worth it |
+| Browser / mobile API | JSON + gzip | Universal client support |
+
+> [!tip] Rankings
+>
+> **Size** (smallest → largest): Protobuf < Parquet < Avro < CSV < JSON
+> **Speed** (fastest → slowest): Protobuf > CSV > Parquet > Avro > JSON
 
 ```python
-# Recommendation matrix — best format for each scenario
-
-print("""
-  ═══ WHEN TO USE WHAT ═══
-
-  Scenario                        Best Format     Why
-  ────────────────────────────────────────────────────────────────────────────
-  Data lake / analytics queries   Parquet         Columnar: read 2 of 50 columns = skip 96% of data
-  Kafka event streaming           Avro            Schema embedded, schema registry, compact
-  gRPC microservices              Protobuf        Fastest parse, smallest size, code-generated types
-  REST API responses              JSON            Human-readable, universal, self-describing
-  Config files                    JSON / YAML     Human-editable, comments (YAML), versioned in git
-  Legacy data warehouse export    CSV             Universal, every tool reads it
-  Debug / logging                 JSON            Human-readable, structured, grep-friendly
-  High-freq trading feed          Protobuf        Lowest latency, smallest payload
-  ML feature store                Parquet         Column pruning, predicate pushdown, partitioned
-  Cross-language IPC              Protobuf/Avro   Protobuf for speed, Avro for schema
-  Batch ETL intermediate          Parquet         Compressed, typed, Spark/BigQuery/Polars
-  Small config payloads (<1KB)    JSON            Binary format overhead not worth it
-  Browser / mobile API            JSON + gzip     Universal client support
-
-  SIZE RANKING (smallest to largest for same data):
-    Protobuf < Parquet < Avro < CSV < JSON
-
-  SPEED RANKING (fastest write+read):
-    Protobuf > CSV > Parquet > Avro > JSON
-""")
-
 shutil.rmtree(bench_dir)
 ```
-
-      ═══ WHEN TO USE WHAT ═══
-    
-      Scenario                        Best Format     Why
-      ────────────────────────────────────────────────────────────────────────────
-      Data lake / analytics queries   Parquet         Columnar: read 2 of 50 columns = skip 96% of data
-      Kafka event streaming           Avro            Schema embedded, schema registry, compact
-      gRPC microservices              Protobuf        Fastest parse, smallest size, code-generated types
-      REST API responses              JSON            Human-readable, universal, self-describing
-      Config files                    JSON / YAML     Human-editable, comments (YAML), versioned in git
-      Legacy data warehouse export    CSV             Universal, every tool reads it
-      Debug / logging                 JSON            Human-readable, structured, grep-friendly
-      High-freq trading feed          Protobuf        Lowest latency, smallest payload
-      ML feature store                Parquet         Column pruning, predicate pushdown, partitioned
-      Cross-language IPC              Protobuf/Avro   Protobuf for speed, Avro for schema
-      Batch ETL intermediate          Parquet         Compressed, typed, Spark/BigQuery/Polars
-      Small config payloads (<1KB)    JSON            Binary format overhead not worth it
-      Browser / mobile API            JSON + gzip     Universal client support
-    
-      SIZE RANKING (smallest to largest for same data):
-        Protobuf < Parquet < Avro < CSV < JSON
-    
-      SPEED RANKING (fastest write+read):
-        Protobuf > CSV > Parquet > Avro > JSON

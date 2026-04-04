@@ -1,9 +1,10 @@
 ---
-tags: [sql, gcp, sql-server, tsql]
+title: "Always On Availability Groups"
+tags: [sql-server, gcp, tsql]
 aliases: [Always On AG, availability group, AOAG, AG, HA, Pacemaker HA, SQL Server HA, failover clustering, SQL Server Linux HA]
 description: "Complete guide to SQL Server Always On Availability Groups on Linux (GCP): architecture, replication modes, step-by-step setup with Pacemaker, essential monitoring DMVs, planned and forced failover operations, read-only routing, and troubleshooting for 5 common issues."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-04
 status: complete
 ---
 
@@ -22,7 +23,7 @@ Always On Availability Groups (AGs) are the primary high-availability mechanism 
 
 A single SQL Server instance is a single point of failure. If the VM crashes, the disk corrupts, or you need to patch the OS, your database is down. HA ensures the database remains accessible during planned maintenance and unplanned outages by maintaining redundant copies of data that can take over automatically.
 
-#### RPO, RTO, SLA uptime — key HA metrics
+### RPO, RTO, SLA uptime — key HA metrics
 
 | Metric | Definition | Target |
 |--------|-----------|--------|
@@ -34,9 +35,23 @@ A single SQL Server instance is a single point of failure. If the VM crashes, th
 
 ## HA Options for SQL Server 2022 on Linux
 
+SQL Server on Linux supports three HA mechanisms, each with different trade-offs between data loss protection, failover speed, operational complexity, and GCP compatibility. Always On Availability Groups are the recommended choice for most workloads because they provide database-level replication with no shared storage requirement — a critical advantage on GCP where native shared block storage is not available.
+
 ### Option 1: Always On Availability Groups (Recommended)
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
 flowchart TD
     VIP["Listener VIP<br/>analytics-sql-ag.internal:1433"]
 
@@ -82,8 +97,7 @@ A single SQL Server instance that runs on one node at a time but can fail over t
 
 > [!info] GCP Favors AGs Over FCI
 >
-> GCP Strongly Favors AGs Over FCI.
-> GCP doesn't offer native shared storage like AWS EBS Multi-Attach or Azure Shared Disks. Setting up GlusterFS or NFS for FCI adds complexity and another failure point. Use AGs.
+> GCP does not offer native shared storage like AWS EBS Multi-Attach or Azure Shared Disks. Setting up GlusterFS or NFS for FCI adds complexity and another failure point. Use AGs.
 
 ### Option 3: Log Shipping (Simple DR)
 
@@ -108,6 +122,8 @@ The primary backs up its transaction log on a schedule, copies the backup file t
 
 ## Setting Up Always On AGs on Linux (GCP)
 
+The setup follows 8 steps: enable HADR on each instance, create the database mirroring endpoint with certificate authentication, create the AG with the desired replication topology, join secondaries, add databases, and configure Pacemaker as the external cluster manager for automatic failover. All inter-replica communication flows through a single TCP endpoint (port 5022) per instance — the log stream is compressed before transmission.
+
 ### Prerequisites
 
 All nodes must have:
@@ -119,16 +135,13 @@ All nodes must have:
 
 ### Step 1: Enable HADR on Every Node
 
+Run this on each SQL Server instance. `EXTERNAL` tells SQL Server that an external cluster manager (Pacemaker) handles failover, not WSFC. Verify with `SERVERPROPERTY('IsHadrEnabled')` — it should return 1.
+
 ```sql
--- Run on each SQL Server instance
 ALTER SERVER CONFIGURATION SET HADR CLUSTER TYPE = EXTERNAL;
 
--- Verify
 SELECT SERVERPROPERTY('IsHadrEnabled') AS hadr_enabled;
--- Returns 1
 ```
-
-`EXTERNAL` tells SQL Server that an external cluster manager (Pacemaker) handles failover, not WSFC.
 
 ### Step 2: Create the Database Mirroring Endpoint on Every Node
 
@@ -146,13 +159,13 @@ ALTER ENDPOINT [Hadr_endpoint] STATE = STARTED;
 
 > [!info] Certificate Auth on Linux
 >
-> Certificate-Based Authentication on Linux.
 > AGs on Linux use **certificate-based authentication** (not Windows authentication). You create a certificate on the primary and copy it to all secondaries — Windows Kerberos is not available on Linux.
 
 ### Step 3: Create and Export the Certificate (Primary)
 
+On the primary, create a master key, generate the AG endpoint certificate, and export both the certificate and private key to files that will be copied to each secondary.
+
 ```sql
--- On primary
 CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'StrongMasterKeyP@ss!';
 
 CREATE CERTIFICATE dbm_cert
@@ -178,8 +191,9 @@ ssh user@analytics-sql-03 'sudo chown mssql:mssql /var/opt/mssql/data/dbm_cert.*
 
 ### Step 4: Import the Certificate on Each Secondary
 
+On each secondary, create a master key and import the certificate and private key that were copied from the primary in the previous step.
+
 ```sql
--- On each secondary
 CREATE MASTER KEY ENCRYPTION BY PASSWORD = 'StrongMasterKeyP@ss!';
 
 CREATE CERTIFICATE dbm_cert
@@ -192,11 +206,13 @@ CREATE CERTIFICATE dbm_cert
 
 ### Step 5: Create the Availability Group (Primary)
 
+Run on the primary. `DB_FAILOVER = ON` triggers automatic failover when a critical database error (such as corruption) is detected, without waiting for the cluster manager. `REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT = 1` ensures at least one synchronous secondary hardens the log before the primary acknowledges a commit.
+
 ```sql
 CREATE AVAILABILITY GROUP [project_ag]
 WITH (
     CLUSTER_TYPE = EXTERNAL,
-    DB_FAILOVER = ON,          -- auto-failover on critical DB errors
+    DB_FAILOVER = ON,
     REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT = 1
 )
 FOR REPLICA ON
@@ -223,10 +239,9 @@ FOR REPLICA ON
     );
 ```
 
-> [!tip] Synchronized Secondary Commitment
+> [!tip] REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT
 >
-> REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT = 1.
-> This prevents data loss during failover — the primary will not acknowledge a commit until at least 1 synchronous secondary has hardened the log. Trade-off: if both synchronous secondaries go down, the primary stops accepting writes.
+> Setting this to 1 prevents data loss during failover — the primary will not acknowledge a commit until at least 1 synchronous secondary has hardened the log. Trade-off: if both synchronous secondaries go down, the primary stops accepting writes. Available since SQL Server 2017.
 
 > [!info] SEEDING_MODE = AUTOMATIC
 >
@@ -234,8 +249,9 @@ FOR REPLICA ON
 
 ### Step 6: Join Secondaries to the AG
 
+Run on each secondary. `GRANT CREATE ANY DATABASE` allows automatic seeding to create the database on the secondary without manual backup/restore.
+
 ```sql
--- On each secondary
 ALTER AVAILABILITY GROUP [project_ag] JOIN WITH (CLUSTER_TYPE = EXTERNAL);
 ALTER AVAILABILITY GROUP [project_ag] GRANT CREATE ANY DATABASE;
 ```
@@ -267,11 +283,11 @@ sudo apt install -y pacemaker pacemaker-cli-utils corosync resource-agents fence
 sudo apt install -y mssql-server-ha
 ```
 
+On each node, create a dedicated SQL login for Pacemaker health checks and grant it the permissions needed to monitor and manage the AG.
+
 ```sql
--- On each node — create Pacemaker login for health checks
 CREATE LOGIN [pacemakerLogin] WITH PASSWORD = 'PacemakerP@ss!';
 
--- Grant the AG health check permission
 GRANT ALTER, CONTROL, VIEW DEFINITION ON AVAILABILITY GROUP::[project_ag]
     TO [pacemakerLogin];
 GRANT VIEW SERVER STATE TO [pacemakerLogin];
@@ -285,8 +301,9 @@ sudo chmod 400 /var/opt/mssql/secrets/passwd
 sudo chown root:root /var/opt/mssql/secrets/passwd
 ```
 
+Configure Corosync on the primary node, then copy the configuration file to all other nodes. The `nodelist` must include all AG replicas with unique node IDs.
+
 ```bash
-# Configure Corosync (on primary, then sync to all nodes)
 sudo cat > /etc/corosync/corosync.conf << 'EOF'
 totem {
     version: 2
@@ -320,8 +337,9 @@ sudo systemctl restart corosync
 sudo systemctl restart pacemaker
 ```
 
+Create the AG resource and virtual IP in Pacemaker. Run on one node only — Pacemaker propagates the configuration to all cluster members. The colocation constraint ensures the VIP always follows the primary replica.
+
 ```bash
-# Create the AG resource in Pacemaker (run on one node only)
 sudo pcs resource create ag_cluster \
     ocf:mssql:ag \
     ag_name="project_ag" \
@@ -341,19 +359,23 @@ sudo pcs resource create ag_vip \
     cidr_netmask=32 \
     op monitor interval=30s
 
-# Colocate the VIP with the primary
 sudo pcs constraint colocation add ag_vip with master ag_cluster-clone INFINITY
 sudo pcs constraint order promote ag_cluster-clone then start ag_vip
 ```
 
 > [!info] Use ILB Instead of Floating VIP
 >
-> GCP: Use Internal TCP/UDP Load Balancer Instead of Floating VIP.
-> GCP doesn't support Gratuitous ARP, so a floating VIP may not work reliably. Create an Internal Load Balancer (ILB) with a health check on port 1433 and backend instance group containing all AG nodes. The ILB forwards traffic only to the node that responds as primary.
+> GCP does not support Gratuitous ARP, so a floating VIP may not work reliably. Create an Internal Load Balancer (ILB) with a health check on port 1433 and backend instance group containing all AG nodes. The ILB forwards traffic only to the node that responds as primary.
 
 ---
 
 ## Monitoring the AG — Essential DMVs
+
+AG health is monitored through the `sys.dm_hadr_*` family of Dynamic Management Views. The primary health signals are the **log send queue** (how far behind the secondary is in receiving log blocks) and the **redo queue** (how far behind the secondary is in replaying received log blocks into database pages). A growing send queue increases RPO risk on async replicas and can cause transaction log file growth on the primary (SQL Server cannot truncate the log past the oldest un-sent record). A growing redo queue increases recovery time after failover and increases read latency on readable secondaries.
+
+The data synchronization pipeline follows six stages: log generation on the primary, log capture into per-replica queues, network send, receive and cache on the secondary, harden (flush to secondary log file — this is the point where data loss is prevented for synchronous replicas), and redo (apply hardened log records to secondary database pages).
+
+### Replica and Database Health
 
 #### sys.dm_hadr_availability_replica_states — replica sync health
 
@@ -420,10 +442,13 @@ ORDER BY d.name, ar.replica_server_name;
 | `is_suspended` | = 1 (manual intervention needed) |
 | `sync_state` | NOT SYNCHRONIZING = broken |
 
+### Seeding and Throughput
+
 #### sys.dm_hadr_automatic_seeding — automatic seeding progress
 
+Check seeding status when adding a new database or replica. A `failure_state_desc` value indicates why seeding failed (e.g., insufficient disk space, network timeout).
+
 ```sql
--- Check seeding status when adding a new database or replica
 SELECT
     ag.name                          AS ag_name,
     ar.replica_server_name           AS replica,
@@ -445,8 +470,9 @@ JOIN sys.databases d
 
 #### dm_hadr_database_replica_states — log send and redo throughput monitoring
 
+Monitor log send and redo rates over time. A persistent gap between `log_send_rate` and `redo_rate` indicates the secondary cannot replay log records as fast as they arrive — the redo queue will grow until the bottleneck is resolved.
+
 ```sql
--- Monitor log send and redo rates over time
 SELECT
     ar.replica_server_name,
     drs.log_send_queue_size / 1024.0      AS log_send_queue_mb,
@@ -465,21 +491,24 @@ JOIN sys.availability_replicas ar ON drs.replica_id = ar.replica_id;
 
 ## Failover Operations
 
+AG failover transfers the primary role from one replica to another. There are two types: **planned** (zero data loss, initiated by an administrator during maintenance windows) and **forced** (emergency, possible data loss, used when the primary is unreachable). In both cases, the failover command is run on the *target* secondary, not the current primary.
+
 ### Planned Failover (Zero Downtime, Zero Data Loss)
 
 Used for: OS patching, SQL Server upgrades, VM maintenance.
 
+First, verify on the primary that the target secondary shows `SYNCHRONIZED` (not `SYNCHRONIZING` — a SYNCHRONIZING state means the secondary has not caught up and a planned failover would lose data). Then run the FAILOVER command on the target secondary.
+
 ```sql
--- Step 1: Verify the target secondary is synchronized (run on primary)
 SELECT
     ar.replica_server_name,
     drs.synchronization_state_desc
 FROM sys.dm_hadr_database_replica_states drs
 JOIN sys.availability_replicas ar ON drs.replica_id = ar.replica_id
 WHERE drs.synchronization_state_desc = 'SYNCHRONIZED';
--- The target must show SYNCHRONIZED, not SYNCHRONIZING
+```
 
--- Step 2: Failover (run on the TARGET secondary, not the primary)
+```sql
 ALTER AVAILABILITY GROUP [project_ag] FAILOVER;
 ```
 
@@ -489,8 +518,9 @@ After failover, the old primary becomes a secondary and starts receiving log rec
 
 Used when the primary is down and cannot be recovered quickly.
 
+Run on the secondary you want to promote to primary. This command does not wait for the original primary and may result in data loss for any transactions that were committed on the primary but not yet hardened on this secondary.
+
 ```sql
--- Run on the secondary you want to promote
 ALTER AVAILABILITY GROUP [project_ag] FORCE_FAILOVER_ALLOW_DATA_LOSS;
 ```
 
@@ -501,7 +531,6 @@ ALTER AVAILABILITY GROUP [project_ag] FORCE_FAILOVER_ALLOW_DATA_LOSS;
 3. Rejoin the old primary as a secondary:
 
 ```sql
--- On the old primary (now rejoining as secondary)
 ALTER AVAILABILITY GROUP [project_ag]
     SET (ROLE = SECONDARY);
 ALTER AVAILABILITY GROUP [project_ag] JOIN WITH (CLUSTER_TYPE = EXTERNAL);
@@ -510,20 +539,23 @@ ALTER AVAILABILITY GROUP [project_ag] JOIN WITH (CLUSTER_TYPE = EXTERNAL);
 If the databases diverged too much, drop the database on the old primary and let automatic seeding re-create it:
 
 ```sql
--- On the old primary
 DROP DATABASE [analytics_db];
 ALTER AVAILABILITY GROUP [project_ag] GRANT CREATE ANY DATABASE;
--- Wait for automatic seeding to complete
 ```
 
 ---
 
 ## Read-Only Routing
 
-Offload read queries (dashboard, reporting) to secondaries, leaving the primary free for writes.
+Read-only routing allows the AG listener to redirect connections that specify `ApplicationIntent=ReadOnly` to a secondary replica, offloading read workloads (dashboards, reporting, analytics) away from the primary. The routing decision happens at connection time: the client connects to the listener, SQL Server inspects the `ApplicationIntent` property in the connection string, and if it is `ReadOnly`, the primary consults its `READ_ONLY_ROUTING_LIST` and redirects the connection to the first available secondary in the list.
+
+By default, the routing list is **ordered** — SQL Server always routes to the first available entry. To distribute read connections across multiple secondaries using round-robin, nest replicas in parentheses (available since SQL Server 2016): `READ_ONLY_ROUTING_LIST = (('Server1','Server2'),'Server3')` routes round-robin between Server1 and Server2, falling back to Server3 only if both are unavailable.
+
+### Routing configuration
+
+Configure `READ_ONLY_ROUTING_URL` on each replica (the TCP endpoint that read-only connections are redirected to) and `READ_ONLY_ROUTING_LIST` on each replica's `PRIMARY_ROLE` (the ordered list of secondaries to route to when that replica is the primary).
 
 ```sql
--- Configure read-only routing URLs on each replica
 ALTER AVAILABILITY GROUP [project_ag]
 MODIFY REPLICA ON N'analytics-sql-01' WITH (
     PRIMARY_ROLE (
@@ -559,16 +591,36 @@ Server=analytics-sql-ag.internal,1433;Database=analytics_db;ApplicationIntent=Re
 
 #### @@SERVERNAME, CONNECTIONPROPERTY — verify read-only routing
 
+Run on a read-only connection to verify it landed on a secondary. The result should show a secondary server name and `READ_ONLY` for updateability. If it shows the primary, read-only routing is not working.
+
 ```sql
--- Run on a read-only connection to see which server you're on
 SELECT @@SERVERNAME AS connected_to,
        DATABASEPROPERTYEX(DB_NAME(), 'Updateability') AS updateability;
--- Should show a secondary name and 'READ_ONLY'
 ```
+
+> [!warning] Common Read-Only Routing Failures
+>
+> - Connection string targets a server instance directly instead of the listener — routing is bypassed entirely
+> - `ApplicationIntent=ReadOnly` is missing from the connection string — traffic goes to the primary
+> - `READ_ONLY_ROUTING_LIST` is empty or not configured on the primary replica
+> - `READ_ONLY_ROUTING_URL` is missing or incorrect on the secondary — verify with `SELECT read_only_routing_url FROM sys.availability_replicas`
+> - The client driver does not support `ApplicationIntent` — only modern drivers (ODBC 11+, `Microsoft.Data.SqlClient`, `System.Data.SqlClient` 4.0.2+) handle it; legacy drivers silently ignore it
+
+> [!success] Diagnostic Queries
+>
+> ```sql
+> SELECT replica_server_name, secondary_role_allow_connections_desc,
+>        read_only_routing_url
+> FROM sys.availability_replicas;
+>
+> SELECT * FROM sys.availability_read_only_routing_lists;
+> ```
 
 ---
 
 ## Troubleshooting
+
+The five issues below cover the most common AG failures. Each issue includes a diagnosis query, a cause/fix table, and where applicable, the specific error numbers or DMV values that confirm the root cause.
 
 ### Issue 1: Secondary Shows NOT SYNCHRONIZING
 
@@ -651,8 +703,9 @@ Two nodes both think they're the primary. This is the most dangerous HA failure.
 
 #### Split-brain detection — check both replicas claim PRIMARY
 
+Run on both nodes — if both return a row with `role_desc = 'PRIMARY'`, the cluster is in a split-brain state.
+
 ```sql
--- Run on both nodes — if both say PRIMARY, you have split-brain
 SELECT
     ars.role_desc,
     ar.replica_server_name
@@ -682,9 +735,13 @@ ALTER ENDPOINT [Hadr_endpoint]
     FOR DATA_MIRRORING (AUTHENTICATION = CERTIFICATE dbm_cert_new);
 ```
 
+> [!info] SQL Server 2022: Contained Availability Groups
+>
+> SQL Server 2022 (Enterprise only) introduces **contained AGs** — an AG type that carries its own `master` and `msdb` system databases, kept in sync across all replicas. Server-scoped objects (logins, SQL Agent jobs, permissions) created within the contained AG context replicate automatically with the AG, eliminating the longstanding pain point of manually re-scripting instance-level objects on each replica after failover. Create with `CREATE AVAILABILITY GROUP ... WITH (CONTAINED)`. Connect through the AG listener to access the contained environment — connecting directly to the instance gives the instance-level context instead.
+
 ---
 
-### Related
+## Related
 
 - [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/Administration/backup-types-and-strategy) — FULL recovery model required for AGs; backup strategy with AG
 - [restore-and-recovery](https://alp78.github.io/elysium/04-SQL-Server/Administration/restore-and-recovery) — recovery point objectives and how AGs interact with restore scenarios

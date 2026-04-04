@@ -69,6 +69,10 @@ optionsField.SetValue(csharpKernel, newOptions);
 
 ## Parquet Files
 
+Parquet stores data column-by-column with per-column compression (snappy, gzip, zstd). Schema is embedded in the file footer — self-describing, no separate schema file needed. Supports column pruning (read only the columns you need), predicate pushdown, and partitioning. 5–10x smaller than CSV. Standard in data lakes (GCS, S3, ADLS), BigQuery, Spark, DuckDB, Athena. C# uses `Parquet.Net` (NuGet).
+
+### Parquet.Net — schema, write, and read
+
 #### NuGet package and type declarations
 
 `Parquet.Net` maps record/class properties to parquet columns automatically via the class serialization API. Supports both low-level `DataColumn` API and high-level class serialization. Pin the NuGet version to avoid build breakage on updates.
@@ -87,9 +91,9 @@ public class EventRecord
 
 #### Write parquet — DataColumn API
 
-```csharp
-// Write parquet — DataColumn API for columnar file creation
+The low-level `DataColumn` API writes one column at a time — matching Parquet's columnar storage model. Define a `ParquetSchema` with `DataField<T>` for each column, then write each column as an array of values. This gives full control over schema types and nullable fields.
 
+```csharp
 var tmpDir = Path.Combine(Path.GetTempPath(), "parquet_cs_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
 
@@ -129,9 +133,9 @@ $"  Written: {Path.GetFileName(parquetFile)} ({new FileInfo(parquetFile).Length}
 
 #### Read parquet — DataColumn API
 
-```csharp
-// Read parquet — schema discovery and column-based reading
+`ParquetReader` discovers the schema from the file footer and reads columns individually. Each column is strongly typed — cast the `Data` array to the expected CLR type. Use `reader.Schema.DataFields` to inspect column names and types at runtime.
 
+```csharp
 using (Stream fs = File.OpenRead(parquetFile))
 {
     using var reader = await ParquetReader.CreateAsync(fs);
@@ -159,11 +163,11 @@ using (Stream fs = File.OpenRead(parquetFile))
         evt_004: signup, user=1003, revenue=$0.00
         evt_005: purchase, user=1002, revenue=$129.99
 
-#### Class serialization and deserialization
+#### Class serialization and deserialization | ParquetSerializer high-level API
+
+`ParquetSerializer.SerializeAsync<T>` maps class properties to Parquet columns automatically — no manual schema definition needed. `DeserializeAsync<T>` reads the file back into typed objects. Simpler than the DataColumn API for standard POCO/record types.
 
 ```csharp
-// Class serialization — serialize/deserialize objects directly to parquet
-
 var events = new List<EventRecord>
 {
     new() { EventId = "evt_001", EventType = "page_view", UserId = 1001, Revenue = 0.0, IsMobile = true },
@@ -192,11 +196,13 @@ foreach (var e in loaded)
         evt_004: signup, user=1003, revenue=$0.00
         evt_005: purchase, user=1002, revenue=$129.99
 
-#### Metadata, MemoryStream, and CSV vs Parquet
+### Metadata, in-memory, and comparison
+
+#### Parquet metadata | read schema and row count without loading data
+
+Parquet embeds metadata in the file footer — you can read the schema, row count, and row group structure without loading any data. This is instant even for multi-GB files.
 
 ```csharp
-// Parquet metadata — read schema and row count without loading data
-
 using (Stream fs = File.OpenRead(parquetFile))
 {
     using var reader = await ParquetReader.CreateAsync(fs);
@@ -213,11 +219,11 @@ using (Stream fs = File.OpenRead(parquetFile))
         revenue: Double (nullable=False)
         is_mobile: Boolean (nullable=False)
 
-#### Parquet in memory — MemoryStream
+#### Parquet in memory — MemoryStream | cloud upload without temp files
+
+Serialize Parquet to a `MemoryStream` for direct cloud upload (GCS, S3, Azure Blob) without writing to disk. Rewind with `Seek(0)` before reading or uploading.
 
 ```csharp
-// Parquet in memory — MemoryStream for cloud upload without temp files
-
 {
     var memStream = new MemoryStream();
     await ParquetSerializer.SerializeAsync(events, memStream);
@@ -235,33 +241,24 @@ using (Stream fs = File.OpenRead(parquetFile))
 
 #### CSV vs Parquet comparison
 
+| Feature | CSV | Parquet |
+|---|---|---|
+| Format | Text (row-based) | Binary (columnar) |
+| Schema | No (header row only) | Embedded (typed, nullable) |
+| Compression | None (manual gzip) | Built-in (snappy/gzip/zstd) |
+| Column pruning | No (read all columns) | Yes (read only needed columns) |
+| Human-readable | Yes | No |
+| Use case | Simple exchange, legacy | Data lakes, analytics, BigQuery |
+
 ```csharp
-// CSV vs Parquet comparison — when to use each format
-
-// Feature              CSV                         Parquet
-// ──────────────────────────────────────────────────────────────
-// Format               Text (row-based)            Binary (columnar)
-// Schema               No (header row only)        Embedded (typed, nullable)
-// Compression          None (manual gzip)          Built-in (snappy/gzip/zstd)
-// Column pruning       No (read all columns)       Yes (read only what you need)
-// Human-readable       Yes                         No
-// Use case             Simple exchange, legacy      Data lakes, analytics, BigQuery
-
-// Cleanup
 Directory.Delete(tmpDir, recursive: true);
 ```
 
-    
-    Feature              CSV                         Parquet
-    ──────────────────────────────────────────────────────────────
-    Format               Text (row-based)            Binary (columnar)
-    Schema               No (header row only)        Embedded (typed, nullable)
-    Compression          None (manual gzip)          Built-in (snappy/gzip/zstd)
-    Column pruning       No (read all columns)       Yes (read only what you need)
-    Human-readable       Yes                         No
-    Use case             Simple exchange, legacy      Data lakes, analytics, BigQuery
-
 ## Protocol Buffers (Protobuf)
+
+Protocol Buffers is Google's binary serialization format — 3–10x smaller than JSON with fast parsing and no text overhead. `.proto` files define schemas; `protoc` generates strongly-typed classes for C#, Python, Java, Go. Schema evolution lets you add fields without breaking existing consumers. Standard for gRPC microservices, Kafka messages, and high-frequency data feeds.
+
+### Google.Protobuf — dynamic and production patterns
 
 #### Protobuf with Google.Protobuf NuGet
 
@@ -296,7 +293,9 @@ Directory.Delete(tmpDir, recursive: true);
 
       Google.Protobuf loaded.
 
-#### Dynamic protobuf messages
+#### Dynamic protobuf messages | runtime encoding without protoc
+
+In notebooks or dynamic scenarios without `protoc`-generated classes, use `CodedOutputStream` to write raw tagged fields and `CodedInputStream` to read them back. Each field is encoded as `(field_number << 3 | wire_type) + value`.
 
 > [!info] Protobuf wire format
 >
@@ -361,11 +360,11 @@ $"  Decoded:   symbol={sym}, price={price}, volume={vol}"
       57%
       symbol=SAP.DE, price=166.52, volume=82621
 
-#### Production protobuf pattern
+#### Production protobuf pattern | protoc-generated code workflow
+
+In production, define schemas in `.proto` files, compile with `protoc --csharp_out=.` to generate strongly-typed C# classes, then serialize/deserialize with `ToByteArray()` and `Parser.ParseFrom()`. Schema evolution: old code ignores new fields; new code uses defaults for missing fields.
 
 ```csharp
-// Production protobuf pattern — protoc-generated code workflow
-
 // ── Step 1: Define schema (stock_quote.proto) ──
 //
 // syntax = "proto3";
@@ -438,6 +437,10 @@ $"  Decoded:   symbol={sym}, price={price}, volume={vol}"
 
 ## Apache Avro
 
+Apache Avro is a row-based binary format with the schema embedded in every file header — readers don't need an external schema to decode. Supports schema evolution (add/remove fields with compatibility rules). Compact binary, comparable to Protobuf. Standard in Kafka (with Schema Registry) and Hadoop. For analytics queries, Parquet is better (columnar = column pruning); for human-readable interchange, use JSON.
+
+### Apache.Avro — schema, write, and read
+
 #### Avro schema and serialization
 
 Schema is defined in JSON format and embedded in every file header — readers don't need an external schema to decode. Supports schema evolution (add/remove fields with compatibility rules). Compact binary format, comparable to Protobuf. Standard in Kafka (with Schema Registry for version management) and Hadoop. For simple analytics files, Parquet is better; for human-readable interchange, use JSON.
@@ -487,11 +490,11 @@ foreach (var f in schema.Fields)
         volume: {"type":"long"}
         exchange: ["null","string"]
 
-#### Write Avro file
+#### Write Avro file | GenericRecord API with embedded schema
+
+Create `GenericRecord` instances (like Python dicts but typed by the Avro schema) and write them with `DataFileWriter`. The schema is embedded in the file header automatically — any consumer can decode the file without a separate schema file.
 
 ```csharp
-// Write Avro file — GenericRecord API with embedded schema
-
 var tmpDir = Path.Combine(Path.GetTempPath(), "avro_cs_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
 var avroFile = Path.Combine(tmpDir, "quotes.avro");
@@ -533,11 +536,11 @@ $"  Records: {records.Count}, Size: {fileSize} bytes"
       C:\Users\aperi\AppData\Local\Temp\avro_cs_89f4466f\quotes.avro
       4, Size: 390 bytes
 
-#### Read Avro file
+#### Read Avro file | schema discovered from file header
+
+`DataFileReader` reads the embedded schema from the file header and iterates records. Access fields by name (`record["symbol"]`). Nullable union fields (`["null", "string"]`) return `null` when absent.
 
 ```csharp
-// Read Avro file — schema read automatically from file header
-
 using (var reader = DataFileReader<GenericRecord>.OpenReader(avroFile))
 {
     // Read the embedded schema
@@ -563,11 +566,13 @@ using (var reader = DataFileReader<GenericRecord>.OpenReader(avroFile))
         TTE.PA     €   58.20  vol=  120000  exch=XPAR
         BAS.DE     €   44.85  vol=   95000  exch=N/A
 
-#### Avro in memory and size comparison
+### In-memory, comparison, and schema evolution
+
+#### Avro in memory and size comparison | MemoryStream for Kafka payloads
+
+Serialize Avro records to a `MemoryStream` for Kafka producer payloads or API responses without disk I/O. The embedded schema adds overhead per file — Avro files are larger than raw Protobuf for small record sets but self-describing.
 
 ```csharp
-// Avro in memory and size comparison — MemoryStream and format benchmarks
-
 var avroMs = new MemoryStream();
 var datumWriter = new GenericDatumWriter<GenericRecord>(schema);
 
@@ -603,52 +608,39 @@ Directory.Delete(tmpDir, recursive: true);
       JSON              269           67
       Savings      -45%
 
-#### Schema evolution
+#### Schema evolution | add fields without breaking existing consumers
 
-```csharp
-// Schema evolution — add fields without breaking existing consumers
+Schema evolution lets producers and consumers update independently. In Kafka with Confluent Schema Registry, set compatibility mode to control which changes are allowed.
 
-// Schema Evolution Rules:
-//
-// SAFE:
-//   + Add field with default    →  old readers get default, new readers get value
-//   + Remove field with default →  old readers ignore extra bytes
-//   + Add aliases               →  renamed fields still recognized
-//
-// UNSAFE (breaks consumers):
-//   × Change field type (string → int)
-//   × Remove field WITHOUT default
-//   × Change field number/order
-//
-// In Kafka + Confluent Schema Registry:
-//   - BACKWARD compatible: new schema can read old data
-//   - FORWARD compatible:  old schema can read new data
-//   - FULL compatible:     both directions
-```
+> [!info] Safe schema changes
+>
+> - **Add field with default** — old readers get the default value, new readers get the actual value
+> - **Remove field with default** — old readers ignore the extra bytes
+> - **Add aliases** — renamed fields are still recognized by old consumers
 
-    
-        + Add field with default    →  old readers get default, new readers get value
-        + Remove field with default →  old readers ignore extra bytes
-        + Add aliases               →  renamed fields still recognized
-    
-      UNSAFE (breaks consumers):
-        × Change field type (string → int)
-        × Remove field WITHOUT default
-        × Change field number/order
-    
-      In Kafka + Confluent Schema Registry:
-        - BACKWARD compatible: new schema can read old data
-        - FORWARD compatible:  old schema can read new data
-        - FULL compatible:     both directions
+> [!danger] Unsafe schema changes (breaks consumers)
+>
+> - Change field type (e.g., `string` → `int`)
+> - Remove a field WITHOUT a default value
+> - Change field number or order
+
+> [!success] Use Confluent Schema Registry with FULL compatibility
+>
+> - **BACKWARD** compatible: new schema can read old data
+> - **FORWARD** compatible: old schema can read new data
+> - **FULL** compatible: both directions — the safest option for production Kafka
 
 ## Format Performance Benchmark
 
 For the architecture-level decision guide on when to use each format (Parquet for analytics, Avro for streaming, Protobuf for services), see [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats).
 
-#### Generate test data
+### Test data and benchmark setup
+
+#### Generate test data | OHLCV records at three sizes
+
+Generates synthetic OHLCV (open/high/low/close/volume) data matching the stoxx database schema. Three sizes — 100 (small), 10K (medium), 100K (large) — to show how format overhead scales.
 
 ```csharp
-// Generate OHLCV test data — same schema as stoxx database
 // Three sizes: 100 (small), 10K (medium), 100K (large)
 var rng = new Random(42);
 var symbols = new[] { "SAP.DE","ASML.AS","TTE.PA","BAS.DE","BAYN.DE","BMW.DE","SIE.DE","ALV.DE",
@@ -691,10 +683,9 @@ record OhlcvRecord(string Symbol, string Date, double Open, double High, double 
       10'000 records
       100'000 records
 
-#### Benchmark helpers
+#### Benchmark helpers | write/read timing and file size measurement
 
 ```csharp
-// Benchmark helpers — write/read each format and measure time + size
 
 var benchDir = Path.Combine(Path.GetTempPath(), "bench_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(benchDir);
@@ -725,10 +716,11 @@ long BenchRead(Action readAction)
 
       Benchmark helpers ready.
 
-#### CSV benchmark
+### Individual format benchmarks
+
+#### CSV benchmark | text-based, row-oriented baseline
 
 ```csharp
-// CSV benchmark — text-based, row-oriented baseline
 
 void WriteCsv(string path, List<OhlcvRecord> data)
 {
@@ -759,10 +751,9 @@ foreach (var (label, data) in new[] { ("small", small), ("medium", medium), ("la
 
       CSV done.
 
-#### JSON benchmark
+#### JSON benchmark | text-based, self-describing format
 
 ```csharp
-// JSON benchmark — text-based, self-describing format
 
 var jsonOpts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
 
@@ -791,10 +782,9 @@ foreach (var (label, data) in new[] { ("small", small), ("medium", medium), ("la
 
       JSON done.
 
-#### Parquet benchmark
+#### Parquet benchmark | columnar, compressed, typed format
 
 ```csharp
-// Parquet benchmark — columnar, compressed, typed format
 
 void WriteParquet(string path, List<OhlcvRecord> data)
 {
@@ -836,10 +826,9 @@ foreach (var (label, data) in new[] { ("small", small), ("medium", medium), ("la
 
       Parquet done.
 
-#### Avro benchmark
+#### Avro benchmark | row-based binary with embedded schema
 
 ```csharp
-// Avro benchmark — row-based binary with embedded schema
 
 var avroSchema = (RecordSchema)Schema.Parse(@"{
   ""type"": ""record"", ""name"": ""OhlcvRecord"", ""namespace"": ""bench"",
@@ -889,10 +878,9 @@ foreach (var (label, data) in new[] { ("small", small), ("medium", medium), ("la
 
       Avro done.
 
-#### Protobuf benchmark
+#### Protobuf benchmark | binary with external schema, most compact
 
 ```csharp
-// Protobuf benchmark — binary with external schema, most compact
 
 void WriteProto(string path, List<OhlcvRecord> data)
 {
@@ -923,12 +911,11 @@ foreach (var (label, data) in new[] { ("small", small), ("medium", medium), ("la
 
       Protobuf done.
 
+### Results and analysis
+
 #### Results — performance matrix
 
 ```csharp
-// Performance results table — write/read speed and file size per format
-
-// ═══ FORMAT PERFORMANCE BENCHMARK ═══
 
 foreach (var bucket in new[] { "large", "medium", "small" })
 {
@@ -1144,62 +1131,30 @@ Plotly.NET.CSharp.Chart.Bar<double, string, string>(
 
 <iframe src="/static/plotly/ser_02.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### Recommendation matrix
+#### Recommendation matrix | best format for each scenario
+
+| Scenario | Best Format | Why |
+|---|---|---|
+| Data lake / analytics queries | Parquet | Columnar: read 2 of 50 columns = skip 96% of data |
+| Kafka event streaming | Avro | Schema embedded, schema registry, compact |
+| gRPC microservices | Protobuf | Fastest parse, smallest size, code-generated types |
+| REST API responses | JSON | Human-readable, universal, self-describing |
+| Config files | JSON / YAML | Human-editable, comments (YAML), versioned in git |
+| Legacy data warehouse export | CSV | Universal, every tool reads it, no schema needed |
+| Debug / logging | JSON | Human-readable, structured, grep-friendly |
+| High-freq trading feed | Protobuf | Lowest latency, smallest payload, no text parsing |
+| ML feature store | Parquet | Column pruning, predicate pushdown, partitioned |
+| Cross-language IPC | Protobuf/Avro | Protobuf for speed, Avro for schema |
+| Batch ETL intermediate | Parquet | Compressed, typed, readable by Spark/BigQuery/Polars |
+| Small config payloads (<1KB) | JSON | Binary format overhead not worth it |
+| Shared memory / mmap | Binary (struct) | Fixed-size records, zero-copy access |
+| Browser / mobile API | JSON + gzip | Universal client support, compressed in transit |
+
+> [!tip] Rankings
+>
+> **Size** (smallest → largest): Protobuf < Parquet < Avro < JSON < CSV
+> **Speed** (fastest → slowest): Protobuf ≈ Parquet > Avro > JSON > CSV
 
 ```csharp
-// Recommendation matrix — best format for each scenario
-
-// ═══ WHEN TO USE WHAT ═══
-//
-// Scenario                        Best Format     Why
-// ────────────────────────────────────────────────────────────────────────────
-// Data lake / analytics queries   Parquet         Columnar: read 2 of 50 columns = skip 96% of data
-// Kafka event streaming           Avro            Schema embedded, schema registry, compact
-// gRPC microservices              Protobuf        Fastest parse, smallest size, code-generated types
-// REST API responses              JSON            Human-readable, universal, self-describing
-// Config files                    JSON / YAML     Human-editable, comments (YAML), versioned in git
-// Legacy data warehouse export    CSV             Universal, every tool reads it, no schema needed
-// Debug / logging                 JSON            Human-readable, structured, grep-friendly
-// High-freq trading feed          Protobuf        Lowest latency, smallest payload, no text parsing
-// ML feature store                Parquet         Column pruning, predicate pushdown, partitioned
-// Cross-language IPC              Protobuf/Avro   Both cross-language; Protobuf for speed, Avro for schema
-// Batch ETL intermediate          Parquet         Compressed, typed, readable by Spark/BigQuery/Polars
-// Small config payloads (<1KB)    JSON            Overhead of binary formats not worth it
-// Shared memory / mmap           Binary (struct)  Fixed-size records, zero-copy access
-// Browser / mobile API            JSON + gzip     Universal client support, compressed in transit
-//
-// SIZE RANKING (smallest to largest for same data):
-//   Protobuf < Parquet < Avro < JSON < CSV
-//
-// SPEED RANKING (fastest to slowest for read+write):
-//   Protobuf ≈ Parquet > Avro > JSON > CSV
-
-// Cleanup
 Directory.Delete(benchDir, recursive: true);
 ```
-
-    
-      ═══ WHEN TO USE WHAT ═══
-    
-      Scenario                        Best Format     Why
-      ────────────────────────────────────────────────────────────────────────────
-      Data lake / analytics queries   Parquet         Columnar: read 2 of 50 columns = skip 96% of data
-      Kafka event streaming           Avro            Schema embedded, schema registry, compact
-      gRPC microservices              Protobuf        Fastest parse, smallest size, code-generated types
-      REST API responses              JSON            Human-readable, universal, self-describing
-      Config files                    JSON / YAML     Human-editable, comments (YAML), versioned in git
-      Legacy data warehouse export    CSV             Universal, every tool reads it, no schema needed
-      Debug / logging                 JSON            Human-readable, structured, grep-friendly
-      High-freq trading feed          Protobuf        Lowest latency, smallest payload, no text parsing
-      ML feature store                Parquet         Column pruning, predicate pushdown, partitioned
-      Cross-language IPC              Protobuf/Avro   Both cross-language; Protobuf for speed, Avro for schema
-      Batch ETL intermediate          Parquet         Compressed, typed, readable by Spark/BigQuery/Polars
-      Small config payloads (<1KB)    JSON            Overhead of binary formats not worth it
-      Shared memory / mmap           Binary (struct)  Fixed-size records, zero-copy access
-      Browser / mobile API            JSON + gzip     Universal client support, compressed in transit
-    
-      SIZE RANKING (smallest to largest for same data):
-        Protobuf < Parquet < Avro < JSON < CSV
-    
-      SPEED RANKING (fastest to slowest for read+write):
-        Protobuf ≈ Parquet > Avro > JSON > CSV

@@ -12,7 +12,7 @@ tags:
 aliases: [Loading Patterns, Bulk Loading, Data Ingestion SQL Server, fast_executemany, SqlBulkCopy, BULK INSERT, bcp]
 description: "Every method of getting data into SQL Server — benchmarked and compared. Covers bcp, BULK INSERT, pyodbc fast_executemany, SqlBulkCopy, loading strategies (truncate-reload, staging swap, incremental, upsert), and minimal logging."
 created: 2026-03-29
-updated: 2026-03-29
+updated: 2026-04-04
 status: complete
 ---
 
@@ -97,7 +97,7 @@ COMMIT;
 
 > [!warning] TRUNCATE vs DELETE
 >
-> `TRUNCATE TABLE` is faster (minimal logging, no row-by-row log entries) but requires `ALTER TABLE` permission, resets `IDENTITY`, and cannot be scoped with a `WHERE` clause. Use `DELETE` when you need to clear a subset (e.g., by `_index`). `TRUNCATE` cannot be rolled back in user transactions on all recovery models — see [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) for details.
+> `TRUNCATE TABLE` is faster (minimal logging — logs only page deallocations, not individual rows) but requires `ALTER TABLE` permission, resets `IDENTITY` to the seed value, and cannot be scoped with a `WHERE` clause. Use `DELETE` when you need to clear a subset (e.g., by `_index`). Note: `TRUNCATE` **can** be rolled back inside an explicit `BEGIN TRANSACTION ... ROLLBACK` in SQL Server — a common misconception is that it cannot. However, it deallocates all data pages, so rollback of a large truncate can be as slow as re-inserting the data. See [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) for idempotency patterns around truncate-reload.
 
 > [!success] Use Scoped DELETE Inside a Transaction
 >
@@ -388,7 +388,7 @@ WHERE pipeline_name = 'ohlcv_europe';
 
 ### Watermark Anti-Patterns
 
-### Advancing watermark before committing the load — data gaps
+#### Advancing watermark before committing the load — data gaps
 
 > [!danger] Watermark Before Commit = Data Loss
 >
@@ -398,19 +398,19 @@ WHERE pipeline_name = 'ohlcv_europe';
 >
 > In T-SQL, place the `UPDATE meta.watermarks` statement at the end of the same `BEGIN TRANSACTION ... COMMIT` block as the `INSERT`. In Python, call `Variable.set()` or update the control table only after `conn.commit()` confirms the data load succeeded. Never advance the watermark in a `finally` block that runs regardless of success or failure.
 
-### No deduplication with overlap windows — duplicate rows
+#### No deduplication with overlap windows — duplicate rows
 
 If you use an overlap window (subtract N days from watermark) but the target table has no UNIQUE constraint and the INSERT has no `NOT EXISTS` check, every overlapping row is inserted again on every run. Within a week, you have 7 copies of each row in the overlap window.
 
-### Using IDENTITY as watermark on a truncate-reload table — broken contract
+#### Using IDENTITY as watermark on a truncate-reload table — broken contract
 
 `IDENTITY` values reset on `TRUNCATE`. If the source table is truncated and reloaded, the same IDENTITY value now points to a different row. Use a business date or timestamp column as the watermark, not IDENTITY. See [sql-server-pipeline-anti-patterns > IDENTITY as a Business Key](https://alp78.github.io/elysium/04-SQL-Server/Patterns/sql-server-pipeline-anti-patterns#identity-as-a-business-key).
 
-### No NULL handling on first run — pipeline crashes on empty table
+#### No NULL handling on first run — pipeline crashes on empty table
 
 `SELECT MAX(date)` on an empty table returns `NULL`. If the pipeline uses `WHERE date > @wm` without handling NULL, the comparison `date > NULL` is always FALSE — zero rows loaded, forever. Always wrap in `ISNULL(@wm, '1900-01-01')`.
 
-### Watermark stored outside the load transaction — silent drift
+#### Watermark stored outside the load transaction — silent drift
 
 An Airflow Variable, a file, or a separate database write is not transactional with the load. If the load succeeds but the watermark write fails (or vice versa), the watermark and the actual data drift apart. Prefer a control table in the same database as the target, updated in the same transaction.
 
@@ -449,7 +449,7 @@ WHERE b.date > @wm
 
 ## Upsert (INSERT + UPDATE)
 
-When source data contains both new rows and updates to existing rows. Three approaches, each with different trade-offs.
+An **upsert** (portmanteau of UPDATE + INSERT) is an operation that inserts a row if it doesn't exist in the target, or updates it if it does — ensuring the target table always reflects the latest source state for each key. This is the standard pattern when source data contains both new rows and changes to existing rows (e.g., stock metadata where new symbols appear and existing symbols change sector). Three approaches exist in SQL Server, each with different trade-offs.
 
 ### Three Upsert Approaches — compared
 
@@ -521,7 +521,7 @@ The standard Python path for loading data into SQL Server. One configuration fla
 
 > [!abstract] How fast_executemany Works
 >
-> Without it, pyodbc sends one row per TDS network round-trip. With it, pyodbc batches all parameter arrays into a single TDS call. The speedup is proportional to network latency.
+> Without it, pyodbc sends one row per **TDS** (Tabular Data Stream — SQL Server's wire protocol) network round-trip. With it, pyodbc batches all parameter arrays into a single TDS call using the `sp_prepexec` bulk parameter format. The speedup is proportional to network latency — the more round-trips eliminated, the greater the gain.
 
 ```python
 # One line, 10x speedup — always enable for bulk loads
@@ -551,7 +551,7 @@ conn.commit()
 
 ## bcp Deep Dive
 
-The fastest path into SQL Server. `bcp` bypasses the query processor entirely and writes directly to data pages.
+The fastest path into SQL Server. `bcp` uses the **TDS (Tabular Data Stream) BULK LOAD protocol** to send data directly to the storage engine's bulk insert API, bypassing the query parser and query optimizer that normal `INSERT` statements go through. This eliminates per-row query compilation overhead and enables the storage engine to write data pages in large sequential batches.
 
 ### bcp BULK LOAD — command-line syntax
 
@@ -589,10 +589,12 @@ bcp bronze.signals_daily in signals.csv \
 >
 > Always pass `-w` when loading files that contain non-ASCII characters (accented names, CJK characters). Standardise date columns to ISO 8601 (`YYYY-MM-DD`) in the source file to avoid locale-dependent parsing — this works regardless of `DATEFORMAT` setting on the server.
 
+- **Constraints bypassed by default:** bcp does **not** check `CHECK`, `FOREIGN KEY`, or `UNIQUE` constraints during load — invalid data lands in the table silently. Add `-h "CHECK_CONSTRAINTS"` to enforce constraint checking during load
+- **Triggers not fired:** bcp does not fire `INSERT` triggers by default. If the table has triggers that maintain audit tables or denormalized columns, add `-h "FIRE_TRIGGERS"` — but note this significantly reduces throughput
 - **Format files:** `-c` (character/CSV), `-n` (native binary), `-w` (wide character/Unicode)
 - **Error handling:** `-e error_file` logs bad rows, `-m max_errors` sets failure threshold
 - **First-row skip:** `-F 2` skips the header row in CSVs
-- **TABLOCK:** Add `-h "TABLOCK"` for minimal logging (5-10x faster, but blocks concurrent reads)
+- **TABLOCK:** Add `-h "TABLOCK"` for minimal logging (5-10x faster, but blocks concurrent reads). With `TABLOCK`, bcp acquires a Bulk Update (BU) lock — less restrictive than the exclusive (X) lock taken by `INSERT...SELECT WITH (TABLOCK)`, allowing concurrent bulk loads on tables with no indexes
 
 ### bcp Complete Flag Reference
 
@@ -687,7 +689,7 @@ transaction.Commit();
 
 ## BULK INSERT — T-SQL Native Bulk Load
 
-Same engine as `bcp` but called from T-SQL. Useful when the load is orchestrated by a stored procedure.
+`BULK INSERT` uses the same storage engine bulk insert API as `bcp` but is invoked from T-SQL rather than the command line. This makes it useful when the load is orchestrated by a stored procedure or an automated T-SQL script. It supports the same minimal logging conditions and `TABLOCK` hint as `bcp`.
 
 ### BULK INSERT FROM — loading a CSV from T-SQL
 
@@ -712,7 +714,7 @@ WITH (
 
 ## Minimal Logging
 
-Minimal logging skips detailed transaction log writes for bulk operations, giving 5-10x speedup on large loads.
+Under **full logging**, every row inserted generates an individual log record containing the row data — a 10M-row INSERT produces 10M log records. Under **minimal logging**, the engine logs only the page and extent allocations (which data pages were modified), not the individual row values. This dramatically reduces log volume, I/O, and the time the load holds locks. The trade-off: minimally logged operations cannot be recovered to a point-in-time within the bulk operation window, and the log backup taken during or after the operation is larger (it contains the modified data extents).
 
 ### Minimal Logging Requirements — when it kicks in
 
@@ -728,7 +730,7 @@ Minimal logging skips detailed transaction log writes for bulk operations, givin
 
 - **bcp with TABLOCK:** minimal logging automatically
 - **`INSERT ... SELECT` with TABLOCK on a heap:** minimal logging if table is empty
-- **`INSERT ... SELECT` into a table with clustered index + data:** NOT minimal logging
+- **`INSERT ... SELECT` into a non-empty table with clustered index:** **fully logged** regardless of recovery model, TABLOCK, or SQL Server version. Rows inserted into existing pages must maintain B-tree order, and displaced rows from page splits are also fully logged. SQL Server 2016+ minimally logs only rows that fill **newly allocated pages** (trace flag 610 is no longer needed for this — it's the default). For truly minimal logging at scale, load into an empty table or use partition SWITCH
 - **Impact:** 5-10x faster for large loads, but no point-in-time recovery until the next log backup completes
 
 > [!warning] BULK_LOGGED Recovery Trade-off

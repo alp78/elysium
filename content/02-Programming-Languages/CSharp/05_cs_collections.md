@@ -1,4 +1,5 @@
 ---
+title: "Collections"
 tags: [csharp]
 aliases: [lists, dictionaries, sets, tuples, arrays, List, Dictionary, HashSet, LINQ]
 description: "C# collections reference with executable examples and cell outputs — covers List, Dictionary, HashSet, arrays, Queue, Stack, and immutable collections. See [05_py_collections](https://alp78.github.io/elysium/02-Programming-Languages/Python/05_py_collections) for the Python equivalent."
@@ -19,6 +20,12 @@ status: complete
 > — **Eric S. Raymond**, *The Cathedral and the Bazaar* (1999)
 
 ## Arrays and Lists
+
+Arrays and lists are the workhorses of C# data handling. Arrays (`T[]`) offer fixed-size, contiguous memory with the fastest indexed access due to cache locality. `List<T>` wraps an internal array with automatic resizing, making it the default choice for dynamic collections. `Span<T>` and `ReadOnlySpan<T>` provide zero-allocation slicing over contiguous memory for performance-critical paths. This section covers creation, mutation, searching, sorting, slicing, and when to choose each type.
+
+### Array and List fundamentals
+
+Arrays and lists are the two most common sequential collections. Arrays are fixed-size and stack-friendly; lists are dynamically sized and backed by an internal array that doubles capacity on overflow.
 
 #### Array — T[] (fixed size)
 
@@ -53,13 +60,15 @@ string.Join(", ", nums[1..4])   // [1..4]
 > [!info] Arrays Are Fixed Size
 > Arrays have no `Add()` or `Remove()`. Use `List<T>` for resizable collections.
 
-    [1, 2, 3, 4, 5]
-    [0, 0, 0, 0, 0]
-    [0, 1, 2, 3, 4]
-    5
-    1
-    5
-    [2, 3, 4]
+```text
+[1, 2, 3, 4, 5]
+[0, 0, 0, 0, 0]
+[0, 1, 2, 3, 4]
+5
+1
+5
+[2, 3, 4]
+```
 
 #### List&lt;T&gt; — adding and removing
 
@@ -78,90 +87,95 @@ string.Join(", ", nums[1..4])   // [1..4]
 > Always specify `new List<T>(capacity: n)` when loading large datasets (e.g., from a database or file). This eliminates resize copies and reduces GC pressure significantly.
 
 ```csharp
-// List<T> — dynamic array with Add, Insert, Remove operations
-
 var empty = new List<int>();
 var list = new List<int> { 1, 2, 3, 4, 5 };
-string.Join(", ", list)   // list
-list.Count   // Count
+string.Join(", ", list)
+list.Count
 
 var lst = new List<int> { 1, 2, 3 };
-lst.Add(4);                                   // add to end
-lst.Insert(0, 0);                             // insert at index
-lst.AddRange(new[] { 5, 6 });                 // add multiple
-string.Join(", ", lst)   // After adds
+lst.Add(4);
+lst.Insert(0, 0);
+lst.AddRange(new[] { 5, 6 });
+string.Join(", ", lst)
 
 lst = new List<int> { 1, 2, 3, 2, 4, 5 };
-lst.Remove(2);                                // remove FIRST occurrence of value
-string.Join(", ", lst)   // Remove(2)
-lst.RemoveAt(0);                              // remove at index
-string.Join(", ", lst)   // RemoveAt(0)
-int last = lst[^1]; lst.RemoveAt(lst.Count - 1);  // pop last (no built-in Pop)
+lst.Remove(2);
+string.Join(", ", lst)
+lst.RemoveAt(0);
+string.Join(", ", lst)
+int last = lst[^1]; lst.RemoveAt(lst.Count - 1);
 $"Pop last:   [{string.Join(", ", lst)}] (popped: {last})"
-lst.Clear();                                  // remove all
-string.Join(", ", lst)   // Clear()
+lst.Clear();
+string.Join(", ", lst)
 ```
 
-    [1, 2, 3, 4, 5]
-    5
-    [0, 1, 2, 3, 4, 5, 6]
-    [1, 3, 2, 4, 5]
-    [3, 2, 4, 5]
-    5)
-    []
+```text
+[1, 2, 3, 4, 5]
+5
+[0, 1, 2, 3, 4, 5, 6]
+[1, 3, 2, 4, 5]
+[3, 2, 4, 5]
+Pop last:   [3, 2, 4] (popped: 5)
+[]
+```
+
+### List search and sorting
+
+Lists support linear search methods (`Contains`, `IndexOf`, `Find`, `Exists`) and both in-place (`Sort`) and non-mutating (`OrderBy`) sorting. For frequent membership checks, consider `HashSet<T>` (O(1)) instead of `List.Contains` (O(n)).
 
 #### List Contains, IndexOf, Find, Exists — search and membership
 
 These methods search a List linearly (O(n)) — they check each element until a match is found. For frequent lookups, use a `HashSet<T>` (O(1)) or `Dictionary<TKey, TValue>` instead.
 
 ```csharp
-// Search and membership — Contains, IndexOf, FindAll, Find, Exists
-
 lst = new List<int> { 10, 20, 30, 40, 30, 50 };
-lst.Contains(30)   // Contains(30)
-lst.IndexOf(30)   // IndexOf(30)
-string.Join(", ", lst.FindAll(x => x > 25))   // FindAll(>25)
-lst.Exists(x => x > 40)   // Exists(>40)
-lst.Find(x => x > 25)   // Find(>25)
+lst.Contains(30)
+lst.IndexOf(30)
+string.Join(", ", lst.FindAll(x => x > 25))
+lst.Exists(x => x > 40)
+lst.Find(x => x > 25)
 ```
 
-    True
-    2
-    [30, 40, 30, 50]
-    True
-    30
+```text
+True
+2
+[30, 40, 30, 50]
+True
+30
+```
 
 #### List Sort, OrderBy, ThenBy — sorting and custom comparers
 
 `Sort()` sorts the list in-place (mutates it), while LINQ's `OrderBy()` returns a new sorted sequence without modifying the original. Use `Sort()` when you don't need the original order; use `OrderBy()` in LINQ chains where immutability matters.
 
+`OrderBy` returns a new sorted sequence without modifying the original — use it in LINQ chains where immutability matters. `Sort()` mutates the list in-place and accepts a custom `Comparison<T>` delegate where the comparer returns -1 (left first), 0 (equal), or +1 (right first).
+
 ```csharp
-// Sorting — OrderBy (new sequence) vs Sort (in-place mutation)
-
 var unsorted = new List<int> { 3, 1, 4, 1, 5, 9, 2, 6 };
-string.Join(", ", unsorted.OrderBy(x => x))   // OrderBy
-string.Join(", ", unsorted)   // original
+string.Join(", ", unsorted.OrderBy(x => x))
+string.Join(", ", unsorted)
 
-unsorted.Sort();                              // in-place sort
-string.Join(", ", unsorted)   // Sort()
+unsorted.Sort();
+string.Join(", ", unsorted)
 
-// Sort() comparer: return -1 (left first), 0 (equal), +1 (right first)
-unsorted.Sort((a, b) => b.CompareTo(a));      // descending
-string.Join(", ", unsorted)   // Desc
+unsorted.Sort((a, b) => b.CompareTo(a));
+string.Join(", ", unsorted)
 
 var wordList = new List<string> { "banana", "apple", "cherry" };
-string.Join(", ", wordList.OrderBy(w => w.Length))   // By length ASC
-string.Join(", ", wordList.OrderByDescending(w => w.Length))   // By length DESC
-string.Join(", ", wordList.OrderByDescending(w => w.Length).ThenBy(w => w))   // By length DESC then Alpha
+string.Join(", ", wordList.OrderBy(w => w.Length))
+string.Join(", ", wordList.OrderByDescending(w => w.Length))
+string.Join(", ", wordList.OrderByDescending(w => w.Length).ThenBy(w => w))
 ```
 
-    [1, 1, 2, 3, 4, 5, 6, 9]
-    [3, 1, 4, 1, 5, 9, 2, 6]
-    [1, 1, 2, 3, 4, 5, 6, 9]
-    [9, 6, 5, 4, 3, 2, 1, 1]
-    [apple, banana, cherry]
-    [banana, cherry, apple]
-    [banana, cherry, apple]
+```text
+[1, 1, 2, 3, 4, 5, 6, 9]
+[3, 1, 4, 1, 5, 9, 2, 6]
+[1, 1, 2, 3, 4, 5, 6, 9]
+[9, 6, 5, 4, 3, 2, 1, 1]
+[apple, banana, cherry]
+[banana, cherry, apple]
+[banana, cherry, apple]
+```
 
 #### List ToArray, ToList, shallow copy — copying and conversion
 
@@ -173,35 +187,32 @@ These methods create new collections from existing ones. `ToArray()` and `ToList
 > [!success] Deep clone when independence is required
 > Use `Select(item => item with { })` (record copy expressions) or implement `ICloneable` to produce a truly independent copy. For value-type collections (`List<int>`, `int[]`) shallow copy is always safe.
 
+Passing a list to the `List<T>` constructor creates a shallow copy. For value types (`int`, `struct`), the copy is fully independent. For reference types, both lists point to the same objects — mutating an element in one mutates it in the other.
+
 ```csharp
-// Copying and conversion — shallow copy, ToArray, ToList
-
 var original = new List<int> { 1, 2, 3 };
-var shallow = new List<int>(original);         // shallow copy (for value types, this is fine)
+var shallow = new List<int>(original);
 shallow[0] = 99;
-string.Join(", ", original)   // original
+string.Join(", ", original)
 
-// For reference types (List<List<int>>), shallow copy shares inner objects
-
-int[] arr = list.ToArray();                    // List → Array
-var backToList = arr.ToList();                 // Array → List
+int[] arr = list.ToArray();
+var backToList = arr.ToList();
 ```
 
-    [1, 2, 3]
+```text
+[1, 2, 3]
+```
+
+### Range, index, and span operators
+
+C# 8+ introduced the `^` (from-end index) and `..` (range) operators for concise slicing. `Span<T>` and `ReadOnlySpan<T>` provide zero-allocation views into contiguous memory — essential for parsers, serializers, and hot loops where heap allocation is unacceptable.
 
 #### Range and Index operators — slicing syntax
 
-```csharp
-// Range and Index operators — C# 8+ slicing with ^ and ..
+The `^` operator indexes from the end (`^1` is the last element). The `..` range operator creates a slice where the start is inclusive and the end is exclusive. Both `Index` and `Range` can be stored in variables and reused.
 
+```csharp
 int[] nums = { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
-//              0   1   2   3   4   5   6   7   8   9
-```
-
-#### Index operator ^ — from end
-
-```csharp
-// Index (^) and Range (..) operators in detail
 
 nums[0]
 nums[9]
@@ -209,68 +220,67 @@ nums[^1]
 nums[^2]
 nums[^10]
 
-// [start..end] — start is INCLUSIVE, end is EXCLUSIVE
-string.Join(", ", nums[0..3])   // [0..3]
-string.Join(", ", nums[3..7])   // [3..7]
-string.Join(", ", nums[..3])   // [..3]
-string.Join(", ", nums[7..])   // [7..]
-string.Join(", ", nums[..])   // [..]
+string.Join(", ", nums[0..3])
+string.Join(", ", nums[3..7])
+string.Join(", ", nums[..3])
+string.Join(", ", nums[7..])
+string.Join(", ", nums[..])
 
-string.Join(", ", nums[^3..])   // [^3..]
-string.Join(", ", nums[..^3])   // [..^3]
-string.Join(", ", nums[^5..^2])   // [^5..^2]
-string.Join(", ", nums[1..^1])   // [1..^1]
+string.Join(", ", nums[^3..])
+string.Join(", ", nums[..^3])
+string.Join(", ", nums[^5..^2])
+string.Join(", ", nums[1..^1])
 
-// Index and Range can be stored in variables
 Index last = ^1;
 Range middle = 2..^2;
-nums[last]   // Index ^1
-string.Join(", ", nums[middle])   // Range 2..^2
+nums[last]
+string.Join(", ", nums[middle])
 ```
 
-    10
-    100
-    100
-    90
-    10
-    [10, 20, 30]
-    [40, 50, 60, 70]
-    [10, 20, 30]
-    [80, 90, 100]
-    [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    [80, 90, 100]
-    [10, 20, 30, 40, 50, 60, 70]
-    [60, 70, 80]
-    [20, 30, 40, 50, 60, 70, 80, 90]
-    100
-    [30, 40, 50, 60, 70, 80]
+```text
+10
+100
+100
+90
+10
+[10, 20, 30]
+[40, 50, 60, 70]
+[10, 20, 30]
+[80, 90, 100]
+[10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+[80, 90, 100]
+[10, 20, 30, 40, 50, 60, 70]
+[60, 70, 80]
+[20, 30, 40, 50, 60, 70, 80, 90]
+100
+[30, 40, 50, 60, 70, 80]
+```
 
 #### Span&lt;T&gt; — zero-allocation slicing
 
+`Span<T>` is a stack-only view into contiguous memory (arrays, stackalloc, native buffers). It supports slicing with the range operator, in-place `Sort`, `Reverse`, `Fill`, and `CopyTo` — all without heap allocation. Mutating a span element modifies the underlying array directly.
+
 ```csharp
-// Span<T> — zero-allocation view into contiguous memory
-
 {
-
     int[] arr = { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
 
-    Span<int> full = arr;                          // span over entire array
-    Span<int> slice = arr.AsSpan(2, 5);            // span from index 2, length 5
-    Span<int> ranged = arr.AsSpan()[3..7];         // span using range operator
+    Span<int> full = arr;
+    Span<int> slice = arr.AsSpan(2, 5);
+    Span<int> ranged = arr.AsSpan()[3..7];
 
     Console.WriteLine($"full:    [{string.Join(", ", full.ToArray())}]");
-    Console.WriteLine($"slice:   [{string.Join(", ", slice.ToArray())}]");     // 30, 40, 50, 60, 70
-    Console.WriteLine($"ranged:  [{string.Join(", ", ranged.ToArray())}]");    // 40, 50, 60, 70
+    Console.WriteLine($"slice:   [{string.Join(", ", slice.ToArray())}]");
+    Console.WriteLine($"ranged:  [{string.Join(", ", ranged.ToArray())}]");
 
-    Span<int> window = arr.AsSpan(0, 3);          // [10, 20, 30]
-    window[0] = 999;                               // modifies arr[0] directly!
-    Console.WriteLine($"arr[0] after span mutation: {arr[0]}");   // 999 — same memory!
-    arr[0] = 10;                                   // reset
+    Span<int> window = arr.AsSpan(0, 3);
+    window[0] = 999;
+    Console.WriteLine($"arr[0] after span mutation: {arr[0]}");
+    arr[0] = 10;
 
     Span<int> s = arr;
-    Console.WriteLine($"s[..3]:    [{string.Join(", ", s[..3].ToArray())}]");       // first 3
-    Console.WriteLine($"s[^3..]:   [{string.Join(", ", s[^3..].ToArray())}]");      // last 3
-    Console.WriteLine($"s[2..^2]:  [{string.Join(", ", s[2..^2].ToArray())}]");     // skip first 2 and last 2
+    Console.WriteLine($"s[..3]:    [{string.Join(", ", s[..3].ToArray())}]");
+    Console.WriteLine($"s[^3..]:   [{string.Join(", ", s[^3..].ToArray())}]");
+    Console.WriteLine($"s[2..^2]:  [{string.Join(", ", s[2..^2].ToArray())}]");
 
     Span<int> data = new int[] { 5, 3, 1, 4, 2 };
     data.Sort();
@@ -287,30 +297,30 @@ string.Join(", ", nums[middle])   // Range 2..^2
 }
 ```
 
-    [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    [30, 40, 50, 60, 70]
-    [40, 50, 60, 70]
-    999
-    [10, 20, 30]
-    [80, 90, 100]
-    [30, 40, 50, 60, 70, 80]
-    [1, 2, 3, 4, 5]
-    [5, 4, 3, 2, 1]
-    [0, 0, 0, 0, 0]
-    [1, 2, 3]
+```text
+full:    [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+slice:   [30, 40, 50, 60, 70]
+ranged:  [40, 50, 60, 70]
+arr[0] after span mutation: 999
+s[..3]:    [10, 20, 30]
+s[^3..]:   [80, 90, 100]
+s[2..^2]:  [30, 40, 50, 60, 70, 80]
+Sort:          [1, 2, 3, 4, 5]
+Reverse:       [5, 4, 3, 2, 1]
+Fill(0):       [0, 0, 0, 0, 0]
+CopyTo:        [1, 2, 3]
+```
 
 #### ReadOnlySpan&lt;char&gt; for strings
 
-```csharp
-// ReadOnlySpan<char> for strings — zero-allocation substring
+`ReadOnlySpan<char>` provides zero-allocation substring views. Unlike `Substring()` which allocates a new string on the heap, `AsSpan()` returns a view into the original string's memory — critical for high-throughput parsers and text processing.
 
+```csharp
 string text = "Hello, World!";
 
-// Normal substring — creates a NEW string (allocation):
-string sub1 = text.Substring(7, 5);           // "World" — new string on heap
-sub1   // Substring
+string sub1 = text.Substring(7, 5);
+sub1
 
-// Span substring — must be in a block
 {
     ReadOnlySpan<char> sub2 = text.AsSpan(7, 5);
     Console.WriteLine($"Span:          '{sub2.ToString()}'");
@@ -320,9 +330,21 @@ sub1   // Substring
 }
 ```
 
-    'World'
-    'World'
-    'Hello'
+```text
+World
+Span:          'World'
+Span[..5]:     'Hello'
+```
+
+#### Memory&lt;T&gt; — span without stack restrictions
+
+`Span<T>` is a `ref struct` and cannot be stored on the heap (no fields, no async methods, no closures). `Memory<T>` lifts this restriction — it can be stored in fields and passed to async methods — while still supporting slicing via its `.Span` property. Use `Memory<T>` when you need to pass a slice across async boundaries or store it in a collection.
+
+> [!info] Span vs Memory
+>
+> - `Span<T>` — stack-only, lowest overhead, use in synchronous hot paths
+> - `Memory<T>` — heap-safe, use when spans must cross `async`/`await` boundaries or be stored in fields
+> - Both make the older `ArraySegment<T>` redundant — implicit conversions exist in both directions
 
 #### When to use Array vs List vs Span
 
@@ -332,8 +354,15 @@ sub1   // Substring
 | `List<T>` | Dynamic data, add/remove, general purpose (95% of the time) |
 | `Span<T>` | Performance-critical slicing without allocation (parsers, serializers, hot loops) |
 | `ReadOnlySpan<T>` | Zero-copy string slicing, immutable views |
+| `Memory<T>` | Slicing across async boundaries, storing slices in fields or collections |
 
 ## Dictionaries
+
+`Dictionary<TKey, TValue>` is a hash-based key-value mapping with O(1) average lookup, insert, and delete. Keys must implement `GetHashCode`/`Equals` (built-in types work out of the box). `SortedDictionary<K,V>` keeps keys in sorted order using a red-black tree (O(log n)). For thread-safe scenarios, use `ConcurrentDictionary<K,V>` from `System.Collections.Concurrent`.
+
+### Dictionary creation and access
+
+Creating dictionaries, reading values safely, and updating entries. Always prefer `TryGetValue` or `GetValueOrDefault` over bracket access when the key may not exist.
 
 #### Dictionary&lt;TKey, TValue&gt; creation — initializer, indexer, TryGetValue
 
@@ -366,89 +395,98 @@ var scores = new Dictionary<string, int>
     { "Charlie", 78 }
 };
 
-string.Join(", ", person.Select(kv => $"{kv.Key}:{kv.Value}"))   // person
-string.Join(", ", scores.Select(kv => $"{kv.Key}:{kv.Value}"))   // scores
+string.Join(", ", person.Select(kv => $"{kv.Key}:{kv.Value}"))
+string.Join(", ", scores.Select(kv => $"{kv.Key}:{kv.Value}"))
 ```
 
-    name:Alice, age:30, city:NYC
-    Alice:85, Bob:92, Charlie:78
+```text
+name:Alice, age:30, city:NYC
+Alice:85, Bob:92, Charlie:78
+```
 
 #### Dictionary [], TryGetValue, ContainsKey — access and update
 
+Bracket access (`dict[key]`) throws `KeyNotFoundException` if the key is missing. `TryGetValue` returns `false` instead — safer for uncertain lookups. `GetValueOrDefault` provides a fallback value inline.
+
 ```csharp
-// Dictionary access and update — bracket, TryGetValue, GetValueOrDefault
-
 person["name"]
-person["age"] = 31;                                                     // update
-person["email"] = "alice@example.com";                                  // add new key
-person["age"]   // Updated age
+person["age"] = 31;
+person["email"] = "alice@example.com";
+person["age"]
 
-// Safe access — TryGetValue returns false if key missing (no exception)
 if (scores.TryGetValue("Bob", out int bobScore))
     Console.WriteLine($"Bob's score:          {bobScore}");
-scores.GetValueOrDefault("Unknown", -1)   // GetValueOrDefault
+scores.GetValueOrDefault("Unknown", -1)
 ```
 
-    Alice
-    31
-    92
-    -1
+```text
+Alice
+31
+Bob's score:          92
+-1
+```
+
+### Dictionary modification and iteration
+
+Removing entries, iterating key-value pairs, and using LINQ for filtering and grouping over dictionaries.
 
 #### Dictionary Remove, Clear — removing entries
 
-```csharp
-// Dictionary removing — Remove by key and Clear
+`Remove` deletes by key and returns `true` if found. `Clear` empties the entire dictionary.
 
+```csharp
 var d = new Dictionary<string, int> { ["a"] = 1, ["b"] = 2, ["c"] = 3 };
 d.Remove("b");
-string.Join(", ", d.Select(kv => $"{kv.Key}:{kv.Value}"))   // After Remove(b)
+string.Join(", ", d.Select(kv => $"{kv.Key}:{kv.Value}"))
 d.Clear();
-d.Count   // After Clear: Count
+d.Count
 ```
 
-    a:1, c:3
-    Count=0
+```text
+a:1, c:3
+0
+```
 
 #### Dictionary foreach KeyValuePair — iterating and membership
 
-```csharp
-// Dictionary iteration and membership — foreach and ContainsKey/Value
+Iterating with `foreach` deconstructs each `KeyValuePair<K,V>` into `(key, value)`. `ContainsKey` is O(1); `ContainsValue` is O(n) — it scans all values linearly.
 
+```csharp
 var dd = new Dictionary<string, object> { ["name"] = "Alice", ["age"] = 30, ["city"] = "NYC" };
 foreach (var (key, value) in dd)
     Console.WriteLine($"  {key}: {value}");
 
-dd.ContainsKey("name")   // ContainsKey(name)
-dd.ContainsValue("NYC")   // ContainsValue(NYC)
-string.Join(", ", dd.Keys)   // Keys
-string.Join(", ", dd.Values)   // Values
+dd.ContainsKey("name")
+dd.ContainsValue("NYC")
+string.Join(", ", dd.Keys)
+string.Join(", ", dd.Values)
 ```
 
-      name: Alice
-      age: 30
-      city: NYC
-    True
-    True
-    [name, age, city]
-    [Alice, 30, NYC]
+```text
+  name: Alice
+  age: 30
+  city: NYC
+True
+True
+name, age, city
+Alice, 30, NYC
+```
 
 #### LINQ Where, GroupBy, Count — dictionary filtering and grouping
 
-```csharp
-// LINQ on dictionaries — filtering, grouping, and counting
+LINQ's `Where`, `GroupBy`, and `ToDictionary` chain naturally over dictionaries. `GroupBy` + `Count` replaces Python's `Counter`. `SortedDictionary<K,V>` maintains keys in sorted order automatically.
 
+```csharp
 var filtered = scores.Where(kv => kv.Value >= 80)
     .ToDictionary(kv => kv.Key, kv => kv.Value);
-string.Join(", ", filtered.Select(kv => $"{kv.Key}:{kv.Value}"))   // Score >= 80
+string.Join(", ", filtered.Select(kv => $"{kv.Key}:{kv.Value}"))
 
-// Group by first letter
 var words = new[] { "apple", "banana", "avocado", "cherry", "blueberry" };
 var groups = words.GroupBy(w => w[0])
     .ToDictionary(g => g.Key, g => g.ToList());
 foreach (var (key, value) in groups)
     Console.WriteLine($"  {key}: [{string.Join(", ", value)}]");
 
-// Count occurrences
 string text = "abracadabra";
 var counter = text.GroupBy(c => c)
     .ToDictionary(g => g.Key, g => g.Count())
@@ -461,20 +499,28 @@ foreach (var (key, value) in sorted)
     Console.WriteLine($"  {key}: {value}");
 ```
 
-    Alice:85, Bob:92
-      a: [apple, avocado]
-      b: [banana, blueberry]
-      c: [cherry]
-      'a': 5
-      'b': 2
-      'r': 2
-      'c': 1
-      'd': 1
-      Alice: 85
-      Bob: 92
-      Charlie: 78
+```text
+Alice:85, Bob:92
+  a: [apple, avocado]
+  b: [banana, blueberry]
+  c: [cherry]
+  'a': 5
+  'b': 2
+  'r': 2
+  'c': 1
+  'd': 1
+  Alice: 85
+  Bob: 92
+  Charlie: 78
+```
 
 ## Sets
+
+Sets store unique elements with O(1) membership testing. `HashSet<T>` is unordered and backed by a hash table. `SortedSet<T>` keeps elements sorted via a red-black tree (O(log n)). For immutable sets, use `ImmutableHashSet<T>` from `System.Collections.Immutable`. Set algebra operations (`UnionWith`, `IntersectWith`, `ExceptWith`, `SymmetricExceptWith`) mutate the set in-place — copy first if you need to preserve the original.
+
+### HashSet operations
+
+Creating sets, adding/removing elements, and performing set algebra (union, intersection, difference, symmetric difference).
 
 #### HashSet&lt;T&gt; creation — unordered unique elements
 
@@ -501,37 +547,41 @@ var nums = new HashSet<int> { 1, 2, 3, 4, 5 };
 var fromList = new List<int> { 1, 2, 2, 3, 3, 3 }.ToHashSet();
 var fromStr = "abracadabra".ToHashSet();
 
-string.Join(", ", nums)   // nums
-string.Join(", ", fromList)   // fromList
-string.Join(", ", fromStr)   // fromStr
+string.Join(", ", nums)
+string.Join(", ", fromList)
+string.Join(", ", fromStr)
 ```
 
-    {1, 2, 3, 4, 5}
-    {1, 2, 3}
-    {a, b, r, c, d}
+```text
+{1, 2, 3, 4, 5}
+{1, 2, 3}
+{a, b, r, c, d}
+```
 
 #### HashSet Add, Remove, RemoveWhere — modify set elements
 
-```csharp
-// HashSet add and remove — Add returns bool, Remove returns bool
+`Add` returns `true` if the element was inserted, `false` if it already existed. `Remove` returns `true` if the element was found and removed.
 
+```csharp
 var s = new HashSet<int> { 1, 2, 3 };
-s.Add(4)   // Add(4)
-s.Add(2)   // Add(2)
-s.Remove(1)   // Remove(1)
-string.Join(", ", s)   // Set
+s.Add(4)
+s.Add(2)
+s.Remove(1)
+string.Join(", ", s)
 ```
 
-    True
-    False
-    True
-    {2, 3, 4}
+```text
+True
+False
+True
+{2, 3, 4}
+```
 
 #### HashSet UnionWith, IntersectWith, ExceptWith, SymmetricExceptWith
 
-```csharp
-// Set operations — union, intersection, difference, symmetric difference
+All four set algebra operations mutate the target set in-place. To preserve the original, copy it first with `new HashSet<int>(original)`. `UnionWith` adds all elements from the other set. `IntersectWith` keeps only shared elements. `ExceptWith` removes elements present in the other set. `SymmetricExceptWith` keeps elements in either set but not both.
 
+```csharp
 var a = new HashSet<int> { 1, 2, 3, 4, 5 };
 var b = new HashSet<int> { 3, 4, 5, 6, 7 };
 
@@ -540,51 +590,63 @@ var inter = new HashSet<int>(a); inter.IntersectWith(b);
 var diff  = new HashSet<int>(a); diff.ExceptWith(b);
 var symm  = new HashSet<int>(a); symm.SymmetricExceptWith(b);
 
-string.Join(", ", union)   // Union
-string.Join(", ", inter)   // Intersect
-string.Join(", ", diff)   // Except
-string.Join(", ", symm)   // Symmetric
+string.Join(", ", union)
+string.Join(", ", inter)
+string.Join(", ", diff)
+string.Join(", ", symm)
 ```
 
-    {1, 2, 3, 4, 5, 6, 7}
-    {3, 4, 5}
-    {1, 2}
-    {1, 2, 7, 6}
+```text
+{1, 2, 3, 4, 5, 6, 7}
+{3, 4, 5}
+{1, 2}
+{1, 2, 7, 6}
+```
 
 #### HashSet Except — data comparison for missing and extra items
 
-```csharp
-// Data comparison use case — ExceptWith for finding missing items
+A practical data engineering pattern — use `ExceptWith` to find items present in one dataset but missing from another (e.g., unsold products, orphaned foreign keys).
 
+```csharp
 var prodIds = new HashSet<string> { "P001", "P002", "P003", "P004" };
 var soldIds = new HashSet<string> { "P002", "P004", "P005" };
 
 var unsold = new HashSet<string>(prodIds); unsold.ExceptWith(soldIds);
 var unknown = new HashSet<string>(soldIds); unknown.ExceptWith(prodIds);
-string.Join(", ", unsold)   // Unsold
-string.Join(", ", unknown)   // Unknown
+string.Join(", ", unsold)
+string.Join(", ", unknown)
 ```
 
-    {P001, P003}
-    {P005}
+```text
+{P001, P003}
+{P005}
+```
 
-#### SortedSet
+### SortedSet
 
-A `SortedSet<T>` is a collection that maintains its elements in sorted order and guarantees uniqueness — duplicates are silently ignored on `Add()`. It uses a red-black tree internally, giving O(log n) for add, remove, and lookup. Use it when you need both uniqueness and sorted iteration.
+`SortedSet<T>` maintains elements in sorted order and guarantees uniqueness — duplicates are silently ignored on `Add()`. Internally it uses a red-black tree, giving O(log n) for add, remove, and lookup. Use it when you need both uniqueness and sorted iteration. It also exposes `Min`, `Max`, and `GetViewBetween(lower, upper)` for range queries.
+
+#### SortedSet creation and range access
 
 ```csharp
-// SortedSet — elements maintained in sorted order automatically
-
 var unsorted = new HashSet<int> { 5, 3, 1, 4, 2 };
 var sorted = new SortedSet<int>(unsorted);
-string.Join(", ", sorted)   // SortedSet
+string.Join(", ", sorted)
 $"Min: {sorted.Min}, Max: {sorted.Max}"
 ```
 
-    {1, 2, 3, 4, 5}
-    5
+```text
+{1, 2, 3, 4, 5}
+Min: 1, Max: 5
+```
 
 ## Tuples and Enums
+
+Tuples group a fixed number of heterogeneous values without defining a class. C# uses `ValueTuple` (value type, stack-allocated, compared by value) — the modern replacement for `System.Tuple` (reference type, heap-allocated). Enums define named integer constants for discrete value sets, improving readability and compile-time safety over magic numbers.
+
+### ValueTuple fundamentals
+
+`ValueTuple` supports named fields, deconstruction into separate variables, and swap-without-temp idioms. For public APIs or complex return types (3–4+ fields), prefer a `record` or class for discoverability and documentation.
 
 #### ValueTuple basics
 
@@ -606,27 +668,30 @@ person.Name
 person.Age
 ```
 
-    (3, 4)
-    3
-    Alice
-    30
+```text
+(3, 4)
+3
+Alice
+30
+```
 
 #### Tuple deconstruction (var (a,b) = ...) and swap
 
-```csharp
-// Deconstruction and swap — unpack tuples into separate variables
+Deconstruction unpacks tuple fields into separate variables. The swap idiom `(a, b) = (b, a)` exchanges two values without a temporary variable — the compiler handles this atomically.
 
+```csharp
 var (x, y) = point;
 $"Deconstructed: x={x}, y={y}"
 
-// Swap without temp variable
 int a2 = 1, b2 = 2;
 (a2, b2) = (b2, a2);
 $"Swapped: a={a2}, b={b2}"
 ```
 
-    x=3, y=4
-    a=2, b=1
+```text
+Deconstructed: x=3, y=4
+Swapped: a=2, b=1
+```
 
 #### Records as an alternative to namedtuple
 
@@ -638,34 +703,46 @@ record class Person(string Name);    // reference type (default)
 record struct Coord(int X, int Y);   // value type
 ```
 
+### Enum types
+
+Enums define a closed set of named integer constants. Members auto-increment from 0 unless explicitly assigned. Use enums instead of magic numbers or string constants for state machines, status codes, and configuration options.
+
 #### Enum type declaration
 
-```csharp
-// Enum — named integer constants for discrete value sets
+Enum values auto-increment from 0 unless explicitly assigned. Use explicit values when they map to external codes (database, wire protocol). The `[Flags]` attribute enables bitwise combination for multi-valued enums.
 
+```csharp
 enum Color { Red = 1, Green = 2, Blue = 3 }
-enum Direction { North, South, East, West }           // auto: 0, 1, 2, 3
+enum Direction { North, South, East, West }
 
 enum PipelineStatus { Pending, Running, Success, Failed }
 ```
 
 #### Enum usage — switch, ToString, Enum.Parse, IsDefined
 
-```csharp
-// Using enums — access, cast, parse, and iterate
+Cast to `int` for the underlying value. `Enum.Parse<T>` converts a string to the enum member. `Enum.GetValues<T>` returns all defined members.
 
+```csharp
 Color.Red
 (int)Color.Red
-Enum.Parse<Color>("Blue")   // Parse
-string.Join(", ", Enum.GetValues<Color>())   // All values
+Enum.Parse<Color>("Blue")
+string.Join(", ", Enum.GetValues<Color>())
 ```
 
-    Red
-    1
-    Blue
-    [Red, Green, Blue]
+```text
+Red
+1
+Blue
+Red, Green, Blue
+```
 
 ## Stacks, Queues, and Linked Lists
+
+Specialized collections for ordered processing. `Stack<T>` (LIFO) is natural for undo systems, DFS, and expression evaluation. `Queue<T>` (FIFO) models task queues, BFS, and ETL pipelines. `LinkedList<T>` provides O(1) insertion/removal at any node position. `PriorityQueue<T, TPriority>` (.NET 6+) dequeues by priority rather than insertion order.
+
+### Stack and Queue
+
+Stack operations (`Push`, `Pop`, `Peek`) and Queue operations (`Enqueue`, `Dequeue`, `Peek`) are all O(1).
 
 #### Stack — Stack&lt;T&gt; (LIFO)
 
@@ -683,78 +760,90 @@ var stack = new Stack<string>();
 stack.Push("first");
 stack.Push("second");
 stack.Push("third");
-string.Join(", ", stack)   // Stack
-stack.Pop()   // Pop
-stack.Pop()   // Pop
-stack.Peek()   // Peek
-stack.Count   // Count
+string.Join(", ", stack)
+stack.Pop()
+stack.Pop()
+stack.Peek()
+stack.Count
 ```
 
-    [third, second, first]
-    third
-    second
-    first
-    1
+```text
+[third, second, first]
+third
+second
+first
+1
+```
 
 #### Queue — Queue&lt;T&gt; (FIFO)
 
-```csharp
-// Queue<T> — First In, First Out (FIFO) collection
+`Queue<T>` processes elements in insertion order (First In, First Out). `Dequeue` removes and returns the front element; `Peek` reads it without removing.
 
+```csharp
 var queue = new Queue<string>();
 queue.Enqueue("first");
 queue.Enqueue("second");
 queue.Enqueue("third");
-string.Join(", ", queue)   // Queue
-queue.Dequeue()   // Dequeue
-queue.Peek()   // Peek
+string.Join(", ", queue)
+queue.Dequeue()
+queue.Peek()
 ```
 
-    [first, second, third]
-    first
-    second
+```text
+[first, second, third]
+first
+second
+```
 
-#### LinkedList&lt;T&gt;
+### LinkedList and PriorityQueue
+
+`LinkedList<T>` is a doubly-linked list with O(1) insert/remove at any node (given a reference to that node). `PriorityQueue<T, TPriority>` (.NET 6+) dequeues the element with the lowest priority value first.
+
+#### LinkedList&lt;T&gt; — doubly-linked list
+
+`AddFirst`, `AddLast`, and `AddAfter`/`AddBefore` insert at specific positions. `Find` returns a `LinkedListNode<T>` reference for positional operations.
 
 ```csharp
-// LinkedList<T> — doubly-linked list with O(1) insert/remove at any node
-
 var ll = new LinkedList<string>();
 ll.AddLast("B");
 ll.AddFirst("A");
 ll.AddLast("D");
 ll.AddAfter(ll.Find("B")!, "C");
-string.Join(", ", ll)   // LinkedList
+string.Join(", ", ll)
 ll.Remove("C");
 ll.RemoveFirst();
-string.Join(", ", ll)   // After removes
+string.Join(", ", ll)
 ```
 
-    [A, B, C, D]
-    [B, D]
+```text
+[A, B, C, D]
+[B, D]
+```
 
-#### PriorityQueue&lt;T, TPriority&gt;
+#### PriorityQueue&lt;T, TPriority&gt; — dequeue by lowest priority
+
+`PriorityQueue` orders by priority value (lower = higher priority). It uses a min-heap internally. There is no built-in way to update priorities — remove and re-insert instead.
 
 ```csharp
-// PriorityQueue<T, TPriority> — dequeue by lowest priority first (.NET 6+)
-
 var pq = new PriorityQueue<string, int>();
 pq.Enqueue("low priority", 3);
 pq.Enqueue("high priority", 1);
 pq.Enqueue("medium priority", 2);
 
-pq.Dequeue()   // Dequeue
-pq.Dequeue()   // Dequeue
+pq.Dequeue()
+pq.Dequeue()
 ```
 
-    high priority
-    medium priority
+```text
+high priority
+medium priority
+```
 
-#### ETL task queue
+#### ETL task queue — FIFO processing pattern
+
+A practical data engineering pattern — model extract/transform/load steps as a FIFO queue. Each job is dequeued and processed in submission order.
 
 ```csharp
-// ETL task queue — process extract/transform/load jobs in FIFO order
-
 var taskQueue = new Queue<(string task, string table)>();
 taskQueue.Enqueue(("extract", "users"));
 taskQueue.Enqueue(("extract", "orders"));
@@ -767,11 +856,17 @@ while (taskQueue.Count > 0)
 }
 ```
 
-      Processing: extract → users
-      Processing: extract → orders
-      Processing: transform → users
+```text
+  Processing: extract → users
+  Processing: extract → orders
+  Processing: transform → users
+```
 
 ## Collection Comparison and Choosing the Right One
+
+Choosing the right collection type depends on access pattern, ordering requirements, uniqueness constraints, and performance characteristics. This section provides a quick-reference comparison table and a decision guide for common data engineering scenarios.
+
+### Collection comparison tables
 
 #### Collection cheat sheet
 
@@ -798,31 +893,30 @@ enum                | -       | No      | No         | -
 ");
 ```
 
-    
-    Collection          | Ordered | Mutable | Duplicates | Lookup
-    --------------------+---------+---------+------------+---------
-    int[] (array)       | Yes     | Fixed*  | Yes        | O(n)
-    List<T>             | Yes     | Yes     | Yes        | O(n)
-    Dictionary<K,V>     | No**    | Yes     | Keys: No   | O(1)
-    HashSet<T>          | No      | Yes     | No         | O(1)
-    SortedDictionary    | Yes     | Yes     | Keys: No   | O(log n)
-    SortedSet<T>        | Yes     | Yes     | No         | O(log n)
-    Stack<T>            | LIFO    | Yes     | Yes        | -
-    Queue<T>            | FIFO    | Yes     | Yes        | -
-    LinkedList<T>       | Yes     | Yes     | Yes        | O(n)
-    PriorityQueue<T,P>  | Priority| Yes     | Yes        | -
-    ValueTuple          | Yes     | No***   | Yes        | -
-    enum                | -       | No      | No         | -
-    
-    *  Array: elements mutable, size fixed
-    ** Dictionary: no guaranteed order
-    *** ValueTuple: struct fields mutable, but usually used as immutable
+```text
+Collection          | Ordered | Mutable | Duplicates | Lookup
+--------------------+---------+---------+------------+---------
+int[] (array)       | Yes     | Fixed*  | Yes        | O(n)
+List<T>             | Yes     | Yes     | Yes        | O(n)
+Dictionary<K,V>     | No**    | Yes     | Keys: No   | O(1)
+HashSet<T>          | No      | Yes     | No         | O(1)
+SortedDictionary    | Yes     | Yes     | Keys: No   | O(log n)
+SortedSet<T>        | Yes     | Yes     | No         | O(log n)
+Stack<T>            | LIFO    | Yes     | Yes        | -
+Queue<T>            | FIFO    | Yes     | Yes        | -
+LinkedList<T>       | Yes     | Yes     | Yes        | O(n)
+PriorityQueue<T,P>  | Priority| Yes     | Yes        | -
+ValueTuple          | Yes     | No***   | Yes        | -
+enum                | -       | No      | No         | -
+
+*  Array: elements mutable, size fixed
+** Dictionary: no guaranteed order
+*** ValueTuple: struct fields mutable, but usually used as immutable
+```
 
 #### Decision guide
 
 ```csharp
-// Decision guide — choose the right collection by access pattern
-
 Console.WriteLine(@"
 Need ordered items?
   ├─ Fixed size?      → T[] (array)
@@ -843,23 +937,24 @@ Need O(1) insert/remove at position? → LinkedList<T>
 ");
 ```
 
-    
-    Need ordered items?
-      ├─ Fixed size?      → T[] (array)
-      └─ Dynamic size?    → List<T>
-    
-    Need key-value pairs?
-      ├─ Keep keys sorted? → SortedDictionary<K,V>
-      └─ Fast lookup?      → Dictionary<K,V>
-    
-    Need unique elements?
-      ├─ Keep sorted?      → SortedSet<T>
-      └─ Fast lookup?      → HashSet<T>
-    
-    Need FIFO?             → Queue<T>
-    Need LIFO?             → Stack<T>
-    Need priority?         → PriorityQueue<T,P>
-    Need O(1) insert/remove at position? → LinkedList<T>
+```text
+Need ordered items?
+  ├─ Fixed size?      → T[] (array)
+  └─ Dynamic size?    → List<T>
+
+Need key-value pairs?
+  ├─ Keep keys sorted? → SortedDictionary<K,V>
+  └─ Fast lookup?      → Dictionary<K,V>
+
+Need unique elements?
+  ├─ Keep sorted?      → SortedSet<T>
+  └─ Fast lookup?      → HashSet<T>
+
+Need FIFO?             → Queue<T>
+Need LIFO?             → Stack<T>
+Need priority?         → PriorityQueue<T,P>
+Need O(1) insert/remove at position? → LinkedList<T>
+```
 
 #### Common data engineering patterns
 
@@ -875,3 +970,8 @@ Need O(1) insert/remove at position? → LinkedList<T>
 | Priority tasks | `PriorityQueue<T, int>` |
 | Schema fields | `ValueTuple` or `enum` |
 | Immutable config | `ImmutableDictionary` (`System.Collections.Immutable`) |
+| Read-heavy lookup | `FrozenDictionary` / `FrozenSet` (`System.Collections.Frozen`, .NET 8+) |
+
+> [!info] FrozenDictionary and FrozenSet (.NET 8+)
+>
+> `FrozenDictionary<TKey, TValue>` and `FrozenSet<T>` from `System.Collections.Frozen` are optimized for scenarios where the collection is built once and read many times. The `ToFrozenDictionary()` / `ToFrozenSet()` extension methods create an immutable snapshot with faster read performance than standard `Dictionary` or `HashSet` — the runtime pre-computes an optimal hash strategy at creation time. Ideal for static lookup tables, configuration caches, and reference data loaded at startup.

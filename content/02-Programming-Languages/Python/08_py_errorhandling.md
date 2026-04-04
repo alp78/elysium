@@ -1,4 +1,5 @@
 ---
+title: "08. Error Handling - Python"
 tags: [python]
 aliases: [exceptions, try catch, error handling, custom exceptions, exception hierarchy]
 description: "Python error handling reference with executable examples and cell outputs — covers try/except/finally, exception hierarchy, custom exceptions, re-raising, and context managers. See [08_cs_errorhandling](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/08_cs_errorhandling) for the C# equivalent."
@@ -14,7 +15,13 @@ status: complete
 >
 > — **Edsger W. Dijkstra**, attributed remark (c. 1970s)
 
+Python uses `try`/`except`/`else`/`finally` blocks for exception handling, a class-based hierarchy rooted in `BaseException`, and context managers (`with` statement) for deterministic resource cleanup. This note covers exception catching and chaining, the built-in exception tree, custom domain exceptions, context managers (both generator-based and class-based), and data-engineering patterns like error accumulation, safe parse helpers, and retry with backoff.
+
 ## try / except / else / finally
+
+Python's `try`/`except` construct catches exceptions by type. `else` runs only on success (no exception), and `finally` guarantees cleanup regardless. Exception chaining via `raise ... from e` preserves the full cause chain for debugging. Unlike C#, Python has no `catch when` — use conditional logic inside the `except` block instead.
+
+### Python | Exceptions | try, except, else, finally, raise
 
 #### Basic try / except
 
@@ -31,7 +38,6 @@ Wrap risky code in `try:` and catch specific exception types with `except Except
 > Use `except ValueError as e:` (never bare `except:`). Log with `logging.exception("msg")` or `logging.error("msg", exc_info=True)` to preserve the full stack trace. Reserve `except Exception` only for top-level handlers that re-raise or report.
 
 ```python
-# Basic try/except — wrap risky code in try; except handles specific exception types
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
@@ -47,7 +53,9 @@ except IndexError as e:
     print(f"Caught: {e}")
 ```
 
-    Caught: list index out of range
+```text
+Caught: list index out of range
+```
 
 > [!danger] Bare except: catches everything
 >
@@ -78,8 +86,6 @@ Handle different exception types with different recovery strategies. Python eval
 > Place `except ValueError:` before `except Exception:`. Python executes the first matching clause — if `Exception` comes first it swallows everything. End with `except Exception as e:` only as a fallback that logs and optionally re-raises.
 
 ```python
-# Multiple except clauses — match most specific exception first
-
 def parse_row(value, row_num):
     try:
         result = int(value)
@@ -99,18 +105,18 @@ parse_row(-100, 3)           # ValueError (negative)
 parse_row(None, 4)           # TypeError (int(None))
 ```
 
-      Row 1: parsed 42
-      Row 2: value error — invalid literal for int() with base 10: 'not_a_number'
-      Row 3: value error — Salary cannot be negative: -100
-      Row 4: type error — int() argument must be a string, a bytes-like object or a real number, not 'NoneType'
+```text
+Row 1: parsed 42
+Row 2: value error — invalid literal for int() with base 10: 'not_a_number'
+Row 3: value error — Salary cannot be negative: -100
+Row 4: type error — int() argument must be a string, a bytes-like object or a real number, not 'NoneType'
+```
 
 #### else and finally — success-only code and guaranteed cleanup
 
 `else` runs only if no exception was raised in the `try` block — useful for code that should only execute on success (separating "risky" from "safe" logic). `finally` runs ALWAYS, whether an exception occurred or not, guaranteeing cleanup such as closing files and releasing locks.
 
 ```python
-# else — runs only when try succeeds (no exception raised)
-
 def load_config(path):
     try:
         with open(path) as f:
@@ -127,14 +133,14 @@ def load_config(path):
 load_config("missing.json")
 ```
 
-      missing.json
-      Attempt to load: missing.json (always runs)
+```text
+Config not found: missing.json
+Attempt to load: missing.json (always runs)
+```
 
 #### finally — guaranteed cleanup even on exception
 
 ```python
-# finally — cleanup pattern that always runs
-
 def process_with_cleanup(throw_error):
     print("  Opening resource...")
     try:
@@ -151,15 +157,17 @@ process_with_cleanup(False)
 process_with_cleanup(True)
 ```
 
-      Opening resource...
-      Processing...
-      Done.
-      Closing resource (finally)
+```text
+Opening resource...
+Processing...
+Done.
+Closing resource (finally)
 
-      Opening resource...
-      Processing...
-      Something went wrong
-      Closing resource (finally)
+Opening resource...
+Processing...
+Error caught: Something went wrong
+Closing resource (finally)
+```
 
 #### raise vs raise from — exception chaining
 
@@ -173,8 +181,6 @@ process_with_cleanup(True)
 > `raise PipelineError("stage failed") from e` sets `e.__cause__` explicitly, giving debuggers and log parsers the full chain. When you want to hide implementation details from callers (e.g., database errors exposed as API errors), use `raise PublicError("msg") from None`.
 
 ```python
-# raise from — exception chaining preserving the original cause
-
 def wrapper():
     try:
         int("bad_value")
@@ -188,10 +194,16 @@ except RuntimeError as e:
     print(f"  Caused by: {e.__cause__}")
 ```
 
-      Pipeline failed during validation
-      Caused by: invalid literal for int() with base 10: 'bad_value'
+```text
+Outer: Pipeline failed during validation
+Caused by: invalid literal for int() with base 10: 'bad_value'
+```
 
 ## Exception Types and Hierarchy
+
+Python's exception hierarchy starts at `BaseException`, not `Exception`. `SystemExit`, `KeyboardInterrupt`, and `GeneratorExit` are direct children of `BaseException` — catching `Exception` correctly excludes them. Built-in exception types like `ValueError`, `TypeError`, `KeyError`, `OSError` (and its subclasses `FileNotFoundError`, `PermissionError`) cover most data engineering scenarios. Each exception carries `args` (tuple), `__cause__` (explicit chain via `raise from`), and `__context__` (implicit chain).
+
+### Python | Exceptions | types and properties
 
 #### Exception hierarchy — BaseException tree, args, __cause__
 
@@ -225,7 +237,6 @@ except RuntimeError as e:
 > `except Exception as e:` is the safe broadest catch — it excludes `SystemExit`, `KeyboardInterrupt`, and `GeneratorExit`. This lets Ctrl+C and interpreter shutdown work normally. Use `except BaseException` only in frameworks that must intercept process termination signals.
 
 ```python
-# Exception properties — args, __cause__, __traceback__
 try:
     raise ValueError("salary must be positive", -500)
 except ValueError as e:
@@ -234,15 +245,15 @@ except ValueError as e:
     print(f"  type(e): {type(e).__name__}")
 ```
 
-      ('salary must be positive', -500)
-      ('salary must be positive', -500)
-       ValueError
+```text
+str(e):  ('salary must be positive', -500)
+e.args:  ('salary must be positive', -500)
+type(e): ValueError
+```
 
 #### Common exceptions in data engineering
 
 ```python
-# ValueError, KeyError, TypeError — most common in CSV/JSON parsing
-
 csv_row = ["Alice", "not_a_number", "2024-01-15"]
 try:
     salary = int(csv_row[1])
@@ -251,8 +262,8 @@ except ValueError as e:
     print(f"  ValueError: safe fallback = {salary}")
 
 row = {"name": "Alice", "dept": "Engineering"}
-salary = row.get("salary", 0)  # .get() avoids KeyError
-salary   # KeyError avoided: salary =
+salary = row.get("salary", 0)
+salary
 
 try:
     total = sum("not_a_list")  # type: ignore
@@ -260,23 +271,23 @@ except TypeError as e:
     print(f"  TypeError: {e}")
 ```
 
-      ValueError: safe fallback = 0
-      KeyError avoided: salary = 0
-      TypeError: unsupported operand type(s) for +: 'int' and 'str'
+```text
+ValueError: safe fallback = 0
+KeyError avoided: salary = 0
+TypeError: unsupported operand type(s) for +: 'int' and 'str'
+```
 
 #### Common exceptions — AttributeError, ZeroDivisionError, FileNotFoundError
 
 ```python
-# Defensive patterns for None, empty collections, missing files
-
 optional_field = None
 safe = optional_field.upper() if optional_field is not None else ""  # type: ignore
-safe   # AttributeError avoided
+safe
 
 def safe_avg(values):
     return sum(values) / len(values) if values else None
-safe_avg([10, 20])   # safe_avg([10,20])
-safe_avg([])   # safe_avg([])
+safe_avg([10, 20])
+safe_avg([])
 
 try:
     with open("missing_data.csv") as f:
@@ -285,16 +296,16 @@ except FileNotFoundError as e:
     print(f"  FileNotFoundError: {e.filename} — {e.strerror}")
 ```
 
-      AttributeError avoided: ''
-       15.0
-      None
-      FileNotFoundError: missing_data.csv — No such file or directory
+```text
+AttributeError avoided: ''
+15.0
+None
+FileNotFoundError: missing_data.csv — No such file or directory
+```
 
 #### Catching multiple exception types in one clause
 
 ```python
-# Tuple of exception types in one except clause
-
 def parse_numeric(value):
     try:
         return float(value)
@@ -305,21 +316,24 @@ for v in ["3.14", "bad", None, "42"]:
     print(f"  parse_numeric({str(v)!r:8}) = {parse_numeric(v)}")
 ```
 
-      parse_numeric('3.14'  ) = 3.14
-      parse_numeric('bad'   ) = None
-      parse_numeric('None'  ) = None
-      parse_numeric('42'    ) = 42.0
+```text
+parse_numeric('3.14'  ) = 3.14
+parse_numeric('bad'   ) = None
+parse_numeric('None'  ) = None
+parse_numeric('42'    ) = 42.0
+```
 
 ## Custom Exceptions
+
+Custom exception classes inherit from `Exception` and add domain-specific attributes (`row_number`, `column_name`, `raw_value`) for structured error reporting. Use `raise CustomError("msg") from e` to chain causes. Only create custom exceptions when you need context beyond what `ValueError` or `FileNotFoundError` provide.
+
+### Python | Exceptions | custom exception classes
 
 #### Custom exception classes
 
 Custom exceptions add structured diagnostic fields (`row_number`, `column_name`, `raw_value`) that built-in types lack. Type-safe catching (`except CsvParseError`) is more precise than catching generic `Exception`. The `__cause__` chain preserves full error history. Only create custom exceptions when you need extra context — otherwise built-in types like `ValueError` or `FileNotFoundError` suffice.
 
 ```python
-# Custom exception classes — inherit from Exception; add domain-specific attributes
-
-# CsvParseError — structured context for CSV parsing failures
 class CsvParseError(Exception):
     def __init__(self, row_number: int, column_name: str, raw_value: str,
                  cause: Optional[Exception] = None):
@@ -330,7 +344,6 @@ class CsvParseError(Exception):
         if cause:
             self.__cause__ = cause
 
-# PipelineError — wraps lower-level errors with pipeline name and stage
 class PipelineError(Exception):
     def __init__(self, pipeline_name: str, stage: str, message: str,
                  cause: Optional[Exception] = None):
@@ -340,7 +353,6 @@ class PipelineError(Exception):
         if cause:
             self.__cause__ = cause
 
-# ConfigError — hides internal file errors from callers
 class ConfigError(Exception):
     pass
 ```
@@ -348,8 +360,6 @@ class ConfigError(Exception):
 #### Using custom exceptions — catch, wrap, and re-raise with domain context
 
 ```python
-# Using custom exceptions — catch low-level, wrap with domain context
-
 def parse_salary(value: str, row_num: int) -> int:
     try:
         return int(value)
@@ -367,16 +377,16 @@ for i, row in enumerate(rows, start=1):
         print(f"         Caused by: {e.__cause__}")
 ```
 
-      Row 1: Alice salary=95,000
-      SKIP row 2: column 'salary' bad value 'not_a_number'
-             Caused by: invalid literal for int() with base 10: 'not_a_number'
-      Row 3: Charlie salary=110,000
+```text
+Row 1: Alice salary=95,000
+SKIP row 2: column 'salary' bad value 'not_a_number'
+       Caused by: invalid literal for int() with base 10: 'not_a_number'
+Row 3: Charlie salary=110,000
+```
 
 #### Exception chaining and raise from None
 
 ```python
-# Exception chaining and raise from None — control the error chain
-
 def run_pipeline(name):
     try:
         raise CsvParseError(42, "amount", "$$$")
@@ -392,7 +402,6 @@ except PipelineError as e:
         csv_e = e.__cause__
         print(f"  Root:     row {csv_e.row_number}, col '{csv_e.column_name}', value {csv_e.raw_value!r}")
 
-# raise from None — hide internal exception from caller
 def load_config(path):
     try:
         with open(path) as f:
@@ -407,13 +416,19 @@ except ConfigError as e:
     print(f"  __cause__: {e.__cause__}")  # None — suppressed
 ```
 
-      sales_etl
-      transform
-      row 42, col 'amount', value '$$$'
-      config.yaml
-      __cause__: None
+```text
+Pipeline: sales_etl
+Stage:    transform
+Root:     row 42, col 'amount', value '$$$'
+Config file not found: config.yaml
+__cause__: None
+```
 
 ## Context Managers — with statement
+
+Python's `with` statement is the equivalent of C#'s `using` — it guarantees cleanup via the `__enter__`/`__exit__` protocol, even if an exception occurs. Custom context managers can be built with `@contextlib.contextmanager` (generator-based, lightweight) or by implementing the `__enter__`/`__exit__` methods on a class. Use `with` for all resource acquisition: files, database connections, locks, temporary directories, and network sockets.
+
+### Python | Context managers | with statement and protocols
 
 #### Basic with statement — guaranteed cleanup via context managers
 
@@ -436,19 +451,14 @@ The `with` statement guarantees cleanup even if an exception occurs. `with open(
 > Any object with `__enter__`/`__exit__` (files, DB connections, locks, thread pools) should be opened with `with`. Nest multiple resources in one statement: `with open(src) as f1, open(dst, 'w') as f2:` — both are closed even if an exception occurs inside the block.
 
 ```python
-# with statement — calls __enter__ on start, __exit__ on end (even on exception)
-
-# Create temp CSV
 tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
 tmp.write("name,salary,dept\nAlice,95000,Engineering\nBob,65000,Sales")
 tmp.close()
 
-# File auto-closed when with block exits
 with open(tmp.name) as f:
     for line in f:
         print(f"  {line.rstrip()}")
 
-# Multiple context managers in one statement
 out_tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
 out_tmp.close()
 
@@ -464,18 +474,18 @@ with open(out_tmp.name) as f:
     print(f"  Output: {f.read().strip()}")
 ```
 
-      name,salary,dept
-      Alice,95000,Engineering
-      Bob,65000,Sales
-      name,salary,dept,tax
-    Alice,95000,Engineering,28500
-    Bob,65000,Sales,19500
+```text
+name,salary,dept
+Alice,95000,Engineering
+Bob,65000,Sales
+Output: name,salary,dept,tax
+Alice,95000,Engineering,28500
+Bob,65000,Sales,19500
+```
 
 #### Custom context manager — @contextmanager
 
 ```python
-# @contextmanager — generator-based context manager (no class needed)
-
 @contextlib.contextmanager
 def csv_writer(path: str, header: list[str]):
     """Context manager that writes a CSV file, flushing on exit."""
@@ -500,23 +510,22 @@ with csv_writer(out2, ["name", "salary", "dept"]) as write:
     write("Alice", 95000, "Engineering")
     write("Bob", 65000, "Sales")
 
-# contextlib.suppress — silently ignore specific exceptions
 for f in [tmp.name, out_tmp.name, out2]:
     with contextlib.suppress(FileNotFoundError):
         os.unlink(f)
         print(f"  Deleted: {f}")
 ```
 
-      C:\Users\aperi\AppData\Local\Temp\tmpkqxh9yf4.csv (2 rows written)
-      C:\Users\aperi\AppData\Local\Temp\tmp8z18xzfq.csv
-      C:\Users\aperi\AppData\Local\Temp\tmpxzwt778q.csv
-      C:\Users\aperi\AppData\Local\Temp\tmpkqxh9yf4.csv
+```text
+Closed: C:\...\tmpkqxh9yf4.csv (2 rows written)
+Deleted: C:\...\tmp8z18xzfq.csv
+Deleted: C:\...\tmpxzwt778q.csv
+Deleted: C:\...\tmpkqxh9yf4.csv
+```
 
 #### Class-based context manager — __enter__ and __exit__ protocol
 
 ```python
-# Class-based context manager — __enter__ and __exit__ for resource lifecycle
-
 class DatabaseConnection:
     def __init__(self, conn_string: str):
         self.conn_string = conn_string
@@ -541,11 +550,17 @@ with DatabaseConnection("postgresql://localhost/mydb") as db:
     db.execute("SELECT * FROM employees LIMIT 3")
 ```
 
-      Connecting to postgresql://localhost/mydb...
-      SELECT * FROM employees LIMIT 3
-      Disconnecting from postgresql://localhost/mydb
+```text
+Connecting to postgresql://localhost/mydb...
+Query: SELECT * FROM employees LIMIT 3
+Disconnecting from postgresql://localhost/mydb
+```
 
 ## Data Engineering — error accumulation and resilience patterns
+
+In data pipelines, throwing on the first bad row kills the entire batch. Use safe parse helpers (`safe_int`, `safe_float`) that return defaults instead of raising, result dataclasses to accumulate errors and valid records separately, and retry with backoff for transient failures. Python 3.11+ adds `ExceptionGroup` and `except*` for structured parallel error handling.
+
+### Python | Error handling | result types and retry
 
 #### Safe parse helpers — return default on failure instead of raising
 
@@ -557,8 +572,6 @@ with DatabaseConnection("postgresql://localhost/mydb") as db:
 > - When invalid data should halt processing, raise explicitly instead
 
 ```python
-# Safe parse helpers — return a default instead of raising; much cleaner for expected bad data
-
 def safe_int(value, default=None):
     try:
         return int(value)
@@ -583,20 +596,20 @@ for v in values:
           f"safe_date({str(v)!r:12}) = {safe_date(str(v) if v else v)}")
 ```
 
-      safe_int('42'        ) = '42'    safe_date('42'        ) = None
-      safe_int('bad'       ) = 'None'  safe_date('bad'       ) = None
-      safe_int('None'      ) = 'None'  safe_date('None'      ) = None
-      safe_int(''          ) = 'None'  safe_date(''          ) = None
-      safe_int('3.14'      ) = 'None'  safe_date('3.14'      ) = None
-      safe_int('2024-01-15') = 'None'  safe_date('2024-01-15') = 2024-01-15 00:00:00
+```text
+safe_int('42'        ) = '42'    safe_date('42'        ) = None
+safe_int('bad'       ) = 'None'  safe_date('bad'       ) = None
+safe_int('None'      ) = 'None'  safe_date('None'      ) = None
+safe_int(''          ) = 'None'  safe_date(''          ) = None
+safe_int('3.14'      ) = 'None'  safe_date('3.14'      ) = None
+safe_int('2024-01-15') = 'None'  safe_date('2024-01-15') = 2024-01-15 00:00:00
+```
 
 #### Error accumulation — ETL pattern
 
 Instead of failing on the first error, collect all errors during processing and report them at the end. Essential for batch pipelines where one bad row should not halt 10,000 good ones. Append errors to a list, continue processing, then decide at the end whether to fail or quarantine the bad records.
 
 ```python
-# ParseResult dataclass — structured result type for error accumulation
-
 @dataclass
 class ParseResult:
     name: str = ""
@@ -619,8 +632,6 @@ def parse_employee(csv_line: str, row_num: int) -> ParseResult:
 #### Error accumulation — process all rows, partition valid/invalid
 
 ```python
-# Process all rows, partition into valid and rejected
-
 input_rows = [
     "Alice, 95000", "Bob, not_a_number", "Charlie",
     "Diana, 78000", "Eve, -500", "Frank, 72000",
@@ -635,13 +646,15 @@ for r in good: print(f"    {r.name:<10} ${r.salary:,}")
 for r in bad:  print(f"    ERROR: {r.error}")
 ```
 
-      6 rows, Valid: 3, Rejected: 3
-        Alice      $95,000
-        Diana      $78,000
-        Frank      $72,000
-        ERROR: Row 2: invalid salary 'not_a_number'
-        ERROR: Row 3: expected 2 columns, got 1
-        ERROR: Row 5: salary cannot be negative (-500)
+```text
+Processed: 6 rows, Valid: 3, Rejected: 3
+  Alice      $95,000
+  Diana      $78,000
+  Frank      $72,000
+  ERROR: Row 2: invalid salary 'not_a_number'
+  ERROR: Row 3: expected 2 columns, got 1
+  ERROR: Row 5: salary cannot be negative (-500)
+```
 
 #### Retry pattern for transient errors
 
@@ -650,8 +663,6 @@ for r in bad:  print(f"    ERROR: {r.error}")
 > Pass a specific tuple of retryable exceptions (e.g., `ConnectionError`, `TimeoutError`) to avoid retrying permanent failures like `ValueError` or `PermissionError`. In production, use `tenacity` or `stamina` libraries instead of hand-rolling retry logic.
 
 ```python
-# Retry pattern — retry transient failures with backoff
-
 def with_retry(operation, max_attempts=3, delay_s=0.1, exceptions=(Exception,)):
     for attempt in range(1, max_attempts + 1):
         try:
@@ -674,9 +685,11 @@ result = with_retry(flaky_load, exceptions=(ConnectionError,))
 f"  Result after {call_count} attempts: {result}"
 ```
 
-      Attempt 1 failed: Connection timeout (attempt 1). Retrying...
-      Attempt 2 failed: Connection timeout (attempt 2). Retrying...
-      Result after 3 attempts: data loaded successfully
+```text
+Attempt 1 failed: Connection timeout (attempt 1). Retrying...
+Attempt 2 failed: Connection timeout (attempt 2). Retrying...
+Result after 3 attempts: data loaded successfully
+```
 
 #### ExceptionGroup — parallel errors (Python 3.11+)
 
@@ -691,8 +704,6 @@ An `ExceptionGroup` bundles multiple exceptions into a single object, raised wit
 > Wrap `ExceptionGroup` usage in `if sys.version_info >= (3, 11):` to keep code backward compatible. For older runtimes, the error accumulation pattern (collect errors into a list, report at the end) achieves the same result without the 3.11 dependency.
 
 ```python
-# ExceptionGroup — aggregate multiple exceptions (Python 3.11+)
-
 if sys.version_info >= (3, 11):
     try:
         raise ExceptionGroup("pipeline errors", [
@@ -710,6 +721,9 @@ else:
     print("  ExceptionGroup requires Python 3.11+ (skipped)")
 ```
 
-        - Bad value in file A
-        - Bad value in file C
-      IOError group: File B not found
+```text
+ValueError group (2 errors):
+  - Bad value in file A
+  - Bad value in file C
+IOError group: File B not found
+```

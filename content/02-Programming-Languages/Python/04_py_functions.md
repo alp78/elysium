@@ -1,6 +1,7 @@
 ---
+title: "Functions"
 tags: [python]
-aliases: [lambda, closures, decorators, delegates, higher-order functions, generators, iterators]
+aliases: [lambda, closures, decorators, higher-order functions]
 description: "Python functions reference with executable examples and cell outputs — covers function basics, parameters, lambda, closures, decorators, and type hints. See [04_cs_functions](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/04_cs_functions) for the C# equivalent."
 created: 2026-03-22
 updated: 2026-03-22
@@ -16,7 +17,15 @@ status: complete
 
 ## Function Basics
 
+Python functions are first-class objects — assign them to variables, pass them as arguments, return them from other functions, and store them in data structures. Functions are defined with `def`, support flexible parameter modes (`*args`, `**kwargs`, defaults), and use closures to capture enclosing scope. This section covers definitions, first-class usage, and common function-passing patterns.
+
+### Defining and calling functions
+
+Functions are defined with `def name(params): body` and return values with `return`. Without an explicit `return`, functions return `None` (Python's equivalent of C#'s `void`). Docstrings provide built-in documentation accessible via `help()`.
+
 #### def, return, docstrings — basic function definition
+
+`def` declares a function. The first string literal inside the body becomes the docstring, accessible via `help(func)` or `func.__doc__`. Functions without a `return` statement implicitly return `None`. All functions are objects that can be assigned, passed, and inspected at runtime.
 
 > [!info] Function basics
 >
@@ -49,8 +58,10 @@ greet("Alice")
 greet("Bob")
 ```
 
-    Hello, Alice!
-    Hello, Bob!
+```text
+Hello, Alice!
+Hello, Bob!
+```
 
 #### Void equivalent — implicit None return
 
@@ -69,13 +80,17 @@ def print_greeting(name):
     print(f"Hi, {name}!")
 
 result = print_greeting("Charlie")
-result  # None
+result
 ```
 
-    Hi, Charlie!
-    None
+```text
+Hi, Charlie!
+None
+```
 
 #### Default parameters, *args, **kwargs — tuple return and unpacking
+
+Default parameters provide fallback values, `*args` collects extra positional arguments as a tuple, and `**kwargs` collects extra keyword arguments as a dict. Named arguments at the call site (`f(x=5)`) are self-documenting and allow any order.
 
 > [!info] Parameters and arguments
 >
@@ -100,12 +115,14 @@ def greet(name, greeting="Hello"):
 
 greet("Alice")                          # positional, default greeting
 greet("Bob", "Hi")                      # both positional
-greet(greeting="Yo", name="Diana")      # both keyword (any order)
+greet(greeting="Yo", name="Diana")
 ```
 
-    Hello, Alice!
-    Hi, Bob!
-    Yo, Diana!
+```text
+Hello, Alice!
+Hi, Bob!
+Yo, Diana!
+```
 
 #### First-class functions
 
@@ -120,8 +137,14 @@ def apply(func, value):                # pass as argument
 apply(greet, "Eve")
 ```
 
-    Hello, Diana!
-    Hello, Eve!
+```text
+Hello, Diana!
+Hello, Eve!
+```
+
+### Function-passing patterns
+
+Functions stored as variables unlock powerful composition patterns: closures create encapsulated state, callbacks decouple operations from side effects, strategy pattern swaps algorithms at runtime, pipelines chain transformations, and dependency injection makes code testable.
 
 #### Closures — return a function from a function
 
@@ -145,16 +168,18 @@ def make_multiplier(n):
 
 double = make_multiplier(2)
 triple = make_multiplier(3)
-double(5)   # double(5) =
-triple(5)   # triple(5) =
-
-# __doc__ — the docstring is accessible as an attribute
-greet.__doc__   # greet.__doc__
+double(5)
+triple(5)
+greet.__doc__
 ```
 
-    double(5) = 10
-    triple(5) = 15
-    None
+```text
+10
+15
+Return a greeting message.
+```
+
+The docstring is accessible as an attribute via `func.__doc__` or `help(func)`.
 
 #### Callbacks — onSuccess / onError
 
@@ -175,7 +200,9 @@ fetch_data("api/users",
     on_error=lambda err: print(f"  Error: {err}"))
 ```
 
-      data from api/users
+```text
+Got: data from api/users
+```
 
 #### Strategy pattern — swap behavior via functions
 
@@ -191,14 +218,16 @@ member_discount = lambda price: price * 0.7
 def calculate(price, strategy):
     return strategy(price)
 
-f"{calculate(100, full_price):.2f}"   # Full:     $
-f"{calculate(100, discount_20):.2f}"   # 20% off:  $
-f"{calculate(100, member_discount):.2f}"   # Member:   $
+f"Full:     ${calculate(100, full_price):.2f}"
+f"20% off:  ${calculate(100, discount_20):.2f}"
+f"Member:   ${calculate(100, member_discount):.2f}"
 ```
 
-      $100.00
-      $80.00
-      $70.00
+```text
+Full:     $100.00
+20% off:  $80.00
+Member:   $70.00
+```
 
 #### Pipeline — chained steps with reduce
 
@@ -212,17 +241,19 @@ Store steps as a list of functions. `reduce` applies them sequentially — each 
 
 ```python
 steps = [
-    str.strip,                         # remove leading/trailing whitespace
-    str.lower,                         # convert to lowercase
-    lambda s: re.sub(r'\s+', ' ', s),  # collapse multiple spaces
+    str.strip,
+    str.lower,
+    lambda s: re.sub(r'\s+', ' ', s),
 ]
 
 raw = "   Hello   WORLD   "
 result = reduce(lambda s, fn: fn(s), steps, raw)
-f"  Pipeline: '{raw}' → '{result}'"
+f"Pipeline: '{raw}' → '{result}'"
 ```
 
-      '   Hello   WORLD   ' → 'hello world'
+```text
+Pipeline: '   Hello   WORLD   ' → 'hello world'
+```
 
 #### Dependency injection — inject fake time for testing
 
@@ -247,15 +278,16 @@ def process_order(order, get_now=None):
 
 # Production
 order1 = process_order({"id": 1})
-order1['processed_at']   # Production
+order1['processed_at']
 
-# Test — inject fake time
 order2 = process_order({"id": 2}, get_now=lambda: datetime(2024, 1, 1, 12, 0, 0))
-order2['processed_at']   # Test
+order2['processed_at']
 ```
 
-      2026-03-25 01:34:08.803144+00:00
-      2024-01-01 12:00:00
+```text
+Production: 2026-03-25 01:34:08.803144+00:00
+Test:       2024-01-01 12:00:00
+```
 
 #### Progress callback
 
@@ -276,11 +308,15 @@ loader.on_progress = lambda curr, total, item: print(f"  [{curr}/{total}] Loadin
 loader.load(["users", "orders", "products"])
 ```
 
-      [1/3] Loading users
-      [2/3] Loading orders
-      [3/3] Loading products
+```text
+[1/3] Loading users
+[2/3] Loading orders
+[3/3] Loading products
+```
 
 #### Sorting with key= function
+
+`sorted(iterable, key=func)` returns a new sorted list using `func` to extract the comparison value from each element. `key=len` sorts by length, `key=lambda x: x["salary"]` sorts by a dict field. Python's sort is stable — equal elements keep their original order. Use `reverse=True` for descending.
 
 > [!info] Sorting with key
 >
@@ -300,9 +336,11 @@ for e in by_salary:
     print(f"  {e['name']:<10} ${e['salary']:>7,}")
 ```
 
-      Charlie    $110,000
-      Alice      $ 95,000
-      Bob        $ 65,000
+```text
+Charlie    $110,000
+Alice      $ 95,000
+Bob        $ 65,000
+```
 
 #### Common function-passing patterns
 
@@ -316,7 +354,19 @@ for e in by_salary:
 
 ## Parameters
 
+Python's parameter system is more flexible than C#'s: `*args` and `**kwargs` collect variable arguments, `/` and `*` enforce positional-only or keyword-only calling conventions, and defaults can be any expression (but mutable defaults are a notorious trap). Python passes everything by object reference — there are no `ref`/`out`/`in` modifiers.
+
+> [!info] No pass-by-reference modes
+>
+> Python has no equivalent to C#'s `ref`, `out`, or `in` keywords. All arguments are passed by object reference — the function receives a reference to the same object, not a copy. Rebinding the parameter name (`x = new_value`) does not affect the caller, but mutating the object (`x.append(item)`) does. For output-style returns, use tuples: `return success, value`.
+
+### Default parameters and argument passing
+
+Default values are evaluated once at function definition time — not on each call. This makes mutable defaults (`list`, `dict`, `set`) a common source of bugs. The fix is the `None` sentinel pattern.
+
 #### Mutable default argument trap — def f(lst=[]) pitfall
+
+Mutable default arguments (`def f(lst=[])`) create a single shared object at definition time — all calls that use the default share the same list. The fix is to use `None` as the default and create a fresh object inside the function body.
 
 > [!info] Mutable default trap
 >
@@ -345,13 +395,15 @@ def good_append(item, lst=None):      # GOOD: create new each time
     lst.append(item)
     return lst
 good_append(1)                 # [1]
-good_append(2)                 # [2]
+good_append(2)
 ```
 
-    [1]
-    [1, 2]
-    [1]
-    [2]
+```text
+[1]
+[1, 2]
+[1]
+[2]
+```
 
 #### **kwargs — variable keyword arguments
 
@@ -366,12 +418,14 @@ build_profile(name="Alice", age=30)
 data = {"host": "localhost", "port": 5432}
 def connect(host, port=5432):
     return f"{host}:{port}"
-connect(**data)   # connect(**dict)
+connect(**data)
 ```
 
-      kwargs = {'name': 'Alice', 'age': 30}  (type: dict)
-    {'name': 'Alice', 'age': 30}
-    localhost:5432
+```text
+kwargs = {'name': 'Alice', 'age': 30}  (type: dict)
+{'name': 'Alice', 'age': 30}
+localhost:5432
+```
 
 #### Combined *args/**kwargs and positional/keyword-only
 
@@ -386,12 +440,41 @@ def kitchen_sink(required, *args, keyword_only="default", **kwargs):
 kitchen_sink("a", "b", "c", keyword_only="custom", x=1, y=2)
 ```
 
-      required: a
-      ('b', 'c')
-      custom
-      **kwargs: {'x': 1, 'y': 2}
+```text
+required: a
+*args:    ('b', 'c')
+kw_only:  custom
+**kwargs: {'x': 1, 'y': 2}
+```
+
+### Parameter restrictions
+
+Python 3.8+ introduced `/` (positional-only) and `*` (keyword-only) parameter separators. These enforce how callers pass arguments — positional-only parameters can be renamed without breaking callers, and keyword-only parameters prevent positional misuse.
+
+#### *args — variable positional arguments as tuple
+
+`*args` collects unmatched positional arguments as a tuple. `*list` at the call site unpacks a sequence into positional arguments. Common in wrappers and decorators. Prefer explicit params when names are known — they give better IDE support.
+
+```python
+def total(*args):
+    print(f"  args = {args}  (type: {type(args).__name__})")
+    return sum(args)
+total(1, 2, 3)
+
+numbers = [1, 2, 3, 4, 5]
+total(*numbers)
+```
+
+```text
+args = (1, 2, 3)  (type: tuple)
+6
+args = (1, 2, 3, 4, 5)  (type: tuple)
+15
+```
 
 #### Positional-only (/) and keyword-only (*) parameters
+
+Parameters before `/` are positional-only — callers cannot use their names, which lets you rename them without breaking existing code. Parameters after `*` are keyword-only — prevents positional misuse. These match built-in signatures like `len(obj, /)`.
 
 > [!info] Parameter kinds
 >
@@ -404,14 +487,24 @@ def func(pos_only, /, normal, *, kw_only):
     return f"{pos_only}, {normal}, {kw_only}"
 func(1, 2, kw_only=3)
 func(1, normal=2, kw_only=3)
-# func(pos_only=1, ...)  # Error! pos_only is positional-only
-# func(1, 2, 3)          # Error! kw_only must be keyword
 ```
 
-    1, 2, 3
-    1, 2, 3
+```text
+1, 2, 3
+1, 2, 3
+```
+
+> [!tip] Positional-only prevents naming errors
+>
+> `func(pos_only=1, ...)` raises `TypeError` — `pos_only` is positional-only. Similarly, `func(1, 2, 3)` fails because `kw_only` must be passed by name. These constraints make APIs safer and more explicit.
 
 ## Lambda Expressions
+
+Lambda expressions (`lambda params: expr`) create anonymous single-expression functions inline. They are the primary way to write short throwaway functions for `sorted`, `map`, `filter`, and other higher-order functions. Unlike C# lambdas, Python lambdas cannot contain statements — only a single expression.
+
+### Lambda syntax
+
+Python lambdas are limited to one expression with an implicit return. For anything more complex, use a `def` statement — named functions have names in tracebacks, support docstrings, and are more readable.
 
 #### Lambda basics
 
@@ -429,12 +522,16 @@ func(1, normal=2, kw_only=3)
 
 ```python
 add = lambda a, b: a + b              # same as: def add(a, b): return a + b
-add(3, 4)   # lambda add
+add(3, 4)
 ```
 
-    7
+```text
+7
+```
 
 #### Lambdas with sorted, map, filter
+
+`sorted`, `map`, and `filter` accept callables as arguments — lambdas are the most common choice. `map` and `filter` are lazy (return iterators). Comprehensions (`[x**2 for x in nums]`) are often more Pythonic than `list(map(...))`.
 
 > [!info] Lambdas with built-ins
 >
@@ -448,14 +545,20 @@ sorted(names, key=lambda n: len(n))   # By length
 sorted(names, key=lambda n: n[-1])   # By last char
 
 nums = [1, 2, 3, 4, 5]
-list(map(lambda x: x**2, nums))   # Squared
-list(filter(lambda x: x % 2 == 0, nums))   # Evens
+list(map(lambda x: x**2, nums))
+list(filter(lambda x: x % 2 == 0, nums))
 ```
 
-    ['Bob', 'Alice', 'Diana', 'Charlie']
-    ['Diana', 'Bob', 'Charlie', 'Alice']
-    [1, 4, 9, 16, 25]
-    [2, 4]
+```text
+['Bob', 'Alice', 'Diana', 'Charlie']
+['Diana', 'Bob', 'Charlie', 'Alice']
+[1, 4, 9, 16, 25]
+[2, 4]
+```
+
+### Closures and scope resolution
+
+Python resolves variable names using the LEGB rule: Local → Enclosing → Global → Built-in. Closures capture enclosing scope variables by reference, and `nonlocal`/`global` declarations modify the lookup behavior.
 
 #### Closures and variable scope — LEGB rule
 
@@ -479,14 +582,47 @@ def outer():
     inner()
     print(f"  outer: {x}")
 outer()
-x   # global
+x
 ```
 
-      inner: local
-      outer: enclosing
-      global: global
+```text
+inner: local
+outer: enclosing
+global
+```
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A["Name lookup: x"] --> B["Local scope"]
+    B -->|Not found| C["Enclosing scope\n(nonlocal)"]
+    C -->|Not found| D["Global scope\n(module level)"]
+    D -->|Not found| E["Built-in scope\n(len, print, etc.)"]
+    E -->|Not found| F["NameError"]
+    B -->|Found| G["Use local x"]
+    C -->|Found| H["Use enclosing x"]
+    D -->|Found| I["Use global x"]
+    E -->|Found| J["Use built-in"]
+```
 
 ## Closures & Scope
+
+Closures capture variables from the enclosing scope by reference. The `nonlocal` keyword allows an inner function to modify an enclosing variable — without it, assignment creates a local shadow. Closure factories return functions with private, encapsulated state — replacing simple classes for counters, validators, and parameterized logic.
+
+### Variable capture and nonlocal
+
+`nonlocal` tells Python that a name refers to the nearest enclosing scope's variable, not a new local. Without it, `count += 1` inside an inner function raises `UnboundLocalError` because Python sees the assignment and assumes `count` is local.
 
 #### Closures and nonlocal
 
@@ -505,19 +641,85 @@ counter = make_counter(10)
 counter()  # 11
 counter()  # 12
 
-counter2 = make_counter(0)          # independent closure
-counter2()  # 1
+counter2 = make_counter(0)
+counter2()
 ```
 
-    11
-    12
-    1
+```text
+11
+12
+1
+```
 
-#### global keyword
+### Closure factories
 
-A decorator wraps a function with additional behavior without modifying its source code. The `@decorator` syntax is syntactic sugar for `func = decorator(func)`. Common uses include logging, timing, retry logic, and authentication checks.
+Closures that return functions create independent, encapsulated state — each call produces a new closure with its own captured variables. This pattern replaces simple classes for counters, validators, and parameterized logic.
 
-A decorator takes a function and returns a modified version. `@decorator` applies at definition time. `@functools.wraps` preserves the original `__name__` and `__doc__`. Use for cross-cutting concerns: timing, logging, retry, caching, authentication.
+#### Closure as validator factory
+
+`make_validator(min, max)` returns a function that tests whether a value falls in `[min, max]`. Each call creates an independent validator with its own captured bounds — composable with `filter()`, `any()`, `all()`.
+
+```python
+def make_validator(min_val, max_val):
+    def validate(value):
+        return min_val <= value <= max_val
+    return validate
+
+is_valid_age = make_validator(0, 120)
+is_valid_score = make_validator(0, 100)
+is_valid_age(25)
+is_valid_age(150)
+```
+
+```text
+True
+False
+```
+
+### Closure pitfalls
+
+The most common closure bug in Python involves lambdas created inside a loop — all lambdas share the same loop variable and see its final value.
+
+#### Lambda loop capture gotcha — closures bind by reference
+
+Lambdas created in a loop capture the loop variable `i` itself — not its value at each iteration. After the loop, `i` has its final value, so all lambdas return the same result. The fix is a default argument `i=i` which is evaluated at definition time, binding the current value.
+
+> [!danger] Lambdas in a loop capture
+>
+> Lambdas in a loop capture the variable itself — not the value. After the loop, all see the final value. Fix: default argument `i=i` captures the current value.
+
+> [!success] Correct pattern
+>
+> Capture the current value using a default argument: `lambda i=i: i`. The default is evaluated at definition time, binding the current value of `i` rather than the variable reference. This is the standard Pythonic fix for late-binding closures in loops.
+
+```python
+funcs_bad = [lambda: i for i in range(3)]
+[f() for f in funcs_bad]
+
+funcs_good = [lambda i=i: i for i in range(3)]
+[f() for f in funcs_good]
+```
+
+```text
+[2, 2, 2]
+[0, 1, 2]
+```
+
+## Decorators
+
+A decorator wraps a function with additional behavior without modifying its source code. The `@decorator` syntax is syntactic sugar for `func = decorator(func)`. Decorators are the Pythonic way to implement cross-cutting concerns: timing, logging, retry, caching, and authentication. They rely on closures — the wrapper function captures the original function and adds behavior before and/or after calling it.
+
+> [!info] No C# equivalent
+>
+> C# has no direct decorator equivalent. The closest patterns are method attributes (`[Authorize]`, `[Cache]`) which require framework support, or wrapping via `Func<T>` composition. Python decorators are more flexible because functions are first-class objects with no type ceremony.
+
+### Decorator basics
+
+A basic decorator takes a function, defines a wrapper that adds behavior, and returns the wrapper. `@functools.wraps(func)` on the wrapper preserves the original `__name__`, `__doc__`, and `__annotations__` — without it, `help()` and debugging tools see the wrapper instead of the decorated function.
+
+#### Timer decorator — measure execution time
+
+The `timer` decorator wraps a function to measure its execution time. It calls `time.perf_counter()` before and after the wrapped function, then prints the elapsed time. `@functools.wraps(func)` preserves the original function's metadata on the wrapper.
 
 > [!warning] Decorator pitfalls
 >
@@ -530,15 +732,15 @@ A decorator takes a function and returns a modified version. `@decorator` applie
 > Always use `@functools.wraps(func)` on the wrapper to preserve `__name__`, `__doc__`, and `__annotations__`. Keep decorator logic side-effect-free at definition time. If stacking more than 3 decorators, consider combining related concerns into one decorator.
 
 ```python
-def timer(func):                          # Step 1: receives original function
-    @functools.wraps(func)                # preserves func.__name__ and __doc__ on wrapper
-    def wrapper(*args, **kwargs):         # Step 2: replacement function (accepts any arguments)
-        start = time.perf_counter()       # 2a. BEFORE: start timer
-        result = func(*args, **kwargs)    # 2b. CALL: run the original function
-        elapsed = time.perf_counter() - start  # 2c. AFTER: measure time
+def timer(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        elapsed = time.perf_counter() - start
         print(f"  {func.__name__} took {elapsed:.6f}s")
-        return result                     # 2d. return original's result to caller
-    return wrapper                        # Step 3: return the wrapper (replaces original)
+        return result
+    return wrapper
 
 @timer
 def slow_sum(n):
@@ -547,54 +749,18 @@ def slow_sum(n):
 
 result = slow_sum(1_000_000)
 result
-slow_sum.__name__  # 'slow_sum' (preserved by wraps)
+slow_sum.__name__
 ```
 
-      slow_sum took 0.016651s
-      499999500000
-      Name: slow_sum
-
-#### Lambda loop capture gotcha — closures bind by reference
-
-> [!danger] Lambdas in a loop capture
->
-> Lambdas in a loop capture the variable itself — not the value. After the loop, all see the final value. Fix: default argument `i=i` captures the current value.
-
-> [!success] Correct pattern
->
-> Capture the current value using a default argument: `lambda i=i: i`. The default is evaluated at definition time, binding the current value of `i` rather than the variable reference. This is the standard Pythonic fix for late-binding closures in loops.
-
-```python
-funcs_bad = [lambda: i for i in range(3)]
-[f() for f in funcs_bad]  # [2, 2, 2] — all see final i!
-
-funcs_good = [lambda i=i: i for i in range(3)] # fix: capture value via default arg
-[f() for f in funcs_good]  # [0, 1, 2]
+```text
+slow_sum took 0.016651s
+499999500000
+slow_sum
 ```
 
-    [2, 2, 2]
-    [0, 1, 2]
+### Decorator patterns
 
-#### *args — variable positional arguments as tuple
-
-`*args` collects unmatched positional arguments as a tuple. `*list` at the call site unpacks. Common in wrappers and decorators. Prefer explicit params when names are known — they give better IDE support.
-
-```python
-def total(*args):
-    print(f"  args = {args}  (type: {type(args).__name__})")
-    return sum(args)
-total(1, 2, 3)   # total(1,2,3)
-
-numbers = [1, 2, 3, 4, 5]
-total(*numbers)  # unpack list into args
-```
-
-      args = (1, 2, 3)  (type: tuple)
-    6
-      args = (1, 2, 3, 4, 5)  (type: tuple)
-    15
-
-## Decorators
+Decorators can accept arguments (requiring an extra nesting level), be stacked in order, or come from the standard library (`@property`, `@staticmethod`, `@classmethod`).
 
 #### Decorator with arguments — retry
 
@@ -628,9 +794,11 @@ except ValueError as e:
     print(f"  Final failure: {e}")
 ```
 
-      Attempt 1 failed: bad luck, retrying...
-      Attempt 2 failed: bad luck, retrying...
-      Final failure: bad luck
+```text
+Attempt 1 failed: bad luck, retrying...
+Attempt 2 failed: bad luck, retrying...
+Final failure: bad luck
+```
 
 #### Stacking decorators — execution order and composition
 
@@ -645,17 +813,32 @@ except ValueError as e:
 `@a @b @c def f()` means `f = a(b(c(f)))` — bottom decorator wraps first, each receives the result of the one below. Order matters. Avoid stacking more than 3 decorators.
 
 ```python
-def add(a: int, b: int) -> int:
-    return a + b
+def log(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        print(f"  [LOG] Calling {func.__name__}")
+        return func(*args, **kwargs)
+    return wrapper
 
-add(3, 4)   # add(3, 4)
-add('a', 'b')  # works! Python doesn't enforce  # type: ignore
+@log
+@timer
+def compute(n):
+    return sum(range(n))
+
+compute(500_000)
 ```
 
-    7
-    ab
+```text
+[LOG] Calling compute
+  compute took 0.008312s
+249999750000
+```
+
+`@log` wraps `@timer(compute)` — the logger sees the timed function. Reversing the order would time the logging overhead too.
 
 #### Built-in decorators — @property, @staticmethod, @classmethod
+
+Python includes several built-in decorators that transform method behavior. `@property` turns a method into a computed attribute, `@staticmethod` removes the implicit `self` parameter, and `@classmethod` receives the class instead of the instance.
 
 > [!info] Built-in decorators
 >
@@ -682,35 +865,115 @@ class MyClass:
         return cls(int(s))
 
 obj = MyClass(21)
-obj.doubled  # 42 (no parentheses!)
-MyClass.utility()   # @staticmethod
-MyClass.from_string('99').value   # @classmethod
+obj.doubled
+MyClass.utility()
+MyClass.from_string('99').value
 ```
 
-    42
-    @staticmethod: No instance needed
-    99
+```text
+42
+No instance needed
+99
+```
 
-#### Closure as validator factory
+### functools utilities
 
-`make_validator(min, max)` returns a function that tests whether a value falls in `[min, max]`. Each call creates an independent validator with its own captured bounds — composable with `filter()`, `any()`, `all()`.
+The `functools` module provides higher-order functions that extend Python's functional programming capabilities. `partial` freezes some arguments, `lru_cache` memoizes results, and `singledispatch` enables function overloading by argument type.
+
+#### functools.partial — freeze arguments
+
+`functools.partial(func, *args, **kwargs)` returns a new callable with some arguments pre-filled. Use for callback factories, configuration, and adapting function signatures to match expected interfaces.
 
 ```python
-def make_validator(min_val, max_val):
-    def validate(value):
-        return min_val <= value <= max_val
-    return validate
+from functools import partial
 
-is_valid_age = make_validator(0, 120)
-is_valid_score = make_validator(0, 100)
-is_valid_age(25)   # age 25
-is_valid_age(150)   # age 150
+def power(base, exponent):
+    return base ** exponent
+
+square = partial(power, exponent=2)
+cube = partial(power, exponent=3)
+square(5)
+cube(3)
 ```
 
-    True
-    age 150: False
+```text
+25
+27
+```
+
+#### functools.lru_cache — memoize expensive computations
+
+`@lru_cache(maxsize=128)` caches return values based on arguments — subsequent calls with the same arguments return the cached result instantly. `@cache` (Python 3.9+) is shorthand for `@lru_cache(maxsize=None)`. Arguments must be hashable. Use for recursive algorithms (Fibonacci), expensive lookups, and pure functions.
+
+> [!warning] lru_cache with mutable arguments
+>
+> `@lru_cache` requires hashable arguments — passing a list or dict raises `TypeError`. Convert to tuple first: `tuple(my_list)`.
+
+> [!success] Correct pattern
+>
+> Only decorate pure functions with hashable parameters. For functions with mutable arguments, accept a tuple or frozenset instead. Use `cache_info()` to monitor hit rates: `func.cache_info()`.
+
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=128)
+def fibonacci(n):
+    if n < 2:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+fibonacci(50)
+fibonacci.cache_info()
+```
+
+```text
+12586269025
+CacheInfo(hits=48, misses=51, maxsize=128, currsize=51)
+```
+
+#### functools.singledispatch — function overloading by type
+
+`@singledispatch` creates a generic function that dispatches to type-specific implementations. Register implementations with `@func.register(type)`. This is Python's equivalent of C#'s method overloading — different behavior based on the first argument's type.
+
+```python
+from functools import singledispatch
+
+@singledispatch
+def format_value(value):
+    return f"unknown: {value}"
+
+@format_value.register(int)
+def _(value):
+    return f"int: {value}"
+
+@format_value.register(float)
+def _(value):
+    return f"float: {value:.2f}"
+
+@format_value.register(str)
+def _(value):
+    return f"string: '{value}'"
+
+format_value(42)
+format_value(3.14)
+format_value("hello")
+format_value([1, 2])
+```
+
+```text
+int: 42
+float: 3.14
+string: 'hello'
+unknown: [1, 2]
+```
 
 ## Type Hints
+
+Python type hints are optional annotations that enable IDE autocompletion, static analysis (mypy, pyright), and documentation. They are not enforced at runtime — Python remains dynamically typed. Hints use the `typing` module or built-in generics (Python 3.9+).
+
+### Type annotations
+
+Type annotations declare parameter types, return types, and complex composed types. `Optional[str]` (or `str | None` in 3.10+) indicates nullable values, and `Callable[[int], str]` declares function signatures.
 
 #### Complex type hints and Optional
 
@@ -729,7 +992,9 @@ def process(
 process("Alice", 30, 85.5, tags=["admin"])
 ```
 
-    {'name': 'Alice', 'age': 30, 'score': 85.5, 'active': True, 'tags': ['admin']}
+```text
+{'name': 'Alice', 'age': 30, 'score': 85.5, 'active': True, 'tags': ['admin']}
+```
 
 #### Optional return — str | None for nullable results
 
@@ -740,12 +1005,14 @@ def find_user(user_id: int) -> Optional[str]:   # same as str | None
     users = {1: "Alice", 2: "Bob"}
     return users.get(user_id)
 
-find_user(1)   # find_user(1)
-find_user(9)   # find_user(9)
+find_user(1)
+find_user(9)
 ```
 
-    Alice
-    None
+```text
+Alice
+None
+```
 
 #### Callable type hints
 
@@ -753,21 +1020,22 @@ find_user(9)   # find_user(9)
 
 ```python
 def apply_func(func: Callable[[int], int], value: int) -> int:
-    # func must be a function that takes an int and returns an int
     return func(value)
 
-# same as the non-hinted version
-def apply_func_nohint(func, value):
-    return func(value)
-
-apply_func(lambda x: x * 2, 5)   # apply
-apply_func_nohint(lambda x: x * 2, 5)   # apply_nohint
+apply_func(lambda x: x * 2, 5)
 ```
 
-    apply: 10
-    apply_nohint: 10
+```text
+10
+```
+
+### Type introspection
+
+Type aliases give readable names to complex types, `__annotations__` stores hints as a dict for runtime inspection (this is how Pydantic validates types), and `get_type_hints()` resolves forward references.
 
 #### Type aliases, __annotations__, get_type_hints — runtime introspection
+
+Type aliases create readable names for complex composed types: `UserMap = dict[int, str]`. The `__annotations__` attribute stores hints as a dict — frameworks like Pydantic, FastAPI, and dataclasses use this for runtime validation and serialization.
 
 > [!info] Type introspection
 >
@@ -782,12 +1050,12 @@ UserMap = dict[UserId, UserName]
 
 def get_users() -> UserMap:
     return {1: "Alice", 2: "Bob"}
-get_users()   # get_users()
+get_users()
 
-add.__annotations__   # add
-process.__annotations__   # process
+process.__annotations__
 ```
 
-    {1: 'Alice', 2: 'Bob'}
-    {'a': <class 'int'>, 'b': <class 'int'>, 'return': <class 'int'>}
-    process: {'name': <class 'str'>, 'age': <class 'int'>, 'score': <class 'float'>, 'active': <class 'bool'>, 'tags': list[str] | None, 'return': dict[str, object]}
+```text
+{1: 'Alice', 2: 'Bob'}
+{'name': <class 'str'>, 'age': <class 'int'>, 'score': <class 'float'>, 'active': <class 'bool'>, 'tags': list[str] | None, 'return': dict[str, object]}
+```

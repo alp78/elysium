@@ -1,4 +1,5 @@
 ---
+title: "Object-Oriented Programming"
 tags: [python]
 aliases: [classes, inheritance, polymorphism, interfaces, abstract classes, encapsulation, properties]
 description: "Python OOP reference with executable examples and cell outputs — covers classes, inheritance, polymorphism, encapsulation, properties, dataclasses, and abstract base classes. See [06_cs_oop](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/06_cs_oop) for the C# equivalent."
@@ -27,6 +28,12 @@ from dataclasses import dataclass, field
 
 ## Classes & Objects
 
+Classes are Python's primary mechanism for encapsulating state (attributes) and behavior (methods). `__init__` initializes instance attributes, class attributes are shared by all instances, and dunder methods (`__str__`, `__repr__`) control string representation. Python uses dynamic attribute access and duck typing — any object with the right methods works, regardless of its class hierarchy.
+
+### Class definition and usage
+
+Defining classes with `__init__`, instance/class attributes, and dunder methods, then creating and using instances.
+
 #### Class definition — __init__, attributes, __str__
 
 > [!info] Class basics
@@ -50,16 +57,13 @@ from dataclasses import dataclass, field
 > - Keep `__init__` to attribute assignment only; use `@classmethod` factories for complex construction
 
 ```python
-# Classes and objects — class is the blueprint; instances are created with ClassName()
-
-# Dog — class attribute shared by all, instance attributes unique to each, methods operate on self
 class Dog:
-    species = "Canis familiaris"       # class attribute — shared by ALL instances
+    species = "Canis familiaris"
 
     def __init__(self, name, age):
-        self.name = name               # instance attribute — unique to each object
+        self.name = name
         self.age = age
-        self.color: str | None = None  # declared here to satisfy type checkers
+        self.color: str | None = None
 
     def bark(self):
         return f"{self.name} says Woof!"
@@ -77,91 +81,99 @@ class Dog:
 #### Instance vs class attributes — instantiation and attribute access
 
 ```python
-# Using classes — instantiation, attribute access, method calls
-
 dog1 = Dog("Rex", 5)
 dog2 = Dog("Buddy", 3)
 
-dog1  # calls __str__
-dog1.name  # access attribute
-dog1.bark()  # call method
-dog1.species  # class attribute (shared)
-dog1.is_older_than(dog2)   # older?
+dog1
+dog1.name
+dog1.bark()
+dog1.species
+dog1.is_older_than(dog2)
 
-dog1.color = "brown"                              # works because we declared it in __init__
-dog1.color   # dog1.color
-dog2.color  # None — default from __init__
+dog1.color = "brown"
+dog1.color
+dog2.color
 ```
 
-    Dog(Rex, age=5)
-    Rex
-    Rex says Woof!
-    Canis familiaris
-    True
-    brown
-    None
+```text
+Dog(Rex, age=5)
+Rex
+Rex says Woof!
+Canis familiaris
+True
+brown
+None
+```
 
 #### Class vs instance attribute shadowing
 
+Assigning to an instance attribute with the same name as a class attribute creates a per-instance shadow — the class attribute remains unchanged. Other instances still see the original class attribute.
+
 ```python
-# Class vs instance attribute shadowing — shared vs per-instance state
+Dog.species
+dog1.species
 
-Dog.species  # access on class
-dog1.species  # access on instance (falls back to class)
-
-dog1.species = "Modified"                         # creates INSTANCE attribute, doesn't change class
-dog1.species  # "Modified" (instance)
-dog2.species  # still "Canis familiaris" (class)
-Dog.species  # still "Canis familiaris" (class)
+dog1.species = "Modified"
+dog1.species
+dog2.species
+Dog.species
 ```
 
-    Canis familiaris
-    Canis familiaris
-    Modified
-    Canis familiaris
-    Canis familiaris
+```text
+'Canis familiaris'
+'Canis familiaris'
+'Modified'
+'Canis familiaris'
+'Canis familiaris'
+```
 
 #### @property — controlled access with validation
 
 The `@property` decorator turns a method into an attribute-style accessor with optional validation. The getter looks like `obj.radius` (no parentheses), but runs validation code behind the scenes. Pair with `@name.setter` for write access.
 
 ```python
-# @property — controlled access with validation and computed attributes
-
 class Circle:
     def __init__(self, radius):
-        self._radius = radius                     # convention: _ prefix = "private"
+        self._radius = radius
 
-    @property                                     # getter — access like attribute, not method
+    @property
     def radius(self):
         return self._radius
 
-    @radius.setter                                # setter — validate on assignment
+    @radius.setter
     def radius(self, value):
         if value < 0:
             raise ValueError("Radius can't be negative")
         self._radius = value
 
-    @property                                     # computed property (read-only)
+    @property
     def area(self):
         return math.pi * self._radius ** 2
 
 c = Circle(5)
-c.radius  # calls getter (no parentheses!)
-f"{c.area:.2f}"  # computed, read-only
-c.radius = 10                                     # calls setter (validates)
-c.radius   # new radius
+c.radius
+f"{c.area:.2f}"
+c.radius = 10
+c.radius
 ```
 
 > [!info] Property Validation
 >
 > Setters with validation raise exceptions for invalid values. Read-only properties (no setter) raise `AttributeError` on assignment.
 
-    radius: 5
-    area:   78.54
-    new radius: 10
+```text
+5
+'78.54'
+10
+```
 
 ## Inheritance & Polymorphism
+
+Inheritance lets a child class acquire all attributes and methods of a parent class and extend or override them. Python supports multiple inheritance (resolved via MRO — C3 linearization). Polymorphism works via duck typing — no base class required; if it has the right methods, it works.
+
+### Inheritance fundamentals
+
+Defining parent/child relationships with `class Child(Parent)`, calling parent methods with `super()`, and overriding methods.
 
 #### Inheritance — base class, super().__init__, method override
 
@@ -188,9 +200,6 @@ A child class acquires all attributes and methods of a parent class and can exte
 > If a class needs the capability of another but isn't fundamentally a subtype, compose: `class Pipeline: def __init__(self): self.logger = Logger()`. Reserve inheritance for true IS-A relationships where the Liskov Substitution Principle holds.
 
 ```python
-# Inheritance and polymorphism — child classes extend a parent; method overriding enables runtime dispatch
-
-# Animal — base class with speak that subclasses can override
 class Animal:
     def __init__(self, name, sound):
         self.name = name
@@ -202,16 +211,14 @@ class Animal:
     def __str__(self):
         return f"{type(self).__name__}({self.name})"
 
-# Dog — inherits from Animal; adds breed and a Dog-specific method
 class Dog(Animal):
     def __init__(self, name, breed):
-        super().__init__(name, "Woof")     # call parent's __init__
+        super().__init__(name, "Woof")
         self.breed = breed
 
     def fetch(self):
         return f"{self.name} fetches the ball!"
 
-# Cat — overrides speak with its own behavior
 class Cat(Animal):
     def __init__(self, name):
         super().__init__(name, "Meow")
@@ -223,86 +230,92 @@ class Cat(Animal):
 #### Using inheritance — subclass instantiation and polymorphic calls
 
 ```python
-# Using inheritance — instantiate subclasses, call overridden methods
-
 dog = Dog("Rex", "German Shepherd")
 cat = Cat("Whiskers")
 
-dog.speak()  # inherited from Animal
-dog.fetch()  # Dog-specific
-cat.speak()  # overridden version
-dog.breed   # dog.breed
+dog.speak()
+dog.fetch()
+cat.speak()
+dog.breed
 ```
 
-    Rex says Woof!
-    Rex fetches the ball!
-    Whiskers says Meow... when it feels like it.
-    German Shepherd
+```text
+'Rex says Woof!'
+'Rex fetches the ball!'
+'Whiskers says Meow... when it feels like it.'
+'German Shepherd'
+```
 
-#### Polymorphism and type checking
+### Polymorphism and type checking
 
-A variable can hold objects of different types and calling the same method executes the correct version for each type at runtime. In Python, this works via duck typing — no base class or interface required. If it has a `.speak()` method, it's valid.
+Polymorphism in Python works via duck typing — no base class or interface required. If it has the right method, it works. `isinstance()` and `issubclass()` test the actual type hierarchy at runtime.
+
+#### Polymorphism — duck typing and isinstance
 
 ```python
-# Polymorphism and type checking — duck typing and isinstance
-
 def animal_roll_call(animals):
-    """Works with ANY Animal — doesn't care which specific type."""
     for animal in animals:
         print(f"  {animal}: {animal.speak()}")
 
 animals = [Dog("Rex", "Shepherd"), Cat("Whiskers"), Dog("Buddy", "Lab")]
-animal_roll_call(animals)                  # each calls its own speak()
+animal_roll_call(animals)
 
-isinstance(dog, Dog)  # True
-isinstance(dog, Animal)  # True (Dog IS an Animal)
-isinstance(cat, Dog)  # False
-issubclass(Dog, Animal)  # True
+isinstance(dog, Dog)
+isinstance(dog, Animal)
+isinstance(cat, Dog)
+issubclass(Dog, Animal)
 ```
 
-       Rex says Woof!
-       Whiskers says Meow... when it feels like it.
-       Buddy says Woof!
-    True
-    True
-    False
-    True
+```text
+  Dog(Rex): Rex says Woof!
+  Cat(Whiskers): Whiskers says Meow... when it feels like it.
+  Dog(Buddy): Buddy says Woof!
+True
+True
+False
+True
+```
 
 #### Mixin classes — add capabilities via multiple inheritance
 
 A mixin is a class designed to be combined with other classes via multiple inheritance, adding a specific capability (logging, serialization, comparison) without being a standalone base class. Mixins have no `__init__` of their own and assume the host class provides certain attributes.
 
-```python
-# Mixin — add capabilities via multiple inheritance
+A mixin is a class designed to be combined via multiple inheritance, adding a specific capability without being a standalone base class. Mixins have no `__init__` and assume the host class provides certain attributes.
 
+```python
 class Flyable:
-    name: str                          # declare so type checkers know about it
+    name: str
     def fly(self):
         return f"{self.name} is flying!"
 
 class Swimmable:
-    name: str                          # declare so type checkers know about it
+    name: str
     def swim(self):
         return f"{self.name} is swimming!"
 
-# Mixins combined with a "real" class that has __init__:
-class Duck(Animal, Flyable, Swimmable):    # inherits from 3 classes!
+class Duck(Animal, Flyable, Swimmable):
     def __init__(self, name):
         super().__init__(name, "Quack")
 
 duck = Duck("Donald")
-duck.speak()   # speak
-duck.fly()   # fly
-duck.swim()   # swim
-[c.__name__ for c in Duck.__mro__]  # Method Resolution Order (from left to right)
+duck.speak()
+duck.fly()
+duck.swim()
+[c.__name__ for c in Duck.__mro__]
 ```
 
-    speak: Donald says Quack!
-    Donald is flying!
-    Donald is swimming!
-    ['Duck', 'Animal', 'Flyable', 'Swimmable', 'object']
+```text
+'Donald says Quack!'
+'Donald is flying!'
+'Donald is swimming!'
+['Duck', 'Animal', 'Flyable', 'Swimmable', 'object']
+```
 
 ## Abstract Classes & Interfaces
+
+Python provides two mechanisms for defining contracts: `ABC` (Abstract Base Class) with `@abstractmethod` for contracts with shared implementation, and `Protocol` for structural typing without inheritance. ABCs require explicit inheritance; Protocols work via duck typing — any class with the right methods matches.
+
+### Abstract base classes (ABC)
 
 #### Abstract class
 
@@ -324,12 +337,7 @@ duck.swim()   # swim
 > If the base class provides shared methods (like `describe()` above), use `ABC`. If you only need a structural contract with no shared code — especially for third-party classes — use `@runtime_checkable Protocol` instead. Keep ABCs focused: 2-4 abstract methods is usually the right size.
 
 ```python
-# Abstract class — Shape defines the contract; subclasses must implement area/perimeter
-
-# Shape — abstract base; area and perimeter are abstract, describe is concrete
 class Shape(ABC):
-    """Can't instantiate Shape directly — must subclass."""
-
     def __init__(self, color="black"):
         self.color = color
 
@@ -344,7 +352,6 @@ class Shape(ABC):
     def describe(self):
         return f"{self.color} {type(self).__name__}: area={self.area():.2f}"
 
-# Rectangle — implements area and perimeter for width × height
 class Rectangle(Shape):
     def __init__(self, width, height, color="black"):
         super().__init__(color)
@@ -357,7 +364,6 @@ class Rectangle(Shape):
     def perimeter(self) -> float:
         return 2 * (self.width + self.height)
 
-# Circle — implements area and perimeter for a radius
 class Circle(Shape):
     def __init__(self, radius, color="black"):
         super().__init__(color)
@@ -373,47 +379,34 @@ class Circle(Shape):
 #### Using ABC — instantiate subclasses, enforce abstract methods
 
 ```python
-# Using abstract classes — instantiate subclasses, call abstract methods
-
 rect = Rectangle(5, 3, "red")
 circ = Circle(4, "blue")
 
-rect.describe()   # rect
-circ.describe()   # circ
+rect.describe()
+circ.describe()
 
-# Polymorphism with abstract class
 shapes: list[Shape] = [rect, circ]
 total_area = sum(s.area() for s in shapes)
-f"{total_area:.2f}"   # Total area
+f"{total_area:.2f}"
 ```
 
-    rect: red Rectangle: area=15.00
-    circ: blue Circle: area=50.27
-    65.27
+```text
+'red Rectangle: area=15.00'
+'blue Circle: area=50.27'
+'65.27'
+```
 
-#### Protocol — structural typing without explicit inheritance
+### Protocol — structural typing
 
-A Protocol defines a set of methods that a class must have, checked by type checkers (mypy) without requiring explicit inheritance. It is Python's answer to Go interfaces — "if it quacks like a duck." Classes satisfy a Protocol simply by having the right methods with the right signatures.
+A `Protocol` defines methods a class must have, checked by type checkers (mypy) without requiring explicit inheritance. Python's answer to Go interfaces — "if it quacks like a duck." Classes satisfy a Protocol by having the right methods with the right signatures. Use `@runtime_checkable` to enable `isinstance()` checks.
+
+#### Protocol declaration and usage
 
 ```python
-# Protocol — structural typing without inheritance (duck typing formalized)
-
-// When to use:
-#   - Third-party classes that can't inherit your ABC
-#   - Duck typing with type checker support
-#
-# When NOT to use:
-#   - When shared implementation is needed — use ABC instead
-
-# Protocol — structural typing; any class with the right methods matches, no inheritance needed
-
-# Drawable — any class with a draw() method qualifies
 @runtime_checkable
 class Drawable(Protocol):
-    """Any class with a draw() method qualifies — no inheritance needed."""
     def draw(self) -> str: ...
 
-# Button and TextBox — do NOT inherit from Drawable, but satisfy the protocol
 class Button:
     def draw(self) -> str:
         return "Drawing button"
@@ -422,18 +415,19 @@ class TextBox:
     def draw(self) -> str:
         return "Drawing textbox"
 
-# render accepts anything with draw()
 def render(widget: Drawable):
     print(f"  {widget.draw()}")
 
 render(Button())
 render(TextBox())
-isinstance(Button(), Drawable)  # True!
+isinstance(Button(), Drawable)
 ```
 
-      Drawing button
-      Drawing textbox
-    Button is Drawable? True
+```text
+  Drawing button
+  Drawing textbox
+True
+```
 
 | Feature | ABC | Protocol |
 |---|---|---|
@@ -441,6 +435,10 @@ isinstance(Button(), Drawable)  # True!
 | Methods | Concrete + abstract (partial implementation) | Pure contract (just signatures) |
 
 ## Encapsulation & Access Control
+
+Python uses naming conventions, not enforcement, for access control: `name` is public, `_name` is protected (convention), and `__name` triggers name mangling to prevent accidental override in subclasses. `@property` provides validated access to private backing fields.
+
+### Naming conventions and name mangling
 
 #### Encapsulation — public, _protected, __private name mangling
 
@@ -457,63 +455,49 @@ Python uses conventions, not enforcement: `name` is public, `_name` is protected
 > Prefix internal attributes with `_` and expose them through `@property` with a setter that validates. Reserve `__` name mangling only for attributes that must survive subclass overrides — this keeps the class testable and subclassable.
 
 ```python
-# Encapsulation — Python uses naming conventions instead of enforced access modifiers
-
-# BankAccount — public (name), protected (_balance), private (__pin via name mangling)
 class BankAccount:
     def __init__(self, owner, balance):
-        self.owner = owner           # public (no prefix)
-        self._balance = balance      # "protected" (convention: don't touch)
-        self.__pin = 1234            # "private" (name mangling)
+        self.owner = owner
+        self._balance = balance
+        self.__pin = 1234
 
     def deposit(self, amount):
         if amount > 0:
             self._balance += amount
 
-    def get_balance(self):           # controlled access
+    def get_balance(self):
         return self._balance
 
-    def __validate_pin(self, pin):   # "private" method
+    def __validate_pin(self, pin):
         return pin == self.__pin
 
 acc = BankAccount("Alice", 1000)
-acc.owner  # public — OK
-acc._balance  # "protected" — works but shouldn't
-# print(acc.__pin)                        # AttributeError! Name mangled
-acc._BankAccount__pin  # name mangling — still accessible!  # type: ignore
-[a for a in dir(acc) if 'pin' in a.lower()]   # dir(acc) with __
-# Shows _BankAccount__pin — Python renamed it
+acc.owner
+acc._balance
+acc._BankAccount__pin  # type: ignore
+[a for a in dir(acc) if 'pin' in a.lower()]
 ```
 
-    Alice
-    _balance: 1000
-    1234
-    dir(acc) with __: ['_BankAccount__pin', '_BankAccount__validate_pin']
+```text
+'Alice'
+1000
+1234
+['_BankAccount__pin', '_BankAccount__validate_pin']
+```
 
 #### Access comparison
 
-```python
-# Access convention comparison — Python naming vs C# access modifiers
+| Python convention | C# modifier | Visible to |
+|---|---|---|
+| `name` | `public` | Everywhere |
+| `_name` | `protected` | Class + subclasses (convention in Python) |
+| `__name` | `private` | Same class only (name mangling in Python) |
+| (no equivalent) | `internal` | Same assembly/project |
+| (no equivalent) | `protected internal` | Protected OR internal |
+| (no equivalent) | `private protected` | Protected AND internal |
 
-comparison = """
-name                public              accessible everywhere
-_name               protected           accessible in class + subclasses (convention in Python)
-(no equivalent)     internal            accessible within same assembly/project
-(no equivalent)     protected internal  protected OR internal
-(no equivalent)     private protected   protected AND internal
-"""
-comparison
-# Python: conventions only — nothing is truly private
-```
-
-    
-    name                public              accessible everywhere
-    _name               protected           accessible in class + subclasses (convention in Python)
-    (no equivalent)     internal            accessible within same assembly/project
-    (no equivalent)     protected internal  protected OR internal
-    (no equivalent)     private protected   protected AND internal
-    
-    Python: conventions only — nothing is truly private
+> [!info] Python has conventions, not enforcement
+> Nothing is truly private in Python — `__name` is just renamed to `_ClassName__name`. The convention is the contract.
 
 #### __slots__ — restrict attributes and reduce memory usage
 
@@ -528,6 +512,10 @@ comparison
 > In Python 3.10+, `@dataclass(slots=True)` automatically generates `__slots__` from field annotations, giving the memory benefit without manual slot maintenance. For high-volume instances (millions of price records), this reduces per-instance overhead by ~40%.
 
 ## Static & Class Methods
+
+`@classmethod` receives `cls` as first argument — enables factory methods and inheritance-aware construction. `@staticmethod` gets no implicit argument — just a function namespaced to the class. Use `@classmethod` for factories; `@staticmethod` for pure utilities.
+
+### @staticmethod and @classmethod
 
 #### @staticmethod and @classmethod — definition and factory methods
 
@@ -548,11 +536,8 @@ comparison
 > If the method uses `self` → instance method. If it uses `cls` (or creates new instances) → `@classmethod`. If it uses neither → `@staticmethod` (or move it to module level if it doesn't conceptually belong to the class).
 
 ```python
-# Static and class methods — @classmethod receives cls for factories; @staticmethod has no self/cls
-
-# Employee — instance method (self), @classmethod (cls), @staticmethod (no self/cls)
 class Employee:
-    company = "Acme Corp"              # class attribute — shared by all instances
+    company = "Acme Corp"
     _employee_count = 0
 
     def __init__(self, name, salary):
@@ -560,26 +545,21 @@ class Employee:
         self.salary = salary
         Employee._employee_count += 1
 
-    # Instance method — operates on self (the specific employee)
     def give_raise(self, percent):
         self.salary *= (1 + percent / 100)
         return self.salary
 
-    # @classmethod — receives the CLASS, not an instance; used as factory
     @classmethod
     def from_string(cls, data_string):
-        """Create Employee from 'name,salary' string."""
         name, salary = data_string.split(",")
-        return cls(name, float(salary))    # cls() works with subclasses too
+        return cls(name, float(salary))
 
     @classmethod
     def get_count(cls):
         return cls._employee_count
 
-    # @staticmethod — no self, no cls; utility function in the class namespace
     @staticmethod
     def is_valid_salary(salary):
-        """Validate salary without needing an instance."""
         return salary > 0
 
     def __str__(self):
@@ -589,49 +569,50 @@ class Employee:
 #### Using @staticmethod and @classmethod — calls and inheritance
 
 ```python
-# Using static and class methods — factories and aggregate operations
-
 emp1 = Employee("Alice", 95000)
 emp1.give_raise(10)
-emp1   # Instance
+emp1
 
-# Class method — called on the class, creates an object
 emp2 = Employee.from_string("Bob,85000")
-emp2   # Factory
+emp2
 
-# Static method — no instance needed
-Employee.is_valid_salary(50000)   # Static:   valid salary?
-Employee.is_valid_salary(-100)   # Static:   valid salary?
+Employee.is_valid_salary(50000)
+Employee.is_valid_salary(-100)
 
-# Class attribute
 f"Count:    {Employee.get_count()} employees"
-Employee.company   # Company
+Employee.company
 ```
 
-    Alice @ Acme Corp: $104,500
-    Bob @ Acme Corp: $85,000
-    valid salary? True
-    valid salary? False
-    2 employees
-    Acme Corp
+```text
+Alice @ Acme Corp: $104,500
+Bob @ Acme Corp: $85,000
+True
+False
+'Count:    2 employees'
+'Acme Corp'
+```
 
 #### @classmethod inheritance — cls is the subclass
 
-```python
-# @classmethod inheritance — cls is the subclass, enabling polymorphic factories
+When a subclass calls an inherited `@classmethod`, `cls` is the subclass — the factory creates the correct type automatically. This is why `@classmethod` is preferred over `@staticmethod` for factory methods.
 
+```python
 class Manager(Employee):
     pass
 
-# cls is Manager, not Employee — creates a Manager object!
 mgr = Manager.from_string("Charlie,120000")
-type(mgr).__name__  # Manager, not Employee
-# If from_string used @staticmethod with Employee(), it would always create Employee
+type(mgr).__name__
 ```
 
-    Manager
+```text
+'Manager'
+```
 
 ## Dataclasses & Records
+
+`@dataclass` auto-generates `__init__`, `__repr__`, `__eq__` and optionally `__hash__` and `__order__` from field declarations. It eliminates boilerplate while providing IDE autocomplete and type-checker support. `frozen=True` makes instances immutable and hashable. `order=True` enables sorting. Dataclasses are Python's equivalent of C# records.
+
+### Dataclasses vs Dicts
 
 #### Why dataclasses instead of dicts
 
@@ -664,8 +645,10 @@ order = Order(customer_id=123, amount=99.99)
 
 ```
 
-    silent bug (amout instead of amount)
-    TypeError at creation time
+```text
+Dict typo: silent bug (amout instead of amount) → KeyError at runtime
+Dataclass typo: TypeError at creation time
+```
 
 #### Autocomplete, refactoring, and type safety
 
@@ -701,46 +684,26 @@ bad_dict = {"customer_id": "not_a_number", "amount": "free"}  # no error!
 
 #### When to use what
 
-```python
-# When to use what — dict vs dataclass vs class decision guide
+| Use case | Recommendation |
+|---|---|
+| Quick script / notebook | `dict` |
+| Pandas / Spark data processing | DataFrame (not classes) |
+| SQL queries | SQL results (not classes) |
+| Pipeline config | `@dataclass` or Pydantic |
+| API request/response | Pydantic (validates input) |
+| Pipeline metadata / state | `@dataclass` |
+| Task queue messages | `@dataclass` |
+| Logging / error reports | `@dataclass` |
+| Shared library / team code | `@dataclass` (self-documenting) |
+| Unknown/dynamic JSON schema | `dict` (can't define class upfront) |
 
-recs = """
-USE CASE                        RECOMMENDATION
-─────────────────────────────── ──────────────────────────
-Quick script / notebook          dict
-Pandas / Spark data processing   DataFrame (not classes)
-SQL queries                      SQL results (not classes)
-Pipeline config                  @dataclass or Pydantic
-API request/response             Pydantic (validates input)
-Pipeline metadata / state        @dataclass
-Task queue messages              @dataclass
-Logging / error reports          @dataclass
-Shared library / team code       @dataclass (self-documenting)
-Unknown/dynamic JSON schema      dict (can't define class upfront)
-"""
-recs
-```
+### Dataclass declarations and features
 
-    
-    ─────────────────────────────── ──────────────────────────
-    Quick script / notebook          dict
-    Pandas / Spark data processing   DataFrame (not classes)
-    SQL queries                      SQL results (not classes)
-    Pipeline config                  @dataclass or Pydantic
-    API request/response             Pydantic (validates input)
-    Pipeline metadata / state        @dataclass
-    Task queue messages              @dataclass
-    Logging / error reports          @dataclass
-    Shared library / team code       @dataclass (self-documenting)
-    Unknown/dynamic JSON schema      dict (can't define class upfront)
+Defining dataclasses, using `field()` for customization, `frozen=True` for immutability, and `order=True` for comparisons.
 
-#### @dataclass declarations
-
-The `@dataclass` decorator automatically generates `__init__`, `__repr__`, `__eq__` and optionally `__hash__` and `__order__` from class field declarations. It eliminates boilerplate for data-holding classes while keeping full IDE autocomplete and type-checker support.
+#### @dataclass — auto-generated __init__, __repr__, __eq__
 
 ```python
-# @dataclass — auto-generated __init__, __repr__, __eq__ from field declarations
-
 @dataclass
 class Point:
     x: float
@@ -750,38 +713,42 @@ p1 = Point(3.0, 4.0)
 p2 = Point(3.0, 4.0)
 p3 = Point(1.0, 2.0)
 
-p1  # auto __repr__
-p1 == p2  # auto __eq__ (compares by value!)
-p1 == p3   # p1 == p3
+p1
+p1 == p2
+p1 == p3
 ```
 
-    Point(x=3.0, y=4.0)
-    True
-    False
+```text
+Point(x=3.0, y=4.0)
+True
+False
+```
 
 #### field() — customizing dataclass fields
 
-```python
-# field() — customize individual dataclass fields
+`field()` customizes individual fields: `default_factory` for mutable defaults (lists/dicts), `init=False` to exclude from `__init__`, `repr=False` to hide from `__repr__`. `__post_init__` runs after auto-generated `__init__` for computed fields.
 
+```python
 @dataclass
 class Employee:
-    name: str                                      # no default -> required for init
-    department: str                                # no default -> required for init                     
-    salary: float = 50000.0                        # default value -> optional during init
-    tags: list[str] = field(default_factory=list)  # mutable default (safe!)
-    _id: int = field(init=False, repr=False)       # excluded from __init__ and __repr__
+    name: str
+    department: str
+    salary: float = 50000.0
+    tags: list[str] = field(default_factory=list)
+    _id: int = field(init=False, repr=False)
 
-    def __post_init__(self):                       # runs after __init__
-        self._id = hash(self.name)                 # computed field
+    def __post_init__(self):
+        self._id = hash(self.name)
 
 emp = Employee("Alice", "Engineering", 95000, ["senior", "lead"])
-emp   # Employee
-emp._id   # Hidden _id
+emp
+emp._id
 ```
 
-    Employee(name='Alice', department='Engineering', salary=95000, tags=['senior', 'lead'])
-    Hidden _id: -5760575203000102949
+```text
+Employee(name='Alice', department='Engineering', salary=95000, tags=['senior', 'lead'])
+-5760575203000102949
+```
 
 #### frozen=True — immutable dataclass
 
@@ -789,9 +756,9 @@ emp._id   # Hidden _id
 >
 > `@dataclass(frozen=True)` makes instances immutable and hashable — essential for using dataclass instances as dictionary keys or set members. Any attempt to reassign a field raises `FrozenInstanceError`.
 
-```python
-# frozen=True — immutable dataclass that raises on assignment
+`frozen=True` makes instances immutable and hashable — essential for using dataclass instances as dict keys or set members. Any attempt to reassign a field raises `FrozenInstanceError`.
 
+```python
 @dataclass(frozen=True)
 class Config:
     host: str
@@ -800,42 +767,42 @@ class Config:
 
 config = Config("localhost", 5432)
 config
-# config.host = "other"  # FrozenInstanceError! Immutable
 
-# Can use as dict key or set element (hashable because frozen)
-# hashable = can compute a fixed integer fingerprint (hash) for the object
 configs = {config: "primary"}
-configs   # As dict key
+configs
 ```
 
-    Config(host='localhost', port=5432, ssl=True)
-    {Config(host='localhost', port=5432, ssl=True): 'primary'}
+```text
+Config(host='localhost', port=5432, ssl=True)
+{Config(host='localhost', port=5432, ssl=True): 'primary'}
+```
 
 #### order=True — comparable dataclass
 
-```python
-# order=True — auto-generated comparison methods for sortable dataclasses
+`order=True` auto-generates `__lt__`, `__le__`, `__gt__`, `__ge__` based on field order in the class declaration — the first field has the highest sort priority.
 
+```python
 @dataclass(order=True)
-# field order in the class IS the sort priority
 class Version:
     major: int
     minor: int
     patch: int
 
 versions = [Version(2, 0, 0), Version(1, 9, 5), Version(2, 1, 0)]
-sorted(versions)   # Sorted
-max(versions)   # Max
+sorted(versions)
+max(versions)
 ```
 
-    [Version(major=1, minor=9, patch=5), Version(major=2, minor=0, patch=0), Version(major=2, minor=1, patch=0)]
-    Version(major=2, minor=1, patch=0)
+```text
+[Version(major=1, minor=9, patch=5), Version(major=2, minor=0, patch=0), Version(major=2, minor=1, patch=0)]
+Version(major=2, minor=1, patch=0)
+```
 
 #### PipelineRecord and boilerplate comparison
 
-```python
-# PipelineRecord and boilerplate comparison — real-world dataclass usage
+Dataclasses can include `@property` for computed fields, combining auto-generated boilerplate with custom logic.
 
+```python
 @dataclass
 class PipelineRecord:
     table_name: str
@@ -856,35 +823,17 @@ for r in records:
     print(f"  {r.table_name}: {r.status} (ok={r.is_success})")
 ```
 
-      users: success (ok=True)
-      orders: failed (ok=False)
-      products: pending (ok=False)
+```text
+  users: success (ok=True)
+  orders: failed (ok=False)
+  products: pending (ok=False)
+```
 
 #### Summary — class vs dataclass vs frozen dataclass
 
-```python
-# Summary — class vs dataclass boilerplate comparison
-
-# Without @dataclass — 12 lines of boilerplate:
-#   class Point:
-#       def __init__(self, x, y): ...
-#       def __repr__(self): ...
-#       def __eq__(self, other): ...
-#       def __hash__(self): ...
-
-# With @dataclass: just 3 lines — all methods auto-generated!
-```
-
-    
-    class Point:
-        def __init__(self, x, y):
-            self.x = x
-            self.y = y
-        def __repr__(self):
-            return f"Point(x={self.x}, y={self.y})"
-        def __eq__(self, other):
-            return self.x == other.x and self.y == other.y
-        def __hash__(self):
-            return hash((self.x, self.y))
-    
-    With @dataclass: just 3 lines — all methods auto-generated!
+| Type | Mutability | Equality | Use for |
+|---|---|---|---|
+| `class` | Mutable | Identity-based (`is`) | Full OOP with custom behavior |
+| `@dataclass` | Mutable | Value-based (`==`) | DTOs, config, events, pipeline state |
+| `@dataclass(frozen=True)` | Immutable | Value-based + hashable | Dict keys, set members, immutable config |
+| `namedtuple` | Immutable | Value-based + hashable | Lightweight records, tuple unpacking |
