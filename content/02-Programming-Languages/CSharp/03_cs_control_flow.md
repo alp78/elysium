@@ -1,4 +1,5 @@
 ---
+title: "Control Flow"
 tags: [csharp]
 aliases: [if else, loops, for loop, while loop, switch, pattern matching, match case]
 description: "C# control flow reference with executable examples and cell outputs — covers conditionals, switch expressions, loops, pattern matching, and iterators. See [03_py_control_flow](https://alp78.github.io/elysium/02-Programming-Languages/Python/03_py_control_flow) for the Python equivalent."
@@ -14,11 +15,48 @@ status: complete
 >
 > — **Edsger W. Dijkstra**, *Go To Statement Considered Harmful* (1968)
 
+C# control flow covers conditional branching (`if`/`else`, `switch`, ternary), loops (`for`, `foreach`, `while`), iterator methods with `yield return`, and LINQ pipelines as functional equivalents to imperative loops. C# enforces explicit `bool` conditions — there is no truthy/falsy coercion — and pattern matching (type, property, relational, list) integrates deeply into both `switch` and `if` expressions.
+
 ## Conditional Statements
+
+C# provides three families of conditional constructs: `if`/`else` chains for boolean branching, `switch` statements and expressions for multi-way value and pattern matching, and null-handling operators (`??`, `??=`, `is`) for safe navigation. Conditions must always be explicit `bool` — no implicit truthy/falsy conversion.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A["How many branches?"] --> B["1-2 branches"]
+    A --> C["3+ discrete values"]
+    A --> D["Pattern matching needed"]
+    B --> E["if / else"]
+    B --> F["Ternary ? :"]
+    C --> G["Switch statement"]
+    C --> H["Switch expression"]
+    D --> I["Type / property / relational patterns"]
+    E --> J["Use for side effects,\nmultiple statements"]
+    F --> K["Use for inline\nvalue selection"]
+    G --> L["Use for imperative flow\nwith fall-through"]
+    H --> M["Use for value-returning\ncompact matching"]
+    I --> H
+```
+
+### Branching with if / else
+
+Basic conditional branching evaluates explicit `bool` expressions top-down. C# has no truthy/falsy coercion, so every condition must resolve to `true` or `false`.
 
 #### if / else if / else — explicit bool conditions
 
-Conditions must be explicit `bool` expressions — no truthy/falsy (unlike Python/JS). `else if` chains evaluate top-down — first match wins.
+Conditions must be explicit `bool` expressions — no truthy/falsy (unlike Python/JS). `else if` chains evaluate top-down — first match wins. Place the most restrictive condition first, since each branch is only reached if all conditions above it failed.
 
 > [!warning] Always use braces
 >
@@ -29,11 +67,9 @@ Conditions must be explicit `bool` expressions — no truthy/falsy (unlike Pytho
 > Always wrap `if`/`else` bodies in braces, even for single-line branches. Replace deep nesting with guard clauses or switch expressions to keep methods flat and readable.
 
 ```csharp
-#nullable enable
-
 int score = 85;
 string grade;
-// Most restrictive condition first — each branch only reached if all above failed
+
 if (score >= 90)
     grade = "A";
 else if (score >= 80)
@@ -49,16 +85,12 @@ $"Score {score} → Grade {grade}"
 int x = 10;
 if (x > 0)
     Console.WriteLine($"{x} is positive");
-
-// Ternary expression — single-line conditional returning a value
-int age = 20;
-string status = age >= 18 ? "adult" : "minor";
-$"age={age} → {status}"
 ```
 
-    Score 85 → Grade B
-    10 is positive
-    age=20 → adult
+```text
+Score 85 → Grade B
+10 is positive
+```
 
 #### Nested ternary — ? : chains
 
@@ -70,41 +102,45 @@ string label = val > 20 ? "high" : val > 10 ? "mid" : "low";
 $"val={val} → {label}"
 ```
 
-    val=15 → mid
+```text
+val=15 → mid
+```
 
 #### No truthy/falsy — explicit bool conditions
 
-C# requires explicit `bool` in every condition — no truthy/falsy. `if (items)`, `if (str)` are compile errors. Use `items.Count > 0`, `string.IsNullOrEmpty(s)`, `x != 0`, `obj != null`. This prevents `if (x = 5)` bugs (assignment is not bool).
+C# requires explicit `bool` in every condition — no truthy/falsy. `if (items)`, `if (str)` are compile errors — use `items.Count > 0`, `string.IsNullOrEmpty(s)`, `x != 0`, or `obj != null`. This prevents `if (x = 5)` bugs (assignment returns `int`, not `bool`). For null checks, `is null` is preferred over `== null` because `is` cannot be overloaded. Chained comparisons like `10 < x < 20` are also compile errors — use `&&` to combine conditions.
 
 ```csharp
 #nullable enable
 var items = new List<int> { 1, 2, 3 };
-// if (items) { }          // Compile error! Not a bool
-if (items.Count > 0)       // must be explicit
+if (items.Count > 0)
     Console.WriteLine($"List has {items.Count} items");
 
 string name = "";
-// if (!name) { }           // Compile error!
 if (string.IsNullOrEmpty(name))
     Console.WriteLine("Name is empty");
 
 string? value = null;
-if (value is null)          // pattern matching (preferred)
+if (value is null)
     Console.WriteLine("Value is null");
-// also: if (value == null)  — works but 'is null' is safer
 
-// if (10 < x < 20)  // Compile error! No chained comparisons in C#
 if (10 < x && x < 20)
     Console.WriteLine($"{x} is between 10 and 20");
 ```
 
-    List has 3 items
-    Name is empty
-    Value is null
+```text
+List has 3 items
+Name is empty
+Value is null
+```
+
+### Switch statements and expressions
+
+The `switch` construct comes in two forms: the traditional statement (multi-line, imperative) and the modern expression (single-expression, value-returning). Switch expressions support relational, type, property, and combinatorial patterns — making them the preferred choice for most pattern matching scenarios in modern C#.
 
 #### Switch statement — discrete value matching with mandatory break
 
-Each case must end with `break` (no fall-through — compile error in C#, unlike C). Empty cases can stack for multiple values. Only constants in case labels. Compiler warns on missing enum cases.
+Each case must end with `break` (no fall-through — compile error in C#, unlike C). Empty cases can stack for multiple values. Only constants allowed in case labels. The compiler warns on missing enum cases.
 
 ```csharp
 string command = "quit";
@@ -112,10 +148,10 @@ switch (command)
 {
     case "start":
         Console.WriteLine("Starting...");
-        break;                              // break is REQUIRED
-    case "stop":                            // no code, falls to next
-    case "quit":                            // no code, falls to next
-    case "exit":                            // fall-through: only allowed for empty cases
+        break;
+    case "stop":
+    case "quit":
+    case "exit":
         Console.WriteLine("Stopping...");
         break;
     default:
@@ -124,7 +160,9 @@ switch (command)
 }
 ```
 
-    Stopping...
+```text
+Stopping...
+```
 
 #### Switch expression — compact value-returning form with or pattern and _ wildcard
 
@@ -147,22 +185,24 @@ switch (command)
 string result = command switch
 {
     "start" => "Starting...",
-    "stop" or "quit" or "exit" => "Stopping...",   // 'or' pattern
-    _ => $"Unknown: {command}"                       // _ is wildcard default
+    "stop" or "quit" or "exit" => "Stopping...",
+    _ => $"Unknown: {command}"
 };
 result
 ```
 
-    Stopping...
+```text
+Stopping...
+```
 
-#### Switch expression — relational patterns (&gt;=, &lt;, etc.)
+#### Switch expression — relational patterns
 
-Switch arms with relational operators: `>= 90 => "A"`. First match wins — order from most restrictive to least. `>= 70` before `>= 90` would match 95 as "C".
+Switch arms support relational operators (`>=`, `<`, `>`, `<=`). First match wins — order arms from most restrictive to least. Placing `>= 70` before `>= 90` would incorrectly match 95 as "C".
 
 ```csharp
 grade = score switch
 {
-    >= 90 => "A",          // first match wins — most restrictive first
+    >= 90 => "A",
     >= 80 => "B",
     >= 70 => "C",
     >= 60 => "D",
@@ -171,7 +211,9 @@ grade = score switch
 $"Score {score} → Grade {grade}"
 ```
 
-    Score 85 → Grade B
+```text
+Score 85 → Grade B
+```
 
 #### Switch expression — type patterns and when guard
 
@@ -187,8 +229,8 @@ foreach (var v in values)
 {
     string desc = v switch
     {
-        int n when n > 0 => $"positive int: {n}",     // type + guard (when)
-        int n            => $"non-positive int: {n}",  // type only
+        int n when n > 0 => $"positive int: {n}",
+        int n            => $"non-positive int: {n}",
         string s         => $"string: '{s}'",
         int[] arr        => $"array starting with {arr[0]}, {arr.Length - 1} more",
         _                => $"other: {v.GetType().Name}"
@@ -197,11 +239,13 @@ foreach (var v in values)
 }
 ```
 
-      42           → positive int: 42
-      -5           → non-positive int: -5
-      hello        → string: 'hello'
-      System.Int32[] → array starting with 1, 2 more
-      3.14         → other: Double
+```text
+  42           → positive int: 42
+  -5           → non-positive int: -5
+  hello        → string: 'hello'
+  System.Int32[] → array starting with 1, 2 more
+  3.14         → other: Double
+```
 
 #### Switch expression — property patterns ({ Property: value })
 
@@ -223,7 +267,13 @@ string holiday = date switch
 $"{date:yyyy-MM-dd} → {holiday}"
 ```
 
-    2024-12-25 → Christmas
+```text
+2024-12-25 → Christmas
+```
+
+### Null handling and pattern matching
+
+C# provides dedicated operators for null-safe programming that eliminate verbose `if (x != null)` checks and combine type testing with variable binding in a single expression.
 
 #### Null-coalescing (??, ??=) and is pattern matching
 
@@ -240,26 +290,117 @@ $"{date:yyyy-MM-dd} → {holiday}"
 
 string? maybeNull = null;
 
-// ?? — default fallback
 string safe = maybeNull ?? "default";
-safe   // ??
+safe
 
-// ??= — assign only if null
 maybeNull ??= "fallback";
-maybeNull   // ??
+maybeNull
 
-// is — pattern matching: tests type AND extracts value in one expression
 if (maybeNull is string notNull)
     Console.WriteLine($"Has value: {notNull}");
 else
     Console.WriteLine("Is null");
 ```
 
-    default
-    fallback
-    fallback
+```text
+default
+fallback
+Has value: fallback
+```
+
+#### Logical pattern combinators — and, or, not (C# 9+)
+
+C# 9 introduced `and`, `or`, and `not` as pattern combinators that compose with any pattern — relational, type, property, or constant. They replace verbose `&&`/`||` chains in `switch` arms and `is` expressions. `not` is especially useful for null-guard clauses: `if (obj is not null)` reads more naturally than `if (obj != null)`.
+
+```csharp
+int temperature = 22;
+string comfort = temperature switch
+{
+    < 0 => "freezing",
+    >= 0 and < 15 => "cold",
+    >= 15 and <= 25 => "comfortable",
+    > 25 and <= 35 => "warm",
+    > 35 => "hot"
+};
+$"temp={temperature} → {comfort}"
+
+object item = "hello";
+if (item is not null and string s)
+    Console.WriteLine($"Non-null string: {s}");
+```
+
+```text
+temp=22 → comfortable
+Non-null string: hello
+```
+
+#### List patterns — positional matching on collections (C# 11+)
+
+List patterns match elements by position in arrays, lists, and spans. Use `_` for a single-element wildcard, `..` (slice pattern) for zero-or-more elements, and combine with relational or type patterns. List patterns make guard logic for sequences concise and declarative — especially useful for parsing command-line arguments, CSV rows, or protocol headers.
+
+```csharp
+int[] numbers = { 1, 2, 3, 4, 5 };
+string description = numbers switch
+{
+    [1, 2, ..]          => "starts with 1, 2",
+    [_, _, _, ..]       => "at least 3 elements",
+    []                  => "empty",
+    _                   => "other"
+};
+description
+
+var cmd = new[] { "git", "commit", "-m", "fix bug" };
+string action = cmd switch
+{
+    ["git", "commit", "-m", var msg] => $"committing: {msg}",
+    ["git", "push", ..]              => "pushing",
+    ["git", ..]                      => "other git command",
+    _                                => "unknown"
+};
+action
+```
+
+```text
+starts with 1, 2
+committing: fix bug
+```
 
 ## Loops
+
+C# provides four loop constructs: `for` (index-based), `foreach` (collection iteration), `while` (condition-first), and `do-while` (body-first). Prefer `foreach` for collection traversal — it eliminates off-by-one errors and works with any `IEnumerable<T>`. Use `for` when you need the index, and `while`/`do-while` for condition-driven repetition.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A["What drives the iteration?"] --> B["A collection"]
+    A --> C["A numeric range or index"]
+    A --> D["A condition"]
+    A --> E["A transformation pipeline"]
+    B --> F["foreach"]
+    C --> G["for"]
+    D --> H{"Must body run\nat least once?"}
+    E --> I["LINQ .Where/.Select"]
+    H -->|Yes| J["do-while"]
+    H -->|No| K["while"]
+    F --> L["Preferred for\nIEnumerable&lt;T&gt;"]
+    G --> M["Use when index\nis needed"]
+    I --> N["Lazy, composable,\nvalue-returning"]
+```
+
+### Counted and collection iteration
+
+Index-based `for` loops give explicit control over the counter, step, and direction. `foreach` iterates any `IEnumerable<T>` without exposing the index. Both support `break` and `continue` for early exit and skip.
 
 #### for and foreach loops
 
@@ -278,37 +419,111 @@ else
 > To remove or add items while iterating, snapshot the collection first with `.ToList()`, then `foreach` over the snapshot while modifying the original. For indexed removal, iterate backwards with a `for` loop.
 
 ```csharp
-// for — index-based iteration with explicit counter
 for (int i = 0; i < 5; i++)
     Console.Write($"  {i}");
 Console.WriteLine();
 
-// for with step — increment by any value
-Console.Write("Step 3: ");
 for (int i = 0; i < 20; i += 3)
     Console.Write($"  {i}");
 Console.WriteLine();
 ```
 
-      0  1  2  3  4
-    0  3  6  9  12  15  18
+```text
+  0  1  2  3  4
+  0  3  6  9  12  15  18
+```
 
 #### Count down with for
 
-Decrement: `for (int i = 10; i > 0; i -= 2)`. Step can be any integer — negative for counting down, >1 for skipping. Watch condition direction: `i > 0` not `i < 10` for counting down.
+Decrement with a negative step: `for (int i = 10; i > 0; i -= 2)`. The step can be any integer — negative for counting down, greater than 1 for skipping. Watch the condition direction: use `i > 0` (not `i < 10`) when counting down.
 
 ```csharp
-Console.Write("Down:   ");
 for (int i = 10; i > 0; i -= 2)
     Console.Write($"  {i}");
 Console.WriteLine();
 ```
 
-    10  8  6  4  2
+```text
+  10  8  6  4  2
+```
 
-#### Enumerate and Zip
+#### Iterate a collection with foreach
+
+`foreach` iterates any type implementing `IEnumerable<T>` — arrays, lists, dictionaries, LINQ results, and custom collections. The loop variable is read-only; you cannot reassign it inside the body. For dictionaries, the loop variable is a `KeyValuePair<TKey, TValue>` that you can deconstruct.
+
+```csharp
+var languages = new[] { "C#", "Python", "Go" };
+foreach (var lang in languages)
+    Console.Write($"  {lang}");
+Console.WriteLine();
+
+var scores = new Dictionary<string, int> { ["Alice"] = 92, ["Bob"] = 85 };
+foreach (var (name, score) in scores)
+    Console.Write($"  {name}:{score}");
+Console.WriteLine();
+```
+
+```text
+  C#  Python  Go
+  Alice:92  Bob:85
+```
+
+#### while and do-while loops
+
+`while` evaluates the condition before each iteration — the body may never execute. `do-while` executes the body first, then checks the condition — guaranteeing at least one iteration. Use `while` for input validation loops and polling. Use `do-while` when the first pass must always run (e.g., menu display, retry-at-least-once logic).
+
+```csharp
+int n = 3;
+while (n > 0)
+{
+    Console.Write($"  {n}");
+    n--;
+}
+Console.WriteLine();
+
+int attempts = 0;
+do
+{
+    attempts++;
+    Console.Write($"  attempt-{attempts}");
+} while (attempts < 3);
+Console.WriteLine();
+```
+
+```text
+  3  2  1
+  attempt-1  attempt-2  attempt-3
+```
+
+#### Enumerate with index using Select overload
+
+C# has no built-in `enumerate` keyword. Use LINQ's `Select` overload that provides the index as a second parameter: `.Select((item, index) => ...)`. For parallel iteration of two sequences, use `Zip` which pairs elements positionally and stops at the shorter sequence.
+
+```csharp
+var fruits = new[] { "apple", "banana", "cherry" };
+foreach (var (fruit, i) in fruits.Select((f, i) => (f, i)))
+    Console.Write($"  {i}:{fruit}");
+Console.WriteLine();
+
+var names = new[] { "Alice", "Bob", "Charlie" };
+var ages = new[] { 30, 25, 35 };
+foreach (var pair in names.Zip(ages))
+    Console.Write($"  {pair.First}={pair.Second}");
+Console.WriteLine();
+```
+
+```text
+  0:apple  1:banana  2:cherry
+  Alice=30  Bob=25  Charlie=35
+```
 
 ## Loop Control
+
+C# provides `break` to exit a loop, `continue` to skip to the next iteration, and `goto` as a last-resort mechanism for breaking out of nested loops. For complex loop logic, extracting to a method and using `return` is usually cleaner than `goto`.
+
+### Control keywords
+
+Keywords that alter loop execution: `break` exits immediately, `continue` skips to the next iteration, and `goto` jumps to a labeled statement (used only for nested loop escape).
 
 #### break, continue, goto
 
@@ -320,7 +535,6 @@ Console.WriteLine();
 > - For complex flow, extract to a method with `return`
 
 ```csharp
-// break — exits immediately when condition is met
 for (int i = 0; i < 10; i++)
 {
     if (i == 5)
@@ -332,23 +546,24 @@ for (int i = 0; i < 10; i++)
 }
 Console.WriteLine();
 
-// continue — skips the rest of the current iteration
 for (int i = 0; i < 10; i++)
 {
     if (i % 2 == 0)
-        continue;           // skip even numbers
+        continue;
     Console.Write($"  {i}");
 }
 Console.WriteLine();
 ```
 
-      0  1  2  3  4  Breaking at 5
-    
-      1  3  5  7  9
+```text
+  0  1  2  3  4  Breaking at 5
+
+  1  3  5  7  9
+```
 
 #### Breaking outer loops with goto and return
 
-C# has no labeled `break`. Two patterns: (1) `goto` to a label after the outer loop — the accepted idiom for nested loop breaking. (2) Extract to a method and use `return`. Don't use `goto` for general flow control.
+C# has no labeled `break`. Two patterns for escaping nested loops: (1) `goto` to a label placed after the outer loop — the accepted idiom for nested loop breaking. (2) Extract the logic to a method and use `return` to exit all loops at once. Avoid `goto` for general flow control — it is only justified for this specific nested-break scenario.
 
 ```csharp
 bool found = false;
@@ -366,7 +581,6 @@ for (int i = 0; i < 3; i++)
 Done:
 Console.WriteLine($"Found: {found}");
 
-// return — exits the entire method, implicitly breaking all loops
 static int FindFirst(int[][] matrix, int target)
 {
     for (int i = 0; i < matrix.Length; i++)
@@ -379,10 +593,18 @@ int[][] m = { new[] { 1, 2 }, new[] { 3, 4 } };
 Console.WriteLine(FindFirst(m, 3));
 ```
 
-    True
-    100
+```text
+Found: True
+100
+```
 
 ## Iterators & Generators
+
+Iterator methods use `yield return` to produce values lazily — the compiler transforms them into state machines that pause between each value. This enables memory-efficient processing of large or infinite sequences, composable pipelines with LINQ, and custom traversal logic for trees and graphs.
+
+### yield return and yield break
+
+`yield return` pauses execution and emits one value; `yield break` terminates the iterator. The method body does not execute until the first `MoveNext()` call — not when the method is called.
 
 #### yield return — lazy iterator method
 
@@ -402,7 +624,8 @@ IEnumerable<int> Countdown(int n)
     Console.WriteLine($"  Starting countdown from {n}");
     while (n > 0)
     {
-        yield return n;      // pauses here, returns value, resumes on MoveNext()
+        yield return n;
+
         n--;
     }
     Console.WriteLine("  Done!");
@@ -413,8 +636,10 @@ foreach (var val in Countdown(5))
 Console.WriteLine();
 ```
 
-      Starting countdown from 5
-      5  4  3  2  1  Done!
+```text
+  Starting countdown from 5
+  5  4  3  2  1  Done!
+```
 
 #### Manual iteration with GetEnumerator()
 
@@ -427,26 +652,33 @@ IEnumerable<int> Countdown(int n)
 }
 
 var enumerator = Countdown(3).GetEnumerator();
-enumerator.MoveNext(); Console.WriteLine($"  next: {enumerator.Current}");  // 3
-enumerator.MoveNext(); Console.WriteLine($"  next: {enumerator.Current}");  // 2
-enumerator.MoveNext(); Console.WriteLine($"  next: {enumerator.Current}");  // 1
+enumerator.MoveNext(); Console.WriteLine($"  next: {enumerator.Current}");
+enumerator.MoveNext(); Console.WriteLine($"  next: {enumerator.Current}");
+enumerator.MoveNext(); Console.WriteLine($"  next: {enumerator.Current}");
 ```
 
-      next: 3
-      next: 2
-      next: 1
+```text
+  next: 3
+  next: 2
+  next: 1
+```
+
+### Flattening nested structures
+
+Flattening converts nested collections into a single flat sequence. `SelectMany` handles one level; for arbitrary depth, use a `Stack<T>`-based iterative approach or recursive iterators.
 
 #### SelectMany — flattens one level of nesting
 
-`SelectMany` projects each element to a sequence and flattens into one. One-line flatten: `nested.SelectMany(x => x)`. Only one level — not recursive.
+`SelectMany` projects each element to a sequence and flattens the results into a single sequence: `nested.SelectMany(x => x)`. It only peels one layer — it is not recursive. For deeper nesting, use the iterative or recursive approaches below.
 
 ```csharp
 var oneLevel = new[] { new[] { 1, 2 }, new[] { 3, 4 }, new[] { 5, 6 } };
-string.Join(", ", oneLevel.SelectMany(x => x))   // SelectMany (1 level)
-// Does NOT work for deep nesting — SelectMany only peels one layer
+string.Join(", ", oneLevel.SelectMany(x => x))
 ```
 
-    [1, 2, 3, 4, 5, 6]
+```text
+1, 2, 3, 4, 5, 6
+```
 
 #### Iterative flatten with Stack&lt;T&gt;
 
@@ -455,10 +687,9 @@ Stack-based iterative flatten — no recursion, handles arbitrary depth in const
 ```csharp
 var nested = new object[] { 1, new object[] { 2, 3 }, new object[] { 4, new object[] { 5, 6 } }, 7 };
 
-// FlattenIter — uses a stack instead of recursion; push sub-items back onto stack in reverse order
 List<int> FlattenIter(object[] input)
 {
-    var stack = new Stack<object>(input.Reverse());  // reversed to maintain order
+    var stack = new Stack<object>(input.Reverse());
     var result = new List<int>();
     while (stack.Count > 0)
     {
@@ -471,16 +702,19 @@ List<int> FlattenIter(object[] input)
     }
     return result;
 }
-string.Join(", ", FlattenIter(nested))   // Iterative flatten
+string.Join(", ", FlattenIter(nested))
 
-// FlatLinq — recursive SelectMany; compact but still uses the call stack
 IEnumerable<int> FlatLinq(IEnumerable<object> items) =>
     items.SelectMany(item => item is object[] sub ? FlatLinq(sub) : new[] { (int)item });
-string.Join(", ", FlatLinq(nested))   // LINQ recursive
+string.Join(", ", FlatLinq(nested))
 ```
 
-    [1, 2, 3, 4, 5, 6, 7]
-    [1, 2, 3, 4, 5, 6, 7]
+The iterative approach uses a `Stack` to avoid recursion, making it safe for arbitrarily deep nesting. The LINQ variant is more compact but still uses the call stack — prefer the iterative version for untrusted input depth.
+
+```text
+1, 2, 3, 4, 5, 6, 7
+1, 2, 3, 4, 5, 6, 7
+```
 
 #### Eager vs lazy evaluation — ToList() vs deferred
 
@@ -488,17 +722,20 @@ LINQ queries are lazy — nothing executes until enumerated (`foreach`, `ToList`
 
 ```csharp
 var squaresList = Enumerable.Range(0, 10).Select(x => x * x).ToList();
-string.Join(", ", squaresList)   // Eager list
+string.Join(", ", squaresList)
 
-// Lazy: without .ToList() — values computed on demand during iteration
 var squaresLazy = Enumerable.Range(0, 10).Select(x => x * x);
-squaresLazy.GetType().Name   // Lazy type
-string.Join(", ", squaresLazy)   // As list
+squaresLazy.GetType().Name
+string.Join(", ", squaresLazy)
 ```
 
-    [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
-    RangeSelectIterator`2
-    [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+The eager list materializes immediately; the lazy query returns an iterator whose type name (`RangeSelectIterator`) reveals it has not yet computed any values. Both produce identical results when enumerated, but the lazy version re-executes on each enumeration.
+
+```text
+0, 1, 4, 9, 16, 25, 36, 49, 64, 81
+RangeSelectIterator`2
+0, 1, 4, 9, 16, 25, 36, 49, 64, 81
+```
 
 #### yield break — early termination
 
@@ -509,14 +746,16 @@ IEnumerable<int> TakeWhilePositive(int[] arr)
 {
     foreach (var n in arr)
     {
-        if (n < 0) yield break;   // stops the iterator when a negative is encountered
+        if (n < 0) yield break;
         yield return n;
     }
 }
-string.Join(", ", TakeWhilePositive(new[] { 3, 7, -2, 5 }))   // TakeWhile
+string.Join(", ", TakeWhilePositive(new[] { 3, 7, -2, 5 }))
 ```
 
-    [3, 7]
+```text
+3, 7
+```
 
 #### Recursive iterator — flatten a deeply nested structure with yield return
 
@@ -528,19 +767,27 @@ IEnumerable<int> Flatten(IEnumerable<object> nested)
     foreach (var item in nested)
     {
         if (item is IEnumerable<object> sub)
-            foreach (var inner in Flatten(sub))  // manual "yield from"
+            foreach (var inner in Flatten(sub))
                 yield return inner;
         else if (item is int n)
             yield return n;
     }
 }
 var nestedArr = new object[] { 1, new object[] { 2, 3 }, new object[] { 4, new object[] { 5, 6 } }, 7 };
-string.Join(", ", Flatten(nestedArr))   // Flatten
+string.Join(", ", Flatten(nestedArr))
 ```
 
-    [1, 2, 3, 4, 5, 6, 7]
+```text
+1, 2, 3, 4, 5, 6, 7
+```
 
 ## LINQ & Functional Equivalents
+
+LINQ (Language Integrated Query) replaces imperative `foreach`/`if`/`Add` patterns with declarative pipelines. All LINQ methods are lazy — nothing executes until the result is enumerated (`foreach`, `ToList()`, `ToArray()`). Method syntax (`.Where().Select()`) and query syntax (`from x in items where ... select ...`) compile to identical IL.
+
+### Core LINQ methods
+
+The foundational LINQ operations: `Select` (map), `Where` (filter), `SelectMany` (flat-map), and query syntax as an alternative notation.
 
 #### LINQ basics — Select, Where, chaining, and SelectMany
 
@@ -561,29 +808,27 @@ string.Join(", ", Flatten(nestedArr))   // Flatten
 > Replace manual `foreach`/`if`/`Add` patterns with `.Where().Select()` chains. Call `.ToList()` once at the end to materialize, then reuse the list freely without re-executing the query.
 
 ```csharp
-// Select — transforms each element (map)
 var squares = Enumerable.Range(0, 10).Select(x => x * x).ToList();
-string.Join(", ", squares)   // Squares
+string.Join(", ", squares)
 
-// Where — keeps only elements matching a condition (filter)
 var evens = Enumerable.Range(0, 20).Where(x => x % 2 == 0).ToList();
-string.Join(", ", evens)   // Evens
+string.Join(", ", evens)
 
-// Chaining — pipe results through multiple operations
 var words = new[] { "hello", "world", "csharp", "is", "great" };
 var longUpper = words.Where(w => w.Length > 3).Select(w => w.ToUpper());
-string.Join(", ", longUpper)   // Long upper
+string.Join(", ", longUpper)
 
-// SelectMany — flattens one level of nesting (nested loop in one call)
 var matrix = new[] { new[] { 1, 2, 3 }, new[] { 4, 5, 6 }, new[] { 7, 8, 9 } };
 var flat = matrix.SelectMany(row => row).ToList();
-string.Join(", ", flat)   // Flat
+string.Join(", ", flat)
 ```
 
-    [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
-    [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
-    [HELLO, WORLD, CSHARP, GREAT]
-    [1, 2, 3, 4, 5, 6, 7, 8, 9]
+```text
+0, 1, 4, 9, 16, 25, 36, 49, 64, 81
+0, 2, 4, 6, 8, 10, 12, 14, 16, 18
+HELLO, WORLD, CSHARP, GREAT
+1, 2, 3, 4, 5, 6, 7, 8, 9
+```
 
 #### Query syntax vs method syntax
 
@@ -592,20 +837,24 @@ Query syntax (`from x in items where ... select ...`) reads like SQL. Method syn
 ```csharp
 var words = new[] { "hello", "world", "csharp", "is", "great" };
 
-// Query syntax — SQL-like keywords: from, where, orderby, select
 var queryResult = from w in words
                   where w.Length > 3
                   orderby w.Length
                   select w.ToUpper();
-string.Join(", ", queryResult)   // Query
+string.Join(", ", queryResult)
 
-// Method syntax — fluent chaining of extension methods (most common style)
 var methodResult = words.Where(w => w.Length > 3).OrderBy(w => w.Length).Select(w => w.ToUpper());
-string.Join(", ", methodResult)   // Method
+string.Join(", ", methodResult)
 ```
 
-    [HELLO, WORLD, GREAT, CSHARP]
-    [HELLO, WORLD, GREAT, CSHARP]
+```text
+HELLO, WORLD, GREAT, CSHARP
+HELLO, WORLD, GREAT, CSHARP
+```
+
+### Materialization and aggregation
+
+Materialization converts lazy LINQ queries into concrete collections (`Dictionary`, `HashSet`, `List`). Aggregation reduces a sequence to a single value (`Sum`, `Count`, `Aggregate`).
 
 #### ToDictionary and ToHashSet
 
@@ -619,22 +868,24 @@ string.Join(", ", methodResult)   // Method
 
 ```csharp
 var squaresDict = Enumerable.Range(0, 6).ToDictionary(x => x, x => x * x);
-string.Join(", ", squaresDict.Select(kv => $"{kv.Key}:{kv.Value}"))   // Squares dict
+string.Join(", ", squaresDict.Select(kv => $"{kv.Key}:{kv.Value}"))
 
-// Filter dict — Where on a dictionary yields KeyValuePair<K,V>; re-materialize with ToDictionary
 var scores = new Dictionary<string, int> { ["Alice"] = 85, ["Bob"] = 92, ["Charlie"] = 78, ["Diana"] = 95 };
 var passed = scores.Where(kv => kv.Value >= 80).ToDictionary(kv => kv.Key, kv => kv.Value);
-string.Join(", ", passed.Select(kv => $"{kv.Key}:{kv.Value}"))   // Passed
+string.Join(", ", passed.Select(kv => $"{kv.Key}:{kv.Value}"))
 
-// ToHashSet — deduplicated collection, O(1) lookup
 var words = new[] { "hello", "world", "csharp", "is", "great" };
 var uniqueLengths = words.Select(w => w.Length).ToHashSet();
-string.Join(", ", uniqueLengths)   // Unique lengths
+string.Join(", ", uniqueLengths)
 ```
 
-    0:0, 1:1, 2:4, 3:9, 4:16, 5:25
-    Alice:85, Bob:92, Diana:95
-    [5, 6, 2]
+`Where` on a dictionary yields `KeyValuePair<K,V>` — re-materialize with `ToDictionary`. `ToHashSet` builds a deduplicated `HashSet<T>` with O(1) membership testing.
+
+```text
+0:0, 1:1, 2:4, 3:9, 4:16, 5:25
+Alice:85, Bob:92, Diana:95
+5, 6, 2
+```
 
 #### Aggregate and built-in aggregations (Sum, Max, Any, All)
 
@@ -648,29 +899,35 @@ string.Join(", ", uniqueLengths)   // Unique lengths
 ```csharp
 var nums = new[] { 1, 2, 3, 4, 5 };
 int total = nums.Aggregate(0, (acc, x) => acc + x);
-total   // Sum
-int product = nums.Aggregate(1, (acc, x) => acc * x);
-product   // Product
+total
 
-// Built-in aggregations — preferred for common operations
-nums.Sum()   // Sum()
-nums.Max()   // Max()
-nums.Min()   // Min()
-nums.All(x => x > 0)   // All()
-nums.Any(x => x > 3)   // Any()
-nums.Count(x => x > 2)   // Count()
-nums.Average()   // Average
+int product = nums.Aggregate(1, (acc, x) => acc * x);
+product
+
+nums.Sum()
+nums.Max()
+nums.Min()
+nums.All(x => x > 0)
+nums.Any(x => x > 3)
+nums.Count(x => x > 2)
+nums.Average()
 ```
 
-    15
-    120
-    15
-    5
-    1
-    True
-    True
-    3
-    Average:3
+```text
+15
+120
+15
+5
+1
+True
+True
+3
+3
+```
+
+### Ordering and deferred execution
+
+Sorting, chaining, and controlling when a LINQ pipeline actually executes.
 
 #### Ordering — OrderBy, OrderByDescending with a key selector
 
@@ -685,16 +942,18 @@ nums.Average()   // Average
 
 ```csharp
 var names = new[] { "Charlie", "Alice", "Bob", "Diana" };
-string.Join(", ", names.OrderBy(n => n))   // Alphabetical
-string.Join(", ", names.OrderBy(n => n.Length))   // By length
-string.Join(", ", names.OrderByDescending(n => n))   // Descending
-string.Join(", ", names.OrderBy(n => n[^1]))   // By last char
+string.Join(", ", names.OrderBy(n => n))
+string.Join(", ", names.OrderBy(n => n.Length))
+string.Join(", ", names.OrderByDescending(n => n))
+string.Join(", ", names.OrderBy(n => n[^1]))
 ```
 
-    [Alice, Bob, Charlie, Diana]
-    [Bob, Alice, Diana, Charlie]
-    [Diana, Charlie, Bob, Alice]
-    [Diana, Bob, Charlie, Alice]
+```text
+Alice, Bob, Charlie, Diana
+Bob, Alice, Diana, Charlie
+Diana, Charlie, Bob, Alice
+Diana, Bob, Charlie, Alice
+```
 
 #### Deferred execution — chained LINQ pipeline materialized by ToList()
 
@@ -709,16 +968,18 @@ string.Join(", ", names.OrderBy(n => n[^1]))   // By last char
 
 ```csharp
 var result = Enumerable.Range(1, 20)
-    .Where(x => x % 2 == 0)             // filter evens
-    .Select(x => x * x)                 // square them
-    .Where(x => x > 50)                 // keep > 50
-    .OrderByDescending(x => x)          // sort descending
-    .Take(3)                            // first 3
-    .ToList();                          // materialize — executes the entire chain
-string.Join(", ", result)   // Chained
+    .Where(x => x % 2 == 0)
+    .Select(x => x * x)
+    .Where(x => x > 50)
+    .OrderByDescending(x => x)
+    .Take(3)
+    .ToList();
+string.Join(", ", result)
 ```
 
-    [400, 324, 256]
+```text
+400, 324, 256
+```
 
 #### Infinite generator and common sequence methods
 
@@ -739,39 +1000,32 @@ string.Join(", ", result)   // Chained
 ```csharp
 IEnumerable<int> Naturals(int start = 0)
 {
-    while (true)          // never ends — relies on caller to stop (Take, First, etc.)
+    while (true)
     {
         yield return start;
         start++;
     }
 }
-string.Join(", ", Naturals().Take(5))   // First 5 naturals
-string.Join(", ", Naturals(10).Take(5))   // From 10
+string.Join(", ", Naturals().Take(5))
+string.Join(", ", Naturals(10).Take(5))
 
-// Range — generates a sequence of consecutive integers
-string.Join(", ", Enumerable.Range(0, 5))   // Range
-
-// Select — transforms each element with a lambda
-string.Join(", ", new[] { "a", "b" }.Select(s => s.ToUpper()))   // Select (map)
-
-// Where — keeps only elements matching a condition
-string.Join(", ", new[] { 1, 2, 3, 4 }.Where(x => x > 2))   // Where (filter)
-
-// Reverse — reverses the order of elements
-string.Join(", ", new[] { 1, 2, 3 }.Reverse())   // Reverse
-
-// Concat — appends one sequence to another
-string.Join(", ", new[] { 1, 2 }.Concat(new[] { 3, 4 }))   // Concat (chain)
-
-// Repeat — produces a single value repeated n times
-string.Join(", ", Enumerable.Repeat("x", 3))   // Repeat
+string.Join(", ", Enumerable.Range(0, 5))
+string.Join(", ", new[] { "a", "b" }.Select(s => s.ToUpper()))
+string.Join(", ", new[] { 1, 2, 3, 4 }.Where(x => x > 2))
+string.Join(", ", new[] { 1, 2, 3 }.Reverse())
+string.Join(", ", new[] { 1, 2 }.Concat(new[] { 3, 4 }))
+string.Join(", ", Enumerable.Repeat("x", 3))
 ```
 
-    [0, 1, 2, 3, 4]
-    [10, 11, 12, 13, 14]
-    [0, 1, 2, 3, 4]
-    [A, B]
-    [3, 4]
-    [3, 2, 1]
-    [1, 2, 3, 4]
-    [x, x, x]
+`Range` generates consecutive integers, `Reverse` reverses order, `Concat` appends sequences, and `Repeat` produces a single value `n` times. All return lazy `IEnumerable<T>`.
+
+```text
+0, 1, 2, 3, 4
+10, 11, 12, 13, 14
+0, 1, 2, 3, 4
+A, B
+3, 4
+3, 2, 1
+1, 2, 3, 4
+x, x, x
+```

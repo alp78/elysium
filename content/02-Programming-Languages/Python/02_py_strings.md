@@ -1,4 +1,5 @@
 ---
+title: "02. Strings - Python"
 tags: [python]
 aliases: [string manipulation, string formatting, regex, f-strings, string interpolation]
 description: "Python strings reference with executable examples and cell outputs — covers string creation, indexing, slicing, methods, formatting, efficient building, and regular expressions. See [02_cs_strings](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/02_cs_strings) for the C# equivalent."
@@ -16,101 +17,183 @@ status: complete
 
 ## String Creation & Basics
 
-#### String (str) - immutable sequence of Unicode characters
+This section covers the fundamental building blocks of string handling in Python: literal syntax, type conversions, construction patterns, and the immutability guarantee that shapes how strings behave at runtime.
+
+### Literals and declaration
+
+Python strings are sequences of Unicode code points. Single quotes and double quotes are interchangeable; triple quotes create multiline strings; and the `r""` prefix disables escape processing.
+
+#### Declare strings with single and double quotes
+
+`str` is Python's only text type — there is no separate `char` type. A single character is simply a string of length 1. Single quotes (`'...'`) and double quotes (`"..."`) produce identical `str` objects. Choose whichever avoids internal escaping.
 
 ```python
 import io
 import re
 import time
-
-# No separate char type — a single character is just a string of length 1
-# Single quotes, double quotes — identical
 import locale
+
 s1 = 'hello'
 s2 = "hello"
-s1   # Single quotes
-f"Double quotes:  \"{s2}\""
-s1 == s2   # Same?
+s1
+f"Double quotes: \"{s2}\""
+s1 == s2
 ```
 
-#### Multiline & Raw Strings
+```text
+'hello'
+"hello"
+True
+```
+
+#### Create multiline and raw strings
+
+Triple-quoted strings (`"""..."""` or `'''...'''`) preserve embedded newlines. Raw strings (`r"..."`) treat backslashes as literal characters — essential for regex patterns and Windows file paths. Both can be combined (`r"""..."""`).
 
 ```python
-# Multiline and raw strings — triple quotes and r"" prefix
-
 s3 = """This is
 a multiline
 string"""
 s4 = '''Also works
 with single
 quotes'''
-s3   # Triple-quoted:\n
+s3
 
-# Raw strings — no escape processing
-s5 = r"C:\Users\new\test"     # backslashes NOT interpreted
-s6 = "C:\\Users\\new\\test"    # same result, but must escape
-s5   # Raw string
-s6   # Escaped string
-s5 == s6   # Same?
+s5 = r"C:\Users\new\test"
+s6 = "C:\\Users\\new\\test"
+s5
+s6
+s5 == s6
 ```
 
-    This is
-    a multiline
-    string
-    
-    C:\Users\new\test
-    C:\Users\new\test
-    True
+```text
+This is
+a multiline
+string
 
-#### str() — convert other types to string
+C:\Users\new\test
+C:\Users\new\test
+True
+```
+
+### Conversion and construction
+
+Methods for converting other types to strings, assembling strings from parts, and checking for empty values.
+
+#### Convert other types to string with str()
+
+`str()` calls the object's `__str__` method (or `__repr__` as fallback) to produce a human-readable string representation. Unlike C#'s `ToString()`, `str(None)` returns the string `"None"` rather than throwing.
 
 ```python
-# Type-to-string conversion — str(), repetition, and empty checks
+str(42)
+str(3.14)
+str(True)
+str([1,2,3])
+str(None)
+```
 
-str(42)   # str(42)
-str(3.14)   # str(3.14)
-str(True)   # str(True)
-str([1,2,3])   # str([1,2,3])
-str(None)   # str(None)
+```text
+'42'
+'3.14'
+'True'
+'[1, 2, 3]'
+'None'
+```
 
-# String repetition and concatenation
-'ha' * 3   # 'ha' * 3
-'hello' + ' ' + 'world'   # 'hello' + ' ' + 'world'
+#### Repeat and concatenate strings
 
-# Empty string and truthiness
+The `*` operator repeats a string *n* times — a feature C# lacks. The `+` operator concatenates strings. The compiler does not optimize `+` in loops, so reserve it for small fixed concatenations.
+
+```python
+'ha' * 3
+'hello' + ' ' + 'world'
+```
+
+```text
+'hahaha'
+'hello world'
+```
+
+#### Check for empty strings and truthiness
+
+Empty strings are falsy in Python — `bool('')` returns `False`. This means you can test for emptiness with `if not s:` instead of `if s == ""` or `if len(s) == 0`. Any non-empty string is truthy.
+
+> [!tip] Idiomatic emptiness check
+> Prefer `if not s:` over `if s == ""` or `if len(s) == 0`. The boolean test is the Pythonic convention and handles `None` gracefully when combined with `if not s:` (both `None` and `""` are falsy).
+
+```python
 empty = ""
-empty == ''   # empty == ''
-len(empty)   # len(empty)
-bool('')  # False (falsy)
-bool('a')  # True (truthy)
+empty == ''
+len(empty)
+bool('')
+bool('a')
 ```
 
-    '42'
-    '3.14'
-    'True'
-    '[1, 2, 3]'
-    'None'
-    'hahaha'
-    'hello' + ' ' + 'world': 'hello world'
-    True
-    0
-    False
-    True
+```text
+True
+0
+False
+True
+```
 
-#### String Immutability
+### Immutability
+
+The single most important property of Python strings — every operation that appears to modify a string actually allocates a new object and returns it. Understanding this shapes how you write performant string code.
+
+#### Understand string immutability and its implications
+
+Once a `str` is created, its character sequence cannot change. Item assignment (`s[0] = 'H'`) raises `TypeError`. Any transformation — `upper()`, `replace()`, slicing, or concatenation — allocates a new `str` on the heap. The original is unchanged and becomes eligible for garbage collection if no other reference points to it.
+
+> [!warning] Anti-pattern — concatenation in loops
+> Each `+=` in a loop creates a new string object, copying all previous characters. For *n* iterations this is O(n²) in both time and allocations. CPython may optimize simple cases, but this is not guaranteed.
+
+> [!success] Correct pattern
+> Use `"".join()` for loop-based construction, or `io.StringIO` for incremental writes. Reserve `+` for small, fixed concatenations (2–5 parts).
 
 ```python
-# String immutability — strings cannot be modified in place
-
-s = 'H' + s[1:]  # must create a new string
-s   # Modified
+s = 'H' + s[1:]
+s
 ```
 
-    Hello
+```text
+Hello
+```
+
+The diagram below shows what happens in memory. The variable `s` is reassigned to point to a new string object; the original `"hello"` is not modified — it becomes unreachable and is collected by the GC.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    subgraph Before["Before: s = 'hello'"]
+        s1["s"] -->|points to| obj1["'hello'<br/>(heap)"]
+    end
+    subgraph After["After: s = 'H' + s[1:]"]
+        s2["s"] -->|points to| obj2["'Hello'<br/>(new object)"]
+        obj3["'hello'<br/>(unreachable → GC)"]
+    end
+    Before --> After
+```
 
 ## Indexing & Slicing
 
-#### Indexing (0-based)
+Accessing individual characters and extracting substrings. Python uses 0-based indexing, negative indexing from the end, and slice syntax (`start:stop:step`) with full stride support — more powerful than C#'s Range syntax.
+
+### Accessing characters and substrings
+
+Direct character access by position, substring extraction via slicing, and stride patterns.
+
+#### Indexing and slicing (0-based)
 
 > [!info] Indexing and slicing
 >
@@ -122,64 +205,76 @@ s   # Modified
 > - For pattern extraction, use regex or split instead of index math
 
 ```python
-#     0123456789...
-
-s[0]  # H
-s[1]  # e
-s[-1]  # ! (last char)
-s[-2]  # d (second to last)
-s[0:5]  # Hello (stop is exclusive)
-s[:5]  # Hello (start defaults to 0)
-s[7:]  # World! (stop defaults to end)
-s[-6:]  # orld! (negative index)
-s[::2]  # Hlo ol! (every 2nd char)
-s[::-1]  # !dlroW ,olleH (reversed)
-s[7:12]  # World
-s[2:10:2]  # lo o (slice with step)
+s[0]
+s[1]
+s[-1]
+s[-2]
+s[0:5]
+s[:5]
+s[7:]
+s[-6:]
+s[::2]
+s[::-1]
+s[7:12]
+s[2:10:2]
 ```
 
-    'H'
-    'e'
-    '!'
-    'd'
-    'Hello'
-    'Hello'
-    'World!'
-    'World!'
-    'Hlo ol!'
-    '!dlroW ,olleH'
-    'World'
-    'lo o'
+```text
+'H'
+'e'
+'!'
+'d'
+'Hello'
+'Hello'
+'World!'
+'World!'
+'Hlo ol!'
+'!dlroW ,olleH'
+'World'
+'lo o'
+```
 
-#### String iteration — enumerate(), slicing out of range
+### Iterating characters and out-of-range behavior
+
+Python slicing silently clamps out-of-range indices — no exception is raised. Direct indexing (`s[100]`) raises `IndexError`.
+
+#### Handle out-of-range access and iterate characters
+
+Slicing beyond the string length returns as many characters as available — `s[0:100]` returns the full string without error. Direct index access (`s[100]`) raises `IndexError`. Use `for ch in s` for simple iteration or `enumerate()` for index-value pairs (equivalent to C#'s LINQ `Select` with index).
+
+> [!info] Slicing vs indexing — different error behavior
+> `s[100]` raises `IndexError`, but `s[0:100]` silently returns the whole string. This is by design — slicing is intended to be forgiving, while indexing expects a valid position.
 
 ```python
-# Out-of-range behavior and character iteration
+s[0:100]
 
-s[0:100]  # Hello, World! (no error!)
-# print(s[100])                       # IndexError!
-
-# Iterate over characters
 print("Chars:", end=" ")
 for ch in s[:5]:
     print(ch, end=" ")
 
-# Enumerate — index + character
 for i, ch in enumerate(s[:5]):
     print(f"  [{i}] = '{ch}'")
 ```
 
-    'Hello, World!'
-    H e l l o
-      [0] = 'H'
-      [1] = 'e'
-      [2] = 'l'
-      [3] = 'l'
-      [4] = 'o'
+```text
+'Hello, World!'
+H e l l o
+  [0] = 'H'
+  [1] = 'e'
+  [2] = 'l'
+  [3] = 'l'
+  [4] = 'o'
+```
 
 ## String Methods
 
-#### Case Methods  — Case, Whitespace, Checking, Searching, Replacing
+The built-in methods on `str` for transforming case, trimming whitespace, inspecting content, searching, splitting, joining, and encoding. All transformation methods return new strings — the original is never modified.
+
+### Case conversion
+
+Methods for changing letter case. Python provides `upper()`, `lower()`, `title()`, `capitalize()`, `swapcase()`, and `casefold()` — richer than C#'s set.
+
+#### Convert case with upper, lower, title, capitalize, swapcase, casefold
 
 > [!info] Case methods
 >
@@ -192,51 +287,64 @@ for i, ch in enumerate(s[:5]):
 ```python
 s = "  Hello, World!  "
 
-'hello world'.upper()   # upper()
-'HELLO WORLD'.lower()   # lower()
-'hello world'.title()   # title()
-'hello world'.capitalize()   # capitalize()
-'Hello World'.swapcase()   # swapcase()
-'Straße'.casefold()  # aggressive lowercase for comparison
+'hello world'.upper()
+'HELLO WORLD'.lower()
+'hello world'.title()
+'hello world'.capitalize()
+'Hello World'.swapcase()
+'Straße'.casefold()
 ```
 
-    'HELLO WORLD'
-    'hello world'
-    'Hello World'
-    'Hello world'
-    'hELLO wORLD'
-    'strasse'
-
-#### Whitespace & Padding
-
-```python
-# Whitespace and padding — strip, ljust, rjust, center, zfill
-
-s.lstrip()  # left only
-s.rstrip()  # right only
-'Hello!!'.strip('!')  # strip specific chars
-'hello'.center(20)   # center(20)
-'hello'.center(20, '*')   # center(20,'*')
-'hello'.ljust(20)   # ljust(20)
-'hello'.rjust(20)   # rjust(20)
-'42'.zfill(8)  # zero-pad numbers
+```text
+'HELLO WORLD'
+'hello world'
+'Hello World'
+'Hello world'
+'hELLO wORLD'
+'strasse'
 ```
 
-    'Hello, World!'
-    'Hello, World!  '
-    '  Hello, World!'
-    'Hello'
-    '       hello        '
-    '*******hello********'
-    'hello               '
-    '               hello'
-    '00000042'
+### Whitespace and padding
 
-#### String Type Checks
+Methods for stripping leading/trailing whitespace (or custom characters) and padding strings to a fixed width.
+
+#### Trim with strip and pad with ljust, rjust, center, zfill
+
+`strip()` removes whitespace from both ends; `lstrip()`/`rstrip()` from one side. Pass a string argument to strip specific characters. `ljust`/`rjust`/`center` pad to a target width — Python adds `center()` and `zfill()` which C# lacks natively.
 
 ```python
-# String type checks — isalpha, isdigit, isalnum, isspace, and more
+s.lstrip()
+s.rstrip()
+'Hello!!'.strip('!')
+'hello'.center(20)
+'hello'.center(20, '*')
+'hello'.ljust(20)
+'hello'.rjust(20)
+'42'.zfill(8)
+```
 
+```text
+'Hello, World!'
+'Hello, World!  '
+'  Hello, World!'
+'Hello'
+'       hello        '
+'*******hello********'
+'hello               '
+'               hello'
+'00000042'
+```
+
+### Character and content checks
+
+Python provides built-in `str.isXxx()` methods — unlike C# where you must combine `char.IsXxx` with LINQ.
+
+#### Test string content with isalpha, isdigit, isnumeric, and more
+
+> [!tip] isdigit vs isnumeric vs isdecimal
+> `isdecimal()` accepts only `0-9` characters. `isdigit()` also accepts superscripts and subscripts. `isnumeric()` is the broadest — it includes fractions like `½` and Roman numerals. For parsing numbers, `isdecimal()` is usually what you want.
+
+```python
 checks = {
     "isalpha()":    "Hello",
     "isdigit()":    "12345",
@@ -256,136 +364,183 @@ for method, example in checks.items():
     print(f"  '{example:12}'.{method:18} = {result}")
 ```
 
-      'Hello       '.isalpha()          = True
-      '12345       '.isdigit()          = True
-      'Hello123    '.isalnum()          = True
-      '            '.isspace()          = True
-      'HELLO       '.isupper()          = True
-      'hello       '.islower()          = True
-      'Hello World '.istitle()          = True
-      'Hello       '.isascii()          = True
-      '½           '.isnumeric()        = True
-      '12345       '.isdecimal()        = True
-      'my_var      '.isidentifier()     = True
-      'hello
-          '.isprintable()      = False
-
-#### Searching
-
-```python
-# Searching — find, index, count, startswith, endswith, in
-
-s.find('Hello')  # 0 (first occurrence)
-s.find('Hello', 1)  # 14 (start from index 1)
-s.rfind('Hello')  # 14 (last occurrence)
-s.find('Java')  # -1 (not found)
-s.index('World')  # 7 (like find but raises ValueError)
-s.count('Hello')  # 2
-s.startswith('Hello')   # startswith('Hello')
-s.endswith('!')   # endswith('!')
-'World' in s  # True (membership)
+```text
+'Hello       '.isalpha()          = True
+'12345       '.isdigit()          = True
+'Hello123    '.isalnum()          = True
+'            '.isspace()          = True
+'HELLO       '.isupper()          = True
+'hello       '.islower()          = True
+'Hello World '.istitle()          = True
+'Hello       '.isascii()          = True
+'½           '.isnumeric()        = True
+'12345       '.isdecimal()        = True
+'my_var      '.isidentifier()     = True
+'hello\n     '.isprintable()      = False
 ```
 
-    0
-    14
-    14
-    -1
-    7
-    2
-    True
-    True
-    True
+### Search and location
 
-#### Replace, Split & Join
+Methods for finding substrings by position or existence.
+
+#### Search with find, index, count, startswith, endswith
+
+`find` returns the 0-based position of the first occurrence (or `-1` if not found). `index` is identical but raises `ValueError` instead of returning `-1`. `rfind`/`rindex` search from the right. `count` returns the number of non-overlapping occurrences. The `in` operator is the idiomatic way to check for substring existence.
 
 ```python
-# Replace, split, and join — substitution, tokenization, and reassembly
+s.find('Hello')
+s.find('Hello', 1)
+s.rfind('Hello')
+s.find('Java')
+s.index('World')
+s.count('Hello')
+s.startswith('Hello')
+s.endswith('!')
+'World' in s
+```
 
-s.replace('Hello', 'Hi')   # replace
-s.replace('Hello', 'Hi', 1)   # replace(max=1)
+```text
+0
+14
+14
+-1
+7
+2
+True
+True
+True
+```
+
+### Comparison and ordering
+
+Python strings support direct comparison with `<`, `>`, `==` using lexicographic (Unicode code point) ordering — no explicit `Compare` method needed.
+
+#### Compare strings for ordering
+
+Python's comparison operators (`<`, `>`, `<=`, `>=`, `==`, `!=`) compare strings lexicographically by Unicode code point — equivalent to C#'s `StringComparison.Ordinal`. For locale-aware sorting (e.g., German ä near a), use `locale.strcoll`. For custom sort keys, use `functools.cmp_to_key`.
+
+> [!info] C# parity
+> Python's `<` operator is equivalent to `string.CompareOrdinal` in C#. There is no built-in case-insensitive comparison operator — use `s1.casefold() == s2.casefold()` or `s1.lower() == s2.lower()`.
+
+```python
+"apple" < "banana"
+"banana" > "apple"
+"apple" == "apple"
+"hello" == "HELLO"
+"hello".casefold() == "HELLO".casefold()
+```
+
+```text
+True
+True
+True
+False
+True
+```
+
+### Replace, split, and join
+
+Methods for substituting substrings, tokenizing strings into arrays, and reassembling them. Python's `str.split()` and `str.join()` are richer than C#'s — with `rsplit`, `splitlines`, `partition`, and `expandtabs`.
+
+#### Replace substrings and split strings
+
+`replace` substitutes occurrences and accepts an optional max-count parameter (unlike C# which always replaces all). `split` tokenizes on a delimiter — with no arguments it splits on any whitespace and strips empties, equivalent to C#'s `Split(null, RemoveEmptyEntries)`. `rsplit` splits from the right. `splitlines` handles all line endings (`\n`, `\r\n`, `\r`). `partition`/`rpartition` split into exactly three parts `(before, sep, after)`.
+
+```python
+s.replace('Hello', 'Hi')
+s.replace('Hello', 'Hi', 1)
 
 csv = "apple,banana,cherry"
-
-# split — split on delimiter; optional second arg limits number of splits
-csv.split(',')   # split(',')
-csv.split(',', 1)   # split(',', 1)
+csv.split(',')
+csv.split(',', 1)
 
 words = "  hello  world  "
+words.split()
+words.split(' ')
 
-# split() with no args splits on any whitespace and strips leading/trailing
-words.split()   # split()
-
-# split(' ') splits on exact space character, preserving empty strings
-words.split(' ')   # split(' ')
-
-# rsplit — like split but starts from the right
-csv.rsplit(',', 1)   # rsplit(',', 1)
+csv.rsplit(',', 1)
 
 lines = "line1\nline2\nline3"
+lines.splitlines()
 
-# splitlines — splits on line boundaries (\n, \r\n, \r, etc.)
-lines.splitlines()   # splitlines()
-
-# partition — splits into exactly (before, separator, after) on first occurrence
-csv.partition(',')   # partition(',')
-
-# rpartition — same but finds last occurrence
-csv.rpartition(',')   # rpartition(',')
-
-parts = ["hello", "world", "python"]
-
-# join — concatenate iterable with separator between elements
-' '.join(parts)   # ' '.join()
-', '.join(parts)   # ', '.join()
-'->'.join(parts)   # '->'.join()
-''.join(parts)   # ''.join()
-
-tab_str = "a\tb\tc"
-
-# expandtabs — replace tab characters with spaces aligned to tab stops
-tab_str.expandtabs(4)   # expandtabs(4)
+csv.partition(',')
+csv.rpartition(',')
 ```
 
-    '  Hi, World!  '
-    '  Hi, World!  '
-    ['apple', 'banana', 'cherry']
-    ['apple', 'banana,cherry']
-    ['hello', 'world']
-    ['', '', 'hello', '', 'world', '', '']
-    ['apple,banana', 'cherry']
-    ['line1', 'line2', 'line3']
-    ('apple', ',', 'banana,cherry')
-    ('apple,banana', ',', 'cherry')
-    'hello world python'
-    'hello, world, python'
-    'hello->world->python'
-    'helloworldpython'
-    'a   b   c'
+```text
+'  Hi, World!  '
+'  Hi, World!  '
+['apple', 'banana', 'cherry']
+['apple', 'banana,cherry']
+['hello', 'world']
+['', '', 'hello', '', 'world', '', '']
+['apple,banana', 'cherry']
+['line1', 'line2', 'line3']
+('apple', ',', 'banana,cherry')
+('apple,banana', ',', 'cherry')
+```
 
-#### Translate & Encode
+#### Rejoin strings with join and expandtabs
+
+`str.join(iterable)` is called on the separator string, not on the list — the opposite of C#'s `string.Join(separator, collection)`. `expandtabs` replaces tab characters with spaces aligned to tab stops.
 
 ```python
-# Translate and encode — character-level replacement and byte conversion
+parts = ["hello", "world", "python"]
+' '.join(parts)
+', '.join(parts)
+'->'.join(parts)
+''.join(parts)
 
-table = str.maketrans("aeiou", "12345")
-'hello world'.translate(table)   # translate(vowels)
-
-# Remove characters
-table2 = str.maketrans("", "", "aeiou")
-'hello world'.translate(table2)   # remove vowels
-
-'hello'.encode('utf-8')   # encode('utf-8')
-'hello'.encode('ascii')   # encode('ascii')
+tab_str = "a\tb\tc"
+tab_str.expandtabs(4)
 ```
 
-    'h2ll4 w4rld'
-    'hll wrld'
-    b'hello'
-    b'hello'
+```text
+'hello world python'
+'hello, world, python'
+'hello->world->python'
+'helloworldpython'
+'a   b   c'
+```
+
+### Encoding and translation
+
+Converting between strings and bytes, and performing character-level replacements.
+
+#### Translate characters and encode to bytes
+
+`str.maketrans` builds a translation table mapping characters to replacements (or `None` for deletion). `translate` applies the table in a single pass — faster than chained `replace` calls for multiple substitutions. `encode` converts a `str` to `bytes` using a specified codec; `bytes.decode` reverses the process.
+
+> [!info] C# parity
+> C# has no direct equivalent of `str.translate`/`str.maketrans`. The closest approach is `Regex.Replace` with a character class, or a manual loop with `StringBuilder`.
+
+```python
+table = str.maketrans("aeiou", "12345")
+'hello world'.translate(table)
+
+table2 = str.maketrans("", "", "aeiou")
+'hello world'.translate(table2)
+
+'hello'.encode('utf-8')
+'hello'.encode('ascii')
+```
+
+```text
+'h2ll4 w4rld'
+'hll wrld'
+b'hello'
+b'hello'
+```
 
 ## String Formatting
 
-#### f-strings (recommended, Python 3.6+)
+Embedding values into strings and controlling how numbers, dates, and currencies are displayed. Python offers three mechanisms: f-strings (`f""`), `str.format()`, and the legacy `%` operator.
+
+### f-strings and format()
+
+The primary ways to embed expressions into string literals.
+
+#### Embed values with f-strings, format(), and % operator
 
 > [!info] f-string syntax
 >
@@ -402,79 +557,103 @@ table2 = str.maketrans("", "", "aeiou")
 >
 > Use parameterized queries for SQL: `cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))`. For logging, use lazy `%s` formatting: `logger.info("User %s logged in", username)` — the string is only built if the log level is active.
 
+f-strings (`f""`, Python 3.6+) are the preferred approach — any expression inside `{...}` is evaluated at runtime. `str.format()` uses numbered or named placeholders and is useful when the format string is stored in a variable. The `%` operator is the legacy C-style approach, still common in logging.
+
 ```python
 name, age = "Alice", 30
 n = 1234567.89123
 pct = 0.856
 
-
 f"Name: {name}, Age: {age}"
-age + 1   # Expression
-name.upper()   # Method call
+age + 1
+name.upper()
 
 "Name: {}, Age: {}".format(name, age)
-"Name: {0}, Age: {1}, {0} again".format(name, age)  # reuse by index
-"Name: {n}, Age: {a}".format(n=name, a=age)  # named
+"Name: {0}, Age: {1}, {0} again".format(name, age)
+"Name: {n}, Age: {a}".format(n=name, a=age)
 
 "Name: %s, Age: %d, Pi: %.2f" % (name, age, 3.14)
 ```
 
-    Name: Alice, Age: 30
-    31
-    ALICE
-    Name: Alice, Age: 30
-    Name: Alice, Age: 30, Alice again
-    Name: Alice, Age: 30
-    Name: Alice, Age: 30, Pi: 3.14
-
-#### Numeric Format Specifiers
-
-```python
-# Numeric format specifiers — .2f, .2e, ,.2f, .1%, d, x, o, b
-
-f"{n:.2f}"   # Fixed 2 dec
-f"{n:.0f}"   # Fixed 0 dec
-f"{n:,.2f}"   # Comma sep
-f"{n:.2e}"   # Scientific
-f"{n:.4g}"   # General
-f"{pct:.1%}"   # Percentage
-
-x = 255
-x:d   # Decimal
-x:b   # Binary
-x:o   # Octal
-x:x   # Hex lower
-x:X   # Hex upper
-f"{x:#x}"   # With prefix
-f"{x:08d}"   # Zero-padded
+```text
+Name: Alice, Age: 30
+31
+ALICE
+Name: Alice, Age: 30
+Name: Alice, Age: 30, Alice again
+Name: Alice, Age: 30
+Name: Alice, Age: 30, Pi: 3.14
 ```
 
-    1234567.89
-    1234568
-    1,234,567.89
-    1.23e+06
-    1.235e+06
-    85.6%
-    255
-    11111111
-    377
-    ff
-    FF
-    0xff
-    00000255
+### Numeric format specifiers
 
-#### Alignment & Locale Currency
+Format specifiers inside f-string braces control numeric display: `{value:.2f}`, `{value:,.0f}`, `{value:#x}`.
+
+#### Format numbers with f-string specifiers
+
+| Specifier | Meaning | Example |
+|---|---|---|
+| `.2f` | Fixed-point, 2 decimals | `1234567.89` |
+| `,.2f` | Fixed with comma separator | `1,234,567.89` |
+| `.2e` | Scientific notation | `1.23e+06` |
+| `.4g` | General (compact) | `1.235e+06` |
+| `.1%` | Percentage (multiplies by 100) | `85.6%` |
+| `d` | Decimal integer | `255` |
+| `b` | Binary | `11111111` |
+| `o` | Octal | `377` |
+| `x`/`X` | Hexadecimal lower/upper | `ff` / `FF` |
+| `#x` | Hex with `0x` prefix | `0xff` |
 
 ```python
-# Alignment and locale currency — layout control and locale-aware output
+f"{n:.2f}"
+f"{n:.0f}"
+f"{n:,.2f}"
+f"{n:.2e}"
+f"{n:.4g}"
+f"{pct:.1%}"
 
+x = 255
+f"{x:d}"
+f"{x:b}"
+f"{x:o}"
+f"{x:x}"
+f"{x:X}"
+f"{x:#x}"
+f"{x:08d}"
+```
+
+```text
+1234567.89
+1234568
+1,234,567.89
+1.23e+06
+1.235e+06
+85.6%
+255
+11111111
+377
+ff
+FF
+0xff
+00000255
+```
+
+### Alignment and locale currency
+
+Controlling field width for tabular output and formatting numbers according to locale conventions.
+
+#### Align strings and format currencies by locale
+
+f-string alignment uses `<` (left), `>` (right), `^` (center) with an optional fill character. For locale-aware currency, Python's `locale` module depends on system locale availability. The `babel` library is more reliable and portable for production currency formatting.
+
+```python
 s = "hi"
-f"{s:<10}"   # Left 10
-f"{s:>10}"   # Right 10
-f"{s:^10}"   # Center 10
-f"{s:*^10}"   # Fill char
-f"{42:+d}"   # Sign always
-f"{42: d}"   # Space for pos
+f"{s:<10}"
+f"{s:>10}"
+f"{s:^10}"
+f"{s:*^10}"
+f"{42:+d}"
+f"{42: d}"
 
 try:
     locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
@@ -482,7 +661,6 @@ try:
 except:
     print("(locale not available)")
 
-# babel is more reliable for currency
 try:
     from babel.numbers import format_currency
     print(f"EUR: {format_currency(1234567.89, 'EUR', locale='de_DE')}")
@@ -492,20 +670,45 @@ except ImportError:
     print("(babel not installed — pip install babel)")
 ```
 
-    'hi        '
-    '        hi'
-    '    hi    '
-    '****hi****'
-    +42
-    42
-    $1,234,567.89
-    EUR: 1.234.567,89 €
-    JPY: ￥1,234,568
-    BRL: R$ 1.234.567,89
+```text
+'hi        '
+'        hi'
+'    hi    '
+'****hi****'
++42
+42
+$1,234,567.89
+EUR: 1.234.567,89 €
+JPY: ￥1,234,568
+BRL: R$ 1.234.567,89
+```
 
 ## Efficient String Building
 
-Strings are immutable — each `+=` copies the entire string. For *n* concatenations, this is O(n²) total work. Use `"".join()` or `io.StringIO` for O(n) string building.
+Strategies for building strings without the O(n²) penalty of repeated concatenation. `"".join()` for collections, `io.StringIO` for incremental writes, and `+` for small fixed concatenations.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A["How many strings<br/>are you combining?"] --> B{"2–5 fixed parts?"}
+    B -->|Yes| C["Use + or f-string<br/>Readable and fast"]
+    B -->|No| D{"From a collection<br/>or generator?"}
+    D -->|Yes| E["Use ''.join()<br/>Single allocation"]
+    D -->|No| F{"Built incrementally<br/>in a loop?"}
+    F -->|Yes| G["Use io.StringIO<br/>or list + join()"]
+    F -->|No| H["Use ''.join()<br/>with generator expr"]
+```
 
 > [!warning] Don't use += in loops
 >
@@ -515,11 +718,15 @@ Strings are immutable — each `+=` copies the entire string. For *n* concatenat
 >
 > Use `"".join(parts)` for O(n) string assembly: `result = "".join(str(i) for i in range(50000))`. For incremental writes, use `io.StringIO`: `buf = io.StringIO(); buf.write(...); result = buf.getvalue()`.
 
-#### String concatenation performance — += in loops is O(n²)
+### join and StringIO
+
+Python's equivalents of C#'s `StringBuilder` and `string.Join`.
+
+#### Compare += vs join() performance
+
+The benchmark below demonstrates the difference: 50,000 `+=` operations are ~15x slower than a single `"".join()` call because `join` pre-calculates the final size and copies each part exactly once.
 
 ```python
-# Performance comparison — + in loop vs join()
-
 start = time.perf_counter()
 result = ""
 for i in range(50000):
@@ -527,7 +734,6 @@ for i in range(50000):
 t1 = time.perf_counter() - start
 f"+ in loop (50k):     {t1:.4f}s  len={len(result)}"
 
-# GOOD: O(n) — join builds once
 start = time.perf_counter()
 result = "".join(str(i) for i in range(50000))
 t2 = time.perf_counter() - start
@@ -535,15 +741,17 @@ f"join() (50k):        {t2:.4f}s  len={len(result)}"
 f"join is {t1/t2:.1f}x faster"
 ```
 
-    0.0542s  len=238890
-    0.0037s  len=238890
-    join is 14.7x faster
+```text
+0.0542s  len=238890
+0.0037s  len=238890
+join is 14.7x faster
+```
 
-#### io.StringIO & List Building
+#### Build strings with io.StringIO and list accumulation
+
+`io.StringIO` provides a file-like write interface for incremental string building — the Python equivalent of C#'s `StringBuilder`. Alternatively, accumulate parts in a `list` and call `"".join()` at the end. Generator expressions inside `join()` are the most concise pattern.
 
 ```python
-# io.StringIO and list building — two efficient string assembly patterns
-
 buf = io.StringIO()
 buf.write("Hello")
 buf.write(", ")
@@ -560,77 +768,89 @@ result = ", ".join(parts)
 result
 
 result = ", ".join(f"item_{i}" for i in range(5))
-result   # Comprehension
+result
 ```
 
-    'Hello, World! Number: 42'
-    'item_0, item_1, item_2, item_3, item_4'
-    'item_0, item_1, item_2, item_3, item_4'
+```text
+'Hello, World! Number: 42'
+'item_0, item_1, item_2, item_3, item_4'
+'item_0, item_1, item_2, item_3, item_4'
+```
 
-#### Small number of concatenations — readability wins
+> [!info] C# parity — no zero-copy string slicing
+> C# offers `ReadOnlySpan<char>` and `string.Create` for zero-allocation string processing. Python has no equivalent — every slice creates a new `str` object. `memoryview` exists for bytes but not for strings. For hot-path string parsing, consider operating on `bytes` with `memoryview` instead.
+
+#### Use + for small fixed concatenations
+
+For 2–5 known parts, the `+` operator is perfectly readable and efficient. Python does not optimize `+` in loops, but for small fixed concatenations the overhead is negligible.
 
 ```python
-# Small concatenation — + is fine for 2-5 strings
-
 first = "Hello"
 last = "World"
-full = first + " " + last    # perfectly fine
-full   # Small concat
-# Rule: use + for 2-5 strings, join() for loops/many strings
+full = first + " " + last
+full
 ```
 
-    'Hello World'
-    use + for 2-5 strings, join() for loops/many strings
+```text
+'Hello World'
+```
 
 ## Regular Expressions
 
-#### re module — import and test text setup
+The `re` module provides pattern matching, extraction, replacement, and splitting. Always use raw strings (`r""`) for patterns to avoid double-escaping backslashes.
+
+### Matching and capturing
+
+Finding patterns in text and extracting matched groups.
+
+#### Find matches with re.search, findall, finditer, match, fullmatch
+
+`re.search` scans the entire string and returns the first match (or `None`). `re.findall` returns all non-overlapping matches as a list of strings. `re.finditer` yields match objects for iteration with position info. `re.match` only matches at the **start** of the string. `re.fullmatch` requires the **entire** string to match.
 
 ```python
 text = "Contact us at support@email.com or sales@company.org. Call 123-456-7890 or 987-654-3210."
-```
-
-#### re.search, re.findall, re.finditer, re.match — pattern matching
-
-```python
-# re.search, re.findall, re.match — find patterns in text
 
 match = re.search(r'\d{3}-\d{3}-\d{4}', text)
 if match:
     print(f"Found: {match.group()} at [{match.start()}:{match.end()}]")
 
-# re.findall — returns all non-overlapping matches as a list of strings
 phones = re.findall(r'\d{3}-\d{3}-\d{4}', text)
 emails = re.findall(r'[\w.+-]+@[\w-]+\.[\w.]+', text)
 phones
 emails
 
-# re.finditer — like findall but yields match objects, giving access to position and groups
 for m in re.finditer(r'\d{3}-\d{3}-\d{4}', text):
     print(f"  {m.group()} at [{m.start()}:{m.end()}]")
 
-# re.match — only matches at the START of the string (unlike search)
-bool(re.match(r'Contact', text))   # match('Contact')
-bool(re.match(r'support', text))   # match('support')
-
-# re.fullmatch — the entire string must match the pattern
-bool(re.fullmatch(r'\d+', '12345'))   # fullmatch digits
-bool(re.fullmatch(r'\d+', '123a5'))   # fullmatch digits
+bool(re.match(r'Contact', text))
+bool(re.match(r'support', text))
+bool(re.fullmatch(r'\d+', '12345'))
+bool(re.fullmatch(r'\d+', '123a5'))
 ```
 
-#### Regex capture groups — numbered and named (?P&lt;name&gt;...)
+```text
+Found: 123-456-7890 at [59:71]
+['123-456-7890', '987-654-3210']
+['support@email.com', 'sales@company.org.']
+  123-456-7890 at [59:71]
+  987-654-3210 at [75:87]
+True
+False
+True
+False
+```
+
+#### Extract sub-matches with capture groups
+
+Parentheses `(...)` create numbered capture groups accessible via `match.group(1)`, `match.group(2)`, etc. (`group(0)` is the full match). `match.groups()` returns all groups as a tuple. Named groups `(?P<name>...)` use the `P<>` syntax (unlike C#'s `<>`) and are accessed via `match.group('name')` or `match.groupdict()`.
 
 ```python
-# Capture groups — extract sub-matches with () and (?P<name>...)
-
 match = re.search(r'(\d{3})-(\d{3})-(\d{4})', text)
 if match:
     print(f"Full:     {match.group(0)}")
     print(f"Groups:   {match.groups()}")
     print(f"Area:     {match.group(1)}")
 
-# Named groups — (?P<name>...) gives a capture group a label so it can be accessed
-# by name instead of position. groupdict() returns all named groups as a dict.
 match = re.search(r'(?P<user>[\w.+-]+)@(?P<domain>[\w-]+\.[\w.]+)', text)
 if match:
     print(f"User:     {match.group('user')}")
@@ -638,121 +858,104 @@ if match:
     print(f"GroupDict:{match.groupdict()}")
 ```
 
-#### re.sub, re.split, re.compile — replace, split, precompile
+```text
+Full:     123-456-7890
+Groups:   ('123', '456', '7890')
+Area:     123
+User:     support
+Domain:   email.com
+GroupDict:{'user': 'support', 'domain': 'email.com'}
+```
+
+### Replace, split, and compilation
+
+Transforming text with pattern-based replacement, splitting on patterns, and pre-compiling for performance.
+
+#### Replace, split, and compile regex patterns
+
+`re.sub` substitutes matches — pass a string for static replacement, a lambda for dynamic transformation, or `\1`/`\2` backreferences for group rearrangement. `re.split` tokenizes on a pattern instead of a fixed delimiter. `re.compile` pre-compiles a pattern into a reusable object — the Python equivalent of C#'s `new Regex(..., Compiled)`.
 
 ```python
-# re.sub, re.split, re.compile — replace, split, and precompile patterns
-
 re.sub(r'\d{3}-\d{3}-\d{4}', '***-***-****', text)
 
-# Replace with a function — doubles every number found
 re.sub(r'\d+', lambda m: str(int(m.group()) * 2), "price: 50, qty: 3")
 
-# Replace with backreference — \1 and \2 refer to capture groups
 re.sub(r'(\w+)@(\w+)', r'\2/\1', "user@host")
 
-# Split on sentence-ending punctuation
 re.split(r'[.!?]\s*', "Hello World. How are you? Fine!")
-# Split on comma with optional surrounding spaces
 re.split(r'\s*,\s*', "a , b , c")
 
-# Compiled pattern — reuse for findall and sub
 phone_pat = re.compile(r'\d{3}-\d{3}-\d{4}')
 phone_pat.findall(text)
 phone_pat.sub('REDACTED', text)
 ```
 
-    Hello
-    world
-    HELLO
-    price: 100, qty: 6
-    host/user
-    ['Hello World', 'How are you', 'Fine', '']
-    ['a', 'b', 'c']
-    []
-    Hello
-    world
-    HELLO
-
-#### Regex Syntax Reference
-
-```python
-# Regex syntax reference — characters, quantifiers, anchors, groups
-
-syntax = r"""
-  CHARACTERS
-  .         Any character (except newline)
-  \d        Digit [0-9]              \D  Non-digit
-  \w        Word char [a-zA-Z0-9_]   \W  Non-word
-  \s        Whitespace [ \t\n\r]     \S  Non-whitespace
-  \b        Word boundary             \B  Non-word boundary
-
-  QUANTIFIERS
-  *         0 or more (greedy)        *?  0 or more (lazy)
-  +         1 or more (greedy)        +?  1 or more (lazy)
-  ?         0 or 1 (optional)         ??  0 or 1 (lazy)
-  {n}       Exactly n                 {n,m}  Between n and m
-  {n,}      n or more                 {n,m}? Between n and m (lazy)
-
-  ANCHORS
-  ^         Start of string/line      $   End of string/line
-  \A        Start of string only      \Z  End of string only
-
-  GROUPS
-  (...)     Capture group             (?:...)  Non-capture group
-  (?P<name>...) Named group           (?P=name) Backreference
-  \1, \2    Backreference by number
-
-  LOOKAROUND
-  (?=...)   Lookahead (positive)      (?!...)  Lookahead (negative)
-  (?<=...)  Lookbehind (positive)     (?<!...) Lookbehind (negative)
-
-  CHARACTER CLASSES
-  [abc]     Any of a, b, c            [^abc]  NOT a, b, c
-  [a-z]     Range a through z         [a-zA-Z0-9]  Alphanumeric
-  |         OR (alternation)
-"""
-syntax
+```text
+Contact us at support@email.com or sales@company.org. Call ***-***-**** or ***-***-****.
+price: 100, qty: 6
+host/user
+['Hello World', 'How are you', 'Fine', '']
+['a', 'b', 'c']
+['123-456-7890', '987-654-3210']
+Contact us at support@email.com or sales@company.org. Call REDACTED or REDACTED.
 ```
 
-    
-      .         Any character (except newline)
-      \d        Digit [0-9]              \D  Non-digit
-      \w        Word char [a-zA-Z0-9_]   \W  Non-word
-      \s        Whitespace [ \t\n\r]     \S  Non-whitespace
-      \b        Word boundary             \B  Non-word boundary
-    
-      *         0 or more (greedy)        *?  0 or more (lazy)
-      +         1 or more (greedy)        +?  1 or more (lazy)
-      ?         0 or 1 (optional)         ??  0 or 1 (lazy)
-      {n}       Exactly n                 {n,m}  Between n and m
-      {n,}      n or more                 {n,m}? Between n and m (lazy)
-    
-      ^         Start of string/line      $   End of string/line
-      \A        Start of string only      \Z  End of string only
-    
-      (...)     Capture group             (?:...)  Non-capture group
-      (?P<name>...) Named group           (?P=name) Backreference
-      \1, \2    Backreference by number
-    
-      (?=...)   Lookahead (positive)      (?!...)  Lookahead (negative)
-      (?<=...)  Lookbehind (positive)     (?<!...) Lookbehind (negative)
-    
-      [abc]     Any of a, b, c            [^abc]  NOT a, b, c
-      [a-z]     Range a through z         [a-zA-Z0-9]  Alphanumeric
-      |         OR (alternation)
+### Syntax reference
 
-#### Regex Flags
+Quick-reference tables for regex syntax elements.
+
+#### Regex syntax — characters, quantifiers, anchors, groups
+
+A condensed reference for Python's `re` module syntax. Named groups use `(?P<name>...)` (with `P`) — unlike C#'s `(?<name>...)`.
+
+```text
+CHARACTERS
+.         Any character (except newline)
+\d        Digit [0-9]              \D  Non-digit
+\w        Word char [a-zA-Z0-9_]   \W  Non-word
+\s        Whitespace [ \t\n\r]     \S  Non-whitespace
+\b        Word boundary             \B  Non-word boundary
+
+QUANTIFIERS
+*         0 or more (greedy)        *?  0 or more (lazy)
++         1 or more (greedy)        +?  1 or more (lazy)
+?         0 or 1 (optional)         ??  0 or 1 (lazy)
+{n}       Exactly n                 {n,m}  Between n and m
+{n,}      n or more                 {n,m}? Between n and m (lazy)
+
+ANCHORS
+^         Start of string/line      $   End of string/line
+\A        Start of string only      \Z  End of string only
+
+GROUPS
+(...)     Capture group             (?:...)  Non-capture group
+(?P<name>...) Named group           (?P=name) Backreference
+\1, \2    Backreference by number
+
+LOOKAROUND
+(?=...)   Lookahead (positive)      (?!...)  Lookahead (negative)
+(?<=...)  Lookbehind (positive)     (?<!...) Lookbehind (negative)
+
+CHARACTER CLASSES
+[abc]     Any of a, b, c            [^abc]  NOT a, b, c
+[a-z]     Range a through z         [a-zA-Z0-9]  Alphanumeric
+|         OR (alternation)
+```
+
+### Options and flags
+
+`re` flags modify matching behavior. Combine multiple flags with bitwise OR (`|`).
+
+#### Control matching with re flags
+
+`re.IGNORECASE` enables case-insensitive matching. `re.MULTILINE` makes `^` and `$` match line boundaries. `re.DOTALL` makes `.` match newline characters. `re.VERBOSE` allows formatting patterns with whitespace and inline `#` comments for readability — the Python equivalent of C#'s `IgnorePatternWhitespace`.
 
 ```python
-# Regex flags — IGNORECASE, MULTILINE, DOTALL, VERBOSE
-
 text = "Hello\nworld\nHELLO"
-re.findall(r'hello', text, re.IGNORECASE)   # IGNORECASE
-re.findall(r'^\\w+', text, re.MULTILINE)   # MULTILINE
-bool(re.search(r'Hello.world', text, re.DOTALL))  # . matches \n
+re.findall(r'hello', text, re.IGNORECASE)
+re.findall(r'^\w+', text, re.MULTILINE)
+bool(re.search(r'Hello.world', text, re.DOTALL))
 
-# VERBOSE allows comments and whitespace in pattern
 pattern = re.compile(r"""
     (\d{3})     # area code
     [-.]        # separator
@@ -760,23 +963,41 @@ pattern = re.compile(r"""
     [-.]        # separator
     (\d{4})     # last 4 digits
 """, re.VERBOSE)
-pattern.findall('Call 123-456-7890')   # VERBOSE
+pattern.findall('Call 123-456-7890')
 
-# Combine flags
-re.findall(r'^hello', text, re.IGNORECASE | re.MULTILINE)   # Combined
+re.findall(r'^hello', text, re.IGNORECASE | re.MULTILINE)
 ```
 
-    IGNORECASE: ['Hello', 'HELLO']
-    []
-    True
-    [('123', '456', '7890')]
-    ['Hello', 'HELLO']
+```text
+['Hello', 'HELLO']
+['Hello', 'world', 'HELLO']
+True
+[('123', '456', '7890')]
+['Hello', 'HELLO']
+```
 
-#### Common Regex Patterns
+> [!info] C# parity — no source-generated regex
+> C# (.NET 7+) offers `[GeneratedRegex]` for compile-time regex generation. Python's `re.compile()` is the closest equivalent — it caches the compiled pattern at runtime. There is no build-time code generation for Python regex.
+
+### Common patterns
+
+Ready-to-use validation patterns for frequently matched formats.
+
+#### Common regex patterns for validation
+
+| Pattern | Regex |
+|---|---|
+| Email | `^[\w.+-]+@[\w-]+\.[\w.]+$` |
+| URL | `https?://[\w./\-?=&#]+` |
+| IPv4 | `\b\d{1,3}(\.\d{1,3}){3}\b` |
+| Date (YYYY-MM-DD) | `\d{4}-(?:0[1-9]\|1[0-2])-(?:0[1-9]\|[12]\d\|3[01])` |
+| Time (HH:MM) | `(?:[01]\d\|2[0-3]):[0-5]\d` |
+| Hex color | `^#[0-9a-fA-F]{6}$` |
+| Phone (US) | `\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}` |
+| Zip code (US) | `\d{5}(-\d{4})?` |
+| Strong password | `^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$` |
 
 ```python
-# Common regex patterns — ready-to-use patterns for validation
-
 patterns = {
     "email":          r'^[\w.+-]+@[\w-]+\.[\w.]+$',
     "URL":            r'https?://[\w./\-?=&#]+',
@@ -792,12 +1013,14 @@ for name, pat in patterns.items():
     print(f"  {name:20}: {pat}")
 ```
 
-      email               : ^[\w.+-]+@[\w-]+\.[\w.]+$
-      URL                 : https?://[\w./\-?=&#]+
-      IPv4                : \b\d{1,3}(\.\d{1,3}){3}\b
-      date YYYY-MM-DD     : \d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])
-      time HH:MM          : (?:[01]\d|2[0-3]):[0-5]\d
-      hex color           : ^#[0-9a-fA-F]{6}$
-      phone US            : \(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}
-      zip code US         : \d{5}(-\d{4})?
-      strong password     : ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$
+```text
+email               : ^[\w.+-]+@[\w-]+\.[\w.]+$
+URL                 : https?://[\w./\-?=&#]+
+IPv4                : \b\d{1,3}(\.\d{1,3}){3}\b
+date YYYY-MM-DD     : \d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])
+time HH:MM          : (?:[01]\d|2[0-3]):[0-5]\d
+hex color           : ^#[0-9a-fA-F]{6}$
+phone US            : \(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}
+zip code US         : \d{5}(-\d{4})?
+strong password     : ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$
+```
