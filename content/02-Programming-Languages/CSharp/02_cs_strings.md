@@ -200,12 +200,12 @@ The diagram below shows what happens in memory. The variable `s` is reassigned t
   'fontSize': '14px'
 }}}%%
 flowchart LR
-    subgraph Before["Before: s = &quot;hello&quot;"]
-        s1["s"] -->|points to| obj1["&quot;hello&quot;<br/>(heap)"]
+    subgraph Before["Before: s = #quot;hello#quot;"]
+        s1["s"] -->|points to| obj1["#quot;hello#quot;<br/>(heap)"]
     end
     subgraph After["After: s = 'H' + s.Substring(1)"]
-        s2["s"] -->|points to| obj2["&quot;Hello&quot;<br/>(new object)"]
-        obj3["&quot;hello&quot;<br/>(unreachable → GC)"]
+        s2["s"] -->|points to| obj2["#quot;Hello#quot;<br/>(new object)"]
+        obj3["#quot;hello#quot;<br/>(unreachable → GC)"]
     end
     Before --> After
 ```
@@ -760,7 +760,7 @@ Strategies for building strings without the O(n²) penalty of repeated concatena
 }}}%%
 flowchart TD
     A["How many strings<br/>are you combining?"] --> B{"2–5 fixed parts?"}
-    B -->|Yes| C["Use + or $&quot;&quot;<br/>Compiler optimizes this"]
+    B -->|Yes| C["Use + or $#quot;#quot;<br/>Compiler optimizes this"]
     B -->|No| D{"From a collection<br/>or array?"}
     D -->|Yes| E["Use string.Join<br/>Single allocation"]
     D -->|No| F{"Built in a loop<br/>or dynamically?"}
