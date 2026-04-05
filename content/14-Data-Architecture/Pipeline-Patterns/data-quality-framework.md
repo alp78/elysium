@@ -1,7 +1,14 @@
 ---
+title: "Data Quality Framework"
 tags: [data-architecture, architecture, pipeline, testing, data-quality, python, sql, airflow, bigquery, medallion, quarantine, anomaly-detection, sla, dbt, great-expectations, soda, dataplex]
 status: stable
 updated: 2026-03-29
+parent: "[[domain-pipeline-reliability]]"
+links:
+  - "[[data-contracts]]"
+  - "[[data-pipeline-testing-strategy]]"
+  - "[[error-handling-and-retry-patterns]]"
+  - "[[environment-management-strategy]]"
 ---
 
 # Data Quality Framework

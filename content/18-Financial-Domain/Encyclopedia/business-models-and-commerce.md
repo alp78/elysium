@@ -1,4 +1,5 @@
 ---
+title: "Business Models and Commerce"
 type: reference
 category: financial-encyclopedia
 technology: []
@@ -6,12 +7,23 @@ tags: [financial]
 aliases: [business model terms, commerce glossary, e-commerce glossary, B2B glossary, B2C glossary, franchise glossary, subscription model, marketplace, omnichannel, white-label, managed services, on-demand delivery, membership warehouse]
 keywords: [e-commerce, B2B, B2C, business to business, business to consumer, franchise, licensing, platform business model, subscription model, subscription, omnichannel, marketplace, white-label, white label, managed services, on-demand delivery, membership warehouse, direct to consumer, DTC, digital commerce, network effects, recurring revenue, SaaS model, franchisee, franchisor, royalties]
 description: "Encyclopedia definitions for business model and commerce terms from the example Index universe, covering e-commerce, B2B, B2C, franchise, licensing, platform models, subscriptions, omnichannel, marketplace, white-label, managed services, on-demand delivery, and membership warehouse."
-related:
-  - technology-and-digital
-  - payments-and-settlement
-  - banking-and-lending
-  - real-estate-and-industrial
-  - compliance-and-risk-management
+parent: "[[domain-financial-encyclopedia]]"
+links:
+  - "[[banking-and-lending]]"
+  - "[[capital-markets-and-trading]]"
+  - "[[compliance-and-risk-management]]"
+  - "[[corporate-finance-and-strategy]]"
+  - "[[energy-and-commodities]]"
+  - "[[esg-and-sustainability]]"
+  - "[[exchanges-and-market-infrastructure]]"
+  - "[[insurance-and-risk]]"
+  - "[[investment-management]]"
+  - "[[payments-and-settlement]]"
+  - "[[pharma-and-healthcare]]"
+  - "[[real-estate-and-industrial]]"
+  - "[[structured-finance]]"
+  - "[[technology-and-digital]]"
+  - "[[trade-and-treasury]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

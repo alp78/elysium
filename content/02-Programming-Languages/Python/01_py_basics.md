@@ -3,6 +3,9 @@ title: "01. Basics - Python"
 tags: [python]
 aliases: [variables, data types, type conversion, operators, console IO]
 description: "Python basics reference with executable examples and cell outputs — covers variables, data types, type conversion, operators, and console I/O. See [01_cs_basics](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/01_cs_basics) for the C# equivalent."
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[01_cs_basics]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

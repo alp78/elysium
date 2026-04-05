@@ -1,4 +1,5 @@
 ---
+title: "Structured Finance"
 type: reference
 category: financial-encyclopedia
 technology: []
@@ -6,11 +7,23 @@ tags: [financial]
 aliases: [structured finance glossary, project finance terms, trade finance glossary, securitization terms, loan syndication glossary]
 keywords: [structured finance, securitization, asset-backed securities, project finance, trade finance, factoring, loan syndication, collateral, warehouse financing, non-recourse, collateralized loan obligation, export credit, ABS, MBS]
 description: "Encyclopedia definitions for structured finance terms covering securitization, project finance, trade finance, factoring, loan syndication, collateral, and warehouse financing, drawn from the example Index universe."
-related:
-  - banking-and-lending
-  - capital-markets-and-trading
-  - investment-management
-  - corporate-finance-and-strategy
+parent: "[[domain-financial-encyclopedia]]"
+links:
+  - "[[banking-and-lending]]"
+  - "[[business-models-and-commerce]]"
+  - "[[capital-markets-and-trading]]"
+  - "[[compliance-and-risk-management]]"
+  - "[[corporate-finance-and-strategy]]"
+  - "[[energy-and-commodities]]"
+  - "[[esg-and-sustainability]]"
+  - "[[exchanges-and-market-infrastructure]]"
+  - "[[insurance-and-risk]]"
+  - "[[investment-management]]"
+  - "[[payments-and-settlement]]"
+  - "[[pharma-and-healthcare]]"
+  - "[[real-estate-and-industrial]]"
+  - "[[technology-and-digital]]"
+  - "[[trade-and-treasury]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

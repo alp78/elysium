@@ -1,4 +1,5 @@
 ---
+title: "GCP Cloud Trace and Logging"
 tags: [monitoring, observability, python, gcp]
 aliases:
   - Cloud Logging
@@ -19,6 +20,11 @@ description: >
   Storage, Log Analytics SQL, audit logs, OpenTelemetry tracing, span
   instrumentation, trace-log correlation, and a full GCP-native observability
   stack architecture with cost comparison vs Datadog.
+parent: "[[domain-gcp-native-monitoring]]"
+links:
+  - "[[gcp-cloud-monitoring-deep-dive]]"
+  - "[[gcp-data-lineage-and-catalog]]"
+  - "[[gcp-pipeline-health-and-sla]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

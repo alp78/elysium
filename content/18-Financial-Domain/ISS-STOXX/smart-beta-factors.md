@@ -9,7 +9,20 @@ tags:
   - smart-beta
 aliases:
   - "Smart Beta & Factors Glossary"
+parent: "[[domain-iss-stoxx-glossary]]"
 date: 2026-03-28
+links:
+  - "[[corporate-governance]]"
+  - "[[data-methodology]]"
+  - "[[esg-frameworks]]"
+  - "[[esg-ratings]]"
+  - "[[financial-instruments]]"
+  - "[[financial-metrics]]"
+  - "[[index-construction]]"
+  - "[[index-families]]"
+  - "[[market-structure]]"
+  - "[[regulatory]]"
+  - "[[sustainability-themes]]"
 ---
 
 # Smart Beta & Factors — ISS & STOXX Glossary

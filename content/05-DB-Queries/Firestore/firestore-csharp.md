@@ -3,6 +3,9 @@ title: "Firestore for Data Engineering — C#"
 tags: [csharp, nosql, gcp, firestore, fundamentals]
 aliases: [Firestore C#, Firestore queries C#, NoSQL C#, document database C#]
 description: "Firestore operations in C# with executable examples and cell outputs — covers CRUD, queries, transactions, batches, snapshots, and typed document mapping."
+parent: "[[domain-firestore]]"
+links:
+  - "[[firestore-python]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

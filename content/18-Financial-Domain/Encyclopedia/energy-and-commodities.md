@@ -1,4 +1,5 @@
 ---
+title: "Energy and Commodities"
 type: reference
 category: financial-encyclopedia
 technology: []
@@ -6,10 +7,23 @@ tags: [financial]
 aliases: [energy terms, commodities glossary, oil gas glossary, upstream midstream downstream, LNG glossary, renewables glossary]
 keywords: [upstream, midstream, downstream, LNG, liquefied natural gas, renewables, green hydrogen, carbon capture, cogeneration, energy storage, pipeline energy, refining, petrochemicals, commodity trading, FPSO, integrated energy]
 description: "Encyclopedia definitions for energy and commodities terms covering upstream, midstream, downstream, LNG, renewables, green hydrogen, carbon capture, and commodity trading drawn from the example Index universe."
-related:
-  - esg-and-sustainability
-  - capital-markets-and-trading
-  - structured-finance
+parent: "[[domain-financial-encyclopedia]]"
+links:
+  - "[[banking-and-lending]]"
+  - "[[business-models-and-commerce]]"
+  - "[[capital-markets-and-trading]]"
+  - "[[compliance-and-risk-management]]"
+  - "[[corporate-finance-and-strategy]]"
+  - "[[esg-and-sustainability]]"
+  - "[[exchanges-and-market-infrastructure]]"
+  - "[[insurance-and-risk]]"
+  - "[[investment-management]]"
+  - "[[payments-and-settlement]]"
+  - "[[pharma-and-healthcare]]"
+  - "[[real-estate-and-industrial]]"
+  - "[[structured-finance]]"
+  - "[[technology-and-digital]]"
+  - "[[trade-and-treasury]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -1,7 +1,15 @@
 ---
+title: "Audit Logging"
 tags: [sql, gcp, sql-server, tsql]
 aliases: [SQL Server Audit, audit logging, database audit, server audit, audit specification, LGIF, LGIS, failed login detection, brute force detection, compliance logging]
 description: "Step-by-step guide to setting up SQL Server Audit on Linux for compliance and threat detection: server audit target, server and database audit specifications, querying audit logs, detecting brute-force attacks, forwarding to GCP Cloud Logging and BigQuery, and running a quarterly security review."
+parent: "[[domain-concurrency-and-security]]"
+links:
+  - "[[sql-server-authentication]]"
+  - "[[tde-encryption]]"
+  - "[[blocking-and-locking]]"
+  - "[[deadlock-detection-and-prevention]]"
+  - "[[race-conditions]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

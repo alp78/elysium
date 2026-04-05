@@ -1,7 +1,12 @@
 ---
+title: "BigQuery Fundamentals"
 tags: [bigquery, gcp, fundamentals]
 aliases: [BigQuery fundamentals, BigQuery SQL, Standard SQL, BQ queries, BigQuery basics]
 description: "BigQuery GoogleSQL fundamentals with executable examples — covers schema exploration, SELECT/filtering, aggregation, JOINs across medallion layers, window functions, CTEs, data quality checks, and bronze-silver-gold transforms."
+parent: "[[domain-bigquery]]"
+links:
+  - "[[bq-advanced]]"
+  - "[[bq-engineering]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -1,4 +1,5 @@
 ---
+title: "Killing Processes"
 type: concept
 category: foundations
 technology: [bash, powershell]
@@ -6,6 +7,17 @@ tags: [shell, process-management]
 aliases: [kill, pkill, killall, SIGTERM, SIGKILL, kill -9, stop process, terminate process]
 keywords: [kill, pkill, killall, SIGTERM, SIGKILL, kill -9, stop process, terminate, signal, graceful shutdown, force kill, process group, PGID, strace, lock file cleanup, Stop-Process]
 description: "Graceful and forceful process termination in Linux and PowerShell. Covers the correct kill escalation sequence (SIGTERM → strace → SIGKILL), pkill -f for pattern matching, process groups, and cleanup after force kills."
+parent: "[[domain-process-management]]"
+links:
+  - "[[viewing-processes]]"
+  - "[[system-resources]]"
+  - "[[managing-services]]"
+  - "[[connectivity-testing]]"
+  - "[[socket-inspection]]"
+  - "[[http-requests-and-apis]]"
+  - "[[firewalls]]"
+  - "[[iap-tunneling]]"
+  - "[[connecting-to-gcp-resources]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

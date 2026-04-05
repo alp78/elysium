@@ -1,4 +1,5 @@
 ---
+title: "Context and Metadata Architecture"
 tags: [data-architecture, architecture, metadata, data-contracts]
 aliases:
   - context store
@@ -22,6 +23,14 @@ description: >
   provenance, temporal modeling, quality metadata, business context, data
   contracts, schema evolution, and propagation patterns across SQL Server,
   BigQuery, GCS, Firestore, and Python.
+parent: "[[domain-system-blueprints]]"
+links:
+  - "[[data-warehouse-architecture]]"
+  - "[[data-lake-architecture]]"
+  - "[[lakehouse-architecture]]"
+  - "[[data-mesh-architecture]]"
+  - "[[streaming-architecture]]"
+  - "[[open-table-formats]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

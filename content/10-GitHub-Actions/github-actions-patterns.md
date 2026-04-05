@@ -14,6 +14,9 @@ aliases:
   - deployment workflows
   - monorepo CI
 description: "Advanced GitHub Actions patterns — matrix builds, reusable workflows, composite actions, deployment strategies, Terraform CI/CD, Docker builds, and monorepo patterns."
+parent: "[[domain-foundations-and-patterns]]"
+links:
+  - "[[github-actions-fundamentals]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

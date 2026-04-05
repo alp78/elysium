@@ -3,6 +3,9 @@ title: "21. Security Operations - Python"
 tags: [python, gcp, security, encryption, identity]
 aliases: [Security Operations Python, Encryption and Identity Python]
 description: "Python security operations reference — encryption, certificates, identity, and secure access across GCP services. Executable examples with cell outputs. Built on infrastructure from [20_py_security_setup](https://alp78.github.io/elysium/02-Programming-Languages/Python/20_py_security_setup). See [21_cs_security_operations](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/21_cs_security_operations) for the C# equivalent."
+parent: "[[domain-gcp-integration]]"
+links:
+  - "[[21_cs_security_operations]]"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete

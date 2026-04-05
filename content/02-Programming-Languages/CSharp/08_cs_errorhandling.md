@@ -3,6 +3,9 @@ title: "08. Error Handling - C#"
 tags: [csharp]
 aliases: [exceptions, try catch, error handling, custom exceptions, exception hierarchy]
 description: "C# error handling reference with executable examples and cell outputs — covers try/catch/finally, exception hierarchy, custom exceptions, exception filters, and IDisposable/using. See [08_py_errorhandling](https://alp78.github.io/elysium/02-Programming-Languages/Python/08_py_errorhandling) for the Python equivalent."
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[08_py_errorhandling]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

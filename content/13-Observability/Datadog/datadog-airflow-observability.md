@@ -1,7 +1,23 @@
 ---
+title: "Datadog Airflow Observability"
 tags: [monitoring, orchestration, observability, docker, airflow, datadog]
 aliases: [Airflow Observability, Airflow StatsD Metrics, Airflow Datadog Dashboard]
 description: "Airflow-specific observability for the project — how to enable StatsD metrics from Airflow containers, key metrics for scheduler health and DAG run tracking, the Airflow Orchestration dashboard, and recommended Datadog monitors."
+parent: "[[domain-datadog-platform]]"
+links:
+  - "[[datadog-architecture-overview]]"
+  - "[[datadog-agent-airflow-vm]]"
+  - "[[datadog-agent-sql-vm]]"
+  - "[[datadog-gcp-integration]]"
+  - "[[datadog-sql-server-integration]]"
+  - "[[datadog-custom-queries]]"
+  - "[[datadog-log-management]]"
+  - "[[datadog-sql-server-logs]]"
+  - "[[datadog-apm-traces]]"
+  - "[[datadog-dashboards]]"
+  - "[[datadog-alerting]]"
+  - "[[datadog-cost-optimization]]"
+  - "[[datadog-troubleshooting]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -1,10 +1,11 @@
 ---
-title: "26. Environments & Dependency Management - C#"
+title: "26. Environments - C#"
 tags: [csharp, nuget, dotnet, environments, dependencies]
 aliases: [dotnet environments, nuget, .csproj, global.json, dotnet SDK]
 description: "C#/.NET environment and dependency management — project creation, NuGet packages, dependency pinning, global.json SDK control, Docker multi-stage builds, CI/CD, GCP deployment, and anti-patterns."
-related:
-  - "[[programming-languages-index]]"
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[26_py_environments]]"
 created: 2026-03-30
 updated: 2026-03-30
 status: complete

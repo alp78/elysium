@@ -1,4 +1,5 @@
 ---
+title: "Airflow Deployment"
 tags: [orchestration, docker, airflow, gcp]
 aliases:
   - Cloud Composer
@@ -22,6 +23,12 @@ aliases:
   - Airflow StatsD
   - Airflow monitoring
 description: "Step-by-step how-to guide for deploying Apache Airflow: local Docker Compose development setup, self-hosted on GCE, GCP Cloud Composer managed service, AWS MWAA, configuration of airflow.cfg, DAG deployment strategies, secrets management, and monitoring integration."
+parent: "[[domain-airflow]]"
+links:
+  - "[[airflow-core-concepts]]"
+  - "[[airflow-dag-patterns]]"
+  - "[[airflow-problems]]"
+  - "[[airflow-troubleshooting]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

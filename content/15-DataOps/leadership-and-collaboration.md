@@ -1,7 +1,11 @@
 ---
+title: "Leadership and Collaboration"
 tags: [python, sql, terraform, airflow, leadership]
 aliases: [code review best practices, technical design document, ADR template, architecture decision record, blameless post-mortem, incident response, war room, technical debt management, RACI matrix, matrixed organization, mentoring junior engineers, stakeholder communication, senior engineer skills, staff engineer, data engineering leadership]
 description: "Leadership and collaboration skills for senior data engineers at scale: the code review as a teaching tool (review pyramid, feedback principles), technical design documents, stakeholder expectation management, mentoring progression, navigating matrixed organizations (RACI), Architecture Decision Records (ADRs), managing technical debt (four quadrants, technical debt register, when to say no), and incident response with blameless post-mortems (war room roles, 5-whys RCA, Euro market index incident case study). Includes all templates and frameworks."
+parent: "[[domain-people-and-organization]]"
+links:
+  - "[[data-team-organization]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

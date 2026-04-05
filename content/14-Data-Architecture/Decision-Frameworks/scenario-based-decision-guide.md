@@ -1,7 +1,13 @@
 ---
+title: "Scenario-Based Decision Guide"
 tags: [data-architecture, architecture, python, sql, terraform, airflow, bigquery, gcp]
 aliases: [scenario guide, use case guide, reference architecture, solution patterns, architecture decisions, what to use when]
 description: "Practical scenario-based decision guide — 'I have THIS business need, what do I use?' — covering ten real-world data engineering scenarios with recommended stacks, Mermaid architecture diagrams, key decisions explained, cost estimates, and links to detailed vault notes."
+parent: "[[domain-principles-and-decisions]]"
+links:
+  - "[[five-pillars-of-data-engineering]]"
+  - "[[golden-rules-of-data-engineering]]"
+  - "[[technology-selection-matrices]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

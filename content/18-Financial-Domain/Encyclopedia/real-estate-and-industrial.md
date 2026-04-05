@@ -1,4 +1,5 @@
 ---
+title: "Real Estate and Industrial"
 type: reference
 category: financial-encyclopedia
 technology: []
@@ -6,11 +7,23 @@ tags: [financial]
 aliases: [real estate terms, industrial terms, logistics glossary, supply chain glossary, procurement glossary, OEM glossary, MRO glossary, aftermarket glossary, concessions glossary, fleet management glossary]
 keywords: [real estate, real estate investment, property development, concessions, fleet management, logistics, supply chain, procurement, OEM, original equipment manufacturer, aftermarket, MRO, maintenance repair overhaul, distributors, resellers, warehouse, distribution, toll road, motorway, airport concession, leasing fleet, telematics, GPS tracking, value-added reseller, VAR]
 description: "Encyclopedia definitions for real estate, concessions, fleet management, logistics, supply chain, procurement, OEM, aftermarket, MRO, distributors, and resellers terms from the example Index universe, covering industrial operations and physical asset management."
-related:
-  - corporate-finance-and-strategy
-  - business-models-and-commerce
-  - energy-and-commodities
-  - banking-and-lending
+parent: "[[domain-financial-encyclopedia]]"
+links:
+  - "[[banking-and-lending]]"
+  - "[[business-models-and-commerce]]"
+  - "[[capital-markets-and-trading]]"
+  - "[[compliance-and-risk-management]]"
+  - "[[corporate-finance-and-strategy]]"
+  - "[[energy-and-commodities]]"
+  - "[[esg-and-sustainability]]"
+  - "[[exchanges-and-market-infrastructure]]"
+  - "[[insurance-and-risk]]"
+  - "[[investment-management]]"
+  - "[[payments-and-settlement]]"
+  - "[[pharma-and-healthcare]]"
+  - "[[structured-finance]]"
+  - "[[technology-and-digital]]"
+  - "[[trade-and-treasury]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

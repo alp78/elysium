@@ -1,7 +1,23 @@
 ---
+title: "Datadog Custom Queries"
 tags: [monitoring, observability, sql, datadog]
 aliases: [Custom SQL Metrics, Datadog custom_queries, DMV metrics]
 description: "How to configure custom SQL Server DMV queries in the Datadog SQL Server integration to track connections by login and deadlock counts as custom metrics."
+parent: "[[domain-datadog-platform]]"
+links:
+  - "[[datadog-architecture-overview]]"
+  - "[[datadog-agent-airflow-vm]]"
+  - "[[datadog-agent-sql-vm]]"
+  - "[[datadog-gcp-integration]]"
+  - "[[datadog-sql-server-integration]]"
+  - "[[datadog-log-management]]"
+  - "[[datadog-sql-server-logs]]"
+  - "[[datadog-apm-traces]]"
+  - "[[datadog-dashboards]]"
+  - "[[datadog-alerting]]"
+  - "[[datadog-airflow-observability]]"
+  - "[[datadog-cost-optimization]]"
+  - "[[datadog-troubleshooting]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

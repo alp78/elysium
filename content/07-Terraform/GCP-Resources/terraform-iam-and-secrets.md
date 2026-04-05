@@ -1,7 +1,14 @@
 ---
+title: "Terraform: IAM and Secrets"
 tags: [terraform, gcp, security, iam, secret-manager]
 aliases: [terraform IAM, terraform service accounts, terraform Secret Manager, GCP IAM bindings terraform, google_service_account]
 description: "Terraform configuration for GCP IAM service accounts, IAM role bindings, and Secret Manager secrets. Covers the least-privilege pattern with one service account per workload, resource-level vs project-level bindings, conditional Datadog resources, and CI/CD service account setup."
+parent: "[[domain-gcp-resources]]"
+links:
+  - "[[terraform-networking]]"
+  - "[[terraform-compute]]"
+  - "[[terraform-cloud-run]]"
+  - "[[terraform-registry-and-ci]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

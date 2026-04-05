@@ -1,4 +1,5 @@
 ---
+title: "Capital Markets and Trading"
 type: reference
 category: financial-encyclopedia
 technology: []
@@ -6,11 +7,23 @@ tags: [api, financial]
 aliases: [capital markets terms, equities glossary, derivatives glossary, trading terms, IPO glossary]
 keywords: [capital markets, equities, stocks, shares, fixed income, bonds, derivatives, futures, options, IPO, listing, bond underwriting, equity underwriting, brokerage, market-making, securities, debt capital markets, exchange, index, dual-listed, stock connect]
 description: "Encyclopedia definitions for capital markets and trading terms covering equities, fixed income, derivatives, futures, market-making, IPOs, listings, and exchange operations drawn from the example Index universe."
-related:
-  - banking-and-lending
-  - investment-management
-  - structured-finance
-  - scoring-methodology
+parent: "[[domain-financial-encyclopedia]]"
+links:
+  - "[[banking-and-lending]]"
+  - "[[business-models-and-commerce]]"
+  - "[[compliance-and-risk-management]]"
+  - "[[corporate-finance-and-strategy]]"
+  - "[[energy-and-commodities]]"
+  - "[[esg-and-sustainability]]"
+  - "[[exchanges-and-market-infrastructure]]"
+  - "[[insurance-and-risk]]"
+  - "[[investment-management]]"
+  - "[[payments-and-settlement]]"
+  - "[[pharma-and-healthcare]]"
+  - "[[real-estate-and-industrial]]"
+  - "[[structured-finance]]"
+  - "[[technology-and-digital]]"
+  - "[[trade-and-treasury]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

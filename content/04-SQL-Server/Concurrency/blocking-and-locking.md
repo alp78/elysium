@@ -3,6 +3,13 @@ title: "Blocking and Locking"
 tags: [sql-server, tsql]
 aliases: [SQL Server locking, lock manager, isolation level, lock escalation, shared lock, exclusive lock, blocking chain, intent lock]
 description: "SQL Server lock types, lock granularity hierarchy, lock compatibility matrix, isolation levels, and RCSI. Includes blocking chain detection, lock escalation prevention, and how each CRUD operation interacts with the lock manager."
+parent: "[[domain-concurrency-and-security]]"
+links:
+  - "[[sql-server-authentication]]"
+  - "[[tde-encryption]]"
+  - "[[audit-logging]]"
+  - "[[deadlock-detection-and-prevention]]"
+  - "[[race-conditions]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

@@ -11,6 +11,15 @@ tags:
   - performance
 aliases: [Incremental Transforms, Watermark Loading, Partition SWITCH, Gap Fill, Pre-computed Aggregations, Indexed Views]
 description: "Building SQL Server transforms that process data incrementally — watermark-based loading, partition SWITCH, window functions at scale, gap detection, forward-fill, pre-computed aggregation tables, and indexed views."
+parent: "[[domain-pipeline-patterns]]"
+links:
+  - "[[sql-server-loading-patterns]]"
+  - "[[sql-server-schema-layering]]"
+  - "[[sql-server-change-tracking]]"
+  - "[[sql-server-pipeline-anti-patterns]]"
+  - "[[bronze-layer-loading]]"
+  - "[[silver-transforms]]"
+  - "[[gold-transforms]]"
 created: 2026-03-29
 updated: 2026-04-04
 status: complete

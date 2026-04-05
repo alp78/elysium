@@ -1,4 +1,5 @@
 ---
+title: "Self-Service Data Platform"
 tags: [dataops]
 aliases:
   - self-service data
@@ -10,6 +11,10 @@ aliases:
   - data contracts
   - governed self-service
 description: "Building self-service data platforms — from data catalogs and quality layers to governed access and data products, enabling non-engineers to use data without filing tickets."
+parent: "[[domain-principles-and-practice]]"
+links:
+  - "[[dataops-principles-and-practices]]"
+  - "[[dataops-for-indices]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

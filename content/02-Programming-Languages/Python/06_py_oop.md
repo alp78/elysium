@@ -4,6 +4,9 @@ tags:
   - python
 aliases: [classes, inheritance, polymorphism, interfaces, abstract classes, encapsulation, properties]
 description: "Python OOP reference with executable examples and cell outputs — covers classes, inheritance, polymorphism, encapsulation, properties, dataclasses, and abstract base classes. See [06_cs_oop](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/06_cs_oop) for the C# equivalent."
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[06_cs_oop]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

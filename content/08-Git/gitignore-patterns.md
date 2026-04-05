@@ -7,6 +7,11 @@ tags:
   - security
 aliases: [.gitignore, gitignore, git ignore, exclude files, git rm --cached]
 description: "How to use .gitignore to exclude files from version control, patterns for Python data engineering projects, how to stop tracking already-committed files, and what to do if secrets were accidentally committed."
+parent: "[[domain-setup-and-daily-use]]"
+links:
+  - "[[git-setup-and-config]]"
+  - "[[git-daily-workflow]]"
+  - "[[git-history-and-inspection]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

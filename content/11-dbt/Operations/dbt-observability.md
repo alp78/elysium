@@ -1,8 +1,19 @@
 ---
+title: "dbt: Observability"
 tags: [pipeline, observability, dbt, datadog]
 status: stable
 updated: 2026-03-23
 description: "Monitoring dbt runs with Datadog custom metrics, the elementary package for anomaly detection, artifact parsing, and Slack alerting for financial data pipelines."
+parent: "[[domain-operations-and-adapters]]"
+links:
+  - "[[dbt-airflow-integration]]"
+  - "[[dbt-ci-cd]]"
+  - "[[dbt-documentation-and-lineage]]"
+  - "[[dbt-performance-tuning]]"
+  - "[[dbt-troubleshooting]]"
+  - "[[dbt-bigquery-adapter]]"
+  - "[[dbt-sqlserver-adapter]]"
+  - "[[dbt-cross-adapter-patterns]]"
 ---
 
 # dbt: Observability

@@ -1,7 +1,23 @@
 ---
+title: "Datadog Dashboards"
 tags: [monitoring, observability, sql, airflow, datadog, gcp]
 aliases: [Pipeline Watch Dashboard, SQL Server DBA Dashboard, Datadog Dashboards, Airflow Dashboard]
 description: "Step-by-step instructions for building the Pipeline Watch and SQL Server DBA dashboards in Datadog, plus the Airflow Orchestration Dashboard — covering all widgets, metrics, and layout tips."
+parent: "[[domain-datadog-platform]]"
+links:
+  - "[[datadog-architecture-overview]]"
+  - "[[datadog-agent-airflow-vm]]"
+  - "[[datadog-agent-sql-vm]]"
+  - "[[datadog-gcp-integration]]"
+  - "[[datadog-sql-server-integration]]"
+  - "[[datadog-custom-queries]]"
+  - "[[datadog-log-management]]"
+  - "[[datadog-sql-server-logs]]"
+  - "[[datadog-apm-traces]]"
+  - "[[datadog-alerting]]"
+  - "[[datadog-airflow-observability]]"
+  - "[[datadog-cost-optimization]]"
+  - "[[datadog-troubleshooting]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

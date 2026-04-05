@@ -1,4 +1,5 @@
 ---
+title: "IAP Tunneling"
 type: concept
 category: foundations
 technology: [bash, powershell, gcp]
@@ -6,6 +7,17 @@ tags: [shell, networking, gcp]
 aliases: [IAP, Identity-Aware Proxy, IAP tunnel, gcloud start-iap-tunnel, iap.tunnelInstances.accessTunnelResourceAccessor]
 keywords: [IAP, Identity-Aware Proxy, IAP tunnel, gcloud start-iap-tunnel, gcloud compute ssh, tunnel-through-iap, local-host-port, SQL Server tunnel, SSMS IAP, no public IP, secure connectivity, GCE access, VPN alternative, bastion host alternative, IAP debugging, 35.235.240.0/20, IAP IP range]
 description: "Google Cloud IAP (Identity-Aware Proxy) tunneling for secure access to VMs with no public IP. Covers how IAP works at the network level, all tunnel command variants, debugging common failures, and comparison with Cloud VPN and bastion hosts."
+parent: "[[domain-network-operations]]"
+links:
+  - "[[viewing-processes]]"
+  - "[[system-resources]]"
+  - "[[killing-processes]]"
+  - "[[managing-services]]"
+  - "[[connectivity-testing]]"
+  - "[[socket-inspection]]"
+  - "[[http-requests-and-apis]]"
+  - "[[firewalls]]"
+  - "[[connecting-to-gcp-resources]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

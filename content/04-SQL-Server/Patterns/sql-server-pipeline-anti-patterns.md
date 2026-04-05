@@ -10,6 +10,15 @@ tags:
   - data-quality
 aliases: [Anti-Patterns, Pipeline Mistakes, SQL Server Gotchas, Common Mistakes]
 description: "A dedicated anti-pattern reference for SQL Server data pipelines — 20+ mistakes that cause incidents, data quality issues, or performance crises, with the fix for each."
+parent: "[[domain-pipeline-patterns]]"
+links:
+  - "[[sql-server-loading-patterns]]"
+  - "[[sql-server-schema-layering]]"
+  - "[[sql-server-change-tracking]]"
+  - "[[sql-server-incremental-transforms]]"
+  - "[[bronze-layer-loading]]"
+  - "[[silver-transforms]]"
+  - "[[gold-transforms]]"
 created: 2026-03-29
 updated: 2026-04-04
 status: complete

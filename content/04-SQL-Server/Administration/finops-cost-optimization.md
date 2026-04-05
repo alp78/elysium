@@ -1,7 +1,20 @@
 ---
+title: "FinOps Cost Optimization"
 tags: [finops, cost, sql-server, gcp]
 aliases: [SQL Server cost optimization, FinOps SQL Server, GCP disk snapshots, committed use discount, spot instances, application-consistent snapshot, right-sizing SQL Server]
 description: "Cost optimization strategies for SQL Server on GCP: disk snapshot schedules, application-consistent snapshot technique with SQL Server 2022 SUSPEND_FOR_SNAPSHOT_BACKUP, committed use discounts vs spot instances, and right-sizing the VM using GCP Recommender."
+parent: "[[domain-server-operations]]"
+links:
+  - "[[server-configuration]]"
+  - "[[sqlcmd-connection-and-usage]]"
+  - "[[essential-dba-queries]]"
+  - "[[sql-server-agent-jobs]]"
+  - "[[backup-types-and-strategy]]"
+  - "[[restore-and-recovery]]"
+  - "[[high-availability-overview]]"
+  - "[[always-on-availability-groups]]"
+  - "[[sql-server-problems]]"
+  - "[[troubleshooting-flowcharts]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -1,8 +1,13 @@
 ---
+title: "dbt Core Concepts"
 tags: [pipeline, sql, dbt, bigquery]
 status: stable
 updated: 2026-03-23
 description: "What dbt is, how it compiles, the DAG, materializations, profiles, adapters, and packages."
+parent: "[[domain-foundations]]"
+links:
+  - "[[dbt-project-structure]]"
+  - "[[dbt-cli-reference]]"
 ---
 
 # dbt Core Concepts

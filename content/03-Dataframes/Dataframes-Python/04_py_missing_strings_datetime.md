@@ -4,6 +4,15 @@ tags: [python, pandas, polars, dataframes]
 aliases:
   - null handling, string methods, datetime parsing, timezones
 description: "Pandas/Polars DataFrame reference 04/10 — Missing Data, Strings & DateTime (nulls, .str, .dt, timezones). Side-by-side executable examples with cell outputs."
+parent: "[[domain-transform-and-analyze]]"
+links:
+  - "[[03_py_transforms_expressions]]"
+  - "[[03_cs_transforms_expressions]]"
+  - "[[04_cs_missing_strings_datetime]]"
+  - "[[05_py_aggregation_reshaping]]"
+  - "[[05_cs_aggregation_reshaping]]"
+  - "[[06_py_lazy_performance]]"
+  - "[[06_cs_lazy_performance]]"
 created: 2026-03-24
 updated: 2026-04-04
 status: complete
@@ -94,9 +103,13 @@ perf_pl = pl.read_parquet(DATA / "index_performance.parquet")
 
 Pandas has three null representations depending on the dtype: `NaN` (float columns), `None` (object columns), and `pd.NA` (nullable extension types). Polars uses a single `null` for all data types — no silent type coercion ever occurs.
 
-### Pandas | Null representation as NaN
+### Null Type Behavior
+
+#### Pandas | Null representation as NaN
 
 Pandas coerces `None` in a float series to `NaN`. The resulting dtype is `float64` regardless of the original intent.
+
+_Creates a float Series mixing `None` and `np.nan` at positions 1 and 3, confirming both collapse to `NaN` and the Series dtype becomes `float64` regardless of intent._
 
 ```python
 pd_s = pd.Series([1.0, None, 3.0, np.nan, 5.0])
@@ -105,9 +118,11 @@ print(f"Pandas: {pd_s.tolist()}, dtype: {pd_s.dtype}")
 
     Pandas: [1.0, nan, 3.0, nan, 5.0], dtype: float64
 
-### Polars | Null representation as native null
+#### Polars | Null representation as native null
 
 Polars uses `null` for all types. `None` in a Python list becomes `null` in the Polars Series. The dtype stays `Float64` — no coercion.
+
+_Creates a `Float64` Series from a Python list with `None` at positions 1 and 3, confirming Polars preserves the original dtype and reports missing values as `None` — not `NaN` — with no silent type coercion._
 
 ```python
 pl_s = pl.Series([1.0, None, 3.0, None, 5.0])
@@ -120,9 +135,13 @@ print(f"Polars: {pl_s.to_list()}, dtype: {pl_s.dtype}")
 
 Quantifying missing values per column is the first step in any data quality assessment. It reveals which columns have gaps and how severe the problem is — guiding the decision to drop, fill, or investigate.
 
-### Pandas | Count nulls per column with isna().sum()
+### Counting Nulls per Column
+
+#### Pandas | Count nulls per column with isna().sum()
 
 `isna()` returns a boolean DataFrame of the same shape. Chaining `.sum()` counts `True` values per column. Sorting descending puts the most problematic columns first.
+
+_Calls `isna().sum()` on the 19-column `signals_pd` DataFrame and sorts by descending null count, surfacing `ev_to_ebitda` (71 nulls) and `dividend_yield` (35 nulls) as the most problematic columns._
 
 ```python
 print("=== Pandas nulls ===")
@@ -182,9 +201,11 @@ display(signals_pd.isna().sum().sort_values(ascending=False).to_frame("null_coun
   </tbody>
 </table>
 
-### Polars | Count nulls per column with null_count()
+#### Polars | Count nulls per column with null_count()
 
 `null_count()` returns a single-row DataFrame where each value is the null count for that column. This is a metadata operation in Polars — extremely fast even on large DataFrames.
+
+_Calls `null_count()` on `signals_pl` to return a single-row DataFrame of per-column null counts in one metadata pass — confirming `ev_to_ebitda` has 71 nulls and `dividend_yield` has 35._
 
 ```python
 print("=== Polars nulls ===")
@@ -195,9 +216,13 @@ display(signals_pl.null_count())
 
 <div><!-- shape: (1, 19) --><table><thead><tr><th>id</th><th>_index</th><th>symbol</th><th>signal_date</th><th>current_price</th><th>forward_pe</th><th>price_to_book</th><th>ev_to_ebitda</th><th>dividend_yield</th><th>market_cap</th><th>beta</th><th>fifty_two_week_change</th><th>sandp_52_week_change</th><th>fifty_day_average</th><th>two_hundred_day_average</th><th>dist_from_52_week_high</th><th>target_median_price</th><th>recommendation_mean</th><th>upside_potential</th></tr><tr><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>71</td><td>35</td><td>0</td><td>8</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>14</td><td>0</td></tr></tbody></table></div>
 
-### Polars | Filter rows where a column is null
+### Filtering Null Rows
+
+#### Polars | Filter rows where a column is null
 
 `is_null()` returns a boolean expression. Pass it to `filter()` to keep only rows with null values in the specified column. Chain with `select()` to pick columns of interest.
+
+_Filters `signals_pl` to rows where `forward_pe` is null and selects three columns, returning an empty table because all `forward_pe` values are present in this dataset._
 
 ```python
 signals_pl.filter(pl.col("forward_pe").is_null()).select("symbol", "signal_date", "forward_pe").head(5)
@@ -209,9 +234,13 @@ signals_pl.filter(pl.col("forward_pe").is_null()).select("symbol", "signal_date"
 
 Remove rows that contain missing values. Use this when nulls are random, few in number, and the remaining dataset is large enough to be representative. The `subset` parameter limits the check to specific columns — without it, any null in any column triggers removal.
 
-### Pandas | Drop rows with dropna()
+### Dropping Rows with Nulls
+
+#### Pandas | Drop rows with dropna()
 
 `dropna(subset=[...])` removes rows where any of the specified columns is NaN. Without `subset`, it drops rows with any null in any column.
+
+_Drops rows from `signals_pd` where `forward_pe` or `price_to_book` is null and prints row counts before and after — both show 466 rows because no rows in this dataset have nulls in those columns._
 
 ```python
 print(f"Before: {len(signals_pd)}")
@@ -222,9 +251,11 @@ print(f"After: {len(cleaned_pd)}")
     Before: 466
     After: 466
 
-### Polars | Drop rows with drop_nulls()
+#### Polars | Drop rows with drop_nulls()
 
 `drop_nulls(subset=[...])` is the Polars equivalent. It returns a new DataFrame (Polars DataFrames are immutable). Without `subset`, it drops rows with null in any column.
+
+_Drops rows from `signals_pl` where `forward_pe` or `price_to_book` is null and prints `height` before and after — both show 466, confirming no rows are removed because the specified columns have no nulls._
 
 ```python
 print(f"Before: {signals_pl.height}")
@@ -239,9 +270,13 @@ print(f"After: {cleaned_pl.height}")
 
 Replace missing values with a substitute instead of dropping the row. The choice of fill strategy depends on the nature of the data and the downstream use case — a literal default for known constants, forward/backward fill for time-series, or statistical imputation for analytical columns.
 
-### Pandas | Fill nulls with a literal using fillna()
+### Literal Fill
+
+#### Pandas | Fill nulls with a literal using fillna()
 
 `fillna()` accepts a scalar value or a dictionary mapping column names to fill values. It returns a new DataFrame by default (use `inplace=True` to mutate, though this is discouraged in modern Pandas).
+
+_Fills null values in `forward_pe` with `0.0` using a dict mapping and displays the first 5 rows of `symbol` and `forward_pe` — since none of the top rows have nulls, all values are unchanged._
 
 ```python
 display(signals_pd[["symbol", "forward_pe"]].fillna({"forward_pe": 0.0}).head(5))
@@ -284,9 +319,11 @@ display(signals_pd[["symbol", "forward_pe"]].fillna({"forward_pe": 0.0}).head(5)
   </tbody>
 </table>
 
-### Polars | Fill nulls with a literal using fill_null()
+#### Polars | Fill nulls with a literal using fill_null()
 
 `fill_null(value)` replaces all null entries in the column with the given value. It works inside a `select()` or `with_columns()` expression. Polars does not have `inplace` — all operations return new DataFrames.
+
+_Uses `fill_null(0.0)` inside `select()` to replace null `forward_pe` values with zero, then displays the first 5 rows — all top values are non-null so the output matches the original._
 
 ```python
 display(signals_pl.select("symbol", pl.col("forward_pe").fill_null(0.0)).head(5))
@@ -305,6 +342,8 @@ Forward fill (LOCF — Last Observation Carried Forward) propagates the last non
 #### Pandas | Forward fill with ffill()
 
 `ffill()` (or `fillna(method="forward")`) propagates the last valid value forward. Operates on the entire DataFrame or on specific columns.
+
+_Filters ASML.AS rows sorted by date, takes the last 10, and applies `ffill()` across the slice — demonstrating that each column's last valid value would be carried forward over any null gaps._
 
 ```python
 asml_pd = ohlcv_pd[ohlcv_pd["symbol"] == "ASML.AS"].sort_values("date")[["date", "close", "dividends"]].tail(10)
@@ -388,6 +427,8 @@ display(asml_pd.ffill())
 
 Polars' `fill_null(strategy="forward")` and `fill_null(strategy="backward")` replace nulls using directional propagation. Both are expression-based — combine with `select()` or `with_columns()`.
 
+_Demonstrates forward and backward fill on the `dividends` column of the last 10 ASML.AS rows, producing `div_ffill` and `div_bfill` alias columns side by side — all dividends are `0.0` in this window so no fill is triggered._
+
 ```python
 asml_pl = ohlcv_pl.filter(pl.col("symbol") == "ASML.AS").sort("date").tail(10)
 display(asml_pl.select(
@@ -406,6 +447,8 @@ Replace nulls with a summary statistic of the column. Mean imputation preserves 
 #### Pandas | Fill with column mean using fillna()
 
 Compute the mean separately, then pass it to `fillna()`. Use `.assign()` for method chaining that keeps the original column alongside the filled version.
+
+_Computes the `forward_pe` column mean (27.55) separately, then fills null PE values with it via `.assign()`, producing a `pe_filled` column that replaces nulls while retaining the original for comparison._
 
 ```python
 mean_pe = signals_pd["forward_pe"].mean()
@@ -462,6 +505,8 @@ display(signals_pd[["symbol", "forward_pe"]].assign(pe_filled=signals_pd["forwar
 
 Polars computes the statistic inside the expression engine: `fill_null(pl.col("c").mean())`. No need to compute the value in Python first — the engine handles it in a single pass.
 
+_Creates `pe_mean_filled` and `pe_median_filled` columns in a single `select()` call — Polars evaluates the mean and median of `forward_pe` within the expression engine without a separate Python computation step._
+
 ```python
 display(signals_pl.select(
     "symbol", "forward_pe",
@@ -472,7 +517,9 @@ display(signals_pl.select(
 
 <div><!-- shape: (5, 4) --><table><thead><tr><th>symbol</th><th>forward_pe</th><th>pe_mean_filled</th><th>pe_median_filled</th></tr><tr><td>str</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>32.141113</td><td>32.141113</td><td>32.141113</td></tr><tr><td>MC.PA</td><td>18.85428</td><td>18.85428</td><td>18.85428</td></tr><tr><td>RMS.PA</td><td>36.034904</td><td>36.034904</td><td>36.034904</td></tr><tr><td>OR.PA</td><td>25.504032</td><td>25.504032</td><td>25.504032</td></tr><tr><td>SAP.DE</td><td>19.631992</td><td>19.631992</td><td>19.631992</td></tr></tbody></table></div>
 
-### Polars | fill_nan vs fill_null
+### NaN vs Null Distinction
+
+#### Polars | fill_nan vs fill_null
 
 Polars makes a strict distinction between `null` (missing value, applies to all types) and `NaN` (IEEE 754 floating-point "Not a Number", only for float columns). `fill_null()` handles `null`; `fill_nan()` handles `NaN`. You often need both to clean a float column completely.
 
@@ -505,6 +552,8 @@ flowchart LR
     G["Chain both"] -->|"fill_nan → fill_null"| H["All cleaned ✓"]
 ```
 
+_Constructs a 4-element Series containing `1.0`, `float("nan")`, `None`, and `4.0`, then applies `fill_null(0)`, `fill_nan(0)`, and both chained — demonstrating that only the chained call clears all missing-like values._
+
 ```python
 s = pl.Series([1.0, float("nan"), None, 4.0])
 print(f"Original: {s.to_list()}")
@@ -518,9 +567,13 @@ print(f"Both:         {s.fill_nan(0).fill_null(0).to_list()}")
     fill_nan(0):  [1.0, 0.0, None, 4.0]
     Both:         [1.0, 0.0, 0.0, 4.0]
 
-### Polars | Coalesce
+### Coalesce
+
+#### Polars | Coalesce
 
 `pl.coalesce()` returns the first non-null value across multiple columns for each row. This is the Polars equivalent of SQL's `COALESCE()` and Pandas' `combine_first()`. Use it to build fallback chains — for example, use the primary data source if available, else the secondary, else a default.
+
+_Builds a 4-row DataFrame with primary and secondary columns that have alternating nulls, then applies `pl.coalesce()` to return the first non-null value per row — always preferring `primary` → `secondary` → `fallback`._
 
 ```python
 df = pl.DataFrame({"primary": [100.0, None, 300.0, None], "secondary": [None, 200.0, None, 400.0], "fallback": [50.0, 50.0, 50.0, 50.0]})
@@ -536,6 +589,8 @@ Linear interpolation estimates missing values by drawing a straight line between
 #### Pandas | Interpolate with interpolate()
 
 `interpolate()` performs linear interpolation by default (other methods available: `'polynomial'`, `'spline'`, etc.). Operates on the column's positional index, not on datetime values.
+
+_Sets rows 5 through 7 of the last 20 ASML.AS close prices to `NaN`, then linearly interpolates them by positional index — filling the three gaps with evenly spaced values between the surrounding valid closes (1238.2 → 1288.4)._
 
 ```python
 asml_pd2 = ohlcv_pd[ohlcv_pd["symbol"] == "ASML.AS"].sort_values("date").tail(20).copy()
@@ -620,6 +675,8 @@ display(asml_pd2[["date", "close"]].assign(interpolated=asml_pd2["close"].interp
 
 Polars' `interpolate()` also uses linear interpolation based on positional index. It works as an expression — combine with `select()` or `with_columns()`.
 
+_Replicates the same three-gap scenario in Polars by injecting `null` at positions 5–7, then uses `interpolate()` as an expression inside `select()` to fill the nulls with linearly spaced values matching the Pandas result._
+
 ```python
 asml_pl2 = ohlcv_pl.filter(pl.col("symbol") == "ASML.AS").sort("date").tail(20)
 vals = asml_pl2["close"].to_list()
@@ -656,9 +713,13 @@ dim_pl = pl.read_parquet(DATA / "index_dim.parquet")
 
 Converting strings to upper or lower case is a common normalization step before joins or deduplication. Both Pandas and Polars provide `.str` accessor methods that operate on entire columns without Python loops.
 
-### Pandas | Convert case with str.upper() and str.lower()
+### Case Conversion
+
+#### Pandas | Convert case with str.upper() and str.lower()
 
 The `.str` accessor on a Pandas Series exposes vectorized string methods. `.str.upper()` and `.str.lower()` return new Series with case-converted values. Use `.assign()` to add results as new columns via method chaining.
+
+_Adds `name_upper` (uppercased `short_name`) and `sector_lower` (lowercased `sector`) to the first 5 rows of `dim_pd`, showing names already in uppercase like "ASML HOLDING" are unaffected while sectors like "Technology" become "technology"._
 
 ```python
 display(dim_pd[["short_name", "sector"]].assign(
@@ -716,9 +777,11 @@ display(dim_pd[["short_name", "sector"]].assign(
   </tbody>
 </table>
 
-### Polars | Convert case with str.to_uppercase() and str.to_lowercase()
+#### Polars | Convert case with str.to_uppercase() and str.to_lowercase()
 
 Polars' `.str.to_uppercase()` and `.str.to_lowercase()` are expression-based — use inside `select()` or `with_columns()`. The naming differs slightly from Pandas (`.upper()` vs `.to_uppercase()`).
+
+_Uses `.str.to_uppercase()` and `.str.to_lowercase()` inside `select()` to produce `name_upper` and `sector_lower` from `dim_pl`, producing identical output to the Pandas result with Polars' expression syntax._
 
 ```python
 display(dim_pl.select(
@@ -734,9 +797,13 @@ display(dim_pl.select(
 
 Pattern matching on string columns filters rows by substring presence, prefix, or suffix. Essential for selecting by exchange code (`.AS`, `.DE`), sector keywords, or naming conventions.
 
-### Pandas | Filter with str.contains()
+### Filtering with Contains
+
+#### Pandas | Filter with str.contains()
 
 `str.contains(pattern, na=False)` returns a boolean Series. The `na=False` parameter treats NaN values as non-matches instead of propagating NaN into the boolean mask. Use the result as a boolean index to filter the DataFrame.
+
+_Filters `dim_pd` to rows where `sector` contains "Tech" using `str.contains()` with `na=False`, returning 26 Technology stocks including ASML, SAP, NVIDIA, Apple, and Microsoft._
 
 ```python
 display(dim_pd[dim_pd["sector"].str.contains("Tech", na=False)][["symbol", "short_name", "sector"]])
@@ -911,9 +978,11 @@ display(dim_pd[dim_pd["sector"].str.contains("Tech", na=False)][["symbol", "shor
   </tbody>
 </table>
 
-### Polars | Filter with str.contains()
+#### Polars | Filter with str.contains()
 
 Polars' `str.contains()` returns a boolean expression. Pass it to `filter()` directly — no `na` parameter needed since Polars handles nulls natively (null in a boolean filter is treated as `False`).
+
+_Filters `dim_pl` to rows where `sector` contains "Tech" using `str.contains()` inside `filter()`, returning the same 26 Technology stocks as the Pandas result without needing an `na` parameter._
 
 ```python
 display(dim_pl.filter(pl.col("sector").str.contains("Tech")).select("symbol", "short_name", "sector"))
@@ -921,9 +990,13 @@ display(dim_pl.filter(pl.col("sector").str.contains("Tech")).select("symbol", "s
 
 <div><!-- shape: (26, 3) --><table><thead><tr><th>symbol</th><th>short_name</th><th>sector</th></tr><tr><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>ASML.AS</td><td>ASML HOLDING</td><td>Technology</td></tr><tr><td>SAP.DE</td><td>SAP SE</td><td>Technology</td></tr><tr><td>IFX.DE</td><td>INFINEON TECHNOLOGIES AG</td><td>Technology</td></tr><tr><td>ADYEN.AS</td><td>ADYEN</td><td>Technology</td></tr><tr><td>6758.T</td><td>SONY GROUP CORPORATION</td><td>Technology</td></tr><tr><td>6861.T</td><td>KEYENCE CORP</td><td>Technology</td></tr><tr><td>8035.T</td><td>TOKYO ELECTRON</td><td>Technology</td></tr><tr><td>6981.T</td><td>MURATA MANUFACTURING CO</td><td>Technology</td></tr><tr><td>6702.T</td><td>FUJITSU</td><td>Technology</td></tr><tr><td>1810.HK</td><td>XIAOMI-W</td><td>Technology</td></tr><tr><td>NVDA</td><td>NVIDIA Corporation</td><td>Technology</td></tr><tr><td>AAPL</td><td>Apple Inc.</td><td>Technology</td></tr><tr><td>MSFT</td><td>Microsoft Corporation</td><td>Technology</td></tr><tr><td>AVGO</td><td>Broadcom Inc.</td><td>Technology</td></tr><tr><td>MU</td><td>Micron Technology, Inc.</td><td>Technology</td></tr><tr><td>ORCL</td><td>Oracle Corporation</td><td>Technology</td></tr><tr><td>PLTR</td><td>Palantir Technologies Inc.</td><td>Technology</td></tr><tr><td>AMD</td><td>Advanced Micro Devices, Inc.</td><td>Technology</td></tr><tr><td>CSCO</td><td>Cisco Systems, Inc.</td><td>Technology</td></tr><tr><td>AMAT</td><td>Applied Materials, Inc.</td><td>Technology</td></tr><tr><td>LRCX</td><td>Lam Research Corporation</td><td>Technology</td></tr><tr><td>INTC</td><td>Intel Corporation</td><td>Technology</td></tr><tr><td>IBM</td><td>International Business Machine…</td><td>Technology</td></tr><tr><td>DSY.PA</td><td>DASSAULT SYSTEMES</td><td>Technology</td></tr><tr><td>CRM</td><td>Salesforce, Inc.</td><td>Technology</td></tr><tr><td>UBER</td><td>Uber Technologies, Inc.</td><td>Technology</td></tr></tbody></table></div>
 
-### Polars | Filter with str.ends_with()
+### Filtering with Ends With
+
+#### Polars | Filter with str.ends_with()
 
 `str.ends_with()` and `str.starts_with()` check for suffix/prefix matches. Here, filtering for `.AS` suffix isolates Amsterdam-listed stocks.
+
+_Filters `dim_pl` to symbols ending with ".AS" to isolate Amsterdam-listed stocks, returning 6 Netherlands-based names including ASML, PROSUS, ING, and ADYEN._
 
 ```python
 display(dim_pl.filter(pl.col("symbol").str.ends_with(".AS")).select("symbol", "short_name", "country"))
@@ -935,9 +1008,13 @@ display(dim_pl.filter(pl.col("symbol").str.ends_with(".AS")).select("symbol", "s
 
 Decomposing composite identifiers into their parts — splitting `"ASML.AS"` into ticker and exchange code, or extracting patterns with regex. Both Pandas and Polars provide `.str.extract()` (regex-based) and `.str.split()` (delimiter-based).
 
-### Pandas | Extract and split with str.extract() and str.split()
+### Extracting and Splitting Identifiers
+
+#### Pandas | Extract and split with str.extract() and str.split()
 
 `str.extract(regex)` returns the first capture group as a new column. `str.split(delimiter).str[n]` splits and accesses the nth element. Use `.assign()` to add both as new columns.
+
+_Applies regex extraction to capture the exchange code after the dot (e.g., "AS" from "ASML.AS") and split-based slicing to extract the bare ticker (e.g., "ASML"), displaying both as new columns for the first 10 symbols._
 
 ```python
 display(dim_pd[["symbol"]].assign(
@@ -1019,9 +1096,11 @@ display(dim_pd[["symbol"]].assign(
   </tbody>
 </table>
 
-### Polars | Extract and split with str.extract() and str.split()
+#### Polars | Extract and split with str.extract() and str.split()
 
 Polars' `str.extract(pattern, group_index)` requires an explicit group index (1 for the first capture group). `str.split(delimiter)` returns a list column — access elements via `.list.first()`, `.list.last()`, or `.list.get(n)`.
+
+_Replicates the same extraction in Polars using `str.extract(regex, group_index=1)` for the exchange code and `.str.split(".").list.first()` for the ticker, producing identical results to the Pandas version._
 
 ```python
 display(dim_pl.select(
@@ -1037,9 +1116,13 @@ display(dim_pl.select(
 
 Substring replacement cleans identifiers, normalizes naming conventions, or masks sensitive parts of strings. Polars' `str.replace()` uses regex by default; pass `literal=True` for plain string matching.
 
-### Polars | Remove exchange suffix with str.replace()
+### Regex-Based Replacement
+
+#### Polars | Remove exchange suffix with str.replace()
 
 `str.replace(pattern, replacement)` applies a regex by default. The pattern `r"\..*$"` matches from the first dot to the end of the string, effectively stripping the exchange suffix.
+
+_Strips the exchange suffix from the first 5 symbols by applying a regex that matches from the first dot to end-of-string, converting "ASML.AS" → "ASML", "MC.PA" → "MC", etc._
 
 ```python
 display(dim_pl.select(
@@ -1054,7 +1137,11 @@ display(dim_pl.select(
 
 Measuring string length and extracting fixed-position substrings — building blocks for parsing structured identifiers like ISINs, fixed-width codes, or display truncation.
 
-### Polars | Measure length and slice with str.len_chars() and str.slice()
+### Length and Slicing
+
+#### Polars | Measure length and slice with str.len_chars() and str.slice()
+
+_Computes `length` (character count) and `first_5` (the first 5 characters) for 10 `short_name` values, showing that "ASML HOLDING" has length 12 and a 31-character name like "INDUSTRIA DE DISEÑO..." is truncated to "INDUS"._
 
 ```python
 dim_pl.select(
@@ -1070,9 +1157,13 @@ dim_pl.select(
 
 Combining values from multiple string columns into a single formatted string — for example, building display labels like `"ASML HOLDING (Netherlands)"`.
 
-### Pandas | Concatenate with the + operator
+### String Concatenation
+
+#### Pandas | Concatenate with the + operator
 
 Pandas uses Python's `+` operator for string concatenation across Series. All Series must be string type; use `.astype(str)` if needed.
+
+_Combines `short_name` and `country` using the `+` operator with literal parentheses strings to produce `display_name` entries like "ASML HOLDING (Netherlands)" and "LVMH (France)"._
 
 ```python
 display(dim_pd[["short_name", "country"]].assign(
@@ -1123,9 +1214,11 @@ display(dim_pd[["short_name", "country"]].assign(
   </tbody>
 </table>
 
-### Polars | Concatenate with pl.concat_str()
+#### Polars | Concatenate with pl.concat_str()
 
 `pl.concat_str()` joins multiple column expressions and literal strings into a single string column. Use `pl.lit()` for literal text between column values. This is the Polars equivalent of SQL's `CONCAT()`.
+
+_Uses `pl.concat_str()` with `pl.lit()` for the parentheses to build the same `display_name` strings as Polars expressions, producing identical output to the Pandas `+` operator approach._
 
 ```python
 display(dim_pl.select(
@@ -1139,7 +1232,11 @@ display(dim_pl.select(
 
 Stripping removes leading/trailing whitespace (or specified characters) from strings. Padding adds characters to reach a fixed width — useful for generating fixed-width output files or zero-padded identifiers.
 
-### Polars | Strip whitespace with str.strip_chars()
+### Stripping Whitespace
+
+#### Polars | Strip whitespace with str.strip_chars()
+
+_Strips leading and trailing whitespace from 3 name strings ("  ASML  ", "  SAP ", " MC") using `str.strip_chars()`, producing clean values "ASML", "SAP", "MC" in a new `stripped` column._
 
 ```python
 df = pl.DataFrame({"name": ["  ASML  ", "  SAP ", " MC"]})
@@ -1150,9 +1247,13 @@ display(df.with_columns(
 
 <div><!-- shape: (3, 2) --><table><thead><tr><th>name</th><th>stripped</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>&nbsp;&nbsp;ASML&nbsp;&nbsp;</td><td>ASML</td></tr><tr><td>&nbsp;&nbsp;SAP </td><td>SAP</td></tr><tr><td> MC</td><td>MC</td></tr></tbody></table></div>
 
-### Polars | Pad strings with str.pad_start()
+### Padding Strings
+
+#### Polars | Pad strings with str.pad_start()
 
 `str.pad_start(width, fill_char)` pads each string to the specified width by prepending the fill character. Equivalent to Python's `str.zfill()` when fill character is `"0"`.
+
+_Pads 4 code strings ("A", "AB", "ABC", "ABCD") to width 6 with leading zeros using `str.pad_start(6, "0")`, producing "00000A", "0000AB", "000ABC", "00ABCD"._
 
 ```python
 df = pl.DataFrame({"code": ["A", "AB", "ABC", "ABCD"]})
@@ -1167,7 +1268,11 @@ display(df.with_columns(
 
 Extract all matches of a pattern from each string — not just the first match. Returns a list column containing all captured substrings. Use `count_matches()` to count how many times the pattern appears.
 
-### Polars | Extract all matches with str.extract_all()
+### Extracting All Pattern Matches
+
+#### Polars | Extract all matches with str.extract_all()
+
+_Applies `str.extract_all()` to extract all decimal numbers from three text strings and `count_matches()` to count digit sequences — returning `["900.5", "895.2"]` for the ASML text and an empty list for "No numbers"._
 
 ```python
 df = pl.DataFrame({"text": ["ASML closed at 900.5 up from 895.2", "No numbers", "PE: 45.3, PB: 12.1"]})
@@ -1204,9 +1309,13 @@ Pandas and Polars use different type systems for dates and times. Understanding 
 >
 > When reading from Parquet, Pandas may keep date columns as `object` (string) type rather than `datetime64`. Always verify with `.dtype` and convert with `pd.to_datetime()` if needed. Polars preserves the `Date` type natively from Parquet.
 
-### Pandas | Date types: Timestamp, Timedelta, datetime64
+### Type System Overview
+
+#### Pandas | Date types: Timestamp, Timedelta, datetime64
 
 `pd.Timestamp` represents a single point in time. `pd.Timedelta` represents a duration. Column dtype is `datetime64[ns]` after conversion.
+
+_Inspects the `ohlcv_pd["date"]` dtype (which reads as `object` from Parquet), then creates a `Timestamp` for 2026-03-15 and a `Timedelta` of 5 days to show the three core Pandas time type representations._
 
 ```python
 print("Pandas date dtype:", ohlcv_pd["date"].dtype)
@@ -1218,9 +1327,11 @@ print("Pandas Timedelta:", pd.Timedelta(days=5))
     Pandas Timestamp: 2026-03-15 00:00:00
     Pandas Timedelta: 5 days 00:00:00
 
-### Polars | Date types: Date, Datetime, Duration
+#### Polars | Date types: Date, Datetime, Duration
 
 Polars distinguishes `Date` (calendar date only) from `Datetime` (date + time + optional timezone). `pl.duration()` constructs duration expressions for arithmetic.
+
+_Inspects the `ohlcv_pl["date"]` dtype (which Polars preserves as `Date` from Parquet), then creates a `Date` Series from a string and a `Duration` expression, contrasting Polars' strict Date/Datetime distinction with Pandas._
 
 ```python
 print("Polars date dtype:", ohlcv_pl["date"].dtype)
@@ -1240,9 +1351,13 @@ print("Polars Duration:", pl.duration(days=5))
 
 Converting string columns to proper date types enables date arithmetic, component extraction, and time-aware filtering. Always verify the format matches your data — silent parsing failures produce `NaT` (Pandas) or `null` (Polars).
 
-### Pandas | Parse with pd.to_datetime()
+### Parsing Date Strings
+
+#### Pandas | Parse with pd.to_datetime()
 
 `pd.to_datetime()` handles multiple formats with `format="mixed"`. For production code, specify the format explicitly for reliability and performance.
+
+_Parses three date strings in different formats ("2026-03-15", "15/03/2026", "March 15, 2026") using `format="mixed"`, demonstrating that all three resolve to the same `datetime64[ns]` Timestamp._
 
 ```python
 date_strs = pd.Series(["2026-03-15", "15/03/2026", "March 15, 2026"])
@@ -1254,9 +1369,11 @@ print(pd.to_datetime(date_strs, format="mixed"))
     2   2026-03-15
     dtype: datetime64[ns]
 
-### Polars | Parse with str.to_date()
+#### Polars | Parse with str.to_date()
 
 `str.to_date(format)` parses strings using strftime format codes. Unlike Pandas, Polars does not auto-detect formats — you must specify the exact format. This is stricter but avoids silent mis-parsing.
+
+_Parses three ISO-format date strings with the explicit `"%Y-%m-%d"` strftime format, producing a `date`-typed Polars Series — Polars requires the format to be specified explicitly to avoid silent mis-parsing._
 
 ```python
 date_strs_pl = pl.Series(["2026-03-15", "2026-03-16", "2026-03-17"])
@@ -1273,9 +1390,13 @@ Both Pandas and Polars provide a `.dt` accessor for extracting date components (
 >
 > The `.dt` accessor only works on columns with `datetime64` dtype. If the column is `object` (string), convert first with `pd.to_datetime()`. Polars' `.dt` accessor works directly on `Date` and `Datetime` columns.
 
-### Pandas | Extract components with .dt.year, .dt.month, .dt.day_name()
+### Extracting Date Components
+
+#### Pandas | Extract components with .dt.year, .dt.month, .dt.day_name()
 
 Pandas' `.dt` properties (not methods) return Series: `.dt.year`, `.dt.month`, `.dt.day_name()`. Note: `day_name()` is a method (returns strings like "Monday"), while `year` and `month` are properties.
+
+_Converts the ASML.AS `date` column to `datetime64`, then extracts `year`, `month`, and `weekday` name via `.dt` properties — confirming the first 5 trading dates of 2021 fall on Monday through Friday._
 
 ```python
 asml_pd = ohlcv_pd[ohlcv_pd["symbol"] == "ASML.AS"].copy()
@@ -1336,9 +1457,11 @@ display(asml_pd.assign(
   </tbody>
 </table>
 
-### Polars | Extract components with .dt.year(), .dt.month(), .dt.weekday()
+#### Polars | Extract components with .dt.year(), .dt.month(), .dt.weekday()
 
 Polars' `.dt` accessor uses methods (with parentheses), not properties: `.dt.year()`, `.dt.month()`, `.dt.weekday()`. Weekday numbering: Monday = 1, Sunday = 7 (ISO 8601).
+
+_Extracts `year`, `month`, and ISO weekday number (1=Monday) from ASML.AS dates using Polars' method-style `.dt` accessor — confirming the same first five 2021 trading days map to weekdays 1 through 5._
 
 ```python
 asml_pl = ohlcv_pl.filter(pl.col("symbol") == "ASML.AS")
@@ -1356,9 +1479,13 @@ display(asml_pl.select(
 
 Generate a sequence of dates between a start and end point at a specified frequency. Useful for building trading calendars, creating time-axis DataFrames, or filling date gaps in sparse data.
 
-### Pandas | Generate with pd.date_range()
+### Generating Date Ranges
+
+#### Pandas | Generate with pd.date_range()
 
 `pd.date_range(start, end, freq)` returns a `DatetimeIndex`. Common frequencies: `"D"` (daily), `"B"` (business days), `"ME"` (month-end), `"QE"` (quarter-end).
+
+_Generates a daily `DatetimeIndex` from 2026-01-01 to 2026-01-10 at frequency `"D"`, printing the first three Timestamps to show the format and sequence._
 
 ```python
 dr_pd = pd.date_range("2026-01-01", "2026-01-10", freq="D")
@@ -1367,9 +1494,11 @@ print(f"Pandas: {dr_pd.tolist()[:3]}...")
 
     Pandas: [Timestamp('2026-01-01 00:00:00'), Timestamp('2026-01-02 00:00:00'), Timestamp('2026-01-03 00:00:00')]...
 
-### Polars | Generate with pl.date_range()
+#### Polars | Generate with pl.date_range()
 
 `pl.date_range(start, end, eager=True)` returns a Series of dates. Use `pl.date(year, month, day)` to construct date literals. The `eager=True` flag materializes the range immediately; without it, the result is a lazy expression.
+
+_Generates a 10-element `Date` Series from 2026-01-01 to 2026-01-10 using `pl.date_range()` with `eager=True` to materialize immediately, producing a `date`-typed Polars Series without a Python loop._
 
 ```python
 dr_pl = pl.date_range(pl.date(2026, 1, 1), pl.date(2026, 1, 10), eager=True)
@@ -1386,9 +1515,13 @@ Compute statistics over a sliding window of N consecutive rows — moving averag
 >
 > Short-term moving averages (SMA-7) respond quickly to price changes; long-term averages (SMA-30) smooth out noise. Crossover of short-over-long is a classic trading signal. Use `min_periods` to control how many non-null values are required in the window before producing a result.
 
-### Pandas | Rolling mean with rolling().mean()
+### Rolling Mean
+
+#### Pandas | Rolling mean with rolling().mean()
 
 `rolling(window_size)` returns a `Rolling` object. Chain `.mean()`, `.std()`, `.sum()`, etc. to compute the statistic. Use `.assign()` to add multiple rolling columns in one step.
+
+_Computes 7-day and 30-day simple moving averages for ASML close prices using `.rolling().mean()`, displaying the last 10 rows where `sma_7` ranges from ~1177 to ~1252 and `sma_30` hovers around 1204._
 
 ```python
 asml_pd_sorted = ohlcv_pd[ohlcv_pd["symbol"] == "ASML.AS"].sort_values("date")
@@ -1482,9 +1615,11 @@ display(asml_pd_sorted.assign(
   </tbody>
 </table>
 
-### Polars | Rolling mean with rolling_mean()
+#### Polars | Rolling mean with rolling_mean()
 
 Polars uses dedicated methods: `rolling_mean(window_size)`, `rolling_std()`, `rolling_sum()`, etc. These are expression-based — use inside `with_columns()` or `select()`.
+
+_Uses `rolling_mean(7)` and `rolling_mean(30)` as expressions inside `with_columns()` to produce `sma_7` and `sma_30` for ASML, matching the Pandas moving averages exactly on the same 10-row tail._
 
 ```python
 asml_pl_sorted = ohlcv_pl.filter(pl.col("symbol") == "ASML.AS").sort("date")
@@ -1500,9 +1635,13 @@ display(asml_pl_sorted.with_columns(
 
 Shifting a column by N positions creates lagged (previous) or lead (future) versions of the data. This is the foundation for computing day-over-day returns, comparing consecutive values, and building time-series features.
 
-### Pandas | Shift with shift()
+### Lag and Lead with Shift
+
+#### Pandas | Shift with shift()
 
 `shift(n)` offsets column values by `n` positions. Positive `n` shifts down (lag), negative shifts up (lead). The first/last `n` values become `NaN`. Combine with arithmetic to compute returns: `(close - close.shift(1)) / close.shift(1)`.
+
+_Creates `prev_close` by shifting the close column down one row and computes `daily_return` as the percentage change, showing the last 10 ASML daily returns ranging from -4.02% (2026-03-03) to +4.57% (2026-03-10)._
 
 ```python
 display(asml_pd_sorted.assign(
@@ -1595,9 +1734,11 @@ display(asml_pd_sorted.assign(
   </tbody>
 </table>
 
-### Polars | Shift with shift()
+#### Polars | Shift with shift()
 
 Same semantics as Pandas: `shift(1)` creates a lag. Polars fills the boundary with `null` (not `NaN`). Arithmetic on shifted columns uses Polars expressions — no lambda needed.
+
+_Replicates the same lag-and-return computation in Polars using `shift(1)` and arithmetic expressions inside `with_columns()` — producing identical daily return values to the Pandas result without a lambda function._
 
 ```python
 display(asml_pl_sorted.with_columns(
@@ -1616,9 +1757,13 @@ Change time frequency — downsampling daily data to monthly OHLC bars, or upsam
 >
 > `.resample()` only works when the DataFrame's index is a `DatetimeIndex`. Use `.set_index()` to move the date column to the index first. Polars has no index — `group_by_dynamic()` takes the date column name as a parameter.
 
-### Pandas | Monthly OHLC with resample().agg()
+### Monthly OHLC Aggregation
+
+#### Pandas | Monthly OHLC with resample().agg()
 
 Set the date column as the index, then call `.resample("ME")` for month-end frequency. The `.agg()` dictionary maps columns to aggregation functions: `"first"` for open, `"max"` for high, `"min"` for low, `"last"` for close, `"sum"` for volume.
+
+_Sets the ASML date column as a `DatetimeIndex`, resamples to month-end frequency with `"ME"`, and aggregates open/high/low/close/volume per month — displaying the last 6 months from Oct 2025 through Mar 2026._
 
 ```python
 asml_monthly = (
@@ -1702,9 +1847,11 @@ display(asml_monthly)
   </tbody>
 </table>
 
-### Polars | Monthly OHLC with group_by_dynamic()
+#### Polars | Monthly OHLC with group_by_dynamic()
 
 `group_by_dynamic(date_column, every="1mo")` groups rows into time buckets without requiring an index. The data must be sorted by the date column. Chain `.agg()` with Polars expressions for each aggregation.
+
+_Groups ASML sorted data into monthly buckets using `group_by_dynamic("date", every="1mo")` and aggregates OHLCV per bucket — producing the same 6-month result as the Pandas resample with month-start labels instead of month-end._
 
 ```python
 display(
@@ -1727,9 +1874,13 @@ display(
 
 Cumulative (running) aggregations compute a value that grows from the first row to the current row — running total of volume, running maximum of price (all-time high), running minimum (all-time low). These are essential for tracking accumulated metrics over a time series.
 
-### Polars | Cumulative sum, max, and min
+### Running Aggregates
+
+#### Polars | Cumulative sum, max, and min
 
 `cum_sum()`, `cum_max()`, and `cum_min()` compute running aggregates. Each row's value is the aggregate of all preceding values plus the current value. Nulls are skipped.
+
+_Computes `cum_volume` (running total volume), `running_high` (all-time high close = 1288.4), and `running_low` (all-time low close = 397.45) for all ASML trading days, displaying the last 10 rows where cumulative volume exceeds 945 million._
 
 ```python
 display(asml_pl_sorted.with_columns(

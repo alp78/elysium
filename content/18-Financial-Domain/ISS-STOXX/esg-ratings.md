@@ -9,7 +9,20 @@ tags:
   - esg
 aliases:
   - "ESG Ratings Glossary"
+parent: "[[domain-iss-stoxx-glossary]]"
 date: 2026-03-28
+links:
+  - "[[corporate-governance]]"
+  - "[[data-methodology]]"
+  - "[[esg-frameworks]]"
+  - "[[financial-instruments]]"
+  - "[[financial-metrics]]"
+  - "[[index-construction]]"
+  - "[[index-families]]"
+  - "[[market-structure]]"
+  - "[[regulatory]]"
+  - "[[smart-beta-factors]]"
+  - "[[sustainability-themes]]"
 ---
 
 # ESG Ratings — ISS & STOXX Glossary

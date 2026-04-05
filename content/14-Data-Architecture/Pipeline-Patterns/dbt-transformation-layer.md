@@ -1,7 +1,16 @@
 ---
+title: "dbt Transformation Layer"
 tags: [data-architecture, architecture, pipeline, python, sql, airflow, dbt, bigquery]
 aliases: [dbt Core, dbt Cloud, Data Build Tool, dbt models, dbt snapshots, dbt macros, dbt testing, transformation layer]
 description: "dbt (Data Build Tool) is the standard SQL transformation layer for modern data platforms — it implements software engineering practices (version control, testing, documentation, CI/CD) for SQL transforms already inside your warehouse. Covers project structure, staging/intermediate/mart model layers, schema and custom tests, SCD Type 2 snapshots, Jinja macros, Airflow integration, and slim CI builds."
+parent: "[[domain-pipeline-construction]]"
+links:
+  - "[[medallion-architecture]]"
+  - "[[functional-pipeline-architecture]]"
+  - "[[data-flow-architecture]]"
+  - "[[idempotent-pipeline-design]]"
+  - "[[serialization-formats]]"
+  - "[[migration-idempotency-backfills]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

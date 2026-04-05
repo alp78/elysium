@@ -16,6 +16,14 @@ aliases:
   - "Functional Pipeline"
   - "Pipeline Architecture Principles"
 description: "Five architectural principles — functional core/imperative shell, contract validation, quality gates, data provenance, immutable value objects — applied to data pipeline construction."
+parent: "[[domain-pipeline-construction]]"
+links:
+  - "[[medallion-architecture]]"
+  - "[[data-flow-architecture]]"
+  - "[[idempotent-pipeline-design]]"
+  - "[[dbt-transformation-layer]]"
+  - "[[serialization-formats]]"
+  - "[[migration-idempotency-backfills]]"
 created: 2026-03-29
 updated: 2026-03-29
 status: complete

@@ -1,7 +1,15 @@
 ---
+title: "Pub/Sub Topics and Subscriptions"
 tags: [gcp, pubsub]
 aliases: [Pub/Sub topics, Pub/Sub subscriptions, gcloud pubsub, dead letter queue, push subscription, pull subscription]
 description: "How to create Pub/Sub topics and subscriptions — including pull vs push models, acknowledgement deadlines, message retention, and dead letter queues for failed message handling."
+parent: "[[domain-compute-and-messaging]]"
+links:
+  - "[[vm-lifecycle]]"
+  - "[[vm-ssh-and-file-transfer]]"
+  - "[[disks-and-snapshots]]"
+  - "[[cloud-run-jobs-vs-services]]"
+  - "[[pubsub-messaging]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

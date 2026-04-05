@@ -1,4 +1,5 @@
 ---
+title: "Liquidity and Flow Metrics"
 type: reference
 category: financial-domain
 technology: [yfinance, python]
@@ -6,11 +7,13 @@ tags: [python, financial]
 aliases: [Liquidity and Flow Metrics, liquidity metrics, bid-ask spread, turnover ratio, Money Flow Index, MFI, On-Balance Volume, OBV]
 keywords: [liquidity metrics, flow metrics, bid-ask spread, turnover ratio, Money Flow Index, MFI, On-Balance Volume, OBV, trading volume, market liquidity, volume analysis, flow indicators]
 description: "Liquidity and flow metrics for equity index analysis — bid-ask spread, turnover ratio, Money Flow Index, and On-Balance Volume with formulas, thresholds, and interpretation."
-related:
-  - "[breadth-and-sentiment-indicators](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/breadth-and-sentiment-indicators)"
-  - "[technical-indicators](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/technical-indicators)"
-  - "[daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)"
-  - "[chart-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/chart-metrics)"
+parent: "[[domain-market-analysis]]"
+links:
+  - "[[breadth-and-sentiment-indicators]]"
+  - "[[index-maintenance-and-corporate-actions]]"
+  - "[[risk-and-volatility-metrics]]"
+  - "[[technical-indicators]]"
+  - "[[valuation-ratios]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

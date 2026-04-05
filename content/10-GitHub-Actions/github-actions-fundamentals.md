@@ -14,6 +14,9 @@ aliases:
   - concurrency
   - reusable workflows
 description: "GitHub Actions fundamentals — workflow anatomy, triggers, runners, jobs, steps, secrets, caching, artifacts, and concurrency."
+parent: "[[domain-foundations-and-patterns]]"
+links:
+  - "[[github-actions-patterns]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

@@ -1,7 +1,12 @@
 ---
+title: "BigQuery Engineering"
 tags: [bigquery, gcp, engineering]
 aliases: [BigQuery engineering, BigQuery partitioning, BigQuery clustering, BigQuery DML, BigQuery cost, BigQuery views]
 description: "BigQuery engineering patterns with executable examples — covers views, stored procedures, table functions, clustering, DML, SCD, deduplication, query optimization, transactions, bulk loading, and partitioning."
+parent: "[[domain-bigquery]]"
+links:
+  - "[[bq-fundamentals]]"
+  - "[[bq-advanced]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

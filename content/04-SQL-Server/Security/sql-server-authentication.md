@@ -1,7 +1,15 @@
 ---
+title: "SQL Server Authentication"
 tags: [sql, gcp, sql-server, tsql]
 aliases: [SQL Server authentication, service account hardening, SQL Server Audit, login hardening, sa disable, dedicated logins, GCP service account, IAM least privilege, TLS SQL Server, network encryption, firewall rules, SQL Server security, LGIF, LGIS, failed login, brute force detection]
 description: "How to harden SQL Server 2022 on GCP: creating a dedicated GCP service account with minimal IAM roles, setting up application-specific SQL logins with least-privilege permissions, enabling TLS 1.2 encryption, configuring GCP firewall rules, setting up SQL Server Audit for login and data access events, and running a quarterly security review."
+parent: "[[domain-concurrency-and-security]]"
+links:
+  - "[[tde-encryption]]"
+  - "[[audit-logging]]"
+  - "[[blocking-and-locking]]"
+  - "[[deadlock-detection-and-prevention]]"
+  - "[[race-conditions]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

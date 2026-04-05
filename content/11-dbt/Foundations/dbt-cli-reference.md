@@ -1,8 +1,13 @@
 ---
+title: "dbt: CLI Reference"
 tags: [pipeline, dbt]
 status: stable
 updated: 2026-03-23
 description: "CLI commands, node selection, flags, output interpretation"
+parent: "[[domain-foundations]]"
+links:
+  - "[[dbt-core-concepts]]"
+  - "[[dbt-project-structure]]"
 ---
 
 # dbt: CLI Reference

@@ -4,6 +4,9 @@ tags:
   - csharp
 aliases: [lists, dictionaries, sets, tuples, arrays, List, Dictionary, HashSet, LINQ]
 description: "C# collections reference with executable examples and cell outputs — covers List, Dictionary, HashSet, arrays, Queue, Stack, and immutable collections. See [05_py_collections](https://alp78.github.io/elysium/02-Programming-Languages/Python/05_py_collections) for the Python equivalent."
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[05_py_collections]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

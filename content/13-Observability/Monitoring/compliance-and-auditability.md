@@ -1,4 +1,5 @@
 ---
+title: "Compliance and Auditability"
 tags: [monitoring, observability, python, csharp, sql, bigquery, datadog]
 aliases:
   - compliance
@@ -10,6 +11,10 @@ aliases:
   - price adjustment factor
   - divisor
   - EU BMR
+parent: "[[domain-strategy-and-foundations]]"
+links:
+  - "[[observability-strategy-matrix]]"
+  - "[[observability-deep-dive]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

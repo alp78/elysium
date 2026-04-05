@@ -1,4 +1,5 @@
 ---
+title: "Pharma and Healthcare"
 type: reference
 category: financial-encyclopedia
 technology: []
@@ -6,10 +7,23 @@ tags: [financial]
 aliases: [pharma glossary, healthcare terms, biotech glossary, drug development terms, pharmaceutical glossary]
 keywords: [pharmaceutical, biotech, biosimilars, clinical trials, CDMO, generic drugs, medical devices, patent, regulatory approval, FDA, in-licensing, out-licensing, intellectual property, oncology, recombinant therapies, drug development]
 description: "Encyclopedia definitions for pharmaceutical and healthcare terms covering drug development, regulatory approval, biosimilars, CDMOs, medical devices, intellectual property, and licensing, drawn from the example Index universe."
-related:
-  - esg-and-sustainability
-  - corporate-finance-and-strategy
-  - structured-finance
+parent: "[[domain-financial-encyclopedia]]"
+links:
+  - "[[banking-and-lending]]"
+  - "[[business-models-and-commerce]]"
+  - "[[capital-markets-and-trading]]"
+  - "[[compliance-and-risk-management]]"
+  - "[[corporate-finance-and-strategy]]"
+  - "[[energy-and-commodities]]"
+  - "[[esg-and-sustainability]]"
+  - "[[exchanges-and-market-infrastructure]]"
+  - "[[insurance-and-risk]]"
+  - "[[investment-management]]"
+  - "[[payments-and-settlement]]"
+  - "[[real-estate-and-industrial]]"
+  - "[[structured-finance]]"
+  - "[[technology-and-digital]]"
+  - "[[trade-and-treasury]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

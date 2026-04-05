@@ -1,4 +1,5 @@
 ---
+title: "Environment Variables"
 type: concept
 category: foundations
 technology: [bash, powershell]
@@ -6,6 +7,16 @@ tags: [shell, scripting]
 aliases: [env vars, environment variables, shell variables, export, PATH variable]
 keywords: [environment variable, env var, export, PATH, bashrc, profile, credential handling, secret management, process environment, child process, variable propagation, unset, printenv]
 description: "How environment variables propagate through process hierarchies in bash and PowerShell, including secure credential handling patterns and persistence across sessions."
+parent: "[[domain-script-engineering]]"
+links:
+  - "[[command-history]]"
+  - "[[io-redirection]]"
+  - "[[command-chaining]]"
+  - "[[process-substitution]]"
+  - "[[brace-expansion-and-globbing]]"
+  - "[[defensive-scripting]]"
+  - "[[bash-automation]]"
+  - "[[powershell-automation]]"
 created: 2026-03-22
 updated: 2026-04-03
 status: complete

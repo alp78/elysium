@@ -1,4 +1,5 @@
 ---
+title: "Index Snapshot Metrics"
 type: reference
 category: financial-domain
 technology: [yfinance, sql-server]
@@ -6,12 +7,14 @@ tags: [sql, financial]
 aliases: [Index Snapshot, Index Aggregates, Dashboard Snapshot]
 keywords: [index snapshot, YTD return, 30d return, 90d return, volatility, P/E ratio, P/B ratio, dividend yield, cap-weighted, return interpretation, trend reversal]
 description: "Cap-weighted index-level aggregate metrics displayed in the financial data platform dashboard snapshot panel, including return periods, volatility, and valuation ratios."
-related:
-  - "[chart-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/chart-metrics)"
-  - "[scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology)"
-  - "[valuation-ratios](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/valuation-ratios)"
-  - "[data-sources-and-refresh](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/data-sources-and-refresh)"
-  - "[yfinance pipeline](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/data-sources-and-refresh)"
+parent: "[[domain-metrics-and-scoring]]"
+links:
+  - "[[chart-metrics]]"
+  - "[[daily-signal-scores]]"
+  - "[[data-sources-and-refresh]]"
+  - "[[factor-profile-and-composition]]"
+  - "[[quarterly-signal-scores]]"
+  - "[[scoring-methodology]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

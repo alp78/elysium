@@ -1,7 +1,18 @@
 ---
+title: "Dataset and Table Management"
 tags: [bigquery, gcp]
 aliases: [BigQuery datasets, BigQuery tables, bq ls, bq show, bq mk, BQ schema, BigQuery table management]
 description: "How to list, inspect, create, and delete BigQuery datasets and tables using the bq CLI — including schemas, metadata, partitioning, and clustering configuration."
+parent: "[[domain-data-services]]"
+links:
+  - "[[gcs-buckets-and-lifecycle]]"
+  - "[[gcs-object-operations]]"
+  - "[[data-loading-and-export]]"
+  - "[[querying-and-cost-optimization]]"
+  - "[[job-management]]"
+  - "[[bigquery-problems]]"
+  - "[[firestore-data-model-and-operations]]"
+  - "[[real-time-nosql-pipelines]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

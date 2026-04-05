@@ -1,7 +1,13 @@
 ---
+title: "Storage Internals"
 tags: [sql, sql-server, tsql]
 aliases: [SQL Server pages, extents, buffer pool, WAL, write-ahead logging, checkpoint, LSN, log sequence number, heap, dirty page, ghost record, page split, tempdb internals, VLF, virtual log files, IAM, GAM, SGAM, PFS, B-tree, row offset array, forwarding pointer]
 description: "SQL Server storage internals: the 8 KB page and 64 KB extent model, the file architecture (.mdf and .ldf), page anatomy (96-byte header, row offset array), how WAL and checkpoints work, CRUD mechanics at the page level, B-tree structures, page splits, tempdb consumers, the buffer pool, and the lock manager's compatibility matrix."
+parent: "[[domain-storage-internals]]"
+links:
+  - "[[index-types-and-strategy]]"
+  - "[[table-compression]]"
+  - "[[partitioning-strategies]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

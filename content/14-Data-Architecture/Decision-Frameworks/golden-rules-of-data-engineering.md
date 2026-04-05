@@ -1,7 +1,13 @@
 ---
+title: "Golden Rules of Data Engineering"
 tags: [data-architecture, data-engineering, architecture]
 aliases: [golden rules, engineering principles, data engineering philosophy, first principles, trade-off analysis, YAGNI, KISS, build vs buy, undifferentiated heavy lifting, reversible decisions, two-way doors]
 description: "The golden rules of data engineering — ten foundational principles that guide every architectural decision, technology choice, and trade-off evaluation. Inspired by Reis & Housley, Kleppmann, Kimball, Densmore, and the five pillars of senior data engineering."
+parent: "[[domain-principles-and-decisions]]"
+links:
+  - "[[five-pillars-of-data-engineering]]"
+  - "[[technology-selection-matrices]]"
+  - "[[scenario-based-decision-guide]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -1,4 +1,5 @@
 ---
+title: "GCP Cloud Monitoring Deep Dive"
 tags: [monitoring, observability, python, gcp]
 aliases:
   - Cloud Monitoring
@@ -16,6 +17,11 @@ description: >
   monitor data engineering infrastructure. Covers metric types, monitored resources,
   MQL, custom metrics, dashboards, alerting policies, uptime checks, SLOs, and a
   comprehensive feature-parity comparison with Datadog — using only GCP-native tools.
+parent: "[[domain-gcp-native-monitoring]]"
+links:
+  - "[[gcp-cloud-trace-and-logging]]"
+  - "[[gcp-data-lineage-and-catalog]]"
+  - "[[gcp-pipeline-health-and-sla]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

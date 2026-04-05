@@ -1,4 +1,5 @@
 ---
+title: "Windows Scheduling"
 tags: [orchestration, scheduling, task-scheduler]
 aliases:
   - Task Scheduler
@@ -8,6 +9,10 @@ aliases:
   - ScheduledJob
   - Register-ScheduledTask
 description: "Exhaustive reference for scheduling tasks on Windows using schtasks.exe, the PowerShell ScheduledTasks module, and PSScheduledJob. Covers all trigger types, data engineering patterns (SSIS, sqlcmd, Python pipelines), event-based triggers, error notification, and a comparison with Linux cron."
+parent: "[[domain-scheduling]]"
+links:
+  - "[[linux-scheduling]]"
+  - "[[gcp-scheduling]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

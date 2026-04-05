@@ -1,7 +1,12 @@
 ---
+title: "SQL Advanced"
 tags: [sql-server, tsql, advanced]
 aliases: [SQL advanced, window functions, CTE, common table expression, PIVOT, UNPIVOT, JSON, recursive CTE, ROW_NUMBER, RANK, LAG, LEAD]
 description: "Advanced SQL Server T-SQL patterns with executable examples — covers window functions, CTEs, PIVOT/UNPIVOT, JSON, CROSS APPLY, and recursive queries."
+parent: "[[domain-sql-server]]"
+links:
+  - "[[sql-fundamentals]]"
+  - "[[sql-engineering]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

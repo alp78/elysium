@@ -6,6 +6,16 @@ tags:
 aliases: [defensive scripting, set -euo pipefail, bash strict mode, safe scripting, script safety]
 keywords: [set -e, set -u, set -o pipefail, defensive scripting, bash strict mode, trap, cleanup, exit on error, unset variable, pipeline failure, production script template, error handling, ErrorActionPreference, Set-StrictMode, PowerShell error handling]
 description: "Bash set flags (set -euo pipefail) and PowerShell equivalents ($ErrorActionPreference, Set-StrictMode, try/catch) that prevent the most dangerous scripting bugs — exit-on-error, unset variable detection, pipeline failure propagation, and cleanup traps."
+parent: "[[domain-script-engineering]]"
+links:
+  - "[[command-history]]"
+  - "[[io-redirection]]"
+  - "[[command-chaining]]"
+  - "[[process-substitution]]"
+  - "[[brace-expansion-and-globbing]]"
+  - "[[environment-variables]]"
+  - "[[bash-automation]]"
+  - "[[powershell-automation]]"
 created: 2026-03-22
 updated: 2026-04-03
 status: complete

@@ -3,6 +3,9 @@ title: "07. Generics & LINQ - C#"
 tags: [csharp]
 aliases: [generics, LINQ, type parameters, generic collections, comprehensions, functional programming]
 description: "C# generics and LINQ reference with executable examples and cell outputs — covers generic classes, constraints, LINQ query and method syntax, deferred execution, and functional patterns. See [07_py_generics_linq](https://alp78.github.io/elysium/02-Programming-Languages/Python/07_py_generics_linq) for the Python equivalent."
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[07_py_generics_linq]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

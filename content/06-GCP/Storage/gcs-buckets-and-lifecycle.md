@@ -1,7 +1,18 @@
 ---
+title: "GCS Buckets and Lifecycle"
 tags: [gcp, gcs, storage]
 aliases: [GCS buckets, GCS lifecycle, GCS storage classes, GCS versioning, Cloud Storage lifecycle rules, STANDARD NEARLINE COLDLINE ARCHIVE, Autoclass, soft delete, bucket lock]
 description: "How to create GCS buckets with appropriate storage classes and configure lifecycle rules to automatically transition objects through STANDARD → NEARLINE → COLDLINE → ARCHIVE, reducing storage costs for aging pipeline data."
+parent: "[[domain-data-services]]"
+links:
+  - "[[gcs-object-operations]]"
+  - "[[dataset-and-table-management]]"
+  - "[[data-loading-and-export]]"
+  - "[[querying-and-cost-optimization]]"
+  - "[[job-management]]"
+  - "[[bigquery-problems]]"
+  - "[[firestore-data-model-and-operations]]"
+  - "[[real-time-nosql-pipelines]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

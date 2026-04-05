@@ -1,9 +1,14 @@
 ---
+title: "EU BMR Benchmark Regulation"
 tags: [sql, bigquery, gcp, financial, regulatory, stoxx]
 type: reference
 technology: [sql-server, bigquery, gcp]
 status: stable
 updated: 2026-03-23
+parent: "[[domain-regulatory]]"
+links:
+  - "[[iosco-benchmark-principles]]"
+  - "[[sfdr-data-requirements]]"
 ---
 
 # EU BMR — Benchmark Regulation

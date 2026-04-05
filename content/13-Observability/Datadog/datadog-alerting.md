@@ -1,7 +1,23 @@
 ---
+title: "Datadog Alerting"
 tags: [monitoring, observability, sql, airflow, datadog]
 aliases: [Datadog Monitors, Datadog Alerts, Deadlock Alert, Airflow Monitors]
 description: "Recommended Datadog monitors for the data platform — deadlock detection on SQL Server, Airflow scheduler health, task failure alerts, and pool starvation warnings."
+parent: "[[domain-datadog-platform]]"
+links:
+  - "[[datadog-architecture-overview]]"
+  - "[[datadog-agent-airflow-vm]]"
+  - "[[datadog-agent-sql-vm]]"
+  - "[[datadog-gcp-integration]]"
+  - "[[datadog-sql-server-integration]]"
+  - "[[datadog-custom-queries]]"
+  - "[[datadog-log-management]]"
+  - "[[datadog-sql-server-logs]]"
+  - "[[datadog-apm-traces]]"
+  - "[[datadog-dashboards]]"
+  - "[[datadog-airflow-observability]]"
+  - "[[datadog-cost-optimization]]"
+  - "[[datadog-troubleshooting]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

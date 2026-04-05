@@ -1,4 +1,5 @@
 ---
+title: "Airflow Core Concepts"
 tags: [orchestration, python, airflow]
 aliases:
   - Apache Airflow
@@ -25,6 +26,12 @@ aliases:
   - LocalExecutor
   - SequentialExecutor
 description: "Comprehensive reference for Apache Airflow core concepts: architecture (Scheduler, Webserver, Worker, Metadata DB, Executor), DAGs, Operators, Sensors, Hooks, XComs, the TaskFlow API, and a comparison of all Executor types."
+parent: "[[domain-airflow]]"
+links:
+  - "[[airflow-dag-patterns]]"
+  - "[[airflow-deployment]]"
+  - "[[airflow-problems]]"
+  - "[[airflow-troubleshooting]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

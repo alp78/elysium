@@ -11,6 +11,15 @@ tags:
   - temporal-tables
 aliases: [Change Tracking, SCD2 SQL Server, Temporal Tables, CDC, Change Data Capture, Slowly Changing Dimensions]
 description: "Every method SQL Server offers for tracking data changes over time — manual SCD2, temporal tables, CDC, Change Tracking, dbt snapshots — with a decision matrix and side-by-side comparisons."
+parent: "[[domain-pipeline-patterns]]"
+links:
+  - "[[sql-server-loading-patterns]]"
+  - "[[sql-server-schema-layering]]"
+  - "[[sql-server-incremental-transforms]]"
+  - "[[sql-server-pipeline-anti-patterns]]"
+  - "[[bronze-layer-loading]]"
+  - "[[silver-transforms]]"
+  - "[[gold-transforms]]"
 created: 2026-03-29
 updated: 2026-04-04
 status: complete

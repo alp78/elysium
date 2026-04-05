@@ -1,7 +1,18 @@
 ---
+title: "Querying and Cost Optimization"
 tags: [performance, cost, bigquery, gcp]
 aliases: [BigQuery cost optimization, bq query, BigQuery dry run, BigQuery caching, BigQuery SELECT star cost, BQ cost]
 description: "How to run BigQuery queries efficiently using the bq CLI — including dry runs for cost estimation, parameterized queries for caching, destination tables, and the 80/20 cost optimization practices."
+parent: "[[domain-data-services]]"
+links:
+  - "[[gcs-buckets-and-lifecycle]]"
+  - "[[gcs-object-operations]]"
+  - "[[dataset-and-table-management]]"
+  - "[[data-loading-and-export]]"
+  - "[[job-management]]"
+  - "[[bigquery-problems]]"
+  - "[[firestore-data-model-and-operations]]"
+  - "[[real-time-nosql-pipelines]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

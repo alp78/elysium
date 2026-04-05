@@ -1,4 +1,5 @@
 ---
+title: "Airflow DAG Patterns"
 tags: [orchestration, python, airflow]
 aliases:
   - Dynamic DAGs
@@ -21,6 +22,12 @@ aliases:
   - cross_downstream
   - chain
 description: "Comprehensive reference for Apache Airflow DAG patterns: task dependencies, task groups, dynamic DAG generation, branching, trigger rules, idempotency, backfill, parameterization, dataset-driven scheduling, and SLA/callback configuration."
+parent: "[[domain-airflow]]"
+links:
+  - "[[airflow-core-concepts]]"
+  - "[[airflow-deployment]]"
+  - "[[airflow-problems]]"
+  - "[[airflow-troubleshooting]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

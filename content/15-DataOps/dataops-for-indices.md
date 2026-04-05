@@ -1,4 +1,5 @@
 ---
+title: "DataOps for Indices"
 tags: [python, sql, terraform, bigquery, github-actions, dataops]
 aliases:
   - parallel backtesting
@@ -7,6 +8,10 @@ aliases:
   - regression testing
   - blue-green data
   - calculation validation
+parent: "[[domain-principles-and-practice]]"
+links:
+  - "[[dataops-principles-and-practices]]"
+  - "[[self-service-data-platform]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

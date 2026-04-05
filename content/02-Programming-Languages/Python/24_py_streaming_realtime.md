@@ -1,5 +1,5 @@
 ---
-title: "24. Streaming & Real-Time Data - Python"
+title: "24. Streaming and Real-Time Data - Python"
 tags:
   - python
   - gcp
@@ -7,6 +7,9 @@ tags:
   - streaming
 aliases: [Streaming Python, Real-Time Data Python, WebSocket, SSE, Pub/Sub]
 description: "Python streaming and real-time data reference — WebSocket, SSE, Pub/Sub, Firestore listeners, and latency benchmarks. See [24_cs_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/24_cs_streaming_realtime) for the C# equivalent."
+parent: "[[domain-gcp-integration]]"
+links:
+  - "[[24_cs_streaming_realtime]]"
 created: 2026-03-28
 updated: 2026-03-28
 status: complete

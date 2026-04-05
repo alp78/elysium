@@ -1,8 +1,19 @@
 ---
+title: "dbt: Airflow Integration"
 tags: [pipeline, orchestration, airflow, dbt]
 status: stable
 updated: 2026-03-23
 description: "BashOperator, astronomer-cosmos, and CloudRunJobOperator patterns for orchestrating dbt in Airflow, with a full ESG pipeline DAG."
+parent: "[[domain-operations-and-adapters]]"
+links:
+  - "[[dbt-ci-cd]]"
+  - "[[dbt-documentation-and-lineage]]"
+  - "[[dbt-observability]]"
+  - "[[dbt-performance-tuning]]"
+  - "[[dbt-troubleshooting]]"
+  - "[[dbt-bigquery-adapter]]"
+  - "[[dbt-sqlserver-adapter]]"
+  - "[[dbt-cross-adapter-patterns]]"
 ---
 
 # dbt: Airflow Integration

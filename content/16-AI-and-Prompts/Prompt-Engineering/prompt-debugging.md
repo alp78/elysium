@@ -1,7 +1,14 @@
 ---
+title: "Prompt Debugging"
 tags: [ai, prompt-engineering]
 aliases: [prompt debugging, prompt optimization, weak output diagnosis, intent misalignment, prompt system design, multi-agent prompting, prompt library, prompt mastery, feedback loop prompting, iterative refinement, memory layering, prompt workflows, prompt anti-patterns]
 description: "Complete guide to debugging weak AI prompts, diagnosing output failures, rebuilding prompts with three techniques (rephrasing, logic steps, contextual reinforcement), and designing prompt systems including workflows, loops, multi-agent architectures, memory layering, and feedback loops. Includes the full mastery checklist and prompt library structure."
+parent: "[[domain-prompt-craft]]"
+links:
+  - "[[prompt-foundations]]"
+  - "[[prompt-architecture]]"
+  - "[[applied-prompting]]"
+  - "[[model-specific-prompting]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

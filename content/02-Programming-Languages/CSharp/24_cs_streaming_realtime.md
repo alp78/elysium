@@ -1,5 +1,5 @@
 ---
-title: "24. Streaming & Real-Time Data - C#"
+title: "24. Streaming and Real-Time Data - C#"
 tags:
   - csharp
   - gcp
@@ -7,6 +7,9 @@ tags:
   - streaming
 aliases: [Streaming CSharp, Real-Time Data CSharp, WebSocket, SSE, Pub/Sub]
 description: "C# streaming and real-time data reference — WebSocket, SSE, Pub/Sub, Firestore listeners, and latency benchmarks. See [24_py_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/Python/24_py_streaming_realtime) for the Python equivalent."
+parent: "[[domain-gcp-integration]]"
+links:
+  - "[[24_py_streaming_realtime]]"
 created: 2026-03-28
 updated: 2026-03-28
 status: complete

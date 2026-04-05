@@ -4,6 +4,13 @@ tags: [python, pandas, polars, dataframes]
 aliases:
   - Series, DataFrames, indexes, data types
 description: "Pandas/Polars DataFrame reference 01/10 — Foundations & I/O (Series, DataFrames, types, CSV/Parquet). Side-by-side executable examples with cell outputs."
+parent: "[[domain-ingest-and-explore]]"
+links:
+  - "[[01_cs_foundations_io]]"
+  - "[[02_py_explore_select_filter]]"
+  - "[[02_cs_explore_select_filter]]"
+  - "[[07_py_types_interop]]"
+  - "[[07_cs_types_interop]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -2517,6 +2524,8 @@ display(size_df)
 >
 > Always pass `encoding=` when reading files from SQL Server BCP exports, Excel CSV, or any legacy system: `pd.read_csv(path, encoding='utf-8-sig')` handles BOM-prefixed UTF-8; use `encoding='latin-1'` for Western European legacy files. For Polars, pre-convert non-UTF-8 files with `iconv` or Python's `codecs` module before ingestion.
 
+_Reads `dim_country.csv` with default inference (212 rows × 2 columns), then reads `eurostoxx50_ohlcv.csv` with `dtype={"ticker": "category"}`, `parse_dates=["date"]`, and `na_values` to override defaults — demonstrating how explicit parameters prevent silent dtype coercion and missed null sentinels at load time._
+
 ```python
 df_pd = pd.read_csv(DATA_DIR / "dim_country.csv")
 print(f"Shape: {df_pd.shape}")
@@ -2720,6 +2729,8 @@ display(df_peek)
 
 Polars' eager `read_csv()` reads the entire file into memory. It uses multi-threaded parsing and infers types from the first 1000 rows by default. Use `try_parse_dates=True` for automatic date detection.
 
+_Reads `dim_country.csv` to confirm a 2-column `String` schema, then reads `eurostoxx50_ohlcv.csv` with `try_parse_dates=True` and `schema_overrides={"ticker": pl.Categorical}` — producing a 66 355-row DataFrame where `date` is automatically typed as `Date` and `ticker` as `Categorical`._
+
 ```python
 df_pl = pl.read_csv(DATA_DIR / "dim_country.csv")
 print(f"Shape: {df_pl.shape}")
@@ -2755,6 +2766,8 @@ display(df_pl_ohlcv.head(3))
 #### Polars | scan_csv (Lazy)
 
 `scan_csv()` returns a `LazyFrame` — no data is read until `.collect()` is called. The query optimizer can push predicates and projections down to the scan, reading only what's needed.
+
+_Creates a `LazyFrame` from `eurostoxx50_ohlcv.csv` without reading any row data, then filters to `ADYEN.AS`, selects 4 columns, and collects — confirming the 12-column schema is available immediately while data is only read at `.collect()` time._
 
 ```python
 lf = pl.scan_csv(DATA_DIR / "eurostoxx50_ohlcv.csv", try_parse_dates=True)
@@ -2840,6 +2853,8 @@ for f in csv_files:
 ### Reading JSON Files
 
 #### Pandas | read_json
+
+_Reads `dim_index.json` (4 rows × 5 columns) and `index_performance.json` (5 281 rows × 15 columns), printing shapes and dtypes — showing that Pandas infers date-like strings as `object` and mixes `int64`, `float64`, and `datetime64[ns]` without an explicit schema._
 
 ```python
 df_pd_json = pd.read_json(DATA_DIR / "dim_index.json")
@@ -3008,6 +3023,8 @@ display(df_pd_perf.head(3))
 
 #### Polars | read_json
 
+_Reads `dim_index.json` with default inference (4 rows × 5-column `String` schema), then reads `index_performance.json` with `infer_schema_length=None` to force full-file scanning — preventing `ComputeError` from early-null columns in the 5 281-row performance dataset._
+
 ```python
 df_pl_json = pl.read_json(DATA_DIR / "dim_index.json")
 print(f"Shape: {df_pl_json.shape}")
@@ -3040,6 +3057,8 @@ display(df_pl_perf.head(3))
 `scan_ndjson` works with newline-delimited JSON files.  Standard JSON
 arrays need to be converted first.  We demonstrate by writing NDJSON
 and scanning it back.
+
+_Converts `dim_index.json` to NDJSON via `.write_ndjson()`, then scans the resulting file lazily with `scan_ndjson` and collects only 3 rows — confirming the 5-column `String` schema is available without loading the full file, then deletes the temp file._
 
 ```python
 # Write an NDJSON file from an existing dataframe, then scan it lazily
@@ -3120,6 +3139,7 @@ for f in json_files:
 
 #### Pandas | read_parquet
 
+_Reads `dim_country.parquet` (212 rows × 2 columns) with default settings, then reads `eurostoxx50_ohlcv.parquet` with `columns=["date", "symbol", "close"]` — demonstrating column projection that returns 3 of 12 columns across 66 355 rows without loading the full schema._
 
 ```python
 df_pd_pq = pd.read_parquet(DATA_DIR / "dim_country.parquet")
@@ -3220,6 +3240,8 @@ display(df_pd_pq_cols.head(3))
 
 #### Polars | read_parquet (Eager)
 
+_Reads `dim_country.parquet` with a native `String` schema (no coercion), then reads `eurostoxx50_ohlcv.parquet` selecting only `date`, `symbol`, and `close` — confirming Polars preserves native Parquet types (`Date`, `String`, `Float64`) without any post-load casting._
+
 ```python
 df_pl_pq = pl.read_parquet(DATA_DIR / "dim_country.parquet")
 print(f"Shape: {df_pl_pq.shape}")
@@ -3250,6 +3272,8 @@ display(df_pl_pq_cols.head(3))
 
 `scan_parquet()` reads only Parquet metadata — no row data is loaded until `.collect()`. Combined with `.filter()` and `.select()`, the optimizer pushes both predicates and projections down to the Parquet reader.
 
+_Scans `eurostoxx50_ohlcv.parquet` lazily, then filters to `ADYEN.AS`, selects two columns, sorts descending, and collects only 10 rows — confirming the optimizer reads far less than the full 66 355-row file._
+
 ```python
 lf_pq = pl.scan_parquet(DATA_DIR / "eurostoxx50_ohlcv.parquet")
 print(f"Type: {type(lf_pq)}")
@@ -3277,6 +3301,10 @@ display(result_pq)
 
 <div><!-- shape: (10, 2) --><table><thead><tr><th>date</th><th>close</th></tr><tr><td>date</td><td>f64</td></tr></thead><tbody><tr><td>2026-03-12</td><td>925.7</td></tr><tr><td>2026-03-11</td><td>926.5</td></tr><tr><td>2026-03-10</td><td>935.0</td></tr><tr><td>2026-03-09</td><td>942.7</td></tr><tr><td>2026-03-06</td><td>930.4</td></tr><tr><td>2026-03-05</td><td>931.5</td></tr><tr><td>2026-03-04</td><td>957.6</td></tr><tr><td>2026-03-03</td><td>949.1</td></tr><tr><td>2026-03-02</td><td>965.7</td></tr><tr><td>2026-02-27</td><td>994.8</td></tr></tbody></table></div>
 
+#### Pandas | Bulk-load all Parquet files with timing
+
+_Loops over 13 Parquet files and loads each with `pd.read_parquet()`, printing per-file shape and elapsed time — confirming Parquet reads are sub-10 ms even for the largest files, with `eurostoxx50_ohlcv` (66 355 rows) loading in 0.006 s._
+
 ```python
 # Load ALL parquet files with Pandas
 print("Loading all Parquet files with Pandas...")
@@ -3302,6 +3330,10 @@ for f in pq_files:
       signals_quarterly              -> (177, 22)  (0.001s)
       stoxxusa50_ohlcv               -> (65100, 12)  (0.005s)
       trading_calendar               -> (29335, 11)  (0.003s)
+
+#### Polars | Bulk-load all Parquet files with timing
+
+_Loops over the same 13 Parquet files with `pl.read_parquet()`, printing per-file shape and elapsed time — showing Polars at or below Pandas speeds, with `eurostoxx50_ohlcv` (66 355 rows) loading in 0.004 s vs Pandas' 0.006 s._
 
 ```python
 # Load ALL parquet files with Polars
@@ -3331,10 +3363,11 @@ for f in pq_files:
 
 ### Parameter Deep-Dives
 
-#### Pandas / Polars | dtypes and schema_overrides
-
+#### Pandas | dtype override for column types at read time
 
 Pandas uses `dtype=` to override column types at read time. Polars uses `schema_overrides=` for the same purpose. Both accept a dict mapping column names to types.
+
+_Reads `pulse.csv` with `dtype={"ticker": "category"}` — demonstrating that Pandas accepts a single-column override dict, while the remaining columns are inferred automatically._
 
 ```python
 df_dtype_pd = pd.read_csv(
@@ -3472,6 +3505,10 @@ display(df_dtype_pd.head(3))
 </table>
 </div>
 
+#### Polars | schema_overrides for column types at read time
+
+_Reads `pulse.csv` with `schema_overrides={"ticker": pl.Categorical}` — showing Polars' dedicated parameter name for the same column-type-override concept, with the rest of the 20-column schema inferred automatically._
+
 ```python
 df_dtype_pl = pl.read_csv(
     DATA_DIR / "pulse.csv",
@@ -3489,9 +3526,11 @@ display(df_dtype_pl.head(3))
 
 <div><!-- shape: (3, 20) --><table><thead><tr><th>id</th><th>_index</th><th>_ingested_at</th><th>symbol</th><th>timestamp</th><th>current_price</th><th>open_price</th><th>day_high</th><th>day_low</th><th>previous_close</th><th>price_change</th><th>price_change_pct</th><th>bid</th><th>ask</th><th>bid_size</th><th>ask_size</th><th>spread</th><th>current_volume</th><th>average_volume_10day</th><th>volume_ratio</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>i64</td><td>f64</td></tr></thead><tbody><tr><td>20192</td><td>euro_stoxx_50</td><td>2026-03-12 12:50:13.639560</td><td>BMW.DE</td><td>2026-03-12 13:49:54</td><td>80.4</td><td>79.0</td><td>81.16</td><td>77.9</td><td>80.82</td><td>-0.42</td><td>-0.5197</td><td>80.38</td><td>80.52</td><td>0.0</td><td>0.0</td><td>0.14</td><td>770681</td><td>1209819</td><td>0.637</td></tr><tr><td>20193</td><td>euro_stoxx_50</td><td>2026-03-12 12:50:13.639560</td><td>RHM.DE</td><td>2026-03-12 13:49:55</td><td>1551.0</td><td>1536.0</td><td>1588.0</td><td>1535.0</td><td>1520.5</td><td>30.5</td><td>2.0059</td><td>1551.5</td><td>1552.0</td><td>267.0</td><td>45.0</td><td>0.5</td><td>159633</td><td>294973</td><td>0.5412</td></tr><tr><td>20194</td><td>euro_stoxx_50</td><td>2026-03-12 12:50:13.639560</td><td>BAS.DE</td><td>2026-03-12 13:49:55</td><td>47.67</td><td>46.3</td><td>48.1</td><td>45.96</td><td>46.31</td><td>1.36</td><td>2.9367</td><td>47.68</td><td>47.71</td><td>1393.0</td><td>165.0</td><td>0.03</td><td>1512800</td><td>4089134</td><td>0.37</td></tr></tbody></table></div>
 
-#### Pandas / Polars | null_values
+#### Pandas | na_values parameter for null sentinel recognition
 
 Pandas recognises many null sentinels by default (`NA`, `N/A`, `null`, empty string). You can extend with `na_values=`. Polars uses `null_values=` for the same purpose.
+
+_Reads `scores_daily.csv` with `na_values=["", "NA", "N/A", "null", "-"]` and counts nulls per column — revealing that 5 financial metric columns (`pe_zscore`, `pb_zscore`, `ev_ebitda_zscore`, `yield_zscore`, `recommendation_mean`) contain missing values._
 
 ```python
 df_null_pd = pd.read_csv(
@@ -3512,6 +3551,10 @@ display(null_counts_pd[null_counts_pd > 0])
     recommendation_mean    14
     dtype: int64
 
+#### Polars | null_values parameter for null sentinel recognition
+
+_Reads the same `scores_daily.csv` with Polars `null_values=` and calls `.null_count()` — displaying a wide 1-row × 36-column DataFrame of per-column null counts, confirming the same 5 columns with identical counts as Pandas._
+
 ```python
 df_null_pl = pl.read_csv(
     DATA_DIR / "scores_daily.csv",
@@ -3526,9 +3569,11 @@ display(null_counts_pl)
 
 <div><!-- shape: (1, 36) --><table><thead><tr><th>id</th><th>_index</th><th>symbol</th><th>score_date</th><th>sector</th><th>pe_zscore</th><th>pb_zscore</th><th>ev_ebitda_zscore</th><th>yield_zscore</th><th>relative_value_score</th><th>relative_value_rank</th><th>relative_strength</th><th>sma_50_ratio</th><th>sma_200_ratio</th><th>dist_from_52w_high</th><th>momentum_score</th><th>momentum_rank</th><th>implied_upside</th><th>recommendation_mean</th><th>price_falling_analysts_bullish</th><th>sentiment_score</th><th>sentiment_rank</th><th>composite_score</th><th>composite_rank</th><th>_scored_at</th><th>sma_30_close</th><th>sma_90_close</th><th>market_cap</th><th>index_weight</th><th>short_name</th><th>country</th><th>current_price</th><th>day_change_pct</th><th>five_day_change_pct</th><th>ytd_change_pct</th><th>currency</th></tr><tr><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td><td>u32</td></tr></thead><tbody><tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>3</td><td>6</td><td>71</td><td>35</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>14</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr></tbody></table></div>
 
-#### Pandas / Polars | separator
+#### Pandas / Polars | separator parameter: sep vs separator
 
 Pandas uses `sep=` while Polars uses `separator=`. Both default to comma.
+
+_Reads `dim_index.csv` with an explicit `sep=","` in Pandas and `separator=","` in Polars, confirming both produce a (4, 5) result — demonstrating the parameter naming difference between the two libraries._
 
 ```python
 df_sep_pd = pd.read_csv(DATA_DIR / "dim_index.csv", sep=",")
@@ -3589,7 +3634,9 @@ display(df_sep_pd.head(3))
 
 Both Pandas and Polars write to CSV, JSON, and Parquet. Note the API naming difference: Pandas uses `.to_csv()` / `.to_json()` / `.to_parquet()`, while Polars uses `.write_csv()` / `.write_json()` / `.write_parquet()`.
 
-#### Pandas / Polars | Writing CSV
+#### Pandas / Polars | Writing CSV: to_csv vs write_csv
+
+_Reads `scores_quarterly.parquet` and writes it as CSV via Pandas `.to_csv(index=False)` and Polars `.write_csv()` — comparing output sizes (49.0 KB vs 49.3 KB) and confirming both produce valid CSV files._
 
 ```python
 OUT_DIR = Path("../data/_output")
@@ -3611,7 +3658,9 @@ print(f"Polars CSV written: {csv_path_pl.stat().st_size / 1024:.1f} KB")
     Pandas CSV written: 49.0 KB
     Polars CSV written: 49.3 KB
 
-#### Pandas / Polars | Writing JSON
+#### Pandas / Polars | Writing JSON: to_json vs write_json
+
+_Writes the same `scores_quarterly` DataFrame as JSON via Pandas `.to_json(orient="records", indent=2)` and Polars `.write_json()` — showing Polars produces a more compact file (128.7 KB vs 143.6 KB) due to different default formatting._
 
 ```python
 # Pandas to_json
@@ -3628,7 +3677,9 @@ print(f"Polars JSON written: {json_path_pl.stat().st_size / 1024:.1f} KB")
     Pandas JSON written: 143.6 KB
     Polars JSON written: 128.7 KB
 
-#### Pandas / Polars | Writing Parquet
+#### Pandas / Polars | Writing Parquet: to_parquet vs write_parquet
+
+_Writes `scores_quarterly` as Parquet via both libraries — Polars produces a smaller file (23.9 KB vs 33.6 KB) due to more aggressive compression defaults, while both produce Arrow-compatible Parquet files._
 
 ```python
 # Pandas to_parquet
@@ -3644,6 +3695,10 @@ print(f"Polars Parquet written: {pq_path_pl.stat().st_size / 1024:.1f} KB")
 
     Pandas Parquet written: 33.6 KB
     Polars Parquet written: 23.9 KB
+
+#### Pandas | Compare output file sizes across formats and libraries
+
+_Globs all six output files from the `_output` directory and builds a name-to-size DataFrame — summarising CSV, JSON, and Parquet sizes for both Pandas and Polars side by side._
 
 ```python
 # Compare output file sizes
@@ -3701,6 +3756,10 @@ display(pd.DataFrame(rows))
 </table>
 </div>
 
+#### Python | Clean up output directory
+
+_Deletes the `_output` directory and all six generated files (CSV, JSON, Parquet × 2 libraries) created in the Writing Data section — keeping the working directory clean after the write demonstration._
+
 ```python
 # Cleanup output directory
 shutil.rmtree(OUT_DIR)
@@ -3741,6 +3800,10 @@ flowchart LR
     style Lazy fill:#1a1b26,stroke:#565f89
 ```
 
+#### Polars | Eager Parquet read — full file load into memory
+
+_Reads all 66 355 rows × 12 columns of `eurostoxx50_ohlcv.parquet` into memory eagerly and records the elapsed time — establishing the baseline for comparison with the lazy filtered read below._
+
 ```python
 # Eager: reads entire file into memory
 t0 = time.perf_counter()
@@ -3750,6 +3813,10 @@ print(f"Eager read: {df_eager.shape}, {eager_time:.4f}s")
 ```
 
     Eager read: (66355, 12), 0.0044s
+
+#### Polars | Lazy Parquet scan with filter and collect
+
+_Scans the same file lazily, filters to `ADYEN.AS`, selects two columns, and collects — resulting in a 1 331-row result in 0.0018 s vs 0.0044 s for the eager full read, showing ~2.5× speedup from predicate + projection pushdown._
 
 ```python
 # Lazy: scan + filter + collect (only reads what's needed)
@@ -3768,6 +3835,10 @@ print(f"\nLazy was ~{eager_time / max(lazy_time, 0.0001):.1f}x vs eager for this
     Lazy scan+filter+collect: (1331, 2), 0.0018s
     
     Lazy was ~2.5x vs eager for this filtered query
+
+#### Polars | Explain optimized query plan
+
+_Builds a lazy plan with filter, column selection, and sort, then calls `.explain()` — printing the optimized execution plan bottom-up, confirming `PROJECT 4/12 COLUMNS` and predicate pushdown into the Parquet scan._
 
 ```python
 # Explain the query plan
@@ -3792,6 +3863,10 @@ SORT BY [col("date")]
 ```
 
 Reading the plan bottom-up: `Parquet SCAN` reads the file. `PROJECT 4/12 COLUMNS` means only 4 of 12 columns are loaded (projection pushdown — `date`, `symbol`, `close`, `volume`; `symbol` is needed for the filter). `SELECTION` shows the predicate pushed down to the scan. `simple π 3/3` is the final projection that drops `symbol` after filtering. `SORT BY` sorts the result.
+
+#### Polars | Lazy vs eager CSV scan comparison
+
+_Compares `read_csv` (eager, 24 738 rows) against `scan_csv` + filter + collect on `oil20_ohlcv.csv` — demonstrating that lazy CSV scanning with a symbol filter can be faster than loading the full file when only a subset of rows is needed._
 
 ```python
 # Lazy scan_csv comparison
@@ -3818,6 +3893,10 @@ print(f"CSV lazy+filter: {df_csv_lazy.shape} in {csv_lazy_time:.4f}s")
 ### Format Comparison | Size and Speed
 
 For a deeper look at when to choose Parquet, CSV, or JSON across the full data pipeline, see [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats). The same Parquet I/O patterns shown here apply when loading data into BigQuery via [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export).
+
+#### Pandas / Polars | Read speed benchmark across CSV, JSON, and Parquet
+
+_Runs timed reads for 5 datasets × 3 formats with both Pandas and Polars, accumulating results into a 15-row benchmark DataFrame — showing Polars consistently faster (often 3–10×) on CSV and JSON for medium-to-large files._
 
 ```python
 # Benchmark read speed: CSV vs JSON vs Parquet for Pandas and Polars
@@ -3997,6 +4076,10 @@ display(bench_df)
 </table>
 </div>
 
+#### Pandas | Pivot benchmark results to compare file sizes across formats
+
+_Pivots `bench_df` so rows are datasets and columns are formats (CSV, JSON, Parquet), then adds a `parquet_vs_csv_%` column — making it easy to see that Parquet achieves 37–50% of CSV size for larger datasets._
+
 ```python
 # Pivot to compare formats side-by-side for file size
 size_pivot = bench_df.pivot_table(
@@ -4071,7 +4154,7 @@ display(size_pivot)
 
 ### Gotchas and Tips
 
-#### Pandas / Polars | Date Parsing
+#### Pandas | Date parsing: parse_dates parameter in read_csv
 
 - **Pandas**: use `parse_dates=["col"]` in `read_csv`; JSON dates often
   need `pd.to_datetime()` after loading.
@@ -4079,6 +4162,8 @@ display(size_pivot)
   date types natively.
 - **Gotcha**: Pandas may silently parse dates as strings if the format is
   ambiguous. Always verify dtypes after loading.
+
+_Reads `trading_calendar.csv` twice — once without and once with `parse_dates=["date"]` — showing the date column resolves as `object` by default and as `datetime64[ns]` when parsing is enabled._
 
 ```python
 # Pandas: dates in CSV may need explicit parsing
@@ -4092,11 +4177,13 @@ print(f"date column dtype WITH parse_dates:    {df_dates2['date'].dtype}")
     date column dtype WITHOUT parse_dates: object
     date column dtype WITH parse_dates:    datetime64[ns]
 
-#### Pandas / Polars | Memory and Large Files
+#### Pandas | Chunked reading for large CSV files with chunksize
 
 - **Parquet** supports column projection - read only the columns you need.
 - **Polars lazy** scans avoid loading entire files.
 - **Pandas** `read_csv` with `chunksize` returns an iterator for large files.
+
+_Reads `eurostoxx50_ohlcv.csv` in 10 000-row chunks via the `chunksize` iterator, accumulating `total_rows` — demonstrating that Pandas can process files larger than memory without loading everything at once._
 
 ```python
 # Pandas chunked reading
@@ -4112,6 +4199,8 @@ print(f"Total rows via chunked reading: {total_rows:,}")
 #### Pandas | Index Handling in CSV output
 
 Pandas' `.to_csv()` includes the index by default — always pass `index=False` when writing data intended for other systems.
+
+_Writes a 2-row DataFrame to a StringIO buffer twice — once with the default index and once with `index=False` — printing both outputs to show the unwanted leading row-number column that appears in default CSV output._
 
 ```python
 # Pandas default to_csv includes the index
@@ -4136,11 +4225,13 @@ print(buf2.getvalue())
     1
     2
 
-#### Pandas / Polars | String vs Categorical
+#### Pandas | Memory savings: string vs category dtype for low-cardinality columns
 
 - For columns with low cardinality (e.g. tickers, country codes),
   use `category` (Pandas) or `Categorical` (Polars) to save memory.
 - Set dtypes at read time for best performance.
+
+_Reads only the `symbol` column from `eurostoxx50_ohlcv.csv` twice — once as `object` and once as `category` — and compares memory usage, demonstrating a 98% reduction (3 569 KB → 70 KB) from category encoding._
 
 ```python
 # Memory comparison: string vs category in Pandas
@@ -4163,7 +4254,9 @@ Savings: 98.0%
 
 ### Summary Comparison | Reading & Writing
 
+#### Pandas / Polars | Reading and writing API comparison table
 
+_Builds a 15-row comparison table mapping each I/O operation to its Pandas and Polars equivalents, highlighting key differences such as parameter naming (`dtype=` vs `schema_overrides=`), missing lazy-read support in Pandas, and index handling in CSV output._
 
 ```python
 comparison = [

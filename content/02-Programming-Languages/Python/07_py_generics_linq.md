@@ -3,6 +3,9 @@ title: "07. Generics & Functional Data Processing - Python"
 tags: [python]
 aliases: [generics, LINQ, type parameters, generic collections, comprehensions, functional programming]
 description: "Python generics and functional data processing reference with executable examples and cell outputs — covers TypeVar, Generic classes, Protocol, functional tools, and itertools. See [07_cs_generics_linq](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/07_cs_generics_linq) for the C# equivalent."
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[07_cs_generics_linq]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

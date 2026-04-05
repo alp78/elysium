@@ -1,9 +1,16 @@
 ---
-title: "09. Database & SQL Interface - Python"
+title: "09. Database and SQL Interface - Python"
 tags: [python, pandas, polars, dataframes]
 aliases:
   - SQLContext, DuckDB, SQL Server, database queries
 description: "Pandas/Polars DataFrame reference 09/10 — Database & SQL Interface (SQLContext, DuckDB, SQL Server connectivity). Side-by-side executable examples with cell outputs."
+parent: "[[domain-integrate-and-validate]]"
+links:
+  - "[[08_py_visualization]]"
+  - "[[08_cs_visualization]]"
+  - "[[09_cs_database_interface]]"
+  - "[[10_py_testing_migration]]"
+  - "[[10_cs_testing_migration]]"
 created: 2026-03-24
 updated: 2026-04-04
 status: complete
@@ -65,9 +72,13 @@ Register Polars DataFrames as virtual SQL tables and query them with standard SQ
 >
 > The .NET bindings (Polars.NET 0.4.0) do not implement `SQLContext`. C# code must use the Polars expression API directly, or route SQL through DuckDB.NET. See [09_cs_database_interface](https://alp78.github.io/elysium/03-Dataframes/Dataframes-CSharp/09_cs_database_interface) for the DuckDB.NET approach.
 
-### Polars | Basic SELECT
+### Basic SELECT
+
+#### Polars | Register tables in SQLContext and query with SELECT
 
 Register DataFrames as named tables in a `SQLContext` instance, then run SQL against them. The `execute()` method returns a `LazyFrame`; call `.collect()` to materialize rows into a `DataFrame`.
+
+_Registers three DataFrames (`ohlcv`, `dim`, `scores`) as named virtual tables, then executes `SELECT * FROM ohlcv LIMIT 5` — materializing 5 OHLCV rows with all 12 columns as a Polars DataFrame._
 
 ```python
 ctx=pl.SQLContext(ohlcv=ohlcv_pl, dim=dim_pl, scores=scores_pl)
@@ -76,9 +87,13 @@ display(ctx.execute("SELECT * FROM ohlcv LIMIT 5").collect())
 
 <div><!-- shape: (5, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-### Polars | GROUP BY aggregation
+### GROUP BY Aggregation
+
+#### Polars | GROUP BY with AVG and COUNT across all symbols
 
 Aggregate over all rows grouped by a key column using standard `GROUP BY ... ORDER BY` SQL. The query runs against the registered `ohlcv` table and returns per-symbol statistics across the full date range.
+
+_Groups 66,355 OHLCV rows by symbol, computes average close price and trading-day count per stock, and returns the top-10 by average close — confirming Hermès (RMS.PA, €1,761) and Adyen (ADYEN.AS, €1,545) as the highest-priced index constituents._
 
 ```python
 display(ctx.execute("""
@@ -92,9 +107,13 @@ display(ctx.execute("""
 
 <div><!-- shape: (10, 3) --><table><thead><tr><th>symbol</th><th>avg_close</th><th>days</th></tr><tr><td>str</td><td>f64</td><td>u32</td></tr></thead><tbody><tr><td>RMS.PA</td><td>1761.555748</td><td>1331</td></tr><tr><td>ADYEN.AS</td><td>1545.976409</td><td>1331</td></tr><tr><td>ASML.AS</td><td>671.348911</td><td>1331</td></tr><tr><td>MC.PA</td><td>662.404508</td><td>1331</td></tr><tr><td>RHM.DE</td><td>544.661533</td><td>1324</td></tr><tr><td>ARGX.BR</td><td>413.691961</td><td>1331</td></tr><tr><td>OR.PA</td><td>377.544365</td><td>1331</td></tr><tr><td>MUV2.DE</td><td>374.659932</td><td>1324</td></tr><tr><td>RACE.MI</td><td>289.753823</td><td>1321</td></tr><tr><td>ALV.DE</td><td>252.193731</td><td>1324</td></tr></tbody></table></div>
 
-### Polars | JOIN query
+### JOIN Queries
+
+#### Polars | INNER JOIN with WHERE filter on country
 
 Join two registered tables on a shared key using `JOIN ... USING (column)`. Equivalent to a Polars expression `join(dim_pl, on="symbol")`, but expressed in SQL for readability when combining many tables or when porting SQL from another system.
+
+_Joins `ohlcv` and `dim` on `symbol`, filters to German-listed stocks only, and returns the top-10 closing prices — demonstrating that Rheinmetall (RHM.DE) holds the highest recorded close (€1,988.50) in the dataset._
 
 ```python
 display(ctx.execute("""
@@ -117,9 +136,13 @@ The SQL syntax used in Polars SQLContext follows the same patterns as [sql-funda
 >
 > Polars SQLContext does not implement the `ROWS BETWEEN N PRECEDING AND CURRENT ROW` frame specification as of Polars 1.x. Use the Polars expression API (`pl.col().rolling_mean(window_size)`) for sliding-window aggregations. DuckDB (see [DuckDB — Embedded Analytical Database](#duckdb--embedded-analytical-database)) supports the full `ROWS BETWEEN` syntax.
 
-### Polars | SQL window function (cumulative average)
+### SQL and Expression Window Functions
+
+#### Polars | Cumulative average with SQL OVER(PARTITION BY ORDER BY)
 
 Compute a cumulative average over all rows up to and including the current row, partitioned by symbol and ordered by date, using `AVG(col) OVER (PARTITION BY ... ORDER BY ...)`. This form of window function is supported in `pl.SQLContext`; `ROWS BETWEEN` frame specifications are not.
+
+_Computes a running cumulative average of ASML.AS close prices partitioned by symbol and ordered by date — confirming that with ORDER BY but no ROWS BETWEEN frame, the window expands to include all prior rows, yielding the dataset-wide average (671.35) at every position._
 
 ```python
 result = (
@@ -137,9 +160,11 @@ display(result)
 
 <div><!-- shape: (10, 4) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>cumulative_avg</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>2026-03-12</td><td>1190.8</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-11</td><td>1198.8</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-10</td><td>1200.0</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-09</td><td>1147.6</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-06</td><td>1147.0</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-05</td><td>1186.0</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-04</td><td>1199.8</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-03</td><td>1161.8</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-03-02</td><td>1210.4</td><td>671.348911</td></tr><tr><td>ASML.AS</td><td>2026-02-27</td><td>1233.4</td><td>671.348911</td></tr></tbody></table></div>
 
-### Polars | Expression API rolling window (SMA-7)
+#### Polars | SMA-7 via expression API rolling_mean()
 
 For sliding-window aggregations (e.g., a 7-day simple moving average), use `pl.col().rolling_mean(window_size)` via the Polars expression API. This is the preferred approach when `ROWS BETWEEN` SQL syntax is needed but not yet available in `pl.SQLContext`.
+
+_Filters ASML.AS rows, sorts chronologically, and computes a strict 7-day rolling mean on `close` — showing that the most recent SMA-7 (≈1,181) smooths the daily close swings visible in the sorted-descending output._
 
 ```python
 sma_result = (
@@ -3042,6 +3067,8 @@ Connect Pandas and Polars directly to SQL Server tables for reading, writing, an
 > `TrustServerCertificate=yes` from the connection string. Verify with
 > `openssl s_client -connect <host>:1433` before deploying.
 
+### pyodbc and SQLAlchemy Connection
+
 ```python
 load_dotenv(dotenv_path="../.env")
 
@@ -3111,7 +3138,11 @@ print("Connection OK")
 > In SQLAlchemy use bound parameters: `text("SELECT * FROM t WHERE symbol = :s")` with
 > `conn.execute(stmt, {"s": symbol})`.
 
-### Pandas | pd.read_sql()
+### Reading with pd.read_sql() and pl.read_database()
+
+#### Pandas | pd.read_sql()
+
+_Reads the top-5 rows from `bronze.eurostoxx50_ohlcv` into a Pandas DataFrame via a raw SQL string, printing column dtypes — confirming `datetime64[ns]` for `_ingested_at` and `object` for the `date` column before explicit parsing._
 
 ```python
 # Read entire table
@@ -3278,7 +3309,9 @@ print(f"\nShape: \n{df.shape}")
     Shape: 
     (169, 24)
 
-### Polars | pl.read_database()
+#### Polars | pl.read_database()
+
+_Reads the top-5 rows from `bronze.eurostoxx50_ohlcv` into a Polars DataFrame using a SQLAlchemy engine — returning natively typed columns including `datetime[μs]` for `_ingested_at` and `Date` for `date`, unlike Pandas which reads the date column as `object`._
 
 ```python
 # Polars with SQLAlchemy engine
@@ -3315,7 +3348,11 @@ display(df)
 
 ## Chunked Reading (Large Tables)
 
-### Pandas | Chunked read
+### Chunked Reading
+
+#### Pandas | pd.read_sql() with chunksize
+
+_Iterates through `bronze.eurostoxx50_ohlcv` in chunks of 10,000 rows using `chunksize=10_000`, accumulating total row count — demonstrating the iterator pattern for memory-bounded reads of large SQL result sets._
 
 ```python
 # Read in chunks for memory efficiency
@@ -3327,7 +3364,9 @@ print(f"Read {total:,} rows in chunks of 10,000")
 
     Read 50 rows in chunks of 10,000
 
-### Polars | Chunked read
+#### Polars | Batch reading with OFFSET/FETCH
+
+_Reads the first 10,000 rows from `bronze.eurostoxx50_ohlcv` using SQL Server's `OFFSET 0 ROWS FETCH NEXT 10000 ROWS ONLY` syntax — showing the SQL pagination pattern used in place of Polars' absent native batch iteration._
 
 ```python
 # Polars reads the full result but ConnectorX streams internally
@@ -3374,7 +3413,11 @@ print(f"First batch: {df.shape}")
 > `df.to_sql("table", engine, if_exists="append", index=False)`. For partial replacements,
 > use a `MERGE` statement instead.
 
-### Pandas | df.to_sql()
+### Writing DataFrames
+
+#### Pandas | df.to_sql()
+
+_Creates a 2-row test DataFrame with symbol, score, and date columns, writes it to `dbo._test_pandas` with `if_exists="replace"`, then demonstrates explicit SQL type mapping (`NVARCHAR`, `Float`, `Date`) and row-append behavior._
 
 ```python
 # Create a test DataFrame
@@ -3496,7 +3539,9 @@ display(pd.read_sql("SELECT * FROM dbo._test_pandas", ENGINE))
   </tbody>
 </table>
 
-### Polars | write via Pandas or pyodbc
+#### Polars | Write via Pandas bridge and pyodbc fast_executemany
+
+_Converts a 2-row Polars DataFrame to Pandas and writes it to `dbo._test_polars` via SQLAlchemy, then bulk-inserts the same rows directly into `_test_bulk` using pyodbc's `fast_executemany=True` for higher-throughput ODBC batch inserts._
 
 ```python
 # Polars doesn't have a native write_sql yet — convert to Pandas first
@@ -3605,6 +3650,8 @@ with pyodbc.connect(PYODBC_CONN) as conn:
     Tables (27): ['_test_bulk', '_test_exec', '_test_pandas', '_test_pandas_typed', '_test_polars', 'dim_country', 'dim_index', 'eurostoxx50_ohlcv', 'eurostoxx50_ohlcv', 'index_dim']...
 
 ## Stored Procedures
+
+### Creating and Executing Stored Procedures
 
 ```python
 # Call stored procedures and read results

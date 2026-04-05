@@ -1,4 +1,5 @@
 ---
+title: "awk — Data Processing"
 type: reference
 category: shell
 technology: [bash, powershell, awk]
@@ -6,6 +7,17 @@ tags: [shell, text-processing]
 aliases: [awk, gawk, mawk, field processing, column extraction, text transformation, csv processing, awk reference, awk cheatsheet, GNU awk, awk functions, awk control flow]
 keywords: [awk, gawk, mawk, field separator, record separator, NR, NF, BEGIN, END, print, printf, gsub, sub, gensub, match, split, substr, tolower, toupper, associative array, getline, FNR, OFS, ORS, RS, FS, pattern-action, csv parsing, log parsing, data aggregation, group-by, running total, pivot, text processing, shell scripting, PowerShell equivalent, Import-Csv, ConvertFrom-Csv, Select-Object, Where-Object, Measure-Object, ForEach-Object, data engineering, ETL, column extraction, delimiter conversion, TSV, pipe-delimited, user-defined functions, POSIX character classes, next, nextfile, output redirection, rand, srand, int, sqrt]
 description: "Exhaustive awk/gawk reference for data engineers covering field extraction, filtering, control flow, user-defined functions, aggregation, string functions, arithmetic functions, multi-file processing, output redirection, advanced patterns, and PowerShell equivalents for every key technique."
+parent: "[[domain-text-processing]]"
+links:
+  - "[[navigation-and-listing]]"
+  - "[[reading-file-contents]]"
+  - "[[grep-and-pattern-matching]]"
+  - "[[sed-stream-editing]]"
+  - "[[date-and-time-handling]]"
+  - "[[finding-files]]"
+  - "[[file-manipulation]]"
+  - "[[compression]]"
+  - "[[data-transfer]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

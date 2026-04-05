@@ -1,4 +1,5 @@
 ---
+title: "Valuation Ratios"
 type: reference
 category: financial-domain
 technology: [yfinance, sql-server]
@@ -6,13 +7,13 @@ tags: [sql, financial]
 aliases: [Valuation Ratios, valuation metrics, PEG ratio, CAPE, Shiller PE, EV/Sales, FCF Yield, earnings yield, price-to-earnings, P/E ratio]
 keywords: [valuation ratios, PEG ratio, CAPE, Shiller P/E, EV/Sales, free cash flow yield, FCF yield, earnings yield, price-to-earnings, P/E, price-to-book, EV/EBITDA, forward PE, trailing PE, dividend yield, valuation multiples, undervalued, overvalued]
 description: "Standard equity valuation ratios beyond P/E and P/B — PEG ratio, CAPE/Shiller P/E, EV/Sales, free cash flow yield, and earnings yield with formulas, thresholds, and interpretation guidance."
-related:
-  - "[index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics)"
-  - "[daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)"
-  - "[quarterly-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores)"
-  - "[technical-indicators](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/technical-indicators)"
-  - "[risk-and-volatility-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/risk-and-volatility-metrics)"
-  - "[scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology)"
+parent: "[[domain-market-analysis]]"
+links:
+  - "[[breadth-and-sentiment-indicators]]"
+  - "[[index-maintenance-and-corporate-actions]]"
+  - "[[liquidity-and-flow-metrics]]"
+  - "[[risk-and-volatility-metrics]]"
+  - "[[technical-indicators]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

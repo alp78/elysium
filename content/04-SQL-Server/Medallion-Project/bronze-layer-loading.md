@@ -1,7 +1,17 @@
 ---
+title: "Bronze Layer Loading"
 tags: [sql, sql-server, tsql, medallion-project]
 aliases: [Bronze Layer, Bronze DDL, Bronze Loading, JSON to Bronze, Raw Layer Loading, Bronze Tables, Bronze Schema]
 description: "Complete DDL and Python loading patterns for the example medallion bronze layer — covers all table definitions, idempotent schema creation, pyodbc connection setup, truncate-and-reload vs merge loading strategies, and JSON-to-bronze data flow."
+parent: "[[domain-pipeline-patterns]]"
+links:
+  - "[[sql-server-loading-patterns]]"
+  - "[[sql-server-schema-layering]]"
+  - "[[sql-server-change-tracking]]"
+  - "[[sql-server-incremental-transforms]]"
+  - "[[sql-server-pipeline-anti-patterns]]"
+  - "[[silver-transforms]]"
+  - "[[gold-transforms]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

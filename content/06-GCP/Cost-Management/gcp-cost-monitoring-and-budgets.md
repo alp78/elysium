@@ -1,4 +1,5 @@
 ---
+title: "GCP Cost Monitoring and Budgets"
 tags: [gcp, cost, billing, finops, observability, bigquery]
 aliases:
   - cost monitoring
@@ -16,6 +17,12 @@ description: >
   budget alerts with Pub/Sub automation, cost anomaly detection, per-service
   optimization strategies, weekly review checklists, dashboard SQL, and
   Terraform cost controls. No project-specific references.
+parent: "[[domain-operations-and-cost]]"
+links:
+  - "[[cloud-logging]]"
+  - "[[cloud-monitoring-metrics]]"
+  - "[[gcp-billing-and-pricing]]"
+  - "[[gcp-total-cost-of-ownership]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

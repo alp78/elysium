@@ -1,7 +1,18 @@
 ---
+title: "Data Loading and Export"
 tags: [bigquery, gcp, data-loading, data-export]
 aliases: [BigQuery load, bq load, BigQuery export, bq extract, time travel, BigQuery GCS load, Parquet BigQuery]
 description: "How to load data into BigQuery from GCS using CSV, Parquet, and other formats — including hive-partitioned layouts — and export BigQuery tables back to GCS. Also covers BigQuery time travel for querying and restoring historical data."
+parent: "[[domain-data-services]]"
+links:
+  - "[[gcs-buckets-and-lifecycle]]"
+  - "[[gcs-object-operations]]"
+  - "[[dataset-and-table-management]]"
+  - "[[querying-and-cost-optimization]]"
+  - "[[job-management]]"
+  - "[[bigquery-problems]]"
+  - "[[firestore-data-model-and-operations]]"
+  - "[[real-time-nosql-pipelines]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

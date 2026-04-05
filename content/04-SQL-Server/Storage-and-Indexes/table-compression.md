@@ -1,7 +1,13 @@
 ---
+title: "Table Compression"
 tags: [sql, sql-server, tsql]
 aliases: [SQL Server compression, page compression, row compression, DATA_COMPRESSION, sp_estimate_data_compression_savings, table compression]
 description: "How SQL Server page and row compression works, when to apply each type, how to estimate savings before committing, and how to apply compression with minimal blocking using ONLINE rebuilds. Includes data pipeline guidance for gold-layer tables."
+parent: "[[domain-storage-internals]]"
+links:
+  - "[[storage-internals]]"
+  - "[[index-types-and-strategy]]"
+  - "[[partitioning-strategies]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

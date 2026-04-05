@@ -1,7 +1,13 @@
 ---
+title: "Service Accounts and IAM"
 tags: [security, gcp, iam, service-accounts]
 aliases: [GCP service accounts, IAM bindings, GCP IAM roles, least privilege GCP, service account keys, Workload Identity, IAM policy, gcloud iam]
 description: "How to create GCP service accounts, generate and rotate keys, grant minimum IAM roles for data pipeline workloads, and verify permissions — implementing least-privilege access as the baseline security standard."
+parent: "[[domain-security-and-identity]]"
+links:
+  - "[[gcp-identity-and-connection-patterns]]"
+  - "[[secrets-management]]"
+  - "[[vpc-service-controls]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

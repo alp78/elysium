@@ -1,4 +1,5 @@
 ---
+title: "Terraform: Data Services Blocks"
 tags: [terraform, gcp, bigquery, firestore, dataflow, cloud-sql, monitoring, logging, billing]
 aliases:
   - terraform data services
@@ -11,6 +12,11 @@ aliases:
   - google_firestore_database terraform
   - google_dataflow_job terraform
 description: "Atomic Terraform block library for GCP data services — BigQuery datasets, tables, views, materialized views, UDFs, external tables, scheduled queries, reservations, Firestore databases, indexes, backup schedules, Dataflow batch and streaming jobs, Cloud SQL instances, log sinks, monitoring alert policies, and billing budgets."
+parent: "[[domain-block-library]]"
+links:
+  - "[[tf-foundation-and-networking]]"
+  - "[[tf-compute-and-storage]]"
+  - "[[tf-iam-secrets-serverless]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

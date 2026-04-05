@@ -1,7 +1,23 @@
 ---
+title: "Datadog SQL Server Integration"
 tags: [monitoring, observability, sql, datadog]
 aliases: [SQL Server Integration, sqlserver check, Datadog SQL integration]
 description: "Complete configuration reference for the Datadog SQL Server integration on the example SQL VM — connection setup, ODBC driver, and the full conf.yaml with custom queries."
+parent: "[[domain-datadog-platform]]"
+links:
+  - "[[datadog-architecture-overview]]"
+  - "[[datadog-agent-airflow-vm]]"
+  - "[[datadog-agent-sql-vm]]"
+  - "[[datadog-gcp-integration]]"
+  - "[[datadog-custom-queries]]"
+  - "[[datadog-log-management]]"
+  - "[[datadog-sql-server-logs]]"
+  - "[[datadog-apm-traces]]"
+  - "[[datadog-dashboards]]"
+  - "[[datadog-alerting]]"
+  - "[[datadog-airflow-observability]]"
+  - "[[datadog-cost-optimization]]"
+  - "[[datadog-troubleshooting]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

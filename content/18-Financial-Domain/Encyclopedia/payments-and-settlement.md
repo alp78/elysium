@@ -1,4 +1,5 @@
 ---
+title: "Payments and Settlement"
 type: reference
 category: financial-encyclopedia
 technology: []
@@ -6,10 +7,23 @@ tags: [financial]
 aliases: [payments terms, settlement glossary, payment processing glossary, acquiring issuing glossary]
 keywords: [acquiring, issuing, clearing, settlement, authorization, gateway, merchant services, payments processing, point-of-sale, tokenization, prepaid cards, virtual card, electronic money, fintech]
 description: "Encyclopedia definitions for payments and settlement terms covering acquiring, issuing, clearing, settlement, authorization, gateway, merchant services, and payment processing drawn from the example Index universe."
-related:
-  - banking-and-lending
-  - technology-and-digital
-  - capital-markets-and-trading
+parent: "[[domain-financial-encyclopedia]]"
+links:
+  - "[[banking-and-lending]]"
+  - "[[business-models-and-commerce]]"
+  - "[[capital-markets-and-trading]]"
+  - "[[compliance-and-risk-management]]"
+  - "[[corporate-finance-and-strategy]]"
+  - "[[energy-and-commodities]]"
+  - "[[esg-and-sustainability]]"
+  - "[[exchanges-and-market-infrastructure]]"
+  - "[[insurance-and-risk]]"
+  - "[[investment-management]]"
+  - "[[pharma-and-healthcare]]"
+  - "[[real-estate-and-industrial]]"
+  - "[[structured-finance]]"
+  - "[[technology-and-digital]]"
+  - "[[trade-and-treasury]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -1,4 +1,5 @@
 ---
+title: "Connectivity Testing"
 type: concept
 category: foundations
 technology: [bash, powershell, gcp]
@@ -6,6 +7,17 @@ tags: [shell, networking]
 aliases: [netcat, nc, ping, traceroute, mtr, dig, DNS, port testing, TCP test, ss, connectivity]
 keywords: [netcat, nc, ping, traceroute, mtr, dig, DNS lookup, port testing, TCP test, ss, connectivity, connection refused, connection timed out, /dev/tcp, Test-NetConnection, Resolve-DnsName, network debugging, firewall, GCP firewall rules]
 description: "Systematic network connectivity debugging from DNS resolution through TCP port reachability to application-level authentication. Covers netcat, dig, traceroute, mtr, ss, and PowerShell Test-NetConnection."
+parent: "[[domain-network-operations]]"
+links:
+  - "[[viewing-processes]]"
+  - "[[system-resources]]"
+  - "[[killing-processes]]"
+  - "[[managing-services]]"
+  - "[[socket-inspection]]"
+  - "[[http-requests-and-apis]]"
+  - "[[firewalls]]"
+  - "[[iap-tunneling]]"
+  - "[[connecting-to-gcp-resources]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

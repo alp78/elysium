@@ -1,8 +1,11 @@
 ---
-title: "18. Design Patterns & Architecture - Python"
+title: "18. Design Patterns - Python"
 tags: [python, design-patterns]
 aliases: [design patterns, singleton, factory, observer, strategy, repository, dependency injection]
 description: "Python design patterns and architecture reference with executable examples and cell outputs — covers singleton, factory, observer, strategy, repository patterns, and dependency injection. See [18_cs_designpatterns](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/18_cs_designpatterns) for the C# equivalent."
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[18_cs_designpatterns]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

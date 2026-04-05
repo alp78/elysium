@@ -3,6 +3,18 @@ title: "Execution Plans"
 tags: [sql, sql-server, tsql]
 aliases: [query execution plan, estimated plan, actual plan, graphical plan, showplan, query plan]
 description: "How to read SQL Server execution plans in SSMS: right-to-left data flow, estimated vs actual plans, cost analysis, cardinality estimation errors, per-query wait stats, implicit conversions, parameter sniffing, batch mode, and Intelligent Query Processing. Includes all programmatic XML queries."
+parent: "[[domain-query-craft]]"
+links:
+  - "[[sargable-queries]]"
+  - "[[merge-and-upsert]]"
+  - "[[date-and-time-functions]]"
+  - "[[query-plan-analysis]]"
+  - "[[wait-stats-analysis]]"
+  - "[[memory-and-buffer-pool]]"
+  - "[[index-maintenance]]"
+  - "[[performance-audit-playbook]]"
+  - "[[pipeline-integration-and-devex]]"
+  - "[[pit-integrity-logic]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

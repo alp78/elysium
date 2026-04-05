@@ -1,4 +1,5 @@
 ---
+title: "Factor Profile and Composition"
 type: reference
 category: financial-domain
 technology: [yfinance, sql-server]
@@ -6,11 +7,14 @@ tags: [sql, financial]
 aliases: [Factor Profile, Radar Chart, Index Composition, Donut Chart]
 keywords: [factor profile, radar chart, factor tilt, value, momentum, sentiment, quality, governance, index composition, donut chart, sector allocation, cap-weighted, cube-root scaling]
 description: "Factor profile radar chart and index composition donut chart from the financial data platform dashboard, showing five-axis factor tilts and dual-ring sector/stock weight breakdowns."
-related:
-  - "[daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)"
-  - "[quarterly-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores)"
-  - "[scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology)"
-  - "[index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics)"
+parent: "[[domain-metrics-and-scoring]]"
+links:
+  - "[[chart-metrics]]"
+  - "[[daily-signal-scores]]"
+  - "[[data-sources-and-refresh]]"
+  - "[[index-snapshot-metrics]]"
+  - "[[quarterly-signal-scores]]"
+  - "[[scoring-methodology]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

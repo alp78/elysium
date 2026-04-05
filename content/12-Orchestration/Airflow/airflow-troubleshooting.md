@@ -1,4 +1,5 @@
 ---
+title: "Airflow Troubleshooting"
 tags: [orchestration, python, airflow]
 aliases:
   - Airflow DAG import errors
@@ -23,6 +24,12 @@ aliases:
   - airflow db check
   - airflow db clean
 description: "Comprehensive Airflow troubleshooting guide covering the most common errors with exact error messages and fixes: DAG import errors, stuck tasks, scheduler issues, XCom size limits, metadata DB deadlocks, OOM worker kills, and slow DAG parsing. Includes the full debugging CLI reference."
+parent: "[[domain-airflow]]"
+links:
+  - "[[airflow-core-concepts]]"
+  - "[[airflow-dag-patterns]]"
+  - "[[airflow-deployment]]"
+  - "[[airflow-problems]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

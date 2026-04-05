@@ -1,4 +1,5 @@
 ---
+title: "Risk and Volatility Metrics"
 type: reference
 category: financial-domain
 technology: [yfinance, python]
@@ -6,13 +7,13 @@ tags: [python, financial]
 aliases: [Risk and Volatility Metrics, risk metrics, volatility, Beta, VIX, maximum drawdown, Sortino ratio, Calmar ratio, Value at Risk, VaR]
 keywords: [risk metrics, volatility, beta, VIX, maximum drawdown, Sortino ratio, Calmar ratio, Value at Risk, VaR, Sharpe ratio, risk-adjusted return, downside deviation, tail risk, implied volatility]
 description: "Risk and volatility metrics for equity index analysis — Beta, VIX, maximum drawdown, Sortino ratio, Calmar ratio, and Value at Risk with formulas, thresholds, and interpretation."
-related:
-  - "[chart-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/chart-metrics)"
-  - "[daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)"
-  - "[index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics)"
-  - "[valuation-ratios](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/valuation-ratios)"
-  - "[technical-indicators](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/technical-indicators)"
-  - "[breadth-and-sentiment-indicators](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/breadth-and-sentiment-indicators)"
+parent: "[[domain-market-analysis]]"
+links:
+  - "[[breadth-and-sentiment-indicators]]"
+  - "[[index-maintenance-and-corporate-actions]]"
+  - "[[liquidity-and-flow-metrics]]"
+  - "[[technical-indicators]]"
+  - "[[valuation-ratios]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

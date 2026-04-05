@@ -1,4 +1,5 @@
 ---
+title: "Compression"
 type: concept
 category: foundations
 technology: [bash, powershell]
@@ -6,6 +7,17 @@ tags: [shell]
 aliases: [gzip, zstd, tar, compress, decompress, archive, zip, snappy]
 keywords: [gzip, zstd, tar, compression, decompress, archive, zip, snappy, compress data, tar.gz, tar.zst, gz, compression algorithm, compression level, pipeline compression strategy, 7zip, GZipStream, Compress-Archive]
 description: "Compression tools and strategies for data engineering: gzip for compatibility, zstd for performance, tar for directory archiving. Includes a compression strategy matrix for pipeline intermediate files, archives, Parquet, and database backups."
+parent: "[[domain-file-operations]]"
+links:
+  - "[[navigation-and-listing]]"
+  - "[[reading-file-contents]]"
+  - "[[grep-and-pattern-matching]]"
+  - "[[awk-data-processing]]"
+  - "[[sed-stream-editing]]"
+  - "[[date-and-time-handling]]"
+  - "[[finding-files]]"
+  - "[[file-manipulation]]"
+  - "[[data-transfer]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

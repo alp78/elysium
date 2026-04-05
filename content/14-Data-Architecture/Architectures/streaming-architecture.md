@@ -1,7 +1,16 @@
 ---
+title: "Streaming Architecture"
 tags: [data-architecture, architecture, streaming, python, gcp]
 aliases: [streaming architecture, Lambda architecture, Kappa architecture, event-driven architecture, real-time pipeline, stream processing, CDC, change data capture, event streaming, micro-batch, continuous processing, stream-first architecture]
 description: "Streaming architecture patterns — Lambda, Kappa, and event-driven — covering batch vs streaming trade-offs, message broker comparisons (Kafka, Pub/Sub, Kinesis), stream processing engines (Flink, Beam/Dataflow, Spark Structured Streaming), CDC tools (Debezium, GCP Datastream), and the GCP canonical streaming stack."
+parent: "[[domain-system-blueprints]]"
+links:
+  - "[[data-warehouse-architecture]]"
+  - "[[data-lake-architecture]]"
+  - "[[lakehouse-architecture]]"
+  - "[[data-mesh-architecture]]"
+  - "[[open-table-formats]]"
+  - "[[context-and-metadata-architecture]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

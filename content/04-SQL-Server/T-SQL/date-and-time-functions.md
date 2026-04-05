@@ -1,7 +1,20 @@
 ---
+title: "Date and Time Functions"
 tags: [python, csharp, sql, sql-server, tsql]
 aliases: [SQL Server date functions, datetime types, DATETIMEOFFSET, DATETIME2, DATEADD, DATEDIFF, EOMONTH, DATETRUNC, AT TIME ZONE, ISO 8601, date arithmetic]
 description: "Complete reference for date and time handling in SQL Server T-SQL, Python, and C# — covering ISO 8601 formats, data type selection, parsing/formatting, date arithmetic, timezone conversion, and DST pitfalls that break pipelines."
+parent: "[[domain-query-craft]]"
+links:
+  - "[[sargable-queries]]"
+  - "[[merge-and-upsert]]"
+  - "[[execution-plans]]"
+  - "[[query-plan-analysis]]"
+  - "[[wait-stats-analysis]]"
+  - "[[memory-and-buffer-pool]]"
+  - "[[index-maintenance]]"
+  - "[[performance-audit-playbook]]"
+  - "[[pipeline-integration-and-devex]]"
+  - "[[pit-integrity-logic]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

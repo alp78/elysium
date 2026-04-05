@@ -1,4 +1,5 @@
 ---
+title: "Image Management"
 tags: [docker, gcp]
 aliases:
   - Docker images
@@ -18,6 +19,7 @@ aliases:
   - slim base image
   - alpine image
 description: "Comprehensive Docker image management reference — Dockerfile instructions, building with cache and multi-stage patterns, tagging strategies, pushing to GCP Artifact Registry, inspecting layers and size, and cleaning up disk usage."
+parent: "[[domain-images-and-builds]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

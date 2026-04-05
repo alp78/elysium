@@ -1,7 +1,20 @@
 ---
+title: "Query Plan Analysis"
 tags: [performance, sql, sql-server, tsql]
 aliases: [execution plans, query plans, parameter sniffing, cardinality estimation, plan cache, Query Store, SARGability, SHOWPLAN, key lookup, index seek, index scan, table scan]
 description: "How to read, capture, and analyze SQL Server execution plans to identify performance problems — covers plan operators, cardinality estimation errors, parameter sniffing, Query Store setup, and plan forcing to fix regressions."
+parent: "[[domain-query-craft]]"
+links:
+  - "[[sargable-queries]]"
+  - "[[merge-and-upsert]]"
+  - "[[date-and-time-functions]]"
+  - "[[execution-plans]]"
+  - "[[wait-stats-analysis]]"
+  - "[[memory-and-buffer-pool]]"
+  - "[[index-maintenance]]"
+  - "[[performance-audit-playbook]]"
+  - "[[pipeline-integration-and-devex]]"
+  - "[[pit-integrity-logic]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

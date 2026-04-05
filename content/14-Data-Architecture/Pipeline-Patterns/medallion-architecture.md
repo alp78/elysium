@@ -1,7 +1,16 @@
 ---
+title: "Medallion Architecture"
 tags: [data-architecture, architecture, pipeline, medallion, python, sql]
 aliases: [medallion architecture, bronze silver gold, bronze/silver/gold, data lakehouse, three layer architecture, medallion pattern]
 description: "The medallion architecture (bronze/silver/gold) implemented in SQL Server — raw data landing, cleaning and deduplication, and analytics-ready aggregation across three schema layers."
+parent: "[[domain-pipeline-construction]]"
+links:
+  - "[[functional-pipeline-architecture]]"
+  - "[[data-flow-architecture]]"
+  - "[[idempotent-pipeline-design]]"
+  - "[[dbt-transformation-layer]]"
+  - "[[serialization-formats]]"
+  - "[[migration-idempotency-backfills]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -8,8 +8,9 @@ tags:
   - dependencies
 aliases: [virtual environments, venv, pip, requirements.txt, pyenv, python environments]
 description: "Python environment and dependency management — venv creation, pip workflows, requirements.txt lifecycle, pyenv version management, Docker/CI/CD/GCP deployment patterns, and anti-patterns."
-related:
-  - "[[programming-languages-index]]"
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[26_cs_environments]]"
 created: 2026-03-30
 updated: 2026-03-30
 status: complete

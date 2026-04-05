@@ -1,4 +1,5 @@
 ---
+title: "Viewing Processes"
 type: concept
 category: foundations
 technology: [bash, powershell]
@@ -6,6 +7,17 @@ tags: [shell, process-management]
 aliases: [ps aux, htop, top, pstree, process list, process monitoring, iostat, docker stats]
 keywords: [ps aux, htop, top, pstree, process list, PID, CPU usage, memory usage, RSS, VSZ, zombie process, D state, uninterruptible sleep, iostat, docker stats, process tree, uptime, load average, free memory]
 description: "Linux and PowerShell commands for viewing running processes, understanding resource usage, and diagnosing system performance issues. Covers ps aux, htop, top, pstree, and the D state (uninterruptible sleep) that cannot be killed."
+parent: "[[domain-process-management]]"
+links:
+  - "[[system-resources]]"
+  - "[[killing-processes]]"
+  - "[[managing-services]]"
+  - "[[connectivity-testing]]"
+  - "[[socket-inspection]]"
+  - "[[http-requests-and-apis]]"
+  - "[[firewalls]]"
+  - "[[iap-tunneling]]"
+  - "[[connecting-to-gcp-resources]]"
 created: 2026-03-22
 updated: 2026-04-03
 status: complete

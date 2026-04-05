@@ -1,8 +1,19 @@
 ---
+title: "dbt: Cross-Adapter Patterns"
 tags: [pipeline, dbt]
 status: stable
 updated: 2026-03-23
 description: "Dispatch macros, adapter-conditional SQL, cross-adapter testing strategy, and a SQL Server to BigQuery migration guide."
+parent: "[[domain-operations-and-adapters]]"
+links:
+  - "[[dbt-airflow-integration]]"
+  - "[[dbt-ci-cd]]"
+  - "[[dbt-documentation-and-lineage]]"
+  - "[[dbt-observability]]"
+  - "[[dbt-performance-tuning]]"
+  - "[[dbt-troubleshooting]]"
+  - "[[dbt-bigquery-adapter]]"
+  - "[[dbt-sqlserver-adapter]]"
 ---
 
 # dbt: Cross-Adapter Patterns

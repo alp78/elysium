@@ -4,6 +4,13 @@ tags: [python, pandas, polars, dataframes]
 aliases:
   - head, tail, describe, info, select, filter, isin, where
 description: "Pandas/Polars DataFrame reference 02/10 — Explore, Select & Filter (head/tail, describe, column selection, row filtering). Side-by-side executable examples with cell outputs."
+parent: "[[domain-ingest-and-explore]]"
+links:
+  - "[[01_py_foundations_io]]"
+  - "[[01_cs_foundations_io]]"
+  - "[[02_cs_explore_select_filter]]"
+  - "[[07_py_types_interop]]"
+  - "[[07_cs_types_interop]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -2593,6 +2600,8 @@ display(scores_pl.null_count())
 ---
 ## Exploring the Dimension Table
 
+### Head Preview
+
 ```python
 display(Markdown("**index_dim — Pandas:**"))
 display(dim_pd.drop(columns="long_business_summary").head())
@@ -2783,6 +2792,8 @@ display(dim_pl.head())
 #### index_dim — Polars
 
 <div><!-- shape: (5, 26) --><table><thead><tr><th>id</th><th>_index</th><th>symbol</th><th>long_name</th><th>short_name</th><th>sector</th><th>sector_key</th><th>industry</th><th>industry_key</th><th>country</th><th>city</th><th>website</th><th>long_business_summary</th><th>exchange</th><th>full_exchange_name</th><th>exchange_timezone_name</th><th>exchange_timezone_short</th><th>currency</th><th>financial_currency</th><th>quote_type</th><th>market</th><th>range_start</th><th>price_data_start</th><th>valid_from</th><th>valid_to</th><th>is_current</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>date</td><td>date</td><td>datetime[ns]</td><td>null</td><td>bool</td></tr></thead><tbody><tr><td>1</td><td>euro_stoxx_50</td><td>ASML.AS</td><td>ASML Holding N.V.</td><td>ASML HOLDING</td><td>Technology</td><td>technology</td><td>Semiconductor Equipment &amp; Mate…</td><td>semiconductor-equipment-materi…</td><td>Netherlands</td><td>Veldhoven</td><td>https://www.asml.com</td><td>ASML Holding N.V. provides lit…</td><td>AMS</td><td>Amsterdam</td><td>Europe/Amsterdam</td><td>CET</td><td>EUR</td><td>EUR</td><td>EQUITY</td><td>nl_market</td><td>1998-07-20</td><td>2021-01-01</td><td>2026-03-04 22:11:36.189862</td><td>null</td><td>true</td></tr><tr><td>2</td><td>euro_stoxx_50</td><td>MC.PA</td><td>LVMH Moët Hennessy - Louis Vui…</td><td>LVMH</td><td>Consumer Cyclical</td><td>consumer-cyclical</td><td>Luxury Goods</td><td>luxury-goods</td><td>France</td><td>Paris</td><td>https://www.lvmh.com</td><td>LVMH Moët Hennessy - Louis Vui…</td><td>PAR</td><td>Paris</td><td>Europe/Paris</td><td>CET</td><td>EUR</td><td>EUR</td><td>EQUITY</td><td>fr_market</td><td>2000-01-03</td><td>2021-01-01</td><td>2026-03-04 22:11:36.189862</td><td>null</td><td>true</td></tr><tr><td>3</td><td>euro_stoxx_50</td><td>RMS.PA</td><td>Hermès International Société e…</td><td>HERMES INTL</td><td>Consumer Cyclical</td><td>consumer-cyclical</td><td>Luxury Goods</td><td>luxury-goods</td><td>France</td><td>Paris</td><td>https://finance.hermes.com</td><td>Hermès International Société e…</td><td>PAR</td><td>Paris</td><td>Europe/Paris</td><td>CET</td><td>EUR</td><td>EUR</td><td>EQUITY</td><td>fr_market</td><td>2000-01-03</td><td>2021-01-01</td><td>2026-03-04 22:11:36.193940</td><td>null</td><td>true</td></tr><tr><td>4</td><td>euro_stoxx_50</td><td>OR.PA</td><td>L&#x27;Oréal S.A.</td><td>L&#x27;OREAL</td><td>Consumer Defensive</td><td>consumer-defensive</td><td>Household &amp; Personal Products</td><td>household-personal-products</td><td>France</td><td>Clichy</td><td>https://www.loreal.com</td><td>L&#x27;Oréal S.A., through its subs…</td><td>PAR</td><td>Paris</td><td>Europe/Paris</td><td>CET</td><td>EUR</td><td>EUR</td><td>EQUITY</td><td>fr_market</td><td>2000-01-03</td><td>2021-01-01</td><td>2026-03-04 22:11:36.193940</td><td>null</td><td>true</td></tr><tr><td>5</td><td>euro_stoxx_50</td><td>SAP.DE</td><td>SAP SE</td><td>SAP SE</td><td>Technology</td><td>technology</td><td>Software - Application</td><td>software-application</td><td>Germany</td><td>Walldorf</td><td>https://www.sap.com</td><td>SAP SE, together with its subs…</td><td>GER</td><td>XETRA</td><td>Europe/Berlin</td><td>CET</td><td>EUR</td><td>EUR</td><td>EQUITY</td><td>de_market</td><td>1998-04-09</td><td>2021-01-01</td><td>2026-03-04 22:11:36.193940</td><td>null</td><td>true</td></tr></tbody></table></div>
+
+### Types and Schema
 
 ```python
 display(Markdown("**index_dim — dtypes (Pandas):**"))
@@ -3495,6 +3506,8 @@ This section covers positional, label-based, and name-based row and column selec
 >
 > Pandas provides two indexing axes: `.iloc[]` for integer position and `.loc[]` for label-based access. Polars has no `.iloc`/`.loc` — all column selection goes through `.select()` with expressions, and all row filtering goes through `.filter()`. This eliminates the `SettingWithCopyWarning` and chained-indexing bugs common in Pandas.
 
+### Dataset Overview
+
 ```python
 display(Markdown("**Quick look at both datasets:**"))
 display(ohlcv_pd.head(3))
@@ -3691,7 +3704,7 @@ display(dim_pd.drop(columns="long_business_summary").head(3))
 
 ### Selecting Rows by Position
 
-#### Single Row
+### Single Row
 
 ```python
 # Pandas — iloc returns a Series
@@ -3777,7 +3790,7 @@ display(ohlcv_pl.slice(0, 1))
 
 <div><!-- shape: (1, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-#### Multiple Rows by Position
+### Multiple Rows by Position
 
 ```python
 # Pandas — pass a list of positions
@@ -3864,7 +3877,7 @@ display(ohlcv_pl[[0, 10, 100]])
 
 <div><!-- shape: (3, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21170</td><td>ABI.BR</td><td>2021-01-18</td><td>56.25</td><td>57.3</td><td>56.2</td><td>57.08</td><td>53.4544</td><td>730298</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21260</td><td>ABI.BR</td><td>2021-05-26</td><td>61.99</td><td>62.39</td><td>61.83</td><td>62.12</td><td>58.6701</td><td>940186</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-#### Row Slicing
+### Row Slicing
 
 ```python
 # Pandas — standard Python slicing (start:stop)
@@ -3981,7 +3994,7 @@ display(ohlcv_pl.slice(10, 5))
 
 <div><!-- shape: (5, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21170</td><td>ABI.BR</td><td>2021-01-18</td><td>56.25</td><td>57.3</td><td>56.2</td><td>57.08</td><td>53.4544</td><td>730298</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21171</td><td>ABI.BR</td><td>2021-01-19</td><td>57.1</td><td>57.26</td><td>56.26</td><td>56.35</td><td>52.7707</td><td>1116570</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21172</td><td>ABI.BR</td><td>2021-01-20</td><td>56.35</td><td>56.77</td><td>56.0</td><td>56.24</td><td>52.6677</td><td>1226516</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21173</td><td>ABI.BR</td><td>2021-01-21</td><td>56.2</td><td>56.55</td><td>55.31</td><td>55.31</td><td>51.7968</td><td>1404283</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21174</td><td>ABI.BR</td><td>2021-01-22</td><td>55.28</td><td>55.28</td><td>54.12</td><td>54.78</td><td>51.3005</td><td>1557287</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-#### Row by Label (Pandas only)
+### Row by Label
 
 Pandas DataFrames have a row index that supports label-based access via `loc`.
 Polars has no row index — use `filter()` instead.
@@ -4117,13 +4130,13 @@ display(Markdown("**Polars — filter as label equivalent:**"))
 display(dim_pl.filter(pl.col("symbol").is_in(["ASML.AS", "SAP.DE"])).drop("long_business_summary"))
 ```
 
-##### Polars | filter as label equivalent
+#### Polars | filter as label equivalent
 
 <div><!-- shape: (2, 25) --><table><thead><tr><th>id</th><th>_index</th><th>symbol</th><th>long_name</th><th>short_name</th><th>sector</th><th>sector_key</th><th>industry</th><th>industry_key</th><th>country</th><th>city</th><th>website</th><th>exchange</th><th>full_exchange_name</th><th>exchange_timezone_name</th><th>exchange_timezone_short</th><th>currency</th><th>financial_currency</th><th>quote_type</th><th>market</th><th>range_start</th><th>price_data_start</th><th>valid_from</th><th>valid_to</th><th>is_current</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>str</td><td>date</td><td>date</td><td>datetime[ns]</td><td>null</td><td>bool</td></tr></thead><tbody><tr><td>1</td><td>euro_stoxx_50</td><td>ASML.AS</td><td>ASML Holding N.V.</td><td>ASML HOLDING</td><td>Technology</td><td>technology</td><td>Semiconductor Equipment &amp; Mate…</td><td>semiconductor-equipment-materi…</td><td>Netherlands</td><td>Veldhoven</td><td>https://www.asml.com</td><td>AMS</td><td>Amsterdam</td><td>Europe/Amsterdam</td><td>CET</td><td>EUR</td><td>EUR</td><td>EQUITY</td><td>nl_market</td><td>1998-07-20</td><td>2021-01-01</td><td>2026-03-04 22:11:36.189862</td><td>null</td><td>true</td></tr><tr><td>5</td><td>euro_stoxx_50</td><td>SAP.DE</td><td>SAP SE</td><td>SAP SE</td><td>Technology</td><td>technology</td><td>Software - Application</td><td>software-application</td><td>Germany</td><td>Walldorf</td><td>https://www.sap.com</td><td>GER</td><td>XETRA</td><td>Europe/Berlin</td><td>CET</td><td>EUR</td><td>EUR</td><td>EQUITY</td><td>de_market</td><td>1998-04-09</td><td>2021-01-01</td><td>2026-03-04 22:11:36.193940</td><td>null</td><td>true</td></tr></tbody></table></div>
 
 ### Selecting Rows and Columns Together
 
-#### By Position
+### By Position
 
 ```python
 # Pandas — iloc[rows, cols]
@@ -4193,7 +4206,7 @@ display(ohlcv_pl.slice(0, 5).select(cols))
 
 <div><!-- shape: (5, 4) --><table><thead><tr><th>date</th><th>open</th><th>high</th><th>low</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td></tr><tr><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td></tr><tr><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td></tr><tr><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td></tr><tr><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td></tr></tbody></table></div>
 
-#### By Name / Condition + Columns
+### By Name and Condition
 
 ```python
 # Pandas — loc with condition + column names
@@ -4261,7 +4274,7 @@ display(
 
 <div><!-- shape: (5, 3) --><table><thead><tr><th>date</th><th>close</th><th>volume</th></tr><tr><td>date</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>406.25</td><td>789502</td></tr><tr><td>2021-01-05</td><td>406.9</td><td>798787</td></tr><tr><td>2021-01-06</td><td>402.85</td><td>875711</td></tr><tr><td>2021-01-07</td><td>403.9</td><td>874780</td></tr><tr><td>2021-01-08</td><td>416.05</td><td>975243</td></tr></tbody></table></div>
 
-#### Practical | Subset from Dimension Table
+### Practical Subset from Dimension Table
 
 ```python
 # Pandas — first 5 stocks, just name and sector
@@ -4269,7 +4282,7 @@ display(Markdown("**Pandas:**"))
 display(dim_pd.iloc[:5][["symbol", "long_name", "sector", "country"]])
 ```
 
-#### Pandas
+#### Pandas | first 5 stocks — symbol, name, sector, country
 
 <table>
   <thead>
@@ -4326,7 +4339,7 @@ display(Markdown("**Polars:**"))
 display(dim_pl.slice(0, 5).select("symbol", "long_name", "sector", "country"))
 ```
 
-#### Polars
+#### Polars | first 5 stocks — symbol, name, sector, country
 
 <div><!-- shape: (5, 4) --><table><thead><tr><th>symbol</th><th>long_name</th><th>sector</th><th>country</th></tr><tr><td>str</td><td>str</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>ASML.AS</td><td>ASML Holding N.V.</td><td>Technology</td><td>Netherlands</td></tr><tr><td>MC.PA</td><td>LVMH Moët Hennessy - Louis Vui…</td><td>Consumer Cyclical</td><td>France</td></tr><tr><td>RMS.PA</td><td>Hermès International Société e…</td><td>Consumer Cyclical</td><td>France</td></tr><tr><td>OR.PA</td><td>L&#x27;Oréal S.A.</td><td>Consumer Defensive</td><td>France</td></tr><tr><td>SAP.DE</td><td>SAP SE</td><td>Technology</td><td>Germany</td></tr></tbody></table></div>
 
@@ -4336,6 +4349,8 @@ display(dim_pl.slice(0, 5).select("symbol", "long_name", "sector", "country"))
 ### Single Column Selection
 
 #### Pandas | bracket and dot notation
+
+_Selects the `close` column from `ohlcv_pd` using bracket notation and dot attribute access, both returning the first 5 rows as an identical Series — demonstrating that `df["col"]` and `df.col` are interchangeable for column retrieval._
 
 ```python
 display(ohlcv_pd["close"].head())
@@ -4408,6 +4423,9 @@ display(ohlcv_pd.close.head())
 </table>
 
 #### Polars | select() and pl.col()
+
+_Selects `symbol`, `date`, and `close` from `ohlcv_pl` using string shorthand in `select()`, then repeats with explicit `pl.col()` expressions — confirming that bare strings and `pl.col()` are interchangeable column references, both returning a 5-row, 2–3 column result._
+
 ```python
 display(ohlcv_pl.select("symbol", "date", "close").head())
 ```
@@ -4424,6 +4442,9 @@ display(ohlcv_pl.select(pl.col("symbol"), pl.col("close")).head())
 ### Multiple Column Selection
 
 #### Pandas | list, loc
+
+_Selects three columns from `ohlcv_pd` using a double-bracket list — the standard Pandas idiom for returning a DataFrame (not a Series) with a named column subset — then demonstrates `loc[:, [...]]` and `loc[:, "open":"close"]` for label-based multi-column access._
+
 ```python
 display(ohlcv_pd[["symbol", "date", "close"]].head())
 ```
@@ -4579,6 +4600,8 @@ display(ohlcv_pd.loc[:, "open":"close"].head())
 
 #### Polars | pl.col() with a list
 
+_Passes a Python list of column names to `pl.col()` inside `select()`, returning the five OHLCV price columns — demonstrating that `pl.col(["a", "b", ...])` is a concise alternative to `pl.col("a"), pl.col("b"), ...` for multi-column selection._
+
 ```python
 display(ohlcv_pl.select(pl.col(["symbol", "open", "high", "low", "close"])).head())
 ```
@@ -4589,6 +4612,9 @@ display(ohlcv_pl.select(pl.col(["symbol", "open", "high", "low", "close"])).head
 ### Column Selection by Position
 
 #### Pandas | iloc
+
+_Uses `iloc[:, :3]` to return the first three columns (id, symbol, date) of `ohlcv_pd` by position, then `iloc[:, [0, 2, 4]]` to retrieve non-contiguous columns id, date, and high — both operations across all rows._
+
 ```python
 display(Markdown("**First three columns by position:**"))
 display(ohlcv_pd.iloc[:, :3].head())
@@ -4691,6 +4717,8 @@ display(ohlcv_pd.iloc[:, [0, 2, 4]].head())
 
 #### Polars | index into columns list
 
+_Slices `ohlcv_pl.columns` (a Python list) to get the first three column names, then passes them to `select()` — and repeats with a list comprehension for non-contiguous positions 0, 2, 4 — since Polars has no `iloc`-style positional column indexer._
+
 ```python
 # Polars has no positional column indexing — slice the columns list
 display(Markdown("**First three columns by position:**"))
@@ -4715,6 +4743,9 @@ Pandas selects all columns by default; exclusion uses `drop()` (covered later).
 Polars provides `pl.all()` and `pl.exclude()` as expression-level selectors.
 
 #### Polars | pl.all() and pl.exclude()
+
+_Uses `pl.all()` inside `select()` to pass through all 12 columns of `ohlcv_pl` unmodified, then `pl.exclude("volume")` to drop a single column and `pl.exclude(["volume", "symbol"])` to drop two — demonstrating expression-level exclusion without listing every kept column._
+
 ```python
 display(ohlcv_pl.select(pl.all()).head(3))
 ```
@@ -4743,6 +4774,9 @@ display(ohlcv_pl.select(pl.exclude(["volume", "symbol"])).head())
 ### Column Selection by Dtype
 
 #### Pandas | select_dtypes()
+
+_Passes `include="number"` to `select_dtypes()` on `ohlcv_pd`, returning the 9 numeric columns (id, open, high, low, close, adj_close, volume, dividends, stock_splits) and filtering out symbol, date, and is_filled — then repeats with `include="object"` to isolate the two string columns._
+
 ```python
 display(Markdown("**Numeric columns only:**"))
 display(ohlcv_pd.select_dtypes(include="number").head())
@@ -4874,6 +4908,9 @@ display(ohlcv_pd.select_dtypes(include="object").head())
 </table>
 
 #### Polars | polars.selectors
+
+_Uses `cs.numeric()`, `cs.string()`, and `cs.temporal()` on `ohlcv_pl` to select 9 numeric columns, 1 string column (symbol), and 1 temporal column (date) respectively — then demonstrates `cs.by_dtype(pl.Float64)` and `cs.by_dtype(pl.Int64)` for single-dtype filtering._
+
 ```python
 display(ohlcv_pl.select(cs.numeric()).head())
 ```
@@ -4914,6 +4951,9 @@ display(ohlcv_pl.select(cs.by_dtype(pl.Int64)).head())
 ### Column Selection by Pattern / Regex
 
 #### Pandas | filter(regex=...)
+
+_Applies `df.filter(regex="o")` to `ohlcv_pd`, returning the 7 columns whose names contain the letter "o" (symbol, open, low, close, adj_close, volume, stock_splits) — then demonstrates anchored patterns: `^c` for names starting with "c" and `e` for names containing "e"._
+
 ```python
 display(Markdown("**Columns matching regex (contains 'o'):**"))
 display(ohlcv_pd.filter(regex="o").head())
@@ -5101,6 +5141,9 @@ display(ohlcv_pd.filter(regex="e").head())
 </table>
 
 #### Polars | pl.col("^regex$") and cs.by_name()
+
+_Uses `cs.by_name("open", "close")` to select two columns by exact name, then demonstrates Polars regex column selection with `pl.col("^(c|o).*$")` for names starting with "c" or "o" and `pl.col("^.*e$")` for names ending with "e" — all anchored with `^...$` as Polars requires._
+
 ```python
 display(ohlcv_pl.select(cs.by_name("open", "close")).head())
 ```
@@ -5162,6 +5205,8 @@ display(ohlcv_pl.select(~cs.numeric()).head())
 
 #### Pandas | rename()
 - **Rename**: Rename columns.
+
+_Renames `open` to `Open` and `close` to `Close` in `ohlcv_pd` using a `columns` dictionary — the result confirms both columns are capitalised while the remaining 10 columns are unchanged._
 
 ```python
 display(
@@ -5239,6 +5284,8 @@ display(
 #### Polars | rename()
 - **Rename**: Rename columns.
 
+_Applies the same two-column rename as the Pandas example using a plain dict (no `columns=` keyword) — confirms API parity while highlighting that Polars `rename()` takes the mapping as the first positional argument._
+
 ```python
 display(
     ohlcv_pl.rename({"open": "Open", "close": "Close"}).head(3)
@@ -5250,6 +5297,8 @@ display(
 #### Polars | alias() inside select()
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 - **Alias**: Give an expression result a column name (Polars).
+
+_Selects `symbol` and `date` unchanged, renames `close` to `closing_price` and `volume` to `vol` using `.alias()` per expression — reducing the result from 12 to 4 named columns without a separate rename step._
 
 ```python
 display(
@@ -5266,6 +5315,8 @@ display(
 
 #### Polars | name.prefix() / name.suffix()
 - **Selector: Numeric**: Select all numeric columns (Polars selectors module).
+
+_Adds a `num_` prefix to all 9 numeric column names using `cs.numeric().name.prefix()`, then demonstrates `pl.all().name.suffix("_raw")` to append `_raw` to all 12 column names — showing both approaches to bulk column renaming via name modifiers._
 
 ```python
 display(Markdown("**Add prefix to numeric columns:**"))
@@ -5294,6 +5345,7 @@ display(
 
 #### Pandas | explicit list
 
+_Reorders `ohlcv_pd` to a 7-column subset with `date` and `symbol` first, followed by OHLCV price columns — using a manually defined list as the column index to achieve reordering and column subsetting in one bracket operation._
 
 ```python
 new_order = ["date", "symbol", "close", "open", "high", "low", "volume"]
@@ -5349,6 +5401,7 @@ display(ohlcv_pd[new_order].head(3))
 
 #### Polars | select() reorders
 
+_Reorders `ohlcv_pl` to the same 7-column subset as the Pandas example by passing the desired column order directly to `select()` — demonstrating that Polars `select()` naturally reorders and subsets in one step._
 
 ```python
 display(
@@ -5358,8 +5411,9 @@ display(
 
 <div><!-- shape: (3, 7) --><table><thead><tr><th>date</th><th>symbol</th><th>close</th><th>open</th><th>high</th><th>low</th><th>volume</th></tr><tr><td>date</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>ABI.BR</td><td>57.21</td><td>58.15</td><td>58.85</td><td>56.78</td><td>1513937</td></tr><tr><td>2021-01-05</td><td>ABI.BR</td><td>57.18</td><td>56.9</td><td>57.98</td><td>56.75</td><td>1382722</td></tr><tr><td>2021-01-06</td><td>ABI.BR</td><td>58.77</td><td>57.96</td><td>58.94</td><td>57.39</td><td>1370204</td></tr></tbody></table></div>
 
-#### Move specific columns to front (Polars idiom)
+#### Polars | move specific columns to front
 
+_Moves `date` and `symbol` to the front of `ohlcv_pl` while preserving all 12 columns by splitting the column list into `front` and `rest`, then concatenating them as the `select()` argument._
 
 ```python
 front = ["date", "symbol"]
@@ -5373,6 +5427,8 @@ display(ohlcv_pl.select(front + rest).head(3))
 ### Dropping Columns
 
 #### Pandas | drop()
+
+_Removes the `volume` column from `ohlcv_pd` using `drop(columns=[...])`, returning an 11-column DataFrame, then drops both `volume` and `open` to produce a 10-column result._
 
 ```python
 display(ohlcv_pd.drop(columns=["volume"]).head(3))
@@ -5508,6 +5564,8 @@ display(ohlcv_pd.drop(columns=["volume", "open"]).head(3))
 </table>
 
 #### Polars | drop()
+
+_Removes `volume` from `ohlcv_pl` using `drop()` with a bare string (no list required for a single column), returning an 11-column DataFrame — then drops both `volume` and `open` to confirm `drop("a", "b")` variadic syntax._
 
 ```python
 display(ohlcv_pl.drop("volume").head(3))
@@ -5905,6 +5963,8 @@ ohlcv_pl.head(3)
 
 #### Pandas | Boolean Indexing — bracket notation
 
+_Filters `ohlcv_pd` to rows where the `close` column exceeds 50 using bracket-notation boolean indexing — the simplest Pandas filter form, returning the first 5 matching OHLCV rows._
+
 ```python
 # Rows where Close > 50
 ohlcv_pd[ohlcv_pd["close"] > 50].head()
@@ -6009,6 +6069,7 @@ ohlcv_pd[ohlcv_pd["close"] > 50].head()
 
 #### Pandas | .loc with a boolean mask
 
+_Applies the same `close > 50` filter as bracket notation but using `.loc[]`, producing identical results — `.loc[]` is preferred over bracket notation for any conditional assignment operation to avoid `SettingWithCopyWarning`._
 
 ```python
 ohlcv_pd.loc[ohlcv_pd["close"] > 50].head()
@@ -6114,6 +6175,8 @@ ohlcv_pd.loc[ohlcv_pd["close"] > 50].head()
 #### Polars | filter
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 
+_Filters `ohlcv_pl` to rows where `close > 50` using a `pl.col` expression inside `.filter()` — the Polars equivalent of Pandas bracket-notation boolean indexing, returning the first 5 matching rows without the `SettingWithCopyWarning` risk._
+
 ```python
 ohlcv_pl.filter(pl.col("close") > 50).head()
 ```
@@ -6125,6 +6188,7 @@ ohlcv_pl.filter(pl.col("close") > 50).head()
 
 #### Pandas | AND / OR / NOT
 
+_Builds three boolean masks on `ohlcv_pd`: AND (`close > 50` and `volume > 1M`), OR (`close < 10` or `close > 100`), and NOT (volume not above 5M) — each stored in a variable and applied with `.loc[]` to demonstrate all three Pandas boolean operators._
 
 ```python
 # AND: close > 50 AND volume > 1_000_000
@@ -6438,6 +6502,8 @@ ohlcv_pd.loc[mask].head()
 #### Polars | AND / OR / NOT
 
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
+
+_Demonstrates AND, OR, and NOT filtering in Polars using `pl.col` expressions inside `.filter()` — mirrors the Pandas examples with the same threshold values, applying `&`, `|`, and `~` operators directly in the expression context without intermediate mask variables._
 
 ```python
 ohlcv_pl.filter(
@@ -6775,8 +6841,10 @@ ohlcv_pd.query("symbol in @tickers").head()
 
 ---
 ### isin / is_in
-### Pandas
 
+#### Pandas | filter by ticker list with isin
+
+_Defines a list of three German ticker symbols and filters `ohlcv_pd` to only rows matching those tickers using `.isin()` — returning the first 5 OHLCV rows for SIE.DE, SAP.DE, or BAS.DE._
 
 ```python
 target_tickers = ["SIE.DE", "SAP.DE", "BAS.DE"]
@@ -6882,6 +6950,8 @@ ohlcv_pd[ohlcv_pd["symbol"].isin(target_tickers)].head()
 
 #### Polars | is_in
 
+_Applies the same three-ticker filter as the Pandas example using `pl.col("symbol").is_in(target_tickers)` inside `.filter()` — reusing the same target list to confirm parity between Pandas `.isin()` and Polars `.is_in()`._
+
 ```python
 target_tickers = ["SIE.DE", "SAP.DE", "BAS.DE"]
 ohlcv_pl.filter(pl.col("symbol").is_in(target_tickers)).head()
@@ -6891,8 +6961,10 @@ ohlcv_pl.filter(pl.col("symbol").is_in(target_tickers)).head()
 
 ---
 ### between / is_between
-### Pandas
 
+#### Pandas | close price in range 40–60 with between
+
+_Filters `ohlcv_pd` to rows where the `close` price falls in the closed interval [40, 60] using `.between()` — targets the lower-priced tier of the Euro Stoxx 50 universe, returning the first 5 matching rows._
 
 ```python
 ohlcv_pd[ohlcv_pd["close"].between(40, 60)].head()
@@ -6997,6 +7069,8 @@ ohlcv_pd[ohlcv_pd["close"].between(40, 60)].head()
 
 #### Polars | is_between
 
+_Demonstrates `is_between()` for both a numeric range (`close` between 40 and 60) and a date range (`date` between 2023-01-01 and 2023-06-30), using `pl.lit(...).str.to_date()` to convert string literals to dates for the second filter._
+
 ```python
 ohlcv_pl.filter(pl.col("close").is_between(40, 60)).head()
 ```
@@ -7020,6 +7094,7 @@ ohlcv_pl.filter(
 
 #### Pandas | Null / NaN Filtering
 
+_Filters `scores_pd` to rows where `ev_ebitda_zscore` is null using `.isna()`, then to rows where it is not null using `.notna()` — identifies which index constituents lack EV/EBITDA data (financial institutions without an enterprise value ratio)._
 
 ```python
 # Rows where a column IS null
@@ -7517,6 +7592,8 @@ scores_pd[scores_pd["ev_ebitda_zscore"].notna()].head()
 
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 
+_Filters `scores_pl` to null rows with `.is_null()` and non-null rows with `.is_not_null()` on `ev_ebitda_zscore` — the Polars equivalents of Pandas `.isna()` / `.notna()`, confirming the same financial institutions are identified as lacking EV/EBITDA data._
+
 ```python
 scores_pl.filter(pl.col("ev_ebitda_zscore").is_null()).head()
 ```
@@ -7536,6 +7613,7 @@ These do not strictly *filter* rows — they replace values conditionally while 
 
 #### Pandas | where — keep values where True, replace with NaN where False
 
+_Applies `.where()` to the `close` column, keeping the original price where `volume > 1M` and replacing it with NaN otherwise — demonstrating conditional value preservation that retains all rows while masking low-volume prices._
 
 ```python
 # Keep close where volume > 1M, else NaN
@@ -7595,6 +7673,7 @@ ohlcv_pd["close"].where(ohlcv_pd["volume"] > 1_000_000).head(10)
 
 #### Pandas | mask — opposite of where (replace where True)
 
+_Applies `.mask()` to the `close` column, replacing prices with NaN where `volume > 5M` — the inverse of `.where()`, masking out high-volume spikes rather than preserving low-volume entries._
 
 ```python
 # Replace close with NaN where volume > 5M
@@ -7657,6 +7736,8 @@ ohlcv_pd["close"].mask(ohlcv_pd["volume"] > 5_000_000).head(10)
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 - **pl.lit**: Create a constant/literal value as an expression.
 
+_Creates a `close_filtered` column keeping `close` where `volume > 1M` and `None` otherwise, then chains multiple `when/then` to bucket prices into "high", "mid", or "low" — both computed as new columns via `with_columns()` without dropping any rows._
+
 ```python
 ohlcv_pl.with_columns(
     pl.when(pl.col("volume") > 1_000_000)
@@ -7687,6 +7768,8 @@ ohlcv_pl.with_columns(
 
 #### Pandas | String Accessor Filtering — .str
 - **String Ops**: Text manipulation via .str accessor: contains, split, replace, extract.
+
+_Filters `ohlcv_pd` via the `.str` accessor: first to tickers starting with "S" using `.str.startswith()` (e.g., SAF.PA, SAP.DE, SAN.MC), then to tickers containing "DE" using `.str.contains()` — selecting German-exchange stocks by exchange suffix._
 
 ```python
 # Tickers that start with "S"
@@ -7896,6 +7979,8 @@ ohlcv_pd[ohlcv_pd["symbol"].str.contains("DE")].head()
 - **String Ops**: Text manipulation via .str accessor: contains, split, replace, extract.
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 
+_Applies the same string filters as the Pandas example using `str.starts_with()` and `str.contains()` inside `pl.col(...).filter()` — note `starts_with` (no underscore) vs Pandas' `startswith`, returning identical ticker subsets._
+
 ```python
 ohlcv_pl.filter(pl.col("symbol").str.starts_with("S")).head()
 ```
@@ -7914,6 +7999,8 @@ ohlcv_pl.filter(pl.col("symbol").str.contains("DE")).head()
 #### Pandas | Datetime Accessor Filtering — .dt
 - **DateTime Accessor**: Extract date parts: .dt.year(), .dt.month(), .dt.weekday().
 - **Parse Dates**: Convert strings to datetime objects (Pandas).
+
+_Converts the `date` column to datetime with `pd.to_datetime()` (required in Pandas before `.dt` access), then filters to January rows using `.dt.month == 1` — demonstrating date-part extraction for seasonal or calendar-based filtering._
 
 ```python
 # Ensure date is datetime
@@ -8227,6 +8314,8 @@ ohlcv_pd[ohlcv_pd["date"].dt.dayofweek == 0].head()
 #### Polars | Datetime Accessor Filtering — .dt
 - **DateTime Accessor**: Extract date parts: .dt.year(), .dt.month(), .dt.weekday().
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
+
+_Filters `ohlcv_pl` by month (January), year (2023), and weekday (Monday = 1 in Polars) using `pl.col("date").dt.method()` — note Polars requires function-call syntax (`.dt.month()`) where Pandas uses attribute access (`.dt.month`)._
 
 ```python
 ohlcv_pl.filter(pl.col("date").dt.month() == 1).head()
@@ -8937,6 +9026,7 @@ scores_pl.drop_nulls(subset=["ev_ebitda_zscore"]).head()
 
 #### Pandas | sort_values
 
+_Sorts `ohlcv_pd` by `close` descending to surface the highest-priced OHLCV rows (Hermès RMS.PA at ~2839), then by `["symbol", "date"]` with mixed ascending/descending order to list the most recent date first within each ticker._
 
 ```python
 ohlcv_pd.sort_values("close", ascending=False).head()
@@ -9142,6 +9232,8 @@ ohlcv_pd.sort_values(["symbol", "date"], ascending=[True, False]).head()
 </table>
 
 #### Polars | sort
+
+_Sorts `ohlcv_pl` by `close` descending, then by `["symbol", "date"]` with mixed directions, and demonstrates `sort_by` inside a `with_columns` / `over` expression to reorder `close` values chronologically within each symbol partition — a pattern useful in group-aware calculations._
 
 ```python
 ohlcv_pl.sort("close", descending=True).head()

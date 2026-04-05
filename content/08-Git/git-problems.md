@@ -1,8 +1,14 @@
 ---
+title: "Git Problems"
 tags: [git, github]
 status: stable
 updated: 2026-04-05
 description: "Comprehensive catalog of Git and GitHub problems in distributed data engineering teams — 25 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures."
+parent: "[[domain-releases-and-recovery]]"
+links:
+  - "[[git-tagging-and-releases]]"
+  - "[[git-recovery-and-undo]]"
+  - "[[git-common-errors]]"
 ---
 
 # Git and GitHub Problems in Distributed Teams

@@ -1,4 +1,5 @@
 ---
+title: "Real-Time NoSQL Pipelines"
 tags: [pipeline, python, gcp, firestore, pubsub, dataflow]
 aliases:
   - real-time pipeline
@@ -14,6 +15,16 @@ description: >
   event-driven processing patterns, config-driven behavior, Pub/Sub + Dataflow
   streaming, change data capture, full Python implementations, monitoring, cost
   optimization, and security. Batch vs. real-time decision framework included.
+parent: "[[domain-data-services]]"
+links:
+  - "[[gcs-buckets-and-lifecycle]]"
+  - "[[gcs-object-operations]]"
+  - "[[dataset-and-table-management]]"
+  - "[[data-loading-and-export]]"
+  - "[[querying-and-cost-optimization]]"
+  - "[[job-management]]"
+  - "[[bigquery-problems]]"
+  - "[[firestore-data-model-and-operations]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

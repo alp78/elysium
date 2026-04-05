@@ -4,6 +4,15 @@ tags: [csharp, deedle, polars, dataframes]
 aliases:
   - null handling, string operations, datetime, timezones
 description: "Polars.NET / C# DataFrames reference 04/10 — Missing Data, Strings & DateTime (nulls, .str, .dt, timezones). Executable examples with cell outputs. See [04_py_missing_strings_datetime](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/04_py_missing_strings_datetime) for the Python equivalent."
+parent: "[[domain-transform-and-analyze]]"
+links:
+  - "[[03_py_transforms_expressions]]"
+  - "[[03_cs_transforms_expressions]]"
+  - "[[04_py_missing_strings_datetime]]"
+  - "[[05_py_aggregation_reshaping]]"
+  - "[[05_cs_aggregation_reshaping]]"
+  - "[[06_py_lazy_performance]]"
+  - "[[06_cs_lazy_performance]]"
 created: 2026-03-27
 updated: 2026-04-04
 status: complete
@@ -24,7 +33,7 @@ Three foundational topics that every data pipeline must handle correctly: detect
 
 ---
 
-## Setup & Imports
+## Setup
 
 ### Warning Suppression
 
@@ -47,7 +56,7 @@ var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 ```
 
-### NuGet Packages and Imports
+### Install NuGet packages and import namespaces
 
 ```csharp
 #r "nuget: Polars.NET, 0.4.0"
@@ -89,7 +98,7 @@ Formatter.Register<Polars.CSharp.Series>((s, writer) =>
 var DATA = Path.Combine("..", "data");
 ```
 
-### Dataset Loading
+### Load the primary datasets used throughout this notebook
 
 ```csharp
 // Load primary datasets
@@ -156,7 +165,7 @@ Null detection is the first step in any data quality check. Scan each column for
 
 The `IsNull()` expression returns a boolean mask that can be passed to `Filter()` to isolate rows where a specific column is null. Iterating over `Columns` and checking the `NullCount` property on each `Series` gives a quick per-column summary without constructing a full filtered DataFrame.
 
-_Scans all columns in `scP` (scores_daily, 466 rows) for null counts and prints any column with at least one null — then filters to rows where `ev_ebitda_zscore` is null, showing the first 5 affected symbols and their `pe_zscore` values._
+_Iterates over all columns in `scP` to print null counts for the 5 columns with missing values, then filters with `IsNull()` to display the 5 rows where `ev_ebitda_zscore` is null alongside their `pe_zscore` values._
 
 ```csharp
 display("Null counts per column:");
@@ -188,7 +197,7 @@ scP.Filter(Col("ev_ebitda_zscore").IsNull()).Head(5)
 
 Deedle tracks missingness through its optional-value system. `ValueCount` returns the count of present (non-missing) values in a series, so `RowCount - ValueCount` gives the missing count. `RowsDense` returns only rows where every column has a value — useful for understanding how many complete rows survive after all missing values are accounted for.
 
-_Iterates all columns in `scD` to print the number of missing values per column (using `RowCount - ValueCount`), then uses `RowsDense` to count how many rows have no missing values at all — confirming 346 dense rows out of 466._
+_Iterates over all column keys in `scD`, computing missing count as `RowCount − ValueCount` for each column, then reports how many complete (dense) rows survive when every column must be non-missing._
 
 ```csharp
 display("Missing counts per column:");
@@ -227,7 +236,7 @@ After detecting which columns contain nulls, quantify the problem. Knowing the e
 
 The `NullCount` property on a Polars `Series` returns the number of null entries as a simple integer. This is a metadata operation — it does not scan the data, making it O(1) for most column types.
 
-_Prints the null count and total row count for five specific z-score columns in `scP`, confirming that `ev_ebitda_zscore` has the most nulls (71/466) while `pe_zscore` has the fewest (3/466)._
+_Prints the null count and total row count for each of the 5 known-null columns, confirming that `ev_ebitda_zscore` has the most missing values (71 out of 466) and `pe_zscore` the fewest (3)._
 
 ```csharp
 var nullCols = new[] { "pe_zscore", "pb_zscore", "ev_ebitda_zscore", "yield_zscore", "recommendation_mean" };
@@ -248,7 +257,7 @@ display($"Total rows: {scP.Height}");
 
 Deedle does not have a direct `NullCount` property. Instead, subtract `ValueCount` (the number of present values) from `RowCount` to compute the number of missing entries. This requires iterating over the column's internal representation.
 
-_Computes missing counts for the same five z-score columns in `scD` by subtracting `ValueCount` from `RowCount` — confirming the identical distribution of missing values as the Polars result._
+_Mirrors the Polars count by computing `RowCount − series.ValueCount` for each of the same 5 columns, producing identical counts using Deedle's optional-value API._
 
 ```csharp
 var nullCols = new[] { "pe_zscore", "pb_zscore", "ev_ebitda_zscore", "yield_zscore", "recommendation_mean" };
@@ -273,7 +282,7 @@ The simplest null strategy: remove rows that contain any missing value. Use this
 
 `DropNulls()` removes every row that has a null in any column. It returns a new DataFrame (Polars DataFrames are immutable). To drop nulls in specific columns only, filter with `IsNotNull()` instead.
 
-_Applies `DropNulls()` to `scP`, reducing 466 rows to 346 — 120 rows removed because at least one z-score column was null — then previews the first 5 remaining rows._
+_Calls `DropNulls()` on the scores DataFrame, reducing it from 466 to 346 rows, then previews the first 5 surviving rows to confirm all four selected columns are non-null._
 
 ```csharp
 var scPDropped = scP.DropNulls();
@@ -289,7 +298,7 @@ scPDropped.Select("symbol", "score_date", "ev_ebitda_zscore", "pe_zscore").Head(
 
 `DropSparseRows()` removes rows where any column has a missing value — equivalent to Polars' `DropNulls()`. The name "sparse" refers to Deedle's internal representation where missing values create sparse series.
 
-_Applies `DropSparseRows()` to `scD`, reducing 466 rows to 346 — matching the Polars result and confirming that `RowsDense.KeyCount` equals the post-drop row count._
+_Calls `DropSparseRows()` on the Deedle scores frame, matching Polars' result of 346 surviving rows from 466, then displays the first 5 rows via integer-based row key selection._
 
 ```csharp
 var scDDropped = scD.DropSparseRows();
@@ -329,7 +338,7 @@ Replace nulls with a known constant value. Appropriate when the business logic d
 
 `FillNull(Lit(value))` replaces every null in the column with the given literal. The `Lit()` wrapper converts a C# value into a Polars expression. Combined with `WithColumns` and `Alias`, this returns a new DataFrame with the specified column's nulls replaced.
 
-_Fills all 71 nulls in `ev_ebitda_zscore` with `0.0` using `FillNull(Lit(0.0))` — the first row (BNP.PA) changes from `null` to `0`, while already-present values like DTE.DE (0.3795) are unaffected._
+_Fills the 71 nulls in `ev_ebitda_zscore` with literal `0.0`, confirms null count drops to 0, and displays the first 5 rows — `BNP.PA`'s formerly null value now reads `0`._
 
 ```csharp
 var scPFilled = scP.WithColumns(
@@ -347,7 +356,7 @@ scPFilled.Select("symbol", "score_date", "ev_ebitda_zscore").Head(5)
 
 Deedle's `FillMissing(value)` on a series replaces all missing entries with the given constant. Unlike Polars, Deedle operates on individual series rather than DataFrame-level expressions — you extract the column, fill it, then reassemble if needed.
 
-_Extracts `ev_ebitda_zscore` as a float series, fills missing values with `0.0`, and confirms zero remaining missing values — the first 5 values show `[0.00, 0.38, 0.68, -1.69, 0.55]`._
+_Extracts `ev_ebitda_zscore` as a double series, fills missing entries with `0.0`, and displays the first 5 values as formatted strings — showing `0.00` in the position that was previously missing._
 
 ```csharp
 var evFilled = scD.GetColumn<double>("ev_ebitda_zscore").FillMissing(0.0);
@@ -372,7 +381,7 @@ Directional fill strategies propagate the nearest non-null value forward (LOCF �
 
 `ForwardFill()` propagates the last non-null value forward through subsequent nulls. If the first value in the column is null, it remains null — there is no preceding value to carry. Returns a new expression that can be used with `WithColumns`.
 
-_Applies `ForwardFill()` to `ev_ebitda_zscore` — one null remains because BNP.PA is the first row and has no preceding value to carry forward; all other 70 nulls are replaced by their prior row's value._
+_Applies `ForwardFill()` to `ev_ebitda_zscore`, reducing nulls from 71 to 1 — the single leading null for `BNP.PA` remains because there is no preceding value to carry forward._
 
 ```csharp
 var scPFfill = scP.WithColumns(
@@ -390,7 +399,7 @@ scPFfill.Select("symbol", "score_date", "ev_ebitda_zscore").Head(5)
 
 Deedle's `FillMissing(Direction.Forward)` is equivalent to Polars' `ForwardFill()`. It propagates the last present value forward through missing entries. Same caveat applies: if the series starts with a missing value, it stays missing.
 
-_Applies `FillMissing(Direction.Forward)` to `ev_ebitda_zscore` — one null remains (the leading BNP.PA missing value); the first 5 present values are `[0.38, 0.68, -1.69, 0.55, 0.38]` from DTE.DE onward._
+_Applies `FillMissing(Direction.Forward)` to the Deedle series, confirming 1 missing entry remains (the leading `BNP.PA` row with no prior value to carry) and printing the first 5 present values._
 
 ```csharp
 var evFfill = scD.GetColumn<double>("ev_ebitda_zscore").FillMissing(Direction.Forward);
@@ -407,7 +416,7 @@ display($"First 5 values: [{string.Join(", ", evFfill.Values.Take(5).Select(v =>
 
 `BackwardFill()` propagates the next non-null value backward. This resolves the leading-null problem that forward fill cannot — combining both directions fills all interior nulls and at least one edge.
 
-_Applies `BackwardFill()` to `ev_ebitda_zscore` — all 71 nulls are filled, including the leading BNP.PA null which takes DTE.DE's value of 0.3795 from the next row, leaving 0 remaining nulls._
+_Applies `BackwardFill()` to `ev_ebitda_zscore`, resolving all 71 nulls including the leading `BNP.PA` entry — which now shows `0.3795` (the value from the next non-null row, `DTE.DE`)._
 
 ```csharp
 var scPBfill = scP.WithColumns(
@@ -425,7 +434,7 @@ scPBfill.Select("symbol", "score_date", "ev_ebitda_zscore").Head(5)
 
 Deedle's `FillMissing(Direction.Backward)` is the reverse of forward fill — it propagates the next present value backward through missing entries.
 
-_Applies `FillMissing(Direction.Backward)` to `ev_ebitda_zscore` — all missing values are filled; the first 5 present values become `[0.38, 0.38, 0.68, -1.69, 0.55]` where the leading null takes DTE.DE's backward-carried value._
+_Applies `FillMissing(Direction.Backward)` to eliminate all missing values, with the first 5 present values showing `[0.38, 0.38, 0.68, -1.69, 0.55]` — the leading missing entry is filled with the value from its next non-missing neighbour._
 
 ```csharp
 var evBfill = scD.GetColumn<double>("ev_ebitda_zscore").FillMissing(Direction.Backward);
@@ -446,7 +455,7 @@ Replace nulls with a summary statistic of the column — mean, median, or mode. 
 
 The expression `Col("c").FillNull(Col("c").Mean())` computes the column mean and uses it as the fill value — all inside the Polars engine. This is faster than computing the mean in C# and passing it as `Lit()` because it avoids a round-trip between managed and native code.
 
-_Fills all 71 nulls in `ev_ebitda_zscore` with the column's own mean (≈ 0.038), computed inside the Polars engine — BNP.PA changes from `null` to `0.0380` while other values are unaffected._
+_Uses `FillNull(Col("ev_ebitda_zscore").Mean())` to replace all 71 nulls with the column mean (`0.038`), shown in the first row where `BNP.PA` now reads `0.03804613962` instead of null._
 
 ```csharp
 var scPMeanFill = scP.WithColumns(
@@ -464,7 +473,7 @@ scPMeanFill.Select("symbol", "score_date", "ev_ebitda_zscore").Head(5)
 
 In Deedle, compute the mean separately using `series.Mean()`, then pass the result to `FillMissing()`. This is a two-step process — Deedle does not support expression-based fill like Polars.
 
-_Computes `ev_ebitda_zscore` mean as 0.0380 via `series.Mean()`, then fills all missing entries with that value — confirms 0 remaining missing values after fill._
+_Computes the series mean as `0.0380`, stores it in `meanVal`, then fills all missing entries with that value — confirming zero remaining missing values without modifying the frame structure._
 
 ```csharp
 var evCol = scD.GetColumn<double>("ev_ebitda_zscore");
@@ -487,7 +496,7 @@ Linear interpolation estimates missing values by drawing a straight line between
 
 `Interpolate()` performs linear interpolation on a numeric series. It uses the positional index (row number), not datetime values, to compute the interpolated value. If the first or last row is null, it stays null — interpolation requires values on both sides.
 
-_Interpolates `ev_ebitda_zscore` using linear interpolation between adjacent non-null values — 1 null remains because BNP.PA is the first row and has no left anchor; all interior nulls are estimated from neighboring values._
+_Applies linear interpolation to `ev_ebitda_zscore`, filling all interior nulls and leaving 1 remaining (the leading `BNP.PA` row) — the first 10 rows show computed values filling the gaps between known anchor points._
 
 ```csharp
 var scPInterp = scP.WithColumns(
@@ -511,7 +520,7 @@ scPInterp.Select("symbol", "score_date", "ev_ebitda_zscore").Head(10)
 >
 > If you need linear interpolation in Deedle, extract the series keys and values, compute interpolated values using `MathNet.Numerics.Interpolation`, and reassemble the series. Alternatively, perform the interpolation in Polars.NET and transfer the result.
 
-_Applies `FillMissing(Direction.Forward)` to `ev_ebitda_zscore` as the closest built-in approximation to interpolation — 1 leading missing value remains since forward fill cannot fill values without a preceding observation._
+_Uses `FillMissing(Direction.Forward)` as a step-function approximation since Deedle has no native interpolation — 1 missing entry remains (the leading row), identical to Polars' result but with a step rather than a linear estimate._
 
 ```csharp
 var evInterp = scD.GetColumn<double>("ev_ebitda_zscore").FillMissing(Direction.Forward);
@@ -532,7 +541,7 @@ display("Deedle has no built-in linear interpolation — forward fill is the clo
 
 Chain `FillNull(Col("secondary")).FillNull(Col("fallback"))` on the primary column to cascade through fallback sources. Each `FillNull` replaces remaining nulls with the next column's values.
 
-_Creates a 4-row DataFrame with `primary`, `secondary`, and `fallback` columns (each with different nulls), then chains `FillNull` calls to produce a `best` column with no nulls: [100, 200, 300, 400]._
+_Constructs a 4-row DataFrame where `primary` and `secondary` alternate nulls, then chains `FillNull(Col("secondary")).FillNull(Col("fallback"))` to produce a `best` column that picks the first non-null across all three sources._
 
 ```csharp
 var coalDf = DataFrame.FromColumns(
@@ -571,7 +580,7 @@ Converting strings to upper or lower case is a common normalization step before 
 
 The `Str.ToUpper()` and `Str.ToLower()` methods return new string expressions with case-converted values. Use with `WithColumns` to add the results as new columns.
 
-_Extracts the 50 unique symbols from `dfP`, adds `upper` and `lower` columns showing that `.DE`, `.AS`, `.PA` suffixes are preserved in the correct case for all EuroStoxx 50 tickers._
+_Extracts the 50 unique symbols from the OHLCV DataFrame, adds `upper` and `lower` columns using `Str.ToUpper()` and `Str.ToLower()`, and displays the first 10 rows — confirming that already-uppercase tickers remain unchanged._
 
 ```csharp
 var symbols = dfP.Select(new[] { "symbol" }).Unique();
@@ -588,7 +597,7 @@ caseDemo.Head(10)
 
 Without a string accessor, Deedle requires extracting the column values, applying `.ToUpper()` / `.ToLower()` on each string, and rebuilding a new frame with the results.
 
-_Extracts the first 10 distinct symbols from `dfD`, applies `.ToUpper()` and `.ToLower()` to each, and assembles a 3-column frame confirming identical case results to the Polars output._
+_Extracts 10 distinct symbols as a string array, builds three series (original, upper, lower) using LINQ and `FrameBuilder`, and reassembles them into a frame with output matching the Polars result._
 
 ```csharp
 var symArr = dfD.GetColumn<string>("symbol").Observations
@@ -628,7 +637,7 @@ Pattern matching on string columns is the primary way to filter by exchange code
 
 `Str.Contains(pattern)` takes a plain string argument (not wrapped in `Lit()`) and returns a boolean expression. Pass it to `Filter()` to keep only matching rows.
 
-_Filters `dfP` for all rows where `symbol` contains `".DE"`, then deduplicates — producing the 16 German-exchange EuroStoxx 50 symbols (ADS.DE through VOW.DE)._
+_Filters the OHLCV DataFrame to rows where `symbol` contains `".DE"`, then selects unique symbols — returning the 16 German-listed stocks from the 50-member index._
 
 ```csharp
 var germanP = dfP.Filter(Col("symbol").Str.Contains(".DE"))
@@ -645,7 +654,7 @@ germanP
 
 Deedle requires extracting the column as observations, applying `.Where()` with a `.Contains()` predicate, and collecting the results.
 
-_Extracts all symbol observations from `dfD`, filters for strings containing `".DE"`, and deduplicates — producing the same 16 German symbols as the Polars result._
+_Applies `.Where(s => s.Contains(".DE"))` to the observations of the symbol column and deduplicates — producing the same 16 German symbols as Polars, printed as a comma-separated string._
 
 ```csharp
 var germanD = dfD.GetColumn<string>("symbol").Observations
@@ -664,7 +673,7 @@ display(string.Join(", ", germanD));
 
 `Str.StartsWith()` and `Str.EndsWith()` take plain string arguments, like `Str.Contains()`. They can be combined with `Filter()` to select rows matching a prefix or suffix pattern.
 
-_Applies two independent filters on unique symbols: `StartsWith("S")` yields 7 symbols (SAF.PA through SU.PA), `EndsWith(".BR")` yields 2 symbols (ABI.BR and ARGX.BR) — results displayed side by side in HTML._
+_Applies `Str.StartsWith("S")` and `Str.EndsWith(".BR")` in separate filter passes, rendering both result sets side by side as HTML — 7 symbols starting with S and 2 Brussels-listed symbols._
 
 ```csharp
 var startsS = dfP.Filter(Col("symbol").Str.StartsWith("S"))
@@ -687,7 +696,7 @@ display(HTML($"<div style='display:flex;gap:40px'><div><b>StartsWith S</b>{leftH
 
 Standard .NET `string.StartsWith()` and `string.EndsWith()` methods, applied via LINQ to the extracted column values.
 
-_Builds a `HashSet` of unique symbols from `dfD`, then applies `StartsWith("S")` and `EndsWith(".BR")` LINQ predicates — finding the same 7 S-prefixed and 2 `.BR`-suffixed symbols as the Polars result._
+_Builds a `HashSet<string>` of unique symbols, then applies `.StartsWith("S")` and `.EndsWith(".BR")` predicates separately, printing both result sets as comma-separated strings._
 
 ```csharp
 var symSet = new HashSet<string>();
@@ -719,7 +728,7 @@ Substring replacement is used for cleaning identifiers, normalizing naming conve
 
 `Str.ReplaceAll(old, new)` replaces every occurrence of the pattern in each string. For single-match replacement, use `Str.Replace()`. Both accept plain strings (not `Lit()`).
 
-_Replaces `".DE"` with `"_GER"` across all unique symbols and filters to show only the renamed German tickers — producing 16 entries like `ADS_GER`, `ALV_GER`, etc._
+_Applies `Str.ReplaceAll(".DE", "_GER")` to all 50 symbols, then filters to the 16 replaced entries — showing `ADS.DE → ADS_GER`, `ALV.DE → ALV_GER`, etc._
 
 ```csharp
 var replaced = dfP.Select(new[] { "symbol" }).Unique()
@@ -738,7 +747,7 @@ replaced.Filter(Col("replaced").Str.Contains("_GER"))
 
 Standard `string.Replace()` via LINQ. Deedle has no vectorized replace — each value is processed individually.
 
-_Applies `string.Replace(".DE", "_GER")` to all unique symbols via LINQ, then filters for entries containing `"_GER"` — producing the same 16 German ticker renames as the Polars result._
+_Applies `string.Replace(".DE", "_GER")` via LINQ over all unique symbols, then filters to those containing `"_GER"` — producing the same 16 transformed identifiers as Polars._
 
 ```csharp
 var uniqueSymbols = dfD.GetColumn<string>("symbol").Values.Distinct().ToArray();
@@ -760,7 +769,7 @@ Measuring string length and extracting fixed-position substrings are building bl
 
 In Polars.NET 0.4.0, the `Str.LenChars()` method is not yet exposed. As a workaround, extract the column to a C# array, compute lengths with LINQ, and stack the result back onto the DataFrame.
 
-_Extracts all unique symbols to a C# array, computes `.Length` for each, stacks back as a `char_len` float64 column, and sorts descending — `NDA-FI.HE` is longest at 9 chars, most symbols are 6–7 chars._
+_Extracts symbols to a C# array, computes each string's `.Length`, stacks the result back as a `char_len` series, then sorts descending to show that `NDA-FI.HE` (9 chars) is the longest ticker in the index._
 
 ```csharp
 var symDf = dfP.Select(new[] { "symbol" }).Unique();
@@ -777,7 +786,7 @@ lengths.Sort("char_len", descending: true).Head(10)
 
 Extract values, apply `.Length` on each string, and rebuild the frame. Straightforward LINQ pattern.
 
-_Extracts 50 distinct symbols from `dfD`, computes each string's `.Length`, and builds a 2-column frame showing `symbol` and `char_len` for all symbols._
+_Extracts 50 distinct symbols, maps each to its `.Length`, and builds a two-column frame — showing all symbols from length 5 (`AD.AS`) to 8 (`ADYEN.AS`) across the index members._
 
 ```csharp
 var symUniq = dfD.GetColumn<string>("symbol").Observations
@@ -811,7 +820,7 @@ builder.Frame
 
 `Str.Slice(offset, length)` extracts a fixed-position substring from each value. The offset is zero-based. This is useful for fixed-width parsing but not for variable-length identifiers — use `Str.Split()` or `Str.Extract()` with regex for those.
 
-_Slices the first 3 characters from each unique symbol using `Str.Slice(0, 3)` — `"ABI.BR"` becomes `"ABI"`, `"AD.AS"` becomes `"AD."` (period included since slicing is positional, not delimiter-aware)._
+_Applies `Str.Slice(0, 3)` to all unique symbols, creating a `first_3` column — the first 10 rows show three-character prefixes like `ABI`, `AD.`, `ADS`, `ADY`._
 
 ```csharp
 var sliced = dfP.Select(new[] { "symbol" }).Unique()
@@ -827,7 +836,7 @@ sliced.Head(10)
 
 Standard `string.Substring(start, length)` via LINQ. Add a length guard to avoid `ArgumentOutOfRangeException` for strings shorter than the requested slice.
 
-_Applies `Substring(0, 3)` with a length guard to all 50 unique symbols — producing the same first-3-char results as the Polars Slice operation, with the period preserved where it falls within position 2._
+_Applies `Substring(0, 3)` to each symbol via LINQ, guarding against short strings with a length check — building a two-column frame showing all 50 symbols alongside their three-character prefixes._
 
 ```csharp
 var first3 = symUniq.Select(s => s.Length >= 3 ? s.Substring(0, 3) : s).ToArray();
@@ -859,7 +868,7 @@ Splitting strings by a delimiter decomposes composite identifiers into their par
 
 `Str.Split(separator)` splits each string into a list of substrings. The result is a column of type `List[Str]`. Access individual elements using list indexing expressions in downstream operations.
 
-_Splits each unique symbol on `"."` to produce a `List[Str]` column — `"ABI.BR"` becomes `[ABI, BR]`, `"ADYEN.AS"` becomes `[ADYEN, AS]`, showing both ticker and exchange components in each list._
+_Splits all unique symbols on `"."`, producing a `List[Str]` column where each cell contains the ticker and exchange code as a two-element list — e.g., `ABI.BR → [ABI, BR]`._
 
 ```csharp
 var split = dfP.Select(new[] { "symbol" }).Unique()
@@ -875,7 +884,7 @@ split.Head(10)
 
 Standard `string.Split()` in LINQ. Since Deedle does not have list columns, each part must be extracted into a separate column explicitly.
 
-_Splits each unique symbol on `"."` to extract `ticker` and `exchange` into separate string columns — `"ABI.BR"` → ticker=`ABI`, exchange=`BR`; uses an empty-string fallback for symbols without a dot._
+_Splits each symbol on `"."`, explicitly mapping each part to a separate column (`ticker`, `exchange`) — since Deedle has no list column type, each component must be extracted individually._
 
 ```csharp
 var tickerPart = symUniq.Select(s => s.Split(".")[0]).ToArray();
@@ -910,7 +919,7 @@ Regular expressions provide flexible pattern matching for extracting structured 
 
 `Str.Extract(pattern, groupIndex)` applies a regex to each string and returns the specified capture group. Group index `1` refers to the first parenthesized group. Returns `null` for non-matching strings.
 
-_Applies regex `\.(\w+)` to each symbol and returns capture group 1 (the exchange code after the dot) — `"ABI.BR"` → `BR`, `"ASML.AS"` → `AS`, with `null` for any symbol without a dot._
+_Applies the regex `\.(\w+)` with `Str.Extract(pattern, 1)` to extract the exchange code suffix from all 50 unique symbols, returning `null` for any symbol without a dot — the first 10 rows show `BR`, `AS`, `DE`, etc._
 
 ```csharp
 var extracted = dfP.Select(new[] { "symbol" }).Unique()
@@ -926,7 +935,7 @@ extracted.Head(10)
 
 Use `System.Text.RegularExpressions.Regex` in a LINQ lambda. Compile the regex once outside the loop for performance when processing large series.
 
-_Compiles `\.(\w+)` once, then applies `Regex.Match` per symbol via LINQ — extracts the exchange suffix (group 1) into a new `exchange` column; returns empty string for non-matching symbols._
+_Compiles the same regex outside the loop for efficiency, applies `Regex.Match()` per symbol, and extracts group 1 — building a two-column frame with identical exchange code results as the Polars approach._
 
 ```csharp
 var regexPattern = new Regex(@"\.(\w+)");
@@ -963,7 +972,7 @@ Padding strings to a fixed width is common when generating fixed-width output fi
 
 In Polars.NET 0.4.0, `Str.PadStart()` is not yet exposed. As a workaround, extract values to a C# array, apply `string.PadLeft()`, and stack the result back.
 
-_Pads all unique symbols to total width 10 with leading `'0'` characters — `"ABI.BR"` (6 chars) becomes `"0000ABI.BR"`, `"ADYEN.AS"` (8 chars) becomes `"00ADYEN.AS"`._
+_Extracts unique symbols to a C# array, pads each to 10 characters with leading zeros using `PadLeft(10, '0')`, and stacks the result back — showing `ABI.BR → 0000ABI.BR` and `ADYEN.AS → 00ADYEN.AS`._
 
 ```csharp
 var symDfPad = dfP.Select(new[] { "symbol" }).Unique();
@@ -979,7 +988,7 @@ symDfPad.HStack(paddedSeries).Head(10)
 
 Standard `string.PadLeft(totalWidth, paddingChar)` applied via LINQ. Identical syntax to the Polars.NET workaround since both fall back to .NET string methods.
 
-_Applies `string.PadLeft(10, '0')` to all 50 unique symbols via LINQ — produces identical zero-padded results to the Polars.NET workaround._
+_Applies `PadLeft(10, '0')` to all 50 unique symbols via LINQ, building a two-column frame — output matches the Polars workaround exactly since both fall back to .NET string methods._
 
 ```csharp
 var padded = symUniq.Select(s => s.PadLeft(10, '0')).ToArray();
@@ -1011,7 +1020,7 @@ Combining values from multiple string columns into a single formatted string —
 
 Extract string columns to arrays, combine with `Zip` and string interpolation, then stack the result back as a new series.
 
-_Zips `short_name` and `country` arrays from `dimP` using `$"{n} ({c})"` interpolation to build display labels — `"ASML HOLDING"` + `"Netherlands"` becomes `"ASML HOLDING (Netherlands)"`, shown for the first 10 companies._
+_Extracts `short_name` and `country` arrays from `dimP`, zips them with string interpolation to produce `"ASML HOLDING (Netherlands)"` style labels, and stacks the result back as a `display_name` column._
 
 ```csharp
 var nameArr = dimP.Column("short_name").ToArray<string>();
@@ -1027,7 +1036,7 @@ dimP.Select("short_name", "country").HStack(dnSeries).Head(10)
 
 Same pattern — extract, combine, rebuild frame.
 
-_Extracts `short_name` and `country` arrays from `dimD`, zips with the same `$"{n} ({c})"` interpolation, and assembles a 3-column frame showing the first 10 company-country display labels._
+_Mirrors the Polars approach for Deedle: extracts both columns as arrays, zips them with the same interpolation template, and builds a three-column frame — producing identical display names for the first 10 rows._
 
 ```csharp
 var dNames = dimD.GetColumn<string>("short_name").Values.ToArray();
@@ -1052,7 +1061,7 @@ Remove leading and trailing whitespace (or specified characters) from strings. P
 
 Extract to array, apply `Trim()`, and stack back.
 
-_Creates a 3-row DataFrame with padded strings (`"  ASML  "`, `"  SAP "`, `" MC"`), applies `.Trim()` to each, and stacks the cleaned `stripped` column — confirming `ASML`, `SAP`, and `MC` with all whitespace removed._
+_Demonstrates the workaround on a 3-element test array with leading/trailing spaces — applies `string.Trim()` and stacks back to show `"  ASML  " → "ASML"` and `"  SAP " → "SAP"`._
 
 ```csharp
 var dirtyArr = new[] { "  ASML  ", "  SAP ", " MC" };
@@ -1073,7 +1082,7 @@ Extract all matches of a pattern from each string — not just the first. Return
 
 Apply `Regex.Matches` per string, join results, and stack back as columns.
 
-_Applies `Regex.Matches` with pattern `[0-9]+\.?[0-9]*` to 3 text strings — extracts `"900.5, 895.2"`, `""`, and `"45.3, 12.1"` as comma-joined `numbers` strings, plus a `count` column showing 2, 0, and 2 matches._
+_Demonstrates on a 3-row test DataFrame — extracts all decimal-number matches as comma-separated strings and their count, showing `"ASML closed at 900.5 up from 895.2" → "900.5, 895.2"` (count: 2) and `"No numbers" → ""` (count: 0)._
 
 ```csharp
 var textArr = new[] {
@@ -1111,7 +1120,7 @@ Converting string columns to proper date types enables date arithmetic, componen
 
 The `Str.ToDate(format)` method parses a string column into a Polars `Date` type using strftime format codes (e.g., `%Y-%m-%d`). If the date column was already parsed during `ReadCsv` with `tryParseDates: true`, it arrives as `Date` type directly.
 
-_Casts the already-parsed `date` column back to string, then re-parses with `Str.ToDate("%Y-%m-%d")` to confirm the round-trip works — both original (`date`) and re-parsed (`date_reparsed`) columns show `date` type._
+_Confirms the `date` column arrives as Polars `Date` type after `ReadCsv` with `tryParseDates`, then demonstrates round-trip parsing by casting to string and reparsing with `Str.ToDate("%Y-%m-%d")` — all three representations appear side by side for the first 5 rows._
 
 ```csharp
 display($"date column type: {dfP.Column("date").DataTypeName}");
@@ -1139,7 +1148,7 @@ dfParsed.Select("symbol", "date", "date_str", "date_reparsed").Head(5)
 
 Deedle stores dates as strings by default when reading CSV. To enable date operations, extract the string column and parse each value to `DateTime` using `DateTime.Parse()` or `DateTime.ParseExact()` for strict format control.
 
-_Extracts the `date` string column from `dfD`, parses each value with `DateTime.Parse`, and confirms the output type is `DateTime` — showing the first 5 dates formatted as `yyyy-MM-dd` (2021-01-04 through 2021-01-08)._
+_Extracts the `date` column as strings from the Deedle frame, maps each to `DateTime` with `DateTime.Parse()`, and confirms the parsed type and the formatted output of the first 5 dates._
 
 ```csharp
 var dateStrings = dfD.GetColumn<string>("date");
@@ -1165,7 +1174,7 @@ Extracting year, month, day, and weekday from date columns enables time-based gr
 
 The `.Dt` accessor provides `.Year()`, `.Month()`, `.Day()`, `.Weekday()`, and other component extractors. These return integer expressions. Polars weekday numbering: Monday = 1, Sunday = 7 (ISO 8601).
 
-_Adds `year`, `month`, and `weekday` columns to `dfP` using `.Dt.Year()`, `.Dt.Month()`, and `.Dt.Weekday()` — the first 10 rows all fall in January 2021 (month=1), with weekdays 1–5 (Mon–Fri, ISO 8601)._
+_Adds `year`, `month`, and `weekday` columns to the OHLCV DataFrame using `.Dt.Year()`, `.Dt.Month()`, and `.Dt.Weekday()`, showing the first 10 rows for `ABI.BR` in January 2021 — weekdays 1–5 confirming sequential trading day ordering._
 
 ```csharp
 var dateComponents = dfP.WithColumns(
@@ -1182,7 +1191,7 @@ dateComponents.Select(new[] { "symbol", "date", "year", "month", "weekday" }).He
 
 Extract components using `DateTime` properties (`.Year`, `.Month`, `.DayOfWeek`) in LINQ. Note: .NET `DayOfWeek` uses Sunday = 0, Monday = 1 numbering (not ISO), so results align with Polars in this case but diverge for Sunday.
 
-_Extracts `.Year`, `.Month`, and `.DayOfWeek` (as double) from the parsed `dateVals` array and builds a 4-column frame — first 5 rows confirm January 2021, weekdays 1–5 using .NET's Monday=1 convention._
+_Extracts year, month, and weekday from the pre-parsed `dateVals` array using `.Year`, `.Month`, and `.DayOfWeek`, building a four-column frame — the first 5 rows match Polars' output, with the caveat that .NET Sunday = 0 (vs ISO Sunday = 7)._
 
 ```csharp
 var yearArr = dateVals.Select(d => (double)d.Year).ToArray();
@@ -1219,7 +1228,7 @@ Adding or subtracting durations from date columns is essential for computing set
 
 `Dt.OffsetBy("7d")` adds a duration string to every value in a date column. Supported units: `d` (days), `w` (weeks), `mo` (months), `y` (years), `h` (hours), `m` (minutes), `s` (seconds). Returns a new date expression.
 
-_Adds 7 calendar days to every `date` value in `dfP` using `Dt.OffsetBy("7d")` — `2021-01-04` (Monday) becomes `2021-01-11` (next Monday), verified across the first 5 rows._
+_Uses `Dt.OffsetBy("7d")` to add exactly 7 calendar days to each trading date, producing `date_plus_7` — the first row shows `2021-01-04 → 2021-01-11`, confirming the offset is calendar days, not trading days._
 
 ```csharp
 var dfPlus7 = dfP.WithColumns(
@@ -1234,7 +1243,7 @@ dfPlus7.Select(new[] { "symbol", "date", "date_plus_7" }).Head(5)
 
 Standard `DateTime.AddDays(n)` applied via LINQ. The result is formatted back to a string for display since Deedle stores the column as string type.
 
-_Applies `DateTime.AddDays(7)` to each parsed date, formats back to `"yyyy-MM-dd"` string, and builds a 2-column frame — showing the same Monday+7 results as the Polars output for the first 5 rows._
+_Maps each parsed `DateTime` through `AddDays(7)` and formats back to `"yyyy-MM-dd"`, building a two-column frame — the first 5 rows confirm the same calendar offsets as Polars._
 
 ```csharp
 var datePlus7 = dateVals.Select(d => d.AddDays(7).ToString("yyyy-MM-dd")).ToArray();
@@ -1267,7 +1276,7 @@ Shifting a column by N positions creates lagged (previous) or lead (future) vers
 
 `Shift(n)` offsets the column values by `n` positions. Positive `n` shifts down (lag — previous values), negative shifts up (lead — future values). The resulting nulls at the edges represent the missing boundary values.
 
-_Shifts `close` by 1 position for `ABI.BR`, creating `prev_close` — the first row (2021-01-04) has `null` for `prev_close`, while subsequent rows show the prior day's closing price (57.21, 57.18, etc.)._
+_Filters to `ABI.BR` rows, shifts `close` by 1 to create `prev_close`, and displays the first 5 rows — the first row shows `null` in `prev_close` (no preceding value), while row 2 shows `57.21` (the row-1 close) appearing in both columns._
 
 ```csharp
 var abiPrices = dfP.Filter(Col("symbol") == Lit("ABI.BR"));
@@ -1286,7 +1295,7 @@ abiShifted.Select(new[] { "date", "close", "prev_close" }).Head(5)
 
 Deedle's `Shift(n)` works the same as Polars — positive `n` shifts down, creating a lag. Missing values at the boundary are represented as Deedle's `<missing>`.
 
-_Applies `Shift(1)` to the `close` series for `ABI.BR` rows, assembling a 3-column frame — the first row shows `<missing>` for `prev_close`, while rows 1–4 show the lagged price values._
+_Filters the Deedle frame to `ABI.BR` rows, applies `Shift(1)` to the close series, and displays the first 5 rows — row 0 shows `<missing>` for `prev_close`, matching the Polars null behavior._
 
 ```csharp
 var abiDRows = dfD.Where(row => row.Value.GetAs<string>("symbol") == "ABI.BR");
@@ -1322,7 +1331,7 @@ Cumulative (running) aggregations compute a value that grows from the first row 
 
 `CumSum()` computes the running total of a numeric column. Each row's value is the sum of all preceding values plus the current value. Nulls are skipped (treated as 0 in the running total).
 
-_Computes `cum_volume` as the running total of daily volume for `ABI.BR` — the first 10 rows grow from 1,513,937 on 2021-01-04 to 14,717,364 on 2021-01-15._
+_Applies `CumSum()` to the `volume` column for `ABI.BR`, adding a `cum_volume` column that grows from 1,513,937 (first trading day) to 14,717,364 by the 10th row._
 
 ```csharp
 var abiCum = abiPrices.WithColumns(
@@ -1337,7 +1346,7 @@ abiCum.Select(new[] { "date", "volume", "cum_volume" }).Head(10)
 
 Deedle does not have a built-in `CumSum()` method. Compute it manually by iterating over the series values and maintaining a running total. For large series, this is less efficient than Polars' native implementation.
 
-_Iterates over `ABI.BR` volume values, maintains a `running` double, and builds `cum_volume` — the last 10 rows confirm matching totals to the Polars result (e.g., 14,717,364 on 2021-01-15)._
+_Iterates over `ABI.BR` volume values with a running accumulator, manually computing `cum_volume` for each row — the last 10 rows confirm the same accumulated totals as the Polars `CumSum()` result._
 
 ```csharp
 var volSeries = abiDRows.GetColumn<double>("volume");
@@ -1379,7 +1388,7 @@ Filtering rows by date range is the most common datetime operation — selecting
 
 Combine `Dt.Year()`, `Dt.Month()`, and column equality expressions with `&` (and) to build complex date filters. Each component comparison returns a boolean expression; combine with `&` for intersection.
 
-_Filters `dfP` for `symbol == "SAP.DE"` AND `year == 2024` AND `month == 1`, returning 22 trading days — from 2024-01-02 (close=137.34) to 2024-01-31 (close=160.80)._
+_Chains three expression filters with `&` to select `SAP.DE` rows in January 2024, returning all 22 trading days in that month with close prices ranging from `137.34` to `160.76`._
 
 ```csharp
 var jan2024 = dfP.Filter(
@@ -1399,7 +1408,7 @@ jan2024.Select(new[] { "symbol", "date", "close", "volume" })
 
 Use `frame.Where()` with a row predicate that parses the date string and checks year/month components. This is verbose but gives full access to .NET's `DateTime` comparison operators.
 
-_Uses `frame.Where()` with a row predicate that parses each date string and checks `symbol == "SAP.DE"`, `Year == 2024`, `Month == 1` — returning the same 22 January 2024 trading days as the Polars result._
+_Uses a row predicate that parses `date` with `DateTime.Parse()` and checks both `symbol == "SAP.DE"` and `dt.Year == 2024 && dt.Month == 1` — matching the same 22 rows as Polars but parsing the date string on every row evaluation._
 
 ```csharp
 var jan2024D = dfD.Where(row =>
@@ -1436,7 +1445,7 @@ Generate a sequence of dates between a start and end point. Useful for building 
 
 Build date strings with `Enumerable.Range` and `AddDays`, then parse to Polars `Date` type.
 
-_Generates 10 consecutive date strings from 2026-01-01 to 2026-01-10 using `Enumerable.Range` + `AddDays`, then parses with `Str.ToDate("%Y-%m-%d")` to produce a single-column Polars `Date` DataFrame._
+_Generates a 10-element date sequence from `2026-01-01` to `2026-01-10` using `Enumerable.Range` with `AddDays`, formats them as strings, then parses back to Polars `Date` type with `Str.ToDate("%Y-%m-%d")`._
 
 ```csharp
 var start = new DateTime(2026, 1, 1);
@@ -1468,7 +1477,7 @@ Compute statistics over a sliding window of N consecutive rows — moving averag
 
 `RollingMean("7")` computes the 7-period simple moving average. The window size is passed as a string in Polars.NET 0.4.0. Combine with `WithColumns` and `Alias` for multiple rolling columns.
 
-_Computes SMA-7 and SMA-30 for `ASML.AS` close prices sorted by date — the last 10 rows show close prices around 1,147–1,234, with SMA-7 ≈ 1,178–1,252 and SMA-30 ≈ 1,204–1,207._
+_Filters to `ASML.AS` sorted by date, computes both a 7-period and 30-period simple moving average on `close`, and displays the last 10 rows — showing SMA-7 (`1181`) tracking below SMA-30 (`1204`) in the declining price period._
 
 ```csharp
 var asmlP = dfP.Filter(Col("symbol") == Lit("ASML.AS")).Sort("date");
@@ -1485,7 +1494,7 @@ asmlRolling.Select(new[] { "date", "close", "sma_7", "sma_30" }).Tail(10)
 
 Deedle does not have a built-in `RollingMean`. Compute it manually by iterating over the values array and averaging each window.
 
-_Manually computes SMA-7 for `ASML.AS` by iterating over the close array and averaging each 7-element window — the last 10 values match the Polars SMA-7 output (e.g., 1,251.51 on 2026-02-27)._
+_Manually computes a 7-period moving average by iterating over `ASML.AS` close values with a sliding window accumulator, printing the last 10 rows — producing the same rounded SMA-7 values as Polars._
 
 ```csharp
 var asmlD = dfD.Where(row => row.Value.GetAs<string>("symbol") == "ASML.AS");
@@ -1533,7 +1542,7 @@ Change time frequency — downsampling daily data to monthly OHLC bars. Polars.N
 
 Extract year and month components with the `.Dt` accessor, group by both, then aggregate with `First` (open), `Max` (high), `Min` (low), `Last` (close), and `Sum` (volume).
 
-_Aggregates `ASML.AS` daily OHLCV into monthly bars using `First`/`Max`/`Min`/`Last`/`Sum` — the last 6 months (Oct 2025 – Mar 2026) show the strong rally from close ≈ 918 to ≈ 1,191._
+_Groups `ASML.AS` by extracted `year` and `month` components, aggregating `open` (first), `high` (max), `low` (min), `close` (last), and `volume` (sum) — the last 6 months show the stock's rally from close 918 (Oct 2025) to 1190 (Mar 2026)._
 
 ```csharp
 var asmlSorted = dfP.Filter(Col("symbol") == Lit("ASML.AS")).Sort("date");
@@ -1567,7 +1576,7 @@ Running maximum and minimum track the all-time high and all-time low from the fi
 
 `CumMax()` and `CumMin()` return running aggregates. Each row's value is the max (or min) of all values from the first row to the current row.
 
-_Computes three running aggregates for `ASML.AS` simultaneously: `cum_volume` (total shares traded), `running_high` (all-time high close, plateaued at 1,288.4), and `running_low` (all-time low close, 397.45)._
+_Applies `CumMax()`, `CumMin()`, and `CumSum()` to `ASML.AS` prices and volume — the last 10 rows confirm the all-time high at `1288.4` and all-time low at `397.45`, with cumulative volume exceeding 945 million shares._
 
 ```csharp
 var asmlCum = asmlSorted.WithColumns(
@@ -1584,7 +1593,7 @@ asmlCum.Select(new[] { "date", "close", "volume", "cum_volume", "running_high", 
 
 Deedle has no built-in `CumMax` or `CumMin`. Compute manually by iterating over the values and tracking running extremes.
 
-_Iterates over `ASML.AS` close values, tracking `cumMax[i] = Math.Max(cumMax[i-1], vals[i])` and `cumMin[i] = Math.Min(...)` — the last 10 rows confirm the same running_high (1,288.40) and running_low (397.45) as Polars._
+_Manually tracks running high and low by iterating over `ASML.AS` close values with `Math.Max` and `Math.Min`, printing the last 10 rows — confirming the same all-time extremes (high: 1288.40, low: 397.45) as Polars._
 
 ```csharp
 var asmlClose = asmlD.GetColumn<double>("close");

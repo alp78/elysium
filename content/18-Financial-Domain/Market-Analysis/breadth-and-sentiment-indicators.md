@@ -1,4 +1,5 @@
 ---
+title: "Breadth and Sentiment Indicators"
 type: reference
 category: financial-domain
 technology: [yfinance, python]
@@ -6,12 +7,13 @@ tags: [python, financial]
 aliases: [Breadth and Sentiment Indicators, market breadth, advance decline, put call ratio, short interest, sentiment indicators]
 keywords: [breadth indicators, sentiment indicators, advance decline ratio, percent above 200 day MA, new highs new lows, put call ratio, short interest ratio, market breadth, market sentiment, contrarian, bullish, bearish]
 description: "Market breadth and sentiment indicators for equity index analysis — advance/decline ratio, percent above 200-day MA, new highs/lows, put/call ratio, and short interest with formulas and interpretation."
-related:
-  - "[daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)"
-  - "[technical-indicators](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/technical-indicators)"
-  - "[risk-and-volatility-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/risk-and-volatility-metrics)"
-  - "[liquidity-and-flow-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Market-Analysis/liquidity-and-flow-metrics)"
-  - "[chart-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/chart-metrics)"
+parent: "[[domain-market-analysis]]"
+links:
+  - "[[index-maintenance-and-corporate-actions]]"
+  - "[[liquidity-and-flow-metrics]]"
+  - "[[risk-and-volatility-metrics]]"
+  - "[[technical-indicators]]"
+  - "[[valuation-ratios]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

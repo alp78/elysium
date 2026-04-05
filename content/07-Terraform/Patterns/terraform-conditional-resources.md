@@ -1,7 +1,13 @@
 ---
+title: "Terraform Conditional Resources"
 tags: [terraform, iac]
 aliases: [terraform conditional, terraform count, terraform for_each, optional resources terraform, terraform ternary]
 description: "How Terraform uses count and for_each to conditionally create resources or create multiple instances, enabling optional integrations (like Datadog) and parameterized infrastructure."
+parent: "[[domain-patterns-and-reference]]"
+links:
+  - "[[terraform-resource-dependencies]]"
+  - "[[terraform-module-composition]]"
+  - "[[terraform-problems]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

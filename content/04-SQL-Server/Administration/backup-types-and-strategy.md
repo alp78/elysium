@@ -3,6 +3,18 @@ title: "Backup Types and Strategy"
 tags: [sql-server, tsql]
 aliases: [SQL Server backup, full backup, differential backup, transaction log backup, copy-only backup, file backup, filegroup backup, partial backup, 3-2-1 rule, backup strategy]
 description: "SQL Server backup types (full, differential, transaction log, copy-only, file/filegroup, partial), the 3-2-1 backup rule, recovery model selection, point-in-time recovery procedure, and an automated GCS backup script."
+parent: "[[domain-server-operations]]"
+links:
+  - "[[server-configuration]]"
+  - "[[sqlcmd-connection-and-usage]]"
+  - "[[essential-dba-queries]]"
+  - "[[sql-server-agent-jobs]]"
+  - "[[restore-and-recovery]]"
+  - "[[finops-cost-optimization]]"
+  - "[[high-availability-overview]]"
+  - "[[always-on-availability-groups]]"
+  - "[[sql-server-problems]]"
+  - "[[troubleshooting-flowcharts]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

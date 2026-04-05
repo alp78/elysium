@@ -1,7 +1,20 @@
 ---
+title: "Performance Audit Playbook"
 tags: [performance, sql, sql-server, tsql]
 aliases: [SQL Server audit, performance audit, health check, DBA audit, instance audit]
 description: "Step-by-step SQL Server performance audit playbook covering 11 phases: instance overview, memory pressure, wait statistics, IO performance, expensive queries, index health, TempDB, blocking and deadlocks, statistics and plan quality, database sizes, and security. Includes all diagnostic queries and a post-pipeline health check script."
+parent: "[[domain-query-craft]]"
+links:
+  - "[[sargable-queries]]"
+  - "[[merge-and-upsert]]"
+  - "[[date-and-time-functions]]"
+  - "[[execution-plans]]"
+  - "[[query-plan-analysis]]"
+  - "[[wait-stats-analysis]]"
+  - "[[memory-and-buffer-pool]]"
+  - "[[index-maintenance]]"
+  - "[[pipeline-integration-and-devex]]"
+  - "[[pit-integrity-logic]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

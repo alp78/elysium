@@ -1,8 +1,19 @@
 ---
+title: "dbt: Troubleshooting"
 tags: [pipeline, dbt]
 status: stable
 updated: 2026-03-23
 description: "Systematic diagnosis of dbt compilation errors, runtime failures, test failures, incremental drift, snapshot corruption, and a reference table of 12 common errors with causes and fixes."
+parent: "[[domain-operations-and-adapters]]"
+links:
+  - "[[dbt-airflow-integration]]"
+  - "[[dbt-ci-cd]]"
+  - "[[dbt-documentation-and-lineage]]"
+  - "[[dbt-observability]]"
+  - "[[dbt-performance-tuning]]"
+  - "[[dbt-bigquery-adapter]]"
+  - "[[dbt-sqlserver-adapter]]"
+  - "[[dbt-cross-adapter-patterns]]"
 ---
 
 # dbt: Troubleshooting

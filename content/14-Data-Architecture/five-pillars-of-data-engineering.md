@@ -1,7 +1,13 @@
 ---
+title: "Five Pillars of Data Engineering"
 tags: [data-architecture, data-engineering, architecture]
 aliases: [Five Pillars, Senior Data Engineer Pillars, data engineering principles, engineering pillars]
 description: "The five pillars of senior data engineering — reliability, observability, efficiency, security, and operability — that every production system must be designed around."
+parent: "[[domain-principles-and-decisions]]"
+links:
+  - "[[golden-rules-of-data-engineering]]"
+  - "[[technology-selection-matrices]]"
+  - "[[scenario-based-decision-guide]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

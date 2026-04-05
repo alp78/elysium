@@ -4,6 +4,9 @@ tags:
   - python
 aliases: [lambda, closures, decorators, higher-order functions]
 description: "Python functions reference with executable examples and cell outputs — covers function basics, parameters, lambda, closures, decorators, and type hints. See [04_cs_functions](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/04_cs_functions) for the C# equivalent."
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[04_cs_functions]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

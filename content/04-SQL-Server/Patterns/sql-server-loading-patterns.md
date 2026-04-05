@@ -11,6 +11,15 @@ tags:
   - etl
 aliases: [Loading Patterns, Bulk Loading, Data Ingestion SQL Server, fast_executemany, SqlBulkCopy, BULK INSERT, bcp]
 description: "Every method of getting data into SQL Server — benchmarked and compared. Covers bcp, BULK INSERT, pyodbc fast_executemany, SqlBulkCopy, loading strategies (truncate-reload, staging swap, incremental, upsert), and minimal logging."
+parent: "[[domain-pipeline-patterns]]"
+links:
+  - "[[sql-server-schema-layering]]"
+  - "[[sql-server-change-tracking]]"
+  - "[[sql-server-incremental-transforms]]"
+  - "[[sql-server-pipeline-anti-patterns]]"
+  - "[[bronze-layer-loading]]"
+  - "[[silver-transforms]]"
+  - "[[gold-transforms]]"
 created: 2026-03-29
 updated: 2026-04-04
 status: complete

@@ -1,4 +1,5 @@
 ---
+title: "Terraform: IAM, Secrets and Serverless Blocks"
 tags: [security, terraform, gcp, iam, secret-manager, cloud-run, cloud-functions, pubsub, artifact-registry]
 aliases:
   - terraform iam blocks
@@ -11,6 +12,11 @@ description: >
   Atomic Terraform block library for GCP IAM, Secret Manager, Cloud Run (v2),
   Cloud Functions v2, Cloud Scheduler, Pub/Sub, and Artifact Registry. Each
   block is self-contained for copy-paste use in data engineering infrastructure.
+parent: "[[domain-block-library]]"
+links:
+  - "[[tf-foundation-and-networking]]"
+  - "[[tf-compute-and-storage]]"
+  - "[[tf-data-services]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

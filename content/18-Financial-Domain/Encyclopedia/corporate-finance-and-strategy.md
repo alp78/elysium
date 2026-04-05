@@ -1,4 +1,5 @@
 ---
+title: "Corporate Finance and Strategy"
 type: reference
 category: financial-encyclopedia
 technology: []
@@ -6,10 +7,23 @@ tags: [financial]
 aliases: [corporate finance terms, M&A glossary, merger acquisition glossary, restructuring glossary, spin-off glossary]
 keywords: [mergers acquisitions, M&A, divestitures, spin-off, restructuring, corporate finance advisory, holding company, subsidiaries, segments, joint venture, incorporated, financial advisory, goodwill, tender offer]
 description: "Encyclopedia definitions for corporate finance and strategy terms covering M&A, divestitures, spin-offs, restructuring, advisory, holding companies, and corporate governance drawn from the example Index universe."
-related:
-  - investment-management
-  - capital-markets-and-trading
-  - banking-and-lending
+parent: "[[domain-financial-encyclopedia]]"
+links:
+  - "[[banking-and-lending]]"
+  - "[[business-models-and-commerce]]"
+  - "[[capital-markets-and-trading]]"
+  - "[[compliance-and-risk-management]]"
+  - "[[energy-and-commodities]]"
+  - "[[esg-and-sustainability]]"
+  - "[[exchanges-and-market-infrastructure]]"
+  - "[[insurance-and-risk]]"
+  - "[[investment-management]]"
+  - "[[payments-and-settlement]]"
+  - "[[pharma-and-healthcare]]"
+  - "[[real-estate-and-industrial]]"
+  - "[[structured-finance]]"
+  - "[[technology-and-digital]]"
+  - "[[trade-and-treasury]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

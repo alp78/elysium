@@ -1,7 +1,17 @@
 ---
+title: "Silver Transforms"
 tags: [sql, sql-server, tsql, medallion-project]
 aliases: [Silver Layer, Silver Transforms, Bronze to Silver, SCD2 Transform, Silver DDL, Cleaned Layer, Gap Fill, Forward Fill]
 description: "Complete SQL patterns for the example silver layer — covers SCD Type 2 dimension tracking, OHLCV gap-filling against the trading calendar, daily and quarterly signal upserts, and unique index design for deduplication."
+parent: "[[domain-pipeline-patterns]]"
+links:
+  - "[[sql-server-loading-patterns]]"
+  - "[[sql-server-schema-layering]]"
+  - "[[sql-server-change-tracking]]"
+  - "[[sql-server-incremental-transforms]]"
+  - "[[sql-server-pipeline-anti-patterns]]"
+  - "[[bronze-layer-loading]]"
+  - "[[gold-transforms]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

@@ -1,7 +1,16 @@
 ---
+title: "Idempotent Pipeline Design"
 tags: [data-architecture, architecture, pipeline, python, sql, airflow]
 aliases: [idempotent pipelines, idempotency, idempotent loads, safe re-runs, replayable pipelines]
 description: "Idempotent pipeline design ensures running a pipeline multiple times with the same input produces the same result without duplicates or corruption — the foundation of reliable data engineering."
+parent: "[[domain-pipeline-construction]]"
+links:
+  - "[[medallion-architecture]]"
+  - "[[functional-pipeline-architecture]]"
+  - "[[data-flow-architecture]]"
+  - "[[dbt-transformation-layer]]"
+  - "[[serialization-formats]]"
+  - "[[migration-idempotency-backfills]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

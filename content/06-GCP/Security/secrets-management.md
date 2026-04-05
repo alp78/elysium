@@ -1,7 +1,13 @@
 ---
+title: "Secrets Management"
 tags: [gcp, security, secrets]
 status: stable
 updated: 2026-04-05
+parent: "[[domain-security-and-identity]]"
+links:
+  - "[[service-accounts-and-iam]]"
+  - "[[gcp-identity-and-connection-patterns]]"
+  - "[[vpc-service-controls]]"
 ---
 
 # Secrets Management

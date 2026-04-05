@@ -1,4 +1,5 @@
 ---
+title: "Banking and Lending"
 type: reference
 category: financial-encyclopedia
 technology: []
@@ -6,11 +7,23 @@ tags: [financial]
 aliases: [banking terms, lending terms, retail banking glossary, commercial banking glossary]
 keywords: [commercial banking, retail banking, wholesale banking, consumer finance, mortgage, leasing, credit cards, digital banking, bancassurance, bank holding company, credit union, non-bank lender, margin lending, factoring, working capital, transaction banking, treasury services]
 description: "Encyclopedia definitions for banking and lending terms drawn from the example Index universe, covering commercial banking, retail banking, wholesale banking, consumer finance, mortgages, leasing, and related concepts."
-related:
-  - payments-and-settlement
-  - investment-management
-  - corporate-finance-and-strategy
-  - structured-finance
+parent: "[[domain-financial-encyclopedia]]"
+links:
+  - "[[business-models-and-commerce]]"
+  - "[[capital-markets-and-trading]]"
+  - "[[compliance-and-risk-management]]"
+  - "[[corporate-finance-and-strategy]]"
+  - "[[energy-and-commodities]]"
+  - "[[esg-and-sustainability]]"
+  - "[[exchanges-and-market-infrastructure]]"
+  - "[[insurance-and-risk]]"
+  - "[[investment-management]]"
+  - "[[payments-and-settlement]]"
+  - "[[pharma-and-healthcare]]"
+  - "[[real-estate-and-industrial]]"
+  - "[[structured-finance]]"
+  - "[[technology-and-digital]]"
+  - "[[trade-and-treasury]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

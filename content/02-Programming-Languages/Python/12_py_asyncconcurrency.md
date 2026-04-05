@@ -1,8 +1,11 @@
 ---
-title: "12. Async & Concurrency - Python"
+title: "12. Async and Concurrency - Python"
 tags: [python, async, concurrency]
 aliases: [async await, concurrency, parallelism, threads, asyncio]
 description: "Python async and concurrency reference with executable examples and cell outputs — covers asyncio, async/await, tasks, threading, multiprocessing, and concurrent.futures. See [12_cs_asyncconcurrency](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/12_cs_asyncconcurrency) for the C# equivalent."
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[12_cs_asyncconcurrency]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

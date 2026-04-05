@@ -1,7 +1,20 @@
 ---
+title: "Point-in-Time Integrity Logic"
 tags: [performance, sql, bigquery, sql-server, tsql]
 aliases: [PIT, point-in-time, effective-dated, bi-temporal, as-of query, weight normalization, constituent list, rebalancing, index reconstitution, SCD Type 2, temporal join]
 description: "Point-in-Time data integrity patterns for stock index calculation and ESG scoring — covers effective-dated constituent lists, weight normalization to exactly 1.00000000, bi-temporal modeling, and performance tuning for large-scale price/ESG joins."
+parent: "[[domain-query-craft]]"
+links:
+  - "[[sargable-queries]]"
+  - "[[merge-and-upsert]]"
+  - "[[date-and-time-functions]]"
+  - "[[execution-plans]]"
+  - "[[query-plan-analysis]]"
+  - "[[wait-stats-analysis]]"
+  - "[[memory-and-buffer-pool]]"
+  - "[[index-maintenance]]"
+  - "[[performance-audit-playbook]]"
+  - "[[pipeline-integration-and-devex]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

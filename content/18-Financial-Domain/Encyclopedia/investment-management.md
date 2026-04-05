@@ -1,4 +1,5 @@
 ---
+title: "Investment Management"
 type: reference
 category: financial-encyclopedia
 technology: []
@@ -6,11 +7,23 @@ tags: [financial]
 aliases: [investment management terms, asset management glossary, wealth management glossary, hedge fund glossary, private equity glossary]
 keywords: [asset management, wealth management, portfolio management, hedge funds, private equity, venture capital, mutual funds, pension fund, prime brokerage, private banking, superannuation, fiduciary, brokerage, alternative investments, investment banking, wrap platform]
 description: "Encyclopedia definitions for investment management terms covering asset management, wealth management, portfolio management, hedge funds, private equity, venture capital, and related concepts drawn from the example Index universe."
-related:
-  - capital-markets-and-trading
-  - banking-and-lending
-  - corporate-finance-and-strategy
-  - scoring-methodology
+parent: "[[domain-financial-encyclopedia]]"
+links:
+  - "[[banking-and-lending]]"
+  - "[[business-models-and-commerce]]"
+  - "[[capital-markets-and-trading]]"
+  - "[[compliance-and-risk-management]]"
+  - "[[corporate-finance-and-strategy]]"
+  - "[[energy-and-commodities]]"
+  - "[[esg-and-sustainability]]"
+  - "[[exchanges-and-market-infrastructure]]"
+  - "[[insurance-and-risk]]"
+  - "[[payments-and-settlement]]"
+  - "[[pharma-and-healthcare]]"
+  - "[[real-estate-and-industrial]]"
+  - "[[structured-finance]]"
+  - "[[technology-and-digital]]"
+  - "[[trade-and-treasury]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

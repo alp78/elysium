@@ -1,7 +1,20 @@
 ---
+title: "Pipeline Integration and Developer Experience"
 tags: [pipeline, python, sql, airflow, sql-server, tsql]
 aliases: [pipeline integration, SQL comment tagging, Airflow SQL correlation, schema migrations, Flyway SQL Server, Liquibase SQL Server, connection pool management, developer experience]
 description: "Developer experience patterns for SQL Server pipeline integration: tagging queries with Airflow context for monitoring correlation, schema migration management (Flyway/Python runner), and connection pool management for pymssql and ADO.NET."
+parent: "[[domain-query-craft]]"
+links:
+  - "[[sargable-queries]]"
+  - "[[merge-and-upsert]]"
+  - "[[date-and-time-functions]]"
+  - "[[execution-plans]]"
+  - "[[query-plan-analysis]]"
+  - "[[wait-stats-analysis]]"
+  - "[[memory-and-buffer-pool]]"
+  - "[[index-maintenance]]"
+  - "[[performance-audit-playbook]]"
+  - "[[pit-integrity-logic]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

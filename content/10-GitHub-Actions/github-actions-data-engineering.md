@@ -17,6 +17,10 @@ aliases:
   - Workload Identity Federation
   - data quality gates
 description: "GitHub Actions for data engineering — CI for pipelines, CD for Cloud Run, Terraform automation, dbt CI, data quality gates, and Workload Identity Federation."
+parent: "[[domain-applied-automation]]"
+links:
+  - "[[github-actions-ci-cd]]"
+  - "[[github-actions-problems]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

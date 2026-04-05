@@ -1,7 +1,20 @@
 ---
+title: "sqlcmd — Connection and Usage"
 tags: [sql-server, sqlcmd, administration]
 aliases: [sqlcmd, go-sqlcmd, mssql-tools, Invoke-Sqlcmd, sql server command line]
 description: "How to connect to SQL Server from the command line using sqlcmd, including all common flags, inline queries, script execution, and CSV export in both Linux and PowerShell."
+parent: "[[domain-server-operations]]"
+links:
+  - "[[server-configuration]]"
+  - "[[essential-dba-queries]]"
+  - "[[sql-server-agent-jobs]]"
+  - "[[backup-types-and-strategy]]"
+  - "[[restore-and-recovery]]"
+  - "[[finops-cost-optimization]]"
+  - "[[high-availability-overview]]"
+  - "[[always-on-availability-groups]]"
+  - "[[sql-server-problems]]"
+  - "[[troubleshooting-flowcharts]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

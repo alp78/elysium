@@ -1,9 +1,14 @@
 ---
+title: "IOSCO Benchmark Principles"
 tags: [financial, regulatory, stoxx]
 type: reference
 technology: []
 status: stable
 updated: 2026-03-23
+parent: "[[domain-regulatory]]"
+links:
+  - "[[eu-bmr-benchmark-regulation]]"
+  - "[[sfdr-data-requirements]]"
 ---
 
 # IOSCO Benchmark Principles

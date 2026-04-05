@@ -1,4 +1,5 @@
 ---
+title: "Quarterly Signal Scores"
 type: reference
 category: financial-domain
 technology: [yfinance, sql-server, python]
@@ -6,11 +7,14 @@ tags: [python, sql, financial]
 aliases: [Quarterly Signals, Quality Score, Moat Score, Health Warnings, Governance Risk Score]
 keywords: [quarterly signals, quality score, moat score, gross margin, ROE, operating margin, leverage, debt-to-equity, FCF yield, free cash flow, health warnings, liquidity flag, leverage flag, cash burn, revenue decline, governance risk, audit risk, board risk, compensation risk, shareholder rights, ISS]
 description: "Quarterly earnings-based scores in the financial data platform dashboard: quality/moat score, binary health warning flags, and ISS-style governance risk score with component breakdowns."
-related:
-  - "[daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)"
-  - "[scoring-methodology](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/scoring-methodology)"
-  - "[factor-profile-and-composition](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/factor-profile-and-composition)"
-  - "[data-sources-and-refresh](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/data-sources-and-refresh)"
+parent: "[[domain-metrics-and-scoring]]"
+links:
+  - "[[chart-metrics]]"
+  - "[[daily-signal-scores]]"
+  - "[[data-sources-and-refresh]]"
+  - "[[factor-profile-and-composition]]"
+  - "[[index-snapshot-metrics]]"
+  - "[[scoring-methodology]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -3,6 +3,18 @@ title: "Memory and the Buffer Pool"
 tags: [sql, sql-server, tsql]
 aliases: [buffer pool, page life expectancy, PLE, buffer cache hit ratio, memory pressure, max server memory, memory clerks, DBCC FREEPROCCACHE, DBCC DROPCLEANBUFFERS, Lock Pages in Memory, LPIM]
 description: "How SQL Server's buffer pool manages data pages in RAM, how to measure memory pressure using Page Life Expectancy and buffer cache hit ratio, and how to configure max server memory correctly on GCP Compute Engine VMs."
+parent: "[[domain-query-craft]]"
+links:
+  - "[[sargable-queries]]"
+  - "[[merge-and-upsert]]"
+  - "[[date-and-time-functions]]"
+  - "[[execution-plans]]"
+  - "[[query-plan-analysis]]"
+  - "[[wait-stats-analysis]]"
+  - "[[index-maintenance]]"
+  - "[[performance-audit-playbook]]"
+  - "[[pipeline-integration-and-devex]]"
+  - "[[pit-integrity-logic]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

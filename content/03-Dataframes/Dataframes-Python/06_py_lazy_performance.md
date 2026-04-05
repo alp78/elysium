@@ -1,9 +1,18 @@
 ---
-title: "06. Lazy API & Performance - Python"
+title: "06. Lazy API and Performance - Python"
 tags: [python, pandas, polars, dataframes]
 aliases:
   - lazy evaluation, query plan, collect, benchmarks
 description: "Pandas/Polars DataFrame reference 06/10 — Lazy API & Performance (lazy/collect, query plan, benchmarks). Side-by-side executable examples with cell outputs."
+parent: "[[domain-transform-and-analyze]]"
+links:
+  - "[[03_py_transforms_expressions]]"
+  - "[[03_cs_transforms_expressions]]"
+  - "[[04_py_missing_strings_datetime]]"
+  - "[[04_cs_missing_strings_datetime]]"
+  - "[[05_py_aggregation_reshaping]]"
+  - "[[05_cs_aggregation_reshaping]]"
+  - "[[06_cs_lazy_performance]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -55,7 +64,9 @@ import time
 
 ## Eager: Immediate
 
-### Pandas / Polars | Eager read
+### Eager File Read
+
+#### Polars | Eager read with read_parquet()
 
 > [!warning] Eager execution loads ALL data
 >
@@ -70,6 +81,8 @@ import time
 > `.select()` / `.filter()` before `.collect()` — Polars will apply projection and
 > predicate pushdown automatically. In Pandas, pass `columns=[...]` to `pd.read_parquet()`
 > to load only the columns you need.
+
+_Reads `eurostoxx50_ohlcv.parquet` eagerly with `pl.read_parquet()`, printing the resulting type and shape to confirm all 66,355 rows are fully loaded into a Polars DataFrame._
 
 ```python
 df = pl.read_parquet(DATA / "eurostoxx50_ohlcv.parquet")
@@ -104,9 +117,13 @@ flowchart LR
     style G2 fill:#1f2335,stroke:#565f89,color:#c0caf5
 ```
 
-### Polars | scan_parquet()
+### Lazy File Scanning
+
+#### Polars | scan_parquet()
 
 `pl.scan_parquet(path)` returns a `LazyFrame` — a description of work, not data. Call `.collect_schema()` to inspect the column names and types without reading any rows. The schema is derived from the Parquet file footer metadata.
+
+_Scans `eurostoxx50_ohlcv.parquet` without loading any rows, confirms the resulting type is `LazyFrame`, then calls `collect_schema()` to read the Parquet footer and return all 12 column names with their Arrow types._
 
 ```python
 lf = pl.scan_parquet(DATA / "eurostoxx50_ohlcv.parquet")
@@ -119,7 +136,9 @@ print(f"Schema: {lf.collect_schema()}")
 
 ## Collect
 
-### Polars | .collect()
+### Materializing a LazyFrame
+
+#### Polars | .collect()
 
 > [!danger] Forgetting .collect() is the most
 >
@@ -135,6 +154,8 @@ print(f"Schema: {lf.collect_schema()}")
 > Use type annotations (`lf: pl.LazyFrame`, `df: pl.DataFrame`) to catch missing
 > `.collect()` calls at review time. If you need a partial result during development,
 > chain `.head(100).collect()` first to verify the plan before collecting the full dataset.
+
+_Chains filter, select, sort, and head on a lazy scan of `eurostoxx50_ohlcv.parquet`, then materializes with `.collect()` to return the 10 most recent closing prices for ASML.AS._
 
 ```python
 result = (
@@ -152,7 +173,9 @@ display(result)
 
 ## Query Plan
 
-### Polars | explain()
+### Query Plan Inspection
+
+#### Polars | explain()
 
 `lf.explain()` returns the **optimized** query plan as a string without executing it. Read it to verify that Polars has applied predicate and projection pushdown. The key fields to look for:
 
@@ -163,6 +186,8 @@ display(result)
 > [!tip] Always check `.explain()` before collecting on large datasets
 >
 > On a multi-GB Parquet file, call `lf.explain()` first to verify that `PROJECT` shows fewer columns than the total and that `SELECTION` contains your filter. If you see `PROJECT */N COLUMNS` with the full column count, your filter or select is not pushing down — check for unsupported expression types.
+
+_Builds a lazy plan filtering ASML.AS rows with close above 900 and selecting 3 of 12 columns, then calls `explain()` to print the optimized plan — confirming `PROJECT 3/12 COLUMNS` and both filter predicates merged into a single `SELECTION` clause._
 
 ```python
 lf = (
@@ -181,13 +206,17 @@ print(lf.explain())
 
 ## Predicate Pushdown
 
-### Polars | Predicate pushdown
+### Predicate Pushdown
+
+#### Polars | Predicate pushdown
 
 When you call `.filter()` on a `LazyFrame`, Polars moves the predicate into the file scanner at optimization time. For Parquet files, the scanner uses row group statistics to skip entire row groups that cannot satisfy the predicate — so unmatched rows are never deserialized into memory. The optimizer applies this even if you write the filter after a `.select()`.
 
 > [!info] Pandas has no predicate pushdown
 >
 > `pd.read_parquet()` loads all rows unconditionally. The only way to limit rows in Pandas is to read all data first, then filter with `df.query()` or boolean indexing. To limit I/O in Pandas, use `pd.read_parquet(path, filters=[...])` which delegates pushdown to the `pyarrow` engine — but this is only available at read time, not as part of a chain.
+
+_Chains `.select()` before `.filter()` to demonstrate that the optimizer still pushes the symbol predicate into the Parquet scanner regardless of chain order — confirmed by `explain()` showing `SELECTION: [(col("symbol")) == ("ASML.AS")]`._
 
 ```python
 lf = (
@@ -207,9 +236,13 @@ print(lf.explain())
 
 ## Projection Pushdown
 
-### Polars | Projection pushdown
+### Projection Pushdown
+
+#### Polars | Projection pushdown
 
 `.select()` on a `LazyFrame` tells Polars which columns are needed. At optimization time, the column list is pushed into the Parquet scanner, which reads only those byte ranges from disk — all other columns are completely skipped. The `.explain()` output shows `PROJECT N/12 COLUMNS` to confirm this is active.
+
+_Selects 2 of 12 columns from the OHLCV Parquet file via a lazy scan, calls `explain()` to confirm `PROJECT 2/12 COLUMNS` is active, then collects to verify the resulting shape is (66355, 2)._
 
 ```python
 lf = pl.scan_parquet(DATA / "eurostoxx50_ohlcv.parquet").select("symbol", "close")
@@ -226,9 +259,13 @@ print(f"Result: {lf.collect().shape}")
 
 ## Eager to Lazy Conversion
 
-### Polars | .lazy()
+### Converting Eager to Lazy
+
+#### Polars | .lazy()
 
 Call `.lazy()` on an existing `DataFrame` to enter the lazy API. The conversion is free — no data is copied. Use this when you have already read data eagerly but want to apply further operations with query optimization before collecting. `pl.col("name")` is the expression API entry point — it references a column by name and is the foundation for all Polars filter, select, and transform expressions.
+
+_Reads the OHLCV dataset eagerly, then calls `.lazy()` to enter the lazy API and chains `.filter()` and `.select()` before `.collect()` — returning 1,331 ASML.AS rows with only the date and close columns._
 
 ```python
 df = pl.read_parquet(DATA / "eurostoxx50_ohlcv.parquet")
@@ -240,13 +277,17 @@ print(f"Result: {result.shape}")
 
 ## Streaming Mode
 
-### Polars | collect(engine="streaming")
+### Streaming Execution
+
+#### Polars | collect(engine="streaming")
 
 Streaming mode processes data in chunks instead of loading the full dataset into memory at once. Pass `engine="streaming"` to `.collect()` to activate it. Use streaming for datasets larger than available RAM or when you want bounded memory usage on long-running aggregations.
 
 > [!warning] Streaming engine is experimental in Polars v1
 >
 > Not all operations support streaming. Unsupported nodes fall back to in-memory execution silently. Check `.explain(streaming=True)` to see which plan nodes will stream. The new Polars streaming engine (introduced in v1) is more capable than the legacy `streaming=True` parameter from v0.x but remains under active development.
+
+_Scans the OHLCV Parquet with `engine="streaming"`, filters rows where close exceeds 500, groups by symbol to compute average close rounded to 2 decimals, sorts descending, and collects — returning the 7 symbols that consistently traded above 500._
 
 ```python
 result = (
@@ -263,9 +304,13 @@ display(result.head(10))
 
 ## Profile
 
-### Polars | .profile()
+### Query Profiling
+
+#### Polars | .profile()
 
 `lf.profile()` executes the query and returns a tuple of `(result_df, timing_df)`. The `timing_df` contains one row per plan node with `start` and `end` timestamps in microseconds. Use it to identify which operation in a chain is the bottleneck before optimizing.
+
+_Profiles a chain that filters two symbols (ASML.AS and MC.PA), computes daily return percentage via `with_columns`, and groups by symbol for average return — returning both the result DataFrame and a timing DataFrame with microsecond start/end timestamps per plan node._
 
 ```python
 lf = (
@@ -287,13 +332,17 @@ The `start` and `end` columns are in microseconds. Here, `optimization` took 205
 
 ## Pandas vs Polars Lazy Benchmark
 
-### Pandas / Polars | Head query benchmark
+### Head Query Benchmark
+
+#### Pandas / Polars | Head query benchmark
 
 Compares the same operation — filter one symbol, select three columns, sort by date descending, take top 10 — using Pandas eager execution vs Polars lazy execution. Pandas reads the full Parquet file then filters in memory. Polars scans with predicate and projection pushdown.
 
 > [!question] When to choose Polars lazy over Pandas for read queries?
 >
 > For small DataFrames (< 100K rows, fits easily in memory), the difference is negligible and Pandas' familiar API may be preferable. Choose Polars lazy when: (1) data is larger than memory or growing toward that limit, (2) the query reads from Parquet and you can exploit projection/predicate pushdown, (3) the operation is part of a scheduled pipeline where throughput matters, or (4) you need reproducible multi-threaded performance.
+
+_Times the identical head-10 query — filter ASML.AS, select 3 columns, sort descending by date — in Pandas (full eager read then filter) versus Polars lazy scanning with predicate and projection pushdown, printing both durations and the speedup ratio (5.1x in the sample run)._
 
 ```python
 start = time.perf_counter()
@@ -323,7 +372,7 @@ print(f"Pandas: {pd_t:.4f}s \nPolars lazy: {pl_t:.4f}s \nSpeedup: {pd_t/pl_t:.1f
 
 ## Performance & Optimization
 
-### Setup | Reload datasets for benchmarking
+### Dataset Reload
 
 Reloads both datasets into memory so the benchmark cells below have a clean baseline without any cached filtered subsets from earlier cells.
 
@@ -337,13 +386,17 @@ print(f"Rows: {len(ohlcv_pd):,}")
 
 ## Vectorized vs Loop
 
-### Pandas | iterrows() vs column arithmetic
+### Row Iteration vs Vectorized Arithmetic
+
+#### Pandas | iterrows() vs column arithmetic
 
 `DataFrame.iterrows()` yields one Python dict per row, bypassing NumPy's C-level vectorization entirely. Column arithmetic (`df["a"] - df["b"]`) dispatches to NumPy's C implementation and processes all rows in a single SIMD-accelerated pass. The benchmark below measures `iterrows` over 1K rows vs column subtraction over the full 66K rows.
 
 > [!info] Polars has no iterrows equivalent
 >
 > Polars DataFrames are immutable and expression-based — there is no row iteration API. All operations use `pl.col()` expressions that execute in parallel across the full column in Rust. This design eliminates the anti-pattern at the API level.
+
+_Runs `iterrows()` over 1,000 rows computing close minus open per row in Python, then runs direct column subtraction over all 66,355 rows, printing both durations to quantify the cost of per-row Python dispatch versus a single C-level vectorized pass._
 
 ```python
 start=time.perf_counter()
@@ -365,7 +418,9 @@ print(f"vectorized (66K): {good:.4f}s")
 
 ## Why apply() Is Slow
 
-### Pandas | apply(axis=1) anti-pattern
+### The apply() Anti-Pattern
+
+#### Pandas | apply(axis=1) anti-pattern
 
 > [!danger] apply() is extremely slow
 >
@@ -382,6 +437,8 @@ print(f"vectorized (66K): {good:.4f}s")
 > For conditional logic use `np.where()` or `np.select()` instead of `apply`.
 > In Polars, use `pl.when().then().otherwise()` — all operations execute in parallel
 > across columns in native Rust with no Python overhead.
+
+_Applies a row-wise lambda computing daily return percentage (close−open)/open×100 over all 66K rows with `apply(axis=1)`, then computes the same metric via direct column arithmetic, printing both durations and the 743x speedup._
 
 ```python
 start=time.perf_counter()
@@ -401,13 +458,17 @@ print(f"apply: {apply_t:.4f}s\nvectorized: {vec_t:.4f}s\nSpeedup: {apply_t/vec_t
 
 ## Memory Usage
 
-### Pandas / Polars | RAM footprint comparison
+### RAM Footprint Comparison
+
+#### Pandas / Polars | RAM footprint comparison
 
 Polars uses Apache Arrow as its in-memory format. Arrow stores data in typed, contiguous column buffers that are more compact than Pandas' NumPy arrays, which add per-array Python object overhead and use 8-byte floats for integer columns that contain `NaN`.
 
 > [!info] Pandas uses NaN (float) for missing integers; Polars uses null
 >
 > In Pandas, an integer column with any missing value is silently promoted to `float64` to accommodate `NaN`. This doubles the memory footprint for integer columns with nulls and can cause silent precision loss for large integers. Polars uses a native `null` type backed by a validity bitmask — integer columns stay as `Int64` regardless of nulls, with no type coercion.
+
+_Measures the in-memory size of the 66K-row OHLCV dataset in both libraries — `memory_usage(deep=True)` for Pandas and `estimated_size("mb")` for Polars — printing both in MB and the ratio to confirm Polars is 2.2x more memory-efficient._
 
 ```python
 mem_pd=ohlcv_pd.memory_usage(deep=True).sum()/1024/1024
@@ -423,9 +484,13 @@ print(f"Ratio: {mem_pd/mem_pl:.1f}x")
 
 ## Benchmark: Common Operations
 
-### Pandas / Polars | Filter, GroupBy, Sort
+### Filter, GroupBy, and Sort Benchmarks
+
+#### Pandas / Polars | Filter, GroupBy, Sort
 
 Measures three core operations — single-column equality filter, group-by mean aggregation, and multi-column sort — side by side on the same 66K-row dataset. Polars benefits from multi-threaded execution and Apache Arrow's cache-friendly columnar layout.
+
+_Benchmarks filter, group-by mean aggregation, and multi-column sort on the 66K-row OHLCV dataset with Pandas versus Polars, each in a separate timed code cell, printing per-operation durations and speedup ratios._
 
 ```python
 ops = {}
@@ -485,7 +550,9 @@ print(f"  Sort speedup: {ops['pd_sort'] / ops['pl_sort']:.1f}x")
 
 ## Polars Architecture
 
-### Polars | Execution model
+### Execution Model
+
+#### Polars | Execution model
 
 Polars is built on four pillars that together make it faster than Pandas for analytical workloads:
 

@@ -3,6 +3,9 @@ title: "16. Database - Python"
 tags: [python]
 aliases: [database access, SQL, ORM, pyodbc, Entity Framework, Dapper, SQLAlchemy, connection strings]
 description: "Python database reference with executable examples and cell outputs — covers pyodbc, SQLAlchemy ORM, raw SQL, transactions, and pandas integration. See [16_cs_database](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/16_cs_database) for the C# equivalent."
+parent: "[[domain-data-engineering]]"
+links:
+  - "[[16_cs_database]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

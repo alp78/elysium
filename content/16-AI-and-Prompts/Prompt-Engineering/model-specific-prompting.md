@@ -1,7 +1,14 @@
 ---
+title: "Model-Specific Prompting"
 tags: [ai, prompt-engineering]
 aliases: [model differences prompting, Claude vs GPT prompting, model-specific syntax, cross-model prompting, Anthropic prompting, OpenAI prompting, Google Gemini prompting, xAI Grok prompting, Perplexity prompting, model comparison AI]
 description: "Model-specific prompting strategies for Claude (Anthropic), GPT-4/ChatGPT (OpenAI), Gemini (Google), Grok (xAI), and Perplexity. Covers each model's strengths, preferred structural formats, tone response characteristics, and distinctive behavioral traits. Includes cross-model portability tips."
+parent: "[[domain-prompt-craft]]"
+links:
+  - "[[prompt-foundations]]"
+  - "[[prompt-architecture]]"
+  - "[[applied-prompting]]"
+  - "[[prompt-debugging]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

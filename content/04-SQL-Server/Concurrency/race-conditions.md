@@ -3,6 +3,13 @@ title: "Race Conditions"
 tags: [sql-server, tsql]
 aliases: [race condition, lost update, phantom insert, dirty read, concurrent write, data corruption]
 description: "SQL Server race conditions in data pipelines: the four common patterns (lost update, phantom insert, dirty read, overlapping truncate-reload), detection queries, and five prevention strategies including Airflow serialization, atomic SQL operations, transactions, and unique constraints. Includes a complete data pipeline audit."
+parent: "[[domain-concurrency-and-security]]"
+links:
+  - "[[sql-server-authentication]]"
+  - "[[tde-encryption]]"
+  - "[[audit-logging]]"
+  - "[[blocking-and-locking]]"
+  - "[[deadlock-detection-and-prevention]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

@@ -1,4 +1,5 @@
 ---
+title: "Terraform: Compute and Storage Blocks"
 tags: [terraform, gcp, compute, gcs]
 aliases:
   - terraform-compute-storage
@@ -10,6 +11,11 @@ description: >
   organized by type (google_compute_instance, google_storage_bucket, etc.) with
   operational variants, argument tables, callouts, and mermaid diagrams. Covers VMs,
   disks, snapshots, scheduling, GCS buckets, IAM, objects, and Pub/Sub notifications.
+parent: "[[domain-block-library]]"
+links:
+  - "[[tf-foundation-and-networking]]"
+  - "[[tf-data-services]]"
+  - "[[tf-iam-secrets-serverless]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

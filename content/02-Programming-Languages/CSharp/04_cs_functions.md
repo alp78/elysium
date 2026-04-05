@@ -4,6 +4,9 @@ tags:
   - csharp
 aliases: [lambda, closures, decorators, delegates, higher-order functions]
 description: "C# functions reference with executable examples and cell outputs — covers methods, delegates, Func/Action, lambdas, closures, extension methods, and events. See [04_py_functions](https://alp78.github.io/elysium/02-Programming-Languages/Python/04_py_functions) for the Python equivalent."
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[04_py_functions]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

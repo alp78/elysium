@@ -7,6 +7,18 @@ tags:
   - agent
 aliases: [SQL Server Agent, Agent Jobs, Job Scheduling, Task Scheduling SQL Server]
 description: "SQL Server Agent job scheduling — enabling on Linux, creating jobs, built-in CDC/backup agents, and a complete comparison of all five job triggering methods in the GCP + SQL Server + Airflow stack."
+parent: "[[domain-server-operations]]"
+links:
+  - "[[server-configuration]]"
+  - "[[sqlcmd-connection-and-usage]]"
+  - "[[essential-dba-queries]]"
+  - "[[backup-types-and-strategy]]"
+  - "[[restore-and-recovery]]"
+  - "[[finops-cost-optimization]]"
+  - "[[high-availability-overview]]"
+  - "[[always-on-availability-groups]]"
+  - "[[sql-server-problems]]"
+  - "[[troubleshooting-flowcharts]]"
 created: 2026-03-29
 updated: 2026-03-29
 status: complete

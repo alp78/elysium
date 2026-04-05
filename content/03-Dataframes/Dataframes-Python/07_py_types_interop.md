@@ -1,9 +1,16 @@
 ---
-title: "07. Advanced Types & Interoperability - Python"
+title: "07. Advanced Types and Interop - Python"
 tags: [python, pandas, polars, dataframes]
 aliases:
   - categoricals, nested types, Arrow, zero-copy
 description: "Pandas/Polars DataFrame reference 07/10 — Advanced Types & Interoperability (categoricals, nested types, Arrow, zero-copy). Side-by-side executable examples with cell outputs."
+parent: "[[domain-ingest-and-explore]]"
+links:
+  - "[[01_py_foundations_io]]"
+  - "[[01_cs_foundations_io]]"
+  - "[[02_py_explore_select_filter]]"
+  - "[[02_cs_explore_select_filter]]"
+  - "[[07_cs_types_interop]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -57,12 +64,16 @@ import shutil
 
 ## Categorical
 
-### Pandas | Categorical
+### Categorical
+
+#### Pandas | Categorical encoding
 
 `pd.Categorical` encodes repeated string values as integer codes backed by a fixed category array. Use it for low-cardinality string columns (sector, country, status) to reduce memory and speed up groupby operations.
 
 > [!info] Pandas Categorical vs Polars Categorical
 > Pandas `Categorical` represents missing categories as `NaN` (float), which can silently coerce integer category codes to float. Polars `Categorical` uses native `null` without type coercion. Both store unique values once; Polars additionally uses integer codes at the column level rather than per-Series.
+
+_Encodes `dim_pd["sector"]` as a Pandas `Categorical` and prints the first 5 category labels and memory usage — confirming the `cat` column uses 681 bytes versus 1,484 bytes for the original string column._
 
 ```python
 dim_pd["sector_cat"] = pd.Categorical(dim_pd["sector"])
@@ -73,9 +84,11 @@ print(f"Memory: str={dim_pd["sector"].memory_usage()}, cat={dim_pd["sector_cat"]
     Categories: ['Basic Materials', 'Communication Services', 'Consumer Cyclical', 'Consumer Defensive', 'Energy']
     Memory: str=1484, cat=681
 
-### Polars | Categorical
+#### Polars | Categorical encoding
 
 `pl.Categorical` stores unique string values in a dictionary and encodes each row as an integer index. `cast(pl.Categorical)` is non-destructive — `with_columns` returns a new DataFrame. The `cat` dtype is visible in schema inspection and in displayed DataFrames.
+
+_Casts `dim_pl["sector"]` to `pl.Categorical` and displays the first 5 rows with `symbol`, `sector`, and `sector_cat` columns — confirming the inferred `cat` dtype shown in the Polars DataFrame schema._
 
 ```python
 dim_cat = dim_pl.with_columns(pl.col("sector").cast(pl.Categorical).alias("sector_cat"))
@@ -89,12 +102,16 @@ display(dim_cat.select("symbol", "sector", "sector_cat").head(5))
 
 ## Polars Enum
 
-### Polars | Enum
+### Ordered Categorical Type
+
+#### Polars | Sort ordered categorical with pl.Enum
 
 `pl.Enum` is a Categorical variant with a fixed, ordered set of values defined at creation time. Sorting on an Enum column respects the declared order (not alphabetical). Use it for ordered categories: risk levels (`LOW < MEDIUM < HIGH`), priority tiers, ratings.
 
 > [!info] No Pandas equivalent for ordered Enum
 > Pandas has `CategoricalDtype(ordered=True)` which provides ordered categoricals, but requires the category list upfront. Polars `pl.Enum` is stricter — values not in the declared set raise an error at cast time.
+
+_Creates a 3-row DataFrame with `alert` values cast to `pl.Enum(["LOW","MEDIUM","HIGH","CRITICAL"])`, sorts by `risk_enum` — confirming the result orders `LOW, MEDIUM, HIGH` by declared position rather than alphabetically._
 
 ```python
 risk=pl.Enum(["LOW","MEDIUM","HIGH","CRITICAL"])
@@ -106,12 +123,16 @@ display(df.sort("risk_enum"))
 
 ## List Type (Polars)
 
-### Polars | List
+### Variable-Length List Column
+
+#### Polars | List column with .list operations
 
 A `List` column stores a variable-length array of typed values in each row. It is native to Polars (and Arrow) — each row can hold a different number of elements. Use it for tags, labels, multi-value attributes, or time-series windows. Pandas has no direct native equivalent.
 
 > [!info] No Pandas native List column
 > Pandas can store Python lists in `object` columns but without vectorized operations. Polars `List` columns support `.list.len()`, `.list.first()`, `.list.contains()`, `.list.explode()`, and more — all executed at the Arrow layer without Python overhead.
+
+_Builds a 2-row DataFrame with a `tags` List column, then uses `.list.len()` and `.list.first()` to add `count` and `first` columns — producing `[2, "tech"]` and `[2, "luxury"]` for ASML.AS and MC.PA._
 
 ```python
 df=pl.DataFrame({"symbol":["ASML.AS","MC.PA"],"tags":[["tech","nl"],["luxury","fr"]]})
@@ -125,9 +146,13 @@ display(df.with_columns(
 
 ## Struct Type (Polars)
 
-### Polars | Struct
+### Nested Struct Column
+
+#### Polars | Struct column and unnest to flat columns
 
 A `Struct` column stores a fixed-schema record (key-value pairs) in each row — analogous to a nested object in JSON. Use it to keep related fields together before unnesting, or when reading JSON with nested objects. `unnest()` flattens a Struct column into separate top-level columns.
+
+_Creates a 1-row DataFrame with a `scores` Struct column containing `momentum` and `value` keys, then unnests it — producing a 3-column DataFrame with `symbol`, `momentum`, and `value` as top-level columns._
 
 ```python
 df=pl.DataFrame({"symbol":["ASML.AS"],"scores":[{"momentum":0.8,"value":0.5}]})
@@ -138,12 +163,16 @@ display(df.unnest("scores"))
 
 ## Arrow-Backed Dtypes (Pandas 2.x)
 
-### Pandas | Arrow-backed dtypes (2.x)
+### Arrow-Backed Dtypes
+
+#### Pandas | Arrow-backed string dtype via pd.array
 
 Pandas 2.x introduced opt-in Arrow-backed dtypes (e.g., `string[pyarrow]`, `int64[pyarrow]`) via `dtype_backend="pyarrow"`. These use the same Arrow memory layout as Polars, enabling faster operations and reducing conversion overhead when moving data between the two libraries.
 
 > [!warning] Arrow-backed dtypes are opt-in
 > Arrow-backed dtypes are not the default in Pandas 2.x. You must request them explicitly via `pd.array(..., dtype="string[pyarrow]")` or `dtype_backend="pyarrow"` on read functions. Copy-on-Write (CoW) became the default in Pandas 3.0. Mixing Arrow-backed and NumPy-backed columns in the same DataFrame can cause unexpected behavior.
+
+_Creates a 2-row DataFrame with `symbol` stored as `string[pyarrow]` via explicit `pd.array(dtype="string[pyarrow]")` — confirming the printed dtype is `string` (Arrow-backed) rather than the default `object`._
 
 ```python
 df = pd.DataFrame({"symbol": pd.array(["ASML.AS", "MC.PA"], dtype="string[pyarrow]")})
@@ -165,14 +194,20 @@ print(f"dtype: {df["symbol"].dtype}")
 ---
 ## Interoperability
 
+### Dataset Loading
+
 ```python
 ohlcv_pl=pl.read_parquet(DATA/"eurostoxx50_ohlcv.parquet")
 scores_pl=pl.read_parquet(DATA/"scores_daily.parquet")
 ```
 
-### Polars | to_pandas()
+### Polars-to-Pandas Conversion
+
+#### Polars | Convert Polars DataFrame to Pandas with .to_pandas()
 
 `.to_pandas()` converts a Polars `DataFrame` to a Pandas `DataFrame`. When Polars columns use Arrow-compatible types, the conversion may be zero-copy via the Arrow C Data Interface. Otherwise, a full memory copy occurs. Polars `null` becomes Pandas `NaN` for float columns; for integer columns, Pandas may upcast to `float64` to accommodate `NaN`.
+
+_Calls `.to_pandas()` on the first 5 rows of the OHLCV Polars DataFrame, confirming the output type is `pandas.core.frame.DataFrame` and displaying all 12 columns — including Polars `date` promoted to Pandas `datetime64` to accommodate the conversion._
 
 ```python
 pdf=ohlcv_pl.head(5).to_pandas()
@@ -279,9 +314,13 @@ display(pdf)
   </tbody>
 </table>
 
-### Polars | from_pandas()
+### Pandas-to-Polars Conversion
+
+#### Pandas | Convert Pandas DataFrame back to Polars with pl.from_pandas()
 
 `pl.from_pandas()` converts a Pandas `DataFrame` to Polars. This is always a data copy — Pandas uses NumPy buffers (not Arrow-native), so Polars must allocate new Arrow arrays. Pandas `NaN` in numeric columns becomes Polars `null`; Pandas `object` columns become Polars `String`.
+
+_Calls `pl.from_pandas()` on the 5-row Pandas DataFrame, confirming the output type is `polars.dataframe.frame.DataFrame` — demonstrating the round-trip where Pandas `datetime64` maps back to Polars `datetime[ms]` in the schema._
 
 ```python
 plf=pl.from_pandas(pdf)
@@ -293,9 +332,13 @@ display(plf)
 
 <div><!-- shape: (5, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>datetime[ms]</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04 00:00:00</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05 00:00:00</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06 00:00:00</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>ABI.BR</td><td>2021-01-07 00:00:00</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>ABI.BR</td><td>2021-01-08 00:00:00</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-### Polars | to_numpy()
+### NumPy Conversion
+
+#### Polars | Extract Polars Series to NumPy array with .to_numpy()
 
 `.to_numpy()` extracts a Polars `Series` as a NumPy array. For contiguous numeric types with no nulls, this may be zero-copy (returns a view). If the column contains nulls or non-contiguous memory, a copy is made. Pass `allow_copy=False` to raise an error instead of silently copying.
+
+_Extracts the first 5 `close` values from the OHLCV Polars DataFrame as a NumPy array, printing type `numpy.ndarray`, `dtype: float64`, and the 5 closing prices `[57.21 57.18 58.77 58.4 57.86]`._
 
 ```python
 arr=ohlcv_pl["close"].head(5).to_numpy()
@@ -304,12 +347,16 @@ print(f"Type: {type(arr)}, dtype: {arr.dtype}, values: {arr}")
 
     Type: <class 'numpy.ndarray'>, dtype: float64, values: [57.21 57.18 58.77 58.4  57.86]
 
-### Polars | Arrow interop
+### Arrow Interoperability
 
 > [!tip] Polars is Arrow-native — use it as the interop hub
 > Polars stores data in Apache Arrow columnar format internally. `.to_arrow()` returns a `pyarrow.Table` with zero-copy (no data duplication). Use Arrow as the interop layer between Polars and any other Arrow-compatible library (DuckDB, Spark via `datafusion`, ADBC, etc.).
 
+#### Polars | Export to PyArrow Table with .to_arrow()
+
 `.to_arrow()` returns a `pyarrow.Table` without copying data — Polars and PyArrow share the same memory buffers. `pl.from_arrow()` reconstructs a Polars `DataFrame` from any Arrow `Table` or `RecordBatch`, also zero-copy.
+
+_Calls `.to_arrow()` on the first 5 OHLCV rows to produce a `pyarrow.lib.Table`, printing the 12-field Arrow schema including `date32[day]` for dates and `large_string` for the symbol column._
 
 ```python
 arrow_table=ohlcv_pl.head(5).to_arrow()
@@ -331,6 +378,10 @@ print(f"Schema: {arrow_table.schema}")
     stock_splits: double
     is_filled: bool
 
+#### Polars | Round-trip Arrow Table back to Polars with pl.from_arrow()
+
+_Reconstructs the 5-row Polars DataFrame from the Arrow Table using `pl.from_arrow()` — confirming zero-copy round-trip where Arrow `date32[day]` maps back to Polars `date` dtype._
+
 ```python
 back=pl.from_arrow(arrow_table)
 display(back)
@@ -338,9 +389,13 @@ display(back)
 
 <div><!-- shape: (5, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21163</td><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21164</td><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
-### Polars | to_dicts()
+### Python Dict Conversion
+
+#### Polars | Convert DataFrame rows to Python dicts with .to_dicts()
 
 `.to_dicts()` converts a Polars `DataFrame` to a Python list of dicts (one dict per row). This is a full data copy into Python native objects — useful for serializing to JSON, passing rows to external APIs, or interoperating with non-DataFrame Python code.
+
+_Selects `symbol` and `composite_score` from the first 3 scores rows and calls `.to_dicts()`, printing a Python `list` of 3 dicts — confirming composite scores for BNP.PA (0.684), DTE.DE (0.515), and IFX.DE (0.512) serialize as native Python floats._
 
 ```python
 d=scores_pl.head(3).select("symbol","composite_score").to_dicts()
@@ -353,9 +408,13 @@ for row in d: print(f"  {row}")
       {'symbol': 'DTE.DE', 'composite_score': 0.5150053634526331}
       {'symbol': 'IFX.DE', 'composite_score': 0.5122353361255053}
 
-### Polars / Pandas | Zero-copy summary
+### Zero-Copy Summary
+
+#### Polars | Zero-copy round-trip via Arrow
 
 Zero-copy means no new memory is allocated — the receiving structure shares the same buffer as the source. Polars ↔ Arrow is zero-copy because both use the same columnar Arrow format. Pandas conversion is generally a copy because NumPy-backed Pandas uses a different memory layout.
+
+_Converts the full 66,355-row OHLCV Polars DataFrame to Arrow and back with `pl.from_arrow(ohlcv_pl.to_arrow())`, printing shape `(66355, 12)` — confirming no data was duplicated in memory during the round-trip._
 
 ```python
 # Zero-copy: Polars -> Arrow -> Polars
@@ -395,6 +454,8 @@ print(f"Temp dir: {TMP}")
 #### Pandas | Read CSV — separators and delimiters
 
 `sep` accepts any single character or a regex pattern. `decimal` handles locales where `,` is the decimal separator (common in European CSV exports). `pd.read_fwf` handles fixed-width format files where columns are aligned by character position.
+
+_Demonstrates four CSV variants — tab-separated, European semicolon-separated with `,` as decimal, pipe-separated, and fixed-width format — producing four separate DataFrames from inline string data._
 
 ```python
 # Tab-separated
@@ -509,6 +570,8 @@ display(pd.read_fwf(io.StringIO(fwf)))
 
 `separator` accepts a single character. Polars has no `decimal` parameter — preprocess European-format numbers before reading, or use `pl.read_csv` with `schema_overrides` and cast afterward. There is no fixed-width reader in Polars.
 
+_Reads the same three CSV variants (tab, semicolon, pipe) into Polars DataFrames, each producing a 2×2 result — confirming that Polars infers `i64` for integer columns and `f64` for decimal values._
+
 ```python
 # Tab-separated
 tsv = "name\tage\nAlice\t30\nBob\t25"
@@ -534,6 +597,8 @@ display(pl.read_csv(io.StringIO(pipe), separator="|"))
 #### Pandas | Read CSV — header, names, usecols
 
 `header=None` reads files with no header row; `names` assigns column names. `skiprows` skips lines from the top (useful for files with metadata preamble). Multi-level headers (`header=[0,1]`) create a `MultiIndex` on columns.
+
+_Demonstrates four header scenarios: providing column names when no header exists, skipping 2 metadata comment lines, reading the second row as the header, and building a MultiIndex from rows 0 and 1._
 
 ```python
 # No header in file — provide names
@@ -652,6 +717,8 @@ display(pd.read_csv(io.StringIO(raw), header=[0, 1]))
 
 `has_header=False` combined with `new_columns` handles files without a header row. `skip_rows` discards leading lines before the header; `skip_rows_after_header` discards the first data row (e.g., a units row). Polars has no MultiIndex equivalent.
 
+_Reads three CSV variants: assigning column names via `new_columns` when no header exists, skipping 2 comment lines, and discarding a "skip_this" units row after the header — each producing a clean 2-row DataFrame._
+
 ```python
 # No header — provide names
 raw = "Alice,30\nBob,25"
@@ -677,6 +744,8 @@ display(pl.read_csv(io.StringIO(raw), skip_rows_after_header=1))
 #### Pandas | Read CSV — dtype, parse_dates, na_values
 
 `dtype` overrides inferred types per column. `parse_dates` converts string columns to `datetime64`. `na_values` defines custom null sentinels in addition to (or replacing) Pandas defaults (`NaN`, `N/A`, `null`, `None`, `#N/A`, etc.).
+
+_Demonstrates five type-control scenarios on a 2-row CSV: explicit `int32`/`category`/`boolean` dtypes, automatic date parsing, day-first date parsing, custom null sentinels (`N/A` and `-999`), and a combined default + custom null configuration._
 
 ```python
 raw = "id,name,score,date,active\n1,Alice,3.14,2024-01-15,true\n2,Bob,2.72,2024-02-20,false"
@@ -849,6 +918,8 @@ display(df)
 > [!warning] Polars null vs Pandas NaN in CSV parsing
 > Pandas uses `NaN` (float) for missing values, which coerces integer columns to `float64`. Polars uses typed `null` — integer columns stay `Int64` even with nulls. This difference becomes visible when round-tripping CSV data between the two libraries.
 
+_Reads the 3-row CSV with a per-column null mapping (`score → "N/A"`), producing a Float64 `score` column where `"N/A"` becomes `null` while `"-999"` remains as a numeric value._
+
 ```python
 # Per-column null values (one sentinel per column)
 df = pl.read_csv(io.StringIO(raw3), null_values={"score": "N/A"})
@@ -862,6 +933,8 @@ display(df)
 #### Pandas | Read CSV — quoting and escaping
 
 RFC 4180 quoting is handled automatically: fields containing the separator, quotes, or newlines are enclosed in double-quotes; literal double-quotes are escaped by doubling. `quoting=csv.QUOTE_ALL` forces all fields to be quoted on write; `QUOTE_MINIMAL` (default) quotes only when necessary.
+
+_Reads a CSV with embedded commas and doubled-quote escaping, then writes the same DataFrame three times — with `QUOTE_MINIMAL` (default), `QUOTE_ALL`, and `QUOTE_NONNUMERIC` — showing how each strategy affects the output._
 
 ```python
 # Fields containing commas, quotes, newlines
@@ -919,6 +992,8 @@ print(df.to_csv(index=False, quoting=csv.QUOTE_NONNUMERIC))
 
 Polars handles RFC 4180 quoting automatically on read. On write, `quote_style="always"` quotes all fields; `"auto"` (default) quotes only when the field contains the separator or a quote character. Use `quote_char` to change the quote character from `"` to another.
 
+_Reads a 2-row CSV with embedded commas and doubled-quote escaping, then writes it twice — with `quote_style="auto"` (default, quotes only fields containing commas) and `quote_style="always"` (all fields quoted)._
+
 ```python
 # Polars handles standard RFC 4180 quoting automatically
 raw = 'name,bio\nAlice,"Likes cats, dogs"\nBob,"Said ""hello"""'  
@@ -949,6 +1024,8 @@ print(df.write_csv(quote_style="always"))
 #### Pandas | Read CSV — on_bad_lines, nrows, comment
 
 `on_bad_lines="skip"` silently drops rows with more fields than the header; `"warn"` logs them. `nrows` limits rows loaded for fast file inspection. `comment` skips lines that start with the specified character — useful for files with embedded metadata lines.
+
+_Skips a malformed row with 3 fields (from a 2-column header) yielding a 2-row result, limits a 100-row file to 5 rows with `nrows`, and skips a `#`-prefixed comment line to produce a clean 2-row DataFrame._
 
 ```python
 # on_bad_lines: "skip" drops malformed rows
@@ -1049,6 +1126,8 @@ display(pd.read_csv(io.StringIO(raw), comment="#"))
 
 `truncate_ragged_lines=True` keeps rows with extra fields by truncating them to the expected number of columns. `n_rows` limits rows loaded. `comment_prefix` skips lines starting with the specified string (e.g., `"#"`).
 
+_Reads a ragged CSV (keeping all 3 rows by truncating the extra field), limits a 100-row file to 5 rows, and skips a `#`-prefixed comment — each producing a clean 2-column DataFrame._
+
 ```python
 # Truncate ragged lines (extra fields)
 bad = "name,age\nAlice,30\nBob,25,extra_field\nCarol,28"
@@ -1074,6 +1153,8 @@ display(pl.read_csv(io.StringIO(raw), comment_prefix="#"))
 #### Pandas | Read and write CSV — compression (gzip, bz2, zstd)
 
 Compression format is inferred from the file extension automatically. `compression="gzip"` is the most widely supported; `"zstd"` offers better compression ratios with faster decompression. Compressed CSV is useful for intermediate files but slower to read than Parquet for analytical workloads.
+
+_Writes the first 100 OHLCV rows to four compressed formats (gzip, bz2, zip, zstd), reads back the gzip file to verify round-trip integrity, and prints file sizes — confirming bz2 achieves the smallest output (2,058 bytes) among the four._
 
 ```python
 # Write compressed CSV
@@ -1168,6 +1249,8 @@ for ext in ["csv.gz", "csv.bz2", "csv.zip", "csv.zst"]:
 
 Polars auto-detects compression from the file extension on read. On write, `write_csv()` returns a string — compress it manually using `gzip`, `zstd`, or `lz4` as needed. Alternatively, use `write_parquet` with a compression codec for a better-structured format.
 
+_Reads the gzip-compressed OHLCV CSV written by the Pandas cell (auto-detected from the `.gz` extension), then writes 100 Polars rows to gzip by encoding the CSV string to bytes and compressing manually — producing a 2,384-byte output._
+
 ```python
 # Polars reads compressed CSV automatically from extension
 display(pl.read_csv(TMP / "ohlcv.csv.gz").head(3))
@@ -1188,6 +1271,8 @@ print(f"Compressed: {(TMP / 'ohlcv_pl.csv.gz').stat().st_size:,} bytes")
 #### Pandas | Write CSV — index, float_format, sep, header
 
 `index=False` (almost always needed) suppresses the Pandas row index from the output. `columns` selects a subset. `float_format="%.2f"` controls decimal precision. `sep` changes the delimiter. `header=False` writes data only (useful for append scenarios).
+
+_Writes the first 5 OHLCV rows in five variations: with and without the row index, as a `symbol`/`close` subset, with semicolon delimiter, without a header row, and with close prices formatted to 2 decimal places._
 
 ```python
 df = ohlcv_pd.head(5)
@@ -1256,6 +1341,8 @@ print(df[["close", "volume"]].head(3).to_csv(index=False, float_format="%.2f"))
 
 `separator` changes the delimiter. `include_header=False` omits the header row. `null_value` controls how `null` is serialized (default: empty string). `write_csv()` without a path argument returns a Python string, which can then be compressed or transmitted.
 
+_Writes the first 5 OHLCV rows with comma delimiter (default), semicolon delimiter, no header, custom `"NA"` null string, and to a file — demonstrating how `write_csv()` returns a Python string for all in-memory variants._
+
 ```python
 df = ohlcv_pl.head(5)
 
@@ -1321,6 +1408,8 @@ print(f"Written: {(TMP / 'polars_out.csv').stat().st_size:,} bytes")
 > [!tip] Prefer Polars scan_csv for large files
 > Pandas `chunksize` reads the full file row by row in batches. Polars `scan_csv()` (lazy) applies predicate and column pushdown before reading — it only reads the data you actually need, which is much faster for filtered aggregations on large CSVs.
 
+_Reads the full 66,355-row OHLCV CSV in 10,000-row chunks to count total rows and compute the average close price (197.03) by accumulating per-chunk sums without loading the entire file into memory._
+
 ```python
 # chunksize returns an iterator of DataFrames
 path = DATA / "eurostoxx50_ohlcv.csv"
@@ -1344,6 +1433,8 @@ print(f"Average close: {avg_close / n:.2f}")
 #### Polars | Read CSV — scan_csv (lazy, predicate pushdown)
 
 `scan_csv()` creates a `LazyFrame` — no data is read until `.collect()` is called. Polars optimizes the query plan first: predicates are pushed down to the file scan (only matching rows are read), and column projection reduces which columns are loaded. For large files, this can reduce read time by orders of magnitude.
+
+_Creates a LazyFrame over the 66,355-row OHLCV CSV, filters for `ASML.AS` rows with predicate pushdown (reading 1,331 matching rows), then batch-reads the full file in 10,000-row chunks to confirm 66,355 total rows._
 
 ```python
 # Polars: use scan_csv (lazy) — never loads everything at once
@@ -1376,6 +1467,8 @@ print(f"Batched read: {total:,} rows")
 #### Pandas | Write JSON — orient options
 
 The `orient` parameter controls the JSON structure. `"records"` (list of row dicts) is most interoperable. `"columns"` (column-keyed dict) is compact. `"split"` preserves exact index/column metadata for round-trips. `"table"` includes schema metadata for type-aware deserialization.
+
+_Serializes a 2-row, 3-column DataFrame (Alice/NYC and Bob/LON) to six JSON orientations — `records`, `columns`, `index`, `split`, `values`, and `table` — showing the structural difference of each._
 
 ```python
 df = pd.DataFrame({"name": ["Alice", "Bob"], "age": [30, 25], "city": ["NYC", "LON"]})
@@ -1534,6 +1627,8 @@ print(df.to_json(orient="table", indent=2))
 
 `pd.read_json` requires the same `orient` on read as was used on write. `"values"` loses column names (returns integer column indices). `"table"` preserves schema metadata and is the most robust orient for lossless round-trips.
 
+_Round-trips the 2-row DataFrame through all 6 `orient` values, printing shape and column names for each — confirming all orientations preserve shape `(2, 3)` but `"values"` loses column names (returning integer indices `[0, 1, 2]`)._
+
 ```python
 orientations: list = ["records", "columns", "index", "split", "values", "table"]
 for orient in orientations:
@@ -1554,6 +1649,8 @@ for orient in orientations:
 #### Pandas | JSON — json_normalize for nested records
 
 `pd.json_normalize()` recursively flattens nested dicts into dot-notation column names (`address.city`). `record_path` explodes a nested list into rows; `meta` copies parent-level fields into each exploded row. Use this when ingesting REST API responses with nested objects.
+
+_Reads 2 nested records raw (showing dict/list cells), flattens them with `json_normalize` to produce dot-notation columns (`address.city`, `address.zip`), then explodes the `employees` list with `record_path` and `meta=["company"]` to produce 3 rows with company name preserved._
 
 ```python
 # Nested JSON records
@@ -1686,6 +1783,8 @@ Polars reads nested JSON objects as `Struct` columns and arrays as `List` column
 > [!info] Polars keeps nested structure; Pandas flattens by default
 > `pd.json_normalize()` eagerly flattens nested dicts with dot-notation keys. Polars `read_json` preserves the hierarchy as `Struct`/`List` types, giving you more control over when and how to flatten. For columnar access patterns, Polars' approach is more memory-efficient.
 
+_Reads the same 2-record nested JSON as Polars, confirming `address` becomes `Struct({'city','zip'})` and `scores` becomes `List(Int64)`, then unnests to 4 columns and explodes to 6 rows (3 scores × 2 names)._
+
 ```python
 # Polars represents nested JSON as Struct and List types
 nested_json = '[{"name":"Alice","address":{"city":"NYC","zip":"10001"},"scores":[90,85,92]},''{"name":"Bob","address":{"city":"London","zip":"EC1A"},"scores":[78,88,95]}]'
@@ -1724,7 +1823,11 @@ display(df_exploded)
 
 ### NDJSON (Newline-Delimited JSON)
 
+#### Pandas and Polars | Read and write NDJSON with lines=True and read_ndjson()
+
 NDJSON (also called JSON Lines) stores one JSON object per line, making it streamable and append-friendly. Pandas reads it with `lines=True`; Polars has dedicated `read_ndjson()` and `write_ndjson()` methods, plus `scan_ndjson()` for lazy evaluation.
+
+_Reads a 3-record NDJSON string with Pandas (`lines=True`) and Polars (`read_ndjson()`), writes NDJSON back with both, then creates a Polars `LazyFrame` via `scan_ndjson()` — confirming both libraries produce identical 3-row, 2-column DataFrames._
 
 ```python
 # NDJSON — one JSON object per line, ideal for streaming/append
@@ -1805,6 +1908,8 @@ print(f"\nLazy schema: {lf.collect_schema()}")
 
 `date_format="iso"` writes dates as ISO 8601 strings; `"epoch"` writes milliseconds since epoch. `double_precision` controls float decimal digits. `force_ascii=False` preserves Unicode characters (default `True` escapes them as `\uXXXX`). Supports gzip/bz2/zstd compression.
 
+_Serializes the first 3 OHLCV rows (symbol, date, close) with ISO dates and 2-space indentation, then demonstrates epoch timestamps, float precision control, Unicode escaping for city names, and gzip compression — producing a 113-byte compressed JSON file._
+
 ```python
 df = ohlcv_pd.head(3)[["symbol", "date", "close"]]
 
@@ -1865,6 +1970,8 @@ print(f"\nCompressed JSON: {(TMP / 'ohlcv.json.gz').stat().st_size:,} bytes")
 
 `write_json()` writes a JSON array (row-oriented, no orient variants). `write_ndjson()` writes NDJSON. For custom JSON control (custom date formatting, selective fields, extra metadata), use `to_dicts()` to get a Python list and serialize with `json.dumps()` and `default=str` for date handling.
 
+_Writes the first 3 OHLCV rows (symbol, date, close) as a JSON array file, as NDJSON, and as a custom JSON via `to_dicts()` with `json.dumps(default=str)` — showing that Polars dates serialize as ISO strings in all three approaches._
+
 ```python
 df = ohlcv_pl.head(3).select("symbol", "date", "close")
 
@@ -1915,7 +2022,11 @@ print(custom)
 
 ### Schema Control on Read
 
+#### Pandas and Polars | JSON schema override and infer_schema_length comparison
+
 Both libraries support schema overrides at read time to avoid a separate cast step. Polars `infer_schema_length=None` scans the entire file before inferring types — useful for files where the first N rows are insufficient to determine the correct type (e.g., a `"1"` that becomes `"two"` 1000 rows later).
+
+_Reads a 2-element JSON array with Pandas `dtype={"id": int, "val": float}` and Polars `schema_overrides`, then demonstrates `infer_schema_length=None` on an inconsistent JSON array `[{"x":1},{"x":"two"},{"x":3}]` — showing Polars falls back to `String` when types conflict across rows._
 
 ```python
 # Pandas — dtype control
@@ -1978,6 +2089,8 @@ Parquet compression is applied per-column during write. `snappy` (default) offer
 > [!tip] Choose zstd for analytical workloads
 > For data that will be read many times but written once (analytical pipelines), `zstd` at level 5–10 gives a good balance: 30–40% smaller than snappy with acceptable write overhead. For intermediate files that are rewritten frequently, `snappy` or `lz4` reduces write latency.
 
+_Writes the first 10,000 OHLCV rows to 6 Parquet files with different codecs and to 4 zstd compression levels, printing byte sizes — confirming brotli achieves the smallest output (283,158 bytes) while zstd level 19 reaches 283,439 bytes._
+
 ```python
 df = ohlcv_pd.head(10_000)
 
@@ -2012,6 +2125,8 @@ for level in [1, 5, 9, 19]:
 
 Polars supports the same codecs as PyArrow. `compression_level` allows fine-tuning within each codec (e.g., `zstd` level 1–22). `"uncompressed"` is the Polars equivalent of Pandas' `compression=None`. Use `use_pyarrow=True` to write via the PyArrow engine (required for some advanced features like custom metadata).
 
+_Writes the same 10,000 OHLCV rows to 6 Polars-native compressed formats and 4 zstd levels, printing byte sizes — confirming uncompressed is largest (744,360 bytes) and zstd level 22 achieves the smallest output (180,766 bytes)._
+
 ```python
 df = ohlcv_pl.head(10_000)
 
@@ -2040,10 +2155,14 @@ for level in [1, 5, 10, 22]:
 
 ### Row Groups & Statistics
 
+#### Polars | Write Parquet with custom row group sizes and inspect statistics via PyArrow
+
 Row groups are the horizontal partitions of a Parquet file. Each row group stores column data independently with its own min/max statistics. These statistics enable predicate pushdown: the Parquet reader skips entire row groups that cannot contain matching rows, without decompressing them.
 
 > [!info] Row group size trade-off
 > Smaller row groups (1K–10K rows): finer predicate pushdown granularity, more metadata overhead, better for highly selective filters. Larger row groups (100K+ rows): better compression (more context for the codec), lower metadata overhead, faster sequential reads. Default in most engines is 128MB per row group.
+
+_Writes 10,000 OHLCV rows with row group sizes of 1,000 (10 groups) and 10,000 (1 group), then uses `pq.read_metadata()` to print per-group row counts and byte sizes — confirming column-level min/max statistics (`id`, `symbol`, `date`, `open`, `high`) used for predicate pushdown._
 
 ```python
 # Row groups control parallelism and predicate pushdown granularity
@@ -2104,6 +2223,8 @@ print(f"\nWith stats: {path_small.stat().st_size:,}, without: {path_no_stats.sta
 #### Pandas | Read Parquet — column projection and explicit schema
 
 `columns=[...]` reads only specified columns (column projection) — Parquet's columnar format means unread columns incur zero I/O cost. `pq.read_schema()` reads only the schema metadata without loading any data. Writing with an explicit PyArrow schema controls precise types (e.g., `int32` instead of inferred `int64`).
+
+_Projects only `symbol`, `date`, and `close` from the 66,355-row OHLCV Parquet, inspects the full 12-field schema without loading data, then writes a 2-row DataFrame with an explicit Arrow schema enforcing `int32`, `float32`, and `large_string` types._
 
 ```python
 # Read with specific columns only
@@ -2185,6 +2306,8 @@ print(pq.read_schema(TMP / "typed.parquet"))
 
 `columns=[...]` applies column projection at the file level (zero-cost for skipped columns). `scan_parquet()` returns a `LazyFrame` — combine with `.filter()` for predicate pushdown before `.collect()`. Use `.cast()` before write to control output types precisely.
 
+_Projects `symbol`, `date`, and `close` with Polars column projection, inspects the full schema lazily via `scan_parquet().collect_schema()`, then writes a 2-row DataFrame with `Int32`/`Float32` types and compares PyArrow engine output (uses `int64`/`double` instead)._
+
 ```python
 # Read with column projection
 df = pl.read_parquet(DATA / "eurostoxx50_ohlcv.parquet", columns=["symbol", "date", "close"])
@@ -2218,10 +2341,14 @@ print("PyArrow engine:", pq.read_schema(TMP / "pl_pyarrow.parquet"))
 
 ### Partitioned Parquet
 
+#### PyArrow | Write Hive-style partitioned Parquet by symbol and year
+
 Hive-style partitioning splits a dataset into a directory tree where folder names encode partition key values (`symbol=ASML.AS/`, `year=2021/`). This allows query engines to skip entire directories for queries that filter on the partition keys, without reading any data files.
 
 > [!tip] Partition on high-cardinality filter columns
 > Partition on columns you filter most frequently in WHERE clauses. Typical choices: date/year, symbol, country, region. Avoid over-partitioning (too many small files degrade performance) — a good target is files of 100MB–1GB per partition.
+
+_Partitions 300 OHLCV rows for ASML.AS, SAP.DE, and SIE.DE into Hive-style directories (`symbol=ASML.AS/`, etc.) via `pq.write_to_dataset()`, then extends to multi-level partitioning by `symbol` and `year` — producing subdirectories like `symbol=ASML.AS/year=2021/`._
 
 ```python
 # Partitioned Parquet — Hive-style directory layout
@@ -2255,6 +2382,10 @@ for p in sorted((part_dir / "by_symbol_year").rglob("*.parquet")):
     Multi-level partitions:
       symbol=ASML.AS\year=2021\8791271a22434bc7ab0bec4da71a4f5b-0.parquet
       symbol=ASML.AS\year=2022\8791271a22434bc7ab0bec4da71a4f5b-0.parquet
+
+#### Pandas and Polars | Read Hive-style partitioned Parquet with filter pushdown
+
+_Reads the partitioned ASML.AS dataset into Pandas (full read + partition filter `symbol=ASML.AS`), Polars with `hive_partitioning=True`, and Polars lazy `scan_parquet` filtered for SAP.DE — confirming 300 rows for ASML.AS (the only symbol written) and 0 rows for SAP.DE._
 
 ```python
 # Reading partitioned datasets
@@ -2296,7 +2427,11 @@ display(result.head(3))
 
 ### Custom Metadata
 
+#### Polars | Embed custom key-value metadata in Parquet via PyArrow
+
 Parquet files carry a key-value metadata dict in the file footer (in addition to Pandas-specific schema metadata). This is useful for lineage tracking: record the pipeline version, source system, creation timestamp, or row count without embedding them in the data. Metadata is accessed via PyArrow's schema API.
+
+_Writes 100 OHLCV rows to Parquet with custom metadata keys `created_by`, `version`, and `row_count` injected via `replace_schema_metadata()`, then reads back with `pq.read_schema()` — confirming all three custom keys are preserved while the verbose `pandas` metadata key is skipped._
 
 ```python
 # Parquet files can carry custom key-value metadata
@@ -2337,6 +2472,8 @@ print(f"\nRound-trip metadata: {table_back.schema.metadata[b'version']}")
 
 > [!warning] Polars is UTF-8 only
 > Polars `read_csv()` only reads UTF-8 encoded files natively. For any other encoding, decode the bytes to a Python string first, then pass a `StringIO` object. See the Polars cell below for the standard pattern.
+
+_Creates city CSV files in 4 encodings (UTF-8, Latin-1, CP1252, UTF-16) with German and Portuguese city names, reads each with the matching `encoding` parameter, writes a Latin-1 file, and runs `chardet.detect()` on the Latin-1 bytes — reporting Windows-1252 at 9% confidence._
 
 ```python
 # Create files with different encodings
@@ -2381,6 +2518,8 @@ except ImportError:
 
 Polars reads only UTF-8 natively. The standard pattern for other encodings: `Path(file).read_bytes().decode(encoding)` → pass the resulting string to `pl.read_csv(io.StringIO(text))`. The helper function below encapsulates this pattern for any encoding.
 
+_Reads the UTF-8 city file directly, then reads the Latin-1 and UTF-16 files by decoding bytes first and wrapping in `StringIO`, and defines a `read_csv_encoded()` helper — confirming all 4 encodings return the same 3 city names._
+
 ```python
 # Polars only reads UTF-8 natively.
 # For other encodings, decode to string first, then pass to read_csv.
@@ -2417,7 +2556,11 @@ print(f"CP1252: {df['city'].to_list()}")
 
 ### BOM (Byte Order Mark)
 
+#### Pandas and Polars | Handle UTF-8 BOM in CSV files
+
 A UTF-8 BOM (`\xef\xbb\xbf`) is prepended by some tools (notably Excel and Windows Notepad) to signal UTF-8 encoding. If not stripped, it appears as a garbage character in the first column name. Pandas handles it automatically; Polars requires decoding with `"utf-8-sig"` (which strips the BOM) before passing to `read_csv`.
+
+_Creates a BOM-prefixed CSV file and reads it with Pandas (auto-strips BOM) and Polars (requires decoding via `"utf-8-sig"` before `StringIO`) — both producing column names `["name", "age"]` with no BOM artifact._
 
 ```python
 # UTF-8 BOM — common when files are exported from Excel
@@ -2440,10 +2583,14 @@ print(f"Polars columns: {df.columns}")
 
 ### Base64 & Binary Data in DataFrames
 
+#### Pandas and Polars | Store and round-trip binary blobs as base64 and native Binary dtype
+
 For binary data (images, cryptographic blobs, serialized objects), CSV and JSON require base64 encoding since they are text formats. Parquet supports native binary columns (`pl.Binary`, `pa.binary()`) that survive round-trips without any encoding — use Parquet when storing binary data at scale.
 
 > [!tip] Use Polars Binary + Parquet for blob storage
 > Polars `pl.Binary` dtype stores raw bytes natively. Writing to Parquet preserves the binary type without any encoding overhead. For CSV/JSON export, encode to base64 as a separate step using `map_elements`. Avoid storing large binaries in DataFrames — prefer a blob store with a reference column.
+
+_Generates 3 random 32-byte blobs, stores them as base64 strings in a Pandas `object` column and as `pl.Binary` in a Polars column, round-trips the Polars binary through Parquet (asserting equality), then encodes to base64 strings for CSV export._
 
 ```python
 # Storing binary data (images, blobs) as base64 strings

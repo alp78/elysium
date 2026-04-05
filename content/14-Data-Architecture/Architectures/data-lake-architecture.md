@@ -1,7 +1,16 @@
 ---
+title: "Data Lake Architecture"
 tags: [data-architecture, architecture, python, bigquery, gcp]
 aliases: [data lake, data swamp, landing zone, raw zone, curated zone, GCS data lake, S3 data lake, ADLS data lake, bronze zone, silver zone, gold zone, schema-on-read, Hive-style partitioning, object storage lake, cloud data lake]
 description: "Comprehensive reference on data lake architecture — zone organization (Landing, Cleansed, Curated), Hive-style partitioning, file format selection, governance and cataloging, anti-patterns (data swamp), GCS/S3/ADLS comparison, and GCP-specific lake implementation using GCS, BigQuery external tables, and Dataproc."
+parent: "[[domain-system-blueprints]]"
+links:
+  - "[[data-warehouse-architecture]]"
+  - "[[lakehouse-architecture]]"
+  - "[[data-mesh-architecture]]"
+  - "[[streaming-architecture]]"
+  - "[[open-table-formats]]"
+  - "[[context-and-metadata-architecture]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

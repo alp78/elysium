@@ -1,7 +1,23 @@
 ---
+title: "Datadog SQL Server Logs"
 tags: [monitoring, observability, sql, datadog, gcp]
 aliases: [SQL Server Log Collection, Datadog SQL Logs, SQL Server Errorlog Datadog]
 description: "How to configure Datadog Agent to collect SQL Server errorlog entries from the example SQL VM — including the logs.yaml setup, permission fix, and how to test that logs are flowing."
+parent: "[[domain-datadog-platform]]"
+links:
+  - "[[datadog-architecture-overview]]"
+  - "[[datadog-agent-airflow-vm]]"
+  - "[[datadog-agent-sql-vm]]"
+  - "[[datadog-gcp-integration]]"
+  - "[[datadog-sql-server-integration]]"
+  - "[[datadog-custom-queries]]"
+  - "[[datadog-log-management]]"
+  - "[[datadog-apm-traces]]"
+  - "[[datadog-dashboards]]"
+  - "[[datadog-alerting]]"
+  - "[[datadog-airflow-observability]]"
+  - "[[datadog-cost-optimization]]"
+  - "[[datadog-troubleshooting]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -1,4 +1,5 @@
 ---
+title: "Command Chaining"
 type: concept
 category: foundations
 technology: [bash, powershell]
@@ -6,6 +7,16 @@ tags: [shell, scripting]
 aliases: [command chaining, shell operators, chain commands, && operator, pipe operator, semicolon operator, OR operator]
 keywords: [command chaining, exit code, logical AND, logical OR, pipe, pipeline, semicolon, fail-fast, bash operators, powershell operators, process exit code, shell execution flow]
 description: "How bash and PowerShell command chaining operators (&&, ||, ;, |) use exit codes to control execution flow, enabling fail-fast scripts and graceful error handling."
+parent: "[[domain-script-engineering]]"
+links:
+  - "[[command-history]]"
+  - "[[io-redirection]]"
+  - "[[process-substitution]]"
+  - "[[brace-expansion-and-globbing]]"
+  - "[[environment-variables]]"
+  - "[[defensive-scripting]]"
+  - "[[bash-automation]]"
+  - "[[powershell-automation]]"
 created: 2026-03-22
 updated: 2026-04-03
 status: complete

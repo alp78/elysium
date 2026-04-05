@@ -6,6 +6,16 @@ tags:
 aliases: [command history, shell history, history recall, reverse search, Ctrl+R]
 keywords: [command history, history, reverse search, Ctrl+R, bash history, HISTSIZE, HISTCONTROL, recall, re-run command, bang bang, exclamation, PSReadLine, predictive intellisense]
 description: "How to search, recall, and re-run previous shell commands in bash and PowerShell, including history configuration for data engineers and incident response."
+parent: "[[domain-script-engineering]]"
+links:
+  - "[[io-redirection]]"
+  - "[[command-chaining]]"
+  - "[[process-substitution]]"
+  - "[[brace-expansion-and-globbing]]"
+  - "[[environment-variables]]"
+  - "[[defensive-scripting]]"
+  - "[[bash-automation]]"
+  - "[[powershell-automation]]"
 ---
 
 # Command History and Recall

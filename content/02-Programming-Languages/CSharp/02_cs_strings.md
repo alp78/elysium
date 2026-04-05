@@ -4,6 +4,9 @@ tags:
   - csharp
 aliases: [string manipulation, string formatting, regex, string interpolation]
 description: "C# strings reference with executable examples and cell outputs — covers string creation, indexing, methods, interpolation, StringBuilder, and regular expressions. See [02_py_strings](https://alp78.github.io/elysium/02-Programming-Languages/Python/02_py_strings) for the Python equivalent."
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[02_py_strings]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

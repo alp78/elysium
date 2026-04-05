@@ -1,4 +1,5 @@
 ---
+title: "File Manipulation"
 type: concept
 category: foundations
 technology: [bash, powershell]
@@ -6,6 +7,17 @@ tags: [shell]
 aliases: [cp, mv, rm, chmod, chown, mkdir, file permissions, safe delete, file ownership]
 keywords: [cp, mv, rm, chmod, chown, mkdir, rsync, file copy, file move, delete, permissions, ownership, octal permissions, safe delete, trash, archive mode, disk usage, docker permissions, airflow uid]
 description: "Safe file copying, moving, and deletion patterns for production environments. Covers rsync archive mode, chmod octal notation, chown for Docker/Airflow containers, and the safe delete pattern using a trash directory."
+parent: "[[domain-file-operations]]"
+links:
+  - "[[navigation-and-listing]]"
+  - "[[reading-file-contents]]"
+  - "[[grep-and-pattern-matching]]"
+  - "[[awk-data-processing]]"
+  - "[[sed-stream-editing]]"
+  - "[[date-and-time-handling]]"
+  - "[[finding-files]]"
+  - "[[compression]]"
+  - "[[data-transfer]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

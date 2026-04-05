@@ -1,8 +1,11 @@
 ---
-title: "15. Web & APIs - C#"
+title: "15. Web and APIs - C#"
 tags: [api, csharp]
 aliases: [REST API, HTTP client, web server, ASP.NET, minimal API]
 description: "C# web and APIs reference with executable examples and cell outputs — covers HttpClient, ASP.NET Core minimal APIs, controllers, middleware, and authentication. See [15_py_webapis](https://alp78.github.io/elysium/02-Programming-Languages/Python/15_py_webapis) for the Python equivalent."
+parent: "[[domain-data-engineering]]"
+links:
+  - "[[15_py_webapis]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

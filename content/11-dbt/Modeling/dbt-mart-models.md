@@ -1,8 +1,14 @@
 ---
+title: "dbt: Mart Models"
 tags: [pipeline, dbt]
 status: stable
 updated: 2026-03-23
 description: "Consumption-ready facts and dimensions, gold layer"
+parent: "[[domain-model-design]]"
+links:
+  - "[[dbt-staging-models]]"
+  - "[[dbt-intermediate-models]]"
+  - "[[dbt-materializations]]"
 ---
 
 # dbt: Mart Models

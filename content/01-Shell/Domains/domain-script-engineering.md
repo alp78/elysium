@@ -19,6 +19,8 @@ mindmap
     (brace expansion)
     (environment variables)
     (defensive scripting)
+    (bash automation)
+    (powershell automation)
 ```
 
 > [!abstract]- [[command-history]]
@@ -70,3 +72,17 @@ mindmap
 > - [[defensive-scripting#set -o pipefail — propagate pipeline failures|Pipeline failure propagation]]
 > - [[defensive-scripting#Production script template — set -euo pipefail with trap cleanup|Production script template]]
 > - [[defensive-scripting#trap EXIT — guaranteed cleanup on script exit, error, or signal|Trap cleanup on exit]]
+
+> [!abstract]- [[bash-automation]]
+>
+> - [[bash-automation#File Intake and Validation|File intake and validation]]
+> - [[bash-automation#Data Transformation|Data transformation]]
+> - [[bash-automation#API Interaction|API interaction]]
+> - [[bash-automation#Database Operations|Database operations]]
+
+> [!abstract]- [[powershell-automation]]
+>
+> - [[powershell-automation#File Intake and Validation|File intake and validation]]
+> - [[powershell-automation#Data Transformation|Data transformation]]
+> - [[powershell-automation#API Interaction|API interaction]]
+> - [[powershell-automation#Database Operations|Database operations]]

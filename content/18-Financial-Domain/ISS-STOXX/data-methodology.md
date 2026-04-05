@@ -9,7 +9,20 @@ tags:
   - index-construction
 aliases:
   - "Data Methodology Glossary"
+parent: "[[domain-iss-stoxx-glossary]]"
 date: 2026-03-28
+links:
+  - "[[corporate-governance]]"
+  - "[[esg-frameworks]]"
+  - "[[esg-ratings]]"
+  - "[[financial-instruments]]"
+  - "[[financial-metrics]]"
+  - "[[index-construction]]"
+  - "[[index-families]]"
+  - "[[market-structure]]"
+  - "[[regulatory]]"
+  - "[[smart-beta-factors]]"
+  - "[[sustainability-themes]]"
 ---
 
 # Data Methodology — ISS & STOXX Glossary

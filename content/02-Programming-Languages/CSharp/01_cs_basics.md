@@ -3,6 +3,9 @@ title: "01. Basics - C#"
 tags: [csharp]
 aliases: [variables, data types, type conversion, operators, console IO]
 description: "C# basics reference with executable examples and cell outputs — covers variables, data types, type conversion, operators, and console I/O. See [01_py_basics](https://alp78.github.io/elysium/02-Programming-Languages/Python/01_py_basics) for the Python equivalent."
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[01_py_basics]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

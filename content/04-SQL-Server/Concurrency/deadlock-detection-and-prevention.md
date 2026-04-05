@@ -3,6 +3,13 @@ title: "Deadlock Detection and Prevention"
 tags: [sql-server, tsql]
 aliases: [deadlocks, deadlock, error 1205, circular wait, deadlock victim, deadlock monitor, deadlock retry]
 description: "SQL Server deadlock detection, prevention, and monitoring — what causes deadlocks, how to detect them with DMVs and Extended Events, RCSI as the primary prevention, and application-level retry logic."
+parent: "[[domain-concurrency-and-security]]"
+links:
+  - "[[sql-server-authentication]]"
+  - "[[tde-encryption]]"
+  - "[[audit-logging]]"
+  - "[[blocking-and-locking]]"
+  - "[[race-conditions]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

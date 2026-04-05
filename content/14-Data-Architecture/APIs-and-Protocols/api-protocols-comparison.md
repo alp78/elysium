@@ -16,6 +16,11 @@ aliases:
   - SFTP
   - API selection
 description: Master decision framework comparing all API and data exchange protocols relevant to data engineering — REST, gRPC, GraphQL, WebSocket, SSE, MQTT, AMQP, Webhooks, SFTP, FIX, and GCP Pub/Sub. Includes working Python code examples, a protocol comparison matrix, and decision tables by use case and constraint.
+parent: "[[domain-integration-and-protocols]]"
+links:
+  - "[[rest-api-design-and-consumption]]"
+  - "[[grpc-for-data-pipelines]]"
+  - "[[graphql-for-data-access]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

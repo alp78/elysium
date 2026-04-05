@@ -8,6 +8,11 @@ tags:
   - semver
 aliases: [git tag, annotated tag, semantic versioning, release tags, lightweight tag, git push tags, version label, tag a release, SemVer git]
 description: "How to create lightweight and annotated git tags, push them to GitHub, and use semantic versioning to mark production releases."
+parent: "[[domain-releases-and-recovery]]"
+links:
+  - "[[git-recovery-and-undo]]"
+  - "[[git-common-errors]]"
+  - "[[git-problems]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

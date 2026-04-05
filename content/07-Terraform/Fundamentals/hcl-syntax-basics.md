@@ -1,7 +1,14 @@
 ---
+title: "HCL Syntax Basics"
 tags: [terraform, iac]
 aliases: [HCL, HashiCorp Configuration Language, HCL syntax, terraform syntax, tf syntax]
 description: "HCL (HashiCorp Configuration Language) syntax fundamentals — blocks, arguments, types, expressions, resource naming, file organization, functions reference, and the difference between Terraform-internal and GCP names."
+parent: "[[domain-language-and-workflow]]"
+links:
+  - "[[terraform-variables-and-outputs]]"
+  - "[[terraform-providers-and-backend]]"
+  - "[[terraform-state-management]]"
+  - "[[terraform-plan-apply-destroy]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

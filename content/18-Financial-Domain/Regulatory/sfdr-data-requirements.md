@@ -1,9 +1,14 @@
 ---
+title: "SFDR Data Requirements"
 tags: [python, sql, bigquery, financial, regulatory, esg, stoxx]
 type: reference
 technology: [python, bigquery, sql-server]
 status: stable
 updated: 2026-03-23
+parent: "[[domain-regulatory]]"
+links:
+  - "[[eu-bmr-benchmark-regulation]]"
+  - "[[iosco-benchmark-principles]]"
 ---
 
 # SFDR Data Requirements

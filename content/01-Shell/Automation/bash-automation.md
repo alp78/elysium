@@ -6,6 +6,16 @@ tags:
 aliases: [bash automation, bash scripts, shell automation, data engineering bash]
 keywords: [bash automation, shell scripts, CSV processing, JSON processing, API automation, database scripts, GCP automation, log parsing, cron, scheduling, retry, backoff, health check, data validation, ETL scripts, file intake, lock file, flock]
 description: "28 production-ready Bash scripts for data engineering automation — file intake validation, data transformation, API interaction, database operations, GCP cloud ops, log parsing, environment pre-flight checks, and scheduling helpers."
+parent: "[[domain-script-engineering]]"
+links:
+  - "[[command-history]]"
+  - "[[io-redirection]]"
+  - "[[command-chaining]]"
+  - "[[process-substitution]]"
+  - "[[brace-expansion-and-globbing]]"
+  - "[[environment-variables]]"
+  - "[[defensive-scripting]]"
+  - "[[powershell-automation]]"
 created: 2026-04-05
 updated: 2026-04-05
 status: complete

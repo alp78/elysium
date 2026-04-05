@@ -11,6 +11,11 @@ tags:
 aliases:
   - "GCP Security Model"
   - "Connection Patterns"
+parent: "[[domain-security-and-identity]]"
+links:
+  - "[[service-accounts-and-iam]]"
+  - "[[secrets-management]]"
+  - "[[vpc-service-controls]]"
 created: 2026-03-29
 updated: 2026-03-29
 status: complete

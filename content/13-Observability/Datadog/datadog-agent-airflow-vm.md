@@ -1,7 +1,23 @@
 ---
+title: "Datadog Agent: Airflow VM"
 tags: [monitoring, orchestration, observability, docker, airflow, datadog, gcp]
 aliases: [DD Agent Airflow, Datadog Airflow VM, dd-agent COS]
 description: "How to set up the Datadog Agent as a Docker container on the example Airflow VM (Container-Optimized OS), covering startup script, autodiscovery labels, StatsD metrics, and memory budget."
+parent: "[[domain-datadog-platform]]"
+links:
+  - "[[datadog-architecture-overview]]"
+  - "[[datadog-agent-sql-vm]]"
+  - "[[datadog-gcp-integration]]"
+  - "[[datadog-sql-server-integration]]"
+  - "[[datadog-custom-queries]]"
+  - "[[datadog-log-management]]"
+  - "[[datadog-sql-server-logs]]"
+  - "[[datadog-apm-traces]]"
+  - "[[datadog-dashboards]]"
+  - "[[datadog-alerting]]"
+  - "[[datadog-airflow-observability]]"
+  - "[[datadog-cost-optimization]]"
+  - "[[datadog-troubleshooting]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

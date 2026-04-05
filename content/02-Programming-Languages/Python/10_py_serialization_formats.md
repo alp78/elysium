@@ -4,6 +4,9 @@ tags:
   - python
 aliases: [serialization formats, JSON, CSV, Parquet, Avro, Protocol Buffers]
 description: "Python serialization formats reference with executable examples and cell outputs — covers JSON, CSV, Parquet, Avro, Protocol Buffers, MessagePack, and format comparison benchmarks. See [10_cs_serialization_formats](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/10_cs_serialization_formats) for the C# equivalent."
+parent: "[[domain-data-engineering]]"
+links:
+  - "[[10_cs_serialization_formats]]"
 created: 2026-03-25
 updated: 2026-03-25
 status: complete

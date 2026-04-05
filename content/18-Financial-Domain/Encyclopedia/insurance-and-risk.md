@@ -1,4 +1,5 @@
 ---
+title: "Insurance and Risk"
 type: reference
 category: financial-encyclopedia
 technology: []
@@ -6,10 +7,23 @@ tags: [financial]
 aliases: [insurance terms, risk management glossary, reinsurance glossary, annuity glossary]
 keywords: [life insurance, property casualty, P&C, reinsurance, parametric insurance, annuity, endowment insurance, unit-linked insurance, insurance premium, risk management, underwriting insurance, bancassurance, natural catastrophe]
 description: "Encyclopedia definitions for insurance and risk management terms covering life insurance, property-casualty, reinsurance, parametric insurance, annuities, and risk management drawn from the example Index universe."
-related:
-  - banking-and-lending
-  - investment-management
-  - esg-and-sustainability
+parent: "[[domain-financial-encyclopedia]]"
+links:
+  - "[[banking-and-lending]]"
+  - "[[business-models-and-commerce]]"
+  - "[[capital-markets-and-trading]]"
+  - "[[compliance-and-risk-management]]"
+  - "[[corporate-finance-and-strategy]]"
+  - "[[energy-and-commodities]]"
+  - "[[esg-and-sustainability]]"
+  - "[[exchanges-and-market-infrastructure]]"
+  - "[[investment-management]]"
+  - "[[payments-and-settlement]]"
+  - "[[pharma-and-healthcare]]"
+  - "[[real-estate-and-industrial]]"
+  - "[[structured-finance]]"
+  - "[[technology-and-digital]]"
+  - "[[trade-and-treasury]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

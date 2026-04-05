@@ -1,8 +1,21 @@
 ---
+title: "SQL Server Problems"
 tags: [sql, sql-server, tsql]
 status: stable
 updated: 2026-03-23
 description: "Comprehensive catalog of SQL Server production problems for data engineers — 25 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures. Covers performance, concurrency, data loading, backup, and operational issues on SQL Server 2022 Linux/GCP."
+parent: "[[domain-server-operations]]"
+links:
+  - "[[server-configuration]]"
+  - "[[sqlcmd-connection-and-usage]]"
+  - "[[essential-dba-queries]]"
+  - "[[sql-server-agent-jobs]]"
+  - "[[backup-types-and-strategy]]"
+  - "[[restore-and-recovery]]"
+  - "[[finops-cost-optimization]]"
+  - "[[high-availability-overview]]"
+  - "[[always-on-availability-groups]]"
+  - "[[troubleshooting-flowcharts]]"
 ---
 
 # SQL Server Production Problems

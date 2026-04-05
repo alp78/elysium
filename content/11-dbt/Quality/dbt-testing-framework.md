@@ -1,8 +1,15 @@
 ---
+title: "dbt: Testing Framework"
 tags: [pipeline, testing, dbt]
 status: stable
 updated: 2026-03-23
 description: "Schema tests dbt-utils dbt-expectations custom tests"
+parent: "[[domain-extensions-and-quality]]"
+links:
+  - "[[dbt-macros-and-jinja]]"
+  - "[[dbt-packages]]"
+  - "[[dbt-snapshots-and-scd]]"
+  - "[[dbt-data-contracts-implementation]]"
 ---
 
 # dbt: Testing Framework

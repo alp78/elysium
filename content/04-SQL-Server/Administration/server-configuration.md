@@ -3,6 +3,18 @@ title: "Server Configuration"
 tags: [sql-server, tsql, configuration]
 aliases: [SQL Server configuration, max server memory, sp_configure, mssql-conf, RCSI, Read Committed Snapshot Isolation, TempDB configuration, swappiness, THP]
 description: "Non-negotiable SQL Server configuration settings: max server memory, RCSI, TempDB, recovery models, and Linux OS tuning (swappiness, THP, I/O scheduler) for SQL Server on Linux GCP."
+parent: "[[domain-server-operations]]"
+links:
+  - "[[sqlcmd-connection-and-usage]]"
+  - "[[essential-dba-queries]]"
+  - "[[sql-server-agent-jobs]]"
+  - "[[backup-types-and-strategy]]"
+  - "[[restore-and-recovery]]"
+  - "[[finops-cost-optimization]]"
+  - "[[high-availability-overview]]"
+  - "[[always-on-availability-groups]]"
+  - "[[sql-server-problems]]"
+  - "[[troubleshooting-flowcharts]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

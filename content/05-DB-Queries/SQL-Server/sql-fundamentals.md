@@ -1,7 +1,12 @@
 ---
+title: "SQL Fundamentals"
 tags: [sql-server, tsql, fundamentals]
 aliases: [SQL fundamentals, T-SQL basics, SQL queries, SELECT, JOIN, WHERE, GROUP BY]
 description: "SQL Server T-SQL fundamentals with executable examples and cell outputs — covers SELECT, filtering, joins, aggregation, subqueries, and set operations."
+parent: "[[domain-sql-server]]"
+links:
+  - "[[sql-advanced]]"
+  - "[[sql-engineering]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

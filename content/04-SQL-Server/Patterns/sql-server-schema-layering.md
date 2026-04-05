@@ -10,6 +10,15 @@ tags:
   - security
 aliases: [Schema Layering, Schema per Layer, Database Organization, Schema Design Patterns]
 description: "How to organize SQL Server databases and schemas for multi-layer data architectures — schema-per-layer, schema-per-domain, separate databases, naming conventions, and security."
+parent: "[[domain-pipeline-patterns]]"
+links:
+  - "[[sql-server-loading-patterns]]"
+  - "[[sql-server-change-tracking]]"
+  - "[[sql-server-incremental-transforms]]"
+  - "[[sql-server-pipeline-anti-patterns]]"
+  - "[[bronze-layer-loading]]"
+  - "[[silver-transforms]]"
+  - "[[gold-transforms]]"
 created: 2026-03-29
 updated: 2026-04-04
 status: complete

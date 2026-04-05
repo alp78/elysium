@@ -9,7 +9,20 @@ tags:
   - regulatory
 aliases:
   - "Regulatory Glossary"
+parent: "[[domain-iss-stoxx-glossary]]"
 date: 2026-03-28
+links:
+  - "[[corporate-governance]]"
+  - "[[data-methodology]]"
+  - "[[esg-frameworks]]"
+  - "[[esg-ratings]]"
+  - "[[financial-instruments]]"
+  - "[[financial-metrics]]"
+  - "[[index-construction]]"
+  - "[[index-families]]"
+  - "[[market-structure]]"
+  - "[[smart-beta-factors]]"
+  - "[[sustainability-themes]]"
 ---
 
 # Regulatory — ISS & STOXX Glossary

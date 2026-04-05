@@ -4,6 +4,9 @@ tags:
   - python
 aliases: [lists, dictionaries, sets, tuples, arrays, List, Dictionary, HashSet, LINQ]
 description: "Python collections reference with executable examples and cell outputs — covers lists, dictionaries, sets, tuples, and specialized collections from the collections module. See [05_cs_collections](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/05_cs_collections) for the C# equivalent."
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[05_cs_collections]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -1,8 +1,11 @@
 ---
-title: "25. Functional Data Pipeline - C#"
+title: "25. Functional Pipeline - C#"
 tags: [csharp, pipeline, data-quality, lineage, dotnet, fluentvalidation, polly, dapper, aspnet, sql-server, medallion, parquet, validation, plotly]
 aliases: [functional pipeline csharp, medallion pipeline dotnet, data lineage csharp]
 description: "End-to-end functional data pipeline in C#/.NET with FluentValidation, Polly resilience, lineage tracking, Parquet export, and ASP.NET serving. See [25_py_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline) for the Python equivalent."
+parent: "[[domain-data-engineering]]"
+links:
+  - "[[25_py_functional_pipeline]]"
 created: 2026-03-29
 updated: 2026-03-30
 status: complete

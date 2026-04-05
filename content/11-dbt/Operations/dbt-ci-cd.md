@@ -1,8 +1,19 @@
 ---
+title: "dbt: CI/CD"
 tags: [pipeline, dbt, github-actions]
 status: stable
 updated: 2026-03-23
 description: "GitHub Actions CI with slim builds and manifest diffing, Workload Identity Federation, pre-commit hooks, and CD via Git pull or Docker rebuild."
+parent: "[[domain-operations-and-adapters]]"
+links:
+  - "[[dbt-airflow-integration]]"
+  - "[[dbt-documentation-and-lineage]]"
+  - "[[dbt-observability]]"
+  - "[[dbt-performance-tuning]]"
+  - "[[dbt-troubleshooting]]"
+  - "[[dbt-bigquery-adapter]]"
+  - "[[dbt-sqlserver-adapter]]"
+  - "[[dbt-cross-adapter-patterns]]"
 ---
 
 # dbt: CI/CD

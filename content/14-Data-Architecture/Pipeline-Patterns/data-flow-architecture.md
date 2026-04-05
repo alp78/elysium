@@ -20,6 +20,14 @@ aliases:
   - "Data Movement Patterns"
   - "Data Flow Topology"
 description: "Complete data movement topology, transfer method selection, format decisions, and flow patterns for the GCP + SQL Server stack."
+parent: "[[domain-pipeline-construction]]"
+links:
+  - "[[medallion-architecture]]"
+  - "[[functional-pipeline-architecture]]"
+  - "[[idempotent-pipeline-design]]"
+  - "[[dbt-transformation-layer]]"
+  - "[[serialization-formats]]"
+  - "[[migration-idempotency-backfills]]"
 created: 2026-03-29
 updated: 2026-03-29
 status: complete

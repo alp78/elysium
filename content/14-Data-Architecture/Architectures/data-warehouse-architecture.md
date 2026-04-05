@@ -1,7 +1,16 @@
 ---
+title: "Data Warehouse Architecture"
 tags: [data-architecture, architecture, data-warehouse, sql, bigquery]
 aliases: [data warehouse, DWH, dimensional modeling, star schema, snowflake schema, Kimball, Inmon, fact table, dimension table, OLAP, OLTP, data mart, conformed dimension, degenerate dimension, junk dimension, SCD, slowly changing dimensions, SCD Type 2, SCD Type 1, accumulating snapshot, periodic snapshot, transactional fact, enterprise data warehouse, EDW]
 description: "Comprehensive reference on data warehouse architecture covering the Kimball dimensional modeling methodology (star schema, fact and dimension table types, all SCD variants), the Inmon 3NF top-down approach, Data Vault 2.0, cloud DWH comparisons (BigQuery, Snowflake, Redshift, Synapse), and ELT/ETL positioning."
+parent: "[[domain-system-blueprints]]"
+links:
+  - "[[data-lake-architecture]]"
+  - "[[lakehouse-architecture]]"
+  - "[[data-mesh-architecture]]"
+  - "[[streaming-architecture]]"
+  - "[[open-table-formats]]"
+  - "[[context-and-metadata-architecture]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -1,4 +1,5 @@
 ---
+title: "Firestore Data Model and Operations"
 tags: [data-modeling, python, gcp, firestore]
 aliases:
   - Firestore
@@ -16,6 +17,16 @@ description: >
   CLI operations, Terraform provisioning, and data engineering patterns including
   pipeline state stores, config-driven pipelines, event sourcing, and the
   Firestore vs BigQuery vs Bigtable decision matrix.
+parent: "[[domain-data-services]]"
+links:
+  - "[[gcs-buckets-and-lifecycle]]"
+  - "[[gcs-object-operations]]"
+  - "[[dataset-and-table-management]]"
+  - "[[data-loading-and-export]]"
+  - "[[querying-and-cost-optimization]]"
+  - "[[job-management]]"
+  - "[[bigquery-problems]]"
+  - "[[real-time-nosql-pipelines]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

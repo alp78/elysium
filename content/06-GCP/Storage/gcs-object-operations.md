@@ -1,7 +1,18 @@
 ---
+title: "GCS Object Operations"
 tags: [gcp, gcs, gcloud]
 aliases: [GCS objects, gcloud storage, gsutil, Cloud Storage operations, GCS copy, GCS sync, GCS rsync]
 description: "How to list, copy, sync, move, delete, and inspect metadata of Cloud Storage objects using the gcloud storage CLI — including parallel transfers for large files and incremental sync patterns."
+parent: "[[domain-data-services]]"
+links:
+  - "[[gcs-buckets-and-lifecycle]]"
+  - "[[dataset-and-table-management]]"
+  - "[[data-loading-and-export]]"
+  - "[[querying-and-cost-optimization]]"
+  - "[[job-management]]"
+  - "[[bigquery-problems]]"
+  - "[[firestore-data-model-and-operations]]"
+  - "[[real-time-nosql-pipelines]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

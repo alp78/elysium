@@ -59,6 +59,11 @@ keywords:
     conflict modify delete,
   ]
 description: "Reference guide for 25 common Git and GitHub error messages — what causes each error and the exact commands to fix it, covering push rejections, detached HEAD, SSH failures, merge conflicts, lock files, line endings, accidental commits, and more."
+parent: "[[domain-releases-and-recovery]]"
+links:
+  - "[[git-tagging-and-releases]]"
+  - "[[git-recovery-and-undo]]"
+  - "[[git-problems]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

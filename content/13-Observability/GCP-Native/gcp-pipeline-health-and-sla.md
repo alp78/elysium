@@ -1,4 +1,5 @@
 ---
+title: "GCP Pipeline Health and SLA"
 tags: [monitoring, pipeline, observability, python, bash, gcp]
 aliases:
   - pipeline health
@@ -14,6 +15,11 @@ description: >
   using GCP-native tooling. Covers data freshness, quality checks, SLA definition
   and measurement, alerting triage decision trees, on-call procedures, and
   self-healing automation patterns — no third-party APM required.
+parent: "[[domain-gcp-native-monitoring]]"
+links:
+  - "[[gcp-cloud-monitoring-deep-dive]]"
+  - "[[gcp-cloud-trace-and-logging]]"
+  - "[[gcp-data-lineage-and-catalog]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -1,7 +1,20 @@
 ---
+title: "Troubleshooting Flowcharts"
 tags: [sql, sql-server, tsql]
 aliases: [SQL Server troubleshooting, why is it slow, pipeline failed, disk space emergency, should I add an index, decision tree, troubleshooting guide]
 description: "Visual troubleshooting flowcharts for SQL Server: diagnosing slowness via wait stats, pipeline failure root cause analysis, the index decision tree, and disk space emergency recovery steps."
+parent: "[[domain-server-operations]]"
+links:
+  - "[[server-configuration]]"
+  - "[[sqlcmd-connection-and-usage]]"
+  - "[[essential-dba-queries]]"
+  - "[[sql-server-agent-jobs]]"
+  - "[[backup-types-and-strategy]]"
+  - "[[restore-and-recovery]]"
+  - "[[finops-cost-optimization]]"
+  - "[[high-availability-overview]]"
+  - "[[always-on-availability-groups]]"
+  - "[[sql-server-problems]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

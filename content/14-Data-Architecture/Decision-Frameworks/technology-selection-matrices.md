@@ -1,7 +1,13 @@
 ---
+title: "Technology Selection Matrices"
 tags: [data-architecture, architecture, python, csharp, bash, sql, terraform, docker, airflow, bigquery, gcp]
 aliases: [technology selection, decision matrix, when to use, build vs buy, language comparison, Python vs C# vs bash, SQL Server vs BigQuery, Airflow vs cron, Terraform vs CLI]
 description: "Comprehensive decision-matrix reference for data engineering technology selection — language choice (Python/Bash/PowerShell/C#/SQL), database selection (SQL Server/BigQuery/Cloud SQL/Firestore/Bigtable), GCP component selection (compute/messaging/storage), orchestration (Airflow/cron/Cloud Scheduler/Composer), infrastructure tooling (Terraform/gcloud/Console), data modeling, API protocols, architecture patterns, and build-vs-buy frameworks. Every decision backed by trade-off analysis with specific thresholds and decision rules."
+parent: "[[domain-principles-and-decisions]]"
+links:
+  - "[[five-pillars-of-data-engineering]]"
+  - "[[golden-rules-of-data-engineering]]"
+  - "[[scenario-based-decision-guide]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -1,7 +1,16 @@
 ---
+title: "Serialization Formats"
 tags: [data-architecture, architecture, pipeline, python]
 aliases: [serialization, data formats comparison, format decision matrix, JSON vs Parquet, Avro vs Protobuf, MessagePack, Pickle, compression codecs, Snappy, Zstd, Gzip, LZ4]
 description: "Comprehensive comparison of every serialization format a data engineer encounters — JSON, YAML, CSV, MessagePack, Protobuf, Avro, Parquet, and Pickle — with a format decision matrix and compression codec comparison (Snappy, LZ4, Zstd, Gzip)."
+parent: "[[domain-pipeline-construction]]"
+links:
+  - "[[medallion-architecture]]"
+  - "[[functional-pipeline-architecture]]"
+  - "[[data-flow-architecture]]"
+  - "[[idempotent-pipeline-design]]"
+  - "[[dbt-transformation-layer]]"
+  - "[[migration-idempotency-backfills]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -1,7 +1,20 @@
 ---
+title: "Wait Stats Analysis"
 tags: [performance, sql, sql-server, tsql]
 aliases: [wait stats, wait statistics, sys.dm_os_wait_stats, PAGEIOLATCH, WRITELOG, LCK_M, CXPACKET, SOS_SCHEDULER_YIELD, RESOURCE_SEMAPHORE, wait type interpretation]
 description: "How to read SQL Server wait statistics (sys.dm_os_wait_stats) to diagnose performance problems: the complete filtered wait query, signal vs. resource wait interpretation, common wait type meanings for pipeline workloads, I/O latency benchmarks, and Query Store setup for regression detection."
+parent: "[[domain-query-craft]]"
+links:
+  - "[[sargable-queries]]"
+  - "[[merge-and-upsert]]"
+  - "[[date-and-time-functions]]"
+  - "[[execution-plans]]"
+  - "[[query-plan-analysis]]"
+  - "[[memory-and-buffer-pool]]"
+  - "[[index-maintenance]]"
+  - "[[performance-audit-playbook]]"
+  - "[[pipeline-integration-and-devex]]"
+  - "[[pit-integrity-logic]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -1,4 +1,5 @@
 ---
+title: "REST API Design and Consumption"
 tags: [data-architecture, rest, api]
 aliases:
   - REST API
@@ -23,6 +24,11 @@ description: >
   processed data to dashboards and downstream systems). Covers HTTP fundamentals,
   authentication patterns, pagination strategies, rate limiting, async consumption
   with httpx, FastAPI for data serving, OpenAPI specifications, and curl workflows.
+parent: "[[domain-integration-and-protocols]]"
+links:
+  - "[[api-protocols-comparison]]"
+  - "[[grpc-for-data-pipelines]]"
+  - "[[graphql-for-data-access]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -1,7 +1,13 @@
 ---
+title: "Partitioning Strategies"
 tags: [sql, sql-server, tsql]
 aliases: [SQL Server partitioning, table partitioning, partition function, partition scheme, partition elimination, SWITCH partition, horizontal partitioning, date-based partitioning]
 description: "SQL Server table partitioning by date: partition functions, partition schemes, creating partitioned clustered indexes, partition elimination for query performance, SWITCH for fast archiving and loading, and the sliding window pattern for ongoing pipelines."
+parent: "[[domain-storage-internals]]"
+links:
+  - "[[storage-internals]]"
+  - "[[index-types-and-strategy]]"
+  - "[[table-compression]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

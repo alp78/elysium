@@ -1,7 +1,15 @@
 ---
+title: "Cloud Run Jobs vs Services"
 tags: [serverless, gcp, cloud-run]
 aliases: [Cloud Run Jobs, Cloud Run Services, gcloud run jobs, serverless containers, Cloud Run ETL, cold start]
 description: "How to manage Cloud Run Jobs vs Services for data pipeline workloads — executing jobs, viewing logs, updating configuration, and mitigating cold start latency for ETL containers."
+parent: "[[domain-compute-and-messaging]]"
+links:
+  - "[[vm-lifecycle]]"
+  - "[[vm-ssh-and-file-transfer]]"
+  - "[[disks-and-snapshots]]"
+  - "[[pubsub-messaging]]"
+  - "[[pubsub-topics-and-subscriptions]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

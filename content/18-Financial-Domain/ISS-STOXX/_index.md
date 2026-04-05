@@ -6,6 +6,7 @@ tags:
   - iss
   - financial-domain
   - glossary
+parent: "[[domain-iss-stoxx-glossary]]"
 date: 2026-03-28
 ---
 

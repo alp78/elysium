@@ -1,4 +1,5 @@
 ---
+title: "Managing Services"
 type: concept
 category: foundations
 technology: [bash, powershell]
@@ -6,6 +7,17 @@ tags: [shell, process-management]
 aliases: [systemctl, journalctl, service management, systemd, daemon, OOM kill, service restart]
 keywords: [systemctl, journalctl, systemd, service, daemon, start service, stop service, restart service, enable on boot, service logs, OOM killer, out of memory, service status, mssql-server, datadog-agent, airflow, service failed, Set-Service, Start-Service]
 description: "Managing Linux systemd services and Windows services for production data engineering infrastructure. Covers start/stop/restart/enable, reading service logs with journalctl, diagnosing OOM kills, and the PowerShell equivalents."
+parent: "[[domain-process-management]]"
+links:
+  - "[[viewing-processes]]"
+  - "[[system-resources]]"
+  - "[[killing-processes]]"
+  - "[[connectivity-testing]]"
+  - "[[socket-inspection]]"
+  - "[[http-requests-and-apis]]"
+  - "[[firewalls]]"
+  - "[[iap-tunneling]]"
+  - "[[connecting-to-gcp-resources]]"
 created: 2026-03-22
 updated: 2026-04-03
 status: complete

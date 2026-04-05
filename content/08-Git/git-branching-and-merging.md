@@ -12,6 +12,12 @@ description: "Git branching and merging strategies — creating feature branches
 created: 2026-03-22
 updated: 2026-04-05
 status: complete
+parent: "[[domain-branching-and-collaboration]]"
+links:
+  - "[[merge-vs-rebase-vs-squash]]"
+  - "[[git-merge-conflicts]]"
+  - "[[git-remote-management]]"
+  - "[[pull-requests-and-code-review]]"
 ---
 
 # Git Branching and Merging

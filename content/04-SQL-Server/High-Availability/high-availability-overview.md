@@ -3,6 +3,18 @@ title: "SQL Server High Availability Overview"
 tags: [sql-server, gcp, tsql]
 aliases: [AG, Always On AG, Always On Availability Groups, SQL Server HA, HADR, Failover Clustering]
 description: "Complete guide to SQL Server 2022 High Availability on Linux GCP VMs: Always On Availability Groups setup with Pacemaker/Corosync, monitoring DMVs, failover operations, read-only routing, troubleshooting, and GCP-specific considerations including Internal Load Balancer configuration."
+parent: "[[domain-server-operations]]"
+links:
+  - "[[server-configuration]]"
+  - "[[sqlcmd-connection-and-usage]]"
+  - "[[essential-dba-queries]]"
+  - "[[sql-server-agent-jobs]]"
+  - "[[backup-types-and-strategy]]"
+  - "[[restore-and-recovery]]"
+  - "[[finops-cost-optimization]]"
+  - "[[always-on-availability-groups]]"
+  - "[[sql-server-problems]]"
+  - "[[troubleshooting-flowcharts]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

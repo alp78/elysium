@@ -1,7 +1,12 @@
 ---
+title: "BigQuery Advanced"
 tags: [bigquery, gcp, advanced]
 aliases: [BigQuery advanced, BigQuery window functions, BigQuery CTE, BigQuery PIVOT, BigQuery MERGE]
 description: "Advanced BigQuery GoogleSQL patterns with executable examples — covers window functions, recursive CTEs, lateral joins, PIVOT/UNPIVOT, MERGE, grouping sets, NULL handling, and set operations."
+parent: "[[domain-bigquery]]"
+links:
+  - "[[bq-fundamentals]]"
+  - "[[bq-engineering]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

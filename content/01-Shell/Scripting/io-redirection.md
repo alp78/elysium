@@ -1,4 +1,5 @@
 ---
+title: "I/O Redirection"
 type: concept
 category: foundations
 technology: [bash, powershell]
@@ -6,6 +7,16 @@ tags: [shell, scripting]
 aliases: [IO redirection, I/O redirection, output redirection, stderr redirect, stdin redirect, file descriptors]
 keywords: [redirection, stdout, stderr, stdin, file descriptor, dev null, redirect output, redirect error, tee, append, overwrite, fd 0, fd 1, fd 2, 2>&1, output to file]
 description: "How to redirect stdin, stdout, and stderr to files, other streams, or /dev/null in bash and PowerShell, including production logging patterns and common gotchas."
+parent: "[[domain-script-engineering]]"
+links:
+  - "[[command-history]]"
+  - "[[command-chaining]]"
+  - "[[process-substitution]]"
+  - "[[brace-expansion-and-globbing]]"
+  - "[[environment-variables]]"
+  - "[[defensive-scripting]]"
+  - "[[bash-automation]]"
+  - "[[powershell-automation]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

@@ -1,7 +1,11 @@
 ---
+title: "Data Modeling Patterns"
 tags: [data-architecture, architecture, data-modeling, sql, bigquery, firestore]
 aliases: [data modeling patterns, normalized model, 3NF, Data Vault, hub satellite link, wide table, OBT, one big table, activity schema, graph model, document model, time-series model, anchor modeling]
 description: "Comprehensive reference on data modeling patterns beyond dimensional modeling — normalized (3NF), Data Vault 2.0, wide/flat (OBT), activity schema, document, graph, and time-series models. Each pattern demonstrated with full DDL, SQL examples, and concrete scenarios from a financial index provider domain. Includes a decision framework for choosing the right model per use case."
+parent: "[[domain-data-modeling]]"
+links:
+  - "[[dimensional-modeling]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

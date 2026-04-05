@@ -3,6 +3,18 @@ title: "Index Maintenance"
 tags: [sql, sql-server, tsql]
 aliases: [index fragmentation, index rebuild, index reorganize, fill factor, ALTER INDEX REBUILD, ALTER INDEX REORGANIZE, index defragmentation, Ola Hallengren, resumable index rebuild, dm_db_index_physical_stats, missing index suggestions, unused indexes]
 description: "How to detect and fix SQL Server index fragmentation using REORGANIZE and REBUILD operations — includes fragmentation thresholds, scan modes (LIMITED/SAMPLED/DETAILED), resumable operations, automated maintenance scripts, fill factor guidance, index discovery DMVs, and a recommended maintenance schedule for data pipeline workloads."
+parent: "[[domain-query-craft]]"
+links:
+  - "[[sargable-queries]]"
+  - "[[merge-and-upsert]]"
+  - "[[date-and-time-functions]]"
+  - "[[execution-plans]]"
+  - "[[query-plan-analysis]]"
+  - "[[wait-stats-analysis]]"
+  - "[[memory-and-buffer-pool]]"
+  - "[[performance-audit-playbook]]"
+  - "[[pipeline-integration-and-devex]]"
+  - "[[pit-integrity-logic]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

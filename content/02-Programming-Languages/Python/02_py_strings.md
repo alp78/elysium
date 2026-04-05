@@ -4,6 +4,9 @@ tags:
   - python
 aliases: [string manipulation, string formatting, regex, f-strings, string interpolation]
 description: "Python strings reference with executable examples and cell outputs — covers string creation, indexing, slicing, methods, formatting, efficient building, and regular expressions. See [02_cs_strings](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/02_cs_strings) for the C# equivalent."
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[02_cs_strings]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

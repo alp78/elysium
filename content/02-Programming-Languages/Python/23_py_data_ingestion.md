@@ -3,6 +3,9 @@ title: "23. Data Ingestion - Python"
 tags: [python, gcp, pipeline, sql, bigquery]
 aliases: [Data Ingestion Python, SQL Server Bulk Insert, BigQuery Load]
 description: "Python data ingestion reference — bulk loading into SQL Server, BigQuery, and Firestore from local and GCS sources with performance benchmarks. See [23_cs_data_ingestion](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/23_cs_data_ingestion) for the C# equivalent."
+parent: "[[domain-gcp-integration]]"
+links:
+  - "[[23_cs_data_ingestion]]"
 created: 2026-03-28
 updated: 2026-03-28
 status: complete

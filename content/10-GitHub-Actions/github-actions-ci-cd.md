@@ -6,6 +6,10 @@ tags:
   - gcp
 aliases: [GitHub Actions, CI/CD, workflow, gh run, workflow_dispatch, matrix testing, secrets management]
 description: "GitHub Actions CI/CD workflows for data engineering teams — triggers, matrix testing, secrets management, GCP authentication, and monitoring workflow runs with the GitHub CLI."
+parent: "[[domain-applied-automation]]"
+links:
+  - "[[github-actions-data-engineering]]"
+  - "[[github-actions-problems]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

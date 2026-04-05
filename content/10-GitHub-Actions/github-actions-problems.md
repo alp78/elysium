@@ -12,6 +12,10 @@ aliases:
   - "GitHub Actions Security"
 description: "Comprehensive catalog of GitHub Actions problems in distributed teams — 20 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures."
 status: stable
+parent: "[[domain-applied-automation]]"
+links:
+  - "[[github-actions-ci-cd]]"
+  - "[[github-actions-data-engineering]]"
 created: 2026-03-23
 updated: 2026-04-05
 ---

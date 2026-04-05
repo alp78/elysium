@@ -1,7 +1,16 @@
 ---
+title: "Data Mesh Architecture"
 tags: [data-architecture, architecture, data-mesh]
 aliases: [data mesh, domain-driven data, data products, federated governance, data as a product, Zhamak Dehghani, decentralized data architecture, domain ownership, self-serve data platform, federated computational governance]
 description: "Data mesh is an organizational and architectural approach (Zhamak Dehghani, 2019) that decentralizes data ownership to domain teams, treats data as a product, provides a self-serve infrastructure platform, and enforces governance through federation rather than central control. It is primarily an organizational design pattern, not a technology."
+parent: "[[domain-system-blueprints]]"
+links:
+  - "[[data-warehouse-architecture]]"
+  - "[[data-lake-architecture]]"
+  - "[[lakehouse-architecture]]"
+  - "[[streaming-architecture]]"
+  - "[[open-table-formats]]"
+  - "[[context-and-metadata-architecture]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

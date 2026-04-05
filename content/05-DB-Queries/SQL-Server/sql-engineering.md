@@ -1,7 +1,12 @@
 ---
+title: "SQL Engineering"
 tags: [sql-server, tsql, engineering]
 aliases: [SQL engineering, SQL performance, transactions, error handling, indexing, temp tables, table variables, dynamic SQL, stored procedures]
 description: "SQL Server T-SQL engineering patterns with executable examples — covers transactions, error handling, temp tables, dynamic SQL, stored procedures, and performance tuning."
+parent: "[[domain-sql-server]]"
+links:
+  - "[[sql-fundamentals]]"
+  - "[[sql-advanced]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

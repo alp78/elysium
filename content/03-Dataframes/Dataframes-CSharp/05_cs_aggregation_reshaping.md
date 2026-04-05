@@ -1,9 +1,18 @@
 ---
-title: "05. Aggregation & Reshaping - C#"
+title: "05. Aggregation and Reshaping - C#"
 tags: [csharp, deedle, polars, dataframes]
 aliases:
   - groupby, window functions, joins, pivot, melt
 description: "Polars.NET / C# DataFrames reference 05/10 — Aggregation & Reshaping (groupby, windows, joins, pivot, melt). Executable examples with cell outputs. See [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) for the Python equivalent."
+parent: "[[domain-transform-and-analyze]]"
+links:
+  - "[[03_py_transforms_expressions]]"
+  - "[[03_cs_transforms_expressions]]"
+  - "[[04_py_missing_strings_datetime]]"
+  - "[[04_cs_missing_strings_datetime]]"
+  - "[[05_py_aggregation_reshaping]]"
+  - "[[06_py_lazy_performance]]"
+  - "[[06_cs_lazy_performance]]"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete
@@ -43,8 +52,6 @@ optionsField.SetValue(csharpKernel, newOptions);
 ```
 
 ### NuGet Packages and Imports
-
-#### Polars.NET / Deedle | Install NuGet packages
 
 Install Polars.NET and Deedle via NuGet in .NET Interactive. The formatter registration renders Polars DataFrames and Series as HTML tables in the notebook output, making output cells readable.
 
@@ -91,8 +98,6 @@ Console.WriteLine($"Data directory: {Path.GetFullPath(DATA)}");
 
 ### Dataset Loading
 
-#### Polars.NET / Deedle | Load datasets
-
 Load the same CSV files into both Polars.NET and Deedle. This file uses two datasets: `eurostoxx50_ohlcv.csv` (~66K daily OHLCV rows) and `dim_index.csv` (4-row dimension table). Loading both libraries side-by-side lets us verify output parity.
 
 ```csharp
@@ -109,7 +114,7 @@ display($"DimIndex — Polars: {dimP.Shape}  |  Deedle: {dimD.RowCount} x {dimD.
 
     DimIndex — Polars: (4, 5)  |  Deedle: 4 x 5
 
-### Exchange Dimension Construction
+### Exchange Dimension Table
 
 #### Polars.NET | Build exchange dimension table
 
@@ -208,7 +213,7 @@ dimExD
 
 Group rows by one key column and compute a single aggregate. `GroupBy("col").Agg(expr)` returns a flat DataFrame with one row per group — no index. Returns results in arbitrary order; chain `.Sort()` for deterministic ordering.
 
-_Groups the 66K-row OHLCV frame by `symbol` and computes the mean `close` price per ticker, returning a 2-column DataFrame with one row per symbol in arbitrary order._
+_Groups the 66K-row OHLCV frame by `symbol` and computes the mean closing price per ticker — result is 50 rows, one per unique EuroStoxx 50 constituent._
 
 ```csharp
 // Polars.NET — Average closing price per symbol
@@ -225,7 +230,7 @@ avgCloseP.Head(10)
 
 Deedle `GroupRowsBy<T>()` returns a `Frame<(string,int),string>` — a hierarchical row key, not a flat result. Computing the mean requires extracting the column, grouping via LINQ, and iterating. Much more verbose than Polars.NET for simple aggregations.
 
-_Groups the OHLCV frame on `symbol` using LINQ aggregation over grouped observations, producing a key-value sequence of symbol → average close — then prints the first 10 symbols ordered alphabetically._
+_Performs the same symbol-level mean aggregation using LINQ on grouped observations, printing the first 10 symbol/avg-close pairs and confirming 50 total groups._
 
 ```csharp
 // Deedle — Average closing price per symbol
@@ -262,7 +267,7 @@ display($"Total groups: {avgCloseD.Count()}");
 
 Pass multiple column names to `GroupBy()` to create composite group keys. Polars.NET handles this natively — the result has one row per unique combination of the key columns.
 
-_Groups by the composite key `(symbol, is_filled)` and counts rows per combination — confirming that all 50 symbols have only `False` fill flags, producing 50 groups each with 1324–1331 rows._
+_Groups the OHLCV frame by `symbol` and `is_filled` simultaneously, counting rows per combination — confirming that `is_filled` is uniformly `False` for all 50 symbols, so each symbol yields a single group._
 
 ```csharp
 // Polars.NET — Group by symbol + is_filled, count rows
@@ -279,7 +284,7 @@ multiGroupP.Head(10)
 
 Deedle's `GroupRowsBy<T>()` supports only one key column. For multi-column grouping, concatenate the key values into a composite string key and group on that.
 
-_Works around Deedle's single-key limitation by concatenating `symbol` and `is_filled` into a `"symbol|is_filled"` composite key, then groups and counts via LINQ — the top 10 results confirm all 1331 rows per symbol share the same `False` fill flag._
+_Concatenates `symbol` and `is_filled` into a composite key `"ABI.BR|False"`, groups on that string to count rows per combination, then prints the top 10 most frequent groups._
 
 ```csharp
 // Deedle — Group by symbol + is_filled, count rows
@@ -320,7 +325,7 @@ foreach (var r in grouped)
 
 Pass a list of expressions to `.Agg()` to compute multiple aggregations in a single group-by pass. Each expression names an output column via `.Alias()`. This avoids multiple scans of the data.
 
-_Computes six statistics (`sum`, `mean`, `count`, `min`, `max` of close, and `total_volume`) per symbol in a single `.Agg()` pass — produces a 7-column DataFrame with one row per symbol, confirming ASML.AS has the widest price range (397→1288)._
+_Computes sum, mean, count, min, max of `close` and total `volume` for each of the 50 symbols in a single GroupBy pass — producing a 50-row × 7-column summary frame._
 
 ```csharp
 // Polars.NET — Sum, mean, count, min, max in one GroupBy.Agg()
@@ -344,11 +349,11 @@ multiAggP.Head(10)
 
 Deedle has no multi-aggregation equivalent to `Agg()`. Each statistic requires a separate LINQ scan of the grouped observations. Results are then assembled into a new frame via `FrameBuilder.Columns`.
 
-_Performs five separate LINQ scans over grouped close observations and one over volume to compute the same six statistics as the Polars.NET version — demonstrating the multi-pass cost of Deedle's aggregation model._
-
 > [!warning] Deedle multi-aggregation scans each column N times
 >
 > Computing `sum`, `mean`, `min`, `max`, and `count` requires 5 separate LINQ iterations over the grouped data. For large frames this is significantly slower than Polars.NET's single-pass `.Agg()`. Prefer Polars.NET for analytical aggregation pipelines.
+
+_Reproduces the same 6 aggregation statistics across 50 symbol groups using separate LINQ scans, then assembles the results into a frame via `FrameBuilder.Columns` — with significantly higher runtime cost than Polars' single-pass `Agg()`._
 
 ```csharp
 // Deedle — Deedle has no multi-agg; aggregate each stat via LINQ
@@ -390,7 +395,7 @@ builder.Frame.Rows[Enumerable.Range(0, 10)]
 
 </div>
 
-### Group Head (Top N per Group)
+### Group Head
 
 #### Polars.NET | Group head (top N per group)
 
@@ -400,7 +405,7 @@ Return the first N rows within each group without collapsing rows. Polars.NET ha
 >
 > Polars Python supports `group_by().head(n)` natively. In Polars.NET 0.4.x this method exists on the `GroupBy` object only for some overloads. The safe workaround is `Lit(1).CumSum().Over("group_col")` to number rows within each group, then `.Filter(Col("row_num") <= Lit(n))`.
 
-_Assigns intra-group row numbers via `Lit(1).CumSum().Over("symbol")` and filters to `row_num <= 3` — the (66355, 13) shape reveals the entire frame is returned with the numbering column appended; the filter step then selects the first 3 rows per symbol._
+_Adds a cumulative row number per symbol via `Lit(1).CumSum().Over("symbol")`, then filters to `row_num <= 3` — returning the first 3 rows for each of the 50 symbols._
 
 ```csharp
 // Polars.NET — First 3 rows per symbol (group head)
@@ -423,7 +428,7 @@ groupHeadP.Select("symbol", "date", "close", "row_num").Head(9)
 
 Deedle exposes group row keys via `.RowKeys`. Take the first N from each group with LINQ `.GroupBy().SelectMany(g => g.Take(n))`, then slice the frame to those keys.
 
-_Groups the OHLCV row keys by symbol and takes the first 3 per group via `.SelectMany()`, then slices the frame to those 150 keys — the 9-row preview confirms the first 3 dates for ABI.BR, AD.AS, and ADS.DE are returned in original order._
+_Groups the hierarchical row keys from `GroupRowsBy` by symbol (Item1), takes the first 3 keys per group with LINQ, then slices the frame to those 150 keys — yielding 3 rows for each of the 50 symbols._
 
 ```csharp
 // Deedle — First 3 rows per symbol
@@ -458,13 +463,13 @@ groupHeadD.Rows[groupHeadD.RowKeys.Take(9)]
 
 The SQL Server gold layer in [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms) applies the same windowed aggregations to produce final analytical tables.
 
-### Mean Over Group
+### Mean over Group
 
 #### Polars.NET | Mean over group
 
 `expr.Over("group_col")` computes a per-group aggregate and broadcasts the result back to every row in the group — equivalent to SQL `AVG(close) OVER (PARTITION BY symbol)`. The original row count is preserved; no grouping collapse occurs.
 
-_Broadcasts the per-symbol mean close back to every row using `Mean().Over("symbol")` — the 8-row preview shows `mean_close_over` repeating `54.864` for all ABI.BR rows, confirming the original 66355-row count is preserved._
+_Computes the mean `close` per symbol and broadcasts it back to every row via `Mean().Over("symbol")` — every ABI.BR row receives the same `54.86` mean_close_over value without collapsing the 66K-row frame._
 
 ```csharp
 // Polars.NET — Mean close over each symbol (broadcast back to every row)
@@ -485,7 +490,7 @@ withMeanP.Head(8)
 
 Deedle has no `.Over()` equivalent. The workaround: compute a group-mean dictionary via LINQ, then iterate every row and map the symbol to its pre-computed mean. This is O(n) but requires explicit iteration.
 
-_Pre-computes a `symbol → mean` dictionary via LINQ, then iterates all 66355 rows to look up and assign each row's group mean — producing the same `54.864` repeated values for ABI.BR rows as the Polars.NET `.Over()` approach._
+_Pre-computes a symbol→mean dictionary from grouped observations, then iterates all 66K rows to map each symbol to its pre-computed mean — producing the same broadcast result as Polars' `Over()` via explicit LINQ + loop._
 
 ```csharp
 // Deedle — Compute group mean, then map back to each row
@@ -520,13 +525,13 @@ dfDWithMean.Columns[new[] { "symbol", "date", "close", "mean_close_by_symbol" }]
 
 </div>
 
-### Rank Within Group
+### Rank within Group
 
 #### Polars.NET | Rank within group
 
 `Col("close").Rank().Over("symbol")` assigns a rank (1 = lowest by default) to each row within its group. Ties produce averaged ranks (dense or standard depending on version). Equivalent to SQL `RANK() OVER (PARTITION BY symbol ORDER BY close)`.
 
-_Ranks each row's close price within its symbol group using `Rank().Over("symbol")` — ABI.BR's 2021-01-04 close of 57.21 ranks 946.5 out of 1331, with averaged fractional ranks for tied values._
+_Assigns each ABI.BR close price a rank within its symbol group — e.g., 57.21 on 2021-01-04 ranks 946.5 out of 1331, with ties producing averaged ranks (float output)._
 
 ```csharp
 // Polars.NET — Rank close price within each symbol
@@ -547,7 +552,7 @@ withRankP.Head(8)
 
 Deedle has no rank window function. Sort the values within each group, assign ordinal positions with a loop, then write results into a `SeriesBuilder`.
 
-_Sorts each symbol's closing prices in ascending order and assigns integer ordinal positions via a loop — producing rank 946 for ABI.BR's 57.21 close (vs. Polars.NET's 946.5), as this approach assigns distinct integers without averaging ties._
+_Sorts close values within each symbol group, assigns integer ordinal ranks 1–N via loop, and adds the result as a new column — producing integer ranks (no tie-averaging) compared to Polars' float ranks._
 
 ```csharp
 // Deedle — Manual rank: sort values within group, assign ordinal rank
@@ -589,7 +594,7 @@ dfDWithRank.Columns[new[] { "symbol", "date", "close", "rank_in_group" }].Rows[d
 
 </div>
 
-### Rolling Mean Over Group
+### Rolling Mean over Group
 
 #### Polars.NET | Rolling mean over group
 
@@ -599,7 +604,7 @@ dfDWithRank.Columns[new[] { "symbol", "date", "close", "rank_in_group" }].Rows[d
 >
 > Polars.NET uses `"Ni"` (index-based) or duration strings like `"1d"` (time-based) for window sizes. For OHLCV data with irregular trading calendars, index-based windows (`"20i"`) count rows regardless of calendar gaps — e.g., weekends. Use time-based windows only when actual calendar duration matters.
 
-_Computes a per-symbol 20-row trailing mean of close prices using `RollingMean("20i").Over("symbol")` — ABI.BR's mean starts at its own close (57.21) on row 1 and converges to a stable 20-row average of 57.272 by row 10._
+_Computes a 20-row trailing mean of `close` per symbol via `RollingMean("20i").Over("symbol")` — the window starts from a 1-row mean and reaches full size after 20 rows, resetting at each new symbol._
 
 ```csharp
 // Polars.NET — 20-row rolling mean of close, per symbol
@@ -620,7 +625,7 @@ withRollingP.Head(10)
 
 Deedle has no rolling window functions. Implement manually: for each group, iterate rows in order and maintain a sliding sum over the last 20 values. This is O(n) but requires explicit loops and careful index tracking.
 
-_Computes the 20-row rolling mean per symbol by maintaining a `[i-19..i]` sliding window index in a nested loop — the 10-row preview matches the Polars.NET output but required a full per-group iteration over all 66355 rows._
+_Implements a 20-row trailing mean per symbol group with a manual sliding-sum loop — for each row i, sums values from `max(0, i-19)` to `i` and divides by the actual window size, matching Polars' output._
 
 ```csharp
 // Deedle — 20-row rolling mean per symbol using Window
@@ -702,7 +707,7 @@ dfDWithRolling.Columns[new[] { "symbol", "date", "close", "rolling_mean_20" }].R
 
 `df.Join(other, leftKeys, rightKeys)` defaults to an inner join — only rows where the key exists in both frames are kept. Rows without a match are silently dropped. Verify the output row count matches the expected number after joining.
 
-_Joins the 66355-row OHLCV frame (with extracted `suffix` column) to the 7-row exchange dimension on `suffix` — the output shape (66355, 15) confirms all rows matched, as every symbol suffix maps to one of the 7 exchange codes._
+_Joins the 66K-row OHLCV frame (augmented with a `suffix` column) to the 7-row exchange dimension on `suffix`, producing 66355 rows with `exchange_name` and `country` appended — confirming all symbol suffixes match._
 
 ```csharp
 // Polars.NET — Inner join OHLCV (with suffix) to exchange dimension
@@ -721,7 +726,7 @@ innerP.Select("symbol", "date", "close", "suffix", "exchange_name", "country").H
 
 Deedle has no native `Join(otherFrame)` on DataFrames. Simulate an inner join with a dictionary lookup: build a key → value map from the right side, iterate the left frame, and collect only matching keys.
 
-_Simulates the inner join by building a `suffix → (name, country)` dictionary from the right frame, then collecting only OHLCV rows with a matching suffix — the 66355-row result confirms the same outcome as the Polars.NET join._
+_Simulates an inner join via a dictionary lookup on `suffix`, adding `exchange_name` and `country` columns only for rows with a matching key — yielding 66355 matched rows, identical to the Polars result._
 
 ```csharp
 // Deedle — Inner join by building a lookup dictionary
@@ -778,7 +783,7 @@ innerD.Columns[new[] { "symbol", "date", "close", "suffix", "exchange_name", "co
 
 `JoinType.Left` keeps all rows from the left frame. Unmatched rows on the right produce `null` in the new columns. Use `.NullCount` on the joined column to verify how many rows had no match.
 
-_Joins against a 3-exchange subset (`.DE`, `.PA`, `.AS`) using `JoinType.Left` — the output confirms 15889 null values in `exchange_name` for the four unmatched suffixes (`.BR`, `.MC`, `.MI`, `.HE`), while all 66355 left rows are preserved._
+_Joins OHLCV to a 3-row partial dimension table (only `.DE`, `.PA`, `.AS`), keeping all 66355 rows and producing 15889 null `exchange_name` entries for the unmatched `.BR`, `.MC`, `.MI`, `.HE` suffixes._
 
 ```csharp
 // Polars.NET — Left join with partial dim table to demonstrate nulls
@@ -816,7 +821,7 @@ Simulate a left join by iterating all rows of the left frame and looking up each
 >
 > Deedle represents missing values as `OptionalValue<T>.Missing`, not `null`. When building string columns with `SeriesBuilder`, there is no way to insert a true missing string — use a sentinel like `"N/A"` or `""` instead. This differs from Polars.NET, where unmatched left-join rows produce `null` in the output column.
 
-_Iterates all 66355 OHLCV rows and fills unmatched exchange suffixes with `"N/A"` sentinel strings — since the full dimension table covers all 7 suffixes, the first 8 preview rows all show matched exchange names without any `"N/A"` values._
+_Iterates all 66K OHLCV rows, filling `exchange_name` and `country` with the matched exchange data or `"N/A"` for the 15889 unmatched rows — preserving all rows in the left frame._
 
 ```csharp
 // Deedle — Left join: keep all rows, fill missing with "N/A"
@@ -867,7 +872,7 @@ leftD.Columns[new[] { "symbol", "close", "suffix", "exchange_name", "country" }]
 
 `JoinType.Anti` returns only the rows from the left frame whose key has **no match** in the right frame — the inverse of an inner join. Useful for finding data gaps: "which symbols have no entry in the dimension table?"
 
-_Applies an anti join against the 3-exchange partial dim (`.DE`, `.PA`, `.AS`) — the 15889 returned rows confirm all `.BR`, `.HE`, `.MI`, and `.MC` symbols had no match in the right frame._
+_Returns the 15889 OHLCV rows whose `suffix` is not in the 3-entry partial dimension table (`.DE`, `.PA`, `.AS` only), isolating `.BR`, `.HE`, `.MI`, `.MC` as unmatched suffixes._
 
 ```csharp
 // Polars.NET — Anti join: rows whose suffix is NOT in the partial dim table
@@ -892,7 +897,7 @@ antiP.Select("symbol", "date", "suffix").Head(8)
 
 Deedle has no anti join. Filter the left frame by set difference: build a `HashSet<string>` from the right-side keys, then keep only left rows whose key is **not** in the set.
 
-_Builds a `HashSet<string>` of all 7 dimension suffixes and retains only OHLCV rows whose suffix is not in the set — the "0 rows" result confirms all suffixes in the full OHLCV frame matched the complete dimension table, unlike the partial-dim example used in the Polars.NET anti join._
+_Builds a `HashSet<string>` of all 7 exchange suffixes, then filters the OHLCV suffix column to rows NOT in that set — returning 0 rows because all 7 suffixes are present in the full dimension table._
 
 ```csharp
 // Deedle — Anti join: Deedle has no native anti join
@@ -927,7 +932,7 @@ else
 >
 > Deedle has no semi join. The equivalent is a manual set-intersection filter: build a `HashSet<T>` from the right-side keys and keep left rows whose key is in the set. This is identical in behavior but requires explicit iteration.
 
-_Filters the OHLCV frame to rows whose `suffix` exists in the 7-row exchange dimension using `JoinType.Semi` — the unchanged shape (66355, 13) confirms all rows passed the filter and no columns from the right frame were added._
+_Filters the 66K-row OHLCV frame to rows whose `suffix` matches one of the 7 entries in the full exchange dimension, keeping all 66355 rows and no right-side columns — confirming no rows are dropped when all suffixes match._
 
 ```csharp
 // Polars.NET — Semi join: keep OHLCV rows whose suffix is in the dimension table
@@ -958,7 +963,7 @@ semiP.Select("symbol", "date", "suffix").Head(5)
 >
 > Deedle has no cross join. Implement in LINQ with `from r1 in leftRows from r2 in rightRows select (r1, r2)`, then build a new frame from the paired tuples.
 
-_Cross-joins a 2-row symbol frame (`ASML.AS`, `MC.PA`) with a 2-row exchange frame (`Primary`, `Secondary`) using empty key arrays — the (4, 2) output is the Cartesian product of all symbol × exchange combinations._
+_Cross-joins a 2-symbol frame (`ASML.AS`, `MC.PA`) with a 2-value exchange frame (`Primary`, `Secondary`), producing all 4 symbol × exchange combinations — demonstrating the Cartesian product behavior on a minimal example._
 
 ```csharp
 // Polars.NET — Cross join: all symbol × suffix combinations (tiny example)
@@ -988,7 +993,7 @@ crossP
 
 `.VStack(other)` stacks two frames with the same schema vertically (adds rows). Both frames must have identical column names and types — Polars.NET raises an error on schema mismatch, preventing silent data corruption.
 
-_Splits the first 20 OHLCV rows into two 10-row frames and re-stacks them using `.VStack()` — the (20, 12) output confirms both frames were appended in order with the original schema preserved._
+_Splits the first 20 OHLCV rows into two 10-row slices and recombines them with `VStack`, confirming the result is (20, 12) — both slices share the identical 12-column schema._
 
 ```csharp
 // Polars.NET — Split first 10 and next 10, then vertical concat
@@ -1008,7 +1013,7 @@ vcatP.Head(5)
 
 `frame1.Merge(frame2)` combines two frames vertically by aligning on column names. **Row keys must not overlap** — Deedle uses integer row keys, so take rows from the original frame using non-overlapping key ranges.
 
-_Takes rows 0–9 and rows 10–19 from the OHLCV frame using non-overlapping key ranges and merges them vertically — the (20, 12) result confirms `.Merge()` aligns on column names and requires non-overlapping integer row keys._
+_Merges rows 0–9 and rows 10–19 from the OHLCV frame into a single 20-row frame using `Merge`, aligning on column names — row keys must not overlap for Deedle's integer-indexed frames._
 
 ```csharp
 // Deedle — Merge two frames vertically (row keys must not overlap)
@@ -1042,7 +1047,7 @@ vcatD.Rows[vcatD.RowKeys.Take(5)]
 
 `.HStack(series)` appends a single `Series` as a new column. To add multiple columns from another frame, call `.HStack()` once per column. Both frames must have the same number of rows.
 
-_Splits the first 5 OHLCV rows into a 3-column left frame and a 3-column right frame, then horizontally concatenates them by calling `.HStack()` once per column — the (5, 6) output confirms all three series were appended in sequence._
+_Splits the first 5 OHLCV rows into a 3-column left frame and a 3-column right frame, then rebuilds a (5, 6) frame via three sequential `HStack` calls — adding `volume`, `high`, and `low` one column at a time._
 
 ```csharp
 // Polars.NET — Horizontal concat: split columns, then rejoin
@@ -1067,7 +1072,7 @@ hcatP
 
 `frame1.Join(frame2, JoinKind.Inner)` aligns two frames on their shared row keys and concatenates their columns. Use `JoinKind.Inner` to keep only rows present in both, or `JoinKind.Outer` to keep all rows and fill gaps with missing values.
 
-_Joins two 5-row sub-frames side-by-side on their shared integer row keys using `JoinKind.Inner` — the (5, 6) result aligns `symbol/date/close` from the left with `volume/high/low` from the right on matching keys._
+_Joins two 5-row, 3-column frames on shared integer row keys using `JoinKind.Inner`, producing a (5, 6) frame with columns from both sides aligned by key — equivalent to Polars' HStack but key-aligned._
 
 ```csharp
 // Deedle — Join frames side by side (aligns on row keys)
@@ -1104,7 +1109,7 @@ hcatD
 
 `.Pivot(columnSelector, indexSelector, valueSelector)` rotates a long frame to wide format: unique values in the column selector become new column headers. Use when you need one row per date and one column per symbol.
 
-_Pivots a 30-row long subset of 3 symbols into a wide frame using symbol as the column selector — the (1, 31) output shape reveals that Polars.NET's `.Pivot()` produces one row per unique symbol value with dates as columns, rather than the more common one-row-per-date layout._
+_Pivots 30 rows of close prices for ASML.AS, SAP.DE, and MC.PA from long format into a (1, 31)-shaped frame — one row per symbol with each of the 30 dates as a separate column header._
 
 ```csharp
 // Polars.NET — Pivot: daily close prices with symbols as columns
@@ -1137,7 +1142,7 @@ Deedle's native `PivotTable<R,C,V>()` API requires homogeneous types and is cumb
 >
 > Deedle's approach — one Series per symbol aligned on a shared date index — produces a frame where dates are row keys and symbols are column keys. This is the canonical Deedle representation for time-series cross-sectional data and is more idiomatic than the Polars long→wide pivot for this use case.
 
-_Builds one date-indexed `Series<string, double>` per symbol and assembles them into a (1331 × 3) frame — date strings become row keys and symbol names become column headers, demonstrating Deedle's canonical approach to cross-sectional time series._
+_Builds one `Series<date, double>` per symbol (SAP.DE, ASML.AS, MC.PA) and assembles them via `FrameBuilder.Columns`, producing a 1331-row × 3-column frame where dates are row keys and symbols are column headers._
 
 ```csharp
 // Deedle — Manual pivot: reshape long to wide
@@ -1182,7 +1187,7 @@ pivotD.Rows[pivotD.RowKeys.Take(10)]
 
 `.Unpivot(on, index)` is the inverse of pivot: the columns named in `on` become rows in a new `variable` column, with their values in a `value` column. The `index` columns are preserved as-is per row. Result shape: `n_rows × len(on)` rows.
 
-_Melts the `open`, `high`, `low`, and `close` columns of the first 5 OHLCV rows into a long format — the (20, 4) output contains one row per price type per original row, with `variable` holding the column name and `value` holding the price._
+_Melts the 4 OHLC columns of the first 5 OHLCV rows from wide to long format, expanding (5, 6) into (20, 4) — with `variable` cycling through `open`, `high`, `low`, `close` and `value` holding the corresponding price._
 
 ```csharp
 // Polars.NET — Melt/Unpivot: turn OHLC columns into rows
@@ -1207,7 +1212,7 @@ meltedP.Head(12)
 
 Deedle has no melt/unpivot operation. Implement by iterating each row and emitting one output row per value column, building four parallel lists (symbol, date, variable, value) and assembling them into a new frame.
 
-_Iterates the first 5 rows and emits four output rows per input row (one per OHLC column) by appending to four parallel lists, then assembles them into a (20, 4) frame — matching the Polars.NET Unpivot shape while requiring an explicit loop and `SeriesBuilder` assembly._
+_Iterates the 5 subset rows, emitting 4 output rows per input row (one per OHLC column) — assembling the 20-row result via parallel `List<T>` collectors and a new `FrameBuilder.Columns` frame._
 
 ```csharp
 // Deedle — Manual melt: iterate rows, emit one row per value column

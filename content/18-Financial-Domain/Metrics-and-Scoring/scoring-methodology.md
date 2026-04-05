@@ -1,4 +1,5 @@
 ---
+title: "Scoring Methodology"
 type: concept
 category: financial-domain
 technology: [python, sql-server, numpy]
@@ -6,12 +7,14 @@ tags: [python, sql, financial]
 aliases: [Scoring Methodology, z-score methodology, z-score calculation, composite scores, dense ranking, cap-weighting]
 keywords: [scoring methodology, z-score, cross-sectional, composite score, dense rank, cap-weighted, standardization, normalization, ranking, mean, standard deviation, inverted z-score, sign inversion]
 description: "Z-score calculation methodology, composite scoring, dense ranking, and cap-weighting formulas used across all financial data platform dashboard signals and metrics."
-related:
-  - "[daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)"
-  - "[quarterly-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores)"
-  - "[index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics)"
-  - "[factor-profile-and-composition](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/factor-profile-and-composition)"
-  - "[gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/gold-transforms)"
+parent: "[[domain-metrics-and-scoring]]"
+links:
+  - "[[chart-metrics]]"
+  - "[[daily-signal-scores]]"
+  - "[[data-sources-and-refresh]]"
+  - "[[factor-profile-and-composition]]"
+  - "[[index-snapshot-metrics]]"
+  - "[[quarterly-signal-scores]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

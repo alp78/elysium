@@ -1,4 +1,5 @@
 ---
+title: "Process Substitution"
 type: concept
 category: foundations
 technology: [bash]
@@ -6,6 +7,16 @@ tags: [shell, scripting]
 aliases: [process substitution, here document, here string, heredoc, herestring, advanced input output]
 keywords: [process substitution, here document, heredoc, here string, herestring, diff command output, virtual file descriptor, multi-line input, EOF, stdin, temporary file elimination]
 description: "Bash process substitution (<() and >()), here documents (<<EOF), and here strings (<<<) for treating command output as files and embedding multi-line strings in scripts."
+parent: "[[domain-script-engineering]]"
+links:
+  - "[[command-history]]"
+  - "[[io-redirection]]"
+  - "[[command-chaining]]"
+  - "[[brace-expansion-and-globbing]]"
+  - "[[environment-variables]]"
+  - "[[defensive-scripting]]"
+  - "[[bash-automation]]"
+  - "[[powershell-automation]]"
 created: 2026-03-22
 updated: 2026-04-03
 status: complete

@@ -3,6 +3,7 @@ title: "20. Security Setup - Python"
 tags: [python, gcp, security, infrastructure]
 aliases: [Security Setup, GCP Security Infrastructure, Workload Identity Setup]
 description: "GCP security infrastructure setup — provisions service accounts, KMS keys, secrets, Cloud SQL, Compute Engine, Workload Identity Federation, and populates demo data. Prerequisite for [21_py_security_operations](https://alp78.github.io/elysium/02-Programming-Languages/Python/21_py_security_operations) and [21_cs_security_operations](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/21_cs_security_operations)."
+parent: "[[domain-gcp-integration]]"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete

@@ -1,4 +1,5 @@
 ---
+title: "GCP Billing and Pricing"
 tags: [cost, billing, finops, gcp, bigquery, firestore, compute, cloud-run, pubsub, gcs]
 aliases:
   - GCP billing
@@ -17,6 +18,12 @@ aliases:
   - per-TB pricing
   - per-slot pricing
 description: Definitive reference on how every GCP data engineering service is billed — pricing models, billing dimensions, free tiers, discount mechanisms, cost formulas, and gcloud/BigQuery commands for ongoing cost analysis and optimization.
+parent: "[[domain-operations-and-cost]]"
+links:
+  - "[[cloud-logging]]"
+  - "[[cloud-monitoring-metrics]]"
+  - "[[gcp-cost-monitoring-and-budgets]]"
+  - "[[gcp-total-cost-of-ownership]]"
 created: 2026-03-22
 updated: 2026-03-29
 status: complete

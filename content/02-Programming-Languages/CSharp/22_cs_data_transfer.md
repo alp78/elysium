@@ -7,6 +7,9 @@ tags:
   - benchmarks
 aliases: [Data Transfer CSharp, GCS Transfer, BigQuery Load]
 description: "C# data transfer reference — GCS upload/download, VM file copy, SQL Server bulk insert, BigQuery load benchmarks with interactive charts. See [22_py_data_transfer](https://alp78.github.io/elysium/02-Programming-Languages/Python/22_py_data_transfer) for the Python equivalent."
+parent: "[[domain-gcp-integration]]"
+links:
+  - "[[22_py_data_transfer]]"
 created: 2026-03-27
 updated: 2026-03-27
 status: complete

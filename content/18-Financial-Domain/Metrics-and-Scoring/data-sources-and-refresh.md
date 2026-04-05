@@ -1,4 +1,5 @@
 ---
+title: "Data Sources and Refresh"
 type: reference
 category: financial-domain
 technology: [yfinance, python, sql-server, airflow]
@@ -6,14 +7,14 @@ tags: [python, sql, airflow, financial]
 aliases: [Data Sources and Refresh, yfinance data sources, data refresh, pipeline schedule, yfinance data pipeline]
 keywords: [data sources, refresh cadence, yfinance, pipeline schedule, price data, volume, market cap, forward PE, analyst target, recommendation, dividend yield, quarterly financials, governance, ticker membership, pulse, intraday]
 description: "Data sources, refresh cadences, and pipeline schedule for the financial data platform dashboard — yfinance data feeds, update frequencies, and the relationship between data freshness and scoring accuracy."
-related:
-  - "the pipeline steps"
-  - "the Airflow DAGs"
-  - "[index-snapshot-metrics](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/index-snapshot-metrics)"
-  - "[daily-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/daily-signal-scores)"
-  - "[quarterly-signal-scores](https://alp78.github.io/elysium/18-Financial-Domain/Metrics-and-Scoring/quarterly-signal-scores)"
-  - "[bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading)"
-  - "[medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture)"
+parent: "[[domain-metrics-and-scoring]]"
+links:
+  - "[[chart-metrics]]"
+  - "[[daily-signal-scores]]"
+  - "[[factor-profile-and-composition]]"
+  - "[[index-snapshot-metrics]]"
+  - "[[quarterly-signal-scores]]"
+  - "[[scoring-methodology]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

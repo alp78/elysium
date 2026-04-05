@@ -2,6 +2,17 @@
 tags: [shell]
 aliases: [find, fd, locate, file search, find command, xargs, parallel]
 description: "Targeted file searching with find, fd, and locate — searching by name pattern, size, modification time, and content. Includes parallel processing with xargs and GNU parallel, and PowerShell equivalents."
+parent: "[[domain-file-operations]]"
+links:
+  - "[[navigation-and-listing]]"
+  - "[[reading-file-contents]]"
+  - "[[grep-and-pattern-matching]]"
+  - "[[awk-data-processing]]"
+  - "[[sed-stream-editing]]"
+  - "[[date-and-time-handling]]"
+  - "[[file-manipulation]]"
+  - "[[compression]]"
+  - "[[data-transfer]]"
 created: 2026-03-22
 updated: 2026-04-03
 status: complete

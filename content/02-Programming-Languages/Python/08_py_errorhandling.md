@@ -3,6 +3,9 @@ title: "08. Error Handling - Python"
 tags: [python]
 aliases: [exceptions, try catch, error handling, custom exceptions, exception hierarchy]
 description: "Python error handling reference with executable examples and cell outputs — covers try/except/finally, exception hierarchy, custom exceptions, re-raising, and context managers. See [08_cs_errorhandling](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/08_cs_errorhandling) for the C# equivalent."
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[08_cs_errorhandling]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

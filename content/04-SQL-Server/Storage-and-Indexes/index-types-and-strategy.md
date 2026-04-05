@@ -1,7 +1,13 @@
 ---
+title: "Index Types and Strategy"
 tags: [sql, sql-server, tsql]
 aliases: [clustered index, nonclustered index, covering index, filtered index, columnstore index, CCI, NCCI, composite index, index key, INCLUDE columns, bookmark lookup, key lookup, index seek, index scan, B-tree, fill factor, fragmentation, REORGANIZE, REBUILD, statistics]
 description: "All SQL Server index types (clustered, nonclustered, covering, filtered, columnstore) with creation syntax, usage guidance, the decision tree for choosing the right type, anti-patterns, fragmentation detection and maintenance, statistics management, and the data pipeline index strategy."
+parent: "[[domain-storage-internals]]"
+links:
+  - "[[storage-internals]]"
+  - "[[table-compression]]"
+  - "[[partitioning-strategies]]"
 created: 2026-03-22
 updated: 2026-04-04
 status: complete

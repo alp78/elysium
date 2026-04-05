@@ -24,6 +24,11 @@ description: >
   all four RPC types, Python server and client implementations, error handling,
   interceptors, load balancing, and comparisons with REST. Includes financial
   data scenarios for market data feeds and bulk ingestion pipelines.
+parent: "[[domain-integration-and-protocols]]"
+links:
+  - "[[api-protocols-comparison]]"
+  - "[[rest-api-design-and-consumption]]"
+  - "[[graphql-for-data-access]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

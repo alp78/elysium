@@ -1,7 +1,20 @@
 ---
+title: "MERGE and Upsert"
 tags: [sql, sql-server, tsql]
 aliases: [MERGE, upsert, WHEN MATCHED, WHEN NOT MATCHED, SCD Type 2, truncate and reload, delete and insert, fast_executemany]
 description: "MERGE statement patterns and upsert strategies for the bronze→silver→gold medallion pipeline: truncate-reload for snapshots, merge for OHLCV corrections, SCD Type 2 close-and-insert for dimensions, and delete-and-insert for gold. Includes transaction management, @@ROWCOUNT guards, and XACT_ABORT best practices."
+parent: "[[domain-query-craft]]"
+links:
+  - "[[sargable-queries]]"
+  - "[[date-and-time-functions]]"
+  - "[[execution-plans]]"
+  - "[[query-plan-analysis]]"
+  - "[[wait-stats-analysis]]"
+  - "[[memory-and-buffer-pool]]"
+  - "[[index-maintenance]]"
+  - "[[performance-audit-playbook]]"
+  - "[[pipeline-integration-and-devex]]"
+  - "[[pit-integrity-logic]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

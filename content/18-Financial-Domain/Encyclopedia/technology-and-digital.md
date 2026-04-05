@@ -1,4 +1,5 @@
 ---
+title: "Technology and Digital"
 type: reference
 category: financial-encyclopedia
 technology: []
@@ -6,10 +7,23 @@ tags: [financial, technology]
 aliases: [technology terms, digital glossary, cloud computing glossary, SaaS glossary, fintech glossary]
 keywords: [cloud computing, IaaS, PaaS, SaaS, IoT, internet of things, AI, machine learning, cybersecurity, digital transformation, hybrid cloud, fintech, ERP, enterprise resource planning, B2B, B2C, e-commerce, omnichannel, platform business model, subscription model]
 description: "Encyclopedia definitions for technology and digital terms covering cloud computing, IaaS, PaaS, SaaS, IoT, AI/ML, cybersecurity, digital transformation, and fintech drawn from the example Index universe."
-related:
-  - banking-and-lending
-  - payments-and-settlement
-  - esg-and-sustainability
+parent: "[[domain-financial-encyclopedia]]"
+links:
+  - "[[banking-and-lending]]"
+  - "[[business-models-and-commerce]]"
+  - "[[capital-markets-and-trading]]"
+  - "[[compliance-and-risk-management]]"
+  - "[[corporate-finance-and-strategy]]"
+  - "[[energy-and-commodities]]"
+  - "[[esg-and-sustainability]]"
+  - "[[exchanges-and-market-infrastructure]]"
+  - "[[insurance-and-risk]]"
+  - "[[investment-management]]"
+  - "[[payments-and-settlement]]"
+  - "[[pharma-and-healthcare]]"
+  - "[[real-estate-and-industrial]]"
+  - "[[structured-finance]]"
+  - "[[trade-and-treasury]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

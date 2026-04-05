@@ -4,6 +4,9 @@ tags:
   - csharp
 aliases: [classes, inheritance, polymorphism, interfaces, abstract classes, encapsulation, properties]
 description: "C# OOP reference with executable examples and cell outputs — covers classes, interfaces, inheritance, polymorphism, properties, records, and encapsulation. See [06_py_oop](https://alp78.github.io/elysium/02-Programming-Languages/Python/06_py_oop) for the Python equivalent."
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[06_py_oop]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

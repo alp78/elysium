@@ -4,6 +4,9 @@ tags:
   - python
 aliases: [if else, loops, for loop, while loop, switch, pattern matching, match case]
 description: "Python control flow reference with executable examples and cell outputs — covers conditionals, loops, loop control, iterators, generators, and comprehensions. See [03_cs_control_flow](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/03_cs_control_flow) for the C# equivalent."
+parent: "[[domain-language-foundations]]"
+links:
+  - "[[03_cs_control_flow]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

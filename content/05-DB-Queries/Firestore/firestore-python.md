@@ -8,6 +8,9 @@ tags:
   - fundamentals
 aliases: [Firestore Python, Firestore queries Python, NoSQL Python, document database Python]
 description: "Firestore operations in Python with executable examples and cell outputs — covers CRUD, queries, transactions, batches, real-time listeners, and subcollections."
+parent: "[[domain-firestore]]"
+links:
+  - "[[firestore-csharp]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

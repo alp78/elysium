@@ -1,7 +1,13 @@
 ---
+title: "Terraform Resource Dependencies"
 tags: [terraform, iac]
 aliases: [terraform dependencies, terraform dependency graph, depends_on, terraform parallelism, resource references]
 description: "How Terraform builds and resolves the resource dependency graph — implicit dependencies from resource references, explicit depends_on, and how parallelism works during apply."
+parent: "[[domain-patterns-and-reference]]"
+links:
+  - "[[terraform-conditional-resources]]"
+  - "[[terraform-module-composition]]"
+  - "[[terraform-problems]]"
 created: 2026-03-22
 updated: 2026-04-05
 status: complete

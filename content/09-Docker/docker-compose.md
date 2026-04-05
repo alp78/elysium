@@ -1,7 +1,11 @@
 ---
+title: "Docker Compose"
 tags: [docker]
 aliases: [Docker Compose, docker compose, docker-compose, compose, multi-container, compose file, docker-compose.yaml, docker-compose.yml]
 description: "Complete Docker Compose reference — compose file structure, lifecycle commands (up/down/start/stop/restart), scaling, logs, exec/debug, config overrides, and cleanup. Includes a full data engineering stack example with Airflow, PostgreSQL, and Redis."
+parent: "[[domain-containers-and-orchestration]]"
+links:
+  - "[[container-lifecycle]]"
 created: 2026-03-22
 updated: 2026-03-22
 status: complete

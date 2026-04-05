@@ -1,8 +1,11 @@
 ---
-title: "25. Functional Data Pipeline - Python"
+title: "25. Functional Pipeline - Python"
 tags: [python, pipeline, data-quality, lineage, polars, pydantic, fastapi, streamlit, sql-server, medallion, parquet, airflow, validation, plotly]
 aliases: [functional pipeline, medallion pipeline, data lineage, pydantic validation]
 description: "End-to-end functional data pipeline with Pydantic validation, lineage tracking, Parquet export, FastAPI serving, and Plotly visualization. See [25_cs_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline) for the C# equivalent."
+parent: "[[domain-data-engineering]]"
+links:
+  - "[[25_cs_functional_pipeline]]"
 created: 2026-03-29
 updated: 2026-03-30
 status: complete

@@ -4,6 +4,15 @@ tags: [pipeline, python, pandas, polars]
 aliases:
   - with_columns, assign, apply, map, when/then, method chaining
 description: "Pandas/Polars DataFrame reference 03/10 — Transforms, Expressions & Chaining (with_columns, when/then, apply). Side-by-side executable examples with cell outputs."
+parent: "[[domain-transform-and-analyze]]"
+links:
+  - "[[03_cs_transforms_expressions]]"
+  - "[[04_py_missing_strings_datetime]]"
+  - "[[04_cs_missing_strings_datetime]]"
+  - "[[05_py_aggregation_reshaping]]"
+  - "[[05_cs_aggregation_reshaping]]"
+  - "[[06_py_lazy_performance]]"
+  - "[[06_cs_lazy_performance]]"
 created: 2026-03-24
 updated: 2026-03-24
 status: complete
@@ -51,6 +60,8 @@ print(f"OHLCV: {ohlcv_pd.shape}, Dim: {dim_pd.shape}, Scores: {scores_pd.shape}"
 
 ## Setup & Data Loading
 
+### Dataset Verification
+
 ```python
 # Verify loaded datasets — shapes and column names
 print("ohlcv  :\n", ohlcv_pd.shape, "\n", list(ohlcv_pd.columns))
@@ -69,6 +80,8 @@ print("\nscores :\n", scores_pd.shape, "\n", list(scores_pd.columns))
     scores :
      (466, 36) 
      ['id', '_index', 'symbol', 'score_date', 'sector', 'pe_zscore', 'pb_zscore', 'ev_ebitda_zscore', 'yield_zscore', 'relative_value_score', 'relative_value_rank', 'relative_strength', 'sma_50_ratio', 'sma_200_ratio', 'dist_from_52w_high', 'momentum_score', 'momentum_rank', 'implied_upside', 'recommendation_mean', 'price_falling_analysts_bullish', 'sentiment_score', 'sentiment_rank', 'composite_score', 'composite_rank', '_scored_at', 'sma_30_close', 'sma_90_close', 'market_cap', 'index_weight', 'short_name', 'country', 'current_price', 'day_change_pct', 'five_day_change_pct', 'ytd_change_pct', 'currency']
+
+### Data Preview
 
 ```python
 # Preview Pandas OHLCV DataFrame
@@ -804,6 +817,8 @@ ohlcv_pl.with_columns(
 >
 > `.astype("type")` converts a column to a different dtype. Common casts: `int64` → `float64` (for division), `object` → `category` (for memory), `str` → `datetime64` (for date ops). Returns a new Series — assign it back to the column.
 
+_Demonstrates three common dtype casts on the OHLCV dataset: converts `volume` from `int64` to `float64` for division safety, parses `date` strings to `datetime64[ns]` via `pd.to_datetime()`, and re-encodes `symbol` as a memory-efficient `category` dtype — each using `.astype()`._
+
 ```python
 # astype — cast volume from int to float for division safety
 df = ohlcv_pd.copy()
@@ -848,6 +863,8 @@ print(df["symbol"].cat.categories[:5].tolist())
 > [!success] Use strict=False when casting dirty or untrusted data
 >
 > For columns sourced from external files or APIs, cast with `pl.col("col").cast(pl.Int64, strict=False)` — invalid values become `null` instead of raising. Follow with a null-count check (`df["col"].null_count()`) to quantify data quality before proceeding.
+
+_Casts `volume` from `Int64` to `Float64`, then bulk-casts all numeric columns to `Float32` via the `cs.numeric()` selector, and finally re-encodes `symbol` as `Categorical` — printing the full schema after each operation to confirm the dtype changes._
 
 ```python
 # cast — convert volume from Int64 to Float64
@@ -906,6 +923,8 @@ ohlcv_pl.with_columns(
 > [!info] .str gives access to vectorized
 >
 > `.str` gives access to vectorized string methods on a Series: `.str.upper()`, `.str.lower()`, `.str.contains()`, `.str.split()`, `.str.replace()`, `.str.extract()`. Works on `object` or `string` dtype columns. Much faster than `apply(lambda x: x.upper())`.
+
+_Derives three new columns from `symbol`: uppercased text (`symbol_upper`), the ticker stub without exchange suffix (`symbol_short` via `.str.split(".").str[0]`), and a boolean flag for German-listed stocks (`has_de`). A second example strips the `.DE` exchange suffix using `.str.replace()` and `.str.strip()`._
 
 ```python
 # .str accessor — vectorized string operations on a column
@@ -1015,6 +1034,8 @@ df[["symbol", "clean"]].drop_duplicates().head()
 >
 > Polars `.str` namespace: `.str.to_uppercase()`, `.str.to_lowercase()`, `.str.contains()`, `.str.split()`, `.str.replace()`, `.str.extract()`. After `.str.split()` the result is a List column — chain `.list.first()`, `.list.last()`, `.list.len()` to extract elements.
 
+_Replicates the same three string transformations on the Polars `symbol` column: uppercases via `.str.to_uppercase()`, extracts the ticker stub via `.str.split().list.first()`, and flags German listings via `.str.contains("DE")`. A second example strips the `.DE` exchange suffix using `.str.replace()` combined with `.str.strip_chars()`._
+
 ```python
 # .str accessor — string transforms inside Polars expressions
 ohlcv_pl.with_columns(
@@ -1044,6 +1065,8 @@ ohlcv_pl.with_columns(
 > [!info] .dt gives access to datetime
 >
 > `.dt` gives access to datetime components: `.dt.year`, `.dt.month`, `.dt.day`, `.dt.day_name()`, `.dt.quarter`, `.dt.weekday`. The column must be `datetime64` dtype — convert with `pd.to_datetime()` first if it's a string.
+
+_Converts the `date` column to `datetime64` via `pd.to_datetime()`, then extracts four temporal components — year, month, weekday name, and quarter — into separate columns, demonstrating that `.dt` accessor methods are available only after the column is in a datetime dtype._
 
 ```python
 # .dt accessor — extract date components from a datetime column
@@ -1117,6 +1140,8 @@ df[["date", "year", "month", "weekday", "quarter"]].head()
 > [!info] Polars .dt namespace: .dt.year(), .dt.month(),
 >
 > Polars `.dt` namespace: `.dt.year()`, `.dt.month()`, `.dt.day()`, `.dt.weekday()`, `.dt.quarter()`, `.dt.ordinal_day()`. Note: Polars weekday is 1=Monday (ISO), Pandas is 0=Monday.
+
+_Extracts year, month, ISO weekday integer (1=Monday), and quarter from the Polars `date` column using the `.dt` namespace inside a `with_columns` call. A second example demonstrates date arithmetic — shifting each date forward 7 days with `pl.duration(days=7)` and computing the first day of the month via `.dt.month_start()`._
 
 ```python
 # .dt accessor — extract date components inside Polars expressions
@@ -1296,6 +1321,8 @@ This makes pipelines **reproducible** and **testable**.
 >
 > The "tweak function" pattern wraps all DataFrame transforms in a single function: `def tweak(df) -> df`. Inside, chain `.assign()`, `.rename()`, `.astype()`, `.query()`, `.sort_values()` etc. Call it as `df.pipe(tweak)` to include in a pipeline. This is the idiomatic Pandas approach to composable, testable transforms.
 
+_Defines `tweak_ohlcv_pd()` — a Pandas tweak function that adds `range`, `mid`, `intraday_ret`, `volume_m`, and `symbol_short` columns in a single `.assign()` chain, then lowercases all column names via `.rename(columns=str.lower)`, returning the enriched 17-column OHLCV DataFrame._
+
 ```python
 # Tweak function — all Pandas transforms in one chainable function
 def tweak_ohlcv_pd(df: pd.DataFrame) -> pd.DataFrame:
@@ -1453,6 +1480,8 @@ tweak_ohlcv_pd(ohlcv_pd).head()
 > [!info] Polars tweak functions use .with_columns(),
 >
 > Polars tweak functions use `.with_columns()`, `.filter()`, `.sort()`, `.rename()` chained naturally — no `.pipe()` needed because Polars methods already return new DataFrames (immutable by design).
+
+_Defines `tweak_ohlcv_pl()` — the Polars equivalent that adds the same five derived columns (`range`, `mid`, `intraday_ret`, `volume_m`, `symbol_short`) in a single `.with_columns()` call, demonstrating that Polars methods chain directly without `.pipe()` or `.copy()`._
 
 ```python
 # Tweak function — all Polars transforms in one chainable function
@@ -1978,7 +2007,7 @@ display(Markdown(comparison))
 | Tweak function                | `def tweak(df): return df.assign(…)`              | `def tweak(df): return df.with_columns(…)`        |
 
 ---
-# Part 2: Polars Expressions Deep Dive
+## Part 2: Polars Expressions Deep Dive
 
 ### What Is an Expression?
 
@@ -2022,6 +2051,8 @@ ohlcv_pl.select(
 - **With Columns**: Add new columns or replace existing ones. All original columns are kept.
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 
+_Adds `price_change` (close minus open) and `pct_change` (percentage change from open to close, rounded to 2 dp) as two new columns in a single `with_columns` call, keeping all 12 original OHLCV columns intact._
+
 ```python
 # with_columns context — add new columns, keep all originals
 ohlcv_pl.with_columns(
@@ -2037,6 +2068,8 @@ ohlcv_pl.with_columns(
 
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 
+_Filters the OHLCV dataset to ASML.AS rows where `close > 900` using a compound boolean expression with `&`, returning the first 5 matching dates and prices._
+
 ```python
 # filter context — keep rows matching a boolean expression
 ohlcv_pl.filter(
@@ -2050,6 +2083,8 @@ ohlcv_pl.filter(
 
 
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
+
+_Groups the full OHLCV dataset by `symbol` and computes three per-symbol aggregates — average close price, total traded volume, and most recent date — then sorts descending by average close to rank the 50 stocks by price level._
 
 ```python
 # group_by.agg context — aggregate expressions per group
@@ -2083,7 +2118,7 @@ ohlcv_pl.select(pl.col("^(open|high|low|close)$")).head(3)
 
 #### Polars Column Expressions — pl.all, pl.exclude
 
-
+_Uses `pl.exclude()` to drop four metadata columns (`id`, `dividends`, `stock_splits`, `is_filled`) and return only the 8 analytically relevant OHLCV columns._
 
 ```python
 # pl.exclude — select all columns EXCEPT the listed ones
@@ -2098,6 +2133,8 @@ ohlcv_pl.select(pl.exclude("id", "dividends", "stock_splits", "is_filled")).head
 - **pl.lit**: Create a constant/literal value as an expression.
 - **Alias**: Give an expression result a column name (Polars).
 
+_Injects two constant columns into the OHLCV dataset using `pl.lit()`: a static `"EUR"` currency string and a `1.0` float weight — demonstrating how to attach fixed-value metadata to every row without a source column._
+
 ```python
 # pl.lit — inject a constant value as a new column
 ohlcv_pl.select("symbol", "date", pl.lit("EUR").alias("currency"), pl.lit(1.0).alias("weight")).head(3)
@@ -2109,6 +2146,8 @@ ohlcv_pl.select("symbol", "date", pl.lit("EUR").alias("currency"), pl.lit(1.0).a
 
 
 - **Alias**: Give an expression result a column name (Polars).
+
+_Extracts the first symbol in the dataset and the date range boundaries (`first_date` and `last_date`) using `pl.first()` and `pl.last()`, confirming that the OHLCV data spans from 2021-01-04 to 2026-03-12._
 
 ```python
 # pl.first, pl.last — get the first/last value in the column
@@ -2277,7 +2316,7 @@ scores_pl.select(cs.contains("score")).head(3)
 | Selectors | cs.numeric() | df.select_dtypes() |
 
 ---
-# Part 3: Method Chaining & Pipes
+## Part 3: Method Chaining & Pipes
 
 ### Imperative vs Chained Style
 
@@ -2292,6 +2331,8 @@ Imperative code mutates step by step; chained (declarative) code reads as a pipe
 > [!success] Prefer method chaining to eliminate stale intermediate variables
 >
 > Use Pandas method chaining — `(df.query(...).assign(...).sort_values(...))` — or wrap the chain in a `pipe()` call for named steps. In Polars, chain `.filter()`, `.with_columns()`, and `.sort()` directly on the LazyFrame. Both styles produce a single, immutable result with no reused intermediate names.
+
+_Filters OHLCV to ASML.AS, computes `daily_return` as a separate in-place assignment, then re-sorts — using the same variable `df` at each step, illustrating how imperative style accumulates stale intermediate state._
 
 ```python
 # Imperative: each step is a separate statement, intermediate variable "df" is reused
@@ -2390,6 +2431,8 @@ display(df[["symbol", "date", "close", "daily_return"]].head(10))
 > [!info] Chained declarative style
 >
 > Chained style: start from the DataFrame and chain `.query()`, `.assign()`, `.sort_values()`, `.head()` in one expression. No intermediate variables. Wrap in parentheses `(...)` for multi-line readability. Use `.pipe(func)` to insert custom functions into the chain.
+
+_Rewrites the same ASML.AS transformation as a single Pandas method chain: `.query()` → `.assign()` → `.sort_values()` → `.head()` → column selection, producing identical output with no mutable intermediate variables._
 
 ```python
 result_pd = (
@@ -2494,6 +2537,8 @@ display(result_pd)
 >
 > Polars is designed for chaining — every method returns a new DataFrame. No `.pipe()` needed, no `.copy()` needed. The chain reads top to bottom: filter → compute → sort → limit → select.
 
+_Reproduces the ASML.AS daily return pipeline in Polars as a clean top-to-bottom chain: `.filter()` → `.with_columns()` → `.sort()` → `.head()` → `.select()`, demonstrating that no `.pipe()` or `.copy()` is needed._
+
 ```python
 result_pl = (
     ohlcv_pl
@@ -2518,6 +2563,8 @@ display(result_pl)
 > [!info] .pipe(func) inserts a custom function
 >
 > `.pipe(func)` inserts a custom function into a Pandas chain. The function receives the DataFrame as its first argument and must return a DataFrame. This lets you break complex transforms into named, testable, reusable functions.
+
+_Defines two reusable Pandas transform functions — `add_moving_averages()` (7-day and 30-day SMAs via `.rolling().mean()`) and `flag_high_volume()` (boolean flag for volume > 2× average) — and composes them into the ASML.AS pipeline using `.pipe()`._
 
 ```python
 # Reusable transform functions — each takes a DataFrame and returns a DataFrame
@@ -2655,6 +2702,8 @@ display(result_pd)
 > [!info] In Polars, reuse is achieved
 >
 > In Polars, reuse is achieved by **storing expressions in variables**. An expression is just a Python object — assign it to a name, then pass it into `.with_columns()` or `.select()` anywhere. No `.pipe()` needed.
+
+_Stores the daily return, 7-day SMA, and 30-day SMA computations as named Polars expression variables (`daily_return_expr`, `sma_7_expr`, `sma_30_expr`), then applies all three in a single `.with_columns()` call on the ASML.AS pipeline — demonstrating expression reuse without `.pipe()`._
 
 ```python
 # Reusable expressions — define once, use in any context
