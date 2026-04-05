@@ -409,6 +409,16 @@ FROM sys.dm_exec_requests
 WHERE command LIKE '%RECOVERY%';
 ```
 
+> [!info] Column Reference
+>
+> | Column | Source | Meaning |
+> |---|---|---|
+> | `database_id` | `sys.dm_exec_requests.database_id` | Integer ID of the database being recovered. Use `DB_NAME(database_id)` to resolve to a name. |
+> | `database_name` | `DB_NAME(database_id)` | Human-readable database name derived from the integer ID. |
+> | `percent_complete` | `sys.dm_exec_requests.percent_complete` | Progress percentage (0.00–100.00). Reliable during the **Redo** phase. During **Undo**, the value may read `0` or jump non-linearly — SQL Server recalculates remaining work as uncommitted transactions are reversed, so progress appears to stall or regress. |
+> | `est_minutes_remaining` | `estimated_completion_time / 60000` | Estimated minutes remaining. The raw `estimated_completion_time` column is in milliseconds — dividing by 60,000 converts to minutes. This estimate fluctuates during Undo and should be treated as approximate. |
+> | `command` | Filter: `LIKE '%RECOVERY%'` | Active operation type. Values matching the filter: `DB STARTUP` (automatic crash recovery at instance restart), `RECOVER DATABASE` (explicit `RESTORE … WITH RECOVERY`), `RECOVERY` (internal auto-recovery). An empty result set means no recovery is currently in progress. |
+
 ### SQL Server | Crash Recovery | three phases
 
 Crash recovery proceeds through three phases in strict order. Each phase has a different performance characteristic based on what happened before the crash.

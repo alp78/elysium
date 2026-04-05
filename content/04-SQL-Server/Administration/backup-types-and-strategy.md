@@ -424,6 +424,15 @@ SELECT name, type_desc, size * 8 / 1024 AS size_mb
 FROM sys.database_files WHERE type = 1;
 ```
 
+> [!info] Column Reference
+>
+> | Column | Source | Meaning |
+> |---|---|---|
+> | `name` | `sys.database_files.name` | Logical file name — the identifier used in `DBCC SHRINKFILE` and `WITH MOVE` clauses. This is **not** the physical path on disk. |
+> | `type_desc` | `sys.database_files.type_desc` | File type string: `ROWS` (data file, `.mdf`/`.ndf`), `LOG` (transaction log, `.ldf`), `FILESTREAM`, `FULLTEXT`. |
+> | `size_mb` | `size × 8 / 1024` | File size in MB. The raw `size` column stores the allocation in 8 KB pages — multiply by 8 for KB, divide by 1024 for MB. This is the **allocated** size, not the used size. |
+> | `type` | Filter: `type = 1` | Integer file type: `0` = ROWS (data file), `1` = LOG, `2` = FILESTREAM, `3` = log shipping mirror, `4` = FULLTEXT. The `WHERE type = 1` filter returns only log files, ensuring `DBCC SHRINKFILE` targets the `.ldf`. |
+
 #### Shrink the log file to a target size
 
 Shrinks the `.ldf` file to the specified size in megabytes. SQL Server will grow it again as needed, but under SIMPLE recovery the log recycles space internally and typically stays small.
@@ -472,6 +481,14 @@ SELECT name, recovery_model_desc, log_reuse_wait_desc
 FROM sys.databases
 WHERE name = 'analytics_db';
 ```
+
+> [!info] Column Reference
+>
+> | Column | Meaning |
+> |---|---|
+> | `name` | Database name. |
+> | `recovery_model_desc` | Active recovery model: `FULL` (PITR capable), `SIMPLE` (PITR not possible), `BULK_LOGGED` (PITR blocked during bulk windows). PITR requires `FULL`. |
+> | `log_reuse_wait_desc` | Reason the log cannot yet be truncated. For PITR prerequisites: `LOG_BACKUP` confirms log backups are running and the chain is intact. `NOTHING` or `CHECKPOINT` means the log is healthy. Any other value (e.g., `ACTIVE_TRANSACTION`, `REPLICATION`) indicates a condition blocking truncation. See [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/Administration/essential-dba-queries) for the full 10-value reference. |
 
 #### Step 2 — Tail-log backup
 

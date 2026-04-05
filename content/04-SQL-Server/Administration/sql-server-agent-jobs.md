@@ -68,6 +68,14 @@ SELECT subsystem, description_id, agent_exe
 FROM msdb.dbo.syssubsystems;
 ```
 
+> [!info] Column Reference
+>
+> | Column | Meaning |
+> |---|---|
+> | `subsystem` | Token name for the registered subsystem. Windows values: `TSQL`, `CmdExec`, `PowerShell`, `SSIS`, `ANALYSISQUERY`, `ANALYSISCOMMAND`, `Distribution`, `Snapshot`, `LogReader`, `Merge`, `QueueReader`. Linux values: `TSQL` and replication subsystems only (`Distribution`, `Snapshot`, `LogReader`, `Merge`). Missing entries confirm which subsystems are unavailable on the current platform. |
+> | `description_id` | Integer key into `msdb.dbo.syssubsystemslocales` for the localized description string. Not directly useful for diagnostics — use `subsystem` for identification. |
+> | `agent_exe` | Full path to the subsystem executable on disk. A populated path confirms the binary exists. On Linux, replication agent executables are in `/opt/mssql/bin/`. A NULL or non-existent path means the subsystem will fail at job step start. |
+
 > [!warning] Agent on Linux — restricted subsystems
 >
 > SQL Server Agent on Linux supports **only TSQL and replication subsystems** (Distribution, Snapshot, LogReader, Merge). CmdExec, PowerShell, SSIS, and SSAS are **not available** on Linux. Alerts (SQL Server event, performance condition, WMI) are also unsupported on Linux. If your job needs shell commands, Python, .NET, or GCP SDK calls — it cannot run in Agent on Linux.
@@ -366,6 +374,18 @@ JOIN msdb.dbo.sysjobs j ON h.job_id = j.job_id
 WHERE h.run_date >= CONVERT(INT, CONVERT(VARCHAR(8), DATEADD(DAY, -7, GETDATE()), 112))
 ORDER BY h.run_date DESC, h.run_time DESC;
 ```
+
+> [!info] Column Reference
+>
+> | Column | Source | Meaning |
+> |---|---|---|
+> | `job_name` | `msdb.dbo.sysjobs.name` | Job name as defined in `sp_add_job`. Rows with `step_id = 0` are job-level summary records; rows with `step_id ≥ 1` are per-step records. |
+> | `step_name` | `msdb.dbo.sysjobhistory.step_name` | Name of the specific step. For job-level rows (`step_id = 0`), this contains `(Job outcome)`. |
+> | `run_status` | `msdb.dbo.sysjobhistory.run_status` | Integer outcome code. See table below for all values. |
+> | `run_date` | `msdb.dbo.sysjobhistory.run_date` | Execution date as a `YYYYMMDD` integer (e.g., `20260405`). The `WHERE` clause uses `CONVERT(INT, CONVERT(VARCHAR(8), GETDATE(), 112))` to produce the same format. |
+> | `run_time` | `msdb.dbo.sysjobhistory.run_time` | Start time as a `HHMMSS` integer (e.g., `143000` = 14:30:00). Requires `CONVERT` for display. |
+> | `run_duration` | `msdb.dbo.sysjobhistory.run_duration` | Elapsed time as a `HHMMSS` integer (e.g., `13042` = 1h 30m 42s). Convert: hours = `run_duration / 10000`, minutes = `(run_duration % 10000) / 100`, seconds = `run_duration % 100`. |
+> | `message` | `msdb.dbo.sysjobhistory.message` | Step output text or error message (max 1,024 characters). Longer outputs silently truncated. |
 
 | `run_status` | Meaning |
 |---|---|
@@ -727,4 +747,15 @@ JOIN msdb.dbo.sysjobs j ON h.job_id = j.job_id
 WHERE h.run_status = 0
   AND h.run_date >= CONVERT(INT, CONVERT(VARCHAR(8), DATEADD(DAY, -1, GETDATE()), 112));
 ```
+
+> [!info] Column Reference
+>
+> | Column | Meaning |
+> |---|---|
+> | `j.name` | Job name from `msdb.dbo.sysjobs`. Identifies which Agent job failed. |
+> | `step_name` | Name of the step that failed. For a job-level failure summary, the value is `(Job outcome)`. |
+> | `message` | Error output for the failed step (max 1,024 characters). For TSQL steps, contains the SQL Server error message. For CmdExec steps, the last 1,024 characters of stderr. |
+> | `run_date` | Execution date as a `YYYYMMDD` integer (e.g., `20260405`). The `WHERE` clause converts `GETDATE()` minus 1 day to the same integer format: `CONVERT(INT, CONVERT(VARCHAR(8), DATEADD(DAY, -1, GETDATE()), 112))`. |
+> | `run_time` | Start time as a `HHMMSS` integer (e.g., `143000` = 14:30:00). Requires arithmetic or `CONVERT` for display. |
+> | `run_status = 0` | Filter condition — returns only failed executions. Other values: `1` = Succeeded, `2` = Retry, `3` = Canceled, `4` = In Progress. |
 

@@ -1,5 +1,5 @@
 ---
-tags: [infrastructure, bigquery, gcp]
+tags: [bigquery, gcp]
 status: stable
 updated: 2026-03-23
 description: "Comprehensive catalog of BigQuery production problems for data engineers — 25 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures. Covers cost control, query performance, DML concurrency, data types, and operational issues."
@@ -56,6 +56,8 @@ BigQuery is deceptively simple — write SQL, get results. But in a production d
 ---
 
 ## Critical — Cost Explosion / Data Loss
+
+These problems trigger immediate cost spikes or permanent data loss. Address preventively — all five have architectural fixes that can be implemented before incidents occur.
 
 ### Uncontrolled Full-Table Scans ($$$)
 
@@ -701,6 +703,8 @@ WHERE job_type = 'LOAD'
 ---
 
 ## High — Data Quality / Performance
+
+These problems produce incorrect results or severe performance degradation. Many are invisible in query output — only cost monitoring or audit validation reveals them.
 
 ### FLOAT64 Precision Loss in Financial Calculations
 

@@ -139,6 +139,14 @@ SELECT db_name, suspend_time_ms, is_write_io_frozen
 FROM sys.dm_server_suspend_status;
 ```
 
+> [!info] Column Reference
+>
+> | Column | Meaning |
+> |---|---|
+> | `db_name` | Name of the database currently in a suspended state. Returns one row per suspended database. An empty result set means no databases are frozen — either the suspend was never issued or the `BACKUP … WITH METADATA_ONLY` step completed and automatically resumed writes. |
+> | `suspend_time_ms` | Elapsed milliseconds since write I/O was frozen. The GCP snapshot must be taken **immediately** — keep this value under 30,000 ms (30 seconds). Beyond 30 seconds, application write timeouts begin accumulating. Values above 60,000 ms risk active transaction failures and alert-level error log entries. |
+> | `is_write_io_frozen` | `1` = write I/O is currently frozen (snapshot window is open). `0` = writes have resumed (the freeze ended or was never started). Confirm `is_write_io_frozen = 1` before issuing the `gcloud compute disks snapshot` command to guarantee the snapshot captures a write-quiesced, consistent state. |
+
 > [!bug] Known bug — databases stuck in suspended state (fixed in CU16)
 > In SQL Server 2022 builds prior to CU16, running `ALTER SERVER CONFIGURATION SET SUSPEND_FOR_SNAPSHOT_BACKUP = ON` could leave databases in an incorrect suspended state if an error occurred during the suspend operation. Subsequent suspend attempts would fail with `Msg 3081: Database was previously suspended for snapshot backup.`
 
@@ -381,6 +389,17 @@ ORDER BY total_cost DESC
 LIMIT 20
 ```
 
+> [!info] Column Reference
+>
+> | Column | Source | Meaning |
+> |---|---|---|
+> | `service.description` | `billing_export.service.description` | GCP service name (e.g., `Compute Engine`, `Cloud Storage`, `BigQuery`). |
+> | `sku.description` | `billing_export.sku.description` | Specific resource SKU (e.g., `N2 Predefined Instance Core running in EMEA`). Drill into this when a service cost is unexpectedly high. |
+> | `total_cost` | `SUM(cost)` | Total USD cost pre-tax, pre-credit. Credits (SUDs, CUDs) appear as separate rows with negative values. |
+> | `usage_amount` | `SUM(usage.amount)` | Total units consumed. Interpret with `usage.unit`. |
+> | `usage.unit` | `billing_export.usage.unit` | Unit of measure: `hour` (compute), `gibibyte` (storage), `count` (API requests), `gibibyte month` (persistent storage). |
+> | `_PARTITIONTIME` | Partition filter | The table is date-partitioned. **Always include this filter** — omitting it causes BigQuery to full-scan all partitions, incurring unnecessary query costs. |
+
 Run this query using the `bq` CLI tool:
 
 ```bash
@@ -534,6 +553,17 @@ FROM msdb..backupset
 WHERE type = 'D'
 ORDER BY backup_finish_date DESC;
 ```
+
+> [!info] Column Reference
+>
+> | Column | Source | Meaning |
+> |---|---|---|
+> | `database_name` | `msdb.dbo.backupset.database_name` | Name of the database that was backed up. |
+> | `backup_size_mb` | `backup_size / 1048576` | Uncompressed logical size in MB. Raw `backup_size` is in bytes. |
+> | `compressed_size_mb` | `compressed_backup_size / 1048576` | Actual bytes written to the backup file, in MB. `NULL` if compression was not used — produces NULL for `compression_ratio`. |
+> | `compression_ratio` | `backup_size / compressed_backup_size` | Ratio of original to compressed size. Ranges: `3–7:1` for character-heavy data, `1.5–3:1` for mixed workloads, `~1.0:1` for TDE-encrypted databases on pre-2019 CU5. Values below `1.5:1` indicate already-compressed or encrypted data. |
+> | `type` | Filter: `type = 'D'` | Backup type: `D` = Full, `I` = Differential, `L` = Log, `F` = File/Filegroup, `G` = File Differential, `P` = Partial, `Q` = Partial Differential. |
+> | `backup_finish_date` | `msdb.dbo.backupset.backup_finish_date` | Datetime when the backup completed. Used for `ORDER BY DESC` so most recent appears first. |
 
 A compression ratio of 3:1 means ~66% disk space savings. Ratios below 1.5:1 indicate the data is not compressing well (likely encrypted or already compressed).
 

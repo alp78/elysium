@@ -81,6 +81,8 @@ OHLCV data is append-only (new dates added each day) with volume corrections (af
 
 #### SELECT existing rows — build lookup map for merge comparison
 
+This query loads the current state of the OHLCV table into memory so Python can classify each source row as new (INSERT), stale (UPDATE), or unchanged (SKIP). `CONVERT(VARCHAR(10), date, 120)` serializes the date column using SQL Server format style 120 (`YYYY-MM-DD`), which matches the string key format used in the Python dictionary. `ISNULL(volume, 0)` replaces NULL volumes with 0 so the staleness check — "was this a zero-volume after-hours snapshot?" — can use a simple numeric comparison rather than IS NULL.
+
 ```sql
 -- Step 1: Read existing bronze data to build a lookup map
 -- ingestion/loaders/load_ohlcv.py (lines 54-57)
@@ -121,6 +123,16 @@ WHERE symbol = ? AND date = ?
 ---
 
 ## Strategy 3: SCD Type 2 — Close Old, Insert New (Silver Dimensions)
+
+A **dimension table** stores the descriptive attributes of business entities — in this pipeline, company metadata such as sector, country, exchange, and name. Dimension tables are contrasted with **fact tables**, which store measurable events (OHLCV prices, financial signals, computed scores). When an entity's attributes change over time, three handling strategies exist:
+
+| SCD Type | Action on change | History preserved | Typical use |
+|---|---|---|---|
+| **Type 1** | Overwrite the existing row | No — old value is lost | Corrections, typos |
+| **Type 2** | Close old row, insert new row | Yes — full version history | Reclassifications, sector changes |
+| **Type 3** | Add a "previous value" column | Partial — one prior value only | Soft transitions, single attribute |
+
+This pipeline uses **Type 2** because index composition and sector classifications change with each periodic rebalancing. Downstream analytics must reconstruct the portfolio as it existed on any historical date — which requires a complete, unbroken version chain, not just the current value.
 
 Slowly Changing Dimension (SCD) Type 2 preserves the full history of attribute changes by never updating existing rows. When an attribute changes, the old row is closed with a `valid_to` timestamp and a new row is inserted with the current values. This allows point-in-time queries: "what was ASML's sector on 2024-06-15?"
 
@@ -271,7 +283,11 @@ records_inserted=50  records_updated=45  records_unchanged=5
 
 ## T-SQL MERGE Statement (Atomic Upsert)
 
-The T-SQL `MERGE` statement combines INSERT and UPDATE into a single atomic operation. It is the most concise way to express "insert if not exists, update if matched" and is safe against phantom insert race conditions because the check and write happen atomically. MERGE is the core [idempotent pattern](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) used across the pipeline, and [dbt incremental models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-materializations) generate MERGE statements internally when targeting SQL Server.
+The T-SQL `MERGE` statement — introduced in SQL Server 2008 (database compatibility level 100 or higher) — combines INSERT, UPDATE, and optionally DELETE into a single atomic DML operation against a target table. It is the most concise way to express "insert if not exists, update if matched" and is safe against phantom insert race conditions because the match check and the write happen within the same atomic step.
+
+`@@ROWCOUNT` after a MERGE returns the **total** of all rows inserted, updated, and deleted combined — not just one operation. To distinguish counts by operation, use the `OUTPUT $action` clause to capture `'INSERT'`, `'UPDATE'`, or `'DELETE'` per row.
+
+MERGE is the core [idempotent pattern](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) used across the pipeline, and [dbt incremental models](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-materializations) generate MERGE statements internally when targeting SQL Server.
 
 #### MERGE WHEN MATCHED / NOT MATCHED — atomic upsert pattern
 
@@ -399,9 +415,9 @@ INSERT INTO gold.index_performance (
 
 ### When Autocommit Is Sufficient
 
-SQL Server runs in autocommit mode by default: each statement is its own implicit transaction that commits immediately on success or rolls back on failure. For single-statement operations (one INSERT, one UPDATE, one MERGE), autocommit is sufficient. Explicit `BEGIN TRAN` is only needed when multiple statements must succeed or fail together.
+SQL Server runs in **autocommit mode** by default: each individual statement is wrapped in its own implicit transaction that commits immediately on success or rolls back on the failing statement on error. Explicit `BEGIN TRAN` is only needed when multiple statements must succeed or fail together as a unit.
 
-Every SQL statement in SQL Server runs inside an implicit transaction (autocommit). For most pipeline operations — especially idempotent MERGEs — autocommit is the right default:
+For most pipeline operations — especially idempotent MERGEs — autocommit is the right default:
 
 - Simpler code with shorter lock duration
 - Re-runnable on failure (MERGE is idempotent if the source is stable)
@@ -497,7 +513,7 @@ IF @@ERROR <> 0
     PRINT 'Update failed (probably NOT NULL constraint)';
 ```
 
-Same rule: must be captured immediately. Superseded by TRY/CATCH in modern code, but still useful for quick checks.
+Same rule: must be captured immediately. Superseded by `TRY/CATCH` in SQL Server 2005 and later — prefer structured error handling for production batches. Still useful for quick one-off checks in ad-hoc scripts where a full CATCH block is overkill.
 
 ---
 
@@ -603,6 +619,14 @@ COMMIT;                     -- never reached
 > Always Use XACT_ABORT ON With Explicit Transactions.
 > Without it, a mid-transaction error leaves you in a half-committed state that's hard to detect. `SET XACT_ABORT ON` before `BEGIN TRAN` is a near-universal best practice.
 
+> [!info] THROW vs RAISERROR — Which to Use in CATCH Blocks
+>
+> `THROW` was introduced in SQL Server 2012. Unlike `RAISERROR`, `THROW` re-raises the original error number and severity without modification, and critically, it **honors `SET XACT_ABORT ON`** — meaning it will mark an active transaction as uncommittable if `XACT_ABORT` is enabled. `RAISERROR` does not honor `XACT_ABORT ON` and can leave the transaction in an ambiguous state where it appears active but subsequent COMMIT attempts fail.
+>
+> - Use `THROW;` (no arguments) to re-raise the caught error in SQL Server 2012+
+> - Use `THROW error_number, message, state;` to raise a new error
+> - Avoid `RAISERROR` in new code — it exists for backward compatibility only
+
 ### Error Functions Inside CATCH
 
 Inside a CATCH block, SQL Server provides functions that return details about the error: `ERROR_NUMBER()`, `ERROR_MESSAGE()`, `ERROR_SEVERITY()`, `ERROR_STATE()`, `ERROR_LINE()`, and `ERROR_PROCEDURE()`. These functions are only available inside CATCH — calling them outside returns NULL.
@@ -658,6 +682,8 @@ A bare `ROLLBACK` (without a savepoint name) kills the entire transaction. `ROLL
 
 ### SCOPE_IDENTITY() — Retrieving the Last Inserted Key
 
+An **IDENTITY column** is a SQL Server auto-increment column defined with `IDENTITY(seed, increment)` — for example, `id INT IDENTITY(1, 1)`. The engine assigns a sequentially increasing integer to every inserted row automatically, starting from `seed` and advancing by `increment`. Identity values are **never reused and never rolled back**: a failed INSERT still increments the internal counter, leaving a permanent gap in the sequence. This is by design to prevent race conditions when multiple sessions insert concurrently.
+
 After an INSERT into a table with an IDENTITY column, three functions can retrieve the generated value: `@@IDENTITY` (dangerous — returns the last identity across all scopes including triggers), `SCOPE_IDENTITY()` (safe — returns only the current scope), and `IDENT_CURRENT('table')` (returns the last value for a specific table regardless of scope or session).
 
 ```sql
@@ -676,9 +702,33 @@ DECLARE @log_id BIGINT = SCOPE_IDENTITY();
 
 ### MERGE Internals — What Happens Under RCSI
 
-Under Read Committed Snapshot Isolation (RCSI), MERGE reads a snapshot of the source data but acquires update locks on the target. Understanding the lock sequence is essential for diagnosing deadlocks and designing concurrent pipeline loads.
+**Read Committed Snapshot Isolation (RCSI)** is a database-level setting that changes how `READ COMMITTED` queries (the default isolation level) behave. When enabled, readers never acquire shared (S) locks — instead they read the last committed version of a row from a version store in TempDB. This eliminates reader/writer blocking without changing any application code.
 
-Understanding what happens inside SQL Server when a MERGE executes against an RCSI-enabled database prevents surprises in production:
+```sql
+-- Enable RCSI on a database (requires brief exclusive access — disconnect all users first)
+ALTER DATABASE your_db SET READ_COMMITTED_SNAPSHOT ON WITH NO_WAIT;
+
+-- Verify
+SELECT is_read_committed_snapshot_on FROM sys.databases WHERE name = 'your_db';
+```
+
+RCSI differs from full **SNAPSHOT isolation** in granularity:
+
+| Isolation level | Snapshot consistency | Lock behavior |
+|---|---|---|
+| `READ COMMITTED` (default, no RCSI) | Per-statement, with S locks | Writers block readers |
+| `READ COMMITTED SNAPSHOT` (RCSI) | Per-statement, from version store | Readers never block writers |
+| `SNAPSHOT` | Per-transaction (consistent across all statements) | Readers never block writers |
+
+RCSI provides **statement-level** consistency: each SELECT sees the last committed state at the moment it starts. SNAPSHOT isolation provides **transaction-level** consistency: the entire transaction sees the database as it was when the transaction began. Enable SNAPSHOT isolation separately with `ALTER DATABASE … SET ALLOW_SNAPSHOT_ISOLATION ON` (does not require exclusive access).
+
+> [!info] SQL Server 2019+ — Accelerated Database Recovery (ADR) Moves the Version Store
+>
+> In SQL Server 2019 and later, enabling **Accelerated Database Recovery (ADR)** moves the version store from TempDB into a per-database **Persistent Version Store (PVS)**. This eliminates the TempDB growth problem caused by long-running readers under RCSI. The tradeoff: if the PVS fills up, UPDATE and DELETE operations fail (INSERT still succeeds). ADR also dramatically speeds up rollback and recovery by maintaining a version history without replaying the full log.
+>
+> Enable ADR per database: `ALTER DATABASE your_db SET ACCELERATED_DATABASE_RECOVERY = ON`.
+
+Under RCSI, MERGE reads a snapshot of the source data but still acquires update locks on the target — it is not a fully optimistic operation. The flowchart below traces the complete lock and version store sequence inside SQL Server:
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#1a1b26', 'primaryTextColor': '#c0caf5', 'primaryBorderColor': '#565f89', 'lineColor': '#7aa2f7', 'secondaryColor': '#24283b', 'tertiaryColor': '#414868', 'edgeLabelBackground': '#1a1b26', 'clusterBkg': '#24283b', 'clusterBorder': '#565f89'}}}%%
@@ -721,6 +771,22 @@ flowchart TD
 > [!success] Safe Pattern
 >
 > Monitor TempDB version store size with `SELECT SUM(version_store_reserved_page_count) * 8 / 1024 AS version_store_mb FROM sys.dm_db_file_space_usage`. Set a `LOCK_TIMEOUT` on dashboard sessions and route long-running BI queries to a read replica or a BigQuery export to prevent version store runaway on the production instance.
+
+> [!warning] MERGE Against Columnstore Index Targets Is Inefficient
+>
+> When the MERGE target table has a clustered or non-clustered **columnstore index**, MERGE performs poorly. Columnstore segments must be decompressed, the rows updated or inserted, and then recompressed — this serial per-row overhead eliminates the batch-compression advantage that makes columnstore fast. For columnstore targets, the preferred pattern is a staged batch DELETE + INSERT into a rowstore staging table, then a bulk columnstore load.
+
+> [!success] Safe Pattern
+>
+> For columnstore-indexed gold tables, use the two-step pattern: `DELETE FROM gold.target WHERE date = ?` followed by a bulk `INSERT INTO gold.target SELECT ... FROM staging`. This preserves columnar batch compression during the INSERT phase and avoids row-by-row MERGE overhead against compressed segments.
+
+> [!warning] MERGE Does Not Use Simple Parameterization
+>
+> SQL Server does not apply simple parameterization to MERGE statements — literal values in the `ON` clause or `WHEN` conditions compile a new execution plan on every execution. In a high-frequency pipeline this causes plan cache bloat. Fix: wrap literals in variables before the MERGE, or set `PARAMETERIZATION FORCED` on the database (with caution — this affects all queries).
+
+> [!success] Safe Pattern
+>
+> Declare variables for any literal values used in MERGE conditions: `DECLARE @idx NVARCHAR(50) = 'market_index'; MERGE INTO t AS target USING source ON target._index = @idx AND ...`. This allows plan reuse across executions with different index names, preventing a new compiled plan per run.
 
 ---
 

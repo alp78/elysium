@@ -37,13 +37,25 @@ WarningLevel set to 0.
 
 ## Dependency Injection
 
-Interface defines the contract (what, not how). Constructor injection passes dependencies via the constructor. .NET's built-in `IServiceCollection` container offers three lifetimes: `AddTransient` (new per request), `AddScoped` (one per HTTP request), `AddSingleton` (one for the entire app). Python equivalent: just pass objects via `__init__` (no container needed).
+Dependency Injection (DI) is a design principle where a class receives its collaborators from the outside rather than creating them internally. The class declares *what* it needs (interfaces), and the caller decides *which* concrete implementation to provide. This decouples business logic from infrastructure — a pipeline service works identically whether it talks to SQL Server, BigQuery, or a mock.
+
+In C#, constructor injection is the standard approach: dependencies are passed as constructor parameters typed to interfaces. .NET's built-in `IServiceCollection` container manages object lifetimes automatically — `AddTransient<T>()` creates a new instance per request, `AddScoped<T>()` creates one per HTTP request, and `AddSingleton<T>()` creates one for the entire application. Python equivalent: pass objects via `__init__` (no container needed — the language's dynamic nature makes a DI framework optional).
 
 > [!warning] Anti-pattern — hardcoded dependencies
 > A class that creates its own database connection or API client internally (`new SqlConnection("prod-host")`) cannot be tested in isolation. Changing the provider means changing the class itself.
 
 > [!success] Inject dependencies via constructor
 > Pass dependencies as constructor parameters typed to interfaces. Production code passes real implementations; tests pass mocks — zero changes to the service class in either case.
+
+> [!tip] C# 12 primary constructors simplify injection
+> Starting with C# 12 (.NET 8+), classes can declare constructor parameters directly on the class declaration — eliminating the boilerplate of private fields and explicit constructors:
+> ```csharp
+> public class PipelineService(IDataRepository repo, INotificationService notifier)
+> {
+>     public string Run(string ticker) => repo.GetPrices(ticker).Count.ToString();
+> }
+> ```
+> The parameters are captured as fields automatically. This is syntactic sugar — the DI container and injection pattern remain identical.
 
 ### Interface contracts
 
@@ -684,9 +696,9 @@ Quantity = 100
 Price = 685.4
 ```
 
-#### Constructor inspection
+#### Constructor inspection — discover constructor parameters
 
-`GetConstructors()` enumerates parameter names and types — how DI containers auto-resolve dependencies.
+`GetConstructors()` returns `ConstructorInfo[]` for all public constructors. Each `ConstructorInfo` exposes its parameters (name, type, position) via `GetParameters()`. DI containers use this to auto-resolve dependencies: read the constructor, look up each parameter type in the service registry, and create the object with all dependencies injected — no manual wiring needed.
 
 ```csharp
 foreach (var ctor in type.GetConstructors())
@@ -703,9 +715,9 @@ quantity: Int32
 price: Double
 ```
 
-#### Dynamic instantiation
+#### Dynamic instantiation — create objects without compile-time type knowledge
 
-`Activator.CreateInstance()` constructs an object at runtime — how ORMs hydrate entities from DB rows.
+`Activator.CreateInstance(type, args)` constructs an object at runtime by finding a constructor whose parameter types match the provided arguments. This is how ORMs hydrate entity objects from database rows — the ORM knows the `Type` and the column values, but not the concrete class at compile time. Also used by plugin systems that load assemblies dynamically and instantiate classes by name.
 
 ```csharp
 var newOrder = Activator.CreateInstance(type, "MC.PA", "SELL", 50, 890.20);
@@ -719,6 +731,37 @@ TradeOrder(MC.PA, SELL, 50, 890.2)
 ## Project Structure & Best Practices
 
 A well-organized C# solution separates domain logic from infrastructure, wires dependencies at the entry point, and mirrors the folder structure in test projects. The layout below follows the Clean Architecture pattern used in production index-calculation pipelines.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    API["<b>API / Entry Point</b><br/>Program.cs<br/>DI wiring + endpoints"]
+    CORE["<b>Core</b><br/>Interfaces + Models + Services<br/><i>no external dependencies</i>"]
+    INFRA["<b>Infrastructure</b><br/>SqlRepository, GCSClient<br/>SlackNotifier"]
+    TESTS["<b>Tests</b><br/>MockRepository<br/>MockNotifier"]
+
+    API -->|"references"| CORE
+    API -->|"references"| INFRA
+    INFRA -->|"implements"| CORE
+    TESTS -->|"mocks"| CORE
+    CORE -.->|"NEVER references"| INFRA
+
+    style CORE fill:#292e42,stroke:#7aa2f7,color:#c0caf5
+    style INFRA fill:#292e42,stroke:#9ece6a,color:#c0caf5
+    style API fill:#292e42,stroke:#bb9af7,color:#c0caf5
+    style TESTS fill:#292e42,stroke:#e0af68,color:#c0caf5
+```
 
 ### Recommended project layout
 

@@ -76,6 +76,26 @@ SQL Server provides six date/time types with different precision and storage tra
 
 > [!tip] Use DATE for trade dates, DATETIME2 for timestamps, DATETIMEOFFSET for cross-timezone. Never use DATETIME for new columns — DATETIME2 is superior in every way.
 
+> [!tip] DATETIME2 and DATETIMEOFFSET Storage by Declared Precision
+>
+> Storage size scales with the declared fractional seconds precision — only pay for the precision you need:
+>
+> | Declared precision | `time` | `datetime2` | `datetimeoffset` |
+> |---|---|---|---|
+> | `(0)`, `(1)`, `(2)` | 3 bytes | 6 bytes | 8 bytes |
+> | `(3)`, `(4)` | 4 bytes | 7 bytes | 9 bytes |
+> | `(5)`, `(6)`, `(7)` *(default)* | 5 bytes | 8 bytes | 10 bytes |
+>
+> `datetimeoffset` always adds exactly 2 bytes to `datetime2` — the extra bytes store the `±hh:mm` UTC offset. Declare `datetime2(3)` (7 bytes, true 1ms precision) rather than the default `datetime2(7)` (8 bytes, 100ns precision) when sub-millisecond precision is not needed. Note: all sizes are for uncompressed rowstore storage; columnstore compression and batch-mode processing may differ.
+
+> [!warning] DATETIME Does Not Store Milliseconds Accurately
+>
+> Despite displaying three decimal digits (`.nnn`), `DATETIME` stores fractional seconds in increments of 1/300 second (~3.33 ms), so only three suffixes actually exist in storage: `.000`, `.003`, and `.007`. A value like `15:30:00.004` is silently rounded to `.003`. At SQL Server compatibility level 130+, implicit conversion from `DATETIME` to `DATETIME2` accounts for this fractional difference — values that compared equal at compat < 130 may now compare unequal. This matters for financial tick data or audit timestamps where millisecond precision is assumed.
+
+> [!success] Safe Pattern
+>
+> Replace `DATETIME` columns with `DATETIME2(3)` for true millisecond precision (7 bytes) or `DATETIME2(7)` for 100ns precision (8 bytes). When comparing a legacy `DATETIME` column with a `DATETIME2` value, always cast explicitly: `CAST(legacy_col AS DATETIME2(3))` to avoid silent rounding discrepancies.
+
 ---
 
 ### Current Date and Time Functions
@@ -89,7 +109,6 @@ SELECT GETUTCDATE()           -- 2026-03-10 15:30:00.123 (UTC, DATETIME)
 SELECT SYSDATETIME()          -- 2026-03-10 16:30:00.1234567 (server-local, DATETIME2 — more precision)
 SELECT SYSUTCDATETIME()       -- 2026-03-10 15:30:00.1234567 (UTC, DATETIME2)
 SELECT SYSDATETIMEOFFSET()    -- 2026-03-10 16:30:00.1234567 +01:00 (with offset, DATETIMEOFFSET)
--- RULE: Use SYSUTCDATETIME() for timestamps in pipelines. Never GETDATE().
 ```
 
 > [!warning] GETDATE() vs SYSUTCDATETIME()
@@ -235,18 +254,36 @@ SELECT DATEDIFF(MONTH, '2025-06-15', '2026-03-10')   -- 9
 SELECT DATEDIFF(YEAR, '2020-01-01', '2026-03-10')    -- 6
 SELECT DATEDIFF(HOUR, '2026-03-10 08:00', '2026-03-10 17:30')   -- 9
 
--- DATEDIFF_BIG for large intervals (avoids INT overflow for seconds since epoch)
+-- DATEDIFF_BIG for large intervals — use when DATEDIFF INT overflow is possible
 SELECT DATEDIFF_BIG(SECOND, '2000-01-01', SYSUTCDATETIME())   -- ~827,000,000
 
--- DATETRUNC — truncate to a boundary (SQL Server 2022+)
+-- DATETRUNC — truncate to a boundary (SQL Server 2022+, Azure SQL)
 SELECT DATETRUNC(HOUR, GETDATE())        -- 2026-03-10 16:00:00 (drop minutes/seconds)
 SELECT DATETRUNC(DAY, GETDATE())         -- 2026-03-10 00:00:00
 SELECT DATETRUNC(MONTH, GETDATE())       -- 2026-03-01 00:00:00
 SELECT DATETRUNC(QUARTER, GETDATE())     -- 2026-01-01 00:00:00
 SELECT DATETRUNC(YEAR, GETDATE())        -- 2026-01-01 00:00:00
-SELECT DATETRUNC(WEEK, GETDATE())        -- 2026-03-09 00:00:00 (Monday of the week)
--- Use case: GROUP BY date period without FORMAT/CONVERT overhead
+SELECT DATETRUNC(WEEK, GETDATE())         -- 2026-03-08 00:00:00 (first day per @@DATEFIRST — Sunday by default!)
+SELECT DATETRUNC(ISO_WEEK, GETDATE())     -- 2026-03-09 00:00:00 (always Monday — ISO 8601 standard)
 ```
+
+`DATETRUNC(WEEK, ...)` respects the `@@DATEFIRST` session setting — with the US-English default of `@@DATEFIRST = 7` (Sunday), it truncates to the previous Sunday, not Monday. `DATETRUNC(ISO_WEEK, ...)` always truncates to Monday regardless of session settings. Use `ISO_WEEK` in pipelines for consistent behavior across servers.
+
+> [!warning] DATEDIFF INT Overflow Thresholds
+>
+> `DATEDIFF` returns `INT` (max 2,147,483,647). At fine-grained dateparts, it overflows silently for large date ranges:
+>
+> | datepart | Overflows after |
+> |---|---|
+> | `millisecond` | 24 days, 20 hours |
+> | `second` | 68 years |
+> | `minute` or coarser | can overflow at extreme ranges |
+>
+> `DATEDIFF_BIG` (SQL Server 2016+) returns `bigint` — safe for all practical dateparts except `nanosecond`, which overflows after 292 years.
+
+> [!success] Safe Pattern
+>
+> Use `DATEDIFF_BIG(SECOND, @start, @end)` for elapsed-time calculations between arbitrary timestamps. For day-level differences where the range is known to be under ~5.8 million days, `DATEDIFF(DAY, ...)` is safe. Never use `DATEDIFF(MILLISECOND, ...)` across ranges of more than a few hours.
 
 > [!warning] DATEDIFF Counts Boundary Crossings
 >
@@ -277,7 +314,7 @@ SELECT DATETRUNC(WEEK, GETDATE())        -- 2026-03-09 00:00:00 (Monday of the w
 
 ### Timezone Conversion with AT TIME ZONE
 
-DATETIME2 values have no timezone information. AT TIME ZONE attaches an offset (producing DATETIMEOFFSET) or converts between zones. Chain two AT TIME ZONE calls to convert: first to declare the source zone, then to convert to the target.
+DATETIME2 values have no timezone information. `AT TIME ZONE` attaches an offset (producing `DATETIMEOFFSET`) or converts between zones. Chaining two `AT TIME ZONE` calls is the standard conversion pattern: the first call declares the source timezone (tagging a `DATETIME2` that has no embedded offset), and the second call converts to the target timezone. Available timezone names come from the Windows Registry and are enumerable via `sys.time_zone_info`.
 
 ```sql
 -- Convert between timezones (SQL Server 2016+)
@@ -287,8 +324,6 @@ SELECT GETDATE() AT TIME ZONE 'Central European Standard Time'
 -- Convert UTC to another timezone — must chain AT TIME ZONE twice:
 SELECT SYSUTCDATETIME() AT TIME ZONE 'UTC' AT TIME ZONE 'Eastern Standard Time'
 -- 2026-03-10 11:30:00.000 -04:00 (UTC → New York)
--- NOTE: First: tag the value as UTC (DATETIME2 has no timezone info)
---       Second: convert to the target timezone
 
 SELECT SYSUTCDATETIME() AT TIME ZONE 'UTC' AT TIME ZONE 'Tokyo Standard Time'
 -- 2026-03-11 00:30:00.000 +09:00 (note: date changes!)
@@ -305,11 +340,23 @@ SELECT
 FROM gold.scores_daily
 ```
 
+> [!warning] AT TIME ZONE and DST Transition Behavior
+>
+> When the `DATETIME2` input falls in a **spring-forward gap** (e.g., `2026-03-29 02:30:00` in Europe, where clocks skip from 2:00 AM to 3:00 AM), SQL Server applies the post-DST offset — the skipped local time is treated as already being in the new offset. When the input falls in a **fall-back overlap** (e.g., `2026-10-25 02:30:00`, which occurs twice), SQL Server applies the pre-DST offset — the ambiguous local time is treated as the *first* occurrence (summer time). There is no way to distinguish the two occurrences from a `DATETIME2` value alone. `AT TIME ZONE` is nondeterministic: its output depends on the Windows Registry time zone rules, which can change with OS updates.
+
+> [!success] Safe Pattern
+>
+> Never store local timestamps across DST boundaries as bare `DATETIME2`. Store UTC in `DATETIME2` (confirmed by your pipeline convention) or use `DATETIMEOFFSET` to preserve the original offset. Apply `AT TIME ZONE` only at the query/presentation layer when converting stored UTC values for display. Chain always as: `utc_col AT TIME ZONE 'UTC' AT TIME ZONE 'Target Zone'`.
+
 ---
 
 ## Practical Pipeline Date Patterns
 
 Common date calculations used in financial data pipelines — yesterday's date, start/end of current month, business day detection, quarter labels.
+
+> [!tip] Use a Date Dimension Table for Non-Standard Calendar Logic
+>
+> SQL Server's built-in date functions handle standard calendar arithmetic (days, months, quarters) but have no concept of fiscal periods, market holidays, exchange trading days, or weekend rules that vary by market. Attempting to encode this logic in T-SQL date functions creates unmaintainable code scattered across queries. Instead, maintain a `dim_date` or `bronze.trading_calendar` table with pre-computed columns: `is_trading_day`, `fiscal_quarter`, `fiscal_year_end`, `is_holiday`, `exchange`. Filter and join on these columns rather than computing them inline. Calendar logic belongs in a dimension table, not in application code — a principle from dimensional modeling that holds equally true for financial pipelines.
 
 #### DATEADD, DATEDIFF, EOMONTH, DATEFROMPARTS — pipeline date patterns
 

@@ -303,6 +303,14 @@ WHERE p.rows > 0
 ORDER BY p.rows DESC;
 ```
 
+> [!info] Column Reference
+>
+> | Column | Source | Meaning |
+> |---|---|---|
+> | `table_name` | `SCHEMA_NAME(schema_id) + '.' + t.name` | Fully qualified table name (`schema.table`). Any result in the silver or gold layer must be addressed by adding a clustered index. |
+> | `rows` | `sys.partitions.rows` | Approximate row count from partition metadata. Updated during bulk operations and `UPDATE STATISTICS`, but may lag for tables with frequent small DML. For a current exact count use `sys.dm_db_partition_stats.row_count`. |
+> | `index_id = 0` | Join/filter condition | `index_id = 0` in `sys.partitions` is the heap indicator. `index_id = 1` means a clustered index exists. Values `2–999` are nonclustered indexes. The join on `index_id = 0` returns exactly one row per heap partition — multi-partition heaps produce one row per partition. |
+
 > [!warning] Forwarded Records on Heaps
 >
 > A heap with variable-length columns is especially vulnerable to forwarded records. Each forwarded record adds a random I/O hop during scans, and nonclustered index lookups on heaps use RID pointers that also follow forwarded chains. On large heaps, forwarded records can make full scans 2–5x slower than equivalent clustered index scans.
