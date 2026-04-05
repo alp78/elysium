@@ -813,19 +813,19 @@ index-pipeline/
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    A["Which pattern?"] --> B{"Need exactly\none instance?"}
-    A --> C{"Need to create objects\nwithout knowing the class?"}
-    A --> D{"Need to notify\nmultiple listeners?"}
-    A --> E{"Need to swap\nalgorithms at runtime?"}
-    A --> F{"Need to add behavior\nwithout modifying a class?"}
-    A --> G{"Need to abstract\ndata access?"}
+    A["Which pattern?"] --> B{"Need exactly<br/>one instance?"}
+    A --> C{"Need to create objects<br/>without knowing the class?"}
+    A --> D{"Need to notify<br/>multiple listeners?"}
+    A --> E{"Need to swap<br/>algorithms at runtime?"}
+    A --> F{"Need to add behavior<br/>without modifying a class?"}
+    A --> G{"Need to abstract<br/>data access?"}
 
-    B -->|Yes| B1["<b>Singleton</b>\n__new__ or module-level\nvariable"]
-    C -->|Yes| C1["<b>Factory</b>\ndict dispatch\n{'gcs': GCS}[t]()"]
-    D -->|Yes| D1["<b>Observer</b>\ncallback list\nbus.publish()"]
-    E -->|Yes| E1["<b>Strategy</b>\ninject via __init__\nself.strategy.score()"]
-    F -->|Yes| F1["<b>Decorator</b>\n@functools.wraps or\nclass wrapping"]
-    G -->|Yes| G1["<b>Repository</b>\nABC + __init__ DI\nswap impl in tests"]
+    B -->|Yes| B1["<b>Singleton</b><br/>__new__ or module-level<br/>variable"]
+    C -->|Yes| C1["<b>Factory</b><br/>dict dispatch<br/>{'gcs': GCS}[t]()"]
+    D -->|Yes| D1["<b>Observer</b><br/>callback list<br/>bus.publish()"]
+    E -->|Yes| E1["<b>Strategy</b><br/>inject via __init__<br/>self.strategy.score()"]
+    F -->|Yes| F1["<b>Decorator</b><br/>@functools.wraps or<br/>class wrapping"]
+    G -->|Yes| G1["<b>Repository</b><br/>ABC + __init__ DI<br/>swap impl in tests"]
 ```
 
 > [!abstract]- Design Patterns Quick Reference

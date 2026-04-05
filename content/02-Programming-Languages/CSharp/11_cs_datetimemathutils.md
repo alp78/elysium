@@ -930,12 +930,9 @@ The standard .NET logging abstraction — same API for console, file, and cloud 
 >
 > Use `ILogger` from `Microsoft.Extensions.Logging` with named placeholders. This enables level filtering, timestamps, structured output to any backend (console, Seq, ELK, GCP), and is the same API across all .NET workloads.
 
+> [!info] In a real app, the logger comes from dependency injection (`builder.Services.AddLogging()`). In a notebook or script, we build the `LoggerFactory` manually.
+
 ```csharp
-// ── Basic console logging ──
-// In a real app, this comes from dependency injection (builder.Services.AddLogging()).
-// In a notebook/script, we build the factory manually.
-
-
 {
     using var factory = LoggerFactory.Create(builder =>
     {

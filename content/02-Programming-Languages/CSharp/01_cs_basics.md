@@ -477,7 +477,7 @@ Covers variable declaration, constants, type inference with `var`, the complete 
 
 #### Declare variables with explicit types or var inference
 
-Declare with an explicit type (`int x = 10`) or let the compiler infer it (`var x = 10`) — both are statically typed at compile time. Use `var` for obvious types (LINQ, constructors, anonymous types) and explicit types when the right-hand side doesn't reveal the type (`int count = GetCount()`). Avoid `var` for numeric literals (`var x = 1` — ambiguous: `int`? `long`? `byte`?).
+Declare with an explicit type (`int x = 10`) or let the compiler infer it (`var x = 10`) — both are statically typed at compile time. Use `var` for obvious types (LINQ, constructors, anonymous types) and explicit types when the right-hand side doesn't reveal the type (`int count = GetCount()`). Avoid `var` for numeric literals (`var x = 1` — ambiguous: `int`? `long`? `byte`?). `var` lets the compiler infer the type at compile time — `var z = 42` is inferred as `int` and remains statically typed.
 
 ```csharp
 int x = 10;
@@ -485,8 +485,7 @@ double y = 3.14;
 string name = "Alice";
 bool active = true;
 
-// var lets the compiler infer the type (still statically typed)
-var z = 42; // inferred as int
+var z = 42;
 
 $"x = {x}, type: {x.GetType()}"
 $"y = {y}, type: {y.GetType()}"
@@ -511,7 +510,7 @@ System.Int32
 
 #### Define compile-time and runtime constants with const and readonly
 
-`const` values must be known at compile time and are embedded directly into the IL — use for truly fixed values like `Pi` or configuration keys that never change. `readonly` fields can be set once in the constructor at runtime — use for values computed at startup (e.g., connection strings from environment variables). `const` is implicitly `static`; `readonly` can be instance-level.
+`const` values must be known at compile time and are embedded directly into the IL — use for truly fixed values like `Pi` or configuration keys that never change. `readonly` fields can be set once in the constructor at runtime — use for values computed at startup (e.g., connection strings from environment variables). `const` is implicitly `static`; `readonly` can be instance-level. Any attempt to reassign a constant (`Pi = 999`) is a compile error.
 
 ```csharp
 const double Pi = 3.14159;
@@ -521,8 +520,6 @@ const string ApiUrl = "https://api.example.com";
 Pi
 MaxUsers
 ApiUrl
-
-// Pi = 999; // Compile error: cannot assign to a constant
 ```
 
 > [!info] readonly vs const
@@ -617,12 +614,12 @@ Three floating-point types with increasing precision: `float` (32-bit, ~7 digits
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    Q{"Need exact\ndecimal math?"} -->|Yes| DEC["decimal (28-29 digits)\nMoney, financial, tax"]
-    Q -->|No| Q2{"Need >15 digits\nprecision?"}
+    Q{"Need exact<br/>decimal math?"} -->|Yes| DEC["decimal (28-29 digits)<br/>Money, financial, tax"]
+    Q -->|No| Q2{"Need >15 digits<br/>precision?"}
     Q2 -->|Yes| DEC
-    Q2 -->|No| Q3{"Memory-\nconstrained?"}
-    Q3 -->|Yes| FLT["float (6-9 digits)\n4 bytes, GPU, large arrays"]
-    Q3 -->|No| DBL["double (15-17 digits)\nDefault, science, ML"]
+    Q2 -->|No| Q3{"Memory-<br/>constrained?"}
+    Q3 -->|Yes| FLT["float (6-9 digits)<br/>4 bytes, GPU, large arrays"]
+    Q3 -->|No| DBL["double (15-17 digits)<br/>Default, science, ML"]
 ```
 
 > [!danger] Financial math
@@ -749,11 +746,9 @@ Convert.ToInt32(true)
 Convert.ToInt32(false)
 ```
 
-> [!info] bool Is Not Numeric
+> [!info] bool Is Strict — No Numeric Conversion, No Truthy/Falsy
 > C# has no implicit bool-to-int conversion. `true + true` and `int x = true` are compile errors. Use `Convert.ToInt32(boolVal)` if needed.
-
-> [!info] No Truthy/Falsy in C#
-> `if ("hello")` and `if (1)` are compile errors. C# requires explicit boolean expressions: `if (str != null && str.Length > 0)`.
+> `if ("hello")` and `if (1)` are also compile errors. C# requires explicit boolean expressions: `if (str != null && str.Length > 0)`.
 
 ```text
 System.Boolean
@@ -969,15 +964,23 @@ A  (2 bytes, Unicode))
 
 `struct` and `enum` are user-defined value types that live on the stack. Use `struct` for small, immutable data bundles (coordinates, RGB colors, date ranges) — keep them under 16 bytes to avoid expensive copy overhead. `enum` maps named constants to underlying integer values.
 
+**struct** — user-defined value type for small, immutable data bundles.
+
 ```csharp
 
 Console.WriteLine($"struct:   {"(user-defined)",20}  (value type)");
-
-// Enum
-Console.WriteLine($"enum:     {"(user-defined)",20}  (value type)");
 ```
 ```text
 (user-defined)  (value type)
+```
+
+**enum** — maps named constants to underlying integer values.
+
+```csharp
+
+Console.WriteLine($"enum:     {"(user-defined)",20}  (value type)");
+```
+```text
 (user-defined)  (value type)
 ```
 
@@ -1014,15 +1017,23 @@ hello  (runtime typed))
 
 `int[]` is a fixed-size, contiguous block of memory — fast random access by index, but the size cannot change after creation. `List<T>` is backed by an array that automatically resizes (doubles capacity) when full — use it as the default indexed collection. Both are reference types — assigning to another variable shares the same underlying data.
 
+**int[]** — fixed-size array; size is set at creation and cannot change.
+
 ```csharp
 
 int[] arr = {1, 2, 3};    Console.WriteLine($"int[]:    {string.Join(",", arr),20}  (fixed size))");
-
-// List<T> — dynamic size
-var lst = new List<int>{1,2,3}; Console.WriteLine($"List<T>:  {string.Join(",", lst),20}  (dynamic size)");
 ```
 ```text
 1,2,3  (fixed size))
+```
+
+**List\<T\>** — dynamic-size collection backed by a resizing array.
+
+```csharp
+
+var lst = new List<int>{1,2,3}; Console.WriteLine($"List<T>:  {string.Join(",", lst),20}  (dynamic size)");
+```
+```text
 1,2,3  (dynamic size)
 ```
 
@@ -1186,7 +1197,6 @@ $"{a} / {b}  = {a / b}"
 $"{a} % {b}  = {a % b}"
 $"-{a}       = {-a}"
 
-// No ** operator in C# — use Math.Pow()
 $"{a} ^ {b}  = {Math.Pow(a, b)}"
 ```
 ```text
@@ -1212,7 +1222,6 @@ When both operands are integers, division truncates the fractional part (rounds 
 -7 / 2
 -7 % 2
 
-// No // floor division operator — use Math.Floor
 Math.Floor(-7.0 / 2)
 ```
 ```text
@@ -1299,8 +1308,6 @@ True
 true && false
 true || false
 !true
-
-// && and || are short-circuit; & and | evaluate both sides
 ```
 ```text
 False
@@ -1308,13 +1315,9 @@ True
 False
 ```
 
-> [!info] Short-circuit evaluation — `&&` vs `&` and `||` vs `|`
-> - `&&` short-circuits: `false && Foo()` — `Foo()` never called
-> - `&` evaluates both sides: `false & Foo()` — `Foo()` IS called
-> - `||` short-circuits: `true || Foo()` — `Foo()` never called
-> - `|` evaluates both sides: `true | Foo()` — `Foo()` IS called
-
 #### No truthy/falsy — C# requires explicit bool comparison
+
+Unlike Python or JavaScript, C# does not treat non-zero integers, non-empty strings, or non-null objects as `true`. Every `if` condition must evaluate to an explicit `bool` — anything else is a compile error.
 
 > [!info] No truthy/falsy — C# requires explicit `bool` in all conditions
 > - `if (list.Count > 0)` not `if (list)`
@@ -1368,10 +1371,7 @@ $"a ^ b  (XOR)  = {Convert.ToString(a ^ b, 2).PadLeft(4, '0')} ({a ^ b})"
 ~a   // ~a (NOT) = (inverts all bits)
 $"a << 2 (LEFT) = {Convert.ToString(a << 2, 2).PadLeft(8, '0')} ({a << 2})"
 $"a >> 1 (RIGHT)= {Convert.ToString(a >> 1, 2).PadLeft(4, '0')} ({a >> 1})"
-// >>> unsigned right shift (C# 11+)
 a >>> 1   // a >>> 1 (UNSIGNED RIGHT)
-
-// Common use cases for bitwise operators
 ```
 ```text
 a = 1100 (12),  b = 1010 (10)
@@ -1501,14 +1501,14 @@ Bitwise compound operators modify a variable's bits in place: `&=` masks (keeps 
 ```csharp
 
 x = 0b1100;
-x &= 0b1010; Console.WriteLine($"x &= 0b1010  → {Convert.ToString(x, 2).PadLeft(4, '0')}");  // x = x & y — keep only shared bits (mask/filter)
+x &= 0b1010; Console.WriteLine($"x &= 0b1010  → {Convert.ToString(x, 2).PadLeft(4, '0')}");
 x = 0b1100;
-x |= 0b1010; Console.WriteLine($"x |= 0b1010  → {Convert.ToString(x, 2).PadLeft(4, '0')}");  // x = x | y — add/set bits (set flags)
+x |= 0b1010; Console.WriteLine($"x |= 0b1010  → {Convert.ToString(x, 2).PadLeft(4, '0')}");
 x = 0b1100;
-x ^= 0b1010; Console.WriteLine($"x ^= 0b1010  → {Convert.ToString(x, 2).PadLeft(4, '0')}");  // x = x ^ y — toggle bits (flip flags)
+x ^= 0b1010; Console.WriteLine($"x ^= 0b1010  → {Convert.ToString(x, 2).PadLeft(4, '0')}");
 x = 8;
-x >>= 2; Console.WriteLine($"x >>= 2      → {x}");   // x = x >> y — right shift
-x <<= 3; Console.WriteLine($"x <<= 3      → {x}");   // x = x << y — left shift
+x >>= 2; Console.WriteLine($"x >>= 2      → {x}");
+x <<= 3; Console.WriteLine($"x <<= 3      → {x}");
 ```
 ```text
 x &= 0b1010  → 1000
@@ -1815,8 +1815,6 @@ string.Join(", ", vectors)   // Sorted
 
 (double x, double y) = v1;                                   // Deconstruct
 $"Deconstructed: x={x}, y={y}"
-
-// Operators that require pairs in C#:
 ```
 ```text
 3

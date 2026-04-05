@@ -566,6 +566,8 @@ Fetching page 2...
 >
 > Use `Task<T>` by default. Only switch to `ValueTask<T>` when profiling shows measurable allocation pressure on a hot path. For synchronous completion with no result, return `Task.CompletedTask` or `ValueTask.CompletedTask` instead of allocating a new task.
 
+The cell defines `GetConfigAsync`, which checks a local `_cache` dictionary first and returns a `new ValueTask<string>(cached)` — no heap allocation — on a hit. On a miss it falls through to `LoadFromDbAsync`, wrapping the resulting `Task<string>` in a `ValueTask<string>`. Calling the method with a cached key (`"config_a"`) and an uncached key (`"config_c"`) shows the allocation-free synchronous path versus the deferred async path, with the result added to the cache for future hits.
+
 ```csharp
 private readonly Dictionary<string, string> _cache = new()
 {
@@ -609,6 +611,8 @@ Cache miss (loaded): db_config_c
 > [!tip] Use TrySet* variants for multiple completion paths
 >
 > When wrapping event-based APIs where multiple events may fire (success, error, cancellation), use `TrySetResult`, `TrySetException`, and `TrySetCanceled` instead of their throwing counterparts. The `Try` variants return `false` if the task is already completed, avoiding `InvalidOperationException`.
+
+The cell defines `WaitForSignalAsync`, which creates a `TaskCompletionSource<string>`, registers a cancellation callback that calls `TrySetCanceled`, then fires a background `Task.Run` that resolves the TCS via `TrySetResult("signal_received")` after 500 ms. It is called twice — once successfully (signal arrives before cancellation) and once with a 100 ms `CancellationTokenSource` that fires before the signal, demonstrating how `TCS.Task` behaves under both normal resolution and cancellation.
 
 ```csharp
 async Task<string> WaitForSignalAsync(CancellationToken ct = default)
@@ -670,6 +674,8 @@ Cancelled before signal arrived
 
 `Task.Run` schedules a delegate on the thread pool and returns a `Task` representing its completion. Use it for CPU-bound work that would block the calling thread. Each `Task.Run` call consumes a thread pool thread — use `Task.WhenAll` to await multiple parallel computations. C# has no GIL, so multiple threads execute truly in parallel on separate cores.
 
+The cell hashes 8 random 100 KB payloads first sequentially (plain `Select`) and then in parallel using `Task.Run` inside a `Select` projection, collecting all parallel tasks with `Task.WhenAll`. It measures elapsed time for both passes and prints a speedup ratio, then confirms `seqHashes.SequenceEqual(parHashes)` to verify correctness — the hashes must match regardless of scheduling order.
+
 ```csharp
 string ComputeHash(byte[] data)
 {
@@ -711,6 +717,8 @@ True
 
 `Parallel.ForEach` partitions a collection and processes items in parallel using the thread pool. It blocks the calling thread until all iterations complete. Use `MaxDegreeOfParallelism` to cap threads — without it, the runtime auto-tunes based on core count and workload.
 
+The cell hashes the same 8 payloads using `Parallel.ForEach` over an index range, storing each result into `hashResults[i]` directly by index — safe because each iteration writes to a distinct array slot. `MaxDegreeOfParallelism = 4` caps thread usage, and the final `SequenceEqual` check confirms the parallel output matches the sequential baseline computed earlier.
+
 ```csharp
 var hashResults = new string[payloads.Length];
 sw.Restart();
@@ -732,6 +740,8 @@ True
 #### Parallel.ForEachAsync — async I/O with controlled concurrency
 
 `Parallel.ForEachAsync` (.NET 6+) is the async counterpart of `Parallel.ForEach`. It accepts an `async` lambda and respects `await` — no thread is blocked while waiting for I/O. Ideal for fetching many API endpoints or database tables concurrently with a concurrency cap.
+
+The cell generates 10 table names and "fetches" each one with a random `Task.Delay` of 100–500 ms inside the async lambda, appending results to a `ConcurrentBag<string>`. With `MaxDegreeOfParallelism = 3`, at most 3 tables are in-flight at once, so the total time is roughly the time to process ceil(10/3) batches rather than the sum of all delays.
 
 ```csharp
 var tables = Enumerable.Range(0, 10).Select(i => $"table_{i:D2}").ToArray();
@@ -766,6 +776,8 @@ Fetched 10 tables in 1.20s
 
 `AsParallel()` converts a LINQ query into a parallel query that partitions data across threads. `WithDegreeOfParallelism` caps the thread count. PLINQ preserves LINQ semantics (Where, Select, etc.) but executes them concurrently. Most effective on large datasets (100K+ items) where the per-item work is non-trivial.
 
+The cell builds 1 million CSV-formatted event strings, then applies `AsParallel().WithDegreeOfParallelism(4)` to filter out `user_000` records, parse each CSV line into an anonymous type, and apply a second `Value > 50.0` filter — all in parallel. The timed result shows how many records survive both filters and how long the parallel pass takes, providing the baseline for comparison in the next cell.
+
 ```csharp
 var rawRecords = Enumerable.Range(0, 1_000_000)
     .Select(i => $"evt_{i:D7},user_{i % 100:D3},{i * 0.01:F2}")
@@ -786,6 +798,8 @@ $"  Parsed {rawRecords.Length:N0} -> {parsed.Length:N0} filtered in {sw.Elapsed.
 #### PLINQ vs sequential — speedup comparison
 
 Sequential baseline comparison to demonstrate PLINQ speedup on large datasets. The difference is most visible when per-item processing is CPU-bound (parsing, transformation, aggregation).
+
+The cell runs the identical two-stage filter-and-parse pipeline from the previous cell without `AsParallel()`, using plain LINQ on the same `rawRecords` array. The elapsed time is printed alongside the PLINQ time so the reader can directly compare the two numbers and see that PLINQ is faster when per-item work is CPU-bound and the collection is large.
 
 ```csharp
 sw.Restart();
@@ -833,6 +847,8 @@ Parsed 1'000'000 records -> 985'050 filtered in 0.10s
 #### Thread class — basic thread creation and Join
 
 The `Thread` class creates an OS-level thread. Call `.Start()` to begin execution and `.Join()` to block the caller until the thread completes. Pass state through the `Start(object?)` parameter. Use `ConcurrentBag<T>` or another thread-safe collection to gather results from multiple threads. In modern C#, prefer `Task.Run` for short-lived work — use raw threads only when you need explicit control over thread priority, apartment state, or dedicated long-running work.
+
+The cell creates three `Thread` instances, each receiving a `(name, delay)` tuple via `Start(state)`. Each thread sleeps for its assigned delay (simulating work), then appends its name to a shared `ConcurrentBag<string>`. The main thread calls `Join()` on each thread in sequence to wait for all three to finish, then prints the collected results — demonstrating explicit thread lifecycle control and safe result aggregation.
 
 ```csharp
 #nullable enable
@@ -887,6 +903,8 @@ $"  Results: [{string.Join(", ", threadResults)}]"
 
 Without synchronization, `counter++` compiles to separate read-increment-write instructions that interleave across threads. Two threads can read the same value, both increment, and one update is lost. Unlike Python's GIL, C# has true parallelism, making races more frequent and harder to reproduce.
 
+The cell starts 4 threads that each increment `unsafeCounter` 100,000 times using bare `unsafeCounter++`, with no synchronization. After all threads `Join`, the actual count is printed alongside the expected 400,000 — the result is typically less, proving that increments were lost to interleaving. The output message flags the discrepancy as a race condition.
+
 ```csharp
 var unsafeCounter = 0;
 
@@ -914,6 +932,8 @@ Got:      398'731  (WRONG — race condition!)
 #### lock statement — fix race condition with mutual exclusion
 
 The `lock` statement (syntactic sugar for `Monitor.Enter`/`Monitor.Exit`) ensures only one thread enters the critical section at a time. Lock on a dedicated `object` instance — never lock on `this`, `typeof()`, or string literals, as external code might lock on the same reference and cause deadlocks.
+
+The cell repeats the same 4-thread × 100,000-increment pattern as the race condition demo, but wraps each `safeCounter++` in `lock (lockObj) { ... }`. After all threads `Join`, the result is exactly 400,000 every time — the lock serializes access to the critical section, eliminating lost updates at the cost of contention overhead.
 
 ```csharp
 var safeCounter = 0;
@@ -948,6 +968,8 @@ Got:      400'000  (correct — lock prevents race)
 #### Interlocked — lock-free atomic operations
 
 `Interlocked` provides atomic operations using CPU-level instructions (compare-and-swap). `Interlocked.Increment` guarantees the read-increment-write sequence is indivisible — no other thread can interleave. Faster than `lock` for simple counters because there's no kernel transition. Also supports `Add`, `Exchange`, and `CompareExchange` for more complex atomic operations.
+
+The cell runs the same 4-thread × 100,000-increment pattern a third time, replacing `counter++` with `Interlocked.Increment(ref atomicCounter)`. The final count is always exactly 400,000, confirming atomicity — and unlike the `lock` version, no mutex object or kernel transition is required, making this the lowest-overhead option for simple integer counters.
 
 ```csharp
 var atomicCounter = 0;
@@ -986,6 +1008,8 @@ Got:      400'000  (correct — atomic operation)
 >
 > Ensure the `AddOrUpdate` factory and update delegates are pure functions — no I/O, no side effects, no external calls. For operations that must be atomic with side effects, use `lock` or a dedicated synchronization primitive instead.
 
+The cell simulates 100,000 events cycling through four event types and tallies them using `ConcurrentDictionary.AddOrUpdate` — inserting with a seed value of `1` on first encounter, then incrementing `oldVal + 1` on each subsequent hit. `Parallel.For` drives the concurrent writes, and the final counts for all four keys should sum to exactly 100,000, confirming that no increments were lost despite concurrent access.
+
 ```csharp
 var eventCounts = new ConcurrentDictionary<string, int>();
 var eventTypes = new[] { "click", "view", "purchase", "signup" };
@@ -1013,6 +1037,8 @@ Event counts (100K events across 4 types):
 #### BlockingCollection — thread concurrency producer-consumer
 
 `BlockingCollection` is the synchronous (thread-based) equivalent of Channel. Producers call `Add()` (blocks if bounded and full), consumers call `Take()` (blocks if empty). Use `GetConsumingEnumerable()` for a foreach-friendly consumer loop. Prefer `Channel<T>` in async code; use `BlockingCollection` only when working with thread-based (non-async) consumers.
+
+The cell creates a `BlockingCollection<string>` with a bound of 5, then starts a producer thread that adds 20 events with 20 ms spacing before calling `CompleteAdding()`. Three consumer threads each iterate over `GetConsumingEnumerable()`, sleeping a random 10–50 ms per item to simulate variable processing. After all threads `Join`, the output shows how many events each worker handled — demonstrating that `BlockingCollection` distributes work across consumers and signals completion cleanly via `CompleteAdding`.
 
 ```csharp
 var collection = new BlockingCollection<string>(boundedCapacity: 5);
@@ -1091,6 +1117,8 @@ A synchronization primitive optimized for read-heavy workloads. `EnterReadLock()
 >
 > Always pair `EnterReadLock`/`EnterWriteLock` with `ExitReadLock`/`ExitWriteLock` inside a `try/finally` block. This guarantees the lock is released even if an exception is thrown, preventing permanent deadlock for all waiting threads.
 
+The cell builds a shared `Dictionary<string, string>` representing an ETL status cache. Five reader tasks call `EnterReadLock` concurrently to read `"ETL_001"` — all five can hold the read lock simultaneously. A single writer task calls `EnterWriteLock` to update `"ETL_002"` to `"completed"`, which blocks until all readers exit. The final print shows the dictionary state after the concurrent mix of reads and the exclusive write completes.
+
 ```csharp
 var rwLock = new ReaderWriterLockSlim();
 var cache = new Dictionary<string, string>
@@ -1144,6 +1172,8 @@ ETL_001=success, ETL_002=completed
 
 `CountdownEvent` is initialized with count N. Each `Signal()` decrements the count, and `Wait()` blocks until the count reaches 0. Use it when the main thread needs to wait for N workers to report ready — like a phased initialization where each component signals completion.
 
+The cell demonstrates both primitives back-to-back. First, a `ManualResetEventSlim` gate (initialized to `false`) holds three worker tasks at `gate.Wait()` until the main flow calls `gate.Set()` after 200 ms, releasing all three simultaneously. Then a `CountdownEvent(3)` is set up: three setup tasks each signal after staggered delays, and `countdown.Wait()` on the main flow blocks until all three have signaled — confirming that all components finished initialization before proceeding.
+
 ```csharp
 var gate = new ManualResetEventSlim(false);
 
@@ -1189,6 +1219,8 @@ all 3 workers finished setup, proceeding
 
 A Barrier synchronizes multiple threads at a checkpoint: all participants must arrive at the barrier before any can proceed to the next phase. This is useful when parallel tasks must complete a step before the next step can begin — like a data pipeline where all partition loads must finish before the merge step starts. Each call to `SignalAndWait()` blocks until all participants have signaled.
 
+The cell creates a `Barrier(3)` with a post-phase callback that prints the completed phase number. Three worker tasks simulate a two-phase ETL pipeline: each calls `SignalAndWait()` after its "extract" step and again after its "transform" step. No worker begins transforming until all three have finished extracting, and no worker begins loading until all three have finished transforming — enforced automatically by the two barrier checkpoints.
+
 ```csharp
 var barrier = new Barrier(
     3,
@@ -1228,6 +1260,8 @@ load done
 #### PeriodicTimer — modern scheduled polling
 
 `PeriodicTimer` (introduced in .NET 6) provides async-friendly periodic ticking without thread blocking. Unlike `System.Timers.Timer` (callback-based, easy to overlap) or `Task.Delay` in a loop (drift accumulation), `PeriodicTimer` provides a clean `WaitForNextTickAsync()` that respects cancellation tokens and doesn't fire overlapping callbacks.
+
+The cell creates a `PeriodicTimer` with a 100 ms interval and a `CancellationTokenSource` that fires after 350 ms. The `while (await timer.WaitForNextTickAsync(...))` loop increments a tick counter and prints a timestamp on each tick, then exits when the cancellation token fires and `WaitForNextTickAsync` throws `OperationCanceledException`. The output shows three ticks at ~100 ms intervals before the timer is stopped and disposed.
 
 ```csharp
 var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));

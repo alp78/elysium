@@ -53,10 +53,10 @@ Unit tests run on every commit. Integration tests run on every PR. E2E tests run
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    PERF["⚡ Performance\n~10s · pytest-benchmark · locust\nfew tests"]
-    E2E["🔁 End-to-End\n~1s+ · FastAPI.TestClient · httpx\n10%"]
-    INT["🔗 Integration\n~100ms · pytest + pyodbc · pandera\n20%"]
-    UNIT["✅ Unit\n~1ms · pytest · assert · unittest.mock\n70%"]
+    PERF["⚡ Performance<br/>~10s · pytest-benchmark · locust<br/>few tests"]
+    E2E["🔁 End-to-End<br/>~1s+ · FastAPI.TestClient · httpx<br/>10%"]
+    INT["🔗 Integration<br/>~100ms · pytest + pyodbc · pandera<br/>20%"]
+    UNIT["✅ Unit<br/>~1ms · pytest · assert · unittest.mock<br/>70%"]
 
     PERF --> E2E --> INT --> UNIT
 ```
@@ -120,8 +120,11 @@ ipytest.autoconfig()
 
 pytest uses plain `assert` statements instead of special assertion methods. When an assertion fails, pytest introspects the expression and shows the actual vs expected values. No need for `assertEqual`, `assertTrue` — just `assert result == expected`.
 
+> [!todo] TEST
+>
+> basic price calculation — quantity * unit_price = total
+
 ```python
-# TEST: basic price calculation — quantity * unit_price = total
 def test_price_calculation():
     """Test trade price computation: quantity * unit_price."""
     quantity = 150
@@ -140,8 +143,11 @@ ipytest.run()
 <span style="color:#4ec9b0">1 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.01s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+> [!todo] TEST
+>
+> ticker strings are trimmed and uppercased
+
 ```python
-# TEST: ticker strings are trimmed and uppercased
 def test_ticker_normalization():
     """Tickers should be uppercase and stripped."""
     raw_ticker = "  aapl  "
@@ -159,8 +165,11 @@ ipytest.run()
 <span style="color:#4ec9b0">2 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.01s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+> [!todo] TEST
+>
+> normalized portfolio weights sum to exactly 1.0
+
 ```python
-# TEST: normalized portfolio weights sum to exactly 1.0
 def test_portfolio_weights_sum():
     """Portfolio weights must sum to 1.0 (fully invested)."""
     weights = {"AAPL": 0.30, "MSFT": 0.25, "GOOG": 0.20, "AMZN": 0.25}
@@ -178,8 +187,11 @@ ipytest.run()
 <span style="color:#4ec9b0">3 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.01s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+> [!todo] TEST
+>
+> trade dict contains all required keys
+
 ```python
-# TEST: trade dict contains all required keys
 def test_trade_record_fields():
     """Validate that a trade dict has all required fields."""
     trade = {
@@ -211,8 +223,11 @@ ipytest.run()
 
 A context manager that verifies a specific exception is raised. The test passes only if the expected exception type is raised within the `with` block. Use `match=` to also verify the error message matches a regex.
 
+> [!todo] TEST
+>
+> negative quantity raises ValueError (fail-fast validation)
+
 ```python
-# TEST: negative quantity raises ValueError (fail-fast validation)
 def test_invalid_quantity_raises():
     """Negative trade quantity should raise ValueError."""
     def validate_trade(qty):
@@ -233,8 +248,11 @@ ipytest.run()
 <span style="color:#4ec9b0">5 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.01s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+> [!todo] TEST
+>
+> accessing missing key raises KeyNotFoundException
+
 ```python
-# TEST: accessing missing key raises KeyNotFoundException
 def test_missing_ticker_raises():
     """Accessing missing key in position dict should raise KeyError."""
     positions = {"AAPL": 100, "MSFT": 50}
@@ -279,8 +297,11 @@ pytest rewrites plain `assert` for rich error messages — no `assertEqual` or `
 >
 > `assert result == pytest.approx(expected)` applies a default relative tolerance of 1e-6, which is safe for financial calculations. For tighter control, pass `rel=1e-4` or `abs=0.01`. Use `math.isclose()` outside of test code for the same protection.
 
+> [!todo] TEST
+>
+> PnL = (exit - entry) * quantity
+
 ```python
-# TEST: PnL = (exit - entry) * quantity
 def test_pnl_calculation():
     """Profit & Loss: (exit_price - entry_price) * quantity."""
     entry = 150.25
@@ -301,8 +322,11 @@ ipytest.run()
 <span style="color:#4ec9b0">7 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+> [!todo] TEST
+>
+> fee tiers map volume to correct basis points
+
 ```python
-# TEST: fee tiers map volume to correct basis points
 def test_basis_points():
     """1 basis point = 0.01%. 50 bps = 0.50%."""
     bps = 50
@@ -321,8 +345,11 @@ ipytest.run()
 <span style="color:#4ec9b0">8 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+> [!todo] TEST
+>
+> Sharpe ratio is positive for upward-trending returns
+
 ```python
-# TEST: Sharpe ratio is positive for upward-trending returns
 def test_sharpe_ratio_positive():
     """A positive Sharpe ratio means returns exceed the risk-free rate."""
     returns = [0.02, 0.01, -0.005, 0.03, 0.015]
@@ -349,8 +376,11 @@ ipytest.run()
 
 Use `in` to test membership, `.issubset()` to verify required keys are all present, and `all(...)` to assert a condition holds for every element. These patterns appear constantly in financial data tests: verifying an ETF holds a known ticker, checking a trade record has all mandatory fields, confirming no price is negative.
 
+> [!todo] TEST
+>
+> Euro Stoxx 50 index has exactly 50 constituents
+
 ```python
-# TEST: Euro Stoxx 50 index has exactly 50 constituents
 def test_index_constituents():
     """S&P 500 sector ETFs should contain known tickers."""
     tech_etf = {"AAPL", "MSFT", "GOOG", "NVDA", "META"}
@@ -369,8 +399,11 @@ ipytest.run()
 <span style="color:#4ec9b0">10 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+> [!todo] TEST
+>
+> OHLCV bar has all required fields with correct types
+
 ```python
-# TEST: OHLCV bar has all required fields with correct types
 def test_ohlcv_bar():
     """OHLCV bar must have all required fields."""
     bar = {"open": 150.0, "high": 155.0, "low": 149.0, "close": 153.0, "volume": 1_200_000}
@@ -396,8 +429,11 @@ ipytest.run()
 
 String assertions validate structured identifiers: ISIN codes, ticker formats, log line patterns. Use `len()` for fixed-length checks, `.isalpha()` and `.isupper()` for character-class validation, and `re.match()` for structured format validation. These catch data corruption that would otherwise propagate silently through string-keyed joins.
 
+> [!todo] TEST
+>
+> ISIN matches 2-letter country + 9 alphanum + 1 check digit
+
 ```python
-# TEST: ISIN matches 2-letter country + 9 alphanum + 1 check digit
 def test_isin_format():
     """ISIN: 2-letter country + 9 alphanum + 1 check digit = 12 chars."""
     isin = "US0378331005"  # Apple Inc.
@@ -417,8 +453,11 @@ ipytest.run()
 <span style="color:#4ec9b0">12 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+> [!todo] TEST
+>
+> trade log line matches expected pipe-delimited format
+
 ```python
-# TEST: trade log line matches expected pipe-delimited format
 def test_trade_log_format():
     import re
     log = "2024-03-15T14:30:00Z | BUY | AAPL | 100 @ 178.50"
@@ -440,8 +479,11 @@ ipytest.run()
 
 `isinstance(value, type)` verifies that a field carries the expected type — catching cases where an API returns `"178.50"` (string) instead of `178.50` (float), which would cause silent errors in arithmetic. `is None` explicitly tests for absent optional fields without accidentally matching falsy values like `0` or `""`.
 
+> [!todo] TEST
+>
+> market data dict fields have correct types (str, float, int)
+
 ```python
-# TEST: market data dict fields have correct types (str, float, int)
 def test_market_data_types():
     tick = {"price": 178.50, "size": 100, "exchange": "XNAS"}
     assert isinstance(tick["price"], float)
@@ -460,8 +502,11 @@ ipytest.run()
 <span style="color:#4ec9b0">14 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+> [!todo] TEST
+>
+> optional field can be None without causing errors
+
 ```python
-# TEST: optional field can be None without causing errors
 def test_optional_field():
     """Missing optional fields should be None."""
     order = {"ticker": "AAPL", "limit_price": None}
@@ -512,10 +557,13 @@ def sample_trades():
     ]
 ```
 
+> [!todo] TEST
+>
+> fixture provides exactly 4 trade records
+
+> [!info] The parameter name `sample_trades` matches the fixture function name — pytest sees this and automatically calls `sample_trades()` to get the data.
+
 ```python
-# TEST: fixture provides exactly 4 trade records
-# The parameter name "sample_trades" matches the fixture function name —
-# pytest sees this and automatically calls sample_trades() to get the data.
 def test_trade_count(sample_trades):
     assert len(sample_trades) == 4
 
@@ -531,9 +579,13 @@ ipytest.run()
 <span style="color:#4ec9b0">16 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+> [!todo] TEST
+>
+> every trade has a non-empty ticker field
+
+> [!warning] Catches data corruption: missing tickers would cause KeyError or empty joins downstream.
+
 ```python
-# TEST: every trade has a non-empty ticker field
-# Catches data corruption: missing tickers would cause KeyError or empty joins downstream.
 def test_all_trades_have_ticker(sample_trades):
     for trade in sample_trades:
         assert "ticker" in trade          # key exists
@@ -551,10 +603,13 @@ ipytest.run()
 <span style="color:#4ec9b0">17 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.02s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+> [!todo] TEST
+>
+> net AAPL position = bought 100 - sold 30 = 70 shares
+
+> [!warning] Net position is BUY qty minus SELL qty for one ticker. This is a core portfolio calculation — getting it wrong means wrong risk exposure.
+
 ```python
-# TEST: net AAPL position = bought 100 - sold 30 = 70 shares
-# Net position is BUY qty minus SELL qty for one ticker.
-# This is a core portfolio calculation — getting it wrong means wrong risk exposure.
 def test_net_aapl_position(sample_trades):
     """Net position = sum of BUY qty - sum of SELL qty for a ticker."""
     net = sum(
@@ -599,10 +654,13 @@ def temp_positions_file():
         os.unlink(path)
 ```
 
+> [!todo] TEST
+>
+> load positions from the temp JSONL file created by the fixture
+
+> [!info] Verifies: file was written correctly, JSONL parsing works, first record is AAPL. The fixture creates the file BEFORE this test runs and deletes it AFTER.
+
 ```python
-# TEST: load positions from the temp JSONL file created by the fixture
-# Verifies: file was written correctly, JSONL parsing works, first record is AAPL.
-# The fixture creates the file BEFORE this test runs and deletes it AFTER.
 def test_load_positions(temp_positions_file):
     with open(temp_positions_file) as f:
         positions = [json.loads(line) for line in f]
@@ -621,10 +679,13 @@ ipytest.run()
 <span style="color:#4ec9b0">19 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.03s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+> [!todo] TEST
+>
+> total market value = sum(shares × avg_cost) for all positions
+
+> [!warning] This is a core portfolio valuation — wrong math here means wrong NAV reporting. Uses `pytest.approx` for floating-point comparison safety.
+
 ```python
-# TEST: total market value = sum(shares × avg_cost) for all positions
-# Uses pytest.approx for floating-point comparison safety.
-# This is a core portfolio valuation — wrong math here means wrong NAV reporting.
 def test_total_market_value(temp_positions_file):
     with open(temp_positions_file) as f:
         positions = [json.loads(line) for line in f]
@@ -668,10 +729,13 @@ Use parametrize when the **logic is the same but the data varies**: fee tier cal
 
 #### Parametrize: validate ticker formats
 
+> [!todo] TEST
+>
+> validate ticker format — uppercase, 1-5 chars, dot allowed for class shares
+
+> [!info] Each row is one ticker + expected validity. pytest runs the test once per row. Valid: `AAPL`, `BRK.B`. Invalid: empty, lowercase, too long.
+
 ```python
-# TEST: validate ticker format — uppercase, 1-5 chars, dot allowed for class shares
-# Each row is one ticker + expected validity. pytest runs the test once per row.
-# Valid: "AAPL", "BRK.B". Invalid: empty, lowercase, too long.
 @pytest.mark.parametrize("ticker, valid", [
     ("AAPL",  True),
     ("MSFT",  True),
@@ -688,10 +752,13 @@ def test_ticker_validation(ticker, valid):
 
 #### Parametrize: OHLCV bar validation
 
+> [!todo] TEST
+>
+> OHLCV bar invariants — high >= max(open,close), low <= min(open,close), volume >= 0
+
+> [!warning] Catches impossible candles from API errors or bad transforms. Each row is one candle dict + expected pass/fail.
+
 ```python
-# TEST: OHLCV bar invariants — high >= max(open,close), low <= min(open,close), volume >= 0
-# Each row is one candle dict + expected pass/fail.
-# Catches impossible candles from API errors or bad transforms.
 @pytest.mark.parametrize("bar, should_pass", [
     ({"o": 100, "h": 105, "l": 98, "c": 103, "v": 50000}, True),
     ({"o": 100, "h": 95,  "l": 98, "c": 99,  "v": 50000}, False),  # high < open
@@ -708,10 +775,13 @@ def test_ohlcv_bar_validation(bar, should_pass):
 
 #### Parametrize: fee tier calculation
 
+> [!todo] TEST
+>
+> fee tier mapping — volume in USD maps to fee in basis points
+
+> [!warning] < $100K → 30 bps, $100K–$1M → 20 bps, > $1M → 10 bps. Each row tests one volume tier. Wrong fee = overcharging or undercharging clients.
+
 ```python
-# TEST: fee tier mapping — volume in USD maps to fee in basis points
-# < $100K → 30 bps, $100K-$1M → 20 bps, > $1M → 10 bps.
-# Each row tests one volume tier. Wrong fee = overcharging or undercharging clients.
 @pytest.mark.parametrize("volume_usd, expected_bps", [
     (50_000,    30),   # tier 1: < $100K → 30 bps
     (500_000,   20),   # tier 2: $100K-$1M → 20 bps
@@ -730,10 +800,13 @@ def test_fee_tier(volume_usd, expected_bps):
 
 #### Parametrize: currency conversions
 
+> [!todo] TEST
+>
+> currency conversion — amount × rate = expected
+
+> [!info] Each row converts 1000 USD to a different currency. Uses `pytest.approx` for floating-point tolerance (IEEE 754 rounding).
+
 ```python
-# TEST: currency conversion — amount × rate = expected
-# Each row converts 1000 USD to a different currency.
-# Uses pytest.approx for floating-point tolerance (IEEE 754 rounding).
 @pytest.mark.parametrize("amount_usd, rate, expected", [
     (1000.0, 0.92,  920.0),    # USD → EUR
     (1000.0, 149.5, 149500.0), # USD → JPY
@@ -912,10 +985,13 @@ def is_market_open(now=None):
     return market_open <= now <= market_close
 ```
 
+> [!todo] TEST
+>
+> market is open during trading hours (Wednesday 11:00 AM)
+
+> [!info] Instead of `@patch("datetime.datetime")`, we pass `now` directly. This is the dependency injection pattern — easier to test than monkey-patching.
+
 ```python
-# TEST: market is open during trading hours (Wednesday 11:00 AM)
-# Instead of @patch("datetime.datetime"), we pass `now` directly.
-# This is the dependency injection pattern — easier to test than monkey-patching.
 def test_market_open_during_hours():
     now = datetime(2024, 3, 13, 11, 0, 0)  # Wednesday 11:00
     assert is_market_open(now) is True
@@ -932,8 +1008,11 @@ ipytest.run()
 <span style="color:#4ec9b0">39 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.05s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+> [!todo] TEST
+>
+> market is closed on weekends (Saturday 11:00 AM)
+
 ```python
-# TEST: market is closed on weekends (Saturday 11:00 AM)
 def test_market_closed_weekend():
     now = datetime(2024, 3, 16, 11, 0, 0)  # Saturday 11:00
     assert is_market_open(now) is False
@@ -950,8 +1029,11 @@ ipytest.run()
 <span style="color:#4ec9b0">40 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.05s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+> [!todo] TEST
+>
+> market is closed after hours (Wednesday 18:00)
+
 ```python
-# TEST: market is closed after hours (Wednesday 18:00)
 def test_market_closed_after_hours():
     now = datetime(2024, 3, 13, 18, 0, 0)  # Wednesday 18:00
     assert is_market_open(now) is False
@@ -990,9 +1072,13 @@ def get_exchange_config():
     }
 ```
 
+> [!todo] TEST
+>
+> with patched env vars — simulates production deployment
+
+> [!info] `@patch.dict` temporarily sets these env vars, restores original after test.
+
 ```python
-# TEST: with patched env vars — simulates production deployment
-# @patch.dict temporarily sets these env vars, restores original after test.
 @patch.dict(os.environ, {
     "EXCHANGE_HOST": "exchange.prod.internal",
     "EXCHANGE_PORT": "9090",
@@ -1016,10 +1102,13 @@ ipytest.run()
 <span style="color:#4ec9b0">42 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.06s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+> [!todo] TEST
+>
+> without patch — falls back to defaults
+
+> [!warning] This FAILS if `EXCHANGE_HOST`/`PORT` are set in your real env. In real projects, use `@patch.dict(os.environ, {}, clear=True)` for clean env.
+
 ```python
-# TEST: without patch — falls back to defaults
-# NOTE: this FAILS if EXCHANGE_HOST/PORT are set in your real env.
-# In real projects, use @patch.dict(os.environ, {}, clear=True) for clean env.
 def test_default_exchange_config():
     config = get_exchange_config()
     assert config["host"] == "localhost"
@@ -1079,13 +1168,15 @@ def normalize_trades(raw_trades: list[dict]) -> list[dict]:
             "notional": int(t["qty"]) * float(t["price"]), # qty × price
         })
     return cleaned
-
-# TEST: basic normalization — ticker uppercased, price converted to float, notional computed
-# Verifies the happy path: two valid trades go in, two cleaned trades come out.
 ```
 
+> [!todo] TEST
+>
+> normal trades are cleaned — ticker uppercased, price as float, notional computed
+
+> [!info] Verifies the happy path: two valid trades go in, two cleaned trades come out.
+
 ```python
-# TEST: normal trades are cleaned — ticker uppercased, price as float, notional computed
 def test_normalize_trades_basic():
     raw = [
         {"trade_id": "TRD_001", "ticker": " aapl ", "side": "buy", "qty": "100", "price": "178.50"},
@@ -1097,10 +1188,6 @@ def test_normalize_trades_basic():
     assert result[0]["price"] == 178.50                      # string → float
     assert result[0]["notional"] == pytest.approx(17850.0)   # 100 × 178.50 (approx for float safety)
     assert result[1]["side"] == "SELL"                        # already uppercase, stays uppercase
-
-# TEST: trades with empty/None trade_id are silently dropped
-# In production, exchange feeds sometimes send heartbeat or malformed records
-# with no trade_id. The pipeline must skip these without crashing.
 
 ipytest.run()
 ```
@@ -1114,10 +1201,13 @@ ipytest.run()
 <span style="color:#4ec9b0">44 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.06s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+> [!todo] TEST
+>
+> trades with empty/None trade_id are silently dropped
+
+> [!warning] In production, exchange feeds sometimes send heartbeat or malformed records with no trade_id. The pipeline must skip these without crashing.
+
 ```python
-# TEST: trades with empty/None trade_id are silently dropped
-# In production, exchange feeds sometimes send heartbeat or malformed records
-# with no trade_id. The pipeline must skip these without crashing.
 def test_normalize_trades_drops_missing_id():
     raw = [
         {"trade_id": "", "ticker": "AAPL", "side": "BUY", "qty": "100", "price": "178.50"},      # empty string
@@ -1127,9 +1217,6 @@ def test_normalize_trades_drops_missing_id():
     result = normalize_trades(raw)
     assert len(result) == 1              # only the valid trade survives
     assert result[0]["trade_id"] == "TRD_003"
-
-# TEST: empty input produces empty output — no crash, no None, just []
-# Edge case that catches IndexError or NoneType bugs in the transform.
 
 ipytest.run()
 ```
@@ -1143,9 +1230,13 @@ ipytest.run()
 <span style="color:#4ec9b0">45 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.06s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
+> [!todo] TEST
+>
+> empty input produces empty output — no crash, no None, just []
+
+> [!info] Edge case that catches IndexError or NoneType bugs in the transform.
+
 ```python
-# TEST: empty input produces empty output — no crash, no None, just []
-# Edge case that catches IndexError or NoneType bugs in the transform.
 def test_normalize_trades_empty():
     assert normalize_trades([]) == []
 
@@ -1232,32 +1323,21 @@ def validate_eod_prices(prices: list[dict]) -> list[str]:
             if daily_return > 0.20:                  # >20% move = suspicious
                 errors.append(f"{p['ticker']}: suspicious daily move {daily_return:.1%}")
     return errors
-
-# TEST: clean data produces zero errors — the happy path
-# Two normal stocks with valid OHLCV data, both should pass all checks.
 ```
 
+> [!todo] TEST
+>
+> clean OHLCV data produces zero validation errors
+
+> [!info] Two normal stocks with valid OHLCV data, both should pass all checks.
+
 ```python
-# TEST: clean OHLCV data produces zero validation errors
 def test_valid_eod_data():
     prices = [
         {"ticker": "AAPL", "close": 178.50, "high": 180.0, "low": 176.0, "volume": 50_000_000, "prev_close": 177.00},
         {"ticker": "MSFT", "close": 415.20, "high": 418.0, "low": 412.0, "volume": 25_000_000, "prev_close": 413.00},
     ]
     assert validate_eod_prices(prices) == []  # no errors = all data is valid
-
-# TEST: three different violations are all caught
-# BAD1: close = -5.0 → non-positive close
-# BAD2: high = 90.0 < low = 95.0 → impossible candle (high < low)
-# BAD3: close = 150.0, prev_close = 100.0 → 50% daily move (> 20% threshold)
-#
-# WHY THIS TEST FAILS (assert len(errors) == 3 → actually gets 4):
-#   BAD1 has close = -5.0 and prev_close = 10.0, so |(-5 - 10) / 10| = 150%.
-#   That triggers BOTH the "non-positive close" AND "suspicious daily move" checks.
-#   So BAD1 produces 2 errors, BAD2 produces 1, BAD3 produces 1 → total 4, not 3.
-#   This is a real bug in the test, not in the function — the test assumed each
-#   bad record produces exactly 1 error, but a record can violate multiple rules.
-#   FIX: change assert to len(errors) == 4, or separate BAD1 so it only triggers one rule.
 
 ipytest.run()
 ```
@@ -1271,7 +1351,11 @@ ipytest.run()
 <span style="color:#4ec9b0">48 passed</span>, <b><span style="color:#e5c07b">1 warning</span></b><span style="color:#e5c07b"> in 0.07s</span>
 &lt;ExitCode.OK: 0&gt;</pre>
 
-Three violations: BAD1 (negative close), BAD2 (high < low), BAD3 (50% daily move). Note: BAD1 triggers **two** rules (negative close + extreme return) → total 4 errors, not 3. A record can violate multiple rules.
+> [!todo] TEST
+>
+> three different violations are all caught — BAD1 (negative close), BAD2 (high < low), BAD3 (50% daily move)
+
+> [!warning] BAD1 triggers **two** rules (negative close + extreme return) → total 4 errors, not 3. A record can violate multiple rules. This is a real bug in the test, not in the function — the test assumed each bad record produces exactly 1 error.
 
 ```python
 def test_catches_invalid_prices():
@@ -1615,8 +1699,7 @@ GitHub Actions workflow: `.github/workflows/test.yml`. Triggers on push/PR/sched
 
 ### Workflow configuration
 
-```python
-workflow = '''
+```yaml
 # .github/workflows/test.yml
 name: Tests
 
@@ -1645,22 +1728,22 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest-cov  # coverage plugin
+          pip install pytest-cov
 
       - name: Run tests with coverage
         run: |
-          pytest tests/ \\
-            --tb=short \\
-            --cov=src \\
-            --cov-report=xml \\
-            --cov-report=term-missing \\
+          pytest tests/ \
+            --tb=short \
+            --cov=src \
+            --cov-report=xml \
+            --cov-report=term-missing \
             --junitxml=test-results.xml
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
           EXCHANGE_API_KEY: ${{ secrets.EXCHANGE_API_KEY }}
 
       - name: Upload test results
-        if: always()  # upload even if tests fail
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results-py${{ matrix.python-version }}
@@ -1672,112 +1755,27 @@ jobs:
         with:
           name: coverage-py${{ matrix.python-version }}
           path: coverage.xml
-'''
-
-print(workflow)
-print("─" * 60)
-print()
-print("KEY GITHUB ACTIONS CONCEPTS:")
-print()
-print("  Trigger              Description")
-print("  ──────────────────   ──────────────────────────────────────")
-print("  push                 Runs on every push to specified branches")
-print("  pull_request         Runs on PRs targeting specified branches")
-print("  schedule             Cron-based (e.g., nightly data quality checks)")
-print("  workflow_dispatch    Manual trigger from GitHub UI")
-print()
-print("  Secret                   How to set")
-print("  ──────────────────────   ────────────────────────────────")
-print("  secrets.DB_HOST          Repo → Settings → Secrets → Actions")
-print("  secrets.API_KEY          Never hardcode in workflow files!")
-print()
-print("  pytest flags             Purpose")
-print("  ──────────────────────   ────────────────────────────────")
-print("  --cov=src                Measure code coverage")
-print("  --cov-report=xml         Coverage report for CI tools")
-print("  --junitxml=...           Test results in JUnit XML format")
-print("  --tb=short               Short tracebacks (cleaner CI logs)")
-print("  -x                       Stop on first failure")
 ```
-    # .github/workflows/test.yml
-    Tests
-    
-    on:
-      push:
-        branches: [main, develop]
-      pull_request:
-        branches: [main]
-    
-    jobs:
-      test:
-        runs-on: ubuntu-latest
-        strategy:
-          matrix:
-            python-version: ["3.11", "3.12"]
-    
-        steps:
-          - uses: actions/checkout@v4
-    
-          - name: Set up Python ${{ matrix.python-version }}
-            uses: actions/setup-python@v5
-            with:
-              python-version: ${{ matrix.python-version }}
-    
-          - name: Install dependencies
-            run: |
-              python -m pip install --upgrade pip
-              pip install -r requirements.txt
-              pip install pytest-cov  # coverage plugin
-    
-          - name: Run tests with coverage
-            run: |
-              pytest tests/ \
-                --tb=short \
-                --cov=src \
-                --cov-report=xml \
-                --cov-report=term-missing \
-                --junitxml=test-results.xml
-            env:
-              DB_HOST: ${{ secrets.DB_HOST }}
-              EXCHANGE_API_KEY: ${{ secrets.EXCHANGE_API_KEY }}
-    
-          - name: Upload test results
-            if: always()  # upload even if tests fail
-            uses: actions/upload-artifact@v4
-            with:
-    test-results-py${{ matrix.python-version }}
-              path: test-results.xml
-    
-          - name: Upload coverage
-            if: always()
-            uses: actions/upload-artifact@v4
-            with:
-    coverage-py${{ matrix.python-version }}
-              path: coverage.xml
-    
-    ────────────────────────────────────────────────────────────
-    
-    KEY GITHUB ACTIONS CONCEPTS:
-    
-      Trigger              Description
-      ──────────────────   ──────────────────────────────────────
-      push                 Runs on every push to specified branches
-      pull_request         Runs on PRs targeting specified branches
-      schedule             Cron-based (e.g., nightly data quality checks)
-      workflow_dispatch    Manual trigger from GitHub UI
-    
-      Secret                   How to set
-      ──────────────────────   ────────────────────────────────
-      secrets.DB_HOST          Repo → Settings → Secrets → Actions
-      secrets.API_KEY          Never hardcode in workflow files!
-    
-      pytest flags             Purpose
-      ──────────────────────   ────────────────────────────────
-      --cov=src                Measure code coverage
-      --cov-report=xml         Coverage report for CI tools
-      --junitxml=...           Test results in JUnit XML format
-      --tb=short               Short tracebacks (cleaner CI logs)
-      -x                       Stop on first failure
+
+| Trigger | Description |
+|---|---|
+| `push` | Runs on every push to specified branches |
+| `pull_request` | Runs on PRs targeting specified branches |
+| `schedule` | Cron-based (e.g., nightly data quality checks) |
+| `workflow_dispatch` | Manual trigger from GitHub UI |
+
+| Secret | How to set |
+|---|---|
+| `secrets.DB_HOST` | Repo → Settings → Secrets → Actions |
+| `secrets.API_KEY` | Never hardcode in workflow files |
+
+| pytest flag | Purpose |
+|---|---|
+| `--cov=src` | Measure code coverage |
+| `--cov-report=xml` | Coverage report for CI tools |
+| `--junitxml=...` | Test results in JUnit XML format |
+| `--tb=short` | Short tracebacks (cleaner CI logs) |
+| `-x` | Stop on first failure |
 
 > [!abstract]- Python Testing Quick Reference
 >

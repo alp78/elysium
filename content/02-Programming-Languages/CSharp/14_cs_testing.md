@@ -53,10 +53,10 @@ Unit tests run on every commit. Integration tests run on every PR. E2E tests run
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    PERF["⚡ Performance\n~10s · BenchmarkDotNet\nfew tests"]
-    E2E["🔁 End-to-End\n~1s+ · WebApplicationFactory\n10%"]
-    INT["🔗 Integration\n~100ms · xUnit + SqlClient\n20%"]
-    UNIT["✅ Unit\n~1ms · xUnit · Assert · Moq\n70%"]
+    PERF["⚡ Performance<br/>~10s · BenchmarkDotNet<br/>few tests"]
+    E2E["🔁 End-to-End<br/>~1s+ · WebApplicationFactory<br/>10%"]
+    INT["🔗 Integration<br/>~100ms · xUnit + SqlClient<br/>20%"]
+    UNIT["✅ Unit<br/>~1ms · xUnit · Assert · Moq<br/>70%"]
 
     PERF --> E2E --> INT --> UNIT
 ```
@@ -114,14 +114,13 @@ optionsField.SetValue(csharpKernel, newOptions);
 >
 > This cell defines stub versions of xUnit's `[Fact]`, `[Theory]`, and `[InlineData]` attributes, plus a lightweight `Assert` class. In a real project, xUnit NuGet provides these. The stubs avoid assembly version conflicts in .NET Interactive while keeping the API surface identical — test code is copy-pasteable into a real xUnit project.
 
+> [!info] Lightweight stubs for notebook use
+>
+> The `Assert` class below has the same API as xUnit but zero dependencies — avoids NuGet assembly version warnings in .NET Interactive. In a real project, xUnit provides these via `dotnet test`. Attribute stubs (`[Fact]`, `[Theory]`, `[InlineData]`) keep the code copy-pasteable into a real xUnit project.
+
 ```csharp
 #nullable enable
-// Lightweight Assert class — same API as xUnit, zero dependencies.
-// In a real project you'd use xUnit with `dotnet test`.
-// In notebooks, this avoids NuGet assembly version warnings.
 
-
-// Attribute stubs for notebook use (real xUnit uses [Fact] and [Theory])
 [AttributeUsage(AttributeTargets.Method)] public class FactAttribute : Attribute { }
 [AttributeUsage(AttributeTargets.Method)] public class TheoryAttribute : Attribute { }
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
@@ -161,12 +160,7 @@ void RunTests(object testClass)
     Console.WriteLine($"  Results: {passed} passed, {failed} failed, {passed + failed} total");
 }
 
-// Attribute stubs for notebook use (real xUnit uses [Fact] and [Theory])
-
-
 ```
-
-      Assert class, test runner, and attributes ready.
 
 #### Assert.Equal, Assert.True, Assert.Throws — xUnit assertion methods
 
@@ -408,13 +402,18 @@ void RunTest(string name, Action test)
 
 In a real test project, this would use xUnit's `[Theory]` + `[InlineData]`:
 
-```csharp
-// [Theory]
-// [InlineData(50_000,    30)]   // tier 1: < $100K → 30 bps
-// [InlineData(500_000,   20)]   // tier 2: $100K-$1M → 20 bps
-// [InlineData(5_000_000, 10)]   // tier 3: > $1M → 10 bps
-// public void FeeTier_ReturnsCorrectBps(long volume, int expectedBps) { ... }
+> [!info] xUnit equivalent
+>
+> In a real test project, this would use `[Theory]` + `[InlineData]`:
+> ```csharp
+> [Theory]
+> [InlineData(50_000,    30)]   // tier 1: < $100K → 30 bps
+> [InlineData(500_000,   20)]   // tier 2: $100K-$1M → 20 bps
+> [InlineData(5_000_000, 10)]   // tier 3: > $1M → 10 bps
+> public void FeeTier_ReturnsCorrectBps(long volume, int expectedBps) { ... }
+> ```
 
+```csharp
 static int GetFeeBps(long volume) => volume switch
 {
     < 100_000    => 30,
@@ -427,13 +426,14 @@ var feeCases = new (long volume, int expectedBps)[]
     (50_000, 30), (500_000, 20), (5_000_000, 10)
 };
 foreach (var (vol, bps) in feeCases)
-    // TEST: each volume tier maps to the correct fee in basis points
     RunTest($"Volume ${vol:N0} → {bps} bps", () => Assert.Equal(bps, GetFeeBps(vol)));
 ```
 
-      ✓ Volume $50'000 → 30 bps
-      ✓ Volume $500'000 → 20 bps
-      ✓ Volume $5'000'000 → 10 bps
+```text
+✓ Volume $50,000 → 30 bps
+✓ Volume $500,000 → 20 bps
+✓ Volume $5,000,000 → 10 bps
+```
 
 #### Parametrize: currency conversion
 
@@ -621,8 +621,11 @@ After calling code that depends on a mock, you verify two things: the return val
 
 Hand-written mock: implements the interface with canned return values, records what was called (`LastRequestedTicker`, `CallCount`). Moq equivalent: `new Mock<IMarketDataClient>()`. Both achieve the same goal — hand-written is clearer for learning.
 
+> [!todo] TEST
+>
+> mock returns canned price, records which symbol was requested
+
 ```csharp
-// TEST: mock returns canned price, records which symbol was requested
 RunTest("Mock market data quote", () =>
 {
     var mock = new MockMarketDataClient();
@@ -661,76 +664,53 @@ RunTest("Mock order submission", () =>
 
 #### Mock: transient failure (side_effect equivalent)
 
+> [!todo] TEST
+>
+> retry loop handles N failures then succeeds on attempt N+1
+
+> [!warning] Retry logic is critical in DE pipelines. Without testing it you don't know if your retry actually retries (off-by-one), gives up correctly after max attempts, or returns the right result on eventual success.
+
+The test pattern configures the mock to fail N times, then runs code with a retry loop and asserts both the success response and the exact call count. The mock's `FailCount` property causes the first 2 calls to throw `IOException` — the 3rd call succeeds and returns `"ACK"`.
+
 ```csharp
 #nullable enable
-// Testing transient failures — mock that fails N times then succeeds
-//
-// WHAT: MockExchangeGateway.FailCount controls how many calls throw IOException
-//   before returning a successful "ACK". The test retries up to 3 times.
-//   This simulates real-world transient errors: network timeouts, API 503s,
-//   DB deadlocks — errors that succeed if you just try again.
-//
-// WHY: retry logic is critical in DE pipelines. Without testing it:
-//   - You don't know if your retry actually retries (off-by-one: retries 2 times not 3)
-//   - You don't know if it gives up correctly after max attempts
-//   - You don't know if it returns the right result on eventual success
-//
-// PATTERN: set mock to fail N times → run code with retry loop → assert success + call count
 
-// TEST: retry loop handles N failures then succeeds on attempt N+1
 RunTest("Mock with transient failure + retry", () =>
 {
     var mock = new MockExchangeGateway();
-    mock.FailCount = 2;  // first 2 calls throw IOException, 3rd succeeds
+    mock.FailCount = 2;
 
-    // Retry loop — same pattern as production retry logic
     string? result = null;
     for (int i = 0; i < 3; i++)
     {
-        try { result = mock.Send("NEW_ORDER"); break; }  // break on success
-        catch (IOException) { continue; }                  // retry on transient error
+        try { result = mock.Send("NEW_ORDER"); break; }
+        catch (IOException) { continue; }
     }
 
-    Assert.Equal("ACK", result);     // verify we got the success response
-    Assert.Equal(3, mock.CallCount); // verify it took exactly 3 attempts (2 fails + 1 success)
+    Assert.Equal("ACK", result);
+    Assert.Equal(3, mock.CallCount);
 });
-
-// Moq equivalent — how you'd write the same test with the Moq NuGet library
-// Moq generates the mock class automatically from the interface (no hand-written mock needed).
-// Setup() defines what the mock returns. Verify() asserts how it was called.
-@"
-  // In a real test project with Moq (NuGet: Moq):
-  var mock = new Mock<IMarketDataClient>();
-
-  // Setup: when GetQuote(""AAPL"") is called, return this canned response
-  mock.Setup(c => c.GetQuote(""AAPL""))
-      .Returns(new Quote { Ticker = ""AAPL"", Last = 178.50 });
-
-  // Act: call the mock through its .Object property (the generated implementation)
-  var quote = mock.Object.GetQuote(""AAPL"");
-
-  // Assert: verify the return value AND that the method was called exactly once
-  Assert.Equal(178.50, quote.Last);
-  mock.Verify(c => c.GetQuote(""AAPL""), Times.Once());
-"
 ```
 
-      ✓ Mock with transient failure + retry
-    
-    
-      // In a real test project with Moq (NuGet: Moq):
-      var mock = new Mock<IMarketDataClient>();
-    
-      // Setup: when GetQuote("AAPL") is called, return this canned response
-      mock.Setup(c => c.GetQuote("AAPL"))
-          .Returns(new Quote { Ticker = "AAPL", Last = 178.50 });
-    
-      // Act: call the mock through its .Object property (the generated implementation)
-      var quote = mock.Object.GetQuote("AAPL");
-    
-      // Assert: verify the return value AND that the method was called exactly once
-      Assert.Equal(178.50, quote.Last);
-      mock.Verify(c => c.GetQuote("AAPL"), Times.Once());
+```text
+✓ Mock with transient failure + retry
+```
+
+> [!example] Moq equivalent — production mock with Setup and Verify
+>
+> In a real test project, Moq generates the mock class automatically from the interface — no hand-written mock needed. `Setup()` defines what the mock returns, and `Verify()` asserts how it was called.
+>
+> ```csharp
+> var mock = new Mock<IMarketDataClient>();
+>
+> mock.Setup(c => c.GetQuote("AAPL"))
+>     .Returns(new Quote { Ticker = "AAPL", Last = 178.50 });
+>
+> var quote = mock.Object.GetQuote("AAPL");
+>
+> Assert.Equal(178.50, quote.Last);
+> mock.Verify(c => c.GetQuote("AAPL"), Times.Once());
+> ```
 
 ## Test Patterns for Data Engineering
 
@@ -826,7 +806,13 @@ static List<Dictionary<string, object>> NormalizeTrades(List<Dictionary<string, 
 }
 
 
-// TEST: normal trades are cleaned correctly — ticker uppercased, price rounded
+```
+
+> [!todo] TEST
+>
+> normal trades are cleaned correctly — ticker uppercased, price rounded
+
+```csharp
 RunTest("NormalizeTrades basic", () =>
 {
     var raw = new List<Dictionary<string, object>>
@@ -839,8 +825,17 @@ RunTest("NormalizeTrades basic", () =>
     Assert.Equal("AAPL", result[0]["ticker"]);
     Assert.Equal(17850.0, (double)result[0]["notional"], precision: 2);
 });
+```
 
-// TEST: trades without a trade_id are silently dropped
+      ✓ NormalizeTrades basic
+
+> [!todo] TEST
+>
+> trades without a trade_id are silently dropped
+
+> [!warning] In production, exchange feeds sometimes send heartbeat or malformed records with no trade_id. The pipeline must skip these without crashing.
+
+```csharp
 RunTest("NormalizeTrades drops missing ID", () =>
 {
     var raw = new List<Dictionary<string, object>>
@@ -852,24 +847,32 @@ RunTest("NormalizeTrades drops missing ID", () =>
     Assert.Single(result);
     Assert.Equal("TRD_003", result[0]["trade_id"]);
 });
+```
 
-// TEST: empty input produces empty output (no crash on edge case)
+      ✓ NormalizeTrades drops missing ID
+
+> [!todo] TEST
+>
+> empty input produces empty output (no crash on edge case)
+
+> [!info] Edge case that catches IndexOutOfRangeException or NullReferenceException bugs in the transform.
+
+```csharp
 RunTest("NormalizeTrades empty list", () =>
 {
     Assert.Empty(NormalizeTrades(new List<Dictionary<string, object>>()));
 });
 ```
 
-      ✓ NormalizeTrades basic
-      ✓ NormalizeTrades drops missing ID
       ✓ NormalizeTrades empty list
 
 #### Mock external service (hand-written)
 
-```csharp
-// Mock external service (hand-written)
+> [!todo] TEST
+>
+> weight = stock market cap / total market cap, using mock data client
 
-// TEST: weight = stock market cap / total market cap, using mock data client
+```csharp
 RunTest("Index weight calculation with mock", () =>
 {
     var mock = new MockIndexDataClient();
@@ -925,8 +928,15 @@ static List<string> ValidateEodPrices(List<EodPrice> prices)
     }
     return errors;
 }
+```
 
-// TEST: clean OHLCV data produces zero validation errors
+> [!todo] TEST
+>
+> clean OHLCV data produces zero validation errors
+
+> [!info] Two normal stocks with valid OHLCV data, both should pass all checks.
+
+```csharp
 RunTest("Valid EOD data passes", () =>
 {
     var prices = new List<EodPrice>
@@ -936,8 +946,17 @@ RunTest("Valid EOD data passes", () =>
     };
     Assert.Empty(ValidateEodPrices(prices));
 });
+```
 
-// TEST: negative close, high < low, and extreme daily move are all caught
+      ✓ Valid EOD data passes
+
+> [!todo] TEST
+>
+> negative close, high < low, and extreme daily move are all caught
+
+> [!warning] BAD1 triggers **two** rules (negative close + extreme return) → total 4 errors, not 3. A record can violate multiple rules. This is a real bug in the test, not in the function.
+
+```csharp
 RunTest("Catches invalid prices", () =>
 {
     var prices = new List<EodPrice>
@@ -954,8 +973,6 @@ RunTest("Catches invalid prices", () =>
 });
 ```
 
-    
-      ✓ Valid EOD data passes
       ✗ Catches invalid prices: Assert.Equal failed: expected <3>, got <4>
 
 ## Integration Testing with Real Database
@@ -1233,62 +1250,33 @@ class PipelineRunner : IPipelineRunner
 
 #### GitHub Actions workflow
 
-```csharp
-@"
-KEY GITHUB ACTIONS CONCEPTS:
+| Trigger | Description |
+|---|---|
+| `push` | Runs on every push to specified branches |
+| `pull_request` | Runs on PRs targeting specified branches |
+| `schedule` | Cron-based (nightly data quality checks) |
+| `workflow_dispatch` | Manual trigger from GitHub UI |
 
-  Trigger              Description
-  ──────────────────   ──────────────────────────────────────
-  push                 Runs on every push to specified branches
-  pull_request         Runs on PRs targeting specified branches
-  schedule             Cron-based (nightly data quality checks)
-  workflow_dispatch    Manual trigger from GitHub UI
+| `dotnet test` flag | Purpose |
+|---|---|
+| `--logger trx` | Test results in TRX format (VS/Azure DevOps) |
+| `--collect:coverage` | Collect code coverage via coverlet |
+| `--filter Trade` | Run only tests matching pattern |
+| `--blame` | Identify tests that crash the runner |
 
-  dotnet test flags    Purpose
-  ──────────────────   ──────────────────────────────────────
-  --logger trx         Test results in TRX format (VS/Azure DevOps)
-  --collect:coverage   Collect code coverage via coverlet
-  --filter Trade       Run only tests matching pattern
-  --blame              Identify tests that crash the runner
-
-  Python equivalent    C# equivalent
-  ──────────────────   ──────────────────────────────────────
-  pytest               dotnet test
-  pytest-cov           coverlet (built into SDK)
-  --junitxml           --logger trx
-  pip install -r ...   dotnet restore
-  tox / nox            dotnet test matrix
-"
-```
-
-    
-      Trigger              Description
-      ──────────────────   ──────────────────────────────────────
-      push                 Runs on every push to specified branches
-      pull_request         Runs on PRs targeting specified branches
-      schedule             Cron-based (nightly data quality checks)
-      workflow_dispatch    Manual trigger from GitHub UI
-    
-      dotnet test flags    Purpose
-      ──────────────────   ──────────────────────────────────────
-      --logger trx         Test results in TRX format (VS/Azure DevOps)
-      --collect:coverage   Collect code coverage via coverlet
-      --filter Trade       Run only tests matching pattern
-      --blame              Identify tests that crash the runner
-    
-      Python equivalent    C# equivalent
-      ──────────────────   ──────────────────────────────────────
-      pytest               dotnet test
-      pytest-cov           coverlet (built into SDK)
-      --junitxml           --logger trx
-      pip install -r ...   dotnet restore
-      tox / nox            dotnet test matrix
+| Python equivalent | C# equivalent |
+|---|---|
+| `pytest` | `dotnet test` |
+| `pytest-cov` | coverlet (built into SDK) |
+| `--junitxml` | `--logger trx` |
+| `pip install -r ...` | `dotnet restore` |
+| `tox` / `nox` | `dotnet test` matrix |
 
 GitHub Actions workflow for automated testing on every push/PR. `dotnet test` runs xUnit/NUnit/MSTest. Matrix tests across .NET versions. Secrets injected as env vars. `coverlet` for code coverage.
 
-```csharp
-var workflow = @"
-# .github/workflows/test.yml
+`.github/workflows/test.yml`:
+
+```yaml
 name: Tests
 
 on:
@@ -1322,7 +1310,7 @@ jobs:
         run: |
           dotnet test --no-build --configuration Release \
             --logger trx \
-            --collect:""XPlat Code Coverage"" \
+            --collect:"XPlat Code Coverage" \
             --results-directory ./test-results
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
@@ -1341,65 +1329,7 @@ jobs:
         with:
           name: coverage
           path: ./test-results/**/coverage.cobertura.xml
-";
-
-workflow
 ```
-
-    
-    # .github/workflows/test.yml
-    name: Tests
-    
-    on:
-      push:
-        branches: [main, develop]
-      pull_request:
-        branches: [main]
-    
-    jobs:
-      test:
-        runs-on: ubuntu-latest
-        strategy:
-          matrix:
-            dotnet-version: [8.0.x, 9.0.x]
-    
-        steps:
-          - uses: actions/checkout@v4
-    
-          - name: Setup .NET
-            uses: actions/setup-dotnet@v4
-            with:
-              dotnet-version: ${{ matrix.dotnet-version }}
-    
-          - name: Restore dependencies
-            run: dotnet restore
-    
-          - name: Build
-            run: dotnet build --no-restore --configuration Release
-    
-          - name: Run tests with coverage
-            run: |
-              dotnet test --no-build --configuration Release \
-                --logger trx \
-                --collect:"XPlat Code Coverage" \
-                --results-directory ./test-results
-            env:
-              DB_HOST: ${{ secrets.DB_HOST }}
-              EXCHANGE_API_KEY: ${{ secrets.EXCHANGE_API_KEY }}
-    
-          - name: Upload test results
-            if: always()
-            uses: actions/upload-artifact@v4
-            with:
-              name: test-results
-              path: ./test-results/**/*.trx
-    
-          - name: Upload coverage
-            if: always()
-            uses: actions/upload-artifact@v4
-            with:
-              name: coverage
-              path: ./test-results/**/coverage.cobertura.xml
 
 ### Reference
 

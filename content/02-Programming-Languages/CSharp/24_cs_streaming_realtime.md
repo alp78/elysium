@@ -14,7 +14,9 @@ status: complete
 >
 > — **Martin Kleppmann**, *Making Sense of Stream Processing* (2016)
 
-### Technologies Overview
+## Technologies Overview
+
+Comparison of the four streaming protocols used in this notebook — from lowest-latency local TCP to managed cloud services.
 
 | Technology | Protocol | Direction | Latency | Use Case |
 |------------|----------|-----------|---------|----------|
@@ -31,8 +33,65 @@ status: complete
 
 **Firestore Listener** uses gRPC bidirectional streaming. The server pushes document-level change events as they happen.
 
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+sequenceDiagram
+    participant P as Publisher / Client
+    participant S as Server / Broker
+    participant L as Listener / Subscriber
+
+    rect rgb(41, 46, 66)
+    Note over P,L: WebSocket — full-duplex TCP
+    P->>S: Upgrade: websocket
+    S-->>L: tick stream (sub-ms latency)
+    L-->>S: commands / acks
+    end
+
+    rect rgb(26, 27, 38)
+    Note over P,L: SSE — server → client only
+    L->>S: GET /stream (HTTP)
+    S-->>L: text/event-stream (~10–50ms)
+    end
+
+    rect rgb(41, 46, 66)
+    Note over P,L: Pub/Sub — decoupled message bus
+    P->>S: Publish message (gRPC)
+    Note over S: Durable queue
+    S-->>L: StreamingPull delivery (50–200ms)
+    L->>S: Ack
+    end
+
+    rect rgb(26, 27, 38)
+    Note over P,L: Firestore — document change push
+    P->>S: Write document (gRPC)
+    S-->>L: Listen callback (100–500ms)
+    end
+```
+
+> [!tip] Related pattern
+>
+> For the architectural context of where streaming fits within the broader data platform — including how real-time feeds connect to batch pipelines — see [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture).
+
+## Setup
+
+### Setup | .NET Interactive | environment and dependencies
+
+#### Suppress .NET Interactive assembly version warnings
+
+The `.NET Interactive` kernel emits CS1701 and CS1702 warnings when NuGet package assembly versions differ from the runtime. This cell uses reflection to access the C# kernel's private `_scriptOptions` field and set the warning level to 0, silencing all compile-time warnings in subsequent cells.
+
 ```csharp
-// Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
 using Microsoft.DotNet.Interactive.CSharp;
@@ -45,6 +104,10 @@ var withWarningLevel = scriptOptions.GetType().GetMethod("WithWarningLevel");
 var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 ```
+
+#### Load NuGet packages and namespace imports
+
+External libraries used throughout the notebook: `DotNetEnv` for `.env` loading, `Google.Cloud.PubSub.V1` and `Google.Cloud.Firestore` for GCP streaming, `Newtonsoft.Json` for serialization, and `Plotly.NET` for latency charts.
 
 ```csharp
 #r "nuget: DotNetEnv"
@@ -77,16 +140,17 @@ using Plotly.NET.CSharp;
 using Plotly.NET.LayoutObjects;
 ```
 
+#### Set Windows timer resolution and initialize GCP clients
+
+Windows has a default timer resolution of 15.6ms — any `Task.Delay(10)` rounds up to that value, distorting latency measurements. The `timeBeginPeriod(1)` P/Invoke sets resolution to 1ms for the duration of this notebook. The cell also loads `.env` variables, sets the `GOOGLE_APPLICATION_CREDENTIALS` path, and creates `PublisherServiceApiClient`, `SubscriberServiceApiClient`, and `FirestoreDb` clients for all GCP operations that follow.
+
 ```csharp
-// Set Windows timer resolution to 1ms (default is 15.6ms)
-// Without this, Task.Delay(10) rounds to 15.6ms on Windows.
 [System.Runtime.InteropServices.DllImport("winmm.dll")]
 static extern uint timeBeginPeriod(uint period);
 [System.Runtime.InteropServices.DllImport("winmm.dll")]
 static extern uint timeEndPeriod(uint period);
 timeBeginPeriod(1);
 
-// Load .env and define project constants
 DotNetEnv.Env.Load();
 
 var PROJECT_ID   = "seclab-dev-ap-26";
@@ -105,10 +169,16 @@ Console.WriteLine($"  Project:   {PROJECT_ID}");
 Console.WriteLine($"  Firestore: {FIRESTORE_DB}");
 ```
 
-      Project:   seclab-dev-ap-26
-      Firestore: seclab-scores
+```text
+  Project:   seclab-dev-ap-26
+  Firestore: seclab-scores
+```
 
-#### Formatting helpers
+### Setup | data generation | formatting helpers and OHLCV tick simulation
+
+#### Format time and rate values as human-readable strings
+
+Two utility functions used throughout the notebook. `FmtTime` converts milliseconds to the most readable unit (µs, ms, s, or min). `FmtRate` converts a message count and elapsed duration into a throughput rate (msg/s, K msg/s, or M msg/s).
 
 ```csharp
 string FmtTime(double ms)
@@ -130,12 +200,11 @@ string FmtRate(int n, double ms)
 }
 ```
 
-#### Simulated OHLCV tick generator
+#### Generate simulated OHLCV ticks with random-walk price movement
 
-Generates synthetic tick data for 5 symbols — used as the data source for all streaming patterns below.
+Produces synthetic tick data for 5 European equity symbols (ASML, SAP, Siemens, LVMH, TotalEnergies). Each call to `GenerateTick()` applies a small random-walk price change (±0.2%) and returns a dictionary with symbol, timestamp, price, volume, bid, and ask fields. This function is the data source for all streaming patterns below.
 
 ```csharp
-// Simulated tick generator — produces OHLCV-like ticks with realistic price movement
 var SYMBOLS = new[] { "ASML.AS", "SAP.DE", "SIE.DE", "MC.PA", "TTE.PA" };
 var rng = new Random();
 var prices = SYMBOLS.ToDictionary(s => s, s => 50.0 + rng.NextDouble() * 850);
@@ -157,7 +226,6 @@ Dictionary<string, object> GenerateTick()
     };
 }
 
-// Preview
 for (int i = 0; i < 3; i++)
 {
     var tick = GenerateTick();
@@ -165,14 +233,20 @@ for (int i = 0; i < 3; i++)
 }
 ```
 
-      ASML.AS    494.3035 vol=327
-      MC.PA      231.8838 vol=2458
-      TTE.PA      832.032 vol=1651
+```text
+  ASML.AS    494.3035 vol=327
+  MC.PA      231.8838 vol=2458
+  TTE.PA      832.032 vol=1651
+```
 
 ## WebSocket Streaming
 
 Full-duplex, persistent TCP connection. The server pushes ticks as they occur — no polling.
 Used by every real-time trading platform (Binance, Bloomberg Terminal, Refinitiv).
+
+### WebSocket | System.Net.WebSockets | server and client
+
+Local WebSocket server broadcasting simulated ticks, with a client that measures one-way latency using `Stopwatch.GetTimestamp()` embedded in each message.
 
 #### Run WebSocket server and client for simulated tick feed using System.Net.WebSockets over TCP
 
@@ -183,7 +257,6 @@ The client connects, receives ticks for 3 seconds, and collects them.
 **When NOT to use:** One-shot request/response — use REST instead.
 
 ```csharp
-// WebSocket server — broadcasts ticks with embedded send_ts for one-way latency
 var WS_PORT = 8775;
 var wsRunning = true;
 var wsListener = new HttpListener();
@@ -215,12 +288,15 @@ _ = Task.Run(async () =>
 Console.WriteLine($"  WebSocket server running on ws://localhost:{WS_PORT}");
 ```
 
-      WebSocket server running on ws://localhost:8775
+```text
+  WebSocket server running on ws://localhost:8775
+```
 
 #### WebSocket streaming client — receive ticks for 3 seconds
 
+Connects to the local WebSocket server and receives 1,000 ticks (after 100 warmup messages). Each tick carries a `send_ts` from `Stopwatch.GetTimestamp()`, allowing one-way latency measurement in microseconds without clock synchronization.
+
 ```csharp
-// WebSocket client — one-way latency (send_ts embedded by server)
 var NUM_WS = 1_000;
 var WARMUP_WS = 100;
 var wsLatUs = new List<double>(NUM_WS);
@@ -256,13 +332,19 @@ Console.WriteLine($"  {wsLatUs.Count} one-way measurements");
 Console.WriteLine($"  p50: {wsP50:F0}µs  p99: {wsP99:F0}µs");
 ```
 
-      1000 one-way measurements
-      p50: 69µs  p99: 158µs
+```text
+  1000 one-way measurements
+  p50: 69µs  p99: 158µs
+```
 
 ## Server-Sent Events (SSE)
 
 One-directional server→client push over HTTP. Simpler than WebSocket — works through
 proxies/CDNs, auto-reconnects, text-only. Used by ChatGPT, GitHub notifications, stock tickers.
+
+### SSE | HttpListener | server and client
+
+Local HttpListener SSE server streaming ticks as `text/event-stream`, with a client that parses events and measures one-way latency using the same `Stopwatch.GetTimestamp()` approach as WebSocket.
 
 #### Run SSE server and client for simulated tick feed using HttpListener over HTTP
 
@@ -272,7 +354,6 @@ Starts a local HttpListener SSE server that streams ticks as `text/event-stream`
 **When NOT to use:** Bi-directional communication — use WebSocket. Binary data — use gRPC.
 
 ```csharp
-// SSE server — streams ticks with embedded send_ts as text/event-stream
 var SSE_PORT = 8776;
 var sseRunning = true;
 var sseListener = new HttpListener();
@@ -313,12 +394,15 @@ _ = Task.Run(async () =>
 Console.WriteLine($"  SSE server running on http://localhost:{SSE_PORT}");
 ```
 
-      SSE server running on http://localhost:8776
+```text
+  SSE server running on http://localhost:8776
+```
 
 #### SSE client — receive ticks for 3 seconds
 
+Connects to the SSE endpoint and reads 1,000 `data:` lines (after 100 warmup). Each line is parsed from JSON and the embedded `send_ts` is compared to a `Stopwatch.GetTimestamp()` at receive time to compute one-way latency in microseconds.
+
 ```csharp
-// SSE client — one-way latency (send_ts embedded by server)
 var NUM_SSE = 1_000;
 var WARMUP_SSE = 100;
 var sseLatUs = new List<double>(NUM_SSE);
@@ -353,18 +437,25 @@ Console.WriteLine($"  {sseLatUs.Count} one-way measurements");
 Console.WriteLine($"  p50: {sseP50:F0}µs  p99: {sseP99:F0}µs");
 ```
 
-      1000 one-way measurements
-      p50: 58µs  p99: 154µs
+```text
+  1000 one-way measurements
+  p50: 58µs  p99: 154µs
+```
 
 ## Google Cloud Pub/Sub
 
 Managed message bus with at-least-once delivery, auto-scaling, and dead-letter queues.
 Decouples publishers from subscribers — the backbone of event-driven architectures in GCP.
 
+### Pub/Sub | Google.Cloud.PubSub.V1 | topic, subscriber, publisher
+
+Creates a topic and subscription, starts a streaming subscriber, publishes 500 ticks at a steady ~50 msg/s rate, and measures end-to-end delivery latency using a custom `send_ts` attribute (same-machine clock, no NTP drift).
+
 #### Create Pub/Sub topic and subscription
 
+Creates the topic and subscription used for tick streaming. Both operations are idempotent — if the resource already exists, the `GetTopic`/`GetSubscription` call succeeds and creation is skipped.
+
 ```csharp
-// Create topic and subscription (idempotent — skips if exists)
 var TOPIC_ID = "tick-feed";
 var SUB_ID   = "tick-feed-sub";
 var topicName = new TopicName(PROJECT_ID, TOPIC_ID);
@@ -377,18 +468,16 @@ try { subscriber.GetSubscription(subName); Console.WriteLine($"  Subscription ex
 catch { subscriber.CreateSubscription(subName, topicName, null, 10); Console.WriteLine($"  Created subscription: {subName}"); }
 ```
 
-      Topic exists: projects/seclab-dev-ap-26/topics/tick-feed
-      Subscription exists: projects/seclab-dev-ap-26/subscriptions/tick-feed-sub
+```text
+  Topic exists: projects/seclab-dev-ap-26/topics/tick-feed
+  Subscription exists: projects/seclab-dev-ap-26/subscriptions/tick-feed-sub
+```
 
 #### Start streaming subscriber using Google.Cloud.PubSub.V1 SubscriberClient over gRPC
 
 Starts the subscriber before publishing so the gRPC stream is established when messages arrive.
 
 ```csharp
-// Pub/Sub latency: publish 500 messages at steady rate, measure delivery latency
-// Uses custom 'send_ts' attribute (same machine clock, no NTP drift).
-// Steady rate (~50 msg/s) keeps the pipeline warm.
-
 var NUM_PS = 500;
 var WARMUP_PS = 50;
 var psLatMs = new ConcurrentBag<double>();
@@ -437,14 +526,20 @@ Console.WriteLine($"  {psSorted.Count} delivery latency measurements");
 Console.WriteLine($"  p50: {psP50:F0}ms  p99: {psP99:F0}ms  avg: {psAvgLatency:F0}ms");
 ```
 
-      Published 550 messages
-      468 delivery latency measurements
-      p50: 44ms  p99: 54ms  avg: 43ms
+```text
+  Published 550 messages
+  468 delivery latency measurements
+  p50: 44ms  p99: 54ms  avg: 43ms
+```
 
 ## Firestore Real-Time Listener
 
 Firestore’s `Listen()` pushes document changes to the client in real-time over gRPC.
 The same mechanism that powers live sync in Firebase mobile apps and dashboards.
+
+### Firestore | Google.Cloud.Firestore | listener, writes, cleanup
+
+Registers a `Listen` callback, writes 550 documents at ~50 doc/s, measures write-to-notification latency, and cleans up. Same measurement pattern as Pub/Sub — custom `send_ts` field with same-machine clock.
 
 #### Register Firestore real-time listener using Google.Cloud.Firestore Listen over gRPC
 
@@ -454,7 +549,6 @@ Registers a callback on every document change. Runs as a background gRPC stream.
 **When NOT to use:** High-throughput ingestion (>1K writes/s) — use Pub/Sub.
 
 ```csharp
-// Firestore listener — same measurement pattern as Pub/Sub
 var FS_RT_COLLECTION = "realtime_ticks";
 var NUM_FS = 500;
 var WARMUP_FS = 50;
@@ -481,14 +575,15 @@ await Task.Delay(1000);
 Console.WriteLine($"  Listener registered on {FS_RT_COLLECTION}");
 ```
 
-      Listener registered on realtime_ticks
+```text
+  Listener registered on realtime_ticks
+```
 
 #### Write documents to Firestore using Google.Cloud.Firestore WriteBatch over gRPC
 
-Writes 100 documents. Each carries a `write_ts` for latency measurement.
+Writes 550 documents (50 warmup + 500 measured) one at a time at a steady ~50 doc/s rate. Each document carries a `send_ts` field for latency measurement. Individual `SetAsync` calls are used instead of batch writes so each document triggers a separate listener notification.
 
 ```csharp
-// Write documents one at a time at steady rate — same pattern as Pub/Sub
 var totalFs = WARMUP_FS + NUM_FS;
 var colRef = fsDb.Collection(FS_RT_COLLECTION);
 for (int n = 0; n < totalFs; n++)
@@ -502,14 +597,15 @@ for (int n = 0; n < totalFs; n++)
 Console.WriteLine($"  Wrote {totalFs} documents");
 ```
 
-      Wrote 550 documents
+```text
+  Wrote 550 documents
+```
 
 #### Measure Firestore listener latency from Listen change events over gRPC
 
 Waits for the listener to receive all events, computes write-to-receive latency.
 
 ```csharp
-// Wait for notifications, compute latency
 fsDone.Wait(TimeSpan.FromSeconds(60));
 await fsListener.StopAsync();
 
@@ -521,30 +617,37 @@ Console.WriteLine($"  {fsSorted.Count} delivery latency measurements");
 Console.WriteLine($"  p50: {fsP50:F0}ms  p99: {fsP99:F0}ms  avg: {fsAvgLatency:F0}ms");
 ```
 
-      500 delivery latency measurements
-      p50: 41ms  p99: 58ms  avg: 41ms
+```text
+  500 delivery latency measurements
+  p50: 41ms  p99: 58ms  avg: 41ms
+```
 
 #### Cleanup Firestore real-time collection
 
+Deletes all test documents created during the listener benchmark to leave the collection empty.
+
 ```csharp
-// Delete test documents
 for (int i = 0; i < totalFs; i++)
     await fsDb.Collection(FS_RT_COLLECTION).Document($"tick_{i:D4}").DeleteAsync();
 Console.WriteLine($"  Deleted {totalFs} documents");
 ```
 
-      Deleted 550 documents
+```text
+  Deleted 550 documents
+```
 
 ## Latency Comparison
 
 Two separate comparisons — local protocols vs GCP managed services — because mixing
 localhost (0ms network) with cross-continent GCP (~300ms RTT) would be meaningless.
 
+### Latency | Plotly.NET | local protocols
+
 #### Local protocols — WebSocket vs SSE throughput (localhost, no network)
 
-```csharp
-// Local protocols — p50 one-way latency (µs), both measured the same way
+Compares p50 one-way latency for both local protocols. Both are sub-millisecond on localhost — in production, network RTT dominates. C# uses HTTP.sys kernel-mode handling for both `HttpListener` (SSE) and WebSocket, which gives different performance characteristics than Python's user-space asyncio.
 
+```csharp
 var localMethods = new[] { "WebSocket", "SSE" };
 var localLatencies = new[] { wsP50, sseP50 };
 var localTexts = localLatencies.Select(v => $"{v:F0}µs").ToArray();
@@ -565,15 +668,22 @@ Plotly.NET.CSharp.Chart.Column<double, string, string>(
     Margin: Margin.init<int, int, int, int, int, int>(Top: 50)))
 ```
 
-      WebSocket: p50=69µs  p99=158µs  (1000 msgs)
-      SSE:       p50=58µs  p99=154µs  (1000 msgs)
+```text
+  WebSocket: p50=69µs  p99=158µs  (1000 msgs)
+  SSE:       p50=58µs  p99=154µs  (1000 msgs)
+```
 
 <iframe src="/static/plotly/sr_cs_01.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
+### Latency | Plotly.NET | GCP managed services
+
+Isolates network RTT from protocol overhead by measuring raw gRPC round-trip time to GCP as a baseline, then stacking Pub/Sub and Firestore delivery latency on top. Both services show ~10ms of protocol overhead beyond the ~33ms network RTT — the bottleneck is network + server processing, not the client language.
+
 #### GCP managed services — Pub/Sub vs Firestore (europe-west1)
 
+Measures raw gRPC RTT to GCP using a minimal Firestore metadata call (50 samples), then compares total delivery latency for Pub/Sub and Firestore against that baseline.
+
 ```csharp
-// Measure raw gRPC RTT to GCP as baseline (Firestore metadata call)
 var rttSamples = new List<double>();
 for (int r = 0; r < 50; r++)
 {
@@ -587,16 +697,11 @@ var rttP50Ms = rttSamples[rttSamples.Count / 2];
 Console.WriteLine($"  gRPC RTT to GCP (50 samples): p50={rttP50Ms:F0}ms");
 ```
 
-      gRPC RTT to GCP (50 samples): p50=33ms
+```text
+  gRPC RTT to GCP (50 samples): p50=33ms
+```
 
 ```csharp
-// GCP managed services — total latency and protocol overhead
-//
-// C# shows the same ~33ms RTT + ~10ms overhead as Python — the GCP service latency
-// is network-bound, not language-bound. Both use gRPC under the hood.
-// Local WebSocket/SSE differ (C# HTTP.sys kernel vs Python asyncio user-space),
-// but GCP latency is identical because the bottleneck is network + server processing.
-
 var psOverheadMs = Math.Max(0, psAvgLatency - rttP50Ms);
 var fsOverheadMs = Math.Max(0, fsAvgLatency - rttP50Ms);
 
@@ -629,28 +734,35 @@ Plotly.NET.CSharp.Chart.Combine(new[] {
     Margin: Margin.init<int, int, int, int, int, int>(Top: 60)))
 ```
 
-      Network RTT baseline:  33ms
-      Pub/Sub total:         43ms  overhead: 10ms
-      Firestore total:       41ms  overhead: 8ms
+```text
+  Network RTT baseline:  33ms
+  Pub/Sub total:         43ms  overhead: 10ms
+  Firestore total:       41ms  overhead: 8ms
+```
 
 <iframe src="/static/plotly/sr_cs_02.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 #### Cleanup Pub/Sub resources
 
+Deletes the subscription and topic created for the latency benchmark. Both operations are wrapped in try/catch — if the resource was already deleted, the error is silently caught.
+
 ```csharp
-// Delete subscription and topic
 try { subscriber.DeleteSubscription(subName); Console.WriteLine($"  Deleted subscription"); }
 catch { Console.WriteLine($"  Subscription already deleted"); }
 try { publisher.DeleteTopic(topicName); Console.WriteLine($"  Deleted topic"); }
 catch { Console.WriteLine($"  Topic already deleted"); }
 ```
 
-      Deleted subscription
-      Deleted topic
+```text
+  Deleted subscription
+  Deleted topic
+```
 
 ## Enterprise Transfer & Streaming Patterns (Reference)
 
 Production patterns for large-scale data movement. Included as architecture reference — no runnable code.
+
+### Enterprise patterns | reference architecture
 
 #### Enterprise Streaming — MFT (Managed File Transfer)
 
@@ -675,6 +787,8 @@ Production patterns for large-scale data movement. Included as architecture refe
 | Partner Interconnect | 50 Mbps-50 Gbps | Low | Smaller dedicated link |
 
 #### When to Use What
+
+Decision matrix for selecting the right streaming or transfer pattern based on the scenario requirements.
 
 | Scenario | Pattern | Why |
 |----------|---------|-----|

@@ -1,9 +1,9 @@
 ---
-tags: [infrastructure, gcp, gcloud]
+tags: [gcp, gcloud, authentication]
 aliases: [gcloud auth, GCP authentication, Application Default Credentials, ADC, gcloud login]
 description: "How GCP authentication works with gcloud CLI: interactive login, Application Default Credentials (ADC), service account key files, and the credential search order that client libraries follow."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-05
 status: complete
 ---
 
@@ -16,11 +16,40 @@ status: complete
 
 GCP uses OAuth 2.0 tokens for authentication. Every gcloud command sends a token that identifies who you are and what you are authorized to do. Understanding the two types of credentials — user credentials and Application Default Credentials (ADC) — prevents the most common "permission denied" errors in pipeline development.
 
-### How GCP Authentication Works
+## Authentication Overview
 
 There are three authentication flows: interactive login for humans, Application Default Credentials for code/SDKs, and service account activation for CI/CD and production environments. The gcloud CLI commands are identical on Linux and Windows.
 
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A["Which authentication method?"] --> B{"Environment"}
+    B -- "Local dev\n(human user)" --> C["gcloud auth login\n+ application-default login"]
+    B -- "CI/CD pipeline" --> D{"GCP-hosted or\nOIDC provider?"}
+    D -- Yes --> E["Workload Identity Federation\n(no key files)"]
+    D -- No --> F["gcloud auth activate-service-account\n--key-file=key.json"]
+    B -- "GCE VM / Cloud Run\n/ GKE Pod" --> G["GCE Metadata Server\n(automatic — no setup)"]
+    B -- "Non-GCP env\nno OIDC support" --> F
+```
+
 ## Authentication Commands
+
+The `gcloud auth` subcommand manages all credential types. Choose the method that matches your environment: interactive for local work, application-default for SDK access, or service account for production and CI/CD.
+
+### Interactive Authentication
+
+For human users working locally. `auth login` populates credentials for the `gcloud` CLI; `application-default login` populates a separate file read by Python, Go, and Java client libraries. Both are needed for full local development access.
 
 #### gcloud auth login — interactive authentication for human users
 
@@ -30,7 +59,19 @@ Opens a browser for Google account login. The OAuth token is stored in `~/.confi
 gcloud auth login
 ```
 
+```text
+Your browser has been opened to visit:
+
+    https://accounts.google.com/o/oauth2/auth?...
+
+You are now logged in as [you@example.com].
+Your current project is [my-project]. You can change this setting by running:
+  $ gcloud config set project PROJECT_ID
+```
+
 #### gcloud auth application-default login — ADC for application code
+
+Writes credentials to `~/.config/gcloud/application_default_credentials.json`. These are read by Python `google-cloud-*`, Go, and Java SDK clients — not by the `gcloud` CLI itself.
 
 > [!warning] ADC is different from `gcloud auth login`
 > - `gcloud auth login` = credentials for the **gcloud CLI** itself
@@ -50,6 +91,48 @@ gcloud auth login
 gcloud auth application-default login
 ```
 
+```text
+Your browser has been opened to visit:
+
+    https://accounts.google.com/o/oauth2/auth?...
+
+Credentials saved to file: [/home/user/.config/gcloud/application_default_credentials.json]
+
+These credentials will be used by any library that requests Application Default Credentials (ADC).
+Quota project "my-project" was added to ADC which can be used by Google client libraries for billing and quota.
+```
+
+#### gcloud auth application-default set-quota-project — set billing project for ADC
+
+Sets the quota project used by client libraries for billing. Required when your user identity belongs to a different project than the API resources you are accessing — otherwise API calls may fail with quota or billing errors.
+
+```bash
+gcloud auth application-default set-quota-project PROJECT_ID
+```
+
+```text
+Updated property [core/project].
+Credentials saved to file: [/home/user/.config/gcloud/application_default_credentials.json]
+```
+
+| Flag | Description |
+|---|---|
+| `PROJECT_ID` | Project to use for quota and billing when ADC credentials are used by client libraries |
+
+### Interactive Authentication — Flag Reference
+
+| Flag | Command | Description |
+|---|---|---|
+| `--no-launch-browser` | `auth login`, `application-default login` | Print auth URL instead of opening a browser — use in headless or SSH environments |
+| `--scopes` | `auth login`, `application-default login` | Comma-separated OAuth scopes to request (default: `cloud-platform`) |
+| `--account` | `auth login` | Google account to authenticate if multiple are available |
+| `--client-id-file` | `application-default login` | Path to a custom OAuth client credentials JSON file |
+| `--disable-quota-project` | `application-default login` | Omit the billing project from the ADC credentials file |
+
+### Service Account Authentication
+
+For CI/CD pipelines, automated scripts, and non-interactive environments. In production, prefer Workload Identity Federation over key files — key files never expire and remain valid until explicitly deleted in IAM.
+
 #### gcloud auth activate-service-account — SA key for production and CI/CD
 
 Authenticates as a service account using a JSON key file. Use for CI/CD pipelines, automated scripts, and non-interactive environments. In production, prefer Workload Identity (no key files) over key files.
@@ -58,26 +141,85 @@ Authenticates as a service account using a JSON key file. Use for CI/CD pipeline
 gcloud auth activate-service-account --key-file=key.json
 ```
 
-For creating and managing the service accounts referenced here, see [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam). In GitHub Actions, [Workload Identity Federation](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) eliminates key files entirely for CI/CD authentication.
-
-#### gcloud auth list, revoke, print-access-token — view and manage credentials
-
-```bash
-# View current identity
-gcloud auth list
-# Shows all authenticated accounts and which one is active (marked with *)
-
-# Print access token (for debugging API calls directly)
-gcloud auth print-access-token
-# Use case: testing API calls with curl
-# curl -H "Authorization: Bearer $(gcloud auth print-access-token)" https://bigquery.googleapis.com/...
-
-# Revoke credentials (security: when leaving a project or shared machine)
-gcloud auth revoke
-# Removes stored credentials for the active account
+```text
+Activated service account credentials for: [my-sa@my-project.iam.gserviceaccount.com]
 ```
 
-### The ADC Credential Search Order
+For creating and managing the service accounts referenced here, see [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam). In GitHub Actions, [Workload Identity Federation](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) eliminates key files entirely for CI/CD authentication.
+
+### Service Account Authentication — Flag Reference
+
+| Flag | Description |
+|---|---|
+| `--key-file` | Path to the service account JSON key file (required) |
+| `--project` | Set the default GCP project for this service account session |
+
+### Credential Management
+
+Commands for inspecting, debugging, and cleaning up credentials. Use `gcloud auth list` to verify the active identity before running infrastructure commands on a shared or multi-project machine.
+
+#### gcloud auth list — view authenticated accounts
+
+Lists all authenticated accounts and marks the active one with `*`. Run before any `gcloud` command on a shared or multi-project machine to confirm you are using the expected identity.
+
+```bash
+gcloud auth list
+```
+
+```text
+                         Credentialed Accounts
+ACTIVE  ACCOUNT
+*       you@example.com
+        other@example.com
+
+To set the active account, run:
+    $ gcloud config set account `ACCOUNT`
+```
+
+#### gcloud auth print-access-token — retrieve the current OAuth token
+
+Prints the raw OAuth 2.0 access token for the active account. Use when debugging direct REST API calls with `curl` or validating that a credential is active.
+
+```bash
+gcloud auth print-access-token
+```
+
+```text
+ya29.A0ARrdaM_...Zx9Q
+```
+
+Pass the token directly to REST API calls:
+
+```bash
+curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "https://bigquery.googleapis.com/bigquery/v2/projects/my-project/datasets"
+```
+
+#### gcloud auth revoke — remove stored credentials
+
+Revokes and deletes stored credentials for an account. Run when leaving a shared machine, rotating credentials after a security incident, or cleaning up stale accounts.
+
+```bash
+gcloud auth revoke
+```
+
+```text
+Revoked credentials:
+ - you@example.com
+```
+
+### Credential Management — Flag Reference
+
+| Flag | Command | Description |
+|---|---|---|
+| `--account` | `list`, `print-access-token`, `revoke` | Account to operate on (default: currently active account) |
+| `--all` | `revoke` | Revoke all authenticated accounts, not just the active one |
+| `--filter` | `list` | Filter expression (e.g., `--filter="account:@example.com"`) |
+| `--format` | `list` | Output format: `json`, `yaml`, `table`, `value` |
+
+## ADC Credential Search Order
+
+When application code calls a GCP client library, the library calls `google.auth.default()` to resolve credentials. It searches the following locations in order and stops at the first match.
 
 > [!info] The ADC Search Order
 >
@@ -101,7 +243,56 @@ gcloud auth revoke
 > [!success] Prefer keyless authentication
 > On GCE VMs, Cloud Run, and GKE, use the **metadata server** — no key files needed at all. For CI/CD, use **Workload Identity Federation** to authenticate GitHub Actions or other OIDC providers without any long-lived credentials. Key files should only exist as a last resort for non-GCP environments without Workload Identity support.
 
-### GCP Authentication Gotchas and Edge Cases
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A["google.auth.default()"] --> B{"GOOGLE_APPLICATION_CREDENTIALS\nenv var set?"}
+    B -- Yes --> C["JSON key file\nfrom env path"]
+    B -- No --> D{"ADC file exists?\n~/.config/gcloud/\napplication_default_credentials.json"}
+    D -- Yes --> E["gcloud ADC\ngcloud auth application-default login"]
+    D -- No --> F{"Running on GCE /\nCloud Run / GKE?"}
+    F -- Yes --> G["GCE Metadata Server\n(automatic)"]
+    F -- No --> H["AuthenticationError\nNo credentials found"]
+    C --> I["Authenticated"]
+    E --> I
+    G --> I
+```
+
+## Service Account Impersonation
+
+Service account impersonation lets a human user or another service account act as a target service account without downloading its key file. The `--impersonate-service-account` flag works on any `gcloud` command and requires `roles/iam.serviceAccountTokenCreator` on the target SA.
+
+```bash
+gcloud storage ls gs://my-bucket \
+  --impersonate-service-account=my-sa@my-project.iam.gserviceaccount.com
+```
+
+```text
+gs://my-bucket/data/
+gs://my-bucket/logs/
+```
+
+> [!tip] Use impersonation instead of downloading key files for local testing
+> To test what a service account can access, impersonate it from your own authenticated session. This avoids creating a persistent key file and the associated security risk. The impersonation token is short-lived (1 hour) and tied to your identity's audit trail.
+
+| Flag | Description |
+|---|---|
+| `--impersonate-service-account` | SA email to impersonate; valid on any `gcloud` command |
+
+## Gotchas and Edge Cases
+
+Common sources of authentication failures in local development and CI/CD pipelines.
 
 > [!warning] ADC Token Caching Issues
 >

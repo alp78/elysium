@@ -1,4 +1,5 @@
 ---
+title: "Streaming & Real-Time Data"
 tags: [python, gcp, pipeline, streaming]
 aliases: [Streaming Python, Real-Time Data Python, WebSocket, SSE, Pub/Sub]
 description: "Python streaming and real-time data reference — WebSocket, SSE, Pub/Sub, Firestore listeners, and latency benchmarks. See [24_cs_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/24_cs_streaming_realtime) for the C# equivalent."
@@ -7,15 +8,16 @@ updated: 2026-03-28
 status: complete
 ---
 
-# 24. Streaming & Real-Time Data
-WebSocket, SSE, Pub/Sub, Firestore
+# 24. Streaming & Real-Time Data — WebSocket, SSE, Pub/Sub, Firestore
 
 > [!quote]
 > "Turning the database inside out: take the implementation detail that was previously hidden inside the database, and make it a first-class citizen."
 >
 > — **Martin Kleppmann**, *Making Sense of Stream Processing* (2016)
 
-### Technologies Overview
+## Technologies Overview
+
+Comparison of the five streaming and transfer protocols used in this notebook — from lowest-latency local TCP to managed cloud services and batch file transfer.
 
 | Technology | Protocol | Direction | Latency | Use Case |
 |------------|----------|-----------|---------|----------|
@@ -35,10 +37,65 @@ WebSocket, SSE, Pub/Sub, Firestore
 
 **Batch transfer** (file upload/download via GCS) is included as a baseline. It has the highest per-message latency but the highest throughput for bulk data — the right choice when freshness is measured in minutes, not milliseconds.
 
-```python
-# All imports for streaming and real-time data patterns
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+sequenceDiagram
+    participant P as Publisher / Client
+    participant S as Server / Broker
+    participant L as Listener / Subscriber
 
-# Standard library
+    rect rgb(41, 46, 66)
+    Note over P,L: WebSocket — full-duplex TCP
+    P->>S: Upgrade: websocket
+    S-->>L: tick stream (sub-ms latency)
+    L-->>S: commands / acks
+    end
+
+    rect rgb(26, 27, 38)
+    Note over P,L: SSE — server → client only
+    L->>S: GET /stream (HTTP)
+    S-->>L: text/event-stream (~10–50ms)
+    end
+
+    rect rgb(41, 46, 66)
+    Note over P,L: Pub/Sub — decoupled message bus
+    P->>S: Publish message (gRPC)
+    Note over S: Durable queue
+    S-->>L: StreamingPull delivery (50–200ms)
+    L->>S: Ack
+    end
+
+    rect rgb(26, 27, 38)
+    Note over P,L: Firestore — document change push
+    P->>S: Write document (gRPC)
+    S-->>L: on_snapshot callback (100–500ms)
+    end
+```
+
+> [!tip] Related pattern
+>
+> For the architectural context of where streaming fits within the broader data platform — including how real-time feeds connect to batch pipelines — see [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture).
+
+## Setup
+
+### Setup | Jupyter | imports, asyncio, environment init
+
+#### Load imports and configure Jupyter async support
+
+All external libraries used throughout the notebook: `websockets` and `aiohttp` for local streaming servers, `httpx` for async HTTP, `google-cloud-pubsub` and `google-cloud-firestore` for GCP streaming, and `plotly` for latency charts. `nest_asyncio.apply()` patches the event loop to allow `asyncio.run()` inside Jupyter, which normally forbids nested loops.
+
+```python
 import asyncio
 import gc
 import json
@@ -49,27 +106,22 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Async networking
 import aiohttp
 from aiohttp import web
 import httpx
 import websockets
 import nest_asyncio
 
-# Data
 import pandas as pd
 
-# Google Cloud
 from dotenv import load_dotenv
 from google.cloud import pubsub_v1, firestore, storage
 
-# Visualisation
 import plotly.graph_objects as go
 from IPython.display import display
 
-nest_asyncio.apply()  # allow asyncio.run() inside Jupyter
+nest_asyncio.apply()
 
-# Render DataFrames as HTML
 html_formatter = get_ipython().display_formatter.formatters['text/html'] # type: ignore
 html_formatter.for_type(pd.DataFrame, lambda df: df.to_html())
 _ = html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
@@ -78,8 +130,11 @@ import logging
 logging.getLogger("aiohttp.server").setLevel(logging.CRITICAL)
 ```
 
+#### Load environment variables and create GCP clients
+
+Loads `.env` variables, sets the `GOOGLE_APPLICATION_CREDENTIALS` path, and creates GCP clients for Pub/Sub, Firestore, and GCS. Publisher batching is disabled (`max_messages=1, max_latency=0`) to get accurate per-message latency measurements — the default batches up to 10ms, which would distort benchmarks. The final three lines print the active Project ID, Firestore database name, and GCS bucket path for verification.
+
 ```python
-# Load .env and define project constants
 load_dotenv(override=True)
 
 PROJECT_ID   = 'seclab-dev-ap-26'
@@ -91,8 +146,6 @@ DATA_DIR     = Path(r'C:\Users\aperi\DEV\LANG\data')
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = SA_KEY_PATH
 
-# GCP clients
-# Disable publisher batching for latency benchmarks (default batches up to 10ms)
 from google.cloud.pubsub_v1.types import BatchSettings
 publisher    = pubsub_v1.PublisherClient(
     batch_settings=BatchSettings(max_messages=1, max_latency=0))
@@ -101,16 +154,22 @@ fs_client    = firestore.Client(project=PROJECT_ID, database=FIRESTORE_DB)
 gcs_client   = storage.Client(project=PROJECT_ID)
 bucket       = gcs_client.bucket(BUCKET_NAME)
 
-PROJECT_ID  # Project
-FIRESTORE_DB  # Firestore
+PROJECT_ID
+FIRESTORE_DB
 print(f'  GCS:       gs://{BUCKET_NAME}')
 ```
 
-      seclab-dev-ap-26
-      seclab-scores
-      gs://seclab-dev-ap-26-data
+```text
+  seclab-dev-ap-26
+  seclab-scores
+  gs://seclab-dev-ap-26-data
+```
 
-#### Formatting helpers
+### Setup | data generation | formatting helpers and OHLCV tick simulation
+
+#### Format time and rate values as human-readable strings
+
+Two utility functions used throughout the notebook. `fmt_time` converts milliseconds to the most readable unit (µs, ms, s, or min). `fmt_rate` converts a message count and elapsed duration into a throughput rate (msg/s, K msg/s, or M msg/s).
 
 ```python
 def fmt_time(ms):
@@ -129,12 +188,11 @@ def fmt_rate(n, ms):
     return f'{rate/1_000_000:.1f}M msg/s'
 ```
 
-#### Simulated OHLCV tick generator
+#### Generate simulated OHLCV ticks with random-walk price movement
 
-Generates synthetic tick data for 5 symbols — used as the data source for all streaming patterns below.
+Produces synthetic tick data for 5 European equity symbols (ASML, SAP, Siemens, LVMH, TotalEnergies). Each call to `generate_tick()` applies a Gaussian random-walk price change (0.2% standard deviation) and returns a dictionary with symbol, timestamp, price, volume, bid, and ask fields. This function is the data source for all streaming patterns below.
 
 ```python
-# Simulated tick generator — produces OHLCV-like ticks with realistic price movement
 SYMBOLS = ['ASML.AS', 'SAP.DE', 'SIE.DE', 'MC.PA', 'TTE.PA']
 PRICES = {s: random.uniform(50, 900) for s in SYMBOLS}
 
@@ -142,7 +200,7 @@ def generate_tick():
     """Generate one simulated tick with random walk price movement."""
     symbol = random.choice(SYMBOLS)
     price = PRICES[symbol]
-    change = price * random.gauss(0, 0.002)  # 0.2% stddev per tick
+    change = price * random.gauss(0, 0.002)
     PRICES[symbol] = price + change
     return {
         'symbol': symbol,
@@ -153,7 +211,6 @@ def generate_tick():
         'ask': round(PRICES[symbol] + random.uniform(0.01, 0.5), 4),
     }
 
-# Preview
 sample = [generate_tick() for _ in range(5)]
 display(pd.DataFrame(sample))
 ```
@@ -219,25 +276,24 @@ display(pd.DataFrame(sample))
   </tbody>
 </table>
 
-> [!tip] Related pattern
->
-> For the architectural context of where streaming fits within the broader data platform — including how real-time feeds connect to batch pipelines — see [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture).
-
 ## WebSocket Streaming
 
 Full-duplex, persistent TCP connection. The server pushes ticks as they occur — no polling.
 Used by every real-time trading platform (Binance, Bloomberg Terminal, Refinitiv).
 
-#### Run WebSocket server and client for simulated tick feed using websockets over TCP
+### WebSocket | websockets | server and client
 
-Starts a local WebSocket server in a background thread that broadcasts ticks at ~100 msg/s.
+Local WebSocket server broadcasting simulated ticks, with a client that measures one-way latency using `time.perf_counter_ns()` embedded in each message.
+
+#### Start local WebSocket tick server
+
+Starts a local WebSocket server in a background thread that broadcasts ticks at ~100 msg/s. The `asyncio.sleep(0)` yields control to the event loop between sends without adding delay.
 The client connects, receives ticks for 3 seconds, and collects them into a DataFrame.
 
 **Scenario:** Real-time price dashboards, algorithmic trading, live order book feeds.
 **When NOT to use:** One-shot request/response patterns — use REST instead.
 
 ```python
-# WebSocket server — broadcasts ticks with embedded send_ts for one-way latency
 WS_PORT = 8765
 
 async def ws_handler(websocket):
@@ -246,20 +302,23 @@ async def ws_handler(websocket):
             t = generate_tick()
             t['send_ts'] = time.perf_counter_ns()
             await websocket.send(json.dumps(t))
-            await asyncio.sleep(0)  # yield, no delay
+            await asyncio.sleep(0)
     except websockets.ConnectionClosed:
         pass
 
 ws_server = await websockets.serve(ws_handler, 'localhost', WS_PORT)
-WS_PORT  # WebSocket server running on ws://localhost
+WS_PORT
 ```
 
-      WebSocket server running on ws://localhost:8765
+```text
+  WebSocket server running on ws://localhost:8765
+```
 
-#### websockets.connect — WebSocket streaming client, receive ticks
+#### Receive ticks and measure one-way latency
+
+Connects to the local WebSocket server and receives 10,000 ticks (after 100 warmup messages). Each tick carries a `send_ts` from `time.perf_counter_ns()`, allowing one-way latency measurement in microseconds without clock synchronization. Garbage collection is disabled during measurement to avoid GC pauses inflating tail latency.
 
 ```python
-# WebSocket client — one-way latency (send_ts embedded by server)
 ws_latencies_us = []
 WARMUP_WS = 100
 NUM_WS = 10_000
@@ -295,24 +354,28 @@ print(f'  {len(ws_latencies_us)} one-way measurements')
 print(f'  p50: {ws_p50:.0f}µs  p99: {ws_p99:.0f}µs  p99.9: {ws_p999:.0f}µs')
 ```
 
-      10000 one-way measurements
-      p50: 83µs  p99: 139µs  p99.9: 233µs
+```text
+  10000 one-way measurements
+  p50: 83µs  p99: 139µs  p99.9: 233µs
+```
 
 ## Server-Sent Events (SSE)
 
 One-directional server→client push over HTTP. Simpler than WebSocket — works through
 proxies/CDNs, auto-reconnects, text-only. Used by ChatGPT, GitHub notifications, stock tickers.
 
-#### Run SSE server and client for simulated tick feed using aiohttp over HTTP
+### SSE | aiohttp + httpx | server and client
 
-Starts a local aiohttp server that streams ticks as `text/event-stream`. The client reads
-events using `httpx` async streaming.
+Local aiohttp SSE server streaming ticks as `text/event-stream`, with an `httpx` async client that parses events and measures one-way latency using the same `perf_counter_ns()` approach as WebSocket.
+
+#### Start local SSE tick server
+
+Starts a local aiohttp server that streams ticks as `text/event-stream`. The `asyncio.sleep(0)` yields control without delay. The client reads events using `httpx` async streaming.
 
 **Scenario:** Live dashboards, notification feeds, AI chat token streaming.
 **When NOT to use:** Bi-directional communication — use WebSocket. Binary data — use gRPC.
 
 ```python
-# SSE server — streams ticks as text/event-stream
 SSE_PORT = 8766
 sse_running = True
 
@@ -327,7 +390,7 @@ async def sse_handler(request):
         t['send_ts'] = time.perf_counter_ns()
         tick = json.dumps(t)
         await resp.write(f'data: {tick}\n\n'.encode())
-        await asyncio.sleep(0)
+        await asyncio.sleep(0)  
     return resp
 
 async def start_sse_server():
@@ -348,12 +411,15 @@ time.sleep(0.5)
 print(f'  SSE server running on http://localhost:{SSE_PORT}/ticks')
 ```
 
-      SSE server running on http://localhost:8766/ticks
+```text
+  SSE server running on http://localhost:8766/ticks
+```
 
-#### httpx AsyncClient — SSE client, receive Server-Sent Events
+#### Receive SSE events and measure one-way latency
+
+Connects to the SSE endpoint and reads 10,000 `data:` lines (after 100 warmup). Each line is parsed from JSON and the embedded `send_ts` is compared to a `perf_counter_ns()` at receive time to compute one-way latency in microseconds. SSE is server→client only, so no echo-based RTT is possible. Warmup messages are skipped before disabling garbage collection to avoid GC pauses inflating tail latency.
 
 ```python
-# SSE client — one-way latency (SSE is server→client only, can't echo)
 sse_latencies_us = []
 WARMUP_SSE = 100
 NUM_SSE = 10_000
@@ -367,10 +433,8 @@ async def sse_bench():
                 if not line.startswith('data: '):
                     continue
                 msg_count += 1
-                # Skip warmup
                 if msg_count <= WARMUP_SSE:
                     continue
-                # Disable GC after warmup
                 if not gc_disabled:
                     gc.disable()
                     gc_disabled = True
@@ -394,22 +458,30 @@ print(f'  {len(sse_latencies_us)} one-way measurements')
 print(f'  p50: {sse_p50:.0f}µs  p99: {sse_p99:.0f}µs  p99.9: {sse_p999:.0f}µs')
 ```
 
-      10000 one-way measurements
-      p50: 127µs  p99: 524µs  p99.9: 654µs
+```text
+  10000 one-way measurements
+  p50: 127µs  p99: 524µs  p99.9: 654µs
+```
 
 ## Google Cloud Pub/Sub
 
 Managed message bus with at-least-once delivery, auto-scaling, and dead-letter queues.
 Decouples publishers from subscribers — the backbone of event-driven architectures in GCP. For topic/subscription setup, dead-letter configuration, and operational patterns via `gcloud`, see [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging).
 
-#### gcloud services enable + IAM binding — Pub/Sub API and permissions
+### Pub/Sub | google-cloud-pubsub | setup, streaming, latency
+
+Enables the Pub/Sub API, creates a topic and subscription, starts a streaming subscriber, publishes 500 ticks at a steady ~50 msg/s rate, and measures end-to-end delivery latency using a custom `send_ts` attribute (same-machine clock, no NTP drift).
+
+#### Enable Pub/Sub API and grant IAM permissions
+
+Enables the Pub/Sub API and grants the `roles/pubsub.admin` role to the notebook service account. Both operations are idempotent. The output dumps the full IAM policy confirming the binding was added.
 
 ```python
-# Enable Pub/Sub API and grant admin role to the service account
 !gcloud services enable pubsub.googleapis.com --project=seclab-dev-ap-26
 !gcloud projects add-iam-policy-binding seclab-dev-ap-26 --member=serviceAccount:notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com --role=roles/pubsub.admin --condition=None --quiet
 ```
 
+```text
     bindings:
     - members:
       - serviceAccount:service-922174528852@gcp-sa-artifactregistry.iam.gserviceaccount.com
@@ -466,17 +538,18 @@ Decouples publishers from subscribers — the backbone of event-driven architect
     version: 1
 
     Updated IAM policy for project [seclab-dev-ap-26].
+```
 
-#### google-cloud-pubsub PublisherClient + SubscriberClient — create topic and subscription
+#### Create topic and subscription
+
+Creates the topic and subscription used for tick streaming. Both operations are idempotent — if the resource already exists, the `get_topic`/`get_subscription` call succeeds and creation is skipped. Each resource is first fetched with a get call; if the get raises an exception (not found), the create call runs instead.
 
 ```python
-# Create topic and subscription for tick streaming (idempotent — skips if exists)
 TOPIC_ID = 'tick-feed'
 SUB_ID   = 'tick-feed-sub'
 topic_path = publisher.topic_path(PROJECT_ID, TOPIC_ID)
 sub_path   = subscriber.subscription_path(PROJECT_ID, SUB_ID)
 
-# Get or create topic
 try:
     publisher.get_topic(request={'topic': topic_path})
     print(f'  Topic exists: {topic_path}')
@@ -484,7 +557,6 @@ except Exception:
     publisher.create_topic(request={'name': topic_path})
     print(f'  Created topic: {topic_path}')
 
-# Get or create subscription
 try:
     subscriber.get_subscription(request={'subscription': sub_path})
     print(f'  Subscription exists: {sub_path}')
@@ -493,23 +565,19 @@ except Exception:
     print(f'  Created subscription: {sub_path}')
 ```
 
-      Topic exists: projects/seclab-dev-ap-26/topics/tick-feed
-      Subscription exists: projects/seclab-dev-ap-26/subscriptions/tick-feed-sub
+```text
+  Topic exists: projects/seclab-dev-ap-26/topics/tick-feed
+  Subscription exists: projects/seclab-dev-ap-26/subscriptions/tick-feed-sub
+```
 
-#### Publish and subscribe to tick feed using google-cloud-pubsub over gRPC
+#### Start streaming subscriber
 
-Publishes 1000 ticks to the topic, then pulls them back via the subscription.
-Measures end-to-end latency (publish → receive) and throughput.
+Starts the subscriber before publishing so the gRPC stream is established when messages arrive. This measures true transport latency, not queue wait time.
 
 **Scenario:** Event-driven pipelines, microservice communication, IoT telemetry.
 **When NOT to use:** Sub-millisecond latency requirements — use direct TCP/WebSocket.
 
-#### Start streaming subscriber using google-cloud-pubsub subscriber.subscribe over gRPC
-
-Starts the subscriber before publishing so the gRPC stream is established when messages arrive. Measures true transport latency, not queue wait time.
-
 ```python
-# Start streaming pull FIRST — connects the gRPC stream before any messages are published
 NUM_TICKS = 1000
 received = []
 pull_lock = threading.Lock()
@@ -523,23 +591,24 @@ def callback(message):
     message.ack()
 
 streaming_pull = subscriber.subscribe(sub_path, callback=callback)
-time.sleep(2)  # let the gRPC stream establish
+time.sleep(2)
 print(f'  Streaming subscriber connected on {sub_path}')
 ```
 
-      Streaming subscriber connected on projects/seclab-dev-ap-26/subscriptions/tick-feed-sub
+```text
+  Streaming subscriber connected on projects/seclab-dev-ap-26/subscriptions/tick-feed-sub
+```
 
-#### Publish 1000 ticks using google-cloud-pubsub publisher.publish over gRPC
+#### Publish 1000 ticks to topic
 
 Publishes 1000 ticks with wall-clock timestamps. The subscriber callback receives them in real-time.
 
 ```python
-# Publish ticks — subscriber is already listening
 t0 = time.perf_counter()
 futures = []
 for _ in range(NUM_TICKS):
     tick = generate_tick()
-    tick['publish_ts'] = time.time()  # wall clock for cross-process latency
+    tick['publish_ts'] = time.time()
     data = json.dumps(tick).encode('utf-8')
     futures.append(publisher.publish(topic_path, data))
 for f in futures:
@@ -548,17 +617,15 @@ pub_ms = (time.perf_counter() - t0) * 1000
 print(f'  Published {NUM_TICKS} ticks in {fmt_time(pub_ms)} ({fmt_rate(NUM_TICKS, pub_ms)})')
 ```
 
-      Published 1000 ticks in 737ms (1.4K msg/s)
+```text
+  Published 1000 ticks in 737ms (1.4K msg/s)
+```
 
-#### Measure end-to-end Pub/Sub latency from publish to callback over gRPC
+#### Measure end-to-end delivery latency
 
-Waits for all messages to arrive, then computes publish-to-receive latency per message (avg and P99).
+Publishes 500 messages at a steady ~50 msg/s rate (after 50 warmup), measures delivery latency per message. Uses a custom `send_ts` attribute with same-machine `time.time()` instead of `message.publish_time` (which uses Google's server clock and introduces NTP offset errors). Warmup messages are excluded from the latency measurements. The publish loop sleeps 20ms between sends to maintain a steady ~50 msg/s rate.
 
 ```python
-# Pub/Sub latency: publish 500 messages at steady rate, measure delivery latency
-# Uses custom 'send_ts' attribute (same machine, no clock drift) instead of
-# message.publish_time (which uses Google's server clock, causing NTP offset errors).
-
 NUM_PS = 500
 WARMUP_PS = 50
 ps_latencies_ms = []
@@ -573,27 +640,24 @@ def ps_callback(message):
         latency = (recv_time - send_ts) * 1000
         with ps_lock:
             ps_count[0] += 1
-            if ps_count[0] > WARMUP_PS:  # skip warmup
+            if ps_count[0] > WARMUP_PS:
                 ps_latencies_ms.append(latency)
             if len(ps_latencies_ms) >= NUM_PS:
                 ps_done.set()
     message.ack()
 
-# Start streaming subscriber FIRST
 sub_client = subscriber.subscribe(sub_path, callback=ps_callback)
 time.sleep(2)
 
-# Publish at steady ~50 msg/s with send_ts as custom attribute
 total_msgs = WARMUP_PS + NUM_PS
 t0 = time.perf_counter()
 for n in range(total_msgs):
     payload = json.dumps(generate_tick()).encode('utf-8')
     publisher.publish(topic_path, payload, send_ts=str(time.time()))
-    time.sleep(0.02)  # ~50 msg/s steady rate
+    time.sleep(0.02)
 pub_ms = (time.perf_counter() - t0) * 1000
 print(f'  Published {total_msgs} messages in {fmt_time(pub_ms)}')
 
-# Wait for all messages to arrive
 ps_done.wait(timeout=60)
 sub_client.cancel()
 
@@ -609,16 +673,45 @@ else:
     print('  No messages received')
 ```
 
-      Published 550 messages in 11.5s
-      225 delivery latency measurements
-      p50: 45ms  p99: 52ms  avg: 45ms
+```text
+  Published 550 messages in 11.5s
+  225 delivery latency measurements
+  p50: 45ms  p99: 52ms  avg: 45ms
+```
+
+#### Delete subscription and topic
+
+Deletes the subscription and topic created for the latency benchmark. Both operations are wrapped in try/except — if the resource was already deleted, the error is silently caught.
+
+```python
+try:
+    subscriber.delete_subscription(request={'subscription': sub_path})
+    print(f'  Deleted subscription: {sub_path}')
+except Exception:
+    print(f'  Subscription already deleted')
+
+try:
+    publisher.delete_topic(request={'topic': topic_path})
+    print(f'  Deleted topic: {topic_path}')
+except Exception:
+    print(f'  Topic already deleted')
+```
+
+```text
+  Deleted subscription: projects/seclab-dev-ap-26/subscriptions/tick-feed-sub
+  Deleted topic: projects/seclab-dev-ap-26/topics/tick-feed
+```
 
 ## Firestore Real-Time Listener
 
 Firestore’s `on_snapshot` pushes document changes to the client in real-time over gRPC.
 The same mechanism that powers live sync in Firebase mobile apps and dashboards.
 
-#### Register Firestore real-time listener using google-cloud-firestore on_snapshot over gRPC
+### Firestore | google-cloud-firestore | listener, writes, cleanup
+
+Registers an `on_snapshot` callback, writes 550 documents at ~50 doc/s, measures write-to-notification latency, and cleans up. Same measurement pattern as Pub/Sub — custom `send_ts` field with same-machine clock.
+
+#### Register real-time listener with on_snapshot
 
 Registers a callback that fires on every document change (ADDED, MODIFIED, REMOVED). Runs in a background thread.
 
@@ -626,7 +719,6 @@ Registers a callback that fires on every document change (ADDED, MODIFIED, REMOV
 **When NOT to use:** High-throughput ingestion (>1K writes/s) — use Pub/Sub or streaming inserts.
 
 ```python
-# Register on_snapshot listener — same measurement pattern as Pub/Sub
 FS_RT_COLLECTION = 'realtime_ticks'
 NUM_FS = 500
 WARMUP_FS = 50
@@ -656,35 +748,36 @@ time.sleep(1)
 print(f'  Listener registered on {FS_RT_COLLECTION}')
 ```
 
-      Listener registered on realtime_ticks
+```text
+  Listener registered on realtime_ticks
+```
 
-#### Write documents to Firestore using google-cloud-firestore batch.commit over gRPC
+#### Write documents at steady rate
 
-Writes 100 documents via Firestore batch API. Each document carries a `write_ts` timestamp for latency measurement.
+Writes 550 documents (50 warmup + 500 measured) one at a time at a steady ~50 doc/s rate (20ms sleep between writes, matching the Pub/Sub benchmark). Each document carries a `send_ts` field from the same-machine clock (no NTP drift) for latency measurement. Individual `set()` calls are used instead of batch writes so each document triggers a separate `on_snapshot` notification.
 
 ```python
-# Write documents one at a time at steady rate — same pattern as Pub/Sub
-# Individual set() instead of batch — each doc triggers a separate notification.
 total_fs = WARMUP_FS + NUM_FS
 t0 = time.perf_counter()
 for i in range(total_fs):
     tick = generate_tick()
-    tick['send_ts'] = time.time()  # same-machine clock, no drift
+    tick['send_ts'] = time.time()
     tick['seq'] = i
     col_ref.document(f'tick_{i:04d}').set(tick)
-    time.sleep(0.02)  # ~50 msg/s steady rate, matching Pub/Sub
+    time.sleep(0.02)
 write_ms = (time.perf_counter() - t0) * 1000
 print(f'  Wrote {total_fs} documents in {fmt_time(write_ms)}')
 ```
 
-      Wrote 550 documents in 30.5s
+```text
+  Wrote 550 documents in 30.5s
+```
 
-#### Measure Firestore listener latency from on_snapshot change events over gRPC
+#### Measure listener delivery latency
 
 Waits for the background listener to receive all change events, then computes write-to-receive latency per document.
 
 ```python
-# Wait for all notifications, compute latency
 fs_done.wait(timeout=60)
 listener.unsubscribe()
 
@@ -700,38 +793,37 @@ else:
     print('  No notifications received')
 ```
 
-      500 delivery latency measurements
-      p50: 44ms  p99: 63ms  avg: 44ms
+```text
+  500 delivery latency measurements
+  p50: 44ms  p99: 63ms  avg: 44ms
+```
 
-#### google-cloud-firestore — cleanup real-time collection
+#### Delete test documents from real-time collection
+
+Deletes all test documents created during the listener benchmark to leave the collection empty.
 
 ```python
-# Delete test documents
 for i in range(WARMUP_FS + NUM_FS):
     fs_client.collection(FS_RT_COLLECTION).document(f'tick_{i:04d}').delete()
 print(f'  Deleted {WARMUP_FS + NUM_FS} documents from {FS_RT_COLLECTION}')
 ```
 
-      Deleted 550 documents from realtime_ticks
+```text
+  Deleted 550 documents from realtime_ticks
+```
 
 ## Latency Comparison
 
 Two separate comparisons — local protocols vs GCP managed services — because mixing
 localhost (0ms network) with cross-continent GCP (300ms RTT) would be meaningless.
 
+### Latency | Plotly | local protocols
+
 #### Local protocols — WebSocket vs SSE throughput (localhost, no network)
 
+Compares p50 one-way latency for both local protocols. WebSocket is ~1.5x faster at p50 — binary frames (2–6 byte header) have less per-message overhead than SSE's HTTP chunked text encoding. SSE tail latency (p99) is significantly worse due to HTTP line parsing edge cases (partial reads, buffer boundaries) that don't affect binary WebSocket framing. Both are sub-millisecond on localhost — in production, network RTT dominates. SSE trade-off: works through CDNs/proxies, built-in auto-reconnect, simpler to implement.
+
 ```python
-# Local protocols — p50 one-way latency (µs), both measured the same way
-#
-# WebSocket is ~1.5x faster at p50 — binary frames (2-6 byte header) have less
-# per-message overhead than SSE's HTTP chunked text encoding (chunk size + 'data: ' prefix + 
-
-# SSE tail latency (p99) is significantly worse due to HTTP line parsing edge cases
-# (partial reads, buffer boundaries) that don't affect binary WebSocket framing.
-# Both are sub-millisecond on localhost — in production, network RTT dominates.
-# SSE trade-off: works through CDNs/proxies, built-in auto-reconnect, simpler to implement.
-
 local_data = {
     'WebSocket': ws_p50,
     'SSE': sse_p50,
@@ -754,23 +846,28 @@ fig_local.update_layout(
 fig_local.show()
 ```
 
-      WebSocket: p50=83µs  p99=139µs  (10000 msgs)
-      SSE:       p50=127µs  p99=524µs  (10000 msgs)
+```text
+  WebSocket: p50=83µs  p99=139µs  (10000 msgs)
+  SSE:       p50=127µs  p99=524µs  (10000 msgs)
+```
 
 <iframe src="/static/plotly/sr_py_01.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### GCP managed services — Pub/Sub vs Firestore vs Batch GCS (europe-west1)
+### Latency | Plotly | GCP managed services
+
+Isolates network RTT from protocol overhead by measuring raw gRPC round-trip time to GCP as a baseline, then stacking Pub/Sub and Firestore delivery latency on top. Network RTT dominates ~75% of total latency for both services — both use gRPC to the same GCP region. On a VM in the same region (RTT ≈ 0), expect ~10–15ms pure service overhead.
+
+#### Measure raw gRPC round-trip time to GCP
+
+Measures raw gRPC RTT to GCP using a minimal Firestore metadata call (50 samples), then compares total delivery latency for Pub/Sub and Firestore against that baseline.
 
 ```python
-# Measure raw gRPC RTT to GCP as baseline (Firestore metadata call)
-# This isolates network latency from protocol overhead.
 rtt_samples = []
 for _ in range(50):
     t0 = time.perf_counter_ns()
-    # Minimal Firestore call — just reads server metadata, no data transfer
     list(fs_client.collection('rtt_probe').limit(1).stream())
     t1 = time.perf_counter_ns()
-    rtt_samples.append((t1 - t0) / 1000)  # µs
+    rtt_samples.append((t1 - t0) / 1000)
 
 rtt_samples.sort()
 rtt_p50 = rtt_samples[len(rtt_samples) // 2]
@@ -779,15 +876,15 @@ rtt_ms = rtt_p50 / 1000
 print(f'  gRPC RTT to GCP (50 samples): p50={rtt_p50/1000:.0f}ms  p99={rtt_p99/1000:.0f}ms')
 ```
 
-      gRPC RTT to GCP (50 samples): p50=33ms  p99=49ms
+```text
+  gRPC RTT to GCP (50 samples): p50=33ms  p99=49ms
+```
+
+#### Plot stacked latency breakdown for Pub/Sub and Firestore
+
+Computes protocol overhead by subtracting the raw gRPC RTT baseline from total delivery latency, then renders a stacked bar chart showing the network RTT and protocol overhead components. Total latency labels are added on top of each bar.
 
 ```python
-# GCP managed services — total latency and protocol overhead
-#
-# Network RTT dominates ~75% of total latency for both services.
-# Protocol overhead is nearly identical — both use gRPC to the same GCP region.
-# On a VM in the same region (RTT ≈ 0), expect ~10-15ms pure service overhead.
-
 ps_overhead_ms = max(0, avg_latency - rtt_ms) if 'avg_latency' in dir() else 0
 fs_total_ms = fs_avg if 'fs_avg' in dir() else 0
 fs_overhead_ms = max(0, fs_total_ms - rtt_ms)
@@ -805,7 +902,6 @@ fig_gcp.add_trace(go.Bar(name='Network RTT', x=gcp_labels, y=gcp_rtt,
     marker_color='#555'))
 fig_gcp.add_trace(go.Bar(name='Protocol overhead', x=gcp_labels, y=gcp_overhead,
     marker_color='#636EFA'))
-# Add total labels on top
 totals = [avg_latency, fs_total_ms]
 fig_gcp.add_trace(go.Scatter(x=gcp_labels, y=[t + 2 for t in totals],
     text=[f'{t:.0f}ms' for t in totals], mode='text', showlegend=False))
@@ -819,75 +915,43 @@ fig_gcp.update_layout(
 fig_gcp.show()
 ```
 
-      Network RTT baseline:  33ms (p50 of 50 gRPC probes)
-      Pub/Sub total:         45ms  overhead: 12ms
-      Firestore total:       44ms  overhead: 11ms
+```text
+  Network RTT baseline:  33ms (p50 of 50 gRPC probes)
+  Pub/Sub total:         45ms  overhead: 12ms
+  Firestore total:       44ms  overhead: 11ms
+```
 
 <iframe src="/static/plotly/sr_py_02.html" width="100%" height="500" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### google-cloud-pubsub — delete subscription and topic
+## Enterprise Transfer & Streaming Patterns
 
-```python
-# Delete subscription and topic
-try:
-    subscriber.delete_subscription(request={'subscription': sub_path})
-    print(f'  Deleted subscription: {sub_path}')
-except Exception:
-    print(f'  Subscription already deleted')
+Production patterns for large-scale data movement that go beyond what a notebook can demonstrate. Included as architecture reference — no runnable code.
 
-try:
-    publisher.delete_topic(request={'topic': topic_path})
-    print(f'  Deleted topic: {topic_path}')
-except Exception:
-    print(f'  Topic already deleted')
-```
+### Enterprise | MFT | Managed File Transfer
 
-      Deleted subscription: projects/seclab-dev-ap-26/subscriptions/tick-feed-sub
-      Deleted topic: projects/seclab-dev-ap-26/topics/tick-feed
+Dedicated gateways that handle large file transfers with multiplexing, packet-level resume, bandwidth routing, encryption, and audit logging. Examples: IBM Sterling, Axway, GoAnywhere.
 
-## Enterprise Transfer & Streaming Patterns (Reference)
-
-Production patterns for large-scale data movement that go beyond what a notebook can demonstrate.
-Included as architecture reference — no runnable code.
-
-#### Enterprise Streaming — MFT (Managed File Transfer)
-
-**What:** Dedicated gateways that handle large file transfers with multiplexing, packet-level resume,
-bandwidth routing, encryption, and audit logging. Examples: IBM Sterling, Axway, GoAnywhere.
-
-#### When to use
-- Regulated industries (finance, healthcare) requiring audit trails
-- Multi-partner B2B file exchange with SLA guarantees
-- Files > 100 GB where resumability is critical
-
+**When to use:** Regulated industries (finance, healthcare) requiring audit trails, multi-partner B2B file exchange with SLA guarantees, files > 100 GB where resumability is critical.
 **When NOT to use:** Internal cloud-to-cloud transfers — use native cloud tools instead.
 
-#### GCS Transfer Service
+### Enterprise | GCS Transfer Service | scheduled cross-cloud transfers
 
-**What:** Managed service for scheduled, recurring transfers between GCS buckets, S3, Azure,
-or HTTP endpoints. Handles retries, bandwidth throttling, and incremental sync.
+Managed service for scheduled, recurring transfers between GCS buckets, S3, Azure, or HTTP endpoints. Handles retries, bandwidth throttling, and incremental sync.
 
-#### When to use
-- Scheduled cross-cloud data replication (S3 → GCS nightly)
-- Large dataset migration (TB-scale, multi-day)
-- On-prem NAS → GCS via Transfer Service for on-premises data
+**When to use:** Scheduled cross-cloud data replication (S3 → GCS nightly), large dataset migration (TB-scale, multi-day), on-prem NAS → GCS via Transfer Service for on-premises data.
 
-```
+```bash
 gcloud transfer jobs create \\
   --source-agent-pool=my-pool \\
   --source=posix:///data/exports \\
   --destination=gs://my-bucket/imports
 ```
 
-#### Transfer Acceleration & Cloud Interconnect
+### Enterprise | Transfer Acceleration & Cloud Interconnect
 
-**Transfer Acceleration:** Routes uploads through the cloud provider’s edge network (CDN PoPs)
-instead of the public internet. AWS S3 Transfer Acceleration, GCS has equivalent via CDN.
-Typical speedup: 2-5x for cross-continent transfers.
+**Transfer Acceleration** routes uploads through the cloud provider’s edge network (CDN PoPs) instead of the public internet. AWS S3 Transfer Acceleration, GCS has equivalent via CDN. Typical speedup: 2-5x for cross-continent transfers.
 
-**Cloud Interconnect / Direct Peering:** Dedicated physical network links between your
-data center and the cloud provider. Consistent bandwidth (10-100 Gbps), lower latency,
-no public internet routing.
+**Cloud Interconnect / Direct Peering** provides dedicated physical network links between your data center and the cloud provider. Consistent bandwidth (10-100 Gbps), lower latency, no public internet routing.
 
 | Method | Bandwidth | Latency | Cost | Use Case |
 |--------|-----------|---------|------|----------|
@@ -896,7 +960,9 @@ no public internet routing.
 | Dedicated Interconnect | 10-100 Gbps | Low | Monthly + port fee | Production pipelines |
 | Partner Interconnect | 50 Mbps-50 Gbps | Low | Monthly | Smaller dedicated link |
 
-#### When to Use What
+### Enterprise | decision matrix | when to use what
+
+Decision matrix for selecting the right streaming or transfer pattern based on the scenario requirements.
 
 | Scenario | Pattern | Why |
 |----------|---------|-----|

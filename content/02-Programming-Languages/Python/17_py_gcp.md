@@ -33,18 +33,18 @@ The index ETL pipeline moves market data through three layers — Bronze (raw), 
   'textColor': '#c0caf5',
   'fontSize': '14px'
 }}}%%
-flowchart LR
-    SRC[yfinance\nOHLCV data] -->|CSV| GCS[GCS\nBronze Layer]
-    GCS -->|load job| BQ_B[BigQuery\nbronze_ohlcv]
-    BQ_B -->|window fns| BQ_S[BigQuery\nsilver_ohlcv]
-    BQ_S -->|scoring SQL| BQ_G[BigQuery\ngold_scores]
-    BQ_G -->|upsert| FS[Firestore\nscores_latest]
-    BQ_G -->|publish| PS[Pub/Sub\npipeline-events]
-    FS -->|on_snapshot| DASH[Dashboard\nlive updates]
-    PS -->|subscribe| DASH
-    SM[Secret Manager] -.->|credentials| SRC
-    SM -.->|credentials| GCS
-    MON[Cloud Monitoring\nlogs + metrics] -.->|observe| BQ_G
+flowchart TD
+    SRC["yfinance<br/>OHLCV data"] -->|"CSV"| GCS["GCS<br/>Bronze Layer"]
+    GCS -->|"load job"| BQ_B["BigQuery<br/>bronze_ohlcv"]
+    BQ_B -->|"window fns"| BQ_S["BigQuery<br/>silver_ohlcv"]
+    BQ_S -->|"scoring SQL"| BQ_G["BigQuery<br/>gold_scores"]
+    BQ_G -->|"upsert"| FS["Firestore<br/>scores_latest"]
+    BQ_G -->|"publish"| PS["Pub/Sub<br/>pipeline-events"]
+    FS -->|"on_snapshot"| DASH["Dashboard<br/>live updates"]
+    PS -->|"subscribe"| DASH
+    SM["Secret Manager"] -.->|"credentials"| SRC
+    SM -.->|"credentials"| GCS
+    MON["Cloud Monitoring<br/>logs + metrics"] -.->|"observe"| BQ_G
 ```
 
 ## Topics Covered

@@ -1,5 +1,7 @@
 ---
-tags: [csharp]
+title: "Serialization Formats — C#"
+tags:
+  - csharp
 aliases: [serialization formats, JSON, CSV, Parquet, Avro, Protocol Buffers]
 description: "C# serialization formats reference with executable examples and cell outputs — covers JSON, CSV, Parquet, Avro, Protocol Buffers, MessagePack, and format comparison benchmarks. See [10_py_serialization_formats](https://alp78.github.io/elysium/02-Programming-Languages/Python/10_py_serialization_formats) for the Python equivalent."
 created: 2026-03-25
@@ -53,6 +55,7 @@ using Plotly.NET.Interactive;
 using Plotly.NET.LayoutObjects;
 using Plotly.NET;
 using Polars.CSharp;
+using static Polars.CSharp.Polars;
 var csharpKernel = (CSharpKernel)Kernel.Root.FindKernelByName("csharp");
 var optionsField = typeof(CSharpKernel).GetField("_scriptOptions",
     BindingFlags.NonPublic | BindingFlags.Instance);
@@ -69,14 +72,15 @@ optionsField.SetValue(csharpKernel, newOptions);
 
 Parquet stores data column-by-column with per-column compression (snappy, gzip, zstd). Schema is embedded in the file footer — self-describing, no separate schema file needed. Supports column pruning (read only the columns you need), predicate pushdown, and partitioning. 5–10x smaller than CSV. Standard in data lakes (GCS, S3, ADLS), BigQuery, Spark, DuckDB, Athena. C# uses `Parquet.Net` (NuGet).
 
-### Parquet.Net — schema, write, and read
+### Parquet.Net | schema, write, and read
 
 #### NuGet package and type declarations
 
 `Parquet.Net` maps record/class properties to parquet columns automatically via the class serialization API. Supports both low-level `DataColumn` API and high-level class serialization. Pin the NuGet version to avoid build breakage on updates.
 
+`Parquet.Net` maps `EventRecord` properties to parquet columns automatically.
+
 ```csharp
-// EventRecord — Parquet.Net maps properties to parquet columns
 public class EventRecord
 {
     public string EventId { get; set; } = "";
@@ -95,7 +99,6 @@ The low-level `DataColumn` API writes one column at a time — matching Parquet'
 var tmpDir = Path.Combine(Path.GetTempPath(), "parquet_cs_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
 
-// Define schema — DataField(name, type) for each column
 var schema = new ParquetSchema(
     new DataField<string>("event_id"),
     new DataField<string>("event_type"),
@@ -106,7 +109,6 @@ var schema = new ParquetSchema(
 
 var parquetFile = Path.Combine(tmpDir, "events.parquet");
 
-// Write column by column — parquet is columnar, not row-based
 using (Stream fs = File.OpenWrite(parquetFile))
 {
     using var writer = await ParquetWriter.CreateAsync(schema, fs);
@@ -125,11 +127,13 @@ using (Stream fs = File.OpenWrite(parquetFile))
 }
 
 Path.GetFileName(parquetFile)
-new FileInfo(parquetFile).Length // Length in bytes
+new FileInfo(parquetFile).Length
 ```
 
-      events.parquet
-      1045
+```text
+events.parquet
+1045
+```
 
 #### Read parquet — DataColumn API
 
@@ -155,13 +159,15 @@ using (Stream fs = File.OpenRead(parquetFile))
 }
 ```
 
-  Schema: event_id:String, event_type:String, user_id:Int64, revenue:Double, is_mobile:Boolean
-  Rows: 5
-    evt_001: page_view, user=1001, revenue=$0.00
-    evt_002: purchase, user=1002, revenue=$49.99
-    evt_003: page_view, user=1001, revenue=$0.00
-    evt_004: signup, user=1003, revenue=$0.00
-    evt_005: purchase, user=1002, revenue=$129.99
+```text
+Schema: event_id:String, event_type:String, user_id:Int64, revenue:Double, is_mobile:Boolean
+Rows: 5
+  evt_001: page_view, user=1001, revenue=$0.00
+  evt_002: purchase, user=1002, revenue=$49.99
+  evt_003: page_view, user=1001, revenue=$0.00
+  evt_004: signup, user=1003, revenue=$0.00
+  evt_005: purchase, user=1002, revenue=$129.99
+```
 
 #### Class serialization and deserialization | ParquetSerializer high-level API
 
@@ -181,20 +187,21 @@ var typedFile = Path.Combine(tmpDir, "events_typed.parquet");
 await ParquetSerializer.SerializeAsync(events, typedFile);
 $"  Written: {Path.GetFileName(typedFile)} ({new FileInfo(typedFile).Length} bytes)"
 
-// Deserialize back to typed objects
 var loaded = await ParquetSerializer.DeserializeAsync<EventRecord>(typedFile);
 Console.WriteLine($"  Loaded {loaded.Count} records:");
 foreach (var e in loaded)
     Console.WriteLine($"    {e.EventId}: {e.EventType}, user={e.UserId}, revenue=${e.Revenue:F2}");
 ```
 
-      events_typed.parquet (1037 bytes)
-      Loaded 5 records:
-        evt_001: page_view, user=1001, revenue=$0.00
-        evt_002: purchase, user=1002, revenue=$49.99
-        evt_003: page_view, user=1001, revenue=$0.00
-        evt_004: signup, user=1003, revenue=$0.00
-        evt_005: purchase, user=1002, revenue=$129.99
+```text
+events_typed.parquet (1037 bytes)
+Loaded 5 records:
+  evt_001: page_view, user=1001, revenue=$0.00
+  evt_002: purchase, user=1002, revenue=$49.99
+  evt_003: page_view, user=1001, revenue=$0.00
+  evt_004: signup, user=1003, revenue=$0.00
+  evt_005: purchase, user=1002, revenue=$129.99
+```
 
 ### Metadata, in-memory, and comparison
 
@@ -212,12 +219,14 @@ using (Stream fs = File.OpenRead(parquetFile))
 }
 ```
 
-  Row groups: 1
-    event_id: String (nullable=True)
-    event_type: String (nullable=True)
-    user_id: Int64 (nullable=False)
-    revenue: Double (nullable=False)
-    is_mobile: Boolean (nullable=False)
+```text
+Row groups: 1
+  event_id: String (nullable=True)
+  event_type: String (nullable=True)
+  user_id: Int64 (nullable=False)
+  revenue: Double (nullable=False)
+  is_mobile: Boolean (nullable=False)
+```
 
 #### Parquet in memory — MemoryStream | cloud upload without temp files
 
@@ -229,15 +238,16 @@ Serialize Parquet to a `MemoryStream` for direct cloud upload (GCS, S3, Azure Bl
     await ParquetSerializer.SerializeAsync(events, memStream);
     Console.WriteLine($"  MemoryStream size: {memStream.Length} bytes");
 
-    // Read back from the same buffer — verify roundtrip
     memStream.Seek(0, SeekOrigin.Begin);
     var fromMem = await ParquetSerializer.DeserializeAsync<EventRecord>(memStream);
     Console.WriteLine($"  Read from memory: {fromMem.Count} records");
 }
 ```
 
-  MemoryStream size: 1037 bytes
-  Read from memory: 5 records
+```text
+MemoryStream size: 1037 bytes
+Read from memory: 5 records
+```
 
 #### CSV vs Parquet comparison
 
@@ -258,7 +268,7 @@ Directory.Delete(tmpDir, recursive: true);
 
 Protocol Buffers is Google's binary serialization format — 3–10x smaller than JSON with fast parsing and no text overhead. `.proto` files define schemas; `protoc` generates strongly-typed classes for C#, Python, Java, Go. Schema evolution lets you add fields without breaking existing consumers. Standard for gRPC microservices, Kafka messages, and high-frequency data feeds.
 
-### Google.Protobuf — dynamic and production patterns
+### Google.Protobuf | dynamic and production patterns
 
 #### Protobuf with Google.Protobuf NuGet
 
@@ -287,12 +297,6 @@ Protocol Buffers is Google's binary serialization format — 3–10x smaller tha
 >
 > gRPC services, Kafka events, high-frequency data feeds, inter-service communication, mobile APIs (bandwidth matters). In production, `protoc` generates C# classes from `.proto` files. In notebooks, use the dynamic message API (same binary format).
 
-```csharp
-// Google.Protobuf loaded.
-```
-
-      Google.Protobuf loaded.
-
 #### Dynamic protobuf messages | runtime encoding without protoc
 
 In notebooks or dynamic scenarios without `protoc`-generated classes, use `CodedOutputStream` to write raw tagged fields and `CodedInputStream` to read them back. Each field is encoded as `(field_number << 3 | wire_type) + value`.
@@ -301,43 +305,58 @@ In notebooks or dynamic scenarios without `protoc`-generated classes, use `Coded
 >
 > For dynamic messages without `protoc`, use raw byte encoding. Each field is encoded as `(field_number << 3 | wire_type) + value`. Wire types: `0` = varint, `1` = 64-bit, `2` = length-delimited, `5` = 32-bit.
 
+**Initialize stream and encoder.** Create a `MemoryStream` as the target buffer and wrap it in a `CodedOutputStream` for writing tagged protobuf fields.
+
 ```csharp
-// Runtime message construction without protoc
-
-var fileDescProto = new Google.Protobuf.Reflection.FileDescriptorProto
-{
-    Name = "stock_quote.proto",
-    Package = "stoxx",
-};
-
-// Manually encode a StockQuote { symbol="SAP.DE", price=166.52, volume=82621 }
 var ms = new MemoryStream();
 var cos = new CodedOutputStream(ms);
+```
 
-// Field 1 (symbol): tag = (1 << 3) | 2 = 10, wire type 2 = length-delimited
+**Field 1 — symbol (length-delimited string).** Tag is `(1 << 3) | 2 = 10`. Wire type 2 means the value is prefixed with its byte length, followed by UTF-8 encoded string bytes.
+
+```csharp
 cos.WriteTag(1, WireFormat.WireType.LengthDelimited);
 cos.WriteString("SAP.DE");
+```
 
-// Field 2 (price): tag = (2 << 3) | 1 = 17, wire type 1 = 64-bit (double)
+**Field 2 — price (64-bit double).** Tag is `(2 << 3) | 1 = 17`. Wire type 1 writes exactly 8 bytes in little-endian IEEE 754 format — no length prefix needed.
+
+```csharp
 cos.WriteTag(2, WireFormat.WireType.Fixed64);
 cos.WriteDouble(166.52);
+```
 
-// Field 3 (volume): tag = (3 << 3) | 0 = 24, wire type 0 = varint
+**Field 3 — volume (varint int64).** Tag is `(3 << 3) | 0 = 24`. Wire type 0 encodes the integer as a variable-length sequence of 7-bit groups — small values use fewer bytes.
+
+```csharp
 cos.WriteTag(3, WireFormat.WireType.Varint);
 cos.WriteInt64(82621);
+```
 
+**Flush and compare size with JSON.** The protobuf encoding is significantly smaller than the equivalent JSON because it uses binary encoding and field numbers instead of repeated key strings.
+
+```csharp
 cos.Flush();
 var protoBytes = ms.ToArray();
 
 Console.WriteLine($"  Protobuf:  {protoBytes.Length} bytes");
 Console.WriteLine($"  Hex:       {Convert.ToHexString(protoBytes).ToLower()}");
 
-// Compare with JSON
 var jsonStr = JsonSerializer.Serialize(new { symbol = "SAP.DE", price = 166.52, volume = 82621 });
 Console.WriteLine($"  JSON:      {Encoding.UTF8.GetByteCount(jsonStr)} bytes");
 Console.WriteLine($"  Savings:   {(1.0 - (double)protoBytes.Length / Encoding.UTF8.GetByteCount(jsonStr)) * 100:F0}%");
+```
 
-// Decode the bytes back using CodedInputStream
+```text
+Protobuf:  21 bytes
+Hex:       0a065341502e444511713d0ad7a3d0644018bd8505
+JSON:      49 bytes
+Savings:   57%
+```
+
+**Decode with CodedInputStream.** Read tags in a loop, switch on the field number to dispatch to the correct reader method. Unknown fields are skipped with `SkipLastField` — this is how protobuf achieves forward compatibility.
+
+```csharp
 var cis = new CodedInputStream(protoBytes);
 string? sym = null; double price = 0; long vol = 0;
 while (!cis.IsAtEnd)
@@ -351,30 +370,26 @@ while (!cis.IsAtEnd)
         default: cis.SkipLastField(); break;
     }
 }
-Console.WriteLine($"  Decoded:   symbol={sym}, price={price}, volume={vol}");
+Console.WriteLine($"  Decoded: symbol={sym}, price={price}, volume={vol}");
 ```
 
 ```text
-  Protobuf:  21 bytes
-  Hex:       0a065341502e444511713d0ad7a3d0644018bd8505
-  JSON:      49 bytes
-  Savings:   57%
-  Decoded:   symbol=SAP.DE, price=166.52, volume=82621
+Decoded: symbol=SAP.DE, price=166.52, volume=82621
 ```
 
 #### Production protobuf — Step 1: define the .proto schema
 
 The `.proto` file is the immutable contract for the message. Each field gets a unique number (not a default value) that is baked into the binary encoding — changing a number breaks all existing consumers. Assign numbers 1–15 to the most frequently used fields: they use single-byte tags, saving one byte per field per message. Adding field 4 (`exchange`) later is safe: old consumers that don't know about it simply skip it.
 
-```proto
+```protobuf
 syntax = "proto3";
 package stoxx;
 
 message StockQuote {
-  string symbol   = 1;  // field number — fixed forever, not a default value
+  string symbol   = 1;
   double price    = 2;
   int64  volume   = 3;
-  string exchange = 4;  // added later — old consumers skip unknown fields
+  string exchange = 4;
 }
 ```
 
@@ -382,10 +397,11 @@ message StockQuote {
 
 `protoc` reads the `.proto` file and generates a strongly-typed `StockQuote.cs` with `ToByteArray()`, `Parser.ParseFrom()`, and all property accessors already implemented. Re-run whenever the schema changes and commit both `.proto` and generated `.cs` to version control — the `.proto` is the source of truth, the `.cs` is a build artifact.
 
-```text
-$ protoc --csharp_out=. stock_quote.proto
-# Generates: StockQuote.cs
+```bash
+protoc --csharp_out=. stock_quote.proto
 ```
+
+This generates `StockQuote.cs` with all property accessors and serialization methods.
 
 > [!tip] Automate protoc in CI with Grpc.Tools
 >
@@ -413,7 +429,7 @@ Console.WriteLine($"  {data.Length} bytes | exchange default: '{parsed.Exchange}
 
 A gRPC service is defined in the same `.proto` file alongside the messages. `protoc` (with the gRPC plugin) generates both the server base class and the client stub. The method signature is strongly typed — request and response shapes are enforced at compile time, and the transport is HTTP/2.
 
-```proto
+```protobuf
 service MarketData {
   rpc GetQuote (QuoteRequest) returns (StockQuote);
 }
@@ -427,7 +443,7 @@ service MarketData {
 
 Apache Avro is a row-based binary format with the schema embedded in every file header — readers don't need an external schema to decode. Supports schema evolution (add/remove fields with compatibility rules). Compact binary, comparable to Protobuf. Standard in Kafka (with Schema Registry) and Hadoop. For analytics queries, Parquet is better (columnar = column pruning); for human-readable interchange, use JSON.
 
-### Apache.Avro — schema, write, and read
+### Apache.Avro | schema, write, and read
 
 #### Avro schema and serialization
 
@@ -451,8 +467,9 @@ Schema is defined in JSON format and embedded in every file header — readers d
 > - Use Confluent Schema Registry with FULL compatibility mode for Kafka topics
 > - Keep the writer schema alongside the data or in a registry — never discard it
 
+Avro schemas are always defined as JSON, even when the data format is binary.
+
 ```csharp
-// Define Avro schema as JSON string (Avro schemas are always JSON, even for binary data)
 var schemaJson = @"{
   ""type"": ""record"",
   ""name"": ""StockQuote"",
@@ -465,36 +482,42 @@ var schemaJson = @"{
   ]
 }";
 
-// Parse the schema
 var schema = (RecordSchema)Schema.Parse(schemaJson);
 Console.WriteLine($"  Schema: {schema.Name} ({schema.Fields.Count} fields)");
 foreach (var f in schema.Fields)
     Console.WriteLine($"    {f.Name}: {f.Schema}");
 ```
 
-  Schema: StockQuote (4 fields)
-    symbol: {"type":"string"}
-    price: {"type":"double"}
-    volume: {"type":"long"}
-    exchange: ["null","string"]
+```text
+Schema: StockQuote (4 fields)
+  symbol: "string"
+  price: "double"
+  volume: "long"
+  exchange: ["null","string"]
+```
 
 #### Write Avro file | GenericRecord API with embedded schema
 
 Create `GenericRecord` instances (like Python dicts but typed by the Avro schema) and write them with `DataFileWriter`. The schema is embedded in the file header automatically — any consumer can decode the file without a separate schema file.
 
+**Prepare output path.** Create a temporary directory for the Avro file.
+
 ```csharp
 var tmpDir = Path.Combine(Path.GetTempPath(), "avro_cs_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
 var avroFile = Path.Combine(tmpDir, "quotes.avro");
+```
 
-// Create GenericRecord instances (like Python dicts but typed by schema)
+**Build GenericRecord instances.** Each `GenericRecord` is typed by the Avro schema — fields are added by name with `record.Add()`. Nullable union fields (`["null", "string"]`) accept `null` values directly, as shown in the last record where `exchange` is absent.
+
+```csharp
 var records = new List<GenericRecord>();
 var quotes = new[]
 {
     ("SAP.DE",  166.52, 82621L,  "XETR"),
     ("ASML.AS", 685.40, 45000L,  "XAMS"),
     ("TTE.PA",  58.20,  120000L, "XPAR"),
-    ("BAS.DE",  44.85,  95000L,  (string?)null),  // exchange is nullable
+    ("BAS.DE",  44.85,  95000L,  (string?)null),
 };
 
 foreach (var (sym, price, vol, exch) in quotes)
@@ -503,11 +526,14 @@ foreach (var (sym, price, vol, exch) in quotes)
     record.Add("symbol", sym);
     record.Add("price", price);
     record.Add("volume", vol);
-    record.Add("exchange", exch);  // null is valid for union ["null", "string"]
+    record.Add("exchange", exch);
     records.Add(record);
 }
+```
 
-// Write to file — DataFileWriter embeds the schema in the file header
+**Write to file with DataFileWriter.** `DataFileWriter` embeds the schema in the file header automatically — any consumer can decode the file without a separate schema file. Records are appended one at a time with `Append()`.
+
+```csharp
 using (var writer = DataFileWriter<GenericRecord>.OpenWriter(
     new GenericDatumWriter<GenericRecord>(schema),
     avroFile))
@@ -517,12 +543,12 @@ using (var writer = DataFileWriter<GenericRecord>.OpenWriter(
 }
 
 var fileSize = new FileInfo(avroFile).Length;
-Console.WriteLine($"  Written: {avroFile}");
 Console.WriteLine($"  Records: {records.Count}, Size: {fileSize} bytes");
 ```
 
-  Written: C:\Users\aperi\AppData\Local\Temp\avro_cs_89f4466f\quotes.avro
-  Records: 4, Size: 390 bytes
+```text
+Records: 4, Size: 390 bytes
+```
 
 #### Read Avro file | schema discovered from file header
 
@@ -531,11 +557,9 @@ Console.WriteLine($"  Records: {records.Count}, Size: {fileSize} bytes");
 ```csharp
 using (var reader = DataFileReader<GenericRecord>.OpenReader(avroFile))
 {
-    // Read the embedded schema
     var fileSchema = reader.GetSchema();
     Console.WriteLine($"  Schema from file: {fileSchema.Name}");
 
-    // Iterate records
     while (reader.HasNext())
     {
         var record = reader.Next();
@@ -548,12 +572,13 @@ using (var reader = DataFileReader<GenericRecord>.OpenReader(avroFile))
 }
 ```
 
-  Schema from file: StockQuote
-  Records:
-    SAP.DE     €  166.52  vol=   82621  exch=XETR
-    ASML.AS    €  685.40  vol=   45000  exch=XAMS
-    TTE.PA     €   58.20  vol=  120000  exch=XPAR
-    BAS.DE     €   44.85  vol=   95000  exch=N/A
+```text
+Schema from file: StockQuote
+  SAP.DE     €  166.52  vol=   82621  exch=XETR
+  ASML.AS    €  685.40  vol=   45000  exch=XAMS
+  TTE.PA     €   58.20  vol=  120000  exch=XPAR
+  BAS.DE     €   44.85  vol=   95000  exch=N/A
+```
 
 ### In-memory, comparison, and schema evolution
 
@@ -574,7 +599,6 @@ using (var writer = DataFileWriter<GenericRecord>.OpenWriter(datumWriter, avroMs
 var avroBytes = avroMs.ToArray();
 Console.WriteLine($"  Avro in memory: {avroBytes.Length} bytes ({records.Count} records)");
 
-// Compare with JSON
 var jsonPayload = JsonSerializer.Serialize(
     quotes.Select(q => new { symbol = q.Item1, price = q.Item2, volume = q.Item3, exchange = q.Item4 }));
 var jsonSize = Encoding.UTF8.GetByteCount(jsonPayload);
@@ -585,17 +609,18 @@ Console.WriteLine($"  {"Avro",-12} {avroBytes.Length,8} {avroBytes.Length / reco
 Console.WriteLine($"  {"JSON",-12} {jsonSize,8} {jsonSize / records.Count,12}");
 Console.WriteLine($"  {"Savings",-12} {(1.0 - (double)avroBytes.Length / jsonSize) * 100:F0}%");
 
-// Cleanup
 Directory.Delete(tmpDir, recursive: true);
 ```
 
-  Avro in memory: 390 bytes (4 records)
+```text
+Avro in memory: 390 bytes (4 records)
 
-  Format           Size   Per record
-  ──────────────────────────────────
-  Avro              390           97
-  JSON              269           67
-  Savings      -45%
+Format           Size   Per record
+──────────────────────────────────
+Avro              390           97
+JSON              269           67
+Savings      -45%
+```
 
 #### Schema evolution | add fields without breaking existing consumers
 
@@ -630,7 +655,6 @@ For the architecture-level decision guide on when to use each format (Parquet fo
 Generates synthetic OHLCV (open/high/low/close/volume) data matching the stoxx database schema. Three sizes — 100 (small), 10K (medium), 100K (large) — to show how format overhead scales.
 
 ```csharp
-// Three sizes: 100 (small), 10K (medium), 100K (large)
 var rng = new Random(42);
 var symbols = new[] { "SAP.DE","ASML.AS","TTE.PA","BAS.DE","BAYN.DE","BMW.DE","SIE.DE","ALV.DE",
                       "ADS.DE","DTE.DE","ENEL.MI","ENI.MI","BNP.PA","MC.PA","OR.PA","AIR.PA",
@@ -668,9 +692,11 @@ Console.WriteLine($"  Large:  {large.Count:N0} records");
 record OhlcvRecord(string Symbol, string Date, double Open, double High, double Low, double Close, long Volume);
 ```
 
-  Small:  100 records
-  Medium: 10'000 records
-  Large:  100'000 records
+```text
+Small:  100 records
+Medium: 10,000 records
+Large:  100,000 records
+```
 
 #### Benchmark helpers | write/read timing and file size measurement
 
@@ -679,7 +705,6 @@ record OhlcvRecord(string Symbol, string Date, double Open, double High, double 
 var benchDir = Path.Combine(Path.GetTempPath(), "bench_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(benchDir);
 
-// Result collector
 var results = new List<(string Format, string Size, int Records, long WriteMs, long ReadMs, long FileBytes)>();
 
 (long ms, long bytes) BenchWrite(string label, string size, int records, Action<string> writeAction)
@@ -700,10 +725,7 @@ long BenchRead(Action readAction)
     return sw.ElapsedMilliseconds;
 }
 
-// Benchmark helpers ready.
 ```
-
-      Benchmark helpers ready.
 
 ### Individual format benchmarks
 
@@ -735,10 +757,7 @@ foreach (var (label, data) in new[] { ("small", small), ("medium", medium), ("la
     var rMs = BenchRead(() => ReadCsv(path));
     results.Add(("CSV", label, data.Count, wMs, rMs, bytes));
 }
-// CSV done.
 ```
-
-      CSV done.
 
 #### JSON benchmark | text-based, self-describing format
 
@@ -766,10 +785,7 @@ foreach (var (label, data) in new[] { ("small", small), ("medium", medium), ("la
     var rMs = BenchRead(() => ReadJson(path));
     results.Add(("JSON", label, data.Count, wMs, rMs, bytes));
 }
-// JSON done.
 ```
-
-      JSON done.
 
 #### Parquet benchmark | columnar, compressed, typed format
 
@@ -810,10 +826,7 @@ foreach (var (label, data) in new[] { ("small", small), ("medium", medium), ("la
     var rMs = BenchRead(() => ReadParquet(path));
     results.Add(("Parquet", label, data.Count, wMs, rMs, bytes));
 }
-// Parquet done.
 ```
-
-      Parquet done.
 
 #### Avro benchmark | row-based binary with embedded schema
 
@@ -862,10 +875,7 @@ foreach (var (label, data) in new[] { ("small", small), ("medium", medium), ("la
     var rMs = BenchRead(() => ReadAvro(path));
     results.Add(("Avro", label, data.Count, wMs, rMs, bytes));
 }
-// Avro done.
 ```
-
-      Avro done.
 
 #### Protobuf benchmark | binary with external schema, most compact
 
@@ -892,13 +902,13 @@ foreach (var (label, data) in new[] { ("small", small), ("medium", medium), ("la
 {
     var path = Path.Combine(benchDir, $"proto_{label}.bin");
     var (wMs, bytes) = BenchWrite("proto", $"{label}.bin", data.Count, p => WriteProto(p, data));
-    // Read is same format — skip for simplicity (no framing in raw proto)
     results.Add(("Protobuf", label, data.Count, wMs, 0, bytes));
 }
-// Protobuf done.
 ```
 
-      Protobuf done.
+> [!info] Protobuf read benchmark omitted
+>
+> Raw protobuf bytes have no built-in message framing — without length-prefixed records, a generic reader cannot determine where one message ends and the next begins. Read benchmarks require `protoc`-generated classes or a framing convention.
 
 ### Results and analysis
 
@@ -930,8 +940,7 @@ foreach (var bucket in new[] { "large", "medium", "small" })
         var bpr = r.FileBytes / Math.Max(r.Records, 1);
         var readStr = r.ReadMs > 0 ? $"{r.ReadMs}" : "n/a";
 
-        // Mark best (green checkmark) and worst (red X)
-        var bprMark = r.FileBytes == minBytes ? " \u2714" : r.FileBytes == maxBytes ? " \u2718" : "";
+            var bprMark = r.FileBytes == minBytes ? " \u2714" : r.FileBytes == maxBytes ? " \u2718" : "";
         var writeMark = r.WriteMs == minWrite ? " \u2714" : r.WriteMs == maxWrite ? " \u2718" : "";
         var readMark = r.ReadMs == minRead ? " \u2714" : r.ReadMs == maxRead ? " \u2718" : "";
 
@@ -940,49 +949,42 @@ foreach (var bucket in new[] { "large", "medium", "small" })
 }
 ```
 
-    
-      ═══ FORMAT PERFORMANCE BENCHMARK ═══
-    
-      ═══ LARGE (100'000 records) ═══
-      Format        File Size  Bytes/Rec   Write ms    Read ms
-      ──────────────────────────────────────────────────────
-      Parquet          1.8 MB       18 ✔       23 ✔        8 ✔
-      CSV              5.0 MB       52         36         14
-      Avro             5.1 MB       53         38         31
-      Protobuf         5.7 MB       59         40        n/a
-      JSON            10.5 MB      110 ✘       45 ✘       87 ✘
-    
-      ═══ MEDIUM (10'000 records) ═══
-      Format        File Size  Bytes/Rec   Write ms    Read ms
-      ──────────────────────────────────────────────────────
-      Parquet        292.1 KB       29 ✔        9 ✘        6 ✔
-      CSV            510.6 KB       52          3         16 ✘
-      Avro           517.9 KB       53          3          6 ✔
-      Protobuf       585.6 KB       59          2 ✔      n/a
-      JSON             1.1 MB      110 ✘        4         12
-    
-      ═══ SMALL (100 records) ═══
-      Format        File Size  Bytes/Rec   Write ms    Read ms
-      ──────────────────────────────────────────────────────
-      Parquet          4.1 KB       41 ✔        2 ✘      n/a
-      CSV              5.2 KB       53          0 ✔      n/a
-      Avro             5.5 KB       56          0 ✔        7 ✔
-      Protobuf         5.9 KB       60          0 ✔      n/a
-      JSON            10.8 KB      110 ✘        1          7 ✔
+```text
+═══ LARGE (100,000 records) ═══
+Format        File Size  Bytes/Rec   Write ms    Read ms
+──────────────────────────────────────────────────────
+Parquet          1.8 MB       18 ✔       23 ✔        8 ✔
+CSV              5.0 MB       52         36         14
+Avro             5.1 MB       53         38         31
+Protobuf         5.7 MB       59         40        n/a
+JSON            10.5 MB      110 ✘       45 ✘       87 ✘
 
-#### Performance and compression charts
+═══ MEDIUM (10,000 records) ═══
+Format        File Size  Bytes/Rec   Write ms    Read ms
+──────────────────────────────────────────────────────
+Parquet        292.1 KB       29 ✔        9 ✘        6 ✔
+CSV            510.6 KB       52          3         16 ✘
+Avro           517.9 KB       53          3          6 ✔
+Protobuf       585.6 KB       59          2 ✔      n/a
+JSON             1.1 MB      110 ✘        4         12
 
-```csharp
-// Performance charts — NuGet packages for DataFrame and Plotly visualization
-
-using static Polars.CSharp.Polars;
+═══ SMALL (100 records) ═══
+Format        File Size  Bytes/Rec   Write ms    Read ms
+──────────────────────────────────────────────────────
+Parquet          4.1 KB       41 ✔        2 ✘      n/a
+CSV              5.2 KB       53          0 ✔      n/a
+Avro             5.5 KB       56          0 ✔        7 ✔
+Protobuf         5.9 KB       60          0 ✔      n/a
+JSON            10.8 KB      110 ✘        1          7 ✔
 ```
+
+### Performance and compression charts
 
 #### Results DataFrame
 
-```csharp
-// Results DataFrame — styled HTML table for benchmark results
+Registers a custom HTML table formatter for `DataFrame` that highlights the best (green) and worst (red) values in metric columns, grouped by record count.
 
+```csharp
 Formatter.Register<DataFrame>(df =>
 {
     var cols = df.ColumnNames.ToList();
@@ -990,7 +992,6 @@ Formatter.Register<DataFrame>(df =>
         .Select(r => cols.ToDictionary(c => c, c => df[cols.IndexOf(c)][r]?.ToString() ?? ""))
         .ToList();
 
-    // Only color these specific metric columns — NOT Records, Size_KB, or Format
     var colorCols = new HashSet<string> { "Write_ms", "Read_ms", "Bytes_Rec" };
     var groupCol = "Records";
 
@@ -1011,7 +1012,6 @@ Formatter.Register<DataFrame>(df =>
             if (vals.Any()) { mins[c] = vals.Min(); maxs[c] = vals.Max(); }
         }
 
-        // Separator row — matches pandas style: "━━ 100,000 records ━━"
         html += $"<tr><td colspan='{cols.Count}'>" +
                 $"\u2500\u2500\u2500\u2500 {long.Parse(grp.Key):N0} records \u2500\u2500\u2500\u2500</td></tr>";
 
@@ -1024,7 +1024,6 @@ Formatter.Register<DataFrame>(df =>
                 var s = "padding:3px 8px;text-align:right;";
                 if (c == "Format") s = "padding:3px 8px;text-align:right;font-weight:bold;";
 
-                // Green/red ONLY for metric columns
                 if (colorCols.Contains(c) && long.TryParse(val, out var n) && n > 0)
                 {
                     if (mins.ContainsKey(c) && n == mins[c]) s += "background:#2e7d32;color:#fff;";
@@ -1038,16 +1037,13 @@ Formatter.Register<DataFrame>(df =>
     return html + "</table>";
 }, mimeType: "text/html");
 
-// DataFrame formatter registered.
 ```
-
-      DataFrame formatter registered.
 
 #### Results
 
-```csharp
-// Results display — benchmark DataFrame with formatted columns
+Builds a `DataFrame` from the benchmark results with formatted file size and per-record byte count columns.
 
+```csharp
 DataFrame.From(results.Select(r => {
     var sz = r.FileBytes < 1024 * 1024
         ? $"{r.FileBytes / 1024.0:F1} KB"
@@ -1067,9 +1063,9 @@ DataFrame.From(results.Select(r => {
 
 #### Write vs Read speed — 100K records
 
-```csharp
-// Write vs Read speed chart — Plotly bar chart for 100K records
+Grouped bar chart comparing write and read times across all formats for the 100K record set.
 
+```csharp
 var large = results.Where(r => r.Size == "large").OrderBy(r => r.WriteMs).ToList();
 var fmtNames = large.Select(r => r.Format).ToArray();
 
@@ -1100,9 +1096,9 @@ Plotly.NET.CSharp.Chart.Combine(new[] {
 
 #### File size comparison — 100K records
 
-```csharp
-// File size comparison — horizontal bar chart for 100K records
+Horizontal bar chart showing file sizes in MB for the 100K record set, ordered by size.
 
+```csharp
 var sizeMB = large.Select(r => Math.Round(r.FileBytes / (1024.0 * 1024), 2)).ToArray();
 
 Plotly.NET.CSharp.Chart.Bar<double, string, string>(

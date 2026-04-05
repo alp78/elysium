@@ -1,9 +1,9 @@
 ---
-tags: [infrastructure, gcp, security, iam]
+tags: [gcp, security, iam, vpc-sc]
 aliases: [VPC Service Controls, VPC-SC, service perimeter, access context manager, data exfiltration prevention, GCP data perimeter]
 description: "How VPC Service Controls create a data perimeter that prevents exfiltration of BigQuery and GCS data — even for users with IAM admin permissions — and how to configure, audit, and debug VPC-SC violations."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-05
 status: complete
 ---
 
@@ -16,7 +16,17 @@ status: complete
 
 IAM controls *who* can access resources. VPC Service Controls (VPC-SC) control *where* data can flow — even if someone has valid IAM permissions. For a data platform project, this is the difference between "an engineer can query BigQuery" and "an engineer can query BigQuery *but cannot copy the results to their personal GCP project*." VPC-SC enforces this at the network level, regardless of IAM role. Even `roles/owner` cannot exfiltrate data past a properly configured perimeter.
 
-### The Data Exfiltration Threat Model
+> [!todo] Prerequisites
+>
+> - **Organization:** VPC-SC requires a GCP organization — not available for standalone projects
+> - **API:** Enable `accesscontextmanager.googleapis.com`
+> - **IAM role:** `roles/accesscontextmanager.policyAdmin` on the organization
+> - **Existing resources:** At least one project to include in the perimeter
+> - **Pricing:** VPC-SC and Access Context Manager are free — no additional charges beyond the protected services themselves
+
+## Threat Model
+
+The data exfiltration threat model illustrates three risk classes that VPC-SC mitigates at the network level, regardless of IAM permissions.
 
 ```text
 Without VPC-SC:
@@ -29,25 +39,105 @@ With VPC-SC:
   Data cannot leave the perimeter — even if the requester has roles/owner.
 ```
 
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    subgraph PERIMETER["VPC-SC Perimeter"]
+        direction TB
+        BQ["BigQuery"]
+        GCS["Cloud Storage"]
+        CE["Compute Engine"]
+        SM["Secret Manager"]
+    end
+
+    ENG["Engineer\n(trusted IP + managed device)"]
+    ATTACKER["Compromised SA\n(external project)"]
+    PARTNER["Partner Project\n(explicit egress rule)"]
+
+    ENG -->|"access level ✅"| PERIMETER
+    ATTACKER -.->|"❌ BLOCKED"| PERIMETER
+    PERIMETER -->|"egress policy ✅"| PARTNER
+
+    style PERIMETER fill:#292e42,stroke:#565f89,color:#c0caf5
+    style ENG fill:#1a1b26,stroke:#565f89,color:#c0caf5
+    style ATTACKER fill:#1a1b26,stroke:#f7768e,color:#f7768e
+    style PARTNER fill:#1a1b26,stroke:#9ece6a,color:#9ece6a
+    style BQ fill:#24283b,stroke:#565f89,color:#c0caf5
+    style GCS fill:#24283b,stroke:#565f89,color:#c0caf5
+    style CE fill:#24283b,stroke:#565f89,color:#c0caf5
+    style SM fill:#24283b,stroke:#565f89,color:#c0caf5
+```
+
 ## Setting Up a VPC-SC Perimeter
 
+VPC-SC setup involves three sequential steps: creating an org-level access policy, defining access levels for trusted identities, and creating the service perimeter itself. All operations use the `gcloud access-context-manager` command group.
+
+### gcloud | Access Context Manager Setup
+
+The following commands configure a complete VPC-SC perimeter from scratch using the `gcloud` CLI.
+
 #### gcloud access-context-manager policies create — org-level access policy
+
+Creates the top-level access policy that anchors all access levels and perimeters to the organization. Each organization can have only one access policy.
+
 ```bash
 gcloud access-context-manager policies create \
   --organization=123456789 \
   --title="Data Platform Data Protection"
 ```
 
+```text
+Create request issued for: [Data Platform Data Protection]
+Created.
+```
+
 #### gcloud access-context-manager levels create — define access level
+
+Creates an access level that defines the conditions under which requests are considered "trusted" — such as originating from specific IP ranges, managed devices, or identity groups. The access level references an external YAML file (`access-level.yaml`) that specifies these conditions.
+
 ```bash
 gcloud access-context-manager levels create data-pipeline-trusted-engineers \
   --policy=POLICY_ID \
   --title="Data Platform Trusted Engineers" \
   --basic-level-spec=access-level.yaml
-  # access-level.yaml defines: specific IP ranges, device policies, identity groups
+```
+
+```text
+Create request issued for: [data-pipeline-trusted-engineers]
+Created.
+```
+
+The `access-level.yaml` file defines the conditions for the access level:
+
+```yaml
+- ipSubnetworks:
+    - 203.0.113.0/24
+    - 198.51.100.0/24
+  members:
+    - user:engineer@example.com
+    - group:data-team@example.com
+  devicePolicy:
+    requireScreenlock: true
+    osConstraints:
+      - osType: DESKTOP_CHROME_OS
+        minimumVersion: "100.0"
 ```
 
 #### gcloud access-context-manager perimeters create — service perimeter
+
+Creates the service perimeter that restricts the specified GCP APIs to only operate within the designated project. Requests that cross the perimeter boundary are blocked unless they match an explicit ingress or egress rule.
+
 ```bash
 gcloud access-context-manager perimeters create data-pipeline-data-perimeter \
   --policy=POLICY_ID \
@@ -57,6 +147,11 @@ gcloud access-context-manager perimeters create data-pipeline-data-perimeter \
   --access-levels="accessPolicies/POLICY_ID/accessLevels/data-pipeline-trusted-engineers"
 ```
 
+```text
+Create request issued for: [data-pipeline-data-perimeter]
+Created.
+```
+
 > [!abstract] What the Perimeter Enforces
 >
 > - BigQuery, GCS, and Compute Engine are now inside the perimeter
@@ -64,7 +159,19 @@ gcloud access-context-manager perimeters create data-pipeline-data-perimeter \
 > - Even `roles/owner` cannot exfiltrate data to another project
 > - Only engineers matching the access level can reach services from outside
 
-### Terraform Pattern for VPC-SC in Production
+| Flag | Syntax | Description |
+|---|---|---|
+| `--organization` | `--organization=ORG_ID` | Organization ID for the access policy |
+| `--title` | `--title="TITLE"` | Human-readable title for the policy, level, or perimeter |
+| `--policy` | `--policy=POLICY_ID` | Access policy ID that owns the level or perimeter |
+| `--basic-level-spec` | `--basic-level-spec=FILE.yaml` | YAML file defining access level conditions (IP ranges, device policies) |
+| `--resources` | `--resources="projects/NUMBER"` | Comma-separated project numbers to include in the perimeter |
+| `--restricted-services` | `--restricted-services="SVC1,SVC2"` | GCP APIs restricted to perimeter-internal traffic only |
+| `--access-levels` | `--access-levels="LEVEL_PATH"` | Access levels that can bypass the perimeter from outside |
+
+### Terraform | Service Perimeter
+
+The recommended production approach is to manage VPC-SC perimeters as Terraform resources — version-controlled, peer-reviewed, and reproducible. The `google_access_context_manager_service_perimeter` resource defines the perimeter, its restricted services, and explicit ingress/egress policies for cross-project integrations. For the full Terraform GCP provisioning reference, see [Terraform GCP patterns](https://alp78.github.io/elysium/07-Terraform/).
 
 ```hcl
 # vpc_sc.tf — define the security perimeter
@@ -140,7 +247,13 @@ resource "google_access_context_manager_access_level" "trusted_engineers" {
 }
 ```
 
+## Perimeter Behavior and Operations
+
+This section covers how the perimeter behaves at runtime — what traffic it blocks, how to debug denials, and the ingress/egress policy model.
+
 ### What VPC-SC Blocks vs Allows
+
+The following table summarizes how VPC-SC changes the outcome of common data platform operations.
 
 | Scenario | Without VPC-SC | With VPC-SC |
 |---|---|---|
@@ -153,7 +266,11 @@ resource "google_access_context_manager_access_level" "trusted_engineers" {
 
 ### Debugging VPC-SC Denial Errors
 
-VPC-SC denials appear in [Cloud Audit Logs](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) with a specific violation type:
+VPC-SC denials appear in [Cloud Audit Logs](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) with a specific violation type. Filter for `protoPayload.status.code=7` (PERMISSION_DENIED) combined with `VpcServiceControlAuditMetadata` to isolate perimeter violations from regular IAM denials.
+
+#### gcloud logging read — query VPC-SC violations
+
+Reads Cloud Audit Logs filtered to VPC-SC violation events. The `--format=table` flag extracts the timestamp, method, violation reason, and affected resource for quick triage.
 
 ```bash
 gcloud logging read 'protoPayload.status.code=7 AND
@@ -163,33 +280,49 @@ gcloud logging read 'protoPayload.status.code=7 AND
   --limit=20
 ```
 
+```text
+TIMESTAMP                METHOD_NAME                                     VIOLATION_REASON                            RESOURCE_NAMES
+2026-03-22T14:32:01Z     google.storage.objects.get                      RESOURCES_NOT_IN_SAME_SERVICE_PERIMETER     projects/external-project/buckets/leak-bucket
+2026-03-22T14:28:45Z     google.cloud.bigquery.v2.JobService.InsertJob   NO_MATCHING_ACCESS_LEVEL                    projects/data-platform-prod/datasets/prod_index
+```
+
 > [!info] Common VPC-SC Violation Reasons
 >
-> - `RESOURCES_NOT_IN_SAME_SERVICE_PERIMETER` -- trying to access a resource outside the perimeter
-> - `NO_MATCHING_ACCESS_LEVEL` -- caller does not meet access level criteria (wrong IP, no managed device)
+> - `RESOURCES_NOT_IN_SAME_SERVICE_PERIMETER` — trying to access a resource outside the perimeter
+> - `NO_MATCHING_ACCESS_LEVEL` — caller does not meet access level criteria (wrong IP, no managed device)
 
-> [!warning] VPC-SC Is Non-Negotiable
+### Security and Operational Guidance
+
+Key considerations for deploying and maintaining VPC-SC perimeters in production.
+
+> [!warning] VPC-SC Is Non-Negotiable for Sensitive Data
 >
-> VPC-SC Is Non-Negotiable for Sensitive Data.
 > On a data platform, the processed and enriched data is among the most commercially sensitive assets in the system. A single leak of data before public release could have significant consequences. VPC-SC ensures that even an insider with admin-level IAM permissions cannot exfiltrate this data to an external project or bucket. Implement it from day one — retrofitting a perimeter onto existing services is significantly harder than designing with it.
 
 > [!success] Enforce VPC-SC from Day One
 >
 > Design perimeter boundaries before deploying any services. Define your restricted services list (`bigquery.googleapis.com`, `storage.googleapis.com`), enumerate all cross-project integrations (Airflow, partner exports), and encode them as explicit ingress/egress rules in Terraform (`google_access_context_manager_service_perimeter`). Starting with VPC-SC in place is an order of magnitude easier than retrofitting it onto a running platform.
 
-> [!danger] VPC-SC Dry Run First
+> [!danger] Always Deploy in Dry Run Mode First
 >
-> VPC-SC Dry Run Mode Before Enforcement.
-> Deploying VPC-SC in enforce mode without testing will instantly break every cross-project API call, Cloud Build trigger, and external service integration. Always start in **dry run mode** (`--perimeter-type=PERIMETER_TYPE_REGULAR --spec-type=DRY_RUN`) and monitor Cloud Audit Logs for would-be violations for at least one full pipeline cycle before switching to enforce. A single missing ingress rule can take down your entire data platform.
+> Deploying VPC-SC in enforce mode without testing will instantly break every cross-project API call, Cloud Build trigger, and external service integration. Always start in **dry run mode** and monitor Cloud Audit Logs for would-be violations for at least one full pipeline cycle before switching to enforce. A single missing ingress rule can take down your entire data platform.
 
 > [!success] Dry Run Workflow
 >
-> Deploy the perimeter in dry run mode first. Run `gcloud logging read` filtering for `VpcServiceControlAuditMetadata` violations over one full pipeline cycle. For each violation, add the missing ingress or egress rule to the Terraform config. Only switch to enforce mode (`spec-type=ENFORCE`) once the audit log shows zero would-be denials for services that should be permitted.
-
-> [!warning] VPC-SC Skips Insider Access
+> Deploy the perimeter in dry run mode using `--spec-type=DRY_RUN`:
 >
-> VPC-SC Does Not Protect Against Insider Data Access.
-> VPC-SC prevents data from leaving the perimeter, but it does not restrict what users can see within the perimeter. An engineer with BigQuery read access can still query all tables and view all results inside the project. For column-level and row-level restrictions within the perimeter, use BigQuery column-level security and authorized views.
+> ```bash
+> gcloud access-context-manager perimeters dry-run create data-pipeline-data-perimeter \
+>   --policy=POLICY_ID \
+>   --resources="projects/123456789" \
+>   --restricted-services="bigquery.googleapis.com,storage.googleapis.com"
+> ```
+>
+> Run `gcloud logging read` filtering for `VpcServiceControlAuditMetadata` violations over one full pipeline cycle. For each violation, add the missing ingress or egress rule to the Terraform config. Only switch to enforce mode once the audit log shows zero would-be denials for services that should be permitted.
+
+> [!warning] VPC-SC Does Not Protect Against Insider Data Access
+>
+> VPC-SC prevents data from leaving the perimeter, but it does not restrict what users can see within the perimeter. An engineer with BigQuery read access can still query all tables and view all results inside the project. For column-level and row-level restrictions within the perimeter, use [BigQuery column-level security](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-fundamentals) and authorized views.
 
 > [!success] Layer In-Perimeter Access Controls
 >
@@ -208,6 +341,8 @@ gcloud logging read 'protoPayload.status.code=7 AND
 - [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) — VPC-SC violations appear in Cloud Audit Logs; query them with `gcloud logging read`
 - [dataset-and-table-management](https://alp78.github.io/elysium/06-GCP/BigQuery/dataset-and-table-management) — BigQuery is one of the primary services protected by VPC-SC
 - [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) — GCS is the other primary service protected by VPC-SC
+- [Terraform GCP patterns](https://alp78.github.io/elysium/07-Terraform/) — IaC provisioning of VPC-SC perimeters and access levels
+- [BigQuery fundamentals](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-fundamentals) — Column-level and row-level security for in-perimeter data access controls
 
 ## References
 

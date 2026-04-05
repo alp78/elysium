@@ -162,10 +162,9 @@ Console.WriteLine($"  State:    {project.State}");
 
 #### GoogleCredential.CreateScoped — restrict API access by scope
 
+Scoped credentials limit which APIs the token can access. Even if the SA has broad roles, the scoped token restricts access to only the specified APIs.
+
 ```csharp
-// Scoped credentials limit which APIs the token can access.
-// Even if the SA has broad roles, scoped credentials restrict the token
-// to only the specified APIs.
 var storageOnly = ServiceAccountCredential
     .FromServiceAccountData(File.OpenRead(SA_KEY_PATH))
     .ToGoogleCredential()
@@ -239,9 +238,9 @@ Console.WriteLine($"  Lifetime:         600 seconds");
 
 #### SecretManagerServiceClient.AccessSecretVersion — read secrets
 
+Secrets are versioned — `"latest"` always resolves to the most recent active version.
+
 ```csharp
-// Read secrets stored during project setup.
-// Secrets are versioned — "latest" gets the most recent active version.
 var smClient = SecretManagerServiceClient.Create();
 
 var secretNames = new[] { "test-api-key", "db-password", "db-config" };
@@ -352,8 +351,9 @@ if (allVersions.Count > 1)
 
 #### Parse JSON secret — database config
 
+Secrets can store any string — JSON configs, connection strings, or certificates.
+
 ```csharp
-// Secrets can store any string — JSON configs, connection strings, certificates.
 var dbConfigPath = $"projects/{PROJECT_ID}/secrets/db-config/versions/latest";
 try
 {
@@ -412,9 +412,9 @@ Console.WriteLine($"  Ciphertext size:  {ciphertext.Length} bytes");
 
 #### KeyManagementServiceClient.Decrypt — symmetric decryption
 
+KMS determines the correct key version from metadata embedded in the ciphertext — no version selection needed.
+
 ```csharp
-// Decrypt the ciphertext back to plaintext using the same KMS key.
-// KMS determines the correct key version from metadata in the ciphertext.
 var decryptResponse = kmsClient.Decrypt(keyName, ciphertext);
 var decrypted = decryptResponse.Plaintext.ToByteArray();
 
@@ -495,10 +495,9 @@ Console.WriteLine($"  Data match:       {largeData.SequenceEqual(decryptedData)}
 
 #### KeyManagementServiceClient.GetCryptoKey — list key versions and rotation
 
+KMS automatically manages version history. When you rotate, the new version becomes primary for new encryptions. Old ciphertext still decrypts because the version ID is embedded in it.
+
 ```csharp
-// Show current key versions — KMS automatically manages version history.
-// When you rotate, the new version becomes primary for new encryptions.
-// Old ciphertext still decrypts because the version ID is embedded in it.
 var key = kmsClient.GetCryptoKey(keyName);
 Console.WriteLine($"  Key:             {KMS_KEY}");
 Console.WriteLine($"  Purpose:         {key.Purpose}");
@@ -581,63 +580,67 @@ catch (Exception e)
 
 #### SQL Server — CRUD operations
 
+All operations use parameterized queries to prevent SQL injection.
+
+**Create table.** Uses `IF NOT EXISTS` to make the operation idempotent.
+
 ```csharp
-// Perform CRUD operations to verify full SQL Server access.
-// Using parameterized queries to prevent SQL injection.
-try
+using var conn = new SqlConnection(connStr);
+conn.Open();
+
+using (var cmd = new SqlCommand(@"
+    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'security_test')
+    CREATE TABLE security_test (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        symbol NVARCHAR(20),
+        score FLOAT,
+        created_at DATETIME DEFAULT GETDATE()
+    )", conn))
+{ cmd.ExecuteNonQuery(); }
+```
+
+**Insert rows.** Parameters are bound with `AddWithValue` — the driver handles type mapping and escaping.
+
+```csharp
+using (var cmd = new SqlCommand("INSERT INTO security_test (symbol, score) VALUES (@s, @v)", conn))
 {
-    using var conn = new SqlConnection(connStr);
-    conn.Open();
-
-    // Create
-    using (var cmd = new SqlCommand(@"
-        IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'security_test')
-        CREATE TABLE security_test (
-            id INT IDENTITY(1,1) PRIMARY KEY,
-            symbol NVARCHAR(20),
-            score FLOAT,
-            created_at DATETIME DEFAULT GETDATE()
-        )", conn))
-    { cmd.ExecuteNonQuery(); }
-
-    // Insert
-    using (var cmd = new SqlCommand("INSERT INTO security_test (symbol, score) VALUES (@s, @v)", conn))
-    {
-        cmd.Parameters.AddWithValue("@s", "AAPL");
-        cmd.Parameters.AddWithValue("@v", 95.5);
-        cmd.ExecuteNonQuery();
-    }
-    using (var cmd = new SqlCommand("INSERT INTO security_test (symbol, score) VALUES (@s, @v)", conn))
-    {
-        cmd.Parameters.AddWithValue("@s", "MSFT");
-        cmd.Parameters.AddWithValue("@v", 88.2);
-        cmd.ExecuteNonQuery();
-    }
-    Console.WriteLine("  Inserted 2 rows into security_test");
-
-    // Query
-    using (var cmd = new SqlCommand("SELECT id, symbol, score, created_at FROM security_test", conn))
-    using (var reader = cmd.ExecuteReader())
-    {
-        while (reader.Read())
-            Console.WriteLine($"    {reader.GetInt32(0),3}  {reader.GetString(1),-10}  {reader.GetDouble(2),6:F1}  {reader.GetDateTime(3)}");
-    }
-
-    // Drop
-    using (var cmd = new SqlCommand("DROP TABLE security_test", conn))
-    { cmd.ExecuteNonQuery(); }
-    Console.WriteLine("  Dropped security_test table");
+    cmd.Parameters.AddWithValue("@s", "AAPL");
+    cmd.Parameters.AddWithValue("@v", 95.5);
+    cmd.ExecuteNonQuery();
 }
-catch (Exception e)
+using (var cmd = new SqlCommand("INSERT INTO security_test (symbol, score) VALUES (@s, @v)", conn))
 {
-    Console.WriteLine($"  SQL operations failed: {e.Message}");
+    cmd.Parameters.AddWithValue("@s", "MSFT");
+    cmd.Parameters.AddWithValue("@v", 88.2);
+    cmd.ExecuteNonQuery();
+}
+Console.WriteLine("  Inserted 2 rows into security_test");
+```
+
+**Query rows.** `ExecuteReader` returns a forward-only cursor. Column values are accessed by ordinal with typed getters.
+
+```csharp
+using (var cmd = new SqlCommand("SELECT id, symbol, score, created_at FROM security_test", conn))
+using (var reader = cmd.ExecuteReader())
+{
+    while (reader.Read())
+        Console.WriteLine($"    {reader.GetInt32(0),3}  {reader.GetString(1),-10}  {reader.GetDouble(2),6:F1}  {reader.GetDateTime(3)}");
 }
 ```
 
-      Inserted 2 rows into security_test
-          1  AAPL          95.5  26-Mar-26 4:34:20
-          2  MSFT          88.2  26-Mar-26 4:34:20
-      Dropped security_test table
+```text
+Inserted 2 rows into security_test
+  1  AAPL          95.5  26-Mar-26 4:34:20
+  2  MSFT          88.2  26-Mar-26 4:34:20
+```
+
+**Drop table.** Cleans up the test table after verification.
+
+```csharp
+using (var cmd = new SqlCommand("DROP TABLE security_test", conn))
+{ cmd.ExecuteNonQuery(); }
+Console.WriteLine("  Dropped security_test table");
+```
 
 #### SqlConnection + SSL — verified connection to Cloud SQL
 
@@ -674,9 +677,9 @@ catch (SqlException e)
 
 #### Cloud SQL encryption at rest — check CMEK
 
+Checks whether the Cloud SQL instance uses CMEK or Google-managed encryption. Empty output means Google-managed (default); CMEK shows the KMS key path.
+
 ```csharp
-// Check if the Cloud SQL instance uses CMEK or Google-managed encryption.
-// Empty output = Google-managed (default). CMEK shows the KMS key path.
 var p = new System.Diagnostics.Process();
 p.StartInfo.FileName = "cmd.exe";
 p.StartInfo.Arguments = $"/c gcloud sql instances describe {SQL_INSTANCE} --format=yaml(diskEncryptionConfiguration,diskEncryptionStatus)";
@@ -758,9 +761,9 @@ catch (Exception e)
 
 #### BigQueryClient — query with service account credentials
 
+BigQuery access is controlled by IAM roles (`bigquery.dataViewer` or higher). The SA credential is picked up automatically via ADC.
+
 ```csharp
-// Authenticate to BigQuery using the SA key and run a query.
-// BigQuery access is controlled by IAM roles (bigquery.dataViewer or higher).
 var bqClient = BigQueryClient.Create(PROJECT_ID);
 
 var sql = $@"SELECT symbol, ROUND(close, 2) AS close,
@@ -854,17 +857,15 @@ foreach (var row in encResults)
 
 #### FirestoreDb — read and write documents with SA credentials
 
+Firestore access is controlled by IAM roles (`datastore.user` or higher). This cell uses the REST API directly because the Firestore SDK has an assembly binding issue in Polyglot Notebooks (`Microsoft.Bcl.AsyncInterfaces` mismatch).
+
 ```csharp
-// Firestore access is controlled by IAM roles (datastore.user or higher).
-// Using the REST API directly because the Firestore SDK has an assembly
-// binding issue in Polyglot Notebooks (Microsoft.Bcl.AsyncInterfaces mismatch).
 var httpClient = new HttpClient();
 var accessToken = await saCredential.UnderlyingCredential.GetAccessTokenForRequestAsync();
 httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
 var fsBaseUrl = $"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/{FIRESTORE_DB}/documents";
 
-// Read existing scores
 var resp = await httpClient.GetAsync($"{fsBaseUrl}/scores_latest?pageSize=5");
 var json = await resp.Content.ReadAsStringAsync();
 var docs = JsonSerializer.Deserialize<JsonElement>(json);
@@ -889,8 +890,9 @@ if (docs.TryGetProperty("documents", out var docArray))
 
 #### Write and read back a document
 
+Writes a test document via REST API and reads it back to verify round-trip access.
+
 ```csharp
-// Write a test document via REST API and read it back.
 var writeBody = JsonSerializer.Serialize(new {
     fields = new {
         message = new { stringValue = "written by C# notebook" },
@@ -905,13 +907,11 @@ var writeResp = await httpClient.PatchAsync(
 );
 Console.WriteLine($"  Write: {writeResp.StatusCode}");
 
-// Read back
 var readResp = await httpClient.GetAsync($"{fsBaseUrl}/access_test_cs/demo");
 var readJson = await readResp.Content.ReadAsStringAsync();
 Console.WriteLine($"  Read back: {readResp.StatusCode}");
 Console.WriteLine($"  Data: {readJson[..Math.Min(200, readJson.Length)]}...");
 
-// Cleanup
 await httpClient.DeleteAsync($"{fsBaseUrl}/access_test_cs/demo");
 Console.WriteLine("  Cleaned up test document");
 ```
@@ -929,8 +929,9 @@ Console.WriteLine("  Cleaned up test document");
 
 #### KeyManagementServiceClient + Firestore — field-level encryption
 
+Encrypts sensitive fields with KMS before writing to Firestore via REST. Only the `position_size` value is encrypted — the symbol remains in cleartext for querying.
+
 ```csharp
-// Encrypt sensitive fields with KMS before writing to Firestore via REST.
 var posEnc = kmsClient.Encrypt(keyName, ByteString.CopyFromUtf8("1500"));
 var encB64 = Convert.ToBase64String(posEnc.Ciphertext.ToByteArray());
 
@@ -947,14 +948,12 @@ var encResp = await httpClient.PatchAsync(
 );
 Console.WriteLine($"  Written encrypted document: {encResp.StatusCode}");
 
-// Read and decrypt
 var encReadResp = await httpClient.GetAsync($"{fsBaseUrl}/encrypted_positions_cs/demo");
 var encReadJson = JsonSerializer.Deserialize<JsonElement>(await encReadResp.Content.ReadAsStringAsync());
 var encValue = encReadJson.GetProperty("fields").GetProperty("position_size_encrypted").GetProperty("stringValue").GetString();
 var decResp = kmsClient.Decrypt(keyName, ByteString.CopyFrom(Convert.FromBase64String(encValue)));
 Console.WriteLine($"  Decrypted position_size: {decResp.Plaintext.ToStringUtf8()}");
 
-// Cleanup
 await httpClient.DeleteAsync($"{fsBaseUrl}/encrypted_positions_cs/demo");
 Console.WriteLine("  Cleaned up encrypted document");
 ```
@@ -967,8 +966,9 @@ Console.WriteLine("  Cleaned up encrypted document");
 
 #### StorageClient — upload to CMEK-encrypted GCS bucket
 
+Uploads a file to the CMEK-encrypted bucket and verifies the encryption metadata on the stored object.
+
 ```csharp
-// Upload a file to the CMEK-encrypted bucket and verify encryption metadata.
 var storageClient = StorageClient.Create();
 var testContent = Encoding.UTF8.GetBytes("Security test from C# notebook");
 
@@ -978,7 +978,6 @@ using (var ms = new MemoryStream(testContent))
 }
 Console.WriteLine("  Uploaded: security-demo/cs_test.txt");
 
-// Check encryption metadata
 var obj = storageClient.GetObject(BUCKET_NAME, "security-demo/cs_test.txt");
 Console.WriteLine($"  KMS key:  {obj.KmsKeyName ?? "Google-managed"}");
 Console.WriteLine($"  Size:     {obj.Size} bytes");
@@ -990,9 +989,9 @@ Console.WriteLine($"  Size:     {obj.Size} bytes");
 
 #### AesGcm — client-side encryption before GCS upload
 
+Encrypts data locally with AES-GCM before uploading to GCS. `AesGcm` is built into `System.Security.Cryptography` — no external library needed. The nonce, tag, and ciphertext are combined into a single blob for storage.
+
 ```csharp
-// Encrypt data locally with AES-GCM before uploading to GCS.
-// .NET advantage: AesGcm is built into System.Security.Cryptography.
 var cseDek = RandomNumberGenerator.GetBytes(32);
 var cseNonce = RandomNumberGenerator.GetBytes(12);
 var cseData = Encoding.UTF8.GetBytes("Client-side encrypted data from C#");
@@ -1002,7 +1001,6 @@ var cseTag = new byte[16];
 using (var aes = new AesGcm(cseDek, 16))
     aes.Encrypt(cseNonce, cseData, cseEncrypted, cseTag);
 
-// Combine nonce + tag + ciphertext for storage
 var combined = new byte[cseNonce.Length + cseTag.Length + cseEncrypted.Length];
 Buffer.BlockCopy(cseNonce, 0, combined, 0, cseNonce.Length);
 Buffer.BlockCopy(cseTag, 0, combined, cseNonce.Length, cseTag.Length);
@@ -1020,13 +1018,13 @@ Console.WriteLine($"  Original: {cseData.Length} bytes, Encrypted: {cseEncrypted
 
 #### AesGcm — download and decrypt client-side encrypted file
 
+Downloads the encrypted blob and decrypts locally. The combined format is split back into nonce (12 bytes), tag (16 bytes), and ciphertext.
+
 ```csharp
-// Download the encrypted blob and decrypt locally.
 var dlStream = new MemoryStream();
 storageClient.DownloadObject(BUCKET_NAME, "security-demo/cs_encrypted.bin", dlStream);
 var dlBytes = dlStream.ToArray();
 
-// Split: nonce (12) + tag (16) + ciphertext
 var dlNonce = dlBytes[..12];
 var dlTag = dlBytes[12..28];
 var dlCipher = dlBytes[28..];
@@ -1044,12 +1042,13 @@ Console.WriteLine($"  Decrypted:  {Encoding.UTF8.GetString(dlPlain)}");
 
 #### UrlSigner.FromCredential — generate signed URLs for time-limited access
 
+Signed URLs grant time-limited access to a private GCS object without requiring the caller to authenticate. Use for sharing with external users or frontend direct downloads.
+
+> [!warning] Signed URL anti-patterns
+>
+> Never log signed URLs (they grant access to anyone who has them) and keep expiration times short (minutes, not days).
+
 ```csharp
-// Signed URLs: grant time-limited access to a private GCS object
-// without requiring the caller to authenticate.
-//
-// When to use: sharing with external users, frontend direct download.
-// Anti-patterns: logging signed URLs, long expiration times.
 var urlSigner = UrlSigner.FromCredential(
     ServiceAccountCredential.FromServiceAccountData(File.OpenRead(SA_KEY_PATH))
 );
@@ -1064,7 +1063,6 @@ var signedUrl = urlSigner.Sign(
 Console.WriteLine($"  Signed URL (first 100): {signedUrl[..100]}...");
 Console.WriteLine($"  Expires in: 15 minutes");
 
-// Access with no authentication
 var httpClient2 = new HttpClient();
 var resp = await httpClient.GetAsync(signedUrl);
 var body = await resp.Content.ReadAsStringAsync();

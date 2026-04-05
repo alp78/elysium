@@ -14,9 +14,11 @@ status: complete
 >
 > — **Kent Beck**
 
-```python
-# All imports for data transfer benchmarking across GCP services
+## Setup
 
+Imports all standard-library and third-party dependencies, loads environment variables from `.env`, initialises GCS/BigQuery/KMS clients, and defines shared formatting helpers and benchmark file sets used throughout this notebook.
+
+```python
 # Standard library
 import bz2
 import gzip as gzip_mod
@@ -74,7 +76,6 @@ _ = html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 ```
 
 ```python
-# Load .env and define project constants
 load_dotenv(override=True)
 
 PROJECT_ID   = "seclab-dev-ap-26"
@@ -108,10 +109,15 @@ BUCKET_NAME  # Bucket
       34.38.193.79
       seclab-dev-ap-26-data
 
+### Helpers and test data
+
+Utility functions and test file sets shared across all benchmark sections in this notebook.
+
 #### Formatting helpers
 
+Utility functions for human-readable byte and duration formatting — shared across all benchmark output in this notebook.
+
 ```python
-# Human-readable size and time formatters
 def fmt_bytes(b):
     if b <= 0: return "-"
     if b < 1024: return f"{b} B"
@@ -127,14 +133,9 @@ def fmt_time(ms):
 
 #### Define file sets for upload, SQL insert, and BigQuery benchmarks
 
-```python
-# Three separate file sets for different benchmark categories.
-# Each set uses real data at appropriate sizes for its operation.
-#
-# Upload files: test network transfer speed at increasing sizes
-# SQL insert files: test insert methods on existing table schemas
-# BigQuery files: test load/query on existing table schemas
+Three test files at increasing sizes (10 MB → 200 MB → 1 GB) expose how each method scales from latency-dominated small transfers to bandwidth-dominated large ones. Separate file sets for SQL insert and BigQuery use row counts appropriate to those operations.
 
+```python
 upload_files = {
     "small":  DATA_DIR / "small_upload.csv",    # ~10 MB
     "medium": DATA_DIR / "medium_upload.csv",   # ~200 MB 
@@ -198,8 +199,11 @@ for name, files in [("SQL Insert", sql_insert_files), ("BigQuery", bq_files)]:
 
 For the CLI transfer tools (`gsutil cp`, `gcloud storage cp`, `rsync`, `bcp`) that these Python methods wrap or replace, see [data-transfer](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer). The GCS operations benchmarked below have direct CLI equivalents documented in [gcs-object-operations](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations).
 
+### Benchmark helper
+
+Persists upload benchmark results to a local JSON file, keyed by `(method, tier)`, and keeps an in-memory list in sync for live display.
+
 ```python
-# Benchmark helper — persists results to JSON, keyed by (method, tier)
 GCS_PREFIX   = "benchmarks/uploads"
 RESULTS_FILE = DATA_DIR / "upload_results.json"
 
@@ -250,12 +254,15 @@ print(f"  Loaded {len(upload_results)} existing results from {RESULTS_FILE.name}
 
       Loaded 33 existing results from upload_results.json
 
+### Upload methods
+
+Ten upload methods benchmarked across three file sizes: Python client library (simple, resumable, parallel composite, streamed), CLI wrappers (gsutil, gcloud storage), raw JSON API, async aiohttp, and compressed/converted variants (gzip, Parquet).
+
 #### Upload CSV to GCS with google-cloud-storage - blob.upload_from_filename over HTTPS
 
-The most straightforward approach. Reads the entire file into memory and uploads in a single request (small files) or automatically switches to a resumable upload for larger files. No tuning required.
+The most straightforward approach. Reads the entire file into memory and uploads in a single request (small files) or automatically switches to a resumable upload for larger files. No tuning required. Single sequential stream.
 
 ```python
-# Simple blob upload — single sequential stream
 def simple_upload(file_path, dest_blob_name):
     blob = bucket.blob(dest_blob_name)
     blob.upload_from_filename(str(file_path))
@@ -274,10 +281,9 @@ for tier, path in upload_files.items():
 
 #### Upload CSV to GCS with google-cloud-storage - blob.upload_from_filename(chunk_size) over HTTPS
 
-Explicitly configures the resumable upload chunk size. Each chunk is sent in a separate HTTP request, enabling recovery from mid-upload failures. Useful for unreliable networks — if a chunk fails, only that chunk is retried rather than the whole file.
+Explicitly configures the resumable upload chunk size to 10 MB for fault tolerance. Each chunk is sent in a separate HTTP request, enabling recovery from mid-upload failures. Useful for unreliable networks — if a chunk fails, only that chunk is retried rather than the whole file.
 
 ```python
-# Resumable upload — explicit 10 MB chunk size for fault tolerance
 CHUNK_SIZE = 10 * 1024 * 1024  # 10 MB
 
 def resumable_upload(file_path, dest_blob_name):
@@ -298,11 +304,9 @@ for tier, path in upload_files.items():
 
 #### Upload CSV to GCS with google-cloud-storage - transfer_manager.upload_chunks_concurrently over HTTPS
 
-Uses `google.cloud.storage.transfer_manager` to split the file into chunks and upload them in parallel across multiple threads. GCS composes the chunks server-side into a single object. Best throughput for large files on high-bandwidth connections.
+Uses `google.cloud.storage.transfer_manager` to split the file into chunks and upload them in parallel across multiple threads. GCS composes the chunks server-side into a single object. Best throughput for large files on high-bandwidth connections. Note: `worker_type="process"` is broken on Windows (RetryError pickling bug in `google-api-core`) — use `"thread"` instead.
 
 ```python
-# Parallel composite upload — chunks uploaded concurrently, composed server-side
-# worker_type="process" is broken on Windows (RetryError pickling bug in google-api-core)
 def parallel_composite_upload(file_path, dest_blob_name):
     blob = bucket.blob(dest_blob_name)
     transfer_manager.upload_chunks_concurrently(
@@ -328,10 +332,9 @@ for tier, path in upload_files.items():
 
 #### Upload CSV to GCS with google-cloud-storage - blob.upload_from_file over HTTPS
 
-Reads the file as a binary stream rather than loading the full path. Useful when data comes from a pipeline, network socket, or in-memory buffer. Avoids materializing the full file in memory — the client library reads and sends in chunks internally.
+Reads the file as a binary stream rather than loading the full path. Avoids materializing the full file in memory — the client library reads and sends in chunks internally. Useful when data comes from a pipeline, network socket, or in-memory buffer.
 
 ```python
-# Streamed upload — read file as binary stream, avoids full memory materialisation
 def streamed_upload(file_path, dest_blob_name):
     blob = bucket.blob(dest_blob_name)
     blob.chunk_size = 32 * 1024 * 1024
@@ -355,11 +358,9 @@ for tier, path in upload_files.items():
 
 #### Upload gzip to GCS with google-cloud-storage - blob.upload_from_filename over HTTPS
 
-Compresses the CSV to gzip locally, then uploads the smaller payload. Trades CPU time for reduced network transfer. The blob's `content_encoding` is set to `gzip` so GCS transparently decompresses on download.
+Compresses the CSV to gzip locally, then uploads the smaller payload. Trades CPU time for reduced network transfer. The blob's `content_encoding` is set to `gzip` so GCS transparently decompresses on download. Compression and upload are timed separately; reported throughput uses wire bytes over upload time only.
 
 ```python
-# Compressed upload — gzip locally, upload smaller payload, report wire throughput
-# Times compression and upload separately. Throughput = wire_bytes / upload_time only.
 gzip_split_times = {}
 
 def gzip_upload(file_path, dest_blob_name):
@@ -401,11 +402,9 @@ for tier, path in upload_files.items():
 
 #### Upload Parquet to GCS with google-cloud-storage - blob.upload_from_filename over HTTPS
 
-Converts CSV to Parquet (columnar, compressed) before uploading. Parquet files are typically 5-10x smaller than CSV for numeric data. Measures total time including the conversion step — useful when downstream consumers (BigQuery, Spark) prefer Parquet anyway.
+Converts CSV to Parquet (columnar, compressed) before uploading. Parquet files are typically 5-10x smaller than CSV for numeric data. Measures total time including the conversion step — useful when downstream consumers (BigQuery, Spark) prefer Parquet anyway. Conversion and upload are timed separately; reported throughput uses wire bytes over upload time only.
 
 ```python
-# Parquet conversion then upload — report wire throughput based on parquet size
-# Times conversion and upload separately. Throughput = wire_bytes / upload_time only.
 parquet_split_times = {}
 
 def parquet_upload(file_path, dest_blob_name):
@@ -447,10 +446,9 @@ for tier, path in upload_files.items():
 
 #### Upload CSV to GCS with gsutil - cp over HTTPS
 
-Shells out to `gsutil cp`, the standard CLI tool. Uses its own resumable upload logic and retries. Useful as a baseline comparison against the Python client library — also the approach used in shell scripts and CI pipelines.
+Shells out to `gsutil cp`, the standard CLI tool. Uses its own resumable upload logic and retries. Useful as a baseline comparison against the Python client library — also the approach used in shell scripts and CI pipelines. CLI equivalent: `gsutil cp file.csv gs://seclab-dev-ap-26-data/benchmarks/uploads/gsutil_cp/file.csv`
 
 ```python
-# gsutil cp file.csv gs://seclab-dev-ap-26-data/benchmarks/uploads/gsutil_cp/file.csv
 GSUTIL: str = shutil.which("gsutil.cmd") or shutil.which("gsutil") or "gsutil"
 
 def gsutil_upload(file_path, dest_blob_name):
@@ -467,12 +465,14 @@ for tier, path in upload_files.items():
     print(f"  {tier:<8s} {r['size']:>10s} {r['elapsed']:>10s} {r['throughput']:>14s}")
 ```
 
+> [!info] Output cell missing
+> Run this cell to capture benchmark output, then add a ` ```text ` block here.
+
 #### Upload CSV to GCS with gsutil - cp -o parallel_composite over HTTPS
 
-Uses `gsutil -o GSUtil:parallel_composite_upload_threshold=50M` to enable parallel composite uploads at the CLI level. For large files, gsutil splits the file and uploads chunks in parallel — similar to Method 3 but driven entirely by the CLI.
+Uses `gsutil -o GSUtil:parallel_composite_upload_threshold=50M` to enable parallel composite uploads at the CLI level. For large files, gsutil splits the file and uploads chunks in parallel — similar to Method 3 but driven entirely by the CLI. CLI equivalent: `gsutil -o GSUtil:parallel_composite_upload_threshold=50M -o GSUtil:parallel_composite_upload_component_size=32M cp file.csv gs://...`
 
 ```python
-# gsutil -o GSUtil:parallel_composite_upload_threshold=50M -o GSUtil:parallel_composite_upload_component_size=32M cp file.csv gs://seclab-dev-ap-26-data/benchmarks/uploads/gsutil_parallel/file.csv
 def gsutil_parallel_upload(file_path, dest_blob_name):
     dest_uri = f"gs://{BUCKET_NAME}/{dest_blob_name}"
     subprocess.run(
@@ -494,12 +494,14 @@ for tier, path in upload_files.items():
     print(f"  {tier:<8s} {r['size']:>10s} {r['elapsed']:>10s} {r['throughput']:>14s}")
 ```
 
+> [!info] Output cell missing
+> Run this cell to capture benchmark output, then add a ` ```text ` block here.
+
 #### Upload CSV to GCS with gcloud - storage cp over HTTPS
 
-The newer `gcloud storage cp` command replaces `gsutil` and uses the same Python client library under the hood. It automatically enables parallel uploads for large files and is the recommended CLI path going forward.
+The newer `gcloud storage cp` command replaces `gsutil` and uses the same Python client library under the hood. It automatically enables parallel uploads for large files and is the recommended CLI path going forward. CLI equivalent: `gcloud storage cp file.csv gs://seclab-dev-ap-26-data/benchmarks/uploads/gcloud_storage/file.csv`
 
 ```python
-# gcloud storage cp file.csv gs://seclab-dev-ap-26-data/benchmarks/uploads/gcloud_storage/file.csv
 GCLOUD: str = shutil.which("gcloud.cmd") or shutil.which("gcloud") or "gcloud"
 
 def gcloud_storage_upload(file_path, dest_blob_name):
@@ -521,7 +523,6 @@ for tier, path in upload_files.items():
 Bypasses the client library entirely and drives the GCS JSON API directly via `AuthorizedSession`. Initiates a resumable upload session, then sends the file in 8 MB chunks with explicit `Content-Range` headers. Demonstrates the underlying protocol that all other methods build on.
 
 ```python
-# JSON API resumable upload — raw HTTP, 8 MB chunks
 RAW_CHUNK = 8 * 1024 * 1024  # 8 MB
 
 def raw_api_upload(file_path, dest_blob_name):
@@ -569,10 +570,9 @@ for tier, path in upload_files.items():
 
 #### Upload CSV to GCS with gcloud-aio-storage - Storage.upload over HTTPS (async)
 
-Uses `gcloud-aio-storage`, an async GCS client built on `aiohttp`. Runs an `asyncio` event loop with a persistent `aiohttp.ClientSession` — a single session reuses the underlying TCP connection and benefits from HTTP keep-alive, avoiding the per-request handshake overhead of the synchronous client. Resumable upload is forced for files >5 MB.
+Uses `gcloud-aio-storage`, an async GCS client built on `aiohttp`. Runs an `asyncio` event loop with a persistent `aiohttp.ClientSession` that reuses the underlying TCP connection via HTTP keep-alive, avoiding the per-request handshake overhead of the synchronous client. Resumable upload is forced for files >5 MB.
 
 ```python
-# Async upload — aiohttp session with connection reuse, resumable for large files
 async def _async_upload(file_path: Path, dest_blob_name: str) -> None:
     connector = aiohttp.TCPConnector(limit=8)
     async with aiohttp.ClientSession(connector=connector) as session:
@@ -603,10 +603,15 @@ for tier, path in upload_files.items():
       medium     193.1 MB      27.8s       7.0 MB/s
       large       1.19 GB     2.9min       7.1 MB/s
 
+### Results
+
+Aggregated benchmark output, throughput chart, and cleanup for all GCS upload methods.
+
 #### Summary of CSV upload methods from local to GCS
 
+Aggregates all benchmark results grouped by file size tier. Method order reflects insertion order — sort by throughput column to identify the fastest approach for your target file size.
+
 ```python
-# Results grouped by tier — terminal format
 df_up = pd.DataFrame(upload_results)
 for tier in ["small", "medium", "large"]:
     sub = df_up[df_up["tier"] == tier]
@@ -667,8 +672,9 @@ for tier in ["small", "medium", "large"]:
 
 #### Chart of CSV upload methods from local to GCS
 
+Interactive bar chart grouped by upload method, with bars colored by file size tier (small / medium / large). Methods are sorted by mean throughput descending so the fastest method appears first.
+
 ```python
-# Throughput chart — grouped by method, bars = tiers sorted by value
 df_up = pd.DataFrame(upload_results).drop_duplicates(subset=["method", "tier"], keep="last")
 df_up["throughput_mbps"] = df_up["wire_bytes"] / (df_up["elapsed_ms"] / 1000) / 1024**2
 
@@ -711,8 +717,9 @@ fig.show()
 
 #### google-cloud-storage — cleanup benchmark blobs
 
+Deletes all objects under `benchmarks/uploads/` to avoid ongoing storage charges. Run after capturing results.
+
 ```python
-# Delete all benchmark blobs from the bucket
 blobs = list(gcs_client.list_blobs(BUCKET_NAME, prefix=GCS_PREFIX))
 print(f"  Deleting {len(blobs)} benchmark blobs...")
 for blob in blobs:
@@ -724,6 +731,10 @@ print("  Cleanup done")
       Cleanup done
 
 ## Copy files from Local to VM
+
+### Setup
+
+Connection constants, SSH helper, and benchmark infrastructure for local-to-VM transfers.
 
 ```python
 # VM connection constants
@@ -752,7 +763,6 @@ with _ssh() as ssh:
     Python 3.11.2
 
 ```python
-# Benchmark helper for local→VM transfers — persists results to JSON, keyed by (method, tier)
 COPY_RESULTS_FILE = DATA_DIR / "vm_transfer_results.json"
 
 def _load_copy_results() -> list:
@@ -801,12 +811,15 @@ print(f"  Loaded {len(copy_results)} existing results from {COPY_RESULTS_FILE.na
 
       Loaded 15 existing results from vm_transfer_results.json
 
+### Copy methods
+
+Each method transfers the three benchmark files (10 MB / 193 MB / 1.19 GB) from the local machine to the GCP VM over SSH.
+
 #### Copy CSV from local to VM with paramiko - sftp.put over SFTP/SSH
 
 Standard SFTP over SSH. Single-threaded, no compression. Baseline method.
 
 ```python
-# Method 1 — paramiko SFTP
 def sftp_copy(file_path):
     with _ssh() as ssh:
         with ssh.open_sftp() as sftp:
@@ -826,10 +839,9 @@ for tier, path in upload_files.items():
 
 #### Copy CSV from local to VM with OpenSSH - scp over SSH
 
-Uses Windows OpenSSH `scp` via subprocess. Same SSH transport as SFTP but a simpler protocol with less per-packet overhead.
+Uses Windows OpenSSH `scp` via subprocess. Same SSH transport as SFTP but a simpler protocol with less per-packet overhead. CLI equivalent: `scp -i ~/.ssh/google_compute_engine -o StrictHostKeyChecking=no -o BatchMode=yes file.csv user@VM_IP:/path/`
 
 ```python
-# scp -i C:/Users/aperi/.ssh/google_compute_engine -o StrictHostKeyChecking=no -o BatchMode=yes file.csv alexper_recovery_gmail_com@34.38.193.79:/home/alexper_recovery_gmail_com/bench_data/file.csv
 def scp_copy(file_path):
     subprocess.run([
         SCP, "-i", VM_SSH_KEY,
@@ -853,12 +865,9 @@ for tier, path in upload_files.items():
 
 #### Copy CSV from local to VM with OpenSSH - scp -C over SSH (compressed)
 
-Same as Method 2 but enables SSH-level compression. Trades CPU for reduced bytes on the wire — most effective for compressible data like CSV.
+Same as Method 2 but enables SSH-level compression (`scp -C`). Trades CPU for reduced bytes on the wire — most effective for compressible data like CSV. Compression and transfer are timed separately; reported throughput uses wire bytes over transfer time only. The gzip equivalent is pre-computed to estimate wire bytes.
 
 ```python
-# scp -C — SSH compression. Pre-compute gzip size to estimate wire bytes.
-# Times compression and transfer separately. Throughput = wire_bytes / transfer_time only.
-
 gzip_sizes = {}
 scp_comp_split_times = {}
 
@@ -907,10 +916,9 @@ for tier, path in upload_files.items():
 
 #### Copy CSV from local to VM with gcloud - compute scp over SSH
 
-Uses the gcloud CLI which handles authentication via OS Login automatically, no key file needed. Internally wraps OpenSSH.
+Uses the gcloud CLI which handles authentication via OS Login automatically, no key file needed. Internally wraps OpenSSH. CLI equivalent: `gcloud compute scp --zone=europe-west1-b --strict-host-key-checking=no file.csv notebook-vm:/home/user/bench_data/`
 
 ```python
-# gcloud compute scp --zone=europe-west1-b --strict-host-key-checking=no file.csv notebook-vm:/home/alexper_recovery_gmail_com/bench_data/file.csv
 def gcloud_scp_copy(file_path):
     subprocess.run([
         GCLOUD, "compute", "scp",
@@ -937,7 +945,6 @@ for tier, path in upload_files.items():
 Same as Method 1 but increases the SSH window size to 64 MB and disables mid-transfer rekeying, reducing round-trip overhead for large transfers.
 
 ```python
-# Method 5 — paramiko SFTP with tuned window / read buffer
 def sftp_tuned_copy(file_path):
     with _ssh() as ssh:
         transport = ssh.get_transport()
@@ -961,10 +968,15 @@ for tier, path in upload_files.items():
       medium     193.1 MB     1.5min       2.1 MB/s
       large       1.19 GB     9.5min       2.1 MB/s
 
+### Results
+
+Aggregated benchmark output and throughput comparison chart for all VM copy methods.
+
 #### Summary of CSV copy methods from local to VM
 
+Aggregates all VM copy benchmark results grouped by file size tier. SCP-based methods typically outperform SFTP for large files due to lower protocol overhead.
+
 ```python
-# Copy results grouped by tier — terminal format
 df_cp = pd.DataFrame(copy_results).drop_duplicates(subset=["method", "tier"], keep="last")
 for tier in ["small", "medium", "large"]:
     sub = df_cp[df_cp["tier"] == tier]
@@ -1001,8 +1013,9 @@ for tier in ["small", "medium", "large"]:
 
 #### Chart of CSV copy methods from local to VM
 
+Interactive bar chart grouped by copy method, with bars colored by file size tier. SCP-based methods generally show higher throughput than SFTP for medium and large files.
+
 ```python
-# Throughput chart — grouped by method, bars = tiers sorted by value
 df_cp = pd.DataFrame(copy_results).drop_duplicates(subset=["method", "tier"], keep="last")
 df_cp["throughput_mbps"] = df_cp["wire_bytes"] / (df_cp["elapsed_ms"] / 1000) / 1024**2
 
@@ -1045,12 +1058,17 @@ fig.show()
 
 ## Transfer files from VM to GCS
 
-from VM (`notebook-vm`, `europe-west1-b`)
+Benchmarks upload methods executed on a co-located VM (`notebook-vm`, `europe-west1-b` — same region as the bucket). The VM-to-GCS path eliminates WAN latency, isolating pure throughput and SDK overhead.
+
+### Benchmark setup
+
+Copies test files and credentials to the VM, then runs the upload benchmark script remotely via SSH.
 
 #### paramiko SFTP — copy upload files and SA key to VM
 
+Copies the three upload test files and the service-account key to the VM via paramiko SFTP. The SA key is needed so the benchmark script running on the VM can authenticate to GCS.
+
 ```python
-# Copy upload files + SA key to VM via SFTP
 files_to_copy = list(upload_files.values()) + [Path(SA_KEY_PATH)]
 
 with _ssh() as ssh:
@@ -1074,7 +1092,7 @@ with _ssh() as ssh:
 
 #### paramiko SSHClient — run upload benchmarks on VM via SSH
 
-Executes the same 10 upload methods on the VM via SSH. The VM is in `europe-west1-b`, same region as the bucket
+Executes the same 10 upload methods on the VM via SSH. The VM is in `europe-west1-b`, same region as the bucket. Before running, activates the service account on the VM (`gcloud auth activate-service-account`) so that `gsutil`/`gcloud` CLI tools can authenticate — without this, only Python client library methods (which read `GOOGLE_APPLICATION_CREDENTIALS` directly) would work. Run once per VM session.
 
 ```python
 VM_BENCHMARK_SCRIPT = r"""
@@ -1255,12 +1273,6 @@ for method, fn in methods:
 ```
 
 ```python
-# Activate the service account on the VM so gsutil/gcloud CLI tools can authenticate.
-# Without this, only Python client library methods work (they read GOOGLE_APPLICATION_CREDENTIALS directly).
-#
-# Run once per VM session:
-#   gcloud auth activate-service-account --key-file=/home/alexper_recovery_gmail_com/bench_data/gcp-sa-key.json
-#
 with _ssh() as ssh:
     cmd = f"gcloud auth activate-service-account --key-file={VM_DATA_DIR}/gcp-sa-key.json"
     _, stdout, stderr = ssh.exec_command(cmd)
@@ -1273,7 +1285,6 @@ with _ssh() as ssh:
     Activated service account credentials for: [notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com]
 
 ```python
-# Run VM benchmark script, stream results line-by-line, save each to local JSON
 vm_script_path = f"{VM_DATA_DIR}/bench_upload.py"
 VM_UPLOAD_RESULTS_FILE = DATA_DIR / "vm_upload_results.json"
 
@@ -1364,10 +1375,15 @@ print(f"\n  Saved {len(vm_upload_results)} results to {VM_UPLOAD_RESULTS_FILE.na
     
       Saved 33 results to vm_upload_results.json
 
-#### Comparision of files upload from local vs VM
+### Results
+
+Side-by-side throughput comparison between local and VM origins, with interactive chart.
+
+#### Comparison of files upload from local vs VM
+
+Side-by-side pivot comparing the top upload methods when running from a local machine vs. a co-located VM (same region as the GCS bucket). The VM-to-GCS path has negligible network latency — this comparison quantifies the practical throughput gap.
 
 ```python
-# Side-by-side pivot: local vs VM, large file only (most meaningful for throughput)
 def make_pivot(results, label):
     df = pd.DataFrame(results).drop_duplicates(subset=["method", "tier"], keep="last")
     df_large = df[df["tier"] == "large"].set_index("method")
@@ -1521,11 +1537,15 @@ Compares three concurrency strategies for uploading 8 medium-size files to GCS u
 method (`streamed` / `blob.upload_from_file`, ranked #1 by mean throughput): sequential, multithreaded
 (8 threads), and multiprocessing (8 processes). Measures total wall-clock time and aggregate throughput.
 
+### Setup
+
+Test file generation and benchmark helper infrastructure for parallel transfer experiments.
+
 #### Generate 8 medium upload files
 
+Creates 8 independent copies of the medium upload file (193 MB each) so that each upload worker reads a distinct file — avoiding OS-level page cache reuse that would artificially accelerate the benchmark.
+
 ```python
-# Create 8 copies of the medium upload file for parallel transfer benchmarks.
-# Using copies (not the same file) to avoid OS-level read caching effects.
 PARALLEL_DIR = DATA_DIR / "parallel_8"
 PARALLEL_DIR.mkdir(exist_ok=True)
 
@@ -1545,8 +1565,9 @@ print(f"  {len(parallel_files)} files, {fmt_bytes(total_size)} total ({fmt_bytes
 
 #### Parallel transfer benchmark helper
 
+Measures wall-clock time and aggregate throughput for any parallel upload strategy. Results are persisted to JSON and upserted by method name — re-running a strategy replaces its prior result without duplicating the record.
+
 ```python
-# Parallel transfer benchmark helper — persists results to JSON, keyed by method.
 PARALLEL_RESULTS_FILE = DATA_DIR / "parallel_transfer_results.json"
 PARALLEL_GCS_PREFIX = "benchmarks/parallel"
 
@@ -1598,18 +1619,21 @@ print(f"  Loaded {len(parallel_results)} existing results from {PARALLEL_RESULTS
 
       Loaded 3 existing results from parallel_transfer_results.json
 
+### Transfer methods
+
+Three concurrency strategies benchmarked against the same 8-file workload using the top-ranked upload method.
+
 #### Upload 8 files sequentially with blob.upload_from_file
 
 Baseline — uploads each file one after the other in a single thread. Total time = sum of individual upload times. No concurrency overhead.
 
 ```python
-# Sequential — one file at a time, single thread
 def sequential_upload(files):
     for f in files:
         _upload_one(f)
 
 r = bench_parallel("sequential", sequential_upload)
-r['files']} files  {r['total_size']}  {r['elapsed']}  {r['throughput']
+print(f"  {r['files']} files  {r['total_size']}  {r['elapsed']}  {r['throughput']}")
 ```
 
       8 files  1.51 GB  3.7min  7.0 MB/s
@@ -1623,7 +1647,6 @@ Concurrent uploads using 8 threads. A semaphore limits the number of simultaneou
 > 8 threads with a semaphore limiting concurrent uploads prevents SSL connection saturation. All files are submitted but only N run simultaneously.
 
 ```python
-# ThreadPoolExecutor — 8 threads, semaphore-throttled to avoid SSL saturation
 CONCURRENT_LIMIT = 4
 _sem = __import__('threading').Semaphore(CONCURRENT_LIMIT)
 
@@ -1638,7 +1661,7 @@ def threaded_upload(files):
             fut.result()
 
 r = bench_parallel('threaded_8', threaded_upload)
-r['files']} files  {r['total_size']}  {r['elapsed']}  {r['throughput']
+print(f"  {r['files']} files  {r['total_size']}  {r['elapsed']}  {r['throughput']}")
 ```
 
       8 files  1.51 GB  4.1min  6.3 MB/s
@@ -1652,8 +1675,6 @@ True parallelism — each upload in a separate process with its own GCS client. 
 > `max_workers=4` limits concurrent uploads to 4, avoiding SSL saturation while providing true process-level parallelism (bypasses GIL).
 
 ```python
-# loky ProcessPoolExecutor — 8 files across 4 processes
-
 def multiprocess_upload(files):
     executor = get_reusable_executor(max_workers=4)
     futures = [executor.submit(upload_one, str(f)) for f in files]
@@ -1661,15 +1682,20 @@ def multiprocess_upload(files):
         result = fut.result()
 
 r = bench_parallel('multiprocess_4', multiprocess_upload)
-r['files']} files  {r['total_size']}  {r['elapsed']}  {r['throughput']
+print(f"  {r['files']} files  {r['total_size']}  {r['elapsed']}  {r['throughput']}")
 ```
 
       8 files  1.51 GB  4.1min  6.3 MB/s
 
+### Results
+
+Summary table and cleanup for parallel transfer benchmarks.
+
 #### Summary of parallel transfer methods
 
+Aggregates all parallel benchmark results. Reload from JSON to ensure deduplication — re-running any strategy replaces its row in the output.
+
 ```python
-# Parallel transfer summary — reload from JSON for clean deduplicated results
 parallel_results = _load_parallel_results()
 print(f"  {'method':<18s} {'files':>6s} {'total':>10s} {'time':>10s} {'throughput':>14s}")
 for r in parallel_results:
@@ -1683,8 +1709,9 @@ for r in parallel_results:
 
 #### google-cloud-storage — cleanup parallel benchmark blobs
 
+Deletes all objects under `benchmarks/parallel/` to avoid ongoing storage charges. Run after capturing results.
+
 ```python
-# Delete parallel benchmark blobs
 blobs = list(gcs_client.list_blobs(BUCKET_NAME, prefix=PARALLEL_GCS_PREFIX))
 print(f"  Deleting {len(blobs)} parallel benchmark blobs...")
 for blob in blobs:
@@ -1694,13 +1721,15 @@ print("  Cleanup done")
 
 ## Download Files
 
+### Download methods
+
+Three methods for downloading GCS blobs to local disk, mirroring the top-ranked upload counterparts.
+
 #### Download CSV from GCS with google-cloud-storage - blob.download_to_file over HTTPS
 
-Streams the blob content directly to a file handle. Avoids materializing the full object in memory — the client library reads and writes in chunks internally. Counterpart to `streamed` upload.
+Streams the blob content directly to a file handle. Avoids materializing the full object in memory — the client library reads and writes in chunks internally. Counterpart to `streamed` upload (ranked #1 by mean throughput).
 
 ```python
-# Download from GCS — streamed (blob.download_to_file)
-# Upload counterpart: streamed (blob.upload_from_file) — ranked #1 by mean throughput
 GCS_DL_PREFIX = "benchmarks/uploads"  # reuse uploaded blobs
 DL_DIR = DATA_DIR / "downloads"
 DL_DIR.mkdir(exist_ok=True)
@@ -1730,12 +1759,9 @@ for tier, path in upload_files.items():
 
 #### Download CSV from GCS with google-cloud-storage - blob.download_to_filename over HTTPS
 
-Downloads the entire blob to a local file in a single request. The client library handles resumable downloads automatically for large files. Counterpart to `resumable_chunked` upload.
+Downloads the entire blob to a local file in a single request. The client library handles resumable downloads automatically for large files. Counterpart to `resumable_chunked` upload (ranked #2 by mean throughput).
 
 ```python
-# Download from GCS — simple (blob.download_to_filename)
-# Upload counterpart: resumable_chunked (blob.upload_from_filename) — ranked #2 by mean throughput
-
 def dl_simple(blob_name, local_path):
     blob = bucket.blob(blob_name)
     blob.download_to_filename(str(local_path))
@@ -1760,12 +1786,9 @@ for tier, path in upload_files.items():
 
 #### Download CSV from GCS with google-cloud-storage - transfer_manager.download_chunks_concurrently over HTTPS
 
-Uses `google.cloud.storage.transfer_manager` to download the file in parallel chunks across multiple threads. Best throughput for large files on high-bandwidth connections.
+Uses `google.cloud.storage.transfer_manager` to download the file in parallel chunks across multiple threads. Best throughput for large files on high-bandwidth connections. Counterpart to `parallel_composite` upload (ranked #3 by mean throughput).
 
 ```python
-# Download from GCS — parallel chunks (transfer_manager.download_chunks_concurrently)
-# Upload counterpart: parallel_composite (transfer_manager.upload_chunks_concurrently) — ranked #3 by mean throughput
-
 def dl_parallel(blob_name, local_path):
     blob = bucket.blob(blob_name)
     transfer_manager.download_chunks_concurrently(
@@ -1791,15 +1814,15 @@ for tier, path in upload_files.items():
 
 ## Download files from VM
 
+### Download methods
+
+Three methods for pulling files from the GCP VM to the local machine over SSH.
+
 #### Download CSV from VM with OpenSSH - scp over SSH
 
-Uses Windows OpenSSH `scp` via subprocess in reverse direction (VM → local). Same SSH transport as upload but pulls data from the VM.
+Uses Windows OpenSSH `scp` via subprocess in reverse direction (VM → local). Same SSH transport as upload but pulls data from the VM. Counterpart to `scp` upload (ranked #1 by mean throughput). CLI equivalent: `scp -i ~/.ssh/google_compute_engine -o StrictHostKeyChecking=no user@VM_IP:/path/file.csv ./downloads/`
 
 ```python
-# scp -i C:/Users/aperi/.ssh/google_compute_engine -o StrictHostKeyChecking=no -o BatchMode=yes alexper_recovery_gmail_com@34.38.193.79:/home/alexper_recovery_gmail_com/bench_data/file.csv ./downloads/file.csv
-# Download from VM — scp (reverse direction)
-# Upload counterpart: scp — ranked #1 by mean throughput
-
 DL_DIR.mkdir(exist_ok=True)
 
 def dl_scp(remote_file, local_path):
@@ -1831,13 +1854,9 @@ for tier, path in upload_files.items():
 
 #### Download CSV from VM with gcloud - compute scp over SSH
 
-Uses the gcloud CLI which handles authentication via OS Login automatically, no key file needed. Internally wraps OpenSSH.
+Uses the gcloud CLI which handles authentication via OS Login automatically, no key file needed. Internally wraps OpenSSH. Counterpart to `gcloud_scp` upload (ranked #2 by mean throughput). CLI equivalent: `gcloud compute scp --zone=europe-west1-b --strict-host-key-checking=no notebook-vm:/path/file.csv ./downloads/`
 
 ```python
-# gcloud compute scp --zone=europe-west1-b --strict-host-key-checking=no notebook-vm:/home/alexper_recovery_gmail_com/bench_data/file.csv ./downloads/file.csv
-# Download from VM — gcloud compute scp (reverse direction)
-# Upload counterpart: gcloud_scp — ranked #2 by mean throughput
-
 def dl_gcloud_scp(remote_file, local_path):
     subprocess.run([
         GCLOUD, "compute", "scp",
@@ -1867,13 +1886,9 @@ for tier, path in upload_files.items():
 
 #### Download CSV from VM with OpenSSH - scp -C over SSH (compressed)
 
-Same as `scp` but enables SSH-level compression. Trades CPU for reduced bytes on the wire — most effective for compressible data like CSV.
+Same as `scp` but enables SSH-level compression (`-C`). Trades CPU for reduced bytes on the wire — most effective for compressible data like CSV. Counterpart to `scp_compressed` upload (ranked #3 by mean throughput). CLI equivalent: `scp -C -i ~/.ssh/google_compute_engine -o StrictHostKeyChecking=no user@VM_IP:/path/file.csv ./downloads/`
 
 ```python
-# scp -C -i C:/Users/aperi/.ssh/google_compute_engine -o StrictHostKeyChecking=no -o BatchMode=yes alexper_recovery_gmail_com@34.38.193.79:/home/alexper_recovery_gmail_com/bench_data/file.csv ./downloads/file.csv
-# Download from VM — scp -C (compressed, reverse direction)
-# Upload counterpart: scp_compressed — ranked #3 by mean throughput
-
 def dl_scp_compressed(remote_file, local_path):
     subprocess.run([
         SCP, "-i", VM_SSH_KEY,
@@ -1907,11 +1922,15 @@ for tier, path in upload_files.items():
 Benchmarks compression speed and ratio for the large upload file (~1.19 GB CSV) and a folder of 1000 small files.
 Methods: gzip, bz2, lzma (xz), zstd, lz4, brotli, zip archive.
 
+### Setup
+
+Test data generation and benchmark helper for compression experiments.
+
 #### Generate 1000 small test files (~1 MB each)
 
+Creates 1000 small CSV files to benchmark per-file compression overhead. Small files are the worst case for compressors — dictionary initialisation and header overhead are proportionally larger, and the GIL contention in threaded compression becomes more visible. Splits `large_upload.csv` (~1.19 GB) into 1000 chunks, each a valid CSV with the same header.
+
 ```python
-# Generate 1000 small CSV files (~1 MB each) for multi-file compression benchmarks.
-# Splits large_upload.csv (~1.19 GB) into 1000 chunks, each a valid CSV with the same header.
 SMALL_FILES_DIR = DATA_DIR / "small_files_1000"
 if SMALL_FILES_DIR.exists():
     shutil.rmtree(SMALL_FILES_DIR)
@@ -1940,9 +1959,9 @@ print(f"  Total size: {fmt_bytes(total_size)}  Avg: {fmt_bytes(total_size // len
 
 #### Compression benchmark helper
 
+Times both compress and decompress passes, measures the compression ratio, and persists results to JSON keyed by `(method, tier)` — re-running a method replaces its prior record. Returns a `dict` with raw bytes, formatted sizes, elapsed times, and throughput.
+
 ```python
-# Compression benchmark helper — times compress + decompress, measures ratio.
-# Persists results to JSON, keyed by (method, tier).
 COMPRESS_RESULTS_FILE = DATA_DIR / "compression_results.json"
 
 compress_files = {
@@ -2023,12 +2042,15 @@ print(f"  Loaded {len(compress_results)} existing results from {COMPRESS_RESULTS
 
       Loaded 14 existing results from compression_results.json
 
+### Compression methods
+
+Each method is benchmarked for both compress and decompress speed, plus compression ratio, against the large file and the 1000-small-files folder.
+
 #### Compress with gzip (zlib level 6)
 
-Standard gzip compression. The most widely supported format — every tool, language, and OS can decompress it. Default level 6 balances speed and ratio.
+Standard gzip compression at zlib level 6 (default). The most widely supported format — every tool, language, and OS can decompress it. Level 6 balances speed and ratio.
 
 ```python
-# gzip — stdlib, zlib level 6 (default)
 def gzip_compress(input_path, output_path):
     with open(output_path, "wb") as f_out:
         with gzip_mod.open(f_out, "wb", compresslevel=6) as gz:
@@ -2057,11 +2079,9 @@ for tier, path in compress_files.items():
 
 #### Compress with bz2 (Burrows-Wheeler)
 
-Higher compression ratio than gzip but significantly slower. Uses the Burrows-Wheeler transform. Best when storage cost matters more than CPU time.
+Higher compression ratio than gzip but significantly slower. Uses the Burrows-Wheeler transform at level 9 (default). Best when storage cost matters more than CPU time.
 
 ```python
-# bz2 — stdlib, Burrows-Wheeler, level 9 (default)
-
 def bz2_compress(input_path, output_path):
     with open(output_path, "wb") as raw_out, bz2.BZ2File(raw_out, "wb", compresslevel=9) as f_out:
         if input_path.is_dir():
@@ -2089,11 +2109,9 @@ for tier, path in compress_files.items():
 
 #### Compress with lzma (xz)
 
-Best compression ratio of the stdlib methods. Very slow to compress but fast to decompress. Used by `.xz` and `.tar.xz` archives. Ideal for archival where you compress once and decompress many times.
+Best compression ratio of the stdlib methods — but slowest to compress. Used by `.xz` and `.tar.xz` archives. Ideal for archival where you compress once and decompress many times.
 
 ```python
-# lzma (xz) — stdlib, best ratio, slowest compress
-
 def lzma_compress(input_path, output_path):
     with open(output_path, "wb") as raw_out, lzma.LZMAFile(raw_out, "wb", preset=6) as f_out:
         if input_path.is_dir():
@@ -2124,8 +2142,6 @@ for tier, path in compress_files.items():
 Modern compression algorithm by Facebook. Near-gzip ratio at LZ4-like speed. Supports dictionary compression and streaming. The default choice for new systems — used by Linux kernel, Kafka, ClickHouse.
 
 ```python
-# zstandard (zstd) — near-gzip ratio at LZ4-like speed
-
 def zstd_compress(input_path, output_path):
     cctx = zstd.ZstdCompressor(level=3)
     with open(output_path, "wb") as f_out:
@@ -2158,7 +2174,6 @@ for tier, path in compress_files.items():
 Fastest compression algorithm — optimized for speed over ratio. Decompression is extremely fast (multi-GB/s). Used in real-time systems, databases (RocksDB), and in-memory caching where latency matters more than size.
 
 ```python
-# lz4 — fastest compress/decompress, lowest ratio
 
 def lz4_compress(input_path, output_path):
     with open(output_path, "wb") as f_out:
@@ -2187,11 +2202,9 @@ for tier, path in compress_files.items():
 
 #### Compress with brotli
 
-Google-developed algorithm optimized for web content. Better ratio than gzip at similar speed (level 4). Used by all modern browsers for HTTP content-encoding. Best for static assets served over CDN.
+Google-developed algorithm optimized for web content. Better ratio than gzip at similar speed using level 4. Used by all modern browsers for HTTP content-encoding. Best for static assets served over CDN.
 
 ```python
-# brotli — Google, optimized for web content, level 4
-
 def brotli_compress(input_path, output_path):
     if input_path.is_dir():
         data = b"".join(f.read_bytes() for f in sorted(input_path.glob("*")))
@@ -2217,11 +2230,9 @@ for tier, path in compress_files.items():
 
 #### Compress with zipfile (ZIP archive)
 
-Standard ZIP format — compresses each file individually within the archive. Unlike the stream-based methods above, ZIP preserves file boundaries and names. Universal format supported by every OS file manager.
+Standard ZIP format using deflate compression — compresses each file individually within the archive. Unlike the stream-based methods above, ZIP preserves file boundaries and names. Universal format supported by every OS file manager.
 
 ```python
-# zipfile — ZIP archive with deflate compression
-
 def zip_compress(input_path, output_path):
     with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
         if input_path.is_dir():
@@ -2251,10 +2262,15 @@ for tier, path in compress_files.items():
       large           1.19 GB     420.3 MB    2.9x      40.2s       4.2s      30.3 MB/s     289.2 MB/s
       1000_small      1.19 GB     421.6 MB    2.9x      39.5s       7.4s      30.8 MB/s     163.8 MB/s
 
+### Results
+
+Summary tables, selection guide, and throughput scatter chart for all compression methods.
+
 #### Summary of compression methods
 
+Aggregates all compression benchmark results for both tiers. Reload from JSON to ensure deduplication — re-running any method replaces its row. Compare compress time vs ratio to select the right trade-off for your pipeline's bottleneck.
+
 ```python
-# Compression results summary — all methods, both tiers
 df_comp = pd.DataFrame(compress_results).drop_duplicates(subset=["method", "tier"], keep="last")
 for tier in ["large", "1000_small"]:
     sub = df_comp[df_comp["tier"] == tier].sort_values("compress_ms")
@@ -2285,10 +2301,28 @@ for tier in ["large", "1000_small"]:
       bz2             1.19 GB     296.8 MB    4.1x      54.9s      24.5s      22.2 MB/s      49.6 MB/s
       lzma            1.19 GB     321.7 MB    3.8x     8.1min      14.3s       2.5 MB/s      85.0 MB/s
 
+#### Compression method selection guide
+
+Choose the algorithm based on your pipeline's bottleneck — CPU time or final size.
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#1e2030', 'primaryTextColor': '#cdd6f4', 'primaryBorderColor': '#45475a', 'lineColor': '#89b4fa', 'secondaryColor': '#181825', 'tertiaryColor': '#313244', 'edgeLabelBackground': '#1e2030', 'fontFamily': 'monospace'}}}%%
+flowchart TD
+    A[Need to compress?] --> B{Decompression\nspeed critical?}
+    B -->|Yes — real-time or\nlow-latency pipeline| C["lz4\n1.6x ratio · 460 MB/s compress\n1.0+ GB/s decompress"]
+    B -->|No — batch or\nnightly job| D{Minimize\nstorage cost?}
+    D -->|Yes| E["brotli\n3.0x ratio · 88 MB/s"]
+    D -->|No — balance\nspeed and ratio| F{Need universal\nformat support?}
+    F -->|Yes — cross-team,\ncross-tool| G["gzip\n2.9x ratio · 31 MB/s\nEvery OS and language"]
+    F -->|No — internal\npipeline only| H["zstd level 3\n2.8x ratio · 215 MB/s\nProduction sweet spot"]
+    A -->|Multiple named files\nor folder| I["ZIP\nPreserves filenames\nper-file compression"]
+```
+
 #### Chart — compression speed vs ratio
 
+Scatter plot with compress throughput on the x-axis and compression ratio on the y-axis — algorithms in the top-right quadrant offer the best of both. Data shown for the large file (1.19 GB) only.
+
 ```python
-# Scatter: compress throughput (x) vs ratio (y) — large file only
 df_large = df_comp[df_comp["tier"] == "large"].copy()
 df_large["c_mbps"] = df_large["orig_bytes"] / (df_large["compress_ms"] / 1000) / 1024**2
 df_large["ratio_num"] = df_large["orig_bytes"] / df_large["compressed_bytes"]
@@ -2333,12 +2367,15 @@ parallel, verify checksums per chunk, and merge back to the original file.
 
 Uses the large upload file (~1.19 GB) as input.
 
+### Pipeline steps
+
+Each step in the end-to-end pipeline: compress, split, parallel upload, parallel download, verify, and merge.
+
 #### Step 1 — Compress with zstd (level 3)
 
 Compress the full file before splitting. Zstd level 3 gives ~3x ratio at near-LZ4 speed — the production sweet spot.
 
 ```python
-# Step 1: Compress the large file with zstd level 3
 import hashlib
 
 PIPELINE_DIR = DATA_DIR / "pipeline"
@@ -2379,7 +2416,6 @@ print(f"  Time: {fmt_time(compress_ms)}  Throughput: {fmt_bytes(tp)}/s")
 Split the compressed file into 8 equal chunks. Compute MD5 for each chunk — used to verify integrity after download.
 
 ```python
-# Step 2: Split compressed file into 8 chunks, compute MD5 per chunk
 NUM_CHUNKS = 8
 CHUNK_DIR = PIPELINE_DIR / "chunks"
 if CHUNK_DIR.exists():
@@ -2424,11 +2460,6 @@ for name, md5, size in chunk_manifest:
 Two levels of parallelism: outer `ThreadPoolExecutor` dispatches 8 chunks (4 concurrent via semaphore), inner `transfer_manager` further splits each chunk into 32 MB sub-chunks and uploads them concurrently. CRC32C checksum per sub-chunk.
 
 ```python
-# Step 3: Upload all chunks in parallel, each using transfer_manager.upload_chunks_concurrently
-# Outer parallelism: 8 threads (one per chunk), semaphore-throttled to 4 concurrent.
-# Inner parallelism: transfer_manager splits each chunk into 32 MB sub-chunks, uploads concurrently.
-# Double parallelism = maximum throughput.
-
 chunk_files = sorted(CHUNK_DIR.glob("*.zst"))
 _upload_sem = threading.Semaphore(4)
 
@@ -2473,7 +2504,6 @@ print(f"  Uploaded {NUM_CHUNKS} chunks ({fmt_bytes(total_uploaded)}) in {fmt_tim
 Download all 8 chunks back in parallel. Uses `blob.download_to_file` (top download method).
 
 ```python
-# Step 4: Download chunks in parallel
 DL_CHUNK_DIR = PIPELINE_DIR / "downloaded_chunks"
 if DL_CHUNK_DIR.exists():
     shutil.rmtree(DL_CHUNK_DIR)
@@ -2517,7 +2547,6 @@ print(f"  Downloaded {NUM_CHUNKS} chunks in {fmt_time(download_ms)}  ({fmt_bytes
 Compare MD5 of each downloaded chunk against the manifest computed at split time. Any mismatch means corruption during transfer.
 
 ```python
-# Step 5: Verify MD5 checksums per chunk
 all_ok = True
 print(f"  {'chunk':<16s} {'expected':>34s} {'actual':>34s} {'status'}")
 for name, expected_md5, _ in chunk_manifest:
@@ -2548,7 +2577,6 @@ for name, expected_md5, _ in chunk_manifest:
 Concatenate the downloaded chunks back into the compressed file, then decompress with zstd. Verify the final file matches the original via MD5.
 
 ```python
-# Step 6: Merge chunks → decompress → verify against original
 merged_compressed = PIPELINE_DIR / "merged.csv.zst"
 final_output = PIPELINE_DIR / "restored_large_upload.csv"
 
@@ -2588,10 +2616,15 @@ original_md5  # Original MD5
       054b516bca00fe7ebcfeb6516a5d3789
       MATCH ✓ — pipeline verified end-to-end
 
+### Results and cleanup
+
+Pipeline timing summary broken down by stage, and local/GCS cleanup.
+
 #### Parallel upload, merge, verify — pipeline summary
 
+Prints end-to-end wall-clock time broken down by pipeline stage: compress, split, parallel upload, parallel download, checksum verification, merge, and decompress. Identify the bottleneck stage before tuning worker counts or chunk sizes.
+
 ```python
-# End-to-end pipeline timing summary
 total_ms = compress_ms + split_ms + upload_ms + download_ms + merge_ms + decompress_ms + verify_ms
 end_to_end_tp = orig_size / (total_ms / 1000)
 
@@ -2622,8 +2655,9 @@ print(f"  Original: {fmt_bytes(orig_size)}  Wire: {fmt_bytes(comp_size)}  Ratio:
 
 #### Cleanup pipeline files
 
+Removes local temporary files (split chunks, compressed intermediate files) and deletes all GCS objects written during the pipeline run. Run after capturing results to avoid ongoing storage charges.
+
 ```python
-# Cleanup pipeline: local temp files + GCS blobs
 blobs = list(gcs_client.list_blobs(BUCKET_NAME, prefix=PIPELINE_GCS_PREFIX))
 print(f"  Deleting {len(blobs)} pipeline blobs...")
 for blob in blobs:

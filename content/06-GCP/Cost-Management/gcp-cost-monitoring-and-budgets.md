@@ -1,5 +1,5 @@
 ---
-tags: [observability, cost, infrastructure, python, bash, bigquery, gcp, billing]
+tags: [gcp, cost, billing, finops, observability, bigquery]
 aliases:
   - cost monitoring
   - budget alerts
@@ -28,7 +28,33 @@ status: complete
 >
 > — **J.R. Storment**, *Cloud FinOps*
 
+> [!abstract]
 > Operational FinOps for GCP. Covers the full stack: export billing data, alert on budgets, detect anomalies, optimize per service, and automate enforcement.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    BA[Billing Account] -->|Standard Export| BQ1[BigQuery\nbilling_export table]
+    BA -->|Detailed Export| BQ2[BigQuery\nbilling_export_resource table]
+    BA -->|Budget threshold| PS[Pub/Sub topic]
+    PS -->|trigger| CF[Cloud Function\nautomated enforcement]
+    BQ1 --> LS[Looker Studio\nDashboard]
+    BQ1 --> GF[Grafana\nBigQuery plugin]
+    BQ2 --> LS
+    BQ1 --> AD[Anomaly Detection\nCloud Run Job]
+    AD -->|alert| SL[Slack / Email]
+```
 
 ---
 
@@ -38,16 +64,10 @@ Billing export is the foundation of all cost analysis on GCP. Without it, you ar
 
 ### Enable the Billing Export
 
-Billing export is configured at the billing account level, not the project level.
+Billing export is configured at the billing account level, not the project level. You need the account ID before enabling export — use the command below to retrieve it. Enabling the actual export has no direct `gcloud` command; it must be done in the Console (**Billing → Billing export → BigQuery export**) or via Terraform (`google_billing_account_bucket_config` — see the Terraform section below).
 
 ```bash
-# List billing accounts to get the account ID
 gcloud billing accounts list
-
-# Enable BigQuery export — do this in the console or via Terraform
-# gcloud does not have a direct command for enabling export;
-# use the Billing console: Billing > Billing export > BigQuery export
-# Or use the Terraform resource: google_billing_account_bucket_config (see Terraform section)
 ```
 
 You need two roles:
@@ -56,19 +76,25 @@ You need two roles:
 
 ### Create the Destination Dataset
 
+The dataset must exist in BigQuery before enabling export in the console. The location must match the region where you want billing data stored — `US` is the standard choice for multi-regional availability.
+
 ```bash
-# Create the dataset that will receive billing data
 bq mk \
   --dataset \
   --location=US \
   --description="GCP billing export" \
   PROJECT_ID:billing_export
+```
 
-# Verify
+Verify the dataset was created:
+
+```bash
 bq ls --datasets PROJECT_ID
 ```
 
 ### Standard vs Detailed Export
+
+GCP offers three export types. Standard export covers daily resource-level costs and is sufficient for most cost tracking. Detailed export adds per-resource attribution (individual VM IDs, disk IDs) — required for right-sizing analysis and chargebacks. Pricing export provides SKU-level rates for building internal cost calculators.
 
 | Export type | Table name suffix | Granularity | Use case |
 |---|---|---|---|
@@ -86,6 +112,8 @@ Enable **detailed usage cost export** if you want resource-level attribution (e.
 > Always use a 2-day lag buffer when querying recent spend: `WHERE usage_start_time < TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 2 DAY)`. This ensures your anomaly queries operate on complete billing rows, avoiding false-negative alerts from partially ingested data.
 
 ### Key Columns in the Export Table
+
+The billing export table schema is consistent across all GCP projects but the `resource.name` column is only populated in the detailed export. The columns below are the most useful for cost analysis queries; the full schema has ~30 columns.
 
 | Column | Type | Description |
 |---|---|---|
@@ -108,6 +136,8 @@ Enable **detailed usage cost export** if you want resource-level attribution (e.
 | `cost_type` | STRING | regular, tax, adjustment, rounding_error |
 
 ### Example Queries
+
+Production-ready SQL queries against the standard billing export table. Replace `PROJECT_ID.billing_export.gcp_billing_export_v1_XXXXXX` with your actual export table name (visible in BigQuery after enabling export). All queries filter on `cost_type = 'regular'` to exclude tax and rounding-error rows.
 
 #### BigQuery billing export — cost by service, current month
 
@@ -199,8 +229,13 @@ Budgets in GCP are attached to billing accounts and can scope to specific projec
 
 ### Create a Budget via gcloud
 
+A budget is a threshold definition — it does not stop spending. It fires Pub/Sub or email notifications when cumulative monthly spend crosses each threshold percentage. The Billing Budgets API must be enabled on the project owning the Pub/Sub topic.
+
+#### gcloud | Create a billing-account-level budget with threshold alerts
+
+A basic budget scoped to the entire billing account. Thresholds at 50%, 80%, and 100% fire progressively urgent alerts. Connecting a Pub/Sub topic enables automated enforcement (see the automation section below).
+
 ```bash
-# Basic budget with threshold alerts
 gcloud billing budgets create \
   --billing-account=ACCOUNT_ID \
   --display-name="Data Platform Monthly" \
@@ -209,8 +244,13 @@ gcloud billing budgets create \
   --threshold-rule=percent=80 \
   --threshold-rule=percent=100 \
   --notifications-pubsub-topic=projects/PROJECT_ID/topics/billing-alerts
+```
 
-# Budget scoped to specific projects
+#### gcloud | Create a budget scoped to specific projects
+
+Scoping a budget to a subset of projects lets each team own their cost ceiling independently. Multiple project IDs are comma-separated.
+
+```bash
 gcloud billing budgets create \
   --billing-account=ACCOUNT_ID \
   --display-name="Production Projects Budget" \
@@ -219,8 +259,13 @@ gcloud billing budgets create \
   --threshold-rule=percent=80 \
   --threshold-rule=percent=100 \
   --notifications-pubsub-topic=projects/PROJECT_ID/topics/billing-alerts
+```
 
-# Budget scoped to a specific service (BigQuery only)
+#### gcloud | Create a budget scoped to a specific service
+
+Scoping to a service uses the GCP service ID (not the display name). BigQuery's service ID is `95FF-2EF5-5EA1`. Useful for tracking a single expensive service independently of the overall project budget.
+
+```bash
 gcloud billing budgets create \
   --billing-account=ACCOUNT_ID \
   --display-name="BigQuery Budget" \
@@ -228,16 +273,35 @@ gcloud billing budgets create \
   --filter-services=services/95FF-2EF5-5EA1 \
   --threshold-rule=percent=90 \
   --notifications-pubsub-topic=projects/PROJECT_ID/topics/billing-alerts
+```
 
-# List existing budgets
+#### gcloud | List budgets on a billing account
+
+```bash
 gcloud billing budgets list --billing-account=ACCOUNT_ID
+```
 
-# Describe a budget
+#### gcloud | Describe a budget
+
+```bash
 gcloud billing budgets describe BUDGET_ID --billing-account=ACCOUNT_ID
+```
 
-# Delete a budget
+#### gcloud | Delete a budget
+
+```bash
 gcloud billing budgets delete BUDGET_ID --billing-account=ACCOUNT_ID
 ```
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `--billing-account` | `--billing-account=ACCOUNT_ID` | Billing account the budget belongs to |
+| `--display-name` | `--display-name="Name"` | Human-readable budget name |
+| `--budget-amount` | `--budget-amount=500USD` | Budget ceiling in `<amount><CURRENCY>` format |
+| `--threshold-rule` | `--threshold-rule=percent=80` | Alert threshold as a percentage of the budget amount; repeat for multiple thresholds |
+| `--notifications-pubsub-topic` | `--notifications-pubsub-topic=projects/P/topics/T` | Pub/Sub topic to receive budget alert messages |
+| `--projects` | `--projects=projects/P1,projects/P2` | Scope the budget to specific projects |
+| `--filter-services` | `--filter-services=services/SERVICE_ID` | Scope the budget to a specific GCP service |
 
 > [!warning] Budget Alert Lag
 >
@@ -250,19 +314,47 @@ gcloud billing budgets delete BUDGET_ID --billing-account=ACCOUNT_ID
 
 The full automation pattern: budget fires a Pub/Sub message, Cloud Function reacts.
 
-**Step 1: Create the Pub/Sub topic**
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    B[Budget\n100% threshold crossed] -->|publishes message| PS[Pub/Sub topic\nbilling-alerts]
+    PS -->|triggers| CF[Cloud Function\nstop-vms-on-budget]
+    CF --> DEC{costAmount\n>= budgetAmount?}
+    DEC -->|No| LOG[Log: no action]
+    DEC -->|Yes| LIST[List all zones]
+    LIST --> INST[Iterate instances]
+    INST --> SKIP{auto-shutdown\nlabel = false?}
+    SKIP -->|Yes| NEXT[Skip instance]
+    SKIP -->|No| STOP[Stop RUNNING instance]
+```
+
+#### gcloud | Create the Pub/Sub topic for billing alerts
+
+The Billing service account (`billing-alerts@system.gserviceaccount.com`) is a GCP-managed service account that needs `roles/pubsub.publisher` on the topic before the budget can publish to it.
 
 ```bash
 gcloud pubsub topics create billing-alerts --project=PROJECT_ID
+```
 
-# Grant the Billing service account permission to publish
+```bash
 gcloud pubsub topics add-iam-policy-binding billing-alerts \
   --member=serviceAccount:billing-alerts@system.gserviceaccount.com \
   --role=roles/pubsub.publisher \
   --project=PROJECT_ID
 ```
 
-**Step 2: Cloud Function — Auto-shutdown VMs on budget exceeded**
+#### Python / gcloud | Deploy Cloud Function to auto-shutdown VMs on budget exceeded
 
 ```python
 # main.py — Cloud Function triggered by Pub/Sub billing alert
@@ -315,8 +407,9 @@ def stop_vms_on_budget_exceeded(event, context):
                 )
 ```
 
+Deploy the function triggered by the `billing-alerts` Pub/Sub topic:
+
 ```bash
-# Deploy the Cloud Function
 gcloud functions deploy stop-vms-on-budget \
   --runtime=python311 \
   --trigger-topic=billing-alerts \
@@ -324,14 +417,19 @@ gcloud functions deploy stop-vms-on-budget \
   --region=us-central1 \
   --service-account=budget-enforcer@PROJECT_ID.iam.gserviceaccount.com \
   --set-env-vars=PROJECT_ID=PROJECT_ID
+```
 
-# Required IAM for the service account
+Grant the `budget-enforcer` service account permission to stop VMs:
+
+```bash
 gcloud projects add-iam-policy-binding PROJECT_ID \
   --member=serviceAccount:budget-enforcer@PROJECT_ID.iam.gserviceaccount.com \
   --role=roles/compute.instanceAdmin.v1
 ```
 
 ### Multiple Budget Strategy
+
+A single billing-account budget is insufficient for multi-team environments. Layer budgets at different scopes so each team owns their ceiling, and the platform team retains visibility at the account level.
 
 | Budget scope | Threshold | Action |
 |---|---|---|
@@ -353,7 +451,9 @@ gcloud projects add-iam-policy-binding PROJECT_ID \
 
 Automated anomaly detection catches runaway jobs, misconfigured resources, and unexpected usage spikes before they appear on the invoice.
 
-### BigQuery SQL: Detect Spend Anomalies
+### BigQuery SQL — Detect Spend Anomalies
+
+The query below computes a 7-day rolling average per service and flags any day where spend exceeds 2× the average as `ANOMALY` and 1.5× as `ELEVATED`. It runs against the previous day's data (with the 1-day lag buffer) so it can be scheduled via Cloud Scheduler each morning.
 
 ```sql
 -- Daily spend vs 7-day rolling average
@@ -399,7 +499,9 @@ WHERE
 ORDER BY ratio DESC;
 ```
 
-### Python Script: Automated Anomaly Detection and Alerting
+### Python — Automated Anomaly Detection and Alerting
+
+A self-contained script that wraps the anomaly SQL above, posts a Slack alert when anomalies are found, and is designed to run as a daily Cloud Run Job or Cloud Function. Configuration is via environment variables so no credentials are embedded in code.
 
 ```python
 #!/usr/bin/env python3
@@ -504,8 +606,9 @@ if __name__ == "__main__":
 
 ### Cloud Monitoring Custom Metric for Daily Spend
 
+Writing daily spend as a custom Cloud Monitoring metric enables alerting policies and dashboard charts without relying on the billing console. The metric can be queried alongside infrastructure metrics (CPU, memory, error rates) in the same Monitoring workspace. Requires the `monitoring.metricDescriptors.create` and `monitoring.timeSeries.create` permissions (included in `roles/monitoring.metricWriter`).
+
 ```python
-# Write daily spend as a custom metric for Cloud Monitoring dashboards and alerts
 from google.cloud import monitoring_v3
 from google.cloud import bigquery
 import time
@@ -537,25 +640,36 @@ def write_daily_spend_metric(project_id: str, cost: float, service: str):
 
 ## Cost Optimization Strategies
 
+Each GCP service has a distinct pricing model and a corresponding set of optimization levers. The sections below cover Compute Engine, BigQuery, Cloud Storage, Cloud Run, Pub/Sub, Cloud Logging, Cloud NAT, and Firestore — with specific commands, configuration patterns, and cost traps for each.
+
 ### Compute Engine
+
+Compute Engine is typically the largest cost driver. The three primary levers are right-sizing (using GCP Recommender to identify oversized VMs), scheduling (shutting down non-production VMs overnight and on weekends), and Committed Use Discounts (exchanging flexibility for up to 55% off on-demand rates). Spot VMs offer 60–91% savings for fault-tolerant batch workloads.
 
 #### Right-Sizing with GCP Recommender
 
+The GCP Recommender analyzes VM CPU and memory utilization over the past 8 days and generates machine-type recommendations. Idle VM recommendations flag instances with near-zero CPU over the same window. Recommendations must be explicitly acknowledged (`mark-claimed`) before you resize to prevent conflicting changes.
+
 ```bash
-# List machine type recommendations for a specific zone
 gcloud recommender recommendations list \
   --recommender=google.compute.instance.MachineTypeRecommender \
   --location=us-central1-a \
   --project=PROJECT_ID \
   --format="table(name,stateInfo.state,primaryImpact.costProjection.cost.units)"
+```
 
-# List idle VM recommendations
+List VMs flagged as idle (near-zero CPU utilization for 8+ days):
+
+```bash
 gcloud recommender recommendations list \
   --recommender=google.compute.instance.IdleResourceRecommender \
   --location=us-central1-a \
   --project=PROJECT_ID
+```
 
-# Apply a right-sizing recommendation
+Acknowledge a recommendation before resizing — this locks it so the Recommender doesn't conflict with your change. The `--etag` value comes from the recommendation's `etag` field in the list output.
+
+```bash
 gcloud recommender recommendations mark-claimed \
   RECOMMENDATION_ID \
   --recommender=google.compute.instance.MachineTypeRecommender \
@@ -564,26 +678,45 @@ gcloud recommender recommendations mark-claimed \
   --etag=ETAG
 ```
 
+| Flag | Syntax | Description |
+|---|---|---|
+| `--recommender` | `--recommender=google.compute.instance.MachineTypeRecommender` | Recommender type |
+| `--location` | `--location=ZONE` | Zone to query (zone-scoped for VM recommenders) |
+| `--project` | `--project=PROJECT_ID` | Project to query |
+| `--format` | `--format="table(...)"` | Output format; `table(name,stateInfo.state,...)` for tabular display |
+| `--etag` | `--etag=ETAG` | Optimistic concurrency lock; required for `mark-claimed` |
+
 #### Schedule VM Shutdown with Cloud Scheduler
 
+Cloud Scheduler sends authenticated HTTP requests to the Compute Engine REST API on a cron schedule. The pattern below stops dev VMs at 8 PM UTC weekdays and restarts them at 7 AM, eliminating ~13 idle hours per weekday (54% of the day). A dedicated service account with only `roles/compute.instanceAdmin.v1` is used — not a broad editor role. For the full Cloud Scheduler reference, see [GCP Scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling).
+
+Create the service account and grant it the minimum required role:
+
 ```bash
-# Create a service account for the scheduler
 gcloud iam service-accounts create vm-scheduler \
   --display-name="VM Scheduler"
+```
 
+```bash
 gcloud projects add-iam-policy-binding PROJECT_ID \
   --member=serviceAccount:vm-scheduler@PROJECT_ID.iam.gserviceaccount.com \
   --role=roles/compute.instanceAdmin.v1
+```
 
-# Stop VMs at 8 PM weekdays (UTC)
+Create the stop job (fires at 8 PM UTC Mon–Fri):
+
+```bash
 gcloud scheduler jobs create http stop-dev-vms \
   --schedule="0 20 * * 1-5" \
   --uri="https://compute.googleapis.com/compute/v1/projects/PROJECT_ID/zones/ZONE/instances/INSTANCE_NAME/stop" \
   --http-method=POST \
   --oauth-service-account-email=vm-scheduler@PROJECT_ID.iam.gserviceaccount.com \
   --location=us-central1
+```
 
-# Start VMs at 7 AM weekdays (UTC)
+Create the start job (fires at 7 AM UTC Mon–Fri):
+
+```bash
 gcloud scheduler jobs create http start-dev-vms \
   --schedule="0 7 * * 1-5" \
   --uri="https://compute.googleapis.com/compute/v1/projects/PROJECT_ID/zones/ZONE/instances/INSTANCE_NAME/start" \
@@ -601,18 +734,23 @@ gcloud scheduler jobs create http start-dev-vms \
 
 #### Committed Use Discounts
 
+Committed Use Discounts (CUDs) exchange flexibility for a reduced rate. General-purpose CUDs commit to a specific number of vCPUs and GB of memory in a region for 1 or 3 years — you pay for the commitment regardless of actual usage. Sustained Use Discounts (SUDs) apply automatically when a VM runs more than 25% of a month with no action required.
+
+Purchase a 1-year CUD committing to 10 vCPUs and 40 GB memory in `us-central1`:
+
 ```bash
-# Purchase a 1-year CUD for n2 vCPUs in us-central1
 gcloud compute commitments create my-commitment \
   --plan=12-month \
   --region=us-central1 \
   --resources=vcpu=10,memory=40GB \
   --type=GENERAL_PURPOSE
+```
 
-# List existing commitments
+```bash
 gcloud compute commitments list --region=us-central1
+```
 
-# Describe a commitment
+```bash
 gcloud compute commitments describe my-commitment --region=us-central1
 ```
 
@@ -623,12 +761,18 @@ gcloud compute commitments describe my-commitment --region=us-central1
 | Committed Use Discount 3yr | 3-year commit | ~55% |
 | Spot VM | No commit, preemptible | 60–91% |
 
+| Flag | Syntax | Description |
+|---|---|---|
+| `--plan` | `--plan=12-month` | Commitment duration: `12-month` or `36-month` |
+| `--region` | `--region=REGION` | Region for the commitment (must match VMs) |
+| `--resources` | `--resources=vcpu=10,memory=40GB` | vCPU count and memory in GB |
+| `--type` | `--type=GENERAL_PURPOSE` | Machine family: `GENERAL_PURPOSE`, `MEMORY_OPTIMIZED`, `ACCELERATOR_OPTIMIZED` |
+
 > [!tip] Custom Machine Types
 >
 > When a standard machine type has more RAM or vCPU than you need, create a custom machine type. Example: instead of n2-standard-8 (8 vCPU, 32 GB), use `n2-custom-6-24576` (6 vCPU, 24 GB). Pay only for what you configure.
 
 ```bash
-# Create a VM with a custom machine type
 gcloud compute instances create my-instance \
   --machine-type=n2-custom-6-24576 \
   --zone=us-central1-a
@@ -638,6 +782,8 @@ gcloud compute instances create my-instance \
 
 ### BigQuery
 
+BigQuery on-demand pricing charges per byte scanned. The primary cost levers are partitioning and clustering (reduces scan size), dry-run validation before execution, per-user quotas (prevents accidental full-table scans), and slot-based capacity commitments (converts variable per-byte cost to a fixed monthly rate). For query optimization patterns beyond cost controls, see [BigQuery query patterns](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-fundamentals).
+
 > [!warning] On-Demand Cost Trap
 >
 > On-demand BigQuery pricing charges per byte scanned. A single `SELECT *` on a 10 TB table costs ~$50. Enforce partition filters and use `--dry_run` before running unfamiliar queries.
@@ -646,6 +792,8 @@ gcloud compute instances create my-instance \
 > Set `require_partition_filter = TRUE` on large tables so that any unfiltered query fails at the API level before scanning data. Always run `bq query --dry_run` on new queries to see the byte estimate before incurring cost.
 
 #### Partition and Cluster Tables
+
+Partitioning limits the bytes scanned by restricting which date shards are read. Clustering further prunes data within each partition by sorting on the specified columns. Together they can reduce scan size by 90%+ on a well-filtered query. `require_partition_filter = TRUE` enforces that every query must include a partition predicate — any unfiltered query fails before scanning data.
 
 ```sql
 -- Create a partitioned and clustered table
@@ -672,19 +820,21 @@ bq update \
 > On-demand BigQuery charges per byte scanned — a single `SELECT *` on a 10 TB table costs ~$50. `--dry_run` validates the query and reports how many bytes it would scan **without executing it**. Wrap this in a script to enforce a byte ceiling: if the estimate exceeds the limit, abort before any cost is incurred.
 
 ```bash
-# Estimate bytes scanned before running
 bq query \
   --dry_run \
   --use_legacy_sql=false \
   'SELECT * FROM `PROJECT_ID.dataset.events` WHERE DATE(event_timestamp) = "2026-01-01"'
 ```
 
-    Query successfully validated. Assuming the tables are not modified,
-    running this query will process 1234567890 bytes of data.
+```text
+Query successfully validated. Assuming the tables are not modified,
+running this query will process 1234567890 bytes of data.
+```
+
+The script below aborts execution if the byte estimate exceeds a configured ceiling (10 GB here = ~$50 at on-demand rates):
 
 ```bash
-# Script to abort if query exceeds a byte limit
-BYTES_LIMIT=10737418240  # 10 GB
+BYTES_LIMIT=10737418240
 BYTES=$(bq query --dry_run --use_legacy_sql=false "$QUERY" 2>&1 | grep -oP '\d+ bytes')
 if [ "$BYTES" -gt "$BYTES_LIMIT" ]; then
   echo "Query would scan $(numfmt --to=iec $BYTES). Aborting."
@@ -697,8 +847,9 @@ fi
 > [!info] Why quotas matter
 > Without quotas, a single analyst running an unfiltered `SELECT *` can scan terabytes and blow the entire team's monthly budget in one query. Per-user byte quotas cap how much data each user can scan per day. Capacity commitments (slot-based pricing) provide a predictable monthly cost instead of pay-per-byte.
 
+Create a capacity commitment using BigQuery Editions slot-based pricing. `FLEX` slots are provisioned within seconds and can be cancelled after 60 seconds — use for variable workloads. `MONTHLY` and `ANNUAL` plans offer higher discounts for predictable workloads.
+
 ```bash
-# Create a capacity commitment (BigQuery editions — slot-based pricing)
 gcloud alpha bq reservations capacity-commitments create \
   --location=us-central1 \
   --slot-count=100 \
@@ -708,8 +859,17 @@ gcloud alpha bq reservations capacity-commitments create \
 
 Set per-user byte quotas via the console: **IAM & Admin → Quotas → "Query usage per day per user"**.
 
+BigQuery Editions replaces the legacy flat-rate reservations with three tiers:
+
+| Edition | Autoscaling | Commitment options | Best for |
+|---|---|---|---|
+| Standard | Yes (up to max slots) | None | Variable analytics workloads |
+| Enterprise | Yes | 1-year or 3-year | Production analytics with predictable usage |
+| Enterprise Plus | Yes | 1-year or 3-year | Highest performance, largest discounts |
+
+Check current quota settings:
+
 ```bash
-# Check current quota settings
 gcloud quotas info --service=bigquery.googleapis.com --project=PROJECT_ID
 ```
 
@@ -736,14 +896,20 @@ GROUP BY report_date, product_category;
 
 ### Cloud Storage
 
+GCS pricing has three components: storage (per GB per month, varies by class), retrieval (per GB read for Nearline/Coldline/Archive), and operations (per-request). The primary cost lever is lifecycle policies — automatically transitioning objects to cheaper storage classes as they age and deleting them before they accumulate indefinitely.
+
 #### Lifecycle Policies
 
+Apply a lifecycle configuration from a local JSON file (see the `lifecycle.json` example below for the full tiering ruleset):
+
 ```bash
-# Update a bucket with a lifecycle config file
 gcloud storage buckets update gs://BUCKET_NAME \
   --lifecycle-file=lifecycle.json
+```
 
-# View current lifecycle config
+View the current lifecycle configuration on a bucket:
+
+```bash
 gcloud storage buckets describe gs://BUCKET_NAME \
   --format="value(lifecycle)"
 ```
@@ -786,16 +952,42 @@ gcloud storage buckets describe gs://BUCKET_NAME \
 > [!success] Match lifecycle transition ages to minimum storage durations
 > Configure lifecycle rules with `age: 30` for Nearline transitions, `age: 90` for Coldline, and `age: 365` for Archive. Never transition objects before these ages and you will never incur an early-deletion fee.
 
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+stateDiagram-v2
+    [*] --> Standard : object created
+    Standard --> Nearline : age ≥ 30 days\n$0.020→$0.010/GB/mo
+    Nearline --> Coldline : age ≥ 90 days\n$0.010→$0.004/GB/mo
+    Coldline --> Archive : age ≥ 365 days\n$0.004→$0.0012/GB/mo
+    Archive --> [*] : age ≥ 1825 days\n(5 years) — deleted
+    Standard --> [*] : AbortIncompleteMultipartUpload\nage ≥ 7 days
+```
+
+Find buckets without any lifecycle policy configured:
+
 ```bash
-# Find buckets without lifecycle policies
 gcloud storage ls --project=PROJECT_ID | while read bucket; do
   policy=$(gcloud storage buckets describe "$bucket" --format="value(lifecycle)" 2>/dev/null)
   if [ -z "$policy" ]; then
     echo "No lifecycle: $bucket"
   fi
 done
+```
 
-# Estimate cost of objects by storage class
+Estimate cost distribution of objects in a bucket by storage class (output: class, count, total bytes):
+
+```bash
 gcloud storage ls --recursive --long gs://BUCKET_NAME | \
   awk '{sum[$4] += $1; count[$4]++} END {for (c in sum) print c, count[c], sum[c]}'
 ```
@@ -813,57 +1005,100 @@ gcloud storage ls --recursive --long gs://BUCKET_NAME | \
 
 ### Cloud Run
 
+Cloud Run bills per 100ms of vCPU + memory allocation during active request handling. The two biggest levers are scaling to zero (`--min-instances=0`) which eliminates idle cost entirely, and right-sizing CPU and memory allocations to match actual workload requirements.
+
 > [!info] Cloud Run cost levers
 > - **Scale to zero** (`--min-instances=0`) — no idle cost; container only runs when triggered
 > - **Right-size CPU/memory** — don't allocate 2 vCPU + 2 GB for a job that peaks at 0.5 vCPU + 256 MB
 > - **CPU allocation mode** — default (throttled) only charges CPU during request processing; always-on (`--no-cpu-throttling`) costs more but keeps background work alive
 > - **Job parallelism** — controls how many task instances run concurrently (more parallelism = faster but higher peak cost)
 
+#### gcloud | Set scaling to zero for a Cloud Run service
+
+Setting `--min-instances=0` eliminates idle cost — the container only runs when a request arrives. Latency for the first request after a cold start increases by ~200–500ms depending on image size.
+
 ```bash
-# Scale to zero for batch jobs (no min instances)
 gcloud run services update SERVICE_NAME \
   --min-instances=0 \
   --max-instances=10 \
   --region=us-central1
+```
 
-# Right-size CPU and memory
+#### gcloud | Right-size CPU and memory allocation
+
+Reduce CPU and memory to match actual workload requirements. Use Cloud Monitoring to check the `container/cpu/utilizations` and `container/memory/utilizations` metrics before committing to a smaller allocation.
+
+```bash
 gcloud run services update SERVICE_NAME \
   --cpu=0.5 \
   --memory=512Mi \
   --region=us-central1
+```
 
-# CPU-only allocation (not always-on) — cheaper for batch
+#### gcloud | Disable always-on CPU (throttled mode)
+
+By default, Cloud Run throttles CPU when no request is being processed. If `--no-cpu-throttling` is enabled (always-on), CPU is allocated even while idle. Setting it back to throttled reduces cost for services that do not need background processing.
+
+```bash
 gcloud run services update SERVICE_NAME \
   --no-cpu-throttling=false \
   --region=us-central1
+```
 
-# For Cloud Run Jobs: set parallelism to control concurrent cost
+#### gcloud | Set parallelism on a Cloud Run Job
+
+Parallelism controls how many task instances run concurrently. Higher parallelism reduces wall-clock time but increases peak cost. Tune to balance throughput requirements against cost ceiling.
+
+```bash
 gcloud run jobs update JOB_NAME \
   --parallelism=5 \
   --region=us-central1
 ```
 
+| Flag | Syntax | Description |
+|---|---|---|
+| `--min-instances` | `--min-instances=0` | Minimum running instances; 0 enables scale-to-zero |
+| `--max-instances` | `--max-instances=N` | Maximum concurrent instances |
+| `--cpu` | `--cpu=0.5` | vCPU allocation per instance (0.08 to 8) |
+| `--memory` | `--memory=512Mi` | Memory per instance; minimum 128Mi |
+| `--no-cpu-throttling` | `--no-cpu-throttling=false` | false = throttled (cheaper); true = always-on |
+| `--parallelism` | `--parallelism=N` | Concurrent task instances for Cloud Run Jobs |
+
 > [!tip] Cloud Run vs Functions Cost
 >
-> Cloud Run vs Cloud Functions Cost.
 > Cloud Run bills per 100ms of CPU+memory allocation. Cloud Functions Gen2 runs on Cloud Run under the hood. For jobs that run infrequently and complete quickly, Cloud Run Jobs with `min-instances=0` is almost free — you only pay during execution.
 
 ---
 
 ### Pub/Sub
 
-```bash
-# Use Pub/Sub Lite for high-volume, cost-sensitive workloads
-# Pub/Sub Lite is ~10x cheaper but requires reserved capacity and is zonal
+Pub/Sub pricing is per message (first 10 GB/month free, then $0.04/GB) plus optional message retention storage. For very high-throughput pipelines, Pub/Sub Lite offered reserved-capacity pricing but was deprecated by Google in 2023.
 
+> [!warning] Pub/Sub Lite is deprecated
+>
+> Google deprecated Pub/Sub Lite in 2023. New workloads should use standard Pub/Sub. Existing Pub/Sub Lite resources should be migrated to Pub/Sub before the service is shut down. The cost difference has narrowed significantly with Pub/Sub compression and batching options.
+
+> [!success] Use message batching and compression on the publisher side instead
+> Standard Pub/Sub supports message batching (`batch_settings`) and message compression (`enable_message_ordering` + gzip) to reduce throughput costs without the operational overhead of Pub/Sub Lite partition management.
+
+#### gcloud | Create a Pub/Sub Lite topic (legacy — deprecated)
+
+The commands below are retained for reference only. Pub/Sub Lite is deprecated. Do not use for new workloads.
+
+```bash
 # Create a Pub/Sub Lite topic
 gcloud pubsub lite-topics create my-lite-topic \
   --location=us-central1 \
   --partitions=1 \
   --per-partition-publish-mib=1 \
   --per-partition-subscribe-mib=2
+```
 
-# Set retention to minimum needed (reduces storage cost)
+#### gcloud | Set subscription retention to minimum
+
+Setting retention duration to the minimum required reduces message storage fees on standard Pub/Sub subscriptions.
+
+```bash
 gcloud pubsub subscriptions modify-config SUBSCRIPTION_NAME \
   --message-retention-duration=1d
 ```
@@ -882,6 +1117,8 @@ gcloud pubsub subscriptions modify-config SUBSCRIPTION_NAME \
 
 ### Cloud Logging
 
+Cloud Logging charges $0.01/GB for ingestion beyond the first 50 GB/project/month (free tier). The primary lever is exclusions — dropping high-volume, low-value logs before ingestion. For deeper monitoring coverage including alerting policies and SLO dashboards, see [GCP Native Observability](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-monitoring).
+
 > [!warning] Logging Cost Trap
 >
 > Cloud Logging charges $0.01/GB for ingestion beyond the free tier (first 50 GB/project/month are free). A verbose application logging at DEBUG level can easily exceed 100 GB/month. Always exclude DEBUG in production.
@@ -891,33 +1128,49 @@ gcloud pubsub subscriptions modify-config SUBSCRIPTION_NAME \
 
 #### Exclude Debug Logs
 
+Add an exclusion to the `_Default` sink to drop all logs at DEBUG severity and below before ingestion:
+
 ```bash
-# Add an exclusion to the _Default sink to drop DEBUG and lower
 gcloud logging sinks update _Default \
   --add-exclusion="name=exclude-debug,filter=severity<=DEBUG"
+```
 
-# Verify the exclusion was applied
+Verify the exclusion was applied:
+
+```bash
 gcloud logging sinks describe _Default
+```
 
-# Exclude a specific noisy logger entirely
+Exclude a specific noisy endpoint (e.g., health check probes that generate thousands of 200 OK log entries per hour):
+
+```bash
 gcloud logging sinks update _Default \
   --add-exclusion='name=exclude-healthcheck,filter=httpRequest.requestUrl="/health"'
+```
 
-# List all exclusions on the default sink
+List all active exclusions on the default sink:
+
+```bash
 gcloud logging sinks describe _Default --format="json" | \
   python3 -c "import json,sys; [print(e['name'], e['filter']) for e in json.load(sys.stdin).get('exclusions', [])]"
 ```
 
 #### Route Old Logs to GCS (Cheaper Retention)
 
+Cloud Logging storage beyond 30 days costs $0.01/GB/month. Routing to a Coldline GCS bucket costs $0.004/GB/month — a 60% reduction. The sink's writer identity (a service account managed by GCP) must be granted `roles/storage.objectCreator` on the destination bucket.
+
+Create the GCS sink with a log filter routing logs older than a cutoff date:
+
 ```bash
-# Create a GCS sink for long-term retention
 gcloud logging sinks create long-term-logs-sink \
   storage.googleapis.com/BUCKET_NAME \
   --log-filter='timestamp < "2026-01-01T00:00:00Z"' \
   --project=PROJECT_ID
+```
 
-# Grant the sink's writer identity access to the bucket
+Retrieve the sink's auto-generated writer identity and grant it write access to the destination bucket:
+
+```bash
 WRITER=$(gcloud logging sinks describe long-term-logs-sink \
   --format="value(writerIdentity)")
 gcloud storage buckets add-iam-policy-binding gs://BUCKET_NAME \
@@ -927,20 +1180,32 @@ gcloud storage buckets add-iam-policy-binding gs://BUCKET_NAME \
 
 #### Set Custom Retention per Log Bucket
 
+The `_Default` log bucket retains logs for 30 days at no storage cost. Custom buckets allow shorter or longer retention. Shortening to 7 days for high-volume debug buckets reduces incidental storage charges; extending beyond 30 days incurs $0.01/GB/month storage fees.
+
+Create a custom log bucket with 7-day retention for high-volume or debug logs:
+
 ```bash
-# Default _Default bucket has 30-day retention (free)
-# Create a custom bucket with shorter retention for noisy logs
 gcloud logging buckets create short-retention-logs \
   --location=global \
   --retention-days=7 \
   --project=PROJECT_ID
+```
 
-# Update retention on existing bucket
+Reduce the `_Default` bucket retention from 30 days to 14 days:
+
+```bash
 gcloud logging buckets update _Default \
   --location=global \
   --retention-days=14 \
   --project=PROJECT_ID
 ```
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `--add-exclusion` | `--add-exclusion="name=X,filter=F"` | Add a log exclusion by filter expression |
+| `--log-filter` | `--log-filter='...'` | Filter expression for sink routing |
+| `--retention-days` | `--retention-days=N` | Retention period for a log bucket |
+| `--location` | `--location=global` | Location of the log bucket (`global` for the `_Default` bucket) |
 
 #### Cloud Logging cost reference — ingestion, storage, routing rates
 
@@ -955,27 +1220,43 @@ gcloud logging buckets update _Default \
 
 ### Cloud NAT
 
+Cloud NAT charges per GB of data processed ($0.045/GB in most regions). If VMs only need to reach GCP APIs (BigQuery, GCS, Pub/Sub), Private Google Access is free and eliminates the need for a NAT gateway entirely.
+
+#### gcloud | List NAT gateways on a router
+
+Check which routers have NAT gateways configured before deciding whether to replace them with Private Google Access.
+
 ```bash
-# Check if NAT is being used (look for egress to internet from VMs)
 gcloud compute routers nats list \
   --router=ROUTER_NAME \
   --region=us-central1 \
   --project=PROJECT_ID
+```
 
-# Delete NAT if VMs only need to reach GCP APIs
+#### gcloud | Delete a NAT gateway
+
+```bash
 gcloud compute routers nats delete NAT_NAME \
   --router=ROUTER_NAME \
   --region=us-central1
+```
 
-# Enable Private Google Access instead (free, no NAT needed for GCP APIs)
+#### gcloud | Enable Private Google Access on a subnet
+
+Enabling Private Google Access allows VMs without external IPs to reach GCP APIs without NAT, eliminating NAT processing charges for GCP-internal traffic.
+
+```bash
 gcloud compute networks subnets update SUBNET_NAME \
   --region=us-central1 \
   --enable-private-ip-google-access
 ```
 
-> [!tip] Private Google Access
->
-> Enabling Private Google Access on a subnet allows VMs without external IPs to reach GCP APIs (BigQuery, GCS, Pub/Sub, etc.) without NAT. This eliminates NAT gateway costs for GCP-internal traffic.
+| Flag | Syntax | Description |
+|---|---|---|
+| `--router` | `--router=ROUTER_NAME` | The Cloud Router that owns the NAT gateway |
+| `--region` | `--region=REGION` | Region where the router is located |
+| `--project` | `--project=PROJECT_ID` | Project containing the router |
+| `--enable-private-ip-google-access` | (flag only) | Allows VMs without external IPs to reach Google APIs for free |
 
 ---
 
@@ -991,6 +1272,8 @@ Firestore costs are driven by operation count, not query complexity. Every docum
 | Storage | $0.108/GB/month | Delete unused collections, archive to GCS |
 
 #### Application-level optimizations — caching, batching, field projection
+
+Three patterns that reduce Firestore operation billing: TTL caching to serve repeated reads from memory instead of Firestore, batch writes to collapse multiple operations into one API call (up to 500 per batch), and field projection to read only the fields needed rather than the full document.
 
 ```python
 from google.cloud import firestore
@@ -1060,25 +1343,34 @@ Run this every Monday against the previous week's data.
 - [ ] Check for unused Artifact Registry images consuming storage
 - [ ] Review any new services added this week (do they have cost controls?)
 
+Find unattached persistent disks (disks with no VM attached still incur storage charges):
+
 ```bash
-# Find unattached persistent disks
 gcloud compute disks list \
   --filter="NOT users:*" \
   --format="table(name,zone,sizeGb,type,status)" \
   --project=PROJECT_ID
+```
 
-# Find unused static IPs (reserved but not attached)
+Find reserved static IPs not attached to any resource ($0.010/hour = $7.20/month each):
+
+```bash
 gcloud compute addresses list \
   --filter="status=RESERVED" \
   --format="table(name,address,region,status)" \
   --project=PROJECT_ID
+```
 
-# Release an unused static IP
+Release an unused static IP:
+
+```bash
 gcloud compute addresses delete ADDRESS_NAME --region=REGION
+```
 
-# Find VMs with low CPU utilization (use Cloud Monitoring)
+List the CPU utilization metric descriptor (query the time series via Cloud Monitoring API or BigQuery metrics export for 7-day averages):
+
+```bash
 gcloud monitoring metrics list --filter="metric.type=compute.googleapis.com/instance/cpu/utilization"
-# Then query via Cloud Monitoring API or BigQuery metrics export for 7-day averages
 ```
 
 ---
@@ -1224,6 +1516,8 @@ ORDER BY projected_monthly_spend DESC;
 
 ### Looker Studio / Grafana Connection
 
+Both tools connect directly to the BigQuery views defined above. For deeper monitoring integration including alerting and SLO tracking, see [GCP Native Observability](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-monitoring).
+
 > [!info] Connecting dashboards to billing views
 > - **Looker Studio** — Data source → BigQuery → select the billing dataset → choose a view. Use `v_daily_spend_by_service` for time-series charts and `v_monthly_projection` for a summary scorecard.
 > - **Grafana** — Install the BigQuery plugin (`grafana-cli plugins install doitintl-bigquery-datasource`). Configure a service account with `roles/bigquery.dataViewer` on the billing dataset.
@@ -1232,7 +1526,11 @@ ORDER BY projected_monthly_spend DESC;
 
 ## Terraform for Cost Controls
 
+Terraform enforces cost controls at provisioning time rather than reactively. The patterns below cover budget resources with Pub/Sub notification, mandatory label enforcement on every resource, machine-type variables for right-sizing, and Organization Policy constraints. For the full GCP Terraform provisioning reference, see [07-Terraform](https://alp78.github.io/elysium/07-Terraform/Domains/terraform-gcp-moc).
+
 ### Terraform Cost Controls — Budget Resource
+
+A reusable Terraform module that creates a `google_billing_budget` resource and a `google_pubsub_topic` for notifications. The budget scopes to a list of projects and fires at 50%, 80%, and 100% of the monthly ceiling. Wire `monitoring_notification_channels` to email or PagerDuty channels created elsewhere in your Terraform configuration.
 
 ```hcl
 # terraform/modules/billing/budget.tf
@@ -1285,6 +1583,8 @@ resource "google_pubsub_topic" "billing_alerts" {
 
 ### Terraform Cost Controls — Enforce Labels on All Resources
 
+A `local.common_labels` map is defined once and applied to every resource. The `pipeline` label enables the `v_cost_per_pipeline` dashboard view to break down costs by ETL pipeline. Without consistent labels, `project.id` is the finest cost attribution granularity available in the billing export.
+
 ```hcl
 # terraform/modules/labels/variables.tf
 variable "required_labels" {
@@ -1324,6 +1624,8 @@ resource "google_storage_bucket" "data" {
 ```
 
 ### Terraform Cost Controls — Machine Type Variables (Right-Sizing)
+
+Parameterizing machine type and disk size allows right-sizing changes via `terraform.tfvars` without modifying the resource definition. The validation constraint enforces modern machine families — legacy `n1` and `f1` families have worse price/performance and lack Confidential Computing support.
 
 ```hcl
 # terraform/environments/prod/variables.tf
@@ -1369,6 +1671,8 @@ resource "google_compute_instance_template" "worker" {
 
 ### Terraform Cost Controls — Organization Policy to Enforce Labels
 
+Organization Policies block resource creation at the GCP API level if required conditions are not met. The audit command below uses `gcloud asset search-all-resources` to find existing resources already missing the `team` label — fix these before enforcing the org policy or deployments will fail.
+
 ```hcl
 # Require specific labels on all GCE instances via org policy
 resource "google_org_policy_policy" "require_labels" {
@@ -1381,14 +1685,13 @@ resource "google_org_policy_policy" "require_labels" {
     }
   }
 }
-
-# Better: use gcloud org-policies for label constraints
-# gcloud org-policies set-policy label-policy.yaml --project=PROJECT_ID
-# where label-policy.yaml defines required label keys
 ```
 
+For label constraints, `gcloud org-policies set-policy` with a YAML policy file is the recommended approach over the Terraform resource above. Create a `label-policy.yaml` defining required label keys and apply it per project.
+
+Audit existing resources missing the `team` label before enforcing the policy:
+
 ```bash
-# Audit: find resources missing the 'team' label
 gcloud asset search-all-resources \
   --scope=projects/PROJECT_ID \
   --query='NOT labels.team:*' \
@@ -1399,6 +1702,8 @@ gcloud asset search-all-resources \
 ---
 
 ## Quick Reference: Cost by Service
+
+Primary cost drivers and top optimization action per service at a glance.
 
 | Service | Primary cost driver | Key optimization |
 |---|---|---|

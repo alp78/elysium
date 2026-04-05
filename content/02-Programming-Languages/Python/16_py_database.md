@@ -127,15 +127,82 @@ Inserted 6 trades
 pd.read_sql("SELECT *, quantity * price AS notional FROM trades ORDER BY trade_date, trade_id", conn)
 ```
 
-```text
-   trade_id   ticker  side  quantity   price  trade_date   notional
-0   TRD_001  ASML.AS   BUY       100   685.4  2026-03-15  68540.0
-1   TRD_002    MC.PA   BUY        50   890.2  2026-03-15  44510.0
-2   TRD_003   SAP.DE  SELL        75   245.8  2026-03-15  18435.0
-3   TRD_004  ASML.AS  SELL        30   690.0  2026-03-16  20700.0
-4   TRD_005   RMS.PA   BUY        20  2850.0  2026-03-16  57000.0
-5   TRD_006   SIE.DE   BUY       200   198.5  2026-03-17  39700.0
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>trade_id</th>
+      <th>ticker</th>
+      <th>side</th>
+      <th>quantity</th>
+      <th>price</th>
+      <th>trade_date</th>
+      <th>notional</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>TRD_001</td>
+      <td>ASML.AS</td>
+      <td>BUY</td>
+      <td>100</td>
+      <td>685.4</td>
+      <td>2026-03-15</td>
+      <td>68540.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>TRD_002</td>
+      <td>MC.PA</td>
+      <td>BUY</td>
+      <td>50</td>
+      <td>890.2</td>
+      <td>2026-03-15</td>
+      <td>44510.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>TRD_003</td>
+      <td>SAP.DE</td>
+      <td>SELL</td>
+      <td>75</td>
+      <td>245.8</td>
+      <td>2026-03-15</td>
+      <td>18435.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>TRD_004</td>
+      <td>ASML.AS</td>
+      <td>SELL</td>
+      <td>30</td>
+      <td>690.0</td>
+      <td>2026-03-16</td>
+      <td>20700.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>TRD_005</td>
+      <td>RMS.PA</td>
+      <td>BUY</td>
+      <td>20</td>
+      <td>2850.0</td>
+      <td>2026-03-16</td>
+      <td>57000.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>TRD_006</td>
+      <td>SIE.DE</td>
+      <td>BUY</td>
+      <td>200</td>
+      <td>198.5</td>
+      <td>2026-03-17</td>
+      <td>39700.0</td>
+    </tr>
+  </tbody>
+</table>
 
 #### SQLite — SELECT with WHERE parameter
 
@@ -145,11 +212,39 @@ Pass a parameter tuple to `params=` in `pd.read_sql()` to safely inject filter v
 pd.read_sql("SELECT * FROM trades WHERE ticker = ?", conn, params=("ASML.AS",))
 ```
 
-```text
-   trade_id   ticker  side  quantity  price  trade_date
-0   TRD_001  ASML.AS   BUY       100  685.4  2026-03-15
-1   TRD_004  ASML.AS  SELL        30  690.0  2026-03-16
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>trade_id</th>
+      <th>ticker</th>
+      <th>side</th>
+      <th>quantity</th>
+      <th>price</th>
+      <th>trade_date</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>TRD_001</td>
+      <td>ASML.AS</td>
+      <td>BUY</td>
+      <td>100</td>
+      <td>685.4</td>
+      <td>2026-03-15</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>TRD_004</td>
+      <td>ASML.AS</td>
+      <td>SELL</td>
+      <td>30</td>
+      <td>690.0</td>
+      <td>2026-03-16</td>
+    </tr>
+  </tbody>
+</table>
 
 #### SQLite — aggregate with GROUP BY
 
@@ -164,14 +259,54 @@ pd.read_sql("""
     FROM trades GROUP BY ticker ORDER BY net_notional DESC""", conn)
 ```
 
-```text
-    ticker  net_shares  net_notional  trade_count
-0   RMS.PA          20       57000.0            1
-1  ASML.AS          70       47840.0            2
-2    MC.PA          50       44510.0            1
-3   SIE.DE         200       39700.0            1
-4   SAP.DE         -75      -18435.0            1
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>ticker</th>
+      <th>net_shares</th>
+      <th>net_notional</th>
+      <th>trade_count</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>RMS.PA</td>
+      <td>20</td>
+      <td>57000.0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ASML.AS</td>
+      <td>70</td>
+      <td>47840.0</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>MC.PA</td>
+      <td>50</td>
+      <td>44510.0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>SIE.DE</td>
+      <td>200</td>
+      <td>39700.0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>SAP.DE</td>
+      <td>-75</td>
+      <td>-18435.0</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
 
 #### SQLite — UPDATE and DELETE
 
@@ -334,19 +469,122 @@ pd.read_sql("""
     ORDER BY date DESC""", sql_engine, params=("SAP.DE",))
 ```
 
-```text
-   symbol        date    open     high      low   close   volume
-0  SAP.DE  2026-03-12  163.00   166.74   162.80  166.52   806722
-1  SAP.DE  2026-03-11  167.10   168.96   163.02  165.44  2953782
-2  SAP.DE  2026-03-10  171.60   172.88   166.46  169.60  3187246
-3  SAP.DE  2026-03-09  173.72   173.86   168.52  171.88  1990823
-4  SAP.DE  2026-03-06  173.66   175.10   170.24  172.74  3347221
-5  SAP.DE  2026-03-05  167.50   172.80   166.48  170.98  2961032
-6  SAP.DE  2026-03-04  169.22   169.22   165.94  167.38  2443582
-7  SAP.DE  2026-03-03  165.60   166.16   161.28  165.48  3971985
-8  SAP.DE  2026-03-02  166.62   169.10   164.86  167.10  2776438
-9  SAP.DE  2026-02-27  172.00   173.34   168.28  170.96  2673448
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>open</th>
+      <th>high</th>
+      <th>low</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>SAP.DE</td>
+      <td>2026-03-12</td>
+      <td>163.00</td>
+      <td>166.74</td>
+      <td>162.80</td>
+      <td>166.52</td>
+      <td>806722</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>SAP.DE</td>
+      <td>2026-03-11</td>
+      <td>167.10</td>
+      <td>168.96</td>
+      <td>163.02</td>
+      <td>165.44</td>
+      <td>2953782</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>SAP.DE</td>
+      <td>2026-03-10</td>
+      <td>171.60</td>
+      <td>172.88</td>
+      <td>166.46</td>
+      <td>169.60</td>
+      <td>3187246</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>SAP.DE</td>
+      <td>2026-03-09</td>
+      <td>173.72</td>
+      <td>173.86</td>
+      <td>168.52</td>
+      <td>171.88</td>
+      <td>1990823</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>SAP.DE</td>
+      <td>2026-03-06</td>
+      <td>173.66</td>
+      <td>175.10</td>
+      <td>170.24</td>
+      <td>172.74</td>
+      <td>3347221</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>SAP.DE</td>
+      <td>2026-03-05</td>
+      <td>167.50</td>
+      <td>172.80</td>
+      <td>166.48</td>
+      <td>170.98</td>
+      <td>2961032</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>SAP.DE</td>
+      <td>2026-03-04</td>
+      <td>169.22</td>
+      <td>169.22</td>
+      <td>165.94</td>
+      <td>167.38</td>
+      <td>2443582</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>SAP.DE</td>
+      <td>2026-03-03</td>
+      <td>165.60</td>
+      <td>166.16</td>
+      <td>161.28</td>
+      <td>165.48</td>
+      <td>3971985</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>SAP.DE</td>
+      <td>2026-03-02</td>
+      <td>166.62</td>
+      <td>169.10</td>
+      <td>164.86</td>
+      <td>167.10</td>
+      <td>2776438</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>SAP.DE</td>
+      <td>2026-02-27</td>
+      <td>172.00</td>
+      <td>173.34</td>
+      <td>168.28</td>
+      <td>170.96</td>
+      <td>2673448</td>
+    </tr>
+  </tbody>
+</table>
 
 #### SQL Server — aggregate with GROUP BY
 
@@ -363,19 +601,89 @@ pd.read_sql("""
     ORDER BY total_volume DESC""", sql_engine)
 ```
 
-```text
-       symbol  trading_days  avg_close   total_volume
-0      ISP.MI          1321       3.15  115704541969
-1      SAN.MC          1329       4.43   55513641918
-2     ENEL.MI          1321       6.82   32600561934
-3     BBVA.MC          1329       8.65   22133773194
-4      UCG.MI          1321      28.46   18366801099
-5      ENI.MI          1321      13.40   17141570967
-6     INGA.AS          1331      14.04   17041577555
-7      IBE.MC          1329      12.26   15994295949
-8      DTE.DE          1324      22.43   10029411390
-9  NDA-FI.HE          1306      10.85    7020342991
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>trading_days</th>
+      <th>avg_close</th>
+      <th>total_volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ISP.MI</td>
+      <td>1321</td>
+      <td>3.15</td>
+      <td>115704541969</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>SAN.MC</td>
+      <td>1329</td>
+      <td>4.43</td>
+      <td>55513641918</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ENEL.MI</td>
+      <td>1321</td>
+      <td>6.82</td>
+      <td>32600561934</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>BBVA.MC</td>
+      <td>1329</td>
+      <td>8.65</td>
+      <td>22133773194</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>UCG.MI</td>
+      <td>1321</td>
+      <td>28.46</td>
+      <td>18366801099</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>ENI.MI</td>
+      <td>1321</td>
+      <td>13.40</td>
+      <td>17141570967</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>INGA.AS</td>
+      <td>1331</td>
+      <td>14.04</td>
+      <td>17041577555</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>IBE.MC</td>
+      <td>1329</td>
+      <td>12.26</td>
+      <td>15994295949</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>DTE.DE</td>
+      <td>1324</td>
+      <td>22.43</td>
+      <td>10029411390</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>NDA-FI.HE</td>
+      <td>1306</td>
+      <td>10.85</td>
+      <td>7020342991</td>
+    </tr>
+  </tbody>
+</table>
 
 #### SQL Server — INSERT, UPDATE, DELETE
 
@@ -443,11 +751,33 @@ pd.read_sql("""
     ORDER BY i.name""", sql_engine)
 ```
 
-```text
-                               index_name     type_desc  is_unique       columns
-0  IX_silver_eurostoxx50_ohlcv_symbol_date  NONCLUSTERED       True  symbol, date
-1          PK__eurostox__3213E83FDF67D274     CLUSTERED       True            id
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>index_name</th>
+      <th>type_desc</th>
+      <th>is_unique</th>
+      <th>columns</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>IX_silver_eurostoxx50_ohlcv_symbol_date</td>
+      <td>NONCLUSTERED</td>
+      <td>True</td>
+      <td>symbol, date</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>PK__eurostox__3213E83FDF67D274</td>
+      <td>CLUSTERED</td>
+      <td>True</td>
+      <td>id</td>
+    </tr>
+  </tbody>
+</table>
 
 #### SQL Server — index fragmentation
 
@@ -468,19 +798,111 @@ pd.read_sql("""
     ORDER BY ips.avg_fragmentation_in_percent DESC""", sql_engine)
 ```
 
-```text
-               table                                      index                type  frag_pct  pages      action
-0          index_dim             PK__index_di__3213E83FDB4E5BA9    CLUSTERED INDEX      13.6     88  REORGANIZE
-1  index_performance                  UX_gold_index_performance  NONCLUSTERED INDEX       5.3     19          OK
-2  index_performance             PK__index_pe__3213E83FBBB2393E    CLUSTERED INDEX       4.9     81          OK
-3   stoxxusa50_ohlcv             PK__stoxxusa__3213E83FC84E3F24    CLUSTERED INDEX       1.4    724          OK
-4          index_dim             PK__index_di__3213E83F590AA69E    CLUSTERED INDEX       1.2     85          OK
-5   stoxxusa50_ohlcv    IX_silver_stoxxusa50_ohlcv_symbol_date  NONCLUSTERED INDEX       0.6    163          OK
-6  stoxxasia50_ohlcv  IX_silver_stoxxasia50_ohlcv_symbol_date  NONCLUSTERED INDEX       0.5    183          OK
-7  stoxxasia50_ohlcv             PK__stoxxasi__3213E83F66A8DE5E    CLUSTERED INDEX       0.4    729          OK
-8  eurostoxx50_ohlcv             PK__eurostox__3213E83FDF67D274    CLUSTERED INDEX       0.4    757          OK
-9        oil20_ohlcv             PK__oil20_oh__3213E83F544EB286    CLUSTERED INDEX       0.4    275          OK
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>table</th>
+      <th>index</th>
+      <th>type</th>
+      <th>frag_pct</th>
+      <th>pages</th>
+      <th>action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>index_dim</td>
+      <td>PK__index_di__3213E83FDB4E5BA9</td>
+      <td>CLUSTERED INDEX</td>
+      <td>13.6</td>
+      <td>88</td>
+      <td>REORGANIZE</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>index_performance</td>
+      <td>UX_gold_index_performance</td>
+      <td>NONCLUSTERED INDEX</td>
+      <td>5.3</td>
+      <td>19</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>index_performance</td>
+      <td>PK__index_pe__3213E83FBBB2393E</td>
+      <td>CLUSTERED INDEX</td>
+      <td>4.9</td>
+      <td>81</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>stoxxusa50_ohlcv</td>
+      <td>PK__stoxxusa__3213E83FC84E3F24</td>
+      <td>CLUSTERED INDEX</td>
+      <td>1.4</td>
+      <td>724</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>index_dim</td>
+      <td>PK__index_di__3213E83F590AA69E</td>
+      <td>CLUSTERED INDEX</td>
+      <td>1.2</td>
+      <td>85</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>stoxxusa50_ohlcv</td>
+      <td>IX_silver_stoxxusa50_ohlcv_symbol_date</td>
+      <td>NONCLUSTERED INDEX</td>
+      <td>0.6</td>
+      <td>163</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>stoxxasia50_ohlcv</td>
+      <td>IX_silver_stoxxasia50_ohlcv_symbol_date</td>
+      <td>NONCLUSTERED INDEX</td>
+      <td>0.5</td>
+      <td>183</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>stoxxasia50_ohlcv</td>
+      <td>PK__stoxxasi__3213E83F66A8DE5E</td>
+      <td>CLUSTERED INDEX</td>
+      <td>0.4</td>
+      <td>729</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>eurostoxx50_ohlcv</td>
+      <td>PK__eurostox__3213E83FDF67D274</td>
+      <td>CLUSTERED INDEX</td>
+      <td>0.4</td>
+      <td>757</td>
+      <td>OK</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>oil20_ohlcv</td>
+      <td>PK__oil20_oh__3213E83F544EB286</td>
+      <td>CLUSTERED INDEX</td>
+      <td>0.4</td>
+      <td>275</td>
+      <td>OK</td>
+    </tr>
+  </tbody>
+</table>
 
 #### SQL Server — database and table sizes
 
@@ -501,24 +923,95 @@ pd.read_sql("""
     GROUP BY s.name, t.name ORDER BY SUM(a.total_pages) DESC""", sql_engine)
 ```
 
-```text
-      db  size_mb
-0  stoxx    272.0
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>db</th>
+      <th>size_mb</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>stoxx</td>
+      <td>272.0</td>
+    </tr>
+  </tbody>
+</table>
 
-```text
-                      table     rows  size_mb
-0   silver.eurostoxx50_ohlcv  132,710     7.52
-1   silver.stoxxasia50_ohlcv  128,090     7.27
-2    silver.stoxxusa50_ohlcv  130,200     7.08
-3       silver.oil20_ohlcv   49,476     2.77
-4    bronze.trading_calendar   58,670     1.58
-5          bronze.index_dim      676     1.02
-6     gold.index_performance   10,562     1.02
-7          silver.index_dim      676     0.77
-8  bronze.eurostoxx50_ohlcv      100     0.33
-9        gold.scores_daily      932     0.33
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>table</th>
+      <th>rows</th>
+      <th>size_mb</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>silver.eurostoxx50_ohlcv</td>
+      <td>132,710</td>
+      <td>7.52</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>silver.stoxxasia50_ohlcv</td>
+      <td>128,090</td>
+      <td>7.27</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>silver.stoxxusa50_ohlcv</td>
+      <td>130,200</td>
+      <td>7.08</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>silver.oil20_ohlcv</td>
+      <td>49,476</td>
+      <td>2.77</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>bronze.trading_calendar</td>
+      <td>58,670</td>
+      <td>1.58</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>bronze.index_dim</td>
+      <td>676</td>
+      <td>1.02</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>gold.index_performance</td>
+      <td>10,562</td>
+      <td>1.02</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>silver.index_dim</td>
+      <td>676</td>
+      <td>0.77</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>bronze.eurostoxx50_ohlcv</td>
+      <td>100</td>
+      <td>0.33</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>gold.scores_daily</td>
+      <td>932</td>
+      <td>0.33</td>
+    </tr>
+  </tbody>
+</table>
 
 ### Server Configuration and Administration
 
@@ -539,17 +1032,51 @@ pd.read_sql("""
     ORDER BY name""", sql_engine)
 ```
 
-```text
-                    version                      edition                      collation
-0  Microsoft SQL Server 2022  Developer Edition (64-bit)  SQL_Latin1_General_CP1_CI_AS
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>version</th>
+      <th>edition</th>
+      <th>collation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Microsoft SQL Server 2022</td>
+      <td>Developer Edition (64-bit)</td>
+      <td>SQL_Latin1_General_CP1_CI_AS</td>
+    </tr>
+  </tbody>
+</table>
 
-```text
-                          setting       value
-0  cost threshold for parallelism           5
-1       max degree of parallelism           0
-2          max server memory (MB)  2147483647
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>setting</th>
+      <th>value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>cost threshold for parallelism</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>max degree of parallelism</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>max server memory (MB)</td>
+      <td>2147483647</td>
+    </tr>
+  </tbody>
+</table>
 
 ## pandas Integration — pd.read_sql and to_sql
 
@@ -582,14 +1109,54 @@ engine = create_engine(f"mssql+pyodbc:///?odbc_connect={odbc_params}")
 pd.read_sql("SELECT TOP 5 symbol, date, [close], volume FROM silver.eurostoxx50_ohlcv ORDER BY date DESC", engine)
 ```
 
-```text
-    symbol        date    close   volume
-0  ASML.AS  2026-03-12  1190.80   128223
-1    MC.PA  2026-03-12   494.35   171997
-2   RMS.PA  2026-03-12  1906.00    18681
-3    OR.PA  2026-03-12   360.80    82621
-4   SAP.DE  2026-03-12   166.52   806722
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ASML.AS</td>
+      <td>2026-03-12</td>
+      <td>1190.80</td>
+      <td>128223</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>MC.PA</td>
+      <td>2026-03-12</td>
+      <td>494.35</td>
+      <td>171997</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>RMS.PA</td>
+      <td>2026-03-12</td>
+      <td>1906.00</td>
+      <td>18681</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>OR.PA</td>
+      <td>2026-03-12</td>
+      <td>360.80</td>
+      <td>82621</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>SAP.DE</td>
+      <td>2026-03-12</td>
+      <td>166.52</td>
+      <td>806722</td>
+    </tr>
+  </tbody>
+</table>
 
 #### pandas — to_sql to write DataFrame to database
 
@@ -619,12 +1186,36 @@ with engine.connect() as c:
 Written to dbo.pandas_demo
 ```
 
-```text
-  ticker  price  volume
-0  TEST1  100.0    1000
-1  TEST2  200.0    2000
-2  TEST3  300.0    3000
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>ticker</th>
+      <th>price</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>TEST1</td>
+      <td>100.0</td>
+      <td>1000</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>TEST2</td>
+      <td>200.0</td>
+      <td>2000</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>TEST3</td>
+      <td>300.0</td>
+      <td>3000</td>
+    </tr>
+  </tbody>
+</table>
 
 ## SQLAlchemy — ORM
 
@@ -747,14 +1338,54 @@ with engine.connect() as c:
 df
 ```
 
-```text
-    symbol        date   close   volume
-0  ASML.AS  2026-03-12  1190.8   128223
-1  ASML.AS  2026-03-11  1198.8   562904
-2  ASML.AS  2026-03-10  1200.0   800815
-3  ASML.AS  2026-03-09  1147.6   689086
-4  ASML.AS  2026-03-06  1147.0   857271
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ASML.AS</td>
+      <td>2026-03-12</td>
+      <td>1190.8</td>
+      <td>128223</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ASML.AS</td>
+      <td>2026-03-11</td>
+      <td>1198.8</td>
+      <td>562904</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ASML.AS</td>
+      <td>2026-03-10</td>
+      <td>1200.0</td>
+      <td>800815</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ASML.AS</td>
+      <td>2026-03-09</td>
+      <td>1147.6</td>
+      <td>689086</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ASML.AS</td>
+      <td>2026-03-06</td>
+      <td>1147.0</td>
+      <td>857271</td>
+    </tr>
+  </tbody>
+</table>
 
 ## DuckDB — Embedded Analytical SQL Database
 
@@ -860,14 +1491,54 @@ duck2.execute("SELECT COUNT(*) FROM ohlcv").fetchone()[0]
 duck.execute("SELECT symbol, date, close, volume FROM ohlcv WHERE symbol = 'SAP.DE' ORDER BY date DESC LIMIT 5").df()
 ```
 
-```text
-   symbol        date   close   volume
-0  SAP.DE  2026-03-12  166.52   806722
-1  SAP.DE  2026-03-11  165.44  2953782
-2  SAP.DE  2026-03-10  169.60  3187246
-3  SAP.DE  2026-03-09  171.88  1990823
-4  SAP.DE  2026-03-06  172.74  3347221
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>SAP.DE</td>
+      <td>2026-03-12</td>
+      <td>166.52</td>
+      <td>806722</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>SAP.DE</td>
+      <td>2026-03-11</td>
+      <td>165.44</td>
+      <td>2953782</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>SAP.DE</td>
+      <td>2026-03-10</td>
+      <td>169.60</td>
+      <td>3187246</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>SAP.DE</td>
+      <td>2026-03-09</td>
+      <td>171.88</td>
+      <td>1990823</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>SAP.DE</td>
+      <td>2026-03-06</td>
+      <td>172.74</td>
+      <td>3347221</td>
+    </tr>
+  </tbody>
+</table>
 
 #### DuckDB — aggregate with GROUP BY
 
@@ -880,19 +1551,89 @@ duck.execute("""
     FROM ohlcv GROUP BY symbol ORDER BY total_volume DESC LIMIT 10""").df()
 ```
 
-```text
-       symbol  days  avg_close  total_volume
-0      ISP.MI  1321       3.15  1.157045e+11
-1      SAN.MC  1329       4.43  5.551364e+10
-2     ENEL.MI  1321       6.82  3.260056e+10
-3     BBVA.MC  1329       8.65  2.213377e+10
-4      UCG.MI  1321      28.46  1.836680e+10
-5      ENI.MI  1321      13.40  1.714157e+10
-6     INGA.AS  1331      14.04  1.704158e+10
-7      IBE.MC  1329      12.26  1.599430e+10
-8      DTE.DE  1324      22.43  1.002941e+10
-9  NDA-FI.HE  1306      10.85  7.020343e+09
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>days</th>
+      <th>avg_close</th>
+      <th>total_volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ISP.MI</td>
+      <td>1321</td>
+      <td>3.15</td>
+      <td>1.157045e+11</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>SAN.MC</td>
+      <td>1329</td>
+      <td>4.43</td>
+      <td>5.551364e+10</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ENEL.MI</td>
+      <td>1321</td>
+      <td>6.82</td>
+      <td>3.260056e+10</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>BBVA.MC</td>
+      <td>1329</td>
+      <td>8.65</td>
+      <td>2.213377e+10</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>UCG.MI</td>
+      <td>1321</td>
+      <td>28.46</td>
+      <td>1.836680e+10</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>ENI.MI</td>
+      <td>1321</td>
+      <td>13.40</td>
+      <td>1.714157e+10</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>INGA.AS</td>
+      <td>1331</td>
+      <td>14.04</td>
+      <td>1.704158e+10</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>IBE.MC</td>
+      <td>1329</td>
+      <td>12.26</td>
+      <td>1.599430e+10</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>DTE.DE</td>
+      <td>1324</td>
+      <td>22.43</td>
+      <td>1.002941e+10</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>NDA-FI.HE</td>
+      <td>1306</td>
+      <td>10.85</td>
+      <td>7.020343e+09</td>
+    </tr>
+  </tbody>
+</table>
 
 #### DuckDB — window function: LAG for daily returns
 
@@ -907,19 +1648,100 @@ duck.execute("""
     FROM ohlcv WHERE symbol = 'ASML.AS' ORDER BY date DESC LIMIT 10""").df()
 ```
 
-```text
-    symbol        date   close  prev_close  daily_return_pct
-0  ASML.AS  2026-03-12  1190.8      1198.8             -0.67
-1  ASML.AS  2026-03-11  1198.8      1200.0             -0.10
-2  ASML.AS  2026-03-10  1200.0      1147.6              4.57
-3  ASML.AS  2026-03-09  1147.6      1147.0              0.05
-4  ASML.AS  2026-03-06  1147.0      1186.0             -3.29
-5  ASML.AS  2026-03-05  1186.0      1199.8             -1.15
-6  ASML.AS  2026-03-04  1199.8      1161.8              3.27
-7  ASML.AS  2026-03-03  1161.8      1210.4             -4.02
-8  ASML.AS  2026-03-02  1210.4      1233.4             -1.86
-9  ASML.AS  2026-02-27  1233.4      1232.4              0.08
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>prev_close</th>
+      <th>daily_return_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ASML.AS</td>
+      <td>2026-03-12</td>
+      <td>1190.8</td>
+      <td>1198.8</td>
+      <td>-0.67</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ASML.AS</td>
+      <td>2026-03-11</td>
+      <td>1198.8</td>
+      <td>1200.0</td>
+      <td>-0.10</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ASML.AS</td>
+      <td>2026-03-10</td>
+      <td>1200.0</td>
+      <td>1147.6</td>
+      <td>4.57</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ASML.AS</td>
+      <td>2026-03-09</td>
+      <td>1147.6</td>
+      <td>1147.0</td>
+      <td>0.05</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ASML.AS</td>
+      <td>2026-03-06</td>
+      <td>1147.0</td>
+      <td>1186.0</td>
+      <td>-3.29</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>ASML.AS</td>
+      <td>2026-03-05</td>
+      <td>1186.0</td>
+      <td>1199.8</td>
+      <td>-1.15</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>ASML.AS</td>
+      <td>2026-03-04</td>
+      <td>1199.8</td>
+      <td>1161.8</td>
+      <td>3.27</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>ASML.AS</td>
+      <td>2026-03-03</td>
+      <td>1161.8</td>
+      <td>1210.4</td>
+      <td>-4.02</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>ASML.AS</td>
+      <td>2026-03-02</td>
+      <td>1210.4</td>
+      <td>1233.4</td>
+      <td>-1.86</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>ASML.AS</td>
+      <td>2026-02-27</td>
+      <td>1233.4</td>
+      <td>1232.4</td>
+      <td>0.08</td>
+    </tr>
+  </tbody>
+</table>
 
 #### DuckDB — CTE for annualized volatility
 
@@ -939,14 +1761,48 @@ duck.execute("""
     GROUP BY symbol ORDER BY annualized_vol_pct DESC""").df().head()
 ```
 
-```text
-     symbol  days  annualized_vol_pct
-0  ADYEN.AS  1330               50.30
-1    ENR.DE  1323               50.05
-2    RHM.DE  1323               40.85
-3    PRX.AS  1330               39.72
-4   ARGX.BR  1330               39.31
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>days</th>
+      <th>annualized_vol_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ADYEN.AS</td>
+      <td>1330</td>
+      <td>50.30</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ENR.DE</td>
+      <td>1323</td>
+      <td>50.05</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>RHM.DE</td>
+      <td>1323</td>
+      <td>40.85</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>PRX.AS</td>
+      <td>1330</td>
+      <td>39.72</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ARGX.BR</td>
+      <td>1330</td>
+      <td>39.31</td>
+    </tr>
+  </tbody>
+</table>
 
 #### DuckDB — SUMMARIZE for data profiling
 
@@ -956,16 +1812,132 @@ duck.execute("""
 duck.execute("SUMMARIZE ohlcv").df()
 ```
 
-```text
-  column_name column_type          min          max  approx_unique                         avg              std             q25             q50             q75  count  null_pct
-0       symbol     VARCHAR      ABI.BR      WKL.AS             51                           None             None            None            None            None  66355       0.0
-1         date        DATE  2021-01-04  2026-03-12           1516  2023-08-05 00:56:42.354005             None      2022-04-18      2023-08-03      2024-11-18  66355       0.0
-2         open      DOUBLE       1.601      2926.0          25981                       197.04           363.15           29.93           70.86          186.66  66355       0.0
-3         high      DOUBLE      1.6628      2957.0          30967                       199.36           367.87           30.07           72.03          188.90  66355       0.0
-4          low      DOUBLE      1.5842      2813.0          34449                       194.59           358.01           29.54           70.57          184.59  66355       0.0
-5        close      DOUBLE      1.6066      2839.0          31796                       197.03           363.05           30.00           71.37          186.45  66355       0.0
-6       volume      BIGINT           0   376391539          75668                  5942123.69      16156185.53          510041         1415355         4094451  66355       0.0
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>column_name</th>
+      <th>column_type</th>
+      <th>min</th>
+      <th>max</th>
+      <th>approx_unique</th>
+      <th>avg</th>
+      <th>std</th>
+      <th>q25</th>
+      <th>q50</th>
+      <th>q75</th>
+      <th>count</th>
+      <th>null_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>symbol</td>
+      <td>VARCHAR</td>
+      <td>ABI.BR</td>
+      <td>WKL.AS</td>
+      <td>51</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>None</td>
+      <td>66355</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>date</td>
+      <td>DATE</td>
+      <td>2021-01-04</td>
+      <td>2026-03-12</td>
+      <td>1516</td>
+      <td>2023-08-05 00:56:42.354005</td>
+      <td>None</td>
+      <td>2022-04-18</td>
+      <td>2023-08-03</td>
+      <td>2024-11-18</td>
+      <td>66355</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>open</td>
+      <td>DOUBLE</td>
+      <td>1.601</td>
+      <td>2926.0</td>
+      <td>25981</td>
+      <td>197.04</td>
+      <td>363.15</td>
+      <td>29.93</td>
+      <td>70.86</td>
+      <td>186.66</td>
+      <td>66355</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>high</td>
+      <td>DOUBLE</td>
+      <td>1.6628</td>
+      <td>2957.0</td>
+      <td>30967</td>
+      <td>199.36</td>
+      <td>367.87</td>
+      <td>30.07</td>
+      <td>72.03</td>
+      <td>188.90</td>
+      <td>66355</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>low</td>
+      <td>DOUBLE</td>
+      <td>1.5842</td>
+      <td>2813.0</td>
+      <td>34449</td>
+      <td>194.59</td>
+      <td>358.01</td>
+      <td>29.54</td>
+      <td>70.57</td>
+      <td>184.59</td>
+      <td>66355</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>close</td>
+      <td>DOUBLE</td>
+      <td>1.6066</td>
+      <td>2839.0</td>
+      <td>31796</td>
+      <td>197.03</td>
+      <td>363.05</td>
+      <td>30.00</td>
+      <td>71.37</td>
+      <td>186.45</td>
+      <td>66355</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>volume</td>
+      <td>BIGINT</td>
+      <td>0</td>
+      <td>376391539</td>
+      <td>75668</td>
+      <td>5942123.69</td>
+      <td>16156185.53</td>
+      <td>510041</td>
+      <td>1415355</td>
+      <td>4094451</td>
+      <td>66355</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
 
 #### DuckDB — COPY TO export to Parquet
 
@@ -1003,13 +1975,42 @@ for label, fn in [
 pd.DataFrame(results)
 ```
 
-```text
-   Engine             Query  Time (ms)
-0  DuckDB          GROUP BY        3.2
-1     SQL    Server GROUP BY       17.2
-2  DuckDB            LAG()       23.9
-3     SQL      Server LAG()      181.3
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>Engine</th>
+      <th>Query</th>
+      <th>Time (ms)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>DuckDB</td>
+      <td>GROUP BY</td>
+      <td>3.2</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>SQL</td>
+      <td>Server GROUP BY</td>
+      <td>17.2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>DuckDB</td>
+      <td>LAG()</td>
+      <td>23.9</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>SQL</td>
+      <td>Server LAG()</td>
+      <td>181.3</td>
+    </tr>
+  </tbody>
+</table>
 
 ## Querying Files — DuckDB vs Polars vs Pandas
 
@@ -1023,14 +2024,54 @@ DuckDB reads Parquet directly from disk with a SQL SELECT — no intermediate lo
 duck.execute("SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet' LIMIT 5").df()
 ```
 
-```text
-   symbol        date  close   volume
-0  ABI.BR  2021-01-04  57.21  1513937
-1  ABI.BR  2021-01-05  57.18  1382722
-2  ABI.BR  2021-01-06  58.77  1370204
-3  ABI.BR  2021-01-07  58.40  1469911
-4  ABI.BR  2021-01-08  57.86  1428681
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ABI.BR</td>
+      <td>2021-01-04</td>
+      <td>57.21</td>
+      <td>1513937</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ABI.BR</td>
+      <td>2021-01-05</td>
+      <td>57.18</td>
+      <td>1382722</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ABI.BR</td>
+      <td>2021-01-06</td>
+      <td>58.77</td>
+      <td>1370204</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ABI.BR</td>
+      <td>2021-01-07</td>
+      <td>58.40</td>
+      <td>1469911</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ABI.BR</td>
+      <td>2021-01-08</td>
+      <td>57.86</td>
+      <td>1428681</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Polars — read Parquet file with pl.read_parquet()
 
@@ -1040,14 +2081,54 @@ duck.execute("SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/d
 pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").select("symbol", "date", "close", "volume").head(5)
 ```
 
-```text
-   symbol                 date      close   volume
-0  ABI.BR  2021-01-04 00:00:00  57.210000  1513937
-1  ABI.BR  2021-01-05 00:00:00  57.180000  1382722
-2  ABI.BR  2021-01-06 00:00:00  58.770000  1370204
-3  ABI.BR  2021-01-07 00:00:00  58.400000  1469911
-4  ABI.BR  2021-01-08 00:00:00  57.860000  1428681
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ABI.BR</td>
+      <td>2021-01-04 00:00:00</td>
+      <td>57.210000</td>
+      <td>1513937</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ABI.BR</td>
+      <td>2021-01-05 00:00:00</td>
+      <td>57.180000</td>
+      <td>1382722</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ABI.BR</td>
+      <td>2021-01-06 00:00:00</td>
+      <td>58.770000</td>
+      <td>1370204</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ABI.BR</td>
+      <td>2021-01-07 00:00:00</td>
+      <td>58.400000</td>
+      <td>1469911</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ABI.BR</td>
+      <td>2021-01-08 00:00:00</td>
+      <td>57.860000</td>
+      <td>1428681</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Pandas — read Parquet file with pd.read_parquet()
 
@@ -1057,14 +2138,54 @@ pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").select
 pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", columns=["symbol", "date", "close", "volume"]).head(5)
 ```
 
-```text
-   symbol        date  close   volume
-0  ABI.BR  2021-01-04  57.21  1513937
-1  ABI.BR  2021-01-05  57.18  1382722
-2  ABI.BR  2021-01-06  58.77  1370204
-3  ABI.BR  2021-01-07  58.40  1469911
-4  ABI.BR  2021-01-08  57.86  1428681
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ABI.BR</td>
+      <td>2021-01-04</td>
+      <td>57.21</td>
+      <td>1513937</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ABI.BR</td>
+      <td>2021-01-05</td>
+      <td>57.18</td>
+      <td>1382722</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ABI.BR</td>
+      <td>2021-01-06</td>
+      <td>58.77</td>
+      <td>1370204</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ABI.BR</td>
+      <td>2021-01-07</td>
+      <td>58.40</td>
+      <td>1469911</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ABI.BR</td>
+      <td>2021-01-08</td>
+      <td>57.86</td>
+      <td>1428681</td>
+    </tr>
+  </tbody>
+</table>
 
 ### Read CSV
 
@@ -1076,14 +2197,54 @@ DuckDB auto-detects CSV schema (delimiter, types, header) and reads the file dir
 duck.execute("SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv' LIMIT 5").df()
 ```
 
-```text
-   symbol        date  close   volume
-0  ABI.BR  2021-01-04  57.21  1513937
-1  ABI.BR  2021-01-05  57.18  1382722
-2  ABI.BR  2021-01-06  58.77  1370204
-3  ABI.BR  2021-01-07  58.40  1469911
-4  ABI.BR  2021-01-08  57.86  1428681
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ABI.BR</td>
+      <td>2021-01-04</td>
+      <td>57.21</td>
+      <td>1513937</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ABI.BR</td>
+      <td>2021-01-05</td>
+      <td>57.18</td>
+      <td>1382722</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ABI.BR</td>
+      <td>2021-01-06</td>
+      <td>58.77</td>
+      <td>1370204</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ABI.BR</td>
+      <td>2021-01-07</td>
+      <td>58.40</td>
+      <td>1469911</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ABI.BR</td>
+      <td>2021-01-08</td>
+      <td>57.86</td>
+      <td>1428681</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Polars — read CSV file with pl.read_csv()
 
@@ -1093,14 +2254,54 @@ duck.execute("SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/d
 pl.read_csv("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv").select("symbol", "date", "close", "volume").head(5)
 ```
 
-```text
-   symbol        date      close   volume
-0  ABI.BR  2021-01-04  57.210000  1513937
-1  ABI.BR  2021-01-05  57.180000  1382722
-2  ABI.BR  2021-01-06  58.770000  1370204
-3  ABI.BR  2021-01-07  58.400000  1469911
-4  ABI.BR  2021-01-08  57.860000  1428681
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ABI.BR</td>
+      <td>2021-01-04</td>
+      <td>57.210000</td>
+      <td>1513937</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ABI.BR</td>
+      <td>2021-01-05</td>
+      <td>57.180000</td>
+      <td>1382722</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ABI.BR</td>
+      <td>2021-01-06</td>
+      <td>58.770000</td>
+      <td>1370204</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ABI.BR</td>
+      <td>2021-01-07</td>
+      <td>58.400000</td>
+      <td>1469911</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ABI.BR</td>
+      <td>2021-01-08</td>
+      <td>57.860000</td>
+      <td>1428681</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Pandas — read CSV file with pd.read_csv()
 
@@ -1110,14 +2311,54 @@ pl.read_csv("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv").select("symbol
 pd.read_csv("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv", usecols=["symbol", "date", "close", "volume"]).head(5)
 ```
 
-```text
-   symbol        date  close   volume
-0  ABI.BR  2021-01-04  57.21  1513937
-1  ABI.BR  2021-01-05  57.18  1382722
-2  ABI.BR  2021-01-06  58.77  1370204
-3  ABI.BR  2021-01-07  58.40  1469911
-4  ABI.BR  2021-01-08  57.86  1428681
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ABI.BR</td>
+      <td>2021-01-04</td>
+      <td>57.21</td>
+      <td>1513937</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ABI.BR</td>
+      <td>2021-01-05</td>
+      <td>57.18</td>
+      <td>1382722</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ABI.BR</td>
+      <td>2021-01-06</td>
+      <td>58.77</td>
+      <td>1370204</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ABI.BR</td>
+      <td>2021-01-07</td>
+      <td>58.40</td>
+      <td>1469911</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ABI.BR</td>
+      <td>2021-01-08</td>
+      <td>57.86</td>
+      <td>1428681</td>
+    </tr>
+  </tbody>
+</table>
 
 ### Filter rows
 
@@ -1129,14 +2370,54 @@ DuckDB pushes the `WHERE` predicate into the Parquet reader — rows that don't 
 duck.execute("SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet' WHERE symbol = 'SAP.DE' ORDER BY date DESC LIMIT 5").df()
 ```
 
-```text
-   symbol        date   close   volume
-0  SAP.DE  2026-03-12  166.52   806722
-1  SAP.DE  2026-03-11  165.44  2953782
-2  SAP.DE  2026-03-10  169.60  3187246
-3  SAP.DE  2026-03-09  171.88  1990823
-4  SAP.DE  2026-03-06  172.74  3347221
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>SAP.DE</td>
+      <td>2026-03-12</td>
+      <td>166.52</td>
+      <td>806722</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>SAP.DE</td>
+      <td>2026-03-11</td>
+      <td>165.44</td>
+      <td>2953782</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>SAP.DE</td>
+      <td>2026-03-10</td>
+      <td>169.60</td>
+      <td>3187246</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>SAP.DE</td>
+      <td>2026-03-09</td>
+      <td>171.88</td>
+      <td>1990823</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>SAP.DE</td>
+      <td>2026-03-06</td>
+      <td>172.74</td>
+      <td>3347221</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Polars — filter with filter() and select()
 
@@ -1146,14 +2427,54 @@ duck.execute("SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/d
 pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").filter(pl.col("symbol") == "SAP.DE").select("symbol", "date", "close", "volume").sort("date", descending=True).head(5)
 ```
 
-```text
-   symbol                 date       close   volume
-0  SAP.DE  2026-03-12 00:00:00  166.520000   806722
-1  SAP.DE  2026-03-11 00:00:00  165.440000  2953782
-2  SAP.DE  2026-03-10 00:00:00  169.600000  3187246
-3  SAP.DE  2026-03-09 00:00:00  171.880000  1990823
-4  SAP.DE  2026-03-06 00:00:00  172.740000  3347221
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>SAP.DE</td>
+      <td>2026-03-12 00:00:00</td>
+      <td>166.520000</td>
+      <td>806722</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>SAP.DE</td>
+      <td>2026-03-11 00:00:00</td>
+      <td>165.440000</td>
+      <td>2953782</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>SAP.DE</td>
+      <td>2026-03-10 00:00:00</td>
+      <td>169.600000</td>
+      <td>3187246</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>SAP.DE</td>
+      <td>2026-03-09 00:00:00</td>
+      <td>171.880000</td>
+      <td>1990823</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>SAP.DE</td>
+      <td>2026-03-06 00:00:00</td>
+      <td>172.740000</td>
+      <td>3347221</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Pandas — filter with boolean indexing
 
@@ -1164,14 +2485,54 @@ df = pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", c
 df[df["symbol"] == "SAP.DE"].sort_values("date", ascending=False).head(5)
 ```
 
-```text
-         symbol        date   close   volume
-57061  SAP.DE  2026-03-12  166.52   806722
-57060  SAP.DE  2026-03-11  165.44  2953782
-57059  SAP.DE  2026-03-10  169.60  3187246
-57058  SAP.DE  2026-03-09  171.88  1990823
-57057  SAP.DE  2026-03-06  172.74  3347221
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>57061</th>
+      <td>SAP.DE</td>
+      <td>2026-03-12</td>
+      <td>166.52</td>
+      <td>806722</td>
+    </tr>
+    <tr>
+      <th>57060</th>
+      <td>SAP.DE</td>
+      <td>2026-03-11</td>
+      <td>165.44</td>
+      <td>2953782</td>
+    </tr>
+    <tr>
+      <th>57059</th>
+      <td>SAP.DE</td>
+      <td>2026-03-10</td>
+      <td>169.60</td>
+      <td>3187246</td>
+    </tr>
+    <tr>
+      <th>57058</th>
+      <td>SAP.DE</td>
+      <td>2026-03-09</td>
+      <td>171.88</td>
+      <td>1990823</td>
+    </tr>
+    <tr>
+      <th>57057</th>
+      <td>SAP.DE</td>
+      <td>2026-03-06</td>
+      <td>172.74</td>
+      <td>3347221</td>
+    </tr>
+  </tbody>
+</table>
 
 ### Group and aggregate
 
@@ -1186,19 +2547,89 @@ duck.execute("""
     GROUP BY symbol ORDER BY total_volume DESC LIMIT 10""").df()
 ```
 
-```text
-       symbol  days  avg_close  total_volume
-0      ISP.MI  1321       3.15  1.157045e+11
-1      SAN.MC  1329       4.43  5.551364e+10
-2     ENEL.MI  1321       6.82  3.260056e+10
-3     BBVA.MC  1329       8.65  2.213377e+10
-4      UCG.MI  1321      28.46  1.836680e+10
-5      ENI.MI  1321      13.40  1.714157e+10
-6     INGA.AS  1331      14.04  1.704158e+10
-7      IBE.MC  1329      12.26  1.599430e+10
-8      DTE.DE  1324      22.43  1.002941e+10
-9  NDA-FI.HE  1306      10.85  7.020343e+09
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>days</th>
+      <th>avg_close</th>
+      <th>total_volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ISP.MI</td>
+      <td>1321</td>
+      <td>3.15</td>
+      <td>1.157045e+11</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>SAN.MC</td>
+      <td>1329</td>
+      <td>4.43</td>
+      <td>5.551364e+10</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ENEL.MI</td>
+      <td>1321</td>
+      <td>6.82</td>
+      <td>3.260056e+10</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>BBVA.MC</td>
+      <td>1329</td>
+      <td>8.65</td>
+      <td>2.213377e+10</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>UCG.MI</td>
+      <td>1321</td>
+      <td>28.46</td>
+      <td>1.836680e+10</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>ENI.MI</td>
+      <td>1321</td>
+      <td>13.40</td>
+      <td>1.714157e+10</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>INGA.AS</td>
+      <td>1331</td>
+      <td>14.04</td>
+      <td>1.704158e+10</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>IBE.MC</td>
+      <td>1329</td>
+      <td>12.26</td>
+      <td>1.599430e+10</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>DTE.DE</td>
+      <td>1324</td>
+      <td>22.43</td>
+      <td>1.002941e+10</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>NDA-FI.HE</td>
+      <td>1306</td>
+      <td>10.85</td>
+      <td>7.020343e+09</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Polars — aggregate with group_by() and agg()
 
@@ -1212,19 +2643,89 @@ pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").group_
 ).sort("total_volume", descending=True).head(10)
 ```
 
-```text
-       symbol  days  avg_close  total_volume
-0      ISP.MI  1321   3.147987  115704541969
-1      SAN.MC  1329   4.425848   55513641918
-2     ENEL.MI  1321   6.820438   32600561934
-3     BBVA.MC  1329   8.651954   22133773194
-4      UCG.MI  1321  28.457104   18366801099
-5      ENI.MI  1321  13.397625   17141570967
-6     INGA.AS  1331  14.038188   17041577555
-7      IBE.MC  1329  12.255312   15994295949
-8      DTE.DE  1324  22.430097   10029411390
-9  NDA-FI.HE  1306  10.848079    7020342991
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>days</th>
+      <th>avg_close</th>
+      <th>total_volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ISP.MI</td>
+      <td>1321</td>
+      <td>3.147987</td>
+      <td>115704541969</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>SAN.MC</td>
+      <td>1329</td>
+      <td>4.425848</td>
+      <td>55513641918</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ENEL.MI</td>
+      <td>1321</td>
+      <td>6.820438</td>
+      <td>32600561934</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>BBVA.MC</td>
+      <td>1329</td>
+      <td>8.651954</td>
+      <td>22133773194</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>UCG.MI</td>
+      <td>1321</td>
+      <td>28.457104</td>
+      <td>18366801099</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>ENI.MI</td>
+      <td>1321</td>
+      <td>13.397625</td>
+      <td>17141570967</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>INGA.AS</td>
+      <td>1331</td>
+      <td>14.038188</td>
+      <td>17041577555</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>IBE.MC</td>
+      <td>1329</td>
+      <td>12.255312</td>
+      <td>15994295949</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>DTE.DE</td>
+      <td>1324</td>
+      <td>22.430097</td>
+      <td>10029411390</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>NDA-FI.HE</td>
+      <td>1306</td>
+      <td>10.848079</td>
+      <td>7020342991</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Pandas — aggregate with groupby() and agg()
 
@@ -1239,20 +2740,78 @@ df.groupby("symbol").agg(
 ).sort_values("total_volume", ascending=False).head(10)
 ```
 
-```text
-            days  avg_close  total_volume
-symbol
-ISP.MI      1321   3.147987  115704541969
-SAN.MC      1329   4.425848   55513641918
-ENEL.MI     1321   6.820438   32600561934
-BBVA.MC     1329   8.651954   22133773194
-UCG.MI      1321  28.457104   18366801099
-ENI.MI      1321  13.397625   17141570967
-INGA.AS     1331  14.038188   17041577555
-IBE.MC      1329  12.255312   15994295949
-DTE.DE      1324  22.430097   10029411390
-NDA-FI.HE   1306  10.848079    7020342991
-```
+<table>
+  <thead>
+    <tr>
+      <th>symbol</th>
+      <th>days</th>
+      <th>avg_close</th>
+      <th>total_volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>ISP.MI</th>
+      <td>1321</td>
+      <td>3.147987</td>
+      <td>115704541969</td>
+    </tr>
+    <tr>
+      <th>SAN.MC</th>
+      <td>1329</td>
+      <td>4.425848</td>
+      <td>55513641918</td>
+    </tr>
+    <tr>
+      <th>ENEL.MI</th>
+      <td>1321</td>
+      <td>6.820438</td>
+      <td>32600561934</td>
+    </tr>
+    <tr>
+      <th>BBVA.MC</th>
+      <td>1329</td>
+      <td>8.651954</td>
+      <td>22133773194</td>
+    </tr>
+    <tr>
+      <th>UCG.MI</th>
+      <td>1321</td>
+      <td>28.457104</td>
+      <td>18366801099</td>
+    </tr>
+    <tr>
+      <th>ENI.MI</th>
+      <td>1321</td>
+      <td>13.397625</td>
+      <td>17141570967</td>
+    </tr>
+    <tr>
+      <th>INGA.AS</th>
+      <td>1331</td>
+      <td>14.038188</td>
+      <td>17041577555</td>
+    </tr>
+    <tr>
+      <th>IBE.MC</th>
+      <td>1329</td>
+      <td>12.255312</td>
+      <td>15994295949</td>
+    </tr>
+    <tr>
+      <th>DTE.DE</th>
+      <td>1324</td>
+      <td>22.430097</td>
+      <td>10029411390</td>
+    </tr>
+    <tr>
+      <th>NDA-FI.HE</th>
+      <td>1306</td>
+      <td>10.848079</td>
+      <td>7020342991</td>
+    </tr>
+  </tbody>
+</table>
 
 ### Select specific columns from file
 
@@ -1264,14 +2823,42 @@ Standard SQL column projection — only listed columns are read from the Parquet
 duck.execute("SELECT symbol, close FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet' LIMIT 5").df()
 ```
 
-```text
-   symbol  close
-0  ABI.BR  57.21
-1  ABI.BR  57.18
-2  ABI.BR  58.77
-3  ABI.BR  58.40
-4  ABI.BR  57.86
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>close</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ABI.BR</td>
+      <td>57.21</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ABI.BR</td>
+      <td>57.18</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ABI.BR</td>
+      <td>58.77</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ABI.BR</td>
+      <td>58.40</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ABI.BR</td>
+      <td>57.86</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Polars — select columns with select()
 
@@ -1281,14 +2868,42 @@ duck.execute("SELECT symbol, close FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx5
 pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").select("symbol", "close").head(5)
 ```
 
-```text
-   symbol      close
-0  ABI.BR  57.210000
-1  ABI.BR  57.180000
-2  ABI.BR  58.770000
-3  ABI.BR  58.400000
-4  ABI.BR  57.860000
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>close</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ABI.BR</td>
+      <td>57.210000</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ABI.BR</td>
+      <td>57.180000</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ABI.BR</td>
+      <td>58.770000</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ABI.BR</td>
+      <td>58.400000</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ABI.BR</td>
+      <td>57.860000</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Pandas — select columns with usecols
 
@@ -1298,14 +2913,42 @@ pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").select
 pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", columns=["symbol", "close"]).head(5)
 ```
 
-```text
-   symbol  close
-0  ABI.BR  57.21
-1  ABI.BR  57.18
-2  ABI.BR  58.77
-3  ABI.BR  58.40
-4  ABI.BR  57.86
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>close</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ABI.BR</td>
+      <td>57.21</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ABI.BR</td>
+      <td>57.18</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ABI.BR</td>
+      <td>58.77</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ABI.BR</td>
+      <td>58.40</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ABI.BR</td>
+      <td>57.86</td>
+    </tr>
+  </tbody>
+</table>
 
 ### Sort and limit directly from file
 
@@ -1319,14 +2962,48 @@ pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", column
 duck.execute("SELECT symbol, date, close FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet' ORDER BY close DESC LIMIT 5").df()
 ```
 
-```text
-     symbol        date   close
-0    RMS.PA  2025-02-14  2839.0
-1    RMS.PA  2025-02-13  2816.0
-2    RMS.PA  2025-02-17  2809.0
-3    RMS.PA  2025-02-18  2806.0
-4  ADYEN.AS  2021-08-24  2766.0
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>RMS.PA</td>
+      <td>2025-02-14</td>
+      <td>2839.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>RMS.PA</td>
+      <td>2025-02-13</td>
+      <td>2816.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>RMS.PA</td>
+      <td>2025-02-17</td>
+      <td>2809.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>RMS.PA</td>
+      <td>2025-02-18</td>
+      <td>2806.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ADYEN.AS</td>
+      <td>2021-08-24</td>
+      <td>2766.0</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Polars — sort with sort() and head()
 
@@ -1338,14 +3015,48 @@ duck.execute("SELECT symbol, date, close FROM 'C:/Users/aperi/DEV/LANG/data/euro
 pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").select("symbol", "date", "close").sort("close", descending=True).head(5)
 ```
 
-```text
-     symbol                 date         close
-0    RMS.PA  2025-02-14 00:00:00  2839.000000
-1    RMS.PA  2025-02-13 00:00:00  2816.000000
-2    RMS.PA  2025-02-17 00:00:00  2809.000000
-3    RMS.PA  2025-02-18 00:00:00  2806.000000
-4  ADYEN.AS  2021-08-24 00:00:00  2766.000000
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>RMS.PA</td>
+      <td>2025-02-14 00:00:00</td>
+      <td>2839.000000</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>RMS.PA</td>
+      <td>2025-02-13 00:00:00</td>
+      <td>2816.000000</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>RMS.PA</td>
+      <td>2025-02-17 00:00:00</td>
+      <td>2809.000000</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>RMS.PA</td>
+      <td>2025-02-18 00:00:00</td>
+      <td>2806.000000</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ADYEN.AS</td>
+      <td>2021-08-24 00:00:00</td>
+      <td>2766.000000</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Pandas — sort with sort_values() and head()
 
@@ -1357,14 +3068,48 @@ pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").select
 pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", columns=["symbol", "date", "close"]).sort_values("close", ascending=False).head(5)
 ```
 
-```text
-        symbol        date   close
-51473   RMS.PA  2025-02-14  2839.0
-51472   RMS.PA  2025-02-13  2816.0
-51474   RMS.PA  2025-02-17  2809.0
-51475   RMS.PA  2025-02-18  2806.0
-4150  ADYEN.AS  2021-08-24  2766.0
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>51473</th>
+      <td>RMS.PA</td>
+      <td>2025-02-14</td>
+      <td>2839.0</td>
+    </tr>
+    <tr>
+      <th>51472</th>
+      <td>RMS.PA</td>
+      <td>2025-02-13</td>
+      <td>2816.0</td>
+    </tr>
+    <tr>
+      <th>51474</th>
+      <td>RMS.PA</td>
+      <td>2025-02-17</td>
+      <td>2809.0</td>
+    </tr>
+    <tr>
+      <th>51475</th>
+      <td>RMS.PA</td>
+      <td>2025-02-18</td>
+      <td>2806.0</td>
+    </tr>
+    <tr>
+      <th>4150</th>
+      <td>ADYEN.AS</td>
+      <td>2021-08-24</td>
+      <td>2766.0</td>
+    </tr>
+  </tbody>
+</table>
 
 ### Multiple filters (AND / OR) directly from file
 
@@ -1382,14 +3127,54 @@ duck.execute("""
     ORDER BY date DESC LIMIT 5""").df()
 ```
 
-```text
-   symbol        date   close  volume
-0  ASML.AS  2026-03-12  1190.8  128223
-1  ASML.AS  2026-03-11  1198.8  562904
-2  ASML.AS  2026-03-10  1200.0  800815
-3  ASML.AS  2026-03-09  1147.6  689086
-4  ASML.AS  2026-03-06  1147.0  857271
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ASML.AS</td>
+      <td>2026-03-12</td>
+      <td>1190.8</td>
+      <td>128223</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ASML.AS</td>
+      <td>2026-03-11</td>
+      <td>1198.8</td>
+      <td>562904</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ASML.AS</td>
+      <td>2026-03-10</td>
+      <td>1200.0</td>
+      <td>800815</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ASML.AS</td>
+      <td>2026-03-09</td>
+      <td>1147.6</td>
+      <td>689086</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ASML.AS</td>
+      <td>2026-03-06</td>
+      <td>1147.0</td>
+      <td>857271</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Polars — multi-condition filter with & and |
 
@@ -1403,14 +3188,54 @@ pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").filter
 ).select("symbol", "date", "close", "volume").sort("date", descending=True).head(5)
 ```
 
-```text
-   symbol                 date         close  volume
-0  ASML.AS  2026-03-12 00:00:00  1190.800000  128223
-1  ASML.AS  2026-03-11 00:00:00  1198.800000  562904
-2  ASML.AS  2026-03-10 00:00:00  1200.000000  800815
-3  ASML.AS  2026-03-09 00:00:00  1147.600000  689086
-4  ASML.AS  2026-03-06 00:00:00  1147.000000  857271
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ASML.AS</td>
+      <td>2026-03-12 00:00:00</td>
+      <td>1190.800000</td>
+      <td>128223</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ASML.AS</td>
+      <td>2026-03-11 00:00:00</td>
+      <td>1198.800000</td>
+      <td>562904</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ASML.AS</td>
+      <td>2026-03-10 00:00:00</td>
+      <td>1200.000000</td>
+      <td>800815</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ASML.AS</td>
+      <td>2026-03-09 00:00:00</td>
+      <td>1147.600000</td>
+      <td>689086</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ASML.AS</td>
+      <td>2026-03-06 00:00:00</td>
+      <td>1147.000000</td>
+      <td>857271</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Pandas — multi-condition filter with & and |
 
@@ -1423,14 +3248,54 @@ df = pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", c
 df[(df["symbol"] == "ASML.AS") & (df["close"] > 700)].sort_values("date", ascending=False).head(5)
 ```
 
-```text
-        symbol        date   close  volume
-11964  ASML.AS  2026-03-12  1190.8  128223
-11963  ASML.AS  2026-03-11  1198.8  562904
-11962  ASML.AS  2026-03-10  1200.0  800815
-11961  ASML.AS  2026-03-09  1147.6  689086
-11960  ASML.AS  2026-03-06  1147.0  857271
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>11964</th>
+      <td>ASML.AS</td>
+      <td>2026-03-12</td>
+      <td>1190.8</td>
+      <td>128223</td>
+    </tr>
+    <tr>
+      <th>11963</th>
+      <td>ASML.AS</td>
+      <td>2026-03-11</td>
+      <td>1198.8</td>
+      <td>562904</td>
+    </tr>
+    <tr>
+      <th>11962</th>
+      <td>ASML.AS</td>
+      <td>2026-03-10</td>
+      <td>1200.0</td>
+      <td>800815</td>
+    </tr>
+    <tr>
+      <th>11961</th>
+      <td>ASML.AS</td>
+      <td>2026-03-09</td>
+      <td>1147.6</td>
+      <td>689086</td>
+    </tr>
+    <tr>
+      <th>11960</th>
+      <td>ASML.AS</td>
+      <td>2026-03-06</td>
+      <td>1147.0</td>
+      <td>857271</td>
+    </tr>
+  </tbody>
+</table>
 
 ### Add computed column directly from file
 
@@ -1448,14 +3313,60 @@ duck.execute("""
     ORDER BY daily_range DESC LIMIT 5""").df()
 ```
 
-```text
-   symbol        date    high     low  daily_range
-0  ASML.AS  2024-10-15   804.6   665.0        139.6
-1  ASML.AS  2026-01-28  1309.0  1185.4        123.6
-2  ASML.AS  2026-02-26  1304.3  1210.8         93.5
-3  ASML.AS  2024-08-05   749.9   657.0         92.9
-4  ASML.AS  2025-04-07   596.2   508.4         87.8
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>high</th>
+      <th>low</th>
+      <th>daily_range</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ASML.AS</td>
+      <td>2024-10-15</td>
+      <td>804.6</td>
+      <td>665.0</td>
+      <td>139.6</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ASML.AS</td>
+      <td>2026-01-28</td>
+      <td>1309.0</td>
+      <td>1185.4</td>
+      <td>123.6</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ASML.AS</td>
+      <td>2026-02-26</td>
+      <td>1304.3</td>
+      <td>1210.8</td>
+      <td>93.5</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ASML.AS</td>
+      <td>2024-08-05</td>
+      <td>749.9</td>
+      <td>657.0</td>
+      <td>92.9</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ASML.AS</td>
+      <td>2025-04-07</td>
+      <td>596.2</td>
+      <td>508.4</td>
+      <td>87.8</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Polars — computed column with with_columns()
 
@@ -1471,14 +3382,60 @@ pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").filter
 ).select("symbol", "date", "high", "low", "daily_range").sort("daily_range", descending=True).head(5)
 ```
 
-```text
-   symbol                 date         high          low  daily_range
-0  ASML.AS  2024-10-15 00:00:00   804.600000   665.000000      139.600000
-1  ASML.AS  2026-01-28 00:00:00  1309.000000  1185.400000      123.600000
-2  ASML.AS  2026-02-26 00:00:00  1304.300000  1210.800000       93.500000
-3  ASML.AS  2024-08-05 00:00:00   749.900000   657.000000       92.900000
-4  ASML.AS  2025-04-07 00:00:00   596.200000   508.400000       87.800000
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>high</th>
+      <th>low</th>
+      <th>daily_range</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ASML.AS</td>
+      <td>2024-10-15 00:00:00</td>
+      <td>804.600000</td>
+      <td>665.000000</td>
+      <td>139.600000</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ASML.AS</td>
+      <td>2026-01-28 00:00:00</td>
+      <td>1309.000000</td>
+      <td>1185.400000</td>
+      <td>123.600000</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ASML.AS</td>
+      <td>2026-02-26 00:00:00</td>
+      <td>1304.300000</td>
+      <td>1210.800000</td>
+      <td>93.500000</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ASML.AS</td>
+      <td>2024-08-05 00:00:00</td>
+      <td>749.900000</td>
+      <td>657.000000</td>
+      <td>92.900000</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ASML.AS</td>
+      <td>2025-04-07 00:00:00</td>
+      <td>596.200000</td>
+      <td>508.400000</td>
+      <td>87.800000</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Pandas — computed column with assign()
 
@@ -1491,14 +3448,60 @@ df = pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", c
 df[df["symbol"] == "ASML.AS"].assign(daily_range=lambda d: round(d["high"] - d["low"], 2)).sort_values("daily_range", ascending=False).head(5)
 ```
 
-```text
-        symbol        date    high     low  daily_range
-11606  ASML.AS  2024-10-15   804.6   665.0        139.6
-11933  ASML.AS  2026-01-28  1309.0  1185.4        123.6
-11954  ASML.AS  2026-02-26  1304.3  1210.8         93.5
-11555  ASML.AS  2024-08-05   749.9   657.0         92.9
-11727  ASML.AS  2025-04-07   596.2   508.4         87.8
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>high</th>
+      <th>low</th>
+      <th>daily_range</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>11606</th>
+      <td>ASML.AS</td>
+      <td>2024-10-15</td>
+      <td>804.6</td>
+      <td>665.0</td>
+      <td>139.6</td>
+    </tr>
+    <tr>
+      <th>11933</th>
+      <td>ASML.AS</td>
+      <td>2026-01-28</td>
+      <td>1309.0</td>
+      <td>1185.4</td>
+      <td>123.6</td>
+    </tr>
+    <tr>
+      <th>11954</th>
+      <td>ASML.AS</td>
+      <td>2026-02-26</td>
+      <td>1304.3</td>
+      <td>1210.8</td>
+      <td>93.5</td>
+    </tr>
+    <tr>
+      <th>11555</th>
+      <td>ASML.AS</td>
+      <td>2024-08-05</td>
+      <td>749.9</td>
+      <td>657.0</td>
+      <td>92.9</td>
+    </tr>
+    <tr>
+      <th>11727</th>
+      <td>ASML.AS</td>
+      <td>2025-04-07</td>
+      <td>596.2</td>
+      <td>508.4</td>
+      <td>87.8</td>
+    </tr>
+  </tbody>
+</table>
 
 ### Window function directly from file (DuckDB only)
 
@@ -1519,19 +3522,100 @@ duck.execute("""
     ORDER BY date DESC LIMIT 10""").df()
 ```
 
-```text
-   symbol        date   close  prev_close  daily_return_pct
-0  ASML.AS  2026-03-12  1190.8      1198.8             -0.67
-1  ASML.AS  2026-03-11  1198.8      1200.0             -0.10
-2  ASML.AS  2026-03-10  1200.0      1147.6              4.57
-3  ASML.AS  2026-03-09  1147.6      1147.0              0.05
-4  ASML.AS  2026-03-06  1147.0      1186.0             -3.29
-5  ASML.AS  2026-03-05  1186.0      1199.8             -1.15
-6  ASML.AS  2026-03-04  1199.8      1161.8              3.27
-7  ASML.AS  2026-03-03  1161.8      1210.4             -4.02
-8  ASML.AS  2026-03-02  1210.4      1233.4             -1.86
-9  ASML.AS  2026-02-27  1233.4      1232.4              0.08
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>prev_close</th>
+      <th>daily_return_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ASML.AS</td>
+      <td>2026-03-12</td>
+      <td>1190.8</td>
+      <td>1198.8</td>
+      <td>-0.67</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ASML.AS</td>
+      <td>2026-03-11</td>
+      <td>1198.8</td>
+      <td>1200.0</td>
+      <td>-0.10</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ASML.AS</td>
+      <td>2026-03-10</td>
+      <td>1200.0</td>
+      <td>1147.6</td>
+      <td>4.57</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ASML.AS</td>
+      <td>2026-03-09</td>
+      <td>1147.6</td>
+      <td>1147.0</td>
+      <td>0.05</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ASML.AS</td>
+      <td>2026-03-06</td>
+      <td>1147.0</td>
+      <td>1186.0</td>
+      <td>-3.29</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>ASML.AS</td>
+      <td>2026-03-05</td>
+      <td>1186.0</td>
+      <td>1199.8</td>
+      <td>-1.15</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>ASML.AS</td>
+      <td>2026-03-04</td>
+      <td>1199.8</td>
+      <td>1161.8</td>
+      <td>3.27</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>ASML.AS</td>
+      <td>2026-03-03</td>
+      <td>1161.8</td>
+      <td>1210.4</td>
+      <td>-4.02</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>ASML.AS</td>
+      <td>2026-03-02</td>
+      <td>1210.4</td>
+      <td>1233.4</td>
+      <td>-1.86</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>ASML.AS</td>
+      <td>2026-02-27</td>
+      <td>1233.4</td>
+      <td>1232.4</td>
+      <td>0.08</td>
+    </tr>
+  </tbody>
+</table>
 
 #### Polars — equivalent with shift() (must load data first)
 
@@ -1549,19 +3633,100 @@ pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").filter
 ).select("symbol", "date", "close", "prev_close", "daily_return_pct").sort("date", descending=True).head(10)
 ```
 
-```text
-   symbol                 date         close    prev_close  daily_return_pct
-0  ASML.AS  2026-03-12 00:00:00  1190.800000  1198.800000           -0.670000
-1  ASML.AS  2026-03-11 00:00:00  1198.800000  1200.000000           -0.100000
-2  ASML.AS  2026-03-10 00:00:00  1200.000000  1147.600000            4.570000
-3  ASML.AS  2026-03-09 00:00:00  1147.600000  1147.000000            0.050000
-4  ASML.AS  2026-03-06 00:00:00  1147.000000  1186.000000           -3.290000
-5  ASML.AS  2026-03-05 00:00:00  1186.000000  1199.800000           -1.150000
-6  ASML.AS  2026-03-04 00:00:00  1199.800000  1161.800000            3.270000
-7  ASML.AS  2026-03-03 00:00:00  1161.800000  1210.400000           -4.020000
-8  ASML.AS  2026-03-02 00:00:00  1210.400000  1233.400000           -1.860000
-9  ASML.AS  2026-02-27 00:00:00  1233.400000  1232.400000            0.080000
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>symbol</th>
+      <th>date</th>
+      <th>close</th>
+      <th>prev_close</th>
+      <th>daily_return_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>ASML.AS</td>
+      <td>2026-03-12 00:00:00</td>
+      <td>1190.800000</td>
+      <td>1198.800000</td>
+      <td>-0.670000</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ASML.AS</td>
+      <td>2026-03-11 00:00:00</td>
+      <td>1198.800000</td>
+      <td>1200.000000</td>
+      <td>-0.100000</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>ASML.AS</td>
+      <td>2026-03-10 00:00:00</td>
+      <td>1200.000000</td>
+      <td>1147.600000</td>
+      <td>4.570000</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>ASML.AS</td>
+      <td>2026-03-09 00:00:00</td>
+      <td>1147.600000</td>
+      <td>1147.000000</td>
+      <td>0.050000</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>ASML.AS</td>
+      <td>2026-03-06 00:00:00</td>
+      <td>1147.000000</td>
+      <td>1186.000000</td>
+      <td>-3.290000</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>ASML.AS</td>
+      <td>2026-03-05 00:00:00</td>
+      <td>1186.000000</td>
+      <td>1199.800000</td>
+      <td>-1.150000</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>ASML.AS</td>
+      <td>2026-03-04 00:00:00</td>
+      <td>1199.800000</td>
+      <td>1161.800000</td>
+      <td>3.270000</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>ASML.AS</td>
+      <td>2026-03-03 00:00:00</td>
+      <td>1161.800000</td>
+      <td>1210.400000</td>
+      <td>-4.020000</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>ASML.AS</td>
+      <td>2026-03-02 00:00:00</td>
+      <td>1210.400000</td>
+      <td>1233.400000</td>
+      <td>-1.860000</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>ASML.AS</td>
+      <td>2026-02-27 00:00:00</td>
+      <td>1233.400000</td>
+      <td>1232.400000</td>
+      <td>0.080000</td>
+    </tr>
+  </tbody>
+</table>
 
 ### Performance — format comparison
 
@@ -1583,12 +3748,36 @@ for fmt, path in [("CSV", "C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv"),
 pd.DataFrame(results)
 ```
 
-```text
-    Format  Rows  Time (ms)
-0      CSV    50       59.8
-1  Parquet    50        3.1
-2     JSON    50       76.7
-```
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>Format</th>
+      <th>Rows</th>
+      <th>Time (ms)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>CSV</td>
+      <td>50</td>
+      <td>59.8</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Parquet</td>
+      <td>50</td>
+      <td>3.1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>JSON</td>
+      <td>50</td>
+      <td>76.7</td>
+    </tr>
+  </tbody>
+</table>
 
 ### DuckDB vs Polars vs Pandas — reference
 

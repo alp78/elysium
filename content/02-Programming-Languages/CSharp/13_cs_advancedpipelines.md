@@ -117,12 +117,14 @@ FINNHUB_KEY:     set
   'fontSize': '14px'
 }}}%%
 flowchart LR
-    F["TransformBlock\nFetch (3 concurrent)"] --> P["TransformBlock\nFormat (2 concurrent)"]
-    P --> A["ActionBlock\nPrint (1 sequential)"]
+    F["TransformBlock<br/>Fetch (3 concurrent)"] --> P["TransformBlock<br/>Format (2 concurrent)"]
+    P --> A["ActionBlock<br/>Print (1 sequential)"]
     style F fill:#292e42,stroke:#565f89
     style P fill:#292e42,stroke:#565f89
     style A fill:#292e42,stroke:#565f89
 ```
+
+This cell builds a three-stage pipeline for 8 European ADR symbols: a `TransformBlock` simulates a 100ms async fetch and returns a `(Symbol, Price)` tuple with up to 3 concurrent fetches, a second `TransformBlock` formats each result with a directional arrow (▲/▼) capped at 2 concurrent, and an `ActionBlock` prints each formatted string sequentially. `fetchBlock.Complete()` triggers the cascading shutdown via `PropagateCompletion`, and `await printBlock.Completion` ensures the cell blocks until all items have been printed.
 
 ```csharp
 var fetchBlock = new TransformBlock<string, (string Symbol, double Price)>(
@@ -186,6 +188,8 @@ A `BatchBlock` in TPL Dataflow collects individual items into fixed-size arrays 
 > [!tip] Batch size tuning
 > Small batches (10-50) minimize latency but increase per-batch overhead. Large batches (1000+) maximize throughput but increase memory usage and delay processing. For database bulk inserts, 500-1000 rows per batch typically hits the sweet spot. Measure with your actual workload.
 
+This cell posts 8 single-letter items ("A" through "H") into a `BatchBlock<string>` configured with a batch size of 3, linked to an `ActionBlock<string[]>` that prints each batch. The output shows two full batches of 3 and one partial batch of 2 — demonstrating that `batchBlock.Complete()` flushes the remainder even when it doesn't fill the batch size.
+
 ```csharp
 var batchBlock = new BatchBlock<string>(3); // emit arrays of 3
 
@@ -214,6 +218,8 @@ All batches processed.
 #### TPL Dataflow — multi-stage pipeline with real API
 
 Connects three stages with real HTTP calls: Fetch (I/O-bound, 2 concurrent) → Parse (CPU-bound, synchronous) → Display (terminal consumer). `PropagateCompletion` cascades shutdown through the chain so all stages drain and complete cleanly.
+
+This cell posts 4 European ADR symbols (`SAP`, `ASML`, `TTE`, `UL`) into a `fetchStage` `TransformBlock` that calls the Twelve Data `/quote` endpoint with up to 2 concurrent requests, returning a `(Symbol, Json)` tuple. A `parseStage` `TransformBlock` extracts `close` price and `percent_change` from the JSON, then a `resultStage` `ActionBlock` prints each result. The elapsed time in the output reflects the 2-at-a-time concurrency limit across 4 real HTTP calls.
 
 ```csharp
 var apiKey = TWELVE_DATA_KEY;
@@ -283,6 +289,8 @@ Done in 260ms
 
 `SemaphoreSlim(n)` limits how many tasks can run a critical section concurrently. `WaitAsync()` blocks if n tasks are already inside; `Release()` lets the next one in. `ConcurrentBag<T>` is a thread-safe unordered collection for collecting results from parallel tasks. Share one semaphore across all concurrent tasks — don't create one per call.
 
+This cell fetches prices for 8 symbols from Twelve Data, capping concurrency at 3 simultaneous requests via a `SemaphoreSlim(3)`. Each task awaits the semaphore before making its HTTP call and releases it in a `finally` block. `Task.WhenAll` waits for all 8 tasks to complete; the elapsed timestamps in the output show the first 3 completing together, then the next 3, then the last 2 — confirming the 3-at-a-time throttle.
+
 ```csharp
 var tdSymbols = new[] { "SAP", "ASML", "TTE", "UL", "DEO", "SNY", "NVS", "AZN" };
 var tdKey = TWELVE_DATA_KEY;
@@ -329,6 +337,8 @@ Fetched 8 quotes in 332ms (3 concurrent max)
 #### IAsyncEnumerable for paginated FRED API
 
 An async generator that fetches one page at a time from the FRED API and yields individual items via `yield return`. The consumer sees a clean `await foreach` stream — only one page is in memory at a time. `break` in the consumer stops further page fetching, making this safe for APIs with thousands of results.
+
+This cell defines `FetchFredSeriesAsync`, an async iterator that searches the FRED `/series/search` endpoint for `"GDP"` with a page size of 5, yielding up to 8 `(Id, Title)` tuples across multiple HTTP calls. The `await foreach` loop in the consumer prints each series ID and a truncated title; only the pages actually needed are fetched, not the full result set.
 
 ```csharp
 var fredKey = FRED_KEY;
@@ -397,6 +407,8 @@ This pattern combines `Channel<T>` (async producer-consumer queue) with parallel
 >
 > Create channels with `Channel.CreateBounded<T>(capacity)`. When the channel is full, `WriteAsync` awaits automatically — this backpressure slows producers to match consumer speed. Size the capacity to buffer a few seconds of throughput, not the entire dataset.
 
+This cell fetches quotes for 5 symbols from the Finnhub API using `Task.WhenAll` for concurrency, writing each `(Symbol, Price, Change)` tuple into a bounded `Channel<T>` with capacity 20. A single consumer reads via `ReadAllAsync()` and accumulates items into batches of 3, printing each full batch and flushing any remainder. The output shows one batch of 3 and one partial batch of 2, reflecting the order items arrived from concurrent HTTP calls.
+
 ```csharp
 var finnhubKey = FINNHUB_KEY;
 var finnhubSymbols = new[] { "SAP", "ASML", "TTE", "UL", "DEO" };
@@ -462,6 +474,8 @@ await producer;
 > Always set `UseShellExecute = false` and pass arguments as a structured `ArgumentList` or validated string — never interpolate raw user input into `Arguments`. After `WaitForExitAsync`, check `proc.ExitCode != 0` and read `stderr` to surface failures before continuing the pipeline.
 
 `Process.Start()` creates a new operating system process with separate memory space. `ProcessStartInfo` configures the executable, arguments, stdio redirection, and window behavior. Always read stdout/stderr **before** `WaitForExitAsync` — reading after can deadlock if the pipe buffer fills up. Always `Dispose` the process to release OS handles.
+
+This cell launches a Python child process that executes a one-liner emitting `{"source": "python", "value": 42}` as JSON on stdout. It reads stdout and stderr asynchronously before awaiting exit, checks the exit code, then parses the JSON back in C# with `JsonDocument` — demonstrating the full round-trip of spawning a cross-language process and consuming its structured output.
 
 ```csharp
 var pyCode = "import json; print(json.dumps({'source': 'python', 'value': 42}))";

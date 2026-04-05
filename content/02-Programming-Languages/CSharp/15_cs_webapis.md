@@ -275,12 +275,12 @@ Define `record` DTOs for request and response shapes, write handler functions th
   'textColor': '#c0caf5',
   'fontSize': '14px'
 }}}%%
-flowchart LR
-    C["HTTP Client\nrequests / httpx"] -->|"HTTP Request"| MW["ASP.NET Core\nMiddleware"]
-    MW --> R["Route matching\napp.Map*()"]
-    R --> V["Data Annotations\nIValidatableObject"]
-    V --> H["Handler function\n(pure C# function)"]
-    H -->|"Results.Ok()\nResults.NotFound()\nResults.Created()"| S["JSON Response\n200 / 201 / 404 / 409"]
+flowchart TD
+    C["HTTP Client<br/>HttpClient / httpx"] -->|"HTTP Request"| MW["ASP.NET Core<br/>Middleware"]
+    MW --> R["Route matching<br/>app.Map*()"]
+    R --> V["Data Annotations<br/>IValidatableObject"]
+    V --> H["Handler function<br/>pure C# function"]
+    H -->|"Results.Ok() / NotFound() / Created()"| S["JSON Response<br/>200 / 201 / 404 / 409"]
     V -->|"invalid input"| E["400 Bad Request"]
 ```
 
@@ -786,39 +786,20 @@ The checklist below maps every C# validation pattern to its Pydantic/Python equi
 
 Summary table of production best practices for C# API validation, mapped to Python/Pydantic equivalents.
 
-```csharp
-@"
-  Rule                                          C# Approach                    Python Equivalent
-  ───────────────────────────────────────────── ────────────────────────────── ──────────────────────────
-  Use typed DTOs, not Dictionary                record / class                 Pydantic BaseModel
-  Constrain every field                         [Range], [StringLength]        Field(gt=0, max_length=5)
-  Restrict to fixed values                      enum / [RegularExpression]     Literal[""BUY"",""SELL""]
-  Cross-field validation                        IValidatableObject             @model_validator
-  Per-field custom rules                        Custom [ValidationAttribute]   @field_validator
-  camelCase JSON output                         JsonNamingPolicy.CamelCase     Field(alias=""camelCase"")
-  Enum as string in JSON                        JsonStringEnumConverter        str, Enum
-  Immutable models                              record (init-only)             frozen=True
-  No implicit type coercion                     Built-in (C# is always strict) strict=True
-  Auto-generate API docs                        Swagger via AddSwaggerGen      model_json_schema()
-  Complex validation rules                      FluentValidation NuGet         @field_validator chains
-  Validate on model binding                     ASP.NET auto-validates         FastAPI auto-validates
-"
-```
-
-      Rule                                          C# Approach                    Python Equivalent
-      ───────────────────────────────────────────── ────────────────────────────── ──────────────────────────
-      Use typed DTOs, not Dictionary                record / class                 Pydantic BaseModel
-      Constrain every field                         [Range], [StringLength]        Field(gt=0, max_length=5)
-      Restrict to fixed values                      enum / [RegularExpression]     Literal["BUY","SELL"]
-      Cross-field validation                        IValidatableObject             @model_validator
-      Per-field custom rules                        Custom [ValidationAttribute]   @field_validator
-      camelCase JSON output                         JsonNamingPolicy.CamelCase     Field(alias="camelCase")
-      Enum as string in JSON                        JsonStringEnumConverter        str, Enum
-      Immutable models                              record (init-only)             frozen=True
-      No implicit type coercion                     Built-in (C# is always strict) strict=True
-      Auto-generate API docs                        Swagger via AddSwaggerGen      model_json_schema()
-      Complex validation rules                      FluentValidation NuGet         @field_validator chains
-      Validate on model binding                     ASP.NET auto-validates         FastAPI auto-validates
+| Rule | C# Approach | Python Equivalent |
+|---|---|---|
+| Use typed DTOs, not Dictionary | `record` / `class` | Pydantic `BaseModel` |
+| Constrain every field | `[Range]`, `[StringLength]` | `Field(gt=0, max_length=5)` |
+| Restrict to fixed values | `enum` / `[RegularExpression]` | `Literal["BUY","SELL"]` |
+| Cross-field validation | `IValidatableObject` | `@model_validator` |
+| Per-field custom rules | Custom `[ValidationAttribute]` | `@field_validator` |
+| camelCase JSON output | `JsonNamingPolicy.CamelCase` | `Field(alias="camelCase")` |
+| Enum as string in JSON | `JsonStringEnumConverter` | `str`, `Enum` |
+| Immutable models | `record` (init-only) | `frozen=True` |
+| No implicit type coercion | Built-in (C# is always strict) | `strict=True` |
+| Auto-generate API docs | Swagger via `AddSwaggerGen` | `model_json_schema()` |
+| Complex validation rules | FluentValidation NuGet | `@field_validator` chains |
+| Validate on model binding | ASP.NET auto-validates | FastAPI auto-validates |
 
 ## Summary
 

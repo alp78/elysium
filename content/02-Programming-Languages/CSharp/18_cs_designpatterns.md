@@ -820,19 +820,19 @@ IndexPipeline/
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    A["Which pattern?"] --> B{"Need exactly\none instance?"}
-    A --> C{"Need to create objects\nwithout knowing the class?"}
-    A --> D{"Need to notify\nmultiple listeners?"}
-    A --> E{"Need to swap\nalgorithms at runtime?"}
-    A --> F{"Need to add behavior\nwithout modifying a class?"}
-    A --> G{"Need to abstract\ndata access?"}
+    A["Which pattern?"] --> B{"Need exactly<br/>one instance?"}
+    A --> C{"Need to create objects<br/>without knowing the class?"}
+    A --> D{"Need to notify<br/>multiple listeners?"}
+    A --> E{"Need to swap<br/>algorithms at runtime?"}
+    A --> F{"Need to add behavior<br/>without modifying a class?"}
+    A --> G{"Need to abstract<br/>data access?"}
 
-    B -->|Yes| B1["<b>Singleton</b>\nLazy&lt;T&gt; + private ctor\nor AddSingleton&lt;T&gt;()"]
-    C -->|Yes| C1["<b>Factory</b>\nstatic Create() with\nswitch expression"]
-    D -->|Yes| D1["<b>Observer</b>\nevent Action&lt;T&gt;\n+= subscribe"]
-    E -->|Yes| E1["<b>Strategy</b>\ninterface + constructor\ninjection"]
-    F -->|Yes| F1["<b>Decorator</b>\nwrap via composition\nsame interface"]
-    G -->|Yes| G1["<b>Repository</b>\ninterface + DI\nswap impl in tests"]
+    B -->|Yes| B1["<b>Singleton</b><br/>Lazy‹T› + private ctor<br/>or AddSingleton‹T›()"]
+    C -->|Yes| C1["<b>Factory</b><br/>static Create() with<br/>switch expression"]
+    D -->|Yes| D1["<b>Observer</b><br/>event Action‹T›<br/>+= subscribe"]
+    E -->|Yes| E1["<b>Strategy</b><br/>interface + constructor<br/>injection"]
+    F -->|Yes| F1["<b>Decorator</b><br/>wrap via composition<br/>same interface"]
+    G -->|Yes| G1["<b>Repository</b><br/>interface + DI<br/>swap impl in tests"]
 ```
 
 > [!abstract]- C# Design Patterns Quick Reference

@@ -1,9 +1,9 @@
 ---
-tags: [infrastructure, terraform, iac]
+tags: [terraform, iac]
 aliases: [HCL, HashiCorp Configuration Language, HCL syntax, terraform syntax, tf syntax]
-description: "HCL (HashiCorp Configuration Language) syntax fundamentals — blocks, arguments, resource naming, file organization, and the difference between Terraform-internal and GCP names."
+description: "HCL (HashiCorp Configuration Language) syntax fundamentals — blocks, arguments, types, expressions, resource naming, file organization, functions reference, and the difference between Terraform-internal and GCP names."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-05
 status: complete
 ---
 
@@ -16,7 +16,7 @@ status: complete
 
 HashiCorp Configuration Language (HCL) is a declarative language designed by HashiCorp specifically for infrastructure-as-code. Unlike imperative scripts (bash, Python), you describe _what_ you want and Terraform figures out _how_ to create it. HCL files use the `.tf` extension.
 
-### Blocks and Arguments
+## Blocks and Arguments
 
 HCL has two structural elements:
 
@@ -25,7 +25,35 @@ HCL has two structural elements:
 
 Blocks can be nested. For example, a `resource` block may contain a `template` block, which contains a `containers` block, which contains `env` blocks.
 
-### File Naming and Organization
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    R["resource 'google_cloud_run_v2_service' 'dashboard'"]
+    T["template { }"]
+    C["containers { }"]
+    E1["env { name = 'DB_HOST' }"]
+    E2["env { name = 'DB_PORT' }"]
+    V["volumes { }"]
+
+    R --> T
+    T --> C
+    T --> V
+    C --> E1
+    C --> E2
+```
+
+## File Naming and Organization
 
 Terraform merges **all** `.tf` files in a directory into a single configuration. File names have **no impact** on behavior — you could rename `network.tf` to `dodo.tf` and everything would still work. Files are split purely for human readability and organization.
 
@@ -46,12 +74,13 @@ A typical file layout for a GCP project:
 
 ## Terraform Name vs GCP Name
 
-Every resource has two names:
+Every resource has two names. The first label after the resource type (`"allow_sql"`) is the Terraform-internal name — used only inside `.tf` files to reference this resource (e.g., `google_compute_firewall.allow_sql.id`). The `name` argument (`"allow-sql-from-airflow"`) is the actual name in GCP — what appears in the Console, `gcloud` commands, and API calls. They don't have to match.
 
-#### resource "type" "name" — Terraform-internal name vs GCP name
+### Naming Example
+
 ```hcl
-resource "google_compute_firewall" "allow_sql" {   # "allow_sql" = Terraform-internal name
-  name = "allow-sql-from-airflow"                          # "allow-sql-from-airflow" = actual name in GCP
+resource "google_compute_firewall" "allow_sql" {
+  name = "allow-sql-from-airflow"
 }
 ```
 
@@ -60,9 +89,7 @@ resource "google_compute_firewall" "allow_sql" {   # "allow_sql" = Terraform-int
 | `"allow_sql"` | Terraform only | Referencing this resource in other `.tf` files (e.g., `google_compute_firewall.allow_sql.id`) |
 | `"allow-sql-from-airflow"` | GCP | What appears in the Console, `gcloud` commands, and API calls |
 
-They don't have to match.
-
-### Block Types
+## Block Types
 
 The `variable` and `output` blocks below are covered in depth in [terraform-variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-variables-and-outputs), which extends HCL syntax with parameterization, type constraints, and validation rules.
 
@@ -78,20 +105,134 @@ The most common block types in Terraform:
 | `locals` | Defines computed values | `locals { sql_ip = resource.network_interface[0].network_ip }` |
 | `data` | Reads existing infrastructure (not created by this config) | `data "google_project" "current" {}` |
 
-### Declarative vs Imperative
+## Declarative vs Imperative
 
 Terraform is declarative: you describe the desired end state, and Terraform computes the steps to reach it. This is fundamentally different from imperative tools like bash scripts or Ansible playbooks, which describe the sequence of actions to perform.
 
 **Declarative (Terraform):** "There should be a VM named data-pipeline-sql with these properties."
 **Imperative (bash):** "Run `gcloud compute instances create data-pipeline-sql ...` with these flags."
 
-The declarative approach means Terraform can determine whether a resource already exists, needs updating, or needs to be recreated — and it can handle all three cases automatically.
+The declarative approach means Terraform can determine whether a resource already exists, needs updating, or needs to be recreated — and it can handle all three cases automatically. See [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy) for the workflow that turns declarative config into real infrastructure.
+
+## HCL Type System
+
+Every value in HCL has a type. Terraform uses types to validate variable inputs, enforce constraints, and determine how values can be combined in expressions. Understanding the type system is essential for writing correct `variable` blocks and `for` expressions. See [terraform-variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-variables-and-outputs) for type constraints in practice.
+
+### Primitive Types
+
+| Type | Description | Example |
+|---|---|---|
+| `string` | UTF-8 text | `"us-central1"` |
+| `number` | Integer or float (64-bit) | `3`, `3.14` |
+| `bool` | Boolean | `true`, `false` |
+
+Terraform automatically converts between primitives when unambiguous: `"42"` becomes `42` in a numeric context, and `true` becomes `"true"` in a string context.
+
+### Collection Types
+
+| Type | Description | Example |
+|---|---|---|
+| `list(type)` | Ordered sequence, all elements same type | `["a", "b", "c"]` |
+| `set(type)` | Unordered unique elements, all same type | `toset(["a", "b"])` |
+| `map(type)` | Key-value pairs, all values same type | `{ dev = "us-central1", prod = "us-east1" }` |
+
+Lists are indexed by position (`element(list, 0)`). Maps are indexed by key (`map["dev"]`). Sets have no index — iterate with `for_each`.
+
+> [!warning] Duplicate map keys silently discard earlier values
+> `{ a = 1, a = 2 }` evaluates to `{ a = 2 }` with no error. This can cause hard-to-debug issues when merging maps with `merge()`.
+
+> [!success] Use `keys()` and `length()` to verify map integrity after merges in `terraform console`.
+
+### Structural Types
+
+| Type | Description | Example |
+|---|---|---|
+| `object({...})` | Fixed set of named attributes, each with its own type | `object({ name = string, count = number })` |
+| `tuple([...])` | Fixed-length sequence, each element with its own type | `tuple([string, number, bool])` |
+
+Objects and tuples are used in `variable` type constraints when a collection needs mixed types. Objects support `optional()` attributes (Terraform 1.3+): `object({ name = string, tags = optional(map(string), {}) })`.
+
+### Special Types
+
+| Type | Description |
+|---|---|
+| `any` | Accepts any type — Terraform infers the actual type at runtime |
+| `null` | Absence of a value — used to conditionally omit arguments |
+
+`any` is useful for generic module inputs but loses type safety. Prefer explicit types where possible.
+
+## Expression Syntax
+
+HCL expressions go anywhere a value is expected — argument values, `locals` definitions, `output` blocks, and conditional logic. Expressions are evaluated at `terraform plan` time.
+
+### String Interpolation
+
+Embed expressions inside strings with `${}`:
+
+```hcl
+name = "${var.project_id}-${var.environment}-vpc"
+```
+
+For directive-based templates (loops and conditionals inside strings), use `%{}`:
+
+```hcl
+description = "%{if var.environment == "prod"}Production%{else}Non-production%{endif} VPC"
+```
+
+### Conditional Expressions
+
+The ternary operator selects between two values based on a boolean condition:
+
+```hcl
+machine_type = var.environment == "prod" ? "n2-standard-4" : "e2-medium"
+```
+
+Combine with `null` to conditionally omit an argument entirely — Terraform treats `null` as "use the provider default":
+
+```hcl
+min_tls_version = var.enforce_tls ? "TLS_1_2" : null
+```
+
+### For Expressions
+
+Transform collections by iterating over their elements. Produces a new list or map.
+
+```hcl
+upper_names = [for name in var.bucket_names : upper(name)]
+```
+
+Filter with an `if` clause:
+
+```hcl
+prod_instances = [for inst in var.instances : inst if inst.environment == "prod"]
+```
+
+Produce a map by separating key and value with `=>`:
+
+```hcl
+instance_map = { for inst in var.instances : inst.name => inst.zone }
+```
+
+### Splat Expressions
+
+Shorthand for extracting a single attribute from every element in a list:
+
+```hcl
+instance_ids = google_compute_instance.workers[*].instance_id
+```
+
+Equivalent to `[for inst in google_compute_instance.workers : inst.instance_id]`, but more concise. Works only on lists, not maps — use a `for` expression for maps.
 
 ## HCL Functions Reference
 
-All functions are available in any HCL expression context. Test them interactively with `terraform console`.
+All functions are available in any HCL expression context — inside `resource`, `variable`, `locals`, `output`, and `data` blocks.
+
+> [!tip] Interactive testing with `terraform console`
+> Run `terraform console` in any initialized Terraform directory to test expressions against live state and variables. Useful for debugging interpolation, type conversions, and complex `for` expressions before committing them to config files.
 
 ### String Functions
+
+Manipulate, search, and format string values. Commonly used for constructing resource names, parsing labels, and formatting output values.
 
 | Function | Signature | Example | Result |
 |----------|-----------|---------|--------|
@@ -113,9 +254,9 @@ All functions are available in any HCL expression context. Test them interactive
 | `trimprefix` | `trimprefix(str, prefix)` | `trimprefix("hello", "hel")` | `"lo"` |
 | `trimsuffix` | `trimsuffix(str, suffix)` | `trimsuffix("hello", "lo")` | `"hel"` |
 
----
-
 ### Collection Functions
+
+Work with lists, maps, sets, and tuples. Essential for `for_each` iteration, variable transformation, and merging configuration maps across modules.
 
 | Function | Signature | Example | Result |
 |----------|-----------|---------|--------|
@@ -145,9 +286,9 @@ All functions are available in any HCL expression context. Test them interactive
 | `alltrue` | `alltrue(list)` | `alltrue([true,true])` | `true` |
 | `anytrue` | `anytrue(list)` | `anytrue([false,true])` | `true` |
 
----
-
 ### Numeric Functions
+
+Arithmetic, rounding, and base conversion. Used for calculating resource counts, CIDR math inputs, and parsing non-decimal strings.
 
 | Function | Signature | Example | Result |
 |----------|-----------|---------|--------|
@@ -161,9 +302,9 @@ All functions are available in any HCL expression context. Test them interactive
 | `pow` | `pow(base, exp)` | `pow(2, 10)` | `1024` |
 | `parseint` | `parseint(str, base)` | `parseint("ff", 16)` | `255` |
 
----
-
 ### Date/Time Functions
+
+Generate and compare timestamps. Commonly used for setting expiration dates on resources, computing rotation schedules, and tagging resources with creation time.
 
 | Function | Signature | Example | Result |
 |----------|-----------|---------|--------|
@@ -172,9 +313,9 @@ All functions are available in any HCL expression context. Test them interactive
 | `timeadd` | `timeadd(timestamp, duration)` | `timeadd(timestamp(), "24h")` | tomorrow's timestamp |
 | `timecmp` | `timecmp(ts_a, ts_b)` | `timecmp("2026-01-01T00:00:00Z","2025-01-01T00:00:00Z")` | `1` |
 
----
-
 ### Filesystem Functions
+
+Read files, render templates, and check paths at plan time. `templatefile` is the primary way to inject variables into startup scripts, Cloud Init configs, and SQL migration files.
 
 | Function | Signature | Example | Result |
 |----------|-----------|---------|--------|
@@ -185,9 +326,9 @@ All functions are available in any HCL expression context. Test them interactive
 | `fileexists` | `fileexists(path)` | `fileexists("optional.tf")` | bool |
 | `pathexpand` | `pathexpand("~/.kube/config")` | — | expanded path string |
 
----
-
 ### Encoding Functions
+
+Serialize and deserialize between HCL objects and JSON, YAML, CSV, and base64 formats. `jsonencode` and `yamldecode` are the workhorses for passing structured data to GCP metadata fields and reading external config files.
 
 | Function | Signature | Example | Result |
 |----------|-----------|---------|--------|
@@ -202,9 +343,9 @@ All functions are available in any HCL expression context. Test them interactive
 | `textencodebase64` | `textencodebase64(str, enc)` | `textencodebase64("hi","UTF-16LE")` | base64 of re-encoded string |
 | `urlencode` | `urlencode(str)` | `urlencode("hello world")` | `"hello+world"` |
 
----
-
 ### IP / CIDR Functions
+
+Calculate subnet ranges, host addresses, and netmasks from CIDR notation. Used heavily in `network.tf` to carve a VPC CIDR into subnets without manual math.
 
 | Function | Signature | Example | Result |
 |----------|-----------|---------|--------|
@@ -214,9 +355,9 @@ All functions are available in any HCL expression context. Test them interactive
 | `cidrsubnets` | `cidrsubnets(prefix, newbits…)` | `cidrsubnets("10.0.0.0/8",8,8,8)` | list of 3 subnets |
 | `cidrcontains` | `cidrcontains(cidr, ip)` | `cidrcontains("10.0.0.0/8","10.1.2.3")` | `true` |
 
----
-
 ### Crypto / Hash Functions
+
+Generate hashes, UUIDs, and checksums. `filesha256` is commonly used to trigger redeployment when a source artifact (ZIP, JAR) changes. `uuid` generates a new value on every plan — use it only in `random_id` alternatives, not in resource arguments.
 
 | Function | Signature | Example | Result |
 |----------|-----------|---------|--------|
@@ -226,13 +367,18 @@ All functions are available in any HCL expression context. Test them interactive
 | `md5` | `md5(str)` | `md5("hello")` | hex MD5 digest |
 | `uuid` | `uuid()` | `uuid()` | random UUID v4 string |
 | `uuidv5` | `uuidv5(namespace, name)` | `uuidv5("dns","example.com")` | deterministic UUID v5 |
-| `bcrypt` | `bcrypt(str, cost?)` | `bcrypt("pass",10)` | bcrypt hash (avoid in state) |
+| `bcrypt` | `bcrypt(str, cost?)` | `bcrypt("pass",10)` | bcrypt hash |
 | `filesha256` | `filesha256(path)` | `filesha256("lambda.zip")` | SHA-256 of file |
 | `filemd5` | `filemd5(path)` | `filemd5("object.bin")` | MD5 of file |
 
----
+> [!warning] `bcrypt` produces a different hash on every `terraform plan`
+> Because `bcrypt` includes a random salt, Terraform sees the output as changed on every run, causing perpetual diffs. The hash also ends up stored in plaintext in the state file.
+
+> [!success] Use a `random_password` resource with the `bcrypt` function only in a `local-exec` provisioner, or hash outside Terraform and pass the value as a variable.
 
 ### Type Conversion and Safety Functions
+
+Convert between HCL types and handle nullable or error-prone expressions safely. `try` and `can` are especially useful when working with optional object attributes or data sources that may not exist.
 
 | Function | Signature | Example | Result |
 |----------|-----------|---------|--------|
@@ -245,9 +391,9 @@ All functions are available in any HCL expression context. Test them interactive
 | `tobool` | `tobool(value)` | `tobool("true")` | `true` |
 | `type` | `type(value)` | (console only) | prints type of value |
 
----
-
 ## File Organization Reference
+
+Standard file layout for a Terraform project targeting GCP. File names are a convention — Terraform merges all `.tf` files in a directory regardless of name — but consistent naming helps teams navigate projects quickly.
 
 | File | Purpose |
 |------|---------|
@@ -269,7 +415,16 @@ All functions are available in any HCL expression context. Test them interactive
 | `.terraform.lock.hcl` | Provider lock file — always commit to version control |
 | `.terraform/` | Local cache — add to `.gitignore` |
 
----
+> [!danger] Never commit `*.tfvars` files containing secrets (database passwords, API keys, service account keys)
+> These files are often the source of credential leaks in version control. Even private repos are not safe — credentials in git history persist after deletion.
+
+> [!success] Store secrets in environment variables (`TF_VAR_*`), a secrets manager (GCP Secret Manager, HashiCorp Vault), or encrypted backend. Add `*.tfvars` to `.gitignore` and use `*.tfvars.example` files with placeholder values.
+
+> [!info] Always commit `.terraform.lock.hcl`
+> This file pins the exact provider versions and hashes used by your project. Without it, `terraform init` may download a different provider version on another machine, causing inconsistent behavior. Treat it like a `package-lock.json`.
+
+> [!tip] Run `terraform fmt` before every commit
+> `terraform fmt` rewrites `.tf` files to the canonical HCL style (2-space indent, aligned `=` signs, sorted arguments). Enforcing it in CI prevents style drift across team members.
 
 ## Related
 

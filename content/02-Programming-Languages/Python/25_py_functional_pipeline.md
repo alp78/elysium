@@ -93,6 +93,10 @@ Central configuration: paths, SQL connection, stock universe, date range.
 Every downstream cell references these constants — change them here, not in
 individual cells.
 
+### Project configuration
+
+Single cell that defines all pipeline-wide constants used by every downstream stage.
+
 #### Python — define pipeline paths, SQL connection, and stock universe
 
 > [!info] Central Configuration Cell
@@ -179,6 +183,10 @@ The models divide into three groups along two orthogonal dimensions — **struct
 > Parse every API response through the model before writing to SQL Server. Invalid
 > rows raise `ValidationError` — catch, log to quarantine, and continue. No bad row
 > ever reaches bronze.
+
+### Medallion layer models
+
+Structural models for each stage boundary: Bronze, Silver, Gold, and operational lineage tracking.
 
 #### Pydantic — define Bronze validation model with `BaseModel` and `Field()`
 
@@ -589,6 +597,10 @@ These functions implement the ability to trace any data point from Gold back to 
 > against the stored hash — any mismatch proves post-write modification. The
 > `lineage_stages` table provides the full audit trail by batch and stage.
 
+### Lineage helpers
+
+Utility functions for batch identification, deterministic hashing, stage timing, and run context persistence.
+
 #### uuid — generate unique batch ID with `uuid4()`
 
 > [!info] Batch ID: Unique Run Identifier
@@ -701,6 +713,10 @@ Nine tables implementing the full architecture — not just data storage but the
 > boundary (start + finish + row count). Route every `ValidationError` to
 > `quarantine` with the raw payload and error message. Flush `StageContext.warnings`
 > to `context_log` at the end of each run.
+
+### Table definitions
+
+DDL for all nine schema tables: medallion data tables, dimension tables, and operational tables.
 
 | Table | Purpose | Key |
 |---|---|---|
@@ -959,10 +975,15 @@ sql_conn.commit()
 
     quarantine table ready (dead letter queue)
 
+### Persistence helpers
+
+Helper functions for writing to operational tables, MERGE upserts, and API retry logic.
+
 #### SQL Server — create context log table with `cursor.execute()`
 
+Persists StageContext records: business context, temporal context, and data warnings per stage.
+
 ```python
-# Persists StageContext records — business context, temporal context, warnings
 
 cur.execute("""
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'context_log')
@@ -987,8 +1008,9 @@ log.info("context_log table ready")
 
 #### SQL Server — define context persistence helper with `cursor.execute()`
 
+Writes a StageContext record to the context_log table, including business date, trigger type, warnings, and column context JSON.
+
 ```python
-# Write a StageContext record to the context_log table
 
 def persist_context(stage_ctx: StageContext | None) -> None:
     if stage_ctx is None:
@@ -1198,6 +1220,10 @@ log.info("fetch_with_retry() defined \u2014 3 attempts, exponential backoff")
 
     23:19:35 | INFO  | fetch_with_retry() defined — 3 attempts, exponential backoff
 
+### Quality gates
+
+Reusable assertion functions that check DataFrame properties; run together as a gated pass/fail before each stage proceeds.
+
 #### Python — define custom `Exception` subclass for quality gate failures
 
 > [!info] Quality Gate Exception
@@ -1374,6 +1400,10 @@ Dimensions are the pipeline's external knowledge — facts about the world that 
 > `dim_calendar` and automatically classify zero-volume rows as `holiday`,
 > `weekend`, or `genuine_anomaly`. Record the classification as a `StageContext`
 > warning — not an error — so the pipeline continues without false alerts.
+
+### Symbol metadata (SCD2)
+
+Fetch, load, and SCD Type 2 upsert company metadata from yfinance into `dim_symbol`.
 
 #### yfinance — fetch symbol metadata to JSON landing zone with `Ticker.info`
 
@@ -1631,6 +1661,10 @@ dim_symbol_df.select("symbol", "longName", "sector", "country", "exchange", "_ac
     </tr>
   </tbody>
 </table>
+
+### Trading calendar
+
+Build and persist a per-exchange trading calendar using `pandas-market-calendars`, including holiday detection.
 
 #### pandas-market-calendars — generate trading calendar with `get_calendar().schedule()`
 
@@ -1905,6 +1939,10 @@ Bronze implements two principles. The **landing zone** decouples API fetching fr
 > load re-run against the saved JSON without a second API call. Retain files
 > for at least 30 days to cover any delayed re-processing need.
 
+### Data fetching
+
+Functions to download OHLCV data from yfinance to the JSON landing zone and reload it into Polars.
+
 #### yfinance — fetch OHLCV to JSON landing zone with `Ticker.history()`
 
 > [!info] Landing Zone: OHLCV Fetch
@@ -1974,8 +2012,9 @@ def load_ohlcv_from_landing(symbol: str) -> pl.DataFrame:
 
 #### yfinance — test single symbol landing zone fetch with `fetch_ohlcv_to_landing()`
 
+Verifies the landing zone pattern: fetch to JSON, then load back into a Polars DataFrame.
+
 ```python
-# Verify the landing zone pattern: fetch → JSON → load → DataFrame
 
 test_path = fetch_ohlcv_to_landing("SAP.DE", "2024-06-01", "2024-06-30")
 if test_path:
@@ -2068,6 +2107,10 @@ test_df.head()
   </tbody>
 </table>
 
+### Validation
+
+Row-level Pydantic validation at the Bronze boundary; rejected rows are routed to the quarantine table.
+
 #### Pydantic — validate Bronze rows with `BaseModel()` row-level check
 
 > [!info] Bronze Row-Level Validation
@@ -2113,8 +2156,9 @@ log.info("validate_bronze() defined \u2014 rejects go to quarantine")
 
 #### Pydantic — test Bronze validation on sample data
 
+All rows should pass since yfinance data is generally clean.
+
 ```python
-# Should pass all rows since yfinance data is generally clean
 
 valid_df, rejected = validate_bronze(test_df, batch_id="test")
 len(valid_df), rejected  # valid rows, rejected rows
@@ -2200,6 +2244,10 @@ valid_df.head(5)
     </tr>
   </tbody>
 </table>
+
+### Ingestion pipeline
+
+End-to-end Bronze orchestration: incremental fetch, Pydantic validation, MERGE upsert, and quality gate.
 
 #### Bronze — define incremental ingestion pipeline with landing zone + `MERGE INTO`
 
@@ -2338,8 +2386,9 @@ log.info(f"Bronze complete: {len(bronze_df)} rows in {elapsed:.0f}ms")
 
 #### Polars — display Bronze sample data with `head()`
 
+Shows the first rows of ingested data to verify schema and values.
+
 ```python
-# Show first rows of ingested data to verify schema and values
 
 bronze_df.head(5)
 ```
@@ -2432,8 +2481,9 @@ bronze_df.head(5)
 
 #### Polars — display Bronze row counts per symbol with `group_by().agg()`
 
+Verifies all symbols were ingested with reasonable row counts and correct date ranges.
+
 ```python
-# Verify all symbols were ingested with reasonable row counts
 
 bronze_df.group_by("symbol").agg(
     pl.col("date").count().alias("rows"),
@@ -2574,6 +2624,10 @@ Silver is where the **Functional Core** principle (Gary Bernhardt, 'Boundaries' 
 > The caller (imperative shell) handles reading from SQL Server and writing back.
 > This pattern makes every transform unit-testable with `pl.DataFrame(...)` literals
 > in under a second, with no mocking required.
+
+### Transform functions
+
+Pure Polars functions computing daily return, intraday range, and 20-day SMA — no side effects.
 
 #### Polars — compute daily returns with `pct_change().over()`
 
@@ -2854,6 +2908,10 @@ log.info("validate_silver() defined \u2014 rejects go to quarantine")
 
     23:19:38 | INFO  | validate_silver() defined — rejects go to quarantine
 
+### Enrichment pipeline
+
+Imperative shell: applies transforms, validates through CleanOHLCV, MERGE upserts to SQL Server, and runs the quality gate.
+
 #### Silver — define enrichment pipeline with transform + `MERGE INTO`
 
 > [!info] Silver Enrichment Pipeline
@@ -2923,8 +2981,9 @@ log.info(f"Silver complete: {len(silver_df)} rows in {elapsed:.0f}ms")
 
 #### Polars — display Silver enriched columns with `filter().select()`
 
+Verifies that daily_return, intraday_range, and sma_20 are populated after Silver enrichment.
+
 ```python
-# Verify daily_return, intraday_range, and sma_20 are populated
 
 silver_df.filter(pl.col("symbol") == "SAP.DE").select(
     "symbol", "date", "close", "daily_return", "intraday_range", "sma_20"
@@ -2989,8 +3048,9 @@ silver_df.filter(pl.col("symbol") == "SAP.DE").select(
 
 #### Polars — display Silver statistics per symbol with `group_by().agg()`
 
+Summary statistics to verify enrichment quality across all symbols.
+
 ```python
-# Summary stats to verify enrichment quality across all symbols
 
 silver_df.group_by("symbol").agg(
     pl.col("daily_return").mean().round(6).alias("avg_return"),
@@ -3190,6 +3250,10 @@ Gold produces consumption-ready data products from Silver. Two aggregations, bot
 > Run every aggregated row through the model before writing to the gold table.
 > Rows that violate an invariant are rejected to quarantine with the constraint
 > name and the actual value — never silently written.
+
+### Aggregation functions
+
+Pure Polars functions building DailySummary (cross-sectional) and SymbolProfile (longitudinal) from Silver data.
 
 #### Polars — build daily cross-sectional summary with `group_by().agg()`
 
@@ -3414,8 +3478,9 @@ symbol_profile_df
 
 #### Pydantic — validate Gold daily summary with `BaseModel()` row-level check
 
+Validates each daily summary row through the `DailySummary` model to catch aggregation errors before persistence.
+
 ```python
-# Validates each row to catch aggregation errors before persistence
 
 def validate_gold_daily(df: pl.DataFrame) -> tuple[pl.DataFrame, int]:
     """Validate daily summary rows through DailySummary model."""
@@ -3436,8 +3501,9 @@ len(valid_daily), rej_daily  # daily summary validation: valid, rejected
 
 #### Pydantic — validate Gold symbol profiles with `BaseModel()` row-level check
 
+Validates each symbol profile through the `SymbolProfile` model to catch calculation errors before persistence.
+
 ```python
-# Validates each profile to catch calculation errors
 
 def validate_gold_profiles(df: pl.DataFrame) -> tuple[pl.DataFrame, int]:
     """Validate symbol profile rows through SymbolProfile model."""
@@ -3456,6 +3522,10 @@ valid_profiles, rej_profiles = validate_gold_profiles(symbol_profile_df)
 len(valid_profiles), rej_profiles  # symbol profile validation: valid, rejected
 ```
 
+
+### Persistence
+
+Validate Gold rows through typed contracts, then truncate and reload both mart tables.
 
 #### SQL Server — define Gold persistence function with `TRUNCATE` + `to_sql()`
 
@@ -3512,8 +3582,9 @@ log.info(f"Gold persisted: hash={gold_lineage.output_hash}")
 
 #### Polars — display Gold daily summary with `sort().tail()`
 
+Shows the most recent trading days with cross-sectional metrics.
+
 ```python
-# Show the most recent trading days with cross-sectional metrics
 
 valid_daily.sort("date").tail()
 ```
@@ -3588,8 +3659,9 @@ valid_daily.sort("date").tail()
 
 #### Polars — display Gold symbol profiles with `select()`
 
+Final per-symbol summary statistics across the full two-year history.
+
 ```python
-# Final per-symbol summary statistics
 
 valid_profiles.select(
     "symbol", "total_trading_days", "avg_daily_return",
@@ -3678,6 +3750,10 @@ The serving layer reads Parquet files, not SQL Server. This is the **pre-materia
 > database queries at serve time. Cache invalidation is a file replacement:
 > re-run the pipeline, the next request loads the new file.
 
+### Export operations
+
+Write Gold and Silver data products to Parquet, record the export lineage stage, and verify file integrity.
+
 #### Polars — export daily summary to Parquet with `write_parquet()`
 
 > [!info] Parquet: Pre-Materialized View
@@ -3696,8 +3772,9 @@ daily_path.name, size_kb, len(valid_daily)  # exported file, KB, rows
 
 #### Polars — export symbol profiles to Parquet with `write_parquet()`
 
+Pre-materialized per-symbol summary for the comparison dashboard.
+
 ```python
-# Pre-materialized view: per-symbol summary for the comparison dashboard
 
 profile_path = EXPORT_DIR / "gold_symbol_profile.parquet"
 valid_profiles.write_parquet(profile_path)
@@ -3725,8 +3802,9 @@ silver_path.name, size_kb, len(silver_df)  # exported file, KB, rows
 
 #### Lineage — record export stage with `end_stage()`
 
+Tracks which files were exported and their sizes as a stage lineage record.
+
 ```python
-# Track which files were exported and their sizes
 
 export_ctx = start_stage(batch_id, "export", input_rows=len(valid_daily) + len(valid_profiles) + len(silver_df))
 
@@ -3747,8 +3825,9 @@ export_lineage.output_rows, export_lineage.output_hash  # export lineage: total 
 
 #### Polars — verify exported Parquet files with `read_parquet()`
 
+Round-trip test: write, then read back to verify row counts match.
+
 ```python
-# Round-trip test: write → read → verify row counts match
 
 for name in ["gold_daily_summary", "gold_symbol_profile", "silver_ohlcv"]:
     path = EXPORT_DIR / f"{name}.parquet"
@@ -3762,8 +3841,9 @@ for name in ["gold_daily_summary", "gold_symbol_profile", "silver_ohlcv"]:
 
 #### Pydantic \u2014 export data contracts as JSON Schema with `model_json_schema()`
 
+Exports machine-readable JSON Schema contracts for every pipeline boundary.
+
 ```python
-# Export machine-readable contracts for every pipeline boundary
 
 contract_paths = export_data_contracts(EXPORT_DIR)
 for p in contract_paths:
@@ -3783,6 +3863,10 @@ for p in contract_paths:
 ## 10. Lineage Review — Pipeline Execution Audit
 
 After all stages complete, the full execution trail is available for review across five artifacts: **stage lineage** (timing, row counts, hashes), **RunContext JSON** (execution envelope with business and temporal context), **context log** (warnings per stage in SQL Server), **quarantine** (every rejected row with its error), and **data contracts** (column-level semantics as JSON Schema). Together these answer any question about what the pipeline did, why it did it, what it knew, and what it produced.
+
+### Pipeline audit
+
+Finalize and persist the RunContext, then query lineage, quarantine, and context log tables for the current batch.
 
 #### Pydantic — build and save run context with `RunContext()`
 
@@ -3819,8 +3903,9 @@ total_ms  # processing time (ms)
 
 #### Polars — display lineage summary as DataFrame
 
+Shows all stages with timing, row counts, and output hashes.
+
 ```python
-# Shows all stages with timing, row counts, and hashes
 
 lineage_records = [
     {
@@ -3941,8 +4026,9 @@ json.dumps(display_ctx, indent=2, default=str)
 
 #### Polars — query lineage table with `read_database()`
 
+Verifies lineage records were persisted to SQL Server for the current batch.
+
 ```python
-# Verify lineage records were persisted to SQL Server
 
 lineage_query = pl.read_database(
     f"SELECT stage, input_rows, output_rows, rows_rejected, output_hash FROM lineage_stages WHERE batch_id = '{batch_id}'",
@@ -4074,8 +4160,9 @@ context_df
 
 #### Python — display accumulated data warnings with `log.warning()`
 
+Shows all data warnings accumulated across stages from the gold StageContext.
+
 ```python
-# Show all data warnings accumulated across stages
 
 if gold_stage_ctx and gold_stage_ctx.data_warnings:
     print(f"Data Warnings ({len(gold_stage_ctx.data_warnings)} total):")
@@ -4090,8 +4177,9 @@ else:
 
 #### JSON — inspect exported data contract with `json.loads()`
 
+Inspects the Silver contract to show structural schema and column semantics side by side.
+
 ```python
-# Inspect the Silver contract — shows structural schema + column semantics
 
 contract_path = EXPORT_DIR / "contracts" / "silver_ohlcv_contract.json"
 if contract_path.exists():
@@ -4126,6 +4214,10 @@ if contract_path.exists():
 
 FastAPI serves the Gold data products by reading pre-materialized Parquet files. No database connection at runtime — the API reads files that the pipeline produced. Five endpoints serve different consumer needs: health (operational monitoring), daily-summary (market overview), symbol-profile (stock comparison), timeseries (per-symbol drill-down), and lineage (pipeline execution audit).
 
+### API models
+
+Pydantic response models that define the JSON shape returned by each endpoint.
+
 #### Pydantic — define daily summary API response model with `BaseModel`
 
 > [!info] API Response Schema
@@ -4148,8 +4240,9 @@ class DailySummaryResponse(BaseModel):
 
 #### Pydantic — define symbol profile API response model with `BaseModel`
 
+Response schema for the `/symbol-profile` endpoint.
+
 ```python
-# Response schema for the /symbol-profile endpoint
 
 class SymbolProfileResponse(BaseModel):
     symbol:              str
@@ -4167,8 +4260,9 @@ class SymbolProfileResponse(BaseModel):
 
 #### Pydantic — define timeseries row API response model with `BaseModel`
 
+Response schema for the `/symbol/{symbol}/timeseries` endpoint.
+
 ```python
-# Response schema for the /symbol/{symbol}/timeseries endpoint
 
 class TimeSeriesRow(BaseModel):
     date:           Date
@@ -4184,10 +4278,15 @@ class TimeSeriesRow(BaseModel):
 ```
 
 
+### Endpoints
+
+FastAPI application instance and five route handlers: health, daily-summary, symbol-profile, timeseries, and lineage.
+
 #### FastAPI — create application instance with `FastAPI()`
 
+Initializes the FastAPI application for serving pre-materialized Parquet data.
+
 ```python
-# Initialize FastAPI app for serving pre-materialized Parquet data
 
 app = FastAPI(title="Gold Data Pipeline API", version="1.0.0")
 
@@ -4197,8 +4296,9 @@ app = FastAPI(title="Gold Data Pipeline API", version="1.0.0")
 
 #### FastAPI — define health endpoint with `@app.get()`
 
+Healthcheck endpoint that verifies Parquet files exist and reports their sizes.
+
 ```python
-# Healthcheck: verifies Parquet files exist and reports their sizes
 
 @app.get("/health")
 def health():
@@ -4211,8 +4311,9 @@ def health():
 
 #### FastAPI — define daily summary endpoint with `@app.get()`
 
+Returns the daily cross-sectional summary from Parquet, with optional date range filter.
+
 ```python
-# Returns daily cross-sectional summary from Parquet, with optional date filter
 
 @app.get("/daily-summary", response_model=list[DailySummaryResponse])
 def get_daily_summary(start_date: Date | None = None, end_date: Date | None = None):
@@ -4229,8 +4330,9 @@ def get_daily_summary(start_date: Date | None = None, end_date: Date | None = No
 
 #### FastAPI — define symbol profile endpoint with `@app.get()`
 
+Returns per-symbol summary statistics from the pre-materialized Parquet file.
+
 ```python
-# Returns per-symbol summary statistics from Parquet
 
 @app.get("/symbol-profile", response_model=list[SymbolProfileResponse])
 def get_symbol_profiles():
@@ -4243,8 +4345,9 @@ def get_symbol_profiles():
 
 #### FastAPI — define symbol timeseries endpoint with `@app.get()`
 
+Returns daily OHLCV plus enrichment columns for one symbol from the Silver Parquet file.
+
 ```python
-# Returns daily OHLCV + enrichment for one symbol from Silver Parquet
 
 @app.get("/symbol/{symbol}/timeseries", response_model=list[TimeSeriesRow])
 def get_timeseries(symbol: str, limit: int = 100):
@@ -4263,8 +4366,9 @@ def get_timeseries(symbol: str, limit: int = 100):
 
 #### FastAPI — define lineage endpoint with `@app.get()`
 
+Returns the RunContext JSON for a batch ID prefix, enabling audit queries from the API.
+
 ```python
-# Returns RunContext JSON for a batch, matched by prefix
 
 @app.get("/lineage/{batch_id_prefix}")
 def get_lineage(batch_id_prefix: str):
@@ -4277,6 +4381,10 @@ def get_lineage(batch_id_prefix: str):
 ```
 
     GET /lineage/{batch_id} registered — 9 total routes
+
+### Testing
+
+Start the server in a background thread and smoke-test all five endpoints with `httpx`.
 
 #### uvicorn — start API server in background with `threading.Thread()`
 
@@ -4310,8 +4418,9 @@ API_PORT  # FastAPI server running at http://127.0.0.1
 
 #### httpx — test health endpoint with `httpx.get()`
 
+Verifies the API server is running and that all Parquet files are accessible.
+
 ```python
-# Verify the API server is running and Parquet files are accessible
 
 resp = httpx.get(f"http://127.0.0.1:{API_PORT}/health")
 resp.status_code  # Status
@@ -4332,8 +4441,9 @@ json.dumps(resp.json(), indent=2)
 
 #### httpx — test daily summary endpoint with `httpx.get()`
 
+Fetches the last 5 trading days of cross-sectional summary from the API.
+
 ```python
-# Fetch last 5 trading days of cross-sectional summary
 
 five_days_ago = (Date.today() - timedelta(days=10)).isoformat()
 resp = httpx.get(f"http://127.0.0.1:{API_PORT}/daily-summary", params={"start_date": five_days_ago})
@@ -4429,8 +4539,9 @@ pl.DataFrame(resp.json())
 
 #### httpx — test symbol profile endpoint with `httpx.get()`
 
+Fetches all symbol profiles from the API and renders them as a DataFrame.
+
 ```python
-# Fetch all symbol profiles from the API
 
 resp = httpx.get(f"http://127.0.0.1:{API_PORT}/symbol-profile")
 resp.status_code, len(resp.json())  # status, profiles
@@ -4518,8 +4629,9 @@ pl.DataFrame(resp.json())
 
 #### httpx — test symbol timeseries endpoint with `httpx.get()`
 
+Fetches the last 10 days of SAP.DE time series data from the API.
+
 ```python
-# Fetch last 10 days of SAP.DE time series data
 
 resp = httpx.get(f"http://127.0.0.1:{API_PORT}/symbol/SAP.DE/timeseries", params={"limit": 10})
 resp.status_code, len(resp.json())  # status, rows
@@ -4607,8 +4719,9 @@ pl.DataFrame(resp.json()).head()
 
 #### httpx — test lineage endpoint with `httpx.get()`
 
+Fetches the pipeline execution metadata for the current run from the lineage endpoint.
+
 ```python
-# Fetch pipeline execution metadata for this run
 
 resp = httpx.get(f"http://127.0.0.1:{API_PORT}/lineage/{batch_id[:8]}")
 resp.status_code  # Status
@@ -4670,10 +4783,15 @@ pl.DataFrame(data["stages"]).select("stage", "input_rows", "output_rows", "rows_
 
 Visual validation of the pipeline output. Each chart answers a specific question about the data: daily return volatility (how noisy is the market?), cumulative investment performance (how would a 1 EUR investment have grown?), risk-return positioning (which stocks offer the best return per unit of risk?), and pipeline execution timing (which stage is the bottleneck?). Charts use dark-theme compatible transparent backgrounds.
 
+### Charts
+
+Four Plotly charts covering return time series, cumulative performance, risk-return scatter, and stage timing.
+
 #### Plotly — plot daily return time series with `go.Scatter()`
 
+Overlaid line chart showing daily returns across all 5 symbols for the last 3 months.
+
 ```python
-# Overlaid line chart showing daily returns across all 5 symbols (last 3 months)
 
 three_months_ago = Date.today() - timedelta(days=90)
 
@@ -4704,8 +4822,9 @@ fig.show()
 
 #### Plotly — plot cumulative returns comparison with `cum_prod()`
 
+Shows how a €1 investment in each symbol would have grown over the full history.
+
 ```python
-# Shows how a €1 investment in each symbol would have grown
 
 fig = go.Figure()
 for symbol in SYMBOLS:
@@ -4733,8 +4852,9 @@ fig.show()
 
 #### Plotly — plot risk-return scatter with `go.Scatter()`
 
+Risk-return visualization using Gold symbol profile data: volatility vs average daily return.
+
 ```python
-# Risk-return visualization using Gold symbol profile data
 
 fig = go.Figure()
 fig.add_trace(go.Scatter(
@@ -4761,8 +4881,9 @@ fig.show()
 
 #### Plotly — plot pipeline stage timing with `go.Bar()`
 
+Shows how long each pipeline stage took in milliseconds, identifying the bottleneck.
+
 ```python
-# Shows how long each pipeline stage took in milliseconds
 
 stages = [s.stage for s in run_context.stages]
 durations = [s.duration_ms for s in run_context.stages]
@@ -4791,6 +4912,10 @@ fig.show()
 ## 13. Audit — Investigating a Disputed Data Point
 
 The audit section demonstrates lineage in action. A stakeholder disputes a specific data point — the pipeline traces it from Gold back to the raw source in seven steps, each independently verifiable: Bronze (raw values as ingested), Silver (computed return verified mathematically), Gold (propagation to aggregation), Lineage (batch metadata with SHA-256 hash), RunContext (execution fingerprint), Landing Zone (raw JSON file on disk), and Live API (corroboration with current source). This is the proof that the architecture's lineage tracking delivers real forensic capability.
+
+### Disputed data point investigation
+
+Seven-step forensic trace from Gold back to raw source: Bronze → Silver → Gold → Lineage → RunContext → Landing Zone → Live API.
 
 #### SQL Server — query Bronze table for raw ingested values with `read_database()`
 

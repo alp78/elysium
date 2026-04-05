@@ -1,5 +1,11 @@
 ---
-tags: [ci-cd, terraform, docker, gcp, github-actions]
+title: "GitHub Actions Patterns"
+tags:
+  - github-actions
+  - ci-cd
+  - terraform
+  - docker
+  - gcp
 aliases:
   - matrix builds
   - reusable workflows
@@ -9,7 +15,7 @@ aliases:
   - monorepo CI
 description: "Advanced GitHub Actions patterns — matrix builds, reusable workflows, composite actions, deployment strategies, Terraform CI/CD, Docker builds, and monorepo patterns."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-05
 status: complete
 ---
 
@@ -20,17 +26,17 @@ status: complete
 >
 > — **Jez Humble**, *Continuous Delivery* (2010)
 
-> [!abstract] Summary
-> Reusable patterns for production-grade GitHub Actions workflows. Covers matrix builds, reusable workflows, deployment strategies, Terraform automation, Docker builds, monorepo CI, and cost optimization. Many shell steps rely on [defensive scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) practices (`set -euo pipefail`, error trapping) to fail fast and surface problems clearly. To practice applying these patterns in realistic scenarios, work through [github-actions-problems](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-problems).
-
----
+This file contains reusable patterns for production-grade GitHub Actions workflows. Each section is a self-contained pattern with a complete, runnable YAML example. For core concepts (triggers, runners, expressions), see [github-actions-fundamentals](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-fundamentals). For applied data engineering workflows (pipeline CI, dbt, Cloud Run CD), see [github-actions-data-engineering](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-data-engineering). Many shell steps rely on [defensive scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) practices. To practice applying these patterns, work through [github-actions-problems](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-problems).
 
 ## Matrix Builds
 
+Matrix strategies run the same job across multiple variable combinations in parallel. Each combination spawns a separate job on its own runner. This is essential for testing across Python versions, operating systems, or database backends.
+
 ### Python Version × OS Matrix
 
+This workflow tests across 3 Python versions and 3 operating systems, with `include` to flag one cell for coverage upload and `exclude` to skip expensive combinations. The `fail-fast: false` setting lets all cells complete even if one fails.
+
 ```yaml
-# .github/workflows/test-matrix.yml
 name: Test Matrix
 
 on:
@@ -44,18 +50,16 @@ jobs:
     name: Python ${{ matrix.python-version }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false          # continue other matrix cells on failure
+      fail-fast: false
       max-parallel: 6
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
         os: [ubuntu-latest, windows-latest, macos-latest]
         include:
-          # add extra variable for specific combination
           - python-version: "3.12"
             os: ubuntu-latest
             upload-coverage: true
         exclude:
-          # skip expensive combos
           - python-version: "3.10"
             os: macos-latest
           - python-version: "3.10"
@@ -83,6 +87,8 @@ jobs:
 
 ### Dynamic Matrix from Script
 
+When the matrix values aren't known at write time (e.g., they depend on which services changed in a monorepo), compute them dynamically in a setup job. The `fromJSON()` function parses the JSON output into a matrix object.
+
 ```yaml
 jobs:
   set-matrix:
@@ -93,7 +99,6 @@ jobs:
       - uses: actions/checkout@v4
       - id: compute
         run: |
-          # Build matrix JSON dynamically
           MATRIX=$(python scripts/compute_matrix.py)
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
@@ -107,6 +112,8 @@ jobs:
 ```
 
 ### Matrix with Services (Databases)
+
+Matrix builds can combine with service containers to test against multiple database backends. The `services:` key starts a Docker container alongside the runner, accessible via `localhost`.
 
 ```yaml
 jobs:
@@ -132,16 +139,19 @@ jobs:
       - run: pytest tests/db/ --db=${{ matrix.db }}
 ```
 
----
-
 ## Reusable Workflows
 
-A reusable workflow is a complete workflow file called from another workflow.
+A reusable workflow is a complete workflow file (with `on: workflow_call`) that can be called from other workflows using `uses:`. It accepts typed inputs, secrets, and can return outputs. Reusable workflows run as a separate workflow in the caller's context — they appear as a collapsed job in the GitHub UI.
+
+> [!question] Reusable workflows vs composite actions
+> **Reusable workflows** are complete workflow files with their own `jobs:` and `runs-on:`. Best for encapsulating multi-job pipelines (e.g., a standard test → build → deploy pipeline shared across repos).
+> **Composite actions** bundle multiple steps into a single action called with `uses:`. Best for reusable step sequences within a job (e.g., "setup Python with caching"). Composite actions cannot define their own jobs or runners — they inherit from the calling job.
 
 ### Defining a Reusable Workflow
 
+The workflow file uses `on: workflow_call` to declare it as callable. The `inputs`, `secrets`, and `outputs` blocks define the contract with callers. Convention: prefix the filename with `_` (e.g., `_reusable-test.yml`) to indicate it is not triggered directly.
+
 ```yaml
-# .github/workflows/_reusable-test.yml   (prefix _ = internal)
 name: Reusable — Test
 
 on:
@@ -199,8 +209,9 @@ jobs:
 
 ### Calling a Reusable Workflow
 
+The caller uses `uses:` at the job level (not the step level) to invoke the reusable workflow. Local workflows use `./.github/workflows/<name>.yml`. Cross-org workflows use `org/repo/.github/workflows/<name>.yml@ref`. The `secrets: inherit` shorthand passes all caller secrets to the callee.
+
 ```yaml
-# .github/workflows/ci.yml
 name: CI
 
 on:
@@ -227,26 +238,24 @@ jobs:
     uses: my-org/shared-workflows/.github/workflows/test.yml@main
     with:
       python-version: "3.12"
-    secrets: inherit           # pass all caller secrets to callee
+    secrets: inherit
 ```
 
-> [!note] Secrets inheritance
-> `secrets: inherit` passes all caller secrets to the reusable workflow. Use specific secret mapping to be explicit.
+> [!warning] secrets: inherit passes everything
+> `secrets: inherit` passes **all** caller secrets to the reusable workflow, including secrets the callee doesn't need. This widens the blast radius if the callee is compromised.
 
----
+> [!success] Map secrets explicitly
+> Use specific secret mapping (e.g., `secrets: { CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }} }`) to pass only the secrets the callee requires. Reserve `secrets: inherit` for trusted, same-repo workflows.
 
 ## Composite Actions
 
-Composite actions bundle multiple steps into a reusable action you call with `uses:`.
+Composite actions bundle multiple steps into a reusable action called with `uses:` at the step level. Unlike reusable workflows, composite actions run **within** the calling job — they share the runner, filesystem, and environment. They are defined in an `action.yml` file, typically at `.github/actions/<name>/action.yml`.
 
 ### Creating a Composite Action
 
-```
-.github/actions/setup-python-env/action.yml
-```
+This composite action sets up a Python environment with caching. It accepts `python-version` and `install-extras` as inputs and outputs whether the cache was hit. The file lives at `.github/actions/setup-python-env/action.yml`.
 
 ```yaml
-# .github/actions/setup-python-env/action.yml
 name: Setup Python Environment
 description: Install Python and project dependencies with caching
 
@@ -291,6 +300,8 @@ runs:
 
 ### Using the Composite Action
 
+Call the composite action with `uses:` pointing to its directory. The `with:` key passes inputs.
+
 ```yaml
 steps:
   - uses: actions/checkout@v4
@@ -305,12 +316,11 @@ steps:
       pytest tests/
 ```
 
----
-
 ### Docker Container Actions
 
+Docker container actions run their logic inside a Docker container rather than directly on the runner. The `using: docker` field tells GitHub to build the image from the `Dockerfile` in the action's directory. Inputs are passed as command-line arguments. This is useful for tools that require a specific environment (e.g., sqlfluff with specific Python dependencies).
+
 ```yaml
-# .github/actions/run-sql-lint/action.yml
 name: SQL Lint
 description: Run sqlfluff on SQL files
 
@@ -332,17 +342,21 @@ runs:
     - ${{ inputs.path }}
 ```
 
----
+## Deployment Strategies
 
-## Environment Protection (Staging → Production)
+Deployment workflows promote code through environments with increasing protection. GitHub environments provide approval gates, wait timers, and branch restrictions. For environment configuration details, see the Environment Protection Rules section in [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd).
 
-### Define Environments in GitHub
+### Environment Protection Setup
 
-Go to **Settings → Environments** and create:
-- `staging` — no protection rules
-- `production` — required reviewers, deployment branch `main` only
+Create environments in **Settings → Environments**:
+- `staging` — no protection rules (auto-deploy)
+- `production` — required reviewers, deployment branch restricted to `main` only
 
-### Deployment Workflow with Gate
+### Staged Deployment with Approval Gate
+
+This workflow demonstrates the staging → integration test → production pattern. The `production` environment triggers a required reviewer approval before the deploy job executes. The `build` job passes the image tag to both deploy jobs via `outputs:`.
+
+
 
 ```yaml
 # .github/workflows/deploy.yml
@@ -385,7 +399,7 @@ jobs:
     needs: [build, integration-test]
     runs-on: ubuntu-latest
     environment:
-      name: production           # triggers required reviewer approval
+      name: production
       url: https://myapp.com
     steps:
       - name: Deploy to production
@@ -394,14 +408,11 @@ jobs:
           ./scripts/deploy.sh production ${{ needs.build.outputs.image }}
 ```
 
----
-
 ### Deployment to Cloud Run
 
-Workflow secrets like `WIF_PROVIDER` and service account emails are stored through [GitHub's encrypted secrets](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) mechanism and injected at runtime.
+This two-job workflow builds a Docker image, pushes it to Artifact Registry, and deploys to [Cloud Run](https://alp78.github.io/elysium/06-GCP/Compute/cloud-run-jobs-vs-services) with a health check. It authenticates via Workload Identity Federation (see [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam)). For Docker build details, see [image-management](https://alp78.github.io/elysium/09-Docker/image-management).
 
 ```yaml
-# .github/workflows/deploy-cloud-run.yml
 name: Build and Deploy to Cloud Run
 
 on:
@@ -417,7 +428,7 @@ env:
 
 permissions:
   contents: read
-  id-token: write              # required for Workload Identity
+  id-token: write
 
 jobs:
   build:
@@ -508,14 +519,15 @@ jobs:
           echo "Deployment verified: $URL"
 ```
 
----
-
 ## Terraform CI/CD
 
-### Terraform CI/CD — Plan on PR (with Comment)
+These workflows implement the plan-on-PR, apply-on-merge pattern for Terraform infrastructure changes. For Terraform fundamentals, see [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy).
+
+### Plan on PR with Comment
+
+This workflow runs `terraform plan` on every PR that touches `infra/` and posts the output as a collapsible PR comment. If a previous plan comment exists, it updates it in place. The plan artifact is uploaded for use in the apply workflow.
 
 ```yaml
-# .github/workflows/terraform-plan.yml
 name: Terraform Plan
 
 on:
@@ -559,7 +571,7 @@ jobs:
       - name: Terraform Plan
         id: plan
         run: terraform plan -no-color -out=tfplan 2>&1
-        continue-on-error: true   # capture output even on failure
+        continue-on-error: true
 
       - name: Comment Plan on PR
         uses: actions/github-script@v7
@@ -625,10 +637,11 @@ jobs:
 >
 > Use the `production` GitHub environment with required reviewers on the apply job. Upload the `tfplan` artifact in the plan job and download it in the apply job — this guarantees the apply executes exactly the reviewed plan, not a new one that may reflect state drift. Pin `terraform_version` in `hashicorp/setup-terraform` to prevent behavior changes on runner upgrades.
 
-### Terraform CI/CD — Apply on Merge to Main
+### Apply on Merge to Main
+
+This workflow runs `terraform apply -auto-approve` when changes to `infra/` are merged to `main`. The `production` environment provides an approval gate.
 
 ```yaml
-# .github/workflows/terraform-apply.yml
 name: Terraform Apply
 
 on:
@@ -644,7 +657,7 @@ permissions:
 jobs:
   apply:
     runs-on: ubuntu-latest
-    environment: production     # requires approval
+    environment: production
     defaults:
       run:
         working-directory: infra/
@@ -665,15 +678,16 @@ jobs:
       - run: terraform apply -auto-approve -no-color
 ```
 
-### Terraform CI/CD — Drift Detection (Scheduled)
+### Drift Detection (Scheduled)
+
+This workflow runs `terraform plan -detailed-exitcode` on a weekday schedule to detect configuration drift — changes made outside of Terraform (e.g., manual console edits). Exit code `2` means changes were detected. The workflow can alert via Slack or create a GitHub issue.
 
 ```yaml
-# .github/workflows/terraform-drift.yml
 name: Terraform Drift Detection
 
 on:
   schedule:
-    - cron: "0 8 * * 1-5"    # 08:00 UTC weekdays
+    - cron: "0 8 * * 1-5"
   workflow_dispatch:
 
 jobs:
@@ -703,12 +717,15 @@ jobs:
           # curl -X POST ${{ secrets.SLACK_WEBHOOK }} ...
 ```
 
----
+## Docker Builds
 
-### Docker Build and Push to Artifact Registry
+Docker build workflows produce container images and push them to a registry. For Docker image management details, see [image-management](https://alp78.github.io/elysium/09-Docker/image-management).
+
+### Build and Push to Artifact Registry
+
+This workflow builds a Docker image on push to `main` or version tags, computes semantic tags using `docker/metadata-action`, and pushes to Google Artifact Registry with BuildKit layer caching.
 
 ```yaml
-# .github/workflows/docker-build.yml
 name: Docker Build & Push
 
 on:
@@ -772,19 +789,18 @@ jobs:
             BUILD_DATE=${{ github.event.head_commit.timestamp }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
-          provenance: false      # smaller image, no SBOM by default
+          provenance: false
 
       - run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 ```
 
----
-
 ### Multi-Environment Deployment
 
+This workflow dynamically selects the target environment based on the trigger: `workflow_dispatch` uses the user's choice, pushes to `main` deploy to staging, and all other branches deploy to dev. The `set-env` job computes the environment name and URL, which the `deploy` job reads.
+
 ```yaml
-# .github/workflows/multi-env-deploy.yml
 name: Multi-Environment Deploy
 
 on:
@@ -831,14 +847,15 @@ jobs:
           echo "Deploying to $ENV at ${{ needs.set-env.outputs.url }}"
 ```
 
----
+## Monorepo Patterns
 
-## Monorepo: Path Filters
+Monorepos contain multiple services, libraries, or infrastructure in a single repository. The challenge is running CI only for the services that changed, avoiding wasted compute on unaffected code. The `dorny/paths-filter` action detects which directories changed and sets boolean outputs that gate downstream jobs.
 
-### Using dorny/paths-filter
+### Path-Based Change Detection
+
+This workflow uses `dorny/paths-filter` to detect which services changed, then conditionally runs CI for each affected service. Shared library changes (`shared/**`) trigger CI for all dependent services.
 
 ```yaml
-# .github/workflows/monorepo-ci.yml
 name: Monorepo CI
 
 on:
@@ -901,20 +918,17 @@ jobs:
     secrets: inherit
 ```
 
----
-
 ### Branch Protection and Required Status Checks
 
-Configure in **Settings → Branches → Add rule**:
+Required status checks ensure PRs cannot merge until specific jobs pass. Configure in **Settings → Branches → Add rule**:
 - Require status checks: `lint`, `test (3.12)`, `build-check`
 - Require branches to be up to date
 - Require linear history
 - Restrict pushes to `main`
 
-For monorepos, use required status checks that always run even when skipped:
+For monorepos, required status checks create a problem: if a job is skipped (because no relevant files changed), GitHub treats it as "not run" and blocks the merge. The workaround is an always-running job that either executes tests or reports "no changes."
 
 ```yaml
-# Always-pass job when changes not detected (satisfies required check)
 test-api:
   needs: detect-changes
   if: always()          # always run
@@ -928,14 +942,15 @@ test-api:
       run: echo "No API changes — skipping tests"
 ```
 
----
-
 ## Release Automation
+
+Release workflows automate version bumping, changelog generation, and package publishing. Two patterns are common: automated releases via Release Please (convention-based) and manual tag-based releases.
 
 ### Semantic Versioning + Changelog
 
+The `release-please-action` analyzes commit messages (following Conventional Commits) and automatically creates a release PR with version bump and changelog. When the release PR is merged, it creates a GitHub Release, and the workflow publishes the package to PyPI.
+
 ```yaml
-# .github/workflows/release.yml
 name: Release
 
 on:
@@ -974,8 +989,9 @@ jobs:
 
 ### Manual Tag-Based Release
 
+This workflow triggers when a GitHub Release is published (created via the UI or `gh release create`). It builds the Python package and publishes to PyPI using OIDC trusted publishing — no API token needed.
+
 ```yaml
-# .github/workflows/publish.yml
 name: Publish
 
 on:
@@ -987,7 +1003,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
-      id-token: write    # for trusted publishing (OIDC)
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -997,17 +1013,17 @@ jobs:
           pip install build
           python -m build
       - uses: pypa/gh-action-pypi-publish@release/v1
-        # No password needed — uses OIDC trusted publishing
 ```
-
----
 
 ## Self-Hosted Runners
 
+Self-hosted runners are machines you manage that execute GitHub Actions jobs. Use cases include: private network access, GPU hardware, licensed software, or large disk for data processing. For security hardening details, see the self-hosted runner section in [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd).
+
 ### Setup
 
+Install the runner agent on the target machine. The `--token` is a short-lived registration token from Settings → Actions → Runners → New self-hosted runner.
+
 ```bash
-# On the runner machine:
 mkdir actions-runner && cd actions-runner
 curl -o actions-runner-linux-x64-2.316.0.tar.gz -L \
   https://github.com/actions/runner/releases/download/v2.316.0/actions-runner-linux-x64-2.316.0.tar.gz
@@ -1017,6 +1033,8 @@ tar xzf actions-runner-linux-x64-2.316.0.tar.gz
 ```
 
 ### Using Self-Hosted Runners
+
+Use label arrays in `runs-on:` to target runners with specific capabilities. Labels are assigned during runner registration.
 
 ```yaml
 jobs:
@@ -1045,24 +1063,28 @@ jobs:
 
 ### Runner Labels for Routing
 
-```yaml
-# Register runner with labels
-./config.sh --url ... --token ... --labels "linux,x64,high-memory,us-central1"
+Custom labels enable routing jobs to runners with specific hardware or network access. Register labels during setup and reference them in `runs-on:`.
 
-# Use in workflow
+```bash
+./config.sh --url ... --token ... --labels "linux,x64,high-memory,us-central1"
+```
+
+```yaml
 runs-on: [self-hosted, high-memory, us-central1]
 ```
 
----
-
 ## Cost Optimization
 
+GitHub Actions bills per-minute for private repositories. These patterns minimize billable minutes without sacrificing CI quality.
+
 ### Timeout (Prevent Runaway Jobs)
+
+Always set `timeout-minutes` to prevent hanging jobs from consuming the 6-hour default timeout. A typical lint job needs 10 minutes; a test suite needs 20–30.
 
 ```yaml
 jobs:
   test:
-    timeout-minutes: 20   # fail fast vs 6-hour GitHub default
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:
       - timeout-minutes: 10   # step-level
@@ -1087,10 +1109,9 @@ concurrency:
 
 ### Skip CI
 
-```yaml
-# Commit message-based skip:
-# git commit -m "chore: update docs [skip ci]"
+Skip CI runs for commits that don't need testing (e.g., documentation-only changes). The `[skip ci]` or `[ci skip]` convention in the commit message is checked via an `if:` condition on the job.
 
+```yaml
 on:
   push:
     branches: [main]
@@ -1107,6 +1128,8 @@ jobs:
 
 ### Path Filtering (Skip Unaffected Jobs)
 
+The `paths:` and `paths-ignore:` filters on the `on:` trigger skip the entire workflow when only irrelevant files change. This is the simplest cost optimization — no workflow run, no billing.
+
 ```yaml
 on:
   push:
@@ -1122,8 +1145,9 @@ on:
 
 ### Use Caching Aggressively
 
+Caching saves 30–60 seconds per run for Python dependencies and 2–5 minutes for Docker layer builds. Use both local and GitHub Actions cache backends depending on the tool.
+
 ```yaml
-# Cache Python env — saves 30-60s per run
 - uses: actions/cache@v4
   with:
     path: .venv
@@ -1132,28 +1156,58 @@ on:
 # Cache Docker layers — saves 2-5 min per build
 - uses: docker/build-push-action@v5
   with:
-    cache-from: type=gha        # GitHub Actions cache backend
+    cache-from: type=gha
     cache-to: type=gha,mode=max
 ```
 
 ### Smaller Runners When Possible
 
+Use the cheapest runner that meets the job's needs. Reserve larger runners (and their higher per-minute cost) for compute-heavy builds.
+
 ```yaml
-# Use ubuntu-latest (not larger) for lint/test
-# Reserve larger runners for actual builds
 jobs:
   lint:
-    runs-on: ubuntu-latest    # cheapest
+    runs-on: ubuntu-latest
   build:
-    runs-on: ubuntu-latest-4-cores   # larger for Docker builds
+    runs-on: ubuntu-latest-4-cores
 ```
 
----
+## Complete Pipeline Example
 
-### Complete Pattern: PR to Test to Deploy
+This workflow combines all patterns from this file into a single end-to-end pipeline: lint → test → build → deploy staging → deploy production. On PRs, only lint and test run. On pushes to `main`, the full pipeline executes with environment protection on production.
+
+### Job Dependency Graph
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    lint["Lint"] --> test["Test"]
+    test --> build["Build"]
+    build --> stg["Deploy Staging"]
+    build --> prod["Deploy Production"]
+    stg --> prod
+
+    style lint fill:#7aa2f7,stroke:#565f89,color:#1a1b26
+    style test fill:#7aa2f7,stroke:#565f89,color:#1a1b26
+    style build fill:#bb9af7,stroke:#565f89,color:#1a1b26
+    style stg fill:#9ece6a,stroke:#565f89,color:#1a1b26
+    style prod fill:#f7768e,stroke:#565f89,color:#1a1b26
+```
+
+### Full Pipeline Workflow
 
 ```yaml
-# .github/workflows/full-pipeline.yml
 name: Full Pipeline
 
 on:
@@ -1282,11 +1336,37 @@ jobs:
           image: ${{ needs.build.outputs.image }}
 ```
 
----
+## Related
 
-### See Also
+**GitHub Actions chapter:**
+- [[github-actions-fundamentals]] — workflow anatomy, triggers, runners, core concepts
+- [[github-actions-ci-cd]] — secrets, caching, concurrency, environments, security
+- [[github-actions-data-engineering]] — data pipeline CI/CD, dbt, Workload Identity
+- [[github-actions-problems]] — practice exercises applying these patterns
 
-- [github-actions-fundamentals](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-fundamentals) — workflow anatomy, triggers, runners, core concepts
-- [github-actions-data-engineering](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-data-engineering) — data pipeline CI/CD, dbt, Workload Identity
+**Terraform (Chapter 07):**
 - [terraform-plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/terraform-plan-apply-destroy) — Terraform workflow details
-- [environment-management-strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — How GitHub Actions environments fit into the full promotion workflow
+
+**Docker (Chapter 09):**
+- [image-management](https://alp78.github.io/elysium/09-Docker/image-management) — Docker build/push commands
+
+**GCP (Chapter 06):**
+- [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — Workload Identity Federation
+- [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Compute/cloud-run-jobs-vs-services) — Cloud Run deployment targets
+
+**Data Architecture (Chapter 14):**
+- [environment-management-strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — environment promotion workflow
+
+**Shell (Chapter 01):**
+- [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) — shell practices for `run:` steps
+
+## References
+
+- [GitHub Actions documentation](https://docs.github.com/en/actions)
+- [Workflow syntax for GitHub Actions](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions)
+- [dorny/paths-filter](https://github.com/dorny/paths-filter)
+- [docker/metadata-action](https://github.com/docker/metadata-action)
+- [google-github-actions/release-please-action](https://github.com/google-github-actions/release-please-action)
+- [pypa/gh-action-pypi-publish](https://github.com/pypa/gh-action-pypi-publish)
+- [hashicorp/setup-terraform](https://github.com/hashicorp/setup-terraform)
+- [Security hardening for GitHub Actions](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments)

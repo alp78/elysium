@@ -8,7 +8,6 @@ tags:
   - identity
   - authentication
   - networking
-  - infrastructure
 aliases:
   - "GCP Security Model"
   - "Connection Patterns"
@@ -32,6 +31,8 @@ This page is the **conceptual framework** for GCP security. It explains the iden
 
 ### Human vs Machine Identity — who is calling the API
 
+Every GCP API call is authenticated by an identity — either a human user or a service account. The table below defines each type and its appropriate use context.
+
 > [!info] Two Types of Identity
 >
 > Every GCP API call is made by an identity. GCP recognizes two kinds: human users (interactive) and service accounts (machine). Choosing the wrong one for your context creates security gaps or operational friction.
@@ -48,6 +49,8 @@ This page is the **conceptual framework** for GCP security. It explains the iden
 For SA creation and IAM binding commands, see [service-accounts-and-iam > GCP Service Accounts — Machine Identities](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam#gcp-service-accounts--machine-identities). For the Terraform pattern of one SA per workload, see [terraform-iam-and-secrets > Design Principle: One Service Account Per Workload](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets#design-principle-one-service-account-per-workload).
 
 ### Credential Types — Short-Lived vs Long-Lived
+
+GCP credentials fall into three classes by lifetime: short-lived tokens that expire automatically, refresh tokens that last until revoked, and key files that never expire. The lifetime determines the blast radius of a credential leak.
 
 > [!tip] Short-Lived Credentials — Auto-Expire
 >
@@ -119,6 +122,18 @@ For SA creation and IAM binding commands, see [service-accounts-and-iam > GCP Se
 When Python code calls BigQuery, this is the full sequence of events behind the scenes:
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
 sequenceDiagram
     participant App as Your Code
     participant Auth as Google Auth + IAM
@@ -140,6 +155,8 @@ sequenceDiagram
 - **Step 9:** Network controls — VPC-SC may block even authorized requests if the data would cross a perimeter boundary
 
 ### Authentication vs Authorization vs Network Controls
+
+A GCP request must pass three independent layers to succeed. Failing any one of them blocks the request, regardless of what the other two allow.
 
 > [!tip] Three Layers of Security
 >
@@ -180,6 +197,8 @@ For the gcloud reference, see [gcloud-authentication > The ADC Credential Search
 
 ### Metadata Server (GCE VMs, Cloud Run) — the production standard
 
+The metadata server is the recommended authentication mechanism for any workload running on GCE or Cloud Run. No credentials touch disk and tokens are auto-refreshed by the client library.
+
 > [!abstract] How the Metadata Server Works
 >
 > Every GCE VM and Cloud Run instance has access to a local metadata server at `169.254.169.254`. The VM's attached service account is the identity. Code calls the metadata server, gets a short-lived token, and uses it — no credentials to manage, rotate, or leak.
@@ -201,11 +220,25 @@ For the gcloud reference, see [gcloud-authentication > The ADC Credential Search
 
 ### Workload Identity Federation (WIF) — keyless external identity
 
+WIF allows external systems (GitHub Actions, AWS, Azure AD) to authenticate to GCP without a service account key file. The external identity provider issues a token; Google STS exchanges it for a short-lived GCP access token.
+
 > [!info] WIF Trust Chain
 >
 > WIF lets external identity providers (GitHub Actions, AWS, Azure AD) authenticate to GCP without a service account key file. The external provider issues a token, Google STS exchanges it for a short-lived GCP access token.
 
 ```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
 sequenceDiagram
     participant GH as GitHub Runner
     participant WIF as WIF + STS
@@ -230,6 +263,8 @@ sequenceDiagram
 
 ### Service Account Impersonation — temporary privilege escalation
 
+Impersonation lets identity A temporarily act as identity B without holding B's key file. It is the standard pattern for developer testing and least-privilege delegation in CI/CD pipelines.
+
 > [!info] Impersonation Model
 >
 > Identity A temporarily assumes identity B's permissions. No key file is created — A gets a short-lived token that acts as B. Requires `roles/iam.serviceAccountTokenCreator` on the target SA.
@@ -243,6 +278,8 @@ sequenceDiagram
 - Short-lived token generation: [21_py_security_operations > google-cloud-iam-credentials — generate short-lived OAuth2 access tokens](https://alp78.github.io/elysium/02-Programming-Languages/Python/21_py_security_operations#google-cloud-iam-credentials--generate-short-lived-oauth2-access-tokens)
 
 ### Service Account Key Files — last resort only
+
+A downloaded JSON key file authenticates as the service account with no expiration. This section explains when (rarely) a key file is justified and what controls must be in place when one exists.
 
 > [!danger] Service Account Key Files
 >
@@ -277,6 +314,8 @@ sequenceDiagram
 
 ### Application Default Credentials — interactive local dev
 
+On a developer workstation, two separate credential commands must be run: one for the gcloud CLI and one for application code. Confusing them is the most common local development authentication mistake.
+
 > [!info] The Two-Login Confusion
 >
 > `gcloud auth login` and `gcloud auth application-default login` are two different commands that set two different credential stores. Confusing them is the most common GCP authentication mistake.
@@ -304,6 +343,8 @@ sequenceDiagram
 Every source→destination pair in the stack, with the complete trust chain, required IAM roles, network path, and links to implementation.
 
 ### Workstation → SQL Server (private VM, no public IP)
+
+The standard pattern for a developer connecting to a SQL Server VM that has no public IP. IAP authenticates the tunnel; SQL Server authenticates the database session.
 
 > [!info] Three-Layer Auth Pattern
 >
@@ -434,6 +475,37 @@ Every source→destination pair in the stack, with the complete trust chain, req
 >
 > Create a connector: `gcloud compute networks vpc-access connectors create CONNECTOR_NAME --region=REGION --network=VPC_NAME --range=10.8.0.0/28`. Deploy Cloud Run with `--vpc-connector=CONNECTOR_NAME`. Alternatively, enable Direct VPC Egress on the Cloud Run service to route traffic directly into the VPC without a connector resource.
 
+### Cloud Run → BigQuery / GCS / Secret Manager (serverless-to-serverless)
+
+The most common Cloud Run data pipeline pattern. All three targets are public Google APIs — no VPC connector needed. The attached service account identity flows through ADC automatically.
+
+**Trust chain:** `Cloud Run's attached SA → metadata server → OAuth2 access token → GCP API over HTTPS (port 443)`
+
+| Requirement | BigQuery | Cloud Storage | Secret Manager |
+|-------------|----------|---------------|----------------|
+| IAM role (read) | `roles/bigquery.dataViewer` + `roles/bigquery.jobUser` | `roles/storage.objectViewer` | `roles/secretmanager.secretAccessor` |
+| IAM role (write) | `roles/bigquery.dataEditor` + `roles/bigquery.jobUser` | `roles/storage.objectAdmin` | `roles/secretmanager.secretVersionAdder` |
+| Network | Public API — no connector | Public API — no connector | Public API — no connector |
+| VPC-SC | May restrict if configured | May restrict if configured | May restrict if configured |
+
+> [!tip] No VPC Connector Needed for Serverless GCP APIs
+>
+> VPC connectors are only required when Cloud Run needs to reach **private** resources (VMs, Cloud SQL with private IP). BigQuery, GCS, and Secret Manager are public Google APIs reachable over HTTPS from any Cloud Run instance without a connector — and without a public IP on the container itself.
+
+> [!warning] Common Mistake
+>
+> Attaching a VPC connector and routing all traffic through it (`--vpc-egress=all-traffic`) when the workload only calls public GCP APIs. This adds latency, consumes connector capacity, and routes unnecessary traffic through the VPC. Use `--vpc-egress=private-ranges-only` if a connector is needed for private resources but GCP API calls should stay on the public path.
+
+> [!success] Use --vpc-egress=private-ranges-only When a Connector Is Present
+>
+> If Cloud Run needs both a private SQL Server and a public BigQuery API, attach the VPC connector but set `--vpc-egress=private-ranges-only`. This routes only RFC 1918 traffic through the connector; GCP API calls continue over the direct public path.
+
+- Cloud Run IAM setup: [service-accounts-and-iam > Minimum IAM Permission Set for a Data Pipeline](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam#minimum-iam-permission-set-for-a-data-pipeline)
+- Cloud Run service configuration: [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services)
+- BigQuery connection pattern: [Python/C# → BigQuery](#pythonc--bigquery-serverless-api) (above)
+
+---
+
 ### GitHub Actions → GCP (external, WIF)
 
 **Trust chain:** `GitHub OIDC token → WIF pool/provider → STS token exchange → short-lived GCP access token → GCP APIs`
@@ -475,6 +547,8 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 
 ### Connection Quick Reference Matrix
 
+A consolidated view of all patterns above, for quick lookup during incident response or infrastructure review.
+
 > [!info]- All Connection Patterns at a Glance
 >
 > For protocol details and tunnel commands, see [connecting-to-gcp-resources > Connection quick reference matrix — protocol and tunnel requirements by service](https://alp78.github.io/elysium/01-Shell/Networking/connecting-to-gcp-resources#connection-quick-reference-matrix--protocol-and-tunnel-requirements-by-service).
@@ -488,6 +562,7 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 | Python → GCS | ADC/metadata | HTTPS → public API | No |
 | Python → Secret Manager | ADC/metadata | HTTPS → public API | No |
 | Cloud Run → SQL Server | SQL auth | VPC connector → port 1433 | No (VPC connector) |
+| Cloud Run → BigQuery/GCS/Secret Manager | ADC/metadata | HTTPS → public API | No |
 | GitHub Actions → GCP APIs | WIF | HTTPS → public API | No |
 | GitHub Actions → SQL Server | WIF + IAP + SQL auth | IAP tunnel → port 1433 | Yes (IAP) |
 
@@ -496,6 +571,8 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 ## The Certificate and TLS Landscape
 
 ### Certificate Overview — who manages what
+
+Across the full GCP stack, most TLS certificates are Google-managed and invisible to application code. The one exception is SQL Server on Linux, which generates a self-signed certificate.
 
 > [!info] Certificate Inventory
 >
@@ -513,6 +590,8 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 
 ### TrustServerCertificate=yes — why SQL Server connections use it
 
+SQL Server on Linux generates a self-signed certificate at startup. Because no CA chain exists, client drivers require `TrustServerCertificate=yes` to connect. This section explains when that is acceptable and when it is not.
+
 > [!warning] Self-Signed Certificate on Linux
 >
 > SQL Server on Linux generates a self-signed TLS certificate at startup. No CA chain exists — it is not signed by a trusted authority. `TrustServerCertificate=yes` tells the client to accept any certificate without validation.
@@ -527,6 +606,8 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 - Certificate generation: [sql-server-authentication > openssl req -x509 — generate TLS certificate for SQL Server](https://alp78.github.io/elysium/04-SQL-Server/Security/sql-server-authentication#openssl-req--x509--generate-tls-certificate-for-sql-server)
 
 ### KMS and Envelope Encryption — the two-tier model
+
+Cloud KMS uses envelope encryption: data is encrypted with a local Data Encryption Key (DEK), and the DEK itself is wrapped by a Key Encryption Key (KEK) stored in KMS. This keeps KMS API call volume low while protecting the key material.
 
 > [!info] Envelope Encryption
 >
@@ -551,6 +632,8 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 
 ### Single SA for everything — no blast radius containment
 
+Using one service account for all workloads eliminates containment boundaries. A single credential compromise exposes the entire stack.
+
 > [!danger] One SA shared across all workloads
 >
 > One service account used by the pipeline, dashboard, CI/CD, and monitoring.
@@ -566,6 +649,8 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 ---
 
 ### SA key files in production — permanent liability
+
+A key file on a production system persists through VM rebuilds and image redeployments. It grants access forever until manually deleted — even after the original workload is decommissioned.
 
 > [!danger] Key file on a VM, in a Docker image, or in an env var
 >
@@ -583,6 +668,8 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 ---
 
 ### roles/editor or roles/owner on service accounts — over-permissioned
+
+`roles/editor` grants write access to approximately 200 GCP services. A data pipeline SA needs access to two or three — not two hundred.
 
 > [!danger] Granting roles/editor to a pipeline SA
 >
@@ -603,7 +690,9 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 
 ### Hardcoding credentials in code or env vars — leaked in logs and git
 
-> [!failure] SA_PASSWORD in source code or Dockerfile
+Credentials embedded in source code, Dockerfiles, or environment variables are routinely exposed through git history, image layer inspection, and process crash dumps.
+
+> [!danger] SA_PASSWORD in source code or Dockerfile
 >
 > Credentials in Python files end up in git history — permanently, even after
 > deletion. Credentials in Dockerfiles end up in image layers — extractable
@@ -621,6 +710,8 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 ---
 
 ### Skipping VPC-SC because "IAM is enough" — data exfiltration risk
+
+IAM controls who can read data. Without VPC-SC, an authorized identity can copy that data out of the project entirely — to an attacker-controlled destination.
 
 > [!danger] No VPC Service Controls on sensitive data
 >
@@ -640,6 +731,8 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 
 ### Never rotating SA keys — permanent risk accumulation
 
+Key files accumulate exposure over time. Each day a key exists without rotation is another day it may have been copied, shared, or forgotten somewhere outside your control.
+
 > [!warning] Key file downloaded 18 months ago, shared with 3 people
 >
 > Two of those people have left the company. The key still works. Nobody
@@ -657,6 +750,8 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 ---
 
 ### Using the Compute Engine default SA — over-permissioned by default
+
+GCP attaches the project's Compute Engine default service account to every VM that doesn't specify one. That default SA has `roles/editor` — write access to almost everything in the project.
 
 > [!warning] VM created without specifying a custom SA
 >
@@ -676,6 +771,8 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 
 ### TrustServerCertificate=yes on public-facing SQL Server — no TLS validation
 
+`TrustServerCertificate=yes` is a safe choice behind an IAP tunnel but a security hole on any public-facing endpoint where a man-in-the-middle can present an arbitrary certificate.
+
 > [!warning] Skipping certificate validation on a public endpoint
 >
 > `TrustServerCertificate=yes` accepts any certificate — including one
@@ -694,7 +791,9 @@ This is the most complex pattern in the stack — three layers of auth: GitHub �
 
 ### Running gcloud auth login expecting Python SDK to work — wrong credential store
 
-> [!failure] "Permission denied" after gcloud auth login
+`gcloud auth login` and `gcloud auth application-default login` write to completely separate credential stores. Client libraries never read from the gcloud CLI store.
+
+> [!danger] "Permission denied" after gcloud auth login
 >
 > `gcloud auth login` sets credentials for the gcloud CLI tool **only**.
 > Python, C#, and Go client libraries use Application Default Credentials

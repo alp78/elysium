@@ -391,13 +391,13 @@ Define Pydantic models for request and response shapes, decorate handler functio
   'textColor': '#c0caf5',
   'fontSize': '14px'
 }}}%%
-flowchart LR
-    C["HTTP Client\nrequests / httpx"] -->|"HTTP Request"| MW["FastAPI / Starlette\nASGI middleware"]
-    MW --> R["Route matching\n@app.get / post / delete"]
-    R --> V["Pydantic validation\nBaseModel.__init__()"]
-    V --> H["Handler function\n(Python def / async def)"]
-    H -->|"return dict\nreturn BaseModel"| S["JSON Response\n200 / 201 / 404 / 409"]
-    V -->|"ValidationError"| E["422 Unprocessable Entity\n{detail: [...]}"]
+flowchart TD
+    C["HTTP Client<br/>requests / httpx"] -->|"HTTP Request"| MW["FastAPI / Starlette<br/>ASGI middleware"]
+    MW --> R["Route matching<br/>@app.get / post / delete"]
+    R --> V["Pydantic validation<br/>BaseModel.__init__()"]
+    V --> H["Handler function<br/>Python def / async def"]
+    H -->|"return dict / BaseModel"| S["JSON Response<br/>200 / 201 / 404 / 409"]
+    V -->|"ValidationError"| E["422 Unprocessable Entity<br/>{detail: [...]}"]
 ```
 
 ### Pydantic models and app setup
@@ -1161,98 +1161,20 @@ Summary table of production best practices: always use `BaseModel` (not dicts), 
 `Field()` constraints, use `Literal`/`Enum` for fixed options, add validators for business rules,
 use aliases for public APIs, freeze config models, enable strict mode for financial data.
 
-```python
-checklist = pd.DataFrame({
-    "Rule": [
-        "Always use BaseModel for request/response",
-        "Use Field() with constraints on every field",
-        "Use Literal[] for fixed option sets",
-        "Use Enum for status/state fields",
-        "Add @field_validator for business rules",
-        "Add @model_validator for cross-field rules",
-        "Use aliases for camelCase API output",
-        "Use frozen=True for config models",
-        "Use strict=True when coercion is dangerous",
-        "Return model_dump(by_alias=True) in responses",
-        "Never expose internal field names in APIs",
-        "Generate JSON schema for documentation",
-    ],
-    "Why": [
-        "Validates all input — catches bad data at the door",
-        "gt=0, max_length, pattern prevent garbage values",
-        "Compile-time restriction — only valid values accepted",
-        "Type-safe states — no magic strings for status",
-        "snake_case enforcement, format checks, normalization",
-        "end_date > start_date, at least 2 legs for PAIRS",
-        "Python uses snake_case, APIs use camelCase",
-        "Config should never change after loading",
-        "Financial data — string 100 must not silently become int 100",
-        "Consistent JSON output matching API contract",
-        "Aliases decouple internal naming from public API",
-        "Swagger/OpenAPI docs auto-generated from models",
-    ],
-})
-checklist.style.set_properties(**{"text-align": "left"}).hide(axis="index")
-```
-
-<table id="T_46908">
-  <thead>
-    <tr>
-      <th id="T_46908_level0_col0" class="col_heading level0 col0" >Rule</th>
-      <th id="T_46908_level0_col1" class="col_heading level0 col1" >Why</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td id="T_46908_row0_col0" class="data row0 col0" >Always use BaseModel for request/response</td>
-      <td id="T_46908_row0_col1" class="data row0 col1" >Validates all input — catches bad data at the door</td>
-    </tr>
-    <tr>
-      <td id="T_46908_row1_col0" class="data row1 col0" >Use Field() with constraints on every field</td>
-      <td id="T_46908_row1_col1" class="data row1 col1" >gt=0, max_length, pattern prevent garbage values</td>
-    </tr>
-    <tr>
-      <td id="T_46908_row2_col0" class="data row2 col0" >Use Literal[] for fixed option sets</td>
-      <td id="T_46908_row2_col1" class="data row2 col1" >Compile-time restriction — only valid values accepted</td>
-    </tr>
-    <tr>
-      <td id="T_46908_row3_col0" class="data row3 col0" >Use Enum for status/state fields</td>
-      <td id="T_46908_row3_col1" class="data row3 col1" >Type-safe states — no magic strings for status</td>
-    </tr>
-    <tr>
-      <td id="T_46908_row4_col0" class="data row4 col0" >Add @field_validator for business rules</td>
-      <td id="T_46908_row4_col1" class="data row4 col1" >snake_case enforcement, format checks, normalization</td>
-    </tr>
-    <tr>
-      <td id="T_46908_row5_col0" class="data row5 col0" >Add @model_validator for cross-field rules</td>
-      <td id="T_46908_row5_col1" class="data row5 col1" >end_date > start_date, at least 2 legs for PAIRS</td>
-    </tr>
-    <tr>
-      <td id="T_46908_row6_col0" class="data row6 col0" >Use aliases for camelCase API output</td>
-      <td id="T_46908_row6_col1" class="data row6 col1" >Python uses snake_case, APIs use camelCase</td>
-    </tr>
-    <tr>
-      <td id="T_46908_row7_col0" class="data row7 col0" >Use frozen=True for config models</td>
-      <td id="T_46908_row7_col1" class="data row7 col1" >Config should never change after loading</td>
-    </tr>
-    <tr>
-      <td id="T_46908_row8_col0" class="data row8 col0" >Use strict=True when coercion is dangerous</td>
-      <td id="T_46908_row8_col1" class="data row8 col1" >Financial data — string 100 must not silently become int 100</td>
-    </tr>
-    <tr>
-      <td id="T_46908_row9_col0" class="data row9 col0" >Return model_dump(by_alias=True) in responses</td>
-      <td id="T_46908_row9_col1" class="data row9 col1" >Consistent JSON output matching API contract</td>
-    </tr>
-    <tr>
-      <td id="T_46908_row10_col0" class="data row10 col0" >Never expose internal field names in APIs</td>
-      <td id="T_46908_row10_col1" class="data row10 col1" >Aliases decouple internal naming from public API</td>
-    </tr>
-    <tr>
-      <td id="T_46908_row11_col0" class="data row11 col0" >Generate JSON schema for documentation</td>
-      <td id="T_46908_row11_col1" class="data row11 col1" >Swagger/OpenAPI docs auto-generated from models</td>
-    </tr>
-  </tbody>
-</table>
+| Rule | Why |
+|---|---|
+| Always use `BaseModel` for request/response | Validates all input — catches bad data at the door |
+| Use `Field()` with constraints on every field | `gt=0`, `max_length`, `pattern` prevent garbage values |
+| Use `Literal[]` for fixed option sets | Compile-time restriction — only valid values accepted |
+| Use `Enum` for status/state fields | Type-safe states — no magic strings for status |
+| Add `@field_validator` for business rules | snake_case enforcement, format checks, normalization |
+| Add `@model_validator` for cross-field rules | `end_date > start_date`, at least 2 legs for PAIRS |
+| Use aliases for camelCase API output | Python uses snake_case, APIs use camelCase |
+| Use `frozen=True` for config models | Config should never change after loading |
+| Use `strict=True` when coercion is dangerous | Financial data — string `"100"` must not silently become int `100` |
+| Return `model_dump(by_alias=True)` in responses | Consistent JSON output matching API contract |
+| Never expose internal field names in APIs | Aliases decouple internal naming from public API |
+| Generate JSON schema for documentation | Swagger/OpenAPI docs auto-generated from models |
 
 ## Summary
 

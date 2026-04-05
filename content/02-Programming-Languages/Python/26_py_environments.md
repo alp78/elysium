@@ -1,5 +1,11 @@
 ---
-tags: [python, venv, pip, environments, dependencies]
+title: "Environments — Python"
+tags:
+  - python
+  - venv
+  - pip
+  - environments
+  - dependencies
 aliases: [virtual environments, venv, pip, requirements.txt, pyenv, python environments]
 description: "Python environment and dependency management — venv creation, pip workflows, requirements.txt lifecycle, pyenv version management, Docker/CI/CD/GCP deployment patterns, and anti-patterns."
 related:
@@ -39,12 +45,44 @@ Virtual environments solve this by creating a self-contained Python installation
 > (Windows) — the path should point inside `.venv/`. If it doesn't, do not proceed.
 > One venv per project; never share venvs across projects.
 
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    A["python -m venv"] --> B["activate"]
+    B --> C["pip install"]
+    C --> D["pip freeze"]
+    D --> E["requirements.txt"]
+    E --> F{"Deploy target"}
+    F --> G["Docker image"]
+    F --> H["VM / bare metal"]
+    F --> I["Cloud Functions"]
+    G --> J["Cloud Run"]
+    G --> K["Compute Engine"]
+```
+
+
 ## venv — create and activate virtual environments
+
+### venv | creation and structure
+
+Creating a virtual environment generates a self-contained Python installation in a `.venv/` directory. The directory contains a copy of the Python binary, a `pip` executable, and an empty `site-packages` directory ready for package installation.
 
 #### python -m venv — create a new virtual environment
 
+The `venv` module is part of the Python standard library — no extra installation required. It creates the directory structure, copies (or symlinks) the Python binary, and sets up `pip`. The `.venv` name is a convention that VS Code and other tools auto-detect.
+
 ```bash
-# Create a virtual environment in the .venv directory
 python -m venv .venv
 ```
 
@@ -60,14 +98,23 @@ python -m venv .venv
 
 #### activate — switch your shell to use the virtual environment
 
-```bash
-# Windows (PowerShell)
+Activation prepends the venv's `Scripts/` (or `bin/`) directory to the shell's `PATH` so that `python` and `pip` resolve to the venv copies instead of the system installation. It also sets the `VIRTUAL_ENV` environment variable. Activation is shell-specific — each platform has its own script.
+
+Windows (PowerShell):
+
+```powershell
 .venv\Scripts\Activate.ps1
+```
 
-# Windows (Git Bash / MSYS2)
+Windows (Git Bash / MSYS2):
+
+```bash
 source .venv/Scripts/activate
+```
 
-# Linux / macOS
+Linux / macOS:
+
+```bash
 source .venv/bin/activate
 ```
 
@@ -82,8 +129,9 @@ source .venv/bin/activate
 
 #### deactivate — exit the virtual environment
 
+Restores the shell's `PATH` to its pre-activation state, removing the venv's directory. After deactivation, `python` and `pip` resolve to the system installation again.
+
 ```bash
-# Return to system Python
 deactivate
 ```
 
@@ -101,10 +149,15 @@ deactivate
 > creating the venv. Run `echo ".venv/" >> .gitignore && git add .gitignore && git commit -m "init: add .gitignore"`.
 > If `.venv/` was already tracked, remove it: `git rm -r --cached .venv/` then commit.
 
+### venv | project configuration
+
+Standard entries for `.gitignore` and IDE configuration ensure the venv and bytecode caches stay out of source control.
+
 #### .gitignore — standard entries for Python projects
 
+These entries prevent the venv directory, bytecode caches, and type checker caches from entering source control. `.venv/` is platform-specific and not portable. `__pycache__/` and `*.pyc` are compiled bytecode files regenerated on every import. `.mypy_cache/` is the mypy type checker's cache.
+
 ```bash
-# Add to .gitignore immediately after creating the project
 echo ".venv/" >> .gitignore
 echo "__pycache__/" >> .gitignore
 echo "*.pyc" >> .gitignore
@@ -119,29 +172,27 @@ echo ".mypy_cache/" >> .gitignore
 
 ## pip — install packages into the virtual environment
 
+### pip | package installation
+
+`pip install` downloads packages from PyPI and installs them into the active environment's `site-packages` directory. Version specifiers control which version is installed.
+
 #### pip install — add a package
 
+Installs a package from PyPI into the active virtual environment. Without a version specifier, pip resolves the latest stable version. The `==` operator pins an exact version. Range operators (`>=`, `<`) allow bounded flexibility. Square brackets install optional extras — dependency groups declared by the package author for specific use cases.
+
 ```bash
-# Install latest version
 pip install pandas
-
-# Install exact version (pinned)
 pip install pandas==2.1.4
-
-# Install version range
 pip install "pandas>=2.0,<3.0"
-
-# Install with optional extras
 pip install "uvicorn[standard]"
 ```
 
 #### pip install -r — install from a requirements file
 
-```bash
-# Install all production dependencies
-pip install -r requirements.txt
+The `-r` flag reads a requirements file and installs every package listed in it. This is the primary mechanism for reproducing an environment — a new contributor clones the repo, creates a venv, and runs `pip install -r requirements.txt` to get an identical set of packages.
 
-# Install dev dependencies (which include production deps)
+```bash
+pip install -r requirements.txt
 pip install -r requirements-dev.txt
 ```
 
@@ -155,10 +206,7 @@ pip install -r requirements-dev.txt
 > without reinstalling. This requires a `pyproject.toml` or `setup.py` in the project root.
 
 ```bash
-# Install current project in editable mode
 pip install -e .
-
-# Install with dev extras in editable mode
 pip install -e ".[dev]"
 ```
 
@@ -188,10 +236,15 @@ pip install -e ".[dev]"
 
 ## pip freeze — pin and freeze dependencies
 
+### pip | freezing dependencies
+
+`pip freeze` captures the exact state of the current environment — every package, every version, including transitive dependencies. This is the simplest path to reproducibility.
+
 #### pip freeze — snapshot all installed packages
 
+Outputs every installed package with its exact version in `package==version` format. Redirecting to `requirements.txt` creates a reproducible specification. Because pip freeze captures the entire environment (direct and transitive dependencies), the output is a complete snapshot — installing from it reproduces the exact same set of packages.
+
 ```bash
-# Write all installed packages with exact versions to requirements.txt
 pip freeze > requirements.txt
 ```
 
@@ -206,10 +259,9 @@ pip freeze > requirements.txt
 
 #### pip-tools pip-compile — separate abstract from pinned dependencies
 
-Create a `requirements.in` with your direct dependencies (loose constraints), then compile to a fully pinned `requirements.txt`:
+Create a `requirements.in` with your direct dependencies (loose constraints), then compile to a fully pinned `requirements.txt`. The `.in` file captures what you actually need — only your direct dependencies with loose version bounds:
 
-```
-# requirements.in — what you actually need
+```text
 pandas>=2.0
 fastapi>=0.100
 pyodbc>=5.0
@@ -227,10 +279,15 @@ pip-compile requirements.in --output-file requirements.txt
 > package with exact pinned versions). To upgrade, run `pip-compile --upgrade`.
 > This gives you the best of both worlds: readable intent in `.in`, reproducibility in `.txt`.
 
+### pip | constraint files
+
+Constraint files limit which versions of packages can be installed without requiring those packages to be installed. They are used to enforce version consistency across multiple requirements files or projects.
+
 #### pip install --constraint — constrain without installing
 
+The `-c` flag applies version constraints from a file without installing the listed packages. If a package happens to be required by a dependency, the constraint ensures it resolves to the specified version. This is useful in monorepos or when multiple requirements files must share consistent transitive dependency versions.
+
 ```bash
-# Constrain versions across multiple requirements files
 pip install -r requirements.txt -c constraints.txt
 ```
 
@@ -251,13 +308,16 @@ pip install -r requirements.txt -c constraints.txt
 
 ## pip — upgrade and manage installed packages
 
+### pip | package updates
+
+Upgrading a package replaces the installed version with a newer one. The `--upgrade` flag tells pip to ignore the currently installed version and resolve the latest available.
+
 #### pip install --upgrade — upgrade a package to latest
 
-```bash
-# Upgrade pip itself — do this FIRST in every new venv
-python -m pip install --upgrade pip
+The `--upgrade` flag forces pip to resolve the latest version even if the package is already installed. For pip itself, use `python -m pip install --upgrade pip` — this avoids a Windows edge case where the running `pip.exe` cannot overwrite itself. Always upgrade pip first in a new venv to get the latest resolver and security fixes.
 
-# Upgrade a specific package
+```bash
+python -m pip install --upgrade pip
 pip install --upgrade pandas
 ```
 
@@ -270,19 +330,21 @@ pip install --upgrade pandas
 
 #### pip list --outdated — find packages with newer versions
 
+Queries PyPI for each installed package and shows those with a newer version available. The output includes the current version, the latest version, and the type of update (wheel or sdist).
+
 ```bash
-# Show all packages that have newer versions available
 pip list --outdated
 ```
 
 #### pip show — inspect a single package
 
+Displays metadata for a single installed package: version, installation location, direct dependencies (`Requires`), and reverse dependencies (`Required-by`). Use this to understand why a package is installed and what depends on it.
+
 ```bash
-# Show package metadata: version, location, dependencies, dependents
 pip show pandas
 ```
 
-```
+```text
 Name: pandas
 Version: 2.1.4
 Summary: Powerful data structures for data analysis
@@ -294,8 +356,9 @@ Required-by:
 
 #### pip uninstall — remove a package
 
+Removes the specified package from the environment but does NOT remove its transitive dependencies. This means `pip uninstall pandas` leaves `numpy`, `python-dateutil`, and `tzdata` behind as orphans. Over time, the environment accumulates unused packages.
+
 ```bash
-# Remove a package (does NOT remove its transitive dependencies)
 pip uninstall pandas
 ```
 
@@ -314,35 +377,40 @@ pip uninstall pandas
 > This is faster and guaranteed clean. If you need to remove a package from the spec,
 > delete it from `requirements.txt` (or `requirements.in`) first, then rebuild.
 
+### pip | environment health
+
+These commands verify that the installed packages are internally consistent and help reclaim disk space.
+
 #### pip check — verify dependency compatibility
 
+Scans all installed packages and reports version conflicts — cases where package A requires `numpy>=1.24` but `numpy==1.23` is installed. A clean `pip check` with no output means all dependency constraints are satisfied.
+
 ```bash
-# Verify all installed packages have compatible dependencies
 pip check
 ```
 
 #### pip cache purge — clear the download cache
 
+Deletes all cached wheel files from pip's download cache (`~/.cache/pip` on Linux, `~/Library/Caches/pip` on macOS). Pip caches downloaded wheels to speed up future installs of the same package version. Purging frees disk space but means the next install of any cached package will re-download it.
+
 ```bash
-# Clear cached wheel files to free disk space
 pip cache purge
 ```
 
 ## pip — inspect the active environment
 
+### Python | binary inspection
+
+When something goes wrong, the first question is always "which Python am I actually running?" These commands answer that.
+
 #### python --version and which python — confirm what's active
 
+`python --version` shows the interpreter version. `which python` (Linux/macOS) or `where python` (Windows) shows the full path to the binary — this reveals whether you are running the venv Python or the system Python. `pip --version` shows both the pip version and the Python installation it is attached to.
+
 ```bash
-# Check Python version
 python --version
-
-# Check WHICH Python binary is running (Linux/macOS)
 which python
-
-# Check WHICH Python binary is running (Windows)
 where python
-
-# Check pip version and which Python it's attached to
 pip --version
 ```
 
@@ -357,34 +425,42 @@ pip --version
 
 #### sys.prefix — programmatic venv check
 
+From within Python code, `sys.prefix` returns the path to the active environment and `sys.base_prefix` returns the path to the base Python installation. When a venv is active, these two differ — the comparison `sys.prefix != sys.base_prefix` returns `True`. This is useful for runtime checks in scripts that must verify they are running inside a venv.
+
 ```python
-# Confirm venv is active from within Python
 import sys
-sys.prefix  # Prefix
-sys.base_prefix  # Base prefix
-sys.prefix != sys.base_prefix  # In venv
+sys.prefix
+sys.base_prefix
+sys.prefix != sys.base_prefix
 ```
 
 #### pip list — all installed packages
 
-```bash
-# List all packages in the active environment
-pip list
+Lists every package installed in the active environment. The default tabular format shows package name and version. The `--format=freeze` option produces the same output as `pip freeze` — useful for scripting without redirecting freeze output.
 
-# Same output as pip freeze (pinned format)
+```bash
+pip list
 pip list --format=freeze
 ```
 
 #### Locating a package on disk
 
+Every Python package has a `__file__` attribute pointing to its `__init__.py` on disk. This reveals whether the package is installed in the venv's `site-packages` or in the system Python — a quick way to confirm isolation is working correctly.
+
 ```python
-# Find where a package is physically installed
 import pandas
 pandas.__file__
-# .venv/lib/python3.12/site-packages/pandas/__init__.py
+```
+
+```text
+.venv/lib/python3.12/site-packages/pandas/__init__.py
 ```
 
 ## requirements.txt — the dependency specification lifecycle
+
+### requirements.txt | pinned vs unpinned
+
+The difference between a pinned and unpinned `requirements.txt` is the difference between a reproducible environment and a future outage.
 
 #### requirements.txt — production dependencies (pinned)
 
@@ -415,8 +491,9 @@ pandas.__file__
 > if you need a range, maintain a `requirements.in` for intent and use
 > `pip-compile` to produce the pinned `requirements.txt` from it.
 
-```
-# requirements.txt — production dependencies (pinned)
+A production `requirements.txt` with fully pinned versions:
+
+```text
 pandas==2.1.4
 polars==0.20.5
 pyodbc==5.1.0
@@ -427,10 +504,15 @@ fastapi==0.109.0
 uvicorn==0.27.0
 ```
 
+### requirements.txt | production and development
+
+Separating production and development dependencies ensures that test tools, linters, and formatters never ship to production. The convention is two files: `requirements.txt` for production and `requirements-dev.txt` for development.
+
 #### requirements-dev.txt — development extras that extend production
 
+The `-r requirements.txt` line at the top includes all production dependencies, then adds development tools. This ensures developers test against the same package versions that run in production. Only the additional dev packages are listed explicitly.
+
 ```
-# requirements-dev.txt — development extras
 -r requirements.txt
 pytest==7.4.4
 pytest-cov==4.1.0
@@ -446,58 +528,52 @@ ruff==0.1.14
 > test against the SAME package versions that run in production, plus they
 > get pytest, linters, and formatters.
 
+### requirements.txt | full lifecycle
+
+The standard workflow for managing a Python environment follows a predictable sequence: create, activate, upgrade pip, install from spec, add new packages, re-freeze, and commit.
+
 #### Full lifecycle — create, install, freeze, rebuild
 
+This sequence demonstrates the complete dependency management cycle. Steps 4-6 repeat for every new package addition. The key discipline is always re-freezing after any `pip install` so `requirements.txt` stays in sync with the actual environment.
+
 ```bash
-# 1. Create and activate
 python -m venv .venv
-source .venv/bin/activate  # or .venv\Scripts\activate on Windows
-
-# 2. Upgrade pip
+source .venv/bin/activate
 python -m pip install --upgrade pip
-
-# 3. Install from requirements
 pip install -r requirements.txt
-
-# 4. Add a new dependency
 pip install httpx==0.27.0
-
-# 5. Re-freeze to capture the addition
 pip freeze > requirements.txt
-
-# 6. Commit the updated requirements.txt
 git add requirements.txt
 git commit -m "Add httpx for async HTTP client"
 ```
 
 #### Updating a single package
 
+To upgrade a single dependency, use `--upgrade` on just that package, then re-freeze the entire environment. The re-freeze captures any transitive dependency changes caused by the upgrade.
+
 ```bash
-# Upgrade one package, then re-freeze
 pip install --upgrade pandas
 pip freeze > requirements.txt
 ```
 
 #### Comments and line options in requirements files
 
-```
+Requirements files support comments (`#`), editable installs (`-e`), Git repository references, constraint file references (`-c`), and index URL overrides. The `--extra-index-url` option adds a private PyPI feed as a secondary package source alongside the public `pypi.org`.
+
+```text
 # Comments start with #
 # Blank lines are ignored
-
-# Editable install of a local package
 -e .
-
-# Install from a Git repository
 -e git+https://github.com/org/repo.git@v2.0#egg=mypackage
-
-# Constrain file
 -c constraints.txt
-
-# Index URL override
 --extra-index-url https://pypi.company.com/simple/
 ```
 
 ## pyenv — manage multiple Python versions
+
+### pyenv | version significance
+
+Python minor versions are not interchangeable — features, performance, and stdlib modules differ significantly between them.
 
 #### Why the Python minor version matters
 
@@ -519,57 +595,56 @@ pip freeze > requirements.txt
 > All three must agree. A mismatch between local (3.11) and CI (3.12) will
 > surface as type errors or missing stdlib modules at the worst possible time.
 
+### pyenv | system Python inspection
+
+Before managing versions with pyenv, check what is already installed on the machine.
+
 #### python --version — check what's installed
 
-```bash
-# Check the active Python version
-python --version
-# Python 3.12.0
+Shows the version of the Python binary that the shell currently resolves. On machines with multiple Python versions installed, this shows whichever one is first on the `PATH`.
 
-# Check all available Python binaries (Linux)
+```bash
+python --version
+```
+
+```text
+Python 3.12.0
+```
+
+```bash
 ls /usr/bin/python*
 ```
 
 #### Creating a venv with a specific Python version
 
-```bash
-# Use a specific Python version to create the venv
-python3.12 -m venv .venv
+When multiple Python versions are installed, invoke the specific version explicitly to create the venv. The venv inherits the Python version of the binary used to create it — a venv created with `python3.12` always runs Python 3.12, regardless of what `python` resolves to later. On Windows, the `py` launcher provides version selection.
 
-# On Windows with multiple versions installed via python.org
+```bash
+python3.12 -m venv .venv
 py -3.12 -m venv .venv
 ```
 
-#### pyenv — install and switch between Python versions
+### pyenv | installation and version switching
 
-> [!info] pyenv basics
->
-> `pyenv` manages multiple Python installations on a single machine. It intercepts
-> the `python` command and routes it to whichever version is configured for the
-> current directory. This is useful when different projects require different
-> Python minor versions. pyenv works on Linux and macOS; on Windows, use `pyenv-win`.
+`pyenv` manages multiple Python installations on a single machine by intercepting the `python` command and routing it to whichever version is configured for the current directory. It works on Linux and macOS; on Windows, use `pyenv-win`.
+
+#### pyenv install and configure — manage Python versions
+
+Install `pyenv` via Homebrew, then use it to install specific Python versions. `pyenv global` sets the machine-wide default. `pyenv local` creates a `.python-version` file in the current directory, pinning that directory to a specific version. `pyenv versions` lists all installed versions.
 
 ```bash
-# Install pyenv (Linux/macOS via Homebrew)
 brew install pyenv
-
-# Install a specific Python version
 pyenv install 3.12.0
-
-# Set the global default
 pyenv global 3.12.0
-
-# Set a per-directory version (creates .python-version file)
 pyenv local 3.11.7
-
-# List installed versions
 pyenv versions
 ```
 
 #### .python-version — per-project Python version pinning
 
+The `.python-version` file pins the Python version at the project level. When `pyenv` detects this file in the current directory, it automatically switches to the specified version. Commit this file to the repository so all contributors use the same Python version.
+
 ```bash
-# Create .python-version in the project root
 echo "3.12.0" > .python-version
 ```
 
@@ -582,7 +657,116 @@ echo "3.12.0" > .python-version
 >
 > If any of these drift, you get "works on my machine" failures.
 
+
+## uv — modern Python package management
+
+`uv` (by Astral, the creators of `ruff`) is a drop-in replacement for `pip`, `pip-tools`, `virtualenv`, and `pyenv` written in Rust. It resolves and installs packages 10-100x faster than pip and produces deterministic lock files by default.
+
+### uv | virtual environments and package installation
+
+`uv` can create virtual environments, install packages, and manage Python versions — all from a single binary. It uses `pip`-compatible syntax so migration is minimal.
+
+#### uv venv and uv pip — create environments and install packages
+
+`uv venv` creates a virtual environment (10x faster than `python -m venv`). `uv pip install` and `uv pip install -r` work identically to their pip equivalents but resolve dependencies in parallel. `uv pip compile` replaces `pip-compile` for lock file generation. `uv pip sync` installs exactly what is listed and removes everything else.
+
+```bash
+uv venv .venv
+uv pip install pandas==2.1.4
+uv pip install -r requirements.txt
+uv pip compile requirements.in -o requirements.txt
+uv pip sync requirements.txt
+```
+
+> [!info] uv vs pip — when to switch
+>
+> `uv` is a strict superset of pip's functionality with dramatically faster
+> performance. It uses the same `requirements.txt` format, the same version
+> specifiers, and the same `--extra-index-url` syntax. For new projects,
+> `uv` is the recommended choice. For existing projects, migration is as
+> simple as replacing `pip` with `uv pip` in commands. The main caveat:
+> `uv` is newer (2024+) and may not be available in all CI base images —
+> install it with `pip install uv` or `curl` from the official release.
+
+> [!tip] uv pip sync for Deterministic Environments
+>
+> `uv pip sync requirements.txt` installs exactly the packages listed
+> and REMOVES any packages not in the file — unlike `pip install -r`
+> which only adds. This guarantees the environment matches the spec
+> exactly, with no orphaned packages from previous installations.
+
+
+## pipx — isolated global Python tools
+
+`pipx` installs Python CLI tools into isolated environments, preventing them from polluting your project's venv. This is the Python equivalent of .NET's `dotnet tool install --global`.
+
+### pipx | installation and usage
+
+Each tool installed via `pipx` gets its own hidden virtual environment. The tool's entry point is symlinked to `~/.local/bin/` so it is available globally without conflicting with project dependencies.
+
+#### pipx install — isolated global tool management
+
+Install `pipx` once with pip, then use it to install CLI tools. Each tool gets its own venv — `black`, `ruff`, and `mypy` never interfere with each other or with your project's dependencies. `pipx list` shows all installed tools and their versions.
+
+```bash
+pip install pipx
+pipx install black
+pipx install ruff
+pipx install mypy
+pipx list
+pipx upgrade-all
+```
+
+> [!tip] pipx vs pip install --user
+>
+> `pip install --user black` installs black and its dependencies into
+> your user site-packages — where they can conflict with project dependencies.
+> `pipx install black` creates an isolated venv just for black. The tool
+> works globally, its dependencies are invisible to your projects.
+
+
+## Private PyPI feeds — pip.conf and --extra-index-url
+
+Enterprise environments host internal packages on private PyPI feeds (GCP Artifact Registry, Azure DevOps, JFrog Artifactory). Configure pip to query these feeds in addition to the public `pypi.org`.
+
+### pip.conf | persistent feed configuration
+
+A `pip.conf` file (Linux/macOS: `~/.config/pip/pip.conf`, Windows: `%APPDATA%\pip\pip.ini`) configures additional package sources without repeating `--extra-index-url` on every install command.
+
+#### Configure a private PyPI feed
+
+The `pip.conf` file accepts an `extra-index-url` option that adds a secondary package source alongside the public `pypi.org`. The `--extra-index-url` flag on the command line achieves the same thing for one-off installs.
+
+```text
+[global]
+extra-index-url = https://us-python.pkg.dev/my-project/pypi-repo/simple/
+trusted-host = us-python.pkg.dev
+```
+
+```bash
+pip install my-internal-package --extra-index-url https://us-python.pkg.dev/my-project/pypi-repo/simple/
+```
+
+> [!danger] Private Feeds Require Authentication
+>
+> Private PyPI feeds require credentials. Never hardcode tokens in `pip.conf`.
+> Use `keyring` integration, environment variables (`PIP_EXTRA_INDEX_URL`),
+> or GCP's `gcloud auth application-default print-access-token` for
+> Artifact Registry. In CI, inject the token as a secret environment variable.
+
+> [!success] Use environment variables for feed credentials
+>
+> Set `PIP_EXTRA_INDEX_URL` as a CI secret. Pip reads this environment variable
+> automatically — no `pip.conf` file needed in CI. For GCP Artifact Registry,
+> use `pip install keyrings.google-artifactregistry-auth` for seamless
+> credential management.
+
+
 ## docker — Python environments in containers
+
+### Docker | standard container pattern
+
+The standard Python Docker pattern copies `requirements.txt` first (for layer caching), installs dependencies, then copies source code. No virtual environment is needed inside a container — the container IS the isolation.
 
 #### Dockerfile — the standard Python container pattern
 
@@ -593,21 +777,20 @@ echo "3.12.0" > .python-version
 > there's no system Python to corrupt because the container has only YOUR Python.
 > Using a venv inside Docker adds an unnecessary layer and increases image size.
 
+The Dockerfile installs system dependencies first (for packages that compile C extensions), then copies `requirements.txt` and installs Python dependencies in a separate layer for Docker layer caching. Source code is copied last because it changes most often — keeping the pip install layer cached.
+
 ```dockerfile
 FROM python:3.12-slim
 WORKDIR /app
 
-# Install system dependencies (for packages that compile C extensions)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     unixodbc-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies first (Docker layer caching)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code (changes more often — separate layer)
 COPY . .
 
 CMD ["python", "main.py"]
@@ -629,8 +812,9 @@ CMD ["python", "main.py"]
 
 #### .dockerignore — keep the image lean
 
-```
-# .dockerignore — exclude from Docker build context
+A `.dockerignore` file excludes files from the Docker build context. Without it, `COPY . .` sends the venv, git history, test caches, and documentation into the build — inflating context size and potentially leaking sensitive data into the image.
+
+```text
 .venv/
 __pycache__/
 *.pyc
@@ -642,17 +826,23 @@ tests/
 *.md
 ```
 
+### Docker | multi-stage and specialized builds
+
+Multi-stage builds separate compilation from runtime, keeping the final image free of build tools like `gcc`. Specialized containers (FastAPI, etc.) follow the same pattern with framework-specific entry points.
+
 #### Multi-stage build — when you compile wheels
 
+Stage 1 installs build tools (`gcc`, dev headers) and compiles all packages with C extensions into wheel files. Stage 2 starts from a clean `slim` image and installs the pre-built wheels — no compiler needed. The final image is smaller and has a reduced attack surface.
+
 ```dockerfile
-# Stage 1: Build wheels for packages with C extensions
 FROM python:3.12-slim AS builder
 WORKDIR /build
 RUN apt-get update && apt-get install -y gcc unixodbc-dev
 COPY requirements.txt .
 RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
+```
 
-# Stage 2: Install pre-built wheels into clean image
+```dockerfile
 FROM python:3.12-slim
 WORKDIR /app
 COPY --from=builder /wheels /wheels
@@ -670,6 +860,8 @@ CMD ["python", "main.py"]
 
 #### FastAPI container — real-world example
 
+A production FastAPI container follows the same `requirements.txt`-first pattern. The `CMD` uses `uvicorn` with explicit host and port bindings for Cloud Run compatibility (which expects the app to listen on `0.0.0.0:8080`).
+
 ```dockerfile
 FROM python:3.12-slim
 WORKDIR /app
@@ -679,14 +871,19 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Expose the port and run with uvicorn
 EXPOSE 8080
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
 ```
 
 ## github-actions — Python environments in CI/CD
 
+### GitHub Actions | build and test workflows
+
+The core CI pattern installs Python with `actions/setup-python`, upgrades pip, installs from requirements files, then runs linting, type checking, and tests.
+
 #### Basic CI workflow — test on every push
+
+This workflow installs both production and dev dependencies, then runs the full quality gate: linting with ruff, type checking with mypy, and testing with pytest (including coverage). Each step is explicit so failures are easy to diagnose.
 
 ```yaml
 name: CI
@@ -732,6 +929,8 @@ jobs:
 
 #### Matrix strategy — test across Python versions
 
+Matrix strategies run the same workflow against multiple Python versions in parallel. This is useful for libraries that must support multiple Python minor versions. For applications pinned to one version, a matrix is unnecessary.
+
 ```yaml
 jobs:
   test:
@@ -750,7 +949,13 @@ jobs:
           pytest
 ```
 
+### GitHub Actions | Docker deployment
+
+Building and pushing Docker images in CI completes the pipeline from source to deployed container.
+
 #### Build and push Docker image in CI
+
+This workflow builds the Docker image locally in the CI runner and pushes it to GCP Artifact Registry tagged with the commit SHA for traceability.
 
 ```yaml
 jobs:
@@ -773,6 +978,8 @@ jobs:
 
 ## gcp — Python environments on Google Cloud Platform
 
+### GCP | VM deployment
+
 #### Compute Engine VM — standard deployment
 
 > [!info] Compute Engine is just a remote machine
@@ -782,10 +989,7 @@ jobs:
 > SSH or a startup script instead of opening a terminal.
 
 ```bash
-# SSH into the VM and set up the environment
 gcloud compute ssh my-vm --zone=us-central1-a
-
-# On the VM:
 sudo apt update && sudo apt install -y python3.12 python3.12-venv
 python3.12 -m venv /opt/app/.venv
 source /opt/app/.venv/bin/activate
@@ -793,12 +997,16 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+### GCP | container deployment
+
+Cloud Run runs your Docker image with automatic scaling, HTTPS, and environment variable injection. The environment is entirely defined by the Dockerfile.
+
 #### Cloud Run — Dockerized deployment
 
-```bash
-# Build and deploy to Cloud Run (uses Dockerfile)
-gcloud builds submit --tag us-central1-docker.pkg.dev/my-project/repo/myapp
+`gcloud builds submit` builds the image using Cloud Build and pushes it to Artifact Registry. `gcloud run deploy` creates or updates the Cloud Run service. The environment — Python version, packages, system dependencies — is baked into the Docker image.
 
+```bash
+gcloud builds submit --tag us-central1-docker.pkg.dev/my-project/repo/myapp
 gcloud run deploy myapp \
   --image us-central1-docker.pkg.dev/my-project/repo/myapp \
   --region us-central1 \
@@ -822,8 +1030,9 @@ my-function/
   requirements.txt
 ```
 
+The `main.py` file is the Cloud Function entry point:
+
 ```python
-# main.py — Cloud Function entry point
 import functions_framework
 import pandas as pd
 
@@ -833,8 +1042,9 @@ def process(request):
     return df.describe().to_json()
 ```
 
-```
-# requirements.txt — GCP installs these automatically
+GCP installs the packages listed in `requirements.txt` automatically during the build phase:
+
+```text
 pandas==2.1.4
 functions-framework==3.5.0
 ```
@@ -853,10 +1063,15 @@ functions-framework==3.5.0
 > `gcloud composer environments update my-env --location us-central1 --update-pypi-packages-from-file requirements-composer.txt`
 > This is idempotent, version-controlled, and survives environment updates.
 
+### GCP | managed services
+
+Cloud Composer (managed Airflow) has its own dependency management — packages must be installed via the GCP API, not via SSH.
+
 #### Cloud Composer — managed Airflow package installation
 
+`gcloud composer environments update` applies a requirements file to the Composer environment through the GCP control plane. This is idempotent and survives environment updates — unlike SSH-based `pip install` which is overwritten on the next environment update.
+
 ```bash
-# Add a PyPI package to Composer (correct way)
 gcloud composer environments update my-env \
   --location us-central1 \
   --update-pypi-packages-from-file requirements-composer.txt
@@ -872,7 +1087,13 @@ gcloud composer environments update my-env \
 > platform settings (see GCP section). Terraform's job is to point the
 > infrastructure at the right image and set the right environment variables.
 
+### Terraform | infrastructure deployment
+
+Terraform provisions the GCP resources where Python containers run. It points infrastructure at Docker images and configures environment variables — it has no knowledge of pip, venv, or `requirements.txt`.
+
 #### Cloud Run service with environment variables
+
+This resource creates a Cloud Run service pointing at a Docker image in Artifact Registry. Environment variables are set in `env` blocks — the container reads them at runtime via `os.environ`. Resource limits control the container's memory and CPU allocation.
 
 ```hcl
 resource "google_cloud_run_service" "pipeline" {
@@ -906,6 +1127,8 @@ resource "google_cloud_run_service" "pipeline" {
 ```
 
 #### Cloud Function deployment
+
+For Cloud Functions, Terraform specifies the runtime (`python312`), entry point function, and source location. GCP reads `requirements.txt` from the source and installs dependencies automatically during the build phase — no Dockerfile needed.
 
 ```hcl
 resource "google_cloudfunctions2_function" "processor" {
@@ -954,6 +1177,10 @@ resource "google_cloudfunctions2_function" "processor" {
 > file (values redacted) committed to the repo, with a CI step that asserts each is set
 > before the test suite runs.
 
+### Common mistakes
+
+The table below consolidates the most frequent Python environment mistakes. Each one has caused production outages or hours of debugging.
+
 | Anti-Pattern | Why It's Bad | Fix |
 |---|---|---|
 | `pip install` without venv | Corrupts system Python, breaks other projects | Always create and activate a venv first |
@@ -986,6 +1213,8 @@ resource "google_cloudfunctions2_function" "processor" {
 
 ## cheat sheet — quick reference for venv and pip
 
+### Environment commands
+
 | Task | Command |
 |---|---|
 | Create environment | `python -m venv .venv` |
@@ -1009,6 +1238,8 @@ resource "google_cloudfunctions2_function" "processor" {
 | Confirm venv active | `python -c "import sys; print(sys.prefix)"` |
 | Rebuild from scratch | `rm -rf .venv && python -m venv .venv` |
 
+### Specification files
+
 | Spec File | Purpose |
 |---|---|
 | `requirements.txt` | Pinned production dependencies |
@@ -1018,6 +1249,8 @@ resource "google_cloudfunctions2_function" "processor" {
 | `.python-version` | Pin Python version (pyenv) |
 | `.gitignore` | Exclude `.venv/`, `__pycache__/`, `*.pyc` |
 | `.dockerignore` | Exclude `.venv/`, `.git/`, tests from image |
+
+### Dependencies by environment
 
 | Environment | How Dependencies Are Installed |
 |---|---|

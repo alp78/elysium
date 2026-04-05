@@ -200,14 +200,14 @@ Use this flow when choosing how to authenticate a Python workload to GCP service
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    A{Running on GCP compute?} -->|Yes| B["Metadata server\nAttach SA to resource\nNo key file needed"]
+    A{Running on GCP compute?} -->|Yes| B["Metadata server<br/>Attach SA to resource<br/>No key file needed"]
     A -->|No| C{CI/CD or cross-cloud?}
-    C -->|Yes| D["Workload Identity Federation\nExchange OIDC token\nfor short-lived GCP token"]
+    C -->|Yes| D["Workload Identity Federation<br/>Exchange OIDC token<br/>for short-lived GCP token"]
     C -->|No| E{Act as a different SA?}
-    E -->|Yes| F["SA impersonation\nShort-lived delegation\nNeeds TokenCreator role"]
+    E -->|Yes| F["SA impersonation<br/>Short-lived delegation<br/>Needs TokenCreator role"]
     E -->|No| G{Local development?}
-    G -->|Yes| H["ADC via gcloud\ngcloud auth application-default login"]
-    G -->|No| I["SA JSON key\nLast resort — rotate every 90 days\nStore in Secret Manager"]
+    G -->|Yes| H["ADC via gcloud<br/>gcloud auth application-default login"]
+    G -->|No| I["SA JSON key<br/>Last resort — rotate every 90 days<br/>Store in Secret Manager"]
 ```
 
 ### Service account key authentication
@@ -485,8 +485,7 @@ else:
 
 Generates and saves the GitHub Actions workflow YAML that implements the WIF authentication flow. The `google-github-actions/auth@v2` action handles the OIDC token exchange — the workflow never touches a key file.
 
-```python
-wif_workflow = f"""
+```yaml
 name: GCP Security Lab — WIF Demo
 on:
   workflow_dispatch:
@@ -505,66 +504,22 @@ jobs:
         name: Authenticate to GCP via Workload Identity Federation
         uses: google-github-actions/auth@v2
         with:
-          project_id: {PROJECT_ID}
+          project_id: $PROJECT_ID
           workload_identity_provider: >-
-            projects/{PROJECT_NUMBER}/locations/global/workloadIdentityPools/{WIF_POOL}/providers/{WIF_PROVIDER}
-          service_account: {SA_EMAIL}
+            projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/$WIF_POOL/providers/$WIF_PROVIDER
+          service_account: $SA_EMAIL
 
       - name: Verify GCP access
         run: |
           gcloud auth list
-          gcloud projects describe {PROJECT_ID}
-          gcloud storage ls gs://{BUCKET_NAME}
+          gcloud projects describe $PROJECT_ID
+          gcloud storage ls gs://$BUCKET_NAME
 
       - name: Query BigQuery
         run: |
-          bq query --use_legacy_sql=false \\
-            'SELECT COUNT(*) as rows FROM `{PROJECT_ID}.{BQ_DATASET}.gold_scores`'
-"""
-
-wif_workflow
-
-# Save to file for reference
-Path("wif-demo-workflow.yml").write_text(wif_workflow.strip())
-print("  Saved to: wif-demo-workflow.yml")
+          bq query --use_legacy_sql=false \
+            'SELECT COUNT(*) as rows FROM `$PROJECT_ID.$BQ_DATASET.gold_scores`'
 ```
-
-    
-    name: GCP Security Lab — WIF Demo
-    on:
-      workflow_dispatch:
-    
-    permissions:
-      id-token: write    # Required for OIDC token request
-      contents: read
-    
-    jobs:
-      gcp-auth:
-        runs-on: ubuntu-latest
-        steps:
-      - uses: actions/checkout@v4
-    
-      - id: auth
-            name: Authenticate to GCP via Workload Identity Federation
-            uses: google-github-actions/auth@v2
-            with:
-              project_id: seclab-dev-ap-26
-              workload_identity_provider: >-
-      projects/922174528852/locations/global/workloadIdentityPools/github-pool/providers/github-provider
-              service_account: notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
-    
-      - name: Verify GCP access
-            run: |
-      gcloud auth list
-      gcloud projects describe seclab-dev-ap-26
-              gcloud storage ls gs://seclab-dev-ap-26-data
-    
-      - name: Query BigQuery
-            run: |
-      bq query --use_legacy_sql=false \
-      'SELECT COUNT(*) as rows FROM `seclab-dev-ap-26.index_data.gold_scores`'
-    
-      Saved to: wif-demo-workflow.yml
 
 #### ID tokens versus access tokens — JWT structure
 
@@ -1362,38 +1317,24 @@ The metadata server at `169.254.169.254` is the internal GCP credential source f
 
 The GCP metadata server at `http://metadata.google.internal` provides access tokens, SA email, project ID, and instance identity tokens to any process running on the VM — no key file needed. The `Metadata-Flavor: Google` header is required to prevent SSRF attacks from external requests accidentally hitting the endpoint.
 
-```python
-print("  VM metadata server endpoints (accessible from inside the VM):")
-endpoints = {
-    "Access token":    "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token",
-    "SA email":        "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email",
-    "Instance ID":     "http://metadata.google.internal/computeMetadata/v1/instance/id",
-    "Instance zone":   "http://metadata.google.internal/computeMetadata/v1/instance/zone",
-    "Instance name":   "http://metadata.google.internal/computeMetadata/v1/instance/name",
-    "Project ID":      "http://metadata.google.internal/computeMetadata/v1/project/project-id",
-    "Identity token":  "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=AUDIENCE",
-}
-for name, url in endpoints.items():
-    print(f"  {name:20s} → {url}")
+All endpoints are under `http://metadata.google.internal/computeMetadata/v1/`:
 
-print("  Usage from inside the VM:")
-print('    curl -H "Metadata-Flavor: Google" \\')
-print('      "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"')
+| Endpoint | Path |
+|---|---|
+| Access token | `instance/service-accounts/default/token` |
+| SA email | `instance/service-accounts/default/email` |
+| Instance ID | `instance/id` |
+| Instance zone | `instance/zone` |
+| Instance name | `instance/name` |
+| Project ID | `project/project-id` |
+| Identity token | `instance/service-accounts/default/identity?audience=AUDIENCE` |
+
+Usage from inside the VM:
+
+```bash
+curl -H "Metadata-Flavor: Google" \
+  "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"
 ```
-
-      VM metadata server endpoints (accessible from inside the VM):
-    
-      Access token         → http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token
-      SA email             → http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email
-      Instance ID          → http://metadata.google.internal/computeMetadata/v1/instance/id
-      Instance zone        → http://metadata.google.internal/computeMetadata/v1/instance/zone
-      Instance name        → http://metadata.google.internal/computeMetadata/v1/instance/name
-      Project ID           → http://metadata.google.internal/computeMetadata/v1/project/project-id
-      Identity token       → http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/identity?audience=AUDIENCE
-    
-      Usage from inside the VM:
-        curl -H "Metadata-Flavor: Google" \
-      "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"
 
 #### google-cloud-compute FirewallsClient — audit permissive firewall rules
 
@@ -2529,12 +2470,12 @@ The pipeline demonstrates defense-in-depth: each stage authenticates via SA cred
   'textColor': '#c0caf5',
   'fontSize': '14px'
 }}}%%
-flowchart LR
-    SM["Secret Manager\nDB password"]
-    BQ["BigQuery\nquery results"]
-    KMS["Cloud KMS\nencrypt payload"]
-    FS["Firestore\nciphertext doc"]
-    GCS["GCS CMEK bucket\nciphertext archive"]
+flowchart TD
+    SM["Secret Manager<br/>DB password"]
+    BQ["BigQuery<br/>query results"]
+    KMS["Cloud KMS<br/>encrypt payload"]
+    FS["Firestore<br/>ciphertext doc"]
+    GCS["GCS CMEK bucket<br/>ciphertext archive"]
 
     SM -->|"Step 1: fetch secret"| BQ
     BQ -->|"Step 2: SA query"| KMS

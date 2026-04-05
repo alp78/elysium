@@ -1,6 +1,7 @@
 ---
 title: "Control Flow"
-tags: [csharp]
+tags:
+  - csharp
 aliases: [if else, loops, for loop, while loop, switch, pattern matching, match case]
 description: "C# control flow reference with executable examples and cell outputs — covers conditionals, switch expressions, loops, pattern matching, and iterators. See [03_py_control_flow](https://alp78.github.io/elysium/02-Programming-Languages/Python/03_py_control_flow) for the Python equivalent."
 created: 2026-03-22
@@ -81,14 +82,23 @@ else if (score >= 60)
 else
     grade = "F";
 $"Score {score} → Grade {grade}"
+```
 
+```text
+Score 85 → Grade B
+```
+
+#### Simple if — single condition without else
+
+A standalone `if` checks one condition with no alternative branch. The body executes only when the condition is `true`.
+
+```csharp
 int x = 10;
 if (x > 0)
     Console.WriteLine($"{x} is positive");
 ```
 
 ```text
-Score 85 → Grade B
 10 is positive
 ```
 
@@ -422,14 +432,23 @@ Index-based `for` loops give explicit control over the counter, step, and direct
 for (int i = 0; i < 5; i++)
     Console.Write($"  {i}");
 Console.WriteLine();
+```
 
+```text
+  0  1  2  3  4
+```
+
+#### for loop — custom step increment
+
+The step expression can be any integer — `i += 3` skips by three on each iteration. Use this pattern for sampling, pagination offsets, or any non-unit stride.
+
+```csharp
 for (int i = 0; i < 20; i += 3)
     Console.Write($"  {i}");
 Console.WriteLine();
 ```
 
 ```text
-  0  1  2  3  4
   0  3  6  9  12  15  18
 ```
 
@@ -468,9 +487,9 @@ Console.WriteLine();
   Alice:92  Bob:85
 ```
 
-#### while and do-while loops
+#### while — condition-first loop
 
-`while` evaluates the condition before each iteration — the body may never execute. `do-while` executes the body first, then checks the condition — guaranteeing at least one iteration. Use `while` for input validation loops and polling. Use `do-while` when the first pass must always run (e.g., menu display, retry-at-least-once logic).
+`while` evaluates the condition before each iteration — the body may never execute if the condition is `false` from the start. Use for input validation loops and polling where zero iterations is a valid outcome.
 
 ```csharp
 int n = 3;
@@ -480,7 +499,17 @@ while (n > 0)
     n--;
 }
 Console.WriteLine();
+```
 
+```text
+  3  2  1
+```
+
+#### do-while — body-first loop
+
+`do-while` executes the body first, then checks the condition — guaranteeing at least one iteration. Use for retry-at-least-once logic, menu display, or input validation where the first pass must always run.
+
+```csharp
 int attempts = 0;
 do
 {
@@ -491,20 +520,29 @@ Console.WriteLine();
 ```
 
 ```text
-  3  2  1
   attempt-1  attempt-2  attempt-3
 ```
 
 #### Enumerate with index using Select overload
 
-C# has no built-in `enumerate` keyword. Use LINQ's `Select` overload that provides the index as a second parameter: `.Select((item, index) => ...)`. For parallel iteration of two sequences, use `Zip` which pairs elements positionally and stops at the shorter sequence.
+C# has no built-in `enumerate` keyword. Use LINQ's `Select` overload that provides the index as a second parameter: `.Select((item, index) => ...)`.
 
 ```csharp
 var fruits = new[] { "apple", "banana", "cherry" };
 foreach (var (fruit, i) in fruits.Select((f, i) => (f, i)))
     Console.Write($"  {i}:{fruit}");
 Console.WriteLine();
+```
 
+```text
+  0:apple  1:banana  2:cherry
+```
+
+#### Parallel iteration with Zip
+
+`Zip` pairs elements from two sequences positionally and stops at the shorter sequence. Use for lock-step iteration of parallel collections — names with ages, keys with values, expected with actual.
+
+```csharp
 var names = new[] { "Alice", "Bob", "Charlie" };
 var ages = new[] { 30, 25, 35 };
 foreach (var pair in names.Zip(ages))
@@ -513,7 +551,6 @@ Console.WriteLine();
 ```
 
 ```text
-  0:apple  1:banana  2:cherry
   Alice=30  Bob=25  Charlie=35
 ```
 
@@ -525,14 +562,9 @@ C# provides `break` to exit a loop, `continue` to skip to the next iteration, an
 
 Keywords that alter loop execution: `break` exits immediately, `continue` skips to the next iteration, and `goto` jumps to a labeled statement (used only for nested loop escape).
 
-#### break, continue, goto
+#### break — exit the innermost loop
 
-> [!info] Loop control
->
-> - `break` — exits the innermost loop immediately
-> - `continue` — skips to the next iteration
-> - Both work in `for`, `foreach`, `while`, and `do-while`
-> - For complex flow, extract to a method with `return`
+`break` exits the innermost enclosing loop immediately. Execution continues after the loop body. Works in `for`, `foreach`, `while`, and `do-while`. For complex flow, extract to a method with `return`.
 
 ```csharp
 for (int i = 0; i < 10; i++)
@@ -545,7 +577,18 @@ for (int i = 0; i < 10; i++)
     Console.Write($"  {i}");
 }
 Console.WriteLine();
+```
 
+```text
+  0  1  2  3  4  Breaking at 5
+
+```
+
+#### continue — skip to the next iteration
+
+`continue` skips the remainder of the current iteration and jumps to the next loop cycle. Use for filtering within a loop when a LINQ pipeline is not practical.
+
+```csharp
 for (int i = 0; i < 10; i++)
 {
     if (i % 2 == 0)
@@ -556,14 +599,12 @@ Console.WriteLine();
 ```
 
 ```text
-  0  1  2  3  4  Breaking at 5
-
   1  3  5  7  9
 ```
 
-#### Breaking outer loops with goto and return
+#### Breaking outer loops with goto
 
-C# has no labeled `break`. Two patterns for escaping nested loops: (1) `goto` to a label placed after the outer loop — the accepted idiom for nested loop breaking. (2) Extract the logic to a method and use `return` to exit all loops at once. Avoid `goto` for general flow control — it is only justified for this specific nested-break scenario.
+C# has no labeled `break`. The accepted idiom for escaping nested loops is `goto` to a label placed after the outer loop. Avoid `goto` for general flow control — it is only justified for this specific nested-break scenario.
 
 ```csharp
 bool found = false;
@@ -580,7 +621,17 @@ for (int i = 0; i < 3; i++)
 }
 Done:
 Console.WriteLine($"Found: {found}");
+```
 
+```text
+Found: True
+```
+
+#### Breaking outer loops with return
+
+Extract nested loop logic to a method and use `return` to exit all loops at once. This is usually cleaner than `goto` and avoids the stigma of labeled jumps.
+
+```csharp
 static int FindFirst(int[][] matrix, int target)
 {
     for (int i = 0; i < matrix.Length; i++)
@@ -594,7 +645,6 @@ Console.WriteLine(FindFirst(m, 3));
 ```
 
 ```text
-Found: True
 100
 ```
 
@@ -703,36 +753,52 @@ List<int> FlattenIter(object[] input)
     return result;
 }
 string.Join(", ", FlattenIter(nested))
+```
+
+```text
+1, 2, 3, 4, 5, 6, 7
+```
+
+#### Recursive flatten with SelectMany
+
+The LINQ variant uses `SelectMany` with a recursive lambda — more compact but still uses the call stack. Prefer the iterative `Stack<T>` version for untrusted input depth.
+
+```csharp
+var nested = new object[] { 1, new object[] { 2, 3 }, new object[] { 4, new object[] { 5, 6 } }, 7 };
 
 IEnumerable<int> FlatLinq(IEnumerable<object> items) =>
     items.SelectMany(item => item is object[] sub ? FlatLinq(sub) : new[] { (int)item });
 string.Join(", ", FlatLinq(nested))
 ```
 
-The iterative approach uses a `Stack` to avoid recursion, making it safe for arbitrarily deep nesting. The LINQ variant is more compact but still uses the call stack — prefer the iterative version for untrusted input depth.
-
 ```text
-1, 2, 3, 4, 5, 6, 7
 1, 2, 3, 4, 5, 6, 7
 ```
 
-#### Eager vs lazy evaluation — ToList() vs deferred
+#### Eager evaluation — materialize with ToList()
 
-LINQ queries are lazy — nothing executes until enumerated (`foreach`, `ToList`, `ToArray`). Without `ToList()`, the query re-executes on each enumeration. Use `ToList()` when enumerating multiple times or caching results. Never `ToList()` on infinite sequences.
+`ToList()` forces immediate evaluation and caches the results in a concrete `List<T>`. Use when enumerating multiple times or when downstream code expects a materialized collection. Never call `ToList()` on infinite sequences.
 
 ```csharp
 var squaresList = Enumerable.Range(0, 10).Select(x => x * x).ToList();
 string.Join(", ", squaresList)
+```
 
+```text
+0, 1, 4, 9, 16, 25, 36, 49, 64, 81
+```
+
+#### Lazy evaluation — deferred query re-executes on each enumeration
+
+Without `ToList()`, the query returns an iterator that re-executes on each enumeration. The type name (`RangeSelectIterator`) reveals no values have been computed yet. Both produce identical results, but the lazy version duplicates work on repeated enumeration.
+
+```csharp
 var squaresLazy = Enumerable.Range(0, 10).Select(x => x * x);
 squaresLazy.GetType().Name
 string.Join(", ", squaresLazy)
 ```
 
-The eager list materializes immediately; the lazy query returns an iterator whose type name (`RangeSelectIterator`) reveals it has not yet computed any values. Both produce identical results when enumerated, but the lazy version re-executes on each enumeration.
-
 ```text
-0, 1, 4, 9, 16, 25, 36, 49, 64, 81
 RangeSelectIterator`2
 0, 1, 4, 9, 16, 25, 36, 49, 64, 81
 ```
@@ -789,15 +855,9 @@ LINQ (Language Integrated Query) replaces imperative `foreach`/`if`/`Add` patter
 
 The foundational LINQ operations: `Select` (map), `Where` (filter), `SelectMany` (flat-map), and query syntax as an alternative notation.
 
-#### LINQ basics — Select, Where, chaining, and SelectMany
+#### Select — transform each element (map)
 
-> [!info] Core LINQ methods
->
-> - `Select` — transforms each element (map)
-> - `Where` — filters elements (filter)
-> - `SelectMany` — flattens nested sequences
-> - Chain fluently: `.Where(...).Select(...).Take(...)`
-> - All lazy — nothing executes until enumeration (`foreach` or `ToList()`)
+`Select` projects each element into a new form — equivalent to `map` in functional languages. All LINQ methods are lazy and return `IEnumerable<T>`.
 
 > [!warning] Don't use foreach with if
 >
@@ -810,23 +870,50 @@ The foundational LINQ operations: `Select` (map), `Where` (filter), `SelectMany`
 ```csharp
 var squares = Enumerable.Range(0, 10).Select(x => x * x).ToList();
 string.Join(", ", squares)
+```
 
+```text
+0, 1, 4, 9, 16, 25, 36, 49, 64, 81
+```
+
+#### Where — filter elements by predicate
+
+`Where` returns only elements satisfying the predicate — equivalent to `filter`. Chain with `Select` for filter-then-transform pipelines.
+
+```csharp
 var evens = Enumerable.Range(0, 20).Where(x => x % 2 == 0).ToList();
 string.Join(", ", evens)
+```
 
+```text
+0, 2, 4, 6, 8, 10, 12, 14, 16, 18
+```
+
+#### Chaining Where and Select
+
+Chain `.Where().Select()` fluently for filter-then-transform pipelines. The order matters — filtering first reduces the number of elements transformed.
+
+```csharp
 var words = new[] { "hello", "world", "csharp", "is", "great" };
 var longUpper = words.Where(w => w.Length > 3).Select(w => w.ToUpper());
 string.Join(", ", longUpper)
+```
 
+```text
+HELLO, WORLD, CSHARP, GREAT
+```
+
+#### SelectMany — flatten nested sequences
+
+`SelectMany` projects each element to a sequence and flattens the results into a single `IEnumerable<T>`. It only peels one layer of nesting.
+
+```csharp
 var matrix = new[] { new[] { 1, 2, 3 }, new[] { 4, 5, 6 }, new[] { 7, 8, 9 } };
 var flat = matrix.SelectMany(row => row).ToList();
 string.Join(", ", flat)
 ```
 
 ```text
-0, 1, 4, 9, 16, 25, 36, 49, 64, 81
-0, 2, 4, 6, 8, 10, 12, 14, 16, 18
-HELLO, WORLD, CSHARP, GREAT
 1, 2, 3, 4, 5, 6, 7, 8, 9
 ```
 
@@ -887,14 +974,9 @@ Alice:85, Bob:92, Diana:95
 5, 6, 2
 ```
 
-#### Aggregate and built-in aggregations (Sum, Max, Any, All)
+#### Aggregate — general-purpose fold
 
-> [!info] Aggregation
->
-> - `Aggregate(seed, (acc, x) => ...)` — the general fold
-> - Built-in shortcuts: `Sum()`, `Max()`, `Min()`, `Average()`, `Count()`
-> - `Any(predicate)` / `All(predicate)` — boolean checks; `Any()` short-circuits on first match
-> - Don't use `Count() > 0` when `Any()` suffices
+`Aggregate(seed, (acc, x) => ...)` is the general fold — reduces a sequence to a single value by applying an accumulator function. The seed is the initial value. Use for custom reductions that built-in methods don't cover.
 
 ```csharp
 var nums = new[] { 1, 2, 3, 4, 5 };
@@ -903,7 +985,19 @@ total
 
 int product = nums.Aggregate(1, (acc, x) => acc * x);
 product
+```
 
+```text
+15
+120
+```
+
+#### Built-in aggregations — Sum, Max, Min, Any, All, Count, Average
+
+Built-in shortcuts for common reductions. `Any(predicate)` short-circuits on first match — always prefer `Any()` over `Count() > 0`. `All(predicate)` returns `true` for empty sequences.
+
+```csharp
+var nums = new[] { 1, 2, 3, 4, 5 };
 nums.Sum()
 nums.Max()
 nums.Min()
@@ -914,8 +1008,6 @@ nums.Average()
 ```
 
 ```text
-15
-120
 15
 5
 1
@@ -981,13 +1073,9 @@ string.Join(", ", result)
 400, 324, 256
 ```
 
-#### Infinite generator and common sequence methods
+#### Infinite generator with yield return
 
-> [!info] Infinite sequences
->
-> - `while(true)` with `yield return` produces an infinite sequence
-> - Callers control consumption with `Take()`, `First()`, `TakeWhile()`
-> - Common methods: `Take`, `Skip`, `Distinct`, `Zip`, `Chunk`, `Concat`
+`while(true)` with `yield return` produces an infinite sequence. Callers control consumption with `Take()`, `First()`, or `TakeWhile()`.
 
 > [!danger] Infinite sequences cause OOM
 >
@@ -1008,7 +1096,18 @@ IEnumerable<int> Naturals(int start = 0)
 }
 string.Join(", ", Naturals().Take(5))
 string.Join(", ", Naturals(10).Take(5))
+```
 
+```text
+0, 1, 2, 3, 4
+10, 11, 12, 13, 14
+```
+
+#### Common sequence methods — Range, Reverse, Concat, Repeat
+
+`Range` generates consecutive integers, `Reverse` reverses order, `Concat` appends sequences, and `Repeat` produces a single value `n` times. All return lazy `IEnumerable<T>`.
+
+```csharp
 string.Join(", ", Enumerable.Range(0, 5))
 string.Join(", ", new[] { "a", "b" }.Select(s => s.ToUpper()))
 string.Join(", ", new[] { 1, 2, 3, 4 }.Where(x => x > 2))
@@ -1017,11 +1116,7 @@ string.Join(", ", new[] { 1, 2 }.Concat(new[] { 3, 4 }))
 string.Join(", ", Enumerable.Repeat("x", 3))
 ```
 
-`Range` generates consecutive integers, `Reverse` reverses order, `Concat` appends sequences, and `Repeat` produces a single value `n` times. All return lazy `IEnumerable<T>`.
-
 ```text
-0, 1, 2, 3, 4
-10, 11, 12, 13, 14
 0, 1, 2, 3, 4
 A, B
 3, 4

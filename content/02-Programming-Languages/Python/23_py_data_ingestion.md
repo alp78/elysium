@@ -14,6 +14,39 @@ status: complete
 >
 > — **Tim Berners-Lee**, attributed remark (c. 2006)
 
+This notebook benchmarks bulk-load performance into SQL Server, BigQuery, and Firestore across three file tiers (2.5K / 75K / 750K rows) and four source formats (CSV, JSON, Parquet, GCS). Results are persisted to JSON for cross-session comparison and visualised with Plotly.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    LOC["Local Files\nCSV · JSON · Parquet"]
+    GCS["GCS\nbronze/"]
+    SQL["SQL Server"]
+    BQ["BigQuery"]
+    FS["Firestore"]
+    LOC -->|"fast_executemany / bcp"| SQL
+    LOC -->|"load_table_from_file\nbq CLI"| BQ
+    LOC -->|"batch.set / BulkWriter"| FS
+    GCS -->|"load_table_from_uri"| BQ
+    GCS -->|"download_as_bytes +\nfast_executemany"| SQL
+    SQL -->|"load_table_from_dataframe\n(GCS staging)"| BQ
+    BQ -->|"to_dataframe +\nfast_executemany"| SQL
+    SQL -->|"batch.set / BulkWriter"| FS
+    SQL -->|"csv.writer"| LOC
+    BQ -->|"extract_table"| GCS
+```
+
 ```python
 # Suppress tqdm progress bars globally (pandas_gbq uses tqdm internally)
 import os
@@ -157,7 +190,17 @@ print(f'  GCS:        gs://{BUCKET_NAME}')
       seclab-scores (seclab-dev-ap-26)
       gs://seclab-dev-ap-26-data
 
+## Setup
+
+Helper functions and benchmark infrastructure shared across all ingestion sections. Run these cells once before executing any benchmark.
+
+### Helpers and test data
+
+Formatting utilities, tier definitions, and the benchmark recorder used by every ingestion section.
+
 #### Formatting helpers
+
+Human-readable formatters for row counts, elapsed time, byte sizes, and throughput rates. Used in every benchmark output row and summary table.
 
 ```python
 def fmt_rows(n):
@@ -188,11 +231,9 @@ def fmt_rate(rows, ms):
 
 #### Define file tiers for ingestion benchmarks
 
-```python
-# Unified OHLCV schema across all three tiers.
-# Generated from combined eurostoxx50 + stoxxusa50 + oil20 OHLCV data.
-# Schema: id, symbol, date, open, high, low, close, adj_close, volume, dividends, stock_splits, is_filled
+Three file tiers (small 2.5K, medium 75K, large 750K rows) with paths for CSV, JSON, and Parquet formats. The unified OHLCV schema — generated from combined eurostoxx50, stoxxusa50, and oil20 data — is consistent across all tiers and all target systems. GCS staging paths mirror the local tier names under the `bronze/` prefix.
 
+```python
 OHLCV_COLS = ['id', 'symbol', 'date', 'open', 'high', 'low', 'close',
               'adj_close', 'volume', 'dividends', 'stock_splits', 'is_filled']
 
@@ -268,8 +309,9 @@ display(tier_summary)
 
 #### Ingestion benchmark helper
 
+Times a single ingestion function and upserts the result into an in-memory list and a persistent JSON file, keyed by `(method, tier)`. Re-running a benchmark for the same key overwrites the previous record, keeping the results file stable across partial re-runs.
+
 ```python
-# Benchmark helper — persists results to JSON, keyed by (method, tier).
 INGEST_RESULTS_FILE = DATA_DIR / 'ingestion_results.json'
 
 def _load_results() -> list:
@@ -314,10 +356,15 @@ print(f'  Loaded {len(ingest_results)} existing results from {INGEST_RESULTS_FIL
 Create unified `ohlcv_bench` staging table in SQL Server and BigQuery.
 Same OHLCV schema everywhere. Firestore is schemaless — no setup needed. The SQL Server DDL below follows the same [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) patterns used in the medallion architecture, while the BigQuery schema aligns with the format decisions documented in [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export).
 
+### Staging tables
+
+DDL cells that create the `ohlcv_bench` table in SQL Server and BigQuery before benchmarks run.
+
 #### pymssql — create staging table in SQL Server
 
+Creates `dbo.ohlcv_bench` if it does not already exist. All columns use `NVARCHAR(50)` to match the bronze-layer loading pattern used in the medallion architecture — type coercion is deferred to the transformation layer.
+
 ```python
-# Single staging table matching the OHLCV schema. All nvarchar (matching existing Cloud SQL pattern).
 with sql_pymssql() as conn:
     cursor = conn.cursor()
     cursor.execute('''
@@ -342,8 +389,9 @@ with sql_pymssql() as conn:
 
 #### google-cloud-bigquery — create staging table in BigQuery
 
+Creates `ohlcv_bench` in the `index_data` dataset with a fully typed schema. `create_table(..., exists_ok=True)` is idempotent — safe to re-run between benchmark sessions.
+
 ```python
-# Typed schema for BigQuery staging table.
 BQ_BENCH_TABLE = f'{PROJECT_ID}.{BQ_DATASET}.ohlcv_bench'
 
 bq_schema = [
@@ -367,8 +415,11 @@ table = bq_client.create_table(table, exists_ok=True)
 
 ## Local → SQL Server Ingestion
 
-#### Insert data from local CSV files into Cloud SQL for SQL Server.
-Small tier: `executemany` (baseline). Medium + large: `fast_executemany` vs `bcp`.
+Benchmarks local-file-to-SQL-Server ingestion using three strategies: row-by-row `executemany` (baseline, small tier only), `fast_executemany` via pyodbc (medium and large tiers), and the `bcp` CLI utility. Covers CSV, JSON, and Parquet source formats.
+
+### Ingestion methods
+
+Each method covers a different driver or protocol path; run all three tiers per method to capture the performance curve.
 
 #### Ingest CSV into SQL Server from local using pymssql executemany over TDS
 
@@ -565,11 +616,21 @@ for tier in tiers:
 Load data from local files into BigQuery. Three formats (CSV, JSON, Parquet),
 plus `bq` CLI and Storage Write API.
 
+### Ingestion methods
+
+Covers the Python client library, `bq` CLI, pandas-gbq Storage Write API, and read-only external tables.
+
 #### Ingest CSV into BigQuery from local using google-cloud-bigquery load_table_from_file over HTTPS
 
 Server parses CSV rows. `skip_leading_rows=1` for header. `WRITE_TRUNCATE` clears before load.
 
 Uploads CSV to BigQuery's load job API over HTTPS. Server-side parsing, atomic (fully succeeds or fails). Always set `skip_leading_rows=1`. Use explicit schema in production (not autodetect). For large files, use Parquet (5x compression) or GCS staging.
+
+> [!warning] `autodetect=True` is unsafe in production
+> BigQuery infers types from the first few rows — a column with nulls early in the file may be typed as `STRING` instead of `FLOAT`, causing silent data loss downstream.
+
+> [!success] Provide an explicit schema in production
+> Pass `schema=bq_schema` to `LoadJobConfig` and set `autodetect=False`. The schema defined in the Setup section already captures correct types for all OHLCV columns.
 
 ```python
 def bq_load_csv(tier):
@@ -717,6 +778,9 @@ Query CSV/JSON/Parquet in GCS directly via SQL. Zero ingestion time — slower q
 
 External table points to a GCS file — queries read directly at query time. Zero ingestion, zero storage cost. 10–100x slower than native tables. Use for ad-hoc exploration; not for production dashboards.
 
+> [!tip] Use external tables for one-off exploration, not production dashboards
+> External tables re-scan the GCS file on every query. For recurring workloads or dashboards, load the data into a native BigQuery table first — queries will be 10–100x faster and cheaper.
+
 ```python
 def bq_external_table(tier):
     ext_table = f'{PROJECT_ID}.{BQ_DATASET}.ohlcv_bench_ext'
@@ -750,6 +814,10 @@ Not benchmarkable from a notebook.
 ## Local → Firestore Ingestion
 
 Write OHLCV data into Firestore. Each row becomes a document in the `ohlcv_bench` collection.
+
+### Ingestion methods
+
+Compares manual `batch.set()` (500-doc limit) against `BulkWriter` (parallel, auto-throttled).
 
 #### Ingest CSV into Firestore from local using google-cloud-firestore batch.set over gRPC
 
@@ -785,10 +853,7 @@ def fs_batch_write(tier):
     return count
 
 print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
-
-# Benchmark standard batches
 for tier in tiers:
-    # No delete — set() overwrites existing docs by ID, avoiding costly collection scan
     r = bench_ingest('fs_batch', lambda t=tier: fs_batch_write(t), tier)
     print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
 ```
@@ -802,7 +867,20 @@ for tier in tiers:
 
 `BulkWriter` manages batching, retries, and throttling automatically. Parallel writes — the recommended method for bulk ingestion.
 
-`BulkWriter` manages batching, retries, and rate limiting automatically. 2–5x faster than manual `batch.set()`. Use for 10K–500K document migrations/backfills. Always call `bw.close()` — unflushed writes are lost.
+`BulkWriter` manages batching, retries, and rate limiting automatically. 2–5x faster than manual `batch.set()`. Use for 10K–500K document migrations/backfills. `set()` overwrites existing documents by ID — no prior delete is needed, which avoids a costly collection scan.
+
+> [!warning] Always call `bw.close()` before the function returns
+> `BulkWriter` buffers writes internally. If the process exits or an exception is raised before `close()`, buffered documents are silently lost with no error raised.
+
+> [!success] Wrap in try/finally to guarantee flush
+> ```python
+> bw = fs_client.bulk_writer()
+> try:
+>     for idx, row in df.iterrows():
+>         bw.set(collection.document(str(idx)), row.to_dict())
+> finally:
+>     bw.close()
+> ```
 
 ```python
 def fs_bulk_write(tier):
@@ -817,10 +895,7 @@ def fs_bulk_write(tier):
     return count
 
 print(f'  {"tier":<8s} {"rows":>8s} {"time":>10s} {"rate":>14s}')
-
-# Benchmark BulkWriter
 for tier in tiers:
-    # No delete — set() overwrites existing docs by ID, avoiding costly collection scan
     r = bench_ingest('fs_bulkwriter', lambda t=tier: fs_bulk_write(t), tier)
     print(f'  {tier:<8s} {r["rows_fmt"]:>8s} {r["elapsed"]:>10s} {r["rate"]:>14s}')
 ```
@@ -841,6 +916,10 @@ Both require managed export format (not raw CSV/JSON).
 ## GCS → BigQuery Ingestion
 
 Server-side operation — no data passes through the local machine.
+
+### Ingestion methods
+
+Three source formats (CSV, JSON, Parquet) loaded via `load_table_from_uri`, all flowing within Google's network.
 
 #### Ingest CSV into BigQuery from GCS using google-cloud-bigquery load_table_from_uri over internal network
 
@@ -874,10 +953,9 @@ for tier in tiers:
 
 #### Ingest JSON into BigQuery from GCS using google-cloud-bigquery load_table_from_uri over internal network
 
-Server-side JSON parse. Same internal network path.
+Server-side JSON parse. Same internal network path as CSV — data flows GCS → BigQuery within Google's network.
 
 ```python
-# BigQuery load from GCS JSON
 def bq_gcs_json(tier):
     uri = f'gs://{BUCKET_NAME}/{gcs_paths[tier]["json"]}'
     job_config = bigquery.LoadJobConfig(
@@ -902,10 +980,9 @@ for tier in tiers:
 
 #### Ingest Parquet into BigQuery from GCS using google-cloud-bigquery load_table_from_uri over internal network
 
-Fastest — columnar, compressed, schema embedded.
+Fastest GCS source format — columnar, compressed, schema embedded, no server-side parsing overhead.
 
 ```python
-# BigQuery load from GCS Parquet
 def bq_gcs_parquet(tier):
     uri = f'gs://{BUCKET_NAME}/{gcs_paths[tier]["parquet"]}'
     job_config = bigquery.LoadJobConfig(
@@ -931,6 +1008,10 @@ for tier in tiers:
 ## GCS → SQL Server Ingestion
 
 Two-hop: download from GCS to memory, then insert into SQL Server.
+
+### Ingestion methods
+
+Single method: download CSV from GCS into memory via `BytesIO`, then insert with `fast_executemany`.
 
 #### Ingest CSV into SQL Server from GCS using google-cloud-storage download + pyodbc fast_executemany over HTTPS + TLS
 
@@ -971,16 +1052,15 @@ for tier in tiers:
 
 Move data between SQL Server, BigQuery, and Firestore.
 
+### Transfer methods
+
+Five bidirectional paths covering SQL↔BigQuery, SQL→Firestore, BQ→Firestore, and the GCS-staged SQL→BigQuery route.
+
 #### Transfer data from SQL Server to BigQuery using pymssql query + load_table_from_dataframe over TDS + HTTPS
 
-Query SQL Server → DataFrame → BigQuery. Two-hop via local memory.
+Query SQL Server → DataFrame → BigQuery. Two-hop via local memory. Self-populates SQL Server first (Step 1: load CSV), then queries and transfers to BigQuery (Step 2).
 
 ```python
-# SQL Server → BigQuery — self-populates SQL Server first, then transfers
-#
-# Step 1: Load CSV into SQL Server (ensures correct row count per tier)
-# Step 2: Query SQL Server into DataFrame, load into BigQuery
-
 def sql_to_bq(tier):
     # Step 1: populate SQL Server with this tier's data
     _sql_truncate('ohlcv_bench')
@@ -1011,11 +1091,9 @@ for tier in tiers:
 
 #### Transfer data from BigQuery to SQL Server using google-cloud-bigquery query + pyodbc fast_executemany over HTTPS + TLS
 
-Query BigQuery → DataFrame → SQL Server.
+Query BigQuery → DataFrame → SQL Server. Self-populates BigQuery first (Step 1), then queries and inserts into SQL Server via `fast_executemany` (Step 2).
 
 ```python
-# BigQuery → SQL Server — self-populates BigQuery first, then transfers
-
 def bq_to_sql(tier):
     # Step 1: populate BigQuery with this tier's data
     df = pd.read_csv(tiers[tier]['csv'], dtype=str, keep_default_na=False)
@@ -1047,11 +1125,9 @@ for tier in tiers:
 
 #### Transfer data from BigQuery to Firestore using google-cloud-bigquery query + BulkWriter over HTTPS + gRPC
 
-Query BigQuery → iterate results → Firestore BulkWriter. For real-time serving of scored data.
+Query BigQuery → iterate results → Firestore BulkWriter. Self-populates BigQuery first (Step 1), then streams rows into Firestore via `BulkWriter` (Step 2). For real-time serving of scored data.
 
 ```python
-# BigQuery → Firestore — self-populates BigQuery first, then transfers
-
 def bq_to_fs(tier):
     # Step 1: populate BigQuery with this tier's data
     df = pd.read_csv(tiers[tier]['csv'], dtype=str, keep_default_na=False)
@@ -1086,11 +1162,9 @@ for tier in tiers:
 
 #### Transfer data from SQL Server to Firestore using pymssql query + BulkWriter over TDS + gRPC
 
-Direct SQL Server → Firestore bridge.
+Direct SQL Server → Firestore bridge. Self-populates SQL Server first (Step 1), then streams rows into Firestore via `BulkWriter` (Step 2).
 
 ```python
-# SQL Server → Firestore — self-populates SQL Server first, then transfers
-
 def sql_to_fs(tier):
     # Step 1: populate SQL Server with this tier's data
     _sql_truncate('ohlcv_bench')
@@ -1123,11 +1197,12 @@ for tier in tiers:
 
 #### Transfer data from SQL Server to BigQuery via GCS staging using pandas + GCS + load_table_from_uri
 
-Production pattern: SQL → Parquet → GCS → BigQuery. Avoids local memory bottleneck for large datasets.
+Production pattern: SQL → Parquet → GCS → BigQuery. Avoids local memory bottleneck for large datasets. For this benchmark the function self-populates SQL Server first (Step 1), then exports to GCS and loads into BigQuery (Step 2).
+
+> [!tip] Prefer GCS staging for large SQL → BigQuery migrations
+> Loading directly from the client via `load_table_from_dataframe` requires the full dataset to pass through local memory and network. The GCS staging path (SQL → Parquet → GCS → `load_table_from_uri`) is server-side from GCS onward and scales to hundreds of GB without memory pressure.
 
 ```python
-# SQL Server → GCS → BigQuery — self-populates SQL Server first
-
 def sql_to_bq_gcs(tier):
     # Step 1: populate SQL Server with this tier's data
     _sql_truncate('ohlcv_bench')
@@ -1166,6 +1241,10 @@ for tier in tiers:
 ## Export
 
 Export data from SQL Server, BigQuery, and Firestore.
+
+### Export methods
+
+Three targets: SQL Server to local CSV, BigQuery to GCS, and Firestore collection to NDJSON.
 
 #### Export SQL Server to CSV using pandas read_sql + to_csv over TDS
 
@@ -1265,19 +1344,25 @@ for tier in tiers:
 
 ## Summary
 
+Reloads all persisted benchmark results from JSON and renders comparative bar charts for each target system and transfer type. Run this section at any time to visualise results from previous sessions without re-running ingestion.
+
+### Results
+
+Benchmark data and Plotly charts grouped by target system (BigQuery, SQL Server, Firestore, cross-service, export).
+
 #### Results table
 
+Loads raw results from the persistent JSON file, deduplicates to the latest run per `(method, tier)` combination, and creates a numeric sort key so large-tier rows appear first in charts.
+
 ```python
-# Load the raw data and keep the latest run for each method/tier combination
 all_results = _load_results()
 df_results = pd.DataFrame(all_results).drop_duplicates(subset=['method', 'tier'], keep='last')
 
-# Create a numeric rank so Large appears first, then Medium, then Small
 tier_order = {'large': 0, 'medium': 1, 'small': 2}
 df_results['tier_rank'] = df_results['tier'].map(tier_order)
 ```
 
-#### INGESTION BENCHMARK: BIGQUERY (Local & GCS)
+#### BigQuery ingestion benchmark (local and GCS)
 
 ```python
 bq_methods = [
@@ -1549,7 +1634,7 @@ fig_bq.show()
 
 <iframe src="/static/plotly/di_py_01.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### INGESTION BENCHMARK: SQL SERVER (Local & GCS)
+#### SQL Server ingestion benchmark (local and GCS)
 
 ```python
 sql_methods = [
@@ -1732,7 +1817,7 @@ fig_sql.show()
 
 <iframe src="/static/plotly/di_py_02.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### INGESTION BENCHMARK: FIRESTORE
+#### Firestore ingestion benchmark
 
 ```python
 fs_methods = [
@@ -1834,7 +1919,7 @@ fig_fs.show()
 
 <iframe src="/static/plotly/di_py_03.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### DATABASE-TO-DATABASE TRANSFERS BENCHMARK
+#### Cross-database transfer benchmark
 
 ```python
 transfer_methods = [
@@ -2006,7 +2091,7 @@ fig_transfer.update_layout(
 
 <iframe src="/static/plotly/di_py_04.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
-#### DATA EXPORTS BENCHMARK
+#### Data exports benchmark
 
 ```python
 export_methods = [
@@ -2131,10 +2216,15 @@ fig_export.show()
 
 <iframe src="/static/plotly/di_py_05.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
+### Cleanup
+
+Removes all staging tables, GCS prefixes, and local export directories created during the benchmark.
+
 #### pymssql + google-cloud-bigquery — cleanup staging tables
 
+Drops `dbo.ohlcv_bench` from SQL Server, removes the BigQuery staging and external tables, and purges the `exports/` and `staging/` GCS prefixes created during the benchmark. Firestore requires no explicit drop — documents are overwritten on the next `set()` call, so no collection scan or delete is needed.
+
 ```python
-# Drop staging tables and clean up
 with sql_pymssql() as conn:
     conn.cursor().execute('DROP TABLE IF EXISTS dbo.ohlcv_bench')
     conn.commit()
@@ -2144,7 +2234,6 @@ bq_client.delete_table(BQ_BENCH_TABLE, not_found_ok=True)
 bq_client.delete_table(f'{BQ_BENCH_TABLE}_ext', not_found_ok=True)
 print('  BigQuery: ohlcv_bench dropped')
 
-# No delete — set() overwrites existing docs by ID, avoiding costly collection scan
 print('  Firestore: ohlcv_bench cleared')
 
 for blob in gcs_client.list_blobs(BUCKET_NAME, prefix='exports/'):

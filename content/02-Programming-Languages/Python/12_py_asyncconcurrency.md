@@ -536,15 +536,16 @@ asyncio.Event:
   'textColor': '#c0caf5',
   'fontSize': '14px'
 }}}%%
-flowchart LR
-    subgraph Threads["ThreadPoolExecutor (shared GIL)"]
+flowchart TD
+    subgraph Threads["ThreadPoolExecutor — shared GIL"]
         T1["Thread 1<br/>CPU work"] -.->|"GIL blocks"| T2["Thread 2<br/>waits"]
         T1 -->|"I/O release"| T2b["Thread 2<br/>runs during I/O"]
     end
-    subgraph Processes["ProcessPoolExecutor (separate GILs)"]
+    subgraph Processes["ProcessPoolExecutor — separate GILs"]
         P1["Process 1<br/>own GIL"] --> R1["True parallel"]
         P2["Process 2<br/>own GIL"] --> R1
     end
+    Threads ~~~ Processes
 ```
 
 > [!warning] Concurrency pitfalls
@@ -642,6 +643,8 @@ print(f"  {len(seq_hashes)} hashes in {seq_time:.2f}s")
 ```
 
 #### ThreadPoolExecutor — GIL limits CPU-bound speedup
+
+Runs the same `cpu_heavy` hash function from the sequential baseline using a `ThreadPoolExecutor` with `os.cpu_count()` threads. Because the GIL prevents true parallel Python bytecode execution, adding threads introduces context-switching overhead without gaining parallelism — producing a speedup ratio below 1.0x.
 
 > [!danger] GIL blocks CPU-bound threads
 >

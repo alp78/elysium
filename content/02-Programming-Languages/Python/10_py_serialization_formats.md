@@ -1,5 +1,7 @@
 ---
-tags: [python]
+title: "Serialization Formats — Python"
+tags:
+  - python
 aliases: [serialization formats, JSON, CSV, Parquet, Avro, Protocol Buffers]
 description: "Python serialization formats reference with executable examples and cell outputs — covers JSON, CSV, Parquet, Avro, Protocol Buffers, MessagePack, and format comparison benchmarks. See [10_cs_serialization_formats](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/10_cs_serialization_formats) for the C# equivalent."
 created: 2026-03-25
@@ -43,11 +45,9 @@ html_formatter.for_type(pd.DataFrame, lambda df: df.to_html())
 html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 ```
 
-    <function __main__.<lambda>(s)>
-
 ## Parquet Files
 
-### pyarrow — write and read Parquet
+### pyarrow | write and read Parquet
 
 #### Parquet overview — columnar format for analytics
 
@@ -67,9 +67,9 @@ Parquet stores data **column-by-column** with per-column compression (snappy, gz
 tmp_dir = Path(tempfile.mkdtemp(prefix="parquet_"))
 ```
 
-#### pyarrow pq.write_table — write Parquet from Arrow table
+#### pa.schema — define typed Arrow schema
 
-Define an Arrow schema with `pa.schema()` using typed fields (`pa.string()`, `pa.int64()`, `pa.float64()`, `pa.bool_()`). Create a `pa.table` from column arrays, then write with `pq.write_table()`. The `compression` parameter controls the codec: `'snappy'` (default, fast), `'gzip'` (smaller), `'zstd'` (best ratio), `'none'`.
+`pa.schema()` declares column names and types upfront. Arrow enforces these types at table creation — no silent coercion. Use `pa.string()`, `pa.int64()`, `pa.float64()`, `pa.bool_()` for the most common column types.
 
 ```python
 schema = pa.schema([
@@ -79,9 +79,13 @@ schema = pa.schema([
     ("revenue", pa.float64()),
     ("is_mobile", pa.bool_()),
 ])
+```
 
-# Step 2: Create an Arrow table from column arrays
-# Each column is a pa.array — typed, nullable, and efficient.
+#### pa.table — create Arrow table from column arrays
+
+Each column is a `pa.array` — typed, nullable, and memory-efficient. Pass a dict of column names to Python lists along with the schema to enforce types at construction time.
+
+```python
 table = pa.table({
     "event_id":   ["evt_001", "evt_002", "evt_003", "evt_004", "evt_005"],
     "event_type": ["page_view", "purchase", "page_view", "signup", "purchase"],
@@ -89,49 +93,53 @@ table = pa.table({
     "revenue":    [0.0, 49.99, 0.0, 0.0, 129.99],
     "is_mobile":  [True, False, True, True, False],
 }, schema=schema)
-
-# Step 3: Write to parquet file
-parquet_file = tmp_dir / "events.parquet"
-pq.write_table(table, parquet_file, compression="snappy")
-#   compression options: 'snappy' (default, fast), 'gzip' (smaller), 'zstd' (best ratio), 'none'
-
-parquet_file.name  # Written
-f"{parquet_file.stat().st_size} bytes (compressed)"  # Size
-f"Rows: {table.num_rows}, Columns: {table.num_columns}"
-
-# ─────────────────────────────────────────────
-# READ PARQUET
-# ─────────────────────────────────────────────
 ```
 
-    events.parquet
-    1594 bytes (compressed)
-    Rows: 5, Columns: 5
+#### pq.write_table — write Parquet from Arrow table
+
+`pq.write_table()` serializes an Arrow table to a Parquet file on disk. The `compression` parameter controls the codec: `'snappy'` (default, fast), `'gzip'` (smaller), `'zstd'` (best ratio), `'none'`.
+
+```python
+parquet_file = tmp_dir / "events.parquet"
+pq.write_table(table, parquet_file, compression="snappy")
+
+parquet_file.name
+f"{parquet_file.stat().st_size} bytes (compressed)"
+f"Rows: {table.num_rows}, Columns: {table.num_columns}"
+```
+
+```text
+events.parquet
+1594 bytes (compressed)
+Rows: 5, Columns: 5
+```
 
 #### pyarrow pq.read_table — read entire Parquet file
 
 `pq.read_table()` reads the full Parquet file into an Arrow table. The schema is discovered from the file footer. Call `.to_pandas()` to convert to a pandas DataFrame for display or further processing.
 
 ```python
-table_read = pq.read_table(parquet_file)  # returns an Arrow table
+table_read = pq.read_table(parquet_file)
 f"Schema:\n{table_read.schema}"
-f"Data:\n{table_read.to_pandas()}"  # convert to pandas DataFrame for display
+f"Data:\n{table_read.to_pandas()}"
 ```
 
-      Schema:
-    event_id: string
-    event_type: string
-    user_id: int64
-    revenue: double
-    is_mobile: bool
-    
-      Data:
-      event_id event_type  user_id  revenue  is_mobile
-    0  evt_001  page_view     1001     0.00       True
-    1  evt_002   purchase     1002    49.99      False
-    2  evt_003  page_view     1001     0.00       True
-    3  evt_004     signup     1003     0.00       True
-    4  evt_005   purchase     1002   129.99      False
+```text
+Schema:
+  event_id: string
+  event_type: string
+  user_id: int64
+  revenue: double
+  is_mobile: bool
+
+Data:
+  event_id event_type  user_id  revenue  is_mobile
+  evt_001  page_view     1001     0.00       True
+  evt_002   purchase     1002    49.99      False
+  evt_003  page_view     1001     0.00       True
+  evt_004     signup     1003     0.00       True
+  evt_005   purchase     1002   129.99      False
+```
 
 ### Column pruning, pushdown, and partitioning
 
@@ -141,14 +149,16 @@ Pass `columns=["col1", "col2"]` to read only the columns you need. On a 100-colu
 
 ```python
 partial = pq.read_table(parquet_file, columns=["event_id", "revenue"])
-partial.column_names  # Columns read
-partial.column('revenue').to_pylist()  # Revenue total — Arrow column → Python list
-f"{sum(partial.column('revenue').to_pylist()):.2f}"  # Sum
+partial.column_names
+partial.column('revenue').to_pylist()
+f"{sum(partial.column('revenue').to_pylist()):.2f}"
 ```
 
-    ['event_id', 'revenue']
-    [0.0, 49.99, 0.0, 0.0, 129.99]
-    179.98
+```text
+['event_id', 'revenue']
+[0.0, 49.99, 0.0, 0.0, 129.99]
+179.98
+```
 
 #### pyarrow pq.read_table filters= — predicate pushdown
 
@@ -162,27 +172,29 @@ filtered = pq.read_table(
 f"Purchases only ({filtered.num_rows} rows):"
 f"{filtered.to_pandas()}"
 
-# Metadata — read schema and row count without loading data (instant, even for huge files)
 meta = pq.read_metadata(parquet_file)
 f"Rows: {meta.num_rows}, Columns: {meta.num_columns}, Row groups: {meta.num_row_groups}"
 
 schema_read = pq.read_schema(parquet_file)
-# Schema
 for i, field in enumerate(schema_read):
     print(f"    [{i}] {field.name}: {field.type}")
 ```
 
-      Purchases only (2 rows):
-        event_id event_type  user_id  revenue  is_mobile
-    0  evt_002   purchase     1002    49.99      False
-    1  evt_005   purchase     1002   129.99      False
-    Rows: 5, Columns: 5, Row groups: 1
-      Schema:
-        [0] event_id: string
-        [1] event_type: string
-        [2] user_id: int64
-        [3] revenue: double
-        [4] is_mobile: bool
+Metadata reads the schema and row count from the file footer without loading any data — instant even for huge files.
+
+```text
+Purchases only (2 rows):
+  event_id event_type  user_id  revenue  is_mobile
+  evt_002   purchase     1002    49.99      False
+  evt_005   purchase     1002   129.99      False
+Rows: 5, Columns: 5, Row groups: 1
+Schema:
+  [0] event_id: string
+  [1] event_type: string
+  [2] user_id: int64
+  [3] revenue: double
+  [4] is_mobile: bool
+```
 
 #### pyarrow pq.write_to_dataset — Hive-style partitioning
 
@@ -200,16 +212,18 @@ for f in sorted(partitioned_dir.rglob("*.parquet")):
     rel = f.relative_to(partitioned_dir)
     print(f"    {rel} ({f.stat().st_size} bytes)")
 
-# Read back — pyarrow discovers partitions automatically
 dataset = pq.read_table(str(partitioned_dir))
-f"{dataset.num_rows} rows, columns: {dataset.column_names}"  # Read back
+f"{dataset.num_rows} rows, columns: {dataset.column_names}"
 ```
 
-      Partitioned dir structure:
-        event_type=page_view\9f62ef0dd3b74960a0f065356a69591c-0.parquet (1266 bytes)
-        event_type=purchase\9f62ef0dd3b74960a0f065356a69591c-0.parquet (1274 bytes)
-        event_type=signup\9f62ef0dd3b74960a0f065356a69591c-0.parquet (1255 bytes)
-    5 rows, columns: ['event_id', 'user_id', 'revenue', 'is_mobile', 'event_type']
+pyarrow discovers partitions automatically when reading back.
+
+```text
+event_type=page_view/...-0.parquet (1266 bytes)
+event_type=purchase/...-0.parquet (1274 bytes)
+event_type=signup/...-0.parquet (1255 bytes)
+5 rows, columns: ['event_id', 'user_id', 'revenue', 'is_mobile', 'event_type']
+```
 
 ### In-memory and comparison
 
@@ -220,16 +234,17 @@ Serialize Parquet to a `BytesIO` buffer for direct cloud upload (GCS, S3) withou
 ```python
 buffer = BytesIO()
 pq.write_table(table, buffer)
-f"{buffer.tell()} bytes"  # Buffer size
+f"{buffer.tell()} bytes"
 
-# Read back from the same buffer
 buffer.seek(0)
 table_from_mem = pq.read_table(buffer)
-f"{table_from_mem.num_rows} rows"  # Read from memory
+f"{table_from_mem.num_rows} rows"
 ```
 
-    1594 bytes
-    5 rows
+```text
+1594 bytes
+5 rows
+```
 
 #### CSV vs Parquet comparison | size, features, and use cases
 
@@ -239,8 +254,8 @@ table.to_pandas().to_csv(csv_file, index=False)
 
 csv_size = csv_file.stat().st_size
 parquet_size = parquet_file.stat().st_size
-f"{csv_size} bytes"  # CSV size
-f"{parquet_size} bytes"  # Parquet size
+f"{csv_size} bytes"
+f"{parquet_size} bytes"
 f"Ratio:        {csv_size / parquet_size:.1f}x smaller with parquet"
 ```
 
@@ -285,7 +300,7 @@ Binary formats provide schema enforcement, cross-language support, and compact s
 | pickle | Medium | Fast | No | No | Never in prod |
 | struct | Tiny | Fastest | Manual | Manual | IoT, binary protocols |
 
-### Apache Avro — fastavro
+### fastavro | Apache Avro
 
 #### Avro serialization with fastavro | define schema and parse
 
@@ -304,18 +319,19 @@ avro_schema = {
     ],
 }
 
-# Parse and validate the schema
 parsed_schema = fastavro.parse_schema(avro_schema)
-f"{avro_schema['name']} ({len(avro_schema['fields'])} fields)"  # Schema
+f"{avro_schema['name']} ({len(avro_schema['fields'])} fields)"
 for f in avro_schema["fields"]:
     print(f"    {f['name']}: {f['type']}")
 ```
 
-    StockQuote (4 fields)
-        symbol: string
-        price: double
-        volume: long
-        exchange: ['null', 'string']
+```text
+StockQuote (4 fields)
+  symbol: string
+  price: double
+  volume: long
+  exchange: ['null', 'string']
+```
 
 #### Write and read Avro file | fastavro.writer with embedded schema
 
@@ -325,22 +341,19 @@ for f in avro_schema["fields"]:
 avro_dir = tempfile.mkdtemp(prefix="avro_py_")
 avro_file = os.path.join(avro_dir, "quotes.avro")
 
-# Records as plain Python dicts — fastavro validates against the schema
 records = [
     {"symbol": "SAP.DE",  "price": 166.52, "volume": 82621,  "exchange": "XETR"},
     {"symbol": "ASML.AS", "price": 685.40, "volume": 45000,  "exchange": "XAMS"},
     {"symbol": "TTE.PA",  "price": 58.20,  "volume": 120000, "exchange": "XPAR"},
-    {"symbol": "BAS.DE",  "price": 44.85,  "volume": 95000,  "exchange": None},  # nullable
+    {"symbol": "BAS.DE",  "price": 44.85,  "volume": 95000,  "exchange": None},
 ]
 
-# Write — fastavro.writer embeds the schema in the file header
 with open(avro_file, "wb") as f:
     fastavro.writer(f, parsed_schema, records)
 
-os.path.basename(avro_file)  # Written
+os.path.basename(avro_file)
 f"Records: {len(records)}, Size: {os.path.getsize(avro_file)} bytes"
 
-# Read — schema is read from the file header automatically
 with open(avro_file, "rb") as f:
     reader = fastavro.reader(f)
     print(f"  Schema from file: {reader.writer_schema['name']}")  # type: ignore[index]
@@ -351,13 +364,17 @@ with open(avro_file, "rb") as f:
 shutil.rmtree(avro_dir)
 ```
 
-    quotes.avro
-    Records: 4, Size: 399 bytes
-    stoxx.StockQuote
-        SAP.DE     €  166.52  vol=   82621  exch=XETR
-        ASML.AS    €  685.40  vol=   45000  exch=XAMS
-        TTE.PA     €   58.20  vol=  120000  exch=XPAR
-        BAS.DE     €   44.85  vol=   95000  exch=N/A
+Records are plain Python dicts — `fastavro` validates them against the schema on write. The schema is read from the file header automatically on read.
+
+```text
+quotes.avro
+Records: 4, Size: 399 bytes
+Schema from file: stoxx.StockQuote
+  SAP.DE     €  166.52  vol=   82621  exch=XETR
+  ASML.AS    €  685.40  vol=   45000  exch=XAMS
+  TTE.PA     €   58.20  vol=  120000  exch=XPAR
+  BAS.DE     €   44.85  vol=   95000  exch=N/A
+```
 
 #### Avro in memory and schema evolution | BytesIO for Kafka payloads
 
@@ -367,38 +384,33 @@ Serialize Avro records to `BytesIO` for Kafka producer payloads or API responses
 avro_buffer = BytesIO()
 fastavro.writer(avro_buffer, parsed_schema, records)
 avro_bytes = avro_buffer.getvalue()
-f"{len(avro_bytes)} bytes ({len(records)} records)"  # Avro in memory
+f"{len(avro_bytes)} bytes ({len(records)} records)"
 
-# Read back from memory
 avro_buffer.seek(0)
 mem_records = list(fastavro.reader(avro_buffer))
-f"{len(mem_records)} records"  # Read from memory
+f"{len(mem_records)} records"
 
-# Compare sizes
 json_size = len(json.dumps(records).encode())
-f"{json_size} bytes"  # JSON size
-f"{len(avro_bytes)} bytes"  # Avro size
+f"{json_size} bytes"
+f"{len(avro_bytes)} bytes"
 f"Savings:    {(1 - len(avro_bytes)/json_size)*100:.0f}%"
 
-# Schema evolution rules
-print("""
-  Schema Evolution Rules:
-    SAFE:   add field with default, remove field with default, add aliases
-    UNSAFE: change field type, remove field WITHOUT default
-""")
 ```
 
-    399 bytes (4 records)
-    4 records
-    
-    300 bytes
-    399 bytes
-    -33%
-    
-        SAFE:   add field with default, remove field with default, add aliases
-        UNSAFE: change field type, remove field WITHOUT default
+```text
+399 bytes (4 records)
+4 records
+JSON: 300 bytes
+Avro: 399 bytes
+Savings: -33%
+```
 
-### Protocol Buffers — protobuf
+> [!info] Schema evolution rules
+>
+> - **Safe**: add field with default, remove field with default, add aliases
+> - **Unsafe**: change field type, remove field WITHOUT default
+
+### protobuf | Protocol Buffers
 
 #### Protobuf in Python — dynamic message building
 
@@ -432,7 +444,6 @@ DESCRIPTOR = descriptor_pb2.FileDescriptorProto(
     ],
 )
 
-# Register the descriptor and create a message class
 pool = descriptor_pool.DescriptorPool()
 file_desc = pool.Add(DESCRIPTOR)
 msg_desc = pool.FindMessageTypeByName("stoxx.StockQuote")
@@ -443,102 +454,66 @@ factory = _reflection.GeneratedProtocolMessageType(
     {"DESCRIPTOR": msg_desc, "__module__": "__main__"},
 )
 
-# Create a message, serialize, deserialize
-quote = factory(symbol="SAP.DE", price=166.52, volume=82621)  # type: ignore[call-arg] — fields are dynamic (runtime reflection)
+quote = factory(symbol="SAP.DE", price=166.52, volume=82621)  # type: ignore[call-arg]
 binary = quote.SerializeToString()  # type: ignore[attr-defined]
 f"Message:    symbol={quote.symbol}, price={quote.price}, volume={quote.volume}"  # type: ignore[attr-defined]
-f"{len(binary)} bytes ({binary.hex()[:40]}...)"  # Binary
+f"{len(binary)} bytes ({binary.hex()[:40]}...)"
 
-# Deserialize from bytes
 parsed = factory.FromString(binary)  # type: ignore[attr-defined]
 f"Parsed:     symbol={parsed.symbol}, price={parsed.price}, volume={parsed.volume}"  # type: ignore[attr-defined]
 
-# Compare sizes
 json_size = len(json.dumps({"symbol": "SAP.DE", "price": 166.52, "volume": 82621}).encode())
-f"{json_size} bytes"  # JSON size
-f"{len(binary)} bytes"  # Protobuf size
+f"{json_size} bytes"
+f"{len(binary)} bytes"
 f"Savings:       {(1 - len(binary)/json_size)*100:.0f}%"
 ```
 
-    symbol=SAP.DE, price=166.52, volume=82621
-    21 bytes (0a065341502e444511713d0ad7a3d0644018bd85...)
-    symbol=SAP.DE, price=166.52, volume=82621
-    
-    54 bytes
-    21 bytes
-    61%
+```text
+Message: symbol=SAP.DE, price=166.52, volume=82621
+21 bytes (0a065341502e444511713d0ad7a3d0644018bd85...)
+Parsed:  symbol=SAP.DE, price=166.52, volume=82621
+JSON:     54 bytes
+Protobuf: 21 bytes
+Savings:  61%
+```
 
 #### Protobuf with protoc (production pattern) | protoc-generated code workflow
 
 In production, define schemas in `.proto` files, compile with `protoc --python_out=.` to generate `_pb2.py` modules, then serialize/deserialize with `SerializeToString()` and `FromString()`. Schema evolution: old code ignores new fields; new code uses defaults for missing fields.
 
-```python
-print("""
-  ── Step 1: Define schema (stock_quote.proto) ──
+**Step 1 — Define schema** (`stock_quote.proto`). Field numbers are wire identifiers, not default values. Adding new fields (like `exchange = 4`) is backward-compatible — old consumers ignore unknown fields.
 
-  syntax = "proto3";
-  package stoxx;
+```protobuf
+syntax = "proto3";
+package stoxx;
 
-  message StockQuote {
-    string symbol = 1;     // field number, not default value
-    double price = 2;
-    int64  volume = 3;
-    string exchange = 4;   // added later — old consumers ignore it (forward compat)
-  }
-
-  ── Step 2: Compile ──
-
-  $ protoc --python_out=. stock_quote.proto
-  # Generates: stock_quote_pb2.py
-
-  ── Step 3: Use in Python ──
-
-  from stock_quote_pb2 import StockQuote
-
-  # Serialize
-  quote = StockQuote(symbol="SAP.DE", price=166.52, volume=82621)
-  data = quote.SerializeToString()  # bytes — send to Kafka, gRPC, file
-
-  # Deserialize
-  parsed = StockQuote.FromString(data)
-  print(parsed.symbol, parsed.price)
-
-  # Schema evolution: old code ignores field 4 (exchange)
-  # New code reads it if present, uses default ("") if absent
-""")
+message StockQuote {
+  string symbol = 1;
+  double price = 2;
+  int64  volume = 3;
+  string exchange = 4;
+}
 ```
 
-      ── Step 1: Define schema (stock_quote.proto) ──
-    
-      syntax = "proto3";
-      package stoxx;
-    
-      message StockQuote {
-        string symbol = 1;     // field number, not default value
-        double price = 2;
-        int64  volume = 3;
-        string exchange = 4;   // added later — old consumers ignore it (forward compat)
-      }
-    
-      ── Step 2: Compile ──
-    
-      $ protoc --python_out=. stock_quote.proto
-      # Generates: stock_quote_pb2.py
-    
-      ── Step 3: Use in Python ──
-    
-      from stock_quote_pb2 import StockQuote
-    
-      # Serialize
-      quote = StockQuote(symbol="SAP.DE", price=166.52, volume=82621)
-      data = quote.SerializeToString()  # bytes — send to Kafka, gRPC, file
-    
-      # Deserialize
-      parsed = StockQuote.FromString(data)
-      print(parsed.symbol, parsed.price)
-    
-      # Schema evolution: old code ignores field 4 (exchange)
-      # New code reads it if present, uses default ("") if absent
+**Step 2 — Compile** with `protoc` to generate a Python module. The generated `_pb2.py` file contains typed classes with `SerializeToString()` and `FromString()` methods.
+
+```bash
+protoc --python_out=. stock_quote.proto
+```
+
+This generates `stock_quote_pb2.py` with typed classes.
+
+**Step 3 — Use in Python**. Serialize with `SerializeToString()` (returns bytes for Kafka, gRPC, or file storage) and deserialize with `FromString()`. Schema evolution is automatic — old code ignores field 4 (`exchange`), new code uses the default (`""`) if absent.
+
+```python
+from stock_quote_pb2 import StockQuote
+
+quote = StockQuote(symbol="SAP.DE", price=166.52, volume=82621)
+data = quote.SerializeToString()
+
+parsed = StockQuote.FromString(data)
+print(parsed.symbol, parsed.price)
+```
 
 ## Format Performance Benchmark
 
@@ -580,7 +555,9 @@ large  = generate_data(100_000)
 f"Small: {len(small):,}, Medium: {len(medium):,}, Large: {len(large):,}"
 ```
 
-    Small: 100, Medium: 10,000, Large: 100,000
+```text
+Small: 100, Medium: 10,000, Large: 100,000
+```
 
 ### Benchmark execution
 
@@ -591,22 +568,19 @@ Benchmarks each format at all three sizes, measuring write time (ms), read time 
 ```python
 
 bench_dir = tempfile.mkdtemp(prefix="bench_py_")
-results = []  # (format, size_label, records, write_ms, read_ms, file_bytes)
+results = []
 
 def bench(fmt, label, data, write_fn, read_fn):
     path = os.path.join(bench_dir, f"{fmt}_{label}")
-    # Write
     start = time.perf_counter()
     write_fn(path, data)
     write_ms = (time.perf_counter() - start) * 1000
     file_bytes = os.path.getsize(path)
-    # Read
     start = time.perf_counter()
     count = read_fn(path)
     read_ms = (time.perf_counter() - start) * 1000
     results.append((fmt, label, len(data), write_ms, read_ms, file_bytes))
 
-# CSV
 def write_csv(path, data):
     with open(path, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=data[0].keys())
@@ -614,19 +588,16 @@ def write_csv(path, data):
 def read_csv(path):
     with open(path) as f: return sum(1 for _ in csv.DictReader(f))
 
-# JSON
 def write_json(path, data):
     with open(path, "w") as f: json.dump(data, f)
 def read_json(path):
     with open(path) as f: return len(json.load(f))
 
-# Parquet
 def write_parquet(path, data):
     pd.DataFrame(data).to_parquet(path, index=False)
 def read_parquet(path):
     return len(pq.read_table(path))
 
-# Avro
 bench_avro_schema = fastavro.parse_schema({
     "type": "record", "name": "Ohlcv", "fields": [
         {"name": "symbol", "type": "string"}, {"name": "date", "type": "string"},
@@ -640,7 +611,6 @@ def write_avro(path, data):
 def read_avro(path):
     with open(path, "rb") as f: return sum(1 for _ in fastavro.reader(f))
 
-# Protobuf — raw wire-format encoding (same binary format as protoc)
 def _proto_tag(field_num, wire_type):
     return bytes([(field_num << 3) | wire_type])
 
@@ -656,18 +626,13 @@ def write_proto(path, data):
     with open(path, 'wb') as f:
         for r in data:
             msg = b''
-            # field 1: symbol (wire type 2 = length-delimited)
             sym = r['symbol'].encode('utf-8')
             msg += _proto_tag(1, 2) + bytes([len(sym)]) + sym
-            # field 2: date (wire type 2)
             dt = r['date'].encode('utf-8')
             msg += _proto_tag(2, 2) + bytes([len(dt)]) + dt
-            # fields 3-6: open/high/low/close (wire type 1 = fixed64/double)
             for fnum, key in [(3,'open'),(4,'high'),(5,'low'),(6,'close')]:
                 msg += _proto_tag(fnum, 1) + struct.pack('<d', r[key])
-            # field 7: volume (wire type 0 = varint)
             msg += _proto_tag(7, 0) + _proto_varint(r['volume'])
-            # Length-prefix each message for framing
             f.write(len(msg).to_bytes(2, 'big') + msg)
 
 def read_proto(path):
@@ -679,7 +644,7 @@ def read_proto(path):
             f.read(int.from_bytes(lb, 'big'))
             count += 1
     return count
-# Run all benchmarks
+
 for label, data in [("small", small), ("medium", medium), ("large", large)]:
     for fmt, wfn, rfn, ext in [
         ("CSV", write_csv, read_csv, ".csv"),
@@ -691,8 +656,6 @@ for label, data in [("small", small), ("medium", medium), ("large", large)]:
         bench(fmt, label + ext, data, wfn, rfn)
 
 ```
-
-      All benchmarks complete.
 
 ### Results and analysis
 
@@ -708,13 +671,11 @@ df_bench["Bytes/Rec"] = df_bench["Bytes"] // df_bench["Records"]
 df_bench["Write_ms"] = df_bench["Write_ms"].round(0).astype(int)
 df_bench["Read_ms"] = df_bench["Read_ms"].round(0).astype(int)
 
-# Build a single DataFrame sorted by bucket (large first) then Bytes/Rec
 bucket_order = {"large": 0, "medium": 1, "small": 2}
 df_out = (df_bench[["Format", "Records", "File_Size", "Bytes/Rec", "Write_ms", "Read_ms", "Bucket"]]
     .assign(_sort=df_bench["Bucket"].map(bucket_order))
     .sort_values(["_sort", "Bytes/Rec"]).drop(columns="_sort").reset_index(drop=True))
 
-# Insert separator rows between buckets
 rows = []
 prev_bucket = None
 for _, row in df_out.iterrows():
@@ -727,7 +688,6 @@ for _, row in df_out.iterrows():
 
 df_display = pd.DataFrame(rows).reset_index(drop=True)
 
-# Color function: green=best, red=worst per bucket group
 def highlight(df):
     styles = pd.DataFrame("", index=df.index, columns=df.columns)
     # Find separator row indices to define groups
@@ -742,7 +702,6 @@ def highlight(df):
             if len(positive) > 0:
                 styles.iloc[positive.idxmin(), styles.columns.get_loc(col)] = "background-color:#2e7d32;color:#fff"
                 styles.iloc[vals.idxmax(), styles.columns.get_loc(col)] = "background-color:#c62828;color:#fff"
-    # Bold separator rows
     for idx in sep_idxs[:-1]:
         for col in styles.columns:
             styles.iloc[idx, styles.columns.get_loc(col)] = "font-weight:bold;border-top:2px solid #888"
@@ -948,7 +907,6 @@ comp["File_Size"] = comp["Bytes"].apply(
     lambda b: f"{b/1024**2:.1f} MB" if b >= 1024**2 else f"{b/1024:.1f} KB")
 comp["Size_MB"] = (comp["Bytes"] / 1024**2).round(2)
 
-# Styled table
 display(
     comp[["Format", "File_Size", "vs_CSV"]]
     .style

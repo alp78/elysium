@@ -82,11 +82,11 @@ Python's built-in `open()` function handles all file I/O with mode strings contr
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    O["open(path, mode)"] --> R["'r' — read\n(default)"]
-    O --> W["'w' — write\n(truncates!)"]
-    O --> A["'a' — append\n(safe add)"]
-    O --> X["'x' — exclusive\n(fail if exists)"]
-    O --> B["add 'b' for binary\n'rb' / 'wb'"]
+    O["open(path, mode)"] --> R["'r' — read<br/>(default)"]
+    O --> W["'w' — write<br/>(truncates!)"]
+    O --> A["'a' — append<br/>(safe add)"]
+    O --> X["'x' — exclusive<br/>(fail if exists)"]
+    O --> B["add 'b' for binary<br/>'rb' / 'wb'"]
     W -.- |"⚠ destroys existing"| W
     X -.- |"✓ prevents overwrite"| X
 ```

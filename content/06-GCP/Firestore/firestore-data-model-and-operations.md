@@ -1,5 +1,5 @@
 ---
-tags: [data-modeling, infrastructure, python, gcp, firestore]
+tags: [data-modeling, python, gcp, firestore]
 aliases:
   - Firestore
   - Cloud Firestore
@@ -28,7 +28,7 @@ status: complete
 >
 > — **Rick Houlihan**, AWS NoSQL design lead
 
-### Why Firestore for Data Engineering
+## Why Firestore for Data Engineering
 
 Firestore's unbeatable value comes down to one thing no other GCP service does: **real-time push to clients with zero infrastructure.**
 
@@ -45,10 +45,17 @@ Cloud Firestore is a fully managed, serverless, document-oriented NoSQL database
 
 Firestore is distinct from traditional relational databases: there is no fixed schema, no SQL, and no joins across collections. Instead, data is organized into **documents** grouped into **collections**, with optional **subcollections** nested under documents.
 
+> [!info] Prerequisites
+>
+> Enable `firestore.googleapis.com` before creating any database:
+> ```bash
+> gcloud services enable firestore.googleapis.com
+> ```
+> Required role to create and manage databases: `roles/datastore.owner` or `roles/firebase.admin`.
+
 > [!tip] When to Use Firestore
 >
-> When to reach for Firestore.
-> Firestore excels at pipeline state tracking, config stores, feature flags, audit logs, and any use case where you need real-time change propagation without managing infrastructure. For analytics workloads, pair it with [BigQuery](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization).
+> Firestore excels at pipeline state tracking, config stores, feature flags, audit logs, and any use case where you need real-time change propagation without managing infrastructure. For advanced Firestore query patterns, see [05-DB-Queries/Firestore](https://alp78.github.io/elysium/05-DB-Queries/Firestore/firestore-queries). For analytics workloads, pair it with [BigQuery](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization).
 
 ---
 
@@ -129,9 +136,45 @@ Firestore pricing is operation-based, not instance-based. There is no cost when 
 
 ## Data Model
 
+Firestore organizes data as documents inside collections, with optional subcollections nested under documents. Understanding this hierarchy is a prerequisite for writing SDK code, queries, and indexes.
+
 ### Documents, Collections, and Subcollections
 
-Firestore organizes data hierarchically:
+Firestore organizes data hierarchically. Each level in the tree is distinct — a collection holds only documents, a document holds only fields and optional subcollections.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    DB["🗄️ Firestore Database\n(default) or named"]
+    C1["📁 Collection\n/pipelines"]
+    C2["📁 Collection\n/config"]
+    D1["📄 Document\n/pipelines/daily-ingest"]
+    D2["📄 Document\n/pipelines/hourly-sync"]
+    D3["📄 Document\n/config/daily-ingest"]
+    SC["📁 Subcollection\n/pipelines/daily-ingest/runs"]
+    SD1["📄 Document\n/runs/2026-03-22T06:00:00Z"]
+    SD2["📄 Document\n/runs/2026-03-22T18:00:00Z"]
+
+    DB --> C1
+    DB --> C2
+    C1 --> D1
+    C1 --> D2
+    C2 --> D3
+    D1 --> SC
+    SC --> SD1
+    SC --> SD2
+```
 
 ```text
 /pipelines                          ← collection
@@ -281,7 +324,11 @@ Collection group queries (covered in the Querying section) allow querying nested
 
 ## CRUD Operations (Python SDK)
 
+The `google-cloud-firestore` Python client provides synchronous and asynchronous APIs for all document operations. Install it once per environment, then initialize a `Client` instance that persists for the lifetime of the process.
+
 ### Installation and Client Initialization
+
+Install the client library and initialize a `firestore.Client` instance. The client uses Application Default Credentials (ADC) by default — set `GOOGLE_APPLICATION_CREDENTIALS` to a service account key file, or run `gcloud auth application-default login` for local development.
 
 ```bash
 pip install google-cloud-firestore
@@ -451,6 +498,8 @@ batch.commit()
 
 ### Transactions
 
+Use transactions when a write depends on the current value of a document — for example, incrementing a counter or enforcing a state machine transition. Firestore retries the transaction automatically if a concurrent write modifies any read document before the commit.
+
 Transactions allow read-then-write atomicity across multiple documents. If a concurrent write modifies a document between the transaction's read and write, Firestore retries automatically (up to 5 times by default).
 
 ```python
@@ -473,7 +522,11 @@ increment_run_count(transaction, pipeline_ref)
 
 ## Querying
 
+Firestore queries are scoped to a single collection or collection group and run entirely server-side. All filters are applied before results are returned — Firestore never does a full table scan on the client side.
+
 ### Simple Queries
+
+Filter a collection using `.where()` and chain `.order_by()` and `.limit()` for sorting and result-set control. Call `.stream()` to iterate over matching documents without loading all of them into memory at once.
 
 ```python
 # All pipelines with status "running"
@@ -563,7 +616,9 @@ for doc in runs_query.stream():
 
 Firestore auto-creates single-field indexes for every field. Queries with multiple `where()` or `order_by()` on different fields require a manually created composite index.
 
-#### Create via gcloud
+#### gcloud | Create a composite index
+
+Create the index from the command line, or copy the exact command from the error message Firestore returns when a query fails due to a missing index.
 
 ```bash
 gcloud firestore indexes composite create \
@@ -573,10 +628,21 @@ gcloud firestore indexes composite create \
   --field-config=field-path=started_at,order=DESCENDING
 ```
 
-#### List existing indexes
+```text
+Create request issued for: [...]
+Waiting for operation [...] to complete...done.
+Created index [...].
+```
+
+#### gcloud | List composite indexes
 
 ```bash
 gcloud firestore indexes composite list
+```
+
+```text
+INDEX_ID    COLLECTION_GROUP  QUERY_SCOPE  STATE  FIELDS
+abc123...   pipeline_runs     COLLECTION   READY  pipeline_id ASC, status ASC, started_at DESC
 ```
 
 ---
@@ -651,7 +717,11 @@ avg_duration = result[0][0].value
 
 ## Real-Time Listeners
 
+Firestore pushes document and query changes to connected clients in real time using `on_snapshot()`. Listeners operate on individual documents or filtered collection queries and fire immediately with the current snapshot, then once per change thereafter.
+
 ### Document Listener
+
+Register a callback with `.on_snapshot()` on a `DocumentReference`. The callback fires immediately with the current state, then once each time the document is modified. The returned `unsubscribe` callable stops the listener.
 
 ```python
 def on_pipeline_change(doc_snapshot, changes, read_time):
@@ -666,6 +736,8 @@ unsubscribe()
 ```
 
 ### Collection Watcher
+
+Attach `.on_snapshot()` to a query to watch all documents matching its filters. The `changes` list provides typed events (`ADDED`, `MODIFIED`, `REMOVED`) so the callback can react to specific change types rather than processing the full snapshot.
 
 ```python
 def on_collection_change(col_snapshot, changes, read_time):
@@ -748,71 +820,241 @@ def on_job_request(cloud_event):
 
 ## gcloud CLI Operations
 
+The `gcloud firestore` command group manages databases, indexes, and data exports. Requires `firestore.googleapis.com` to be enabled on the project (`gcloud services enable firestore.googleapis.com`).
+
 ### Database Management
 
-```bash
-# Create a Firestore database in Native mode (default region)
-gcloud firestore databases create --location=us-central1
+Create and inspect Firestore databases. A project can have multiple named databases alongside the `(default)` database — useful for environment isolation (dev/staging/prod) or per-tenant separation. Required role: `roles/datastore.owner` or `roles/firebase.admin`.
 
-# Create a named database
+#### gcloud firestore databases create — create the default database
+
+Creates a Firestore database in Native mode in the specified region. Must be run before any SDK access. The `--location` flag is required and cannot be changed after creation.
+
+```bash
+gcloud firestore databases create --location=us-central1
+```
+
+```text
+Create request issued for: [(default)]
+Waiting for operation [projects/my-gcp-project/operations/...] to complete...done.
+Created database [(default)].
+```
+
+#### gcloud firestore databases create — create a named database
+
+Creates a named non-default database. Multiple named databases can coexist in one project. Use `--type=firestore-native` to explicitly enforce Native mode (the default).
+
+```bash
 gcloud firestore databases create \
   --database=pipeline-state \
   --location=us-central1 \
   --type=firestore-native
+```
 
-# List all databases in the project
+```text
+Create request issued for: [pipeline-state]
+Waiting for operation [projects/my-gcp-project/operations/...] to complete...done.
+Created database [pipeline-state].
+```
+
+#### gcloud firestore databases list — list all databases
+
+Lists all Firestore databases in the current project, including the `(default)` database.
+
+```bash
 gcloud firestore databases list
+```
 
-# Describe a specific database
+```text
+NAME             LOCATION_ID   TYPE               DELETE_PROTECTION_STATE
+(default)        us-central1   FIRESTORE_NATIVE   DELETION_PROTECTION_DISABLED
+pipeline-state   us-central1   FIRESTORE_NATIVE   DELETION_PROTECTION_DISABLED
+```
+
+#### gcloud firestore databases describe — inspect a database
+
+Returns full configuration for a named database including PITR status, concurrency mode, and version retention period.
+
+```bash
 gcloud firestore databases describe --database=pipeline-state
 ```
+
+```text
+concurrencyMode: PESSIMISTIC
+createTime: '2026-01-15T10:23:45Z'
+locationId: us-central1
+name: projects/my-gcp-project/databases/pipeline-state
+type: FIRESTORE_NATIVE
+versionRetentionPeriod: 3600s
+```
+
+#### gcloud firestore databases update — enable Point-in-Time Recovery
+
+Enables PITR on an existing database. PITR allows restoring the database to any point within the last 7 days.
+
+```bash
+gcloud firestore databases update \
+  --database=pipeline-state \
+  --enable-pitr
+```
+
+```text
+Updated database [pipeline-state].
+```
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `--location` | `--location=us-central1` | Region for the new database. Cannot be changed after creation. |
+| `--database` | `--database=NAME` | Name of the database. Omit for the `(default)` database. |
+| `--type` | `--type=firestore-native` | Database type: `firestore-native` (default) or `datastore-mode`. |
+| `--enable-pitr` | `--enable-pitr` | Enables Point-in-Time Recovery (7-day restore window). |
+| `--delete-protection` | `--delete-protection` | Prevents accidental database deletion. |
 
 ---
 
 ### Index Management
 
+Firestore auto-indexes every field in every document. Composite indexes — covering multiple fields — must be created manually before compound queries or collection group queries can run. The Firestore console provides the exact `gcloud` command when a query fails due to a missing index.
+
+#### gcloud firestore indexes composite create — create a composite index
+
+Creates an index on a collection for compound queries combining `where()` on one field with `order_by()` on another.
+
 ```bash
-# Create a composite index
 gcloud firestore indexes composite create \
   --collection-group=pipeline_runs \
   --field-config=field-path=pipeline_id,order=ASCENDING \
   --field-config=field-path=started_at,order=DESCENDING
+```
 
-# Create a collection group index (for subcollection queries)
+```text
+Create request issued for: [projects/my-gcp-project/databases/(default)/collectionGroups/pipeline_runs/indexes/...]
+Waiting for operation [...] to complete...done.
+Created index [...].
+```
+
+#### gcloud firestore indexes composite create — create a collection group index
+
+Creates a composite index scoped to all subcollections with the same name, enabling `db.collection_group()` queries across parent documents.
+
+```bash
 gcloud firestore indexes composite create \
   --collection-group=runs \
   --query-scope=COLLECTION_GROUP \
   --field-config=field-path=status,order=ASCENDING \
   --field-config=field-path=started_at,order=DESCENDING
+```
 
-# List all composite indexes
+```text
+Create request issued for: [...]
+Waiting for operation [...] to complete...done.
+Created index [...].
+```
+
+#### gcloud firestore indexes composite list — list all composite indexes
+
+Lists all manually created composite indexes with their IDs, collection groups, scopes, and current states.
+
+```bash
 gcloud firestore indexes composite list
+```
 
-# Delete a composite index
+```text
+INDEX_ID    COLLECTION_GROUP  QUERY_SCOPE       STATE  FIELDS
+abc123...   pipeline_runs     COLLECTION        READY  pipeline_id ASC, started_at DESC
+xyz789...   runs              COLLECTION_GROUP  READY  status ASC, started_at DESC
+```
+
+#### gcloud firestore indexes composite delete — delete a composite index
+
+Deletes a composite index by ID. Retrieve the ID from `gcloud firestore indexes composite list`.
+
+```bash
 gcloud firestore indexes composite delete INDEX_ID
 ```
+
+```text
+Deleted index [INDEX_ID].
+```
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `--collection-group` | `--collection-group=NAME` | Collection name the index applies to. |
+| `--query-scope` | `--query-scope=COLLECTION_GROUP` | Scope: `COLLECTION` (default) or `COLLECTION_GROUP` for subcollection queries. |
+| `--field-config` | `--field-config=field-path=F,order=ASC` | Field and sort order. Repeat for each field. |
+| `--database` | `--database=NAME` | Target database. Omit for `(default)`. |
 
 ---
 
 ### Backup and Restore
 
-```bash
-# Export entire database to GCS
-gcloud firestore export gs://my-backup-bucket/firestore/2026-03-22
+Exports write a full or partial snapshot of the database to a GCS bucket. Imports restore from a prior export. The Firestore service account must have `storage.objects.create` on the destination bucket. See [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) for bucket setup and [gcs-object-operations](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations) for managing backup files.
 
-# Export specific collections only
+#### gcloud firestore export — export entire database
+
+Exports all collections to a GCS path. The operation runs asynchronously as a managed long-running operation.
+
+```bash
+gcloud firestore export gs://my-backup-bucket/firestore/2026-03-22
+```
+
+```text
+Waiting for operation [projects/my-gcp-project/operations/...] to complete...done.
+metadata:
+  outputUriPrefix: gs://my-backup-bucket/firestore/2026-03-22
+  operationState: SUCCESSFUL
+```
+
+#### gcloud firestore export — export specific collections
+
+Exports only the listed collection IDs. Useful for partial backups of operational collections without including large historical data.
+
+```bash
 gcloud firestore export gs://my-backup-bucket/firestore/partial \
   --collection-ids=pipelines,pipeline_runs,config
+```
 
-# Import from a GCS export
+```text
+Waiting for operation [...] to complete...done.
+metadata:
+  outputUriPrefix: gs://my-backup-bucket/firestore/partial
+  operationState: SUCCESSFUL
+```
+
+#### gcloud firestore import — restore from a full export
+
+Imports all collections from a prior export. Import does not delete existing documents — it upserts into the target database.
+
+```bash
 gcloud firestore import gs://my-backup-bucket/firestore/2026-03-22
+```
 
-# Import specific collections only
+```text
+Waiting for operation [...] to complete...done.
+metadata:
+  operationState: SUCCESSFUL
+```
+
+#### gcloud firestore import — restore specific collections
+
+Imports only the listed collection IDs from a prior export. Use this to restore a single operational collection without overwriting others.
+
+```bash
 gcloud firestore import gs://my-backup-bucket/firestore/2026-03-22 \
   --collection-ids=config
 ```
 
-See [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) for GCS bucket setup and [gcs-object-operations](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations) for managing backup files. Make sure the Firestore service account has `storage.objects.create` on the destination bucket.
+```text
+Waiting for operation [...] to complete...done.
+metadata:
+  operationState: SUCCESSFUL
+```
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `--collection-ids` | `--collection-ids=A,B` | Comma-separated collection IDs to export/import. Omit for all collections. |
+| `--database` | `--database=NAME` | Source or target database. Omit for `(default)`. |
+| `--async` | `--async` | Return immediately without waiting for the operation to complete. |
 
 > [!tip] Schedule Exports
 >
@@ -825,6 +1067,10 @@ See [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/g
 
 Security rules apply to **client-side SDK access** (web and mobile apps). When accessing Firestore from a **server-side Python SDK using a service account**, security rules are bypassed — the service account's IAM role governs access instead.
 
+### Server-Side IAM Access
+
+For server-side pipelines using the `google-cloud-firestore` Python client, access is controlled exclusively by IAM roles bound to the service account. Security rules have no effect.
+
 #### Required IAM roles for server-side access
 
 | Role | Access level |
@@ -834,14 +1080,19 @@ Security rules apply to **client-side SDK access** (web and mobile apps). When a
 | `roles/datastore.owner` | Full control including index management |
 | `roles/datastore.importExportAdmin` | Export/import only |
 
+Grant a service account Firestore read/write access at the project level:
+
 ```bash
-# Grant a service account Firestore read/write access
 gcloud projects add-iam-policy-binding my-gcp-project \
   --member="serviceAccount:pipeline-sa@my-gcp-project.iam.gserviceaccount.com" \
   --role="roles/datastore.user"
 ```
 
 See [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for service account creation and key management.
+
+### Client-Side Security Rules
+
+Security rules govern which documents a web or mobile client can read or write. They are evaluated by the Firestore service before any client SDK request is fulfilled, and are expressed in a rules DSL. The following example is shown for reference only — for data engineering pipelines, use IAM roles (see above).
 
 #### Basic rules for a web app exposing Firestore (for reference)
 
@@ -882,7 +1133,11 @@ service cloud.firestore {
 
 ## Terraform Provisioning
 
+The examples below show the core Terraform resources for provisioning Firestore infrastructure. For a complete IaC reference including module patterns and state management, see [07-Terraform/GCP](https://alp78.github.io/elysium/07-Terraform/GCP/terraform-gcp-resources).
+
 ### Firestore Database
+
+Provision a Native mode Firestore database with PITR enabled. The `name` field sets the database ID — use `"(default)"` for the default database.
 
 ```hcl
 resource "google_firestore_database" "pipeline_state" {
@@ -900,6 +1155,8 @@ resource "google_firestore_database" "pipeline_state" {
 ```
 
 ### Terraform Firestore — Composite Index
+
+Version-control composite indexes as code. This eliminates the manual `gcloud firestore indexes composite create` step that breaks deployments in new environments.
 
 ```hcl
 resource "google_firestore_index" "runs_by_status_and_time" {
@@ -926,6 +1183,8 @@ resource "google_firestore_index" "runs_by_status_and_time" {
 
 ### Terraform Firestore — Seed a Config Document
 
+Seed an initial configuration document at apply time. Useful for bootstrapping pipeline config in new environments. Field values must use Firestore's typed value syntax (`integerValue`, `stringValue`, `booleanValue`).
+
 ```hcl
 resource "google_firestore_document" "pipeline_config" {
   project     = var.project_id
@@ -950,6 +1209,8 @@ resource "google_firestore_document" "pipeline_config" {
 ---
 
 ## Data Engineering Patterns with Firestore
+
+These patterns apply Firestore's document model to common data engineering problems: pipeline state tracking, runtime configuration, audit logging, and real-time data ingestion. All patterns below use the `google-cloud-firestore` Python SDK against a Native mode database.
 
 ### Pipeline State Store
 
@@ -1172,6 +1433,8 @@ def export_recent_events_to_bigquery(hours_back: int = 1):
 
 ## Performance and Limits
 
+Firestore scales automatically but enforces hard limits that affect high-throughput pipeline design. The two most impactful issues at scale are hot spots (sequential document IDs saturating a single shard) and index explosion (large maps multiplying write costs).
+
 ### Throughput Limits
 
 | Limit | Value | Notes |
@@ -1193,17 +1456,22 @@ def export_recent_events_to_bigquery(hours_back: int = 1):
 Firestore splits data across shards based on document ID lexicographic order. If many writes target adjacent document IDs (e.g., timestamps like `2026-03-22T00:00:01`, `2026-03-22T00:00:02`, ...), all writes hit the same shard and Firestore throttles.
 
 #### Avoid
+
+Using timestamps or monotonically increasing integers as document IDs concentrates writes on a single shard.
+
 ```python
-# BAD — timestamp IDs create a write hot spot
 doc_ref = db.collection("events").document(datetime.utcnow().isoformat())
 ```
 
 #### Prefer
-```python
-# GOOD — random auto-generated ID distributes across shards
-doc_ref = db.collection("events").document()  # e.g., "Xk2mN9pQr7..."
 
-# GOOD — hash-prefix disperses sequential IDs
+Use auto-generated IDs for maximum shard distribution, or hash-prefix sequential IDs to disperse writes across multiple shards while preserving sortability.
+
+```python
+doc_ref = db.collection("events").document()
+```
+
+```python
 import hashlib
 ts = datetime.utcnow().isoformat()
 prefix = hashlib.md5(ts.encode()).hexdigest()[:4]
@@ -1220,8 +1488,10 @@ Firestore auto-indexes every field in every document. If a document contains a l
 A document with a `metadata` map containing 50 dynamic keys creates 50 index entries on write, charged as additional write operations.
 
 #### Mitigation
+
+Exempt the high-cardinality map field from auto-indexing using a single-field index exemption.
+
 ```bash
-# Exempt a field from auto-indexing using single-field index exemptions
 gcloud firestore indexes fields update metadata \
   --collection-group=pipeline_runs \
   --index-config=no-index
@@ -1237,6 +1507,16 @@ Or restructure to store dynamic keys as an array of `{key, value}` objects rathe
 > [!success] Exempt High-Cardinality Maps From Indexing
 >
 > Use a single-field index exemption to disable auto-indexing on the dynamic map field: `gcloud firestore indexes fields update metadata --collection-group=pipeline_runs --index-config=no-index`. Alternatively, serialize the map to a JSON string field — one indexed string instead of N index entries.
+
+---
+
+### Vector Search (GA 2024)
+
+Firestore Native mode supports vector similarity search via `find_nearest()` on a vector-typed field. This enables semantic search, recommendation, and embedding lookup directly on Firestore data without an external vector store.
+
+> [!info] Native Vector Search
+>
+> Firestore added GA vector search support in 2024. A `VECTOR` field stores dense float embeddings. The `find_nearest()` query returns the K-nearest neighbors using cosine or dot-product distance. Requires a vector index created via the Firestore console or `gcloud`. Useful for config documents that store embeddings alongside metadata, or for feature stores where embeddings need to be co-located with operational data.
 
 ---
 
@@ -1268,6 +1548,49 @@ Or restructure to store dynamic keys as an array of `{key, value}` objects rathe
 | Best for DE | Pipeline state, config | Analytics queries | Structured transactional data | IoT, time-series, wide rows |
 | Companion service | BigQuery (analytics) | Firestore (hot path) | — | BigQuery (export) |
 
+### Decision Guidance
+
+Use the following rules to select the right storage service. When multiple criteria apply, the first matching rule wins.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    START["What is your primary need?"]
+    Q1{"Real-time listeners\nor push updates?"}
+    Q2{"SQL analytics on\nlarge datasets?"}
+    Q3{"ACID transactions\nwith foreign keys?"}
+    Q4{"High-throughput\ntime-series writes\n(>10 GB/s)?"}
+    Q5{"Pipeline state,\nconfig, or flags?"}
+
+    FS["✅ Firestore\nReal-time, schemaless,\nfully serverless"]
+    BQ["✅ BigQuery\nAnalytics, reporting,\nper-bytes-scanned cost"]
+    SQL["✅ Cloud SQL\nPostgreSQL / MySQL,\nACID, FK constraints"]
+    BT["✅ Bigtable\nIoT, time-series,\nwide-row column store"]
+    FS2["✅ Firestore\nPurpose-built for\noperational state"]
+
+    START --> Q1
+    Q1 -->|Yes| FS
+    Q1 -->|No| Q2
+    Q2 -->|Yes| BQ
+    Q2 -->|No| Q3
+    Q3 -->|Yes| SQL
+    Q3 -->|No| Q4
+    Q4 -->|Yes| BT
+    Q4 -->|No| Q5
+    Q5 -->|Yes| FS2
+```
+
 #### Firestore vs Alternatives — decision guidance
 - Need real-time updates or listeners → **Firestore**
 - Need SQL analytics on large datasets → **BigQuery** (see [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization))
@@ -1279,7 +1602,11 @@ Or restructure to store dynamic keys as an array of `{key, value}` objects rathe
 
 ## Quick Reference
 
+One-liners and minimal command references for copy-paste use in pipeline code or terminal sessions.
+
 ### Common Python Patterns
+
+Frequently used one-liners for the Python SDK. All examples assume `db = firestore.Client(project="my-project")`.
 
 ```python
 from google.cloud import firestore
@@ -1316,6 +1643,8 @@ count = col("pipelines").where("status", "==", "failed").count().get()[0][0].val
 ```
 
 ### gcloud Cheat Sheet
+
+Minimal `gcloud` commands for daily Firestore operations. For full flag references and output examples, see [gcloud CLI Operations](#gcloud-cli-operations) above.
 
 ```bash
 # Create database

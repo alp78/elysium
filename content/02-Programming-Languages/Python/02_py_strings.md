@@ -1,6 +1,7 @@
 ---
 title: "02. Strings - Python"
-tags: [python]
+tags:
+  - python
 aliases: [string manipulation, string formatting, regex, f-strings, string interpolation]
 description: "Python strings reference with executable examples and cell outputs — covers string creation, indexing, slicing, methods, formatting, efficient building, and regular expressions. See [02_cs_strings](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/02_cs_strings) for the C# equivalent."
 created: 2026-03-22
@@ -193,7 +194,9 @@ Accessing individual characters and extracting substrings. Python uses 0-based i
 
 Direct character access by position, substring extraction via slicing, and stride patterns.
 
-#### Indexing and slicing (0-based)
+#### Access characters and substrings by index and slice
+
+Python strings support 0-based indexing with `[]`, negative indexing from the end, and slice syntax `[start:stop:step]` with full stride support. Slicing never raises an exception — out-of-range indices are silently clamped.
 
 > [!info] Indexing and slicing
 >
@@ -276,6 +279,8 @@ Methods for changing letter case. Python provides `upper()`, `lower()`, `title()
 
 #### Convert case with upper, lower, title, capitalize, swapcase, casefold
 
+Python provides six case-conversion methods. `upper()` and `lower()` convert all characters. `title()` capitalizes the first letter of each word, while `capitalize()` only capitalizes the first character of the string. `swapcase()` inverts case, and `casefold()` performs aggressive Unicode-aware lowering for case-insensitive comparison.
+
 > [!info] Case methods
 >
 > - `casefold()` — more aggressive than `lower()`, handles Unicode (`"Straße"` → `"strasse"`)
@@ -341,6 +346,8 @@ Python provides built-in `str.isXxx()` methods — unlike C# where you must comb
 
 #### Test string content with isalpha, isdigit, isnumeric, and more
 
+Python provides built-in `str.isXxx()` methods that return `True` if all characters satisfy the condition and the string is non-empty. Notable distinctions: `isnumeric()` is broader than `isdigit()` (it includes fractions like `½`), `isdecimal()` is the strictest (only `0-9`), and `isprintable()` returns `False` for control characters like `\n`.
+
 > [!tip] isdigit vs isnumeric vs isdecimal
 > `isdecimal()` accepts only `0-9` characters. `isdigit()` also accepts superscripts and subscripts. `isnumeric()` is the broadest — it includes fractions like `½` and Roman numerals. For parsing numbers, `isdecimal()` is usually what you want.
 
@@ -354,10 +361,10 @@ checks = {
     "islower()":    "hello",
     "istitle()":    "Hello World",
     "isascii()":    "Hello",
-    "isnumeric()":  "½",          # True (broader than isdigit)
+    "isnumeric()":  "½",
     "isdecimal()":  "12345",
-    "isidentifier()": "my_var",   # valid Python identifier?
-    "isprintable()":  "hello\n",  # False (\n is not printable)
+    "isidentifier()": "my_var",
+    "isprintable()":  "hello\n",
 }
 for method, example in checks.items():
     result = getattr(example, method.replace('()', ''))()

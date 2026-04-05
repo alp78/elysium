@@ -1,5 +1,5 @@
 ---
-tags: [pipeline, infrastructure, python, gcp, firestore]
+tags: [pipeline, python, gcp, firestore, pubsub, dataflow]
 aliases:
   - real-time pipeline
   - NoSQL pipeline
@@ -15,7 +15,7 @@ description: >
   streaming, change data capture, full Python implementations, monitoring, cost
   optimization, and security. Batch vs. real-time decision framework included.
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-05
 status: complete
 ---
 
@@ -32,9 +32,18 @@ Firestore is a serverless, fully managed document database that occupies a speci
 >
 > This is not a Firestore CRUD tutorial. The focus is on **pipeline architecture patterns**: when Firestore earns its place, how to integrate it with other GCP services, and the full Python code required to do so production-ready.
 
+> [!todo] Prerequisites
+>
+> - **APIs:** Enable `firestore.googleapis.com` and `eventarc.googleapis.com` (for trigger-based patterns)
+> - **IAM:** `roles/datastore.user` for read/write; `roles/datastore.owner` for admin; `roles/datastore.importExportAdmin` for export operations
+> - **Firestore mode:** This note assumes **Native mode**. Datastore mode is a separate compatibility layer with different API behaviour and CMEK support. The mode cannot be changed after database creation — verify before applying these patterns.
+> - **SDK:** `google-cloud-firestore>=2.11` for Python; `apache-beam[gcp]` for the Dataflow patterns
+
 ---
 
 ## When to Use Real-Time NoSQL Pipelines
+
+Choosing the right data service requires matching workload characteristics to service strengths. This section defines the latency tiers, identifies the scenarios where Firestore earns its place, and lists the cases where another GCP service is a better choice.
 
 ### Batch vs. Near-Real-Time vs. Real-Time
 
@@ -79,6 +88,8 @@ Firestore handles ~1 write/second per document and up to 10,000 writes/second at
 **Real-time serving layer**
 Gold scores computed in BigQuery are written to Firestore (`stocks` collection) so dashboards can read them instantly with sub-10ms latency, instead of querying BigQuery every time (which costs money and takes seconds)
 
+For Firestore querying patterns, composite index design, and cost-optimized query structures, see [Firestore Python queries](https://alp78.github.io/elysium/05-DB-Queries/Firestore/firestore-python) and [Firestore C# queries](https://alp78.github.io/elysium/05-DB-Queries/Firestore/firestore-csharp). For IaC provisioning of Firestore databases, indexes, and IAM bindings, see [Terraform data services](https://alp78.github.io/elysium/07-Terraform/Block-Library/tf-data-services).
+
 ---
 
 ### Use Cases Where Firestore Does NOT Fit
@@ -104,28 +115,37 @@ Gold scores computed in BigQuery are written to Firestore (`stocks` collection) 
 
 ## Architecture Patterns
 
+Five canonical patterns for using Firestore in data pipelines, ordered by complexity. Each covers the data flow, implementation hooks, and trade-offs.
+
 ### Pattern 1: Firestore as Pipeline State Store
 
-```text
-Pipeline Start  → Write {status: "running", started_at: now()} to Firestore
-                ↓
-     Dashboard reads in real-time via on_snapshot() listener
-                ↓
-Pipeline Finish → Update {status: "success", rows_written: N, finished_at: now()}
-Pipeline Fail   → Update {status: "failed", error: msg, finished_at: now()}
+The pipeline writes a document at the start of execution and updates it on completion or failure. Dashboard subscribers receive server-push updates via `on_snapshot()` within milliseconds of each state change — no polling endpoint, no separate metadata database.
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#414868", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#1a1b26", "edgeLabelBackground": "#1a1b26", "clusterBkg": "#16161e", "titleColor": "#c0caf5", "attributeBackgroundColorEven": "#1a1b26", "attributeBackgroundColorOdd": "#16161e"}}}%%
+flowchart TD
+    A([Pipeline starts]) --> B["Write: status=running\nstarted_at=now()"]
+    B -->|on_snapshot push| C[Dashboard: RUNNING]
+    B --> D{Outcome}
+    D -->|Success| E["Update: status=success\nrows_written=N\nfinished_at=now()"]
+    D -->|Failure| F["Update: status=failed\nerror=msg\nfinished_at=now()"]
+    E -->|on_snapshot push| G[Dashboard: SUCCESS]
+    F -->|on_snapshot push| H[Dashboard: FAILED]
 ```
 
 This pattern requires no polling endpoint, no separate metadata database, and no webhook infrastructure. The dashboard receives server-push updates within milliseconds of the state change.
 
 #### Document path convention
 
+Subcollections per pipeline name allow independent queries per pipeline without scanning all runs across the root collection.
+
 ```text
 pipelines/{pipeline_name}/runs/{run_id}
 ```
 
-Using a subcollection per pipeline name allows independent queries per pipeline without scanning all runs.
-
 #### Query recent failures
+
+Returns the ten most recent failed runs for a given pipeline, ordered newest-first. Requires a composite index on `(status ASC, started_at DESC)`.
 
 ```python
 db.collection("pipelines").document(pipeline_name).collection("runs") \
@@ -135,28 +155,31 @@ db.collection("pipelines").document(pipeline_name).collection("runs") \
     .stream()
 ```
 
-> [!note] Index Requirements
+> [!info] Index Requirements
 > Ordering by a field while filtering on another requires a composite index in Firestore. Create it via `gcloud firestore indexes composite create` or the console. Firestore will surface an error with the index creation URL on the first failing query.
 
 ---
 
 ### Pattern 2: Event-Driven Processing with Firestore Triggers
 
-```text
-Data arrives  → Write document to Firestore collection "raw_events"
-              ↓
-    Eventarc detects document create/update
-              ↓
-    Cloud Function fires with document snapshot
-              ↓
-    Function processes document → writes to BigQuery
-              ↓
-    Function marks document as processed (or deletes it)
+Firestore document writes trigger Eventarc events, which invoke a Cloud Function. The function is only called when data exists to process, eliminating polling and idle compute. Requires `eventarc.googleapis.com` to be enabled.
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#414868", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#1a1b26", "edgeLabelBackground": "#1a1b26", "clusterBkg": "#16161e", "titleColor": "#c0caf5", "attributeBackgroundColorEven": "#1a1b26", "attributeBackgroundColorOdd": "#16161e"}}}%%
+flowchart TD
+    A([Data arrives]) --> B["Write to Firestore\ncollection: raw_events"]
+    B --> C{Eventarc detects\ndocument create/update}
+    C --> D["Cloud Function fires\nwith document snapshot"]
+    D --> E[Process document]
+    E --> F["Write derived record\nto BigQuery"]
+    F --> G["Mark document processed\nor delete it"]
 ```
 
 This pattern eliminates polling entirely. The Cloud Function is only invoked when data exists to process. Related: [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) for when a long-running service is preferable to a function.
 
 #### Eventarc trigger configuration
+
+Routes Firestore `document.created` events matching `raw_events/{event_id}` to the `event-processor` Cloud Run service. The service account must have `roles/eventarc.eventReceiver` and `roles/run.invoker`.
 
 ```bash
 gcloud eventarc triggers create process-raw-events \
@@ -167,6 +190,10 @@ gcloud eventarc triggers create process-raw-events \
   --event-filters="database=(default)" \
   --event-filters-path-pattern="document=raw_events/{event_id}" \
   --service-account=pipeline-sa@PROJECT_ID.iam.gserviceaccount.com
+```
+
+```text
+Created trigger [process-raw-events] in location [us-central1].
 ```
 
 #### Retry and dead-letter pattern
@@ -195,17 +222,19 @@ def process_event(event_data: dict, doc_ref) -> None:
 
 ### Pattern 3: Config-Driven Pipeline Behavior
 
-```text
-Operator updates config doc in Firestore console (or API)
-              ↓
-Pipeline reads config at start of each run (with caching)
-              ↓
-Behavior changes without code deploy or pipeline restart
+Operational parameters live in a Firestore document rather than environment variables or code. Operators update the document; pipelines read the new values on their next run — no code deploy or pipeline restart required.
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#414868", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#1a1b26", "edgeLabelBackground": "#1a1b26", "clusterBkg": "#16161e", "titleColor": "#c0caf5", "attributeBackgroundColorEven": "#1a1b26", "attributeBackgroundColorOdd": "#16161e"}}}%%
+flowchart LR
+    A([Operator]) -->|"Updates config doc\nvia Console or API"| B[("Firestore\npipeline_config")]
+    B -->|"Read at run start\nwith 5-min TTL cache"| C[Pipeline run]
+    C --> D([Behavior change\nno deploy needed])
 ```
 
-This pattern decouples operational tuning from the release cycle. Thresholds, email lists, schedule parameters, and feature flags live in Firestore rather than environment variables or code.
-
 #### Config document structure
+
+A canonical config document contains quality thresholds, notification recipients, feature flags, and schedule overrides. The `updated_by` and `updated_at` fields provide an operator audit trail without requiring Data Access audit logging.
 
 ```json
 {
@@ -223,6 +252,8 @@ This pattern decouples operational tuning from the release cycle. Thresholds, em
 ```
 
 #### Firestore security rules for config docs
+
+Restricts reads to authenticated users with a company email domain, and writes to a defined list of authorized editors stored in the document itself. These rules apply to client-SDK access only; server-side SDK access using a service account bypasses them.
 
 ```text
 rules_version = '2';
@@ -244,25 +275,20 @@ service cloud.firestore {
 
 ### Pattern 4: Firestore + Pub/Sub + Dataflow Streaming
 
-```text
-┌─────────────┐     ┌─────────────┐     ┌───────────────────────────────┐
-│  Producers  │────▶│   Pub/Sub   │────▶│         Dataflow              │
-│ (IoT, APIs) │     │   Topic     │     │  (Apache Beam streaming job)  │
-└─────────────┘     └─────────────┘     └──────────┬────────────────────┘
-                                                    │
-                              ┌─────────────────────┼──────────────────────┐
-                              ▼                                             ▼
-                    ┌─────────────────┐                         ┌──────────────────┐
-                    │    Firestore    │                         │    BigQuery      │
-                    │  (hot / live)   │                         │  (cold / OLAP)   │
-                    └─────────────────┘                         └──────────────────┘
+Use this architecture when inbound throughput exceeds Firestore's direct write capacity, you need both real-time operational reads and historical analytics, and you want durable message buffering with backpressure handling. Pub/Sub acts as the ingestion buffer; Dataflow fans out to both stores in parallel.
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#414868", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#1a1b26", "edgeLabelBackground": "#1a1b26", "clusterBkg": "#16161e", "titleColor": "#c0caf5", "attributeBackgroundColorEven": "#1a1b26", "attributeBackgroundColorOdd": "#16161e"}}}%%
+flowchart LR
+    P["Producers\n(IoT / APIs)"] --> T[Pub/Sub Topic]
+    T --> D["Dataflow\n(Apache Beam streaming)"]
+    D --> F["Firestore\nhot / live reads"]
+    D --> B["BigQuery\ncold / OLAP analytics"]
+    style F fill:#16161e,stroke:#7aa2f7,color:#c0caf5
+    style B fill:#16161e,stroke:#e0af68,color:#c0caf5
 ```
 
-Use this when: inbound throughput exceeds Firestore's direct write capacity, you need both real-time operational reads (Firestore) and historical analytics (BigQuery), and you want durable buffering (Pub/Sub) to handle backpressure. Related: [pubsub-topics-and-subscriptions](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-topics-and-subscriptions) for topic and subscription configuration.
-
-**When NOT to use this pattern:** if you only need analytics (skip Firestore, write directly to BigQuery via Dataflow), or if you only need real-time reads with no analytics (skip Dataflow and BigQuery, write directly to Firestore from producers).
-
-See [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture) for the broader context of windowing strategies and late data handling in Dataflow.
+**When NOT to use this pattern:** if you only need analytics (skip Firestore, write directly to BigQuery via Dataflow), or if you only need real-time reads with no analytics (skip Dataflow and BigQuery, write directly to Firestore from producers). Related: [pubsub-topics-and-subscriptions](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-topics-and-subscriptions) for topic and subscription configuration. See [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture) for windowing strategies and late data handling in Dataflow.
 
 ---
 
@@ -272,20 +298,34 @@ Two approaches to propagating Firestore changes to downstream systems:
 
 #### Scheduled export (low complexity, higher latency)
 
+Exports specified collection groups to GCS in Firestore's native export format, then loads them into BigQuery. Typically run as a daily Cloud Scheduler job. Requires `roles/datastore.importExportAdmin` and write access to the target GCS bucket.
+
 ```bash
-# Export entire database to GCS daily
 gcloud firestore export gs://BUCKET/exports/$(date +%Y-%m-%d) \
   --collection-ids=pipeline_runs,alert_states
+```
 
-# Load exported data into BigQuery
+```text
+Exporting [gs://BUCKET/exports/2026-04-05]...done.
+```
+
+Load the exported backup into BigQuery using the `DATASTORE_BACKUP` source format. The path pattern targets the specific collection kind within the export directory.
+
+```bash
 bq load \
   --source_format=DATASTORE_BACKUP \
   --replace \
   analytics_dataset.pipeline_runs \
-  gs://BUCKET/exports/$(date +%Y-%m-%d)/all_namespaces/kind_pipeline_runs/*
+  gs://BUCKET/exports/2026-04-05/all_namespaces/kind_pipeline_runs/*
+```
+
+```text
+Waiting on bqjob_r12345abcde_00000...  (3s) Current status: DONE
 ```
 
 #### Real-time CDC via Python listener
+
+Registers an `on_snapshot()` listener on the collection. On each change event, it classifies `ADDED` and `MODIFIED` documents, serializes them, and streams rows to BigQuery via the insert API. The listener process must stay alive — run it as a Cloud Run service with `min-instances=1`.
 
 ```python
 def on_change(collection_snapshot, changes, read_time):
@@ -329,7 +369,11 @@ unsubscribe = col_ref.on_snapshot(on_change)
 
 ## Implementation: Complete Pipeline State Store
 
-The module below writes and queries pipeline execution state in Firestore. It has no project-specific dependencies and is configured entirely via environment variables.
+A self-contained Python module with an optional Airflow operator. Configure entirely via environment variables; no project-specific dependencies required. The Airflow operator is conditionally imported and silently skipped if Airflow is not installed.
+
+### Python | FirestoreStateManager
+
+The `FirestoreStateManager` class provides lifecycle methods (`start_run`, `complete_run`, `fail_run`, `skip_run`) and a `track_run()` context manager for automatic state tracking with no boilerplate at the call site.
 
 ```python
 # pipeline_state.py
@@ -539,8 +583,6 @@ class FirestoreStateManager:
 
 try:
     from airflow.models import BaseOperator
-    from airflow.utils.decorators import apply_defaults
-
     class FirestoreStateOperator(BaseOperator):
         """
         Airflow operator that wraps an arbitrary callable with
@@ -555,7 +597,6 @@ try:
             )
         """
 
-        @apply_defaults
         def __init__(
             self,
             pipeline_name: str,
@@ -587,9 +628,15 @@ except ImportError:
     pass  # Airflow not installed; operator not available
 ```
 
+For Airflow DAG patterns and custom operator composition, see [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns).
+
 ---
 
 ## Implementation: Firestore-Triggered Cloud Function
+
+A second-generation Cloud Function triggered by Eventarc on Firestore document create or update events. Extracts fields from the Firestore proto payload, converts them to Python native types, and streams a row to BigQuery.
+
+### Python | Cloud Function handler
 
 ```python
 # main.py — Cloud Function triggered by Firestore document create/update
@@ -677,6 +724,8 @@ def _write_to_bigquery(row: dict) -> None:
 
 #### Firestore Cloud Function — deploy command
 
+Deploys the function as a second-generation Cloud Function with Eventarc trigger. Requires `cloudfunctions.googleapis.com`, `eventarc.googleapis.com`, and `run.googleapis.com` enabled. The service account needs `roles/eventarc.eventReceiver` and `roles/bigquery.dataEditor`.
+
 ```bash
 gcloud functions deploy process-firestore-event \
   --gen2 \
@@ -695,7 +744,7 @@ gcloud functions deploy process-firestore-event \
   --timeout=120s
 ```
 
-> [!note] Gen2 Functions Use Eventarc Internally
+> [!info] Gen2 Functions Use Eventarc Internally
 > Second-generation Cloud Functions use Eventarc as the trigger mechanism. The `--trigger-event-filters-path-pattern` argument accepts Firestore document path patterns with `{wildcard}` segments.
 
 ---
@@ -703,6 +752,8 @@ gcloud functions deploy process-firestore-event \
 ## Implementation: Apache Beam Pipeline (Pub/Sub → Firestore + BigQuery)
 
 Apache Beam streaming pipeline that reads from Pub/Sub and writes to Firestore (hot path) and BigQuery (cold path) in parallel.
+
+### Python | Streaming pipeline
 
 ```python
 # streaming_pipeline.py
@@ -799,6 +850,8 @@ if __name__ == "__main__":
 
 #### Firestore + BigQuery Beam Pipeline — run on Dataflow
 
+Submits the pipeline to Dataflow in streaming mode. The job runs continuously; cancel it with `gcloud dataflow jobs cancel JOB_ID` when done. The `--temp_location` bucket must exist and the Dataflow service account must have write access to it.
+
 ```bash
 python streaming_pipeline.py \
   --runner=DataflowRunner \
@@ -812,6 +865,11 @@ python streaming_pipeline.py \
   --streaming
 ```
 
+```text
+INFO:apache_beam.runners.dataflow.dataflow_runner:Job [your-job-id] is running...
+INFO:apache_beam.runners.dataflow.dataflow_runner:To access the Dataflow monitoring console, please navigate to https://console.cloud.google.com/dataflow/jobs/us-central1/your-job-id
+```
+
 > [!tip] Late Data Handling
 >
 > Add `--allow_late_data` or configure `beam.WindowInto` with `allowed_lateness` to handle messages that arrive after the window closes. For IoT use cases, a 30-second allowed lateness typically covers network delays without significantly increasing state size. See [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture) for watermark and trigger strategies.
@@ -819,6 +877,8 @@ python streaming_pipeline.py \
 ---
 
 ## Monitoring and Observability
+
+Firestore exposes operational metrics through Cloud Monitoring and optionally through Data Access audit logs. The sections below cover what to monitor, how to set alerts, and how to correlate Firestore activity with pipeline logs.
 
 ### Firestore Metrics in Cloud Monitoring
 
@@ -833,6 +893,8 @@ The following metrics are available under the `firestore.googleapis.com` namespa
 
 #### Create an alert for elevated write rates
 
+Creates an alerting policy that fires when the Firestore write rate exceeds 5,000 writes/second sustained over 60 seconds. Replace `CHANNEL_ID` with a notification channel ID from `gcloud beta monitoring channels list`.
+
 ```bash
 gcloud monitoring policies create \
   --notification-channels=CHANNEL_ID \
@@ -844,16 +906,36 @@ gcloud monitoring policies create \
   --condition-threshold-duration=60s
 ```
 
+```text
+Created alert policy [projects/PROJECT_ID/alertPolicies/POLICY_ID].
+```
+
 ### Logging Firestore Operations
 
-Firestore does not log individual document reads/writes to [Cloud Logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) by default. Enable Data Access audit logs to capture them:
+Firestore does not log individual document reads/writes to [Cloud Logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) by default. Enable Data Access audit logs to capture them. Export the current IAM policy, add `auditLogConfigs` for `firestore.googleapis.com`, then re-apply it.
 
 ```bash
-# Enable DATA_READ and DATA_WRITE audit logs for Firestore
 gcloud projects get-iam-policy PROJECT_ID --format=json > policy.json
-# Edit policy.json to add auditLogConfigs for firestore.googleapis.com
-# Then apply:
+```
+
+Edit `policy.json` to add the following entry under `auditConfigs`:
+
+```json
+{
+  "service": "firestore.googleapis.com",
+  "auditLogConfigs": [
+    {"logType": "DATA_READ"},
+    {"logType": "DATA_WRITE"}
+  ]
+}
+```
+
+```bash
 gcloud projects set-iam-policy PROJECT_ID policy.json
+```
+
+```text
+Updated IAM policy for project [PROJECT_ID].
 ```
 
 > [!warning] Audit Log Volume and Cost
@@ -865,6 +947,8 @@ gcloud projects set-iam-policy PROJECT_ID policy.json
 > Create a log-based metric for `DATA_WRITE` audit events only, and set up a Cloud Monitoring alert on that metric. If you need audit data in BigQuery, create a log sink with a filter like `protoPayload.serviceName="firestore.googleapis.com" AND protoPayload.methodName:"Write"` — writes only, not reads — to keep volume manageable.
 
 ### Structured Logging From Pipeline Code
+
+A `LoggerAdapter` subclass that injects pipeline and run context into every log message. Compatible with Cloud Logging's structured JSON format for log-based metrics and correlation.
 
 ```python
 import logging
@@ -885,6 +969,8 @@ class FirestoreOperationLogger(logging.LoggerAdapter):
 
 ## Cost Optimization
 
+Firestore bills per document operation and stored data volume, not by query complexity or compute time. Understanding the pricing model and applying the patterns below can reduce costs by an order of magnitude at scale.
+
 ### Firestore Pricing Summary
 
 | Operation | Free Tier (per day) | Paid Rate |
@@ -902,7 +988,11 @@ class FirestoreOperationLogger(logging.LoggerAdapter):
 
 ### Minimize Read Costs
 
+Firestore charges per document read regardless of how many fields are accessed. Three strategies eliminate unnecessary reads: in-memory caching with TTL, batch reads with a single round-trip, and denormalization to avoid query fan-out.
+
 #### Cache reads in memory with TTL
+
+Stores the config document in a module-level dict with a timestamp. On cache hit within the TTL window, returns the cached value without a Firestore read. Resets on process restart — appropriate for config that changes infrequently.
 
 ```python
 import time
@@ -924,8 +1014,9 @@ def get_pipeline_config(pipeline_name: str, db) -> dict:
 
 #### Batch reads with `get_all()`
 
+Fetches multiple documents in a single RPC call. Each document still counts as one read operation for billing, but network round-trips are reduced to one.
+
 ```python
-# Single round-trip for multiple documents
 doc_refs = [db.collection("pipeline_config").document(name) for name in pipeline_names]
 docs = db.get_all(doc_refs)
 configs = {doc.id: doc.to_dict() for doc in docs if doc.exists}
@@ -937,7 +1028,11 @@ Rather than querying a subcollection to find the current status, maintain a summ
 
 ### Minimize Write Costs
 
+Two main strategies: batch writes to reduce network round-trips, and debouncing high-frequency counters to reduce the total operation count.
+
 #### Batch writes — up to 500 operations per batch
+
+Groups up to 500 set/update/delete operations into a single committed transaction. One network round-trip; each operation still counts as a separate write for billing purposes.
 
 ```python
 batch = db.batch()
@@ -956,10 +1051,13 @@ For metrics that update every second (e.g., rows processed counter), debounce wr
 Firestore TTL policies automatically delete documents after a specified field's timestamp passes. No Cloud Function or scheduled job required.
 
 ```bash
-# Create a TTL policy on the 'expires_at' field in the 'pipeline_runs' collection
 gcloud firestore fields ttls update expires_at \
   --collection-group=runs \
   --enable-ttl
+```
+
+```text
+Updated field [expires_at].
 ```
 
 #### Set the expiry field when writing
@@ -971,7 +1069,7 @@ doc["expires_at"] = datetime.now(timezone.utc) + timedelta(days=90)
 db.collection("pipelines").document(name).collection("runs").document(run_id).set(doc)
 ```
 
-> [!note] TTL Deletion Latency
+> [!info] TTL Deletion Latency
 > TTL deletions are not instant. Documents may persist for up to 24 hours beyond their `expires_at` timestamp. Do not use TTL for security-sensitive deletion — use explicit deletes for those.
 
 ### Cost Comparison: Firestore vs. Alternatives
@@ -990,23 +1088,45 @@ For pure analytics with no real-time read requirement, [BigQuery streaming inser
 
 ## Security
 
+Access control for Firestore pipelines spans three layers: service account identity, IAM role bindings, and optionally VPC Service Controls for network-level perimeters. All production access should be server-to-server using dedicated service accounts.
+
 ### Service Account Authentication
 
 All server-to-server Firestore access should use dedicated service accounts — never user credentials or default compute service accounts in production. See [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) for service account creation and key management.
 
 ```bash
-# Create a dedicated service account for pipeline state writes
 gcloud iam service-accounts create pipeline-state-writer \
   --display-name="Pipeline State Writer" \
   --description="Writes pipeline execution state to Firestore"
+```
 
-# Grant Firestore user role (read + write documents)
+```text
+Created service account [pipeline-state-writer].
+```
+
+Grant the Firestore user role (`roles/datastore.user`), which allows reading and writing documents but excludes administrative operations.
+
+```bash
 gcloud projects add-iam-policy-binding PROJECT_ID \
   --member="serviceAccount:pipeline-state-writer@PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/datastore.user"
 ```
 
+```text
+Updated IAM policy for project [PROJECT_ID].
+```
+
 #### Activate credentials in application code
+
+Explicit key file loading is shown for local development only. Do not use this pattern in production.
+
+> [!danger] Never load SA key files in production
+>
+> A service account key file is a long-lived credential. If stored on disk, bundled in a container image, or committed to source control, it becomes a persistent exfiltration risk that survives the service it authenticates.
+
+> [!success] Use Application Default Credentials or Workload Identity instead
+>
+> On Cloud Run, GKE, or any GCP compute resource, omit credentials entirely — the client library picks up ADC from the metadata server automatically. For cross-cloud or on-premises use cases, configure Workload Identity Federation. See [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam).
 
 ```python
 from google.oauth2 import service_account
@@ -1039,9 +1159,12 @@ On Cloud Run or GKE with Workload Identity, omit the explicit credentials — th
 Firestore can be included in a VPC Service Control perimeter to prevent data exfiltration. See [vpc-service-controls](https://alp78.github.io/elysium/06-GCP/Security/vpc-service-controls) for perimeter configuration. When Firestore is inside a VPC-SC perimeter, access from outside the perimeter (including developer workstations) requires an access policy with appropriate access levels.
 
 ```bash
-# Add Firestore to an existing perimeter
 gcloud access-context-manager perimeters update PERIMETER_NAME \
   --add-restricted-services=firestore.googleapis.com
+```
+
+```text
+Updated servicePerimeter [PERIMETER_NAME].
 ```
 
 > [!warning] VPC-SC and Cloud Functions
@@ -1060,6 +1183,8 @@ Firestore encrypts all data at rest automatically using AES-256 and in transit u
 
 ## Operational Runbook
 
+Step-by-step diagnostic guides for common Firestore operational issues in pipeline contexts.
+
 ### Diagnosing Slow Writes
 
 1. Check `firestore.googleapis.com/api/request_latencies` in [Cloud Monitoring](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics) — filter by method `BatchWrite` or `Commit`.
@@ -1075,8 +1200,9 @@ Firestore encrypts all data at rest automatically using AES-256 and in transit u
 
 ### Recovering From a Bad State Write
 
+If a pipeline crashes mid-run, its document may be stuck at `status=running`. Use the snippet below from the Python REPL or a one-off recovery script to force it to a terminal state.
+
 ```python
-# Manually set a run to a terminal state from the REPL or a recovery script
 db = firestore.Client(project="PROJECT_ID")
 db.collection("pipelines") \
   .document("my_pipeline") \
@@ -1092,6 +1218,10 @@ db.collection("pipelines") \
 ---
 
 ## Quick-Reference Cheatsheet
+
+Common Firestore client library operations for Python. All examples use the synchronous client (`google.cloud.firestore`). For async usage, import `google.cloud.firestore_async` instead.
+
+### Python | Common operations
 
 ```python
 from google.cloud import firestore

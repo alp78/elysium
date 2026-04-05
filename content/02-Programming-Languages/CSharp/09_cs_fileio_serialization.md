@@ -329,28 +329,28 @@ Directory.Delete(tmpDir, recursive: true);
 
 `CsvHelper` (NuGet: `dotnet add package CsvHelper`) is the standard C# library for production CSV. It handles quoted commas, escaped quotes, custom delimiters, header mapping, and lazy streaming. Records are yielded one at a time via `GetRecords<T>()` — memory-efficient for large files. Use `ClassMap<T>` for custom column mapping. This is the C# equivalent of Python's `csv.DictReader` with type conversion.
 
-```csharp
-// CsvHelper pattern — production CSV reading with typed records and class mapping
-// Requires: dotnet add package CsvHelper
-
-// using CsvHelper;
-// using CsvHelper.Configuration;
-// using System.Globalization;
-
-// Define a typed record matching the CSV columns
-// record PipelineRun(string PipelineId, string Status, int RowsProcessed, double DurationS);
-
-// Read CSV → typed records (lazily streamed, memory-efficient)
-// using var reader = new StreamReader("pipeline_runs.csv");
-// using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-// foreach (var run in csv.GetRecords<PipelineRun>())
-//     Console.WriteLine($"{run.PipelineId}: {run.Status}, {run.RowsProcessed:N0} rows");
-
-// Write typed records → CSV
-// using var writer = new StreamWriter("output.csv");
-// using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-// csv.WriteRecords(records);
-```
+> [!example] Pipeline run log — read and write typed CSV records
+>
+> A positional `record` maps directly to CSV columns. `GetRecords<T>()` lazily streams rows one at a time — memory-efficient for large files. Writing is the inverse: pass a collection of records to `WriteRecords()` and CsvHelper serializes each field with proper quoting.
+>
+> ```csharp
+> using CsvHelper;
+> using CsvHelper.Configuration;
+> using System.Globalization;
+>
+> record PipelineRun(string PipelineId, string Status, int RowsProcessed, double DurationS);
+>
+> // Read CSV → typed records
+> using var reader = new StreamReader("pipeline_runs.csv");
+> using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+> foreach (var run in csv.GetRecords<PipelineRun>())
+>     Console.WriteLine($"{run.PipelineId}: {run.Status}, {run.RowsProcessed:N0} rows");
+>
+> // Write typed records → CSV
+> using var writer = new StreamWriter("output.csv");
+> using var csvOut = new CsvWriter(writer, CultureInfo.InvariantCulture);
+> csvOut.WriteRecords(records);
+> ```
 
 > [!tip] CsvHelper vs manual Split
 >
@@ -593,81 +593,48 @@ YAML is the standard configuration format for dbt, Airflow, Kubernetes, and Dock
 
 YAML uses indentation (like Python), supports comments (`#`), anchors, multi-line strings (`|` and `>`). Standard config for dbt, Airflow, K8s, Docker Compose. Requires `YamlDotNet` NuGet. Don't use YAML for API payloads (JSON is the standard) or rely on type coercion (`"yes"` → boolean `true`).
 
-```csharp
-// JSON version — strict: double quotes, no comments, no trailing commas
-var jsonConfig = @"{
-    ""pipeline"": {
-        ""name"": ""etl_events_daily"",
-        ""schedule"": ""0 3 * * *"",
-        ""owner"": ""data-team""
-    },
-    ""source"": {
-        ""type"": ""bigquery"",
-        ""dataset"": ""raw_events""
-    }
-}";
-// JSON version
-jsonConfig
-```
+JSON is strict: double quotes required, no comments, no trailing commas.
 
-    {
-        "pipeline": {
-            "name": "etl_events_daily",
-            "schedule": "0 3 * * *",
-            "owner": "data-team"
-        },
-        "source": {
-            "type": "bigquery",
-            "dataset": "raw_events"
-        }
+```json
+{
+    "pipeline": {
+        "name": "etl_events_daily",
+        "schedule": "0 3 * * *",
+        "owner": "data-team"
+    },
+    "source": {
+        "type": "bigquery",
+        "dataset": "raw_events"
     }
+}
+```
 
 #### YAML equivalent of the JSON config
 
 The same pipeline configuration expressed in YAML — notice the cleaner syntax, support for inline comments, and lack of quoting requirements. YAML supports block lists (items prefixed with `-`) and inline lists (`[a, b, c]`).
 
-```csharp
-var yamlConfig = @"# Pipeline configuration (YAML supports comments — JSON does not)
+YAML supports inline comments (`#`), block lists (items prefixed with `-`), and inline list syntax (`[a, b, c]`).
+
+```yaml
+# Pipeline configuration (YAML supports comments — JSON does not)
 pipeline:
   name: etl_events_daily
-  schedule: ""0 3 * * *""
+  schedule: "0 3 * * *"
   owner: data-team
 
 source:
   type: bigquery
   dataset: raw_events
-  partitioned_by: event_date    # BigQuery partition column
+  partitioned_by: event_date
 
 quality_checks:
-  - name: row_count_check       # list items start with -
+  - name: row_count_check
     min_rows: 1000
   - name: null_check
-    columns: [event_id, user_id]   # inline list syntax
+    columns: [event_id, user_id]
 
 tags: [production, clickstream, daily]
-";
-// YAML version
-yamlConfig
 ```
-
-    # Pipeline configuration (YAML supports comments — JSON does not)
-    pipeline:
-      name: etl_events_daily
-      schedule: "0 3 * * *"
-      owner: data-team
-    
-    source:
-      type: bigquery
-      dataset: raw_events
-      partitioned_by: event_date    # BigQuery partition column
-    
-    quality_checks:
-      - name: row_count_check       # list items start with -
-        min_rows: 1000
-      - name: null_check
-        columns: [event_id, user_id]   # inline list syntax
-    
-    tags: [production, clickstream, daily]
 
 ### YamlDotNet — serialize and deserialize YAML in C#
 
@@ -681,46 +648,31 @@ var deserializer = new DeserializerBuilder()
     .Build();
 var config = deserializer.Deserialize<PipelineConfig>(yamlString);
 
-// Serialize object → YAML
 var serializer = new SerializerBuilder()
     .WithNamingConvention(UnderscoredNamingConvention.Instance)
     .Build();
 string yaml = serializer.Serialize(config);
 
-// Read from file
 var config2 = deserializer.Deserialize<PipelineConfig>(File.ReadAllText("config.yaml"));
 ```
-
-    
-    // Deserialize YAML → object
-    var deserializer = new DeserializerBuilder()
-        .WithNamingConvention(UnderscoredNamingConvention.Instance)
-        .Build();
-    var config = deserializer.Deserialize<PipelineConfig>(yamlString);
-    
-    // Serialize object → YAML
-    var serializer = new SerializerBuilder()
-        .WithNamingConvention(UnderscoredNamingConvention.Instance)
-        .Build();
-    string yaml = serializer.Serialize(config);
-    
-    // Read from file
-    var config2 = deserializer.Deserialize<PipelineConfig>(File.ReadAllText("config.yaml"));
 
 #### Multi-document YAML | multiple documents in one file with --- separator
 
 Some tools (Kubernetes manifests, dbt model configs) use multiple YAML documents in a single file, separated by `---`. `YamlDotNet` does not have a built-in `safe_load_all` equivalent — parse each document by splitting on `---` first, or use the `YamlStream` API to iterate documents.
 
-```csharp
-// Multi-document YAML parsing with YamlDotNet
-// var yamlStream = new YamlStream();
-// yamlStream.Load(new StringReader(multiDocYaml));
-// foreach (var doc in yamlStream.Documents)
-// {
-//     var root = (YamlMappingNode)doc.RootNode;
-//     var name = root.Children[new YamlScalarNode("name")];
-// }
-```
+> [!example] Parse a multi-document YAML file with YamlStream
+>
+> `YamlStream.Load()` reads all documents separated by `---` into a `Documents` collection. Each document's `RootNode` is cast to `YamlMappingNode` for key-value access. Keys are looked up via `YamlScalarNode` instances.
+>
+> ```csharp
+> var yamlStream = new YamlStream();
+> yamlStream.Load(new StringReader(multiDocYaml));
+> foreach (var doc in yamlStream.Documents)
+> {
+>     var root = (YamlMappingNode)doc.RootNode;
+>     var name = root.Children[new YamlScalarNode("name")];
+> }
+> ```
 
 #### JSON vs YAML comparison | when to use each format
 
@@ -766,13 +718,29 @@ All I/O in .NET flows through the abstract `Stream` class. Concrete implementati
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    S["Stream\n(abstract base)"]
-    S --> FS["FileStream\nbytes ↔ file"]
-    S --> MS["MemoryStream\nbytes in memory"]
-    S --> NS["NetworkStream\nbytes over TCP"]
-    S --> GS["GZipStream\ncompress / decompress"]
-    S --> BS["BufferedStream\nadds buffering"]
-    S -.- W["Wrappers:\nStreamReader / StreamWriter\nBinaryReader / BinaryWriter\nUtf8JsonWriter"]
+    S["Stream<br/>(abstract base)"]
+
+    S --> FS["FileStream<br/>bytes ↔ file"]
+    S --> MS["MemoryStream<br/>bytes in memory"]
+    S --> NS["NetworkStream<br/>bytes over TCP"]
+    S --> GS["GZipStream<br/>compress / decompress"]
+    S --> BS["BufferedStream<br/>adds buffering"]
+
+    FS -.- W1["StreamReader / StreamWriter"]
+    FS -.- W2["BinaryReader / BinaryWriter"]
+    MS -.- W1
+    NS -.- W1
+    GS -.- W3["Utf8JsonWriter"]
+
+    style S fill:#292e42,stroke:#7aa2f7,color:#c0caf5
+    style FS fill:#1a1b26,stroke:#7dcfff,color:#c0caf5
+    style MS fill:#1a1b26,stroke:#7dcfff,color:#c0caf5
+    style NS fill:#1a1b26,stroke:#7dcfff,color:#c0caf5
+    style GS fill:#1a1b26,stroke:#7dcfff,color:#c0caf5
+    style BS fill:#1a1b26,stroke:#7dcfff,color:#c0caf5
+    style W1 fill:#292e42,stroke:#bb9af7,color:#c0caf5
+    style W2 fill:#292e42,stroke:#bb9af7,color:#c0caf5
+    style W3 fill:#292e42,stroke:#bb9af7,color:#c0caf5
 ```
 
 ```csharp
@@ -1031,42 +999,27 @@ Directory.Delete(tmpDir, recursive: true);
 >
 > Source generators require a partial class in a real project. The pattern below demonstrates the API — actual codegen needs a `.csproj`.
 
+**Step 1 — Define your type.** A positional `record` maps directly to the JSON shape.
+
 ```csharp
-// In a real project (not notebook):
-
-// 1. Define your type
 public record StockQuote(string Symbol, double Price, DateTime Timestamp);
+```
 
-// 2. Create a source-generated context
+**Step 2 — Create a source-generated context.** Decorate a `partial` class inheriting `JsonSerializerContext` with `[JsonSerializable]` for each type the generator should handle. `JsonSourceGenerationOptions` configures naming policy globally for the context.
+
+```csharp
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower)]
 [JsonSerializable(typeof(StockQuote))]
 [JsonSerializable(typeof(List<StockQuote>))]
 partial class QuoteContext : JsonSerializerContext { }
-
-// 3. Use the context instead of default options
-var json = JsonSerializer.Serialize(quote, QuoteContext.Default.StockQuote);
-var parsed = JsonSerializer.Deserialize(json, QuoteContext.Default.StockQuote);
-
-// Result: no reflection, no runtime codegen, AOT-compatible, 2-5x faster
 ```
 
-    
-    // In a real project (not notebook):
-    
-    // 1. Define your type
-    public record StockQuote(string Symbol, double Price, DateTime Timestamp);
-    
-    // 2. Create a source-generated context
-    [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower)]
-    [JsonSerializable(typeof(StockQuote))]
-    [JsonSerializable(typeof(List<StockQuote>))]
-    JsonSerializerContext { }
-    
-    // 3. Use the context instead of default options
-    var json = JsonSerializer.Serialize(quote, QuoteContext.Default.StockQuote);
-    var parsed = JsonSerializer.Deserialize(json, QuoteContext.Default.StockQuote);
-    
-    // Result: no reflection, no runtime codegen, AOT-compatible, 2-5x faster
+**Step 3 — Serialize and deserialize using the context.** Pass the generated type info instead of default options. The result is reflection-free, AOT-compatible, and 2–5x faster than the default serializer.
+
+```csharp
+var json = JsonSerializer.Serialize(quote, QuoteContext.Default.StockQuote);
+var parsed = JsonSerializer.Deserialize(json, QuoteContext.Default.StockQuote);
+```
 
 #### Utf8JsonReader — forward-only zero-allocation parsing
 
@@ -1114,56 +1067,57 @@ var parsed = JsonSerializer.Deserialize(json, QuoteContext.Default.StockQuote);
 
 Maps a file into virtual address space — OS pages data into RAM on demand. Access any offset without loading the whole file. Use for huge files (>1GB), random access, IPC shared memory. Don't use for sequential reads (StreamReader is simpler) or files <1MB.
 
+**Step 1 — Create a test file.** Write a 1 MB binary file with a known byte pattern (`byte[i] = i % 256`) so random-access reads can be verified.
+
 ```csharp
 var tmpDir = Path.Combine(Path.GetTempPath(), "mmf_cs_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
 var mmfFile = Path.Combine(tmpDir, "large_data.bin");
 
-// Write a binary file with known pattern: byte[i] = i % 256
-var data = new byte[1024 * 1024]; // 1MB
+var data = new byte[1024 * 1024];
 for (int i = 0; i < data.Length; i++) data[i] = (byte)(i % 256);
 File.WriteAllBytes(mmfFile, data);
+```
 
-// Memory-map the file — OS pages it on demand, no 1MB allocation
+**Step 2 — Memory-map the file and read at arbitrary offsets.** `CreateFromFile` maps the file into virtual address space — the OS pages data into RAM on demand without allocating the full 1 MB. `CreateViewAccessor` opens a window at a specific offset and length; only that page is loaded.
+
+```csharp
 using (var mmf = MemoryMappedFile.CreateFromFile(mmfFile, FileMode.Open))
 {
+    using (var accessor = mmf.CreateViewAccessor(500_000, 4))
+    {
+        var b0 = accessor.ReadByte(0);
+        var b1 = accessor.ReadByte(1);
+        Console.WriteLine($"  Bytes at offset 500000: {b0}, {b1}");
+        Console.WriteLine($"  Expected: {500000 % 256}, {500001 % 256}");
+    }
 
-// Random access: read 4 bytes at offset 500,000 — only that page is loaded
-using (var accessor = mmf.CreateViewAccessor(500_000, 4))
-{
-    var b0 = accessor.ReadByte(0);
-    var b1 = accessor.ReadByte(1);
-    $"  Bytes at offset 500000: {b0}, {b1}"
-    $"  Expected: {500000 % 256}, {500001 % 256}"
+    using (var accessor = mmf.CreateViewAccessor(0, 100))
+    {
+        var buffer = new byte[10];
+        accessor.ReadArray(0, buffer, 0, 10);
+        Console.WriteLine($"  First 10 bytes: [{string.Join(", ", buffer)}]");
+    }
 }
-
-// Read a struct-like record at a specific offset
-using (var accessor = mmf.CreateViewAccessor(0, 100))
-{
-    // Read first 10 bytes
-    var buffer = new byte[10];
-    accessor.ReadArray(0, buffer, 0, 10);
-    $"  First 10 bytes: [{string.Join(", ", buffer)}]"
-}
-
-}
-
-// Named MMF for inter-process shared memory:
-// Process A: MemoryMappedFile.CreateNew("shared_data", 1024)
-// Process B: MemoryMappedFile.OpenExisting("shared_data")
-// Both read/write the same memory region — no serialization needed
 
 Directory.Delete(tmpDir, recursive: true);
 ```
 
-      32, 33
-      32, 33
-      [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-    
-      // Named MMF for inter-process shared memory:
-      // Process A: MemoryMappedFile.CreateNew("shared_data", 1024)
-      // Process B: MemoryMappedFile.OpenExisting("shared_data")
-      // Both read/write the same memory region — no serialization needed
+```text
+Bytes at offset 500000: 32, 33
+Expected: 32, 33
+First 10 bytes: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+```
+
+Named memory-mapped files enable inter-process shared memory — both processes read and write the same memory region without serialization:
+
+```csharp
+// Process A
+var mmf = MemoryMappedFile.CreateNew("shared_data", 1024);
+
+// Process B
+var mmf = MemoryMappedFile.OpenExisting("shared_data");
+```
 
 ## System.IO.Pipelines
 
@@ -1177,65 +1131,43 @@ Directory.Delete(tmpDir, recursive: true);
 >
 > This demonstrates the pattern — real usage requires a continuous data source (network stream, log pipe).
 
+The production pattern parses newline-delimited records from a network stream. Create a `Pipe`, then run the producer and consumer concurrently.
+
 ```csharp
-// Production pattern: parse newline-delimited records from a network stream
-
 var pipe = new Pipe();
+```
 
-// Producer: reads from network/file into the pipe
-async Task FillPipeAsync(Stream source, PipeWriter writer) {
-    while (true) {
-        Memory<byte> buffer = writer.GetMemory(4096);   // get a buffer from the pool
-        int bytesRead = await source.ReadAsync(buffer);  // fill it from the source
-        if (bytesRead == 0) break;                       // end of stream
-        writer.Advance(bytesRead);                       // tell pipe how much was written
-        await writer.FlushAsync();                        // signal consumer
+**Producer — fill the pipe from a stream.** `GetMemory` borrows a buffer from the pool, `ReadAsync` fills it from the source, `Advance` tells the pipe how many bytes were written, and `FlushAsync` signals the consumer that data is available. `CompleteAsync` signals end-of-stream.
+
+```csharp
+async Task FillPipeAsync(Stream source, PipeWriter writer)
+{
+    while (true)
+    {
+        Memory<byte> buffer = writer.GetMemory(4096);
+        int bytesRead = await source.ReadAsync(buffer);
+        if (bytesRead == 0) break;
+        writer.Advance(bytesRead);
+        await writer.FlushAsync();
     }
-    await writer.CompleteAsync();                          // signal: no more data
+    await writer.CompleteAsync();
 }
+```
 
-// Consumer: reads records from the pipe
-async Task ReadPipeAsync(PipeReader reader) {
-    while (true) {
-        ReadResult result = await reader.ReadAsync();     // wait for data
-        ReadOnlySequence<byte> buffer = result.Buffer;    // the available bytes
-        // Find newline, process the line, then:
-        reader.AdvanceTo(consumed, examined);             // mark progress
+**Consumer — read records from the pipe.** `ReadAsync` waits for data and returns a `ReadOnlySequence<byte>` spanning the available bytes. After finding and processing a delimited record, `AdvanceTo` marks how far the reader has consumed and examined, releasing buffer memory. The pipe provides built-in backpressure — if the consumer falls behind, the producer blocks on `FlushAsync`.
+
+```csharp
+async Task ReadPipeAsync(PipeReader reader)
+{
+    while (true)
+    {
+        ReadResult result = await reader.ReadAsync();
+        ReadOnlySequence<byte> buffer = result.Buffer;
+        reader.AdvanceTo(consumed, examined);
         if (result.IsCompleted) break;
     }
 }
-// Pipelines: used by ASP.NET Core Kestrel for HTTP parsing
 ```
-
-    
-    // Production pattern: parse newline-delimited records from a network stream
-    
-    var pipe = new Pipe();
-    
-    // Producer: reads from network/file into the pipe
-    async Task FillPipeAsync(Stream source, PipeWriter writer) {
-        while (true) {
-            Memory<byte> buffer = writer.GetMemory(4096);   // get a buffer from the pool
-            int bytesRead = await source.ReadAsync(buffer);  // fill it from the source
-            if (bytesRead == 0) break;                       // end of stream
-            writer.Advance(bytesRead);                       // tell pipe how much was written
-            await writer.FlushAsync();                        // signal consumer
-        }
-        await writer.CompleteAsync();                          // signal: no more data
-    }
-    
-    // Consumer: reads records from the pipe
-    async Task ReadPipeAsync(PipeReader reader) {
-        while (true) {
-            ReadResult result = await reader.ReadAsync();     // wait for data
-            ReadOnlySequence<byte> buffer = result.Buffer;    // the available bytes
-            // Find newline, process the line, then:
-            reader.AdvanceTo(consumed, examined);             // mark progress
-            if (result.IsCompleted) break;
-        }
-    }
-    
-      used by ASP.NET Core Kestrel for HTTP parsing
 
 ## High-Performance Parsing with Span
 
@@ -1291,8 +1223,6 @@ $"  Split: {parts[0]}, close={parts[2]}"
 
 ### Character encoding — UTF-8, ASCII, UTF-16, Latin-1
 
-#### Encoding.UTF8, Encoding.ASCII — character encoding conversion
-
 `Encoding.UTF8.GetBytes(string)` converts text to bytes. `.GetString(bytes)` converts back. C# strings are internally UTF-16; APIs/files use UTF-8. Always specify encoding explicitly — without it, you get mojibake or data corruption.
 
 > [!danger] Never use Encoding.Default (varies by
@@ -1303,78 +1233,131 @@ $"  Split: {parts[0]}, close={parts[2]}"
 >
 > Pass `Encoding.UTF8` to every `StreamReader`, `StreamWriter`, `File.ReadAllText`, and `File.WriteAllText` call. UTF-8 is the correct default for files, APIs, and cross-platform code.
 
+#### Encoding.UTF8 — variable-length ASCII-compatible encoding
+
+UTF-8 is the internet standard. ASCII characters use 1 byte, multi-byte sequences handle the full Unicode range. `GetBytes` encodes, `GetString` decodes. Roundtrips are lossless for all Unicode text.
+
 ```csharp
 var text = "Euro Stoxx 50: SAP €166.52, ASML €685.40";
 
-// UTF-8: variable-length, ASCII-compatible, the internet standard
 var utf8Bytes = Encoding.UTF8.GetBytes(text);
 var utf8Back = Encoding.UTF8.GetString(utf8Bytes);
-$"  UTF-8:    {utf8Bytes.Length} bytes, roundtrip={text == utf8Back}"
-
-// ASCII: 7-bit, non-ASCII chars become '?' — data loss!
-var asciiBytes = Encoding.ASCII.GetBytes(text);
-var asciiBack = Encoding.ASCII.GetString(asciiBytes);
-$"  ASCII:    {asciiBytes.Length} bytes, roundtrip={text == asciiBack} (€ lost!)"
-asciiBack
-
-// UTF-16: C#'s internal format, 2 bytes per char (4 for supplementary)
-var utf16Bytes = Encoding.Unicode.GetBytes(text);
-$"  UTF-16:   {utf16Bytes.Length} bytes (2x larger than UTF-8 for ASCII text)"
-
-// Latin-1 (ISO 8859-1): single-byte Western European — used in some legacy systems
-var latin1Bytes = Encoding.Latin1.GetBytes(text);
-var latin1Back = Encoding.Latin1.GetString(latin1Bytes);
-$"  Latin-1:  {latin1Bytes.Length} bytes, roundtrip={text == latin1Back}"
-
-// Detect BOM (Byte Order Mark) in a file
-var bom = Encoding.UTF8.GetPreamble();
-$"  UTF-8 BOM: [{string.Join(", ", bom.Select(b => $"0x{b:X2}"))}] ({bom.Length} bytes)"
+Console.WriteLine($"  UTF-8: {utf8Bytes.Length} bytes, roundtrip={text == utf8Back}");
 ```
 
-      44 bytes, roundtrip=True
-      40 bytes, roundtrip=False (€ lost!)
-      "Euro Stoxx 50: SAP ?166.52, ASML ?685.40"
-      80 bytes (2x larger than UTF-8 for ASCII text)
-      40 bytes, roundtrip=False
-      [0xEF, 0xBB, 0xBF] (3 bytes)
+```text
+UTF-8: 44 bytes, roundtrip=True
+```
+
+#### Encoding.ASCII — 7-bit lossy encoding
+
+ASCII maps only the first 128 code points. Any character outside that range (like `€`) is silently replaced with `?` — data loss with no warning.
+
+```csharp
+var asciiBytes = Encoding.ASCII.GetBytes(text);
+var asciiBack = Encoding.ASCII.GetString(asciiBytes);
+Console.WriteLine($"  ASCII: {asciiBytes.Length} bytes, roundtrip={text == asciiBack}");
+Console.WriteLine($"  {asciiBack}");
+```
+
+```text
+ASCII: 40 bytes, roundtrip=False
+Euro Stoxx 50: SAP ?166.52, ASML ?685.40
+```
+
+#### Encoding.Unicode — UTF-16 internal format
+
+UTF-16 is C#'s internal string representation. Every character uses at least 2 bytes (4 for supplementary characters), making it roughly 2x larger than UTF-8 for ASCII-heavy text.
+
+```csharp
+var utf16Bytes = Encoding.Unicode.GetBytes(text);
+Console.WriteLine($"  UTF-16: {utf16Bytes.Length} bytes");
+```
+
+```text
+UTF-16: 80 bytes
+```
+
+#### Encoding.Latin1 — single-byte Western European legacy encoding
+
+ISO 8859-1 covers Western European characters in a single byte. It handles `€` differently than Unicode — roundtrip failures indicate characters outside the Latin-1 range. Found in some legacy financial systems and mainframe feeds.
+
+```csharp
+var latin1Bytes = Encoding.Latin1.GetBytes(text);
+var latin1Back = Encoding.Latin1.GetString(latin1Bytes);
+Console.WriteLine($"  Latin-1: {latin1Bytes.Length} bytes, roundtrip={text == latin1Back}");
+```
+
+```text
+Latin-1: 40 bytes, roundtrip=False
+```
+
+#### Encoding.UTF8.GetPreamble — detect BOM
+
+The Byte Order Mark is a 3-byte prefix (`0xEF, 0xBB, 0xBF`) that some editors prepend to UTF-8 files. `GetPreamble()` returns the BOM bytes for a given encoding — useful for detecting or stripping BOMs when reading files from external sources.
+
+```csharp
+var bom = Encoding.UTF8.GetPreamble();
+Console.WriteLine($"  UTF-8 BOM: [{string.Join(", ", bom.Select(b => $"0x{b:X2}"))}] ({bom.Length} bytes)");
+```
+
+```text
+UTF-8 BOM: [0xEF, 0xBB, 0xBF] (3 bytes)
+```
 
 ### Data encoding — Base64, Hex, URL
 
-#### Convert.ToBase64String / FromBase64String — Base64 encoding
-
 Base64 encodes arbitrary binary data as printable ASCII characters (A–Z, a–z, 0–9, +, /). The output is ~33% larger than the input. Use for embedding binary data in JSON, XML, or email (MIME). URL-safe Base64 replaces `+` and `/` with `-` and `_` and strips padding `=`.
+
+#### ToBase64String / FromBase64String — encode and decode text
+
+`ToBase64String` encodes a byte array as a Base64 string. To encode a string, first convert it to bytes with `Encoding.UTF8.GetBytes`. Decoding reverses the process: `FromBase64String` returns the original byte array, then `GetString` recovers the text.
 
 ```csharp
 var original = "SAP.DE|2024-03-12|166.52";
 var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(original));
 var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(base64));
-original     // Original
-base64       // Base64
-decoded      // Decoded
-original == decoded   // Roundtrip
-
-// Encode raw bytes (e.g., a hash or encrypted payload)
-var rawBytes = new byte[] { 0x89, 0x50, 0x4E, 0x47 }; // PNG header
-var b64Bytes = Convert.ToBase64String(rawBytes);
-BitConverter.ToString(rawBytes)   // Raw bytes
-b64Bytes   // Base64
-
-// URL-safe Base64 (replace + and / with - and _, strip padding =)
-var urlSafe = base64.Replace("+", "-").Replace("/", "_").TrimEnd('=');
-base64     // Standard
-urlSafe    // URL-safe
+Console.WriteLine($"  Original: {original}");
+Console.WriteLine($"  Base64:   {base64}");
+Console.WriteLine($"  Roundtrip: {original == decoded}");
 ```
 
-      SAP.DE|2024-03-12|166.52
-      U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
-      SAP.DE|2024-03-12|166.52
-      True
-    
-      [89-50-4E-47]
-      iVBORw==
-    
-      U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
-      U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
+```text
+Original: SAP.DE|2024-03-12|166.52
+Base64:   U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
+Roundtrip: True
+```
+
+#### ToBase64String — encode raw binary data
+
+Pass any byte array directly — hash digests, encrypted payloads, image headers. No text conversion needed since the input is already bytes.
+
+```csharp
+var rawBytes = new byte[] { 0x89, 0x50, 0x4E, 0x47 };
+var b64Bytes = Convert.ToBase64String(rawBytes);
+Console.WriteLine($"  Raw:    {BitConverter.ToString(rawBytes)}");
+Console.WriteLine($"  Base64: {b64Bytes}");
+```
+
+```text
+Raw:    89-50-4E-47
+Base64: iVBORw==
+```
+
+#### URL-safe Base64 — replace unsafe characters
+
+Standard Base64 uses `+` and `/` which are reserved in URLs. URL-safe Base64 replaces them with `-` and `_` and strips the padding `=` characters. Use this variant when embedding Base64 in query strings or JWT tokens.
+
+```csharp
+var urlSafe = base64.Replace("+", "-").Replace("/", "_").TrimEnd('=');
+Console.WriteLine($"  Standard: {base64}");
+Console.WriteLine($"  URL-safe: {urlSafe}");
+```
+
+```text
+Standard: U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
+URL-safe: U0FQLkRFfDIwMjQtMDMtMTJ8MTY2LjUy
+```
 
 #### Convert.ToHexString / FromHexString — hexadecimal encoding
 
@@ -1404,43 +1387,57 @@ $"  Length: {sha256.Length} bytes = {sha256.Length * 2} hex chars"
       SHA-256 of "SAP.DE": a80ae49a0c54581271b2fa37bc9113425072ca8b559941b00b916d37af0c4e58
       32 bytes = 64 hex chars
 
-#### Uri.EscapeDataString, WebUtility.UrlEncode — URL percent-encoding
+#### Uri.EscapeDataString — encode and decode URL components
 
-URL encoding (percent-encoding) replaces unsafe characters with `%XX` hex pairs so they can be safely included in URLs. `Uri.EscapeDataString` is the modern API — it encodes spaces as `%20`. `WebUtility.UrlEncode` is the older HTML-form-style API that encodes spaces as `+`. Prefer `EscapeDataString` for REST APIs.
+URL encoding (percent-encoding) replaces unsafe characters with `%XX` hex pairs so they can be safely included in URLs. `Uri.EscapeDataString` is the modern API — it encodes spaces as `%20`.
+
+`EscapeDataString` replaces unsafe characters (`=`, `+`, `%`, `&`, spaces) with `%XX` hex pairs. `UnescapeDataString` reverses the encoding. This is the modern API — spaces become `%20`.
 
 ```csharp
 var raw = "SAP.DE close=166.52 change=+2.5% sector=Tech&Finance";
 var escaped = Uri.EscapeDataString(raw);
 var unescaped = Uri.UnescapeDataString(escaped);
-raw          // Raw
-escaped      // Escaped
-unescaped    // Unescaped
-raw == unescaped   // Roundtrip
+Console.WriteLine($"  Raw:       {raw}");
+Console.WriteLine($"  Escaped:   {escaped}");
+Console.WriteLine($"  Roundtrip: {raw == unescaped}");
+```
 
-// Building a safe API URL with encoded parameters
-var symbol = "BRK.B";  // dot and capital letters
+```text
+Raw:       SAP.DE close=166.52 change=+2.5% sector=Tech&Finance
+Escaped:   SAP.DE%20close%3D166.52%20change%3D%2B2.5%25%20sector%3DTech%26Finance
+Roundtrip: True
+```
+
+#### Uri.EscapeDataString — build safe API URLs with encoded parameters
+
+Encode each query parameter value individually with `EscapeDataString` before interpolating into the URL. This prevents characters like `&` in values from being interpreted as parameter separators.
+
+```csharp
+var symbol = "BRK.B";
 var note = "Q1 2024 earnings & revenue";
 var url = $"https://api.example.com/quote?symbol={Uri.EscapeDataString(symbol)}"
         + $"&note={Uri.EscapeDataString(note)}";
-url   // Safe URL
-
-// WebUtility.UrlEncode — older API, encodes space as + (HTML form style)
-var webEncoded = WebUtility.UrlEncode(raw);
-webEncoded   // WebUtility
-escaped      // EscapeDataStr
-// Difference: space → + (WebUtility) vs %20 (EscapeDataString)
+Console.WriteLine($"  {url}");
 ```
 
-      SAP.DE close=166.52 change=+2.5% sector=Tech&Finance
-      SAP.DE%20close%3D166.52%20change%3D%2B2.5%25%20sector%3DTech%26Finance
-      SAP.DE close=166.52 change=+2.5% sector=Tech&Finance
-      True
-    
-      https://api.example.com/quote?symbol=BRK.B&note=Q1%202024%20earnings%20%26%20revenue
-    
-      SAP.DE+close%3D166.52+change%3D%2B2.5%25+sector%3DTech%26Finance
-      SAP.DE%20close%3D166.52%20change%3D%2B2.5%25%20sector%3DTech%26Finance
-      space → + (WebUtility) vs %20 (EscapeDataString)
+```text
+https://api.example.com/quote?symbol=BRK.B&note=Q1%202024%20earnings%20%26%20revenue
+```
+
+#### WebUtility.UrlEncode — HTML form-style encoding
+
+`WebUtility.UrlEncode` is the older API that encodes spaces as `+` instead of `%20`. This follows the `application/x-www-form-urlencoded` format used in HTML form submissions. Prefer `Uri.EscapeDataString` for REST APIs.
+
+```csharp
+var webEncoded = WebUtility.UrlEncode(raw);
+Console.WriteLine($"  WebUtility:      {webEncoded}");
+Console.WriteLine($"  EscapeDataString: {escaped}");
+```
+
+```text
+WebUtility:      SAP.DE+close%3D166.52+change%3D%2B2.5%25+sector%3DTech%26Finance
+EscapeDataString: SAP.DE%20close%3D166.52%20change%3D%2B2.5%25%20sector%3DTech%26Finance
+```
 
 #### Encoding comparison — same data in UTF-8, Base64, Hex, and URL formats
 

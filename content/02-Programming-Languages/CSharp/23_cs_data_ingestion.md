@@ -14,6 +14,40 @@ status: complete
 >
 > — **Tim Berners-Lee**, attributed remark (c. 2006)
 
+This notebook benchmarks bulk-load performance into SQL Server, BigQuery, and Firestore across three file tiers (2.5K / 75K / 750K rows) and four source formats (CSV, JSON, Parquet, GCS). Results are persisted to JSON for cross-session comparison and visualised with Plotly.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    LOC["Local Files<br/>CSV · JSON · Parquet"]
+    GCS["GCS<br/>bronze/"]
+    SQL["SQL Server"]
+    BQ["BigQuery"]
+    FS["Firestore"]
+
+    LOC -->|"SqlBulkCopy / bcp"| SQL
+    LOC -->|"UploadCsv / UploadJson<br/>UploadParquet / bq CLI"| BQ
+    LOC -->|"WriteBatch"| FS
+    GCS -->|"CreateLoadJob"| BQ
+    GCS -->|"download +<br/>SqlBulkCopy"| SQL
+    SQL -->|"SqlDataReader +<br/>UploadCsv"| BQ
+    BQ -->|"ExecuteQuery +<br/>SqlBulkCopy"| SQL
+    SQL -->|"SqlDataReader +<br/>WriteBatch"| FS
+    SQL -->|"StreamWriter"| LOC
+    BQ -->|"CreateExtractJob"| GCS
+```
+
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
@@ -75,11 +109,11 @@ using Plotly.NET.CSharp;
 using Plotly.NET.LayoutObjects;
 ```
 
+Loads `.env` and defines project constants.
+
 ```csharp
-// Load .env and define project constants
 DotNetEnv.Env.Load();
 
-// ── Project constants ──
 var PROJECT_ID    = "seclab-dev-ap-26";
 var REGION        = "europe-west1";
 var BUCKET_NAME   = $"{PROJECT_ID}-data";
@@ -93,28 +127,23 @@ var CHUNK_SIZE    = 10_000;
 
 Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", SA_KEY_PATH);
 
-// ── Benchmark table/collection names ──
 var SQL_BENCH_TABLE = "dbo.ohlcv_bench";
 var BQ_BENCH_TABLE  = $"{PROJECT_ID}.{BQ_DATASET}.ohlcv_bench";
 var FS_COLLECTION   = "ohlcv_bench";
 
-// ── GCP clients ──
 var bqClient      = BigQueryClient.Create(PROJECT_ID);
 var storageClient = StorageClient.Create();
 var fsDb          = new FirestoreDbBuilder { ProjectId = PROJECT_ID, DatabaseId = FIRESTORE_DB }.Build();
 
-// ── SQL Server connection string (ODBC Driver 18 + TLS) ──
 var SQL_CONN = $"Server={SQL_IP},1433;Database=stoxx;User Id=sqlserver;Password={SQL_PASSWORD};"
              + "Encrypt=True;TrustServerCertificate=True;Connection Timeout=15;";
 
 SqlConnection CreateSqlConnection() => new SqlConnection(SQL_CONN);
 
-// ── CLI tool paths ──
 var BCP    = "bcp";
 var BQ_CLI = @"C:\Users\aperi\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin\bq.cmd";
 var GCLOUD = @"C:\Users\aperi\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd";
 
-// ── Helpers ──
 void SqlTruncate(string table)
 {
     using var conn = CreateSqlConnection();
@@ -131,7 +160,6 @@ async Task FsDeleteCollection(string collection)
     if (snapshot.Count > 0) await batch.CommitAsync();
 }
 
-// ── Test all connections ──
 using (var conn = CreateSqlConnection())
 {
     conn.Open();
@@ -141,7 +169,6 @@ Console.WriteLine($"  BigQuery:   {BQ_DATASET} ({PROJECT_ID})");
 Console.WriteLine($"  Firestore:  {FIRESTORE_DB} ({PROJECT_ID})");
 Console.WriteLine($"  GCS:        gs://{BUCKET_NAME}");
 
-// Register Polars DataFrame/Series HTML formatters (transparent background for dark theme)
 Formatter.Register<DataFrame>((df, writer) =>
 {
     var html = df.ToHtml();
@@ -166,7 +193,15 @@ Formatter.Register<Polars.CSharp.Series>((s, writer) =>
       Firestore:  seclab-scores (seclab-dev-ap-26)
       GCS:        gs://seclab-dev-ap-26-data
 
+## Setup
+
+Helper functions and benchmark infrastructure shared across all ingestion sections. Run these cells once before executing any benchmark.
+
+### Setup | helpers and infrastructure
+
 #### Formatting helpers
+
+Human-readable formatters for row counts, elapsed time, byte sizes, and throughput rates. Used in every benchmark output row and summary table.
 
 ```csharp
 string FmtRows(int n)
@@ -204,8 +239,9 @@ string FmtRate(int rows, double ms)
 
 #### Define file tiers for ingestion benchmarks
 
+Three file tiers (small 2.5K, medium 75K, large 750K rows) with paths for CSV, JSON, and Parquet formats. Row counts are derived from the CSV files at runtime and reused across all benchmark functions.
+
 ```csharp
-// Unified OHLCV schema across all three tiers (same files as Python notebook).
 var tierNames = new[] { "small", "medium", "large" };
 var tiers = new Dictionary<string, Dictionary<string, string>>();
 var tierRows = new Dictionary<string, int>();
@@ -221,7 +257,6 @@ foreach (var tier in tierNames)
     tierRows[tier] = File.ReadLines(tiers[tier]["csv"]).Count() - 1;
 }
 
-// Display as Polars DataFrame
 var dfTiers = new DataFrame(
     Series.From("tier", tierNames),
     Series.From("rows", tierNames.Select(t => tierRows[t]).ToArray()),
@@ -246,8 +281,9 @@ dfTiers
 
 #### Ingestion benchmark helper
 
+Times a single ingestion function and upserts the result into an in-memory list and a persistent JSON file, keyed by `(method, tier)`. Existing entries for the same key are replaced — re-running a benchmark updates the stored result without accumulating duplicates.
+
 ```csharp
-// Benchmark helper — persists results to JSON, keyed by (method, tier).
 var INGEST_RESULTS_FILE = Path.Combine(DATA_DIR, "ingestion_results_cs.json");
 
 List<IngestResult> LoadIngestResults()
@@ -309,10 +345,13 @@ class IngestResult
 
 The SQL Server DDL below follows the same [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/bronze-layer-loading) patterns used in the medallion architecture. BigQuery schema and load configuration align with [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export).
 
+### Schema Setup | staging tables
+
 #### Create staging table in SQL Server
 
+Creates `dbo.ohlcv_bench` if it does not already exist. All columns use `NVARCHAR` to accept raw string values without conversion — type coercion happens downstream in the medallion pipeline.
+
 ```csharp
-// Single staging table matching the OHLCV schema. All NVARCHAR for flexible ingestion.
 using (var conn = CreateSqlConnection())
 {
     conn.Open();
@@ -342,8 +381,9 @@ using (var conn = CreateSqlConnection())
 
 #### Create staging table in BigQuery
 
+Creates `ohlcv_bench` in the `index_data` dataset with a fully typed schema. `GetOrCreateTable` is idempotent — safe to re-run without error if the table already exists.
+
 ```csharp
-// Typed schema for BigQuery staging table.
 var bqSchema = new TableSchemaBuilder
 {
     { "id", BigQueryDbType.Int64 },
@@ -368,10 +408,21 @@ Console.WriteLine($"  BigQuery {BQ_DATASET}.ohlcv_bench table ready");
 
 ## Local → SQL Server Ingestion
 
+Load OHLCV data from local CSV, JSON, and Parquet files into Cloud SQL for SQL Server using three distinct methods: row-by-row ADO.NET (baseline), `SqlBulkCopy` (managed bulk insert), and `bcp` (native CLI bulk load).
+
+### SqlClient / bcp | local CSV, JSON, Parquet to SQL Server
+
 #### Ingest CSV into SQL Server from local using Microsoft.Data.SqlClient ExecuteNonQuery over TLS
 
-Row-by-row parameterised INSERT. Simplest pattern but slowest — one round trip per row.
-Only practical for small datasets. Included as a baseline to show the cost of naive ingestion.
+Row-by-row parameterised INSERT via `ExecuteNonQuery`. One network round-trip per row over TLS. Simplest pattern but slowest — included as a baseline to quantify the cost of naive ingestion. Only practical for datasets under a few hundred rows.
+
+> [!warning] Row-by-row INSERT does not scale
+>
+> At ~40 rows/s over an encrypted TLS connection, loading 750K rows takes over 5 hours. Every row incurs a full SQL parse, plan-cache lookup, and network round-trip.
+
+> [!success] Use SqlBulkCopy or bcp for any real volume
+>
+> `SqlBulkCopy` streams all rows via the TDS bulk-insert protocol in a single connection — 500–900× faster at large tier. For flat-file loads, `bcp` is marginally faster still (no managed layer overhead).
 
 ```csharp
 int AdoInsert(string tier)
@@ -453,8 +504,15 @@ foreach (var tier in tierNames)
 
 #### Ingest CSV into SQL Server from local using bcp (Bulk Copy Program) over TDS
 
-Native command-line tool. Uses the TDS bulk-insert protocol directly.
-Fastest for raw file loading — bypasses the .NET managed layer entirely.
+The `bcp` CLI sends rows via the native TDS bulk-insert protocol, bypassing the .NET managed layer and the SQL parser entirely. Marginally faster than `SqlBulkCopy` at large tier and requires no C# DataTable allocation.
+
+> [!warning] Do not hardcode credentials in CLI arguments
+>
+> Passing `-P <password>` on the command line exposes the credential in process listings (`ps aux`, Windows Event Log, shell history). On a shared or cloud host this is a security risk.
+
+> [!success] Use a trusted connection or runtime-injected credentials
+>
+> Pass `-T` to use Windows Integrated Authentication, or read the password from an environment variable at runtime — never interpolate it directly into the argument string.
 
 ```csharp
 int BcpImport(string tier)
@@ -499,7 +557,6 @@ Reads newline-delimited JSON, parses with Newtonsoft, bulk-copies via `SqlBulkCo
 Same bulk-insert throughput as CSV once parsed — the JSON parsing is the overhead.
 
 ```csharp
-// JSON → SQL Server via SqlBulkCopy
 int JsonBulkInsert(string tier)
 {
     SqlTruncate(SQL_BENCH_TABLE);
@@ -540,7 +597,6 @@ Reads Parquet columnar data with Parquet.Net, pivots to row-based DataTable, bul
 Parquet files are smaller and faster to parse than CSV — columnar layout enables skip-reads.
 
 ```csharp
-// Parquet → SQL Server via Parquet.Net + SqlBulkCopy
 int ParquetBulkInsert(string tier)
 {
     SqlTruncate(SQL_BENCH_TABLE);
@@ -584,12 +640,15 @@ foreach (var tier in tierNames)
 
 ## Local → BigQuery Ingestion
 
+Upload local CSV, JSON, and Parquet files into BigQuery using the `Google.Cloud.BigQuery.V2` managed client and the `bq` CLI. All paths use HTTPS to the BigQuery Jobs API; BigQuery handles server-side parsing.
+
+### BigQueryClient / bq CLI | local CSV, JSON, Parquet to BigQuery
+
 #### Ingest CSV into BigQuery from local using Google.Cloud.BigQuery.V2 UploadCsv over HTTPS
 
 Uploads the CSV file directly via the BigQuery jobs API. Server-side parsing — the file is streamed as-is.
 
 ```csharp
-// BigQuery load from local CSV via UploadCsv
 int BqLoadCsv(string tier)
 {
     using var fs = File.OpenRead(tiers[tier]["csv"]);
@@ -617,7 +676,6 @@ foreach (var tier in tierNames)
 Uploads newline-delimited JSON. BigQuery parses each line as a row — schema must match.
 
 ```csharp
-// BigQuery load from local JSON
 int BqLoadJson(string tier)
 {
     using var fs = File.OpenRead(tiers[tier]["json"]);
@@ -645,7 +703,6 @@ foreach (var tier in tierNames)
 Parquet carries its own schema — BigQuery reads column types from the file footer. Fastest local format.
 
 ```csharp
-// BigQuery load from local Parquet
 int BqLoadParquet(string tier)
 {
     using var fs = File.OpenRead(tiers[tier]["parquet"]);
@@ -673,7 +730,6 @@ foreach (var tier in tierNames)
 Command-line load without writing C# code. Same underlying API as `UploadCsv`.
 
 ```csharp
-// bq load --source_format=CSV --skip_leading_rows=1 --replace index_data.ohlcv_bench ingest_large.csv
 int BqCliLoad(string tier)
 {
     var psi = new ProcessStartInfo
@@ -708,15 +764,25 @@ foreach (var tier in tierNames)
 
 ## Local → Firestore Ingestion
 
+Write OHLCV rows as documents into a Firestore collection using the `Google.Cloud.Firestore` client over gRPC. Each CSV row becomes a document; `Set()` overwrites by document ID, making re-runs safe without a prior delete.
+
+### FirestoreDb | local CSV to Firestore
+
 #### Ingest CSV into Firestore from local using Google.Cloud.Firestore WriteBatch over gRPC
 
-Batches up to 500 documents per gRPC call. Each batch is a single atomic commit.
+Batches up to 500 documents per gRPC call. Each `CommitAsync()` is a single atomic operation — all 500 writes succeed or none do. `Set()` overwrites existing documents by ID, so no prior delete is needed.
+
+> [!warning] Firestore batch limit is 500 documents
+>
+> A `WriteBatch` that accumulates more than 500 operations throws `InvalidArgument` at commit time. Always flush and start a new batch when the counter reaches 500.
+
+> [!success] Pattern: counter-flush loop
+>
+> Maintain a `batchCount` counter alongside the batch object. On every 500th document, call `batch.CommitAsync().Wait()` and reset both the batch and the counter. After the loop, check `batchCount > 0` and commit the final partial batch to avoid silently dropping the tail.
 
 ```csharp
-// Firestore batch writes — 500 docs per gRPC call
 int FsBatchWrite(string tier)
 {
-    // No delete — Set() overwrites existing docs by ID, avoiding costly collection scan
     var lines = File.ReadAllLines(tiers[tier]["csv"]);
     var headers = lines[0].Trim().Split(',');
     int count = 0;
@@ -756,14 +822,21 @@ foreach (var tier in tierNames)
       medium      75.0K      3m18s     378 rows/s
       large      750.0K      8m21s    1.5K rows/s
 
+> [!info] No BulkWriter equivalent in the C# Firestore client
+>
+> The Python `google-cloud-firestore` SDK exposes `BulkWriter`, which manages batching, retry logic, and rate limiting automatically — delivering 2–5× higher throughput than manual batch writes. The C# `Google.Cloud.Firestore` client (v3.x) does not expose an equivalent API. For high-volume C# Firestore ingestion, implement parallel batch dispatch manually or see the Python counterpart for the BulkWriter pattern.
+
 ## GCS → BigQuery Ingestion
+
+Server-side load — BigQuery reads files directly from GCS over Google's internal network. No data passes through the local machine, making this the standard production pattern for data lake pipelines.
+
+### BigQueryClient | GCS to BigQuery load jobs
 
 #### Ingest CSV into BigQuery from GCS using Google.Cloud.BigQuery.V2 CreateLoadJob over internal network
 
 Server-side load — BigQuery reads directly from GCS. No data passes through local machine.
 
 ```csharp
-// BigQuery load from GCS CSV — server-side
 int BqGcsCsv(string tier)
 {
     var uri = $"gs://{BUCKET_NAME}/bronze/csv/ingest_{tier}.csv";
@@ -799,7 +872,6 @@ foreach (var tier in tierNames)
 Parquet is the fastest GCS→BQ path — columnar, compressed, schema embedded.
 
 ```csharp
-// BigQuery load from GCS Parquet
 int BqGcsParquet(string tier)
 {
     var uri = $"gs://{BUCKET_NAME}/bronze/parquet/ingest_{tier}.parquet";
@@ -830,12 +902,15 @@ foreach (var tier in tierNames)
 
 ## GCS → SQL Server Ingestion
 
+Two-hop pipeline: download the file from GCS into a `MemoryStream`, then bulk-insert into SQL Server via `SqlBulkCopy`. There is no direct GCS→SQL path; the local machine acts as the transfer relay.
+
+### StorageClient + SqlBulkCopy | GCS to SQL Server
+
 #### Ingest CSV into SQL Server from GCS using Google.Cloud.Storage.V1 download + SqlBulkCopy over TLS
 
 Two-hop pipeline: download from GCS to memory, then bulk-insert to SQL Server.
 
 ```csharp
-// GCS CSV → SQL Server — two-hop pipeline (download + SqlBulkCopy)
 int GcsToBulkCopy(string tier)
 {
     SqlTruncate(SQL_BENCH_TABLE);
@@ -873,13 +948,15 @@ foreach (var tier in tierNames)
 
 ## Cross-Service Transfers
 
+Move data between SQL Server, BigQuery, and Firestore using two-hop in-memory bridges. Each function self-populates the source database before transferring, so benchmarks are repeatable without manual setup.
+
+### Cross-service | SQL Server ↔ BigQuery ↔ Firestore
+
 #### Transfer data from SQL Server to BigQuery using SqlDataReader + UploadCsv over TLS/HTTPS
 
-Two-hop bridge via local memory: query SQL Server, write CSV to MemoryStream, upload to BigQuery.
+Two-hop bridge via local memory: query SQL Server, write CSV to MemoryStream, upload to BigQuery. The function populates `ohlcv_bench` with the correct tier first, then transfers.
 
 ```csharp
-// SQL Server → BigQuery — read CSV into SQL, query back, stream to BQ
-// Populates ohlcv_bench with the correct tier first, then transfers.
 int SqlToBq(string tier)
 {
     // Step 1: ensure SQL Server has the right data for this tier
@@ -935,11 +1012,9 @@ foreach (var tier in tierNames)
 
 #### Transfer data from BigQuery to SQL Server using BigQueryClient.ExecuteQuery + SqlBulkCopy over HTTPS/TLS
 
-Two-hop bridge in reverse: query BigQuery, build DataTable, SqlBulkCopy to SQL Server.
+Two-hop bridge in reverse: query BigQuery, build DataTable, SqlBulkCopy to SQL Server. The function populates `ohlcv_bench` with the correct tier first, then transfers.
 
 ```csharp
-// BigQuery → SQL Server — load CSV into BQ, query back, bulk copy to SQL
-// Populates ohlcv_bench with the correct tier first, then transfers.
 int BqToSql(string tier)
 {
     // Step 1: ensure BigQuery has the right data for this tier
@@ -987,7 +1062,6 @@ foreach (var tier in tierNames)
 Query SQL Server, batch-write documents to Firestore. Bridge from relational to document store.
 
 ```csharp
-// SQL Server → Firestore — load CSV into SQL, query back, batch write to Firestore
 int SqlToFs(string tier)
 {
     // Step 1: ensure SQL Server has the right data for this tier
@@ -1043,12 +1117,15 @@ foreach (var tier in tierNames)
 
 ## Export
 
+Export data out of SQL Server and BigQuery for downstream consumption. SQL Server exports stream directly to a local CSV file; BigQuery exports are server-side to GCS.
+
+### Export | SQL Server and BigQuery
+
 #### Export SQL Server to CSV using SqlDataReader + StreamWriter over TLS
 
 Query SQL Server, write rows to local CSV. Simple streaming export.
 
 ```csharp
-// SQL Server → local CSV export
 var EXPORT_DIR = Path.Combine(DATA_DIR, "exports");
 Directory.CreateDirectory(EXPORT_DIR);
 
@@ -1090,7 +1167,6 @@ foreach (var tier in tierNames)
 Server-side export — BigQuery writes directly to GCS. No local data transfer.
 
 ```csharp
-// BigQuery → GCS export
 int BqExport(string tier)
 {
     // Create temp table with correct row count for this tier
@@ -1125,22 +1201,25 @@ foreach (var tier in tierNames)
 
 ## Summary
 
+Aggregated benchmark results across all methods, loaded from the persisted JSON file. Results are grouped by ingestion category and rendered as Polars DataFrames with Plotly bar charts.
+
 ```csharp
-// Reload all results from JSON
 var allResults = LoadIngestResults();
 Console.WriteLine($"  {allResults.Count} total benchmark results");
 ```
 
       53 total benchmark results
 
+### Summary | benchmark charts
+
 #### SQL Server Ingestion Benchmark
 
+SQL Server ingestion results grouped by method, displaying rows, elapsed time, and throughput. The bar chart compares all methods across all three tiers.
+
 ```csharp
-// SQL Server Ingestion Benchmark
 var methods = new[] { "ado_executenonquery", "sqlbulkcopy", "bcp_import", "json_sqlbulkcopy", "parquet_sqlbulkcopy", "gcs_csv_sqlbulkcopy" };
 var subset = allResults.Where(r => methods.Contains(r.method)).ToList();
 
-// Display as Polars DataFrame
 var dfSummary = new DataFrame(
     Series.From("method", subset.Select(r => r.method).ToArray()),
     Series.From("tier", subset.Select(r => r.tier).ToArray()),
@@ -1164,7 +1243,6 @@ dfSummary
 </style><div class='pl-dim'>Polars DataFrame: <b>(17 rows, 5 columns)</b></div><table class='pl-dataframe'><thead><tr><th>method<span class='pl-dtype'>utf8view</span></th><th>tier<span class='pl-dtype'>utf8view</span></th><th>rows<span class='pl-dtype'>utf8view</span></th><th>time<span class='pl-dtype'>utf8view</span></th><th>rate<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>ado_executenonquery</td><td>small</td><td>2.5K</td><td>1m5s</td><td>38 rows/s</td></tr><tr><td>ado_executenonquery</td><td>medium</td><td>75.0K</td><td>32m5s</td><td>39 rows/s</td></tr><tr><td>sqlbulkcopy</td><td>small</td><td>2.5K</td><td>357ms</td><td>7.0K rows/s</td></tr><tr><td>sqlbulkcopy</td><td>medium</td><td>75.0K</td><td>2.7s</td><td>27.3K rows/s</td></tr><tr><td>sqlbulkcopy</td><td>large</td><td>750.0K</td><td>21.5s</td><td>34.9K rows/s</td></tr><tr><td>bcp_import</td><td>small</td><td>2.5K</td><td>489ms</td><td>5.1K rows/s</td></tr><tr><td>bcp_import</td><td>medium</td><td>75.0K</td><td>2.4s</td><td>30.9K rows/s</td></tr><tr><td>bcp_import</td><td>large</td><td>750.0K</td><td>20.6s</td><td>36.3K rows/s</td></tr><tr><td>json_sqlbulkcopy</td><td>small</td><td>2.5K</td><td>190ms</td><td>13.2K rows/s</td></tr><tr><td>json_sqlbulkcopy</td><td>medium</td><td>75.0K</td><td>2.6s</td><td>28.5K rows/s</td></tr><tr><td colspan='5'>... 7 more rows ...</td></tr></tbody></table>
 
 ```csharp
-// SQL Server Ingestion — Throughput by Method (K rows/s)
 var tierOrder = new[] { "small", "medium", "large" };
 var tierColors = new Dictionary<string, string>
     { ["small"] = "#636EFA", ["medium"] = "#EF553B", ["large"] = "#00CC96" };
@@ -1196,12 +1274,12 @@ Plotly.NET.CSharp.Chart.Combine(tierCharts)
 
 #### BigQuery Ingestion Benchmark
 
+BigQuery ingestion results grouped by method, comparing local upload formats and GCS load jobs across all three tiers. The bar chart highlights the throughput advantage of GCS Parquet at large tier.
+
 ```csharp
-// BigQuery Ingestion Benchmark
 var methods = new[] { "bq_load_csv", "bq_load_json", "bq_load_parquet", "bq_cli_load", "bq_gcs_csv", "bq_gcs_parquet" };
 var subset = allResults.Where(r => methods.Contains(r.method)).ToList();
 
-// Display as Polars DataFrame
 var dfSummary = new DataFrame(
     Series.From("method", subset.Select(r => r.method).ToArray()),
     Series.From("tier", subset.Select(r => r.tier).ToArray()),
@@ -1225,7 +1303,6 @@ dfSummary
 </style><div class='pl-dim'>Polars DataFrame: <b>(18 rows, 5 columns)</b></div><table class='pl-dataframe'><thead><tr><th>method<span class='pl-dtype'>utf8view</span></th><th>tier<span class='pl-dtype'>utf8view</span></th><th>rows<span class='pl-dtype'>utf8view</span></th><th>time<span class='pl-dtype'>utf8view</span></th><th>rate<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>bq_load_json</td><td>small</td><td>2.5K</td><td>5.8s</td><td>429 rows/s</td></tr><tr><td>bq_load_json</td><td>medium</td><td>75.0K</td><td>7.7s</td><td>9.7K rows/s</td></tr><tr><td>bq_load_json</td><td>large</td><td>750.0K</td><td>31.5s</td><td>23.8K rows/s</td></tr><tr><td>bq_load_parquet</td><td>small</td><td>2.5K</td><td>6.0s</td><td>415 rows/s</td></tr><tr><td>bq_load_parquet</td><td>medium</td><td>75.0K</td><td>6.1s</td><td>12.2K rows/s</td></tr><tr><td>bq_load_parquet</td><td>large</td><td>750.0K</td><td>8.6s</td><td>87.4K rows/s</td></tr><tr><td>bq_cli_load</td><td>small</td><td>2.5K</td><td>5.8s</td><td>431 rows/s</td></tr><tr><td>bq_cli_load</td><td>medium</td><td>75.0K</td><td>7.9s</td><td>9.5K rows/s</td></tr><tr><td>bq_cli_load</td><td>large</td><td>750.0K</td><td>20.8s</td><td>36.1K rows/s</td></tr><tr><td>bq_gcs_csv</td><td>small</td><td>2.5K</td><td>5.9s</td><td>427 rows/s</td></tr><tr><td colspan='5'>... 8 more rows ...</td></tr></tbody></table>
 
 ```csharp
-// BigQuery Ingestion — Throughput by Method (K rows/s)
 var tierOrder = new[] { "small", "medium", "large" };
 var tierColors = new Dictionary<string, string>
     { ["small"] = "#636EFA", ["medium"] = "#EF553B", ["large"] = "#00CC96" };
@@ -1257,12 +1334,12 @@ Plotly.NET.CSharp.Chart.Combine(tierCharts)
 
 #### Firestore Ingestion Benchmark
 
+Firestore batch-write results across all three tiers. The bar chart illustrates the ~400 rows/s ceiling imposed by sequential gRPC batch commits.
+
 ```csharp
-// Firestore Ingestion Benchmark
 var methods = new[] { "fs_batch_write" };
 var subset = allResults.Where(r => methods.Contains(r.method)).ToList();
 
-// Display as Polars DataFrame
 var dfSummary = new DataFrame(
     Series.From("method", subset.Select(r => r.method).ToArray()),
     Series.From("tier", subset.Select(r => r.tier).ToArray()),
@@ -1286,7 +1363,6 @@ dfSummary
 </style><div class='pl-dim'>Polars DataFrame: <b>(3 rows, 5 columns)</b></div><table class='pl-dataframe'><thead><tr><th>method<span class='pl-dtype'>utf8view</span></th><th>tier<span class='pl-dtype'>utf8view</span></th><th>rows<span class='pl-dtype'>utf8view</span></th><th>time<span class='pl-dtype'>utf8view</span></th><th>rate<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>fs_batch_write</td><td>small</td><td>2.5K</td><td>6.2s</td><td>406 rows/s</td></tr><tr><td>fs_batch_write</td><td>medium</td><td>75.0K</td><td>3m18s</td><td>378 rows/s</td></tr><tr><td>fs_batch_write</td><td>large</td><td>750.0K</td><td>8m21s</td><td>1.5K rows/s</td></tr></tbody></table>
 
 ```csharp
-// Firestore Ingestion — Throughput by Method (K rows/s)
 var tierOrder = new[] { "small", "medium", "large" };
 var tierColors = new Dictionary<string, string>
     { ["small"] = "#636EFA", ["medium"] = "#EF553B", ["large"] = "#00CC96" };
@@ -1318,12 +1394,12 @@ Plotly.NET.CSharp.Chart.Combine(tierCharts)
 
 #### Cross-Service Transfers Benchmark
 
+Cross-service transfer results comparing SQL Server→BigQuery, BigQuery→SQL Server, and SQL Server→Firestore paths. The bar chart shows that SQL→BQ is the fastest cross-service path due to streaming CSV upload.
+
 ```csharp
-// Cross-Service Transfers Benchmark
 var methods = new[] { "sql_to_bq", "bq_to_sql", "sql_to_firestore" };
 var subset = allResults.Where(r => methods.Contains(r.method)).ToList();
 
-// Display as Polars DataFrame
 var dfSummary = new DataFrame(
     Series.From("method", subset.Select(r => r.method).ToArray()),
     Series.From("tier", subset.Select(r => r.tier).ToArray()),
@@ -1347,7 +1423,6 @@ dfSummary
 </style><div class='pl-dim'>Polars DataFrame: <b>(9 rows, 5 columns)</b></div><table class='pl-dataframe'><thead><tr><th>method<span class='pl-dtype'>utf8view</span></th><th>tier<span class='pl-dtype'>utf8view</span></th><th>rows<span class='pl-dtype'>utf8view</span></th><th>time<span class='pl-dtype'>utf8view</span></th><th>rate<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>sql_to_bq</td><td>small</td><td>2.5K</td><td>1.3s</td><td>2.0K rows/s</td></tr><tr><td>sql_to_bq</td><td>medium</td><td>75.0K</td><td>4.2s</td><td>17.7K rows/s</td></tr><tr><td>sql_to_bq</td><td>large</td><td>750.0K</td><td>34.0s</td><td>22.1K rows/s</td></tr><tr><td>bq_to_sql</td><td>small</td><td>2.5K</td><td>6.8s</td><td>365 rows/s</td></tr><tr><td>bq_to_sql</td><td>medium</td><td>75.0K</td><td>15.3s</td><td>4.9K rows/s</td></tr><tr><td>bq_to_sql</td><td>large</td><td>750.0K</td><td>1m24s</td><td>8.9K rows/s</td></tr><tr><td>sql_to_firestore</td><td>small</td><td>2.5K</td><td>7.7s</td><td>324 rows/s</td></tr><tr><td>sql_to_firestore</td><td>medium</td><td>75.0K</td><td>3m47s</td><td>331 rows/s</td></tr><tr><td>sql_to_firestore</td><td>large</td><td>750.0K</td><td>38m25s</td><td>325 rows/s</td></tr></tbody></table>
 
 ```csharp
-// Cross-Service Transfers — Throughput by Method (K rows/s)
 var tierOrder = new[] { "small", "medium", "large" };
 var tierColors = new Dictionary<string, string>
     { ["small"] = "#636EFA", ["medium"] = "#EF553B", ["large"] = "#00CC96" };
@@ -1379,12 +1454,12 @@ Plotly.NET.CSharp.Chart.Combine(tierCharts)
 
 #### Data Exports Benchmark
 
+Export benchmark results comparing SQL Server CSV streaming and BigQuery→GCS extract jobs. The bar chart shows SQL Server local export as the faster path at small/medium tier, while BQ→GCS scales better at large tier.
+
 ```csharp
-// Data Exports Benchmark
 var methods = new[] { "sql_export_csv", "bq_export_gcs" };
 var subset = allResults.Where(r => methods.Contains(r.method)).ToList();
 
-// Display as Polars DataFrame
 var dfSummary = new DataFrame(
     Series.From("method", subset.Select(r => r.method).ToArray()),
     Series.From("tier", subset.Select(r => r.tier).ToArray()),
@@ -1408,7 +1483,6 @@ dfSummary
 </style><div class='pl-dim'>Polars DataFrame: <b>(6 rows, 5 columns)</b></div><table class='pl-dataframe'><thead><tr><th>method<span class='pl-dtype'>utf8view</span></th><th>tier<span class='pl-dtype'>utf8view</span></th><th>rows<span class='pl-dtype'>utf8view</span></th><th>time<span class='pl-dtype'>utf8view</span></th><th>rate<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>sql_export_csv</td><td>small</td><td>2.5K</td><td>92ms</td><td>27.1K rows/s</td></tr><tr><td>sql_export_csv</td><td>medium</td><td>75.0K</td><td>1.7s</td><td>45.4K rows/s</td></tr><tr><td>sql_export_csv</td><td>large</td><td>750.0K</td><td>9.4s</td><td>79.4K rows/s</td></tr><tr><td>bq_export_gcs</td><td>small</td><td>2.5K</td><td>8.5s</td><td>296 rows/s</td></tr><tr><td>bq_export_gcs</td><td>medium</td><td>75.0K</td><td>7.5s</td><td>10.0K rows/s</td></tr><tr><td>bq_export_gcs</td><td>large</td><td>750.0K</td><td>15.3s</td><td>49.1K rows/s</td></tr></tbody></table>
 
 ```csharp
-// Data Exports — Throughput by Method (K rows/s)
 var tierOrder = new[] { "small", "medium", "large" };
 var tierColors = new Dictionary<string, string>
     { ["small"] = "#636EFA", ["medium"] = "#EF553B", ["large"] = "#00CC96" };
@@ -1440,8 +1514,9 @@ Plotly.NET.CSharp.Chart.Combine(tierCharts)
 
 #### Cleanup staging tables
 
+Drops `dbo.ohlcv_bench` and `dbo.firestore_audit_log` from SQL Server, deletes the BigQuery staging table, and removes the local exports directory.
+
 ```csharp
-// Drop staging tables and clean up
 using (var conn = CreateSqlConnection())
 {
     conn.Open();
@@ -1458,8 +1533,6 @@ try { bqClient.DeleteTable(BQ_DATASET, "ohlcv_bench"); }
 catch (Google.GoogleApiException) { /* already deleted */ }
 Console.WriteLine("  BigQuery staging table dropped");
 
-// Firestore: overwritten docs remain (no collection drop API).
-// To clean up, run FsDeleteCollection after kernel restart with Microsoft.Bcl.AsyncInterfaces loaded.
 Console.WriteLine("  Firestore: documents left in place (overwrite-safe)");
 
 if (Directory.Exists(Path.Combine(DATA_DIR, "exports")))
@@ -1471,3 +1544,7 @@ Console.WriteLine("  Local exports cleaned up");
       BigQuery staging table dropped
       Firestore: documents left in place (overwrite-safe)
       Local exports cleaned up
+
+> [!info] Firestore has no collection drop API
+>
+> Overwritten docs remain after cleanup. To remove them, call `FsDeleteCollection` after a kernel restart with `Microsoft.Bcl.AsyncInterfaces` loaded.

@@ -1,5 +1,5 @@
 ---
-tags: [infrastructure, terraform, iac, gcp]
+tags: [terraform, gcp, cloud-run, serverless]
 aliases: [terraform Cloud Run, google_cloud_run_v2_service, google_cloud_run_v2_job, Cloud Run service terraform, Cloud Run job terraform]
 description: "Terraform configuration for Cloud Run services (long-running HTTP endpoints) and Cloud Run jobs (batch run-to-completion), including VPC access, secret injection, session affinity, scaling, and the double-nested job template structure."
 created: 2026-03-22
@@ -16,14 +16,50 @@ status: complete
 
 This note covers `run.tf` — the Cloud Run service (dashboard) and Cloud Run jobs (pipeline, setup) that form the application layer of the example infrastructure.
 
-### Cloud Run Billing Note
-
 > [!info] Billing Is Usage-Based
 >
-> Billing: Actual Usage, Not Limits.
 > Cloud Run bills **actual CPU/memory usage**, not the limits defined in the configuration. Setting `cpu = "2"` and `memory = "2Gi"` as limits does not mean you pay for 2 CPUs — you pay for what the container actually consumes during execution. Lowering limits does not save cost; it only risks OOM kills or CPU throttling if the workload exceeds them.
 
-### Locals Block
+> [!info] Assumed Variables and Prerequisites
+>
+> All resource blocks in this file reference `var.region` and `var.project_id`, which must be defined in your variables file. The following GCP APIs must be enabled on the project:
+> - `run.googleapis.com` — Cloud Run services and jobs
+> - `secretmanager.googleapis.com` — secret injection into containers
+> - `compute.googleapis.com` — VPC networking for Direct VPC Egress
+>
+> The Terraform service account needs at minimum: `roles/run.admin`, `roles/iam.serviceAccountUser` (to attach service accounts to Cloud Run resources), and `roles/secretmanager.secretAccessor` (to read secrets at deploy time).
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    A["Internet"] -->|HTTPS| B["Cloud Run Service<br/>dashboard"]
+    C["Airflow"] -->|execute| D["Cloud Run Job<br/>pipeline / setup"]
+    B -->|Direct VPC Egress| E["SQL VM<br/>10.0.0.x:1433"]
+    D -->|Direct VPC Egress| E
+    F["Secret Manager"] -.->|env injection| B
+    F -.->|env injection| D
+    G["Artifact Registry"] -.->|image pull| B
+    G -.->|image pull| D
+```
+
+## Shared Configuration
+
+Computed values reused across all Cloud Run resources in this file.
+
+### locals
+
+Terraform `locals` are computed values evaluated once at plan time. They cannot be overridden from outside the module — use `variable` blocks for configurable inputs.
 
 ```hcl
 locals {
@@ -33,8 +69,6 @@ locals {
 }
 ```
 
-**`locals`** are computed values reused across the file. They are evaluated once and cannot be overridden from outside.
-
 | Local | Value | Purpose |
 |-------|-------|---------|
 | `registry` | `europe-west1-docker.pkg.dev/data-platform-prod/data-pipeline` | Full registry path. Used as prefix for image references. |
@@ -43,9 +77,9 @@ locals {
 
 ---
 
-## Resource: Dashboard Service
+## google_cloud_run_v2_service
 
-A Cloud Run **service** is a long-running HTTP endpoint. Unlike jobs, services stay alive to serve requests. For the architectural distinction between services and jobs, including when to choose each, see [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services).
+A Cloud Run **service** is a long-running HTTP endpoint that auto-scales based on incoming traffic. Unlike jobs, services stay alive to serve requests. This resource provisions the dashboard — a Blazor Server application serving the project's web interface. For the architectural distinction between services and jobs, including when to choose each, see [Cloud Run jobs vs services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services).
 
 ```hcl
 resource "google_cloud_run_v2_service" "dashboard" {
@@ -60,6 +94,14 @@ resource "google_cloud_run_v2_service" "dashboard" {
 |-------|-------|---------|
 | `name` | `data-pipeline-dashboard` | Service name. The public URL is derived from this: `data-pipeline-dashboard-xxxxx-ew.a.run.app`. |
 | `deletion_protection` | `false` | When `true`, Terraform refuses to destroy this resource. Set to `false` here to allow teardown via `terraform destroy`. In production, consider `true` for databases. |
+
+> [!danger] deletion_protection = false
+>
+> With `deletion_protection = false`, `terraform destroy` or removing the resource from config will immediately delete the Cloud Run service and all its revisions. Changing `location` also forces a destroy-and-recreate, which causes downtime and a new URL.
+
+> [!success] Production Safeguard
+>
+> Set `deletion_protection = true` for production services. To intentionally destroy, first set it to `false`, run `terraform apply`, then destroy. For stateful resources, also add `lifecycle { prevent_destroy = true }`.
 
 ### Template Block
 
@@ -136,6 +178,14 @@ containers {
 | `cpu` | `1` | 1 vCPU allocated to the container. |
 | `memory` | `512Mi` | 512 megabytes of RAM. Sufficient for Blazor Server with a small number of concurrent circuits. |
 
+> [!warning] Non-Deterministic Image Tags
+>
+> Using `:latest` means `terraform plan` cannot detect image changes — the tag stays the same even when the underlying image is updated by CI/CD. Terraform will show "no changes" even after a new image is pushed.
+
+> [!success] Deterministic Deployments
+>
+> Use image digests (`@sha256:...`) or immutable version tags for full traceability. Alternatively, add `lifecycle { ignore_changes = [template[0].containers[0].image] }` if image updates are intentionally managed outside Terraform (e.g., by [GitHub Actions](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd)).
+
 ### VPC Access — Direct Egress
 
 ```hcl
@@ -153,7 +203,11 @@ vpc_access {
 | `network_interfaces` | VPC + subnet | **Direct VPC egress** — Cloud Run gets a network interface in the VPC, allowing it to reach private IPs (like the SQL VM at `10.0.0.x`). This replaced the older VPC Connector approach. |
 | `egress` | `PRIVATE_RANGES_ONLY` | Only traffic destined for private IP ranges (RFC 1918: `10.x`, `172.16-31.x`, `192.168.x`) goes through the VPC. Public internet traffic (e.g., external API calls) uses Cloud Run's default route. This prevents database traffic from ever touching the public internet. |
 
-### Public Access IAM
+> [!tip] Direct VPC Egress vs VPC Connector
+>
+> Direct VPC Egress (used here) attaches a network interface directly to the VPC — no separate connector resource needed. This replaced the older `google_vpc_access_connector` approach, which required provisioning a dedicated `/28` subnet and had throughput limits (up to 1 Gbps). Direct VPC Egress supports higher bandwidth, has no additional resource cost, and simplifies the Terraform configuration. If migrating from a VPC Connector, remove the connector resource and replace the `vpc_access` block with the `network_interfaces` syntax shown above.
+
+### google_cloud_run_v2_service_iam_member
 
 ```hcl
 resource "google_cloud_run_v2_service_iam_member" "dashboard_public" {
@@ -168,11 +222,19 @@ resource "google_cloud_run_v2_service_iam_member" "dashboard_public" {
 |-------|-------|---------|
 | `member` | `allUsers` | A special IAM principal meaning "anyone on the internet." This makes the dashboard publicly accessible without authentication. Without this binding, Cloud Run returns 403 to unauthenticated requests. |
 
+> [!danger] Public Internet Access
+>
+> Binding `allUsers` with `roles/run.invoker` makes this service accessible to anyone on the internet without authentication. Any person or bot can send requests to the service URL. This is appropriate for a public dashboard but dangerous for internal tools or APIs that handle sensitive data.
+
+> [!success] Restrict Access
+>
+> For internal tools, use `allAuthenticatedUsers` (requires Google login) or specific service accounts and groups. For zero-trust access, use [Identity-Aware Proxy (IAP)](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling) to enforce authentication at the load balancer level.
+
 ---
 
-## Resource: Pipeline Job
+## google_cloud_run_v2_job
 
-A Cloud Run **job** runs a container to completion and exits. Unlike a service, it has no HTTP endpoint — it is triggered externally (by Airflow).
+A Cloud Run **job** runs a container to completion and exits. Unlike a service, it has no HTTP endpoint — it is triggered externally (by Airflow or the `gcloud` CLI). This section covers two job variants: the pipeline job (recurring data processing) and the setup job (one-time initialization).
 
 ```hcl
 resource "google_cloud_run_v2_job" "pipeline" {
@@ -184,6 +246,8 @@ resource "google_cloud_run_v2_job" "pipeline" {
 ```
 
 ### Service vs Job Comparison
+
+Key differences between the Cloud Run service and job provisioned in this file.
 
 | Aspect | Dashboard (service) | Pipeline (job) |
 |--------|-------------------|----------------|
@@ -254,7 +318,9 @@ Other pipeline environment variables:
 
 ---
 
-### Resource: Setup Job
+### google_cloud_run_v2_job | Setup
+
+The setup job runs one-time initialization tasks — creating database schemas, seeding reference data, and downloading historical data. It uses the same container image as the pipeline job but overrides the entrypoint with a custom command.
 
 ```hcl
 resource "google_cloud_run_v2_job" "setup" {
@@ -281,42 +347,127 @@ resource "google_cloud_run_v2_job" "setup" {
 | `max_retries` | `0` | No automatic retries. Setup is a one-time operation — if it fails, investigate the logs rather than blindly retrying. |
 | `timeout` | `3600s` | 1 hour. Initial setup includes downloading historical data for all configured instruments — this can take 10-15 minutes. |
 
+> [!tip] Lifecycle Meta-Arguments for Cloud Run
+>
+> - **`ignore_changes`**: Add `lifecycle { ignore_changes = [template[0].containers[0].image] }` to services and jobs whose image tag is updated by CI/CD outside of Terraform. This prevents Terraform from reporting drift on every plan.
+> - **`prevent_destroy`**: Set `lifecycle { prevent_destroy = true }` on production services to block accidental deletion via `terraform destroy`.
+> - **`create_before_destroy`**: Cloud Run creates a new revision before routing traffic away from the old one by default, so this meta-argument is rarely needed at the Terraform level.
+
+> [!danger] Force-Replacement Triggers
+>
+> Changing `location` on a `google_cloud_run_v2_service` or `google_cloud_run_v2_job` forces Terraform to **destroy and recreate** the resource (`# forces replacement` in plan output). For services, this means the public URL changes and all traffic is interrupted. For jobs, in-progress executions are terminated.
+
+> [!success] Safe Region Migration
+>
+> To migrate a Cloud Run resource to a new region: deploy the new resource alongside the old one (with a different Terraform resource name), migrate traffic or triggers, verify the new resource works, then remove the old resource from config.
+
+> [!todo] Import Existing Cloud Run Resources
+>
+> To bring an existing Cloud Run service or job under Terraform management:
+> 1. Add the resource block to your `.tf` file matching the current configuration
+> 2. Run the import command:
+>    ```bash
+>    terraform import google_cloud_run_v2_service.dashboard projects/{project}/locations/{region}/services/{name}
+>    ```
+> 3. Run `terraform plan` to verify no diff — adjust arguments until the plan is clean
+> 4. For Terraform 1.5+, use declarative `import` blocks instead:
+>    ```hcl
+>    import {
+>      to = google_cloud_run_v2_service.dashboard
+>      id = "projects/my-project/locations/europe-west1/services/data-pipeline-dashboard"
+>    }
+>    ```
+
 ---
 
-### gcloud Verification Commands
+## Verification
+
+Post-deployment verification commands for Cloud Run services and jobs. Replace `europe-west1` with your region.
+
+### List services
+
+List all Cloud Run services in the project.
 
 ```bash
-# List all Cloud Run services
 gcloud run services list --region=europe-west1
+```
 
-# Describe the dashboard service (shows URL, env vars, scaling, revision)
+### Describe a service
+
+Show the full configuration of a service, including URL, environment variables, scaling settings, and current revision.
+
+```bash
 gcloud run services describe data-pipeline-dashboard --region=europe-west1
+```
 
-# List all Cloud Run jobs
+### List jobs
+
+List all Cloud Run jobs in the project.
+
+```bash
 gcloud run jobs list --region=europe-west1
+```
 
-# Describe a job (shows env vars, timeout, retries, service account)
+### Describe a job
+
+Show a job's configuration: environment variables, timeout, retries, and attached service account.
+
+```bash
 gcloud run jobs describe data-pipeline-pipeline --region=europe-west1
+```
+
+```bash
 gcloud run jobs describe data-pipeline-setup --region=europe-west1
+```
 
-# View recent job executions
+### List job executions
+
+View recent executions of a job, including status and duration.
+
+```bash
 gcloud run jobs executions list --job=data-pipeline-pipeline --region=europe-west1
+```
 
-# Manually trigger a job
+### Trigger a job manually
+
+Execute a job on demand. Useful for testing or one-off runs outside the normal Airflow schedule.
+
+```bash
 gcloud run jobs execute data-pipeline-pipeline --region=europe-west1
-gcloud run jobs execute data-pipeline-setup --region=europe-west1
+```
 
-# View logs for a Cloud Run service or job
+```bash
+gcloud run jobs execute data-pipeline-setup --region=europe-west1
+```
+
+### View Cloud Run logs
+
+Query Cloud Logging for service or job output. Adjust `--limit` and add `--freshness` to narrow the time window.
+
+```bash
 gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=data-pipeline-dashboard" --limit=50 --format="table(timestamp, textPayload)"
+```
+
+```bash
 gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=data-pipeline-pipeline" --limit=50 --format="table(timestamp, textPayload)"
 ```
 
 ## Related
 
-- [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — service accounts and Secret Manager used here
-- [terraform-networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-networking) — the VPC this service connects to via direct egress
-- [terraform-registry-and-ci](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-registry-and-ci) — Artifact Registry where the Docker images live
+**Terraform (this chapter):**
+- [terraform-iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-iam-and-secrets) — service accounts and Secret Manager resources used by these Cloud Run services
+- [terraform-networking](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-networking) — VPC and subnet for Direct VPC Egress
+- [terraform-registry-and-ci](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-registry-and-ci) — Artifact Registry where Docker images are stored
 - [terraform-compute](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/terraform-compute) — the SQL VM that these services connect to
+- [tf-iam-secrets-serverless](https://alp78.github.io/elysium/07-Terraform/Block-Library/tf-iam-secrets-serverless) — reusable HCL blocks for Cloud Run, IAM, and Secret Manager
+
+**GCP services (Folder 06):**
+- [Cloud Run jobs vs services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) — architectural comparison and gcloud management
+- [Service accounts and IAM](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — IAM roles and service account concepts
+- [Secrets management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — Secret Manager via gcloud CLI
+
+**CI/CD:**
+- [GitHub Actions CI/CD](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — workflow that builds and pushes container images
 
 ## References
 

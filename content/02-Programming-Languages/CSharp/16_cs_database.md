@@ -202,8 +202,6 @@ trades.Length  // inserted
 `SqliteDataReader` streams rows from the database without loading the full result set into memory. For display in notebooks, `QueryToTable` (the helper defined above) wraps the reader and loads into a `DataTable`, which the kernel renders as HTML. SQLite supports all standard SQL expressions in the `SELECT` list — `ROUND(quantity * price, 2) AS notional` is computed in the database, not in C#.
 
 ```csharp
-// SELECT all trades with computed notional column
-
 QueryToTable(conn, "SELECT *, ROUND(quantity * price, 2) AS notional FROM trades ORDER BY trade_date, trade_id")
 ```
 
@@ -214,8 +212,6 @@ QueryToTable(conn, "SELECT *, ROUND(quantity * price, 2) AS notional FROM trades
 `GROUP BY` collapses rows with the same key column into a single row per group. `SUM(CASE WHEN side='BUY' THEN quantity ELSE -quantity END)` is the standard SQL pattern for computing net position — buys add, sells subtract. All aggregation (SUM, AVG, COUNT, MIN, MAX) happens inside the database engine, so only the summary rows are returned to C#.
 
 ```csharp
-// Aggregate — net position per ticker
-
 QueryToTable(conn, @"
     SELECT ticker AS Ticker,
            SUM(CASE WHEN side='BUY' THEN quantity ELSE -quantity END) AS [Net Shares],
@@ -254,8 +250,6 @@ cmd.ExecuteNonQuery()  // Deleted TRD_006
 #### SQLite — transaction with atomic multi-row insert and rollback
 
 ```csharp
-// Transaction — both inserts succeed or both roll back
-
 using (var tx = conn.BeginTransaction())
 {
     try
@@ -360,29 +354,35 @@ cmd.ExecuteScalar()  // synchronous (0=OFF, 1=NORMAL, 2=FULL)
 
 #### SQLite — `cache_size` for in-memory page cache
 
+A negative value sets the cache in kilobytes; a positive value sets it in pages. `-20000` means 20MB. `page_size` must be set before creating any tables — it has no effect on an existing database.
+
 ```csharp
-// Negative value = KB, positive = pages (default page = 4096 bytes)
-// -20000 = 20MB cache
 cmd.CommandText = "PRAGMA cache_size=-20000";
 cmd.ExecuteNonQuery();
 cmd.CommandText = "PRAGMA cache_size";
 cmd.ExecuteScalar()  // cache_size (negative = KB)
+```
 
-// Page size — must be set BEFORE creating tables (on new databases)
+```text
+-20000  // cache_size (negative = KB)
+```
+
+`page_size` must be set before any tables are created on a new database; it is a no-op on an existing database.
+
+```csharp
 cmd.CommandText = "PRAGMA page_size";
 cmd.ExecuteScalar()  // page_size (bytes)
 ```
 
 ```text
--20000  // cache_size (negative = KB)
 4096    // page_size (bytes)
 ```
 
 #### SQLite — `busy_timeout` for lock contention retry
 
+Waits up to N milliseconds for a lock instead of failing immediately. Without this, concurrent access gets an `SQLITE_BUSY` error instantly.
+
 ```csharp
-// Wait up to N ms for a lock instead of failing immediately
-// Without this, concurrent access gets SQLITE_BUSY error instantly
 cmd.CommandText = "PRAGMA busy_timeout=5000";
 cmd.ExecuteNonQuery();
 cmd.CommandText = "PRAGMA busy_timeout";
@@ -395,10 +395,9 @@ cmd.ExecuteScalar()  // busy_timeout (ms)
 
 #### SQLite — `mmap_size` for memory-mapped I/O
 
+Maps up to N bytes of the database file into memory. `0` disables it; `268435456` = 256MB. Faster reads on large files — the OS pages data on demand rather than copying through the kernel buffer.
+
 ```csharp
-// Map up to N bytes of the database file into memory
-// 0 = disabled, 268435456 = 256MB
-// Faster reads on large files — OS pages data on demand
 cmd.CommandText = "PRAGMA mmap_size=268435456";
 cmd.ExecuteNonQuery();
 cmd.CommandText = "PRAGMA mmap_size";
@@ -411,16 +410,14 @@ Convert.ToInt64(cmd.ExecuteScalar()) / 1024 / 1024  // mmap_size (MB)
 
 #### SQLite — `temp_store` and `foreign_keys`
 
+`temp_store` controls where temporary tables and indexes are stored: `0=DEFAULT`, `1=FILE`, `2=MEMORY`. Foreign key enforcement is disabled by default in SQLite and must be enabled explicitly on every connection.
+
 ```csharp
-// Temp store — where temporary tables/indexes are stored
-// 0=DEFAULT, 1=FILE, 2=MEMORY
 cmd.CommandText = "PRAGMA temp_store=MEMORY";
 cmd.ExecuteNonQuery();
 cmd.CommandText = "PRAGMA temp_store";
 cmd.ExecuteScalar()  // temp_store (0=DEFAULT, 1=FILE, 2=MEMORY)
 
-// Foreign keys — DISABLED by default in SQLite (!)
-// Must enable explicitly on every connection
 cmd.CommandText = "PRAGMA foreign_keys=ON";
 cmd.ExecuteNonQuery();
 cmd.CommandText = "PRAGMA foreign_keys";
@@ -436,9 +433,9 @@ cmd.ExecuteScalar()  // foreign_keys (0=OFF, 1=ON)
 
 #### SQLite — CREATE TABLE for index demos
 
-```csharp
-// Create OHLCV table for index performance demos
+Creates the `ohlcv` table used throughout the index performance demos below.
 
+```csharp
 cmd = pragmaConn.CreateCommand();
 cmd.CommandText = @"
     CREATE TABLE IF NOT EXISTS ohlcv (
@@ -460,9 +457,9 @@ ohlcv
 
 #### SQLite — INSERT 5000 sample OHLCV rows
 
-```csharp
-// Insert 5000 rows of synthetic OHLCV data
+Inserts 5000 rows of synthetic OHLCV data using a seeded random number generator.
 
+```csharp
 var rng = new Random(42);
 var symbols = new[] { "ASML.AS", "SAP.DE", "MC.PA", "SIE.DE", "TTE.PA" };
 var baseDate = new DateTime(2024, 1, 1);
@@ -483,40 +480,37 @@ Inserted 5000 OHLCV rows
 
 #### SQLite — EXPLAIN QUERY PLAN without index (full table scan)
 
-```csharp
-// EXPLAIN QUERY PLAN shows whether SQLite uses an index or full table scan
-// Drop any existing indexes first to show the "before" state
+`EXPLAIN QUERY PLAN` shows whether SQLite uses an index or a full table scan. Drop any existing indexes first to show the "before" state. Interpreting the output:
 
-// Drop indexes if they exist from a previous run
+- `SCAN ohlcv` — full table scan, reads every row; slow with no index
+- `SEARCH ohlcv` — index lookup, reads only matching rows; fast
+- `USING INDEX idx` — which index is being used
+- `USING COVERING INDEX` — index has all needed columns, no table access at all
+
+The goal is to turn `SCAN` into `SEARCH` by creating the right index. A `SCAN` on 5000 rows is fine; on 50M rows it is a disaster.
+
+Drop any existing indexes first to show the "before" state.
+
+```csharp
 try { cmd.CommandText = "DROP INDEX IF EXISTS idx_ohlcv_symbol"; cmd.ExecuteNonQuery(); } catch {}
 try { cmd.CommandText = "DROP INDEX IF EXISTS idx_ohlcv_symbol_date"; cmd.ExecuteNonQuery(); } catch {}
 
 
 QueryToTable(pragmaConn, "EXPLAIN QUERY PLAN SELECT * FROM ohlcv WHERE symbol = 'ASML.AS' AND date > '2024-06-01'")
-
-// INTERPRETING EXPLAIN QUERY PLAN:
-//   SCAN ohlcv         = full table scan (reads every row) — slow, no index used
-//   SEARCH ohlcv       = index lookup (reads only matching rows) — fast
-//   USING INDEX idx    = which index is being used
-//   USING COVERING INDEX = index has all needed columns, no table access at all
-//
-// Goal: turn SCAN into SEARCH by creating the right index.
-// "SCAN" on a 5000-row table is fine. On 50M rows it is a disaster.
 ```
 
 <table><thead><tr><th>id</th><th>parent</th><th>notused</th><th>detail</th></tr></thead><tbody><tr><td>2</td><td>0</td><td>216</td><td>SCAN ohlcv</td></tr></tbody></table>
 
 #### SQLite — CREATE INDEX (single, composite, unique)
 
+`CREATE INDEX` speeds up `WHERE`, `JOIN`, and `ORDER BY`. A composite index on `(symbol, date)` covers queries that filter on both columns. A unique index additionally enforces that no duplicate `(symbol, date)` pairs exist — the commented-out example would fail here because the sample data has duplicates.
+
+A single-column index speeds up `WHERE symbol = ?`. A composite index on `(symbol, date)` covers queries filtering both columns. The unique index is commented out because the sample data contains duplicate `(symbol, date)` pairs.
+
 ```csharp
-// CREATE INDEX speeds up WHERE, JOIN, ORDER BY
-
-
-// Single column index — speeds up WHERE symbol = ?
 cmd.CommandText = "CREATE INDEX idx_ohlcv_symbol ON ohlcv(symbol)";
 cmd.ExecuteNonQuery();
 
-// Composite index — covers WHERE symbol = ? AND date > ?
 cmd.CommandText = "CREATE INDEX idx_ohlcv_symbol_date ON ohlcv(symbol, date)";
 cmd.ExecuteNonQuery();
 
@@ -532,32 +526,19 @@ idx_ohlcv_symbol_date created (composite)
 
 #### SQLite — EXPLAIN QUERY PLAN with index (index scan)
 
+The same query now uses the composite index instead of a full table scan. The output changes from `SCAN ohlcv` (reads all 5000 rows) to `SEARCH ohlcv USING INDEX idx_ohlcv_symbol_date (symbol=? AND date>?)` (jumps directly to matching rows). The composite index covers both `WHERE` conditions: `symbol=?` is an exact match on the first column, `date>?` is a range scan on the second. On 50M rows this is the difference between 50ms and 50 seconds.
+
 ```csharp
-// Same query now uses the composite index instead of full table scan
-
 QueryToTable(pragmaConn, "EXPLAIN QUERY PLAN SELECT * FROM ohlcv WHERE symbol = 'ASML.AS' AND date > '2024-06-01'")
-
-
-// OUTPUT: SEARCH ohlcv USING INDEX idx_ohlcv_symbol_date (symbol=? AND date>?)
-//
-// Before index: SCAN ohlcv        = reads all 5000 rows, checks each one
-// After index:  SEARCH ... USING INDEX = jumps directly to matching rows
-//
-// The composite index idx_ohlcv_symbol_date covers both WHERE conditions:
-//   symbol=?  (exact match on first column of index)
-//   date>?    (range scan on second column of index)
-// On 50M rows this is the difference between 50ms and 50 seconds.
 ```
 
 <table><thead><tr><th>id</th><th>parent</th><th>notused</th><th>detail</th></tr></thead><tbody><tr><td>3</td><td>0</td><td>51</td><td>SEARCH ohlcv USING INDEX idx_ohlcv_symbol_date (symbol=? AND date>?)</td></tr></tbody></table>
 
 #### SQLite — ANALYZE to update query planner statistics
 
-```csharp
-// ANALYZE collects statistics about index selectivity
-// The query planner uses these to choose the best index for each query
-// Run after bulk inserts or significant data changes
+`ANALYZE` collects statistics about index selectivity. The query planner uses these to choose the best index for each query. Run after bulk inserts or significant data changes.
 
+```csharp
 cmd.CommandText = "ANALYZE";
 cmd.ExecuteNonQuery();
 ```
@@ -568,9 +549,9 @@ query planner statistics updated
 
 #### SQLite — list all indexes and tables with row counts
 
-```csharp
-// sqlite_master — list all indexes
+`sqlite_master` is the system catalog. Filtering by `type = 'index'` lists all indexes in the database.
 
+```csharp
 QueryToTable(pragmaConn, "SELECT name AS [Index Name], tbl_name AS [Table] FROM sqlite_master WHERE type = 'index' ORDER BY tbl_name, name")
 ```
 
@@ -579,9 +560,9 @@ QueryToTable(pragmaConn, "SELECT name AS [Index Name], tbl_name AS [Table] FROM 
 
 #### SQLite — list tables with row counts
 
-```csharp
-// SQLite — list tables with row counts
+Reads all table names from `sqlite_master`, then issues a `COUNT(*)` per table and assembles the results into a `DataTable`.
 
+```csharp
 var tableNames = new List<string>();
 var countCmd = pragmaConn.CreateCommand();
 countCmd.CommandText = "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name";
@@ -603,9 +584,9 @@ dt
 
 #### SQLite — database size
 
-```csharp
-// SQLite — database size (page_count * page_size)
+Database size is `page_count * page_size`. Both values are read via PRAGMA.
 
+```csharp
 countCmd.CommandText = "PRAGMA page_count";
 var pageCount = Convert.ToInt64(countCmd.ExecuteScalar());
 countCmd.CommandText = "PRAGMA page_size";
@@ -619,19 +600,37 @@ $"{pageCount} pages x {pageSize} bytes = {pageCount * pageSize / 1024.0:F1} KB"
 
 #### SQLite — VACUUM, REINDEX, and integrity check
 
+**VACUUM — reclaim unused pages**
+
+`VACUUM` rebuilds and compacts the database file after DELETEs. It reclaims unused pages. On an in-memory database this is a no-op.
+
 ```csharp
-// VACUUM — rebuild and compact the database file after DELETEs
-// Reclaims unused pages. On in-memory DB this is a no-op.
 cmd.CommandText = "VACUUM";
 cmd.ExecuteNonQuery();
+```
 
-// REINDEX — rebuild all indexes from scratch
-// Use after bulk updates that may have fragmented indexes
+```text
+database file compacted
+```
+
+**REINDEX — rebuild all indexes from scratch**
+
+Use `REINDEX` after bulk updates that may have fragmented indexes.
+
+```csharp
 cmd.CommandText = "REINDEX";
 cmd.ExecuteNonQuery();
+```
 
-// Integrity check — verify database consistency
-// Returns "ok" if everything is fine, or a list of problems
+```text
+all indexes rebuilt
+```
+
+**integrity_check — verify database consistency**
+
+Returns `"ok"` if everything is fine, or a list of problems if corruption is detected.
+
+```csharp
 cmd.CommandText = "PRAGMA integrity_check";
 cmd.ExecuteScalar()  // integrity_check
 
@@ -639,8 +638,6 @@ pragmaConn.Close();
 ```
 
 ```text
-database file compacted
-all indexes rebuilt
 ok
 ```
 
@@ -695,7 +692,6 @@ var connStr = "Server=localhost,1434;Database=stoxx;"
 var conn = new SqlConnection(connStr);
 conn.Open();
 
-// List all schemas and tables with row counts
 QueryToTable(conn, @"
     SELECT s.name AS [Schema], t.name AS [Table],
            FORMAT(p.rows, 'N0') AS Rows
@@ -713,9 +709,9 @@ stoxx database
 
 #### SQL Server — SELECT with parameterised queries
 
-```csharp
-// Parameterised query — @param prevents SQL injection
+Uses `@param` named placeholders — same pattern as SQLite. `AddWithValue` infers the SQL type from the C# type and prevents SQL injection. `FORMAT()` formats numeric and date values for display.
 
+```csharp
 QueryToTable(conn, @"
     SELECT TOP 10 symbol AS Symbol, CONVERT(VARCHAR, date, 23) AS Date,
            FORMAT([open], 'N2') AS [Open], FORMAT(high, 'N2') AS High,
@@ -731,8 +727,6 @@ QueryToTable(conn, @"
 #### SQL Server — aggregate queries and GROUP BY
 
 ```csharp
-// Aggregate — average close price and total volume per symbol
-
 QueryToTable(conn, @"
     SELECT TOP 10 symbol AS Symbol,
            COUNT(*) AS [Trading Days],
@@ -748,8 +742,6 @@ QueryToTable(conn, @"
 #### SQL Server — CREATE TABLE for demo
 
 ```csharp
-// Create a staging table for INSERT/UPDATE/DELETE demos
-
 var sqlCmd = new SqlCommand(@"
     IF OBJECT_ID('dbo.trades_demo', 'U') IS NOT NULL DROP TABLE dbo.trades_demo;
     CREATE TABLE dbo.trades_demo (
@@ -791,8 +783,6 @@ sqlCmd.ExecuteNonQuery()  // INSERT
 `UPDATE` changes column values in rows that match the `WHERE` predicate. Without a `WHERE` clause it updates every row in the table — always include a predicate. Returns the number of affected rows from `ExecuteNonQuery()`.
 
 ```csharp
-// UPDATE — change price for a specific trade
-
 var sqlCmd = new SqlCommand("UPDATE dbo.trades_demo SET price = @p WHERE trade_id = @id", conn);
 sqlCmd.Parameters.AddWithValue("@p", 700.00);
 sqlCmd.Parameters.AddWithValue("@id", "TRD_001");
@@ -808,8 +798,6 @@ sqlCmd.ExecuteNonQuery()  // UPDATE
 `DELETE` removes rows matching the `WHERE` predicate. Without a `WHERE` clause it removes all rows (equivalent to `TRUNCATE` but slower, as it logs each deletion). Use `TRUNCATE TABLE` to empty a table in one operation — but `TRUNCATE` cannot be rolled back in most configurations and does not fire row-level triggers.
 
 ```csharp
-// DELETE — remove a specific trade
-
 var sqlCmd = new SqlCommand("DELETE FROM dbo.trades_demo WHERE trade_id = @id", conn);
 sqlCmd.Parameters.AddWithValue("@id", "TRD_001");
 sqlCmd.ExecuteNonQuery()  // DELETE
@@ -822,8 +810,6 @@ sqlCmd.ExecuteNonQuery()  // DELETE
 #### SQL Server — DROP TABLE cleanup
 
 ```csharp
-// Cleanup — drop the demo table
-
 var sqlCmd = new SqlCommand("DROP TABLE dbo.trades_demo", conn);
 sqlCmd.ExecuteNonQuery();
 ```
@@ -834,9 +820,9 @@ Dropped dbo.trades_demo
 
 #### SQL Server — transactions with BEGIN/COMMIT/ROLLBACK
 
-```csharp
-// Explicit transaction — both inserts succeed or both roll back
+All statements in the transaction succeed or all roll back — partial commits are not possible within a `BeginTransaction` block.
 
+```csharp
 var sqlCmd = new SqlCommand(@"
     IF OBJECT_ID('dbo.tx_demo', 'U') IS NOT NULL DROP TABLE dbo.tx_demo;
     CREATE TABLE dbo.tx_demo (id INT PRIMARY KEY, val NVARCHAR(50))", conn);
@@ -869,9 +855,9 @@ Rows in tx_demo: 2
 
 #### SQL Server — list all indexes on a table
 
-```csharp
-// List indexes — sys.indexes + sys.index_columns + sys.columns
+Joins `sys.indexes`, `sys.index_columns`, and `sys.columns` to show index name, type, uniqueness, and column list.
 
+```csharp
 QueryToTable(conn, @"
     SELECT i.name AS [Index Name],
            i.type_desc AS [Type],
@@ -889,12 +875,9 @@ QueryToTable(conn, @"
 
 #### SQL Server — benchmark full table scan with Stopwatch
 
-```csharp
-// Full table aggregate — scans all rows, GROUP BY forces sort/hash
-//
-// This reads every 8KB page in the table. Elapsed time scales with table size.
-// If 0ms, data is fully cached in the SQL Server buffer pool.
+This reads every 8KB page in the table. Elapsed time scales with table size. If the result is 0ms, data is fully cached in the SQL Server buffer pool.
 
+```csharp
 var sw = new System.Diagnostics.Stopwatch();
 
 sw.Restart();
@@ -920,13 +903,9 @@ $"Full table scan: {rows1} symbols | {sw.ElapsedMilliseconds} ms"
 
 #### SQL Server — benchmark indexed single-symbol lookup
 
-```csharp
-// Indexed seek — reads only pages matching symbol = @Symbol
-//
-// With an index on symbol, SQL Server jumps directly to matching rows.
-// Should be significantly faster than the full scan above.
-// If similar speed, the table may be small enough to fit in cache entirely.
+With an index on `symbol`, SQL Server jumps directly to matching rows and should be significantly faster than the full scan above. If the elapsed time is similar, the table is small enough to fit entirely in the buffer pool cache.
 
+```csharp
 sw.Restart();
 var sqlCmd = new SqlCommand(@"
     SELECT TOP 100 symbol, date, [close], volume
@@ -947,9 +926,9 @@ $"Index seek: {rows2} rows | {sw.ElapsedMilliseconds} ms"
 
 #### SQL Server — benchmark cross-table JOIN
 
-```csharp
-// Cross-table JOIN — combines ohlcv with dim_index
+Combines `silver.eurostoxx50_ohlcv` with `bronze.dim_index` via a `CROSS JOIN` filtered to a single index key.
 
+```csharp
 sw.Restart();
 var joinResult = QueryToTable(conn, @"
     SELECT d.display_name AS [Index], COUNT(*) AS [OHLCV Rows],
@@ -972,13 +951,9 @@ JOIN completed in 9 ms
 
 #### SQL Server — table sizes and page counts for I/O context
 
-```csharp
-// Table sizes — rows, MB, and 8KB page counts
-//
-// A full table scan reads total_pages * 8KB of data.
-// An index seek reads only the pages containing matching rows.
-// If the entire table fits in the buffer pool, physical reads = 0.
+A full table scan reads `total_pages * 8KB` of data. An index seek reads only the pages containing matching rows. If the entire table fits in the buffer pool, physical reads = 0.
 
+```csharp
 QueryToTable(conn, @"
     SELECT s.name + '.' + t.name AS [Table],
            FORMAT(SUM(p.rows), 'N0') AS Rows,
@@ -999,8 +974,6 @@ QueryToTable(conn, @"
 #### SQL Server — database size
 
 ```csharp
-// Database size
-
 QueryToTable(conn, @"
     SELECT DB_NAME() AS [Database],
            CAST(SUM(size) * 8.0 / 1024 AS DECIMAL(10,2)) AS [Size MB]
@@ -1012,8 +985,6 @@ QueryToTable(conn, @"
 #### SQL Server — table sizes (Top 10)
 
 ```csharp
-// Table sizes (Top 10 by size)
-
 QueryToTable(conn, @"
     SELECT TOP 10
            s.name + '.' + t.name AS [Table],
@@ -1045,6 +1016,13 @@ SQL Server stores index data in 8KB B-tree pages. INSERT/UPDATE/DELETE cause pag
 >
 > Always `UPDATE STATISTICS` after `REBUILD` — stale stats produce bad query plans. Schedule via SQL Agent job. For data warehouses, rebuild after each ETL load.
 
+Interpreting the results:
+
+- **95–98% on bronze tables** (`trading_calendar`, `ohlcv`): bulk-loaded without sorting — random inserts cause massive page splits. A CLUSTERED INDEX at 98% means the physical row order is almost completely random relative to the index key; every range scan jumps across the entire file.
+- **47–49% on silver tables**: built from bronze via `INSERT...SELECT`. Partial ordering from the source means partial fragmentation. Still above 30% — REBUILD is recommended.
+- **Small page counts (20–51 pages)**: tiny tables — fragmentation matters less because the entire table fits in the buffer pool. Rebuilding is instant.
+- **Larger tables (213–252 pages ≈ 2MB)**: fragmentation has measurable impact. Sequential scans read 2× more pages than necessary at 47%. REBUILD will cut scan time significantly.
+
 ```csharp
 QueryToTable(conn, @"
     SELECT TOP 10
@@ -1062,40 +1040,15 @@ QueryToTable(conn, @"
     JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id
     WHERE ips.page_count > 10
     ORDER BY ips.avg_fragmentation_in_percent DESC")
-
-
-// INTERPRETING THE RESULTS:
-//
-// 95-98% fragmentation on bronze tables (trading_calendar, ohlcv):
-//   These tables were bulk-loaded (INSERT from CSV/API) without sorting.
-//   Bulk inserts in random order cause massive page splits.
-//   CLUSTERED INDEX at 98% means the physical row order is almost
-//   completely random relative to the index key — every range scan
-//   jumps across the entire file instead of reading sequentially.
-//
-// 47-49% fragmentation on silver tables:
-//   Silver tables were built from bronze via INSERT...SELECT.
-//   Partial ordering from the source means partial fragmentation.
-//   Still above 30% — REBUILD is recommended.
-//
-// Small page counts (20-51 pages):
-//   These are tiny tables. Fragmentation matters less here because
-//   the entire table fits in the buffer pool cache. But rebuilding
-//   is instant and costs nothing, so do it anyway.
-//
-// Larger tables (213-252 pages = ~2MB):
-//   At this size, fragmentation starts to have measurable impact.
-//   Sequential scans read 2x more pages than necessary at 47% frag.
-//   REBUILD will cut scan time significantly.
 ```
 
 <table><thead><tr><th>Table</th><th>Index</th><th>Type</th><th>Frag %</th><th>Pages</th><th>Action</th></tr></thead><tbody><tr><td>trading_calendar</td><td>PK_trading_calendar</td><td>CLUSTERED INDEX</td><td>98.7</td><td>149</td><td>REBUILD</td></tr><tr><td>eurostoxx50_ohlcv</td><td>IX_bronze_eurostoxx50_ohlcv_symbol_date</td><td>NONCLUSTERED INDEX</td><td>98.0</td><td>51</td><td>REBUILD</td></tr><tr><td>stoxxusa50_ohlcv</td><td>IX_bronze_stoxxusa50_ohlcv_symbol_date</td><td>NONCLUSTERED INDEX</td><td>98.0</td><td>51</td><td>REBUILD</td></tr><tr><td>oil20_ohlcv</td><td>PK__oil20_oh__3213E83F22CF352A</td><td>CLUSTERED INDEX</td><td>95.0</td><td>20</td><td>REBUILD</td></tr><tr><td>oil20_ohlcv</td><td>IX_bronze_oil20_ohlcv_symbol_date</td><td>NONCLUSTERED INDEX</td><td>95.0</td><td>20</td><td>REBUILD</td></tr><tr><td>stoxxasia50_ohlcv</td><td>IX_bronze_stoxxasia50_ohlcv_symbol_date</td><td>NONCLUSTERED INDEX</td><td>94.1</td><td>51</td><td>REBUILD</td></tr><tr><td>stoxxasia50_ohlcv</td><td>IX_silver_stoxxasia50_ohlcv_symbol_date</td><td>NONCLUSTERED INDEX</td><td>49.4</td><td>247</td><td>REBUILD</td></tr><tr><td>stoxxusa50_ohlcv</td><td>IX_silver_stoxxusa50_ohlcv_symbol_date</td><td>NONCLUSTERED INDEX</td><td>47.4</td><td>213</td><td>REBUILD</td></tr><tr><td>eurostoxx50_ohlcv</td><td>IX_silver_eurostoxx50_ohlcv_symbol_date</td><td>NONCLUSTERED INDEX</td><td>47.2</td><td>252</td><td>REBUILD</td></tr><tr><td>oil20_ohlcv</td><td>IX_silver_oil20_ohlcv_symbol_date</td><td>NONCLUSTERED INDEX</td><td>46.2</td><td>78</td><td>REBUILD</td></tr></tbody></table>
 
 #### SQL Server — find all indexes needing REBUILD (>30% fragmented)
 
-```csharp
-// Query fragmented indexes above the 30% threshold
+Queries all indexes above the 30% fragmentation threshold and collects them into a list for the rebuild loop below.
 
+```csharp
 var sqlCmd = new SqlCommand(@"
     SELECT s.name AS schema_name, OBJECT_NAME(ips.object_id) AS table_name,
            i.name AS index_name,
@@ -1127,9 +1080,9 @@ indexesToRebuild.Count  // indexes to rebuild (>30% fragmentation)
 
 #### SQL Server — ALTER INDEX REBUILD on each fragmented index
 
-```csharp
-// REBUILD recreates the index from scratch — fragmentation goes to 0%
+`REBUILD` recreates the index from scratch — fragmentation resets to 0%.
 
+```csharp
 var sw = System.Diagnostics.Stopwatch.StartNew();
 foreach (var (schema, table, index, frag) in indexesToRebuild)
 {
@@ -1158,9 +1111,9 @@ All 12 indexes rebuilt in 167 ms
 
 #### SQL Server — UPDATE STATISTICS after rebuild
 
-```csharp
-// Stale statistics = bad query plans. Always update after REBUILD.
+Stale statistics produce bad query plans. Always update after REBUILD.
 
+```csharp
 foreach (var (schema, table, _, _) in indexesToRebuild.DistinctBy(x => x.schema + "." + x.table))
 {
     new SqlCommand($"UPDATE STATISTICS [{schema}].[{table}]", conn).ExecuteNonQuery();
@@ -1184,9 +1137,9 @@ Statistics updated:
 
 #### SQL Server — verify fragmentation after rebuild
 
-```csharp
-// Verify fragmentation is now 0% after rebuild
+Re-runs the fragmentation query to confirm all rebuilt indexes are now at or near 0%.
 
+```csharp
 QueryToTable(conn, @"
     SELECT TOP 10
            s.name + '.' + OBJECT_NAME(ips.object_id) AS [Table],
@@ -1206,10 +1159,9 @@ QueryToTable(conn, @"
 
 #### SQL Server — index usage statistics
 
-```csharp
-// Which indexes are actually used? sys.dm_db_index_usage_stats
-// Unused indexes waste disk space and slow down writes.
+`sys.dm_db_index_usage_stats` shows which indexes are actually used. Unused indexes waste disk space and slow down writes.
 
+```csharp
 QueryToTable(conn, @"
     SELECT TOP 10
            OBJECT_NAME(s.object_id) AS [Table],
@@ -1226,42 +1178,48 @@ QueryToTable(conn, @"
 
 #### SQL Server — provoke missing index recommendations
 
-Missing index DMVs only populate when SQL Server sees queries that WOULD have
-benefited from an index that doesn’t exist. After an index REBUILD, the DMV
-stats reset. We run queries on unindexed columns to generate recommendations.
+Missing index DMVs only populate when SQL Server sees queries that WOULD have benefited from an index that doesn’t exist. After an index REBUILD, the DMV stats reset. Run queries on unindexed columns — SQL Server tracks these in `sys.dm_db_missing_index_details`.
+
+**Query 1 — filter on `close` (no index on close)**
 
 ```csharp
-// Run queries on columns without indexes to trigger missing index recommendations
-// SQL Server tracks these in sys.dm_db_missing_index_details
-
-// Query 1: filter on close price (no index on close)
 new SqlCommand(@"
     SELECT symbol, date, [close], volume
     FROM silver.eurostoxx50_ohlcv
     WHERE [close] > 500
     ORDER BY [close] DESC", conn).ExecuteReader().Close();
+```
 
-// Query 2: filter on volume (no index on volume)
+**Query 2 — filter on `volume` (no index on volume)**
+
+```csharp
 new SqlCommand(@"
     SELECT symbol, date, volume
     FROM silver.eurostoxx50_ohlcv
     WHERE volume > 5000000
     ORDER BY volume DESC", conn).ExecuteReader().Close();
+```
 
-// Query 3: filter on date range without covering index
+**Query 3 — filter on date range without covering index**
+
+```csharp
 new SqlCommand(@"
     SELECT symbol, date, [close], high - low AS daily_range
     FROM silver.eurostoxx50_ohlcv
-    WHERE date BETWEEN '2025-01-01' AND '2025-06-30'
+    WHERE date BETWEEN ‘2025-01-01’ AND ‘2025-06-30’
     ORDER BY date", conn).ExecuteReader().Close();
+```
 
-// Run each a few times to increase the impact score
+**Repeat queries to increase impact score**
+
+Run each query a few times to increase the impact score tracked by the DMV.
+
+```csharp
 for (int i = 0; i < 5; i++)
 {
     new SqlCommand("SELECT * FROM silver.eurostoxx50_ohlcv WHERE [close] > 500", conn).ExecuteReader().Close();
     new SqlCommand("SELECT * FROM silver.eurostoxx50_ohlcv WHERE volume > 5000000", conn).ExecuteReader().Close();
 }
-
 ```
 
 ```text
@@ -1300,9 +1258,9 @@ QueryToTable(conn, @"
 
 #### SQL Server — server configuration and version
 
-```csharp
-// Server metadata — version, edition, collation, configuration
+Reads server metadata from `@@VERSION` and `SERVERPROPERTY()` built-in functions.
 
+```csharp
 QueryToTable(conn, @"
     SELECT
         SUBSTRING(@@VERSION, 1, CHARINDEX(' (', @@VERSION) - 1) AS [Version],
@@ -1315,9 +1273,9 @@ QueryToTable(conn, @"
 
 #### SQL Server — key configuration settings
 
-```csharp
-// Key server configuration from sys.configurations
+Reads the three most important performance-related settings from `sys.configurations`.
 
+```csharp
 QueryToTable(conn, @"
     SELECT name AS [Setting],
            CAST(value_in_use AS NVARCHAR(30)) AS [Value],
@@ -1337,9 +1295,9 @@ QueryToTable(conn, @"
 
 #### SQL Server — active sessions and blocking
 
-```csharp
-// Active sessions — who is connected and what are they doing
+Shows all user processes from `sys.dm_exec_sessions` — who is connected and what they are doing.
 
+```csharp
 QueryToTable(conn, @"
     SELECT s.session_id AS SID,
            s.login_name AS [Login],
@@ -1385,9 +1343,9 @@ tuning, and troubleshooting.
 
 #### SQL Server — ODBC Provider with positional parameters
 
-```csharp
-// ODBC Provider — same driver as Python pyodbc, ? positional params
+Uses the same ODBC Driver 18 as Python `pyodbc`. Parameters use `?` positional placeholders instead of `@named`.
 
+```csharp
 var odbcConnStr = "Driver={ODBC Driver 18 for SQL Server};"
     + "Server=localhost,1434;Database=stoxx;"
     + "UID=sa;PWD=EsgDev2026Pass1;"
@@ -1412,8 +1370,6 @@ odbcResult
 #### SQL Server — SqlClient vs ODBC comparison
 
 ```csharp
-// SqlClient vs ODBC comparison
-
 var cmp = new DataTable();
 cmp.Columns.Add("Feature");
 cmp.Columns.Add("SqlClient");
@@ -1473,7 +1429,6 @@ Dapper returns **typed objects** (real C# instances with properties). Same diffe
 Define a `record` whose property names match SQL column aliases — Dapper matches by name (case-insensitive), no configuration. Auto-maps results, supports parameterised queries via anonymous objects, ~same performance as raw ADO.NET. Use EF Core for complex CRUD with relationships.
 
 ```csharp
-// DTOs — Dapper maps columns to these by matching property names
 record OhlcvRow(string Symbol, DateTime Date, double Open, double High, double Low, double Close, long Volume);
 record IndexInfo(string IndexKey, string DisplayName, string Currency);
 record ScoreRow(string Symbol, double CompositeScore, int CompositeRank);
@@ -1490,10 +1445,9 @@ dapperConn.Open();
 
 #### Dapper — `Query<T>` returns typed list from SQL
 
-```csharp
-// Query<T> — returns IEnumerable<T>, maps each row to a record
-// Column aliases must match property names (case-insensitive)
+`Query<T>` returns `IEnumerable<T>`, mapping each row to a record. Column aliases must match property names (case-insensitive).
 
+```csharp
 var indices = dapperConn.Query<IndexInfo>(
     "SELECT index_key AS IndexKey, display_name AS DisplayName, currency AS Currency FROM bronze.dim_index ORDER BY display_name");
 
@@ -1508,10 +1462,9 @@ dt
 
 #### Dapper — parameterised queries with anonymous objects
 
-```csharp
-// Parameters as anonymous object — @param in SQL maps to object properties
-// No cmd.Parameters.AddWithValue boilerplate
+Parameters are passed as an anonymous object — each property maps to a `@param` in the SQL. No `cmd.Parameters.AddWithValue` boilerplate.
 
+```csharp
 var prices = dapperConn.Query<OhlcvRow>(@"
     SELECT TOP 5 symbol AS Symbol, date AS Date,
            [open] AS [Open], high AS High, low AS Low, [close] AS [Close], volume AS Volume
@@ -1532,9 +1485,9 @@ dt
 
 #### Dapper — multiple parameters and WHERE IN
 
-```csharp
-// Multiple parameters — each property becomes a @param
+Each property in the anonymous object becomes a `@param`. For `WHERE IN`, pass a list — Dapper expands it to `(val1, val2, val3)` automatically.
 
+```csharp
 var filtered = dapperConn.Query<OhlcvRow>(@"
     SELECT TOP 10 symbol AS Symbol, date AS Date,
            [open] AS [Open], high AS High, low AS Low, [close] AS [Close], volume AS Volume
@@ -1543,7 +1496,6 @@ var filtered = dapperConn.Query<OhlcvRow>(@"
     ORDER BY volume DESC",
     new { Symbol = "SAP.DE", MinVolume = 3_000_000 });
 
-// WHERE IN — pass a list, Dapper expands to (val1, val2, val3)
 var multiSymbol = dapperConn.Query<OhlcvRow>(@"
     SELECT TOP 10 symbol AS Symbol, date AS Date,
            [open] AS [Open], high AS High, low AS Low, [close] AS [Close], volume AS Volume
@@ -1561,12 +1513,12 @@ multiSymbol.Count()  // multi-symbol IN
 
 #### Dapper — `QueryFirst`, `QuerySingle`, `ExecuteScalar`
 
-```csharp
-// QueryFirst<T> — returns first row (throws if empty)
-// QueryFirstOrDefault<T> — returns first row or null/default
-// QuerySingle<T> — returns exactly one row (throws if 0 or >1)
-// ExecuteScalar<T> — returns a single value (COUNT, SUM, MAX)
+- `QueryFirst<T>` — returns the first row (throws if empty)
+- `QueryFirstOrDefault<T>` — returns the first row or `null`/default
+- `QuerySingle<T>` — returns exactly one row (throws if 0 or more than 1)
+- `ExecuteScalar<T>` — returns a single value (`COUNT`, `SUM`, `MAX`)
 
+```csharp
 var latest = dapperConn.QueryFirst<OhlcvRow>(@"
     SELECT TOP 1 symbol AS Symbol, date AS Date,
            [open] AS [Open], high AS High, low AS Low, [close] AS [Close], volume AS Volume
@@ -1591,10 +1543,11 @@ dt
 
 #### Dapper — `Execute` for INSERT, UPDATE, DELETE
 
-```csharp
-// Execute — returns number of affected rows (for INSERT/UPDATE/DELETE)
+`Execute` returns the number of affected rows. Use it for all write operations.
 
-// Create demo table
+**Setup — create demo table**
+
+```csharp
 dapperConn.Execute(@"
     IF OBJECT_ID('dbo.dapper_trades', 'U') IS NOT NULL DROP TABLE dbo.dapper_trades;
     CREATE TABLE dbo.dapper_trades (
@@ -1603,14 +1556,22 @@ dapperConn.Execute(@"
         side     NVARCHAR(4),
         quantity INT,
         price    DECIMAL(10,2))");
+```
 
-// INSERT single row
+**INSERT — single row**
+
+```csharp
 var inserted = dapperConn.Execute(
     "INSERT INTO dbo.dapper_trades VALUES (@TradeId, @Ticker, @Side, @Quantity, @Price)",
     new { TradeId = "TRD_001", Ticker = "ASML.AS", Side = "BUY", Quantity = 100, Price = 685.40m });
 inserted  // INSERT
+```
 
-// INSERT multiple rows — pass a list, Dapper executes once per item
+    1 row
+
+**INSERT — batch (pass a list, Dapper executes once per item)**
+
+```csharp
 var batch = new[] {
     new { TradeId = "TRD_002", Ticker = "SAP.DE",  Side = "SELL", Quantity = 75,  Price = 245.80m },
     new { TradeId = "TRD_003", Ticker = "MC.PA",   Side = "BUY",  Quantity = 50,  Price = 890.20m },
@@ -1619,14 +1580,24 @@ var batch = new[] {
 var batchInserted = dapperConn.Execute(
     "INSERT INTO dbo.dapper_trades VALUES (@TradeId, @Ticker, @Side, @Quantity, @Price)", batch);
 batchInserted  // BATCH INSERT
+```
 
-// UPDATE
+    3 rows
+
+**UPDATE — modify a row**
+
+```csharp
 var updated = dapperConn.Execute(
     "UPDATE dbo.dapper_trades SET price = @Price WHERE trade_id = @TradeId",
     new { Price = 700.00m, TradeId = "TRD_001" });
 updated  // UPDATE
+```
 
-// DELETE
+    1 row
+
+**DELETE — remove a row**
+
+```csharp
 var deleted = dapperConn.Execute(
     "DELETE FROM dbo.dapper_trades WHERE trade_id = @TradeId",
     new { TradeId = "TRD_004" });
@@ -1634,15 +1605,12 @@ deleted  // DELETE
 ```
 
     1 row
-    3 rows
-    1 row
-    1 row
 
 #### Dapper — verify trades table after INSERT/UPDATE/DELETE
 
-```csharp
-// Query the trades we just modified
+Queries the modified table to confirm TRD_001 was updated to 700.00 and TRD_004 was deleted.
 
+```csharp
 var dt = new DataTable();
 dt.Columns.Add("Trade ID"); dt.Columns.Add("Ticker"); dt.Columns.Add("Side");
 dt.Columns.Add("Qty"); dt.Columns.Add("Price");
@@ -1659,17 +1627,15 @@ dt
 
 #### Dapper — aggregate queries with LINQ on results
 
-```csharp
-// Dapper returns IEnumerable<T> — full LINQ works on results
-// This is impossible with raw ADO.NET DataReader
+Dapper returns `IEnumerable<T>`, so full LINQ works on the results. This is not possible with a raw ADO.NET `DataReader`.
 
+```csharp
 var allPrices = dapperConn.Query<OhlcvRow>(@"
     SELECT symbol AS Symbol, date AS Date,
            [open] AS [Open], high AS High, low AS Low, [close] AS [Close], volume AS Volume
     FROM silver.eurostoxx50_ohlcv
     WHERE date >= '2025-01-01'").ToList();
 
-// LINQ aggregation on typed objects — not possible with DataReader
 var summary = allPrices
     .GroupBy(r => r.Symbol)
     .Select(g => new {
@@ -1693,9 +1659,6 @@ dt
 #### Dapper — dynamic queries (no DTO needed)
 
 ```csharp
-// Query without a DTO — returns dynamic objects
-// Useful for ad-hoc queries where defining a record is overkill
-
 var dynamic = dapperConn.Query(
     "SELECT TOP 3 symbol, date, [close], volume FROM silver.eurostoxx50_ohlcv ORDER BY volume DESC");
 
@@ -1704,18 +1667,17 @@ dt.Columns.Add("Symbol"); dt.Columns.Add("Date"); dt.Columns.Add("Close"); dt.Co
 foreach (var row in dynamic)
     dt.Rows.Add(row.symbol, $"{row.date:yyyy-MM-dd}", $"{row.close:F2}", $"{row.volume:N0}");
 dt
-
-// dynamic = no IntelliSense, no compile-time safety
-// Use only for throwaway queries — prefer typed records for production
 ```
+
+`dynamic` provides no IntelliSense and no compile-time safety. Use only for throwaway queries — prefer typed records for production.
 
 <table><thead><tr><th>Symbol</th><th>Date</th><th>Close</th><th>Volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>2023-08-08</td><td>2.34</td><td>376'391'539</td></tr><tr><td>SAN.MC</td><td>2021-10-20</td><td>3.36</td><td>367'211'467</td></tr><tr><td>ISP.MI</td><td>2023-05-31</td><td>2.16</td><td>317'362'978</td></tr></tbody></table>
 
 #### ADO.NET vs Dapper vs Entity Framework — comparison
 
-```csharp
-// When to use what — decision guide
+Decision guide for choosing between the three approaches.
 
+```csharp
 var dt = new DataTable();
 dt.Columns.Add("Feature"); dt.Columns.Add("ADO.NET (raw)"); dt.Columns.Add("Dapper"); dt.Columns.Add("EF Core");
 dt.Rows.Add("SQL control", "Full — you write SQL", "Full — you write SQL", "LINQ — auto-generated SQL");
@@ -1780,9 +1742,6 @@ Entity classes = tables, properties = columns. `DbContext` maps entities via `Db
 > Add `.AsNoTracking()` on every read-only query. Use `.Include()` explicitly instead of lazy loading to control join depth. Filter with `.Where()` before `.ToList()` so EF pushes the predicate to SQL. Switch to Dapper for bulk inserts, aggregations, or CTEs where LINQ becomes unwieldy.
 
 ```csharp
-// Entity classes — each class = one database table
-// Properties = columns. Navigation properties = foreign key relationships.
-
 public class Stock
 {
     public int Id { get; set; }
@@ -1872,9 +1831,6 @@ public class TradingContext : DbContext
 The pattern is always: modify objects in memory → call `SaveChanges()` once → EF generates SQL and executes in a transaction. If any statement fails, the entire transaction rolls back.
 
 ```csharp
-// Create context and seed data
-// SaveChanges() generates INSERT statements automatically
-
 var db = new TradingContext();
 db.Database.EnsureDeleted();   // clean slate for re-runs
 db.Database.EnsureCreated();
@@ -1918,8 +1874,6 @@ the compiler checks your queries at build time. Wrong property name = compile er
 not runtime crash.
 
 ```csharp
-// Simple query — WHERE + OrderBy + Take
-
 var techStocks = db.Stocks
     .Where(s => s.Sector == "Technology")
     .OrderBy(s => s.Symbol)
@@ -1936,10 +1890,9 @@ dt
 
 #### EF Core — navigation properties (joins without SQL)
 
-```csharp
-// Navigation properties — traverse relationships without writing JOIN
-// stock.Prices navigates the one-to-many relationship automatically
+`stock.Prices` navigates the one-to-many relationship automatically — no JOIN needed in the query.
 
+```csharp
 var stocksWithPrices = db.Stocks
     .Include(s => s.Prices)    // eager load related prices (generates LEFT JOIN)
     .OrderBy(s => s.Symbol)
@@ -1962,8 +1915,6 @@ dt
 #### EF Core — aggregate queries with GroupBy
 
 ```csharp
-// GroupBy + aggregation — translated to SQL GROUP BY
-
 var sectorSummary = db.Stocks
     .Include(s => s.Prices)
     .ToList()   // materialize first for in-memory grouping
@@ -1990,11 +1941,11 @@ dt
 
 #### EF Core — change tracking and `SaveChanges()`
 
-Modify objects in memory — EF Core tracks all changes and generates
-the correct INSERT/UPDATE/DELETE SQL when you call `SaveChanges()`.
+Modify objects in memory — EF Core tracks all changes and generates the correct INSERT/UPDATE/DELETE SQL when you call `SaveChanges()`.
+
+**INSERT — `Add` + `SaveChanges` generates INSERT**
 
 ```csharp
-// INSERT — Add + SaveChanges generates INSERT
 db.Trades.Add(new Trade
 {
     TradeId = "TRD_001", StockId = asml.Id,
@@ -2002,32 +1953,39 @@ db.Trades.Add(new Trade
     TradeDate = DateTime.Today
 });
 db.SaveChanges();
+```
 
-// UPDATE — modify a tracked entity + SaveChanges generates UPDATE
+    TRD_001 added
+
+**UPDATE — modify a tracked entity + `SaveChanges` generates UPDATE**
+
+```csharp
 var trade = db.Trades.First(t => t.TradeId == "TRD_001");
 trade.Price = 700.00m;
 db.SaveChanges();
+```
 
-// DELETE — Remove + SaveChanges generates DELETE
+    TRD_001 price -> 700.00
+
+**DELETE — `Remove` + `SaveChanges` generates DELETE**
+
+```csharp
 db.Trades.Remove(trade);
 db.SaveChanges();
 
 db.Trades.Count()  // trades remaining
 ```
 
-    TRD_001 added
-    TRD_001 price -> 700.00
     TRD_001 removed
     0
 
 #### EF Core — `AsNoTracking()` for read-only performance
 
-```csharp
-// AsNoTracking() — skip change tracking for read-only queries
-// 2-3x faster for large result sets because EF doesn't snapshot each entity
+Skips change tracking for read-only queries. 2–3x faster for large result sets because EF Core does not snapshot each entity.
 
+```csharp
 var readOnly = db.Prices
-    .AsNoTracking()                        // no change tracking overhead
+    .AsNoTracking()
     .Where(p => p.Close > 700)
     .OrderByDescending(p => p.Close)
     .Take(5)
@@ -2038,16 +1996,15 @@ dt.Columns.Add("Stock ID"); dt.Columns.Add("Date"); dt.Columns.Add("Close"); dt.
 foreach (var p in readOnly)
     dt.Rows.Add(p.StockId, $"{p.Date:yyyy-MM-dd}", $"{p.Close:F2}", $"{p.Volume:N0}");
 dt
-
-// RULE: always use AsNoTracking() for queries that only READ data
-// Only skip it when you need to modify and SaveChanges() the entities
 ```
+
+Always use `AsNoTracking()` for queries that only read data. Only omit it when you need to modify the entities and call `SaveChanges()`.
 
 <table><thead><tr><th>Stock ID</th><th>Date</th><th>Close</th><th>Volume</th></tr></thead><tbody><tr><td>3</td><td>2025-03-06</td><td>859.87</td><td>1'046'270</td></tr><tr><td>3</td><td>2025-03-18</td><td>859.75</td><td>4'017'367</td></tr><tr><td>3</td><td>2025-03-27</td><td>858.95</td><td>4'146'515</td></tr><tr><td>3</td><td>2025-03-30</td><td>858.81</td><td>3'740'448</td></tr><tr><td>3</td><td>2025-03-12</td><td>858.52</td><td>4'303'796</td></tr></tbody></table>
 
 #### EF Core — raw SQL escape hatch with `FromSqlRaw`
 
-`FromSqlRaw` — raw SQL inside EF Core. Use `{0}`, `{1}` placeholders (auto-parameterised). Can chain LINQ after. For complex analytics (CTEs, PIVOT, window functions) or stored procedures. Alternative: use Dapper alongside EF Core.
+`FromSqlRaw` — raw SQL inside EF Core. Use `{0}`, `{1}` placeholders (auto-parameterised). Can chain LINQ after. For complex analytics (CTEs, PIVOT, window functions) or stored procedures. Alternative: use Dapper alongside EF Core. The InMemory provider does not support `FromSqlRaw`, so the demo below uses LINQ instead.
 
 > [!danger] Never use string interpolation $"...{var}..."
 >
@@ -2058,7 +2015,6 @@ dt
 > Use `FromSqlInterpolated($"SELECT * FROM Stocks WHERE Sector = {sector}")` — EF Core converts the interpolated expression into a parameterised query automatically. For Dapper, pass an anonymous object: `conn.Query<T>(sql, new { sector })`. Neither approach ever concatenates user input into SQL text.
 
 ```csharp
-// Demo with LINQ instead (works with InMemory provider)
 var techStocks = db.Stocks
     .Where(s => s.Sector == "Technology")    // LINQ → generates WHERE clause
     .AsNoTracking()
@@ -2119,8 +2075,6 @@ public partial class AddVolumeColumn : Migration
 #### EF Core — when to use EF Core vs Dapper
 
 ```csharp
-// Decision guide — EF Core vs Dapper
-
 var dt = new DataTable();
 dt.Columns.Add("Scenario"); dt.Columns.Add("Use"); dt.Columns.Add("Why");
 dt.Rows.Add("CRUD app with 50 tables", "EF Core", "Navigation properties, migrations, change tracking");
@@ -2174,8 +2128,6 @@ dkCmd.ExecuteNonQuery();
 #### DuckDB ADO.NET — INSERT rows from SQL Server using parameterised DuckDBCommand
 
 ```csharp
-// Read from SQL Server with ADO.NET, insert into DuckDB with parameterised INSERT
-
 var conn = new SqlConnection("Server=localhost,1434;Database=stoxx;User Id=sa;Password=EsgDev2026Pass1;Encrypt=True;TrustServerCertificate=True;");
 conn.Open();
 
@@ -2211,8 +2163,6 @@ dkCmd.ExecuteScalar()  // rows loaded from SQL Server
 #### DuckDB ADO.NET — SELECT rows into DataTable with ExecuteReader
 
 ```csharp
-// ExecuteReader — standard row-by-row iteration
-
 var dt = new DataTable();
 dkCmd.CommandText = "SELECT symbol, date, close, volume FROM ohlcv WHERE symbol = 'SAP.DE' ORDER BY date DESC LIMIT 5";
 dt.Load(dkCmd.ExecuteReader());
@@ -2224,8 +2174,6 @@ dt
 #### DuckDB ADO.NET — get single values with ExecuteScalar (COUNT, MAX)
 
 ```csharp
-// ExecuteScalar — returns a single value (COUNT, MAX, etc.)
-
 dkCmd.CommandText = "SELECT COUNT(*) FROM ohlcv";
 dkCmd.ExecuteScalar()  // row count
 
@@ -2260,8 +2208,6 @@ dt
 #### DuckDB ADO.NET — UPDATE a row with ExecuteNonQuery
 
 ```csharp
-// UPDATE — same SQL syntax
-
 dkCmd.CommandText = "UPDATE ohlcv SET close = 999.99 WHERE symbol = 'SAP.DE' AND date = (SELECT MAX(date) FROM ohlcv WHERE symbol = 'SAP.DE')";
 dkCmd.Parameters.Clear();
 dkCmd.ExecuteNonQuery()  // UPDATE
@@ -2280,8 +2226,6 @@ dt
 #### DuckDB ADO.NET — DELETE rows with ExecuteNonQuery
 
 ```csharp
-// DELETE
-
 dkCmd.CommandText = "SELECT COUNT(*) FROM ohlcv WHERE symbol = 'SAP.DE'";
 dkCmd.ExecuteScalar()  // before DELETE: SAP.DE rows
 
@@ -2298,9 +2242,9 @@ dkCmd.ExecuteScalar()  // after DELETE: SAP.DE rows
 
 #### DuckDB ADO.NET — inspect schema with DESCRIBE and information_schema
 
-```csharp
-// Schema inspection — same as PostgreSQL
+`DESCRIBE` uses the same syntax as PostgreSQL. Returns column names, types, nullability, key, and default values.
 
+```csharp
 var dt = new DataTable();
 dkCmd.CommandText = "DESCRIBE ohlcv";
 dkCmd.Parameters.Clear();
@@ -2313,9 +2257,9 @@ dt
 
 #### DuckDB ADO.NET — show query plan with EXPLAIN ANALYZE
 
-```csharp
-// EXPLAIN ANALYZE — query plan with actual timing
+`EXPLAIN ANALYZE` returns the query plan with actual execution timing.
 
+```csharp
 dkCmd.CommandText = "EXPLAIN ANALYZE SELECT symbol, AVG(close) FROM ohlcv GROUP BY symbol";
 using (var reader = dkCmd.ExecuteReader())
     while (reader.Read())
@@ -2431,9 +2375,9 @@ dt
 
 #### DuckDB Appender — stream SqlDataReader into DuckDB with bulk CreateRow loop
 
-```csharp
-// Appender bulk load — stream from SqlDataReader directly into DuckDB
+Streams rows from SQL Server via `SqlDataReader` directly into DuckDB using the Appender — no intermediate buffer.
 
+```csharp
 dkCmd.CommandText = "CREATE OR REPLACE TABLE ohlcv_fast AS SELECT * FROM ohlcv LIMIT 0";
 dkCmd.ExecuteNonQuery();
 
@@ -2470,18 +2414,17 @@ $"Appender: loaded {bulkCount} rows in {sw.ElapsedMilliseconds} ms"
 
 #### DuckDB Dapper — define record DTO for typed mapping
 
-```csharp
-// Record DTO for Dapper typed queries against DuckDB
+Record DTO for Dapper typed queries against DuckDB.
 
+```csharp
 record DuckOhlcv(string Symbol, string Date, double Close, long Volume);
 ```
 
 #### DuckDB Dapper — SELECT into typed records with Query<T>
 
-```csharp
-// Dapper works with DuckDB — same as SQL Server or SQLite
-// DuckDBConnection implements DbConnection, so Dapper recognises it
+`DuckDBConnection` implements `DbConnection`, so Dapper recognises it the same way as SQL Server or SQLite.
 
+```csharp
 var top5 = duck.Query<DuckOhlcv>(
     "SELECT symbol AS Symbol, CAST(date AS VARCHAR) AS Date, close AS Close, volume AS Volume FROM ohlcv ORDER BY volume DESC LIMIT 5");
 
@@ -2496,14 +2439,9 @@ dt
 
 #### DuckDB Dapper — filter with anonymous object parameters (@Symbol, @MinClose)
 
-```csharp
-// Dapper with DuckDB — parameterised queries
-//
-// LIMITATION: DuckDB uses $1 $2 positional params, not @named.
-// Dapper sends @name which DuckDB interprets as a type cast operator.
-// Workaround: use string interpolation (safe when values are not user input)
-// or use ADO.NET with $1 positional params for user-facing queries.
+DuckDB uses `$1 $2` positional parameters, not `@named`. Dapper sends `@name` which DuckDB interprets as a type cast operator. Workaround: use string interpolation (safe when values are not user input), or use ADO.NET with `$1` positional params for user-facing queries.
 
+```csharp
 var symbol = "ASML.AS";
 var minClose = 700.0;
 var filtered = duck.Query<DuckOhlcv>(
@@ -2521,10 +2459,9 @@ dt
 
 #### DuckDB Dapper — INSERT, UPDATE, DELETE with Execute and anonymous objects
 
-```csharp
-// Dapper Execute for INSERT/UPDATE/DELETE
-// DuckDB does not support @named params — use literal values
+DuckDB does not support `@named` parameters — use literal values in the SQL string.
 
+```csharp
 // INSERT
 var inserted = duck.Execute(
     "INSERT INTO ohlcv VALUES ('TEST.XX', '2025-01-01', 100.0, 105.0, 95.0, 102.0, 1000000)");
@@ -2547,9 +2484,9 @@ deleted  // Dapper DELETE
 
 #### DuckDB Dapper — SELECT single row with QueryFirst<T> and single value with ExecuteScalar
 
-```csharp
-// QueryFirst — single row (no @params, DuckDB limitation)
+Uses literal values in SQL because DuckDB does not support Dapper `@named` parameters.
 
+```csharp
 var latest = duck.QueryFirst<DuckOhlcv>(
     "SELECT symbol AS Symbol, CAST(date AS VARCHAR) AS Date, close AS Close, volume AS Volume "
     + "FROM ohlcv WHERE symbol = 'ASML.AS' ORDER BY date DESC LIMIT 1");
@@ -2567,9 +2504,9 @@ count  // ExecuteScalar (rows)
 
 #### DuckDB SQL — export query results to Parquet and CSV with COPY TO
 
-```csharp
-// COPY TO — export query results to file
+`COPY TO` exports any query result directly to a file — Parquet or CSV.
 
+```csharp
 dkCmd.CommandText = @"
     COPY (SELECT symbol, COUNT(*) AS days, ROUND(AVG(close), 2) AS avg_close
           FROM ohlcv GROUP BY symbol ORDER BY avg_close DESC)
@@ -2589,10 +2526,9 @@ dkCmd.ExecuteNonQuery();
 
 #### DuckDB SQL — load data from Parquet file with INSERT INTO ... SELECT FROM
 
-```csharp
-// Load data from Parquet file into a new DuckDB table
-// CREATE TABLE AS SELECT auto-detects schema from the file
+`CREATE TABLE AS SELECT` auto-detects the schema from the Parquet file — no column definitions needed.
 
+```csharp
 dkCmd.CommandText = "CREATE OR REPLACE TABLE from_parquet AS SELECT * FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet'";
 dkCmd.Parameters.Clear();
 dkCmd.ExecuteNonQuery();
@@ -2600,7 +2536,6 @@ dkCmd.ExecuteNonQuery();
 dkCmd.CommandText = "SELECT COUNT(*) FROM from_parquet";
 dkCmd.ExecuteScalar()  // loaded from Parquet
 
-// Show auto-detected schema
 var dt = new DataTable();
 dkCmd.CommandText = "DESCRIBE from_parquet";
 dt.Load(dkCmd.ExecuteReader());
@@ -2613,9 +2548,9 @@ dt
 
 #### DuckDB SQL — create table directly from CSV file with CREATE TABLE AS SELECT
 
-```csharp
-// One-liner: create table directly from a file
+One-liner — DuckDB auto-detects column types from the CSV content.
 
+```csharp
 dkCmd.CommandText = "CREATE OR REPLACE TABLE ohlcv_from_csv AS SELECT * FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv'";
 dkCmd.ExecuteNonQuery();
 
@@ -2626,8 +2561,6 @@ dkCmd.CommandText = "DESCRIBE ohlcv_from_csv";
 var dt = new DataTable();
 dt.Load(dkCmd.ExecuteReader());
 dt
-
-// DuckDB auto-detects column types from the CSV content
 ```
 
     66355 rows
@@ -2636,15 +2569,13 @@ dt
 
 #### DuckDB SQL — profile all columns with SUMMARIZE (min, max, avg, nulls)
 
-```csharp
-// SUMMARIZE — min, max, avg, nulls, distinct per column in one call
+`SUMMARIZE` returns min, max, avg, nulls, and distinct count per column in one call — equivalent to `df.describe()` in pandas.
 
+```csharp
 var dt = new DataTable();
 dkCmd.CommandText = "SUMMARIZE ohlcv";
 dt.Load(dkCmd.ExecuteReader());
 dt
-
-// Equivalent of pandas df.describe() in one SQL command
 ```
 
 <table><thead><tr><th>column_name</th><th>column_type</th><th>min</th><th>max</th><th>approx_unique</th><th>avg</th><th>std</th><th>q25</th><th>q50</th><th>q75</th><th>count</th><th>null_percentage</th></tr></thead><tbody><tr><td>symbol</td><td>VARCHAR</td><td>ABI.BR</td><td>WKL.AS</td><td>51</td><td></td><td></td><td></td><td></td><td></td><td>65843</td><td>0</td></tr><tr><td>date</td><td>DATE</td><td>2021-01-04</td><td>2026-03-12</td><td>1516</td><td>2023-08-09 13:12:43.762283</td><td></td><td>2022-04-25</td><td>2023-08-10</td><td>2024-11-21</td><td>65843</td><td>0</td></tr><tr><td>open</td><td>DOUBLE</td><td>1.601</td><td>2926.0</td><td>25981</td><td>197.74364532144514</td><td>364.4699500693946</td><td>29.516213068894928</td><td>70.31475017274542</td><td>188.63608762992362</td><td>65843</td><td>0</td></tr><tr><td>high</td><td>DOUBLE</td><td>1.6628</td><td>2957.0</td><td>30967</td><td>200.07710156888447</td><td>369.2103309370757</td><td>29.899639613590537</td><td>71.04163364730812</td><td>190.78985690530178</td><td>65843</td><td>0</td></tr><tr><td>low</td><td>DOUBLE</td><td>1.5842</td><td>2813.0</td><td>34449</td><td>195.27775719058997</td><td>359.3127051878782</td><td>29.291640677307946</td><td>69.50168287298162</td><td>186.0791768916689</td><td>65843</td><td>0</td></tr><tr><td>close</td><td>DOUBLE</td><td>1.6066</td><td>2839.0</td><td>31506</td><td>197.74997440122425</td><td>364.3846830497668</td><td>29.47347149787374</td><td>69.66141927075263</td><td>188.31922598476882</td><td>65843</td><td>0</td></tr><tr><td>volume</td><td>BIGINT</td><td>0</td><td>376391539</td><td>75668</td><td>5971114.79628814</td><td>16215225.87082861</td><td>505631</td><td>1403981</td><td>4116754</td><td>65843</td><td>0</td></tr></tbody></table>
@@ -2686,9 +2617,9 @@ dkCmd.ExecuteNonQuery();
 
 #### DuckDB — list all indexes
 
-```csharp
-// List indexes on a table
+`duckdb_indexes()` returns all indexes in the database.
 
+```csharp
 var dt = new DataTable();
 dkCmd.CommandText = @"
     SELECT index_name, table_name, is_unique
@@ -2702,13 +2633,12 @@ dt
 
 #### DuckDB — DROP INDEX
 
-```csharp
-// Drop an index
+Drops the single-column index and verifies only the composite index remains.
 
+```csharp
 dkCmd.CommandText = "DROP INDEX IF EXISTS idx_ohlcv_symbol";
 dkCmd.ExecuteNonQuery();
 
-// Verify
 dkCmd.CommandText = "SELECT index_name FROM duckdb_indexes()";
 using (var r = dkCmd.ExecuteReader())
     while (r.Read())
@@ -2720,9 +2650,9 @@ using (var r = dkCmd.ExecuteReader())
 
 #### DuckDB — PRAGMA database_size and memory usage
 
-```csharp
-// Database size and memory usage
+Reports database size, block usage, WAL size, and current memory consumption.
 
+```csharp
 var dt = new DataTable();
 dkCmd.CommandText = "CALL pragma_database_size()";
 dt.Load(dkCmd.ExecuteReader());
@@ -2733,14 +2663,13 @@ dt
 
 #### DuckDB — pragma_storage_info — compression and row groups per column
 
-```csharp
-// Storage info — row groups, compression, and size per column
+Shows row groups, compression type, and size per column. The `stats` column is extracted separately below.
 
+```csharp
 var storageInfo = new DataTable();
 dkCmd.CommandText = "CALL pragma_storage_info('ohlcv')";
 storageInfo.Load(dkCmd.ExecuteReader());
 
-// Remove stats column (shown separately) and any all-null columns
 var clean = storageInfo.Copy();
 var dropCols = new List<string>();
 foreach (DataColumn col in clean.Columns)
@@ -2787,10 +2716,9 @@ statsOnly.AsEnumerable().OrderBy(r => r["segment_id"].ToString()).Take(20).CopyT
 
 #### DuckDB — memory_limit and threads configuration
 
-```csharp
-// DuckDB configuration — memory limit and thread count
+Reads the key performance-related settings from `duckdb_settings()`.
 
-// Show current settings
+```csharp
 var dt = new DataTable();
 dkCmd.CommandText = @"
     SELECT name, value, description
@@ -2822,20 +2750,16 @@ dt
 > 4. Second run 2x faster → object cache is helping
 
 ```csharp
-// Set memory limit
 dkCmd.CommandText = "SET memory_limit = '4GB'";
 dkCmd.Parameters.Clear();
 dkCmd.ExecuteNonQuery();
 
-// Set thread count
 dkCmd.CommandText = "SET threads = 4";
 dkCmd.ExecuteNonQuery();
 
-// Enable object cache for interactive notebook use
-dkCmd.CommandText = "SET enable_object_cache = true";
+dkCmd.CommandText = "SET enable_object_cache = true";  // recommended for interactive notebook use
 dkCmd.ExecuteNonQuery();
 
-// Verify
 dkCmd.CommandText = "SELECT name, value FROM duckdb_settings() WHERE name IN ('memory_limit', 'threads', 'enable_object_cache') ORDER BY name";
 var dt = new DataTable();
 dt.Load(dkCmd.ExecuteReader());
@@ -2850,10 +2774,9 @@ dt
 
 #### DuckDB — VACUUM ANALYZE (reclaim space and update stats)
 
-```csharp
-// VACUUM — reclaim space from deleted rows
-// ANALYZE — update statistics for the query optimizer
+`VACUUM` reclaims space from deleted rows. `VACUUM ANALYZE` also updates statistics for the query optimizer. `CHECKPOINT` forces a WAL flush to main storage — only needed for file-backed databases, not in-memory.
 
+```csharp
 dkCmd.CommandText = "VACUUM";
 dkCmd.ExecuteNonQuery();
 
@@ -2863,7 +2786,6 @@ dkCmd.ExecuteNonQuery();
 // CHECKPOINT — force write of WAL to main storage (file-based DBs only)
 // dkCmd.CommandText = "CHECKPOINT";
 // dkCmd.ExecuteNonQuery();
-// Not needed for in-memory databases
 ```
 
     space reclaimed
@@ -2896,14 +2818,13 @@ Quick reference of all DuckDB tuning and maintenance commands.
 
 #### DuckDB vs SQL Server — benchmark GROUP BY, LAG window, full scan side by side
 
-```csharp
-// Time the same queries on DuckDB vs SQL Server
+Times the same three queries on both engines and presents the results side by side.
 
+```csharp
 var sw = new System.Diagnostics.Stopwatch();
 var perf = new DataTable();
 perf.Columns.Add("Engine"); perf.Columns.Add("Query"); perf.Columns.Add("Time (ms)");
 
-// GROUP BY + AVG
 sw.Restart();
 dkCmd.CommandText = "SELECT symbol, COUNT(*), ROUND(AVG(close), 2) FROM ohlcv GROUP BY symbol";
 dkCmd.Parameters.Clear();
@@ -2917,7 +2838,6 @@ using (var r = sqlBench.ExecuteReader()) while (r.Read()) { }
 sw.Stop();
 perf.Rows.Add("SQL Server", "GROUP BY + AVG", sw.ElapsedMilliseconds);
 
-// LAG window function
 sw.Restart();
 dkCmd.CommandText = "SELECT symbol, date, close, LAG(close) OVER (PARTITION BY symbol ORDER BY date) FROM ohlcv";
 using (var r = dkCmd.ExecuteReader()) while (r.Read()) { }
@@ -2930,7 +2850,6 @@ using (var r = sqlBench.ExecuteReader()) while (r.Read()) { }
 sw.Stop();
 perf.Rows.Add("SQL Server", "LAG() window", sw.ElapsedMilliseconds);
 
-// Full scan
 sw.Restart();
 dkCmd.CommandText = "SELECT * FROM ohlcv";
 using (var r = dkCmd.ExecuteReader()) while (r.Read()) { }
@@ -2950,9 +2869,9 @@ perf
 
 #### DuckDB vs SQL Server — Plotly grouped bar chart of benchmark results
 
-```csharp
-// Grouped bar chart
+Renders the benchmark results as a grouped bar chart comparing DuckDB and SQL Server side by side.
 
+```csharp
 var duckRows = perf.AsEnumerable().Where(r => r["Engine"].ToString() == "DuckDB").ToList();
 var sqlRows = perf.AsEnumerable().Where(r => r["Engine"].ToString() == "SQL Server").ToList();
 
@@ -2980,9 +2899,9 @@ Plotly.NET.CSharp.Chart.Combine(new[] { duckBar, sqlBar })
 
 #### DuckDB — when to use ADO.NET vs Appender vs Dapper for each operation
 
-```csharp
-// Which DuckDB interface for which job
+Decision guide for choosing between the three DuckDB interfaces.
 
+```csharp
 var cmp = new DataTable();
 cmp.Columns.Add("Operation"); cmp.Columns.Add("ADO.NET"); cmp.Columns.Add("Appender"); cmp.Columns.Add("Dapper");
 cmp.Rows.Add("SELECT rows", "ExecuteReader + DataTable", "—", "Query<T> (typed)");
@@ -3008,9 +2927,9 @@ This section pairs each operation side by side: DuckDB (SQL) then Polars (DataFr
 
 #### DuckDB — read Parquet file with SELECT
 
-```csharp
-// DuckDB reads Parquet directly — no import, predicate pushdown
+DuckDB reads Parquet directly — no import step, with automatic predicate pushdown.
 
+```csharp
 var dt = new DataTable();
 dkCmd.CommandText = "SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet' LIMIT 5";
 dkCmd.Parameters.Clear();
@@ -3022,9 +2941,9 @@ dt
 
 #### Polars — read Parquet file with ReadParquet and Select
 
-```csharp
-// Polars equivalent: read Parquet, select same 4 columns, show 5 rows
+Polars equivalent: read Parquet, select the same 4 columns, show 5 rows.
 
+```csharp
 var df = DataFrame.ReadParquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet");
 df.Select("symbol", "date", "close", "volume").Head(5)
 ```
@@ -3047,9 +2966,9 @@ df.Select("symbol", "date", "close", "volume").Head(5)
 
 #### DuckDB — read CSV file with SELECT
 
-```csharp
-// DuckDB reads CSV directly — auto-detects schema and headers
+DuckDB reads CSV directly — auto-detects schema and headers.
 
+```csharp
 var dt = new DataTable();
 dkCmd.CommandText = "SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv' LIMIT 5";
 dt.Load(dkCmd.ExecuteReader());
@@ -3060,9 +2979,9 @@ dt
 
 #### Polars — read CSV file with ReadCsv and Select
 
-```csharp
-// Polars equivalent: read CSV, select same 4 columns, show 5 rows
+Polars equivalent: read CSV, select the same 4 columns, show 5 rows.
 
+```csharp
 var csvDf = DataFrame.ReadCsv("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv");
 csvDf.Select("symbol", "date", "close", "volume").Head(5)
 ```
@@ -3083,9 +3002,9 @@ csvDf.Select("symbol", "date", "close", "volume").Head(5)
 
 #### DuckDB — read JSON file with SELECT
 
-```csharp
-// DuckDB reads JSON/JSONL directly
+DuckDB reads JSON and JSONL directly — auto-detects structure.
 
+```csharp
 var dt = new DataTable();
 dkCmd.CommandText = "SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.json' LIMIT 5";
 dt.Load(dkCmd.ExecuteReader());
@@ -3096,9 +3015,9 @@ dt
 
 #### Polars — read JSON file with ReadJson and Select
 
-```csharp
-// Polars equivalent: read JSON, select same 4 columns, show 5 rows
+Polars equivalent: read JSON, select the same 4 columns, show 5 rows.
 
+```csharp
 var jsonDf = DataFrame.ReadJson("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.json");
 jsonDf.Select("symbol", "date", "close", "volume").Head(5)
 ```
@@ -3119,9 +3038,9 @@ jsonDf.Select("symbol", "date", "close", "volume").Head(5)
 
 #### DuckDB — filter rows with WHERE and ORDER BY
 
-```csharp
-// DuckDB: WHERE symbol = 'SAP.DE'
+Filter on `symbol = 'SAP.DE'`, ordered by date descending, top 5 rows.
 
+```csharp
 var dt = new DataTable();
 dkCmd.CommandText = "SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet' WHERE symbol = 'SAP.DE' ORDER BY date DESC LIMIT 5";
 dt.Load(dkCmd.ExecuteReader());
@@ -3132,9 +3051,9 @@ dt
 
 #### Polars — filter with Filter() and Select()
 
-```csharp
-// Polars equivalent: filter symbol = SAP.DE, select same columns, sort, limit 5
+Polars equivalent: filter `symbol = SAP.DE`, select the same columns, sort by date descending, limit 5.
 
+```csharp
 df.Filter(Col("symbol") == Lit("SAP.DE"))
     .Select("symbol", "date", "close", "volume")
     .Sort("date", descending: true)
@@ -3157,9 +3076,9 @@ df.Filter(Col("symbol") == Lit("SAP.DE"))
 
 #### DuckDB — aggregate with GROUP BY, COUNT, AVG, SUM
 
-```csharp
-// DuckDB: GROUP BY + AVG + COUNT
+Group by symbol, compute row count, average close, and total volume, ordered by total volume descending.
 
+```csharp
 var dt = new DataTable();
 dkCmd.CommandText = @"
     SELECT symbol, COUNT(*) AS days, ROUND(AVG(close), 2) AS avg_close,
@@ -3174,9 +3093,9 @@ dt
 
 #### Polars — aggregate with GroupBy and Agg
 
-```csharp
-// Polars equivalent: group by symbol, count, avg close, sum volume, top 10
+Polars equivalent: group by symbol, count trading days, average close, sum volume, top 10 by volume.
 
+```csharp
 df.GroupBy("symbol")
     .Agg(
         Col("close").Count().Alias("days"),
@@ -3203,9 +3122,9 @@ df.GroupBy("symbol")
 
 #### DuckDB — benchmark same aggregate on CSV vs Parquet vs JSON
 
-```csharp
-// Compare DuckDB query speed across file formats
+Runs the same GROUP BY aggregate across CSV, Parquet, and JSON to compare query speed across file formats.
 
+```csharp
 var sw = new System.Diagnostics.Stopwatch();
 var results = new DataTable();
 results.Columns.Add("Format"); results.Columns.Add("Rows"); results.Columns.Add("Time (ms)");
@@ -3225,10 +3144,9 @@ foreach (var (format, path) in new[] {
     results.Rows.Add(format, rows, sw.ElapsedMilliseconds);
 }
 results
-
-// Parquet is fastest — columnar format + predicate pushdown
-// CSV requires full parse; JSON requires parse + type inference
 ```
+
+> [!info] Parquet is fastest — columnar format with predicate pushdown. CSV requires full text parse; JSON requires parse + type inference.
 
 <table><thead><tr><th>Format</th><th>Rows</th><th>Time (ms)</th></tr></thead><tbody><tr><td>CSV</td><td>50</td><td>55</td></tr><tr><td>Parquet</td><td>50</td><td>2</td></tr><tr><td>JSON</td><td>50</td><td>76</td></tr></tbody></table>
 

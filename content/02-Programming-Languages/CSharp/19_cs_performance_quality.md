@@ -451,17 +451,20 @@ The list is ordered by frequency of occurrence in real codebases. The `[!success
 > [!success] Production-safe alternatives
 > Use `StringBuilder` for concatenation, `using` for all `IDisposable` resources, `async Task` for all async methods, and `await` instead of `.Result`/`.Wait()`. Store secrets in `IConfiguration`, user-secrets, or Key Vault. Register `IHttpClientFactory` in DI and use pattern-matched `is` checks over `GetType()` comparisons.
 
-The cell below demonstrates the `using` pattern for a `SqlConnection` — the correct way to ensure a disposable resource is always cleaned up even if an exception is thrown.
-
-```csharp
-// BAD: resource leak if exception occurs
-// var conn = new SqlConnection(connString);
-// conn.Open(); ... conn.Close();
-
-// GOOD: disposed even if exception occurs
-// using var conn = new SqlConnection(connString);
-// conn.Open(); ...
-```
+> [!example] SqlConnection — using pattern for disposable resources
+>
+> Without `using`, an exception between `Open()` and `Close()` leaks the connection. The `using` declaration ensures `Dispose()` is called when the variable goes out of scope, even if an exception is thrown.
+>
+> ```csharp
+> // BAD: resource leak if exception occurs
+> var conn = new SqlConnection(connString);
+> conn.Open();
+> conn.Close();
+>
+> // GOOD: disposed even if exception occurs
+> using var conn = new SqlConnection(connString);
+> conn.Open();
+> ```
 
 ## Code Smells & Anti-Patterns
 

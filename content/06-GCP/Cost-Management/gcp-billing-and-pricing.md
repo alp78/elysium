@@ -1,5 +1,5 @@
 ---
-tags: [cost, infrastructure, bigquery, gcp, firestore, billing]
+tags: [cost, billing, finops, gcp, bigquery, firestore, compute, cloud-run, pubsub, gcs]
 aliases:
   - GCP billing
   - GCP pricing
@@ -40,12 +40,18 @@ This note is the single source of truth for GCP cost management across every dat
 
 ### Billing Hierarchy
 
-```text
-Organization
-└── Billing Account (credit card / invoice)
-    ├── Project A  ←── Resources (VMs, BQ datasets, GCS buckets…)
-    ├── Project B
-    └── Project C
+Every GCP cost traces through this four-level hierarchy. Resources generate usage charges that roll up through the project to the linked billing account. A project can be linked to only one billing account at a time, but a single billing account can fund many projects.
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#1a1b26', 'primaryTextColor': '#c0caf5', 'primaryBorderColor': '#7aa2f7', 'lineColor': '#7aa2f7', 'secondaryColor': '#16161e', 'tertiaryColor': '#16161e', 'edgeLabelBackground': '#1a1b26', 'nodeTextColor': '#c0caf5'}}}%%
+flowchart TD
+    O[Organization] --> BA["Billing Account\n(credit card / invoice)"]
+    BA --> PA[Project A]
+    BA --> PB[Project B]
+    BA --> PC[Project C]
+    PA --> RA["Resources\nVMs · BQ datasets · GCS buckets"]
+    PB --> RB[Resources]
+    PC --> RC[Resources]
 ```
 
 - One billing account can fund many projects.
@@ -53,18 +59,42 @@ Organization
 - Resources within a project inherit that project's billing account.
 - Charges accumulate at the resource level, roll up to project, then to billing account.
 
-Link or change a project's billing account:
+List all billing accounts you have access to:
 
 ```bash
-# List billing accounts you have access to
 gcloud billing accounts list
+```
 
-# Link a project to a billing account
+```text
+ACCOUNT_ID            NAME                      OPEN  MASTER_ACCOUNT_ID
+01ABCD-234EFG-567HIJ  My Billing Account        True
+```
+
+Link a project to a billing account:
+
+```bash
 gcloud billing projects link PROJECT_ID \
   --billing-account=BILLING_ACCOUNT_ID
+```
 
-# Verify current billing link
+```text
+billingAccountName: billingAccounts/01ABCD-234EFG-567HIJ
+billingEnabled: true
+name: projects/PROJECT_ID/billingInfo
+projectId: PROJECT_ID
+```
+
+Verify the current billing link for a project:
+
+```bash
 gcloud billing projects describe PROJECT_ID
+```
+
+```text
+billingAccountName: billingAccounts/01ABCD-234EFG-567HIJ
+billingEnabled: true
+name: projects/my-project/billingInfo
+projectId: my-project
 ```
 
 ### Billing Export to BigQuery (Essential)
@@ -121,20 +151,34 @@ ORDER BY total_cost_usd DESC
 
 Labels are the single most important cost governance tool. Every resource should carry at minimum: `team`, `environment`, and `pipeline`.
 
+Label a Compute Engine VM:
+
 ```bash
-# Label a Compute Engine VM
 gcloud compute instances update VM_NAME \
   --update-labels=team=data-platform,env=prod,pipeline=daily-ingest
+```
 
-# Label a GCS bucket
+Label a GCS bucket:
+
+```bash
 gcloud storage buckets update gs://BUCKET_NAME \
   --update-labels=team=data-platform,env=staging,pipeline=etl
+```
 
-# Label a BigQuery dataset
+Label a BigQuery dataset:
+
+```bash
 bq update --set_label team:data-platform --set_label env:prod PROJECT_ID:DATASET
+```
 
-# List all labels on a resource
+List all labels currently applied to a resource:
+
+```bash
 gcloud compute instances describe VM_NAME --format='get(labels)'
+```
+
+```text
+{u'env': u'prod', u'pipeline': u'daily-ingest', u'team': u'data-platform'}
 ```
 
 > [!warning] Labels Are Not Retroactive
@@ -148,8 +192,9 @@ gcloud compute instances describe VM_NAME --format='get(labels)'
 
 Set budget alerts before costs spiral. Alerts do not cap spending; they notify.
 
+Create a budget (requires `billing.budgets.create` permission on the billing account):
+
 ```bash
-# Create a budget via gcloud (requires billing.budgets.create permission)
 gcloud billing budgets create \
   --billing-account=BILLING_ACCOUNT_ID \
   --display-name="Monthly Data Platform Budget" \
@@ -158,9 +203,17 @@ gcloud billing budgets create \
   --threshold-rules-percent=0.9 \
   --threshold-rules-percent=1.0 \
   --filter-projects=PROJECT_ID
+```
 
-# List existing budgets
+List existing budgets for a billing account:
+
+```bash
 gcloud billing budgets list --billing-account=BILLING_ACCOUNT_ID
+```
+
+```text
+DISPLAY_NAME                    BUDGET_AMOUNT  FILTER_PROJECTS
+Monthly Data Platform Budget    5000.0 USD     PROJECT_ID
 ```
 
 You can also attach a Pub/Sub topic to a budget to trigger automated cost-control actions (e.g., stop non-critical VMs when 90% threshold is hit).
@@ -169,6 +222,8 @@ You can also attach a Pub/Sub topic to a budget to trigger automated cost-contro
 
 ## Pricing for Every GCP Data Engineering Service
 
+Each section below covers one GCP service: its billing model, pricing dimensions, free tier, discount mechanisms, cost formulas, and the gcloud commands most relevant to cost analysis. Services are ordered by typical cost impact in a data engineering platform.
+
 ---
 
 ### Compute Engine (VMs)
@@ -176,6 +231,8 @@ You can also attach a Pub/Sub topic to a budget to trigger automated cost-contro
 **Billing unit:** Per-second (minimum 1 minute)
 
 #### Compute Engine cost formula — vCPU + memory + disk + network
+
+The total monthly cost of a VM is the sum of four independent dimensions. Each is billed separately, including when the VM is stopped (disk and static IP continue to accrue).
 
 ```text
 Monthly cost =
@@ -188,6 +245,8 @@ Monthly cost =
 
 #### Machine Type Rates (approximate, us-central1)
 
+Rates vary by machine family. Choose the family based on the workload type — E2 for general batch, N2 for higher single-thread performance, C2 for compute-intensive jobs.
+
 | Machine family | vCPU/hour | Memory/GB/hour | Notes |
 |----------------|-----------|----------------|-------|
 | e2 | $0.03351 | $0.00450 | General purpose, best price/perf for most workloads |
@@ -197,6 +256,8 @@ Monthly cost =
 | m1 (memory) | $0.04800 | $0.00732 | Very large RAM workloads |
 
 #### Disk Pricing
+
+Persistent disks are billed continuously regardless of VM state — a stopped VM still pays for its attached disk. Detached disks also accrue storage charges until deleted.
 
 | Type | Cost/GB/month | IOPS | Notes |
 |------|---------------|------|-------|
@@ -237,28 +298,36 @@ Running an N1 VM 24/7 for a full month yields ~30% off automatically. N2/C2 yiel
 
 CUDs apply at the project or billing-account level (for resource-based CUDs). They do not apply to Spot VMs.
 
+Purchase a resource-based CUD for 1 year:
+
 ```bash
-# Purchase a CUD
 gcloud compute commitments create COMMITMENT_NAME \
   --plan=12-month \
   --region=us-central1 \
   --resources=vcpu=16,memory=64GB
+```
 
-# List existing commitments
+List existing commitments in a region:
+
+```bash
 gcloud compute commitments list --filter="region=us-central1"
 ```
 
 **Spot / Preemptible VMs** — 60–91% off on-demand rates, can be terminated any time:
 
+Create a Spot VM (current API — `--provisioning-model=SPOT`):
+
 ```bash
-# Create a Spot VM (newer API; Preemptible is deprecated)
 gcloud compute instances create INSTANCE_NAME \
   --machine-type=e2-standard-4 \
   --provisioning-model=SPOT \
   --instance-termination-action=STOP \
   --zone=us-central1-a
+```
 
-# Create classic preemptible (still works)
+The legacy `--preemptible` flag still works but is functionally equivalent to Spot:
+
+```bash
 gcloud compute instances create INSTANCE_NAME \
   --machine-type=e2-standard-4 \
   --preemptible \
@@ -280,15 +349,21 @@ GPU VMs: GPUs are billed per-hour on top of the base VM cost. Example: NVIDIA A1
 
 #### Right-Sizing with the Recommender API
 
+The Compute Recommender analyzes actual CPU and memory utilization over 8 days and suggests a smaller machine type when the VM is consistently underutilized. Recommendations include projected monthly savings.
+
+List machine-type right-sizing recommendations for a zone:
+
 ```bash
-# List machine-type right-sizing recommendations in a zone
 gcloud recommender recommendations list \
   --recommender=google.compute.instance.MachineTypeRecommender \
   --location=us-central1-a \
   --project=PROJECT_ID \
   --format=json | jq '.[] | {name: .name, impact: .primaryImpact.costProjection}'
+```
 
-# Apply a recommendation
+Apply a recommendation using the ETAG from the previous output (required for optimistic concurrency):
+
+```bash
 gcloud recommender recommendations apply RECOMMENDATION_ID \
   --recommender=google.compute.instance.MachineTypeRecommender \
   --location=us-central1-a \
@@ -297,26 +372,58 @@ gcloud recommender recommendations apply RECOMMENDATION_ID \
 
 #### Inventory and Cost Audit Commands
 
+Run these periodically to identify idle or over-provisioned resources that are silently accruing cost.
+
+List all running VMs and their machine types:
+
 ```bash
-# List all running VMs and their machine types
 gcloud compute instances list \
   --filter="status=RUNNING" \
   --format="table(name,zone,machineType.basename(),status)"
+```
 
-# List VMs by zone sorted by size
+```text
+NAME             ZONE           MACHINE_TYPE    STATUS
+pipeline-worker  us-central1-a  e2-standard-4   RUNNING
+data-api         us-central1-b  n2-standard-2   RUNNING
+```
+
+List VMs by zone with preemptibility flag:
+
+```bash
 gcloud compute instances list \
   --format="table(name,zone,machineType.basename(),scheduling.preemptible)"
+```
 
-# Find unattached (orphaned) persistent disks
+Find unattached (orphaned) persistent disks — these continue billing even with no VM attached:
+
+```bash
 gcloud compute disks list \
   --filter="NOT users:*" \
   --format="table(name,zone,sizeGb,type.basename())"
+```
 
-# Find unattached static IPs (charged at $0.01/hr each!)
+```text
+NAME              ZONE           SIZE_GB  TYPE
+old-data-disk     us-central1-a  500      pd-ssd
+unused-backup     us-central1-b  200      pd-standard
+```
+
+Find unattached static IPs — each costs $0.01/hr (~$7.20/month):
+
+```bash
 gcloud compute addresses list \
   --filter="status=RESERVED AND NOT users:*"
+```
 
-# Delete an unattached static IP
+```text
+NAME         REGION       ADDRESS        STATUS
+orphan-ip-1  us-central1  35.193.x.x     RESERVED
+```
+
+Delete an unattached static IP:
+
+```bash
 gcloud compute addresses delete IP_NAME --region=us-central1
 ```
 
@@ -344,6 +451,8 @@ BigQuery has two fundamentally different pricing models. Choose based on workloa
 
 #### Model 2: Editions (Capacity / Slot-Based)
 
+Editions replace the legacy flat-rate reservations. You pay for compute capacity (slots) per hour rather than per byte scanned. Autoscaling adjusts slot count between zero and your configured maximum.
+
 | Edition | Price/slot-hour | Min slots | Autoscaling |
 |---------|----------------|-----------|-------------|
 | Standard | $0.04 | 100 | Yes (baseline 0) |
@@ -361,6 +470,8 @@ On-demand is best when:
 - Ad-hoc analytics with infrequent queries
 
 #### BigQuery Storage Pricing
+
+Storage is billed separately from compute. The distinction between active and long-term storage is applied automatically per table — no manual configuration required.
 
 | Storage type | Cost/GB/month | Condition |
 |-------------|---------------|-----------|
@@ -385,8 +496,9 @@ Partitioned tables get long-term pricing applied per-partition, so old partition
 
 #### Cost Estimation Commands
 
+Use dry-run mode to estimate query cost before execution — the query is validated and bytes-scanned is returned without actually running it or consuming any quota.
+
 ```bash
-# Dry run: estimate bytes scanned before running a query (no cost incurred)
 bq query \
   --dry_run \
   --use_legacy_sql=false \
@@ -394,8 +506,11 @@ bq query \
    FROM my_dataset.events
    WHERE DATE(ts) = '2026-03-22'
      AND event_type = 'purchase'"
-# Output: Query successfully validated. Assuming the tables are not modified,
-#         running this query will process X bytes.
+```
+
+```text
+Query successfully validated. Assuming the tables are not modified,
+running this query will process 52428800 bytes.
 ```
 
 Convert dry-run output to cost estimate:
@@ -548,6 +663,8 @@ See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQ
 
 #### Cloud Run Services (HTTP/gRPC)
 
+Services are billed per request and per CPU/memory time consumed during request processing. If `--cpu-always-on` is set, idle CPU is billed at the lower between-request rate.
+
 | Dimension | Rate | Free tier/month |
 |-----------|------|-----------------|
 | Requests | $0.40/million | 2 million requests |
@@ -557,6 +674,8 @@ See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQ
 
 #### Cloud Run Jobs (Batch Workloads)
 
+Jobs have no per-request charge — billing starts when the task container starts and stops when it exits. Multiple parallel tasks in one execution each accrue cost independently.
+
 | Dimension | Rate |
 |-----------|------|
 | CPU | $0.00002400/vCPU-second |
@@ -564,6 +683,8 @@ See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQ
 | No per-request charge | — |
 
 #### Cloud Run Job cost formula — vCPU-seconds + memory-seconds + requests
+
+The formula below calculates the cost of one execution. For scheduled daily jobs, multiply by 30 to get the monthly estimate.
 
 ```text
 Cost = executions × duration_seconds × (vCPU × $0.0000240 + RAM_GB × $0.0000025)
@@ -591,8 +712,9 @@ Daily cost = 1 × 300 × (2 × 0.0000240 + 4 × 0.0000025)
 > [!success] Keep min-instances at 0 for batch and low-traffic services
 > Deploy Cloud Run Jobs and infrequent services with `--min-instances=0`. Cold start for most container images is under 2 seconds — acceptable for batch jobs and internal tools. Only set `min-instances=1` for user-facing services with strict sub-second latency SLAs.
 
+Deploy a Cloud Run Job with cost-efficient defaults:
+
 ```bash
-# Deploy a Cloud Run Job with cost-efficient defaults
 gcloud run jobs create JOB_NAME \
   --image=gcr.io/PROJECT_ID/IMAGE:TAG \
   --region=us-central1 \
@@ -600,14 +722,23 @@ gcloud run jobs create JOB_NAME \
   --memory=512Mi \
   --task-timeout=600 \
   --max-retries=3
+```
 
-# Execute the job
+Execute the job:
+
+```bash
 gcloud run jobs execute JOB_NAME --region=us-central1
+```
 
-# Check execution history and durations
+Check execution history and durations:
+
+```bash
 gcloud run jobs executions list --job=JOB_NAME --region=us-central1
+```
 
-# Deploy a service with min-instances=0 to avoid idle charges
+Deploy a service with `--min-instances=0` to avoid idle charges:
+
+```bash
 gcloud run deploy SERVICE_NAME \
   --image=gcr.io/PROJECT_ID/IMAGE:TAG \
   --region=us-central1 \
@@ -635,6 +766,8 @@ See [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverle
 **Minimum message size:** 1,000 bytes (1 KB) per publish operation. Even a 10-byte message is billed as 1 KB.
 
 #### Pub/Sub cost formula — message volume + delivery + storage
+
+Total message volume includes both the publish and delivery legs — a message published once and delivered to two subscriptions counts as three message-bytes.
 
 ```text
 Monthly cost = max(0, total_message_volume_GB - 10) × $0.04
@@ -664,20 +797,30 @@ Cost   = (500 - 10) × $0.04 = 490 × $0.04 = $19.60/month
 > [!success] Set the shortest retention period that satisfies your replay needs
 > Use `gcloud pubsub subscriptions modify-config SUBSCRIPTION_ID --message-retention-duration=1d` to cap retention. For most pipelines, 24-hour replay is sufficient. Only extend to 7 days if you have an explicit replay or audit requirement.
 
+Check undelivered message count on a subscription via Cloud Monitoring:
+
 ```bash
-# Check message volume on a subscription (via Cloud Monitoring metrics)
 gcloud monitoring read \
   'pubsub.googleapis.com/subscription/num_undelivered_messages' \
   --filter='resource.label.subscription_id=SUBSCRIPTION_ID' \
   --freshness=1h
+```
 
-# List subscriptions and their configs
+List all subscriptions and their retention configurations:
+
+```bash
 gcloud pubsub subscriptions list --format=json | jq '.[] | {name, messageRetentionDuration}'
+```
 
-# Update retention on a subscription (reduce to save cost)
+Update retention on a subscription to cap storage cost:
+
+```bash
 gcloud pubsub subscriptions modify-config SUBSCRIPTION_ID \
   --message-retention-duration=1d
 ```
+
+> [!info] Pub/Sub Lite Deprecated
+> Pub/Sub Lite (the zonal, capacity-provisioned variant) was deprecated in January 2024 and is no longer available for new projects. Use standard Pub/Sub for all new messaging workloads.
 
 See [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) and [pubsub-topics-and-subscriptions](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-topics-and-subscriptions) for operational patterns.
 
@@ -688,6 +831,8 @@ See [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-
 **Billing dimensions:** Storage class, storage volume, operations (Class A / Class B), and egress.
 
 #### Storage Classes and Pricing
+
+Choose the storage class based on how frequently the data is accessed. The lower the storage price, the higher the retrieval cost and the longer the minimum storage commitment.
 
 | Class | Storage/GB/month | Retrieval/GB | Min storage duration | Use case |
 |-------|-----------------|-------------|---------------------|----------|
@@ -705,6 +850,8 @@ See [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-
 
 #### Operations Pricing
 
+Operations are charged per thousand requests, regardless of object size. High-frequency access patterns (e.g., listing bucket contents in a loop) can generate significant Class A charges.
+
 | Class | Operations | Price |
 |-------|-----------|-------|
 | Class A (write-like) | Writes, list, multi-part uploads | $0.005/1,000 ops |
@@ -713,6 +860,8 @@ See [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-
 Class A ops are 12.5× more expensive than Class B. Minimizing unnecessary bucket listing and re-writes matters at scale.
 
 #### Egress Pricing
+
+Egress charges apply when data leaves a region. Co-locating compute and storage in the same GCP region eliminates most egress costs for data pipelines.
 
 | Destination | Rate |
 |-------------|------|
@@ -739,8 +888,11 @@ Class A ops are 12.5× more expensive than Class B. Minimizing unnecessary bucke
 
 #### GCS Lifecycle Rules for Cost Optimization
 
+Lifecycle rules run server-side on a daily schedule. They evaluate each object's age, storage class, and other conditions, then apply the configured action automatically with no compute cost.
+
+Apply a lifecycle policy that transitions objects through storage classes and deletes after 365 days:
+
 ```bash
-# Apply a lifecycle rule to auto-transition and delete old objects
 cat > /tmp/lifecycle.json <<'EOF'
 {
   "lifecycle": {
@@ -763,19 +915,27 @@ cat > /tmp/lifecycle.json <<'EOF'
 EOF
 
 gsutil lifecycle set /tmp/lifecycle.json gs://BUCKET_NAME
+```
 
-# Verify lifecycle policy
+Verify the lifecycle policy was applied:
+
+```bash
 gsutil lifecycle get gs://BUCKET_NAME
 ```
 
+Check total bucket storage usage:
+
 ```bash
-# Check bucket storage usage by storage class
 gsutil du -s gs://BUCKET_NAME
+```
 
-# Detailed breakdown with storage class
-gsutil ls -L gs://BUCKET_NAME/** | grep -E "Storage class|Content-Length"
+```text
+17179869184  gs://BUCKET_NAME
+```
 
-# Find objects larger than 1 GB (candidates for Coldline/Archive)
+Find objects larger than 1 GB — candidates for Coldline or Archive transition:
+
+```bash
 gsutil ls -l gs://BUCKET_NAME/** | awk '$1 > 1073741824 {print $0}' | sort -rn
 ```
 
@@ -788,6 +948,8 @@ See [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/g
 **Billing model:** Per-operation (reads, writes, deletes) plus storage.
 
 #### Pricing
+
+Firestore charges per document operation — each read, write, or delete on a single document counts as one operation regardless of document size. The free tier resets daily, making Firestore effectively free for development.
 
 | Operation | Rate | Free tier/day |
 |-----------|------|---------------|
@@ -814,6 +976,8 @@ Free tier resets daily (not monthly), making Firestore effectively free for deve
 
 #### Firestore cost estimation — reads, writes, deletes, storage
 
+Subtract the free daily allowance before calculating cost. The example below shows a real-time dashboard workload with high read volume.
+
 ```text
 Monthly reads cost  = (total_reads - 50,000/day × 30) / 100,000 × $0.06
 Monthly writes cost = (total_writes - 20,000/day × 30) / 100,000 × $0.18
@@ -831,15 +995,19 @@ Monthly writes = (500,000 - 20,000) × 30 / 100,000 × $0.18
 Total ≈ $115.83/month
 ```
 
+Check Firestore read count for the last 24 hours via Cloud Monitoring:
+
 ```bash
-# Check Firestore usage via Cloud Monitoring (reads/writes per day)
 gcloud monitoring read \
   'firestore.googleapis.com/document/read_count' \
   --project=PROJECT_ID \
   --freshness=24h \
   --align=ALIGN_SUM
+```
 
-# Estimate storage size
+Estimate database storage size:
+
+```bash
 gcloud firestore databases describe --project=PROJECT_ID
 ```
 
@@ -853,6 +1021,8 @@ See [firestore-data-model-and-operations](https://alp78.github.io/elysium/06-GCP
 
 #### Pricing
 
+Dataflow bills independently for compute (vCPU + memory), disk, and data shuffle. Streaming jobs cost ~22–25% more than equivalent batch jobs due to persistent worker overhead.
+
 | Resource | Batch rate | Streaming rate |
 |----------|-----------|---------------|
 | Worker vCPU | $0.056/vCPU/hour | $0.069/vCPU/hour |
@@ -865,6 +1035,8 @@ See [firestore-data-model-and-operations](https://alp78.github.io/elysium/06-GCP
 Streaming jobs: 22–25% more expensive than batch due to persistent worker overhead and streaming engine.
 
 #### Dataflow cost formula — worker vCPUs + memory + shuffle
+
+Shuffle cost is often the largest variable — it depends on the volume of data redistributed across workers during group-by or join operations.
 
 ```text
 Batch job cost =
@@ -904,8 +1076,9 @@ Total   ≈ $6.62
 > [!success] Evaluate Pub/Sub → BigQuery direct subscription as a zero-worker alternative
 > For high-volume streaming into BigQuery, a **Pub/Sub BigQuery subscription** writes messages directly to a BigQuery table with no worker VMs — billed at $0.05/GB delivered, eliminating Dataflow compute cost entirely for simple insert workloads.
 
+Submit a batch Dataflow job with cost-conscious defaults (start at 2 workers, let autoscaling go to 20):
+
 ```bash
-# Submit a batch Dataflow job with cost-conscious defaults
 gcloud dataflow jobs run JOB_NAME \
   --gcs-location=gs://BUCKET/templates/TEMPLATE \
   --region=us-central1 \
@@ -913,18 +1086,30 @@ gcloud dataflow jobs run JOB_NAME \
   --max-workers=20 \
   --worker-machine-type=n1-standard-4 \
   --disk-size-gb=50
+```
 
-# List running Dataflow jobs (potential cost leak if forgotten)
+List running Dataflow jobs — a common cost leak when forgotten streaming jobs run 24/7:
+
+```bash
 gcloud dataflow jobs list --region=us-central1 --filter="state=JOB_STATE_RUNNING"
+```
 
-# Cancel a job
+```text
+JOB_ID            NAME               TYPE       CREATION_TIME         STATE
+2026-03-22_abc123 daily-etl-job      Batch      2026-03-22 08:00:00   Running
+2026-03-20_def456 streaming-ingest   Streaming  2026-03-20 00:00:00   Running
+```
+
+Cancel a batch job immediately:
+
+```bash
 gcloud dataflow jobs cancel JOB_ID --region=us-central1
+```
 
-# Drain a streaming job gracefully (commits in-flight work before stopping)
+Drain a streaming job gracefully — commits in-flight work before stopping:
+
+```bash
 gcloud dataflow jobs drain JOB_ID --region=us-central1
-
-# Show job metrics (workers, throughput)
-gcloud dataflow jobs show JOB_ID --region=us-central1
 ```
 
 ---
@@ -933,6 +1118,8 @@ gcloud dataflow jobs show JOB_ID --region=us-central1
 
 #### Cloud Scheduler pricing — jobs per month, free tier
 
+Cloud Scheduler is charged per job definition per month, not per execution. Executions are unlimited and free.
+
 | Dimension | Rate | Free tier |
 |-----------|------|-----------|
 | Jobs | $0.10/job/month | First 3 jobs free |
@@ -940,11 +1127,22 @@ gcloud dataflow jobs show JOB_ID --region=us-central1
 
 Cloud Scheduler is trivially cheap — a pipeline with 20 scheduled jobs costs $1.70/month. Never a significant cost driver.
 
-```bash
-# List all scheduled jobs (confirm no orphan schedules)
-gcloud scheduler jobs list --location=us-central1
+List all scheduled jobs to identify any orphan definitions:
 
-# Delete an unused job
+```bash
+gcloud scheduler jobs list --location=us-central1
+```
+
+```text
+ID                   LOCATION     SCHEDULE (TZ)                    TARGET_TYPE  STATE
+daily-ingest         us-central1  0 6 * * * (America/Chicago)      HTTP         ENABLED
+weekly-report        us-central1  0 9 * * 1 (UTC)                  Pub/Sub      ENABLED
+old-unused-trigger   us-central1  */5 * * * * (UTC)                HTTP         PAUSED
+```
+
+Delete an unused job:
+
+```bash
 gcloud scheduler jobs delete JOB_NAME --location=us-central1
 ```
 
@@ -953,6 +1151,8 @@ gcloud scheduler jobs delete JOB_NAME --location=us-central1
 ### Cloud Functions (Gen 2)
 
 #### Cloud Functions pricing — invocations, compute time, networking
+
+Cloud Functions Gen 2 runs on Cloud Run infrastructure, so pricing is identical to Cloud Run services. The free tier is generous enough that low-volume event-driven functions have zero cost.
 
 | Dimension | Rate | Free tier/month |
 |-----------|------|-----------------|
@@ -963,14 +1163,28 @@ gcloud scheduler jobs delete JOB_NAME --location=us-central1
 
 Cloud Functions Gen 2 runs on Cloud Run under the hood, so pricing is identical to Cloud Run services. The free tier is generous enough that low-volume event-driven functions cost nothing.
 
+List all functions and their trigger types:
+
 ```bash
-# List functions and their triggers
 gcloud functions list --format="table(name,status,trigger)"
+```
 
-# Describe a function (check min-instances, which adds idle cost)
+```text
+NAME                 STATUS  TRIGGER
+on-pubsub-message    ACTIVE  pubsub
+on-gcs-upload        ACTIVE  storage
+nightly-aggregator   ACTIVE  http
+```
+
+Describe a function to check min-instances (which adds idle cost):
+
+```bash
 gcloud functions describe FUNCTION_NAME --region=us-central1
+```
 
-# Update to remove always-on instances
+Remove always-on instances to eliminate idle charges:
+
+```bash
 gcloud functions deploy FUNCTION_NAME \
   --min-instances=0 \
   --region=us-central1
@@ -981,6 +1195,8 @@ gcloud functions deploy FUNCTION_NAME \
 ### Secret Manager
 
 #### Secret Manager pricing — active versions, access operations
+
+Secret Manager charges per active secret version, not per secret. A secret with 10 versions counts as 10 billable units. Only enabled versions are counted — disabled and destroyed versions are not billed.
 
 | Dimension | Rate | Free tier |
 |-----------|------|-----------|
@@ -993,14 +1209,30 @@ Secret Manager almost never appears as a cost item. With 6 free versions, a typi
 >
 > Destroy old secret versions that are no longer in rotation. Each active version costs $0.06/month. If you have 100 secrets with 10 versions each, that's 1,000 versions = $57/month (minus the 6 free).
 
+List all versions of a secret to identify old ones for destruction:
+
 ```bash
-# List all secret versions (find old ones to destroy)
 gcloud secrets versions list SECRET_NAME
+```
 
-# Destroy a specific old version
+```text
+NAME  STATE    CREATED              DESTROYED
+5     enabled  2026-03-01T00:00:00  -
+4     enabled  2026-02-01T00:00:00  -
+3     disabled 2026-01-01T00:00:00  -
+2     destroyed 2025-12-01T00:00:00 2026-01-15T00:00:00
+1     destroyed 2025-11-01T00:00:00 2025-12-15T00:00:00
+```
+
+Destroy an old version permanently (irreversible — the secret data is gone):
+
+```bash
 gcloud secrets versions destroy VERSION_NUMBER --secret=SECRET_NAME
+```
 
-# Disable a version (reversible)
+Disable a version reversibly (it stops being billed but can be re-enabled):
+
+```bash
 gcloud secrets versions disable VERSION_NUMBER --secret=SECRET_NAME
 ```
 
@@ -1009,6 +1241,8 @@ gcloud secrets versions disable VERSION_NUMBER --secret=SECRET_NAME
 ### Cloud Logging
 
 #### Cloud Logging pricing — ingestion, storage, routing
+
+Billing occurs at ingestion time — logs are metered as they enter the `_Default` sink. Exclusion filters drop logs before ingestion, eliminating the charge entirely.
 
 | Dimension | Rate | Free tier/month |
 |-----------|------|-----------------|
@@ -1031,29 +1265,29 @@ gcloud secrets versions disable VERSION_NUMBER --secret=SECRET_NAME
 > [!success] Add exclusion filters for health checks and noisy paths
 > Create exclusions for `/healthz`, `/readiness`, and any other high-frequency low-value endpoints using `gcloud logging exclusions create`. This keeps the same observability for real errors while eliminating the bulk of unnecessary log volume.
 
+Create a log exclusion to drop DEBUG-level logs from Cloud Run before ingestion:
+
 ```bash
-# Check current log volume (bytes ingested this month)
-gcloud logging read \
-  'logName="projects/PROJECT_ID/logs/cloudaudit.googleapis.com%2Factivity"' \
-  --limit=1 \
-  --format=json
-
-# Create a log exclusion filter to drop noisy health-check logs
-gcloud logging sinks create exclude-healthchecks \
-  logging.googleapis.com/projects/PROJECT_ID \
-  --log-filter='httpRequest.requestUrl="/healthz"' \
-  --exclusion-filter='true'
-
-# More targeted: exclude specific log names
 gcloud logging exclusions create drop-debug-logs \
   --project=PROJECT_ID \
   --description="Drop debug logs from data workers" \
   --log-filter='severity="DEBUG" AND resource.type="cloud_run_revision"'
+```
 
-# List current exclusions
+List current exclusion filters:
+
+```bash
 gcloud logging exclusions list --project=PROJECT_ID
+```
 
-# Export logs to GCS for long-term cheap retention (instead of Cloud Logging storage)
+```text
+NAME             DESCRIPTION                       FILTER                                              DISABLED
+drop-debug-logs  Drop debug logs from data workers severity="DEBUG" AND resource.type="cloud_run..."   False
+```
+
+Export logs to GCS for long-term cheap retention instead of paying Cloud Logging storage rates:
+
+```bash
 gcloud logging sinks create long-term-logs-sink \
   storage.googleapis.com/LOG_ARCHIVE_BUCKET \
   --log-filter='severity>=WARNING' \
@@ -1068,6 +1302,8 @@ See [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging
 
 #### Artifact Registry pricing — storage per GB, free tier
 
+Each pushed image layer is stored as an immutable blob. Untagged images from old CI builds accumulate silently — set cleanup policies to cap storage growth.
+
 | Dimension | Rate | Free tier |
 |-----------|------|-----------|
 | Storage | $0.10/GB/month | 0.5 GB free |
@@ -1079,18 +1315,33 @@ See [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging
 >
 > Container images accumulate fast. A 2 GB image with 50 versions = 100 GB = $10/month. Set up cleanup policies to delete images older than N days or beyond the last N versions.
 
+List repositories and their sizes:
+
 ```bash
-# List repositories and their sizes
 gcloud artifacts repositories list --location=us-central1
+```
 
-# List images in a repository
+```text
+REPOSITORY     FORMAT  MODE                 DESCRIPTION  LOCATION     LABELS  ENCRYPTION  CREATE_TIME
+app-images     DOCKER  STANDARD_REPOSITORY               us-central1          Google-managed  2025-06-01T00:00:00
+```
+
+List images in a repository:
+
+```bash
 gcloud artifacts docker images list us-central1-docker.pkg.dev/PROJECT_ID/REPO
+```
 
-# Delete a specific image digest
+Delete a specific image by digest:
+
+```bash
 gcloud artifacts docker images delete \
   us-central1-docker.pkg.dev/PROJECT_ID/REPO/IMAGE@DIGEST
+```
 
-# Set a cleanup policy (delete untagged images older than 30 days)
+Set a cleanup policy to delete untagged images older than 30 days:
+
+```bash
 gcloud artifacts repositories set-cleanup-policies REPO_NAME \
   --location=us-central1 \
   --policy='[{"name":"delete-old-untagged","action":{"type":"Delete"},"condition":{"tagState":"UNTAGGED","olderThan":"30d"}}]'
@@ -1101,6 +1352,8 @@ gcloud artifacts repositories set-cleanup-policies REPO_NAME \
 ### Cloud NAT
 
 #### Cloud NAT pricing — per-VM charge + data processing
+
+Cloud NAT has two cost components: a per-VM gateway charge (applied continuously while VMs are routed through NAT) and a per-GB data processing charge for all traffic that traverses the gateway.
 
 | Dimension | Rate | Free tier |
 |-----------|------|-----------|
@@ -1115,17 +1368,29 @@ gcloud artifacts repositories set-cleanup-policies REPO_NAME \
 > [!success] Enable Private Google Access instead of NAT for GCP API traffic
 > Enable **Private Google Access** on the subnet (`gcloud compute networks subnets update SUBNET --enable-private-ip-google-access`) so VMs can reach GCP APIs (BigQuery, GCS, Pub/Sub) without a NAT gateway. Only provision NAT for VMs that genuinely need to reach external internet services.
 
-```bash
-# List all NAT gateways (check for orphaned ones)
-gcloud compute routers list --format="table(name,region)"
-gcloud compute routers nats list --router=ROUTER_NAME --region=REGION
+List all Cloud Routers (NAT gateways are attached to routers):
 
-# Delete a NAT gateway
+```bash
+gcloud compute routers list --format="table(name,region)"
+```
+
+List NAT configurations on a specific router:
+
+```bash
+gcloud compute routers nats list --router=ROUTER_NAME --region=REGION
+```
+
+Delete a NAT gateway to stop per-VM charges in an unused region:
+
+```bash
 gcloud compute routers nats delete NAT_NAME \
   --router=ROUTER_NAME \
   --region=us-central1
+```
 
-# Check if VMs actually need NAT (look for internet-bound traffic)
+Check NAT flow logs to verify VMs actually use the gateway before deleting it:
+
+```bash
 gcloud logging read \
   'resource.type="nat_gateway" AND jsonPayload.destination!~"^10\." AND jsonPayload.bytes_sent>0' \
   --project=PROJECT_ID \
@@ -1156,6 +1421,8 @@ Egress charges apply whenever data leaves a region. This is often an invisible m
 
 ### GCP Master Pricing Summary Table
 
+Single-view reference of billing units, approximate rates, free tiers, and the most common cost trap for every service covered in this file.
+
 | Service | Billing unit | Price | Free tier | Biggest cost trap |
 |---------|-------------|-------|-----------|------------------|
 | Compute Engine | vCPU-hour + GB-hour | $0.031–0.047/vCPU | 1 e2-micro/month | Idle VMs running 24/7 with attached disks |
@@ -1182,6 +1449,8 @@ Egress charges apply whenever data leaves a region. This is often an invisible m
 
 ### GCP Discount Mechanisms Summary
 
+Overview of every automatic and opt-in discount mechanism available across GCP services. Sustained use and free tier discounts require no action — the others require explicit commitment or workload configuration.
+
 | Discount type | Services | Discount | Requirement |
 |--------------|----------|----------|-------------|
 | Sustained Use Discounts (SUD) | Compute Engine N1/M1/M2 (~30%), N2/N2D/C2 (~20%). E2 excluded | Up to ~20-30% | Automatic, just run >25% of month |
@@ -1192,18 +1461,27 @@ Egress charges apply whenever data leaves a region. This is often an invisible m
 | Long-term storage | BigQuery, GCS | 50% off storage | Don't modify tables for 90 days |
 | Free tier | All major services | 100% on usage below limit | Automatic |
 
-```bash
-# Check active CUDs
-gcloud compute commitments list --project=PROJECT_ID
+Check active Committed Use Discounts for a project:
 
-# Check SUD savings (visible in billing export)
+```bash
+gcloud compute commitments list --project=PROJECT_ID
+```
+
+```text
+NAME              REGION       CPU_TOTAL  MEMORY_TOTAL  STATUS  END_TIME
+prod-2yr-commit   us-central1  16         64GB          ACTIVE  2027-04-01T00:00:00
+```
+
+Query SUD and CUD savings visible in the billing export (last 30 days):
+
+```sql
 SELECT
   sku.description,
   SUM(cost) AS total_cost
 FROM `billing_export.gcp_billing_export_v1_XXXXXXXX`
 WHERE
-  LOWER(sku.description) LIKE '%sustained%'
-  OR LOWER(sku.description) LIKE '%committed%'
+  (LOWER(sku.description) LIKE '%sustained%'
+  OR LOWER(sku.description) LIKE '%committed%')
   AND DATE(_PARTITIONTIME) >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
 GROUP BY sku.description
 ORDER BY total_cost
@@ -1212,6 +1490,8 @@ ORDER BY total_cost
 ---
 
 ## Cost Governance Patterns
+
+These BigQuery queries run against the billing export table to detect anomalies, attribute cost to teams, and identify unlabeled or idle resources. Schedule them as BigQuery scheduled queries or Dataform assertions for continuous visibility.
 
 ### Weekly Cost Review Query
 
@@ -1245,6 +1525,8 @@ ORDER BY pct_change DESC
 ```
 
 ### Anomaly Detection: Unexpected Cost Spikes
+
+This query surfaces services whose daily cost exceeds twice their 30-day rolling average. Run it daily as a scheduled query and alert on non-empty results.
 
 ```sql
 -- Alert when a service costs >2x its 30-day average in a single day
@@ -1285,6 +1567,8 @@ ORDER BY cost_multiplier DESC
 
 ### Cost Attribution by Label
 
+Break down spend by the `env` and `team` labels to charge back costs to the responsible teams. Resources missing required labels surface as `unlabeled` — use the following query to find and remediate them.
+
 ```sql
 -- Cost breakdown by environment label
 SELECT
@@ -1300,6 +1584,8 @@ ORDER BY cost_usd DESC
 ```
 
 ### Find Unlabeled Resources (Cost Attribution Gap)
+
+Any resource missing the `team` label cannot be attributed to a cost center. This query identifies the highest-cost unlabeled resources to prioritize remediation.
 
 ```sql
 -- Resources contributing cost but missing required labels
@@ -1322,24 +1608,36 @@ LIMIT 50
 
 ### Idle Resource Audit
 
+Run this audit monthly. Stopped VMs still pay for attached disks; reserved static IPs charge $0.01/hr regardless of attachment status.
+
+VMs stopped for more than 7 days — still accruing disk charges:
+
 ```bash
-# VMs stopped for >7 days (still paying for disk)
 gcloud compute instances list \
   --filter="status=TERMINATED" \
   --format="table(name,zone,lastStartTimestamp,status)"
+```
 
-# Unattached persistent disks
+Unattached persistent disks sorted by size:
+
+```bash
 gcloud compute disks list \
   --filter="NOT users:*" \
   --format="table(name,zone,sizeGb,type.basename(),status)" \
   --sort-by=sizeGb
+```
 
-# Unattached static IPs (each costs $0.01/hour = $7.20/month)
+Unattached static IPs — each costs $0.01/hour ($7.20/month):
+
+```bash
 gcloud compute addresses list \
   --filter="status=RESERVED AND NOT users:*" \
   --format="table(name,region,address,status)"
+```
 
-# BigQuery tables that have never been queried (possible orphan data)
+BigQuery tables not modified in 90+ days — candidates for archival or deletion:
+
+```sql
 SELECT
   t.table_schema,
   t.table_name,
@@ -1355,6 +1653,8 @@ ORDER BY ts.size_bytes DESC
 ---
 
 ## FinOps Checklist
+
+Cadenced tasks to keep GCP spend under control. Automate the daily checks via Cloud Monitoring alerts and BigQuery scheduled queries. The weekly and monthly items require human review of recommendations and query results.
 
 ### Daily (Automated)
 - [ ] Budget alert thresholds set at 50%, 90%, 100% of monthly budget
@@ -1389,6 +1689,8 @@ ORDER BY ts.size_bytes DESC
 
 ### GCP Free Tiers Quick Reference
 
+Free tier limits reset monthly per billing account unless noted otherwise. Compute Engine and Cloud Run free tiers do not stack across multiple accounts.
+
 | Service | Free tier | Notes |
 |---------|-----------|-------|
 | Compute Engine | 1 e2-micro/month | `us-*` regions only (excl. us-east4/5) |
@@ -1419,3 +1721,5 @@ ORDER BY ts.size_bytes DESC
 - [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) — Log exclusion and volume reduction
 - [gcp-projects-and-apis](https://alp78.github.io/elysium/06-GCP/Core/gcp-projects-and-apis) — Project structure and billing linkage
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — IAM for billing account access
+- [07-Terraform](https://alp78.github.io/elysium/07-Terraform) — IaC provisioning of GCP resources with cost attribution labels baked in
+- [13-Observability](https://alp78.github.io/elysium/13-Observability) — Datadog cost monitoring and cloud spend dashboards

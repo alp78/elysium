@@ -1,6 +1,7 @@
 ---
 title: "02. Strings - C#"
-tags: [csharp]
+tags:
+  - csharp
 aliases: [string manipulation, string formatting, regex, string interpolation]
 description: "C# strings reference with executable examples and cell outputs — covers string creation, indexing, methods, interpolation, StringBuilder, and regular expressions. See [02_py_strings](https://alp78.github.io/elysium/02-Programming-Languages/Python/02_py_strings) for the Python equivalent."
 created: 2026-03-22
@@ -218,7 +219,9 @@ Accessing individual characters and extracting substrings. C# uses 0-based index
 
 Direct character access by position, substring extraction, and Range syntax for slicing.
 
-#### Indexing (0-based)
+#### Access characters and substrings by index and range
+
+C# strings support 0-based indexing with `[]`, hat indexing from the end with `^`, and Range syntax with `..` for slicing. All return values without modifying the original string.
 
 > [!info] Indexing and slicing
 >
@@ -355,7 +358,9 @@ The built-in methods on `System.String` for transforming case, trimming whitespa
 
 Methods for changing letter case. C# provides `ToUpper()`, `ToLower()`, and `ToTitleCase()` (via `TextInfo`). There are no built-in `swapcase` or `casefold` equivalents.
 
-#### Case Methods
+#### Convert case with ToUpper, ToLower, and ToTitleCase
+
+`ToUpper()` and `ToLower()` convert all characters in a string. `ToTitleCase()` is available via `CultureInfo.CurrentCulture.TextInfo` and capitalizes the first letter of each word. All three return new strings — the original is unchanged.
 
 > [!info] Case methods
 >
@@ -1215,14 +1220,16 @@ Decorate a `partial` method returning `Regex` with `[GeneratedRegex]`. The sourc
 > [!tip] When to use GeneratedRegex vs Compiled
 > Use `[GeneratedRegex]` for all patterns known at compile time — it is strictly better than `Compiled` in every dimension (startup, throughput, AOT). Reserve `new Regex(..., RegexOptions.Compiled)` only when the pattern is constructed dynamically at runtime. Analyzer `SYSLIB1045` automatically flags existing `Regex` usages that can be converted, with a one-click fixer in Visual Studio.
 
+#### Declare and call a source-generated regex
+
+The containing class must be `partial` so the source generator can emit the matching implementation. The `[GeneratedRegex]` attribute takes the pattern and optional `RegexOptions`. Call the generated method to get a cached `Regex` instance, then use it like any other `Regex`.
+
 ```csharp
-// Requires: partial class containing the method
-// partial class MyRegexHelper
-// {
-//     [GeneratedRegex(@"\d{3}-\d{3}-\d{4}", RegexOptions.IgnoreCase)]
-//     private static partial Regex PhonePattern();
-//
-//     // Usage:
-//     // var match = PhonePattern().Match(text);
-// }
+partial class MyRegexHelper
+{
+    [GeneratedRegex(@"\d{3}-\d{3}-\d{4}", RegexOptions.IgnoreCase)]
+    private static partial Regex PhonePattern();
+}
+
+var match = MyRegexHelper.PhonePattern().Match(text);
 ```

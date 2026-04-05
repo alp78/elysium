@@ -1,5 +1,5 @@
 ---
-tags: [cost, infrastructure, sql, terraform, airflow, bigquery, gcp, billing]
+tags: [gcp, cost, billing, bigquery, cost-management, tco]
 aliases:
   - TCO
   - total cost of ownership
@@ -36,6 +36,8 @@ This reference provides concrete, line-item TCO calculations for four archetypal
 
 ## How to Calculate TCO for a Data Pipeline
 
+A GCP data pipeline TCO spans six cost categories. Use the formula and reference prices below to build a bottom-up estimate before provisioning.
+
 ### Cost Categories
 
 1. **Compute** — Compute Engine VMs, Cloud Run (Jobs + Services), Dataflow workers, Cloud Composer worker nodes
@@ -47,6 +49,8 @@ This reference provides concrete, line-item TCO calculations for four archetypal
 7. **Human Cost** — Engineering hours for maintenance, incident response, and on-call. Not calculated here, but typically $5,000–$25,000/month equivalent for a 1–3 engineer team. Always factor into total platform cost.
 
 ### The TCO Formula
+
+Add each cost category to arrive at the monthly total. Apply a 15–20% buffer to account for unpredictable egress, log spikes, and one-off queries.
 
 ```text
 Monthly TCO = Compute + Storage + Networking + Processing + Operations + Licensing
@@ -63,11 +67,13 @@ For budgeting purposes, add a **15–20% buffer** for unexpected egress, log spi
 | Compute Engine e2-standard-8 | per hour | $0.2681 |
 | Compute Engine n2-standard-8 | per hour | $0.3880 |
 | Persistent Disk SSD | per GB/month | $0.170 |
+| Persistent Disk Balanced (pd-balanced) | per GB/month | $0.100 |
 | Persistent Disk Standard (HDD) | per GB/month | $0.040 |
 | Disk Snapshot | per GB/month | $0.026 |
 | GCS Standard storage | per GB/month | $0.020 |
 | GCS Nearline storage | per GB/month | $0.010 |
 | GCS Coldline storage | per GB/month | $0.004 |
+| GCS Archive storage | per GB/month | $0.0012 |
 | BigQuery on-demand queries | per TB scanned | $6.25 |
 | BigQuery active storage | per GB/month | $0.020 |
 | BigQuery long-term storage | per GB/month | $0.010 |
@@ -83,10 +89,21 @@ For budgeting purposes, add a **15–20% buffer** for unexpected egress, log spi
 | Cloud Scheduler | per job/month (after 3 free) | $0.10 |
 | Pub/Sub | per GB | $0.040 |
 | Cloud Composer small | per environment/month | ~$300 |
+| Network egress (internet) | per GB (varies by destination) | $0.08–$0.12 |
+
+> [!tip] Set Cloud Billing Budget Alerts Before You Build
+>
+> In **Billing → Budgets & Alerts**, create a budget for each GCP project with threshold alerts at 50%, 90%, and 100% of your expected monthly spend. GCP can also auto-disable billing (kill all paid services) when a threshold is breached — useful for dev/sandbox projects to prevent runaway costs.
+
+> [!tip] Export Billing Data to BigQuery for Cost Analysis
+>
+> Enable **Cloud Billing Export → BigQuery Export** in the Billing console. Once active, all cost and usage data flows into a BigQuery dataset in near-real-time. Query `gcp_billing_export_v1_*` tables to break down cost by service, SKU, project, label, or resource. This is the most powerful tool for attribution, anomaly detection, and chargeback — far more capable than the Billing console UI. See [BigQuery query patterns](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-fundamentals) for query examples.
 
 ---
 
 ## Reference Architecture 1: Small Batch Pipeline (~$100–150/month)
+
+Fully serverless — no fixed VM costs. All services are pay-per-use, making this the lowest-risk starting point for a new GCP data project.
 
 ### Scenario
 
@@ -174,20 +191,27 @@ Total Cloud Run: **$0.783/month** → round to **~$0.80/month**
 
 ### Architecture Diagram
 
+End-to-end flow from scheduled trigger through ingestion, raw storage, dbt transformation in BigQuery, and dashboard serving.
+
 ```mermaid
-graph LR
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
     CS[Cloud Scheduler\n3 cron jobs] -->|trigger| CRJ[Cloud Run Jobs\n3 ingestion jobs\n1 vCPU / 2 GB / 5 min]
     CRJ -->|write raw JSON| GCS[(GCS\n50 GB Standard)]
     GCS -->|dbt loads via\nexternal tables| BQ[(BigQuery\n100 GB storage\n500 GB scanned/mo)]
     BQ -->|Looker Studio\nconnection| DASH[Dashboards]
     SM[Secret Manager\n5 secrets] -.->|API keys| CRJ
-
-    style CS fill:#4285f4,color:#fff
-    style CRJ fill:#34a853,color:#fff
-    style GCS fill:#fbbc04,color:#000
-    style BQ fill:#4285f4,color:#fff
-    style DASH fill:#ea4335,color:#fff
-    style SM fill:#9c27b0,color:#fff
 ```
 
 ### Cost Optimization Tips — Small Tier
@@ -202,6 +226,8 @@ graph LR
 ---
 
 ## Reference Architecture 2: Medium Pipeline with SQL Server (~$200–400/month)
+
+Introduces fixed VM costs for full SQL Server control alongside self-hosted Airflow orchestration. The most common architecture for mid-size data engineering teams. See [Terraform provisioning](https://alp78.github.io/elysium/07-Terraform) for IaC of these resources.
 
 ### Scenario
 
@@ -309,8 +335,22 @@ A mid-size pipeline for a team of 2–4 engineers:
 
 ### Architecture Diagram
 
+Two-VM architecture with Cloud NAT for external API access. Airflow orchestrates both the ingestion jobs and the SQL Server transformation pipeline.
+
 ```mermaid
-graph TD
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
     EXT1[REST APIs] -->|HTTPS via Cloud NAT| CRJ[Cloud Run Job\nIngestion\nor Airflow task]
     EXT2[SFTP Server] -->|SFTP via Cloud NAT| CRJ
     CRJ -->|raw files| GCS[(GCS\n100 GB\nLanding Zone)]
@@ -321,17 +361,6 @@ graph TD
     BQ -->|analytics| DASH[Dashboards]
     NAT[Cloud NAT\n1 gateway] -.->|outbound internet| CRJ
     SNAP[Daily Snapshots\n200 GB] -.->|backup| SQLVM
-
-    style EXT1 fill:#9e9e9e,color:#fff
-    style EXT2 fill:#9e9e9e,color:#fff
-    style CRJ fill:#34a853,color:#fff
-    style GCS fill:#fbbc04,color:#000
-    style SQLVM fill:#ea4335,color:#fff
-    style AIRFLOW fill:#0288d1,color:#fff
-    style BQ fill:#4285f4,color:#fff
-    style DASH fill:#7b1fa2,color:#fff
-    style NAT fill:#ff6f00,color:#fff
-    style SNAP fill:#546e7a,color:#fff
 ```
 
 ### Paused vs Running Cost Comparison
@@ -377,6 +406,8 @@ This is the "dev environment off" state — keep the data, destroy the compute.
 ---
 
 ## Reference Architecture 3: Production Platform (~$800–1,500/month)
+
+Production-grade platform with managed orchestration, full-stack observability, and multi-source ingestion. Fixed costs dominate (~75%) — primarily Cloud Composer and Datadog. See [Cloud Scheduler and orchestration patterns](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling) for Cloud Composer DAG scheduling.
 
 ### Scenario
 
@@ -523,8 +554,22 @@ A production-grade platform for a team of 3–6 engineers with multiple data sou
 
 ### Architecture Diagram
 
+Production topology with Cloud Composer at the center. Pub/Sub handles event-driven ingestion; the HTTP load balancer fronts the Cloud Run API services.
+
 ```mermaid
-graph TD
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
     subgraph Sources
         API[REST APIs]
         DB[Source DBs]
@@ -575,14 +620,6 @@ graph TD
     LB --> CRS
     SQLVM -.->|metrics| DD
     COMP -.->|logs| LOG
-
-    style COMP fill:#f57c00,color:#fff
-    style SQLVM fill:#ea4335,color:#fff
-    style BQ fill:#4285f4,color:#fff
-    style CRJ fill:#34a853,color:#fff
-    style PS fill:#7b1fa2,color:#fff
-    style DD fill:#6324ad,color:#fff
-    style LB fill:#0288d1,color:#fff
 ```
 
 ### Cost Optimization: What to Cut First
@@ -601,6 +638,8 @@ Priority-ordered list (highest impact first):
 ---
 
 ## Reference Architecture 4: Enterprise Scale (~$3,000–10,000/month)
+
+Multi-environment, multi-team platform with BigQuery reserved slots and Always On SQL Server. Cost is dominated by BigQuery slot commitments and multi-environment duplication. See [Datadog monitoring integration](https://alp78.github.io/elysium/13-Observability) for full-stack cost alerting.
 
 ### Scenario
 
@@ -773,6 +812,8 @@ Total Dataflow: **$391.95/month**
 
 ## Cost Comparison: GCP vs AWS vs Azure
 
+Using the Medium Pipeline (Architecture 2) as the baseline. Total costs land within ~5% across clouds at list price — the real differentiators are discount mechanics, licensing, and ecosystem fit.
+
 For the **Medium Pipeline (Architecture 2)** as the comparison baseline:
 
 ### VM: 4 vCPU, 16 GB RAM
@@ -843,7 +884,7 @@ All managed Airflow services carry a ~$250–$350/month minimum. Self-hosting on
 
 ## Cost Planning Template
 
-Use this blank template to estimate your own architecture before building it.
+Use this blank template to estimate your own architecture before building it. Fill in one row per service, apply the unit prices from the Pricing Building Blocks table above, and add the 15% buffer row before presenting to stakeholders.
 
 ```markdown
 ## My Pipeline TCO Estimate
@@ -878,7 +919,8 @@ Use this blank template to estimate your own architecture before building it.
 | **Total TCO** | | | | | **$X.XX** |
 ```
 
-#### Setup instructions — Terraform apply, gcloud, environment variables
+### How to Use This Template
+
 1. Fill in each row for every service you plan to use.
 2. Leave unused rows blank or delete them.
 3. For Compute Engine, multiply hourly rate × expected hours/month × SUD factor (0.80 for 24/7 E2/N2 usage).
@@ -887,15 +929,23 @@ Use this blank template to estimate your own architecture before building it.
 
 ---
 
-### GCP Hidden Costs Checklist
+## GCP Hidden Costs Checklist
 
-Before signing off on a budget, audit each item:
+Before signing off on a budget, audit each item. These are the most common sources of GCP billing surprises in data engineering environments:
 
 - [ ] **Cloud NAT gateway (~$32/month each)** — Do your VMs actually need outbound internet access? If only Cloud Run Jobs need to hit external APIs, NAT is unnecessary. Cloud Run has built-in internet egress. Evaluate replacing VM-based ingestion with Cloud Run.
 
-- [ ] **Unused static IPs ($7.20/month each)** — A reserved static IP that is not attached to a running resource costs $0.010/hr = $7.20/month. List all reserved IPs with `gcloud compute addresses list --filter="status=RESERVED"` and release any not in use.
+- [ ] **Unused static IPs ($7.20/month each)** — A reserved static IP that is not attached to a running resource costs $0.010/hr = $7.20/month. List all reserved IPs and release any not in use:
 
-- [ ] **Unattached persistent disks** — When a VM is deleted and the disk is not, the disk continues billing at full rate. Run `gcloud compute disks list --filter="users:( )"` monthly to find orphaned disks.
+```bash
+gcloud compute addresses list --filter="status=RESERVED"
+```
+
+- [ ] **Unattached persistent disks** — When a VM is deleted and the disk is not, the disk continues billing at full rate. Run monthly to find orphaned disks:
+
+```bash
+gcloud compute disks list --filter="users:( )"
+```
 
 - [ ] **Cloud Logging beyond 50 GB free tier** — The first 50 GB per billing account per month is free. Beyond that: $0.50/GB. Verbose application logs from a busy Airflow or SQL Server instance can push you past 50 GB quickly. Audit log volume with Cloud Logging's usage metrics before going to production.
 
@@ -922,6 +972,8 @@ Before signing off on a budget, audit each item:
 ---
 
 ## Quick Reference: GCP Pricing Cheat Sheet (Early 2026)
+
+Point-in-time pricing snapshot for `us-central1`. Cross-check against the [GCP Pricing Calculator](https://cloud.google.com/products/calculator) for current rates before committing to a budget.
 
 ### Compute Engine (us-central1, per hour)
 
@@ -968,7 +1020,9 @@ Before signing off on a budget, audit each item:
 
 ---
 
-### TCO Summary: Architecture Comparison
+## TCO Summary: Architecture Comparison
+
+Summary of all four reference architectures by monthly cost, cost structure, and recommended use case.
 
 | Scenario | Monthly Cost | Fixed Cost % | Variable Cost % | Best For |
 |---|---|---|---|---|

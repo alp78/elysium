@@ -3,11 +3,11 @@ type: reference
 category: shell
 technology: [bash, powershell, awk]
 tags: [shell, text-processing]
-aliases: [awk, gawk, mawk, field processing, column extraction, text transformation, csv processing, awk reference, awk cheatsheet, GNU awk]
-keywords: [awk, gawk, mawk, field separator, record separator, NR, NF, BEGIN, END, print, printf, gsub, sub, split, substr, tolower, toupper, associative array, getline, FNR, OFS, ORS, RS, FS, pattern-action, csv parsing, log parsing, data aggregation, group-by, running total, pivot, text processing, shell scripting, PowerShell equivalent, Import-Csv, ConvertFrom-Csv, Select-Object, Where-Object, Measure-Object, ForEach-Object, data engineering, ETL, column extraction, delimiter conversion, TSV, pipe-delimited]
-description: "Exhaustive awk/gawk reference for data engineers covering field extraction, filtering, aggregation, string functions, multi-file processing, advanced patterns, and PowerShell equivalents for every key technique."
+aliases: [awk, gawk, mawk, field processing, column extraction, text transformation, csv processing, awk reference, awk cheatsheet, GNU awk, awk functions, awk control flow]
+keywords: [awk, gawk, mawk, field separator, record separator, NR, NF, BEGIN, END, print, printf, gsub, sub, gensub, match, split, substr, tolower, toupper, associative array, getline, FNR, OFS, ORS, RS, FS, pattern-action, csv parsing, log parsing, data aggregation, group-by, running total, pivot, text processing, shell scripting, PowerShell equivalent, Import-Csv, ConvertFrom-Csv, Select-Object, Where-Object, Measure-Object, ForEach-Object, data engineering, ETL, column extraction, delimiter conversion, TSV, pipe-delimited, user-defined functions, POSIX character classes, next, nextfile, output redirection, rand, srand, int, sqrt]
+description: "Exhaustive awk/gawk reference for data engineers covering field extraction, filtering, control flow, user-defined functions, aggregation, string functions, arithmetic functions, multi-file processing, output redirection, advanced patterns, and PowerShell equivalents for every key technique."
 created: 2026-03-22
-updated: 2026-04-03
+updated: 2026-04-05
 status: complete
 ---
 
@@ -424,6 +424,45 @@ awk '/ERROR|FATAL/' app.log
 awk '/\bERROR\b/' app.log
 ```
 
+### Linux | awk | POSIX character classes in patterns
+
+awk supports POSIX character classes inside bracket expressions. These are portable across locales and more readable than hardcoded ranges like `[a-zA-Z]`.
+
+| Class | Matches | Equivalent |
+|---|---|---|
+| `[:alpha:]` | Any letter | `[a-zA-Z]` (ASCII only) |
+| `[:digit:]` | Any digit | `[0-9]` |
+| `[:alnum:]` | Letter or digit | `[a-zA-Z0-9]` |
+| `[:upper:]` | Uppercase letter | `[A-Z]` |
+| `[:lower:]` | Lowercase letter | `[a-z]` |
+| `[:space:]` | Whitespace (space, tab, newline, etc.) | `[ \t\n\r\f\v]` |
+| `[:blank:]` | Space or tab only | `[ \t]` |
+| `[:punct:]` | Punctuation symbols | |
+| `[:print:]` | Printable characters (including space) | |
+| `[:graph:]` | Printable characters (excluding space) | |
+| `[:cntrl:]` | Control characters | |
+| `[:xdigit:]` | Hexadecimal digits | `[0-9a-fA-F]` |
+
+POSIX classes must be enclosed in an additional pair of brackets: `[[:alpha:]]`, not `[:alpha:]`.
+
+#### Match lines starting with a letter
+
+```bash
+awk '/^[[:alpha:]]/' data.txt
+```
+
+#### Match fields containing only digits
+
+```bash
+awk -F',' '$2 ~ /^[[:digit:]]+$/' data.csv
+```
+
+#### Strip leading and trailing whitespace from a field
+
+```bash
+awk -F',' '{gsub(/^[[:space:]]+|[[:space:]]+$/, "", $1); print $1}' data.csv
+```
+
 ### Linux | awk | field conditions
 
 #### Numeric comparison on a field
@@ -556,6 +595,124 @@ awk -F',' 'NR>1 && $2=="FAILED" && NR<=21' jobs.csv
 
 ---
 
+## Linux awk | control flow
+
+awk supports the same control flow constructs as C: `if/else`, `for`, `while`, `do-while`, and the awk-specific `next` and `nextfile` statements. These constructs appear inside the action block of a pattern-action rule and allow conditional logic and iteration within record processing.
+
+### Linux | awk | if / else
+
+`if` evaluates a condition and executes the associated block. `else if` and `else` provide additional branches. Braces are required when the body contains more than one statement.
+
+#### Filter rows by category with if / else if
+
+```bash
+awk -F',' 'NR>1 {
+  if ($3 > 1000)      print $1, "HIGH"
+  else if ($3 > 100)  print $1, "MED"
+  else                 print $1, "LOW"
+}' data.csv
+```
+
+#### Ternary operator (inline if)
+
+The ternary operator `condition ? value_if_true : value_if_false` is the inline form of `if/else`. It is commonly used inside `print` and `printf` statements for compact conditional output.
+
+```bash
+awk -F',' 'NR>1 {print $1, ($3 > 100 ? "ABOVE" : "BELOW")}' data.csv
+```
+
+### Linux | awk | for loop
+
+The C-style `for` loop iterates a fixed number of times. It is the standard way to process a range of fields or generate output sequences.
+
+#### Sum fields 2 through 7 per row
+
+```bash
+awk '{
+  total = 0
+  for (i = 2; i <= 7; i++) total += $i
+  print $1, total
+}' items-sold.txt
+```
+
+#### Iterate over associative array keys
+
+The `for (key in array)` form iterates over all existing keys. Iteration order is not guaranteed.
+
+```bash
+awk '{count[$1]++} END {for (k in count) print k, count[k]}' data.txt
+```
+
+### Linux | awk | while and do-while
+
+`while` checks the condition before each iteration. `do-while` executes the body at least once, then checks the condition.
+
+#### Read fields with while
+
+```bash
+awk '{
+  i = 1
+  while (i <= NF) {
+    print "Field", i, "=", $i
+    i++
+  }
+}' data.txt
+```
+
+#### Generate a repeated string with do-while
+
+```bash
+awk 'BEGIN {
+  do {
+    str = str "x"
+    count++
+  } while (count < 50)
+  print str
+}'
+```
+
+### Linux | awk | break and continue
+
+`break` exits the innermost `for`, `while`, or `do-while` loop immediately. `continue` skips the rest of the current iteration and proceeds to the next one. Neither affects pattern-action rule evaluation — they only apply to loops within an action block.
+
+#### Skip negative values and stop at a sentinel
+
+```bash
+awk '{
+  for (i = 1; i <= NF; i++) {
+    if ($i < 0) continue
+    if ($i == 999) break
+    sum += $i
+  }
+} END {print sum}' data.txt
+```
+
+### Linux | awk | next and nextfile
+
+`next` stops processing the current record immediately, skips all remaining pattern-action rules for that record, and reads the next input record. `nextfile` (gawk / POSIX 2008) stops processing the current file entirely and moves to the next input file.
+
+#### Skip comment lines and blank lines
+
+```bash
+awk '/^#/ {next} /^$/ {next} {print}' config.txt
+```
+
+Both patterns cause awk to immediately advance to the next record without executing the final `{print}` rule.
+
+#### Stop processing a file after the first match
+
+```bash
+awk '/CRITICAL/ {print FILENAME, $0; nextfile}' *.log
+```
+
+`nextfile` ensures that only the first `CRITICAL` line from each file is printed, which is also significantly faster when scanning many large files.
+
+> [!tip] next vs getline for skipping records
+>
+> `next` is the clean way to skip a record — it returns control to the top of the awk program and reads the next line naturally. `getline` reads the next line but continues execution at the same point in the script, which can produce subtle bugs if not handled carefully. Prefer `next` for skipping; reserve `getline` for reading from files or commands.
+
+---
+
 ## Linux awk | data transformation
 
 This section covers arithmetic, string manipulation, and aggregate operations — the core of awk's value for ETL and data engineering pipelines.
@@ -587,6 +744,50 @@ awk -F',' 'NR>1 {margin=($3-$4)/$3*100; printf "%s %.2f%%\n", $1, margin}' data.
 ```bash
 awk '{print int($1/60), $1%60}' seconds.txt
 ```
+
+### Linux | awk | built-in arithmetic functions
+
+awk includes a set of built-in arithmetic functions inherited from C. These operate on numeric values and are useful for rounding, random sampling, and mathematical transformations in data pipelines.
+
+| Function | Description |
+|---|---|
+| `int(x)` | Truncate `x` to integer (rounds toward zero) |
+| `sqrt(x)` | Square root of `x` |
+| `exp(x)` | Exponential: `e` raised to the power `x` |
+| `log(x)` | Natural logarithm (base `e`) of `x` |
+| `sin(x)` | Sine of `x` (radians) |
+| `cos(x)` | Cosine of `x` (radians) |
+| `atan2(y, x)` | Arctangent of `y/x` in radians |
+| `rand()` | Random float between 0 and 1 (exclusive) |
+| `srand(seed)` | Seed the random number generator; returns the previous seed |
+
+#### Truncate a float to integer
+
+```bash
+echo "3.7" | awk '{print int($1)}'
+```
+
+```text
+3
+```
+
+`int()` truncates toward zero: `int(-3.7)` returns `-3`, not `-4`.
+
+#### Generate a random sample of 10% of rows
+
+```bash
+awk 'BEGIN{srand()} rand() < 0.10' data.csv
+```
+
+`srand()` without an argument seeds from the current time, producing different results each run. Call `srand(42)` for reproducible sampling.
+
+#### Compute the natural log of each value
+
+```bash
+awk '$1 > 0 {printf "%.6f\n", log($1)}' values.txt
+```
+
+The guard `$1 > 0` prevents domain errors since `log(0)` and `log(negative)` are undefined.
 
 ### Linux | awk | string functions
 
@@ -662,6 +863,62 @@ awk '{print toupper($1)}' data.txt
 
 ```bash
 awk -F',' '{print $1, toupper($2)}' data.csv
+```
+
+#### gensub() — substitution with backreferences (gawk only)
+
+`gensub(regex, replacement, how [, target])` is gawk's enhanced substitution function. Unlike `sub()` and `gsub()`, it returns the modified string instead of modifying the target in place. It also supports backreferences (`\1`, `\2`, etc.) in the replacement string, making it far more powerful for pattern extraction and reformatting.
+
+```bash
+echo "2026-03-22" | gawk '{print gensub(/([0-9]{4})-([0-9]{2})-([0-9]{2})/, "\\3/\\2/\\1", "g")}'
+```
+
+```text
+22/03/2026
+```
+
+The third argument `how` is either `"g"` (global) or a number indicating which occurrence to replace. `gensub` with `how=1` replaces only the first match, like `sub`, but returns the result rather than modifying `$0`.
+
+```bash
+echo "foo_bar_baz" | gawk '{print gensub(/_/, "-", 2)}'
+```
+
+```text
+foo_bar-baz
+```
+
+Only the second underscore is replaced.
+
+> [!info] gensub is gawk-only
+>
+> `gensub()` is not part of POSIX awk. It is available in gawk (GNU awk) only. For portable scripts, use `sub()` or `gsub()` instead. If you need backreference capture portably, use `match()` with the array form.
+
+#### match() — find a pattern and capture groups (gawk array form)
+
+`match(string, regex)` returns the position of the first match (or 0 if not found) and sets `RSTART` and `RLENGTH`. In gawk, `match(string, regex, array)` additionally populates `array` with the captured groups: `array[0]` is the full match, `array[1]` is the first group, and so on.
+
+```bash
+echo "error code=42 msg=timeout" | gawk '{
+    match($0, /code=([0-9]+) msg=([a-z]+)/, arr)
+    print "Code:", arr[1], "Message:", arr[2]
+}'
+```
+
+```text
+Code: 42 Message: timeout
+```
+
+The POSIX-portable form (without the array argument) only provides `RSTART` and `RLENGTH`:
+
+```bash
+echo "error code=42" | awk '{
+    if (match($0, /code=[0-9]+/))
+        print substr($0, RSTART, RLENGTH)
+}'
+```
+
+```text
+code=42
 ```
 
 > [!warning] sub() and gsub() target parameter
@@ -1357,6 +1614,46 @@ awk '{
 }' bigfile.txt
 ```
 
+### Linux | awk | output redirection to files
+
+The `print` and `printf` statements can redirect their output to a file using `>` (truncate) or `>>` (append). The filename is any expression that evaluates to a string. The file is opened on first use and stays open until explicitly closed with `close()` or until the program ends.
+
+#### Write records to different files by category
+
+```bash
+awk -F',' 'NR>1 {print > ($2 ".csv")}' data.csv
+```
+
+Each unique value in field 2 creates a separate output file. For a CSV with `status` values like `ACTIVE` and `INACTIVE`, this produces `ACTIVE.csv` and `INACTIVE.csv`.
+
+#### Append to a log file
+
+```bash
+awk '/ERROR/ {print >> "errors.log"}' app.log
+```
+
+`>>` appends to the file without truncating it, making this safe for incremental runs.
+
+#### Write to a file and close explicitly
+
+```bash
+awk -F',' '{
+  outfile = "output_" $1 ".csv"
+  print $0 > outfile
+  close(outfile)
+}' data.csv
+```
+
+Without `close()`, awk keeps each file open. Most systems limit the number of simultaneous open file descriptors (typically 1024). When splitting data into many files, close each file after writing to avoid hitting this limit.
+
+> [!warning] > is redirection, not comparison, in print arguments
+>
+> Inside a `print` argument list, `>` is interpreted as a redirection operator, not a comparison. To use `>` as a comparison within `print`, wrap the expression in parentheses: `print (a > b ? a : b) > "out.txt"`.
+
+> [!success] Parenthesize comparisons in print output
+>
+> Always parenthesize the conditional expression when redirecting output: `print (a > b ? a : b) > "file"`. This prevents awk from misinterpreting the `>` as a redirect of the partial expression.
+
 ### Linux | awk | store the program in a file
 
 For complex aggregation scripts, storing the awk program in a `.awk` file improves readability and version control. Invoke it with `-f`.
@@ -1385,6 +1682,67 @@ END {
         printf "%s,%d,%.2f,%.4f\n", c, cnt[c], sum[c], sum[c]/cnt[c]
 }
 ```
+
+### Linux | awk | user-defined functions
+
+awk supports user-defined functions that can be called from any pattern-action rule or from other functions. Functions are defined at the top level of the program (outside any rule) and follow C-like syntax. They accept arguments by value (scalars) and by reference (arrays).
+
+#### Function syntax
+
+```text
+function name(param1, param2,    local1, local2) {
+    body
+    return value
+}
+```
+
+Parameters and local variables share the same list, separated by convention with extra spaces. All variables not listed in the parameter list are global. Variables listed after the extra-space gap are local to the function — they receive no argument from the caller.
+
+#### Reusable max function
+
+A function that returns the maximum value from an associative array. This pattern is useful for normalizing or scaling aggregated results.
+
+```bash
+awk '
+function max(arr,    big, i) {
+    big = 0
+    for (i in arr)
+        if (arr[i] > big) big = arr[i]
+    return big
+}
+{count[$1]++}
+END {
+    m = max(count)
+    for (k in count)
+        printf "%-15s %d/%d (%.0f%%)\n", k, count[k], m, count[k]/m*100
+}' data.txt
+```
+
+The function receives the array by reference (arrays are always passed by reference in awk). `big` and `i` are local variables declared after the conventional gap.
+
+#### Trim whitespace function
+
+```bash
+awk '
+function trim(s) {
+    gsub(/^[[:space:]]+|[[:space:]]+$/, "", s)
+    return s
+}
+BEGIN {FS=","; OFS=","}
+{
+    for (i = 1; i <= NF; i++) $i = trim($i)
+    print
+}' data.csv
+```
+
+> [!tip] Local variables in awk functions
+>
+> awk has no `local` keyword. All variables inside a function are global unless they appear in the parameter list. The convention is to add extra spaces before the local variables in the parameter list: `function f(arg1, arg2,    local1, local2)`. This is purely cosmetic for the programmer — awk treats all parameters identically — but it clearly communicates intent.
+
+> [!quote]
+> User-defined functions can appear anywhere between the pattern-action rules. They are called by name and arguments, just like the built-in functions.
+>
+> Source: Robbins & Dougherty | Sed awk.epub
 
 ---
 
@@ -1708,6 +2066,30 @@ Print every unique value of column 2 in order of first appearance.
 > [!tip] Performance: mawk vs gawk
 >
 > For pure text processing on very large files (multi-GB logs), `mawk` is typically 2–5x faster than `gawk` because it has a leaner runtime. Use `mawk` for speed-critical pipelines when extended gawk features (multi-dimensional arrays, `PROCINFO`, `gensub`) are not needed.
+
+---
+
+## When to use awk vs sed
+
+awk and sed are complementary tools that share regex pattern matching but serve different purposes. sed operates on individual lines with substitution-oriented commands. awk operates on records split into fields and supports variables, arrays, arithmetic, and full control flow — it is a programming language, not just a stream editor.
+
+| Criterion | Use **sed** | Use **awk** |
+|---|---|---|
+| Line-level substitution (`s/old/new/`) | Preferred — sed is faster and more concise | Possible but verbose |
+| Field/column extraction | Not practical — sed has no concept of fields | Preferred — `$1`, `$2`, `$NF` |
+| Arithmetic on field values | Not supported | Preferred — native arithmetic |
+| Multi-line transformations | Possible via hold space (complex) | Possible via RS or getline (simpler) |
+| Aggregation (sum, count, avg, group-by) | Not supported | Preferred — associative arrays |
+| In-place file editing (`-i`) | Preferred — `sed -i` is a core use case | Not natively supported |
+| Generating reports and formatted output | Limited | Preferred — `printf`, `OFS`, `BEGIN`/`END` |
+| Simple global find-and-replace | Preferred | Overkill |
+| Multi-file join / lookup | Awkward | Preferred — `FNR==NR` trick |
+
+> [!tip] Pipeline rule of thumb
+>
+> If the task can be expressed as a regex substitution on each line, use sed. If the task requires splitting lines into columns, doing math, or accumulating state across records, use awk. For anything requiring data structures beyond arrays, switch to Python.
+
+For the sed perspective on this comparison, including in-place editing, hold space, and substitution flags, see [sed-stream-editing](https://alp78.github.io/elysium/01-Shell/Text-Processing/sed-stream-editing).
 
 ---
 

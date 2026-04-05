@@ -84,6 +84,10 @@ Multiple catch blocks let you handle different exception types with different re
 >
 > Always order catch blocks from most specific subclass to most general base class. Place `catch (Exception)` last as a fallback only. This ensures each exception type receives the correct recovery logic.
 
+#### Catch by arithmetic exception type
+
+Three catch blocks handle the three possible outcomes of parsing and multiplying a string value: a valid result, a non-numeric input (`FormatException`), and a value that overflows during the `checked` multiplication (`OverflowException`). The general `Exception` fallback catches anything not covered by the two specific handlers.
+
 ```csharp
 void ParseRow(string input)
 {
@@ -107,10 +111,22 @@ void ParseRow(string input)
     }
 }
 
-ParseRow("42");           // ok
-ParseRow("not_a_number"); // FormatException
-ParseRow("999999");       // OverflowException
+ParseRow("42");
+ParseRow("not_a_number");
+ParseRow("999999");
+```
 
+```text
+Parsed: 42000000
+Format error: The input string 'not_a_number' was not in a correct format.
+Overflow: Arithmetic operation resulted in an overflow.
+```
+
+#### Catch by file I/O exception type
+
+Three catch blocks distinguish between a missing file (`FileNotFoundException`), a permissions failure (`UnauthorizedAccessException`), and any other I/O error (`IOException`). The `IOException` base class acts as the general fallback for disk, network, or device errors not covered by the two specific handlers.
+
+```csharp
 void LoadFile(string path)
 {
     try
@@ -136,9 +152,6 @@ LoadFile("C:\\Windows\\System32");
 ```
 
 ```text
-Parsed: 42000000
-Format error: The input string 'not_a_number' was not in a correct format.
-Overflow: Arithmetic operation resulted in an overflow.
 File not found: missing.csv
 Permission denied: C:\Windows\System32
 ```
@@ -266,20 +279,93 @@ All C# exceptions inherit from `System.Exception`. The built-in hierarchy branch
 > - `Data` — key-value diagnostic context
 > - Hierarchical catching: `catch (SystemException)` handles the entire family
 
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    EX["Exception"]
+    SYS["SystemException"]
+    AGG["AggregateException"]
+    CUSTOM["Custom exceptions"]
+
+    ARG["ArgumentException"]
+    ARGNULL["ArgumentNullException"]
+    ARGRANGE["ArgumentOutOfRangeException"]
+
+    ARITH["ArithmeticException"]
+    DIV["DivideByZeroException"]
+    OVF["OverflowException"]
+
+    INV["InvalidOperationException"]
+    NRE["NullReferenceException"]
+    FMT["FormatException"]
+    KNF["KeyNotFoundException"]
+
+    IO["IOException"]
+    FNF["FileNotFoundException"]
+    DNF["DirectoryNotFoundException"]
+
+    UA["UnauthorizedAccessException"]
+
+    EX --> SYS
+    EX --> AGG
+    EX --> CUSTOM
+
+    SYS --> ARG
+    ARG --> ARGNULL
+    ARG --> ARGRANGE
+
+    SYS --> ARITH
+    ARITH --> DIV
+    ARITH --> OVF
+
+    SYS --> INV
+    SYS --> NRE
+    SYS --> FMT
+    SYS --> KNF
+
+    SYS --> IO
+    IO --> FNF
+    IO --> DNF
+
+    SYS --> UA
+
+    style EX fill:#292e42,stroke:#7aa2f7,color:#c0caf5
+    style SYS fill:#292e42,stroke:#bb9af7,color:#c0caf5
+    style AGG fill:#292e42,stroke:#e0af68,color:#c0caf5
+    style CUSTOM fill:#292e42,stroke:#565f89,color:#c0caf5,stroke-dasharray: 5 5
+    style ARG fill:#1a1b26,stroke:#7dcfff,color:#c0caf5
+    style ARGNULL fill:#1a1b26,stroke:#565f89,color:#c0caf5
+    style ARGRANGE fill:#1a1b26,stroke:#565f89,color:#c0caf5
+    style ARITH fill:#1a1b26,stroke:#7dcfff,color:#c0caf5
+    style DIV fill:#1a1b26,stroke:#565f89,color:#c0caf5
+    style OVF fill:#1a1b26,stroke:#565f89,color:#c0caf5
+    style INV fill:#1a1b26,stroke:#7dcfff,color:#c0caf5
+    style NRE fill:#1a1b26,stroke:#7dcfff,color:#c0caf5
+    style FMT fill:#1a1b26,stroke:#7dcfff,color:#c0caf5
+    style KNF fill:#1a1b26,stroke:#7dcfff,color:#c0caf5
+    style IO fill:#1a1b26,stroke:#7dcfff,color:#c0caf5
+    style FNF fill:#1a1b26,stroke:#565f89,color:#c0caf5
+    style DNF fill:#1a1b26,stroke:#565f89,color:#c0caf5
+    style UA fill:#1a1b26,stroke:#7dcfff,color:#c0caf5
+```
+
+#### Inspect exception properties
+
+Catching an `ArgumentException` exposes its `Message`, `ParamName`, and runtime type via `GetType().Name`. These properties are available on all exception types — `ParamName` is specific to `ArgumentException` and its subclasses.
+
 ```csharp
 #nullable enable
-//   Exception
-//   ├── SystemException
-//   │   ├── ArgumentException (ArgumentNullException, ArgumentOutOfRangeException)
-//   │   ├── ArithmeticException (DivideByZeroException, OverflowException)
-//   │   ├── InvalidOperationException
-//   │   ├── NullReferenceException
-//   │   ├── FormatException
-//   │   ├── KeyNotFoundException
-//   │   ├── IOException (FileNotFoundException, DirectoryNotFoundException)
-//   │   └── UnauthorizedAccessException
-//   ├── AggregateException (wraps multiple exceptions from parallel tasks)
-//   └── your custom exceptions inherit from Exception or a specific subclass
 
 try
 {

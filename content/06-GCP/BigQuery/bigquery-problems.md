@@ -84,14 +84,16 @@ BigQuery uses columnar storage (Capacitor format) and charges $6.25 per TB scann
 
 **Prevention protocol**
 
-1. Enforce partition filter requirement at the table level so that any query without a partition filter is rejected:
+1. Enforce partition filter requirement at the table level so that any query without a partition filter is rejected at execution time:
 
 ```sql
--- Require partition filter on all partitioned production tables
 ALTER TABLE analytics.daily_prices
 SET OPTIONS (require_partition_filter = TRUE);
+```
 
--- Apply to all tables in a dataset via Terraform
+For new tables, declare it in Terraform to enforce it as infrastructure-as-code:
+
+```hcl
 resource "google_bigquery_table" "daily_prices" {
   dataset_id = google_bigquery_dataset.analytics.dataset_id
   table_id   = "daily_prices"
@@ -129,7 +131,6 @@ production:
 3. Use dry-run to check cost before executing:
 
 ```bash
-# Check bytes that would be scanned without actually running the query
 bq query \
   --dry_run \
   --use_legacy_sql=false \
@@ -139,9 +140,13 @@ bq query \
      AND index_code = "MSCI_WORLD"'
 ```
 
-> [!info] Dry-Run Output
+```text
+Query successfully validated. Assuming the tables are not modified, running this query will process 47185920 bytes (45 MB). This query will bill its running project.
+```
+
+> [!info] Reading dry-run output
 >
-> The dry run returns a validation message and the total bytes that would be scanned. For example, 45,678,901 bytes (roughly 45 MB) costs approximately $0.00028 at on-demand pricing -- well within acceptable limits for an ad-hoc query.
+> The `bytes` figure is what BigQuery will bill. Divide by 1,099,511,627,776 (1 TB) and multiply by $6.25 to get estimated cost. 45 MB ≈ $0.00028 — well within acceptable limits for a targeted ad-hoc query. A full 5 TB scan would return ~5,497,558,138,880 bytes ($31.25).
 
 4. Monitor top-cost queries daily using INFORMATION_SCHEMA:
 
@@ -314,6 +319,10 @@ ORDER BY start_time;
 
 ```bash
 bq cancel --project_id=my-financial-platform <job_id>
+```
+
+```text
+Job 'my-financial-platform:EU.<job_id>' successfully cancelled.
 ```
 
 3. Requeue failed tasks with a sequentialized approach — set `max_active_tasks` on the TaskGroup to 15:
@@ -608,6 +617,38 @@ BigQuery has three data ingestion mechanisms with dramatically different cost an
 
 **Prevention protocol**
 
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A([New data to load into BigQuery]) --> B{Latency requirement?}
+    B -->|Daily / Hourly batch| C[Write Parquet to GCS]
+    B -->|Near-real-time seconds| D{Volume per second?}
+    B -->|Real-time milliseconds single events| E[Legacy Streaming API]
+    C --> F[bq load job from GCS]
+    D -->|High throughput| G[Storage Write API — batched]
+    D -->|Low throughput| E
+    F --> H["Cost: FREE\nDML-ready: immediately\nLatency: minutes"]
+    G --> I["Cost: $0.025/GB\nDML-ready: immediately\nLatency: seconds"]
+    E --> J["Cost: $0.012/200MB\nDML-ready: ~30 min delay\nLatency: ms"]
+    style F fill:#1a1b26,stroke:#9ece6a
+    style G fill:#1a1b26,stroke:#e0af68
+    style E fill:#1a1b26,stroke:#f7768e
+    style H fill:#292e42,stroke:#9ece6a
+    style I fill:#292e42,stroke:#e0af68
+    style J fill:#292e42,stroke:#f7768e
+```
+
 1. Use load jobs (GCS → BigQuery) for all batch financial data — this is the standard Cloud Run export pattern:
 
 ```python
@@ -712,7 +753,7 @@ These problems produce incorrect results or severe performance degradation. Many
 Index constituent weights are stored as `FLOAT64` in the `analytics.index_weights` table. A validation query checks that constituent weights sum to 1.0 for each index on each date. The query returns `0.9999999999999998` for the MSCI World index. An automated audit validation script that checks `SUM(weight) = 1.0` fails. The pipeline is halted pending investigation. The root cause is not a data error — it is FLOAT64's fundamental inability to represent certain decimal fractions exactly.
 
 **Root cause**
-`FLOAT64` (IEEE 754 double-precision) stores numbers as binary fractions. Decimal values like `0.1`, `0.2`, and `0.3` cannot be represented exactly in binary — they become repeating fractions. When you sum 1,500 constituent weights that are each imprecisely stored, the errors compound. `NUMERIC` (DECIMAL) in BigQuery stores numbers as exact decimal values with up to 38 digits of precision and 9 decimal places, making it the correct type for all financial values.
+`FLOAT64` (IEEE 754 double-precision) stores numbers as binary fractions. Decimal values like `0.1`, `0.2`, and `0.3` cannot be represented exactly in binary — they become repeating fractions. When you sum 1,500 constituent weights that are each imprecisely stored, the errors compound. `NUMERIC` (DECIMAL) in BigQuery stores numbers as exact decimal values with up to 38 digits of precision and 9 decimal places, making it the correct type for stored financial values. For intermediate calculation results that chain many operations (e.g., cumulative index return calculations), `BIGNUMERIC` (76 digits precision, 38 decimal places) prevents precision exhaustion in long calculation chains.
 
 **Consequences**
 - Audit validation failures trigger false alarms, causing pipeline halts
@@ -840,6 +881,14 @@ BigQuery's partition pruning requires that the filter expression directly refere
 - The partition structure provides zero benefit despite the storage and maintenance overhead
 - Hard to detect: the query returns correct results, only the cost and performance reveal the problem
 
+> [!warning] Functions on partition columns silently disable pruning
+>
+> `WHERE DATE(price_date) = '2026-03-22'` scans the entire table. BigQuery cannot invert arbitrary functions to determine partition ranges. The query returns correct results at 2,500× expected cost with no warning.
+
+> [!success] Always compare the partition column directly
+>
+> Use `WHERE price_date = '2026-03-22'` — no function wrapping. Validate with `bq query --dry_run` before deploying any scheduled query or dbt model against a partitioned table.
+
 **Prevention protocol**
 
 1. Use direct column comparisons, never functions on partition columns:
@@ -937,6 +986,10 @@ BigQuery clustering physically sorts and co-locates data by the specified column
 - Performance degradation as partition sizes grow over time
 - Analysts experience slow queries and complain about BigQuery performance, masking the real issue
 
+> [!tip] Clustering is free — add it at table creation
+>
+> Clustering has no storage overhead and no maintenance jobs. It is applied automatically by BigQuery as data is written. For a table with four cluster columns, each highly selective filter reduces bytes billed proportionally. The only cost of not clustering is paid on every query.
+
 **Prevention protocol**
 
 1. Add clustering to all partitioned tables by the top filter columns, in order of selectivity (most selective first):
@@ -1033,6 +1086,14 @@ BigQuery's MERGE statement evaluates the `WHEN MATCHED` condition across all row
 - As the table grows over time, costs increase even with a constant daily row count
 - High slot consumption for a simple insert/update operation blocks other queries
 - Economic unsustainability: a table that grows to 10B rows would cost $125/merge
+
+> [!warning] MERGE cost scales with total table size, not incremental data size
+>
+> dbt's default `merge` strategy scans the entire target table to find matching rows. A MERGE loading 100 new rows into a 1B-row table scans ~2TB — $12.50 per run. At 288 runs/day that is $3,600/day.
+
+> [!success] Use `insert_overwrite` for date-partitioned tables
+>
+> Switch to `incremental_strategy = 'insert_overwrite'` for tables where new data arrives by partition. This replaces the target partition entirely, scanning only that partition rather than the full table. For late-arriving updates, add `incremental_predicates` to restrict the MERGE to a recent date window.
 
 **Prevention protocol**
 
@@ -1142,6 +1203,14 @@ On-demand BigQuery pricing gives each project up to 2,000 concurrent slots (soft
 - Analysts lose trust in the platform and resort to downloading data to Excel
 - On-demand slot queuing can cause cascading failures in time-sensitive pipelines
 
+> [!warning] On-demand pricing provides no SLA and no query priority
+>
+> On-demand mode shares 2,000 slots across all project workloads. There is no mechanism to prioritize a client-facing dashboard over an analyst's ad-hoc exploration query. During peak hours, all queries queue equally.
+
+> [!success] Use BigQuery Editions reservations to isolate workloads
+>
+> Purchase ENTERPRISE edition slot reservations and assign separate reservation assignments to ETL, analytics, and dashboards. This guarantees each workload a dedicated slot pool, eliminating contention. For dashboards specifically, BI Engine bypasses the slot queue entirely for pinned tables.
+
 **Prevention protocol**
 
 1. Monitor slot utilization over time to quantify the problem:
@@ -1186,14 +1255,9 @@ resource "google_bigquery_reservation_assignment" "etl_assignment" {
 }
 ```
 
-3. Use BI Engine for dashboard queries — in-memory acceleration bypasses slot queueing:
+3. Use BI Engine for dashboard queries — in-memory acceleration bypasses slot queueing entirely for tables pinned to the reservation:
 
 ```hcl
-resource "google_bigtable_app_profile" "bi_engine" {
-  # BI Engine reservation for dashboard acceleration
-}
-
-# In Terraform for BI Engine:
 resource "google_bigquery_bi_reservation" "default" {
   location = "EU"
   size     = 10737418240  # 10 GB BI Engine reservation
@@ -1216,6 +1280,10 @@ ORDER BY seconds_running DESC;
 
 ```bash
 bq cancel --project_id=my-financial-platform <long_running_job_id>
+```
+
+```text
+Job 'my-financial-platform:EU.<long_running_job_id>' successfully cancelled.
 ```
 
 2. As an immediate mitigation, move ETL jobs to BATCH priority to free interactive slots for dashboards:
@@ -1453,6 +1521,8 @@ ORDER BY creation_time DESC;
 
 ## Moderate — Operational Pain
 
+These problems cause pipeline failures, silent staleness, or escalating manual toil. Each has a preventive fix that eliminates the recurrence pattern.
+
 ### Schema Evolution Breaks Downstream
 
 **What happens**
@@ -1466,6 +1536,14 @@ BigQuery views, scheduled queries, and dbt models reference table columns by nam
 - No centralized way to identify all affected objects without manual investigation
 - Index calculation pipeline down until all references are updated
 - Risk of missing a reference in a rarely-run query that fails weeks later
+
+> [!warning] BigQuery has no built-in column lineage tracking
+>
+> There is no native mechanism to enumerate all views, scheduled queries, or dbt models that reference a given column. A rename that takes 10 seconds in SQL Server can generate 3–5 hours of downstream investigation in BigQuery.
+
+> [!success] Scan INFORMATION_SCHEMA.VIEWS before any rename
+>
+> Run `REGEXP_CONTAINS(view_definition, r'\bclose_px\b')` across all datasets before committing to a rename. Combine with dbt contracts (`contract: enforced: true`) so dbt validates the schema contract at compile time and fails loudly rather than silently querying the wrong column.
 
 **Prevention protocol**
 
@@ -1552,6 +1630,14 @@ BigQuery scheduled queries run under a service account and log results to INFORM
 - Data consumers discover stale data days after the failure, with no context on when it stopped working
 - Backfilling 3 days of aggregates may require manual intervention and re-running expensive queries
 - Regulatory gap: ESG data used in client reports was stale for 3 days without detection
+
+> [!warning] Scheduled query failures are silent by default
+>
+> BigQuery does not alert on failed scheduled queries. The failure is logged in `INFORMATION_SCHEMA.JOBS` with `error_result IS NOT NULL`, but nothing notifies anyone proactively. Days of stale data can accumulate before discovery.
+
+> [!success] Add a Cloud Monitoring log-based alert on BigQuery job failures
+>
+> Configure a log-based alert policy (see Terraform example below) that fires on any `severity=ERROR` BigQuery job event. Route to Slack and PagerDuty. Pair with a daily INFORMATION_SCHEMA query that checks for failed jobs in the last 24 hours as a fallback sweep.
 
 **Prevention protocol**
 
@@ -1657,6 +1743,14 @@ BigQuery stores data in the specified region. Query compute runs in that region.
 - Higher latency for Cloud Run jobs in a different region than the dataset
 - Data residency complications for EU GDPR compliance if results traverse US infrastructure
 
+> [!warning] Network egress costs do not appear in BigQuery billing line items
+>
+> Egress charges are billed under the Networking service, not BigQuery. A pipeline transferring 50 GB/day of query results from EU to US costs ~$4/day ($1,460/year) that is invisible in BigQuery cost monitoring dashboards.
+
+> [!success] Co-locate all compute in the same GCP region as the BigQuery dataset
+>
+> Deploy Cloud Run jobs, Cloud Composer, and Dataflow in `europe-west4` (or whichever single region is within the EU multi-region) to keep all data transfers intra-region and free of egress charges.
+
 **Prevention protocol**
 
 1. Deploy all compute resources (Cloud Run, Cloud Functions, Dataflow) in the same region as the BigQuery dataset:
@@ -1728,6 +1822,14 @@ BigQuery serializes DML operations on the same table at the partition level for 
 - One of two simultaneous DML operations always fails, requiring retry logic
 - Partial pipeline state: some data is written, some is not
 - Complex retry logic is needed in Airflow to handle BQ concurrency conflicts without double-counting
+
+> [!warning] UPDATE and DELETE acquire table-level locks — no queuing, immediate failure
+>
+> BigQuery does not queue the second DML operation. It fails immediately with `Table is currently busy`. A concurrent INSERT into a different partition and an UPDATE on any row of the same table will conflict. The failing task must be retried after the first completes.
+
+> [!success] Use Airflow task dependencies to serialize DML on the same table
+>
+> Set explicit `>>` ordering between tasks that touch the same table. For Cloud Run export jobs, implement exponential backoff retry on the `currently busy` error (see code example below).
 
 **Prevention protocol**
 
@@ -1822,6 +1924,14 @@ BigQuery external tables (a.k.a. federated queries) read data from GCS, Cloud Bi
 - No benefit from BigQuery's optimizations (clustering, partition pruning, caching)
 - GCS data reads are not cached — repeated identical queries pay full cost each time
 - External table queries cannot benefit from BI Engine acceleration
+
+> [!warning] External tables bypass all BigQuery optimizations
+>
+> No caching, no clustering, no statistics, no BI Engine. Every query reads raw GCS files. Repeated identical queries pay full cost each time. Performance is 5–20× slower than native tables for the same data.
+
+> [!success] Use external tables for landing only — load immediately into native tables
+>
+> External tables are acceptable for validating a GCS landing file before ingestion. As soon as the data is confirmed, run a `bq load` job to create a native table. All downstream consumers — dbt, dashboards, scheduled queries — must point to the native table, never the external table.
 
 **Prevention protocol**
 
@@ -2046,6 +2156,10 @@ BigQuery time travel retains all versions of table data for a configurable windo
 >
 > EU BMR requires data and methodology to be retained for a minimum of 5 years. BigQuery's 7-day time travel provides zero regulatory compliance. A dedicated snapshot and archival strategy is mandatory for all tables that feed client-published index levels.
 
+> [!info] BigQuery fail-safe window
+>
+> After the 7-day time travel window expires, BigQuery retains an additional 7-day **fail-safe** copy of deleted or modified data. This copy is not queryable directly — it requires a Google Cloud Support case to initiate recovery. It is not a substitute for snapshots but provides a last-resort recovery path within 14 days total. Beyond 14 days, the data is permanently gone without external backups.
+
 > [!success] Implement Daily Snapshots with 5-Year Retention
 >
 > Run a daily Cloud Run job that creates `CREATE SNAPSHOT TABLE` clones of all index-feeding tables with `expiration_timestamp` set 5 years out. Back this up with a `bq extract` to a GCS bucket with an immutable retention policy (`retention_period = 157766400`).
@@ -2171,6 +2285,8 @@ bq load \
 
 ## Low — Annoyances / Technical Debt
 
+These problems accumulate silently over months and become expensive to reverse. Each fix is low-effort but yields sustained cost or operational improvement.
+
 ### No `require_partition_filter` Enforced
 
 **What happens**
@@ -2183,6 +2299,10 @@ BigQuery's `require_partition_filter` is an opt-in table option. It must be expl
 - Partition investment provides zero ROI if queries don't use it
 - Cost and performance are equivalent to an unpartitioned table for unfiltered queries
 - Difficult to enforce through code review alone — needs to be enforced at the table level
+
+> [!tip] `require_partition_filter` costs nothing and cannot be bypassed at query time
+>
+> Once set, any query without a qualifying partition predicate is rejected with `Unrecognized name` before scanning a single byte. It is the single most effective cost control for large partitioned tables. Set it at table creation in Terraform so it is never missing by default.
 
 **Prevention protocol**
 
@@ -2246,6 +2366,10 @@ BigQuery supports labels on datasets, tables, and query jobs. Labels are key-val
 - Showback/chargeback models cannot be implemented
 - Identifying the owner of expensive queries requires detective work
 - No way to set team-level budget alerts in Cloud Monitoring
+
+> [!tip] Labels propagate to Cloud Billing export — they are the only attribution mechanism
+>
+> Job labels set in dbt `profiles.yml` or in the Python `QueryJobConfig` appear in `gcp_billing_export_v1_*` as filterable dimensions. Once applied, cost can be broken down by team, pipeline, environment, or domain without any changes to monitoring infrastructure. Labels cannot be retroactively applied to completed jobs.
 
 **Prevention protocol**
 
@@ -2349,6 +2473,14 @@ Date sharding was a common BigQuery pattern before native partitioning was matur
 - Schema changes require updating every shard individually
 - Cannot use `require_partition_filter` to enforce filter discipline
 
+> [!warning] `FROM table_*` without `_TABLE_SUFFIX` scans every shard — including years of history
+>
+> New team members are unaware of the sharding convention. A single unguarded wildcard query on a table sharded since 2020 scans 5+ years of data. There is no table-level guard equivalent to `require_partition_filter`.
+
+> [!success] Migrate sharded tables to a single native partitioned table
+>
+> The migration is a one-time load: `INSERT INTO prices_partitioned SELECT * FROM prices_*`. After migration, `require_partition_filter = true` prevents unguarded scans permanently. Until migration, always add `WHERE _TABLE_SUFFIX BETWEEN '...' AND '...'` to every wildcard query.
+
 **Prevention protocol**
 
 1. Always use `_TABLE_SUFFIX` filter in wildcard queries as an immediate mitigation:
@@ -2418,6 +2550,14 @@ BI Engine uses an in-memory cache keyed on query hash (the exact SQL text). Quer
 - BI Engine reservation cost ($X/GB/hour) is wasted if cache hit rate is low
 - Dashboard performance does not improve despite the reservation spend
 - Difficult to diagnose without cache hit rate monitoring
+
+> [!warning] `CURRENT_DATE()` generates a unique query hash on every execution
+>
+> BI Engine caches by exact SQL string hash. Any dynamic expression — `CURRENT_DATE()`, `NOW()`, `DATE_SUB(CURRENT_DATE(), INTERVAL N DAY)` — produces a different string every day, every hour, or every run. There is no cache hit from a query that was structurally identical yesterday.
+
+> [!success] Use fixed date parameters and monitor hit rate before purchasing reservation
+>
+> Replace `CURRENT_DATE()` expressions with parameterized date fields (`@start_date`, `@end_date`) in dashboard tooling. Check hit rate via `INFORMATION_SCHEMA.JOBS` before sizing the BI Engine reservation. If hit rate stays below 30% after parameterization, reserved slots are a better investment.
 
 **Prevention protocol**
 
@@ -2492,6 +2632,14 @@ BigQuery views store the view definition as a SQL string and validate it only at
 - Silent breakage: views appear healthy in the schema browser but fail when queried
 - Discovery during business hours causes analyst-visible failures
 - Without lineage tracking, enumerating all affected views requires scanning all view definitions
+
+> [!warning] BigQuery views fail at query time, not at definition time
+>
+> A view referencing a renamed or dropped table is syntactically valid in the schema browser. It returns no error until someone queries it — which may be during business hours, in a client-facing report, or months later in a rarely-run audit query.
+
+> [!success] Scan INFORMATION_SCHEMA.VIEWS before every table rename
+>
+> Run `REGEXP_CONTAINS(view_definition, r'\btable_name\b')` across all datasets as a pre-rename checklist step. Automate view compilation validation in CI with a `dry_run=True` query against every view in affected datasets after any schema change.
 
 **Prevention protocol**
 
@@ -2575,6 +2723,9 @@ JOIN analytics.index_weights USING (instrument_isin);
 - [gcp-cost-monitoring-and-budgets](https://alp78.github.io/elysium/06-GCP/Cost-Management/gcp-cost-monitoring-and-budgets) — Cost monitoring and alerts
 - [gcp-total-cost-of-ownership](https://alp78.github.io/elysium/06-GCP/Cost-Management/gcp-total-cost-of-ownership) — TCO calculations
 - [dbt-bigquery-adapter](https://alp78.github.io/elysium/11-dbt/Adapters/dbt-bigquery-adapter) — dbt-specific BigQuery configuration
+- [cloud-run](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run) — Cloud Run export job patterns referenced throughout
+- [bigquery-resources](https://alp78.github.io/elysium/07-Terraform/GCP/bigquery-resources) — Terraform IaC for tables, datasets, reservations, BI Engine
+- [airflow-bigquery](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-bigquery) — Airflow operators, pools, and DML concurrency patterns
 
 ---
 

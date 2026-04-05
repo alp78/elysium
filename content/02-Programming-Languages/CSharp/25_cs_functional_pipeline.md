@@ -101,6 +101,10 @@ Central configuration: paths, SQL connection, stock universe, date range.
 Every downstream cell references these constants — change them here, not in
 individual cells.
 
+### Project configuration
+
+Defines all top-level constants for the pipeline run: filesystem paths, SQL Server connection string, stock universe, and date range.
+
 #### C# — define pipeline paths, SQL connection, and stock universe
 
 > [!info] Central Configuration Cell
@@ -172,6 +176,10 @@ The models divide into three groups along two orthogonal dimensions — **struct
 
 > [!success] With Typed Contracts
 > C# `record` types with FluentValidation enforce schema and business rules at the bronze boundary. A renamed field throws a `ValidationException` on the first bad row — the pipeline stops, logs the rejection to quarantine, and the problem is fixed at the source before any corrupt data reaches silver or gold.
+
+### Medallion layer models
+
+Typed `record` contracts for the three medallion layers (Bronze, Silver, Gold) plus the operational lineage model.
 
 #### record — define Bronze validation model with `record` and properties
 
@@ -597,6 +605,10 @@ These functions implement the ability to trace any data point from Gold back to 
 > [!success] With Lineage Tracking
 > `batch_id` links every row to its pipeline run. SHA-256 hashes prove rows were not modified after ingestion. `RunContext` records symbol count, date range, and rejection count at commit time. Any dispute is resolved with three SQL queries — no manual archaeology.
 
+### Lineage helpers
+
+Core functions for generating batch IDs, computing SHA-256 tamper-detection hashes, and recording start/end stage metrics.
+
 #### Guid — generate unique batch ID with `Guid.NewGuid()`
 
 > [!info] Batch ID: Unique Run Identifier
@@ -722,6 +734,10 @@ Nine tables implementing the full architecture — not just data storage but the
 | `lineage_stages` | Stage-level execution metadata | `(batch_id, stage)` |
 | `quarantine` | Dead letter queue for rejected rows | `(batch_id, stage)` |
 | `context_log` | Semantic context per stage per run | `(batch_id, stage)` |
+
+### Table definitions
+
+DDL for the nine medallion, dimension, and operational tables.
 
 #### SQL Server — create Bronze OHLCV table with `sqlConn.Execute()`
 
@@ -966,10 +982,15 @@ CREATE TABLE context_log (
 ");
 ```
 
+### Persistence helpers
+
+Helper functions for writing stage context, lineage records, upsert data, and quarantine rows to SQL Server.
+
 #### SQL Server — define context persistence helper with `Execute()`
 
+Writes a StageContext record to the context_log table.
+
 ```csharp
-// Write a StageContext record to the context_log table
 
 void PersistContext(StageContext stageCtx)
 {
@@ -1198,6 +1219,10 @@ AsyncRetryPolicy retryPolicy = Policy
 
 ```
 
+### Quality gates
+
+Reusable assertion functions that check DataTable properties; run together as a gated pass/fail before each stage proceeds.
+
 #### C# — define custom `Exception` subclass for quality gate failures
 
 > [!info] Quality Gate Exception
@@ -1381,6 +1406,10 @@ Dimensions are the pipeline's external knowledge — facts about the world that 
 
 > [!success] With Trading Calendar
 > `dim_calendar` classifies each zero-volume day as a known holiday or a genuine anomaly at ingestion time. Engineers see pre-classified context warnings — holiday days are acknowledged automatically, only true anomalies trigger alerts.
+
+### Symbol metadata (SCD2)
+
+Fetch, load, and SCD Type 2 upsert company metadata from Yahoo Finance into `dim_symbol`.
 
 #### HttpClient — fetch symbol metadata to JSON landing zone with `GetStringAsync()`
 
@@ -1619,6 +1648,10 @@ dimSymbolDt.AsEnumerable().Take(5).CopyToDataTable()
 
 <table style='border-collapse:collapse;background:transparent;color:inherit;'><tr><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>symbol</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>longName</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>sector</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>country</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>exchange</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>_action</th></tr><tr><td style='text-align:left;padding:4px 12px;'>SAP.DE</td><td style='text-align:left;padding:4px 12px;'>SAP SE</td><td style='text-align:left;padding:4px 12px;'></td><td style='text-align:left;padding:4px 12px;'></td><td style='text-align:left;padding:4px 12px;'>GER</td><td style='text-align:left;padding:4px 12px;'>UNCHANGED</td></tr><tr><td style='text-align:left;padding:4px 12px;'>SIE.DE</td><td style='text-align:left;padding:4px 12px;'>Siemens Aktiengesellschaft</td><td style='text-align:left;padding:4px 12px;'></td><td style='text-align:left;padding:4px 12px;'></td><td style='text-align:left;padding:4px 12px;'>GER</td><td style='text-align:left;padding:4px 12px;'>UNCHANGED</td></tr><tr><td style='text-align:left;padding:4px 12px;'>ALV.DE</td><td style='text-align:left;padding:4px 12px;'>Allianz SE</td><td style='text-align:left;padding:4px 12px;'></td><td style='text-align:left;padding:4px 12px;'></td><td style='text-align:left;padding:4px 12px;'>GER</td><td style='text-align:left;padding:4px 12px;'>UNCHANGED</td></tr><tr><td style='text-align:left;padding:4px 12px;'>DTE.DE</td><td style='text-align:left;padding:4px 12px;'>Deutsche Telekom AG</td><td style='text-align:left;padding:4px 12px;'></td><td style='text-align:left;padding:4px 12px;'></td><td style='text-align:left;padding:4px 12px;'>GER</td><td style='text-align:left;padding:4px 12px;'>UNCHANGED</td></tr><tr><td style='text-align:left;padding:4px 12px;'>BAS.DE</td><td style='text-align:left;padding:4px 12px;'>BASF SE</td><td style='text-align:left;padding:4px 12px;'></td><td style='text-align:left;padding:4px 12px;'></td><td style='text-align:left;padding:4px 12px;'>GER</td><td style='text-align:left;padding:4px 12px;'>UNCHANGED</td></tr></table>
 
+### Trading calendar
+
+Build and verify a per-exchange trading calendar, including holiday detection, using the dimension table populated by the Python notebook.
+
 #### SQL Server — verify trading calendar exists with `QueryToTable()`
 
 > [!info] Read Existing Calendar
@@ -1687,6 +1720,10 @@ Bronze implements two principles. The **landing zone** decouples API fetching fr
 
 > [!success] With Landing Zone
 > Raw API responses are written to disk before any parsing or database operations. If the MERGE fails, re-run the load step against the saved files — no API call, no rate-limit risk, no missing symbols. The landing zone decouples the unreliable (API) from the recoverable (database).
+
+### Data fetching
+
+Functions to download OHLCV data from the Yahoo Finance API to the JSON landing zone and reload it into a DataTable.
 
 #### HttpClient — fetch OHLCV to JSON landing zone with `GetStringAsync()`
 
@@ -1793,8 +1830,9 @@ DataTable LoadOhlcvFromLanding(string symbol)
 
 #### HttpClient — test single symbol landing zone fetch with `FetchOhlcvToLanding()`
 
+Verifies the landing zone pattern: fetch → JSON → load → DataTable.
+
 ```csharp
-// Verify the landing zone pattern: fetch → JSON → load → DataTable
 
 var testPath = await FetchOhlcvToLanding("SAP.DE", "2024-06-01", "2024-06-30");
 if (testPath != null)
@@ -1809,6 +1847,10 @@ testDt.AsEnumerable().Take(5).CopyToDataTable()
     Loaded: 20 rows, columns: symbol, date, open, high, low, close, adj_close, volume, dividends, stock_splits
 
 <table style='border-collapse:collapse;background:transparent;color:inherit;'><tr><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>symbol</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>date</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>open</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>high</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>low</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>close</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>adj_close</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>volume</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>dividends</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>stock_splits</th></tr><tr><td style='text-align:left;padding:4px 12px;'>SAP.DE</td><td style='text-align:left;padding:4px 12px;'>03-Jun-24 0:00:00</td><td style='text-align:left;padding:4px 12px;'>169.74000549316406</td><td style='text-align:left;padding:4px 12px;'>169.82000732421875</td><td style='text-align:left;padding:4px 12px;'>166.9600067138672</td><td style='text-align:left;padding:4px 12px;'>168.25999450683594</td><td style='text-align:left;padding:4px 12px;'>166.7528076171875</td><td style='text-align:left;padding:4px 12px;'>1531728</td><td style='text-align:left;padding:4px 12px;'>0</td><td style='text-align:left;padding:4px 12px;'>0</td></tr><tr><td style='text-align:left;padding:4px 12px;'>SAP.DE</td><td style='text-align:left;padding:4px 12px;'>04-Jun-24 0:00:00</td><td style='text-align:left;padding:4px 12px;'>168.52000427246094</td><td style='text-align:left;padding:4px 12px;'>170.44000244140625</td><td style='text-align:left;padding:4px 12px;'>167.66000366210938</td><td style='text-align:left;padding:4px 12px;'>168.60000610351562</td><td style='text-align:left;padding:4px 12px;'>167.0897674560547</td><td style='text-align:left;padding:4px 12px;'>1592071</td><td style='text-align:left;padding:4px 12px;'>0</td><td style='text-align:left;padding:4px 12px;'>0</td></tr><tr><td style='text-align:left;padding:4px 12px;'>SAP.DE</td><td style='text-align:left;padding:4px 12px;'>05-Jun-24 0:00:00</td><td style='text-align:left;padding:4px 12px;'>170</td><td style='text-align:left;padding:4px 12px;'>171.82000732421875</td><td style='text-align:left;padding:4px 12px;'>169.0800018310547</td><td style='text-align:left;padding:4px 12px;'>171.52000427246094</td><td style='text-align:left;padding:4px 12px;'>169.98361206054688</td><td style='text-align:left;padding:4px 12px;'>1352916</td><td style='text-align:left;padding:4px 12px;'>0</td><td style='text-align:left;padding:4px 12px;'>0</td></tr><tr><td style='text-align:left;padding:4px 12px;'>SAP.DE</td><td style='text-align:left;padding:4px 12px;'>06-Jun-24 0:00:00</td><td style='text-align:left;padding:4px 12px;'>176.02000427246094</td><td style='text-align:left;padding:4px 12px;'>180.24000549316406</td><td style='text-align:left;padding:4px 12px;'>176</td><td style='text-align:left;padding:4px 12px;'>177.72000122070312</td><td style='text-align:left;padding:4px 12px;'>176.12806701660156</td><td style='text-align:left;padding:4px 12px;'>2089549</td><td style='text-align:left;padding:4px 12px;'>0</td><td style='text-align:left;padding:4px 12px;'>0</td></tr><tr><td style='text-align:left;padding:4px 12px;'>SAP.DE</td><td style='text-align:left;padding:4px 12px;'>07-Jun-24 0:00:00</td><td style='text-align:left;padding:4px 12px;'>177.5</td><td style='text-align:left;padding:4px 12px;'>178.25999450683594</td><td style='text-align:left;padding:4px 12px;'>175.6999969482422</td><td style='text-align:left;padding:4px 12px;'>177.36000061035156</td><td style='text-align:left;padding:4px 12px;'>175.77130126953125</td><td style='text-align:left;padding:4px 12px;'>1224863</td><td style='text-align:left;padding:4px 12px;'>0</td><td style='text-align:left;padding:4px 12px;'>0</td></tr></table>
+
+### Validation
+
+Row-level FluentValidation at the Bronze boundary; rejected rows are routed to the quarantine table.
 
 #### FluentValidation — validate Bronze rows with `Validate()` row-level check
 
@@ -1854,8 +1896,9 @@ testDt.AsEnumerable().Take(5).CopyToDataTable()
 
 #### FluentValidation — test Bronze validation on sample data
 
+Should pass all rows since Yahoo Finance data is generally clean.
+
 ```csharp
-// Should pass all rows since Yahoo Finance data is generally clean
 
 var (validDt, rejectedCount) = ValidateBronze(testDt, "test");
 Console.WriteLine($"Valid: {validDt.Rows.Count} rows | Rejected: {rejectedCount} rows");
@@ -1866,6 +1909,10 @@ preview
     Valid: 20 rows | Rejected: 0 rows
 
 <table style='border-collapse:collapse;background:transparent;color:inherit;'><tr><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>symbol</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>date</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>open</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>high</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>low</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>close</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>adj_close</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>volume</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>dividends</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>stock_splits</th></tr><tr><td style='text-align:left;padding:4px 12px;'>SAP.DE</td><td style='text-align:left;padding:4px 12px;'>03-Jun-24 0:00:00</td><td style='text-align:left;padding:4px 12px;'>169.74000549316406</td><td style='text-align:left;padding:4px 12px;'>169.82000732421875</td><td style='text-align:left;padding:4px 12px;'>166.9600067138672</td><td style='text-align:left;padding:4px 12px;'>168.25999450683594</td><td style='text-align:left;padding:4px 12px;'>166.7528076171875</td><td style='text-align:left;padding:4px 12px;'>1531728</td><td style='text-align:left;padding:4px 12px;'>0</td><td style='text-align:left;padding:4px 12px;'>0</td></tr><tr><td style='text-align:left;padding:4px 12px;'>SAP.DE</td><td style='text-align:left;padding:4px 12px;'>04-Jun-24 0:00:00</td><td style='text-align:left;padding:4px 12px;'>168.52000427246094</td><td style='text-align:left;padding:4px 12px;'>170.44000244140625</td><td style='text-align:left;padding:4px 12px;'>167.66000366210938</td><td style='text-align:left;padding:4px 12px;'>168.60000610351562</td><td style='text-align:left;padding:4px 12px;'>167.0897674560547</td><td style='text-align:left;padding:4px 12px;'>1592071</td><td style='text-align:left;padding:4px 12px;'>0</td><td style='text-align:left;padding:4px 12px;'>0</td></tr><tr><td style='text-align:left;padding:4px 12px;'>SAP.DE</td><td style='text-align:left;padding:4px 12px;'>05-Jun-24 0:00:00</td><td style='text-align:left;padding:4px 12px;'>170</td><td style='text-align:left;padding:4px 12px;'>171.82000732421875</td><td style='text-align:left;padding:4px 12px;'>169.0800018310547</td><td style='text-align:left;padding:4px 12px;'>171.52000427246094</td><td style='text-align:left;padding:4px 12px;'>169.98361206054688</td><td style='text-align:left;padding:4px 12px;'>1352916</td><td style='text-align:left;padding:4px 12px;'>0</td><td style='text-align:left;padding:4px 12px;'>0</td></tr><tr><td style='text-align:left;padding:4px 12px;'>SAP.DE</td><td style='text-align:left;padding:4px 12px;'>06-Jun-24 0:00:00</td><td style='text-align:left;padding:4px 12px;'>176.02000427246094</td><td style='text-align:left;padding:4px 12px;'>180.24000549316406</td><td style='text-align:left;padding:4px 12px;'>176</td><td style='text-align:left;padding:4px 12px;'>177.72000122070312</td><td style='text-align:left;padding:4px 12px;'>176.12806701660156</td><td style='text-align:left;padding:4px 12px;'>2089549</td><td style='text-align:left;padding:4px 12px;'>0</td><td style='text-align:left;padding:4px 12px;'>0</td></tr><tr><td style='text-align:left;padding:4px 12px;'>SAP.DE</td><td style='text-align:left;padding:4px 12px;'>07-Jun-24 0:00:00</td><td style='text-align:left;padding:4px 12px;'>177.5</td><td style='text-align:left;padding:4px 12px;'>178.25999450683594</td><td style='text-align:left;padding:4px 12px;'>175.6999969482422</td><td style='text-align:left;padding:4px 12px;'>177.36000061035156</td><td style='text-align:left;padding:4px 12px;'>175.77130126953125</td><td style='text-align:left;padding:4px 12px;'>1224863</td><td style='text-align:left;padding:4px 12px;'>0</td><td style='text-align:left;padding:4px 12px;'>0</td></tr></table>
+
+### Ingestion pipeline
+
+End-to-end Bronze orchestration: incremental fetch, FluentValidation, MERGE upsert, and quality gate.
 
 #### Bronze — define incremental ingestion pipeline with landing zone + `MERGE INTO`
 
@@ -2037,8 +2084,9 @@ QueryToTable("SELECT TOP 5 * FROM bronze_ohlcv ORDER BY symbol, date")
 
 #### SQL Server — display Bronze row counts per symbol with `GROUP BY`
 
+Verifies all symbols were ingested with reasonable row counts.
+
 ```csharp
-// Verify all symbols were ingested with reasonable row counts
 
 QueryToTable(@"SELECT symbol, COUNT(*) as rows, MIN(date) as first_date, MAX(date) as last_date
     FROM bronze_ohlcv GROUP BY symbol ORDER BY symbol")
@@ -2091,6 +2139,10 @@ Silver is where the **Functional Core** principle (Gary Bernhardt, 'Boundaries' 
 
 > [!success] With Pure Transforms
 > Each silver transform is a function: `DataTable in → DataTable out`, no I/O, no side effects. Unit tests pass a 10-row hardcoded `DataTable` and assert the output in milliseconds — no database, no network, no flakiness. The imperative shell (MERGE, lineage, context) wraps around pure transforms, never inside them.
+
+### Transform functions
+
+Pure LINQ functions computing daily return, intraday range, and 20-day SMA — no side effects.
 
 #### LINQ — compute daily returns with grouped percentage change
 
@@ -2282,6 +2334,10 @@ DataTable TransformSilver(DataTable bronzeDt)
 
 ```
 
+### Enrichment pipeline
+
+Imperative shell: applies transforms, validates through `CleanOhlcv`, MERGE upserts to SQL Server, and runs the quality gate.
+
 #### Silver — define enrichment pipeline with transform + `MERGE INTO`
 
 > [!info] Silver Enrichment Pipeline
@@ -2351,8 +2407,9 @@ Console.WriteLine($"Silver complete: {silverDt.Rows.Count} rows in {swSilver.Ela
 
 #### SQL Server — display Silver enriched columns with `QueryToTable()`
 
+Verifies that `daily_return`, `intraday_range`, and `sma_20` are populated after enrichment.
+
 ```csharp
-// Verify daily_return, intraday_range, and sma_20 are populated
 
 QueryToTable(@"SELECT TOP 5 symbol, date, [close], daily_return, intraday_range, sma_20
     FROM silver_ohlcv WHERE symbol = 'SAP.DE' ORDER BY date DESC")
@@ -2439,6 +2496,10 @@ Gold produces consumption-ready data products from Silver. Two aggregations, bot
 
 > [!success] With Gold Validation
 > The gold contract enforces mathematical invariants on every aggregated row before persistence — `max_drawdown <= 0`, `avg_volume >= 0`, `sharpe_ratio` finite. A bad aggregation is rejected at the gold boundary, not discovered by a portfolio manager three days later.
+
+### Aggregation functions
+
+Pure LINQ functions building `DailySummary` (cross-sectional) and `SymbolProfile` (longitudinal) from Silver data.
 
 #### LINQ — build daily cross-sectional summary with `GroupBy()`
 
@@ -2647,6 +2708,10 @@ Console.WriteLine($"Symbol profile validation: {validProfiles.Rows.Count} valid,
 
     Symbol profile validation: 5 valid, 0 rejected
 
+### Persistence
+
+Validate Gold rows through typed contracts, then truncate and reload both mart tables.
+
 #### SQL Server — define Gold persistence function with `TRUNCATE` + `WriteToCsv()`
 
 > [!info] Gold: Truncate and Rebuild
@@ -2750,6 +2815,10 @@ The serving layer reads Parquet files, not SQL Server. This is the **pre-materia
 
 > [!success] With Pre-Materialization
 > The pipeline exports finished Parquet files as part of each run. The ASP.NET API reads those files directly — zero SQL dependency at serving time. A SQL Server restart has no impact on API availability. Deployment is a file copy, not a migration.
+
+### Export operations
+
+Write Gold and Silver data products to Parquet, record the export lineage stage, and verify file integrity.
 
 #### ParquetSharp — export daily summary to Parquet with `WriteDataTableToParquet()`
 
@@ -2925,6 +2994,10 @@ foreach (var p in contractPaths)
 ## 10. Lineage Review — Pipeline Execution Audit
 
 After all stages complete, the full execution trail is available for review across five artifacts: **stage lineage** (timing, row counts, hashes), **RunContext JSON** (execution envelope with business and temporal context), **context log** (warnings per stage in SQL Server), **quarantine** (every rejected row with its error), and **data contracts** (column-level semantics as JSON Schema). Together these answer any question about what the pipeline did, why it did it, what it knew, and what it produced.
+
+### Pipeline audit
+
+Finalize and persist the RunContext, then query lineage, quarantine, and context log tables for the current batch.
 
 #### C# — build and save run context with `RunContext`
 
@@ -3190,6 +3263,10 @@ if (File.Exists(contractPath))
 
 HttpListener serves the Gold data products by reading pre-materialized JSON files. No database connection at runtime — the API reads files that the pipeline produced. Four endpoints: health (operational monitoring), daily-summary (market overview), symbol-profile (stock comparison), and lineage (pipeline execution audit).
 
+### API models
+
+Typed `record` contracts that define the JSON shape returned by each HttpListener endpoint.
+
 #### C# — define daily summary API response record
 
 ```csharp
@@ -3244,6 +3321,10 @@ public record TimeSeriesRow(
 );
 
 ```
+
+### Endpoints
+
+HttpListener application instance and route handlers: health, daily-summary, symbol-profile, timeseries, and lineage.
 
 #### HttpListener — create listener instance with `HttpListener()`
 
@@ -3416,6 +3497,10 @@ Thread.Sleep(1000);
 
     HttpListener running at http://localhost:8098
 
+### Testing
+
+Start the server in a background thread and smoke-test all endpoints with `HttpClient`.
+
 #### HttpClient — test health endpoint with `GetStringAsync()`
 
 ```csharp
@@ -3562,10 +3647,15 @@ stagesDt
 
 Visual validation of the pipeline output. Each chart answers a specific question about the data: daily return volatility (how noisy is the market?), cumulative investment performance (how would a 1 EUR investment have grown?), risk-return positioning (which stocks offer the best return per unit of risk?), and pipeline execution timing (which stage is the bottleneck?). Charts use dark-theme compatible transparent backgrounds.
 
+### Charts
+
+Four Plotly.NET charts covering return time series, cumulative performance, risk-return scatter, and stage timing.
+
 #### Plotly.NET — plot daily return time series with `Chart.Line()`
 
+Overlaid line chart showing daily returns across all 5 symbols for the last 3 months.
+
 ```csharp
-// Overlaid line chart showing daily returns across all 5 symbols (last 3 months)
 
 var threeMonthsAgo = DateTime.Today.AddDays(-90);
 
@@ -3769,6 +3859,10 @@ else {
 ## 13. Audit — Investigating a Disputed Data Point
 
 The audit section demonstrates lineage in action. A stakeholder disputes a specific data point — the pipeline traces it from Gold back to the raw source in seven steps, each independently verifiable: Bronze (raw values as ingested), Silver (computed return verified mathematically), Gold (propagation to aggregation), Lineage (batch metadata with SHA-256 hash), RunContext (execution fingerprint), Landing Zone (raw JSON file on disk), and Live API (corroboration with current source). This is the proof that the architecture’s lineage tracking delivers real forensic capability.
+
+### Disputed data point investigation
+
+Seven-step forensic trace from Gold back to raw source: Bronze → Silver → Gold → Lineage → RunContext → Landing Zone → Live API.
 
 #### SQL Server — query Bronze table for raw ingested values with `read_database()`
 
