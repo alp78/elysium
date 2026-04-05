@@ -45,16 +45,22 @@ A class receives its dependencies (DB connection, API client, logger) through it
 > svc = PipelineService(db=MockDatabase(), storage=MockStorage())
 > ```
 
+### Abstract base classes
+
+ABCs define the contract. Every consumer — the pipeline service, tests, future implementations — programs against these rather than concrete classes.
+
+#### DataRepository — data access contract
+
+Declares `get_prices` and `save_scores`. Same signature whether the backend is SQL, BigQuery, or an in-memory mock.
+
 ```python
 from abc import ABC, abstractmethod
-
-# ─── Define interfaces (abstract base classes) ───
-
 from datetime import date
 from pydantic import BaseModel, Field, model_validator, ValidationError
 from typing import Callable
 from typing import Optional
 import inspect
+
 class DataRepository(ABC):
     """Interface for data access — could be SQL, BigQuery, CSV, mock."""
     @abstractmethod
@@ -64,15 +70,29 @@ class DataRepository(ABC):
     @abstractmethod
     def save_scores(self, scores: list[dict]) -> int:
         ...
+```
 
+#### NotificationService — notification contract
+
+Single-method contract for pipeline notifications.
+
+```python
 class NotificationService(ABC):
     """Interface for notifications — could be email, Slack, Pub/Sub, mock."""
     @abstractmethod
     def notify(self, message: str) -> None:
         ...
+```
 
-# ─── Concrete implementations ───
+### Production implementations
 
+Each concrete class implements one ABC and handles the actual I/O — database queries, Slack API calls, etc.
+
+#### SqlRepository — database-backed data access
+
+Connects to a SQL database and implements both retrieval and persistence. Connection string is injected. In production, `get_prices` would execute a parameterized query (`cursor.execute("SELECT * FROM prices WHERE ticker=?", ticker)`) — here it returns sample data for demonstration.
+
+```python
 class SqlRepository(DataRepository):
     """Real implementation — talks to a database."""
     def __init__(self, connection_string: str):
@@ -80,13 +100,32 @@ class SqlRepository(DataRepository):
         print(f"  SqlRepository connected to: {connection_string[:30]}...")
 
     def get_prices(self, ticker: str) -> list[dict]:
-        # In production: cursor.execute("SELECT * FROM prices WHERE ticker=?", ticker)
         return [{"ticker": ticker, "close": 178.50, "date": "2026-03-20"}]
 
     def save_scores(self, scores: list[dict]) -> int:
         print(f"  SqlRepository: saved {len(scores)} scores to database")
         return len(scores)
+```
 
+#### SlackNotifier — Slack notifications
+
+Sends formatted pipeline notifications to Slack.
+
+```python
+class SlackNotifier(NotificationService):
+    def notify(self, message: str) -> None:
+        print(f"  Slack: {message}")
+```
+
+### Test doubles
+
+Replace production dependencies with in-memory alternatives. No database, no network — tests run in milliseconds.
+
+#### MockRepository — in-memory data access
+
+Returns hardcoded prices, captures every saved score in a list. Inspect `saved` after the test.
+
+```python
 class MockRepository(DataRepository):
     """Test implementation — no database needed."""
     def __init__(self):
@@ -98,19 +137,29 @@ class MockRepository(DataRepository):
     def save_scores(self, scores: list[dict]) -> int:
         self.saved.extend(scores)
         return len(scores)
+```
 
-class SlackNotifier(NotificationService):
-    def notify(self, message: str) -> None:
-        print(f"  Slack: {message}")
+#### MockNotifier — notification capture
 
+Collects messages instead of sending them. Inspect `messages` after the run.
+
+```python
 class MockNotifier(NotificationService):
     def __init__(self):
         self.messages: list[str] = []
     def notify(self, message: str) -> None:
         self.messages.append(message)
+```
 
-# ─── Service that uses DI ───
+### Pipeline service
 
+The service class depends only on the two ABCs — it has no knowledge of SQL, Slack, or mocks.
+
+#### PipelineService — constructor-injected orchestrator
+
+Constructor receives both dependencies via `__init__`. `run()` orchestrates: fetch prices, compute score, persist, notify.
+
+```python
 class PipelineService:
     """Orchestrates the pipeline — dependencies injected via constructor."""
     def __init__(self, repo: DataRepository, notifier: NotificationService):
@@ -123,16 +172,37 @@ class PipelineService:
         self.repo.save_scores([score])
         self.notifier.notify(f"Pipeline done: {ticker} scored {score['momentum']}")
         return score
+```
 
-# ─── Production wiring ───
+### Wiring — production vs. test
+
+The same `PipelineService` class is used in both contexts. Only the objects passed to `__init__` change.
+
+#### Production wiring
+
+`SqlRepository` connects to prod database, `SlackNotifier` sends to team channel.
+
+```python
 prod_service = PipelineService(
     repo=SqlRepository("Server=prod-db;Database=stoxx"),
     notifier=SlackNotifier(),
 )
 result = prod_service.run("ASML.AS")
 result
+```
 
-# ─── Test wiring — swap implementations, same PipelineService ───
+```text
+SqlRepository connected to: Server=prod-db;Database=stoxx...
+SqlRepository: saved 1 scores to database
+Slack: Pipeline done: ASML.AS scored 0.85
+{'ticker': 'ASML.AS', 'momentum': 0.85, 'rank': 1}
+```
+
+#### Test wiring — swap mocks with zero code changes
+
+Replace every dependency with a mock. `PipelineService.__init__` is identical. After the run, inspect the mock's captured state.
+
+```python
 mock_repo = MockRepository()
 mock_notifier = MockNotifier()
 test_service = PipelineService(repo=mock_repo, notifier=mock_notifier)
@@ -143,11 +213,6 @@ mock_notifier.messages
 ```
 
 ```text
-SqlRepository connected to: Server=prod-db;Database=stoxx...
-SqlRepository: saved 1 scores to database
-Slack: Pipeline done: ASML.AS scored 0.85
-{'ticker': 'ASML.AS', 'momentum': 0.85, 'rank': 1}
-
 {'ticker': 'TEST.XX', 'momentum': 0.85, 'rank': 1}
 [{'ticker': 'TEST.XX', 'momentum': 0.85, 'rank': 1}]
 ['Pipeline done: TEST.XX scored 0.85']
@@ -164,6 +229,10 @@ Ensures a class has exactly ONE instance — useful for database connection pool
 > [!tip] Modules are natural singletons
 >
 > In Python, a module is only imported once. A database connection created at module level (`conn = create_connection()`) is effectively a singleton. No pattern needed.
+
+#### Config — singleton with \_\_new\_\_
+
+A private `_instance` class variable stores the single instance. `__new__` checks whether an instance already exists — if so, returns the existing one. The `_initialized` guard in `__init__` prevents re-running setup on subsequent calls.
 
 ```python
 class Config:
@@ -184,16 +253,17 @@ class Config:
         self.region = "europe-west1"
         self.batch_size = 5000
         print(f"  Config loaded (project={self.project_id})")
+```
 
+#### Verifying single-instance behavior
+
+Both calls to `Config()` return the same object — `__init__` runs only on the first call (the `_initialized` guard skips re-execution). `is` confirms identity. A simpler alternative is a module-level variable — Python modules are imported once, making them natural singletons without any pattern.
+
+```python
 c1 = Config()
-c2 = Config()  # same instance — __init__ skipped
-c1 is c2  # True
+c2 = Config()
+c1 is c2
 c1.project_id
-
-# ─── Simpler alternative: module-level singleton ───
-# Just create the instance at module level. Python modules are singletons.
-# _config = {"project_id": "index-lab-2", "region": "europe-west1"}
-# def get_config(): return _config
 ```
 
 ```text
@@ -205,6 +275,10 @@ index-lab-2
 ### Factory — create objects without specifying the exact class
 
 Creates objects without specifying the exact class — select the right implementation based on config or environment. A factory function or method decides which class to instantiate based on input. `create_parser("csv")` returns a CSVParser; `create_parser("json")` returns a JSONParser. The caller doesn't need to know the concrete classes. In Python, use a function or `@classmethod` that returns the right subclass. C# equivalent: static factory method, or `IServiceProvider.GetService<T>()`.
+
+#### StorageClient ABC and concrete backends
+
+The abstract base class declares a single `upload` method. Three implementations — GCS, S3, and local filesystem — each format the upload result differently. Adding a new backend means adding one class and one entry in the factory.
 
 ```python
 class StorageClient(ABC):
@@ -222,9 +296,13 @@ class S3Client(StorageClient):
 class LocalClient(StorageClient):
     def upload(self, path: str, data: bytes) -> str:
         return f"file://{path} ({len(data)} bytes)"
+```
 
-# ─── Factory function ───
+#### create_storage_client — factory function
 
+Maps a provider string to a concrete class via dictionary dispatch. The caller gets back a `StorageClient` without knowing which class was instantiated.
+
+```python
 def create_storage_client(provider: str = "gcs") -> StorageClient:
     """Factory: create storage client based on provider name."""
     clients = {
@@ -235,7 +313,13 @@ def create_storage_client(provider: str = "gcs") -> StorageClient:
     if provider not in clients:
         raise ValueError(f"Unknown provider: {provider}. Choose from: {list(clients.keys())}")
     return clients[provider]()
+```
 
+#### Provider-agnostic usage
+
+The loop creates three clients through the factory. Each upload returns a provider-specific path — the consuming code is identical regardless of backend.
+
+```python
 for provider in ["gcs", "s3", "local"]:
     client = create_storage_client(provider)
     result = client.upload("bronze/data.csv", b"OHLCV data")
@@ -252,6 +336,10 @@ local -> file://bronze/data.csv (10 bytes)
 
 One-to-many notification: when a subject changes state, all registered observers are notified. In Python, implement with callbacks (list of functions) or the built-in `property` setter that triggers notifications. Notifies multiple listeners when something happens — pipeline events (step completed, error occurred, data ready). Multiple consumers react to the same event without coupling. C# equivalent: `event`/`delegate` pattern, or `IObservable<T>`. GCP equivalent: Pub/Sub (same pattern, distributed).
 
+#### PipelineEventBus — subject
+
+The event bus maintains a dictionary of event names to subscriber lists. `subscribe()` registers a callback; `publish()` iterates all subscribers for that event type and invokes each one.
+
 ```python
 class PipelineEventBus:
     """Simple observer/event bus — subscribe to events, publish notifications."""
@@ -266,9 +354,13 @@ class PipelineEventBus:
         """Notify all subscribers of an event."""
         for callback in self._subscribers.get(event, []):
             callback(data)
+```
 
-# ─── Subscribers (observers) ───
+#### Handler functions — observers
 
+Three lightweight handlers subscribe to the same event type. `log_handler` prints every event, `metrics_handler` only fires when the event carries row counts, and `alert_handler` only fires on errors. Each handler is independent.
+
+```python
 def log_handler(data: dict):
     print(f"  [LOG]   {data}")
 
@@ -279,14 +371,18 @@ def alert_handler(data: dict):
 def metrics_handler(data: dict):
     if "rows" in data:
         print(f"  [METRIC] rows_loaded = {data['rows']}")
+```
 
-# ─── Wire up and use ───
+#### Wiring subscribers and publishing events
+
+All three handlers subscribe to `"step_completed"`. Publishing three pipeline events demonstrates selective handling — the ok events trigger LOG + METRIC, the error event triggers LOG + ALERT.
+
+```python
 bus = PipelineEventBus()
 bus.subscribe("step_completed", log_handler)
 bus.subscribe("step_completed", metrics_handler)
 bus.subscribe("step_completed", alert_handler)
 
-# Simulate pipeline events
 bus.publish("step_completed", {"step": "ohlcv_load", "status": "ok", "rows": 306})
 bus.publish("step_completed", {"step": "silver_transform", "status": "ok", "rows": 306})
 bus.publish("step_completed", {"step": "gold_score", "status": "error", "message": "BQ timeout"})
@@ -305,6 +401,10 @@ bus.publish("step_completed", {"step": "gold_score", "status": "error", "message
 
 Swap algorithms at runtime by passing functions or objects with a common interface. Instead of if/else chains selecting a scoring method, accept the scoring function as a parameter. Python's first-class functions make this trivial: just pass the function directly. Useful for different scoring algorithms, export formats, or retry policies. The context class delegates to a strategy object. C# equivalent: interface + DI, or `Func<T>` delegate.
 
+#### ScoringStrategy — algorithm contract
+
+The ABC declares two methods: `score()` takes a price list and returns a float, `name()` identifies the strategy. Every concrete strategy implements both.
+
 ```python
 class ScoringStrategy(ABC):
     """Interface for different scoring algorithms."""
@@ -313,7 +413,13 @@ class ScoringStrategy(ABC):
 
     @abstractmethod
     def name(self) -> str: ...
+```
 
+#### MomentumStrategy
+
+Scores based on the latest price relative to the mean — positive means the latest is above average, suggesting upward momentum.
+
+```python
 class MomentumStrategy(ScoringStrategy):
     """Score based on price momentum (last vs average)."""
     def score(self, prices: list[float]) -> float:
@@ -321,7 +427,13 @@ class MomentumStrategy(ScoringStrategy):
         avg = sum(prices) / len(prices)
         return (prices[-1] - avg) / avg
     def name(self) -> str: return "Momentum"
+```
 
+#### VolatilityStrategy
+
+Computes coefficient of variation (std dev / mean), negated so lower volatility yields a higher (less negative) score.
+
+```python
 class VolatilityStrategy(ScoringStrategy):
     """Score based on price volatility (lower = better)."""
     def score(self, prices: list[float]) -> float:
@@ -330,7 +442,13 @@ class VolatilityStrategy(ScoringStrategy):
         variance = sum((p - avg) ** 2 for p in prices) / len(prices)
         return -(variance ** 0.5 / avg)  # negative: lower vol = higher score
     def name(self) -> str: return "Volatility"
+```
 
+#### MeanReversionStrategy
+
+Scores based on distance below the mean — the farther the latest price is below average, the higher the score, betting on reversion to the mean.
+
+```python
 class MeanReversionStrategy(ScoringStrategy):
     """Score based on distance from mean (farther below = higher score)."""
     def score(self, prices: list[float]) -> float:
@@ -338,9 +456,13 @@ class MeanReversionStrategy(ScoringStrategy):
         avg = sum(prices) / len(prices)
         return (avg - prices[-1]) / avg  # below avg = positive score
     def name(self) -> str: return "MeanReversion"
+```
 
-# ─── Context class that uses a strategy ───
+#### StockScorer — strategy consumer
 
+The context class receives any `ScoringStrategy` via `__init__`. `evaluate()` delegates to the injected strategy — the scorer does not know or care which algorithm it uses.
+
+```python
 class StockScorer:
     """Scores stocks using a pluggable strategy."""
     def __init__(self, strategy: ScoringStrategy):
@@ -352,10 +474,14 @@ class StockScorer:
             "strategy": self.strategy.name(),
             "score": round(self.strategy.score(prices), 4),
         }
+```
 
-# ─── Same data, different strategies ───
+#### Evaluating with different strategies
+
+The same ASML.AS price series is scored with all three strategies. Momentum and Volatility return small negatives; MeanReversion returns a small positive since the latest price is below average.
+
+```python
 prices = [685.0, 690.0, 680.0, 695.0, 710.0, 700.0, 685.0]
-prices
 
 for strategy in [MomentumStrategy(), VolatilityStrategy(), MeanReversionStrategy()]:
     scorer = StockScorer(strategy)
@@ -364,8 +490,6 @@ for strategy in [MomentumStrategy(), VolatilityStrategy(), MeanReversionStrategy
 ```
 
 ```text
-[685.0, 690.0, 680.0, 695.0, 710.0, 700.0, 685.0]
-
 Momentum        score=-0.0103
 Volatility      score=-0.0138
 MeanReversion   score=+0.0103
@@ -392,9 +516,15 @@ Pydantic validates data at construction time using Python type hints — if the 
 > - Catches bad data at the boundary (API input, file load, config parse) before it flows into pipelines
 > - C# equivalent: `DataAnnotations` (`[Required]`, `[Range]`) + FluentValidation
 
-```python
-# ─── Model definitions ───
+### Pydantic model validation
 
+Pydantic validates data at construction time. Define the schema as a class with type hints and `Field` constraints — if input violates any rule, a `ValidationError` is raised immediately.
+
+#### OhlcvRecord — validated price model
+
+Each field uses `Field()` with constraints: `min_length`/`max_length` for strings, `gt`/`ge` for numeric bounds. The `@model_validator` adds a cross-field check ensuring High >= Low.
+
+```python
 class OhlcvRecord(BaseModel):
     """Validated OHLCV record — catches bad data before pipeline ingestion."""
     symbol: str = Field(..., min_length=1, max_length=20, description="Ticker symbol")
@@ -410,7 +540,13 @@ class OhlcvRecord(BaseModel):
         if self.high < self.low:
             raise ValueError(f"high ({self.high}) must be >= low ({self.low})")
         return self
+```
 
+#### PipelineConfig — validated configuration
+
+Configuration model with a regex pattern on `name`, bounded `batch_size` and `max_retries`, and a `dry_run` flag. Invalid config is caught before the pipeline starts.
+
+```python
 class PipelineConfig(BaseModel):
     """Validated pipeline configuration."""
     name: str = Field(..., pattern=r"^[a-z][a-z0-9_]*$")
@@ -419,23 +555,39 @@ class PipelineConfig(BaseModel):
     source_bucket: str = Field(..., min_length=3)
     destination_table: str
     dry_run: bool = False
+```
 
-# ─── Valid data ───
+#### Valid data — passes all constraints
+
+A well-formed OHLCV record and pipeline config. Pydantic returns the validated model; `model_dump()` serializes to dict.
+
+```python
 record = OhlcvRecord(
     symbol="ASML.AS", trade_date=date(2026, 3, 20),
     open=685.0, high=710.0, low=680.0, close=700.0, volume=1_500_000
 )
 record
-record.model_dump()  # Dict
+record.model_dump()
 
 config = PipelineConfig(
     name="events_etl",
     source_bucket="index-lab-2-data",
     destination_table="index_data.bronze_ohlcv",
 )
-config  # Config
+config
+```
 
-# ─── Invalid data — caught at boundary ───
+```text
+symbol='ASML.AS' trade_date=datetime.date(2026, 3, 20) open=685.0 high=710.0 low=680.0 close=700.0 volume=1500000
+{'symbol': 'ASML.AS', 'trade_date': datetime.date(2026, 3, 20), 'open': 685.0, 'high': 710.0, 'low': 680.0, 'close': 700.0, 'volume': 1500000}
+name='events_etl' batch_size=5000 max_retries=3 source_bucket='index-lab-2-data' destination_table='index_data.bronze_ohlcv' dry_run=False
+```
+
+#### Invalid data — caught at the boundary
+
+Each invalid input triggers a different rule: negative price fails `gt=0`, High < Low fails the `model_validator`, empty symbol fails `min_length`, bad config name fails the regex pattern.
+
+```python
 bad_inputs = [
     {"label": "Negative price", "data": {"symbol": "X", "trade_date": "2026-01-01", "open": -5, "high": 10, "low": 8, "close": 9, "volume": 100}},
     {"label": "High < Low", "data": {"symbol": "X", "trade_date": "2026-01-01", "open": 10, "high": 5, "low": 8, "close": 9, "volume": 100}},
@@ -455,10 +607,6 @@ for case in bad_inputs:
 ```
 
 ```text
-symbol='ASML.AS' trade_date=datetime.date(2026, 3, 20) open=685.0 high=710.0 low=680.0 close=700.0 volume=1500000
-{'symbol': 'ASML.AS', 'trade_date': datetime.date(2026, 3, 20), 'open': 685.0, 'high': 710.0, 'low': 680.0, 'close': 700.0, 'volume': 1500000}
-name='events_etl' batch_size=5000 max_retries=3 source_bucket='index-lab-2-data' destination_table='index_data.bronze_ohlcv' dry_run=False
-
 Negative price: CAUGHT — Input should be greater than 0
 High < Low: CAUGHT — Value error, high (5.0) must be >= low (8.0)
 Empty symbol: CAUGHT — String should have at least 1 character
@@ -468,6 +616,14 @@ Bad config name: CAUGHT — String should match pattern '^[a-z][a-z0-9_]*$'
 ## Reflection / Introspection
 
 Python is deeply introspective — you can inspect any object's type, attributes, methods, source code, and module at runtime. C# equivalent: `System.Reflection` (`typeof`, `GetType`, `GetProperties`, `GetMethods`). Use cases include plugin systems, serializers, ORMs, debugging, and documentation generation.
+
+### Inspecting objects at runtime
+
+Python's introspection tools operate on any object. The `TradeOrder` class below serves as the inspection target for every example in this section.
+
+#### TradeOrder — inspection target
+
+A trade model with a class attribute `MAX_QUANTITY`, four instance attributes set in `__init__`, a computed `notional()` method, and a custom `__repr__`.
 
 ```python
 class TradeOrder:
@@ -487,20 +643,54 @@ class TradeOrder:
         return f"TradeOrder({self.ticker}, {self.side}, {self.quantity}, {self.price})"
 
 order = TradeOrder("ASML.AS", "BUY", 100, 685.40)
+```
 
-# ─── type() and isinstance() ───
+#### type() and isinstance()
+
+`type()` returns the class object itself, `type().__name__` gives the string name, `isinstance()` checks membership in a class hierarchy.
+
+```python
 type(order)
 type(order).__name__
 isinstance(order, TradeOrder)
+```
 
-# ─── dir() — list all attributes and methods ───
+```text
+<class '__main__.TradeOrder'>
+TradeOrder
+True
+```
+
+#### dir() — list public attributes and methods
+
+`dir()` returns all attributes; filtering out dunder names shows the public API: class attributes, instance attributes, and methods together.
+
+```python
 public = [m for m in dir(order) if not m.startswith("_")]
 public
+```
 
-# ─── vars() / __dict__ — instance attributes ───
+```text
+['MAX_QUANTITY', 'notional', 'price', 'quantity', 'side', 'ticker']
+```
+
+#### vars() — instance attributes only
+
+`vars()` returns the instance's `__dict__` — only attributes set in `__init__`, not class attributes or methods.
+
+```python
 vars(order)
+```
 
-# ─── getattr() / hasattr() — dynamic attribute access ───
+```text
+{'ticker': 'ASML.AS', 'side': 'BUY', 'quantity': 100, 'price': 685.4}
+```
+
+#### getattr() — dynamic attribute access
+
+`getattr(obj, name)` retrieves an attribute by string name — Python's equivalent of C#'s reflection `GetProperty().GetValue()`. Combined with `callable()`, it distinguishes data attributes from methods.
+
+```python
 for attr in ["ticker", "side", "quantity", "notional"]:
     if hasattr(order, attr):
         val = getattr(order, attr)
@@ -508,16 +698,27 @@ for attr in ["ticker", "side", "quantity", "notional"]:
             print(f"  {attr}() = {val()}")
         else:
             print(f"  {attr} = {val}")
+```
 
-# ─── inspect module — deeper introspection ───
-inspect.isclass(TradeOrder)  # Is class
-[m[0] for m in inspect.getmembers(order, predicate=inspect.ismethod)]  # Methods
+```text
+ticker = ASML.AS
+side = BUY
+quantity = 100
+notional() = 68540.0
+```
+
+#### inspect module — deeper introspection
+
+The `inspect` module examines classes and functions: `isclass()` checks type, `getmembers()` finds methods, `getfile()` locates the source, and `signature()` extracts parameter names and type annotations.
+
+```python
+inspect.isclass(TradeOrder)
+[m[0] for m in inspect.getmembers(order, predicate=inspect.ismethod)]
 try:
     print(f"  Source file: {inspect.getfile(TradeOrder)}")
 except OSError:
     print("  Source file: <notebook cell> (no file on disk)")
 
-# ─── Signature introspection ───
 sig = inspect.signature(TradeOrder.__init__)
 for name, param in sig.parameters.items():
     if name == "self": continue
@@ -525,19 +726,6 @@ for name, param in sig.parameters.items():
 ```
 
 ```text
-<class '__main__.TradeOrder'>
-TradeOrder
-isinstance(order, TradeOrder): True
-
-['MAX_QUANTITY', 'notional', 'price', 'quantity', 'side', 'ticker']
-
-{'ticker': 'ASML.AS', 'side': 'BUY', 'quantity': 100, 'price': 685.4}
-
-ticker = ASML.AS
-side = BUY
-quantity = 100
-notional() = 68540.0
-
 True
 ['__init__', '__repr__', 'notional']
 <notebook cell> (no file on disk)
@@ -547,8 +735,6 @@ side: str
 quantity: int
 price: float
 ```
-
-The output demonstrates Python's introspection toolkit: `type()` returns the class object, `dir()` lists all public attributes and methods (filtered to exclude dunder names), `vars()` returns the instance's `__dict__` (instance attributes only — class attributes like `MAX_QUANTITY` and methods are excluded), `getattr()` with `callable()` distinguishes data attributes from methods, `inspect.getmembers()` finds methods, and `inspect.signature()` extracts constructor parameter names and type annotations.
 
 ## Project Structure & Best Practices
 

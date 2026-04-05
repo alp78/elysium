@@ -4,7 +4,7 @@ tags: [sql-server, tsql, dba]
 aliases: [DBA queries, SQL Server diagnostics, DMV queries, sys.dm_exec_sessions, sys.dm_exec_requests]
 description: "Essential T-SQL diagnostic queries for SQL Server DBAs: server version, database sizes, active connections, currently running queries, blocking chains, wait statistics, space and size analysis, transaction log health, TempDB monitoring, and disk capacity."
 created: 2026-03-22
-updated: 2026-03-30
+updated: 2026-04-05
 status: complete
 ---
 
@@ -51,6 +51,23 @@ SELECT
     SERVERPROPERTY('ComputerNamePhysicalNetBIOS') AS physical_host;
 ```
 
+> [!info] SERVERPROPERTY Column Reference
+>
+> | Property | Returns | Why It Matters |
+> |---|---|---|
+> | `ProductVersion` | Version string in `major.minor.build.revision` format (e.g., `16.0.4135.4`) | Determines which features, DMVs, and T-SQL syntax are available. The major version maps to the SQL Server release: `16` = SQL Server 2022, `15` = 2019, `14` = 2017, `13` = 2016 |
+> | `ProductLevel` | `RTM` (original release), `SPn` (service pack), or `CTPn` (preview) | Identifies whether critical service packs are applied — some security fixes and features require a specific service pack |
+> | `ProductUpdateLevel` | `CUn` (cumulative update number) or `NULL` if not applicable | Cumulative updates contain bug fixes and security patches — compare against the latest published CU to assess patch currency |
+> | `Edition` | `Enterprise`, `Standard`, `Developer`, `Express`, `Web`, `Business Intelligence` (appends `(64-bit)` on 64-bit installs) | Edition determines feature availability: Enterprise supports online index rebuilds, table partitioning, and compression; Standard caps at 128 GB RAM; Express caps at 1 GB RAM and 10 GB database size |
+> | `EngineEdition` | Integer: `1` = Personal/Desktop, `2` = Standard, `3` = Enterprise, `4` = Express, `5` = Azure SQL Database, `8` = Azure SQL Managed Instance | Use this in scripts to branch logic by edition — numeric comparison is more reliable than parsing the `Edition` string |
+> | `Collation` | Server default collation name (e.g., `SQL_Latin1_General_CP1_CI_AS`) | Controls default sort order and string comparison for all databases that inherit the server collation. Mismatched collations between databases cause `COLLATE` conflicts in cross-database joins |
+> | `IsClustered` | `1` = failover cluster instance, `0` = standalone | Clustered instances fail over to another node automatically — affects how you plan maintenance windows and where you look for logs after a failover |
+> | `IsHadrEnabled` | `1` = Always On Availability Groups enabled, `0` = disabled, `NULL` = not applicable | Must be `1` for any AG-replicated database. Pertains only to AGs — database mirroring and log shipping are unaffected by this property |
+> | `IsFullTextInstalled` | `1` = full-text search components installed, `0` = not installed | Required for `CONTAINS`, `FREETEXT`, and full-text index operations. If `0`, any full-text query will fail |
+> | `ServerName` | Combined Windows server and instance name (e.g., `SERVER01\INST1`) | Used in scripts to log which server executed a statement. For a default instance, returns the server name with no backslash |
+> | `InstanceName` | Named instance identifier (e.g., `INST1`) or `NULL` for the default instance | Distinguishes multiple SQL Server instances on the same host — critical for connection strings and service management |
+> | `ComputerNamePhysicalNetBIOS` | NetBIOS name of the physical host running the instance | On a failover cluster, this changes after failover — use it to determine which physical node currently owns the instance. On a standalone server, it matches `MachineName` |
+
 > [!tip] Quick Identity Globals
 >
 > These globals are useful in scripts that need to log which server and session they ran on.
@@ -60,6 +77,16 @@ SELECT @@SERVERNAME AS server_name, @@SERVICENAME AS service_name,
        @@SPID AS current_spid, @@LANGUAGE AS language,
        @@MAX_CONNECTIONS AS max_connections;
 ```
+
+> [!info] Global Variables Reference
+>
+> | Variable | Meaning | Interpretation |
+> |---|---|---|
+> | `@@SERVERNAME` | Returns the server and instance name (e.g., `SERVER01\INST1` for a named instance, or `SERVER01` for the default instance) | Useful in scripts that log which server they ran on. Can differ from `SERVERPROPERTY('ServerName')` after a machine rename until `sp_dropserver`/`sp_addserver` is run |
+> | `@@SERVICENAME` | Name of the Windows service running this SQL Server instance. `MSSQLSERVER` for the default instance, or the instance name for named instances | Used to verify which Windows service to restart or monitor |
+> | `@@SPID` | Session ID (SPID) of the current connection | Useful for identifying your own session in DMV queries and avoiding killing your own connection |
+> | `@@LANGUAGE` | Current language name for the session (e.g., `us_english`) | Affects date format interpretation and error message language |
+> | `@@MAX_CONNECTIONS` | Maximum number of simultaneous user connections allowed. Default is `32,767` | This is rarely the limiting factor — connection pool limits, memory, and worker thread count (`max worker threads`) are typically reached first |
 
 ---
 
@@ -90,6 +117,98 @@ FROM sys.databases
 ORDER BY name;
 ```
 
+> [!info] sys.databases Column Reference
+>
+> **`database_id`** — unique integer identifying each database on the instance. System databases have fixed IDs: `1` = `master`, `2` = `tempdb`, `3` = `model`, `4` = `msdb`. User databases start at `5` and increment. Use this to join with other DMVs (`sys.master_files`, `sys.dm_io_virtual_file_stats`, etc.).
+>
+> **`name`** — the logical name of the database, unique within the instance. This is the name used in `USE` statements, connection strings, and backup commands.
+>
+> **`state_desc`** — the current availability state of the database.
+>
+> | Value | Meaning | Action |
+> |---|---|---|
+> | `ONLINE` | Normal operations — database is accessible for read/write | No action needed |
+> | `RESTORING` | Mid-restore sequence — the database is receiving backup files | Wait for restore to complete or issue `RESTORE WITH RECOVERY` to bring it online |
+> | `RECOVERING` | Startup crash recovery in progress — SQL Server is replaying the transaction log | Wait for automatic recovery to finish. If it takes too long, check `errorlog` for corruption |
+> | `RECOVERY_PENDING` | Recovery needs a resource that is not available (e.g., missing filegroup) | Investigate missing files or resources; may require `RESTORE` or `ALTER DATABASE` to resolve |
+> | `SUSPECT` | Corruption detected during recovery — the database may have damaged pages | Run `DBCC CHECKDB`. Restore from the last known good backup if corruption is confirmed |
+> | `EMERGENCY` | Manually set for repair operations — single-user, read-only access | Used only during `DBCC CHECKDB ... REPAIR_ALLOW_DATA_LOSS`. Restore to `ONLINE` after repair |
+> | `OFFLINE` | Manually taken offline via `ALTER DATABASE SET OFFLINE` | Bring back with `ALTER DATABASE SET ONLINE` when ready |
+
+> [!info] recovery_model_desc — Recovery Model
+>
+> The recovery model controls how the transaction log is managed and what restore operations are possible. This is one of the most consequential database settings.
+>
+> | Value | Log Behavior | Backup Requirements | Point-in-Time Restore? | Work Loss Exposure |
+> |---|---|---|---|---|
+> | `FULL` | Every transaction is fully logged. Log grows until explicitly backed up | Full backups + regular transaction log backups (typically every 5–15 minutes) | Yes — can restore to any point covered by log backups | None, if log backups are current. If the tail of the log is damaged, changes since the last log backup are lost |
+> | `BULK_LOGGED` | Most operations fully logged; bulk operations (BCP, `SELECT INTO`, index rebuilds) use minimal logging | Same as FULL — requires log backups | No — cannot restore to a point within a log backup that contains bulk-logged operations. Can only restore to the end of a log backup | If log is damaged after a bulk operation, changes since the last log backup must be redone |
+> | `SIMPLE` | Log is automatically truncated at each checkpoint. No log backup possible | Full backups + optional differential backups only | No — can only restore to the end of the last full or differential backup | All changes since the last backup are lost |
+>
+> **Implications:** Production databases that require point-in-time recovery (OLTP, financial systems) must use `FULL`. The `BULK_LOGGED` model is a temporary optimization — switch to it before large ETL loads to reduce log volume, then switch back to `FULL`. The `SIMPLE` model is appropriate for development databases, read-only reporting databases, and data warehouse staging layers that can be fully reloaded.
+
+> [!info] compatibility_level — Database Engine Behavior Version
+>
+> An integer that controls T-SQL behavior and query optimizer features. It does not restrict which SQL Server version the database runs on — it restricts which *behaviors* are active.
+>
+> | Value | Maps to SQL Server Version | Key Behavior Changes |
+> |---|---|---|
+> | `80` | SQL Server 2000 | Legacy — deprecated in modern versions |
+> | `90` | SQL Server 2005 | Introduced `PIVOT`, `UNPIVOT`, `TRY...CATCH` |
+> | `100` | SQL Server 2008 | Introduced `MERGE`, `GROUPING SETS` |
+> | `110` | SQL Server 2012 | Introduced `OFFSET/FETCH`, `THROW`, window function enhancements |
+> | `120` | SQL Server 2014 | New cardinality estimator (CE) — can change query plans significantly |
+> | `130` | SQL Server 2016 | Batch mode for columnstore, `STRING_SPLIT`, `DROP IF EXISTS` |
+> | `140` | SQL Server 2017 | Adaptive joins, interleaved execution, automatic tuning |
+> | `150` | SQL Server 2019 | Intelligent Query Processing (IQP), scalar UDF inlining, batch mode on rowstore |
+> | `160` | SQL Server 2022 | Parameter Sensitive Plan (PSP) optimization, optimized plan forcing |
+>
+> **Implications:** After upgrading a SQL Server instance, databases retain their old compatibility level until explicitly changed. A database at level `130` on a SQL Server 2022 instance will not benefit from IQP or PSP optimizations. Always test workloads before raising the compatibility level — the new cardinality estimator at `120+` can produce different (sometimes worse) query plans.
+
+> [!info] Boolean Flag Columns
+>
+> | Column | `1` Means | `0` Means | Recommendation |
+> |---|---|---|---|
+> | `is_read_only` | Database is `READ_ONLY` — no writes allowed | Database is `READ_WRITE` | Set reporting replicas and archive databases to read-only to prevent accidental writes and reduce locking |
+> | `is_auto_shrink_on` | `AUTO_SHRINK` is enabled — SQL Server periodically shrinks data files | Auto-shrink is disabled | **Always disable.** Auto-shrink causes severe index fragmentation, wastes I/O, and the freed space is immediately reclaimed by the next growth event — creating an expensive shrink-grow cycle |
+> | `is_auto_close_on` | `AUTO_CLOSE` is enabled — database shuts down when the last connection closes | Auto-close is disabled | **Disable on servers.** Auto-close causes startup overhead on every new connection. Acceptable only for SQL Server Express instances used as local file databases |
+> | `is_broker_enabled` | Service Broker is active — can send and receive messages | Broker is disabled — sent messages queue on the transmission queue, received messages are not delivered | Enable only if the application uses Service Broker messaging. By default, restored or attached databases have the broker disabled |
+> | `is_cdc_enabled` | Change Data Capture is active — DML changes are tracked in CDC tables | CDC is disabled | CDC creates capture jobs that read the transaction log. When enabled, the log cannot be truncated until the capture job has processed all changes — monitor `log_reuse_wait_desc` for `REPLICATION` if the log grows unexpectedly |
+
+> [!info] collation_name — Database Default Collation
+>
+> The collation determines how SQL Server sorts and compares string data. It is set at database creation and inherited by all `char`/`varchar`/`nchar`/`nvarchar` columns that do not specify an explicit collation. Common collations:
+>
+> | Collation | Case Sensitive? | Accent Sensitive? | Notes |
+> |---|---|---|---|
+> | `SQL_Latin1_General_CP1_CI_AS` | No (CI) | Yes (AS) | SQL Server default. Most common in legacy installations |
+> | `Latin1_General_CI_AS` | No (CI) | Yes (AS) | Windows collation — preferred for new databases |
+> | `Latin1_General_CS_AS` | Yes (CS) | Yes (AS) | Case-sensitive — `'ABC' ≠ 'abc'` |
+> | `Latin1_General_100_CI_AS_SC_UTF8` | No (CI) | Yes (AS) | UTF-8 collation (SQL Server 2019+) — stores Unicode in `varchar` without doubling storage |
+>
+> **Implications:** If two databases on the same instance have different collations, cross-database joins on string columns require an explicit `COLLATE` clause — otherwise the query fails with a collation conflict error. Returns `NULL` if the database is not `ONLINE`.
+
+> [!info] log_reuse_wait_desc — Why the Transaction Log Cannot Be Truncated
+>
+> This column is critical during capacity incidents. After a log backup completes, SQL Server marks inactive Virtual Log Files (VLFs) for reuse. If something prevents this, the log file grows until the disk is full. This column tells you what is blocking truncation.
+>
+> | Value | Meaning | Response |
+> |---|---|---|
+> | `NOTHING` | Normal — no truncation blocker, VLFs are available for reuse | No action needed |
+> | `CHECKPOINT` | No checkpoint has occurred since the last truncation | Routine — usually resolves within seconds. If sustained, run `CHECKPOINT` manually |
+> | `LOG_BACKUP` | No log backup has been taken (FULL/BULK_LOGGED recovery model) | Take a log backup immediately: `BACKUP LOG [db] TO DISK = '...'` |
+> | `ACTIVE_BACKUP_OR_RESTORE` | A data backup or restore is in progress | Wait for the backup/restore to finish |
+> | `ACTIVE_TRANSACTION` | A long-running transaction is holding log space | Identify the transaction with `DBCC OPENTRAN` or `sys.dm_tran_active_transactions`. Kill if safe, or wait for it to commit |
+> | `DATABASE_MIRRORING` | Mirror is behind the principal — log cannot be truncated until the mirror catches up | Check mirror status with `sys.dm_db_mirroring_connections`. If mirroring is paused, resume or remove it |
+> | `REPLICATION` | Transactions relevant to publications have not been delivered to the distribution database | Check the Log Reader Agent. If CDC is enabled, check the capture job in `msdb.dbo.cdc_jobs` |
+> | `DATABASE_SNAPSHOT_CREATION` | A snapshot is being created | Transient — wait for snapshot creation to finish |
+> | `AVAILABILITY_REPLICA` | Secondary replica has not hardened or applied the log — the primary cannot truncate until all synchronous replicas acknowledge | Check `sys.dm_hadr_database_replica_states` for `log_send_queue_size` and `redo_queue_size`. Investigate network latency or slow secondary I/O |
+> | `XTP_CHECKPOINT` | In-Memory OLTP checkpoint has not completed | Expected on databases with memory-optimized filegroups |
+
+> [!info] create_date — Database Creation Timestamp
+>
+> The `datetime` value when the database was created or last renamed. For `tempdb`, this value resets on every SQL Server restart — making it a quick way to check when the instance was last restarted. For user databases, this date reflects the original `CREATE DATABASE` statement and does not change on backup/restore operations.
+
 ---
 
 ### sys.master_files — Database File Locations and Sizes
@@ -118,6 +237,29 @@ FROM sys.master_files mf
 JOIN sys.databases d ON d.database_id = mf.database_id
 ORDER BY d.name, mf.file_id;
 ```
+
+> [!info] sys.master_files Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `database_name` | Logical name of the database (joined from `sys.databases`) | Groups files by database |
+> | `file_id` | Integer identifying each file within a database. `1` = primary data file (`.mdf`), `2` = transaction log (`.ldf`), `3+` = secondary data files (`.ndf`) or FILESTREAM | The primary file (`file_id = 1`) contains the system catalog. Additional data files spread I/O across multiple drives |
+> | `type_desc` | File type: `ROWS` (data file storing tables/indexes), `LOG` (transaction log), `FILESTREAM` (BLOB storage on the file system), `FULLTEXT` (legacy full-text catalog, pre-2008) | Data and log files should be on separate physical drives — log writes are sequential and benefit from dedicated I/O |
+> | `logical_name` | Logical file name used in T-SQL commands (`ALTER DATABASE ... MODIFY FILE (NAME = ...)`) | Used when resizing, moving, or shrinking a specific file |
+> | `physical_name` | Full operating-system path to the file (e.g., `D:\Data\mydb.mdf`) | Verify data and log files are on separate volumes. Watch for files on the OS drive — that is a capacity risk |
+> | `state_desc` | File availability: `ONLINE` (normal), `RESTORING`, `RECOVERING`, `RECOVERY_PENDING`, `SUSPECT`, `OFFLINE`, `DEFUNCT` | Any state other than `ONLINE` requires investigation. `SUSPECT` indicates possible corruption |
+> | `size_mb` | Current allocated file size in megabytes. Computed as `size * 8.0 / 1024` because `size` is stored in 8 KB pages | This is the *allocated* size, not the *used* size. To see used space, query `sys.database_files` with `FILEPROPERTY(name, 'SpaceUsed')` inside each database |
+> | `max_size_mb` | Maximum size the file can grow to. `-1` = unlimited (grows until disk is full). `268435456` pages = 2 TB (maximum for log files) | Unlimited max size (`-1`) is dangerous — set an explicit cap to prevent a runaway log from filling the disk |
+> | `growth` | Auto-growth increment. If `is_percent_growth = 0`, the value is in 8 KB pages (multiply by 8/1024 for MB). If `is_percent_growth = 1`, the value is a whole-number percentage | Fixed growth (e.g., 512 MB) is preferred. Percentage growth is dangerous at scale: 10% on a 500 GB file allocates 50 GB in a single event, potentially stalling the server during zeroing |
+> | `is_percent_growth` | `1` = growth is a percentage, `0` = growth is in 8 KB pages (absolute) | If `1`, convert to fixed growth immediately to avoid unpredictable large expansions |
+
+> [!warning] Unlimited Max Size and Percent Growth
+>
+> A file with `max_size = -1` and `is_percent_growth = 1` is a capacity incident waiting to happen. The file can grow without limit, and each growth event gets exponentially larger.
+
+> [!success] Set Fixed Growth and Explicit Max Size
+>
+> `ALTER DATABASE [mydb] MODIFY FILE (NAME = mydb_data, FILEGROWTH = 512MB, MAXSIZE = 100GB);` — this caps growth and makes each expansion predictable. Pre-size files to their expected working size to minimize growth events entirely.
 
 ---
 
@@ -150,6 +292,20 @@ WHERE name IN (
 )
 ORDER BY name;
 ```
+
+> [!info] sys.configurations Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `name` | Configuration option name (e.g., `max server memory (MB)`) | The identifier used in `sp_configure` commands |
+> | `value` | The configured setting — what was set via `sp_configure` | This may differ from the active setting if `RECONFIGURE` has not been run or a restart is pending |
+> | `value_in_use` | The currently active setting — what SQL Server is actually using right now | **Always compare `value` vs `value_in_use`.** A mismatch means a `RECONFIGURE` statement or server restart is needed to activate the change |
+> | `minimum` | Lowest valid value for this configuration option | Attempting to set below this value causes `sp_configure` to error |
+> | `maximum` | Highest valid value for this configuration option | For `max server memory`, the maximum is `2147483647` (effectively unlimited) |
+> | `description` | Human-readable explanation of the option | Useful for identifying unfamiliar settings |
+> | `is_advanced` | `1` = requires `show advanced options` to be enabled before it appears in `sp_configure` output. `0` = always visible | Run `sp_configure 'show advanced options', 1; RECONFIGURE;` before querying or changing advanced settings. Most performance-critical settings are advanced |
+>
+> The `is_dynamic` column (not selected in this query but available) indicates whether the setting takes effect immediately after `RECONFIGURE` (`1`) or requires a server restart (`0`). Memory settings (`max/min server memory`) are dynamic; the `fill factor` setting requires a restart.
 
 > [!example] Recommended Values for Key Settings
 >
@@ -195,6 +351,15 @@ GROUP BY d.name
 ORDER BY total_size_mb DESC;
 ```
 
+> [!info] Database Size Summary Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `database_name` | Name of the database | Sorted by total size descending to show the largest databases first |
+> | `data_size_mb` | Total allocated space for data files (`type = 0` in `sys.master_files`), in megabytes. Includes `.mdf` (primary) and `.ndf` (secondary) data files | This is allocated space — not all of it may contain data. A large gap between allocated and used space means the files were pre-sized or grew and were never shrunk |
+> | `log_size_mb` | Total allocated space for transaction log files (`type = 1`), in megabytes | A log file larger than 25% of the data file size under FULL recovery usually means log backups are too infrequent. Under SIMPLE recovery, an oversized log suggests a recent large transaction that triggered auto-growth |
+> | `total_size_mb` | Sum of data and log file allocations | The total disk footprint of the database. Compare against available disk space from the `dm_os_volume_stats` query |
+
 ---
 
 ### Table Sizes — Current Database
@@ -234,6 +399,17 @@ GROUP BY s.name, t.name
 ORDER BY total_mb DESC;
 ```
 
+> [!info] Table Size Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `schema_name` | Schema owning the table (e.g., `dbo`, `staging`) | Useful for distinguishing identically-named tables in different schemas |
+> | `table_name` | Name of the table | Sorted by total space descending — the largest tables appear first |
+> | `total_mb` | Total allocated pages (data + index + unused) in megabytes. Includes space reserved by SQL Server but not yet used | A large `total_mb` relative to `used_mb` indicates excessive reserved space — the table may have been bulk-loaded then had rows deleted |
+> | `used_mb` | Pages currently in use (data + index pages that contain data) | The actual space consumed by table data and indexes |
+> | `data_mb` | Pages containing row data only (excludes index leaf/non-leaf pages and internal pages) | Compare `data_mb` to `used_mb` to estimate the index overhead — `used_mb - data_mb` = space consumed by indexes |
+> | `row_count` | Approximate row count from partition metadata. Highly accurate for non-partitioned tables. For partitioned tables, `SUM(p.rows)` across `index_id IN (0, 1)` avoids double-counting | Use this instead of `SELECT COUNT(*)` for large tables — it reads metadata instantly instead of scanning the entire table |
+
 ---
 
 ### dm_db_partition_stats — Fast Row Counts Without Scanning
@@ -250,6 +426,14 @@ WHERE index_id IN (0, 1)
 GROUP BY object_id
 ORDER BY total_rows DESC;
 ```
+
+> [!info] dm_db_partition_stats Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `schema_name` | Derived from `OBJECT_SCHEMA_NAME(object_id)` — the schema owning the table | Groups results by schema |
+> | `table_name` | Derived from `OBJECT_NAME(object_id)` — the table name | Sorted by row count descending |
+> | `total_rows` | Sum of `row_count` across heap (`index_id = 0`) and clustered index (`index_id = 1`) partitions. Pre-computed metadata — returns instantly regardless of table size | Accurate to the last statistics update. `SELECT COUNT(*)` performs a full scan and returns the exact count, but at much higher cost. For monitoring and capacity planning, the metadata count is sufficient |
 
 ---
 
@@ -276,6 +460,17 @@ GROUP BY i.object_id, i.name, i.type_desc
 ORDER BY total_mb DESC;
 ```
 
+> [!info] Index Size Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `schema_name` | Schema owning the table | Groups indexes by their parent table's schema |
+> | `table_name` | Table the index belongs to | Identifies which table's write performance is affected by large indexes |
+> | `index_name` | Name of the index. `NULL` for heaps (tables without a clustered index) | Named indexes are easier to manage — always name your indexes explicitly |
+> | `type_desc` | Index structure type: `HEAP` (no clustered index), `CLUSTERED` (base table data ordered by index key), `NONCLUSTERED` (separate B-tree structure), `XML`, `SPATIAL`, `CLUSTERED COLUMNSTORE`, `NONCLUSTERED COLUMNSTORE` | Every nonclustered index must be updated on every write to the base table — oversized or rarely-queried nonclustered indexes impose a direct write penalty |
+> | `total_mb` | Total allocated pages for this index in megabytes | Includes reserved but unused pages. Large values on nonclustered indexes are candidates for review — cross-reference with `sys.dm_db_index_usage_stats` to check if reads justify the space |
+> | `used_mb` | Pages actually containing index data | `total_mb - used_mb` = wasted reserved space. If this gap is large, the index may benefit from a rebuild |
+
 ---
 
 ### Transaction Log Space Usage — Log Size and VLF Health
@@ -294,15 +489,41 @@ The transaction log records every data modification so SQL Server can guarantee 
 DBCC SQLPERF(LOGSPACE);
 ```
 
+> [!info] DBCC SQLPERF(LOGSPACE) Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `Database Name` | Name of each database on the instance | One row per database |
+> | `Log Size (MB)` | Total allocated size of the transaction log file | Compare against disk capacity. A log that is 25%+ of the data file size under FULL recovery may indicate infrequent log backups |
+> | `Log Space Used (%)` | Percentage of the log file currently occupied by active log records | Below 50% is healthy. Above 80% means the log is nearly full — check `log_reuse_wait_desc` to find the truncation blocker. At 100%, the database cannot accept writes until space is freed |
+> | `Status` | Internal status flag (always `0` for user queries) | Not diagnostically useful — ignore this column |
+
 ```sql
 SELECT name, log_reuse_wait_desc
 FROM sys.databases
 ORDER BY name;
 ```
 
+The `log_reuse_wait_desc` column values and their meanings are documented in the sys.databases column reference above.
+
 ```sql
 DBCC LOGINFO;
 ```
+
+> [!info] DBCC LOGINFO Column Reference
+>
+> Returns one row per Virtual Log File (VLF) in the current database's transaction log.
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `RecoveryUnitId` | Recovery unit identifier (always `0` for standard databases) | Only relevant for databases with multiple recovery units |
+> | `FileId` | File ID of the log file containing this VLF | Matches `file_id` in `sys.database_files` |
+> | `FileSize` | Size of this VLF in bytes | Many small VLFs (under 512 KB) indicate the log was grown in tiny increments. Fewer, larger VLFs are preferred |
+> | `StartOffset` | Byte offset of this VLF within the log file | Used internally for VLF layout analysis |
+> | `FSeqNo` | Log sequence number for this VLF | Higher values are more recent. VLFs with `FSeqNo = 0` have never been used |
+> | `Status` | `0` = VLF is inactive (reusable), `2` = VLF is active (contains log records that have not been truncated) | Count the rows: fewer than 50 is ideal, 50–200 is acceptable, 200–1000 indicates log fragmentation, above 1000 is a serious performance risk requiring log pre-sizing |
+> | `Parity` | VLF parity value (`64` or `128`) | Used internally for log recovery — not diagnostically useful |
+> | `CreateLSN` | Log Sequence Number at which this VLF was created. `0` = VLF was created with the original file | VLFs with `CreateLSN > 0` were created by auto-growth events. Many distinct `CreateLSN` values = many growth events = fragmented log |
 
 ---
 
@@ -338,6 +559,17 @@ WHERE t.user_objects_alloc_page_count + t.internal_objects_alloc_page_count > 0
 ORDER BY total_pages DESC;
 ```
 
+> [!info] TempDB Session Usage Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `session_id` | SQL Server session identifier (SPID). System sessions are 1–50; user sessions start at 51 | Cross-reference with `sys.dm_exec_requests` to see what the session is currently running |
+> | `login_name` | The SQL or Windows login authenticated for this session | Identifies which service account or user is consuming TempDB space |
+> | `program_name` | Application name reported in the connection string (e.g., `.Net SqlClient`, `Python`, `SSIS`) | Helps trace TempDB consumption back to a specific application or ETL tool |
+> | `user_obj_mb` | Space allocated by explicit user objects: `#temp` tables, table variables (`@var`), and user-created global temp tables (`##temp`). Computed from `user_objects_alloc_page_count * 8 / 1024` | High values mean the session is creating large temp tables. Verify the temp tables are dropped after use and that the session is not leaking temp objects |
+> | `internal_obj_mb` | Space allocated by internal objects: sort spills, hash join spills, cursor worktables, spool worktables. Computed from `internal_objects_alloc_page_count * 8 / 1024` | High values indicate queries are spilling to disk because their memory grant is insufficient. Run `UPDATE STATISTICS` with `FULLSCAN` on the underlying tables, or add `OPTION (MIN_GRANT_PERCENT = n)` to the query |
+> | `total_pages` | Sum of user and internal object page counts (raw pages, not megabytes) | The sort key — highest consumers appear first. Sessions with thousands of pages are the primary TempDB consumers |
+
 #### TempDB File Sizes and Free Space
 
 This query reports the allocated size, used space, and free space for each TempDB data file. All TempDB data files should be the same size — unequal sizes cause SQL Server's proportional fill algorithm to favor the largest file, negating the contention reduction that multiple files provide.
@@ -352,6 +584,16 @@ SELECT
     CAST((size - FILEPROPERTY(name, 'SpaceUsed')) * 8.0 / 1024 AS DECIMAL(10,2)) AS free_mb
 FROM sys.database_files;
 ```
+
+> [!info] TempDB File Size Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `name` | Logical file name (e.g., `tempdev`, `templog`, `temp2`) | TempDB data files should be named consistently. Default is `tempdev` for the primary data file |
+> | `file_id` | Integer identifying the file. `1` = primary data file, `2` = log file, `3+` = additional data files | Best practice: 1 data file per logical core, minimum 2, maximum 8. All must be equal size |
+> | `size_mb` | Total allocated size of the file in megabytes | All TempDB data files must be the same size. Unequal sizes cause SQL Server's proportional fill algorithm to favor the largest file, negating the contention reduction of multiple files |
+> | `used_mb` | Space currently containing data, in megabytes. Computed using `FILEPROPERTY(name, 'SpaceUsed')` | Used space close to allocated size means TempDB is nearly full. Auto-growth will trigger, which is slow and creates fragmentation |
+> | `free_mb` | Unused space within the allocated file (`size_mb - used_mb`) | If consistently near zero during peak workloads, pre-size the file larger. If consistently high, the file may be oversized |
 
 ---
 
@@ -379,6 +621,16 @@ CROSS APPLY sys.dm_os_volume_stats(mf.database_id, mf.file_id) vs
 ORDER BY vs.volume_mount_point;
 ```
 
+> [!info] dm_os_volume_stats Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `volume_mount_point` | Drive letter or mount point (e.g., `C:\`, `D:\`, `E:\Data\`) | Identifies the physical volume hosting database files. Check that data and log files are on separate volumes |
+> | `logical_volume_name` | Windows volume label (e.g., `Data`, `Logs`, `Backup`) | Useful for identifying the purpose of each drive in multi-disk configurations |
+> | `total_gb` | Total capacity of the volume in gigabytes | Baseline for calculating utilization percentages |
+> | `free_gb` | Available free space on the volume in gigabytes | The primary metric for capacity monitoring. Below 10% free is a P1 alert threshold |
+> | `pct_free` | Percentage of the volume that is free (`available_bytes / total_bytes * 100`) | Alert at < 15% free, investigate at < 10% free, treat < 5% as a P1 incident. SQL Server stops accepting writes when a volume is full |
+
 ---
 
 ## Active Sessions and Queries
@@ -396,6 +648,14 @@ WHERE is_user_process = 1
 GROUP BY login_name, program_name
 ORDER BY connections DESC;
 ```
+
+> [!info] Active Connections Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `login_name` | The SQL Server or Windows login authenticated for the session | Identifies which service accounts or users are consuming connections. A single login with hundreds of connections may indicate a connection pool leak |
+> | `program_name` | Application name reported in the connection string. Common values: `.Net SqlClient Data Provider` (C#/.NET), `Microsoft JDBC Driver` (Java), `Python` (pyodbc/SQLAlchemy), `SQL Server Management Studio`, `SQLAgent - TSQL JobStep` | Traces connections back to specific applications. If a new application deploys and connections spike, this column tells you which one |
+> | `connections` | Count of active sessions for each login/program combination | Baseline this value during normal operations. A sudden 2x–3x spike compared to baseline signals a connection leak, retry storm, or runaway application. Most connection pools default to 100 max — exceeding this causes connection timeout errors in the application |
 
 > [!tip] Connection Spikes Signal Trouble
 >
@@ -416,6 +676,18 @@ The `status` column shows the request's current state:
 | `suspended` | Blocked — waiting for a resource (lock, I/O, latch, memory grant) |
 | `sleeping` | Session idle, no active request |
 | `rollback` | Rolling back a transaction |
+
+> [!info] dm_exec_requests Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `session_id` | SQL Server session identifier (SPID). System sessions are 1–50, user sessions start at 51 | The filter `session_id > 50` in the query excludes internal background tasks (checkpoint, lazy writer, lock monitor, etc.) |
+> | `status` | Current execution state of the request (see table above) | `suspended` = blocked waiting for a resource (check `wait_type`). `runnable` = ready but waiting for a CPU time slice. `running` = actively executing on a scheduler |
+> | `command` | The type of operation currently executing (e.g., `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `BACKUP DATABASE`, `DBCC`, `KILLED/ROLLBACK`, `AWAITING COMMAND`) | `KILLED/ROLLBACK` means a session was killed and is rolling back — check `percent_complete` to estimate remaining time. `AWAITING COMMAND` means the session is idle |
+> | `elapsed_sec` | Total elapsed time in seconds since the request began (`total_elapsed_time / 1000`) | Long-running requests (> 300 seconds on OLTP systems) are candidates for investigation. Compare with `cpu_sec` to determine if the time is spent computing or waiting |
+> | `cpu_sec` | CPU time consumed by the request in seconds (`cpu_time / 1000`) | If `elapsed_sec` is high but `cpu_sec` is low, the query is spending most of its time waiting (I/O, locks, memory grants) — not computing. If both are high, the query is CPU-intensive and may benefit from index tuning or query rewriting |
+> | `logical_reads` | Number of 8 KB pages read from the buffer pool (memory). Does not count physical disk reads | High logical reads (millions) indicate large scans — the query may be missing an index. Compare across requests to find the most expensive queries |
+> | `query_text` | First 200 characters of the T-SQL batch text, retrieved via `sys.dm_exec_sql_text(sql_handle)` | Identifies the query. For the full text, remove the `SUBSTRING` and select `st.text` directly. The `sql_handle` is a varbinary token that uniquely identifies the compiled batch |
 
 ```sql
 SELECT r.session_id, r.status, r.command,
@@ -505,6 +777,17 @@ AND waiting_tasks_count > 0
 ORDER BY wait_time_ms DESC;
 ```
 
+> [!info] dm_os_wait_stats Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `wait_type` | Name of the wait type (e.g., `PAGEIOLATCH_SH`, `LCK_M_X`, `CXPACKET`) | The classification of what SQL Server was waiting for. See the Common Wait Types table below for the most important ones and their fixes |
+> | `wait_sec` | Total cumulative wait time in seconds for this wait type since the last server restart (or manual reset via `DBCC SQLPERF('sys.dm_os_wait_stats', CLEAR)`) | This is cumulative — high values on a server that has been running for months may be normal. Compare the percentage (`pct`) column instead, and trend over time by capturing snapshots |
+> | `waiting_tasks_count` | Number of times a task waited on this wait type since the counter was last reset | Divide `wait_sec` by `waiting_tasks_count` to get the average wait time per occurrence. A wait type with millions of occurrences but low average wait time is typically benign. A wait type with fewer occurrences but high average wait time is more concerning |
+> | `pct` | Percentage of total wait time attributed to this wait type | The top 2–3 wait types by percentage identify the dominant bottleneck. If a single wait type accounts for > 50% of total waits, that is the primary problem to investigate |
+>
+> The query filters out benign background waits (`SLEEP_TASK`, `WAITFOR`, `BROKER_RECEIVE_WAITFOR`, etc.) that would otherwise dominate the results. The `signal_wait_time_ms` column (not selected but available) measures time in the runnable queue after being signaled — subtract it from `wait_time_ms` to isolate pure resource wait time. A `signal_wait_time_ms` above 25% of `wait_time_ms` indicates CPU pressure.
+
 > [!info] Common Wait Types
 >
 > | Wait type | Meaning | Fix |
@@ -529,6 +812,14 @@ SELECT physical_memory_kb / 1024 AS physical_mb,
 FROM sys.dm_os_sys_info;
 ```
 
+> [!info] Memory Query Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `physical_mb` | Total physical RAM installed on the server, in megabytes. Read from `sys.dm_os_sys_info.physical_memory_kb` | The baseline for sizing `max server memory`. SQL Server's buffer pool should typically be configured to ~75% of this value, leaving the rest for the OS, CLR, and other services |
+> | `committed_mb` | Memory currently committed (allocated and in use) by SQL Server, in megabytes. Read from `sys.dm_os_sys_info.committed_kb` | This is the actual buffer pool size. If it equals `max server memory`, SQL Server is using its full allocation. If significantly below `max server memory`, the server has not yet needed to fill its buffer pool (common after a recent restart) |
+> | `PLE_sec` | Page Life Expectancy in seconds — how long a data page stays in the buffer pool before being evicted to make room for another page. Read from `sys.dm_os_performance_counters` where `counter_name = 'Page life expectancy'` | The classic threshold is 300 seconds, but this is a community heuristic, not an absolute rule. A more accurate formula: **300 seconds per 4 GB of buffer pool**. A 64 GB server should sustain PLE above ~4,800 seconds. A sudden PLE drop (e.g., from 5,000 to 200 within minutes) during a workload spike means SQL Server is evicting cached pages and forcing queries to read from disk — this is the signature of memory pressure |
+
 > [!info] Page Life Expectancy Thresholds
 >
 > PLE > 300 = healthy (pages stay in memory). PLE < 60 = memory pressure — SQL Server is evicting data pages constantly, which means every query pays the cost of reading from disk.
@@ -545,6 +836,17 @@ FROM sys.dm_io_virtual_file_stats(NULL,NULL) fs
 JOIN sys.master_files f ON fs.database_id = f.database_id AND fs.file_id = f.file_id
 ORDER BY (fs.io_stall_read_ms + fs.io_stall_write_ms) DESC;
 ```
+
+> [!info] I/O Latency Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `db` | Database name derived from `DB_NAME(database_id)` | Identifies which database's files are experiencing I/O latency |
+> | `type_desc` | File type: `ROWS` (data file) or `LOG` (transaction log file). Joined from `sys.master_files` | Log files should have lower write latency than data files because log writes are sequential. High `avg_write_ms` on log files directly causes `WRITELOG` waits |
+> | `avg_read_ms` | Average read latency per I/O operation in milliseconds. Computed as `io_stall_read_ms / num_of_reads`. `NULL` if `num_of_reads = 0` | The single best indicator of storage read performance. Cumulative since server restart — captures the overall trend, not point-in-time. See the threshold table below |
+> | `avg_write_ms` | Average write latency per I/O operation in milliseconds. Computed as `io_stall_write_ms / num_of_writes`. `NULL` if `num_of_writes = 0` | High write latency on data files causes `PAGEIOLATCH_EX` waits. High write latency on log files causes `WRITELOG` waits, which block every commit. Log file writes should consistently be under 5 ms on modern storage |
+>
+> The underlying columns from `sys.dm_io_virtual_file_stats` are cumulative since server restart. To measure current I/O performance, capture two snapshots and compute the delta.
 
 > [!info] I/O Latency Thresholds
 >
@@ -568,6 +870,16 @@ CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) st
 WHERE r.blocking_session_id > 0;
 ```
 
+> [!info] Blocking Query Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `blocked` | Session ID of the request that is waiting to acquire a lock | This session cannot proceed until the blocker releases its lock. Check how long it has been waiting using `wait_sec` |
+> | `blocker` | Session ID of the session holding the lock that the blocked request needs. Special values: `-2` = orphaned distributed transaction, `-3` = deferred recovery transaction, `-4`/`-5` = latch owner could not be determined | Always investigate the head blocker first — it is the root of the blocking chain. Use the Currently Running Queries query above to see what the blocker is doing |
+> | `wait_type` | The lock wait type (e.g., `LCK_M_S` = waiting for a shared lock, `LCK_M_X` = waiting for an exclusive lock, `LCK_M_U` = waiting for an update lock, `LCK_M_IX` = waiting for an intent exclusive lock) | The lock type indicates the operation: shared locks are reads, exclusive locks are writes. `LCK_M_X` waits mean a read is blocked by a write, or two writes are contending for the same resource |
+> | `wait_sec` | Duration the blocked session has been waiting, in seconds (`wait_time / 1000`) | Waits under 5 seconds are transient and usually resolve. Waits above 30 seconds indicate a significant blocking event. Waits above 300 seconds are long-running blocks that likely affect application response times |
+> | `blocked_query` | First 100 characters of the T-SQL text being executed by the blocked session | Identifies what the blocked session is trying to do. For the full query text of the *blocker*, run the Currently Running Queries query filtered on the blocker's session_id |
+
 > [!tip] Frequent Blocking Means Long Transactions
 >
 > If blocking chains appear regularly, your transactions are holding locks too long. Fix: shorter transactions and RCSI (Read Committed Snapshot Isolation), which lets readers proceed without waiting for writers.
@@ -580,6 +892,12 @@ A deadlock occurs when two or more sessions form a circular dependency — each 
 SELECT cntr_value AS total_deadlocks FROM sys.dm_os_performance_counters
 WHERE counter_name = 'Number of Deadlocks/sec' AND instance_name = '_Total';
 ```
+
+> [!info] Deadlock Counter Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `total_deadlocks` | Cumulative count of deadlocks detected since the last SQL Server restart. Read from `sys.dm_os_performance_counters` where `counter_name = 'Number of Deadlocks/sec'` and `instance_name = '_Total'` | Despite the counter name containing "/sec", this is a cumulative total, not a per-second rate. Use `sys.dm_os_sys_info.sqlserver_start_time` to calculate the elapsed time since reset. A few deadlocks per day on a busy OLTP system is normal. More than 10 per hour indicates a design problem — typically two code paths acquiring locks on the same tables in different orders |
 
 > [!info] Cumulative Counter
 >
@@ -621,6 +939,19 @@ SELECT
     (SELECT COUNT(*) FROM sys.dm_exec_requests WHERE status = 'running') AS active_queries;
 ```
 
+> [!info] System Health Dashboard Column Reference
+>
+> | Column | Source | Meaning |
+> |---|---|---|
+> | `logical_cpus` | `sys.dm_os_sys_info.cpu_count` | Number of logical processors visible to SQL Server. This includes hyperthreaded cores. SQL Server creates one scheduler per logical CPU |
+> | `physical_memory_mb` | `sys.dm_os_sys_info.physical_memory_kb / 1024` | Total physical RAM installed on the server. Baseline for configuring `max server memory` |
+> | `committed_memory_mb` | `sys.dm_os_sys_info.committed_kb / 1024` | Memory currently committed by SQL Server (the buffer pool + other memory grants). If this equals `max server memory`, the buffer pool is at its configured limit |
+> | `page_life_expectancy_sec` | `sys.dm_os_performance_counters` (Buffer Manager) | How long a data page survives in the buffer pool before eviction. See the PLE analysis in the Memory query section above |
+> | `buffer_cache_hit_ratio` | `sys.dm_os_performance_counters` (Buffer Manager) | Percentage of page requests satisfied from memory without a physical disk read. Values above 95% are healthy. Below 90% means too many queries are reading from disk — typically caused by insufficient memory or large table scans that evict cached pages |
+> | `batch_requests_sec` | `sys.dm_os_performance_counters` (SQL Statistics) | Cumulative count of batch requests received. Divide by uptime in seconds for the per-second rate. This is the primary workload throughput metric — a sudden spike or drop compared to the same time yesterday signals a workload change |
+> | `user_sessions` | `COUNT(*)` from `sys.dm_exec_sessions WHERE is_user_process = 1` | Number of authenticated user connections (excludes system sessions). Baseline this during normal operations — an unusually high count indicates connection pool leaks or runaway retry loops |
+> | `active_queries` | `COUNT(*)` from `sys.dm_exec_requests WHERE status = 'running'` | Number of requests actively executing on a CPU scheduler. If this equals or exceeds `logical_cpus`, the server is at full CPU saturation. If zero, the server is idle |
+
 > [!info] Interpreting the Dashboard Row
 >
 > | Column | Healthy | Investigate |
@@ -644,6 +975,13 @@ JOIN sys.partitions p ON t.object_id = p.object_id AND p.index_id = 0
 WHERE p.rows > 0
 ORDER BY p.rows DESC;
 ```
+
+> [!info] Heaps Query Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `table_name` | Fully qualified table name (`schema.table`), constructed from `SCHEMA_NAME(t.schema_id)` and `t.name` | Identifies which tables lack a clustered index |
+> | `rows` | Approximate row count from partition metadata (`sys.partitions WHERE index_id = 0`). `index_id = 0` specifically identifies heaps — tables with no clustered index | Empty heaps (`rows = 0`) are harmless. Non-empty heaps sorted by `rows DESC` highlight the largest tables that will benefit most from adding a clustered index. A heap with millions of rows forces a full table scan for every query that cannot be satisfied by a nonclustered index |
 
 > [!warning] Heaps Are Dangerous
 >
@@ -679,6 +1017,16 @@ WHERE database_name = 'analytics_db'
 ORDER BY backup_start_date DESC;
 ```
 
+> [!info] backupset Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `database_name` | Name of the database that was backed up | Filter on the database you need to verify |
+> | `type` | Backup type character decoded in the `CASE` expression. Raw values: `D` = Full database, `I` = Differential database, `L` = Transaction log, `F` = File/filegroup, `G` = Differential file, `P` = Partial, `Q` = Differential partial | A healthy backup chain under FULL recovery: regular Full backups (e.g., nightly), optional Differentials between fulls, and frequent Log backups (every 5–15 minutes). If no `L` (Log) backups appear for a database in FULL recovery, the transaction log is growing without bounds |
+> | `backup_start_date` | Timestamp when the backup operation began | Check for gaps in the sequence. A gap in log backups means a break in the log chain — point-in-time recovery is only possible up to the last log backup before the gap |
+> | `backup_finish_date` | Timestamp when the backup operation completed | `finish - start` = backup duration. Long durations indicate slow storage or large databases. If `finish_date` is `NULL`, the backup is still running or failed |
+> | `size_mb` | Size of the backup set in megabytes (`backup_size / 1024 / 1024`). For compressed backups, `compressed_backup_size` (not selected here) shows the actual file size on disk | Compare `size_mb` across successive Full backups to track database growth rate. A sudden increase may indicate unexpected data loads or index rebuilds |
+
 #### sysjobs — Automated Backup Job Schedules
 
 This query checks whether SQL Agent jobs are configured to run backups. The `freq_type` column encodes the schedule frequency: `1` = once, `4` = daily, `8` = weekly, `16` = monthly, `32` = monthly relative (e.g., "second Tuesday"), `64` = runs when SQL Agent starts. If this query returns no rows, there is no automated backup — set one up immediately.
@@ -695,6 +1043,17 @@ LEFT JOIN (
     GROUP BY job_id
 ) ja ON j.job_id = ja.job_id;
 ```
+
+> [!info] sysjobs Column Reference
+>
+> | Column | Meaning | Interpretation |
+> |---|---|---|
+> | `name` | SQL Agent job name | Look for jobs with names containing "backup", "maintenance", or your organization's naming convention for backup jobs |
+> | `enabled` | `1` = job is enabled and will run on schedule, `0` = job is disabled | A disabled backup job means no automated backups are occurring — this is a P1 risk. Enable it immediately or create a new backup job |
+> | `freq_type` | Schedule frequency type: `1` = once, `4` = daily, `8` = weekly, `16` = monthly, `32` = monthly relative (e.g., "second Tuesday"), `64` = runs when SQL Agent starts, `128` = runs when the computer is idle | Full backups should be daily (`4`) or weekly (`8`). Log backups should be daily with a sub-interval in `freq_subday_type`. If `freq_type` is `NULL`, the job has no schedule attached |
+> | `freq_interval` | Depends on `freq_type`: for daily (`4`), the number of days between runs (e.g., `1` = every day). For weekly (`8`), a bitmask of days (`1` = Sunday, `2` = Monday, `4` = Tuesday, `8` = Wednesday, `16` = Thursday, `32` = Friday, `64` = Saturday). For monthly (`16`), the day of the month | A daily Full backup with `freq_interval = 1` runs every day. A weekly Full with `freq_interval = 1` runs only on Sundays |
+> | `run_date` | Date of the most recent job execution in `YYYYMMDD` integer format (from `msdb.dbo.sysjobhistory`) | If this date is more than 24 hours ago for a daily backup job, the job may be failing or stuck. Investigate with `msdb.dbo.sysjobhistory` filtered on `run_status = 0` (failed) |
+> | `run_time` | Time of the most recent job execution in `HHMMSS` integer format | Combined with `run_date`, this gives the exact last execution timestamp. Check that it aligns with the expected schedule |
 
 > [!info] No Built-In Scheduler
 >

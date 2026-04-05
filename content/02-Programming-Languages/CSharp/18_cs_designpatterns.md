@@ -45,36 +45,42 @@ Interface defines the contract (what, not how). Constructor injection passes dep
 > [!success] Inject dependencies via constructor
 > Pass dependencies as constructor parameters typed to interfaces. Production code passes real implementations; tests pass mocks — zero changes to the service class in either case.
 
+### Interface contracts
+
+Interfaces define what operations are available without specifying how they work. Every consumer programs against these rather than concrete classes.
+
+#### IDataRepository — data access contract
+
+Declares `GetPrices` and `SaveScores` — same signature whether the backend is SQL Server, BigQuery, or an in-memory mock.
+
 ```csharp
-// ─── Production wiring ───
-var prodRepo = new SqlRepository("Server=prod-db;Database=stoxx");
-var prodNotifier = new SlackNotifier();
-var prodService = new PipelineService(prodRepo, prodNotifier);
-var result = prodService.Run("ASML.AS");
-result
-
-// ─── Test wiring — swap mocks ───
-var mockRepo = new MockRepository();
-var mockNotifier = new MockNotifier();
-var testService = new PipelineService(mockRepo, mockNotifier);
-result = testService.Run("TEST.XX");
-result
-string.Join(", ", mockRepo.Saved)
-string.Join(", ", mockNotifier.Messages)
-
-// ─── Type declarations ───
-
 public interface IDataRepository
 {
     List<Dictionary<string, object>> GetPrices(string ticker);
     int SaveScores(List<Dictionary<string, object>> scores);
 }
+```
 
+#### INotificationService — notification contract
+
+Single-method contract for pipeline notifications.
+
+```csharp
 public interface INotificationService
 {
     void Notify(string message);
 }
+```
 
+### Production implementations
+
+Each concrete class implements one interface and handles the actual I/O — database queries, Slack API calls, etc.
+
+#### SqlRepository — database-backed data access
+
+Connects to SQL Server, implements both retrieval and persistence. Connection string is injected — the repository does not decide where to connect.
+
+```csharp
 public class SqlRepository : IDataRepository
 {
     public SqlRepository(string connectionString)
@@ -89,7 +95,28 @@ public class SqlRepository : IDataRepository
         return scores.Count;
     }
 }
+```
 
+#### SlackNotifier — Slack channel notifications
+
+Sends formatted pipeline notifications to a Slack channel.
+
+```csharp
+public class SlackNotifier : INotificationService
+{
+    public void Notify(string message) => Console.WriteLine($"  Slack: {message}");
+}
+```
+
+### Test doubles
+
+Test doubles replace production dependencies with in-memory alternatives. No database, no network — tests run in milliseconds.
+
+#### MockRepository — in-memory data access
+
+Returns hardcoded prices, captures every saved score in a list. After the test, inspect `Saved` to verify correct tickers.
+
+```csharp
 public class MockRepository : IDataRepository
 {
     public List<string> Saved { get; } = new();
@@ -101,18 +128,29 @@ public class MockRepository : IDataRepository
         return scores.Count;
     }
 }
+```
 
-public class SlackNotifier : INotificationService
-{
-    public void Notify(string message) => Console.WriteLine($"  Slack: {message}");
-}
+#### MockNotifier — notification capture
 
+Collects notification messages instead of sending them. Inspect `Messages` after the run.
+
+```csharp
 public class MockNotifier : INotificationService
 {
     public List<string> Messages { get; } = new();
     public void Notify(string message) => Messages.Add(message);
 }
+```
 
+### Pipeline service
+
+The service class depends only on the two interfaces — it has no knowledge of SQL, Slack, or mocks.
+
+#### PipelineService — constructor-injected orchestrator
+
+Constructor receives both dependencies. `Run` fetches prices, computes a score, persists it, notifies.
+
+```csharp
 public class PipelineService
 {
     private readonly IDataRepository _repo;
@@ -135,12 +173,44 @@ public class PipelineService
 }
 ```
 
-```text
-Server=prod-db;Database=stoxx...
-saved 1 scores
-Pipeline done: ASML.AS scored 0.85
-ASML.AS: momentum=0.85
+### Wiring — production vs. test
 
+The same `PipelineService` class is used in both contexts. Only the objects passed to its constructor change.
+
+#### Production wiring
+
+`SqlRepository` connects to the prod database, `SlackNotifier` sends to the team channel.
+
+```csharp
+var prodRepo = new SqlRepository("Server=prod-db;Database=stoxx");
+var prodNotifier = new SlackNotifier();
+var prodService = new PipelineService(prodRepo, prodNotifier);
+var result = prodService.Run("ASML.AS");
+result
+```
+
+```text
+  SqlRepository connected to: Server=prod-db;Database=stoxx...
+  SqlRepository: saved 1 scores
+  Slack: Pipeline done: ASML.AS scored 0.85
+ASML.AS: momentum=0.85
+```
+
+#### Test wiring — swap mocks with zero code changes
+
+Replace every dependency with a mock. `PipelineService` constructor is identical. After the run, inspect the mock's captured state.
+
+```csharp
+var mockRepo = new MockRepository();
+var mockNotifier = new MockNotifier();
+var testService = new PipelineService(mockRepo, mockNotifier);
+result = testService.Run("TEST.XX");
+result
+string.Join(", ", mockRepo.Saved)
+string.Join(", ", mockNotifier.Messages)
+```
+
+```text
 TEST.XX: momentum=0.85
 TEST.XX
 Pipeline done: TEST.XX scored 0.85
@@ -160,12 +230,11 @@ The Singleton pattern ensures a class has exactly one instance throughout the ap
 > [!success] Testable singleton via DI
 > Register the dependency as `AddSingleton<T>()` in `IServiceCollection`. The DI container manages the single instance — tests can inject a mock or a fresh instance per test suite, eliminating shared state between test runs.
 
-```csharp
-var c1 = AppConfig.Instance;
-var c2 = AppConfig.Instance;
-object.ReferenceEquals(c1, c2)
-c1.ProjectId
+#### AppConfig — singleton with Lazy\<T>
 
+A private constructor prevents external instantiation. `Lazy<T>` wraps the creation delegate — the runtime guarantees it runs exactly once, even under concurrent access. The static `Instance` property exposes the single instance.
+
+```csharp
 public class AppConfig
 {
     private static readonly Lazy<AppConfig> _instance = new(() => new AppConfig());
@@ -179,6 +248,17 @@ public class AppConfig
 }
 ```
 
+#### Verifying single-instance behavior
+
+Both calls to `Instance` return the same reference — the constructor runs only once. `ReferenceEquals` confirms both variables point to the exact same object in memory.
+
+```csharp
+var c1 = AppConfig.Instance;
+var c2 = AppConfig.Instance;
+object.ReferenceEquals(c1, c2)
+c1.ProjectId
+```
+
 ```text
 Config loaded (once)
 c1 == c2: True
@@ -189,13 +269,11 @@ index-lab-2
 
 The Factory pattern encapsulates object creation behind a static method or class, so the caller specifies *what* it needs (e.g., `"gcs"`) without knowing *which* concrete class gets instantiated. This decouples the consumer from the implementation — adding a new storage backend means adding one new class and one new case in the factory, with zero changes to calling code. In C#, a `switch` expression in a static method is the most concise form.
 
-```csharp
-foreach (var provider in new[] { "gcs", "s3", "local" })
-{
-    var client = StorageFactory.Create(provider);
-    $"{provider,-5} -> {client.Upload("data.csv", new byte[100])}"
-}
+#### IStorageClient and concrete backends
 
+The common interface declares a single `Upload` method. Three implementations — GCS, S3, and local filesystem — each format the upload result differently. Adding a new backend means adding one class.
+
+```csharp
 public interface IStorageClient
 {
     string Upload(string path, byte[] data);
@@ -213,7 +291,13 @@ public class LocalClient : IStorageClient
 {
     public string Upload(string path, byte[] data) => $"file://{path} ({data.Length} bytes)";
 }
+```
 
+#### StorageFactory — creation logic
+
+The static factory method maps a provider string to a concrete class using a switch expression. The caller never references `GCSClient` or `S3Client` directly.
+
+```csharp
 public static class StorageFactory
 {
     public static IStorageClient Create(string provider) => provider switch
@@ -223,6 +307,18 @@ public static class StorageFactory
         "local" => new LocalClient(),
         _ => throw new ArgumentException($"Unknown: {provider}")
     };
+}
+```
+
+#### Provider-agnostic usage
+
+The loop creates three different clients through the factory. Each call to `Upload` returns a provider-specific path — the consuming code is identical regardless of backend.
+
+```csharp
+foreach (var provider in new[] { "gcs", "s3", "local" })
+{
+    var client = StorageFactory.Create(provider);
+    $"{provider,-5} -> {client.Upload("data.csv", new byte[100])}"
 }
 ```
 
@@ -236,6 +332,24 @@ local -> file://data.csv (100 bytes)
 
 The Observer pattern establishes a one-to-many relationship: when one object (the subject) changes state, all its dependents (observers) are notified automatically. In C#, this is built into the language with events and delegates — the subject exposes an `event`, and observers subscribe with `+=`. Common in data pipelines: a price feed publishes updates, and multiple consumers (dashboard, alerting system, persistence layer) each react independently.
 
+#### StepEvent and EventBus
+
+`StepEvent` is an immutable record carrying step name, status, row count, and message. `EventBus` holds a list of subscribers per event type — `Publish` iterates the list and invokes each callback.
+
+```csharp
+public record StepEvent(string Step, string Status, int Rows, string Message);
+
+public class EventBus
+{
+    public event Action<StepEvent>? StepCompleted;
+    public void Publish(StepEvent data) => StepCompleted?.Invoke(data);
+}
+```
+
+#### Subscribe handlers and publish events
+
+Three handlers subscribe to `StepCompleted` — a logger, a metric emitter, and an alerter. Publishing an event invokes all three. The `ohlcv_load` event triggers LOG + METRIC; the `gold_score` error triggers LOG + ALERT.
+
 ```csharp
 var bus = new EventBus();
 bus.StepCompleted += data => Console.WriteLine($"  [LOG]    {data.Step}: {data.Status}");
@@ -244,14 +358,6 @@ bus.StepCompleted += data => { if (data.Status == "error") Console.WriteLine($" 
 
 bus.Publish(new StepEvent("ohlcv_load", "ok", 306, ""));
 bus.Publish(new StepEvent("gold_score", "error", 0, "BQ timeout"));
-
-public record StepEvent(string Step, string Status, int Rows, string Message);
-
-public class EventBus
-{
-    public event Action<StepEvent>? StepCompleted;
-    public void Publish(StepEvent data) => StepCompleted?.Invoke(data);
-}
 ```
 
 ```text
@@ -265,23 +371,23 @@ public class EventBus
 
 The Strategy pattern encapsulates interchangeable algorithms behind a common interface, letting you swap behavior at runtime without modifying the code that uses it. Instead of an `if/else` chain selecting a scoring method, you inject the scoring function as a parameter. Each strategy (z-score normalization, percentile ranking, equal weighting) implements the same interface. The caller picks which strategy to use; the pipeline doesn't care which one it got.
 
+#### IScoringStrategy — algorithm contract
+
+Declares `Name` and `Score` — every strategy implements these two members.
+
 ```csharp
-var prices = new double[] { 685, 690, 680, 695, 710, 700, 685 };
-string.Join(", ", prices)
-
-foreach (IScoringStrategy strategy in new IScoringStrategy[] { new MomentumStrategy(), new VolatilityStrategy() })
-{
-    var scorer = new StockScorer(strategy);
-    var score = scorer.Evaluate("ASML.AS", prices);
-    $"{strategy.Name,-15} score={score:+0.0000;-0.0000}"
-}
-
 public interface IScoringStrategy
 {
     string Name { get; }
     double Score(double[] prices);
 }
+```
 
+#### MomentumStrategy
+
+Scores based on the most recent price relative to the mean — positive means latest price is above average, suggesting upward momentum.
+
+```csharp
 public class MomentumStrategy : IScoringStrategy
 {
     public string Name => "Momentum";
@@ -292,7 +398,13 @@ public class MomentumStrategy : IScoringStrategy
         return (prices[^1] - avg) / avg;
     }
 }
+```
 
+#### VolatilityStrategy
+
+Scores using coefficient of variation (std dev / mean), negated so lower volatility scores higher — penalizes erratic price swings.
+
+```csharp
 public class VolatilityStrategy : IScoringStrategy
 {
     public string Name => "Volatility";
@@ -304,12 +416,34 @@ public class VolatilityStrategy : IScoringStrategy
         return -(Math.Sqrt(variance) / avg);
     }
 }
+```
 
+#### StockScorer — strategy consumer
+
+The context class receives any `IScoringStrategy` via constructor. `Evaluate` delegates to the injected strategy — the scorer does not know or care which algorithm it uses.
+
+```csharp
 public class StockScorer
 {
     private readonly IScoringStrategy _strategy;
     public StockScorer(IScoringStrategy strategy) => _strategy = strategy;
     public double Evaluate(string ticker, double[] prices) => _strategy.Score(prices);
+}
+```
+
+#### Evaluating with different strategies
+
+The same ASML.AS price series is scored with both strategies. Momentum shows a slight negative score (latest below mean), and Volatility returns a small negative penalty.
+
+```csharp
+var prices = new double[] { 685, 690, 680, 695, 710, 700, 685 };
+string.Join(", ", prices)
+
+foreach (IScoringStrategy strategy in new IScoringStrategy[] { new MomentumStrategy(), new VolatilityStrategy() })
+{
+    var scorer = new StockScorer(strategy);
+    var score = scorer.Evaluate("ASML.AS", prices);
+    $"{strategy.Name,-15} score={score:+0.0000;-0.0000}"
 }
 ```
 
@@ -331,40 +465,15 @@ The Repository pattern abstracts data access behind a clean interface so that pi
 
 Attribute-based validation built into .NET: decorate properties with `[Required]`, `[Range]`, `[StringLength]`, or `[RegularExpression]`, then call `Validator.TryValidateObject()` to validate and collect all errors at once. In ASP.NET, model binding auto-validates incoming requests — no explicit call needed. For complex cross-field rules (e.g., "high must be ≥ low"), implement `IValidatableObject.Validate()` on the model class, or use the FluentValidation library for rule-builder syntax.
 
+### Attribute-based validation with DataAnnotations
+
+.NET's DataAnnotations library decorates model properties with constraint attributes. At validation time, `Validator.TryValidateObject()` checks every attribute and collects all violations in a single pass.
+
+#### OhlcvRecord — validated price model
+
+Each property carries an attribute — `[Required]`, `[Range]`, `[StringLength]`. `IValidatableObject.Validate()` adds the High >= Low cross-field check.
+
 ```csharp
-var validRecord = new OhlcvRecord
-{
-    Symbol = "ASML.AS", Date = new DateTime(2026, 3, 20),
-    Open = 685.0, High = 710.0, Low = 680.0, Close = 700.0, Volume = 1_500_000
-};
-var (isValid, errors) = Validate(validRecord);
-isValid  // valid
-
-var badRecords = new OhlcvRecord[]
-{
-    new() { Symbol = "", Date = DateTime.Now, Open = -5, High = 10, Low = 8, Close = 9, Volume = 100 },
-    new() { Symbol = "X", Date = DateTime.Now, Open = 10, High = 5, Low = 8, Close = 9, Volume = -1 },
-};
-
-foreach (var r in badRecords)
-{
-    var (ok, errs) = Validate(r);
-    $"Symbol=\"{r.Symbol}\" Open={r.Open} High={r.High} Vol={r.Volume}"
-    foreach (var e in errs)
-        e.ErrorMessage
-}
-
-// ─── Helper ───
-static (bool, List<ValidationResult>) Validate(object obj)
-{
-    var results = new List<ValidationResult>();
-    var ctx = new ValidationContext(obj);
-    var ok = Validator.TryValidateObject(obj, ctx, results, validateAllProperties: true);
-    return (ok, results);
-}
-
-// ─── Type declarations ───
-
 public class OhlcvRecord : IValidatableObject
 {
     [Required(ErrorMessage = "Symbol is required")]
@@ -397,9 +506,59 @@ public class OhlcvRecord : IValidatableObject
 }
 ```
 
+#### Validate helper
+
+Creates a `ValidationContext`, runs `TryValidateObject` with `validateAllProperties: true`, returns bool and error list.
+
+```csharp
+static (bool, List<ValidationResult>) Validate(object obj)
+{
+    var results = new List<ValidationResult>();
+    var ctx = new ValidationContext(obj);
+    var ok = Validator.TryValidateObject(obj, ctx, results, validateAllProperties: true);
+    return (ok, results);
+}
+```
+
+#### Valid record — passes all constraints
+
+Well-formed OHLCV record. `TryValidateObject` returns `true`.
+
+```csharp
+var validRecord = new OhlcvRecord
+{
+    Symbol = "ASML.AS", Date = new DateTime(2026, 3, 20),
+    Open = 685.0, High = 710.0, Low = 680.0, Close = 700.0, Volume = 1_500_000
+};
+var (isValid, errors) = Validate(validRecord);
+isValid
+```
+
 ```text
 True
+```
 
+#### Invalid records — caught at the boundary
+
+Each record triggers a different rule: negative price fails `[Range]`, High < Low fails `IValidatableObject`, empty symbol fails `[StringLength]`, negative volume fails `[Range]`.
+
+```csharp
+var badRecords = new OhlcvRecord[]
+{
+    new() { Symbol = "", Date = DateTime.Now, Open = -5, High = 10, Low = 8, Close = 9, Volume = 100 },
+    new() { Symbol = "X", Date = DateTime.Now, Open = 10, High = 5, Low = 8, Close = 9, Volume = -1 },
+};
+
+foreach (var r in badRecords)
+{
+    var (ok, errs) = Validate(r);
+    $"Symbol=\"{r.Symbol}\" Open={r.Open} High={r.High} Vol={r.Volume}"
+    foreach (var e in errs)
+        e.ErrorMessage
+}
+```
+
+```text
 Symbol="" Open=-5 High=10 Vol=100
   -> Symbol is required
   -> Price must be positive
@@ -417,50 +576,15 @@ Reflection lets you examine a type's properties, methods, and constructors at ru
 > [!success] Cache PropertyInfo for hot paths
 > Retrieve `PropertyInfo` objects once at startup and store them in a static dictionary. For maximum throughput, compile them into typed delegates with `Expression.Lambda<Func<T, object>>()` — this brings reflection-based access down to near-direct-call performance.
 
+### Inspecting types at runtime
+
+Reflection operates on a target object. The `TradeOrder` class below serves as the inspection target for every example in this section.
+
+#### TradeOrder — inspection target
+
+Simple trade model with four constructor params, a computed `Notional` property, and a custom `ToString`.
+
 ```csharp
-var order = new TradeOrder("ASML.AS", "BUY", 100, 685.40);
-var type = order.GetType();
-
-type.Name       // type name
-type.FullName   // full name
-type.IsClass    // is class
-type.IsSealed   // is sealed
-
-// ─── Properties ───
-foreach (var prop in type.GetProperties())
-{
-    var value = prop.GetValue(order);
-    $"{prop.Name,-12} {prop.PropertyType.Name,-10} = {value}"
-}
-
-// ─── Methods ───
-foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-{
-    var parms = string.Join(", ", method.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"));
-    $"{method.ReturnType.Name} {method.Name}({parms})"
-}
-
-// ─── Dynamic property access ───
-foreach (var name in new[] { "Ticker", "Side", "Quantity", "Price" })
-{
-    var prop = type.GetProperty(name);
-    if (prop != null)
-        $"{name} = {prop.GetValue(order)}"
-}
-
-// ─── Constructor inspection ───
-foreach (var ctor in type.GetConstructors())
-{
-    foreach (var p in ctor.GetParameters())
-        $"{p.Name}: {p.ParameterType.Name}"
-}
-
-// ─── Create instance via reflection ───
-var newOrder = Activator.CreateInstance(type, "MC.PA", "SELL", 50, 890.20);
-newOrder
-
-// ─── Type declaration ───
-
 public class TradeOrder
 {
     public string Ticker { get; }
@@ -478,39 +602,119 @@ public class TradeOrder
 }
 ```
 
+#### Type metadata — inspect a type's identity and characteristics
+
+Every .NET object carries a `Type` reference accessible via `GetType()`. The `Type` object exposes the type's name, namespace-qualified full name, and classification flags (`IsClass`, `IsSealed`, `IsValueType`). Use this as the entry point for all further reflection — once you have the `Type`, you can enumerate properties, methods, and constructors.
+
+```csharp
+var order = new TradeOrder("ASML.AS", "BUY", 100, 685.40);
+var type = order.GetType();
+
+type.Name
+type.FullName
+type.IsClass
+type.IsSealed
+```
+
 ```text
 TradeOrder
 Submission#9+TradeOrder
 True
 False
+```
 
+#### Property enumeration — list all public properties and their values
+
+`GetProperties()` returns a `PropertyInfo[]` for every public property on the type. Each `PropertyInfo` exposes the property's name, CLR type (`PropertyType`), and can read the current value from an instance via `GetValue()`. This is how ORMs map database columns to class members — iterate properties, match by name, and assign values.
+
+```csharp
+foreach (var prop in type.GetProperties())
+{
+    var value = prop.GetValue(order);
+    $"{prop.Name,-12} {prop.PropertyType.Name,-10} = {value}"
+}
+```
+
+```text
 Ticker       String     = ASML.AS
 Side         String     = BUY
 Quantity     Int32      = 100
 Price        Double     = 685.4
 Notional     Double     = 68540
+```
 
+#### Method discovery — enumerate declared methods
+
+`GetMethods()` returns `MethodInfo[]` for the type's methods. Without binding flags, it includes inherited members from `object` (`Equals`, `GetHashCode`). Adding `BindingFlags.DeclaredOnly` restricts the result to methods defined directly on the type — useful when you need to discover domain-specific behavior without noise from the base class. Test frameworks use this to find `[Test]`-attributed methods automatically.
+
+```csharp
+foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+{
+    var parms = string.Join(", ", method.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"));
+    $"{method.ReturnType.Name} {method.Name}({parms})"
+}
+```
+
+```text
 String get_Ticker()
 String get_Side()
 Int32 get_Quantity()
 Double get_Price()
 Double get_Notional()
 String ToString()
+```
 
+#### Dynamic property access by name — read properties without compile-time knowledge
+
+`GetProperty(name)` retrieves a single `PropertyInfo` by its string name — the C# equivalent of Python's `getattr()`. This is the core mechanism behind JSON serializers (System.Text.Json, Newtonsoft) and ORMs (Entity Framework, Dapper): given a column name from a database row or a JSON key, look up the matching property and set its value. Returns `null` if the name doesn't match, so always check before calling `GetValue()`.
+
+```csharp
+foreach (var name in new[] { "Ticker", "Side", "Quantity", "Price" })
+{
+    var prop = type.GetProperty(name);
+    if (prop != null)
+        $"{name} = {prop.GetValue(order)}"
+}
+```
+
+```text
 Ticker = ASML.AS
 Side = BUY
 Quantity = 100
 Price = 685.4
+```
 
+#### Constructor inspection
+
+`GetConstructors()` enumerates parameter names and types — how DI containers auto-resolve dependencies.
+
+```csharp
+foreach (var ctor in type.GetConstructors())
+{
+    foreach (var p in ctor.GetParameters())
+        $"{p.Name}: {p.ParameterType.Name}"
+}
+```
+
+```text
 ticker: String
 side: String
 quantity: Int32
 price: Double
-
-TradeOrder(MC.PA, SELL, 50, 890.2)
 ```
 
-The output walks through four reflection capabilities: type metadata (`TradeOrder`, `IsClass: True`), property enumeration with types and values, method discovery (public instance methods declared on the type, not inherited), dynamic property access by name (equivalent to Python's `getattr()`), constructor parameter inspection, and dynamic instantiation via `Activator.CreateInstance()`.
+#### Dynamic instantiation
+
+`Activator.CreateInstance()` constructs an object at runtime — how ORMs hydrate entities from DB rows.
+
+```csharp
+var newOrder = Activator.CreateInstance(type, "MC.PA", "SELL", 50, 890.20);
+newOrder
+```
+
+```text
+TradeOrder(MC.PA, SELL, 50, 890.2)
+```
 
 ## Project Structure & Best Practices
 
