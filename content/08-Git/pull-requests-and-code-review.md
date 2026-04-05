@@ -137,8 +137,8 @@ Squash merge collapses every commit on the feature branch into a single new comm
 **Squash merge:**
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   branch feat/signal-fetcher
@@ -171,8 +171,8 @@ Standard merge creates a **merge commit** with two parents: the tip of main and 
 **Standard merge:**
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   branch feat/signal-fetcher
@@ -199,8 +199,8 @@ Rebase merge replays each feature branch commit on top of main, one by one, with
 **Rebase merge:**
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   commit id: "C'"
@@ -297,8 +297,8 @@ The divergence is the root cause. `main` has advanced to commit `C` (the merged 
 **Before rebase — diverged history:**
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   branch fix/stock-chart-missing-latest-date
@@ -313,8 +313,8 @@ gitGraph
 **After rebase — linear history, PR can merge:**
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   commit id: "C"

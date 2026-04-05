@@ -25,8 +25,8 @@ Merge conflicts occur when two branches modify the same lines in the same file a
 A conflict arises when two branches diverge from a common ancestor and each modifies the same region of a file. Git detects the overlap at merge time and cannot decide which version to keep without your input.
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   branch feat/new-history
@@ -204,8 +204,8 @@ Conflicts during `git rebase` work the same way mechanically, but the workflow c
 **Before rebase:**
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   branch feature
@@ -220,8 +220,8 @@ gitGraph
 **After rebase:**
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   commit id: "E"
@@ -401,8 +401,8 @@ The feature branch now diverges from the updated `main`. Rebasing replays your c
 **Before rebase:**
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   branch fix/stock-chart
@@ -416,8 +416,8 @@ gitGraph
 **After rebase:**
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   commit id: "perf: bulk"

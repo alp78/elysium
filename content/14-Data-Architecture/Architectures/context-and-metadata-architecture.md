@@ -66,6 +66,25 @@ An ML model's predictions degrade over two weeks. The model hasn't changed. The 
 
 Every piece of data flowing through a pipeline needs five types of context to be fully understood. Most pipelines capture one or two. Mature pipelines capture all five.
 
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#7aa2f7", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#24283b", "edgeLabelBackground": "#1a1b26", "clusterBkg": "#24283b", "clusterBorder": "#565f89"}}}%%
+flowchart TD
+    DATA(["Data Record"])
+    RC["Run Context\nWhich execution\nproduced this?"]
+    PC["Provenance Context\nWhere did it\ncome from?"]
+    TC["Temporal Context\nAs of when\nis it true?"]
+    QC["Quality Context\nHow trustworthy\nis it?"]
+    BC["Business Context\nWhat does\nit mean?"]
+
+    DATA --> RC
+    DATA --> PC
+    DATA --> TC
+    DATA --> QC
+    DATA --> BC
+```
+
+*Figure: The five dimensions of pipeline context — a data record is fully understood only when all five are known.*
+
 | Context Type | Core Question | Without It |
 |---|---|---|
 | **Run Context** | Which execution produced this data? | Cannot debug, audit, or reprocess |
@@ -81,6 +100,8 @@ Every piece of data flowing through a pipeline needs five types of context to be
 Run context answers: "This row exists because pipeline X ran at time Y with parameters Z and produced N rows." It is the most fundamental form of pipeline observability.
 
 #### What it captures
+
+The following fields form the minimum run context record. Start with the first five and add the rest as your observability needs grow.
 
 | Field | Type | Purpose |
 |---|---|---|
@@ -100,6 +121,8 @@ Run context answers: "This row exists because pipeline X ran at time Y with para
 **Why it matters:** When something goes wrong, the first question is always "what changed?" Run context lets you compare today's run to yesterday's run — different parameters, different row counts, different duration. It also enables idempotent reprocessing: delete all rows with a given `_run_id` and re-run.
 
 #### Implementation: Pipeline Runs Metadata Table (SQL Server)
+
+Create a central metadata table to record every pipeline execution, with filtered indexes for the two most common operational queries (recent runs by pipeline, all failures):
 
 ```sql
 CREATE TABLE dbo.pipeline_runs (
@@ -122,17 +145,17 @@ CREATE TABLE dbo.pipeline_runs (
         FOREIGN KEY (parent_run_id) REFERENCES dbo.pipeline_runs(run_id)
 );
 
--- Index for querying recent runs by pipeline
 CREATE INDEX IX_pipeline_runs_name_started
     ON dbo.pipeline_runs (pipeline_name, started_at DESC);
 
--- Index for finding failed runs
 CREATE INDEX IX_pipeline_runs_status
     ON dbo.pipeline_runs (status)
     WHERE status = 'failed';
 ```
 
 #### Implementation: Pipeline Runs Metadata Table (BigQuery)
+
+The equivalent structure in BigQuery, partitioned by run date and clustered for efficient status and pipeline-name queries:
 
 ```sql
 CREATE TABLE IF NOT EXISTS `project.ops.pipeline_runs` (
@@ -219,15 +242,6 @@ class RunMetrics:
 
 
 class PipelineContext:
-    """Captures run context for every pipeline execution.
-
-    Usage:
-        with PipelineContext('daily-ingest', db_conn) as ctx:
-            data = extract(ctx.run_id)
-            ctx.metrics.rows_extracted = len(data)
-            load(data, ctx.run_id)
-            ctx.metrics.rows_loaded = len(data)
-    """
 
     def __init__(
         self,
@@ -392,6 +406,8 @@ Provenance answers: "This row was extracted from source system X, table Y, at ti
 
 #### What it captures
 
+Provenance columns answer the chain-of-custody question: given any row, where did it come from and when?
+
 | Field | Type | Purpose |
 |---|---|---|
 | `_source_system` | String | Name of the originating system |
@@ -406,10 +422,11 @@ Provenance answers: "This row was extracted from source system X, table Y, at ti
 
 #### Implementation: Materialized Provenance Columns
 
+Add provenance columns directly to the bronze table alongside business columns so every row is self-describing:
+
 ```sql
 -- Bronze table carries full provenance from the source
 CREATE TABLE dbo.bronze_daily_prices (
-    -- Business columns
     symbol          VARCHAR(20)     NOT NULL,
     trade_date      DATE            NOT NULL,
     open_price      DECIMAL(18,6),
@@ -417,7 +434,6 @@ CREATE TABLE dbo.bronze_daily_prices (
     low_price       DECIMAL(18,6),
     close_price     DECIMAL(18,6),
     volume          BIGINT,
-    -- Provenance context
     _run_id         UNIQUEIDENTIFIER NOT NULL,
     _loaded_at      DATETIME2(0)     NOT NULL DEFAULT SYSUTCDATETIME(),
     _source_system  VARCHAR(50)      NOT NULL,
@@ -652,6 +668,8 @@ Temporal context is the hardest context problem. It requires distinguishing betw
 
 #### Three Time Concepts
 
+Most pipelines conflate all three into a single `timestamp` field. Separating them is what enables late-arrival handling, restatements, and historical auditability:
+
 | Concept | Definition | Example |
 |---|---|---|
 | **Event time** | When the business event actually occurred | A trade executed at 14:30:00 EST |
@@ -659,6 +677,8 @@ Temporal context is the hardest context problem. It requires distinguishing betw
 | **Recording time** | When the record was written to the target | The row was inserted into SQL Server at 15:47:12 UTC |
 
 #### Why all three matter
+
+Each time concept enables a different class of data reliability:
 
 - **Late-arriving data**: A trade from Monday arrives in Tuesday's pipeline run. If you only track processing time, it appears as a Tuesday event. If you track event time, it correctly belongs to Monday.
 - **Corrections**: The source system corrects a price from $185.42 to $185.44. With only current state, the old value is gone. With recording time, you know both values and when each was believed true.
@@ -671,26 +691,43 @@ Bi-temporal tables track two independent time axes:
 1. **Business time** (`valid_from` / `valid_to`): when the fact was true in the real world
 2. **System time** (`recorded_at`): when the system learned about this version
 
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#7aa2f7", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#24283b", "edgeLabelBackground": "#1a1b26", "clusterBkg": "#24283b", "clusterBorder": "#565f89"}}}%%
+flowchart TD
+    subgraph BT["Business Time Axis — when was it true in the world?"]
+        V1["Version 1\nvalid_from: 2025-01-01\nvalid_to: 2026-03-01\nsector: Technology"]:::highlight
+        V2["Version 2\nvalid_from: 2026-03-01\nvalid_to: 9999-12-31\nsector: Software"]
+        V1 -->|"sector changed"| V2
+    end
+    subgraph ST["System Time Axis — when did the system learn about each version?"]
+        R1["Recorded: 2025-01-01\nfirst known version"]:::highlight
+        R2["Recorded: 2026-03-01\nnew version discovered"]
+        RC["Recorded: 2026-03-05\nretroactive correction to V1\nsupersedes original R1"]
+        R1 --> RC
+        R2
+    end
+    V1 --- R1
+    V2 --- R2
+
+    classDef highlight fill:#24283b,stroke:#7aa2f7
+```
+
+*Figure: Bi-temporal modeling tracks both when a fact was true (business time) and when the system learned about it (system time), enabling point-in-time reconstruction and retroactive correction handling.*
+
 ```sql
 CREATE TABLE dbo.instrument_dim (
-    -- Surrogate key
     instrument_sk   INT IDENTITY(1,1) PRIMARY KEY,
-    -- Natural key
     instrument_id   INT              NOT NULL,
-    -- Business attributes
     symbol          VARCHAR(20)      NOT NULL,
     company_name    NVARCHAR(200),
     sector          VARCHAR(100),
     exchange        VARCHAR(50),
     currency        CHAR(3),
-    -- Business time axis
     valid_from      DATETIME2(0)     NOT NULL,
     valid_to        DATETIME2(0)     NOT NULL DEFAULT '9999-12-31',
     is_current      BIT              NOT NULL DEFAULT 1,
-    -- System time axis
     recorded_at     DATETIME2(0)     NOT NULL DEFAULT SYSUTCDATETIME(),
-    superseded_at   DATETIME2(0),    -- NULL = this is the latest known version
-    -- Provenance
+    superseded_at   DATETIME2(0),
     _run_id         UNIQUEIDENTIFIER NOT NULL,
     _source_system  VARCHAR(50)      NOT NULL
 );
@@ -708,15 +745,19 @@ CREATE INDEX IX_instrument_dim_current
 
 **"What did we believe the instrument looked like on March 1?"**
 
+**Business-time query** — what was true in the real world on March 1:
+
 ```sql
--- Business-time query: what was true on March 1
 SELECT *
 FROM dbo.instrument_dim
 WHERE instrument_id = 42
   AND valid_from <= '2026-03-01'
   AND valid_to   >  '2026-03-01';
+```
 
--- Bi-temporal query: what did we believe on March 1 was true on March 1
+**Bi-temporal query** — what did the system believe on March 1 was true on March 1 (corrects for retroactive data fixes):
+
+```sql
 SELECT *
 FROM dbo.instrument_dim
 WHERE instrument_id = 42
@@ -727,6 +768,8 @@ WHERE instrument_id = 42
 ```
 
 #### "Show me how our knowledge of this instrument changed over time"
+
+Query all historical versions of a dimension record, ordered by when the system first learned about each version:
 
 ```sql
 -- All versions of a single instrument, ordered by when we learned about them
@@ -739,6 +782,8 @@ ORDER BY recorded_at;
 ```
 
 #### SCD Type 2 Insert Procedure with Bi-Temporal Support
+
+A stored procedure implementing [SCD Type 2](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-warehouse-architecture) with bi-temporal support: it closes the current record on the business time axis and records the correction timestamp on the system time axis:
 
 ```sql
 CREATE PROCEDURE dbo.usp_merge_instrument_dim
@@ -834,21 +879,15 @@ For fact tables (transactions, events), always store both event time and process
 CREATE TABLE dbo.silver_trades (
     trade_id            BIGINT          NOT NULL,
     symbol              VARCHAR(20)     NOT NULL,
-    -- Event time: when the trade actually happened
     trade_timestamp     DATETIME2(3)    NOT NULL,
     trade_date          AS CAST(trade_timestamp AS DATE) PERSISTED,
-    -- Processing time: when our pipeline processed it
     _processed_at       DATETIME2(0)    NOT NULL DEFAULT SYSUTCDATETIME(),
-    -- Recording time: when it was written to this table
     _loaded_at          DATETIME2(0)    NOT NULL DEFAULT SYSUTCDATETIME(),
-    -- Late arrival flag
     _is_late_arrival    BIT             NOT NULL DEFAULT 0,
     _days_late          AS DATEDIFF(DAY, trade_timestamp, _processed_at),
-    -- Business columns
     quantity            DECIMAL(18,4)   NOT NULL,
     price               DECIMAL(18,6)   NOT NULL,
     trade_value         AS quantity * price PERSISTED,
-    -- Context
     _run_id             UNIQUEIDENTIFIER NOT NULL,
     _source_system      VARCHAR(50)     NOT NULL
 );
@@ -871,9 +910,9 @@ Event sourcing stores every state change as an immutable event rather than overw
 CREATE TABLE dbo.instrument_events (
     event_id        BIGINT IDENTITY(1,1) PRIMARY KEY,
     instrument_id   INT             NOT NULL,
-    event_type      VARCHAR(50)     NOT NULL,  -- 'created', 'sector_changed', 'delisted'
+    event_type      VARCHAR(50)     NOT NULL,
     event_timestamp DATETIME2(3)    NOT NULL,
-    event_data      NVARCHAR(MAX)   NOT NULL,  -- JSON
+    event_data      NVARCHAR(MAX)   NOT NULL,
     recorded_at     DATETIME2(0)    NOT NULL DEFAULT SYSUTCDATETIME(),
     _run_id         UNIQUEIDENTIFIER NOT NULL,
     _source_system  VARCHAR(50)     NOT NULL
@@ -909,6 +948,8 @@ Quality context answers: "This dataset has a completeness score of 0.97, all uni
 
 #### What it captures
 
+Quality context quantifies trustworthiness along six dimensions, turning a binary pass/fail into a scored signal that consumers can reason about:
+
 | Check Type | Metric | Example |
 |---|---|---|
 | Completeness | % of non-null values | `close_price` is 99.7% non-null |
@@ -919,6 +960,8 @@ Quality context answers: "This dataset has a completeness score of 0.97, all uni
 | Consistency | Cross-table agreement | Revenue in fact table matches control total |
 
 #### Implementation: Quality Results Metadata Table
+
+Store every quality check result as a row linked to its producing run via foreign key, enabling dashboard queries over check history:
 
 ```sql
 CREATE TABLE dbo.data_quality_results (
@@ -941,11 +984,9 @@ CREATE TABLE dbo.data_quality_results (
         FOREIGN KEY (run_id) REFERENCES dbo.pipeline_runs(run_id)
 );
 
--- Index for querying quality by table
 CREATE INDEX IX_dq_results_table
     ON dbo.data_quality_results (table_name, checked_at DESC);
 
--- Index for finding failures
 CREATE INDEX IX_dq_results_failures
     ON dbo.data_quality_results (passed, checked_at DESC)
     WHERE passed = 0;
@@ -974,6 +1015,8 @@ OUTER APPLY (
 ```
 
 #### Implementation: Python Quality Check Framework
+
+A declarative framework for defining and executing quality checks against SQL Server tables, storing results in the `data_quality_results` metadata table:
 
 ```python
 from dataclasses import dataclass
@@ -1216,6 +1259,8 @@ Business context answers: "This column represents the closing price adjusted for
 
 #### What it captures
 
+Business context bridges the gap between technical metadata and organizational meaning — it answers questions no schema or runtime log can answer:
+
 | Field | Purpose |
 |---|---|
 | Business definition | What the column/table means in business terms |
@@ -1227,6 +1272,8 @@ Business context answers: "This column represents the closing price adjusted for
 | SLA | When the data must be available |
 
 #### Implementation: SQL Server Extended Properties
+
+SQL Server's extended properties system allows attaching arbitrary metadata to database objects — tables, columns, schemas, and views:
 
 ```sql
 -- Table-level description
@@ -1271,6 +1318,8 @@ WHERE t.name = 'silver_daily_prices';
 ```
 
 #### Implementation: BigQuery Column Descriptions and Labels
+
+BigQuery supports inline column descriptions via `OPTIONS (description = ...)` in DDL and table-level labels for ownership, classification, and SLA metadata:
 
 ```sql
 -- Create table with column descriptions
@@ -1393,37 +1442,30 @@ ORDER BY table_schema, table_name;
 
 As data flows through pipeline stages, context must flow with it. Each stage reads upstream context, adds its own, and passes the combined context forward.
 
-```
-┌──────────┐    ┌───────────┐    ┌──────────────┐    ┌──────────────┐
-│  Source   │───▶│  Landing  │───▶│    Bronze     │───▶│    Silver    │
-│  (API)   │    │   (GCS)   │    │ (SQL Server)  │    │ (SQL Server) │
-└──────────┘    └───────────┘    └──────────────┘    └──────────────┘
-     │               │                  │                    │
-     │  api_version  │  source_file     │  _run_id           │  _run_id
-     │  endpoint     │  extracted_at    │  _loaded_at         │  _loaded_at
-     │               │  run_id          │  _source_system     │  _source_system
-     │               │  checksum        │  _source_file       │  valid_from/to
-     │               │                  │  _extracted_at      │  is_current
-     │               │                  │                     │  _quality_score
-     │               │                  │                     │
-     │               ▼                  ▼                     ▼
-     │          ┌───────────┐    ┌──────────────┐    ┌──────────────┐
-     └─────────▶│  Sidecar  │    │  Metadata    │    │   Quality    │
-                │  .meta.json│    │  Tables      │    │   Results    │
-                └───────────┘    └──────────────┘    └──────────────┘
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#7aa2f7", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#24283b", "edgeLabelBackground": "#1a1b26", "clusterBkg": "#24283b", "clusterBorder": "#565f89"}}}%%
+flowchart LR
+    API["Source API\napi_version · endpoint"]
+    GCS["GCS Landing\nsource_file · extracted_at\nrun_id · checksum"]
+    BRZ["SQL Server Bronze\n_run_id · _loaded_at\n_source_system · _source_file\n_extracted_at"]
+    SLV["SQL Server Silver\n_run_id · _loaded_at\n_source_system · event_time\nvalid_from/to · _quality_score"]
+    GLD["SQL Server Gold\n_run_id · _loaded_at\n_quality_score"]
+    BQ["BigQuery\n_run_id · _loaded_at\nlabels · descriptions"]
+    META["Metadata Tables\npipeline_runs\ndata_quality_results"]
+    SIDECAR[".meta.json Sidecar"]
 
-                                      │
-                                      ▼
-                              ┌──────────────┐    ┌──────────────┐
-                              │     Gold     │───▶│   BigQuery   │
-                              │ (SQL Server) │    │  (Analytics) │
-                              └──────────────┘    └──────────────┘
-                                     │                    │
-                                     │  _run_id           │  _run_id
-                                     │  _loaded_at        │  _loaded_at
-                                     │  _quality_score    │  labels
-                                     │                    │  descriptions
+    API --> GCS
+    GCS --> BRZ
+    BRZ --> SLV
+    SLV --> GLD
+    GLD --> BQ
+    GCS --> SIDECAR
+    BRZ --> META
+    SLV --> META
+    GLD --> META
 ```
+
+*Figure: Context propagation across pipeline zones — each layer adds context on top of what it inherits.*
 
 ### Context Propagation Patterns
 
@@ -1631,30 +1673,6 @@ logger = logging.getLogger(__name__)
 
 
 class FullPipelineContext:
-    """Unified context manager that propagates all five context types.
-
-    Combines:
-      - Run context (SQL Server metadata table + Firestore real-time state)
-      - Provenance context (source tracking)
-      - Temporal context (event time / processing time)
-      - Quality context (quality checks and scoring)
-      - Business context (classification and ownership)
-
-    Usage:
-        with FullPipelineContext(
-            pipeline_name="daily-ingest",
-            db_connection=conn,
-            source_system="market-data-api",
-            owner="market-data-team",
-        ) as ctx:
-            data = extract(ctx.run_id, ctx.source_system)
-            ctx.record_extraction(rows=len(data), source_file="gs://...")
-            clean = transform(data)
-            ctx.run_quality_checks(DAILY_PRICES_CHECKS)
-            ctx.gate_quality(threshold=0.9)
-            load(clean, ctx.run_id)
-            ctx.record_load(rows=len(clean))
-    """
 
     def __init__(
         self,
@@ -1874,6 +1892,8 @@ With contracts:
 
 ### YAML Data Contract Specification
 
+A complete contract specification covers schema, quality thresholds, SLA, classification, lineage, and changelog — all in a single versioned YAML file stored alongside pipeline code:
+
 ```yaml
 # data-contracts/daily-prices.yaml
 contract:
@@ -2014,6 +2034,8 @@ contract:
 ```
 
 ### Python Contract Validator
+
+A validator class that reads the YAML contract and executes schema and quality checks against a live SQL Server table, returning structured `ValidationResult` objects:
 
 ```python
 import yaml
@@ -2197,6 +2219,8 @@ ALTER TABLE dbo.silver_daily_prices
 
 ### BigQuery Schema Evolution Rules
 
+BigQuery enforces strict schema evolution constraints. Some changes are safe and allowed in-place; others require the expand-and-contract approach to avoid breaking downstream consumers:
+
 ```sql
 -- Allowed: Add a new NULLABLE column
 ALTER TABLE `project.dataset.daily_prices`
@@ -2269,9 +2293,9 @@ For teams managing many schemas, a lightweight registry:
 ```sql
 CREATE TABLE dbo.schema_registry (
     schema_id       INT IDENTITY(1,1) PRIMARY KEY,
-    schema_name     VARCHAR(200)     NOT NULL,  -- e.g., 'daily-prices'
-    version         VARCHAR(20)      NOT NULL,  -- e.g., '2.1'
-    schema_json     NVARCHAR(MAX)    NOT NULL,  -- Full JSON schema definition
+    schema_name     VARCHAR(200)     NOT NULL,
+    version         VARCHAR(20)      NOT NULL,
+    schema_json     NVARCHAR(MAX)    NOT NULL,
     compatibility   VARCHAR(20)      NOT NULL DEFAULT 'backward',
                     CHECK (compatibility IN ('backward','forward','full','none')),
     created_at      DATETIME2(0)     NOT NULL DEFAULT SYSUTCDATETIME(),
@@ -2296,6 +2320,8 @@ ORDER BY created_at DESC;
 ---
 
 ### Anti-Patterns — How Context Gets Lost
+
+The following patterns represent the most common ways context is silently lost in production pipelines — each mapped to its downstream consequence and the fix:
 
 | Anti-Pattern | What Happens | Fix |
 |---|---|---|
@@ -2322,7 +2348,32 @@ ORDER BY created_at DESC;
 
 ## Decision Framework: Choosing Your Context Architecture
 
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#7aa2f7", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#24283b", "edgeLabelBackground": "#1a1b26", "clusterBkg": "#24283b", "clusterBorder": "#565f89"}}}%%
+flowchart TD
+    START{"What is your\nprimary pain point?"}
+
+    START -->|"Cannot debug\nfailed runs"| RC["Run Context\npipeline_runs + _run_id\non every row"]:::tip
+    START -->|"Cannot trace\ndata origin"| PC["Provenance Context\nsource columns +\nlineage API"]:::tip
+    START -->|"Late data / corrections\nbreak reports"| TC["Temporal Context\nbi-temporal modeling,\nevent_time + _processed_at"]:::tip
+    START -->|"Nobody trusts\nthe data"| QC["Quality Context\nquality checks + scores\n+ circuit breakers"]:::tip
+    START -->|"Teams define\nmetrics differently"| BC["Business Context\nglossary + data contracts\n+ catalog tags"]:::tip
+
+    RC --> MIN["Minimum Viable:\npipeline_runs table\n+ _run_id everywhere\n+ column descriptions"]:::highlight
+    PC --> MIN
+    TC --> ADV["Advanced:\nbi-temporal dimensions\n+ event sourcing\n+ Dataplex lineage"]
+    QC --> MIN
+    BC --> ADV
+
+    classDef tip fill:#1a1b26,stroke:#e0af68
+    classDef highlight fill:#1a1b26,stroke:#9ece6a
+```
+
+*Figure: Context architecture selection — start with the pain point driving the investment, then build toward the minimum viable foundation.*
+
 ### By Pipeline Complexity
+
+Match your context architecture investment to your pipeline's actual complexity — over-engineering context infrastructure for a simple daily batch is as costly as having none:
 
 | If your pipelines are... | Start with... | Then add... |
 |---|---|---|
@@ -2334,6 +2385,8 @@ ORDER BY created_at DESC;
 
 ### By Context Type Priority
 
+If you are solving a specific pain point, target the context type that addresses it directly rather than implementing everything at once:
+
 | If your biggest pain point is... | Prioritize... |
 |---|---|
 | "We can't debug failed pipelines" | Run context (pipeline_runs table, `_run_id` everywhere) |
@@ -2341,6 +2394,9 @@ ORDER BY created_at DESC;
 | "Late data and corrections break reports" | Temporal context (bi-temporal modeling, event time) |
 | "Nobody trusts the data" | Quality context (checks, scores, circuit breakers) |
 | "Teams define metrics differently" | Business context (glossary, contracts, catalog) |
+
+> [!question] Which context type should I implement first?
+> Start with **Run Context** — it unblocks every other type. Without `_run_id` on rows and a `pipeline_runs` table, you cannot trace quality failures to their producing run, cannot idempotently reprocess, and cannot link provenance or temporal metadata back to a specific execution. Once run context is in place, the order depends on your biggest pain point: Provenance if root-cause debugging consumes team time; Quality if stakeholders don't trust the data; Temporal if late data or regulatory restatements are recurring problems; Business if teams disagree on metric definitions or can't answer compliance questions.
 
 ### Minimum Viable Context
 
@@ -2357,6 +2413,8 @@ Everything else builds on this foundation.
 ## Querying Context — Operational Recipes
 
 ### "What happened in the last failed run?"
+
+Query the `pipeline_runs` table ordered by start time to retrieve the most recent failure with full parameters and error detail:
 
 ```sql
 SELECT
@@ -2377,6 +2435,8 @@ OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY;
 
 ### "Which rows were loaded in a specific run?"
 
+Every target table carries `_run_id` — use it to isolate all rows produced by a specific execution, enabling safe delete-and-reload reprocessing:
+
 ```sql
 SELECT *
 FROM dbo.silver_daily_prices
@@ -2384,6 +2444,8 @@ WHERE _run_id = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
 ```
 
 ### "What quality checks failed today?"
+
+Join quality results to pipeline runs to get a full picture of which checks failed, in which tables, and in which pipeline execution:
 
 ```sql
 SELECT
@@ -2402,6 +2464,8 @@ ORDER BY dq.checked_at DESC;
 ```
 
 ### "Show me data freshness for all gold tables"
+
+A union query across gold tables computes minutes-since-last-load and flags anything beyond a 3-hour threshold as stale:
 
 ```sql
 SELECT
@@ -2422,6 +2486,8 @@ GROUP BY table_name;
 ```
 
 ### "Trace a data issue from dashboard to source"
+
+Work backward through each medallion layer using `_run_id` as the tracing key — from a suspicious gold row all the way to the original source file:
 
 ```sql
 -- Step 1: Find the run that produced the suspicious gold data
@@ -2447,6 +2513,8 @@ WHERE symbol = 'AAPL' AND trade_date = '2026-03-20';
 ```
 
 ### BigQuery: "Find all tables that haven't been updated in 24 hours"
+
+BigQuery's `__TABLES__` metadata table stores `last_modified_time` for every table in a dataset, enabling dataset-wide freshness monitoring:
 
 ```sql
 SELECT

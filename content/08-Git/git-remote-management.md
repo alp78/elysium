@@ -201,8 +201,8 @@ After rebasing, the local feature branch has new commit SHAs (X', Y') that diver
 **Before rebase:**
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   commit id: "C"
@@ -218,8 +218,8 @@ gitGraph
 **After rebase + force-push:**
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   commit id: "C"

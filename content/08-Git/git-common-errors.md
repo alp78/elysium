@@ -82,8 +82,8 @@ Push failures occur when the local and remote branches have diverged, when authe
 **Cause:** Someone pushed commits to the same branch after your last pull. Your local branch has diverged from the remote — Git refuses to push because it would overwrite their work. A "non-fast-forward" means the remote branch tip is not an ancestor of your local tip.
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   branch origin/main
@@ -125,8 +125,8 @@ git push
 **Cause:** Rebase rewrites commit SHAs by replaying each commit with a new parent. The remote still has the original commits with the old SHAs, so Git sees a divergence and rejects the push as non-fast-forward.
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   branch feature
@@ -223,8 +223,8 @@ Branch errors arise from operating on the wrong branch, losing track of HEAD, or
 **Cause:** You checked out a specific commit SHA or a tag instead of a branch name. In this state, HEAD points directly at a commit rather than at a branch pointer. Any new commits you create are not on any branch — they become orphaned (unreachable) as soon as you switch to a named branch, and will be garbage-collected after approximately 90 days.
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B" type: HIGHLIGHT
   commit id: "C"
@@ -233,8 +233,8 @@ gitGraph
 *Figure: You ran `git checkout B` — HEAD now points directly at commit B instead of following the main branch. Main still points at C. If you make new commits here, they won't belong to any branch.*
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   branch detached
@@ -480,8 +480,8 @@ This copies the file from HEAD back into the working tree without affecting the 
 **Fix:** Create a revert commit that undoes the changes, then push.
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   commit id: "C" type: REVERSE

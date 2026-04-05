@@ -185,8 +185,8 @@ git restore --staged filename.py
 Each `git commit` records a snapshot of the staged files as a new node in the DAG. The branch pointer (e.g., `main` or `feat/add-signals`) advances to the new commit, and `HEAD` follows it.
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   commit id: "C"
@@ -226,8 +226,8 @@ git commit -m "feat: add daily signal fetcher" -m "Fetches PE, yield, and moment
 **Before amend:**
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   commit id: "C" type: REVERSE
@@ -238,8 +238,8 @@ gitGraph
 **After amend:**
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   commit id: "C'" type: HIGHLIGHT
@@ -353,8 +353,8 @@ Fast-forward
 **Before pull --rebase** (local C, D diverged from remote E):
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   branch feat/local
@@ -369,8 +369,8 @@ gitGraph
 **After pull --rebase** (C, D replayed as C', D' on top of E — new SHAs):
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   commit id: "E"
@@ -426,8 +426,8 @@ From github.com:org/repo
 This is the standard workflow used by data engineering teams. A feature branch isolates work-in-progress from `main` — commits accumulate on the branch, are reviewed via PR, then squash-merged into `main` as a single clean commit.
 
 ```mermaid
-%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
-gitGraph
+%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph TB:
   commit id: "A"
   commit id: "B"
   branch feat/my-feature

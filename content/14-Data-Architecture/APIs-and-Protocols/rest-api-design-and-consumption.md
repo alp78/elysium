@@ -1,5 +1,5 @@
 ---
-tags: [data-architecture, architecture, api, python, bash, gcp]
+tags: [data-architecture, rest, api]
 aliases:
   - REST API
   - RESTful
@@ -42,6 +42,8 @@ status: complete
 
 ## REST Fundamentals for Data Engineers
 
+REST defines a set of structural constraints for HTTP-based systems. This section covers the core properties — HTTP methods, URL anatomy, request and response structure, and idempotency — that shape how data pipelines interact with APIs.
+
 ### What REST Is
 
 REST (Representational State Transfer) is a stateless client-server architectural style built on top of HTTP. Every request from a client contains all information the server needs to fulfill it — no session state lives on the server between calls. This property is what makes REST pipelines straightforward to scale horizontally and retry safely. For Python implementation of REST clients and servers, see [15_py_webapis](https://alp78.github.io/elysium/02-Programming-Languages/Python/15_py_webapis); for C#, see [15_cs_webapis](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/15_cs_webapis).
@@ -55,7 +57,30 @@ Key constraints of REST:
 > [!info] Why statelessness matters for pipelines
 > Because each request is self-contained, you can restart a failed pipeline step mid-run without needing to re-establish session state. Each API call either succeeds or fails atomically, making retry logic clean.
 
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart LR
+    A["Pipeline Client\n(stateless caller)"] -->|"HTTP Request\nMethod + URL\nAuth Header\nBody (optional)"| B["API Server\n(stateless handler)"]
+    B -->|"HTTP Response\nStatus Code\nRate-Limit Headers\nJSON Body"| A
+    B -.->|"No session\nstate stored"| B
+```
+
+*Figure: REST request-response lifecycle — every request is self-contained; the server stores no client state between calls.*
+
 ### HTTP Methods Mapped to Data Operations
+
+REST maps HTTP verbs to data operations. The safety and idempotency properties determine how you design retry logic — only idempotent methods can be retried unconditionally.
 
 | Method   | Operation | SQL Equivalent | Body? | Safe? | Idempotent? |
 |----------|-----------|----------------|-------|-------|-------------|
@@ -76,6 +101,8 @@ Key constraints of REST:
 > Generate a stable UUID per logical operation (e.g., derived from `f"{pipeline_run_id}:{entity_id}"` hashed to UUID5) and pass it as `Idempotency-Key` on every POST. The server stores the key and returns the original response on duplicate requests. On your pipeline side, always retry POST calls with the same key — the operation becomes safely idempotent.
 
 ### URL Structure Anatomy
+
+A REST URL encodes both resource identity and request parameters. Consistent URL design makes APIs predictable and their access logs readable.
 
 ```
 https://api.example.com/v2/indices/{index_id}/constituents?date=2026-03-22&format=json
@@ -112,6 +139,8 @@ For data engineering work, the most important headers to send:
 
 ### Response Anatomy
 
+Every HTTP response carries metadata in headers alongside the body. Rate limit state, request IDs, and retry timing arrive in headers — not the body. Pipelines that only read the body miss critical operational information.
+
 ```
 HTTP/1.1 200 OK
 Content-Type: application/json
@@ -130,6 +159,8 @@ Retry-After: 60
 The response headers carry critical pipeline metadata: rate limit state, request tracing IDs, and retry timing. Ignoring these headers is why pipelines hit 429s.
 
 ### Idempotency and Pipeline Retries
+
+Different HTTP methods carry different idempotency guarantees. This table summarizes which operations are safe to retry unconditionally and which require special handling to avoid duplicate effects.
 
 ```
 Operation  | Retry safe? | Notes
@@ -151,7 +182,7 @@ response = session.post(
     "https://api.example.com/v1/trades",
     headers={
         "Authorization": f"Bearer {token}",
-        "Idempotency-Key": str(uuid.uuid4()),  # stable per logical operation
+        "Idempotency-Key": str(uuid.uuid4()),
         "Content-Type": "application/json",
     },
     json={"symbol": "AAPL", "quantity": 100, "side": "buy"},
@@ -163,7 +194,11 @@ response = session.post(
 
 ## HTTP Status Codes Every Data Engineer Must Know
 
+HTTP status codes are grouped by class. Each class signals a different category of outcome and maps to a specific pipeline action — retry, abort, refresh credentials, or process normally.
+
 ### 2xx — Success
+
+Success codes confirm the request completed. The specific code tells you whether to expect a response body and what the pipeline should do next.
 
 | Code | Name              | Meaning                                      | Pipeline action       |
 |------|-------------------|----------------------------------------------|-----------------------|
@@ -177,6 +212,8 @@ response = session.post(
 > `response.raise_for_status()` won't raise on 204, but `response.json()` will throw `JSONDecodeError`. Always check `response.status_code != 204` before parsing.
 
 ### 3xx — Redirection
+
+Redirect codes indicate the resource has moved. Most HTTP clients follow them automatically; production pipelines should log the final destination URL to detect unexpected endpoint migrations.
 
 | Code | Name              | Meaning                                      | Pipeline action       |
 |------|-------------------|----------------------------------------------|-----------------------|
@@ -193,6 +230,8 @@ response = session.post(
 > In production pipelines, log `response.url` after every request to confirm you landed on the expected endpoint. Use `allow_redirects=True` (the default) but cap with `max_redirects=5` via the session adapter. If the final URL differs from the configured URL by more than a path prefix (e.g., a full domain change), raise an alert — it may indicate a misconfigured base URL or a vendor domain migration.
 
 ### 4xx — Client Errors
+
+Client errors indicate a problem with the request itself. Most 4xx errors are permanent — retrying the same request will produce the same failure. Fix the request before retrying.
 
 | Code | Name                  | Meaning                                      | Pipeline action               |
 |------|-----------------------|----------------------------------------------|-------------------------------|
@@ -215,6 +254,8 @@ response = session.post(
 
 ### 5xx — Server Errors
 
+Server errors indicate a transient problem on the API side. All 5xx codes are safe to retry with exponential backoff — the server is effectively telling you to try again later.
+
 | Code | Name                  | Meaning                                      | Pipeline action               |
 |------|-----------------------|----------------------------------------------|-------------------------------|
 | 500  | Internal Server Error | Unhandled exception on server                | Retry with backoff (often transient) |
@@ -222,7 +263,7 @@ response = session.post(
 | 503  | Service Unavailable   | Server overloaded or in maintenance          | Retry with backoff, check status page |
 | 504  | Gateway Timeout       | Upstream timeout                             | Retry with backoff, consider longer timeout |
 
-> [!note] Retry matrix summary
+> [!info] Retry matrix summary
 > - **Always retry**: 429, 500, 502, 503, 504
 > - **Retry once after refresh**: 401
 > - **Never retry**: 400, 403, 404, 405, 410, 422
@@ -232,6 +273,8 @@ response = session.post(
 
 ## Authentication Patterns
 
+APIs authenticate clients using tokens, keys, or certificates. This section covers the four patterns common in data engineering: static API keys, OAuth2 bearer tokens, GCP service account credentials, and mTLS client certificates.
+
 ### API Key Authentication
 
 The simplest pattern. A static secret issued by the API provider, sent on every request. Common with market data vendors (Bloomberg, Refinitiv, Alpha Vantage, Quandl, Polygon.io).
@@ -239,6 +282,9 @@ The simplest pattern. A static secret issued by the API provider, sent on every 
 Two delivery mechanisms:
 
 #### Header-based (preferred)
+
+Pass the API key in an `Authorization` or `X-API-Key` header — headers are not captured in URL access logs, so the key is not exposed in server log files.
+
 ```python
 response = session.get(
     "https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/2026-01-01/2026-03-22",
@@ -247,6 +293,9 @@ response = session.get(
 ```
 
 #### Query parameter (avoid if possible — keys appear in logs)
+
+Some APIs require the key as a query parameter. Avoid this when you have a choice — the key appears in server access logs, browser history, and any intermediary cache.
+
 ```python
 response = session.get(
     "https://api.example.com/v1/prices",
@@ -275,6 +324,8 @@ For more curl recipes and CLI-based API interaction patterns, see [http-requests
 The standard for modern enterprise APIs: GCP, Azure, AWS SigV4 (variant), Salesforce, most financial data platforms.
 
 #### OAuth2 Client Credentials Flow (machine-to-machine)
+
+The client credentials grant is the correct OAuth2 flow for server-to-server authentication. No user is involved — the pipeline authenticates directly with its own `client_id` and `client_secret`, exchanging them for a short-lived access token.
 
 ```python
 import requests
@@ -307,7 +358,40 @@ response = session.get(
 )
 ```
 
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+sequenceDiagram
+    participant P as Pipeline
+    participant A as Auth Server
+    participant API as API Server
+
+    P->>A: POST /oauth2/token<br/>grant_type=client_credentials<br/>client_id + client_secret
+    A-->>P: access_token + expires_in
+    P->>API: GET /v1/resource<br/>Authorization: Bearer token
+    API-->>P: 200 OK + JSON data
+    Note over P: Token expires (expires_in seconds)
+    P->>A: POST /oauth2/token (refresh)
+    A-->>P: new access_token
+    P->>API: GET /v1/resource (new token)
+    API-->>P: 200 OK + JSON data
+```
+
+*Figure: OAuth2 client credentials flow — pipeline exchanges client\_id + client\_secret for a short-lived access token, caches it, and refreshes before expiry.*
+
 #### Token caching with expiry
+
+Fetching a new token on every API call wastes latency and may trigger rate limits on the token endpoint. Cache the token in memory and refresh it proactively 60 seconds before it expires to avoid mid-request expiry.
 
 ```python
 import time
@@ -442,9 +526,19 @@ curl \
 
 ## Consuming APIs in Data Pipelines
 
+Production pipeline code needs more than a one-liner `requests.get()`. This section covers the full client stack: session configuration, pagination strategies, rate limit handling, async concurrency, error classification, circuit breaking, and dead letter queues.
+
 ### Python requests — Production-Ready Session
 
-Never use bare `requests.get()` in a pipeline. Always use a `Session` with retry logic, timeouts, and auth baked in.
+Production pipelines make many API calls under varied conditions. A configured session handles retries, timeouts, compression, and auth uniformly — without repeating boilerplate at each call site.
+
+> [!danger] Using bare requests.get() in production
+> Calling `requests.get()` directly creates a new TCP connection per call, applies no retry logic, and has no default timeout. A single network glitch in a pipeline making hundreds of calls will raise an uncaught exception and halt the entire run.
+
+> [!success] Build a configured Session once per pipeline run
+> A `Session` reuses TCP connections (keepalive), shares auth headers across all calls, and applies retry logic automatically. Build it once at pipeline startup and pass it to every function that makes API calls.
+
+The session retries on status codes 429, 500, 502, 503, and 504 with exponential backoff (1s, 2s, 4s at `backoff_factor=1`). Errors are raised manually via `response.raise_for_status()` after all retries are exhausted, which allows richer log context than urllib3's built-in mechanism. When a 429 includes a `Retry-After` header, the retry waits exactly that many seconds rather than using the backoff formula.
 
 ```python
 import os
@@ -456,12 +550,6 @@ from urllib3.util.retry import Retry
 logger = logging.getLogger(__name__)
 
 def build_session(token: str, total_retries: int = 3, backoff_factor: float = 1.0) -> requests.Session:
-    """
-    Build a requests Session with retry logic, auth, and compression enabled.
-
-    Retries on: 429, 500, 502, 503, 504
-    Backoff: 1s, 2s, 4s (with backoff_factor=1)
-    """
     session = requests.Session()
 
     retry_strategy = Retry(
@@ -469,8 +557,8 @@ def build_session(token: str, total_retries: int = 3, backoff_factor: float = 1.
         backoff_factor=backoff_factor,
         status_forcelist=[429, 500, 502, 503, 504],
         allowed_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-        raise_on_status=False,   # we raise manually for better logging
-        respect_retry_after_header=True,  # honor Retry-After on 429
+        raise_on_status=False,
+        respect_retry_after_header=True,
     )
     adapter = HTTPAdapter(max_retries=retry_strategy)
     session.mount("https://", adapter)
@@ -508,6 +596,8 @@ def api_get(session: requests.Session, url: str, **kwargs) -> dict:
 
 #### Usage in a financial data pipeline
 
+The session is built once and reused across all calls in a pipeline run, sharing the auth header, retry configuration, and TCP connection pool.
+
 ```python
 session = build_session(token=get_token())
 
@@ -538,7 +628,7 @@ GET /v1/constituents?index=SP500&page=2&per_page=100
 GET /v1/constituents?index=SP500&page=3&per_page=100
 ```
 
-Problem: if records are inserted or deleted between pages, you get skips or duplicates. Acceptable for historical data, risky for live data.
+Problem: if records are inserted or deleted between pages, you get skips or duplicates. Acceptable for historical data, risky for live data. The loop terminates when the response returns no records or the accumulated count reaches the total reported in the metadata.
 
 ```python
 def paginate_offset(session, base_url: str, params: dict, page_size: int = 100) -> list:
@@ -553,7 +643,6 @@ def paginate_offset(session, base_url: str, params: dict, page_size: int = 100) 
         records = data.get("data", data.get("results", data if isinstance(data, list) else []))
         all_records.extend(records)
 
-        # Detect end of pages
         meta = data.get("meta", data.get("pagination", {}))
         total = meta.get("total", meta.get("total_count", 0))
         if not records or len(all_records) >= total:
@@ -566,7 +655,7 @@ def paginate_offset(session, base_url: str, params: dict, page_size: int = 100) 
 
 #### Cursor-Based Pagination
 
-The right approach for mutable datasets. The server returns an opaque cursor pointing to the current position.
+The right approach for mutable datasets. The server returns an opaque cursor pointing to the current position. Cursor field names vary by API — common variants are `next_cursor`, `cursor`, and `meta.next_cursor`; the function checks all three. The loop terminates when the cursor is null or the page returns no records.
 
 ```
 GET /v1/trades?limit=100
@@ -596,7 +685,6 @@ def paginate_cursor(session, base_url: str, params: dict, page_size: int = 100) 
         records = data.get("data", data.get("results", []))
         all_records.extend(records)
 
-        # Cursor field names vary by API
         cursor = (
             data.get("next_cursor")
             or data.get("cursor")
@@ -607,6 +695,30 @@ def paginate_cursor(session, base_url: str, params: dict, page_size: int = 100) 
 
     return all_records
 ```
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A[Start: cursor = null] --> B["GET /v1/trades?limit=100\n(+cursor param if set)"]
+    B --> C[Append records to result]
+    C --> D{next_cursor\nin response?}
+    D -->|Yes| E[cursor = next_cursor]
+    E --> B
+    D -->|No| F[All pages fetched\nReturn all_records]
+```
+
+*Figure: Cursor pagination flow — each response carries an opaque cursor pointing to the next page; the loop terminates when `next_cursor` is null.*
 
 #### Link Header Pagination (RFC 5988)
 
@@ -689,6 +801,8 @@ def paginate_keyset(session, base_url: str, params: dict, id_field: str = "id", 
 
 #### Financial data example — paginating 5,000 index constituents
 
+A complete example: fetching all members of a large index using cursor pagination. The same pattern applies to any resource set where the API supports cursor-based traversal.
+
 ```python
 def fetch_index_constituents(
     session: requests.Session,
@@ -721,7 +835,11 @@ constituents = fetch_index_constituents(session, "SP500", "2026-03-22")
 
 ### Rate Limiting and Backoff
 
+Rate limiting governs how many requests a client can make per time window. Pipelines must read rate limit headers proactively after each response and implement backoff strategies for when limits are exceeded.
+
 #### Reading Rate Limit Headers
+
+Extract rate limit state from response headers after every call. `X-RateLimit-Remaining` tells you how many requests remain before the window resets; `X-RateLimit-Reset` gives the Unix timestamp for the reset; `Retry-After` gives the exact number of seconds to wait after a 429.
 
 ```python
 def log_rate_limit_status(response: requests.Response) -> None:
@@ -730,8 +848,8 @@ def log_rate_limit_status(response: requests.Response) -> None:
 
     limit = headers.get("X-RateLimit-Limit")
     remaining = headers.get("X-RateLimit-Remaining")
-    reset = headers.get("X-RateLimit-Reset")          # Unix timestamp
-    retry_after = headers.get("Retry-After")            # seconds to wait
+    reset = headers.get("X-RateLimit-Reset")
+    retry_after = headers.get("Retry-After")
 
     if remaining and int(remaining) < 50:
         logger.warning(
@@ -766,6 +884,8 @@ def throttle_if_needed(response: requests.Response, min_remaining: int = 10) -> 
 ```
 
 #### Exponential Backoff with Jitter
+
+Jitter adds randomness to the wait interval to prevent the thundering-herd problem — multiple pipeline instances retrying in unison after a server outage all hit the API at the same moment. Full jitter randomizes the delay uniformly between zero and the calculated maximum.
 
 ```python
 import time
@@ -819,25 +939,16 @@ def retry_with_backoff(func, max_attempts: int = 5, retryable_codes: set = None)
 
 #### Token Bucket for Controlled Throughput
 
-When you have a rate limit of, say, 10 requests/second and are making bulk calls:
+When you have a rate limit of, say, 10 requests/second and are making bulk calls, a token bucket controls throughput without building complex per-call timing logic. `rate` sets how many tokens are added per second (equivalent to the target request rate); `capacity` sets the maximum burst size — set it equal to `rate` to disallow bursting. `consume()` blocks briefly until a token is available, so callers only need to call it before each API request.
 
 ```python
 import threading
 import time
 
 class TokenBucket:
-    """
-    Thread-safe token bucket rate limiter.
-
-    Usage:
-        bucket = TokenBucket(rate=10, capacity=10)  # 10 req/s
-        bucket.consume()  # blocks until a token is available
-        make_api_call()
-    """
-
     def __init__(self, rate: float, capacity: float):
-        self.rate = rate          # tokens added per second
-        self.capacity = capacity  # max tokens
+        self.rate = rate
+        self.capacity = capacity
         self.tokens = capacity
         self.last_refill = time.monotonic()
         self._lock = threading.Lock()
@@ -849,7 +960,7 @@ class TokenBucket:
                 if self.tokens >= tokens:
                     self.tokens -= tokens
                     return
-            time.sleep(0.01)  # brief yield before retry
+            time.sleep(0.01)
 
     def _refill(self) -> None:
         now = time.monotonic()
@@ -859,7 +970,7 @@ class TokenBucket:
 
 
 # Use in a pipeline making many calls
-bucket = TokenBucket(rate=8, capacity=8)  # stay under 10 req/s limit
+bucket = TokenBucket(rate=8, capacity=8)
 
 for symbol in symbols:
     bucket.consume()
@@ -948,7 +1059,11 @@ def ingest_eod_prices(symbols: list[str], date: str, token: str) -> list[dict]:
 
 ### Error Handling for Pipelines
 
+API errors fall into two fundamentally different categories — transient and permanent — each requiring a different response strategy. Misclassifying them either wastes retries on unfixable errors or silently drops valid retry opportunities.
+
 #### Transient vs Permanent Errors
+
+API errors fall into categories that require fundamentally different handling strategies. Retrying a permanent error wastes quota and delays alerting; not retrying a transient error causes unnecessary pipeline failures.
 
 ```
 Error Type       | Examples                  | Action
@@ -962,27 +1077,18 @@ Data error       | Valid JSON, wrong schema  | Log, send to dead letter queue
 
 #### Circuit Breaker Pattern
 
-Stop hammering a failing API. After N consecutive failures, open the circuit (stop calling) for a cooldown period.
+Stop hammering a failing API. After N consecutive failures, open the circuit (stop calling) for a cooldown period. The breaker cycles through three states: `CLOSED` — calls proceed normally; `OPEN` — all calls are blocked immediately after `failure_threshold` consecutive failures; `HALF_OPEN` — after `recovery_timeout` seconds, one probe call is allowed to test if the API has recovered. On success it returns to `CLOSED`; on failure it reopens.
 
 ```python
 import time
 from enum import Enum
 
 class CircuitState(Enum):
-    CLOSED = "closed"        # normal, calls allowed
-    OPEN = "open"            # failing, calls blocked
-    HALF_OPEN = "half_open"  # testing recovery
+    CLOSED = "closed"
+    OPEN = "open"
+    HALF_OPEN = "half_open"
 
 class CircuitBreaker:
-    """
-    Simple circuit breaker for API calls.
-
-    Transitions:
-    CLOSED → OPEN after failure_threshold consecutive failures
-    OPEN → HALF_OPEN after recovery_timeout seconds
-    HALF_OPEN → CLOSED on success; → OPEN on failure
-    """
-
     def __init__(self, failure_threshold: int = 5, recovery_timeout: float = 60.0):
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
@@ -1030,9 +1136,36 @@ def get_price(symbol):
     return breaker.call(api_get, session, f"https://api.example.com/v1/prices/{symbol}")
 ```
 
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+stateDiagram-v2
+    [*] --> CLOSED
+    CLOSED --> OPEN: failure_threshold reached
+    OPEN --> HALF_OPEN: recovery_timeout elapsed
+    HALF_OPEN --> CLOSED: call succeeds
+    HALF_OPEN --> OPEN: call fails
+
+    CLOSED: CLOSED\nCalls pass through normally
+    OPEN: OPEN\nAll calls blocked immediately
+    HALF_OPEN: HALF_OPEN\nOne probe call allowed
+```
+
+*Figure: Circuit breaker state machine — CLOSED allows calls, OPEN blocks them after repeated failures, HALF\_OPEN tests whether the API has recovered.*
+
 #### Dead Letter Queue
 
-Failed requests that shouldn't be silently dropped:
+Permanent failures (400, 404, 422) should be persisted for manual review and replay rather than silently dropped or allowed to halt the pipeline. This implementation writes to a local JSONL file. In production, replace with Cloud Pub/Sub, a BigQuery staging table, or a dedicated dead letter queue service.
 
 ```python
 import json
@@ -1040,11 +1173,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 class DeadLetterQueue:
-    """
-    Persists failed API requests to a JSONL file for manual review and replay.
-    In production, replace with Cloud Pub/Sub, SQS, or a database table.
-    """
-
     def __init__(self, path: str = "/tmp/dlq/api-failures.jsonl"):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -1080,6 +1208,8 @@ for symbol in symbols:
 
 ## Building Data APIs with FastAPI
 
+Data engineers build APIs to serve processed results to downstream consumers — BI tools, dashboards, automation scripts, and other pipelines. FastAPI with Pydantic provides request validation, response serialization, and OpenAPI documentation from Python type annotations with minimal boilerplate.
+
 ### When a Data Engineer Builds an API
 
 Data engineers build APIs to:
@@ -1088,9 +1218,11 @@ Data engineers build APIs to:
 - Provide webhook receivers for event-driven ingestion (SaaS → your pipeline)
 - Create standardized data contracts between teams
 
-See fastapi and polars for full FastAPI + Polars integration patterns. This section covers the API design layer.
+See [15_py_webapis](https://alp78.github.io/elysium/02-Programming-Languages/Python/15_py_webapis) for full FastAPI integration patterns. This section covers the API design layer.
 
 ### Application Structure
+
+FastAPI derives API routes, parameter validation, and OpenAPI documentation directly from Python type annotations and function signatures. The `FastAPI()` instance is the root of the application.
 
 ```python
 from fastapi import FastAPI, Query, Path, HTTPException, Depends
@@ -1112,6 +1244,8 @@ app = FastAPI(
 ```
 
 ### Pydantic Models for Request/Response
+
+Pydantic models define the contract for request and response data. FastAPI uses them for input validation, response serialization, and automatic OpenAPI schema generation — one model serves all three purposes.
 
 ```python
 from pydantic import BaseModel, Field, field_validator
@@ -1150,6 +1284,8 @@ class PaginatedResponse(BaseModel):
 ```
 
 ### Endpoint Design for Data Serving
+
+Data-serving endpoints follow REST conventions: GET with typed path and query parameters, a typed `response_model`, and explicit validation before touching the data layer. FastAPI infers the OpenAPI schema from the function signature.
 
 ```python
 @app.get(
@@ -1197,7 +1333,11 @@ async def get_constituents(
 
 ### API Versioning
 
+Version your API so consumers can migrate at their own pace while you iterate. URL path versioning is the recommended approach for data APIs — it makes the version visible in logs, cache keys, and client configurations.
+
 #### URL path versioning (recommended for data APIs)
+
+Embed the version number in the URL path. This makes it explicit in logs, cache keys, load balancer rules, and client configuration — no hidden behaviour behind a header.
 
 ```
 /v1/indices    ← stable, deprecated
@@ -1208,6 +1348,8 @@ Pros: explicit in logs, cacheable, works everywhere.
 Cons: URL changes require client updates.
 
 #### Header versioning
+
+An alternative: pass the version in the `Accept` header. Keeps URLs clean but hides the version from standard tooling — browsers, log aggregators, and CDN rules can't see it.
 
 ```
 GET /indices
@@ -1233,6 +1375,8 @@ async def get_performance_v1(index_code: str, ...):
 ```
 
 ### Middleware for Logging and Timing
+
+Middleware intercepts every HTTP exchange before routing and after response generation — the correct place for cross-cutting concerns like request tracing, response timing, and injecting standard headers.
 
 ```python
 import time
@@ -1264,7 +1408,11 @@ async def log_requests(request: Request, call_next):
 
 ## API Design Best Practices for Data Systems
 
+A well-designed data API is predictable, filterable, and pipeline-friendly. This section covers the structural decisions that affect every consumer: URL conventions, query parameter grammar, bulk operations, compression, and HTTP caching.
+
 ### Resource Naming
+
+Use lowercase plural nouns for resource paths. HTTP methods express the action — the URL identifies only the resource. Verb-based URLs are a common anti-pattern that breaks REST semantics.
 
 ```
 Good                                Bad
@@ -1327,6 +1475,9 @@ curl -X POST \
 Always enable gzip for large responses. Both sides of the equation:
 
 #### As a consumer
+
+Enable compression on the client by setting `Accept-Encoding`. The `requests` library automatically decompresses gzip responses before returning the body — no manual decompression needed.
+
 ```python
 # requests enables Accept-Encoding: gzip by default when you pass headers
 session.headers["Accept-Encoding"] = "gzip, deflate"
@@ -1334,6 +1485,9 @@ session.headers["Accept-Encoding"] = "gzip, deflate"
 ```
 
 #### As a producer (FastAPI with GZipMiddleware)
+
+Add middleware to compress responses above a minimum size threshold. No changes to individual route handlers are required — the middleware wraps every response automatically.
+
 ```python
 from fastapi.middleware.gzip import GZipMiddleware
 
@@ -1387,6 +1541,8 @@ curl -H 'If-None-Match: "a1b2c3d4e5f67890"' "https://api.example.com/v1/indices/
 
 ## OpenAPI / Swagger
 
+OpenAPI is the machine-readable contract that describes an API's endpoints, schemas, and authentication. FastAPI generates it automatically from type annotations; any other framework can export it. Either way, the spec enables client generation, contract validation, and mock server testing without manual documentation effort.
+
 ### What It Is
 
 OpenAPI (formerly Swagger) is a machine-readable specification of an API: its endpoints, request/response schemas, authentication, and error codes, written in YAML or JSON. It is the contract between API producer and consumer.
@@ -1401,12 +1557,16 @@ https://your-api.com/openapi.json ← Raw spec (for tooling)
 
 ### Why It Matters for Data Engineering
 
+OpenAPI specs unlock tooling that saves significant integration work. These are the four benefits that matter most for data engineering teams.
+
 1. **Auto-generate Python clients** — don't write `requests` boilerplate by hand
 2. **Validate responses** — ensure the API returns what it claims
 3. **Documented contracts** — downstream teams know exactly what fields to expect
 4. **Mock servers** — test your pipeline against a mock before the API is built
 
 ### Generating a Python Client from a Spec
+
+Use `openapi-python-client` to generate a type-safe Python client from any OpenAPI spec — no hand-written `requests` boilerplate needed. The generated client handles auth, serialization, and type checking automatically.
 
 ```bash
 # Install openapi-generator
@@ -1441,6 +1601,8 @@ print(f"Total return: {result.total_return:.2%}")
 ```
 
 ### Writing an OpenAPI Spec (Fragment)
+
+When writing specs manually rather than generating them from FastAPI, use this fragment as a starting point for a data-serving endpoint with typed parameters, pagination, and error responses.
 
 ```yaml
 openapi: "3.1.0"
@@ -1498,100 +1660,102 @@ components:
 
 ## curl for API Testing
 
-curl is the essential tool for debugging APIs before writing pipeline code. Always test with curl first.
+curl is the essential tool for debugging APIs before writing pipeline code. Always test with curl first — it's faster to validate an endpoint interactively than to debug it through Python client code.
+
+### CRUD Methods
+
+The four HTTP methods used in data engineering APIs: GET for fetching, POST for creating, PATCH for partial updates, DELETE for removal. Use `-X` to specify the method; `-d` or `-d @file` to send a JSON body.
 
 ```bash
-# ── Basic GET with auth ─────────────────────────────────────────────────────
 curl -H "Authorization: Bearer $TOKEN" \
      "https://api.example.com/v2/prices?symbol=AAPL&date=2026-03-22"
 
-# ── Pretty-print JSON response (requires jq) ────────────────────────────────
 curl -s -H "Authorization: Bearer $TOKEN" \
      "https://api.example.com/v2/prices?symbol=AAPL" | jq .
 
-# ── POST JSON body ───────────────────────────────────────────────────────────
 curl -X POST \
      -H "Authorization: Bearer $TOKEN" \
      -H "Content-Type: application/json" \
      -d '{"symbol": "AAPL", "name": "Apple Inc."}' \
      "https://api.example.com/v2/watchlist"
 
-# ── POST from file (large body) ─────────────────────────────────────────────
 curl -X POST \
      -H "Authorization: Bearer $TOKEN" \
      -H "Content-Type: application/json" \
      -d @payload.json \
      "https://api.example.com/v1/prices/batch"
 
-# ── PATCH (partial update) ───────────────────────────────────────────────────
 curl -X PATCH \
      -H "Authorization: Bearer $TOKEN" \
      -H "Content-Type: application/json" \
      -d '{"weight": 0.0812}' \
      "https://api.example.com/v2/portfolios/MY-PORT/positions/AAPL"
 
-# ── DELETE ───────────────────────────────────────────────────────────────────
 curl -X DELETE \
      -H "Authorization: Bearer $TOKEN" \
      "https://api.example.com/v2/watchlist/items/AAPL"
+```
 
-# ── Show response headers (critical for debugging rate limits) ───────────────
+### Debugging and Inspection
+
+Use `-I` to fetch headers only, `-i` to include headers in the output alongside the body, `-D file` to save headers to a file for inspection, `-w` for timing breakdowns, and `-v` for full protocol-level output including TLS handshake. These are the first tools to reach for when an API call fails.
+
+```bash
 curl -I -H "Authorization: Bearer $TOKEN" \
      "https://api.example.com/v2/prices?symbol=AAPL"
-# or include headers inline with -i
+
 curl -i -H "Authorization: Bearer $TOKEN" \
      "https://api.example.com/v2/prices?symbol=AAPL"
 
-# ── Save response headers to file ────────────────────────────────────────────
 curl -D headers.txt \
      -H "Authorization: Bearer $TOKEN" \
      -o response.json \
      "https://api.example.com/v2/prices?symbol=AAPL"
-cat headers.txt  # inspect rate limit headers
+cat headers.txt
 
-# ── Timing breakdown ─────────────────────────────────────────────────────────
 curl -w "\n---\nHTTP %{http_code}\nTotal: %{time_total}s\nDNS: %{time_namelookup}s\nConnect: %{time_connect}s\nTTFB: %{time_starttransfer}s\nSize: %{size_download} bytes\n" \
      -o /dev/null -s \
      -H "Authorization: Bearer $TOKEN" \
      "https://api.example.com/v2/prices?symbol=AAPL"
 
-# ── Follow redirects ─────────────────────────────────────────────────────────
-curl -L -H "Authorization: Bearer $TOKEN" \
-     "https://api.example.com/prices"  # redirects to /v2/prices
+curl -v -H "Authorization: Bearer $TOKEN" \
+     "https://api.example.com/v2/health" 2>&1 | head -50
+```
 
-# ── With client certificate (mTLS) ──────────────────────────────────────────
+### Advanced Options
+
+Redirect following with `-L`, mTLS client certificates with `--cert`/`--key`/`--cacert`, gzip compression verification with `--compressed`, conditional requests with `If-None-Match`, and native retry with `--retry`. These cover the less common but critical scenarios in pipeline development.
+
+```bash
+curl -L -H "Authorization: Bearer $TOKEN" \
+     "https://api.example.com/prices"
+
 curl --cert ./client.crt \
      --key ./client.key \
      --cacert ./ca-bundle.crt \
      "https://secure-api.clearinghouse.com/v1/positions"
 
-# ── Test with gzip compression ───────────────────────────────────────────────
 curl -H "Accept-Encoding: gzip" \
      -H "Authorization: Bearer $TOKEN" \
      --compressed \
      -o /dev/null -w "%{size_download} bytes (compressed) from %{size_header} header bytes\n" \
      "https://api.example.com/v2/indices/SP500/constituents"
 
-# ── Conditional request with ETag ────────────────────────────────────────────
 curl -H 'If-None-Match: "a1b2c3d4e5f67890"' \
      -H "Authorization: Bearer $TOKEN" \
      -w "\nHTTP %{http_code}\n" \
      "https://api.example.com/v1/indices/SP500/constituents"
 
-# ── Verbose mode for full request/response debugging ────────────────────────
-curl -v -H "Authorization: Bearer $TOKEN" \
-     "https://api.example.com/v2/health" 2>&1 | head -50
-
-# ── Retry on failure ─────────────────────────────────────────────────────────
 curl --retry 3 --retry-delay 2 --retry-on-http-error 429,500,502,503,504 \
      -H "Authorization: Bearer $TOKEN" \
      "https://api.example.com/v2/prices?symbol=AAPL"
 ```
 
-#### Useful curl one-liners for pipeline debugging
+### Pipeline Debugging One-Liners
+
+Short shell scripts for bulk status validation and throughput measurement.
 
 ```bash
-# Check all symbols in a list against an API
 for symbol in AAPL MSFT GOOGL AMZN META; do
     echo -n "$symbol: "
     curl -s -o /dev/null -w "%{http_code}\n" \
@@ -1599,14 +1763,12 @@ for symbol in AAPL MSFT GOOGL AMZN META; do
          "https://api.example.com/v2/prices/$symbol?date=2026-03-22"
 done
 
-# Time 10 sequential requests (throughput test)
 for i in $(seq 1 10); do
     curl -s -o /dev/null -w "%{time_total}\n" \
          -H "Authorization: Bearer $TOKEN" \
          "https://api.example.com/v2/prices?symbol=AAPL"
 done | awk '{sum+=$1} END {printf "avg: %.3fs over %d requests\n", sum/NR, NR}'
 
-# Extract a specific field from a paginated response
 curl -s -H "Authorization: Bearer $TOKEN" \
      "https://api.example.com/v2/indices/SP500/constituents?per_page=500" \
      | jq '.data[].symbol' | head -20
@@ -1615,6 +1777,8 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 ---
 
 ## REST vs Alternatives — When to Use What
+
+REST is the default for external APIs, but it is not the right choice for all internal data engineering infrastructure. This table maps the trade-offs of REST, gRPC, GraphQL, WebSocket, and file-based protocols to common data engineering scenarios. For a deeper comparison, see [api-protocols-comparison](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison).
 
 | Protocol  | Best For                              | Latency      | Payload             | Streaming          |
 |-----------|---------------------------------------|--------------|---------------------|--------------------|
@@ -1627,25 +1791,35 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 For a deeper side-by-side comparison of REST, gRPC, GraphQL, and other protocols, see [api-protocols-comparison](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/api-protocols-comparison).
 
-#### Use REST when
+### Use REST When
+
+REST is the default for any external-facing integration. Third-party APIs, SaaS platforms, and BI tools almost universally expose REST endpoints.
+
 - Consuming a third-party API (it will almost certainly be REST)
 - Building an API for external teams or BI tools
 - The operation is naturally request-response (fetch data, submit batch)
 - You need broad compatibility with any HTTP client
 
-#### Avoid REST when
+### Avoid REST When
+
+REST adds overhead that matters in certain scenarios. These situations call for a different protocol.
+
 - You need sub-millisecond latency between internal services (use gRPC)
 - The client needs server-push with no polling (use WebSocket or Server-Sent Events)
 - You're moving bulk files (use SFTP, GCS, S3)
 
-> [!tip] Decision heuristic for data engineers
+> [!question] Protocol selection for data engineers
 > External API? Almost always REST — you don't choose. Internal microservice talking to another? Evaluate gRPC. Dashboard needing live data? WebSocket or polling with short intervals. Event from SaaS (Salesforce, Stripe, GitHub)? Webhook receiver. Batch file from vendor? SFTP/object storage.
 
 ---
 
 ## Common Patterns Reference
 
+Reusable patterns that appear across multiple API integration contexts: secret loading, structured logging, response mocking for tests, and health checking.
+
 ### Environment Variable Pattern for Secrets
+
+Load API credentials from environment variables — never from hardcoded constants. Cache the resolved config after the first call to avoid redundant environment reads on every API request.
 
 ```python
 import os
@@ -1663,6 +1837,8 @@ def get_api_config() -> dict:
 ```
 
 ### Structured Logging for API Calls
+
+Log every outbound API call with consistent fields: method, URL, status code, latency, and response size. Structured fields enable filtering and aggregation in log management systems like Datadog or Cloud Logging.
 
 ```python
 import structlog  # or standard logging with extra dict
@@ -1701,6 +1877,8 @@ def logged_api_call(session, method: str, url: str, **kwargs) -> requests.Respon
 
 ### Testing API Client Code
 
+Use the `responses` library to mock HTTP calls in unit tests. This lets you test retry logic, error handling, and response parsing without making real network requests. See [14_py_testing](https://alp78.github.io/elysium/02-Programming-Languages/Python/14_py_testing) for broader Python testing patterns.
+
 ```python
 import pytest
 import responses  # pip install responses
@@ -1737,6 +1915,8 @@ def test_fetch_prices_retries_on_503():
 ```
 
 ### Health Check Endpoint Pattern
+
+A health endpoint lets load balancers and monitoring systems verify the API is operational. It should check every critical dependency and return 503 when any are degraded — not just 200 because the process is alive.
 
 ```python
 from fastapi import FastAPI
@@ -1786,7 +1966,11 @@ async def health_check():
 
 ## Quick Reference Cheatsheet
 
+One-line snippets, decision trees, and header glossaries for fast lookup during development or debugging.
+
 ### requests One-Liners
+
+Common patterns condensed to single expressions for quick reference during development.
 
 ```python
 # GET with params
@@ -1816,23 +2000,44 @@ while True:
 
 ### Status Code Decision Tree
 
-```
-response.status_code
-├── 2xx → success, process response
-│   └── 204 → no body, don't call .json()
-├── 301/302 → follow redirect (requests does this automatically)
-├── 304 → use cached response
-├── 400 → fix your request, never retry
-├── 401 → refresh token, retry once
-├── 403 → fix permissions, never retry
-├── 404 → resource doesn't exist, never retry
-├── 409 → check semantics — may or may not retry
-├── 422 → fix your payload, never retry
-├── 429 → wait Retry-After seconds, retry
-└── 5xx → retry with exponential backoff
+Translate any HTTP status code to the correct pipeline action using this decision tree.
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'primaryColor': '#292e42',
+  'primaryTextColor': '#c0caf5',
+  'primaryBorderColor': '#565f89',
+  'lineColor': '#565f89',
+  'secondaryColor': '#1a1b26',
+  'tertiaryColor': '#24283b',
+  'noteTextColor': '#c0caf5',
+  'noteBkgColor': '#292e42',
+  'textColor': '#c0caf5',
+  'fontSize': '14px'
+}}}%%
+flowchart TD
+    A[HTTP Status Code] --> B{2xx?}
+    B -->|200 / 201 / 206| E[Parse JSON body]
+    B -->|204| D[Success — no body]
+    B -->|No| F{3xx?}
+    F -->|301 / 302 / 307 / 308| G[Follow redirect]
+    F -->|304| H[Use cached data]
+    F -->|No| I{4xx?}
+    I -->|400 / 405 / 422| J[Fix request — never retry]
+    I -->|401| K[Refresh token — retry once]
+    I -->|403| L[Fix permissions — never retry]
+    I -->|404 / 410| M[Resource missing — never retry]
+    I -->|409| N[Check idempotency semantics]
+    I -->|429| O[Wait Retry-After — then retry]
+    I -->|No| P{5xx?}
+    P -->|Yes| Q[Exponential backoff — retry]
 ```
 
+*Figure: HTTP status code decision tree — maps every response code to the correct pipeline action.*
+
 ### Headers Cheatsheet
+
+The most important headers to send with every request and the most important headers to parse from every response.
 
 ```
 Send these:                          Look for these in response:
@@ -1847,4 +2052,4 @@ If-None-Match: {etag}                X-Request-Id (for support tickets)
 
 ---
 
-*See also: [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) | fastapi and polars | [curl and HTTP](https://alp78.github.io/elysium/01-Shell/Networking/http-requests-and-apis) | [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) | *
+*See also: [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) | [15_py_webapis](https://alp78.github.io/elysium/02-Programming-Languages/Python/15_py_webapis) | [curl and HTTP](https://alp78.github.io/elysium/01-Shell/Networking/http-requests-and-apis) | [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) | [12_py_asyncconcurrency](https://alp78.github.io/elysium/02-Programming-Languages/Python/12_py_asyncconcurrency)*
