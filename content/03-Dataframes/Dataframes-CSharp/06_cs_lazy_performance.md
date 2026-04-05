@@ -111,9 +111,13 @@ flowchart LR
     style G fill:#1f2335,stroke:#9ece6a,color:#9ece6a
 ```
 
-### Polars.NET | Scan Parquet (lazy)
+### Creating and Converting Lazy Frames
+
+#### Polars.NET | Scan Parquet (lazy)
 
 `LazyFrame.ScanParquet(path)` registers the Parquet file in the query plan without reading any data. Schema is inferred from file metadata. Use this as the entry point for all lazy pipelines — it enables predicate and projection pushdown so only the rows and columns you actually need are ever read from disk.
+
+_Scans `eurostoxx50_ohlcv.parquet` into a `LazyFrame` and prints the type name to confirm that no data has been read — the row count and schema are inferred from Parquet file metadata alone, with zero I/O on the actual row data._
 
 ```csharp
 var parquetPath = Path.Combine(DATA, "eurostoxx50_ohlcv.parquet");
@@ -126,9 +130,11 @@ Console.WriteLine("No data has been loaded yet — just a query plan.");
     Type: LazyFrame
     No data has been loaded yet — just a query plan.
 
-### Polars.NET | Eager to Lazy conversion
+#### Polars.NET | Eager to lazy conversion
 
 Call `.Lazy()` on an existing `DataFrame` to convert it to a `LazyFrame`. The conversion is free — no data is copied. Use this when you have already read data eagerly (e.g., from a CSV) but want to chain further operations with lazy optimization before collecting.
+
+_Reads the full OHLCV CSV into a 66,355-row eager `DataFrame`, then calls `.Lazy()` to obtain a `LazyFrame` — printing both shape and type to confirm the zero-copy conversion._
 
 ```csharp
 var dfEager = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
@@ -143,13 +149,17 @@ Console.WriteLine("Eager -> Lazy conversion is free (no copy).");
     LazyFrame type: LazyFrame
     Eager -> Lazy conversion is free (no copy).
 
-### Polars.NET | Collect
+### Executing and Inspecting the Plan
+
+#### Polars.NET | Collect and materialize results
 
 > [!warning] `.Collect()` is the execution trigger
 >
 > Nothing runs until you call `.Collect()`. A `LazyFrame` with filters, selects, and sorts is just a description of work — no computation happens. If you forget `.Collect()`, you will hold a `LazyFrame` with no results. For large datasets, call `.Head(100).Collect()` first to validate the plan before collecting the full result.
 
 `.Collect()` executes the optimized query plan and materializes the result as a `DataFrame`. This is the only point where data moves — Polars reads the file, applies filters, and evaluates expressions.
+
+_Executes the full lazy scan of `eurostoxx50_ohlcv.parquet` and materializes all 66,355 rows, then previews the first five rows to confirm the collected result._
 
 ```csharp
 var result = lf.Collect();
@@ -162,13 +172,15 @@ result.Head(5)
 
 <!-- Polars DataFrame: (5 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21163</td><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0</td><td>0</td><td>false</td></tr><tr><td>21164</td><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-### Polars.NET | Explain: inspect the optimized query plan
+#### Polars.NET | Explain the optimized query plan
 
 `lf.Explain()` returns the optimized query plan as a string. Read it to verify that filters and column selections have been pushed into the scan. The plan shows `PROJECT N/12 COLUMNS` for projection pushdown and `SELECTION: [...]` for predicate pushdown.
 
 > [!info] `Explain()` availability in Polars.NET 0.4.0
 >
 > `Explain()` may not be exposed in Polars.NET 0.4.0. The code below catches the exception gracefully. Regardless, Polars still applies all optimizations internally when you call `.Collect()` — you just cannot inspect the plan text in this version.
+
+_Scans `eurostoxx50_ohlcv.parquet` into a fresh `LazyFrame` and calls `Explain()` in a try/catch — in Polars.NET 0.4.0 the call succeeds, returning a plan string showing `PROJECT */12 COLUMNS` on the unfiltered frame with no pushdown applied._
 
 ```csharp
 try
@@ -205,9 +217,13 @@ These happen transparently. You write clear, readable code; Polars figures out t
 >
 > Do not manually reorder filters to "help" Polars. Write the query in logical order (scan → filter → select → aggregate). Polars will rewrite the plan into the optimal execution order automatically, including pushing filters inside the file scanner.
 
-### Polars.NET | Predicate pushdown
+### Predicate and Projection Pushdown
+
+#### Polars.NET | Predicate pushdown
 
 A filter applied to a `LazyFrame` is pushed into the file scanner at optimization time. Polars passes the predicate to the Parquet reader, which skips row groups that cannot match — so only qualifying rows are ever deserialized into memory.
+
+_Scans the OHLCV Parquet file with a `symbol == "SAP.DE"` predicate pushed into the row-group scanner, reducing 66,355 rows to 1,324 — only SAP.DE rows are ever deserialized into memory._
 
 ```csharp
 var lfFiltered = LazyFrame.ScanParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"))
@@ -223,9 +239,11 @@ dfFiltered.Head(5)
 
 <!-- Polars DataFrame: (5 rows, 12 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>5301</td><td>SAP.DE</td><td>2021-01-04</td><td>108.1</td><td>108.5</td><td>104.78</td><td>105.32</td><td>97.0102</td><td>2928515</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5302</td><td>SAP.DE</td><td>2021-01-05</td><td>104.98</td><td>106.2</td><td>104.46</td><td>105.04</td><td>96.7523</td><td>2798888</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5303</td><td>SAP.DE</td><td>2021-01-06</td><td>105.14</td><td>106.26</td><td>103.6</td><td>105.48</td><td>97.1576</td><td>3018802</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5304</td><td>SAP.DE</td><td>2021-01-07</td><td>105.58</td><td>105.7</td><td>104.04</td><td>104.52</td><td>96.2734</td><td>3176143</td><td>0</td><td>0</td><td>false</td></tr><tr><td>5305</td><td>SAP.DE</td><td>2021-01-08</td><td>105.14</td><td>106.72</td><td>105.04</td><td>106.18</td><td>97.8024</td><td>3068744</td><td>0</td><td>0</td><td>false</td></tr></tbody></table></div>
 
-### Polars.NET | Projection pushdown
+#### Polars.NET | Projection pushdown
 
 A `.Select()` on a `LazyFrame` is pushed into the Parquet scanner — only the requested columns are read from disk. Parquet's columnar format stores each column separately, so unselected columns are completely skipped. This is one of the largest memory and I/O savings in the Polars lazy API.
+
+_Selects four columns (`symbol`, `date`, `close`, `volume`) from a 12-column Parquet file — only those four byte ranges are read from disk, producing a (66355, 4) result while completely skipping the remaining eight columns._
 
 ```csharp
 var lfProjected = LazyFrame.ScanParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"))
@@ -241,9 +259,13 @@ dfProjected.Head(5)
 
 <!-- Polars DataFrame: (5 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>1370204</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>1469911</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>1428681</td></tr></tbody></table></div>
 
-### Polars.NET | Combined filter, select, and sort
+### Lazy Pipelines
+
+#### Polars.NET | Combined filter, select, and sort
 
 Chaining `.Filter()`, `.Select()`, and `.Sort()` on a `LazyFrame` builds a single query plan. Polars optimizes the full pipeline before any execution: the filter is pushed into the scan, only the four selected columns are read from disk, and the sort runs on the already-filtered result. Write the chain in the logical order that reads clearly — Polars handles the reordering.
+
+_Chains a `volume > 5,000,000` filter, a 4-column projection, and a descending `volume` sort into one lazy plan — the optimizer pushes the filter into the scanner, reducing 66,355 rows to 14,330 high-volume trades before applying the sort._
 
 ```csharp
 var lfCombined = LazyFrame.ScanParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"))
@@ -261,9 +283,11 @@ dfCombined.Head(10)
 
 <!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>volume</th></tr></thead><tbody><tr><td>ISP.MI</td><td>2023-08-08</td><td>2.338</td><td>376391539</td></tr><tr><td>SAN.MC</td><td>2021-10-20</td><td>3.36</td><td>367211467</td></tr><tr><td>ISP.MI</td><td>2023-05-31</td><td>2.1555</td><td>317362978</td></tr><tr><td>ISP.MI</td><td>2023-03-13</td><td>2.3305</td><td>311886033</td></tr><tr><td>SAN.MC</td><td>2021-11-03</td><td>3.31</td><td>306973344</td></tr><tr><td>SAN.MC</td><td>2022-10-19</td><td>2.6345</td><td>304539953</td></tr><tr><td>ISP.MI</td><td>2022-03-07</td><td>1.8432</td><td>286679922</td></tr><tr><td>ISP.MI</td><td>2021-02-03</td><td>1.9512</td><td>284805919</td></tr><tr><td>ISP.MI</td><td>2022-03-09</td><td>2.0725</td><td>284368758</td></tr><tr><td>ISP.MI</td><td>2023-03-15</td><td>2.2435</td><td>282185531</td></tr></tbody></table></div>
 
-### Polars.NET | Lazy GroupBy with aggregation
+#### Polars.NET | Lazy GroupBy with aggregation
 
 `.GroupBy().Agg()` in lazy mode builds the grouping and aggregation into the query plan. Polars can optimize the scan to only read the columns referenced in the grouping key and aggregation expressions. The `.Sort()` after `.Agg()` runs on the smaller grouped result, not the full dataset.
+
+_Groups all 66,355 OHLCV rows by `symbol` in a single lazy plan, computing mean close price, total traded volume, and day count per ticker — the final sort runs on the 50-row aggregated result, not the full dataset._
 
 ```csharp
 var lfGrouped = LazyFrame.ScanParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"))
@@ -285,9 +309,11 @@ dfGrouped.Head(10)
 
 <!-- Polars DataFrame: (10 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>avg_close</th><th>total_volume</th><th>num_days</th></tr></thead><tbody><tr><td>ISP.MI</td><td>3.147987207</td><td>115704541969</td><td>1321</td></tr><tr><td>SAN.MC</td><td>4.42584763</td><td>55513641918</td><td>1329</td></tr><tr><td>ENEL.MI</td><td>6.820438304</td><td>32600561934</td><td>1321</td></tr><tr><td>BBVA.MC</td><td>8.651954101</td><td>22133773194</td><td>1329</td></tr><tr><td>UCG.MI</td><td>28.45710447</td><td>18366801099</td><td>1321</td></tr><tr><td>ENI.MI</td><td>13.39762453</td><td>17141570967</td><td>1321</td></tr><tr><td>INGA.AS</td><td>14.03818783</td><td>17041577555</td><td>1331</td></tr><tr><td>IBE.MC</td><td>12.25531151</td><td>15994295949</td><td>1329</td></tr><tr><td>DTE.DE</td><td>22.43009743</td><td>10029411390</td><td>1324</td></tr><tr><td>NDA-FI.HE</td><td>10.84807887</td><td>7020342991</td><td>1306</td></tr></tbody></table></div>
 
-### Polars.NET | Lazy WithColumns: add computed columns
+#### Polars.NET | Lazy WithColumns: add computed columns
 
 `.WithColumns()` adds new expression-based columns to the query plan without materializing the DataFrame. All original columns are preserved alongside the new ones. Expressions passed to `.WithColumns()` are evaluated lazily — they run only at `.Collect()` time, after filters have reduced the row count.
+
+_Filters to SAP.DE (1,324 rows), then lazily adds `daily_range` (high − low) and `daily_change` (close − open) — both computed columns evaluate only at `.Collect()` time on the already-filtered subset._
 
 ```csharp
 var lfWithCols = LazyFrame.ScanParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"))
@@ -318,9 +344,13 @@ We compare **eager** vs **lazy** execution on real data to measure the impact of
 
 We use `Stopwatch` for timing and average over multiple iterations to reduce noise.
 
-### Polars.NET | Benchmark helper
+### Benchmark Setup
+
+#### Polars.NET | Benchmark helper
 
 A `Stopwatch`-based timing helper that runs warmup iterations to stabilize JIT compilation and OS file caching before measuring. Returns average, min, and max across the measured iterations. Warmup is important: the first run after cold-start will always be slower due to JIT and disk cache effects.
+
+_Defines a `Benchmark` static function that runs `warmup` iterations first to prime JIT and disk cache, then times `iterations` measured runs with a `Stopwatch` — returning average, minimum, and maximum elapsed milliseconds as a value tuple._
 
 ```csharp
 static (double avgMs, double minMs, double maxMs) Benchmark(Action action, int warmup = 2, int iterations = 5)
@@ -347,9 +377,13 @@ Console.WriteLine("Benchmark helper defined.");
 
     Benchmark helper defined.
 
-### Polars.NET | Eager vs Lazy: Parquet read + filter + select
+### Eager vs Lazy Benchmarks
+
+#### Polars.NET | Eager vs Lazy: Parquet read, filter, and select
 
 Benchmarks the same query (filter one exchange, select four columns) on a ~12M-row Parquet file using eager and lazy execution. Eager reads all 12 columns into memory first, then filters. Lazy pushes the filter and column selection into the Parquet scanner, reading only what it needs.
+
+_Runs 3 measured iterations of an `exchange == "XAMS"` filter plus 4-column select on a large Parquet file in both eager and lazy modes — lazy execution achieves ~9× speedup by pushing the predicate and projection into the Parquet scanner._
 
 ```csharp
 var benchPath = Path.Combine(DATA, "bench_large.parquet");
@@ -384,13 +418,15 @@ Console.WriteLine($"\nLazy is ~{speedup:F1}x faster than eager on this query.");
     
     Lazy is ~9.0x faster than eager on this query.
 
-### Polars.NET | Eager vs Lazy: CSV read + filter + select
+#### Polars.NET | Eager vs Lazy: CSV read, filter, and select
 
 CSV is a row-based format — unlike Parquet, it cannot skip columns without reading the full line. Projection pushdown has no effect on CSV. `LazyFrame.ScanCsv()` was not available in early Polars.NET builds; the code falls back to an eager-read + `.Lazy()` hybrid if `ScanCsv` throws.
 
 > [!info] Use Parquet for best lazy performance
 >
 > CSV must be fully scanned line by line regardless of which columns you request. Lazy CSV (`ScanCsv`) still applies predicate pushdown to skip non-matching rows, but column pruning does not apply. For data that you query repeatedly, convert to Parquet once and get true projection pushdown.
+
+_Benchmarks a `symbol == "ASML.AS"` filter on a ~2.5M-row CSV in eager and `ScanCsv` lazy modes, falling back to a `ReadCsv + .Lazy()` hybrid if `ScanCsv` is unavailable — showing only ~1.4× improvement since the CSV scanner must read every row regardless._
 
 ```csharp
 var csvBenchPath = Path.Combine(DATA, "bench_medium.csv");
@@ -443,9 +479,11 @@ catch (Exception ex)
     
     Lazy CSV speedup: ~1.4x
 
-### Polars.NET | Projection pushdown impact
+#### Polars.NET | Projection pushdown impact
 
 Measures the I/O savings from reading 2 columns vs all 12 columns from the same Parquet file. In a columnar format, each column is a separate byte range in the file — selecting fewer columns means less data read from disk, less decompression work, and less memory allocation.
+
+_Times two lazy scans of the same large Parquet file — one collecting all 12 columns, one selecting only `symbol` and `price` — isolating the I/O saving from column pruning and confirming a ~76% reduction in read time._
 
 ```csharp
 var projPath = Path.Combine(DATA, "bench_large.parquet");
@@ -472,9 +510,11 @@ Console.WriteLine($"\nProjection pushdown saves ~{(1 - twoColsAvg / allColsAvg) 
     
     Projection pushdown saves ~76% read time.
 
-### Polars.NET | Benchmark summary
+#### Polars.NET | Benchmark summary
 
 Assembles the benchmark results into a `DataFrame` for comparison. The `vs_eager` column shows the speedup factor relative to the eager Parquet baseline.
+
+_Constructs a 3-row summary `DataFrame` from the three benchmark averages, adding a `vs_eager` speedup ratio — showing lazy Parquet at ~9× and 2-column projection at ~8× relative to the full eager read baseline._
 
 ```csharp
 var summaryDf = new DataFrame(new Polars.CSharp.Series[]

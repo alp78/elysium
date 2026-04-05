@@ -459,6 +459,8 @@ dfFromDeedle.Head(5)
 
 Extract Polars columns via `ToArray<T>()`, then use `FrameBuilder.Columns<int, string>()` to assemble a Deedle `Frame`. Each column must be wrapped in a `Series<int, T>` with an explicit integer row index.
 
+_Extracts `symbol`, `close`, `volume`, and `open` from `dfPSmall` (100 rows) via `ToArray<T>()`, wraps each in a `Series<int, T>` with an integer row index, and assembles a Deedle `Frame` using `FrameBuilder.Columns<int, string>()` — producing a 100 × 4 Deedle frame._
+
 ```csharp
 var dfPSmall = dfP.Head(100);
 var dfPSmall = dfP.Head(100);
@@ -503,6 +505,8 @@ dfFromPolars.Rows[Enumerable.Range(0, 5)]
 
 Extract from the Deedle frame built in the previous cell, convert back to Polars, and compare numeric columns value by value. Floating-point equality uses an epsilon of `1e-10` to tolerate any precision rounding during the double conversion step.
 
+_Extracts `symbol` and `close` from the Deedle frame built in the previous cell, rebuilds a Polars `DataFrame`, and compares original `close` values against the round-tripped values using epsilon `1e-10` — confirming all 100 values match exactly._
+
 ```csharp
 var rtSymbols = dfFromPolars.GetColumn<string>("symbol").Values.ToArray();
 // Extract from Deedle frame we just built, convert back to Polars
@@ -540,6 +544,8 @@ Both libraries support CSV read and write. Polars.NET is more feature-rich: it a
 #### Polars.NET | Read CSV — separator, date parsing, row limits
 
 `tryParseDates: true` detects ISO-format date columns and parses them as the Polars `date` type during read, avoiding a separate conversion step. `nRows` limits rows loaded — useful for quick inspection of large files without reading the full dataset.
+
+_Reads the OHLCV CSV with `nRows=500` and `tryParseDates:true`, confirming the `date` column is parsed as `date` type; then reads `dim_country` in TSV and SSV formats using the `separator` char parameter, producing (212, 2) frames in both cases._
 
 ```csharp
 var dfCsv = DataFrame.ReadCsv(
@@ -580,6 +586,8 @@ dfTsv.Head(5)
 
 Deedle's `Frame.ReadCsv` accepts a `separators` string (plural, not a `char`). Pass `"\t"` for TSV or `";"` for SSV. Date columns are read as strings by default — explicit conversion is required afterward.
 
+_Reads `dim_country` in CSV, TSV (separator `"\t"`), and SSV (separator `";"`) formats using Deedle's `Frame.ReadCsv` with the `separators` string parameter, confirming all three produce a 212 × 2 frame and demonstrating that Deedle treats date columns as strings by default._
+
 ```csharp
 var dfDCsv = Frame.ReadCsv(Path.Combine(DATA, "dim_country.csv"));
 var dfDCsv = Frame.ReadCsv(Path.Combine(DATA, "dim_country.csv"));
@@ -618,6 +626,8 @@ dfDTsv.Rows[dfDTsv.RowKeys.Take(5)]
 
 `df.WriteCsv(path)` (Polars.NET) and `frame.SaveCsv(path)` (Deedle) both produce standard comma-separated output with column headers. Polars writes the full schema types as a header row; Deedle includes an integer row-index column by default.
 
+_Writes the first 50 rows of `dfP` to a temp CSV using `WriteCsv` and the first 50 rows of `dfD` using `SaveCsv`, then reads the Polars-written file back and confirms a (50, 12) shape — demonstrating that Polars CSV output is valid for round-trip read._
+
 ```csharp
 var csvOutPath = Path.Combine(DATA, "_temp_polars_write.csv");
 var csvOutPath = Path.Combine(DATA, "_temp_polars_write.csv");
@@ -654,6 +664,8 @@ Console.WriteLine($"\nPolars read-back: {dfReadBack.Shape}");
 #### Polars.NET | Read Parquet — schema and data
 
 `DataFrame.ReadParquet(path)` reads a Parquet file directly into a Polars.NET `DataFrame`. Parquet preserves column types across write/read cycles — unlike CSV, which represents all values as text and requires re-parsing. Files are typically 40–60% smaller than the equivalent CSV due to columnar compression.
+
+_Reads `eurostoxx50_ohlcv.parquet` into a Polars DataFrame, prints the 12-column schema showing preserved types (date, i64, f64, bool), and compares file sizes — confirming the Parquet file (2.4 MB) is 53% smaller than the equivalent CSV (5.0 MB)._
 
 ```csharp
 var dfParquet = DataFrame.ReadParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));
@@ -699,6 +711,8 @@ Console.WriteLine($"Compression:  {(1.0 - (double)parquetSize / csvSize) * 100:F
 
 `df.WriteParquet(path)` writes a Parquet file with Snappy compression by default. Reading the file back and comparing shapes confirms that Parquet preserves data integrity across the write/read cycle. Verify that types are preserved by inspecting column `DataTypeName` on the re-read frame.
 
+_Writes `dfWrite` (50 rows) to a temporary Parquet file using `WriteParquet`, reads it back with `ReadParquet`, and confirms the returned shape is (50, 12) — verifying that Polars Parquet I/O preserves structure across a write/read cycle._
+
 ```csharp
 var parquetOutPath = Path.Combine(DATA, "_temp_polars_write.parquet");
 var parquetOutPath = Path.Combine(DATA, "_temp_polars_write.parquet");
@@ -729,6 +743,8 @@ Console.WriteLine("Workaround: use Polars to read Parquet, convert to arrays, bu
 #### Polars.NET | Read and write JSON (NDJSON)
 
 `DataFrame.ReadJson(path)` reads NDJSON format. The `try/catch` handles the case where the method signature differs in earlier builds. For standard JSON arrays, use `System.Text.Json` to deserialize to typed records, then construct Polars `Series` manually.
+
+_Reads `dim_country.json` as NDJSON using `DataFrame.ReadJson`, displays the first 5 rows of the resulting (212, 2) DataFrame, writes it back to a temp JSON file (9,868 bytes), and wraps both operations in a try/catch to handle versions where the method is not available._
 
 ```csharp
 try
@@ -767,6 +783,8 @@ catch (Exception ex)
 #### Polars.NET | Full round-trip — CSV → Parquet → CSV
 
 Five-step integrity test: read CSV → write Parquet → read Parquet → write CSV → read CSV, comparing shapes and content at each step. This confirms that Polars I/O preserves both structure and data values across format conversions.
+
+_Executes a five-step integrity test on `dim_country.csv` (212, 2): reads CSV, writes Parquet (3,520 bytes), reads Parquet back, writes CSV (3,535 bytes), re-reads CSV — then verifies that row/column shapes match and all `country_name` values are identical between original and re-read._
 
 ```csharp
 var rtCsvPath = Path.Combine(DATA, "dim_country.csv");
@@ -816,6 +834,8 @@ Console.WriteLine($"Content match: {allMatch}");
 #### Polars.NET | Cleanup temp files
 
 Delete temporary files created during the I/O demos. Always run this cell after the notebook to keep the data directory clean.
+
+_Deletes the six temporary files created across the I/O demo cells (`_temp_polars_write.csv`, `_temp_deedle_write.csv`, `_temp_polars_write.parquet`, `_temp_polars_write.json`, `_temp_roundtrip.parquet`, `_temp_roundtrip.csv`) using `File.Exists` checks before each `File.Delete` call._
 
 ```csharp
 var tempFiles = new[]

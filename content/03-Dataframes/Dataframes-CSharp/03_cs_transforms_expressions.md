@@ -1151,6 +1151,8 @@ User-defined functions (UDFs) apply custom logic element-wise or row-wise. Polar
 > [!warning] MapElements not available in Polars.NET 0.4.0
 > The Python Polars `map_elements()` function has no direct equivalent in the .NET bindings at version 0.4.0. Use the extract-transform-add pattern shown below.
 
+_Filters to ASML.AS, extracts `close` values to a `double[]` with `.ToArray<double>()`, applies `Math.Log()` via LINQ, wraps the result as a named `Series`, and stacks it onto the DataFrame with `.HStack()` — adding `log_close` without rebuilding the frame._
+
 ```csharp
 var dfAsmlU = dfP
     .Filter(Col("symbol") == Lit("ASML.AS"))
@@ -1169,6 +1171,8 @@ dfUdf.Select("symbol", "date", "close", "log_close").Head(8)
 #### Deedle | Element-wise transform with Series.Select
 
 Deedle's `.Select()` is the natural UDF mechanism — it takes a lambda that receives each key-value pair and returns the transformed value. This is idiomatic Deedle and has no performance penalty relative to its normal operation model (all Deedle operations are eager and row-wise).
+
+_Extracts the ASML.AS `close` Series from a cloned frame and applies `Math.Log(kvp.Value)` in a `.Select()` lambda — adding `log_close` directly with `.AddColumn()`, with no array extraction or `.HStack()` required._
 
 ```csharp
 var asmlKeysU = dfD.GetColumn<string>("symbol")
@@ -1202,6 +1206,8 @@ dfDAsmlU.Columns[new[] { "symbol", "date", "close", "log_close" }].Rows[dfDAsmlU
 
 Multi-column row-wise conditions are best expressed with Polars' expression combinators using `&` (AND) and `|` (OR). This keeps the operation vectorized and optimizable. The volume column is cast to `Float64` for comparison with the `Lit()` constant.
 
+_Flags rows where close > open AND volume > 2,000,000 using `&` inside `IfElse`, adds the boolean `bullish_high_vol` column, then counts the 13,931 matching rows across all 66 K rows._
+
 ```csharp
 var dfRowWise = dfP.WithColumns(
     IfElse(
@@ -1222,6 +1228,8 @@ dfRowWise.Select("symbol", "date", "close", "open", "volume", "bullish_high_vol"
 #### Deedle | Row-wise apply with ZipInner
 
 The Deedle equivalent zips three Series together and applies a lambda that evaluates the combined condition. `.ZipInner()` chains for multi-column logic — each `.ZipInner()` adds one more series to the tuple.
+
+_Chains two `.ZipInner()` calls to zip `close`, `open`, and `volume` into a triple-tuple Series, applies a lambda evaluating both conditions simultaneously, and adds `bullish_high_vol` — confirming the same 13,931 count as Polars._
 
 ```csharp
 var cD = dfD.GetColumn<double>("close");

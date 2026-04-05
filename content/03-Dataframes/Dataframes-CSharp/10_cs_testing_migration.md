@@ -18,6 +18,8 @@ status: complete
 
 End-to-end analysis, validation, Pandas-to-Polars.NET guide.
 
+### Warning Suppression
+
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
@@ -36,6 +38,8 @@ var withWarningLevel = scriptOptions.GetType().GetMethod("WithWarningLevel");
 var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 ```
+
+### NuGet Packages and Imports
 
 ```csharp
 #r "nuget: Polars.NET, 0.4.0"
@@ -66,6 +70,8 @@ Console.WriteLine($"Data directory: {Path.GetFullPath(DATA)}");
 
     Data directory: c:\Users\aperi\DEV\LANG\data
 
+### Dataset Loading
+
 ```csharp
 var dfP = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), tryParseDates: true);
 var dimP = DataFrame.ReadCsv(Path.Combine(DATA, "index_dim.csv"));
@@ -82,7 +88,7 @@ Polars.NET ships no built-in testing module. The helpers below implement structu
 > [!info] No Deedle in this notebook
 > Deedle is not demonstrated here because it has no equivalent testing or validation API. The Polars.NET patterns below are the idiomatic C# approach and map closely to Python's `polars.testing` module — see the Python counterpart at [10_py_testing_migration](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/10_py_testing_migration).
 
-### Polars.NET | Assert DataFrame equality
+### Assert DataFrame Equality
 
 Compares two DataFrames for structural equality: row count, column count, column names, and column dtypes. Returns `true` on pass; prints each difference and returns `false` on fail.
 
@@ -90,6 +96,10 @@ Use this in unit tests for transformation functions — call after applying a kn
 
 > [!warning] Value comparison not included
 > This helper checks shape and `DataTypeName` only — it does **not** compare individual cell values. Polars.NET has no generic row-level equality method. For value comparison, use `.ToArray<T>()` on a specific type and compare with LINQ, or use `assert_frame_equal` in the Python layer.
+
+#### Polars.NET | Assert DataFrame equality
+
+_Defines `AssertDataFrameEqual` returning `bool`, then validates it with two calls on `dfP`: a self-check (66 355 rows, PASS) and a full-vs-head comparison that triggers a row-count mismatch failure — demonstrating both the PASS and FAIL output formats._
 
 ```csharp
 bool AssertDataFrameEqual(DataFrame left, DataFrame right, string label = "")
@@ -146,12 +156,16 @@ AssertDataFrameEqual(dfP, subset, "full vs head(10)");
     FAIL [full vs head(10)]:
       - Row count mismatch: 66355 vs 10
 
-### Polars.NET | Validate schema
+### Schema Validation
 
 Checks that a DataFrame contains the expected column names with the expected `DataTypeName` strings. Use this at the entry point of a pipeline to catch upstream changes to column names or type inference before they propagate.
 
 > [!info] `DataTypeName` vs `Dtype`
 > Column type is accessed via `series.DataTypeName` (a string like `"f64"`, `"str"`, `"i64"`) — not a `.Dtype` property or enum. Match against the lowercase Polars type name strings used in the expression API.
+
+#### Polars.NET | Validate schema
+
+_Defines `ValidateSchema`, builds a 6-column expected schema for OHLCV data (`symbol` str, four f64 price columns, `volume` i64), and runs it against `dfP` — printing PASS when all column names and `DataTypeName` strings match._
 
 ```csharp
 void ValidateSchema(DataFrame df, Dictionary<string, string> expectedSchema, string label = "")
@@ -197,12 +211,16 @@ ValidateSchema(dfP, expectedOhlcv, "OHLCV schema");
 
     PASS [OHLCV schema]: Schema matches (6 columns validated)
 
-### Polars.NET | Null audit
+### Null Audit
 
 Counts nulls per column and flags any column exceeding a configurable percentage threshold. Use this as a data-completeness gate before analytics — high null rates in key columns indicate upstream ingestion problems.
 
 > [!info] `NullCount` is a property, not a method
 > Access null counts via `df.Column(col).NullCount` — a property on `Series`. There is no `df.NullCount()` method on `DataFrame` as in Python's `df.null_count()`.
+
+#### Polars.NET | Null audit
+
+_Defines `NullAudit` with a configurable threshold, loads `scores_daily.csv` (466 rows, 35 columns), and audits at 1% — flagging `pb_zscore` (1.3%), `ev_ebitda_zscore` (15.2%), `yield_zscore` (7.5%), and `recommendation_mean` (3.0%) as exceeding the threshold while leaving 31 columns clear._
 
 ```csharp
 void NullAudit(DataFrame df, double threshold = 0.05, string label = "")
@@ -276,12 +294,16 @@ NullAudit(scP, 0.01, "scores_daily");
     -------------------------------------------------------
     WARNING: 4 column(s) exceed null threshold.
 
-### Polars.NET | Detect duplicate keys
+### Duplicate Key Detection
 
 Groups by the primary key columns and counts occurrences; filters groups with count > 1. Use this before inserts or joins to enforce uniqueness constraints.
 
 > [!warning] `GroupBy().Count()` does not exist
 > Polars.NET has no `.Count()` shortcut on `GroupBy`. Use `.Agg(Col("any_col").Count().Alias("row_count"))` then filter the result. This differs from Python where `df.group_by("k").len()` works directly.
+
+#### Polars.NET | Detect duplicate keys
+
+_Groups `dfP` by `date` and `symbol`, aggregates with `.Count().Alias("row_count")`, and filters for groups where `row_count > 1` — confirming zero duplicate keys in the 66 355-row EuroStoxx 50 OHLCV dataset._
 
 ```csharp
 var dupes = dfP
@@ -307,12 +329,16 @@ else
       Groups with duplicates: 0
       PASS: No duplicate keys found.
 
-### Polars.NET | Verify OHLC consistency
+### OHLC Consistency Check
 
 Adds boolean columns for each relationship rule (`high >= low`, `close >= low`, `close <= high`), then counts violations using `.ToArray<int>()` and LINQ. Use this as a domain-specific data quality gate for financial OHLCV data.
 
 > [!warning] Use C# comparison operators, not Polars method calls
 > Polars.NET translates C# native operators (`>=`, `<=`, `==`) into expression trees. Do **not** use `.Gt()`, `.Lt()`, `.GtEq()` — these methods do not exist in Polars.NET. This differs from Python where `pl.col("a") >= pl.col("b")` uses Python operator overloading in the same way.
+
+#### Polars.NET | Verify OHLC consistency
+
+_Adds `high_gte_low`, `close_gte_low`, and `close_lte_high` boolean columns via C# comparison operators, casts each to `Int32`, extracts as `int[]` via `.ToArray<int>()`, and counts zeros with LINQ — finding zero violations across all 66 355 rows._
 
 ```csharp
 var ohlcCheck = dfP
@@ -364,12 +390,16 @@ flowchart LR
     E -- fail --> G[quarantine]
 ```
 
-### Polars.NET | Chainable assertion guards
+### Chainable Assertion Guards
 
 Defines three guard functions — `AssertNoNulls`, `AssertUnique`, `AssertInRange` — each taking a `DataFrame`, validating a constraint, and returning the same `DataFrame` unchanged so calls can be chained. Throws `Exception` on violation so the pipeline stops immediately with a clear message.
 
 > [!tip] Chainable pipeline guards
 > Returning `DataFrame` from each guard enables a declarative chain: `var validated = AssertNoNulls(df, cols).AssertUnique(...)`. This is the idiomatic pattern in Polars.NET — equivalent to using `.pipe(assert_fn)` in Python Polars.
+
+#### Polars.NET | AssertNoNulls, AssertUnique, AssertInRange
+
+_Defines `AssertNoNulls`, `AssertUnique`, and `AssertInRange` — each returning `DataFrame` to enable chaining — then chains all three on `dfP`, validating that `symbol` and `date` have no nulls, `(date, symbol)` is a unique key, and `volume` is non-negative._
 
 ```csharp
 DataFrame AssertNoNulls(DataFrame df, string[] columns, string label = "")
@@ -432,12 +462,16 @@ catch (Exception ex)
       AssertInRange [volume]: PASS ('volume' in [0, 1.7976931348623157E+308])
     All assertions passed.
 
-### Polars.NET | Referential integrity check
+### Referential Integrity Check
 
 Finds orphan rows — records in the fact table whose key has no matching row in the dimension table — using an anti-join. Returns only the rows from the left frame that have no match on the right. Use before loading fact data to verify all foreign keys resolve.
 
 > [!info] Anti-join syntax
 > `JoinType.Anti` keeps only left-frame rows that have **no** match on the join keys. Syntax: `df.Join(other, new[] { Col("key") }, new[] { Col("key") }, JoinType.Anti)`. The right frame's columns are not included in the output.
+
+#### Polars.NET | Referential integrity check
+
+_Extracts the 50 unique symbols from `dfP` via `.Select(Col("symbol")).Unique()`, then anti-joins against `dimP` (169 rows) to find symbols with no dimension record — confirming zero orphans and full referential integrity._
 
 ```csharp
 var uniqueSymbols = dfP
@@ -473,12 +507,16 @@ else
       Orphan symbols:          0
       PASS: All symbols have dimension records.
 
-### Polars.NET | Date gap detection
+### Date Gap Detection
 
 Computes the interval between consecutive trading dates per symbol using `.Shift(1)` on the date column, then filters for gaps exceeding a threshold. Trading calendars have regular weekend gaps (3 days); gaps > 4 calendar days indicate a missed trading day or data outage.
 
 > [!warning] Polars durations are in microseconds
 > `Col("date") - Col("date").Shift(1)` produces a Duration column in **microseconds**, not days. Cast to `Int64` to get raw μs, then compare against `4L * 24 * 60 * 60 * 1_000_000` for a 4-day threshold. The output column `date_diff` displays as `432000000000us` — divide by `86_400_000_000` to convert to days.
+
+#### Polars.NET | Date gap detection
+
+_Filters `dfP` to `ASML.AS` (1 331 trading days), sorts by date, computes consecutive date differences via `Col("date") - Col("date").Shift(1)` (Duration in microseconds), casts to `Int64` for comparison, and identifies 7 gaps exceeding 4 calendar days — holiday clusters around Easter and Christmas._
 
 ```csharp
 var sym = "ASML.AS";
@@ -523,9 +561,13 @@ else
 
 <!-- Polars DataFrame: (7 rows, 2 columns) --><table><thead><tr><th>date</th><th>date_diff</th></tr></thead><tbody><tr><td>2021-04-06</td><td>432000000000us</td></tr><tr><td>2022-04-19</td><td>432000000000us</td></tr><tr><td>2023-04-11</td><td>432000000000us</td></tr><tr><td>2023-12-27</td><td>432000000000us</td></tr><tr><td>2024-04-02</td><td>432000000000us</td></tr><tr><td>2025-04-22</td><td>432000000000us</td></tr><tr><td>2025-12-29</td><td>432000000000us</td></tr></tbody></table></div>
 
-### Polars.NET | Quarantine pattern
+### Quarantine Pattern
 
 Splits a DataFrame into a `good` partition (rows passing all quality rules) and a `bad` partition (rows failing any rule) using complementary filter expressions. Bad rows are not discarded — they are routed to a quarantine table for investigation. Confirm `good.Height + bad.Height == total` as a sum check.
+
+#### Polars.NET | Quarantine pattern
+
+_Applies three quality rules (`close.IsNotNull()`, `volume > 0`, `high >= low`) using `&` and complementary `|` expressions to split `dfP` into 65 704 good rows and 651 quarantine rows — confirming `good.Height + bad.Height == 66 355`._
 
 ```csharp
 var qualityRules =
@@ -600,9 +642,13 @@ Many Python idioms do not translate 1:1 — pay close attention to the gotchas c
 | **Map elements** | `col.map_elements(fn)` | Extract array + LINQ + `Series.From` + `HStack` | No `MapElements` — manual loop |
 | **Add column** | `df.with_columns(series)` | `df.HStack(series)` | `WithColumn` for expressions; `HStack` for Series |
 
-### Polars.NET | Migration demo pipeline
+### End-to-End Migration Demo
 
 Translates a typical Python Polars analysis pipeline step-by-step to idiomatic C# Polars.NET. The Python version uses `when().then().otherwise()` for the conditional column; the C# version replaces this with `IfElse()`. Grouping and aggregation syntax is nearly identical.
+
+#### Polars.NET | Migration demo pipeline
+
+_Filters `dfP` to `ASML.AS`, computes `intraday_change` as `close - open`, classifies each day as "up" or "down" via `IfElse()` in place of Python's `when/then/otherwise`, then groups by direction — showing that "up" days average a slightly higher close (675.32) and total volume (476 M) than "down" days (667.18 / 468 M)._
 
 ```csharp
 // Python equivalent:
@@ -652,12 +698,16 @@ display(pipeline);
 
 When a multi-step pipeline produces unexpected results, break it into named variables and inspect shape and head at each step. Polars.NET has no `.pipe()` method, so the equivalent pattern is intermediate variable assignment.
 
-### Polars.NET | Step-by-step pipeline inspection
+### Step-by-Step Pipeline Inspection
 
 Breaks a pipeline into named steps (`step1`, `step2`, `step3`), printing shape and a `.Head(3)` preview after each. Use this to localize where a pipeline produces wrong row counts, unexpected nulls, or wrong column values.
 
 > [!tip] Inspect at each step
 > Polars.NET DataFrames are **immutable** — each operation returns a new frame. Assigning intermediate results to named variables has zero cost (no data is copied) and makes inspection trivial. This is the preferred alternative to Python's `.pipe(debug_fn)` pattern.
+
+#### Polars.NET | Step-by-step pipeline inspection
+
+_Materialises three named intermediates for `SAN.MC` — `step1` (1 329 rows, filter only), `step2` (1 329 rows with `daily_return_pct` added via Shift-based formula), and `step3` (141 high-volatility days with return outside ±3%) — printing shape and `.Head(3)` at each stage._
 
 ```csharp
 Console.WriteLine("=== Step 1: Filter to single symbol ===");
@@ -701,12 +751,16 @@ display(step3.Head(5));
 
 <!-- Polars DataFrame: (5 rows, 13 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th><th>daily_return_pct</th></tr></thead><tbody><tr><td>10580</td><td>SAN.MC</td><td>2021-01-06</td><td>2.6495</td><td>2.7925</td><td>2.6295</td><td>2.7525</td><td>2.3048</td><td>73687945</td><td>0</td><td>0</td><td>false</td><td>6.872451951</td></tr><tr><td>10593</td><td>SAN.MC</td><td>2021-01-25</td><td>2.5985</td><td>2.6185</td><td>2.4755</td><td>2.49</td><td>2.085</td><td>50395819</td><td>0</td><td>0</td><td>false</td><td>-3.525765207</td></tr><tr><td>10595</td><td>SAN.MC</td><td>2021-01-27</td><td>2.51</td><td>2.524</td><td>2.422</td><td>2.4325</td><td>2.0369</td><td>55168498</td><td>0</td><td>0</td><td>false</td><td>-3.948667325</td></tr><tr><td>10599</td><td>SAN.MC</td><td>2021-02-02</td><td>2.438</td><td>2.5615</td><td>2.4315</td><td>2.537</td><td>2.1244</td><td>74092009</td><td>0</td><td>0</td><td>false</td><td>4.964832437</td></tr><tr><td>10601</td><td>SAN.MC</td><td>2021-02-04</td><td>2.57</td><td>2.7045</td><td>2.5385</td><td>2.69</td><td>2.2525</td><td>91259735</td><td>0</td><td>0</td><td>false</td><td>5.324980423</td></tr></tbody></table></div>
 
-### Polars.NET | Peek helper for chain debugging
+### Peek Helper for Chain Debugging
 
 Defines a `Peek` helper that prints shape + head and returns the input `DataFrame` unchanged, enabling it to be inserted anywhere inside a chained expression without breaking the chain.
 
 > [!tip] Use Peek for chain debugging
 > Since Polars.NET has no `.pipe()` method, wrap each intermediate result in `Peek(...)` to observe it mid-chain. Remove `Peek` calls before production — the `display()` call targets the .NET Interactive kernel.
+
+#### Polars.NET | Peek helper for chain debugging
+
+_Defines `Peek` as a pass-through that prints shape + `.Head(3)` and returns the same `DataFrame`, then wraps three stages of a `BNP.PA` pipeline — filter (1 331 rows), sort, and `WithColumns` adding `daily_range = high - low` — confirming zero overhead on the chain._
 
 ```csharp
 DataFrame Peek(DataFrame df, string label = "")
@@ -746,12 +800,16 @@ var result = Peek(
 
 <!-- Polars DataFrame: (3 rows, 13 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th><th>daily_range</th></tr></thead><tbody><tr><td>25123</td><td>BNP.PA</td><td>2021-01-04</td><td>43.86</td><td>43.915</td><td>42.64</td><td>43.01</td><td>30.4027</td><td>3025708</td><td>0</td><td>0</td><td>false</td><td>1.275</td></tr><tr><td>25124</td><td>BNP.PA</td><td>2021-01-05</td><td>42.72</td><td>43.475</td><td>42.315</td><td>42.92</td><td>30.3391</td><td>2852830</td><td>0</td><td>0</td><td>false</td><td>1.16</td></tr><tr><td>25125</td><td>BNP.PA</td><td>2021-01-06</td><td>43.97</td><td>46.01</td><td>43.78</td><td>45.29</td><td>32.0143</td><td>5959237</td><td>0</td><td>0</td><td>false</td><td>2.23</td></tr></tbody></table></div>
 
-### Polars.NET | Stopwatch profiling
+### Stopwatch Pipeline Profiling
 
 Wraps each pipeline step in `sw.Restart()` / `sw.Stop()` calls and accumulates timings into a list. Polars.NET has no `.profile()` method (unlike Python Polars' `.lazy().profile()`), so `Stopwatch` is the standard approach for identifying bottlenecks.
 
 > [!info] Polars.NET vs Python profiling
 > Python Polars supports `.lazy().profile()` which returns per-node execution times from the query optimizer. Polars.NET has no equivalent — use `Stopwatch` per step. For large datasets, the most expensive step is typically `ReadCsv` (I/O bound) or `GroupBy+Agg` (CPU bound).
+
+#### Polars.NET | Stopwatch profiling
+
+_Times six pipeline steps on the full EuroStoxx 50 dataset: `ReadCsv` (5 ms), then `Filter`, `Sort`, `WithColumns`, `GroupBy+Agg`, and `Join` (all 0 ms) — confirming that I/O dominates and in-memory columnar operations on 66 355 rows are effectively zero-cost._
 
 ```csharp
 var sw = new Stopwatch();

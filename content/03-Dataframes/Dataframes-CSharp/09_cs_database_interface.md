@@ -22,6 +22,8 @@ SQL queries against DataFrames (Polars.NET SQL, DuckDB.NET) and SQL Server conne
 
 This notebook uses Polars.NET for in-memory DataFrame operations, DuckDB.NET for in-process SQL analytics, and Microsoft.Data.SqlClient for SQL Server connectivity. The suppress cell below silences assembly version warnings that .NET Interactive emits for NuGet packages targeting .NET 8/9 — run it once before any other cell.
 
+### Warning Suppression
+
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
@@ -40,6 +42,8 @@ var withWarningLevel = scriptOptions.GetType().GetMethod("WithWarningLevel");
 var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 ```
+
+### NuGet Packages and Imports
 
 #### Setup | Install NuGet packages and import namespaces
 
@@ -106,6 +110,8 @@ Console.WriteLine($"SQL Server: {SQL_CONN.Split(';')[0]}");
 #### Polars.NET | Probe for SQLContext using reflection
 
 Uses reflection to scan all types in the Polars.NET assembly for anything SQL-related. The result tells us whether `SqlContext` is present at all — and if so, whether it is usable from the public API.
+
+_Loads `eurostoxx50_ohlcv.csv` (66,355 rows), then scans the `Polars.CSharp` assembly for any type name containing "SQL", "Sql", or "Context" — confirming that `Polars.CSharp.SqlContext` exists in the binary but is not exposed through the public API._
 
 ```csharp
 // Polars (Rust) has SQLContext for running SQL against DataFrames.
@@ -180,6 +186,8 @@ DuckDB is an in-process OLAP database — no server, no daemon, no configuration
 
 .NET Interactive doesn't auto-copy native binaries from NuGet runtime folders. The cell below locates `duckdb.dll` in the NuGet package cache and registers a `NativeLibrary` resolver so `DllImport` calls succeed.
 
+_Resolves `duckdb.dll` from `~/.nuget/packages/duckdb.net.bindings.full/1.3.0/runtimes/win-x64/native/` and registers a `NativeLibrary` resolver on each DuckDB assembly so P/Invoke calls succeed inside .NET Interactive._
+
 ```csharp
 // Find the DuckDB assembly and set native DLL resolver
 var duckdbDir = Path.Combine(
@@ -227,6 +235,8 @@ foreach (var asm in AppDomain.CurrentDomain.GetAssemblies()
 #### DuckDB | Define DuckDbToPolars and SqlToPolars helpers
 
 Both helpers share the same pattern: execute a SQL string, read the `IDataReader` column by column, and construct a `Polars.CSharp.Series` array. Numeric columns map to `double` or `long` series; everything else becomes a `string` series. `null` database values become `double.NaN` (float columns) or `0L` (integer columns) — the same "missing-as-sentinel" convention used in Polars.NET. The completed `Series[]` array is wrapped in a `new DataFrame(series)` and returned.
+
+_Defines `DuckDbToPolars()` for DuckDB `IDataReader` results and `SqlToPolars()` for SQL Server results — both mapping `double`/`float`/`decimal` columns to f64 Series, `long`/`int` to i64 Series, and all other types (including `DateTime`) to string Series._
 
 ```csharp
 // Reusable helper: execute DuckDB SQL → Polars DataFrame
@@ -311,6 +321,8 @@ Console.WriteLine("DuckDbToPolars() and SqlToPolars() helpers ready.");
 
 Creates a small in-memory DuckDB table with three rows, queries it with `SELECT *`, and converts the result to a Polars DataFrame via the helper. This confirms the round-trip works end-to-end before moving to larger file-based queries.
 
+_Creates an in-memory DuckDB `demo` table with three rows (`alpha=10.5`, `beta=20.3`, `gamma=30.1`), queries it with `SELECT * ORDER BY id`, and converts the result via `DuckDbToPolars()` — verifying the full in-memory round-trip produces a 3-row Polars DataFrame._
+
 ```csharp
 // DuckDB in-memory — create table, query, return as Polars DataFrame
 DataFrame demoResult;
@@ -333,6 +345,8 @@ demoResult
 
 DuckDB's `read_parquet()` reads the file on disk without loading it into memory first. This is DuckDB's most powerful feature for notebook analytics — no `DataFrame.ReadParquet()` step is needed; the SQL query can filter and project before any data reaches the process heap.
 
+_Queries `eurostoxx50_ohlcv.parquet` via `read_parquet()` with `LIMIT 10`, returning the first 10 rows across all 12 columns as a Polars DataFrame — with no intermediate `DataFrame.ReadParquet()` step._
+
 ```csharp
 DataFrame result;
 // DuckDB → Polars — query Parquet file directly, no intermediate load
@@ -351,6 +365,8 @@ result
 
 `read_csv_auto()` infers column types automatically. Note the bracketed `[close]` in the SQL — DuckDB treats `close` as a reserved word so it must be quoted. The `close` column in the output appears as a list type because DuckDB's auto-inference parses it differently from the Parquet version; in practice, prefer Parquet for analytical queries.
 
+_Queries `eurostoxx50_ohlcv.csv` via `read_csv_auto()`, selecting `symbol`, `date`, `[close]` (bracketed because `close` is a DuckDB reserved word), and `volume` for 10 rows — demonstrating that CSV auto-inference parses `close` as a list type rather than a scalar, unlike the Parquet path._
+
 ```csharp
 DataFrame result;
 // DuckDB → Polars — query CSV file directly
@@ -368,6 +384,8 @@ result
 #### DuckDB | GROUP BY aggregation on Parquet
 
 Computes per-symbol statistics — row count, average close price, average volume — directly from the Parquet file using a `GROUP BY` query. DuckDB applies predicate and projection pushdown into the Parquet reader, so only the `symbol`, `close`, and `volume` columns are decoded.
+
+_Runs `GROUP BY symbol` on the full OHLCV Parquet file — computing `COUNT(*)`, `ROUND(AVG(close), 2)`, and `ROUND(AVG(volume), 0)` for all 50 EuroStoxx symbols — then returns the 10 highest average-close symbols ordered descending._
 
 ```csharp
 DataFrame result;
@@ -396,6 +414,8 @@ result
 #### DuckDB | LAG, running average, and daily return
 
 Demonstrates three window function patterns over a partitioned time series: `LAG(close, 1)` retrieves the previous day's close, `AVG(close) OVER (ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)` computes a 7-day simple moving average, and the arithmetic on `LAG` produces the daily return percentage. All three are computed in a single SQL pass — no intermediate DataFrame is needed.
+
+_Filters the Parquet file to `ASML.AS` and computes three `PARTITION BY symbol ORDER BY date` window expressions in a single pass: `LAG(close, 1)` for the previous-day close, daily return percentage from the LAG, and a 7-day simple moving average (`ROWS BETWEEN 6 PRECEDING AND CURRENT ROW`) — returning the 10 most recent rows._
 
 ```csharp
 DataFrame result;
@@ -430,6 +450,8 @@ result
 #### DuckDB | Multi-step CTE: daily returns and annualised volatility
 
 A two-step CTE computes per-symbol daily returns in the first stage (`daily_returns`) and then aggregates them into volatility statistics in the second stage (`volatility`). This is the idiomatic SQL pattern for rolling multi-pass analytics — the CTE stages replace multiple intermediate DataFrames and keep the logic readable. `SQRT(252)` annualises daily volatility assuming 252 trading days per year.
+
+_Builds a two-stage CTE over the full Parquet file: `daily_returns` computes `(close - LAG(close)) / LAG(close) * 100` per symbol per day, then `volatility` aggregates into `STDDEV(ret)`, `AVG(ret)`, and `daily_vol * SQRT(252)` — returning the 10 most volatile EuroStoxx symbols by annualised volatility._
 
 ```csharp
 DataFrame result;
@@ -470,6 +492,8 @@ result
 #### DuckDB | Export query result to Parquet using COPY TO
 
 `COPY (...) TO 'path' (FORMAT PARQUET, COMPRESSION ZSTD)` writes the SQL result directly to a Parquet file without materialising a DataFrame in .NET memory first. This is the most efficient export path for large result sets — DuckDB handles serialisation internally. The output path must use forward slashes on Windows.
+
+_Filters to `ASML.AS`, computes `COUNT(*)`, `ROUND(AVG(close), 4)`, and `ROUND(STDDEV(close), 4)` in a single SQL query, then writes the single-row result directly to `asml_agg.parquet` using `COPY (...) TO` with `FORMAT PARQUET, COMPRESSION ZSTD` — bypassing any .NET memory allocation for the serialised output._
 
 ```csharp
 var outPath = Path.GetFullPath(Path.Combine(DATA, "asml_agg.parquet")).Replace("\\", "/");
@@ -516,6 +540,8 @@ The query patterns used here follow the same SQL fundamentals documented in [sql
 
 Opens a `SqlConnection`, queries `INFORMATION_SCHEMA.TABLES`, and converts the result to a Polars DataFrame via `SqlToPolars()`. The connection string is loaded from the `.env` file at setup time — credentials are never hardcoded.
 
+_Opens a `SqlConnection` to `localhost,1434/stoxx`, queries `INFORMATION_SCHEMA.TABLES` ordered by schema and name, and loads all 22 rows into a Polars DataFrame via `SqlToPolars()` — confirming connectivity and listing all user tables in the `stoxx` database._
+
 ```csharp
 // List all tables from SQL Server into Polars DataFrame
 try
@@ -546,6 +572,8 @@ catch (Exception ex)
 #### SQL Server | GROUP BY aggregate query via SqlToPolars
 
 Runs a `GROUP BY` aggregation on `bronze.eurostoxx50_ohlcv` and returns the result as a Polars DataFrame. `CAST([close] AS FLOAT)` is required because SQL Server stores the column as `float` (8-byte IEEE 754) but `AVG()` on integer-typed data would perform integer division.
+
+_Runs `GROUP BY symbol` on `bronze.eurostoxx50_ohlcv` — computing `AVG(CAST([close] AS FLOAT))` and `AVG(CAST([volume] AS FLOAT))` for all 50 symbols ordered by average close descending — and loads the 50-row result into a Polars DataFrame via `SqlToPolars()`._
 
 ```csharp
 DataFrame result;
@@ -579,6 +607,8 @@ result
 
 Reads the most recent rows for all symbols, ordered by date descending. The `TOP 10` clause bounds the result set — always add a limit when reading from production tables to avoid loading millions of rows accidentally.
 
+_Reads `TOP 10` rows from `bronze.eurostoxx50_ohlcv` — selecting `symbol`, `date`, `close`, and `volume` ordered by `date DESC` — and converts the result to a Polars DataFrame, demonstrating `TOP N` as a safe guard against accidental full-table scans._
+
 ```csharp
 // Read rows from SQL Server into Polars DataFrame using Dapper + SqlToPolars
 try
@@ -603,6 +633,8 @@ catch (Exception ex)
 #### SQL Server | Parameterized queries (two approaches)
 
 Parameterized queries prevent SQL injection by keeping user-supplied values separate from the query string. Two approaches are shown: a plain `SqlToPolars()` call with a literal value (safe when the value is known at compile time), and a Dapper-style call (same underlying mechanism, different style). For user-supplied input always use `SqlCommand` with `@param` parameters.
+
+_Queries `bronze.eurostoxx50_ohlcv` twice on the same open connection — `TOP 5` rows for `SAP.DE` then `TOP 5` for `SIE.DE` — using `SqlToPolars()` with literal filter values, and includes a callout explaining when `SqlCommand` with `@param` parameters is required for user-supplied input._
 
 > [!warning] Never interpolate user input into SQL strings
 >
@@ -648,6 +680,8 @@ catch (Exception ex)
 #### SQL Server | Bulk insert via SqlBulkCopy
 
 `SqlBulkCopy` streams a `DataTable` to SQL Server using the TDS bulk-load protocol — typically 10,000–100,000 rows/second depending on network and row size. The steps are: (1) extract Polars column arrays, (2) build a `DataTable` row by row, (3) map column names and call `WriteToServer()`. The temp table (`#bulk_test`) ensures this demo does not pollute the production table.
+
+_Filters `eurostoxx50_ohlcv.csv` to 100 rows of `ASML.AS`, converts the 7 Polars columns to a `DataTable` row by row, creates a temporary `#bulk_test` table, and streams all 100 rows via `SqlBulkCopy.WriteToServer()` — reporting elapsed milliseconds to confirm the bulk-load throughput._
 
 > [!tip] SqlBulkCopy is 10–100× faster than INSERT loops
 >
@@ -742,6 +776,8 @@ catch (Exception ex)
 #### SQL Server | List tables and column details from INFORMATION_SCHEMA
 
 `INFORMATION_SCHEMA.TABLES` lists all user tables and views. `INFORMATION_SCHEMA.COLUMNS` gives column names, data types, nullability, and defaults. Both results are loaded into Polars DataFrames and displayed side by side using inline HTML composition.
+
+_Queries `INFORMATION_SCHEMA.TABLES` for all 22 tables in `stoxx` and `INFORMATION_SCHEMA.COLUMNS` for the 12 columns of `bronze.eurostoxx50_ohlcv` — loads both into Polars DataFrames, then renders them side by side in a `display:flex` HTML layout using inline `FormatDf()` formatting._
 
 ```csharp
 // Read schema from SQL Server into Polars DataFrames, display side by side

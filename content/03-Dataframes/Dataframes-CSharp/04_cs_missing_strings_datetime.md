@@ -1267,6 +1267,8 @@ Shifting a column by N positions creates lagged (previous) or lead (future) vers
 
 `Shift(n)` offsets the column values by `n` positions. Positive `n` shifts down (lag — previous values), negative shifts up (lead — future values). The resulting nulls at the edges represent the missing boundary values.
 
+_Shifts `close` by 1 position for `ABI.BR`, creating `prev_close` — the first row (2021-01-04) has `null` for `prev_close`, while subsequent rows show the prior day's closing price (57.21, 57.18, etc.)._
+
 ```csharp
 var abiPrices = dfP.Filter(Col("symbol") == Lit("ABI.BR"));
 var abiShifted = abiPrices.WithColumns(
@@ -1283,6 +1285,8 @@ abiShifted.Select(new[] { "date", "close", "prev_close" }).Head(5)
 #### Deedle | Shift a series with Shift()
 
 Deedle's `Shift(n)` works the same as Polars — positive `n` shifts down, creating a lag. Missing values at the boundary are represented as Deedle's `<missing>`.
+
+_Applies `Shift(1)` to the `close` series for `ABI.BR` rows, assembling a 3-column frame — the first row shows `<missing>` for `prev_close`, while rows 1–4 show the lagged price values._
 
 ```csharp
 var abiDRows = dfD.Where(row => row.Value.GetAs<string>("symbol") == "ABI.BR");
@@ -1318,6 +1322,8 @@ Cumulative (running) aggregations compute a value that grows from the first row 
 
 `CumSum()` computes the running total of a numeric column. Each row's value is the sum of all preceding values plus the current value. Nulls are skipped (treated as 0 in the running total).
 
+_Computes `cum_volume` as the running total of daily volume for `ABI.BR` — the first 10 rows grow from 1,513,937 on 2021-01-04 to 14,717,364 on 2021-01-15._
+
 ```csharp
 var abiCum = abiPrices.WithColumns(
     Col("volume").CumSum().Alias("cum_volume")
@@ -1330,6 +1336,8 @@ abiCum.Select(new[] { "date", "volume", "cum_volume" }).Head(10)
 #### Deedle | Cumulative sum with manual running total
 
 Deedle does not have a built-in `CumSum()` method. Compute it manually by iterating over the series values and maintaining a running total. For large series, this is less efficient than Polars' native implementation.
+
+_Iterates over `ABI.BR` volume values, maintains a `running` double, and builds `cum_volume` — the last 10 rows confirm matching totals to the Polars result (e.g., 14,717,364 on 2021-01-15)._
 
 ```csharp
 var volSeries = abiDRows.GetColumn<double>("volume");
@@ -1371,6 +1379,8 @@ Filtering rows by date range is the most common datetime operation — selecting
 
 Combine `Dt.Year()`, `Dt.Month()`, and column equality expressions with `&` (and) to build complex date filters. Each component comparison returns a boolean expression; combine with `&` for intersection.
 
+_Filters `dfP` for `symbol == "SAP.DE"` AND `year == 2024` AND `month == 1`, returning 22 trading days — from 2024-01-02 (close=137.34) to 2024-01-31 (close=160.80)._
+
 ```csharp
 var jan2024 = dfP.Filter(
     (Col("date").Dt.Year() == Lit(2024))
@@ -1388,6 +1398,8 @@ jan2024.Select(new[] { "symbol", "date", "close", "volume" })
 #### Deedle | Filter by date range with DateTime lambda
 
 Use `frame.Where()` with a row predicate that parses the date string and checks year/month components. This is verbose but gives full access to .NET's `DateTime` comparison operators.
+
+_Uses `frame.Where()` with a row predicate that parses each date string and checks `symbol == "SAP.DE"`, `Year == 2024`, `Month == 1` — returning the same 22 January 2024 trading days as the Polars result._
 
 ```csharp
 var jan2024D = dfD.Where(row =>
@@ -1424,6 +1436,8 @@ Generate a sequence of dates between a start and end point. Useful for building 
 
 Build date strings with `Enumerable.Range` and `AddDays`, then parse to Polars `Date` type.
 
+_Generates 10 consecutive date strings from 2026-01-01 to 2026-01-10 using `Enumerable.Range` + `AddDays`, then parses with `Str.ToDate("%Y-%m-%d")` to produce a single-column Polars `Date` DataFrame._
+
 ```csharp
 var start = new DateTime(2026, 1, 1);
 var end = new DateTime(2026, 1, 10);
@@ -1454,6 +1468,8 @@ Compute statistics over a sliding window of N consecutive rows — moving averag
 
 `RollingMean("7")` computes the 7-period simple moving average. The window size is passed as a string in Polars.NET 0.4.0. Combine with `WithColumns` and `Alias` for multiple rolling columns.
 
+_Computes SMA-7 and SMA-30 for `ASML.AS` close prices sorted by date — the last 10 rows show close prices around 1,147–1,234, with SMA-7 ≈ 1,178–1,252 and SMA-30 ≈ 1,204–1,207._
+
 ```csharp
 var asmlP = dfP.Filter(Col("symbol") == Lit("ASML.AS")).Sort("date");
 var asmlRolling = asmlP.WithColumns(
@@ -1468,6 +1484,8 @@ asmlRolling.Select(new[] { "date", "close", "sma_7", "sma_30" }).Tail(10)
 #### Deedle | Rolling mean via manual sliding window
 
 Deedle does not have a built-in `RollingMean`. Compute it manually by iterating over the values array and averaging each window.
+
+_Manually computes SMA-7 for `ASML.AS` by iterating over the close array and averaging each 7-element window — the last 10 values match the Polars SMA-7 output (e.g., 1,251.51 on 2026-02-27)._
 
 ```csharp
 var asmlD = dfD.Where(row => row.Value.GetAs<string>("symbol") == "ASML.AS");
@@ -1515,6 +1533,8 @@ Change time frequency — downsampling daily data to monthly OHLC bars. Polars.N
 
 Extract year and month components with the `.Dt` accessor, group by both, then aggregate with `First` (open), `Max` (high), `Min` (low), `Last` (close), and `Sum` (volume).
 
+_Aggregates `ASML.AS` daily OHLCV into monthly bars using `First`/`Max`/`Min`/`Last`/`Sum` — the last 6 months (Oct 2025 – Mar 2026) show the strong rally from close ≈ 918 to ≈ 1,191._
+
 ```csharp
 var asmlSorted = dfP.Filter(Col("symbol") == Lit("ASML.AS")).Sort("date");
 var asmlMonthly = asmlSorted
@@ -1547,6 +1567,8 @@ Running maximum and minimum track the all-time high and all-time low from the fi
 
 `CumMax()` and `CumMin()` return running aggregates. Each row's value is the max (or min) of all values from the first row to the current row.
 
+_Computes three running aggregates for `ASML.AS` simultaneously: `cum_volume` (total shares traded), `running_high` (all-time high close, plateaued at 1,288.4), and `running_low` (all-time low close, 397.45)._
+
 ```csharp
 var asmlCum = asmlSorted.WithColumns(
     Col("volume").CumSum().Alias("cum_volume"),
@@ -1561,6 +1583,8 @@ asmlCum.Select(new[] { "date", "close", "volume", "cum_volume", "running_high", 
 #### Deedle | Cumulative max and min via manual running aggregates
 
 Deedle has no built-in `CumMax` or `CumMin`. Compute manually by iterating over the values and tracking running extremes.
+
+_Iterates over `ASML.AS` close values, tracking `cumMax[i] = Math.Max(cumMax[i-1], vals[i])` and `cumMin[i] = Math.Min(...)` — the last 10 rows confirm the same running_high (1,288.40) and running_low (397.45) as Polars._
 
 ```csharp
 var asmlClose = asmlD.GetColumn<double>("close");
