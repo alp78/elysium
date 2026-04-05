@@ -220,6 +220,53 @@ document.addEventListener("nav", async () => {
     )
 
     const darkMode = document.documentElement.getAttribute("saved-theme") === "dark"
+    const gitColors = darkMode
+      ? {
+          git0: "#7aa2f7",
+          git1: "#f7768e",
+          git2: "#9ece6a",
+          git3: "#e0af68",
+          git4: "#bb9af7",
+          git5: "#2ac3de",
+          git6: "#ff9e64",
+          git7: "#73daca",
+          gitBranchLabel0: "#1a1b26",
+          gitBranchLabel1: "#1a1b26",
+          gitBranchLabel2: "#1a1b26",
+          gitBranchLabel3: "#1a1b26",
+          gitBranchLabel4: "#1a1b26",
+          gitBranchLabel5: "#1a1b26",
+          gitBranchLabel6: "#1a1b26",
+          gitBranchLabel7: "#1a1b26",
+          commitLabelColor: "#c0caf5",
+          commitLabelBackground: "transparent",
+          commitLabelFontSize: "14px",
+          tagLabelColor: "#1a1b26",
+          tagLabelBackground: "#c0caf5",
+        }
+      : {
+          git0: "#3d59a1",
+          git1: "#8c4351",
+          git2: "#485e30",
+          git3: "#8f5e15",
+          git4: "#5a4fcf",
+          git5: "#166775",
+          git6: "#965027",
+          git7: "#33635c",
+          gitBranchLabel0: "#f0f0f2",
+          gitBranchLabel1: "#f0f0f2",
+          gitBranchLabel2: "#f0f0f2",
+          gitBranchLabel3: "#f0f0f2",
+          gitBranchLabel4: "#f0f0f2",
+          gitBranchLabel5: "#f0f0f2",
+          gitBranchLabel6: "#f0f0f2",
+          gitBranchLabel7: "#f0f0f2",
+          commitLabelColor: "#3b3950",
+          commitLabelBackground: "transparent",
+          commitLabelFontSize: "14px",
+          tagLabelColor: "#f0f0f2",
+          tagLabelBackground: "#3b3950",
+        }
     mermaid.initialize({
       startOnLoad: false,
       securityLevel: "loose",
@@ -234,6 +281,7 @@ document.addEventListener("nav", async () => {
         tertiaryColor: computedStyleMap["--tertiary"],
         clusterBkg: computedStyleMap["--light"],
         edgeLabelBackground: computedStyleMap["--highlight"],
+        ...gitColors,
       },
     })
 
