@@ -449,7 +449,7 @@ Every Python package has a `__file__` attribute pointing to its `__init__.py` on
 
 ```python
 import pandas
-pandas.__file__
+print(pandas.__file__)
 ```
 
 ```text

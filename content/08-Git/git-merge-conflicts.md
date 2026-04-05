@@ -2,7 +2,7 @@
 type: how-to
 category: git
 technology: [git, github]
-tags: [git, github]
+tags: [git, github, merge-conflicts]
 aliases: [merge conflict, conflict markers, resolve conflicts, git merge abort, conflict resolution, git mergetool, rebase conflict, three-way merge, accept incoming, accept current]
 keywords: [merge conflict, conflict markers, resolve conflict, git merge abort, git mergetool, rebase continue, rebase abort, conflict resolution, three-way merge, HEAD, incoming changes, stash pop conflict, VS Code merge tool, accept current, accept incoming, prevent merge conflicts, conflict markers explanation]
 description: "How to understand, resolve, and prevent git merge conflicts — including conflict marker syntax, step-by-step resolution, git mergetool with VS Code, and rebase conflict resolution with a real-world case study."
@@ -22,6 +22,21 @@ Merge conflicts occur when two branches modify the same lines in the same file a
 
 ## What a Merge Conflict Looks Like
 
+A conflict arises when two branches diverge from a common ancestor and each modifies the same region of a file. Git detects the overlap at merge time and cannot decide which version to keep without your input.
+
+```mermaid
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph
+  commit id: "A"
+  commit id: "B"
+  branch feat/new-history
+  commit id: "C"
+  checkout main
+  commit id: "D"
+```
+
+*Figure: Both branches modified the same code after diverging at B. Commit C changed start_date on the feature branch while D changed it on main. Git cannot decide which version to keep.*
+
 When Git encounters a conflict, it edits the affected file and inserts conflict markers:
 
 ```
@@ -31,6 +46,10 @@ start_date = "2024-01-01"
 start_date = "2023-06-01"
 >>>>>>> feat/new-history
 ```
+
+### Conflict Marker Syntax
+
+Conflict markers divide the file into two competing versions. Understanding which section belongs to which branch is the first step before editing.
 
 #### Merge conflict markers — reading HEAD vs incoming
 
@@ -44,7 +63,6 @@ Everything between `<<<<<<< HEAD` and `=======` is what your current branch (HEA
 
 > [!info] Conflict Marker Labels Vary
 >
-> Conflict markers in different contexts.
 > The marker labels change depending on the operation:
 > - **`git merge`**: `HEAD` = your branch, `>>>>>>> branch-name` = the branch being merged in
 > - **`git rebase`**: `HEAD` = the target branch (main), `>>>>>>> commit-sha (message)` = your commit being replayed
@@ -56,6 +74,17 @@ Everything between `<<<<<<< HEAD` and `=======` is what your current branch (HEA
 
    ```bash
    git status
+   ```
+
+   ```text
+   On branch main
+   You have unmerged paths.
+
+   Unmerged paths:
+     (use "git add <file>..." to mark resolution)
+           both modified:   config/settings.py
+
+   no changes added to commit (use "git add" and/or "git commit -a")
    ```
 
    Files with conflicts are listed under "Unmerged paths" with `both modified`.
@@ -78,6 +107,10 @@ Everything between `<<<<<<< HEAD` and `=======` is what your current branch (HEA
    git commit
    ```
 
+   ```text
+   [main 3a1b2c4] Merge branch 'feat/new-history'
+   ```
+
    Git will pre-populate the commit message with merge information. You can edit it or accept the default.
 
 > [!warning] Remove All Conflict Markers
@@ -89,9 +122,23 @@ Everything between `<<<<<<< HEAD` and `=======` is what your current branch (HEA
 >
 > Merge conflicts in binary files (images, Parquet, compiled assets) show as "CONFLICT (binary)" with no conflict markers to edit. You must pick one entire version: `git checkout --ours file` or `git checkout --theirs file`, then `git add file`.
 
+> [!success] Resolve Binary Conflicts
+>
+> Pick the correct version explicitly, then stage it:
+> ```bash
+> git checkout --ours path/to/file.parquet
+> git add path/to/file.parquet
+> ```
+
 ## Aborting a Merge
 
-#### Cancel a merge and return to the state before merging started
+When conflicts are too complex to resolve immediately, or when you realize mid-way that your merge strategy was wrong, you can cancel the entire operation and return to a clean state.
+
+### git merge --abort
+
+`git merge --abort` cancels the in-progress merge and restores your working directory and index to the exact state they were in before you ran `git merge`.
+
+#### git merge --abort — cancel merge and restore pre-merge state
 
 ```bash
 git merge --abort
@@ -107,7 +154,13 @@ Use this when you start a merge, find the conflicts too complex to resolve now, 
 
 ## Visual Merge Tools
 
-#### Launch the configured visual merge tool
+Text-based conflict marker editing works for simple conflicts. For complex multi-file conflicts, a visual merge tool presents both versions side by side and lets you accept or combine changes interactively.
+
+### git mergetool
+
+`git mergetool` opens the merge editor configured in your git config for each conflicted file in sequence. Without explicit configuration, Git attempts to open any available GUI diff tool on your system.
+
+#### git mergetool — open configured GUI for all conflicted files
 
 ```bash
 git mergetool
@@ -128,6 +181,9 @@ To configure VS Code as the default merge tool globally:
 
 ```bash
 git config --global merge.tool vscode
+```
+
+```bash
 git config --global mergetool.vscode.cmd 'code --wait $MERGED'
 ```
 
@@ -135,28 +191,86 @@ After this, `git mergetool` opens VS Code for every conflicted file.
 
 ## Rebase Conflict Resolution
 
-Conflicts during `git rebase` work the same way mechanically, but the workflow continues differently than a merge. Git pauses the rebase at each conflicting commit and waits for you to resolve.
+Conflicts during `git rebase` work the same way mechanically, but the workflow continues differently than a merge. Git pauses the rebase at each conflicting commit and waits for you to resolve before replaying the next one. Each commit in your branch is applied on top of the new base individually — so conflicts may occur multiple times, once per commit.
 
-#### After resolving conflicts in a rebasing file, continue the rebase
+> [!danger] Never Rebase Published Branches
+>
+> Rebasing rewrites commit SHAs. If you rebase a branch that teammates have already pulled, their local history will diverge from the force-pushed remote — causing confusion and potential data loss.
+
+> [!success] Safe Rebase Pattern
+>
+> Only rebase commits that have not been pushed to a shared remote, or on personal feature branches where you are the sole contributor. For shared branches, use `git merge` to incorporate upstream changes without rewriting history. See [merge-vs-rebase-vs-squash](https://alp78.github.io/elysium/08-Git/merge-vs-rebase-vs-squash) for strategy guidance.
+
+**Before rebase:**
+
+```mermaid
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph
+  commit id: "A"
+  commit id: "B"
+  branch feature
+  commit id: "C"
+  commit id: "D"
+  checkout main
+  commit id: "E"
+```
+
+*Figure: Feature branch diverged from main at B. Commits C and D are on feature while E advanced main.*
+
+**After rebase:**
+
+```mermaid
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph
+  commit id: "A"
+  commit id: "B"
+  commit id: "E"
+  branch feature
+  commit id: "C'"
+  commit id: "D'"
+```
+
+*Figure: After rebase — C and D replayed as C' and D' on top of E with new SHAs. Any commit conflicting with E pauses the rebase for manual resolution.*
+
+Commits C and D are replayed as C′ and D′ with new SHAs on top of E. Any commit that conflicts with E pauses the rebase for manual resolution.
+
+### git rebase --continue
+
+After resolving conflicts in the paused commit, stage the resolved file and resume replaying the remaining commits onto the base.
+
+#### git rebase --continue — stage resolved file and resume the rebase
 
 ```bash
 git add filename.py
+```
+
+```bash
 git rebase --continue
 ```
 
 - `git add` — mark the file as resolved (same as in merge resolution)
 - `git rebase --continue` — apply the resolution and replay the next commit in the sequence
 
-#### Other rebase escape hatches
+### Rebase Escape Hatches
+
+When a rebase cannot proceed as planned, use these commands to abort the operation or skip the current conflicting commit.
+
+#### git rebase --abort — cancel the entire rebase and restore pre-rebase state
 
 ```bash
-git rebase --abort   # Cancel the entire rebase, restore pre-rebase state
-git rebase --skip    # Skip the current commit (use only if that commit is no longer needed)
+git rebase --abort
 ```
+
+#### git rebase --skip — discard the current commit and continue replaying the rest
+
+```bash
+git rebase --skip
+```
+
+Use `--skip` only when the conflicting commit is entirely redundant — its changes were already incorporated into the base branch and are no longer needed. `--skip` permanently discards that commit's changes.
 
 > [!warning] Rebase vs Merge Abort
 >
-> Rebase --abort vs Merge --abort.
 > Both abort commands are safe and restore your prior state. Remember: after a `git rebase`, commit SHAs change — you will need to `git push --force-with-lease` to update the remote. See [git-remote-management](https://alp78.github.io/elysium/08-Git/git-remote-management) for safe force-push usage.
 
 ## Real-World Case Study: Rebase a PR After Another PR Was Merged
@@ -173,8 +287,28 @@ This scenario happens regularly: you open a PR, a teammate's PR gets merged into
 
 ```bash
 git stash
+```
+
+```text
+Saved working directory and index state WIP on main: abc1234 previous commit message
+```
+
+```bash
 git checkout fix/stock-chart-missing-latest-date
+```
+
+```text
+Switched to branch 'fix/stock-chart-missing-latest-date'
+```
+
+```bash
 git stash pop
+```
+
+```text
+Auto-merging ingestion/loaders/load_ohlcv.py
+CONFLICT (content): Merge conflict in ingestion/loaders/load_ohlcv.py
+The stash entry is kept in case you need it again.
 ```
 
 - `git stash` — shelve all uncommitted changes (staged and unstaged) into temporary storage
@@ -183,8 +317,14 @@ git stash pop
 
 > [!warning] Stash Pop Can Conflict
 >
-> Stash pop can produce conflicts.
 > If the stashed changes touch the same lines that differ between branches, `git stash pop` will produce merge conflicts. This is expected — the stash is still preserved (not dropped) when conflicts occur, so your work is safe.
+
+> [!success] Recover from Stash Pop Conflicts
+>
+> Resolve the conflict markers normally, then drop the stash manually — it was not auto-dropped because the pop did not complete cleanly:
+> ```bash
+> git stash drop
+> ```
 
 ### Step 2: Resolve Stash Pop Conflicts
 
@@ -206,19 +346,43 @@ When `git stash pop` produces conflicts, the markers label the sides differently
 - In most cases you want your stashed changes (they contain the new work)
 - Verify: if the branch has old code and `main` has newer refactored code, you may need to combine both
 
-After resolving:
+After resolving, stage the resolved file:
 
 ```bash
-git add ingestion/loaders/load_ohlcv.py    # stage each resolved file
-git stash drop                              # manually drop the stash (pop didn't auto-drop due to conflicts)
+git add ingestion/loaders/load_ohlcv.py
+```
+
+The stash was preserved because pop encountered conflicts — drop it manually now:
+
+```bash
+git stash drop
 ```
 
 ### Step 3: Commit, Push, and Attempt Squash-Merge
 
 ```bash
 git add -A
+```
+
+```bash
 git commit -m "fix: resolve missing volume and stale OHLCV data across pipeline and dashboard"
+```
+
+```text
+[fix/stock-chart-missing-latest-date f55889d] fix: resolve missing volume and stale OHLCV data across pipeline and dashboard
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+```
+
+```bash
 git push -u origin fix/stock-chart-missing-latest-date
+```
+
+```text
+Branch 'fix/stock-chart-missing-latest-date' set up to track remote branch 'fix/stock-chart-missing-latest-date' from 'origin'.
+Everything up-to-date
+```
+
+```bash
 gh pr merge 7 --squash
 ```
 
@@ -232,8 +396,47 @@ Your branch diverged from `main` before the other PR was merged. Git cannot auto
 
 ### Step 4: Rebase onto the Updated Main
 
+The feature branch now diverges from the updated `main`. Rebasing replays your commits on top of the current `main` tip, creating a linear history that GitHub can cleanly squash-merge.
+
+**Before rebase:**
+
+```mermaid
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph
+  commit id: "A"
+  commit id: "B"
+  branch fix/stock-chart
+  commit id: "fix"
+  checkout main
+  commit id: "perf: bulk"
+```
+
+*Figure: Feature branch diverged from main before the teammate's PR was merged. Main advanced to the perf commit while the fix branch has its own commit.*
+
+**After rebase:**
+
+```mermaid
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph
+  commit id: "A"
+  commit id: "B"
+  commit id: "perf: bulk"
+  branch fix/stock-chart
+  commit id: "fix'"
+```
+
+*Figure: After rebase — the fix commit is replayed on top of the perf commit with a new SHA. History is now linear and the PR can be cleanly squash-merged.*
+
 ```bash
 git fetch origin main
+```
+
+```text
+From github.com:org/repo
+ * branch            main       -> FETCH_HEAD
+```
+
+```bash
 git rebase origin/main
 ```
 
@@ -242,7 +445,7 @@ git rebase origin/main
 
 Git pauses at each conflicting commit:
 
-```
+```text
 Auto-merging ingestion/loaders/load_ohlcv.py
 CONFLICT (content): Merge conflict in ingestion/loaders/load_ohlcv.py
 error: could not apply f55889d... fix: resolve missing volume...
@@ -267,7 +470,14 @@ Keep your feature branch version (the upsert logic with `inserts` + `updates`) �
 
 ```bash
 git add ingestion/loaders/load_ohlcv.py
+```
+
+```bash
 git rebase --continue
+```
+
+```text
+Successfully rebased and updated refs/heads/fix/stock-chart-missing-latest-date.
 ```
 
 - `git add` — mark the file as resolved
@@ -275,10 +485,26 @@ git rebase --continue
 
 ### Step 6: Force-Push and Squash-Merge
 
-After rebasing, your local branch has been rewritten (new commit SHAs), so a normal `git push` is rejected. Use `--force-with-lease`:
+After rebasing, the local branch has been rewritten with new commit SHAs. A normal `git push` will be rejected because the remote and local histories have diverged.
+
+> [!danger] Force-Push Rewrites Remote History
+>
+> `git push --force` unconditionally overwrites the remote branch. If a teammate has pushed to your branch since your last fetch, their commits are destroyed with no recovery path.
+
+> [!success] Use --force-with-lease
+>
+> `--force-with-lease` only allows the force-push if the remote branch still matches what you last fetched. If anyone else has pushed in the meantime, the push fails safely — giving you a chance to integrate their changes first.
 
 ```bash
 git push --force-with-lease origin fix/stock-chart-missing-latest-date
+```
+
+```text
+To github.com:org/repo.git
+ + f55889d...9ab3c12 fix/stock-chart-missing-latest-date -> fix/stock-chart-missing-latest-date (forced update)
+```
+
+```bash
 gh pr merge 7 --squash
 ```
 
@@ -345,6 +571,7 @@ Prevention is better than resolution. Strategies that reduce conflict frequency:
 ## Related
 
 - [git-branching-and-merging](https://alp78.github.io/elysium/08-Git/git-branching-and-merging) — merge and rebase strategies that trigger conflicts
+- [merge-vs-rebase-vs-squash](https://alp78.github.io/elysium/08-Git/merge-vs-rebase-vs-squash) — when to merge vs rebase, and the resulting graph shape for each strategy
 - [git-remote-management](https://alp78.github.io/elysium/08-Git/git-remote-management) — `--force-with-lease` for pushing after rebase
 - [git-recovery-and-undo](https://alp78.github.io/elysium/08-Git/git-recovery-and-undo) — aborting, resetting, and recovering from failed merges
 - [pull-requests-and-code-review](https://alp78.github.io/elysium/08-Git/pull-requests-and-code-review) — preventing unmergeable PRs with branch protection rules

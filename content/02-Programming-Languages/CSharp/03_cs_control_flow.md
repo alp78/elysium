@@ -81,7 +81,7 @@ else if (score >= 60)
     grade = "D";
 else
     grade = "F";
-$"Score {score} → Grade {grade}"
+Console.WriteLine($"Score {score} → Grade {grade}");
 ```
 
 ```text
@@ -109,7 +109,7 @@ if (x > 0)
 ```csharp
 int val = 15;
 string label = val > 20 ? "high" : val > 10 ? "mid" : "low";
-$"val={val} → {label}"
+Console.WriteLine($"val={val} → {label}");
 ```
 
 ```text
@@ -198,7 +198,7 @@ string result = command switch
     "stop" or "quit" or "exit" => "Stopping...",
     _ => $"Unknown: {command}"
 };
-result
+Console.WriteLine(result);
 ```
 
 ```text
@@ -218,7 +218,7 @@ grade = score switch
     >= 60 => "D",
     _ => "F"
 };
-$"Score {score} → Grade {grade}"
+Console.WriteLine($"Score {score} → Grade {grade}");
 ```
 
 ```text
@@ -274,7 +274,7 @@ string holiday = date switch
     { DayOfWeek: DayOfWeek.Saturday or DayOfWeek.Sunday }        => "Weekend",
     _                                                             => "Regular day"
 };
-$"{date:yyyy-MM-dd} → {holiday}"
+Console.WriteLine($"{date:yyyy-MM-dd} → {holiday}");
 ```
 
 ```text
@@ -301,10 +301,10 @@ C# provides dedicated operators for null-safe programming that eliminate verbose
 string? maybeNull = null;
 
 string safe = maybeNull ?? "default";
-safe
+Console.WriteLine(safe);
 
 maybeNull ??= "fallback";
-maybeNull
+Console.WriteLine(maybeNull);
 
 if (maybeNull is string notNull)
     Console.WriteLine($"Has value: {notNull}");
@@ -332,7 +332,7 @@ string comfort = temperature switch
     > 25 and <= 35 => "warm",
     > 35 => "hot"
 };
-$"temp={temperature} → {comfort}"
+Console.WriteLine($"temp={temperature} → {comfort}");
 
 object item = "hello";
 if (item is not null and string s)
@@ -357,7 +357,7 @@ string description = numbers switch
     []                  => "empty",
     _                   => "other"
 };
-description
+Console.WriteLine(description);
 
 var cmd = new[] { "git", "commit", "-m", "fix bug" };
 string action = cmd switch
@@ -367,7 +367,7 @@ string action = cmd switch
     ["git", ..]                      => "other git command",
     _                                => "unknown"
 };
-action
+Console.WriteLine(action);
 ```
 
 ```text
@@ -723,7 +723,7 @@ Flattening converts nested collections into a single flat sequence. `SelectMany`
 
 ```csharp
 var oneLevel = new[] { new[] { 1, 2 }, new[] { 3, 4 }, new[] { 5, 6 } };
-string.Join(", ", oneLevel.SelectMany(x => x))
+Console.WriteLine(string.Join(", ", oneLevel.SelectMany(x => x)));
 ```
 
 ```text
@@ -752,7 +752,7 @@ List<int> FlattenIter(object[] input)
     }
     return result;
 }
-string.Join(", ", FlattenIter(nested))
+Console.WriteLine(string.Join(", ", FlattenIter(nested)));
 ```
 
 ```text
@@ -768,7 +768,7 @@ var nested = new object[] { 1, new object[] { 2, 3 }, new object[] { 4, new obje
 
 IEnumerable<int> FlatLinq(IEnumerable<object> items) =>
     items.SelectMany(item => item is object[] sub ? FlatLinq(sub) : new[] { (int)item });
-string.Join(", ", FlatLinq(nested))
+Console.WriteLine(string.Join(", ", FlatLinq(nested)));
 ```
 
 ```text
@@ -781,7 +781,7 @@ string.Join(", ", FlatLinq(nested))
 
 ```csharp
 var squaresList = Enumerable.Range(0, 10).Select(x => x * x).ToList();
-string.Join(", ", squaresList)
+Console.WriteLine(string.Join(", ", squaresList));
 ```
 
 ```text
@@ -794,8 +794,8 @@ Without `ToList()`, the query returns an iterator that re-executes on each enume
 
 ```csharp
 var squaresLazy = Enumerable.Range(0, 10).Select(x => x * x);
-squaresLazy.GetType().Name
-string.Join(", ", squaresLazy)
+Console.WriteLine(squaresLazy.GetType().Name);
+Console.WriteLine(string.Join(", ", squaresLazy));
 ```
 
 ```text
@@ -816,7 +816,7 @@ IEnumerable<int> TakeWhilePositive(int[] arr)
         yield return n;
     }
 }
-string.Join(", ", TakeWhilePositive(new[] { 3, 7, -2, 5 }))
+Console.WriteLine(string.Join(", ", TakeWhilePositive(new[] { 3, 7, -2, 5 })));
 ```
 
 ```text
@@ -840,7 +840,7 @@ IEnumerable<int> Flatten(IEnumerable<object> nested)
     }
 }
 var nestedArr = new object[] { 1, new object[] { 2, 3 }, new object[] { 4, new object[] { 5, 6 } }, 7 };
-string.Join(", ", Flatten(nestedArr))
+Console.WriteLine(string.Join(", ", Flatten(nestedArr)));
 ```
 
 ```text
@@ -869,7 +869,7 @@ The foundational LINQ operations: `Select` (map), `Where` (filter), `SelectMany`
 
 ```csharp
 var squares = Enumerable.Range(0, 10).Select(x => x * x).ToList();
-string.Join(", ", squares)
+Console.WriteLine(string.Join(", ", squares));
 ```
 
 ```text
@@ -882,7 +882,7 @@ string.Join(", ", squares)
 
 ```csharp
 var evens = Enumerable.Range(0, 20).Where(x => x % 2 == 0).ToList();
-string.Join(", ", evens)
+Console.WriteLine(string.Join(", ", evens));
 ```
 
 ```text
@@ -896,7 +896,7 @@ Chain `.Where().Select()` fluently for filter-then-transform pipelines. The orde
 ```csharp
 var words = new[] { "hello", "world", "csharp", "is", "great" };
 var longUpper = words.Where(w => w.Length > 3).Select(w => w.ToUpper());
-string.Join(", ", longUpper)
+Console.WriteLine(string.Join(", ", longUpper));
 ```
 
 ```text
@@ -910,7 +910,7 @@ HELLO, WORLD, CSHARP, GREAT
 ```csharp
 var matrix = new[] { new[] { 1, 2, 3 }, new[] { 4, 5, 6 }, new[] { 7, 8, 9 } };
 var flat = matrix.SelectMany(row => row).ToList();
-string.Join(", ", flat)
+Console.WriteLine(string.Join(", ", flat));
 ```
 
 ```text
@@ -928,10 +928,10 @@ var queryResult = from w in words
                   where w.Length > 3
                   orderby w.Length
                   select w.ToUpper();
-string.Join(", ", queryResult)
+Console.WriteLine(string.Join(", ", queryResult));
 
 var methodResult = words.Where(w => w.Length > 3).OrderBy(w => w.Length).Select(w => w.ToUpper());
-string.Join(", ", methodResult)
+Console.WriteLine(string.Join(", ", methodResult));
 ```
 
 ```text
@@ -955,15 +955,15 @@ Materialization converts lazy LINQ queries into concrete collections (`Dictionar
 
 ```csharp
 var squaresDict = Enumerable.Range(0, 6).ToDictionary(x => x, x => x * x);
-string.Join(", ", squaresDict.Select(kv => $"{kv.Key}:{kv.Value}"))
+Console.WriteLine(string.Join(", ", squaresDict.Select(kv => $"{kv.Key}:{kv.Value}")));
 
 var scores = new Dictionary<string, int> { ["Alice"] = 85, ["Bob"] = 92, ["Charlie"] = 78, ["Diana"] = 95 };
 var passed = scores.Where(kv => kv.Value >= 80).ToDictionary(kv => kv.Key, kv => kv.Value);
-string.Join(", ", passed.Select(kv => $"{kv.Key}:{kv.Value}"))
+Console.WriteLine(string.Join(", ", passed.Select(kv => $"{kv.Key}:{kv.Value}")));
 
 var words = new[] { "hello", "world", "csharp", "is", "great" };
 var uniqueLengths = words.Select(w => w.Length).ToHashSet();
-string.Join(", ", uniqueLengths)
+Console.WriteLine(string.Join(", ", uniqueLengths));
 ```
 
 `Where` on a dictionary yields `KeyValuePair<K,V>` — re-materialize with `ToDictionary`. `ToHashSet` builds a deduplicated `HashSet<T>` with O(1) membership testing.
@@ -981,10 +981,10 @@ Alice:85, Bob:92, Diana:95
 ```csharp
 var nums = new[] { 1, 2, 3, 4, 5 };
 int total = nums.Aggregate(0, (acc, x) => acc + x);
-total
+Console.WriteLine(total);
 
 int product = nums.Aggregate(1, (acc, x) => acc * x);
-product
+Console.WriteLine(product);
 ```
 
 ```text
@@ -998,13 +998,13 @@ Built-in shortcuts for common reductions. `Any(predicate)` short-circuits on fir
 
 ```csharp
 var nums = new[] { 1, 2, 3, 4, 5 };
-nums.Sum()
-nums.Max()
-nums.Min()
-nums.All(x => x > 0)
-nums.Any(x => x > 3)
-nums.Count(x => x > 2)
-nums.Average()
+Console.WriteLine(nums.Sum());
+Console.WriteLine(nums.Max());
+Console.WriteLine(nums.Min());
+Console.WriteLine(nums.All(x => x > 0));
+Console.WriteLine(nums.Any(x => x > 3));
+Console.WriteLine(nums.Count(x => x > 2));
+Console.WriteLine(nums.Average());
 ```
 
 ```text
@@ -1034,10 +1034,10 @@ Sorting, chaining, and controlling when a LINQ pipeline actually executes.
 
 ```csharp
 var names = new[] { "Charlie", "Alice", "Bob", "Diana" };
-string.Join(", ", names.OrderBy(n => n))
-string.Join(", ", names.OrderBy(n => n.Length))
-string.Join(", ", names.OrderByDescending(n => n))
-string.Join(", ", names.OrderBy(n => n[^1]))
+Console.WriteLine(string.Join(", ", names.OrderBy(n => n)));
+Console.WriteLine(string.Join(", ", names.OrderBy(n => n.Length)));
+Console.WriteLine(string.Join(", ", names.OrderByDescending(n => n)));
+Console.WriteLine(string.Join(", ", names.OrderBy(n => n[^1])));
 ```
 
 ```text
@@ -1066,7 +1066,7 @@ var result = Enumerable.Range(1, 20)
     .OrderByDescending(x => x)
     .Take(3)
     .ToList();
-string.Join(", ", result)
+Console.WriteLine(string.Join(", ", result));
 ```
 
 ```text
@@ -1094,8 +1094,8 @@ IEnumerable<int> Naturals(int start = 0)
         start++;
     }
 }
-string.Join(", ", Naturals().Take(5))
-string.Join(", ", Naturals(10).Take(5))
+Console.WriteLine(string.Join(", ", Naturals().Take(5)));
+Console.WriteLine(string.Join(", ", Naturals(10).Take(5)));
 ```
 
 ```text
@@ -1108,12 +1108,12 @@ string.Join(", ", Naturals(10).Take(5))
 `Range` generates consecutive integers, `Reverse` reverses order, `Concat` appends sequences, and `Repeat` produces a single value `n` times. All return lazy `IEnumerable<T>`.
 
 ```csharp
-string.Join(", ", Enumerable.Range(0, 5))
-string.Join(", ", new[] { "a", "b" }.Select(s => s.ToUpper()))
-string.Join(", ", new[] { 1, 2, 3, 4 }.Where(x => x > 2))
-string.Join(", ", new[] { 1, 2, 3 }.Reverse())
-string.Join(", ", new[] { 1, 2 }.Concat(new[] { 3, 4 }))
-string.Join(", ", Enumerable.Repeat("x", 3))
+Console.WriteLine(string.Join(", ", Enumerable.Range(0, 5)));
+Console.WriteLine(string.Join(", ", new[] { "a", "b" }.Select(s => s.ToUpper())));
+Console.WriteLine(string.Join(", ", new[] { 1, 2, 3, 4 }.Where(x => x > 2)));
+Console.WriteLine(string.Join(", ", new[] { 1, 2, 3 }.Reverse()));
+Console.WriteLine(string.Join(", ", new[] { 1, 2 }.Concat(new[] { 3, 4 })));
+Console.WriteLine(string.Join(", ", Enumerable.Repeat("x", 3)));
 ```
 
 ```text

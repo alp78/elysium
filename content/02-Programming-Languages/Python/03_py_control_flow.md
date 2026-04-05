@@ -85,7 +85,7 @@ elif score >= 60:
     grade = "D"
 else:
     grade = "F"
-f"Score {score} → Grade {grade}"
+print(f"Score {score} → Grade {grade}")
 ```
 
 ```text
@@ -112,7 +112,7 @@ Inline conditional: `value_if_true if condition else value_if_false`. Reads like
 ```python
 age = 20
 status = "adult" if age >= 18 else "minor"
-f"age={age} → {status}"
+print(f"age={age} → {status}")
 ```
 
 ```text
@@ -126,7 +126,7 @@ Ternary expressions can chain: `a if c1 else b if c2 else c`. Readability drops 
 ```python
 val = 15
 label = "high" if val > 20 else "mid" if val > 10 else "low"
-f"val={val} → {label}"
+print(f"val={val} → {label}")
 ```
 
 ```text
@@ -627,7 +627,7 @@ for i in range(3):
             break
     if found:
         break
-f"  Broke at ({i},{j})"
+print(f"  Broke at ({i},{j})")
 ```
 
 ```text
@@ -645,7 +645,7 @@ def find_pair():
             if i == 1 and j == 1:
                 return (i, j)
     return None
-find_pair()
+print(find_pair())
 ```
 
 ```text
@@ -678,7 +678,7 @@ if (n := len(data)) > 5:
     print(f"  String has {n} chars (> 5)")
 
 results = [y for x in range(10) if (y := x ** 2) > 20]
-results
+print(results)
 ```
 
 ```text
@@ -733,9 +733,9 @@ for val in countdown(5):
 
 ```python
 gen = countdown(3)
-next(gen)
-next(gen)
-next(gen)
+print(next(gen))
+print(next(gen))
+print(next(gen))
 ```
 
 ```text
@@ -756,7 +756,7 @@ next(gen)
 
 ```python
 squares_list = [x**2 for x in range(10)]
-squares_list
+print(squares_list)
 ```
 
 ```text
@@ -769,8 +769,8 @@ squares_list
 
 ```python
 squares_gen = (x**2 for x in range(10))
-squares_gen
-list(squares_gen)
+print(squares_gen)
+print(list(squares_gen))
 ```
 
 ```text
@@ -785,8 +785,8 @@ The list stores all 100,000 values in memory (~800 KB), while the generator obje
 ```python
 big_list = [x for x in range(100000)]
 big_gen = (x for x in range(100000))
-f"List size:      {sys.getsizeof(big_list):>8} bytes"
-f"Generator size: {sys.getsizeof(big_gen):>8} bytes"
+print(f"List size:      {sys.getsizeof(big_list):>8} bytes")
+print(f"Generator size: {sys.getsizeof(big_gen):>8} bytes")
 ```
 
 ```text
@@ -807,7 +807,7 @@ def flatten(nested):
             yield item
 
 nested = [1, [2, 3], [4, [5, 6]], 7]
-list(flatten(nested))
+print(list(flatten(nested)))
 ```
 
 ```text
@@ -837,8 +837,8 @@ def naturals(start=0):
         yield n
         n += 1
 
-list(islice(naturals(), 5))
-list(islice(naturals(10), 5))
+print(list(islice(naturals(), 5)))
+print(list(islice(naturals(10), 5)))
 ```
 
 ```text
@@ -851,12 +851,12 @@ list(islice(naturals(10), 5))
 `range`, `enumerate`, `zip`, `map`, `filter`, and `reversed` are all lazy built-in iterators — wrap in `list()` to materialize. They consume constant memory regardless of input size.
 
 ```python
-list(range(5))
-list(enumerate('abc'))
-list(zip([1,2], ['a','b']))
-list(map(str.upper, ['a','b']))
-list(filter(lambda x: x > 2, [1,2,3,4]))
-list(reversed([1,2,3]))
+print(list(range(5)))
+print(list(enumerate('abc')))
+print(list(zip([1,2], ['a','b'])))
+print(list(map(str.upper, ['a','b'])))
+print(list(filter(lambda x: x > 2, [1,2,3,4])))
+print(list(reversed([1,2,3])))
 ```
 
 ```text
@@ -881,10 +881,10 @@ list(reversed([1,2,3]))
 > > [!warning] Never `list(cycle(...))` — infinite memory.
 
 ```python
-list(chain([1,2], [3,4]))
-list(repeat('x', 3))
-list(accumulate([1,2,3,4]))
-list(product('ab', '12'))
+print(list(chain([1,2], [3,4])))
+print(list(repeat('x', 3)))
+print(list(accumulate([1,2,3,4])))
+print(list(product('ab', '12')))
 ```
 
 ```text
@@ -912,7 +912,7 @@ class Squares:
         self.i += 1
         return val
 
-list(Squares(5))
+print(list(Squares(5)))
 ```
 
 ```text
@@ -937,7 +937,7 @@ nested = [1, [2, 3], [4, [5, 6]], 7]
 
 ```python
 one_level = list(chain.from_iterable([[1, 2], [3, 4], [5, 6]]))
-one_level
+print(one_level)
 ```
 
 ```text
@@ -950,7 +950,7 @@ one_level
 
 ```python
 nested = [1, [2, 3], [4, [5, 6]], 7]
-list(collapse(nested))
+print(list(collapse(nested)))
 ```
 
 ```text
@@ -975,7 +975,7 @@ def flatten_iter(nested):
     return result
 
 nested = [1, [2, 3], [4, [5, 6]], 7]
-flatten_iter(nested)
+print(flatten_iter(nested))
 ```
 
 ```text
@@ -992,7 +992,7 @@ nested_records = [
     {"name": "Bob", "address": {"city": "LA", "zip": "90001"}},
 ]
 df = pd.json_normalize(nested_records)
-df
+print(df)
 ```
 
 ```text
@@ -1032,7 +1032,7 @@ List, dict, and set comprehensions build new collections from iterables with opt
 
 ```python
 squares = [x**2 for x in range(10)]
-squares
+print(squares)
 ```
 
 ```text
@@ -1045,7 +1045,7 @@ Adding `if condition` filters elements before the expression is applied. Only el
 
 ```python
 evens = [x for x in range(20) if x % 2 == 0]
-evens
+print(evens)
 ```
 
 ```text
@@ -1059,7 +1059,7 @@ Combine `if` filtering with an expression transform in a single comprehension �
 ```python
 words = ["hello", "world", "python", "is", "great"]
 long_upper = [w.upper() for w in words if len(w) > 3]
-long_upper
+print(long_upper)
 ```
 
 ```text
@@ -1073,10 +1073,10 @@ long_upper
 ```python
 matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
 flat = [n for row in matrix for n in row]
-flat
+print(flat)
 
 grid = [[(i, j) for j in range(3)] for i in range(3)]
-grid
+print(grid)
 ```
 
 ```text
@@ -1097,15 +1097,15 @@ grid
 
 ```python
 squares_dict = {x: x**2 for x in range(6)}
-squares_dict
+print(squares_dict)
 
 original = {"a": 1, "b": 2, "c": 3}
 swapped = {v: k for k, v in original.items()}
-swapped
+print(swapped)
 
 scores = {"Alice": 85, "Bob": 92, "Charlie": 78, "Diana": 95}
 passed = {name: score for name, score in scores.items() if score >= 80}
-passed
+print(passed)
 ```
 
 ```text
@@ -1121,7 +1121,7 @@ passed
 ```python
 words = ["hello", "world", "python", "is", "great"]
 unique_lengths = {len(w) for w in words}
-unique_lengths
+print(unique_lengths)
 ```
 
 ```text
@@ -1144,10 +1144,10 @@ unique_lengths
 ```python
 nums = [1, 2, 3, 4, 5]
 doubled = list(map(lambda x: x * 2, nums))
-doubled
+print(doubled)
 
 doubled2 = [x * 2 for x in nums]
-doubled2
+print(doubled2)
 ```
 
 ```text
@@ -1162,7 +1162,7 @@ doubled2
 ```python
 nums = [1, 2, 3, 4, 5]
 evens = list(filter(lambda x: x % 2 == 0, nums))
-evens
+print(evens)
 ```
 
 ```text
@@ -1176,10 +1176,10 @@ evens
 ```python
 nums = [1, 2, 3, 4, 5]
 total = reduce(lambda acc, x: acc + x, nums, 0)
-total
+print(total)
 
 product = reduce(lambda acc, x: acc * x, nums, 1)
-product
+print(product)
 ```
 
 ```text
@@ -1193,11 +1193,11 @@ Prefer built-ins over `reduce` for common operations — they are implemented in
 
 ```python
 nums = [1, 2, 3, 4, 5]
-sum(nums)
-max(nums)
-min(nums)
-all(x > 0 for x in nums)
-any(x > 3 for x in nums)
+print(sum(nums))
+print(max(nums))
+print(min(nums))
+print(all(x > 0 for x in nums))
+print(any(x > 3 for x in nums))
 ```
 
 ```text
@@ -1221,10 +1221,10 @@ True
 
 ```python
 names = ["Charlie", "Alice", "Bob", "Diana"]
-sorted(names)
-sorted(names, key=len)
-sorted(names, reverse=True)
-sorted(names, key=lambda n: n[-1])
+print(sorted(names))
+print(sorted(names, key=len))
+print(sorted(names, reverse=True))
+print(sorted(names, key=lambda n: n[-1]))
 ```
 
 ```text

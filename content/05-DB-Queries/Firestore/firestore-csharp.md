@@ -1,4 +1,5 @@
 ---
+title: "Firestore for Data Engineering — C#"
 tags: [csharp, nosql, gcp, firestore, fundamentals]
 aliases: [Firestore C#, Firestore queries C#, NoSQL C#, document database C#]
 description: "Firestore operations in C# with executable examples and cell outputs — covers CRUD, queries, transactions, batches, snapshots, and typed document mapping."
@@ -77,6 +78,12 @@ flowchart TD
 
 ## Setup & Connection
 
+Initializes the Firestore SDK and REST clients, defines field extraction and index management utilities, and verifies the connection to the `bq-wh-nb` project.
+
+### C# | Polyglot Notebook | suppress assembly warnings
+
+#### C# | suppress CS1701 assembly version warnings
+
 The Polyglot Notebooks kernel emits CS1701 assembly version warnings when loading NuGet packages on .NET 10. This cell suppresses them globally so subsequent output stays clean.
 
 ```csharp
@@ -95,8 +102,10 @@ if (optionsField != null)
 Console.WriteLine("Warnings suppressed");
 ```
 
-    Warnings suppressed
-    
+```text
+Warnings suppressed
+```
+
 
 ### SDK and REST Client Initialization
 
@@ -125,12 +134,14 @@ This cell:
 
 > [!info] Two Clients — SDK and REST
 >
-> - **SDK client** — used for writes and single-document reads (these work on .NET 10). Collection-level reads fail due to a missing `AsyncInterfaces` assembly.
+> - **SDK client** — used for writes and single-document reads on .NET 10. Collection-level reads fail on .NET 10 due to a missing `AsyncInterfaces` assembly but work normally on .NET 8/9. Both SDK and REST versions are demonstrated throughout this page.
 > - **REST client** — used for collection reads, filtered queries, and collection group queries. This is the .NET 10 workaround; in .NET 8/9 the SDK handles everything.
 
+#### C# | Firestore SDK + REST | load packages, create FirestoreDb, HTTP client, and OAuth2 token
+
 ```csharp
+#r "nuget: Microsoft.Bcl.AsyncInterfaces, 10.0.0"
 #r "nuget: Google.Cloud.Firestore"
-#r "nuget: Microsoft.Bcl.AsyncInterfaces"
 
 using Google.Cloud.Firestore;
 using System.Collections.Generic;
@@ -155,10 +166,21 @@ var baseUrl = "https://firestore.googleapis.com/v1/projects/bq-wh-nb/databases/(
 Console.WriteLine("Connected to Firestore (SDK + REST).");
 ```
 
-> Installed Packages: Google.Cloud.Firestore, 4.2.0, Microsoft.Bcl.AsyncInterfaces, 10.0.5
+```text
+Installed Packages: Google.Cloud.Firestore, 4.2.0, Microsoft.Bcl.AsyncInterfaces, 10.0.5
+Connected to Firestore (SDK + REST).
+```
 
-    Connected to Firestore (SDK + REST).
-    
+
+### SDK-Only Connection — `FirestoreDbBuilder`
+
+The setup above creates both an SDK client and a REST client for the `(default)` database. When targeting a **named database** (e.g. `main`), use `FirestoreDbBuilder` with an explicit `DatabaseId`. This approach is SDK-only and does not require a REST client.
+
+#### C# | FirestoreDbBuilder | connect to a named database
+
+```csharp
+var dbMain = new FirestoreDbBuilder { ProjectId = "bq-wh-nb", DatabaseId = "main" }.Build();
+```
 
 ### REST Query Helper — `RestQuery()`
 
@@ -173,6 +195,8 @@ This cell:
 4. Returns a `List<JsonElement>` of Firestore documents
 
 Used by all filter/query cells below.
+
+#### C# | REST API | define RestQuery() helper
 
 ```csharp
 async Task<List<JsonElement>> RestQuery(string queryJson)
@@ -194,8 +218,10 @@ async Task<List<JsonElement>> RestQuery(string queryJson)
 Console.WriteLine("RestQuery() helper loaded.");
 ```
 
-    RestQuery() helper loaded.
-    
+```text
+RestQuery() helper loaded.
+```
+
 
 ### Field Extraction Helpers
 
@@ -210,6 +236,8 @@ Firestore REST API wraps every field value in a type envelope:
 
 These helpers unwrap the type envelope and return the native C# value.
 Without them, every field access would need 2 levels of `TryGetProperty()`.
+
+#### C# | REST API | define GetStr, GetDbl, GetBool, GetInt field helpers
 
 ```csharp
 string GetStr(JsonElement fields, string key) =>
@@ -231,8 +259,10 @@ long GetInt(JsonElement fields, string key) =>
 Console.WriteLine("Field extraction helpers loaded: GetStr, GetDbl, GetBool, GetInt");
 ```
 
-    Field extraction helpers loaded: GetStr, GetDbl, GetBool, GetInt
-    
+```text
+Field extraction helpers loaded: GetStr, GetDbl, GetBool, GetInt
+```
+
 
 ### Index Utility — `EnsureIndex()`
 
@@ -250,18 +280,18 @@ This utility:
 
 Called automatically before queries that need an index.
 
-> [!info] Admin REST API Setup
->
-> All index operations use the Firestore REST Admin API. The base URL encodes the project and database.
+#### C# | Admin REST API | set base URL for index management
+
+The Firestore Admin REST API manages index creation and field exemptions. The base URL encodes both the project ID and database name.
 
 ```csharp
 var adminBaseUrl = "https://firestore.googleapis.com/v1/"
     + "projects/bq-wh-nb/databases/(default)";
 ```
 
-> [!info] EnsureIndex() — Composite Index Creation
->
-> Routes to the correct method based on field count and scope. Multi-field indexes use POST to the indexes endpoint. Single-field collection group indexes use the field exemption PATCH endpoint. Idempotent — safe to call multiple times.
+#### C# | Admin REST API | EnsureIndex() — create composite or collection group indexes
+
+Routes to the correct method based on field count and scope. Multi-field indexes use POST to the indexes endpoint. Single-field collection group indexes use the field exemption PATCH endpoint. Idempotent — safe to call multiple times.
 
 ```csharp
 async Task EnsureIndex(string collection,
@@ -327,9 +357,9 @@ async Task EnsureIndex(string collection,
 }
 ```
 
-> [!info] EnsureFieldExemption() — Collection Group Indexes
->
-> Firestore auto-indexes single fields for `COLLECTION` scope only. For `COLLECTION_GROUP` queries, you must create a field exemption via PATCH. The function checks if the exemption already exists and waits if it's still building.
+#### C# | Admin REST API | EnsureFieldExemption() — single-field collection group exemption
+
+Firestore auto-indexes single fields for `COLLECTION` scope only. For `COLLECTION_GROUP` queries, a field exemption must be created via PATCH. This function checks if the exemption already exists and waits if it is still building.
 
 ```csharp
 async Task EnsureFieldExemption(
@@ -433,18 +463,18 @@ async Task EnsureFieldExemption(
 Console.WriteLine("EnsureIndex() utility loaded.");
 ```
 
-    EnsureIndex() utility loaded.
-    
+```text
+EnsureIndex() utility loaded.
+```
+
 
 ### Verify Connection — List Collections
 
-This cell:
-
-1. Calls the REST API for each known collection with `pageSize=1000`
-2. Counts documents in the response
-3. Prints a summary table
-
 Run this after setup to confirm the connection works and data is populated.
+
+#### C# | REST API | count documents per collection
+
+Calls the REST API for each known collection with `pageSize=1000`, counts documents in each JSON response, and prints a summary table.
 
 ```csharp
 Console.WriteLine("=== Firestore Collections ===");
@@ -457,18 +487,24 @@ foreach (var coll in new[] { "stocks", "sectors", "alerts", "pipeline_runs", "wa
 }
 ```
 
-    === Firestore Collections ===
-      stocks                  50 documents
-      sectors                 10 documents
-      alerts                  20 documents
-      pipeline_runs           15 documents
-      watchlists               3 documents
-      config                   2 documents
-    
+```text
+=== Firestore Collections ===
+  stocks                  50 documents
+  sectors                 10 documents
+  alerts                  20 documents
+  pipeline_runs           15 documents
+  watchlists               3 documents
+  config                   2 documents
+```
+
 
 ## Read Operations
 
+Covers single-document reads, multi-document fetches, and full-collection list operations using the SDK on .NET 8/9 and the REST API on .NET 10.
+
 ### Get a Single Document by ID
+
+#### C# | Firestore SDK | fetch a document and read its fields
 
 This cell:
 
@@ -496,29 +532,52 @@ if (doc.Exists)
 }
 ```
 
-    Document: ASML.AS
-      Short name: ASML HOLDING
-      Sector:     Technology
-      Price:      1191.2
-      Active:     True
-      Scores:     composite=0.17610432350282, rank=19
-      Tags:       [technology, netherlands, euro_stoxx_50]
-    
+```text
+Document: ASML.AS
+  Short name: ASML HOLDING
+  Sector:     Technology
+  Price:      1191.2
+  Active:     True
+  Scores:     composite=0.17610432350282, rank=19
+  Tags:       [technology, netherlands, euro_stoxx_50]
+```
+
 
 ### List Documents (Top 10)
 
-This cell:
+Both the `Google.Cloud.Firestore` SDK and the REST API can list documents from a collection. The SDK version is more concise; the REST version works on .NET 10 where SDK collection reads are broken.
 
-1. Calls REST API `GET .../documents/stocks?pageSize=10`
-2. Parses JSON response, extracts symbol, short_name, price from each document
-3. Prints a formatted table
+#### Google.Cloud.Firestore SDK
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var snapshot = await db.Collection("stocks").Limit(10).GetSnapshotAsync();
-> foreach (var doc in snapshot.Documents) { ... }
-> ```
+Fetches the first 10 stock documents using `Limit(10).GetSnapshotAsync()` and prints symbol, name, and price from each snapshot.
+
+```csharp
+var snapshot = await db.Collection("stocks").Limit(10).GetSnapshotAsync();
+
+Console.WriteLine("=== Stocks (top 10) ===");
+foreach (var doc in snapshot.Documents)
+{
+    Console.WriteLine($"  {doc.Id,-12} {doc.GetValue<string>("short_name"),-20} price={doc.GetValue<double>("current_price"),8:F2}");
+}
+```
+
+```text
+=== Stocks (top 10) ===
+  ABI.BR       AB INBEV             price=   62.76
+  AD.AS        KONINKLIJKE AHOLD DELHAIZE N.V. price=   41.04
+  ADS.DE       adidas AG            price=  140.10
+  ADYEN.AS     ADYEN                price=  923.10
+  AI.PA        AIR LIQUIDE          price=  168.02
+  AIR.PA       AIRBUS SE            price=  176.02
+  ALV.DE       Allianz SE           price=  348.80
+  ARGX.BR      ARGENX SE            price=  626.60
+  ASML.AS      ASML HOLDING         price= 1191.20
+  BAS.DE       BASF SE              price=   47.74
+```
+
+#### Firestore REST API
+
+Calls REST API `GET .../documents/stocks?pageSize=10`, parses the JSON response, and extracts symbol, short_name, and price from each document.
 
 ```csharp
 var listResp = await http.GetAsync($"{baseUrl}/stocks?pageSize=10");
@@ -536,20 +595,23 @@ if (listJson.RootElement.TryGetProperty("documents", out var docs))
 }
 ```
 
-    === Stocks (top 10) ===
-      ABI.BR       AB INBEV             price=   62.76
-      AD.AS        KONINKLIJKE AHOLD DELHAIZE N.V. price=   41.04
-      ADS.DE       adidas AG            price=  140.10
-      ADYEN.AS     ADYEN                price=  923.10
-      AI.PA        AIR LIQUIDE          price=  168.02
-      AIR.PA       AIRBUS SE            price=  176.02
-      ALV.DE       Allianz SE           price=  348.80
-      ARGX.BR      ARGENX SE            price=  626.60
-      ASML.AS      ASML HOLDING         price= 1191.20
-      BAS.DE       BASF SE              price=   47.74
-    
+```text
+=== Stocks (top 10) ===
+  ABI.BR       AB INBEV             price=   62.76
+  AD.AS        KONINKLIJKE AHOLD DELHAIZE N.V. price=   41.04
+  ADS.DE       adidas AG            price=  140.10
+  ADYEN.AS     ADYEN                price=  923.10
+  AI.PA        AIR LIQUIDE          price=  168.02
+  AIR.PA       AIRBUS SE            price=  176.02
+  ALV.DE       Allianz SE           price=  348.80
+  ARGX.BR      ARGENX SE            price=  626.60
+  ASML.AS      ASML HOLDING         price= 1191.20
+  BAS.DE       BASF SE              price=   47.74
+```
 
 ### Get Multiple Documents by ID
+
+#### C# | Firestore SDK | fetch multiple documents individually
 
 This cell:
 
@@ -570,11 +632,13 @@ foreach (var sym in new[] { "ASML.AS", "MC.PA", "SAP.DE" })
 }
 ```
 
-    === Multiple Documents ===
-      ASML.AS: ASML HOLDING — 1191.20
-      MC.PA: LVMH — 494.40
-      SAP.DE: SAP SE — 153.82
-    
+```text
+=== Multiple Documents ===
+  ASML.AS: ASML HOLDING — 1191.20
+  MC.PA: LVMH — 494.40
+  SAP.DE: SAP SE — 153.82
+```
+
 
 ## Filtering & Ordering
 
@@ -594,19 +658,47 @@ Firestore supports equality, range, `IN`, `NOT-IN`, `array_contains`, and `array
 >
 > Always add a `limit` to list queries. For counts and aggregates, use `runAggregationQuery` (REST) or `Count().GetSnapshotAsync()` (.NET 8/9) — aggregation queries cost one read regardless of how many documents they scan.
 
-This cell:
+Both the SDK and REST API support equality filters. The SDK uses `WhereEqualTo()`; the REST API uses a `fieldFilter` with `EQUAL` operator.
 
-1. Sends a structured query to the REST API filtering `country == "Germany"`
-2. Returns only German stocks with their sector
+#### Google.Cloud.Firestore SDK
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var docs = await db.Collection("stocks")
->     .WhereEqualTo("country", "Germany")
->     .Limit(15)
->     .GetSnapshotAsync();
-> ```
+Filters stocks where `country == "Germany"` using `WhereEqualTo()` and limits to 15 results.
+
+```csharp
+var germanDocs = await db.Collection("stocks")
+    .WhereEqualTo("country", "Germany")
+    .Limit(15)
+    .GetSnapshotAsync();
+
+Console.WriteLine("=== German Stocks ===");
+foreach (var doc in germanDocs.Documents)
+{
+    Console.WriteLine($"  {doc.Id,-12} {doc.GetValue<string>("sector")}");
+}
+```
+
+```text
+=== German Stocks ===
+  ADS.DE       Consumer Cyclical
+  ALV.DE       Financial Services
+  BAS.DE       Basic Materials
+  BAYN.DE      Healthcare
+  BMW.DE       Consumer Cyclical
+  DB1.DE       Financial Services
+  DHL.DE       Industrials
+  DTE.DE       Communication Services
+  ENR.DE       Industrials
+  IFX.DE       Technology
+  MBG.DE       Consumer Cyclical
+  MUV2.DE      Financial Services
+  RHM.DE       Industrials
+  SAP.DE       Technology
+  SIE.DE       Industrials
+```
+
+#### Firestore REST API
+
+Sends a structured query to the REST API filtering `country == "Germany"` and returns German stocks with their sector.
 
 ```csharp
 var germanQuery = @"{
@@ -631,40 +723,60 @@ foreach (var fdoc in await RestQuery(germanQuery))
 }
 ```
 
-    === German Stocks ===
-      ADS.DE       Consumer Cyclical
-      ALV.DE       Financial Services
-      BAS.DE       Basic Materials
-      BAYN.DE      Healthcare
-      BMW.DE       Consumer Cyclical
-      DB1.DE       Financial Services
-      DHL.DE       Industrials
-      DTE.DE       Communication Services
-      ENR.DE       Industrials
-      IFX.DE       Technology
-      MBG.DE       Consumer Cyclical
-      MUV2.DE      Financial Services
-      RHM.DE       Industrials
-      SAP.DE       Technology
-      SIE.DE       Industrials
-    
+```text
+=== German Stocks ===
+  ADS.DE       Consumer Cyclical
+  ALV.DE       Financial Services
+  BAS.DE       Basic Materials
+  BAYN.DE      Healthcare
+  BMW.DE       Consumer Cyclical
+  DB1.DE       Financial Services
+  DHL.DE       Industrials
+  DTE.DE       Communication Services
+  ENR.DE       Industrials
+  IFX.DE       Technology
+  MBG.DE       Consumer Cyclical
+  MUV2.DE      Financial Services
+  RHM.DE       Industrials
+  SAP.DE       Technology
+  SIE.DE       Industrials
+```
 
 ### Range Filter with Ordering
 
-This cell:
+Both the SDK and REST API support range filters with ordering. The SDK chains `WhereGreaterThan()` with `OrderByDescending()`; the REST API uses `GREATER_THAN` operator and `orderBy` in the structured query.
 
-1. Filters stocks where `current_price > 500`
-2. Orders by `current_price` descending
+#### Google.Cloud.Firestore SDK
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var docs = await db.Collection("stocks")
->     .WhereGreaterThan("current_price", 500)
->     .OrderByDescending("current_price")
->     .Limit(10)
->     .GetSnapshotAsync();
-> ```
+Filters stocks where `current_price > 500` and orders by price descending.
+
+```csharp
+var rangeDocs = await db.Collection("stocks")
+    .WhereGreaterThan("current_price", 500)
+    .OrderByDescending("current_price")
+    .Limit(10)
+    .GetSnapshotAsync();
+
+Console.WriteLine("=== High-Price Stocks (>500) ===");
+foreach (var doc in rangeDocs.Documents)
+{
+    Console.WriteLine($"  {doc.Id,-12} price={doc.GetValue<double>("current_price"):F2}");
+}
+```
+
+```text
+=== High-Price Stocks (>500) ===
+  RMS.PA       price=1906.00
+  RHM.DE       price=1552.00
+  ASML.AS      price=1191.20
+  ADYEN.AS     price=923.10
+  ARGX.BR      price=626.60
+  MUV2.DE      price=526.20
+```
+
+#### Firestore REST API
+
+Filters stocks where `current_price > 500` and orders by price descending using a structured query.
 
 ```csharp
 var rangeQuery = @"{
@@ -690,32 +802,54 @@ foreach (var fdoc in await RestQuery(rangeQuery))
 }
 ```
 
-    === High-Price Stocks (>500) ===
-      RMS.PA       price=1906.00
-      RHM.DE       price=1552.00
-      ASML.AS      price=1191.20
-      ADYEN.AS     price=923.10
-      ARGX.BR      price=626.60
-      MUV2.DE      price=526.20
-    
+```text
+=== High-Price Stocks (>500) ===
+  RMS.PA       price=1906.00
+  RHM.DE       price=1552.00
+  ASML.AS      price=1191.20
+  ADYEN.AS     price=923.10
+  ARGX.BR      price=626.60
+  MUV2.DE      price=526.20
+```
 
 ### Compound Filters (AND)
 
-This cell:
+Both the SDK and REST API support compound AND filters. The SDK chains multiple `Where*()` calls; the REST API uses a `compositeFilter` with `AND` operator. Both require a composite index.
 
-1. Filters `country == "France"` AND `current_price < 200`
-2. Uses `compositeFilter` with `AND` operator
-3. Requires a composite index (same as Python)
+#### Google.Cloud.Firestore SDK
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var docs = await db.Collection("stocks")
->     .WhereEqualTo("country", "France")
->     .WhereLessThan("current_price", 200)
->     .Limit(10)
->     .GetSnapshotAsync();
-> ```
+Filters French stocks priced under 200 by chaining `WhereEqualTo("country", "France")` and `WhereLessThan("current_price", 200)`.
+
+```csharp
+var compoundDocs = await db.Collection("stocks")
+    .WhereEqualTo("country", "France")
+    .WhereLessThan("current_price", 200)
+    .Limit(10)
+    .GetSnapshotAsync();
+
+Console.WriteLine("=== French Stocks Under 200 ===");
+foreach (var doc in compoundDocs.Documents)
+{
+    Console.WriteLine($"  {doc.Id,-12} {doc.GetValue<string>("short_name"),-20} price={doc.GetValue<double>("current_price"):F2}");
+}
+```
+
+```text
+=== French Stocks Under 200 ===
+  DSY.PA       DASSAULT SYSTEMES    price=18.37
+  CS.PA        AXA                  price=37.96
+  BN.PA        DANONE               price=69.24
+  TTE.PA       TOTALENERGIES        price=69.80
+  SGO.PA       SAINT GOBAIN         price=73.22
+  SAN.PA       SANOFI               price=76.26
+  BNP.PA       BNP PARIBAS ACT.A    price=87.44
+  DG.PA        VINCI                price=129.90
+  AI.PA        AIR LIQUIDE          price=168.02
+```
+
+#### Firestore REST API
+
+Filters `country == "France"` AND `current_price < 200` using a `compositeFilter` with `AND` operator. Requires a composite index.
 
 ```csharp
 await EnsureIndex("stocks", new[] {
@@ -747,34 +881,64 @@ foreach (var fdoc in await RestQuery(compoundQuery))
 }
 ```
 
-      Index exists: stocks/country + current_price.... ready!
-    === French Stocks Under 200 ===
-      DSY.PA       DASSAULT SYSTEMES    price=18.37
-      CS.PA        AXA                  price=37.96
-      BN.PA        DANONE               price=69.24
-      TTE.PA       TOTALENERGIES        price=69.80
-      SGO.PA       SAINT GOBAIN         price=73.22
-      SAN.PA       SANOFI               price=76.26
-      BNP.PA       BNP PARIBAS ACT.A    price=87.44
-      DG.PA        VINCI                price=129.90
-      AI.PA        AIR LIQUIDE          price=168.02
-    
+```text
+  Index exists: stocks/country + current_price.... ready!
+=== French Stocks Under 200 ===
+  DSY.PA       DASSAULT SYSTEMES    price=18.37
+  CS.PA        AXA                  price=37.96
+  BN.PA        DANONE               price=69.24
+  TTE.PA       TOTALENERGIES        price=69.80
+  SGO.PA       SAINT GOBAIN         price=73.22
+  SAN.PA       SANOFI               price=76.26
+  BNP.PA       BNP PARIBAS ACT.A    price=87.44
+  DG.PA        VINCI                price=129.90
+  AI.PA        AIR LIQUIDE          price=168.02
+```
+
 
 ### Array Contains
 
-This cell:
+Both the SDK and REST API can filter on array membership. The SDK uses `WhereArrayContains()`; the REST API uses the `ARRAY_CONTAINS` operator.
 
-1. Filters stocks where the `tags` array contains `"germany"`
-2. Uses `ARRAY_CONTAINS` operator in the REST API
+#### Google.Cloud.Firestore SDK
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var docs = await db.Collection("stocks")
->     .WhereArrayContains("tags", "germany")
->     .Limit(15)
->     .GetSnapshotAsync();
-> ```
+Filters stocks where the `tags` array contains `"germany"` using `WhereArrayContains()`.
+
+```csharp
+var arrayDocs = await db.Collection("stocks")
+    .WhereArrayContains("tags", "germany")
+    .Limit(15)
+    .GetSnapshotAsync();
+
+Console.WriteLine("=== Stocks tagged germany ===");
+foreach (var doc in arrayDocs.Documents)
+{
+    Console.WriteLine($"  {doc.Id,-12} {doc.GetValue<string>("country")}");
+}
+```
+
+```text
+=== Stocks tagged germany ===
+  ADS.DE       Germany
+  ALV.DE       Germany
+  BAS.DE       Germany
+  BAYN.DE      Germany
+  BMW.DE       Germany
+  DB1.DE       Germany
+  DHL.DE       Germany
+  DTE.DE       Germany
+  ENR.DE       Germany
+  IFX.DE       Germany
+  MBG.DE       Germany
+  MUV2.DE      Germany
+  RHM.DE       Germany
+  SAP.DE       Germany
+  SIE.DE       Germany
+```
+
+#### Firestore REST API
+
+Filters stocks where the `tags` array contains `"germany"` using the `ARRAY_CONTAINS` operator in a structured query.
 
 ```csharp
 var arrayQuery = @"{
@@ -799,40 +963,68 @@ foreach (var fdoc in await RestQuery(arrayQuery))
 }
 ```
 
-    === Stocks tagged germany ===
-      ADS.DE       Germany
-      ALV.DE       Germany
-      BAS.DE       Germany
-      BAYN.DE      Germany
-      BMW.DE       Germany
-      DB1.DE       Germany
-      DHL.DE       Germany
-      DTE.DE       Germany
-      ENR.DE       Germany
-      IFX.DE       Germany
-      MBG.DE       Germany
-      MUV2.DE      Germany
-      RHM.DE       Germany
-      SAP.DE       Germany
-      SIE.DE       Germany
-    
+```text
+=== Stocks tagged germany ===
+  ADS.DE       Germany
+  ALV.DE       Germany
+  BAS.DE       Germany
+  BAYN.DE      Germany
+  BMW.DE       Germany
+  DB1.DE       Germany
+  DHL.DE       Germany
+  DTE.DE       Germany
+  ENR.DE       Germany
+  IFX.DE       Germany
+  MBG.DE       Germany
+  MUV2.DE      Germany
+  RHM.DE       Germany
+  SAP.DE       Germany
+  SIE.DE       Germany
+```
 
 ### Array Contains Any
 
-This cell:
+Both the SDK and REST API support `array_contains_any` to match documents whose array field contains any value from a list. Returns French OR Dutch stocks in this example.
 
-1. Filters stocks where `tags` contains **any** of `["france", "netherlands"]`
-2. Uses `ARRAY_CONTAINS_ANY` operator
-3. Returns French OR Dutch stocks
+#### Google.Cloud.Firestore SDK
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var docs = await db.Collection("stocks")
->     .WhereArrayContainsAny("tags", new[] { "france", "netherlands" })
->     .Limit(15)
->     .GetSnapshotAsync();
-> ```
+Filters stocks where `tags` contains any of `["france", "netherlands"]` using `WhereArrayContainsAny()`.
+
+```csharp
+var acaDocs = await db.Collection("stocks")
+    .WhereArrayContainsAny("tags", new[] { "france", "netherlands" })
+    .Limit(15)
+    .GetSnapshotAsync();
+
+Console.WriteLine("=== French or Dutch stocks ===");
+foreach (var doc in acaDocs.Documents)
+{
+    Console.WriteLine($"  {doc.Id,-12} {doc.GetValue<string>("country")}");
+}
+```
+
+```text
+=== French or Dutch stocks ===
+  AD.AS        Netherlands
+  ADYEN.AS     Netherlands
+  AI.PA        France
+  AIR.PA       Netherlands
+  ARGX.BR      Netherlands
+  ASML.AS      Netherlands
+  BN.PA        France
+  BNP.PA       France
+  CS.PA        France
+  DG.PA        France
+  DSY.PA       France
+  EL.PA        France
+  INGA.AS      Netherlands
+  MC.PA        France
+  OR.PA        France
+```
+
+#### Firestore REST API
+
+Filters stocks where `tags` contains any of `["france", "netherlands"]` using the `ARRAY_CONTAINS_ANY` operator.
 
 ```csharp
 var acaQuery = @"{
@@ -857,27 +1049,30 @@ foreach (var fdoc in await RestQuery(acaQuery))
 }
 ```
 
-    === French or Dutch stocks ===
-      AD.AS        Netherlands
-      ADYEN.AS     Netherlands
-      AI.PA        France
-      AIR.PA       Netherlands
-      ARGX.BR      Netherlands
-      ASML.AS      Netherlands
-      BN.PA        France
-      BNP.PA       France
-      CS.PA        France
-      DG.PA        France
-      DSY.PA       France
-      EL.PA        France
-      INGA.AS      Netherlands
-      MC.PA        France
-      OR.PA        France
-    
+```text
+=== French or Dutch stocks ===
+  AD.AS        Netherlands
+  ADYEN.AS     Netherlands
+  AI.PA        France
+  AIR.PA       Netherlands
+  ARGX.BR      Netherlands
+  ASML.AS      Netherlands
+  BN.PA        France
+  BNP.PA       France
+  CS.PA        France
+  DG.PA        France
+  DSY.PA       France
+  EL.PA        France
+  INGA.AS      Netherlands
+  MC.PA        France
+  OR.PA        France
+```
 
 ### IN and NOT-IN Filters
 
 The `IN` operator matches documents where a field equals any value in a list (up to 30 values). `NOT_IN` returns documents where the field does not match any value in the list and the field exists.
+
+#### C# | REST API | IN filter on sector field
 
 > [!info] IN Operator Limit: 30 Values
 >
@@ -893,7 +1088,6 @@ The `IN` operator matches documents where a field equals any value in a list (up
 > ```
 
 ```csharp
-// IN filter: Technology or Health Care sectors
 var inQuery = @"{
     ""structuredQuery"": {
         ""from"": [{""collectionId"": ""stocks""}],
@@ -919,29 +1113,50 @@ foreach (var r in inResults)
     Console.WriteLine($"  {r.Name,-12} {r.Sector,-15} — {r.Price:F2}");
 ```
 
-    === Tech & Healthcare ===
-      ASML.AS      Technology      — 1191.20
-      ADYEN.AS     Technology      — 923.10
-      SAP.DE       Technology      — 153.82
-      IFX.DE       Technology      — 40.73
-      DSY.PA       Technology      — 18.37
-    
+```text
+=== Tech & Healthcare ===
+  ASML.AS      Technology      — 1191.20
+  ADYEN.AS     Technology      — 923.10
+  SAP.DE       Technology      — 153.82
+  IFX.DE       Technology      — 40.73
+  DSY.PA       Technology      — 18.37
+```
+
 
 ### Ordering and Limiting
 
-This cell:
+Both the SDK and REST API support ordering by nested fields using dot notation. This example orders stocks by `scores.composite` descending and takes the top 5.
 
-1. Orders stocks by `scores.composite` descending (nested field, dot notation)
-2. Takes top 5
+#### Google.Cloud.Firestore SDK
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var docs = await db.Collection("stocks")
->     .OrderByDescending("scores.composite")
->     .Limit(5)
->     .GetSnapshotAsync();
-> ```
+Orders by `scores.composite` descending and limits to 5 documents using `OrderByDescending()`.
+
+```csharp
+var topDocs = await db.Collection("stocks")
+    .OrderByDescending("scores.composite")
+    .Limit(5)
+    .GetSnapshotAsync();
+
+Console.WriteLine("=== Top 5 by Composite Score ===");
+foreach (var doc in topDocs.Documents)
+{
+    var scores = doc.GetValue<Dictionary<string, object>>("scores");
+    Console.WriteLine($"  #{scores["rank"],2} {doc.Id,-12} score={scores["composite"]}");
+}
+```
+
+```text
+=== Top 5 by Composite Score ===
+  # 1 BNP.PA       score=0.6795985859619491
+  # 2 VOW.DE       score=0.5756100520413311
+  # 3 DTE.DE       score=0.4870486370039222
+  # 4 TTE.PA       score=0.3912872052761238
+  # 5 ABI.BR       score=0.38521031359211527
+```
+
+#### Firestore REST API
+
+Orders stocks by `scores.composite` descending using the `orderBy` clause in a structured query and limits to 5.
 
 ```csharp
 var topQuery = @"{
@@ -966,32 +1181,60 @@ foreach (var fdoc in await RestQuery(topQuery))
 }
 ```
 
-    === Top 5 by Composite Score ===
-      # 1 BNP.PA       score=0.6796
-      # 2 VOW.DE       score=0.5756
-      # 3 DTE.DE       score=0.4870
-      # 4 TTE.PA       score=0.3913
-      # 5 ABI.BR       score=0.3852
-    
+```text
+=== Top 5 by Composite Score ===
+  # 1 BNP.PA       score=0.6796
+  # 2 VOW.DE       score=0.5756
+  # 3 DTE.DE       score=0.4870
+  # 4 TTE.PA       score=0.3913
+  # 5 ABI.BR       score=0.3852
+```
+
 
 ## Nested Fields & Arrays
 
+Demonstrates querying on dot-notation nested map fields and reading nested map values from Firestore documents using both the SDK and REST API.
+
 ### Query on Nested Map Fields
 
-This cell:
+Both the SDK and REST API use dot notation to query nested map fields. This example filters stocks where `scores.momentum > 0.05` and orders by momentum descending.
 
-1. Filters stocks where `scores.momentum > 0.05` (dot notation)
-2. Orders by `scores.momentum` descending
+#### Google.Cloud.Firestore SDK
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var docs = await db.Collection("stocks")
->     .WhereGreaterThan("scores.momentum", 0.05)
->     .OrderByDescending("scores.momentum")
->     .Limit(10)
->     .GetSnapshotAsync();
-> ```
+Filters on `scores.momentum > 0.05` using `WhereGreaterThan()` with dot notation and orders descending.
+
+```csharp
+var momentumDocs = await db.Collection("stocks")
+    .WhereGreaterThan("scores.momentum", 0.05)
+    .OrderByDescending("scores.momentum")
+    .Limit(10)
+    .GetSnapshotAsync();
+
+Console.WriteLine("=== High Momentum Stocks ===");
+foreach (var doc in momentumDocs.Documents)
+{
+    var scores = doc.GetValue<Dictionary<string, object>>("scores");
+    Console.WriteLine($"  {doc.Id,-12} momentum={scores["momentum"]}");
+}
+```
+
+```text
+=== High Momentum Stocks ===
+  ENR.DE       momentum=2.040248003563352
+  ENI.MI       momentum=1.97784246073669
+  ASML.AS      momentum=1.4701340833921561
+  TTE.PA       momentum=1.3073873387458326
+  AD.AS        momentum=1.1629070461780389
+  IBE.MC       momentum=0.7533811586118653
+  DTE.DE       momentum=0.7063835924853747
+  BAYN.DE      momentum=0.64222974751378
+  ENEL.MI      momentum=0.6335766081570756
+  SU.PA        momentum=0.5632576742927043
+```
+
+#### Firestore REST API
+
+Filters stocks where `scores.momentum > 0.05` using a `fieldFilter` with dot-notation field path and orders descending.
 
 ```csharp
 var momentumQuery = @"{
@@ -1020,20 +1263,24 @@ foreach (var fdoc in await RestQuery(momentumQuery))
 }
 ```
 
-    === High Momentum Stocks ===
-      ENR.DE       momentum=2.0402
-      ENI.MI       momentum=1.9778
-      ASML.AS      momentum=1.4701
-      TTE.PA       momentum=1.3074
-      AD.AS        momentum=1.1629
-      IBE.MC       momentum=0.7534
-      DTE.DE       momentum=0.7064
-      BAYN.DE      momentum=0.6422
-      ENEL.MI      momentum=0.6336
-      SU.PA        momentum=0.5633
-    
+```text
+=== High Momentum Stocks ===
+  ENR.DE       momentum=2.0402
+  ENI.MI       momentum=1.9778
+  ASML.AS      momentum=1.4701
+  TTE.PA       momentum=1.3074
+  AD.AS        momentum=1.1629
+  IBE.MC       momentum=0.7534
+  DTE.DE       momentum=0.7064
+  BAYN.DE      momentum=0.6422
+  ENEL.MI      momentum=0.6336
+  SU.PA        momentum=0.5633
+```
+
 
 ### Read Nested Maps from Documents
+
+#### C# | REST API | unwrap mapValue envelope to read nested map fields
 
 This cell:
 
@@ -1081,33 +1328,55 @@ foreach (var fdoc in await RestQuery(alertMetaQuery))
 }
 ```
 
-    === Alert Metadata ===
-      alert_001: type=PRICE_DROP      source=scheduler       run=run_028
-      alert_002: type=PRICE_DROP      source=manual          run=run_019
-      alert_003: type=PRICE_DROP      source=manual          run=run_050
-      alert_004: type=PRICE_DROP      source=cloud_function  run=run_042
-      alert_005: type=MOMENTUM_FLIP   source=manual          run=run_024
-    
+```text
+=== Alert Metadata ===
+  alert_001: type=PRICE_DROP      source=scheduler       run=run_028
+  alert_002: type=PRICE_DROP      source=manual          run=run_019
+  alert_003: type=PRICE_DROP      source=manual          run=run_050
+  alert_004: type=PRICE_DROP      source=cloud_function  run=run_042
+  alert_005: type=MOMENTUM_FLIP   source=manual          run=run_024
+```
+
 
 ## Subcollections
 
+Subcollections are ideal for unbounded data like per-symbol price history. Each entry becomes its own document with no practical document-size ceiling. Covers reading, filtering, and querying within subcollections.
+
 ### Read a Subcollection
 
-This cell:
+Both the SDK and REST API can read subcollections. This example reads `stocks/ASML.AS/prices` ordered by date descending, taking the last 5 trading days with OHLCV data.
 
-1. Reads `stocks/ASML.AS/prices` subcollection via REST
-2. Orders by `date` descending, takes top 5
-3. Prints OHLCV data for each day
+#### Google.Cloud.Firestore SDK
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var docs = await db.Collection("stocks").Document("ASML.AS")
->     .Collection("prices")
->     .OrderByDescending("date")
->     .Limit(5)
->     .GetSnapshotAsync();
-> ```
+Navigates to the `prices` subcollection under `stocks/ASML.AS` using `Document().Collection()` chaining, then orders by date descending.
+
+```csharp
+var priceDocs = await db.Collection("stocks").Document("ASML.AS")
+    .Collection("prices")
+    .OrderByDescending("date")
+    .Limit(5)
+    .GetSnapshotAsync();
+
+Console.WriteLine("=== ASML.AS Price History (last 5 days) ===");
+foreach (var doc in priceDocs.Documents)
+{
+    Console.WriteLine($"  {doc.GetValue<string>("date")}  O={doc.GetValue<double>("open"),8:F2}  H={doc.GetValue<double>("high"),8:F2}  "
+        + $"L={doc.GetValue<double>("low"),8:F2}  C={doc.GetValue<double>("close"),8:F2}  V={doc.GetValue<long>("volume"),12:N0}");
+}
+```
+
+```text
+=== ASML.AS Price History (last 5 days) ===
+  2026-03-12  O= 1194.80  H= 1202.20  L= 1187.80  C= 1190.80  V=     128'223
+  2026-03-11  O= 1188.40  H= 1210.80  L= 1174.00  C= 1198.80  V=     562'904
+  2026-03-10  O= 1188.40  H= 1208.40  L= 1172.20  C= 1200.00  V=     800'815
+  2026-03-09  O= 1072.00  H= 1147.60  L= 1060.20  C= 1147.60  V=     689'086
+  2026-03-06  O= 1186.00  H= 1192.60  L= 1112.80  C= 1147.00  V=     857'271
+```
+
+#### Firestore REST API
+
+Reads `stocks/ASML.AS/prices` via REST, orders by `date` descending, and takes the top 5.
 
 ```csharp
 var priceQuery = @"{
@@ -1133,32 +1402,55 @@ foreach (var item in priceResults.RootElement.EnumerateArray())
 }
 ```
 
-    === ASML.AS Price History (last 5 days) ===
-      2026-03-12  O= 1194.80  H= 1202.20  L= 1187.80  C= 1190.80  V=     128'223
-      2026-03-11  O= 1188.40  H= 1210.80  L= 1174.00  C= 1198.80  V=     562'904
-      2026-03-10  O= 1188.40  H= 1208.40  L= 1172.20  C= 1200.00  V=     800'815
-      2026-03-09  O= 1072.00  H= 1147.60  L= 1060.20  C= 1147.60  V=     689'086
-      2026-03-06  O= 1186.00  H= 1192.60  L= 1112.80  C= 1147.00  V=     857'271
-    
+```text
+=== ASML.AS Price History (last 5 days) ===
+  2026-03-12  O= 1194.80  H= 1202.20  L= 1187.80  C= 1190.80  V=     128'223
+  2026-03-11  O= 1188.40  H= 1210.80  L= 1174.00  C= 1198.80  V=     562'904
+  2026-03-10  O= 1188.40  H= 1208.40  L= 1172.20  C= 1200.00  V=     800'815
+  2026-03-09  O= 1072.00  H= 1147.60  L= 1060.20  C= 1147.60  V=     689'086
+  2026-03-06  O= 1186.00  H= 1192.60  L= 1112.80  C= 1147.00  V=     857'271
+```
 
 ### Query Within a Subcollection
 
-This cell:
+Both the SDK and REST API can filter within a single subcollection. This example queries `stocks/ASML.AS/prices` where `close > 700`, ordered by close descending. Only ASML's prices are searched — not other stocks.
 
-1. Queries `stocks/ASML.AS/prices` where `close > 700`
-2. Orders by `close` descending
-3. Only searches ASML's prices — not other stocks
+#### Google.Cloud.Firestore SDK
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var docs = await db.Collection("stocks").Document("ASML.AS")
->     .Collection("prices")
->     .WhereGreaterThan("close", 700)
->     .OrderByDescending("close")
->     .Limit(10)
->     .GetSnapshotAsync();
-> ```
+Filters ASML's price subcollection for days with close above 700 using `WhereGreaterThan()` and `OrderByDescending()`.
+
+```csharp
+var subDocs = await db.Collection("stocks").Document("ASML.AS")
+    .Collection("prices")
+    .WhereGreaterThan("close", 700)
+    .OrderByDescending("close")
+    .Limit(10)
+    .GetSnapshotAsync();
+
+Console.WriteLine("=== ASML Days Above 700 ===");
+foreach (var doc in subDocs.Documents)
+{
+    Console.WriteLine($"  {doc.GetValue<string>("date")}: close={doc.GetValue<double>("close"):F2}");
+}
+```
+
+```text
+=== ASML Days Above 700 ===
+  2026-02-25: close=1288.40
+  2026-02-24: close=1263.40
+  2026-02-20: close=1255.60
+  2026-02-23: close=1249.20
+  2026-02-18: close=1244.80
+  2026-02-19: close=1238.20
+  2026-02-27: close=1233.40
+  2026-02-26: close=1232.40
+  2026-02-02: close=1224.80
+  2026-01-30: close=1215.60
+```
+
+#### Firestore REST API
+
+Queries `stocks/ASML.AS/prices` where `close > 700` using a structured query with `GREATER_THAN` operator.
 
 ```csharp
 var subQuery = @"{
@@ -1190,20 +1482,24 @@ foreach (var item in subResults.RootElement.EnumerateArray())
 }
 ```
 
-    === ASML Days Above 700 ===
-      2026-02-25: close=1288.40
-      2026-02-24: close=1263.40
-      2026-02-20: close=1255.60
-      2026-02-23: close=1249.20
-      2026-02-27: close=1233.40
-      2026-02-26: close=1232.40
-      2026-03-02: close=1210.40
-      2026-03-10: close=1200.00
-      2026-03-04: close=1199.80
-      2026-03-11: close=1198.80
-    
+```text
+=== ASML Days Above 700 ===
+  2026-02-25: close=1288.40
+  2026-02-24: close=1263.40
+  2026-02-20: close=1255.60
+  2026-02-23: close=1249.20
+  2026-02-27: close=1233.40
+  2026-02-26: close=1232.40
+  2026-03-02: close=1210.40
+  2026-03-10: close=1200.00
+  2026-03-04: close=1199.80
+  2026-03-11: close=1198.80
+```
+
 
 ## Write Operations
+
+Covers document creation and overwrite with `SetAsync`, field-level atomic updates with `UpdateAsync`, and permanent deletion with `DeleteAsync`.
 
 ### Set — Create or Overwrite
 
@@ -1237,6 +1533,8 @@ This cell:
 >
 > Use `SetAsync(data, SetOptions.MergeAll)` for upserts, and `UpdateAsync(fields)` when you only want to touch specific fields on an existing document. Reserve bare `SetAsync(data)` for explicit full-document replacements where you intentionally want to clear all other fields.
 
+#### C# | Firestore SDK | create, update, and delete a watchlist document
+
 ```csharp
 var testRef = db.Collection("watchlists").Document("test_cs");
 await testRef.SetAsync(new Dictionary<string, object>
@@ -1261,12 +1559,16 @@ await testRef.DeleteAsync();
 Console.WriteLine("Deleted test_cs");
 ```
 
-    Created test_cs
-    Updated: added MC.PA, incremented count
-    Deleted test_cs
-    
+```text
+Created test_cs
+Updated: added MC.PA, incremented count
+Deleted test_cs
+```
+
 
 ### Update — ArrayUnion, Increment, ServerTimestamp
+
+#### C# | Firestore SDK | atomic array and counter updates
 
 This cell:
 
@@ -1299,13 +1601,17 @@ await updRef.DeleteAsync();
 Console.WriteLine("Deleted test_update_cs");
 ```
 
-    Symbols: [ASML.AS, TTE.PA]
-    Count: 3
-    Modified: Timestamp: 2026-03-22T18:39:01.125Z
-    Deleted test_update_cs
-    
+```text
+Symbols: [ASML.AS, TTE.PA]
+Count: 3
+Modified: Timestamp: 2026-03-22T18:39:01.125Z
+Deleted test_update_cs
+```
+
 
 ### Delete a Document
+
+#### C# | Firestore SDK | delete and verify document removal
 
 This cell:
 
@@ -1338,18 +1644,24 @@ var delCheck = await delRef.GetSnapshotAsync();
 Console.WriteLine($"Exists after delete: {delCheck.Exists}");
 ```
 
-    Created: test_delete_cs
-    Deleted: test_delete_cs
-    Exists after delete: False
-    
+```text
+Created: test_delete_cs
+Deleted: test_delete_cs
+Exists after delete: False
+```
+
 
 ## Batch Operations & Transactions
+
+Covers atomic multi-write batches and optimistic-concurrency transactions using the Firestore SDK. Batches commit up to 500 writes atomically; transactions add read-before-write with automatic retry on conflict.
 
 > [!info] Cross-Engine — Transaction Models
 >
 > Firestore transactions use optimistic concurrency (retry on conflict) and are limited to 500 operations per batch/transaction. SQL Server provides full ACID with pessimistic locking and no operation-count limit. BigQuery has limited multi-statement transactions scoped to a single query job.
 
 ### Batch — Atomic Multi-Write
+
+#### C# | Firestore SDK | create and commit a write batch
 
 This cell:
 
@@ -1379,11 +1691,15 @@ for (int i = 0; i < 3; i++)
 Console.WriteLine("Cleaned up");
 ```
 
-    Batch committed: 3 alerts
-    Cleaned up
-    
+```text
+Batch committed: 3 alerts
+Cleaned up
+```
+
 
 ### Transaction — Acknowledge an Alert
+
+#### C# | Firestore SDK | read-modify-write with optimistic concurrency
 
 This cell:
 
@@ -1421,12 +1737,16 @@ await alertRef.UpdateAsync(new Dictionary<string, object> { { "acknowledged", fa
 Console.WriteLine("  [RESET] alert_001.acknowledged = false");
 ```
 
-    === Transaction Result ===
-      [UPDATED] alert_001: acknowledged=true
-      [RESET] alert_001.acknowledged = false
-    
+```text
+=== Transaction Result ===
+  [UPDATED] alert_001: acknowledged=true
+  [RESET] alert_001.acknowledged = false
+```
+
 
 ## Real-Time Listeners
+
+Real-time listeners push document and collection changes to the client as they happen. On .NET 8/9 the SDK `Listen()` method is used directly; on .NET 10 the listener fails and requires a REST polling workaround.
 
 ### on_snapshot Push Notifications
 
@@ -1438,7 +1758,9 @@ Console.WriteLine("  [RESET] alert_001.acknowledged = false");
 >
 > On .NET 10, replace real-time listeners with a REST polling loop: call `runQuery` on a short interval (e.g., every 5–10 seconds) and compare results against a local snapshot to detect changes. For production event-driven workflows, use a Cloud Pub/Sub trigger or Cloud Function instead of an in-process listener.
 
-In a real .NET 8/9 project:
+#### C# | Firestore SDK | attach and stop a real-time collection listener
+
+In a real .NET 8/9 project, attach a listener via `Listen()` and dispose it with `StopAsync()` when done.
 
 ```csharp
 var listener = db.Collection("stocks")
@@ -1447,7 +1769,7 @@ var listener = db.Collection("stocks")
         foreach (var change in snapshot.Changes)
             Console.WriteLine($"[{change.ChangeType}] {change.Document.Id}");
     });
-// ... later:
+
 await listener.StopAsync();
 ```
 
@@ -1463,6 +1785,8 @@ Firestore added server-side `COUNT`, `SUM`, and `AVG` aggregation queries in 202
 > Firestore aggregation is limited to COUNT, SUM, and AVG over a single field with no GROUP BY, HAVING, or window functions. For complex aggregation (pivots, percentiles, multi-dimensional rollups), export data to BigQuery. SQL Server and BigQuery support the full SQL aggregation spectrum.
 
 ### COUNT — Server-Side
+
+#### C# | REST API | count stocks per country with runAggregationQuery
 
 This cell runs a server-side `COUNT` aggregation for each country. Each aggregation query costs 1 read operation regardless of how many documents match — much cheaper than streaming all documents.
 
@@ -1508,15 +1832,19 @@ foreach (var country in new[] { "Germany", "France", "Netherlands", "Italy", "Sp
 }
 ```
 
-    === Stock Count by Country ===
-      Germany        : 16 stocks
-      France         : 15 stocks
-      Netherlands    : 8 stocks
-      Italy          : 5 stocks
-      Spain          : 4 stocks
-    
+```text
+=== Stock Count by Country ===
+  Germany        : 16 stocks
+  France         : 15 stocks
+  Netherlands    : 8 stocks
+  Italy          : 5 stocks
+  Spain          : 4 stocks
+```
+
 
 ### SUM and AVG — Server-Side
+
+#### C# | REST API | aggregate index weight sum, price average, and document count
 
 This cell runs three server-side aggregations across all 50 stocks:
 
@@ -1561,10 +1889,12 @@ foreach (var item in aggResult.EnumerateArray())
 }
 ```
 
-    Total index weight: 1.0000
-    Average stock price: 234.17
-    Total stocks: 50
-    
+```text
+Total index weight: 1.0000
+Average stock price: 234.17
+Total stocks: 50
+```
+
 
 ## Collection Group Queries
 
@@ -1576,23 +1906,43 @@ Collection group queries search across all subcollections with the same name in 
 
 ### Query Across ALL Subcollections
 
-This cell:
+Both the SDK and REST API support collection group queries that search across all subcollections with the same name. The SDK uses `CollectionGroup()`; the REST API uses `allDescendants: true`. Requires a field exemption for `close` on the `prices` collection group.
 
-1. Sends a collection group query (`allDescendants: true`) for `prices`
-2. Orders by `close` descending, takes top 10
-3. Extracts parent symbol from the document path
+#### Google.Cloud.Firestore SDK
 
-**Prerequisite**: field exemption for `close` on `prices` collection group
-(created from the Python notebook's `ensure_index()`).
+Queries all `prices` subcollections across all stocks using `CollectionGroup("prices")`, ordered by `close` descending. Extracts the parent stock symbol from the document reference path.
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var docs = await db.CollectionGroup("prices")
->     .OrderByDescending("close")
->     .Limit(10)
->     .GetSnapshotAsync();
-> ```
+```csharp
+var cgDocs = await db.CollectionGroup("prices")
+    .OrderByDescending("close")
+    .Limit(10)
+    .GetSnapshotAsync();
+
+Console.WriteLine("=== Highest Closes Across All Stocks ===");
+foreach (var doc in cgDocs.Documents)
+{
+    var symbol = doc.Reference.Parent.Parent.Id;
+    Console.WriteLine($"  {symbol,-12} {doc.GetValue<string>("date")}  close={doc.GetValue<double>("close"),10:F2}");
+}
+```
+
+```text
+=== Highest Closes Across All Stocks ===
+  RMS.PA       2026-02-12  close=   2174.00
+  RMS.PA       2026-02-13  close=   2147.00
+  RMS.PA       2026-02-10  close=   2124.00
+  RMS.PA       2026-02-11  close=   2120.00
+  RMS.PA       2026-02-20  close=   2112.00
+  RMS.PA       2026-02-23  close=   2106.00
+  RMS.PA       2026-02-24  close=   2080.00
+  RMS.PA       2026-02-16  close=   2080.00
+  RMS.PA       2026-02-17  close=   2072.00
+  RMS.PA       2026-02-09  close=   2072.00
+```
+
+#### Firestore REST API
+
+Sends a collection group query with `allDescendants: true` for `prices`, ordered by `close` descending, and extracts the parent symbol from the document path.
 
 ```csharp
 await EnsureIndex("prices", new[] { ("close", "DESCENDING") }, scope: "COLLECTION_GROUP");
@@ -1621,38 +1971,69 @@ foreach (var item in cgResults.RootElement.EnumerateArray())
 }
 ```
 
-      Field exemption ready: prices/close
-    === Highest Closes Across All Stocks ===
-      RMS.PA       2026-02-20  close=   2112.00
-      RMS.PA       2026-02-23  close=   2106.00
-      RMS.PA       2026-02-24  close=   2080.00
-      RMS.PA       2026-02-25  close=   2062.00
-      RMS.PA       2026-02-26  close=   2060.00
-      RMS.PA       2026-02-27  close=   2049.00
-      RMS.PA       2026-03-02  close=   1967.00
-      RMS.PA       2026-03-10  close=   1948.00
-      RMS.PA       2026-03-04  close=   1930.00
-      RMS.PA       2026-03-11  close=   1920.50
-    
+```text
+  Field exemption ready: prices/close
+=== Highest Closes Across All Stocks ===
+  RMS.PA       2026-02-20  close=   2112.00
+  RMS.PA       2026-02-23  close=   2106.00
+  RMS.PA       2026-02-24  close=   2080.00
+  RMS.PA       2026-02-25  close=   2062.00
+  RMS.PA       2026-02-26  close=   2060.00
+  RMS.PA       2026-02-27  close=   2049.00
+  RMS.PA       2026-03-02  close=   1967.00
+  RMS.PA       2026-03-10  close=   1948.00
+  RMS.PA       2026-03-04  close=   1930.00
+  RMS.PA       2026-03-11  close=   1920.50
+```
+
 
 ### Collection Group — Filter by Date
 
-This cell:
+Both the SDK and REST API can combine collection group queries with equality filters. This example dynamically finds the latest available date from ASML's prices, then queries all `prices` subcollections for that date.
 
-1. Dynamically finds the latest available date from ASML's prices
-2. Queries ALL `prices` subcollections for that date using `allDescendants: true`
-3. Orders by `close` descending, limits to 10
-4. Prints cross-stock closing prices for that day
+#### Google.Cloud.Firestore SDK
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var docs = await db.CollectionGroup("prices")
->     .WhereEqualTo("date", targetDate)
->     .OrderByDescending("close")
->     .Limit(10)
->     .GetSnapshotAsync();
-> ```
+Finds the latest date from ASML's prices, then queries all `prices` subcollections for that date using `CollectionGroup("prices")` with `WhereEqualTo()`.
+
+```csharp
+var latestDoc = await db.Collection("stocks").Document("ASML.AS")
+    .Collection("prices")
+    .OrderByDescending("date")
+    .Limit(1)
+    .GetSnapshotAsync();
+var targetDate = latestDoc.Documents.First().GetValue<string>("date");
+
+var dateDocs = await db.CollectionGroup("prices")
+    .WhereEqualTo("date", targetDate)
+    .OrderByDescending("close")
+    .Limit(10)
+    .GetSnapshotAsync();
+
+Console.WriteLine($"=== All Prices on {targetDate} ===");
+foreach (var doc in dateDocs.Documents)
+{
+    var symbol = doc.Reference.Parent.Parent.Id;
+    Console.WriteLine($"  {symbol,-12} close={doc.GetValue<double>("close"),10:F2}  volume={doc.GetValue<long>("volume"),12:N0}");
+}
+```
+
+```text
+=== All Prices on 2026-03-12 ===
+  RMS.PA       close=   1906.00  volume=      18'681
+  RHM.DE       close=   1551.50  volume=     158'741
+  ASML.AS      close=   1190.80  volume=     128'223
+  ADYEN.AS     close=    925.70  volume=      27'887
+  ARGX.BR      close=    626.60  volume=      14'083
+  MUV2.DE      close=    526.20  volume=      86'783
+  MC.PA        close=    494.35  volume=     171'997
+  OR.PA        close=    360.80  volume=      82'621
+  ALV.DE       close=    348.70  volume=     182'426
+  SAF.PA       close=    315.40  volume=     160'065
+```
+
+#### Firestore REST API
+
+Dynamically finds the latest date, then queries all `prices` subcollections for that date using `allDescendants: true` with an equality filter.
 
 ```csharp
 await EnsureIndex("prices", new[] { ("date", "ASCENDING") }, scope: "COLLECTION_GROUP");
@@ -1698,40 +2079,74 @@ foreach (var fdoc in dateDocs)
 }
 ```
 
-      Field exemption ready: prices/date
-    === All Prices on 2026-03-12 ===
-      RMS.PA       close=   1906.00  volume=      18'681
-      RHM.DE       close=   1551.50  volume=     158'741
-      ASML.AS      close=   1190.80  volume=     128'223
-      ADYEN.AS     close=    925.70  volume=      27'887
-      ARGX.BR      close=    626.60  volume=      14'083
-      MUV2.DE      close=    526.20  volume=      86'783
-      MC.PA        close=    494.35  volume=     171'997
-      OR.PA        close=    360.80  volume=      82'621
-      ALV.DE       close=    348.70  volume=     182'426
-      SAF.PA       close=    315.40  volume=     160'065
-    
+```text
+  Field exemption ready: prices/date
+=== All Prices on 2026-03-12 ===
+  RMS.PA       close=   1906.00  volume=      18'681
+  RHM.DE       close=   1551.50  volume=     158'741
+  ASML.AS      close=   1190.80  volume=     128'223
+  ADYEN.AS     close=    925.70  volume=      27'887
+  ARGX.BR      close=    626.60  volume=      14'083
+  MUV2.DE      close=    526.20  volume=      86'783
+  MC.PA        close=    494.35  volume=     171'997
+  OR.PA        close=    360.80  volume=      82'621
+  ALV.DE       close=    348.70  volume=     182'426
+  SAF.PA       close=    315.40  volume=     160'065
+```
+
 
 ## Pagination & Cursors
 
+Firestore does not support offset-based pagination. Use cursor-based pagination: advance the cursor to the last document of each page with `StartAfter()` (SDK) or follow the `nextPageToken` from the REST response.
+
 ### Cursor-Based Pagination
 
-This cell:
+Both the SDK and REST API support cursor-based pagination. The SDK uses `StartAfter()` with the last document snapshot; the REST API uses `pageToken` from the response. Both examples fetch 5 stocks per page, stopping after 2 pages.
 
-1. Fetches stocks 5 at a time using `pageSize` and `pageToken`
-2. Follows `nextPageToken` from each response to get the next page
-3. Stops after 2 pages (demo limit)
+#### Google.Cloud.Firestore SDK
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var query = db.Collection("stocks").OrderBy("symbol").Limit(5);
-> QuerySnapshot snapshot = await query.GetSnapshotAsync();
-> // Next page:
-> query = db.Collection("stocks").OrderBy("symbol")
->     .StartAfter(snapshot.Documents.Last())
->     .Limit(5);
-> ```
+Paginates through stocks 5 at a time using `OrderBy("symbol").Limit(5)` and advancing the cursor with `StartAfter()` on the last document of each page.
+
+```csharp
+Console.WriteLine("=== Paginated Stock List ===");
+var query = db.Collection("stocks").OrderBy("symbol").Limit(5);
+
+for (int page = 1; page <= 2; page++)
+{
+    QuerySnapshot pageSnap = await query.GetSnapshotAsync();
+    Console.WriteLine($"\n--- Page {page} ---");
+    foreach (var doc in pageSnap.Documents)
+    {
+        Console.WriteLine($"  {doc.Id,-12} {doc.GetValue<string>("short_name"),-20}");
+    }
+    if (pageSnap.Documents.Count == 0) break;
+    query = db.Collection("stocks").OrderBy("symbol")
+        .StartAfter(pageSnap.Documents.Last())
+        .Limit(5);
+}
+```
+
+```text
+=== Paginated Stock List ===
+
+--- Page 1 ---
+  ABI.BR       AB INBEV
+  AD.AS        KONINKLIJKE AHOLD DELHAIZE N.V.
+  ADS.DE       adidas AG
+  ADYEN.AS     ADYEN
+  AI.PA        AIR LIQUIDE
+
+--- Page 2 ---
+  AIR.PA       AIRBUS SE
+  ALV.DE       Allianz SE
+  ARGX.BR      ARGENX SE
+  ASML.AS      ASML HOLDING
+  BAS.DE       BASF SE
+```
+
+#### Firestore REST API
+
+Fetches stocks 5 at a time using `pageSize` and follows `nextPageToken` from each response to get the next page.
 
 ```csharp
 Console.WriteLine("=== Paginated Stock List ===");
@@ -1760,42 +2175,57 @@ for (int page = 1; page <= 2; page++)
 }
 ```
 
-    === Paginated Stock List ===
-    
-    --- Page 1 ---
-      ABI.BR       AB INBEV            
-      AD.AS        KONINKLIJKE AHOLD DELHAIZE N.V.
-      ADS.DE       adidas AG           
-      ADYEN.AS     ADYEN               
-      AI.PA        AIR LIQUIDE         
-    
-    --- Page 2 ---
-      AIR.PA       AIRBUS SE           
-      ALV.DE       Allianz SE          
-      ARGX.BR      ARGENX SE           
-      ASML.AS      ASML HOLDING        
-      BAS.DE       BASF SE             
-    
+```text
+=== Paginated Stock List ===
+
+--- Page 1 ---
+  ABI.BR       AB INBEV
+  AD.AS        KONINKLIJKE AHOLD DELHAIZE N.V.
+  ADS.DE       adidas AG
+  ADYEN.AS     ADYEN
+  AI.PA        AIR LIQUIDE
+
+--- Page 2 ---
+  AIR.PA       AIRBUS SE
+  ALV.DE       Allianz SE
+  ARGX.BR      ARGENX SE
+  ASML.AS      ASML HOLDING
+  BAS.DE       BASF SE
+```
+
 
 ## Maintenance & Monitoring
 
 ### List Collections and Document Counts
 
-This cell:
+Both the SDK and REST API can enumerate root collections and count documents. The SDK discovers collections automatically via `ListRootCollectionsAsync()`; the REST version iterates a hardcoded list.
 
-1. Lists 6 known collections
-2. Counts documents in each via REST
-3. Prints a summary table
+#### Google.Cloud.Firestore SDK
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> foreach (var coll in db.ListRootCollectionsAsync())
-> {
->     var snapshot = await coll.Count().GetSnapshotAsync();
->     Console.WriteLine($"  {coll.Id}: {snapshot.Count}");
-> }
-> ```
+Lists all root collections and counts documents in each using `ListRootCollectionsAsync()` and `Limit(1000).GetSnapshotAsync()`.
+
+```csharp
+Console.WriteLine("=== Collections ===");
+await foreach (var coll in db.ListRootCollectionsAsync())
+{
+    var snap = await coll.Limit(1000).GetSnapshotAsync();
+    Console.WriteLine($"  {coll.Id,-20} {snap.Documents.Count,5} documents");
+}
+```
+
+```text
+=== Collections ===
+  alerts                  20 documents
+  config                   2 documents
+  pipeline_runs           15 documents
+  sectors                 10 documents
+  stocks                  50 documents
+  watchlists               3 documents
+```
+
+#### Firestore REST API
+
+Iterates 6 known collections, counts documents in each via REST `GET` with `pageSize=1000`, and prints a summary table.
 
 ```csharp
 Console.WriteLine("=== Collections ===");
@@ -1808,30 +2238,48 @@ foreach (var coll in new[] { "stocks", "sectors", "alerts", "pipeline_runs", "wa
 }
 ```
 
-    === Collections ===
-      stocks                  50 documents
-      sectors                 10 documents
-      alerts                  20 documents
-      pipeline_runs           15 documents
-      watchlists               3 documents
-      config                   2 documents
-    
+```text
+=== Collections ===
+  stocks                  50 documents
+  sectors                 10 documents
+  alerts                  20 documents
+  pipeline_runs           15 documents
+  watchlists               3 documents
+  config                   2 documents
+```
+
 
 ### List Subcollections
 
-This cell:
+Both the SDK and REST API can list subcollections under a document. The SDK uses `ListCollectionsAsync()` to discover them; the REST version queries the known subcollection directly.
 
-1. Lists subcollections under `stocks/ASML.AS` via REST API
-2. Prints the subcollection name and a sample document
+#### Google.Cloud.Firestore SDK
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var subCollections = db.Collection("stocks").Document("ASML.AS")
->     .ListCollectionsAsync();
-> await foreach (var sub in subCollections)
->     Console.WriteLine($"  {sub.Id}");
-> ```
+Lists subcollections under `stocks/ASML.AS` using `ListCollectionsAsync()` and prints a sample document from each.
+
+```csharp
+Console.WriteLine("=== Subcollections of stocks/ASML.AS ===");
+await foreach (var sub in db.Collection("stocks").Document("ASML.AS").ListCollectionsAsync())
+{
+    var snap = await sub.Limit(1).GetSnapshotAsync();
+    Console.WriteLine($"  {sub.Id}: {snap.Documents.Count}+ documents");
+    if (snap.Documents.Count > 0)
+    {
+        var first = snap.Documents[0];
+        Console.WriteLine($"    Sample: date={first.GetValue<string>("date")}, close={first.GetValue<double>("close"):F2}");
+    }
+}
+```
+
+```text
+=== Subcollections of stocks/ASML.AS ===
+  prices: 1+ documents
+    Sample: date=2026-01-30, close=1215.60
+```
+
+#### Firestore REST API
+
+Queries the known `prices` subcollection under `stocks/ASML.AS` via REST and prints a sample document.
 
 ```csharp
 var subCollUrl = $"{baseUrl}/stocks/ASML.AS/prices?pageSize=1";
@@ -1848,29 +2296,46 @@ if (subCollJson.RootElement.TryGetProperty("documents", out var subDocs))
 }
 ```
 
-    === Subcollections of stocks/ASML.AS ===
-      prices: 1+ documents (showing 1)
-        Sample: date=2026-02-20, close=1255.60
-    
+```text
+=== Subcollections of stocks/ASML.AS ===
+  prices: 1+ documents (showing 1)
+    Sample: date=2026-02-20, close=1255.60
+```
+
 
 ### Find Stale Documents
 
-This cell:
+Both the SDK and REST API can filter on timestamp fields. This example queries `pipeline_runs` started more than 48 hours ago for freshness monitoring. The SDK uses `Timestamp.FromDateTime()`; the REST API uses an ISO 8601 `timestampValue`.
 
-1. Queries `pipeline_runs` started more than 48 hours ago
-2. Uses `LESS_THAN` filter on `started_at` timestamp field
-3. Prints stale runs for freshness monitoring
+#### Google.Cloud.Firestore SDK
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var cutoff = Timestamp.FromDateTime(DateTime.UtcNow.AddHours(-48));
-> var docs = await db.Collection("pipeline_runs")
->     .WhereLessThan("started_at", cutoff)
->     .OrderBy("started_at")
->     .Limit(10)
->     .GetSnapshotAsync();
-> ```
+Filters pipeline runs older than 48 hours using `WhereLessThan()` with a `Timestamp` cutoff.
+
+```csharp
+var cutoff = Timestamp.FromDateTime(DateTime.UtcNow.AddHours(-48));
+var staleDocs = await db.Collection("pipeline_runs")
+    .WhereLessThan("started_at", cutoff)
+    .OrderBy("started_at")
+    .Limit(10)
+    .GetSnapshotAsync();
+
+Console.WriteLine("=== Stale Pipeline Runs (>48h) ===");
+foreach (var doc in staleDocs.Documents)
+{
+    Console.WriteLine($"  {doc.Id}: status={doc.GetValue<string>("status")}");
+}
+```
+
+```text
+=== Stale Pipeline Runs (>48h) ===
+  run_015: status=SUCCESS
+  run_014: status=SUCCESS
+  run_013: status=SUCCESS
+```
+
+#### Firestore REST API
+
+Queries `pipeline_runs` where `started_at < cutoff` using `LESS_THAN` filter on the timestamp field.
 
 ```csharp
 var cutoff = DateTime.UtcNow.AddHours(-48).ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
@@ -1898,27 +2363,46 @@ foreach (var fdoc in await RestQuery(staleQuery))
 }
 ```
 
-    === Stale Pipeline Runs (>48h) ===
-      run_015: status=SUCCESS
-      run_014: status=SUCCESS
-      run_013: status=SUCCESS
-    
+```text
+=== Stale Pipeline Runs (>48h) ===
+  run_015: status=SUCCESS
+  run_014: status=SUCCESS
+  run_013: status=SUCCESS
+```
 
 ### Find Failed Pipeline Runs
 
-This cell:
+Both the SDK and REST API can filter pipeline runs by status. This example returns runs where `status == "FAILED"`.
 
-1. Queries `pipeline_runs` where `status == "FAILED"`
-2. Inspects the `steps` array to find which step failed
+#### Google.Cloud.Firestore SDK
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var docs = await db.Collection("pipeline_runs")
->     .WhereEqualTo("status", "FAILED")
->     .Limit(10)
->     .GetSnapshotAsync();
-> ```
+Filters pipeline runs with `WhereEqualTo("status", "FAILED")`.
+
+```csharp
+var failedDocs = await db.Collection("pipeline_runs")
+    .WhereEqualTo("status", "FAILED")
+    .Limit(10)
+    .GetSnapshotAsync();
+
+Console.WriteLine("=== Failed Pipeline Runs ===");
+foreach (var doc in failedDocs.Documents)
+{
+    Console.WriteLine($"  {doc.Id}: status={doc.GetValue<string>("status")}");
+}
+```
+
+```text
+=== Failed Pipeline Runs ===
+  run_001: status=FAILED
+  run_002: status=FAILED
+  run_005: status=FAILED
+  run_008: status=FAILED
+  run_010: status=FAILED
+```
+
+#### Firestore REST API
+
+Queries `pipeline_runs` where `status == "FAILED"` using an `EQUAL` field filter and inspects the `steps` array.
 
 ```csharp
 var failedQuery = @"{
@@ -1944,28 +2428,50 @@ foreach (var fdoc in await RestQuery(failedQuery))
 }
 ```
 
-    === Failed Pipeline Runs ===
-      run_004: status=FAILED
-      run_005: status=FAILED
-      run_006: status=FAILED
-    
+```text
+=== Failed Pipeline Runs ===
+  run_004: status=FAILED
+  run_005: status=FAILED
+  run_006: status=FAILED
+```
+
 
 ### Unacknowledged Critical Alerts
 
-This cell:
+Both the SDK and REST API support compound equality filters. This example returns alerts where `severity == "HIGH"` AND `acknowledged == false` — alerts needing immediate attention. Requires a composite index.
 
-1. Compound filter: `severity == "HIGH"` AND `acknowledged == false`
-2. Returns alerts needing immediate attention
+#### Google.Cloud.Firestore SDK
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var docs = await db.Collection("alerts")
->     .WhereEqualTo("severity", "HIGH")
->     .WhereEqualTo("acknowledged", false)
->     .Limit(10)
->     .GetSnapshotAsync();
-> ```
+Chains `WhereEqualTo("severity", "HIGH")` and `WhereEqualTo("acknowledged", false)` to find unacknowledged high-severity alerts.
+
+```csharp
+var alertDocs = await db.Collection("alerts")
+    .WhereEqualTo("severity", "HIGH")
+    .WhereEqualTo("acknowledged", false)
+    .Limit(10)
+    .GetSnapshotAsync();
+
+Console.WriteLine("=== Unacknowledged HIGH Alerts ===");
+foreach (var doc in alertDocs.Documents)
+{
+    Console.WriteLine($"  {doc.Id}: {doc.GetValue<string>("symbol")} — {doc.GetValue<string>("message")}");
+}
+```
+
+```text
+=== Unacknowledged HIGH Alerts ===
+  alert_003: VOW.DE — VOW.DE triggered weight change alert
+  alert_005: IFX.DE — IFX.DE triggered momentum flip alert
+  alert_011: SIE.DE — SIE.DE triggered rank change alert
+  alert_014: IFX.DE — IFX.DE triggered price drop alert
+  alert_018: BMW.DE — BMW.DE triggered volume spike alert
+  alert_019: ARGX.BR — ARGX.BR triggered price drop alert
+  alert_020: DHL.DE — DHL.DE triggered price drop alert
+```
+
+#### Firestore REST API
+
+Uses a `compositeFilter` with `AND` operator to filter `severity == "HIGH"` and `acknowledged == false`. Requires a composite index.
 
 ```csharp
 await EnsureIndex("alerts", new[] {
@@ -1997,34 +2503,50 @@ foreach (var fdoc in await RestQuery(alertQuery))
 }
 ```
 
-      Index exists: alerts/severity + acknowledged.... ready!
-    === Unacknowledged HIGH Alerts ===
-      alert_001: BAS.DE — BAS.DE triggered price drop alert
-      alert_008: UCG.MI — UCG.MI triggered weight change alert
-      alert_009: ENI.MI — ENI.MI triggered volume spike alert
-      alert_010: DG.PA — DG.PA triggered momentum flip alert
-      alert_011: SAP.DE — SAP.DE triggered price drop alert
-      alert_020: DHL.DE — DHL.DE triggered rank change alert
-    
+```text
+  Index exists: alerts/severity + acknowledged.... ready!
+=== Unacknowledged HIGH Alerts ===
+  alert_001: BAS.DE — BAS.DE triggered price drop alert
+  alert_008: UCG.MI — UCG.MI triggered weight change alert
+  alert_009: ENI.MI — ENI.MI triggered volume spike alert
+  alert_010: DG.PA — DG.PA triggered momentum flip alert
+  alert_011: SAP.DE — SAP.DE triggered price drop alert
+  alert_020: DHL.DE — DHL.DE triggered rank change alert
+```
+
 
 ### Read Application Config
 
-This cell:
+Both the SDK and REST API can read singleton config documents. Config documents are **singletons** — one document per config type. Change a value here and all clients see it instantly (via real-time listeners).
 
-1. Reads `config/pipeline` — contains `fetch_interval_seconds`, `max_retries`, `enabled_indices`, `alert_thresholds`
-2. Reads `config/display` — contains `default_index`, `rows_per_page`, `theme`, `currency`
-3. Prints all key-value pairs
+#### Google.Cloud.Firestore SDK
 
-Config documents are **singletons** — one document per config type. Change a value here and all clients see it instantly (via real-time listeners).
+Reads `config/pipeline` using `GetSnapshotAsync()` and iterates all key-value pairs via `ToDictionary()`.
 
-> [!info] SDK Equivalent (.NET 8/9)
->
-> ```csharp
-> var doc = await db.Collection("config").Document("pipeline").GetSnapshotAsync();
-> var dict = doc.ToDictionary();
-> foreach (var kv in dict)
->     Console.WriteLine($"  {kv.Key}: {kv.Value}");
-> ```
+```csharp
+var configDoc = await db.Collection("config").Document("pipeline").GetSnapshotAsync();
+
+Console.WriteLine("=== Pipeline Config ===");
+foreach (var kv in configDoc.ToDictionary())
+{
+    Console.WriteLine($"  {kv.Key}: {kv.Value}");
+}
+```
+
+```text
+=== Pipeline Config ===
+  last_modified_by: admin
+  fetch_interval_seconds: 60
+  max_retries: 3
+  last_modified_at: Timestamp: 2026-04-05T13:08:35.987951Z
+  enabled_indices: System.Collections.Generic.List`1[System.Object]
+  alert_thresholds: System.Collections.Generic.Dictionary`2[System.String,System.Object]
+```
+
+
+#### Firestore REST API
+
+Reads `config/pipeline` and `config/display` via REST `GET` requests and prints all key-value pairs. The REST API returns typed envelopes that are unwrapped inline.
 
 ```csharp
 Console.WriteLine("=== Pipeline Config ===");
@@ -2041,38 +2563,28 @@ if (configJson.RootElement.TryGetProperty("fields", out var configFields))
 }
 ```
 
-    === Pipeline Config ===
-      last_modified_by: admin
-      fetch_interval_seconds: 60
-      last_modified_at: 2026-03-22T17:02:47.409688Z
-      enabled_indices: {
-            "values": [
-              {
-                "stringValue": "euro_stoxx_50"
-              },
-              {
-                "stringValue": "stoxx_usa_50"
-              },
-              {
-                "stringValue": "stoxx_asia_50"
-              }
-            ]
-          }
-      max_retries: 3
-      alert_thresholds: {
-            "fields": {
-              "price_drop_pct": {
-                "doubleValue": -3
-              },
-              "volume_spike_ratio": {
-                "doubleValue": 2
-              },
-              "rank_change_min": {
-                "integerValue": "3"
-              }
-            }
-          }
-    
+```text
+=== Pipeline Config ===
+  last_modified_by: admin
+  fetch_interval_seconds: 60
+  last_modified_at: 2026-03-22T17:02:47.409688Z
+  enabled_indices: {
+        "values": [
+          { "stringValue": "euro_stoxx_50" },
+          { "stringValue": "stoxx_usa_50" },
+          { "stringValue": "stoxx_asia_50" }
+        ]
+      }
+  max_retries: 3
+  alert_thresholds: {
+        "fields": {
+          "price_drop_pct": { "doubleValue": -3 },
+          "volume_spike_ratio": { "doubleValue": 2 },
+          "rank_change_min": { "integerValue": "3" }
+        }
+      }
+```
+
 
 ```csharp
 Console.WriteLine("=== Display Config ===");
@@ -2089,10 +2601,12 @@ if (displayJson.RootElement.TryGetProperty("fields", out var displayFields))
 }
 ```
 
-    === Display Config ===
-      default_index: euro_stoxx_50
-      theme: dark
-      decimal_places: 4
-      currency: EUR
-      rows_per_page: 25
-    
+```text
+=== Display Config ===
+  default_index: euro_stoxx_50
+  theme: dark
+  decimal_places: 4
+  currency: EUR
+  rows_per_page: 25
+```
+

@@ -103,7 +103,7 @@ flowchart TD
 # Temp directory — isolated workspace for file demos
 
 tmp_dir = Path(tempfile.mkdtemp(prefix="fileio_"))
-f"Working dir: {tmp_dir}\n"
+print(f"Working dir: {tmp_dir}\n")
 ```
 
     C:\Users\aperi\AppData\Local\Temp\fileio_yk2nuyou
@@ -132,7 +132,7 @@ with open(staging_file, "w", encoding="utf-8") as f:
     f.write("etl_003|success|8200\n")
 
 staging_file
-f"{staging_file.stat().st_size} bytes"
+print(f"{staging_file.stat().st_size} bytes")
 ```
 
     C:\Users\aperi\AppData\Local\Temp\fileio_yk2nuyou\pipeline_output.txt
@@ -153,10 +153,10 @@ f"{staging_file.stat().st_size} bytes"
 ```python
 with open(staging_file, "r", encoding="utf-8") as f:
     content = f.read()
-f"read(): {repr(content[:60])}..."
+print(f"read(): {repr(content[:60])}...")
 
 content = staging_file.read_text(encoding="utf-8")
-f"{len(content)} chars"
+print(f"{len(content)} chars")
 ```
 
     'pipeline_id|status|rows_processed\netl_001|success|15000\netl_'...
@@ -348,7 +348,7 @@ with open(csv_file, "w", newline="", encoding="utf-8") as f:
     ])
 
 csv_file.name  # Written
-f"Content:\n{csv_file.read_text(encoding='utf-8')}"
+print(f"Content:\n{csv_file.read_text(encoding='utf-8')}")
 ```
 
     pipeline_runs.csv
@@ -428,7 +428,7 @@ with open(enriched_file, "w", newline="", encoding="utf-8") as f:
     writer.writerows(records)       # writes all dicts at once (or use writer.writerow(dict) one by one)
 
 enriched_file.name  # Written
-f"Content:\n{enriched_file.read_text(encoding='utf-8')}"
+print(f"Content:\n{enriched_file.read_text(encoding='utf-8')}")
 ```
 
     enriched_runs.csv
@@ -493,8 +493,8 @@ writer.writerow(["evt_001", "page_view", "2024-01-15T10:30:00Z"])
 writer.writerow(["evt_002", "purchase", "2024-01-15T10:31:00Z"])
 
 csv_string = output.getvalue()                 # retrieve the entire CSV as a string
-f"In-memory CSV ({len(csv_string)} chars):"
-f"{csv_string.strip()}"
+print(f"In-memory CSV ({len(csv_string)} chars):")
+print(f"{csv_string.strip()}")
 # Now csv_string can be sent to an API, uploaded to GCS, or written to Kafka.
 ```
 
@@ -590,7 +590,7 @@ data = json.loads(api_response)  # JSON string → Python dict
 #   number (int) → int,  number (float) → float
 #   true/false → True/False,  null → None
 data['job_id']  # Job
-f"{data['statistics']['total_rows']:,}"  # Rows
+print(f"{data['statistics']['total_rows']:,}")  # Rows
 data['statistics']['cache_hit']  # Cache hit — Python bool
 ```
 
@@ -609,13 +609,13 @@ json_file = tmp_dir / "pipeline_config.json"
 with open(json_file, "w", encoding="utf-8") as f:
     json.dump(pipeline_meta, f, indent=2, ensure_ascii=False)
     # dump (no 's') writes directly to a file object
-f"{json_file.name} ({json_file.stat().st_size} bytes)"  # Written
+print(f"{json_file.name} ({json_file.stat().st_size} bytes)")  # Written
 
 # Read JSON file → dict
 with open(json_file, "r", encoding="utf-8") as f:
     loaded = json.load(f)  # load (no 's') reads from a file object
 loaded['pipeline_id']  # Loaded pipeline
-f"Source: {loaded['source']['dataset']}.{loaded['source']['table']}"
+print(f"Source: {loaded['source']['dataset']}.{loaded['source']['table']}")
 ```
 
     pipeline_config.json (421 bytes)
@@ -761,8 +761,8 @@ tags: [production, clickstream, daily]
 config = yaml.safe_load(yaml_config)
 
 config['pipeline']['name']  # Pipeline
-f"Source:   {config['source']['dataset']}.{config['source']['table']}"
-f"Sink:     gs://{config['sink']['bucket']}/{config['sink']['format']}"
+print(f"Source:   {config['source']['dataset']}.{config['source']['table']}")
+print(f"Sink:     gs://{config['sink']['bucket']}/{config['sink']['format']}")
 [c['name'] for c in config['quality_checks']]  # Checks
 config['tags']  # Tags
 ```
@@ -937,7 +937,7 @@ buffer.close()                       # free the buffer (or use 'with')
 bin_buffer = BytesIO()
 bin_buffer.write(b"HEADER")         # write bytes (not strings)
 bin_buffer.write(b"\x00\x01\x02")  # raw binary data
-f"{bin_buffer.tell()} bytes"  # Size — tell() returns current position
+print(f"{bin_buffer.tell()} bytes")  # Size — tell() returns current position
 
 # Read back
 bin_buffer.seek(0)                   # rewind to start
@@ -970,13 +970,13 @@ events = [
 # Option 1: write to in-memory stream (for API upload, unit test, etc.)
 mem_file = StringIO()
 write_events_csv(mem_file, events)
-f"In-memory CSV:\n  {mem_file.getvalue().strip()}"
+print(f"In-memory CSV:\n  {mem_file.getvalue().strip()}")
 
 # Option 2: write to real file on disk (same function, different argument)
 disk_file = tmp_dir / "events.csv"
 with open(disk_file, "w", newline="", encoding="utf-8") as f:
     write_events_csv(f, events)
-f"{disk_file.name} ({disk_file.stat().st_size} bytes)"  # Disk file
+print(f"{disk_file.name} ({disk_file.stat().st_size} bytes)")  # Disk file
 ```
 
       In-memory CSV:
@@ -1071,12 +1071,12 @@ type(run2)  # Type
 
 ```python
 pickled = pickle.dumps(run)            # PipelineRun → bytes
-f"{len(pickled)} bytes"  # Pickled size
+print(f"{len(pickled)} bytes")  # Pickled size
 type(pickled)  # Type
 pickled[:30]  # First 30 bytes
 
 unpickled = pickle.loads(pickled)      # bytes → PipelineRun
-f"Unpickled: {unpickled.pipeline_id}, {unpickled.status}"
+print(f"Unpickled: {unpickled.pipeline_id}, {unpickled.status}")
 type(unpickled)  # Type
 ```
 
@@ -1096,12 +1096,12 @@ pkl_file = tmp_dir / "pipeline_run.pkl"
 # Write — binary mode required ('wb')
 with open(pkl_file, "wb") as f:
     pickle.dump(run, f)
-f"{pkl_file.name} ({pkl_file.stat().st_size} bytes)"  # Written
+print(f"{pkl_file.name} ({pkl_file.stat().st_size} bytes)")  # Written
 
 # Read — binary mode required ('rb')
 with open(pkl_file, "rb") as f:
     loaded_run = pickle.load(f)
-f"Loaded: {loaded_run.pipeline_id}, {loaded_run.rows_processed:,} rows"
+print(f"Loaded: {loaded_run.pipeline_id}, {loaded_run.rows_processed:,} rows")
 ```
 
     pipeline_run.pkl (212 bytes)
@@ -1153,7 +1153,7 @@ DE use case     Sklearn model artifacts,        BigQuery loads, API payloads,
 ```python
 fmt = '<ifd?'
 fmt  # Format
-f"{struct.calcsize(fmt)} bytes"  # Size — how many bytes this format needs
+print(f"{struct.calcsize(fmt)} bytes")  # Size — how many bytes this format needs
 
 # Pack: Python values → bytes
 packed = struct.pack(fmt, 42, 23.5, 1705312200.0, True)
@@ -1161,7 +1161,7 @@ packed.hex()  # Packed
 
 # Unpack: bytes → Python tuple
 sensor_id, value, ts, alert = struct.unpack(fmt, packed)
-f"Unpacked: sensor={sensor_id}, value={value:.1f}, ts={ts}, alert={alert}"
+print(f"Unpacked: sensor={sensor_id}, value={value:.1f}, ts={ts}, alert={alert}")
 ```
 
     <ifd?
@@ -1187,7 +1187,7 @@ text = "Euro Stoxx 50: SAP €166.52, ASML €685.40"
 
 # UTF-8: variable-length, ASCII-compatible, the internet standard
 utf8 = text.encode("utf-8")
-f"{len(utf8)} bytes, roundtrip={text == utf8.decode('utf-8')}"  # UTF-8
+print(f"{len(utf8)} bytes, roundtrip={text == utf8.decode('utf-8')}")  # UTF-8
 
 # ASCII: 7-bit only — non-ASCII chars raise UnicodeEncodeError
 try:
@@ -1197,7 +1197,7 @@ except UnicodeEncodeError as e:
 
 # ASCII with replace — replaces unknown chars with ?
 ascii_safe = text.encode("ascii", errors="replace")
-f"{ascii_safe.decode('ascii')} (€ replaced with ?)"  # ASCII
+print(f"{ascii_safe.decode('ascii')} (€ replaced with ?)")  # ASCII
 
 # Latin-1 (ISO 8859-1): single-byte Western European
 # Note: € is NOT in Latin-1 (it was added in Latin-9/ISO 8859-15)
@@ -1210,7 +1210,7 @@ except UnicodeEncodeError as e:
 
 # UTF-16: 2 bytes per char (4 for supplementary) — used internally by Java/.NET
 utf16 = text.encode("utf-16")
-f"{len(utf16)} bytes (includes 2-byte BOM)"  # UTF-16
+print(f"{len(utf16)} bytes (includes 2-byte BOM)")  # UTF-16
 ```
 
     44 bytes, roundtrip=True
@@ -1264,7 +1264,7 @@ raw == back  # Roundtrip
 # SHA-256 hash displayed as hex (standard format)
 sha = hashlib.sha256(b"SAP.DE").hexdigest()
 sha  # SHA-256
-f"{len(sha)} hex chars = {len(sha)//2} bytes"  # Length
+print(f"{len(sha)} hex chars = {len(sha)//2} bytes")  # Length
 ```
 
     b'\xde\xad\xbe\xef\xca\xfe'
@@ -1289,7 +1289,7 @@ unquote(encoded)  # Decoded
 params = {"symbol": "BRK.B", "note": "Q1 2024 earnings & revenue"}
 qs = urlencode(params)
 qs  # Query string
-f"Full URL: https://api.example.com/quote?{qs}"
+print(f"Full URL: https://api.example.com/quote?{qs}")
 ```
 
     SAP.DE close=166.52 change=+2.5% sector=Tech&Finance
@@ -1373,9 +1373,9 @@ start = time.perf_counter()
 for _ in range(100): orjson.dumps(big)
 orj_time = time.perf_counter() - start
 
-f"json:   {std_time:.3f}s"
-f"orjson: {orj_time:.3f}s"
-f"Speedup: {std_time/orj_time:.1f}x"
+print(f"json:   {std_time:.3f}s")
+print(f"orjson: {orj_time:.3f}s")
+print(f"Speedup: {std_time/orj_time:.1f}x")
 ```
 
     {
@@ -1417,7 +1417,7 @@ quote.model_dump_json()  # JSON
 
 # Type coercion — "166.52" auto-converted to float
 coerced = StockQuote(symbol="ASML.AS", price="685.40", volume="45000")
-f"Coerced: price={coerced.price} (type={type(coerced.price).__name__})"
+print(f"Coerced: price={coerced.price} (type={type(coerced.price).__name__})")
 
 # Validation error — negative price rejected
 try:
@@ -1446,9 +1446,9 @@ csv_data += "\n".join(f"SYM_{i},2024-03-{i%28+1:02d},{100+i*0.5},{1000*i}" for i
 
 # Polars: read CSV from string (in production: pl.read_csv("path.csv"))
 df = pl.read_csv(csv_data.encode())
-f"{df.shape[0]} rows, {df.shape[1]} cols"  # Polars
+print(f"{df.shape[0]} rows, {df.shape[1]} cols")  # Polars
 dict(zip(df.columns, [str(t) for t in df.dtypes]))  # Schema
-f"Head:\n{df.head(3)}"
+print(f"Head:\n{df.head(3)}")
 
 # Benchmark: csv module vs Polars
 
@@ -1463,9 +1463,9 @@ for _ in range(100):
     df = pl.read_csv(csv_data.encode())
 pl_time = time.perf_counter() - start
 
-f"csv module: {csv_time:.3f}s"
-f"Polars:     {pl_time:.3f}s"
-f"Speedup:    {csv_time/pl_time:.1f}x"
+print(f"csv module: {csv_time:.3f}s")
+print(f"Polars:     {pl_time:.3f}s")
+print(f"Speedup:    {csv_time/pl_time:.1f}x")
 ```
 
     1000 rows, 4 cols

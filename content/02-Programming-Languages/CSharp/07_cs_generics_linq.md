@@ -83,11 +83,11 @@ Generic type parameters are placeholders declared in angle brackets. The compile
 ```csharp
 T First<T>(T[] items) => items[0];
 
-First(new[] { 1, 2, 3 })          // int
-First(new[] { "a", "b", "c" })    // string
-First(new[] { 1.1, 2.2, 3.3 })    // double
+Console.WriteLine(First(new[] { 1, 2, 3 }));          // int
+Console.WriteLine(First(new[] { "a", "b", "c" }));    // string
+Console.WriteLine(First(new[] { 1.1, 2.2, 3.3 }));    // double
 
-First<string>(new[] { "x", "y" })  // explicit type argument
+Console.WriteLine(First<string>(new[] { "x", "y" }));  // explicit type argument
 ```
 
 ```text
@@ -105,8 +105,8 @@ Generic constraints restrict what types can be used as a type parameter. Without
 T Max<T>(T a, T b) where T : IComparable<T>
     => a.CompareTo(b) >= 0 ? a : b;
 
-Max(3, 7)                          // 7
-Max("apple", "banana")             // banana
+Console.WriteLine(Max(3, 7));                          // 7
+Console.WriteLine(Max("apple", "banana"));             // banana
 // Max(new object(), new object());  // Compile error — object doesn't implement IComparable
 ```
 
@@ -143,15 +143,15 @@ A generic class is parameterized by one or more types, allowing the same data st
 ```csharp
 var ints = new List<int> { 1, 2, 3 };
 var lookup = new Dictionary<string, int> { ["Alice"] = 85, ["Bob"] = 92 };
-$"[{string.Join(", ", ints)}]"
-string.Join(", ", lookup.Select(kv => $"{kv.Key}: {kv.Value}"))
+Console.WriteLine($"[{string.Join(", ", ints)}]");
+Console.WriteLine(string.Join(", ", lookup.Select(kv => $"{kv.Key}: {kv.Value}")));
 
 (TKey, TValue) MakePair<TKey, TValue>(TKey key, TValue value) => (key, value);
 
 var pair1 = MakePair("name", 42);
 var pair2 = MakePair(1, true);
-pair1
-pair2
+Console.WriteLine(pair1);
+Console.WriteLine(pair2);
 ```
 
 ```text
@@ -204,13 +204,13 @@ foreach (var group in byDept)
 {
     var names = string.Join(", ", group.Select(e => e.Name));
     var avgSalary = group.Average(e => e.Salary);
-    $"  {group.Key,-15} ({group.Count()} people): [{names}] avg=${avgSalary:N0}"
+    Console.WriteLine($"  {group.Key,-15} ({group.Count()} people): [{names}] avg=${avgSalary:N0}");
 }
 
 foreach (var group in byDept)
 {
     var top = group.MaxBy(e => e.Salary)!;
-    $"  {group.Key,-15} top earner: {top.Name} ${top.Salary:N0}"
+    Console.WriteLine($"  {group.Key,-15} top earner: {top.Name} ${top.Salary:N0}");
 }
 
 var deptStats = employees.GroupBy(e => e.Dept).Select(g => new
@@ -223,7 +223,7 @@ var deptStats = employees.GroupBy(e => e.Dept).Select(g => new
     TotalSalary = g.Sum(e => e.Salary),
 });
 foreach (var s in deptStats)
-    $"  {s.Dept,-15} count={s.Count} avg=${s.AvgSalary:N0} range=[${s.MinSalary:N0}-${s.MaxSalary:N0}] total=${s.TotalSalary:N0}"
+    Console.WriteLine($"  {s.Dept,-15} count={s.Count} avg=${s.AvgSalary:N0} range=[${s.MinSalary:N0}-${s.MaxSalary:N0}] total=${s.TotalSalary:N0}");
 ```
 
 ```text
@@ -256,7 +256,7 @@ var innerJoin = employees.Join(
     (e, d) => new { e.Name, e.Dept, d.Head, d.Budget }
 );
 foreach (var r in innerJoin.Take(3))
-    $"  {r.Name,-10} {r.Dept,-15} head={r.Head,-10} budget=${r.Budget:N0}"
+    Console.WriteLine($"  {r.Name,-10} {r.Dept,-15} head={r.Head,-10} budget=${r.Budget:N0}");
 
 var leftJoin = departments.GroupJoin(
     employees,
@@ -265,7 +265,7 @@ var leftJoin = departments.GroupJoin(
     (d, emps) => new { d.Dept, d.Head, Count = emps.Count() }
 );
 foreach (var r in leftJoin)
-    $"  {r.Dept,-15} head={r.Head,-10} employees={r.Count}"
+    Console.WriteLine($"  {r.Dept,-15} head={r.Head,-10} employees={r.Count}");
 ```
 ```text
 Alice      Engineering     head=CTO        budget=$500'000
@@ -288,18 +288,18 @@ var result = employees
     .OrderByDescending(e => e.Salary)
     .Take(3);
 foreach (var r in result)
-    $"  {r.Name,-10} salary=${r.Salary:N0}  tax=${r.Tax:N0}"
+    Console.WriteLine($"  {r.Name,-10} salary=${r.Salary:N0}  tax=${r.Tax:N0}");
 
 var empLookup = employees.ToLookup(e => e.Dept);
-$"Engineering: [{string.Join(", ", empLookup["Engineering"].Select(e => e.Name))}]"
-$"Unknown:     [{string.Join(", ", empLookup["Unknown"].Select(e => e.Name))}]"
+Console.WriteLine($"Engineering: [{string.Join(", ", empLookup["Engineering"].Select(e => e.Name))}]");
+Console.WriteLine($"Unknown:     [{string.Join(", ", empLookup["Unknown"].Select(e => e.Name))}]");
 
 var names = employees.Select(e => e.Name);
 var salaries = employees.Select(e => e.Salary);
 var raises = employees.Select(e => e.Salary * 0.1);
 
 foreach (var (name, salary, raise_amt) in names.Zip(salaries, raises))
-    $"  {name,-10} ${salary,8:N0} + ${raise_amt,7:N0} raise"
+    Console.WriteLine($"  {name,-10} ${salary,8:N0} + ${raise_amt,7:N0} raise");
 ```
 ```text
 Charlie    salary=$110'000  tax=$33'000
@@ -328,19 +328,19 @@ var people = new[]
 };
 
 foreach (var arr in people.Select(p => p.Skills))
-    $"  [{string.Join(", ", arr)}]"
+    Console.WriteLine($"  [{string.Join(", ", arr)}]");
 
 var allSkills = people.SelectMany(p => p.Skills);
-$"SelectMany (flat): [{string.Join(", ", allSkills)}]"
+Console.WriteLine($"SelectMany (flat): [{string.Join(", ", allSkills)}]");
 
 var pairs = people.SelectMany(
     p => p.Skills,
     (p, skill) => $"{p.Name}: {skill}"
 );
 foreach (var pair in pairs)
-    $"  {pair}"
+    Console.WriteLine($"  {pair}");
 
-$"Distinct skills: [{string.Join(", ", people.SelectMany(p => p.Skills).Distinct().OrderBy(s => s))}]"
+Console.WriteLine($"Distinct skills: [{string.Join(", ", people.SelectMany(p => p.Skills).Distinct().OrderBy(s => s))}]");
 
 var matrix = new List<List<int>>
 {
@@ -348,7 +348,7 @@ var matrix = new List<List<int>>
     new List<int> { 4, 5 },
     new List<int> { 6, 7, 8, 9 },
 };
-$"Flat matrix: [{string.Join(", ", matrix.SelectMany(row => row))}]"
+Console.WriteLine($"Flat matrix: [{string.Join(", ", matrix.SelectMany(row => row))}]");
 ```
 ```text
 Select (nested):
@@ -419,9 +419,9 @@ using (var conn = new SqlConnection(connStr))
         + "ytd_change_pct AS YtdChangePct "
         + "FROM gold.scores_daily").AsList();
 }
-$"  OHLCV: {ohlcv.Count:N0} rows, {ohlcv.Select(r => r.Symbol).Distinct().Count()} symbols"
-$"  Scores: {scores.Count:N0} rows"
-$"  Date range: {ohlcv.Min(r => r.Date):yyyy-MM-dd} to {ohlcv.Max(r => r.Date):yyyy-MM-dd}"
+Console.WriteLine($"  OHLCV: {ohlcv.Count:N0} rows, {ohlcv.Select(r => r.Symbol).Distinct().Count()} symbols");
+Console.WriteLine($"  Scores: {scores.Count:N0} rows");
+Console.WriteLine($"  Date range: {ohlcv.Min(r => r.Date):yyyy-MM-dd} to {ohlcv.Max(r => r.Date):yyyy-MM-dd}");
 ```
 
 ```text
@@ -716,7 +716,7 @@ Polars.NET reads Parquet files directly into a columnar DataFrame backed by the 
 
 ```csharp
 var df = DataFrame.ReadParquet(@"C:\Users\aperi\DEV\LANG\data\eurostoxx50_ohlcv.parquet");
-$"  Polars: {df.Height} rows x {df.Width} columns"
+Console.WriteLine($"  Polars: {df.Height} rows x {df.Width} columns");
 df.Head(3)
 ```
 
@@ -1023,7 +1023,7 @@ dfAvg.Join(dfScores, new[] { Col("symbol") }, new[] { Col("symbol") })
 ```csharp
 var newRows = new[] { new Ohlcv("TEST.XX", DateTime.Today, 100, 105, 95, 102, 102, 50000) };
 var linqInsert = ohlcv.Concat(newRows).TakeLast(3).ToList();
-$"  LINQ: {ohlcv.Count} + {newRows.Length} = {ohlcv.Count + newRows.Length} rows (Concat)"
+Console.WriteLine($"  LINQ: {ohlcv.Count} + {newRows.Length} = {ohlcv.Count + newRows.Length} rows (Concat)");
 new DataFrame(
     Series.From("Symbol", linqInsert.Select(r => r.Symbol).ToArray()),
     Series.From("Date", linqInsert.Select(r => r.Date.ToString("yyyy-MM-dd")).ToArray()),
@@ -1057,7 +1057,7 @@ var newDf = new DataFrame(
     Series.From("is_filled", new[] { false }));
 
 var dfInserted = df.VStack(newDf);
-$"  Polars: {df.Height} + {newDf.Height} = {dfInserted.Height} rows (VStack)"
+Console.WriteLine($"  Polars: {df.Height} + {newDf.Height} = {dfInserted.Height} rows (VStack)");
 dfInserted.Tail(3)
 ```
 
@@ -1101,7 +1101,7 @@ Deleting is the inverse of filtering — `Where` keeps non-matching rows, effect
 
 ```csharp
 var linqDelete = ohlcv.Where(r => r.Symbol != "ASML.AS");
-$"  LINQ: {ohlcv.Count} - ASML rows = {linqDelete.Count()} remaining"
+Console.WriteLine($"  LINQ: {ohlcv.Count} - ASML rows = {linqDelete.Count()} remaining");
 ```
 
 ```text
@@ -1114,7 +1114,7 @@ Same pattern — `Filter` with a negated condition returns a new DataFrame witho
 
 ```csharp
 var dfFiltered = df.Filter(Col("symbol") != Lit("ASML.AS"));
-$"  Polars: {df.Height} - ASML rows = {dfFiltered.Height} remaining"
+Console.WriteLine($"  Polars: {df.Height} - ASML rows = {dfFiltered.Height} remaining");
 ```
 
 ```text

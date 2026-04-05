@@ -154,7 +154,7 @@ time.time()
 epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
 now_utc = datetime.now(timezone.utc)
 epoch  # Epoch
-f"{(now_utc - epoch).total_seconds():.0f}"  # Seconds since epoch
+print(f"{(now_utc - epoch).total_seconds():.0f}")  # Seconds since epoch
 ```
 
     1774414099.520628
@@ -189,12 +189,12 @@ dt4 = datetime.strptime(s4, "%Y-%m-%dT%H:%M:%S")
 dt5 = datetime.strptime(s5, "%Y-%m-%dT%H:%M:%S.%f")
 dt6 = datetime.strptime(s6, "%a, %d %b %Y %H:%M:%S")
 
-f"'{s1}' -> {dt1}"
-f"'{s2}' -> {dt2}"
-f"'{s3}' -> {dt3}"
-f"'{s4}' -> {dt4}"
-f"'{s5}' -> {dt5}"
-f"'{s6}' -> {dt6}"
+print(f"'{s1}' -> {dt1}")
+print(f"'{s2}' -> {dt2}")
+print(f"'{s3}' -> {dt3}")
+print(f"'{s4}' -> {dt4}")
+print(f"'{s5}' -> {dt5}")
+print(f"'{s6}' -> {dt6}")
 ```
 
     '2024-03-15 14:30:45' -> 2024-03-15 14:30:45
@@ -329,7 +329,7 @@ Pass `tzinfo=ZoneInfo("America/New_York")` to the `datetime` constructor to crea
 ```python
 
 naive = datetime(2024, 3, 15, 14, 30, 45)
-f"Naive (no tz):   {naive}, tzinfo={naive.tzinfo}"
+print(f"Naive (no tz):   {naive}, tzinfo={naive.tzinfo}")
 
 # Creating timezone-aware datetimes
 utc_dt = datetime(2024, 3, 15, 14, 30, 45, tzinfo=timezone.utc)
@@ -422,14 +422,14 @@ dt1 = datetime(2024, 3, 15)
 dt2 = datetime(2024, 12, 25)
 diff = dt2 - dt1
 
-f"From {dt1.date()} to {dt2.date()}"
+print(f"From {dt1.date()} to {dt2.date()}")
 diff  # Difference
 diff.days  # Days
 diff.total_seconds()  # Total seconds
 
 # Comparing dates
-f"dt1 < dt2:   {dt1 < dt2}"
-f"dt1 == dt2:  {dt1 == dt2}"
+print(f"dt1 < dt2:   {dt1 < dt2}")
+print(f"dt1 == dt2:  {dt1 == dt2}")
 dt1 > dt2
 ```
 
@@ -490,7 +490,7 @@ d + timedelta(weeks=1)  # + 1 week
 # date difference
 d2 = date(2024, 12, 25)
 diff = d2 - d
-f"Diff {d} to {d2}: {diff.days} days"
+print(f"Diff {d} to {d2}: {diff.days} days")
 ```
 
     2024-03-15
@@ -694,12 +694,12 @@ math.isfinite(42)
 latencies = [12.5, 45.2, 3.1, 78.9, 22.0, 15.3, 99.1, 6.7, 33.4, 51.8]
 latencies.sort()
 latencies  # Latencies
-f"{statistics.mean(latencies):.2f}"  # Mean
-f"{statistics.median(latencies):.2f}"  # Median
-f"{statistics.stdev(latencies):.2f}"  # Stdev
+print(f"{statistics.mean(latencies):.2f}")  # Mean
+print(f"{statistics.median(latencies):.2f}")  # Median
+print(f"{statistics.stdev(latencies):.2f}")  # Stdev
 # Python 3.8+ quantiles
 quantiles = statistics.quantiles(latencies, n=20)  # 5% increments
-f"{quantiles[-1]:.2f} ms"  # P95
+print(f"{quantiles[-1]:.2f} ms")  # P95
 ```
 
     [3.1, 6.7, 12.5, 15.3, 22.0, 33.4, 45.2, 51.8, 78.9, 99.1]
@@ -773,7 +773,7 @@ event_types = ["page_view", "click", "purchase", "signup"]
 regions = ["us-east-1", "eu-west-1", "ap-south-1"]
 rng = random.Random(123)  # independent RNG instance (like C# new Random(123))
 
-f"{'event_id':<12} {'type':<12} {'region':<12} {'revenue':>8}"
+print(f"{'event_id':<12} {'type':<12} {'region':<12} {'revenue':>8}")
 for i in range(8):
     event_id = f"evt_{i+1:04d}"
     evt_type = rng.choice(event_types)
@@ -942,7 +942,7 @@ json_logger.warning("Schema drift detected in %s", "users")
 # Read common env vars
 os.environ.get('USERNAME', 'N/A')  # USERNAME — Windows
 os.environ.get('COMPUTERNAME', 'N/A')  # COMPUTERNAME
-f"PATH (first 80): {os.environ.get('PATH', '')[:80]}..."
+print(f"PATH (first 80): {os.environ.get('PATH', '')[:80]}...")
 
 db_host = os.environ.get("DATABASE_HOST", "localhost")
 db_host  # DATABASE_HOST (default)
@@ -981,7 +981,7 @@ for i, (key, val) in enumerate(os.environ.items()):
     if i >= 10: break
     if len(val) > 60: val = val[:60] + "..."
     print(f"  {key} = {val}")
-f"... ({len(os.environ)} total)"
+print(f"... ({len(os.environ)} total)")
 ```
 
       3DVPATH = C:\AMD\Chipset_Software\Binaries\3D_V-Cache_Performance_Opti...

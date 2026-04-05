@@ -68,7 +68,7 @@ def first(items: list[T]) -> Optional[T]:
 
 result_int: Optional[int] = first([1, 2, 3])
 result_str: Optional[str] = first(["a", "b", "c"])
-f"int: {result_int}, str: {result_str}"
+print(f"int: {result_int}, str: {result_str}")
 
 Number = TypeVar("Number", int, float)
 
@@ -325,9 +325,9 @@ scores = pd.read_sql('SELECT symbol, sector, country, composite_score, composite
 
 pldf = pl.read_parquet('C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet')
 
-f"  Pandas: {len(ohlcv):,} rows, {ohlcv.symbol.nunique()} symbols"
-f"  Polars: {pldf.height:,} rows"
-f"  Date range: {ohlcv.date.min()} to {ohlcv.date.max()}"
+print(f"  Pandas: {len(ohlcv):,} rows, {ohlcv.symbol.nunique()} symbols")
+print(f"  Polars: {pldf.height:,} rows")
+print(f"  Date range: {ohlcv.date.min()} to {ohlcv.date.max()}")
 ```
 
 ```text
@@ -1679,7 +1679,7 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').with_columns(
 
 ```python
 filtered = ohlcv[ohlcv.symbol != 'ASML.AS']
-f"  {len(ohlcv)} - ASML rows = {len(filtered)} remaining"
+print(f"  {len(ohlcv)} - ASML rows = {len(filtered)} remaining")
 ```
 
 ```text
@@ -1690,7 +1690,7 @@ f"  {len(ohlcv)} - ASML rows = {len(filtered)} remaining"
 
 ```python
 filtered = pldf.filter(pl.col('symbol') != 'ASML.AS')
-f"  {pldf.height} - ASML rows = {filtered.height} remaining"
+print(f"  {pldf.height} - ASML rows = {filtered.height} remaining")
 ```
 
 ```text

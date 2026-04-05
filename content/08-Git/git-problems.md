@@ -1,7 +1,7 @@
 ---
 tags: [git, github]
 status: stable
-updated: 2026-03-23
+updated: 2026-04-05
 description: "Comprehensive catalog of Git and GitHub problems in distributed data engineering teams — 25 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures."
 ---
 
@@ -41,14 +41,19 @@ Git stores the entire working tree snapshot at every commit. Deleting a file in 
 
 1. Add a comprehensive `.gitignore` before the first commit (see template below).
 
-2. Install `gitleaks` as a pre-commit hook:
+2. Install `gitleaks` as a pre-commit hook. Install on macOS with Homebrew, or Windows with Chocolatey:
 
 ```bash
-# Install gitleaks
-brew install gitleaks           # macOS
-# or: choco install gitleaks    # Windows
+brew install gitleaks
+```
 
-# Install pre-commit framework
+```bash
+choco install gitleaks
+```
+
+Install the pre-commit framework:
+
+```bash
 pip install pre-commit
 
 # .pre-commit-config.yaml (repo root)
@@ -254,6 +259,46 @@ Three engineers push commits to main over a morning. A fourth engineer, working 
 
 `git push --force` (or `--force-with-lease` without a current ref) replaces the remote branch tip with the local ref unconditionally. The commits that were on the remote but not in the local history become unreachable — still in the object store briefly, but no branch points to them, and they are garbage collected eventually.
 
+**Before force push** — main contains all three engineers' commits:
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
+  'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
+  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
+  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
+  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
+}}}%%
+gitGraph
+  commit id: "A"
+  commit id: "B"
+  commit id: "C (eng-1)"
+  commit id: "D (eng-2)"
+  commit id: "E (eng-3)"
+  branch local-hotfix
+  commit id: "F' (rebased)"
+  commit id: "G' (rebased)"
+```
+
+**After force push** — main is replaced; C, D, E are orphaned (unreachable from any branch):
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
+  'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
+  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
+  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
+  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
+}}}%%
+gitGraph
+  commit id: "A"
+  commit id: "B"
+  commit id: "F' (rebased hotfix)"
+  commit id: "G' (rebased hotfix)"
+```
+
 **Consequences**
 
 - Airflow DAG changes silently disappear — scheduled jobs run with old logic
@@ -343,6 +388,41 @@ An engineer has been on `main` all morning reviewing code. They start a new feat
 
 `git reset --hard <ref>` moves the current branch pointer to `<ref>` AND updates the working tree and index to match. Commits that were ahead of `<ref>` become unreachable from any branch. They remain in the object store until garbage collection (default: 90 days for unreachable commits), which is why `git reflog` can recover them.
 
+**Before reset** — three commits made accidentally on main:
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
+  'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
+  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
+  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
+  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
+}}}%%
+gitGraph
+  commit id: "A"
+  commit id: "B" tag: "origin/main"
+  commit id: "C (accidental)"
+  commit id: "D (migration)"
+  commit id: "E (dbt model)"
+```
+
+**After `git reset --hard origin/main`** — HEAD moves back to B; C, D, E are orphaned (recoverable via reflog for ~90 days):
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
+  'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
+  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
+  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
+  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
+}}}%%
+gitGraph
+  commit id: "A"
+  commit id: "B"
+```
+
 **Consequences**
 
 - SQL migrations written from memory are difficult to recreate exactly — Flyway/Liquibase versioning means a recreation needs a new version number
@@ -413,11 +493,13 @@ fi
 
 ```bash
 git reflog
-# Output looks like:
-# a1b2c3d HEAD@{0}: reset: moving to origin/main
-# e4f5g6h HEAD@{1}: commit: add V005__add_index_column.sql
-# i7j8k9l HEAD@{2}: commit: add dbt model for ESG score calc
-# m0n1o2p HEAD@{3}: commit: feat: initial migration scaffold
+```
+
+```text
+a1b2c3d HEAD@{0}: reset: moving to origin/main
+e4f5g6h HEAD@{1}: commit: add V005__add_index_column.sql
+i7j8k9l HEAD@{2}: commit: add dbt model for ESG score calc
+m0n1o2p HEAD@{3}: commit: feat: initial migration scaffold
 ```
 
 2. **Identify the commit you want to restore** — it will be the last commit before the reset.
@@ -528,7 +610,26 @@ git diff a1b2c3d^1 a1b2c3d^2 -- models/finance/index_calculation.sql
 git show feature/esg-refactor:models/finance/index_calculation.sql
 ```
 
-3. **Revert the bad merge commit** (preserve history rather than rewriting):
+3. **Revert the bad merge commit** (preserve history rather than rewriting). `git revert -m 1` creates a new REVERSE commit that undoes the merge while keeping the full history intact:
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
+  'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
+  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
+  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
+  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
+}}}%%
+gitGraph
+  commit id: "A"
+  branch feature/esg-refactor
+  commit id: "B (esg weighting)"
+  checkout main
+  commit id: "C"
+  merge feature/esg-refactor id: "M (bad resolution)"
+  commit id: "R (revert M)" type: REVERSE
+```
 
 ```bash
 git revert -m 1 a1b2c3d
@@ -763,7 +864,31 @@ git rebase origin/main
 git log --oneline feature/refactor-index-pipeline ^main
 ```
 
-2. **Create sub-branches and cherry-pick:**
+2. **Create sub-branches and cherry-pick** individual commits from the mega-branch onto focused sub-branches:
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
+  'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
+  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
+  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
+  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
+}}}%%
+gitGraph
+  commit id: "A"
+  commit id: "B"
+  branch feature/mega-refactor
+  commit id: "sql-1"
+  commit id: "dbt-1"
+  commit id: "dag-1"
+  checkout main
+  branch feature/split-migrations
+  cherry-pick id: "sql-1"
+  checkout main
+  branch feature/split-dbt
+  cherry-pick id: "dbt-1"
+```
 
 ```bash
 # Part 1: SQL migrations only
@@ -1006,7 +1131,7 @@ Half the team uses `git pull --rebase`, the other half uses `git pull` (merge). 
 
 Git supports multiple history-integration strategies, each with different behavior. The confusion stems from not understanding what each actually does under the hood.
 
-#### What `git rebase main` Actually Does (Step by Step)
+**What `git rebase main` Actually Does (Step by Step)**
 
 When you are on a local feature branch and run `git rebase main`, Git rewrites your branch's history so it looks like you just created it from the latest version of main. Here is exactly what happens:
 
@@ -1018,29 +1143,105 @@ When you are on a local feature branch and run `git rebase main`, Git rewrites y
 
 4. **Reapplies your commits** — Git takes your saved commits and replays them one by one on top of the new base. Each commit is recreated as a **brand new commit** (new SHA hash) even though the code changes are identical.
 
+**Before rebase** — feature diverged from B; main has moved forward to D:
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
+  'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
+  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
+  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
+  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
+}}}%%
+gitGraph
+  commit id: "A"
+  commit id: "B"
+  branch feature
+  commit id: "E"
+  commit id: "F"
+  commit id: "G"
+  checkout main
+  commit id: "C"
+  commit id: "D"
 ```
-BEFORE rebase:                    AFTER rebase:
 
-main:    A - B - C - D            main:    A - B - C - D
-              \                                         \
-feature:       E - F - G          feature:               E' - F' - G'
+**After `git rebase main`** — E′, F′, G′ are brand-new commits (new SHAs); original E, F, G are orphaned:
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
+  'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
+  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
+  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
+  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
+}}}%%
+gitGraph
+  commit id: "A"
+  commit id: "B"
+  commit id: "C"
+  commit id: "D"
+  branch feature
+  commit id: "E'"
+  commit id: "F'"
+  commit id: "G'"
 ```
 
-Note: E', F', G' are **new commits** — same code diff, but different SHA hashes than E, F, G. The originals become orphaned (recoverable via `git reflog` for ~30 days).
+E′, F′, G′ are **new commits** — same code diff, but different SHA hashes than E, F, G. The originals become orphaned (recoverable via `git reflog` for ~30 days).
 
-#### What `git merge main` Does (Contrast)
+**What `git merge main` Does (Contrast)**
 
+**Before merge** — same diverged state as the rebase scenario:
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
+  'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
+  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
+  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
+  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
+}}}%%
+gitGraph
+  commit id: "A"
+  commit id: "B"
+  branch feature
+  commit id: "E"
+  commit id: "F"
+  commit id: "G"
+  checkout main
+  commit id: "C"
+  commit id: "D"
 ```
-BEFORE merge:                     AFTER merge:
 
-main:    A - B - C - D            main:    A - B - C - D
-              \                                \         \
-feature:       E - F - G          feature:      E - F - G - M (merge commit)
+**After `git merge feature`** — merge commit M has two parents (D and G); no commits are rewritten:
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
+  'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
+  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
+  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
+  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
+}}}%%
+gitGraph
+  commit id: "A"
+  commit id: "B"
+  branch feature
+  commit id: "E"
+  commit id: "F"
+  commit id: "G"
+  checkout main
+  commit id: "C"
+  commit id: "D"
+  merge feature id: "M"
 ```
 
 Merge creates a new "merge commit" (M) that ties the two histories together. No existing commits are rewritten. In a busy project, these merge commits accumulate and make `git log --graph` look like a tangled web.
 
-#### Why Rebase Exists
+**Why Rebase Exists**
 
 The primary goal is a **clean, linear history**. With rebase, main's log reads as a straight sequence of commits — easy to read, easy to `git bisect`, easy to audit (EU BMR requires traceable methodology changes).
 
@@ -1053,7 +1254,7 @@ The primary goal is a **clean, linear history**. With rebase, main's log reads a
 >
 > Keep rebase to your local feature branch before the first push (or before re-requesting review). Once teammates have checked out your branch, switch to `git merge origin/main` to incorporate upstream changes without rewriting shared history.
 
-#### Handling Conflicts During Rebase
+**Handling Conflicts During Rebase**
 
 When Git reapplies your commits one by one, any commit that touches lines also changed on main will produce a conflict. Unlike merge (one conflict resolution for everything), rebase may require you to resolve conflicts **for each commit** being replayed:
 
@@ -1080,6 +1281,8 @@ git rebase --abort
 > [!success] Enable rerere to Reuse Conflict Resolutions
 >
 > Run `git config rerere.enabled true`. Git will remember how you resolved each conflict and reapply that resolution automatically the next time the same conflict appears during rebase, saving repeated manual work.
+
+For a full comparison of merge, rebase, and squash strategies with team-size guidance, see [merge-vs-rebase-vs-squash](https://alp78.github.io/elysium/08-Git/merge-vs-rebase-vs-squash).
 
 **Consequences**
 
@@ -1152,6 +1355,29 @@ An engineer runs `git checkout v2.3.1` to investigate a production tag. They fin
 **Root cause**
 
 "Detached HEAD" means HEAD points directly to a commit SHA rather than to a branch ref. When you switch branches, HEAD moves to the new branch — the commit you made in detached state is no longer reachable from any ref. Git retains it in the reflog for ~30 days but will eventually prune it.
+
+**While in detached HEAD state** — committing at the `v2.3.1` tag creates a commit with no branch reference:
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
+  'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
+  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
+  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
+  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
+}}}%%
+gitGraph
+  commit id: "A"
+  commit id: "B" tag: "v2.3.1"
+  branch detached-work
+  commit id: "fix: ESG edge case"
+  checkout main
+  commit id: "C"
+  commit id: "D"
+```
+
+When `git checkout main` runs, the `detached-work` branch reference disappears — the fix commit becomes orphaned. The correct approach is `git checkout -b hotfix/v2.3.1-fix v2.3.1` before making any changes, keeping the commit safely on a named branch.
 
 **Consequences**
 
@@ -1462,7 +1688,29 @@ Cherry-pick applies the diff of a single commit to a different base. If the cont
 2. **Write hotfixes as small, self-contained commits** with minimal context dependencies — easier to cherry-pick cleanly.
 3. **Consider a backport PR** instead of cherry-pick — merge the fix to a backport branch targeting `release/v2.3.x`, allowing code review of the adaptation.
 
-**Fix procedure** (safe cherry-pick with conflict resolution):
+**Fix procedure** (safe cherry-pick with conflict resolution). Cherry-pick applies the diff of `abc1234` from main onto `release/v2.3.x`. Conflicts arise when the surrounding context lines have diverged:
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': {
+  'git0': '#7aa2f7', 'git1': '#9ece6a', 'git2': '#e0af68', 'git3': '#f7768e',
+  'git4': '#bb9af7', 'git5': '#7dcfff', 'git6': '#73daca', 'git7': '#ff9e64',
+  'gitBranchLabel0': '#c0caf5', 'gitBranchLabel1': '#c0caf5',
+  'gitBranchLabel2': '#c0caf5', 'gitBranchLabel3': '#c0caf5',
+  'commitLabelColor': '#c0caf5', 'commitLabelBackground': '#292e42',
+  'tagLabelColor': '#c0caf5', 'tagLabelBackground': '#292e42', 'tagLabelBorder': '#565f89'
+}}}%%
+gitGraph
+  commit id: "A"
+  commit id: "B"
+  branch release/v2.3.x
+  commit id: "C (v2.3 changes)"
+  commit id: "D (v2.3 changes)"
+  checkout main
+  commit id: "E"
+  commit id: "fix (abc1234)" type: HIGHLIGHT
+  checkout release/v2.3.x
+  cherry-pick id: "fix (abc1234)"
+```
 
 ```bash
 # Checkout the release branch

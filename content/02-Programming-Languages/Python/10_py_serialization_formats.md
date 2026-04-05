@@ -103,9 +103,9 @@ table = pa.table({
 parquet_file = tmp_dir / "events.parquet"
 pq.write_table(table, parquet_file, compression="snappy")
 
-parquet_file.name
-f"{parquet_file.stat().st_size} bytes (compressed)"
-f"Rows: {table.num_rows}, Columns: {table.num_columns}"
+print(parquet_file.name)
+print(f"{parquet_file.stat().st_size} bytes (compressed)")
+print(f"Rows: {table.num_rows}, Columns: {table.num_columns}")
 ```
 
 ```text
@@ -120,8 +120,8 @@ Rows: 5, Columns: 5
 
 ```python
 table_read = pq.read_table(parquet_file)
-f"Schema:\n{table_read.schema}"
-f"Data:\n{table_read.to_pandas()}"
+print(f"Schema:\n{table_read.schema}")
+print(f"Data:\n{table_read.to_pandas()}")
 ```
 
 ```text
@@ -149,9 +149,9 @@ Pass `columns=["col1", "col2"]` to read only the columns you need. On a 100-colu
 
 ```python
 partial = pq.read_table(parquet_file, columns=["event_id", "revenue"])
-partial.column_names
-partial.column('revenue').to_pylist()
-f"{sum(partial.column('revenue').to_pylist()):.2f}"
+print(partial.column_names)
+print(partial.column('revenue').to_pylist())
+print(f"{sum(partial.column('revenue').to_pylist()):.2f}")
 ```
 
 ```text
@@ -169,11 +169,11 @@ filtered = pq.read_table(
     parquet_file,
     filters=[("event_type", "==", "purchase")]
 )
-f"Purchases only ({filtered.num_rows} rows):"
-f"{filtered.to_pandas()}"
+print(f"Purchases only ({filtered.num_rows} rows):")
+print(f"{filtered.to_pandas()}")
 
 meta = pq.read_metadata(parquet_file)
-f"Rows: {meta.num_rows}, Columns: {meta.num_columns}, Row groups: {meta.num_row_groups}"
+print(f"Rows: {meta.num_rows}, Columns: {meta.num_columns}, Row groups: {meta.num_row_groups}")
 
 schema_read = pq.read_schema(parquet_file)
 for i, field in enumerate(schema_read):
@@ -213,7 +213,7 @@ for f in sorted(partitioned_dir.rglob("*.parquet")):
     print(f"    {rel} ({f.stat().st_size} bytes)")
 
 dataset = pq.read_table(str(partitioned_dir))
-f"{dataset.num_rows} rows, columns: {dataset.column_names}"
+print(f"{dataset.num_rows} rows, columns: {dataset.column_names}")
 ```
 
 pyarrow discovers partitions automatically when reading back.
@@ -234,11 +234,11 @@ Serialize Parquet to a `BytesIO` buffer for direct cloud upload (GCS, S3) withou
 ```python
 buffer = BytesIO()
 pq.write_table(table, buffer)
-f"{buffer.tell()} bytes"
+print(f"{buffer.tell()} bytes")
 
 buffer.seek(0)
 table_from_mem = pq.read_table(buffer)
-f"{table_from_mem.num_rows} rows"
+print(f"{table_from_mem.num_rows} rows")
 ```
 
 ```text
@@ -254,9 +254,9 @@ table.to_pandas().to_csv(csv_file, index=False)
 
 csv_size = csv_file.stat().st_size
 parquet_size = parquet_file.stat().st_size
-f"{csv_size} bytes"
-f"{parquet_size} bytes"
-f"Ratio:        {csv_size / parquet_size:.1f}x smaller with parquet"
+print(f"{csv_size} bytes")
+print(f"{parquet_size} bytes")
+print(f"Ratio:        {csv_size / parquet_size:.1f}x smaller with parquet")
 ```
 
 ```text
@@ -320,7 +320,7 @@ avro_schema = {
 }
 
 parsed_schema = fastavro.parse_schema(avro_schema)
-f"{avro_schema['name']} ({len(avro_schema['fields'])} fields)"
+print(f"{avro_schema['name']} ({len(avro_schema['fields'])} fields)")
 for f in avro_schema["fields"]:
     print(f"    {f['name']}: {f['type']}")
 ```
@@ -351,8 +351,8 @@ records = [
 with open(avro_file, "wb") as f:
     fastavro.writer(f, parsed_schema, records)
 
-os.path.basename(avro_file)
-f"Records: {len(records)}, Size: {os.path.getsize(avro_file)} bytes"
+print(os.path.basename(avro_file))
+print(f"Records: {len(records)}, Size: {os.path.getsize(avro_file)} bytes")
 
 with open(avro_file, "rb") as f:
     reader = fastavro.reader(f)
@@ -384,16 +384,16 @@ Serialize Avro records to `BytesIO` for Kafka producer payloads or API responses
 avro_buffer = BytesIO()
 fastavro.writer(avro_buffer, parsed_schema, records)
 avro_bytes = avro_buffer.getvalue()
-f"{len(avro_bytes)} bytes ({len(records)} records)"
+print(f"{len(avro_bytes)} bytes ({len(records)} records)")
 
 avro_buffer.seek(0)
 mem_records = list(fastavro.reader(avro_buffer))
-f"{len(mem_records)} records"
+print(f"{len(mem_records)} records")
 
 json_size = len(json.dumps(records).encode())
-f"{json_size} bytes"
-f"{len(avro_bytes)} bytes"
-f"Savings:    {(1 - len(avro_bytes)/json_size)*100:.0f}%"
+print(f"{json_size} bytes")
+print(f"{len(avro_bytes)} bytes")
+print(f"Savings:    {(1 - len(avro_bytes)/json_size)*100:.0f}%")
 
 ```
 
@@ -456,16 +456,16 @@ factory = _reflection.GeneratedProtocolMessageType(
 
 quote = factory(symbol="SAP.DE", price=166.52, volume=82621)  # type: ignore[call-arg]
 binary = quote.SerializeToString()  # type: ignore[attr-defined]
-f"Message:    symbol={quote.symbol}, price={quote.price}, volume={quote.volume}"  # type: ignore[attr-defined]
-f"{len(binary)} bytes ({binary.hex()[:40]}...)"
+print(f"Message:    symbol={quote.symbol}, price={quote.price}, volume={quote.volume}")  # type: ignore[attr-defined]
+print(f"{len(binary)} bytes ({binary.hex()[:40]}...)")
 
 parsed = factory.FromString(binary)  # type: ignore[attr-defined]
-f"Parsed:     symbol={parsed.symbol}, price={parsed.price}, volume={parsed.volume}"  # type: ignore[attr-defined]
+print(f"Parsed:     symbol={parsed.symbol}, price={parsed.price}, volume={parsed.volume}")  # type: ignore[attr-defined]
 
 json_size = len(json.dumps({"symbol": "SAP.DE", "price": 166.52, "volume": 82621}).encode())
-f"{json_size} bytes"
-f"{len(binary)} bytes"
-f"Savings:       {(1 - len(binary)/json_size)*100:.0f}%"
+print(f"{json_size} bytes")
+print(f"{len(binary)} bytes")
+print(f"Savings:       {(1 - len(binary)/json_size)*100:.0f}%")
 ```
 
 ```text
@@ -552,7 +552,7 @@ def generate_data(count: int) -> list[dict]:
 small  = generate_data(100)
 medium = generate_data(10_000)
 large  = generate_data(100_000)
-f"Small: {len(small):,}, Medium: {len(medium):,}, Large: {len(large):,}"
+print(f"Small: {len(small):,}, Medium: {len(medium):,}, Large: {len(large):,}")
 ```
 
 ```text

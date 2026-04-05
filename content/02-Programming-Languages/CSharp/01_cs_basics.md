@@ -52,9 +52,9 @@ optionsField.SetValue(csharpKernel, newOptions);
 `Environment.Version` returns the .NET runtime version, `Environment.OSVersion` reports the host OS, and `Environment.MachineName` identifies the machine. Use these to verify the notebook is running on the expected platform.
 
 ```csharp
-Environment.Version
-Environment.OSVersion
-Environment.MachineName
+Console.WriteLine(Environment.Version);
+Console.WriteLine(Environment.OSVersion);
+Console.WriteLine(Environment.MachineName);
 ```
 
 ```text
@@ -68,8 +68,8 @@ ELYSIUM
 `Environment.CurrentDirectory` returns the working directory where file path resolution starts. `Environment.UserName` returns the identity running the process. Useful for verifying notebook execution context before file I/O operations.
 
 ```csharp
-Environment.CurrentDirectory
-Environment.UserName
+Console.WriteLine(Environment.CurrentDirectory);
+Console.WriteLine(Environment.UserName);
 ```
 
 ```text
@@ -487,18 +487,12 @@ bool active = true;
 
 var z = 42;
 
-$"x = {x}, type: {x.GetType()}"
-$"y = {y}, type: {y.GetType()}"
-$"name = {name}, type: {name.GetType()}"
-$"active = {active}, type: {active.GetType()}"
-$"z = {z}, type: {z.GetType()}"
+Console.WriteLine($"x = {x}, type: {x.GetType()}");
+Console.WriteLine($"y = {y}, type: {y.GetType()}");
+Console.WriteLine($"name = {name}, type: {name.GetType()}");
+Console.WriteLine($"active = {active}, type: {active.GetType()}");
+Console.WriteLine($"z = {z}, type: {z.GetType()}");
 ```
-
-> [!warning] Variables Cannot Change Type
-> C# is statically typed. `x = "string"` after declaring `int x` is a compile error. Unlike Python, types are fixed at declaration.
-
-> [!success] Use var for type inference without sacrificing type safety
-> `var x = 42;` infers `int` at compile time — the variable is still statically typed, you just don't have to write the type explicitly. `x = "string"` would still be a compile error.
 
 ```text
 System.Int32
@@ -507,6 +501,14 @@ System.String
 System.Boolean
 System.Int32
 ```
+
+> [!warning] Variables Cannot Change Type
+> C# is statically typed. `x = "string"` after declaring `int x` is a compile error. Unlike Python, types are fixed at declaration.
+
+> [!success] Use var for type inference without sacrificing type safety
+> `var x = 42;` infers `int` at compile time — the variable is still statically typed, you just don't have to write the type explicitly. `x = "string"` would still be a compile error.
+
+
 
 #### Define compile-time and runtime constants with const and readonly
 
@@ -517,9 +519,9 @@ const double Pi = 3.14159;
 const int MaxUsers = 100;
 const string ApiUrl = "https://api.example.com";
 
-Pi
-MaxUsers
-ApiUrl
+Console.WriteLine(Pi);
+Console.WriteLine(MaxUsers);
+Console.WriteLine(ApiUrl);
 ```
 
 > [!info] readonly vs const
@@ -539,17 +541,17 @@ C# provides ten integer types across four widths (8, 16, 32, 64 bits), each avai
 
 ```csharp
 
-$"sbyte   (8-bit):  {sbyte.MinValue} to {sbyte.MaxValue}"
-$"short   (16-bit): {short.MinValue} to {short.MaxValue}"
-$"int     (32-bit): {int.MinValue} to {int.MaxValue}"
-$"long    (64-bit): {long.MinValue} to {long.MaxValue}"
+Console.WriteLine($"sbyte   (8-bit):  {sbyte.MinValue} to {sbyte.MaxValue}");
+Console.WriteLine($"short   (16-bit): {short.MinValue} to {short.MaxValue}");
+Console.WriteLine($"int     (32-bit): {int.MinValue} to {int.MaxValue}");
+Console.WriteLine($"long    (64-bit): {long.MinValue} to {long.MaxValue}");
 
 // Unsigned integers
 
-$"byte    (8-bit):  {byte.MinValue} to {byte.MaxValue}"
-$"ushort  (16-bit): {ushort.MinValue} to {ushort.MaxValue}"
-$"uint    (32-bit): {uint.MinValue} to {uint.MaxValue}"
-$"ulong   (64-bit): {ulong.MinValue} to {ulong.MaxValue}"
+Console.WriteLine($"byte    (8-bit):  {byte.MinValue} to {byte.MaxValue}");
+Console.WriteLine($"ushort  (16-bit): {ushort.MinValue} to {ushort.MaxValue}");
+Console.WriteLine($"uint    (32-bit): {uint.MinValue} to {uint.MaxValue}");
+Console.WriteLine($"ulong   (64-bit): {ulong.MinValue} to {ulong.MaxValue}");
 
 long big = 9_000_000_000_000L;   // L suffix for long
 uint positive = 4_000_000_000U;  // U suffix for uint
@@ -630,9 +632,9 @@ flowchart TD
 > Declare monetary amounts as `decimal amount = 9.99m;`. For float equality checks, use `Math.Abs(a - b) < 1e-9` where `1e-9` is your tolerance (epsilon), chosen based on the precision your computation requires.
 
 ```csharp
-$"float   (32-bit): {float.MinValue} to {float.MaxValue}, ~6-9 digits precision"
-$"double  (64-bit): {double.MinValue} to {double.MaxValue}, ~15-17 digits precision"
-$"decimal (128-bit): {decimal.MinValue} to {decimal.MaxValue}, 28-29 digits precision"
+Console.WriteLine($"float   (32-bit): {float.MinValue} to {float.MaxValue}, ~6-9 digits precision");
+Console.WriteLine($"double  (64-bit): {double.MinValue} to {double.MaxValue}, ~15-17 digits precision");
+Console.WriteLine($"decimal (128-bit): {decimal.MinValue} to {decimal.MaxValue}, 28-29 digits precision");
 ```
 ```text
 === Floating-Point Types ===
@@ -650,9 +652,9 @@ float f = 3.14f;
 double d = 3.14;
 decimal m = 3.14m;
 
-$"\nfloat:   {f}, type: {f.GetType()}"
-$"double:  {d}, type: {d.GetType()}"
-$"decimal: {m}, type: {m.GetType()}"
+Console.WriteLine($"\nfloat:   {f}, type: {f.GetType()}");
+Console.WriteLine($"double:  {d}, type: {d.GetType()}");
+Console.WriteLine($"decimal: {m}, type: {m.GetType()}");
 ```
 ```text
 System.Single
@@ -669,10 +671,10 @@ var a = 3.14;
 var b = 3.14f;
 var c = 3.14d;
 var e = 3.14m;
-a.GetType().Name
-b.GetType().Name
-c.GetType().Name
-e.GetType().Name
+Console.WriteLine(a.GetType().Name);
+Console.WriteLine(b.GetType().Name);
+Console.WriteLine(c.GetType().Name);
+Console.WriteLine(e.GetType().Name);
 ```
 
 > [!warning] Float Requires f Suffix
@@ -694,12 +696,12 @@ Decimal
 IEEE 754 defines three special `double` values: `PositiveInfinity` (result of division by zero), `NegativeInfinity`, and `NaN` (Not a Number — result of `0.0/0.0` or `Math.Sqrt(-1)`). `NaN` is not equal to anything, including itself — use `double.IsNaN()` to test. The classic `0.1 + 0.2 != 0.3` rounding artifact is inherent to binary floating-point; `decimal` avoids it because it uses base-10 representation.
 
 ```csharp
-double.PositiveInfinity
-double.NegativeInfinity
-double.NaN
+Console.WriteLine(double.PositiveInfinity);
+Console.WriteLine(double.NegativeInfinity);
+Console.WriteLine(double.NaN);
 
-0.1 + 0.2
-0.1m + 0.2m
+Console.WriteLine(0.1 + 0.2);
+Console.WriteLine(0.1m + 0.2m);
 ```
 ```text
 ∞
@@ -716,10 +718,10 @@ NaN
 
 ```csharp
 var z = new Complex(3, 4);
-$"z = {z}, type: {z.GetType()}"
-$"Real: {z.Real}, Imaginary: {z.Imaginary}"
-Complex.Conjugate(z)
-z.Magnitude
+Console.WriteLine($"z = {z}, type: {z.GetType()}");
+Console.WriteLine($"Real: {z.Real}, Imaginary: {z.Imaginary}");
+Console.WriteLine(Complex.Conjugate(z));
+Console.WriteLine(z.Magnitude);
 ```
 ```text
 System.Numerics.Complex
@@ -738,12 +740,12 @@ The `bool` type holds exactly `true` or `false` — there is no implicit convers
 bool a = true;
 bool b = false;
 
-$"a = {a}, type: {a.GetType()}"
-$"b = {b}, type: {b.GetType()}"
+Console.WriteLine($"a = {a}, type: {a.GetType()}");
+Console.WriteLine($"b = {b}, type: {b.GetType()}");
 
 // Explicit conversion
-Convert.ToInt32(true)
-Convert.ToInt32(false)
+Console.WriteLine(Convert.ToInt32(true));
+Console.WriteLine(Convert.ToInt32(false));
 ```
 
 > [!info] bool Is Strict — No Numeric Conversion, No Truthy/Falsy
@@ -763,15 +765,15 @@ Convert.ToInt32(false) = 0
 
 ```csharp
 byte[] b1 = new byte[] { 104, 101, 108, 108, 111 };
-$"b1 = [{string.Join(", ", b1)}], type: {b1.GetType()}"
-System.Text.Encoding.UTF8.GetString(b1)   // As string
+Console.WriteLine($"b1 = [{string.Join(", ", b1)}], type: {b1.GetType()}");
+Console.WriteLine(System.Text.Encoding.UTF8.GetString(b1));   // As string
 
 // Encoding/decoding
 string text = "café";
 byte[] encoded = System.Text.Encoding.UTF8.GetBytes(text);
 string decoded = System.Text.Encoding.UTF8.GetString(encoded);
-$"\n'{text}' encoded: [{string.Join(", ", encoded)}]"
-decoded   // decoded back
+Console.WriteLine($"\n'{text}' encoded: [{string.Join(", ", encoded)}]");
+Console.WriteLine(decoded);   // decoded back
 ```
 ```text
 System.Byte[]
@@ -794,15 +796,15 @@ café
 ```csharp
 string s = null;
 
-s == null   // s is null
-s is null
+Console.WriteLine(s == null);   // s is null
+Console.WriteLine(s is null);
 
 // Nullable value types — use ? suffix
 int? x = null;              // nullable int
 double? y = null;           // nullable double
-$"\nx = {x}, hasValue: {x.HasValue}"
+Console.WriteLine($"\nx = {x}, hasValue: {x.HasValue}");
 x = 42;
-$"x = {x}, hasValue: {x.HasValue}, value: {x.Value}"
+Console.WriteLine($"x = {x}, hasValue: {x.HasValue}, value: {x.Value}");
 ```
 ```text
 True
@@ -818,9 +820,9 @@ The null-coalescing operator `??` returns the left operand if it is non-null, ot
 
 ```csharp
 string name = null;
-name ?? "Unknown"
+Console.WriteLine(name ?? "Unknown");
 
-name?.Length
+Console.WriteLine(name?.Length);
 ```
 ```text
 Unknown
@@ -1130,14 +1132,14 @@ Assigning a value type (`int a = b`) copies all data — the two variables are i
 int a = 42;
 int b = a;       // b gets a COPY
 a = 100;
-$"a = {a}, b = {b}"
+Console.WriteLine($"a = {a}, b = {b}");
 
 var listA = new List<int> { 1, 2, 3 };
 var listB = listA;     // listB points to SAME object
 listA.Add(4);
-string.Join(",", listA)   // listA
-string.Join(",", listB)   // listB
-object.ReferenceEquals(listA, listB)   // Same object?
+Console.WriteLine(string.Join(",", listA));   // listA
+Console.WriteLine(string.Join(",", listB));   // listB
+Console.WriteLine(object.ReferenceEquals(listA, listB));   // Same object?
 ```
 ```text
 a = 100, b = 42
@@ -1155,13 +1157,13 @@ Strings are reference types but behave like values because they are immutable �
 string strA = "hello";
 string strB = strA;
 strA += " world";    // creates a NEW string, doesn't modify original
-strA
-strB
+Console.WriteLine(strA);
+Console.WriteLine(strB);
 
 int val = 42;
 object boxed = val;    // boxing: int copied to heap
 int unboxed = (int)boxed;  // unboxing: copied back to stack
-$"val={val}, boxed={boxed}, unboxed={unboxed}"
+Console.WriteLine($"val={val}, boxed={boxed}, unboxed={unboxed}");
 ```
 ```text
 strA = 'hello world'
@@ -1190,14 +1192,14 @@ The standard arithmetic operators work on numeric types with automatic promotion
 ```csharp
 int a = 17, b = 5;
 
-$"{a} + {b}  = {a + b}"
-$"{a} - {b}  = {a - b}"
-$"{a} * {b}  = {a * b}"
-$"{a} / {b}  = {a / b}"
-$"{a} % {b}  = {a % b}"
-$"-{a}       = {-a}"
+Console.WriteLine($"{a} + {b}  = {a + b}");
+Console.WriteLine($"{a} - {b}  = {a - b}");
+Console.WriteLine($"{a} * {b}  = {a * b}");
+Console.WriteLine($"{a} / {b}  = {a / b}");
+Console.WriteLine($"{a} % {b}  = {a % b}");
+Console.WriteLine($"-{a}       = {-a}");
 
-$"{a} ^ {b}  = {Math.Pow(a, b)}"
+Console.WriteLine($"{a} ^ {b}  = {Math.Pow(a, b)}");
 ```
 ```text
 17 + 5  = 22
@@ -1215,14 +1217,14 @@ When both operands are integers, division truncates the fractional part (rounds 
 
 ```csharp
 
-17 / 5
-17.0 / 5
-17 / 5.0
-(double)17 / 5
--7 / 2
--7 % 2
+Console.WriteLine(17 / 5);
+Console.WriteLine(17.0 / 5);
+Console.WriteLine(17 / 5.0);
+Console.WriteLine((double)17 / 5);
+Console.WriteLine(-7 / 2);
+Console.WriteLine(-7 % 2);
 
-Math.Floor(-7.0 / 2)
+Console.WriteLine(Math.Floor(-7.0 / 2));
 ```
 ```text
 17 / 5     = 3
@@ -1241,17 +1243,17 @@ Comparison operators return `bool`. For value types, `==` compares values. For r
 ```csharp
 int a = 10, b = 20;
 
-$"{a} == {b}  : {a == b}"
-$"{a} != {b}  : {a != b}"
-$"{a} > {b}   : {a > b}"
-$"{a} < {b}   : {a < b}"
-$"{a} >= {b}  : {a >= b}"
-$"{a} <= {b}  : {a <= b}"
+Console.WriteLine($"{a} == {b}  : {a == b}");
+Console.WriteLine($"{a} != {b}  : {a != b}");
+Console.WriteLine($"{a} > {b}   : {a > b}");
+Console.WriteLine($"{a} < {b}   : {a < b}");
+Console.WriteLine($"{a} >= {b}  : {a >= b}");
+Console.WriteLine($"{a} <= {b}  : {a <= b}");
 
 // No chained comparisons — must use && explicitly
 int x = 15;
 
-$"10 < {x} && {x} < 20 : {10 < x && x < 20}"
+Console.WriteLine($"10 < {x} && {x} < 20 : {10 < x && x < 20}");
 ```
 ```text
 False
@@ -1272,18 +1274,18 @@ True
 var list1 = new List<int> { 1, 2, 3 };
 var list2 = new List<int> { 1, 2, 3 };
 var list3 = list1;
-list1.SequenceEqual(list2)
-object.ReferenceEquals(list1, list2)
-object.ReferenceEquals(list1, list3)
-list1 == list2
+Console.WriteLine(list1.SequenceEqual(list2));
+Console.WriteLine(object.ReferenceEquals(list1, list2));
+Console.WriteLine(object.ReferenceEquals(list1, list3));
+Console.WriteLine(list1 == list2);
 
 // Membership — use .Contains() or LINQ .Any()
 
 var fruits = new List<string> { "apple", "banana", "cherry" };
-fruits.Contains("banana")
-!fruits.Contains("grape")
-"banana".Contains("an")
-fruits.Any(f => f.Length > 5)
+Console.WriteLine(fruits.Contains("banana"));
+Console.WriteLine(!fruits.Contains("grape"));
+Console.WriteLine("banana".Contains("an"));
+Console.WriteLine(fruits.Any(f => f.Length > 5));
 ```
 ```text
 True
@@ -1305,9 +1307,9 @@ True
 ```csharp
 #nullable enable
 
-true && false
-true || false
-!true
+Console.WriteLine(true && false);
+Console.WriteLine(true || false);
+Console.WriteLine(!true);
 ```
 ```text
 False
@@ -1332,9 +1334,9 @@ The null-coalescing operator `??` returns the left operand if non-null, otherwis
 ```csharp
 
 string? name = null;
-name ?? "default"
+Console.WriteLine(name ?? "default");
 name = "Alice";
-name ?? "default"
+Console.WriteLine(name ?? "default");
 ```
 ```text
 default
@@ -1349,7 +1351,7 @@ Alice
 
 string? val = null;
 val ??= "fallback";   // assign only if null
-val   // val ??= \"fallback\"
+Console.WriteLine(val);   // val ??= \"fallback\"
 ```
 ```text
 fallback
@@ -1364,14 +1366,14 @@ Bitwise operators work on the individual bits of integer values. AND (`&`) keeps
 ```csharp
 int a = 0b1100, b = 0b1010;
 
-$"a = {Convert.ToString(a, 2).PadLeft(4, '0')} ({a}),  b = {Convert.ToString(b, 2).PadLeft(4, '0')} ({b})"
-$"a & b  (AND)  = {Convert.ToString(a & b, 2).PadLeft(4, '0')} ({a & b})"
-$"a | b  (OR)   = {Convert.ToString(a | b, 2).PadLeft(4, '0')} ({a | b})"
-$"a ^ b  (XOR)  = {Convert.ToString(a ^ b, 2).PadLeft(4, '0')} ({a ^ b})"
-~a   // ~a (NOT) = (inverts all bits)
-$"a << 2 (LEFT) = {Convert.ToString(a << 2, 2).PadLeft(8, '0')} ({a << 2})"
-$"a >> 1 (RIGHT)= {Convert.ToString(a >> 1, 2).PadLeft(4, '0')} ({a >> 1})"
-a >>> 1   // a >>> 1 (UNSIGNED RIGHT)
+Console.WriteLine($"a = {Convert.ToString(a, 2).PadLeft(4, '0')} ({a}),  b = {Convert.ToString(b, 2).PadLeft(4, '0')} ({b})");
+Console.WriteLine($"a & b  (AND)  = {Convert.ToString(a & b, 2).PadLeft(4, '0')} ({a & b})");
+Console.WriteLine($"a | b  (OR)   = {Convert.ToString(a | b, 2).PadLeft(4, '0')} ({a | b})");
+Console.WriteLine($"a ^ b  (XOR)  = {Convert.ToString(a ^ b, 2).PadLeft(4, '0')} ({a ^ b})");
+Console.WriteLine(~a);   // ~a (NOT) = (inverts all bits)
+Console.WriteLine($"a << 2 (LEFT) = {Convert.ToString(a << 2, 2).PadLeft(8, '0')} ({a << 2})");
+Console.WriteLine($"a >> 1 (RIGHT)= {Convert.ToString(a >> 1, 2).PadLeft(4, '0')} ({a >> 1})");
+Console.WriteLine(a >>> 1);   // a >>> 1 (UNSIGNED RIGHT)
 ```
 ```text
 a = 1100 (12),  b = 1010 (10)
@@ -1392,13 +1394,13 @@ A common pattern for permission systems: define each permission as a power of 2 
 
 int READ = 0b100, WRITE = 0b010, EXECUTE = 0b001;
 int perms = READ | WRITE;
-Convert.ToString(perms, 2).PadLeft(3, '0')   // Permissions
-(perms & READ) != 0   // Can read?
-(perms & EXECUTE) != 0   // Can execute?
+Console.WriteLine(Convert.ToString(perms, 2).PadLeft(3, '0'));   // Permissions
+Console.WriteLine((perms & READ) != 0);   // Can read?
+Console.WriteLine((perms & EXECUTE) != 0);   // Can execute?
 perms |= EXECUTE;
-Convert.ToString(perms, 2).PadLeft(3, '0')   // After +exec
+Console.WriteLine(Convert.ToString(perms, 2).PadLeft(3, '0'));   // After +exec
 perms &= ~WRITE;
-Convert.ToString(perms, 2).PadLeft(3, '0')   // After -write
+Console.WriteLine(Convert.ToString(perms, 2).PadLeft(3, '0'));   // After -write
 ```
 ```text
 110
@@ -1415,7 +1417,7 @@ The lowest bit of an integer determines parity: `n & 1` is `0` for even numbers 
 ```csharp
 
 int n = 42;
-$"\n{n} is {((n & 1) == 0 ? "even" : "odd")}"
+Console.WriteLine($"\n{n} is {((n & 1) == 0 ? "even" : "odd")}");
 ```
 ```text
 42 is even
@@ -1429,7 +1431,7 @@ XOR swap exploits the property that `a ^ a = 0` and `a ^ 0 = a`. Three XOR opera
 
 int x = 5, y = 10;
 x ^= y; y ^= x; x ^= y;
-$"Swapped: x={x}, y={y}"
+Console.WriteLine($"Swapped: x={x}, y={y}");
 ```
 ```text
 x=10, y=5
@@ -1452,13 +1454,13 @@ Use `|` to combine flags, `.HasFlag()` to test, `|=` to add, and `&= ~flag` to r
 ```csharp
 
 var perms = Perms.Read | Perms.Write;
-perms   // Permissions
-perms.HasFlag(Perms.Read)   // Can read?
-perms.HasFlag(Perms.Execute)   // Can execute?
+Console.WriteLine(perms);   // Permissions
+Console.WriteLine(perms.HasFlag(Perms.Read));   // Can read?
+Console.WriteLine(perms.HasFlag(Perms.Execute));   // Can execute?
 perms |= Perms.Execute;
-perms   // After +exec
+Console.WriteLine(perms);   // After +exec
 perms &= ~Perms.Write;
-perms   // After -write
+Console.WriteLine(perms);   // After -write
 ```
 ```text
 Write, Read
@@ -1526,13 +1528,13 @@ The two most common flag operations: `perms |= flag` sets a flag, and `perms &= 
 
 int READ = 0b100, WRITE = 0b010, EXECUTE = 0b001;
 int perms = READ;
-Convert.ToString(perms, 2).PadLeft(3, '0')   // Start
+Console.WriteLine(Convert.ToString(perms, 2).PadLeft(3, '0'));   // Start
 perms |= WRITE;
-Convert.ToString(perms, 2).PadLeft(3, '0')   // perms |= WRITE: (|= adds a flag)
+Console.WriteLine(Convert.ToString(perms, 2).PadLeft(3, '0'));   // perms |= WRITE: (|= adds a flag)
 perms |= EXECUTE;
-Convert.ToString(perms, 2).PadLeft(3, '0')   // perms |= EXEC: (|= adds a flag)
+Console.WriteLine(Convert.ToString(perms, 2).PadLeft(3, '0'));   // perms |= EXEC: (|= adds a flag)
 perms &= ~WRITE;
-Convert.ToString(perms, 2).PadLeft(3, '0')   // perms &= ~WRITE: (&= ~ removes a flag)
+Console.WriteLine(Convert.ToString(perms, 2).PadLeft(3, '0'));   // perms &= ~WRITE: (&= ~ removes a flag)
 ```
 ```text
 100
@@ -1548,11 +1550,11 @@ Prefix (`++x`) increments the variable and returns the new value. Postfix (`x++`
 ```csharp
 
 x = 10;
-x
-$"x++ (post): {x++}, then x = {x}"
-$"++x (pre):  {++x}, and x = {x}"
-$"x-- (post): {x--}, then x = {x}"
-$"--x (pre):  {--x}, and x = {x}"
+Console.WriteLine(x);
+Console.WriteLine($"x++ (post): {x++}, then x = {x}");
+Console.WriteLine($"++x (pre):  {++x}, and x = {x}");
+Console.WriteLine($"x-- (post): {x--}, then x = {x}");
+Console.WriteLine($"--x (pre):  {--x}, and x = {x}");
 ```
 ```text
 x = 10
@@ -1572,21 +1574,21 @@ The ternary operator `condition ? trueValue : falseValue` is C#'s inline conditi
 
 int age = 20;
 string status = age >= 18 ? "adult" : "minor";
-$"age={age} → {status}"
+Console.WriteLine($"age={age} → {status}");
 
 // Null-conditional operators (C# only)
 
 string? name = null;
-name?.Length
-name?.ToUpper()
+Console.WriteLine(name?.Length);
+Console.WriteLine(name?.ToUpper());
 name = "Alice";
-name?.Length
-name?.ToUpper()
+Console.WriteLine(name?.Length);
+Console.WriteLine(name?.ToUpper());
 
 int[]? arr = null;
-arr?[0]
+Console.WriteLine(arr?[0]);
 arr = new[] { 10, 20, 30 };
-arr?[0]
+Console.WriteLine(arr?[0]);
 ```
 ```text
 age=20 → adult
@@ -1756,14 +1758,14 @@ Once operators are defined, Vector instances support natural arithmetic syntax. 
 var v1 = new Vector(3, 4);
 var v2 = new Vector(1, 2);
 
-v1
-v1
+Console.WriteLine(v1);
+Console.WriteLine(v1);
 
-v1 + v2
-v1 - v2
-v1 * 3
--v1
-v1.Magnitude
+Console.WriteLine(v1 + v2);
+Console.WriteLine(v1 - v2);
+Console.WriteLine(v1 * 3);
+Console.WriteLine(-v1);
+Console.WriteLine(v1.Magnitude);
 ```
 ```text
 Vector(3, 4)
@@ -1781,12 +1783,12 @@ Vector(-3, -4)
 
 ```csharp
 
-v1 == v2
-v1 == new Vector(3, 4)   // v1 == Vector(3,4)
-v1 != v2
-v1 < v2
-v1 > v2
-v1.GetHashCode()
+Console.WriteLine(v1 == v2);
+Console.WriteLine(v1 == new Vector(3, 4));   // v1 == Vector(3,4)
+Console.WriteLine(v1 != v2);
+Console.WriteLine(v1 < v2);
+Console.WriteLine(v1 > v2);
+Console.WriteLine(v1.GetHashCode());
 ```
 ```text
 False
@@ -1803,18 +1805,18 @@ The `this[int]` indexer allows `v1[0]` syntax. `IEnumerable<double>` enables `fo
 
 ```csharp
 
-v1[0]
-v1[1]
+Console.WriteLine(v1[0]);
+Console.WriteLine(v1[1]);
 
 foreach (var val in v1) Console.Write($"{val} ");            // IEnumerable
-string.Join(", ", v1)   // ToList
+Console.WriteLine(string.Join(", ", v1));   // ToList
 
 var vectors = new List<Vector> { new(5, 0), new(1, 1), new(3, 4) };
 vectors.Sort();                                               // uses CompareTo
-string.Join(", ", vectors)   // Sorted
+Console.WriteLine(string.Join(", ", vectors));   // Sorted
 
 (double x, double y) = v1;                                   // Deconstruct
-$"Deconstructed: x={x}, y={y}"
+Console.WriteLine($"Deconstructed: x={x}, y={y}");
 ```
 ```text
 3
@@ -1835,19 +1837,19 @@ x=3, y=4
 ```csharp
 
 var dog = new { Name = "Rex", Age = 5 };  // anonymous type for demo
-dog.GetType()   // GetType()
-dog.GetType().Name   // GetType().Name
-nameof(dog)   // nameof()
+Console.WriteLine(dog.GetType());   // GetType()
+Console.WriteLine(dog.GetType().Name);   // GetType().Name
+Console.WriteLine(nameof(dog));   // nameof()
 
 int x = 42;
-x.GetType()
-x.GetType().Name
+Console.WriteLine(x.GetType());
+Console.WriteLine(x.GetType().Name);
 
 object obj = "hello";
-obj is string
-obj is int
-typeof(string)
-typeof(string).IsClass
+Console.WriteLine(obj is string);
+Console.WriteLine(obj is int);
+Console.WriteLine(typeof(string));
+Console.WriteLine(typeof(string).IsClass);
 ```
 ```text
 <>f__AnonymousType0#140`2[System.String,System.Int32]
@@ -1868,9 +1870,9 @@ True
 ```csharp
 
 var type = typeof(List<int>);
-type.Name   // Type
-type.BaseType?.Name   // BaseType
-string.Join(", ", type.GetInterfaces().Select(i => i.Name))   // Interfaces
+Console.WriteLine(type.Name);   // Type
+Console.WriteLine(type.BaseType?.Name);   // BaseType
+Console.WriteLine(string.Join(", ", type.GetInterfaces().Select(i => i.Name)));   // Interfaces
 ```
 ```text
 List`1
@@ -1892,9 +1894,9 @@ while (current != null)
 }
 
 var strType = typeof(string);
-strType.GetProperties().Length   // Properties
-strType.GetMethods().Length   // Methods
-strType.GetFields().Length   // Fields
+Console.WriteLine(strType.GetProperties().Length);   // Properties
+Console.WriteLine(strType.GetMethods().Length);   // Methods
+Console.WriteLine(strType.GetFields().Length);   // Fields
 ```
 ```text
 List`1 → Object → null
@@ -1927,11 +1929,11 @@ foreach (var method in strType.GetMethods().Take(5))
 ```csharp
 
 var asm = typeof(string).Assembly;
-asm.GetName().Name   // Assembly
-asm.GetName().Version   // Version
-asm.Location   // Location
-typeof(string).Namespace   // Namespace
-typeof(string).FullName   // FullName
+Console.WriteLine(asm.GetName().Name);   // Assembly
+Console.WriteLine(asm.GetName().Version);   // Version
+Console.WriteLine(asm.Location);   // Location
+Console.WriteLine(typeof(string).Namespace);   // Namespace
+Console.WriteLine(typeof(string).FullName);   // FullName
 ```
 ```text
 System.Private.CoreLib
@@ -2040,7 +2042,7 @@ Assigning a value type (`int`, `struct`, `enum`) copies all data — after copyi
 int a = 10;
 int b = a;
 b = 99;
-$"a = {a}, b = {b}"
+Console.WriteLine($"a = {a}, b = {b}");
 ```
 ```text
 a = 10, b = 99
@@ -2055,9 +2057,9 @@ Assigning a reference type copies the pointer, not the object. Both variables no
 var listA = new List<int> { 1, 2, 3 };
 var listB = listA;
 listB.Add(4);
-string.Join(",", listA)   // listA
-string.Join(",", listB)   // listB
-object.ReferenceEquals(listA, listB)   // Same?
+Console.WriteLine(string.Join(",", listA));   // listA
+Console.WriteLine(string.Join(",", listB));   // listB
+Console.WriteLine(object.ReferenceEquals(listA, listB));   // Same?
 ```
 ```text
 listA = [1,2,3,4]
@@ -2074,8 +2076,8 @@ Although `string` is a reference type, it is immutable — `+=` does not modify 
 string strA = "hello";
 string strB = strA;
 strA += " world";
-strA
-strB
+Console.WriteLine(strA);
+Console.WriteLine(strB);
 ```
 ```text
 strA = 'hello world'
@@ -2099,8 +2101,8 @@ void TryModify(int val, List<int> lst)
 int num = 42;
 var myList = new List<int> { 1, 2 };
 TryModify(num, myList);
-num   // num after
-string.Join(",", myList)   // list after
+Console.WriteLine(num);   // num after
+Console.WriteLine(string.Join(",", myList));   // list after
 ```
 ```text
 42

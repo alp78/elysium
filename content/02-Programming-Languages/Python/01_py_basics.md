@@ -40,9 +40,9 @@ import json
 import math
 import os
 import time as _time
-sys.version   # Python version
-sys.executable   # Python executable
-socket.gethostname()   # Machine
+print(sys.version)   # Python version
+print(sys.executable)   # Python executable
+print(socket.gethostname())   # Machine
 ```
 ```text
 3.12.0 (tags/v3.12.0:0fb18b0, Oct  2 2023, 13:03:39) [MSC v.1935 64 bit (AMD64)]
@@ -55,8 +55,8 @@ Elysium
 `os.environ.get('VIRTUAL_ENV')` returns the path to the active virtual environment, or `None` if running in the system Python. `os.getcwd()` returns the current working directory where file path resolution starts.
 
 ```python
-os.environ.get('VIRTUAL_ENV', 'None')
-os.getcwd()
+print(os.environ.get('VIRTUAL_ENV', 'None'))
+print(os.getcwd())
 ```
 ```text
 C:\Users\aperi\DEV\LANG\.lang
@@ -141,21 +141,22 @@ name = "Alice"
 age = 30
 
 # f-string
-f"Name: {name}, Age: {age}"
+print(f"Name: {name}, Age: {age}")
 
 # .format() method
-"Name: {}, Age: {}".format(name, age)
+print("Name: {}, Age: {}".format(name, age))
 
 # % formatting (legacy)
-"Name: %s, Age: %d" % (name, age)
+print("Name: %s, Age: %d" % (name, age))
 
 # f-string with expressions
-age + 1   # Next year
-name.upper()   # Name uppercased
-f"{3.14159:.2f}"   # Pi to 2 decimals
+print(age + 1)   # Next year
+print(name.upper())   # Name uppercased
+print(f"{3.14159:.2f}")   # Pi to 2 decimals
 
 # Output formatting options for print()
 ```
+
 ```text
 Name: Alice, Age: 30
 Name: Alice, Age: 30
@@ -289,8 +290,8 @@ Shows how to read user input with `input()`, parse it to numeric types using `in
 ```python
 
 name = input("Enter your name: ")
-f"Hello, {name}!"
-type(name)   # Type of input
+print(f"Hello, {name}!")
+print(type(name))   # Type of input
 ```
 ```text
 Hello, Alex!
@@ -388,10 +389,10 @@ Demonstrates calling the validators defined above. In a real console application
 ```python
 
 num = get_valid_int("Enter a number: ")
-num   # Got
+print(num)   # Got
 
 name = get_non_empty_string("Enter your name: ")
-name   # Got
+print(name)   # Got
 ```
 ```text
 17
@@ -417,14 +418,14 @@ name = "Alice"  # str
 active = True   # bool
 
 # Python infers the type from the assigned value
-f"x = {x}, type: {type(x)}"
-f"y = {y}, type: {type(y)}"
-f"name = {name}, type: {type(name)}"
-f"active = {active}, type: {type(active)}"
+print(f"x = {x}, type: {type(x)}")
+print(f"y = {y}, type: {type(y)}")
+print(f"name = {name}, type: {type(name)}")
+print(f"active = {active}, type: {type(active)}")
 
 # Variables can change type (dynamic typing)
 x = "now I'm a string"
-f"\nx = {x}, type: {type(x)}"
+print(f"\nx = {x}, type: {type(x)}")
 ```
 ```text
 x = 10, type: <class 'int'>
@@ -445,9 +446,9 @@ PI = 3.14159
 MAX_USERS = 100
 API_URL = "https://api.example.com"
 
-PI
-MAX_USERS
-API_URL
+print(PI)
+print(MAX_USERS)
+print(API_URL)
 
 # Nothing prevents reassignment (it's just a convention)
 PI = 999  # No error, but don't do this!
@@ -478,7 +479,7 @@ c = 10**100  # huge number, no overflow!
 a
 b
 c
-f"c has {len(str(c))} digits"
+print(f"c has {len(str(c))} digits")
 sys.getsizeof(a)   # Size of a in bytes
 sys.getsizeof(c)   # Size of c in bytes
 ```
@@ -504,13 +505,13 @@ b = -0.001
 c = 1.8e308   # near max
 d = 5e-324    # near min positive
 
-a
-b
-c
-d
-sys.float_info.max   # Max float
-sys.float_info.min   # Min float
-f"Precision: {sys.float_info.dig} digits"
+print(a)
+print(b)
+print(c)
+print(d)
+print(sys.float_info.max)   # Max float
+print(sys.float_info.min)   # Min float
+print(f"Precision: {sys.float_info.dig} digits")
 ```
 ```text
 a = 3.14
@@ -528,12 +529,12 @@ IEEE 754 defines three special float values: `inf` (positive infinity), `-inf`, 
 
 ```python
 
-float('inf')   # Infinity
-float('-inf')   # Neg Infinity
-float('nan')   # NaN
+print(float('inf'))   # Infinity
+print(float('-inf'))   # Neg Infinity
+print(float('nan'))   # NaN
 
 # Floating point imprecision
-0.1 + 0.2  # not exactly 0.3!
+print(0.1 + 0.2)  # not exactly 0.3!
 ```
 ```text
 inf
@@ -550,10 +551,10 @@ Python has a built-in `complex` type using `j` suffix for the imaginary part (no
 ```python
 
 z = 3 + 4j
-f"z = {z}, type: {type(z)}"
-f"Real: {z.real}, Imaginary: {z.imag}"
-z.conjugate()   # Conjugate
-abs(z)  # magnitude
+print(f"z = {z}, type: {type(z)}")
+print(f"Real: {z.real}, Imaginary: {z.imag}")
+print(z.conjugate())   # Conjugate
+print(abs(z))  # magnitude
 ```
 ```text
 z = (3+4j), type: <class 'complex'>
@@ -575,19 +576,19 @@ Covers the `bool` type and its integer inheritance, the `bytes`/`bytearray` pair
 a = True
 b = False
 
-f"a = {a}, type: {type(a)}"
-f"b = {b}, type: {type(b)}"
-True + True  # 2 (bool is int)
-True * 10  # 10
+print(f"a = {a}, type: {type(a)}")
+print(f"b = {b}, type: {type(b)}")
+print(True + True)  # 2 (bool is int)
+print(True * 10)  # 10
 
 # Truthy and falsy values
-bool(0)  # False
-bool(1)  # True
-bool('')  # False
-bool('hi')  # True
-bool([])  # False
-bool([1])  # True
-bool(None)  # False
+print(bool(0))  # False
+print(bool(1))  # True
+print(bool(''))  # False
+print(bool('hi'))  # True
+print(bool([]))  # False
+print(bool([1]))  # True
+print(bool(None))  # False
 ```
 ```text
 a = True, type: <class 'bool'>
@@ -613,15 +614,15 @@ False
 b1 = b"hello"              # bytes (immutable)
 b2 = bytearray(b"hello")   # bytearray (mutable)
 
-f"b1 = {b1}, type: {type(b1)}"
-f"b2 = {b2}, type: {type(b2)}"
+print(f"b1 = {b1}, type: {type(b1)}")
+print(f"b2 = {b2}, type: {type(b2)}")
 
 # Encoding/decoding
 text = "café"
 encoded = text.encode("utf-8")
 decoded = encoded.decode("utf-8")
-f"\n'{text}' encoded: {encoded}"
-decoded   # decoded back
+print(f"\n'{text}' encoded: {encoded}")
+print(decoded)   # decoded back
 ```
 ```text
 b1 = b'hello', type: <class 'bytes'>
@@ -638,9 +639,9 @@ decoded back: café
 ```python
 
 x = None
-f"x = {x}, type: {type(x)}"
-x is None  # preferred way to check
-x == None  # works but not idiomatic
+print(f"x = {x}, type: {type(x)}")
+print(x is None)  # preferred way to check
+print(x == None)  # works but not idiomatic
 ```
 ```text
 x = None, type: <class 'NoneType'>
@@ -688,23 +689,23 @@ Complete reference showing all numeric types with their runtime type names. Pyth
 ```python
 
 i = 42
-f"int:          {i:>20}  type={type(i).__name__}"
+print(f"int:          {i:>20}  type={type(i).__name__}")
 
 # float — 64-bit IEEE 754
 f = 3.14
-f"float:        {f:>20}  type={type(f).__name__}"
+print(f"float:        {f:>20}  type={type(f).__name__}")
 
 # complex — real + imaginary
 c = 3 + 4j
-f"complex:      {str(c):>20}  type={type(c).__name__}"
+print(f"complex:      {str(c):>20}  type={type(c).__name__}")
 
 # bool — True/False (subclass of int)
 b = True
-f"bool:         {b:>20}  type={type(b).__name__}"
+print(f"bool:         {b:>20}  type={type(b).__name__}")
 
 # str — immutable Unicode string
 s = "hello"
-f"str:          {s:>20}  type={type(s).__name__}"
+print(f"str:          {s:>20}  type={type(s).__name__}")
 ```
 ```text
 42  type=int
@@ -721,23 +722,23 @@ Immutable types cannot be modified after creation. They are safe as dict keys, f
 ```python
 
 by = b"hello"
-f"bytes:        {str(by):>20}  type={type(by).__name__}"
+print(f"bytes:        {str(by):>20}  type={type(by).__name__}")
 
 # tuple — immutable ordered sequence
 t = (1, 2, 3)
-f"tuple:        {str(t):>20}  type={type(t).__name__}"
+print(f"tuple:        {str(t):>20}  type={type(t).__name__}")
 
 # frozenset — immutable set
 fs = frozenset({1, 2, 3})
-f"frozenset:    {str(fs):>20}  type={type(fs).__name__}"
+print(f"frozenset:    {str(fs):>20}  type={type(fs).__name__}")
 
 # range — immutable sequence of numbers
 r = range(5)
-f"range:        {str(r):>20}  type={type(r).__name__}"
+print(f"range:        {str(r):>20}  type={type(r).__name__}")
 
 # NoneType — singleton null
 n = None
-f"NoneType:     {str(n):>20}  type={type(n).__name__}"
+print(f"NoneType:     {str(n):>20}  type={type(n).__name__}")
 ```
 ```text
 b'hello'  type=bytes
@@ -754,19 +755,19 @@ Mutable types can be modified in place. Assignment copies the reference (not the
 ```python
 
 lst = [1, 2, 3]
-f"list:         {str(lst):>20}  type={type(lst).__name__}"
+print(f"list:         {str(lst):>20}  type={type(lst).__name__}")
 
 # dict — key-value mapping
 d = {"a": 1, "b": 2}
-f"dict:         {str(d):>20}  type={type(d).__name__}"
+print(f"dict:         {str(d):>20}  type={type(d).__name__}")
 
 # set — unordered unique elements
 st = {1, 2, 3}
-f"set:          {str(st):>20}  type={type(st).__name__}"
+print(f"set:          {str(st):>20}  type={type(st).__name__}")
 
 # bytearray — mutable byte sequence
 ba = bytearray(b"hello")
-f"bytearray:    {str(ba):>20}  type={type(ba).__name__}"
+print(f"bytearray:    {str(ba):>20}  type={type(ba).__name__}")
 ```
 ```text
 [1, 2, 3]  type=list
@@ -782,16 +783,16 @@ bytearray(b'hello')  type=bytearray
 ```python
 
 mv = memoryview(ba)
-f"memoryview:   {str(mv):>20}  type={type(mv).__name__}"
+print(f"memoryview:   {str(mv):>20}  type={type(mv).__name__}")
 
 
 # deque — double-ended queue
 dq = deque([1, 2, 3])
-f"deque:        {str(dq):>40}  (fast append/pop both ends)"
+print(f"deque:        {str(dq):>40}  (fast append/pop both ends)")
 
 # OrderedDict — insertion-ordered dict (redundant since 3.7, dict keeps order)
 od = OrderedDict(a=1, b=2)
-f"OrderedDict:  {str(od):>40}  (explicit ordered dict)"
+print(f"OrderedDict:  {str(od):>40}  (explicit ordered dict)")
 ```
 ```text
 <memory at 0x0000029D91A19240>  type=memoryview
@@ -829,13 +830,13 @@ dict(groups)   # Groups
 ```python
 
 ct = Counter("abracadabra")
-ct   # Counter
-ct.most_common(3)   # Most common 3
+print(ct)   # Counter
+print(ct.most_common(3))   # Most common 3
 
 # Counting words
 words = "the cat sat on the mat the cat".split()
 word_counts = Counter(words)
-word_counts
+print(word_counts)
 ```
 ```text
 Counter({'a': 5, 'b': 2, 'r': 2, 'c': 1, 'd': 1})
@@ -851,13 +852,13 @@ Counter({'the': 3, 'cat': 2, 'sat': 1, 'on': 1, 'mat': 1})
 
 Point = namedtuple("Point", ["x", "y"])
 pt = Point(3, 4)
-pt   # Point
-f"pt.x:    {pt.x}, pt.y: {pt.y}"
-pt[0]  # also indexable like a regular tuple
+print(pt)   # Point
+print(f"pt.x:    {pt.x}, pt.y: {pt.y}")
+print(pt[0])  # also indexable like a regular tuple
 
 # _replace returns a NEW namedtuple with one field changed (immutable)
 pt2 = pt._replace(x=10)
-pt2   # _replace
+print(pt2)   # _replace
 ```
 ```text
 Point(x=3, y=4)
@@ -902,13 +903,13 @@ Demonstrates how immutable types create new objects on "reassignment" while muta
 ```python
 
 frac = Fraction(1, 3)
-f"Fraction:     {str(frac):>40}  (exact rational)"
+print(f"Fraction:     {str(frac):>40}  (exact rational)")
 
 # Immutable: reassignment creates a NEW object
 a = "hello"
 b = a
 a += " world"
-f"Immutable str: a='{a}', b='{b}'"  # b unchanged!
+print(f"Immutable str: a='{a}', b='{b}'")  # b unchanged!
 ```
 ```text
 1/3  (exact rational)
@@ -924,7 +925,7 @@ Assigning a list to another variable copies the reference, not the data. Both va
 a = [1, 2, 3]
 b = a
 a.append(4)
-f"Mutable list:  a={a}, b={b}"  # b changed too!
+print(f"Mutable list:  a={a}, b={b}")  # b changed too!
 a is b  # True
 ```
 ```text
@@ -947,22 +948,22 @@ Python has true division (`/` returns float), floor division (`//` returns int),
 ```python
 a, b = 17, 5
 
-f"{a} + {b}  = {a + b}"  # Addition
-f"{a} - {b}  = {a - b}"  # Subtraction
-f"{a} * {b}  = {a * b}"  # Multiplication
-f"{a} / {b}  = {a / b}"  # Division (always returns float)
-f"{a} // {b} = {a // b}"  # Floor division (integer result)
-f"{a} % {b}  = {a % b}"  # Modulus (remainder)
-f"{a} ** {b} = {a ** b}"  # Exponentiation
-f"-{a}       = {-a}"  # Unary negation
+print(f"{a} + {b}  = {a + b}")  # Addition
+print(f"{a} - {b}  = {a - b}")  # Subtraction
+print(f"{a} * {b}  = {a * b}")  # Multiplication
+print(f"{a} / {b}  = {a / b}")  # Division (always returns float)
+print(f"{a} // {b} = {a // b}")  # Floor division (integer result)
+print(f"{a} % {b}  = {a % b}")  # Modulus (remainder)
+print(f"{a} ** {b} = {a ** b}")  # Exponentiation
+print(f"-{a}       = {-a}")  # Unary negation
 
 # Division behavior
 
-7 / 2  # 3.5 (true division)
-7 // 2  # 3 (floor division)
--7 // 2  # -4 (floors toward negative infinity!)
-7 % 2  # 1
--7 % 2  # 1 (Python modulo always returns same sign as divisor)
+print(7 / 2)  # 3.5 (true division)
+print(7 // 2)  # 3 (floor division)
+print(-7 // 2)  # -4 (floors toward negative infinity!)
+print(7 % 2)  # 1
+print(-7 % 2)  # 1 (Python modulo always returns same sign as divisor)
 ```
 ```text
 17 + 5  = 22
@@ -987,12 +988,12 @@ Comparison operators return `bool`. Python compares by value for all built-in ty
 ```python
 a, b = 10, 20
 
-f"{a} == {b}  : {a == b}"  # Equal
-f"{a} != {b}  : {a != b}"  # Not equal
-f"{a} > {b}   : {a > b}"  # Greater than
-f"{a} < {b}   : {a < b}"  # Less than
-f"{a} >= {b}  : {a >= b}"  # Greater than or equal
-f"{a} <= {b}  : {a <= b}"  # Less than or equal
+print(f"{a} == {b}  : {a == b}")  # Equal
+print(f"{a} != {b}  : {a != b}")  # Not equal
+print(f"{a} > {b}   : {a > b}")  # Greater than
+print(f"{a} < {b}   : {a < b}")  # Less than
+print(f"{a} >= {b}  : {a >= b}")  # Greater than or equal
+print(f"{a} <= {b}  : {a <= b}")  # Less than or equal
 ```
 ```text
 10 == 20  : False
@@ -1011,9 +1012,9 @@ Python supports chained comparisons: `10 < x < 20` is equivalent to `(10 < x) an
 
 x = 15
 
-f"10 < {x} < 20 : {10 < x < 20}"  # True — same as (10 < x) and (x < 20)
-1 < 2 < 3 < 4  # True
-1 < 2 > 0  # True
+print(f"10 < {x} < 20 : {10 < x < 20}")  # True — same as (10 < x) and (x < 20)
+print(1 < 2 < 3 < 4)  # True
+print(1 < 2 > 0)  # True
 ```
 ```text
 10 < 15 < 20 : True
@@ -1034,10 +1035,10 @@ Covers `is`/`is not` for object identity, `in`/`not in` for membership testing, 
 a = [1, 2, 3]
 b = [1, 2, 3]
 c = a
-a == b  # True  (same value)
-a is b  # False (different objects)
-a is c  # True  (same object)
-a is not b  # True
+print(a == b)  # True  (same value)
+print(a is b)  # False (different objects)
+print(a is c)  # True  (same object)
+print(a is not b)  # True
 ```
 ```text
 a == b  : True
@@ -1053,15 +1054,15 @@ a is not b : True
 ```python
 
 fruits = ["apple", "banana", "cherry"]
-'banana' in fruits   # 'banana' in fruits
-'grape' not in fruits   # 'grape' not in fruits
-'an' in 'banana'  # works on strings too
-3 in range(5)  # works on range
-f"'key' in {{'key': 1}}    : {'key' in {'key': 1}}"  # works on dict keys
+print('banana' in fruits)   # 'banana' in fruits
+print('grape' not in fruits)   # 'grape' not in fruits
+print('an' in 'banana')  # works on strings too
+print(3 in range(5))  # works on range
+print(f"'key' in {{'key': 1}}    : {'key' in {'key': 1}}")  # works on dict keys
 
-True and False  # False
-True or False  # True
-not True  # False
+print(True and False)  # False
+print(True or False)  # True
+print(not True)  # False
 ```
 ```text
 'banana' in fruits     : True
@@ -1080,15 +1081,15 @@ Unlike C#'s `&&`/`||` which always return `bool`, Python's `and`/`or` return the
 
 ```python
 
-0 and 5  # 0 (first falsy)
-3 and 5  # 5 (last value, both truthy)
-'' and 'hello'  # '' (first falsy)
+print(0 and 5)  # 0 (first falsy)
+print(3 and 5)  # 5 (last value, both truthy)
+print('' and 'hello')  # '' (first falsy)
 
 # 'or' returns first truthy value or last value
-0 or 5  # 5 (first truthy)
-3 or 5  # 3 (first truthy)
-'' or 'hello'  # 'hello'
-None or 'default'  # 'default' (common pattern!)
+print(0 or 5)  # 5 (first truthy)
+print(3 or 5)  # 3 (first truthy)
+print('' or 'hello')  # 'hello'
+print(None or 'default')  # 'default' (common pattern!)
 ```
 ```text
 0 and 5         : 0
@@ -1132,13 +1133,13 @@ Bitwise operators work on the binary representation of integers. Python integers
 
 a, b = 0b1100, 0b1010  # 12 and 10
 
-f"a = {a:04b} ({a}),  b = {b:04b} ({b})"
-f"a & b  (AND)  = {a & b:04b} ({a & b})"  # 1000 (8)
-f"a | b  (OR)   = {a | b:04b} ({a | b})"  # 1110 (14)
-f"a ^ b  (XOR)  = {a ^ b:04b} ({a ^ b})"  # 0110 (6)
-f"~a     (NOT)  = {~a} (inverts all bits)"  # -13 (two's complement)
-f"a << 2 (LEFT) = {a << 2:08b} ({a << 2})"  # 110000 (48)
-f"a >> 1 (RIGHT)= {a >> 1:04b} ({a >> 1})"  # 0110 (6)
+print(f"a = {a:04b} ({a}),  b = {b:04b} ({b})")
+print(f"a & b  (AND)  = {a & b:04b} ({a & b})")  # 1000 (8)
+print(f"a | b  (OR)   = {a | b:04b} ({a | b})")  # 1110 (14)
+print(f"a ^ b  (XOR)  = {a ^ b:04b} ({a ^ b})")  # 0110 (6)
+print(f"~a     (NOT)  = {~a} (inverts all bits)")  # -13 (two's complement)
+print(f"a << 2 (LEFT) = {a << 2:08b} ({a << 2})")  # 110000 (48)
+print(f"a >> 1 (RIGHT)= {a >> 1:04b} ({a >> 1})")  # 0110 (6)
 
 # Common use cases for bitwise operators
 ```
@@ -1162,23 +1163,23 @@ READ, WRITE, EXECUTE = 0b100, 0b010, 0b001
 
 # Combine two flags with OR
 perms = READ | WRITE
-f"{perms:03b}"   # Start
+print(f"{perms:03b}")   # Start
 
 # Test a flag with AND
-bool(perms & READ)   # Can read?
-bool(perms & EXECUTE)   # Can execute?
+print(bool(perms & READ))   # Can read?
+print(bool(perms & EXECUTE))   # Can execute?
 
 # Add a flag — set its bit with |=
 perms |= EXECUTE
-f"{perms:03b}"   # After |= EXEC
+print(f"{perms:03b}")   # After |= EXEC
 
 # Remove a flag — AND with inverted mask using &= ~
 perms &= ~WRITE
-f"{perms:03b}"   # After &= ~WRITE
+print(f"{perms:03b}")   # After &= ~WRITE
 
 # Even/odd check — LSB is 1 for odd, 0 for even
 n = 42
-f"\n{n} is {'even' if n & 1 == 0 else 'odd'}"
+print(f"\n{n} is {'even' if n & 1 == 0 else 'odd'}")
 ```
 ```text
 110
@@ -1199,7 +1200,7 @@ XOR swap works because XOR is its own inverse: `a ^ b ^ b == a`. The algorithm p
 ```python
 x, y = 5, 10
 x ^= y; y ^= x; x ^= y
-f"Swapped: x={x}, y={y}"
+print(f"Swapped: x={x}, y={y}")
 ```
 ```text
 Swapped: x=10, y=5
@@ -1295,7 +1296,7 @@ Python's ternary syntax is `value_if_true if condition else value_if_false` — 
 
 age = 20
 status = "adult" if age >= 18 else "minor"
-f"age={age} → {status}"
+print(f"age={age} → {status}")
 ```
 ```text
 age=20 → adult
@@ -1309,11 +1310,11 @@ Ternary expressions can be chained for multi-condition logic, though readability
 
 score = 85
 grade = "A" if score >= 90 else "B" if score >= 80 else "C" if score >= 70 else "D" if score >= 60 else "F"
-f"score={score} → grade={grade}"
+print(f"score={score} → grade={grade}")
 
 # Ternary in f-string
 items = 3
-f"You have {items} {'item' if items == 1 else 'items'}"
+print(f"You have {items} {'item' if items == 1 else 'items'}")
 ```
 ```text
 score=85 → grade=B
@@ -1325,7 +1326,7 @@ You have 3 items
 ```python
 data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 filtered = [y for x in data if (y := x * 2) > 10]
-filtered   # Doubled > 10
+print(filtered)   # Doubled > 10
 ```
 ```text
 Doubled > 10: [12, 14, 16, 18, 20]
@@ -1396,12 +1397,12 @@ The most common Python precedence surprise: `-2 ** 2` evaluates as `-(2 ** 2) = 
 
 ```python
 
-2 + 3 * 4  # 14 (not 20)
-(2 + 3) * 4  # 20
--2 ** 2  # -4 (** binds tighter than unary -)
-(-2) ** 2  # 4
-not 1 == 1  # False (== before not)
-not (1 == 1)  # False (same, but explicit)
+print(2 + 3 * 4)  # 14 (not 20)
+print((2 + 3) * 4)  # 20
+print(-2 ** 2)  # -4 (** binds tighter than unary -)
+print((-2) ** 2)  # 4
+print(not 1 == 1)  # False (== before not)
+print(not (1 == 1))  # False (same, but explicit)
 ```
 ```text
 14
@@ -1518,8 +1519,8 @@ class Vector:
 v1 = Vector(3, 4)
 v2 = Vector(1, 2)
 
-str(v1)  # __str__
-repr(v1)  # __repr__
+print(str(v1))  # __str__
+print(repr(v1))  # __repr__
 ```
 ```text
 Vector(3, 4)
@@ -1532,16 +1533,16 @@ Once dunder methods are defined, instances support natural Python syntax: `v1 + 
 
 ```python
 
-v1 + v2  # __add__
-v1 - v2  # __sub__
-v1 * 3  # __mul__
--v1  # __neg__
-abs(v1)  # __abs__
+print(v1 + v2)  # __add__
+print(v1 - v2)  # __sub__
+print(v1 * 3)  # __mul__
+print(-v1)  # __neg__
+print(abs(v1))  # __abs__
 
-v1 == v2  # __eq__
-v1 == Vector(3, 4)   # v1 == Vector(3,4)
-v1 < v2  # __lt__ (compares magnitude)
-hash(v1)  # __hash__
+print(v1 == v2)  # __eq__
+print(v1 == Vector(3, 4))   # v1 == Vector(3,4)
+print(v1 < v2)  # __lt__ (compares magnitude)
+print(hash(v1))  # __hash__
 ```
 ```text
 Vector(4, 6)
@@ -1561,16 +1562,16 @@ False
 
 ```python
 
-v1[0]  # __getitem__
-v1[1]   # v1[1]
-3 in v1  # __contains__
-5 in v1   # 5 in v1
-len(v1)  # __len__
+print(v1[0])  # __getitem__
+print(v1[1])   # v1[1]
+print(3 in v1)  # __contains__
+print(5 in v1)   # 5 in v1
+print(len(v1))  # __len__
 
-v1(2)  # __call__
-list(v1)  # __iter__
-bool(v1)  # __bool__
-bool(Vector(0, 0))   # bool(Vector(0,0))
+print(v1(2))  # __call__
+print(list(v1))  # __iter__
+print(bool(v1))  # __bool__
+print(bool(Vector(0, 0)))   # bool(Vector(0,0))
 ```
 ```text
 3
@@ -1622,9 +1623,9 @@ Every module has `__name__` (its import name, or `"__main__"` for the entry-poin
 
 ```python
 
-__name__
-math.__name__   # math.__name__
-f"math.__doc__[:50]: {(math.__doc__ or '')[:50]}..."
+print(__name__)
+print(math.__name__)   # math.__name__
+print(f"math.__doc__[:50]: {(math.__doc__ or '')[:50]}...")
 ```
 ```text
 __main__
@@ -1639,11 +1640,11 @@ math.__doc__[:50]: This module provides access to the mathematical fu...
 ```python
 
 v = Vector(3, 4)
-v.__class__   # v.__class__
-v.__class__.__name__   # v.__class__.__name__
-type(v)   # type(v)
-isinstance(v, Vector)   # isinstance(v, Vector)
-v.__dict__   # v.__dict__
+print(v.__class__)   # v.__class__
+print(v.__class__.__name__)   # v.__class__.__name__
+print(type(v))   # type(v)
+print(isinstance(v, Vector))   # isinstance(v, Vector)
+print(v.__dict__)   # v.__dict__
 ```
 ```text
 <class '__main__.Vector'>
@@ -1666,7 +1667,7 @@ class Point:
         self.y = y
 
 p = Point(1, 2)
-f"Point({p.x}, {p.y})"
+print(f"Point({p.x}, {p.y})")
 # p.z = 3 → AttributeError (slots restricts attributes)
 hasattr(p, '__dict__')   # Has __dict__?
 ```
@@ -1732,7 +1733,7 @@ __name__
 # print(f"__file__:    {__file__}")
 
 # __doc__ — the module's docstring (first string literal at the top of the file)
-f"__doc__:       {(os.__doc__ or '')[:60]}..."
+print(f"__doc__:       {(os.__doc__ or '')[:60]}...")
 
 # Common guard: prevents code from running when the module is imported
 # if __name__ == "__main__":
@@ -1742,7 +1743,7 @@ f"__doc__:       {(os.__doc__ or '')[:60]}..."
 math.__name__   # math.__name__
 
 # math.__doc__ — even C extensions expose their docstring
-f"math.__doc__:     {(math.__doc__ or '')[:60]}..."
+print(f"math.__doc__:     {(math.__doc__ or '')[:60]}...")
 
 # math.__file__ — C extension modules may not have a .py __file__
 getattr(math, '__file__', 'N/A (built-in C module)')   # math.__file__
@@ -1831,22 +1832,22 @@ class Dog(Animal):
 ```python
 
 d = Dog("Rex")
-Dog.__name__  # 'Dog'
-Dog.__doc__  # 'A dog.'
-Dog.__module__  # '__main__'
-Dog.__bases__  # (Animal,) — direct parent classes
-Dog.__mro__  # method resolution order
-list(Dog.__dict__.keys())  # class namespace
+print(Dog.__name__)  # 'Dog'
+print(Dog.__doc__)  # 'A dog.'
+print(Dog.__module__)  # '__main__'
+print(Dog.__bases__)  # (Animal,) — direct parent classes
+print(Dog.__mro__)  # method resolution order
+print(list(Dog.__dict__.keys()))  # class namespace
 
-d.__class__  # <class 'Dog'>
-d.__class__.__name__  # 'Dog'
-d.__dict__  # {'name': 'Rex'} — instance attributes
-f"d.__sizeof__():    {d.__sizeof__()} bytes"  # memory size
+print(d.__class__)  # <class 'Dog'>
+print(d.__class__.__name__)  # 'Dog'
+print(d.__dict__)  # {'name': 'Rex'} — instance attributes
+print(f"d.__sizeof__():    {d.__sizeof__()} bytes")  # memory size
 
-type(d).__name__  # 'Dog'
-isinstance(d, Dog)   # isinstance(d, Dog)
-isinstance(d, Animal)   # isinstance(d, Animal)
-issubclass(Dog, Animal)   # issubclass(Dog, Animal)
+print(type(d).__name__)  # 'Dog'
+print(isinstance(d, Dog))   # isinstance(d, Dog)
+print(isinstance(d, Animal))   # isinstance(d, Animal)
+print(issubclass(Dog, Animal))   # issubclass(Dog, Animal)
 ```
 ```text
 Dog
@@ -1965,9 +1966,9 @@ String `+=` produces a new object, leaving the original reference unchanged — 
 a = "hello"
 b = a
 a += " world"
-a
-b
-a is b   # Same object?
+print(a)
+print(b)
+print(a is b)   # Same object?
 ```
 ```text
 a = 'hello world'

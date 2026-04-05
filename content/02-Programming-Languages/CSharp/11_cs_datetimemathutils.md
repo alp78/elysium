@@ -80,11 +80,11 @@ DateTime utcNow = DateTime.UtcNow;  // UTC time
 DateOnly today = DateOnly.FromDateTime(DateTime.Now);  // date only (.NET 6+)
 TimeOnly currentTime = TimeOnly.FromDateTime(DateTime.Now);  // time only (.NET 6+)
 
-now  // DateTime.Now
-utcNow  // DateTime.UtcNow
-today  // DateOnly
-currentTime  // TimeOnly
-now.GetType()  // type
+Console.WriteLine(now);  // DateTime.Now
+Console.WriteLine(utcNow);  // DateTime.UtcNow
+Console.WriteLine(today);  // DateOnly
+Console.WriteLine(currentTime);  // TimeOnly
+Console.WriteLine(now.GetType());  // type
 ```
 
     25-Mar-26 5:25:13
@@ -103,10 +103,10 @@ var d = new DateOnly(2024, 3, 15);                     // date only
 var t = new TimeOnly(14, 30, 45);                      // time only
 var dtTicks = new DateTime(2024, 3, 15, 14, 30, 45).AddTicks(1234560);  // with sub-ms
 
-dt  // Specific DateTime
-d  // Specific DateOnly
-t  // Specific TimeOnly
-dtTicks  // With ticks
+Console.WriteLine(dt);  // Specific DateTime
+Console.WriteLine(d);  // Specific DateOnly
+Console.WriteLine(t);  // Specific TimeOnly
+Console.WriteLine(dtTicks);  // With ticks
 ```
 
     
@@ -122,18 +122,18 @@ Access individual components as properties: `.Year`, `.Month`, `.Day`, `.Hour`, 
 ```csharp
 var dt = new DateTime(2024, 3, 15, 14, 30, 45).AddTicks(1234560);
 
-dt.Year  // Year
-dt.Month  // Month
-dt.Day  // Day
-dt.Hour  // Hour
-dt.Minute  // Minute
-dt.Second  // Second
-dt.Millisecond  // Millisecond
-dt.Ticks          // 100-nanosecond intervals
-dt.DayOfWeek      // Friday (enum)
-dt.DayOfYear
-System.Globalization.ISOWeek.GetWeekOfYear(dt)  // Week (ISO)
-dt.Kind            // Unspecified, Local, or Utc
+Console.WriteLine(dt.Year);  // Year
+Console.WriteLine(dt.Month);  // Month
+Console.WriteLine(dt.Day);  // Day
+Console.WriteLine(dt.Hour);  // Hour
+Console.WriteLine(dt.Minute);  // Minute
+Console.WriteLine(dt.Second);  // Second
+Console.WriteLine(dt.Millisecond);  // Millisecond
+Console.WriteLine(dt.Ticks);          // 100-nanosecond intervals
+Console.WriteLine(dt.DayOfWeek);      // Friday (enum)
+Console.WriteLine(dt.DayOfYear);
+Console.WriteLine(System.Globalization.ISOWeek.GetWeekOfYear(dt));  // Week (ISO)
+Console.WriteLine(dt.Kind);            // Unspecified, Local, or Utc
 ```
 
     2024
@@ -161,9 +161,9 @@ var now = DateTime.Now;
 var dto = new DateTimeOffset(now);
 long tsSeconds = dto.ToUnixTimeSeconds();
 long tsMillis = dto.ToUnixTimeMilliseconds();
-dto  // Timestamp
-tsSeconds  // Timestamp (seconds)
-tsMillis  // Timestamp (millis)
+Console.WriteLine(dto);  // Timestamp
+Console.WriteLine(tsSeconds);  // Timestamp (seconds)
+Console.WriteLine(tsMillis);  // Timestamp (millis)
 ```
 
     25-Mar-26 5:25:13 +01:00
@@ -177,8 +177,8 @@ tsMillis  // Timestamp (millis)
 ```csharp
 var fromTs = DateTimeOffset.FromUnixTimeSeconds(tsSeconds).LocalDateTime;
 var fromTsUtc = DateTimeOffset.FromUnixTimeSeconds(tsSeconds).UtcDateTime;
-fromTs  // From timestamp (local)
-fromTsUtc  // From timestamp (UTC)
+Console.WriteLine(fromTs);  // From timestamp (local)
+Console.WriteLine(fromTsUtc);  // From timestamp (UTC)
 ```
 
     
@@ -190,8 +190,8 @@ fromTsUtc  // From timestamp (UTC)
 `.Ticks` is a `long` counting 100-nanosecond intervals since 0001-01-01. Reconstruct a `DateTime` from ticks with `new DateTime(ticks)`. Ticks provide higher precision than Unix timestamps (which are seconds or milliseconds).
 
 ```csharp
-now.Ticks  // .NET Ticks
-new DateTime(now.Ticks)  // From ticks
+Console.WriteLine(now.Ticks);  // .NET Ticks
+Console.WriteLine(new DateTime(now.Ticks));  // From ticks
 ```
 
     
@@ -202,7 +202,7 @@ new DateTime(now.Ticks)  // From ticks
 
 ```csharp
 var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-epoch  // Epoch
+Console.WriteLine(epoch);  // Epoch
 ```
 
     
@@ -233,7 +233,7 @@ var dt6 = DateTime.ParseExact(s6, "ddd, dd MMM yyyy HH:mm:ss", CultureInfo.Invar
 // === String -> DateTime (ParseExact) ===
 var inputs = new[] { (s1, dt1), (s2, dt2), (s3, dt3), (s4, dt4), (s5, dt5), (s6, dt6) };
 foreach (var (s, d) in inputs)
-    $"  {("'" + s + "'"),-32} -> {d}"
+    Console.WriteLine($"  {("'" + s + "'"),-32} -> {d}");
 ```
 
       '2024-03-15 14:30:45'            -> 15-Mar-24 14:30:45
@@ -264,7 +264,7 @@ else
 
 ```csharp
 var auto = DateTime.Parse("2024-03-15T14:30:45");
-auto  // Auto-parsed
+Console.WriteLine(auto);  // Auto-parsed
 ```
 
     15-Mar-24 14:30:45
@@ -277,17 +277,17 @@ Standard format strings are single-letter shortcuts: `"d"` (short date), `"D"` (
 
 var dt = new DateTime(2024, 3, 15, 14, 30, 45).AddTicks(1234560);
 
-dt.ToString("d")  // d  Short date
-dt.ToString("D")  // D  Long date
-dt.ToString("t")  // t  Short time
-dt.ToString("T")  // T  Long time
-dt.ToString("f")  // f  Full short
-dt.ToString("F")  // F  Full long
-dt.ToString("g")  // g  General short
-dt.ToString("G")  // G  General long
-dt.ToString("R")  // R  RFC 1123
-dt.ToString("s")  // s  Sortable
-dt.ToString("o")  // o  Round-trip
+Console.WriteLine(dt.ToString("d"));  // d  Short date
+Console.WriteLine(dt.ToString("D"));  // D  Long date
+Console.WriteLine(dt.ToString("t"));  // t  Short time
+Console.WriteLine(dt.ToString("T"));  // T  Long time
+Console.WriteLine(dt.ToString("f"));  // f  Full short
+Console.WriteLine(dt.ToString("F"));  // F  Full long
+Console.WriteLine(dt.ToString("g"));  // g  General short
+Console.WriteLine(dt.ToString("G"));  // G  General long
+Console.WriteLine(dt.ToString("R"));  // R  RFC 1123
+Console.WriteLine(dt.ToString("s"));  // s  Sortable
+Console.WriteLine(dt.ToString("o"));  // o  Round-trip
 ```
 
     15-Mar-24
@@ -308,16 +308,16 @@ Custom format strings use specifiers like `yyyy` (4-digit year), `MM` (month), `
 
 ```csharp
 
-dt.ToString("yyyy-MM-dd'T'HH:mm:ss")  // ISO 8601
-dt.ToString("yyyy-MM-dd")  // Date only
-dt.ToString("HH:mm:ss")  // Time only
-dt.ToString("MM/dd/yyyy")  // US format
-dt.ToString("dd/MM/yyyy")  // EU format
-dt.ToString("MMMM dd, yyyy")  // Long date
-dt.ToString("hh:mm tt")  // 12-hour
-dt.ToString("dddd")  // Day of week
-dt.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff")  // With fraction
-dt.ToString("yyyyMMddHHmmss")  // Compact
+Console.WriteLine(dt.ToString("yyyy-MM-dd'T'HH:mm:ss"));  // ISO 8601
+Console.WriteLine(dt.ToString("yyyy-MM-dd"));  // Date only
+Console.WriteLine(dt.ToString("HH:mm:ss"));  // Time only
+Console.WriteLine(dt.ToString("MM/dd/yyyy"));  // US format
+Console.WriteLine(dt.ToString("dd/MM/yyyy"));  // EU format
+Console.WriteLine(dt.ToString("MMMM dd, yyyy"));  // Long date
+Console.WriteLine(dt.ToString("hh:mm tt"));  // 12-hour
+Console.WriteLine(dt.ToString("dddd"));  // Day of week
+Console.WriteLine(dt.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff"));  // With fraction
+Console.WriteLine(dt.ToString("yyyyMMddHHmmss"));  // Compact
 ```
 
     2024-03-15T14:30:45
@@ -345,14 +345,14 @@ var specs = new (string spec, string desc)[] {
     ("dddd", "Weekday full"),    ("ddd", "Weekday abbr"),
 };
 foreach (var (spec, desc) in specs)
-    $"  {spec,-8} = {dt.ToString(spec),-22} ({desc})"
+    Console.WriteLine($"  {spec,-8} = {dt.ToString(spec),-22} ({desc})");
 
 // K and zzz — timezone offset specifiers (need Kind = Utc or Local)
 var dtUtc = new DateTime(2024, 3, 15, 14, 30, 45, DateTimeKind.Utc);
 var dtLocal = new DateTime(2024, 3, 15, 14, 30, 45, DateTimeKind.Local);
-dtUtc.ToString("%K")  // K (UTC)
-dtLocal.ToString("%K")  // K (Local)
-dtLocal.ToString("zzz")  // zzz (Local)
+Console.WriteLine(dtUtc.ToString("%K"));  // K (UTC)
+Console.WriteLine(dtLocal.ToString("%K"));  // K (Local)
+Console.WriteLine(dtLocal.ToString("zzz"));  // zzz (Local)
 ```
 
       yyyy     = 2024                   (4-digit year)
@@ -384,9 +384,9 @@ The `"o"` (round-trip) format produces full ISO 8601 with maximum precision. The
 
 var dt = new DateTime(2024, 3, 15, 14, 30, 45).AddTicks(1234560);
 
-$"Round-trip (o):  {dt:o}"                           // 2024-03-15T14:30:45.1234560
-$"Sortable (s):    {dt:s}"                           // 2024-03-15T14:30:45
-dt:yyyy-MM-ddTHH:mm:ss.fff  // Custom ISO
+Console.WriteLine($"Round-trip (o):  {dt:o}");                           // 2024-03-15T14:30:45.1234560
+Console.WriteLine($"Sortable (s):    {dt:s}");                           // 2024-03-15T14:30:45
+Console.WriteLine(dt.ToString("yyyy-MM-dd'T'HH:mm:ss.fff"));  // Custom ISO
 ```
 
     2024-03-15T14:30:45.1234560
@@ -403,9 +403,9 @@ var fromIso1 = DateTime.Parse("2024-03-15T14:30:45.1234560");
 var fromIso2 = DateTime.Parse("2024-03-15T14:30:45Z");                  // Z = UTC
 var fromIso3 = DateTimeOffset.Parse("2024-03-15T14:30:45+05:30");       // with offset
 
-fromIso1  // From ISO
-$"From ISO (Z):    {fromIso2} Kind={fromIso2.Kind}"
-$"From ISO (+5:30):{fromIso3} Offset={fromIso3.Offset}"
+Console.WriteLine(fromIso1);  // From ISO
+Console.WriteLine($"From ISO (Z):    {fromIso2} Kind={fromIso2.Kind}");
+Console.WriteLine($"From ISO (+5:30):{fromIso3} Offset={fromIso3.Offset}");
 ```
 
     15-Mar-24 14:30:45
@@ -419,10 +419,10 @@ $"From ISO (+5:30):{fromIso3} Offset={fromIso3.Offset}"
 ```csharp
 
 var dto = DateTimeOffset.Parse("2024-03-15T14:30:45+05:30");
-dto  // DateTimeOffset
-dto.UtcDateTime  // UTC
-dto.LocalDateTime  // Local
-dto.Offset  // Offset
+Console.WriteLine(dto);  // DateTimeOffset
+Console.WriteLine(dto.UtcDateTime);  // UTC
+Console.WriteLine(dto.LocalDateTime);  // Local
+Console.WriteLine(dto.Offset);  // Offset
 ```
 
     15-Mar-24 14:30:45 +05:30
@@ -440,9 +440,9 @@ var unspec = new DateTime(2024, 3, 15, 14, 30, 45);                          // 
 var local = new DateTime(2024, 3, 15, 14, 30, 45, DateTimeKind.Local);       // Local
 var utc = new DateTime(2024, 3, 15, 14, 30, 45, DateTimeKind.Utc);           // Utc
 
-$"Unspecified: {unspec}, Kind={unspec.Kind}"
-$"Local:       {local}, Kind={local.Kind}"
-$"UTC:         {utc}, Kind={utc.Kind}"
+Console.WriteLine($"Unspecified: {unspec}, Kind={unspec.Kind}");
+Console.WriteLine($"Local:       {local}, Kind={local.Kind}");
+Console.WriteLine($"UTC:         {utc}, Kind={utc.Kind}");
 ```
 
     15-Mar-24 14:30:45, Kind=Unspecified
@@ -462,12 +462,12 @@ var india = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
 var sydney = TimeZoneInfo.FindSystemTimeZoneById("AUS Eastern Standard Time");
 
 var utcNow = DateTime.UtcNow;
-utcNow  // UTC now
-TimeZoneInfo.ConvertTimeFromUtc(utcNow, eastern)  // -> Eastern
-TimeZoneInfo.ConvertTimeFromUtc(utcNow, london)  // -> London
-TimeZoneInfo.ConvertTimeFromUtc(utcNow, tokyo)  // -> Tokyo
-TimeZoneInfo.ConvertTimeFromUtc(utcNow, sydney)  // -> Sydney
-TimeZoneInfo.ConvertTimeFromUtc(utcNow, india)  // -> India
+Console.WriteLine(utcNow);  // UTC now
+Console.WriteLine(TimeZoneInfo.ConvertTimeFromUtc(utcNow, eastern));  // -> Eastern
+Console.WriteLine(TimeZoneInfo.ConvertTimeFromUtc(utcNow, london));  // -> London
+Console.WriteLine(TimeZoneInfo.ConvertTimeFromUtc(utcNow, tokyo));  // -> Tokyo
+Console.WriteLine(TimeZoneInfo.ConvertTimeFromUtc(utcNow, sydney));  // -> Sydney
+Console.WriteLine(TimeZoneInfo.ConvertTimeFromUtc(utcNow, india));  // -> India
 ```
 
     25-Mar-26 4:30:20
@@ -487,14 +487,14 @@ var dtoUtc = new DateTimeOffset(2024, 3, 15, 14, 30, 45, TimeSpan.Zero);
 var dtoNy = dtoUtc.ToOffset(TimeSpan.FromHours(-4));
 var dtoIndia = dtoUtc.ToOffset(new TimeSpan(5, 30, 0));
 
-dtoUtc  // DateTimeOffset UTC
-dtoNy  // -> New York (-4)
-dtoIndia  // -> India (+5:30)
+Console.WriteLine(dtoUtc);  // DateTimeOffset UTC
+Console.WriteLine(dtoNy);  // -> New York (-4)
+Console.WriteLine(dtoIndia);  // -> India (+5:30)
 
 // List available timezones
-TimeZoneInfo.GetSystemTimeZones().Count  // Available timezones
+Console.WriteLine(TimeZoneInfo.GetSystemTimeZones().Count);  // Available timezones
 foreach (var tz in TimeZoneInfo.GetSystemTimeZones().Take(5))
-    $"  {tz.Id} ({tz.DisplayName})"
+    Console.WriteLine($"  {tz.Id} ({tz.DisplayName})");
 ```
 
     15-Mar-24 14:30:45 +00:00
@@ -518,14 +518,14 @@ foreach (var tz in TimeZoneInfo.GetSystemTimeZones().Take(5))
 
 var dt = new DateTime(2024, 3, 15, 14, 30, 45);
 
-dt  // Original
-dt.AddDays(7)  // + 7 days
-dt.AddDays(-30)  // - 30 days
-dt.AddHours(2)  // + 2 hours
-dt.AddMinutes(90)  // + 90 minutes
-dt.Add(new TimeSpan(7, 3, 30, 0))  // + 1w 3h 30m
-dt.AddMonths(6)  // + 6 months
-dt.AddYears(1)  // + 1 year
+Console.WriteLine(dt);  // Original
+Console.WriteLine(dt.AddDays(7));  // + 7 days
+Console.WriteLine(dt.AddDays(-30));  // - 30 days
+Console.WriteLine(dt.AddHours(2));  // + 2 hours
+Console.WriteLine(dt.AddMinutes(90));  // + 90 minutes
+Console.WriteLine(dt.Add(new TimeSpan(7, 3, 30, 0)));  // + 1w 3h 30m
+Console.WriteLine(dt.AddMonths(6));  // + 6 months
+Console.WriteLine(dt.AddYears(1));  // + 1 year
 ```
 
     15-Mar-24 14:30:45
@@ -547,11 +547,11 @@ var dt1 = new DateTime(2024, 3, 15);
 var dt2 = new DateTime(2024, 12, 25);
 TimeSpan diff = dt2 - dt1;
 
-$"From {dt1:d} to {dt2:d}"
-diff  // Difference
-diff.Days  // Days
-diff.TotalDays  // Total days
-diff.TotalHours  // Total hours
+Console.WriteLine($"From {dt1:d} to {dt2:d}");
+Console.WriteLine(diff);  // Difference
+Console.WriteLine(diff.Days);  // Days
+Console.WriteLine(diff.TotalDays);  // Total days
+Console.WriteLine(diff.TotalHours);  // Total hours
 ```
 
     From 15-Mar-24 to 25-Dec-24
@@ -566,10 +566,10 @@ diff.TotalHours  // Total hours
 
 ```csharp
 
-dt1 < dt2  // dt1 < dt2
-dt1 == dt2  // dt1 == dt2
-dt1 > dt2  // dt1 > dt2
-DateTime.Compare(dt1, dt2)  // Compare
+Console.WriteLine(dt1 < dt2);  // dt1 < dt2
+Console.WriteLine(dt1 == dt2);  // dt1 == dt2
+Console.WriteLine(dt1 > dt2);  // dt1 > dt2
+Console.WriteLine(DateTime.Compare(dt1, dt2));  // Compare
 ```
 
     True
@@ -583,16 +583,16 @@ DateTime.Compare(dt1, dt2)  // Compare
 
 ```csharp
 var dt = new DateTime(2024, 3, 15, 14, 30, 45);
-dt  // Original
-dt.AddDays(1)  // + 1 day
-dt.AddHours(-2)  // - 2 hours
-dt.AddMinutes(30)  // + 30 minutes
-dt.AddSeconds(45)  // + 45 seconds
-dt.AddMilliseconds(500)  // + 500ms
-dt.AddDays(1.5)  // + 1.5 days
-$"+ 1 month:       {dt.AddMonths(1)}"       // built-in!
-$"+ 1 year:        {dt.AddYears(1)}"        // built-in!
-$"Combined:        {dt.Add(new TimeSpan(1, 2, 30, 15))}"  // 1d 2h 30m 15s
+Console.WriteLine(dt);  // Original
+Console.WriteLine(dt.AddDays(1));  // + 1 day
+Console.WriteLine(dt.AddHours(-2));  // - 2 hours
+Console.WriteLine(dt.AddMinutes(30));  // + 30 minutes
+Console.WriteLine(dt.AddSeconds(45));  // + 45 seconds
+Console.WriteLine(dt.AddMilliseconds(500));  // + 500ms
+Console.WriteLine(dt.AddDays(1.5));  // + 1.5 days
+Console.WriteLine($"+ 1 month:       {dt.AddMonths(1)}");       // built-in!
+Console.WriteLine($"+ 1 year:        {dt.AddYears(1)}");        // built-in!
+Console.WriteLine($"Combined:        {dt.Add(new TimeSpan(1, 2, 30, 15))}");  // 1d 2h 30m 15s
 ```
 
     15-Mar-24 14:30:45
@@ -613,17 +613,17 @@ $"Combined:        {dt.Add(new TimeSpan(1, 2, 30, 15))}"  // 1d 2h 30m 15s
 ```csharp
 
 var d = new DateOnly(2024, 3, 15);
-$"\n=== DateOnly arithmetic ==="
-d  // Original
-d.AddDays(7)  // + 7 days
-d.AddDays(-30)  // - 30 days
-d.AddMonths(1)  // + 1 month
-d.AddYears(1)  // + 1 year
+Console.WriteLine($"\n=== DateOnly arithmetic ===");
+Console.WriteLine(d);  // Original
+Console.WriteLine(d.AddDays(7));  // + 7 days
+Console.WriteLine(d.AddDays(-30));  // - 30 days
+Console.WriteLine(d.AddMonths(1));  // + 1 month
+Console.WriteLine(d.AddYears(1));  // + 1 year
 
 // DateOnly difference (returns int days, not TimeSpan)
 var d2 = new DateOnly(2024, 12, 25);
 int daysDiff = d2.DayNumber - d.DayNumber;
-$"Diff {d} to {d2}: {daysDiff} days"
+Console.WriteLine($"Diff {d} to {d2}: {daysDiff} days");
 ```
 
     
@@ -641,15 +641,15 @@ $"Diff {d} to {d2}: {daysDiff} days"
 ```csharp
 
 var t = new TimeOnly(14, 30, 45);
-$"\n=== TimeOnly arithmetic ==="
-t  // Original
-t.Add(new TimeSpan(2, 15, 0))  // + 2h 15m
-t.Add(new TimeSpan(0, -45, 0))  // - 45m
-t.Add(new TimeSpan(0, 0, 30))  // + 30 seconds
-t.AddHours(3)  // AddHours(3)
-t.AddMinutes(90)  // AddMinutes(90)
+Console.WriteLine($"\n=== TimeOnly arithmetic ===");
+Console.WriteLine(t);  // Original
+Console.WriteLine(t.Add(new TimeSpan(2, 15, 0)));  // + 2h 15m
+Console.WriteLine(t.Add(new TimeSpan(0, -45, 0)));  // - 45m
+Console.WriteLine(t.Add(new TimeSpan(0, 0, 30)));  // + 30 seconds
+Console.WriteLine(t.AddHours(3));  // AddHours(3)
+Console.WriteLine(t.AddMinutes(90));  // AddMinutes(90)
 // TimeOnly wraps around at midnight
-$"+ 12 hours:      {t.AddHours(12)}"  // wraps past midnight
+Console.WriteLine($"+ 12 hours:      {t.AddHours(12)}");  // wraps past midnight
 ```
 
     
@@ -669,13 +669,13 @@ Unix timestamps are just integers — add `86400` for +1 day, `3600` for +1 hour
 
 var dtoNow = new DateTimeOffset(2024, 3, 15, 14, 30, 45, TimeSpan.Zero);
 long ts = dtoNow.ToUnixTimeSeconds();
-$"\n=== Timestamp arithmetic ==="
-ts  // Original
-ts + 86400  // + 1 day
-ts + 3600  // + 1 hour
-ts + 1800  // + 30 minutes
-ts + 45  // + 45 seconds
-DateTimeOffset.FromUnixTimeSeconds(ts + 86400).DateTime  // Back to DateTime
+Console.WriteLine($"\n=== Timestamp arithmetic ===");
+Console.WriteLine(ts);  // Original
+Console.WriteLine(ts + 86400);  // + 1 day
+Console.WriteLine(ts + 3600);  // + 1 hour
+Console.WriteLine(ts + 1800);  // + 30 minutes
+Console.WriteLine(ts + 45);  // + 45 seconds
+Console.WriteLine(DateTimeOffset.FromUnixTimeSeconds(ts + 86400).DateTime);  // Back to DateTime
 ```
 
     
@@ -693,10 +693,10 @@ DateTimeOffset.FromUnixTimeSeconds(ts + 86400).DateTime  // Back to DateTime
 ```csharp
 
 var jan31 = new DateTime(2024, 1, 31);
-$"\n=== Month edge cases ==="
-$"Jan 31 + 1 month: {jan31.AddMonths(1)}"  // Feb 29 (leap year)
-$"Jan 31 + 2 months:{jan31.AddMonths(2)}"  // Mar 31
-$"Jan 31 + 1 year:  {jan31.AddYears(1)}"   // Jan 31
+Console.WriteLine($"\n=== Month edge cases ===");
+Console.WriteLine($"Jan 31 + 1 month: {jan31.AddMonths(1)}");  // Feb 29 (leap year)
+Console.WriteLine($"Jan 31 + 2 months:{jan31.AddMonths(2)}");  // Mar 31
+Console.WriteLine($"Jan 31 + 1 year:  {jan31.AddYears(1)}");   // Jan 31
 ```
 
     
@@ -720,10 +720,10 @@ $"Jan 31 + 1 year:  {jan31.AddYears(1)}"   // Jan 31
 
 ```csharp
 // Basic math — Abs, Max, Min, Clamp; all static methods on Math class
-Math.Abs(-42)  // Abs(-42)
-Math.Max(10, 20)  // Max(10, 20)
-Math.Min(10, 20)  // Min(10, 20)
-$"Clamp(15, 0, 10):{Math.Clamp(15, 0, 10)}"
+Console.WriteLine(Math.Abs(-42));  // Abs(-42)
+Console.WriteLine(Math.Max(10, 20));  // Max(10, 20)
+Console.WriteLine(Math.Min(10, 20));  // Min(10, 20)
+Console.WriteLine($"Clamp(15, 0, 10):{Math.Clamp(15, 0, 10)}");
 ```
 
     42
@@ -736,12 +736,12 @@ $"Clamp(15, 0, 10):{Math.Clamp(15, 0, 10)}"
 ```csharp
 // Rounding — Floor, Ceiling, Round, and banker's rounding
 
-$"Floor(3.7):      {Math.Floor(3.7)}"         // → 3
-$"Ceiling(3.2):    {Math.Ceiling(3.2)}"       // → 4
-$"Round(3.5):      {Math.Round(3.5)}"         // → 4 (banker's)
-$"Round(2.5):      {Math.Round(2.5)}"         // → 2 (banker's — rounds to even!)
-$"Round(2.5, AwayFromZero): {Math.Round(2.5, MidpointRounding.AwayFromZero)}" // → 3
-Math.Truncate(3.9)  // Truncate(3.9)
+Console.WriteLine($"Floor(3.7):      {Math.Floor(3.7)}");         // → 3
+Console.WriteLine($"Ceiling(3.2):    {Math.Ceiling(3.2)}");       // → 4
+Console.WriteLine($"Round(3.5):      {Math.Round(3.5)}");         // → 4 (banker's)
+Console.WriteLine($"Round(2.5):      {Math.Round(2.5)}");         // → 2 (banker's — rounds to even!)
+Console.WriteLine($"Round(2.5, AwayFromZero): {Math.Round(2.5, MidpointRounding.AwayFromZero)}"); // → 3
+Console.WriteLine(Math.Truncate(3.9));  // Truncate(3.9)
 ```
 
     3
@@ -756,13 +756,13 @@ Math.Truncate(3.9)  // Truncate(3.9)
 ```csharp
 // Powers, roots, and logarithms — Pow, Sqrt, Log, Exp
 
-$"Pow(2, 10):      {Math.Pow(2, 10)}"        // 2^10 = 1024
-$"Sqrt(144):       {Math.Sqrt(144)}"          // √144 = 12
-$"Cbrt(27):        {Math.Cbrt(27)}"           // ∛27 = 3
-$"Log(100):        {Math.Log(100)}"           // natural log (ln)
-$"Log10(100):      {Math.Log10(100)}"         // log base 10
-$"Log2(1024):      {Math.Log2(1024)}"         // log base 2
-Math.Exp(1)  // Exp(1)
+Console.WriteLine($"Pow(2, 10):      {Math.Pow(2, 10)}");        // 2^10 = 1024
+Console.WriteLine($"Sqrt(144):       {Math.Sqrt(144)}");          // √144 = 12
+Console.WriteLine($"Cbrt(27):        {Math.Cbrt(27)}");           // ∛27 = 3
+Console.WriteLine($"Log(100):        {Math.Log(100)}");           // natural log (ln)
+Console.WriteLine($"Log10(100):      {Math.Log10(100)}");         // log base 10
+Console.WriteLine($"Log2(1024):      {Math.Log2(1024)}");         // log base 2
+Console.WriteLine(Math.Exp(1));  // Exp(1)
 ```
 
     1024
@@ -778,12 +778,12 @@ Math.Exp(1)  // Exp(1)
 ```csharp
 // Trigonometry and constants — PI, E, Tau, Sin, Cos, Atan2
 
-Math.PI  // PI
-Math.E  // E
-Math.Tau  // Tau
-Math.Sin(Math.PI / 2)  // Sin(π/2)
-Math.Cos(0)  // Cos(0)
-Math.Atan2(1, 1)  // Atan2(1, 1)
+Console.WriteLine(Math.PI);  // PI
+Console.WriteLine(Math.E);  // E
+Console.WriteLine(Math.Tau);  // Tau
+Console.WriteLine(Math.Sin(Math.PI / 2));  // Sin(π/2)
+Console.WriteLine(Math.Cos(0));  // Cos(0)
+Console.WriteLine(Math.Atan2(1, 1));  // Atan2(1, 1)
 ```
 
     3.141592653589793
@@ -798,10 +798,10 @@ Math.Atan2(1, 1)  // Atan2(1, 1)
 ```csharp
 // Special float values and NaN — detection and propagation rules
 
-double.NaN  // double.NaN
-double.PositiveInfinity  // double.PositiveInf
-double.IsNaN(0.0 / 0.0)  // IsNaN(0.0/0.0)
-double.IsInfinity(1.0 / 0.0)  // IsInfinity(1.0/0.0)
+Console.WriteLine(double.NaN);  // double.NaN
+Console.WriteLine(double.PositiveInfinity);  // double.PositiveInf
+Console.WriteLine(double.IsNaN(0.0 / 0.0));  // IsNaN(0.0/0.0)
+Console.WriteLine(double.IsInfinity(1.0 / 0.0));  // IsInfinity(1.0/0.0)
 ```
 
     NaN
@@ -820,8 +820,8 @@ double p95Index = 0.95 * (latencies.Length - 1);
 int lower = (int)Math.Floor(p95Index);
 int upper = (int)Math.Ceiling(p95Index);
 double p95 = latencies[lower] + (latencies[upper] - latencies[lower]) * (p95Index - lower);
-$"Latencies: [{string.Join(", ", latencies.Select(l => $"{l:F1}"))}]"
-$"P95 latency: {p95:F2} ms"
+Console.WriteLine($"Latencies: [{string.Join(", ", latencies.Select(l => $"{l:F1}"))}]");
+Console.WriteLine($"P95 latency: {p95:F2} ms");
 ```
 
     [3.1, 6.7, 12.5, 15.3, 22.0, 33.4, 45.2, 51.8, 78.9, 99.1]
@@ -838,10 +838,10 @@ $"P95 latency: {p95:F2} ms"
 var rng = new Random(42);  // seed for reproducibility
 
 for (int i = 0; i < 5; i++)
-    $"{rng.Next(1, 101)} "
+    Console.WriteLine($"{rng.Next(1, 101)} ");
 
 for (int i = 0; i < 5; i++)
-    $"{rng.NextDouble():F4} "
+    Console.WriteLine($"{rng.NextDouble():F4} ");
 ```
 
     Random integers [1..100]:
@@ -857,13 +857,13 @@ for (int i = 0; i < 5; i++)
 
 var buffer = new byte[8];
 rng.NextBytes(buffer);
-$"Bytes: [{string.Join(", ", buffer)}]"
+Console.WriteLine($"Bytes: [{string.Join(", ", buffer)}]");
 
 // Shuffle an array
 var items = new[] { "A", "B", "C", "D", "E" };
-$"\nOriginal: [{string.Join(", ", items)}]"
+Console.WriteLine($"\nOriginal: [{string.Join(", ", items)}]");
 rng.Shuffle(items);
-$"Shuffled: [{string.Join(", ", items)}]"
+Console.WriteLine($"Shuffled: [{string.Join(", ", items)}]");
 ```
 
     [158, 86, 240, 173, 191, 58, 111, 183]
@@ -877,7 +877,7 @@ $"Shuffled: [{string.Join(", ", items)}]"
 // Random pick — select a random element from a collection
 
 var colors = new[] { "red", "green", "blue", "yellow" };
-colors[rng.Next(colors.Length)]  // Random pick
+Console.WriteLine(colors[rng.Next(colors.Length)]);  // Random pick
 ```
 
     red
@@ -891,15 +891,15 @@ var eventTypes = new[] { "page_view", "click", "purchase", "signup" };
 var regions = new[] { "us-east-1", "eu-west-1", "ap-south-1" };
 var syntheticRng = new Random(123);
 
-$"{"event_id",-12} {"type",-12} {"region",-12} {"revenue",8}"
-new string('─', 48)
+Console.WriteLine($"{"event_id",-12} {"type",-12} {"region",-12} {"revenue",8}");
+Console.WriteLine(new string('─', 48));
 for (int i = 0; i < 8; i++)
 {
     var eventId = $"evt_{i + 1:D4}";
     var evtType = eventTypes[syntheticRng.Next(eventTypes.Length)];
     var region = regions[syntheticRng.Next(regions.Length)];
     var revenue = evtType == "purchase" ? Math.Round(syntheticRng.NextDouble() * 200, 2) : 0.0;
-    $"{eventId,-12} {evtType,-12} {region,-12} {revenue,8:F2}"
+    Console.WriteLine($"{eventId,-12} {evtType,-12} {region,-12} {revenue,8:F2}");
 }
 ```
 
@@ -1026,17 +1026,17 @@ The standard .NET logging abstraction — same API for console, file, and cloud 
 
 ```csharp
 // Read common env vars
-Environment.GetEnvironmentVariable("USERNAME")  // USERNAME
-Environment.GetEnvironmentVariable("COMPUTERNAME")  // COMPUTERNAME
-Environment.GetEnvironmentVariable("OS")  // OS
+Console.WriteLine(Environment.GetEnvironmentVariable("USERNAME"));  // USERNAME
+Console.WriteLine(Environment.GetEnvironmentVariable("COMPUTERNAME"));  // COMPUTERNAME
+Console.WriteLine(Environment.GetEnvironmentVariable("OS"));  // OS
 
 // Read a var that may not exist — always use null check or ??
 var dbHost = Environment.GetEnvironmentVariable("DATABASE_HOST") ?? "localhost";
-dbHost  // DATABASE_HOST (default)
+Console.WriteLine(dbHost);  // DATABASE_HOST (default)
 
 // Set an env var (current process only — does NOT persist after exit)
 Environment.SetEnvironmentVariable("PIPELINE_ENV", "staging");
-Environment.GetEnvironmentVariable("PIPELINE_ENV")  // PIPELINE_ENV
+Console.WriteLine(Environment.GetEnvironmentVariable("PIPELINE_ENV"));  // PIPELINE_ENV
 ```
 
     Alex
@@ -1058,9 +1058,9 @@ foreach (System.Collections.DictionaryEntry entry in allVars)
     if (count++ >= 10) break;
     var val = entry.Value?.ToString();
     if (val != null && val.Length > 60) val = val[..60] + "...";
-    $"  {entry.Key} = {val}"
+    Console.WriteLine($"  {entry.Key} = {val}");
 }
-$"  ... ({allVars.Count} total)"
+Console.WriteLine($"  ... ({allVars.Count} total)");
 
 // Cleanup
 Environment.SetEnvironmentVariable("PIPELINE_ENV", null);
@@ -1122,11 +1122,11 @@ var config = new ConfigurationBuilder()
 
 // Read flat values
 // === Read Configuration ===
-config["Pipeline:Name"]  // Pipeline name
-config["Pipeline:BatchSize"]  // Batch size
-config["Pipeline:MaxRetries"]  // Max retries
-config["Pipeline:Enabled"]  // Enabled
-config["ConnectionStrings:Warehouse"]  // Connection
+Console.WriteLine(config["Pipeline:Name"]);  // Pipeline name
+Console.WriteLine(config["Pipeline:BatchSize"]);  // Batch size
+Console.WriteLine(config["Pipeline:MaxRetries"]);  // Max retries
+Console.WriteLine(config["Pipeline:Enabled"]);  // Enabled
+Console.WriteLine(config["ConnectionStrings:Warehouse"]);  // Connection
 ```
 
     events_etl
@@ -1141,16 +1141,16 @@ config["ConnectionStrings:Warehouse"]  // Connection
 
 ```csharp
 
-$"\n=== GetValue<T> with defaults ==="
-config.GetValue<int>("Pipeline:BatchSize")  // BatchSize (int)
-config.GetValue<bool>("Pipeline:Enabled")  // Enabled (bool)
-config.GetValue<int>("Pipeline:Timeout", 30)  // Timeout (missing): default = 30
+Console.WriteLine($"\n=== GetValue<T> with defaults ===");
+Console.WriteLine(config.GetValue<int>("Pipeline:BatchSize"));  // BatchSize (int)
+Console.WriteLine(config.GetValue<bool>("Pipeline:Enabled"));  // Enabled (bool)
+Console.WriteLine(config.GetValue<int>("Pipeline:Timeout", 30));  // Timeout (missing): default = 30
 
 // GetSection — navigate nested config
 var loggingSection = config.GetSection("Logging:LogLevel");
-$"\n=== Nested Section: Logging:LogLevel ==="
+Console.WriteLine($"\n=== Nested Section: Logging:LogLevel ===");
 foreach (var child in loggingSection.GetChildren())
-    $"  {child.Key} = {child.Value}"
+    Console.WriteLine($"  {child.Key} = {child.Value}");
 ```
 
     
@@ -1173,14 +1173,14 @@ var overriddenConfig = new ConfigurationBuilder()
     .AddEnvironmentVariables()    // env vars win over JSON
     .Build();
 
-$"\n=== Env Var Override ==="
-$"BatchSize (from JSON):    5000"
-overriddenConfig["Pipeline:BatchSize"]  // BatchSize (after envvar)
+Console.WriteLine($"\n=== Env Var Override ===");
+Console.WriteLine($"BatchSize (from JSON):    5000");
+Console.WriteLine(overriddenConfig["Pipeline:BatchSize"]);  // BatchSize (after envvar)
 
 // Cleanup
 Environment.SetEnvironmentVariable("Pipeline__BatchSize", null);
 Directory.Delete(tmpDir, true);
-tmpDir  // Cleaned up
+Console.WriteLine(tmpDir);  // Cleaned up
 ```
 
     

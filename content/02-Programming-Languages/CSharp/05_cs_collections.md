@@ -1,6 +1,7 @@
 ---
 title: "Collections"
-tags: [csharp]
+tags:
+  - csharp
 aliases: [lists, dictionaries, sets, tuples, arrays, List, Dictionary, HashSet, LINQ]
 description: "C# collections reference with executable examples and cell outputs — covers List, Dictionary, HashSet, arrays, Queue, Stack, and immutable collections. See [05_py_collections](https://alp78.github.io/elysium/02-Programming-Languages/Python/05_py_collections) for the Python equivalent."
 created: 2026-03-22
@@ -19,6 +20,8 @@ status: complete
 >
 > — **Eric S. Raymond**, *The Cathedral and the Bazaar* (1999)
 
+C# collections cover fixed arrays, dynamic lists, dictionaries, sets, tuples, enums, and specialised structures. This page covers all core types with executable examples — from `T[]` and `List<T>` through `Span<T>`, `Dictionary`, `HashSet`, and `PriorityQueue`.
+
 ## Arrays and Lists
 
 Arrays and lists are the workhorses of C# data handling. Arrays (`T[]`) offer fixed-size, contiguous memory with the fastest indexed access due to cache locality. `List<T>` wraps an internal array with automatic resizing, making it the default choice for dynamic collections. `Span<T>` and `ReadOnlySpan<T>` provide zero-allocation slicing over contiguous memory for performance-critical paths. This section covers creation, mutation, searching, sorting, slicing, and when to choose each type.
@@ -29,7 +32,7 @@ Arrays and lists are the two most common sequential collections. Arrays are fixe
 
 #### Array — T[] (fixed size)
 
-Arrays are fixed-size, contiguous memory with O(1) index access — the fastest collection type due to cache locality. Size is set at creation and cannot be changed. Use arrays for fixed data, buffers, interop, and performance-critical indexed access. For dynamic sizing (add/remove), use `List<T>` instead.
+Arrays are fixed-size, contiguous memory with O(1) index access — the fastest collection type due to cache locality. Size is set at creation and cannot be changed. Four creation syntaxes: collection literal (`{ ... }`), zero-initialised with `new int[n]` (defaults every element to `0`), range via `Enumerable.Range().ToArray()`, and element-type-inferred with `new[] { ... }`. For dynamic sizing, use `List<T>` instead.
 
 > [!warning] Anti-patterns
 >
@@ -42,19 +45,19 @@ Arrays are fixed-size, contiguous memory with O(1) index access — the fastest 
 > - Pre-allocate with `new T[n]` when size is known upfront to avoid resize overhead
 
 ```csharp
-int[] nums = { 1, 2, 3, 4, 5 };                      // literal
-int[] zeros = new int[5];                            // [0, 0, 0, 0, 0]
-int[] ranged = Enumerable.Range(0, 5).ToArray();     // [0, 1, 2, 3, 4]
-string[] words = new[] { "hello", "world" };         // type inferred
+int[] nums = { 1, 2, 3, 4, 5 };
+int[] zeros = new int[5];
+int[] ranged = Enumerable.Range(0, 5).ToArray();
+string[] words = new[] { "hello", "world" };
 
-string.Join(", ", nums)   // nums
-string.Join(", ", zeros)   // zeros
-string.Join(", ", ranged)   // ranged
-nums.Length   // Length
+Console.WriteLine(string.Join(", ", nums));
+Console.WriteLine(string.Join(", ", zeros));
+Console.WriteLine(string.Join(", ", ranged));
+Console.WriteLine(nums.Length);
 
-nums[0]
-nums[^1]
-string.Join(", ", nums[1..4])   // [1..4]
+Console.WriteLine(nums[0]);
+Console.WriteLine(nums[^1]);
+Console.WriteLine(string.Join(", ", nums[1..4]));
 ```
 
 > [!info] Arrays Are Fixed Size
@@ -89,24 +92,24 @@ string.Join(", ", nums[1..4])   // [1..4]
 ```csharp
 var empty = new List<int>();
 var list = new List<int> { 1, 2, 3, 4, 5 };
-string.Join(", ", list)
-list.Count
+Console.WriteLine(string.Join(", ", list));
+Console.WriteLine(list.Count);
 
 var lst = new List<int> { 1, 2, 3 };
 lst.Add(4);
 lst.Insert(0, 0);
 lst.AddRange(new[] { 5, 6 });
-string.Join(", ", lst)
+Console.WriteLine(string.Join(", ", lst));
 
 lst = new List<int> { 1, 2, 3, 2, 4, 5 };
 lst.Remove(2);
-string.Join(", ", lst)
+Console.WriteLine(string.Join(", ", lst));
 lst.RemoveAt(0);
-string.Join(", ", lst)
+Console.WriteLine(string.Join(", ", lst));
 int last = lst[^1]; lst.RemoveAt(lst.Count - 1);
-$"Pop last:   [{string.Join(", ", lst)}] (popped: {last})"
+Console.WriteLine($"Pop last:   [{string.Join(", ", lst)}] (popped: {last})");
 lst.Clear();
-string.Join(", ", lst)
+Console.WriteLine(string.Join(", ", lst));
 ```
 
 ```text
@@ -129,11 +132,11 @@ These methods search a List linearly (O(n)) — they check each element until a 
 
 ```csharp
 lst = new List<int> { 10, 20, 30, 40, 30, 50 };
-lst.Contains(30)
-lst.IndexOf(30)
-string.Join(", ", lst.FindAll(x => x > 25))
-lst.Exists(x => x > 40)
-lst.Find(x => x > 25)
+Console.WriteLine(lst.Contains(30));
+Console.WriteLine(lst.IndexOf(30));
+Console.WriteLine(string.Join(", ", lst.FindAll(x => x > 25)));
+Console.WriteLine(lst.Exists(x => x > 40));
+Console.WriteLine(lst.Find(x => x > 25));
 ```
 
 ```text
@@ -152,19 +155,19 @@ True
 
 ```csharp
 var unsorted = new List<int> { 3, 1, 4, 1, 5, 9, 2, 6 };
-string.Join(", ", unsorted.OrderBy(x => x))
-string.Join(", ", unsorted)
+Console.WriteLine(string.Join(", ", unsorted.OrderBy(x => x)));
+Console.WriteLine(string.Join(", ", unsorted));
 
 unsorted.Sort();
-string.Join(", ", unsorted)
+Console.WriteLine(string.Join(", ", unsorted));
 
 unsorted.Sort((a, b) => b.CompareTo(a));
-string.Join(", ", unsorted)
+Console.WriteLine(string.Join(", ", unsorted));
 
 var wordList = new List<string> { "banana", "apple", "cherry" };
-string.Join(", ", wordList.OrderBy(w => w.Length))
-string.Join(", ", wordList.OrderByDescending(w => w.Length))
-string.Join(", ", wordList.OrderByDescending(w => w.Length).ThenBy(w => w))
+Console.WriteLine(string.Join(", ", wordList.OrderBy(w => w.Length)));
+Console.WriteLine(string.Join(", ", wordList.OrderByDescending(w => w.Length)));
+Console.WriteLine(string.Join(", ", wordList.OrderByDescending(w => w.Length).ThenBy(w => w)));
 ```
 
 ```text
@@ -193,7 +196,7 @@ Passing a list to the `List<T>` constructor creates a shallow copy. For value ty
 var original = new List<int> { 1, 2, 3 };
 var shallow = new List<int>(original);
 shallow[0] = 99;
-string.Join(", ", original)
+Console.WriteLine(string.Join(", ", original));
 
 int[] arr = list.ToArray();
 var backToList = arr.ToList();
@@ -214,27 +217,27 @@ The `^` operator indexes from the end (`^1` is the last element). The `..` range
 ```csharp
 int[] nums = { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
 
-nums[0]
-nums[9]
-nums[^1]
-nums[^2]
-nums[^10]
+Console.WriteLine(nums[0]);
+Console.WriteLine(nums[9]);
+Console.WriteLine(nums[^1]);
+Console.WriteLine(nums[^2]);
+Console.WriteLine(nums[^10]);
 
-string.Join(", ", nums[0..3])
-string.Join(", ", nums[3..7])
-string.Join(", ", nums[..3])
-string.Join(", ", nums[7..])
-string.Join(", ", nums[..])
+Console.WriteLine(string.Join(", ", nums[0..3]));
+Console.WriteLine(string.Join(", ", nums[3..7]));
+Console.WriteLine(string.Join(", ", nums[..3]));
+Console.WriteLine(string.Join(", ", nums[7..]));
+Console.WriteLine(string.Join(", ", nums[..]));
 
-string.Join(", ", nums[^3..])
-string.Join(", ", nums[..^3])
-string.Join(", ", nums[^5..^2])
-string.Join(", ", nums[1..^1])
+Console.WriteLine(string.Join(", ", nums[^3..]));
+Console.WriteLine(string.Join(", ", nums[..^3]));
+Console.WriteLine(string.Join(", ", nums[^5..^2]));
+Console.WriteLine(string.Join(", ", nums[1..^1]));
 
 Index last = ^1;
 Range middle = 2..^2;
-nums[last]
-string.Join(", ", nums[middle])
+Console.WriteLine(nums[last]);
+Console.WriteLine(string.Join(", ", nums[middle]));
 ```
 
 ```text
@@ -319,7 +322,7 @@ CopyTo:        [1, 2, 3]
 string text = "Hello, World!";
 
 string sub1 = text.Substring(7, 5);
-sub1
+Console.WriteLine(sub1);
 
 {
     ReadOnlySpan<char> sub2 = text.AsSpan(7, 5);
@@ -395,8 +398,8 @@ var scores = new Dictionary<string, int>
     { "Charlie", 78 }
 };
 
-string.Join(", ", person.Select(kv => $"{kv.Key}:{kv.Value}"))
-string.Join(", ", scores.Select(kv => $"{kv.Key}:{kv.Value}"))
+Console.WriteLine(string.Join(", ", person.Select(kv => $"{kv.Key}:{kv.Value}")));
+Console.WriteLine(string.Join(", ", scores.Select(kv => $"{kv.Key}:{kv.Value}")));
 ```
 
 ```text
@@ -409,14 +412,14 @@ Alice:85, Bob:92, Charlie:78
 Bracket access (`dict[key]`) throws `KeyNotFoundException` if the key is missing. `TryGetValue` returns `false` instead — safer for uncertain lookups. `GetValueOrDefault` provides a fallback value inline.
 
 ```csharp
-person["name"]
+Console.WriteLine(person["name"]);
 person["age"] = 31;
 person["email"] = "alice@example.com";
-person["age"]
+Console.WriteLine(person["age"]);
 
 if (scores.TryGetValue("Bob", out int bobScore))
     Console.WriteLine($"Bob's score:          {bobScore}");
-scores.GetValueOrDefault("Unknown", -1)
+Console.WriteLine(scores.GetValueOrDefault("Unknown", -1));
 ```
 
 ```text
@@ -437,9 +440,9 @@ Removing entries, iterating key-value pairs, and using LINQ for filtering and gr
 ```csharp
 var d = new Dictionary<string, int> { ["a"] = 1, ["b"] = 2, ["c"] = 3 };
 d.Remove("b");
-string.Join(", ", d.Select(kv => $"{kv.Key}:{kv.Value}"))
+Console.WriteLine(string.Join(", ", d.Select(kv => $"{kv.Key}:{kv.Value}")));
 d.Clear();
-d.Count
+Console.WriteLine(d.Count);
 ```
 
 ```text
@@ -456,10 +459,10 @@ var dd = new Dictionary<string, object> { ["name"] = "Alice", ["age"] = 30, ["ci
 foreach (var (key, value) in dd)
     Console.WriteLine($"  {key}: {value}");
 
-dd.ContainsKey("name")
-dd.ContainsValue("NYC")
-string.Join(", ", dd.Keys)
-string.Join(", ", dd.Values)
+Console.WriteLine(dd.ContainsKey("name"));
+Console.WriteLine(dd.ContainsValue("NYC"));
+Console.WriteLine(string.Join(", ", dd.Keys));
+Console.WriteLine(string.Join(", ", dd.Values));
 ```
 
 ```text
@@ -479,7 +482,7 @@ LINQ's `Where`, `GroupBy`, and `ToDictionary` chain naturally over dictionaries.
 ```csharp
 var filtered = scores.Where(kv => kv.Value >= 80)
     .ToDictionary(kv => kv.Key, kv => kv.Value);
-string.Join(", ", filtered.Select(kv => $"{kv.Key}:{kv.Value}"))
+Console.WriteLine(string.Join(", ", filtered.Select(kv => $"{kv.Key}:{kv.Value}")));
 
 var words = new[] { "apple", "banana", "avocado", "cherry", "blueberry" };
 var groups = words.GroupBy(w => w[0])
@@ -524,6 +527,8 @@ Creating sets, adding/removing elements, and performing set algebra (union, inte
 
 #### HashSet&lt;T&gt; creation — unordered unique elements
 
+`HashSet<T>` stores unique elements with O(1) add, remove, and membership testing. Duplicates are silently ignored on insertion. The examples show creation from a literal, from a `List` (deduplicating), and from a string (yielding unique characters).
+
 > [!info] HashSet
 >
 > - `HashSet<T>` — unique elements with O(1) membership, deduplication, and set algebra
@@ -547,9 +552,9 @@ var nums = new HashSet<int> { 1, 2, 3, 4, 5 };
 var fromList = new List<int> { 1, 2, 2, 3, 3, 3 }.ToHashSet();
 var fromStr = "abracadabra".ToHashSet();
 
-string.Join(", ", nums)
-string.Join(", ", fromList)
-string.Join(", ", fromStr)
+Console.WriteLine(string.Join(", ", nums));
+Console.WriteLine(string.Join(", ", fromList));
+Console.WriteLine(string.Join(", ", fromStr));
 ```
 
 ```text
@@ -564,10 +569,10 @@ string.Join(", ", fromStr)
 
 ```csharp
 var s = new HashSet<int> { 1, 2, 3 };
-s.Add(4)
-s.Add(2)
-s.Remove(1)
-string.Join(", ", s)
+Console.WriteLine(s.Add(4));
+Console.WriteLine(s.Add(2));
+Console.WriteLine(s.Remove(1));
+Console.WriteLine(string.Join(", ", s));
 ```
 
 ```text
@@ -590,10 +595,10 @@ var inter = new HashSet<int>(a); inter.IntersectWith(b);
 var diff  = new HashSet<int>(a); diff.ExceptWith(b);
 var symm  = new HashSet<int>(a); symm.SymmetricExceptWith(b);
 
-string.Join(", ", union)
-string.Join(", ", inter)
-string.Join(", ", diff)
-string.Join(", ", symm)
+Console.WriteLine(string.Join(", ", union));
+Console.WriteLine(string.Join(", ", inter));
+Console.WriteLine(string.Join(", ", diff));
+Console.WriteLine(string.Join(", ", symm));
 ```
 
 ```text
@@ -613,8 +618,8 @@ var soldIds = new HashSet<string> { "P002", "P004", "P005" };
 
 var unsold = new HashSet<string>(prodIds); unsold.ExceptWith(soldIds);
 var unknown = new HashSet<string>(soldIds); unknown.ExceptWith(prodIds);
-string.Join(", ", unsold)
-string.Join(", ", unknown)
+Console.WriteLine(string.Join(", ", unsold));
+Console.WriteLine(string.Join(", ", unknown));
 ```
 
 ```text
@@ -628,11 +633,13 @@ string.Join(", ", unknown)
 
 #### SortedSet creation and range access
 
+Constructs a `SortedSet<int>` from an unordered `HashSet`, demonstrating that elements are automatically ordered on insertion. `Min` and `Max` properties read the boundary values without scanning.
+
 ```csharp
 var unsorted = new HashSet<int> { 5, 3, 1, 4, 2 };
 var sorted = new SortedSet<int>(unsorted);
-string.Join(", ", sorted)
-$"Min: {sorted.Min}, Max: {sorted.Max}"
+Console.WriteLine(string.Join(", ", sorted));
+Console.WriteLine($"Min: {sorted.Min}, Max: {sorted.Max}");
 ```
 
 ```text
@@ -650,6 +657,8 @@ Tuples group a fixed number of heterogeneous values without defining a class. C#
 
 #### ValueTuple basics
 
+`ValueTuple` is a lightweight value type with optional named fields — stack-allocated, compared by value, and zero heap overhead. Named fields (`Name`, `Age`, `City`) are accessed via dot notation; unnamed fields fall back to `Item1`, `Item2`, etc.
+
 > [!info] ValueTuple
 >
 > - Lightweight value type with named fields — lives on the stack, compared by value, no heap allocation
@@ -662,10 +671,10 @@ Tuples group a fixed number of heterogeneous values without defining a class. C#
 var point = (3, 4);
 var person = (Name: "Alice", Age: 30, City: "NYC");
 
-point
-point.Item1
-person.Name
-person.Age
+Console.WriteLine(point);
+Console.WriteLine(point.Item1);
+Console.WriteLine(person.Name);
+Console.WriteLine(person.Age);
 ```
 
 ```text
@@ -681,11 +690,11 @@ Deconstruction unpacks tuple fields into separate variables. The swap idiom `(a,
 
 ```csharp
 var (x, y) = point;
-$"Deconstructed: x={x}, y={y}"
+Console.WriteLine($"Deconstructed: x={x}, y={y}");
 
 int a2 = 1, b2 = 2;
 (a2, b2) = (b2, a2);
-$"Swapped: a={a2}, b={b2}"
+Console.WriteLine($"Swapped: a={a2}, b={b2}");
 ```
 
 ```text
@@ -723,10 +732,10 @@ enum PipelineStatus { Pending, Running, Success, Failed }
 Cast to `int` for the underlying value. `Enum.Parse<T>` converts a string to the enum member. `Enum.GetValues<T>` returns all defined members.
 
 ```csharp
-Color.Red
-(int)Color.Red
-Enum.Parse<Color>("Blue")
-string.Join(", ", Enum.GetValues<Color>())
+Console.WriteLine(Color.Red);
+Console.WriteLine((int)Color.Red);
+Console.WriteLine(Enum.Parse<Color>("Blue"));
+Console.WriteLine(string.Join(", ", Enum.GetValues<Color>()));
 ```
 
 ```text
@@ -746,6 +755,8 @@ Stack operations (`Push`, `Pop`, `Peek`) and Queue operations (`Enqueue`, `Deque
 
 #### Stack — Stack&lt;T&gt; (LIFO)
 
+`Stack<T>` is Last In, First Out — `Push` adds to the top, `Pop` removes and returns the top element, `Peek` reads it without removing. All three operations are O(1). The last item pushed is the first returned.
+
 > [!info] Stack operations (all O(1))
 >
 > - `Push` — adds to top
@@ -760,11 +771,11 @@ var stack = new Stack<string>();
 stack.Push("first");
 stack.Push("second");
 stack.Push("third");
-string.Join(", ", stack)
-stack.Pop()
-stack.Pop()
-stack.Peek()
-stack.Count
+Console.WriteLine(string.Join(", ", stack));
+Console.WriteLine(stack.Pop());
+Console.WriteLine(stack.Pop());
+Console.WriteLine(stack.Peek());
+Console.WriteLine(stack.Count);
 ```
 
 ```text
@@ -784,9 +795,9 @@ var queue = new Queue<string>();
 queue.Enqueue("first");
 queue.Enqueue("second");
 queue.Enqueue("third");
-string.Join(", ", queue)
-queue.Dequeue()
-queue.Peek()
+Console.WriteLine(string.Join(", ", queue));
+Console.WriteLine(queue.Dequeue());
+Console.WriteLine(queue.Peek());
 ```
 
 ```text
@@ -809,10 +820,10 @@ ll.AddLast("B");
 ll.AddFirst("A");
 ll.AddLast("D");
 ll.AddAfter(ll.Find("B")!, "C");
-string.Join(", ", ll)
+Console.WriteLine(string.Join(", ", ll));
 ll.Remove("C");
 ll.RemoveFirst();
-string.Join(", ", ll)
+Console.WriteLine(string.Join(", ", ll));
 ```
 
 ```text
@@ -830,8 +841,8 @@ pq.Enqueue("low priority", 3);
 pq.Enqueue("high priority", 1);
 pq.Enqueue("medium priority", 2);
 
-pq.Dequeue()
-pq.Dequeue()
+Console.WriteLine(pq.Dequeue());
+Console.WriteLine(pq.Dequeue());
 ```
 
 ```text
@@ -868,7 +879,11 @@ Choosing the right collection type depends on access pattern, ordering requireme
 
 ### Collection comparison tables
 
+The following cells output formatted ASCII tables for quick reference during collection selection — a cheat sheet comparing all types across ordering, mutability, and lookup complexity, then a decision tree by access pattern.
+
 #### Collection cheat sheet
+
+Prints a reference table comparing all core C# collection types across ordering, mutability, duplicate support, and lookup complexity.
 
 ```csharp
 Console.WriteLine(@"
@@ -915,6 +930,8 @@ enum                | -       | No      | No         | -
 ```
 
 #### Decision guide
+
+Prints a decision-tree guide for selecting the right collection type based on access pattern: ordered, key-value, unique, FIFO, LIFO, or priority.
 
 ```csharp
 Console.WriteLine(@"

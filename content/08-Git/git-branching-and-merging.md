@@ -38,25 +38,7 @@ A branch is an independent line of development. Creating a branch adds a new poi
 > Git 2.23 (August 2019) split the overloaded `git checkout` into two focused commands: `git switch` for changing branches and `git restore` for discarding file changes. The old `git checkout` still works but `switch` is safer — it refuses to switch if uncommitted changes conflict, whereas `checkout` can silently discard work when used with file paths.
 
 ```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': {
-  'git0': '#7aa2f7',
-  'git1': '#9ece6a',
-  'git2': '#e0af68',
-  'git3': '#f7768e',
-  'git4': '#bb9af7',
-  'git5': '#7dcfff',
-  'git6': '#73daca',
-  'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5',
-  'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5',
-  'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5',
-  'commitLabelBackground': '#292e42',
-  'tagLabelColor': '#c0caf5',
-  'tagLabelBackground': '#292e42',
-  'tagLabelBorder': '#565f89'
-}}}%%
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
 gitGraph
   commit id: "A"
   commit id: "B"
@@ -67,6 +49,8 @@ gitGraph
   checkout main
   commit id: "F"
 ```
+
+*Figure: Feature branch created at commit C. Commits D and E develop the feature while main advances to F independently. Both branches share history A-B-C. Merging will integrate D-E into main.*
 
 #### git switch -c — create and switch to a new branch
 
@@ -130,6 +114,24 @@ git branch
 ### Stashing Uncommitted Work
 
 A stash is a temporary storage area for uncommitted changes. When you stash, Git saves your modified tracked files and staged changes onto a stack, then reverts your working directory to a clean state matching the last commit. You can re-apply stashed changes later on the same branch or a different one. Stashing is essential when you need to switch branches mid-work without committing half-finished code.
+
+```mermaid
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph
+  commit id: "A"
+  commit id: "B"
+  branch feature
+  commit id: "C"
+  checkout main
+  branch hotfix
+  commit id: "fix" type: HIGHLIGHT
+  checkout main
+  merge hotfix id: "D"
+  checkout feature
+  commit id: "E"
+```
+
+*Figure: Working on feature (commit C), you stash uncommitted changes and switch to hotfix. After committing the fix and merging it to main (D), you switch back to feature and pop the stash to resume work (commit E). Stashing lets you context-switch without half-finished commits.*
 
 #### git stash push — save uncommitted changes
 
@@ -271,25 +273,7 @@ See [merge-vs-rebase-vs-squash](https://alp78.github.io/elysium/08-Git/merge-vs-
 A fast-forward merge occurs when the target branch (e.g., `main`) has not received any new commits since the feature branch was created. Git simply moves the `main` pointer forward to the feature branch's tip — no merge commit is created. The result is a perfectly linear history with no branching visible in `git log --graph`.
 
 ```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': {
-  'git0': '#7aa2f7',
-  'git1': '#9ece6a',
-  'git2': '#e0af68',
-  'git3': '#f7768e',
-  'git4': '#bb9af7',
-  'git5': '#7dcfff',
-  'git6': '#73daca',
-  'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5',
-  'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5',
-  'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5',
-  'commitLabelBackground': '#292e42',
-  'tagLabelColor': '#c0caf5',
-  'tagLabelBackground': '#292e42',
-  'tagLabelBorder': '#565f89'
-}}}%%
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
 gitGraph
   commit id: "A"
   commit id: "B"
@@ -297,8 +281,10 @@ gitGraph
   commit id: "C"
   commit id: "D"
   checkout main
-  merge feature id: "ff"
+  merge feature id: "D" type: HIGHLIGHT
 ```
+
+*Figure: Fast-forward merge — main had no new commits since the branch point at B. Git simply moves the main pointer forward to D. No merge commit is created. History stays linear.*
 
 #### git merge feature — fast-forward when no divergence
 
@@ -321,25 +307,7 @@ Fast-forward
 A three-way merge occurs when both branches have new commits since they diverged. Git finds the common ancestor (merge base), compares both branch tips against it, and creates a **merge commit** with two parents. This preserves the complete history of both branches, showing exactly when they diverged and when they were joined.
 
 ```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': {
-  'git0': '#7aa2f7',
-  'git1': '#9ece6a',
-  'git2': '#e0af68',
-  'git3': '#f7768e',
-  'git4': '#bb9af7',
-  'git5': '#7dcfff',
-  'git6': '#73daca',
-  'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5',
-  'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5',
-  'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5',
-  'commitLabelBackground': '#292e42',
-  'tagLabelColor': '#c0caf5',
-  'tagLabelBackground': '#292e42',
-  'tagLabelBorder': '#565f89'
-}}}%%
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
 gitGraph
   commit id: "A"
   commit id: "B"
@@ -349,8 +317,10 @@ gitGraph
   checkout main
   commit id: "E"
   commit id: "F"
-  merge feature id: "M"
+  merge feature id: "M" type: HIGHLIGHT
 ```
+
+*Figure: Three-way merge — main advanced to F while feature developed C-D. Git creates merge commit M with two parents (F and D). The merge commit records the integration point. Both branches' full history is preserved.*
 
 #### git merge feature — three-way merge with merge commit
 
@@ -406,25 +376,7 @@ Rebasing takes every commit on your branch and replays them one by one on top of
 **Before rebase:**
 
 ```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': {
-  'git0': '#7aa2f7',
-  'git1': '#9ece6a',
-  'git2': '#e0af68',
-  'git3': '#f7768e',
-  'git4': '#bb9af7',
-  'git5': '#7dcfff',
-  'git6': '#73daca',
-  'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5',
-  'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5',
-  'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5',
-  'commitLabelBackground': '#292e42',
-  'tagLabelColor': '#c0caf5',
-  'tagLabelBackground': '#292e42',
-  'tagLabelBorder': '#565f89'
-}}}%%
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
 gitGraph
   commit id: "A"
   commit id: "B"
@@ -435,36 +387,21 @@ gitGraph
   commit id: "E"
 ```
 
+*Figure: Feature branch diverged from main at B. Commits C and D are on feature while E advanced main independently.*
+
 **After rebase:**
 
 ```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': {
-  'git0': '#7aa2f7',
-  'git1': '#9ece6a',
-  'git2': '#e0af68',
-  'git3': '#f7768e',
-  'git4': '#bb9af7',
-  'git5': '#7dcfff',
-  'git6': '#73daca',
-  'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5',
-  'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5',
-  'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5',
-  'commitLabelBackground': '#292e42',
-  'tagLabelColor': '#c0caf5',
-  'tagLabelBackground': '#292e42',
-  'tagLabelBorder': '#565f89'
-}}}%%
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
 gitGraph
   commit id: "A"
   commit id: "B"
   commit id: "E"
-  branch feature
-  commit id: "C'"
-  commit id: "D'"
+  commit id: "C'" type: HIGHLIGHT
+  commit id: "D'" type: HIGHLIGHT
 ```
+
+*Figure: After `git rebase main` — commits C and D are replayed on top of E as C' and D' (new SHAs). History is linear. The feature branch appears to have started after E. Original C and D are orphaned.*
 
 #### git rebase main — replay commits onto new base
 
@@ -528,25 +465,7 @@ git rebase --abort
 Cherry-picking copies a single commit from one branch to another. Git applies the diff introduced by the chosen commit as a new commit on the current branch. The new commit has a different SHA but identical changes. This is useful for applying a specific fix from a development branch to a release branch without merging everything.
 
 ```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': {
-  'git0': '#7aa2f7',
-  'git1': '#9ece6a',
-  'git2': '#e0af68',
-  'git3': '#f7768e',
-  'git4': '#bb9af7',
-  'git5': '#7dcfff',
-  'git6': '#73daca',
-  'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5',
-  'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5',
-  'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5',
-  'commitLabelBackground': '#292e42',
-  'tagLabelColor': '#c0caf5',
-  'tagLabelBackground': '#292e42',
-  'tagLabelBorder': '#565f89'
-}}}%%
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
 gitGraph
   commit id: "A"
   commit id: "B"
@@ -557,6 +476,8 @@ gitGraph
   commit id: "E"
   cherry-pick id: "D"
 ```
+
+*Figure: Cherry-pick copies commit D from feature to main as D' (new SHA, same changes). The original D remains on feature. D' is an independent commit — it has no merge relationship with D.*
 
 #### git cherry-pick — copy a commit to the current branch
 
@@ -599,57 +520,25 @@ Undoing the last commit is one of the most common recovery operations. The three
 **Before reset:**
 
 ```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': {
-  'git0': '#7aa2f7',
-  'git1': '#9ece6a',
-  'git2': '#e0af68',
-  'git3': '#f7768e',
-  'git4': '#bb9af7',
-  'git5': '#7dcfff',
-  'git6': '#73daca',
-  'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5',
-  'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5',
-  'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5',
-  'commitLabelBackground': '#292e42',
-  'tagLabelColor': '#c0caf5',
-  'tagLabelBackground': '#292e42',
-  'tagLabelBorder': '#565f89'
-}}}%%
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
 gitGraph
   commit id: "A"
   commit id: "B"
   commit id: "C" type: HIGHLIGHT
 ```
 
+*Figure: Current state — HEAD points at commit C on main. The next command will undo C.*
+
 **After `git reset --soft HEAD~1`** — HEAD moves back to B, commit C's changes remain staged:
 
 ```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': {
-  'git0': '#7aa2f7',
-  'git1': '#9ece6a',
-  'git2': '#e0af68',
-  'git3': '#f7768e',
-  'git4': '#bb9af7',
-  'git5': '#7dcfff',
-  'git6': '#73daca',
-  'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5',
-  'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5',
-  'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5',
-  'commitLabelBackground': '#292e42',
-  'tagLabelColor': '#c0caf5',
-  'tagLabelBackground': '#292e42',
-  'tagLabelBorder': '#565f89'
-}}}%%
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
 gitGraph
   commit id: "A"
   commit id: "B" type: HIGHLIGHT
 ```
+
+*Figure: After `git reset --soft HEAD~1` — HEAD moved back to B. Commit C is removed from the branch but its changes remain staged, ready to be recommitted with a different message or combined with additional changes.*
 
 #### git reset --soft HEAD~1 — undo commit, keep changes staged
 

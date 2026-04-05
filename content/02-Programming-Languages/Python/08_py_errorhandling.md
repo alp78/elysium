@@ -263,7 +263,7 @@ except ValueError as e:
 
 row = {"name": "Alice", "dept": "Engineering"}
 salary = row.get("salary", 0)
-salary
+print(salary)
 
 try:
     total = sum("not_a_list")  # type: ignore
@@ -282,12 +282,12 @@ TypeError: unsupported operand type(s) for +: 'int' and 'str'
 ```python
 optional_field = None
 safe = optional_field.upper() if optional_field is not None else ""  # type: ignore
-safe
+print(safe)
 
 def safe_avg(values):
     return sum(values) / len(values) if values else None
-safe_avg([10, 20])
-safe_avg([])
+print(safe_avg([10, 20]))
+print(safe_avg([]))
 
 try:
     with open("missing_data.csv") as f:
@@ -641,7 +641,7 @@ results = [parse_employee(row, i + 1) for i, row in enumerate(input_rows)]
 good = [r for r in results if r.is_valid]
 bad  = [r for r in results if not r.is_valid]
 
-f"  Processed: {len(results)} rows, Valid: {len(good)}, Rejected: {len(bad)}"
+print(f"  Processed: {len(results)} rows, Valid: {len(good)}, Rejected: {len(bad)}")
 for r in good: print(f"    {r.name:<10} ${r.salary:,}")
 for r in bad:  print(f"    ERROR: {r.error}")
 ```
@@ -682,7 +682,7 @@ def flaky_load():
     return "data loaded successfully"
 
 result = with_retry(flaky_load, exceptions=(ConnectionError,))
-f"  Result after {call_count} attempts: {result}"
+print(f"  Result after {call_count} attempts: {result}")
 ```
 
 ```text
@@ -712,11 +712,11 @@ if sys.version_info >= (3, 11):
             ValueError("Bad value in file C"),
         ])
     except* ValueError as eg:
-        f"  ValueError group ({len(eg.exceptions)} errors):"
+        print(f"  ValueError group ({len(eg.exceptions)} errors):")
         for e in eg.exceptions:
             print(f"    - {e}")
     except* IOError as eg:
-        eg.exceptions[0]   # IOError group
+        print(eg.exceptions[0])   # IOError group
 else:
     print("  ExceptionGroup requires Python 3.11+ (skipped)")
 ```

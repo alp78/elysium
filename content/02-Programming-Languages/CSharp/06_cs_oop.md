@@ -1,6 +1,7 @@
 ---
 title: "Object-Oriented Programming"
-tags: [csharp]
+tags:
+  - csharp
 aliases: [classes, inheritance, polymorphism, interfaces, abstract classes, encapsulation, properties]
 description: "C# OOP reference with executable examples and cell outputs — covers classes, interfaces, inheritance, polymorphism, properties, records, and encapsulation. See [06_py_oop](https://alp78.github.io/elysium/02-Programming-Languages/Python/06_py_oop) for the Python equivalent."
 created: 2026-03-22
@@ -18,6 +19,8 @@ status: complete
 > "You wanted a banana but what you got was a gorilla holding the banana and the entire jungle."
 >
 > — **Joe Armstrong**, *Coders at Work* interview (2009)
+
+C# OOP organises code into classes, interfaces, inheritance hierarchies, and records. This page covers all core constructs with executable examples — from basic class declaration through to records and static members.
 
 ## Classes & Objects
 
@@ -86,15 +89,17 @@ class Circle
 
 #### Using class instances — new, property access, method calls
 
+Creates two `Dog` instances and exercises property access, instance method calls, the static `Species` constant, and a cross-instance comparison.
+
 ```csharp
 var dog1 = new Dog("Rex", 5);
 var dog2 = new Dog("Buddy", 3);
 
-dog1
-dog1.Name
-dog1.Bark()
-Dog.Species
-dog1.IsOlderThan(dog2)
+Console.WriteLine(dog1);
+Console.WriteLine(dog1.Name);
+Console.WriteLine(dog1.Bark());
+Console.WriteLine(Dog.Species);
+Console.WriteLine(dog1.IsOlderThan(dog2));
 ```
 
 > [!info] No Dynamic Attributes
@@ -114,10 +119,10 @@ The `Circle` class uses a property with a validation setter — assigning a nega
 
 ```csharp
 var c = new Circle(5);
-c.Radius
-c.Area
+Console.WriteLine(c.Radius);
+Console.WriteLine(c.Area);
 c.Radius = 10;
-c.Radius
+Console.WriteLine(c.Radius);
 ```
 
 > [!info] Property Validation
@@ -206,14 +211,16 @@ class Cat : Animal
 
 #### Using inheritance — polymorphic calls and base.Method()
 
+Creates `Dog` and `Cat` instances and calls both inherited and overridden methods, demonstrating that `cat.Speak()` returns the `Cat`-specific version while `dog.Speak()` uses the default from `Animal`.
+
 ```csharp
 var dog = new Dog("Rex", "German Shepherd");
 var cat = new Cat("Whiskers");
 
-dog.Speak()
-dog.Fetch()
-cat.Speak()
-dog.Breed
+Console.WriteLine(dog.Speak());
+Console.WriteLine(dog.Fetch());
+Console.WriteLine(cat.Speak());
+Console.WriteLine(dog.Breed);
 ```
 
 ```text
@@ -255,17 +262,17 @@ AnimalRollCall(animals);
 ```csharp
 #nullable enable
 Animal a = new Dog("Rex", "Shepherd");
-a is Dog
-a is Animal
-a is Cat
+Console.WriteLine(a is Dog);
+Console.WriteLine(a is Animal);
+Console.WriteLine(a is Cat);
 
 if (a is Dog d)
     Console.WriteLine($"It's a dog: {d.Breed}");
 
 Dog? maybeDog = a as Dog;
 Cat? maybeCat = a as Cat;
-maybeDog?.Name ?? "null"
-maybeCat?.Name ?? "null"
+Console.WriteLine(maybeDog?.Name ?? "null");
+Console.WriteLine(maybeCat?.Name ?? "null");
 ```
 
 ```text
@@ -351,7 +358,7 @@ class CircleShape : Shape
 
 Interfaces define contracts that implementing types must fulfill. A class can implement multiple interfaces (unlike single class inheritance). Interfaces are the primary mechanism for dependency injection and testability.
 
-#### interface declaration — contract with default implementations
+#### Interface declaration — contract with default implementations
 
 An interface defines a contract: a set of methods and properties that implementing classes MUST provide. Unlike inheritance (one base class only), a class can implement multiple interfaces. Since C# 8.0, interfaces can include default method implementations — providing behavior that implementers can override but don't have to. Interfaces are the primary mechanism for dependency injection and testability.
 
@@ -388,16 +395,18 @@ class TextBox : IDrawable
 
 #### Using abstract classes — subclass instantiation and abstract call
 
+Instantiates `Rectangle` and `CircleShape` — both concrete subclasses of `Shape` — and calls the concrete `Describe()` method, which internally dispatches to each subclass's `Area()`. A `Shape[]` array uses LINQ to sum total area across both instances.
+
 ```csharp
 var rect = new Rectangle(5, 3, "red");
 var circ = new CircleShape(4, "blue");
 
-rect.Describe()
-circ.Describe()
+Console.WriteLine(rect.Describe());
+Console.WriteLine(circ.Describe());
 
 Shape[] shapes = { rect, circ };
 double totalArea = shapes.Sum(s => s.Area());
-totalArea
+Console.WriteLine(totalArea);
 ```
 
 ```text
@@ -407,6 +416,8 @@ blue CircleShape: area=50.27
 ```
 
 #### Using interfaces — is, as, pattern matching, polymorphic dispatch
+
+Iterates a mixed `IDrawable[]` array and calls `Draw()` on each element. Uses `is IResizable` to safely downcast `btn` and resize it, then confirms that `TextBox` does not implement `IResizable`.
 
 ```csharp
 var btn = new Button("OK", 1.0);
@@ -466,7 +477,11 @@ Properties with `private set` allow read from outside, write only inside. `init`
 
 ### Access modifier reference
 
+Reference cells that print formatted ASCII tables for access modifier scopes and the abstract class vs interface decision. Use during code review or onboarding.
+
 #### OOP theory — access modifiers and abstract vs interface
+
+Prints a formatted ASCII reference table summarising all six C# access modifiers — their visibility scope and recommended use — for quick consultation during code review or pairing sessions.
 
 ```csharp
 Console.WriteLine(@"
@@ -523,7 +538,11 @@ Static members belong to the type, not to any instance. A `static` field is shar
 
 ### Static fields, methods, and factory pattern
 
-#### static members — shared state, factory methods, utility classes
+The `Employee` class demonstrates all three static member types: a shared field (`Company`), a constructor-incremented counter, and factory and validator static methods. The second H4 exercises the full static API surface.
+
+#### Static members — shared state, factory methods, utility classes
+
+Declares the `Employee` class with a static shared field (`Company`), a private instance counter incremented on each construction, an `Employee.FromString` factory method, and a salary validator. All static members are accessed via `ClassName.Member` syntax without needing an instance.
 
 > [!info] Static members
 >
@@ -582,17 +601,19 @@ class Employee
 
 #### Using static methods and properties — Counter, MathHelper, Config
 
+Creates two `Employee` instances — one via the constructor, one via the `FromString` factory — applies a raise, then reads static members: the instance counter, salary validator, and shared company name.
+
 ```csharp
 var emp1 = new Employee("Alice", 95000);
 emp1.GiveRaise(10);
-emp1
+Console.WriteLine(emp1);
 
 var emp2 = Employee.FromString("Bob,85000");
-emp2
+Console.WriteLine(emp2);
 
-Employee.IsValidSalary(50000)
-Employee.EmployeeCount
-Employee.Company
+Console.WriteLine(Employee.IsValidSalary(50000));
+Console.WriteLine(Employee.EmployeeCount);
+Console.WriteLine(Employee.Company);
 ```
 
 ```text
@@ -611,7 +632,7 @@ Records are immutable reference types with auto-generated value-based equality, 
 
 Records catch typos at compile time, enforce types, and provide IntelliSense — dictionaries accept any key (including typos) and fail only at runtime.
 
-#### record vs Dictionary — why records for structured data
+#### Record vs Dictionary — why records for structured data
 
 `Dictionary<string, object>` accepts any key (including typos) and any value type — errors only appear at runtime. Records enforce property names and types at compile time, with IntelliSense autocomplete and refactoring support. Use records for any data with a known, fixed structure (API responses, configs, DTOs); dictionaries are only appropriate for truly dynamic keys determined at runtime.
 
@@ -645,13 +666,13 @@ Record typo: compile error → caught before code even runs
 
 #### Type safety and equality
 
-```csharp
-// Type safety — records enforce types, dictionaries accept anything
+`Dictionary<string, object>` accepts any value regardless of type — assigning a string to a key that logically holds a number produces no compile error. Records close this gap: wrong-typed arguments are caught at compile time. The second cell shows a second weakness: dictionary `==` is reference-based, so two dictionaries with identical entries are not equal; records compare all fields by value.
 
+```csharp
 var bad = new Dictionary<string, object>
 {
-    ["customer_id"] = "not_a_number",   // object accepts anything — no error!
-    ["amount"] = "free"                 // string where number expected — no error!
+    ["customer_id"] = "not_a_number",
+    ["amount"] = "free"
 };
 
 Console.WriteLine("Dictionary<string, object>: any garbage in, no error");
@@ -664,7 +685,7 @@ Console.WriteLine("Record:                     wrong type = compile error");
 ```csharp
 var dict1 = new Dictionary<string, int> { ["a"] = 1 };
 var dict2 = new Dictionary<string, int> { ["a"] = 1 };
-Console.WriteLine($"dict1 == dict2:  {dict1 == dict2}");     // False! Reference comparison
+Console.WriteLine($"dict1 == dict2:  {dict1 == dict2}");
 Console.WriteLine("Records:         == compares VALUES (all fields checked automatically)");
 ```
 
@@ -696,11 +717,13 @@ Defining record types, value equality, non-destructive mutation with `with`, and
 
 #### Record type declarations
 
+Declares four record types: a positional `Point`, a `Config` with a computed `ConnectionString` property derived from its fields, a `record struct Version` (value type, stack-allocated), and a `PipelineRecord` with an `init`-only error list and a computed `IsSuccess` flag.
+
+```csharp
 record Point(double X, double Y);
 record Employee(string Name, string Department, double Salary = 50000);
 record Config(string Host, int Port, bool Ssl = true)
 {
-    // Computed property
     public string ConnectionString => $"{(Ssl ? "https" : "http")}://{Host}:{Port}";
 }
 record struct Version(int Major, int Minor, int Patch);
@@ -711,7 +734,7 @@ record PipelineRecord(string TableName, int RowCount, string Status = "pending")
 }
 ```
 
-#### record value equality, with expression, Deconstruct
+#### Record value equality — with expression, Deconstruct
 
 Records compare by value — two records with identical field values are equal even if they're different instances. Deconstruction unpacks positional record fields into separate variables.
 
@@ -720,12 +743,12 @@ var p1 = new Point(3.0, 4.0);
 var p2 = new Point(3.0, 4.0);
 var p3 = new Point(1.0, 2.0);
 
-p1
-p1 == p2
-p1 == p3
+Console.WriteLine(p1);
+Console.WriteLine(p1 == p2);
+Console.WriteLine(p1 == p3);
 
 var (x, y) = p1;
-$"Deconstructed: x={x}, y={y}"
+Console.WriteLine($"Deconstructed: x={x}, y={y}");
 ```
 
 ```text
@@ -742,13 +765,13 @@ The `with` expression creates a new record with specified fields changed — the
 ```csharp
 var emp = new Employee("Alice", "Engineering", 95000);
 var promoted = emp with { Salary = 110000 };
-emp
-promoted
-emp == promoted
+Console.WriteLine(emp);
+Console.WriteLine(promoted);
+Console.WriteLine(emp == promoted);
 
 var config = new Config("localhost", 5432);
-config
-config.ConnectionString
+Console.WriteLine(config);
+Console.WriteLine(config.ConnectionString);
 ```
 
 ```text
@@ -765,7 +788,7 @@ https://localhost:5432
 
 ```csharp
 var versions = new[] { new Version(2, 0, 0), new Version(1, 9, 5), new Version(2, 1, 0) };
-new Version(1, 0, 0) == new Version(1, 0, 0)
+Console.WriteLine(new Version(1, 0, 0) == new Version(1, 0, 0));
 
 var records = new[]
 {

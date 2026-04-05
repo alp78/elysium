@@ -1050,7 +1050,7 @@ foreach (var table in expectedTables)
 {
     var parts = table.Split('.');
     var exists = QueryScalar<int>(
-        $"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES "
+        Console.WriteLine($"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES ");
         + $"WHERE TABLE_SCHEMA = '{parts[0]}' AND TABLE_NAME = '{parts[1]}'");
     AssertTest($"table {table} exists", exists == 1);
 }

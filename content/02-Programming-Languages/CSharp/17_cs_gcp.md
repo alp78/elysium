@@ -128,9 +128,9 @@ var bucketName = $"{projectId}-index-data";
 var bqDataset = "index_data";
 
 var creds = GoogleCredential.GetApplicationDefault();
-creds.UnderlyingCredential.GetType().Name  // credential type
-projectId   // project
-bucketName  // bucket
+Console.WriteLine(creds.UnderlyingCredential.GetType().Name);  // credential type
+Console.WriteLine(projectId);   // project
+Console.WriteLine(bucketName);  // bucket
 ```
 
 ```text

@@ -104,9 +104,9 @@ sequenceDiagram
 ```csharp
 async Task<Dictionary<string, object>> FetchDataAsync(string source, double delaySeconds)
 {
-    $"  [{DateTime.Now:HH:mm:ss}] Starting fetch: {source}"
+    Console.WriteLine($"  [{DateTime.Now:HH:mm:ss}] Starting fetch: {source}");
     await Task.Delay(TimeSpan.FromSeconds(delaySeconds));
-    $"  [{DateTime.Now:HH:mm:ss}] Completed fetch: {source}"
+    Console.WriteLine($"  [{DateTime.Now:HH:mm:ss}] Completed fetch: {source}");
     return new Dictionary<string, object>
     {
         ["source"] = source,
@@ -127,7 +127,7 @@ var r1 = await FetchDataAsync("users_api", 1.0);
 var r2 = await FetchDataAsync("events_api", 0.8);
 var r3 = await FetchDataAsync("products_api", 0.5);
 sw.Stop();
-$"  Total: {sw.Elapsed.TotalSeconds:F2}s (sum of all delays)"
+Console.WriteLine($"  Total: {sw.Elapsed.TotalSeconds:F2}s (sum of all delays)");
 ```
 
 ```text
@@ -151,8 +151,8 @@ var t2 = FetchDataAsync("events_api", 0.8);
 var t3 = FetchDataAsync("products_api", 0.5);
 var results = await Task.WhenAll(t1, t2, t3);
 sw.Stop();
-$"  Total: {sw.Elapsed.TotalSeconds:F2}s (max of all delays)"
-$"  Results: {results.Length} dictionaries"
+Console.WriteLine($"  Total: {sw.Elapsed.TotalSeconds:F2}s (max of all delays)");
+Console.WriteLine($"  Results: {results.Length} dictionaries");
 ```
 
 ```text
@@ -197,7 +197,7 @@ try
 catch
 {
     foreach (var ex in allTask.Exception!.Flatten().InnerExceptions)
-        ex.Message
+        Console.WriteLine(ex.Message);
 }
 ```
 
@@ -241,12 +241,12 @@ A CancellationToken is a cooperative cancellation mechanism — you pass it to a
 ```csharp
 async Task<string> LongRunningExportAsync(string table, CancellationToken ct)
 {
-    table
+    Console.WriteLine(table);
     for (int i = 0; i < 10; i++)
     {
         ct.ThrowIfCancellationRequested();
         await Task.Delay(500, ct);
-        $"  {table}: chunk {i + 1}/10"
+        Console.WriteLine($"  {table}: chunk {i + 1}/10");
     }
     return $"{table}: export complete";
 }
@@ -263,7 +263,7 @@ cts.CancelAfter(TimeSpan.FromSeconds(2));
 try
 {
     var result = await LongRunningExportAsync("huge_events", cts.Token);
-    $"  {result}"
+    Console.WriteLine($"  {result}");
 }
 catch (OperationCanceledException)
 {
@@ -342,10 +342,10 @@ var tasks = Enumerable.Range(0, 10)
     .ToArray();
 var results = await Task.WhenAll(tasks);
 sw.Stop();
-$"  Fetched {results.Length} pages in {sw.Elapsed.TotalSeconds:F2}s"
+Console.WriteLine($"  Fetched {results.Length} pages in {sw.Elapsed.TotalSeconds:F2}s");
 foreach (var r in results.Take(3))
-    $"    {r}"
-$"    ... ({results.Length - 3} more)"
+    Console.WriteLine($"    {r}");
+Console.WriteLine($"    ... ({results.Length - 3} more)");
 ```
 
 ```text
@@ -384,7 +384,7 @@ async Task<T> RetryWithBackoffAsync<T>(Func<Task<T>> action, int maxRetries = 5,
         catch (Exception ex) when (attempt < maxRetries - 1)
         {
             var delay = baseDelayMs * (int)Math.Pow(2, attempt);
-            $"  Attempt {attempt + 1} failed: {ex.Message}. Retrying in {delay}ms..."
+            Console.WriteLine($"  Attempt {attempt + 1} failed: {ex.Message}. Retrying in {delay}ms...");
             await Task.Delay(delay);
         }
     }
@@ -393,7 +393,7 @@ async Task<T> RetryWithBackoffAsync<T>(Func<Task<T>> action, int maxRetries = 5,
 
 attemptCount = 0;
 var apiResult = await RetryWithBackoffAsync(() => FlakyApiAsync("/data/events"));
-$"  Success on attempt {attemptCount}: {apiResult}"
+Console.WriteLine($"  Success on attempt {attemptCount}: {apiResult}");
 ```
 
 ```text
@@ -448,7 +448,7 @@ await Task.WhenAll(
     ConsumeAsync("worker-3", channel.Reader)
 );
 sw.Stop();
-$"  Processed {processedCount} events in {sw.Elapsed.TotalSeconds:F2}s with 3 workers"
+Console.WriteLine($"  Processed {processedCount} events in {sw.Elapsed.TotalSeconds:F2}s with 3 workers");
 ```
 
 ```text
@@ -467,7 +467,7 @@ async IAsyncEnumerable<string> FetchPagesAsync(int totalPages, int itemsPerPage)
     for (int page = 1; page <= totalPages; page++)
     {
         await Task.Delay(100);
-        $"  Fetching page {page}..."
+        Console.WriteLine($"  Fetching page {page}...");
         for (int i = 0; i < itemsPerPage; i++)
             yield return $"page{page}_item{i + 1}";
     }
@@ -478,9 +478,9 @@ int count = 0;
 await foreach (var item in FetchPagesAsync(3, 2))
 {
     count++;
-    item
+    Console.WriteLine(item);
 }
-$"  Total: {count} items in {sw.ElapsedMilliseconds}ms"
+Console.WriteLine($"  Total: {count} items in {sw.ElapsedMilliseconds}ms");
 ```
 
 ```text
@@ -520,7 +520,7 @@ try
         collected.Add(n);
 }
 catch (OperationCanceledException) { }
-$"  Collected {collected.Count} items before cancellation: [{string.Join(", ", collected)}]"
+Console.WriteLine($"  Collected {collected.Count} items before cancellation: [{string.Join(", ", collected)}]");
 ```
 
 ```text
@@ -535,7 +535,7 @@ Using `break` inside `await foreach` disposes the async enumerator, which stops 
 count = 0;
 await foreach (var item in FetchPagesAsync(10, 3))
 {
-    $"    {item}"
+    Console.WriteLine($"    {item}");
     count++;
     if (count >= 5) break;
 }
@@ -592,9 +592,9 @@ async Task<string> LoadFromDbAsync(string key)
 }
 
 var hit = await GetConfigAsync("config_a");
-$"  Cache hit: {hit}"
+Console.WriteLine($"  Cache hit: {hit}");
 var miss = await GetConfigAsync("config_c");
-$"  Cache miss (loaded): {miss}"
+Console.WriteLine($"  Cache miss (loaded): {miss}");
 ```
 
 ```text
@@ -631,7 +631,7 @@ async Task<string> WaitForSignalAsync(CancellationToken ct = default)
 }
 
 var signal = await WaitForSignalAsync();
-$"  {signal}"
+Console.WriteLine($"  {signal}");
 
 var cts = new CancellationTokenSource(100);
 try
@@ -640,7 +640,7 @@ try
 }
 catch (TaskCanceledException)
 {
-    $"  Cancelled before signal arrived"
+    Console.WriteLine($"  Cancelled before signal arrived");
 }
 ```
 
@@ -691,16 +691,16 @@ var payloads = Enumerable.Range(0, 8)
 var sw = Stopwatch.StartNew();
 var seqHashes = payloads.Select(ComputeHash).ToArray();
 var seqTime = sw.Elapsed;
-$"  {seqHashes.Length} hashes in {seqTime.TotalSeconds:F2}s"
+Console.WriteLine($"  {seqHashes.Length} hashes in {seqTime.TotalSeconds:F2}s");
 
-$"\n=== Task.Run (thread pool, {Environment.ProcessorCount} cores) ==="
+Console.WriteLine($"\n=== Task.Run (thread pool, {Environment.ProcessorCount} cores) ===");
 sw.Restart();
 var parallelTasks = payloads.Select(p => Task.Run(() => ComputeHash(p))).ToArray();
 var parHashes = await Task.WhenAll(parallelTasks);
 var parTime = sw.Elapsed;
-$"  {parHashes.Length} hashes in {parTime.TotalSeconds:F2}s"
-$"  Speedup: {seqTime / parTime:F1}x"
-seqHashes.SequenceEqual(parHashes)
+Console.WriteLine($"  {parHashes.Length} hashes in {parTime.TotalSeconds:F2}s");
+Console.WriteLine($"  Speedup: {seqTime / parTime:F1}x");
+Console.WriteLine(seqHashes.SequenceEqual(parHashes));
 ```
 
 ```text
@@ -728,8 +728,8 @@ Parallel.ForEach(
     i => hashResults[i] = ComputeHash(payloads[i])
 );
 sw.Stop();
-$"  {hashResults.Length} hashes in {sw.Elapsed.TotalSeconds:F2}s (max 4 threads)"
-seqHashes.SequenceEqual(hashResults)
+Console.WriteLine($"  {hashResults.Length} hashes in {sw.Elapsed.TotalSeconds:F2}s (max 4 threads)");
+Console.WriteLine(seqHashes.SequenceEqual(hashResults));
 ```
 
 ```text
@@ -758,9 +758,9 @@ await Parallel.ForEachAsync(
     }
 );
 sw.Stop();
-$"  Fetched {fetchedTables.Count} tables in {sw.Elapsed.TotalSeconds:F2}s"
+Console.WriteLine($"  Fetched {fetchedTables.Count} tables in {sw.Elapsed.TotalSeconds:F2}s");
 foreach (var t in fetchedTables.Take(3))
-    $"    {t}"
+    Console.WriteLine($"    {t}");
 ```
 
 ```text
@@ -792,7 +792,7 @@ var parsed = rawRecords
     .Where(r => r.Value > 50.0)
     .ToArray();
 sw.Stop();
-$"  Parsed {rawRecords.Length:N0} -> {parsed.Length:N0} filtered in {sw.Elapsed.TotalSeconds:F2}s"
+Console.WriteLine($"  Parsed {rawRecords.Length:N0} -> {parsed.Length:N0} filtered in {sw.Elapsed.TotalSeconds:F2}s");
 ```
 
 #### PLINQ vs sequential — speedup comparison
@@ -809,7 +809,7 @@ var seqParsed = rawRecords
     .Where(r => r.Value > 50.0)
     .ToArray();
 sw.Stop();
-$"  Sequential: {sw.Elapsed.TotalSeconds:F2}s  |  PLINQ was faster on large data"
+Console.WriteLine($"  Sequential: {sw.Elapsed.TotalSeconds:F2}s  |  PLINQ was faster on large data");
 ```
 
 ```text
@@ -857,10 +857,10 @@ var threadResults = new System.Collections.Concurrent.ConcurrentBag<string>();
 void WorkerMethod(object? state)
 {
     var (name, delay) = ((string, int))state!;
-    $"  [{Thread.CurrentThread.ManagedThreadId}] {name} starting"
+    Console.WriteLine($"  [{Thread.CurrentThread.ManagedThreadId}] {name} starting");
     Thread.Sleep(delay);
     threadResults.Add($"{name} done");
-    $"  [{Thread.CurrentThread.ManagedThreadId}] {name} finished"
+    Console.WriteLine($"  [{Thread.CurrentThread.ManagedThreadId}] {name} finished");
 }
 
 var threads = new List<Thread>();
@@ -875,7 +875,7 @@ foreach (var (name, delay) in new[] { ("fetch_users", 300), ("fetch_events", 500
 foreach (var t in threads)
     t.Join();
 
-$"  Results: [{string.Join(", ", threadResults)}]"
+Console.WriteLine($"  Results: [{string.Join(", ", threadResults)}]");
 ```
 
 ```text
@@ -920,8 +920,8 @@ var unsafeThreads = Enumerable.Range(0, 4)
     .ToArray();
 foreach (var t in unsafeThreads) t.Start();
 foreach (var t in unsafeThreads) t.Join();
-$"  Expected: 400,000"
-$"  Got:      {unsafeCounter:N0}  {(unsafeCounter != 400_000 ? "(WRONG — race condition!)" : "(got lucky this time)")}"
+Console.WriteLine($"  Expected: 400,000");
+Console.WriteLine($"  Got:      {unsafeCounter:N0}  {(unsafeCounter != 400_000 ? "(WRONG — race condition!)" : "(got lucky this time)")}");
 ```
 
 ```text
@@ -956,8 +956,8 @@ var safeThreads = Enumerable.Range(0, 4)
     .ToArray();
 foreach (var t in safeThreads) t.Start();
 foreach (var t in safeThreads) t.Join();
-$"  Expected: 400,000"
-$"  Got:      {safeCounter:N0}  (correct — lock prevents race)"
+Console.WriteLine($"  Expected: 400,000");
+Console.WriteLine($"  Got:      {safeCounter:N0}  (correct — lock prevents race)");
 ```
 
 ```text
@@ -986,8 +986,8 @@ var atomicThreads = Enumerable.Range(0, 4)
     .ToArray();
 foreach (var t in atomicThreads) t.Start();
 foreach (var t in atomicThreads) t.Join();
-$"  Expected: 400,000"
-$"  Got:      {atomicCounter:N0}  (correct — atomic operation)"
+Console.WriteLine($"  Expected: 400,000");
+Console.WriteLine($"  Got:      {atomicCounter:N0}  (correct — atomic operation)");
 ```
 
 ```text
@@ -1021,8 +1021,8 @@ Parallel.For(0, 100_000, i =>
 });
 
 foreach (var kvp in eventCounts.OrderBy(k => k.Key))
-    $"    {kvp.Key}: {kvp.Value:N0}"
-eventCounts.Values.Sum():N0  // Total
+    Console.WriteLine($"    {kvp.Key}: {kvp.Value:N0}");
+Console.WriteLine($"  Total: {eventCounts.Values.Sum():N0}");  // Total
 ```
 
 ```text
@@ -1074,9 +1074,9 @@ producerThread.Join();
 foreach (var c in consumers) c.Join();
 sw.Stop();
 
-$"  Processed {processed.Count} events in {sw.Elapsed.TotalSeconds:F2}s"
+Console.WriteLine($"  Processed {processed.Count} events in {sw.Elapsed.TotalSeconds:F2}s");
 foreach (var g in processed.GroupBy(p => p.Split(":")[0]).OrderBy(g => g.Key))
-    $"    {g.Key}: {g.Count()} events"
+    Console.WriteLine($"    {g.Key}: {g.Count()} events");
 ```
 
 ```text
@@ -1133,7 +1133,7 @@ var readTasks = Enumerable.Range(0, 5).Select(i => Task.Run(() =>
     try
     {
         var status = cache.GetValueOrDefault("ETL_001", "unknown");
-        $"  Reader {i}: ETL_001 = {status}"
+        Console.WriteLine($"  Reader {i}: ETL_001 = {status}");
     }
     finally { rwLock.ExitReadLock(); }
 }));
@@ -1149,7 +1149,7 @@ var writeTask = Task.Run(() =>
 });
 
 await Task.WhenAll(readTasks.Append(writeTask));
-$"  Final cache: {string.Join(", ", cache.Select(kv => $"{kv.Key}={kv.Value}"))}"
+Console.WriteLine($"  Final cache: {string.Join(", ", cache.Select(kv => $"{kv.Key}={kv.Value}"))}");
 ```
 
 All five readers execute concurrently (no blocking between them), while the writer waits for exclusive access. The output order depends on scheduling — readers may interleave with the writer.
@@ -1179,9 +1179,9 @@ var gate = new ManualResetEventSlim(false);
 
 var workers = Enumerable.Range(0, 3).Select(i => Task.Run(() =>
 {
-    $"  Worker {i}: waiting for signal..."
+    Console.WriteLine($"  Worker {i}: waiting for signal...");
     gate.Wait();
-    $"  Worker {i}: proceeding!"
+    Console.WriteLine($"  Worker {i}: proceeding!");
 })).ToArray();
 
 await Task.Delay(200);
@@ -1193,7 +1193,7 @@ var countdown = new CountdownEvent(3);
 var setupTasks = Enumerable.Range(0, 3).Select(i => Task.Run(async () =>
 {
     await Task.Delay(50 * (i + 1));
-    $"  Worker {i}: setup done"
+    Console.WriteLine($"  Worker {i}: setup done");
     countdown.Signal();
 })).ToArray();
 
@@ -1230,14 +1230,14 @@ var barrier = new Barrier(
 var phasedWorkers = Enumerable.Range(0, 3).Select(i => Task.Run(async () =>
 {
     await Task.Delay(50 * (i + 1));
-    $"  Worker {i}: extract done"
+    Console.WriteLine($"  Worker {i}: extract done");
     barrier.SignalAndWait();
 
     await Task.Delay(30 * (i + 1));
-    $"  Worker {i}: transform done"
+    Console.WriteLine($"  Worker {i}: transform done");
     barrier.SignalAndWait();
 
-    $"  Worker {i}: load done"
+    Console.WriteLine($"  Worker {i}: load done");
 })).ToArray();
 
 await Task.WhenAll(phasedWorkers);
@@ -1273,12 +1273,12 @@ try
     while (await timer.WaitForNextTickAsync(timerCts.Token))
     {
         ticks++;
-        $"  Tick {ticks} at {DateTime.Now:HH:mm:ss.fff}"
+        Console.WriteLine($"  Tick {ticks} at {DateTime.Now:HH:mm:ss.fff}");
     }
 }
 catch (OperationCanceledException) { }
 
-$"  Timer stopped after {ticks} ticks"
+Console.WriteLine($"  Timer stopped after {ticks} ticks");
 timer.Dispose();
 ```
 

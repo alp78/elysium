@@ -93,10 +93,10 @@ BQ_DATASET = "index_data"
 
 ```python
 creds_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', 'NOT SET')
-creds_path                                                          # path
-os.path.exists(creds_path) if creds_path != 'NOT SET' else False   # file exists
-PROJECT_ID                                                          # project
-REGION                                                              # region
+print(creds_path)                                                          # path
+print(os.path.exists(creds_path) if creds_path != 'NOT SET' else False)   # file exists
+print(PROJECT_ID)                                                          # project
+print(REGION)                                                              # region
 ```
 
 ```text
@@ -197,8 +197,8 @@ for blob in gcs.list_blobs(BUCKET_NAME, prefix="bronze/", max_results=10):
 downloaded = bucket.blob(blob_path).download_as_text()
 df_check = pd.read_csv(io.StringIO(downloaded))
 print(f"  Downloaded: {len(df_check)} rows, {len(df_check.columns)} columns")
-list(df_check.columns)
-sorted(df_check["symbol"].unique())
+print(list(df_check.columns))
+print(sorted(df_check["symbol"].unique()))
 ```
 
 ```text
@@ -519,7 +519,7 @@ print(f'Listening for {LISTEN_SECONDS}s...\n')
 time.sleep(LISTEN_SECONDS)
 
 listener.unsubscribe()
-len(events_received)
+print(len(events_received))
 
 if events_received:
     from collections import Counter
@@ -616,7 +616,7 @@ print('  Added version 1')
 resp = sm.access_secret_version(request={
     'name': f'{parent}/secrets/index-notebook-demo/versions/latest'
 })
-resp.payload.data.decode()  # Value
+print(resp.payload.data.decode())  # Value
 ```
 
 ```text

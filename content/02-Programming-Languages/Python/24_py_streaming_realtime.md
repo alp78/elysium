@@ -1,6 +1,10 @@
 ---
 title: "Streaming & Real-Time Data"
-tags: [python, gcp, pipeline, streaming]
+tags:
+  - python
+  - gcp
+  - pipeline
+  - streaming
 aliases: [Streaming Python, Real-Time Data Python, WebSocket, SSE, Pub/Sub]
 description: "Python streaming and real-time data reference — WebSocket, SSE, Pub/Sub, Firestore listeners, and latency benchmarks. See [24_cs_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/24_cs_streaming_realtime) for the C# equivalent."
 created: 2026-03-28
@@ -14,6 +18,8 @@ status: complete
 > "Turning the database inside out: take the implementation detail that was previously hidden inside the database, and make it a first-class citizen."
 >
 > — **Martin Kleppmann**, *Making Sense of Stream Processing* (2016)
+
+Five streaming and transfer patterns — from sub-millisecond local TCP to managed GCP services and batch file transfer — covering protocol mechanics, latency characteristics, and selection criteria for real-time data engineering scenarios.
 
 ## Technologies Overview
 
@@ -89,7 +95,11 @@ sequenceDiagram
 
 ## Setup
 
+Kernel configuration, package imports, asyncio patching, GCP client initialization, and shared data-generation utilities used across all streaming patterns below.
+
 ### Setup | Jupyter | imports, asyncio, environment init
+
+Configures the Jupyter kernel and loads all required packages and GCP clients.
 
 #### Load imports and configure Jupyter async support
 
@@ -166,6 +176,8 @@ print(f'  GCS:       gs://{BUCKET_NAME}')
 ```
 
 ### Setup | data generation | formatting helpers and OHLCV tick simulation
+
+Shared utility functions and a synthetic OHLCV tick generator used as the data source for all four streaming patterns.
 
 #### Format time and rate values as human-readable strings
 
@@ -819,6 +831,8 @@ localhost (0ms network) with cross-continent GCP (300ms RTT) would be meaningles
 
 ### Latency | Plotly | local protocols
 
+Both local protocols are sub-millisecond on localhost — network RTT dominates in production. WebSocket is ~1.5x faster at p50; SSE has worse tail latency due to HTTP chunked text parsing overhead.
+
 #### Local protocols — WebSocket vs SSE throughput (localhost, no network)
 
 Compares p50 one-way latency for both local protocols. WebSocket is ~1.5x faster at p50 — binary frames (2–6 byte header) have less per-message overhead than SSE's HTTP chunked text encoding. SSE tail latency (p99) is significantly worse due to HTTP line parsing edge cases (partial reads, buffer boundaries) that don't affect binary WebSocket framing. Both are sub-millisecond on localhost — in production, network RTT dominates. SSE trade-off: works through CDNs/proxies, built-in auto-reconnect, simpler to implement.
@@ -927,14 +941,18 @@ fig_gcp.show()
 
 Production patterns for large-scale data movement that go beyond what a notebook can demonstrate. Included as architecture reference — no runnable code.
 
-### Enterprise | MFT | Managed File Transfer
+### Enterprise patterns | reference architecture
+
+Architecture reference for large-scale data movement — MFT gateways, GCS Transfer Service, and dedicated interconnect options — with decision guidance for selecting the right pattern.
+
+#### MFT (Managed File Transfer)
 
 Dedicated gateways that handle large file transfers with multiplexing, packet-level resume, bandwidth routing, encryption, and audit logging. Examples: IBM Sterling, Axway, GoAnywhere.
 
 **When to use:** Regulated industries (finance, healthcare) requiring audit trails, multi-partner B2B file exchange with SLA guarantees, files > 100 GB where resumability is critical.
 **When NOT to use:** Internal cloud-to-cloud transfers — use native cloud tools instead.
 
-### Enterprise | GCS Transfer Service | scheduled cross-cloud transfers
+#### GCS Transfer Service — scheduled cross-cloud transfers
 
 Managed service for scheduled, recurring transfers between GCS buckets, S3, Azure, or HTTP endpoints. Handles retries, bandwidth throttling, and incremental sync.
 
@@ -947,7 +965,7 @@ gcloud transfer jobs create \\
   --destination=gs://my-bucket/imports
 ```
 
-### Enterprise | Transfer Acceleration & Cloud Interconnect
+#### Transfer Acceleration & Cloud Interconnect
 
 **Transfer Acceleration** routes uploads through the cloud provider’s edge network (CDN PoPs) instead of the public internet. AWS S3 Transfer Acceleration, GCS has equivalent via CDN. Typical speedup: 2-5x for cross-continent transfers.
 
@@ -960,7 +978,7 @@ gcloud transfer jobs create \\
 | Dedicated Interconnect | 10-100 Gbps | Low | Monthly + port fee | Production pipelines |
 | Partner Interconnect | 50 Mbps-50 Gbps | Low | Monthly | Smaller dedicated link |
 
-### Enterprise | decision matrix | when to use what
+#### Decision matrix — when to use what
 
 Decision matrix for selecting the right streaming or transfer pattern based on the scenario requirements.
 

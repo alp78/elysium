@@ -82,33 +82,17 @@ Push failures occur when the local and remote branches have diverged, when authe
 **Cause:** Someone pushed commits to the same branch after your last pull. Your local branch has diverged from the remote — Git refuses to push because it would overwrite their work. A "non-fast-forward" means the remote branch tip is not an ancestor of your local tip.
 
 ```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': {
-  'git0': '#7aa2f7',
-  'git1': '#9ece6a',
-  'git2': '#e0af68',
-  'git3': '#f7768e',
-  'git4': '#bb9af7',
-  'git5': '#7dcfff',
-  'git6': '#73daca',
-  'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5',
-  'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5',
-  'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5',
-  'commitLabelBackground': '#292e42',
-  'tagLabelColor': '#c0caf5',
-  'tagLabelBackground': '#292e42',
-  'tagLabelBorder': '#565f89'
-}}}%%
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
 gitGraph
   commit id: "A"
   commit id: "B"
-  branch "origin/main"
-  commit id: "C (theirs)"
+  branch origin/main
+  commit id: "C"
   checkout main
-  commit id: "D (yours)"
+  commit id: "D" type: HIGHLIGHT
 ```
+
+*Figure: Local main and origin/main diverged after commit B. Commit C was pushed by someone else to the remote. Commit D is your local commit. Git rejects the push because applying D would overwrite C. Fix: `git pull --rebase` replays D on top of C.*
 
 **Fix:** Pull with rebase to replay your commits on top of the remote changes, then push.
 
@@ -139,6 +123,20 @@ git push
 ### "git push rejected after rebase"
 
 **Cause:** Rebase rewrites commit SHAs by replaying each commit with a new parent. The remote still has the original commits with the old SHAs, so Git sees a divergence and rejects the push as non-fast-forward.
+
+```mermaid
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph
+  commit id: "A"
+  commit id: "B"
+  branch feature
+  commit id: "C"
+  commit id: "D"
+  checkout main
+  commit id: "E"
+```
+
+*Figure: Before rebase — feature branch diverged from main at B. After `git rebase main`, commits C and D are replayed as C' and D' on top of E with new SHAs. The remote still has the original C and D, so Git sees a non-fast-forward divergence and rejects a normal push.*
 
 **Fix:** Force-push with the `--force-with-lease` safety check.
 
@@ -225,32 +223,27 @@ Branch errors arise from operating on the wrong branch, losing track of HEAD, or
 **Cause:** You checked out a specific commit SHA or a tag instead of a branch name. In this state, HEAD points directly at a commit rather than at a branch pointer. Any new commits you create are not on any branch — they become orphaned (unreachable) as soon as you switch to a named branch, and will be garbage-collected after approximately 90 days.
 
 ```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': {
-  'git0': '#7aa2f7',
-  'git1': '#9ece6a',
-  'git2': '#e0af68',
-  'git3': '#f7768e',
-  'git4': '#bb9af7',
-  'git5': '#7dcfff',
-  'git6': '#73daca',
-  'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5',
-  'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5',
-  'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5',
-  'commitLabelBackground': '#292e42',
-  'tagLabelColor': '#c0caf5',
-  'tagLabelBackground': '#292e42',
-  'tagLabelBorder': '#565f89'
-}}}%%
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
+gitGraph
+  commit id: "A"
+  commit id: "B" type: HIGHLIGHT
+  commit id: "C"
+```
+
+*Figure: You ran `git checkout B` — HEAD now points directly at commit B instead of following the main branch. Main still points at C. If you make new commits here, they won't belong to any branch.*
+
+```mermaid
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
 gitGraph
   commit id: "A"
   commit id: "B"
-  commit id: "C (HEAD detached)" type: HIGHLIGHT
-  branch feature
-  commit id: "D (orphaned)"
+  branch detached
+  commit id: "D" type: REVERSE
+  checkout main
+  commit id: "C"
 ```
+
+*Figure: You committed D while in detached HEAD state. D is on no branch — it's reachable only through the reflog. When you switch back to main (pointing at C), commit D becomes orphaned and will be garbage-collected in ~90 days. Fix: `git switch -c rescue-branch` before switching away.*
 
 **Fix:** Create a branch at the current position to anchor your commits.
 
@@ -487,31 +480,15 @@ This copies the file from HEAD back into the working tree without affecting the 
 **Fix:** Create a revert commit that undoes the changes, then push.
 
 ```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': {
-  'git0': '#7aa2f7',
-  'git1': '#9ece6a',
-  'git2': '#e0af68',
-  'git3': '#f7768e',
-  'git4': '#bb9af7',
-  'git5': '#7dcfff',
-  'git6': '#73daca',
-  'git7': '#ff9e64',
-  'gitBranchLabel0': '#c0caf5',
-  'gitBranchLabel1': '#c0caf5',
-  'gitBranchLabel2': '#c0caf5',
-  'gitBranchLabel3': '#c0caf5',
-  'commitLabelColor': '#c0caf5',
-  'commitLabelBackground': '#292e42',
-  'tagLabelColor': '#c0caf5',
-  'tagLabelBackground': '#292e42',
-  'tagLabelBorder': '#565f89'
-}}}%%
+%%{init: {'theme': 'dark', 'gitGraph': {'mainBranchName': 'main'}} }%%
 gitGraph
   commit id: "A"
   commit id: "B"
-  commit id: "C (bad)" type: HIGHLIGHT
-  commit id: "Revert C" type: REVERSE
+  commit id: "C" type: REVERSE
+  commit id: "revert-C" type: HIGHLIGHT
 ```
+
+*Figure: `git revert C` creates a new commit that undoes C's changes. The original commit C remains in history — revert is a forward-moving operation, not history rewriting. Safe for shared branches.*
 
 ```bash
 git revert HEAD

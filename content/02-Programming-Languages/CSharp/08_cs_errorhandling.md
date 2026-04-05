@@ -602,7 +602,7 @@ using (var reader = new StreamReader(tempFile))
 {
     string? line;
     while ((line = reader.ReadLine()) != null)
-        $"  Line: {line}"
+        Console.WriteLine($"  Line: {line}");
 }
 
 void ReadCsvFile(string path)
@@ -664,7 +664,7 @@ using (var csv = new CsvWriter(outFile))
     csv.WriteRow("Alice", 95000, "Engineering");
     csv.WriteRow("Bob", 65000, "Sales");
 }
-File.ReadAllText(outFile).Trim()
+Console.WriteLine(File.ReadAllText(outFile).Trim());
 
 File.Delete(tempFile);
 File.Delete(outFile);
@@ -699,13 +699,13 @@ string[] values = { "42", "bad", "100", "", "999" };
 foreach (var v in values)
 {
     if (int.TryParse(v, out int result))
-        $"  '{v}' → {result}"
+        Console.WriteLine($"  '{v}' → {result}");
     else
-        $"  '{v}' → [invalid, skipped]"
+        Console.WriteLine($"  '{v}' → [invalid, skipped]");
 }
 
 DateTime.TryParse("2024-01-15", out var date);
-$"  Date parsed: {date:yyyy-MM-dd}"
+Console.WriteLine($"  Date parsed: {date:yyyy-MM-dd}");
 ```
 
 ```text
@@ -745,9 +745,9 @@ var results = inputRows.Select((row, i) => ParseEmployee(row, i + 1)).ToList();
 var good = results.Where(r => r.IsValid).ToList();
 var bad  = results.Where(r => !r.IsValid).ToList();
 
-$"  Processed: {results.Count} rows, Valid: {good.Count}, Rejected: {bad.Count}"
-foreach (var r in good) $"    {r.Name,-10} ${r.Salary:N0}"
-foreach (var r in bad)  $"    ERROR: {r.Error}"
+Console.WriteLine($"  Processed: {results.Count} rows, Valid: {good.Count}, Rejected: {bad.Count}");
+foreach (var r in good) Console.WriteLine($"    {r.Name,-10} ${r.Salary:N0}");
+foreach (var r in bad)  Console.WriteLine($"    ERROR: {r.Error}");
 ```
 
 ```text
@@ -823,7 +823,7 @@ var data = await WithRetry(async () =>
     if (callCount < 3) throw new IOException($"Connection timeout (attempt {callCount})");
     return "data loaded successfully";
 });
-$"  Result after {callCount} attempts: {data}"
+Console.WriteLine($"  Result after {callCount} attempts: {data}");
 ```
 
 ```text

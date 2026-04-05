@@ -188,7 +188,7 @@ prod_service = PipelineService(
     notifier=SlackNotifier(),
 )
 result = prod_service.run("ASML.AS")
-result
+print(result)
 ```
 
 ```text
@@ -207,9 +207,9 @@ mock_repo = MockRepository()
 mock_notifier = MockNotifier()
 test_service = PipelineService(repo=mock_repo, notifier=mock_notifier)
 result = test_service.run("TEST.XX")
-result
-mock_repo.saved
-mock_notifier.messages
+print(result)
+print(mock_repo.saved)
+print(mock_notifier.messages)
 ```
 
 ```text
@@ -262,8 +262,8 @@ Both calls to `Config()` return the same object — `__init__` runs only on the 
 ```python
 c1 = Config()
 c2 = Config()
-c1 is c2
-c1.project_id
+print(c1 is c2)
+print(c1.project_id)
 ```
 
 ```text
@@ -566,15 +566,15 @@ record = OhlcvRecord(
     symbol="ASML.AS", trade_date=date(2026, 3, 20),
     open=685.0, high=710.0, low=680.0, close=700.0, volume=1_500_000
 )
-record
-record.model_dump()
+print(record)
+print(record.model_dump())
 
 config = PipelineConfig(
     name="events_etl",
     source_bucket="index-lab-2-data",
     destination_table="index_data.bronze_ohlcv",
 )
-config
+print(config)
 ```
 
 ```text
@@ -650,9 +650,9 @@ order = TradeOrder("ASML.AS", "BUY", 100, 685.40)
 `type()` returns the class object itself, `type().__name__` gives the string name, `isinstance()` checks membership in a class hierarchy.
 
 ```python
-type(order)
-type(order).__name__
-isinstance(order, TradeOrder)
+print(type(order))
+print(type(order).__name__)
+print(isinstance(order, TradeOrder))
 ```
 
 ```text
@@ -667,7 +667,7 @@ True
 
 ```python
 public = [m for m in dir(order) if not m.startswith("_")]
-public
+print(public)
 ```
 
 ```text
@@ -679,7 +679,7 @@ public
 `vars()` returns the instance's `__dict__` — only attributes set in `__init__`, not class attributes or methods.
 
 ```python
-vars(order)
+print(vars(order))
 ```
 
 ```text
@@ -712,8 +712,8 @@ notional() = 68540.0
 The `inspect` module examines classes and functions: `isclass()` checks type, `getmembers()` finds methods, `getfile()` locates the source, and `signature()` extracts parameter names and type annotations.
 
 ```python
-inspect.isclass(TradeOrder)
-[m[0] for m in inspect.getmembers(order, predicate=inspect.ismethod)]
+print(inspect.isclass(TradeOrder))
+print([m[0] for m in inspect.getmembers(order, predicate=inspect.ismethod)])
 try:
     print(f"  Source file: {inspect.getfile(TradeOrder)}")
 except OSError:

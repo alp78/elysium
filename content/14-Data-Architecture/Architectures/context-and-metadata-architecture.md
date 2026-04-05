@@ -1,5 +1,5 @@
 ---
-tags: [data-architecture, architecture, pipeline, python, sql, bigquery, gcp, firestore]
+tags: [data-architecture, architecture, metadata, data-contracts]
 aliases:
   - context store
   - metadata architecture
@@ -38,7 +38,7 @@ Data without context is noise. A number in a table means nothing unless you know
 
 ---
 
-### Why Context Matters — The Cost of Context Loss
+## Why Context Matters — The Cost of Context Loss
 
 Every data team eventually encounters the same class of failures — not failures of computation, but failures of meaning. The pipeline ran. The numbers landed. But nobody can explain what the numbers mean.
 

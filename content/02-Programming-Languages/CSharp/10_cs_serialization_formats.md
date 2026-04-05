@@ -126,8 +126,8 @@ using (Stream fs = File.OpenWrite(parquetFile))
         new DataColumn(schema.DataFields[4], new bool[] { true, false, true, true, false }));
 }
 
-Path.GetFileName(parquetFile)
-new FileInfo(parquetFile).Length
+Console.WriteLine(Path.GetFileName(parquetFile));
+Console.WriteLine(new FileInfo(parquetFile).Length);
 ```
 
 ```text
@@ -144,7 +144,7 @@ using (Stream fs = File.OpenRead(parquetFile))
 {
     using var reader = await ParquetReader.CreateAsync(fs);
 
-    $"  Schema: {string.Join(", ", reader.Schema.DataFields.Select(f => $"{f.Name}:{f.ClrType.Name}"))}"
+    Console.WriteLine($"  Schema: {string.Join(", ", reader.Schema.DataFields.Select(f => $"{f.Name}:{f.ClrType.Name}"))}");
 
     using var groupReader = reader.OpenRowGroupReader(0);
 
@@ -185,7 +185,7 @@ var events = new List<EventRecord>
 
 var typedFile = Path.Combine(tmpDir, "events_typed.parquet");
 await ParquetSerializer.SerializeAsync(events, typedFile);
-$"  Written: {Path.GetFileName(typedFile)} ({new FileInfo(typedFile).Length} bytes)"
+Console.WriteLine($"  Written: {Path.GetFileName(typedFile)} ({new FileInfo(typedFile).Length} bytes)");
 
 var loaded = await ParquetSerializer.DeserializeAsync<EventRecord>(typedFile);
 Console.WriteLine($"  Loaded {loaded.Count} records:");

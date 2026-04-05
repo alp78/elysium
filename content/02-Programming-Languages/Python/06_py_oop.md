@@ -1,6 +1,7 @@
 ---
 title: "Object-Oriented Programming"
-tags: [python]
+tags:
+  - python
 aliases: [classes, inheritance, polymorphism, interfaces, abstract classes, encapsulation, properties]
 description: "Python OOP reference with executable examples and cell outputs — covers classes, inheritance, polymorphism, encapsulation, properties, dataclasses, and abstract base classes. See [06_cs_oop](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/06_cs_oop) for the C# equivalent."
 created: 2026-03-22
@@ -19,6 +20,8 @@ status: complete
 >
 > — **Joe Armstrong**, *Coders at Work* interview (2009)
 
+Python OOP organises code into classes, inheritance hierarchies, abstract base classes, and dataclasses. This page covers all core constructs with executable examples — from basic class definition through to dataclasses and records.
+
 ```python
 import math
 from abc import ABC, abstractmethod
@@ -35,6 +38,8 @@ Classes are Python's primary mechanism for encapsulating state (attributes) and 
 Defining classes with `__init__`, instance/class attributes, and dunder methods, then creating and using instances.
 
 #### Class definition — __init__, attributes, __str__
+
+Defines the `Dog` class with a class attribute (`species`), `__init__` for instance attributes, instance methods, and `__str__`/`__repr__` dunder methods. Python has no auto-properties — all attributes are set explicitly in `__init__`.
 
 > [!info] Class basics
 >
@@ -80,19 +85,21 @@ class Dog:
 
 #### Instance vs class attributes — instantiation and attribute access
 
+Creates two `Dog` instances and exercises attribute access, method calls, class attribute access, and dynamic attribute assignment. `dog2.color` returns `None` because it was never assigned on that instance.
+
 ```python
 dog1 = Dog("Rex", 5)
 dog2 = Dog("Buddy", 3)
 
-dog1
-dog1.name
-dog1.bark()
-dog1.species
-dog1.is_older_than(dog2)
+print(dog1)
+print(dog1.name)
+print(dog1.bark())
+print(dog1.species)
+print(dog1.is_older_than(dog2))
 
 dog1.color = "brown"
-dog1.color
-dog2.color
+print(dog1.color)
+print(dog2.color)
 ```
 
 ```text
@@ -110,13 +117,13 @@ None
 Assigning to an instance attribute with the same name as a class attribute creates a per-instance shadow — the class attribute remains unchanged. Other instances still see the original class attribute.
 
 ```python
-Dog.species
-dog1.species
+print(Dog.species)
+print(dog1.species)
 
 dog1.species = "Modified"
-dog1.species
-dog2.species
-Dog.species
+print(dog1.species)
+print(dog2.species)
+print(Dog.species)
 ```
 
 ```text
@@ -151,10 +158,10 @@ class Circle:
         return math.pi * self._radius ** 2
 
 c = Circle(5)
-c.radius
-f"{c.area:.2f}"
+print(c.radius)
+print(f"{c.area:.2f}")
 c.radius = 10
-c.radius
+print(c.radius)
 ```
 
 > [!info] Property Validation
@@ -229,14 +236,16 @@ class Cat(Animal):
 
 #### Using inheritance — subclass instantiation and polymorphic calls
 
+Creates `Dog` and `Cat` instances and calls both inherited and overridden methods, showing that `cat.speak()` returns the `Cat`-specific version while `dog.speak()` uses the default from `Animal`.
+
 ```python
 dog = Dog("Rex", "German Shepherd")
 cat = Cat("Whiskers")
 
-dog.speak()
-dog.fetch()
-cat.speak()
-dog.breed
+print(dog.speak())
+print(dog.fetch())
+print(cat.speak())
+print(dog.breed)
 ```
 
 ```text
@@ -252,6 +261,8 @@ Polymorphism in Python works via duck typing — no base class or interface requ
 
 #### Polymorphism — duck typing and isinstance
 
+Calls `animal_roll_call` with a mixed list — Python dispatches to each object's own `speak()` via duck typing, no explicit base type required. `isinstance()` and `issubclass()` test the actual type hierarchy at runtime.
+
 ```python
 def animal_roll_call(animals):
     for animal in animals:
@@ -260,10 +271,10 @@ def animal_roll_call(animals):
 animals = [Dog("Rex", "Shepherd"), Cat("Whiskers"), Dog("Buddy", "Lab")]
 animal_roll_call(animals)
 
-isinstance(dog, Dog)
-isinstance(dog, Animal)
-isinstance(cat, Dog)
-issubclass(Dog, Animal)
+print(isinstance(dog, Dog))
+print(isinstance(dog, Animal))
+print(isinstance(cat, Dog))
+print(issubclass(Dog, Animal))
 ```
 
 ```text
@@ -298,10 +309,10 @@ class Duck(Animal, Flyable, Swimmable):
         super().__init__(name, "Quack")
 
 duck = Duck("Donald")
-duck.speak()
-duck.fly()
-duck.swim()
-[c.__name__ for c in Duck.__mro__]
+print(duck.speak())
+print(duck.fly())
+print(duck.swim())
+print([c.__name__ for c in Duck.__mro__])
 ```
 
 ```text
@@ -317,7 +328,11 @@ Python provides two mechanisms for defining contracts: `ABC` (Abstract Base Clas
 
 ### Abstract base classes (ABC)
 
+`ABC` requires explicit inheritance (`class Shape(ABC)`) and marks abstract methods with `@abstractmethod`. Instantiating an abstract class directly raises `TypeError`. For structural typing without inheritance, use `Protocol` instead (see below).
+
 #### Abstract class
+
+Declares `Shape` as an ABC with two `@abstractmethod` stubs (`area`, `perimeter`) and a concrete `describe()` method. `Rectangle` and `Circle` subclass `Shape` and implement both abstract methods.
 
 > [!info] Abstract base class
 >
@@ -378,16 +393,18 @@ class Circle(Shape):
 
 #### Using ABC — instantiate subclasses, enforce abstract methods
 
+Instantiates `Rectangle` and `Circle` and calls the concrete `describe()` method, which internally dispatches to each subclass's `area()`. A generator expression sums total area across both shapes.
+
 ```python
 rect = Rectangle(5, 3, "red")
 circ = Circle(4, "blue")
 
-rect.describe()
-circ.describe()
+print(rect.describe())
+print(circ.describe())
 
 shapes: list[Shape] = [rect, circ]
 total_area = sum(s.area() for s in shapes)
-f"{total_area:.2f}"
+print(f"{total_area:.2f}")
 ```
 
 ```text
@@ -401,6 +418,8 @@ f"{total_area:.2f}"
 A `Protocol` defines methods a class must have, checked by type checkers (mypy) without requiring explicit inheritance. Python's answer to Go interfaces — "if it quacks like a duck." Classes satisfy a Protocol by having the right methods with the right signatures. Use `@runtime_checkable` to enable `isinstance()` checks.
 
 #### Protocol declaration and usage
+
+Declares `Drawable` as a `@runtime_checkable Protocol`. `Button` and `TextBox` satisfy it without inheriting from it — any class with a matching `draw() -> str` method qualifies. `render()` accepts anything that matches the protocol signature.
 
 ```python
 @runtime_checkable
@@ -420,7 +439,7 @@ def render(widget: Drawable):
 
 render(Button())
 render(TextBox())
-isinstance(Button(), Drawable)
+print(isinstance(Button(), Drawable))
 ```
 
 ```text
@@ -472,10 +491,10 @@ class BankAccount:
         return pin == self.__pin
 
 acc = BankAccount("Alice", 1000)
-acc.owner
-acc._balance
-acc._BankAccount__pin  # type: ignore
-[a for a in dir(acc) if 'pin' in a.lower()]
+print(acc.owner)
+print(acc._balance)
+print(acc._BankAccount__pin)  # type: ignore
+print([a for a in dir(acc) if 'pin' in a.lower()])
 ```
 
 ```text
@@ -518,6 +537,8 @@ acc._BankAccount__pin  # type: ignore
 ### @staticmethod and @classmethod
 
 #### @staticmethod and @classmethod — definition and factory methods
+
+Declares the `Employee` class with a `@classmethod` factory (`from_string`), a `@classmethod` counter (`get_count`), and a `@staticmethod` validator (`is_valid_salary`). `@classmethod` receives `cls` and is used for factories and inheritance-aware construction; `@staticmethod` receives no implicit argument.
 
 > [!info] Class methods vs static methods
 >
@@ -568,19 +589,21 @@ class Employee:
 
 #### Using @staticmethod and @classmethod — calls and inheritance
 
+Creates two `Employee` instances — one via the constructor, one via the `from_string` factory — applies a raise, then reads the class attribute, instance counter, and static validator.
+
 ```python
 emp1 = Employee("Alice", 95000)
 emp1.give_raise(10)
-emp1
+print(emp1)
 
 emp2 = Employee.from_string("Bob,85000")
-emp2
+print(emp2)
 
-Employee.is_valid_salary(50000)
-Employee.is_valid_salary(-100)
+print(Employee.is_valid_salary(50000))
+print(Employee.is_valid_salary(-100))
 
-f"Count:    {Employee.get_count()} employees"
-Employee.company
+print(f"Count:    {Employee.get_count()} employees")
+print(Employee.company)
 ```
 
 ```text
@@ -601,7 +624,7 @@ class Manager(Employee):
     pass
 
 mgr = Manager.from_string("Charlie,120000")
-type(mgr).__name__
+print(type(mgr).__name__)
 ```
 
 ```text
@@ -629,13 +652,12 @@ In data pipelines, all data ends up serialized (JSON, Parquet, CSV) and stored i
 
 #### Dict vs @dataclass — silent typos and missing validation
 
-```python
-# Dict vs dataclass — typos pass silently with dicts
+A dict key typo (`"amout"` instead of `"amount"`) raises no error at assignment time — the `KeyError` only surfaces when the key is accessed, potentially far away in the pipeline. The `Order` dataclass raises `TypeError` immediately at construction when an unexpected keyword is passed.
 
-record = {"customer_id": 123, "amout": 99.99}     # typo: "amout" not "amount"
+```python
+record = {"customer_id": 123, "amout": 99.99}
 # total = record["amount"]                          # KeyError in production!
 
-# Dataclass: typo is caught immediately at creation time
 @dataclass
 class Order:
     customer_id: int
@@ -652,6 +674,8 @@ Dataclass typo: TypeError at creation time
 
 #### Autocomplete, refactoring, and type safety
 
+Contrasts two function signatures: one accepting `dict` (no IDE hints — must read docs or trace the call to know what keys exist) vs one accepting a typed `Order` (IDE shows `.customer_id`, `.amount` on autocomplete).
+
 > [!tip] Dataclass IDE Advantages Over Dict
 >
 > - **Autocomplete:** Dict keys must be memorized. Dataclass fields show on `.` in the IDE.
@@ -660,13 +684,15 @@ Dataclass typo: TypeError at creation time
 
 ```python
 def transform_dict(record: dict) -> dict:
-    return record  # what keys does record have? Must read docs or trace the code
+    return record
 
 def transform_typed(record: Order) -> Order:
-    return record  # IDE shows: Order has .customer_id, .amount
+    return record
 ```
 
 #### Dict — no validation
+
+Constructs a dict with a string value where a number is logically expected — Python raises no error. Dataclasses with type hints surface the mismatch at type-check time (mypy/pyright); Pydantic catches it at runtime with a clear validation error.
 
 > [!warning] Dict Accepts Any Garbage
 >
@@ -679,7 +705,7 @@ def transform_typed(record: Order) -> Order:
 > Apply Pydantic `BaseModel` at the boundary (API input, CSV parsing, Kafka messages) where data is untrusted and validation is critical. Use `@dataclass` for internal pipeline state and metadata where you control the construction and want lighter weight.
 
 ```python
-bad_dict = {"customer_id": "not_a_number", "amount": "free"}  # no error!
+bad_dict = {"customer_id": "not_a_number", "amount": "free"}
 ```
 
 #### When to use what
@@ -703,6 +729,8 @@ Defining dataclasses, using `field()` for customization, `frozen=True` for immut
 
 #### @dataclass — auto-generated __init__, __repr__, __eq__
 
+`@dataclass` auto-generates `__init__` from field annotations, a `__repr__` that shows all fields, and value-based `__eq__`. Two `Point` instances with identical coordinates are equal — unlike plain classes where `==` compares object identity.
+
 ```python
 @dataclass
 class Point:
@@ -713,9 +741,9 @@ p1 = Point(3.0, 4.0)
 p2 = Point(3.0, 4.0)
 p3 = Point(1.0, 2.0)
 
-p1
-p1 == p2
-p1 == p3
+print(p1)
+print(p1 == p2)
+print(p1 == p3)
 ```
 
 ```text
@@ -741,8 +769,8 @@ class Employee:
         self._id = hash(self.name)
 
 emp = Employee("Alice", "Engineering", 95000, ["senior", "lead"])
-emp
-emp._id
+print(emp)
+print(emp._id)
 ```
 
 ```text
@@ -766,10 +794,10 @@ class Config:
     ssl: bool = True
 
 config = Config("localhost", 5432)
-config
+print(config)
 
 configs = {config: "primary"}
-configs
+print(configs)
 ```
 
 ```text
@@ -789,8 +817,8 @@ class Version:
     patch: int
 
 versions = [Version(2, 0, 0), Version(1, 9, 5), Version(2, 1, 0)]
-sorted(versions)
-max(versions)
+print(sorted(versions))
+print(max(versions))
 ```
 
 ```text

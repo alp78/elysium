@@ -190,7 +190,7 @@ foreach (var t in trades)
     cmd.Parameters.AddWithValue("@date", t.date);
     cmd.ExecuteNonQuery();
 }
-trades.Length  // inserted
+Console.WriteLine(trades.Length);  // inserted
 ```
 
 ```text
@@ -231,13 +231,13 @@ cmd = conn.CreateCommand();
 cmd.CommandText = "UPDATE trades SET price = @price WHERE trade_id = @id";
 cmd.Parameters.AddWithValue("@price", 700.00);
 cmd.Parameters.AddWithValue("@id", "TRD_004");
-cmd.ExecuteNonQuery()  // Updated TRD_004 price -> $700.00
+Console.WriteLine(cmd.ExecuteNonQuery());  // Updated TRD_004 price -> $700.00
 
 // DELETE
 cmd = conn.CreateCommand();
 cmd.CommandText = "DELETE FROM trades WHERE trade_id = @id";
 cmd.Parameters.AddWithValue("@id", "TRD_006");
-cmd.ExecuteNonQuery()  // Deleted TRD_006
+Console.WriteLine(cmd.ExecuteNonQuery());  // Deleted TRD_006
 ```
 
 ```text
@@ -285,7 +285,7 @@ using (var tx = conn.BeginTransaction())
 // Final count
 cmd = conn.CreateCommand();
 cmd.CommandText = "SELECT COUNT(*) FROM trades";
-cmd.ExecuteScalar()  // total trades
+Console.WriteLine(cmd.ExecuteScalar());  // total trades
 
 conn.Close();
 ```
@@ -591,7 +591,7 @@ countCmd.CommandText = "PRAGMA page_count";
 var pageCount = Convert.ToInt64(countCmd.ExecuteScalar());
 countCmd.CommandText = "PRAGMA page_size";
 var pageSize = Convert.ToInt64(countCmd.ExecuteScalar());
-$"{pageCount} pages x {pageSize} bytes = {pageCount * pageSize / 1024.0:F1} KB"
+Console.WriteLine($"{pageCount} pages x {pageSize} bytes = {pageCount * pageSize / 1024.0:F1} KB");
 ```
 
 ```text
@@ -894,7 +894,7 @@ int rows1 = 0;
 using (var reader = sqlCmd.ExecuteReader())
     while (reader.Read()) rows1++;
 sw.Stop();
-$"Full table scan: {rows1} symbols | {sw.ElapsedMilliseconds} ms"
+Console.WriteLine($"Full table scan: {rows1} symbols | {sw.ElapsedMilliseconds} ms");
 ```
 
 ```text
@@ -917,7 +917,7 @@ int rows2 = 0;
 using (var reader = sqlCmd.ExecuteReader())
     while (reader.Read()) rows2++;
 sw.Stop();
-$"Index seek: {rows2} rows | {sw.ElapsedMilliseconds} ms"
+Console.WriteLine($"Index seek: {rows2} rows | {sw.ElapsedMilliseconds} ms");
 ```
 
 ```text
@@ -939,7 +939,7 @@ var joinResult = QueryToTable(conn, @"
     WHERE d.index_key = 'euro_stoxx_50'
     GROUP BY d.display_name");
 sw.Stop();
-$"JOIN completed in {sw.ElapsedMilliseconds} ms"
+Console.WriteLine($"JOIN completed in {sw.ElapsedMilliseconds} ms");
 joinResult
 ```
 
@@ -1090,7 +1090,7 @@ foreach (var (schema, table, index, frag) in indexesToRebuild)
     new SqlCommand(rebuildSql, conn).ExecuteNonQuery();
 }
 sw.Stop();
-$"All {indexesToRebuild.Count} indexes rebuilt in {sw.ElapsedMilliseconds} ms"
+Console.WriteLine($"All {indexesToRebuild.Count} indexes rebuilt in {sw.ElapsedMilliseconds} ms");
 ```
 
 ```text
@@ -2021,7 +2021,7 @@ var techStocks = db.Stocks
     .ToList();
 
 foreach (var s in techStocks)
-    $"  {s.Symbol,-10} {s.Name,-20} {s.Sector}"
+    Console.WriteLine($"  {s.Symbol,-10} {s.Name,-20} {s.Sector}");
 ```
 
       ASML.AS    ASML Holding         Technology
@@ -2405,7 +2405,7 @@ using (var appender = duck.CreateAppender("ohlcv_fast"))
 }
 sw.Stop();
 
-$"Appender: loaded {bulkCount} rows in {sw.ElapsedMilliseconds} ms"
+Console.WriteLine($"Appender: loaded {bulkCount} rows in {sw.ElapsedMilliseconds} ms");
 ```
 
     loaded 66355 rows in 62 ms
@@ -2445,7 +2445,7 @@ DuckDB uses `$1 $2` positional parameters, not `@named`. Dapper sends `@name` wh
 var symbol = "ASML.AS";
 var minClose = 700.0;
 var filtered = duck.Query<DuckOhlcv>(
-    $"SELECT symbol AS Symbol, CAST(date AS VARCHAR) AS Date, close AS Close, volume AS Volume "
+    Console.WriteLine($"SELECT symbol AS Symbol, CAST(date AS VARCHAR) AS Date, close AS Close, volume AS Volume ");
     + $"FROM ohlcv WHERE symbol = '{symbol}' AND close > {minClose} ORDER BY close DESC LIMIT 5");
 
 var dt = new DataTable();

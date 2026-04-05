@@ -1,5 +1,5 @@
 ---
-tags: [data-architecture, architecture, api, python]
+tags: [data-architecture, graphql, api]
 aliases:
   - GraphQL
   - GQL
@@ -20,7 +20,7 @@ description: >
   pagination, authentication, federation, and real-world GitHub API examples
   for pipeline automation. Python implementations with Strawberry and Ariadne.
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-05
 status: complete
 ---
 
@@ -33,34 +33,14 @@ status: complete
 
 GraphQL is a query language for APIs and a runtime for executing those queries, developed by Facebook in 2012 and open-sourced in 2015. Unlike REST, where the server defines the shape of every response, GraphQL lets the client declare exactly what data it needs. For data engineers, this matters when building flexible data access layers that serve multiple consumers — dashboards, pipelines, ML feature stores — from a single endpoint.
 
-> [!abstract] Core Idea
+> [!info] Core Idea
 > A GraphQL API exposes a strongly typed schema. Clients send queries that mirror the shape of the data they want. The server resolves each field independently — against a SQL database, BigQuery, a REST API, or any other source. There is one endpoint, one schema, and complete client control over the response shape.
 
 ---
 
-## Table of Contents
+## What GraphQL Is
 
-1. [What GraphQL Is](#what-graphql-is)
-2. [When Data Engineers Use GraphQL](#when-data-engineers-use-graphql)
-3. [Schema Definition Language (SDL)](#schema-definition-language-sdl)
-4. [Queries](#queries)
-5. [Mutations](#mutations)
-6. [Subscriptions](#subscriptions)
-7. [Resolvers](#resolvers)
-8. [Python GraphQL Server with Strawberry](#python-graphql-server-with-strawberry)
-9. [Python GraphQL Server with Ariadne](#python-graphql-server-with-ariadne)
-10. [N+1 Query Problem and DataLoader](#n1-query-problem-and-dataloader)
-11. [Pagination: Relay-Style Cursor Connections](#pagination-relay-style-cursor-connections)
-12. [Authentication and Authorization in Resolvers](#authentication-and-authorization-in-resolvers)
-13. [Introspection](#introspection)
-14. [GraphQL vs REST Comparison](#graphql-vs-rest-comparison)
-15. [GraphQL Federation](#graphql-federation)
-16. [Real-World: GitHub GraphQL API for Pipeline Automation](#real-world-github-graphql-api-for-pipeline-automation)
-17. [When NOT to Use GraphQL](#when-not-to-use-graphql)
-
----
-
-### What GraphQL Is
+GraphQL is a query language for APIs, a type system for describing data, and a runtime for executing queries — developed by Facebook in 2012 and open-sourced in 2015. Unlike REST, the server exposes a schema and the client declares exactly what it needs; the server resolves each requested field independently against whatever data source backs it.
 
 GraphQL is three things simultaneously:
 
@@ -70,27 +50,25 @@ GraphQL is three things simultaneously:
 
 **3. A runtime** — the server executes queries by calling resolver functions for each requested field.
 
-```
-Client                       GraphQL Server                  Data Sources
-──────                       ──────────────                  ────────────
-query {                  ┌─► IndexResolver ──────────────► PostgreSQL
-  index(code: "SPX") {   │   ConstituentResolver ─────────► BigQuery
-    name                 │   PerformanceResolver ──────────► TimescaleDB
-    constituents {       │
-      symbol             │
-      weight             │
-    }                    │
-    performance(         │
-      from: "2025-01-01" │
-      to: "2025-03-22"   │
-    ) {                  │
-      date               │
-      returnPct          │
-    }                    │
-  }                      │
-}                        │
-         ────────────────┘
-         One HTTP POST to /graphql
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#414868", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#1a1b26", "clusterBkg": "#16161e", "titleColor": "#c0caf5", "edgeLabelBackground": "#1a1b26", "nodeTextColor": "#c0caf5"}}}%%
+flowchart LR
+    C["Client<br/>query { index(code:SPX)<br/>{ name constituents<br/>performance } }"]
+    GQL["GraphQL Server<br/>/graphql<br/>One HTTP POST"]
+    IR["IndexResolver"]
+    CR["ConstituentResolver"]
+    PR["PerformanceResolver"]
+    PG[("PostgreSQL")]
+    BQ[("BigQuery")]
+    TS[("TimescaleDB")]
+
+    C -->|POST /graphql| GQL
+    GQL --> IR
+    GQL --> CR
+    GQL --> PR
+    IR --> PG
+    CR --> BQ
+    PR --> TS
 ```
 
 The single query above fetches data from three different storage systems in one round trip. The client specifies exactly which fields it needs — no more, no less.
@@ -100,13 +78,13 @@ The single query above fetches data from three different storage systems in one 
 
 ---
 
-### When Data Engineers Use GraphQL
+## When Data Engineers Use GraphQL
 
 **1. Flexible data access layers**
 A financial analytics platform serves both a trading dashboard (needs real-time prices, risk metrics) and a regulatory reporting pipeline (needs positions, trades, reference data). Rather than building separate REST endpoints for each consumer, one GraphQL API serves both — each client requests only what it needs.
 
 **2. Data mesh API layers**
-In a [data mesh](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture), each domain exposes its data as a product. GraphQL is well-suited as the product interface because it is self-documenting, introspectable, and flexible enough to serve any consumer without versioning.
+In a [data mesh](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-mesh-architecture), each domain exposes its data as a product. GraphQL is well-suited as the product interface because it is self-documenting, introspectable, and flexible enough to serve any consumer without versioning.
 
 **3. Serving multiple consumers from one endpoint**
 Mobile apps, web dashboards, Jupyter notebooks, and pipeline scripts all have different data needs. REST APIs accumulate bespoke endpoints over time. A GraphQL API stays clean — clients compose their own queries.
@@ -128,28 +106,30 @@ The SDL is the heart of a GraphQL API. It defines every type the API exposes.
 
 ### Scalar Types
 
-```graphql
-# Built-in scalars
-String     # UTF-8 string
-Int        # 32-bit signed integer
-Float      # 64-bit float
-Boolean    # true / false
-ID         # Unique identifier (serialized as String)
+GraphQL has five built-in scalars: `String` (UTF-8), `Int` (32-bit signed), `Float` (64-bit), `Boolean`, and `ID` (unique identifier, serialized as string). Custom scalars let you define domain-specific types like `Date`, `DateTime`, `Decimal`, and `JSON` — the implementation is server-side.
 
-# Custom scalars (implemented in server code)
-scalar Date       # "2025-03-22"
-scalar DateTime   # "2025-03-22T14:30:00Z"
-scalar Decimal    # High-precision number (e.g., for currency)
-scalar JSON       # Arbitrary JSON blob
+```graphql
+String
+Int
+Float
+Boolean
+ID
+
+scalar Date
+scalar DateTime
+scalar Decimal
+scalar JSON
 ```
 
 ### Object Types
 
+Object types define the data nodes in the graph. The `!` suffix marks a field as non-null; omitting it means the field is nullable. Fields can take arguments for filtering, pagination, and parameterization — these become part of the schema contract.
+
 ```graphql
 type Index {
-  code:         String!               # ! = non-null
+  code:         String!
   name:         String!
-  description:  String                # nullable
+  description:  String
   assetClass:   AssetClass!
   constituents(
     sector:     String
@@ -168,7 +148,7 @@ type Index {
 type Constituent {
   symbol:     String!
   name:       String!
-  weight:     Float!         # percentage, e.g., 7.23
+  weight:     Float!
   sector:     String!
   industry:   String
   country:    String!
@@ -214,8 +194,9 @@ enum Frequency {
 
 ### Interfaces and Unions
 
+Interfaces define shared fields that multiple types must implement — use them when different types have a common shape but differ in additional fields. Unions are looser: a union field can return one of several types that share no fields, requiring inline fragments to select type-specific data.
+
 ```graphql
-# Interface: shared fields across multiple types
 interface SecurityBase {
   symbol:    String!
   name:      String!
@@ -245,7 +226,6 @@ type Bond implements SecurityBase {
   yieldToMaturity: Float
 }
 
-# Union: a field that could be one of several types
 union SearchResult = Equity | Bond | Index | Fund
 
 type Query {
@@ -285,8 +265,9 @@ type Mutation {
 
 ### Directives
 
+Directives annotate fields and types with additional behavior. The built-in `@include` and `@skip` conditionally include fields at query time. Custom directives declared in the schema (`@auth`, `@cached`, `@rateLimit`) are implemented server-side and enforce cross-cutting concerns without coupling them to resolver logic.
+
 ```graphql
-# Built-in directives
 query GetIndex($includePerformance: Boolean = false) {
   index(code: "SPX") {
     name
@@ -298,7 +279,6 @@ query GetIndex($includePerformance: Boolean = false) {
   }
 }
 
-# Custom directives (defined in schema)
 directive @deprecated(reason: String) on FIELD_DEFINITION
 directive @auth(roles: [String!]!) on FIELD_DEFINITION | OBJECT
 directive @rateLimit(max: Int!, window: String!) on FIELD_DEFINITION
@@ -316,7 +296,11 @@ type Query {
 
 ## Queries
 
+Queries are read-only operations. A client declares the exact fields it needs, and the server resolves each field independently — no more, no less data is returned.
+
 ### Basic Query
+
+A named query with no variables, selecting specific fields from a specific index.
 
 ```graphql
 query GetSPXConstituents {
@@ -349,6 +333,8 @@ Response:
 
 ### Query with Variables
 
+Variables are passed as a separate JSON object alongside the query string, allowing the same named query to be reused with different inputs. This is the standard pattern for parameterized queries in pipeline scripts.
+
 ```graphql
 query GetIndexPerformance($code: String!, $range: DateRange!) {
   index(code: $code) {
@@ -373,6 +359,8 @@ Variables:
 
 ### Aliases (Multiple Queries in One Request)
 
+Aliases let you call the same field multiple times in one request with different arguments. Each alias becomes a key in the response object. This replaces three separate REST calls with a single round trip.
+
 ```graphql
 query CompareIndices {
   spx: index(code: "SPX") {
@@ -391,6 +379,8 @@ query CompareIndices {
 ```
 
 ### Fragments (Reusable Field Sets)
+
+Fragments define a named set of fields that can be spread into multiple queries with `...FragmentName`, reducing duplication when the same field selection appears in many places.
 
 ```graphql
 fragment ConstituentFields on Constituent {
@@ -421,6 +411,8 @@ query TechHeavyIndices {
 
 ### Inline Fragments for Unions
 
+When a field returns a union or interface, inline fragments select type-specific fields. The `__typename` meta-field lets the client determine which concrete type was returned.
+
 ```graphql
 query SearchSecurities {
   search(query: "Apple", assetClasses: [EQUITY]) {
@@ -450,10 +442,11 @@ query SearchSecurities {
 
 ---
 
-### GraphQL Mutations
+## Mutations
+
+Mutations are write operations — creating, updating, or deleting data. They return the modified object, so the client can refresh its state in the same round trip without a follow-up query.
 
 ```graphql
-# Create a portfolio
 mutation CreatePortfolio {
   createPortfolio(input: {
     name: "Tech Growth Q1 2026"
@@ -499,7 +492,7 @@ mutation TriggerRebalance {
 
 ---
 
-### GraphQL Subscriptions
+## Subscriptions
 
 GraphQL subscriptions push real-time data over WebSocket (or SSE).
 
@@ -550,24 +543,32 @@ Resolvers are the functions that execute when a field is requested. Each field i
 
 ### Resolver Execution Model
 
-```
-Query:                          Resolver chain:
-index(code: "SPX") {            indexResolver("SPX")
-  name                           └─► field: name  (trivial, returns index.name)
-  constituents {                 └─► constituentsResolver(index)
-    symbol                             └─► field: symbol
-    weight                             └─► field: weight
-    price {                            └─► priceResolver(constituent)
-      current                                └─► field: current
-    }                                  }
-  }                              }
-}
-```
+The execution engine calls the root resolver first, then calls child resolvers for each requested field — passing the parent object's result as the first argument. Execution is depth-first; each level is resolved before moving deeper.
 
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#414868", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#1a1b26", "clusterBkg": "#16161e", "titleColor": "#c0caf5", "edgeLabelBackground": "#1a1b26", "nodeTextColor": "#c0caf5"}}}%%
+flowchart TD
+    Q["query { index(code: SPX) }"]
+    IR["indexResolver(code)"]
+    N["field: name"]
+    CR["constituentsResolver(index)"]
+    SYM["field: symbol"]
+    WGT["field: weight"]
+    PR["priceResolver(constituent)"]
+    CUR["field: current"]
+
+    Q --> IR
+    IR --> N
+    IR --> CR
+    CR --> SYM
+    CR --> WGT
+    CR --> PR
+    PR --> CUR
 ### SQL Resolver Example
 
+Root resolvers receive `_` (parent, which is `None` for root fields), `info` (execution context carrying the request, auth user, and injected clients), and any field arguments. Child resolvers receive the parent object as the first positional argument.
+
 ```python
-# resolvers/index_resolver.py
 import asyncpg
 from dataclasses import dataclass
 from typing import Optional
@@ -583,7 +584,6 @@ class IndexRow:
 
 
 async def resolve_index(_, info, code: str) -> Optional[IndexRow]:
-    """Root resolver for index(code: ...) query."""
     pool: asyncpg.Pool = info.context["db_pool"]
 
     row = await pool.fetchrow(
@@ -606,7 +606,6 @@ async def resolve_constituents(
     min_weight: Optional[float] = None,
     limit: int = 100,
 ) -> list[dict]:
-    """Child resolver: fetches constituents for a given index."""
     pool: asyncpg.Pool = info.context["db_pool"]
 
     query = """
@@ -651,7 +650,6 @@ async def resolve_performance(
     to: str,
     frequency: str = "DAILY",
 ) -> list[dict]:
-    """Child resolver: fetches performance time series from BigQuery."""
     bq_client = info.context["bq_client"]
 
     query = f"""
@@ -679,7 +677,7 @@ async def resolve_performance(
 
 ---
 
-### Python GraphQL Server with Strawberry
+## Python GraphQL Server with Strawberry
 
 Strawberry is a code-first GraphQL library for Python. You define types as Python dataclasses decorated with `@strawberry.type`.
 
@@ -695,8 +693,6 @@ import strawberry
 from strawberry import auto
 from strawberry.types import Info
 
-
-# ── Types ─────────────────────────────────────────────────────────────────────
 
 @strawberry.enum
 class AssetClass:
@@ -785,8 +781,6 @@ class Index:
         return perf[-1].cumulative_pct
 
 
-# ── Input Types ───────────────────────────────────────────────────────────────
-
 @strawberry.input
 class PositionInput:
     symbol:     str
@@ -809,8 +803,6 @@ class Portfolio:
     total_value: float
     created_at:  str
 
-
-# ── Query root ────────────────────────────────────────────────────────────────
 
 @strawberry.type
 class Query:
@@ -843,8 +835,6 @@ class Query:
         return [Index(code=r["code"], name=r["name"], description=r["description"],
                       asset_class=AssetClass(r["asset_class"])) for r in rows]
 
-
-# ── Mutation root ─────────────────────────────────────────────────────────────
 
 @strawberry.type
 class Mutation:
@@ -879,12 +869,8 @@ class Mutation:
         )
 
 
-# ── Schema ────────────────────────────────────────────────────────────────────
-
 schema = strawberry.Schema(query=Query, mutation=Mutation)
 
-
-# ── FastAPI integration ───────────────────────────────────────────────────────
 
 from fastapi import FastAPI
 from strawberry.fastapi import GraphQLRouter
@@ -910,7 +896,7 @@ app.include_router(graphql_app, prefix="/graphql")
 
 ---
 
-### Python GraphQL Server with Ariadne
+## Python GraphQL Server with Ariadne
 
 Ariadne is a schema-first (SDL-first) alternative. You write the SDL, then bind resolvers.
 
@@ -922,8 +908,6 @@ from ariadne.asgi import GraphQL
 # Load schema from file
 with open("schema.graphql") as f:
     type_defs = f.read()
-
-# ── Bind resolvers ────────────────────────────────────────────────────────────
 
 query = QueryType()
 mutation = MutationType()
@@ -977,24 +961,31 @@ The N+1 problem is the most important performance issue in GraphQL. It occurs wh
 
 ### The Problem
 
+When resolving a list of N items, each item's child resolver fires independently — one database query per item. For 500 constituents each requesting a price, that is 502 total queries.
+
 ```graphql
 query {
   index(code: "SPX") {
     constituents(limit: 500) {
       symbol
-      price {          # ← This resolver fires 500 times, one query each
+      price {
         current
         changePct
       }
     }
   }
 }
-# Result: 1 query for index + 1 query for constituents + 500 queries for prices = 502 queries
 ```
+
+> [!danger] N+1 Without DataLoader in Production
+> An unguarded GraphQL API serving 500 constituents will fire 502 database queries per request. At any meaningful load, this collapses the database. Unlike REST endpoints where the developer controls exactly what the query fetches, GraphQL resolvers compose dynamically — the N+1 explosion is invisible until it hits production. Always attach DataLoaders before exposing any list field that has a child resolver.
+
+> [!success] Fix
+> DataLoader batches all individual loads that occur in the same async "tick" into a single `WHERE symbol = ANY($1)` query. 500 price lookups become 1 query.
 
 ### DataLoader Pattern
 
-DataLoader batches all individual loads that occur in the same "tick" of the event loop into a single batched query.
+DataLoader batches all individual loads that occur in the same tick of the event loop into a single batched query.
 
 ```python
 # dataloader.py
@@ -1008,14 +999,6 @@ import asyncpg
 
 
 class PriceLoader:
-    """
-    Batches individual price lookups into a single SQL query.
-
-    Usage:
-        loader = PriceLoader(pool)
-        price = await loader.load("AAPL")      # batched with all other loads in same tick
-    """
-
     def __init__(self, pool: asyncpg.Pool) -> None:
         self._pool = pool
         self._batch: dict[str, asyncio.Future] = {}
@@ -1072,18 +1055,15 @@ class PriceLoader:
 
 
 def create_price_loader(pool: asyncpg.Pool) -> PriceLoader:
-    """Create a new loader per request (not shared across requests)."""
     return PriceLoader(pool)
-
-
-# With DataLoader: 500 constituent prices = 1 batched SQL query (instead of 500)
-# Query: SELECT ... FROM live_prices WHERE symbol = ANY($1)
 ```
 
 > [!tip] strawberry-django and DataLoader
 > Strawberry integrates with `strawberry-django` and `strawberry-graphql-django` which auto-generate DataLoaders for Django ORM relationships. For raw SQL or BigQuery, write your own as above.
 
 ### BigQuery DataLoader
+
+The same batching pattern applied to BigQuery. Because the BigQuery client is synchronous, the batch fetch runs in a thread executor to avoid blocking the async event loop.
 
 ```python
 class BigQueryPriceLoader:
@@ -1153,6 +1133,8 @@ Relay-style cursor pagination is the GraphQL standard. It handles arbitrary sort
 
 ### Schema
 
+The Relay schema wraps each item in an `Edge` that carries both the data `node` and an opaque `cursor`. `PageInfo` exposes navigation state. Clients use `first`/`after` for forward pagination and `last`/`before` for backward.
+
 ```graphql
 type ConstituentConnection {
   edges:    [ConstituentEdge!]!
@@ -1187,6 +1169,8 @@ type Query {
 ```
 
 ### Resolver Implementation
+
+Cursors encode the sort key (weight + symbol for tie-breaking) as base64 JSON. The resolver fetches `page_size + 1` rows to detect whether a next page exists, then trims back to `page_size` before building edges.
 
 ```python
 import base64
@@ -1276,8 +1260,9 @@ async def resolve_constituents_connection(
 
 ### Client Pagination Loop
 
+A pipeline script follows cursors until `hasNextPage` is false, collecting all pages into a flat list.
+
 ```python
-# Pipeline script: paginate through all constituents
 import httpx
 import json
 
@@ -1320,10 +1305,13 @@ async def fetch_all_constituents(base_url: str, index_code: str) -> list[dict]:
 
 ## Authentication and Authorization in Resolvers
 
+GraphQL has no built-in auth layer. Authentication is handled in the context function that runs before any resolver; authorization is enforced inside individual resolvers or via declarative permission classes. Both happen at the application layer, not the transport layer.
+
 ### GraphQL Authentication — Context-Based Auth
 
+The context function decodes the JWT from the `Authorization` header and attaches the user object. Every resolver then reads from `info.context["user"]` — no middleware required.
+
 ```python
-# context.py — attach the authenticated user to every request
 from fastapi import Request, HTTPException
 import jwt  # PyJWT
 
@@ -1358,8 +1346,9 @@ async def get_context(request: Request) -> dict:
 
 ### Field-Level Authorization
 
+Strawberry's `BasePermission` classes let you declare access requirements directly on any field via `permission_classes=[...]`. The framework calls `has_permission` before the resolver; returning `False` adds a GraphQL error without a stack trace.
+
 ```python
-# strawberry permission classes
 import strawberry
 from strawberry.permission import BasePermission
 from strawberry.types import Info
@@ -1402,9 +1391,10 @@ class Query:
 
 ### Row-Level Security in Resolvers
 
+Some access rules are data-specific: a user can only see their own portfolios. This filtering belongs in the resolver query, not in middleware — the resolver has the user context and can scope the SQL `WHERE` clause accordingly.
+
 ```python
 async def resolve_portfolios(_, info) -> list[dict]:
-    """Users can only see their own portfolios; admins see all."""
     user = info.context["user"]
     pool = info.context["db_pool"]
 
@@ -1424,7 +1414,7 @@ async def resolve_portfolios(_, info) -> list[dict]:
 
 ---
 
-### GraphQL Introspection
+## GraphQL Introspection
 
 GraphQL schemas are self-documenting. Clients can query the schema itself.
 
@@ -1491,16 +1481,28 @@ async def get_schema_types(base_url: str) -> list[dict]:
     return [t for t in schema["types"] if not t["name"].startswith("__")]
 ```
 
-> [!info] Disabling Introspection in Production
-> Introspection can leak schema details to attackers. In production, disable it after documenting your API:
+> [!danger] Introspection in Production
+> Introspection reveals every type, field, argument, and resolver in your schema — a complete map for attackers to enumerate attack surface. Disable it in production after documenting your API:
 > ```python
 > schema = strawberry.Schema(query=Query, introspection=False)
 > ```
-> Use schema registries (Apollo Studio, GraphQL Inspector) for internal teams instead.
+
+> [!success] Alternative for Internal Teams
+> Use a schema registry (Apollo Studio, GraphQL Inspector) to give internal teams schema documentation without exposing introspection to the public endpoint.
 
 ---
 
-### GraphQL vs REST Comparison
+## GraphQL vs REST Comparison
+
+Both GraphQL and REST run over HTTP and return JSON. The choice depends on consumer diversity and response shape stability — not on performance or security.
+
+> [!question] GraphQL or REST?
+> - **Multiple consumers needing different projections** (dashboard vs pipeline vs notebook) → GraphQL: each composes its own query, no endpoint accumulation
+> - **Public API with stable, well-defined response shapes** → REST: simpler, natively cacheable, lower learning curve
+> - **Aggressive HTTP caching required** (CDN, ETags) → REST: GraphQL POST queries bypass standard HTTP caches
+> - **File uploads or binary payloads** → REST: GraphQL multipart is awkward
+> - **High-throughput streaming** (>100 events/sec) → neither; use gRPC or Pub/Sub
+> - **Small team, CRUD operations only** → REST: GraphQL overhead (SDL, resolvers, DataLoader) is not justified
 
 | Dimension | GraphQL | REST |
 |---|---|---|
@@ -1528,20 +1530,36 @@ async def get_schema_types(base_url: str) -> list[dict]:
 
 ## GraphQL Federation
 
-Federation lets you compose a unified GraphQL schema from multiple independent subgraph services — the foundation of a data mesh API layer.
+Federation lets you compose a unified GraphQL schema from multiple independent subgraph services — the foundation of a [data mesh](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-mesh-architecture) API layer. Each domain team owns and deploys its own subgraph; a gateway composes them into a single supergraph schema that clients query as one API.
 
-```
-Client → API Gateway (supergraph)
-            ├── Index Subgraph     (owns: Index, Constituent)
-            ├── Pricing Subgraph   (owns: Price, PriceHistory)
-            ├── Portfolio Subgraph (owns: Portfolio, Position)
-            └── Risk Subgraph      (owns: RiskMetrics, VaR)
+> [!question] Single Server or Federation?
+> - **Single team, one data domain** → single Strawberry/Ariadne server; federation adds deployment complexity without benefit
+> - **Multiple domain teams, each owning a slice of the schema** → federation: teams evolve their subgraph independently, types can span services via entity references
+> - **Data mesh product interfaces** → federation maps naturally to the "data as a product" principle — each domain publishes a typed subgraph
+> - **Early-stage product** → start with a monolith and migrate to federation later; premature federation is over-engineering
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#414868", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#1a1b26", "clusterBkg": "#16161e", "titleColor": "#c0caf5", "edgeLabelBackground": "#1a1b26", "nodeTextColor": "#c0caf5"}}}%%
+flowchart LR
+    C["Client"]
+    GW["API Gateway<br/>(supergraph)"]
+    IS["Index Subgraph<br/>owns: Index, Constituent"]
+    PS["Pricing Subgraph<br/>owns: Price, PriceHistory"]
+    PF["Portfolio Subgraph<br/>owns: Portfolio, Position"]
+    RS["Risk Subgraph<br/>owns: RiskMetrics, VaR"]
+
+    C --> GW
+    GW --> IS
+    GW --> PS
+    GW --> PF
+    GW --> RS
 ```
 
 ### GraphQL Federation — Subgraph Schema (Index Service)
 
+The index subgraph declares `Index` and `Constituent` as entities with `@key` — the field(s) that uniquely identify them. Other subgraphs reference these entities by key to extend them with additional fields.
+
 ```graphql
-# index-subgraph/schema.graphql
 extend schema @link(url: "https://specs.apollo.dev/federation/v2.0")
 
 type Index @key(fields: "code") {
@@ -1559,8 +1577,9 @@ type Constituent @key(fields: "symbol") {
 
 ### GraphQL Federation — Subgraph Schema (Pricing Service)
 
+The pricing subgraph extends `Constituent` with price-related fields. It references `symbol` as the entity key (`@external`) without owning the type definition — the gateway merges both subgraph schemas at query time.
+
 ```graphql
-# pricing-subgraph/schema.graphql
 extend schema @link(url: "https://specs.apollo.dev/federation/v2.0")
 
 # Extend Constituent type defined in index subgraph
@@ -1579,8 +1598,9 @@ type Price {
 
 ### GraphQL Federation — Python Subgraph with Strawberry
 
+`@strawberry.federation.type(keys=["symbol"])` marks the type as a federated entity. `resolve_reference` is called by the gateway when it needs to hydrate an entity from its key fields — the pricing subgraph receives a `Constituent` stub with only `symbol` populated and loads the rest.
+
 ```python
-# pricing_subgraph.py
 import strawberry
 from strawberry.federation import Schema
 
@@ -1621,8 +1641,9 @@ Data engineers use the GitHub GraphQL API daily. Examples below show common auto
 
 ### GitHub GraphQL API — Setup and Authentication
 
+A minimal async client wrapping `httpx`. All GitHub GraphQL requests authenticate with a `Bearer` token from the environment and raise on both HTTP errors and GraphQL-level errors.
+
 ```python
-# github_client.py
 import httpx
 import os
 
@@ -1645,6 +1666,8 @@ async def github_query(query: str, variables: dict = None) -> dict:
 ```
 
 ### GitHub GraphQL API — Find Latest Release of a Factor Model
+
+Fetches the latest published release of a repository, returning the tag name, publish date, and download URLs for all attached release assets — useful for pulling versioned model files in a pipeline.
 
 ```graphql
 query GetLatestRelease($owner: String!, $repo: String!) {
@@ -1690,6 +1713,8 @@ async def get_latest_model_release(owner: str, repo: str) -> dict:
 
 ### GitHub GraphQL API — Find Open PRs with a Specific Label
 
+Lists open pull requests carrying a specific label, ordered by creation date. Used to audit pipeline-update PRs or trigger automation on labeled branches.
+
 ```graphql
 query GetPipelinePRs($owner: String!, $repo: String!, $label: String!) {
   repository(owner: $owner, name: $repo) {
@@ -1726,6 +1751,8 @@ async def get_pipeline_prs(owner: str, repo: str) -> list[dict]:
 ```
 
 ### GitHub GraphQL API — Create a Pull Request Programmatically
+
+Opens a PR from a given head branch to a base branch. The `repositoryId` is a node ID retrieved from a separate `repository` query. The mutation returns the PR number and URL for logging and notification.
 
 ```graphql
 mutation CreatePR(
@@ -1787,6 +1814,8 @@ async def create_rebalance_pr(
 
 ### GitHub GraphQL API — Monitor CI Status
 
+Polls the check run rollup for a branch until the CI state resolves to `SUCCESS`, `FAILURE`, or `ERROR`. Used to gate downstream pipeline steps on CI passing.
+
 ```graphql
 query GetCIStatus($owner: String!, $repo: String!, $branch: String!) {
   repository(owner: $owner, name: $repo) {
@@ -1837,7 +1866,7 @@ async def wait_for_ci(owner: str, repo: str, branch: str, timeout: int = 600) ->
 
 ---
 
-### When NOT to Use GraphQL
+## When NOT to Use GraphQL
 
 > [!warning] Avoid GraphQL in These Scenarios
 >
@@ -1891,6 +1920,7 @@ print(response.json())  # {"data": {"hello": "world"}}
 ## Related Notes
 
 - [rest-api-design-and-consumption](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/rest-api-design-and-consumption) — REST patterns and comparison with GraphQL
+- [grpc-for-data-pipelines](https://alp78.github.io/elysium/14-Data-Architecture/APIs-and-Protocols/grpc-for-data-pipelines) — gRPC server streaming as the alternative for high-throughput real-time data
 - [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — JSON, protobuf, Avro; encoding trade-offs for API payloads
-- fastapi and polars — Building the HTTP server that hosts your GraphQL schema
+- [data-mesh-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-mesh-architecture) — Federation as the data mesh API layer pattern
 - [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture) — When to use streaming (Kafka, gRPC) instead of GraphQL subscriptions

@@ -1172,7 +1172,7 @@ int BqExport(string tier)
     // Create temp table with correct row count for this tier
     var tempTable = $"export_temp_{tier}";
     bqClient.ExecuteQuery(
-        $"CREATE OR REPLACE TABLE `{PROJECT_ID}.{BQ_DATASET}.{tempTable}` AS "
+        Console.WriteLine($"CREATE OR REPLACE TABLE `{PROJECT_ID}.{BQ_DATASET}.{tempTable}` AS ");
         + $"SELECT * FROM `{PROJECT_ID}.{BQ_DATASET}.ohlcv_bench` LIMIT {tierRows[tier]}",
         parameters: null).ThrowOnAnyError();
 

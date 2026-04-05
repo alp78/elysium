@@ -39,7 +39,7 @@ int SlowSum(int n) {
 var sw = Stopwatch.StartNew();
 var result = SlowSum(1_000_000);
 sw.Stop();
-$"SlowSum(1M): {sw.ElapsedMilliseconds}ms, result={result}"
+Console.WriteLine($"SlowSum(1M): {sw.ElapsedMilliseconds}ms, result={result}");
 ```
 
 ```text
@@ -54,7 +54,7 @@ SlowSum(1M): 0ms, result=1783293664
 long start = Stopwatch.GetTimestamp();
 SlowSum(1_000_000);
 var elapsed = Stopwatch.GetElapsedTime(start);
-$"GetElapsedTime: {elapsed.TotalMilliseconds:F2}ms"
+Console.WriteLine($"GetElapsedTime: {elapsed.TotalMilliseconds:F2}ms");
 ```
 
 ```text
@@ -143,13 +143,13 @@ var list = new List<int>(100_000);
 for (int i = 0; i < 100_000; i++) list.Add(i);
 
 long after = GC.GetTotalMemory(false);
-$"List<int>(100K): {(after - before) / 1024.0:F0} KB allocated"
+Console.WriteLine($"List<int>(100K): {(after - before) / 1024.0:F0} KB allocated");
 
 GC.Collect(); before = GC.GetTotalMemory(true);
 var arr = new int[100_000];
 for (int i = 0; i < arr.Length; i++) arr[i] = i;
 after = GC.GetTotalMemory(false);
-$"int[100K]: {(after - before) / 1024.0:F0} KB allocated"
+Console.WriteLine($"int[100K]: {(after - before) / 1024.0:F0} KB allocated");
 ```
 
 ```text
@@ -168,14 +168,14 @@ GC.Collect(); before = GC.GetTotalMemory(true);
 string s = "";
 for (int i = 0; i < 10_000; i++) s += i.ToString();
 after = GC.GetTotalMemory(false);
-$"String += (10K): {(after - before) / 1024.0:F0} KB"
+Console.WriteLine($"String += (10K): {(after - before) / 1024.0:F0} KB");
 
 GC.Collect(); before = GC.GetTotalMemory(true);
 var sb = new System.Text.StringBuilder();
 for (int i = 0; i < 10_000; i++) sb.Append(i);
 string result2 = sb.ToString();
 after = GC.GetTotalMemory(false);
-$"StringBuilder: {(after - before) / 1024.0:F0} KB"
+Console.WriteLine($"StringBuilder: {(after - before) / 1024.0:F0} KB");
 ```
 
 ```text
@@ -216,14 +216,14 @@ long before = GC.GetTotalMemory(true);
 var structArr = new PointStruct[100_000];
 for (int i = 0; i < structArr.Length; i++) structArr[i] = new PointStruct(i, i);
 long after = GC.GetTotalMemory(false);
-$"PointStruct[100K]: {(after - before) / 1024.0:F0} KB"
+Console.WriteLine($"PointStruct[100K]: {(after - before) / 1024.0:F0} KB");
 
 GC.Collect();
 before = GC.GetTotalMemory(true);
 var classArr = new PointClass[100_000];
 for (int i = 0; i < classArr.Length; i++) classArr[i] = new PointClass(i, i);
 after = GC.GetTotalMemory(false);
-$"PointClass[100K]: {(after - before) / 1024.0:F0} KB"
+Console.WriteLine($"PointClass[100K]: {(after - before) / 1024.0:F0} KB");
 ```
 
 ```text
@@ -252,7 +252,7 @@ int[] data = Enumerable.Range(0, 1000).ToArray();
 int[] sliceCopy = data[100..200];
 
 Span<int> span = data.AsSpan(100, 100);
-$"Span slice: {span.Length} elements, first={span[0]}, last={span[^1]}"
+Console.WriteLine($"Span slice: {span.Length} elements, first={span[0]}, last={span[^1]}");
 ```
 
 ```text
@@ -267,7 +267,7 @@ Span slice: 100 elements, first=100, last=199
 ReadOnlySpan<char> text = "2024-01-15T10:30:00".AsSpan();
 var datePart = text[..10];
 var timePart = text[11..];
-$"Date: {datePart.ToString()}, Time: {timePart.ToString()}"
+Console.WriteLine($"Date: {datePart.ToString()}, Time: {timePart.ToString()}");
 ```
 
 ```text
@@ -281,7 +281,7 @@ Date: 2024-01-15, Time: 10:30:00
 ```csharp
 Span<int> stackData = stackalloc int[256];
 for (int i = 0; i < stackData.Length; i++) stackData[i] = i * i;
-$"stackalloc: {stackData.Length} ints on the stack"
+Console.WriteLine($"stackalloc: {stackData.Length} ints on the stack");
 ```
 
 ```text
@@ -297,7 +297,7 @@ stackalloc: 256 ints on the stack
 ```csharp
 Memory<int> memory = new int[1_000];
 var slice = memory.Slice(100, 100);
-$"Memory<int> slice: {slice.Length} elements, first={slice.Span[0]}, last={slice.Span[^1]}"
+Console.WriteLine($"Memory<int> slice: {slice.Length} elements, first={slice.Span[0]}, last={slice.Span[^1]}");
 ```
 
 ```text
@@ -364,7 +364,7 @@ var hashSet = new HashSet<int>(list);
 var dict = list.ToDictionary(x => x, x => x);
 var sorted = new SortedDictionary<int, int>(dict);
 
-$"Lookup of element {n-1}:"
+Console.WriteLine($"Lookup of element {n-1}:");
 MeasureTime(() => list.Contains(n - 1), "List (O(n))");
 MeasureTime(() => hashSet.Contains(n - 1), "HashSet (O(1))");
 MeasureTime(() => dict.ContainsKey(n - 1), "Dict (O(1))");
@@ -413,7 +413,7 @@ var pool = ArrayPool<int>.Shared;
 int[] rented = pool.Rent(1024);
 try {
     for (int i = 0; i < 1024; i++) rented[i] = i;
-    $"ArrayPool: rented {rented.Length} (requested 1024), no allocation!"
+    Console.WriteLine($"ArrayPool: rented {rented.Length} (requested 1024), no allocation!");
 } finally {
     pool.Return(rented);
 }
@@ -512,12 +512,12 @@ The call site difference is clear: a raw `string` gives no compile-time guarante
 string email = "alice@example.com";  // Just a string, no validation
 
 var validEmail = new Email("alice@example.com");
-validEmail
+Console.WriteLine(validEmail);
 
 try {
     var invalid = new Email("not-an-email");
 } catch (ArgumentException ex) {
-    ex.Message
+    Console.WriteLine(ex.Message);
 }
 ```
 
@@ -559,15 +559,15 @@ string? maybeName = null;
 string safeName = maybeName ?? "Unknown";
 int length = maybeName?.Length ?? 0;
 
-$"{safeName}, length: {length}"
+Console.WriteLine($"{safeName}, length: {length}");
 
 object? obj = "hello";
 if (obj is string text) {
-    text.ToUpper()
+    Console.WriteLine(text.ToUpper());
 }
 
 string? result = maybeName?.ToUpper()?.Trim();
-result ?? "(null)"
+Console.WriteLine(result ?? "(null)");
 ```
 
 ```text
@@ -607,7 +607,7 @@ IEnumerable<int> filtered = data.Where(x => x % 2 == 0);
 
 var materialized = filtered.ToList();
 var count = materialized.Count;
-count
+Console.WriteLine(count);
 
 MeasureTime(() => data.Where(x => x % 2 == 0).Select(x => (long)x * x).Sum(), "LINQ chain");
 MeasureTime(() => {

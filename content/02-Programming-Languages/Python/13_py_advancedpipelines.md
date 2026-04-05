@@ -146,7 +146,7 @@ async with aiohttp.ClientSession() as session:
 elapsed = time.perf_counter() - start
 for symbol, price in results:
     print(f'  {symbol:6} €{price:>8.2f}')
-f"Fetched {len(results)} quotes in {elapsed:.2f}s (3 concurrent max)"
+print(f"Fetched {len(results)} quotes in {elapsed:.2f}s (3 concurrent max)")
 ```
 
 ```text
@@ -268,7 +268,7 @@ result = subprocess.run(
     capture_output=True, text=True, timeout=10,
 )
 parsed = json.loads(result.stdout)
-f'Child PID: {parsed["pid"]}, result: {parsed["result"]}'
+print(f'Child PID: {parsed["pid"]}, result: {parsed["result"]}')
 
 def run_expr(expr: str) -> tuple:
     r = subprocess.run(["python", "-c", f"print({expr})"], capture_output=True, text=True)

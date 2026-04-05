@@ -1,5 +1,5 @@
 ---
-tags: [git, github]
+tags: [git, github, setup, config]
 aliases:
   - git config
   - git init
@@ -99,6 +99,8 @@ These commands configure your Git identity and global preferences. Run them once
 
 ### Identity (required before your first commit)
 
+Set your name and email before making your first commit. Git embeds these values in every commit object — they identify you in `git log` output and link your contributions to your GitHub profile. These settings are stored in `~/.gitconfig` and apply across all repositories on the machine.
+
 #### git config --global user.name — set author name for all commits
 
 ```bash
@@ -134,6 +136,8 @@ git config --global user.email "your.email@company.com"
 
 ### Useful Global Settings
 
+These settings are optional but strongly recommended when configuring a new machine. They control default branch naming, line-ending normalization, editor selection, command aliases, and default pull behavior. All use `--global` scope and are written to `~/.gitconfig`.
+
 #### git config --global init.defaultBranch main — set default branch name
 
 ```bash
@@ -168,120 +172,238 @@ git config --global pull.rebase false
 
 *In plain English:* When syncing with the team, merge their changes into yours (don't rewrite your history).
 
-#### git config --list --show-origin — view all current configuration
+#### git config --global core.editor — set the default text editor
+
+Git opens a text editor when you write commit messages, perform interactive rebases, or edit config files. Without this setting it falls back to the system default (`vi` on Linux/macOS, Notepad on Windows), which surprises many developers.
+
+```bash
+git config --global core.editor "code --wait"
+```
+
+- `core.editor` — the editor command Git spawns; `--wait` tells VS Code to block until you close the tab
+
+*In plain English:* Write commit messages in VS Code instead of vi. Replace `"code --wait"` with `"nano"`, `"vim"`, or `"notepad"` for other editors.
+
+#### git config --global alias.* — create command shortcuts
+
+Git aliases let you define short names for long or frequently used commands. They are stored under `[alias]` in `~/.gitconfig` and invoked as `git <alias>`.
+
+```bash
+git config --global alias.st status
+```
+
+```bash
+git config --global alias.lg "log --oneline --graph --all --decorate"
+```
+
+```bash
+git config --global alias.undo "reset --soft HEAD~1"
+```
+
+*In plain English:* `git st` runs `git status`, `git lg` shows a compact graph of all branches, and `git undo` moves the last commit back to staged without discarding changes.
+
+#### git config --list — display all configuration values
+
+`git config --list` prints every key-value pair Git knows, merging system, global, and local scopes. Where the same key appears in multiple scopes, the most specific scope wins (local overrides global overrides system).
 
 ```bash
 git config --list
 ```
 
-- `--list` — display all configuration values from all scopes (system, global, local)
+```text
+core.autocrlf=true
+init.defaultbranch=main
+core.editor=code --wait
+user.name=Your Name
+user.email=your.email@company.com
+pull.rebase=false
+alias.st=status
+alias.lg=log --oneline --graph --all --decorate
+```
 
-*In plain English:* Check what Git is configured to do.
+#### git config --list --show-origin — show which file each setting comes from
+
+Adding `--show-origin` prepends the config file path where each value is defined. Useful for diagnosing unexpected settings — for example, a system-level config silently overriding your global one.
+
+```bash
+git config --list --show-origin
+```
+
+```text
+file:C:/Program Files/Git/etc/gitconfig    core.autocrlf=true
+file:C:/Users/you/.gitconfig               user.name=Your Name
+file:C:/Users/you/.gitconfig               user.email=your.email@company.com
+file:.git/config                           core.repositoryformatversion=0
+```
 
 ### Credential Caching
 
-> [!tip] Avoid Re-entering Your Password
->
-> Run `git config --global credential.helper store` to avoid re-entering your password. On Windows, use `manager-core` for the Windows Credential Manager.
+By default Git prompts for your HTTPS password on every remote operation. Setting a credential helper eliminates this. The right choice depends on your OS. An alternative to HTTPS credentials entirely is SSH key authentication — see [git-remote-management](https://alp78.github.io/elysium/08-Git/git-remote-management) for SSH key setup.
+
+#### git config credential.helper store — save credentials to a file
+
+Stores your username and password in a plaintext file at `~/.git-credentials`. Simple to configure but anyone with read access to your home directory can read the credentials.
+
+```bash
+git config --global credential.helper store
+```
 
 > [!warning] credential.helper store is plaintext
 >
-> `credential.helper store` saves passwords in a plaintext file (`~/.git-credentials`). Anyone with access to your home directory can read them. On Windows, use `manager-core` (Windows Credential Manager) instead. On macOS, use `osxkeychain`.
+> `credential.helper store` saves passwords in `~/.git-credentials`. Anyone with access to your home directory can read them. Prefer the OS keychain helper below on any shared or managed machine.
 
 > [!success] Use the OS Credential Manager
 >
-> On Windows: `git config --global credential.helper manager-core`. On macOS: `git config --global credential.helper osxkeychain`. Both store credentials in the OS secure keychain, not a plaintext file.
+> On Windows: `git config --global credential.helper manager-core`. On macOS: `git config --global credential.helper osxkeychain`. Both store credentials in the OS secure keychain — no plaintext file.
+
+#### git config credential.helper manager-core — use the OS keychain (recommended)
+
+Stores credentials in the OS secure keychain. On Windows this is Windows Credential Manager; on macOS it is the system Keychain. No plaintext file is written, and credentials survive reboots and shell restarts.
 
 ```bash
-# All platforms — store credentials to disk (simple, less secure)
-git config --global credential.helper store
-
-# Windows — use Windows Credential Manager (recommended on Windows)
 git config --global credential.helper manager-core
 ```
+
+| Flag / Key | Syntax | Description |
+|---|---|---|
+| `--global` | `git config --global <key> <value>` | Write to `~/.gitconfig` — applies to all repos for the current user |
+| `--local` | `git config --local <key> <value>` | Write to `.git/config` — applies to the current repo only (default scope) |
+| `--system` | `git config --system <key> <value>` | Write to the system-wide config (requires admin); lowest precedence |
+| `--list` | `git config --list` | Print all resolved key-value pairs across all scopes |
+| `--show-origin` | `git config --list --show-origin` | Show the config file path for each key |
+| `--get <key>` | `git config --get user.email` | Print the resolved value of a single key |
+| `--unset <key>` | `git config --unset <key>` | Remove a key from the targeted scope |
+| `--edit` | `git config --global --edit` | Open the config file in the configured editor |
 
 ---
 
 ## Creating and Cloning Repositories
 
+Use `git init` to start a new repository from scratch, or `git clone` to download an existing one from a remote. These are the two entry points into any Git workflow.
+
 ### Initialize a New Repository
 
+`git init` turns any directory into a Git repository by creating the hidden `.git/` subdirectory. Use this when starting a brand-new project locally. If the project already exists on a remote (GitHub, GitLab), use `git clone` instead.
+
 #### git init — initialize a new repository in the current directory
+
+Running `git init` creates `.git/` with the object store, refs, config, hooks, and the HEAD pointer. The directory itself is untouched — no files are staged or committed yet.
 
 ```bash
 git init
 ```
 
-- `init` — create the hidden `.git` folder, start tracking this directory
-
-*In plain English:* Start tracking this folder with Git.
+```text
+Initialized empty Git repository in /path/to/project/.git/
+```
 
 > [!tip] What git init Creates
 >
-> Running `git init` creates a hidden `.git/` subdirectory containing all of Git's internal data: the object store, refs, config, hooks, and HEAD pointer. Deleting this folder removes all Git history from the project without touching your actual files.
+> The `.git/` subdirectory holds all of Git's internal data. Deleting it removes all history from the project without touching your actual files. The working directory is preserved.
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `-b <name>` / `--initial-branch <name>` | `git init -b main` | Set the name of the first branch (overrides `init.defaultBranch`) |
+| `--bare` | `git init --bare` | Create a repository with no working tree — used for server/remote repos |
+| `--template <dir>` | `git init --template /path` | Populate `.git/` from a custom template directory |
+| `--shared[=<perms>]` | `git init --shared=group` | Set group-write permissions for shared server repositories |
 
 ### Clone an Existing Repository
 
+`git clone` downloads a repository from a remote URL to your local machine, including all branches, tags, and the full commit history. The remote is automatically registered as `origin`. For performance-sensitive workflows (CI/CD, large monorepos), use shallow or branch-limited clones.
+
 #### git clone — download a complete copy of a remote repository
+
+Clones all branches and the full history into a new directory named after the repository.
 
 ```bash
 git clone https://github.com/org/repo.git
 ```
 
-- `clone` — download the repo including all branches and full history
-- `https://...` — the remote repository URL
-
-*In plain English:* Download the project from GitHub to your computer.
+```text
+Cloning into 'repo'...
+remote: Enumerating objects: 1024, done.
+remote: Counting objects: 100% (1024/1024), done.
+remote: Compressing objects: 100% (512/512), done.
+Receiving objects: 100% (1024/1024), 2.40 MiB | 8.12 MiB/s, done.
+Resolving deltas: 100% (380/380), done.
+```
 
 #### git clone URL folder — clone into a specific directory
+
+Clones the repository into `my-folder` instead of the default directory name derived from the URL.
 
 ```bash
 git clone https://github.com/org/repo.git my-folder
 ```
 
-- `my-folder` — custom directory name (instead of the repo name)
+#### git clone --branch — clone and check out a specific branch
 
-*In plain English:* Download the project into a specific folder name.
+Clones the full repository but checks out the specified branch immediately. Combine with `--single-branch` to avoid fetching all other remote branches, reducing download size.
+
+```bash
+git clone --branch develop https://github.com/org/repo.git
+```
+
+```bash
+git clone --branch develop --single-branch https://github.com/org/repo.git
+```
 
 #### git clone --depth 1 — shallow clone, latest commit only
+
+Downloads only the most recent commit rather than the full history. Dramatically reduces clone time and disk usage for large repositories.
 
 ```bash
 git clone --depth 1 https://github.com/org/repo.git
 ```
 
-- `--depth 1` — download only the latest commit, skip full history
-
-*In plain English:* Quick download without the full history. Good for CI/CD.
-
 > [!tip] Shallow Clones for CI/CD
 >
-> Shallow Clones in CI/CD Pipelines.
 > Shallow clones with `--depth 1` are the standard approach in [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) pipelines. Cloning the full history of a large repository adds unnecessary time to every pipeline run. GitHub Actions uses `actions/checkout` with `fetch-depth: 1` by default for this reason.
 
 > [!warning] Shallow Clone Limitations
 >
-> A shallow clone cannot be used as the basis for a `git push` to the original remote without first unshallowing (`git fetch --unshallow`). It also cannot run `git bisect` or other commands that require full history traversal.
+> A shallow clone cannot `git push` to the original remote without first unshallowing. It also cannot run `git bisect` or other commands that require full history traversal.
 
 > [!success] Unshallow When Full History Is Needed
 >
 > Run `git fetch --unshallow` to convert a shallow clone into a full clone. After that, all Git history commands (`git bisect`, `git log --all`, `git push`) work normally.
 
+| Flag | Syntax | Description |
+|---|---|---|
+| `--depth <n>` | `git clone --depth 1 <url>` | Shallow clone: fetch only the last N commits |
+| `-b` / `--branch <name>` | `git clone -b develop <url>` | Check out the specified branch after cloning |
+| `--single-branch` | `git clone --single-branch -b main <url>` | Fetch only the specified branch; omit all other remote refs |
+| `--bare` | `git clone --bare <url>` | Clone without a working tree (for server/mirror repos) |
+| `--mirror` | `git clone --mirror <url>` | Clone all refs including remote tracking; implies `--bare` |
+| `--recurse-submodules` | `git clone --recurse-submodules <url>` | Automatically initialize and clone all submodules |
+| `--shallow-submodules` | `git clone --shallow-submodules <url>` | Shallow-clone each submodule to depth 1 |
+
 ---
 
 ## Pre-Commit Hooks — Automated Quality Gates
 
+Git hooks are scripts that execute automatically at lifecycle events — before a commit, before a push, after a merge, etc. The `pre-commit` framework makes hook management declarative and shareable across the team via a versioned YAML configuration file.
+
 ### pre-commit Framework — run checks before every commit
+
+The `pre-commit` framework manages Git hook scripts that run automatically before each commit is created. If any hook fails, the commit is aborted. This catches secrets, lint errors, and formatting issues at the developer's machine before they reach the repository.
 
 > [!abstract] What Pre-Commit Hooks Do
 >
 > Git hooks are scripts that run automatically at specific points in the Git workflow. Pre-commit hooks run BEFORE the commit is created — if they fail, the commit is aborted. This catches secrets, lint errors, and formatting issues before they reach the repo.
 
+#### pip install pre-commit — install the framework
+
+Install the `pre-commit` Python package into your active environment. This makes the `pre-commit` CLI available for configuring and running hooks.
+
 ```bash
-# Install the pre-commit framework
 pip install pre-commit
 ```
 
-Create `.pre-commit-config.yaml` in the repo root:
+#### .pre-commit-config.yaml — define which hooks to run
+
+Create this file in the repository root. Each entry under `repos` points to a hook repository and specifies which hook IDs to enable. Pin the `rev` to a stable tag to ensure reproducible behaviour across the team.
 
 ```yaml
 # .pre-commit-config.yaml
@@ -302,17 +424,6 @@ repos:
       - id: terraform_validate
 ```
 
-```bash
-# Install hooks into .git/hooks/
-pre-commit install
-
-# Run against all files (first time or CI)
-pre-commit run --all-files
-
-# Run a specific hook
-pre-commit run gitleaks --all-files
-```
-
 > [!tip] Hooks for Data Engineering Teams
 >
 > - **gitleaks** — blocks commits containing API keys, passwords, GCP key files
@@ -320,13 +431,49 @@ pre-commit run gitleaks --all-files
 > - **terraform_fmt** — enforces consistent Terraform formatting
 > - **sqlfluff** — SQL linting (add via `repo: https://github.com/sqlfluff/sqlfluff`)
 
+#### pre-commit install — register hooks in the local repository
+
+Writes the hook scripts into `.git/hooks/`. After this, the configured checks run automatically before every `git commit` in this repository. Must be run once per clone.
+
+```bash
+pre-commit install
+```
+
+```text
+pre-commit installed at .git/hooks/pre-commit
+```
+
+#### pre-commit run --all-files — run all hooks against every file
+
+Runs the full hook suite against every file in the repository, not just staged changes. Use this on first setup to validate the entire codebase, or in CI pipelines where there is no staged diff.
+
+```bash
+pre-commit run --all-files
+```
+
+#### pre-commit run \<hook\> --all-files — run a single hook by name
+
+Targets one specific hook ID, bypassing the rest of the suite. Useful for debugging a failing check or testing a newly added hook in isolation.
+
+```bash
+pre-commit run gitleaks --all-files
+```
+
 > [!warning] Hooks Run Locally Only
 >
-> Pre-commit hooks run on each developer's machine. They can be bypassed with `git commit --no-verify`. For mandatory enforcement, run the same checks in GitHub Actions CI — hooks are the fast first line of defense, CI is the mandatory second line.
+> Pre-commit hooks run on each developer's machine and can be bypassed with `git commit --no-verify`. For mandatory enforcement, run the same checks in GitHub Actions CI — hooks are the fast first line of defense, CI is the mandatory second line.
 
 > [!success] Mirror Hook Checks in CI
 >
 > Add the same `pre-commit run --all-files` step to your GitHub Actions workflow. This ensures secrets scanning, linting, and format checks are enforced even if a developer bypasses local hooks with `--no-verify`.
+
+| Flag | Syntax | Description |
+|---|---|---|
+| `--all-files` | `pre-commit run --all-files` | Run hooks against all repository files (not just staged) |
+| `--files <path>` | `pre-commit run --files src/foo.py` | Run hooks against specific files only |
+| `--hook-stage <stage>` | `pre-commit run --hook-stage push` | Target a specific stage (`commit`, `push`, `merge-commit`) |
+| `--verbose` | `pre-commit run --verbose` | Show full hook output even for passing checks |
+| `--show-diff-on-failure` | `pre-commit run --show-diff-on-failure` | Display the diff of auto-fixed files when a hook fails |
 
 ---
 
@@ -334,6 +481,7 @@ pre-commit run gitleaks --all-files
 
 - [git-daily-workflow](https://alp78.github.io/elysium/08-Git/git-daily-workflow) — status, add, commit, push, pull commands for everyday work
 - [git-branching-and-merging](https://alp78.github.io/elysium/08-Git/git-branching-and-merging) — creating, switching, merging, and deleting branches
+- [git-remote-management](https://alp78.github.io/elysium/08-Git/git-remote-management) — adding remotes, SSH key authentication, push/pull/fetch
 - [gitignore-patterns](https://alp78.github.io/elysium/08-Git/gitignore-patterns) — excluding files from Git tracking and Git LFS for large files
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — CI/CD pipelines that use `git clone` and repository operations
 - [pull-requests-and-code-review](https://alp78.github.io/elysium/08-Git/pull-requests-and-code-review) — the PR workflow built on top of branches and remotes

@@ -140,9 +140,9 @@ Dictionary<string, string> EXCHANGE_MAP = new() {
     ["HKG"] = "XHKG", ["TKS"] = "XTKS",
 };
 
-EXPORT_DIR   // export dir
-string.Join(", ", SYMBOLS)  // universe
-$"{START_DATE} → {END_DATE}"  // date range
+Console.WriteLine(EXPORT_DIR);   // export dir
+Console.WriteLine(string.Join(", ", SYMBOLS));  // universe
+Console.WriteLine($"{START_DATE} → {END_DATE}");  // date range
 ```
 
     C:\Users\aperi\DEV\LANG\data\pipeline
@@ -2047,7 +2047,7 @@ if (zeroVol.Count > 0)
     foreach (var row in zeroVol)
     {
         var cal = QueryToTable(
-            $"SELECT is_trading_day FROM dim_calendar "
+            Console.WriteLine($"SELECT is_trading_day FROM dim_calendar ");
             + $"WHERE date = '{row.Date:yyyy-MM-dd}' AND exchange_code = 'XETR'");
         if (cal.Rows.Count > 0 && !Convert.ToBoolean(cal.Rows[0]["is_trading_day"]))
             bronzeStageCtx.AddWarning(
@@ -3129,7 +3129,7 @@ Console.WriteLine(JsonSerializer.Serialize(displayCtx, new JsonSerializerOptions
 // ── Verify lineage records were persisted to SQL Server ──
 
 var lineageQuery = QueryToTable(
-    $"SELECT stage, input_rows, output_rows, rows_rejected, output_hash FROM lineage_stages WHERE batch_id = '{batchId}'"
+    Console.WriteLine($"SELECT stage, input_rows, output_rows, rows_rejected, output_hash FROM lineage_stages WHERE batch_id = '{batchId}'");
 );
 lineageQuery
 ```
@@ -3145,7 +3145,7 @@ lineageQuery
 ```csharp
 
 var quarantineDt = QueryToTable(
-    $"SELECT stage, symbol, date, error_message, quarantined_at FROM quarantine WHERE batch_id = '{batchId}' ORDER BY quarantined_at"
+    Console.WriteLine($"SELECT stage, symbol, date, error_message, quarantined_at FROM quarantine WHERE batch_id = '{batchId}' ORDER BY quarantined_at");
 );
 
 if (quarantineDt.Rows.Count > 0)
@@ -3169,7 +3169,7 @@ else
 ```csharp
 
 var contextDt = QueryToTable(
-    $"SELECT stage, business_date, trigger_type, schema_version, data_warnings FROM context_log WHERE batch_id = '{batchId}' ORDER BY created_at"
+    Console.WriteLine($"SELECT stage, business_date, trigger_type, schema_version, data_warnings FROM context_log WHERE batch_id = '{batchId}' ORDER BY created_at");
 );
 contextDt
 ```
@@ -3662,7 +3662,7 @@ var threeMonthsAgo = DateTime.Today.AddDays(-90);
 var returnTraces = SYMBOLS.Select(symbol =>
 {
     var symDt = QueryToTable(
-        $"SELECT date, daily_return FROM silver_ohlcv "
+        Console.WriteLine($"SELECT date, daily_return FROM silver_ohlcv ");
         + $"WHERE symbol = '{symbol}' AND date >= '{threeMonthsAgo:yyyy-MM-dd}' "
         + "ORDER BY date");
     var dates = symDt.AsEnumerable().Select(r => r.Field<DateTime>("date")).ToArray();
@@ -3713,7 +3713,7 @@ else {
 var cumTraces = SYMBOLS.Select(symbol =>
 {
     var symDt = QueryToTable(
-        $"SELECT date, daily_return FROM silver_ohlcv "
+        Console.WriteLine($"SELECT date, daily_return FROM silver_ohlcv ");
         + $"WHERE symbol = '{symbol}' ORDER BY date");
     var dates = symDt.AsEnumerable().Select(r => r.Field<DateTime>("date")).ToArray();
     var returns = symDt.AsEnumerable().Select(r => Convert.ToDouble(r["daily_return"])).ToArray();

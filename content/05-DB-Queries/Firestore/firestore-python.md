@@ -1,5 +1,11 @@
 ---
-tags: [python, nosql, gcp, firestore, fundamentals]
+title: "Firestore for Data Engineering — Python"
+tags:
+  - python
+  - nosql
+  - gcp
+  - firestore
+  - fundamentals
 aliases: [Firestore Python, Firestore queries Python, NoSQL Python, document database Python]
 description: "Firestore operations in Python with executable examples and cell outputs — covers CRUD, queries, transactions, batches, real-time listeners, and subcollections."
 created: 2026-03-22
@@ -69,6 +75,14 @@ flowchart TD
 
 ## Setup & Connection
 
+Covers authentication, client initialization, and the `ensure_index()` utility used throughout this page for compound query indexes.
+
+### Python | Firestore SDK | client setup
+
+Establishes the Firestore client using a service account key file and verifies connectivity by listing top-level collections.
+
+#### Initialize client and list top-level collections
+
 This cell:
 
 1. Sets `GOOGLE_APPLICATION_CREDENTIALS` env var to the service account key
@@ -119,6 +133,10 @@ already exists and waits for it to finish building before returning.
 
 Called automatically before queries that need an index (no manual setup required).
 
+#### Initialize Firestore Admin API client
+
+The Admin API client creates composite indexes. `_project_db` is the path prefix for all index operations throughout `ensure_index()`.
+
 > [!info] Admin Client Setup
 >
 > The Admin API client creates composite indexes. The database path is the prefix for all index operations.
@@ -130,6 +148,10 @@ import time as _time
 _admin = firestore_admin_v1.FirestoreAdminClient()
 _project_db = "projects/bq-wh-nb/databases/(default)"
 ```
+
+#### ensure_index() — route to composite or field exemption index
+
+The function inspects `scope` and field count to decide which creation path to take. Single-field collection group queries need a REST field exemption; everything else uses the Admin API composite path.
 
 > [!info] ensure_index() — Composite Index Creation
 >
@@ -155,6 +177,10 @@ def ensure_index(collection: str, fields: list[dict],
                 query_scope=scope, fields=fields),
         )
 ```
+
+#### Poll the long-running create_index() operation until ready
+
+`create_index()` is asynchronous. This continuation polls the returned operation object, sleeping 5 seconds between checks, and falls through to the `already exists` handler if the index was previously created.
 
 > [!warning] Index Build Is Asynchronous
 >
@@ -194,6 +220,10 @@ def ensure_index(collection: str, fields: list[dict],
             print(f"  Index error: {e}")
 ```
 
+#### _ensure_field_exemption() — authenticate and prepare REST headers
+
+This fragment authenticates via service account credentials and builds the bearer-token headers used for all subsequent REST calls against the Firestore field config endpoint.
+
 > [!info] _ensure_field_exemption() — Collection Group Indexes
 >
 > Firestore auto-indexes single fields for `COLLECTION` scope only. For `COLLECTION_GROUP` queries (querying across all subcollections with the same name), you must create a "field exemption" via the REST API. This is separate from composite indexes.
@@ -207,7 +237,6 @@ def _ensure_field_exemption(collection: str, field: dict) -> None:
 
     field_path = field["field_path"]
 
-    # Authenticate via service account
     creds = service_account.Credentials.from_service_account_file(
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"],
         scopes=["https://www.googleapis.com/auth/datastore"],
@@ -216,12 +245,15 @@ def _ensure_field_exemption(collection: str, field: dict) -> None:
     headers = {"Authorization": f"Bearer {creds.token}"}
 ```
 
+#### Check if collection group exemption already exists
+
+GETs the current field config and returns early if a `COLLECTION_GROUP`-scoped index is already present. If it's still building, polls until it reaches a non-`CREATING` state.
+
 > [!tip] Idempotent Check-Before-Create
 >
 > The function checks whether the exemption already exists before creating it. If it exists but is still building (`state == "CREATING"`), it polls until ready. This makes the function safe to call on every notebook run.
 
 ```python
-    # Check if the exemption already exists
     url = (f"https://firestore.googleapis.com/v1/{_project_db}"
            f"/collectionGroups/{collection}/fields/{field_path}")
     resp = requests.get(url, headers=headers)
@@ -254,6 +286,10 @@ def _ensure_field_exemption(collection: str, field: dict) -> None:
             return
 ```
 
+#### PATCH field config to add COLLECTION_GROUP exemption and poll until ready
+
+Merges existing `COLLECTION`-scoped index entries with two new `COLLECTION_GROUP` entries (ascending + descending), then PATCHes the field config. Polls every 5 seconds until all `COLLECTION_GROUP` indexes leave the `CREATING` state or a 5-minute timeout is reached.
+
 > [!warning] Preserve Existing COLLECTION Indexes
 >
 > The PATCH request replaces the entire index config for the field. You must include the existing `COLLECTION`-scoped indexes in the body, or they will be deleted. The code below fetches current indexes, strips the `state` field (API rejects it), and appends the new `COLLECTION_GROUP` entries.
@@ -263,7 +299,6 @@ def _ensure_field_exemption(collection: str, field: dict) -> None:
 > Always GET the current field config before issuing a PATCH: extract all `queryScope == "COLLECTION"` entries, strip the `state` key (the API rejects it on write), then append the new `COLLECTION_GROUP` entries. The `_ensure_field_exemption()` helper in this page implements this pattern correctly.
 
 ```python
-    # Preserve existing COLLECTION indexes + add COLLECTION_GROUP
     current_indexes = []
     if resp.ok:
         current_indexes = [
@@ -288,7 +323,6 @@ def _ensure_field_exemption(collection: str, field: dict) -> None:
         print(f" error: {resp.text[:200]}")
         return
 
-    # Wait for READY (timeout after 5 minutes)
     for _ in range(60):
         _time.sleep(5)
         print(".", end="", flush=True)
@@ -308,6 +342,10 @@ print("ensure_index() utility loaded.")
     
 
 ### Verify Connection — List Collections
+
+A quick health check that confirms the client is connected and that the expected collections are present with data.
+
+#### Count documents in every top-level collection
 
 This cell:
 
@@ -336,7 +374,13 @@ for coll in db.collections():
 
 ## Read Operations
 
+Covers fetching a single document by ID, streaming all documents in a collection, and retrieving multiple documents in one round-trip.
+
 ### Get a Single Document
+
+Retrieves a specific document by its collection path and document ID using `.document(id).get()`.
+
+#### Fetch a document by ID and read flat, nested, and array fields
 
 This cell:
 
@@ -374,6 +418,10 @@ else:
     
 
 ### List All Documents in a Collection
+
+Streams every document in a collection as a lazy iterator. Always combine with `.limit(N)` in production to avoid downloading unbounded data.
+
+#### Stream all documents and print a formatted table
 
 This cell:
 
@@ -421,6 +469,10 @@ print(f"\nTotal: {count} documents")
 
 ### Get Multiple Documents by ID
 
+`db.get_all(refs)` fetches a list of document references in a single network round-trip, regardless of how many references are in the list.
+
+#### Fetch multiple documents in a single round-trip with get_all()
+
 This cell:
 
 1. Creates a list of 3 document references (ASML, MC, SAP)
@@ -457,6 +509,10 @@ Firestore supports equality, range, `IN`, `NOT-IN`, `array_contains`, and `array
 > Firestore has no JOIN support. For relational-style queries across collections, denormalize the data model or perform client-side joins. BigQuery and SQL Server support all standard JOIN types; SQL Server adds `CROSS APPLY` / `OUTER APPLY`.
 
 ### Equality Filter
+
+Filters documents using `==`, `!=`, `<`, `>`, `<=`, `>=`. Single-field equality filters use the auto-created index — no manual setup needed.
+
+#### Filter documents by an exact field value
 
 > [!warning] Reads Billed per Document Returned
 >
@@ -504,6 +560,10 @@ for doc in docs:
 
 ### Range Filter with Ordering
 
+Combines a range filter and `order_by` on the same field — covered by the auto-created single-field index. Filtering and sorting on different fields requires a composite index.
+
+#### Filter by range and sort results descending
+
 This cell:
 
 1. Filters `stocks` where `current_price > 500`
@@ -536,6 +596,10 @@ for doc in docs:
     
 
 ### Compound Filters (AND)
+
+Chaining multiple `.where()` calls applies AND logic. Each unique multi-field combination requires a composite index.
+
+#### Combine multiple where() filters for AND queries
 
 This cell:
 
@@ -582,6 +646,10 @@ for doc in docs:
 
 ### IN and NOT-IN Filters
 
+`in` matches documents where a field equals any value in a list (up to 30 values). `not-in` excludes matching documents.
+
+#### Match documents where a field equals one of several values
+
 This cell:
 
 1. Filters `stocks` where `sector` is in `["Technology", "Health Care"]`
@@ -613,6 +681,10 @@ for doc in results:
     
 
 ### Array Contains
+
+`array_contains` returns documents where a single value exists anywhere in an array field.
+
+#### Filter documents where an array field contains a specific value
 
 This cell:
 
@@ -650,6 +722,10 @@ for doc in docs:
     
 
 ### Array Contains Any
+
+`array_contains_any` returns documents where an array field contains at least one value from a provided list — the OR counterpart to `array_contains`.
+
+#### Filter documents where an array field contains any of several values
 
 This cell:
 
@@ -698,6 +774,10 @@ for doc in docs:
 
 ### Ordering and Limiting
 
+`order_by()` accepts dot notation for nested map fields. `.limit(N)` caps results server-side.
+
+#### Sort by a nested field and take the top N results
+
 This cell:
 
 1. Orders `stocks` by `scores.composite` descending (nested field, dot notation)
@@ -730,7 +810,13 @@ for doc in docs:
 
 ## Nested Fields & Arrays
 
+Covers dot-notation queries into nested maps and reading embedded map fields from documents.
+
 ### Query on Nested Map Fields
+
+Dot notation (`"scores.momentum"`) works in `where()`, `order_by()`, and field paths up to 20 levels deep.
+
+#### Filter and sort using dot notation on nested map fields
 
 This cell:
 
@@ -782,6 +868,10 @@ for doc in docs:
 
 ### Read Nested Maps from Documents
 
+Firestore nested maps are returned as Python dicts by `to_dict()`. Use `.get(key, default)` for safe nested access.
+
+#### Access nested map fields from streamed documents
+
 This cell:
 
 1. Reads first 5 documents from `alerts` collection
@@ -809,7 +899,13 @@ for doc in docs:
 
 ## Subcollections
 
+Subcollections are independent collections nested inside a document. Each stock has a `prices` subcollection with daily OHLCV records. Covers reading, querying within a single subcollection, and cross-subcollection queries via collection groups.
+
 ### Read a Subcollection
+
+Navigate to a subcollection by chaining `.document(id).collection(name)` off the parent collection reference.
+
+#### Stream price history from a stock's prices subcollection
 
 This cell:
 
@@ -843,6 +939,10 @@ for doc in prices:
     
 
 ### Query Within a Subcollection
+
+`where()` and `order_by()` work identically on subcollection references. The query is scoped to that document's subcollection only.
+
+#### Apply where() and order_by() within a single stock's subcollection
 
 This cell:
 
@@ -886,7 +986,13 @@ for doc in prices:
 
 ## Write Operations
 
+Covers full document creation with `set()`, partial updates with `update()` and atomic field transforms, and hard deletes. All write operations are immediately visible to readers.
+
 ### Set — Create or Overwrite
+
+`set(data)` replaces the entire document. `set(data, merge=True)` upserts — creates if missing, updates only the provided fields if it exists.
+
+#### Create a document and merge-update specific fields
 
 > [!danger] Document Size Limit — 1 MiB
 >
@@ -946,6 +1052,10 @@ print(f"Result: {doc.to_dict()}") # type: ignore
 
 ### Update — Partial Modifications
 
+`update()` touches only the specified fields, leaving the rest unchanged. Firestore provides atomic field-level transforms that avoid read-modify-write races.
+
+#### Apply atomic field transforms with ArrayUnion, ArrayRemove, and Increment
+
 This cell:
 
 1. **`ArrayUnion(["TTE.PA"])`**: adds TTE.PA to the `symbols` array (no duplicates)
@@ -976,6 +1086,10 @@ print(f"Updated: symbols={d.get('symbols')}, count={d.get('stock_count')}, modif
 
 ### Delete a Document
 
+`.delete()` removes the document but not its subcollections. Orphaned subcollection documents remain accessible if you know their path.
+
+#### Delete a document and verify it no longer exists
+
 This cell:
 
 1. Deletes `watchlists/test_watchlist`
@@ -1003,11 +1117,17 @@ print(f"Exists: {doc.exists}") # type: ignore
 
 ## Batch Operations & Transactions
 
+Batches group up to 500 writes into a single atomic commit. Transactions add a read-before-write step with optimistic concurrency — Firestore retries automatically on conflict.
+
 > [!info] Cross-Engine — Transaction Models
 >
 > Firestore transactions use optimistic concurrency (retry on conflict) and are limited to 500 operations per batch/transaction. SQL Server provides full ACID with pessimistic locking and no operation-count limit. BigQuery has limited multi-statement transactions scoped to a single query job.
 
 ### Batch — Atomic Multi-Write
+
+A batch groups up to 500 write operations into a single commit — all succeed or all fail. A single network round-trip replaces N separate writes.
+
+#### Commit multiple writes atomically in a single batch
 
 This cell:
 
@@ -1049,6 +1169,10 @@ print("Cleaned up batch alerts")
     
 
 ### Transaction — Conditional Read-Modify-Write
+
+Transactions wrap a read and a conditional write in an atomic unit. Firestore retries on conflict — guaranteeing exactly-once semantics for conditional updates.
+
+#### Use a transactional function to prevent duplicate acknowledgments
 
 This cell:
 
@@ -1097,7 +1221,13 @@ alert_ref.update({"acknowledged": False})
 
 ## Real-Time Listeners
 
+Firestore maintains a persistent WebSocket connection and pushes document changes to registered listeners within milliseconds of a write — no polling required. Listeners can be attached to individual documents or queries.
+
 ### on_snapshot Push Notifications
+
+`on_snapshot` registers a callback that fires whenever documents in a query result set change. The first call delivers all matching documents as `ADDED` events; subsequent calls deliver only the delta.
+
+#### Register a listener and trigger it with a document update
 
 This cell:
 
@@ -1173,6 +1303,10 @@ Firestore added server-side `COUNT`, `SUM`, and `AVG` aggregation queries in 202
 
 ### COUNT — Server-Side
 
+`count()` runs entirely on the server. No documents are downloaded to the client, and the result is always a single `AggregationResult`.
+
+#### Run a server-side count() per country
+
 This cell:
 
 1. For each country (Germany, France, Netherlands, Italy, Spain), runs a `count()` aggregation
@@ -1198,6 +1332,10 @@ for country in ["Germany", "France", "Netherlands", "Italy", "Spain"]:
     
 
 ### SUM and AVG — Server-Side
+
+`sum(field)` and `avg(field)` added server-side numeric aggregations in 2023. All three aggregation types can be chained on the same query object.
+
+#### Compute sum(), avg(), and count() in a single pass
 
 This cell:
 
@@ -1237,6 +1375,10 @@ Collection group queries search across all subcollections with the same name in 
 > Collection group queries are Firestore's equivalent of querying across partitions. BigQuery achieves this with partition pruning on partitioned tables. SQL Server uses partitioned views or `UNION ALL` across multiple tables.
 
 ### Query Across ALL Subcollections
+
+`db.collection_group(name)` targets every subcollection with the given name across the entire database — regardless of which parent document they belong to.
+
+#### Order all prices subcollections by close price across every stock
 
 This cell:
 
@@ -1291,6 +1433,10 @@ for attempt in range(12):  # retry up to 2 minutes while index builds
     
 
 ### Collection Group — Filter by Date
+
+Adds a `where()` filter to a collection group query, reducing the result set to documents that match across all subcollections. Requires a field exemption index on the filtered field.
+
+#### Filter all prices subcollections to a single trading date
 
 This cell:
 
@@ -1356,7 +1502,13 @@ for attempt in range(12):
 
 ## Pagination & Cursors
 
+Firestore has no `OFFSET` clause. Pagination uses document snapshots as cursors — passing the last document of each page to `.start_after()` for the next query.
+
 ### Cursor-Based Pagination
+
+Pass the last document snapshot from each page to `.start_after()` on the next query. This is O(1) at any depth — unlike SQL `OFFSET` which scans all skipped rows.
+
+#### Paginate results using the last document as a start_after cursor
 
 This cell:
 
@@ -1420,7 +1572,13 @@ print(f"\nTotal pages: {page - 1}")
 
 ## Maintenance & Monitoring
 
+Covers health checks, subcollection discovery, stale document detection, failed pipeline run analysis, and reading singleton config documents.
+
 ### List Collections and Document Counts
+
+A quick health check that enumerates all top-level collections and their document counts without downloading any document data.
+
+#### Run a server-side count() on every top-level collection
 
 This cell:
 
@@ -1449,6 +1607,10 @@ for coll in db.collections():
 
 ### List Subcollections
 
+`doc_ref.collections()` enumerates all subcollection names under a specific document. Useful for schema discovery in schema-less Firestore data.
+
+#### Discover and count subcollections under a specific document
+
 This cell:
 
 1. Gets document reference `stocks/ASML.AS`
@@ -1471,6 +1633,10 @@ for sub in doc_ref.collections():
     
 
 ### Find Stale Documents
+
+A range query on a timestamp field identifies documents that have not been updated within an expected interval — the basis for data freshness alerts.
+
+#### Query documents older than a time threshold
 
 This cell:
 
@@ -1502,6 +1668,10 @@ for doc in docs:
 
 ### Find Failed Pipeline Runs
 
+Equality filter on `status` narrows to failed runs. The `steps` field is an array of maps — inspect it client-side to identify which step broke.
+
+#### Find failed runs and identify which step failed
+
 This cell:
 
 1. Queries `pipeline_runs` where `status == "FAILED"`
@@ -1530,6 +1700,10 @@ for doc in docs:
     
 
 ### Unacknowledged Critical Alerts
+
+A compound filter on two fields (`severity` + `acknowledged`) requires a composite index. The `ensure_index()` utility builds it automatically on first run.
+
+#### Query high-severity unacknowledged alerts requiring action
 
 This cell:
 
@@ -1567,6 +1741,10 @@ for doc in docs:
     
 
 ### Read Application Config
+
+Config documents are singletons — one document per config type. Updating a config value is instantly visible to all clients holding an `on_snapshot` listener.
+
+#### Read pipeline and display singleton config documents
 
 This cell:
 

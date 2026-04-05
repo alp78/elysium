@@ -67,7 +67,7 @@ The `System.IO` namespace provides two tiers of file access: static convenience 
 
 var tmpDir = Path.Combine(Path.GetTempPath(), "fileio_cs_" + Guid.NewGuid().ToString("N")[..8]);
 Directory.CreateDirectory(tmpDir);
-$"Working dir: {tmpDir}"
+Console.WriteLine($"Working dir: {tmpDir}");
 
 var stagingFile = Path.Combine(tmpDir, "pipeline_output.txt");
 var content = "pipeline_id|status|rows_processed\n"
@@ -75,15 +75,15 @@ var content = "pipeline_id|status|rows_processed\n"
             + "etl_002|failed|0\n"
             + "etl_003|success|8200\n";
 File.WriteAllText(stagingFile, content, Encoding.UTF8);
-$"  Written: {Path.GetFileName(stagingFile)} ({new FileInfo(stagingFile).Length} bytes)"
+Console.WriteLine($"  Written: {Path.GetFileName(stagingFile)} ({new FileInfo(stagingFile).Length} bytes)");
 
 var text = File.ReadAllText(stagingFile, Encoding.UTF8);
-$"  Content ({text.Length} chars): {text[..50]}..."
+Console.WriteLine($"  Content ({text.Length} chars): {text[..50]}...");
 
 string[] allLines = File.ReadAllLines(stagingFile, Encoding.UTF8);
-$"  Lines: {allLines.Length}"
+Console.WriteLine($"  Lines: {allLines.Length}");
 foreach (var (line, i) in allLines.Select((l, i) => (l, i)))
-    $"  [{i}]: {line}"
+    Console.WriteLine($"  [{i}]: {line}");
 ```
 
     C:\Users\aperi\AppData\Local\Temp\fileio_cs_da9b60f9
@@ -112,7 +112,7 @@ using (var reader = new StreamReader(stagingFile, Encoding.UTF8))
     string? line;
     int lineNum = 0;
     while ((line = reader.ReadLine()) != null)
-        $"  Line {lineNum++}: {line}"
+        Console.WriteLine($"  Line {lineNum++}: {line}");
 }
 
 var logFile = Path.Combine(tmpDir, "etl_log.txt");
@@ -123,7 +123,7 @@ using (var writer = new StreamWriter(logFile, append: false, Encoding.UTF8))
     writer.WriteLine("2024-01-15T03:00:05|INFO|Extracted 1.5M rows from BigQuery");
     writer.WriteLine("2024-01-15T03:00:12|INFO|Loaded to GCS");
 }
-$"  Written: {Path.GetFileName(logFile)}"
+Console.WriteLine($"  Written: {Path.GetFileName(logFile)}");
 ```
 
       pipeline_id|status|rows_processed
@@ -144,7 +144,7 @@ using (var writer = new StreamWriter(logFile, append: true, Encoding.UTF8))
     writer.WriteLine("2024-01-15T03:02:00|INFO|Pipeline completed");
 
 var lines = File.ReadAllLines(logFile);
-$"  Total lines: {lines.Length}, Last: {lines[^1]}"
+Console.WriteLine($"  Total lines: {lines.Length}, Last: {lines[^1]}");
 ```
 
 ```text
@@ -160,7 +160,7 @@ var binFile = Path.Combine(tmpDir, "sample.bin");
 byte[] pngMagic = { 0x89, 0x50, 0x4E, 0x47 };
 File.WriteAllBytes(binFile, pngMagic);
 byte[] raw = File.ReadAllBytes(binFile);
-BitConverter.ToString(raw)
+Console.WriteLine(BitConverter.ToString(raw));
 ```
 
 ```text
@@ -173,13 +173,13 @@ BitConverter.ToString(raw)
 
 ```csharp
 var p = @"/data/lake/raw/events/2024/01/events.parquet";
-Path.GetFileName(p)
-Path.GetExtension(p)
-Path.GetDirectoryName(p)
-Path.Combine(tmpDir, "output", "data.csv")
+Console.WriteLine(Path.GetFileName(p));
+Console.WriteLine(Path.GetExtension(p));
+Console.WriteLine(Path.GetDirectoryName(p));
+Console.WriteLine(Path.Combine(tmpDir, "output", "data.csv"));
 
 foreach (var f in Directory.GetFiles(tmpDir))
-    Path.GetFileName(f)
+    Console.WriteLine(Path.GetFileName(f));
 
 Directory.Delete(tmpDir, recursive: true);
 ```
@@ -226,17 +226,17 @@ using (var writer = new StreamWriter(csvFile, false, Encoding.UTF8))
     writer.WriteLine("etl_002,failed,0,0.1");
     writer.WriteLine("etl_003,success,8200,1.7");
 }
-$"  Written: {Path.GetFileName(csvFile)}"
+Console.WriteLine($"  Written: {Path.GetFileName(csvFile)}");
 
 using (var reader = new StreamReader(csvFile, Encoding.UTF8))
 {
     var header = reader.ReadLine()?.Split(',');
-    $"  Header: [{string.Join(", ", header!)}]"
+    Console.WriteLine($"  Header: [{string.Join(", ", header!)}]");
     string? line;
     while ((line = reader.ReadLine()) != null)
     {
         var parts = line.Split(',');
-        $"  {parts[0]}: {parts[1]}, {int.Parse(parts[2]):N0} rows"
+        Console.WriteLine($"  {parts[0]}: {parts[1]}, {int.Parse(parts[2]):N0} rows");
     }
 }
 ```
@@ -283,7 +283,7 @@ List<Dictionary<string, string>> ReadCsvAsDict(string path)
 
 var rows = ReadCsvAsDict(csvFile);
 foreach (var row in rows)
-    $"  {row["pipeline_id"]}: {row["status"]}"
+    Console.WriteLine($"  {row["pipeline_id"]}: {row["status"]}");
 ```
 
       etl_001: success
@@ -299,7 +299,7 @@ Pipe-delimited (`|`) and tab-delimited (TSV) formats are common in legacy data w
 ```csharp
 var pipeData = "id|name|region\n1|Alice|EMEA\n2|Bob|APAC";
 foreach (var line in pipeData.Split('\n'))
-    $"  Pipe: [{string.Join(", ", line.Split('|'))}]"
+    Console.WriteLine($"  Pipe: [{string.Join(", ", line.Split('|'))}]");
 ```
 
       [id, name, region]
@@ -314,7 +314,7 @@ foreach (var line in pipeData.Split('\n'))
 var sw = new StringWriter();
 sw.WriteLine("event_id,event_type,timestamp");
 sw.WriteLine("evt_001,page_view,2024-01-15T10:30:00Z");
-sw.ToString().TrimEnd()   // In-memory CSV
+Console.WriteLine(sw.ToString().TrimEnd());   // In-memory CSV
 
 // Cleanup
 Directory.Delete(tmpDir, recursive: true);
@@ -413,7 +413,7 @@ var pipelineMeta = new
     Tags = new[] { "production", "clickstream", "daily" },
     RowCount = 1_500_000,
 };
-JsonSerializer.Serialize(pipelineMeta, jsonOptions)
+Console.WriteLine(JsonSerializer.Serialize(pipelineMeta, jsonOptions));
 ```
 
     {
@@ -445,7 +445,7 @@ var run = new PipelineRun(
     CostUsd: 0.45m,
     ErrorMessage: null      // omitted due to WhenWritingNull
 );
-JsonSerializer.Serialize(run, jsonOptions)
+Console.WriteLine(JsonSerializer.Serialize(run, jsonOptions));
 ```
 
     {
@@ -471,9 +471,9 @@ var jsonInput = @"{
 }";
 
 var run2 = JsonSerializer.Deserialize<PipelineRun>(jsonInput, jsonOptions);
-run2!.PipelineId     // Pipeline
-run2.Status          // Status
-run2.ErrorMessage    // Error
+Console.WriteLine(run2!.PipelineId);     // Pipeline
+Console.WriteLine(run2.Status);          // Status
+Console.WriteLine(run2.ErrorMessage);    // Error
 ```
 
       etl_purchases
@@ -490,7 +490,7 @@ Combine `JsonSerializer.Serialize` with `File.WriteAllText` to persist JSON to d
 var jsonFile = Path.Combine(tmpDir, "pipeline_config.json");
 File.WriteAllText(jsonFile, JsonSerializer.Serialize(run, jsonOptions), Encoding.UTF8);
 var loaded = JsonSerializer.Deserialize<PipelineRun>(File.ReadAllText(jsonFile), jsonOptions);
-$"  Loaded: {loaded!.PipelineId}, {loaded.RowsProcessed:N0} rows"
+Console.WriteLine($"  Loaded: {loaded!.PipelineId}, {loaded.RowsProcessed:N0} rows");
 
 var apiResponse = @"{
     ""status"": ""completed"",
@@ -505,10 +505,10 @@ var apiResponse = @"{
 {
     using var doc = JsonDocument.Parse(apiResponse);
     var root = doc.RootElement;
-    root.GetProperty("job_id").GetString()                // Job
+    Console.WriteLine(root.GetProperty("job_id").GetString());                // Job
     var stats = root.GetProperty("statistics");
-    stats.GetProperty("total_rows").GetInt64()              // Rows
-    stats.GetProperty("cache_hit").GetBoolean()             // Cache hit
+    Console.WriteLine(stats.GetProperty("total_rows").GetInt64());              // Rows
+    Console.WriteLine(stats.GetProperty("cache_hit").GetBoolean());             // Cache hit
 }
 ```
 
@@ -546,7 +546,7 @@ using (var reader = new StreamReader(jsonlFile, Encoding.UTF8))
     {
         using var lineDoc = JsonDocument.Parse(line);
         var r = lineDoc.RootElement;
-        $"  {r.GetProperty("event_id")}: {r.GetProperty("type")} by user {r.GetProperty("user_id")}"
+        Console.WriteLine($"  {r.GetProperty("event_id")}: {r.GetProperty("type")} by user {r.GetProperty("user_id")}");
     }
 }
 ```
@@ -569,7 +569,7 @@ using (var reader = new StreamReader(jsonlFile, Encoding.UTF8))
     utf8Writer.WriteNumber("rows_processed", 1_500_000);
     utf8Writer.WriteEndObject();
     utf8Writer.Flush();
-    Encoding.UTF8.GetString(ms.ToArray())   // Utf8JsonWriter output
+    Console.WriteLine(Encoding.UTF8.GetString(ms.ToArray()));   // Utf8JsonWriter output
 }
 
 // Cleanup
@@ -764,10 +764,10 @@ using (var ms = new MemoryStream())
     byte[] payload = Encoding.UTF8.GetBytes("etl_001|success|15000\n");
     ms.Write(payload);
 
-    $"  Position: {ms.Position}, Length: {ms.Length} bytes"
+    Console.WriteLine($"  Position: {ms.Position}, Length: {ms.Length} bytes");
 
     ms.Seek(0, SeekOrigin.Begin);
-    Encoding.UTF8.GetString(ms.ToArray()).TrimEnd()   // Content
+    Console.WriteLine(Encoding.UTF8.GetString(ms.ToArray()).TrimEnd());   // Content
 }
 ```
 
@@ -790,8 +790,8 @@ Wrap a `MemoryStream` in a `StreamWriter` to build text content (CSV, JSON) in m
         writer.Flush();
     }
     uploadStream.Seek(0, SeekOrigin.Begin);
-    $"  Upload payload: {uploadStream.Length} bytes"
-    Encoding.UTF8.GetString(uploadStream.ToArray()).TrimEnd()   // Preview
+    Console.WriteLine($"  Upload payload: {uploadStream.Length} bytes");
+    Console.WriteLine(Encoding.UTF8.GetString(uploadStream.ToArray()).TrimEnd());   // Preview
 }
 ```
 
@@ -811,7 +811,7 @@ sw.WriteLine("pipeline_id|status|rows");
 sw.WriteLine("etl_001|success|15000");
 sw.WriteLine("etl_002|failed|0");
 var builtString = sw.ToString();
-builtString.TrimEnd()   // StringWriter output
+Console.WriteLine(builtString.TrimEnd());   // StringWriter output
 ```
 
       pipeline_id|status|rows
@@ -827,7 +827,7 @@ var sr = new StringReader(builtString);
 string? line;
 int lineNum = 0;
 while ((line = sr.ReadLine()) != null)
-    $"  StringReader line {lineNum++}: {line}"
+    Console.WriteLine($"  StringReader line {lineNum++}: {line}");
 ```
 
       pipeline_id|status|rows
@@ -849,7 +849,7 @@ using (var bw = new BinaryWriter(fs))
     bw.Write(43);    bw.Write(19.8);  bw.Write(false);  // sensor 43
     bw.Write(44);    bw.Write(31.2);  bw.Write(true);   // sensor 44
 }
-new FileInfo(binFile).Length   // bytes written
+Console.WriteLine(new FileInfo(binFile).Length);   // bytes written
 ```
 
       39 bytes
@@ -867,7 +867,7 @@ using (var br = new BinaryReader(fs))
         var id = br.ReadInt32();      // 4 bytes → int
         var val = br.ReadDouble();    // 8 bytes → double
         var alert = br.ReadBoolean(); // 1 byte → bool
-        $"  Sensor {id}: {val:F1}, alert={alert}"
+        Console.WriteLine($"  Sensor {id}: {val:F1}, alert={alert}");
     }
 }
 ```
@@ -892,8 +892,7 @@ Combine `BinaryWriter`/`BinaryReader` with `MemoryStream` to serialize primitive
     }
     binaryMs.Seek(0, SeekOrigin.Begin);
     var brMem = new BinaryReader(binaryMs);
-    $"  From memory: sensor={brMem.ReadInt32()}, value={brMem.ReadDouble():F1}, " +
-    $"alert={brMem.ReadBoolean()}, region={brMem.ReadString()}"
+    Console.WriteLine($"  From memory: sensor={brMem.ReadInt32()}, value={brMem.ReadDouble():F1}, alert={brMem.ReadBoolean()}, region={brMem.ReadString()}");
 }
 ```
 
@@ -913,7 +912,7 @@ using (var fs = new FileStream(rawFile, FileMode.Create, FileAccess.Write))
 {
     byte[] data = { 0x01, 0x02, 0x03, 0x04, 0x05 };
     fs.Write(data);
-    fs.Length   // bytes written
+    Console.WriteLine(fs.Length);   // bytes written
 }
 
 // Read with Seek — skip first 2 bytes, read 3
@@ -922,7 +921,7 @@ using (var fs = new FileStream(rawFile, FileMode.Open, FileAccess.Read))
     fs.Seek(2, SeekOrigin.Begin);
     var buffer = new byte[3];
     int bytesRead = fs.Read(buffer, 0, buffer.Length);
-    $"  Read {bytesRead} bytes from offset 2: [{string.Join(", ", buffer.Select(b => $"0x{b:X2}"))}]"
+    Console.WriteLine($"  Read {bytesRead} bytes from offset 2: [{string.Join(", ", buffer.Select(b => $"0x{b:X2}"))}]");
 }
 
 // Cleanup
@@ -956,7 +955,7 @@ var asyncFile = Path.Combine(tmpDir, "data.txt");
 await File.WriteAllTextAsync(asyncFile, "line1\nline2\nline3\n", Encoding.UTF8);
 
 var content = await File.ReadAllTextAsync(asyncFile, Encoding.UTF8);
-content.TrimEnd().Replace("\n", ", ")   // Read async
+Console.WriteLine(content.TrimEnd().Replace("\n", ", "));   // Read async
 
 var cts = new CancellationTokenSource();
 using (var reader = new StreamReader(asyncFile, Encoding.UTF8))
@@ -964,7 +963,7 @@ using (var reader = new StreamReader(asyncFile, Encoding.UTF8))
     string? line;
     int lineNum = 0;
     while ((line = await reader.ReadLineAsync(cts.Token)) != null)
-        $"    Async line {lineNum++}: {line}"
+        Console.WriteLine($"    Async line {lineNum++}: {line}");
 }
 
 var asyncLog = Path.Combine(tmpDir, "log.txt");
@@ -974,7 +973,7 @@ await using (var writer = new StreamWriter(asyncLog, false, Encoding.UTF8))
     await writer.WriteLineAsync("2024-01-15 INFO Processing 1M rows");
     await writer.FlushAsync();
 }
-await File.ReadAllTextAsync(asyncLog)   // Async log
+Console.WriteLine(await File.ReadAllTextAsync(asyncLog));   // Async log
 
 Directory.Delete(tmpDir, recursive: true);
 ```
@@ -1051,7 +1050,7 @@ var parsed = JsonSerializer.Deserialize(json, QuoteContext.Default.StockQuote);
         }
     }
 
-    $"  Extracted {symbols.Count} symbols: [{string.Join(", ", symbols)}]"
+    Console.WriteLine($"  Extracted {symbols.Count} symbols: [{string.Join(", ", symbols)}]");
     // Memory: zero heap allocations during parsing (only the result list)
 }
 ```
@@ -1186,7 +1185,7 @@ async Task ReadPipeAsync(PipeReader reader)
 // Traditional: line.Split(',') — allocates N strings per line
 var csvLine = "SAP.DE,2024-03-12,166.52,168.00,165.30,82621";
 var parts = csvLine.Split(','); // allocates string[] + 6 strings
-$"  Split: {parts[0]}, close={parts[2]}"
+Console.WriteLine($"  Split: {parts[0]}, close={parts[2]}");
 
 // Span-based: zero allocations until you need the final value
 {
@@ -1210,7 +1209,7 @@ $"  Split: {parts[0]}, close={parts[2]}"
 
     // Only allocate when you need the final value
     var closeValue = double.Parse(close);
-    $"  Span: {symbol.ToString()}, close={closeValue}"
+    Console.WriteLine($"  Span: {symbol.ToString()}, close={closeValue}");
     // Allocations: 0 during parsing, 1 string for final ToString()
 }
 ```
@@ -1368,15 +1367,15 @@ var hashBytes = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE };
 var hex = Convert.ToHexString(hashBytes);           // .NET 5+
 var hexLower = Convert.ToHexString(hashBytes).ToLower();
 var backToBytes = Convert.FromHexString(hex);
-BitConverter.ToString(hashBytes)          // Bytes
-hex                                       // Hex
-hexLower                                  // Hex lower
-hashBytes.SequenceEqual(backToBytes)      // Roundtrip
+Console.WriteLine(BitConverter.ToString(hashBytes));          // Bytes
+Console.WriteLine(hex);                                       // Hex
+Console.WriteLine(hexLower);                                  // Hex lower
+Console.WriteLine(hashBytes.SequenceEqual(backToBytes));      // Roundtrip
 
 // SHA-256 hash displayed as hex (standard format)
 var sha256 = SHA256.HashData(Encoding.UTF8.GetBytes("SAP.DE"));
-Convert.ToHexString(sha256).ToLower()     // SHA-256 of "SAP.DE"
-$"  Length: {sha256.Length} bytes = {sha256.Length * 2} hex chars"
+Console.WriteLine(Convert.ToHexString(sha256).ToLower());     // SHA-256 of "SAP.DE"
+Console.WriteLine($"  Length: {sha256.Length} bytes = {sha256.Length * 2} hex chars");
 ```
 
       [DE-AD-BE-EF-CA-FE]
@@ -1447,18 +1446,18 @@ Demonstrates the same string encoded in all four formats side by side — showin
 var sample = "SAP €166.52";
 var sampleBytes = Encoding.UTF8.GetBytes(sample);
 
-sample                                                                // Original
-$"  UTF-8 bytes: [{string.Join(", ", sampleBytes.Select(b => $"0x{b:X2}"))}]"
-Convert.ToBase64String(sampleBytes)                                   // Base64
-Convert.ToHexString(sampleBytes)                                      // Hex
-Uri.EscapeDataString(sample)                                          // URL
+Console.WriteLine(sample);                                                                // Original
+Console.WriteLine($"  UTF-8 bytes: [{string.Join(", ", sampleBytes.Select(b => $"0x{b:X2}"))}]");
+Console.WriteLine(Convert.ToBase64String(sampleBytes));                                   // Base64
+Console.WriteLine(Convert.ToHexString(sampleBytes));                                      // Hex
+Console.WriteLine(Uri.EscapeDataString(sample));                                          // URL
 
-$"  {"Format",-15} {"Output",-40} {"Size",5}"
-$"  {new string('-', 62)}"
-$"  {"UTF-8",-15} {sampleBytes.Length + " bytes",-40} {sampleBytes.Length,5}"
-$"  {"Base64",-15} {Convert.ToBase64String(sampleBytes).Length + " chars",-40} {Convert.ToBase64String(sampleBytes).Length,5}"
-$"  {"Hex",-15} {Convert.ToHexString(sampleBytes).Length + " chars",-40} {Convert.ToHexString(sampleBytes).Length,5}"
-$"  {"URL",-15} {Uri.EscapeDataString(sample).Length + " chars",-40} {Uri.EscapeDataString(sample).Length,5}"
+Console.WriteLine($"  {"Format",-15} {"Output",-40} {"Size",5}");
+Console.WriteLine($"  {new string('-', 62)}");
+Console.WriteLine($"  {"UTF-8",-15} {sampleBytes.Length + " bytes",-40} {sampleBytes.Length,5}");
+Console.WriteLine($"  {"Base64",-15} {Convert.ToBase64String(sampleBytes).Length + " chars",-40} {Convert.ToBase64String(sampleBytes).Length,5}");
+Console.WriteLine($"  {"Hex",-15} {Convert.ToHexString(sampleBytes).Length + " chars",-40} {Convert.ToHexString(sampleBytes).Length,5}");
+Console.WriteLine($"  {"URL",-15} {Uri.EscapeDataString(sample).Length + " chars",-40} {Uri.EscapeDataString(sample).Length,5}");
 ```
 
       SAP €166.52

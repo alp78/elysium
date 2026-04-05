@@ -1,5 +1,10 @@
 ---
-tags: [csharp, gcp, pipeline, streaming]
+title: "Streaming & Real-Time Data"
+tags:
+  - csharp
+  - gcp
+  - pipeline
+  - streaming
 aliases: [Streaming CSharp, Real-Time Data CSharp, WebSocket, SSE, Pub/Sub]
 description: "C# streaming and real-time data reference — WebSocket, SSE, Pub/Sub, Firestore listeners, and latency benchmarks. See [24_py_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/Python/24_py_streaming_realtime) for the Python equivalent."
 created: 2026-03-28
@@ -13,6 +18,8 @@ status: complete
 > "Turning the database inside out: take the implementation detail that was previously hidden inside the database, and make it a first-class citizen."
 >
 > — **Martin Kleppmann**, *Making Sense of Stream Processing* (2016)
+
+Four streaming patterns — from sub-millisecond local TCP to managed GCP services — covering protocol mechanics, latency characteristics, and selection criteria for real-time data engineering scenarios.
 
 ## Technologies Overview
 
@@ -85,7 +92,11 @@ sequenceDiagram
 
 ## Setup
 
+Kernel configuration, NuGet package loading, GCP client initialization, and shared data-generation utilities used across all streaming patterns below.
+
 ### Setup | .NET Interactive | environment and dependencies
+
+Configures the .NET Interactive kernel and loads all required packages and GCP clients.
 
 #### Suppress .NET Interactive assembly version warnings
 
@@ -175,6 +186,8 @@ Console.WriteLine($"  Firestore: {FIRESTORE_DB}");
 ```
 
 ### Setup | data generation | formatting helpers and OHLCV tick simulation
+
+Shared utility functions and a synthetic OHLCV tick generator used as the data source for all four streaming patterns.
 
 #### Format time and rate values as human-readable strings
 
@@ -307,7 +320,6 @@ var buffer = new byte[4096];
 var freq = (double)Stopwatch.Frequency;
 int wsCount = 0;
 
-// Warmup + measurement in single loop
 GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
 while (wsLatUs.Count < NUM_WS)
 {
@@ -353,6 +365,8 @@ Starts a local HttpListener SSE server that streams ticks as `text/event-stream`
 **Scenario:** Live dashboards, notification feeds, AI chat token streaming.
 **When NOT to use:** Bi-directional communication — use WebSocket. Binary data — use gRPC.
 
+The inner `catch` block silently swallows exceptions triggered when the client disconnects mid-stream.
+
 ```csharp
 var SSE_PORT = 8776;
 var sseRunning = true;
@@ -385,7 +399,7 @@ _ = Task.Run(async () =>
                         await Task.Delay(10);
                     }
                 }
-                catch { /* client disconnected */ }
+                catch { }
             });
         }
         catch { if (!sseRunning) break; }
@@ -484,7 +498,6 @@ var psLatMs = new ConcurrentBag<double>();
 var psCount = 0;
 var psDone = new ManualResetEventSlim(false);
 
-// Streaming subscriber callback
 var subClient = await new SubscriberClientBuilder { SubscriptionName = subName }.BuildAsync();
 var subTask = subClient.StartAsync(async (msg, ct) =>
 {
@@ -511,7 +524,7 @@ for (int n = 0; n < totalPs; n++)
         Data = Google.Protobuf.ByteString.CopyFromUtf8(data),
         Attributes = { ["send_ts"] = sendTs.ToString() },
     });
-    await Task.Delay(20); // ~50 msg/s
+    await Task.Delay(20);
 }
 Console.WriteLine($"  Published {totalPs} messages");
 
@@ -592,7 +605,7 @@ for (int n = 0; n < totalFs; n++)
     tick["send_ts"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0;
     tick["seq"] = n;
     await colRef.Document($"tick_{n:D4}").SetAsync(tick);
-    await Task.Delay(20); // ~50 msg/s
+    await Task.Delay(20);
 }
 Console.WriteLine($"  Wrote {totalFs} documents");
 ```
@@ -642,6 +655,8 @@ Two separate comparisons — local protocols vs GCP managed services — because
 localhost (0ms network) with cross-continent GCP (~300ms RTT) would be meaningless.
 
 ### Latency | Plotly.NET | local protocols
+
+Both local protocols are sub-millisecond on localhost — network RTT dominates in production. Plotly.NET renders results as interactive HTML charts embedded via `<iframe>`.
 
 #### Local protocols — WebSocket vs SSE throughput (localhost, no network)
 
@@ -763,6 +778,8 @@ catch { Console.WriteLine($"  Topic already deleted"); }
 Production patterns for large-scale data movement. Included as architecture reference — no runnable code.
 
 ### Enterprise patterns | reference architecture
+
+Architecture reference for large-scale data movement — MFT gateways, GCS Transfer Service, and dedicated interconnect options — with decision guidance for selecting the right pattern.
 
 #### Enterprise Streaming — MFT (Managed File Transfer)
 

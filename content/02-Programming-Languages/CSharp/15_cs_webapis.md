@@ -38,12 +38,12 @@ var client = new HttpClient();
 client.DefaultRequestHeaders.Add("Accept", "application/json");
 
 var resp = await client.GetAsync("https://httpbin.org/get?ticker=AAPL&date=2024-03-15");
-$"{(int)resp.StatusCode} {resp.StatusCode}"  // status
+Console.WriteLine($"{(int)resp.StatusCode} {resp.StatusCode}");  // status
 
 var json = await resp.Content.ReadAsStringAsync();
 var doc = JsonDocument.Parse(json);
 var args = doc.RootElement.GetProperty("args");
-$"ticker={args.GetProperty("ticker").GetString()}, date={args.GetProperty("date").GetString()}"  // args
+Console.WriteLine($"ticker={args.GetProperty("ticker").GetString()}, date={args.GetProperty("date").GetString()}");  // args
 ```
 
     200 OK
@@ -56,7 +56,7 @@ $"ticker={args.GetProperty("ticker").GetString()}, date={args.GetProperty("date"
 ```csharp
 var dataResp = await client.GetAsync("https://httpbin.org/get?source=dotnet");
 var data = JsonSerializer.Deserialize<JsonElement>(await dataResp.Content.ReadAsStringAsync());
-data.GetProperty("origin").GetString()  // origin
+Console.WriteLine(data.GetProperty("origin").GetString());  // origin
 ```
 
     86.49.254.12
@@ -78,8 +78,8 @@ var tradeOrder = new
 resp = await client.PostAsync("https://httpbin.org/post",
     new StringContent(JsonSerializer.Serialize(tradeOrder), Encoding.UTF8, "application/json"));
 var postData = JsonSerializer.Deserialize<JsonElement>(await resp.Content.ReadAsStringAsync());
-(int)resp.StatusCode  // status
-postData.GetProperty("json")  // body echoed
+Console.WriteLine((int)resp.StatusCode);  // status
+Console.WriteLine(postData.GetProperty("json"));  // body echoed
 ```
 
     200
@@ -106,8 +106,8 @@ authClient.DefaultRequestHeaders.Add("X-Client-Id", "trading-pipeline-v2");
 
 resp = await authClient.GetAsync("https://httpbin.org/headers");
 var headers = (JsonSerializer.Deserialize<JsonElement>(await resp.Content.ReadAsStringAsync())).GetProperty("headers");
-headers.GetProperty("Authorization").GetString()  // Authorization
-headers.GetProperty("X-Client-Id").GetString()  // X-Client-Id
+Console.WriteLine(headers.GetProperty("Authorization").GetString());  // Authorization
+Console.WriteLine(headers.GetProperty("X-Client-Id").GetString());  // X-Client-Id
 ```
 
       Bearer sk_demo_fake_key_12345
@@ -178,7 +178,7 @@ for (int page = 1; page <= 3; page++)
     allPages.Add(data);
     Console.WriteLine($"  Page {page}: fetched (args: {data.GetProperty("args")})" );
 }
-allPages.Count  // total pages
+Console.WriteLine(allPages.Count);  // total pages
 ```
 
       fetched (args: {
@@ -229,7 +229,7 @@ async Task<HttpResponseMessage> FetchWithRetry(HttpClient c, string url, int max
 }
 
 var result = await FetchWithRetry(client, "https://httpbin.org/get?ticker=AAPL");
-(int)result.StatusCode  // success
+Console.WriteLine((int)result.StatusCode);  // success
 ```
 
       200
@@ -249,9 +249,9 @@ var batch = new[]
 var postResp = await client.PostAsync("https://httpbin.org/post",
     new StringContent(JsonSerializer.Serialize(new { trades = batch }), Encoding.UTF8, "application/json"));
 var postData = JsonSerializer.Deserialize<JsonElement>(await postResp.Content.ReadAsStringAsync());
-batch.Length  // trades sent
-(int)postResp.StatusCode  // status
-postData.GetProperty("json").GetProperty("trades").GetArrayLength()  // server received
+Console.WriteLine(batch.Length);  // trades sent
+Console.WriteLine((int)postResp.StatusCode);  // status
+Console.WriteLine(postData.GetProperty("json").GetProperty("trades").GetArrayLength());  // server received
 ```
 
       Sent 3 trades
@@ -320,7 +320,7 @@ var positions = new Dictionary<string, PortfolioPosition>
     ["GOOG"] = new("GOOG", 100, 140.25, 17_230.00),
 };
 
-$"{{ status: healthy }}"
+Console.WriteLine($"{{ status: healthy }}");
 ```
 
       { status: healthy }
@@ -348,13 +348,13 @@ The handler accepts an optional `ticker` query-string parameter (`/positions?tic
 }
 
 var (s1, b1) = GetPositions();
-$"{s1}: {((List<PortfolioPosition>)b1).Count} positions"
+Console.WriteLine($"{s1}: {((List<PortfolioPosition>)b1).Count} positions");
 
 var (s2, b2) = GetPositions("AAPL");
-$"{s2}: {b2}"
+Console.WriteLine($"{s2}: {b2}");
 
 var (s3, b3) = GetPositions("TSLA");
-$"{s3}: {b3}"
+Console.WriteLine($"{s3}: {b3}");
 ```
 
       200 OK: 3 positions
@@ -376,10 +376,10 @@ Path parameters are declared in the route template as `{ticker}` and passed as m
 }
 
 var (s1, b1) = GetPosition("MSFT");
-$"{s1}: {b1}"
+Console.WriteLine($"{s1}: {b1}");
 
 var (s2, b2) = GetPosition("TSLA");
-$"{s2}: {b2}"
+Console.WriteLine($"{s2}: {b2}");
 ```
 
       200 OK: PortfolioPosition { Ticker = MSFT, Shares = 200, AvgCost = 380.5, MarketValue = 83040 }
@@ -401,10 +401,10 @@ The POST handler returns `201 Created` on success and `409 Conflict` if the `Tra
 }
 
 var (s1, b1) = PostTrade(new Trade("TRD_001", "AAPL", "BUY", 100, 178.50));
-$"{s1}: {b1}"
+Console.WriteLine($"{s1}: {b1}");
 
 var (s2, b2) = PostTrade(new Trade("TRD_001", "AAPL", "BUY", 100, 178.50));
-$"{s2}: {b2}"
+Console.WriteLine($"{s2}: {b2}");
 ```
 
       201 Created: TradeResponse { TradeId = TRD_001, Status = ACCEPTED, Message = BUY 100 AAPL @ 178.5 }
@@ -424,10 +424,10 @@ $"{s2}: {b2}"
 }
 
 var (s1, b1) = DeleteTrade("TRD_001");
-$"{s1}: {b1}"
+Console.WriteLine($"{s1}: {b1}");
 
 var (s2, b2) = DeleteTrade("TRD_999");
-$"{s2}: {b2}"
+Console.WriteLine($"{s2}: {b2}");
 ```
 
       200 OK: { status = CANCELLED, trade_id = TRD_001 }
@@ -526,13 +526,13 @@ record TradeOrderDto(
 
 // Valid order
 var order = new TradeOrderDto("TRD_001", "AAPL", "BUY", 100, 178.50);
-order  // valid
+Console.WriteLine(order);  // valid
 
 // Validate manually (ASP.NET does this automatically for [FromBody])
 var ctx = new ValidationContext(order);
 var results = new List<ValidationResult>();
 bool isValid = Validator.TryValidateObject(order, ctx, results, true);
-isValid  // valid
+Console.WriteLine(isValid);  // valid
 
 // Invalid — test each constraint
 var badCases = new (string label, TradeOrderDto dto)[] {
@@ -613,20 +613,20 @@ var cfg = new PipelineConfigDto("daily_etl", "raw.events", "analytics.events_agg
     5000, new DateOnly(2024, 1, 1), new DateOnly(2024, 3, 15));
 var cfgResults = new List<ValidationResult>();
 Validator.TryValidateObject(cfg, new ValidationContext(cfg), cfgResults, true);
-cfgResults.Count == 0  // valid config
+Console.WriteLine(cfgResults.Count == 0);  // valid config
 
 // Invalid — end before start
 var badCfg = new PipelineConfigDto("daily_etl", "raw.events", "analytics.out",
     1000, new DateOnly(2024, 6, 1), new DateOnly(2024, 1, 1));
 var badResults = new List<ValidationResult>();
 Validator.TryValidateObject(badCfg, new ValidationContext(badCfg), badResults, true);
-badResults.Count > 0 ? $"REJECTED — {badResults[0].ErrorMessage}" : "PASSED"  // end before start
+Console.WriteLine(badResults.Count > 0 ? $"REJECTED — {badResults[0].ErrorMessage}" : "PASSED");  // end before start
 
 // Invalid — non-snake_case name
 var badName = new PipelineConfigDto("DailyETL", "raw.events", "analytics.out");
 var nameResults = new List<ValidationResult>();
 Validator.TryValidateObject(badName, new ValidationContext(badName), nameResults, true);
-nameResults.Count > 0 ? $"REJECTED — {nameResults[0].ErrorMessage}" : "PASSED"  // non-snake_case
+Console.WriteLine(nameResults.Count > 0 ? $"REJECTED — {nameResults[0].ErrorMessage}" : "PASSED");  // non-snake_case
 ```
 
     True
@@ -683,7 +683,7 @@ var mlo = new MultiLegOrder("MLO_001", "PAIRS", new[] {
     new OrderLeg("AAPL", "BUY", 100, 178.50),
     new OrderLeg("MSFT", "SELL", 50, 415.20),
 });
-$"{mlo.OrderId} | {mlo.Strategy} | {mlo.Legs.Length} legs | {mlo.Status}"
+Console.WriteLine($"{mlo.OrderId} | {mlo.Strategy} | {mlo.Legs.Length} legs | {mlo.Status}");
 
 // Invalid — PAIRS with 3 legs
 var bad3 = new MultiLegOrder("X", "PAIRS", new[] {
@@ -691,7 +691,7 @@ var bad3 = new MultiLegOrder("X", "PAIRS", new[] {
 });
 var r3 = new List<ValidationResult>();
 Validator.TryValidateObject(bad3, new ValidationContext(bad3), r3, true);
-r3.Count > 0 ? $"REJECTED — {r3[0].ErrorMessage}" : "PASSED"  // PAIRS+3 legs
+Console.WriteLine(r3.Count > 0 ? $"REJECTED — {r3[0].ErrorMessage}" : "PASSED");  // PAIRS+3 legs
 ```
 
     MLO_001 | PAIRS | 2 legs | Pending
@@ -717,11 +717,11 @@ var jsonOpts = new JsonSerializerOptions
 
 // Serialize with camelCase + string enums
 var json = JsonSerializer.Serialize(mlo, jsonOpts);
-json
+Console.WriteLine(json);
 
 // Deserialize back
 var deserialized = JsonSerializer.Deserialize<MultiLegOrder>(json, jsonOpts);
-$"{deserialized?.OrderId} | {deserialized?.Status}"  // deserialized
+Console.WriteLine($"{deserialized?.OrderId} | {deserialized?.Status}");  // deserialized
 ```
 
     {
@@ -764,13 +764,13 @@ record ImmutableConfig(string DbHost, int DbPort = 5432, bool Ssl = true);
 
 ```csharp
 var config = new ImmutableConfig("db.prod.internal");
-config
+Console.WriteLine(config);
 
 // config.DbPort = 9999;  // Compile error! init-only property
 
 // Non-destructive mutation with 'with'
 var devConfig = config with { DbHost = "localhost", Ssl = false };
-devConfig
+Console.WriteLine(devConfig);
 ```
 
     Config: ImmutableConfig { DbHost = db.prod.internal, DbPort = 5432, Ssl = True }

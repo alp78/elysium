@@ -198,7 +198,7 @@ var prodRepo = new SqlRepository("Server=prod-db;Database=stoxx");
 var prodNotifier = new SlackNotifier();
 var prodService = new PipelineService(prodRepo, prodNotifier);
 var result = prodService.Run("ASML.AS");
-result
+Console.WriteLine(result);
 ```
 
 ```text
@@ -217,9 +217,9 @@ var mockRepo = new MockRepository();
 var mockNotifier = new MockNotifier();
 var testService = new PipelineService(mockRepo, mockNotifier);
 result = testService.Run("TEST.XX");
-result
-string.Join(", ", mockRepo.Saved)
-string.Join(", ", mockNotifier.Messages)
+Console.WriteLine(result);
+Console.WriteLine(string.Join(", ", mockRepo.Saved));
+Console.WriteLine(string.Join(", ", mockNotifier.Messages));
 ```
 
 ```text
@@ -267,8 +267,8 @@ Both calls to `Instance` return the same reference — the constructor runs only
 ```csharp
 var c1 = AppConfig.Instance;
 var c2 = AppConfig.Instance;
-object.ReferenceEquals(c1, c2)
-c1.ProjectId
+Console.WriteLine(object.ReferenceEquals(c1, c2));
+Console.WriteLine(c1.ProjectId);
 ```
 
 ```text
@@ -330,7 +330,7 @@ The loop creates three different clients through the factory. Each call to `Uplo
 foreach (var provider in new[] { "gcs", "s3", "local" })
 {
     var client = StorageFactory.Create(provider);
-    $"{provider,-5} -> {client.Upload("data.csv", new byte[100])}"
+    Console.WriteLine($"{provider,-5} -> {client.Upload("data.csv", new byte[100])}");
 }
 ```
 
@@ -449,13 +449,13 @@ The same ASML.AS price series is scored with both strategies. Momentum shows a s
 
 ```csharp
 var prices = new double[] { 685, 690, 680, 695, 710, 700, 685 };
-string.Join(", ", prices)
+Console.WriteLine(string.Join(", ", prices));
 
 foreach (IScoringStrategy strategy in new IScoringStrategy[] { new MomentumStrategy(), new VolatilityStrategy() })
 {
     var scorer = new StockScorer(strategy);
     var score = scorer.Evaluate("ASML.AS", prices);
-    $"{strategy.Name,-15} score={score:+0.0000;-0.0000}"
+    Console.WriteLine($"{strategy.Name,-15} score={score:+0.0000;-0.0000}");
 }
 ```
 
@@ -543,7 +543,7 @@ var validRecord = new OhlcvRecord
     Open = 685.0, High = 710.0, Low = 680.0, Close = 700.0, Volume = 1_500_000
 };
 var (isValid, errors) = Validate(validRecord);
-isValid
+Console.WriteLine(isValid);
 ```
 
 ```text
@@ -564,9 +564,9 @@ var badRecords = new OhlcvRecord[]
 foreach (var r in badRecords)
 {
     var (ok, errs) = Validate(r);
-    $"Symbol=\"{r.Symbol}\" Open={r.Open} High={r.High} Vol={r.Volume}"
+    Console.WriteLine($"Symbol=\"{r.Symbol}\" Open={r.Open} High={r.High} Vol={r.Volume}");
     foreach (var e in errs)
-        e.ErrorMessage
+        Console.WriteLine(e.ErrorMessage);
 }
 ```
 
@@ -622,10 +622,10 @@ Every .NET object carries a `Type` reference accessible via `GetType()`. The `Ty
 var order = new TradeOrder("ASML.AS", "BUY", 100, 685.40);
 var type = order.GetType();
 
-type.Name
-type.FullName
-type.IsClass
-type.IsSealed
+Console.WriteLine(type.Name);
+Console.WriteLine(type.FullName);
+Console.WriteLine(type.IsClass);
+Console.WriteLine(type.IsSealed);
 ```
 
 ```text
@@ -643,7 +643,7 @@ False
 foreach (var prop in type.GetProperties())
 {
     var value = prop.GetValue(order);
-    $"{prop.Name,-12} {prop.PropertyType.Name,-10} = {value}"
+    Console.WriteLine($"{prop.Name,-12} {prop.PropertyType.Name,-10} = {value}");
 }
 ```
 
@@ -663,7 +663,7 @@ Notional     Double     = 68540
 foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
 {
     var parms = string.Join(", ", method.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"));
-    $"{method.ReturnType.Name} {method.Name}({parms})"
+    Console.WriteLine($"{method.ReturnType.Name} {method.Name}({parms})");
 }
 ```
 
@@ -685,7 +685,7 @@ foreach (var name in new[] { "Ticker", "Side", "Quantity", "Price" })
 {
     var prop = type.GetProperty(name);
     if (prop != null)
-        $"{name} = {prop.GetValue(order)}"
+        Console.WriteLine($"{name} = {prop.GetValue(order)}");
 }
 ```
 
@@ -704,7 +704,7 @@ Price = 685.4
 foreach (var ctor in type.GetConstructors())
 {
     foreach (var p in ctor.GetParameters())
-        $"{p.Name}: {p.ParameterType.Name}"
+        Console.WriteLine($"{p.Name}: {p.ParameterType.Name}");
 }
 ```
 
@@ -721,7 +721,7 @@ price: Double
 
 ```csharp
 var newOrder = Activator.CreateInstance(type, "MC.PA", "SELL", 50, 890.20);
-newOrder
+Console.WriteLine(newOrder);
 ```
 
 ```text

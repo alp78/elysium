@@ -1,6 +1,7 @@
 ---
 title: "Functions"
-tags: [csharp]
+tags:
+  - csharp
 aliases: [lambda, closures, decorators, delegates, higher-order functions]
 description: "C# functions reference with executable examples and cell outputs — covers methods, delegates, Func/Action, lambdas, closures, extension methods, and events. See [04_py_functions](https://alp78.github.io/elysium/02-Programming-Languages/Python/04_py_functions) for the Python equivalent."
 created: 2026-03-22
@@ -15,6 +16,8 @@ status: complete
 >
 > — **Edsger W. Dijkstra**, *The Humble Programmer*, ACM Turing lecture (1972)
 
+C# functions are typed, statically resolved, and composable via delegates. This page covers method definitions, delegate types (`Func<T>`, `Action<T>`), lambda expressions, closures, extension methods, and the event system — with executable examples and output cells throughout.
+
 ## Function Basics
 
 C# methods are statically typed, requiring explicit return types and parameter types. Functions become first-class values through delegate types (`Func<T>`, `Action<T>`), enabling callbacks, strategy injection, pipelines, and dependency inversion. This section covers method definitions, delegate fundamentals, and common function-passing patterns.
@@ -22,10 +25,6 @@ C# methods are statically typed, requiring explicit return types and parameter t
 ### Defining and calling methods
 
 Methods declare a return type, accept typed parameters, and support overloading (same name, different parameter lists). Local functions nest inside other methods for encapsulated helpers. Expression-bodied syntax (`=>`) provides a concise form for one-liners, and tuples enable multiple return values without a dedicated class.
-
-#### Method definition — return type, parameters, static, overloading
-
-C# methods must declare a return type (`int`, `string`, `void`). Parameters are typed. Static typing catches signature mismatches at compile time. Overloading allows same name with different parameter types.
 
 > [!warning] Function anti-patterns
 >
@@ -39,17 +38,40 @@ C# methods must declare a return type (`int`, `string`, `void`). Parameters are 
 > - Use a config/options object or builder pattern when you need more than 3–4 parameters
 > - Keep each method focused on one responsibility — extract helpers freely
 
+#### Method with return value
+
+`string` and `int` methods return a typed value directly to the caller. The return type is declared before the method name, and the compiler enforces that every code path returns a value of that type.
+
 ```csharp
 string Greet(string name) { return $"Hello, {name}!"; }
-Greet("Alice")
+Console.WriteLine(Greet("Alice"));
+```
 
-void PrintGreeting(string name)      // void — returns nothing
+```text
+Hello, Alice!
+```
+
+#### Void method — no return value
+
+`void` methods perform side effects — printing, writing, mutating state — without returning a value. The compiler prevents callers from using the return value.
+
+```csharp
+void PrintGreeting(string name)
 {
     Console.WriteLine($"  Hi, {name}!");
 }
 PrintGreeting("Bob");
+```
 
-// Local function — nested inside another function
+```text
+  Hi, Bob!
+```
+
+#### Local function — nested inside a method
+
+A local function is defined inside another method's body, restricting its visibility to that scope. Useful for private helpers too small to justify a class-level method.
+
+```csharp
 void RunDemo()
 {
     int Add(int a, int b) => a + b;
@@ -59,41 +81,51 @@ RunDemo();
 ```
 
 ```text
-Hello, Alice!
-  Hi, Bob!
   Local Add: 7
 ```
 
-#### Expression-bodied and tuple return
+#### Expression-bodied methods — => syntax
 
-The `=>` (expression-bodied) syntax eliminates braces and `return` for single-expression methods, reducing boilerplate. Tuples let a method return multiple values without defining a class or struct — callers destructure with `var (a, b) = Method()`. For 3–4+ return values, prefer a `record` or class for clarity.
+The `=>` (expression-bodied) syntax eliminates braces and the `return` keyword for single-expression methods, reducing boilerplate for one-liners.
 
-> [!info] Expression-bodied and tuple return
+> [!info] Expression-bodied syntax
 >
-> - `=>` syntax — eliminates braces and `return` for one-liners
-> - Tuples return multiple values: `(string, int) GetInfo() => ("Alice", 30)`
-> - Callers destructure: `var (name, age) = GetInfo()`
-> - Use named tuple fields for clarity; for 3-4+ values, use a `record` or class
+> - `type Method(params) => expression` — implicit return, no braces
+> - Works for methods, properties, constructors, and operators
 
 ```csharp
 string GreetShort(string name) => $"Hello, {name}!";
 int Square(int x) => x * x;
-GreetShort("Diana")
-Square(5)
-
-// Tuple return — multiple values in one return
-(int quotient, int remainder) Divide(int a, int b)
-{
-    return (a / b, a % b);
-}
-var (q, r) = Divide(17, 5);       // deconstruct
-$"17 / 5 = {q} remainder {r}"
-Divide(17, 5)
+Console.WriteLine(GreetShort("Diana"));
+Console.WriteLine(Square(5));
 ```
 
 ```text
 Hello, Diana!
 25
+```
+
+#### Tuple return — multiple values from one method
+
+Tuples let a method return multiple values without defining a class or struct. Callers destructure the result with `var (a, b) = Method()`. For 3–4+ values, prefer a `record` or class for readability.
+
+> [!info] Tuple return
+>
+> - `(int quotient, int remainder) Divide(int a, int b)` — named tuple fields
+> - Callers destructure: `var (q, r) = Divide(17, 5)`
+> - Use named fields for clarity; for 3–4+ values, prefer a `record` or class
+
+```csharp
+(int quotient, int remainder) Divide(int a, int b)
+{
+    return (a / b, a % b);
+}
+var (q, r) = Divide(17, 5);
+Console.WriteLine($"17 / 5 = {q} remainder {r}");
+Console.WriteLine(Divide(17, 5));
+```
+
+```text
 17 / 5 = 3 remainder 2
 (3, 2)
 ```
@@ -102,9 +134,9 @@ Hello, Diana!
 
 `Func<T, TResult>` stores a method that returns a value, `Action<T>` stores a void method, and `Predicate<T>` stores a boolean test. These built-in generic delegates make functions first-class values — you can assign methods to variables, pass them as arguments, and return them from other methods. This is the foundation for callbacks, LINQ, strategy pattern, and dependency injection in C#.
 
-#### Func&lt;T, TResult&gt; — function with return value
+#### Func&lt;T, TResult&gt; — assign and call
 
-`Func<T, TResult>` holds a reference to any method matching its signature — assign a named method, lambda, or method group. Use it to pass functions as arguments, return functions from methods, and build higher-order patterns like `MakeMultiplier`.
+`Func<T, TResult>` holds a reference to any method matching its return type — assign a named method, lambda, or method group to a `Func` variable and call it via the variable.
 
 > [!info] Delegate types
 >
@@ -115,29 +147,53 @@ Hello, Diana!
 > - For event handlers, use `EventHandler<T>`
 
 ```csharp
-Func<string, string> sayHello = Greet;     // assign method to variable
-sayHello("Eve")
-
-// Action<input...> — function with no return value (void)
-Action<string> printer = PrintGreeting;
-printer("Frank");
-
-// Pass function as argument
-string Apply(Func<string, string> func, string value) => func(value);
-Apply(Greet, "Grace")
-
-// Return a function
-Func<int, int> MakeMultiplier(int n) => x => x * n;
-var doubler = MakeMultiplier(2);
-var tripler = MakeMultiplier(3);
-doubler(5)
-tripler(5)
+Func<string, string> sayHello = Greet;
+Console.WriteLine(sayHello("Eve"));
 ```
 
 ```text
 Hello, Eve!
+```
+
+#### Action&lt;T&gt; — void delegate
+
+`Action<T>` stores a void method — no return value. Assign a named method or lambda. Use for side effects: logging, printing, state mutation.
+
+```csharp
+Action<string> printer = PrintGreeting;
+printer("Frank");
+```
+
+```text
   Hi, Frank!
+```
+
+#### Pass a Func as argument
+
+Pass `Func<T, TResult>` as a method parameter to let the caller inject any compatible function — the foundation for callbacks, the strategy pattern, and dependency injection.
+
+```csharp
+string Apply(Func<string, string> func, string value) => func(value);
+Console.WriteLine(Apply(Greet, "Grace"));
+```
+
+```text
 Hello, Grace!
+```
+
+#### Return a Func — higher-order function
+
+A method can return a `Func<T, TResult>`, creating a parameterized function factory. Each call captures the parameter in a closure, producing an independent function.
+
+```csharp
+Func<int, int> MakeMultiplier(int n) => x => x * n;
+var doubler = MakeMultiplier(2);
+var tripler = MakeMultiplier(3);
+Console.WriteLine(doubler(5));
+Console.WriteLine(tripler(5));
+```
+
+```text
 10
 15
 ```
@@ -248,11 +304,9 @@ Dictionary<string, object> ProcessOrder(
     return order;
 }
 
-// Production — default parameter uses real DateTime.UtcNow
 var order1 = ProcessOrder(new Dictionary<string, object> { ["id"] = 1 });
 Console.WriteLine($"  Production: {order1["processed_at"]}");
 
-// Test — inject a fixed DateTime for deterministic results
 var order2 = ProcessOrder(
     new Dictionary<string, object> { ["id"] = 2 },
     getNow: () => new DateTime(2024, 1, 1, 12, 0, 0));
@@ -327,6 +381,8 @@ Bob        $65,000
 
 #### Common function-passing patterns
 
+Quick reference for choosing the right function-passing approach — each pattern maps to a C# delegate signature.
+
 | Pattern | C# signature | Use case |
 |---|---|---|
 | **Callbacks** | `Action<string> onSuccess, Action<Exception> onError` | Success/error hooks |
@@ -352,9 +408,9 @@ Default values: `void Func(int x = 10)` — must be compile-time constants. Name
 string Connect(string host, int port = 5432, bool ssl = true)
     => $"{host}:{port} ssl={ssl}";
 
-Connect("localhost")
-Connect("db.example.com", 3306)
-Connect("db.example.com", ssl: false)
+Console.WriteLine(Connect("localhost"));
+Console.WriteLine(Connect("db.example.com", 3306));
+Console.WriteLine(Connect("db.example.com", ssl: false));
 ```
 
 ```text
@@ -385,7 +441,7 @@ void DoubleIt(ref int x)
 }
 int val = 5;
 DoubleIt(ref val);
-val
+Console.WriteLine(val);
 ```
 
 ```text
@@ -418,7 +474,7 @@ out: 3
 ```csharp
 double Distance(in (double x, double y) point)
     => Math.Sqrt(point.x * point.x + point.y * point.y);
-Distance((3, 4))
+Console.WriteLine(Distance((3, 4)));
 ```
 
 ```text
@@ -434,16 +490,15 @@ Distance((3, 4))
 `params int[] numbers` accepts variable arguments — compiler creates the array. Must be the last parameter. `Total(1, 2, 3)` and `Total(myArray)` both work.
 
 ```csharp
-int Total(params int[] numbers)       // caller can pass any number of ints
+int Total(params int[] numbers)
 {
     return numbers.Sum();
 }
-Total(1, 2, 3)
-Total(10, 20)
+Console.WriteLine(Total(1, 2, 3));
+Console.WriteLine(Total(10, 20));
 
-// Can also pass an array directly
 int[] nums = { 1, 2, 3, 4, 5 };
-Total(nums)
+Console.WriteLine(Total(nums));
 ```
 
 ```text
@@ -462,19 +517,27 @@ C# has no `**kwargs` equivalent for collecting arbitrary keyword arguments. Inst
 > - `Dictionary<string, object>` for dynamic keys
 > - Named params with defaults for compile-time safety
 
+An anonymous object `new { key = value }` simulates structured keyword arguments — the pattern used widely in ASP.NET for routing and view data. Properties are readable but the type has no name.
+
 ```csharp
 void LogEvent(string name, object data) =>
-    $"  {name}: {data}"
+    Console.WriteLine($"  {name}: {data}");
 LogEvent("click", new { page = "home", button = "submit" });
-
-// Option 2: dictionary
-void LogDict(string name, Dictionary<string, object> data) =>
-    $"  {name}: {string.Join(", ", data.Select(kv => $"{kv.Key}={kv.Value}"))}"
-LogDict("click", new Dictionary<string, object> { ["page"] = "home", ["button"] = "submit" });
 ```
 
 ```text
 click: { page = home, button = submit }
+```
+
+`Dictionary<string, object>` supports fully dynamic keys not known at compile time. Key-value pairs are explicit and enumerable at runtime.
+
+```csharp
+void LogDict(string name, Dictionary<string, object> data) =>
+    Console.WriteLine($"  {name}: {string.Join(", ", data.Select(kv => $"{kv.Key}={kv.Value}"))}");
+LogDict("click", new Dictionary<string, object> { ["page"] = "home", ["button"] = "submit" });
+```
+
+```text
 click: page=home, button=submit
 ```
 
@@ -509,8 +572,8 @@ A lambda expression uses `=>` to separate parameters from the body. Single-expre
 Func<int, int> square = x => x * x;
 Func<int, int, int> add = (a, b) => a + b;
 
-square(5)
-add(3, 4)
+Console.WriteLine(square(5));
+Console.WriteLine(add(3, 4));
 ```
 
 ```text
@@ -535,7 +598,7 @@ Func<int, string> classify = (x) => {
     if (x < 0) return "negative";
     return "zero";
 };
-classify(-5)
+Console.WriteLine(classify(-5));
 ```
 
 ```text
@@ -546,29 +609,56 @@ negative
 
 LINQ methods accept lambdas as predicates, projections, and key selectors. The compiler infers parameter types from the collection's element type, so you rarely need explicit type annotations.
 
-#### Lambdas with LINQ
+#### OrderBy — sort with a lambda key selector
 
-Pass lambdas to `OrderBy`, `Select`, `Where`, `MinBy`. Method chains compose operations declaratively. Compiler infers lambda parameter types.
+`OrderBy(n => expr)` sorts ascending by the value the lambda extracts from each element. The compiler infers the type of `n` from the collection. Pass a different key expression to change sort order without modifying the data.
 
 ```csharp
 var names = new[] { "Charlie", "Alice", "Bob", "Diana" };
-string.Join(", ", names.OrderBy(n => n.Length))   // By length
-string.Join(", ", names.OrderBy(n => n[^1]))   // By last char
-
-var nums = new[] { 1, 2, 3, 4, 5 };
-string.Join(", ", nums.Select(x => x * x))   // Squared
-string.Join(", ", nums.Where(x => x % 2 == 0))   // Evens
-
-var people = new[] { ("Alice", 30), ("Bob", 25), ("Charlie", 35) };
-var youngest = people.MinBy(p => p.Item2);
-youngest
+Console.WriteLine(string.Join(", ", names.OrderBy(n => n.Length)));
+Console.WriteLine(string.Join(", ", names.OrderBy(n => n[^1])));
 ```
 
 ```text
 Bob, Alice, Diana, Charlie
 Diana, Bob, Charlie, Alice
+```
+
+#### Select — project each element with a lambda (map)
+
+`Select(x => expr)` transforms each element into a new value — equivalent to `map`. Returns a lazy `IEnumerable<TResult>`; the compiler infers `x` as `int` from the array type.
+
+```csharp
+var nums = new[] { 1, 2, 3, 4, 5 };
+Console.WriteLine(string.Join(", ", nums.Select(x => x * x)));
+```
+
+```text
 1, 4, 9, 16, 25
+```
+
+#### Where — filter elements with a predicate lambda
+
+`Where(x => bool)` returns only elements where the predicate is `true` — equivalent to `filter`. Commonly chained with `Select` for filter-then-transform pipelines.
+
+```csharp
+Console.WriteLine(string.Join(", ", nums.Where(x => x % 2 == 0)));
+```
+
+```text
 2, 4
+```
+
+#### MinBy — select the element with the smallest key
+
+`MinBy(p => key)` returns the full element (not just the key value) with the minimum key — C# 10+. Use `MaxBy` for the largest.
+
+```csharp
+var people = new[] { ("Alice", 30), ("Bob", 25), ("Charlie", 35) };
+Console.WriteLine(people.MinBy(p => p.Item2));
+```
+
+```text
 (Bob, 25)
 ```
 
@@ -592,8 +682,8 @@ shout("hello");
 
 Predicate<int> isEven = x => x % 2 == 0;
 var list = new List<int> { 1, 2, 3, 4, 5, 6 };
-string.Join(", ", list.FindAll(isEven))
-list.Exists(x => x > 5)
+Console.WriteLine(string.Join(", ", list.FindAll(isEven)));
+Console.WriteLine(list.Exists(x => x > 5));
 ```
 
 ```text
@@ -608,10 +698,10 @@ Lambdas capture the **variable reference**, not a snapshot. If `multiplier` chan
 
 ```csharp
 int multiplier = 3;
-Func<int, int> times = x => x * multiplier;   // captures 'multiplier'
-times(5)
-multiplier = 10;                                // change captured variable
-times(5)
+Func<int, int> times = x => x * multiplier;
+Console.WriteLine(times(5));
+multiplier = 10;
+Console.WriteLine(times(5));
 ```
 
 ```text
@@ -663,7 +753,7 @@ Inside block: 10
 
 #### Closures capture variables
 
-A lambda returned from a method retains access to the method's locals — the variable lives on the heap because the closure keeps a reference. Each call creates independent state.
+A lambda returned from a method retains access to the method's locals — the captured parameter lives on the heap as long as the closure exists. Each call to `MakeAdder` creates an independent closure with its own `n`, so `add5` and `add10` hold separate state.
 
 ```csharp
 Func<int, int> MakeAdder(int n)
@@ -672,16 +762,14 @@ Func<int, int> MakeAdder(int n)
 }
 var add5 = MakeAdder(5);
 var add10 = MakeAdder(10);
-add5(3)
-add10(3)
+Console.WriteLine(add5(3));
+Console.WriteLine(add10(3));
 ```
 
 ```text
 8
 13
 ```
-
-The parameter `n` is captured by the returned lambda — it lives on the heap because the closure keeps a reference. Each call to `MakeAdder` creates independent state.
 
 #### Closure modifies outer variable
 
@@ -693,7 +781,7 @@ Action increment = () => counter++;
 increment();
 increment();
 increment();
-counter
+Console.WriteLine(counter);
 ```
 
 ```text
@@ -715,11 +803,11 @@ Func<int> MakeCounter(int start = 0)
     return () => ++count;
 }
 var c1 = MakeCounter(10);
-c1()
-c1()
+Console.WriteLine(c1());
+Console.WriteLine(c1());
 
 var c2 = MakeCounter(0);
-c2()
+Console.WriteLine(c2());
 ```
 
 ```text
@@ -738,8 +826,8 @@ Func<int, bool> MakeRangeValidator(int min, int max)
 
 var isValidAge = MakeRangeValidator(0, 120);
 var isValidScore = MakeRangeValidator(0, 100);
-isValidAge(25)
-isValidAge(150)
+Console.WriteLine(isValidAge(25));
+Console.WriteLine(isValidAge(150));
 ```
 
 ```text
@@ -766,17 +854,16 @@ Lambdas created in a `for` loop capture the loop variable `i` itself — not its
 ```csharp
 var funcs = new List<Func<int>>();
 for (int i = 0; i < 3; i++)
-    funcs.Add(() => i);               // all capture the SAME variable i
-string.Join(", ", funcs.Select(f => f()))   // Bad
+    funcs.Add(() => i);
+Console.WriteLine(string.Join(", ", funcs.Select(f => f())));
 
-// Fix: capture a copy
 var funcsGood = new List<Func<int>>();
 for (int i = 0; i < 3; i++)
 {
-    int captured = i;                 // new variable each iteration
+    int captured = i;
     funcsGood.Add(() => captured);
 }
-string.Join(", ", funcsGood.Select(f => f()))
+Console.WriteLine(string.Join(", ", funcsGood.Select(f => f())));
 ```
 
 ```text
@@ -835,9 +922,9 @@ int Add(int a, int b) => a + b;
 int Multiply(int a, int b) => a * b;
 
 MathOp op = Add;
-op(3, 4)   // Add
+Console.WriteLine(op(3, 4));
 op = Multiply;
-op(3, 4)
+Console.WriteLine(op(3, 4));
 
 delegate int MathOp(int a, int b);
 ```
@@ -880,7 +967,7 @@ A method group is a method name without parentheses — the compiler creates the
 ```csharp
 void PrintUpper(string s) => Console.WriteLine($"  {s.ToUpper()}");
 
-Action<string> handler = PrintUpper;    // no () — passing the method itself
+Action<string> handler = PrintUpper;
 handler("method group");
 ```
 
@@ -906,7 +993,7 @@ void ProcessData(int[] data, Action<int> onProcessed)
     foreach (var item in data)
     {
         var result = item * 2;
-        onProcessed(result);   // call the callback for each result
+        onProcessed(result);
     }
 }
 
@@ -1000,10 +1087,10 @@ string Format(double value) => $"double: {value:F2}";
 string Format(string value) => $"string: '{value}'";
 string Format(int a, int b) => $"two ints: {a} + {b} = {a + b}";
 
-Format(42)
-Format(3.14)
-Format("hello")
-Format(10, 20)
+Console.WriteLine(Format(42));
+Console.WriteLine(Format(3.14));
+Console.WriteLine(Format("hello"));
+Console.WriteLine(Format(10, 20));
 ```
 
 ```text
@@ -1028,7 +1115,7 @@ Define a static method in a static class with `this` before the first parameter:
 
 ```csharp
 var nums = new[] { 1, 2, 3, 4, 5 };
-string.Join(", ", nums.Where(x => x > 2).Select(x => x * 10))
+Console.WriteLine(string.Join(", ", nums.Where(x => x > 2).Select(x => x * 10)));
 ```
 
 ```text

@@ -36,8 +36,8 @@ using System.Text.RegularExpressions;
 
 string s1 = "hello";
 char c1 = 'A';
-s1
-$"Char: '{c1}' (type: {c1.GetType().Name})"
+Console.WriteLine(s1);
+Console.WriteLine($"Char: '{c1}' (type: {c1.GetType().Name})");
 ```
 
 ```text
@@ -52,9 +52,9 @@ Prefix a string literal with `@` to create a verbatim string where backslashes a
 ```csharp
 string s2 = @"C:\Users\new\test";
 string s3 = "C:\\Users\\new\\test";
-s2
-s3
-s2 == s3
+Console.WriteLine(s2);
+Console.WriteLine(s3);
+Console.WriteLine(s2 == s3);
 ```
 
 ```text
@@ -71,13 +71,13 @@ Verbatim strings (`@""`) preserve line breaks exactly as written. Raw string lit
 string s4 = @"This is
 a multiline
 string";
-s4
+Console.WriteLine(s4);
 
 string s5 = """
     This is a
     raw string literal
     """;
-s5
+Console.WriteLine(s5);
 ```
 
 ```text
@@ -98,13 +98,13 @@ Every type in C# inherits `ToString()` from `System.Object`, making it the unive
 
 ```csharp
 #nullable enable
-42.ToString()
-3.14.ToString()
-true.ToString()
-Convert.ToString(42)
+Console.WriteLine(42.ToString());
+Console.WriteLine(3.14.ToString());
+Console.WriteLine(true.ToString());
+Console.WriteLine(Convert.ToString(42));
 
 object? obj = null;
-obj?.ToString() ?? "(null)"
+Console.WriteLine(obj?.ToString() ?? "(null)");
 ```
 
 ```text
@@ -120,9 +120,9 @@ obj?.ToString() ?? "(null)"
 C# has no `*` operator for string repetition. Use `new string(char, count)` for single-character repeats, or `string.Concat` with `Enumerable.Repeat` for multi-character patterns. The `+` operator concatenates strings and is optimized by the compiler for small, fixed concatenations.
 
 ```csharp
-new string('*', 5)
-string.Concat(Enumerable.Repeat("ha", 3))
-"hello" + " " + "world"
+Console.WriteLine(new string('*', 5));
+Console.WriteLine(string.Concat(Enumerable.Repeat("ha", 3)));
+Console.WriteLine("hello" + " " + "world");
 ```
 
 ```text
@@ -140,14 +140,14 @@ C# strings have three distinct "nothing" states: `null` (no object), `""` (empty
 
 ```csharp
 string empty = "";
-empty == ""
-string.Empty
-empty.Length
-string.IsNullOrEmpty(" ")
-string.IsNullOrEmpty("")
-string.IsNullOrEmpty(null)
-string.IsNullOrWhiteSpace("  ")
-string.IsNullOrWhiteSpace("")
+Console.WriteLine(empty == "");
+Console.WriteLine(string.Empty);
+Console.WriteLine(empty.Length);
+Console.WriteLine(string.IsNullOrEmpty(" "));
+Console.WriteLine(string.IsNullOrEmpty(""));
+Console.WriteLine(string.IsNullOrEmpty(null));
+Console.WriteLine(string.IsNullOrWhiteSpace("  "));
+Console.WriteLine(string.IsNullOrWhiteSpace(""));
 ```
 
 ```text
@@ -178,7 +178,7 @@ Once a `string` is created, its character sequence cannot change. Indexing into 
 ```csharp
 string s = "hello";
 s = 'H' + s.Substring(1);
-s
+Console.WriteLine(s);
 ```
 
 ```text
@@ -234,15 +234,15 @@ C# strings support 0-based indexing with `[]`, hat indexing from the end with `^
 ```csharp
 string s = "Hello, World!";
 
-s[0]
-s[1]
-s[^1]
-s[^2]
-s[0..5]
-s[..5]
-s[7..]
-s[^6..]
-s[7..12]
+Console.WriteLine(s[0]);
+Console.WriteLine(s[1]);
+Console.WriteLine(s[^1]);
+Console.WriteLine(s[^2]);
+Console.WriteLine(s[0..5]);
+Console.WriteLine(s[..5]);
+Console.WriteLine(s[7..]);
+Console.WriteLine(s[^6..]);
+Console.WriteLine(s[7..12]);
 ```
 
 ```text
@@ -262,15 +262,15 @@ s[7..12]
 `Substring(startIndex)` and `Substring(startIndex, length)` are the classic APIs; Range syntax (`s[7..]`) is the modern equivalent. C# has no built-in step/stride parameter — use LINQ `Where` with an index predicate for every-nth-character patterns, or `Reverse()` to reverse a string.
 
 ```csharp
-s.Substring(7)
-s.Substring(7, 5)
+Console.WriteLine(s.Substring(7));
+Console.WriteLine(s.Substring(7, 5));
 
-new string(s.Where((c, i) => i % 2 == 0).ToArray())
-new string(s.Reverse().ToArray())
+Console.WriteLine(new string(s.Where((c, i) => i % 2 == 0).ToArray()));
+Console.WriteLine(new string(s.Reverse().ToArray()));
 
 char[] arr = s.ToCharArray();
 Array.Reverse(arr);
-new string(arr)
+Console.WriteLine(new string(arr));
 ```
 
 ```text
@@ -390,9 +390,9 @@ Methods for changing letter case. C# provides `ToUpper()`, `ToLower()`, and `ToT
 
 string s = "  Hello, World!  ";
 
-"hello world".ToUpper()
-"HELLO WORLD".ToLower()
-CultureInfo.CurrentCulture.TextInfo.ToTitleCase("hello world")
+Console.WriteLine("hello world".ToUpper());
+Console.WriteLine("HELLO WORLD".ToLower());
+Console.WriteLine(CultureInfo.CurrentCulture.TextInfo.ToTitleCase("hello world"));
 ```
 
 ```text
@@ -410,14 +410,14 @@ Methods for stripping leading/trailing whitespace (or custom characters) and pad
 `Trim()` removes whitespace from both ends; `TrimStart()`/`TrimEnd()` remove from one side only. Pass a `char` argument to trim specific characters instead of whitespace. `PadLeft`/`PadRight` extend a string to a target width, filling with spaces or a specified character — useful for tabular output and zero-padding.
 
 ```csharp
-s.Trim()
-s.TrimStart()
-s.TrimEnd()
-"Hello!!".Trim('!')
-"hello".PadLeft(20)
-"hello".PadRight(20)
-"hello".PadLeft(20, '*')
-"42".PadLeft(8, '0')
+Console.WriteLine(s.Trim());
+Console.WriteLine(s.TrimStart());
+Console.WriteLine(s.TrimEnd());
+Console.WriteLine("Hello!!".Trim('!'));
+Console.WriteLine("hello".PadLeft(20));
+Console.WriteLine("hello".PadRight(20));
+Console.WriteLine("hello".PadLeft(20, '*'));
+Console.WriteLine("42".PadLeft(8, '0'));
 ```
 
 ```text
@@ -440,11 +440,11 @@ Inspecting individual characters and testing whole strings for content categorie
 The `char` struct provides static methods to classify individual characters: `IsLetter`, `IsDigit`, `IsWhiteSpace`, `IsUpper`, `IsLower`, and others. These are Unicode-aware — `IsLetter` returns `true` for letters in any script, not just ASCII.
 
 ```csharp
-char.IsLetter('A')
-char.IsDigit('5')
-char.IsWhiteSpace(' ')
-char.IsUpper('A')
-char.IsLower('a')
+Console.WriteLine(char.IsLetter('A'));
+Console.WriteLine(char.IsDigit('5'));
+Console.WriteLine(char.IsWhiteSpace(' '));
+Console.WriteLine(char.IsUpper('A'));
+Console.WriteLine(char.IsLower('a'));
 ```
 
 ```text
@@ -460,12 +460,12 @@ True
 C# has no built-in `str.isalpha()` or `str.isdigit()` like Python. Instead, combine LINQ's `All` method with `char.IsXxx` predicates to test whether every character in a string satisfies a condition.
 
 ```csharp
-"Hello".All(char.IsLetter)
-"12345".All(char.IsDigit)
-"Hello123".All(char.IsLetterOrDigit)
-"HELLO".All(char.IsUpper)
-"hello".All(char.IsLower)
-"Hello".All(c => c < 128)
+Console.WriteLine("Hello".All(char.IsLetter));
+Console.WriteLine("12345".All(char.IsDigit));
+Console.WriteLine("Hello123".All(char.IsLetterOrDigit));
+Console.WriteLine("HELLO".All(char.IsUpper));
+Console.WriteLine("hello".All(char.IsLower));
+Console.WriteLine("Hello".All(c => c < 128));
 ```
 
 ```text
@@ -487,16 +487,16 @@ Methods for finding substrings by position or existence.
 
 ```csharp
 s = "Hello, World! Hello, C#!";
-s.IndexOf("Hello")
-s.IndexOf("Hello", 1)
-s.LastIndexOf("Hello")
-s.IndexOf("Java")
-s.Contains("World")
-s.StartsWith("Hello")
-s.EndsWith("!")
+Console.WriteLine(s.IndexOf("Hello"));
+Console.WriteLine(s.IndexOf("Hello", 1));
+Console.WriteLine(s.LastIndexOf("Hello"));
+Console.WriteLine(s.IndexOf("Java"));
+Console.WriteLine(s.Contains("World"));
+Console.WriteLine(s.StartsWith("Hello"));
+Console.WriteLine(s.EndsWith("!"));
 
 int count = s.Split("Hello").Length - 1;
-count
+Console.WriteLine(count);
 ```
 
 ```text
@@ -522,12 +522,12 @@ Methods for comparing strings for equality and sort order — distinct from sear
 > Use `StringComparison.Ordinal` (or `OrdinalIgnoreCase`) for internal identifiers, dictionary keys, file paths, and protocol strings. Use `StringComparison.CurrentCulture` only when displaying sorted results to users where locale-specific ordering matters (e.g., German ä sorting near a).
 
 ```csharp
-string.Compare("apple", "banana")
-string.Compare("banana", "apple")
-string.Compare("apple", "apple")
-"apple".CompareTo("banana")
-string.Compare("hello", "HELLO", StringComparison.OrdinalIgnoreCase)
-string.CompareOrdinal("hello", "HELLO")
+Console.WriteLine(string.Compare("apple", "banana"));
+Console.WriteLine(string.Compare("banana", "apple"));
+Console.WriteLine(string.Compare("apple", "apple"));
+Console.WriteLine("apple".CompareTo("banana"));
+Console.WriteLine(string.Compare("hello", "HELLO", StringComparison.OrdinalIgnoreCase));
+Console.WriteLine(string.CompareOrdinal("hello", "HELLO"));
 ```
 
 ```text
@@ -548,14 +548,14 @@ Methods for substituting substrings, tokenizing strings into arrays, and reassem
 `Replace` substitutes all occurrences — there is no max-count parameter (use `Regex.Replace` with a count for first-only replacement). `Split` tokenizes a string by a delimiter and returns a `string[]`. Pass an `int` count to limit the number of resulting parts. Splitting on `null` with `RemoveEmptyEntries` splits on any whitespace and discards empty segments, equivalent to Python's `str.split()`.
 
 ```csharp
-s.Replace("Hello", "Hi")
+Console.WriteLine(s.Replace("Hello", "Hi"));
 
 string csv = "apple,banana,cherry";
-string.Join(", ", csv.Split(','))
-string.Join(", ", csv.Split(',', 2))
+Console.WriteLine(string.Join(", ", csv.Split(',')));
+Console.WriteLine(string.Join(", ", csv.Split(',', 2)));
 string words = "  hello  world  ";
-string.Join(", ", words.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
-string.Join(", ", words.Split(' '))
+Console.WriteLine(string.Join(", ", words.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)));
+Console.WriteLine(string.Join(", ", words.Split(' ')));
 ```
 
 ```text
@@ -571,14 +571,14 @@ string.Join(", ", words.Split(' '))
 `StringSplitOptions.RemoveEmptyEntries` discards empty segments from consecutive delimiters. `TrimEntries` (.NET 5+) trims whitespace from each segment after splitting. `string.Join` reassembles an array with a separator; `string.Concat` joins without any separator.
 
 ```csharp
-string.Join(", ", "a,,b,,c".Split(',', StringSplitOptions.RemoveEmptyEntries))
-string.Join(", ", " a , b , c ".Split(',', StringSplitOptions.TrimEntries))
+Console.WriteLine(string.Join(", ", "a,,b,,c".Split(',', StringSplitOptions.RemoveEmptyEntries)));
+Console.WriteLine(string.Join(", ", " a , b , c ".Split(',', StringSplitOptions.TrimEntries)));
 
 string[] parts = { "hello", "world", "csharp" };
-string.Join(' ', parts)
-string.Join(", ", parts)
-string.Join("->", parts)
-string.Concat(parts)
+Console.WriteLine(string.Join(' ', parts));
+Console.WriteLine(string.Join(", ", parts));
+Console.WriteLine(string.Join("->", parts));
+Console.WriteLine(string.Concat(parts));
 ```
 
 ```text
@@ -604,9 +604,9 @@ Converting between strings (UTF-16 in memory) and byte arrays for I/O, hashing, 
 ```csharp
 byte[] utf8 = System.Text.Encoding.UTF8.GetBytes("hello");
 byte[] ascii = System.Text.Encoding.ASCII.GetBytes("hello");
-string.Join(", ", utf8)
-string.Join(", ", ascii)
-System.Text.Encoding.UTF8.GetString(utf8)
+Console.WriteLine(string.Join(", ", utf8));
+Console.WriteLine(string.Join(", ", ascii));
+Console.WriteLine(System.Text.Encoding.UTF8.GetString(utf8));
 ```
 
 ```text
@@ -633,9 +633,9 @@ int age = 30;
 double n = 1234567.89123;
 double pct = 0.856;
 
-$"Name: {name}, Age: {age}"
-age + 1
-name.ToUpper()
+Console.WriteLine($"Name: {name}, Age: {age}");
+Console.WriteLine(age + 1);
+Console.WriteLine(name.ToUpper());
 ```
 
 ```text
@@ -649,9 +649,9 @@ ALICE
 `String.Format` is the older API that uses numbered placeholders (`{0}`, `{1}`). It is still useful when the format string is stored externally (resource files, config) or constructed dynamically — interpolation requires a compile-time literal. The placeholder syntax supports the same alignment and format specifiers as interpolation: `{index,alignment:format}`.
 
 ```csharp
-String.Format("Name: {0}, Age: {1}", name, age)
-String.Format("{0:C2}", 1234.5)
-String.Format("{0,-20}|{1,10}", "Left", "Right")
+Console.WriteLine(String.Format("Name: {0}, Age: {1}", name, age));
+Console.WriteLine(String.Format("{0:C2}", 1234.5));
+Console.WriteLine(String.Format("{0,-20}|{1,10}", "Left", "Right"));
 ```
 
 ```text
@@ -680,21 +680,21 @@ Standard format strings passed to `ToString("X")` or inside interpolation braces
 Append a digit to control precision: `F2` = 2 decimal places, `D8` = zero-padded to 8 digits. Use `Convert.ToString(value, base)` for binary (base 2) or octal (base 8).
 
 ```csharp
-n.ToString("F2")
-n.ToString("F0")
-n.ToString("N2")
-n.ToString("E2")
-n.ToString("G4")
-pct.ToString("P1")
-n.ToString("C2")
+Console.WriteLine(n.ToString("F2"));
+Console.WriteLine(n.ToString("F0"));
+Console.WriteLine(n.ToString("N2"));
+Console.WriteLine(n.ToString("E2"));
+Console.WriteLine(n.ToString("G4"));
+Console.WriteLine(pct.ToString("P1"));
+Console.WriteLine(n.ToString("C2"));
 
 int x = 255;
-x.ToString("D")
-x.ToString("X")
-x.ToString("x")
-x.ToString("D8")
-Convert.ToString(x, 2)
-Convert.ToString(x, 8)
+Console.WriteLine(x.ToString("D"));
+Console.WriteLine(x.ToString("X"));
+Console.WriteLine(x.ToString("x"));
+Console.WriteLine(x.ToString("D8"));
+Console.WriteLine(Convert.ToString(x, 2));
+Console.WriteLine(Convert.ToString(x, 8));
 ```
 
 ```text
@@ -723,16 +723,16 @@ Controlling field width for tabular output and formatting numbers according to l
 
 ```csharp
 string s = "hi";
-s.PadLeft(10, '*')
-s.PadRight(10, '*')
+Console.WriteLine(s.PadLeft(10, '*'));
+Console.WriteLine(s.PadRight(10, '*'));
 
 double amt = 1234567.89;
-amt.ToString("C2", new CultureInfo("en-US"))
-amt.ToString("C2", new CultureInfo("fr-FR"))
-amt.ToString("C0", new CultureInfo("ja-JP"))
-amt.ToString("C2", new CultureInfo("zh-CN"))
-amt.ToString("C2", new CultureInfo("pt-BR"))
-amt.ToString("C2", new CultureInfo("en-GB"))
+Console.WriteLine(amt.ToString("C2", new CultureInfo("en-US")));
+Console.WriteLine(amt.ToString("C2", new CultureInfo("fr-FR")));
+Console.WriteLine(amt.ToString("C0", new CultureInfo("ja-JP")));
+Console.WriteLine(amt.ToString("C2", new CultureInfo("zh-CN")));
+Console.WriteLine(amt.ToString("C2", new CultureInfo("pt-BR")));
+Console.WriteLine(amt.ToString("C2", new CultureInfo("en-GB")));
 ```
 
 ```text
@@ -796,7 +796,7 @@ for (int i = 0; i < 50000; i++)
     result += i.ToString();
 sw.Stop();
 var t1 = sw.Elapsed.TotalSeconds;
-$"+ in loop (50k):     {t1:F4}s  len={result.Length}"
+Console.WriteLine($"+ in loop (50k):     {t1:F4}s  len={result.Length}");
 
 sw.Restart();
 var sb = new StringBuilder();
@@ -805,8 +805,8 @@ for (int i = 0; i < 50000; i++)
 result = sb.ToString();
 sw.Stop();
 var t2 = sw.Elapsed.TotalSeconds;
-$"StringBuilder (50k): {t2:F4}s  len={result.Length}"
-t1/t2
+Console.WriteLine($"StringBuilder (50k): {t2:F4}s  len={result.Length}");
+Console.WriteLine(t1/t2);
 ```
 
 ```text
@@ -827,12 +827,12 @@ sb.AppendLine();
 sb.AppendLine($"Number: {42}");
 sb.Insert(0, ">>> ");
 sb.Replace("World", "C#");
-sb
-sb.Length
-sb.Capacity
+Console.WriteLine(sb);
+Console.WriteLine(sb.Length);
+Console.WriteLine(sb.Capacity);
 
 var sb2 = new StringBuilder(1000);
-sb2.Capacity
+Console.WriteLine(sb2.Capacity);
 ```
 
 ```text
@@ -854,13 +854,13 @@ For assembling strings from collections or a small number of parts without `Stri
 
 ```csharp
 var items = Enumerable.Range(0, 5).Select(i => $"item_{i}");
-string.Join(", ", items)
-string.Concat(Enumerable.Range(0, 5))
+Console.WriteLine(string.Join(", ", items));
+Console.WriteLine(string.Concat(Enumerable.Range(0, 5)));
 
 string first = "Hello";
 string last = "World";
 string full = first + " " + last;
-full
+Console.WriteLine(full);
 ```
 
 ```text
@@ -885,9 +885,9 @@ ReadOnlySpan<char> date = span[..10];
 ReadOnlySpan<char> ticker = span[11..15];
 ReadOnlySpan<char> price = span[16..];
 
-date.ToString()
-ticker.ToString()
-double.Parse(price)
+Console.WriteLine(date.ToString());
+Console.WriteLine(ticker.ToString());
+Console.WriteLine(double.Parse(price));
 ```
 
 ```text
@@ -907,7 +907,7 @@ string result = string.Create(11, (first: "Hello", sep: ' ', last: "World"), (sp
     span[5] = state.sep;
     state.last.AsSpan().CopyTo(span[6..]);
 });
-result
+Console.WriteLine(result);
 ```
 
 ```text
@@ -969,14 +969,14 @@ if (match.Success)
 
 var phones = Regex.Matches(text, @"\d{3}-\d{3}-\d{4}");
 var emails = Regex.Matches(text, @"[\w.+-]+@[\w-]+\.[\w.]+");
-string.Join(", ", phones.Select(m => m.Value))
-string.Join(", ", emails.Select(m => m.Value))
+Console.WriteLine(string.Join(", ", phones.Select(m => m.Value)));
+Console.WriteLine(string.Join(", ", emails.Select(m => m.Value)));
 
 foreach (Match m in phones)
     Console.WriteLine($"  {m.Value} at [{m.Index}:{m.Index + m.Length}]");
 
-Regex.IsMatch("12345", @"^\d+$")
-Regex.IsMatch("123a5", @"^\d+$")
+Console.WriteLine(Regex.IsMatch("12345", @"^\d+$"));
+Console.WriteLine(Regex.IsMatch("123a5", @"^\d+$"));
 ```
 
 ```text
@@ -1029,18 +1029,18 @@ Transforming text with pattern-based replacement, splitting on patterns, and pre
 `Regex.Replace` substitutes matches — pass a string for static replacement, a `MatchEvaluator` lambda for dynamic transformation, or `$1`/`$2` backreferences for group rearrangement. `Regex.Split` tokenizes on a pattern instead of a fixed delimiter. For patterns used repeatedly, instantiate `new Regex(..., RegexOptions.Compiled)` once — this precompiles the pattern to IL, avoiding re-parsing on each call.
 
 ```csharp
-Regex.Replace(text, @"\d{3}-\d{3}-\d{4}", "***-***-****")
+Console.WriteLine(Regex.Replace(text, @"\d{3}-\d{3}-\d{4}", "***-***-****"));
 
-Regex.Replace("price: 50, qty: 3", @"\d+", m => (int.Parse(m.Value) * 2).ToString())
+Console.WriteLine(Regex.Replace("price: 50, qty: 3", @"\d+", m => (int.Parse(m.Value) * 2).ToString()));
 
-Regex.Replace("user@host", @"(\w+)@(\w+)", "$2/$1")
+Console.WriteLine(Regex.Replace("user@host", @"(\w+)@(\w+)", "$2/$1"));
 
-string.Join(", ", Regex.Split("Hello World. How are you? Fine!", @"[.!?]\s*"))
-string.Join(", ", Regex.Split("a , b , c", @"\s*,\s*"))
+Console.WriteLine(string.Join(", ", Regex.Split("Hello World. How are you? Fine!", @"[.!?]\s*")));
+Console.WriteLine(string.Join(", ", Regex.Split("a , b , c", @"\s*,\s*")));
 
 var phonePat = new Regex(@"\d{3}-\d{3}-\d{4}", RegexOptions.Compiled);
-string.Join(", ", phonePat.Matches(text).Select(m => m.Value))
-phonePat.Replace(text, "REDACTED")
+Console.WriteLine(string.Join(", ", phonePat.Matches(text).Select(m => m.Value)));
+Console.WriteLine(phonePat.Replace(text, "REDACTED"));
 ```
 
 ```text
@@ -1107,12 +1107,12 @@ CHARACTER CLASSES
 string text = "Hello\nworld\nHELLO";
 
 var ic = Regex.Matches(text, @"hello", RegexOptions.IgnoreCase);
-string.Join(", ", ic.Select(m => m.Value))
+Console.WriteLine(string.Join(", ", ic.Select(m => m.Value)));
 
 var ml = Regex.Matches(text, @"^\w+", RegexOptions.Multiline);
-string.Join(", ", ml.Select(m => m.Value))
+Console.WriteLine(string.Join(", ", ml.Select(m => m.Value)));
 
-Regex.IsMatch(text, @"Hello.world", RegexOptions.Singleline)
+Console.WriteLine(Regex.IsMatch(text, @"Hello.world", RegexOptions.Singleline));
 ```
 
 ```text

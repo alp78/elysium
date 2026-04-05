@@ -36,9 +36,9 @@ import locale
 
 s1 = 'hello'
 s2 = "hello"
-s1
-f"Double quotes: \"{s2}\""
-s1 == s2
+print(s1)
+print(f"Double quotes: \"{s2}\"")
+print(s1 == s2)
 ```
 
 ```text
@@ -58,13 +58,13 @@ string"""
 s4 = '''Also works
 with single
 quotes'''
-s3
+print(s3)
 
 s5 = r"C:\Users\new\test"
 s6 = "C:\\Users\\new\\test"
-s5
-s6
-s5 == s6
+print(s5)
+print(s6)
+print(s5 == s6)
 ```
 
 ```text
@@ -86,11 +86,11 @@ Methods for converting other types to strings, assembling strings from parts, an
 `str()` calls the object's `__str__` method (or `__repr__` as fallback) to produce a human-readable string representation. Unlike C#'s `ToString()`, `str(None)` returns the string `"None"` rather than throwing.
 
 ```python
-str(42)
-str(3.14)
-str(True)
-str([1,2,3])
-str(None)
+print(str(42))
+print(str(3.14))
+print(str(True))
+print(str([1,2,3]))
+print(str(None))
 ```
 
 ```text
@@ -106,8 +106,8 @@ str(None)
 The `*` operator repeats a string *n* times — a feature C# lacks. The `+` operator concatenates strings. The compiler does not optimize `+` in loops, so reserve it for small fixed concatenations.
 
 ```python
-'ha' * 3
-'hello' + ' ' + 'world'
+print('ha' * 3)
+print('hello' + ' ' + 'world')
 ```
 
 ```text
@@ -124,10 +124,10 @@ Empty strings are falsy in Python — `bool('')` returns `False`. This means you
 
 ```python
 empty = ""
-empty == ''
-len(empty)
-bool('')
-bool('a')
+print(empty == '')
+print(len(empty))
+print(bool(''))
+print(bool('a'))
 ```
 
 ```text
@@ -153,7 +153,7 @@ Once a `str` is created, its character sequence cannot change. Item assignment (
 
 ```python
 s = 'H' + s[1:]
-s
+print(s)
 ```
 
 ```text
@@ -208,18 +208,18 @@ Python strings support 0-based indexing with `[]`, negative indexing from the en
 > - For pattern extraction, use regex or split instead of index math
 
 ```python
-s[0]
-s[1]
-s[-1]
-s[-2]
-s[0:5]
-s[:5]
-s[7:]
-s[-6:]
-s[::2]
-s[::-1]
-s[7:12]
-s[2:10:2]
+print(s[0])
+print(s[1])
+print(s[-1])
+print(s[-2])
+print(s[0:5])
+print(s[:5])
+print(s[7:])
+print(s[-6:])
+print(s[::2])
+print(s[::-1])
+print(s[7:12])
+print(s[2:10:2])
 ```
 
 ```text
@@ -292,12 +292,12 @@ Python provides six case-conversion methods. `upper()` and `lower()` convert all
 ```python
 s = "  Hello, World!  "
 
-'hello world'.upper()
-'HELLO WORLD'.lower()
-'hello world'.title()
-'hello world'.capitalize()
-'Hello World'.swapcase()
-'Straße'.casefold()
+print('hello world'.upper())
+print('HELLO WORLD'.lower())
+print('hello world'.title())
+print('hello world'.capitalize())
+print('Hello World'.swapcase())
+print('Straße'.casefold())
 ```
 
 ```text
@@ -395,15 +395,15 @@ Methods for finding substrings by position or existence.
 `find` returns the 0-based position of the first occurrence (or `-1` if not found). `index` is identical but raises `ValueError` instead of returning `-1`. `rfind`/`rindex` search from the right. `count` returns the number of non-overlapping occurrences. The `in` operator is the idiomatic way to check for substring existence.
 
 ```python
-s.find('Hello')
-s.find('Hello', 1)
-s.rfind('Hello')
-s.find('Java')
-s.index('World')
-s.count('Hello')
-s.startswith('Hello')
-s.endswith('!')
-'World' in s
+print(s.find('Hello'))
+print(s.find('Hello', 1))
+print(s.rfind('Hello'))
+print(s.find('Java'))
+print(s.index('World'))
+print(s.count('Hello'))
+print(s.startswith('Hello'))
+print(s.endswith('!'))
+print('World' in s)
 ```
 
 ```text
@@ -430,11 +430,11 @@ Python's comparison operators (`<`, `>`, `<=`, `>=`, `==`, `!=`) compare strings
 > Python's `<` operator is equivalent to `string.CompareOrdinal` in C#. There is no built-in case-insensitive comparison operator — use `s1.casefold() == s2.casefold()` or `s1.lower() == s2.lower()`.
 
 ```python
-"apple" < "banana"
-"banana" > "apple"
-"apple" == "apple"
-"hello" == "HELLO"
-"hello".casefold() == "HELLO".casefold()
+print("apple" < "banana")
+print("banana" > "apple")
+print("apple" == "apple")
+print("hello" == "HELLO")
+print("hello".casefold() == "HELLO".casefold())
 ```
 
 ```text
@@ -454,24 +454,24 @@ Methods for substituting substrings, tokenizing strings into arrays, and reassem
 `replace` substitutes occurrences and accepts an optional max-count parameter (unlike C# which always replaces all). `split` tokenizes on a delimiter — with no arguments it splits on any whitespace and strips empties, equivalent to C#'s `Split(null, RemoveEmptyEntries)`. `rsplit` splits from the right. `splitlines` handles all line endings (`\n`, `\r\n`, `\r`). `partition`/`rpartition` split into exactly three parts `(before, sep, after)`.
 
 ```python
-s.replace('Hello', 'Hi')
-s.replace('Hello', 'Hi', 1)
+print(s.replace('Hello', 'Hi'))
+print(s.replace('Hello', 'Hi', 1))
 
 csv = "apple,banana,cherry"
-csv.split(',')
-csv.split(',', 1)
+print(csv.split(','))
+print(csv.split(',', 1))
 
 words = "  hello  world  "
-words.split()
-words.split(' ')
+print(words.split())
+print(words.split(' '))
 
-csv.rsplit(',', 1)
+print(csv.rsplit(',', 1))
 
 lines = "line1\nline2\nline3"
-lines.splitlines()
+print(lines.splitlines())
 
-csv.partition(',')
-csv.rpartition(',')
+print(csv.partition(','))
+print(csv.rpartition(','))
 ```
 
 ```text
@@ -493,13 +493,13 @@ csv.rpartition(',')
 
 ```python
 parts = ["hello", "world", "python"]
-' '.join(parts)
-', '.join(parts)
-'->'.join(parts)
-''.join(parts)
+print(' '.join(parts))
+print(', '.join(parts))
+print('->'.join(parts))
+print(''.join(parts))
 
 tab_str = "a\tb\tc"
-tab_str.expandtabs(4)
+print(tab_str.expandtabs(4))
 ```
 
 ```text
@@ -523,13 +523,13 @@ Converting between strings and bytes, and performing character-level replacement
 
 ```python
 table = str.maketrans("aeiou", "12345")
-'hello world'.translate(table)
+print('hello world'.translate(table))
 
 table2 = str.maketrans("", "", "aeiou")
-'hello world'.translate(table2)
+print('hello world'.translate(table2))
 
-'hello'.encode('utf-8')
-'hello'.encode('ascii')
+print('hello'.encode('utf-8'))
+print('hello'.encode('ascii'))
 ```
 
 ```text
@@ -571,15 +571,15 @@ name, age = "Alice", 30
 n = 1234567.89123
 pct = 0.856
 
-f"Name: {name}, Age: {age}"
-age + 1
-name.upper()
+print(f"Name: {name}, Age: {age}")
+print(age + 1)
+print(name.upper())
 
-"Name: {}, Age: {}".format(name, age)
-"Name: {0}, Age: {1}, {0} again".format(name, age)
-"Name: {n}, Age: {a}".format(n=name, a=age)
+print("Name: {}, Age: {}".format(name, age))
+print("Name: {0}, Age: {1}, {0} again".format(name, age))
+print("Name: {n}, Age: {a}".format(n=name, a=age))
 
-"Name: %s, Age: %d, Pi: %.2f" % (name, age, 3.14)
+print("Name: %s, Age: %d, Pi: %.2f" % (name, age, 3.14))
 ```
 
 ```text
@@ -612,21 +612,21 @@ Format specifiers inside f-string braces control numeric display: `{value:.2f}`,
 | `#x` | Hex with `0x` prefix | `0xff` |
 
 ```python
-f"{n:.2f}"
-f"{n:.0f}"
-f"{n:,.2f}"
-f"{n:.2e}"
-f"{n:.4g}"
-f"{pct:.1%}"
+print(f"{n:.2f}")
+print(f"{n:.0f}")
+print(f"{n:,.2f}")
+print(f"{n:.2e}")
+print(f"{n:.4g}")
+print(f"{pct:.1%}")
 
 x = 255
-f"{x:d}"
-f"{x:b}"
-f"{x:o}"
-f"{x:x}"
-f"{x:X}"
-f"{x:#x}"
-f"{x:08d}"
+print(f"{x:d}")
+print(f"{x:b}")
+print(f"{x:o}")
+print(f"{x:x}")
+print(f"{x:X}")
+print(f"{x:#x}")
+print(f"{x:08d}")
 ```
 
 ```text
@@ -655,12 +655,12 @@ f-string alignment uses `<` (left), `>` (right), `^` (center) with an optional f
 
 ```python
 s = "hi"
-f"{s:<10}"
-f"{s:>10}"
-f"{s:^10}"
-f"{s:*^10}"
-f"{42:+d}"
-f"{42: d}"
+print(f"{s:<10}")
+print(f"{s:>10}")
+print(f"{s:^10}")
+print(f"{s:*^10}")
+print(f"{42:+d}")
+print(f"{42: d}")
 
 try:
     locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
@@ -739,13 +739,13 @@ result = ""
 for i in range(50000):
     result += str(i)
 t1 = time.perf_counter() - start
-f"+ in loop (50k):     {t1:.4f}s  len={len(result)}"
+print(f"+ in loop (50k):     {t1:.4f}s  len={len(result)}")
 
 start = time.perf_counter()
 result = "".join(str(i) for i in range(50000))
 t2 = time.perf_counter() - start
-f"join() (50k):        {t2:.4f}s  len={len(result)}"
-f"join is {t1/t2:.1f}x faster"
+print(f"join() (50k):        {t2:.4f}s  len={len(result)}")
+print(f"join is {t1/t2:.1f}x faster")
 ```
 
 ```text
@@ -795,7 +795,7 @@ For 2–5 known parts, the `+` operator is perfectly readable and efficient. Pyt
 first = "Hello"
 last = "World"
 full = first + " " + last
-full
+print(full)
 ```
 
 ```text
@@ -883,18 +883,18 @@ Transforming text with pattern-based replacement, splitting on patterns, and pre
 `re.sub` substitutes matches — pass a string for static replacement, a lambda for dynamic transformation, or `\1`/`\2` backreferences for group rearrangement. `re.split` tokenizes on a pattern instead of a fixed delimiter. `re.compile` pre-compiles a pattern into a reusable object — the Python equivalent of C#'s `new Regex(..., Compiled)`.
 
 ```python
-re.sub(r'\d{3}-\d{3}-\d{4}', '***-***-****', text)
+print(re.sub(r'\d{3}-\d{3}-\d{4}', '***-***-****', text))
 
-re.sub(r'\d+', lambda m: str(int(m.group()) * 2), "price: 50, qty: 3")
+print(re.sub(r'\d+', lambda m: str(int(m.group()) * 2), "price: 50, qty: 3"))
 
-re.sub(r'(\w+)@(\w+)', r'\2/\1', "user@host")
+print(re.sub(r'(\w+)@(\w+)', r'\2/\1', "user@host"))
 
-re.split(r'[.!?]\s*', "Hello World. How are you? Fine!")
-re.split(r'\s*,\s*', "a , b , c")
+print(re.split(r'[.!?]\s*', "Hello World. How are you? Fine!"))
+print(re.split(r'\s*,\s*', "a , b , c"))
 
 phone_pat = re.compile(r'\d{3}-\d{3}-\d{4}')
-phone_pat.findall(text)
-phone_pat.sub('REDACTED', text)
+print(phone_pat.findall(text))
+print(phone_pat.sub('REDACTED', text))
 ```
 
 ```text
@@ -959,9 +959,9 @@ CHARACTER CLASSES
 
 ```python
 text = "Hello\nworld\nHELLO"
-re.findall(r'hello', text, re.IGNORECASE)
-re.findall(r'^\w+', text, re.MULTILINE)
-bool(re.search(r'Hello.world', text, re.DOTALL))
+print(re.findall(r'hello', text, re.IGNORECASE))
+print(re.findall(r'^\w+', text, re.MULTILINE))
+print(bool(re.search(r'Hello.world', text, re.DOTALL)))
 
 pattern = re.compile(r"""
     (\d{3})     # area code
@@ -970,9 +970,9 @@ pattern = re.compile(r"""
     [-.]        # separator
     (\d{4})     # last 4 digits
 """, re.VERBOSE)
-pattern.findall('Call 123-456-7890')
+print(pattern.findall('Call 123-456-7890'))
 
-re.findall(r'^hello', text, re.IGNORECASE | re.MULTILINE)
+print(re.findall(r'^hello', text, re.IGNORECASE | re.MULTILINE))
 ```
 
 ```text
