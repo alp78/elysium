@@ -1541,6 +1541,8 @@ root
 
 `LazyFrame.ScanParquet()` builds a query plan without reading data. Combined with `.Select()` and `.Filter()`, the optimizer pushes both column selection (projection pushdown) and row filtering (predicate pushdown) down to the Parquet reader, reading only the necessary row groups and columns.
 
+_Builds a lazy scan of the OHLCV Parquet, chains `.Select("date", "symbol", "close")` and `.Filter(symbol == "SAP.DE")`, then calls `.Collect()` — materializing 1,324 × 3 without reading the other 9 columns or non-SAP rows._
+
 ```csharp
 var lf = LazyFrame.ScanParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));
 
@@ -1582,6 +1584,8 @@ Deedle cannot read Parquet natively. Use Polars.NET and convert if needed.
 
 Iterate over all `.parquet` files in the data directory (excluding benchmark files) and display their shapes. This gives a quick inventory of available datasets and their sizes.
 
+_Iterates all non-benchmark `.parquet` files in the data directory and prints each file name alongside its shape, producing an inventory that spans from 4-row lookup tables (`dim_index`) to the 66,355-row OHLCV price history._
+
 ```csharp
 var parquetFiles = Directory.GetFiles(DATA, "*.parquet")
     .Where(f => !Path.GetFileName(f).StartsWith("bench_"))
@@ -1618,6 +1622,8 @@ trading_calendar.parquet                 (29335, 11)
 
 Force specific columns to particular types at read time using `dtypeOverride`. This is useful when Polars infers the wrong type (e.g., a numeric ID column parsed as `Int64` when you want `Int32`, or `volume` as integer when you need float for division).
 
+_Reads `eurostoxx50_ohlcv.csv` with a `PolarsSchema` override that forces `volume` to `Float64`, then prints the full schema — confirming the override was applied while all other 11 columns retain their inferred Arrow types._
+
 ```csharp
 var schema = new PolarsSchema()
     .Add("volume", DataType.Float64);
@@ -1648,6 +1654,8 @@ root
 #### Polars.NET | Specify which string values to interpret as null
 
 The `nullValues` parameter accepts an array of strings that should be treated as null during parsing. This is critical for datasets from legacy systems that use varied null representations (`"NA"`, `"N/A"`, `"#N/A"`, `"-"`, empty strings).
+
+_Reads `scores_daily.csv` with 6 custom null strings and reports the 5 columns with non-zero null counts — identifying `ev_ebitda_zscore` (71 nulls) as the most sparse column in the 466-row, 36-column dataset._
 
 ```csharp
 var dfNulls = DataFrame.ReadCsv(Path.Combine(DATA, "scores_daily.csv"),
@@ -1680,6 +1688,8 @@ scores_daily: (466, 36) — 5 columns with nulls
 
 `ReadCsv` defaults to comma (`,`) as the separator. For TSV (tab-separated) or SSV (semicolon-separated) files, pass the actual delimiter via `separator`. Without this, the entire line is parsed as a single column.
 
+_Reads `dim_country.tsv` with `separator: '\t'` and `dim_country.ssv` with `separator: ';'`, displaying the first 3 rows of each — confirming both parse to 212 × 2 with correct country_name and iso_alpha2 columns._
+
 ```csharp
 var dfTsv = DataFrame.ReadCsv(Path.Combine(DATA, "dim_country.tsv"), separator: '\t');
 display($"TSV: {dfTsv.Shape}");
@@ -1706,6 +1716,8 @@ SSV: (212, 2)
 
 Deedle uses `separators` (plural, string) instead of `separator` (char). Pass `"\t"` for tab-separated files.
 
+_Reads `dim_country.tsv` with `separators: "\t"` (Deedle's string parameter vs Polars' char) and retrieves the first 3 rows via `df.Rows[Enumerable.Range(0, 3)]`, confirming 212 × 2 with correct column parsing._
+
 ```csharp
 var dfTsv = Frame.ReadCsv(Path.Combine(DATA, "dim_country.tsv"), separators: "\t");
 display($"TSV: {dfTsv.RowCount} rows x {dfTsv.ColumnCount} cols");
@@ -1730,6 +1742,8 @@ TSV: 212 rows x 2 cols
 #### Polars.NET | Write DataFrames to CSV, Parquet, and JSON
 
 Polars.NET writes to all three formats through `.WriteCsv()`, `.WriteParquet()`, and `.WriteJson()`. Parquet produces the smallest files due to columnar compression.
+
+_Reads `dim_country.parquet`, writes it to CSV, Parquet, and JSON in an `_output/` directory, then lists resulting file sizes — confirming Parquet (3.4 KB) is the most compact output vs JSON (9.6 KB), and cleaning up the output directory afterward._
 
 ```csharp
 var df = DataFrame.ReadParquet(Path.Combine(DATA, "dim_country.parquet"));
@@ -1760,6 +1774,8 @@ dim_country_out.parquet                  3.4 KB
 #### Deedle | Write DataFrames to CSV with SaveCsv
 
 Deedle only supports CSV output natively via `.SaveCsv()`. For Parquet or JSON output, convert to Polars.NET or use a separate serialization library.
+
+_Reads `dim_country.csv` with Deedle and writes it to `_output/dim_country_deedle.csv` via `.SaveCsv()`, printing the output file size (2.9 KB) — demonstrating the only natively supported write format in Deedle._
 
 ```csharp
 var df = Frame.ReadCsv(Path.Combine(DATA, "dim_country.csv"));
@@ -1818,6 +1834,8 @@ flowchart LR
 #### Polars.NET | Compare eager reading vs lazy scanning performance
 
 The eager path reads the entire file into memory, then applies filters and selects columns. The lazy path builds a query plan and reads only what's needed.
+
+_Times both eager (`ReadParquet` + `.Filter()` + `.Select()`) and lazy (`ScanParquet` + `.Filter()` + `.Select()` + `.Collect()`) paths on the OHLCV dataset — showing lazy executes in ~1 ms vs ~6 ms for eager — then prints the optimized plan to explain the projection and predicate pushdown._
 
 ```csharp
 var sw = System.Diagnostics.Stopwatch.StartNew();

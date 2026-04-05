@@ -20,6 +20,10 @@ Polars.NET vs Deedle: Create columns, expressions, method chaining.
 
 ---
 
+## Setup
+
+### Warning Suppression
+
 Suppress CS1701/CS1702 assembly version warnings in .NET Interactive. Run this cell once before any cells that use NuGet packages.
 
 ```csharp
@@ -36,6 +40,8 @@ var withWarningLevel = scriptOptions.GetType().GetMethod("WithWarningLevel");
 var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 ```
+
+### NuGet Packages and Imports
 
 Install NuGet packages and import namespaces.
 
@@ -78,6 +84,8 @@ var DATA = Path.Combine("..", "data");
 
     Loading extensions from `C:\Users\aperi\.nuget\packages\deedle.interactive\3.0.0\lib\netstandard2.1\Deedle.Interactive.dll`
 
+### Dataset Loading
+
 Load the primary datasets used throughout this notebook. Both libraries read the same CSV — Polars.NET with date parsing enabled, Deedle with default inference.
 
 ```csharp
@@ -102,6 +110,8 @@ Adding, modifying, and overwriting columns is the most common DataFrame operatio
 
 `.WithColumns()` accepts one or more expressions. Each expression references existing columns via `Col()`, applies arithmetic or logic, and is named with `.Alias()`. The result is a new DataFrame with the additional column appended.
 
+_Computes a `range` column (high − low) for the full 66 K-row dataset using a single expression and previews the first 5 rows to confirm per-row subtraction._
+
 ```csharp
 var dfRange = dfP.WithColumns(
     (Col("high") - Col("low")).Alias("range"));
@@ -114,6 +124,8 @@ dfRange.Select("symbol", "date", "high", "low", "range").Head(5)
 #### Deedle | Add a computed column with AddColumn
 
 Deedle uses `.GetColumn<T>()` to extract typed Series objects, then standard C# arithmetic operators to combine them. The result is added to the frame with `.AddColumn()`. Because Deedle mutates in place, clone the frame first to avoid side effects.
+
+_Extracts `high` and `low` as typed `double` Series from a cloned frame, subtracts them with the C# `−` operator, and adds `range` with `.AddColumn()` — previewing 5 rows with all five selected columns._
 
 ```csharp
 var dfDRange = dfD.Clone();
@@ -144,6 +156,8 @@ dfDRange.Columns[new[] { "symbol", "date", "high", "low", "range" }].Rows[dfD.Ro
 
 When `.Alias()` matches an existing column name, the new expression replaces that column. `.Cast(DataType.X)` converts the column's data type. This is useful for promoting integer columns to float for downstream arithmetic that requires fractional precision.
 
+_Casts the `volume` column from `i64` to `f64` in-place by aliasing to the same column name, confirms the dtype change in a `display()` call, and previews 3 rows._
+
 ```csharp
 var dfCast = dfP.WithColumns(
     Col("volume").Cast(DataType.Float64)
@@ -160,6 +174,8 @@ dfCast.Select("symbol", "date", "volume").Head(3)
 #### Deedle | Overwrite a column by replacing it with a converted Series
 
 Deedle's CSV reader infers `volume` as `double` by default, so there is no integer-to-float cast to demonstrate. Instead, `.ReplaceColumn()` is shown here rounding the existing values — the same method used to overwrite any column with a transformed Series.
+
+_Rounds the existing `double` `volume` values to 0 decimal places with `Math.Round`, then uses `.ReplaceColumn()` to overwrite the column in a cloned frame — demonstrating the overwrite pattern with a 3-row preview._
 
 ```csharp
 var dfDCast = dfD.Clone();
@@ -189,6 +205,8 @@ dfDCast.Columns[new[] { "symbol", "date", "volume" }].Rows[dfD.RowKeys.Take(3)]
 
 Compound expressions chain arithmetic operators directly on `Col()` references. `Lit(100.0)` injects a scalar constant into the expression tree. The entire expression is evaluated in a single vectorized pass — no intermediate Series objects are allocated.
 
+_Chains subtraction, division, and multiplication on three `Col()` references — `(close − open) / open * 100.0` — to add `daily_return_pct` in one pass, previewing 5 ABI.BR rows with values around ±1.5%._
+
 ```csharp
 var dfPct = dfP.WithColumns(
     ((Col("close") - Col("open")) / Col("open") * Lit(100.0)).Alias("daily_return_pct")
@@ -202,6 +220,8 @@ dfPct.Select("symbol", "date", "open", "close", "daily_return_pct").Head(5)
 #### Deedle | Percentage change with Series arithmetic
 
 The equivalent Deedle approach extracts each column as a `Series<int, double>`, then uses C# arithmetic operators. Each intermediate operation (subtraction, division, multiplication) materializes a new Series object, making this less memory-efficient than the Polars expression approach for large datasets.
+
+_Extracts `open` and `close` as `double` Series, computes `(close − open) / open * 100.0` by chaining C# operators (each step materializing a new Series), and adds `daily_return_pct` to a cloned frame._
 
 ```csharp
 var dfDPct = dfD.Clone();
@@ -232,6 +252,8 @@ dfDPct.Columns[new[] { "symbol", "date", "open", "close", "daily_return_pct" }].
 
 `.WithColumns()` accepts multiple comma-separated expressions. Polars evaluates them in a single pass over the data, avoiding repeated scans. This is both more readable and more performant than chaining multiple `.WithColumns()` calls.
 
+_Adds `range`, `midpoint`, and `daily_return_pct` in one `.WithColumns()` call — all three evaluated in a single scan of the 66 K-row dataset — with a 5-row preview showing all new columns._
+
 ```csharp
 var dfMulti = dfP.WithColumns(
     (Col("high") - Col("low")).Alias("range"),
@@ -247,6 +269,8 @@ dfMulti.Select("symbol", "date", "range", "midpoint", "daily_return_pct").Head(5
 #### Deedle | Multiple transforms with chained AddColumn calls
 
 Deedle has no multi-expression equivalent. Each `.AddColumn()` call mutates the frame and materializes immediately. For multiple transforms, chain the calls sequentially — each one operates on the already-mutated frame.
+
+_Extracts four OHLC Series from a cloned frame, then chains three sequential `.AddColumn()` calls — `range`, `midpoint`, `daily_return_pct` — each mutating the frame immediately and using the already-extracted column variables._
 
 ```csharp
 var dfDMulti = dfD.Clone();
@@ -315,6 +339,8 @@ flowchart LR
 
 `Col("name")` references a column by name, `Lit(value)` injects a scalar constant, and `.Alias("name")` assigns a name to the resulting expression. These three primitives compose into arbitrarily complex expressions passed to `.Select()` or `.WithColumns()`.
 
+_Selects `symbol`, `close`, a `Lit(1.10)` constant aliased as `eur_to_usd`, and `close * 1.10` aliased as `close_usd` — four output columns built from expressions referencing just two source columns._
+
 ```csharp
 var dfExpr = dfP.Select(
     Col("symbol"),
@@ -331,6 +357,8 @@ dfExpr.Head(5)
 #### Deedle | Equivalent using direct Series arithmetic
 
 Deedle has no expression system. The equivalent requires extracting each column as a typed Series, performing arithmetic with C# operators, and adding the results back to the frame imperatively.
+
+_Fills `eur_to_usd` with `Enumerable.Repeat(1.10, rowCount)` and multiplies the `close` Series by 1.10 to produce `close_usd` — the same four columns as the Polars version, via two separate `.AddColumn()` calls._
 
 ```csharp
 var dfDExpr = dfD.Clone();
@@ -366,6 +394,8 @@ dfDExpr.Columns[new[] { "symbol", "close", "eur_to_usd", "close_usd" }].Rows[dfD
 > [!success] Correct Polars.NET conditional pattern
 > `IfElse(Col("a") > Col("b"), Lit("yes"), Lit("no")).Alias("result")`
 
+_Computes `return_pct` and a three-way `direction` label (`"up"` / `"down"` / `"flat"`) for the full dataset in one `.WithColumns()` call, previewing 8 ABI.BR rows to confirm both columns are populated correctly._
+
 ```csharp
 var dailyRet = (Col("close") - Col("open")) / Col("open") * Lit(100.0);
 
@@ -386,6 +416,8 @@ dfCond.Select("symbol", "date", "open", "close", "return_pct", "direction").Head
 #### Deedle | Conditional column via Series.Select lambda
 
 Deedle uses `.ZipInner()` to align two Series by key, then `.Select()` with a lambda containing C# ternary operators. This is functionally equivalent but imperative — the lambda runs once per row with no opportunity for the framework to optimize.
+
+_Zips `close` and `open` with `.ZipInner()`, applies a ternary in `.Select()` to assign `"up"`, `"down"`, or `"flat"`, then adds both `return_pct` and `direction` to a cloned frame — previewing 8 matching rows._
 
 ```csharp
 var dfDCond = dfD.Clone();
@@ -421,6 +453,8 @@ dfDCond.Columns[new[] { "symbol", "date", "open", "close", "return_pct", "direct
 
 For multi-tier classification, nest `IfElse` calls — the false branch of each outer `IfElse` becomes the next condition. The volume column is cast to `Float64` first because `Lit()` with numeric constants produces float comparisons.
 
+_Classifies all 66 K rows into four volume tiers with three nested `IfElse` calls, then groups by `vol_tier` to count each bucket — medium (24,964), low (27,061), high (5,887), very_high (8,443)._
+
 ```csharp
 var volFloat = Col("volume").Cast(DataType.Float64);
 
@@ -443,6 +477,8 @@ dfTier.GroupBy("vol_tier").Agg(Col("vol_tier").Count().Alias("count"))
 #### Deedle | Equivalent tier classification with imperative logic
 
 The Deedle equivalent uses a `Series.Select` lambda with chained ternary operators — a direct C# translation of the nested `IfElse` logic.
+
+_Applies three chained ternary operators in a `.Select()` lambda on the `volume` Series to assign the same four-tier labels, then groups observations by tier value using LINQ to print the count for each bucket._
 
 ```csharp
 var dfDTier = dfD.Clone();
@@ -472,6 +508,8 @@ foreach (var kv in tierCounts.Observations)
 
 Horizontal operations combine values across multiple columns within each row. Polars.NET 0.4.0 does not expose `horizontal_mean`, so the OHLC average is computed as manual arithmetic over four `Col()` references divided by `Lit(4.0)`.
 
+_Sums `open`, `high`, `low`, and `close` with four `Col()` references and divides by `Lit(4.0)` to produce `ohlc_avg` (the OHLC midpoint) — previewing 5 ABI.BR rows with all source price columns visible._
+
 ```csharp
 var dfHoriz = dfP.WithColumns(
     ((Col("open") + Col("high") + Col("low") + Col("close")) / Lit(4.0)).Alias("ohlc_avg")
@@ -485,6 +523,8 @@ dfHoriz.Select("symbol", "date", "open", "high", "low", "close", "ohlc_avg").Hea
 #### Deedle | Horizontal arithmetic across columns
 
 The Deedle equivalent extracts four Series and combines them with standard arithmetic operators. Each intermediate operation (`+`, `/`) materializes a new Series.
+
+_Extracts all four OHLC columns as `double` Series and chains `+` four times before dividing by `4.0` — each binary operation allocating a temporary Series — then adds `ohlc_avg` to a cloned frame._
 
 ```csharp
 var dfDHoriz = dfD.Clone();
@@ -517,6 +557,8 @@ dfDHoriz.Columns[new[] { "symbol", "date", "open", "high", "low", "close", "ohlc
 
 String-valued expressions work the same way as numeric ones — `Lit("UP")` creates a string constant. This example builds a directional label per row using nested `IfElse`.
 
+_Builds a `tag` column with values `"UP"`, `"DOWN"`, or `"FLAT"` for the full dataset using string `Lit()` expressions inside nested `IfElse`, previewing 5 ABI.BR rows to confirm per-day labelling._
+
 ```csharp
 var dfLabel = dfP.WithColumns(
     IfElse(
@@ -534,6 +576,8 @@ dfLabel.Select("symbol", "date", "close", "open", "tag").Head(5)
 #### Deedle | String concatenation with Series.Select
 
 Deedle builds the label by zipping the symbol and close/open Series, applying a ternary for direction, then zipping again with the symbol to concatenate via string interpolation. This multi-zip pattern is the standard Deedle approach for combining values from multiple columns row-wise.
+
+_Zips `close` and `open` for directional ternary evaluation, then zips again with `symbol` to build a `"{symbol}_{direction}"` interpolated string — demonstrating chained `.ZipInner()` for multi-column string assembly._
 
 ```csharp
 var dfDLabel = dfD.Clone();
@@ -578,6 +622,8 @@ Type casting converts column data types — numeric promotions, string-to-date p
 
 `.Cast(DataType.Float64)` converts the column's underlying storage type. When aliased to a new name, the original column is preserved alongside the cast version.
 
+_Casts `id` from `i64` to `f64` under the alias `id_float`, keeping the original `id` column intact — confirms both dtypes in a `display()` line before previewing 3 rows with both columns side by side._
+
 ```csharp
 var dfCast1 = dfP.WithColumns(
     Col("id").Cast(DataType.Float64).Alias("id_float")
@@ -594,6 +640,8 @@ dfCast1.Select("id", "id_float").Head(3)
 #### Deedle | Manual type conversion with Series.Select
 
 Deedle has no `.Cast()` method. Instead, extract the column as the source type, then use `.Select()` with a lambda that performs the C# cast. The converted Series is added as a new column.
+
+_Extracts `id` as `int`, maps each value through `(double)kvp.Value` in a `.Select()` lambda to produce `id_float`, and adds it to a cloned frame — verifying the conversion with a 3-row preview showing both integer and double columns._
 
 ```csharp
 var dfDCast1 = dfD.Clone();
@@ -624,6 +672,8 @@ dfDCast1.Columns[new[] { "id", "id_float" }].Rows[dfD.RowKeys.Take(3)]
 
 `.Str.ToDate(format)` parses a string column into a Polars `Date` type using a strftime format string. Since `tryParseDates: true` already parsed the date column during CSV load, this example first casts the date back to string to demonstrate the parsing roundtrip.
 
+_Casts the already-parsed `date` column back to `str` to create `date_str`, then re-parses it with `.Str.ToDate("%Y-%m-%d")` to confirm the full roundtrip — displaying both dtypes (`str` → `date`) and 3 rows._
+
 ```csharp
 var dfDateStr = dfP.WithColumns(
     Col("date").Cast(DataType.String).Alias("date_str")
@@ -644,6 +694,8 @@ dfDateParsed.Select("date_str", "date_parsed").Head(3)
 #### Deedle | Parse date strings to DateTime with Series.Select
 
 Deedle uses `DateTime.Parse()` inside a `.Select()` lambda. The parsed values become a `Series<int, DateTime>` that can be added back to the frame. For format-specific parsing, use `DateTime.ParseExact()` instead.
+
+_Extracts the string `date` column from a cloned frame, maps each value through `DateTime.Parse()` in a `.Select()` lambda, adds it as `date_parsed`, and confirms the type is `DateTime` by displaying the first row's value._
 
 ```csharp
 var dfDDate = dfD.Clone();
@@ -677,6 +729,8 @@ dfDDate.Columns[new[] { "date", "date_parsed" }].Rows[dfD.RowKeys.Take(3)]
 
 `.Cast(DataType.Categorical)` dictionary-encodes the column — each unique string is stored once, and the column stores integer codes. This dramatically reduces memory for columns with high repetition (e.g., 66K rows but only 50 unique symbols).
 
+_Casts the 66 K-row `symbol` column (50 unique values) from `str` to Polars `cat` type, confirms the dtype change and prints the unique count, then previews 3 rows — demonstrating dictionary encoding with no visible change in displayed values._
+
 ```csharp
 var dfCat = dfP.WithColumns(
     Col("symbol").Cast(DataType.Categorical).Alias("symbol_cat")
@@ -699,6 +753,8 @@ Deedle has no native categorical type. The workaround maps unique string values 
 
 > [!info] Deedle categorical limitation
 > Deedle's lack of native categorical support means group-by operations on string columns always hash the full string. For datasets with high-cardinality string columns, consider using Polars.NET or `Microsoft.Data.Analysis` which support dictionary encoding natively.
+
+_Builds a `Dictionary<string, int>` mapping each of the 50 unique symbols to an integer code, maps the full `symbol` Series through it to produce `coded`, and prints the unique count and first three codes to confirm the manual encoding pattern._
 
 ```csharp
 var symbols = dfD.GetColumn<string>("symbol");
@@ -728,6 +784,8 @@ Method chaining composes multiple DataFrame operations into a single fluent pipe
 
 Each method in the chain returns a new DataFrame, allowing `.Filter()` → `.WithColumns()` → `.Sort()` → `.Head()` → `.Select()` to read as a single declarative pipeline. The query planner can optimize across the entire chain.
 
+_Chains `.Filter()` (ASML.AS only) → `.WithColumns()` (`return_pct`) → `.Sort()` (ascending by return) → `.Head(10)` → `.Select()` — finding the 10 days with the largest negative returns for ASML.AS in a single declarative expression._
+
 ```csharp
 var dfChain = dfP
     .Filter(Col("symbol") == Lit("ASML.AS"))
@@ -746,6 +804,8 @@ dfChain
 #### Deedle | Equivalent multi-step pipeline
 
 Deedle lacks fluent chaining — each step (filter, add column, sort, take) is a separate statement. Sorting requires extracting the column, ordering observations with LINQ, then re-indexing the frame by the sorted keys.
+
+_Reproduces the five-step pipeline imperatively: slices ASML.AS rows by key, adds `return_pct`, sorts row keys with LINQ `.OrderByDescending()`, takes 10, and subsets columns — producing the 10 best-return days (opposite sort direction to the Polars chain)._
 
 ```csharp
 var asmlRows = dfD.GetColumn<string>("symbol")
@@ -787,6 +847,8 @@ dfDAsml2.Rows[sortedKeys].Columns[new[] { "symbol", "date", "open", "close", "re
 
 `.Over("column")` is Polars' window function — it partitions the data by the given column, computes the aggregate within each partition, and broadcasts the result back to every row. This is equivalent to SQL's `AVG(close) OVER (PARTITION BY symbol)`.
 
+_Computes the per-symbol mean close using `.Mean().Over("symbol")` and broadcasts it back to all 66 K rows — every ABI.BR row shows the same mean (≈54.864) repeated in the `mean_close_by_symbol` column._
+
 ```csharp
 var dfOver = dfP.WithColumns(
     Col("close").Mean().Over("symbol").Alias("mean_close_by_symbol")
@@ -800,6 +862,8 @@ dfOver.Select("symbol", "date", "close", "mean_close_by_symbol").Head(8)
 #### Deedle | Group-level mean via GroupBy and manual broadcast
 
 Deedle has no window function. The equivalent requires: (1) computing the group-level aggregate with LINQ's `GroupBy`, (2) storing results in a `Dictionary`, and (3) mapping each row's symbol to the precomputed mean.
+
+_Zips `symbol` and `close`, groups by symbol key with LINQ `.GroupBy()`, averages each group into a `Dictionary<string, double>`, then broadcasts via `.Select()` — producing the same per-symbol mean as `.Over("symbol")`, previewing 8 ABI.BR rows._
 
 ```csharp
 var symCol = dfD.GetColumn<string>("symbol");
@@ -837,6 +901,8 @@ dfDOver.Columns[new[] { "symbol", "date", "close", "mean_close_by_symbol" }].Row
 
 `.RollingMean("20i")` computes a rolling average over a window of 20 rows. The `"20i"` syntax specifies an integer-indexed window (20 rows). Polars fills partial windows at the start of the series with the available data, so the first row's rolling mean equals the first value itself.
 
+_Filters to ASML.AS, sorts ascending, and computes a 20-row rolling mean on `close` — row 1 returns 406.25 (itself), row 2 returns 406.575 (mean of 2), row 3 returns 405.33 (mean of 3), confirming Polars' partial-window fill._
+
 ```csharp
 var dfAsml = dfP.Filter(Col("symbol") == Lit("ASML.AS")).Sort("date", false);
 
@@ -855,6 +921,8 @@ dfRoll.Select("symbol", "date", "close", "close_ma20").Head(25)
 
 > [!info] Partial window behavior
 > Polars fills partial windows at series start (row 1 gets a 1-element mean, row 2 a 2-element mean, etc.). Deedle produces `<missing>` until the full window size is reached. Align behavior by setting `min_periods` in Polars or pre-filling Deedle's missing values.
+
+_Uses `.Window(20)` on the ASML.AS `close` Series to produce 20-row sub-series, collapses each with `.Mean()`, and adds the result as `close_ma20` — showing `<missing>` for rows 1–19 and only computed values from row 20 onwards._
 
 ```csharp
 var asmlKeys = dfD.GetColumn<string>("symbol")
@@ -892,6 +960,8 @@ dfDRoll.Columns[new[] { "symbol", "date", "close", "close_ma20" }].Rows[dfDRoll.
 
 `.CumSum()` computes the running total of a column. Combined with `.Filter()` and `.Sort()`, this builds a cumulative volume curve for a single symbol. The operation is vectorized and runs in a single pass.
 
+_Filters to ASML.AS, sorts by date ascending, and computes running volume totals with `.CumSum()` — showing cumulative traded shares grow from 789,502 on day 1 to 9,052,722 by day 10._
+
 ```csharp
 var dfAsmlCum = dfP
     .Filter(Col("symbol") == Lit("ASML.AS"))
@@ -908,6 +978,8 @@ dfAsmlCum.Select("symbol", "date", "volume", "cum_volume").Head(10)
 #### Deedle | Cumulative sum with manual loop
 
 Deedle has no `.CumSum()` method. The workaround extracts values as an array and accumulates them in a `for` loop. The result is wrapped back into a `Series<int, double>` using the original keys.
+
+_Extracts ASML.AS `volume` values to a `double[]`, accumulates them in a `for` loop (`cumVals[j] = cumVals[j-1] + vals[j]`), wraps the result as a `Series<int, double>` with the original keys, and adds it as `cum_volume`._
 
 ```csharp
 var asmlKeysC = dfD.GetColumn<string>("symbol")
@@ -951,6 +1023,8 @@ dfDAsmlC2.Columns[new[] { "symbol", "date", "volume", "cum_volume" }].Rows[first
 
 `.Rank()` assigns a rank to each value. By default, Polars uses the "average" method for ties (e.g., two values tied for rank 11 both receive 11.5). The ranking is computed within the filtered/sorted context — here, close prices for a single symbol.
 
+_Filters to ASML.AS, sorts by date ascending, and ranks all close prices using Polars' average tie-breaking — rank 11.5 for 14-Jan indicates two closes tied at that position — previewing 10 rows to show early-2021 ASML close ranks._
+
 ```csharp
 var dfRank = dfP
     .Filter(Col("symbol") == Lit("ASML.AS"))
@@ -967,6 +1041,8 @@ dfRank.Select("symbol", "date", "close", "close_rank").Head(10)
 #### Deedle | Manual rank computation with LINQ
 
 Deedle has no `.Rank()` method. The manual approach sorts observations by value, assigns ranks by position using a dictionary, then maps each original key to its rank. This implementation uses ordinal ranking (no tie handling) — ties receive different ranks based on sort order.
+
+_Sorts all ASML.AS close observations by value with LINQ `.OrderBy()`, assigns 1-based integer ranks by loop index into a `Dictionary<int, int>`, then maps each original key to its rank with `.Select()` — ordinal ranking only, no tie averaging._
 
 ```csharp
 var asmlKeysR = dfD.GetColumn<string>("symbol")
@@ -1007,6 +1083,8 @@ dfDRnk.Columns[new[] { "symbol", "date", "close", "close_rank" }].Rows[dfDRnk.Ro
 
 `.PctChange(n)` computes `(current - previous) / previous` with a configurable lag. The first row returns `null` because there is no prior value. This is one of the most common operations in financial time series analysis.
 
+_Filters to ASML.AS, sorts by date ascending, and computes `(current − previous) / previous` with lag 1 — showing `null` for the first row and values like 0.16% and −1.0% for subsequent trading days._
+
 ```csharp
 var dfPctChg = dfP
     .Filter(Col("symbol") == Lit("ASML.AS"))
@@ -1023,6 +1101,8 @@ dfPctChg.Select("symbol", "date", "close", "close_pct_change").Head(10)
 #### Deedle | Manual percent change with Shift
 
 Deedle's `.Shift(1)` offsets the series by one position, producing a `<missing>` value at the start. The percent change formula `(current - shifted) / shifted` then computes the same metric. The first row propagates the missing value from the shift.
+
+_Offsets the ASML.AS `close` Series by one position with `.Shift(1)` (producing `<missing>` at row 1), then computes `(close − shifted) / shifted` element-wise — producing identical percentage values to the Polars `.PctChange(1)` output._
 
 ```csharp
 var asmlKeysPct = dfD.GetColumn<string>("symbol")

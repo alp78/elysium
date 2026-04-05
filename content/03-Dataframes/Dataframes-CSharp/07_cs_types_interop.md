@@ -117,6 +117,8 @@ Other advanced types (Enum, List columns, Struct, Binary) exist in the Rust Pola
 
 `Cast(DataType.Categorical)` replaces the `str` type with `cat` in the column schema. `WithColumns` is non-destructive — it returns a new `DataFrame`, leaving the original `dfP` unchanged.
 
+_Casts the `symbol` column of `dfP` (66,355 rows, 50 unique values) from `str` to `cat` using `Cast(DataType.Categorical)`, printing the original and post-cast `DataTypeName` to confirm that Polars has switched to dictionary encoding._
+
 ```csharp
 var symbolSeries = dfP.Column("symbol");
 var symbolSeries = dfP.Column("symbol");
@@ -150,6 +152,8 @@ Console.WriteLine("With 50 symbols repeated over 66K rows, this significantly re
 
 `DataTypeName` on each `Series` returns the Polars type string. After the cast, `symbol` shows `cat`, confirming dictionary encoding is active. All other columns retain their original types.
 
+_Iterates over all 12 columns in `dfCat` and prints their `DataTypeName`, confirming that `symbol` shows `cat` while all other columns retain their original types (`i64`, `date`, `f64`, `bool`)._
+
 ```csharp
 var colNames = dfCat.ColumnNames;
 // DataTypeName on each column shows the type after casting
@@ -182,6 +186,8 @@ foreach (var name in colNames)
 
 GroupBy on a Categorical column operates on integer indices rather than string comparisons, which is faster for hashing and matching. The result is identical to grouping on the original string column — Categorical is transparent to the consumer.
 
+_Groups `dfCat` by the Categorical `symbol` column, computing `avg_close` (mean) and `total_volume` (sum) per ticker, then sorts by `total_volume` descending and displays the top 10 highest-volume symbols._
+
 ```csharp
 var aggCat = dfCat
 // Categorical uses integer keys internally, making group operations faster
@@ -210,6 +216,8 @@ aggCat.Head(10)
 #### Deedle | No native Categorical — manual encoding
 
 Deedle has no `Categorical` type. The manual encoding below maps unique symbols to integers using a `Dictionary<string, int>` — this mimics Categorical semantics but provides no native GroupBy acceleration or automatic decoding.
+
+_Reads the `symbol` column from `dfD` (66,355 values, 50 unique), builds a `Dictionary<string, int>` mapping each unique symbol to an integer index 0–49, and encodes the full column — producing a `Series<int, int>` with the first five encoded values all `0` (ABI.BR)._
 
 ```csharp
 var symbolsDeedle = dfD.GetColumn<string>("symbol");
@@ -248,6 +256,8 @@ Console.WriteLine("This is purely manual — no Deedle API support for categoric
 #### Polars.NET | Available DataType properties
 
 Enumerate the `DataType` static properties via reflection to confirm what is accessible in this version. Use this as a compatibility check when porting Polars logic from Python to C#.
+
+_Uses reflection to enumerate the public static properties of the `DataType` class that return a `DataType` instance, printing 21 available types in alphabetical order — confirming that Categorical, Date, Float16/32/64, Int8/16/32/64/128, and unsigned variants are accessible in Polars.NET 0.4.0._
 
 ```csharp
 Console.WriteLine("Available DataType static properties:");
@@ -299,6 +309,8 @@ Real projects often need to move data between libraries. This section covers ext
 
 `ToArray<T>()` requires the generic type to match the Polars column type: `string` for `Utf8`/`String`, `double` for `Float64`, `long` for `Int64`. Once extracted, arrays support the full LINQ surface and standard .NET array operations.
 
+_Extracts `symbol` as `string[]`, `close` as `double[]`, and `volume` as `long[]` from `dfP` using `ToArray<T>()`, then applies LINQ `.Average()` and `.Max()` directly on the extracted arrays — confirming avg close of 197.03 and max volume of 376,391,539._
+
 ```csharp
 var symbols = dfP.Column("symbol").ToArray<string>();
 var symbols = dfP.Column("symbol").ToArray<string>();
@@ -328,6 +340,8 @@ Console.WriteLine($"\nLINQ on extracted arrays: avg close = {avgClose:F2}, max v
 #### Polars.NET | Convert to System.Data.DataTable
 
 Build a `DataTable` by mapping each Polars column's `DataTypeName` to a .NET `Type`, then populating rows from column arrays extracted via `ToArray<T>()`. This produces a full data copy — use only for small subsets where DataTable compatibility is required.
+
+_Defines a `ToDataTable()` helper that maps Polars `DataTypeName` strings to .NET `Type` objects and builds a `DataTable` from `dfSmall` (100 rows), populating columns and rows by extracting Float64, Int64, and string arrays._
 
 ```csharp
 var dfSmall = dfP.Head(100);
@@ -410,6 +424,8 @@ Console.WriteLine($"\nFirst row: {string.Join(", ", dataTable.Rows[0].ItemArray.
 #### Deedle | Convert to Polars.NET DataFrame
 
 Extract Deedle column values using `.GetColumn<T>().Values.ToArray()`, then construct Polars `Series` objects with `Series.From("name", array)` and combine them into a new `DataFrame`. Type conversion may be required — Deedle stores `volume` as `double`; Polars expects `long`.
+
+_Extracts `symbol`, `close`, `volume`, and `open` from a 100-row Deedle subset (`dfDSmall`) using `.GetColumn<T>().Values.ToArray()`, casts `volume` from `double` to `long`, and assembles the four columns into a new Polars `DataFrame` of shape (100, 4)._
 
 ```csharp
 var dfDSmall = dfD.GetRowsAt(Enumerable.Range(0, 100).ToArray());

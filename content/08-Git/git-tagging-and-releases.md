@@ -36,7 +36,7 @@ A lightweight tag is simply a named pointer to a commit SHA with no additional m
 | **Annotated** | A full Git object with tagger name, email, date, and a message | Production releases — preferred |
 
 ```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'commitLabelColor': '#c0caf5', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
 gitGraph TB:
   commit id: "feat: source"
   commit id: "fix: nulls"
@@ -216,14 +216,14 @@ Pre-release versions use a hyphen suffix: `v1.0.0-beta.1`, `v1.0.0-rc.2`.
 A complete release cycle: confirm `main` is up to date and all PRs are merged, create an annotated tag on `HEAD`, then push the tag to GitHub. After pushing, GitHub automatically creates a Release entry in the Releases tab, which you can enrich with release notes and attached binaries.
 
 ```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': {'commitLabelColor': '#1a1b26', 'commitLabelBackground': '#c0caf5', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
+%%{init: {'theme': 'base', 'themeVariables': {'git0': '#7aa2f7', 'git1': '#f7768e', 'git2': '#9ece6a', 'git3': '#e0af68', 'git4': '#bb9af7', 'gitBranchLabel0': '#1a1b26', 'gitBranchLabel1': '#1a1b26', 'gitBranchLabel2': '#1a1b26', 'gitBranchLabel3': '#1a1b26', 'commitLabelColor': '#c0caf5', 'commitLabelBackground': 'transparent', 'commitLabelFontSize': '14px', 'tagLabelColor': '#1a1b26', 'tagLabelBackground': '#c0caf5'}, 'gitGraph': {'mainBranchName': 'main'}} }%%
 gitGraph TB:
   commit id: "feat: OHLCV"
-  branch feature/asian-markets
+  branch feat/asia
   commit id: "wip: data"
   commit id: "feat: asia"
   checkout main
-  merge feature/asian-markets id: "merge PR"
+  merge feat/asia id: "merge PR"
   commit id: "fix: ffill" tag: "v1.2.0"
 ```
 
