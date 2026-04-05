@@ -1,4 +1,5 @@
 ---
+title: "04. Missing Data, Strings & DateTime - C#"
 tags: [csharp, deedle, polars, dataframes]
 aliases:
   - null handling, string operations, datetime, timezones

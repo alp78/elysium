@@ -1,4 +1,5 @@
 ---
+title: "09. Database & SQL Interface - C#"
 tags: [csharp, polars, dataframes]
 aliases:
   - SQLContext, DuckDB, database, SQL

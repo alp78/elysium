@@ -1,4 +1,5 @@
 ---
+title: "09. File I/O & Serialization - Python"
 tags: [python]
 aliases: [file IO, JSON serialization, CSV, file reading, file writing, serialization, deserialization]
 description: "Python file I/O and serialization reference with executable examples and cell outputs — covers file reading/writing, JSON, CSV, pickle, and pathlib. See [09_cs_fileio_serialization](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/09_cs_fileio_serialization) for the C# equivalent."

@@ -1,4 +1,5 @@
 ---
+title: "12. Async & Concurrency - C#"
 tags: [csharp, async, concurrency]
 aliases: [async await, concurrency, parallelism, tasks, threads, Task]
 description: "C# async and concurrency reference with executable examples and cell outputs — covers async/await, Task, parallel programming, CancellationToken, and Channels. See [12_py_asyncconcurrency](https://alp78.github.io/elysium/02-Programming-Languages/Python/12_py_asyncconcurrency) for the Python equivalent."

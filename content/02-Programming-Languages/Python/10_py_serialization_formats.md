@@ -1,5 +1,5 @@
 ---
-title: "Serialization Formats — Python"
+title: "10. Serialization Formats - Python"
 tags:
   - python
 aliases: [serialization formats, JSON, CSV, Parquet, Avro, Protocol Buffers]

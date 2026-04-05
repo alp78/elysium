@@ -1,5 +1,5 @@
 ---
-title: "Functions"
+title: "04. Functions - Python"
 tags:
   - python
 aliases: [lambda, closures, decorators, higher-order functions]

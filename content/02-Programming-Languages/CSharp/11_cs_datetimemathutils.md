@@ -1,4 +1,5 @@
 ---
+title: "11. Date, Time, Math & Utilities - C#"
 tags: [csharp]
 aliases: [datetime, timezones, date arithmetic, math operations, utility functions]
 description: "C# date, time, math and utilities reference with executable examples and cell outputs — covers DateTime, DateOnly, TimeSpan, timezones, Math, Random, and Guid. See [11_py_datetimemathutils](https://alp78.github.io/elysium/02-Programming-Languages/Python/11_py_datetimemathutils) for the Python equivalent."

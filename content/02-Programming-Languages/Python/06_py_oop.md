@@ -1,5 +1,5 @@
 ---
-title: "Object-Oriented Programming"
+title: "06. Object-Oriented Programming - Python"
 tags:
   - python
 aliases: [classes, inheritance, polymorphism, interfaces, abstract classes, encapsulation, properties]

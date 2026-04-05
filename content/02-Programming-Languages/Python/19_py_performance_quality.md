@@ -1,4 +1,5 @@
 ---
+title: "19. Performance & Code Quality - Python"
 tags: [python, performance]
 aliases: [performance profiling, code quality, timeit, cProfile, tracemalloc, ruff, mypy]
 description: "Python performance and code quality reference with executable examples and cell outputs — covers timing, memory profiling, Big-O, code smells, type hints, and linting tools. See [19_cs_performance_quality](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/19_cs_performance_quality) for the C# equivalent."

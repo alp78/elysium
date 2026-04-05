@@ -1,4 +1,5 @@
 ---
+title: "07. Advanced Types & Interoperability - C#"
 tags: [csharp, deedle, polars, dataframes]
 aliases:
   - categoricals, Arrow, zero-copy, type conversion

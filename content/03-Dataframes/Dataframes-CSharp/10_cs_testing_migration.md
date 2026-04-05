@@ -1,4 +1,5 @@
 ---
+title: "10. Testing & Migration - C#"
 tags: [pipeline, csharp, polars, dataframes]
 aliases:
   - unit testing, validation, migration guide

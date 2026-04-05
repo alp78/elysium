@@ -1,4 +1,5 @@
 ---
+title: "08. Visualization - C#"
 tags: [csharp, polars, dataframes, plotly]
 aliases:
   - charts, plots, Plotly, matplotlib, seaborn

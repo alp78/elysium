@@ -1,4 +1,5 @@
 ---
+title: "09. Database & SQL Interface - Python"
 tags: [python, pandas, polars, dataframes]
 aliases:
   - SQLContext, DuckDB, SQL Server, database queries

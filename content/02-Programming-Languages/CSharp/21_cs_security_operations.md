@@ -1,4 +1,5 @@
 ---
+title: "21. Security Operations - C#"
 tags: [csharp, gcp, security, encryption, identity]
 aliases: [Security Operations CSharp, Encryption and Identity CSharp]
 description: "C# security operations reference — encryption, certificates, identity, and secure access across GCP services. Executable examples with cell outputs. Built on infrastructure from [20_py_security_setup](https://alp78.github.io/elysium/02-Programming-Languages/Python/20_py_security_setup). See [21_py_security_operations](https://alp78.github.io/elysium/02-Programming-Languages/Python/21_py_security_operations) for the Python equivalent."

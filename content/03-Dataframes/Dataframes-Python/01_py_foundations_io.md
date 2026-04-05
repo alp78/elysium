@@ -1,5 +1,5 @@
 ---
-title: "Foundations and I/O"
+title: "01. Foundations and I/O - Python"
 tags: [python, pandas, polars, dataframes]
 aliases:
   - Series, DataFrames, indexes, data types

@@ -1,4 +1,5 @@
 ---
+title: "17. GCP - C#"
 tags: [csharp]
 aliases: [Google Cloud, BigQuery, Cloud Storage, GCS, Pub/Sub, cloud SDK]
 description: "C# GCP reference with executable examples and cell outputs — covers BigQuery, Cloud Storage, Pub/Sub, and authentication with the Google Cloud .NET SDK. See [17_py_gcp](https://alp78.github.io/elysium/02-Programming-Languages/Python/17_py_gcp) for the Python equivalent."

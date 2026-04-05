@@ -1,4 +1,5 @@
 ---
+title: "11. Date, Time, Math & Utilities - Python"
 tags: [python]
 aliases: [datetime, timezones, date arithmetic, math operations, utility functions]
 description: "Python date, time, math and utilities reference with executable examples and cell outputs — covers datetime, timezones, timedelta, math, random, and common utility functions. See [11_cs_datetimemathutils](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/11_cs_datetimemathutils) for the C# equivalent."

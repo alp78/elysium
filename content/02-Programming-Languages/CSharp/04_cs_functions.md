@@ -1,5 +1,5 @@
 ---
-title: "Functions"
+title: "04. Functions - C#"
 tags:
   - csharp
 aliases: [lambda, closures, decorators, delegates, higher-order functions]

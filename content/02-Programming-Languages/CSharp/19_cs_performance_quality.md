@@ -1,4 +1,5 @@
 ---
+title: "19. Performance & Code Quality - C#"
 tags: [csharp, performance]
 aliases: [performance profiling, code quality, Stopwatch, BenchmarkDotNet, Span, nullable reference types]
 description: "C# performance and code quality reference with executable examples and cell outputs — covers timing, memory measurement, Span<T>, Big-O, LINQ pitfalls, code smells, and static analysis. See [19_py_performance_quality](https://alp78.github.io/elysium/02-Programming-Languages/Python/19_py_performance_quality) for the Python equivalent."

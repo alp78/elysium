@@ -1,4 +1,5 @@
 ---
+title: "13. Advanced Parallel Pipelines - C#"
 tags: [csharp, pipeline]
 aliases: [advanced pipelines, TPL Dataflow, channels, IAsyncEnumerable, cross-process]
 description: "C# advanced parallel pipelines reference with executable examples and cell outputs — covers TPL Dataflow, Channel-based batching, IAsyncEnumerable for paginated APIs, rate-limited parallel fetch, and cross-process execution. See [13_py_advancedpipelines](https://alp78.github.io/elysium/02-Programming-Languages/Python/13_py_advancedpipelines) for the Python equivalent."

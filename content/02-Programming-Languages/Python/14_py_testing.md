@@ -1,4 +1,5 @@
 ---
+title: "14. Testing - Python"
 tags: [testing, python]
 aliases: [unit testing, pytest, unittest, ipytest, hypothesis, test driven development, mocking, assertions]
 description: "Python testing reference with executable examples and cell outputs — covers pytest, unittest, fixtures, mocking, parametrize, and test-driven development patterns. See [14_cs_testing](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/14_cs_testing) for the C# equivalent."

@@ -1,4 +1,5 @@
 ---
+title: "03. Transforms, Expressions & Chaining - Python"
 tags: [pipeline, python, pandas, polars]
 aliases:
   - with_columns, assign, apply, map, when/then, method chaining

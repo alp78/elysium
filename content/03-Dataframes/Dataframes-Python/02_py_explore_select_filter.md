@@ -1,5 +1,5 @@
 ---
-title: "Explore, Select & Filter"
+title: "02. Explore, Select & Filter - Python"
 tags: [python, pandas, polars, dataframes]
 aliases:
   - head, tail, describe, info, select, filter, isin, where

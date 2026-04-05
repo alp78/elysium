@@ -1,5 +1,5 @@
 ---
-title: "Foundations and I/O"
+title: "01. Foundations and I/O - C#"
 tags: [csharp, deedle, polars, dataframes]
 aliases:
   - Series, DataFrames, types, CSV, Parquet
@@ -20,6 +20,8 @@ Polars.NET vs Deedle: Series, DataFrames, and Data Types
 
 ---
 ## Setup & Imports
+
+### Warning Suppression
 
 Suppress CS1701/CS1702 assembly version warnings in .NET Interactive. NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless. Run this cell once before any cells that use NuGet packages.
 
@@ -43,6 +45,8 @@ Console.WriteLine("WarningLevel set to 0 — CS1701/CS1702 warnings suppressed."
 ```text
 WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
 ```
+
+### NuGet Packages and Imports
 
 ```csharp
 #r "nuget: Polars.NET, 0.4.0"
@@ -112,6 +116,8 @@ A **Series** is a single column of typed, homogeneous data — the fundamental b
 
 `Series.From<T>(name, array)` creates a named, typed Series from any .NET array. Polars automatically maps .NET types to Arrow types (`double` → `f64`, `int` → `i32`, `string` → `str`). The name parameter is required because Polars Series always carry a column name — this becomes the column header when the Series is added to a DataFrame.
 
+_Creates a `prices` Series of 5 f64 values, then builds three additional Series from `int[]`, `string[]`, and `DateOnly[]` — printing their Arrow types to confirm that `Series.From<T>()` maps each .NET type without explicit type declarations._
+
 ```csharp
 var prices = Polars.CSharp.Series.From("prices", new[] { 100.0, 102.5, 101.8, 103.2, 104.1 });
 
@@ -144,6 +150,8 @@ ints: i32  |  strings: str  |  dates: date
 #### Deedle | Create Series with ToOrdinalSeries
 
 The fastest way to create a Deedle Series is `.ToOrdinalSeries()`, which assigns integer keys starting from 0. Unlike Polars, Deedle Series are always keyed — the key type (`TRowKey`) determines how alignment and lookup work.
+
+_Creates a 5-element ordinal float Series, then builds two alternatives — one via `SeriesBuilder<int, string>` with explicit key-value pairs, and one via LINQ `KeyValue.Create()` projection — demonstrating all three Deedle construction patterns side by side._
 
 ```csharp
 var prices = new[] { 100.0, 102.5, 101.8, 103.2, 104.1 }.ToOrdinalSeries();
@@ -206,6 +214,8 @@ indexed
 
 Polars.NET supports native nulls via C# nullable types (`double?`, `int?`, `string?`). Nulls are stored in Arrow's null bitmap — the column type is preserved without coercion. Use `.NullCount` to inspect how many values are missing.
 
+_Creates a 5-element `double?` Series with nulls at positions 1 and 3, printing `Length: 5` and `NullCount: 2` to confirm that the column type remains `f64` without coercion._
+
 ```csharp
 var s = Polars.CSharp.Series.From<double?>("with_nulls",
     new double?[] { 1.0, null, 3.0, null, 5.0 });
@@ -223,6 +233,8 @@ Length: 5  |  NullCount: 2
 #### Deedle | Represent missing values with OptionalValue&lt;T&gt;
 
 Deedle does not have a direct null constructor for Series. Missing values arise through key alignment — when you `.Realign()` a sparse Series to a full key range, gaps become `<missing>` values backed by `OptionalValue<T>.Missing`.
+
+_Builds a sparse Series at keys {0, 2, 4}, then realigns it to the full range {0..4} with `.Realign()`, producing `<missing>` at keys 1 and 3 and confirming `KeyCount: 5` with 2 missing values._
 
 ```csharp
 var sparse = new SeriesBuilder<int, double>
@@ -256,6 +268,8 @@ KeyCount: 5
 
 Polars.NET uses the Apache Arrow type system. Each `.NET` type maps to a specific Arrow type. Use `.DataTypeName` to inspect the Arrow type of any Series.
 
+_Creates 7 Series from different .NET types (`int`, `long`, `double`, `string`, `bool`, `DateOnly`, `DateTime`) and prints the corresponding Arrow type name for each, building a complete .NET → Arrow type reference table._
+
 ```csharp
 var examples = new (string Name, string Type)[]
 {
@@ -286,6 +300,8 @@ DateTime     → datetime[μs]
 
 Deedle uses standard .NET types (`Int32`, `Double`, `String`, etc.) rather than Arrow types. Inspect column types through `Frame.ColumnTypes`, which returns the underlying CLR `Type` for each column.
 
+_Creates three single-column Frames from `int[]`, `double[]`, and `string[]` and prints the CLR type name from `ColumnTypes`, confirming Deedle maps them to `Int32`, `Double`, and `String` respectively._
+
 ```csharp
 var dfInt = Frame.FromRecords(new[] { new { x = 1 }, new { x = 2 } });
 var dfDbl = Frame.FromRecords(new[] { new { x = 1.0 }, new { x = 2.0 } });
@@ -311,6 +327,8 @@ Both libraries support standard arithmetic operators (`+`, `-`, `*`, `/`) on Ser
 
 Polars.NET overloads the standard arithmetic operators. The result is always a new Series — Polars Series are immutable.
 
+_Applies `+`, `-`, `*`, and `/` to two 3-element float Series and combines the four result Series into a single DataFrame, confirming element-wise behaviour and that each operation returns a new immutable Series._
+
 ```csharp
 var a = Polars.CSharp.Series.From("a", new[] { 10.0, 20.0, 30.0 });
 var b = Polars.CSharp.Series.From("b", new[] { 1.0, 2.0, 3.0 });
@@ -328,6 +346,8 @@ DataFrame.FromColumns(
 #### Deedle | Perform arithmetic on Series
 
 Deedle also overloads arithmetic operators on `Series<K,V>`. When two Series have the same keys, the operation proceeds element-wise. When keys differ, Deedle automatically aligns by key — mismatched keys produce `<missing>` values.
+
+_Applies `+`, `-`, `*`, and `/` to two ordinal float Series with matching keys and assembles results into a Frame via `FrameBuilder.Columns`, confirming identical element-wise output to Polars.NET with zero missing values._
 
 ```csharp
 var a = new[] { 10.0, 20.0, 30.0 }.ToOrdinalSeries();
@@ -356,6 +376,8 @@ builder.Frame
 
 Polars.NET provides generic aggregation methods (`.Sum<T>()`, `.Mean<T>()`, `.Std()`, `.Min<T>()`, `.Max<T>()`) that return scalar values. The generic type parameter specifies the return type. `.Std()` returns a single-element Series rather than a scalar.
 
+_Computes sum (150), mean (30), std (~15.8), min (10), and max (50) on a 5-element float Series and presents the results as a two-column stat/value DataFrame, demonstrating that `.Std()` requires `.GetValue<double>(0)` while other methods return scalars directly._
+
 ```csharp
 var s = Polars.CSharp.Series.From("vals", new[] { 10.0, 20.0, 30.0, 40.0, 50.0 });
 
@@ -374,6 +396,8 @@ new DataFrame(new Polars.CSharp.Series[]
 #### Deedle | Compute aggregations on Series
 
 Deedle aggregation methods (`.Sum()`, `.Mean()`, `.StdDev()`, `.Min()`, `.Max()`, `.Median()`) return `double` directly — no generic type parameter needed. Deedle also provides `.Median()` which Polars.NET does not expose as a direct Series method.
+
+_Computes 6 aggregations on the same 5-element float Series and assembles them into a stat/value Frame, confirming that all methods return `double` directly and that Deedle adds `.Median()` (30) not available as a direct Polars.NET Series method._
 
 ```csharp
 var s = new[] { 10.0, 20.0, 30.0, 40.0, 50.0 }.ToOrdinalSeries();
@@ -403,6 +427,8 @@ fb.Frame
 
 `Describe()` returns a DataFrame with count, null_count, mean, std, min, percentiles (25%, 50%, 75%), and max. Since `.Describe()` is a DataFrame method, wrap a single Series in a DataFrame first with `DataFrame.FromSeries()`.
 
+_Wraps a 5-element `prices` Series in a single-column DataFrame and calls `.Describe()`, producing a 9-row summary with count=5, null_count=0, mean=102.32, std≈1.55, and the 25%/50%/75% percentiles._
+
 ```csharp
 var s = Polars.CSharp.Series.From("prices", new[] { 100.0, 102.5, 101.8, 103.2, 104.1 });
 var df = DataFrame.FromSeries(s);
@@ -414,6 +440,8 @@ df.Describe()
 #### Deedle | Compute summary statistics manually
 
 Deedle does not have a built-in `Describe()` for individual Series. Build a summary Frame manually from the individual aggregation methods.
+
+_Manually assembles a 6-row stat/value Frame for the same 5-element `prices` Series using `.KeyCount`, `.Mean()`, `.StdDev()`, `.Min()`, `.Max()`, and `.Median()`, replicating the Polars.NET Describe output without a built-in method._
 
 ```csharp
 var s = new[] { 100.0, 102.5, 101.8, 103.2, 104.1 }.ToOrdinalSeries();
@@ -465,6 +493,8 @@ A **DataFrame** is a collection of named, typed columns — the primary tabular 
 
 `DataFrame.FromColumns()` accepts an anonymous object where each property becomes a column. This is the most concise way to create a small DataFrame inline. Column order follows property declaration order.
 
+_Builds a 5-row, 3-column DataFrame of EUROSTOXX 50 stocks (Symbol, Sector, Price) from an anonymous object, then creates a 3-row Name/Age/Score DataFrame using named tuples, demonstrating both anonymous-object and tuple construction syntaxes._
+
 ```csharp
 var df = DataFrame.FromColumns(new
 {
@@ -499,6 +529,8 @@ df2
 #### Deedle | Build DataFrames from records
 
 `Frame.FromRecords()` creates a Deedle Frame from an array of anonymous objects (row-oriented). Each property becomes a column, and rows receive integer keys starting from 0. This is analogous to creating a Pandas DataFrame from a list of dictionaries.
+
+_Creates the same 5-row EUROSTOXX 50 stock Frame from anonymous object records, then builds an alternative 3-column Name/Age/Score Frame using `FrameBuilder.Columns` with `ToOrdinalSeries()`, showing both row-oriented and column-oriented construction._
 
 ```csharp
 var df = Frame.FromRecords(new[]
@@ -550,6 +582,8 @@ df2
 
 `DataFrame.From<T>()` creates a DataFrame from any `IEnumerable<T>` — anonymous types, POCOs, or records. This is useful when your data is already structured as .NET objects (e.g., from a deserialized JSON response or a database query result).
 
+_Converts 3 anonymous OHLCV record objects (Date, Open, High, Low, Close) into a typed 3-row × 5-column DataFrame via `DataFrame.From()`, demonstrating row-oriented ingestion from any `IEnumerable<T>` with automatic column naming from property names._
+
 ```csharp
 var records = new[]
 {
@@ -568,6 +602,8 @@ df
 
 `DataFrame.FromSeries()` combines multiple pre-built Series into a DataFrame. All Series must have the same length; names become column headers.
 
+_Combines three independently built Series (`name`, `age`, `score`) of length 2 into a DataFrame via `DataFrame.FromSeries()`, confirming that column names are taken from the Series names and all Series must share the same length._
+
 ```csharp
 var names  = Polars.CSharp.Series.From("name", new[] { "Alice", "Bob" });
 var ages   = Polars.CSharp.Series.From("age", new[] { 30, 25 });
@@ -583,6 +619,8 @@ df
 #### Polars.NET | Create an empty DataFrame with a predefined schema
 
 An empty DataFrame with a predefined schema is useful as a sentinel or accumulator start value. Define the schema with `PolarsSchema`, then create the DataFrame with empty arrays matching those types.
+
+_Creates a zero-row DataFrame with three typed columns (id: Int32, name: String, value: Float64) using `Array.Empty<T>()`, then calls `PrintSchema()` to confirm that column types are registered correctly despite the absence of any data rows._
 
 ```csharp
 var schema = new PolarsSchema()
@@ -615,6 +653,8 @@ root
 
 `Frame.CreateEmpty<TRowKey, TColKey>()` creates a completely empty Frame with no columns or rows. Unlike Polars, you cannot predefine a schema on an empty Deedle Frame — columns and their types are determined when data is added.
 
+_Calls `Frame.CreateEmpty<int, string>()` and prints the resulting shape, confirming `0 x 0` — no columns or rows — and that Deedle provides no mechanism to pre-register column types on an empty Frame._
+
 ```csharp
 var empty = Frame.CreateEmpty<int, string>();
 display($"Shape: {empty.RowCount} x {empty.ColumnCount}");
@@ -639,6 +679,8 @@ The index is one of the most significant design differences between the two libr
 
 Polars accesses rows by integer position. Use `.Head(n)` for the first N rows, `.Slice(offset, length)` for arbitrary ranges, or `.Filter()` with expressions for conditional access.
 
+_Builds a 3-row Symbol/Price DataFrame and demonstrates two positional access patterns: `.Head(1)` to retrieve the first row, and `.Filter(Col("Symbol") == Lit("SAP.DE"))` to retrieve a specific row by predicate without a row index._
+
 ```csharp
 var df = DataFrame.FromColumns(new
 {
@@ -657,6 +699,8 @@ display(df.Filter(Col("Symbol") == Lit("SAP.DE")));
 #### Deedle | Set a column as the row index for label-based lookup
 
 `.IndexRows<T>(columnName)` promotes a column to the row index, enabling direct label-based access via `frame.Rows["key"]`. This is equivalent to Pandas' `.set_index()`.
+
+_Creates a 3-row Symbol/Price Frame, promotes the Symbol column to the row index via `.IndexRows<string>("Symbol")`, then retrieves the SAP.DE row by string key using `indexed.Rows["SAP.DE"]`, returning a single-element Series with Price 175.2._
 
 ```csharp
 var df = Frame.FromRecords(new[]
@@ -688,6 +732,8 @@ Deedle automatically aligns Series by their keys when performing operations. If 
 > [!success] Inspect alignment results
 >
 > Always check `.KeyCount` and missing value counts after combining Series with different keys. Use `.DropMissing()` to remove gaps, or `.FillMissing(strategy)` to interpolate.
+
+_Adds two string-keyed price Series with overlapping key sets — {ASML, SAP, SIE} and {SAP, SIE, TTE} — showing that the `+` operator aligns on shared keys (SAP→180.2, SIE→172.1) and silently produces `<missing>` for ASML and TTE._
 
 ```csharp
 var s1 = new SeriesBuilder<string, double>
@@ -724,6 +770,8 @@ The Arrow type system provides more precise type control (e.g., distinguishing `
 
 `.PrintSchema()` displays the Arrow type for every column. `.Shape` returns a `(rows, columns)` tuple. Use these as a first step when exploring any new dataset to understand column names, types, and size.
 
+_Reads `eurostoxx50_ohlcv.parquet` (66,355 × 12) and calls `.PrintSchema()` followed by `.Shape`, outputting the Arrow type for all 12 columns including the `date` (Date) and `is_filled` (Boolean) types alongside the OHLCV Float64 columns._
+
 ```csharp
 var df = DataFrame.ReadParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));
 df.PrintSchema();
@@ -753,6 +801,8 @@ Shape: (66355, 12)
 #### Deedle | Inspect column types of a CSV-loaded frame
 
 Deedle exposes column metadata through `.ColumnKeys` (names) and `.ColumnTypes` (CLR types). There is no built-in schema printer, so you iterate and format the output yourself.
+
+_Reads `eurostoxx50_ohlcv.csv`, zips `.ColumnKeys` with `.ColumnTypes`, and assembles a 12-row column/type reference Frame — revealing that Deedle infers OHLCV floating-point columns as `Decimal` rather than `Double`._
 
 ```csharp
 var df = Frame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
@@ -786,6 +836,8 @@ Shape: 66355 x 12
 #### Polars.NET | Cast column types with expressions
 
 Use `.Cast(DataType.X)` within a `.WithColumns()` expression to change a column's type. Casting a string to a numeric type will produce `null` for unparseable values — no exception is thrown.
+
+_Casts the `Id` column from `str` to `Int32` and `Value` from `i32` to `Float64` in a 3-row DataFrame, prints the updated schema to confirm the type changes, then casts a mixed-string Series where "two" becomes `null` to demonstrate safe coercion._
 
 ```csharp
 var df = DataFrame.FromColumns(new
@@ -832,6 +884,8 @@ Polars.NET natively supports CSV, Parquet, and JSON formats. Deedle only support
 
 Polars.NET reads all three formats through static methods on `DataFrame`. All three produce identical DataFrames from the same source data, differing only in I/O performance and type preservation.
 
+_Reads `eurostoxx50_ohlcv` from CSV (with `tryParseDates: true`), Parquet, and JSON into three DataFrames, then compares their row and column counts in a summary table — confirming all three produce 66,355 × 12._
+
 ```csharp
 var csvDf     = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), tryParseDates: true);
 var parquetDf = DataFrame.ReadParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));
@@ -850,6 +904,8 @@ new DataFrame(new Polars.CSharp.Series[]
 #### Deedle | Load data from CSV
 
 Deedle only supports CSV natively via `Frame.ReadCsv()`. For Parquet, use Polars.NET or ParquetSharp as a reader and convert the result. For JSON, deserialize with `System.Text.Json` first, then create a Frame from the typed records.
+
+_Reads `eurostoxx50_ohlcv.csv` with `Frame.ReadCsv()` and prints the resulting shape (66,355 × 12), confirming successful CSV loading and noting that Parquet and JSON require external library workarounds._
 
 ```csharp
 var csvDf = Frame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
@@ -871,6 +927,8 @@ After loading data, the first step is always inspection: shape, column types, he
 #### Polars.NET | Inspect shape, schema, head, tail, nulls, and memory
 
 `.Shape` returns `(rows, columns)`, `.Height` and `.Width` return individual dimensions. `.Head(n)` and `.Tail(n)` show the first and last N rows respectively.
+
+_Loads the full OHLCV Parquet dataset (66,355 × 12), prints shape/head/tail/schema, calls `.Describe()` to reveal volume right-skew and sparse corporate-actions columns, then scans `scores_daily` to identify the 5 columns with real nulls._
 
 ```csharp
 var ohlcv = DataFrame.ReadParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));
@@ -962,6 +1020,8 @@ Estimated size: ~6.07 MB (66355 rows x 12 cols)
 #### Deedle | Inspect shape, column types, head, tail, and describe
 
 Deedle uses `.RowCount` and `.ColumnCount` for shape (no tuple property). `FrameModule.Take(n, df)` and `FrameModule.TakeLast(n, df)` serve as head/tail — there are no direct `.Head()` / `.Tail()` instance methods in the C# API.
+
+_Loads the OHLCV CSV, prints the shape via `.RowCount`/`.ColumnCount`, retrieves head and tail via `FrameModule.Take` and `FrameModule.TakeLast`, iterates column types to reveal Decimal inference, and calls `.Describe()` — exercising all core Deedle inspection methods on a real dataset._
 
 ```csharp
 var ohlcv = Frame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
@@ -1081,6 +1141,8 @@ Common pitfalls when working with Polars.NET and Deedle in the same project.
 
 Use `.Name`, `.Length`, `.DataTypeName` for metadata inspection, `.GetValue<T>(index)` for single values, and `.ToArray<T>()` to convert the entire Series to a .NET array.
 
+_Creates a 3-element `int` Series, extracts `Name`, `Length`, `DataTypeName`, and `GetValue<int>(0)` into a metadata table, converts the Series to `int[]` via `.ToArray<int>()`, and builds a 3×2 DataFrame to confirm row-level access by position._
+
 ```csharp
 var s = Polars.CSharp.Series.From("x", new[] { 1, 2, 3 });
 
@@ -1109,6 +1171,8 @@ As int[]: [1, 2, 3]
 #### Deedle | Extract values, keys, and index from a Series
 
 Access individual values by key with `series[key]`, all values with `.Values`, and all keys with `.Keys`. These return standard .NET collections.
+
+_Creates a 3-element ordinal float Series and demonstrates three extraction patterns: single-value access by key (`s[0]` → 1), all values via `.Values`, and all keys via `.Keys` — confirming each returns standard .NET types._
 
 ```csharp
 var s = new[] { 1.0, 2.0, 3.0 }.ToOrdinalSeries();
@@ -1265,6 +1329,8 @@ vm_upload_results.json                               9.5
 
 `DataFrame.ReadCsv()` reads a CSV file into an eager DataFrame. It infers column types from the first 1000 rows by default. Set `tryParseDates: true` to enable automatic date column detection.
 
+_Reads `eurostoxx50_ohlcv.csv` with `tryParseDates: true` to auto-detect the date column, displaying shape (66,355 × 12) and the first 3 rows, then re-reads limited to 100 rows with explicit `nullValues` strings and prints the full schema to confirm Arrow types._
+
 ```csharp
 var df = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"),
     tryParseDates: true);
@@ -1315,6 +1381,8 @@ root
 
 `LazyFrame.ScanCsv()` reads only the schema and metadata — no data is loaded until `.Collect()` is called. The query optimizer can then push predicates and projections down to the file scan, reading only the rows and columns needed.
 
+_Builds a lazy scan of the OHLCV CSV, prints the optimized query plan showing deferred execution, then materializes only ASML.AS rows by chaining `.Filter()` before `.Collect()` — returning the first 5 rows as proof of predicate pushdown._
+
 ```csharp
 var lf = LazyFrame.ScanCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"),
     tryParseDates: true);
@@ -1342,6 +1410,8 @@ ESTIMATED ROWS: 66910
 #### Deedle | Read CSV files with Frame.ReadCsv
 
 `Frame.ReadCsv()` reads a CSV into an eager Deedle Frame. Use `inferRows` to control how many rows are sampled for type inference, and `maxRows` to limit the result.
+
+_Reads `eurostoxx50_ohlcv.csv` with default settings and displays the first 3 rows via `FrameModule.Take`, then re-reads with `inferRows: 1000` and `maxRows: 100` to demonstrate Deedle's type-inference sampling and row-limit parameters._
 
 ```csharp
 var df = Frame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
@@ -1382,6 +1452,8 @@ Shape: 100 x 12
 
 `DataFrame.ReadJson()` reads a JSON array of objects into a DataFrame. Each object becomes a row, each key becomes a column. Polars also supports NDJSON (newline-delimited JSON) via `JsonFormat.JsonLines`.
 
+_Reads `eurostoxx50_ohlcv.json` into a full 66,355 × 12 DataFrame and displays the first 3 rows, showing that datetime values are preserved as ISO 8601 strings in the JSON source but are stored as Arrow `datetime[μs]` in the DataFrame._
+
 ```csharp
 var df = DataFrame.ReadJson(Path.Combine(DATA, "eurostoxx50_ohlcv.json"));
 display($"Shape: {df.Shape}");
@@ -1404,6 +1476,8 @@ Shape: (66355, 12)
 #### Deedle | Read JSON via System.Text.Json workaround
 
 Deedle does not natively support JSON. The workaround is to deserialize with `System.Text.Json` first, then create a Frame from the resulting typed records with `Frame.FromRecords()`.
+
+_Parses `dim_country.json` with `JsonDocument.Parse()`, counts the 212 root-array records, and prints the two-step workaround pattern — confirming that Deedle requires an explicit deserialize-then-`Frame.FromRecords()` pipeline because it has no native JSON reader._
 
 ```csharp
 var jsonText = File.ReadAllText(Path.Combine(DATA, "dim_country.json"));
@@ -1428,6 +1502,8 @@ Use Frame.FromRecords() with a typed class to create a Deedle Frame.
 #### Polars.NET | Read Parquet files with DataFrame.ReadParquet
 
 `DataFrame.ReadParquet()` reads a Parquet file into an eager DataFrame. Parquet preserves exact types (no inference needed), supports column projection via the `columns` parameter, and is typically 2-5x faster than CSV for the same data.
+
+_Reads `eurostoxx50_ohlcv.parquet` eagerly (full 66,355 × 12), then re-reads with `columns: new[] { "date", "symbol", "close" }` to demonstrate column projection — reducing the result to 66,355 × 3 without loading the other 9 columns._
 
 ```csharp
 var df = DataFrame.ReadParquet(Path.Combine(DATA, "eurostoxx50_ohlcv.parquet"));

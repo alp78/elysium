@@ -1,4 +1,5 @@
 ---
+title: "05. Aggregation & Reshaping - C#"
 tags: [csharp, deedle, polars, dataframes]
 aliases:
   - groupby, window functions, joins, pivot, melt

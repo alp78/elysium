@@ -1,4 +1,5 @@
 ---
+title: "06. Lazy API & Performance - Python"
 tags: [python, pandas, polars, dataframes]
 aliases:
   - lazy evaluation, query plan, collect, benchmarks

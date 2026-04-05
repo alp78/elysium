@@ -1,4 +1,5 @@
 ---
+title: "08. Visualization - Python"
 tags: [python, pandas, polars, dataframes, matplotlib, seaborn, plotly]
 aliases:
   - matplotlib, seaborn, plotting, charts

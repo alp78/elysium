@@ -1,5 +1,5 @@
 ---
-title: "Transforms, Expressions & Chaining"
+title: "03. Transforms, Expressions & Chaining - C#"
 tags: [csharp, deedle, polars, dataframes]
 aliases:
   - with_columns, IfElse, apply, transform

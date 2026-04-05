@@ -1,4 +1,5 @@
 ---
+title: "13. Advanced Parallel Pipelines - Python"
 tags: [python, pipeline]
 aliases: [advanced pipelines, async generators, parallel ingestion, subprocess]
 description: "Python advanced parallel pipelines reference with executable examples and cell outputs — covers async generators, parallel API ingestion with rate limiting, async batching, subprocess execution, and distributed task queues. See [13_cs_advancedpipelines](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/13_cs_advancedpipelines) for the C# equivalent."

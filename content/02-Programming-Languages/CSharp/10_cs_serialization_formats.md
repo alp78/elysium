@@ -1,5 +1,5 @@
 ---
-title: "Serialization Formats — C#"
+title: "10. Serialization Formats - C#"
 tags:
   - csharp
 aliases: [serialization formats, JSON, CSV, Parquet, Avro, Protocol Buffers]

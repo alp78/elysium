@@ -1,4 +1,5 @@
 ---
+title: "15. Web & APIs - Python"
 tags: [api, python]
 aliases: [REST API, HTTP client, web server, FastAPI, Flask, requests]
 description: "Python web and APIs reference with executable examples and cell outputs — covers HTTP clients with requests/httpx, REST API building with FastAPI and Flask, and authentication patterns. See [15_cs_webapis](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/15_cs_webapis) for the C# equivalent."

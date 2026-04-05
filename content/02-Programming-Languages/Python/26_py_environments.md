@@ -1,5 +1,5 @@
 ---
-title: "Environments — Python"
+title: "26. Environments - Python"
 tags:
   - python
   - venv

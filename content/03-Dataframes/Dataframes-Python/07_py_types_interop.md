@@ -1,4 +1,5 @@
 ---
+title: "07. Advanced Types & Interoperability - Python"
 tags: [python, pandas, polars, dataframes]
 aliases:
   - categoricals, nested types, Arrow, zero-copy

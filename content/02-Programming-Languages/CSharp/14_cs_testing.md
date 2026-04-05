@@ -1,4 +1,5 @@
 ---
+title: "14. Testing - C#"
 tags: [testing, csharp]
 aliases: [unit testing, xUnit, NUnit, test driven development, mocking, assertions]
 description: "C# testing reference with executable examples and cell outputs — covers xUnit, NUnit, Moq, FluentAssertions, data-driven tests, and test-driven development patterns. See [14_py_testing](https://alp78.github.io/elysium/02-Programming-Languages/Python/14_py_testing) for the Python equivalent."

@@ -1,4 +1,5 @@
 ---
+title: "16. Database - C#"
 tags: [csharp]
 aliases: [database access, SQL, ORM, pyodbc, Entity Framework, Dapper, SQLAlchemy, connection strings]
 description: "C# database reference with executable examples and cell outputs — covers Entity Framework Core, Dapper, raw ADO.NET, migrations, and connection string patterns. See [16_py_database](https://alp78.github.io/elysium/02-Programming-Languages/Python/16_py_database) for the Python equivalent."

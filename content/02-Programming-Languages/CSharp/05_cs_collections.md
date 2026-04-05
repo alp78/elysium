@@ -1,5 +1,5 @@
 ---
-title: "Collections"
+title: "05. Collections - C#"
 tags:
   - csharp
 aliases: [lists, dictionaries, sets, tuples, arrays, List, Dictionary, HashSet, LINQ]

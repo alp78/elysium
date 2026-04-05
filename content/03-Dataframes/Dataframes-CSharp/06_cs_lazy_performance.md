@@ -1,4 +1,5 @@
 ---
+title: "06. Lazy API & Performance - C#"
 tags: [csharp, deedle, polars, dataframes]
 aliases:
   - lazy evaluation, query optimization, benchmarks

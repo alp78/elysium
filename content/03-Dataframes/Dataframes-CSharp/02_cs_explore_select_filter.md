@@ -1,5 +1,5 @@
 ---
-title: "Explore, Select & Filter"
+title: "02. Explore, Select & Filter - C#"
 tags: [csharp, deedle, polars, dataframes]
 aliases:
   - head, tail, describe, filter, where, isin
@@ -114,6 +114,8 @@ The first step after loading data is exploration: previewing rows, inspecting th
 
 `.Head(n)` and `.Tail(n)` return the first and last N rows. `.Sample(n)` returns N random rows. These are the most common entry points for data exploration.
 
+_Previews the first 5 rows (earliest OHLCV records starting 2021-01-04 for ABI.BR) and last 5 rows (most recent records ending 2026-03-12 for WKL.AS) of the 66,355-row eurostoxx50 dataset to confirm data ordering and date range._
+
 ```csharp
 display("Head(5):");
 display(dfP.Head(5));
@@ -132,6 +134,8 @@ dfP.Tail(5)
 #### Deedle | Preview first and last rows
 
 Deedle has no `.Head()` or `.Tail()` methods in the C# API. Use the `Rows` indexer with `Enumerable.Range()` to select row ranges by position.
+
+_Selects rows 0–4 and the final 5 rows of dfD by integer index using `Enumerable.Range`, confirming the same ABI.BR head and WKL.AS tail as the Polars output despite Deedle's 0-based row labelling._
 
 ```csharp
 display("Head(5):");
@@ -176,6 +180,8 @@ dfD.Rows[Enumerable.Range(dfD.RowCount - 5, 5)]
 
 `.Sample(n)` returns N random rows from the DataFrame. Useful for quick spot-checking of large datasets.
 
+_Draws 5 random rows from the full 66,355-row dataset — each call returns a different selection, demonstrating stochastic spot-checking across diverse symbols and date ranges._
+
 ```csharp
 dfP.Sample(5)
 ```
@@ -185,6 +191,8 @@ dfP.Sample(5)
 #### Deedle | Random sample via manual shuffling
 
 Deedle has no built-in `.Sample()`. Shuffle row indices manually using `Random` and `OrderBy`, then select by index.
+
+_Shuffles all 66,355 row indices using `Random(42)` and `OrderBy`, then takes the first 5 — producing a reproducible 5-row subset with seed 42 that matches a fixed expected output for testing._
 
 ```csharp
 var rng = new Random(42);
@@ -272,6 +280,8 @@ is_filled          : Boolean
 
 `.Describe()` returns a DataFrame with count, null_count, mean, std, min, percentiles (25%, 50%, 75%), and max for all numeric columns. Non-numeric columns are excluded.
 
+_Computes count, null_count, mean, std, min, 25th/50th/75th percentiles, and max across 9 numeric OHLCV columns — revealing the wide price spread (min 1.60, max 2926 for close) and the near-zero dividend and stock_splits distributions._
+
 ```csharp
 dfP.Describe()
 ```
@@ -281,6 +291,8 @@ dfP.Describe()
 #### Deedle | Summary statistics computed manually
 
 Deedle has no built-in `.Describe()`. Build a summary manually by iterating over numeric columns and calling `.Mean()`, `.StdDev()`, `.Min()`, `.Max()`.
+
+_Iterates over 6 price/volume columns, calling `.Mean()`, `.StdDev()`, `.Min()`, and `.Max()` on each typed Series, reproducing the core Describe statistics in a tab-aligned console table._
 
 ```csharp
 var numericCols = new[] { "open", "high", "low", "close", "adj_close", "volume" };

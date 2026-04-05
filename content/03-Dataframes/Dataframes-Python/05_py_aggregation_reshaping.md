@@ -1,4 +1,5 @@
 ---
+title: "05. Aggregation & Reshaping - Python"
 tags: [python, pandas, polars, dataframes]
 aliases:
   - groupby, agg, window functions, join, concat, pivot, melt

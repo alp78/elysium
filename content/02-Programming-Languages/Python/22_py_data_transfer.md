@@ -1,4 +1,5 @@
 ---
+title: "22. Data Transfer - Python"
 tags: [python, gcp, data-transfer, benchmarks]
 aliases: [Data Transfer Python, GCS Transfer, BigQuery Load]
 description: "Python data transfer reference — GCS upload/download, VM file copy, SQL Server bulk insert, BigQuery load benchmarks with interactive charts. See [22_cs_data_transfer](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/22_cs_data_transfer) for the C# equivalent."
