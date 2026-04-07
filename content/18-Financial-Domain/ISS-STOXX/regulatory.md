@@ -52,7 +52,7 @@ Article 173 of the French Energy Transition for Green Growth Act (2015) requires
 > - [SFDR](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#sfdr) — the EU-wide successor regime for sustainability disclosure
 > - [TCFD](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#tcfd) — the voluntary climate disclosure framework that influenced Article 173's reporting expectations
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > e if they do not react, at some stage their cost of capital will probably increase. And what are
 > governments doing about this? We have the example of **Article 173** in France4, where for the
@@ -106,7 +106,7 @@ Under the Sustainable Finance Disclosure Regulation (EU 2019/2088), an Article 8
 > - [SFDR (Sustainable Finance Disclosure Regulation)](#sfdr-sustainable-finance-disclosure-regulation) — the parent regulation
 > - [EU Taxonomy](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#eu-taxonomy) — used to measure alignment within Article 8 products
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > Therefore, the fund was classified as Article 6 under the SFDR regulation. With the new index, the
 > ETF is now an **Article 8 fund**, which makes it attractive for a broader audience. The index
@@ -131,7 +131,7 @@ Under the EU Benchmark Regulation (BMR), a benchmark administrator is the natura
 > - [Benchmark Regulation (EU BMR)](#benchmark-regulation-eu-bmr) — the regulatory framework governing administrators
 > - [ESMA](#esma) — the EU authority that maintains the public register of administrators
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The ISS STOXX indices (“Indices”) are owned and administered by STOXX Ltd., a supervised
 > **benchmark administrator** under the EU Benchmark Regulation, Regulation (EU) 2016/100 of the
@@ -183,7 +183,7 @@ Regulation (EU) 2016/1011 — the EU Benchmark Regulation — establishes a comm
 > - [Climate Transition Benchmark (CTB)](#climate-transition-benchmark-ctb) — a benchmark category created by BMR amendments
 > - [PAB (Paris-Aligned Benchmark)](#pab-paris-aligned-benchmark) — the more stringent climate benchmark under BMR
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > BRIC (Brazil, Russia, India and China) subregions, plus global markets. STOXX is the administrator
 > of the STOXX® and DAX® indices under the European **Benchmark Regulation** and exercises control
@@ -237,7 +237,7 @@ A Climate Transition Benchmark is a benchmark category defined under the amended
 > - [EU Benchmark Regulation](#eu-benchmark-regulation) — the regulatory home of CTBs
 > - [Paris Agreement](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#paris-agreement) — the international climate accord CTBs reference
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 5.9 that most recent ICB data as known to STOXX at the cutoff date are used in the Selection Lists
 > February 2022 (2): Methodology change to the STOXX **Climate Transition Benchmark** and STOXX
@@ -295,7 +295,7 @@ A Corporate Governance Code is a set of principles, standards, and best practice
 > - [OECD Principles of Corporate Governance](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#oecd-guidelines) — the international reference framework for national codes
 > - [CSRD](#csrd) — expanded governance disclosure requirements complement code provisions
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > s reasonable to require a greater outsider presence than at companies that maintain the
 > traditional statutory auditor-based governance structure. The **Corporate Governance Code** of
@@ -347,7 +347,7 @@ The Corporate Sustainability Reporting Directive (Directive (EU) 2022/2464) is a
 > - [ESRS](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#esrs) — the reporting standards companies must use under CSRD
 > - [Financial Materiality](#financial-materiality) — CSRD uses "double materiality," covering both financial and impact materiality
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > In the short term, new regulation such as the Sustainable Finance Disclosure Regulation (SFDR) and
 > the Corporate Sustainability Reporting Directive (**CSRD**) may guide flows into ESG investments.
@@ -403,7 +403,7 @@ The Do No Significant Harm (DNSH) principle is a cornerstone of the EU Taxonomy 
 > - [Technical Screening Criteria](#technical-screening-criteria) — the specific thresholds used to assess DNSH
 > - [EU Taxonomy Alignment](#eu-taxonomy-alignment) — DNSH is one of the four conditions for alignment
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Article 18 of the Taxonomy Regulation. Based on these current regulatory requirements, STOXX has
 > adopted the following criteria and approach for the **DNSH** step of its methodology: • Screening
@@ -458,7 +458,7 @@ The European Securities and Markets Authority (ESMA) is an independent EU author
 > - [Benchmark Regulation (EU BMR)](#benchmark-regulation-eu-bmr) — a major regulation ESMA oversees
 > - [SFDR (Sustainable Finance Disclosure Regulation)](#sfdr-sustainable-finance-disclosure-regulation) — ESMA develops the Regulatory Technical Standards for SFDR
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > nvest in oil and gas companies, a notable challenge as many of those funds still do. In turn, this
 > means that impacted funds will need to either meet **ESMA**’s portfolio requirements or change the
@@ -511,7 +511,7 @@ In 2024 ESMA finalised guidelines on the use of ESG- and sustainability-related 
 > - [Article 8 Fund (SFDR)](#article-8-fund-sfdr) — many Article 8 funds are directly affected by naming rules
 > - [PAB (Paris-Aligned Benchmark)](#pab-paris-aligned-benchmark) — PAB exclusion criteria are referenced in the guidelines
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > Index-based strategies benefit from systematic rules — such as those defined in the PAB and CTB
 > regulations[2] and referenced under the **ESMA fund naming guidelines** — which can be embedded
@@ -550,7 +550,7 @@ See [Benchmark Regulation (EU BMR)](#benchmark-regulation-eu-bmr). "EU Benchmark
 > - [Benchmark Regulation (EU BMR)](#benchmark-regulation-eu-bmr) — full entry
 > - [Benchmark Administrator](#benchmark-administrator) — entities regulated under this framework
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The ISS STOXX indices (“Indices”) are owned and administered by STOXX Ltd., a supervised benchmark
 > administrator under the **EU Benchmark Regulation**, Regulation (EU) 2016/100 of the European
@@ -605,7 +605,7 @@ The European Green Deal is the European Commission's flagship policy agenda, ado
 > - [CSRD](#csrd) — the Green Deal's corporate reporting leg
 > - [EU Taxonomy Alignment](#eu-taxonomy-alignment) — the classification system the Green Deal relies on
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > f its kind globally, aiming to redirect private capital towards sustainable investments, achieve
 > climate neutrality and help to meet the goals of the **EU Green Deal**. It encompasses a list of
@@ -632,7 +632,7 @@ EU Taxonomy Alignment refers to the degree to which a company's economic activit
 > - [DNSH (Do No Significant Harm)](#dnsh-do-no-significant-harm) — another of the four alignment conditions
 > - [Minimum Safeguards](#minimum-safeguards) — the human rights and governance condition
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > SUSTAINABILITY SOLUTIONS / REGULATORY SOLUTIONS **EU Taxonomy Alignment** Solution Quantify the
 > share of your taxonomy-aligned investments. Are you prepared? The European Union’s Taxonomy brings
@@ -690,7 +690,7 @@ Financial materiality, in the context of sustainability reporting and ESG analys
 > - [CSRD](#csrd) — the directive that mandates double materiality assessment
 > - [SASB](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#sasb) — a framework historically focused on financial materiality
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ISS EVA Webinar Series Exploring **Financial Materiality** in ESG Investing ESG has been buzzing
 > around the investing lexicon for the better part of two decades now, and for good reason, because
@@ -744,7 +744,7 @@ The Markets in Financial Instruments Directive II (Directive 2014/65/EU) and its
 > - [EU Taxonomy Alignment](#eu-taxonomy-alignment) — one of three categories of sustainability preference under MiFID II
 > - [UCITS](#ucits) — many products distributed under MiFID II are UCITS funds
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > **MiFID II** and IDD Taxonomy and Sustainable Finance Disclosure Regulation (SFDR) have dominated
 > the public discussion while the upcoming amendments to **MiFID II** and IDD have attracted
@@ -797,7 +797,7 @@ Under the EU Taxonomy Regulation, minimum safeguards are the human rights and go
 > - [UN Guiding Principles](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#ungp) — one of the referenced international standards
 > - [OECD Guidelines](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#oecd-guidelines) — another referenced standard
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > **Minimum Safeguards**, Maximum Impact? Assessing Alignment with **Minimum Safeguards** in the EU
 > Taxonomy AUGUST 19, 2022 KEY TAKEAWAYS - The Minimum Safeguards (MS) provision
@@ -836,7 +836,7 @@ The Non-Financial Reporting Directive (Directive 2014/95/EU) was the EU's first 
 > - [CSRD](#csrd) — the directive that replaces and expands the NFRD
 > - [GRI](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#gri) — many NFRD reporters used GRI standards voluntarily
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > ity generation from wind power - Manufacture of aluminium - Anaerobic digestion of sewage sludge -
 > Composting of bio-waste - Freight rail transport A **NFRD** indicator flag is also included in
@@ -865,7 +865,7 @@ A Paris-Aligned Benchmark is the more stringent of the two climate benchmark cat
 > - [EU Benchmark Regulation](#eu-benchmark-regulation) — the regulatory framework housing PAB requirements
 > - [ESMA Fund Naming Guidelines](#esma-fund-naming-guidelines) — PAB exclusions are referenced in fund naming rules
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > :3050) (cid:1875) (cid:1866) 0.07 (cid:3036) (cid:3036)(cid:2880)(cid:2869) STOXX INDEX
 > METHODOLOGY GUIDE 633/639 19. STOXX CTB AND STOXX **PAB** INDICES The previous year’s GHG
@@ -916,7 +916,7 @@ Principal Adverse Impacts are the most significant negative effects that investm
 > - [SFDR (Sustainable Finance Disclosure Regulation)](#sfdr-sustainable-finance-disclosure-regulation) — the regulation mandating PAI disclosure
 > - [SFDR PAI Solution (ISS)](#sfdr-pai-solution-iss) — ISS's data product for PAI reporting
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > H step of its methodology: • Screening of all investee companies for involvement in the
 > manufacture or selling of controversial weapons, in line with **PAI** 14,9. Companies which derive
@@ -970,7 +970,7 @@ The SFDR Regulatory Technical Standards (Delegated Regulation (EU) 2022/1288) de
 > - [SFDR PAI Solution (ISS)](#sfdr-pai-solution-iss) — ISS's commercial offering for PAI indicator data
 > - [GHG Protocol](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#ghg-protocol) — the standard behind the emissions-related PAI indicators
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > This is particularly important when aggregating data and the subsequent reporting to meet
 > regulatory obligations. Coverage of all mandatory **PAI indicators*** for corporate and sovereign
@@ -1002,7 +1002,7 @@ The Sustainable Finance Disclosure Regulation (Regulation (EU) 2019/2088) establ
 > - [PAI (Principal Adverse Impact)](#pai-principal-adverse-impact) — adverse impact framework within SFDR
 > - [DNSH (Do No Significant Harm)](#dnsh-do-no-significant-harm) — a core SFDR concept for sustainable investments
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Those in the Leaders cluster are, as per present regulation, aligned with **SFDR**’s more
 > ambitious Art. 9. They include the ISS STOXX® World AC Biodiversity Leaders. Figure 1: ISS STOXX
@@ -1054,7 +1054,7 @@ The ISS ESG SFDR PAI Solution is a commercial data product offered by ISS ESG (p
 > - [SFDR (Sustainable Finance Disclosure Regulation)](#sfdr-sustainable-finance-disclosure-regulation) — the regulation driving demand for this solution
 > - [Article 8 Fund (SFDR)](#article-8-fund-sfdr) and [Article 9 Fund (SFDR)](#article-9-fund-sfdr) — the fund types that need PAI data
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > s against regulatory-defined Principal Adverse Impact metrics. Assess and report on the Principal
 > Adverse Impacts of your products and portfolios Our **SFDR PAI Solution** enables Financial Market
@@ -1080,7 +1080,7 @@ A Stewardship Code is a set of principles or guidelines directed at institutiona
 > - [PAI (Principal Adverse Impact)](#pai-principal-adverse-impact) — stewardship activities increasingly focus on PAI-related issues
 > - [PRI](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/esg-frameworks#pri) — the UN-backed Principles for Responsible Investment that overlap with stewardship expectations
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Institutional Shareholder Services Inc. intends to sign Japan’s Principles for Responsible
 > Institutional Investors (the Japanese **Stewardship Code**), that was announced by Japan’s
@@ -1132,7 +1132,7 @@ Under the EU Taxonomy Regulation (EU 2020/852), an economic activity makes a sub
 > - [Technical Screening Criteria](#technical-screening-criteria) — the specific quantitative thresholds
 > - [EU Taxonomy Alignment](#eu-taxonomy-alignment) — substantial contribution is one of the four alignment conditions
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > For each relevant activity, the taxonomy defines specific **substantial contribution** criteria
 > which need to be met to be considered environmentally sustainable. Start typing and press Enter to
@@ -1177,7 +1177,7 @@ The EU Sustainable Finance Action Plan, first published by the European Commissi
 > - [EU Taxonomy Alignment](#eu-taxonomy-alignment) — the classification system born from Action 1 of the plan
 > - [Green MiFID](#green-mifid) — sustainability preferences in advice, from Action 4 of the plan
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > The cause was a tightening of sustainable investing definitions from which European data is drawn,
 > reflecting new laws as part of the European **Sustainable Finance Action Plan**, the GSIA said.
@@ -1218,7 +1218,7 @@ See [EU Taxonomy Alignment](#eu-taxonomy-alignment). Taxonomy alignment is the c
 > - [EU Taxonomy Alignment](#eu-taxonomy-alignment) — full entry
 > - [Taxonomy Eligibility](#taxonomy-eligibility) — the prerequisite check before alignment
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > SUSTAINABILITY SOLUTIONS / REGULATORY SOLUTIONS EU **Taxonomy Alignment** Solution Quantify the
 > share of your taxonomy-aligned investments. Are you prepared? The European Union’s Taxonomy brings
@@ -1270,7 +1270,7 @@ Technical Screening Criteria (TSC) are the quantitative and qualitative threshol
 > - [DNSH (Do No Significant Harm)](#dnsh-do-no-significant-harm) — TSC also define DNSH thresholds per activity
 > - [Taxonomy Eligibility](#taxonomy-eligibility) — only eligible activities have TSC
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > In June, the European Commission (EC) approved in principle a new set of EU Taxonomy **Technical
 > Screening Criteria** for the four remaining environmental objectives of the six in the EU
@@ -1304,7 +1304,7 @@ Undertakings for Collective Investment in Transferable Securities (UCITS) is an 
 > - [SFDR (Sustainable Finance Disclosure Regulation)](#sfdr-sustainable-finance-disclosure-regulation) — UCITS funds must classify under SFDR
 > - [ESMA Fund Naming Guidelines](#esma-fund-naming-guidelines) — directly applicable to UCITS using ESG terminology
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > From its product lineup, seven of its funds currently have more than $100 million in assets,
 > including the Global X U.S. Infrastructure Development **UCITS** ETF (PAVE) and the Global X

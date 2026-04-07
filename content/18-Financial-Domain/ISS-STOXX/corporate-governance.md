@@ -58,7 +58,7 @@ An individual or entity (often a hedge fund) that acquires a significant stake i
 > [!tip] Related Terms
 > [Proxy Contest](#proxy-contest), [Contested Election](#contested-election), [Shareholder Proposal](#shareholder-proposal), [Board Refreshment](#board-refreshment)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ourt decisions have encouraged companies to take a closer look at their bylaw provisions to ensure
 > that broad language does not provide loopholes for **activist investor**s. Specifically, companies
@@ -110,7 +110,7 @@ A non-binding vote presented to shareholders at a company's annual or special me
 > [!tip] Related Terms
 > [Say-on-Pay](#say-on-pay), [Proxy Voting](#proxy-voting), [Vote Preference](#vote-preference)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Executive Compensation Disclosure by Externally Managed Issuers (EMIs)" to the list of practices
 > that may result in an adverse recommendation on the **advisory vote** on executive compensation.
@@ -161,7 +161,7 @@ The mandatory annual gathering of a company's shareholders at which the board of
 > [!tip] Related Terms
 > [Proxy Voting](#proxy-voting), [Director Election](#director-election), [Say-on-Pay](#say-on-pay), [Extraordinary General Meeting (EGM)](#extraordinary-general-meeting-egm)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Acts (BCAs) to submit their financial statements and the auditor's report, which is included in
 > the company’s annual report, to shareholders at every **Annual General Meeting (AGM)**. This
@@ -213,7 +213,7 @@ A mechanism embedded in a company's charter, bylaws, or adopted by the board tha
 > [!tip] Related Terms
 > [Poison Pill](#poison-pill), [Dual-Class Shares](#dual-class-shares), [Supermajority Vote Requirement](#supermajority-vote-requirement), [Classified Board](#classified-board)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > For example, accountability may lead to board and management entrenchment. For example, the
 > existence of several **anti-takeover provision**s* has the cumulative effect of the existence of
@@ -267,7 +267,7 @@ The board-level function — typically exercised through an audit committee — 
 > [!tip] Related Terms
 > [Board Independence](#board-independence), [Board Structure](#board-structure), [Governance QualityScore](#governance-qualityscore)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > verned and responsible companies that excel in managing governance risks across four key areas:
 > Board Structure, Compensation, Shareholder Rights and **Audit & Risk Oversight**. US DIVERSITY
@@ -322,7 +322,7 @@ A board structure in which directors are divided into multiple classes (typicall
 > [!tip] Related Terms
 > [Anti-Takeover Provision](#anti-takeover-provision), [Majority Voting](#majority-voting), [Shareholder Rights](#shareholder-rights)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > outside the Russell 3000 universe is defined as underperforming peers or index on the basis of
 > one-, three-, and five-year total shareholder returns. Classified Boards ~ Annual Elections The
@@ -379,7 +379,7 @@ The representation of varied demographic backgrounds — including gender, race,
 > [!tip] Related Terms
 > [Board Independence](#board-independence), [EEO-1 Data](#eeo-1-data), [Director Data](#director-data)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 2030: An Odyssey to Thirty-Percent **Board Diversity** FEBRUARY 15, 2018 Many public company
 > boards of directors may need to focus more closely on the Earthly concerns of board composition,
@@ -436,7 +436,7 @@ The proportion of directors on a board who have no material financial, familial,
 > [!tip] Related Terms
 > [Independent Director](#independent-director), [CEO Duality](#ceo-duality), [Compensation Committee](#compensation-committee)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > "non-widely held” firms) are currently exempt from the main voting policy on **board
 > independence**. Many European codes of best practice, however, now recommend that small companies
@@ -486,7 +486,7 @@ The ongoing process of introducing new directors to a board over time, ensuring 
 > [!tip] Related Terms
 > [Board Tenure](#board-tenure), [Board Independence](#board-independence), [Director Election](#director-election), [Board Diversity](#board-diversity)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > **Board Refreshment**: Finding the Right Balance AUGUST 10, 2018 For the better part of this
 > decade, governance practitioners and investors have paid significant attention
@@ -536,7 +536,7 @@ The overall composition, organization, and governance framework of a company's b
 > [!tip] Related Terms
 > [Board Independence](#board-independence), [CEO Duality](#ceo-duality), [Board Classification (Classified Board)](#board-classification-classified-board)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > GOVERNANCE QUALITYSCORE INDEX SERIES Identify well-governed and responsible companies that excel
 > in managing governance risks across four key areas: **Board Structure**, Compensation, Shareholder
@@ -588,7 +588,7 @@ The length of time a director has continuously served on a company's board, meas
 > [!tip] Related Terms
 > [Board Refreshment](#board-refreshment), [Board Independence](#board-independence), [Independent Director](#independent-director), [Director Data](#director-data)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ctors; › if requested by major shareholders, ensures that he or she is available for consultation
 > and direct communication. 73. How will ISS consider **board tenure**? **Board tenure** will not be
@@ -640,7 +640,7 @@ The rate at which a company grants equity awards (stock options, restricted stoc
 > [!tip] Related Terms
 > [Equity Plan](#equity-plan), [Executive Compensation](#executive-compensation), [Say-on-Pay](#say-on-pay)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > options. A company's annual VABR is calculated as follows: WWW.ISSGOVERNANCE.COM 3 of 7 UNITED
 > STATES FAQ: GICS UPDATES AND VALUE-ADJUSTED **BURN RATE** Annual Value-Adjusted **Burn Rate** =
@@ -696,7 +696,7 @@ The strategic process by which a company's board and management decide how to de
 > [!tip] Related Terms
 > [Share Buyback](#share-buyback), [Activist Investor](#activist-investor), [Executive Compensation](#executive-compensation)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Climate change is a systemic and urgent global challenge and also one that will significantly
 > disrupt **capital allocation**s and returns.” Craig Baker, Willis Towers Watson’s Global Chief
@@ -753,7 +753,7 @@ A formal company policy that allows the board to recoup previously awarded incen
 > [!tip] Related Terms
 > [Executive Compensation](#executive-compensation), [Compensation Committee](#compensation-committee), [Say-on-Pay](#say-on-pay)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ................................................................................................
 > 19 50. What is needed in order for ISS to consider a **clawback policy** "robust," as displayed in
@@ -806,7 +806,7 @@ A committee of the board of directors, composed entirely or predominantly of ind
 > [!tip] Related Terms
 > [Executive Compensation](#executive-compensation), [Board Independence](#board-independence), [Say-on-Pay](#say-on-pay)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Executive audit committee members may compromise the integrity of the independent audit, and the
 > presence of executives on the **compensation committee** means that executives are allowed to
@@ -859,7 +859,7 @@ A director election in which one or more dissident candidates are nominated in o
 > [!tip] Related Terms
 > [Proxy Contest](#proxy-contest), [Activist Investor](#activist-investor), [Director Election](#director-election), [Majority Voting](#majority-voting)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Directors Sustainability Policy Recommendation: Generally vote for management proposals to adopt a
 > majority of votes cast standard for directors in un**contested election**s. Vote against if no
@@ -916,7 +916,7 @@ A broad framework under which companies voluntarily integrate social, environmen
 > [!tip] Related Terms
 > [ESG Committee](#esg-committee), [Shareholder Proposal](#shareholder-proposal), [Lobbying Disclosure](#lobbying-disclosure), [Political Spending Disclosure](#political-spending-disclosure)
 
-> [!example]- Source excerpts (4)
+> [!guide]- Source excerpts (4)
 >
 > As CAO, he is also responsible for other key functions, including Project Management, Sales
 > Operations, Corporate Services, Procurement, and **Corporate Social Responsibility**. Prior to his
@@ -962,7 +962,7 @@ A voting method in director elections that allows shareholders to aggregate all 
 > [!tip] Related Terms
 > [Majority Voting](#majority-voting), [Shareholder Rights](#shareholder-rights), [Board Structure](#board-structure)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > umulative voting is once again a focal point for the debate around corporate governance in Asia’s
 > fourth largest economy. Market observers often view **cumulative voting** as a necessary reform to
@@ -1018,7 +1018,7 @@ Comprehensive biographical and professional information maintained by ISS on ind
 > [!tip] Related Terms
 > [Overboarded Director](#overboarded-director), [Board Diversity](#board-diversity), [Board Independence](#board-independence)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > SUSTAINABILITY SOLUTIONS / SUSTAINABILITY RAW DATA **Director Data** Generate a complete picture
 > of board-level decision makers to inform investment and sustainability decision making. Access
@@ -1071,7 +1071,7 @@ The ballot item at a shareholder meeting through which individual director nomin
 > [!tip] Related Terms
 > [Majority Voting](#majority-voting), [Contested Election](#contested-election), [Board Refreshment](#board-refreshment), [Overboarded Director](#overboarded-director)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Asia ex-Japan Policies - **Director Election**s Background and Overview ISS is considering
 > harmonizing the following voting guidelines with existing policies for other Asia ex- Japan
@@ -1129,7 +1129,7 @@ A capital structure in which a company issues two or more classes of common stoc
 > [!tip] Related Terms
 > [Anti-Takeover Provision](#anti-takeover-provision), [Shareholder Rights](#shareholder-rights), [Supermajority Vote Requirement](#supermajority-vote-requirement)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > In light of a surge in restrictive governance structures at younger firms, such as **dual-class
 > shares** and classified boards, investors realize that the path to better board accountability is
@@ -1157,7 +1157,7 @@ Workforce demographic data collected by the U.S. Equal Employment Opportunity Co
 > [!tip] Related Terms
 > [Board Diversity](#board-diversity), [Shareholder Proposal](#shareholder-proposal), [Director Data](#director-data)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > s diversity policies or initiatives, or proposals requesting disclosure of a company’s
 > comprehensive workforce diversity data, including requests for **EEO-1 data**. Generally vote FOR
@@ -1209,7 +1209,7 @@ A digital platform and service offering from ISS that enables institutional inve
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > ent activity based on various criteria – topic tags, engagement health, date range, portfolios,
 > watchlists, issuers, and more. Investors can use ISS’ **Engagement Suite** to: - Input new or
@@ -1242,7 +1242,7 @@ A shareholder-approved program through which a company grants stock-based compen
 > [!tip] Related Terms
 > [Burn Rate](#burn-rate), [Executive Compensation](#executive-compensation), [Advisory Vote](#advisory-vote)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Resurgence of Evergreen Features in IPO **Equity Plan**s Restrict Investor Say MARCH 15, 2021 KEY
 > TAKEAWAYS - The ability to assess and vote on **equity plan**s is an important shareholder right
@@ -1298,7 +1298,7 @@ The total remuneration package awarded to a company's senior officers, including
 > [!tip] Related Terms
 > [Say-on-Pay](#say-on-pay), [Burn Rate](#burn-rate), [Clawback Policy](#clawback-policy), [Equity Plan](#equity-plan)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > basis against peers in the RDA test, and it is measured on an absolute 5-year basis in the PTA
 > test. ISSGOVERNANCE.COM 7 of 21 CANADA FAQ: **EXECUTIVE COMPENSATION** Additionally, the financial
@@ -1351,7 +1351,7 @@ A shareholder meeting convened outside the regular annual meeting cycle to addre
 > [!tip] Related Terms
 > [Annual General Meeting (AGM)](#annual-general-meeting-agm), [Special Meeting Right](#special-meeting-right), [Shareholder Rights](#shareholder-rights)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > rights in this regard are to receive information about a company’s performance and to vote on
 > resolutions put before an annual or, where applicable, **extraordinary general meeting**. Under
@@ -1412,7 +1412,7 @@ The legal obligation of a company's directors and officers — and of institutio
 > [!tip] Related Terms
 > [Board Independence](#board-independence), [Independent Director](#independent-director), [Related-Party Transaction](#related-party-transaction), [Stewardship](#stewardship)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > chmark data available, nor standards or methodology, to actually be able to figure out the real
 > impact of ESG performance on our asset class.” ESG as **fiduciary duty** Draeger also commented on
@@ -1462,7 +1462,7 @@ An SEC-mandated annual filing in which registered investment companies (mutual f
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > 13 and Standard No. 20 in Australia - Stronger Super Reforms (RG 252) in Australia **Form N-PX**
 > Vote Disclosure Solution ISS provides a turnkey, outsourced reporting preparation solution to help
@@ -1501,7 +1501,7 @@ A comprehensive ISS dataset capturing vote outcomes from shareholder meetings wo
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > Easily access recent contentious meeting results and ‘against management’ votes as part of
 > workflow analysis of upcoming meetings. Click here to view **Global Meeting Results** Key
@@ -1546,7 +1546,7 @@ A contractual provision guaranteeing substantial severance payments and accelera
 > [!tip] Related Terms
 > [Executive Compensation](#executive-compensation), [Say-on-Pay](#say-on-pay), [Clawback Policy](#clawback-policy), [Anti-Takeover Provision](#anti-takeover-provision)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Change in control is defined as a change in the company ownership structure . › Vote for
 > shareholder proposals to all have **golden parachute** agreements submitted for shareholder
@@ -1596,7 +1596,7 @@ An ISS platform that facilitates communication between institutional investors a
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Bridging the governance community. An industry first, **Governance Exchange** provides subscribing
 > members with the latest news and developments, in-depth reports on governance and compensation
@@ -1645,7 +1645,7 @@ A proprietary ISS scoring system that rates companies on governance practices ac
 > [!tip] Related Terms
 > [Board Structure](#board-structure), [Executive Compensation](#executive-compensation), [Shareholder Rights](#shareholder-rights), [Audit & Risk Oversight](#audit-risk-oversight)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > (December 2, 2019) — ISS ESG, the responsible investment arm of Institutional Shareholder Services
 > Inc., today announced methodology enhancements to **Governance QualityScore** to provide users
@@ -1702,7 +1702,7 @@ A member of the board of directors who has no material relationship with the com
 > [!tip] Related Terms
 > [Board Independence](#board-independence), [CEO Duality](#ceo-duality), [Overboarded Director](#overboarded-director)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The Corporate Governance Code of Japan recommends that all companies appoint at least two
 > **independent director**s, and at the same time, the Code refers to one-third independence,
@@ -1752,7 +1752,7 @@ The default set of proxy voting guidelines published annually by ISS for each ma
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 1, 2018, **ISS benchmark policy** was updated to also require In addition, as of Feb. 1, 20178,
 > **ISS benchmark policy** was updated to will also a minimum of at least one independent director
@@ -1799,7 +1799,7 @@ A broader term encompassing all ISS proxy voting recommendation frameworks, incl
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Dear Sirs, An email about asking the comments of **ISS voting policy** in 2017 was received by me
 > last Friday. After reading them, I have the following comments/opinions as below: 1.
@@ -1853,7 +1853,7 @@ A senior independent board member designated to serve as a counterbalance when t
 > [!tip] Related Terms
 > [CEO Duality](#ceo-duality), [Board Independence](#board-independence), [Independent Director](#independent-director), [Board Structure](#board-structure)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Only 9 percent of non-investors responded that awarding inducement grants to NEDs is not an
 > acceptable practice. Appointment of **Lead Independent Director** (Singapore) The Singapore Code
@@ -1907,7 +1907,7 @@ The voluntary or shareholder-requested reporting by a company of its direct and 
 > [!tip] Related Terms
 > [Political Spending Disclosure](#political-spending-disclosure), [Shareholder Proposal](#shareholder-proposal), [Corporate Social Responsibility (CSR)](#corporate-social-responsibility-csr)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > Resolutions associated with one of the two larger political issue campaigns, political
 > contributions disclosure and **lobbying disclosure**, accounted for more than two-thirds of all
@@ -1940,7 +1940,7 @@ A compensation program that awards executives and key employees equity-based or 
 > [!tip] Related Terms
 > [Executive Compensation](#executive-compensation), [Pay-for-Performance Alignment](#pay-for-performance-alignment), [Equity Plan](#equity-plan), [Say-on-Pay](#say-on-pay)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > initial testing period; • Plan allows for excessive dilution; • Company failed to disclose
 > adequate information regarding any element of the scheme. **Long-Term Incentive Plan** Amendments
@@ -2001,7 +2001,7 @@ A director election standard under which a nominee must receive more votes "for"
 > [!tip] Related Terms
 > [Cumulative Voting](#cumulative-voting), [Board Classification (Classified Board)](#board-classification-classified-board), [Shareholder Rights](#shareholder-rights)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > These latter may in fact have more total “FOR” votes than the candidates on the other card—but
 > will still fail to be elected under the **majority voting** standard. And not only, in a failed
@@ -2055,7 +2055,7 @@ A specific implementation of majority voting that requires director nominees to 
 > [!tip] Related Terms
 > [Majority Voting](#majority-voting), [Director Election](#director-election), [Shareholder Rights](#shareholder-rights), [Board Refreshment](#board-refreshment)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > These latter may in fact have more total “FOR” votes than the candidates on the other card—but
 > will still fail to be elected under the **majority voting standard**. And not only, in a failed
@@ -2111,7 +2111,7 @@ A director who serves on an excessive number of public company boards, raising c
 > [!tip] Related Terms
 > [Director Data](#director-data), [Board Independence](#board-independence), [Independent Director](#independent-director)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > all publicly-listed boards, regardless of whether they have a parent/subsidiary relationship, are
 > counted when determining a director’s status as an **overboarded director**. In situations where
@@ -2170,7 +2170,7 @@ The degree to which executive compensation outcomes correlate with company finan
 > [!tip] Related Terms
 > [Say-on-Pay](#say-on-pay), [Executive Compensation](#executive-compensation), [Long-Term Incentive Plan (LTIP)](#long-term-incentive-plan-ltip), [Compensation Committee](#compensation-committee)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Already in 2012 ISS introduced a robust quantitative methodology to assess **pay-for-performance
 > alignment** for the US market. With similar attention for payout levels in Europe, the 2014 ISS
@@ -2227,7 +2227,7 @@ A shareholder rights plan adopted by a board (typically without shareholder appr
 > [!tip] Related Terms
 > [Anti-Takeover Provision](#anti-takeover-provision), [Shareholder Rights](#shareholder-rights), [Dual-Class Shares](#dual-class-shares)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > will not receive the case-by- case assessment. Intent and Impact The intent of this proposed
 > policy update is to simplify ISS' approach to **poison pill**s, and strengthen the principle that
@@ -2279,7 +2279,7 @@ The voluntary or shareholder-requested reporting by a company of its political c
 > [!tip] Related Terms
 > [Lobbying Disclosure](#lobbying-disclosure), [Shareholder Proposal](#shareholder-proposal), [Corporate Social Responsibility (CSR)](#corporate-social-responsibility-csr)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > Group Presses on **Political Spending Disclosure**s The Corporate Reform Coalition, whose members
 > include investors, academics, and public interest groups, is urging the U.S.
@@ -2308,7 +2308,7 @@ A governance mechanism that allows qualifying shareholders (typically those owni
 > [!tip] Related Terms
 > [Director Election](#director-election), [Proxy Contest](#proxy-contest), [Shareholder Rights](#shareholder-rights), [Contested Election](#contested-election)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > . As of August 31, 39 percent of S&P 500 companies provide a **proxy access** right, and 264 U.S.
 > companies in the Russell 3000 have adopted some form of **proxy access**; only 16 of these
@@ -2360,7 +2360,7 @@ A situation in which a dissident shareholder or activist investor solicits proxy
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Past shareholder activism, board activity, and votes on related proposals. **Proxy Contest**s
 > Sustainability Policy Recommendation: Vote case-by-case on **proxy contest**s, considering the
@@ -2417,7 +2417,7 @@ The process by which shareholders who are unable or choose not to attend a share
 > [!tip] Related Terms
 > [Proxy Exchange](#proxy-exchange), [ISS Benchmark Policy](#iss-benchmark-policy), [Vote Preference](#vote-preference), [Form N-PX](#form-n-px)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ISS was founded in 1985 with the goal of supporting sound investment stewardship to help inform
 > **proxy voting** among institutional investors. First-to-market with **proxy voting** services in
@@ -2468,7 +2468,7 @@ The branded ISS end-to-end proxy voting platform that combines research delivery
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > With an easy-to-use library of over 30 report templates from vote history to accounts to board
 > statistics and many more, **ProxyExchange** Reporting Module allows you to tell your stewardship
@@ -2521,7 +2521,7 @@ The minimum number or percentage of shares that must be represented (in person o
 > [!tip] Related Terms
 > [Annual General Meeting (AGM)](#annual-general-meeting-agm), [Proxy Voting](#proxy-voting), [Shareholder Rights](#shareholder-rights)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > - TSX and TSXV Current Recommendation: Case-by-case based on analytical framework. Key Changes:
 > Addition of a policy on Enhanced Shareholder Meeting **Quorum**. New Recommendation: Generally
@@ -2575,7 +2575,7 @@ A business transaction between a company and an entity with which it has a pre-e
 > [!tip] Related Terms
 > [Board Independence](#board-independence), [Independent Director](#independent-director), [Fiduciary Duty](#fiduciary-duty), [Audit & Risk Oversight](#audit-risk-oversight)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Inclusiveness. Global Expertise. **Related-Party Transaction**s ISS assesses **related-party
 > transaction**s on a case-by-case basis. However, all analyses are conducted from the point of view
@@ -2634,7 +2634,7 @@ A mandatory (in the U.S. under Dodd-Frank) advisory shareholder vote on the comp
 > [!tip] Related Terms
 > [Advisory Vote](#advisory-vote), [Executive Compensation](#executive-compensation), [Compensation Committee](#compensation-committee), [Clawback Policy](#clawback-policy)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > closed at 2015 meetings, as well as goal-setting by companies where financial metrics constituted
 > a majority of annual incentive objectives. Finally, **say-on-pay** vote results at 2015
@@ -2686,7 +2686,7 @@ A program under which a company repurchases its own outstanding shares from the 
 > [!tip] Related Terms
 > [Capital Allocation](#capital-allocation), [Equity Plan](#equity-plan), [Tender Offer](#tender-offer), [Burn Rate](#burn-rate)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Change in control is defined as a change in the company ownership structure. **Share Buyback**
 > Impact on Incentive Program Metrics General Recommendation: Vote case-by-case on proposals
@@ -2741,7 +2741,7 @@ A resolution submitted by an eligible shareholder (meeting SEC ownership and pro
 > [!tip] Related Terms
 > [Advisory Vote](#advisory-vote), [Proxy Voting](#proxy-voting), [Special Meeting Right](#special-meeting-right)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > These access proposals and calls for independent board chairs were number one and number two,
 > respectively, on the **shareholder proposal** leaderboard. While the number of **shareholder
@@ -2793,7 +2793,7 @@ The bundle of legal, contractual, and governance rights held by owners of a comp
 > [!tip] Related Terms
 > [Special Meeting Right](#special-meeting-right), [Supermajority Vote Requirement](#supermajority-vote-requirement), [Cumulative Voting](#cumulative-voting), [Dual-Class Shares](#dual-class-shares)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > VOTING CHAIN - Companies should have access to the identity of shareholders without delay. -
 > Transmission of information that enables the exercise of **shareholder rights** should be made in
@@ -2844,7 +2844,7 @@ The right of shareholders (individually or as a group meeting a specified owners
 > [!tip] Related Terms
 > [Shareholder Rights](#shareholder-rights), [Shareholder Proposal](#shareholder-proposal), [Anti-Takeover Provision](#anti-takeover-provision)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > On the shareholder proposals front, individual investors seemed determined to make headway on
 > issues such as **special meeting right**s, independent board chair, and the ability to act by
@@ -2881,7 +2881,7 @@ The responsible management and oversight of invested assets by institutional inv
 > [!tip] Related Terms
 > [Proxy Voting](#proxy-voting), [Engagement Suite](#engagement-suite), [Fiduciary Duty](#fiduciary-duty), [Vote Disclosure](#vote-disclosure)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ISS’ Head of Japanese Research, Takeyuki Ishida, participated in the Working Group that drafted
 > the **Stewardship** Code. We are pleased to support the FSA in their efforts to enhance investor
@@ -2929,7 +2929,7 @@ A charter or bylaw provision that requires more than a simple majority (typicall
 > [!tip] Related Terms
 > [Anti-Takeover Provision](#anti-takeover-provision), [Shareholder Rights](#shareholder-rights), [Dual-Class Shares](#dual-class-shares)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > In the U.S., poison pills do not require shareholder approval. However, shareholders must approve
 > charter amendments, such as classified boards or **supermajority vote requirement**s. In brief,
@@ -2983,7 +2983,7 @@ A public, time-limited offer made by an acquirer (or the company itself, in the 
 > [!tip] Related Terms
 > [Anti-Takeover Provision](#anti-takeover-provision), [Poison Pill](#poison-pill), [Share Buyback](#share-buyback), [Activist Investor](#activist-investor)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > + 41 43 430 72 72, E-Mail: customersupport@stoxx.com Methodology Changes Extraordinary Free In
 > case of an ongoing **tender offer**, the target 5.1.4 Extraordinary In case of an ongoing **tender
@@ -3041,7 +3041,7 @@ A governance structure in which different classes of shares carry different numb
 > [!tip] Related Terms
 > [Dual-Class Shares](#dual-class-shares), [Anti-Takeover Provision](#anti-takeover-provision), [Shareholder Rights](#shareholder-rights), [Proxy Access](#proxy-access)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > one vote;” pay ratio disclosures; the use of virtual meetings; and board gender diversity. Key
 > findings from this year’s high-level survey include: - **Unequal Voting Rights**. ISS solicited
@@ -3092,7 +3092,7 @@ The public reporting by institutional investors of how they voted on proxy propo
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > 13 and Standard No. 20 in Australia - Stronger Super Reforms (RG 252) in Australia Form N-PX
 > **Vote Disclosure** Solution ISS provides a turnkey, outsourced reporting preparation solution to
@@ -3127,7 +3127,7 @@ The specific voting instruction (for, against, abstain, withhold, one year/two y
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > Designed to provide choice, ISS **Vote Preference** is a flexible way for asset managers to create
 > and manage their own offering leveraging innovative technology.
@@ -3149,7 +3149,7 @@ An ISS data product that aggregates and analyzes proxy voting records from insti
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > All figures are approximate. COMPARE INSTITUTIONAL VOTING PATTERNS BY MUTUAL FUND FAMILY **Voting
 > Analytics** includes mutual funds’ voting records, from SEC filings since 2003, and more recently

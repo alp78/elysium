@@ -11,19 +11,19 @@ tags:
 
 Orchestration determines when pipelines run, in what order, and what happens when they fail. These notes cover Apache Airflow for complex DAG-based workflows, platform-native scheduling tools for simpler recurring jobs, and a domain-specific ESG ingestion framework that ties both together.
 
-> [!example]- Airflow
+> [!guide]- Airflow
 >
 > [[domain-airflow]]
 >
 > Apache Airflow for programmatic workflow orchestration — architecture, DAG authoring, production deployment, common failure modes, and troubleshooting.
 
-> [!example]- Scheduling
+> [!guide]- Scheduling
 >
 > [[domain-scheduling]]
 >
 > Platform-native scheduling tools for recurring jobs that do not require a full orchestration framework — Linux cron and systemd timers, GCP Cloud Scheduler and Cloud Workflows, and Windows Task Scheduler.
 
-> [!example]- Data Ingestion Patterns
+> [!guide]- Data Ingestion Patterns
 >
 > [[domain-data-ingestion-patterns]]
 >

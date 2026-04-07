@@ -51,7 +51,7 @@ Emissions reductions that occur outside a product's life cycle or value chain, b
 > [!tip] Related terms
 > [Carbon Offsetting](#carbon-offsetting), [Emissions Scopes (Scope 1, Scope 2, Scope 3)](#emissions-scopes-scope-1-scope-2-scope-3), [Green Revenue](#green-revenue)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > Carbon Yield methodology here or visit the official website http://carbonyield.org/. 1 The Carbon
 > Yield enables investors to determine the potential **avoided emissions** of Green Bonds. 2
@@ -83,7 +83,7 @@ A systematic evaluation of how a company's operations, supply chain, or financed
 > [!tip] Related terms
 > [Deforestation Risk](#deforestation-risk), [Nature-Related Risk](#nature-related-risk), [Water Stress](#water-stress)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > This includes one-third of all marine mammals, 40% of all amphibian species, and nearly 33% of
 > coral reefs. SOURCE: OECD 2022 BENEFITS OF USING THE **BIODIVERSITY IMPACT ASSESSMENT** TOOL The
@@ -136,7 +136,7 @@ The decline in the variety and abundance of species and ecosystems at the geneti
 > [!tip] Related terms
 > [Biodiversity Impact Assessment](#biodiversity-impact-assessment), [Habitat Loss](#habitat-loss), [Natural Capital](#natural-capital), [Nature-Related Risk](#nature-related-risk)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Some money managers have launched funds that consider corporate impacts on biodiversity. The
 > **biodiversity loss** and the ecological footprint Our planet’s biocapacity is the ability of its
@@ -185,7 +185,7 @@ Revenue derived from business activities associated with fossil fuels and other 
 > [!tip] Related terms
 > [Green Revenue](#green-revenue), [High-Emitting Sectors](#high-emitting-sectors), [Stranded Assets](#stranded-assets)
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > (UN SDG) 13, Climate Action. Green and brown energy revenue shares will be used in the
 > construction of the indices to ensure the total green share / **brown revenue** share of the STOXX
@@ -229,7 +229,7 @@ The maximum cumulative amount of carbon dioxide (CO2) emissions permitted over a
 > [!tip] Related terms
 > [Climate Scenario Analysis](#climate-scenario-analysis), [IEA Net Zero Pathway](#iea-net-zero-pathway), [Net Zero](#net-zero)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > = (cid:2919) (cid:2919) Standard deviation of the 95% lowest cb_os in the population IEA NZE
 > Scenario 2050 Projected Emissions −IEA NZE Scenario 2050 **Carbon Budget** cb_os =max(cid:3436)0,
@@ -279,7 +279,7 @@ A suite of technologies that capture carbon dioxide emissions at their source (e
 > [!tip] Related terms
 > [Avoided Emissions](#avoided-emissions), [Carbon Offsetting](#carbon-offsetting), [Energy Transition](#energy-transition), [Net Zero](#net-zero)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > to promote ‘negative’ emissions strategies including carbon removal, she told the audience. “The
 > math at the moment is not working out,” Lutz said. “**Carbon capture and storage**, and even less
@@ -303,7 +303,7 @@ A tradable certificate or permit representing the right to emit one metric ton o
 > [!tip] Related terms
 > [Carbon Offsetting](#carbon-offsetting), [Carbon Pricing](#carbon-pricing), [Net Zero](#net-zero)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > ipated standards, companies will have to consider options such as: capital improvement to their
 > facilities to reduce emissions, the cost of “trading” **carbon credit**s on an open market to
@@ -341,7 +341,7 @@ $$\text{Carbon Cost} = \text{Unabated Emissions (tCO}_2\text{e)} \times \text{Ca
 > [!tip] Related terms
 > [Carbon Credit](#carbon-credit), [Climate Scenario Analysis](#climate-scenario-analysis), [Transition Risk](#transition-risk)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > , and transparency indicators. TRANSITION RISK Detailed assessment of company and portfolio
 > exposure to transition risks and opportunities related to **carbon pricing** and demand changes,
@@ -381,7 +381,7 @@ where EVIC = Enterprise Value Including Cash.
 > [!tip] Related terms
 > [Carbon Intensity](#carbon-intensity), [Financed Emissions](#financed-emissions), [Weighted Average Carbon Intensity (WACI)](#weighted-average-carbon-intensity-waci)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > CARBON RISK RATING CARBON PERFORMANCE SCORE Carbon Performance Score looks at a company’s CO2
 > efficiency, risk management and measures to reduce the **carbon footprint**. CARBON RISK
@@ -434,7 +434,7 @@ $$\text{Carbon Intensity} = \frac{\text{Total GHG Emissions (tCO}_2\text{e)}}{\t
 > [!tip] Related terms
 > [Carbon Footprint](#carbon-footprint), [Weighted Average Carbon Intensity (WACI)](#weighted-average-carbon-intensity-waci), [High-Emitting Sectors](#high-emitting-sectors)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > hin 0.999 and 1 of 𝐼 where 𝐼 is the minimum of 50% of the total **carbon intensity** of the parent
 > index 𝑡 𝑡 or a 7% reduction from the previous period’s **carbon intensity** exposure, with EVIC
@@ -485,7 +485,7 @@ A suite of quantitative tools and datasets — provided by firms such as ISS ESG
 > [!tip] Related terms
 > [Climate Scenario Analysis](#climate-scenario-analysis), [Implied Temperature Rise](#implied-temperature-rise), [Physical Risk](#physical-risk), [Transition Risk](#transition-risk)
 
-> [!example]- Source excerpts (4)
+> [!guide]- Source excerpts (4)
 >
 > SUSTAINABILITY SOLUTIONS / CLIMATE SOLUTIONS **Climate Analytics** Manage your exposure to
 > climate-related risks. Providing Comprehensive Carbon and Climate Data Solutions Our dedicated
@@ -529,7 +529,7 @@ A forward-looking exercise that models the potential impact of different climate
 > [!tip] Related terms
 > [Carbon Budget](#carbon-budget), [IEA Net Zero Pathway](#iea-net-zero-pathway), [Physical Risk](#physical-risk), [Transition Risk](#transition-risk)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Furthermore, these reports can help investors address key internal and external climate
 > disclosures, including TCFD-based reporting initiatives where **climate scenario analysis** and
@@ -584,7 +584,7 @@ An economic model that replaces the traditional linear "take-make-dispose" appro
 > [!tip] Related terms
 > [Environmental Footprint](#environmental-footprint), [Green Revenue](#green-revenue), [Natural Capital](#natural-capital)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > An Investor’s Guide to the **Circular Economy** JULY 14, 2022 KEY TAKEAWAYS - Humanity’s current
 > global consumption patterns would require the resources of 2.3 planet Earths by 2050.
@@ -631,7 +631,7 @@ Legal proceedings brought against companies, governments, or other entities for 
 > [!tip] Related terms
 > [Greenwashing](#greenwashing), [Transition Risk](#transition-risk), [Stranded Assets](#stranded-assets)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > n companies that are involved in lobbying against reasonable regulation on climate change, and
 > activists and other bodies are increasingly turning to **climate litigation** as a way of
@@ -659,7 +659,7 @@ The systemic shift of an economy, sector, or company from high-carbon to low-car
 > [!tip] Related terms
 > [Decarbonization Pathway](#decarbonization-pathway), [Net Zero Transition](#net-zero-transition), [Transition Risk](#transition-risk)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The other two are physical risk and liability risk. The relevance of **climate transition** risk
 > means that “we are not going to come anywhere near meeting our climate goals just by decarbonizing
@@ -712,7 +712,7 @@ where $r$ is the annual decarbonization rate (e.g., 7% for PAB) and $t$ is years
 > [!tip] Related terms
 > [Carbon Budget](#carbon-budget), [IEA Net Zero Pathway](#iea-net-zero-pathway), [Net Zero Transition](#net-zero-transition), [Paris-Aligned Benchmark (PAB)](#paris-aligned-benchmark-pab)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > hts into climate impact. Our forward-looking scenario alignment framework helps assess how real
 > asset portfolios are positioned against science-based **decarbonization pathway**s, in reference
@@ -764,7 +764,7 @@ The likelihood that a company's operations or supply chain contribute to the cle
 > [!tip] Related terms
 > [Biodiversity Impact Assessment](#biodiversity-impact-assessment), [Nature-Related Risk](#nature-related-risk)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > used on deforestation, particularly of tropical forests. This report is set to answer the
 > question: How are global institutional investors exposed to **deforestation risk**s in their
@@ -799,7 +799,7 @@ $$\text{Energy Efficiency} = \frac{\text{Useful Energy Output}}{\text{Total Ener
 > [!tip] Related terms
 > [Carbon Intensity](#carbon-intensity), [Energy Transition](#energy-transition), [Green Revenue](#green-revenue)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > , or controversy related to its GHG emissions; and ▪ Whether the proposal’s request is unduly
 > burdensome (scope or timeframe) or overly prescriptive. **Energy Efficiency** Sustainability
@@ -853,7 +853,7 @@ The global shift from fossil-fuel-based energy systems (coal, oil, natural gas) 
 > [!tip] Related terms
 > [Climate Transition](#climate-transition), [Fossil Fuel Divestment](#fossil-fuel-divestment), [Net Zero Transition](#net-zero-transition), [Renewable Energy Capacity](#renewable-energy-capacity)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The STOXX Global Lithium and Battery Producers index covers an area of increasing investor
 > interest, allowing them to tap the **energy transition** metals theme through the companies that
@@ -904,7 +904,7 @@ The total environmental impact of an entity — company, product, or portfolio �
 > [!tip] Related terms
 > [Carbon Footprint](#carbon-footprint), [Circular Economy](#circular-economy), [Natural Capital](#natural-capital), [Water Stress](#water-stress)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > Together, we foster an environment that fuels creativity, drives innovation, and shapes our future
 > success. Environment Reducing the **environmental footprint** of our business operations and
@@ -944,7 +944,7 @@ $$\text{Financed Emissions}_i = \frac{\text{Outstanding Amount}_i}{\text{EVIC}_i
 > [!tip] Related terms
 > [Carbon Footprint](#carbon-footprint), [Emissions Scopes (Scope 1, Scope 2, Scope 3)](#emissions-scopes-scope-1-scope-2-scope-3), [Weighted Average Carbon Intensity (WACI)](#weighted-average-carbon-intensity-waci)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 1, 2, and 3 emissions, including Emissions Exposure and Weighted Average Carbon Intensity to
 > assess carbon impact. When valuation data is available, **financed emissions** are calculated,
@@ -1001,7 +1001,7 @@ A fixed-income instrument whose proceeds are exclusively allocated to finance or
 > [!tip] Related terms
 > [Green Revenue](#green-revenue), [Climate Transition](#climate-transition)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > e metric that can be used by a variety of stakeholders, such as issuers, investors and analysts.
 > The methodology looks at the projects financed via a **green bond** and then allocates to the bond
@@ -1050,7 +1050,7 @@ Revenue generated from products and services that deliver clear environmental be
 > [!tip] Related terms
 > [Brown Revenue](#brown-revenue), [Avoided Emissions](#avoided-emissions), [Green Bond](#green-bond)
 
-> [!example]- Source excerpts (4)
+> [!guide]- Source excerpts (4)
 >
 > ISS ESG classifies revenues from renewable energy sources such as wind, solar, hydro, biomass and
 > geo-thermal sources, and nuclear power as **green revenue**s. In addition to these, the definition
@@ -1096,7 +1096,7 @@ $$\text{CO}_2\text{e} = \sum_{g} \text{Emissions}_g \times \text{GWP}_g$$
 > [!tip] Related terms
 > [Carbon Footprint](#carbon-footprint), [Emissions Scopes (Scope 1, Scope 2, Scope 3)](#emissions-scopes-scope-1-scope-2-scope-3)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Intensity = (Scope 1 + Scope 2 GHG emissions) / Revenue (USD million) The data consists of both
 > reported and estimated data. Scope 1 refers to direct **greenhouse gas** emissions coming from
@@ -1153,7 +1153,7 @@ The practice of making misleading, unsubstantiated, or exaggerated claims about 
 > [!tip] Related terms
 > [Climate Litigation](#climate-litigation), [Green Bond](#green-bond), [Green Revenue](#green-revenue)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Market Views: How to spot **greenwashing** As investor interest in sustainable assets continues to
 > rise, a big challenge is how to ensure fund managers live up to their ESG claims. By 2025, as
@@ -1204,7 +1204,7 @@ Industry sectors identified under the EU Climate Benchmark Regulation (and by IS
 > [!tip] Related terms
 > [Brown Revenue](#brown-revenue), [Carbon Intensity](#carbon-intensity), [Transition Risk](#transition-risk)
 
-> [!example]- Source excerpts (4)
+> [!guide]- Source excerpts (4)
 >
 > They incorporate sector-specific performance indicators, and include systematically important
 > companies from **high-emitting sectors** that play a crucial role in the climate transition. The
@@ -1246,7 +1246,7 @@ The reduction in the area or quality of natural environments — forests, wetlan
 > [!tip] Related terms
 > [Biodiversity Impact Assessment](#biodiversity-impact-assessment), [Biodiversity Loss](#biodiversity-loss), [Deforestation Risk](#deforestation-risk), [Nature-Related Risk](#nature-related-risk)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > iodiversity impact involves evaluating the effect that its operations and activities have on the
 > local and global ecosystems. Biodiversity footprint, **habitat loss**, species impact and
@@ -1272,7 +1272,7 @@ A forward-looking metric that translates a company's or portfolio's projected gr
 > [!tip] Related terms
 > [Climate Scenario Analysis](#climate-scenario-analysis), [Temperature Alignment](#temperature-alignment), [Science-Based Target](#science-based-target)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ENT Assessment of a portfolio’s alignment with up to 25 climate scenarios provided by leading
 > models: e.g. IEA, OECM, and NGFS. The analysis includes **implied temperature rise**, cumulative
@@ -1329,7 +1329,7 @@ A framework for ensuring that the shift to a low-carbon economy is fair and incl
 > [!tip] Related terms
 > [Climate Transition](#climate-transition), [Energy Transition](#energy-transition), [Net Zero Transition](#net-zero-transition), [Social License to Operate](#social-license-to-operate)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > **Just Transition**: Blending Social and Environmental Considerations April 25, 2024 Climate
 > change mitigation efforts are sometimes accused of neglecting the human angl
@@ -1384,7 +1384,7 @@ where $\text{GWP}_{\text{CH}_4}$ is 28 (100-year) or 80 (20-year) per IPCC AR6.
 > [!tip] Related terms
 > [Carbon Intensity](#carbon-intensity), [Emissions Scopes (Scope 1, Scope 2, Scope 3)](#emissions-scopes-scope-1-scope-2-scope-3), [Greenhouse Gas (GHG)](#greenhouse-gas-ghg)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > n just one year. That same year, shareholders filed resolutions at three additional companies
 > asking them to report on how they are managing fugitive **methane emissions**. The shareholders
@@ -1438,7 +1438,7 @@ Financial risk arising from an organization's dependencies and impacts on nature
 > [!tip] Related terms
 > [Biodiversity Impact Assessment](#biodiversity-impact-assessment), [Deforestation Risk](#deforestation-risk), [Physical Risk](#physical-risk), [Water Risk](#water-risk)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Taskforce on Climate-related Financial Disclosure (TCFD) and aims to develop risk management and
 > disclosure guidelines to report and act on evolving **nature-related risk**s. The standard-setting
@@ -1493,7 +1493,7 @@ The stock of renewable and non-renewable natural resources — including air, wa
 > [!tip] Related terms
 > [Biodiversity Loss](#biodiversity-loss), [Environmental Footprint](#environmental-footprint), [Nature-Related Risk](#nature-related-risk), [Water Risk](#water-risk)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > **Natural Capital**: The Next Evolution of Environmental Reporting October 9, 2025 The purpose of
 > this paper is to provide a contextual overview of the state of play reg
@@ -1548,7 +1548,7 @@ A state in which the greenhouse gases emitted into the atmosphere are balanced b
 > [!tip] Related terms
 > [Carbon Budget](#carbon-budget), [Decarbonization Pathway](#decarbonization-pathway), [Net Zero Transition](#net-zero-transition), [Science-Based Target](#science-based-target)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The NZFSPA is accredited by the UN Race to Zero campaign and is a member of the Glasgow Financial
 > Alliance for **Net Zero**. Qontigo’s commitment to NZFSPA underscores its dedication to the **net
@@ -1594,7 +1594,7 @@ The process by which a company, portfolio, or economy moves from its current emi
 > [!tip] Related terms
 > [Climate Transition](#climate-transition), [Decarbonization Pathway](#decarbonization-pathway), [Net Zero](#net-zero), [Transition Risk](#transition-risk)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > tant companies from high-emitting sectors that play a crucial role in the climate transition.
 > Compliance with key regulatory guidelines The ISS STOXX **Net Zero Transition** indices are
@@ -1651,7 +1651,7 @@ $$\text{PAB Carbon Intensity}_t \leq \text{PAB Carbon Intensity}_{t-1} \times (1
 > [!tip] Related terms
 > [Climate Transition](#climate-transition), [Decarbonization Pathway](#decarbonization-pathway), [Weighted Average Carbon Intensity (WACI)](#weighted-average-carbon-intensity-waci)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Baden-Württemberg (LBBW). The new index is a decrement version of the iSTOXX® Global Climate
 > Change ESG Index, itself based on the STOXX® Global 1800 **Paris-Aligned Benchmark (PAB)** and
@@ -1706,7 +1706,7 @@ The financial risk arising from the physical effects of climate change, includin
 > [!tip] Related terms
 > [Climate Scenario Analysis](#climate-scenario-analysis), [Nature-Related Risk](#nature-related-risk), [Transition Risk](#transition-risk), [Water Risk](#water-risk)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Our proprietary asset database provides verified geolocation and site-level intelligence to
 > support precise identification of **physical risk** exposure of real assets owned or operated by
@@ -1757,7 +1757,7 @@ A greenhouse gas emissions reduction target adopted by a company that is consist
 > [!tip] Related terms
 > [Decarbonization Pathway](#decarbonization-pathway), [IEA Net Zero Pathway](#iea-net-zero-pathway), [Net Zero](#net-zero), [Temperature Alignment](#temperature-alignment)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ’s 2°C scenario until 2050. Importantly, the STOXX Climate Benchmark Indices mandate science-based
 > carbon-target setting using a phased approach. How **science-based target** setting affects the
@@ -1812,7 +1812,7 @@ Assets that suffer unanticipated or premature write-downs, devaluations, or conv
 > [!tip] Related terms
 > [Brown Revenue](#brown-revenue), [Carbon Budget](#carbon-budget), [High-Emitting Sectors](#high-emitting-sectors), [Transition Risk](#transition-risk)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > cy of their capital expenditure strategies with policymakers’ goals to limit greenhouse gas
 > emissions, or a company's strategy to address the risk of **stranded assets** presented by global
@@ -1837,7 +1837,7 @@ The 17 interconnected goals adopted by the United Nations in 2015 as a universal
 > [!tip] Related terms
 > [Green Revenue](#green-revenue), [Biodiversity Impact Assessment](#biodiversity-impact-assessment)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The SDI AOP consists of asset owners who invest in solutions which contribute to the UN
 > **Sustainable Development Goals**. The SDI AOP is comprised of APG, AustralianSuper, British
@@ -1886,7 +1886,7 @@ A metric that assesses whether a company's or portfolio's emissions trajectory i
 > [!tip] Related terms
 > [Implied Temperature Rise](#implied-temperature-rise), [Decarbonization Pathway](#decarbonization-pathway), [Science-Based Target](#science-based-target)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > Moreover, “different providers’ assessments vary widely even when they are expressed in similar
 > units, as in the case of **temperature alignment**.” Implications for index design Finally, the
@@ -1911,7 +1911,7 @@ In the context of sustainability investing, a metal critical to the clean-energy
 > [!tip] Related terms
 > [Climate Transition](#climate-transition), [Green Revenue](#green-revenue), [Net Zero Transition](#net-zero-transition)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Net-Zero by 2050 Roadmap, renewables may increase their share of power from 10% currently to 60%
 > in three decades, exacerbating supply shortages for **transition metal**s. STOXX’s energy
@@ -1966,7 +1966,7 @@ Financial risk arising from the process of adjusting to a low-carbon economy, in
 > [!tip] Related terms
 > [Climate Scenario Analysis](#climate-scenario-analysis), [High-Emitting Sectors](#high-emitting-sectors), [Physical Risk](#physical-risk), [Stranded Assets](#stranded-assets)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > W Climate Transition Indices are a new approach to managing climate risk that offer investors a
 > systematic and transparent way to incorporate climate **transition risk** into their investment
@@ -2018,7 +2018,7 @@ The probability that water-related challenges — including scarcity, flooding, 
 > [!tip] Related terms
 > [Nature-Related Risk](#nature-related-risk), [Physical Risk](#physical-risk), [Water Stress](#water-stress)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > SUSTAINABILITY SOLUTIONS / RATINGS & RANKINGS **Water Risk** Rating Access a holistic assessment
 > of companies’ exposure to freshwater-related risks. **Water Risk** Rating helps you mitigate
@@ -2071,7 +2071,7 @@ A ratio above 0.4 (40%) is generally classified as "high water stress."
 > [!tip] Related terms
 > [Nature-Related Risk](#nature-related-risk), [Physical Risk](#physical-risk), [Water Risk](#water-risk)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ss information on company-specific geo-based water risks, measured by pairing information on a
 > company’s geographical footprint with data on baseline **water stress** from the World Resource
@@ -2127,7 +2127,7 @@ where $w_i$ is the portfolio weight of company $i$.
 > [!tip] Related terms
 > [Carbon Footprint](#carbon-footprint), [Carbon Intensity](#carbon-intensity), [Financed Emissions](#financed-emissions), [Paris-Aligned Benchmark (PAB)](#paris-aligned-benchmark-pab)
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > Using user-provided data, the model estimates Scope 1, 2, and 3 emissions, including Emissions
 > Exposure and **Weighted Average Carbon Intensity** to assess carbon impact. When valuation data is

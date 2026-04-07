@@ -700,7 +700,7 @@ RunTest("Mock with transient failure + retry", () =>
 ✓ Mock with transient failure + retry
 ```
 
-> [!example] Moq equivalent — production mock with Setup and Verify
+> [!guide] Moq equivalent — production mock with Setup and Verify
 >
 > In a real test project, Moq generates the mock class automatically from the interface — no hand-written mock needed. `Setup()` defines what the mock returns, and `Verify()` asserts how it was called.
 >

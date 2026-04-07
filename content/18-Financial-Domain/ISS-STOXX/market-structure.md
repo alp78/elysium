@@ -59,7 +59,7 @@ screening in STOXX index methodologies.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > INDEX REVIEW Component selection: There is a minimum liquidity requirement for components: to be
 > eligible, the 3-month **average daily trading volume** has to be at least EUR 1 million.
@@ -118,7 +118,7 @@ order book and, together with the bid price, defines the bid-ask spread.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 2𝑡 2𝑡 The post-roll index level has to be equal to the pre-roll index level minus cost the of
 > trading. Hereby 𝑃∗ refers to either the bid price 𝑃𝐵 or **ask price** 𝑃𝐴 depending on whether the
@@ -178,7 +178,7 @@ closing auctions set the official closing price used by index providers.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Significant negotiation "wins" can also signify the deal makers' competency. The comprehensiveness
 > of the sales process (e.g., full **auction**, partial **auction**, no auction) can also affect
@@ -238,7 +238,7 @@ reviews as falling capitalisation pushes companies below size thresholds.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 9 the index plunged more than 20% from its Feb. 19, 2020 high, entering what is popularly
 > considered a **bear market**. Chart 1 shows the performances of the European benchmark, the STOXX®
@@ -294,7 +294,7 @@ best available price for a seller executing immediately.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 1𝑡 1𝑡 1𝑡 2𝑡 2𝑡 2𝑡 2𝑡 The post-roll index level has to be equal to the pre-roll index level minus
 > cost the of trading. Hereby 𝑃∗ refers to either the **bid price** 𝑃𝐵 or ask price 𝑃𝐴 depending on
@@ -354,7 +354,7 @@ tighter spreads signal greater liquidity.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (4)
+> [!guide]- Source excerpts (4)
 >
 > most recent among traded, mid and daily settlement prices is taken • The price cannot be below 0.5
 > • Both, bid and ask price, must be available • The **bid-ask spread** must be within the
@@ -402,7 +402,7 @@ portfolios.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > Hong Kong time to 10 p.m. Central European time. We have active liquidity providers showing prices
 > on screen and offering **block trade**s.” You mentioned that demand for this strategy started in
@@ -432,7 +432,7 @@ EURO STOXX 50 and DAX.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > But how can they screen out the best assets in terms of quality, financial clout and commercial
 > activity? In other words, tokens that are akin to the **blue chip**s of the equity world. The
@@ -490,7 +490,7 @@ thresholds.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Globally, passive assets gained almost 18% a year between 2014 and 2018, while active pools grew
 > by 9.2%. As we travel the ninth year of the current **bull market**, the question is whether
@@ -543,7 +543,7 @@ index membership.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > r of Deutsche Boerse Group’s index business, and a global provider of innovative and tradable
 > index concepts, today announced that it has changed its **Country Classification** model. As part
@@ -601,7 +601,7 @@ give participants time to absorb information.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > The metal is a key material across the entire chain of the electricity grid, including conductor
 > lines, cables, transformers and **circuit breaker**s. Power grids are already competing with
@@ -629,7 +629,7 @@ between trading parties to manage counterparty risk.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > OVERVIEW The STOXX Balkan 50 Equal Weight index represents blue-chip stocks from eight Balkan
 > countries in terms of free-float market capitalization. Universe: The index universe is defined as
@@ -686,7 +686,7 @@ considered normal, periodic resets within longer-term uptrends.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Incorrect real-time index values disseminated before the effective time of the **correction** are
 > not restated. 4.2.2. NON RULE-BASED **CORRECTION** If the above-outlined rule-based error
@@ -744,7 +744,7 @@ and corporate action handling.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Therefore the allocation to financial companies was minimized and the active allocation was
 > negative years before the **crash**, as can be seen from Figures 9 and 10. In fact, looking at
@@ -801,7 +801,7 @@ holdings data that feeds into free-float and ownership analysis.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The new offering is the latest in ISS’ suite of outsourced solutions designed to assist
 > **custodian**s and intermediaries in meeting requirements under the EU Shareholder Rights
@@ -854,7 +854,7 @@ shares in a foreign company. Common forms include American Depositary Receipts
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Global **Depositary Receipt** (GDR) security is directly replicated from the underlying security.
 > Shares held by Depository Bank to back the issuance of **Depositary Receipt**s (such as ADRs and
@@ -908,7 +908,7 @@ construction.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > ing for more than 10% of the STOXX Calendar trading days are excluded Min Number of Price
 > Observations = Number of Trading Days × 0.9 Period Period - **Dual listing**: If a company is
@@ -947,7 +947,7 @@ indices, individual equities, fixed income, and other asset classes.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Qontigo Randolf Roth, Member of the **Eurex** Executive Board: “Sector derivatives are
 > continuously thriving and growing. It is therefore important that **Eurex**’s sector offering
@@ -1004,7 +1004,7 @@ index inclusion.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > , and flawlessly execute your mandates, season after proxy season. With rich content, intuitive
 > yet tailored workflows, and secure technologies, Proxy**Exchange** is the preferred platform for
@@ -1058,7 +1058,7 @@ sectors, and size segments.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > How are performance-based **equity** awards defined? For the purposes of the CEO Performance-based
 > **Equity** Factor, which assesses whether the CEO has received performance- based equity, a
@@ -1117,7 +1117,7 @@ Europe by market capitalisation and the home exchange of the DAX index.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 27 following the gas and engineering company’s announcement that it will delist its shares from
 > the **Frankfurt Stock Exchange** (FSE) around March 1. A listing on the **Frankfurt Stock
@@ -1176,7 +1176,7 @@ index constituents.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > @qontigo.com Index Inquiries: Andreas von Brevern +49 (0) 69 211 14284 Due to the acquisition of
 > Siltronic AG (DE000WAF3001) by GlobalWafers GmbH the **free float** of Siltronic AG changed by
@@ -1228,7 +1228,7 @@ strategically held shares.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (4)
+> [!guide]- Source excerpts (4)
 >
 > The annualized turnover ratio is defined as the median value of the daily traded volume10 to the
 > FOR adjusted **free-float shares** ratio over the last 12 months prior to the cut-off date,
@@ -1274,7 +1274,7 @@ restricted shares, insider holdings, and other locked-up blocks.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > (Zug, 9 November 2021) – Qontigo’s global index provider STOXX Ltd. has announced an unscheduled
 > adjustment to the MDAX index. The free **float** of Zooplus AG changed by more than 10 percentage
@@ -1334,7 +1334,7 @@ sector-based analysis and comparison.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Sustained poor performance is measured by one-, three-, and five-year total shareholder returns in
 > the bottom half of a company’s four-digit **GICS** industry group (Russell 3000 1 A "new nominee"
@@ -1391,7 +1391,7 @@ triggered by pending news, order imbalances, or regulatory concerns.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > WAP) is defined as the sum of the product of execution price and volume of each trade for a stock
 > during the calculation period, divided by the total trading volume of that stock during the
@@ -1445,7 +1445,7 @@ for index construction and sector indices.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > OXX 50, 𝑖 as of the cutoff date N number of constituents in the EURO iSTOXX Megatrends Select 30
 > Index (30) b. Industry For each industry j of the 11 **ICB** Industries, a maximum number of
@@ -1503,7 +1503,7 @@ eligibility screens.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > d its market reach.” STOXX is the administrator of all DAX indices, including the MDAX. Figure 1:
 > Performance MDAX: Key performance in numbers Highly **investable market** There are currently four
@@ -1562,7 +1562,7 @@ portion of the investable market.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > For a description of the selection methodology and the review calendar, please click here. Liquid
 > stocks with a **large-cap** tilt Feedback from market participants indicated that a flagship
@@ -1619,7 +1619,7 @@ metrics such as Average Daily Trading Volume (ADTV) and turnover velocity.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > In this paper, we evaluate the EURO STOXX 50® ESG Index’s **liquidity** and tradability
 > characteristics compared to its benchmark, and make an estimation of execution cost of switching
@@ -1670,7 +1670,7 @@ index universe. STOXX applies liquidity screening at regular index reviews.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The detailed review schedule is published on the STOXX website.3 2F2F LIQUIDITY During the period
 > review processes **liquidity screening**s are applied as defined in the specific index methodology
@@ -1722,7 +1722,7 @@ order book and provide liquidity.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > sing market value of the position’s constituents. Finally, Eurex futures have on-screen prices
 > provided by market makers, which allows users to leave **limit order**s at set spread levels.
@@ -1749,7 +1749,7 @@ hold long positions in every constituent of the index they replicate.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 023 Volatility Strategy indices Key points The VSTOXX® Short-Term Futures and VSTOXX® Mid-Term
 > Futures indices, which track the return from a rolling **long position** in VSTOXX futures
@@ -1807,7 +1807,7 @@ free-float shares) is the standard weighting measure.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > OVERVIEW The STOXX Balkan 50 Equal Weight index represents blue-chip stocks from eight Balkan
 > countries in terms of free-float **market capitalization**. Universe: The index universe is
@@ -1865,7 +1865,7 @@ often excluded from standard benchmark indices due to liquidity constraints.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > You are going to see a lot of growth there, and consequently a lot of unlisted **micro-cap**s
 > coming to the market, and the small-caps that we own, hopefully becoming the large-caps of the
@@ -1902,7 +1902,7 @@ capture this segment of the market.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The STOXX Developed World Universal Index is a market cap weighted index designed to represent the
 > performance of the Large and **Mid-Cap** companies from Developed Markets covering approximately
@@ -1959,7 +1959,7 @@ traded index constituents.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > We are very happy to be part of this STOXX and Eurex initiative. What does having a **market
 > maker** mean for the contracts? What are the benefits? **Market maker**s provide constant
@@ -2010,7 +2010,7 @@ be filled.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > Research™ LM Research™ LiquidMetrix financial market data research is based upon our sophisticated
 > advanced analytics and in-depth database of Global **Market order** books and trade data.
@@ -2044,7 +2044,7 @@ and is the mechanism through which price discovery occurs on modern exchanges.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > A requirement for aggregating **order book** volumes is that the companies that no longer exist
 > are no actively traded on any stock exchange. The **order book** volumes are then aggregated
@@ -2104,7 +2104,7 @@ generally excluded from STOXX indices.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Traditionally, they have been implemented with futures, certificates and **over-the-counter**
 > instruments such as CFDs. Pursuing the strategies through an ETP, however, brings cost, risk and
@@ -2164,7 +2164,7 @@ index purposes.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The assignment is generally based on the country of incorporation and the **primary listing** of
 > the security, with the **primary listing** determined by liquidity. In cases where the country of
@@ -2220,7 +2220,7 @@ assignment, currency denomination, and eligibility for regional indices.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > A company will be deleted from the index based on the traded stock price on its **primary
 > market**, if available, or else the OTC stock price; if neither price is available, the company
@@ -2274,7 +2274,7 @@ and DAX index families.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > “That means that we want to optimize around sustainability too.” This reality is captured in
 > **Qontigo**’s new tagline – ‘Optimizing Impact.’ The phrase reflects the overarching objective
@@ -2328,7 +2328,7 @@ on a regulated market.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 1, 2010), Italian European Shareholder Rights Directive (effective since Nov. 1, 2010), Italian
 > issuers whose shares are listed on the Italian **regulated market** Mercato issuers whose shares
@@ -2386,7 +2386,7 @@ broad-based (affecting entire indices) or sector-specific.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > May after the US and China agreed to pause import tariffs as both nations negotiate a reduction in
 > trade costs. European indices extended this year’s **rally** on expectations the region may be
@@ -2442,7 +2442,7 @@ economic segments.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The global financial crisis significantly changed the industry composition of European equities,
 > enhancing **sector** diversification relative to the market’s own history and to other major
@@ -2495,7 +2495,7 @@ ICB sector classification to build its sector index families.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > DAX EQUITY INDUSTRY CLASSIFICATION The following section describes the **sector classification**
 > used in DAX Equity Indices and maintained by STOXX. The tables should be read in conjunction with
@@ -2553,7 +2553,7 @@ receives the securities and the seller receives payment. Settlement cycles
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ), the flagship gauge for European volatility, is being adjusted to strengthen the index’s trading
 > ecosystem. All indices in the VSTOXX family have a **settlement** level that is calculated on the
@@ -2608,7 +2608,7 @@ STOXX Europe Small 200 is an example of a small-cap index.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > O STOXX® Multi Premia® and Single Premium Indices outperformed the market during January. Again,
 > it was the size factor – which seeks to exploit the ‘**small-cap**’ premium – that performed best
@@ -2666,7 +2666,7 @@ disclosure requirements and temporary bans during periods of stress.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > nd USD. The index base value is 10’000 as of December 30, 2016. The pre-roll index level is
 > calculated to replicate the performance of a hypothetical **short selling** of the contracts as
@@ -2699,7 +2699,7 @@ a stock) that meets the index's eligibility criteria.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Figure 2 shows the DAX ESG Target’s active return in a dotted line. ‘Specific returns’ refers to
 > the idiosyncratic component from each **stock**’s return that can’t be explained by a style
@@ -2751,7 +2751,7 @@ and STOXX publishes supersector indices such as EURO STOXX Banks.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > of Frankfurt Stock Exchange are included in DAX sector indices based on their sector affiliation.
 > There are three types of DAX sector indices: the DAX**supersector**, DAXsector and DAXsubsector.
@@ -2810,7 +2810,7 @@ velocity used in STOXX index eligibility screening.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > WAP) is defined as the sum of the product of execution price and volume of each trade for a stock
 > during the calculation period, divided by the total **trading volume** of that stock during the
@@ -2862,7 +2862,7 @@ reduce displayed liquidity at each price level.
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > in section 0). 𝑖 o 𝑆 is the Euro Stoxx 50 close value at Entry Date. 𝐸𝑛𝑡𝑟𝑦 o 𝑇𝐸𝑛𝑡𝑟𝑦 is the Option
 > Entry Date. 𝑖 o 𝑇𝑖𝑐𝑘 𝑆𝑖𝑧𝑒 is 0.10 EUR, the minimum **tick size** as specified by Eurex 34.1.1.3.

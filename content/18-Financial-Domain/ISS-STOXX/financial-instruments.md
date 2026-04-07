@@ -60,7 +60,7 @@ A standard index — such as the EURO STOXX 50 or STOXX Europe 600 — against w
 > - [ETF](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETF)
 > - [Passive Investment](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Passive%20Investment)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 1999 to Jul. 2016. Factors shown are the standard Axioma style factors. Note: cumulative factor
 > exposures of a strategy relative to a **benchmark** do not generally add to zero as it is measured
@@ -121,7 +121,7 @@ A bond is a fixed-income debt instrument in which an investor lends capital to a
 > - [Investment Grade Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Investment%20Grade%20Bond)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > For example, if the option has a 10-year R Risk Free Rate Treasury term, the risk-free rate is the
 > 10-year U.S. Government **Bond** Yield website on the date of grant. Term/Expected T Proxy Full
@@ -183,7 +183,7 @@ A call option is a derivatives contract that grants the holder the right, but no
 > - [Covered Call Strategy](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Covered%20Call%20Strategy)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > CALCULATIONS Total Return Version The Total Return version of the index combines the EURO STOXX 50
 > (Net Return) Index and a EURO STOXX 50 **call option**. On regular trading days the Total Return
@@ -237,7 +237,7 @@ An index certificate is an unsecured debt instrument issued by a bank that repli
 > - [Structured Product](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Structured%20Product)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 𝑉 ∙( 𝐸𝑅,𝑡 + 𝑡−1 ∙𝑑) 𝑡 𝑡−1 𝐼𝑉 360 𝐸𝑅,𝑡−1 where: 𝐼𝑉 = Value of the EURO STOXX 50 Short Strangle ER
 > Index (SX5ESSE) on day t 𝐸𝑅.𝑡 𝐾𝑊𝐶𝐷𝐶 = Korean 3-Month **Certificate** of Deposit rate (RIC:
@@ -295,7 +295,7 @@ A convertible bond is a hybrid fixed-income instrument that gives the bondholder
 > - [Equity](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Equity)
 > - [corporate-governance](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/corporate-governance)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > It is a market norm for companies to include a clause for downward adjustment of the conversion
 > price in their **convertible bond** issuance proposals for A shares. On the other hand, a similar
@@ -355,7 +355,7 @@ A corporate bond is a debt security issued by a corporation to raise capital, ob
 > - [Convertible Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Convertible%20Bond)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > There is also abundant cash in financial markets ready to be deployed. In 2017, this caused
 > multiple assets – from stocks to **corporate bond**s to private equity – to climb and even reach
@@ -414,7 +414,7 @@ A covered call strategy on an index involves holding a long position in the inde
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 4 Monthly Index News / November 2025 Featured index Global X ETFs Europe last month launched the
 > first ETF tracking an “at-the-money" (ATM) **covered call strategy** on the DAX® benchmark,
@@ -475,7 +475,7 @@ A credit default swap is an OTC derivative contract in which one party (the prot
 > - [Sovereign Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Sovereign%20Bond)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > f its Premier Global Filing Service to include all global markets, along with filing support on
 > settlements without security identifiers, such as the **Credit Default Swap** and Euroyen
@@ -518,7 +518,7 @@ Equity, in the context of financial instruments, refers to shares of ownership i
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > For non-employee director plans, vote for the plan if certain factors are met. Shareholder Value
 > Transfer (SVT) The cost of the **equity** plans is expressed as Shareholder Value Transfer (SVT),
@@ -580,7 +580,7 @@ An exchange-traded fund is an open-ended investment fund that trades on a stock 
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > All calculations conducted by BlackRock. 2022 data refers to the previous ‘Next wave of **ETF**
 > investors’ survey conducted by YouGov Plc between 12 August 2022 and 8 February 2023.
@@ -638,7 +638,7 @@ An exchange-traded commodity is a debt security listed on an exchange that provi
 > - [ETN](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETN)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Style risk is the aggregate risk of the style factors in the EU4 model (e.g., Momentum, Value
 > **etc**.). 5 The diversification ratio of a portfolio is defined as the ratio of the weighted
@@ -697,7 +697,7 @@ An exchange-traded note is an unsecured, unsubordinated debt instrument issued b
 > - [Delta-One Product](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Delta-One%20Product)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > This index has underlied over 15 structured products to date. Another one, the iSTOXX® MUTB Japan
 > Empowering Women 30 Index, underlies an exchange-traded note in Japan, where former Prime Minister
@@ -752,7 +752,7 @@ Exchange-traded product is the umbrella term encompassing ETFs, ETNs, and ETCs �
 > - [ETC](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#ETC)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ETPs? “The index embodies the investment strategy offered to investors — a clear, rules-based and
 > systematic methodology that is independent from the **ETP**’s management. This further ensures
@@ -805,7 +805,7 @@ Eurex futures are standardized, exchange-traded derivatives contracts listed on 
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > CONSEQUENCES OF AN INDEX DISRUPTION EVENT If an index disruption event in relation to the **Eurex
 > futures** contract occurs on index dissemination days, then STOXX Ltd. will calculate the value of
@@ -866,7 +866,7 @@ An index futures contract is a standardized agreement to exchange, at a predeter
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Rolling period refers to the length of transition from the 1st nearby **futures contract** into
 > the 2nd contract. The futures roll is completed on the date preceding the last trading day of each
@@ -928,7 +928,7 @@ A green bond is a fixed-income instrument whose proceeds are exclusively allocat
 > - [[esg-terms#Green Bond Principles]]
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 2022 across an array of regulatory areas (taxonomies, ESG and climate risk management and
 > disclosures, product requirements, ESG in stewardship, and **green bond** frameworks). -
@@ -987,7 +987,7 @@ A high-yield bond (also known as a "junk bond") is a fixed-income instrument rat
 > - [Credit Default Swap](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Credit%20Default%20Swap)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > markets equities and multi-factor equity were among categories that drew record amounts of money
 > in 2018, BlackRock said, while European equities and **high-yield bond**s suffered net outflows.
@@ -1031,7 +1031,7 @@ An index fund is a collective investment scheme — mutual fund, unit trust, or 
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The worst-performing active funds register a significantly weaker performance than the poorest
 > **index fund**s. And around the median, active funds show little if any outperformance relative to
@@ -1085,7 +1085,7 @@ An index license is the contractual agreement granting a financial institution t
 > - [Structured Product](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Structured%20Product)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ake decision. Stakeholders mean (a) persons or entities who have overall concept or the nature of
 > the index are generally considered non-material. an **index license** with STOXX regarding a
@@ -1145,7 +1145,7 @@ An index option is a derivatives contract that gives the holder the right, but n
 > - [Futures Contract](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Futures%20Contract)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Index and EURO STOXX 50® Volatility of Volatility Index (V-VSTOXX). The VSTOXX and VDAX measure
 > the implied volatility of EURO STOXX 50 Index and DAX **Index option**s, respectively, across
@@ -1201,7 +1201,7 @@ An interest rate swap is an OTC derivative contract in which two counterparties 
 > - [Credit Default Swap](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Credit%20Default%20Swap)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > , ICAP Capital Markets LLC (“ICAP”), was supposed to calculate a “reference rate,” which was to be
 > ICAP’s estimate of the average trading rate of USD **interest rate swap**s of various tenors at
@@ -1230,7 +1230,7 @@ Labeled debt refers to any bond or debt instrument that carries a formal environ
 > - [Transition Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Transition%20Bond)
 > - [[esg-terms#Use-of-Proceeds]]
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > Investment Management Process Our Sustainability Bond Rating provides a relevant assessment of the
 > ESG and climate impact and risk exposure of global **labeled debt**. It also allows investors to
@@ -1258,7 +1258,7 @@ A money market fund is a type of mutual fund that invests in short-term, high-qu
 > - [Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Bond)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > ied to the iSTOXX Top Citywire Fund Managers Fixed Weights BE Index that targets a volatility of
 > 6% by allocating to both the fund index as well as a **money market fund**. In addition, a
@@ -1287,7 +1287,7 @@ A municipal bond (muni bond) is a debt security issued by a state, city, county,
 > - [Investment Grade Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Investment%20Grade%20Bond)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > At the ESG Frontier: Understanding the U.S. **Municipal Bond** Market JULY 22, 2021 KEY TAKEAWAYS:
 > - As the responsible investment market matures, it is extending its reach into parts of the world
@@ -1329,7 +1329,7 @@ Passive investment is an investment approach that seeks to replicate the perform
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ther innovation.” We invite you to download the paper and explore its methodology and results. [1]
 > STOXX, “Understanding Investor Preferences through **Passive Investment** Flows,” February 2024.
@@ -1383,7 +1383,7 @@ Portfolio replication is the process by which a fund or product recreates the pe
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > ’s first total return futures (TRFs) tracking collateral indices, offering an alternative to
 > bilateral swaps for buy-side investors who use synthetic **portfolio replication**. Qontigo has
@@ -1416,7 +1416,7 @@ A put option is a derivatives contract that grants the holder the right, but not
 > - [Covered Call Strategy](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Covered%20Call%20Strategy)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Voting Guidelines › Terms of the debts - Are the debt instruments convertible into equity? What
 > are the interest rate and maturity dates? Any call or **put option**s? Often these terms will not
@@ -1480,7 +1480,7 @@ A REIT (Real Estate Investment Trust) is a company or trust that owns, operates,
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 > - [corporate-governance](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/corporate-governance)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 36 82. What is the policy on stock-in-lieu-of-cash plans?
 > ............................................................... 37 83. A non-**REIT** company
@@ -1539,7 +1539,7 @@ A social bond is a fixed-income instrument whose proceeds are allocated to proje
 > - [Labeled Debt](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Labeled%20Debt)
 > - [[esg-terms#Social Bond Principles]]
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > l Bonds, as issuers around the world raced to combat related issues such as poverty, inequality,
 > and food insecurity. - One of the key challenges for **Social Bond**s lies in measuring their
@@ -1581,7 +1581,7 @@ A sovereign bond is a debt security issued by a national government to finance p
 > - [Investment Grade Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Investment%20Grade%20Bond)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Interest rates, which support banks’ net interest margin and profitability, declined in both the
 > Eurozone (Figure 3) and the UK. **Sovereign bond** yields rose over the year in Germany and France
@@ -1644,7 +1644,7 @@ A structured product is a pre-packaged investment that combines a bond component
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > G NR Decrement 4.5% from STOXX Ltd., Qontigo’s index provider, an index that complies with the
 > European Union Climate Benchmarks regulation, to issue **structured product**s. The new index is a
@@ -1702,7 +1702,7 @@ A sustainability bond is a fixed-income instrument whose proceeds finance a comb
 > - [Labeled Debt](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Labeled%20Debt)
 > - [[esg-terms#Sustainability Bond Guidelines]]
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > entify key sustainability-related drivers of the sustainable bonds market and credit performance.
 > Benefit From a Comprehensive Rating Methodology The **Sustainability Bond** Rating utilizes
@@ -1744,7 +1744,7 @@ A sustainability-linked bond (SLB) is a fixed-income instrument whose financial 
 > - [Transition Bond](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Transition%20Bond)
 > - [[esg-terms#Sustainability Performance Targets]]
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > The market has seen a number of new structures in the past year alone – from
 > **sustainability-linked bond**s dedicated to general corporate purposes to transition bonds. As
@@ -1784,7 +1784,7 @@ A swap is a broad category of OTC derivative contracts in which two counterparti
 > - [Credit Default Swap](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Credit%20Default%20Swap)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ion of the popular OTC **swap**s market.” _________________________________________________
 > Overview 1 – Design of ETRFs TRFs follow the OTC total return **swap** structure, quoted as an
@@ -1842,7 +1842,7 @@ A total return swap (TRS) is an OTC derivative contract in which one counterpart
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 > - [index-construction](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-construction)
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > Basket TRFs at Eurex | Improved Capital Efficiency. For additional information on Index TRFs,
 > please visit Index Total Return Futures | Eurex Listed **Total Return Swap**s.
@@ -1883,7 +1883,7 @@ A transition bond is a fixed-income instrument designed to fund an issuer's tran
 > - [Labeled Debt](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/financial-instruments#Labeled%20Debt)
 > - [[esg-terms#Climate Transition Finance]]
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > The market has seen a number of new structures in the past year alone – from sustainability-linked
 > bonds dedicated to general corporate purposes to **transition bond**s. As the market grows and
@@ -1918,7 +1918,7 @@ A warrant is a securitized option — typically issued by a bank — that gives 
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 > - [index-families](https://alp78.github.io/elysium/18-Financial-Domain/ISS-STOXX/index-families)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Subscribers to ensure they have the appropriate licence in place with the London Stock Exchange to
 > receive this data. 4. Disclaimer and Exclusion of **Warrant**ies Nothing in these Conditions of

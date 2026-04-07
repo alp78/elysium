@@ -59,7 +59,7 @@ $$
 > [!tip] Related terms
 > [Quality Factor](#quality-factor), [Net Operating Assets (Changes in)](#net-operating-assets-changes-in), [Alpha Signal](#alpha-signal)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The ratio is calculated as Cash Flow from Operation (CFO) divided by total assets cash flow from
 > operation CFO Ratio = t0 t0 total assets t0 - **Accruals** less than or equal to zero.
@@ -116,7 +116,7 @@ not introduce unintended sector bets.
 > [!tip] Related terms
 > [Industry Neutral](#industry-neutral), [Capping Constraint](#capping-constraint), [Tracking Error Budget](#tracking-error-budget)
 
-> [!example]- Source excerpts (4)
+> [!guide]- Source excerpts (4)
 >
 > tended sector exposures. The STOXX® Industry Neutral Ax Factor Indices implement the same
 > methodology of the STOXX® Factor Indices while reducing the **active industry constraint** from
@@ -170,7 +170,7 @@ where $z_{i,k}$ is the standardized score for security $i$ on factor $k$, and $w
 > [!tip] Related terms
 > [Multifactor Signal](#multifactor-signal), [Factor Tilt](#factor-tilt), [Factor (Definition)](#factor-definition)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Ang. “We continuously want to push the definitions of these factors.” Other ESG signals An
 > additional example of a climate **alpha signal** can be found in companies with the most
@@ -225,7 +225,7 @@ budgets to prevent concentration.
 > [!tip] Related terms
 > [Security Weight Cap](#security-weight-cap), [Active Industry Constraint](#active-industry-constraint), [Turnover Constraint](#turnover-constraint)
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > Developed Markets ex USA, Emerging Markets) January 2021: Clarification of rules for STOXX Minimum
 > Variance and STOXX Factor indices regarding weight **capping constraint**s February 2021: Change
@@ -278,7 +278,7 @@ where $R_f$ is the risk-free rate, $R_m$ is the market return, and $\beta_i = \f
 > [!tip] Related terms
 > [Factor (Definition)](#factor-definition), [Risk Premia](#risk-premia), [Low Risk Factor](#low-risk-factor)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > In recent years, however, academia has shifted its focus to the explanation of the so-called low
 > volatility factor. The traditional **Capital Asset Pricing Model (CAPM)** explains asset returns
@@ -311,7 +311,7 @@ where $D_i$ is the expected annual dividend and $P_i$ is the current price. More
 > [!tip] Related terms
 > [Value Factor](#value-factor), [Yield Factor](#yield-factor), [Factor (Definition)](#factor-definition)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The other only index in the family to have fallen in eight of the nine months so far in 2019 is
 > the iSTOXX® Europe **Carry Factor** Market Neutral Index. For the whole of 2019, the iSTOXX®
@@ -371,7 +371,7 @@ $$
 > [!tip] Related terms
 > [Low Risk Factor](#low-risk-factor), [Quality Factor](#quality-factor), [Low Volatility Factor](#low-volatility-factor)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > r. The Small Size factor, for its part, is a high beta, pro-cyclical factor, relative to the Low
 > Volatility factor, which is low beta and a much more **defensive factor**. Those are opposing
@@ -410,7 +410,7 @@ $$
 > [!tip] Related terms
 > [Quality Factor](#quality-factor), [Accruals](#accruals), [Net Operating Assets (Changes in)](#net-operating-assets-changes-in)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ury or purchased on the open market, shareholder approval will be required and ISS will assume
 > that the plan is funded by treasury shares. 27. How is **dilution** calculated? For purposes of
@@ -477,7 +477,7 @@ Tracing out all $\sigma^*$ values produces the frontier.
 > [!tip] Related terms
 > [Mean-Variance Optimization](#mean-variance-optimization), [Minimum Variance](#minimum-variance), [Maximum Diversification](#maximum-diversification)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > and find out more about the active risk, active variance analysis and comparative returns of an
 > optimized exclusions portfolio, click here. 1 ‘Green **efficient frontier**s. Part 1: Minimizing
@@ -529,7 +529,7 @@ incorporating post-announcement return signals into their composite scores.
 > [!tip] Related terms
 > [Earnings Momentum](#earnings-momentum), [Price Momentum](#price-momentum), [Momentum Factor](#momentum-factor)
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > The Factors are combined to create a Multi-Factor Alpha Signal, as described below. The Momentum
 > Factor is a composite of the following 3 Signals: **Earnings Announcement Drift**, Earnings
@@ -574,7 +574,7 @@ $$
 > [!tip] Related terms
 > [Earnings Announcement Drift](#earnings-announcement-drift), [Momentum Factor](#momentum-factor), [Alpha Signal](#alpha-signal)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The quarterly rebalance schedule will resume as normal in June 2025. STOXX INDEX METHODOLOGY GUIDE
 > 594/639 18. STOXX FACTOR INDICES  **Earnings Momentum** is given by the sum of the number of EPS
@@ -634,7 +634,7 @@ $$
 > [!tip] Related terms
 > [Risk Parity](#risk-parity), [Risk Budget](#risk-budget), [Minimum Variance](#minimum-variance), [Maximum Diversification](#maximum-diversification)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > ithin 0.25 standard deviations of Parent Index Active targeted style factor exposures > 0 vs
 > Parent Index **Equal Risk Contribution** by targeted factors **Equal Risk Contribution** by
@@ -669,7 +669,7 @@ weights away from market capitalization.
 > [!tip] Related terms
 > [Factor Investing](#factor-investing), [Factor-Based Index](#factor-based-index), [Smart Beta](#smart-beta)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ADTV 𝐸𝑈𝑅 𝑖 𝑤 = 𝑖𝑡 ∑40 6𝑀 𝐴𝐷𝑇𝑉 𝐸𝑈𝑅 𝑗=1 𝑗 where the denominator is the sum of the six-month ADTV in
 > EUR of all 40 companies in the index. The weighting **factor** of component i at time t is
@@ -722,7 +722,7 @@ them produces a smoother return profile than any single-factor strategy.
 > [!tip] Related terms
 > [Multi-Factor](#multi-factor), [Multifactor Signal](#multifactor-signal), [Factor Investing](#factor-investing)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > On the other hand, value and reversal stocks, which are described as countercyclical, slightly
 > underperformed the market. Figure 1: **Factor diversification** in practice Drawdown risk The
@@ -781,7 +781,7 @@ desirable factor characteristics and underweight (or exclude) those without.
 > [!tip] Related terms
 > [Factor (Definition)](#factor-definition), [Smart Beta](#smart-beta), [Factor-Based Index](#factor-based-index), [Risk Premia](#risk-premia)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Continue active refreshing of this index's data? Continue active refreshing of this index's data?
 > **Factor Investing** Most Recent **Factor Investing** A rotation out of technology and AI-related
@@ -847,7 +847,7 @@ where the long (short) portfolio holds the top (bottom) quintile on factor $k$.
 > [!tip] Related terms
 > [Risk Premia](#risk-premia), [Factor Crowding](#factor-crowding), [Factor (Definition)](#factor-definition)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Based on relevant and scientifically proven ratios, the best stocks from the investment universe
 > are selected for each **factor premium** — value, size, momentum, residual momentum, reversal, low
@@ -902,7 +902,7 @@ value, momentum, quality, and low volatility depending on regime indicators.
 > [!tip] Related terms
 > [Factor Diversification](#factor-diversification), [Factor Crowding](#factor-crowding), [Multi-Factor](#multi-factor)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > off, how has the iShares multifactor suite performed since launch three years ago? “The past three
 > years have been a volatile period, marked by sharp **factor rotation**s, inflation surprises and
@@ -935,7 +935,7 @@ where $\kappa$ controls the aggressiveness of the tilt and $z_i$ is the factor z
 > [!tip] Related terms
 > [Alpha Signal](#alpha-signal), [Factor-Based Index](#factor-based-index), [Active Industry Constraint](#active-industry-constraint)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > These constraints around country, sector and currency risk embedded in the methodology seek to
 > provide a **factor tilt** as pure as possible, while being neutral around all other sources of
@@ -991,7 +991,7 @@ strategies.
 > [!tip] Related terms
 > [Factor Investing](#factor-investing), [Smart Beta](#smart-beta), [Factor Tilt](#factor-tilt)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > TOXX Ltd., part of the ISS STOXX group of companies, today announced its expanding collaboration
 > with L&G, with L&G’s launch of three developed world **factor-based index** funds tracking
@@ -1052,7 +1052,7 @@ $$
 > [!tip] Related terms
 > [Value Factor](#value-factor), [Earnings Momentum](#earnings-momentum), [Factor (Definition)](#factor-definition)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > positive active exposures in the Market Sensitivity, Volatility and Liquidity factors, while also
 > being more exposed to the Medium-Term Momentum and **Growth factor**s. Negative active exposures
@@ -1082,7 +1082,7 @@ within-sector stock selection alpha by eliminating cross-sector bets entirely.
 > [!tip] Related terms
 > [Active Industry Constraint](#active-industry-constraint), [Tracking Error Budget](#tracking-error-budget), [Factor Tilt](#factor-tilt)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Before we dive into the analysis, let’s briefly review the methodology and offering of the STOXX
 > **Industry Neutral** Single and Multi-Factor indices. STOXX **Industry Neutral** Factor Indices
@@ -1136,7 +1136,7 @@ in multi-factor constructions.
 > [!tip] Related terms
 > [Low Volatility Factor](#low-volatility-factor), [Minimum Variance](#minimum-variance), [Risk Premia](#risk-premia)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > All indices avoided the extent of losses recorded by the STOXX Europe 600 during the month. The
 > iSTOXX® Europe **Low Risk Factor** Market Neutral Index had the best return during the month,
@@ -1196,7 +1196,7 @@ Securities with the smallest $\sigma_i$ receive the highest weights.
 > [!tip] Related terms
 > [Low Risk Factor](#low-risk-factor), [Minimum Variance](#minimum-variance), [Equal Risk Contribution](#equal-risk-contribution)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The Value Factor combines the 5 Signals equally at 20% weights and is again z-scored and
 > truncated. The **Low Volatility Factor** is given by the standard deviation of monthly total
@@ -1254,7 +1254,7 @@ $$
 > [!tip] Related terms
 > [Low Volatility Factor](#low-volatility-factor), [Maximum Diversification](#maximum-diversification), [Capping Constraint](#capping-constraint)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > STOXX Ltd. has introduced the STOXX® Emerging Markets 800 LO **Minimum Variance** Index (STOXX EM
 > 800 LO MinVar), expanding its suite of rules-based **minimum variance** strategies to the universe
@@ -1317,7 +1317,7 @@ The most recent month is excluded to avoid the short-term reversal effect.
 > [!tip] Related terms
 > [Price Momentum](#price-momentum), [Earnings Momentum](#earnings-momentum), [Earnings Announcement Drift](#earnings-announcement-drift)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > At each iteration, a standardized factor is calculated as: (𝑎𝑑𝑗𝑀𝑜𝑚 −𝑎𝑣𝑒) 𝑠𝑡𝑎𝑛𝑑𝑎𝑟𝑑𝑖𝑧𝑒𝑑 𝑓𝑎𝑐𝑡𝑜𝑟
 > 𝑎𝑑̂𝑗𝑀𝑜𝑚 = 𝑖 𝑖 𝜎 where 𝑎𝑑𝑗𝑀𝑜𝑚 : the risk-factor adjusted **momentum factor** of stock i 𝑖 𝑎𝑣𝑒:
@@ -1373,7 +1373,7 @@ composite approach is more common in STOXX methodology.
 > [!tip] Related terms
 > [Factor Diversification](#factor-diversification), [Multifactor Signal](#multifactor-signal), [Alpha Signal](#alpha-signal)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Before we dive into the analysis, let’s briefly review the methodology and offering of the STOXX
 > Industry Neutral Single and **Multi-Factor** indices. STOXX Industry Neutral Factor Indices The
@@ -1431,7 +1431,7 @@ where $K$ is the number of factors and $z_{i,k}$ is the winsorized z-score for f
 > [!tip] Related terms
 > [Alpha Signal](#alpha-signal), [Multi-Factor](#multi-factor), [Factor Tilt](#factor-tilt)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Equity Factor index. Factor definitions The authors first explore the composition of the
 > **Multifactor signal** (Figure 1), which, as reported in previous studies, is grounded in the
@@ -1492,7 +1492,7 @@ $$
 > [!tip] Related terms
 > [Accruals](#accruals), [Quality Factor](#quality-factor), [Dilution](#dilution)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > In such cases, the composition remains unchanged, but new weighting factors will be implemented.
 > Market participants will be notified of such changes in a timely manner. 4.4.2. TURNOVER RATIO The
@@ -1551,7 +1551,7 @@ $$
 > [!tip] Related terms
 > [Momentum Factor](#momentum-factor), [Earnings Momentum](#earnings-momentum), [Factor Tilt](#factor-tilt)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > This ensures that the index is highly liquid. Companies must also rank among the top 80% in the
 > HDAX universe, measured in terms of **price momentum**, excluding companies with a past price
@@ -1619,7 +1619,7 @@ where sub-signals $m$ include ROE, accruals, $\Delta$NOA, and dilution.
 > [!tip] Related terms
 > [Accruals](#accruals), [Dilution](#dilution), [Net Operating Assets (Changes in)](#net-operating-assets-changes-in), [Value Factor](#value-factor)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ccruals, gross profitability and low investments to bottom-line profitability measures such as
 > return-on-equity and margins. Behind the iSTOXX Europe **Quality Factor** Index The iSTOXX Europe
@@ -1674,7 +1674,7 @@ a fixed percentage of total portfolio variance.
 > [!tip] Related terms
 > [Equal Risk Contribution](#equal-risk-contribution), [Risk Parity](#risk-parity), [Capping Constraint](#capping-constraint)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Importantly, they show that the use of an optimizer and a risk model in the process can help
 > reduce active risk, freeing up more of the **risk budget** to increase the allocation to
@@ -1730,7 +1730,7 @@ higher-risk assets until each contributes equally to total volatility.
 > [!tip] Related terms
 > [Equal Risk Contribution](#equal-risk-contribution), [Risk Budget](#risk-budget), [Maximum Diversification](#maximum-diversification)
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > the basis to select the top third of stocks to be included in each individual risk-premium
 > portfolio. The weighting of the stocks is determined by a risk-parity approach, whereby each
@@ -1769,7 +1769,7 @@ in a transparent, rules-based, and cost-efficient manner.
 > [!tip] Related terms
 > [Factor Investing](#factor-investing), [Factor (Definition)](#factor-definition), [Smart Beta](#smart-beta)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ad and liquid universe of Eurozone equities that is the EURO STOXX® Index. Proven track record
 > Testament to their well-researched drivers, all single **risk premia** have demonstrated their
@@ -1833,7 +1833,7 @@ Negative log ensures that smaller companies receive higher scores.
 > [!tip] Related terms
 > [Factor (Definition)](#factor-definition), [Smart Beta](#smart-beta), [Factor-Based Index](#factor-based-index)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > +7.1%). So far, this pattern has not continued in 2018. While February and March saw the STOXX®
 > Europe 600 Index drop 5.7%, the iSTOXX Europe **Size Factor** Index lost ground by only 4.2%. The
@@ -1894,7 +1894,7 @@ diversification, equal risk contribution), and alternatively weighted indices
 > [!tip] Related terms
 > [Factor Investing](#factor-investing), [Factor-Based Index](#factor-based-index), [Risk Premia](#risk-premia)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > It reflects our dedication to our clients and the innovative contribution we make to their
 > businesses. Our smart-beta expertise in factor and thematic strategies allows us to address rising
@@ -1950,7 +1950,7 @@ $$
 > [!tip] Related terms
 > [Active Industry Constraint](#active-industry-constraint), [Turnover Constraint](#turnover-constraint), [Factor Tilt](#factor-tilt)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > may change over time, DWS’ Schiele said. “As investors become more comfortable with a particular
 > topic, they will also, over time, allow for a higher **tracking error budget**” in their bespoke
@@ -1984,7 +1984,7 @@ where $w^{+}$ and $w^{-}$ are post- and pre-rebalancing weights.
 > [!tip] Related terms
 > [Capping Constraint](#capping-constraint), [Security Weight Cap](#security-weight-cap), [Tracking Error Budget](#tracking-error-budget)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > STOXX FACTOR INDICES Maximum turnover: The indices have a 12.5% one-way **turnover constraint**,
 > or 25% two-way. This means up to 12.5% of the portfolio is sold in order to purchase other
@@ -2050,7 +2050,7 @@ where B/P = book-to-price, E/P = earnings-to-price, D/P = dividend yield.
 > [!tip] Related terms
 > [Quality Factor](#quality-factor), [Factor (Definition)](#factor-definition), [Smart Beta](#smart-beta)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ized ratio is set to -4 - with fundamental ratios not available, the normalized ratio is set to -4
 > After normalization, for each stock i, a composite **value factor** is calculated as an average of
@@ -2113,7 +2113,7 @@ where $D_i$ is dividends per share, Net Buybacks is repurchases minus issuance, 
 > [!tip] Related terms
 > [Carry Factor](#carry-factor), [Value Factor](#value-factor), [Quality Factor](#quality-factor)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > Negative active exposures include those to the Dividend Yield, Exchange Rate Sensitivity and
 > Earnings **Yield factor**s. Figure 8: Active style-factor exposures Conclusion The STOXX Global

@@ -51,7 +51,7 @@ A set of protocols, routines, and tools that allows software applications to com
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > This includes, for example, using artificial intelligence and open application programming
 > interfaces (**API**), a feat unimaginable 20 years ago. Investors have embraced the menu of
@@ -108,7 +108,7 @@ The process of applying an index methodology retroactively to historical market 
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The approach is based on empirical observation of the distribution of the measures within the
 > **back-testing** universe. Additionally, the methodology, where possible, avoids arbitrary
@@ -156,7 +156,7 @@ The totality of activities involved in the governance, determination, calculatio
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > STOXX is the administrator of the STOXX® and DAX® indices under the European Benchmark Regulation
 > and exercises control over all **benchmark administration** processes within Qontigo. STOXX
@@ -207,7 +207,7 @@ A public document required under the EU Benchmarks Regulation (BMR) that disclos
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > AGE 9] STOXX® **BENCHMARK STATEMENT** Regulation Clause Regulation Required Information STOXX LTD
 > Statement Subclause 1.10 Procedures for Art. 27(2)(f) A **benchmark statement** shall contain at
@@ -259,7 +259,7 @@ The total set of securities, entities, or data points that a data provider or in
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > (GRId is ISS’ metric for assessing corporate governance risk. Issuers do not pay ISS or ICS to be
 > evaluated. The GRId **coverage universe** is determined by ISS in its discretion. In addition to
@@ -307,7 +307,7 @@ A continuous or scheduled electronic delivery of structured data — such as ind
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > All figures are approximate. Our ESGRaw Data Solutions are available through DataDesk, or via
 > **data feed**s for integration into client workflows. Access Detailed and Up-To-Date Research Data
@@ -356,7 +356,7 @@ A third-party firm that collects, aggregates, standardises, and redistributes fi
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 29, 2019 To learn more about the inception date, the currency, the calculation hours and
 > historical values, please see our **data vendor** code sheet. 3 STOXX data from Mar. 19, 2012 to
@@ -406,7 +406,7 @@ A short alphanumeric identifier assigned by a data vendor (e.g., Bloomberg, Refi
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 29, 2019 To learn more about the inception date, the currency, the calculation hours and
 > historical values, please see our **data vendor code** sheet. 3 STOXX data from Mar. 19, 2012 to
@@ -456,7 +456,7 @@ ISS Governance's online data portal that provides institutional subscribers with
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > This is a significant win for all users.” In addition to the data and workflow already available
 > in ProxyExchange, users of the ISS platform can now benefit from enhanced visibility for supported
@@ -504,7 +504,7 @@ The percentage of companies within a given universe or index that voluntarily or
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > China has distinct corporate governance requirements through its state-led governance model.
 > Additionally, language barriers and different **disclosure rate**s and standards make it all the
@@ -529,7 +529,7 @@ A quantitative framework used by a data provider to infer, approximate, or imput
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > e machine learning to learn complex patterns. We can clean the data and assess the reliability of
 > data. With advanced machine learning, we can create **estimation model**s for all our coverage
@@ -555,7 +555,7 @@ A standardised summary document — typically two to four pages — published by
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > provides a detailed view of definitions and formulas of the calculations as utilized in the
 > reports, **factsheet**s, indices and presentations produced by STOXX » The Guide to Industry
@@ -605,7 +605,7 @@ The legal entity responsible for the governance, calculation, and publication of
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > STOXX Ltd. on Jul. 31 was recognized as **index administrator** under the European Union’s
 > Benchmarks Regulation (BMR), a rules framework devised to ensure the accuracy and integrity of
@@ -655,7 +655,7 @@ A twelve-character alphanumeric code (defined by ISO 6166) that uniquely identif
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Inclusion of the remaining stocks into the respective index will be determined by the **ISIN**
 > country code and exchanges that are included in the methodology.2 Securities that have either a
@@ -707,7 +707,7 @@ An internal or independent committee established by a benchmark administrator to
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > in the field of regulation, control and supervision in the financial markets were transferred to
 > the Bank of Russia. The regulatory, supervisory, and **oversight function**s of the Bank of Russia
@@ -760,7 +760,7 @@ Data that is stored and delivered exactly as it was known on a specific historic
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > ademic Professionals A robust and timely set of environmental, social, and governance datasets to
 > help enrich your academic research. Access in-depth **point-in-time data** on global corporate
@@ -799,7 +799,7 @@ The systematic processes, checks, and controls that a data provider applies to e
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > Data monitoring controls include data filters according to each exchange specification, outlier
 > detection mechanisms, **quality assurance** tools and verification against secondary sources. 4.3.
@@ -836,7 +836,7 @@ A revision to previously published data — such as financial figures, ESG metri
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ults for any period during the past 24 months (this refers to when the company restated its
 > financial statements, not the period restated);  Did the **restatement** cause material changes
@@ -884,7 +884,7 @@ A document published by an index administrator or advisory committee following a
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > . During review implementation month, the published **review report** in combination with the
 > selection list is used. With the public announcement of the **review report** in the review
@@ -934,7 +934,7 @@ A proprietary ticker-like identifier assigned by Refinitiv (formerly Reuters) to
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 360 𝐸𝑅,𝑡−1 where: 𝐼𝑉 = Value of the EURO STOXX 50 Short Strangle ER Index (SX5ESSE) on day t 𝐸𝑅.𝑡
 > 𝐾𝑊𝐶𝐷𝐶 = Korean 3-Month Certificate of Deposit rate (**RIC**: KRCD3M=KFIA)12 on day t 𝑡 𝑑 = number
@@ -981,7 +981,7 @@ The comprehensive, legally binding document published by an index administrator 
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > It is adjusted equal-weighted and reviewed annually in June. The detailed methodology including
 > the calculation formula can be found in our **rulebook**s: www.stoxx.com/**rulebook**s Versions
@@ -1031,7 +1031,7 @@ The finalised roster of securities or entities that have passed all eligibility 
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > cut-off date for the **selection list** and the ADTV data to calculate the weights is the last
 > business day of the month preceding the review month. The **selection list** is produced annually.
@@ -1081,7 +1081,7 @@ ISS's integrated online platform that provides clients with access to ESG rating
 
 > [!tip] Related Terms
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > This is a significant win for all users.” In addition to the data and workflow already available
 > in ProxyExchange, users of the ISS platform can now benefit from enhanced visibility for supported

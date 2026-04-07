@@ -302,7 +302,7 @@ Without `_ingested_at` and `_source_file` in bronze tables, you cannot debug dat
 
 ## Medallion-Project Reference
 
-> [!example]- Medallion-Project: bronze/silver/gold schema layout
+> [!guide]- Medallion-Project: bronze/silver/gold schema layout
 >
 > The financial index pipeline uses schema-per-layer in a single database:
 > - `bronze.index_dim`, `bronze.signals_daily`, `bronze.{ohlcv}` — raw data

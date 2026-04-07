@@ -56,7 +56,7 @@ A responsible investment strategy in which investors use their rights and influe
 > [!tip] Related terms
 > [Engagement Escalation](#engagement-escalation), [Norm-Based Research](#norm-based-research), [ESG Integration](#esg-integration)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > (ISS) has been a PRI signatory since 2007. Established in 1985, ISS is the leading provider of
 > global governance data and **active ownership** solutions for over 1,700 asset owners and
@@ -116,7 +116,7 @@ A positive screening methodology that identifies companies with superior ESG per
 > [!tip] Related terms
 > [Norm-Based Screening](#norm-based-screening), [ESG Corporate Rating](#esg-corporate-rating), [Decile-Based Scoring](#decile-based-scoring)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > of ESG factors into financial analysis, which grew 69% to $18 trillion. The fastest-growing
 > strategies were also the three smallest ones: positive or **best-in-class screening**,
@@ -143,7 +143,7 @@ A specialised analytical framework developed by ISS ESG that quantifies the impa
 > [!tip] Related terms
 > [Mean Species Abundance (MSA)](#mean-species-abundance-msa), [Environmental Pillar](#environmental-pillar), [Carbon Risk Rating](#carbon-risk-rating)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Mean Species Abundance (MSA): The Mean Species Abundance based on ISS ESG **Biodiversity Impact
 > Assessment Tool (BIAT)** is a metric used to quantify the impact of corporates on biodiversity. It
@@ -197,7 +197,7 @@ A quantitative assessment of a company's exposure to and management of carbon-re
 > [!tip] Related terms
 > [Climetrics](#climetrics), [Water Risk Rating](#water-risk-rating), [Environmental Pillar](#environmental-pillar), [ESG Risk Rating](#esg-risk-rating)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > These can be of a physical, regulatory, technological or financial nature resulting in
 > climate-related risks for investors. **Carbon Risk Rating** provides investors with a
@@ -250,7 +250,7 @@ A fund-level climate rating developed by CDP and ISS ESG that evaluates mutual f
 > [!tip] Related terms
 > [ESG Fund Rating](#esg-fund-rating), [Carbon Risk Rating](#carbon-risk-rating), [Fund Rating](#fund-rating)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The license includes free access to the portfolio reports for the corresponding funds. Portfolio
 > Report The **Climetrics** portfolio reports provides an in-depth overview of a fund’s climate
@@ -302,7 +302,7 @@ A backward-looking assessment that evaluates the severity of a company's involve
 > [!tip] Related terms
 > [Controversy Level](#controversy-level), [Norm-Based Research](#norm-based-research), [ESG Risk Categories](#esg-risk-categories)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > TIC INDICES »>10% significant ownership of a company that is involved in distribution and/or
 > retail sale (>10% total revenues) of tobacco products. » **Controversy Rating**s: STOXX will
@@ -354,7 +354,7 @@ A categorical classification of the current state of a company's involvement in 
 > [!tip] Related terms
 > [Controversy Rating](#controversy-rating), [ESG Risk Categories](#esg-risk-categories), [Norm-Based Screening](#norm-based-screening)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > Daily Traded Volume (ADTV) in EUR equal to or exceeding 10 million EUR - Each Ocean Care KPI with
 > a score greater than 0 - Risk level less than 2 in **Controversy Level**: Operations Incidents -
@@ -388,7 +388,7 @@ The flagship company-level ESG assessment produced by ISS ESG. It evaluates over
 > [!tip] Related terms
 > [ISS ESG Corporate Rating](#iss-esg-corporate-rating), [ESG Corporate Rating](#esg-corporate-rating), [ESG Scorecard](#esg-scorecard), [Materiality](#materiality)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > One noteworthy observation is that all 11 stocks have an ESG score above 50, which is the
 > threshold indicating ISS ESG’s Prime status. This designation refers to a company’s demonstrated
@@ -441,7 +441,7 @@ An ESG assessment at the sovereign level that evaluates nations on their environ
 > [!tip] Related terms
 > [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg), [Governance Pillar](#governance-pillar), [Environmental Pillar](#environmental-pillar), [Social Pillar](#social-pillar)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ORK (April 7, 2020) – ISS ESG, the responsible investment arm of Institutional Shareholder
 > Services Inc., today announced enhancements to the ISS ESG **Country Rating**, which provides
@@ -489,7 +489,7 @@ A specialised assessment that evaluates a company's exposure to and management o
 > [!tip] Related terms
 > [Governance QualityScore](#governance-qualityscore), [ISS QualityScore](#iss-qualityscore), [Exposure Score](#exposure-score)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The transaction is expected to close over the coming weeks, subject to customary closing
 > conditions. The FICO® **Cyber Risk Score** provides a long-term indicator of network security risk
@@ -541,7 +541,7 @@ The process by which ISS ESG validates the accuracy, completeness, and consisten
 > [!tip] Related terms
 > [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg), [ESG Scorecard](#esg-scorecard), [Norm-Based Research](#norm-based-research)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > My company does not have an equity plan on the ballot this year. Does Equity Plan **Data
 > Verification** still apply to me? No. Equity Plan **Data Verification** is a new option for
@@ -594,7 +594,7 @@ A relative ranking methodology in which companies or funds are sorted into ten e
 > [!tip] Related terms
 > [ISS QualityScore](#iss-qualityscore), [Best-in-Class Screening](#best-in-class-screening), [ESG Risk Rating](#esg-risk-rating)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > Wynn Resorts is rated a “10” by ISS QuickScore, representing the highest level of governance risk
 > under the **decile-based scoring** system. This contest has generated significant media interest
@@ -629,7 +629,7 @@ A regulatory and analytical concept that requires ESG assessments to consider bo
 > [!tip] Related terms
 > [Materiality](#materiality), [ESG Risk Rating](#esg-risk-rating), [Principal Adverse Impact (PAI)](#principal-adverse-impact-pai)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > SRS), which provide more details on the Corporate Sustainability Reporting Directive (CSRD) from
 > last year. ESRS requires companies to report on the “**double materiality**” environmental impact
@@ -688,7 +688,7 @@ The three central pillars used to evaluate the sustainability and ethical impact
 > [!tip] Related terms
 > [Environmental Pillar](#environmental-pillar), [Social Pillar](#social-pillar), [Governance Pillar](#governance-pillar)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ISS **ESG**’s Controversial Weapons implications. Controversy involvement is one Research is
 > designed to identify all companies in key measure of **ESG** performance. A a corporate structure
@@ -740,7 +740,7 @@ Synonymous with the ISS ESG Corporate Rating. A comprehensive assessment of a co
 > [!tip] Related terms
 > [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg), [ISS ESG Corporate Rating](#iss-esg-corporate-rating), [Materiality](#materiality)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > **ESG Corporate Rating** Survey At the end of 2023, ISS ESG conducted its inaugural **ESG
 > Corporate Rating** Survey, which received over 500 responses.
@@ -795,7 +795,7 @@ A measure of the extent and quality of a company's public reporting on environme
 > [!tip] Related terms
 > [Disclosure-Based Assessment](#disclosure-based-assessment), [ESG Transparency Level](#esg-transparency-level), [Data Verification](#data-verification)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > SUSTAINABILITY SOLUTIONS / REGULATORY SOLUTIONS Benchmark **ESG Disclosure** Dataset Disclose the
 > ESG attributes of your Indexes according to EU’s new disclosure requirements. Meet your regulatory
@@ -847,7 +847,7 @@ An assessment of the overall ESG quality of a mutual fund or ETF based on the ag
 > [!tip] Related terms
 > [Fund Rating](#fund-rating), [Climetrics](#climetrics), [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > Fund rating coverage requires that a minimum of 65 percent of a fund’s holdings by weight be
 > covered by ISS ESG’s Corporate Ratings. ISS **ESG Fund Rating**s will have broad utility for a
@@ -875,7 +875,7 @@ The systematic inclusion of ESG factors into traditional financial analysis and 
 > [!tip] Related terms
 > [Responsible Investment](#responsible-investment), [Active Ownership](#active-ownership), [ESG Risk Rating](#esg-risk-rating)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > USD. 2 Morgan Stanley, ‘Morgan Stanley Survey Finds Interest in Sustainable Investing Stronger
 > than ever,’ Aug. 9, 2017. 3 Cappucci, Michael T., ‘The **ESG Integration** Paradox,’ Jun. 8, 2017.
@@ -927,7 +927,7 @@ A forward-looking assessment of the degree of unmanaged ESG risk that a company 
 > [!tip] Related terms
 > [Exposure Score](#exposure-score), [Management Score](#management-score), [ESG Risk Categories](#esg-risk-categories)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The highest Event rating under a controversy indicator, automatically becomes the Controversy
 > Rating for a given company. » **ESG Risk Rating**s64: STOXX will exclude companies that
@@ -979,7 +979,7 @@ A structured summary report that presents a company's ESG performance across all
 > [!tip] Related terms
 > [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg), [Environmental Pillar](#environmental-pillar), [Social Pillar](#social-pillar), [Governance Pillar](#governance-pillar)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > & DO-IT-YOURSELF ESG ASSESSMENT TOOL Score the ESG performance of private companies on a scale
 > from 0 to 100 EXPLORE **ESG SCORECARD** USE CASES THE FIVE **ESG SCORECARD** ELEMENTS The ESG
@@ -1003,7 +1003,7 @@ The "E" component of the ESG framework, encompassing a company's impact on and m
 > [!tip] Related terms
 > [Social Pillar](#social-pillar), [Governance Pillar](#governance-pillar), [Carbon Risk Rating](#carbon-risk-rating), [Water Risk Rating](#water-risk-rating)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > The development of the Taxonomy has, however, proven to be a challenging process[2] and, as of
 > today, only the **Environmental pillar** is covered and only partly so. Until the Taxonomy is
@@ -1028,7 +1028,7 @@ A measure of the degree to which a company is inherently exposed to material ESG
 > [!tip] Related terms
 > [ESG Risk Rating](#esg-risk-rating), [Management Score](#management-score), [ESG Risk Categories](#esg-risk-categories)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > 9] Here, the methodology differentiates between the Biodiversity and Biodiversity Leaders indices.
 > In the former, we calculate each stock’s total SDG **exposure score** among seven SDGs and select
@@ -1061,7 +1061,7 @@ A generic term for any ESG assessment applied at the fund level rather than the 
 > [!tip] Related terms
 > [ESG Fund Rating](#esg-fund-rating), [Climetrics](#climetrics), [ESG Corporate Rating](#esg-corporate-rating)
 
-> [!example]- Source excerpts (4)
+> [!guide]- Source excerpts (4)
 >
 > 2020) — ISS ESG, the responsible investment arm of Institutional Shareholder Services Inc. (ISS),
 > today announced the launch of a new, best-in-class **fund rating**s solution assessing the
@@ -1110,7 +1110,7 @@ A data-driven governance risk scoring system within the ISS QualityScore suite t
 > [!tip] Related terms
 > [ISS QualityScore](#iss-qualityscore), [Governance Pillar](#governance-pillar), [Decile-Based Scoring](#decile-based-scoring)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > (December 2, 2019) — ISS ESG, the responsible investment arm of Institutional Shareholder Services
 > Inc., today announced methodology enhancements to **Governance QualityScore** to provide users
@@ -1163,7 +1163,7 @@ The risk that a company, fund, or financial product overstates or misrepresents 
 > [!tip] Related terms
 > [Data Verification](#data-verification), [Sustainability Bond Rating](#sustainability-bond-rating), [ESG Disclosure](#esg-disclosure)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > As the European Securities and Markets Authority (ESMA) tightens guidelines on fund names to
 > mitigate **greenwashing risk**s, fund managers face new challenges. In our latest report, we
@@ -1221,7 +1221,7 @@ An investment approach that intentionally seeks to generate measurable positive 
 > [!tip] Related terms
 > [SDG Impact Rating](#sdg-impact-rating), [Sustainability Solutions Assessment](#sustainability-solutions-assessment), [Responsible Investment](#responsible-investment)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > There was a positive take-out shared by most of the panelists: despite confusion and difficulties
 > in settings clear rules for **impact investing**, there is reason for optimism in the rising
@@ -1272,7 +1272,7 @@ The full formal name for ISS ESG's flagship company-level sustainability assessm
 > [!tip] Related terms
 > [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg), [ESG Corporate Rating](#esg-corporate-rating), [ESG Scorecard](#esg-scorecard)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > SS ESG Water Risk Rating, which considers companies’ Water Risk Exposure and Water Risk
 > Management. The index constituents also have a medium or high **ISS ESG Corporate Rating** and
@@ -1324,7 +1324,7 @@ A quantitative governance, environmental, and social risk scoring system that ev
 > [!tip] Related terms
 > [Governance QualityScore](#governance-qualityscore), [Muni QualityScore](#muni-qualityscore), [Decile-Based Scoring](#decile-based-scoring)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ), a leading provider of end-to-end governance and responsible investment solutions to the global
 > financial community, today announced the release of **ISS QualityScore** updates for the
@@ -1376,7 +1376,7 @@ A measure of how effectively a company manages its material ESG risks through po
 > [!tip] Related terms
 > [Exposure Score](#exposure-score), [ESG Risk Rating](#esg-risk-rating), [ESG Risk Categories](#esg-risk-categories)
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > ̅𝑟̅̅𝑒̅𝑘̅ 𝑖 𝑖 𝑗 where: 𝐾𝑃𝐼 𝑆𝑐𝑜𝑟𝑒𝑘 =Value of KPI Score k for stock i 𝑖 𝐾̅̅̅𝑃̅̅𝐼̅
 > ̅𝑆̅𝑐̅̅𝑜̅𝑟̅̅𝑒̅𝑘̅=Average value of KPI Score k in peer group j 𝑗 The ESG **Management Score**, which
@@ -1419,7 +1419,7 @@ The principle that ESG factors should be weighted according to their financial r
 > [!tip] Related terms
 > [ESG Risk Categories](#esg-risk-categories), [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg), [ESG Scorecard](#esg-scorecard)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ISS EVA Webinar Series Exploring Financial **Materiality** in ESG Investing ESG has been buzzing
 > around the investing lexicon for the better part of two decades now, and for good reason, because
@@ -1472,7 +1472,7 @@ A biodiversity indicator used by ISS ESG that measures the average relative abun
 > [!tip] Related terms
 > [Biodiversity Impact Assessment Tool (BIAT)](#biodiversity-impact-assessment-tool-biat), [Environmental Pillar](#environmental-pillar), [Exposure Score](#exposure-score)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Species richness refers to the number of unique species in an area. Another metric that is
 > available for inclusion in the framework is the **Mean Species Abundance (MSA)**. MSA quantifies
@@ -1523,7 +1523,7 @@ A specialised assessment tool that evaluates companies on their policies, due di
 > [!tip] Related terms
 > [Social Pillar](#social-pillar), [Norm-Based Research](#norm-based-research), [Norm-Based Screening](#norm-based-screening)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > SUSTAINABILITY SOLUTIONS **Modern Slavery Scorecard** Identify, evaluate and act on modern slavery
 > risks and their impact on investments. We help investors to meaningfully identify and address
@@ -1573,7 +1573,7 @@ A governance and sustainability risk scoring system specifically designed for US
 > [!tip] Related terms
 > [ISS QualityScore](#iss-qualityscore), [Governance QualityScore](#governance-qualityscore), [Country Rating](#country-rating)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > can play a large role in shifting capital flows to investments that address societal issues and
 > have a tangible impact on local communities. Our ESG **Muni QualityScore** provides scoring for
@@ -1611,7 +1611,7 @@ An investment approach that systematically excludes companies, sectors, or count
 > [!tip] Related terms
 > [Positive Screening](#positive-screening), [Norm-Based Screening](#norm-based-screening), [Best-in-Class Screening](#best-in-class-screening)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The idea is to choose companies with a minimum standard of quality across all KPIs, rather than
 > the leaders. ESG **negative screening** Companies are also excluded if they fail to pass
@@ -1661,7 +1661,7 @@ A research methodology that systematically identifies company involvement in inc
 > [!tip] Related terms
 > [Norm-Based Screening](#norm-based-screening), [Controversy Rating](#controversy-rating), [Controversy Level](#controversy-level)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 2017 Norms-Based Research Methodology Changes As part of the annual review of the scope of
 > **Norm-Based Research**, ISS-Ethix has taken into consideration emerging environmental and social
@@ -1709,7 +1709,7 @@ The application of Norm-Based Research findings to investment decision-making, t
 > [!tip] Related terms
 > [Norm-Based Research](#norm-based-research), [Best-in-Class Screening](#best-in-class-screening), [Controversy Rating](#controversy-rating)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ESG investment approaches.” The ESG-X index family is based on involvement screening for
 > controversial weapons, tobacco and thermal coal as well as a **norm-based screening** that follows
@@ -1762,7 +1762,7 @@ A relative assessment methodology in which a company's ESG performance is evalua
 > [!tip] Related terms
 > [Sector-Relative Scoring](#sector-relative-scoring), [Decile-Based Scoring](#decile-based-scoring), [Best-in-Class Screening](#best-in-class-screening)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > If the bar set for the performance-based program is too low based on the company’s historical or
 > **peer group comparison**, generally vote for the proposal. Furthermore, if target performance
@@ -1817,7 +1817,7 @@ An investment approach that actively selects companies for inclusion in a portfo
 > [!tip] Related terms
 > [Negative Screening](#negative-screening), [Best-in-Class Screening](#best-in-class-screening), [ESG Prime Status](#esg-prime-status)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The index employs two complementary sustainability approaches: standardized negative screens for
 > controversial or unsustainable activities1; and **positive screening** based on ESG scores. The
@@ -1870,7 +1870,7 @@ A regulatory concept introduced by the EU Sustainable Finance Disclosure Regulat
 > [!tip] Related terms
 > [ESG Fund Rating](#esg-fund-rating), [Environmental Pillar](#environmental-pillar), [Social Pillar](#social-pillar), [Carbon Risk Rating](#carbon-risk-rating)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The new screens have the objective of a stricter ESG screening criteria as well as broadening
 > considerations of some SFDR **principal adverse impact (PAI)** indicators, at the same time
@@ -1927,7 +1927,7 @@ A broad investment philosophy that incorporates ESG considerations into investme
 > [!tip] Related terms
 > [ESG Integration](#esg-integration), [Active Ownership](#active-ownership), [Impact Investing](#impact-investing), [Negative Screening](#negative-screening)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ISS-Ethix will continue to be led by Ethix’s Managing Director and Founding Partner, Ulrika
 > Hasselgren, a veteran of the **responsible investment** industry who has advised institutional
@@ -1982,7 +1982,7 @@ An assessment of how a company's products, services, and operations contribute t
 > [!tip] Related terms
 > [Sustainability Solutions Assessment](#sustainability-solutions-assessment), [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg), [Materiality](#materiality)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > OVERSIES ACCESS IMPACT SCORES ACROSS: 0 SDGs 0 Data factors 0 Issuers Data as of December 2024.
 > All figures are approximate. Focus on Materiality The **SDG Impact Rating** aggregation model
@@ -2034,7 +2034,7 @@ The "S" component of the ESG framework, encompassing a company's relationships w
 > [!tip] Related terms
 > [Environmental Pillar](#environmental-pillar), [Governance Pillar](#governance-pillar), [Modern Slavery Scorecard](#modern-slavery-scorecard), [Norm-Based Research](#norm-based-research)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > LEED data is available to anyone and can be turned into investable data, Dr. Ang said. Investors
 > can find sustainability alpha within the **Social pillar** of ESG, too. For example, BlackRock’s
@@ -2063,7 +2063,7 @@ An economic and corporate governance philosophy that holds companies should serv
 > [!tip] Related terms
 > [Social Pillar](#social-pillar), [Governance Pillar](#governance-pillar), [Responsible Investment](#responsible-investment), [Double Materiality](#double-materiality)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > More and more companies are rising up to their responsibilities as trustees and integral parts of
 > the societies they operate in. This is the ‘**stakeholder capitalism**’ proposed by the WEF’s
@@ -2094,7 +2094,7 @@ An assessment of fixed-income instruments (green bonds, social bonds, sustainabi
 > [!tip] Related terms
 > [Corporate Rating (ISS ESG)](#corporate-rating-iss-esg), [SDG Impact Rating](#sdg-impact-rating), [Environmental Pillar](#environmental-pillar)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > entify key sustainability-related drivers of the sustainable bonds market and credit performance.
 > Benefit From a Comprehensive Rating Methodology The **Sustainability Bond Rating** utilizes
@@ -2125,7 +2125,7 @@ An evaluation of the degree to which a company's products and services contribut
 > [!tip] Related terms
 > [SDG Impact Rating](#sdg-impact-rating), [ESG Fund Rating](#esg-fund-rating), [Principal Adverse Impact (PAI)](#principal-adverse-impact-pai)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > ainability Objectives, based on a hypothetical USD 1M investment - Highlights top and bottom
 > holdings based on the SDG Solutions Assessment Score THE **SUSTAINABILITY SOLUTIONS ASSESSMENT**
@@ -2153,7 +2153,7 @@ A specialised assessment of a company's exposure to and management of water-rela
 > [!tip] Related terms
 > [Carbon Risk Rating](#carbon-risk-rating), [Environmental Pillar](#environmental-pillar), [Exposure Score](#exposure-score), [Management Score](#management-score)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > SUSTAINABILITY SOLUTIONS / RATINGS & RANKINGS **Water Risk Rating** Access a holistic assessment
 > of companies’ exposure to freshwater-related risks. **Water Risk Rating** helps you mitigate

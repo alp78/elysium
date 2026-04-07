@@ -455,7 +455,7 @@ The list is ordered by frequency of occurrence in real codebases. The `[!success
 > [!success] Production-safe alternatives
 > Use `StringBuilder` for concatenation, `using` for all `IDisposable` resources, `async Task` for all async methods, and `await` instead of `.Result`/`.Wait()`. Store secrets in `IConfiguration`, user-secrets, or Key Vault. Register `IHttpClientFactory` in DI and use pattern-matched `is` checks over `GetType()` comparisons.
 
-> [!example] SqlConnection — using pattern for disposable resources
+> [!guide] SqlConnection — using pattern for disposable resources
 >
 > Without `using`, an exception between `Open()` and `Close()` leaks the connection. The `using` declaration ensures `Dispose()` is called when the variable goes out of scope, even if an exception is thrown.
 >

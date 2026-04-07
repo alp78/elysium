@@ -97,7 +97,7 @@ flowchart LR
 
 A partition function is a database object that defines how rows map to partitions based on the values of a single column. It specifies the data type of the partition key, the boundary values that separate partitions, and whether each boundary belongs to the left or right partition (the range type). The number of partitions is always one more than the number of boundary values — six boundaries produce seven partitions.
 
-> [!example] Yearly partition function for trade_date
+> [!guide] Yearly partition function for trade_date
 >
 > With `RANGE RIGHT`, the boundary value goes in the right (higher) partition:
 > Partition 1 gets `trade_date < '2021-01-01'`, Partition 2 gets `>= '2021-01-01' AND < '2022-01-01'`, etc.

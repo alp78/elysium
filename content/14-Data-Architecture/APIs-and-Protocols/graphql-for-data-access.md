@@ -101,7 +101,7 @@ The GitHub GraphQL API is the canonical example of GraphQL at scale. Data engine
 **5. Replacing multiple REST calls with one GraphQL query**
 A pipeline that needs to fetch a company's profile, its recent filings, and the filing attachments from a REST API makes 3 round trips. The equivalent GraphQL query makes 1.
 
-> [!example] Real Pipeline Use Case
+> [!guide] Real Pipeline Use Case
 > An index rebalancing pipeline uses the GitHub GraphQL API to find the latest tagged release of a factor model repository, download the asset list CSV, and open a pull request with the new constituent weights — all in one script with three GraphQL mutations and queries.
 
 ---

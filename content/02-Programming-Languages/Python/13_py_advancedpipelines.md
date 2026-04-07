@@ -336,7 +336,7 @@ Each step adds a layer of scalability. Start with the simplest model that meets 
 3. Celery/RQ → multiple machines, distributed workers
 4. Dask/Spark → distributed data processing at scale
 
-> [!example] Celery example (requires Redis +
+> [!guide] Celery example (requires Redis +
 >
 > Celery example (requires Redis + worker process)
 > ```python

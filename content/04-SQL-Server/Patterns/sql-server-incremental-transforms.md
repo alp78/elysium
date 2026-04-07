@@ -453,7 +453,7 @@ Every INSERT into a staging table that feeds an indexed view pays the view maint
 
 ## Medallion-Project Reference
 
-> [!example]- Medallion-Project: OHLCV gap-fill and index performance
+> [!guide]- Medallion-Project: OHLCV gap-fill and index performance
 >
 > **Gap-fill (silver):** The OHLCV transform joins against `bronze.trading_calendar` to detect missing trading days, then forward-fills from the last real close price. Filled rows are marked `is_filled = 1`. See [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/Medallion-Project/silver-transforms) for the full gap-fill logic.
 >

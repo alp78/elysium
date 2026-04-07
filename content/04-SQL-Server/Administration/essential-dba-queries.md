@@ -319,7 +319,7 @@ ORDER BY name;
 >
 > The `is_dynamic` column (not selected in this query but available) indicates whether the setting takes effect immediately after `RECONFIGURE` (`1`) or requires a server restart (`0`). Memory settings (`max/min server memory`) are dynamic; the `fill factor` setting requires a restart.
 
-> [!example] Recommended Values for Key Settings
+> [!guide] Recommended Values for Key Settings
 >
 > | Setting | Default | Recommended | Why |
 > |---|---|---|---|

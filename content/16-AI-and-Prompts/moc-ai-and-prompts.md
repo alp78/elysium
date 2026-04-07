@@ -14,13 +14,13 @@ Prompt engineering and LLM integration for data engineering — from
 foundational prompting techniques through production validation to
 AI-augmented pipeline architecture.
 
-> [!example]- Prompt Craft
+> [!guide]- Prompt Craft
 >
 > [[domain-prompt-craft]]
 >
 > Foundational prompting techniques, prompt architecture patterns, model-specific strategies, and systematic debugging workflows.
 
-> [!example]- AI in Data Engineering
+> [!guide]- AI in Data Engineering
 >
 > [[domain-ai-in-data-engineering]]
 >

@@ -12,13 +12,13 @@ tags:
 DataOps methodology and team organization — from principles and CI/CD
 practices through platform engineering to leadership and collaboration.
 
-> [!example]- Principles and Practice
+> [!guide]- Principles and Practice
 >
 > [[domain-principles-and-practice]]
 >
 > DataOps principles, CI/CD practices for data pipelines, index-specific operational patterns, and self-service platform engineering.
 
-> [!example]- People and Organization
+> [!guide]- People and Organization
 >
 > [[domain-people-and-organization]]
 >

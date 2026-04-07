@@ -833,7 +833,7 @@ When using MERGE or staging-based upsert, the join between staging and target be
 
 ## Medallion-Project Reference
 
-> [!example]- Medallion-Project: JSON → pyodbc → bronze tables
+> [!guide]- Medallion-Project: JSON → pyodbc → bronze tables
 >
 > The financial index pipeline uses truncate-and-reload for most bronze tables and a Python-side merge (INSERT new + UPDATE changed) for OHLCV data:
 >

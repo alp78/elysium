@@ -114,7 +114,7 @@ Protobuf schemas are versioned and backward-compatible. Adding a new field never
 **5. Service meshes (Istio, Linkerd)**
 Service meshes understand HTTP/2 and gRPC natively, providing automatic mTLS, circuit breaking, and observability at the gRPC level.
 
-> [!example] Real-World Data Pipeline Use Case
+> [!guide] Real-World Data Pipeline Use Case
 > A financial data platform receives FIX protocol messages from exchange feeds, normalizes them in a Python service, and pushes normalized records via client-streaming gRPC to a Go aggregation service that writes to BigQuery. Each component speaks the same `.proto` contract.
 
 ---

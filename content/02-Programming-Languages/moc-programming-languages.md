@@ -27,7 +27,7 @@ mindmap
     (design patterns)
 ```
 
-> [!example]- Language Foundations
+> [!guide]- Language Foundations
 >
 > [[domain-language-foundations]]
 >
@@ -46,7 +46,7 @@ mindmap
     (functional pipeline)
 ```
 
-> [!example]- Data Engineering
+> [!guide]- Data Engineering
 >
 > [[domain-data-engineering]]
 >
@@ -63,7 +63,7 @@ mindmap
     (streaming, real-time)
 ```
 
-> [!example]- GCP Integration
+> [!guide]- GCP Integration
 >
 > [[domain-gcp-integration]]
 >

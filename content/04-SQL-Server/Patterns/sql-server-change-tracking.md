@@ -635,7 +635,7 @@ Querying `CHANGETABLE()` without snapshot isolation allows a race condition: the
 
 ## Medallion-Project Reference
 
-> [!example]- Medallion-Project: SCD2 on stock dimensions
+> [!guide]- Medallion-Project: SCD2 on stock dimensions
 >
 > The financial index pipeline implements manual SCD2 on `silver.index_dim`:
 >

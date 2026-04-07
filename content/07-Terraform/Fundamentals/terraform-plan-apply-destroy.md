@@ -153,7 +153,7 @@ Use `-auto-approve` to skip the interactive confirmation prompt. Only appropriat
 terraform apply -auto-approve
 ```
 
-> [!example] Data Pipeline Approach
+> [!guide] Data Pipeline Approach
 > In production data engineering workflows, `terraform apply` is typically run **manually** — not in CI/CD. CI/CD handles application code (Docker images, Cloud Run deployments), while infrastructure changes are deliberate, reviewed, and applied by hand.
 
 #### Apply Only Specific Resources

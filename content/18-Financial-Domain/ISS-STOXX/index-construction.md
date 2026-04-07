@@ -64,7 +64,7 @@ Where $P_i$ is the closing price of security $i$, $S_i$ is total shares outstand
 > [!tip] Related terms
 > [Free-Float](#free-float), [Free-Float Factor](#free-float-factor), [Free-Float Market Capitalization Weighting](#free-float-market-capitalization-weighting), [Capping Factor](#capping-factor)
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > This final weight is then allocated to each share line according to its **adjusted free-float
 > market capitalization**. Weighting: In June, the index constituents are initially weighted by
@@ -106,7 +106,7 @@ The calendar date on which an index provider publicly discloses the results of a
 - [Istoxx Index Guide (PDF)](https://www.stoxx.com/document/Indices/Common/Indexguide/istoxx_index_guide.pdf)
 
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > actor is based on the average daily turnover (ADTV) of the stock over the most recent three-month
 > period, measured one day before the underlying data **announcement date**. The factor is kept
@@ -159,7 +159,7 @@ The reference calendar date from which an index's historical performance begins,
 > [!tip] Related terms
 > [Base Value](#base-value), [Index Level](#index-level)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > CALCULATION On any Dissemination Day t the index value is calculated as follows: 𝐼𝑉 =100 if t is
 > **base date** 𝑡 {𝐼𝑉 𝑡 = 𝐼𝑉 𝑡−1 +100∗ 𝑟 𝑑𝑖𝑠𝑝,𝑡 if 𝑡 is not a reset date 𝐼𝑉 =100+100∗ 𝑟 if 𝑡 is a
@@ -210,7 +210,7 @@ The numerical level assigned to an index on its base date, from which all subseq
 > [!tip] Related terms
 > [Base Date](#base-date), [Index Level](#index-level), [Divisor](#divisor)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Gross Return, Excess Return – Price, Excess Return – Net Return and Excess Return – Gross Return
 > in EUR. Dissemination calendar: STOXX Eurex Calendar **Base value**s and dates: 1000 on Feb 28,
@@ -267,7 +267,7 @@ $$
 > [!tip] Related terms
 > [Index Point](#index-point), [Tracking Error](#tracking-error), [Capping](#capping)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > TOXX ESG-X Indices performed largely in line with their benchmarks during September. The STOXX®
 > Global 1800 ESG-X Index underperformed by less than 1 **basis point**. The ESG-X indices are
@@ -323,7 +323,7 @@ A broadly representative, rules-based index that serves as a standard reference 
 > [!tip] Related terms
 > [Rules-Based Index](#rules-based-index), [Index Universe](#index-universe), [Free-Float Market Capitalization Weighting](#free-float-market-capitalization-weighting)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > capital market. Stephan Flaegel, Global Head of Benchmarks & Indices The main results on changing
 > the index rulebook are: - From September 2021, the **benchmark index** DAX will be expanded by ten
@@ -379,7 +379,7 @@ A threshold band applied during periodic reviews that allows existing constituen
 > [!tip] Related terms
 > [Fast Entry Rule](#fast-entry-rule), [Fast Exit Rule](#fast-exit-rule), [Reconstitution](#reconstitution), [Turnover](#turnover)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Components are selected based on the free-float market capitalization and a 10% **buffer rule**
 > applies for the ranking. If the number of stocks selected is still below the required component
@@ -444,7 +444,7 @@ Where $w_i^{\text{uncapped}}$ is the raw weight and $W_{\max}$ is the cap limit.
 > [!tip] Related terms
 > [Capping Factor](#capping-factor), [Weighting Scheme](#weighting-scheme), [Free-Float Market Capitalization Weighting](#free-float-market-capitalization-weighting)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The responses reflected a wide range of considerations from different stakeholders. A majority of
 > participants were in favour of raising the **capping** limit to 15 percent. Media Contact Andreas
@@ -500,7 +500,7 @@ $$
 > [!tip] Related terms
 > [Capping](#capping), [Free-Float Factor](#free-float-factor), [Divisor Adjustment](#divisor-adjustment)
 
-> [!example]- Source excerpts (4)
+> [!guide]- Source excerpts (4)
 >
 > djusted free float is implemented via a **capping factor** in the sense of Section 4.1 General
 > Definitions of the STOXX Reference Calculations Guide. The **capping factor** is defined as
@@ -553,7 +553,7 @@ Where $R_j^{\text{new basket}}$ is the return of the post-rebalancing basket on 
 > [!tip] Related terms
 > [Divisor](#divisor), [Divisor Adjustment](#divisor-adjustment), [Reconstitution](#reconstitution), [Rebalancing](#rebalancing)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Underlying Data Announcement This report displays future index composition and underlying data
 > that will be implemented at the next **chaining** date. 4.8.1.1. eb.rexx Indices  File name:
@@ -606,7 +606,7 @@ A security that is currently included in an index and contributes to its level c
 > [!tip] Related terms
 > [Constituent](#constituent), [Selection Criteria](#selection-criteria), [Index Universe](#index-universe)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > OXX group of companies and leading provider of benchmark and custom index solutions to global
 > institutional investors, today announced an unscheduled **component** change in the SDAX, HDAX and
@@ -664,7 +664,7 @@ Where $G$ is the set of constituents belonging to the group and $W_{\max}^{\text
 > [!tip] Related terms
 > [Capping](#capping), [Country Weighting](#country-weighting), [Sector Weighting](#sector-weighting), [Weighting Scheme](#weighting-scheme)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > capitalization weighted D Capping: Components are capped with an iterative process to guarantee
 > that an absolute ICB Industry capping and the 5/10/40 **concentration limit**s are met E Base
@@ -690,7 +690,7 @@ An individual security that is a member of an index at a given point in time and
 > [!tip] Related terms
 > [Component](#component), [Eligibility Criteria](#eligibility-criteria), [Selection List](#selection-list)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > On September 20, Germany’s flagship DAX® Index will expand from 30 to 40 **constituent**s,
 > concluding the biggest reform in the benchmark’s +30-year history. The enlargement is the final
@@ -751,7 +751,7 @@ The numerator uses the new composition (post-event) and the denominator uses the
 > [!tip] Related terms
 > [Divisor Adjustment](#divisor-adjustment), [Index Formula (Laspeyres)](#index-formula-laspeyres), [Base Value](#base-value)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ) at time (t) . x it = Exchange rate from reference price currency to index currency at time (t).
 > M t = Total ‘units’ of the index at time (t). D t = **Divisor** of the index at time (t). 3.8.2.
@@ -802,7 +802,7 @@ The recalculation of the index divisor triggered by any non-market event — inc
 > [!tip] Related terms
 > [Divisor](#divisor), [Corporate Action Treatment](#corporate-action-treatment), [Rebalancing](#rebalancing)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > The change in market capitalization (for price weighted indices: the change in units) determines
 > the **divisor adjustment**. a) For free-float market capitalization weighted indices: If the
@@ -835,7 +835,7 @@ The calendar date on which announced index changes — including additions, dele
 > [!tip] Related terms
 > [Announcement Date](#announcement-date), [Periodic Review](#periodic-review), [Divisor Adjustment](#divisor-adjustment)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > t i effective new,i,t on day t+1 • S refers to the official closing price for component i on day
 > t, or in the case where the old,i,t corporate action **effective date** is identical to the
@@ -891,7 +891,7 @@ The set of minimum requirements — covering domicile, listing venue, security t
 > [!tip] Related terms
 > [Selection Criteria](#selection-criteria), [Index Universe](#index-universe), [Free-Float](#free-float)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ONGOING MAINTENANCE Selection list: The selection list is created annually in the review month by
 > applying the three **eligibility criteria** in Section ‘Index Review’ of ‘STOXX US Nexus 100
@@ -951,7 +951,7 @@ $$
 > [!tip] Related terms
 > [Weighting Scheme](#weighting-scheme), [Market Capitalization Weighting](#market-capitalization-weighting), [Fundamental Weighting](#fundamental-weighting), [Rebalancing](#rebalancing)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > t volatility can work both ways, which means that many of the themes are likely to outperform the
 > market in the eventual recovery. Also, the adjusted **equal weighting** of constituents in many
@@ -1005,7 +1005,7 @@ A provision that allows a security to be added to an index outside the regular p
 > [!tip] Related terms
 > [Fast Exit Rule](#fast-exit-rule), [Buffer Rule](#buffer-rule), [Periodic Review](#periodic-review)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 1 Group SE (crossover from MDAX) - Vantage Towers AG replaces Koenig & Bauer AG (fast exit rule) -
 > Grenke AG replaces Corestate Capital Holding S.A. (**fast entry rule**) - Nagarro SE replaces
@@ -1058,7 +1058,7 @@ A provision that triggers the removal of a constituent from an index between per
 > [!tip] Related terms
 > [Fast Entry Rule](#fast-entry-rule), [Buffer Rule](#buffer-rule), [Corporate Action Treatment](#corporate-action-treatment)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 14 EURO STOXX 50® ESG INDEX – INTEGRATING SUSTAINABILITY APPENDIX B THe **FAST eXiT rULe** iN
 > PrACTiCe STOXX used its **fast exit rule** to become the first index provider to remove volkswagen
@@ -1112,7 +1112,7 @@ The proportion of a company's total shares outstanding that is available for tra
 > [!tip] Related terms
 > [Free-Float Factor](#free-float-factor), [Adjusted Free-Float Market Capitalization](#adjusted-free-float-market-capitalization), [Eligibility Criteria](#eligibility-criteria)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > OVERVIEW The STOXX Balkan 50 Equal Weight index represents blue-chip stocks from eight Balkan
 > countries in terms of **free-float** market capitalization. Universe: The index universe is
@@ -1168,7 +1168,7 @@ Rounded to the nearest 0.05.
 > [!tip] Related terms
 > [Free-Float](#free-float), [Adjusted Free-Float Market Capitalization](#adjusted-free-float-market-capitalization), [Capping Factor](#capping-factor)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Where no regulatory announcements are available, other publicly available sources are consulted in
 > addition to determine the number of shares. 5.8. **FREE-FLOAT FACTOR**S 5.8.1. FIXED HOLDINGS
@@ -1233,7 +1233,7 @@ Where $D_i$ is the gross (pre-tax) dividend per share for constituent $i$ going 
 > [!tip] Related terms
 > [Net Return Index](#net-return-index), [Price Return Index](#price-return-index), [Total Return Index](#total-return-index)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 50 component i on day t 𝑖,𝑡 𝑟 = log gross return of EURO STOXX 50 component i on day t 𝑖,𝑡 The
 > return is adjusted for corporate actions affecting the **gross return index**. The log return is
@@ -1288,7 +1288,7 @@ The continuous or end-of-day computational process by which constituent prices, 
 > [!tip] Related terms
 > [Index Formula (Laspeyres)](#index-formula-laspeyres), [Divisor](#divisor), [Index Level](#index-level)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 0 0 % p.a. days = Number of calendar days between the immediately preceding Rebalancing Day R, d R
 > (excluded) and the current **Index Calculation** Day d (included). 8. On any **Index Calculation**
@@ -1341,7 +1341,7 @@ A governance body composed of senior professionals within the index provider org
 > [!tip] Related terms
 > [Periodic Review](#periodic-review), [Rules-Based Index](#rules-based-index), [Stakeholder Consultation](#stakeholder-consultation)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > ty (members must be profitable over the past 12 months, including the most recent quarter).
 > However, constituent selection is at the discretion of an **Index Committee** based on the
@@ -1381,7 +1381,7 @@ Where:
 > [!tip] Related terms
 > [Laspeyres Price Index Formula](#laspeyres-price-index-formula), [Divisor](#divisor), [Index Calculation](#index-calculation)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Global Equity 20% Global Fixed Income 30% High Yield 30% Mixed Allocation 20% iSTOXX® METHODOLOGY
 > GUIDE 532/1024 61. iSTOXX FUND INDICES **Index formula**: 4 𝐼𝑉 =∑ 𝑤𝑓 ∙𝑁𝐴𝑉 𝑡 𝑖,𝑡 𝑖,𝑡 𝑖=1 𝐼𝑉 =1000 0
@@ -1433,7 +1433,7 @@ The numerical value of an index at a given point in time, representing the cumul
 > [!tip] Related terms
 > [Base Value](#base-value), [Base Date](#base-date), [Index Calculation](#index-calculation)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Return Index Index Rounding: 2 d.p. Dissemination Calendar: STOXX Europe Calendar. Index Types and
 > Currencies: Excess Return in EUR. INDEX REVIEW The **Index Level** is determined by: 𝑈𝐿 𝐴𝐶𝑇(𝑡−1,𝑡)
@@ -1492,7 +1492,7 @@ $$
 > [!tip] Related terms
 > [Index Level](#index-level), [Basis Point (Index)](#basis-point-index), [Index Calculation](#index-calculation)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > , dividends are an important factor underpinning equities as many income investors and pension
 > funds are attracted to the stable cash flows. Dividend **index point**s The EURO STOXX 50® Index
@@ -1550,7 +1550,7 @@ The broadest set of securities from which an index's constituents may be selecte
 > [!tip] Related terms
 > [Eligibility Criteria](#eligibility-criteria), [Selection Criteria](#selection-criteria), [Selection List](#selection-list)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > TOXX Balkan 50 Equal Weight index represents blue-chip stocks from eight Balkan countries in terms
 > of free-float market capitalization. Universe: The **index universe** is defined as the following
@@ -1607,7 +1607,7 @@ The degree to which an index can be practically replicated by a real-world portf
 > [!tip] Related terms
 > [Free-Float](#free-float), [Eligibility Criteria](#eligibility-criteria), [Tracking Error](#tracking-error), [Turnover](#turnover)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > indices as building blocks, you can do this without compromising the consistent index-construction
 > methodology. Can you tell us a bit more as to why **investability** is so important in emerging
@@ -1668,7 +1668,7 @@ $$
 > [!tip] Related terms
 > [Free-Float Market Capitalization Weighting](#free-float-market-capitalization-weighting), [Equal Weighting](#equal-weighting), [Price Weighting](#price-weighting)
 
-> [!example]- Source excerpts (3)
+> [!guide]- Source excerpts (3)
 >
 > Selection is based on a multi-step procedure which seeks to identify the strongest and most
 > representative assets in each eligible sector. A **market capitalization weighting** scheme with a
@@ -1719,7 +1719,7 @@ Where $\tau_i$ is the withholding tax rate applicable to the dividend of constit
 > [!tip] Related terms
 > [Gross Return Index](#gross-return-index), [Price Return Index](#price-return-index), [Total Return Index](#total-return-index)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Fixed day count convention). Consequently, due to the percentage of performance being subtracted,
 > the decrement index is underperforming the standard **net return index**. The Underlying Index is
@@ -1771,7 +1771,7 @@ The rule specifying whether an index maintains a predetermined fixed count of co
 > [!tip] Related terms
 > [Buffer Rule](#buffer-rule), [Constituent](#constituent), [Reconstitution](#reconstitution)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > EX For each country i, a maximum **number of components** is calculated as follows, rounded to the
 > nearest integer: K =(SXW1 +10%)∗N i i where: K maximum **number of components** from country i,
@@ -1825,7 +1825,7 @@ The scheduled process — typically conducted quarterly, semi-annually, or annua
 > [!tip] Related terms
 > [Reconstitution](#reconstitution), [Review Frequency](#review-frequency), [Announcement Date](#announcement-date), [Rebalancing](#rebalancing)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > All changes are implemented on the third Friday and effective the next trading day following the
 > STOXX **periodic review** calendar. The cut-off date for the selection list and the ADTV data to
@@ -1881,7 +1881,7 @@ $$
 > [!tip] Related terms
 > [Gross Return Index](#gross-return-index), [Net Return Index](#net-return-index), [Total Return Index](#total-return-index)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > INDEX CHARACTERISTICS INDEX CALCULATION The indices are calculated using Laysperes formula as
 > described in this section. 3.8.1. **PRICE RETURN INDEX** The indices are weighted based on the
@@ -1919,7 +1919,7 @@ The periodic process of realigning constituent weights to their target values as
 > [!tip] Related terms
 > [Reconstitution](#reconstitution), [Divisor Adjustment](#divisor-adjustment), [Capping](#capping), [Turnover](#turnover)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 𝑉 =∑ 𝑤𝑓 ∙𝑁𝐴𝑉 𝑡 𝑖,𝑡 𝑖,𝑡 𝑖=1 𝐼𝑉 =1000 0 whereby the weighting factor is calculated as 𝑤𝑓 = 𝑤𝑖,𝑡𝑅𝑒𝑏
 > ∙𝐼𝑉 and t refers to the Index 𝑖,𝑡 𝑁𝐴𝑉𝑖,𝑡𝑅𝑒𝑏 𝑡𝑅𝑒𝑏 Reb **Rebalancing** Day immediately preceding
@@ -1973,7 +1973,7 @@ The process of redetermining the membership of an index by re-applying eligibili
 > [!tip] Related terms
 > [Rebalancing](#rebalancing), [Periodic Review](#periodic-review), [Buffer Rule](#buffer-rule), [Selection Criteria](#selection-criteria)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > , delivers letter to SandRidge board re- shareholders act by written consent to replace all 7
 > incumbents, including the questing declassification and **reconstitution** of the board in
@@ -2005,7 +2005,7 @@ The cadence at which an index provider conducts periodic reviews, commonly expre
 > [!tip] Related terms
 > [Periodic Review](#periodic-review), [Reconstitution](#reconstitution), [Turnover](#turnover)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Index consist of the components of the parent STOXX World AC Universal All Cap Equity Index, that
 > belong to the respective country, see Section 4.6. **Review frequency**: The **review frequency**
@@ -2059,7 +2059,7 @@ An index constructed and maintained according to a transparent, pre-defined, and
 > [!tip] Related terms
 > [Eligibility Criteria](#eligibility-criteria), [Selection Criteria](#selection-criteria), [Weighting Scheme](#weighting-scheme)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > index was launched in partnership with Bitcoin Suisse, a leading Swiss crypto-financial services
 > provider and brings together STOXX’s transparent and **rules-based index** methodology with
@@ -2092,7 +2092,7 @@ The aggregate weight of all constituents classified within a specific industry s
 > [!tip] Related terms
 > [Country Weighting](#country-weighting), [Concentration Limit](#concentration-limit), [Weighting Scheme](#weighting-scheme)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Overall, the Supersector distribution shows a highly diversified index. Figure 4: Super**sector
 > weighting**s Asia’s growth story With a population of 1.4 billion, a rising middle class and an
@@ -2143,7 +2143,7 @@ The specific quantitative and qualitative rules — beyond basic eligibility —
 > [!tip] Related terms
 > [Eligibility Criteria](#eligibility-criteria), [Buffer Rule](#buffer-rule), [Index Universe](#index-universe), [Selection List](#selection-list)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The post-IPO age is calculated as the period between the review cutoff date for the **selection
 > criteria** and the date of the company’s initial public offering (IPO) or the date on which the
@@ -2194,7 +2194,7 @@ The ordered ranking of eligible securities — typically sorted by free-float ma
 > [!tip] Related terms
 > [Selection Criteria](#selection-criteria), [Reconstitution](#reconstitution), [Buffer Rule](#buffer-rule)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > cut-off date for the **selection list** and the ADTV data to calculate the weights is the last
 > business day of the month preceding the review month. The **selection list** is produced annually.
@@ -2251,7 +2251,7 @@ The process of applying an index methodology retroactively to historical data to
 > [!tip] Related terms
 > [Base Date](#base-date), [Base Value](#base-value), [Tracking Error](#tracking-error)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > DAX **Simulation** data will be displayed in the New Index Data Distribution System throughout the
 > whole **simulation** phase (i.e. from December 18th, 2023 to February 29th, 2024). - Official DAX
@@ -2302,7 +2302,7 @@ An index constructed using a transparent, rules-based methodology that systemati
 > [!tip] Related terms
 > [Rules-Based Index](#rules-based-index), [Optimization-Based Weighting](#optimization-based-weighting), [Fundamental Weighting](#fundamental-weighting), [Weighting Scheme](#weighting-scheme)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > n risk is going to be at the company level, and bring that to life in an index.” The index
 > methodology translates “the CTVaR data into a rules-based, **systematic index** and the key is the
@@ -2341,7 +2341,7 @@ A generic term for an index variant that accounts for both price appreciation an
 > [!tip] Related terms
 > [Gross Return Index](#gross-return-index), [Net Return Index](#net-return-index), [Price Return Index](#price-return-index)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > CALCULATION The excess return index is calculated as follows: 𝐹 𝐼ER =𝐼ER ⋅ k,t 𝑡 𝑡−1 𝐹 k,t−1 The
 > **total return index** is calculated as follows: 𝐹 𝑑 𝐼TR =𝐼TR ⋅( k,t + ⋅𝑅 ) 𝑡 𝑡−1 𝐹 360 f, t−1
@@ -2404,7 +2404,7 @@ Where $R_p$ and $R_b$ are daily portfolio and benchmark returns, respectively, a
 > [!tip] Related terms
 > [Turnover](#turnover), [Rebalancing](#rebalancing), [Simulation](#simulation)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > This article provides a high-level refresher of what **tracking error** means, and how we can
 > embed it directly into portfolio construction. When we design a benchmarked portfolio, every
@@ -2465,7 +2465,7 @@ Where $w_i^{\text{old}}$ and $w_i^{\text{new}}$ are the weights before and after
 > [!tip] Related terms
 > [Rebalancing](#rebalancing), [Buffer Rule](#buffer-rule), [Tracking Error](#tracking-error), [Review Frequency](#review-frequency)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Market participants will be notified of such changes in a timely manner. 4.4.2. **TURNOVER** RATIO
 > The annualized **turnover** ratio is defined as the median value of the daily traded volume to the
@@ -2521,7 +2521,7 @@ The methodology that determines how the index's total value is allocated across 
 > [!tip] Related terms
 > [Free-Float Market Capitalization Weighting](#free-float-market-capitalization-weighting), [Market Capitalization Weighting](#market-capitalization-weighting), [Equal Weighting](#equal-weighting), [Fundamental Weighting](#fundamental-weighting), [Price Weighting](#price-weighting)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The index universe is defined as all stocks of the developed markets in Europe, North America and
 > the Asia/Pacific region as defined in section 4.3. **Weighting scheme**: The index is weighted

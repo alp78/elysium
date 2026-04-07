@@ -305,7 +305,7 @@ Directory.Delete(tmpDir, recursive: true);
 
 `CsvHelper` (NuGet: `dotnet add package CsvHelper`) is the standard C# library for production CSV. It handles quoted commas, escaped quotes, custom delimiters, header mapping, and lazy streaming. Records are yielded one at a time via `GetRecords<T>()` — memory-efficient for large files. Use `ClassMap<T>` for custom column mapping. This is the C# equivalent of Python's `csv.DictReader` with type conversion.
 
-> [!example] Pipeline run log — read and write typed CSV records
+> [!guide] Pipeline run log — read and write typed CSV records
 >
 > A positional `record` maps directly to CSV columns. `GetRecords<T>()` lazily streams rows one at a time — memory-efficient for large files. Writing is the inverse: pass a collection of records to `WriteRecords()` and CsvHelper serializes each field with proper quoting.
 >
@@ -636,7 +636,7 @@ var config2 = deserializer.Deserialize<PipelineConfig>(File.ReadAllText("config.
 
 Some tools (Kubernetes manifests, dbt model configs) use multiple YAML documents in a single file, separated by `---`. `YamlDotNet` does not have a built-in `safe_load_all` equivalent — parse each document by splitting on `---` first, or use the `YamlStream` API to iterate documents.
 
-> [!example] Parse a multi-document YAML file with YamlStream
+> [!guide] Parse a multi-document YAML file with YamlStream
 >
 > `YamlStream.Load()` reads all documents separated by `---` into a `Documents` collection. Each document's `RootNode` is cast to `YamlMappingNode` for key-value access. Keys are looked up via `YamlScalarNode` instances.
 >

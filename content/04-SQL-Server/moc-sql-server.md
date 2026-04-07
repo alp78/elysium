@@ -14,31 +14,31 @@ pipeline construction — covering operations, storage internals, T-SQL craft,
 performance tuning, security, and the medallion pipeline implementation.
 Expand any section to browse page contents.
 
-> [!example]- Server Operations
+> [!guide]- Server Operations
 >
 > [[domain-server-operations]]
 >
 > Instance administration from configuration and connectivity through backup strategy, high availability, and production troubleshooting.
 
-> [!example]- Storage Internals
+> [!guide]- Storage Internals
 >
 > [[domain-storage-internals]]
 >
 > Physical storage from page anatomy and WAL mechanics through index structures, compression, and table partitioning.
 
-> [!example]- Query Craft and Performance
+> [!guide]- Query Craft and Performance
 >
 > [[domain-query-craft]]
 >
 > T-SQL query writing and performance tuning from SARGability and execution plans through wait stats, memory diagnostics, and pipeline integration.
 
-> [!example]- Concurrency and Security
+> [!guide]- Concurrency and Security
 >
 > [[domain-concurrency-and-security]]
 >
 > Authentication hardening, encryption at rest, audit logging, and concurrency control from lock mechanics through deadlock prevention.
 
-> [!example]- Pipeline Patterns
+> [!guide]- Pipeline Patterns
 >
 > [[domain-pipeline-patterns]]
 >

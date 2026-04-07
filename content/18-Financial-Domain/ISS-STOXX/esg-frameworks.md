@@ -58,7 +58,7 @@ CDP is a not-for-profit charity that runs a global disclosure system for investo
 > - [Task Force on Climate-related Financial Disclosures (TCFD)](#task-force-on-climate-related-financial-disclosures-tcfd) — CDP has aligned its questionnaire with TCFD recommendations
 > - [Science Based Targets Initiative (SBTi)](#science-based-targets-initiative-sbti) — CDP tracks which respondents have committed to science-based targets
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 600 Index by nearly 1 percentage point, in dollar terms. The indices were designed to help lower
 > the carbon footprint of portfolios and use data from **CDP** and ISS ESG. Risk and return
@@ -112,7 +112,7 @@ The Convention on Cluster Munitions (CCM) is an international treaty adopted in 
 > - [Ottawa Treaty (Mine Ban Convention)](#ottawa-treaty-mine-ban-convention) — bans anti-personnel landmines
 > - [Good Governance](#good-governance) — weapons convention compliance feeds into minimum social safeguard assessments
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > ic outcry caused by reports about the severe humanitarian consequences of the use of these weapons
 > in recent conflicts. Following the adoption of the **Convention on Cluster Munitions** on 2008 a
@@ -144,7 +144,7 @@ The Corporate Sustainability Reporting Directive is an EU legislative instrument
 > - [Double Materiality](#double-materiality) — the core reporting principle embedded in CSRD
 > - [EU Taxonomy](#eu-taxonomy) — CSRD requires taxonomy-aligned revenue disclosures
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > In the short term, new regulation such as the Sustainable Finance Disclosure Regulation (SFDR) and
 > the Corporate Sustainability Reporting Directive (**CSRD**) may guide flows into ESG investments.
@@ -200,7 +200,7 @@ Do No Significant Harm is a principle embedded in the EU Taxonomy Regulation (Re
 > - [Good Governance](#good-governance) — the social safeguard that complements DNSH on the environmental side
 > - [European ESG Template (EET)](#european-esg-template-eet) — the data exchange template that captures DNSH assessments
 
-> [!example]- Source excerpts (4)
+> [!guide]- Source excerpts (4)
 >
 > Here, we’ll also be watching the European Commission’s initiative on sustainable corporate
 > governance, which may be adopted later this year. - ‘**Do no significant harm**’ (DNSH) is a key
@@ -253,7 +253,7 @@ Double materiality is a reporting concept formalized in the EU's CSRD and operat
 > - [International Sustainability Standards Board (ISSB)](#international-sustainability-standards-board-issb) — uses a single (financial) materiality lens, contrasting with double materiality
 > - [SASB (Sustainability Accounting Standards Board)](#sasb-sustainability-accounting-standards-board) — also focused on financial materiality
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > SRS), which provide more details on the Corporate Sustainability Reporting Directive (CSRD) from
 > last year. ESRS requires companies to report on the “**double materiality**” environmental impact
@@ -315,7 +315,7 @@ The Equator Principles are a risk management framework adopted by financial inst
 > - [Good Governance](#good-governance) — Equator Principles adoption signals governance quality in financial institutions
 > - [OECD Guidelines for Multinational Enterprises](#oecd-guidelines-for-multinational-enterprises) — another normative framework referenced alongside the Equator Principles
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > As of 2024, 131 financial institutions globally are Signatories to the **Equator Principles**.22
 > Sustainability Policy Recommendation: Vote for shareholder proposals to study or implement the
@@ -370,7 +370,7 @@ The European Sustainability Reporting Standards are a set of mandatory disclosur
 > - [Global Reporting Initiative (GRI)](#global-reporting-initiative-gri) — ESRS was developed with a high degree of interoperability with GRI Standards
 > - [International Sustainability Standards Board (ISSB)](#international-sustainability-standards-board-issb) — EFRAG ensured compatibility between ESRS and ISSB standards
 
-> [!example]- Source excerpts (4)
+> [!guide]- Source excerpts (4)
 >
 > or France is being amended to exclude **ESRs** when calculating whether at least 50 percent of the
 > board members elected by shareholders are independent. **ESRs** will thus be treated in the same
@@ -421,7 +421,7 @@ The EU Taxonomy (Regulation 2020/852) is a classification system established by 
 > - [CSRD (Corporate Sustainability Reporting Directive)](#csrd-corporate-sustainability-reporting-directive) — requires companies to report taxonomy-aligned revenue
 > - [European ESG Template (EET)](#european-esg-template-eet) — captures taxonomy alignment data for fund-level reporting
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Navigating the Complexities of Regulation: **EU Taxonomy** & SFDR The European Union’s mandatory
 > reporting requirements for the **EU Taxonomy** and Sustainable Finance Disclosure Regulation
@@ -470,7 +470,7 @@ The European ESG Template is a standardized data exchange template developed by 
 > - [Do No Significant Harm (DNSH)](#do-no-significant-harm-dnsh) — DNSH assessment fields are part of the EET
 > - [SDGs (Sustainable Development Goals)](#sdgs-sustainable-development-goals) — certain EET fields reference SDG alignment
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > **European ESG Template** requirements to data points covered by its proprietary data to assist
 > fund distributors and intermediaries with completing the **European ESG Template**. Our SFDR PAI
@@ -504,7 +504,7 @@ The Greenhouse Gas Protocol is the most widely used international accounting fra
 > - [Science Based Targets Initiative (SBTi)](#science-based-targets-initiative-sbti) — targets are set using GHG Protocol scope definitions
 > - [Paris Agreement](#paris-agreement) — national and corporate Paris-aligned targets use GHG Protocol accounting
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 2050 Scenario, and other internationally recognized frameworks; ▪ Whether the company’s
 > methodology is in alignment with the Greenhouse Gas Protocol (**GHG Protocol**), the Partnership
@@ -562,7 +562,7 @@ The Global Reporting Initiative is an independent international organization tha
 > - [Double Materiality](#double-materiality) — GRI's impact materiality concept is one pillar of double materiality
 > - [SDGs (Sustainable Development Goals)](#sdgs-sustainable-development-goals) — GRI provides guidance on linking disclosures to SDGs
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Companies have begun to report on environmental and sustainability issues using the **Global
 > Reporting Initiative (GRI)** standards. The GRI was established in 1997 with the mission of
@@ -615,7 +615,7 @@ In the context of the EU Taxonomy, "good governance" refers to the minimum socia
 > - [UN Global Compact](#un-global-compact) — UNGC violations are often used as a proxy for good governance failures
 > - [Do No Significant Harm (DNSH)](#do-no-significant-harm-dnsh) — the environmental counterpart to social safeguards
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > A Sustainability Risk Score uses MSCI ESG Key Issue scores aligned with SASB framework to identify
 > and manage ESG risks. APG **Good Governance** Flag: a data attribute to assess **Good Governance**
@@ -669,7 +669,7 @@ The International Labour Organization (ILO) Conventions are legally binding inte
 > - [UN Guiding Principles on Business and Human Rights](#un-guiding-principles-on-business-and-human-rights) — UNGPs reference ILO standards in the context of human rights due diligence
 > - [OECD Guidelines for Multinational Enterprises](#oecd-guidelines-for-multinational-enterprises) — OECD Guidelines incorporate ILO labour standards
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > SA 8000 is a set of labor standards, based on the principles of the **ILO conventions** and other
 > human rights conventions, and covers eight workplace conditions, including: child labor, forced
@@ -719,7 +719,7 @@ The International Sustainability Standards Board is a standard-setting body esta
 > - [ESRS (European Sustainability Reporting Standards)](#esrs-european-sustainability-reporting-standards) — the EU equivalent, with interoperability provisions
 > - [Double Materiality](#double-materiality) — ISSB uses financial materiality, while ESRS uses double materiality
 
-> [!example]- Source excerpts (4)
+> [!guide]- Source excerpts (4)
 >
 > Regulators in the EU, US, UK, and the APAC region are well on their way to developing
 > climate-related reporting requirements and the formation of the **International Sustainability
@@ -769,7 +769,7 @@ The Non-Financial Reporting Directive (Directive 2014/95/EU) was an EU directive
 > - [ESRS (European Sustainability Reporting Standards)](#esrs-european-sustainability-reporting-standards) — the standardized reporting format NFRD lacked
 > - [Double Materiality](#double-materiality) — not explicitly required under NFRD but central to CSRD
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > ity generation from wind power - Manufacture of aluminium - Anaerobic digestion of sewage sludge -
 > Composting of bio-waste - Freight rail transport A **NFRD** indicator flag is also included in
@@ -798,7 +798,7 @@ The OECD Guidelines for Multinational Enterprises on Responsible Business Conduc
 > - [UN Global Compact](#un-global-compact) — UNGC principles overlap significantly with OECD Guidelines themes
 > - [ILO Conventions](#ilo-conventions) — the OECD Guidelines' employment chapter references ILO standards
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > s). 10 PAI 11 is measured as a lack of processes and compliance mechanisms to monitor compliance
 > with the principles of the UN Global Compact and the **OECD Guidelines for Multinational
@@ -857,7 +857,7 @@ The Paris Agreement is a legally binding international treaty on climate change 
 > - [Task Force on Climate-related Financial Disclosures (TCFD)](#task-force-on-climate-related-financial-disclosures-tcfd) — TCFD scenario analysis often uses Paris-derived temperature scenarios
 > - [EU Taxonomy](#eu-taxonomy) — the Taxonomy's climate mitigation objective is grounded in Paris Agreement goals
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > MIT researchers have estimated that the global EV fleet could surpass 800 million units by 2050 if
 > current **Paris Agreement** targets are maintained. Figure 1: Global sales (lhs) and market share
@@ -914,7 +914,7 @@ The Principles for Responsible Investment is a UN-supported international networ
 > - [UN Global Compact](#un-global-compact) — another UN initiative frequently referenced alongside PRI
 > - [SDGs (Sustainable Development Goals)](#sdgs-sustainable-development-goals) — PRI encourages signatories to consider SDG alignment
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > , comparable corporate sustainability data remains one of the central challenges investors are
 > facing,” Susanne Draeger, senior policy analyst at the Principles for Responsible Investment, said
@@ -974,7 +974,7 @@ The Sustainability Accounting Standards Board developed industry-specific sustai
 > - [Double Materiality](#double-materiality) — SASB uses single (financial) materiality
 > - [ESRS (European Sustainability Reporting Standards)](#esrs-european-sustainability-reporting-standards) — covers a broader scope but references SASB-style industry specificity
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > , if it occurs, could cause an actual or a potential material negative impact on the value of an
 > investment. The underlying methodology uses a public **SASB** materiality map that forms a basis
@@ -1029,7 +1029,7 @@ The Science Based Targets initiative is a partnership between CDP, the UN Global
 > - [CDP (Carbon Disclosure Project)](#cdp-carbon-disclosure-project) — SBTi partner; CDP tracks SBTi commitment and validation status
 > - [UN Global Compact](#un-global-compact) — SBTi partner organization
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > By going above and beyond EU regulatory requirements in these indices’ design, in particular with
 > our requirement that companies must commit to **Science Based Targets Initiative**, SBTI, to
@@ -1087,7 +1087,7 @@ The Sustainable Development Goals are a collection of 17 interlinked global goal
 > - [EU Taxonomy](#eu-taxonomy) — many taxonomy-aligned activities correspond to specific SDGs
 > - [European ESG Template (EET)](#european-esg-template-eet) — certain fields reference SDG-aligned investments
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Based on this framework, the ISS SDG Impact Rating holistically scores a company’s positive or
 > negative impact on the 17 **SDGs**. Figure 3 shows the overall SDG rating, which is measured on a
@@ -1135,7 +1135,7 @@ The Shareholder Rights Directive II (Directive 2017/828/EU) is an EU directive t
 > - [Good Governance](#good-governance) — SRD II reinforces governance standards used in taxonomy assessments
 > - [PRI (Principles for Responsible Investment)](#pri-principles-for-responsible-investment) — PRI Principle 2 (active ownership) aligns with SRD II goals
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ANCE.COM 29 of 44 EMEA POLICY UPDATES FOR 2022 Rationale for Change: Pay equity ratios (Item
 > 1.2.2): This a requirement provided by the EU **SRD II**: “Where applicable, the remuneration
@@ -1190,7 +1190,7 @@ A stewardship code is a set of principles or guidelines issued by a national reg
 > - [PRI (Principles for Responsible Investment)](#pri-principles-for-responsible-investment) — PRI signatories often reference stewardship codes
 > - [Good Governance](#good-governance) — stewardship expectations reinforce good governance standards
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Institutional Shareholder Services Inc. intends to sign Japan’s Principles for Responsible
 > Institutional Investors (the Japanese **Stewardship Code**), that was announced by Japan’s
@@ -1251,7 +1251,7 @@ The Task Force on Climate-related Financial Disclosures was established in 2015 
 > - [CDP (Carbon Disclosure Project)](#cdp-carbon-disclosure-project) — CDP aligned its climate questionnaire with TCFD
 > - [CSRD (Corporate Sustainability Reporting Directive)](#csrd-corporate-sustainability-reporting-directive) — ESRS climate standards (E1) build on TCFD
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 6° C climate scenarios. The report can assist investors in fulfilling requirements for internal
 > and global external reporting initiatives such as the **Task Force on Climate-related Financial
@@ -1306,7 +1306,7 @@ The Taskforce on Nature-related Financial Disclosures is a global, market-led in
 > - [ESRS (European Sustainability Reporting Standards)](#esrs-european-sustainability-reporting-standards) — ESRS E4 (biodiversity and ecosystems) covers TNFD-adjacent topics
 > - [SDGs (Sustainable Development Goals)](#sdgs-sustainable-development-goals) — SDGs 14 (life below water) and 15 (life on land) align with TNFD scope
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > within the European Union, including Article 29 of the French law on Energy and Climate, as well
 > as the UN Convention on Biological Diversity and the **Task Force on Nature-related Financial
@@ -1347,7 +1347,7 @@ The United Nations Global Compact is a voluntary initiative launched in 2000 in 
 > - [PRI (Principles for Responsible Investment)](#pri-principles-for-responsible-investment) — PRI is a sister UN initiative; many signatories also participate in UNGC
 > - [Science Based Targets Initiative (SBTi)](#science-based-targets-initiative-sbti) — SBTi is a UNGC partner initiative
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > CH Assesses companies’ adherence to international norms on human rights, labor standards,
 > environmental protection and anti-corruption set out in the **UN Global Compact** and OECD
@@ -1404,7 +1404,7 @@ The United Nations Guiding Principles on Business and Human Rights (UNGPs), endo
 > - [CSRD (Corporate Sustainability Reporting Directive)](#csrd-corporate-sustainability-reporting-directive) — ESRS S1-S4 social standards reference UNGP concepts
 > - [SDGs (Sustainable Development Goals)](#sdgs-sustainable-development-goals) — UNGPs contribute to SDGs 8 (decent work) and 16 (peace, justice)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ent (OECD) Guidelines for Multinational iSTOXX® METHODOLOGY GUIDE 214/1024 9. DECREMENT INDICES
 > (PERFORMANCE DEDUCTIONS) Enterprises, the **UN Guiding Principles on Business and Human Rights**

@@ -6,43 +6,43 @@ title: Elysium
   <img src="/static/elysium_logo.jpg" alt="Elysium" width="280" />
 </div>
 
-> [!example]+ Code and Queries
+> [!guide]+ Code and Queries
 >
 > - [[moc-shell|Shell]] — File processing, scripting, and system operations from the command line
 > - [[moc-programming-languages|Programming Languages]] — Python and C# paired notebooks from language foundations to GCP integration
 > - [[moc-dataframes|DataFrames]] — Pandas and Polars side-by-side: loading, transforming, testing
 > - [[moc-db-queries|Database Queries]] — SQL Server, BigQuery, and Firestore executable query reference
 
-> [!example]+ Data Platform
+> [!guide]+ Data Platform
 >
 > - [[moc-sql-server|SQL Server]] — Administration, query optimization, pipeline patterns, and the medallion implementation
 > - [[moc-gcp|GCP]] — Compute, BigQuery, Firestore, GCS, security, identity, and cost management
 > - [[moc-terraform|Terraform]] — Infrastructure as code: HCL fundamentals, GCP resources, patterns, and block library
 > - [[moc-docker|Docker]] — Container lifecycle, image management, and Docker Compose orchestration
 
-> [!example]+ Pipeline Engineering
+> [!guide]+ Pipeline Engineering
 >
 > - [[moc-dbt|dbt]] — SQL transformation layer: modeling, testing, macros, adapters, and CI/CD
 > - [[moc-orchestration|Orchestration]] — Airflow DAG patterns, scheduling, and data ingestion frameworks
 > - [[moc-data-architecture|Data Architecture]] — System blueprints, pipeline patterns, data modeling, reliability, and decision frameworks
 
-> [!example]+ DevOps and CI/CD
+> [!guide]+ DevOps and CI/CD
 >
 > - [[moc-git|Git]] — Daily workflow, branching, collaboration, and recovery
 > - [[moc-github-actions|GitHub Actions]] — Workflow fundamentals, CI/CD patterns, and data engineering automation
 
-> [!example]+ Observability
+> [!guide]+ Observability
 >
 > - [[moc-observability|Observability]] — Datadog platform, GCP-native monitoring, and observability strategy
 
-> [!example]+ Practice and Leadership
+> [!guide]+ Practice and Leadership
 >
 > - [[moc-dataops|DataOps]] — DataOps principles, team organization, self-service platforms, and engineering leadership
 
-> [!example]+ AI and Prompts
+> [!guide]+ AI and Prompts
 >
 > - [[moc-ai-and-prompts|AI & Prompts]] — Prompt engineering, LLM pipeline integration, output validation, and financial guardrails
 
-> [!example]+ Financial Domain
+> [!guide]+ Financial Domain
 >
 > - [[moc-financial-domain|Financial Domain]] — Sector encyclopedias, market analysis, scoring methodology, regulatory compliance, and the ISS-STOXX glossary

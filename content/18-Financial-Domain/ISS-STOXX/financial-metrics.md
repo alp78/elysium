@@ -60,7 +60,7 @@ $$
 > [!tip] Related terms
 > [Alpha](#alpha), [Tracking Error](#tracking-error), [Information Ratio](#information-ratio)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > tperformance has been consistent, too, with the notable exception of the COVID-19-induced sell-off
 > in early 2020. Figure 2 shows the DAX ESG Target’s **active return** in a dotted line. ‘Specific
@@ -121,7 +121,7 @@ Where $R_f$ is the risk-free rate and $R_m$ is the market return.
 > [!tip] Related terms
 > [Beta](#beta), [Active Return](#active-return), [Risk-Adjusted Return](#risk-adjusted-return), [Equity Risk Premium](#equity-risk-premium)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Implications of Index Reconstitutions: Free Carbon **Alpha**? SEPTEMBER 22, 2022 KEY TAKEAWAYS -
 > ISS ESG’s Climate Impact Report provides a detailed analysis of a portfolio’s carbon footprint,
@@ -181,7 +181,7 @@ Where $n$ is the number of years in the holding period.
 > [!tip] Related terms
 > [Total Return](#total-return), [Gross Return](#gross-return), [Net Return](#net-return)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Propelled by their stellar performance in 2020, the FAANGs portfolio has posted an **annualized
 > return** for the 2020-2022 period of 14%, outperforming the STOXX USA 900 index by 6 percentage
@@ -240,7 +240,7 @@ So a move from 2.50% to 3.00% is a change of 50 bp.
 > [!tip] Related terms
 > [Spread (Credit)](#spread-credit), [Yield Curve](#yield-curve), [Risk-Free Rate](#risk-free-rate)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > WS / December 2021 Low Carbon indices Key points Among the STOXX Low Carbon indices, the EURO
 > STOXX® 50 Low Carbon index beat the EURO STOXX 50 by 17 **basis point**s in December but trailed
@@ -300,7 +300,7 @@ $$
 > [!tip] Related terms
 > [Alpha](#alpha), [Equity Risk Premium](#equity-risk-premium), [Factor Exposure](#factor-exposure)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Australian ETF manager **Beta**Shares has launched its 50th ASX-traded fund, the Global Quality
 > Leaders ETF (QLTY). QLTY provides access to a diversified portfolio of quality global
@@ -355,7 +355,7 @@ $$
 > [!tip] Related terms
 > [Price-to-Earnings Ratio](#price-to-earnings-ratio), [Earnings Yield](#earnings-yield), [Cash Flow Yield](#cash-flow-yield)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > alendar INDEX REVIEW Selection list: On a quarterly basis, the momentum factor is calculated for
 > each stock after adjusting for market beta, size and **book-to-price ratio**. First, the beta and
@@ -392,7 +392,7 @@ $$
 > [!tip] Related terms
 > [Earnings Yield](#earnings-yield), [Dividend Yield](#dividend-yield), [Book-to-Price Ratio](#book-to-price-ratio)
 
-> [!example]- Source excerpts (4)
+> [!guide]- Source excerpts (4)
 >
 > %, 13%, and 7% weights, respectively, and is again z-scored and truncated. The Value Factor is a
 > composite of the following 5 Signals: Book to Price, **Cash Flow Yield**, Time Series Normalized
@@ -450,7 +450,7 @@ Where $V_{\text{begin}}$ and $V_{\text{end}}$ are the starting and ending values
 > [!tip] Related terms
 > [Annualized Return](#annualized-return), [Total Return](#total-return)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Biotechnology is now extensively used in the medical industry, biofuels and agribiotech. The
 > global Robotics market is expected to boost revenue at a **compound annual growth rate** of 16%
@@ -512,7 +512,7 @@ $$
 > [!tip] Related terms
 > [Covariance](#covariance), [Beta](#beta), [Volatility](#volatility), [Standard Deviation](#standard-deviation)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The STOXX Factor Indices, on the other hand, saw more differentiation through the crisis, i.e.
 > active **correlation**s across factors moved closer to 0. This can partly be attributed to the
@@ -570,7 +570,7 @@ $$
 > [!tip] Related terms
 > [Correlation](#correlation), [Beta](#beta), [Standard Deviation](#standard-deviation), [Factor Exposure](#factor-exposure)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > = **covariance**18 of share i=1, …, 40 to share j=1, …, 40 i,j Step 3) The optimized portfolio
 > weights can then be calculated, based on the variances and **covariance**s calculated in Step 2.
@@ -625,7 +625,7 @@ $$
 > [!tip] Related terms
 > [Debt-to-Equity Ratio](#debt-to-equity-ratio), [Free Cash Flow (FCF)](#free-cash-flow-fcf), [Gross Profitability](#gross-profitability)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > The LR is calculated as the ratio of current assets to current liabilities (also called **current
 > ratio**) 1YΔLR =**current ratio** −current ratio t0 t0 t−1 - 1-year growth in the Number of Shares
@@ -666,7 +666,7 @@ $$
 > [!tip] Related terms
 > [Current Ratio](#current-ratio), [Enterprise Value (EV)](#enterprise-value-ev), [EBITDA](#ebitda)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Large increases in borrowing powers can sometimes result in dangerously high **debt-to-equity
 > ratio**s that could harm shareholder value. If no information regarding the limit on the borrowing
@@ -727,7 +727,7 @@ $$
 > [!tip] Related terms
 > [Total Return](#total-return), [Net Return](#net-return), [Gross Return](#gross-return), [Earnings Yield](#earnings-yield)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The inverse of the payout ratio is calculated as earnings per share (EPS) divided by gross
 > dividend per share (DPS 15 WSPIT Item number 09402 - **Dividend Yield** – Current; Worldscope
@@ -789,7 +789,7 @@ Where $C_t$ is the cash flow at time $t$ and $y$ is the yield to maturity.
 > [!tip] Related terms
 > [Yield Curve](#yield-curve), [Spread (Credit)](#spread-credit), [Risk-Free Rate](#risk-free-rate), [Basis Point](#basis-point)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Absent this condition, the evaluation of the pill proposal will not progress to the second stage
 > of the analysis. The pill's total **duration** is defined as the sum of the number of years the
@@ -851,7 +851,7 @@ Where $V(t)$ is the value at time $t$ and $V_{\text{peak}}$ is the highest value
 > [!tip] Related terms
 > [Maximum Drawdown](#maximum-drawdown), [Volatility](#volatility), [Value at Risk (VaR)](#value-at-risk-var)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > It raised that exposure to 20% on August 1 and then to 30% a day later. The effect of large
 > **drawdown**s Of course, having a 2.5% volatility hedge during stable and/or bull markets is a
@@ -912,7 +912,7 @@ $$
 > [!tip] Related terms
 > [Net Income](#net-income), [Price-to-Earnings Ratio](#price-to-earnings-ratio), [Earnings Yield](#earnings-yield), [PEG Ratio](#peg-ratio)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ss dividend yield of 30% or below » All stocks having the inverse of the payout ratio of 1 or
 > above. The inverse of the payout ratio is calculated as **earnings per share (EPS)** divided by
@@ -972,7 +972,7 @@ $$
 > [!tip] Related terms
 > [Price-to-Earnings Ratio](#price-to-earnings-ratio), [Cash Flow Yield](#cash-flow-yield), [Book-to-Price Ratio](#book-to-price-ratio)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Profitability Composite Score. The Value Score is calculated from the following value metrics: •
 > Pure/Deep value (B/P and Fwd S/P) o B/P o Fwd S/P • **Earnings Yield** (Fwd E/P and Fwd EBITDA/EV)
@@ -1037,7 +1037,7 @@ $$
 > [!tip] Related terms
 > [Enterprise Value (EV)](#enterprise-value-ev), [Net Income](#net-income), [Operating Margin](#operating-margin), [Free Cash Flow (FCF)](#free-cash-flow-fcf)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > More profitable companies have higher ratios relative to their peers. **EBITDA**X is **EBITDA**
 > including exploration expense. BOE is Barrel of Oil Equivalent. Total Production is measured in
@@ -1092,7 +1092,7 @@ $$
 > [!tip] Related terms
 > [EVA Margin](#eva-margin), [Net Operating Profit After Tax (NOPAT)](#net-operating-profit-after-tax-nopat), [Gross Profitability](#gross-profitability)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > However, for meetings on or after Feb. 1, 2020, the measures utilized by the secondary FPA screen
 > will be **Economic Value Added (EVA)** metrics instead of the GAAP metrics that were used in 2019.
@@ -1146,7 +1146,7 @@ $$
 > [!tip] Related terms
 > [Economic Value Added (EVA)](#economic-value-added-eva), [Net Operating Profit After Tax (NOPAT)](#net-operating-profit-after-tax-nopat), [Gross Profitability](#gross-profitability)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The FPA generally utilizes four equally-weighted EVA-based metrics: ▪ **EVA Margin** ▪ EVA Spread
 > ▪ EVA Momentum vs. Sales ▪ EVA Momentum vs. Capital Financial performance for these EVA metrics is
@@ -1208,7 +1208,7 @@ $$
 > [!tip] Related terms
 > [Alpha](#alpha), [Beta](#beta), [Risk-Adjusted Return](#risk-adjusted-return), [Sharpe Ratio](#sharpe-ratio)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > The 5 percent threshold was chosen as a minimum ROE level which investors could accept as an
 > **equity risk premium**, based on discussions with institutional investors in Japan holding
@@ -1246,7 +1246,7 @@ $$
 > [!tip] Related terms
 > [EBITDA](#ebitda), [Debt-to-Equity Ratio](#debt-to-equity-ratio), [Earnings Yield](#earnings-yield), [Price-to-Earnings Ratio](#price-to-earnings-ratio)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > GHG Intensity is defined as the sum of Scope 1, Scope 2 and Scope 3 emissions from ISS ESG over
 > **Enterprise Value** Including Cash (EVIC). If the GHG intensity reduction is not at least 30%
@@ -1309,7 +1309,7 @@ Where $\beta_{ik}$ is the exposure of asset $i$ to factor $k$, and $F_k$ is the 
 > [!tip] Related terms
 > [Factor Return](#factor-return), [Beta](#beta), [Return Attribution](#return-attribution)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > In this context, the empirical findings indicate that applying constraints to limit unintended
 > style **factor exposure**s relative to the benchmark may help reduce the negative performance
@@ -1368,7 +1368,7 @@ $$
 > [!tip] Related terms
 > [Factor Exposure](#factor-exposure), [Return Attribution](#return-attribution), [Active Return](#active-return)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > This is captured by the drop in the factors’ cumulative returns in 2022. Despite this recent
 > abrupt decline, the three-year cumulative **factor return**s have remained positive in the US and
@@ -1430,7 +1430,7 @@ $$
 > [!tip] Related terms
 > [Cash Flow Yield](#cash-flow-yield), [EBITDA](#ebitda), [Net Income](#net-income), [Revenue](#revenue)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Does your organization agree with that approach? If not, please explain.  Not entirely. TSR is
 > not an optimal metric; we think a 5-yr rolling **free cash flow**/ share would be a preferred
@@ -1488,7 +1488,7 @@ $$
 > [!tip] Related terms
 > [Gross Profitability](#gross-profitability), [Operating Margin](#operating-margin), [Revenue](#revenue), [EBITDA](#ebitda)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > Companies must pass one of the following indicators in at least one of the subthemes: - Companies
 > must rank in the top 80% of their subtheme group in **Gross Margin** or, - Companies with a
@@ -1530,7 +1530,7 @@ $$
 > [!tip] Related terms
 > [Economic Value Added (EVA)](#economic-value-added-eva), [EVA Margin](#eva-margin), [Earnings Yield](#earnings-yield)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Values are truncated at +/- 50%. The signal is smoothed using an EWMA with a half-life of 24
 > months.  **Gross Profitability** is given by the revenues minus the cost of goods sold, all
@@ -1590,7 +1590,7 @@ $$
 > [!tip] Related terms
 > [Net Return](#net-return), [Total Return](#total-return), [Dividend Yield](#dividend-yield)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 0 Index, which tracks companies with sizeable dividends but also applies a quality filter such as
 > a history of stable payments, gained only 0.2% on a gross-return basis. The STOXX® Global Select
@@ -1653,7 +1653,7 @@ Where $\sigma_{\text{active}}$ is the tracking error (standard deviation of acti
 > [!tip] Related terms
 > [Active Return](#active-return), [Tracking Error](#tracking-error), [Sharpe Ratio](#sharpe-ratio), [Sortino Ratio](#sortino-ratio)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Prior to 2020, the outperformance was fairly steady (Figure 1). Realized tracking error was just
 > over 8%, producing an **information ratio** of 0.15. While that **information ratio** may not
@@ -1710,7 +1710,7 @@ Where $n_i$ is the number of shares of constituent $i$ and $p_{i,t}$ is its pric
 > [!tip] Related terms
 > [Total Return](#total-return), [Gross Return](#gross-return), [Net Return](#net-return)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > ustments due to corporate actions » The DAX Strategy Index Guide contains the formulas and
 > description of all DAX strategy indices » The Guide to the **iNAV** Calculation contains details
@@ -1747,7 +1747,7 @@ $$
 > [!tip] Related terms
 > [Drawdown](#drawdown), [Value at Risk (VaR)](#value-at-risk-var), [Volatility](#volatility), [Sortino Ratio](#sortino-ratio)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > In this same period, QLTY’s Index has also benefitted from significantly lower drawdowns, with a
 > **maximum drawdown** approximately half of that experienced by the MSCI World Index.
@@ -1808,7 +1808,7 @@ Commonly using a 12-month lookback with a 1-month skip.
 > [!tip] Related terms
 > [Factor Exposure](#factor-exposure), [Factor Return](#factor-return), [Realized Volatility](#realized-volatility)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Style risk is the aggregate risk of the style factors in the EU4 model (e.g., **Momentum**, Value
 > etc.). 5 The diversification ratio of a portfolio is defined as the ratio of the weighted average
@@ -1871,7 +1871,7 @@ Where $\tau_i$ is the applicable withholding tax rate for constituent $i$.
 > [!tip] Related terms
 > [Gross Return](#gross-return), [Total Return](#total-return), [Dividend Yield](#dividend-yield)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > ULA Two versions of the indices are available, Total Return and Price. Total Return The Total
 > Return version of the index combines the EURO STOXX 50 (**Net Return**) Index and a EURO STOXX 50
@@ -1928,7 +1928,7 @@ $$
 > [!tip] Related terms
 > [Earnings Per Share (EPS)](#earnings-per-share-eps), [Revenue](#revenue), [EBITDA](#ebitda), [Return on Equity (ROE)](#return-on-equity-roe)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The ROA is calculated as the **net income** before extraordinary items divided by total assets
 > **net income** before extraordinary items ROA = t0 t0 total assets t0 - CFO ratio greater than or
@@ -1985,7 +1985,7 @@ $$
 > [!tip] Related terms
 > [Gross Margin](#gross-margin), [EBITDA](#ebitda), [Net Income](#net-income), [EVA Margin](#eva-margin)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > s than or equal to 5%7. number of shares outstanding 1YΔNBO = t0 −1 t0 number of shares
 > outstanding t−1 - Positive or zero 1-year growth in the Gross **Operating Margin** (1YΔGOM). The
@@ -2022,7 +2022,7 @@ $$
 > [!tip] Related terms
 > [Price-to-Earnings Ratio](#price-to-earnings-ratio), [Earnings Per Share (EPS)](#earnings-per-share-eps), [Earnings Yield](#earnings-yield)
 
-> [!example]- Source excerpts (1)
+> [!guide]- Source excerpts (1)
 >
 > rt suggested using the price/earnings-to-growth (PEG) ratio instead, which combines a company’s
 > P/E ratio with its expected earnings growth rate. The **PEG ratio** is calculated by dividing P/E
@@ -2055,7 +2055,7 @@ $$
 > [!tip] Related terms
 > [Earnings Yield](#earnings-yield), [Book-to-Price Ratio](#book-to-price-ratio), [Cash Flow Yield](#cash-flow-yield), [Dividend Yield](#dividend-yield)
 
-> [!example]- Source excerpts (2)
+> [!guide]- Source excerpts (2)
 >
 > Data as of March 31st, 2025. FORWARD PRICE-TO-EARNINGS (P/E) Valuation of European A forward
 > **Price-to-Earnings ratio** shows Equities Is Low how a company’s current stock price compares to
@@ -2100,7 +2100,7 @@ Where $r_t$ are daily log returns and 252 is the standard annualization factor.
 > [!tip] Related terms
 > [Volatility](#volatility), [Standard Deviation](#standard-deviation), [Beta](#beta), [Value at Risk (VaR)](#value-at-risk-var)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > 60) Where: 𝑇𝑔𝑡𝑉𝑜𝑙 = The pre-determined Target Volatility (10%). And: 𝑀𝑎𝑥𝑅𝑒𝑎𝑙𝑖𝑧𝑒𝑑𝑉𝑜𝑙 = max
 > (𝑅𝑒𝑎𝑙𝑖𝑧𝑒𝑑𝑉𝑜𝑙 ,𝑅𝑒𝑎𝑙𝑖𝑧𝑒𝑑𝑉𝑜𝑙 ) 𝑡,(20,60) 20 60 And finally the **Realized Volatility** is calculated
@@ -2155,7 +2155,7 @@ $$
 > [!tip] Related terms
 > [Return on Equity (ROE)](#return-on-equity-roe), [Net Income](#net-income), [Gross Profitability](#gross-profitability)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > heet Risk Score are calculated as following. The quality score is defined as the number of
 > criteria that a company meets and can range from 0 to 9: - **Return On Assets (ROA)** greater than
@@ -2216,7 +2216,7 @@ $$
 > [!tip] Related terms
 > [Return on Assets (ROA)](#return-on-assets-roa), [Debt-to-Equity Ratio](#debt-to-equity-ratio), [Net Income](#net-income), [Earnings Per Share (EPS)](#earnings-per-share-eps)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Therefore, the qualitative assessment of the company's pay for performance alignment may consider
 > other measures of company performance such as **Return on Equity**, Return on Invested Capital,
@@ -2279,7 +2279,7 @@ $$
 > [!tip] Related terms
 > [Net Income](#net-income), [Gross Margin](#gross-margin), [Operating Margin](#operating-margin), [EBITDA](#ebitda)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Figure 4 shows the performance of stocks in the index methodology’s three **revenue** tiers.
 > Through Aug. 1, 2025, the high military **revenue**s basket rose 102% this year, compared with 73%
@@ -2340,7 +2340,7 @@ This is the general form (Sharpe ratio). Alternative specifications replace $\si
 > [!tip] Related terms
 > [Sharpe Ratio](#sharpe-ratio), [Sortino Ratio](#sortino-ratio), [Information Ratio](#information-ratio), [Alpha](#alpha)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > t is measured in terms of risk allocation.. STOXX LIMITED 9 STOXX MINIMUM VARIANCE INDICES 3 Why
 > minimum variance portfolios provide better **risk-adjusted return**s MVPs tend to strongly
@@ -2403,7 +2403,7 @@ $$
 > [!tip] Related terms
 > [Equity Risk Premium](#equity-risk-premium), [Market Premium](#market-premium), [Sharpe Ratio](#sharpe-ratio), [Alpha](#alpha)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > In addition, cash-settled futures on GC Pooling Deferred are already available and can facilitate
 > the development of a **risk-free rate** term structure. Several possible outcomes of the market
@@ -2463,7 +2463,7 @@ $$
 > [!tip] Related terms
 > [Sortino Ratio](#sortino-ratio), [Information Ratio](#information-ratio), [Standard Deviation](#standard-deviation), [Risk-Adjusted Return](#risk-adjusted-return)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > es (the best 50 /100 stocks by gross dividend yield) on the selection list. If more than 50 (100)
 > stock pass the initial screening for each stock the **Sharpe Ratio** is calculated as following
@@ -2519,7 +2519,7 @@ $$
 > [!tip] Related terms
 > [Volatility](#volatility), [Realized Volatility](#realized-volatility), [Sharpe Ratio](#sharpe-ratio), [Tracking Error](#tracking-error)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > For each single stock, the mean realized cash dividend over the preceding 5 years plus 2.5
 > **standard deviation**s is calculated. This is taken as the fixed decrement amount assuming it
@@ -2581,7 +2581,7 @@ Typically expressed in basis points.
 > [!tip] Related terms
 > [Basis Point](#basis-point), [Yield Curve](#yield-curve), [Duration (Bond)](#duration-bond), [Risk-Free Rate](#risk-free-rate)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > The FPA generally utilizes four equally-weighted EVA-based metrics: ▪ EVA Margin ▪ EVA **Spread**
 > ▪ EVA Momentum vs. Sales ▪ EVA Momentum vs. Capital Financial performance for these EVA metrics is
@@ -2644,7 +2644,7 @@ Where $P_t$ is the price at time $t$ and $D_t$ is the dividend received.
 > [!tip] Related terms
 > [Gross Return](#gross-return), [Net Return](#net-return), [Annualized Return](#annualized-return), [Dividend Yield](#dividend-yield)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Basket TRFs at Eurex | Improved Capital Efficiency. For additional information on Index TRFs,
 > please visit Index **Total Return** Futures | Eurex Listed **Total Return** Swaps.
@@ -2699,7 +2699,7 @@ $$
 > [!tip] Related terms
 > [Active Return](#active-return), [Information Ratio](#information-ratio), [Standard Deviation](#standard-deviation)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > This article provides a high-level refresher of what **tracking error** means, and how we can
 > embed it directly into portfolio construction. When we design a benchmarked portfolio, every
@@ -2760,7 +2760,7 @@ $$
 > [!tip] Related terms
 > [Weighted Average](#weighted-average), [Tracking Error](#tracking-error)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Market participants will be notified of such changes in a timely manner. 4.4.2. **TURNOVER** RATIO
 > The annualized **turnover** ratio is defined as the median value of the daily traded volume to the
@@ -2830,7 +2830,7 @@ Where $z_{\alpha}$ is the z-score at confidence level $\alpha$.
 > [!tip] Related terms
 > [Maximum Drawdown](#maximum-drawdown), [Volatility](#volatility), [Standard Deviation](#standard-deviation), [Drawdown](#drawdown)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Index The STOXX Willis Towers Watson Climate Transition Indices (CTIs) were introduced in October
 > this year. They employ a unique Climate Transition **Value at Risk** (CTVaR) methodology that
@@ -2890,7 +2890,7 @@ $$
 > [!tip] Related terms
 > [Realized Volatility](#realized-volatility), [Standard Deviation](#standard-deviation), [Beta](#beta), [Value at Risk (VaR)](#value-at-risk-var)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > That means that a low-**volatility** portfolio may not necessarily be made up mostly of industries
 > that are less cyclical. “Low-**volatility** stocks have low beta,” said Ung. “However, not all
@@ -2951,7 +2951,7 @@ $$
 > [!tip] Related terms
 > [Turnover](#turnover), [Factor Exposure](#factor-exposure), [Return Attribution](#return-attribution)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > A negative result indicates that the CEO pay rank is greater than the **weighted average**
 > financial performance rank, and a positive score means that the CEO pay rank is below the
@@ -3018,7 +3018,7 @@ This is the Nelson-Siegel model, where $\beta_0$ is the long-run level, $\beta_1
 > [!tip] Related terms
 > [Duration (Bond)](#duration-bond), [Spread (Credit)](#spread-credit), [Risk-Free Rate](#risk-free-rate), [Basis Point](#basis-point)
 
-> [!example]- Source excerpts (5)
+> [!guide]- Source excerpts (5)
 >
 > Throughout the entire period (2019-2022), the index has largely had a positive exposure to the US
 > term spread, as the US **yield curve** steepened. The exposures to the US, European, UK and

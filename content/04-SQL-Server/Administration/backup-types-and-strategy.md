@@ -248,7 +248,7 @@ The 3-2-1 rule is a universally accepted standard for backup resilience. It ensu
 > - **2** different storage media types (e.g., local SSD + cloud object storage)
 > - **1** copy stored offsite (a physically separate location from the primary site)
 
-> [!example] Concrete SQL Server implementation patterns
+> [!guide] Concrete SQL Server implementation patterns
 >
 > **GCP-centric (this vault's default):**
 > 1. **Copy 1** — production database on the GCE VM's persistent disk

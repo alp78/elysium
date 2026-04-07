@@ -17,7 +17,7 @@ mindmap
     (image management)
 ```
 
-> [!example]- Images and Builds
+> [!guide]- Images and Builds
 >
 > [[domain-images-and-builds]]
 >
@@ -31,7 +31,7 @@ mindmap
     (cheat sheet)
 ```
 
-> [!example]- Containers and Orchestration
+> [!guide]- Containers and Orchestration
 >
 > [[domain-containers-and-orchestration]]
 >
